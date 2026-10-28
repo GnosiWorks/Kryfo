@@ -636,7 +636,10 @@ func TestProbeLooksLikeTheSocketsOwnRequest(t *testing.T) {
 	useStandIns(t, modeFast, nil, relay)
 	old := kickSpread
 	kickSpread = 3 * time.Second
-	defer func() { kickSpread = old }()
+	defer func() {
+		runnersGone(t)
+		kickSpread = old
+	}()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	// fifteen sockets: their own delays all falling inside the bound below

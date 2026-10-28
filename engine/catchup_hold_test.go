@@ -29,7 +29,10 @@ func TestWrapStampedIntoAWalkedStretchArrives(t *testing.T) {
 	freshInbox(t)
 	oldSpread := kickSpread
 	kickSpread = 0
-	defer func() { kickSpread = oldSpread }()
+	defer func() {
+		runnersGone(t)
+		kickSpread = oldSpread
+	}()
 	peer := newXid(t)
 	tag := hex.EncodeToString(peer.pub[:])
 	rcv := mustRcv(t, peer)
@@ -121,7 +124,10 @@ func newHalfWay(t *testing.T) *halfWay {
 	freshInbox(t)
 	oldSpread := kickSpread
 	kickSpread = 0
-	t.Cleanup(func() { kickSpread = oldSpread })
+	t.Cleanup(func() {
+		runnersGone(t)
+		kickSpread = oldSpread
+	})
 	h.peer = newXid(t)
 	h.tag = hex.EncodeToString(h.peer.pub[:])
 	h.rcv = mustRcv(t, h.peer)
@@ -553,7 +559,10 @@ func TestEitherEntryOfOurRelayLetsGo(t *testing.T) {
 			useRelays(o, h.ours.url(), h.other.url())
 			oldHost := ownRelayHost
 			ownRelayHost = strings.TrimPrefix(h.ours.url(), "ws://")
-			t.Cleanup(func() { ownRelayHost = oldHost })
+			t.Cleanup(func() {
+				runnersGone(t)
+				ownRelayHost = oldHost
+			})
 			ok := catchupKey(o, h.rcv)
 			forgetCatchup(ok)
 			t.Cleanup(func() { forgetCatchup(ok) })

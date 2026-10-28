@@ -572,6 +572,7 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 	oldRelays := nostrRelays
 	nostrMu.Unlock()
 	t.Cleanup(func() {
+		runnersGone(t)
 		mu.Lock()
 		torNode, myXPriv, myXPub = oldNode, oldPriv, oldPub
 		mu.Unlock()
@@ -601,6 +602,49 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 	mu.Lock()
 	myXPriv, myXPub = me.priv, me.pub
 	mu.Unlock()
+}
+
+// a log sink a test reads while goroutines it did not start may still log
+type logSink struct {
+	mu sync.Mutex
+	b  bytes.Buffer
+}
+
+func (s *logSink) Write(p []byte) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.b.Write(p)
+}
+
+func (s *logSink) String() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.b.String()
+}
+
+func (s *logSink) Len() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.b.Len()
+}
+
+// the runners a test started are over, so what they read is the next
+// test's to change. a test cancels its own contexts first
+func runnersGone(t *testing.T) {
+	t.Helper()
+	nostrMu.Lock()
+	for k, cancel := range nostrSubs {
+		cancel()
+		delete(nostrSubs, k)
+	}
+	nostrMu.Unlock()
+	for end := time.Now().Add(15 * time.Second); runnersLive.Load() > 0; {
+		if time.Now().After(end) {
+			t.Errorf("%d runners still going", runnersLive.Load())
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 }
 
 func newXid(t *testing.T) xid {

@@ -43,7 +43,10 @@ func TestEachLineSaysWhenItReachedTheRelay(t *testing.T) {
 	freshInbox(t)
 	oldSpread := kickSpread
 	kickSpread = 0
-	defer func() { kickSpread = oldSpread }()
+	defer func() {
+		runnersGone(t)
+		kickSpread = oldSpread
+	}()
 	peer := newXid(t)
 	tag := hex.EncodeToString(peer.pub[:])
 	rcv := mustRcv(t, peer)
