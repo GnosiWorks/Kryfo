@@ -1,0 +1,201 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// what the desktop says on each android channel the app calls. the phone's
+// list lives in MainActivity.kt, ToolsBridge.kt, HaloApplication.kt,
+// NetWatch.kt, VideoPlayers.kt and HelperPush.kt; desktop_platform_test
+// checks every method named there has a line here
+import 'dart:async';
+import 'dart:io';
+import 'dart:io' as io show exit;
+
+import 'package:flutter/services.dart';
+
+import 'desktop_channels.dart';
+import 'desktop_db.dart';
+
+/// the android channels and what desktop answers on each
+const androidChannels = [
+  'halo/platform',
+  'halo/tools',
+  'halo/restart',
+  'halo/helper',
+  'halo/gpush',
+  'kryfo/app_icon',
+  'kryfo/net',
+  'kryfo/video',
+];
+
+/// methods with a desktop answer on halo/platform. the rest say not here:
+/// the pin key, the finger, the launcher icon, android's settings pages,
+/// gallery and document saves, video, sharing
+const platformAnswered = {
+  'askNotifications',
+  'notificationsEnabled',
+  'isBatteryExempt',
+  'applyDeliveryMode',
+  'photoPickerReady',
+  'setSecure',
+  'appIconSet',
+  'openNotificationSettings',
+  'openWifiSettings',
+  'openAutostartSettings',
+  'uptimeMs',
+  'bootCount',
+  'bootedAtMs',
+  'processUptimeMs',
+  'lastExit',
+  'reopen',
+  'wipe',
+};
+
+/// not here on desktop, each for a reason the caller already handles
+const platformNotHere = {
+  // no keystore and no finger: the vault's passphrase guards the keys
+  'pinKeyInfo', 'pinKeyMake', 'pinKeyMac', 'pinKeyKcv', 'pinKeyDrop',
+  'bioReady', 'bioState', 'bioSeal', 'bioDisable', 'bioUnlock',
+  // phone makers and android's installer
+  'isMiui', 'phoneMaker', 'installSource',
+  // the plain clipboard is the caller's fallback
+  'copySensitive',
+  // the caller sends the photo as it is
+  'shrinkJpeg',
+  // files leave the app only through a save the person picks, later
+  'saveToPictures', 'openFile', 'shareFile', 'videoInfo',
+  'saveDocument', 'saveDocumentState', 'saveDocumentCancel',
+};
+
+/// the same for halo/tools: nothing is shared into a desktop app
+const toolsAnswered = {
+  'takeShared',
+  'takeSharedText',
+  'seenSharedText',
+  'dropSharedText',
+  'freeBytes',
+  'sweep',
+};
+
+const toolsNotHere = {
+  'pick',
+  'copyIn',
+  'cancelCopy',
+  'shareOut',
+  'saveToGallery',
+  'deleteOriginal',
+  'saveToFiles',
+  'openForRead',
+  'createDocument',
+  'openCreated',
+  'dropCreated',
+  'openCacheOut',
+  'sdk',
+};
+
+/// the clocks and the process, behind a seam for the tests
+class DesktopHost {
+  DesktopHost({
+    required this.dataDir,
+    this.exit = _exit,
+    this.relaunch = _relaunch,
+  });
+
+  final String dataDir;
+  final void Function(int) exit;
+  final Future<void> Function() relaunch;
+  final _since = Stopwatch()..start();
+
+  static void _exit(int code) => io.exit(code);
+  static Future<void> _relaunch() async {
+    await Process.start(
+      Platform.resolvedExecutable,
+      const [],
+      mode: ProcessStartMode.detached,
+    );
+  }
+
+  /// time since boot, suspend included, as android's elapsedRealtime
+  int uptimeMs() {
+    try {
+      final s = File('/proc/uptime').readAsStringSync().split(' ').first;
+      return (double.parse(s) * 1000).round();
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  int processUptimeMs() => _since.elapsedMilliseconds;
+
+  /// free bytes where the app keeps its files, null when unread
+  Future<int?> freeBytes() async {
+    if (Platform.isWindows) return null;
+    try {
+      final r = await Process.run('df', ['-Pk', dataDir]);
+      final last = '${r.stdout}'.trim().split('\n').last.split(RegExp(r'\s+'));
+      return int.parse(last[3]) * 1024;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// the panic wipe's last step, as android's clear of the app's data: the
+  /// vault and every file go, and the process ends
+  Future<void> wipe() async {
+    try {
+      Directory(dataDir).deleteSync(recursive: true);
+    } catch (_) {}
+    exit(0);
+  }
+}
+
+Map<String, DesktopAnswer> desktopAnswers(DesktopHost host, DesktopDb db) {
+  Object? platform(MethodCall c) => switch (c.method) {
+    'askNotifications' => null,
+    'notificationsEnabled' => true,
+    // no battery saver stops a desktop app, and nothing is handed off to a
+    // service: the window's process is the app
+    'isBatteryExempt' => true,
+    'applyDeliveryMode' => true,
+    'photoPickerReady' => false,
+    // linux cannot keep a window out of screenshots
+    'setSecure' => false,
+    'appIconSet' => false,
+    'openNotificationSettings' ||
+    'openWifiSettings' ||
+    'openAutostartSettings' => false,
+    'uptimeMs' => host.uptimeMs(),
+    // no boot counter: unknown, as on a phone that does not say
+    'bootCount' => -1,
+    'bootedAtMs' => DateTime.now().millisecondsSinceEpoch - host.uptimeMs(),
+    'processUptimeMs' => host.processUptimeMs(),
+    'lastExit' => null,
+    _ => notHere,
+  };
+
+  Future<Object?> platformAsync(MethodCall c) async {
+    switch (c.method) {
+      case 'reopen':
+        await host.relaunch();
+        host.exit(0);
+        return null;
+      case 'wipe':
+        await host.wipe();
+        return false;
+    }
+    return platform(c);
+  }
+
+  Future<Object?> tools(MethodCall c) async => switch (c.method) {
+    'takeShared' || 'takeSharedText' => null,
+    'seenSharedText' || 'dropSharedText' || 'sweep' => null,
+    'freeBytes' => await host.freeBytes() ?? -1,
+    _ => notHere,
+  };
+
+  Object? none(MethodCall _) => notHere;
+
+  return {
+    'halo/platform': platformAsync,
+    'halo/tools': tools,
+    for (final ch in androidChannels)
+      if (ch != 'halo/platform' && ch != 'halo/tools') ch: none,
+    sqlcipherChannel: (c) => db.call(c.method, c.arguments),
+  };
+}
