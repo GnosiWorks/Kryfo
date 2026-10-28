@@ -293,8 +293,16 @@ android.applicationVariants.configureEach {
         variant.preBuildProvider.configure {
             doFirst {
                 val src = rootProject.file("../lib/google_push.dart").readText()
-                val dev = Regex("""const\s+kPushGatewayPub\s*=\s*kPushGatewayDevPub\s*;""")
-                if (dev.containsMatchIn(src) && System.getenv("KRYFO_DEV_GATEWAY") != "1") {
+                // the values, however they are written: the dev key named, or
+                // its literal copied in
+                fun value(name: String): String? =
+                    Regex("""const\s+$name\s*=\s*(?:'([^']*)'|"([^"]*)"|(\w+))\s*;""")
+                        .find(src)?.groupValues?.let { g -> g[1].ifEmpty { g[2] }.ifEmpty { g[3] } }
+                val devKey = value("kPushGatewayDevPub")
+                var pinned = value("kPushGatewayPub")
+                if (pinned == "kPushGatewayDevPub") pinned = devKey
+                val dev = pinned == null || pinned == devKey
+                if (dev && System.getenv("KRYFO_DEV_GATEWAY") != "1") {
                     throw GradleException(
                         "the play release pins the development push gateway key.\n" +
                             "pin the server's key in mobile/lib/google_push.dart " +

@@ -19,14 +19,25 @@ void main() {
   });
 
   // the play release build refuses the development key on its own
-  // (android/app/build.gradle.kts): its pattern still finds it here
+  // (android/app/build.gradle.kts), by its value: named or copied in
   test('a play release build would refuse the development key', () {
     final gradle = File('android/app/build.gradle.kts').readAsStringSync();
-    expect(gradle, contains('kPushGatewayDevPub'));
+    expect(gradle, contains('value("kPushGatewayDevPub")'));
     expect(gradle, contains('variant.buildType.name == "release"'));
+    // the same reading of the source as gradle's
     final src = File('lib/google_push.dart').readAsStringSync();
-    final dev = RegExp(r'const\s+kPushGatewayPub\s*=\s*kPushGatewayDevPub\s*;');
-    expect(dev.hasMatch(src), kPushGatewayPub == kPushGatewayDevPub);
+    String? value(String name) {
+      final m = RegExp(
+        'const\\s+$name\\s*=\\s*(?:\'([^\']*)\'|"([^"]*)"|(\\w+))\\s*;',
+      ).firstMatch(src);
+      if (m == null) return null;
+      return m[1] ?? m[2] ?? m[3];
+    }
+
+    var pinned = value('kPushGatewayPub');
+    if (pinned == 'kPushGatewayDevPub') pinned = value('kPushGatewayDevPub');
+    expect(value('kPushGatewayDevPub'), kPushGatewayDevPub);
+    expect(pinned, kPushGatewayPub);
   });
 
   test(
