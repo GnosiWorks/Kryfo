@@ -25,7 +25,34 @@ type fakeBTCPay struct {
 	lazy, activated bool
 	// what the last invoice was made with
 	created map[string]any
-	mu      sync.Mutex
+	// every invoice made, oldest first, as the store's list shows them
+	invs []*fakeInv
+	// the list read fails
+	listDown bool
+	lists    int
+	mu       sync.Mutex
+}
+
+type fakeInv struct {
+	ID         string `json:"id"`
+	Status     string `json:"status"`
+	Additional string `json:"additionalStatus"`
+	Amount     string `json:"amount"`
+	Currency   string `json:"currency"`
+	Created    int64  `json:"createdTime"`
+	Expiration int64  `json:"expirationTime"`
+	Metadata   struct {
+		Tier string `json:"tier"`
+	} `json:"metadata"`
+}
+
+func (f *fakeBTCPay) find(id string) *fakeInv {
+	for _, i := range f.invs {
+		if i.ID == id {
+			return i
+		}
+	}
+	return nil
 }
 
 func (f *fakeBTCPay) serve(t *testing.T) *httptest.Server {
@@ -40,8 +67,29 @@ func (f *fakeBTCPay) serve(t *testing.T) *httptest.Server {
 			f.made++
 			f.created = nil
 			_ = json.NewDecoder(r.Body).Decode(&f.created)
-			fmt.Fprintf(w, `{"id":"INV%05d","checkoutLink":"https://pay.example/i/x","expirationTime":%d}`,
-				f.made, time.Now().Add(time.Hour).Unix())
+			inv := &fakeInv{ID: fmt.Sprintf("INV%05d", f.made), Status: "New", Additional: "None",
+				Amount: fmt.Sprint(f.created["amount"]), Currency: "USD",
+				Created: time.Now().Unix() + int64(f.made), Expiration: time.Now().Add(time.Hour).Unix()}
+			if md, ok := f.created["metadata"].(map[string]any); ok {
+				inv.Metadata.Tier, _ = md["tier"].(string)
+			}
+			f.invs = append(f.invs, inv)
+			fmt.Fprintf(w, `{"id":%q,"checkoutLink":"https://pay.example/i/x","expirationTime":%d}`,
+				inv.ID, inv.Expiration)
+		case r.Method == "GET" && strings.HasSuffix(r.URL.Path, "/invoices"):
+			f.lists++
+			if f.listDown {
+				http.Error(w, "down", 500)
+				return
+			}
+			if r.URL.Query().Get("includeArchived") != "true" {
+				t.Errorf("the list leaves out archived invoices")
+			}
+			out := []*fakeInv{}
+			for i := len(f.invs) - 1; i >= 0; i-- {
+				out = append(out, f.invs[i])
+			}
+			_ = json.NewEncoder(w).Encode(out)
 		case r.Method == "POST" && strings.HasSuffix(r.URL.Path, "/payment-methods/BTC-CHAIN/activate"):
 			f.activated = true
 		case strings.HasSuffix(r.URL.Path, "/payment-methods"):
@@ -55,6 +103,11 @@ func (f *fakeBTCPay) serve(t *testing.T) *httptest.Server {
 				fmt.Fprint(w, `[{"paymentMethodId":"BTC-CHAIN","activated":true,"destination":"bc1qexample","due":"0.00021"}]`)
 			}
 		default:
+			id := r.URL.Path[strings.LastIndex(r.URL.Path, "/")+1:]
+			if inv := f.find(id); inv != nil && f.status == "" {
+				_ = json.NewEncoder(w).Encode(inv)
+				return
+			}
 			fmt.Fprintf(w, `{"id":"INV00001","status":%q,"amount":%q,"currency":%q,"metadata":{"tier":%q}}`,
 				f.status, f.amount, f.currency, f.tier)
 		}
@@ -70,6 +123,7 @@ func setup(t *testing.T, f *fakeBTCPay) {
 	priv = p
 	invoices = newBucket(30)
 	receipts = newRate(5, 60)
+	gap, gapSince = &gapGuard{}, time.Time{}
 }
 
 func receipt(t *testing.T, id string) (int, map[string]any) {
@@ -335,6 +389,16 @@ func serveRaw(t *testing.T, h http.HandlerFunc) {
 	btcpayURL, apiKey, storeID = srv.URL, "k", "s"
 	invoices = newBucket(30)
 	receipts = newRate(5, 60)
+	gap, gapSince = &gapGuard{}, time.Time{}
+}
+
+// the store's list, empty, for the fakes that answer one invoice only
+func emptyList(w http.ResponseWriter, r *http.Request) bool {
+	if r.Method == "GET" && strings.HasSuffix(r.URL.Path, "/invoices") {
+		fmt.Fprint(w, `[]`)
+		return true
+	}
+	return false
 }
 
 // an id from btcpay that is not one never goes into a url
@@ -342,6 +406,9 @@ func TestInvoiceRefusesABadIDFromBTCPay(t *testing.T) {
 	var paths []string
 	var mu sync.Mutex
 	serveRaw(t, func(w http.ResponseWriter, r *http.Request) {
+		if emptyList(w, r) {
+			return
+		}
 		mu.Lock()
 		paths = append(paths, r.Method+" "+r.URL.Path)
 		mu.Unlock()
@@ -361,6 +428,9 @@ func TestInvoiceRefusesABadMethodFromBTCPay(t *testing.T) {
 	var paths []string
 	var mu sync.Mutex
 	serveRaw(t, func(w http.ResponseWriter, r *http.Request) {
+		if emptyList(w, r) {
+			return
+		}
 		mu.Lock()
 		paths = append(paths, r.Method+" "+r.URL.Path)
 		mu.Unlock()
@@ -384,6 +454,9 @@ func TestInvoiceRefusesABadMethodFromBTCPay(t *testing.T) {
 func TestAddressWaitHoldsWithSlowReads(t *testing.T) {
 	quickWait(t, 500*time.Millisecond)
 	serveRaw(t, func(w http.ResponseWriter, r *http.Request) {
+		if emptyList(w, r) {
+			return
+		}
 		if r.Method == "POST" {
 			fmt.Fprint(w, `{"id":"INV00001"}`)
 			return
@@ -399,5 +472,212 @@ func TestAddressWaitHoldsWithSlowReads(t *testing.T) {
 	code, _ := invoice(t, "supporter")
 	if took := time.Since(t0); code != 502 || took > 1500*time.Millisecond {
 		t.Fatalf("code %d after %v, the wait is 500ms", code, took)
+	}
+}
+
+func invoiceAgain(t *testing.T, tier, again string) (int, map[string]any) {
+	t.Helper()
+	body := fmt.Sprintf(`{"tier":%q,"again":%q}`, tier, again)
+	w := httptest.NewRecorder()
+	handleInvoice(w, httptest.NewRequest("POST", "/invoice", strings.NewReader(body)))
+	var m map[string]any
+	_ = json.Unmarshal(w.Body.Bytes(), &m)
+	return w.Code, m
+}
+
+// room for more invoices than the guard allows, so the guard is what stops them
+func roomyBucket() { invoices = &bucket{tokens: 100, max: 100, perSec: 1, last: time.Now()} }
+
+// a phone that comes back with its open invoice gets that one, and no new address
+func TestReuseHandsBackTheSameInvoice(t *testing.T) {
+	f := &fakeBTCPay{}
+	setup(t, f)
+	_, first := invoice(t, "patron")
+	id, _ := first["id"].(string)
+	invoices = newBucket(1)
+	invoices.tokens = 0
+	code, again := invoiceAgain(t, "patron", id)
+	if code != 200 || again["id"] != id || again["address"] != first["address"] || again["btc"] != first["btc"] {
+		t.Fatalf("code=%d %v, want %v back", code, again, first)
+	}
+	if left, _ := again["expiresIn"].(float64); left < 3500 || left > 3600 {
+		t.Fatalf("expiresIn %v", again["expiresIn"])
+	}
+	if f.made != 1 {
+		t.Fatalf("made %d invoices, the second ask was the same phone", f.made)
+	}
+}
+
+// an invoice goes only to whoever names it: a phone without the id gets its own
+func TestNoReuseAcrossPhones(t *testing.T) {
+	f := &fakeBTCPay{}
+	setup(t, f)
+	_, a := invoice(t, "supporter")
+	_, b := invoice(t, "supporter")
+	if a["id"] == b["id"] || a["id"] == nil || f.made != 2 {
+		t.Fatalf("a second phone got %v, the first %v", b["id"], a["id"])
+	}
+	// an id nobody was given, or one for another tier, is not handed out either
+	_, c := invoiceAgain(t, "supporter", "NOSUCHINVOICE1")
+	_, d := invoiceAgain(t, "guardian", a["id"].(string))
+	if c["id"] == a["id"] || d["id"] == a["id"] || f.made != 4 {
+		t.Fatalf("handed back %v and %v, made %d", c["id"], d["id"], f.made)
+	}
+	if d["tier"] != "guardian" {
+		t.Fatalf("tier %v", d["tier"])
+	}
+	// a malformed id is ignored and a fresh invoice made
+	if code, e := invoiceAgain(t, "supporter", "../x"); code != 200 || e["id"] == a["id"] {
+		t.Fatalf("code=%d %v", code, e)
+	}
+}
+
+// an invoice that expired, took money, or is about to run out is never handed back
+func TestExpiredInvoiceIsNeverHandedBack(t *testing.T) {
+	cases := []func(i *fakeInv){
+		func(i *fakeInv) { i.Status = "Expired" },
+		func(i *fakeInv) { i.Status = "Invalid" },
+		func(i *fakeInv) { i.Status = "Processing" },
+		func(i *fakeInv) { i.Status = "Settled" },
+		func(i *fakeInv) { i.Additional = "PaidPartial" },
+		// still new to btcpay, but past its time or too close to it
+		func(i *fakeInv) { i.Expiration = time.Now().Add(-time.Minute).Unix() },
+		func(i *fakeInv) { i.Expiration = time.Now().Add(5 * time.Minute).Unix() },
+		// not one this service made for that tier
+		func(i *fakeInv) { i.Amount = "1.00" },
+	}
+	for n, change := range cases {
+		f := &fakeBTCPay{}
+		setup(t, f)
+		_, first := invoice(t, "supporter")
+		id := first["id"].(string)
+		change(f.find(id))
+		code, again := invoiceAgain(t, "supporter", id)
+		if code != 200 || again["id"] == id || f.made != 2 {
+			t.Fatalf("case %d: code=%d got %v back, made %d", n, code, again["id"], f.made)
+		}
+	}
+}
+
+// at the limit no invoice is made, a phone's own is still handed back, and a
+// payment opens it again
+func TestGapGuardTripsAndRecovers(t *testing.T) {
+	f := &fakeBTCPay{}
+	setup(t, f)
+	roomyBucket()
+	var ids []string
+	for i := 0; i < gapLimit; i++ {
+		code, m := invoice(t, "supporter")
+		if code != 200 {
+			t.Fatalf("invoice %d: %d", i+1, code)
+		}
+		ids = append(ids, m["id"].(string))
+	}
+	if code, _ := invoice(t, "supporter"); code != http.StatusTooManyRequests {
+		t.Fatalf("invoice %d: %d, want 429", gapLimit+1, code)
+	}
+	if f.made != gapLimit {
+		t.Fatalf("made %d, the limit is %d", f.made, gapLimit)
+	}
+	// held, a returning phone still gets its own
+	if code, m := invoiceAgain(t, "supporter", ids[3]); code != 200 || m["id"] != ids[3] {
+		t.Fatalf("held, reuse got code=%d %v", code, m["id"])
+	}
+	// held stays held without asking btcpay on every tap
+	lists := f.lists
+	for i := 0; i < 5; i++ {
+		invoice(t, "supporter")
+	}
+	if f.lists != lists || f.made != gapLimit {
+		t.Fatalf("held: %d list reads, %d made", f.lists-lists, f.made)
+	}
+	// time alone does not reopen it: the unpaid ones are still there
+	gap.checked = time.Now().Add(-gapRecheck)
+	if code, _ := invoice(t, "supporter"); code != http.StatusTooManyRequests {
+		t.Fatalf("reopened with nothing paid: %d", code)
+	}
+	// someone pays the tenth: five unpaid after it, room again
+	f.find(ids[9]).Status = "Settled"
+	gap.checked = time.Now().Add(-gapRecheck)
+	if code, _ := invoice(t, "supporter"); code != 200 {
+		t.Fatalf("after a payment: %d, want 200", code)
+	}
+	if f.made != gapLimit+1 {
+		t.Fatalf("made %d", f.made)
+	}
+}
+
+// a payment seen but not yet in a block, or money sent late, counts as paid
+func TestGapGuardCountsSeenAndLatePayments(t *testing.T) {
+	for _, change := range []func(i *fakeInv){
+		func(i *fakeInv) { i.Status = "Processing" },
+		func(i *fakeInv) { i.Status, i.Additional = "Expired", "PaidLate" },
+	} {
+		f := &fakeBTCPay{}
+		setup(t, f)
+		roomyBucket()
+		for i := 0; i < gapLimit; i++ {
+			invoice(t, "supporter")
+		}
+		change(f.invs[gapLimit-1])
+		gap.checked = time.Now().Add(-gapRecheck)
+		if code, _ := invoice(t, "supporter"); code != 200 {
+			t.Fatalf("code %d", code)
+		}
+	}
+}
+
+// invoices before the baseline are not counted
+func TestGapGuardBaseline(t *testing.T) {
+	f := &fakeBTCPay{}
+	setup(t, f)
+	roomyBucket()
+	for i := 0; i < gapLimit; i++ {
+		invoice(t, "supporter")
+	}
+	gapSince = time.Unix(f.invs[gapLimit-1].Created, 0)
+	gap.checked = time.Now().Add(-gapRecheck)
+	if code, _ := invoice(t, "supporter"); code != 200 {
+		t.Fatalf("code %d, one unpaid since the baseline", code)
+	}
+}
+
+// no count, no invoice: an address is never made blind
+func TestGapGuardFailsClosed(t *testing.T) {
+	f := &fakeBTCPay{listDown: true}
+	setup(t, f)
+	if code, _ := invoice(t, "supporter"); code != 502 || f.made != 0 {
+		t.Fatalf("code %d, made %d", code, f.made)
+	}
+	// once the list answers, invoices are made again
+	f.listDown = false
+	if code, _ := invoice(t, "supporter"); code != 200 || f.made != 1 {
+		t.Fatalf("code %d, made %d", code, f.made)
+	}
+}
+
+// asks at once while the list is stale still stop at the limit
+func TestGapGuardHoldsUnderConcurrentAsks(t *testing.T) {
+	f := &fakeBTCPay{}
+	setup(t, f)
+	roomyBucket()
+	var wg sync.WaitGroup
+	for i := 0; i < 3*gapLimit; i++ {
+		wg.Add(1)
+		go func() { defer wg.Done(); invoice(t, "supporter") }()
+	}
+	wg.Wait()
+	if f.made != gapLimit {
+		t.Fatalf("made %d at once, the limit is %d", f.made, gapLimit)
+	}
+}
+
+// the limit leaves room under the 20 a wallet looks ahead
+func TestGapLimitFitsWallets(t *testing.T) {
+	if gapLimit < 1 || gapLimit > 18 {
+		t.Fatalf("gapLimit %d", gapLimit)
+	}
+	if reopenMinLeft >= invoiceMinutes*time.Minute {
+		t.Fatalf("reopenMinLeft %v", reopenMinLeft)
 	}
 }

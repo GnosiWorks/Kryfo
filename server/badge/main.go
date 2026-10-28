@@ -19,6 +19,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"sync"
 	"time"
@@ -121,7 +122,8 @@ func main() {
 	http.HandleFunc("/invoice", handleInvoice)
 	http.HandleFunc("/receipt", handleReceipt)
 
-	log.Printf("halo badge service on %s, %d invoices an hour", listen, perHour)
+	log.Printf("halo badge service on %s, %d invoices an hour, %d unpaid in a row at most",
+		listen, perHour, gapLimit)
 	// timeouts, so a client that opens a connection and says nothing does
 	// not hold it for ever
 	srv := &http.Server{
@@ -152,14 +154,17 @@ func loadOrCreateKey() {
 		"invalidates every badge you've ever issued", keyPath)
 }
 
-// POST /invoice {"tier":"supporter"} -> {id, tier, usd, address, btc, uri, expiresIn}
+// POST /invoice {"tier":"supporter", "again":"<id>"} -> {id, tier, usd, address, btc, uri, expiresIn}
+// again is optional: the phone's own open invoice, handed back while it can
+// still be paid, so a donor who comes back costs no new address
 func handleInvoice(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "post only", 405)
 		return
 	}
 	var req struct {
-		Tier string `json:"tier"`
+		Tier  string `json:"tier"`
+		Again string `json:"again"`
 	}
 	if err := json.NewDecoder(io.LimitReader(r.Body, 1<<12)).Decode(&req); err != nil {
 		http.Error(w, "bad json", 400)
@@ -170,12 +175,36 @@ func handleInvoice(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "unknown tier", 400)
 		return
 	}
+	if req.Again != "" && invoiceID.MatchString(req.Again) {
+		// a read like a receipt check, so it spends from that allowance
+		if !receipts.take(time.Now()) {
+			http.Error(w, "busy, try again later", http.StatusTooManyRequests)
+			return
+		}
+		if out, ok := reopen(req.Again, req.Tier); ok {
+			writeJSON(w, out)
+			return
+		}
+	}
 	// after the tier check, so a malformed request costs nothing
 	if !invoices.take(time.Now()) {
 		log.Printf("invoice refused: over %d an hour", perHour)
 		http.Error(w, "busy, try again later", http.StatusTooManyRequests)
 		return
 	}
+	// a wallet restored from seed looks only so far past its last paid
+	// address. no more unpaid ones than that in a row
+	ok, err := gap.reserve(time.Now())
+	if err != nil {
+		log.Printf("invoice refused: cannot count unpaid invoices: %v", err)
+		http.Error(w, "upstream", 502)
+		return
+	}
+	if !ok {
+		http.Error(w, "busy, try again later", http.StatusTooManyRequests)
+		return
+	}
+	defer gap.done()
 
 	body, _ := json.Marshal(map[string]any{
 		"amount":   fmt.Sprintf("%.2f", amount),
@@ -227,18 +256,172 @@ func handleInvoice(w http.ResponseWriter, r *http.Request) {
 	if inv.Expiration > 0 {
 		left = inv.Expiration - time.Now().Unix()
 	}
+	writeJSON(w, invoiceAnswer(inv.ID, req.Tier, addr, btcAmt, left))
+}
 
-	// btcpay's checkout link is not passed on: the app draws its own qr, and
-	// the link names wherever btcpay is hosted
-	writeJSON(w, map[string]any{
-		"id":        inv.ID,
-		"tier":      req.Tier,
-		"usd":       amount,
+// btcpay's checkout link is not passed on: the app draws its own qr, and
+// the link names wherever btcpay is hosted
+func invoiceAnswer(id, tier, addr, btc string, left int64) map[string]any {
+	return map[string]any{
+		"id":        id,
+		"tier":      tier,
+		"usd":       tiers[tier],
 		"address":   addr,
-		"btc":       btcAmt,
-		"uri":       "bitcoin:" + addr + "?amount=" + btcAmt,
+		"btc":       btc,
+		"uri":       "bitcoin:" + addr + "?amount=" + btc,
 		"expiresIn": left,
-	})
+	}
+}
+
+// an invoice handed back needs this much time left to be paid in
+const reopenMinLeft = 10 * time.Minute
+
+// the phone's own invoice again, only while nothing was paid into it and
+// there is time to pay. anything else gets a new one
+func reopen(id, tier string) (map[string]any, bool) {
+	resp, err := btcpay("GET", "/api/v1/stores/"+storeID+"/invoices/"+id, nil)
+	if err != nil {
+		return nil, false
+	}
+	var inv struct {
+		ID               string `json:"id"`
+		Status           string `json:"status"`
+		AdditionalStatus string `json:"additionalStatus"`
+		Amount           string `json:"amount"`
+		Currency         string `json:"currency"`
+		Expiration       int64  `json:"expirationTime"`
+		Metadata         struct {
+			Tier string `json:"tier"`
+		} `json:"metadata"`
+	}
+	if json.Unmarshal(resp, &inv) != nil || inv.ID != id {
+		return nil, false
+	}
+	left := inv.Expiration - time.Now().Unix()
+	if inv.Status != "New" || touched(inv.AdditionalStatus) ||
+		earned(inv.Metadata.Tier, inv.Amount, inv.Currency) != tier ||
+		left < int64(reopenMinLeft/time.Second) {
+		return nil, false
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), addrWait)
+	defer cancel()
+	pm, err := paymentDetails(ctx, id)
+	if err != nil || pm.Destination == "" {
+		return nil, false
+	}
+	return invoiceAnswer(id, tier, pm.Destination, pm.amount(), left), true
+}
+
+// some money reached the invoice's address, early, late or short
+func touched(additional string) bool {
+	switch additional {
+	case "PaidPartial", "PaidLate", "PaidOver":
+		return true
+	}
+	return false
+}
+
+// unpaid invoices in a row the guard allows. every invoice takes the next
+// address, and a wallet restored from seed stops looking 20 past the last
+// one paid. 15 leaves room for addresses made outside this service
+var gapLimit = envInt("BADGE_GAP_LIMIT", 15)
+
+// invoices made before this time are not counted, for when the wallet is
+// known to see up to there (RFC 3339, empty for all)
+var gapSince = envTime("BADGE_GAP_SINCE")
+
+// how long a count from btcpay is trusted, so a refusal does not ask again
+// on every tap and a payment reopens it within minutes
+var gapRecheck = 2 * time.Minute
+
+func envTime(k string) time.Time {
+	t, err := time.Parse(time.RFC3339, os.Getenv(k))
+	if err != nil {
+		return time.Time{}
+	}
+	return t
+}
+
+// counts the unpaid invoices since the last paid one and refuses new
+// ones at the limit
+type gapGuard struct {
+	mu      sync.Mutex
+	unpaid  int
+	checked time.Time
+	// invoices asked for and not yet answered: not in btcpay's list yet
+	inflight int
+	held     bool
+}
+
+var gap = &gapGuard{}
+
+func (g *gapGuard) reserve(now time.Time) (bool, error) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if g.checked.IsZero() || now.Sub(g.checked) >= gapRecheck {
+		n, err := unpaidInARow(gapLimit)
+		if err != nil {
+			return false, err
+		}
+		g.unpaid, g.checked = n+g.inflight, now
+	}
+	if g.unpaid >= gapLimit {
+		if !g.held {
+			log.Printf("invoices held: %d unpaid in a row, the limit is %d", g.unpaid, gapLimit)
+		}
+		g.held = true
+		return false, nil
+	}
+	if g.held {
+		log.Printf("invoices open again: %d unpaid in a row", g.unpaid)
+	}
+	g.held = false
+	g.unpaid++
+	g.inflight++
+	return true, nil
+}
+
+func (g *gapGuard) done() {
+	g.mu.Lock()
+	g.inflight--
+	g.mu.Unlock()
+}
+
+// the store's newest invoices, counted back to the newest one money went
+// to. archived ones are counted too: they hold an address all the same
+func unpaidInARow(limit int) (int, error) {
+	take := limit
+	if take < 1 {
+		take = 1
+	}
+	if take > 500 {
+		take = 500
+	}
+	resp, err := btcpay("GET", "/api/v1/stores/"+storeID+"/invoices?includeArchived=true&take="+
+		strconv.Itoa(take), nil)
+	if err != nil {
+		return 0, err
+	}
+	var list []struct {
+		Created          int64  `json:"createdTime"`
+		Status           string `json:"status"`
+		AdditionalStatus string `json:"additionalStatus"`
+	}
+	if err := json.Unmarshal(resp, &list); err != nil {
+		return 0, err
+	}
+	sort.SliceStable(list, func(i, j int) bool { return list[i].Created > list[j].Created })
+	n := 0
+	for _, inv := range list {
+		if !gapSince.IsZero() && inv.Created < gapSince.Unix() {
+			break
+		}
+		if paid(inv.Status) || inv.Status == "Processing" || touched(inv.AdditionalStatus) {
+			break
+		}
+		n++
+	}
+	return n, nil
 }
 
 // how long an invoice stays open, and how far under the amount still
