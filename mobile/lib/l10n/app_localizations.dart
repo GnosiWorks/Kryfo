@@ -1982,7 +1982,7 @@ abstract class AppLocalizations {
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Too long for a message · 15 MB max'**
+  /// **'Too long for a message · 50 MB max'**
   String get cameraTooLongForA;
 
   /// screens/camera_screen.dart
@@ -3674,6 +3674,66 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'Show the address'**
+  String get donateShowTheAddress;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} in bitcoin'**
+  String donateReviewAmount(String amount);
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'What the badge gives'**
+  String get donateWhatTheBadgeGives;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'A mark by your name. You choose who sees it, if anyone.'**
+  String get donateGivesMark;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'A signed receipt kept on this phone. It proves the badge with no account.'**
+  String get donateGivesReceipt;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Every privacy feature stays free, badge or not.'**
+  String get donateGivesFree;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'The address is made when you tap below. It stays yours for an hour, so coming back gives you the same one.'**
+  String get donateAddressOnTap;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Bitcoin is busy right now. Try again later or pay by card.'**
+  String get donateBitcoinBusy;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'You can still send bitcoin to the address below. It gives no badge.'**
+  String get donateBusyPlainAddress;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'This is the address you opened earlier. If you already sent, wait here.'**
+  String get donateSameAddressAgain;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'Reaching the payment service over Tor…'**
   String get donateReachingThePaymentService;
 
@@ -3808,6 +3868,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{tier, select, supporter{Verified on-chain. You\'re a supporter now. No one can take that off you.} patron{Verified on-chain. You\'re a patron now. No one can take that off you.} guardian{Verified on-chain. You\'re a guardian now. No one can take that off you.} other{Verified on-chain. You\'re a supporter now. No one can take that off you.}}'**
   String donateVerifiedOnChainYou(String tier);
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'{tier, select, supporter{Verified on-chain. Thank you for giving again. You keep your supporter badge.} patron{Verified on-chain. Thank you for giving again. You keep your patron badge.} guardian{Verified on-chain. Thank you for giving again. You keep your guardian badge.} other{Verified on-chain. Thank you for giving again. You keep your supporter badge.}}'**
+  String donateVerifiedBadgeStays(String tier);
 
   /// screens/donate_screen.dart
   ///
@@ -15076,6 +15142,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Set a screen lock on your phone so this protection holds when it is locked.'**
   String get keyLineScreenLock;
+
+  /// chat and group: toast when the files service has no room for a big file right now. calm, says to try later
+  ///
+  /// In en, this message translates to:
+  /// **'The file server is full for now. Try again a little later.'**
+  String get fileServerTryLater;
+
+  /// chat and group: toast when a picked file is over what an older Kryfo in the chat takes. size and max are like 30.2 mb and 15.0 mb
+  ///
+  /// In en, this message translates to:
+  /// **'This file is {size}. This chat takes files up to {max} until everyone in it updates Kryfo.'**
+  String fileTooBigUntilUpdate(String size, String max);
+
+  /// chat and group: toast when this phone has sent its day of big files through the files service. calm, says when it works again
+  ///
+  /// In en, this message translates to:
+  /// **'You have sent a lot of big files today. Try again tomorrow.'**
+  String get fileDayLimit;
+
+  /// the strip above the composer while a big file is made ready to go through the files service, before any of it is sent
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing · keep the app open'**
+  String get mediaProgressPreparing;
 
   /// screens/group_info_screen.dart: the admin's switch while it is off: what it does
   ///

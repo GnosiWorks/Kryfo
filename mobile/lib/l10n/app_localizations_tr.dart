@@ -1245,7 +1245,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cameraCouldNotSaveA => 'Bu telefona kopya kaydedilemedi';
 
   @override
-  String get cameraTooLongForA => 'Mesaj için çok uzun · en fazla 15 MB';
+  String get cameraTooLongForA => 'Mesaj için çok uzun · en fazla 50 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Fotoğraflarına asla kaydedilmez';
@@ -2280,6 +2280,45 @@ class AppLocalizationsTr extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Rozet için en az 20 \$';
 
   @override
+  String get donateShowTheAddress => 'Adresi göster';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return 'Bitcoin ile $amount';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Rozet sana ne verir';
+
+  @override
+  String get donateGivesMark =>
+      'Adının yanında bir işaret. Kimin göreceğini, hatta görüp görmeyeceğini sen seçersin.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Bu telefonda saklanan imzalı bir makbuz. Rozeti hesap olmadan kanıtlar.';
+
+  @override
+  String get donateGivesFree =>
+      'Tüm gizlilik özellikleri rozetli de rozetsiz de ücretsiz kalır.';
+
+  @override
+  String get donateAddressOnTap =>
+      'Adres, aşağıya dokunduğunda oluşur. Bir saat boyunca senindir, geri dönersen aynısını alırsın.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin şu an yoğun. Daha sonra tekrar dene ya da kartla öde.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Aşağıdaki adrese yine de bitcoin gönderebilirsin. Rozet vermez.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Bu, daha önce açtığın adres. Zaten gönderdiysen burada bekle.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Ödeme servisine Tor üzerinden ulaşılıyor…';
 
@@ -2371,6 +2410,21 @@ class AppLocalizationsTr extends AppLocalizations {
           'Zincirde doğrulandı. Artık bir koruyucusun. Bunu kimse elinden alamaz.',
       'other':
           'Zincirde doğrulandı. Artık bir destekçisin. Bunu kimse elinden alamaz.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Zincirde doğrulandı. Yeniden destek verdiğin için teşekkürler. Destekçi rozetin seninle kalıyor.',
+      'patron':
+          'Zincirde doğrulandı. Yeniden destek verdiğin için teşekkürler. Hami rozetin seninle kalıyor.',
+      'guardian':
+          'Zincirde doğrulandı. Yeniden destek verdiğin için teşekkürler. Koruyucu rozetin seninle kalıyor.',
+      'other':
+          'Zincirde doğrulandı. Yeniden destek verdiğin için teşekkürler. Destekçi rozetin seninle kalıyor.',
     });
     return '$_temp0';
   }
@@ -9361,6 +9415,22 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Telefonuna bir ekran kilidi koy ki bu koruma telefon kilitliyken de sürsün.';
+
+  @override
+  String get fileServerTryLater =>
+      'Dosya sunucusu şu an dolu. Biraz sonra tekrar dene.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Bu dosya $size. Herkes Kryfo\'yu güncelleyene kadar bu sohbette dosyalar en fazla $max olabilir.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'Bugün çok sayıda büyük dosya gönderdin. Yarın tekrar dene.';
+
+  @override
+  String get mediaProgressPreparing => 'Hazırlanıyor · uygulamayı açık tut';
 
   @override
   String get groupShotsBlocksAll =>

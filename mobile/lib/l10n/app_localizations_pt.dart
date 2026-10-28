@@ -1254,7 +1254,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Não foi possível salvar uma cópia neste celular';
 
   @override
-  String get cameraTooLongForA => 'Longo demais para uma mensagem · máx. 15 MB';
+  String get cameraTooLongForA => 'Longo demais para uma mensagem · máx. 50 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Nunca salvo nas suas fotos';
@@ -2298,6 +2298,45 @@ class AppLocalizationsPt extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Selos a partir de US\$ 20';
 
   @override
+  String get donateShowTheAddress => 'Mostrar o endereço';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount em bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'O que o selo traz';
+
+  @override
+  String get donateGivesMark =>
+      'Uma marca ao lado do seu nome. Você escolhe quem a vê, se alguém.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Um recibo assinado guardado neste telefone. Ele comprova o selo sem nenhuma conta.';
+
+  @override
+  String get donateGivesFree =>
+      'Todos os recursos de privacidade continuam gratuitos, com selo ou sem.';
+
+  @override
+  String get donateAddressOnTap =>
+      'O endereço é criado quando você toca abaixo. Ele fica seu por uma hora, então ao voltar você recebe o mesmo.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'O Bitcoin está sobrecarregado agora. Tente mais tarde ou pague com cartão.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Você ainda pode enviar bitcoin para o endereço abaixo. Ele não dá selo.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Este é o endereço que você abriu antes. Se já enviou, espere aqui.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Acessando o serviço de pagamento pelo Tor…';
 
@@ -2390,6 +2429,21 @@ class AppLocalizationsPt extends AppLocalizations {
           'Verificado na blockchain. Agora você é guardião. Ninguém pode tirar isso de você.',
       'other':
           'Verificado na blockchain. Agora você é apoiador. Ninguém pode tirar isso de você.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Verificado na blockchain. Obrigado por contribuir de novo. Você continua com seu selo de apoiador.',
+      'patron':
+          'Verificado na blockchain. Obrigado por contribuir de novo. Você continua com seu selo de mecenas.',
+      'guardian':
+          'Verificado na blockchain. Obrigado por contribuir de novo. Você continua com seu selo de guardião.',
+      'other':
+          'Verificado na blockchain. Obrigado por contribuir de novo. Você continua com seu selo de apoiador.',
     });
     return '$_temp0';
   }
@@ -9408,6 +9462,22 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Ative um bloqueio de tela no celular para que esta proteção valha também quando ele estiver bloqueado.';
+
+  @override
+  String get fileServerTryLater =>
+      'O servidor de arquivos está cheio agora. Tente de novo daqui a pouco.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Este arquivo tem $size. Nesta conversa os arquivos podem ter até $max até que todos atualizem o Kryfo.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'Você já enviou muitos arquivos grandes hoje. Tente de novo amanhã.';
+
+  @override
+  String get mediaProgressPreparing => 'Preparando · mantenha o app aberto';
 
   @override
   String get groupShotsBlocksAll =>

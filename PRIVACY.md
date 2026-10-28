@@ -14,6 +14,8 @@ backups are files you make and control. they are encrypted with a passphrase onl
 
 to deliver a message, Kryfo routes it through tor and, when the other person is offline, leaves it in an encrypted mailbox on nostr relays: a few public ones and ours in private mode, only our two in fast mode. relays only ever hold sealed, encrypted data. they do not hold your contact list or a record of your account, because no such account exists. messages from 0.5.2 on are padded to one of five sizes, so a relay sees roughly how big a message is, not how long. how many you send and when still shows.
 
+photos, videos, voice notes and files bigger than one message go through our files service, when everyone in the chat has a version that fetches from it. your phone seals the file with a key of its own before it leaves, and the key travels only inside the end-to-end encrypted message. the service holds sealed bytes it cannot open, reached over tor on every route, so it never sees your ip. it knows a file's id, its size rounded up, how many recipients it has and when it went up and came down. nothing in an upload is yours: no key, no account, no day, so two files from you share nothing it can see. each new upload costs your phone a little work instead, more while the service is busy, and never more than a minute of it. each recipient tells the service when it has the file, and once all have, the file goes. only its random id, a hash of a random token only your phone holds, and the day stay until the week is up, so the same message sent again from your phone does not upload it again. nothing stays longer than a week. how many big files you send in a day is counted on your phone, not on our server.
+
 your ip is hidden behind tor on the default private mode. fast mode skips tor to go quicker. it connects straight to our two relays, run at two different hosting companies, which then see your ip for that connection and write nothing down. each message goes to both, so one can stop without messages stopping. only if both are down does fast mode read and send through public relays, and then only through tor, so they never see your ip. fast mode is off by default and labeled where you turn it on. relay mode was merged into it.
 
 ## typing
@@ -80,7 +82,7 @@ google sees that this install uses Kryfo, when it is woken, and your phone's IP 
 
 ## third parties
 
-Kryfo talks to tor relays and nostr relays, to your helper app's server if you choose the helper app mode, to google and our push gateway if you choose google push, to the tor project when you ask it for bridges, and, while a bridge is in use, to that bridge and what it needs: snowflake volunteers, public stun servers and the cdn in front of the tor project. we share nothing with them, and we have no data to sell, rent or trade.
+Kryfo talks to tor relays and nostr relays, to our files service for big files, to your helper app's server if you choose the helper app mode, to google and our push gateway if you choose google push, to the tor project when you ask it for bridges, and, while a bridge is in use, to that bridge and what it needs: snowflake volunteers, public stun servers and the cdn in front of the tor project. we share nothing with them, and we have no data to sell, rent or trade.
 
 ## law enforcement and data requests
 

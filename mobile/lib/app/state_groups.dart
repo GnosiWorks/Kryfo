@@ -598,6 +598,47 @@ extension AppStateGroups on AppState {
     ];
     if (go.isEmpty) return owed == null ? 'error: held' : 'later';
 
+    // more than a slice to a group whose phones all fetch from the files
+    // service: up once for everyone it goes to, and one frame to each with
+    // a token of its own put in as it goes. a room's files stay in slices
+    DropSent? drop;
+    var marker = '';
+    if (room == null && await _dropSize(path) && await dropsForGroup(groupId)) {
+      if (fileName == null && !voice && await cleanSavedPhoto(path) == null) {
+        return 'error: not clean';
+      }
+      if (owed == null) {
+        mediaProgressStart(msgUid, chatKey: d.container.chatKey(groupId));
+      }
+      final (sent, r) = await sendDrop(
+        path: path,
+        uid: msgUid,
+        members: to,
+        progress: owed == null,
+      );
+      if (mediaCancelled.contains(msgUid) || r == 'error: cancelled') {
+        mediaProgressEnd(msgUid);
+        return 'cancelled';
+      }
+      if (sent != null) {
+        drop = sent;
+        marker = 'tok${newMsgUid()}';
+      } else if (!dropFallsBack(r) ||
+          await File(path).length() > kOldFileBytes) {
+        mediaProgressEnd(msgUid);
+        return 'error: drop ${r.replaceFirst('error: ', '')}';
+      } else {
+        dlog('grp media $msgUid: the files service said $r, going as slices');
+      }
+    }
+    // a phone that takes slices only takes so many of a file
+    if (drop == null &&
+        fileName != null &&
+        !voice &&
+        await mediaSliceCount(path) > kMaxFileSlices) {
+      return 'error: big';
+    }
+
     // 16k slices. bigger sizes trip nip-44's 65535 plaintext ceiling once
     // base64'd + double-wrapped (envelope + signal + gift wrap ~= x2.4), and
     // public relays reject the event. 16k lands ~38-51k, safe on every relay.
@@ -634,14 +675,16 @@ extension AppStateGroups on AppState {
         }
         groupOwedTick.value++;
       },
-      photo: fileName == null && !voice,
+      photo: drop == null && fileName == null && !voice,
+      single: drop != null,
       wrap: (slice, i, total) async {
         final (ids, parts) = await roster();
         return wrapMessage(
           caption,
           msgUid: msgUid,
-          imageB64: fileName == null && !voice ? slice : null,
-          fileB64: fileName != null || voice ? slice : null,
+          imageB64: drop == null && fileName == null && !voice ? slice : null,
+          fileB64: drop == null && (fileName != null || voice) ? slice : null,
+          drop: drop?.frame.withToken(marker),
           fileName: fileName,
           voice: voice,
           voiceDisguised: voiceDisguised,
@@ -660,8 +703,23 @@ extension AppStateGroups on AppState {
           writtenAt: written,
         );
       },
-      deliver: (m, wrapped) => _sendGroupEnvelope(groupId, m, wrapped),
+      deliver: (m, wrapped) => _sendGroupEnvelope(
+        groupId,
+        m,
+        drop == null
+            ? wrapped
+            : withMemberToken(wrapped, marker, drop.tokens[m]),
+      ),
     );
+  }
+
+  // worth the files service: more than one slice, not past its size
+  Future<bool> _dropSize(String path) async {
+    try {
+      return dropFits(await File(path).length());
+    } catch (_) {
+      return false;
+    }
   }
 
   // shared pin: everyone in the group sees the same pins
@@ -905,6 +963,8 @@ extension AppStateGroups on AppState {
     // a file still going, to everyone or to the members it missed, stops
     // before its row and its file go, and what they were owed goes too
     if (mediaInflight.contains(targetMsgUid)) cancelMediaSend(targetMsgUid);
+    // up on the files service already: it comes down with the row
+    await takeDropBackOf(targetMsgUid);
     await session.deleteMessage(targetMsgUid);
     groupOwedTick.value++;
     // a quiet session keeps it on this phone: nothing leaves

@@ -148,7 +148,7 @@ class HaloDb
     _db = await openDatabase(
       path,
       password: pw,
-      version: 89,
+      version: 90,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -321,6 +321,7 @@ class HaloDb
         await _pinsTable(db);
         await _framesTable(db);
         await _mediaWantsTable(db);
+        await dropFetchTable(db);
         await _heldTable(db);
         await _signalTables(db);
         await _pollTables(db);
@@ -884,6 +885,11 @@ class HaloDb
         if (oldV < 89) {
           // a group's screenshot block (group_shots.dart)
           await groupShotsColumns(db);
+        }
+        if (oldV < 90) {
+          // the files on their way in from the files service, and the ids
+          // of the ones already here (file_drop.dart)
+          await dropFetchTable(db);
         }
       },
     );

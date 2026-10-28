@@ -114,6 +114,7 @@ Map<String, _Table> _appSchema() {
   final tables = <String, _Table>{};
   for (final f in const [
     'lib/app/database.dart',
+    'lib/file_drop.dart',
     'lib/router.dart',
     'lib/devchat/dev_chat.dart',
     'lib/devchat/support.dart',

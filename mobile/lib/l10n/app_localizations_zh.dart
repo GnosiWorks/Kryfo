@@ -1190,7 +1190,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cameraCouldNotSaveA => '无法在这部手机上保存副本';
 
   @override
-  String get cameraTooLongForA => '太长，无法作为消息发送 · 最大 15 MB';
+  String get cameraTooLongForA => '太长，无法作为消息发送 · 最大 50 MB';
 
   @override
   String get cameraNeverSavedToYour => '不会保存到你的相册';
@@ -2182,6 +2182,38 @@ class AppLocalizationsZh extends AppLocalizations {
   String get donateBadgesStartAt20 => '徽章 \$20 起';
 
   @override
+  String get donateShowTheAddress => '显示地址';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount，以 bitcoin 支付';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => '徽章能给你什么';
+
+  @override
+  String get donateGivesMark => '名字旁边的一个标记。给谁看、给不给人看，都由你决定。';
+
+  @override
+  String get donateGivesReceipt => '一张保存在这台手机上的签名收据。无需任何账号即可证明徽章。';
+
+  @override
+  String get donateGivesFree => '无论有没有徽章，所有隐私功能都一直免费。';
+
+  @override
+  String get donateAddressOnTap => '点下方按钮时才会生成地址。它在一小时内都归你，回来时还是同一个。';
+
+  @override
+  String get donateBitcoinBusy => 'Bitcoin 现在很忙。请稍后再试，或用银行卡支付。';
+
+  @override
+  String get donateBusyPlainAddress => '你仍然可以向下方地址发送 bitcoin，但不会获得徽章。';
+
+  @override
+  String get donateSameAddressAgain => '这是你之前打开的地址。如果已经发送，请在这里等待。';
+
+  @override
   String get donateReachingThePaymentService => '正在经由 Tor 连接支付服务…';
 
   @override
@@ -2265,6 +2297,17 @@ class AppLocalizationsZh extends AppLocalizations {
       'patron': '已在链上验证——你现在是赞助人了。谁也拿不走。',
       'guardian': '已在链上验证——你现在是守护者了。谁也拿不走。',
       'other': '已在链上验证——你现在是支持者了。谁也拿不走。',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '已在链上验证。感谢你再次支持。你的支持者徽章保持不变。',
+      'patron': '已在链上验证。感谢你再次支持。你的赞助人徽章保持不变。',
+      'guardian': '已在链上验证。感谢你再次支持。你的守护者徽章保持不变。',
+      'other': '已在链上验证。感谢你再次支持。你的支持者徽章保持不变。',
     });
     return '$_temp0';
   }
@@ -8904,6 +8947,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get keyLineScreenLock => '请为手机设置屏幕锁，这样手机锁定时这层保护依然有效。';
 
   @override
+  String get fileServerTryLater => '文件服务器暂时已满，请稍后再试。';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return '这个文件有 $size。在所有人更新 Kryfo 之前，这个聊天里的文件最大为 $max。';
+  }
+
+  @override
+  String get fileDayLimit => '你今天已经发送了很多大文件，请明天再试。';
+
+  @override
+  String get mediaProgressPreparing => '正在准备 · 请保持应用打开';
+
+  @override
   String get groupShotsBlocksAll =>
       '在这个群组的每部手机上禁止截屏和录屏，也禁止复制、转发或保存彼此的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
 
@@ -10489,7 +10546,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cameraCouldNotSaveA => '無法在這支手機上儲存副本';
 
   @override
-  String get cameraTooLongForA => '太長了，無法用訊息傳送 · 上限 15 MB';
+  String get cameraTooLongForA => '太長了，無法用訊息傳送 · 上限 50 MB';
 
   @override
   String get cameraNeverSavedToYour => '不會存到你的相簿';
@@ -11480,6 +11537,38 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get donateBadgesStartAt20 => '徽章從 \$20 起';
 
   @override
+  String get donateShowTheAddress => '顯示地址';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount，以 bitcoin 付款';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => '徽章能給你什麼';
+
+  @override
+  String get donateGivesMark => '名字旁的一個標記。給誰看、給不給人看，都由你決定。';
+
+  @override
+  String get donateGivesReceipt => '一張保存在這支手機上的簽名收據。不需任何帳號就能證明徽章。';
+
+  @override
+  String get donateGivesFree => '無論有沒有徽章，所有隱私功能都一直免費。';
+
+  @override
+  String get donateAddressOnTap => '點下方按鈕時才會產生地址。它在一小時內都屬於你，回來時還是同一個。';
+
+  @override
+  String get donateBitcoinBusy => 'Bitcoin 現在很忙。請稍後再試，或刷卡付款。';
+
+  @override
+  String get donateBusyPlainAddress => '你仍然可以向下方地址傳送 bitcoin，但不會獲得徽章。';
+
+  @override
+  String get donateSameAddressAgain => '這是你之前開啟的地址。如果已經傳送，請在這裡等候。';
+
+  @override
   String get donateReachingThePaymentService => '正在經由 Tor 連線到付款服務…';
 
   @override
@@ -11563,6 +11652,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       'patron': '已在鏈上驗證：你現在是贊助人了。沒有人能把這拿走。',
       'guardian': '已在鏈上驗證：你現在是守護者了。沒有人能把這拿走。',
       'other': '已在鏈上驗證：你現在是支持者了。沒有人能把這拿走。',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '已在鏈上驗證。感謝你再次支持。你的支持者徽章維持不變。',
+      'patron': '已在鏈上驗證。感謝你再次支持。你的贊助人徽章維持不變。',
+      'guardian': '已在鏈上驗證。感謝你再次支持。你的守護者徽章維持不變。',
+      'other': '已在鏈上驗證。感謝你再次支持。你的支持者徽章維持不變。',
     });
     return '$_temp0';
   }
@@ -18084,6 +18184,20 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get keyLineScreenLock => '請為手機設定螢幕鎖定，這樣手機鎖定時這層保護依然有效。';
+
+  @override
+  String get fileServerTryLater => '檔案伺服器暫時已滿，請稍後再試。';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return '這個檔案有 $size。在所有人更新 Kryfo 之前，這個聊天裡的檔案最大為 $max。';
+  }
+
+  @override
+  String get fileDayLimit => '你今天已經傳送了很多大檔案，請明天再試。';
+
+  @override
+  String get mediaProgressPreparing => '正在準備 · 請保持 App 開啟';
 
   @override
   String get groupShotsBlocksAll =>

@@ -1233,7 +1233,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không lưu được bản sao trên điện thoại này';
 
   @override
-  String get cameraTooLongForA => 'Quá dài cho một tin nhắn · tối đa 15 MB';
+  String get cameraTooLongForA => 'Quá dài cho một tin nhắn · tối đa 50 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Không bao giờ lưu vào thư viện ảnh';
@@ -2269,6 +2269,45 @@ class AppLocalizationsVi extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Huy hiệu từ \$20';
 
   @override
+  String get donateShowTheAddress => 'Hiện địa chỉ';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount bằng bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Huy hiệu mang lại gì';
+
+  @override
+  String get donateGivesMark =>
+      'Một dấu bên cạnh tên bạn. Bạn chọn ai được thấy, hoặc không ai cả.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Một biên nhận có chữ ký lưu trên điện thoại này. Nó chứng minh huy hiệu mà không cần tài khoản.';
+
+  @override
+  String get donateGivesFree =>
+      'Mọi tính năng riêng tư vẫn miễn phí, dù có huy hiệu hay không.';
+
+  @override
+  String get donateAddressOnTap =>
+      'Địa chỉ chỉ được tạo khi bạn chạm vào bên dưới. Nó là của bạn trong một giờ, nên quay lại bạn vẫn nhận đúng địa chỉ đó.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin đang bận. Hãy thử lại sau hoặc thanh toán bằng thẻ.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Bạn vẫn có thể gửi bitcoin đến địa chỉ bên dưới. Địa chỉ này không mở huy hiệu.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Đây là địa chỉ bạn đã mở lúc trước. Nếu đã gửi rồi, hãy chờ ở đây.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Đang kết nối tới dịch vụ thanh toán qua Tor…';
 
@@ -2361,6 +2400,21 @@ class AppLocalizationsVi extends AppLocalizations {
           'Đã xác minh trên chuỗi. Giờ bạn là người bảo hộ. Không ai có thể lấy đi điều đó.',
       'other':
           'Đã xác minh trên chuỗi. Giờ bạn là người ủng hộ. Không ai có thể lấy đi điều đó.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu người ủng hộ.',
+      'patron':
+          'Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu nhà bảo trợ.',
+      'guardian':
+          'Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu người bảo hộ.',
+      'other':
+          'Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu người ủng hộ.',
     });
     return '$_temp0';
   }
@@ -9325,6 +9379,22 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Hãy đặt khóa màn hình cho điện thoại để lớp bảo vệ này vẫn giữ được khi máy bị khóa.';
+
+  @override
+  String get fileServerTryLater =>
+      'Máy chủ tệp đang đầy. Hãy thử lại sau một lúc.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Tệp này nặng $size. Trong cuộc trò chuyện này, tệp chỉ được tối đa $max cho đến khi mọi người cập nhật Kryfo.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'Hôm nay bạn đã gửi nhiều tệp lớn. Hãy thử lại vào ngày mai.';
+
+  @override
+  String get mediaProgressPreparing => 'Đang chuẩn bị · giữ ứng dụng mở';
 
   @override
   String get groupShotsBlocksAll =>

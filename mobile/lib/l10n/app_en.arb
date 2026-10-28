@@ -1536,7 +1536,7 @@
   "@cameraCouldNotSaveA": {
     "description": "screens/camera_screen.dart"
   },
-  "cameraTooLongForA": "Too long for a message · 15 MB max",
+  "cameraTooLongForA": "Too long for a message · 50 MB max",
   "@cameraTooLongForA": {
     "description": "screens/camera_screen.dart"
   },
@@ -2858,6 +2858,51 @@
   "@donateBadgesStartAt20": {
     "description": "screens/donate_screen.dart"
   },
+  "donateShowTheAddress": "Show the address",
+  "@donateShowTheAddress": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateReviewAmount": "{amount} in bitcoin",
+  "@donateReviewAmount": {
+    "description": "screens/donate_screen.dart",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "donateWhatTheBadgeGives": "What the badge gives",
+  "@donateWhatTheBadgeGives": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateGivesMark": "A mark by your name. You choose who sees it, if anyone.",
+  "@donateGivesMark": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateGivesReceipt": "A signed receipt kept on this phone. It proves the badge with no account.",
+  "@donateGivesReceipt": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateGivesFree": "Every privacy feature stays free, badge or not.",
+  "@donateGivesFree": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateAddressOnTap": "The address is made when you tap below. It stays yours for an hour, so coming back gives you the same one.",
+  "@donateAddressOnTap": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateBitcoinBusy": "Bitcoin is busy right now. Try again later or pay by card.",
+  "@donateBitcoinBusy": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateBusyPlainAddress": "You can still send bitcoin to the address below. It gives no badge.",
+  "@donateBusyPlainAddress": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateSameAddressAgain": "This is the address you opened earlier. If you already sent, wait here.",
+  "@donateSameAddressAgain": {
+    "description": "screens/donate_screen.dart"
+  },
   "donateReachingThePaymentService": "Reaching the payment service over Tor…",
   "@donateReachingThePaymentService": {
     "description": "screens/donate_screen.dart"
@@ -2964,6 +3009,15 @@
   "donateVerifiedOnChainYou": "{tier, select, supporter{Verified on-chain. You're a supporter now. No one can take that off you.} patron{Verified on-chain. You're a patron now. No one can take that off you.} guardian{Verified on-chain. You're a guardian now. No one can take that off you.} other{Verified on-chain. You're a supporter now. No one can take that off you.}}",
   "@donateVerifiedOnChainYou": {
     "description": "screens/donate_screen.dart. tier is the supporter tier",
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "donateVerifiedBadgeStays": "{tier, select, supporter{Verified on-chain. Thank you for giving again. You keep your supporter badge.} patron{Verified on-chain. Thank you for giving again. You keep your patron badge.} guardian{Verified on-chain. Thank you for giving again. You keep your guardian badge.} other{Verified on-chain. Thank you for giving again. You keep your supporter badge.}}",
+  "@donateVerifiedBadgeStays": {
+    "description": "screens/donate_screen.dart",
     "placeholders": {
       "tier": {
         "type": "String"
@@ -11792,6 +11846,30 @@
   "keyLineScreenLock": "Set a screen lock on your phone so this protection holds when it is locked.",
   "@keyLineScreenLock": {
     "description": "screens/pins_screen.dart"
+  },
+  "fileServerTryLater": "The file server is full for now. Try again a little later.",
+  "@fileServerTryLater": {
+    "description": "chat and group: toast when the files service has no room for a big file right now. calm, says to try later"
+  },
+  "fileTooBigUntilUpdate": "This file is {size}. This chat takes files up to {max} until everyone in it updates Kryfo.",
+  "@fileTooBigUntilUpdate": {
+    "description": "chat and group: toast when a picked file is over what an older Kryfo in the chat takes. size and max are like 30.2 mb and 15.0 mb",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "fileDayLimit": "You have sent a lot of big files today. Try again tomorrow.",
+  "@fileDayLimit": {
+    "description": "chat and group: toast when this phone has sent its day of big files through the files service. calm, says when it works again"
+  },
+  "mediaProgressPreparing": "Preparing · keep the app open",
+  "@mediaProgressPreparing": {
+    "description": "the strip above the composer while a big file is made ready to go through the files service, before any of it is sent"
   },
   "groupShotsBlocksAll": "Blocks screenshots and screen recording on every phone in this group, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.",
   "@groupShotsBlocksAll": {

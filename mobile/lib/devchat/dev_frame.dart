@@ -39,9 +39,9 @@ final kDevSender = _set('h e x o');
 final kDevIgnored = _set('av bg cp');
 
 // group controls and rosters, an ended group's words, a group's screenshot
-// block and its words, introductions and polls: no such frame goes to him
-// or is taken from him
-final kDevNever = _set('g gc rs rp in pl vt pc ge gs gu');
+// block and its words, introductions, polls and a file on the files
+// service: no such frame goes to him or is taken from him
+final kDevNever = _set('g gc rs rp in pl vt pc ge gs gu bl');
 
 Set<String> _set(String keys) => Set.unmodifiable(keys.split(' '));
 

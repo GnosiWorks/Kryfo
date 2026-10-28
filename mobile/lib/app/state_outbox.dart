@@ -94,6 +94,7 @@ extension AppStateOutbox on AppState {
     if (everydayHeld || haloWiping) return;
     unawaited(drainOutbox());
     unawaited(askForMissingSlices());
+    unawaited(fetchDrops());
     _maybeRepoint();
   }
 
@@ -156,6 +157,8 @@ extension AppStateOutbox on AppState {
     _outboxTimer = Timer.periodic(const Duration(seconds: 20), (_) {
       if (haloWiping) return;
       unawaited(drainOutbox());
+      // files on their way in from the files service, as they come due
+      unawaited(fetchDrops());
     });
     _needTimer?.cancel();
     // the catch-up that comes with the start may not have begun yet
