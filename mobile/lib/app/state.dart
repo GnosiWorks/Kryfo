@@ -191,6 +191,8 @@ class AppState extends ChangeNotifier {
   final Set<String> _waitingCard = {};
   // peers a small opener is on its way to, ahead of a waiting frame
   final Set<String> _startersGoing = {};
+  // when each contact's new session was last answered (_answerNewSession)
+  final Map<String, int> _answeredNewAt = {};
 
   // a known peer's key moved: the banner goes on their row wherever it is.
   // one a shut vault holds is sealed to it and lands as it opens, so the

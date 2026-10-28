@@ -438,5 +438,28 @@ void main() {
     expect(unwrapMessage(utf8.decode(plain)).message, isEmpty);
     // and their side is answered now: plain from here on
     expect(await again.settled(_me), isTrue);
+    // another start within 30 s is not answered again, as receipts go
+    final pair2 = testKeyPair();
+    final twice = SignalSession();
+    await twice.bootstrap(
+      database: MemDb(),
+      xPubBytes: pair2.publicKey.serialize().sublist(1),
+      xPrivBytes: pair2.privateKey.serialize(),
+    );
+    await twice.processBundle(
+      _me,
+      cardBundle(await makePreKeyBundleB64(signalSession)),
+    );
+    wire.went.clear();
+    expect(
+      await signalDecrypt(
+        _peer,
+        await twice.encryptTo(_me, '{"m":"and again"}'),
+        flagKeyChange: true,
+      ),
+      isNotNull,
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    expect(wire.went, isEmpty);
   });
 }

@@ -1074,14 +1074,20 @@ extension AppStateOutbox on AppState {
   // answers it, so what they hold for the answer goes
   Future<void> _answerNewSession(String peer) async {
     if (isDevId(peer)) return;
+    // as a receipt is: one in 30 s per contact, so one who starts sessions
+    // over and over gets no frame back for each
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final last = _answeredNewAt[peer];
+    if (last != null && now - last < 30000) return;
+    _answeredNewAt[peer] = now;
+    if (_answeredNewAt.length > 500) {
+      _answeredNewAt.removeWhere((_, t) => now - t > 300000);
+    }
     try {
       final to = await _reach(peer);
       if (to == null || !to.backPaired) return;
       if (!await (to.on ?? live).isAccepted(peer)) return;
-      await _sendOneEnvelope(
-        peer,
-        await wrapMessage('', sender: _mySender()),
-      );
+      await _sendOneEnvelope(peer, await wrapMessage('', sender: _mySender()));
     } catch (e) {
       dlog('send: a new session not answered ($e)');
     }
