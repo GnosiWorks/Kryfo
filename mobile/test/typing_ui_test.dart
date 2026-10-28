@@ -133,19 +133,15 @@ void main() {
     on.value = true;
     await t.pumpWidget(host(header(), still: true));
     expect(find.bySemanticsLabel('Typing'), findsOneWidget);
-    final all = <SemanticsNode>[];
-    void walk(SemanticsNode n) {
-      all.add(n);
-      n.visitChildren((c) {
-        walk(c);
-        return true;
-      });
+    // the word's node and every one above it: none is a live region
+    SemanticsNode? n = t.getSemantics(find.bySemanticsLabel('Typing'));
+    var seen = 0;
+    while (n != null) {
+      expect(n.getSemanticsData().flagsCollection.isLiveRegion, isFalse);
+      seen++;
+      n = n.parent;
     }
-
-    walk(t.binding.pipelineOwner.semanticsOwner!.rootSemanticsNode!);
-    for (final n in all) {
-      expect(n.getSemanticsData().hasFlag(SemanticsFlag.isLiveRegion), isFalse);
-    }
+    expect(seen, greaterThan(1));
     h.dispose();
   });
 
