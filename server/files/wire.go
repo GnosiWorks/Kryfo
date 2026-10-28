@@ -8,11 +8,9 @@ package main
 
 import (
 	"crypto/sha256"
-	"encoding/hex"
 	"math/bits"
 	"regexp"
 	"strconv"
-	"time"
 )
 
 const (
@@ -22,8 +20,9 @@ const (
 	// needs, so an s3 store can take the parts as they come
 	partChunks = 80
 	partSize   = partChunks * chunkSealed
-	// recipients one file may name: a group's members, each with a token
-	maxGot = 256
+	// recipients one file may name: a group's other members (50 at most),
+	// each with a token, and room to spare
+	maxGot = 64
 )
 
 // the chunk count a file of n chunks is stored as: n up to 16, past that
@@ -48,23 +47,19 @@ var (
 	keyShape = regexp.MustCompile(`^[0-9a-f]{64}$`)
 )
 
-func hashHex(s string) string {
-	b, err := hex.DecodeString(s)
-	if err != nil {
-		return ""
-	}
-	h := sha256.Sum256(b)
-	return hex.EncodeToString(h[:])
+// each upload costs a little work, bound to that file: its id and its size,
+// more for a bigger file. nothing in it is the sender's, so two uploads from
+// one person share nothing the service can see
+func powBits(base int, size int64) int {
+	return base + bits.Len64(uint64(size>>20))
 }
 
-// a sender's key for one day costs a little work to make: the daily limit
-// counts per key, and a key for free would make the limit free to dodge
-func powText(day, who string, nonce uint64) string {
-	return "kryfo-files-v1:" + day + ":" + who + ":" + strconv.FormatUint(nonce, 10)
+func powText(id string, size int64, nonce uint64) string {
+	return "kryfo-files-v2:" + id + ":" + strconv.FormatInt(size, 10) + ":" + strconv.FormatUint(nonce, 10)
 }
 
-func powOK(day, who string, nonce uint64, want int) bool {
-	h := sha256.Sum256([]byte(powText(day, who, nonce)))
+func powOK(id string, size int64, nonce uint64, want int) bool {
+	h := sha256.Sum256([]byte(powText(id, size, nonce)))
 	got := 0
 	for _, b := range h {
 		if b == 0 {
@@ -75,15 +70,4 @@ func powOK(day, who string, nonce uint64, want int) bool {
 		break
 	}
 	return got >= want
-}
-
-// the day a key is for: this box's day, the one before or the one after, so
-// a phone near midnight on another clock still sends
-func dayOK(day string, now time.Time) bool {
-	for _, d := range []int{-1, 0, 1} {
-		if now.UTC().AddDate(0, 0, d).Format("2006-01-02") == day {
-			return true
-		}
-	}
-	return false
 }

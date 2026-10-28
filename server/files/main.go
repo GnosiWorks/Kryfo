@@ -33,10 +33,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("files: %v", err)
 	}
+	// what a stop left past its time goes before anything is served
+	s.sweep()
 	s.sweepOrphans(blobs)
 	go func() {
-		for range time.Tick(10 * time.Minute) {
+		for range time.Tick(time.Minute) {
 			s.sweep()
+			s.sweepOrphans(blobs)
 		}
 	}()
 	go func() {
@@ -64,16 +67,17 @@ func envInt(k string, d int64) int64 {
 
 func configFromEnv() config {
 	return config{
-		maxPlain:       envInt("FILES_MAX_MB", 50) << 20,
-		floor:          uint64(envInt("FILES_FLOOR_GB", 5)) << 30,
-		quota:          envInt("FILES_QUOTA_GB", 0) << 30,
-		senderDayBytes: envInt("FILES_SENDER_DAY_MB", 1024) << 20,
-		senderDayFiles: int(envInt("FILES_SENDER_DAY_FILES", 300)),
-		dayBytes:       envInt("FILES_DAY_GB", 150) << 30,
-		keep:           time.Duration(envInt("FILES_KEEP_DAYS", 7)) * 24 * time.Hour,
-		unfinished:     24 * time.Hour,
-		powBits:        int(envInt("FILES_POW_BITS", 20)),
-		streams:        int(envInt("FILES_STREAMS", 16)),
+		maxPlain:      envInt("FILES_MAX_MB", 50) << 20,
+		floor:         uint64(envInt("FILES_FLOOR_GB", 5)) << 30,
+		quota:         envInt("FILES_QUOTA_GB", 0) << 30,
+		dayBytes:      envInt("FILES_DAY_GB", 150) << 30,
+		dayFiles:      int(envInt("FILES_DAY_FILES", 20000)),
+		keep:          time.Duration(envInt("FILES_KEEP_DAYS", 7)) * 24 * time.Hour,
+		unfinished:    24 * time.Hour,
+		idle:          time.Duration(envInt("FILES_IDLE_MIN", 15)) * time.Minute,
+		maxFiles:      int(envInt("FILES_MAX_FILES", 50000)),
+		maxUnfinished: int(envInt("FILES_MAX_COMING", 500)),
+		powBase:       int(envInt("FILES_POW_BASE", 18)),
 	}
 }
 
@@ -120,8 +124,6 @@ func fail(w http.ResponseWriter, err error) {
 		code, word = http.StatusRequestEntityTooLarge, "big"
 	case errors.Is(err, errClash):
 		code, word = http.StatusConflict, "clash"
-	case errors.Is(err, errLimit):
-		code, word = http.StatusTooManyRequests, "limit"
 	case errors.Is(err, errBusy):
 		code, word = http.StatusServiceUnavailable, "busy"
 	case errors.Is(err, errFull):
@@ -150,18 +152,25 @@ func idOf(r *http.Request) (string, bool) {
 	return id, idShape.MatchString(id)
 }
 
+// the sender's token rides in a header on what only the sender does, a
+// recipient's on a download: an id alone opens nothing
+const (
+	ownHeader   = "X-Kryfo-Own"
+	tokenHeader = "X-Kryfo-Token"
+)
+
 func (s *service) handleNew(w http.ResponseWriter, r *http.Request) {
 	var req newReq
 	if err := readSmall(r, &req); err != nil {
 		fail(w, err)
 		return
 	}
-	d, err := s.begin(req)
+	b, err := s.begin(req)
 	if err != nil {
 		fail(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"part": partSize, "have": d.have(), "end": d.Ended})
+	writeJSON(w, http.StatusOK, map[string]any{"part": partSize, "have": b.have, "end": b.ended, "gone": b.gone})
 }
 
 func (s *service) handlePart(w http.ResponseWriter, r *http.Request) {
@@ -171,29 +180,17 @@ func (s *service) handlePart(w http.ResponseWriter, r *http.Request) {
 		fail(w, errShape)
 		return
 	}
-	want, err := s.partSlot(id, n)
+	want, err := s.partSlot(id, n, r.Header.Get(ownHeader))
 	if err != nil {
 		fail(w, err)
 		return
 	}
 	if r.ContentLength != want {
+		s.release(id)
 		fail(w, errShape)
 		return
 	}
-	// a part waits for room in memory, never more than streams at once
-	select {
-	case s.parts <- struct{}{}:
-		defer func() { <-s.parts }()
-	case <-r.Context().Done():
-		return
-	}
-	b := make([]byte, want)
-	if _, err := io.ReadFull(r.Body, b); err != nil {
-		fail(w, errShape)
-		return
-	}
-	s.countIO(want, 0)
-	if err := s.putPart(id, n, b); err != nil {
+	if err := s.putPart(id, n, http.MaxBytesReader(w, r.Body, want), want); err != nil {
 		fail(w, err)
 		return
 	}
@@ -206,12 +203,12 @@ func (s *service) handleHave(w http.ResponseWriter, r *http.Request) {
 		fail(w, errShape)
 		return
 	}
-	d, err := s.have(id)
+	b, size, err := s.have(id, r.Header.Get(ownHeader))
 	if err != nil {
 		fail(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"have": d.have(), "end": d.Ended, "size": d.Size})
+	writeJSON(w, http.StatusOK, map[string]any{"have": b.have, "end": b.ended, "gone": b.gone, "size": size})
 }
 
 func (s *service) handleEnd(w http.ResponseWriter, r *http.Request) {
@@ -220,9 +217,10 @@ func (s *service) handleEnd(w http.ResponseWriter, r *http.Request) {
 		fail(w, errShape)
 		return
 	}
-	d, err := s.end(id)
-	if errors.Is(err, errClash) && d != nil {
-		writeJSON(w, http.StatusConflict, map[string]any{"e": "parts", "have": d.have()})
+	have, err := s.end(id, r.Header.Get(ownHeader))
+	if errors.Is(err, errClash) && have != nil {
+		// the parts it lacks: the sender sends those and ends again
+		writeJSON(w, http.StatusConflict, map[string]any{"e": "clash", "have": have})
 		return
 	}
 	if err != nil {
@@ -239,7 +237,9 @@ func (s *service) handleGet(w http.ResponseWriter, r *http.Request) {
 		fail(w, errShape)
 		return
 	}
-	size, err := s.whole(id)
+	rg := r.Header.Get("Range")
+	fromStart := rg == "" || strings.HasPrefix(rg, "bytes=0-")
+	size, err := s.whole(id, r.Header.Get(tokenHeader), fromStart)
 	if err != nil {
 		fail(w, err)
 		return
@@ -255,7 +255,7 @@ func (s *service) handleGet(w http.ResponseWriter, r *http.Request) {
 	cw := &countingWriter{ResponseWriter: w}
 	// no time and no name: nothing about the file but its bytes
 	http.ServeContent(cw, r, "", time.Time{}, io.NewSectionReader(readerAt{f}, 0, size))
-	s.countIO(0, cw.n)
+	s.countOut(cw.n)
 }
 
 type countingWriter struct {
@@ -293,12 +293,13 @@ func (s *service) handleGot(w http.ResponseWriter, r *http.Request) {
 		fail(w, errShape)
 		return
 	}
-	left, err := s.taken(id, req.T)
-	if err != nil {
+	// nothing about the others: how many still lack it is not a
+	// recipient's to know
+	if err := s.taken(id, req.T); err != nil {
 		fail(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"left": left})
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 }
 
 func (s *service) handleDrop(w http.ResponseWriter, r *http.Request) {

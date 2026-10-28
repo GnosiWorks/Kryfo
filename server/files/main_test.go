@@ -14,6 +14,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -24,15 +25,16 @@ const testBits = 6
 
 func testConfig() config {
 	return config{
-		maxPlain:       50 << 20,
-		floor:          5 << 30,
-		senderDayBytes: 1 << 30,
-		senderDayFiles: 300,
-		dayBytes:       100 << 30,
-		keep:           7 * 24 * time.Hour,
-		unfinished:     24 * time.Hour,
-		powBits:        testBits,
-		streams:        4,
+		maxPlain:      50 << 20,
+		floor:         5 << 30,
+		dayBytes:      100 << 30,
+		dayFiles:      20000,
+		keep:          7 * 24 * time.Hour,
+		unfinished:    24 * time.Hour,
+		idle:          15 * time.Minute,
+		maxFiles:      50000,
+		maxUnfinished: 500,
+		powBase:       testBits,
 	}
 }
 
@@ -90,23 +92,23 @@ func sha(s string) string {
 	return hex.EncodeToString(h[:])
 }
 
-func grind(day, who string, bits int) uint64 {
+func grind(id string, size int64, bits int) uint64 {
 	for n := uint64(0); ; n++ {
-		if powOK(day, who, n, bits) {
+		if powOK(id, size, n, bits) {
 			return n
 		}
 	}
 }
 
 type upload struct {
-	id, own, who string
-	tokens       []string
-	size         int64
-	body         []byte
+	id, own string
+	tokens  []string
+	size    int64
+	body    []byte
 }
 
 func newUpload(chunks, recipients int) *upload {
-	u := &upload{id: randHex(16), own: randHex(32), who: randHex(32), size: int64(chunks) * chunkSealed}
+	u := &upload{id: randHex(16), own: randHex(32), size: int64(chunks) * chunkSealed}
 	for i := 0; i < recipients; i++ {
 		u.tokens = append(u.tokens, randHex(32))
 	}
@@ -115,12 +117,17 @@ func newUpload(chunks, recipients int) *upload {
 	return u
 }
 
-func (u *upload) req(day string) newReq {
+// one that only ever begins: no bytes behind it
+func newBare(chunks int) *upload {
+	return &upload{id: randHex(16), own: randHex(32), size: int64(chunks) * chunkSealed, tokens: []string{randHex(32)}}
+}
+
+func (u *upload) req() newReq {
 	got := []string{}
 	for _, t := range u.tokens {
 		got = append(got, sha(t))
 	}
-	return newReq{ID: u.id, Size: u.size, Got: got, Own: sha(u.own), Day: day, Who: u.who, Pow: grind(day, u.who, testBits)}
+	return newReq{ID: u.id, Size: u.size, Got: got, Own: sha(u.own), Pow: grind(u.id, u.size, powBits(testBits, u.size))}
 }
 
 func (r *rig) do(method, path string, body []byte, hdr map[string]string) (int, []byte) {
@@ -151,13 +158,29 @@ func (r *rig) postJSON(path string, v any) (int, map[string]any) {
 }
 
 func (r *rig) begin(u *upload) (int, map[string]any) {
-	return r.postJSON("/files/new", u.req("2026-10-28"))
+	return r.postJSON("/files/new", u.req())
 }
 
 func (r *rig) put(u *upload, n int) int {
 	end := min(int64(n+1)*partSize, u.size)
-	code, _ := r.do("PUT", fmt.Sprintf("/files/%s/%d", u.id, n), u.body[int64(n)*partSize:end], nil)
+	code, _ := r.do("PUT", fmt.Sprintf("/files/%s/%d", u.id, n), u.body[int64(n)*partSize:end], map[string]string{ownHeader: u.own})
 	return code
+}
+
+func (r *rig) end(u *upload) (int, map[string]any) {
+	code, b := r.do("POST", "/files/"+u.id+"/end", nil, map[string]string{ownHeader: u.own})
+	var m map[string]any
+	_ = json.Unmarshal(b, &m)
+	return code, m
+}
+
+// a recipient's download, by its token
+func (r *rig) get(u *upload, i int, hdr map[string]string) (int, []byte) {
+	h := map[string]string{tokenHeader: u.tokens[i]}
+	for k, v := range hdr {
+		h[k] = v
+	}
+	return r.do("GET", "/files/"+u.id, nil, h)
 }
 
 func (r *rig) sendAll(u *upload) {
@@ -171,7 +194,7 @@ func (r *rig) sendAll(u *upload) {
 			r.t.Fatalf("part %d: %d", n, code)
 		}
 	}
-	if code, m := r.postJSON("/files/"+u.id+"/end", nil); code != 200 {
+	if code, m := r.end(u); code != 200 {
 		r.t.Fatalf("end: %d %v", code, m)
 	}
 }
@@ -196,17 +219,51 @@ func TestPadChunks(t *testing.T) {
 }
 
 func TestPow(t *testing.T) {
-	who := randHex(32)
-	n := grind("2026-10-28", who, 10)
-	if !powOK("2026-10-28", who, n, 10) {
+	id := randHex(16)
+	n := grind(id, 3*chunkSealed, 10)
+	if !powOK(id, 3*chunkSealed, n, 10) {
 		t.Fatal("ground nonce does not hold")
 	}
-	if powOK("2026-10-29", who, n, 10) && powOK("2026-10-29", who, n+1, 10) {
-		t.Fatal("work for one day holds for another")
+	other := randHex(16)
+	held := 0
+	for k := uint64(0); k < 64; k++ {
+		if powOK(other, 3*chunkSealed, n+k, 10) && powOK(id, 4*chunkSealed, n+k, 10) {
+			held++
+		}
 	}
-	now := time.Date(2026, 10, 28, 23, 59, 0, 0, time.UTC)
-	if !dayOK("2026-10-29", now) || !dayOK("2026-10-27", now) || dayOK("2026-10-30", now) {
-		t.Fatal("days around now")
+	if held > 1 {
+		t.Fatal("work for one file holds for another")
+	}
+	// a bigger file costs more
+	if powBits(18, 100<<10) != 18 || powBits(18, 50<<20) != 24 {
+		t.Fatalf("bits: %d %d", powBits(18, 100<<10), powBits(18, 50<<20))
+	}
+}
+
+// what the service is told of an upload: nothing two uploads of one
+// sender have in common, and nothing it keeps names a sender
+func TestTwoUploadsShareNothing(t *testing.T) {
+	a, b := newUpload(3, 1), newUpload(3, 1)
+	ja, _ := json.Marshal(a.req())
+	jb, _ := json.Marshal(b.req())
+	var ma, mb map[string]any
+	_ = json.Unmarshal(ja, &ma)
+	_ = json.Unmarshal(jb, &mb)
+	for k := range ma {
+		if k == "size" {
+			continue
+		}
+		if fmt.Sprint(ma[k]) == fmt.Sprint(mb[k]) {
+			t.Fatalf("both uploads carry the same %s", k)
+		}
+	}
+	keys := []string{}
+	for k := range ma {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	if fmt.Sprint(keys) != "[got id own pow size]" {
+		t.Fatalf("an upload says %v", keys)
 	}
 }
 
@@ -216,28 +273,33 @@ func TestUploadDownloadGot(t *testing.T) {
 	r := newRig(t, testConfig())
 	u := newUpload(padChunks(100), 1)
 	r.sendAll(u)
-	code, body := r.do("GET", "/files/"+u.id, nil, nil)
+	if code, _ := r.do("GET", "/files/"+u.id, nil, nil); code != 403 {
+		t.Fatalf("a download with no token: %d", code)
+	}
+	code, body := r.get(u, 0, nil)
 	if code != 200 || !bytes.Equal(body, u.body) {
 		t.Fatalf("get: %d, %d bytes", code, len(body))
 	}
-	code, body = r.do("GET", "/files/"+u.id, nil, map[string]string{"Range": fmt.Sprintf("bytes=%d-", partSize+7)})
+	code, body = r.get(u, 0, map[string]string{"Range": fmt.Sprintf("bytes=%d-", partSize+7)})
 	if code != 206 || !bytes.Equal(body, u.body[partSize+7:]) {
 		t.Fatalf("range: %d, %d bytes", code, len(body))
 	}
 	if code, m := r.postJSON("/files/"+u.id+"/got", tokenReq{T: randHex(32)}); code != 403 {
 		t.Fatalf("a token nobody was given: %d %v", code, m)
 	}
-	if code, m := r.postJSON("/files/"+u.id+"/got", tokenReq{T: u.tokens[0]}); code != 200 || m["left"].(float64) != 0 {
+	if code, m := r.postJSON("/files/"+u.id+"/got", tokenReq{T: u.tokens[0]}); code != 200 || m["left"] != nil {
 		t.Fatalf("got: %d %v", code, m)
 	}
-	if code, _ := r.do("GET", "/files/"+u.id, nil, nil); code != 404 {
+	if code, _ := r.get(u, 0, nil); code != 404 {
 		t.Fatalf("a taken file still answers %d", code)
 	}
 	if _, err := os.Stat(filepath.Join(r.dir, "blobs", u.id)); !os.IsNotExist(err) {
 		t.Fatalf("a taken file is still on disk: %v", err)
 	}
-	if _, err := os.Stat(filepath.Join(r.dir, "index", u.id+".json")); !os.IsNotExist(err) {
-		t.Fatalf("a taken file's record is still on disk: %v", err)
+	// its record stays its week, saying it went, and naming no recipient
+	rec, _ := os.ReadFile(filepath.Join(r.dir, "index", u.id+".json"))
+	if !strings.Contains(string(rec), `"gone":true`) || strings.Contains(string(rec), sha(u.tokens[0])) {
+		t.Fatalf("a taken file's record: %s", rec)
 	}
 }
 
@@ -250,12 +312,12 @@ func TestEveryRecipientBeforeItGoes(t *testing.T) {
 		if code, m := r.postJSON("/files/"+u.id+"/got", tokenReq{T: tok}); code != 200 {
 			t.Fatalf("got %d: %d %v", i, code, m)
 		}
-		if code, _ := r.do("GET", "/files/"+u.id, nil, nil); code != 200 {
+		if code, _ := r.get(u, 2, nil); code != 200 {
 			t.Fatalf("the file went with a member still to take it (%d)", i)
 		}
 	}
 	r.postJSON("/files/"+u.id+"/got", tokenReq{T: u.tokens[2]})
-	if code, _ := r.do("GET", "/files/"+u.id, nil, nil); code != 404 {
+	if code, _ := r.get(u, 2, nil); code != 404 {
 		t.Fatal("the file stayed after every member took it")
 	}
 }
@@ -272,10 +334,10 @@ func TestResumeAndClash(t *testing.T) {
 	if code != 200 || fmt.Sprint(m["have"]) != "[1]" {
 		t.Fatalf("again: %d %v", code, m)
 	}
-	if code, m := r.postJSON("/files/"+u.id+"/end", nil); code != 409 || m["e"] != "parts" {
+	if code, m := r.end(u); code != 409 || m["e"] != "clash" || fmt.Sprint(m["have"]) != "[1]" {
 		t.Fatalf("end with parts missing: %d %v", code, m)
 	}
-	if code, _ := r.do("GET", "/files/"+u.id, nil, nil); code != 404 {
+	if code, _ := r.get(u, 0, nil); code != 404 {
 		t.Fatalf("an unfinished file answers %d", code)
 	}
 	other := *u
@@ -283,14 +345,18 @@ func TestResumeAndClash(t *testing.T) {
 	if code, _ := r.begin(&other); code != 409 {
 		t.Fatalf("another sender's file under the same id: %d", code)
 	}
-	code, m = r.do2(t, "GET", "/files/"+u.id+"/have")
+	code, m = r.do2(t, "GET", "/files/"+u.id+"/have", nil)
+	if code != 403 {
+		t.Fatalf("have with no token: %d %v", code, m)
+	}
+	code, m = r.do2(t, "GET", "/files/"+u.id+"/have", map[string]string{ownHeader: u.own})
 	if code != 200 || fmt.Sprint(m["have"]) != "[1]" {
 		t.Fatalf("have: %d %v", code, m)
 	}
 }
 
-func (r *rig) do2(t *testing.T, method, path string) (int, map[string]any) {
-	code, b := r.do(method, path, nil, nil)
+func (r *rig) do2(t *testing.T, method, path string, hdr map[string]string) (int, map[string]any) {
+	code, b := r.do(method, path, nil, hdr)
 	var m map[string]any
 	_ = json.Unmarshal(b, &m)
 	return code, m
@@ -300,14 +366,89 @@ func TestPartShape(t *testing.T) {
 	r := newRig(t, testConfig())
 	u := newUpload(3, 1)
 	r.begin(u)
-	if code, _ := r.do("PUT", "/files/"+u.id+"/0", u.body[:100], nil); code != 400 {
+	own := map[string]string{ownHeader: u.own}
+	if code, _ := r.do("PUT", "/files/"+u.id+"/0", u.body, nil); code != 403 {
+		t.Fatalf("a part with no token: %d", code)
+	}
+	if code, _ := r.do("PUT", "/files/"+u.id+"/0", u.body, map[string]string{ownHeader: u.tokens[0]}); code != 403 {
+		t.Fatalf("a part with a recipient's token: %d", code)
+	}
+	if code, _ := r.do("PUT", "/files/"+u.id+"/0", u.body[:100], own); code != 400 {
 		t.Fatalf("a short part: %d", code)
 	}
-	if code, _ := r.do("PUT", "/files/"+u.id+"/1", u.body, nil); code != 400 {
+	if code, _ := r.do("PUT", "/files/"+u.id+"/1", u.body, own); code != 400 {
 		t.Fatalf("a part past the end: %d", code)
 	}
-	if code, _ := r.do("PUT", "/files/"+randHex(16)+"/0", u.body, nil); code != 404 {
+	if code, _ := r.do("PUT", "/files/"+randHex(16)+"/0", u.body, own); code != 404 {
 		t.Fatalf("a part of no file: %d", code)
+	}
+	if code, _ := r.end(&upload{id: u.id, own: randHex(32)}); code != 403 {
+		t.Fatalf("an end by someone else: %d", code)
+	}
+	// the writer a refused part took is free again
+	if code := r.put(u, 0); code != 200 {
+		t.Fatalf("the part after the refusals: %d", code)
+	}
+}
+
+// a body that stops part way marks nothing and leaves the slot free
+func TestPartCutShort(t *testing.T) {
+	r := newRig(t, testConfig())
+	u := newUpload(padChunks(100), 1)
+	r.begin(u)
+	want, err := r.s.partSlot(u.id, 0, u.own)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := r.s.putPart(u.id, 0, bytes.NewReader(u.body[:1000]), want); err != errShape {
+		t.Fatalf("a short body: %v", err)
+	}
+	if b, _, _ := r.s.have(u.id, u.own); len(b.have) != 0 {
+		t.Fatal("a part cut short was marked")
+	}
+	if code := r.put(u, 0); code != 200 {
+		t.Fatalf("the part again: %d", code)
+	}
+}
+
+// one writer a file: a second part of the same file waits its turn
+func TestOneWriterAFile(t *testing.T) {
+	r := newRig(t, testConfig())
+	u := newUpload(padChunks(200), 1)
+	r.begin(u)
+	if _, err := r.s.partSlot(u.id, 0, u.own); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := r.s.partSlot(u.id, 1, u.own); err != errBusy {
+		t.Fatalf("a second writer: %v", err)
+	}
+	r.s.release(u.id)
+	if _, err := r.s.partSlot(u.id, 1, u.own); err != nil {
+		t.Fatalf("after the first let go: %v", err)
+	}
+}
+
+// a part that lands after its file went takes its bytes with it
+func TestPartAfterTheFileWent(t *testing.T) {
+	r := newRig(t, testConfig())
+	u := newUpload(3, 1)
+	r.begin(u)
+	want, _ := r.s.partSlot(u.id, 0, u.own)
+	r.s.mu.Lock()
+	r.s.forget(u.id)
+	r.s.mu.Unlock()
+	if err := r.s.putPart(u.id, 0, bytes.NewReader(u.body), want); err != errGone {
+		t.Fatalf("a part of a file gone: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(r.dir, "blobs", u.id)); !os.IsNotExist(err) {
+		t.Fatal("the late part stayed on disk")
+	}
+	// and bytes no record names go on the next sweep, not at a restart
+	stray := filepath.Join(r.dir, "blobs", randHex(16))
+	_ = os.WriteFile(stray, []byte("x"), 0o600)
+	r.s.sweepOrphans(filepath.Join(r.dir, "blobs"))
+	if _, err := os.Stat(stray); !os.IsNotExist(err) {
+		t.Fatal("an orphan stayed")
 	}
 }
 
@@ -319,23 +460,24 @@ func TestNewShape(t *testing.T) {
 		func(q *newReq) { q.Size = 17 * chunkSealed },
 		func(q *newReq) { q.Got = nil },
 		func(q *newReq) { q.Got = make([]string, maxGot+1) },
-		func(q *newReq) { q.Day = "2026-10-01" },
 		func(q *newReq) {
-			for powOK(q.Day, q.Who, q.Pow, testBits) {
+			for powOK(q.ID, q.Size, q.Pow, powBits(testBits, q.Size)) {
 				q.Pow++
 			}
 		},
+		// work for another file
+		func(q *newReq) { q.ID = randHex(16) },
 	}
 	for i, f := range bad {
 		u := newUpload(3, 1)
-		q := u.req("2026-10-28")
+		q := u.req()
 		f(&q)
 		if code, m := r.postJSON("/files/new", q); code == 200 {
 			t.Fatalf("case %d taken: %v", i, m)
 		}
 	}
 	u := newUpload(int(maxSealed(50<<20)/chunkSealed)+64, 1)
-	q := u.req("2026-10-28")
+	q := u.req()
 	if code, m := r.postJSON("/files/new", q); code != 413 || m["e"] != "big" {
 		t.Fatalf("over the limit: %d %v", code, m)
 	}
@@ -345,41 +487,20 @@ func TestNewShape(t *testing.T) {
 	}
 }
 
-// one key a day sends this much, and the next day starts again
-func TestSenderDayLimit(t *testing.T) {
+// everyone together begins this many files a day, and the next day
+// starts again
+func TestEveryoneDayFiles(t *testing.T) {
 	cfg := testConfig()
-	cfg.senderDayFiles = 2
+	cfg.dayFiles = 2
 	r := newRig(t, cfg)
-	who := randHex(32)
-	for i := 0; i < 3; i++ {
-		u := newUpload(2, 1)
-		u.who = who
-		code, m := r.begin(u)
-		if i < 2 && code != 200 {
-			t.Fatalf("file %d: %d %v", i, code, m)
-		}
-		if i == 2 && (code != 429 || m["e"] != "limit") {
-			t.Fatalf("past the day's files: %d %v", code, m)
-		}
-	}
-	other := newUpload(2, 1)
-	if code, _ := r.begin(other); code != 200 {
-		t.Fatalf("another key: %d", code)
+	r.begin(newUpload(2, 1))
+	r.begin(newUpload(2, 1))
+	if code, m := r.begin(newUpload(2, 1)); code != 503 || m["e"] != "busy" {
+		t.Fatalf("past the day's files: %d %v", code, m)
 	}
 	r.clock = r.clock.Add(24 * time.Hour)
-	u := newUpload(2, 1)
-	u.who = who
-	if code, m := r.postJSON("/files/new", u.req("2026-10-29")); code != 200 {
-		t.Fatalf("the next day: %d %v", code, m)
-	}
-	cfg = testConfig()
-	cfg.senderDayBytes = 5 * chunkSealed
-	r = newRig(t, cfg)
-	a, b := newUpload(3, 1), newUpload(3, 1)
-	b.who = a.who
-	r.begin(a)
-	if code, _ := r.begin(b); code != 429 {
-		t.Fatalf("past the day's bytes: %d", code)
+	if code, _ := r.begin(newUpload(2, 1)); code != 200 {
+		t.Fatalf("the next day: %d", code)
 	}
 }
 
@@ -387,9 +508,115 @@ func TestEveryoneDayLimit(t *testing.T) {
 	cfg := testConfig()
 	cfg.dayBytes = 5 * chunkSealed
 	r := newRig(t, cfg)
-	r.begin(newUpload(3, 1))
+	a := newUpload(3, 1)
+	r.begin(a)
+	if code, _ := r.begin(newUpload(3, 1)); code != 200 {
+		t.Fatal("declared bytes used everyone's day")
+	}
+	r.put(a, 0)
 	if code, m := r.begin(newUpload(3, 1)); code != 503 || m["e"] != "busy" {
 		t.Fatalf("past everyone's day: %d %v", code, m)
+	}
+}
+
+// begins with nothing behind them hold their room for minutes: an honest
+// file gets in once they stop, and they never touch the day's bytes
+func TestFloodOfBeginsLeavesRoom(t *testing.T) {
+	cfg := testConfig()
+	cfg.dayBytes = 1 << 30
+	r := newRig(t, cfg)
+	r.store.room = (5 << 30) + 40*int64ToU(maxSealed(50<<20))
+	big := int(maxSealed(50<<20) / chunkSealed)
+	for i := 0; i < 40; i++ {
+		if code, m := r.begin(newBare(big)); code != 200 {
+			t.Fatalf("begin %d: %d %v", i, code, m)
+		}
+	}
+	honest := newUpload(big, 1)
+	if code, _ := r.begin(honest); code != 507 {
+		t.Fatalf("the flood holds the room for now: %d", code)
+	}
+	r.clock = r.clock.Add(16 * time.Minute)
+	r.s.sweep()
+	if code, m := r.begin(honest); code != 200 {
+		t.Fatalf("after the flood stopped: %d %v", code, m)
+	}
+	if r.s.today != 0 || r.s.open != 1 || r.s.coming != honest.size {
+		t.Fatalf("today %d, open %d, coming %d", r.s.today, r.s.open, r.s.coming)
+	}
+	// a file that keeps sending keeps its room past the idle time
+	r.put(honest, 0)
+	r.clock = r.clock.Add(10 * time.Minute)
+	r.put(honest, 1)
+	r.clock = r.clock.Add(10 * time.Minute)
+	if r.s.sweep() != 0 {
+		t.Fatal("a file still sending was swept")
+	}
+}
+
+func int64ToU(n int64) uint64 { return uint64(n) }
+
+// the files still coming and the records in all have caps
+func TestCaps(t *testing.T) {
+	cfg := testConfig()
+	cfg.maxUnfinished = 2
+	r := newRig(t, cfg)
+	a, b := newUpload(3, 1), newUpload(3, 1)
+	r.begin(a)
+	r.begin(b)
+	if code, m := r.begin(newUpload(3, 1)); code != 503 || m["e"] != "busy" {
+		t.Fatalf("past the files coming: %d %v", code, m)
+	}
+	r.put(a, 0)
+	r.end(a)
+	if code, _ := r.begin(newUpload(3, 1)); code != 200 {
+		t.Fatalf("one finished makes room: %d", code)
+	}
+	cfg = testConfig()
+	cfg.maxFiles = 2
+	r = newRig(t, cfg)
+	r.sendAll(newUpload(3, 1))
+	r.sendAll(newUpload(3, 1))
+	if code, _ := r.begin(newUpload(3, 1)); code != 503 {
+		t.Fatalf("past the records: %d", code)
+	}
+}
+
+// every recipient said got: the bytes go, the record says so, and a send of
+// the same message again is told it went instead of sending it again
+func TestGotThenSentAgain(t *testing.T) {
+	r := newRig(t, testConfig())
+	u := newUpload(3, 1)
+	r.sendAll(u)
+	r.postJSON("/files/"+u.id+"/got", tokenReq{T: u.tokens[0]})
+	code, m := r.begin(u)
+	if code != 200 || m["gone"] != true {
+		t.Fatalf("sent again: %d %v", code, m)
+	}
+	if code := r.put(u, 0); code != 404 {
+		t.Fatalf("a part of a file every recipient has: %d", code)
+	}
+	if r.s.held != 0 {
+		t.Fatalf("held %d after the got", r.s.held)
+	}
+}
+
+// downloads from the start stop at twice the recipients; a resume by range
+// is not one
+func TestDownloadsHaveAnEnd(t *testing.T) {
+	r := newRig(t, testConfig())
+	u := newUpload(3, 1)
+	r.sendAll(u)
+	for i := 0; i < 2; i++ {
+		if code, _ := r.get(u, 0, nil); code != 200 {
+			t.Fatalf("download %d: %d", i, code)
+		}
+	}
+	if code, _ := r.get(u, 0, map[string]string{"Range": "bytes=100-"}); code != 206 {
+		t.Fatalf("a resume: %d", code)
+	}
+	if code, _ := r.get(u, 0, nil); code != 404 {
+		t.Fatalf("a third whole download: %d", code)
 	}
 }
 
@@ -433,7 +660,7 @@ func TestSenderTakesItBack(t *testing.T) {
 	if code, _ := r.postJSON("/files/"+u.id+"/drop", tokenReq{T: u.own}); code != 200 {
 		t.Fatalf("drop: %d", code)
 	}
-	if code, _ := r.do("GET", "/files/"+u.id, nil, nil); code != 404 {
+	if code, _ := r.get(u, 0, nil); code != 404 {
 		t.Fatal("a dropped file still answers")
 	}
 }
@@ -449,7 +676,7 @@ func TestSweep(t *testing.T) {
 	if n := r.s.sweep(); n != 1 {
 		t.Fatalf("swept %d after a day", n)
 	}
-	if code, _ := r.do("GET", "/files/"+whole.id, nil, nil); code != 200 {
+	if code, _ := r.get(whole, 0, nil); code != 200 {
 		t.Fatal("a whole file went after a day")
 	}
 	if _, err := os.Stat(filepath.Join(r.dir, "blobs", half.id)); !os.IsNotExist(err) {
@@ -459,13 +686,13 @@ func TestSweep(t *testing.T) {
 	if n := r.s.sweep(); n != 1 {
 		t.Fatalf("swept %d after a week", n)
 	}
-	if code, _ := r.do("GET", "/files/"+whole.id, nil, nil); code != 404 {
+	if code, _ := r.get(whole, 0, nil); code != 404 {
 		t.Fatal("a file stayed past its week")
 	}
 }
 
-// a restart keeps every file, drops a record cut short and bytes no
-// record names
+// a restart keeps every file, drops a record cut short, one too large and
+// bytes no record names, and never holds more records than it may
 func TestRestart(t *testing.T) {
 	r := newRig(t, testConfig())
 	u := newUpload(3, 1)
@@ -473,6 +700,8 @@ func TestRestart(t *testing.T) {
 	broken := randHex(16)
 	_ = os.WriteFile(filepath.Join(r.dir, "index", broken+".json"), []byte("{"), 0o600)
 	_ = os.WriteFile(filepath.Join(r.dir, "blobs", broken), []byte("x"), 0o600)
+	huge := randHex(16)
+	_ = os.WriteFile(filepath.Join(r.dir, "index", huge+".json"), bytes.Repeat([]byte(" "), maxRecord+10), 0o600)
 	orphan := randHex(16)
 	_ = os.WriteFile(filepath.Join(r.dir, "blobs", orphan), []byte("x"), 0o600)
 	s, err := newService(testConfig(), r.store, r.dir)
@@ -480,13 +709,48 @@ func TestRestart(t *testing.T) {
 		t.Fatal(err)
 	}
 	s.sweepOrphans(filepath.Join(r.dir, "blobs"))
-	if d := s.drops[u.id]; d == nil || !d.Ended {
+	if d := s.drops[u.id]; d == nil || !d.ended {
 		t.Fatal("a whole file was lost in the restart")
+	}
+	if s.held != u.size || s.open != 0 {
+		t.Fatalf("held %d open %d after the restart", s.held, s.open)
 	}
 	for _, id := range []string{broken, orphan} {
 		if _, err := os.Stat(filepath.Join(r.dir, "blobs", id)); !os.IsNotExist(err) {
 			t.Fatalf("bytes with no record stayed: %s", id)
 		}
+	}
+	if _, err := os.Stat(filepath.Join(r.dir, "index", huge+".json")); !os.IsNotExist(err) {
+		t.Fatal("a record too large stayed")
+	}
+	for i := 0; i < 5; i++ {
+		r.sendAll(newUpload(3, 1))
+	}
+	cfg := testConfig()
+	cfg.maxFiles = 3
+	s, err = newService(cfg, r.store, r.dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(s.drops) != 3 {
+		t.Fatalf("a start held %d records, the cap is 3", len(s.drops))
+	}
+	// a file that stopped sending while the service was down goes at start
+	cfg = testConfig()
+	half := newUpload(padChunks(100), 1)
+	r.begin(half)
+	r.clock = r.clock.Add(time.Hour)
+	s, _ = newService(cfg, r.store, r.dir)
+	s.now = func() time.Time { return r.clock }
+	if s.drops[half.id] != nil && !s.expired(s.drops[half.id], r.clock) {
+		t.Fatal("an idle upload outlived the restart")
+	}
+}
+
+func TestErrorsNameNoPath(t *testing.T) {
+	_, err := os.Open(filepath.Join(t.TempDir(), "blobs", strings.Repeat("ab", 16)))
+	if k := errKind(err); strings.Contains(k, "ab") || !strings.Contains(k, "open") {
+		t.Fatalf("errKind: %q", k)
 	}
 }
 
@@ -499,10 +763,14 @@ func TestNothingPerFile(t *testing.T) {
 	r := newRig(t, testConfig())
 	u := newUpload(3, 1)
 	r.sendAll(u)
-	r.do("GET", "/files/"+u.id, nil, nil)
+	r.get(u, 0, nil)
 	rec, _ := os.ReadFile(filepath.Join(r.dir, "index", u.id+".json"))
-	if strings.Contains(string(rec), u.who) {
-		t.Fatal("the sender's key is on disk")
+	var keys map[string]any
+	_ = json.Unmarshal(rec, &keys)
+	for k := range keys {
+		if !strings.Contains(" id size parts ended gone got taken own at last ", " "+k+" ") {
+			t.Fatalf("a record keeps %s", k)
+		}
 	}
 	r.postJSON("/files/"+u.id+"/got", tokenReq{T: u.tokens[0]})
 	if buf.Len() != 0 {

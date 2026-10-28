@@ -18,15 +18,19 @@ type blobStore interface {
 	// bytes the store has free, for the guard. an s3 store has no disk and
 	// reports what is left of its quota
 	free() (uint64, error)
-	// part n of file id, at its place in the file
-	writePart(id string, n int, b []byte) error
+	// part n of file id, size bytes read from r, at its place in the file.
+	// errShort when r ends first
+	writePart(id string, n int, r io.Reader, size int64) error
 	// every part is in: the file is whole on durable storage
 	seal(id string) error
 	open(id string) (io.ReadSeekCloser, error)
 	remove(id string) error
 }
 
-var errNoBlob = errors.New("no such file")
+var (
+	errNoBlob = errors.New("no such file")
+	errShort  = errors.New("part cut short")
+)
 
 // one file per upload under dir, written in place part by part. nothing
 // in the path but the random id
@@ -49,16 +53,37 @@ func (d *diskStore) free() (uint64, error) {
 	return st.Bavail * uint64(st.Bsize), nil
 }
 
-func (d *diskStore) writePart(id string, n int, b []byte) error {
+// straight from the body to the file: no part is ever held in memory
+func (d *diskStore) writePart(id string, n int, r io.Reader, size int64) error {
 	f, err := os.OpenFile(d.path(id), os.O_WRONLY|os.O_CREATE, 0o600)
 	if err != nil {
 		return err
 	}
-	_, err = f.WriteAt(b, int64(n)*partSize)
+	w := io.NewOffsetWriter(f, int64(n)*partSize)
+	body := &bodyReader{r: r}
+	got, err := io.CopyN(w, body, size)
 	if cerr := f.Close(); err == nil {
 		err = cerr
 	}
+	// a body that ended or broke first is the sender's, not the disk's
+	if got < size && (body.err != nil || err == nil || errors.Is(err, io.EOF)) {
+		return errShort
+	}
 	return err
+}
+
+// notes a read that failed, apart from a write that did
+type bodyReader struct {
+	r   io.Reader
+	err error
+}
+
+func (b *bodyReader) Read(p []byte) (int, error) {
+	n, err := b.r.Read(p)
+	if err != nil && err != io.EOF {
+		b.err = err
+	}
+	return n, err
 }
 
 func (d *diskStore) seal(id string) error {
