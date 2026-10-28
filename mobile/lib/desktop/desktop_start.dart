@@ -210,6 +210,8 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   // system's language
   await loadAppLocale();
   unawaited(sayTrayWords());
+  // the key goes from memory as the engine lets the app go
+  closeOnDetach = AppLifecycleListener(onDetach: vault.close);
   var started = false;
   runApp(
     DesktopLockApp(
@@ -222,6 +224,10 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     ),
   );
 }
+
+/// held so the listener lives as long as the app
+@visibleForTesting
+AppLifecycleListener? closeOnDetach;
 
 /// secrets and prefs reach the vault and nothing else
 void assertVaultOnly() {
