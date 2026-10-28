@@ -4477,10 +4477,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get photoKnowsPhoto => 'صورة';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'ما يعرفه هذا الفيديو';
+  String get photoKnowsVideoCleaner => 'منظّف الفيديو';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'ما تعرفه هذه الصورة';
+  String get photoKnowsPhotoCleaner => 'منظّف الصور';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'إزالة كل ذلك';
@@ -5545,10 +5545,11 @@ class AppLocalizationsAr extends AppLocalizations {
       'كل شيء هنا يحدث على هذا الهاتف. لا يُرفع شيء، ولا يحتاج أحد غيرك إلى أن يكون على Kryfo.';
 
   @override
-  String get toolsWhatDoesThisPhoto => 'ماذا تعرف هذه الصورة؟';
+  String get toolsPhotoCleaner => 'منظّف الصور';
 
   @override
-  String get toolsPlacePhoneTime => 'المكان · الهاتف · الوقت';
+  String get toolsRemovesHiddenInfo =>
+      'يزيل المعلومات المخفية (البيانات الوصفية) مثل المكان والوقت وطراز الهاتف';
 
   @override
   String get toolsPickAPhotoAnd =>

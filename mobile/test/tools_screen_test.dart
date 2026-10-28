@@ -22,7 +22,7 @@ void main() {
     await t.pumpAndSettle(const Duration(milliseconds: 50));
     final ys = [
       for (final s in [
-        'What does this photo know?',
+        'Photo cleaner',
         'Make a private QR code',
         'Lock a file',
         'Open a locked file',

@@ -242,7 +242,7 @@ void main() {
   group('the bottom tabs', () {
     // where the tools tab's title sits across the screen
     double toolsX(WidgetTester t) =>
-        t.getCenter(find.text(l10n.toolsWhatDoesThisPhoto)).dx;
+        t.getCenter(find.text(l10n.toolsPhotoCleaner)).dx;
 
     Future<void> open(
       WidgetTester t, {

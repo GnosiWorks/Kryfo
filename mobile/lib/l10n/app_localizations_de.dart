@@ -4433,10 +4433,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get photoKnowsPhoto => 'Foto';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'Was dieses Video weiß';
+  String get photoKnowsVideoCleaner => 'Video bereinigen';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'Was dieses Foto weiß';
+  String get photoKnowsPhotoCleaner => 'Foto bereinigen';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'Alles entfernen';
@@ -5524,10 +5524,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Alles hier passiert auf diesem Handy. Nichts wird hochgeladen, und niemand sonst muss Kryfo haben.';
 
   @override
-  String get toolsWhatDoesThisPhoto => 'Was weiß dieses Foto?';
+  String get toolsPhotoCleaner => 'Foto bereinigen';
 
   @override
-  String get toolsPlacePhoneTime => 'Ort · Handy · Zeit';
+  String get toolsRemovesHiddenInfo =>
+      'Entfernt versteckte Infos (Metadaten) wie Ort, Zeit und Handymodell';
 
   @override
   String get toolsPickAPhotoAnd =>

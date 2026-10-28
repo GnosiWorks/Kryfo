@@ -4365,10 +4365,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get photoKnowsPhoto => 'Ảnh';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'Video này biết gì';
+  String get photoKnowsVideoCleaner => 'Làm sạch video';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'Ảnh này biết gì';
+  String get photoKnowsPhotoCleaner => 'Làm sạch ảnh';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'Gỡ bỏ tất cả';
@@ -5455,10 +5455,11 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mọi thứ ở đây diễn ra trên điện thoại này. Không có gì được tải lên, và người khác không cần dùng Kryfo.';
 
   @override
-  String get toolsWhatDoesThisPhoto => 'Ảnh này biết gì?';
+  String get toolsPhotoCleaner => 'Làm sạch ảnh';
 
   @override
-  String get toolsPlacePhoneTime => 'Địa điểm · máy · giờ';
+  String get toolsRemovesHiddenInfo =>
+      'Xóa thông tin ẩn (siêu dữ liệu) như địa điểm, thời gian và mẫu điện thoại';
 
   @override
   String get toolsPickAPhotoAnd =>

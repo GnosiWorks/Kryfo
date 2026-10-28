@@ -5422,12 +5422,12 @@
   "@photoKnowsPhoto": {
     "description": "screens/photo_knows_screen.dart"
   },
-  "photoKnowsWhatThisVideoKnows": "What this video knows",
-  "@photoKnowsWhatThisVideoKnows": {
+  "photoKnowsVideoCleaner": "Video cleaner",
+  "@photoKnowsVideoCleaner": {
     "description": "screens/photo_knows_screen.dart"
   },
-  "photoKnowsWhatThisPhotoKnows": "What this photo knows",
-  "@photoKnowsWhatThisPhotoKnows": {
+  "photoKnowsPhotoCleaner": "Photo cleaner",
+  "@photoKnowsPhotoCleaner": {
     "description": "screens/photo_knows_screen.dart"
   },
   "photoKnowsRemoveAllOfIt": "Remove all of it",
@@ -6803,12 +6803,12 @@
   "@toolsEverythingHereHappensOn": {
     "description": "screens/tools_screen.dart"
   },
-  "toolsWhatDoesThisPhoto": "What does this photo know?",
-  "@toolsWhatDoesThisPhoto": {
+  "toolsPhotoCleaner": "Photo cleaner",
+  "@toolsPhotoCleaner": {
     "description": "screens/tools_screen.dart"
   },
-  "toolsPlacePhoneTime": "Place · phone · time",
-  "@toolsPlacePhoneTime": {
+  "toolsRemovesHiddenInfo": "Removes hidden info (metadata) like place, time and phone model",
+  "@toolsRemovesHiddenInfo": {
     "description": "screens/tools_screen.dart"
   },
   "toolsPickAPhotoAnd": "Pick a photo or video to see what it gives away, then remove all of it with one tap. You can also share one to Kryfo from your gallery.",

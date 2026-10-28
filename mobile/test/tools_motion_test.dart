@@ -259,7 +259,7 @@ void main() {
       await drain(t);
     });
 
-    testWidgets('what a photo knows: the same, and it rests', (t) async {
+    testWidgets('photo cleaner: the same, and it rests', (t) async {
       phone(t);
       failingCopy(t);
       await t.pumpWidget(framed(const PhotoKnowsScreen(file: _photo)));

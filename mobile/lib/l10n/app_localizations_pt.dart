@@ -4411,10 +4411,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get photoKnowsPhoto => 'Foto';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'O que este vídeo sabe';
+  String get photoKnowsVideoCleaner => 'Limpador de vídeos';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'O que esta foto sabe';
+  String get photoKnowsPhotoCleaner => 'Limpador de fotos';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'Remover tudo';
@@ -5497,10 +5497,11 @@ class AppLocalizationsPt extends AppLocalizations {
       'Tudo aqui acontece neste celular. Nada é enviado, e ninguém mais precisa estar no Kryfo.';
 
   @override
-  String get toolsWhatDoesThisPhoto => 'O que esta foto sabe?';
+  String get toolsPhotoCleaner => 'Limpador de fotos';
 
   @override
-  String get toolsPlacePhoneTime => 'Lugar · celular · hora';
+  String get toolsRemovesHiddenInfo =>
+      'Remove informações ocultas (metadados) como lugar, hora e modelo do celular';
 
   @override
   String get toolsPickAPhotoAnd =>

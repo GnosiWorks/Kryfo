@@ -288,7 +288,7 @@ class _PhotoCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      l10n.toolsWhatDoesThisPhoto,
+                      l10n.toolsPhotoCleaner,
                       style: HaloType.sans(
                         size: 15.5,
                         weight: FontWeight.w600,
@@ -298,7 +298,7 @@ class _PhotoCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      l10n.toolsPlacePhoneTime,
+                      l10n.toolsRemovesHiddenInfo,
                       style: HaloType.mono(
                         size: 10,
                         color: ink.withValues(alpha: 0.7),

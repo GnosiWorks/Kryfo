@@ -4429,10 +4429,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get photoKnowsPhoto => 'Photo';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'Ce que sait cette vidéo';
+  String get photoKnowsVideoCleaner => 'Nettoyeur de vidéos';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'Ce que sait cette photo';
+  String get photoKnowsPhotoCleaner => 'Nettoyeur de photos';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'Tout retirer';
@@ -5519,10 +5519,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Tout ici se passe sur ce téléphone. Rien n’est mis en ligne, et personne d’autre n’a besoin d’être sur Kryfo.';
 
   @override
-  String get toolsWhatDoesThisPhoto => 'Que sait cette photo ?';
+  String get toolsPhotoCleaner => 'Nettoyeur de photos';
 
   @override
-  String get toolsPlacePhoneTime => 'Lieu · téléphone · heure';
+  String get toolsRemovesHiddenInfo =>
+      'Supprime les infos cachées (métadonnées) comme le lieu, l’heure et le modèle de téléphone';
 
   @override
   String get toolsPickAPhotoAnd =>

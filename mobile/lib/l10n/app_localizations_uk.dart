@@ -4465,10 +4465,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get photoKnowsPhoto => 'Фото';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'Що знає це відео';
+  String get photoKnowsVideoCleaner => 'Очищення відео';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'Що знає це фото';
+  String get photoKnowsPhotoCleaner => 'Очищення фото';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'Прибрати все';
@@ -5554,10 +5554,11 @@ class AppLocalizationsUk extends AppLocalizations {
       'Усе тут відбувається на цьому телефоні. Нічого не вивантажується, і нікому іншому не треба мати Kryfo.';
 
   @override
-  String get toolsWhatDoesThisPhoto => 'Що знає це фото?';
+  String get toolsPhotoCleaner => 'Очищення фото';
 
   @override
-  String get toolsPlacePhoneTime => 'Місце · телефон · час';
+  String get toolsRemovesHiddenInfo =>
+      'Видаляє приховані дані (метадані): місце, час і модель телефону';
 
   @override
   String get toolsPickAPhotoAnd =>
