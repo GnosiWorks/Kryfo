@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -25,18 +26,19 @@ const testBits = 6
 
 func testConfig() config {
 	return config{
-		maxPlain:   50 << 20,
-		floor:      5 << 30,
-		dayBytes:   100 << 30,
-		dayFiles:   20000,
-		keep:       7 * 24 * time.Hour,
-		unfinished: 24 * time.Hour,
-		idle:       15 * time.Minute,
-		maxFiles:   50000,
-		maxComing:  20 << 30,
-		idleSmall:  2 * time.Minute,
-		powCap:     20,
-		powBase:    testBits,
+		maxPlain:     50 << 20,
+		floor:        5 << 30,
+		dayBytes:     100 << 30,
+		hourFiles:    20000,
+		maxDelivered: 200000,
+		keep:         7 * 24 * time.Hour,
+		unfinished:   24 * time.Hour,
+		idle:         15 * time.Minute,
+		maxFiles:     50000,
+		maxComing:    20 << 30,
+		idleSmall:    2 * time.Minute,
+		powCap:       20,
+		powBase:      testBits,
 	}
 }
 
@@ -308,17 +310,16 @@ func TestUploadDownloadGot(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(r.dir, "blobs", u.id)); !os.IsNotExist(err) {
 		t.Fatalf("a taken file is still on disk: %v", err)
 	}
-	// its record stays its week: its id and its day, nothing more
-	rec, _ := os.ReadFile(filepath.Join(r.dir, "index", u.id+".json"))
-	var kept map[string]any
-	_ = json.Unmarshal(rec, &kept)
-	keys := []string{}
-	for k := range kept {
-		keys = append(keys, k)
+	// its record goes; the delivered log keeps its id, its owner's hash and
+	// its day, nothing more
+	if _, err := os.Stat(filepath.Join(r.dir, "index", u.id+".json")); !os.IsNotExist(err) {
+		t.Fatal("a delivered file's record stayed")
 	}
-	sort.Strings(keys)
-	if fmt.Sprint(keys) != "[at gone id]" || int64(kept["at"].(float64))%86400 != 0 {
-		t.Fatalf("a taken file's record: %s", rec)
+	log, _ := os.ReadFile(filepath.Join(r.dir, "delivered.log"))
+	f := strings.Fields(string(log))
+	day, _ := strconv.ParseInt(f[2], 10, 64)
+	if len(f) != 3 || f[0] != u.id || f[1] != sha(u.own) || day%86400 != 0 {
+		t.Fatalf("the delivered log: %q", log)
 	}
 }
 
@@ -541,20 +542,26 @@ func TestNewShape(t *testing.T) {
 	}
 }
 
-// the day's count of files raises the work, and the next day starts again
-func TestEveryoneDayFiles(t *testing.T) {
+// the files begun in the last hour raise the work, and an hour after a
+// flood stops its cost to others is gone, not at midnight
+func TestFilesThisHour(t *testing.T) {
 	cfg := testConfig()
-	cfg.dayFiles = 2
+	cfg.hourFiles = 2
 	r := newRig(t, cfg)
 	r.begin(newUpload(2, 1))
+	r.clock = r.clock.Add(30 * time.Minute)
 	r.begin(newUpload(2, 1))
-	// past the day's count of files it costs more work, not a refusal
 	if code, m := r.postJSON("/files/new", exactly(newUpload(2, 1))); code != 429 || m["e"] != "work" {
-		t.Fatalf("past the day's files: %d %v", code, m)
+		t.Fatalf("past the hour's files: %d %v", code, m)
 	}
-	r.clock = r.clock.Add(24 * time.Hour)
-	if code, _ := r.begin(newUpload(2, 1)); code != 200 {
-		t.Fatalf("the next day: %d", code)
+	// the first leaves the hour: one in the last sixty minutes
+	r.clock = r.clock.Add(31 * time.Minute)
+	if n := r.s.begunLastHour(); n != 1 {
+		t.Fatalf("%d begun in the last hour", n)
+	}
+	r.clock = r.clock.Add(time.Hour)
+	if code, _ := r.postJSON("/files/new", exactly(newUpload(2, 1))); code != 200 {
+		t.Fatalf("an hour after: %d", code)
 	}
 }
 
@@ -627,7 +634,7 @@ func TestRecordCap(t *testing.T) {
 // for the count of files alone
 func TestWorkRisesWithLoad(t *testing.T) {
 	cfg := testConfig()
-	cfg.dayFiles = 10
+	cfg.hourFiles = 10
 	r := newRig(t, cfg)
 	for i := 0; i < 6; i++ {
 		if code, _ := r.begin(newBare(3)); code != 200 {
@@ -656,7 +663,7 @@ func TestWorkRisesWithLoad(t *testing.T) {
 		q.Pow = grind(v.id, v.size, r.s.bitsNow(v.size))
 		r.postJSON("/files/new", q)
 	}
-	// past the day's count the bits keep rising instead of a refusal
+	// past the hour's count the bits keep rising instead of a refusal
 	if need := r.s.bitsNow(3 * chunkSealed); need < base+7 {
 		t.Fatalf("at 150%%: %d bits", need)
 	}
@@ -731,8 +738,78 @@ func TestGotThenSentAgain(t *testing.T) {
 	if code := r.put(u, 0); code != 404 {
 		t.Fatalf("a part of a file every recipient has: %d", code)
 	}
-	if r.s.held != 0 {
-		t.Fatalf("held %d after the got", r.s.held)
+	if r.s.held != 0 || len(r.s.drops) != 0 {
+		t.Fatalf("held %d, %d records after the got", r.s.held, len(r.s.drops))
+	}
+	// asked by anyone but its owner it says nothing of having gone
+	other := *u
+	other.own = randHex(32)
+	if code, m := r.begin(&other); code != 409 || m["gone"] != nil {
+		t.Fatalf("a begin with another owner: %d %v", code, m)
+	}
+	// and after a restart it is still known
+	s2, err := newService(testConfig(), r.store, r.dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := s2.delivered.has(u.id); !ok {
+		t.Fatal("the delivered set was lost in a restart")
+	}
+}
+
+// delivered files sit apart: they count against neither the records' cap
+// nor the load, and past their own cap the oldest go first
+func TestDeliveredApart(t *testing.T) {
+	cfg := testConfig()
+	cfg.maxFiles = 2
+	cfg.maxDelivered = 3
+	r := newRig(t, cfg)
+	var ids []string
+	for i := 0; i < 5; i++ {
+		u := newUpload(3, 1)
+		r.sendAll(u)
+		r.postJSON("/files/"+u.id+"/got", tokenReq{T: u.tokens[0]})
+		ids = append(ids, u.id)
+	}
+	if len(r.s.drops) != 0 {
+		t.Fatalf("%d records", len(r.s.drops))
+	}
+	if b := r.s.bitsNow(3 * chunkSealed); b != powBits(testBits, 3*chunkSealed) {
+		t.Fatalf("delivered files raised the work to %d", b)
+	}
+	for i, id := range ids {
+		_, ok := r.s.delivered.has(id)
+		if ok != (i >= 2) {
+			t.Fatalf("delivered %d kept %v", i, ok)
+		}
+	}
+	// and a week and a day on they go
+	r.clock = r.clock.Add(9 * 24 * time.Hour)
+	r.s.sweep()
+	if len(r.s.delivered.m) != 0 {
+		t.Fatal("delivered files outlived their week")
+	}
+}
+
+// the bytes held of the disk the service may use, and the bytes that came
+// in today, raise the work as the records do
+func TestBytesRaiseTheWork(t *testing.T) {
+	r := newRig(t, testConfig())
+	u := newUpload(padChunks(200), 1)
+	r.sendAll(u)
+	base := powBits(testBits, 3*chunkSealed)
+	// the disk it may use: free above the floor, and what it holds
+	r.store.room = (5 << 30) + uint64(u.size)/3
+	if b := r.s.bitsNow(3 * chunkSealed); b <= base {
+		t.Fatalf("holding three quarters of its disk asks %d bits", b)
+	}
+	r.store.room = 100 << 30
+	cfg := testConfig()
+	cfg.dayBytes = u.size + u.size/2
+	r2 := newRig(t, cfg)
+	r2.sendAll(u)
+	if b := r2.s.bitsNow(3 * chunkSealed); b != base+2 {
+		t.Fatalf("two thirds of the day's bytes asks %d bits", b)
 	}
 }
 
@@ -753,8 +830,13 @@ func TestDownloadsHaveAnEnd(t *testing.T) {
 			t.Fatalf("download %d: %d", i, code)
 		}
 	}
-	if code, _ := r.get(u, 0, map[string]string{"Range": "bytes=1-"}); code != 206 {
-		t.Fatalf("a resume: %d", code)
+	// a download takes its range from the budget before a byte goes, so
+	// two side by side cannot both pass a budget with room for one
+	if _, _, err := r.s.whole(u.id, u.tokens[0], func(size int64) int64 { return size }); err != errGone {
+		t.Fatalf("a whole download past the budget: %v", err)
+	}
+	if code, _ := r.get(u, 0, map[string]string{"Range": "bytes=600-"}); code != 206 {
+		t.Fatalf("a resume that fits what is left: %d", code)
 	}
 	if code, _ := r.get(u, 0, map[string]string{"Range": "bytes=1-"}); code != 404 {
 		t.Fatalf("past three times the file by range: %d", code)
@@ -923,5 +1005,20 @@ func TestNothingPerFile(t *testing.T) {
 	r.s.report()
 	if strings.Contains(buf.String(), u.id) || !strings.Contains(buf.String(), "1 new") {
 		t.Fatalf("report: %q", buf.String())
+	}
+}
+
+func TestRangeWant(t *testing.T) {
+	for _, c := range []struct {
+		h    string
+		want int64
+	}{
+		{"", 1000}, {"bytes=0-", 1000}, {"bytes=100-", 900}, {"bytes=0-99", 100},
+		{"bytes=-10", 10}, {"bytes=1-,0-0", 1000}, {"bytes=5000-", 1000}, {"junk", 1000},
+		{"bytes=990-2000", 10},
+	} {
+		if got := rangeWant(c.h, 1000); got != c.want {
+			t.Fatalf("%q: %d, want %d", c.h, got, c.want)
+		}
 	}
 }

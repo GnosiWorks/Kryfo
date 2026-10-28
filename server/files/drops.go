@@ -31,10 +31,11 @@ import (
 
 // a file as it is kept on disk
 type dropDisk struct {
-	ID    string   `json:"id"`
-	Size  int64    `json:"size,omitempty"`
-	Parts []bool   `json:"parts,omitempty"`
-	Ended bool     `json:"ended,omitempty"`
+	ID    string `json:"id"`
+	Size  int64  `json:"size,omitempty"`
+	Parts []bool `json:"parts,omitempty"`
+	Ended bool   `json:"ended,omitempty"`
+	// a record of the round before the delivered set: dropped at start
 	Gone  bool     `json:"gone,omitempty"`
 	Got   []string `json:"got,omitempty"`
 	Taken []bool   `json:"taken,omitempty"`
@@ -49,9 +50,6 @@ type drop struct {
 	size  int64
 	parts []bool
 	ended bool
-	// every recipient has it: the bytes went, the record stays its week so
-	// a send of the same message again sends no file
-	gone  bool
 	got   [][32]byte
 	taken []bool
 	own   [32]byte
@@ -85,12 +83,8 @@ func (d *drop) have() []int {
 }
 
 func (d *drop) toDisk() dropDisk {
-	// a file every recipient has keeps its id and its day, and nothing else
-	if d.gone {
-		return dropDisk{ID: d.id, Gone: true, At: d.at / 86400 * 86400}
-	}
 	out := dropDisk{
-		ID: d.id, Size: d.size, Parts: d.parts, Ended: d.ended, Gone: d.gone,
+		ID: d.id, Size: d.size, Parts: d.parts, Ended: d.ended,
 		Taken: d.taken, Own: hex.EncodeToString(d.own[:]), At: d.at, Last: d.last,
 	}
 	for _, g := range d.got {
@@ -111,10 +105,7 @@ func unhash(s string) ([32]byte, bool) {
 
 func fromDisk(r dropDisk) (*drop, bool) {
 	if r.Gone {
-		if !idShape.MatchString(r.ID) {
-			return nil, false
-		}
-		return &drop{id: r.ID, gone: true, at: r.At}, true
+		return nil, false
 	}
 	own, ok := unhash(r.Own)
 	if !ok || !idShape.MatchString(r.ID) || r.Size <= 0 || r.Size%chunkSealed != 0 {
@@ -123,7 +114,7 @@ func fromDisk(r dropDisk) (*drop, bool) {
 	if int64(len(r.Parts)) != (r.Size+partSize-1)/partSize || len(r.Got) != len(r.Taken) || len(r.Got) > maxGot {
 		return nil, false
 	}
-	d := &drop{id: r.ID, size: r.Size, parts: r.Parts, ended: r.Ended, gone: r.Gone, taken: r.Taken, own: own, at: r.At, last: r.Last}
+	d := &drop{id: r.ID, size: r.Size, parts: r.Parts, ended: r.Ended, taken: r.Taken, own: own, at: r.At, last: r.Last}
 	for _, g := range r.Got {
 		h, ok := unhash(g)
 		if !ok {
@@ -156,10 +147,12 @@ type config struct {
 	floor uint64
 	// what all files together may hold, 0 for no cap but the disk
 	quota int64
-	// bytes that came in today and files begun today, for everyone
-	// together
-	dayBytes int64
-	dayFiles int
+	// bytes that came in today, and files begun in the last hour, for
+	// everyone together
+	dayBytes  int64
+	hourFiles int
+	// files every recipient has, kept for their week, at most
+	maxDelivered int
 	// a file goes this long after it came, taken or not
 	keep time.Duration
 	// a file whose parts never all came goes after this
@@ -190,12 +183,16 @@ type service struct {
 	index string
 	now   func() time.Time
 
-	mu         sync.Mutex
-	drops      map[string]*drop
-	day        string
-	today      int64
-	todayFiles int
-	// running sums: the bytes every file not gone holds, what the files
+	mu    sync.Mutex
+	drops map[string]*drop
+	day   string
+	today int64
+	// files begun in each of the last sixty minutes, by the minute
+	begunIn [60]int
+	begunAt [60]int64
+	// the files every recipient has (delivered.go)
+	delivered *deliveredSet
+	// running sums: the bytes every file holds, what the files
 	// still coming may yet write, and how many are still coming
 	held, coming int64
 	open         int
@@ -214,6 +211,11 @@ func newService(cfg config, store blobStore, stateDir string) (*service, error) 
 		drops: map[string]*drop{},
 	}
 	if err := os.MkdirAll(s.index, 0o700); err != nil {
+		return nil, err
+	}
+	var err error
+	s.delivered, err = openDelivered(filepath.Join(stateDir, "delivered.log"), cfg.maxDelivered, cfg.keep, s.now())
+	if err != nil {
 		return nil, err
 	}
 	ents, err := os.ReadDir(s.index)
@@ -264,10 +266,8 @@ func (s *service) load(p, id string) *drop {
 
 func (s *service) add(d *drop) {
 	s.drops[d.id] = d
-	if !d.gone {
-		s.held += d.size
-	}
-	if !d.ended && !d.gone {
+	s.held += d.size
+	if !d.ended {
 		s.coming += d.size - d.written
 		s.open++
 	}
@@ -300,10 +300,8 @@ func errKind(err error) string {
 // the bytes go and the sums with them. the record stays when [tomb], so a
 // send of the same message again is told it went
 func (s *service) letBytesGo(d *drop) {
-	if !d.gone {
-		s.held -= d.size
-	}
-	if !d.ended && !d.gone {
+	s.held -= d.size
+	if !d.ended {
 		s.coming -= d.size - d.written
 		s.open--
 	}
@@ -329,7 +327,6 @@ func (s *service) rollDay(now time.Time) {
 	if day != s.day {
 		s.day = day
 		s.today = 0
-		s.todayFiles = 0
 	}
 }
 
@@ -376,19 +373,52 @@ func (r newReq) valid(cfg config) error {
 	return nil
 }
 
+// a file begun now, on its minute
+func (s *service) begun(now time.Time) {
+	m := now.Unix() / 60
+	k := m % 60
+	if s.begunAt[k] != m {
+		s.begunAt[k], s.begunIn[k] = m, 0
+	}
+	s.begunIn[k]++
+}
+
+// files begun in the sixty minutes up to now
+func (s *service) begunLastHour() int {
+	m := s.now().Unix() / 60
+	n := 0
+	for k := range s.begunIn {
+		if m-s.begunAt[k] < 60 {
+			n += s.begunIn[k]
+		}
+	}
+	return n
+}
+
 // work asked of a begin: the bits it needs now
 type errMoreWork struct{ bits int }
 
 func (e errMoreWork) Error() string { return "work" }
 
 // the bits a new file of [size] needs now: its own, and more the fuller the
-// service is. a flood pays for itself, twice for each bit
+// service is: its records, the files begun this hour, the bytes still
+// coming, the bytes it holds of the disk it may use, and the bytes that came
+// in today. a flood pays for itself, twice for each bit, and its cost to
+// others ends soon after it stops
 func (s *service) bitsNow(size int64) int {
 	b := min(powBits(s.cfg.powBase, size), s.cfg.powCap)
+	disk := 1.0
+	if free, err := s.store.free(); err == nil {
+		if room := float64(free) - float64(s.cfg.floor) + float64(s.held); room > 0 {
+			disk = float64(s.held) / room
+		}
+	}
 	load := max(
 		float64(len(s.drops))/float64(s.cfg.maxFiles),
-		float64(s.todayFiles)/float64(s.cfg.dayFiles),
+		float64(s.begunLastHour())/float64(s.cfg.hourFiles),
 		float64(s.coming)/float64(s.cfg.maxComing),
+		disk,
+		float64(s.today)/float64(s.cfg.dayBytes),
 	)
 	if load > 0.5 {
 		b += int(math.Ceil((load-0.5)*10 - 1e-9))
@@ -414,15 +444,19 @@ func (s *service) begin(r newReq) (begun, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	// one already here goes on with no work: a resume, a resend, a group's
-	// owed members
-	if d := s.drops[r.ID]; d != nil {
-		if d.gone {
-			return begun{gone: true}, nil
+	// owed members. one every recipient has is told so, its owner alone:
+	// to anyone else it says nothing of when the last one said got
+	if g, ok := s.delivered.has(r.ID); ok {
+		if g.own != own {
+			return begun{}, errClash
 		}
+		return begun{gone: true}, nil
+	}
+	if d := s.drops[r.ID]; d != nil {
 		if d.size != r.Size || d.own != own {
 			return begun{}, errClash
 		}
-		return begun{d.have(), d.ended, d.gone}, nil
+		return begun{d.have(), d.ended, false}, nil
 	}
 	if len(s.drops) >= s.cfg.maxFiles {
 		s.c.busy++
@@ -433,13 +467,13 @@ func (s *service) begin(r newReq) (begun, error) {
 		s.c.busy++
 		return begun{}, errBusy
 	}
-	// a nonce of 0 is an ask with no work, which a new file is told to do
-	if need := s.bitsNow(r.Size); r.Pow == 0 || !powOK(r.ID, r.Size, r.Pow, need) {
-		return begun{}, errMoreWork{need}
-	}
 	if !s.roomFor(r.Size) {
 		s.c.full++
 		return begun{}, errFull
+	}
+	// a nonce of 0 is an ask with no work, which a new file is told to do
+	if need := s.bitsNow(r.Size); r.Pow == 0 || !powOK(r.ID, r.Size, r.Pow, need) {
+		return begun{}, errMoreWork{need}
 	}
 	n := int((r.Size + partSize - 1) / partSize)
 	d := &drop{
@@ -460,7 +494,7 @@ func (s *service) begin(r newReq) (begun, error) {
 		return begun{}, errBusy
 	}
 	s.add(d)
-	s.todayFiles++
+	s.begun(now)
 	s.c.made++
 	return begun{have: []int{}}, nil
 }
@@ -494,7 +528,7 @@ func (s *service) partSlot(id string, n int, own string, kill func()) (int64, *w
 	defer s.mu.Unlock()
 	for try := 0; ; try++ {
 		d := s.drops[id]
-		if d == nil || d.gone {
+		if d == nil {
 			return 0, nil, errGone
 		}
 		if !ownOf(d, own) {
@@ -544,7 +578,7 @@ func (s *service) putPart(id string, n int, body io.Reader, want int64, w *write
 	defer s.mu.Unlock()
 	defer close(w.done)
 	d := s.drops[id]
-	if d == nil || d.gone || d.ended {
+	if d == nil || d.ended {
 		// dropped or swept while the part came in
 		if d == nil {
 			_ = s.store.remove(id)
@@ -592,14 +626,14 @@ func (s *service) have(id, own string) (begun, int64, error) {
 	if !ownOf(d, own) {
 		return begun{}, 0, errWork
 	}
-	return begun{d.have(), d.ended, d.gone}, d.size, nil
+	return begun{d.have(), d.ended, false}, d.size, nil
 }
 
 func (s *service) end(id, own string) ([]int, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	d := s.drops[id]
-	if d == nil || d.gone {
+	if d == nil {
 		return nil, errGone
 	}
 	if !ownOf(d, own) {
@@ -643,37 +677,41 @@ func (d *drop) names(token string) bool {
 
 // a whole file, for one of its recipients. each token is served three
 // times the file at most, ranges and all: enough for every resume and
-// refetch, not for fetching it again and again
-func (s *service) whole(id, token string) (int64, error) {
+// refetch, not for fetching it again and again. [want] is the most this
+// download may serve, taken from the budget before a byte goes, so
+// downloads side by side on one token share it
+func (s *service) whole(id, token string, want func(size int64) int64) (int64, int64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	d := s.drops[id]
-	if d == nil || !d.ended || d.gone {
-		return 0, errGone
+	if d == nil || !d.ended {
+		return 0, 0, errGone
 	}
 	if !d.names(token) {
-		return 0, errWork
+		return 0, 0, errWork
 	}
 	h, _ := unhash(hashHex(token))
-	if d.served[h] >= 3*d.size {
-		return 0, errGone
+	w := want(d.size)
+	if d.served[h]+w > 3*d.size {
+		return 0, 0, errGone
 	}
-	return d.size, nil
+	if d.served == nil {
+		d.served = map[[32]byte]int64{}
+	}
+	d.served[h] += w
+	return d.size, w, nil
 }
 
-// what a download served, on its token's count
-func (s *service) servedTo(id, token string, n int64) {
+// what a download did not serve of what it took, back on its token's count
+func (s *service) servedTo(id, token string, took, n int64) {
 	h, ok := unhash(hashHex(token))
-	if !ok {
+	if !ok || n >= took {
 		return
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if d := s.drops[id]; d != nil && !d.gone {
-		if d.served == nil {
-			d.served = map[[32]byte]int64{}
-		}
-		d.served[h] += n
+	if d := s.drops[id]; d != nil && d.served != nil {
+		d.served[h] -= took - n
 	}
 }
 
@@ -687,7 +725,7 @@ func (s *service) taken(id, token string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	d := s.drops[id]
-	if d == nil || d.gone {
+	if d == nil {
 		return errGone
 	}
 	known, left := false, 0
@@ -707,10 +745,14 @@ func (s *service) taken(id, token string) error {
 		return errWork
 	}
 	if left == 0 {
-		s.letBytesGo(d)
-		// its id and its day stay, so a send of it again sends no file
-		*d = drop{id: d.id, gone: true, at: d.at / 86400 * 86400}
+		// its id, its owner's hash and its day stay, apart, so a send of it
+		// again sends no file
+		if err := s.delivered.add(id, d.own, s.now()); err != nil {
+			log.Printf("files: a delivered file not noted: %s", errKind(err))
+		}
+		s.forget(id)
 		s.c.gone++
+		return nil
 	}
 	if err := s.save(d); err != nil {
 		log.Printf("files: a record was not written: %s", errKind(err))
@@ -739,7 +781,7 @@ func (s *service) expired(d *drop, now time.Time) bool {
 	if age > s.cfg.keep {
 		return true
 	}
-	if d.ended || d.gone {
+	if d.ended {
 		return false
 	}
 	idle := s.cfg.idle
@@ -761,6 +803,7 @@ func (s *service) sweep() int {
 			n++
 		}
 	}
+	s.delivered.sweep(now)
 	s.c.swept += n
 	return n
 }
@@ -775,7 +818,7 @@ func (s *service) sweepOrphans(dir string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for _, e := range ents {
-		if d := s.drops[e.Name()]; d == nil || d.gone {
+		if s.drops[e.Name()] == nil {
 			_ = s.store.remove(e.Name())
 		}
 	}

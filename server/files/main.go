@@ -67,19 +67,20 @@ func envInt(k string, d int64) int64 {
 
 func configFromEnv() config {
 	return config{
-		maxPlain:   envInt("FILES_MAX_MB", 50) << 20,
-		floor:      uint64(envInt("FILES_FLOOR_GB", 5)) << 30,
-		quota:      envInt("FILES_QUOTA_GB", 0) << 30,
-		dayBytes:   envInt("FILES_DAY_GB", 150) << 30,
-		dayFiles:   int(envInt("FILES_DAY_FILES", 20000)),
-		keep:       time.Duration(envInt("FILES_KEEP_DAYS", 7)) * 24 * time.Hour,
-		unfinished: 24 * time.Hour,
-		idle:       time.Duration(envInt("FILES_IDLE_MIN", 15)) * time.Minute,
-		maxFiles:   int(envInt("FILES_MAX_FILES", 50000)),
-		idleSmall:  2 * time.Minute,
-		maxComing:  envInt("FILES_MAX_COMING_GB", 20) << 30,
-		powBase:    int(envInt("FILES_POW_BASE", 16)),
-		powCap:     int(envInt("FILES_POW_CAP", 20)),
+		maxPlain:     envInt("FILES_MAX_MB", 50) << 20,
+		floor:        uint64(envInt("FILES_FLOOR_GB", 5)) << 30,
+		quota:        envInt("FILES_QUOTA_GB", 0) << 30,
+		dayBytes:     envInt("FILES_DAY_GB", 150) << 30,
+		hourFiles:    int(envInt("FILES_HOUR_FILES", 1500)),
+		maxDelivered: int(envInt("FILES_MAX_DELIVERED", 200000)),
+		keep:         time.Duration(envInt("FILES_KEEP_DAYS", 7)) * 24 * time.Hour,
+		unfinished:   24 * time.Hour,
+		idle:         time.Duration(envInt("FILES_IDLE_MIN", 15)) * time.Minute,
+		maxFiles:     int(envInt("FILES_MAX_FILES", 50000)),
+		idleSmall:    2 * time.Minute,
+		maxComing:    envInt("FILES_MAX_COMING_GB", 20) << 30,
+		powBase:      int(envInt("FILES_POW_BASE", 16)),
+		powCap:       int(envInt("FILES_POW_CAP", 20)),
 	}
 }
 
@@ -249,7 +250,7 @@ func (s *service) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	token := r.Header.Get(tokenHeader)
-	size, err := s.whole(id, token)
+	size, took, err := s.whole(id, token, func(size int64) int64 { return rangeWant(r.Header.Get("Range"), size) })
 	if err != nil {
 		fail(w, err)
 		return
@@ -266,7 +267,7 @@ func (s *service) handleGet(w http.ResponseWriter, r *http.Request) {
 	// no time and no name: nothing about the file but its bytes
 	http.ServeContent(cw, r, "", time.Time{}, io.NewSectionReader(readerAt{f}, 0, size))
 	s.countOut(cw.n)
-	s.servedTo(id, token, cw.n)
+	s.servedTo(id, token, took, cw.n)
 }
 
 type countingWriter struct {
@@ -325,4 +326,35 @@ func (s *service) handleDrop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
+}
+
+// what a download may serve: one range of a single span is its length, and
+// anything else (none, several, one out of shape) the whole file
+func rangeWant(h string, size int64) int64 {
+	spec, ok := strings.CutPrefix(h, "bytes=")
+	if !ok || strings.Contains(spec, ",") {
+		return size
+	}
+	a, b, ok := strings.Cut(spec, "-")
+	if !ok {
+		return size
+	}
+	if a == "" {
+		n, err := strconv.ParseInt(b, 10, 64)
+		if err != nil || n <= 0 {
+			return size
+		}
+		return min(n, size)
+	}
+	from, err := strconv.ParseInt(a, 10, 64)
+	if err != nil || from < 0 || from >= size {
+		return size
+	}
+	to := size - 1
+	if b != "" {
+		if t, err := strconv.ParseInt(b, 10, 64); err == nil && t >= from {
+			to = min(t, size-1)
+		}
+	}
+	return to - from + 1
 }
