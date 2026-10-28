@@ -606,6 +606,7 @@ extension AppStateDelivery on AppState {
     // vault is tidied right after a removal in it, and as it opens, never
     // as it shuts
     if (!front) {
+      _typingClear();
       unawaited(_tidy(live));
       if (sessionQuiet) unawaited(_tidy(_session.primary));
     }

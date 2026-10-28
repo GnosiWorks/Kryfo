@@ -839,6 +839,15 @@ class HaloEngine {
     ),
   );
 
+  // a typing frame to a peer's door (HaloSendTyping): the private route
+  // only, one try, nothing kept. an engine without the call sends nothing
+  Future<String> sendTyping(String onion, String line) => _ffiOnIsolate(
+    'HaloSendTyping',
+    [onion, line],
+    wait: const Duration(seconds: 10),
+    what: 'typing',
+  ).catchError((Object e) => 'error: typing (${e.runtimeType})');
+
   // burner rooms. every call hands the room's own private key back to the
   // engine, which never keeps it: the key lives in the room row and dies
   // with it.

@@ -116,6 +116,7 @@ import '../main.dart'
         AppStatePrefs,
         AppStateProfile,
         AppStateScreen,
+        AppStateTyping,
         AppStateVault,
         AppStateContacts,
         AppStateSession,
@@ -178,6 +179,8 @@ import '../l10n/numbers.dart';
 import '../widgets/video_viewer.dart';
 import '../widgets/photo_viewer.dart';
 import '../widgets/swap.dart';
+import '../widgets/typing_mark.dart';
+import '../typing.dart' show composerEdit;
 import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
 import '../back_on_top.dart';
@@ -1296,6 +1299,9 @@ class _ChatScreenState extends State<ChatScreen>
     if (kept == null) unawaited(_readDraft(rows));
     // kept on every keystroke, so it survives leaving the chat and the app
     _msgCtrl.addListener(_keepDraft);
+    // what is typed from here on may tell them, words put back never do
+    _typedWas = _msgCtrl.text;
+    _msgCtrl.addListener(_typed);
     // words handed in by a share or a forward are a draft from the start;
     // after a stop, once the row they join is read
     if (kept != null && _handedIn) _keepDraft();
@@ -5463,6 +5469,7 @@ class _ChatScreenState extends State<ChatScreen>
     );
     // left: what the composer holds is written now, not after the wait
     _msgCtrl.removeListener(_keepDraft);
+    _msgCtrl.removeListener(_typed);
     _keepDraft();
     final rows = _draftRows;
     if (rows != null) {
@@ -6050,9 +6057,41 @@ class _ChatScreenState extends State<ChatScreen>
       _takeDraft(composerWith(_msgCtrl.text, words));
 
   void _takeDraft(String t) {
-    _msgCtrl.value = TextEditingValue(
-      text: t,
-      selection: TextSelection.collapsed(offset: t.length),
+    _byApp = true;
+    try {
+      _msgCtrl.value = TextEditingValue(
+        text: t,
+        selection: TextSelection.collapsed(offset: t.length),
+      );
+    } finally {
+      _byApp = false;
+    }
+  }
+
+  // the composer's words as the last change left them, and whether the
+  // app is the one changing them now
+  String _typedWas = '';
+  bool _byApp = false;
+
+  // a keystroke or a paste in the focused composer: their phone may show
+  // that this one is typing (typing.dart). the app's own changes, a draft
+  // put back or words handed in, say nothing
+  void _typed() {
+    final t = _msgCtrl.text;
+    final e = composerEdit(
+      _typedWas,
+      t,
+      byApp: _byApp,
+      focused: _composerFocus.hasFocus,
+    );
+    _typedWas = t;
+    if (e == null || _isDev || widget.support) return;
+    unawaited(
+      appState.typingEdit(
+        widget.peerHaloId,
+        userEdit: e.userEdit,
+        nonEmpty: e.nonEmpty,
+      ),
     );
   }
 
@@ -7415,59 +7454,69 @@ class _ChatHead extends StatelessWidget {
                     ),
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.lock_outline,
-                          size: 10,
-                          // relay and tor told apart by their own colours,
-                          // never by the accent
-                          color: relay ? HaloColors.sky : HaloColors.violet,
-                        ),
-                        const SizedBox(width: 4),
-                        // a longer language at a big font size would run
-                        // past the header's buttons, so it ends in …
-                        Flexible(
-                          child: Text(
-                            relay
-                                ? l10n.chatEncryptedViaRelay
-                                : appState.sendMode == 'fast'
-                                ? l10n.chatEncryptedDirect
-                                : l10n.chatEncryptedOverTor,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: HaloType.mono(
-                              size: 10,
-                              color: relay ? HaloColors.sky : HaloColors.text2,
+                    // the line swaps to "Typing" while they type, in one
+                    // line either way, so the header keeps its height
+                    child: TypingSwap(
+                      showing: appState.typing.board.of(
+                        appState.typingKey(haloId),
+                      ),
+                      style: typingStyle(size: 10, mono: true),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.lock_outline,
+                            size: 10,
+                            // relay and tor told apart by their own colours,
+                            // never by the accent
+                            color: relay ? HaloColors.sky : HaloColors.violet,
+                          ),
+                          const SizedBox(width: 4),
+                          // a longer language at a big font size would run
+                          // past the header's buttons, so it ends in …
+                          Flexible(
+                            child: Text(
+                              relay
+                                  ? l10n.chatEncryptedViaRelay
+                                  : appState.sendMode == 'fast'
+                                  ? l10n.chatEncryptedDirect
+                                  : l10n.chatEncryptedOverTor,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: HaloType.mono(
+                                size: 10,
+                                color: relay
+                                    ? HaloColors.sky
+                                    : HaloColors.text2,
+                              ),
                             ),
                           ),
-                        ),
-                        AnimatedSwitcher(
-                          duration: Duration(
-                            milliseconds: motionStill(context) ? 0 : 220,
-                          ),
-                          child: shotsBlocked
-                              ? Padding(
-                                  key: const ValueKey('shots'),
-                                  padding: const EdgeInsetsDirectional.only(
-                                    start: 6,
-                                  ),
-                                  child: Semantics(
-                                    label: l10n.chatShotsBlockedHere,
-                                    child: Icon(
-                                      Icons.phonelink_lock_outlined,
-                                      size: 11,
-                                      color: HaloColors.text2,
+                          AnimatedSwitcher(
+                            duration: Duration(
+                              milliseconds: motionStill(context) ? 0 : 220,
+                            ),
+                            child: shotsBlocked
+                                ? Padding(
+                                    key: const ValueKey('shots'),
+                                    padding: const EdgeInsetsDirectional.only(
+                                      start: 6,
                                     ),
+                                    child: Semantics(
+                                      label: l10n.chatShotsBlockedHere,
+                                      child: Icon(
+                                        Icons.phonelink_lock_outlined,
+                                        size: 11,
+                                        color: HaloColors.text2,
+                                      ),
+                                    ),
+                                  )
+                                : const SizedBox(
+                                    key: ValueKey('no-shots'),
+                                    width: 0,
                                   ),
-                                )
-                              : const SizedBox(
-                                  key: ValueKey('no-shots'),
-                                  width: 0,
-                                ),
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   if ((note ?? '').isNotEmpty)

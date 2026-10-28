@@ -190,6 +190,9 @@ extension AppStateArrivals on AppState {
     // lane says (heldBySpans)
     Reached? reached,
   }) async {
+    // typing rides the onion door alone (receiveOnion): on any other lane,
+    // or sealed for later, it is dropped unseen
+    if (env.typing) return RouteTo.dropped;
     // the dev chat takes a frame only while it runs, and only what his
     // chat may carry, said by his pinned key. the rest is dropped unseen
     if (isDevId(senderHaloId)) {
@@ -223,7 +226,7 @@ extension AppStateArrivals on AppState {
     }
     final marks = <String>{};
     try {
-      return await _fileArrival(
+      final to = await _fileArrival(
         senderHaloId,
         env,
         wire: wire,
@@ -233,6 +236,8 @@ extension AppStateArrivals on AppState {
         late: late,
         reached: reached,
       );
+      if (AppState._shown(to)) _typingAnswered(senderHaloId, env);
+      return to;
     } finally {
       for (final k in keys) {
         final n = (_arriving[k] ?? 1) - 1;
@@ -391,6 +396,7 @@ extension AppStateArrivals on AppState {
       return to;
     }
     await _takeShots(senderHaloId, env, db);
+    await _takeCaps(senderHaloId, env, db);
     // delivery receipt, handled before the stranger gate and dedup so an ack
     // is never treated as a message or counted toward the cap. it leaves
     // back-paired alone: that flag lifts the sender-side cap, and a stranger

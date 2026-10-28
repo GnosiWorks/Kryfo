@@ -1565,6 +1565,9 @@ type bridgeStatusView struct {
 	AskConsent bool   `json:"ask_consent,omitempty"`
 	Network    string `json:"network"`
 	VPN        bool   `json:"vpn"`
+	// tor's lines are bridge lines now, whatever step automatic is on: the
+	// one fact the typing indicator goes by
+	OnBridge bool `json:"on_bridge"`
 }
 
 // the transport of the lines in use, "direct" without any
@@ -1582,7 +1585,7 @@ func linesMethod() string {
 func bridgeStatus() bridgeStatusView {
 	mode, _, _ := bridgeMode()
 	n := currentNet()
-	v := bridgeStatusView{Mode: mode, VPN: n.VPN, CanSend: routeOK()}
+	v := bridgeStatusView{Mode: mode, VPN: n.VPN, CanSend: routeOK(), OnBridge: bridgesEnabled()}
 	switch {
 	case !n.On:
 		v.Network = "none"

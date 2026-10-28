@@ -343,6 +343,7 @@ extension AppStateBoot on AppState {
     engine.nostrInit(relaysFor(_sendMode));
     _loadFirstContact();
     await loadScreenSecure();
+    await loadTypingPref();
     await loadHeartbeat();
     startMemoryLog();
     await initNotifications(

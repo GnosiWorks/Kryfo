@@ -5332,6 +5332,23 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vérifié uniquement sur votre téléphone, rien n’en sort';
 
   @override
+  String get typingNow => 'Écrit';
+
+  @override
+  String get settingsTypingIndicator => 'Indicateur de saisie';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'Vous voyez tous les deux quand l’autre écrit. L’info part directement par Tor, jamais par un relais.';
+
+  @override
+  String get settingsTypingOnionOnly => 'Disponible sur la route Onion';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      'Désactivé tant que des ponts sont utilisés : quelqu’un qui surveille votre connexion pourrait recouper les signaux de saisie. Il revient tout seul quand les ponts sont coupés.';
+
+  @override
   String get settingsLightTheme => 'Thème clair';
 
   @override
@@ -5940,8 +5957,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get whyKryfoNothingLeaks => 'Rien ne fuite';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'Pas d’accusés de lecture ni d’indicateurs de saisie donnés à qui que ce soit, pas de liste de contacts envoyée. Les métadonnées, c’est ce que la plupart des applis laissent fuiter. Kryfo est conçu pour ne pas le faire.';
+  String get whyKryfoNoReceiptsTyping =>
+      'Pas d’accusés de lecture, pas de liste de contacts envoyée. Le fait que vous écrivez ne s’affiche que chez la personne à qui vous écrivez, directement par Tor, jamais par un serveur. La plupart des applis laissent fuiter les métadonnées. Kryfo est conçu pour ne pas le faire.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Vérifiez son identité';
