@@ -393,6 +393,8 @@ func dropUploadParts(ctx context.Context, c *http.Client, base string, job dropS
 	// file the service holds goes on with no work, and a new one is told
 	// the bits it needs now
 	pow, _ := dropNonceOf(v.id, sealed)
+	// one budget for the work of a send, however many rounds it is asked
+	until := time.Now().Add(dropPowBudget)
 	for round := 0; ; round++ {
 		// nothing of the sender in it: no key, no day, nothing two uploads
 		// of one person share
@@ -410,7 +412,7 @@ func dropUploadParts(ctx context.Context, c *http.Client, base string, job dropS
 			return word
 		}
 		j.preparing.Store(true)
-		n, err := dropPowWithin(ctx, v.id, sealed, begun.Bits)
+		n, err := dropPowWithin(ctx, v.id, sealed, begun.Bits, until)
 		j.preparing.Store(false)
 		if errors.Is(err, errDropPowLong) {
 			// more than a phone should spend: slices, or a calm try later
@@ -507,11 +509,17 @@ var dropPowBudget = 60 * time.Second
 
 var errDropPowLong = errors.New("work past its time")
 
-// the work within its budget, or errDropPowLong
-func dropPowWithin(ctx context.Context, id string, sealed int64, want int) (uint64, error) {
-	tctx, cancel := context.WithTimeout(ctx, dropPowBudget)
+// the grind itself, a var so the tests can make it slow
+var dropGrind = dropPow
+
+// the work done by [until], or errDropPowLong
+func dropPowWithin(ctx context.Context, id string, sealed int64, want int, until time.Time) (uint64, error) {
+	if !time.Now().Before(until) {
+		return 0, errDropPowLong
+	}
+	tctx, cancel := context.WithDeadline(ctx, until)
 	defer cancel()
-	n, err := dropPow(tctx, id, sealed, want)
+	n, err := dropGrind(tctx, id, sealed, want)
 	if err != nil && ctx.Err() == nil {
 		return 0, errDropPowLong
 	}

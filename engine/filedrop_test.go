@@ -3,6 +3,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
@@ -40,8 +41,10 @@ type fakeFiles struct {
 	forget atomic.Int32
 	// what it answers /new with for a file every recipient has
 	goneIDs map[string]bool
-	// the bits a new file needs, as the service would say
-	bits int
+	// the bits a new file needs, as the service would say, and whether it
+	// asks one more each time
+	bits      int
+	raiseLeft int
 	// parts to answer busy, as for a writer still on the file
 	busyParts atomic.Int32
 	gots      []string
@@ -81,7 +84,14 @@ func newFakeFiles(t *testing.T) (*fakeFiles, *httptest.Server) {
 		}
 		ff := f.files[id]
 		// no work is asked for again every time, so the tests know the count
-		if pow := uint64(m["pow"].(float64)); ff == nil && (pow == 0 || !dropPowHolds(id, size, pow, f.bits)) {
+		pow := uint64(m["pow"].(float64))
+		// asks once more of work that would have done
+		raised := ff == nil && pow != 0 && f.raiseLeft > 0
+		if raised {
+			f.raiseLeft--
+			f.bits++
+		}
+		if ff == nil && (raised || pow == 0 || !dropPowHolds(id, size, pow, f.bits)) {
 			w.WriteHeader(429)
 			fmt.Fprintf(w, `{"e":"work","bits":%d}`, f.bits)
 			return
@@ -801,6 +811,38 @@ func TestDropWorkHasATimeBudget(t *testing.T) {
 	if time.Since(start) > 3*time.Second {
 		t.Fatalf("ground for %v", time.Since(start))
 	}
+}
+
+// the budget is the send's, not each round's: a service that asks again
+// gets no more time than one that asks once
+func TestDropWorkBudgetIsTheSends(t *testing.T) {
+	f, _ := dropRig(t)
+	old, oldGrind := dropPowBudget, dropGrind
+	defer func() { dropPowBudget, dropGrind = old, oldGrind }()
+	dropPowBudget = 300 * time.Millisecond
+	// each round of work takes 200 ms: one fits the budget, two do not
+	dropGrind = func(ctx context.Context, id string, sealed int64, want int) (uint64, error) {
+		select {
+		case <-ctx.Done():
+			return 0, ctx.Err()
+		case <-time.After(200 * time.Millisecond):
+		}
+		return dropPow(ctx, id, sealed, want)
+	}
+	// the service asks once more after the first work
+	f.raiseLeft = 1
+	path, _ := writeRandom(t, 1000)
+	start := time.Now()
+	if r := dropSend(sendJob(path, "uid-r", "a")); r != "error: busy" {
+		t.Fatalf("two rounds past one budget: %s", r)
+	}
+	if d := time.Since(start); d > time.Second {
+		t.Fatalf("took %v on a budget of %v", d, dropPowBudget)
+	}
+	// one round inside it goes
+	f.raiseLeft = 0
+	other, _ := writeRandom(t, 1000)
+	mustSend(t, sendJob(other, "uid-s", "a"))
 }
 
 // a part answered busy, a writer of a dead circuit still on the file, is
