@@ -87,6 +87,7 @@ ex=$("$here/../../packaging/windows/check-pe.sh" --exports sqlcipher.dll)
 for want in sqlite3_key sqlite3_key_v2 sqlite3_rekey sqlite3_open_v2 sqlite3_prepare_v3 sqlite3_libversion; do
   grep -qx "$want" <<<"$ex" || die "sqlcipher.dll does not export $want"
 done
-other=$(grep -v '^sqlite3_' <<<"$ex" || true)
+# sqlite's api, and three sqlite3pager_ calls the amalgamation marks too
+other=$(grep -vE '^sqlite3(_|pager_)' <<<"$ex" || true)
 [ -z "$other" ] || die "sqlcipher.dll exports more than sqlite's api: $(echo $other | head -c 300)"
 echo "$out/sqlcipher.dll ($(grep -c . <<<"$ex") exports)"
