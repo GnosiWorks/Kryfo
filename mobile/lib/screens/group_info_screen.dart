@@ -51,7 +51,6 @@ import '../l10n/numbers.dart';
 import '../read_burn.dart' show burnWaitsRow;
 import '../group_end.dart';
 import '../dlog.dart';
-import '../caps.dart';
 import '../chat_shots.dart' show ShotsPacer;
 import '../group_shots.dart';
 import '../widgets/group_shots_sheet.dart';
@@ -141,7 +140,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   bool? _shotsNow;
   // what each member's app can do, and who is blocked here, for the
   // admin's lists
-  Map<String, int> _caps = const {};
+  Map<String, Set<String>> _caps = const {};
   Set<String> _blockedHere = const {};
   final _waiting = ValueNotifier<List<ShotsWaiter>>(const []);
 
@@ -212,7 +211,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     final held = await keysHeldShown();
     // who can block, for the admin's lists: a read that fails leaves
     // everyone as not known, which only ever says less
-    var caps = const <String, int>{};
+    var caps = const <String, Set<String>>{};
     var blocked = const <String>{};
     if (g?['room_pub'] == null) {
       try {
@@ -381,7 +380,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     }
     // while the block is on, someone whose app cannot yet says so. one
     // that will not read is as not known
-    Map<String, int>? caps;
+    Map<String, Set<String>>? caps;
     if (_shots.on && !sessionQuiet) {
       try {
         caps = await session.groupDb(widget.groupId).capsOfPeople([
@@ -395,7 +394,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     final cantYet = {
       if (caps != null)
         for (final c in available)
-          if (!capsHave(caps[c.haloId] ?? 0, kCapGroupShots)) c.haloId,
+          if (!groupShotsCan(caps, c.haloId)) c.haloId,
     };
     final picked = await showHaloSheet<Set<String>>(
       context,

@@ -37,7 +37,7 @@ extension AppStateRefresh on AppState {
       body = l10n.stickerLabel;
     } else if (text.isNotEmpty) {
       body = text;
-    } else if (fileName == 'voice.wav') {
+    } else if (isVoiceName(fileName)) {
       body = l10n.appVoiceMessage2;
     } else if (fileName != null) {
       body = fileName;

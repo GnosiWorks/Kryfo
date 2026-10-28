@@ -7,7 +7,7 @@
 // signal and the engine are stand-ins
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kryfo/caps.dart';
+import 'package:kryfo/typing.dart' show kCapGroupShots;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/group_shots.dart';
 import 'package:kryfo/lock_state.dart' show PinResult, lockState;
@@ -140,7 +140,7 @@ void main() {
     final caps = w.ctls(_h, 'caps');
     expect(caps, hasLength(1));
     expect(caps.single.groupId, _g2);
-    expect(caps.single.caps, kCapsMine);
+    expect(caps.single.caps, contains(kCapGroupShots));
     // the everyday side keeps nothing of it
     expect(w.live.rowWrites.where((c) => c.contains(_g2)), isEmpty);
     expect(w.live.groupRows.containsKey(_g2), isFalse);

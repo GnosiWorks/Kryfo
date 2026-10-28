@@ -50,10 +50,9 @@ extension AppStateSession on AppState {
         final q = await _quietOf(d);
         if (q != null) {
           await _dropGroupLeftovers(d);
-          await _sweepUnnamedWallpapers(
-            d,
-            DateTime.now().subtract(const Duration(minutes: 10)),
-          );
+          final before = DateTime.now().subtract(const Duration(minutes: 10));
+          await _sweepUnnamedWallpapers(d, before);
+          await _sweepUnnamedMedia(before, d);
           _decoyDb = d;
           _decoyId = q;
           _otherShown = await _shownOf(Session(d));
@@ -241,6 +240,8 @@ extension AppStateSession on AppState {
     final want = decoy ? _decoyDb : live;
     if (want == null) return;
     lockState.inDecoy = decoy;
+    // out of the decoy the bridges are seen again at once (typing)
+    if (!decoy) _typingBridgesRead();
     if (identical(_session.primary, want)) return;
     // no reads here: what home shows of the other session was read ahead,
     // and swapping it in costs the same whichever way it goes
@@ -326,8 +327,10 @@ extension AppStateSession on AppState {
       // settled, both sides' rows name their files
       final before = DateTime.now().subtract(const Duration(minutes: 10));
       await _sweepUnnamedWallpapers(v, before);
+      await _sweepUnnamedMedia(before, v);
       if (decoy) {
         await _sweepUnnamedWallpapers(primary, before, vaultOpen: true);
+        await _sweepUnnamedMedia(before, primary, true);
       }
       // seats of people the everyday side let go while it was shut, and its
       // blocks and let-go words as its own rows hold them
@@ -371,6 +374,7 @@ extension AppStateSession on AppState {
       );
     }
     lockState.inDecoy = decoy;
+    if (!decoy) _typingBridgesRead();
     _dropOpened();
     _session = s;
     _quiet = decoy ? _decoyId : null;

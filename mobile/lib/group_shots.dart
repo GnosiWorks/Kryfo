@@ -3,10 +3,11 @@
 // on or off, whether every member's Kryfo can block, and the stamp it was
 // set at, with the same stamp rules as a 1:1 chat (chat_shots.dart). an
 // updated phone blocks as soon as it is on; the group says it is on for
-// everyone only once every member's app can (caps.dart). rooms always block
-import 'caps.dart';
+// everyone only once every member's app can (the 'gs' name in the 'cp'
+// list, typing.dart). rooms always block
 import 'chat_shots.dart';
 import 'group_end.dart';
+import 'typing.dart' show kCapGroupShots;
 
 /// the state next to the admin's roster, on its messages and a create
 const kGroupShotsWire = 'gs';
@@ -164,14 +165,21 @@ bool groupShotsFrom(
 List<String> groupShotsWaitsFor(
   List<String> members,
   String me,
-  Map<String, int> caps,
+  Map<String, Set<String>> caps,
 ) => [
   for (final m in members)
-    if (m != me && !capsHave(caps[m] ?? 0, kCapGroupShots)) m,
+    if (m != me && !(caps[m]?.contains(kCapGroupShots) ?? false)) m,
 ];
 
-bool groupShotsAll(List<String> members, String me, Map<String, int> caps) =>
-    groupShotsWaitsFor(members, me, caps).isEmpty;
+/// [m]'s phone is known to block in groups
+bool groupShotsCan(Map<String, Set<String>> caps, String m) =>
+    caps[m]?.contains(kCapGroupShots) ?? false;
+
+bool groupShotsAll(
+  List<String> members,
+  String me,
+  Map<String, Set<String>> caps,
+) => groupShotsWaitsFor(members, me, caps).isEmpty;
 
 /// the line after a move from ([wasOn], [wasAll]) to ([on], [all]), or null
 /// when the one there stays

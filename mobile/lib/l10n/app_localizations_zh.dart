@@ -501,7 +501,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appScanTheirCode => '扫描对方的二维码';
 
   @override
-  String get appAKryfoLinkA => 'Kryfo 链接、聊天室链接或 @wren';
+  String get appAKryfoLinkA => 'Kryfo 链接、聊天室链接或 @name';
 
   @override
   String get appAddThem => '添加对方';
@@ -597,9 +597,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appSpeedPrivacy => '速度与隐私 →';
-
-  @override
-  String get appGettingMessages => '接收消息 →';
 
   @override
   String get appDisableAppLock => '关闭应用锁？';
@@ -2289,12 +2286,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get donateJustGladToHelp => '能帮上忙就好';
 
   @override
-  String get gettingMessagesGettingMessages => '接收消息';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach => '新消息如何到达这部手机。你随时可以更改。';
-
-  @override
   String get gettingMessagesAlwaysOn => '始终在线';
 
   @override
@@ -2803,7 +2794,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get handleOptionalYourThreeWords => '可选。不管有没有，你的三个词都照常可用。';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => '一句话介绍自己 · 可选';
@@ -3733,6 +3724,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get newGroupAddAtLeastOne => '创建群组之前，请先添加至少一位联系人。';
 
   @override
+  String get newGroupNeedsContacts => '群组由你的联系人组成';
+
+  @override
+  String get newGroupAddSomeoneFirst => '请先添加联系人。聊天室不需要联系人：有链接的人都能加入。';
+
+  @override
   String get notesDeleteThisNote => '删除这条笔记？';
 
   @override
@@ -4234,6 +4231,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pinsUnlockWithFingerprint => '用指纹解锁';
+
+  @override
+  String get pinsFingerOpensDecoy => '设置伪装 PIN 后关闭：手指只会打开伪装。';
 
   @override
   String get pinsWipePin => '抹除 PIN';
@@ -4999,9 +4999,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsOnion3Hops => 'Onion · 3 跳';
 
   @override
-  String get settingsGettingMessages => '接收消息';
-
-  @override
   String settingsPreviewHidden(Object deliveryModeName) {
     return '$deliveryModeName · 隐藏预览';
   }
@@ -5037,6 +5034,23 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsScamShieldHint => '只在你的手机上检查，什么都不会离开手机';
+
+  @override
+  String get typingNow => '正在输入';
+
+  @override
+  String get settingsTypingIndicator => '输入状态提示';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      '对方在输入时，你们双方都能看到。提示经 Tor 直接发给对方，从不经过中继。';
+
+  @override
+  String get settingsTypingOnionOnly => '在 Onion 线路上可用';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      '使用网桥时关闭：监视你连接的人可能会对上输入提示的信号。关闭网桥后会自动恢复。';
 
   @override
   String get settingsLightTheme => '浅色主题';
@@ -5629,8 +5643,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get whyKryfoNothingLeaks => '什么都不泄露';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      '不会把已读回执或“正在输入”提示交给任何人，也不上传联系人列表。元数据是大多数应用泄露的东西——Kryfo 的设计就是不泄露它。';
+  String get whyKryfoNoReceiptsTyping =>
+      '没有已读回执，也不上传联系人列表。你正在输入，只有你在对话的那个人能看到，经 Tor 直接送达，从不经过服务器。大多数应用都会泄露元数据，Kryfo 的设计就是不泄露。';
 
   @override
   String get whyKryfoVerifyItIsReally => '确认真的是对方';
@@ -6115,6 +6129,34 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bootFailedCloseAndReopen => '关闭并重新打开 Kryfo';
+
+  @override
+  String get bootFailedStillStuck => '如果重试也没用';
+
+  @override
+  String get bootFailedRestoreBackup => '从备份恢复';
+
+  @override
+  String get bootFailedStartFresh => '重新开始';
+
+  @override
+  String get bootFailedStartFreshTitle => '要重新开始吗？';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      '这会抹掉 Kryfo 在这台手机上的一切：聊天、联系人、媒体、隐藏的聊天和你的三个词。保存在别处的备份文件不受影响。';
+
+  @override
+  String get bootFailedStartFreshNext => '继续';
+
+  @override
+  String get bootFailedStartFreshSure => '抹掉这台手机上的一切？';
+
+  @override
+  String get bootFailedStartFreshSureLine => '此操作无法撤销。Kryfo 会关闭，再次打开时如同新安装。';
+
+  @override
+  String get bootFailedStartFreshYes => '抹掉并重新开始';
 
   @override
   String get kryfoLinkTextThatLinkIsNot => '这个链接 Kryfo 读不了';
@@ -8860,6 +8902,89 @@ class AppLocalizationsZh extends AppLocalizations {
       '使用简洁图标时，新的照片、视频和文件会以普通的名称存进手机常用的文件夹。之前保存的内容留在原处。';
 
   @override
+  String get deliveryModeGooglePush => '谷歌推送';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead => '新消息如何送达这部手机、提示音如何、显示什么。你可以随时更改。';
+
+  @override
+  String get notificationsHowTheyReachYou => '消息如何送达';
+
+  @override
+  String get notificationsRecommended => '推荐';
+
+  @override
+  String get notificationsGoogleBody =>
+      '即时且省电。Google 能看到你的手机何时被唤醒，但从不知道是谁写的或说了什么。';
+
+  @override
+  String get notificationsGoogleStarting => '正在开启…';
+
+  @override
+  String get notificationsGoogleNoStart => '谷歌推送没能启动。请检查网络后再试一次。';
+
+  @override
+  String get notificationsGoogleNote =>
+      '其中混有假的唤醒，让 Google 更难分辨真消息何时到达。我们的中继只保存它无法彼此关联的地址。推送服务运行在同一台服务器上，能够把它们关联起来，借助 Google 还能关联到你的 Google 账号，所以运营或查扣我们服务器的人也能做到。如果你在意这一点，请选择其他方式。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。';
+
+  @override
+  String get notificationsGoogleRefused =>
+      '我们的中继暂时不接受这部手机的部分登记。这些聊天会随每 15 分钟一次的定时查收到达，Kryfo 会继续尝试。';
+
+  @override
+  String get notificationsSoundAndVibration => '声音和振动';
+
+  @override
+  String get notificationsSoundHint => '在 Android 自己的设置里';
+
+  @override
+  String get notificationsEachShows => '每条通知显示';
+
+  @override
+  String get notificationsBatteryTips => '省电提示';
+
+  @override
+  String get notificationsBatteryAllowed => '已允许';
+
+  @override
+  String get notificationsBatteryNotYet => '未允许';
+
+  @override
+  String get notificationsMakerSwitch => '手机厂商的开关';
+
+  @override
+  String get onboardingDeliveryHeadline => '消息如何*送达*。';
+
+  @override
+  String get onboardingDeliveryLead => '你可以随时在“通知”里更改。';
+
+  @override
+  String get homeGoogleTitle => '谷歌推送来了';
+
+  @override
+  String get homeGoogleLine => '即时又省电。Google 能看到你的手机何时被唤醒，但从不知道是谁写的或说了什么。';
+
+  @override
+  String get homeGoogleUse => '使用';
+
+  @override
+  String get homeGoogleOn => '谷歌推送已开启';
+
+  @override
+  String get homeGoogleGoneTitle => '谷歌推送不可用';
+
+  @override
+  String get appNotificationsLink => '通知 →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return '谷歌推送 $got · 被降级 $low';
+  }
+
+  @override
   String get passFieldLabel => '密码短语';
 
   @override
@@ -9026,6 +9151,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get groupShotsOldNotice => '我在这个群组开启了禁止截屏。你的 Kryfo 还做不到，请更新一下。';
+
+  @override
+  String get captureShotTaken => '已截屏。没有通知任何其他人。';
+
+  @override
+  String get captureRecording => '此屏幕正在被录制。没有通知任何其他人。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -9525,7 +9656,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get appScanTheirCode => '掃描對方的 QR 碼';
 
   @override
-  String get appAKryfoLinkA => 'Kryfo 連結、聊天室連結或 @wren';
+  String get appAKryfoLinkA => 'Kryfo 連結、聊天室連結或 @name';
 
   @override
   String get appAddThem => '新增對方';
@@ -9621,9 +9752,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get appSpeedPrivacy => '速度與隱私 →';
-
-  @override
-  String get appGettingMessages => '接收訊息 →';
 
   @override
   String get appDisableAppLock => '要停用應用程式鎖嗎？';
@@ -11312,12 +11440,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get donateJustGladToHelp => '能幫上忙就好';
 
   @override
-  String get gettingMessagesGettingMessages => '接收訊息';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach => '新訊息如何送到這支手機。你隨時都可以更改。';
-
-  @override
   String get gettingMessagesAlwaysOn => '始終在線';
 
   @override
@@ -11827,7 +11949,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get handleOptionalYourThreeWords => '非必填。無論如何，你的三個詞都能繼續使用。';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => '一句關於你的介紹 · 非必填';
@@ -12758,6 +12880,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get newGroupAddAtLeastOne => '建立群組前，請先新增至少一位聯絡人。';
 
   @override
+  String get newGroupNeedsContacts => '群組由你的聯絡人組成';
+
+  @override
+  String get newGroupAddSomeoneFirst => '請先新增聯絡人。聊天室不需要聯絡人：有連結的人都能加入。';
+
+  @override
   String get notesDeleteThisNote => '要刪除這則筆記嗎？';
 
   @override
@@ -13259,6 +13387,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pinsUnlockWithFingerprint => '用指紋解鎖';
+
+  @override
+  String get pinsFingerOpensDecoy => '設定偽裝 PIN 後關閉：手指只會開啟偽裝。';
 
   @override
   String get pinsWipePin => '抹除 PIN';
@@ -14024,9 +14155,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsOnion3Hops => 'Onion · 3 跳';
 
   @override
-  String get settingsGettingMessages => '接收訊息';
-
-  @override
   String settingsPreviewHidden(Object deliveryModeName) {
     return '$deliveryModeName · 隱藏預覽';
   }
@@ -14062,6 +14190,23 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsScamShieldHint => '只在你的手機上檢查，不會有任何東西離開手機';
+
+  @override
+  String get typingNow => '正在輸入';
+
+  @override
+  String get settingsTypingIndicator => '輸入狀態提示';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      '對方在輸入時，你們雙方都看得到。提示經 Tor 直接傳給對方，從不經過中繼。';
+
+  @override
+  String get settingsTypingOnionOnly => '在 Onion 路線上可用';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      '使用橋接時關閉：監視你連線的人可能會對上輸入提示的訊號。關閉橋接後會自動恢復。';
 
   @override
   String get settingsLightTheme => '淺色主題';
@@ -14654,8 +14799,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get whyKryfoNothingLeaks => '什麼都不外洩';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      '不會把已讀回條或正在輸入的提示交給任何人，也不會上傳聯絡人清單。中繼資料是大多數應用程式會外洩的東西，而 Kryfo 的設計就是不外洩。';
+  String get whyKryfoNoReceiptsTyping =>
+      '沒有已讀回條，也不上傳聯絡人清單。你正在輸入，只有你在對話的那個人看得到，經 Tor 直接送達，從不經過伺服器。大多數應用程式都會外洩中繼資料，Kryfo 的設計就是不外洩。';
 
   @override
   String get whyKryfoVerifyItIsReally => '確認真的是對方';
@@ -15140,6 +15285,34 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bootFailedCloseAndReopen => '關閉並重新開啟 Kryfo';
+
+  @override
+  String get bootFailedStillStuck => '如果重試也沒用';
+
+  @override
+  String get bootFailedRestoreBackup => '從備份還原';
+
+  @override
+  String get bootFailedStartFresh => '重新開始';
+
+  @override
+  String get bootFailedStartFreshTitle => '要重新開始嗎？';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      '這會清除 Kryfo 在這支手機上的一切：聊天、聯絡人、媒體、隱藏的聊天和你的三個詞。存在別處的備份檔案不受影響。';
+
+  @override
+  String get bootFailedStartFreshNext => '繼續';
+
+  @override
+  String get bootFailedStartFreshSure => '清除這支手機上的一切？';
+
+  @override
+  String get bootFailedStartFreshSureLine => '此操作無法復原。Kryfo 會關閉，再次開啟時就像剛安裝。';
+
+  @override
+  String get bootFailedStartFreshYes => '清除並重新開始';
 
   @override
   String get kryfoLinkTextThatLinkIsNot => '這個連結不是 Kryfo 能讀取的';
@@ -17767,6 +17940,89 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '使用簡潔圖示時，新的照片、影片和檔案會以普通的名稱存進手機常用的資料夾。之前儲存的內容留在原處。';
 
   @override
+  String get deliveryModeGooglePush => 'Google 推播';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead => '新訊息如何送達這支手機、提示音如何、顯示什麼。你可以隨時更改。';
+
+  @override
+  String get notificationsHowTheyReachYou => '訊息如何送達';
+
+  @override
+  String get notificationsRecommended => '推薦';
+
+  @override
+  String get notificationsGoogleBody =>
+      '即時且省電。Google 能看到你的手機何時被喚醒，但從不知道是誰寫的或說了什麼。';
+
+  @override
+  String get notificationsGoogleStarting => '正在開啟…';
+
+  @override
+  String get notificationsGoogleNoStart => 'Google 推播沒能啟動。請檢查網路後再試一次。';
+
+  @override
+  String get notificationsGoogleNote =>
+      '其中混有假的喚醒，讓 Google 更難分辨真訊息何時送達。我們的中繼只保存它無法彼此關聯的位址。推播服務執行在同一台伺服器上，能夠把它們關聯起來，借助 Google 還能關聯到你的 Google 帳號，所以營運或查扣我們伺服器的人也能做到。如果你在意這一點，請選擇其他方式。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。';
+
+  @override
+  String get notificationsGoogleRefused =>
+      '我們的中繼暫時不接受這支手機的部分登記。這些聊天會隨每 15 分鐘一次的定時查收送達，Kryfo 會繼續嘗試。';
+
+  @override
+  String get notificationsSoundAndVibration => '聲音和震動';
+
+  @override
+  String get notificationsSoundHint => '在 Android 自己的設定中';
+
+  @override
+  String get notificationsEachShows => '每則通知顯示';
+
+  @override
+  String get notificationsBatteryTips => '省電提示';
+
+  @override
+  String get notificationsBatteryAllowed => '已允許';
+
+  @override
+  String get notificationsBatteryNotYet => '未允許';
+
+  @override
+  String get notificationsMakerSwitch => '手機廠商的開關';
+
+  @override
+  String get onboardingDeliveryHeadline => '訊息如何*送達*。';
+
+  @override
+  String get onboardingDeliveryLead => '你可以隨時在「通知」中更改。';
+
+  @override
+  String get homeGoogleTitle => 'Google 推播來了';
+
+  @override
+  String get homeGoogleLine => '即時又省電。Google 能看到你的手機何時被喚醒，但從不知道是誰寫的或說了什麼。';
+
+  @override
+  String get homeGoogleUse => '使用';
+
+  @override
+  String get homeGoogleOn => 'Google 推播已開啟';
+
+  @override
+  String get homeGoogleGoneTitle => 'Google 推播無法使用';
+
+  @override
+  String get appNotificationsLink => '通知 →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'Google 推播 $got · 被降級 $low';
+  }
+
+  @override
   String get passFieldLabel => '密碼短語';
 
   @override
@@ -17933,4 +18189,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupShotsOldNotice => '我在這個群組開啟了禁止截圖。你的 Kryfo 還做不到，請更新一下。';
+
+  @override
+  String get captureShotTaken => '已截圖。沒有通知任何其他人。';
+
+  @override
+  String get captureRecording => '此螢幕正在被錄影。沒有通知任何其他人。';
 }

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // AppState: a group's screenshot block, set by its admin, and what each
-// member's app can do (group_shots.dart, caps.dart)
+// member's phone understands (group_shots.dart, typing.dart)
 
 part of '../main.dart';
 
@@ -46,7 +46,7 @@ extension AppStateGroupShots on AppState {
       final caps = await d.capsOfPeople(members);
       final to = [
         for (final m in await _othersIn(d, groupId, members))
-          if (!capsHave(caps[m] ?? 0, kCapGroupShots)) m,
+          if (!groupShotsCan(caps, m)) m,
       ];
       if (to.isEmpty) return;
       final now = DateTime.now().millisecondsSinceEpoch;
@@ -136,18 +136,25 @@ extension AppStateGroupShots on AppState {
     }
   }
 
-  // what any envelope says of its sender's app. a room key's says nothing:
-  // room frames carry no bits
-  Future<void> _takeCaps(String sender, UnwrappedMessage env, HaloDb db) async {
+  // what a group frame says of its sender's phone, kept on their row,
+  // a member stub's too. a 1:1 frame's is the typing side's to keep
+  // (_takeCaps); either may change who the groups this phone runs wait
+  // for. a room key's says nothing: room frames carry no list
+  Future<void> _memberCaps(String sender, UnwrappedMessage env, HaloDb db) async {
     if (isDevId(sender) || looksLikeRoomKey(sender)) return;
+    final counts = AppState._dataFrame(env) && env.msgUid != null;
+    if (env.caps == null && !counts) return;
     try {
-      final moved = await db.takeCaps(
-        sender,
-        carried: env.caps,
-        counts: AppState._dataFrame(env) && env.msgUid != null,
-        written: env.writtenAt,
-      );
-      if (moved) await _shotsRecount(db, member: sender);
+      if (env.groupId != null &&
+          !await db.takeMemberCaps(
+            sender,
+            caps: env.caps,
+            counts: counts,
+            written: env.writtenAt,
+          )) {
+        return;
+      }
+      await _shotsRecount(db, member: sender);
     } catch (e) {
       dlog('caps: not taken (${e.runtimeType})');
     }

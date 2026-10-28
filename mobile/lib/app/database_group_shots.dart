@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a group's screenshot block (group_shots.dart) and what each person's app
-// can do (caps.dart)
+// a group's screenshot block (group_shots.dart) and what each member's
+// phone understands, as the 'cp' list says it (typing.dart)
 
 part of '../main.dart';
 
@@ -155,7 +155,7 @@ mixin _GroupShotsRows {
 
   // ---- what each person's app can do ----
 
-  Future<Map<String, int>> capsOfPeople(Iterable<String> ids) async {
+  Future<Map<String, Set<String>>> capsOfPeople(Iterable<String> ids) async {
     final list = ids.toSet().toList();
     if (list.isEmpty) return const {};
     final db = await open();
@@ -167,33 +167,33 @@ mixin _GroupShotsRows {
     );
     return {
       for (final r in rows)
-        r['halo_id'] as String: (r['caps'] as num?)?.toInt() ?? 0,
+        r['halo_id'] as String: capsOfText(r['caps'] as String?),
     };
   }
 
-  // what an envelope from [peer] says of their app (capsAfter). true when
-  // their bits changed
-  Future<bool> takeCaps(
+  // what a group frame from [peer] says their phone understands, on their
+  // row whether it is a contact or a member stub (typing.dart capsAfter).
+  // true when it changed
+  Future<bool> takeMemberCaps(
     String peer, {
-    required int? carried,
+    required List<String>? caps,
     required bool counts,
     int? written,
   }) async {
     final db = await open();
     return db.transaction((t) async {
-      final rows = await t.query(
+      final r = await t.query(
         'contacts',
         columns: const ['caps', 'caps_at'],
         where: 'halo_id = ?',
         whereArgs: [peer],
         limit: 1,
       );
-      if (rows.isEmpty) return false;
-      final was = (rows.first['caps'] as num?)?.toInt() ?? 0;
+      if (r.isEmpty) return false;
       final next = capsAfter(
-        was,
-        (rows.first['caps_at'] as num?)?.toInt() ?? 0,
-        carried: carried,
+        (r.first['caps'] as String?) ?? '',
+        (r.first['caps_at'] as num?)?.toInt() ?? 0,
+        carried: caps,
         counts: counts,
         written: written,
       );
@@ -204,23 +204,17 @@ mixin _GroupShotsRows {
         where: 'halo_id = ?',
         whereArgs: [peer],
       );
-      return next.caps != was;
+      return true;
     });
   }
 }
 
-// the upgrade to 87: a group's block, and what each person's app can do
+// the upgrade to 89: a group's block
 Future<void> groupShotsColumns(DatabaseExecutor db) async {
   for (final col in GroupShots.columns) {
     await addColumn(
       db,
       'ALTER TABLE groups ADD COLUMN $col INTEGER NOT NULL DEFAULT 0',
-    );
-  }
-  for (final col in const ['caps', 'caps_at']) {
-    await addColumn(
-      db,
-      'ALTER TABLE contacts ADD COLUMN $col INTEGER NOT NULL DEFAULT 0',
     );
   }
 }

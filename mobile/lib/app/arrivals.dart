@@ -22,7 +22,7 @@ String? shippedPreview(Map<String, String>? pv, {required bool accepted}) {
 /// what a notification says for a message with no text: what kind of
 /// file it is, never the name a voice note or a camera clip was saved under
 String notifMediaLine(String? fileName, String? mediaPath) {
-  if (fileName == 'voice.wav') return l10n.appVoiceMessage;
+  if (isVoiceName(fileName)) return l10n.appVoiceMessage;
   if (nameSaysVideo(fileName)) return l10n.chatVideo;
   return fileName ?? (mediaPath != null ? l10n.appPhoto : '');
 }
@@ -196,6 +196,14 @@ class AppIo {
 
   Future<String> onionSend(String onion, String cipher) =>
       engine.sendTo(onion, cipher);
+
+  // a typing frame: sealed only on a session past its opener, and sent
+  // straight to the peer's door, never anywhere else (typing.dart)
+  Future<String> typingSeal(String peer, String plain) =>
+      signalEncrypt(peer, plain, onlySettled: true);
+
+  Future<String> typingSend(String onion, String cipher) =>
+      engine.sendTyping(onion, cipher);
 
   Future<String> firstContactSend(String xPub, String fc, String cipher) =>
       engine.sendFirstContact(xPub, fc, cipher);

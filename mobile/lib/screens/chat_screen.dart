@@ -2,6 +2,7 @@
 // chat screen: bubbles, composer, live receive over tor.
 
 import '../lock_state.dart';
+import '../capture_watch.dart';
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -28,7 +29,12 @@ import 'introduce_sheet.dart';
 import '../vouch_text.dart';
 import '../widgets/intro_chip.dart';
 import '../widgets/media_bubbles.dart'
-    show VoiceBubble, VoiceMakingBubble, fileCard, fileTooBigLine;
+    show
+        VoiceBubble,
+        VoiceMakingBubble,
+        fileCard,
+        fileTooBigLine,
+        voiceLengthKnown;
 import '../widgets/voice_mic.dart';
 import '../widgets/owned_text.dart';
 import '../widgets/confirm_sheet.dart';
@@ -111,9 +117,11 @@ import '../main.dart'
         AppStatePrefs,
         AppStateProfile,
         AppStateScreen,
+        AppStateTyping,
         AppStateVault,
         AppStateContacts,
         AppStateSession,
+        AppStateVoice,
         AppStateDevchat,
         AppStatePairing,
         AppStateRefresh;
@@ -172,6 +180,8 @@ import '../l10n/numbers.dart';
 import '../widgets/video_viewer.dart';
 import '../widgets/photo_viewer.dart';
 import '../widgets/swap.dart';
+import '../widgets/typing_mark.dart';
+import '../typing.dart' show composerEdit;
 import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
 import '../back_on_top.dart';
@@ -185,6 +195,10 @@ import '../translate/chat_translation.dart';
 import '../translate/hub_live.dart' show translationHubIfOn;
 import '../translate/translate_bar.dart';
 import '../translate/translate_bubble.dart';
+import '../voice_format.dart' show isVoiceName, kVoiceWav;
+import '../voice_length.dart' show voiceFileMs;
+import '../voice_opus.dart' show voiceForWire;
+import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
 
 // the chats open in the stack, by id: shared words land in the one on top
 // rather than in a second copy of it
@@ -1213,9 +1227,19 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _chooseDevName(bool anon) => _devOpening?.choose(anon: anon);
 
+  // android's word that this chat was screenshotted or is recorded: one
+  // quiet line here, on this phone alone
+  VoidCallback? _unwatchCaptures;
+  void _captured(Capture what) {
+    if (!mounted || lockState.locked) return;
+    if (ModalRoute.of(context)?.isCurrent == false) return;
+    showHaloToast(context, captureLine(what));
+  }
+
   @override
   void initState() {
     super.initState();
+    _unwatchCaptures = captureWatch.watch(_captured);
     _memo = session.chatKey(widget.peerHaloId);
     if (_isDev) {
       final d = _devShown;
@@ -1286,6 +1310,9 @@ class _ChatScreenState extends State<ChatScreen>
     if (kept == null) unawaited(_readDraft(rows));
     // kept on every keystroke, so it survives leaving the chat and the app
     _msgCtrl.addListener(_keepDraft);
+    // what is typed from here on may tell them, words put back never do
+    _typedWas = _msgCtrl.text;
+    _msgCtrl.addListener(_typed);
     // words handed in by a share or a forward are a draft from the start;
     // after a stop, once the row they join is read
     if (kept != null && _handedIn) _keepDraft();
@@ -1326,11 +1353,7 @@ class _ChatScreenState extends State<ChatScreen>
     session.isVerified(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _verified = v);
     });
-    session.getContact(widget.peerHaloId).then((c) {
-      if (mounted) {
-        setState(() => _peerBadge = c?['supporter_badge'] as String?);
-      }
-    });
+    unawaited(_loadBadge());
     // request lock: are they an accepted contact, have they engaged, and how
     // many messages have we already sent while unaccepted.
     final barReads = <Future<void>>[
@@ -1515,6 +1538,8 @@ class _ChatScreenState extends State<ChatScreen>
       _tryAppendNew();
       unawaited(_refreshDelivered());
       _loadShots();
+      // their badge rides their messages: one that came now may change it
+      unawaited(_loadBadge());
     }
     _refreshRequestState();
     unawaited(_readKeyState());
@@ -1530,6 +1555,12 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Object? _devSeen;
+
+  Future<void> _loadBadge() async {
+    final c = await session.getContact(widget.peerHaloId);
+    final b = c?['supporter_badge'] as String?;
+    if (mounted && b != _peerBadge) setState(() => _peerBadge = b);
+  }
 
   // who vouched, as we know them. only accepted contacts come back, so a
   // voucher we deleted since is no longer named.
@@ -2054,7 +2085,7 @@ class _ChatScreenState extends State<ChatScreen>
         shareOn != null &&
         !_keptHere(shareOn) &&
         shareOn.filePath != null &&
-        shareOn.fileName != 'voice.wav';
+        !isVoiceName(shareOn.fileName);
     final going = album == null
         ? target.sending &&
               (target.mediaPath != null || target.filePath != null)
@@ -2101,7 +2132,7 @@ class _ChatScreenState extends State<ChatScreen>
         : (canTranslate ? 4 : 3) +
               (target.text.isNotEmpty && target.sticker == null ? 1 : 0) +
               (target.sticker == null ? 1 : 0) +
-              (target.filePath != null && target.fileName != 'voice.wav'
+              (target.filePath != null && !isVoiceName(target.fileName)
                   ? 1
                   : 0) +
               (out && !media && target.sticker == null ? 1 : 0) -
@@ -2381,7 +2412,7 @@ class _ChatScreenState extends State<ChatScreen>
                                 _keptHere(shareOn) ||
                                 shareOn.filePath == null ||
                                 shareOn.fileName == null ||
-                                shareOn.fileName == 'voice.wav'
+                                isVoiceName(shareOn.fileName)
                             ? null
                             : () {
                                 dismiss(now: true);
@@ -3549,7 +3580,7 @@ class _ChatScreenState extends State<ChatScreen>
       path: path,
       msgUid: msgUid,
       fileName: msg.fileName!,
-      voice: msg.fileName == 'voice.wav',
+      voice: isVoiceName(msg.fileName),
       voiceDisguised: msg.voiceDisguised,
       burnSeconds: msg.burnSecs,
       secure: msg.secure,
@@ -3774,7 +3805,7 @@ class _ChatScreenState extends State<ChatScreen>
           sending: true,
           msgUid: msgUid,
           replyTo: replyToUid,
-          fileName: 'voice.wav',
+          fileName: kVoiceWav,
           voiceDisguised: true,
           burnSecs: _ghost ? _burnSeconds : null,
         )..making = making.progress;
@@ -3838,7 +3869,7 @@ class _ChatScreenState extends State<ChatScreen>
             sending: true,
             msgUid: msgUid,
             replyTo: replyToUid,
-            fileName: 'voice.wav',
+            fileName: kVoiceWav,
             voiceDisguised: disguise,
             burnSecs: _ghost ? _burnSeconds : null,
             burnAt: null,
@@ -3861,6 +3892,26 @@ class _ChatScreenState extends State<ChatScreen>
       // from here a lock takes it off the screen as one still being made
       pending = msg;
       await _answerSupport();
+      // what goes: opus to a phone that plays it, else the wav. the bubble
+      // shows the wav until the opus copy is there, then that
+      if (locked) return lockedOut(null, placed: filePath);
+      // a lock under way stops the encode, and both files go
+      final (wirePath, wireName) = await voiceForWire(
+        filePath,
+        opus: await appState.opusFor(peer),
+        stop: () => locked,
+      );
+      if (wirePath != filePath) {
+        voicePeaksSame(filePath, wirePath);
+        final ms = await voiceFileMs(wirePath);
+        if (ms != null) voiceLengthKnown(wirePath, ms);
+        msg
+          ..filePath = wirePath
+          ..fileName = wireName;
+        if (mounted) setState(() {});
+        unawaited(voiceFileFree(filePath).then((_) => shredFile(filePath)));
+      }
+      if (locked) return lockedOut(null, placed: wirePath);
       // the bubble, the row and the wire all say when it was begun
       final writtenAt = msg.when.millisecondsSinceEpoch;
       var kept = false;
@@ -3875,8 +3926,8 @@ class _ChatScreenState extends State<ChatScreen>
             wasAccepted: wasAccepted,
             writtenAt: writtenAt,
             replyTo: replyToUid,
-            filePath: filePath,
-            fileName: 'voice.wav',
+            filePath: wirePath,
+            fileName: wireName,
             voiceDisguised: disguise,
             burnAt: msg.burnAt,
             burnSecs: msg.burnSecs,
@@ -3886,10 +3937,10 @@ class _ChatScreenState extends State<ChatScreen>
       } catch (e) {
         dlog('voice: row not kept (${e.runtimeType})');
       }
-      if (!kept && locked) return lockedOut(null, placed: filePath);
+      if (!kept && locked) return lockedOut(null, placed: wirePath);
       if (!kept) {
         if (mounted) setState(() => _messages.remove(msg));
-        await shredFile(filePath);
+        await shredFile(wirePath);
         say(l10n.voiceNotSent);
         return;
       }
@@ -3898,9 +3949,9 @@ class _ChatScreenState extends State<ChatScreen>
       // left while it was made: the screen showing the chat now hears of it
       if (!mounted) appState.chatChanged(peer);
       _sendChunkedMedia(
-        path: filePath,
+        path: wirePath,
         msgUid: msgUid,
-        fileName: 'voice.wav',
+        fileName: wireName,
         voice: true,
         voiceDisguised: disguise,
         burnSeconds: msg.burnSecs,
@@ -5086,7 +5137,7 @@ class _ChatScreenState extends State<ChatScreen>
         (m.preparing ||
             m.mediaPath != null ||
             (m.filePath != null &&
-                m.fileName != 'voice.wav' &&
+                !isVoiceName(m.fileName) &&
                 fileShapeNow(m.filePath, m.fileName) == FileShape.video) ||
             (m.direction == 'in' && m.filePath == null)),
   );
@@ -5195,7 +5246,7 @@ class _ChatScreenState extends State<ChatScreen>
           quoted = l10n.albumQuoted;
         } else if (original.mediaPath != null) {
           quoted = l10n.chatQuotedPhoto;
-        } else if (original.fileName == 'voice.wav') {
+        } else if (isVoiceName(original.fileName)) {
           quoted = l10n.chatVoiceMessage;
         } else if (original.fileName != null) {
           quoted = original.fileName;
@@ -5405,6 +5456,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   void dispose() {
+    _unwatchCaptures?.call();
     for (final land in List.of(_flights)) {
       land();
     }
@@ -5429,6 +5481,7 @@ class _ChatScreenState extends State<ChatScreen>
     );
     // left: what the composer holds is written now, not after the wait
     _msgCtrl.removeListener(_keepDraft);
+    _msgCtrl.removeListener(_typed);
     _keepDraft();
     final rows = _draftRows;
     if (rows != null) {
@@ -5678,7 +5731,7 @@ class _ChatScreenState extends State<ChatScreen>
             ),
             // both phones or neither: off, with the reason, until theirs
             // knows the block. someone blocked is not offered
-            if (!_blocked && !widget.support)
+            if (!_blocked && !widget.support && !_isDev)
               MenuSheetRow(
                 icon: Icons.phonelink_lock_outlined,
                 label: l10n.chatBlockScreenshots,
@@ -5778,6 +5831,7 @@ class _ChatScreenState extends State<ChatScreen>
           peerXPub: widget.peerXPub,
           face: _peerFace,
           nickname: _nickname,
+          support: widget.support,
         ),
       ),
     );
@@ -6015,9 +6069,41 @@ class _ChatScreenState extends State<ChatScreen>
       _takeDraft(composerWith(_msgCtrl.text, words));
 
   void _takeDraft(String t) {
-    _msgCtrl.value = TextEditingValue(
-      text: t,
-      selection: TextSelection.collapsed(offset: t.length),
+    _byApp = true;
+    try {
+      _msgCtrl.value = TextEditingValue(
+        text: t,
+        selection: TextSelection.collapsed(offset: t.length),
+      );
+    } finally {
+      _byApp = false;
+    }
+  }
+
+  // the composer's words as the last change left them, and whether the
+  // app is the one changing them now
+  String _typedWas = '';
+  bool _byApp = false;
+
+  // a keystroke or a paste in the focused composer: their phone may show
+  // that this one is typing (typing.dart). the app's own changes, a draft
+  // put back or words handed in, say nothing
+  void _typed() {
+    final t = _msgCtrl.text;
+    final e = composerEdit(
+      _typedWas,
+      t,
+      byApp: _byApp,
+      focused: _composerFocus.hasFocus,
+    );
+    _typedWas = t;
+    if (e == null || _isDev || widget.support) return;
+    unawaited(
+      appState.typingEdit(
+        widget.peerHaloId,
+        userEdit: e.userEdit,
+        nonEmpty: e.nonEmpty,
+      ),
     );
   }
 
@@ -7380,59 +7466,69 @@ class _ChatHead extends StatelessWidget {
                     ),
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.lock_outline,
-                          size: 10,
-                          // relay and tor told apart by their own colours,
-                          // never by the accent
-                          color: relay ? HaloColors.sky : HaloColors.violet,
-                        ),
-                        const SizedBox(width: 4),
-                        // a longer language at a big font size would run
-                        // past the header's buttons, so it ends in …
-                        Flexible(
-                          child: Text(
-                            relay
-                                ? l10n.chatEncryptedViaRelay
-                                : appState.sendMode == 'fast'
-                                ? l10n.chatEncryptedDirect
-                                : l10n.chatEncryptedOverTor,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: HaloType.mono(
-                              size: 10,
-                              color: relay ? HaloColors.sky : HaloColors.text2,
+                    // the line swaps to "Typing" while they type, in one
+                    // line either way, so the header keeps its height
+                    child: TypingSwap(
+                      showing: appState.typing.board.of(
+                        appState.typingKey(haloId),
+                      ),
+                      style: typingStyle(size: 10, mono: true),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.lock_outline,
+                            size: 10,
+                            // relay and tor told apart by their own colours,
+                            // never by the accent
+                            color: relay ? HaloColors.sky : HaloColors.violet,
+                          ),
+                          const SizedBox(width: 4),
+                          // a longer language at a big font size would run
+                          // past the header's buttons, so it ends in …
+                          Flexible(
+                            child: Text(
+                              relay
+                                  ? l10n.chatEncryptedViaRelay
+                                  : appState.sendMode == 'fast'
+                                  ? l10n.chatEncryptedDirect
+                                  : l10n.chatEncryptedOverTor,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: HaloType.mono(
+                                size: 10,
+                                color: relay
+                                    ? HaloColors.sky
+                                    : HaloColors.text2,
+                              ),
                             ),
                           ),
-                        ),
-                        AnimatedSwitcher(
-                          duration: Duration(
-                            milliseconds: motionStill(context) ? 0 : 220,
-                          ),
-                          child: shotsBlocked
-                              ? Padding(
-                                  key: const ValueKey('shots'),
-                                  padding: const EdgeInsetsDirectional.only(
-                                    start: 6,
-                                  ),
-                                  child: Semantics(
-                                    label: l10n.chatShotsBlockedHere,
-                                    child: Icon(
-                                      Icons.phonelink_lock_outlined,
-                                      size: 11,
-                                      color: HaloColors.text2,
+                          AnimatedSwitcher(
+                            duration: Duration(
+                              milliseconds: motionStill(context) ? 0 : 220,
+                            ),
+                            child: shotsBlocked
+                                ? Padding(
+                                    key: const ValueKey('shots'),
+                                    padding: const EdgeInsetsDirectional.only(
+                                      start: 6,
                                     ),
+                                    child: Semantics(
+                                      label: l10n.chatShotsBlockedHere,
+                                      child: Icon(
+                                        Icons.phonelink_lock_outlined,
+                                        size: 11,
+                                        color: HaloColors.text2,
+                                      ),
+                                    ),
+                                  )
+                                : const SizedBox(
+                                    key: ValueKey('no-shots'),
+                                    width: 0,
                                   ),
-                                )
-                              : const SizedBox(
-                                  key: ValueKey('no-shots'),
-                                  width: 0,
-                                ),
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   if ((note ?? '').isNotEmpty)
@@ -7844,7 +7940,7 @@ class _Bubble extends StatelessWidget {
   // drawn by the name alone is drawn again then
   @override
   Widget build(BuildContext context) =>
-      msg.filePath == null || msg.fileName == 'voice.wav'
+      msg.filePath == null || isVoiceName(msg.fileName)
       ? _build(context)
       : ValueListenableBuilder<int>(
           valueListenable: fileFactsRead,
@@ -7865,7 +7961,7 @@ class _Bubble extends StatelessWidget {
     final isVideo =
         msg.filePath != null &&
         msg.text.isEmpty &&
-        msg.fileName != 'voice.wav' &&
+        !isVoiceName(msg.fileName) &&
         shape == FileShape.video;
     final frameless = isImage || isVideo;
     final failedShown = _sendLooksFailed(msg);
@@ -8136,14 +8232,16 @@ class _Bubble extends StatelessWidget {
                                           isOut: isOut,
                                         ),
                                       )
-                                    else if (msg.fileName == 'voice.wav' &&
+                                    else if (isVoiceName(msg.fileName) &&
                                         msg.filePath != null)
                                       Padding(
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 2,
                                         ),
                                         child: VoiceBubble(
-                                          key: ValueKey('vb_${msg.filePath}'),
+                                          key: ValueKey(
+                                            'vb_${msg.msgUid ?? msg.filePath}',
+                                          ),
                                           path: msg.filePath!,
                                           isOut: isOut,
                                           disguised: msg.voiceDisguised,

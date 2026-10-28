@@ -7,12 +7,13 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'album.dart' show AlbumTag;
 import 'bidi_safe.dart';
-import 'caps.dart';
 import 'chat_shots.dart' show ShotsWord, kShotsWire;
 import 'dlog.dart';
 import 'group_shots.dart' show GroupShotsWord, kGroupNudgeWire, kGroupShotsWire;
 import 'media_resend.dart';
 import 'stickers/sticker_wire.dart' show StickerWire;
+import 'typing.dart' show capsFromWire, kCapsWire, kMyCaps, kTypingWire;
+import 'voice_format.dart' show kOpusWire;
 
 const _envelopePrefix = 'halo/1:';
 
@@ -61,13 +62,20 @@ class UnwrappedMessage {
   // 'ge': an ended group's words for versions that cannot read its end.
   // they show it as a message, this version never keeps it
   final bool endNotice;
+  // 'op': the sender's phone plays opus voice notes (voice_format.dart)
+  final bool playsOpus;
   final ShotsWord? shots; // 'ss': a 1:1 chat's screenshot block (chat_shots)
-  final int? caps; // 'cp': what the sender's app can do (caps.dart)
   // 'gs': the admin's word on the group's screenshot block (group_shots)
   final GroupShotsWord? groupShots;
   // 'gu': the admin's words for versions that cannot block in groups. they
   // show it as a message, this version never keeps it
   final bool shotsNudge;
+  // 'ty': the sender is typing in a 1:1 chat (typing.dart). nothing else
+  // in the frame counts
+  final bool typing;
+  // 'cp': what the sender's phone understands, on every 1:1 and group
+  // frame. null from a version without it
+  final List<String>? caps;
   final AlbumTag? album; // 'al': its place in an album, on every slice
   // 'w': when the sender wrote it, ms by their clock. set once and kept on
   // every retry, so a copy wrapped again still says when it was written.
@@ -119,12 +127,14 @@ class UnwrappedMessage {
     this.sticker,
     this.supportMarker,
     this.shots,
-    this.caps,
     this.groupShots,
     this.shotsNudge = false,
     this.album,
     this.writtenAt,
     this.endNotice = false,
+    this.playsOpus = false,
+    this.typing = false,
+    this.caps,
   });
 }
 
@@ -380,7 +390,7 @@ Future<String> wrapMessage(
 }) async {
   final body = <String, dynamic>{'m': plain};
   body['w'] = writtenAt ?? DateTime.now().millisecondsSinceEpoch;
-  body['cp'] = kCapsMine;
+  body[kOpusWire] = 1;
   if (sticker != null) body['st'] = sticker;
   if (supportMarker != null) body['sp'] = supportMarker;
   if (endNotice) body['ge'] = 1;
@@ -448,7 +458,12 @@ Future<String> wrapMessage(
   if (burnSeconds != null && burnSeconds > 0) {
     body['b'] = burnSeconds;
   }
-  if (groupId != null) body['g'] = groupId;
+  if (groupId != null) {
+    body['g'] = groupId;
+    // what this phone understands, inside the group's encryption. a room
+    // frame loses it again (roomFrame)
+    body['cp'] = kMyCaps;
+  }
   if (groupControl != null) body['gc'] = groupControl.toWire();
   return '$_envelopePrefix${jsonEncode(body)}';
 }
@@ -587,7 +602,6 @@ UnwrappedMessage unwrapMessage(String wrapped) {
         _ => null,
       },
       shots: ShotsWord.fromWire(json[kShotsWire]),
-      caps: capsOf(json[kCapsWire]),
       groupShots: GroupShotsWord.fromWire(json[kGroupShotsWire]),
       shotsNudge: json[kGroupNudgeWire] == 1,
       album: AlbumTag.fromWire(json['al']),
@@ -596,6 +610,9 @@ UnwrappedMessage unwrapMessage(String wrapped) {
         _ => null,
       },
       endNotice: json['ge'] == 1,
+      playsOpus: json[kOpusWire] == 1,
+      typing: json[kTypingWire] == 1,
+      caps: capsFromWire(json[kCapsWire]),
     );
   } catch (e) {
     dlog(

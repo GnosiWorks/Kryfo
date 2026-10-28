@@ -149,6 +149,13 @@ class _Seal implements VaultSeal {
 }
 
 class _Io implements AppIo {
+  // nothing here types
+  @override
+  Future<String> typingSeal(String peer, String plain) =>
+      throw UnimplementedError('typingSeal');
+  @override
+  Future<String> typingSend(String onion, String cipher) =>
+      throw UnimplementedError('typingSend');
   // the pinned chats' keys the engine was told, each time
   final pins = <List<String>>[];
   @override

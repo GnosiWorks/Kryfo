@@ -6,10 +6,12 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kryfo/caps.dart';
 import 'package:kryfo/chat_shots.dart';
 import 'package:kryfo/group_shots.dart';
 import 'package:kryfo/message_envelope.dart';
+import 'package:kryfo/rooms.dart' show roomFrame;
+import 'package:kryfo/typing.dart'
+    show capsAfter, capsOfText, kCapGroupShots, kMyCaps;
 
 const _now = 1700000000000;
 
@@ -83,7 +85,7 @@ void main() {
         ),
       );
       expect(caps.groupControl!.type, 'caps');
-      expect(caps.caps, kCapsMine);
+      expect(caps.caps, contains(kCapGroupShots));
       final create = GroupControl.fromWire(
         const GroupControl(type: 'create', name: 'n', shots: w).toWire(),
       );
@@ -108,6 +110,31 @@ void main() {
       final g = await wrapMessage('hi', msgUid: 'w', groupId: 'g1');
       expect(shotsStamped(g, const ShotsWord(on: true, at: _now)), g);
       expect(unwrapMessage(g).shots, isNull);
+    });
+  });
+
+  group('the list of what a phone understands', () {
+    test('rides group frames with the group\'s name in it, and no room '
+        'frame', () async {
+      final g = unwrapMessage(
+        await wrapMessage('hi', msgUid: 'u', groupId: 'g1'),
+      );
+      expect(g.caps, contains(kCapGroupShots));
+      final room = roomFrame(
+        await wrapMessage('hi', msgUid: 'u', groupId: 'g1'),
+        'a' * 64,
+      )!;
+      expect(unwrapMessage(room).caps, isNull);
+      // a 1:1 frame gets its list at the seal, not here
+      expect(unwrapMessage(await wrapMessage('hi', msgUid: 'v')).caps, isNull);
+    });
+
+    test('a row reads the group name, and an older phone\'s list without it '
+        'waits', () {
+      expect(capsOfText('gs,ty'), {kCapGroupShots, 'ty'});
+      expect(groupShotsCan({'bob': capsOfText('ty')}, 'bob'), isFalse);
+      expect(groupShotsCan({'bob': capsOfText('gs')}, 'bob'), isTrue);
+      expect(groupShotsCan(const {}, 'bob'), isFalse);
     });
   });
 
@@ -243,21 +270,33 @@ void main() {
     test('everyone known with the bit, the admin counted as able', () {
       expect(groupShotsAll(['me'], 'me', const {}), isTrue);
       expect(
-        groupShotsAll(['me', 'bob'], 'me', {'bob': kCapGroupShots}),
+        groupShotsAll(
+          ['me', 'bob'],
+          'me',
+          {
+            'bob': {kCapGroupShots},
+          },
+        ),
         isTrue,
       );
       // unknown, or without the bit
       expect(groupShotsAll(['me', 'bob'], 'me', const {}), isFalse);
-      expect(groupShotsAll(['me', 'bob'], 'me', {'bob': 0}), isFalse);
+      expect(groupShotsAll(['me', 'bob'], 'me', {'bob': <String>{}}), isFalse);
       expect(
-        groupShotsWaitsFor(['me', 'bob', 'cat'], 'me', {'bob': kCapsMine}),
+        groupShotsWaitsFor(
+          ['me', 'bob', 'cat'],
+          'me',
+          {'bob': capsOfText(kMyCaps.join(','))},
+        ),
         ['cat'],
       );
     });
 
     test('adding someone unknown pauses it, removing the last one waited '
         'for starts it', () {
-      const caps = {'bob': kCapGroupShots};
+      const caps = {
+        'bob': {kCapGroupShots},
+      };
       final on = _was(on: true, all: true, at: 10);
       final paused = groupShotsAllMoved(
         on,
@@ -282,13 +321,16 @@ void main() {
 
     test('a member\'s newer message without the bit pauses it', () {
       final after = capsAfter(
-        kCapsMine,
+        'gs,ty',
         100,
         carried: null,
         counts: true,
         written: 200,
       );
-      expect(groupShotsAll(['me', 'bob'], 'me', {'bob': after!.caps}), isFalse);
+      expect(
+        groupShotsAll(['me', 'bob'], 'me', {'bob': capsOfText(after!.caps)}),
+        isFalse,
+      );
     });
   });
 

@@ -2,10 +2,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # writes mobile/assets/licences/engine.json, the licences screen's list of
 # what libhalo.so is built from (go, the go modules in vendor/modules.txt,
-# and tor, openssl, libevent and zlib from go-libtor) and of the third-party
-# data files the app ships (each mobile/assets/<dir>/LICENSE* file), with
-# their licence texts. run it after vendor.sh, a go update or a new data
-# licence: test/licences_test.dart fails until the file matches the tree.
+# tor, openssl, libevent and zlib from go-libtor, and libopus from opus/)
+# and of the third-party data files the app ships (each
+# mobile/assets/<dir>/LICENSE* file), with their licence texts. run it
+# after vendor.sh, opus/vendor.sh, a go update or a new data licence:
+# test/licences_test.dart fails until the file matches the tree.
 # go-libtor ships no licence text for openssl and zlib, so licences/ keeps
 # theirs, from the commits in go-libtor's lock.json.
 #   --check   make it again and fail when the committed file differs
@@ -123,6 +124,8 @@ parts.append(part('libevent', define('%s/linux/libevent/include/event2/event-con
     ['%s/linux/libevent/LICENSE' % libtor], 'BSD-3-Clause'))
 parts.append(part('zlib', define('%s/linux/zlib/zlib.h' % libtor, 'ZLIB_VERSION'),
     ['licences/zlib-LICENSE'], 'Zlib'))
+parts.append(part('libopus', read('opus/libopus/VERSION').strip(),
+    ['opus/libopus/COPYING'], 'BSD-3-Clause'))
 parts.sort(key=lambda p: p['name'].lower())
 
 # LICENSE-OpenCC.txt names OpenCC

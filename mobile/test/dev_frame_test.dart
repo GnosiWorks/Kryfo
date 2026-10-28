@@ -351,7 +351,7 @@ void main() {
       j['zz'] = {'h': everydayWords};
       j['hd'] = everydayHandle;
       final got = frameJson(devInFrame(_dev, 'halo/1:${jsonEncode(j)}')!);
-      expect(got.keys.toSet(), {'m', 'w', 'u', 'h', 'e', 'o', 'x'});
+      expect(got.keys.toSet(), {'m', 'w', 'op', 'u', 'h', 'e', 'o', 'x'});
     });
 
     test('a frame filled out to its size reads as it did', () async {

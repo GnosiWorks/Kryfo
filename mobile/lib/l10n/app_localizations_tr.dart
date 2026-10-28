@@ -519,7 +519,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get appAKryfoLinkA =>
-      'Bir Kryfo bağlantısı, oda bağlantısı ya da @wren';
+      'Bir Kryfo bağlantısı, oda bağlantısı ya da @name';
 
   @override
   String get appAddThem => 'Ekle';
@@ -618,9 +618,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get appSpeedPrivacy => 'Hız ve gizlilik →';
-
-  @override
-  String get appGettingMessages => 'Mesaj alma →';
 
   @override
   String get appDisableAppLock => 'Uygulama kilidi kapatılsın mı?';
@@ -2394,13 +2391,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get donateJustGladToHelp => 'Yardım etmek yeter';
 
   @override
-  String get gettingMessagesGettingMessages => 'Mesaj alma';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach =>
-      'Yeni mesajların bu telefona nasıl ulaştığı. İstediğin zaman değiştirebilirsin.';
-
-  @override
   String get gettingMessagesAlwaysOn => 'Hep açık';
 
   @override
@@ -2932,7 +2922,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'İsteğe bağlı. Üç kelimen her durumda çalışmaya devam eder.';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Hakkında bir satır · isteğe bağlı';
@@ -3912,6 +3902,13 @@ class AppLocalizationsTr extends AppLocalizations {
       'Grup oluşturmadan önce en az bir kişi ekle.';
 
   @override
+  String get newGroupNeedsContacts => 'Gruplar kişilerinle kurulur';
+
+  @override
+  String get newGroupAddSomeoneFirst =>
+      'Önce birini ekle. Oda için kişi gerekmez: bağlantısı olan herkes katılabilir.';
+
+  @override
   String get notesDeleteThisNote => 'Bu not silinsin mi?';
 
   @override
@@ -4457,6 +4454,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pinsUnlockWithFingerprint => 'Parmak iziyle kilidi aç';
+
+  @override
+  String get pinsFingerOpensDecoy =>
+      'Yem PIN’i ayarlıyken kapalı: parmak yalnızca yemi açar.';
 
   @override
   String get pinsWipePin => 'Silme PIN’i';
@@ -5251,9 +5252,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsOnion3Hops => 'Onion · 3 atlama';
 
   @override
-  String get settingsGettingMessages => 'Mesaj alma';
-
-  @override
   String settingsPreviewHidden(Object deliveryModeName) {
     return '$deliveryModeName · önizleme gizli';
   }
@@ -5291,6 +5289,23 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get settingsScamShieldHint =>
       'Yalnızca telefonunda kontrol edilir, hiçbir şey dışarı çıkmaz';
+
+  @override
+  String get typingNow => 'Yazıyor';
+
+  @override
+  String get settingsTypingIndicator => 'Yazıyor göstergesi';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'Karşı taraf yazarken ikiniz de görürsünüz. Doğrudan Tor üzerinden ona gider, asla bir aktarıcıdan geçmez.';
+
+  @override
+  String get settingsTypingOnionOnly => 'Onion rotasında kullanılabilir';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      'Köprüler kullanılırken kapalı: bağlantını izleyen biri yazıyor sinyallerini eşleştirebilir. Köprüler kapanınca kendiliğinden geri gelir.';
 
   @override
   String get settingsLightTheme => 'Açık tema';
@@ -5897,8 +5912,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get whyKryfoNothingLeaks => 'Hiçbir şey sızmaz';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'Okundu bilgisi ya da yazıyor işareti kimseye verilmez, kişi listesi yüklenmez. Çoğu uygulamanın sızdırdığı şey meta veridir. Kryfo sızdırmayacak şekilde yapıldı.';
+  String get whyKryfoNoReceiptsTyping =>
+      'Okundu bilgisi yok, kişi listesi yüklenmez. Yazdığını yalnızca yazdığın kişi görür, doğrudan Tor üzerinden, asla bir sunucudan geçmeden. Çoğu uygulama meta veri sızdırır. Kryfo sızdırmayacak şekilde yapıldı.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Gerçekten o olduğunu doğrula';
@@ -6407,6 +6422,35 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bootFailedCloseAndReopen => 'Kryfo’yu kapat ve yeniden aç';
+
+  @override
+  String get bootFailedStillStuck => 'Yeniden denemek işe yaramazsa';
+
+  @override
+  String get bootFailedRestoreBackup => 'Yedekten geri yükle';
+
+  @override
+  String get bootFailedStartFresh => 'Sıfırdan başla';
+
+  @override
+  String get bootFailedStartFreshTitle => 'Sıfırdan başlansın mı?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'Bu, Kryfo’nun bu telefonda tuttuğu her şeyi siler: sohbetler, kişiler, medya, gizli sohbetler ve üç kelimen. Başka bir yere kaydedilmiş yedek dosyasına dokunulmaz.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Devam et';
+
+  @override
+  String get bootFailedStartFreshSure => 'Bu telefondaki her şey silinsin mi?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'Bu geri alınamaz. Kryfo kapanır ve yeni kurulmuş gibi yeniden açılır.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Sil ve sıfırdan başla';
 
   @override
   String get kryfoLinkTextThatLinkIsNot =>
@@ -9310,6 +9354,93 @@ class AppLocalizationsTr extends AppLocalizations {
       'Sade bir simge açıkken yeni fotoğraflar, videolar ve dosyalar telefonunun olağan klasörlerine sıradan adlarla kaydedilir. Daha önce kaydedilenler olduğu yerde kalır.';
 
   @override
+  String get deliveryModeGooglePush => 'Google bildirimi';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead =>
+      'Yeni mesajlar bu telefona nasıl ulaşır, nasıl ses verir ve ne gösterir. İstediğin zaman değiştirebilirsin.';
+
+  @override
+  String get notificationsHowTheyReachYou => 'Mesajlar sana nasıl ulaşır';
+
+  @override
+  String get notificationsRecommended => 'Önerilen';
+
+  @override
+  String get notificationsGoogleBody =>
+      'Anında ve hafif. Google telefonunun ne zaman uyandırıldığını görebilir, kimin yazdığını ya da ne yazıldığını asla.';
+
+  @override
+  String get notificationsGoogleStarting => 'Açılıyor…';
+
+  @override
+  String get notificationsGoogleNoStart =>
+      'Google bildirimi başlatılamadı. Bağlantıyı kontrol edip yeniden dene.';
+
+  @override
+  String get notificationsGoogleNote =>
+      'Araya sahte uyandırmalar karışır; bu, Google’ın gerçek mesajların ne zaman geldiğini anlamasını zorlaştırır. Aktarıcımız yalnızca birbirine bağlayamadığı adresleri saklar. Bildirim hizmeti aynı sunucuda çalışır ve onları, Google’ın yardımıyla Google hesabına kadar, bağlayabilir; yani sunucumuzu işleten ya da ona el koyan da bağlayabilir. Bu senin için önemliyse başka bir yol seç. Gizli sohbetler, ilk birkaçından sonraki odalar ve ara sıra, aşağı yukarı beş ayda bir ay, sıradan bir kişi, Kryfo’nun yine de 15 dakikada bir yaptığı kontrolü bekler.';
+
+  @override
+  String get notificationsGoogleRefused =>
+      'Aktarıcımız şu an bu telefonun bazı kayıtlarını almıyor. O sohbetler 15 dakikada bir yapılan kontrolle gelir ve Kryfo denemeye devam eder.';
+
+  @override
+  String get notificationsSoundAndVibration => 'Ses ve titreşim';
+
+  @override
+  String get notificationsSoundHint => 'Android’in kendi ayarlarında';
+
+  @override
+  String get notificationsEachShows => 'Her bildirim gösterir';
+
+  @override
+  String get notificationsBatteryTips => 'Pil ipuçları';
+
+  @override
+  String get notificationsBatteryAllowed => 'İzin verildi';
+
+  @override
+  String get notificationsBatteryNotYet => 'İzin verilmedi';
+
+  @override
+  String get notificationsMakerSwitch => 'Telefon üreticinin anahtarı';
+
+  @override
+  String get onboardingDeliveryHeadline => 'Mesajlar sana *nasıl ulaşır*.';
+
+  @override
+  String get onboardingDeliveryLead =>
+      'Bunu istediğin zaman Bildirimler’den değiştirebilirsin.';
+
+  @override
+  String get homeGoogleTitle => 'Google bildirimi geldi';
+
+  @override
+  String get homeGoogleLine =>
+      'Anında ve pili yormaz. Google telefonunun ne zaman uyandırıldığını görebilir, kimin yazdığını ya da ne yazıldığını asla.';
+
+  @override
+  String get homeGoogleUse => 'Kullan';
+
+  @override
+  String get homeGoogleOn => 'Google bildirimi açık';
+
+  @override
+  String get homeGoogleGoneTitle => 'Google bildirimi kullanılamıyor';
+
+  @override
+  String get appNotificationsLink => 'Bildirimler →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'Google bildirimleri $got · düşürülen $low';
+  }
+
+  @override
   String get passFieldLabel => 'Parola ifadesi';
 
   @override
@@ -9498,4 +9629,12 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get groupShotsOldNotice =>
       'Bu grupta ekran görüntüsü engelini açtım. Senin Kryfo\'n bunu henüz yapamıyor, lütfen güncelle.';
+
+  @override
+  String get captureShotTaken =>
+      'Ekran görüntüsü alındı. Başka kimseye haber verilmedi.';
+
+  @override
+  String get captureRecording =>
+      'Bu ekran kaydediliyor. Başka kimseye haber verilmedi.';
 }

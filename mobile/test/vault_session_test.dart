@@ -184,6 +184,13 @@ class _Seal implements VaultSeal {
 // ---- signal, the engine and android ----
 
 class _Io implements AppIo {
+  // nothing here types
+  @override
+  Future<String> typingSeal(String peer, String plain) =>
+      throw UnimplementedError('typingSeal');
+  @override
+  Future<String> typingSend(String onion, String cipher) =>
+      throw UnimplementedError('typingSend');
   @override
   Future<String> pinFirst(List<String> xPubs) async => 'ok';
   @override

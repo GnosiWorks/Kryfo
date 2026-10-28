@@ -72,11 +72,13 @@ void main() {
     int on = 0,
     int can = 10,
     int blocked = 0,
+    String peer = _peer,
+    bool support = false,
   }) async {
     phone(t);
     mem = MemDb();
     await mem.insert('contacts', {
-      'halo_id': _peer,
+      'halo_id': peer,
       'onion': '',
       'xpub': '',
       'first_seen': 1,
@@ -95,7 +97,14 @@ void main() {
       () => m.setMockMethodCallHandler(SystemChannels.platform, null),
     );
     await t.pumpWidget(
-      app(const ContactScreen(haloId: _peer, avatarSeed: _peer, peerXPub: '')),
+      app(
+        ContactScreen(
+          haloId: peer,
+          avatarSeed: peer,
+          peerXPub: '',
+          support: support,
+        ),
+      ),
     );
     await t.pump(const Duration(seconds: 1));
   }
@@ -131,6 +140,29 @@ void main() {
     await t.pump(const Duration(seconds: 1));
     expect(find.text(l10n.chatShotsBothPhones), findsOneWidget);
     expect(told.last, isTrue);
+    await close(t);
+  });
+
+  testWidgets('a support chat on his phone offers no switch, and never '
+      'says they must update', (t) async {
+    await open(t, can: -10, support: true);
+    expect(find.text(l10n.chatBlockScreenshots), findsNothing);
+    expect(find.text(l10n.chatShotsWhenTheyUpdate), findsNothing);
+    await close(t);
+  });
+
+  testWidgets('the developer chat offers no switch either', (t) async {
+    await open(t, can: -10, peer: 'dev:kryfo');
+    expect(find.text(l10n.chatBlockScreenshots), findsNothing);
+    expect(find.text(l10n.chatShotsWhenTheyUpdate), findsNothing);
+    await close(t);
+  });
+
+  testWidgets('a chat whose phone has not said so yet still says it', (
+    t,
+  ) async {
+    await open(t, can: -10);
+    expect(find.text(l10n.chatShotsWhenTheyUpdate), findsOneWidget);
     await close(t);
   });
 

@@ -382,6 +382,24 @@ class HaloEngine {
     }
   }
 
+  // google push: the fcm token sealed once to the gateway's key, a new seal
+  // each call (engine/push_seal.go). "error: ..." for a key or a token that
+  // is not one, or an engine without the call
+  String pushSeal(String publicKey, String token) {
+    final k = publicKey.toNativeUtf8();
+    final t = token.toNativeUtf8();
+    try {
+      return engineTake(
+        _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloPushSeal')(k, t),
+      );
+    } catch (_) {
+      return 'error: no engine';
+    } finally {
+      malloc.free(k);
+      malloc.free(t);
+    }
+  }
+
   // the bridges that come with kryfo for one transport
   List<String> builtinBridges(String transport) {
     try {
@@ -820,6 +838,15 @@ class HaloEngine {
       onTimeout: () => 'error: onion timeout',
     ),
   );
+
+  // a typing frame to a peer's door (HaloSendTyping): the private route
+  // only, one try, nothing kept. an engine without the call sends nothing
+  Future<String> sendTyping(String onion, String line) => _ffiOnIsolate(
+    'HaloSendTyping',
+    [onion, line],
+    wait: const Duration(seconds: 10),
+    what: 'typing',
+  ).catchError((Object e) => 'error: typing (${e.runtimeType})');
 
   // burner rooms. every call hands the room's own private key back to the
   // engine, which never keeps it: the key lives in the room row and dies

@@ -11,7 +11,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kryfo/caps.dart';
+import 'package:kryfo/typing.dart' show kCapGroupShots;
 import 'package:kryfo/chat_shots.dart' show kShotsByMe, kShotsByThem;
 import 'package:kryfo/group_shots.dart';
 import 'package:kryfo/l10n/l10n.dart';
@@ -158,7 +158,7 @@ void main() {
   }
 
   // what an older app sends: no bits on it
-  String old(String wire) => wire.replaceFirst('"cp":$kCapsMine,', '');
+  String old(String wire) => wire.replaceFirst(RegExp(r',"cp":\[[^\]]*\]'), '');
 
   Future<String> said(
     String uid, {
@@ -185,18 +185,18 @@ void main() {
 
   Future<void> canBlock(String who, {int at = 5}) => s.update(
     'contacts',
-    {'caps': kCapsMine, 'caps_at': at},
+    {'caps': 'gs,ty', 'caps_at': at},
     where: 'halo_id = ?',
     whereArgs: [who],
   );
 
-  Future<int> capsOf(String who) async =>
+  Future<String> capsOf(String who) async =>
       (await s.query(
             'contacts',
             where: 'halo_id = ?',
             whereArgs: [who],
           )).single['caps']
-          as int;
+          as String;
 
   final later = DateTime.now().millisecondsSinceEpoch + 60000;
 
@@ -302,7 +302,7 @@ void main() {
       expect(io.unrang, contains('group:$_theirs'));
       await app.ctlPassForTest;
       expect(io.ctls('bob', 'caps'), hasLength(1));
-      expect(io.to('bob').last.caps, kCapsMine);
+      expect(io.to('bob').last.caps, contains(kCapGroupShots));
       expect(io.ctls('carol', 'caps'), isEmpty);
       // the same word again, on a message: no second answer
       await comes('bob', await said('m1', shots: w));
@@ -370,7 +370,7 @@ void main() {
       final caps = io.ctls(ann, 'caps');
       expect(caps, hasLength(1));
       expect(io.to(ann).last.groupId, 'g3');
-      expect(io.to(ann).last.caps, kCapsMine);
+      expect(io.to(ann).last.caps, contains(kCapGroupShots));
       // a create that carries the block takes it
       await comes(
         ann,
@@ -456,7 +456,7 @@ void main() {
       await app.ctlPassForTest;
       expect((await shotsOf(_mine)).forAll, isFalse);
       await comes('bob', await said('b1', by: 'bob', g: _mine));
-      expect(await capsOf('bob'), kCapsMine);
+      expect(await capsOf('bob'), contains(kCapGroupShots));
       expect((await shotsOf(_mine)).forAll, isFalse);
       // a caps answer says it too
       await comes(
@@ -480,7 +480,7 @@ void main() {
       // back on an older app: its next message pauses the group
       await comes('carol', old(await said('c2', by: 'carol', g: _mine)));
       await app.ctlPassForTest;
-      expect(await capsOf('carol'), 0);
+      expect(await capsOf('carol'), '');
       expect((await shotsOf(_mine)).forAll, isFalse);
       expect((await shotsOf(_mine)).line, kGroupLinePaused);
       expect((await shotsOf(_mine)).blocking, isTrue);

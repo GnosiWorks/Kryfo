@@ -4,6 +4,7 @@
 // lands, no animation with reduced motion
 import 'package:flutter/material.dart';
 
+import '../capture_watch.dart' show Capture;
 import '../group_shots.dart';
 import '../l10n/l10n.dart';
 import '../theme.dart';
@@ -36,6 +37,12 @@ String? groupShotsLineText(int line, {required bool mine, String? name}) {
     _ => null,
   };
 }
+
+/// the quiet line for a capture android told this phone of
+String captureLine(Capture what) => switch (what) {
+  Capture.shot => l10n.captureShotTaken,
+  Capture.recording => l10n.captureRecording,
+};
 
 /// where a kept file is: each says so in its own words
 enum KeptIn { chat, group, room }

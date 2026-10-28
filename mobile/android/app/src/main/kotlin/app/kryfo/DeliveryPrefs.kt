@@ -18,7 +18,7 @@ object DeliveryPrefs {
 
     fun staysOn(context: Context): Boolean {
         val m = mode(context)
-        return m != "checkins" && m != "helper"
+        return m != "checkins" && m != "helper" && m != "google"
     }
 
     // plain notifications, set in dart's notification settings: the

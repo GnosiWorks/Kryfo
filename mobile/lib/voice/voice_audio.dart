@@ -1,11 +1,28 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the pcm in a voice note's wav, as the transcriber reads it. voice notes
-// are 16-bit pcm wav (voice_mic.dart), disguised ones too (voice_mask.dart),
-// so that is all this reads.
+// are recorded as 16-bit pcm wav (voice_mic.dart), disguised ones too
+// (voice_mask.dart). one that came as opus is made a wav first
+// (voiceAudioOfFile).
 
+import 'dart:io';
 import 'dart:typed_data';
 
+import '../shred.dart' show shredFile;
+import '../voice_format.dart' show isOggPath;
+import '../voice_opus.dart' show decodeVoiceWav;
 import 'voice_ffi.dart';
+
+/// the samples of the note at [path], wav or opus. an opus note is decoded
+/// to [scratch] and shredded there once read
+Future<VoiceAudio?> voiceAudioOfFile(String path, String scratch) async {
+  if (!isOggPath(path)) return voiceAudioOfWav(await File(path).readAsBytes());
+  try {
+    if (!await decodeVoiceWav(path, scratch)) return null;
+    return voiceAudioOfWav(await File(scratch).readAsBytes());
+  } finally {
+    await shredFile(scratch);
+  }
+}
 
 /// the samples of a 16-bit pcm wav, or null for anything else
 VoiceAudio? voiceAudioOfWav(Uint8List wav) {

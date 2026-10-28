@@ -3,3 +3,8 @@
 // donations and no payment screens. flutter passes the same flavor to gradle
 // (android/app/build.gradle.kts) for its version code and manifest
 const bool kPlayBuild = String.fromEnvironment('FLUTTER_APP_FLAVOR') == 'play';
+
+// google push and the play build's own screens, which the tests see in
+// any flavor through [playBuildForTest]
+bool? playBuildForTest;
+bool get playBuild => playBuildForTest ?? kPlayBuild;

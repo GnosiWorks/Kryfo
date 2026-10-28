@@ -512,7 +512,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get appScanTheirCode => 'Pindai kodenya';
 
   @override
-  String get appAKryfoLinkA => 'Tautan Kryfo, tautan ruang, atau @wren';
+  String get appAKryfoLinkA => 'Tautan Kryfo, tautan ruang, atau @name';
 
   @override
   String get appAddThem => 'Tambahkan';
@@ -609,9 +609,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get appSpeedPrivacy => 'Kecepatan & privasi →';
-
-  @override
-  String get appGettingMessages => 'Menerima pesan →';
 
   @override
   String get appDisableAppLock => 'Matikan kunci aplikasi?';
@@ -2388,13 +2385,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get donateJustGladToHelp => 'Senang bisa membantu';
 
   @override
-  String get gettingMessagesGettingMessages => 'Menerima pesan';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach =>
-      'Cara pesan baru sampai ke ponsel ini. Kamu bisa mengubahnya kapan saja.';
-
-  @override
   String get gettingMessagesAlwaysOn => 'Selalu aktif';
 
   @override
@@ -2923,7 +2913,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Opsional. Tiga katamu tetap berfungsi apa pun pilihanmu.';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Satu baris tentangmu · opsional';
@@ -3892,6 +3882,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Tambahkan minimal satu kontak dulu sebelum membuat grup.';
 
   @override
+  String get newGroupNeedsContacts => 'Grup dibuat bersama kontakmu';
+
+  @override
+  String get newGroupAddSomeoneFirst =>
+      'Tambahkan seseorang dulu. Ruang tidak butuh kontak: siapa pun yang punya tautannya bisa bergabung.';
+
+  @override
   String get notesDeleteThisNote => 'Hapus catatan ini?';
 
   @override
@@ -4437,6 +4434,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get pinsUnlockWithFingerprint => 'Buka kunci dengan sidik jari';
+
+  @override
+  String get pinsFingerOpensDecoy =>
+      'Mati selama PIN umpan dipasang: jari hanya membuka umpan.';
 
   @override
   String get pinsWipePin => 'PIN penghapus';
@@ -5233,9 +5234,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsOnion3Hops => 'Onion · 3 lompatan';
 
   @override
-  String get settingsGettingMessages => 'Menerima pesan';
-
-  @override
   String settingsPreviewHidden(Object deliveryModeName) {
     return '$deliveryModeName · pratinjau disembunyikan';
   }
@@ -5273,6 +5271,23 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get settingsScamShieldHint =>
       'Diperiksa hanya di ponselmu, tidak ada yang keluar darinya';
+
+  @override
+  String get typingNow => 'Mengetik';
+
+  @override
+  String get settingsTypingIndicator => 'Indikator mengetik';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'Kalian berdua melihat saat yang lain sedang mengetik. Sinyalnya langsung ke dia lewat Tor, tidak pernah melalui relay.';
+
+  @override
+  String get settingsTypingOnionOnly => 'Tersedia di rute Onion';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      'Mati selama jembatan dipakai: orang yang mengawasi koneksimu bisa mencocokkan sinyal mengetik. Menyala lagi sendiri saat jembatan dimatikan.';
 
   @override
   String get settingsLightTheme => 'Tema terang';
@@ -5880,8 +5895,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get whyKryfoNothingLeaks => 'Tidak ada yang bocor';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'Tidak ada tanda dibaca atau tanda mengetik yang diserahkan ke siapa pun, tidak ada daftar kontak yang diunggah. Metadata adalah hal yang dibocorkan kebanyakan aplikasi. Kryfo dibuat agar tidak membocorkannya.';
+  String get whyKryfoNoReceiptsTyping =>
+      'Tanpa tanda dibaca, tanpa mengunggah daftar kontak. Bahwa kamu sedang mengetik hanya terlihat oleh orang yang kamu ajak bicara, langsung lewat Tor, tidak pernah melalui server. Kebanyakan aplikasi membocorkan metadata. Kryfo dibuat agar tidak begitu.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Pastikan itu benar-benar dia';
@@ -6385,6 +6400,35 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bootFailedCloseAndReopen => 'Tutup dan buka lagi Kryfo';
+
+  @override
+  String get bootFailedStillStuck => 'Jika mencoba lagi tidak membantu';
+
+  @override
+  String get bootFailedRestoreBackup => 'Pulihkan cadangan';
+
+  @override
+  String get bootFailedStartFresh => 'Mulai dari awal';
+
+  @override
+  String get bootFailedStartFreshTitle => 'Mulai dari awal?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'Ini menghapus total semua yang disimpan Kryfo di ponsel ini: obrolan, kontak, media, obrolan tersembunyi, dan tiga katamu. File cadangan yang disimpan di tempat lain tidak tersentuh.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Lanjut';
+
+  @override
+  String get bootFailedStartFreshSure => 'Hapus total semua di ponsel ini?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'Ini tidak bisa dibatalkan. Kryfo tertutup dan terbuka lagi seperti baru dipasang.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Hapus total dan mulai dari awal';
 
   @override
   String get kryfoLinkTextThatLinkIsNot => 'Tautan itu tidak bisa dibaca Kryfo';
@@ -9280,6 +9324,93 @@ class AppLocalizationsId extends AppLocalizations {
       'Selama ikon polos aktif, foto, video, dan file baru disimpan dengan nama biasa di folder ponselmu yang biasa. Yang sudah tersimpan tetap di tempatnya.';
 
   @override
+  String get deliveryModeGooglePush => 'Push Google';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead =>
+      'Bagaimana pesan baru sampai ke ponsel ini, bunyinya, dan apa yang ditampilkan. Kamu bisa mengubahnya kapan saja.';
+
+  @override
+  String get notificationsHowTheyReachYou => 'Cara pesan sampai padamu';
+
+  @override
+  String get notificationsRecommended => 'Disarankan';
+
+  @override
+  String get notificationsGoogleBody =>
+      'Seketika dan ringan. Google bisa melihat kapan ponselmu dibangunkan, tidak pernah siapa yang menulis atau apa isinya.';
+
+  @override
+  String get notificationsGoogleStarting => 'Menyalakan…';
+
+  @override
+  String get notificationsGoogleNoStart =>
+      'Push Google tidak bisa dimulai. Periksa koneksi lalu coba lagi.';
+
+  @override
+  String get notificationsGoogleNote =>
+      'Ada juga panggilan bangun palsu, jadi Google lebih sulit tahu kapan pesan asli masuk. Relay kami hanya menyimpan alamat yang tidak bisa ia hubungkan satu sama lain. Layanan push berjalan di server yang sama dan bisa menghubungkannya, dan dengan bantuan Google ke akun Google-mu, jadi siapa pun yang menjalankan atau menyita server kami juga bisa. Kalau itu penting bagimu, pilih cara lain. Obrolan tersembunyi, ruang setelah beberapa ruang pertama, dan sesekali kontak biasa, kira-kira satu dari lima bulan, menunggu cek yang tetap dilakukan Kryfo setiap 15 menit.';
+
+  @override
+  String get notificationsGoogleRefused =>
+      'Relay kami sedang tidak menerima sebagian pendaftaran dari ponsel ini. Obrolan itu datang dengan cek setiap 15 menit, dan Kryfo terus mencoba.';
+
+  @override
+  String get notificationsSoundAndVibration => 'Suara dan getar';
+
+  @override
+  String get notificationsSoundHint => 'Di pengaturan Android sendiri';
+
+  @override
+  String get notificationsEachShows => 'Setiap notifikasi menampilkan';
+
+  @override
+  String get notificationsBatteryTips => 'Tips baterai';
+
+  @override
+  String get notificationsBatteryAllowed => 'Diizinkan';
+
+  @override
+  String get notificationsBatteryNotYet => 'Tidak diizinkan';
+
+  @override
+  String get notificationsMakerSwitch => 'Tombol dari pembuat ponselmu';
+
+  @override
+  String get onboardingDeliveryHeadline => 'Cara pesan *sampai padamu*.';
+
+  @override
+  String get onboardingDeliveryLead =>
+      'Kamu bisa mengubahnya kapan saja di Notifikasi.';
+
+  @override
+  String get homeGoogleTitle => 'Push Google sudah ada';
+
+  @override
+  String get homeGoogleLine =>
+      'Seketika dan hemat baterai. Google bisa melihat kapan ponselmu dibangunkan, tidak pernah siapa yang menulis atau apa isinya.';
+
+  @override
+  String get homeGoogleUse => 'Pakai';
+
+  @override
+  String get homeGoogleOn => 'Push Google menyala';
+
+  @override
+  String get homeGoogleGoneTitle => 'Push Google tidak tersedia';
+
+  @override
+  String get appNotificationsLink => 'Notifikasi →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'Push Google $got · diturunkan $low';
+  }
+
+  @override
   String get passFieldLabel => 'Frasa sandi';
 
   @override
@@ -9467,4 +9598,12 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get groupShotsOldNotice =>
       'Aku menyalakan blokir tangkapan layar di grup ini. Kryfo-mu belum bisa melakukannya, jadi tolong perbarui.';
+
+  @override
+  String get captureShotTaken =>
+      'Tangkapan layar diambil. Tidak ada orang lain yang diberi tahu.';
+
+  @override
+  String get captureRecording =>
+      'Layar ini sedang direkam. Tidak ada orang lain yang diberi tahu.';
 }

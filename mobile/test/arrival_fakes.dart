@@ -7,7 +7,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:kryfo/album.dart' show AlbumTag;
-import 'package:kryfo/caps.dart' show capsAfter;
 import 'package:kryfo/chat_shots.dart' show ChatShots;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart' show groupOwedGap;
@@ -31,7 +30,9 @@ import 'package:kryfo/relay_poll.dart' show Reached;
 import 'package:kryfo/rooms.dart' show kRoomJoinWait, kRoomRecent, roomUidPart;
 import 'package:kryfo/scam_shield.dart' show shieldRowOpen;
 import 'package:kryfo/router.dart';
-import 'package:kryfo/signal_session.dart' show signalSession;
+import 'package:kryfo/signal_session.dart'
+    show KeyHeld, NotSettled, StartingAfresh, signalSession;
+import 'package:kryfo/typing.dart' show capsAfter, capsOfText;
 import 'package:kryfo/stranger_gate.dart'
     show ShelfFull, Shelved, kShelfPlaces, shelfVerdict;
 
@@ -266,6 +267,33 @@ class ArrivalIo implements AppIo {
   Future<String> firstContactSend(String xPub, String fc, String cipher) async {
     sent.add(('fc $xPub', cipher));
     return 'ok';
+  }
+
+  // typing frames: what was sealed for whom, how a seal is turned down
+  // ('held', 'afresh' or 'opener'), and what the door answers
+  final typingSeals = <String>[];
+  String? typingRefuse;
+  String typingAnswer = 'ok';
+  void Function()? onTypingSeal;
+  @override
+  Future<String> typingSeal(String peer, String plain) async {
+    onTypingSeal?.call();
+    switch (typingRefuse) {
+      case 'held':
+        throw KeyHeld(peer);
+      case 'afresh':
+        throw StartingAfresh(peer);
+      case 'opener':
+        throw NotSettled(peer);
+    }
+    typingSeals.add('$peer $plain');
+    return 'typing to $peer';
+  }
+
+  @override
+  Future<String> typingSend(String onion, String cipher) async {
+    sent.add(('typing $onion', cipher));
+    return typingAnswer;
   }
 
   @override
@@ -2107,6 +2135,34 @@ class ArrivalRows implements HaloDb {
     wants.remove(mediaId);
   }
 
+  // what a contact's phone understands, as typing.dart keeps it
+  var capsWrites = 0;
+  void Function()? onTakeCaps;
+  @override
+  Future<bool> takeCaps(
+    String peer, {
+    required List<String>? caps,
+    required bool counts,
+    int? written,
+  }) async {
+    _hit('takeCaps', peer, null);
+    onTakeCaps?.call();
+    final r = people[peer];
+    if (r == null || r['accepted'] != 1) return false;
+    final next = capsAfter(
+      (r['caps'] as String?) ?? '',
+      (r['caps_at'] as int?) ?? 0,
+      carried: caps,
+      counts: counts,
+      written: written,
+    );
+    if (next == null) return false;
+    r['caps'] = next.caps;
+    r['caps_at'] = next.at;
+    capsWrites++;
+    return true;
+  }
+
   // a chat's screenshot block, as its row says
   @override
   Future<ChatShots> shotsOf(String peer) async =>
@@ -2206,32 +2262,31 @@ class ArrivalRows implements HaloDb {
   ];
 
   @override
-  Future<Map<String, int>> capsOfPeople(Iterable<String> ids) async => {
+  Future<Map<String, Set<String>>> capsOfPeople(Iterable<String> ids) async => {
     for (final id in ids)
-      if (people[id] != null) id: (people[id]!['caps'] as int?) ?? 0,
+      if (people[id] != null) id: capsOfText(people[id]!['caps'] as String?),
   };
 
   @override
-  Future<bool> takeCaps(
+  Future<bool> takeMemberCaps(
     String peer, {
-    required int? carried,
+    required List<String>? caps,
     required bool counts,
     int? written,
   }) async {
     final r = people[peer];
     if (r == null) return false;
-    final was = (r['caps'] as int?) ?? 0;
     final next = capsAfter(
-      was,
+      (r['caps'] as String?) ?? '',
       (r['caps_at'] as int?) ?? 0,
-      carried: carried,
+      carried: caps,
       counts: counts,
       written: written,
     );
     if (next == null) return false;
     r['caps'] = next.caps;
     r['caps_at'] = next.at;
-    return next.caps != was;
+    return true;
   }
 
   @override

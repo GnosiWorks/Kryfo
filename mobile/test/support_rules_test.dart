@@ -273,6 +273,13 @@ class _Phone extends HaloDb {
 
 // signal and the engine as the receive side reaches them
 class _Io implements AppIo {
+  // nothing here types
+  @override
+  Future<String> typingSeal(String peer, String plain) =>
+      throw UnimplementedError('typingSeal');
+  @override
+  Future<String> typingSend(String onion, String cipher) =>
+      throw UnimplementedError('typingSend');
   @override
   Future<String> pinFirst(List<String> xPubs) async => 'ok';
   @override

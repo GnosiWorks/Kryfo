@@ -5,6 +5,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import '../lock_state.dart';
+import '../capture_watch.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
@@ -79,6 +80,7 @@ import '../main.dart'
         AppStateVault,
         AppStateGroups,
         AppStateSession,
+        AppStateVoice,
         AppStateRefresh,
         AppStateRooms;
 import '../widgets/reconnect_valve.dart';
@@ -153,6 +155,10 @@ import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
 import '../container.dart' show HaloContainer;
 import '../lock_guard.dart' show LockDropped, lockGuard, onScreen;
+import '../voice_format.dart' show isVoiceName, kVoiceWav;
+import '../voice_length.dart' show voiceFileMs;
+import '../voice_opus.dart' show voiceForWire;
+import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
 
 // our nickname for a member, or nothing so the id shows. a room member is a
 // key, not a person we know, so it gets the short tag instead.
@@ -589,9 +595,19 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // visits
   late final String _memo;
 
+  // android's word that this chat was screenshotted or is recorded: one
+  // quiet line here, on this phone alone
+  VoidCallback? _unwatchCaptures;
+  void _captured(Capture what) {
+    if (!mounted || lockState.locked) return;
+    if (ModalRoute.of(context)?.isCurrent == false) return;
+    showHaloToast(context, captureLine(what));
+  }
+
   @override
   void initState() {
     super.initState();
+    _unwatchCaptures = captureWatch.watch(_captured);
     _memo = session.chatKey(widget.groupId);
     _loadWall();
     // set from its info page or under appearance: shown at once
@@ -1634,7 +1650,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             (m.preparing ||
                 m.mediaPath != null ||
                 (m.filePath != null &&
-                    m.fileName != 'voice.wav' &&
+                    !isVoiceName(m.fileName) &&
                     fileShapeNow(m.filePath, m.fileName) == FileShape.video) ||
                 (m.direction == 'in' && m.filePath == null)),
       );
@@ -1752,7 +1768,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         quoted = l10n.albumQuoted;
       } else if (orig.mediaPath != null) {
         quoted = l10n.groupChatQuotedPhoto;
-      } else if (orig.fileName == 'voice.wav') {
+      } else if (isVoiceName(orig.fileName)) {
         quoted = l10n.groupChatVoiceMessage;
       } else if (orig.fileName != null) {
         quoted = orig.fileName;
@@ -2137,7 +2153,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           msgUid: m.msgUid!,
           caption: m.text,
           fileName: m.mediaPath != null ? null : m.fileName,
-          voice: m.fileName == 'voice.wav',
+          voice: isVoiceName(m.fileName),
           voiceDisguised: m.voiceDisguised,
           replyTo: m.replyTo,
           burnSeconds: m.burnSecs,
@@ -2760,7 +2776,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       msgUid: uid,
       replyTo: reply,
       sending: true,
-      fileName: 'voice.wav',
+      fileName: kVoiceWav,
       voiceDisguised: disguise,
       burnSecs: burn,
     )..fresh = true;
@@ -2841,8 +2857,28 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       final writtenAt = m.when.millisecondsSinceEpoch;
       // from here a lock takes it off the screen as one still being made
       pending = m;
-      final kept = await keepOwnGroupFile(
+      // what goes: opus when every member's phone plays it, else the wav.
+      // the bubble shows the wav until the opus copy is there, then that
+      if (locked) return lockedOut(null, placed: dest.path);
+      // a lock under way stops the encode, and both files go
+      final (wirePath, wireName) = await voiceForWire(
         dest.path,
+        opus: await appState.opusForGroup(group),
+        stop: () => locked,
+      );
+      if (wirePath != dest.path) {
+        voicePeaksSame(dest.path, wirePath);
+        final ms = await voiceFileMs(wirePath);
+        if (ms != null) voiceLengthKnown(wirePath, ms);
+        m
+          ..filePath = wirePath
+          ..fileName = wireName;
+        if (mounted) setState(() {});
+        unawaited(voiceFileFree(dest.path).then((_) => shredFile(dest.path)));
+      }
+      if (locked) return lockedOut(null, placed: wirePath);
+      final kept = await keepOwnGroupFile(
+        wirePath,
         () => appState.keepOwn(group, () async {
           // a lock while it waited for a move: nothing is written
           if (locked) return false;
@@ -2852,8 +2888,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             groupId: group,
             msgUid: uid,
             replyTo: reply,
-            filePath: dest.path,
-            fileName: 'voice.wav',
+            filePath: wirePath,
+            fileName: wireName,
             voiceDisguised: disguise,
             burnSecs: burn,
             writtenAt: writtenAt,
@@ -2874,10 +2910,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           m,
           () => appState.sendMediaToGroup(
             group,
-            dest.path,
+            wirePath,
             msgUid: uid,
             replyTo: reply,
-            fileName: 'voice.wav',
+            fileName: wireName,
             voice: true,
             voiceDisguised: disguise,
             burnSeconds: burn,
@@ -3362,7 +3398,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final rows =
         2 +
         (words ? 2 : 0) +
-        (target.filePath != null && target.fileName != 'voice.wav' ? 1 : 0) +
+        (target.filePath != null && !isVoiceName(target.fileName) ? 1 : 0) +
         (isOut ? (words ? 2 : 1) : 0);
     final rowH = 20 + math.max(17.0, mq.textScaler.scale(13.5) * 1.3);
     final menuH = rows * rowH + 16;
@@ -3684,7 +3720,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               (kept ||
                   shareOn == null ||
                   shareOn.filePath == null ||
-                  shareOn.fileName == 'voice.wav' ||
+                  isVoiceName(shareOn.fileName) ||
                   knownInstaller(shareOn.filePath!, shareOn.fileName))
               ? null
               : () {
@@ -3704,7 +3740,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                   shareOn == null ||
                   shareOn.filePath == null ||
                   shareOn.fileName == null ||
-                  shareOn.fileName == 'voice.wav')
+                  isVoiceName(shareOn.fileName))
               ? null
               : () {
                   dismiss();
@@ -4427,6 +4463,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   @override
   void dispose() {
+    _unwatchCaptures?.call();
     wallpaperRevision.removeListener(_loadWall);
     final open = _openGroups[widget.groupId]?..remove(this);
     if (open != null && open.isEmpty) _openGroups.remove(widget.groupId);
@@ -5743,7 +5780,7 @@ class _GroupBubble extends StatelessWidget {
     curve: Curves.easeOut,
     opacity: dimmed ? 0.4 : 1.0,
     // a file is drawn by what its bytes are once they are read
-    child: m.filePath == null || m.fileName == 'voice.wav'
+    child: m.filePath == null || isVoiceName(m.fileName)
         ? _bubble(context)
         : ValueListenableBuilder<int>(
             valueListenable: fileFactsRead,
@@ -5759,7 +5796,7 @@ class _GroupBubble extends StatelessWidget {
     final isVideo =
         m.filePath != null &&
         m.text.isEmpty &&
-        m.fileName != 'voice.wav' &&
+        !isVoiceName(m.fileName) &&
         shape == FileShape.video;
     final frameless = m.mediaPath != null || isVideo;
     final onAmberText = isOut && m.mediaPath == null;
@@ -6036,7 +6073,7 @@ class _GroupBubble extends StatelessWidget {
                                                 isOut: isOut,
                                               ),
                                             )
-                                          else if (m.fileName == 'voice.wav' &&
+                                          else if (isVoiceName(m.fileName) &&
                                               m.filePath != null)
                                             Padding(
                                               padding:
@@ -6045,7 +6082,7 @@ class _GroupBubble extends StatelessWidget {
                                                   ),
                                               child: VoiceBubble(
                                                 key: ValueKey(
-                                                  'gvb_${m.filePath}',
+                                                  'gvb_${m.msgUid ?? m.filePath}',
                                                 ),
                                                 path: m.filePath!,
                                                 isOut: isOut,

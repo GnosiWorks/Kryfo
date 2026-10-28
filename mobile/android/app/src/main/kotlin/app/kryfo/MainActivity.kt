@@ -111,6 +111,8 @@ open class MainActivity : FlutterFragmentActivity() {
 
     // the window and the user leaving lock too, not only the lifecycle
     private var awayChannel: BasicMessageChannel<String>? = null
+    // screenshots and recordings of this window, as android tells them
+    private val captures = CaptureWatch(this)
     private fun tellAway() {
         awayChannel?.send("away")
     }
@@ -149,8 +151,14 @@ open class MainActivity : FlutterFragmentActivity() {
         SharePick.wait.paused()
     }
 
+    override fun onStart() {
+        super.onStart()
+        captures.start()
+    }
+
     override fun onStop() {
         super.onStop()
+        captures.stop()
         stoppedSinceResume = true
         SaveDoc.coveredNow()
     }
@@ -373,6 +381,7 @@ open class MainActivity : FlutterFragmentActivity() {
         // hold on to it so the next activity attaches to this same engine
         FlutterEngineCache.getInstance().put(ENGINE_ID, flutterEngine)
         awayChannel = BasicMessageChannel(flutterEngine.dartExecutor.binaryMessenger, "kryfo/window", StringCodec.INSTANCE)
+        captures.channel = BasicMessageChannel(flutterEngine.dartExecutor.binaryMessenger, "kryfo/capture", StringCodec.INSTANCE)
         tools.attach(MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ToolsBridge.CHANNEL))
         // a share is offered once. a screen rebuilt after the process went,
         // or opened again from recents, still carries the old one
@@ -513,7 +522,7 @@ open class MainActivity : FlutterFragmentActivity() {
                         )
                     }
                     "openNotificationSettings" -> {
-                        result.success(openNotificationSettings())
+                        result.success(openNotificationSettings(call.argument<String>("channel")))
                     }
                     "openWifiSettings" -> {
                         result.success(openWifiSettings())
@@ -1060,7 +1069,25 @@ open class MainActivity : FlutterFragmentActivity() {
 
     // android's own notification page for kryfo. the permission dialog is
     // gone for good once the answer is final, so this is the only way back.
-    private fun openNotificationSettings(): Boolean {
+    // with [channel], that channel's page: its sound and vibration are
+    // android's to change once it is made, not the app's
+    private fun openNotificationSettings(channel: String? = null): Boolean {
+        if (channel != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val nm = getSystemService(android.app.NotificationManager::class.java)
+            if (nm?.getNotificationChannel(channel) != null) {
+                try {
+                    startActivity(
+                        Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).apply {
+                            putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                            putExtra(Settings.EXTRA_CHANNEL_ID, channel)
+                        }
+                    )
+                    return true
+                } catch (e: Exception) {
+                    // the app's page below has every channel on it
+                }
+            }
+        }
         // the per-app notification page arrives in api 26. below that, and
         // on a build that does not carry it, the app details page has the
         // same switch one tap deeper.

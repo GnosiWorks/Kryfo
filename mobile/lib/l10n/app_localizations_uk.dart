@@ -537,7 +537,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get appAKryfoLinkA =>
-      'Посилання Kryfo, посилання на кімнату або @sova';
+      'Посилання Kryfo, посилання на кімнату або @name';
 
   @override
   String get appAddThem => 'Додати';
@@ -634,9 +634,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get appSpeedPrivacy => 'Швидкість і приватність →';
-
-  @override
-  String get appGettingMessages => 'Отримання повідомлень →';
 
   @override
   String get appDisableAppLock => 'Вимкнути блокування Kryfo?';
@@ -2447,13 +2444,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get donateJustGladToHelp => 'Просто хочу допомогти';
 
   @override
-  String get gettingMessagesGettingMessages => 'Отримання повідомлень';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach =>
-      'Як нові повідомлення потрапляють на цей телефон. Змінити можна будь-коли.';
-
-  @override
   String get gettingMessagesAlwaysOn => 'Завжди на зв’язку';
 
   @override
@@ -2995,7 +2985,7 @@ class AppLocalizationsUk extends AppLocalizations {
       'Необов’язково. Твої три слова працюють у будь-якому разі.';
 
   @override
-  String get handleWren => 'sova';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Рядок про тебе · необов’язково';
@@ -3983,6 +3973,13 @@ class AppLocalizationsUk extends AppLocalizations {
       'Щоб створити групу, спершу додай хоча б один контакт.';
 
   @override
+  String get newGroupNeedsContacts => 'Групи створюються з твоїх контактів';
+
+  @override
+  String get newGroupAddSomeoneFirst =>
+      'Спершу додай когось. Кімнаті контакти не потрібні: увійти може будь-хто, хто має посилання.';
+
+  @override
   String get notesDeleteThisNote => 'Видалити цю нотатку?';
 
   @override
@@ -4529,6 +4526,10 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get pinsUnlockWithFingerprint => 'Розблокування відбитком';
+
+  @override
+  String get pinsFingerOpensDecoy =>
+      'Вимкнено, поки встановлено PIN-приманку: палець відкриває лише приманку.';
 
   @override
   String get pinsWipePin => 'PIN для стирання';
@@ -5328,9 +5329,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsOnion3Hops => 'Onion · 3 вузли';
 
   @override
-  String get settingsGettingMessages => 'Отримання повідомлень';
-
-  @override
   String settingsPreviewHidden(Object deliveryModeName) {
     return '$deliveryModeName · текст приховано';
   }
@@ -5368,6 +5366,23 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get settingsScamShieldHint =>
       'Перевірка лише на твоєму телефоні, нічого не залишає його';
+
+  @override
+  String get typingNow => 'Друкує';
+
+  @override
+  String get settingsTypingIndicator => 'Індикатор набору';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'Ви обоє бачите, коли співрозмовник друкує. Це йде до нього напряму через Tor, ніколи через ретранслятор.';
+
+  @override
+  String get settingsTypingOnionOnly => 'Доступно на маршруті Onion';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      'Вимкнено, поки використовуються мости: той, хто стежить за вашим з’єднанням, міг би зіставити сигнали набору. Увімкнеться саме, коли мости вимкнено.';
 
   @override
   String get settingsLightTheme => 'Світла тема';
@@ -5983,8 +5998,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get whyKryfoNothingLeaks => 'Нічого не витікає';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'Жодних звітів про прочитання чи індикаторів набору, які хтось отримує, жодного вивантаженого списку контактів. З більшості застосунків витікають метадані, а Kryfo створено так, щоб цього не було.';
+  String get whyKryfoNoReceiptsTyping =>
+      'Жодних звітів про прочитання, список контактів нікуди не вивантажується. Те, що ви друкуєте, бачить лише той, кому ви пишете, і лише напряму через Tor, ніколи через сервер. З більшості застосунків витікають метадані. Kryfo створено так, щоб цього не було.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Перевір, що це справді та людина';
@@ -6508,6 +6523,35 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get bootFailedCloseAndReopen => 'Закрити й знову відкрити Kryfo';
+
+  @override
+  String get bootFailedStillStuck => 'Якщо повторна спроба не допомагає';
+
+  @override
+  String get bootFailedRestoreBackup => 'Відновити з копії';
+
+  @override
+  String get bootFailedStartFresh => 'Почати заново';
+
+  @override
+  String get bootFailedStartFreshTitle => 'Почати заново?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'Це зітре все, що Kryfo зберігає на цьому телефоні: чати, контакти, медіа, приховані чати й твої три слова. Файл резервної копії, збережений деінде, не постраждає.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Продовжити';
+
+  @override
+  String get bootFailedStartFreshSure => 'Стерти все на цьому телефоні?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'Це не можна скасувати. Kryfo закриється й відкриється як після нового встановлення.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Стерти й почати заново';
 
   @override
   String get kryfoLinkTextThatLinkIsNot =>
@@ -9443,6 +9487,94 @@ class AppLocalizationsUk extends AppLocalizations {
       'Поки ввімкнено простий значок, нові фото, відео й файли зберігаються зі звичайними назвами у звичайні папки телефона. Те, що вже збережено, лишається на місці.';
 
   @override
+  String get deliveryModeGooglePush => 'Пуш від Google';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead =>
+      'Як нові повідомлення потрапляють на цей телефон, як звучать і що показують. Це можна змінити будь-коли.';
+
+  @override
+  String get notificationsHowTheyReachYou => 'Як до тебе доходять повідомлення';
+
+  @override
+  String get notificationsRecommended => 'Радимо';
+
+  @override
+  String get notificationsGoogleBody =>
+      'Одразу й легко. Google бачить, коли телефон будять, але не хто написав і що сказано.';
+
+  @override
+  String get notificationsGoogleStarting => 'Вмикаємо…';
+
+  @override
+  String get notificationsGoogleNoStart =>
+      'Пуш від Google не запустився. Перевір з’єднання і спробуй ще раз.';
+
+  @override
+  String get notificationsGoogleNote =>
+      'До справжніх пробуджень домішуються фальшиві, тож Google важче зрозуміти, коли приходять справжні повідомлення. Наш ретранслятор зберігає лише адреси, які не може пов’язати між собою. Служба пушів працює на тому самому сервері й могла б їх пов’язати, а з допомогою Google і з твоїм обліковим записом Google, тож зміг би і той, хто керує нашим сервером або вилучить його. Якщо для тебе це важливо, обери інший спосіб. Приховані чати, кімнати понад перші кілька і час від часу звичайний контакт, приблизно один місяць із п’яти, чекають на перевірку, яку Kryfo однаково робить кожні 15 хвилин.';
+
+  @override
+  String get notificationsGoogleRefused =>
+      'Наш ретранслятор зараз не приймає частину реєстрацій цього телефона. Ці чати приходять із перевіркою кожні 15 хвилин, а Kryfo пробує далі.';
+
+  @override
+  String get notificationsSoundAndVibration => 'Звук і вібрація';
+
+  @override
+  String get notificationsSoundHint => 'У налаштуваннях самого Android';
+
+  @override
+  String get notificationsEachShows => 'Сповіщення показує';
+
+  @override
+  String get notificationsBatteryTips => 'Поради щодо батареї';
+
+  @override
+  String get notificationsBatteryAllowed => 'Дозволено';
+
+  @override
+  String get notificationsBatteryNotYet => 'Не дозволено';
+
+  @override
+  String get notificationsMakerSwitch => 'Перемикач виробника';
+
+  @override
+  String get onboardingDeliveryHeadline =>
+      'Як до тебе *доходять* повідомлення.';
+
+  @override
+  String get onboardingDeliveryLead =>
+      'Це можна змінити будь-коли в розділі «Сповіщення».';
+
+  @override
+  String get homeGoogleTitle => 'Пуш від Google уже тут';
+
+  @override
+  String get homeGoogleLine =>
+      'Одразу й ощадливо для батареї. Google бачить, коли телефон будять, але не хто написав і що сказано.';
+
+  @override
+  String get homeGoogleUse => 'Увімкнути';
+
+  @override
+  String get homeGoogleOn => 'Пуш від Google увімкнено';
+
+  @override
+  String get homeGoogleGoneTitle => 'Пуш від Google недоступний';
+
+  @override
+  String get appNotificationsLink => 'Сповіщення →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'Пуші Google $got · знижено $low';
+  }
+
+  @override
   String get passFieldLabel => 'Парольна фраза';
 
   @override
@@ -9630,4 +9762,12 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get groupShotsOldNotice =>
       'Я увімкнув(-ла) блокування знімків екрана в цій групі. Твій Kryfo поки так не вміє, будь ласка, онови його.';
+
+  @override
+  String get captureShotTaken =>
+      'Зроблено знімок екрана. Більше ніхто про це не дізнався.';
+
+  @override
+  String get captureRecording =>
+      'Цей екран записується. Більше ніхто про це не дізнався.';
 }

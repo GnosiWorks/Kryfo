@@ -2,15 +2,51 @@
     xmlns:tools="http://schemas.android.com/tools">
     <!-- the play flavor only, laid over main. the service names its type
          again because lint reads this element on its own -->
-    <application>
+    <application
+        android:name=".PlayApplication"
+        tools:replace="android:name">
         <service
             android:name=".HaloListenerService"
             android:foregroundServiceType="specialUse"
             tools:replace="android:foregroundServiceType">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Kryfo private messenger: keeps its own encrypted connection to its message relays open, over tor by default, so messages arrive while the app is closed, with no push service. Always on is the default in Getting messages; the user can switch to check-ins, which stops it."
+                android:value="Kryfo private messenger: in Always on, keeps its own encrypted connection to its message relays open, over tor by default, so messages arrive while the app is closed without a push service. Always on is one of the ways in Notifications; the user can switch to Google push or check-ins, which stops it."
                 tools:replace="android:value" />
         </service>
+
+        <!-- google push: a push is only a knock (KryfoMessagingService) -->
+        <service
+            android:name=".KryfoMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- firebase starts only once google push is picked (GooglePush.kt),
+             never on its own as the app opens -->
+        <provider
+            android:name="com.google.firebase.provider.FirebaseInitProvider"
+            android:authorities="${applicationId}.firebaseinitprovider"
+            tools:node="remove" />
+        <!-- no token until google push is picked -->
+        <meta-data
+            android:name="firebase_messaging_auto_init_enabled"
+            android:value="false" />
+        <!-- no analytics, no advertising id, no delivery metrics -->
+        <meta-data
+            android:name="firebase_analytics_collection_deactivated"
+            android:value="true" />
+        <meta-data
+            android:name="google_analytics_adid_collection_enabled"
+            android:value="false" />
+        <meta-data
+            android:name="delivery_metrics_exported_to_big_query_enabled"
+            android:value="false" />
+        <!-- notifications are kryfo's own, never handed to play services -->
+        <meta-data
+            android:name="firebase_messaging_notification_delegation_enabled"
+            android:value="false" />
     </application>
 </manifest>

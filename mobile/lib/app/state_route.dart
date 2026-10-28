@@ -76,9 +76,11 @@ extension AppStateRoute on AppState {
   Future<void> _switchSendMode(String m) async {
     // what carried on the old route is not held for the new one
     _usableAt = null;
-    // the helper app mode registers over tor or not at all: off the
+    // typing goes and shows on the onion route alone
+    if (m != 'private') _typingClear();
+    // the helper app and google push register over tor or not at all: off the
     // private route the phone checks in instead, and the relay forgets
-    if (m != 'private' && _deliveryMode == DeliveryMode.helper) {
+    if (m != 'private' && knockMode(_deliveryMode)) {
       await setDeliveryMode(DeliveryMode.checkins);
     }
     // saved first: a mode that was not saved is gone at the next start, so
@@ -208,7 +210,11 @@ extension AppStateRoute on AppState {
     }
   }
 
-  void _newTorTry() => _torTryNew = true;
+  void _newTorTry() {
+    _torTryNew = true;
+    // a peer that could not be reached may be now
+    typing.pacer.freshRoute();
+  }
 
   // a route changed on purpose: a try of its own, and nothing the old one
   // carried is held for it. a network handover keeps the grace

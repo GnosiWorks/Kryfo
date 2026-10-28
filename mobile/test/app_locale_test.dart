@@ -28,8 +28,8 @@ void main() {
     final hans = lookupAppLocalizations(localeOf('zh'));
     expect(hant.localeName, 'zh_Hant');
     expect(
-      hant.gettingMessagesGettingMessages,
-      isNot(hans.gettingMessagesGettingMessages),
+      hant.notificationsHowTheyReachYou,
+      isNot(hans.notificationsHowTheyReachYou),
     );
   });
 

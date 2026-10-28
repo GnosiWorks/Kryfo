@@ -84,13 +84,22 @@ Future<bool> hasSessionWith(String peerId) async {
 // the one place a frame is sealed for a peer. every frame for the dev chat
 // goes through its own seal instead: the allowlist, its store, the token
 // the wire asks for. either store seals one frame at a time per peer
-Future<String> signalEncrypt(String peerId, String plaintext) async {
-  if (isDevId(peerId)) return devLane.encrypt(peerId, plaintext);
+// [onlySettled]: a frame that must never open a session (a typing frame)
+Future<String> signalEncrypt(
+  String peerId,
+  String plaintext, {
+  bool onlySettled = false,
+}) async {
+  if (isDevId(peerId)) {
+    if (onlySettled) throw NotSettled(peerId);
+    return devLane.encrypt(peerId, plaintext);
+  }
   plaintext = await appState.shotsOnWire(peerId, plaintext);
   final from = _afreshFrom;
   return signalSession.encryptTo(
     peerId,
     plaintext,
+    onlySettled: onlySettled,
     afresh: from == null ? null : () => from(peerId),
     // a read that fails seals nothing
     held: () => appState.keyHeld(peerId, strict: true),

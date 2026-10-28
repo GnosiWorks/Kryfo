@@ -78,9 +78,20 @@ extension AppStateBoot on AppState {
 
   // which files go is settled here; the zeros are written after, in the
   // background: nothing names these files, so nothing can reach them
-  Future<void> _sweepUnnamedMedia(DateTime before) async {
+  // [d]: a vault or the decoy's container as it opens, else the everyday one.
+  // a voice note's wav or a half made opus copy a stop left goes this way.
+  // [vaultOpen]: the decoy's, now its own vault is open (sweepableMedia)
+  Future<void> _sweepUnnamedMedia(
+    DateTime before, [
+    HaloDb? d,
+    bool vaultOpen = false,
+  ]) async {
     try {
-      final gone = await live.unnamedMedia(before: before);
+      final gone = await sweepableMedia(
+        d ?? live,
+        before: before,
+        vaultOpen: vaultOpen,
+      );
       if (gone.isEmpty) return;
       dlog('media: ${gone.length} files no message names');
       unawaited(() async {
@@ -257,6 +268,13 @@ extension AppStateBoot on AppState {
     // set. an endpoint that arrives is registered with the relay
     HelperPush.instance.onChange = () => _helperSoon();
     HelperPush.instance.listen();
+    // google push hands the slots their endpoints in its mode (play only)
+    GooglePush.instance.seal ??= engine.pushSeal;
+    GooglePush.instance.onChange = () => _helperSoon();
+    if (playBuild) GooglePush.instance.listen();
+    if (_deliveryMode == DeliveryMode.google) {
+      helper.usePush(GooglePush.instance);
+    }
     unawaited(_loadHelper());
     await _loadDeliveryTimes();
     // start tor last: nothing above needs it, and earlier it stalls the main
@@ -325,6 +343,7 @@ extension AppStateBoot on AppState {
     engine.nostrInit(relaysFor(_sendMode));
     _loadFirstContact();
     await loadScreenSecure();
+    await loadTypingPref();
     await loadHeartbeat();
     startMemoryLog();
     await initNotifications(

@@ -12,8 +12,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kryfo/caps.dart';
+import 'package:kryfo/typing.dart' show kCapGroupShots;
 import 'package:kryfo/chat_shots.dart' show kShotsByThem;
+import 'package:kryfo/capture_watch.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/drafts.dart' show Draft;
 import 'package:kryfo/group_shots.dart';
@@ -317,10 +318,10 @@ class _Db implements HaloDb {
   // the group's block as its row holds it, and what each person's app can
   // do
   final shots = <String, Object?>{};
-  final caps = <String, int>{};
+  final caps = <String, Set<String>>{};
   final queued = <String>[];
   @override
-  Future<Map<String, int>> capsOfPeople(Iterable<String> ids) async => {
+  Future<Map<String, Set<String>>> capsOfPeople(Iterable<String> ids) async => {
     for (final id in ids)
       if (caps[id] != null) id: caps[id]!,
   };
@@ -464,7 +465,7 @@ void main() {
     testWidgets('the admin\'s switch: off, then waiting with who, then on '
         'for everyone', (t) async {
       final db = _use(t, _mine());
-      db.caps[_anna] = kCapsMine;
+      db.caps[_anna] = {kCapGroupShots};
       appState.contacts = [_contact(_anna, nick: 'Anna'), _contact(_bo)];
       await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
       await _settle(t);
@@ -492,7 +493,7 @@ void main() {
       await _settle(t);
       // bo updates: on for everyone, and the waiting row is gone
       await _close(t);
-      db.caps[_bo] = kCapsMine;
+      db.caps[_bo] = {kCapGroupShots};
       db.shots['shots_all'] = 1;
       await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
       await _settle(t);
@@ -574,7 +575,7 @@ void main() {
       final db = _use(t, _Db(members: const ['me', _anna]))
         ..adminId = 'me'
         ..shots.addAll(_forAll);
-      db.caps[_anna] = kCapsMine;
+      db.caps[_anna] = {kCapGroupShots};
       appState.contacts = [_contact(_anna, nick: 'Anna'), _contact(_bo)];
       await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
       await _settle(t);
@@ -744,6 +745,28 @@ void main() {
         },
       );
     }
+
+    testWidgets('a screenshot android tells of shows one quiet line here, '
+        'and only on the screen in front', (t) async {
+      _use(t, _theirs());
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await _settle(t);
+      captureWatch.take('rec:0');
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.text(l10n.captureRecording), findsNothing);
+      captureWatch.take('shot');
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.text(l10n.captureShotTaken), findsOneWidget);
+      await t.pump(const Duration(seconds: 4));
+      captureWatch.take('rec:1');
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.text(l10n.captureRecording), findsOneWidget);
+      await _close(t);
+      // the screen gone: nobody hears it
+      captureWatch.take('shot');
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.text(l10n.captureShotTaken), findsNothing);
+    });
 
     testWidgets('fits in fa at twice the text', (t) async {
       final now = DateTime.now().millisecondsSinceEpoch;

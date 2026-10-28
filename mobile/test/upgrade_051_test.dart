@@ -20,7 +20,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'sqlite_channel.dart';
 
 const _fixtures = 'test/fixtures/upgrade_051';
-const _version = 87;
+const _version = 89;
 
 // the keys each file opens with, under the names the app keeps them by
 final _keyFile =
@@ -53,7 +53,9 @@ final _steps = <int, (Future<void> Function(Database), String)>{
   84: (albumColumns, 'ALTER TABLE messages ADD COLUMN album_id'),
   85: (wallpaperTable, 'CREATE TABLE IF NOT EXISTS wallpapers'),
   86: (draftsTable, 'CREATE TABLE IF NOT EXISTS drafts'),
-  87: (groupShotsColumns, 'ALTER TABLE groups ADD COLUMN shots_on'),
+  87: (opusColumns, 'ALTER TABLE contacts ADD COLUMN opus_can'),
+  88: (capsColumns, 'ALTER TABLE contacts ADD COLUMN caps'),
+  89: (groupShotsColumns, 'ALTER TABLE groups ADD COLUMN shots_on'),
 };
 
 // whether the step to [step] runs on a file at [from]. test builds took 81

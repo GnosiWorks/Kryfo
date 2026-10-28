@@ -6,7 +6,7 @@
    "name": "OpenCC",
    "sha256": "b534e465949558eec2597b04f5092b5e161236a68dfbfd04d547592ac3964308",
    "texts": [
-    62
+    63
    ],
    "version": null
   }
@@ -261,6 +261,10 @@
   {
    "id": "Zlib",
    "text": "Copyright notice:\n\n (C) 1995-2026 Jean-loup Gailly and Mark Adler\n\n  This software is provided 'as-is', without any express or implied\n  warranty.  In no event will the authors be held liable for any damages\n  arising from the use of this software.\n\n  Permission is granted to anyone to use this software for any purpose,\n  including commercial applications, and to alter it and redistribute it\n  freely, subject to the following restrictions:\n\n  1. The origin of this software must not be misrepresented; you must not\n     claim that you wrote the original software. If you use this software\n     in a product, an acknowledgment in the product documentation would be\n     appreciated but is not required.\n  2. Altered source versions must be plainly marked as such, and must not be\n     misrepresented as being the original software.\n  3. This notice may not be removed or altered from any source distribution.\n\n  Jean-loup Gailly        Mark Adler\n  jloup@gzip.org          madler@alumni.caltech.edu\n"
+  },
+  {
+   "id": "BSD-3-Clause",
+   "text": "Copyright 2001-2023 Xiph.Org, Skype Limited, Octasic,\n                    Jean-Marc Valin, Timothy B. Terriberry,\n                    CSIRO, Gregory Maxwell, Mark Borgerding,\n                    Erik de Castro Lopo, Mozilla, Amazon\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions\nare met:\n\n- Redistributions of source code must retain the above copyright\nnotice, this list of conditions and the following disclaimer.\n\n- Redistributions in binary form must reproduce the above copyright\nnotice, this list of conditions and the following disclaimer in the\ndocumentation and/or other materials provided with the distribution.\n\n- Neither the name of Internet Society, IETF or IETF Trust, nor the\nnames of specific contributors, may be used to endorse or promote\nproducts derived from this software without specific prior written\npermission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS\n``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT\nLIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR\nA PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER\nOR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,\nEXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,\nPROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR\nPROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF\nLIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING\nNEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\nSOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n\nOpus is subject to the royalty-free patent licenses which are\nspecified at:\n\nXiph.Org Foundation:\nhttps://datatracker.ietf.org/ipr/1524/\n\nMicrosoft Corporation:\nhttps://datatracker.ietf.org/ipr/1914/\n\nBroadcom Corporation:\nhttps://datatracker.ietf.org/ipr/1526/\n"
   },
   {
    "id": "Apache-2.0",
@@ -942,6 +946,14 @@
     60
    ],
    "version": "2.2.1-alpha-dev"
+  },
+  {
+   "licence": "BSD-3-Clause",
+   "name": "libopus",
+   "texts": [
+    62
+   ],
+   "version": "1.6.1"
   },
   {
    "licence": "Apache-2.0",

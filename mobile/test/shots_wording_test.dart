@@ -18,8 +18,13 @@ const _explains = [
   'groupShotsBlocksAll',
 ];
 
-// the photo toast and the explaining lines
-const _shotLines = ['chatTheNextPhotoYou', ..._explains];
+// the photo toast, the explaining lines and the capture lines
+const _shotLines = [
+  'chatTheNextPhotoYou',
+  ..._explains,
+  'captureShotTaken',
+  'captureRecording',
+];
 
 // camera words per language, lowercase
 const _cameraWords = {

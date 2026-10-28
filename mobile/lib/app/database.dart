@@ -148,7 +148,7 @@ class HaloDb
     _db = await openDatabase(
       path,
       password: pw,
-      version: 87,
+      version: 89,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -192,7 +192,8 @@ class HaloDb
             shots_can INTEGER NOT NULL DEFAULT 0,
             shots_by INTEGER NOT NULL DEFAULT 0,
             shots_when INTEGER NOT NULL DEFAULT 0,
-            caps INTEGER NOT NULL DEFAULT 0,
+            opus_can INTEGER NOT NULL DEFAULT 0,
+            caps TEXT NOT NULL DEFAULT '',
             caps_at INTEGER NOT NULL DEFAULT 0
           )
         ''');
@@ -289,6 +290,7 @@ class HaloDb
             group_id TEXT NOT NULL,
             halo_id TEXT NOT NULL,
             joined_at INTEGER NOT NULL,
+            opus_can INTEGER NOT NULL DEFAULT 0,
             PRIMARY KEY (group_id, halo_id),
             FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
           )
@@ -343,7 +345,7 @@ class HaloDb
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 to 87
+        // they add. 66 runs after it: it reads what they all make. 67 to 89
         // last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
@@ -871,7 +873,15 @@ class HaloDb
           await draftsTable(db);
         }
         if (oldV < 87) {
-          // a group's screenshot block, and what each person's app can do
+          // which phones play opus voice notes (voice_format.dart)
+          await opusColumns(db);
+        }
+        if (oldV < 88) {
+          // what a contact's phone understands (typing.dart)
+          await capsColumns(db);
+        }
+        if (oldV < 89) {
+          // a group's screenshot block (group_shots.dart)
           await groupShotsColumns(db);
         }
       },
@@ -1130,6 +1140,31 @@ Future<void> shotsColumns(DatabaseExecutor db) async {
       'ALTER TABLE contacts ADD COLUMN $col INTEGER NOT NULL DEFAULT 0',
     );
   }
+}
+
+// the upgrade to 87: a contact's or a member's word that their phone plays
+// opus voice notes, beside the rest of the chat's state, so it moves, ends
+// and goes with it
+Future<void> opusColumns(DatabaseExecutor db) async {
+  for (final table in const ['contacts', 'group_members']) {
+    await addColumn(
+      db,
+      'ALTER TABLE $table ADD COLUMN $kOpusCol INTEGER NOT NULL DEFAULT 0',
+    );
+  }
+}
+
+// the upgrade to 88: what a contact's phone has said it understands, and
+// when by their clock (capsAfter)
+Future<void> capsColumns(DatabaseExecutor db) async {
+  await addColumn(
+    db,
+    "ALTER TABLE contacts ADD COLUMN caps TEXT NOT NULL DEFAULT ''",
+  );
+  await addColumn(
+    db,
+    'ALTER TABLE contacts ADD COLUMN caps_at INTEGER NOT NULL DEFAULT 0',
+  );
 }
 
 // the upgrade to 78. a row from before says when it came
