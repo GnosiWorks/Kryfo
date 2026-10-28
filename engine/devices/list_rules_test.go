@@ -294,11 +294,7 @@ func TestASecondRestoreClimbsAboveTheFirst(t *testing.T) {
 		t.Fatalf("the second restore: %v", err)
 	}
 	// the second phone checks what came back under its own key
-	held, err := ReadList(rb.Held, s)
-	if err != nil {
-		t.Fatal(err)
-	}
-	up, unknown, err := r2.Above(held, rand.Reader)
+	up, unknown, err := r2.Above(rb.Held, s, rand.Reader)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -317,8 +313,36 @@ func TestASecondRestoreClimbsAboveTheFirst(t *testing.T) {
 	}
 	// another identity's list is not a base
 	b := newAccount(t, s)
-	if _, _, err := r2.Above(b.list, rand.Reader); !errors.Is(err, ErrWrongIdentity) {
+	if _, _, err := r2.Above(b.wire, s, rand.Reader); !errors.Is(err, ErrWrongIdentity) {
 		t.Fatalf("another identity's list: %v", err)
+	}
+}
+
+// a contact sends back a list near the top: signed by the identity, it is
+// still refused past the window, and an unsigned one fails the signature
+func TestAHeldListCannotPushTheVersionToTheTop(t *testing.T) {
+	s := newShim()
+	a := newAccount(t, s)
+	top := clone(a.list)
+	top.Version = MaxVersion - 300
+	w, err := top.Sign(a.id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := a.list.Above(w, s, rand.Reader); !errors.Is(err, ErrJump) {
+		t.Fatalf("a held list near the top: %v", err)
+	}
+	edge := clone(a.list)
+	edge.Version += VersionWindow
+	w, _ = edge.Sign(a.id)
+	if up, _, err := a.list.Above(w, s, rand.Reader); err != nil || up.Version <= edge.Version {
+		t.Fatalf("a held list at the window: %v", err)
+	}
+	if _, _, err := a.list.Above(forge(edge), s, rand.Reader); !errors.Is(err, ErrSignature) {
+		t.Fatalf("an unsigned held list: %v", err)
+	}
+	if _, _, err := a.list.Above([]byte("KDL2"), s, rand.Reader); !errors.Is(err, ErrMalformed) {
+		t.Fatalf("junk: %v", err)
 	}
 }
 
@@ -367,8 +391,8 @@ func TestEquivocationFromAnyCarrier(t *testing.T) {
 	// and through the book
 	book := NewBook()
 	book.Add(a.id.pub)
-	book.Accept(a.id.pub, a.wire, FromSession(a.id.pub), s)
-	if _, _, err := book.Accept(a.id.pub, w, FromSession(other.id.pub), s); !errors.Is(err, ErrEquivocation) {
+	_, _, _, _ = book.Accept(a.id.pub, a.wire, FromSession(a.id.pub), s)
+	if _, _, _, err := book.Accept(a.id.pub, w, FromSession(other.id.pub), s); !errors.Is(err, ErrEquivocation) {
 		t.Fatalf("through the book: %v", err)
 	}
 }

@@ -4,6 +4,7 @@ package devices
 import (
 	"crypto/rand"
 	"errors"
+	"slices"
 	"sync"
 	"testing"
 )
@@ -167,7 +168,7 @@ func TestBook(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if _, _, err := book.Accept(a.id.pub, a.wire, FromSession(a.id.pub), s); err != nil {
+	if _, _, _, err := book.Accept(a.id.pub, a.wire, FromSession(a.id.pub), s); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := book.Proven(a.id.pub, desk.Key); err != nil {
@@ -176,8 +177,15 @@ func TestBook(t *testing.T) {
 	// b lists a's proven desktop as its own device
 	claimed, err := b.list.Add(Entry{ID: desk.ID, Key: desk.Key, Reg: desk.Reg}, rand.Reader)
 	b.set(t, claimed, err)
-	if _, _, err := book.Accept(b.id.pub, b.wire, FromSession(b.id.pub), s); !errors.Is(err, ErrTaken) {
-		t.Fatalf("a's proven device on b's list: %v", err)
+	_, _, claimants, err := book.Accept(b.id.pub, b.wire, FromSession(b.id.pub), s)
+	if err != nil || !slices.Contains(claimants, b.id.pub) {
+		t.Fatalf("a's proven device on b's list: %v %v", claimants, err)
+	}
+	if book.Vouches(b.id.pub, desk.Key) || !book.Vouches(a.id.pub, desk.Key) {
+		t.Fatal("a's desktop routes as b's")
+	}
+	if _, ok := book.Pin(b.id.pub, desk.ID); ok {
+		t.Fatal("b's copy is pinned")
 	}
 	// or a's identity key as a device
 	c := newAccount(t, s)
@@ -186,24 +194,28 @@ func TestBook(t *testing.T) {
 	}
 	withA, err := c.list.Add(Entry{ID: 9, Key: a.id.pub, Reg: 1}, rand.Reader)
 	c.set(t, withA, err)
-	if _, _, err := book.Accept(c.id.pub, c.wire, FromSession(c.id.pub), s); !errors.Is(err, ErrTaken) {
-		t.Fatalf("a's identity on c's list: %v", err)
+	_, _, claimants, err = book.Accept(c.id.pub, c.wire, FromSession(c.id.pub), s)
+	if err != nil || !slices.Contains(claimants, c.id.pub) || book.Vouches(c.id.pub, a.id.pub) {
+		t.Fatalf("a's identity on c's list: %v %v", claimants, err)
 	}
 	// a contact whose identity is a's proven desktop
 	if _, err := book.Add(desk.Key); !errors.Is(err, ErrTaken) {
 		t.Fatalf("a's desktop as a contact: %v", err)
 	}
-	if _, _, err := book.Accept(fixedKey(t, 1), a.wire, FromSession(a.id.pub), s); !errors.Is(err, ErrUnknown) {
+	if _, _, _, err := book.Accept(fixedKey(t, 1), a.wire, FromSession(a.id.pub), s); !errors.Is(err, ErrUnknown) {
 		t.Fatalf("an unknown contact: %v", err)
 	}
 	// a proof only for a key the contact lists, and never for one proven
 	// elsewhere
-	if _, err := book.Proven(b.id.pub, desk.Key); !errors.Is(err, ErrNotListed) {
-		t.Fatalf("b proving a key b's list does not hold: %v", err)
+	if _, err := book.Proven(b.id.pub, desk.Key); !errors.Is(err, ErrTaken) {
+		t.Fatalf("b proving a's proven desktop: %v", err)
+	}
+	if _, err := book.Proven(c.id.pub, fixedKey(t, 0x55)); !errors.Is(err, ErrNotListed) {
+		t.Fatalf("c proving a key c's list does not hold: %v", err)
 	}
 	// once a is gone its keys are free again
 	book.Forget(a.id.pub)
-	if _, _, err := book.Accept(b.id.pub, b.wire, FromSession(b.id.pub), s); err != nil {
+	if _, _, _, err := book.Accept(b.id.pub, b.wire, FromSession(b.id.pub), s); err != nil {
 		t.Fatalf("after a is forgotten: %v", err)
 	}
 	if book.Current(b.id.pub) == nil {
@@ -222,7 +234,7 @@ func TestAClaimDoesNotBlockAnAdd(t *testing.T) {
 	}
 	n, err := mallory.list.Add(Entry{ID: 9, Key: carol.id.pub, Reg: 5}, rand.Reader)
 	mallory.set(t, n, err)
-	if _, _, err := book.Accept(mallory.id.pub, mallory.wire, FromSession(mallory.id.pub), s); err != nil {
+	if _, _, _, err := book.Accept(mallory.id.pub, mallory.wire, FromSession(mallory.id.pub), s); err != nil {
 		t.Fatal(err)
 	}
 	claimants, err := book.Add(carol.id.pub)
@@ -249,24 +261,24 @@ func TestACopiedDeviceKeyFreezesNothing(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if _, _, err := book.Accept(alice.id.pub, alice.wire, FromSession(alice.id.pub), s); err != nil {
+	if _, _, _, err := book.Accept(alice.id.pub, alice.wire, FromSession(alice.id.pub), s); err != nil {
 		t.Fatal(err)
 	}
 	stolen := alice.link(t)
-	if _, _, err := book.Accept(alice.id.pub, alice.wire, FromSession(alice.id.pub), s); err != nil {
+	if _, _, _, err := book.Accept(alice.id.pub, alice.wire, FromSession(alice.id.pub), s); err != nil {
 		t.Fatal(err)
 	}
 	desk := alice.link(t)
 	n, err := mallory.list.Add(Entry{ID: 9, Key: desk.Key, Reg: 5}, rand.Reader)
 	mallory.set(t, n, err)
-	if _, _, err := book.Accept(mallory.id.pub, mallory.wire, FromSession(mallory.id.pub), s); err != nil {
+	if _, _, _, err := book.Accept(mallory.id.pub, mallory.wire, FromSession(mallory.id.pub), s); err != nil {
 		t.Fatal(err)
 	}
-	if _, out, err := book.Accept(alice.id.pub, alice.wire, FromSession(alice.id.pub), s); err != nil || out != Changed {
+	if _, out, _, err := book.Accept(alice.id.pub, alice.wire, FromSession(alice.id.pub), s); err != nil || out != Changed {
 		t.Fatalf("alice's real list: %v %v", out, err)
 	}
 	alice.unlink(t, stolen.ID)
-	if _, out, err := book.Accept(alice.id.pub, alice.wire, FromSession(alice.id.pub), s); err != nil || out != Changed {
+	if _, out, _, err := book.Accept(alice.id.pub, alice.wire, FromSession(alice.id.pub), s); err != nil || out != Changed {
 		t.Fatalf("alice's removal: %v %v", out, err)
 	}
 	if book.Vouches(alice.id.pub, stolen.Key) {
@@ -288,11 +300,50 @@ func TestACopiedDeviceKeyFreezesNothing(t *testing.T) {
 	if got := book.Claimants(); len(got) != 1 || got[0] != mallory.id.pub {
 		t.Fatalf("claimants %v", got)
 	}
-	// mallory's next list that keeps the copy is refused
+	// mallory's next list that keeps the copy is taken, the copy still
+	// unrouted and mallory still the one doubted
 	st, err := mallory.list.Settled(rand.Reader)
 	mallory.set(t, st, err)
-	if _, _, err := book.Accept(mallory.id.pub, mallory.wire, FromSession(mallory.id.pub), s); !errors.Is(err, ErrTaken) {
-		t.Fatalf("mallory keeping the copy: %v", err)
+	_, _, claimants, err = book.Accept(mallory.id.pub, mallory.wire, FromSession(mallory.id.pub), s)
+	if err != nil || len(claimants) != 1 || claimants[0] != mallory.id.pub || book.Vouches(mallory.id.pub, desk.Key) {
+		t.Fatalf("mallory keeping the copy: %v %v", claimants, err)
+	}
+	if _, err := book.Proven(mallory.id.pub, desk.Key); !errors.Is(err, ErrTaken) {
+		t.Fatalf("mallory proving the copy: %v", err)
+	}
+}
+
+// bob adds a contact whose identity is alice's desktop key before the
+// desktop ever wrote to him. alice's later lists still go through, her
+// removals included; the desktop entry is the doubted one
+func TestAClashHoldsBackNoLaterChange(t *testing.T) {
+	s := newShim()
+	alice := newAccount(t, s)
+	desk := alice.link(t)
+	book := NewBook()
+	if _, err := book.Add(alice.id.pub); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, _, err := book.Accept(alice.id.pub, alice.wire, FromSession(alice.id.pub), s); err != nil {
+		t.Fatal(err)
+	}
+	claimants, err := book.Add(desk.Key)
+	if err != nil || !slices.Contains(claimants, alice.id.pub) {
+		t.Fatalf("the clash: %v %v", claimants, err)
+	}
+	stolen := alice.link(t)
+	if _, out, _, err := book.Accept(alice.id.pub, alice.wire, FromSession(alice.id.pub), s); err != nil || out != Changed {
+		t.Fatalf("alice adding a device: %v %v", out, err)
+	}
+	if !book.Vouches(alice.id.pub, stolen.Key) {
+		t.Fatal("the new device is not routed")
+	}
+	alice.unlink(t, stolen.ID)
+	if _, out, _, err := book.Accept(alice.id.pub, alice.wire, FromSession(alice.id.pub), s); err != nil || out != Changed {
+		t.Fatalf("alice's removal: %v %v", out, err)
+	}
+	if book.Vouches(alice.id.pub, stolen.Key) || book.Vouches(alice.id.pub, desk.Key) {
+		t.Fatal("a removed or doubted device still routes")
 	}
 }
 
@@ -311,8 +362,9 @@ func TestOwnKeysAreNobodysDevice(t *testing.T) {
 	book.Own(desk)
 	n, err := c.list.Add(Entry{ID: 9, Key: desk, Reg: 5}, rand.Reader)
 	c.set(t, n, err)
-	if _, _, err := book.Accept(c.id.pub, c.wire, FromSession(c.id.pub), s); !errors.Is(err, ErrTaken) {
-		t.Fatalf("my desktop on a contact's list: %v", err)
+	_, _, claimants, err := book.Accept(c.id.pub, c.wire, FromSession(c.id.pub), s)
+	if err != nil || !slices.Contains(claimants, c.id.pub) || book.Vouches(c.id.pub, desk) {
+		t.Fatalf("my desktop on a contact's list: %v %v", claimants, err)
 	}
 }
 
@@ -336,7 +388,7 @@ func TestBookTakesListsAtOnce(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			for range 20 {
-				if _, _, err := book.Accept(a.id.pub, a.wire, FromSession(a.id.pub), s); err != nil {
+				if _, _, _, err := book.Accept(a.id.pub, a.wire, FromSession(a.id.pub), s); err != nil {
 					t.Error(err)
 					return
 				}
