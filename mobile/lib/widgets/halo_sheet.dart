@@ -115,12 +115,17 @@ class _SheetPullState extends State<_SheetPull> {
 
   bool get canPull => _rise != null && _height > 0;
 
+  bool get moved => _moved;
+
   // the finger moved [dy], down positive. the sheet takes a move down
   // whole and a move up until it is back up, and returns what is left
   double take(double dy) {
     final c = _rise;
     final h = _height;
-    if (c == null || h <= 0 || dy == 0 || dy < 0 && c.value >= 1) return dy;
+    if (c == null || h <= 0 || dy == 0) return dy;
+    // a move up never starts a pull: a flick up while the sheet still rises
+    // scrolls, and the sheet goes on rising
+    if (dy < 0 && (!_moved || c.value >= 1)) return dy;
     if (!_moved) {
       _moved = true;
       // the route follows the finger one to one while it drags
@@ -153,6 +158,9 @@ class _SheetPullState extends State<_SheetPull> {
     if (v > _flingClose) {
       if (c.value > 0) c.fling(velocity: -v / h);
       closing = true;
+    } else if (v < 0) {
+      // let go moving up: the sheet goes back up, wherever it is
+      c.forward();
     } else if (c.value < _closeBelow) {
       if (c.value > 0) c.fling(velocity: -1);
       closing = true;
@@ -230,6 +238,14 @@ class _PullPosition extends ScrollPositionWithSingleContext {
       final rest = pull.take(delta);
       if (rest < 0) super.applyUserOffset(rest);
     }
+  }
+
+  // something else took the scroll over mid drag (a field scrolled into
+  // view): the sheet is let go, not left part way down
+  @override
+  void beginActivity(ScrollActivity? newActivity) {
+    if (pull.moved && newActivity is! DragScrollActivity) pull.release(0);
+    super.beginActivity(newActivity);
   }
 
   // a drag's end comes here with the scroll's velocity, the finger's

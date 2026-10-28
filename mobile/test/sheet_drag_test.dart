@@ -3,6 +3,8 @@
 // quick fling closes it. a sheet that scrolls takes the pull at its top and
 // scrolls its content back up first. pumped with the app's own scroll feel,
 // which scrolls every scroll view always
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -278,6 +280,56 @@ void main() {
       await t.pump(const Duration(milliseconds: 300));
       await g.up();
       await t.pumpAndSettle();
+      expect(_top(t), rest);
+    });
+
+    testWidgets('a flick up while it still rises scrolls and keeps it', (
+      t,
+    ) async {
+      _phone(t);
+      await t.pumpWidget(_app((c) => showHaloSheet<void>(c, builder: _long)));
+      await t.tap(find.text('open'));
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 60));
+      final ctl = t.widget<BottomSheet>(_sheet).animationController!;
+      expect(ctl.value, lessThan(1));
+      // the part of it already on the screen
+      final at = t.getTopLeft(_sheet) + const Offset(200, 60);
+      expect(at.dy, lessThan(760));
+      await t.flingFrom(at, const Offset(0, -120), 2000);
+      await t.pump();
+      await t.pumpAndSettle();
+      expect(_sheet, findsOneWidget);
+      expect(ctl.value, 1);
+      expect(_pos(t, 'row 2').pixels, greaterThan(0));
+    });
+
+    testWidgets('a scroll taking over mid pull lets the sheet go back up', (
+      t,
+    ) async {
+      await openLong(t);
+      final rest = _top(t);
+      final pos = _pos(t, 'row 4');
+      final g = await t.startGesture(t.getCenter(find.text('row 4')));
+      for (var i = 0; i < 5; i++) {
+        await g.moveBy(const Offset(0, 20));
+        await t.pump(const Duration(milliseconds: 16));
+      }
+      expect(_top(t), greaterThan(rest + 60));
+      // as a field scrolling itself into view does
+      unawaited(
+        pos.animateTo(
+          200,
+          duration: const Duration(seconds: 2),
+          curve: Curves.linear,
+        ),
+      );
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 400));
+      expect(_top(t), rest);
+      await g.up();
+      await t.pumpAndSettle();
+      expect(_sheet, findsOneWidget);
       expect(_top(t), rest);
     });
 
