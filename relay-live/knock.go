@@ -201,10 +201,12 @@ func knockGatewayLocal(gateway string) string {
 	return v
 }
 
-// a sealed token as the gateway takes it: base64url, no padding, and as
-// long as an fcm token sealed (server/push/seal.go)
+// a sealed token as the gateway takes it: base64url, no padding, and
+// always 480 characters, a token padded to one length and sealed
+// (server/push/seal.go). with the gateway's url that is 510 of the 512 an
+// endpoint may have: a longer gateway name needs a shorter seal
 const (
-	knockSealedMin = 92
+	knockSealedMin = 480
 	knockSealedMax = 480
 )
 

@@ -12,10 +12,10 @@ import (
 	"testing"
 )
 
-// a sealed token as the app makes one: base64url, about 260 characters
+// a sealed token as the app makes one: base64url, always 480 characters
 func sealedEP(i int) string {
-	tok := strings.Repeat("A", 200) + fmt.Sprintf("x%03d", i) + strings.Repeat("_-", 20)
-	return "https://relay.kryfo.app/push/" + tok
+	tok := fmt.Sprintf("x%03d", i) + strings.Repeat("A_-", 200)
+	return "https://relay.kryfo.app/push/" + tok[:knockSealedMax]
 }
 
 func TestKnockGatewayEndpoints(t *testing.T) {
@@ -25,7 +25,8 @@ func TestKnockGatewayEndpoints(t *testing.T) {
 		ok  bool
 	}{
 		{good, true},
-		{strings.Replace(good, "kryfo.app/", "kryfo.app:443/", 1), true},
+		// the port written out makes the endpoint longer than the relay takes
+		{strings.Replace(good, "kryfo.app/", "kryfo.app:443/", 1), false},
 		{strings.Replace(good, "kryfo.app/", "kryfo.app:8443/", 1), false},
 		{good + "?up=1", false},
 		{good + "?", false},
@@ -34,6 +35,7 @@ func TestKnockGatewayEndpoints(t *testing.T) {
 		{good + "=", false},
 		{strings.Replace(good, "A", "+", 1), false},
 		{"https://relay.kryfo.app/push/" + strings.Repeat("A", knockSealedMin-1), false},
+		{"https://relay.kryfo.app/push/" + strings.Repeat("A", 244), false},
 		{"https://relay.kryfo.app/push/" + strings.Repeat("A", knockSealedMax+1), false},
 		{"https://relay.kryfo.app/push/", false},
 		{"https://relay.kryfo.app/up" + strings.Repeat("A", 100), false},
@@ -57,7 +59,7 @@ func TestKnockGatewayCanBeTurnedOff(t *testing.T) {
 		t.Fatal("the gateway's domain is a known push server with the gateway off")
 	}
 	// then its endpoints are any other server's
-	if !knockEndpointOK(sealedEP(1)+"?up=1", false) {
+	if !knockEndpointOK("https://relay.kryfo.app/push/"+strings.Repeat("A", 100)+"?up=1", false) {
 		t.Fatal("the gateway's rules hold with the gateway off")
 	}
 }
