@@ -1283,7 +1283,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get cameraTooLongForA =>
-      'Слишком длинно для сообщения · максимум 15 МБ';
+      'Слишком длинно для сообщения · максимум 50 МБ';
 
   @override
   String get cameraNeverSavedToYour => 'Никогда не сохраняется в галерею';
@@ -9676,6 +9676,22 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Включите блокировку экрана на телефоне, чтобы эта защита действовала и тогда, когда он заблокирован.';
+
+  @override
+  String get fileServerTryLater =>
+      'Файловый сервер сейчас заполнен. Попробуй чуть позже.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Этот файл весит $size. В этом чате можно отправлять файлы до $max, пока все не обновят Kryfo.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'Сегодня ты уже отправил много больших файлов. Попробуй завтра.';
+
+  @override
+  String get mediaProgressPreparing => 'Подготовка · не закрывай приложение';
 
   @override
   String get groupShotsBlocksAll =>

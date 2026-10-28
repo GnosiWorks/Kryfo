@@ -18,11 +18,13 @@ const kCapsWire = 'cp';
 
 /// the names a capability list may hold, and what this build puts on
 /// every 1:1 and group frame it seals. 'gs': it blocks screenshots in
-/// groups (group_shots.dart)
+/// groups (group_shots.dart). 'fb': it fetches from the files service, so
+/// a file may go there (file_drop.dart)
 const kCapTyping = 'ty';
 const kCapGroupShots = 'gs';
-const kKnownCaps = {kCapTyping, kCapGroupShots};
-const kMyCaps = [kCapGroupShots, kCapTyping];
+const kCapDrops = 'fb';
+const kKnownCaps = {kCapTyping, kCapGroupShots, kCapDrops};
+const kMyCaps = [kCapGroupShots, kCapTyping, kCapDrops];
 
 // a list longer than this is no phone's, and is read as none
 const kCapsMost = 16;

@@ -1250,7 +1250,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get cameraTooLongForA =>
-      'برای یک پیام زیادی طولانی است · حداکثر ۱۵ مگابایت';
+      'برای یک پیام زیادی طولانی است · حداکثر ۵۰ مگابایت';
 
   @override
   String get cameraNeverSavedToYour => 'هرگز در عکس‌هایتان ذخیره نمی‌شود';
@@ -9523,6 +9523,23 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'برای گوشی قفل صفحه بگذارید تا این محافظت وقتی گوشی قفل است هم برقرار بماند.';
+
+  @override
+  String get fileServerTryLater =>
+      'سرور فایل فعلاً پر است. کمی بعد دوباره امتحان کن.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'حجم این فایل ⁨$size⁩ است. در این گفتگو تا وقتی همه Kryfo را به‌روز نکرده‌اند، فایل‌ها حداکثر می‌توانند ⁨$max⁩ باشند.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'امروز فایل‌های بزرگ زیادی فرستاده‌ای. فردا دوباره امتحان کن.';
+
+  @override
+  String get mediaProgressPreparing =>
+      'در حال آماده‌سازی · برنامه را باز نگه دار';
 
   @override
   String get groupShotsBlocksAll =>

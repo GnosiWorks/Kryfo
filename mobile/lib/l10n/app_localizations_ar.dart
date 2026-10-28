@@ -1290,7 +1290,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cameraCouldNotSaveA => 'تعذّر حفظ نسخة على هذا الهاتف';
 
   @override
-  String get cameraTooLongForA => 'أطول من أن يُرسل · ١٥ م.ب كحد أقصى';
+  String get cameraTooLongForA => 'أطول من أن يُرسل · ٥٠ م.ب كحد أقصى';
 
   @override
   String get cameraNeverSavedToYour => 'لا يُحفظ أبدًا في صورك';
@@ -9642,6 +9642,22 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'اضبط قفل شاشة لهاتفك حتى تبقى هذه الحماية قائمة عندما يكون مقفلًا.';
+
+  @override
+  String get fileServerTryLater =>
+      'خادم الملفات ممتلئ حاليًا. حاول مرة أخرى بعد قليل.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'حجم هذا الملف ⁨$size⁩. في هذه المحادثة يمكن إرسال ملفات حتى ⁨$max⁩ إلى أن يحدّث الجميع Kryfo.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'أرسلت اليوم ملفات كبيرة كثيرة. حاول مرة أخرى غدًا.';
+
+  @override
+  String get mediaProgressPreparing => 'جارٍ التحضير · أبقِ التطبيق مفتوحًا';
 
   @override
   String get groupShotsBlocksAll =>

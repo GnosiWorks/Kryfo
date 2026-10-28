@@ -1197,7 +1197,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cameraCouldNotSaveA => '无法在这部手机上保存副本';
 
   @override
-  String get cameraTooLongForA => '太长，无法作为消息发送 · 最大 15 MB';
+  String get cameraTooLongForA => '太长，无法作为消息发送 · 最大 50 MB';
 
   @override
   String get cameraNeverSavedToYour => '不会保存到你的相册';
@@ -9072,6 +9072,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get keyLineScreenLock => '请为手机设置屏幕锁，这样手机锁定时这层保护依然有效。';
 
   @override
+  String get fileServerTryLater => '文件服务器暂时已满，请稍后再试。';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return '这个文件有 $size。在所有人更新 Kryfo 之前，这个聊天里的文件最大为 $max。';
+  }
+
+  @override
+  String get fileDayLimit => '你今天已经发送了很多大文件，请明天再试。';
+
+  @override
+  String get mediaProgressPreparing => '正在准备 · 请保持应用打开';
+
+  @override
   String get groupShotsBlocksAll =>
       '在这个群组的每部手机上禁止截屏和录屏，也禁止复制、转发或保存彼此的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
 
@@ -10514,7 +10528,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cameraCouldNotSaveA => '無法在這支手機上儲存副本';
 
   @override
-  String get cameraTooLongForA => '太長了，無法用訊息傳送 · 上限 15 MB';
+  String get cameraTooLongForA => '太長了，無法用訊息傳送 · 上限 50 MB';
 
   @override
   String get cameraNeverSavedToYour => '不會存到你的相簿';
@@ -18270,6 +18284,20 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get keyLineScreenLock => '請為手機設定螢幕鎖定，這樣手機鎖定時這層保護依然有效。';
+
+  @override
+  String get fileServerTryLater => '檔案伺服器暫時已滿，請稍後再試。';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return '這個檔案有 $size。在所有人更新 Kryfo 之前，這個聊天裡的檔案最大為 $max。';
+  }
+
+  @override
+  String get fileDayLimit => '你今天已經傳送了很多大檔案，請明天再試。';
+
+  @override
+  String get mediaProgressPreparing => '正在準備 · 請保持 App 開啟';
 
   @override
   String get groupShotsBlocksAll =>

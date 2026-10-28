@@ -1239,7 +1239,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get cameraCouldNotSaveA => 'Gagal menyimpan salinan di ponsel ini';
 
   @override
-  String get cameraTooLongForA => 'Terlalu panjang untuk pesan · maks 15 MB';
+  String get cameraTooLongForA => 'Terlalu panjang untuk pesan · maks 50 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Tidak pernah disimpan ke galerimu';
@@ -9503,6 +9503,22 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Pasang kunci layar di ponselmu supaya perlindungan ini tetap berlaku saat ponsel terkunci.';
+
+  @override
+  String get fileServerTryLater =>
+      'Server file sedang penuh. Coba lagi sebentar lagi.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'File ini berukuran $size. Di chat ini ukuran file maksimal $max sampai semua orang memperbarui Kryfo.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'Hari ini kamu sudah mengirim banyak file besar. Coba lagi besok.';
+
+  @override
+  String get mediaProgressPreparing => 'Menyiapkan · biarkan aplikasi terbuka';
 
   @override
   String get groupShotsBlocksAll =>

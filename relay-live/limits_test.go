@@ -457,3 +457,31 @@ func TestConnectionCeilingAndDisk(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+// under the second floor file slices wait and text still goes
+func TestDiskTightTakesTextOnly(t *testing.T) {
+	url, l := testRelay(t)
+	r := connect(t, url)
+	l.diskTight.Store(true)
+	big := wrap(t, addr(), func(e *nostr.Event) { e.Content = strings.Repeat("s", bigContent+1) })
+	if err := publish(t, r, big); err == nil || !strings.Contains(err.Error(), "full") {
+		t.Fatalf("a file slice was taken with the disk tight: %v", err)
+	}
+	if err := publish(t, r, wrap(t, addr(), nil)); err != nil {
+		t.Fatalf("a text was refused with the disk tight: %v", err)
+	}
+	l.diskTight.Store(false)
+	big = wrap(t, addr(), func(e *nostr.Event) { e.Content = strings.Repeat("s", bigContent+1) })
+	if err := publish(t, r, big); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestReadDiskSetsBothFloors(t *testing.T) {
+	l := &limits{}
+	l.readDisk(t.TempDir())
+	free := freeBytes(t.TempDir())
+	if l.diskLow.Load() != (free < minFreeBytes) || l.diskTight.Load() != (free < minFreeBigBytes) {
+		t.Fatalf("free %d: low %v tight %v", free, l.diskLow.Load(), l.diskTight.Load())
+	}
+}

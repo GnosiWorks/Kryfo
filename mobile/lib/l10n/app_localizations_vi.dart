@@ -1239,7 +1239,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không lưu được bản sao trên điện thoại này';
 
   @override
-  String get cameraTooLongForA => 'Quá dài cho một tin nhắn · tối đa 15 MB';
+  String get cameraTooLongForA => 'Quá dài cho một tin nhắn · tối đa 50 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Không bao giờ lưu vào thư viện ảnh';
@@ -9497,6 +9497,22 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Hãy đặt khóa màn hình cho điện thoại để lớp bảo vệ này vẫn giữ được khi máy bị khóa.';
+
+  @override
+  String get fileServerTryLater =>
+      'Máy chủ tệp đang đầy. Hãy thử lại sau một lúc.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Tệp này nặng $size. Trong cuộc trò chuyện này, tệp chỉ được tối đa $max cho đến khi mọi người cập nhật Kryfo.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'Hôm nay bạn đã gửi nhiều tệp lớn. Hãy thử lại vào ngày mai.';
+
+  @override
+  String get mediaProgressPreparing => 'Đang chuẩn bị · giữ ứng dụng mở';
 
   @override
   String get groupShotsBlocksAll =>

@@ -1252,7 +1252,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get cameraCouldNotSaveA => 'इस फ़ोन पर कॉपी सेव नहीं हो पाई';
 
   @override
-  String get cameraTooLongForA => 'मैसेज के लिए बहुत लंबा · अधिकतम 15 MB';
+  String get cameraTooLongForA => 'मैसेज के लिए बहुत लंबा · अधिकतम 50 MB';
 
   @override
   String get cameraNeverSavedToYour => 'आपकी फ़ोटो में कभी सेव नहीं होती';
@@ -9513,6 +9513,22 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'अपने फ़ोन पर स्क्रीन लॉक सेट करें, ताकि फ़ोन लॉक होने पर भी यह सुरक्षा बनी रहे।';
+
+  @override
+  String get fileServerTryLater =>
+      'फ़ाइल सर्वर अभी भरा हुआ है। थोड़ी देर बाद फिर से कोशिश करें।';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'यह फ़ाइल $size की है। जब तक इस चैट में सभी Kryfo अपडेट नहीं करते, यहाँ $max तक की फ़ाइलें जा सकती हैं।';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'आज आपने बहुत सारी बड़ी फ़ाइलें भेज दी हैं। कल फिर से कोशिश करें।';
+
+  @override
+  String get mediaProgressPreparing => 'तैयार हो रहा है · ऐप खुला रखें';
 
   @override
   String get groupShotsBlocksAll =>

@@ -32,12 +32,17 @@ String humanFileSize(int bytes) {
 }
 
 /// the line for a file over the limit. a size that would read the same as
-/// the limit is given in whole kb, rounded up, so the two never match
+/// the limit is given in whole kb, rounded up, so the two never match. a
+/// limit under the full one is a chat with a phone not yet updated, and
+/// the line says so
 String fileTooBigLine(int bytes, [int max = kMaxFileBytes]) {
+  final line = max < kMaxFileBytes
+      ? l10n.fileTooBigUntilUpdate
+      : l10n.fileTooBig;
   final size = humanFileSize(bytes);
   final most = humanFileSize(max);
-  if (size != most) return l10n.fileTooBig(size, most);
-  return l10n.fileTooBig(
+  if (size != most) return line(size, most);
+  return line(
     l10n.mediaBubblesKb(whole((bytes / 1024).ceil())),
     l10n.mediaBubblesKb(whole(max ~/ 1024)),
   );

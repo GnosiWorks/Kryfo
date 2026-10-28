@@ -1994,7 +1994,7 @@ abstract class AppLocalizations {
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Too long for a message · 15 MB max'**
+  /// **'Too long for a message · 50 MB max'**
   String get cameraTooLongForA;
 
   /// screens/camera_screen.dart
@@ -15388,6 +15388,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Set a screen lock on your phone so this protection holds when it is locked.'**
   String get keyLineScreenLock;
+
+  /// chat and group: toast when the files service has no room for a big file right now. calm, says to try later
+  ///
+  /// In en, this message translates to:
+  /// **'The file server is full for now. Try again a little later.'**
+  String get fileServerTryLater;
+
+  /// chat and group: toast when a picked file is over what an older Kryfo in the chat takes. size and max are like 30.2 mb and 15.0 mb
+  ///
+  /// In en, this message translates to:
+  /// **'This file is {size}. This chat takes files up to {max} until everyone in it updates Kryfo.'**
+  String fileTooBigUntilUpdate(String size, String max);
+
+  /// chat and group: toast when this phone has sent its day of big files through the files service. calm, says when it works again
+  ///
+  /// In en, this message translates to:
+  /// **'You have sent a lot of big files today. Try again tomorrow.'**
+  String get fileDayLimit;
+
+  /// the strip above the composer while a big file is made ready to go through the files service, before any of it is sent
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing · keep the app open'**
+  String get mediaProgressPreparing;
 
   /// screens/group_info_screen.dart: the admin's switch while it is off: what it does
   ///

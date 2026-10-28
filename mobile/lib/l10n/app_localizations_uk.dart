@@ -1280,7 +1280,7 @@ class AppLocalizationsUk extends AppLocalizations {
       'Не вдалося зберегти копію на цьому телефоні';
 
   @override
-  String get cameraTooLongForA => 'Задовге для повідомлення · макс. 15 МБ';
+  String get cameraTooLongForA => 'Задовге для повідомлення · макс. 50 МБ';
 
   @override
   String get cameraNeverSavedToYour => 'Ніколи не зберігається у твоїх фото';
@@ -9667,6 +9667,22 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Увімкніть блокування екрана на телефоні, щоб цей захист діяв і тоді, коли він заблокований.';
+
+  @override
+  String get fileServerTryLater =>
+      'Файловий сервер зараз заповнений. Спробуй трохи згодом.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Цей файл важить $size. У цьому чаті можна надсилати файли до $max, доки всі не оновлять Kryfo.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'Сьогодні ти вже надіслав багато великих файлів. Спробуй завтра.';
+
+  @override
+  String get mediaProgressPreparing => 'Підготовка · не закривай застосунок';
 
   @override
   String get groupShotsBlocksAll =>

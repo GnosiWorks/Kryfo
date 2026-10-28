@@ -1258,7 +1258,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Konnte keine Kopie auf diesem Handy speichern';
 
   @override
-  String get cameraTooLongForA => 'Zu lang für eine Nachricht · max. 15 MB';
+  String get cameraTooLongForA => 'Zu lang für eine Nachricht · max. 50 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Nie in deinen Fotos gespeichert';
@@ -9607,6 +9607,22 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Richte eine Displaysperre auf deinem Handy ein, damit dieser Schutz auch hält, wenn es gesperrt ist.';
+
+  @override
+  String get fileServerTryLater =>
+      'Der Dateiserver ist gerade voll. Versuch es etwas später noch einmal.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Diese Datei hat $size. In diesem Chat gehen Dateien bis $max, bis alle hier Kryfo aktualisiert haben.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'Du hast heute schon viele große Dateien gesendet. Versuch es morgen wieder.';
+
+  @override
+  String get mediaProgressPreparing => 'Wird vorbereitet · lass die App offen';
 
   @override
   String get groupShotsBlocksAll =>

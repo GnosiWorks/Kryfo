@@ -28,8 +28,11 @@ import 'main.dart'
         AppStateRoute,
         AppStateProfile,
         AppStateContacts,
+        AppStateFiles,
         AppStateRefresh;
+import 'file_drop.dart' show DropFrame, dropFits, dropFallsBack, kOldFileBytes;
 import 'media_progress.dart';
+import 'media_resend.dart' show kMaxFileSlices;
 import 'message_envelope.dart';
 import 'signal_session.dart';
 import 'text_send.dart' show kSendBlocked;
@@ -219,7 +222,7 @@ Future<String> _sendChunkedMediaInner({
       if (only != null) return 'error: changed';
     }
   }
-  final int total;
+  int total;
   try {
     total = await mediaSliceCount(path);
   } catch (e) {
@@ -227,6 +230,37 @@ Future<String> _sendChunkedMediaInner({
   }
   // an empty file has nothing to send, and is not a send that went
   if (total == 0) return 'error: empty';
+  // more than a slice to a phone that fetches from the files service: the
+  // file goes up there once and one frame goes in place of the slices.
+  // one the service has no room for goes as slices while the relay takes it
+  DropFrame? drop;
+  if (total > 1 && only == null && await appState.dropsFor(peerId)) {
+    final bytes = await File(path).length();
+    if (dropFits(bytes)) {
+      mediaProgressStart(msgUid, chatKey: progressKey);
+      final (sent, r) = await appState.sendDrop(
+        path: path,
+        uid: msgUid,
+        members: [peerId],
+      );
+      if (mediaCancelled.contains(msgUid) || r == 'error: cancelled') {
+        return 'cancelled';
+      }
+      if (sent != null) {
+        drop = sent.frameFor(peerId);
+        total = 1;
+      } else if (dropFallsBack(r) && bytes <= kOldFileBytes) {
+        dlog('media $msgUid: the files service said $r, going as slices');
+      } else {
+        return 'error: drop ${r.replaceFirst('error: ', '')}';
+      }
+    }
+  }
+  // a phone that takes slices only takes so many of a file: past that it
+  // would drop every one
+  if (drop == null && fileName != null && !voice && total > kMaxFileSlices) {
+    return 'error: big';
+  }
   // a voice note as well: a long one is a megabyte and more of wav
   final showProgress = total > 1 && only == null;
   if (showProgress) mediaProgressStart(msgUid, chatKey: progressKey);
@@ -320,7 +354,7 @@ Future<String> _sendChunkedMediaInner({
       final t0 = DateTime.now();
       final String slice;
       try {
-        slice = await mediaSlice(path, i);
+        slice = drop != null ? '' : await mediaSlice(path, i);
       } catch (e) {
         // the file went: a wipe, a burn, a full phone that lost it
         failure = 'error: read';
@@ -334,8 +368,9 @@ Future<String> _sendChunkedMediaInner({
         final wrapped = await wrapMessage(
           caption,
           msgUid: msgUid,
-          imageB64: fileName == null ? slice : null,
-          fileB64: fileName != null ? slice : null,
+          imageB64: drop == null && fileName == null ? slice : null,
+          fileB64: drop == null && fileName != null ? slice : null,
+          drop: drop,
           fileName: fileName,
           voice: voice,
           voiceDisguised: voiceDisguised,

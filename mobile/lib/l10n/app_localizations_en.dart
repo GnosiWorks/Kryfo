@@ -1250,7 +1250,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cameraCouldNotSaveA => 'Could not save a copy on this phone';
 
   @override
-  String get cameraTooLongForA => 'Too long for a message · 15 MB max';
+  String get cameraTooLongForA => 'Too long for a message · 50 MB max';
 
   @override
   String get cameraNeverSavedToYour => 'Never saved to your photos';
@@ -9500,6 +9500,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Set a screen lock on your phone so this protection holds when it is locked.';
+
+  @override
+  String get fileServerTryLater =>
+      'The file server is full for now. Try again a little later.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'This file is $size. This chat takes files up to $max until everyone in it updates Kryfo.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'You have sent a lot of big files today. Try again tomorrow.';
+
+  @override
+  String get mediaProgressPreparing => 'Preparing · keep the app open';
 
   @override
   String get groupShotsBlocksAll =>

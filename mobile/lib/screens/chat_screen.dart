@@ -46,6 +46,7 @@ import '../widgets/row_anchor.dart';
 import '../widgets/video_bubble.dart';
 import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
+import '../file_drop.dart' show dropDayDone, dropTryLater;
 import '../file_kind.dart'
     show
         FileShape,
@@ -92,6 +93,7 @@ import '../widgets/kryfo_avatar.dart';
 import '../main.dart'
     show
         engine,
+        AppStateFiles,
         kNameAsk,
         kNameLater,
         kNotSent,
@@ -2571,6 +2573,8 @@ class _ChatScreenState extends State<ChatScreen>
     mediaProgressEnd(uid);
     if (mounted) setState(() => m.removing = true);
     await Future.delayed(kLeaveGone);
+    // up on the files service already: it comes down with the row
+    await appState.takeDropBackOf(uid);
     await session.deleteMessage(uid);
     if (mounted) setState(() => _messages.remove(m));
     unawaited(appState.refreshContacts());
@@ -2593,6 +2597,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (mounted) setState(() => m.removing = true);
     // it burns, then its row folds (LeaveFold); pulled sooner, it pops
     await Future.delayed(kLeaveGone);
+    await appState.takeDropBackOf(m.msgUid!);
     await session.deleteMessage(m.msgUid!);
     if (mounted) setState(() => _messages.remove(m));
     // the home row still previews the message just unsent
@@ -2647,6 +2652,7 @@ class _ChatScreenState extends State<ChatScreen>
     }
     await Future.delayed(kLeaveGone);
     for (final x in ms) {
+      await appState.takeDropBackOf(x.msgUid!);
       await session.deleteMessage(x.msgUid!);
     }
     if (mounted) setState(() => _messages.removeWhere(ms.contains));
@@ -4098,8 +4104,9 @@ class _ChatScreenState extends State<ChatScreen>
       if (mounted) showHaloToast(context, l10n.chatCouldNotReadThat);
       return null;
     }
-    if (!fileFits(size)) {
-      if (mounted) showHaloToast(context, fileTooBigLine(size));
+    final most = await appState.fileLimitFor(widget.peerHaloId);
+    if (!fileFits(size, most)) {
+      if (mounted) showHaloToast(context, fileTooBigLine(size, most));
       return null;
     }
     final raw = (await readFileFactsFresh(src, name))?.raw ?? false;
@@ -4506,6 +4513,9 @@ class _ChatScreenState extends State<ChatScreen>
     final shown = _messages.where(
       (m) => m.msgUid != null && m.msgUid == msg.msgUid,
     );
+    final later = dropTryLater(result) || dropDayDone(result);
+    if (dropTryLater(result)) showHaloToast(context, l10n.fileServerTryLater);
+    if (dropDayDone(result)) showHaloToast(context, l10n.fileDayLimit);
     setState(() {
       for (final m in {msg, ...shown}) {
         m.sending = false;
@@ -4519,7 +4529,8 @@ class _ChatScreenState extends State<ChatScreen>
       } else if (result != 'ok' &&
           result != 'parked' &&
           result != kSendBlocked &&
-          !held) {
+          !held &&
+          !later) {
         _status = result;
       } else if (result == 'ok') {
         _devKeyFailed = false;

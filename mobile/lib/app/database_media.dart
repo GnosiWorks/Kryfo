@@ -221,9 +221,11 @@ mixin _MediaRows {
       ))
         w['media_id'],
     };
-    return r
+    final sliced = r
         .where((x) => x['media_id'] != except && direct.contains(x['media_id']))
         .length;
+    // and the ones still to come from the files service
+    return sliced + await fetchesFrom(db, from, except: except);
   }
 
   // a slice of an unfinished file just came in. can_resend only ever goes

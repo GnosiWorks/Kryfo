@@ -1251,7 +1251,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cameraCouldNotSaveA => 'Bu telefona kopya kaydedilemedi';
 
   @override
-  String get cameraTooLongForA => 'Mesaj için çok uzun · en fazla 15 MB';
+  String get cameraTooLongForA => 'Mesaj için çok uzun · en fazla 50 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Fotoğraflarına asla kaydedilmez';
@@ -9533,6 +9533,22 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Telefonuna bir ekran kilidi koy ki bu koruma telefon kilitliyken de sürsün.';
+
+  @override
+  String get fileServerTryLater =>
+      'Dosya sunucusu şu an dolu. Biraz sonra tekrar dene.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Bu dosya $size. Herkes Kryfo\'yu güncelleyene kadar bu sohbette dosyalar en fazla $max olabilir.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'Bugün çok sayıda büyük dosya gönderdin. Yarın tekrar dene.';
+
+  @override
+  String get mediaProgressPreparing => 'Hazırlanıyor · uygulamayı açık tut';
 
   @override
   String get groupShotsBlocksAll =>

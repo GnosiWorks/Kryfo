@@ -1544,7 +1544,7 @@
   "@cameraCouldNotSaveA": {
     "description": "screens/camera_screen.dart"
   },
-  "cameraTooLongForA": "Too long for a message · 15 MB max",
+  "cameraTooLongForA": "Too long for a message · 50 MB max",
   "@cameraTooLongForA": {
     "description": "screens/camera_screen.dart"
   },
@@ -12005,6 +12005,30 @@
   "keyLineScreenLock": "Set a screen lock on your phone so this protection holds when it is locked.",
   "@keyLineScreenLock": {
     "description": "screens/pins_screen.dart"
+  },
+  "fileServerTryLater": "The file server is full for now. Try again a little later.",
+  "@fileServerTryLater": {
+    "description": "chat and group: toast when the files service has no room for a big file right now. calm, says to try later"
+  },
+  "fileTooBigUntilUpdate": "This file is {size}. This chat takes files up to {max} until everyone in it updates Kryfo.",
+  "@fileTooBigUntilUpdate": {
+    "description": "chat and group: toast when a picked file is over what an older Kryfo in the chat takes. size and max are like 30.2 mb and 15.0 mb",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "fileDayLimit": "You have sent a lot of big files today. Try again tomorrow.",
+  "@fileDayLimit": {
+    "description": "chat and group: toast when this phone has sent its day of big files through the files service. calm, says when it works again"
+  },
+  "mediaProgressPreparing": "Preparing · keep the app open",
+  "@mediaProgressPreparing": {
+    "description": "the strip above the composer while a big file is made ready to go through the files service, before any of it is sent"
   },
   "groupShotsBlocksAll": "Blocks screenshots and screen recording on every phone in this group, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.",
   "@groupShotsBlocksAll": {

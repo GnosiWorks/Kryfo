@@ -1260,7 +1260,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible d’enregistrer une copie sur ce téléphone';
 
   @override
-  String get cameraTooLongForA => 'Trop long pour un message · 15 Mo max';
+  String get cameraTooLongForA => 'Trop long pour un message · 50 Mo max';
 
   @override
   String get cameraNeverSavedToYour => 'Jamais enregistré dans vos photos';
@@ -9607,6 +9607,22 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Activez un verrouillage d’écran sur votre téléphone pour que cette protection tienne quand il est verrouillé.';
+
+  @override
+  String get fileServerTryLater =>
+      'Le serveur de fichiers est plein pour le moment. Réessayez un peu plus tard.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Ce fichier fait $size. Dans cette discussion, les fichiers peuvent faire jusqu’à $max tant que tout le monde n’a pas mis à jour Kryfo.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'Vous avez déjà envoyé beaucoup de gros fichiers aujourd’hui. Réessayez demain.';
+
+  @override
+  String get mediaProgressPreparing => 'Préparation · gardez l’appli ouverte';
 
   @override
   String get groupShotsBlocksAll =>
