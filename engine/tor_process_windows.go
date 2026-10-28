@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"syscall"
+	"unsafe"
 
 	"github.com/cretz/bine/process"
 	"github.com/halo/engine/torexe"
@@ -44,10 +45,34 @@ func (libtorCreator) New(ctx context.Context, args ...string) (process.Process, 
 		cmd := exec.CommandContext(ctx, path, args...)
 		cmd.Env = torexe.Env(os.Environ(), filepath.Dir(path))
 		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: createNoWindow}
+		if sa := torProcessAttrs(); sa != nil {
+			cmd.SysProcAttr.ProcessAttributes = sa
+		}
 		return cmd, nil
 	})
 	return run.New(ctx, torexe.Args(os.Getpid(), args)...)
 }
+
+// the security attributes tor.exe is made with (torexe.ProcessSDDL). nil
+// when the user's sid cannot be read: tor then gets windows' default
+func torProcessAttrs() *syscall.SecurityAttributes {
+	tu, err := windows.GetCurrentProcessToken().GetTokenUser()
+	if err != nil {
+		return nil
+	}
+	sd, err := windows.SecurityDescriptorFromString(torexe.ProcessSDDL(tu.User.Sid.String()))
+	if err != nil {
+		return nil
+	}
+	sa := &syscall.SecurityAttributes{SecurityDescriptor: uintptr(unsafe.Pointer(sd))}
+	sa.Length = uint32(unsafe.Sizeof(*sa))
+	// the attributes hold the descriptor as a bare address: kept here so
+	// the collector never frees one before tor.exe is made. a few per run
+	torSDs = append(torSDs, sd)
+	return sa
+}
+
+var torSDs []*windows.SECURITY_DESCRIPTOR
 
 // a crashed run's tor.exe holds the data dir lock until it sees its owner
 // gone, so the next start would fail

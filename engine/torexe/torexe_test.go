@@ -132,3 +132,15 @@ func TestEnvOwnOpenssl(t *testing.T) {
 		t.Fatalf("input changed: %v", in)
 	}
 }
+
+func TestProcessSDDL(t *testing.T) {
+	got := ProcessSDDL("S-1-5-21-1-2-3-1001")
+	want := "D:P(A;;0x101001;;;OW)(A;;0x101001;;;S-1-5-21-1-2-3-1001)"
+	if got != want {
+		t.Fatalf("got %q", got)
+	}
+	// synchronize, query limited information and terminate, nothing else
+	if 0x101001 != 0x00100000|0x1000|0x0001 {
+		t.Fatal("rights")
+	}
+}

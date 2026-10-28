@@ -112,3 +112,11 @@ func Env(environ []string, torDir string) []string {
 		"OPENSSL_MODULES="+torDir,
 		"OPENSSL_ENGINES="+torDir)
 }
+
+// tor.exe's process dacl: the user's other processes may wait on it, ask
+// its name and end it, never read its memory or dump it. the owner rights
+// entry keeps the owner from rewriting the dacl. kryfo.exe keeps the full
+// handle it got when it made the process
+func ProcessSDDL(userSID string) string {
+	return "D:P(A;;0x101001;;;OW)(A;;0x101001;;;" + userSID + ")"
+}
