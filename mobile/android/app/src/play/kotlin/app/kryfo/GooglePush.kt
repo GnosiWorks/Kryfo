@@ -5,7 +5,9 @@ import android.content.Context
 import android.util.Log
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailabilityLight
+import com.google.android.gms.tasks.Task
 import com.google.firebase.FirebaseApp
+import com.google.firebase.installations.FirebaseInstallations
 import com.google.firebase.messaging.FirebaseMessaging
 import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.plugin.common.MethodCall
@@ -26,15 +28,26 @@ object GooglePush {
     // they were sent with: the sign that it deprioritises kryfo
     private const val KEY_GOT = "got"
     private const val KEY_LOW = "low"
+    // google push was left and google still holds this install's token or
+    // installation: deleted again on each start and each return to the app
+    private const val KEY_OWED = "delete_owed"
 
     private fun prefs(c: Context) = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
     fun isOn(c: Context): Boolean = prefs(c).getBoolean(KEY_ON, false)
 
-    // play services there and working: without them there is no fcm
+    // play services on the phone: without them there is no fcm. one that is
+    // updating itself, or wants an update, is still there and pushes again
+    // once it is done; only missing, disabled or broken ones are not
+    fun availableFrom(code: Int): Boolean = when (code) {
+        ConnectionResult.SERVICE_MISSING,
+        ConnectionResult.SERVICE_DISABLED,
+        ConnectionResult.SERVICE_INVALID -> false
+        else -> true
+    }
+
     fun available(c: Context): Boolean = try {
-        GoogleApiAvailabilityLight.getInstance().isGooglePlayServicesAvailable(c) ==
-            ConnectionResult.SUCCESS
+        availableFrom(GoogleApiAvailabilityLight.getInstance().isGooglePlayServicesAvailable(c))
     } catch (e: Exception) {
         false
     }
@@ -73,25 +86,62 @@ object GooglePush {
         }
     }
 
-    // the token deleted, so google can wake nothing of this install, and
-    // no new one made until google push is picked again
+    // the token and the firebase installation deleted, so google can wake
+    // nothing of this install and keeps no id of it, and no new one made
+    // until google push is picked again. a delete that fails is owed, and
+    // tried again on each start and each return to the app until it goes
     fun stop(c: Context, done: () -> Unit) {
         val wasOn = isOn(c)
+        val owed = prefs(c).getBoolean(KEY_OWED, false)
         prefs(c).edit().putBoolean(KEY_ON, false).apply()
-        if (!wasOn && FirebaseApp.getApps(c).isEmpty()) {
+        if (!wasOn && !owed && FirebaseApp.getApps(c).isEmpty()) {
             done()
             return
         }
-        if (app(c) == null) {
+        prefs(c).edit().putBoolean(KEY_OWED, true).apply()
+        deleteAll(c) { ok ->
+            if (ok && !isOn(c)) prefs(c).edit().putBoolean(KEY_OWED, false).apply()
             done()
+        }
+    }
+
+    fun deleteOwed(c: Context): Boolean = prefs(c).getBoolean(KEY_OWED, false)
+
+    // a delete owed from before goes again, unless google push was picked
+    // meanwhile
+    fun settle(c: Context, done: () -> Unit = {}) {
+        if (!deleteOwed(c) || isOn(c)) {
+            done()
+            return
+        }
+        deleteAll(c) { ok ->
+            if (ok && !isOn(c)) prefs(c).edit().putBoolean(KEY_OWED, false).apply()
+            done()
+        }
+    }
+
+    // the deletes, for the tests a stand-in that can fail
+    var deleter: (Context, (Boolean) -> Unit) -> Unit = { c, done -> firebaseDelete(c, done) }
+
+    private fun deleteAll(c: Context, done: (Boolean) -> Unit) = deleter(c, done)
+
+    private fun firebaseDelete(c: Context, done: (Boolean) -> Unit) {
+        if (app(c) == null) {
+            done(false)
             return
         }
         try {
             val m = FirebaseMessaging.getInstance()
             m.isAutoInitEnabled = false
-            m.deleteToken().addOnCompleteListener { done() }
+            m.deleteToken().addOnCompleteListener { _: Task<Void> ->
+                // the installation's delete takes its tokens with it too, so
+                // it is the one that has to go through
+                FirebaseInstallations.getInstance().delete().addOnCompleteListener { i: Task<Void> ->
+                    done(i.isSuccessful)
+                }
+            }
         } catch (e: Exception) {
-            done()
+            done(false)
         }
     }
 
@@ -111,6 +161,7 @@ object GooglePush {
             "on" -> start(c) { result.success(it) }
             "token" -> token(c) { result.success(it) }
             "off" -> stop(c) { result.success(true) }
+            "settle" -> settle(c) { result.success(true) }
             "stats" -> result.success(stats(c))
             else -> result.notImplemented()
         }

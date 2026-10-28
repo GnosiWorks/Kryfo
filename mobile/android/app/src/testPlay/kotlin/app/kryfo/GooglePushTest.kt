@@ -98,6 +98,56 @@ class GooglePushTest {
     }
 
     @Test
+    fun aFailedDeleteIsOwedAndTriedAgain() {
+        on(true)
+        val tries = mutableListOf<Boolean>()
+        var answer = false
+        GooglePush.deleter = { _, done -> tries.add(answer); done(answer) }
+        try {
+            GooglePush.stop(app) {}
+            assertFalse(GooglePush.isOn(app))
+            assertTrue(GooglePush.deleteOwed(app))
+            // the next start or return to the app tries again, and again
+            GooglePush.settle(app)
+            assertTrue(GooglePush.deleteOwed(app))
+            answer = true
+            GooglePush.settle(app)
+            assertFalse(GooglePush.deleteOwed(app))
+            assertEquals(3, tries.size)
+            // nothing owed: nothing tried
+            GooglePush.settle(app)
+            assertEquals(3, tries.size)
+        } finally {
+            GooglePush.deleter = { _, done -> done(true) }
+        }
+    }
+
+    @Test
+    fun pickedAgainMeanwhileNothingIsDeleted() {
+        on(true)
+        GooglePush.deleter = { _, done -> done(false) }
+        GooglePush.stop(app) {}
+        on(true)
+        var tried = false
+        GooglePush.deleter = { _, done -> tried = true; done(true) }
+        GooglePush.settle(app)
+        assertFalse(tried)
+        GooglePush.deleter = { _, done -> done(true) }
+    }
+
+    @Test
+    fun playServicesUpdatingIsStillThere() {
+        val r = com.google.android.gms.common.ConnectionResult::class.java
+        fun code(name: String) = r.getField(name).getInt(null)
+        assertTrue(GooglePush.availableFrom(code("SUCCESS")))
+        assertTrue(GooglePush.availableFrom(code("SERVICE_UPDATING")))
+        assertTrue(GooglePush.availableFrom(code("SERVICE_VERSION_UPDATE_REQUIRED")))
+        assertFalse(GooglePush.availableFrom(code("SERVICE_MISSING")))
+        assertFalse(GooglePush.availableFrom(code("SERVICE_DISABLED")))
+        assertFalse(GooglePush.availableFrom(code("SERVICE_INVALID")))
+    }
+
+    @Test
     fun googlePushIsNotAlwaysOn() {
         app.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE).edit()
             .putString("flutter.delivery_mode", "google").commit()

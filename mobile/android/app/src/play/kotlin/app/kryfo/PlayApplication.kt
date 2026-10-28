@@ -12,6 +12,8 @@ class PlayApplication : HaloApplication() {
         if (ReopenActivity.inOwnProcess()) return
         // a process started by a push hands it over only with firebase up
         if (GooglePush.isOn(this)) GooglePush.app(this)
+        // a delete owed since google push was left goes again
+        GooglePush.settle(this)
         val engine = FlutterEngineCache.getInstance().get(HaloApplication.ENGINE_ID) ?: return
         MethodChannel(engine.dartExecutor.binaryMessenger, GooglePush.CHANNEL)
             .setMethodCallHandler { call, result -> GooglePush.handle(this, call, result) }
