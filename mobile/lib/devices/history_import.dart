@@ -5,6 +5,7 @@
 // at the end every chat is counted again and compared with what the phone
 // signed; a difference is shown, never passed over
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:path/path.dart' as p;
@@ -31,8 +32,9 @@ const _fileWaiting = 0;
 const _fileWhole = 1;
 const _fileLost = -1;
 
-// the phone sending one record that never opens, again and again: a spool
-// gone bad. past this many tries at one index the copy stops
+// one record that never opens, again and again: a spool gone bad, or a
+// link that keeps cutting it short. past this many tries at one index the
+// copy pauses, and nothing taken so far goes
 const kHistoryTries = 16;
 
 /// the line a chat that stayed on the phone shows on the new device. a
@@ -122,6 +124,17 @@ class HistoryImport {
   bool _stopped = false;
   int _triesAt = -1;
   int _tries = 0;
+  bool _paused = false;
+
+  /// the copy paused after kHistoryTries refusals at one index
+  bool get paused => _paused;
+
+  /// takes records again after a pause, the same index first
+  void resume() {
+    _paused = false;
+    _tries = 0;
+  }
+
   final _chats = <int, HistoryChatRef>{};
   final _files = <int, ({int chat, String name, int size, int ok})>{};
   final _cols = <String, Set<String>>{};
@@ -245,6 +258,7 @@ class HistoryImport {
   /// (send it again) or the stream cannot go on ([HistoryRefused.forGood])
   Future<HistoryEvent> take(Uint8List rec) async {
     if (_stopped) throw const HistoryRefused('open it again');
+    if (_paused) throw const HistoryRefused('paused', paused: true);
     final at = _r.next;
     final HistoryEvent ev;
     try {
@@ -254,7 +268,8 @@ class HistoryImport {
       _tries = _triesAt == at ? _tries + 1 : 1;
       _triesAt = at;
       if (_tries >= kHistoryTries) {
-        throw const HistoryRefused('a record that never opens', forGood: true);
+        _paused = true;
+        throw const HistoryRefused('paused', paused: true);
       }
       rethrow;
     }
@@ -421,6 +436,9 @@ class HistoryImport {
     if (group) {
       final g = _pick(row, kHistoryGroupCols, await _colsOf(t, 'groups'))
         ..['group_id'] = id;
+      // a group that stays on the phone comes with its name alone
+      g['name'] ??= '';
+      g['created_at'] ??= 0;
       await t.insert('groups', g, conflictAlgorithm: ConflictAlgorithm.ignore);
       // members and senders as keys only, never over a contact already here
       for (final c in (meta['people'] as List? ?? const [])) {
@@ -431,7 +449,9 @@ class HistoryImport {
           'onion': m['onion'] ?? '',
           'xpub': m['xpub'] ?? '',
           'first_seen': now,
-          'last_seen': now,
+          'last_seen': (m['last_seen'] as num?)?.toInt() ?? now,
+          'back_paired': m['back_paired'] ?? 0,
+          'blocked': m['blocked'] ?? 0,
           'accepted': 0,
         }, conflictAlgorithm: ConflictAlgorithm.ignore);
       }
@@ -521,7 +541,17 @@ class HistoryImport {
             m['plaintext'],
           ],
         );
-        if (there.isNotEmpty) id = there.first['id'] as int;
+        if (there.isNotEmpty) {
+          id = there.first['id'] as int;
+        } else {
+          // another row under the copy's uid: the copy keeps the uid, the
+          // other is kept under one of its own, so no two rows share one
+          await t.rawUpdate(
+            'UPDATE messages SET msg_uid = ? WHERE msg_uid = ? AND id NOT IN '
+            '(SELECT msg_id FROM history_rows)',
+            ['$uid.${_freshUid()}', uid],
+          );
+        }
       }
       if (id == null) {
         made = 1;
@@ -560,6 +590,14 @@ class HistoryImport {
         }, conflictAlgorithm: ConflictAlgorithm.ignore);
       }
     }
+  }
+
+  static String _freshUid() {
+    final r = Random.secure();
+    return [
+      for (var i = 0; i < 8; i++)
+        r.nextInt(256).toRadixString(16).padLeft(2, '0'),
+    ].join();
   }
 
   bool? _fts;

@@ -93,9 +93,11 @@ DynamicLibrary _lib() => Platform.isAndroid
 /// the engine refused a record. [forGood] when the stream cannot go on;
 /// otherwise the same record may be sent again
 class HistoryRefused implements Exception {
-  const HistoryRefused(this.why, {this.forGood = false});
+  const HistoryRefused(this.why, {this.forGood = false, this.paused = false});
   final String why;
   final bool forGood;
+  // the copy waits: try again later, then HistoryImport.resume
+  final bool paused;
   @override
   String toString() => 'HistoryRefused($why${forGood ? ', for good' : ''})';
 }

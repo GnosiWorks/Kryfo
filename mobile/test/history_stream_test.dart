@@ -117,10 +117,10 @@ Future<_Phone> _phone({int ana = 30}) async {
     });
   }
 
-  String put(String name, int size, {int seed = 1}) {
+  String put(String name, int size, {int seed = 1, String head = ''}) {
     final b = Uint8List.fromList(
       List.generate(size, (i) => (i * seed + 7) & 255),
-    );
+    )..setAll(0, head.codeUnits);
     final path = p.join(media, name);
     File(path).writeAsBytesSync(b);
     ph.files[name] = b;
@@ -148,6 +148,13 @@ Future<_Phone> _phone({int ana = 30}) async {
   );
   // a file outside the media folder never goes
   await msg(_ana, 'a saved file', file: '/sdcard/Download/x.pdf');
+  // one outside the folder that would not have gone anyway counts nothing
+  await msg(
+    _ana,
+    'an old saved file',
+    file: '/sdcard/Download/old.pdf',
+    ago: 40 * 86400000,
+  );
   await msg(_ben, 'ben here');
   await msg(_ben, 'a document', file: put('doc.pdf', 1500, seed: 9), ago: 3000);
   // a timed message burns where it is
@@ -179,6 +186,13 @@ Future<_Phone> _phone({int ana = 30}) async {
     'admin_id': _hid,
   });
   await contact(_hid, accepted: 0);
+  // blocked and paired on the everyday side, as its key-only row holds it
+  await db.update(
+    'contacts',
+    {'blocked': 1, 'back_paired': 1, 'last_seen': now - 5},
+    where: 'halo_id = ?',
+    whereArgs: [_hid],
+  );
   for (final m in [_ana, _hid]) {
     await db.insert('group_members', {
       'group_id': _group,
@@ -267,6 +281,8 @@ Future<_Phone> _phone({int ana = 30}) async {
   await db.insert('groups', {
     'group_id': _shotsGroup,
     'name': 'Quiet',
+    'description': 'quiet group description',
+    'admin_id': _ben,
     'created_at': now,
     'shots_on': 1,
   });
@@ -275,8 +291,16 @@ Future<_Phone> _phone({int ana = 30}) async {
   await msg(
     _ana,
     '',
-    file: put('vn1.ogg', 2100, seed: 11),
+    file: put('vn1.ogg', 2100, seed: 11, head: 'OggS'),
     ago: 6000,
+    more: {'file_name': 'voice.ogg'},
+  );
+  // a file a sender called a voice note that is not one
+  await msg(
+    _ana,
+    '',
+    file: put('fake.ogg', 1800, seed: 13),
+    ago: 6500,
     more: {'file_name': 'voice.ogg'},
   );
   // what cannot go is counted: a name no device could hold, a row too big
@@ -292,6 +316,7 @@ Future<_Phone> _phone({int ana = 30}) async {
     'hidden one to one',
     'shot secret words',
     'shot group words',
+    'quiet group description',
     _hidOnion,
     _hidXpub,
     _hidGroupMember,
@@ -460,9 +485,12 @@ void main() {
   test('a whole history lands and both sides count the same', () async {
     final ph = await _phone();
     final l = _Link();
-    // what a crash left at the spool's name goes first
-    File(p.join(ph.dir, kHistorySpool)).writeAsStringSync('stale');
+    // what a crash left in the spool folder goes first
+    final stale = File(
+      p.join(ph.dir, '${kHistorySpoolPrefix}dead$kHistorySpoolSuffix'),
+    )..writeAsStringSync('stale');
     final out = await _export(ph, l);
+    expect(stale.existsSync(), isFalse);
     final d = await _device();
     final imp = await _open(d, l, out);
     await _pump(out, imp);
@@ -485,11 +513,11 @@ void main() {
     Future<Object?> n(String w) async => (await d.db.rawQuery(
       'SELECT COUNT(*) AS c FROM messages WHERE $w',
     )).first['c'];
-    expect(await n("peer_id = '$_ana' AND group_id IS NULL"), 35);
+    expect(await n("peer_id = '$_ana' AND group_id IS NULL"), 37);
     expect(await n("peer_id = '$_ben' AND group_id IS NULL"), 3);
     expect(await n("group_id = '$_group'"), 3);
     // the month's files, byte for byte; the older one stays on the phone
-    for (final f in ['p1.jpg', 'v1.mp4', 'doc.pdf', 'vn1.ogg']) {
+    for (final f in ['p1.jpg', 'v1.mp4', 'doc.pdf', 'vn1.ogg', 'fake.ogg']) {
       expect(
         File(p.join(d.media, f)).readAsBytesSync(),
         ph.files[f],
@@ -507,7 +535,7 @@ void main() {
       where: "plaintext = 'a saved file'",
     );
     expect(saved.single['file_path'], isNull);
-    expect(out.head.files, 4);
+    expect(out.head.files, 5);
     // found by search as on the phone
     final hits = await d.db.rawQuery(
       "SELECT rowid FROM msg_fts WHERE msg_fts MATCH 'hello'",
@@ -556,6 +584,8 @@ void main() {
         "SELECT peer_id, direction, plaintext, sent_at, msg_uid, poll "
             "FROM messages WHERE group_id = '$_group' ORDER BY msg_uid",
         "SELECT group_id, name, admin_id FROM groups WHERE group_id = '$_group'",
+        "SELECT halo_id, onion, xpub, back_paired, blocked, last_seen "
+            "FROM contacts WHERE halo_id = '$_hid'",
         "SELECT halo_id FROM group_members WHERE group_id = '$_group' "
             'ORDER BY halo_id',
         'SELECT msg_uid, reactor, emoji FROM reactions ORDER BY 1, 2',
@@ -611,7 +641,12 @@ void main() {
       hasLength(1),
     );
     expect(
-      await d.db.query('groups', where: "group_id = '$_shotsGroup'"),
+      await d.db.query(
+        'groups',
+        where:
+            "group_id = '$_shotsGroup' AND name = 'Quiet' AND "
+            'description IS NULL AND admin_id IS NULL',
+      ),
       hasLength(1),
     );
     expect(await d.db.query('messages', where: "peer_id = '$_cara'"), isEmpty);
@@ -651,15 +686,22 @@ void main() {
       final imp = await _open(d, l, out);
       await _pump(out, imp);
       expect((await imp.finish()).gaps, isEmpty);
+      final uid = real['msg_uid'] as String;
       final both = await d.db.query(
         'messages',
-        where: 'msg_uid = ?',
-        whereArgs: [real['msg_uid']],
+        where: 'msg_uid = ? OR msg_uid LIKE ?',
+        whereArgs: [uid, '$uid.%'],
       );
+      // the copy keeps the uid, the other row one of its own
       expect(
-        {for (final r in both) r['plaintext']},
-        {'ana says 3', 'not what was said'},
+        {for (final r in both) r['plaintext']: r['msg_uid'] == uid},
+        {'ana says 3': true, 'not what was said': false},
       );
+      final dup = await d.db.rawQuery(
+        'SELECT msg_uid FROM messages WHERE msg_uid IS NOT NULL '
+        'GROUP BY msg_uid HAVING COUNT(*) > 1',
+      );
+      expect(dup, isEmpty);
       out.close();
     },
     skip: skip,
@@ -688,27 +730,140 @@ void main() {
     skip: skip,
   );
 
-  test('a record that never opens stops the copy after its tries', () async {
+  test(
+    'a record that never opens pauses the copy, which goes on later',
+    () async {
+      final ph = await _phone(ana: 2);
+      final l = _Link();
+      final out = await _export(ph, l);
+      final d = await _device();
+      final imp = await _open(d, l, out);
+      await _pump(out, imp, 2);
+      final bad = Uint8List.fromList(out.record(2))..[9] ^= 1;
+      for (var i = 1; i < kHistoryTries; i++) {
+        await expectLater(
+          imp.take(bad),
+          throwsA(
+            isA<HistoryRefused>().having((e) => e.forGood, 'for good', isFalse),
+          ),
+        );
+      }
+      final paused = isA<HistoryRefused>()
+          .having((e) => e.paused, 'paused', isTrue)
+          .having((e) => e.forGood, 'for good', isFalse);
+      await expectLater(imp.take(bad), throwsA(paused));
+      expect(imp.paused, isTrue);
+      // nothing is taken while paused, the good record neither
+      await expectLater(imp.take(out.record(2)), throwsA(paused));
+      imp.resume();
+      await _pump(out, imp);
+      expect((await imp.finish()).gaps, isEmpty);
+      out.close();
+    },
+    skip: skip,
+  );
+
+  test('a chat row too big to go is counted and the copy goes on', () async {
     final ph = await _phone(ana: 2);
+    await ph.db.update(
+      'contacts',
+      {'note': 'n' * (70 << 10)},
+      where: 'halo_id = ?',
+      whereArgs: [_ben],
+    );
     final l = _Link();
     final out = await _export(ph, l);
+    expect(out.leftChats, 1);
     final d = await _device();
     final imp = await _open(d, l, out);
-    await _pump(out, imp, 2);
-    final bad = Uint8List.fromList(out.record(2))..[9] ^= 1;
-    for (var i = 1; i < kHistoryTries; i++) {
-      await expectLater(
-        imp.take(bad),
-        throwsA(
-          isA<HistoryRefused>().having((e) => e.forGood, 'for good', isFalse),
-        ),
-      );
-    }
+    await _pump(out, imp);
+    final res = await imp.finish();
+    expect(res.gaps, isEmpty);
+    expect(res.leftChats, 1);
+    expect(await d.db.query('contacts', where: "halo_id = '$_ben'"), isEmpty);
+    out.close();
+  }, skip: skip);
+
+  // what a hide does to the everyday side: the chat on the routing list,
+  // its rows out of main
+  Future<void> hide(SqliteMem db, String id) async {
+    await db.insert('hidden_chats', {
+      'chat_id': id,
+      'kind': 'peer',
+      'card': '{}',
+      'at': 1,
+    });
+    await db.delete(
+      'messages',
+      where: 'peer_id = ? AND group_id IS NULL',
+      whereArgs: [id],
+    );
+  }
+
+  test('a chat hidden while the copy reads the chats stops it', () async {
+    final ph = await _phone(ana: 30);
+    final l = _Link();
     await expectLater(
-      imp.take(bad),
-      throwsA(
-        isA<HistoryRefused>().having((e) => e.forGood, 'for good', isTrue),
+      exportHistory(
+        db: ph.db,
+        container: HaloContainer.everyday,
+        mediaDir: ph.media,
+        spoolDir: ph.dir,
+        keyHex: l.key,
+        bindHex: l.bind,
+        identityHex: _identity,
+        chunk: 1024,
+        // a hold that holds nothing: the hide lands mid-read
+        hold: (work) async {
+          final w = work();
+          await Future<void>.microtask(() {});
+          await hide(ph.db, _ana);
+          await w;
+        },
       ),
+      throwsA(isA<HistoryHiddenMeanwhile>()),
+    );
+  }, skip: skip);
+
+  test('under the vault lock a hide waits until the chats are read', () async {
+    final ph = await _phone(ana: 30);
+    final l = _Link();
+    // the vault's chain: one piece of work at a time, as _serial runs them
+    var chain = Future<void>.value();
+    Future<void> serial(Future<void> Function() work) {
+      final r = chain.then((_) => work());
+      chain = r.then((_) {}, onError: (_) {});
+      return r;
+    }
+
+    late Future<void> hid;
+    final out = await exportHistory(
+      db: ph.db,
+      container: HaloContainer.everyday,
+      mediaDir: ph.media,
+      spoolDir: ph.dir,
+      keyHex: l.key,
+      bindHex: l.bind,
+      identityHex: _identity,
+      chunk: 1024,
+      hold: (work) {
+        final r = serial(work);
+        hid = serial(() => hide(ph.db, _ana));
+        return r;
+      },
+    );
+    await hid;
+    // the chat went whole, as it was before the hide
+    final d = await _device();
+    final imp = await _open(d, l, out);
+    await _pump(out, imp);
+    expect((await imp.finish()).gaps, isEmpty);
+    expect(
+      await d.db.query(
+        'messages',
+        where: "peer_id = '$_ana' AND group_id IS NULL",
+      ),
+      hasLength(37),
     );
     out.close();
   }, skip: skip);
@@ -733,6 +888,21 @@ void main() {
     'skip photos, videos and files: none of them, every voice note and text',
     () async {
       final ph = await _phone();
+      // a real voice note's bytes, but too big to be one
+      final big = p.join(ph.media, 'big.ogg');
+      final raf = File(big).openSync(mode: FileMode.write)
+        ..writeFromSync('OggS'.codeUnits)
+        ..truncateSync(kHistoryVoiceMax + 1);
+      raf.closeSync();
+      await ph.db.insert('messages', {
+        'peer_id': _ana,
+        'direction': 'in',
+        'plaintext': '',
+        'sent_at': ph.now - 100,
+        'file_path': big,
+        'file_name': 'voice.ogg',
+        'msg_uid': 'big-voice',
+      });
       final l = _Link();
       final out = await _export(ph, l, skip: true);
       expect(out.head.skipMedia, isTrue);

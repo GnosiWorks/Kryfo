@@ -242,6 +242,10 @@ extension AppStateVault on AppState {
     }
   }
 
+  /// [work] with no chat hidden or unhidden meanwhile: a history copy
+  /// reads the chats under it
+  Future<void> withVaultStill(Future<void> Function() work) => _serial(work);
+
   Future<T> _serial<T>(Future<T> Function() work) {
     final r = _vaultWork.then((_) => work());
     // the caller gets any error from r; the chain only keeps the order

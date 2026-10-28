@@ -5,6 +5,8 @@
 // holds it. hidden chats (whole, by id), the decoy, the chat with the
 // developer, burner rooms, timed messages and chats with screenshots
 // blocked stay here
+import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:path/path.dart' as p;
@@ -18,9 +20,13 @@ import 'history_ffi.dart';
 /// how far back files go with the text
 const kHistoryMediaDays = 30;
 
-/// the spool's one name, in the folder the caller gives: the app's private
-/// no-backup folder
-const kHistorySpool = 'history.spool';
+/// the spools' names, in the folder the caller gives: the app's private
+/// no-backup folder. each sender has its own
+const kHistorySpoolPrefix = 'history-';
+const kHistorySpoolSuffix = '.spool';
+
+/// the biggest voice note that still goes when files are skipped
+const kHistoryVoiceMax = 10 << 20;
 
 /// why a chat came only as its row
 const kHistoryStaysShots = 'shots';
@@ -179,10 +185,66 @@ Future<Set<String>> _colsOf(DatabaseExecutor db, String t) async => {
 
 bool _isDev(Object? id) => id is String && id.startsWith('dev:');
 
+/// the vault's move lock: [work] runs with no chat hidden or unhidden
+/// meanwhile (AppState.withVaultStill)
+typedef HistoryHold = Future<void> Function(Future<void> Function() work);
+
+/// a chat was hidden while the copy read the chats: nothing of it goes
+class HistoryHiddenMeanwhile implements Exception {
+  const HistoryHiddenMeanwhile();
+}
+
+// a voice note by its bytes as well as its name: under skip a name alone
+// would let a sender's choice of name bring any file along
+Future<bool> _voiceFile(String path) async {
+  try {
+    final f = File(path);
+    final n = await f.length();
+    if (n < 12 || n > kHistoryVoiceMax) return false;
+    final raf = await f.open();
+    try {
+      final h = await raf.read(12);
+      bool at(int i, String s) => String.fromCharCodes(h, i, i + 4) == s;
+      return at(0, 'OggS') || (at(0, 'RIFF') && at(8, 'WAVE'));
+    } finally {
+      await raf.close();
+    }
+  } catch (_) {
+    return false;
+  }
+}
+
+// what a crash or another sender left in the spool folder. a spool still
+// open keeps working: its file stays readable once unlinked
+Future<void> _sweepSpools(String dir) async {
+  try {
+    await for (final e in Directory(dir).list(followLinks: false)) {
+      final name = p.basename(e.path);
+      if (e is File &&
+          name.startsWith(kHistorySpoolPrefix) &&
+          name.endsWith(kHistorySpoolSuffix)) {
+        await e.delete();
+      }
+    }
+  } on FileSystemException {
+    // nothing there yet
+  }
+}
+
+String _spoolName() {
+  final r = Random.secure();
+  final hex = [
+    for (var i = 0; i < 8; i++)
+      r.nextInt(256).toRadixString(16).padLeft(2, '0'),
+  ].join();
+  return '$kHistorySpoolPrefix$hex$kHistorySpoolSuffix';
+}
+
 /// builds the stream for a new device. [db] is the everyday database,
 /// nothing attached; [mediaDir] its media folder; [spoolDir] the app's
 /// private no-backup folder. [skipMedia] leaves photos, videos and files
-/// out; voice notes always go
+/// out; voice notes always go. [hold] keeps the vault still while the
+/// chats are read; whatever it is, a chat hidden meanwhile stops the copy
 Future<HistoryOutgoing> exportHistory({
   required Database db,
   required HaloContainer container,
@@ -194,6 +256,7 @@ Future<HistoryOutgoing> exportHistory({
   bool skipMedia = false,
   DateTime? now,
   int chunk = 0,
+  HistoryHold? hold,
 }) async {
   if (container != HaloContainer.everyday) {
     throw const HistoryNotHere('container');
@@ -204,100 +267,104 @@ Future<HistoryOutgoing> exportHistory({
       throw const HistoryNotHere('attached');
     }
   }
-  final hidden = await hiddenChatIds(db);
-  final support = <String>{
-    if (await _hasTable(db, 'support_chats'))
+  final chats = <HistoryChatRef>[];
+  var hidden = <String>{};
+  HistorySender? sender;
+  // the chats and their messages, read while the vault stays still
+  Future<void> text() async {
+    hidden = await hiddenChatIds(db);
+    final support = <String>{
+      if (await _hasTable(db, 'support_chats'))
+        for (final r in await db.rawQuery(
+          'SELECT halo_id FROM main.support_chats',
+        ))
+          r['halo_id'] as String,
+    };
+    // whole chats that stay: the vault's, the developer's and what it started
+    bool stays(String id) =>
+        hidden.contains(id) || support.contains(id) || _isDev(id);
+
+    final ccols = await _colsOf(db, 'contacts');
+    final gcols = await _colsOf(db, 'groups');
+    final mcols = await _colsOf(db, 'messages');
+    final contactCols = [
+      for (final c in kHistoryContactCols)
+        if (ccols.contains(c)) c,
+    ];
+    final groupCols = [
+      for (final c in kHistoryGroupCols)
+        if (gcols.contains(c)) c,
+      if (gcols.contains('shots_on')) 'shots_on',
+    ];
+    final msgCols = [
+      for (final c in kHistoryMessageCols)
+        if (mcols.contains(c)) c,
+    ];
+    final since =
+        (now ?? DateTime.now()).millisecondsSinceEpoch -
+        kHistoryMediaDays * 86400000;
+    final when = mcols.contains('written_at')
+        ? 'COALESCE(written_at, sent_at)'
+        : 'sent_at';
+
+    // the chats, the one written in last first
+    final last = <String, int>{};
+    for (final r in await db.rawQuery(
+      'SELECT peer_id AS k, MAX($when) AS t FROM main.messages '
+      'WHERE group_id IS NULL GROUP BY peer_id',
+    )) {
+      last['p:${r['k']}'] = (r['t'] as num?)?.toInt() ?? 0;
+    }
+    for (final r in await db.rawQuery(
+      'SELECT group_id AS k, MAX($when) AS t FROM main.messages '
+      'WHERE group_id IS NOT NULL GROUP BY group_id',
+    )) {
+      last['g:${r['k']}'] = (r['t'] as num?)?.toInt() ?? 0;
+    }
+    final peers = [
       for (final r in await db.rawQuery(
-        'SELECT halo_id FROM main.support_chats',
+        'SELECT ${contactCols.join(', ')} FROM main.contacts c '
+        'WHERE ${ccols.contains('accepted') ? 'c.accepted = 1 OR ' : ''}'
+        'EXISTS (SELECT 1 FROM main.messages m WHERE m.peer_id = c.halo_id '
+        'AND m.group_id IS NULL)',
       ))
-        r['halo_id'] as String,
-  };
-  // whole chats that stay: the vault's, the developer's and what it started
-  bool stays(String id) =>
-      hidden.contains(id) || support.contains(id) || _isDev(id);
+        if (!stays(r['halo_id'] as String)) r,
+    ];
+    // burner rooms burn: they stay on the phone that holds them
+    final rooms = [
+      if (gcols.contains('room_priv')) 'room_priv IS NULL',
+      if (gcols.contains('expires_at')) 'expires_at IS NULL',
+    ];
+    final groups = [
+      for (final r in await db.rawQuery(
+        'SELECT ${groupCols.join(', ')} FROM main.groups'
+        '${rooms.isEmpty ? '' : ' WHERE ${rooms.join(' AND ')}'}',
+      ))
+        if (!stays(r['group_id'] as String)) r,
+    ];
+    final order = [
+      for (final r in peers) (false, r['halo_id'] as String, r),
+      for (final r in groups) (true, r['group_id'] as String, r),
+    ];
+    int lastOf((bool, String, Map<String, Object?>) c) =>
+        last['${c.$1 ? 'g' : 'p'}:${c.$2}'] ?? 0;
+    order.sort((a, b) {
+      final t = lastOf(b).compareTo(lastOf(a));
+      if (t != 0) return t;
+      if (a.$1 != b.$1) return a.$1 ? 1 : -1;
+      return a.$2.compareTo(b.$2);
+    });
 
-  final ccols = await _colsOf(db, 'contacts');
-  final gcols = await _colsOf(db, 'groups');
-  final mcols = await _colsOf(db, 'messages');
-  final contactCols = [
-    for (final c in kHistoryContactCols)
-      if (ccols.contains(c)) c,
-  ];
-  final groupCols = [
-    for (final c in kHistoryGroupCols)
-      if (gcols.contains(c)) c,
-    if (gcols.contains('shots_on')) 'shots_on',
-  ];
-  final msgCols = [
-    for (final c in kHistoryMessageCols)
-      if (mcols.contains(c)) c,
-  ];
-  final since =
-      (now ?? DateTime.now()).millisecondsSinceEpoch -
-      kHistoryMediaDays * 86400000;
-  final when = mcols.contains('written_at')
-      ? 'COALESCE(written_at, sent_at)'
-      : 'sent_at';
-
-  // the chats, the one written in last first
-  final last = <String, int>{};
-  for (final r in await db.rawQuery(
-    'SELECT peer_id AS k, MAX($when) AS t FROM main.messages '
-    'WHERE group_id IS NULL GROUP BY peer_id',
-  )) {
-    last['p:${r['k']}'] = (r['t'] as num?)?.toInt() ?? 0;
-  }
-  for (final r in await db.rawQuery(
-    'SELECT group_id AS k, MAX($when) AS t FROM main.messages '
-    'WHERE group_id IS NOT NULL GROUP BY group_id',
-  )) {
-    last['g:${r['k']}'] = (r['t'] as num?)?.toInt() ?? 0;
-  }
-  final peers = [
-    for (final r in await db.rawQuery(
-      'SELECT ${contactCols.join(', ')} FROM main.contacts c '
-      'WHERE ${ccols.contains('accepted') ? 'c.accepted = 1 OR ' : ''}'
-      'EXISTS (SELECT 1 FROM main.messages m WHERE m.peer_id = c.halo_id '
-      'AND m.group_id IS NULL)',
-    ))
-      if (!stays(r['halo_id'] as String)) r,
-  ];
-  // burner rooms burn: they stay on the phone that holds them
-  final rooms = [
-    if (gcols.contains('room_priv')) 'room_priv IS NULL',
-    if (gcols.contains('expires_at')) 'expires_at IS NULL',
-  ];
-  final groups = [
-    for (final r in await db.rawQuery(
-      'SELECT ${groupCols.join(', ')} FROM main.groups'
-      '${rooms.isEmpty ? '' : ' WHERE ${rooms.join(' AND ')}'}',
-    ))
-      if (!stays(r['group_id'] as String)) r,
-  ];
-  final order = [
-    for (final r in peers) (false, r['halo_id'] as String, r),
-    for (final r in groups) (true, r['group_id'] as String, r),
-  ];
-  int lastOf((bool, String, Map<String, Object?>) c) =>
-      last['${c.$1 ? 'g' : 'p'}:${c.$2}'] ?? 0;
-  order.sort((a, b) {
-    final t = lastOf(b).compareTo(lastOf(a));
-    if (t != 0) return t;
-    if (a.$1 != b.$1) return a.$1 ? 1 : -1;
-    return a.$2.compareTo(b.$2);
-  });
-
-  final s = HistorySender.open(
-    keyHex: keyHex,
-    bindHex: bindHex,
-    identityHex: identityHex,
-    spool: p.join(spoolDir, kHistorySpool),
-    root: mediaDir,
-    skipMedia: skipMedia,
-    chunk: chunk,
-  );
-  try {
-    final chats = <HistoryChatRef>[];
+    await _sweepSpools(spoolDir);
+    final s = sender = HistorySender.open(
+      keyHex: keyHex,
+      bindHex: bindHex,
+      identityHex: identityHex,
+      spool: p.join(spoolDir, _spoolName()),
+      root: mediaDir,
+      skipMedia: skipMedia,
+      chunk: chunk,
+    );
     final media = <String>{};
     final hasReactions = await _hasTable(db, 'reactions');
     final hasVotes = await _hasTable(db, 'poll_votes');
@@ -308,7 +375,10 @@ Future<HistoryOutgoing> exportHistory({
       final meta = <String, Object?>{
         'kind': group ? 'group' : 'peer',
         'id': id,
-        'row': row,
+        // a blocked group's row shows only what the stays line needs
+        'row': group && shots
+            ? {'group_id': row['group_id'], 'name': row['name'], 'shots_on': 1}
+            : row,
         if (shots) 'stays': kHistoryStaysShots,
       };
       if (group && !shots) {
@@ -318,7 +388,8 @@ Future<HistoryOutgoing> exportHistory({
           [id],
         );
         meta['people'] = await db.rawQuery(
-          'SELECT halo_id, onion, xpub, first_seen FROM main.contacts '
+          'SELECT halo_id, onion, xpub, first_seen, last_seen, back_paired, '
+          'blocked FROM main.contacts '
           'WHERE halo_id IN (SELECT halo_id FROM main.group_members '
           'WHERE group_id = ?1 UNION SELECT peer_id FROM main.messages '
           'WHERE group_id = ?1) ORDER BY halo_id',
@@ -397,22 +468,27 @@ Future<HistoryOutgoing> exportHistory({
           final row = <String, Object?>{for (final c in msgCols) c: m[c]};
           final at = (m['written_at'] as num? ?? m['sent_at'] as num? ?? 0)
               .toInt();
-          final voice = isVoiceName(m['file_name'] as String?);
+          final named = isVoiceName(m['file_name'] as String?);
           for (final col in const ['media_path', 'file_path']) {
             final path = row[col];
             if (path is! String || path.isEmpty) continue;
             // only a file of this container's own folder, by its name there
-            if (!p.isWithin(mediaDir, path)) {
-              row[col] = null;
+            final inside = p.isWithin(mediaDir, path);
+            final rel = inside
+                ? p.posix.joinAll(p.split(p.relative(path, from: mediaDir)))
+                : null;
+            row[col] = rel;
+            // the month's files; under skip only what really is a voice note
+            final goes =
+                at >= since &&
+                (!skipMedia || (named && await _voiceFile(path)));
+            if (!goes) continue;
+            // a file that would have gone and cannot is counted
+            if (rel == null) {
               s.left(n);
               continue;
             }
-            final rel = p.posix.joinAll(
-              p.split(p.relative(path, from: mediaDir)),
-            );
-            row[col] = rel;
-            final goes = voice || !skipMedia;
-            if (goes && at >= since && media.add(rel)) s.media(n, at, rel);
+            if (media.add(rel)) s.media(n, at, rel);
           }
           final uid = m['msg_uid'];
           if (uid is String) {
@@ -423,10 +499,21 @@ Future<HistoryOutgoing> exportHistory({
         }
       }
     }
+    // a hide that slipped past the hold: nothing of it may go. checked
+    // inside the hold, so a hide waiting on it cannot slip in between
+    final after = await hiddenChatIds(db);
+    if (after.difference(hidden).isNotEmpty) {
+      throw const HistoryHiddenMeanwhile();
+    }
+  }
+
+  try {
+    await (hold ?? (w) => w())(text);
+    final s = sender!;
     await s.plan();
     return HistoryOutgoing._(s, s.id, s.head(), chats);
   } catch (_) {
-    s.close();
+    sender?.close();
     rethrow;
   }
 }
