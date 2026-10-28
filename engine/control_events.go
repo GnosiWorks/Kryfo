@@ -41,7 +41,7 @@ func eventConn(t *tor.Tor) (*control.Conn, error) {
 	if err != nil {
 		return nil, fmt.Errorf("dial control port: %w", err)
 	}
-	_ = nc.SetDeadline(time.Now().Add(ctrlDeadline))
+	_ = nc.SetDeadline(time.Now().Add(ctrlDeadline()))
 	c := control.NewConn(textproto.NewConn(nc))
 	if err := c.Authenticate(""); err != nil {
 		_ = nc.Close()

@@ -45,14 +45,15 @@ func heardInMemory(key string) {
 }
 
 func heardFile(rcvPk string) string {
-	if savedDataDir == "" {
+	dir := savedDataDir()
+	if dir == "" {
 		return ""
 	}
 	short := rcvPk
 	if len(short) > 16 {
 		short = short[:16]
 	}
-	return savedDataDir + "/nostr_heard_" + short
+	return dir + "/nostr_heard_" + short
 }
 
 // what the file says of an address, for a runner starting on it. what is

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -69,12 +70,20 @@ func TestHandleCallsWaitForAColdCircuit(t *testing.T) {
 // same bound, so every call answers inside it
 func TestHandleCallsAnswerInTimeOnASlowClient(t *testing.T) {
 	was, wasWait := handleHTTP, handleWait
+	// the calls give up on it, and it is let go once they all have
+	release := make(chan struct{})
+	var gone atomic.Int32
 	handleHTTP = func() (*http.Client, error) {
-		time.Sleep(2 * time.Second)
+		defer gone.Add(1)
+		<-release
 		return &http.Client{Transport: &deadlineTrip{}}, nil
 	}
 	handleWait = 200 * time.Millisecond
-	defer func() { handleHTTP, handleWait = was, wasWait }()
+	defer func() {
+		close(release)
+		waitFor(t, "the slow clients let go", 5*time.Second, func() bool { return gone.Load() == 3 })
+		handleHTTP, handleWait = was, wasWait
+	}()
 	_, priv, _ := ed25519.GenerateKey(nil)
 	mu.Lock()
 	key := myEdPriv

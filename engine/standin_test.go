@@ -286,8 +286,10 @@ func (s *relayStandIn) snapshot() []siConn {
 		cp.subIDs = append([]string(nil), c.subIDs...)
 		cp.reqs = append([]siReq(nil), c.reqs...)
 		cp.pings = append([]time.Time(nil), c.pings...)
-		// the handler adds to these while the test reads its copy
-		cp.addrs, cp.published = maps.Clone(c.addrs), maps.Clone(c.published)
+		cp.got = append([]nostr.Event(nil), c.got...)
+		// the handler keeps writing to the live maps
+		cp.addrs = maps.Clone(c.addrs)
+		cp.published = maps.Clone(c.published)
 		out = append(out, cp)
 	}
 	return out
@@ -564,23 +566,27 @@ func (s *socksStandIn) countAs(name string) int {
 // asking tor anything.
 func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*relayStandIn) {
 	t.Helper()
+	// made first, so it is removed only after the cleanup below saw the
+	// runners out: they write into it until then
+	dir := t.TempDir()
 	mu.Lock()
 	oldNode, oldPriv, oldPub := torNode, myXPriv, myXPub
 	torNode = &tor.Tor{}
 	mu.Unlock()
 	oldMode := currentMode()
 	oldPin := atomic.LoadInt32(&pinnedSocks)
-	oldDir := savedDataDir
+	oldDir := savedDataDir()
 	nostrMu.Lock()
 	oldRelays := nostrRelays
 	nostrMu.Unlock()
 	t.Cleanup(func() {
+		runnersGone(t)
 		mu.Lock()
 		torNode, myXPriv, myXPub = oldNode, oldPriv, oldPub
 		mu.Unlock()
 		transportMode.Store(oldMode)
 		atomic.StoreInt32(&pinnedSocks, oldPin)
-		savedDataDir = oldDir
+		setSavedDataDir(oldDir)
 		setRelays(oldRelays)
 		nostrResetClient()
 		relayClearBenches()
@@ -596,7 +602,7 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 	}
 	nostrResetClient()
 	relayClearBenches()
-	savedDataDir = t.TempDir()
+	setSavedDataDir(dir)
 	var urls []string
 	for _, r := range relays {
 		urls = append(urls, r.url())
@@ -606,6 +612,49 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 	mu.Lock()
 	myXPriv, myXPub = me.priv, me.pub
 	mu.Unlock()
+}
+
+// a log sink a test reads while goroutines it did not start may still log
+type logSink struct {
+	mu sync.Mutex
+	b  bytes.Buffer
+}
+
+func (s *logSink) Write(p []byte) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.b.Write(p)
+}
+
+func (s *logSink) String() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.b.String()
+}
+
+func (s *logSink) Len() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.b.Len()
+}
+
+// the runners a test started are over, so what they read is the next
+// test's to change. a test cancels its own contexts first
+func runnersGone(t *testing.T) {
+	t.Helper()
+	nostrMu.Lock()
+	for k, cancel := range nostrSubs {
+		cancel()
+		delete(nostrSubs, k)
+	}
+	nostrMu.Unlock()
+	for end := time.Now().Add(15 * time.Second); runnersLive.Load() > 0; {
+		if time.Now().After(end) {
+			t.Errorf("%d runners still going", runnersLive.Load())
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 }
 
 func newXid(t *testing.T) xid {

@@ -9,7 +9,6 @@ package main
 // stays up whatever frames arrive on it.
 
 import (
-	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -257,7 +256,7 @@ func TestEventsAreRememberedOnceHandedOver(t *testing.T) {
 	}
 	ev := wrapTo(t, peer, myXPub, "hi")
 	relay.store(ev)
-	seenPath := savedDataDir + "/nostr_seen_" + rcv[:16]
+	seenPath := savedDataDir() + "/nostr_seen_" + rcv[:16]
 	holds := func() bool {
 		b, _ := os.ReadFile(seenPath)
 		return strings.Contains(string(b), ev.ID.Hex())
@@ -343,7 +342,7 @@ func TestAnchorStaysNearNow(t *testing.T) {
 	ahead := time.Now().Add(47 * time.Hour)
 	first.store(unopenedTo(t, rcv, ahead, "x"))
 	first.store(wrapToAt(t, peer, myXPub, "stamped ahead", ahead))
-	lastPath := savedDataDir + "/nostr_last_" + rcv[:16]
+	lastPath := savedDataDir() + "/nostr_last_" + rcv[:16]
 	anchor := func() int64 {
 		b, _ := os.ReadFile(lastPath)
 		v, _ := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64)
@@ -378,7 +377,7 @@ func TestAnchorMovesOnlyOnEventsThatOpen(t *testing.T) {
 		t.Fatal(err)
 	}
 	relay.store(unopenedTo(t, rcv, time.Now(), "x"))
-	lastPath := savedDataDir + "/nostr_last_" + rcv[:16]
+	lastPath := savedDataDir() + "/nostr_last_" + rcv[:16]
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, rcv)
@@ -402,7 +401,7 @@ func TestAnchorIsNeverLaterThanNow(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	lastPath := savedDataDir + "/nostr_last_" + rcv[:16]
+	lastPath := savedDataDir() + "/nostr_last_" + rcv[:16]
 	ahead := time.Now().Add(47 * time.Hour).Unix()
 	if err := os.WriteFile(lastPath, []byte(strconv.FormatInt(ahead, 10)), 0600); err != nil {
 		t.Fatal(err)
@@ -513,7 +512,7 @@ func TestSeenFileBoundedWithinOneConnection(t *testing.T) {
 		}
 		relay.store(ev)
 	}
-	seenPath := savedDataDir + "/nostr_seen_" + rcv[:16]
+	seenPath := savedDataDir() + "/nostr_seen_" + rcv[:16]
 	ck := catchupKey(relay.url(), rcv)
 	// the file between writes: a write that takes it past the cap cuts it
 	// back before anything else may touch it, so a line appended just
@@ -636,7 +635,10 @@ func TestProbeLooksLikeTheSocketsOwnRequest(t *testing.T) {
 	useStandIns(t, modeFast, nil, relay)
 	old := kickSpread
 	kickSpread = 3 * time.Second
-	defer func() { kickSpread = old }()
+	defer func() {
+		runnersGone(t)
+		kickSpread = old
+	}()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	// fifteen sockets: their own delays all falling inside the bound below
@@ -1216,7 +1218,7 @@ func (c *countingReader) Read(p []byte) (int, error) {
 
 // the relay library's own log lines go through the engine's gate
 func TestLibraryLogsFollowTheGate(t *testing.T) {
-	var buf bytes.Buffer
+	var buf logSink
 	old := log.Writer()
 	log.SetOutput(&buf)
 	oldOn := atomic.LoadInt32(&debugOn)
@@ -1276,7 +1278,7 @@ func TestWipeHoldStopsRunnersAndWrites(t *testing.T) {
 		c := relay.snapshot()[0]
 		return !c.closed.IsZero()
 	})
-	path := savedDataDir + "/nostr_seen_held"
+	path := savedDataDir() + "/nostr_seen_held"
 	s := loadSeen(path)
 	id := randomID(t)
 	s.claim(id)
@@ -1285,10 +1287,10 @@ func TestWipeHoldStopsRunnersAndWrites(t *testing.T) {
 	if _, err := os.Stat(path); err == nil {
 		t.Fatal("written after the hold")
 	}
-	entries, _ := os.ReadDir(savedDataDir)
+	entries, _ := os.ReadDir(savedDataDir())
 	before := len(entries)
 	time.Sleep(time.Second)
-	entries, _ = os.ReadDir(savedDataDir)
+	entries, _ = os.ReadDir(savedDataDir())
 	if len(entries) != before {
 		t.Fatal("files appeared after the hold")
 	}

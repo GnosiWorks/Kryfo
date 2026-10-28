@@ -103,7 +103,10 @@ func TestLiveSocketAnswerClearsFailures(t *testing.T) {
 	resetRoute(t, "publishing", 100)
 	oldSpread := kickSpread
 	kickSpread = 0
-	defer func() { kickSpread = oldSpread }()
+	defer func() {
+		runnersGone(t)
+		kickSpread = oldSpread
+	}()
 	peer := newXid(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
