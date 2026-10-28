@@ -151,7 +151,7 @@ func TestBurstToAStoppedPhoneArrivesWhole(t *testing.T) {
 	b.relay.mu.Unlock()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, b.tag, b.peer.pub, b.rcv)
+	go nostrSubscribeRunner(ctx, b.tag, mainPair(b.peer.pub), b.rcv)
 	b.check(12*time.Second, true)
 	if c := b.relay.snapshot(); len(c) != 1 {
 		t.Fatalf("the relay saw %d connections, the walk should not need another", len(c))
@@ -168,7 +168,7 @@ func TestBurstArrivesWhenTheCapCutsTheFirstAnswer(t *testing.T) {
 	b.relay.mu.Unlock()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, b.tag, b.peer.pub, b.rcv)
+	go nostrSubscribeRunner(ctx, b.tag, mainPair(b.peer.pub), b.rcv)
 	b.check(12*time.Second, true)
 }
 
@@ -183,7 +183,7 @@ func TestWalkPastTheCapIsNotActive(t *testing.T) {
 	before := atomic.LoadInt32(&catchupActive)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, b.tag, b.peer.pub, b.rcv)
+	go nostrSubscribeRunner(ctx, b.tag, mainPair(b.peer.pub), b.rcv)
 	ck := catchupKey(b.relay.url(), b.rcv)
 	waitFor(t, "the cap", 5*time.Second, func() bool {
 		catchupMu.Lock()
@@ -210,7 +210,7 @@ func TestBurstArrivesPastAPageThatNeverCame(t *testing.T) {
 	b.relay.mu.Unlock()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, b.tag, b.peer.pub, b.rcv)
+	go nostrSubscribeRunner(ctx, b.tag, mainPair(b.peer.pub), b.rcv)
 	// the hold ends with the connection, so the two connections' parts
 	// go over apart
 	b.check(12*time.Second, false)
@@ -250,7 +250,7 @@ func TestAFirstAnswerThatNeverComesHoldsNothing(t *testing.T) {
 	other.store(wrapToAt(t, peer, myXPub, "text", time.Now().Add(-time.Hour)))
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 	got := false
 	end := time.Now().Add(4 * time.Second)
 	for time.Now().Before(end) && !got {
@@ -274,7 +274,7 @@ func TestALiveTextTakesTheHeldOnesWithIt(t *testing.T) {
 	b.relay.mu.Unlock()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, b.tag, b.peer.pub, b.rcv)
+	go nostrSubscribeRunner(ctx, b.tag, mainPair(b.peer.pub), b.rcv)
 	waitFor(t, "texts held during the walk", 10*time.Second, func() bool {
 		return inboxLen() > 0 && walking(b.tag) > 0
 	})
@@ -310,7 +310,7 @@ func TestAPageNeverAnsweredKeepsTheSocket(t *testing.T) {
 	b.relay.mu.Unlock()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, b.tag, b.peer.pub, b.rcv)
+	go nostrSubscribeRunner(ctx, b.tag, mainPair(b.peer.pub), b.rcv)
 	waitFor(t, "the first page asked", 5*time.Second, func() bool {
 		c := b.relay.snapshot()
 		return len(c) > 0 && len(c[0].reqs) >= 2

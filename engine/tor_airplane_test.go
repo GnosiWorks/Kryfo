@@ -69,6 +69,7 @@ func startRunners(t *testing.T, n int) {
 		t.Fatal(err)
 	}
 	curve25519.ScalarBaseMult(&myXPub, &myXPriv)
+	setMainForTest(myXPriv, myXPub)
 	mu.Unlock()
 	nostrMu.Lock()
 	nostrRelays = strings.Split(testRelays, ",")
@@ -77,7 +78,7 @@ func startRunners(t *testing.T, n int) {
 		var peer [32]byte
 		peer[0], peer[31] = byte(i+1), 0x42
 		peerHex := hex.EncodeToString(peer[:])
-		_, rcvPk, err := nip17RcvAddress(peer)
+		_, rcvPk, err := nip17RcvAddressAs(testMain(), peer)
 		if err != nil {
 			t.Fatalf("derive %d: %v", i, err)
 		}
@@ -86,7 +87,7 @@ func startRunners(t *testing.T, n int) {
 		nostrSubs[peerHex] = cancel
 		nostrMu.Unlock()
 		t.Cleanup(cancel)
-		go nostrSubscribeRunner(ctx, peerHex, peer, rcvPk)
+		go nostrSubscribeRunner(ctx, peerHex, mainPair(peer), rcvPk)
 	}
 	kickRelays()
 }

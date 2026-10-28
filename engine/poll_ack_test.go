@@ -182,7 +182,7 @@ func TestADeathBeforeTheAckFetchesAgain(t *testing.T) {
 	run := func(ack bool) bool {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+		go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 		got := false
 		end := time.Now().Add(3 * time.Second)
 		for time.Now().Before(end) && !got {
@@ -248,7 +248,7 @@ func TestADeathBeforeTheAckFetchesADaysOldTextAgain(t *testing.T) {
 	run := func(ack bool) map[string]bool {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+		go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 		got := map[string]bool{}
 		end := time.Now().Add(3 * time.Second)
 		for time.Now().Before(end) && !(got["old"] && got["new"]) {
