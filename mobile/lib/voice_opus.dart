@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:isolate';
+import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
@@ -34,28 +35,165 @@ String _two(String symbol, String a, String b) {
   }
 }
 
+// windows has no file in memory to hand the engine by path: the bytes go
+// over instead, read and written through the app's own seal
+bool get _bytesOnly => Platform.isWindows;
+
+typedef _BytesC =
+    Pointer<Utf8> Function(
+      Pointer<Uint8>,
+      Int64,
+      Pointer<Pointer<Uint8>>,
+      Pointer<Int64>,
+    );
+typedef _OggBytesC =
+    Pointer<Utf8> Function(
+      Pointer<Utf8>,
+      Pointer<Uint8>,
+      Int64,
+      Pointer<Pointer<Uint8>>,
+      Pointer<Int64>,
+    );
+typedef _OggBytesD =
+    Pointer<Utf8> Function(
+      Pointer<Utf8>,
+      Pointer<Uint8>,
+      int,
+      Pointer<Pointer<Uint8>>,
+      Pointer<Int64>,
+    );
+typedef _BytesD =
+    Pointer<Utf8> Function(
+      Pointer<Uint8>,
+      int,
+      Pointer<Pointer<Uint8>>,
+      Pointer<Int64>,
+    );
+typedef _PeaksBytesC = Pointer<Utf8> Function(Pointer<Uint8>, Int64, Int32);
+typedef _PeaksBytesD = Pointer<Utf8> Function(Pointer<Uint8>, int, int);
+typedef _FreeBytesC = Void Function(Pointer<Uint8>, Int64);
+typedef _FreeBytesD = void Function(Pointer<Uint8>, int);
+
+// [input] in C memory for [call], zeroed after
+T _withIn<T>(Uint8List input, T Function(Pointer<Uint8>, int) call) {
+  final n = input.length;
+  final p = calloc<Uint8>(n == 0 ? 1 : n);
+  try {
+    p.asTypedList(n).setAll(0, input);
+    return call(p, n);
+  } finally {
+    p.asTypedList(n).fillRange(0, n, 0);
+    calloc.free(p);
+  }
+}
+
+// out pointers for [call], and on "ok" the bytes the engine made there,
+// copied, then zeroed and freed on its side
+(String, Uint8List?) _withOut(
+  String Function(Pointer<Pointer<Uint8>> out, Pointer<Int64> outLen) call,
+) {
+  final out = calloc<Pointer<Uint8>>();
+  final outLen = calloc<Int64>();
+  try {
+    final said = call(out, outLen);
+    if (out.value == nullptr) return (said, null);
+    final len = outLen.value;
+    final b = Uint8List.fromList(out.value.asTypedList(len));
+    _lib().lookupFunction<_FreeBytesC, _FreeBytesD>('HaloFreeBytes')(
+      out.value,
+      len,
+    );
+    if (said.startsWith('ok ')) return (said, b);
+    b.fillRange(0, b.length, 0);
+    return (said, null);
+  } finally {
+    calloc.free(out);
+    calloc.free(outLen);
+  }
+}
+
+(String, Uint8List?) _oggBytes(Uint8List input, String stopKey) =>
+    _withOut((out, outLen) {
+      final key = stopKey.toNativeUtf8();
+      try {
+        return _withIn(
+          input,
+          (p, n) => engineTake(
+            _lib().lookupFunction<_OggBytesC, _OggBytesD>('HaloVoiceOggBytes')(
+              key,
+              p,
+              n,
+              out,
+              outLen,
+            ),
+          ),
+        );
+      } finally {
+        malloc.free(key);
+      }
+    });
+
+(String, Uint8List?) _wavBytes(Uint8List input) => _withOut(
+  (out, outLen) => _withIn(
+    input,
+    (p, n) => engineTake(
+      _lib().lookupFunction<_BytesC, _BytesD>('HaloVoiceWavBytes')(
+        p,
+        n,
+        out,
+        outLen,
+      ),
+    ),
+  ),
+);
+
+// [from] read through the seal, the engine's bytes written through it to
+// [to]. the plain copies are zeroed once used
+Future<String> _bytesTwo(
+  (String, Uint8List?) Function(Uint8List input) call,
+  String from,
+  String to,
+) async {
+  final input = await File(from).readAsBytes();
+  final (said, b) = await Isolate.run(() {
+    final r = call(input);
+    input.fillRange(0, input.length, 0);
+    return r;
+  });
+  input.fillRange(0, input.length, 0);
+  if (b == null) return said;
+  try {
+    await File(to).writeAsBytes(b, flush: true);
+  } finally {
+    b.fillRange(0, b.length, 0);
+  }
+  return said;
+}
+
 // only strings cross to the isolate. the engine reads and writes by path:
 // on desktop a sealed note reaches it through memory
 Future<String> _engineOgg(
   String wav,
   String ogg, [
   void Function(String engineOut)? out,
-]) => withNativeFiles(
-  [wav],
-  [ogg],
-  (i, o) {
-    out?.call(o[0]);
-    return Isolate.run(() => _two('HaloVoiceOgg', i[0], o[0]));
-  },
-  ok: (r) => r.startsWith('ok '),
-);
+]) => _bytesOnly
+    ? (() {
+        out?.call(ogg);
+        return _bytesTwo((b) => _oggBytes(b, ogg), wav, ogg);
+      })()
+    : withNativeFiles([wav], [ogg], (i, o) {
+        out?.call(o[0]);
+        return Isolate.run(() => _two('HaloVoiceOgg', i[0], o[0]));
+      }, ok: (r) => r.startsWith('ok '));
 
-Future<String> _engineWav(String ogg, String wav) => withNativeFiles(
-  [ogg],
-  [wav],
-  (i, o) => Isolate.run(() => _two('HaloVoiceWav', i[0], o[0])),
-  ok: (r) => r.startsWith('ok '),
-);
+Future<String> _engineWav(String ogg, String wav) => _bytesOnly
+    ? _bytesTwo(_wavBytes, ogg, wav)
+    : withNativeFiles(
+        [ogg],
+        [wav],
+        (i, o) => Isolate.run(() => _two('HaloVoiceWav', i[0], o[0])),
+        ok: (r) => r.startsWith('ok '),
+      );
 
 /// stands in for the engine in tests: what HaloVoiceOgg would answer
 @visibleForTesting
@@ -168,6 +306,23 @@ List<double>? peaksOfAnswer(String said, int bars) {
 List<double>? oggPeaks(String path, int bars) {
   final hook = voicePeaksForTest;
   if (hook != null) return peaksOfAnswer(hook(path, bars), bars);
+  if (_bytesOnly) {
+    try {
+      final input = File(path).readAsBytesSync();
+      final said = _withIn(
+        input,
+        (p, n) => engineTake(
+          _lib().lookupFunction<_PeaksBytesC, _PeaksBytesD>(
+            'HaloVoicePeaksBytes',
+          )(p, n, bars),
+        ),
+      );
+      input.fillRange(0, input.length, 0);
+      return peaksOfAnswer(said, bars);
+    } catch (_) {
+      return null;
+    }
+  }
   final p = path.toNativeUtf8();
   try {
     final f = _lib().lookupFunction<_PeaksC, _PeaksD>('HaloVoicePeaks');

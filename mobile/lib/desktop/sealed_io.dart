@@ -49,7 +49,12 @@ R plainOutAllowed<R>(R Function() f) =>
 /// where things are sealed and under which key. sendable, so an isolate
 /// gets the same
 class SealedAreas {
-  SealedAreas({required this.docs, required this.support, this.runtime});
+  SealedAreas({
+    required this.docs,
+    required this.support,
+    this.runtime,
+    this.tmp,
+  });
 
   final String docs;
   final String support;
@@ -66,6 +71,11 @@ class SealedAreas {
 
   /// the key of everything else kryfo keeps
   Uint8List? filesKey;
+
+  /// windows: the temporary folder on the disk, sealed under [sessionKey],
+  /// which lives in memory only and dies with the process
+  final String? tmp;
+  Uint8List? sessionKey;
 
   // folders the system's own code reads by path: never sealed
   static const _plainSupport = {'translate', 'voice'};
@@ -107,6 +117,8 @@ class SealedAreas {
       }
       return '*';
     }
+    final t = tmp;
+    if (t != null && p.isWithin(t, full)) return '~';
     return null;
   }
 
@@ -115,8 +127,12 @@ class SealedAreas {
   Uint8List? keyFor(String path) {
     final a = areaOf(path);
     if (a == null) return null;
-    var k = a == '*' ? filesKey : containerKeys[a];
-    if (k == null && a != '*') {
+    var k = switch (a) {
+      '*' => filesKey,
+      '~' => sessionKey,
+      _ => containerKeys[a],
+    };
+    if (k == null && a != '*' && a != '~') {
       k = lateKey?.call(a);
       if (k != null) containerKeys[a] = k;
     }
@@ -142,6 +158,8 @@ class SealedAreas {
     'docs': docs,
     'support': support,
     'runtime': runtime,
+    'tmp': tmp,
+    'session': sessionKey,
     'files': filesKey,
     'keys': Map.of(containerKeys),
     'swept': swept.toList(),
@@ -152,7 +170,9 @@ class SealedAreas {
       docs: m['docs'] as String,
       support: m['support'] as String,
       runtime: m['runtime'] as String?,
+      tmp: m['tmp'] as String?,
     );
+    a.sessionKey = m['session'] as Uint8List?;
     a.swept.addAll((m['swept'] as List).cast<String>());
     a.filesKey = m['files'] as Uint8List?;
     a.containerKeys.addAll((m['keys'] as Map).cast<String, Uint8List>());

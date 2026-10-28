@@ -534,13 +534,20 @@ class KryfoSignal {
   /// on a desktop) the one build-host.sh left, else the platform's own name
   /// for it. throws when it does not load
   static KryfoSignal open([String? path]) {
+    // kryfo.exe loaded it by full path from its own folder before dart ran
+    // (runner/kryfo_win.cpp); a release takes no other
+    if (Platform.isWindows && _product && path == null) {
+      return KryfoSignal._(DynamicLibrary.process());
+    }
     final p = path ?? Platform.environment[envVar];
     if (p != null && p.isNotEmpty) return KryfoSignal._(DynamicLibrary.open(p));
     if (!_product && !Platform.isAndroid && !Platform.isIOS) {
       final host = forHostTests();
       if (host != null) return host;
     }
-    if (Platform.isIOS) return KryfoSignal._(DynamicLibrary.process());
+    if (Platform.isIOS || Platform.isWindows) {
+      return KryfoSignal._(DynamicLibrary.process());
+    }
     if (Platform.isMacOS) {
       return KryfoSignal._(DynamicLibrary.open('libkryfo_signal.dylib'));
     }

@@ -4,6 +4,7 @@
 // and only then the app itself
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' show Random;
 
 import 'package:camera_platform_interface/camera_platform_interface.dart';
 import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
@@ -164,6 +165,9 @@ Future<DesktopStop?> claimFolder(
   int Function() uid = getuid,
   Duration wait = const Duration(seconds: 3),
 }) async {
+  if (Platform.isWindows) {
+    return windowsFolderStop(Platform.environment['KRYFO_FOLDER']);
+  }
   if (!makePrivateDir(root)) return DesktopStop.notPrivate;
   if (ownerOf(root) != uid()) return DesktopStop.notYours;
   final lock = p.join(root, 'lock');
@@ -174,6 +178,16 @@ Future<DesktopStop?> claimFolder(
   }
   return null;
 }
+
+/// on windows kryfo.exe checks, closes and locks the folder before dart
+/// runs (runner/kryfo_win.cpp) and says how it went in KRYFO_FOLDER
+@visibleForTesting
+DesktopStop? windowsFolderStop(String? word) => switch (word) {
+  'ok' => null,
+  'locked' => DesktopStop.alreadyOpen,
+  'owner' => DesktopStop.notYours,
+  _ => DesktopStop.notPrivate,
+};
 
 Future<void> startDesktop(Future<void> Function() appMain) async {
   onDesktop = true;
@@ -189,7 +203,8 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   final host = DesktopHost(dataDir: root);
   DesktopBinding.install(desktopAnswers(host, db));
 
-  final runtime = desktopRuntimeDir(uid: getuid());
+  final uid = Platform.isWindows ? 0 : getuid();
+  final runtime = desktopRuntimeDir(uid: uid);
   // without a folder in memory the engine's files and the temporary ones
   // would be plain on the disk while the app runs: linux refuses that.
   // windows has no tmpfs and keeps them in <root>/tmp (its own branch)
@@ -197,7 +212,7 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     runApp(const DesktopStopApp(stop: DesktopStop.noMemory));
     return;
   }
-  sweepOldRuntimeDirs(runtime, uid: getuid());
+  sweepOldRuntimeDirs(runtime, uid: uid);
   final paths = DesktopPaths(root, runtime: runtime);
   PathProviderPlatform.instance = paths;
   final vault = DesktopVault(p.join(root, 'vault.kv'));
@@ -246,6 +261,8 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     if (call.method == 'quit') ending();
     return null;
   });
+  // a run before's temporary files: its key died with it, they go unread
+  if (Platform.isWindows) clearFolder(p.join(root, 'tmp'));
   // what memory held from a run before goes now, before anything is plain
   if (runtime != null) {
     final docs = (await paths.getApplicationDocumentsPath())!;
@@ -277,6 +294,35 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   );
 }
 
+/// 32 random bytes for this run's temporary files
+@visibleForTesting
+Uint8List sessionKey() {
+  final r = Random.secure();
+  return Uint8List.fromList(List.generate(32, (_) => r.nextInt(256)));
+}
+
+/// every file under [dir] zeroed and removed, the folder kept. best effort:
+/// a file windows still holds stays for the next start
+@visibleForTesting
+void clearFolder(String dir) {
+  final d = Directory(dir);
+  if (!d.existsSync()) return;
+  for (final e in d.listSync(recursive: true, followLinks: false)) {
+    if (e is! File) continue;
+    try {
+      final n = e.lengthSync();
+      final r = e.openSync(mode: FileMode.writeOnlyAppend);
+      r.setPositionSync(0);
+      for (var at = 0; at < n; at += 1 << 16) {
+        r.writeFromSync(Uint8List(n - at < 1 << 16 ? n - at : 1 << 16));
+      }
+      r.flushSync();
+      r.closeSync();
+      e.deleteSync();
+    } catch (_) {}
+  }
+}
+
 /// the seal over kryfo's files, once the vault is open: every file the
 /// app reads and writes from here on goes through it
 Future<void> openSeal({
@@ -294,17 +340,24 @@ Future<void> openSeal({
     docs: docs,
     support: support,
     runtime: runtime == null ? null : (await paths.getTemporaryPath())!,
+    // windows has no folder in memory: its temporary files are on the disk,
+    // sealed under a key that never leaves this process
+    tmp: Platform.isWindows ? p.join(root, 'tmp') : null,
   )..filesKey = await filesKeyFrom(vault);
+  if (Platform.isWindows) areas.sessionKey = sessionKey();
   final io = SealedIO(areas, const EngineChunkCrypto());
   IOOverrides.global = io;
   isolateRunner = <R>(FutureOr<R> Function() f) => runSealed(f);
-  nativeFiles =
-      <T>(
-        List<String> ins,
-        List<String> outs,
-        Future<T> Function(List<String>, List<String>) run,
-        bool Function(T)? ok,
-      ) => nativeFilesSealed(areas, ins, outs, run, ok);
+  // windows hands the engine bytes instead (voice_opus.dart)
+  if (!Platform.isWindows) {
+    nativeFiles =
+        <T>(
+          List<String> ins,
+          List<String> outs,
+          Future<T> Function(List<String>, List<String>) run,
+          bool Function(T)? ok,
+        ) => nativeFilesSealed(areas, ins, outs, run, ok);
+  }
   // a backup is encrypted already and may be large: on the disk
   bulkTempDir = () async {
     final d = p.join(root, 'tmp');

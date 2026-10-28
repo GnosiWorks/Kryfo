@@ -125,10 +125,11 @@ class DesktopHost {
   // the same process becomes the new run, so a restart never ends with no
   // app. a new process is the fallback, and it waits for this one's lock
   static Future<void> _relaunch() async {
-    execSelf(Platform.resolvedExecutable);
+    // windows has no exec: the new kryfo.exe waits for this one's lock
+    if (!Platform.isWindows) execSelf(Platform.resolvedExecutable);
     await Process.start(
       Platform.resolvedExecutable,
-      const [],
+      Platform.isWindows ? const ['--reopen'] : const [],
       mode: ProcessStartMode.detached,
     );
   }
