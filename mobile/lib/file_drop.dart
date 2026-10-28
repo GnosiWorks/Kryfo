@@ -12,7 +12,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart' show sha256;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
-import 'typing.dart' show capsAfter, capsOfText, kCapDrops;
+import 'typing.dart' show capsOfText, kCapDrops;
 
 /// the frame's field in an envelope
 const kDropWire = 'bl';
@@ -238,43 +238,9 @@ String dropDayAdd(({String day, int bytes, int files}) d, int size) =>
 // ---- which phones fetch from the files service ----
 
 // the name 'fb' in the phone's caps list (typing.dart), kept on the
-// contacts row: a 1:1 frame's by the typing code, a group frame's here, on
-// the member's row whether it is a contact or a member's card
-
-/// what a group frame from [member] says their phone understands, on their
-/// row (capsAfter). true when it changed
-Future<bool> takeMemberCaps(
-  Database db,
-  String member, {
-  required List<String>? caps,
-  required bool counts,
-  int? written,
-}) => db.transaction((t) async {
-  final r = await t.query(
-    'contacts',
-    columns: const ['caps', 'caps_at'],
-    where: 'halo_id = ?',
-    whereArgs: [member],
-    limit: 1,
-  );
-  // only a row that is there already: nothing is made for anyone
-  if (r.isEmpty) return false;
-  final next = capsAfter(
-    (r.first['caps'] as String?) ?? '',
-    (r.first['caps_at'] as num?)?.toInt() ?? 0,
-    carried: caps,
-    counts: counts,
-    written: written,
-  );
-  if (next == null) return false;
-  await t.update(
-    'contacts',
-    {'caps': next.caps, 'caps_at': next.at},
-    where: 'halo_id = ?',
-    whereArgs: [member],
-  );
-  return true;
-});
+// contacts row: a 1:1 frame's by the typing code, a group frame's by the
+// group shots code (takeMemberCaps), on the member's row whether it is a
+// contact or a member's card
 
 Future<bool> _fetches(DatabaseExecutor db, String peer) async {
   final r = await db.query(

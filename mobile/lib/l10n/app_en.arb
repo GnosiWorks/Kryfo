@@ -12029,5 +12029,322 @@
   "mediaProgressPreparing": "Preparing · keep the app open",
   "@mediaProgressPreparing": {
     "description": "the strip above the composer while a big file is made ready to go through the files service, before any of it is sent"
+  },
+  "groupShotsBlocksAll": "Blocks screenshots and screen recording on every phone in this group, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.",
+  "@groupShotsBlocksAll": {
+    "description": "screens/group_info_screen.dart: the admin's switch while it is off: what it does"
+  },
+  "groupShotsStartsWhenAll": "Waiting for everyone here to update Kryfo",
+  "@groupShotsStartsWhenAll": {
+    "description": "screens/group_info_screen.dart: the admin's switch, on while someone's app cannot block yet"
+  },
+  "groupShotsOnForAll": "On for everyone here",
+  "@groupShotsOnForAll": {
+    "description": "screens/group_info_screen.dart: the admin's switch, on for every member"
+  },
+  "groupShotsOffAdminOnly": "Off. Only the admin can change this",
+  "@groupShotsOffAdminOnly": {
+    "description": "screens/group_info_screen.dart: a member's read-only row, off"
+  },
+  "groupShotsWaitAdminOnly": "Waiting for everyone here to update Kryfo. Only the admin can change this",
+  "@groupShotsWaitAdminOnly": {
+    "description": "screens/group_info_screen.dart: a member's read-only row, on but waiting on someone"
+  },
+  "groupShotsOnAdminOnly": "On for everyone here. Only the admin can change this",
+  "@groupShotsOnAdminOnly": {
+    "description": "screens/group_info_screen.dart: a member's read-only row, on for every member"
+  },
+  "groupShotsWaitingFor": "{count, plural, one{Waiting for {count} person} other{Waiting for {count} people}}",
+  "@groupShotsWaitingFor": {
+    "description": "screens/group_info_screen.dart: the admin's row that opens the list of members whose app cannot block yet",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "groupShotsWaitingTitle": "Still to update",
+  "@groupShotsWaitingTitle": {
+    "description": "widgets/group_shots_sheet.dart: the title of that list"
+  },
+  "groupShotsWaitingHint": "Screenshot blocking covers everyone once these people update Kryfo. Tap someone to remove them from the group.",
+  "@groupShotsWaitingHint": {
+    "description": "widgets/group_shots_sheet.dart: the line under the title"
+  },
+  "groupShotsNeedsUpdate": "Needs to update Kryfo, or hasn’t been online since",
+  "@groupShotsNeedsUpdate": {
+    "description": "widgets/group_shots_sheet.dart: under a member's name"
+  },
+  "groupShotsBlockedByYou": "Blocked by you",
+  "@groupShotsBlockedByYou": {
+    "description": "widgets/group_shots_sheet.dart: under a member you blocked"
+  },
+  "groupShotsYouTurnedOnWait": "You turned on screenshot blocking. It covers everyone once all here have updated Kryfo.",
+  "@groupShotsYouTurnedOnWait": {
+    "description": "widgets/shots_line.dart: the line in the group where you turned it on and someone's app cannot block yet"
+  },
+  "groupShotsTheyTurnedOnWait": "{name} turned on screenshot blocking. It covers everyone once all here have updated Kryfo.",
+  "@groupShotsTheyTurnedOnWait": {
+    "description": "widgets/shots_line.dart: the same, turned on by the admin",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "groupShotsStarted": "Screenshot blocking is on for everyone here. Copying, forwarding and saving each other’s messages is off too.",
+  "@groupShotsStarted": {
+    "description": "widgets/shots_line.dart: every member's app can block now"
+  },
+  "groupShotsPaused": "Someone here can’t block screenshots yet. It covers everyone again once they update Kryfo.",
+  "@groupShotsPaused": {
+    "description": "widgets/shots_line.dart: someone whose app cannot block came in or went back to an older app"
+  },
+  "groupShotsCantYet": "Can’t block screenshots yet",
+  "@groupShotsCantYet": {
+    "description": "screens/group_info_screen.dart: in the add sheet, under someone whose app cannot block in groups yet"
+  },
+  "groupShotsAddTitle": "Add anyway?",
+  "@groupShotsAddTitle": {
+    "description": "screens/group_info_screen.dart: confirm title when adding such a person"
+  },
+  "groupShotsAddPauses": "Screenshot blocking won’t cover everyone here until they update Kryfo.",
+  "@groupShotsAddPauses": {
+    "description": "screens/group_info_screen.dart: confirm line when adding such a person"
+  },
+  "groupShotsLeaveStays": "Screenshot blocking stays as it is.",
+  "@groupShotsLeaveStays": {
+    "description": "screens/group_info_screen.dart: extra line in the admin's leave confirm while blocking is on"
+  },
+  "groupShotsBlockedHere": "Kryfo blocks screenshots in this group",
+  "@groupShotsBlockedHere": {
+    "description": "screens/group_chat_screen.dart: screen reader label of the lock in the header"
+  },
+  "groupShotsMenuNote": "Copying, forwarding and saving others’ messages is off in this group",
+  "@groupShotsMenuNote": {
+    "description": "screens/group_chat_screen.dart: note in the message menu"
+  },
+  "groupShotsKeptOpen": "Opening others’ files in other apps is off in this group",
+  "@groupShotsKeptOpen": {
+    "description": "widgets/video_bubble.dart: a file of someone else's in a group that blocks"
+  },
+  "groupShotsOldNotice": "I turned on screenshot blocking in this group. Your Kryfo can’t do it yet, so please update.",
+  "@groupShotsOldNotice": {
+    "description": "app/state_group_shots.dart: the message older versions show when the admin turns it on"
+  },
+  "captureShotTaken": "Screenshot taken. Nobody else was told.",
+  "@captureShotTaken": {
+    "description": "widgets/shots_line.dart: one quiet line on this phone when android says the chat was screenshotted. nothing is sent"
+  },
+  "captureRecording": "This screen is being recorded. Nobody else was told.",
+  "@captureRecording": {
+    "description": "widgets/shots_line.dart: the same when android says the screen is being recorded"
+  },
+  "settingsDevices": "Devices",
+  "@settingsDevices": {
+    "description": "screens/settings_screen.dart: the section over the linked devices row"
+  },
+  "devicesLinkedDevices": "Linked devices",
+  "@devicesLinkedDevices": {
+    "description": "screens/linked_devices_screen.dart and settings: the page of your own linked devices"
+  },
+  "devicesThisPhoneOnly": "This phone only",
+  "@devicesThisPhoneOnly": {
+    "description": "screens/linked_devices_screen.dart: the settings row value when nothing else is linked"
+  },
+  "devicesNameSeparator": ", ",
+  "@devicesNameSeparator": {
+    "description": "screens/linked_devices_screen.dart: goes between device names on the settings row"
+  },
+  "devicesThisPhone": "This phone",
+  "@devicesThisPhone": {
+    "description": "screens/linked_devices_screen.dart: the name of the phone in hand on the list"
+  },
+  "devicesOnlyThisPhone": "Only this phone can link or remove devices",
+  "@devicesOnlyThisPhone": {
+    "description": "screens/linked_devices_screen.dart: the line under this phone on the list"
+  },
+  "devicesLinkedOn": "Linked {date}",
+  "@devicesLinkedOn": {
+    "description": "screens/linked_devices_screen.dart: when a device was linked, a day",
+    "placeholders": {
+      "date": {
+        "type": "Object"
+      }
+    }
+  },
+  "devicesUsedToday": "Used today",
+  "@devicesUsedToday": {
+    "description": "screens/linked_devices_screen.dart: a device was used today, after the linked day"
+  },
+  "devicesUsedThisWeek": "Used this week",
+  "@devicesUsedThisWeek": {
+    "description": "screens/linked_devices_screen.dart: a device was used in the last seven days"
+  },
+  "devicesUsedThisMonth": "Used this month",
+  "@devicesUsedThisMonth": {
+    "description": "screens/linked_devices_screen.dart: a device was used in the last thirty days"
+  },
+  "devicesNotUsedYet": "Not used yet",
+  "@devicesNotUsedYet": {
+    "description": "screens/linked_devices_screen.dart: a linked device that was never opened since"
+  },
+  "devicesUnlinksSoon": "{days, plural, =0{Unlinks today unless you open it} =1{Unlinks tomorrow unless you open it} other{Unlinks in {days} days unless you open it}}",
+  "@devicesUnlinksSoon": {
+    "description": "screens/linked_devices_screen.dart: in amber, under a device close to the 30 days unused",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "devicesEmptyTitle": "Kryfo on your computer",
+  "@devicesEmptyTitle": {
+    "description": "screens/linked_devices_screen.dart: over the empty list, only this phone"
+  },
+  "devicesEmptyLine": "Link a computer to read and send your messages there. Up to five devices besides this phone.",
+  "@devicesEmptyLine": {
+    "description": "screens/linked_devices_screen.dart: under the empty title"
+  },
+  "devicesContactsSeeNothing": "Your contacts' apps don't show your devices.",
+  "@devicesContactsSeeNothing": {
+    "description": "screens/linked_devices_screen.dart: a note under the list, about what contacts see"
+  },
+  "devicesUnusedRule": "A device you don't open for 30 days unlinks itself and wipes your chats from it.",
+  "@devicesUnusedRule": {
+    "description": "screens/linked_devices_screen.dart: a note under the list, the 30 day rule"
+  },
+  "devicesFull": "Five devices are linked. Remove one to link another.",
+  "@devicesFull": {
+    "description": "screens/linked_devices_screen.dart: over the link button when five are linked"
+  },
+  "devicesLinkADevice": "Link a device",
+  "@devicesLinkADevice": {
+    "description": "screens/linked_devices_screen.dart: the button at the foot of the list, and the title of the page it opens"
+  },
+  "devicesRemoveAll": "Remove all other devices",
+  "@devicesRemoveAll": {
+    "description": "screens/linked_devices_screen.dart: the rose row at the foot of the list"
+  },
+  "devicesRemoveAllTitle": "Remove all other devices?",
+  "@devicesRemoveAllTitle": {
+    "description": "screens/linked_devices_screen.dart: the sheet that asks"
+  },
+  "devicesRemoveAllLine": "Once your contacts' apps get the change, they stop getting new messages and can't send as you. This phone keeps everything.",
+  "@devicesRemoveAllLine": {
+    "description": "screens/linked_devices_screen.dart: under the question"
+  },
+  "devicesRemoveAllYes": "Remove all",
+  "@devicesRemoveAllYes": {
+    "description": "screens/linked_devices_screen.dart: the rose button that removes them"
+  },
+  "devicesRemovedAll": "Only this phone now",
+  "@devicesRemovedAll": {
+    "description": "screens/linked_devices_screen.dart: the toast once they are removed"
+  },
+  "devicesRemoveTitle": "Remove {name}?",
+  "@devicesRemoveTitle": {
+    "description": "screens/linked_devices_screen.dart: the sheet that asks before one device goes",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "devicesRemoveLine": "Once your contacts' apps get the change, it stops getting new messages and can't send as you. It wipes your chats from itself the next time it's online. A device someone has tampered with may keep what it already has.",
+  "@devicesRemoveLine": {
+    "description": "screens/linked_devices_screen.dart: under the question; the last sentence is the honest part"
+  },
+  "devicesRemove": "Remove",
+  "@devicesRemove": {
+    "description": "screens/linked_devices_screen.dart: the rose row in a device sheet, and the button that removes it"
+  },
+  "devicesRemoved": "{name} removed",
+  "@devicesRemoved": {
+    "description": "screens/linked_devices_screen.dart: the toast once a device is removed",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "devicesRename": "Rename",
+  "@devicesRename": {
+    "description": "screens/linked_devices_screen.dart: a row in a device sheet"
+  },
+  "devicesRenameTitle": "Rename {name}",
+  "@devicesRenameTitle": {
+    "description": "screens/linked_devices_screen.dart: the sheet with the name field",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "devicesRenameLine": "Only you see this name. Your contacts never do.",
+  "@devicesRenameLine": {
+    "description": "screens/linked_devices_screen.dart: under the rename title"
+  },
+  "devicesNameComputer": "Computer",
+  "@devicesNameComputer": {
+    "description": "screens/linked_devices_screen.dart: the hint in an empty name field"
+  },
+  "devicesDeviceCode": "Device code",
+  "@devicesDeviceCode": {
+    "description": "screens/linked_devices_screen.dart: over the device code in a device sheet"
+  },
+  "devicesDeviceCodeLine": "The same code shows on the device itself, in Settings.",
+  "@devicesDeviceCodeLine": {
+    "description": "screens/linked_devices_screen.dart: under the device code"
+  },
+  "devicesLinkStep1": "Open Kryfo on your computer. It shows a code.",
+  "@devicesLinkStep1": {
+    "description": "screens/linked_devices_screen.dart: the first step on the link page"
+  },
+  "devicesLinkStep2": "Scan the code with this phone.",
+  "@devicesLinkStep2": {
+    "description": "screens/linked_devices_screen.dart: the second step on the link page"
+  },
+  "devicesLinkStep3": "Check that both screens show the same six numbers.",
+  "@devicesLinkStep3": {
+    "description": "screens/linked_devices_screen.dart: the third step on the link page"
+  },
+  "devicesHistory": "History",
+  "@devicesHistory": {
+    "description": "screens/linked_devices_screen.dart: the section over the history choices"
+  },
+  "devicesHistoryCopy": "Copy my chats",
+  "@devicesHistoryCopy": {
+    "description": "screens/linked_devices_screen.dart: the first history choice, picked to start"
+  },
+  "devicesHistoryCopyHint": "All your messages, with photos and videos from the last 30 days.",
+  "@devicesHistoryCopyHint": {
+    "description": "screens/linked_devices_screen.dart: under the first history choice"
+  },
+  "devicesHistoryNone": "Start with no history",
+  "@devicesHistoryNone": {
+    "description": "screens/linked_devices_screen.dart: the second history choice"
+  },
+  "devicesHistoryNoneHint": "Only new messages reach the device.",
+  "@devicesHistoryNoneHint": {
+    "description": "screens/linked_devices_screen.dart: under the second history choice"
+  },
+  "devicesSkipMedia": "Skip photos and videos",
+  "@devicesSkipMedia": {
+    "description": "screens/linked_devices_screen.dart: the switch under the first history choice"
+  },
+  "devicesSkipMediaHint": "Only the text comes over. Quicker, and less to keep on the device.",
+  "@devicesSkipMediaHint": {
+    "description": "screens/linked_devices_screen.dart: under the switch"
+  },
+  "devicesHiddenStay": "Hidden chats and the decoy stay on this phone.",
+  "@devicesHiddenStay": {
+    "description": "screens/linked_devices_screen.dart: a note on the link page"
+  },
+  "devicesScanCode": "Scan the code",
+  "@devicesScanCode": {
+    "description": "screens/linked_devices_screen.dart: the button at the foot of the link page"
   }
 }

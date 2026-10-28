@@ -9549,4 +9549,281 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get mediaProgressPreparing => 'Hazırlanıyor · uygulamayı açık tut';
+
+  @override
+  String get groupShotsBlocksAll =>
+      'Bu gruptaki her telefonda ekran görüntüsünü ve ekran kaydını engeller; birbirinizin mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi de. Ekranı okumasına izin verilen uygulamaları ya da bunu aşmak için değiştirilmiş bir telefonu veya uygulamayı durduramaz.';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'Buradaki herkesin Kryfo\'yu güncellemesi bekleniyor';
+
+  @override
+  String get groupShotsOnForAll => 'Buradaki herkes için açık';
+
+  @override
+  String get groupShotsOffAdminOnly =>
+      'Kapalı. Bunu yalnızca yönetici değiştirebilir';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'Buradaki herkesin Kryfo\'yu güncellemesi bekleniyor. Bunu yalnızca yönetici değiştirebilir';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'Buradaki herkes için açık. Bunu yalnızca yönetici değiştirebilir';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString kişi bekleniyor',
+      one: '$countString kişi bekleniyor',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'Henüz güncellemeyenler';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'Bu kişiler Kryfo\'yu güncellediğinde ekran görüntüsü engeli herkesi kapsar. Gruptan çıkarmak için birine dokun.';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'Kryfo\'yu güncellemesi gerekiyor ya da o zamandan beri çevrim dışı';
+
+  @override
+  String get groupShotsBlockedByYou => 'Senin engellediğin';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'Ekran görüntüsü engelini açtın. Buradaki herkes Kryfo\'yu güncellediğinde herkesi kapsar.';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name ekran görüntüsü engelini açtı. Buradaki herkes Kryfo\'yu güncellediğinde herkesi kapsar.';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'Ekran görüntüsü engeli buradaki herkes için açık. Birbirinizin mesajlarını kopyalamak, iletmek ve kaydetmek de kapalı.';
+
+  @override
+  String get groupShotsPaused =>
+      'Buradaki biri henüz ekran görüntüsünü engelleyemiyor. Kryfo\'yu güncellediğinde yeniden herkesi kapsar.';
+
+  @override
+  String get groupShotsCantYet => 'Henüz ekran görüntüsünü engelleyemiyor';
+
+  @override
+  String get groupShotsAddTitle => 'Yine de eklensin mi?';
+
+  @override
+  String get groupShotsAddPauses =>
+      'Bu kişi Kryfo\'yu güncelleyene kadar ekran görüntüsü engeli buradaki herkesi kapsamaz.';
+
+  @override
+  String get groupShotsLeaveStays =>
+      'Ekran görüntüsü engeli olduğu gibi kalır.';
+
+  @override
+  String get groupShotsBlockedHere =>
+      'Kryfo bu grupta ekran görüntüsünü engeller';
+
+  @override
+  String get groupShotsMenuNote =>
+      'Bu grupta başkalarının mesajlarını kopyalamak, iletmek ve kaydetmek kapalı';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'Bu grupta başkalarının dosyalarını başka uygulamalarda açmak kapalı';
+
+  @override
+  String get groupShotsOldNotice =>
+      'Bu grupta ekran görüntüsü engelini açtım. Senin Kryfo\'n bunu henüz yapamıyor, lütfen güncelle.';
+
+  @override
+  String get captureShotTaken =>
+      'Ekran görüntüsü alındı. Başka kimseye haber verilmedi.';
+
+  @override
+  String get captureRecording =>
+      'Bu ekran kaydediliyor. Başka kimseye haber verilmedi.';
+
+  @override
+  String get settingsDevices => 'Cihazlar';
+
+  @override
+  String get devicesLinkedDevices => 'Bağlı cihazlar';
+
+  @override
+  String get devicesThisPhoneOnly => 'Yalnızca bu telefon';
+
+  @override
+  String get devicesNameSeparator => ', ';
+
+  @override
+  String get devicesThisPhone => 'Bu telefon';
+
+  @override
+  String get devicesOnlyThisPhone =>
+      'Cihaz bağlayıp kaldırabilen tek yer bu telefon';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return '$date tarihinde bağlandı';
+  }
+
+  @override
+  String get devicesUsedToday => 'Bugün kullanıldı';
+
+  @override
+  String get devicesUsedThisWeek => 'Bu hafta kullanıldı';
+
+  @override
+  String get devicesUsedThisMonth => 'Bu ay kullanıldı';
+
+  @override
+  String get devicesNotUsedYet => 'Henüz kullanılmadı';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Açmazsan $daysString gün içinde bağlantısı kesilir',
+      one: 'Açmazsan yarın bağlantısı kesilir',
+      zero: 'Açmazsan bugün bağlantısı kesilir',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => 'Bilgisayarında Kryfo';
+
+  @override
+  String get devicesEmptyLine =>
+      'Mesajlarını orada okuyup göndermek için bir bilgisayar bağla. Bu telefon dışında en çok beş cihaz.';
+
+  @override
+  String get devicesContactsSeeNothing =>
+      'Kişilerinin uygulamaları cihazlarını göstermez.';
+
+  @override
+  String get devicesUnusedRule =>
+      '30 gün açmadığın bir cihazın bağlantısı kendiliğinden kesilir ve sohbetlerin ondan silinir.';
+
+  @override
+  String get devicesFull =>
+      'Beş cihaz bağlı. Başka birini bağlamak için birini kaldır.';
+
+  @override
+  String get devicesLinkADevice => 'Cihaz bağla';
+
+  @override
+  String get devicesRemoveAll => 'Diğer tüm cihazları kaldır';
+
+  @override
+  String get devicesRemoveAllTitle => 'Diğer tüm cihazlar kaldırılsın mı?';
+
+  @override
+  String get devicesRemoveAllLine =>
+      'Kişilerinin uygulamaları değişikliği aldığında yeni mesaj almayı bırakırlar ve senin adına gönderemezler. Bu telefon her şeyi saklar.';
+
+  @override
+  String get devicesRemoveAllYes => 'Hepsini kaldır';
+
+  @override
+  String get devicesRemovedAll => 'Artık yalnızca bu telefon';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return '$name kaldırılsın mı?';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      'Kişilerinin uygulamaları değişikliği aldığında yeni mesaj almayı bırakır ve senin adına gönderemez. Bir sonraki çevrimiçi oluşunda sohbetlerini kendinden siler. Biri tarafından kurcalanmış bir cihaz elindekini saklayabilir.';
+
+  @override
+  String get devicesRemove => 'Kaldır';
+
+  @override
+  String devicesRemoved(Object name) {
+    return '$name kaldırıldı';
+  }
+
+  @override
+  String get devicesRename => 'Adı değiştir';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return '$name adını değiştir';
+  }
+
+  @override
+  String get devicesRenameLine =>
+      'Bu adı yalnızca sen görürsün. Kişilerin asla görmez.';
+
+  @override
+  String get devicesNameComputer => 'Bilgisayar';
+
+  @override
+  String get devicesDeviceCode => 'Cihaz kodu';
+
+  @override
+  String get devicesDeviceCodeLine =>
+      'Aynı kod cihazın kendisinde, Ayarlar’da görünür.';
+
+  @override
+  String get devicesLinkStep1 =>
+      'Bilgisayarında Kryfo’yu aç. Bir kod gösterir.';
+
+  @override
+  String get devicesLinkStep2 => 'Kodu bu telefonla tara.';
+
+  @override
+  String get devicesLinkStep3 =>
+      'İki ekranda da aynı altı rakamın göründüğünü kontrol et.';
+
+  @override
+  String get devicesHistory => 'Geçmiş';
+
+  @override
+  String get devicesHistoryCopy => 'Sohbetlerimi aktar';
+
+  @override
+  String get devicesHistoryCopyHint =>
+      'Tüm mesajların, son 30 günün fotoğraf ve videolarıyla.';
+
+  @override
+  String get devicesHistoryNone => 'Geçmiş olmadan başla';
+
+  @override
+  String get devicesHistoryNoneHint => 'Cihaza yalnızca yeni mesajlar gelir.';
+
+  @override
+  String get devicesSkipMedia => 'Fotoğraf ve videoları atla';
+
+  @override
+  String get devicesSkipMediaHint =>
+      'Yalnızca metin aktarılır. Daha hızlı ve cihazda daha az şey kalır.';
+
+  @override
+  String get devicesHiddenStay => 'Gizli sohbetler ve yem bu telefonda kalır.';
+
+  @override
+  String get devicesScanCode => 'Kodu tara';
 }

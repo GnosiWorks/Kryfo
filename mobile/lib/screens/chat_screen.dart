@@ -2,6 +2,7 @@
 // chat screen: bubbles, composer, live receive over tor.
 
 import '../lock_state.dart';
+import '../capture_watch.dart';
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -1228,9 +1229,22 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _chooseDevName(bool anon) => _devOpening?.choose(anon: anon);
 
+  // android's word that this chat was screenshotted or is recorded: one
+  // quiet line here, on this phone alone
+  VoidCallback? _unwatchCaptures;
+  void _captured(Capture what) {
+    if (!mounted || lockState.locked) return;
+    // a secure window came out black: until a phone shows the callback
+    // stays quiet there, nothing is said
+    if (appState.windowSecure) return;
+    if (ModalRoute.of(context)?.isCurrent == false) return;
+    showHaloToast(context, captureLine(what));
+  }
+
   @override
   void initState() {
     super.initState();
+    _unwatchCaptures = captureWatch.watch(_captured);
     _memo = session.chatKey(widget.peerHaloId);
     if (_isDev) {
       final d = _devShown;
@@ -5456,6 +5470,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   void dispose() {
+    _unwatchCaptures?.call();
     for (final land in List.of(_flights)) {
       land();
     }

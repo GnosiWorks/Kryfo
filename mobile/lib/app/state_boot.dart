@@ -420,6 +420,8 @@ extension AppStateBoot on AppState {
       }
     });
     listenAtStart();
+    // once after the update: each group's admin hears what this app can
+    unawaited(_announceCaps(live));
     // what the removed ntfy mode left behind in the prefs
     unawaited(forgetNtfy());
 

@@ -11,6 +11,7 @@ import 'package:kryfo/file_kind.dart' show fileFits, kMaxFileBytes;
 import 'package:kryfo/media_progress.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/rooms.dart' show roomFrame;
+import 'package:kryfo/typing.dart' show capsAfter;
 import 'package:kryfo/widgets/media_bubbles.dart' show fileTooBigLine;
 
 import 'mem_db.dart';
@@ -296,8 +297,24 @@ void main() {
       }
     });
 
-    Future<void> said(String who, List<String>? caps, int at) =>
-        takeMemberCaps(db, who, caps: caps, counts: true, written: at);
+    // the row as the caps code keeps it (capsAfter): newest written wins
+    Future<void> said(String who, List<String>? caps, int at) async {
+      final r = db.rows('contacts').firstWhere((r) => r['halo_id'] == who);
+      final next = capsAfter(
+        (r['caps'] as String?) ?? '',
+        (r['caps_at'] as num?)?.toInt() ?? 0,
+        carried: caps,
+        counts: true,
+        written: at,
+      );
+      if (next == null) return;
+      await db.update(
+        'contacts',
+        {'caps': next.caps, 'caps_at': next.at},
+        where: 'halo_id = ?',
+        whereArgs: [who],
+      );
+    }
 
     test('a phone that said fb, and only while it still says so', () async {
       expect(await peerTakesDrops(db, 'calm-orbit'), isFalse);

@@ -34,14 +34,14 @@ final kDevPow = _set('pw pb');
 // who sent it. out, rewritten; in, checked against his pinned key
 final kDevSender = _set('h e x o');
 
-// the face, the supporter tier and what a phone understands: never sent to
-// him, never taken from him
+// the face, the supporter tier and what the app can do: never sent to him,
+// never taken from him
 final kDevIgnored = _set('av bg cp');
 
-// group controls and rosters, an ended group's words, introductions and
-// polls, a file on the files service: no such frame goes to him or is taken
-// from him
-final kDevNever = _set('g gc rs rp in pl vt pc ge bl');
+// group controls and rosters, an ended group's words, a group's screenshot
+// block and its words, introductions, polls and a file on the files
+// service: no such frame goes to him or is taken from him
+final kDevNever = _set('g gc rs rp in pl vt pc ge gs gu bl');
 
 Set<String> _set(String keys) => Set.unmodifiable(keys.split(' '));
 

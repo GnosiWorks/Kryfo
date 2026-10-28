@@ -7,7 +7,10 @@ import '../main.dart'
     show
         appState,
         session,
+        sessionQuiet,
         GroupFull,
+        AppStateGroupShots,
+        AppStateScreen,
         AppStateMessages,
         AppStatePrefs,
         AppStateGroups,
@@ -47,6 +50,10 @@ import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../read_burn.dart' show burnWaitsRow;
 import '../group_end.dart';
+import '../dlog.dart';
+import '../chat_shots.dart' show ShotsPacer;
+import '../group_shots.dart';
+import '../widgets/group_shots_sheet.dart';
 
 // a member as the screens name them: a room key by its short tag
 String memberLabel(String id) => looksLikeRoomKey(id) ? roomTag(id) : id;
@@ -62,6 +69,21 @@ String endedLine(GroupEnd end) {
   }
   return endLine(end, me: appState.sessionId, name: name);
 }
+
+/// what a group's screenshot row says under its label: to its admin, what
+/// the switch does or where it is; to a member, where it is and that only
+/// the admin changes it
+String groupShotsHint(GroupShots s, {required bool admin}) => admin
+    ? (!s.on
+          ? l10n.groupShotsBlocksAll
+          : s.forAll
+          ? l10n.groupShotsOnForAll
+          : l10n.groupShotsStartsWhenAll)
+    : (!s.on
+          ? l10n.groupShotsOffAdminOnly
+          : s.forAll
+          ? l10n.groupShotsOnAdminOnly
+          : l10n.groupShotsWaitAdminOnly);
 
 // what leaving costs. everything here goes; a group's admin leaves it with
 // no one to change it, and a room's maker takes its link along
@@ -108,6 +130,19 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   bool _mayEnd = false;
   // an end running from this page
   bool _ending = false;
+  // its screenshot block, and this page's hold on the window's flag: the
+  // shared media and the viewers open over it
+  GroupShots _shots = const GroupShots();
+  late final _shotsHold = ShotsPacer(appState.forceSecure);
+  // this phone may turn it: the admin on record, still in it
+  bool _mayShots = false;
+  // the switch moves on the tap; the write follows behind it
+  bool? _shotsNow;
+  // what each member's app can do, and who is blocked here, for the
+  // admin's lists
+  Map<String, Set<String>> _caps = const {};
+  Set<String> _blockedHere = const {};
+  final _waiting = ValueNotifier<List<ShotsWaiter>>(const []);
 
   @override
   void initState() {
@@ -118,8 +153,16 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       _isAdmin = g.isAdmin;
       _seenCount = g.memberCount;
       if (g.endedBy != null) _end = (at: 0, by: g.endedBy!);
+      if (g.expiresAt == null) {
+        _shots = GroupShots(
+          on: g.shotsBlocking,
+          all: g.shotsForAll,
+          known: true,
+        );
+      }
       break;
     }
+    _shotsHold.want(appState.shotsBlocksGroup(widget.groupId), now: true);
     _seenRev = appState.chatRevOf('group:${widget.groupId}');
     appState.addListener(_onApp);
     _load();
@@ -127,8 +170,22 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   }
 
   @override
+  void deactivate() {
+    _shotsHold.release();
+    super.deactivate();
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    _shotsHold.want(_shots.blocking, now: true);
+  }
+
+  @override
   void dispose() {
     appState.removeListener(_onApp);
+    _shotsHold.release();
+    _waiting.dispose();
     _scroll.dispose();
     super.dispose();
   }
@@ -152,6 +209,18 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     final g = await session.getGroup(widget.groupId);
     final members = await session.getGroupMembers(widget.groupId);
     final held = await keysHeldShown();
+    // who can block, for the admin's lists: a read that fails leaves
+    // everyone as not known, which only ever says less
+    var caps = const <String, Set<String>>{};
+    var blocked = const <String>{};
+    if (g?['room_pub'] == null) {
+      try {
+        caps = await session.groupDb(widget.groupId).capsOfPeople(members);
+        blocked = await session.blockedIds();
+      } catch (e) {
+        dlog('group shots: not read (${e.runtimeType})');
+      }
+    }
     if (!mounted || gen != _loadGen) return;
     setState(() {
       _held = held;
@@ -161,14 +230,56 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       _members = members;
       _end = groupEndOf(g);
       _mayEnd = mayEndGroup(g, appState.sessionId);
+      _shots = GroupShots.ofRow(g, quiet: sessionQuiet);
+      _mayShots = mayTurnGroupShots(g, appState.sessionId, members);
+      _caps = caps;
+      _blockedHere = blocked;
       _loaded = true;
     });
+    // on at once, off five seconds after the last change
+    _shotsHold.want(_shots.blocking);
+    _waiting.value = _waitersNow();
     final d = await appState.loadChatDisguise(
       widget.groupId,
       group: true,
       burner: g?['room_pub'] != null,
     );
     if (mounted) setState(() => _disguise = d);
+  }
+
+  // the members the block waits for, as the admin's sheet lists them
+  List<ShotsWaiter> _waitersNow() {
+    if (!_mayShots || !_shots.waiting) return const [];
+    return [
+      for (final m in groupShotsWaitsFor(_members, appState.sessionId, _caps))
+        ShotsWaiter(
+          id: m,
+          name: _contactOf(m)?.nickname ?? memberLabel(m),
+          named: _contactOf(m)?.nickname != null,
+          face: _contactOf(m)?.avatar,
+          blocked: _blockedHere.contains(m),
+        ),
+    ];
+  }
+
+  Future<void> _flipShots() async {
+    if (!_mayShots) return;
+    final on = !(_shotsNow ?? _shots.on);
+    HapticFeedback.selectionClick();
+    setState(() => _shotsNow = on);
+    // this phone's own tap: at once either way
+    _shotsHold.want(on, now: true);
+    await appState.setGroupShots(widget.groupId, on);
+    await _load();
+    if (!mounted) return;
+    _shotsHold.want(_shots.blocking, now: true);
+    setState(() => _shotsNow = null);
+  }
+
+  Future<void> _openWaiting() async {
+    final id = await showShotsWaiting(context, _waiting);
+    if (id == null || !mounted || !_members.contains(id)) return;
+    await _confirmRemove(id);
   }
 
   // remembered in the container that holds the group
@@ -267,11 +378,39 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       showHaloToast(context, l10n.groupInfoNoContactsToAdd);
       return;
     }
+    // while the block is on, someone whose app cannot yet says so. one
+    // that will not read is as not known
+    Map<String, Set<String>>? caps;
+    if (_shots.on && !sessionQuiet) {
+      try {
+        caps = await session.groupDb(widget.groupId).capsOfPeople([
+          for (final c in available) c.haloId,
+        ]);
+      } catch (e) {
+        caps = const {};
+      }
+    }
+    if (!mounted) return;
+    final cantYet = {
+      if (caps != null)
+        for (final c in available)
+          if (!groupShotsCan(caps, c.haloId)) c.haloId,
+    };
     final picked = await showHaloSheet<Set<String>>(
       context,
       scroll: true,
-      builder: (c) => _AddMemberSheet(available: available),
+      builder: (c) => _AddMemberSheet(available: available, cantYet: cantYet),
     );
+    if (picked != null && picked.isNotEmpty && picked.any(cantYet.contains)) {
+      if (!mounted) return;
+      final ok = await showConfirmSheet(
+        context,
+        title: l10n.groupShotsAddTitle,
+        line: l10n.groupShotsAddPauses,
+        yes: l10n.commonAdd,
+      );
+      if (!ok) return;
+    }
     if (picked != null && picked.isNotEmpty) {
       try {
         await appState.addMembersToGroup(widget.groupId, picked.toList());
@@ -461,6 +600,10 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       line: _ended
           ? l10n.groupInfoDeleteGroupLine
           : leaveLine(room: _isRoom, admin: _isAdmin),
+      // nobody can change it once its admin has gone
+      detail: !_ended && !_isRoom && _mayShots && _shots.on
+          ? l10n.groupShotsLeaveStays
+          : null,
       yes: _ended ? l10n.commonDelete : l10n.groupInfoLeave,
     );
     if (ok == true) {
@@ -656,6 +799,8 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   label: l10n.groupInfoWallpaper,
                   onTap: _pickAtmosphere,
                 ),
+                // a group's: its admin's switch, read only for the rest
+                if (!_isRoom && !_roomAtOpen) _shotsRow(),
                 // always on in a room, on every phone in it
                 if (_isRoom || _roomAtOpen)
                   HaloRow(
@@ -800,6 +945,59 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
           ),
         ]),
       ),
+    );
+  }
+
+  // the block's row, and under it the admin's way to who it waits for
+  Widget _shotsRow() {
+    final on = _shotsNow ?? _shots.on;
+    // a tap shows where it lands before the write is back
+    final shown = _shotsNow == null
+        ? _shots
+        : GroupShots(
+            on: on,
+            all: groupShotsAll(_members, appState.sessionId, _caps),
+            quiet: _shots.quiet,
+            known: true,
+          );
+    final waits = _waiting.value.length;
+    final admin = _mayShots || (_isAdmin && !_loaded);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        HaloRow(
+          icon: Icons.phonelink_lock_outlined,
+          label: l10n.chatBlockScreenshots,
+          hint: groupShotsHint(shown, admin: admin),
+          toggled: on,
+          pending: !_loaded,
+          onTap: _mayShots && _shotsNow == null ? _flipShots : null,
+        ),
+        EaseSize(
+          child: FadeSwap(
+            child: _mayShots && _shotsNow == null && shown.waiting && waits > 0
+                ? Column(
+                    key: const ValueKey('waiting'),
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(start: 58),
+                        child: Container(height: 0.5, color: HaloColors.line),
+                      ),
+                      HaloRow(
+                        icon: Icons.hourglass_empty_rounded,
+                        label: l10n.groupShotsWaitingFor(waits),
+                        onTap: _openWaiting,
+                      ),
+                    ],
+                  )
+                : const SizedBox(
+                    key: ValueKey('no-waiting'),
+                    width: double.infinity,
+                  ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1123,7 +1321,9 @@ class _MembersWaiting extends StatelessWidget {
 
 class _AddMemberSheet extends StatefulWidget {
   final List<ContactPreview> available;
-  const _AddMemberSheet({required this.available});
+  // people whose app cannot block screenshots in groups yet
+  final Set<String> cantYet;
+  const _AddMemberSheet({required this.available, this.cantYet = const {}});
   @override
   State<_AddMemberSheet> createState() => _AddMemberSheetState();
 }
@@ -1168,6 +1368,9 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                   child: ContactPickRow(
                     contact: c,
                     picked: picked,
+                    note: widget.cantYet.contains(c.haloId)
+                        ? l10n.groupShotsCantYet
+                        : null,
                     onTap: () {
                       HapticFeedback.selectionClick();
                       setState(() {

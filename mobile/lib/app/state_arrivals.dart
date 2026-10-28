@@ -396,7 +396,8 @@ extension AppStateArrivals on AppState {
       return to;
     }
     await _takeShots(senderHaloId, env, db);
-    await _takeCaps(senderHaloId, env, db);
+    final capsMoved = await _takeCaps(senderHaloId, env, db);
+    await _memberCaps(senderHaloId, env, db, oneToOneMoved: capsMoved);
     // delivery receipt, handled before the stranger gate and dedup so an ack
     // is never treated as a message or counted toward the cap. it leaves
     // back-paired alone: that flag lifts the sender-side cap, and a stranger
@@ -464,6 +465,11 @@ extension AppStateArrivals on AppState {
     // show them, this one shows the end itself
     if (env.endNotice) {
       dlog('group: an end notice, dropped');
+      return to;
+    }
+    // and so are its words on a block this version reads for itself
+    if (env.shotsNudge) {
+      dlog('group: a shots notice, dropped');
       return to;
     }
     if (await _endRefuses(senderHaloId, env.groupId, env, db)) return to;
@@ -776,6 +782,12 @@ extension AppStateArrivals on AppState {
           await refreshContacts();
         }
       }
+    }
+    // the admin's word on the group's screenshot block heals as the
+    // roster does, from the admin alone
+    final heard = env.groupShots;
+    if (isGroup && heard != null && !support.on) {
+      await _takeGroupShots(env.groupId!, senderHaloId, heard, db);
     }
     // stranger lock + proof-of-work gate (1:1 only, unaccepted senders).
     // a sender a friend introduced is not a stranger: no pow, no cap. they
@@ -1192,7 +1204,6 @@ extension AppStateArrivals on AppState {
     }
     // past the gates: what it says of their phone is kept on their own row
     await _takeOpus(senderHaloId, env, db);
-    await _takeDrops(senderHaloId, env, db);
     await db.saveMessage(
       senderHaloId,
       'in',
@@ -1317,10 +1328,9 @@ extension AppStateArrivals on AppState {
         await _wipeAgain(env.groupId!, db);
         return to;
       }
-      // a room always blocks: not even its name in the shade
-      notifTitle = g?['room_pub'] != null
-          ? 'Kryfo'
-          : (g?['name'] as String?) ?? l10n.appGroup2;
+      // a room always blocks, a group may: not even its name in the shade
+      final hush = GroupShots.ofRow(g).blocking;
+      notifTitle = hush ? 'Kryfo' : (g?['name'] as String?) ?? l10n.appGroup2;
       final gBody = sticker != null
           ? l10n.stickerLabel
           : env.poll != null && PollSpec.parse(env.poll) != null
@@ -1334,10 +1344,8 @@ extension AppStateArrivals on AppState {
       final who = looksLikeRoomKey(senderHaloId)
           ? l10n.notificationsSomeone
           : named;
-      // a room always blocks: none of it in the shade
-      notifBody = g?['room_pub'] != null
-          ? l10n.notificationsNewMessage
-          : '$who: $gBody';
+      // none of it in the shade either
+      notifBody = hush ? l10n.notificationsNewMessage : '$who: $gBody';
       notifPayload = 'group:${env.groupId}';
       suppress = reading;
     } else if (!senderAccepted) {
