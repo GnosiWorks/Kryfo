@@ -7,6 +7,7 @@ import 'dart:convert';
 
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/devchat/dev_frame.dart';
+import 'package:kryfo/file_drop.dart' show DropFrame, kDropHost;
 import 'package:kryfo/media_resend.dart' show NeedFrame;
 import 'package:kryfo/message_envelope.dart';
 
@@ -147,6 +148,14 @@ final frameParams = <String, Object>{
   'endNotice': true,
   'writtenAt': 1791393419123,
   'album': const AlbumTag('0123456789abcdef', 4, 1),
+  'drop': DropFrame(
+    host: kDropHost,
+    id: 'ab' * 16,
+    key: 'cd' * 32,
+    size: 100000,
+    chunks: 2,
+    token: 'ef' * 32,
+  ),
 };
 
 // the parameters whose frames never go to him
@@ -160,6 +169,7 @@ const neverParams = {
   'vote',
   'pollClose',
   'endNotice',
+  'drop',
 };
 
 T? _param<T>(Set<String> on, String k) =>
@@ -206,6 +216,7 @@ Future<String> buildFrame(Set<String> on, {String m = 'hello marios'}) =>
       endNotice: on.contains('endNotice'),
       writtenAt: _param(on, 'writtenAt'),
       album: _param(on, 'album'),
+      drop: _param(on, 'drop'),
     );
 
 // the frames the app's own code builds, as each call site builds them
