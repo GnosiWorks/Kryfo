@@ -162,6 +162,7 @@ import 'l10n/numbers.dart';
 import 'l10n/app_locale.dart';
 import 'widgets/shift_tap_guard.dart';
 import 'wire_pad.dart';
+import 'typing.dart';
 
 part 'app/arrivals.dart';
 part 'app/boot.dart';
@@ -212,6 +213,7 @@ part 'app/state_refresh.dart';
 part 'app/state_rooms.dart';
 part 'app/state_route.dart';
 part 'app/state_screen.dart';
+part 'app/state_typing.dart';
 part 'app/state_search.dart';
 part 'app/state_session.dart';
 part 'app/state_vault.dart';

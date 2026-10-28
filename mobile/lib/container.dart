@@ -268,6 +268,7 @@ const containerKeys = {
   'kryfo.intro.accept',
   'kryfo.intro.sent',
   'kryfo.scamshield.on',
+  'kryfo.typing.on',
   'kryfo.gif.on',
   'kryfo.gif.asked',
   'kryfo.update.on',

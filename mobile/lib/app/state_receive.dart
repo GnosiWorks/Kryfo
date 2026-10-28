@@ -449,6 +449,11 @@ extension AppStateReceive on AppState {
       }
       if (known != null) {
         final env = unwrapMessage(known.plain);
+        // a typing frame shows or goes: no row, no seen hash, no ring
+        if (env.typing) {
+          await _typingCame(known.id, env);
+          continue;
+        }
         try {
           shown = AppState._shown(
             await _applyIncomingPayload(
@@ -467,6 +472,8 @@ extension AppStateReceive on AppState {
       }
       if (!handled) {
         final parked = await _openParked(cipher);
+        // nobody is filed again on a typing frame
+        if (parked != null && unwrapMessage(parked.plain).typing) continue;
         if (parked != null) {
           final addr = parked.id;
           final env = unwrapMessage(parked.plain);
@@ -619,6 +626,8 @@ extension AppStateReceive on AppState {
     firstFails.clear();
     _dropEarly();
     _openedEpoch++;
+    // and who was typing, in a session that is no longer the one on screen
+    _typingClear();
   }
 
   void _keepOpened(
