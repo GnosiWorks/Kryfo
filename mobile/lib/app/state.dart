@@ -102,6 +102,11 @@ class AppState extends ChangeNotifier {
       _cardCame(peer);
       unawaited(drainOutbox());
     };
+    // a frame too big for an opener on a session nothing went out on yet:
+    // the empty envelope goes first, so they hear of it and can answer
+    signalSession.onStarterNeeded = (peer) => unawaited(_sendStarter(peer));
+    // their session started again (a heal, a restore): answered at once
+    signalSession.onNewSession = (peer) => unawaited(_answerNewSession(peer));
   }
 
   // signal, the engine and android, as the receive side reaches them
@@ -184,6 +189,8 @@ class AppState extends ChangeNotifier {
   // people a seal to waits on their card, after a restore: the outbox and
   // the chat hold their texts as going, not failed
   final Set<String> _waitingCard = {};
+  // peers a small opener is on its way to, ahead of a waiting frame
+  final Set<String> _startersGoing = {};
 
   // a known peer's key moved: the banner goes on their row wherever it is.
   // one a shut vault holds is sealed to it and lands as it opens, so the

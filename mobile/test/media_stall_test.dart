@@ -339,8 +339,8 @@ void main() {
     expect(rowsOf('v-stop').single['sent'], 0);
   });
 
-  test('a note to someone who has not answered a post-quantum session yet '
-      'waits, nothing sent, and goes once their first message opens', () async {
+  test('a voice note sent first, with no hi, arrives: a small opener goes '
+      'ahead of it, and it goes once their answer opens', () async {
     const p2 = 'amber-quiet-new';
     final pair = testKeyPair();
     final them2 = SignalSession();
@@ -387,11 +387,17 @@ void main() {
       progressKey: p2,
     );
     expect(r, 'parked');
-    expect(wire.went, isEmpty);
-    // a small first message goes, they read it and answer
-    final hi = await signalSession.encryptTo(p2, '{"m":"hi"}');
-    final w = base64Decode(hi);
-    await them2.open(_me, w[0], Uint8List.sublistView(w, 1));
+    // the empty envelope went ahead of it, as an opener, with who it is
+    // from: what their request card shows
+    await _until(() => wire.went.length == 1);
+    final starter = wire.went.single;
+    expect(base64Decode(starter)[0], kLsPreKey);
+    final hello = await _read(them2, starter);
+    expect(hello.message, isEmpty);
+    expect(hello.msgUid, isNull);
+    expect(hello.senderHaloId, _me);
+    wire.went.clear();
+    // their answer to it releases the note
     expect(
       await signalDecrypt(p2, await them2.encryptTo(_me, '{"m":"hey"}')),
       isNotNull,
@@ -400,5 +406,37 @@ void main() {
     final read = [for (final c in wire.went) await _read(them2, c)];
     expect(read, isNotEmpty);
     expect(read.every((m) => m.msgUid == 'v-wait'), isTrue);
+    // one small opener, not one per try
+    expect(
+      [for (final c in wire.went) base64Decode(c)[0]].every((t) => t == 2),
+      isTrue,
+    );
+  });
+
+  test('a contact who started their session again is answered at once, so '
+      'what they hold for the answer can go', () async {
+    // them, rebuilt (a restore, a heal): a new session from this card
+    final pair = testKeyPair();
+    final again = SignalSession();
+    await again.bootstrap(
+      database: MemDb(),
+      xPubBytes: pair.publicKey.serialize().sublist(1),
+      xPrivBytes: pair.privateKey.serialize(),
+    );
+    await again.processBundle(
+      _me,
+      cardBundle(await makePreKeyBundleB64(signalSession)),
+    );
+    final opener = await again.encryptTo(_me, '{"m":"back again"}');
+    expect(base64Decode(opener)[0], kLsPreKey);
+    wire.went.clear();
+    expect(await signalDecrypt(_peer, opener, flagKeyChange: true), isNotNull);
+    await _until(() => wire.went.length == 1);
+    final w = base64Decode(wire.went.single);
+    expect(w[0], kLsWhisper);
+    final plain = await again.open(_me, w[0], Uint8List.sublistView(w, 1));
+    expect(unwrapMessage(utf8.decode(plain)).message, isEmpty);
+    // and their side is answered now: plain from here on
+    expect(await again.settled(_me), isTrue);
   });
 }

@@ -213,6 +213,17 @@ class SignalSession {
   // peers a frame waits on: too big for an opener, it goes once they answer
   final Set<String> _awaiting = {};
 
+  // the session each peer had a post-quantum opener sealed on, by base key
+  final Map<String, String> _openerOut = {};
+
+  /// told when a frame waits for [peer]'s answer on a session nothing has
+  /// gone out on yet: a small opener has to go first
+  void Function(String peer)? onStarterNeeded;
+
+  /// told when an opener from [peer] built a new session here under their
+  /// own name: a rebuilt or restarted one, which an answer settles for them
+  void Function(String peer)? onNewSession;
+
   /// told when [peer]'s first message opened on a session a frame was
   /// waiting on: what waited goes now
   void Function(String peer)? onAnswered;
@@ -403,10 +414,17 @@ class SignalSession {
       // so it lands where a plain message does. one too big for that waits
       // for their first answer, then goes plain
       final o = padSealOpener(plain);
+      final base = _baseOf(lib.sessionInfo(record).current);
       if (o == null) {
         _awaiting.add(peer);
+        // nothing has gone on this session yet: a small opener goes first,
+        // or nobody hears of it and no answer can come
+        if (base != null && _openerOut[peer] != base) {
+          onStarterNeeded?.call(peer);
+        }
         throw WaitsForAnswer(peer);
       }
+      if (base != null) _openerOut[peer] = base;
       padded = o;
     } else {
       padded = padSeal(plain);
@@ -552,6 +570,9 @@ class SignalSession {
     });
     if (changed) moved?.call();
     _answered(peer);
+    if (!known && held != null && peer != kFirstContactSlot) {
+      onNewSession?.call(peer);
+    }
     return o.plaintext;
   });
 
