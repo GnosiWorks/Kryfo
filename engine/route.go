@@ -712,7 +712,13 @@ var netValveTry func()
 
 func init() { netValveTry = valveTryTor }
 
+// valve tries still going, so a test can see one out before it puts back
+// what the try reads
+var valveTries atomic.Int32
+
 func valveTryTor() {
+	valveTries.Add(1)
+	defer valveTries.Add(-1)
 	if !netValveOpen.CompareAndSwap(false, true) {
 		return
 	}

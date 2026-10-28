@@ -127,14 +127,15 @@ func fileGone(path string) bool {
 
 // where a receive address keeps the ids it has seen and how far it got
 func addressFiles(rcvPk string) (seenPath, lastPath string) {
-	if savedDataDir == "" {
+	dir := savedDataDir()
+	if dir == "" {
 		return "", ""
 	}
 	short := rcvPk
 	if len(short) > 16 {
 		short = short[:16]
 	}
-	return savedDataDir + "/nostr_seen_" + short, savedDataDir + "/nostr_last_" + short
+	return dir + "/nostr_seen_" + short, dir + "/nostr_last_" + short
 }
 
 // the files of a receive address, off the disk and never written again by

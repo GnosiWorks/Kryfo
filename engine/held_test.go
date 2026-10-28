@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -155,11 +156,28 @@ func TestAnAckLeavesHeldPlacesOnTheRelay(t *testing.T) {
 func heldRun(t *testing.T, tag string, peer xid, rcv, ck string, how func(string) string) map[string]bool {
 	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
+	began := atomic.LoadInt64(&catchupStarted)
 	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
 	got := map[string]bool{}
 	quiet := time.Now()
-	end := time.Now().Add(6 * time.Second)
-	for time.Now().Before(end) && time.Since(quiet) < 1500*time.Millisecond {
+	// the poll holds the address while its walk is out, however long that
+	// takes on a slow machine: quiet counts once the walk began and ended
+	walked := func() bool {
+		nostrMu.Lock()
+		defer nostrMu.Unlock()
+		return atomic.LoadInt64(&catchupStarted) > began && walkingTags[tag] == 0
+	}
+	var over time.Time
+	for end := time.Now().Add(30 * time.Second); time.Now().Before(end); {
+		switch {
+		case !walked():
+			over = time.Time{}
+		case over.IsZero():
+			over = time.Now()
+		}
+		if !over.IsZero() && time.Since(over) >= 1500*time.Millisecond && time.Since(quiet) >= 1500*time.Millisecond {
+			break
+		}
 		if b := pollRaw(t); b.K != "" {
 			h, g := []int{}, []string{}
 			for i, e := range b.M {

@@ -75,7 +75,11 @@ func TestSubscriptionIDsPerConnection(t *testing.T) {
 	// here, what it does is tested on its own
 	oldSpread := kickSpread
 	kickSpread = time.Second
-	defer func() { kickSpread = oldSpread }()
+	defer func() {
+		cancel()
+		runnersGone(t)
+		kickSpread = oldSpread
+	}()
 	kickRelays()
 	for _, r := range []*relayStandIn{a, b} {
 		waitFor(t, "every socket asked", 15*time.Second, func() bool {

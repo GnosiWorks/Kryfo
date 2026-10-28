@@ -78,7 +78,10 @@ func shortTurns(t *testing.T) {
 	t.Helper()
 	old := subSpread
 	subSpread = 300 * time.Millisecond
-	t.Cleanup(func() { subSpread = old })
+	t.Cleanup(func() {
+		runnersGone(t)
+		subSpread = old
+	})
 	spendFirstTurn()
 }
 
@@ -663,7 +666,10 @@ func TestARoundChangeAsTheWaitBeginsIsNotMissed(t *testing.T) {
 			ownRelayFailed()
 		})
 	}
-	t.Cleanup(func() { sweepWaitHook = nil })
+	t.Cleanup(func() {
+		runnersGone(t)
+		sweepWaitHook = nil
+	})
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	runOn(ctx, in, inRcv)

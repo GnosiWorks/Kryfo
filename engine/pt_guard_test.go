@@ -5,7 +5,6 @@ package main
 // but tor, and what keeps one bad connection from taking the rest down
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -457,7 +456,7 @@ func TestSnowflakeOneClientPerLine(t *testing.T) {
 // the fork logs nothing: its lines would carry the broker, fronts and stun.
 // the engine's own lines say which phase snowflake is in, no more.
 func TestSnowflakeLogsNothing(t *testing.T) {
-	var buf bytes.Buffer
+	var buf logSink
 	old := log.Writer()
 	log.SetOutput(&buf)
 	t.Cleanup(func() { log.SetOutput(old) })
@@ -494,7 +493,7 @@ func TestSnowflakeEventsArrive(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var buf bytes.Buffer
+	var buf logSink
 	old := log.Writer()
 	log.SetOutput(&buf)
 	t.Cleanup(func() { log.SetOutput(old) })

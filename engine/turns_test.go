@@ -37,7 +37,10 @@ func measureStart(t *testing.T, spread time.Duration) (first, all time.Duration)
 	t.Helper()
 	old := subSpread
 	subSpread = spread
-	defer func() { subSpread = old }()
+	defer func() {
+		runnersGone(t)
+		subSpread = old
+	}()
 	relay := newRelayStandIn(t, 0)
 	useStandIns(t, modeFast, nil, relay)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -88,7 +91,10 @@ func TestTurnsSpreadTheStart(t *testing.T) {
 func TestATurnCountsAsACatchup(t *testing.T) {
 	old := subSpread
 	subSpread = time.Hour
-	defer func() { subSpread = old }()
+	defer func() {
+		runnersGone(t)
+		subSpread = old
+	}()
 	spendFirstTurn()
 	active, begun := atomic.LoadInt32(&catchupActive), atomic.LoadInt64(&catchupStarted)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -119,7 +125,10 @@ func TestATurnCountsAsACatchup(t *testing.T) {
 func TestOneTurnPerWake(t *testing.T) {
 	old := subSpread
 	subSpread = time.Hour
-	defer func() { subSpread = old }()
+	defer func() {
+		runnersGone(t)
+		subSpread = old
+	}()
 	quick := func(tn *subTurn) bool {
 		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 		defer cancel()
@@ -182,7 +191,10 @@ func TestOneTurnPerWake(t *testing.T) {
 func TestNoTurnStillCounts(t *testing.T) {
 	old := subSpread
 	subSpread = time.Hour
-	defer func() { subSpread = old }()
+	defer func() {
+		runnersGone(t)
+		subSpread = old
+	}()
 	ctx := context.Background()
 	base := settledActive(t)
 	firstTag.Store("peer-on-screen")
@@ -238,7 +250,10 @@ const (
 func TestTurnsFitACheckIn(t *testing.T) {
 	old, oldKick := subSpread, kickSpread
 	subSpread, kickSpread = time.Minute, time.Minute
-	defer func() { subSpread, kickSpread = old, oldKick }()
+	defer func() {
+		runnersGone(t)
+		subSpread, kickSpread = old, oldKick
+	}()
 	now := time.Date(2026, 10, 12, 12, 0, 0, 0, time.UTC)
 	oldNow := autoNow
 	autoNow = func() time.Time { return now }
@@ -362,7 +377,10 @@ func peakActive(run func()) int32 {
 func TestRealTurnsAndKicks(t *testing.T) {
 	old, oldKick := subSpread, kickSpread
 	subSpread, kickSpread = 2*time.Second, 8*time.Second
-	defer func() { subSpread, kickSpread = old, oldKick }()
+	defer func() {
+		runnersGone(t)
+		subSpread, kickSpread = old, oldKick
+	}()
 	relay := newRelayStandIn(t, 0)
 	useStandIns(t, modeFast, nil, relay)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -414,7 +432,10 @@ func TestRealTurnsAndKicks(t *testing.T) {
 func TestAParkedSocketCountsNothing(t *testing.T) {
 	oldKick := kickSpread
 	kickSpread = 50 * time.Millisecond
-	defer func() { kickSpread = oldKick }()
+	defer func() {
+		runnersGone(t)
+		kickSpread = oldKick
+	}()
 	socks := newSocksStandIn(t)
 	relay := newRelayStandIn(t, 0)
 	useStandIns(t, modePrivate, socks, relay)
@@ -453,7 +474,10 @@ func TestAParkedSocketCountsNothing(t *testing.T) {
 func TestAFreshAddressTakesNoFirstTurn(t *testing.T) {
 	old := subSpread
 	subSpread = time.Hour
-	defer func() { subSpread = old }()
+	defer func() {
+		runnersGone(t)
+		subSpread = old
+	}()
 	quick := func(tn *subTurn) bool {
 		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 		defer cancel()
@@ -485,7 +509,10 @@ func TestAFreshAddressTakesNoFirstTurn(t *testing.T) {
 func TestAFreshTurnHoldsOnlyRightAfterTheAdd(t *testing.T) {
 	old := subSpread
 	subSpread = time.Hour
-	defer func() { subSpread = old }()
+	defer func() {
+		runnersGone(t)
+		subSpread = old
+	}()
 	quick := func(tn *subTurn) bool {
 		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 		defer cancel()
@@ -533,7 +560,10 @@ func TestAFreshTurnHoldsOnlyRightAfterTheAdd(t *testing.T) {
 func TestAJustAddedAddressAsksAtOnce(t *testing.T) {
 	old := subSpread
 	subSpread = time.Hour
-	defer func() { subSpread = old }()
+	defer func() {
+		runnersGone(t)
+		subSpread = old
+	}()
 	relay := newRelayStandIn(t, 0)
 	useStandIns(t, modeFast, nil, relay)
 	kickRelays()
@@ -581,7 +611,10 @@ func TestAJustAddedAddressAsksAtOnce(t *testing.T) {
 func TestAnAddWhileOfflineAsksAtItsTurn(t *testing.T) {
 	old := subSpread
 	subSpread = time.Hour
-	defer func() { subSpread = old }()
+	defer func() {
+		runnersGone(t)
+		subSpread = old
+	}()
 	relay := newRelayStandIn(t, 0)
 	useStandIns(t, modeFast, nil, relay)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -608,7 +641,10 @@ func TestAnAddWhileOfflineAsksAtItsTurn(t *testing.T) {
 func TestAnAddWhileTorStartsAsksAtItsTurn(t *testing.T) {
 	old, oldWait := subSpread, torRetryWait
 	subSpread, torRetryWait = time.Hour, 200*time.Millisecond
-	defer func() { subSpread, torRetryWait = old, oldWait }()
+	defer func() {
+		runnersGone(t)
+		subSpread, torRetryWait = old, oldWait
+	}()
 	socks := newSocksStandIn(t)
 	relay := newRelayStandIn(t, 0)
 	useStandIns(t, modePrivate, socks, relay)
