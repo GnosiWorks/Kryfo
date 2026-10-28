@@ -18,7 +18,7 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
-class _Toy implements VaultCrypto {
+class ToyVaultCrypto implements VaultCrypto {
   @override
   Future<String?> keyOf(String passphrase, Uint8List salt, int logN) async =>
       sha256.convert([...passphrase.codeUnits, ...salt]).toString();
@@ -90,7 +90,10 @@ void main() {
   group('prefs in the vault', () {
     late DesktopVault vault;
     setUp(() async {
-      vault = DesktopVault(p.join(tmp.path, 'vault.kv'), crypto: _Toy());
+      vault = DesktopVault(
+        p.join(tmp.path, 'vault.kv'),
+        crypto: ToyVaultCrypto(),
+      );
       SharedPreferencesStorePlatform.instance = VaultPrefs(vault);
     });
 
@@ -110,7 +113,10 @@ void main() {
       await prefs.setDouble('d', 1.5);
       await prefs.setString('route', 'bridges');
       await prefs.setStringList('list', ['a', 'b']);
-      final again = DesktopVault(p.join(tmp.path, 'vault.kv'), crypto: _Toy());
+      final again = DesktopVault(
+        p.join(tmp.path, 'vault.kv'),
+        crypto: ToyVaultCrypto(),
+      );
       expect(await again.open(_pass), isTrue);
       SharedPreferencesStorePlatform.instance = VaultPrefs(again);
       SharedPreferences.resetStatic();
@@ -141,7 +147,7 @@ void main() {
 
   test('the start refuses storage that is not the vault', () {
     expect(assertVaultOnly, throwsStateError);
-    final v = DesktopVault(p.join(tmp.path, 'v.kv'), crypto: _Toy());
+    final v = DesktopVault(p.join(tmp.path, 'v.kv'), crypto: ToyVaultCrypto());
     FlutterSecureStoragePlatform.instance = VaultStorage(v);
     SharedPreferencesStorePlatform.instance = VaultPrefs(v);
     expect(assertVaultOnly, returnsNormally);
