@@ -29,7 +29,10 @@ const kVaultMinLength = 12;
 const kVaultLogN = 17;
 
 const _magic = [0x4b, 0x52, 0x59, 0x56]; // KRYV
-const _version = 2;
+const _version = 3;
+
+/// the file's size steps: how much is kept shows only to the nearest step
+const kVaultBucket = 16 * 1024;
 const _saltLen = 16;
 const _freshLen = 32;
 // magic, version, cost, salt, fresh bytes
@@ -137,6 +140,27 @@ class VaultLocked implements Exception {
   const VaultLocked();
   @override
   String toString() => 'VaultLocked';
+}
+
+/// [body] with its length in front and zeros after, so that [around] bytes
+/// more make a whole number of steps
+@visibleForTesting
+Uint8List padded(List<int> body, int around) {
+  final need = 4 + body.length + around;
+  final total = (need + kVaultBucket - 1) ~/ kVaultBucket * kVaultBucket;
+  final out = Uint8List(total - around);
+  ByteData.sublistView(out).setUint32(0, body.length);
+  out.setRange(4, 4 + body.length, body);
+  return out;
+}
+
+/// what [padded] put in
+@visibleForTesting
+Uint8List unpadded(Uint8List p) {
+  if (p.length < 4) throw const FormatException('short');
+  final n = ByteData.sublistView(p).getUint32(0);
+  if (4 + n > p.length) throw const FormatException('length');
+  return Uint8List.sublistView(p, 4, 4 + n);
 }
 
 /// how the sealed bytes reach the disk, behind a seam so a test can make
@@ -267,7 +291,7 @@ class DesktopVault {
     }
     final Object? m;
     try {
-      m = jsonDecode(utf8.decode(plain));
+      m = jsonDecode(utf8.decode(unpadded(plain)));
     } catch (_) {
       return false;
     } finally {
@@ -337,7 +361,7 @@ class DesktopVault {
 
   void _persist(Map<String, String> m) {
     final fresh = _bytes(_freshLen);
-    final plain = Uint8List.fromList(utf8.encode(jsonEncode(m)));
+    final plain = padded(utf8.encode(jsonEncode(m)), _head + 16);
     final Uint8List sealed;
     try {
       sealed = _crypto.seal(_fileKey(fresh), plain);
