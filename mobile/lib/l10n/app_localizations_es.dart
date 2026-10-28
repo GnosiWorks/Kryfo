@@ -5336,6 +5336,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsTypingOnionOnly => 'Disponible en la ruta Onion';
 
   @override
+  String get settingsTypingBridgesOff =>
+      'Desactivado mientras se usan puentes: alguien que vigile tu conexión podría cruzar las señales de escritura. Vuelve solo cuando dejas de usar puentes.';
+
+  @override
   String get settingsLightTheme => 'Tema claro';
 
   @override

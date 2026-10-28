@@ -5323,6 +5323,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsTypingOnionOnly => 'Disponível na rota Onion';
 
   @override
+  String get settingsTypingBridgesOff =>
+      'Desligado enquanto você usa pontes: quem observa sua conexão poderia cruzar os sinais de digitação. Volta sozinho quando as pontes forem desligadas.';
+
+  @override
   String get settingsLightTheme => 'Tema claro';
 
   @override

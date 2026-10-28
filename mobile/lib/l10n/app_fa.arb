@@ -1510,6 +1510,7 @@
   "settingsTypingIndicator": "نشانگر نوشتن",
   "settingsTypingIndicatorHint": "هر دو می‌بینید کِی دیگری در حال نوشتن است. این نشانه مستقیم از راه Tor به او می‌رسد و هرگز از رله نمی‌گذرد.",
   "settingsTypingOnionOnly": "در مسیر Onion در دسترس است",
+  "settingsTypingBridgesOff": "تا وقتی از پل‌ها استفاده می‌شود خاموش است: کسی که اتصالت را زیر نظر دارد می‌تواند نشانه‌های نوشتن را با هم تطبیق دهد. با خاموش شدن پل‌ها خودش برمی‌گردد.",
   "settingsLightTheme": "پوسته‌ی روشن",
   "settingsSameProtectionBrighter": "همان محافظت، روشن‌تر",
   "settingsAppearance": "ظاهر",

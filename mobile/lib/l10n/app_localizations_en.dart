@@ -5283,6 +5283,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTypingOnionOnly => 'Available on the Onion route';
 
   @override
+  String get settingsTypingBridgesOff =>
+      'Off while bridges are in use: someone watching your connection could match the typing signals. It comes back by itself when bridges are off.';
+
+  @override
   String get settingsLightTheme => 'Light theme';
 
   @override

@@ -5304,6 +5304,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsTypingOnionOnly => 'Onion rotasında kullanılabilir';
 
   @override
+  String get settingsTypingBridgesOff =>
+      'Köprüler kullanılırken kapalı: bağlantını izleyen biri yazıyor sinyallerini eşleştirebilir. Köprüler kapanınca kendiliğinden geri gelir.';
+
+  @override
   String get settingsLightTheme => 'Açık tema';
 
   @override

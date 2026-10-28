@@ -5349,6 +5349,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsTypingOnionOnly => 'Verfügbar auf der Onion-Route';
 
   @override
+  String get settingsTypingBridgesOff =>
+      'Aus, solange Brücken genutzt werden: Wer deine Verbindung beobachtet, könnte die Tippsignale zuordnen. Ohne Brücken ist es von selbst wieder an.';
+
+  @override
   String get settingsLightTheme => 'Helles Design';
 
   @override

@@ -273,8 +273,10 @@ class ArrivalIo implements AppIo {
   final typingSeals = <String>[];
   String? typingRefuse;
   String typingAnswer = 'ok';
+  void Function()? onTypingSeal;
   @override
   Future<String> typingSeal(String peer, String plain) async {
+    onTypingSeal?.call();
     switch (typingRefuse) {
       case 'held':
         throw KeyHeld(peer);
@@ -2134,6 +2136,7 @@ class ArrivalRows implements HaloDb {
 
   // what a contact's phone understands, as typing.dart keeps it
   var capsWrites = 0;
+  void Function()? onTakeCaps;
   @override
   Future<bool> takeCaps(
     String peer, {
@@ -2142,6 +2145,7 @@ class ArrivalRows implements HaloDb {
     int? written,
   }) async {
     _hit('takeCaps', peer, null);
+    onTakeCaps?.call();
     final r = people[peer];
     if (r == null || r['accepted'] != 1) return false;
     final next = capsAfter(

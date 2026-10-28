@@ -1510,6 +1510,7 @@
   "settingsTypingIndicator": "Tippanzeige",
   "settingsTypingIndicatorHint": "Ihr seht beide, wenn die andere Person schreibt. Das geht direkt über Tor, nie über ein Relay.",
   "settingsTypingOnionOnly": "Verfügbar auf der Onion-Route",
+  "settingsTypingBridgesOff": "Aus, solange Brücken genutzt werden: Wer deine Verbindung beobachtet, könnte die Tippsignale zuordnen. Ohne Brücken ist es von selbst wieder an.",
   "settingsLightTheme": "Helles Design",
   "settingsSameProtectionBrighter": "Gleicher Schutz, heller",
   "settingsAppearance": "Darstellung",

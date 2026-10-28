@@ -5374,6 +5374,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsTypingOnionOnly => 'متاح على مسار Onion';
 
   @override
+  String get settingsTypingBridgesOff =>
+      'مُعطَّل ما دامت الجسور قيد الاستخدام: من يراقب اتصالك قد يطابق إشارات الكتابة. يعود من تلقاء نفسه عند إيقاف الجسور.';
+
+  @override
   String get settingsLightTheme => 'المظهر الفاتح';
 
   @override

@@ -1510,6 +1510,7 @@
   "settingsTypingIndicator": "Indicateur de saisie",
   "settingsTypingIndicatorHint": "Vous voyez tous les deux quand l’autre écrit. L’info part directement par Tor, jamais par un relais.",
   "settingsTypingOnionOnly": "Disponible sur la route Onion",
+  "settingsTypingBridgesOff": "Désactivé tant que des ponts sont utilisés : quelqu’un qui surveille votre connexion pourrait recouper les signaux de saisie. Il revient tout seul quand les ponts sont coupés.",
   "settingsLightTheme": "Thème clair",
   "settingsSameProtectionBrighter": "Même protection, plus lumineux",
   "settingsAppearance": "Apparence",

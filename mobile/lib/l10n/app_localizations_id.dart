@@ -5286,6 +5286,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsTypingOnionOnly => 'Tersedia di rute Onion';
 
   @override
+  String get settingsTypingBridgesOff =>
+      'Mati selama jembatan dipakai: orang yang mengawasi koneksimu bisa mencocokkan sinyal mengetik. Menyala lagi sendiri saat jembatan dimatikan.';
+
+  @override
   String get settingsLightTheme => 'Tema terang';
 
   @override

@@ -5297,6 +5297,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsTypingOnionOnly => 'در مسیر Onion در دسترس است';
 
   @override
+  String get settingsTypingBridgesOff =>
+      'تا وقتی از پل‌ها استفاده می‌شود خاموش است: کسی که اتصالت را زیر نظر دارد می‌تواند نشانه‌های نوشتن را با هم تطبیق دهد. با خاموش شدن پل‌ها خودش برمی‌گردد.';
+
+  @override
   String get settingsLightTheme => 'پوسته‌ی روشن';
 
   @override

@@ -5281,6 +5281,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsTypingOnionOnly => 'Có trên tuyến Onion';
 
   @override
+  String get settingsTypingBridgesOff =>
+      'Tắt khi đang dùng cầu nối: ai theo dõi kết nối của bạn có thể khớp các tín hiệu đang nhập. Tự bật lại khi tắt cầu nối.';
+
+  @override
   String get settingsLightTheme => 'Giao diện sáng';
 
   @override

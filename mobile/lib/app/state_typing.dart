@@ -9,6 +9,17 @@ extension AppStateTyping on AppState {
 
   bool get typingOn => typing.on;
 
+  /// tor goes through a bridge, picked or found by automatic: typing is
+  /// off then, as a network that needs one may be watched closely enough
+  /// to match its signals. it comes back by itself when bridges are off
+  bool get typingBridged =>
+      _sendMode == 'private' && (manualBridge || _bridgeStatus.throughBridge);
+
+  // bridges came into use: what shows goes at once
+  void _typingBridgesMoved() {
+    if (typingBridged) _typingClear();
+  }
+
   @visibleForTesting
   set inFrontForTest(bool v) => _inFront = v;
 
@@ -33,6 +44,17 @@ extension AppStateTyping on AppState {
     if (!on) _typingClear();
   }
 
+  // what may change while a typing frame is sealed or read: the session,
+  // the lock, the decoy, the app's place on screen, the switch, the route
+  bool _typingStill(int epoch) =>
+      epoch == _openedEpoch &&
+      typing.on &&
+      _sendMode == 'private' &&
+      !lockState.locked &&
+      !inDecoyView &&
+      !typingBridged &&
+      _inFront;
+
   void _typingLockMoved() {
     if (lockState.locked) _typingClear();
   }
@@ -52,6 +74,7 @@ extension AppStateTyping on AppState {
     if (inDecoyView || _sendMode != 'private' || !_inFront) return;
     final owner = _ownerOf(peer);
     final key = owner.container.chatKey(peer);
+    final epoch = _openedEpoch;
     if (!typing.pacer.take(key, peer: peer)) return;
     var tried = false;
     var ok = false;
@@ -77,14 +100,17 @@ extension AppStateTyping on AppState {
         linkUp: linkUp,
         userEdit: userEdit,
         nonEmpty: nonEmpty,
+        bridges: typingBridged,
+        archived: row?['archived'] == 1,
       );
       if (!typingMaySend(facts)) return;
       final cipher = await _io.typingSeal(
         peer,
         wrapTyping(writtenAt: DateTime.now().millisecondsSinceEpoch),
       );
-      // the route may have moved while it sealed
-      if (_sendMode != 'private') return;
+      // a lock, a decoy, the back or another route may have come while it
+      // sealed: then it stays here
+      if (!_typingStill(epoch) || !readingIn(peer, owner.container)) return;
       tried = true;
       ok = await _io.typingSend(onion, cipher) == 'ok';
     } on KeyHeld {
@@ -106,6 +132,7 @@ extension AppStateTyping on AppState {
   /// shows, or it is dropped; either way nothing is written of it but what
   /// it says their phone understands, and that only when it changed
   Future<void> _typingCame(String peer, UnwrappedMessage env) async {
+    final epoch = _openedEpoch;
     try {
       final to = _routeOf(peer, env.groupId);
       final db = switch (to) {
@@ -131,11 +158,17 @@ extension AppStateTyping on AppState {
         group: env.groupId != null,
         written: env.writtenAt,
         floor: typing.board.floorOf(key),
+        bridges: typingBridged,
+        archived: row['archived'] == 1,
       );
       if (facts.contact && !facts.blocked && !facts.group) {
         await _takeCaps(peer, env, db);
       }
-      if (typingMayShow(facts)) typing.board.heard(key);
+      // and again after the reads: a lock that came meanwhile cleared the
+      // board already, and nothing sets it again behind the lock
+      if (typingMayShow(facts) && _typingStill(epoch)) {
+        typing.board.heard(key);
+      }
     } catch (e) {
       dlog('typing: not read (${e.runtimeType})');
     }

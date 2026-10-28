@@ -1510,6 +1510,7 @@
   "settingsTypingIndicator": "輸入狀態提示",
   "settingsTypingIndicatorHint": "對方在輸入時，你們雙方都看得到。提示經 Tor 直接傳給對方，從不經過中繼。",
   "settingsTypingOnionOnly": "在 Onion 路線上可用",
+  "settingsTypingBridgesOff": "使用橋接時關閉：監視你連線的人可能會對上輸入提示的訊號。關閉橋接後會自動恢復。",
   "settingsLightTheme": "淺色主題",
   "settingsSameProtectionBrighter": "同樣的防護，更明亮",
   "settingsAppearance": "外觀",

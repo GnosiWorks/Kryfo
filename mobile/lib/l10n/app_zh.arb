@@ -1510,6 +1510,7 @@
   "settingsTypingIndicator": "输入状态提示",
   "settingsTypingIndicatorHint": "对方在输入时，你们双方都能看到。提示经 Tor 直接发给对方，从不经过中继。",
   "settingsTypingOnionOnly": "在 Onion 线路上可用",
+  "settingsTypingBridgesOff": "使用网桥时关闭：监视你连接的人可能会对上输入提示的信号。关闭网桥后会自动恢复。",
   "settingsLightTheme": "浅色主题",
   "settingsSameProtectionBrighter": "同样的保护，更明亮",
   "settingsAppearance": "外观",

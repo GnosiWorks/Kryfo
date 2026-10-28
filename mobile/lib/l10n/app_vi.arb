@@ -1510,6 +1510,7 @@
   "settingsTypingIndicator": "Báo đang nhập",
   "settingsTypingIndicatorHint": "Cả hai đều thấy khi người kia đang nhập. Tín hiệu đi thẳng tới họ qua Tor, không bao giờ qua máy chuyển tiếp.",
   "settingsTypingOnionOnly": "Có trên tuyến Onion",
+  "settingsTypingBridgesOff": "Tắt khi đang dùng cầu nối: ai theo dõi kết nối của bạn có thể khớp các tín hiệu đang nhập. Tự bật lại khi tắt cầu nối.",
   "settingsLightTheme": "Giao diện sáng",
   "settingsSameProtectionBrighter": "Vẫn bảo vệ như vậy, sáng hơn",
   "settingsAppearance": "Giao diện",

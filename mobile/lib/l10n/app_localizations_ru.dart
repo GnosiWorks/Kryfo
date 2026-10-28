@@ -5397,6 +5397,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsTypingOnionOnly => 'Доступно на маршруте Onion';
 
   @override
+  String get settingsTypingBridgesOff =>
+      'Выключено, пока используются мосты: тот, кто следит за вашим соединением, мог бы сопоставить сигналы набора. Включится само, когда мосты отключены.';
+
+  @override
   String get settingsLightTheme => 'Светлая тема';
 
   @override

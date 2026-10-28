@@ -1510,6 +1510,7 @@
   "settingsTypingIndicator": "Індикатор набору",
   "settingsTypingIndicatorHint": "Ви обоє бачите, коли співрозмовник друкує. Це йде до нього напряму через Tor, ніколи через ретранслятор.",
   "settingsTypingOnionOnly": "Доступно на маршруті Onion",
+  "settingsTypingBridgesOff": "Вимкнено, поки використовуються мости: той, хто стежить за вашим з’єднанням, міг би зіставити сигнали набору. Увімкнеться саме, коли мости вимкнено.",
   "settingsLightTheme": "Світла тема",
   "settingsSameProtectionBrighter": "Той самий захист, але світліше",
   "settingsAppearance": "Вигляд",

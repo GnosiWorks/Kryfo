@@ -23,7 +23,11 @@ TypingSendFacts send({
   bool linkUp = true,
   bool userEdit = true,
   bool nonEmpty = true,
+  bool bridges = false,
+  bool archived = false,
 }) => TypingSendFacts(
+  bridges: bridges,
+  archived: archived,
   switchOn: switchOn,
   decoy: decoy,
   held: held,
@@ -57,7 +61,11 @@ TypingShowFacts show({
   bool group = false,
   int? written = 20,
   int floor = 10,
+  bool bridges = false,
+  bool archived = false,
 }) => TypingShowFacts(
+  bridges: bridges,
+  archived: archived,
   viaOnion: viaOnion,
   switchOn: switchOn,
   privateRoute: privateRoute,
@@ -96,6 +104,8 @@ void main() {
     'no network': send(linkUp: false),
     'words the app put there': send(userEdit: false),
     'an empty field': send(nonEmpty: false),
+    'tor goes through a bridge': send(bridges: true),
+    'the chat is archived': send(archived: true),
   };
   for (final e in noSend.entries) {
     test('nothing goes when ${e.key}', () {
@@ -123,6 +133,8 @@ void main() {
     'a group': show(group: true),
     'it has no time': show(written: null),
     'it was written before their last message': show(written: 10),
+    'tor goes through a bridge': show(bridges: true),
+    'its chat is archived': show(archived: true),
   };
   for (final e in noShow.entries) {
     test('nothing shows when ${e.key}', () {

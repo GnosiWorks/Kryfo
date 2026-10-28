@@ -144,6 +144,8 @@ class TypingSendFacts {
     required this.linkUp,
     required this.userEdit,
     required this.nonEmpty,
+    this.bridges = false,
+    this.archived = false,
   });
 
   final bool switchOn;
@@ -170,6 +172,9 @@ class TypingSendFacts {
   // a keystroke or a paste, never a draft put back or words handed in
   final bool userEdit;
   final bool nonEmpty;
+  // tor goes through a bridge: the network is one to keep typing from
+  final bool bridges;
+  final bool archived;
 }
 
 bool typingMaySend(TypingSendFacts f) =>
@@ -189,7 +194,9 @@ bool typingMaySend(TypingSendFacts f) =>
     f.torUsable &&
     f.linkUp &&
     f.userEdit &&
-    f.nonEmpty;
+    f.nonEmpty &&
+    !f.bridges &&
+    !f.archived;
 
 /// what a typing frame that came in needs before it shows
 class TypingShowFacts {
@@ -207,6 +214,8 @@ class TypingShowFacts {
     required this.group,
     required this.written,
     required this.floor,
+    this.bridges = false,
+    this.archived = false,
   });
 
   // it came in through the onion door, opened under a known session
@@ -225,6 +234,8 @@ class TypingShowFacts {
   // its 'w', and the newest 'w' of a message of theirs shown since
   final int? written;
   final int floor;
+  final bool bridges;
+  final bool archived;
 }
 
 bool typingMayShow(TypingShowFacts f) =>
@@ -240,7 +251,9 @@ bool typingMayShow(TypingShowFacts f) =>
     !f.dev &&
     !f.group &&
     f.written != null &&
-    f.written! > f.floor;
+    f.written! > f.floor &&
+    !f.bridges &&
+    !f.archived;
 
 /// what a change of the composer's words says: null for none (the cursor
 /// moved). [byApp]: the app put them there, a draft put back or words

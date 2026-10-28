@@ -1510,6 +1510,7 @@
   "settingsTypingIndicator": "Indikator mengetik",
   "settingsTypingIndicatorHint": "Kalian berdua melihat saat yang lain sedang mengetik. Sinyalnya langsung ke dia lewat Tor, tidak pernah melalui relay.",
   "settingsTypingOnionOnly": "Tersedia di rute Onion",
+  "settingsTypingBridgesOff": "Mati selama jembatan dipakai: orang yang mengawasi koneksimu bisa mencocokkan sinyal mengetik. Menyala lagi sendiri saat jembatan dimatikan.",
   "settingsLightTheme": "Tema terang",
   "settingsSameProtectionBrighter": "Perlindungan sama, lebih terang",
   "settingsAppearance": "Tampilan",

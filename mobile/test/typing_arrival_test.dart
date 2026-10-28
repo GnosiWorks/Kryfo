@@ -6,14 +6,18 @@
 // nothing at all. a frame goes only to the contact's door, never to a
 // relay, the outbox or a first-contact address, and a failed one holds
 // the next. signal, the engine and the databases are stand-ins
+import 'dart:convert';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/bridge_mode.dart' show BridgeChoice, BridgeSetup;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
     show
         AppState,
+        AppStateBridges,
         AppStateDelivery,
         AppStateReceive,
         AppStateRoute,
@@ -301,6 +305,95 @@ void main() {
     });
   });
 
+  group('a lock or a decoy that comes while a frame is read', () {
+    test('a lock during the reads leaves nothing showing behind it', () async {
+      final w = await _World.make();
+      await w.app.loadTypingPref();
+      w.live.onTakeCaps = () {
+        lockState.openForTest(enabled: true);
+        lockState.lock();
+      };
+      await w.typingFrom(_f);
+      expect(w.showing(_f), isFalse);
+      lockState.openForTest();
+      w.live.onTakeCaps = null;
+    });
+
+    test('a decoy switch during the reads leaves nothing showing', () async {
+      final w = await _World.make();
+      w.live.onTakeCaps = w.inDecoy;
+      await w.typingFrom(_f);
+      expect(w.showing(_f), isFalse);
+      w.live.onTakeCaps = null;
+    });
+
+    test(
+      'a frame that opened a session is marked seen and never shows',
+      () async {
+        final w = await _World.make();
+        final opener = base64Encode([3, 1, 2, 3, 4, 5]);
+        w.io.opens[opener] = (_f, wrapTyping(writtenAt: 5));
+        await w.app.receiveOnion([opener]);
+        expect(w.showing(_f), isFalse);
+        expect(w.live.seen, hasLength(1));
+        expect(w.live.msgs, isEmpty);
+        expect(w.io.rang, isEmpty);
+      },
+    );
+  });
+
+  group('bridges and the archive', () {
+    const viaBridge =
+        '{"mode":"auto","phase":"connected","method":"obfs4","source":"builtin"}';
+    const direct = '{"mode":"auto","phase":"connected","method":"direct"}';
+
+    test('while a bridge carries tor nothing goes and nothing shows, and it '
+        'comes back by itself after', () async {
+      final w = await _World.make();
+      claimChat(_f);
+      await w.typingFrom(_f);
+      expect(w.showing(_f), isTrue);
+      w.app.takeBridgeStatus(viaBridge);
+      expect(w.app.typingBridged, isTrue);
+      // what showed goes at once
+      expect(w.showing(_f), isFalse);
+      await w.typingFrom(_f);
+      expect(w.showing(_f), isFalse);
+      await w.type(_f);
+      expect(w.io.sent, isEmpty);
+      w.app.takeBridgeStatus(direct);
+      expect(w.app.typingBridged, isFalse);
+      w.app.typing.pacer.reset();
+      await w.type(_f);
+      expect(w.typingSends, ['typing o-$_f']);
+      await w.typingFrom(_f);
+      expect(w.showing(_f), isTrue);
+    });
+
+    test('a bridge picked by hand holds it off before it connects', () async {
+      final w = await _World.make();
+      claimChat(_f);
+      w.app.bridgeSetupForTest = const BridgeSetup(
+        choice: BridgeChoice.snowflake,
+      );
+      expect(w.app.typingBridged, isTrue);
+      await w.type(_f);
+      await w.typingFrom(_f);
+      expect(w.io.sent, isEmpty);
+      expect(w.showing(_f), isFalse);
+    });
+
+    test('an archived chat neither sends nor shows', () async {
+      final w = await _World.make();
+      w.live.people[_f]!['archived'] = 1;
+      claimChat(_f);
+      await w.type(_f);
+      await w.typingFrom(_f);
+      expect(w.io.sent, isEmpty);
+      expect(w.showing(_f), isFalse);
+    });
+  });
+
   group('what their phone understands', () {
     test('a frame with the list sets it once, the same list again writes '
         'nothing, a message without one clears it', () async {
@@ -397,6 +490,28 @@ void main() {
         expect(w.io.sent, isEmpty, reason: why);
         w.app.typing.pacer.reset();
       }
+    });
+
+    test('a lock, a decoy or the back during the seal sends nothing', () async {
+      final w = await _World.make();
+      claimChat(_f);
+      w.io.onTypingSeal = () {
+        lockState.openForTest(enabled: true);
+        lockState.lock();
+      };
+      await w.type(_f);
+      lockState.openForTest();
+      w.app.typing.pacer.reset();
+      w.io.onTypingSeal = w.inDecoy;
+      await w.type(_f);
+      w.everyday();
+      w.app.typing.pacer.reset();
+      w.io.onTypingSeal = () => w.app.inFrontForTest = false;
+      await w.type(_f);
+      expect(w.io.sent, isEmpty);
+      expect(w.io.typingSeals, hasLength(3));
+      // nothing went, so nothing holds the peer
+      expect(w.app.typing.pacer.heldFor(_f), isNull);
     });
 
     test('a failure holds the next tries to that peer', () async {

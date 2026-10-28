@@ -8559,6 +8559,12 @@ abstract class AppLocalizations {
   /// **'Available on the Onion route'**
   String get settingsTypingOnionOnly;
 
+  /// screens/settings_screen.dart: under the typing indicator switch, dimmed, while tor goes through a bridge. the switch shows off then
+  ///
+  /// In en, this message translates to:
+  /// **'Off while bridges are in use: someone watching your connection could match the typing signals. It comes back by itself when bridges are off.'**
+  String get settingsTypingBridgesOff;
+
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:

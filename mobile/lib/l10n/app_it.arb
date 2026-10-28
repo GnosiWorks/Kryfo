@@ -1510,6 +1510,7 @@
   "settingsTypingIndicator": "Indicatore di scrittura",
   "settingsTypingIndicatorHint": "Vedete entrambi quando l’altro sta scrivendo. Arriva direttamente via Tor, mai attraverso un relay.",
   "settingsTypingOnionOnly": "Disponibile sul percorso Onion",
+  "settingsTypingBridgesOff": "Disattivato mentre usi i bridge: chi osserva la tua connessione potrebbe abbinare i segnali di scrittura. Torna da solo quando i bridge sono spenti.",
   "settingsLightTheme": "Tema chiaro",
   "settingsSameProtectionBrighter": "Stessa protezione, più luminoso",
   "settingsAppearance": "Aspetto",

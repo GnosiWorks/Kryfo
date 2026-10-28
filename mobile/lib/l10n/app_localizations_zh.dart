@@ -5049,6 +5049,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsTypingOnionOnly => '在 Onion 线路上可用';
 
   @override
+  String get settingsTypingBridgesOff =>
+      '使用网桥时关闭：监视你连接的人可能会对上输入提示的信号。关闭网桥后会自动恢复。';
+
+  @override
   String get settingsLightTheme => '浅色主题';
 
   @override
@@ -14109,6 +14113,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsTypingOnionOnly => '在 Onion 路線上可用';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      '使用橋接時關閉：監視你連線的人可能會對上輸入提示的訊號。關閉橋接後會自動恢復。';
 
   @override
   String get settingsLightTheme => '淺色主題';

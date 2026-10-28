@@ -6592,6 +6592,10 @@
   "@settingsTypingOnionOnly": {
     "description": "screens/settings_screen.dart: under the typing indicator switch, dimmed, while the route is relay or fast. same words as gettingMessagesHelperOnionOnly"
   },
+  "settingsTypingBridgesOff": "Off while bridges are in use: someone watching your connection could match the typing signals. It comes back by itself when bridges are off.",
+  "@settingsTypingBridgesOff": {
+    "description": "screens/settings_screen.dart: under the typing indicator switch, dimmed, while tor goes through a bridge. the switch shows off then"
+  },
   "settingsLightTheme": "Light theme",
   "@settingsLightTheme": {
     "description": "screens/settings_screen.dart"

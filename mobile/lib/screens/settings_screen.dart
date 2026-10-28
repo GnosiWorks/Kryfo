@@ -631,19 +631,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // on by default, and mutual: with it off nothing goes and
               // nothing shows. it works on the onion route alone. a decoy's
               // flips like this one and does nothing
-              HaloRow(
-                icon: Icons.more_horiz_rounded,
-                label: l10n.settingsTypingIndicator,
-                hint: l10n.settingsTypingIndicatorHint,
-                note: appState.sendMode == 'private'
-                    ? null
-                    : l10n.settingsTypingOnionOnly,
-                toggled: _typingOn ?? true,
-                pending: _typingOn == null,
-                onTap: () async {
-                  final v = !(_typingOn ?? true);
-                  setState(() => _typingOn = v);
-                  await appState.setTypingOn(v);
+              // while bridges carry tor it is off and says why, and comes
+              // back by itself after. a decoy shows nothing of the bridges
+              ListenableBuilder(
+                listenable: appState,
+                builder: (_, _) {
+                  final bridged =
+                      !appState.inDecoyView && appState.typingBridged;
+                  return HaloRow(
+                    icon: Icons.more_horiz_rounded,
+                    label: l10n.settingsTypingIndicator,
+                    hint: l10n.settingsTypingIndicatorHint,
+                    note: appState.sendMode != 'private'
+                        ? l10n.settingsTypingOnionOnly
+                        : bridged
+                        ? l10n.settingsTypingBridgesOff
+                        : null,
+                    toggled: (_typingOn ?? true) && !bridged,
+                    pending: _typingOn == null,
+                    onTap: bridged
+                        ? null
+                        : () async {
+                            final v = !(_typingOn ?? true);
+                            setState(() => _typingOn = v);
+                            await appState.setTypingOn(v);
+                          },
+                  );
                 },
               ),
               // off by default: turning it on says first what it does. each

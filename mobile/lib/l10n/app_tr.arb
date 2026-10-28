@@ -1510,6 +1510,7 @@
   "settingsTypingIndicator": "Yazıyor göstergesi",
   "settingsTypingIndicatorHint": "Karşı taraf yazarken ikiniz de görürsünüz. Doğrudan Tor üzerinden ona gider, asla bir aktarıcıdan geçmez.",
   "settingsTypingOnionOnly": "Onion rotasında kullanılabilir",
+  "settingsTypingBridgesOff": "Köprüler kullanılırken kapalı: bağlantını izleyen biri yazıyor sinyallerini eşleştirebilir. Köprüler kapanınca kendiliğinden geri gelir.",
   "settingsLightTheme": "Açık tema",
   "settingsSameProtectionBrighter": "Aynı koruma, daha aydınlık",
   "settingsAppearance": "Görünüm",

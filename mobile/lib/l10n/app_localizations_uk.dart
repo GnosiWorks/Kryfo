@@ -5381,6 +5381,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsTypingOnionOnly => 'Доступно на маршруті Onion';
 
   @override
+  String get settingsTypingBridgesOff =>
+      'Вимкнено, поки використовуються мости: той, хто стежить за вашим з’єднанням, міг би зіставити сигнали набору. Увімкнеться саме, коли мости вимкнено.';
+
+  @override
   String get settingsLightTheme => 'Світла тема';
 
   @override

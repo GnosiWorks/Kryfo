@@ -451,7 +451,13 @@ extension AppStateReceive on AppState {
         final env = unwrapMessage(known.plain);
         // a typing frame shows or goes: no row, no seen hash, no ring
         if (env.typing) {
-          await _typingCame(known.id, env);
+          // never one that opened a session: its one-time key is spent, so
+          // it is marked as seen and goes unshown
+          if (_isPreKeyWire(cipher)) {
+            await live.markSeen(h);
+          } else {
+            await _typingCame(known.id, env);
+          }
           continue;
         }
         try {

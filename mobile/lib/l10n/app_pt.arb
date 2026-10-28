@@ -1510,6 +1510,7 @@
   "settingsTypingIndicator": "Indicador de digitação",
   "settingsTypingIndicatorHint": "Vocês dois veem quando o outro está digitando. Vai direto para a pessoa pelo Tor, nunca por um relay.",
   "settingsTypingOnionOnly": "Disponível na rota Onion",
+  "settingsTypingBridgesOff": "Desligado enquanto você usa pontes: quem observa sua conexão poderia cruzar os sinais de digitação. Volta sozinho quando as pontes forem desligadas.",
   "settingsLightTheme": "Tema claro",
   "settingsSameProtectionBrighter": "Mesma proteção, mais claro",
   "settingsAppearance": "Aparência",
