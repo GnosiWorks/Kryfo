@@ -10034,4 +10034,85 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Сканировать код';
+
+  @override
+  String get desktopLockTitle => 'Kryfo заблокирован';
+
+  @override
+  String get desktopLockBody => 'Введите парольную фразу этого компьютера.';
+
+  @override
+  String get desktopLockNewTitle => 'Заблокировать Kryfo на этом компьютере';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo будет спрашивать эту парольную фразу при каждом запуске. Она запирает ваши сообщения, фото, голосовые, файлы, контакты и ключи на этом компьютере.';
+
+  @override
+  String get desktopLockHonest =>
+      'Тот, кто скопирует папку Kryfo, сможет перебирать парольные фразы на своём компьютере так быстро, как тот позволяет. Четыре и больше случайных слов выдержат. Короткая фраза не выдержит.';
+
+  @override
+  String get desktopLockForgot =>
+      'Без парольной фразы здесь не открыть ни ваши сообщения, ни файлы, ни ключи, даже нам.';
+
+  @override
+  String get desktopLockField => 'Парольная фраза';
+
+  @override
+  String get desktopLockRepeat => 'Та же парольная фраза ещё раз';
+
+  @override
+  String get desktopLockSet => 'Заблокировать этой фразой';
+
+  @override
+  String get desktopLockOpen => 'Открыть Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Минимум символов: $countString';
+  }
+
+  @override
+  String get desktopLockMismatch => 'Парольные фразы не совпадают';
+
+  @override
+  String get desktopLockWrong => 'Это не та парольная фраза';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo не смог открыть блокировку. Попробуйте запустить его снова.';
+
+  @override
+  String get desktopTrayQuit => 'Выйти из Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo работает и принимает сообщения';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo пока не может пользоваться камерой на этом компьютере. Используйте ссылку или код.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo уже открыт на этом компьютере.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'Папка Kryfo принадлежит другой учётной записи на этом компьютере, поэтому Kryfo её не откроет.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo не смог сделать свою папку доступной только вам, поэтому не откроется.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Эту блокировку создала другая версия Kryfo, которую эта прочитать не может.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo нужна личная папка в памяти, пока он работает, а этот компьютер её не даёт, поэтому Kryfo не откроется.';
 }

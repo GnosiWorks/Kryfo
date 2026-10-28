@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Kryfo
+GenericName=Messenger
+Comment=Private messages over Tor
+Exec=kryfo %u
+Icon=app.kryfo.Kryfo
+Terminal=false
+Categories=Network;InstantMessaging;Chat;
+Keywords=messenger;chat;tor;encrypted;
+MimeType=x-scheme-handler/kryfo;
+StartupNotify=true

@@ -136,6 +136,12 @@ extension AppStateSession on AppState {
     try {
       final q = engine.quietIdentity();
       if (q == null) throw StateError('no quiet identity');
+      // on desktop a file with no key in storage holds its place: it goes
+      // before the decoy's own is made
+      if (onDesktop &&
+          await secureStore.read(key: HaloContainer.decoy.keyName!) == null) {
+        await HaloContainer.decoy.wipeFiles();
+      }
       final raw = await d.open();
       await d.saveIdentity(
         q['id'] as String,

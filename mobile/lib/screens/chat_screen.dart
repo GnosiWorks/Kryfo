@@ -18,6 +18,7 @@ import '../widgets/album_grid.dart';
 import '../widgets/album_viewer.dart';
 import 'media_send_screen.dart';
 import '../sent_name.dart';
+import '../desktop/desktop_mode.dart' show canShareOut;
 import 'dart:io';
 import 'dart:convert';
 import 'key_verification_screen.dart';
@@ -2391,27 +2392,28 @@ class _ChatScreenState extends State<ChatScreen>
                         ),
                       // a tap opens a file, so sharing it lives here. an
                       // app installer is only ever saved
-                      MenuAction(
-                        icon: Icons.ios_share_rounded,
-                        label: l10n.commonShare,
-                        onTap:
-                            kept ||
-                                !canShare ||
-                                knownInstaller(
-                                  shareOn.filePath!,
-                                  shareOn.fileName,
-                                )
-                            ? null
-                            : () {
-                                dismiss(now: true);
-                                lockState.hold(
-                                  () => shareFileOut(
+                      if (canShareOut)
+                        MenuAction(
+                          icon: Icons.ios_share_rounded,
+                          label: l10n.commonShare,
+                          onTap:
+                              kept ||
+                                  !canShare ||
+                                  knownInstaller(
                                     shareOn.filePath!,
-                                    name: shareOn.fileName,
-                                  ),
-                                );
-                              },
-                      ),
+                                    shareOn.fileName,
+                                  )
+                              ? null
+                              : () {
+                                  dismiss(now: true);
+                                  lockState.hold(
+                                    () => shareFileOut(
+                                      shareOn.filePath!,
+                                      name: shareOn.fileName,
+                                    ),
+                                  );
+                                },
+                        ),
                       MenuAction(
                         icon: Icons.download_rounded,
                         label: l10n.fileSaveToDevice,

@@ -9852,4 +9852,85 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Scan the code';
+
+  @override
+  String get desktopLockTitle => 'Kryfo is locked';
+
+  @override
+  String get desktopLockBody => 'Type the passphrase for this computer.';
+
+  @override
+  String get desktopLockNewTitle => 'Lock Kryfo on this computer';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo asks for this passphrase every time it starts. It locks your messages, photos, voice notes, files, contacts and keys on this computer.';
+
+  @override
+  String get desktopLockHonest =>
+      'Someone who copies Kryfo\'s folder can try passphrases on their own computer, as fast as it allows. Four or more random words hold up. A short passphrase does not.';
+
+  @override
+  String get desktopLockForgot =>
+      'Without the passphrase none of your messages, files or keys here can be opened, not even by us.';
+
+  @override
+  String get desktopLockField => 'Passphrase';
+
+  @override
+  String get desktopLockRepeat => 'The same passphrase again';
+
+  @override
+  String get desktopLockSet => 'Lock with this passphrase';
+
+  @override
+  String get desktopLockOpen => 'Open Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'At least $countString characters';
+  }
+
+  @override
+  String get desktopLockMismatch => 'The two passphrases are not the same';
+
+  @override
+  String get desktopLockWrong => 'That is not the passphrase';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo could not open its lock here. Try starting it again.';
+
+  @override
+  String get desktopTrayQuit => 'Quit Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo is running and receiving messages';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo cannot use a camera on this computer yet. Use the link or the code instead.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo is already open on this computer.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'Kryfo\'s folder belongs to another account on this computer, so Kryfo will not open it.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo could not make its folder private to you, so it will not open.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'This lock was made by another version of Kryfo, which this one cannot read.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo needs a private folder in memory while it runs, and this computer offers none, so it will not open.';
 }

@@ -44,6 +44,8 @@ class HaloDb
 
   Database? _db;
   String? _given;
+  // its files' key was handed to the desktop, once per open
+  bool _keyed = false;
 
   // 32 bytes from the platform csprng, made once, before its database
   // file. a read that fails or gives up throws, and boot shows it: a new
@@ -84,6 +86,8 @@ class HaloDb
   // before its files go
   Future<void> close() async {
     final d = _db;
+    if (_keyed) containerClosed?.call(container.id);
+    _keyed = false;
     _db = null;
     _given = null;
     _unfinished = null;
@@ -143,6 +147,9 @@ class HaloDb
     if (_db != null) return _db!;
     final path = await container.dbPath();
     final pw = await _passphrase();
+    // on desktop its files open from here on, the upgrade's own too
+    if (!_keyed) containerOpened?.call(container.id, container.suffix, pw);
+    _keyed = true;
     // photo files an upgrade took in, shredded once it is written
     var adopted = const <String>[];
     _db = await openDatabase(

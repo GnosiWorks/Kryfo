@@ -161,6 +161,7 @@ import '../voice_format.dart' show isVoiceName, kVoiceWav;
 import '../voice_length.dart' show voiceFileMs;
 import '../voice_opus.dart' show voiceForWire;
 import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
+import '../desktop/desktop_mode.dart' show canShareOut;
 
 // our nickname for a member, or nothing so the id shows. a room member is a
 // key, not a person we know, so it gets the short tag instead.
@@ -3722,24 +3723,27 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         ),
         // a tap opens a file, so sharing it lives here. an app installer is
         // only ever saved
-        MenuAction(
-          icon: Icons.ios_share_rounded,
-          label: l10n.commonShare,
-          onTap:
-              (kept ||
-                  shareOn == null ||
-                  shareOn.filePath == null ||
-                  isVoiceName(shareOn.fileName) ||
-                  knownInstaller(shareOn.filePath!, shareOn.fileName))
-              ? null
-              : () {
-                  dismiss();
-                  lockState.hold(
-                    () =>
-                        shareFileOut(shareOn.filePath!, name: shareOn.fileName),
-                  );
-                },
-        ),
+        if (canShareOut)
+          MenuAction(
+            icon: Icons.ios_share_rounded,
+            label: l10n.commonShare,
+            onTap:
+                (kept ||
+                    shareOn == null ||
+                    shareOn.filePath == null ||
+                    isVoiceName(shareOn.fileName) ||
+                    knownInstaller(shareOn.filePath!, shareOn.fileName))
+                ? null
+                : () {
+                    dismiss();
+                    lockState.hold(
+                      () => shareFileOut(
+                        shareOn.filePath!,
+                        name: shareOn.fileName,
+                      ),
+                    );
+                  },
+          ),
         MenuAction(
           icon: Icons.download_rounded,
           label: l10n.fileSaveToDevice,

@@ -26,6 +26,7 @@ import 'jpeg_strip.dart';
 import 'meta/byte_source.dart';
 import 'meta/meta_reader.dart';
 import 'meta/tiff.dart';
+import 'desktop/desktop_mode.dart' show runIsolated;
 
 enum PictureKind { jpeg, png, webp, heif, gif, other }
 
@@ -130,7 +131,7 @@ Future<bool?> stripPictureFile(
 /// the same, off the ui thread: walking megabytes of scan data drops
 /// frames. top level, so the isolate gets the path and nothing of the caller.
 Future<bool?> stripPictureFileOffUi(String path) =>
-    Isolate.run(() => stripPictureFile(path));
+    runIsolated(() => stripPictureFile(path));
 
 /// a photo as it may leave: cleaned, and a jpeg that still reads as tagged
 /// is refused. every photo lane passes here, the gallery's above all: its
@@ -161,7 +162,7 @@ Future<Uint8List?> photoToSendOffUi(Uint8List src) =>
 /// version that did not clean gallery photos still holds the tags on disk.
 /// false when it was clean already, true when it was rewritten, null when it
 /// cannot be cleaned and may not go.
-Future<bool?> cleanSavedPhoto(String path) => Isolate.run(() async {
+Future<bool?> cleanSavedPhoto(String path) => runIsolated(() async {
   final f = File(path);
   final Uint8List src;
   try {

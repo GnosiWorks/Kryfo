@@ -9867,4 +9867,85 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'कोड स्कैन करें';
+
+  @override
+  String get desktopLockTitle => 'Kryfo लॉक है';
+
+  @override
+  String get desktopLockBody => 'इस कंप्यूटर का पासफ़्रेज़ लिखें।';
+
+  @override
+  String get desktopLockNewTitle => 'इस कंप्यूटर पर Kryfo लॉक करें';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo हर बार शुरू होने पर यह पासफ़्रेज़ पूछेगा। यह इस कंप्यूटर पर आपके संदेश, फ़ोटो, वॉइस नोट, फ़ाइलें, संपर्क और कुंजियाँ लॉक रखता है।';
+
+  @override
+  String get desktopLockHonest =>
+      'जो कोई Kryfo का फ़ोल्डर कॉपी कर ले, वह अपने कंप्यूटर पर उतनी तेज़ी से पासफ़्रेज़ आज़मा सकता है जितना उसका कंप्यूटर चल सके। चार या ज़्यादा बेतरतीब शब्द टिकते हैं। छोटा पासफ़्रेज़ नहीं टिकता।';
+
+  @override
+  String get desktopLockForgot =>
+      'पासफ़्रेज़ के बिना यहाँ आपका कोई संदेश, फ़ाइल या कुंजी नहीं खुल सकती, हमसे भी नहीं।';
+
+  @override
+  String get desktopLockField => 'पासफ़्रेज़';
+
+  @override
+  String get desktopLockRepeat => 'वही पासफ़्रेज़ फिर से';
+
+  @override
+  String get desktopLockSet => 'इस पासफ़्रेज़ से लॉक करें';
+
+  @override
+  String get desktopLockOpen => 'Kryfo खोलें';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'कम से कम $countString अक्षर';
+  }
+
+  @override
+  String get desktopLockMismatch => 'दोनों पासफ़्रेज़ मेल नहीं खाते';
+
+  @override
+  String get desktopLockWrong => 'यह सही पासफ़्रेज़ नहीं है';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo यहाँ अपना लॉक नहीं खोल पाया। इसे फिर से शुरू करके देखें।';
+
+  @override
+  String get desktopTrayQuit => 'Kryfo बंद करें';
+
+  @override
+  String get desktopTrayTip => 'Kryfo चल रहा है और संदेश ले रहा है';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo अभी इस कंप्यूटर पर कैमरा इस्तेमाल नहीं कर सकता। इसके बजाय लिंक या कोड इस्तेमाल करें।';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo इस कंप्यूटर पर पहले से खुला है।';
+
+  @override
+  String get desktopFolderNotYours =>
+      'Kryfo का फ़ोल्डर इस कंप्यूटर के किसी दूसरे खाते का है, इसलिए Kryfo उसे नहीं खोलेगा।';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo अपना फ़ोल्डर सिर्फ़ आपके लिए निजी नहीं बना पाया, इसलिए यह नहीं खुलेगा।';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'यह लॉक Kryfo के किसी दूसरे संस्करण ने बनाया है, जिसे यह संस्करण नहीं पढ़ सकता।';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'चलते समय Kryfo को मेमोरी में एक निजी फ़ोल्डर चाहिए, और यह कंप्यूटर ऐसा कोई फ़ोल्डर नहीं देता, इसलिए यह नहीं खुलेगा।';
 }

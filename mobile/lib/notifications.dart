@@ -26,7 +26,12 @@ Future<void> initNotifications({
   if (tagsOf != null) notifTagsOf = tagsOf;
   if (forget != null) ringsForget = forget;
   const androidInit = AndroidInitializationSettings('ic_halo_notification');
-  const initSettings = InitializationSettings(android: androidInit);
+  // linux has no channels and no icon resource: the desktop's notification
+  // server names the app, and a click opens the window
+  final initSettings = InitializationSettings(
+    android: androidInit,
+    linux: LinuxInitializationSettings(defaultActionName: l10n.desktopLockOpen),
+  );
   await notifPlugin.initialize(
     settings: initSettings,
     onDidReceiveNotificationResponse: (resp) {

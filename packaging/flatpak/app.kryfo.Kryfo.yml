@@ -1,0 +1,81 @@
+# kryfo for linux as a flatpak. the flutter bundle, with libhalo.so and
+# libkryfo_signal.so already in its lib/, is built before flatpak-builder
+# runs (flutter fetches packages while it builds, and the sandbox has no
+# network) and comes in as a local dir.
+id: app.kryfo.Kryfo
+runtime: org.gnome.Platform
+runtime-version: '50'
+sdk: org.gnome.Sdk
+command: kryfo
+finish-args:
+  # tor, bridges and relays
+  - --share=network
+  # wayland first, x11 only where there is no wayland
+  - --socket=wayland
+  - --socket=fallback-x11
+  # x11 shared memory, used only under fallback-x11
+  - --share=ipc
+  # gpu rendering for flutter
+  - --device=dri
+  # libsecret keeps the database key. sandboxed it uses the secret portal
+  # when the desktop has one; this is for desktops whose portal has none
+  - --talk-name=org.freedesktop.secrets
+  # no tray yet. when it lands it needs:
+  # - --talk-name=org.kde.StatusNotifierWatcher
+  # file open/save go through portals, so no --filesystem. notifications
+  # have to use the portal too: no org.freedesktop.Notifications
+modules:
+  - name: sqlcipher
+    buildsystem: autotools
+    config-opts:
+      - --with-tempstore=yes
+      - --fts5
+      - --disable-tcl
+      - --disable-static
+      - --disable-readline
+      # libsqlcipher.so next to the runtime's libsqlite3, not in its place
+      - --dll-basename=libsqlcipher
+      - --soname=legacy
+    make-args:
+      - LDFLAGS.libsqlite3.soname=-Wl,-soname,libsqlcipher.so.0
+    make-install-args:
+      - LDFLAGS.libsqlite3.soname=-Wl,-soname,libsqlcipher.so.0
+    build-options:
+      cflags: -DSQLITE_HAS_CODEC -DSQLITE_EXTRA_INIT=sqlcipher_extra_init -DSQLITE_EXTRA_SHUTDOWN=sqlcipher_extra_shutdown
+      ldflags: -lcrypto
+    cleanup:
+      - /bin
+      - /include
+      - /lib/pkgconfig
+      - /share/man
+    sources:
+      - type: archive
+        url: https://github.com/sqlcipher/sqlcipher/archive/refs/tags/v4.19.0.tar.gz
+        # tag v4.19.0, commit c4b275a47932888216bade83aff2bbc73df0ff85
+        sha256: 7075f96cbabe45b4ecfc2e6b1745a625f856f695b0827a5506ce9ed85b906aa0
+
+  - name: kryfo
+    buildsystem: simple
+    build-commands:
+      - test -x bundle/kryfo
+      - test -f bundle/lib/libhalo.so
+      - test -f bundle/lib/libkryfo_signal.so
+      - mkdir -p ${FLATPAK_DEST}/lib/kryfo ${FLATPAK_DEST}/bin
+      - cp -a bundle/. ${FLATPAK_DEST}/lib/kryfo/
+      - ln -s ../lib/kryfo/kryfo ${FLATPAK_DEST}/bin/kryfo
+      - install -Dm644 app.kryfo.Kryfo.desktop ${FLATPAK_DEST}/share/applications/app.kryfo.Kryfo.desktop
+      - install -Dm644 app.kryfo.Kryfo.metainfo.xml ${FLATPAK_DEST}/share/metainfo/app.kryfo.Kryfo.metainfo.xml
+      - install -Dm644 icon.png ${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/app.kryfo.Kryfo.png
+    sources:
+      # flutter build linux --release, after engine/build-linux.sh and
+      # native/kryfo_signal/build-host.sh
+      - type: dir
+        path: ../../mobile/build/linux/x64/release/bundle
+        dest: bundle
+      - type: file
+        path: app.kryfo.Kryfo.desktop
+      - type: file
+        path: app.kryfo.Kryfo.metainfo.xml
+      - type: file
+        path: ../../ic_launcher-playstore.png
+        dest-filename: icon.png
