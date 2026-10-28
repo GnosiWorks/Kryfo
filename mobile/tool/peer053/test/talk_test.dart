@@ -2,7 +2,7 @@
 // a phone still on 0.5.3 and a phone on this version keep talking, both
 // ways, on real stores: the 0.5.3 side runs 0.5.3's own signal layer and
 // libsignal_protocol_dart 0.8.2 on its file as 0.5.3 left it; this side
-// opens its file through the app's schema (the upgrade to 91 included) and
+// opens its file through the app's schema (the upgrades to 91 and 92 included) and
 // runs the shim. the files are the 0.5.3 fixtures of the app's tests
 import 'dart:convert';
 import 'dart:io';
@@ -161,6 +161,9 @@ void main() {
     ({Uint8List pub, Uint8List priv}) k, {
     String prefix = '',
   }) async {
+    // this version's tables first, as its schema makes them on an update:
+    // a file it opened through HaloDb has them already
+    await signalStoreTables(db, prefix: prefix);
     final s = now.SignalSession(_lib);
     await s.bootstrap(
       database: db,
@@ -194,7 +197,7 @@ void main() {
     final d = await keep(
       openDatabase(p.join(docs.path, name), singleInstance: false),
     );
-    await signalStoreTables(d);
+    await tables053(d);
     await d.execute(
       'CREATE TABLE contacts (halo_id TEXT PRIMARY KEY, verified INTEGER '
       'NOT NULL DEFAULT 0, key_changed INTEGER NOT NULL DEFAULT 0, '
@@ -216,7 +219,7 @@ void main() {
       if (sql == null) return markTestSkipped('no sqlite on this host');
       final aDb = await raw('$_phone/a.db', 'a053.db');
       final bDb = await updated('$_phone/b.db', HaloContainer.decoy);
-      expect(await bDb.getVersion(), 91);
+      expect(await bDb.getVersion(), 92);
       expect(await aDb.getVersion(), 85);
       final a = await Phone053.open(
         aDb,
@@ -265,7 +268,7 @@ void main() {
         'halo.db.passphrase': 'not asked for',
       });
       final bDb = await keep(HaloDb().open());
-      expect(await bDb.getVersion(), 91);
+      expect(await bDb.getVersion(), 92);
       // the everyday store, as the app opens it, and its own decrypt
       await now.signalSession.bootstrap(
         database: bDb,
@@ -328,7 +331,7 @@ void main() {
         'halo.db.passphrase': keys['everyday']!,
       });
       final mineDb = await keep(HaloDb().open());
-      expect(await mineDb.getVersion(), 91);
+      expect(await mineDb.getVersion(), 92);
       final mine = _New(await onShim(mineDb, _keys(me)));
       final aliceDb = await raw('$_host/halo_d.db', 'alice053.db');
       final hers = _Old(
@@ -518,7 +521,7 @@ void main() {
         final kUser = freshKeys();
         final devDb = await fresh053('devphone.db');
         final userDb = await fresh053('user.db');
-        await signalStoreTables(userDb, prefix: 'dev_');
+        await tables053(userDb, prefix: 'dev_');
         // 0.5.3 on both: his phone, and a user's anonymous dev chat store
         final dev053 = await Phone053.open(
           devDb,
@@ -551,6 +554,8 @@ void main() {
           ),
         ]);
         addTearDown(() => useDevKeysForTest(null));
+        // the user's file through this version's schema, as an update runs it
+        await signalStoreTables(userDb, prefix: 'dev_');
         final userNew = now.SignalSession(_lib);
         await userNew.bootstrapInitiator(
           database: userDb,
