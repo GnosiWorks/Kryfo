@@ -122,6 +122,13 @@ List<Map<String, Object?>> _kept(MemDb db, String table, String address) => [
 // signal and the engine as the receive side reaches them: what a cipher
 // opens to, and a note of every call
 class _Io implements AppIo {
+  // nothing here types
+  @override
+  Future<String> typingSeal(String peer, String plain) =>
+      throw UnimplementedError('typingSeal');
+  @override
+  Future<String> typingSend(String onion, String cipher) =>
+      throw UnimplementedError('typingSend');
   @override
   Future<String> pinFirst(List<String> xPubs) async => 'ok';
   @override

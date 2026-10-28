@@ -197,6 +197,14 @@ class AppIo {
   Future<String> onionSend(String onion, String cipher) =>
       engine.sendTo(onion, cipher);
 
+  // a typing frame: sealed only on a session past its opener, and sent
+  // straight to the peer's door, never anywhere else (typing.dart)
+  Future<String> typingSeal(String peer, String plain) =>
+      signalEncrypt(peer, plain, onlySettled: true);
+
+  Future<String> typingSend(String onion, String cipher) =>
+      engine.sendTyping(onion, cipher);
+
   Future<String> firstContactSend(String xPub, String fc, String cipher) =>
       engine.sendFirstContact(xPub, fc, cipher);
 

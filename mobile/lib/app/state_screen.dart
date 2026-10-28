@@ -145,6 +145,8 @@ extension AppStateScreen on AppState {
       }
     }
     _shotsHeard(peer, word);
+    // and what this phone understands, on every 1:1 frame (typing.dart)
+    capsPut(body);
     return shotsPut(body, word);
   }
 

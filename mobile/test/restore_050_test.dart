@@ -248,7 +248,7 @@ void main() {
       final restart = HaloDb();
       useDatabasesForTest(restart, Session(restart));
       final raw = await restart.open();
-      expect(await raw.getVersion(), 87);
+      expect(await raw.getVersion(), 88);
       // the engine is handed the identity in the file
       final id = (await restart.loadIdentity())!;
       expect(id['id'], _me);
@@ -347,7 +347,7 @@ void main() {
         expect(await lock.verifyPin(_hiddenPin), PinResult.vault);
         final vault = HaloDb.withKey(HaloContainer.vault, key!);
         final v = await vault.open();
-        expect(await v.getVersion(), 87);
+        expect(await v.getVersion(), 88);
         final rows = await _rows(v, only: hiddenCols);
         for (final t in hiddenBefore.keys) {
           expect(rows[t], hiddenBefore[t], reason: 'hidden $t');
