@@ -19,6 +19,7 @@ boxes means two seizures and two providers.
 | handle registry (`server/handle/`) | `https://relay.kryfo.app/handle/*`, `/@name` | relay box | no |
 | badge service (`server/badge/`) | its own onion | relay box | no |
 | gif relay (`server/gif/`) | `https://relay.kryfo.app/gif/*` | relay box | no |
+| push gateway (`server/push/`) | `https://relay.kryfo.app/push/*`, the relay on loopback | relay box | no |
 
 the handle registry and the badge service move. the gif relay runs on the relay box too; where it
 goes is not decided yet.
@@ -42,6 +43,21 @@ this needs a release, the hostname is in the app.
 3. the old box redirects `relay.kryfo.app/@name` to the new name for good.
 4. the old box keeps serving `/handle/*` until the last release that calls it
    is gone.
+
+## the push gateway
+
+google push in the play build. a relay posts an empty knock to
+`/push/<sealed token>`; the gateway opens the token (a phone's fcm token
+sealed to the gateway's key, a different seal for each of the phone's
+sixteen endpoints) and asks fcm to wake the phone with an empty
+high-priority message. what it could log: nothing per token. it keeps no
+table and writes no file; in ram it holds a keyed hash of a token with the
+times of its last pushes, for an hour at most, to keep one push per phone
+every 45 seconds and thirty an hour. once an hour it logs counts. google
+sees the install and when it is woken, never by whom or with what. nginx
+logs nothing for `/push/`, since the path carries a sealed token. our relay
+posts to it on loopback (`RELAY_KNOCK_GATEWAY_LOCAL`), since it refuses
+names that point at its own box.
 
 ## watching them
 
