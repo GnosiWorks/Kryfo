@@ -46,6 +46,12 @@ const doorSingleFor = 10 * time.Minute
 
 var errDoorClosed = errors.New("door closed the stream")
 
+// a stream failure from the door's side: it shut, reset or would not take
+// a write, as against an ack that never came
+type doorShut struct{ error }
+
+func (d doorShut) Unwrap() error { return d.error }
+
 type doorStream struct {
 	onion string
 	ready chan struct{} // closed once the dial is done
@@ -185,7 +191,7 @@ func (s *doorStream) readAcks() {
 			if err == io.EOF || errors.Is(err, io.ErrUnexpectedEOF) {
 				err = errDoorClosed
 			}
-			s.fail(fmt.Errorf("no ack: %v", err), true)
+			s.fail(fmt.Errorf("no ack: %w", err), true)
 			return
 		}
 		s.mu.Lock()
@@ -206,6 +212,9 @@ func (s *doorStream) readAcks() {
 // the stream is done for: every line still waiting fails, and it is not
 // handed out again. byDoor says the door ended it rather than this side.
 func (s *doorStream) fail(err error, byDoor bool) {
+	if byDoor {
+		err = doorShut{err}
+	}
 	s.mu.Lock()
 	first := s.err == nil
 	if first {
@@ -296,10 +305,14 @@ func sendTo(t *tor.Tor, onion, line string) error {
 		if err == nil {
 			return nil
 		}
-		// the stream showed an older door, which shut it on a line queued
-		// behind the first: this one goes on a stream of its own
-		if doorOneLineOnly(onion) {
-			return sendOneLine(ctx, t, onion, line)
+		// an older door shut the stream on a line queued behind the first:
+		// this one goes on a stream of its own, while the budget lasts
+		var shut doorShut
+		if doorOneLineOnly(onion) && ctx.Err() == nil && (!fresh && try == 0 || errors.As(err, &shut)) {
+			if err2 := sendOneLine(ctx, t, onion, line); err2 != nil {
+				return fmt.Errorf("%v, then on its own stream: %v", err, err2)
+			}
+			return nil
 		}
 		if fresh || try > 0 {
 			return err

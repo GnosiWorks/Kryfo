@@ -5,6 +5,8 @@ import (
 	"bufio"
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -309,5 +311,24 @@ func TestMeasureDoorBurst(t *testing.T) {
 		inboxDrained()
 		inbox = inbox[:0]
 		mu.Unlock()
+	}
+}
+
+// only a stream the door shut sends its line again on one of its own: a
+// line whose ack never came keeps its own error
+func TestDoorShutIsTheDoorsSide(t *testing.T) {
+	shut := &doorStream{onion: "s.onion"}
+	shut.fail(fmt.Errorf("no ack: %w", errDoorClosed), true)
+	quiet := &doorStream{onion: "s.onion"}
+	quiet.fail(errors.New("no ack: timeout"), false)
+	var d doorShut
+	if !errors.As(shut.err, &d) || !errors.Is(shut.err, errDoorClosed) {
+		t.Fatalf("a shut stream reads %v", shut.err)
+	}
+	if errors.As(quiet.err, &d) {
+		t.Fatalf("a timeout reads as shut: %v", quiet.err)
+	}
+	if shut.err.Error() != "no ack: door closed the stream" {
+		t.Fatalf("the message changed: %q", shut.err.Error())
 	}
 }
