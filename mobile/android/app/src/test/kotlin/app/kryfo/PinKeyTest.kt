@@ -342,6 +342,24 @@ class PinKeyTest {
     }
 
     @Test
+    fun aKeyMidTestIsNoKeyAndNeverUsed() {
+        // a make that died between its generate and the end of its test
+        PinKey.make()
+        notes.m = true
+        assertEquals(false, PinKey.info()["k"])
+        assertEquals("busy", PinKey.kcv()["e"])
+        assertEquals("busy", PinKey.mac(xHex)["e"])
+        // the make dart asks for then drops it and makes a tested one
+        val before = keys.made[PinKey.ALIAS]!!.copyOf()
+        val again = PinKey.make()
+        assertEquals(true, again["k"])
+        assertFalse(before.contentEquals(keys.made[PinKey.ALIAS]))
+        assertFalse(notes.m)
+        assertEquals(true, PinKey.info()["k"])
+        assertTrue(PinKey.mac(xHex).containsKey("m"))
+    }
+
+    @Test
     fun infoSaysWhatIsThere() {
         assertEquals(false, PinKey.info()["k"])
         PinKey.make()

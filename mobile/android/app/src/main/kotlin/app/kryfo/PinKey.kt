@@ -199,6 +199,9 @@ object PinKey {
     // "l": where it lives, "s": the phone has a screen lock, "v": android's
     // version}, or {"e": "busy"}
     fun info(): Map<String, Any> {
+        // a key whose make has not finished its test is no key yet: dart then
+        // asks for a make, which drops it and makes a tested one
+        if (untested()) return mapOf("k" to false, "u" to 0, "l" to SOFTWARE, "s" to secure(), "v" to sdk)
         var has = hasKey() ?: return mapOf("e" to "busy")
         // no key only when it holds a second later as well
         if (!has && !goneSure()) {
@@ -318,6 +321,8 @@ object PinKey {
 
     // x signed: {"m": hex} or {"e": "busy" | "locked" | "gone" | "bad"}
     fun mac(xHex: String?): Map<String, Any> {
+        // never signs with a key that has not passed its test
+        if (untested()) return mapOf("e" to "busy")
         val x = unhex(xHex)
         if (x == null || x.size != 32) return mapOf("e" to "bad")
         val (m, why) = sign(x)
@@ -326,8 +331,15 @@ object PinKey {
 
     // the check value: says only whether this is the key the table was made with
     fun kcv(): Map<String, Any> {
+        if (untested()) return mapOf("e" to "busy")
         val (m, why) = sign(KCV_INPUT)
         return if (m == null) mapOf("e" to why) else mapOf("m" to hex(m))
+    }
+
+    private fun untested(): Boolean = try {
+        notes?.making() == true
+    } catch (_: Exception) {
+        false
     }
 
     // the wipe and the lock turned off only. never beside a make
