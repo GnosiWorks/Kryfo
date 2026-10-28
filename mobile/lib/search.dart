@@ -8,6 +8,7 @@ import 'dart:convert';
 
 import 'polls.dart';
 import 'text_fold.dart';
+import 'voice_format.dart' show isVoiceName, kVoiceOgg, kVoiceWav;
 
 /// characters written without spaces between words: each one a token
 bool isCjk(int r) =>
@@ -45,7 +46,7 @@ String searchBody(Map<String, Object?> r) {
   final poll = PollSpec.parse(r['poll']);
   if (poll != null) parts.addAll(poll.options);
   final name = r['file_name'] as String?;
-  if (name != null && name != 'voice.wav') parts.add(name);
+  if (name != null && !isVoiceName(name)) parts.add(name);
   final pv = r['preview'];
   if (pv is String && pv.contains('"title"')) {
     try {
@@ -245,7 +246,7 @@ String kindWhere(SearchKind k) => switch (k) {
   SearchKind.videos =>
     '(m.file_path IS NOT NULL AND (${[for (final e in videoExts) "lower(m.file_name) LIKE '%.$e'"].join(' OR ')}))',
   SearchKind.files =>
-    "(m.file_path IS NOT NULL AND m.file_name IS NOT NULL AND m.file_name != 'voice.wav' AND NOT (${[for (final e in videoExts) "lower(m.file_name) LIKE '%.$e'"].join(' OR ')}))",
+    "(m.file_path IS NOT NULL AND m.file_name IS NOT NULL AND m.file_name NOT IN ('$kVoiceWav', '$kVoiceOgg') AND NOT (${[for (final e in videoExts) "lower(m.file_name) LIKE '%.$e'"].join(' OR ')}))",
   SearchKind.links =>
     "(m.preview IS NOT NULL OR m.plaintext LIKE '%http://%' OR m.plaintext LIKE '%https://%' OR m.plaintext LIKE '%kryfo://%')",
 };

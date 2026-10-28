@@ -50,7 +50,10 @@ import 'package:kryfo/stickers/sticker_sheet.dart' show StickerButton;
 import 'package:kryfo/widgets/dev_avatar.dart';
 import 'package:kryfo/widgets/dev_note.dart';
 import 'package:kryfo/widgets/kryfo_avatar.dart';
-import 'package:kryfo/widgets/media_bubbles.dart' show VoiceMakingBubble;
+import 'package:kryfo/voice_format.dart' show takePeerOpus;
+import 'package:kryfo/voice_opus.dart' show voiceOggForTest;
+import 'package:kryfo/widgets/media_bubbles.dart'
+    show VoiceBubble, VoiceMakingBubble;
 import 'package:kryfo/widgets/swipe_to_reply.dart';
 import 'package:kryfo/widgets/voice_mic.dart'
     show HoldToTalkMic, MicGlyph, VoiceMaking, VoiceTake;
@@ -1199,6 +1202,92 @@ void main() {
         await _close(t);
       });
     }
+  });
+
+  group('voice in opus', () {
+    // the engine's encoder, standing in: the opus copy it writes
+    final ogg = File('test/fixtures/voice/note.ogg').readAsBytesSync();
+    var encodes = 0;
+    setUp(() {
+      encodes = 0;
+      voiceOggForTest = (_, to) async {
+        encodes++;
+        File(to).writeAsBytesSync(ogg);
+        return 'ok 3400 ${ogg.length}';
+      };
+    });
+    tearDown(() => voiceOggForTest = null);
+
+    Future<List<String>?> media(WidgetTester t) => t.runAsync(
+      () async => [
+        for (final e in (await HaloContainer.decoy.mediaDir()).listSync())
+          e.uri.pathSegments.last,
+      ],
+    );
+
+    testWidgets('to a phone that has not said it plays opus: the wav', (
+      t,
+    ) async {
+      await _world(container: HaloContainer.decoy);
+      await _open(t);
+      await _speak(t, () => _sent().isNotEmpty);
+      final note = _sent().single;
+      expect(note['file_name'], 'voice.wav');
+      expect(note['file_path'], endsWith('.wav'));
+      expect(encodes, 0);
+      await _close(t);
+    });
+
+    testWidgets('to one that has: opus, and the wav goes', (t) async {
+      await _world(container: HaloContainer.decoy);
+      await takePeerOpus(_mem, _dev, carried: true, counts: true, written: 1);
+      await _open(t);
+      await _speak(t, () => _sent().isNotEmpty);
+      final note = _sent().single;
+      expect(note['file_name'], 'voice.ogg');
+      expect(note['file_path'], endsWith('/vn_${note['msg_uid']}.ogg'));
+      expect(File(note['file_path']! as String).readAsBytesSync(), ogg);
+      expect(encodes, 1);
+      // the wav is shredded once no player has it
+      for (var i = 0; i < 20; i++) {
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await t.pump(const Duration(milliseconds: 40));
+      }
+      expect(await media(t), ['vn_${note['msg_uid']}.ogg']);
+      // its bubble is the voice note's, playing the opus copy
+      final b = t.widget<VoiceBubble>(find.byType(VoiceBubble));
+      expect(b.path, note['file_path']);
+      await _close(t);
+    });
+
+    testWidgets('one that went back to an older version: the wav again', (
+      t,
+    ) async {
+      await _world(container: HaloContainer.decoy);
+      await takePeerOpus(_mem, _dev, carried: true, counts: true, written: 1);
+      await takePeerOpus(_mem, _dev, carried: false, counts: true, written: 2);
+      await _open(t);
+      await _speak(t, () => _sent().isNotEmpty);
+      expect(_sent().single['file_name'], 'voice.wav');
+      expect(encodes, 0);
+      await _close(t);
+    });
+
+    testWidgets('an encode that fails: the wav goes, nothing else is left', (
+      t,
+    ) async {
+      voiceOggForTest = (_, _) async => 'error: rate';
+      await _world(container: HaloContainer.decoy);
+      await takePeerOpus(_mem, _dev, carried: true, counts: true, written: 1);
+      await _open(t);
+      await _speak(t, () => _sent().isNotEmpty);
+      final note = _sent().single;
+      expect(note['file_name'], 'voice.wav');
+      expect(await media(t), ['vn_${note['msg_uid']}.wav']);
+      await _close(t);
+    });
   });
 
   group('a note handed over while its disguise is made', () {

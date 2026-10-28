@@ -20,6 +20,7 @@ import 'sheet_handle.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../l10n/numbers.dart';
+import '../voice_format.dart' show isVoiceName;
 
 /// how many pins one chat holds. the sender checks before pinning and the
 /// receiver checks before mirroring, so nobody can fill the list from afar.
@@ -124,7 +125,7 @@ class PinEntry {
     if (sticker != null) return l10n.stickerLabel;
     if (text.trim().isNotEmpty) return text.trim();
     if (imagePath != null) return l10n.pinsPhoto;
-    if (fileName == 'voice.wav') return l10n.pinsVoiceMessage;
+    if (isVoiceName(fileName)) return l10n.pinsVoiceMessage;
     if (fileName != null) return fileName!;
     return l10n.pinsMessage;
   }

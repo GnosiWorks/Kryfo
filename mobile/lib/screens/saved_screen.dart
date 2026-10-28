@@ -22,6 +22,7 @@ import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../msg_order.dart' show rowWrittenAt;
+import '../voice_format.dart' show isVoiceName;
 
 // every saved message across all chats, newest first. tap a card to jump to
 // that message in its chat; tap the bookmark to unsave: it empties, and the
@@ -120,13 +121,14 @@ class _SavedScreenState extends State<SavedScreen> {
     if (_kept(r)) return l10n.savedKeptInChat;
     if (r['sticker'] != null) return l10n.stickerLabel;
     final fn = r['file_name'] as String?;
-    if (fn == 'voice.wav') return l10n.savedVoiceNote;
+    if (isVoiceName(fn)) return l10n.savedVoiceNote;
     if (fn != null) return fn;
     if ((r['media_path'] as String?) != null) return l10n.savedPhoto;
     return (r['plaintext'] as String?) ?? '';
   }
 
-  bool _isVoice(Map<String, Object?> r) => r['file_name'] == 'voice.wav';
+  bool _isVoice(Map<String, Object?> r) =>
+      isVoiceName(r['file_name'] as String?);
   bool _isPhoto(Map<String, Object?> r) =>
       r['file_name'] == null && (r['media_path'] as String?) != null;
 
