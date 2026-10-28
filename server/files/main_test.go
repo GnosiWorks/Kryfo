@@ -95,7 +95,7 @@ func sha(s string) string {
 }
 
 func grind(id string, size int64, bits int) uint64 {
-	for n := uint64(0); ; n++ {
+	for n := uint64(1); ; n++ {
 		if powOK(id, size, n, bits) {
 			return n
 		}
@@ -117,6 +117,16 @@ func newUpload(chunks, recipients int) *upload {
 	u.body = make([]byte, u.size)
 	_, _ = rand.Read(u.body)
 	return u
+}
+
+// a begin with the work a quiet service asks and not one bit more
+func exactly(u *upload) newReq {
+	q := u.req()
+	base := powBits(testBits, u.size)
+	for !powOK(u.id, u.size, q.Pow, base) || powOK(u.id, u.size, q.Pow, base+1) {
+		q.Pow++
+	}
+	return q
 }
 
 // one that only ever begins: no bytes behind it
@@ -539,7 +549,7 @@ func TestEveryoneDayFiles(t *testing.T) {
 	r.begin(newUpload(2, 1))
 	r.begin(newUpload(2, 1))
 	// past the day's count of files it costs more work, not a refusal
-	if code, m := r.begin(newUpload(2, 1)); code != 429 || m["e"] != "work" {
+	if code, m := r.postJSON("/files/new", exactly(newUpload(2, 1))); code != 429 || m["e"] != "work" {
 		t.Fatalf("past the day's files: %d %v", code, m)
 	}
 	r.clock = r.clock.Add(24 * time.Hour)
@@ -626,7 +636,12 @@ func TestWorkRisesWithLoad(t *testing.T) {
 	}
 	u := newBare(3)
 	base := powBits(testBits, u.size)
-	code, m := r.begin(u)
+	// work for the bits a quiet service asks, and not one more
+	q0 := u.req()
+	for !powOK(u.id, u.size, q0.Pow, base) || powOK(u.id, u.size, q0.Pow, base+1) {
+		q0.Pow++
+	}
+	code, m := r.postJSON("/files/new", q0)
 	if code != 429 || m["e"] != "work" || int(m["bits"].(float64)) != base+1 {
 		t.Fatalf("at 60%%: %d %v", code, m)
 	}

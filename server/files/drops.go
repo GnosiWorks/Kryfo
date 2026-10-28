@@ -433,7 +433,8 @@ func (s *service) begin(r newReq) (begun, error) {
 		s.c.busy++
 		return begun{}, errBusy
 	}
-	if need := s.bitsNow(r.Size); !powOK(r.ID, r.Size, r.Pow, need) {
+	// a nonce of 0 is an ask with no work, which a new file is told to do
+	if need := s.bitsNow(r.Size); r.Pow == 0 || !powOK(r.ID, r.Size, r.Pow, need) {
 		return begun{}, errMoreWork{need}
 	}
 	if !s.roomFor(r.Size) {

@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/bits"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -41,8 +40,12 @@ type fakeFiles struct {
 	forget atomic.Int32
 	// what it answers /new with for a file every recipient has
 	goneIDs map[string]bool
-	gots    []string
-	drops   []string
+	// the bits a new file needs, as the service would say
+	bits int
+	// parts to answer busy, as for a writer still on the file
+	busyParts atomic.Int32
+	gots      []string
+	drops     []string
 }
 
 type fakeFile struct {
@@ -54,7 +57,7 @@ type fakeFile struct {
 }
 
 func newFakeFiles(t *testing.T) (*fakeFiles, *httptest.Server) {
-	f := &fakeFiles{files: map[string]*fakeFile{}, goneIDs: map[string]bool{}}
+	f := &fakeFiles{files: map[string]*fakeFile{}, goneIDs: map[string]bool{}, bits: 4}
 	mux := http.NewServeMux()
 	word := func(w http.ResponseWriter, code int, e string) {
 		w.WriteHeader(code)
@@ -72,15 +75,17 @@ func newFakeFiles(t *testing.T) (*fakeFiles, *httptest.Server) {
 		}
 		id := m["id"].(string)
 		size := int64(m["size"].(float64))
-		if !dropPowHolds(id, size, uint64(m["pow"].(float64)), dropPowBase+bits.Len64(uint64(size>>20))) {
-			word(w, 403, "denied")
-			return
-		}
 		if f.goneIDs[id] {
 			json.NewEncoder(w).Encode(map[string]any{"have": []int{}, "gone": true})
 			return
 		}
 		ff := f.files[id]
+		// no work is asked for again every time, so the tests know the count
+		if pow := uint64(m["pow"].(float64)); ff == nil && (pow == 0 || !dropPowHolds(id, size, pow, f.bits)) {
+			w.WriteHeader(429)
+			fmt.Fprintf(w, `{"e":"work","bits":%d}`, f.bits)
+			return
+		}
 		if ff == nil {
 			got := []string{}
 			for _, g := range m["got"].([]any) {
@@ -97,6 +102,11 @@ func newFakeFiles(t *testing.T) (*fakeFiles, *httptest.Server) {
 	})
 	mux.HandleFunc("PUT /files/{id}/{n}", func(w http.ResponseWriter, r *http.Request) {
 		f.puts.Add(1)
+		if f.busyParts.Add(-1) >= 0 {
+			io.Copy(io.Discard, r.Body)
+			word(w, 503, "busy")
+			return
+		}
 		if f.failParts.Add(-1) >= 0 {
 			io.Copy(io.Discard, r.Body)
 			w.WriteHeader(503)
@@ -222,7 +232,7 @@ func newFakeFiles(t *testing.T) (*fakeFiles, *httptest.Server) {
 func dropRig(t *testing.T) (*fakeFiles, *[]string) {
 	t.Helper()
 	f, srv := newFakeFiles(t)
-	oldHosts, oldDial, oldSecret, oldBits, oldPause := dropHosts, dropDial, dropSecret, dropPowBase, dropPause
+	oldHosts, oldDial, oldSecret, oldPause := dropHosts, dropDial, dropSecret, dropPause
 	lanes := &[]string{}
 	var lanesMu sync.Mutex
 	dropHosts = map[string]string{"f1": srv.URL}
@@ -235,10 +245,9 @@ func dropRig(t *testing.T) (*fakeFiles, *[]string) {
 	secret := make([]byte, 32)
 	rand.Read(secret)
 	dropSecret = func() ([]byte, error) { return secret, nil }
-	dropPowBase = 2
 	dropPause = 10 * time.Millisecond
 	t.Cleanup(func() {
-		dropHosts, dropDial, dropSecret, dropPowBase, dropPause = oldHosts, oldDial, oldSecret, oldBits, oldPause
+		dropHosts, dropDial, dropSecret, dropPause = oldHosts, oldDial, oldSecret, oldPause
 	})
 	return f, lanes
 }
@@ -549,7 +558,7 @@ func TestDropCancel(t *testing.T) {
 	for dropProgress("s:uid9") == "" && time.Now().Before(deadline) {
 		time.Sleep(5 * time.Millisecond)
 	}
-	if p := dropProgress("s:uid9"); !strings.HasSuffix(p, fmt.Sprint(int64(dropPadChunks(480))*dropSealed)) {
+	if p := dropProgress("s:uid9"); !strings.Contains(p, " "+fmt.Sprint(int64(dropPadChunks(480))*dropSealed)+" ") {
 		t.Fatalf("progress %q", p)
 	}
 	dropCancel("s:uid9")
@@ -577,10 +586,12 @@ func TestDropUploadsShareNothing(t *testing.T) {
 	p2, _ := writeRandom(t, 1000)
 	mustSend(t, sendJob(p1, "uid-a", "alice"))
 	mustSend(t, sendJob(p2, "uid-b", "alice"))
-	if len(f.news) != 2 {
+	// each asks first with no work, as every phone does, then with the
+	// work the service asked
+	if len(f.news) != 4 || f.news[0]["pow"].(float64) != 0 || f.news[2]["pow"].(float64) != 0 {
 		t.Fatalf("%d begins", len(f.news))
 	}
-	a, b := f.news[0], f.news[1]
+	a, b := f.news[1], f.news[3]
 	keys := []string{}
 	for k := range a {
 		keys = append(keys, k)
@@ -736,6 +747,51 @@ func TestDropLaneGoes(t *testing.T) {
 	if kept {
 		t.Fatal("the file's lane name stayed")
 	}
+}
+
+// the service says the work a new file needs; the engine does it, keeps
+// it, and a send that goes on asks with no work at all
+func TestDropWorkAskedAndKept(t *testing.T) {
+	f, _ := dropRig(t)
+	f.bits = 8
+	path, _ := writeRandom(t, 3*80*dropChunk)
+	f.failParts.Store(int32(dropTries) + 1)
+	if r := dropSend(sendJob(path, "uid-w", "a")); r != "error: net" {
+		t.Fatalf("first go: %s", r)
+	}
+	if len(f.news) != 2 || f.news[0]["pow"].(float64) != 0 {
+		t.Fatalf("begins: %v", f.news)
+	}
+	v, _, _, _ := dropValuesFor(path, "uid-w")
+	if !dropPowHolds(v.id, int64(dropPadChunks(240))*dropSealed, uint64(f.news[1]["pow"].(float64)), 8) {
+		t.Fatal("the work asked was not done")
+	}
+	// again: the service holds it, and the kept work is sent with no
+	// grinding and no second ask
+	f.failParts.Store(0)
+	n := len(f.news)
+	mustSend(t, sendJob(path, "uid-w", "a"))
+	if len(f.news) != n+1 {
+		t.Fatalf("%d begins for a send that goes on", len(f.news)-n)
+	}
+	// a service that asks past what a phone grinds is busy for now
+	f.bits = dropPowMost + 1
+	other, _ := writeRandom(t, 1000)
+	if r := dropSend(sendJob(other, "uid-x", "a")); r != "error: busy" {
+		t.Fatalf("past the most work: %s", r)
+	}
+	if p := dropProgress("s:none"); p != "" {
+		t.Fatalf("progress of nothing: %q", p)
+	}
+}
+
+// a part answered busy, a writer of a dead circuit still on the file, is
+// sent again
+func TestDropBusyPartSentAgain(t *testing.T) {
+	f, _ := dropRig(t)
+	path, _ := writeRandom(t, 1000)
+	f.busyParts.Store(1)
+	mustSend(t, sendJob(path, "uid-y", "a"))
 }
 
 // against a real kryfo-files: KRYFO_FILES_URL=http://127.0.0.1:3342 with

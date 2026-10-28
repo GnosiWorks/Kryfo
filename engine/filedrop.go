@@ -50,9 +50,7 @@ const (
 // a sender cannot point a phone at a server of their choosing
 var dropHosts = map[string]string{"f1": "https://files.kryfo.app"}
 
-// the work an upload costs, as the service asks it: this many bits under
-// 1 MB, one more each doubling (server/files/wire.go, powBits)
-var dropPowBase = 18
+// the service says the bits a new upload needs (server/files, bitsNow)
 
 // the sender's token on what only the sender does, a recipient's on a
 // download (server/files/main.go)
@@ -111,7 +109,10 @@ func dropClient(lane string) (*http.Client, error) {
 
 type dropJob struct {
 	done, total atomic.Int64
-	cancel      context.CancelFunc
+	// 1 while the work for a send is done, before any byte goes: the app
+	// shows it as preparing
+	preparing atomic.Bool
+	cancel    context.CancelFunc
 }
 
 var (
@@ -140,7 +141,7 @@ func dropEnd(key string) {
 	dropJobsMu.Unlock()
 }
 
-// "<done> <total>" in bytes for a transfer under way, or ""
+// "<done> <total> <preparing>" in bytes for a transfer under way, or ""
 //
 //export HaloFileProgress
 func HaloFileProgress(cKey *C.char) *C.char {
@@ -154,7 +155,11 @@ func dropProgress(key string) string {
 	if j == nil {
 		return ""
 	}
-	return fmt.Sprintf("%d %d", j.done.Load(), j.total.Load())
+	p := 0
+	if j.preparing.Load() {
+		p = 1
+	}
+	return fmt.Sprintf("%d %d %d", j.done.Load(), j.total.Load(), p)
 }
 
 // stops a transfer under way. it ends with "error: cancelled"
@@ -378,22 +383,39 @@ func dropUpload(ctx context.Context, c *http.Client, base string, job dropSendJo
 
 // "" once the parts are up, "whole" for a file that needed none
 func dropUploadParts(ctx context.Context, c *http.Client, base string, job dropSendJob, v dropValues, size int64, chunks int, sealed int64, got []string, j *dropJob) string {
-	pow, err := dropPow(ctx, v.id, sealed)
-	if err != nil {
-		return "cancelled"
-	}
-	// nothing of the sender in it: no key, no day, nothing two uploads of
-	// one person share
-	body, _ := json.Marshal(map[string]any{
-		"id": v.id, "size": sealed, "got": got, "own": sha256Hex(v.own), "pow": pow,
-	})
 	var begun struct {
 		Have []int `json:"have"`
 		End  bool  `json:"end"`
 		Gone bool  `json:"gone"`
+		Bits int   `json:"bits"`
 	}
-	if word := dropAsk(ctx, c, http.MethodPost, base+"/files/new", body, &begun, nil); word != "" {
-		return word
+	// asked first with the work already done for this file, or none: a
+	// file the service holds goes on with no work, and a new one is told
+	// the bits it needs now
+	pow, _ := dropNonceOf(v.id, sealed)
+	for round := 0; ; round++ {
+		// nothing of the sender in it: no key, no day, nothing two uploads
+		// of one person share
+		body, _ := json.Marshal(map[string]any{
+			"id": v.id, "size": sealed, "got": got, "own": sha256Hex(v.own), "pow": pow,
+		})
+		word := dropAsk(ctx, c, http.MethodPost, base+"/files/new", body, &begun, nil)
+		if word == "" {
+			break
+		}
+		if word != "work" || round >= 3 || begun.Bits <= 0 || begun.Bits > dropPowMost {
+			if word == "work" {
+				return "busy"
+			}
+			return word
+		}
+		j.preparing.Store(true)
+		n, err := dropPow(ctx, v.id, sealed, begun.Bits)
+		j.preparing.Store(false)
+		if err != nil {
+			return "cancelled"
+		}
+		pow = n
 	}
 	// whole already, or every recipient has it: the frame goes again, the
 	// file does not
@@ -447,16 +469,49 @@ func dropUploadParts(ctx context.Context, c *http.Client, base string, job dropS
 }
 
 // the work for one upload, bound to its id and size
-func dropPow(ctx context.Context, id string, sealed int64) (uint64, error) {
-	want := dropPowBase + bits.Len64(uint64(sealed>>20))
-	for n := uint64(0); ; n++ {
+// the work for one upload, bound to its id and size, at the bits the
+// service asks. what was done is kept for the process, so a resume, a
+// resend or a group's owed members never do it twice
+func dropPow(ctx context.Context, id string, sealed int64, want int) (uint64, error) {
+	if n, bits := dropNonceOf(id, sealed); bits >= want {
+		return n, nil
+	}
+	// 0 is no work at all, as the first ask sends it
+	for n := uint64(1); ; n++ {
 		if dropPowHolds(id, sealed, n, want) {
+			dropNoncesMu.Lock()
+			if len(dropNonces) > 4096 {
+				dropNonces = map[string]workDone{}
+			}
+			dropNonces[id+":"+strconv.FormatInt(sealed, 10)] = workDone{n, want}
+			dropNoncesMu.Unlock()
 			return n, nil
 		}
 		if n&0xffff == 0 && ctx.Err() != nil {
 			return 0, ctx.Err()
 		}
 	}
+}
+
+// the most bits an engine grinds: past it the service is flooded, and the
+// send waits for later
+const dropPowMost = 30
+
+type workDone struct {
+	n    uint64
+	bits int
+}
+
+var (
+	dropNoncesMu sync.Mutex
+	dropNonces   = map[string]workDone{}
+)
+
+func dropNonceOf(id string, sealed int64) (uint64, int) {
+	dropNoncesMu.Lock()
+	defer dropNoncesMu.Unlock()
+	d := dropNonces[id+":"+strconv.FormatInt(sealed, 10)]
+	return d.n, d.bits
 }
 
 func (j *dropJob) progressOf(have map[int]bool, sealed int64) {
@@ -496,7 +551,9 @@ func dropPutPart(ctx context.Context, c *http.Client, base, id, own string, f io
 		req.Header.Set("User-Agent", "")
 		req.Header.Set(dropOwnHeader, own)
 		word = dropDo(ctx, c, req, nil)
-		if word == "" || !dropRetry(word) {
+		// busy on a part: another writer still on the file, which the
+		// service stops for this one. a moment later it is gone
+		if word == "" || !(dropRetry(word) || word == "busy") {
 			return word
 		}
 	}
@@ -587,7 +644,7 @@ func dropDo(ctx context.Context, c *http.Client, req *http.Request, into any) st
 		_ = json.Unmarshal(b, into)
 	}
 	switch e.E {
-	case "full", "limit", "busy", "big", "gone", "clash", "denied":
+	case "full", "limit", "busy", "big", "gone", "clash", "denied", "work":
 		return e.E
 	}
 	if resp.StatusCode >= 500 {
