@@ -706,6 +706,8 @@
   "donateGivesFree": "Toutes les fonctions de confidentialité restent gratuites, badge ou pas.",
   "donateAddressOnTap": "L'adresse est créée quand vous touchez le bouton ci-dessous. Elle reste la vôtre pendant une heure : en revenant, vous retrouvez la même.",
   "donateBitcoinBusy": "Bitcoin est saturé pour le moment. Réessayez plus tard ou payez par carte.",
+  "donateBusyPlainAddress": "Vous pouvez toujours envoyer du bitcoin à l'adresse ci-dessous. Elle ne donne pas de badge.",
+  "donateSameAddressAgain": "C'est l'adresse que vous avez ouverte tout à l'heure. Si vous avez déjà envoyé, attendez ici.",
   "donateReachingThePaymentService": "Connexion au service de paiement par Tor…",
   "donateThisCanTakeUp": "Cela peut prendre une minute ou deux",
   "donateSThisCanTake": "{waited} s · cela peut prendre une minute ou deux",

@@ -602,6 +602,8 @@
   "donateGivesFree": "बैज हो या न हो, निजता की हर सुविधा मुफ़्त रहती है।",
   "donateAddressOnTap": "पता तभी बनता है जब आप नीचे टैप करते हैं। यह एक घंटे तक आपका रहता है, इसलिए लौटने पर आपको वही पता मिलता है।",
   "donateBitcoinBusy": "Bitcoin अभी व्यस्त है। बाद में फिर कोशिश करें या कार्ड से भुगतान करें।",
+  "donateBusyPlainAddress": "आप अब भी नीचे दिए पते पर bitcoin भेज सकते हैं। इससे बैज नहीं मिलता।",
+  "donateSameAddressAgain": "यह वही पता है जो आपने पहले खोला था। अगर आप भेज चुके हैं, तो यहीं प्रतीक्षा करें।",
   "donateReachingThePaymentService": "Tor से भुगतान सेवा तक पहुँच रहे हैं…",
   "donateThisCanTakeUp": "इसमें एक-दो मिनट लग सकते हैं",
   "donateSThisCanTake": "{waited} सेकंड · इसमें एक-दो मिनट लग सकते हैं",

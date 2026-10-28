@@ -706,6 +706,8 @@
   "donateGivesFree": "Jede Datenschutzfunktion bleibt kostenlos, mit oder ohne Abzeichen.",
   "donateAddressOnTap": "Die Adresse entsteht erst, wenn du unten tippst. Sie bleibt eine Stunde lang deine, wer zurückkommt, bekommt dieselbe.",
   "donateBitcoinBusy": "Bitcoin ist gerade ausgelastet. Versuch es später noch einmal oder zahl mit Karte.",
+  "donateBusyPlainAddress": "Du kannst trotzdem Bitcoin an die Adresse unten senden. Sie bringt kein Abzeichen.",
+  "donateSameAddressAgain": "Das ist die Adresse, die du vorhin geöffnet hast. Wenn du schon gesendet hast, warte hier.",
   "donateReachingThePaymentService": "Verbinde mit dem Zahlungsdienst über Tor…",
   "donateThisCanTakeUp": "Das kann ein, zwei Minuten dauern",
   "donateSThisCanTake": "{waited}s · das kann ein, zwei Minuten dauern",

@@ -2316,6 +2316,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Bitcoin is busy right now. Try again later or pay by card.';
 
   @override
+  String get donateBusyPlainAddress =>
+      'You can still send bitcoin to the address below. It gives no badge.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'This is the address you opened earlier. If you already sent, wait here.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Reaching the payment service over Tor…';
 

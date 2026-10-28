@@ -706,6 +706,8 @@
   "donateGivesFree": "Tüm gizlilik özellikleri rozetli de rozetsiz de ücretsiz kalır.",
   "donateAddressOnTap": "Adres, aşağıya dokunduğunda oluşur. Bir saat boyunca senindir, geri dönersen aynısını alırsın.",
   "donateBitcoinBusy": "Bitcoin şu an yoğun. Daha sonra tekrar dene ya da kartla öde.",
+  "donateBusyPlainAddress": "Aşağıdaki adrese yine de bitcoin gönderebilirsin. Rozet vermez.",
+  "donateSameAddressAgain": "Bu, daha önce açtığın adres. Zaten gönderdiysen burada bekle.",
   "donateReachingThePaymentService": "Ödeme servisine Tor üzerinden ulaşılıyor…",
   "donateThisCanTakeUp": "Bu bir iki dakika sürebilir",
   "donateSThisCanTake": "{waited} sn · bu bir iki dakika sürebilir",

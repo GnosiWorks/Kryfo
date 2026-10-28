@@ -257,17 +257,17 @@ Future<SupporterTier?> settleOpenInvoice([
     await prefs.remove(c.key(_openInvoiceKey));
     return null;
   }
-  SupporterTier? best;
-  BadgeReceipt? proof;
+  BadgeReceipt? best;
   final left = <OpenInvoice>[];
   for (final inv in list) {
     final r = await fetchReceipt(inv.id);
     switch (r.state) {
       case ReceiptState.paid:
-        if (inv.tier != SupporterTier.none &&
-            (best == null || inv.tier.index > best.index)) {
-          best = inv.tier;
-          proof = r;
+        // ranked by what the signed receipt proves, not by the record
+        final t = _parseTier(r.tier);
+        if (t != SupporterTier.none &&
+            (best == null || t.index > _parseTier(best.tier).index)) {
+          best = r;
         }
       case ReceiptState.expired:
         break;
@@ -277,11 +277,29 @@ Future<SupporterTier?> settleOpenInvoice([
   }
   await _storeOpen(prefs, c, left);
   if (best == null) return null;
-  // an older, smaller invoice settling late never lowers a badge
-  if ((await loadSupporterTier(c)).index > best.index) return null;
-  await saveSupporterTier(best, c);
-  if (proof?.payload != null && proof?.sig != null) {
-    await saveBadgeReceipt(proof!.payload!, proof.sig!, c);
+  // said only when it raised the badge
+  if ((await loadSupporterTier(c)).index > _parseTier(best.tier).index) {
+    return null;
   }
-  return best;
+  return grantReceipt(best, c);
+}
+
+/// grants the tier a verified receipt names and keeps the receipt, unless
+/// the phone already holds a higher one. returns the tier it proves, none
+/// when it proves nothing
+Future<SupporterTier> grantReceipt(
+  BadgeReceipt r, [
+  HaloContainer c = HaloContainer.everyday,
+]) async {
+  final t = _parseTier(r.tier);
+  if (r.state != ReceiptState.paid || t == SupporterTier.none) {
+    return SupporterTier.none;
+  }
+  // an older, smaller invoice settling late never lowers a badge
+  if ((await loadSupporterTier(c)).index > t.index) return t;
+  await saveSupporterTier(t, c);
+  if (r.payload != null && r.sig != null) {
+    await saveBadgeReceipt(r.payload!, r.sig!, c);
+  }
+  return t;
 }

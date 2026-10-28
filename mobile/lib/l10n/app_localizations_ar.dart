@@ -2382,6 +2382,14 @@ class AppLocalizationsAr extends AppLocalizations {
       'Bitcoin مشغول الآن. حاول لاحقًا أو ادفع بالبطاقة.';
 
   @override
+  String get donateBusyPlainAddress =>
+      'لا يزال بإمكانك إرسال bitcoin إلى العنوان أدناه. لا يمنح شارة.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'هذا هو العنوان الذي فتحته من قبل. إن كنت قد أرسلت، فانتظر هنا.';
+
+  @override
   String get donateReachingThePaymentService =>
       'جارٍ الوصول إلى خدمة الدفع عبر Tor…';
 

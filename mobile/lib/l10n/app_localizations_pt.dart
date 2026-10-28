@@ -2338,6 +2338,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'O Bitcoin está sobrecarregado agora. Tente mais tarde ou pague com cartão.';
 
   @override
+  String get donateBusyPlainAddress =>
+      'Você ainda pode enviar bitcoin para o endereço abaixo. Ele não dá selo.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Este é o endereço que você abriu antes. Se já enviou, espere aqui.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Acessando o serviço de pagamento pelo Tor…';
 

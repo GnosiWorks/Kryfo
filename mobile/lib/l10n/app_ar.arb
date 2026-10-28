@@ -706,6 +706,8 @@
   "donateGivesFree": "تبقى كل ميزات الخصوصية مجانية، بشارة أو بدونها.",
   "donateAddressOnTap": "لا يُنشأ العنوان إلا حين تنقر في الأسفل. يبقى لك لمدة ساعة، فإن عدت تحصل على العنوان نفسه.",
   "donateBitcoinBusy": "Bitcoin مشغول الآن. حاول لاحقًا أو ادفع بالبطاقة.",
+  "donateBusyPlainAddress": "لا يزال بإمكانك إرسال bitcoin إلى العنوان أدناه. لا يمنح شارة.",
+  "donateSameAddressAgain": "هذا هو العنوان الذي فتحته من قبل. إن كنت قد أرسلت، فانتظر هنا.",
   "donateReachingThePaymentService": "جارٍ الوصول إلى خدمة الدفع عبر Tor…",
   "donateThisCanTakeUp": "قد يستغرق هذا دقيقة أو دقيقتين",
   "donateSThisCanTake": "⁨{waited}⁩ ث · قد يستغرق هذا دقيقة أو دقيقتين",

@@ -2343,6 +2343,14 @@ class AppLocalizationsIt extends AppLocalizations {
       'Bitcoin è sovraccarico in questo momento. Riprova più tardi o paga con carta.';
 
   @override
+  String get donateBusyPlainAddress =>
+      'Puoi comunque inviare bitcoin all\'indirizzo qui sotto. Non dà il badge.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'È l\'indirizzo che hai aperto prima. Se hai già inviato, aspetta qui.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Contatto il servizio di pagamento via Tor…';
 

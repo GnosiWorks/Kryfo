@@ -171,13 +171,19 @@ Future<BadgeReceipt> fetchReceipt(String invoiceId) async {
         if (payload == null || sig == null) {
           return const BadgeReceipt(ReceiptState.error);
         }
+        // the id and tier come from the signed words, never from the
+        // answer around them, and must be the invoice that was asked about
+        final signed = signedReceipt(payload);
+        if (signed == null || signed.id != invoiceId) {
+          return const BadgeReceipt(ReceiptState.error);
+        }
         if (!await verifyReceipt(payload, sig)) {
           return const BadgeReceipt(ReceiptState.error);
         }
         return BadgeReceipt(
           ReceiptState.paid,
-          id: j['id'] as String?,
-          tier: j['tier'] as String?,
+          id: signed.id,
+          tier: signed.tier,
           payload: payload,
           sig: sig,
         );
@@ -191,7 +197,18 @@ Future<BadgeReceipt> fetchReceipt(String invoiceId) async {
   }
 }
 
-/// the payload format is frozen (`kryfo-badge|v1|<id>|<tier>`) so old
+const _receiptTiers = {'supporter', 'patron', 'guardian'};
+
+/// the invoice id and tier a receipt's payload names, or null when it is
+/// not one: `halo-badge|v1|<id>|<tier>`
+({String id, String tier})? signedReceipt(String payload) {
+  final p = payload.split('|');
+  if (p.length != 4 || p[0] != 'halo-badge' || p[1] != 'v1') return null;
+  if (p[2].isEmpty || !_receiptTiers.contains(p[3])) return null;
+  return (id: p[2], tier: p[3]);
+}
+
+/// the payload format is frozen (`halo-badge|v1|<id>|<tier>`) so old
 /// receipts keep verifying
 Future<bool> verifyReceipt(String payload, String sigB64) async {
   try {

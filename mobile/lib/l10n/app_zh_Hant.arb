@@ -706,6 +706,8 @@
   "donateGivesFree": "無論有沒有徽章，所有隱私功能都一直免費。",
   "donateAddressOnTap": "點下方按鈕時才會產生地址。它在一小時內都屬於你，回來時還是同一個。",
   "donateBitcoinBusy": "Bitcoin 現在很忙。請稍後再試，或刷卡付款。",
+  "donateBusyPlainAddress": "你仍然可以向下方地址傳送 bitcoin，但不會獲得徽章。",
+  "donateSameAddressAgain": "這是你之前開啟的地址。如果已經傳送，請在這裡等候。",
   "donateReachingThePaymentService": "正在經由 Tor 連線到付款服務…",
   "donateThisCanTakeUp": "可能需要一兩分鐘",
   "donateSThisCanTake": "{waited} 秒 · 可能需要一兩分鐘",

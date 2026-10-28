@@ -2342,6 +2342,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Bitcoin est saturé pour le moment. Réessayez plus tard ou payez par carte.';
 
   @override
+  String get donateBusyPlainAddress =>
+      'Vous pouvez toujours envoyer du bitcoin à l\'adresse ci-dessous. Elle ne donne pas de badge.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'C\'est l\'adresse que vous avez ouverte tout à l\'heure. Si vous avez déjà envoyé, attendez ici.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Connexion au service de paiement par Tor…';
 

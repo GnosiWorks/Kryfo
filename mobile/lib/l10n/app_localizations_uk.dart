@@ -2372,6 +2372,14 @@ class AppLocalizationsUk extends AppLocalizations {
       'Bitcoin зараз перевантажений. Спробуй пізніше або оплати карткою.';
 
   @override
+  String get donateBusyPlainAddress =>
+      'Bitcoin усе одно можна надіслати на адресу нижче. Значка вона не дає.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Це адреса, яку ти відкривав раніше. Якщо вже надіслав, чекай тут.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Звертаємося до платіжного сервісу через Tor…';
 

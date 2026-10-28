@@ -706,6 +706,8 @@
   "donateGivesFree": "Todas las funciones de privacidad siguen siendo gratis, con insignia o sin ella.",
   "donateAddressOnTap": "La dirección se crea cuando tocas abajo. Es tuya durante una hora, así que si vuelves te sale la misma.",
   "donateBitcoinBusy": "Bitcoin está saturado ahora mismo. Inténtalo más tarde o paga con tarjeta.",
+  "donateBusyPlainAddress": "Aún puedes enviar bitcoin a la dirección de abajo. No da insignia.",
+  "donateSameAddressAgain": "Es la dirección que abriste antes. Si ya enviaste, espera aquí.",
   "donateReachingThePaymentService": "Contactando con el servicio de pago por Tor…",
   "donateThisCanTakeUp": "Puede tardar uno o dos minutos",
   "donateSThisCanTake": "{waited}s · puede tardar uno o dos minutos",

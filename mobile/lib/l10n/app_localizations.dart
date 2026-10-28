@@ -3740,6 +3740,18 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'You can still send bitcoin to the address below. It gives no badge.'**
+  String get donateBusyPlainAddress;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'This is the address you opened earlier. If you already sent, wait here.'**
+  String get donateSameAddressAgain;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'Reaching the payment service over Tor…'**
   String get donateReachingThePaymentService;
 

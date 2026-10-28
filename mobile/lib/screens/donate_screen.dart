@@ -998,6 +998,10 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
     with TickerProviderStateMixin {
   late _Phase _phase = _onOnion ? _Phase.review : _Phase.needsOnion;
   BadgeInvoice? _inv;
+  // the service handed back the invoice this phone opened earlier
+  bool _again = false;
+  // the tier the signed receipt proves
+  SupporterTier _paid = SupporterTier.none;
   Timer? _poll;
   Timer? _tick;
   int _secsLeft = 0;
@@ -1092,6 +1096,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
     }
     setState(() {
       _inv = inv;
+      _again = again != null && inv.id == again;
       _secsLeft = inv.secondsLeft;
       _phase = _Phase.invoice;
     });
@@ -1168,16 +1173,15 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
         _poll?.cancel();
         _tick?.cancel();
         await clearOpenInvoice(session.container, inv.id);
-        // signature already verified inside fetchReceipt. grant the tier and
-        // keep the receipt so the badge stays provable without the network.
-        if (widget.tier != SupporterTier.none) {
-          await saveSupporterTier(widget.tier, session.container);
-          if (r.payload != null && r.sig != null) {
-            await saveBadgeReceipt(r.payload!, r.sig!, session.container);
-          }
-        }
+        // signature and id already checked inside fetchReceipt. the tier
+        // granted is the one the receipt proves, kept so the badge stays
+        // provable without the network
+        final t = await grantReceipt(r, session.container);
         if (!mounted) return;
-        setState(() => _phase = _Phase.confirmed);
+        setState(() {
+          _paid = t;
+          _phase = _Phase.confirmed;
+        });
         break;
       case ReceiptState.expired:
         // the service itself says so: nothing left to wait for
@@ -1243,7 +1247,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
       case _Phase.invoice:
         return _invoiceView();
       case _Phase.confirmed:
-        return _ConfirmedView(tier: widget.tier);
+        return _ConfirmedView(tier: _paid);
       case _Phase.expired:
         return _expiredView();
     }
@@ -1472,48 +1476,77 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
   }
 
   // ---- busy: the service holds new invoices for now ----
+  // the badge waits, the donation does not: the fixed address is right
+  // here, and it makes no new address
   Widget _busyView() {
-    return FitColumn(
+    final addr = widget.fallbackAddress;
+    // scrolls rather than fits: the qr measures itself by layout, which an
+    // intrinsic height cannot ask
+    return SingleChildScrollView(
       key: const ValueKey('busy'),
-      padding: const EdgeInsets.fromLTRB(28, 12, 28, 24),
-      children: [
-        const Spacer(),
-        Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: HaloColors.amberSoft,
+      padding: const EdgeInsets.fromLTRB(22, 16, 22, 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: HaloColors.amberSoft,
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.hourglass_empty_rounded,
+                size: 22,
+                color: HaloColors.amber,
+              ),
+            ),
           ),
-          alignment: Alignment.center,
-          child: Icon(
-            Icons.hourglass_empty_rounded,
-            size: 24,
-            color: HaloColors.amber,
+          const SizedBox(height: 14),
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              l10n.donateBitcoinBusy,
+              textAlign: TextAlign.center,
+              style: HaloType.serif(
+                size: 19,
+                color: HaloColors.text,
+              ).copyWith(height: 1.35),
+            ),
           ),
-        ),
-        const SizedBox(height: 18),
-        Semantics(
-          liveRegion: true,
-          child: Text(
-            l10n.donateBitcoinBusy,
-            textAlign: TextAlign.center,
-            style: HaloType.serif(
-              size: 20,
-              color: HaloColors.text,
-            ).copyWith(height: 1.35),
+          if (addr.isNotEmpty) ...[
+            const SizedBox(height: 18),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: HaloColors.surface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: HaloColors.line),
+              ),
+              child: Text(
+                l10n.donateBusyPlainAddress,
+                style: HaloType.sans(
+                  size: 12.5,
+                  color: HaloColors.text2,
+                  height: 1.5,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _StaticAddress(address: addr),
+          ],
+          const SizedBox(height: 20),
+          HaloPrimaryButton(
+            key: const ValueKey('busy-card'),
+            label: l10n.donateCardPay,
+            onTap: () => _openCardPage(context),
           ),
-        ),
-        const Spacer(),
-        const SizedBox(height: 24),
-        HaloPrimaryButton(
-          key: const ValueKey('busy-card'),
-          label: l10n.donateCardPay,
-          onTap: () => _openCardPage(context),
-        ),
-        const SizedBox(height: 10),
-        _ghostButton(l10n.commonTryAgain, _start),
-      ],
+          const SizedBox(height: 10),
+          _ghostButton(l10n.commonTryAgain, _start),
+        ],
+      ),
     );
   }
 
@@ -1580,6 +1613,40 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           const SizedBox(height: 16),
           _copyRow(l10n.donateAddress, inv.address),
           const SizedBox(height: 14),
+          // a donor who sent and came back must not think it failed
+          if (_again) ...[
+            Container(
+              key: const ValueKey('same-address'),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: HaloColors.amberSoft,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: HaloColors.amber),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.history_rounded,
+                    size: 17,
+                    color: HaloColors.amber,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      l10n.donateSameAddressAgain,
+                      style: HaloType.sans(
+                        size: 13,
+                        color: HaloColors.text,
+                        height: 1.45,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
           _watchingPill(),
           const SizedBox(height: 14),
           Row(

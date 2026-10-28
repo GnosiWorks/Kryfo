@@ -2218,6 +2218,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get donateBitcoinBusy => 'Bitcoin 现在很忙。请稍后再试，或用银行卡支付。';
 
   @override
+  String get donateBusyPlainAddress => '你仍然可以向下方地址发送 bitcoin，但不会获得徽章。';
+
+  @override
+  String get donateSameAddressAgain => '这是你之前打开的地址。如果已经发送，请在这里等待。';
+
+  @override
   String get donateReachingThePaymentService => '正在经由 Tor 连接支付服务…';
 
   @override
@@ -11558,6 +11564,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get donateBitcoinBusy => 'Bitcoin 現在很忙。請稍後再試，或刷卡付款。';
+
+  @override
+  String get donateBusyPlainAddress => '你仍然可以向下方地址傳送 bitcoin，但不會獲得徽章。';
+
+  @override
+  String get donateSameAddressAgain => '這是你之前開啟的地址。如果已經傳送，請在這裡等候。';
 
   @override
   String get donateReachingThePaymentService => '正在經由 Tor 連線到付款服務…';

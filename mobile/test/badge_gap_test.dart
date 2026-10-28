@@ -199,6 +199,8 @@ void main() {
       await _open(t, s);
       await _toReview(t);
       await _showAddress(t);
+      // a first address is not called the earlier one
+      expect(find.byKey(const ValueKey('same-address')), findsNothing);
       final prefs = await SharedPreferences.getInstance();
       final saved = (await loadOpenInvoices()).single;
       expect(saved.id, 'inv1');
@@ -214,6 +216,8 @@ void main() {
         {'tier': 'supporter', 'again': 'inv1'},
       ]);
       expect(_stored(prefs)!.split(';'), hasLength(1));
+      // the same address handed back says so, so nobody sends twice
+      expect(find.text(l10n.donateSameAddressAgain), findsOneWidget);
       await _drain(t);
     });
 
@@ -255,6 +259,8 @@ void main() {
       await _showAddress(t);
       expect(s.bodies.single['again'], 'inv1');
       expect((await loadOpenInvoices()).map((i) => i.id), ['inv1', 'inv3']);
+      // a different invoice came back: it is a new address, said as nothing
+      expect(find.byKey(const ValueKey('same-address')), findsNothing);
       expect(await reusableInvoice(SupporterTier.supporter), 'inv3');
       await _drain(t);
     });
@@ -284,6 +290,12 @@ void main() {
         find.text(l10n.donateThePaymentServiceIsHavingTrouble),
         findsNothing,
       );
+      // the badge waits, the donation does not: the fixed address is here
+      expect(find.text(l10n.donateBusyPlainAddress), findsOneWidget);
+      expect(find.textContaining('bc1q dewm'), findsOneWidget);
+      expect(find.text(l10n.donateCopyAddress), findsOneWidget);
+      await t.ensureVisible(find.byKey(const ValueKey('busy-card')));
+      await t.pump(const Duration(milliseconds: 100));
       await t.tap(find.byKey(const ValueKey('busy-card')));
       await _beats(t);
       // the card page is named first, like every card path
@@ -292,6 +304,8 @@ void main() {
       await _beats(t);
       expect(opened.single, Uri.parse(kCardUrl));
       // try again asks once more
+      await t.ensureVisible(find.text(l10n.commonTryAgain));
+      await t.pump(const Duration(milliseconds: 100));
       await t.tap(find.text(l10n.commonTryAgain));
       await t.pump(const Duration(seconds: 1));
       expect(s.asked, 2);
@@ -388,6 +402,67 @@ void main() {
         'sig': base64Url.encode(sig),
       });
     }
+
+    test('a receipt for another invoice is refused', () async {
+      s.receipts['inv1'] = paid('inv9', 'guardian');
+      expect((await fetchReceipt('inv1')).state, ReceiptState.error);
+      SharedPreferences.setMockInitialValues({
+        'badge_open_invoice': 'inv1|guardian',
+      });
+      expect(await settleOpenInvoice(), isNull);
+      expect(await loadSupporterTier(), SupporterTier.none);
+      expect((await loadOpenInvoices()).single.id, 'inv1');
+    });
+
+    test('the tier is the one the signed words name', () async {
+      // the answer around the payload says guardian, the payload patron
+      s.receipts['inv2'] = paid(
+        'inv2',
+        'patron',
+      ).replaceFirst('"tier":"patron"', '"tier":"guardian"');
+      final r = await fetchReceipt('inv2');
+      expect(r.state, ReceiptState.paid);
+      expect(r.tier, 'patron');
+      // and a record that says more than was paid grants only what was
+      SharedPreferences.setMockInitialValues({
+        'badge_open_invoice': 'inv2|guardian',
+      });
+      expect(await settleOpenInvoice(), SupporterTier.patron);
+      expect(await loadSupporterTier(), SupporterTier.patron);
+    });
+
+    test('a payload that is not one is refused', () async {
+      for (final p in [
+        'halo-badge|v2|inv3|patron',
+        'halo-badge|v1|inv3|emperor',
+        'halo-badge|v1|inv3',
+        'other|v1|inv3|patron',
+      ]) {
+        expect(signedReceipt(p), isNull, reason: p);
+      }
+      expect(signedReceipt('halo-badge|v1|inv3|patron'), (
+        id: 'inv3',
+        tier: 'patron',
+      ));
+    });
+
+    testWidgets('the live check grants what the receipt proves', (t) async {
+      _phone(t);
+      final live = _Service([_made('inv1')]);
+      live.receipts['inv1'] = paid('inv1', 'patron');
+      await _open(t, live);
+      await _toReview(t);
+      await _showAddress(t);
+      for (var i = 0; i < 10; i++) {
+        await t.pump(const Duration(milliseconds: 200));
+      }
+      expect(await loadSupporterTier(), SupporterTier.patron);
+      expect(
+        find.text(l10n.donateVerifiedOnChainYou('patron')),
+        findsOneWidget,
+      );
+      await _drain(t);
+    });
 
     test(
       'each is asked about: paid granted, gone dropped, open kept',

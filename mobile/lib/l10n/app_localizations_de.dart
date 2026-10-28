@@ -2344,6 +2344,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Bitcoin ist gerade ausgelastet. Versuch es später noch einmal oder zahl mit Karte.';
 
   @override
+  String get donateBusyPlainAddress =>
+      'Du kannst trotzdem Bitcoin an die Adresse unten senden. Sie bringt kein Abzeichen.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Das ist die Adresse, die du vorhin geöffnet hast. Wenn du schon gesendet hast, warte hier.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Verbinde mit dem Zahlungsdienst über Tor…';
 

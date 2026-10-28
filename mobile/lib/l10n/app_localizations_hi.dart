@@ -2325,6 +2325,14 @@ class AppLocalizationsHi extends AppLocalizations {
       'Bitcoin अभी व्यस्त है। बाद में फिर कोशिश करें या कार्ड से भुगतान करें।';
 
   @override
+  String get donateBusyPlainAddress =>
+      'आप अब भी नीचे दिए पते पर bitcoin भेज सकते हैं। इससे बैज नहीं मिलता।';
+
+  @override
+  String get donateSameAddressAgain =>
+      'यह वही पता है जो आपने पहले खोला था। अगर आप भेज चुके हैं, तो यहीं प्रतीक्षा करें।';
+
+  @override
   String get donateReachingThePaymentService =>
       'Tor से भुगतान सेवा तक पहुँच रहे हैं…';
 

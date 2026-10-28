@@ -2320,6 +2320,14 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bitcoin şu an yoğun. Daha sonra tekrar dene ya da kartla öde.';
 
   @override
+  String get donateBusyPlainAddress =>
+      'Aşağıdaki adrese yine de bitcoin gönderebilirsin. Rozet vermez.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Bu, daha önce açtığın adres. Zaten gönderdiysen burada bekle.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Ödeme servisine Tor üzerinden ulaşılıyor…';
 

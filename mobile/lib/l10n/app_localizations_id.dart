@@ -2313,6 +2313,14 @@ class AppLocalizationsId extends AppLocalizations {
       'Bitcoin sedang sibuk. Coba lagi nanti atau bayar dengan kartu.';
 
   @override
+  String get donateBusyPlainAddress =>
+      'Kamu tetap bisa mengirim bitcoin ke alamat di bawah. Alamat ini tidak memberi lencana.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Ini alamat yang kamu buka tadi. Kalau sudah mengirim, tunggu di sini.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Menghubungi layanan pembayaran lewat Tor…';
 

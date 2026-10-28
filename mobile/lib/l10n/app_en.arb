@@ -2907,6 +2907,14 @@
   "@donateBitcoinBusy": {
     "description": "screens/donate_screen.dart"
   },
+  "donateBusyPlainAddress": "You can still send bitcoin to the address below. It gives no badge.",
+  "@donateBusyPlainAddress": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateSameAddressAgain": "This is the address you opened earlier. If you already sent, wait here.",
+  "@donateSameAddressAgain": {
+    "description": "screens/donate_screen.dart"
+  },
   "donateReachingThePaymentService": "Reaching the payment service over Tor…",
   "@donateReachingThePaymentService": {
     "description": "screens/donate_screen.dart"

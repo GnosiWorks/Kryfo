@@ -706,6 +706,8 @@
   "donateGivesFree": "Mọi tính năng riêng tư vẫn miễn phí, dù có huy hiệu hay không.",
   "donateAddressOnTap": "Địa chỉ chỉ được tạo khi bạn chạm vào bên dưới. Nó là của bạn trong một giờ, nên quay lại bạn vẫn nhận đúng địa chỉ đó.",
   "donateBitcoinBusy": "Bitcoin đang bận. Hãy thử lại sau hoặc thanh toán bằng thẻ.",
+  "donateBusyPlainAddress": "Bạn vẫn có thể gửi bitcoin đến địa chỉ bên dưới. Địa chỉ này không mở huy hiệu.",
+  "donateSameAddressAgain": "Đây là địa chỉ bạn đã mở lúc trước. Nếu đã gửi rồi, hãy chờ ở đây.",
   "donateReachingThePaymentService": "Đang kết nối tới dịch vụ thanh toán qua Tor…",
   "donateThisCanTakeUp": "Có thể mất một đến hai phút",
   "donateSThisCanTake": "{waited}s · có thể mất một đến hai phút",

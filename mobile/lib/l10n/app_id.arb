@@ -706,6 +706,8 @@
   "donateGivesFree": "Semua fitur privasi tetap gratis, dengan atau tanpa lencana.",
   "donateAddressOnTap": "Alamat baru dibuat saat kamu mengetuk di bawah. Alamat itu milikmu selama satu jam, jadi saat kembali kamu mendapat yang sama.",
   "donateBitcoinBusy": "Bitcoin sedang sibuk. Coba lagi nanti atau bayar dengan kartu.",
+  "donateBusyPlainAddress": "Kamu tetap bisa mengirim bitcoin ke alamat di bawah. Alamat ini tidak memberi lencana.",
+  "donateSameAddressAgain": "Ini alamat yang kamu buka tadi. Kalau sudah mengirim, tunggu di sini.",
   "donateReachingThePaymentService": "Menghubungi layanan pembayaran lewat Tor…",
   "donateThisCanTakeUp": "Ini bisa makan waktu satu atau dua menit",
   "donateSThisCanTake": "{waited} dtk · ini bisa makan waktu satu atau dua menit",

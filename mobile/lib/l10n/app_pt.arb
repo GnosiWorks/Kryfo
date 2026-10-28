@@ -706,6 +706,8 @@
   "donateGivesFree": "Todos os recursos de privacidade continuam gratuitos, com selo ou sem.",
   "donateAddressOnTap": "O endereço é criado quando você toca abaixo. Ele fica seu por uma hora, então ao voltar você recebe o mesmo.",
   "donateBitcoinBusy": "O Bitcoin está sobrecarregado agora. Tente mais tarde ou pague com cartão.",
+  "donateBusyPlainAddress": "Você ainda pode enviar bitcoin para o endereço abaixo. Ele não dá selo.",
+  "donateSameAddressAgain": "Este é o endereço que você abriu antes. Se já enviou, espere aqui.",
   "donateReachingThePaymentService": "Acessando o serviço de pagamento pelo Tor…",
   "donateThisCanTakeUp": "Isso pode levar um ou dois minutos",
   "donateSThisCanTake": "{waited}s · isso pode levar um ou dois minutos",
