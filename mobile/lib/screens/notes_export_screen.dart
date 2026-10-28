@@ -17,6 +17,7 @@ import '../lock_guard.dart' show LockDropped;
 import '../lock_state.dart';
 import '../main.dart' hide live;
 import '../notes_export.dart';
+import '../desktop/desktop_mode.dart' show canShareOut;
 import '../open_file.dart' show ShareEnd, shareFileOut;
 import '../theme.dart';
 import '../tools/age_ffi.dart';
@@ -342,7 +343,9 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
           return answer;
         });
       }
-      if ((!save || answer.state == SaveState.cancelled) && mounted) {
+      if ((!save || answer.state == SaveState.cancelled) &&
+          canShareOut &&
+          mounted) {
         // only an app picked from the sheet has it: one closed keeps the file
         shared =
             await lockState.hold(() async {
@@ -613,7 +616,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
               EaseSize(
                 child: RiseSwap(
                   alignment: Alignment.topCenter,
-                  child: !_notSaved || _installer
+                  child: !_notSaved || _installer || !canShareOut
                       ? const SizedBox(
                           key: ValueKey(false),
                           width: double.infinity,

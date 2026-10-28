@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import '../desktop/desktop_mode.dart' show canShareOut;
 import '../open_file.dart' show ShareEnd, shareFileOut;
 import '../backup.dart';
 import '../main.dart' hide live;
@@ -463,7 +464,7 @@ class _BackupScreenState extends State<BackupScreen> {
             EaseSize(
               child: RiseSwap(
                 alignment: Alignment.topCenter,
-                child: !_notSaved
+                child: !_notSaved || !canShareOut
                     ? const SizedBox(
                         key: ValueKey(false),
                         width: double.infinity,

@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/desktop/desktop_mode.dart';
 import 'package:kryfo/open_file.dart';
 import 'package:kryfo/tools/tools_bridge.dart';
+import 'package:kryfo/widgets/nav_bar.dart' show HaloTab, shownTabs;
 
 List<File> _dart() => Directory('lib')
     .listSync(recursive: true)
@@ -71,6 +72,25 @@ void a() {
       ShareEnd.failed,
     );
     expect(canShareOut, isFalse);
+  });
+
+  test('the desktop shows no tools tab, the phone does', () {
+    expect(shownTabs, contains(HaloTab.tools));
+    onDesktop = true;
+    addTearDown(() => onDesktop = false);
+    expect(shownTabs, isNot(contains(HaloTab.tools)));
+    expect(shownTabs, contains(HaloTab.chats));
+  });
+
+  test('backups and notes offer no share instead on desktop', () {
+    for (final f in [
+      'lib/screens/backup_screen.dart',
+      'lib/screens/notes_export_screen.dart',
+    ]) {
+      final src = File(f).readAsStringSync();
+      final i = src.indexOf('l10n.backupShareInstead');
+      expect(src.substring(i - 900, i), contains('canShareOut'), reason: f);
+    }
   });
 
   test('the phone keeps its share sheet', () {
