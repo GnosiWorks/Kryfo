@@ -17,6 +17,7 @@
 **/Flutter.framework
 **/Pods/
 **/build/
+**/fcm.json
 **/google-services.json
 **/jniLibs/**/*.so
 **/jniLibs/**/*.stamp
@@ -29,6 +30,8 @@ mobile/android/app/src/play/google-services.json
 *.log
 *.pem
 *.swp
+*service-account*.json
+box.key
 *~
 .DS_Store
 .env
