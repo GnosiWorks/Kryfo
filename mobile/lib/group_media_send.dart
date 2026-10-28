@@ -222,6 +222,9 @@ Future<String> sendGroupSlices({
   Map<String, Set<int>>? owed,
   // a decoy open: the send stops where it is and says 'parked'
   bool Function()? hold,
+  // one frame in place of the slices, the file being on the files
+  // service: nothing is read from [path]
+  bool single = false,
 }) async {
   if (!mediaInflight.add(msgUid)) return 'busy';
   try {
@@ -238,6 +241,7 @@ Future<String> sendGroupSlices({
       onShort: onShort,
       owed: owed,
       hold: hold ?? () => false,
+      single: single,
     );
   } finally {
     mediaCancelled.remove(msgUid);
@@ -260,6 +264,7 @@ Future<String> _send({
   onShort,
   required Map<String, Set<int>>? owed,
   required bool Function() hold,
+  required bool single,
 }) async {
   // nobody to send to is not a send that went
   if (members.isEmpty) return 'error: no members';
@@ -274,7 +279,7 @@ Future<String> _send({
   }
   final int total;
   try {
-    total = await mediaSliceCount(path);
+    total = single ? 1 : await mediaSliceCount(path);
   } catch (e) {
     return 'error: read';
   }
@@ -356,7 +361,7 @@ Future<String> _send({
 
   Future<String?> envelope(int i) async {
     try {
-      return await wrap(await mediaSlice(path, i), i, total);
+      return await wrap(single ? '' : await mediaSlice(path, i), i, total);
     } catch (e) {
       dlog('grp media chunk $i/$total unreadable: ${e.runtimeType}');
       return null;
