@@ -7,10 +7,16 @@
  * endian. on 0 the output is in *out and must go back through ks_free; on
  * an error *out is null. nothing is kept between calls.
  *
- * identity: a serialized IdentityKeyPair. pub: a 33 byte curve key (0x05
- * first). record: a serialized SessionRecord, the bytes the app stores
- * already. now and ts are milliseconds since 1970. pinned?: when given,
- * the only identity accepted for the peer.
+ * identity: a serialized IdentityKeyPair whose public half is its private
+ * key's. pub: a curve key in its one form: 33 bytes, 0x05 first, u below
+ * 2^255 - 19 with the top bit clear, in the prime order group; any other
+ * form of a key a call takes is KS_ERR_KEY. record: a serialized
+ * SessionRecord, the bytes the app stores already. now and ts are
+ * milliseconds since 1970. pinned?: when given, the only identity accepted
+ * for the peer.
+ *
+ * the abi version moves on any change to a call's fields or to what a call
+ * refuses.
  */
 #ifndef KRYFO_SIGNAL_H
 #define KRYFO_SIGNAL_H
@@ -19,7 +25,7 @@
 #include <stdint.h>
 
 /* what ks_abi_version returns for this header */
-#define KS_ABI_VERSION 2
+#define KS_ABI_VERSION 4
 
 #define KS_OK 0
 #define KS_ERR_ARGS 1      /* framing, a missing field, a wrong width */
@@ -32,6 +38,8 @@
 #define KS_ERR_NO_PREKEY 8 /* the message names a prekey not given */
 #define KS_ERR_CLASSIC 9   /* no kyber prekey, or a version 3 opener */
 #define KS_ERR_SESSION 10  /* a record that does not read or cannot be used */
+#define KS_ERR_FORMAT 11   /* a kryfo frame not in its one encoding */
+#define KS_ERR_SIGNER 12   /* a key the body does not name as its signer */
 #define KS_ERR_PANIC 98
 #define KS_ERR_INTERNAL 99
 
@@ -68,14 +76,18 @@ KS_CALL(ks_verify);
  * kyber id, kyber, kyber signature, identity pub -> bundle.
  * both signatures are checked; no kyber is KS_ERR_CLASSIC */
 KS_CALL(ks_bundle_build);
-/* bundle -> the eleven fields ks_bundle_build takes, checked again */
+/* bundle -> the eleven fields ks_bundle_build takes, checked again. a
+ * kyber key is checked for its length and type only: libsignal has no
+ * check of its coefficients */
 KS_CALL(ks_bundle_parse);
 /* identity, reg, record?, bundle, now, pinned? -> record, their pub */
 KS_CALL(ks_session_from_bundle);
 /* identity, reg, record, plaintext, now, pinned? -> type, message, record */
 KS_CALL(ks_encrypt);
 /* message -> version, reg, prekey id?, signed id, kyber id?, base key,
- * their pub: which records to load for ks_decrypt_prekey */
+ * their pub: which records to load for ks_decrypt_prekey. an identity or
+ * base key not in its one form is KS_ERR_KEY, here and in
+ * ks_decrypt_prekey */
 KS_CALL(ks_prekey_message_info);
 /* identity, reg, record?, message, prekey?, signed prekey?, kyber prekey?,
  * pinned? -> plaintext, record, prekey used?, kyber prekey used?, their pub */
@@ -85,23 +97,57 @@ KS_CALL(ks_decrypt_signal);
 /* record -> has current, version, pq ratchet, base key, their pub?, local
  * reg, remote reg, n, then n times (version, base key) of archived states */
 KS_CALL(ks_session_info);
-/* held, newer -> held with newer's current state in front */
+/* held, newer -> held with newer's current state in front. a newer
+ * record that does not encode back the same is KS_ERR_SESSION */
 KS_CALL(ks_session_promote);
+/* record, version (u32, 1 or more) -> record without the archived states
+ * below version, how many went (u32). a current state below version, one
+ * whose opener the peer has not answered yet, or a record that does not
+ * encode back the same is KS_ERR_SESSION; no current state
+ * KS_ERR_NO_SESSION */
+KS_CALL(ks_session_drop_below);
 /* identity, context, message -> signature (64), xeddsa over
  * "kryfo-sig-v1" 0x00 context 0x00 message. context is one of invite,
- * hello, heal, device-list, move, else KS_ERR_ARGS. an invite, hello,
- * heal or device-list body opens with KIN4, KHL1, KHB1 or KDL2; a move
- * body is two different canonical keys (33 each) and 32 bytes; any other
- * body is KS_ERR_ARGS */
+ * hello, heal, device-list, move, else KS_ERR_ARGS. the message is the
+ * whole body of that context's format without its own signature: a KIN4,
+ * KHL1, KHB1 or KDL2 as ks_parse reads it, or a move body. a body that
+ * does not parse is KS_ERR_FORMAT, one whose signatures inside do not
+ * hold KS_ERR_SIGNATURE. the signer must be the key the body names:
+ * the invite's identity, the identity of the invite inside a hello, the
+ * key a heal's block runs on (the identity when it names none), the list's
+ * identity, a move's old or new identity; any other is KS_ERR_SIGNER */
 KS_CALL(ks_sign);
-/* pub, context, message, signature -> () or KS_ERR_SIGNATURE. pub is
- * exactly 33 canonical bytes, else KS_ERR_KEY; context as for ks_sign;
- * a body ks_sign would refuse, or a signature not 64 bytes with s below
- * the group order, is KS_ERR_SIGNATURE */
+/* pub, context, message, signature -> () or KS_ERR_SIGNATURE. pub not in
+ * its one form is KS_ERR_KEY; context as for ks_sign; a body ks_sign
+ * would refuse, a pub the body does not name as its signer, or a
+ * signature not 64 bytes with s below the group order, is
+ * KS_ERR_SIGNATURE */
 KS_CALL(ks_verify_ctx);
 /* () -> the libsignal-protocol and spqr sources it was built from, as
- * Cargo.lock names them */
+ * Cargo.lock names them. this says what the lock held when it was built,
+ * not what the code is: a build with replaced sources reports the same */
 KS_CALL(ks_build_info);
+/* format, frame, identity? -> the frame's fields, with every check done:
+ * each key in its one form, the bytes the one encoding of what they say,
+ * then every signature inside and the frame's own. anything off is
+ * KS_ERR_FORMAT, a signature that does not hold KS_ERR_SIGNATURE. numbers
+ * are u32 unless named u64; "block" is twelve fields, all empty when
+ * there is no bundle: reg, device, key?, spk id, spk, spk sig, kyber id,
+ * kyber, kyber sig, ec id?, ec?, then the bundle ks_session_from_bundle
+ * takes. identity is given for device-bundle only. the phone is device 1
+ * of every identity and its bundle runs on the identity; every other device
+ * has its own key and an id in 2..127.
+ *   invite: flags, issued, expires, invite id, identity, first contact,
+ *     onion?, face?, face sig?, device list? (a KDL2), answering key, sig,
+ *     block
+ *   hello: answers, owner, invite (a KIN4), sender, sig
+ *   heal: restored, issued, nonce, identity, peer, since, signer, sig,
+ *     block
+ *   device-list: identity, version (u64, below 2^63), sig, n, then n
+ *     times device, key, reg, flags
+ *   device-bundle: the key the bundle runs on, block
+ *   move: old, peer, new, invite hash */
+KS_CALL(ks_parse);
 
 #undef KS_CALL
 

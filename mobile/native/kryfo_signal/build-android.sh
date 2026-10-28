@@ -65,7 +65,7 @@ export PROTOC="${PROTOC:-$(command -v protoc || true)}"
 [[ -n "$PROTOC" ]] || die "protoc not found: libsignal-protocol builds its protobufs with it"
 
 # the two git dependencies stay at the reviewed commits, whatever their tags say
-grep -q "git+https://github.com/signalapp/libsignal?tag=v0.99.4#$LIBSIGNAL_REV\"" Cargo.lock ||
+grep -q "git+https://github.com/signalapp/libsignal?rev=$LIBSIGNAL_REV#$LIBSIGNAL_REV\"" Cargo.lock ||
   die "Cargo.lock does not pin libsignal at $LIBSIGNAL_REV"
 grep -q "git+https://github.com/signalapp/SparsePostQuantumRatchet.git?tag=v1.5.3#$SPQR_REV\"" Cargo.lock ||
   die "Cargo.lock does not pin spqr at $SPQR_REV"
@@ -116,7 +116,7 @@ for t in "${TARGETS[@]}"; do
     "${CARGO[@]}" build --release --target "$t"
   so="target/$t/release/libkryfo_signal.so"
 
-  # exactly the 18 calls of the header, linked against libc and libdl only
+  # exactly the calls of the header, linked against libc and libdl only
   want=$(grep -o 'ks_[a-z_0-9]*' include/kryfo_signal.h | sort -u)
   got=$("$BIN/llvm-nm" -D --defined-only --format=just-symbols "$so" | sort -u)
   [[ "$got" == "$want" ]] || die "$abi exports differ from include/kryfo_signal.h: $(diff <(echo "$want") <(echo "$got") | grep '^[<>]' | tr '\n' ' ')"

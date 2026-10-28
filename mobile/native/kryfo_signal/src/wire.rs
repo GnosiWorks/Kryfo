@@ -100,7 +100,6 @@ impl Writer {
         }
     }
 
-    #[cfg(test)]
     pub fn u64(&mut self, v: u64) -> &mut Self {
         self.bytes(&v.to_le_bytes())
     }

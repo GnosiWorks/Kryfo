@@ -14,6 +14,7 @@ use rand::TryRngCore as _;
 use rand::rngs::OsRng;
 
 use crate::Error;
+use crate::keys::{strict_kyber, strict_public, strict_sig};
 use crate::record;
 use crate::wire::{Reader, Writer};
 
@@ -44,16 +45,25 @@ fn addr(name: &str) -> ProtocolAddress {
     ProtocolAddress::new(name.into(), DeviceId::new(1).expect("1 is a device id"))
 }
 
-fn identity_pair(b: &[u8]) -> R<IdentityKeyPair> {
-    IdentityKeyPair::try_from(b).map_err(|_| Error::Key)
+/// a stored identity pair whose public half is its private key's, in its
+/// one form: a pair that does not belong together would sign or open for a
+/// key it does not hold
+pub(crate) fn identity_pair(b: &[u8]) -> R<IdentityKeyPair> {
+    let pair = IdentityKeyPair::try_from(b).map_err(|_| Error::Key)?;
+    let public = pair.private_key().public_key().map_err(|_| Error::Key)?;
+    if public != *pair.public_key() {
+        return Err(Error::Key);
+    }
+    strict_public(&public.serialize())?;
+    Ok(pair)
 }
 
 fn identity(b: &[u8]) -> R<IdentityKey> {
-    IdentityKey::decode(b).map_err(|_| Error::Key)
+    Ok(IdentityKey::new(strict_public(b)?))
 }
 
 fn public(b: &[u8]) -> R<PublicKey> {
-    PublicKey::deserialize(b).map_err(|_| Error::Key)
+    strict_public(b)
 }
 
 fn session(b: &[u8]) -> R<SessionRecord> {
@@ -236,8 +246,12 @@ pub fn identity_generate(input: &[u8]) -> R<Vec<u8>> {
 
 pub fn identity_from_private(input: &[u8]) -> R<Vec<u8>> {
     let mut r = Reader::new(input);
-    let private = PrivateKey::deserialize(r.need()?).map_err(|_| Error::Key)?;
+    let b = r.need()?;
     r.end()?;
+    if b.len() != 32 {
+        return Err(Error::Key);
+    }
+    let private = PrivateKey::deserialize(b).map_err(|_| Error::Key)?;
     let public = private.public_key().map_err(|_| Error::Key)?;
     let pair = IdentityKeyPair::new(IdentityKey::new(public), private);
     Ok(Writer::default()
@@ -339,7 +353,7 @@ pub fn prekey_public(input: &[u8]) -> R<Vec<u8>> {
 /// kyber key. anything else is for sig.rs, under a context
 pub fn verify(input: &[u8]) -> R<Vec<u8>> {
     let mut r = Reader::new(input);
-    let id = crate::sig::strict_public(r.need()?)?;
+    let id = strict_public(r.need()?)?;
     let msg = r.need()?;
     let sig = r.need()?;
     r.end()?;
@@ -348,7 +362,7 @@ pub fn verify(input: &[u8]) -> R<Vec<u8>> {
     if !prekey {
         return Err(Error::Args);
     }
-    if !id.verify_signature(msg, sig) {
+    if strict_sig(sig).is_err() || !id.verify_signature(msg, sig) {
         return Err(Error::Signature);
     }
     Ok(Vec::new())
@@ -378,15 +392,17 @@ fn bundle_fields(r: &mut Reader) -> R<(PreKeyBundle, Vec<u8>)> {
     let (Some(k_id), Some(k_pub), Some(k_sig)) = (k_id, k_pub, k_sig) else {
         return Err(Error::Classic);
     };
-    let k_pub_key = kem::PublicKey::deserialize(k_pub).map_err(|_| Error::Key)?;
+    let k_pub_key = strict_kyber(k_pub)?;
     let pk = match (pk_id, pk_pub) {
         (Some(i), Some(p)) => Some((PreKeyId::from(i), public(p)?)),
         (None, None) => None,
         _ => return Err(Error::Args),
     };
-    if !id
-        .public_key()
-        .verify_signature(&spk_pub.serialize(), spk_sig)
+    if strict_sig(spk_sig).is_err()
+        || strict_sig(k_sig).is_err()
+        || !id
+            .public_key()
+            .verify_signature(&spk_pub.serialize(), spk_sig)
         || !id.public_key().verify_signature(k_pub, k_sig)
     {
         return Err(Error::Signature);
@@ -517,10 +533,17 @@ pub fn encrypt(input: &[u8]) -> R<Vec<u8>> {
 }
 
 fn prekey_message(b: &[u8]) -> R<PreKeySignalMessage> {
-    PreKeySignalMessage::try_from(b).map_err(|e| match e {
+    let m = PreKeySignalMessage::try_from(b).map_err(|e| match e {
         SignalProtocolError::LegacyCiphertextVersion(_) => Error::Classic,
         _ => Error::Message,
-    })
+    })?;
+    // libsignal reads both keys in any form: x25519 ignores the top bit and
+    // a clamped scalar kills an order 8 part, so one key would open under
+    // several byte forms and come back as the peer's identity in one of them
+    if !m.identity_key().public_key().is_canonical() || !m.base_key().is_canonical() {
+        return Err(Error::Key);
+    }
+    Ok(m)
 }
 
 /// message -> version, reg, prekey id?, signed id, kyber id?, base key,
@@ -672,4 +695,18 @@ pub fn session_promote(input: &[u8]) -> R<Vec<u8>> {
     Ok(Writer::default()
         .bytes(&record::promote(held, newer)?)
         .done())
+}
+
+/// record, version -> record without the archived states below version,
+/// how many went. the current state must be at that version or above
+pub fn session_drop_below(input: &[u8]) -> R<Vec<u8>> {
+    let mut r = Reader::new(input);
+    let held = r.need()?;
+    let min = r.u32()?;
+    r.end()?;
+    if min == 0 {
+        return Err(Error::Args);
+    }
+    let (rec, dropped) = record::drop_below(held, min)?;
+    Ok(Writer::default().bytes(&rec).u32(dropped).done())
 }

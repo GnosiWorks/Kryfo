@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # the noto fallbacks behind kryfo's own fonts, cut down to the scripts they
 # are there for. fraunces, instrument sans and jetbrains mono draw latin; these
-# only ever draw what those lack: cyrillic, and arabic with persian. and one
-# that stands in for instrument sans in vietnamese, which stacks accents
-# instrument sans does not have.
+# only ever draw what those lack: cyrillic, arabic with persian, and
+# devanagari for hindi. and one that stands in for instrument sans in
+# vietnamese, which stacks accents instrument sans does not have.
 #
 # sources: google/fonts at the commit below, checked by sha256. tools:
 # fonttools 4.66.0. same inputs, same commands, same bytes out.
@@ -23,6 +23,7 @@ declare -A SUM=(
   ["NotoSans[wdth,wght].ttf"]=bfb7bb691513f12e734dc346c03a03f784912432d7e3fa8e56efcf906fe86b3d
   ["NotoNaskhArabic[wght].ttf"]=67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f
   ["NotoSansArabic[wdth,wght].ttf"]=63111b5b2e074dd48cc67692e0a2726d86ee94c1c37fe8598257b7b4e87e869e
+  ["NotoSansDevanagari[wdth,wght].ttf"]=14ec4af41f27482216d1c2229f417ff9b1425e1babb014e57d1d40d03229853e
 )
 for f in "${!SUM[@]}"; do
   echo "${SUM[$f]}  $SRC/$f" | sha256sum -c --quiet -
@@ -41,6 +42,10 @@ ARAB=U+0020-002F,U+003A-0040,U+005B-0060,U+007B-007E,U+00A0,U+00AB,U+00B0,U+00B7
 # latin with every vietnamese letter (precomposed, and the combining marks),
 # general punctuation, the dong and euro signs
 VIET=U+0020-007E,U+00A0-017F,U+01A0-01A1,U+01AF-01B0,U+0300-0303,U+0306,U+0309,U+0323,U+1EA0-1EF9,U+2000-206F,U+20AB-20AC
+# devanagari and its extended block, the joiners hindi spelling uses, the
+# dotted circle a lone vowel sign is drawn on, and the rupee sign. latin
+# letters, digits and punctuation stay with our fonts.
+DEVA=U+0900-097F,U+200C-200D,U+20B9,U+25CC,U+A8E0-A8FF
 
 cut() { # in out unicodes axis-limits...
   local in=$1 out=$2 uni=$3; shift 3
@@ -59,3 +64,4 @@ cut "$SRC/NotoSans[wdth,wght].ttf"         NotoSans-Cyrillic.ttf         "$CYR" 
 cut "$SRC/NotoNaskhArabic[wght].ttf"       NotoNaskhArabic-Kryfo.ttf     "$ARAB" wght=400:700
 cut "$SRC/NotoSansArabic[wdth,wght].ttf"   NotoSansArabic-Kryfo.ttf      "$ARAB" wdth=100 wght=400:700
 cut "$SRC/NotoSans[wdth,wght].ttf"         NotoSans-Vietnamese.ttf       "$VIET" wdth=100 wght=400:700
+cut "$SRC/NotoSansDevanagari[wdth,wght].ttf" NotoSansDevanagari-Kryfo.ttf "$DEVA" wdth=100 wght=400:700

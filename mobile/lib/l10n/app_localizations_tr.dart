@@ -7474,6 +7474,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get languageNameAr => 'Arapça';
 
   @override
+  String get languageNameHi => 'Hintçe';
+
+  @override
   String get languageLaterLine =>
       'Bunu istediğin zaman ayarlardan değiştirebilirsin.';
 

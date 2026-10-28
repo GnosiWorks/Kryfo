@@ -66,6 +66,8 @@ pub(crate) fn run(op: Op, w: &mut Writer) -> Result<Vec<Vec<u8>>, Error> {
             8 => Error::NoPrekey,
             9 => Error::Classic,
             10 => Error::Session,
+            11 => Error::Format,
+            12 => Error::Signer,
             _ => Error::Internal,
         });
     }
@@ -858,4 +860,459 @@ fn mte_canary() {
     let past = unsafe { std::ptr::read_volatile(p.add(16)) };
     drop(unsafe { Box::from_raw(p as *mut [u8; 16]) });
     std::hint::black_box(past);
+}
+
+#[test]
+fn classic_states_go_after_the_pq_restart() {
+    let f = fixture();
+    let bob_rec = &f["bob_rec"];
+    let alice_pub = run(session_info, w().bytes(bob_rec)).unwrap()[4].clone();
+    // alice's pq prekeys, and bob restarting the classic chat on them
+    let spk = run(
+        signed_prekey_generate,
+        w().bytes(&f["alice_id"]).u32(51).u64(NOW),
+    )
+    .unwrap();
+    let ky = run(
+        kyber_prekey_generate,
+        w().bytes(&f["alice_id"]).u32(52).u64(NOW),
+    )
+    .unwrap();
+    let bundle = run(
+        bundle_build,
+        w().u32(11)
+            .u32(1)
+            .opt(None)
+            .opt(None)
+            .u32(51)
+            .bytes(&spk[1])
+            .bytes(&spk[2])
+            .u32(52)
+            .bytes(&ky[1])
+            .bytes(&ky[2])
+            .bytes(&alice_pub),
+    )
+    .unwrap()
+    .remove(0);
+    let pq = run(
+        session_from_bundle,
+        w().bytes(&f["bob_id"])
+            .u32(22)
+            .bytes(bob_rec)
+            .bytes(&bundle)
+            .u64(NOW)
+            .opt(Some(&alice_pub)),
+    )
+    .unwrap()
+    .remove(0);
+    let info = run(session_info, w().bytes(&pq)).unwrap();
+    assert_eq!(u32_of(&info[1]), 4);
+    assert_eq!(u32_of(&info[7]), 1);
+    assert_eq!(u32_of(&info[8]), 3);
+    let m3 = |rec: &[u8]| {
+        run(
+            decrypt_signal,
+            w().bytes(&f["bob_id"])
+                .u32(22)
+                .bytes(rec)
+                .bytes(&f["m3"])
+                .opt(None),
+        )
+    };
+    assert_eq!(m3(&pq).unwrap()[0], b"m3 from dart");
+    // alice has not answered the restart: the classic state stays
+    assert_eq!(
+        run(session_drop_below, w().bytes(&pq).u32(4)),
+        Err(Error::Session)
+    );
+    // bob's first pq message, alice opens it on her held classic record
+    let m = run(
+        encrypt,
+        w().bytes(&f["bob_id"])
+            .u32(22)
+            .bytes(&pq)
+            .bytes(b"on pq")
+            .u64(NOW)
+            .opt(None),
+    )
+    .unwrap();
+    assert_eq!(u32_of(&m[0]), 3);
+    assert_eq!(
+        run(session_drop_below, w().bytes(&m[2]).u32(4)),
+        Err(Error::Session)
+    );
+    let o = run(
+        decrypt_prekey,
+        w().bytes(&f["alice_id"])
+            .u32(11)
+            .bytes(&f["alice_rec"])
+            .bytes(&m[1])
+            .opt(None)
+            .bytes(&spk[0])
+            .bytes(&ky[0])
+            .opt(None),
+    )
+    .unwrap();
+    assert_eq!(o[0], b"on pq");
+    // the responder opened bob's pq opener, so her side drops at once
+    let a = run(session_drop_below, w().bytes(&o[1]).u32(4)).unwrap();
+    assert_eq!(u32_of(&a[1]), 1);
+    // her answer reaches bob: now his side drops too
+    let reply = run(
+        encrypt,
+        w().bytes(&f["alice_id"])
+            .u32(11)
+            .bytes(&a[0])
+            .bytes(b"back")
+            .u64(NOW)
+            .opt(None),
+    )
+    .unwrap();
+    assert_eq!(u32_of(&reply[0]), 2);
+    let r = run(
+        decrypt_signal,
+        w().bytes(&f["bob_id"])
+            .u32(22)
+            .bytes(&m[2])
+            .bytes(&reply[1])
+            .opt(None),
+    )
+    .unwrap();
+    assert_eq!(r[0], b"back");
+    // m3 still opened here, before the drop
+    assert_eq!(m3(&r[1]).unwrap()[0], b"m3 from dart");
+    let d = run(session_drop_below, w().bytes(&r[1]).u32(4)).unwrap();
+    assert_eq!(u32_of(&d[1]), 1);
+    let info = run(session_info, w().bytes(&d[0])).unwrap();
+    assert_eq!(u32_of(&info[1]), 4);
+    assert_eq!(u32_of(&info[7]), 0);
+    assert!(m3(&d[0]).is_err());
+    // the pq session goes on
+    let m = run(
+        encrypt,
+        w().bytes(&f["bob_id"])
+            .u32(22)
+            .bytes(&d[0])
+            .bytes(b"still pq")
+            .u64(NOW)
+            .opt(None),
+    )
+    .unwrap();
+    assert_eq!(u32_of(&m[0]), 2);
+    let o = run(
+        decrypt_signal,
+        w().bytes(&f["alice_id"])
+            .u32(11)
+            .bytes(&a[0])
+            .bytes(&m[1])
+            .opt(None),
+    )
+    .unwrap();
+    assert_eq!(o[0], b"still pq");
+    // nothing left to drop; a state below the line, none, or no line
+    assert_eq!(
+        u32_of(&run(session_drop_below, w().bytes(&d[0]).u32(4)).unwrap()[1]),
+        0
+    );
+    assert_eq!(
+        run(session_drop_below, w().bytes(bob_rec).u32(4)),
+        Err(Error::Session)
+    );
+    assert_eq!(
+        run(session_drop_below, w().bytes(&pq).u32(0)),
+        Err(Error::Args)
+    );
+    assert_eq!(
+        run(session_drop_below, w().bytes(&pq).u32(5)),
+        Err(Error::Session)
+    );
+    assert_eq!(
+        run(session_drop_below, w().bytes(b"junk").u32(4)),
+        Err(Error::Session)
+    );
+    // a version 3 record keeps its own archived states below 3: none here
+    assert_eq!(
+        u32_of(&run(session_drop_below, w().bytes(bob_rec).u32(3)).unwrap()[1]),
+        0
+    );
+}
+
+#[test]
+fn every_call_takes_keys_in_their_one_form_only() {
+    let alice = Party::new(1);
+    let bob = Party::new(2);
+    let fields = run(bundle_parse, w().bytes(&bob.bundle())).unwrap();
+    let rebuild = |f: &[Vec<u8>]| {
+        let mut x = w();
+        for v in f {
+            x.bytes(v);
+        }
+        run(bundle_build, &mut x)
+    };
+    let top = |k: &[u8]| {
+        let mut k = k.to_vec();
+        k[32] |= 0x80;
+        k
+    };
+    // the identity, the spk and the one-time prekey with the top bit set,
+    // or a byte after them
+    for i in [3, 5, 10] {
+        let mut f = fields.clone();
+        f[i] = top(&f[i]);
+        assert_eq!(rebuild(&f), Err(Error::Key), "field {i}");
+        let mut f = fields.clone();
+        f[i].push(0);
+        assert_eq!(rebuild(&f), Err(Error::Key), "field {i}");
+    }
+    // a kyber key with a byte after it, or one short
+    let mut f = fields.clone();
+    f[8].push(0);
+    assert_eq!(rebuild(&f), Err(Error::Key));
+    let mut f = fields.clone();
+    f[8].pop();
+    assert_eq!(rebuild(&f), Err(Error::Key));
+    // a prekey signature in its second encoding
+    for i in [6, 9] {
+        let mut f = fields.clone();
+        crate::tests_formats::add_l(&mut f[i][32..]);
+        assert_eq!(rebuild(&f), Err(Error::Signature), "field {i}");
+    }
+    rebuild(&fields).unwrap();
+    // a pin in a second form
+    let mut x = w();
+    x.bytes(&alice.pair)
+        .u32(1)
+        .opt(None)
+        .bytes(&bob.bundle())
+        .u64(NOW)
+        .opt(Some(&top(&bob.public)));
+    assert_eq!(run(session_from_bundle, &mut x), Err(Error::Key));
+    // a pair whose halves do not belong together opens and seals nothing
+    let a = IdentityKeyPair::try_from(alice.pair.as_slice()).unwrap();
+    let b = IdentityKeyPair::try_from(bob.pair.as_slice()).unwrap();
+    let mixed = IdentityKeyPair::new(*b.identity_key(), *a.private_key()).serialize();
+    let mut x = w();
+    x.bytes(&mixed)
+        .u32(1)
+        .opt(None)
+        .bytes(&bob.bundle())
+        .u64(NOW)
+        .opt(None);
+    assert_eq!(run(session_from_bundle, &mut x), Err(Error::Key));
+    for k in [&mixed[..], &[1, 2, 3]] {
+        assert_eq!(
+            run(signed_prekey_generate, w().bytes(k).u32(1).u64(NOW)),
+            Err(Error::Key)
+        );
+    }
+    // a private key of any but 32 bytes
+    let p = a.private_key().serialize();
+    assert_eq!(
+        run(identity_from_private, w().bytes(&[&p[..], &[0]].concat())),
+        Err(Error::Key)
+    );
+    assert_eq!(
+        run(identity_from_private, w().bytes(&p[..31])),
+        Err(Error::Key)
+    );
+    run(identity_from_private, w().bytes(&p)).unwrap();
+}
+
+// an order 8 point, for keys with a torsion part
+pub(crate) fn order8() -> curve25519_dalek::edwards::EdwardsPoint {
+    use curve25519_dalek::edwards::CompressedEdwardsY;
+    use curve25519_dalek::traits::IsIdentity;
+    let b: [u8; 32] = crate::tests_formats::hex(
+        "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a",
+    )
+    .try_into()
+    .unwrap();
+    let p = CompressedEdwardsY(b).decompress().unwrap();
+    // small order, and not of order 4 or less
+    let p2 = p + p;
+    assert!(p.is_small_order() && !(p2 + p2).is_identity());
+    p
+}
+
+// [k] with the top bit of u set, and [k] plus an order 8 point: x25519 with
+// a clamped scalar gives the same secret for both
+pub(crate) fn second_forms(k: &[u8]) -> [(&'static str, Vec<u8>); 2] {
+    use curve25519_dalek::montgomery::MontgomeryPoint;
+    let mut top = k.to_vec();
+    top[32] |= 0x80;
+    let ed = MontgomeryPoint(k[1..].try_into().unwrap())
+        .to_edwards(0)
+        .unwrap()
+        + order8();
+    let mixed = [&[5u8][..], ed.to_montgomery().as_bytes()].concat();
+    [("top bit", top), ("order 8 part", mixed)]
+}
+
+// an opener libsignal itself makes for an identity whose public half is
+// [public], in whatever form
+fn opener_as(private: &[u8], public: &[u8], bob: &Party) -> Vec<u8> {
+    use libsignal_protocol::*;
+    let f = run(bundle_parse, w().bytes(&bob.bundle())).unwrap();
+    let bundle = PreKeyBundle::new(
+        u32_of(&f[0]),
+        DeviceId::try_from(u32_of(&f[1])).unwrap(),
+        Some((u32_of(&f[2]).into(), PublicKey::deserialize(&f[3]).unwrap())),
+        u32_of(&f[4]).into(),
+        PublicKey::deserialize(&f[5]).unwrap(),
+        f[6].clone(),
+        u32_of(&f[7]).into(),
+        kem::PublicKey::deserialize(&f[8]).unwrap(),
+        f[9].clone(),
+        IdentityKey::decode(&f[10]).unwrap(),
+    )
+    .unwrap();
+    let pair = IdentityKeyPair::new(
+        IdentityKey::new(PublicKey::deserialize(public).unwrap()),
+        PrivateKey::deserialize(private).unwrap(),
+    );
+    let mut st = InMemSignalProtocolStore::new(pair, 77).unwrap();
+    let peer = ProtocolAddress::new("peer".into(), DeviceId::new(1).unwrap());
+    let me = ProtocolAddress::new("self".into(), DeviceId::new(1).unwrap());
+    let now = std::time::UNIX_EPOCH + std::time::Duration::from_millis(NOW);
+    let mut rng = crate::ops::rng();
+    block_on_test(Box::pin(process_prekey_bundle(
+        &peer,
+        &me,
+        &mut st.session_store,
+        &mut st.identity_store,
+        &bundle,
+        now,
+        &mut rng,
+    )))
+    .unwrap();
+    let mut rng = crate::ops::rng();
+    let m = block_on_test(Box::pin(message_encrypt(
+        b"hi",
+        &peer,
+        &me,
+        &mut st.session_store,
+        &mut st.identity_store,
+        now,
+        &mut rng,
+    )))
+    .unwrap();
+    m.serialize().to_vec()
+}
+
+pub(crate) fn block_on_test<T>(
+    f: std::pin::Pin<Box<dyn std::future::Future<Output = T> + '_>>,
+) -> T {
+    let mut f = f;
+    let mut cx = std::task::Context::from_waker(std::task::Waker::noop());
+    loop {
+        if let std::task::Poll::Ready(v) = f.as_mut().poll(&mut cx) {
+            return v;
+        }
+    }
+}
+
+fn open_at(bob: &Party, m: &[u8]) -> Result<Vec<Vec<u8>>, Error> {
+    run(
+        decrypt_prekey,
+        w().bytes(&bob.pair)
+            .u32(bob.reg)
+            .opt(None)
+            .bytes(m)
+            .bytes(&bob.pk)
+            .bytes(&bob.spk)
+            .bytes(&bob.kyber)
+            .opt(None),
+    )
+}
+
+#[test]
+fn an_opener_names_its_keys_in_one_form_only() {
+    let alice = crate::tests_formats::Id::new();
+    let bob = Party::new(22);
+    // the canonical opener opens, and names alice as she is
+    let good = opener_as(&alice.private, &alice.public, &bob);
+    let info = run(prekey_message_info, w().bytes(&good)).unwrap();
+    assert_eq!(info[6], alice.public);
+    let d = open_at(&bob, &good).unwrap();
+    assert_eq!(d[0], b"hi");
+    assert_eq!(d[4], alice.public);
+    // libsignal makes and opens one for alice's key in a second form; the
+    // shim takes neither
+    for (what, key) in second_forms(&alice.public) {
+        assert_eq!(crate::keys::strict_public(&key).err(), Some(Error::Key));
+        let m = opener_as(&alice.private, &key, &bob);
+        assert_eq!(
+            run(prekey_message_info, w().bytes(&m)),
+            Err(Error::Key),
+            "{what}"
+        );
+        assert_eq!(open_at(&bob, &m), Err(Error::Key), "{what}");
+    }
+    // the base key edited in place to a second form: the same secrets, so
+    // only the form check refuses it
+    let base = info[5].clone();
+    let at = good.windows(33).position(|x| x == base).unwrap();
+    for (what, key) in second_forms(&base) {
+        let mut m = good.clone();
+        m[at..at + 33].copy_from_slice(&key);
+        assert_eq!(
+            run(prekey_message_info, w().bytes(&m)),
+            Err(Error::Key),
+            "base {what}"
+        );
+        assert_eq!(open_at(&bob, &m), Err(Error::Key), "base {what}");
+    }
+    // the prekeys were not spent by any of it
+    assert_eq!(open_at(&bob, &good).unwrap()[0], b"hi");
+}
+
+#[test]
+fn records_are_rewritten_only_as_libsignal_reads_them() {
+    let f = fixture();
+    // the dart library's records encode back the same
+    for k in ["bob_rec", "alice_rec", "alice_pending_rec"] {
+        record::rec_of(&f[k]).unwrap_or_else(|e| panic!("{k}: {e:?}"));
+    }
+    // the unanswered one is no record to drop from
+    assert_eq!(
+        run(
+            session_drop_below,
+            w().bytes(&f["alice_pending_rec"]).u32(1)
+        ),
+        Err(Error::Session)
+    );
+    // a second current state: libsignal merges the two, a byte reader
+    // takes the last, so neither rewrite takes it
+    let alice = Party::new(1);
+    let bob = Party::new(2);
+    let (_, b1, _) = opened(&alice, &bob);
+    let (_, b2, _) = opened(&alice, &bob);
+    let cur = |r: &[u8]| {
+        let mut x = Vec::new();
+        prost::encoding::bytes::encode(1, &extract_current(r), &mut x);
+        x
+    };
+    let twice = [&b1[..], &cur(&b2)].concat();
+    assert_eq!(
+        run(session_drop_below, w().bytes(&twice).u32(4)),
+        Err(Error::Session)
+    );
+    assert_eq!(
+        run(session_promote, w().bytes(&b1).bytes(&twice)),
+        Err(Error::Session)
+    );
+    // the records as they are go through both
+    run(session_drop_below, w().bytes(&b1).u32(4)).unwrap();
+    run(session_promote, w().bytes(&b1).bytes(&b2)).unwrap();
+}
+
+// the current state's bytes of a record (RecordStructure field 1)
+fn extract_current(r: &[u8]) -> Vec<u8> {
+    use prost::Message;
+    #[derive(Clone, PartialEq, Message)]
+    struct Cur {
+        #[prost(bytes = "vec", optional, tag = "1")]
+        current: Option<Vec<u8>>,
+    }
+    Cur::decode(r).unwrap().current.unwrap()
 }

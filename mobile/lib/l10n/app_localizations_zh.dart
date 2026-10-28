@@ -7135,6 +7135,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get languageNameAr => '阿拉伯语';
 
   @override
+  String get languageNameHi => '印地语';
+
+  @override
   String get languageLaterLine => '你随时可以在设置里更改。';
 
   @override
@@ -16289,6 +16292,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get languageNameAr => '阿拉伯文';
+
+  @override
+  String get languageNameHi => '印地語';
 
   @override
   String get languageLaterLine => '你隨時可以在設定中更改。';
