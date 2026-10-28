@@ -98,6 +98,7 @@ Source: "{#FlutterDir}\data\*"; DestDir: "{app}\data"; Flags: ignoreversion recu
 Source: "{#HaloDll}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SignalDll}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#TorDir}\tor.exe"; DestDir: "{app}\tor"; Flags: ignoreversion
+Source: "{#TorDir}\openssl.cnf"; DestDir: "{app}\tor"; Flags: ignoreversion
 Source: "{#TorDir}\licenses\*"; DestDir: "{app}\tor\licenses"; Flags: ignoreversion
 Source: "{#RepoDir}\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
 

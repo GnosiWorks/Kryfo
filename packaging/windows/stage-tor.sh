@@ -45,6 +45,8 @@ mkdir -p "$OUT/licenses"
 # tor.exe alone: the engine runs the pluggable transports itself, and
 # tor-gencert.exe is for directory authorities
 cp "$tmp/tor/tor.exe" "$OUT/"
+# tor.exe is started with OPENSSL_CONF pointing here (torexe.Env)
+echo "# tor reads no openssl settings" >"$OUT/openssl.cnf"
 # the licences of what tor.exe has inside, as the bundle carries them
 for l in tor openssl libevent zlib; do
   [ -f "$tmp/docs/$l.txt" ] || { echo "FAIL: no docs/$l.txt in the bundle"; exit 1; }

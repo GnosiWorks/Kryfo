@@ -116,3 +116,19 @@ func TestBuildWindowsNeedsPin(t *testing.T) {
 		t.Fatalf("not refused for the pin: %s", out)
 	}
 }
+
+func TestEnvOwnOpenssl(t *testing.T) {
+	dir := filepath.Join("app", "tor")
+	in := []string{"PATH=x", "OPENSSL_CONF=C:\\var\\evil.cnf", "openssl_modules=C:\\evil",
+		"Openssl_Engines=C:\\evil", "OPENSSL_CONF_INCLUDE=C:\\evil", "SystemRoot=C:\\Windows"}
+	got := Env(in, dir)
+	want := []string{"PATH=x", "SystemRoot=C:\\Windows",
+		"OPENSSL_CONF=" + filepath.Join(dir, "openssl.cnf"),
+		"OPENSSL_MODULES=" + dir, "OPENSSL_ENGINES=" + dir}
+	if strings.Join(got, "|") != strings.Join(want, "|") {
+		t.Fatalf("got %v", got)
+	}
+	if len(in) != 6 || in[1] != "OPENSSL_CONF=C:\\var\\evil.cnf" {
+		t.Fatalf("input changed: %v", in)
+	}
+}

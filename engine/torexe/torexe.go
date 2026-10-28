@@ -89,3 +89,26 @@ func Check(path, want string, dev bool) error {
 	}
 	return nil
 }
+
+// the empty openssl config the installer puts beside tor.exe
+func ConfPath(torDir string) string {
+	return filepath.Join(torDir, "openssl.cnf")
+}
+
+// tor.exe's openssl was built with a unix OPENSSLDIR, which windows reads
+// as a folder at the root of the drive that any user can make, and tor
+// loads its config from there. so tor gets its own config, modules and
+// engines folder, ours, and no other OPENSSL_ setting gets through.
+func Env(environ []string, torDir string) []string {
+	out := make([]string, 0, len(environ)+3)
+	for _, kv := range environ {
+		if strings.HasPrefix(strings.ToUpper(kv), "OPENSSL_") {
+			continue
+		}
+		out = append(out, kv)
+	}
+	return append(out,
+		"OPENSSL_CONF="+ConfPath(torDir),
+		"OPENSSL_MODULES="+torDir,
+		"OPENSSL_ENGINES="+torDir)
+}

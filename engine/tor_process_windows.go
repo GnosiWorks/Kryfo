@@ -42,6 +42,7 @@ func (libtorCreator) New(ctx context.Context, args ...string) (process.Process, 
 	}
 	run := process.CmdCreatorFunc(func(ctx context.Context, args ...string) (*exec.Cmd, error) {
 		cmd := exec.CommandContext(ctx, path, args...)
+		cmd.Env = torexe.Env(os.Environ(), filepath.Dir(path))
 		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: createNoWindow}
 		return cmd, nil
 	})
