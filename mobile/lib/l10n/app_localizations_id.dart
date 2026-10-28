@@ -8281,6 +8281,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get devWhoChoiceStays => 'Pilihanmu melekat pada obrolan ini.';
 
   @override
+  String get devUpdateToWrite =>
+      'Perbarui Kryfo untuk mengirim pesan ke Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Tidak bisa memeriksa kunci Marios. Tidak ada yang terkirim.';
 
@@ -8343,6 +8347,11 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'Ini undanganmu sendiri. Bagikan ke orang lain untuk terhubung.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id perlu memperbarui Kryfo sebelum kalian bisa saling menambahkan.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {

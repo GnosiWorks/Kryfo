@@ -1,0 +1,38 @@
+name: peer053
+description: "A phone on Kryfo 0.5.3, for the tests that prove this version still talks to one. Never part of the app."
+publish_to: 'none'
+
+environment:
+  sdk: ^3.11.5
+  flutter: 3.41.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # this version, as the other phone runs it
+  kryfo:
+    path: ../..
+  # what 0.5.3 shipped, exactly
+  libsignal_protocol_dart: 0.8.2
+  sqflite_sqlcipher: ^3.4.0
+  ffi: ^2.2.0
+  path: ^1.9.1
+  flutter_secure_storage: ^11.2.0
+  shared_preferences: ^2.5.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+# as the app's own pubspec has them
+dependency_overrides:
+  camera:
+    path: ../../third_party/camera/camera
+  camera_android_camerax:
+    path: ../../third_party/camera/camera_android_camerax
+  camera_avfoundation:
+    path: ../../third_party/camera/camera_avfoundation
+  camera_platform_interface:
+    path: ../../third_party/camera/camera_platform_interface
+  camera_web:
+    path: ../../third_party/camera/camera_web

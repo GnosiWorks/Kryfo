@@ -8311,6 +8311,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get devWhoChoiceStays => 'Seçimin bu sohbette kalır.';
 
   @override
+  String get devUpdateToWrite => 'Marios’a yazmak için Kryfo’yu güncelle.';
+
+  @override
   String get devKeyCheckFailed =>
       'Marios’un anahtarı kontrol edilemedi. Hiçbir şey gönderilmedi.';
 
@@ -8373,6 +8376,11 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'Bu senin kendi davetin. Bağlanmak için başka biriyle paylaş.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return 'Birbirinizi eklemeden önce $id Kryfo\'yu güncellemeli.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {

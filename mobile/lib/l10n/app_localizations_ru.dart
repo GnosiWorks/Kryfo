@@ -8445,6 +8445,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get devWhoChoiceStays => 'Твой выбор сохранится для этого чата.';
 
   @override
+  String get devUpdateToWrite => 'Обнови Kryfo, чтобы написать Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Не удалось проверить ключ Marios. Ничего не отправлено.';
 
@@ -8507,6 +8510,11 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'Это твоё собственное приглашение. Поделись им с кем-нибудь, чтобы связаться.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id нужно обновить Kryfo, прежде чем вы сможете добавить друг друга.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {

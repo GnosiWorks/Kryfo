@@ -8300,6 +8300,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get devWhoChoiceStays => 'انتخاب شما با این گفت‌وگو می‌ماند.';
 
   @override
+  String get devUpdateToWrite =>
+      'برای پیام دادن به Marios، Kryfo را به‌روز کنید.';
+
+  @override
   String get devKeyCheckFailed =>
       'بررسی کلید Marios ممکن نشد. چیزی فرستاده نشد.';
 
@@ -8362,6 +8366,11 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'این دعوت خودتان است. برای ارتباط، آن را با کس دیگری هم‌رسانی کنید.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '⁨$id⁩ باید Kryfo را به‌روز کند تا بتوانید همدیگر را اضافه کنید.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {

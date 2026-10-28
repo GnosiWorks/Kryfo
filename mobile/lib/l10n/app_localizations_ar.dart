@@ -8418,6 +8418,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get devWhoChoiceStays => 'يبقى اختيارك مع هذه المحادثة.';
 
   @override
+  String get devUpdateToWrite => 'حدّث Kryfo لتراسل Marios.';
+
+  @override
   String get devKeyCheckFailed => 'تعذّر التحقق من مفتاح Marios. لم يُرسل شيء.';
 
   @override
@@ -8477,6 +8480,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get appYourOwnInvite => 'هذه دعوتك أنت. شاركها مع شخص آخر للتواصل.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return 'يحتاج ⁨$id⁩ إلى تحديث Kryfo قبل أن تتمكنا من إضافة بعضكما.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {

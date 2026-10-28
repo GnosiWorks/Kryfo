@@ -11,10 +11,9 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show Curve;
 
 import '../dlog.dart';
+import '../signal_session.dart' show xPublicOf;
 import 'dev_key.dart';
 
 const _prefix = 'halo/1:';
@@ -73,11 +72,10 @@ class DevSelf {
     if (edPriv == null || !_hex128.hasMatch(edPriv)) return null;
     if (xPriv == null || !_hex64.hasMatch(xPriv)) return null;
     try {
-      final pair = Curve.generateKeyPairFromPrivate(_bytes(xPriv));
       return DevSelf(
         id: id,
         edPub: edPriv.substring(64).toLowerCase(),
-        xPub: _hex(pair.publicKey.serialize().sublist(1)),
+        xPub: _hex(xPublicOf(_bytes(xPriv))),
       );
     } catch (_) {
       return null;

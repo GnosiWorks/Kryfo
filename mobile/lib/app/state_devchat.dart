@@ -39,6 +39,8 @@ extension AppStateDevchat on AppState {
     if (key == null) return DevStart.none;
     // his card as pinned, checked the same way in every container
     if (!devCardChecks(key)) throw const DevKeyCheckFailed();
+    // one without the post-quantum prekey starts nothing: no classic chat
+    if (devCardOld(key)) throw const DevCardOld();
     final made = anon ? _devMadeName() : null;
     if (quiet) {
       // a decoy keeps its chat on this phone: no store, no lane, nothing
@@ -110,18 +112,19 @@ extension AppStateDevchat on AppState {
   // pinned one, byte for byte. a card libsignal refuses, or any other key,
   // is a key that did not check out, and no session of it stays
   Future<void> _devSession(SignalSession ss, DevKey key) async {
-    final addr = SignalProtocolAddress(key.chatId, 1);
     var ok = false;
     try {
       await processPeerBundle(key.chatId, key.bundle, into: ss);
-      final held = await ss.identityStore.getIdentity(addr);
+      final held = await ss.identityStore.getIdentity(key.chatId);
       ok =
           held != null &&
-          _eqBytes(held.serialize(), pinnedIdentity(key)) &&
-          await ss.sessionStore.containsSession(addr);
-    } on UntrustedIdentityException {
+          _eqBytes(held, pinnedIdentity(key)) &&
+          await ss.hasSession(key.chatId);
+    } on LsError {
+      // not the pinned key, a key or signature that does not hold
       ok = false;
-    } on InvalidKeyException {
+    } on ClassicRefused {
+      // a pinned card without the kyber prekey starts nothing
       ok = false;
     } catch (_) {
       await _dropDevSession(ss, key.chatId);
@@ -134,10 +137,9 @@ extension AppStateDevchat on AppState {
   }
 
   Future<void> _dropDevSession(SignalSession ss, String id) async {
-    final addr = SignalProtocolAddress(id, 1);
     try {
-      await ss.sessionStore.deleteSession(addr);
-      await ss.identityStore.removePeerIdentity(addr);
+      await ss.sessionStore.delete(id);
+      await ss.identityStore.removePeerIdentity(id);
     } catch (e) {
       dlog('dev chat: the session did not clear ($e)');
     }

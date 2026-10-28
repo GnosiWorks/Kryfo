@@ -21,6 +21,7 @@ extension AppStatePairing on AppState {
         uid: o.env.msgUid,
         now: now,
         reached: reached,
+        opened: (id: o.haloId, plain: o.plain),
       )) {
         firstFails.note('full');
         return false;
@@ -115,6 +116,14 @@ extension AppStatePairing on AppState {
         if (!all && r.nextAt > now) {
           if (soonest == null || r.nextAt < soonest) soonest = r.nextAt;
           continue;
+        }
+        // opened in an earlier process: what it opened to, not signal again
+        final was = r.opened;
+        if (was != null && _firstOpened[r.hash] == null) {
+          _firstOpened.put(
+            r.hash,
+            _FirstOpen(was.id, was.plain, unwrapMessage(was.plain)),
+          );
         }
         await _receiveRelayOne(
           (peer: 'firstcontact', cipher: r.cipher),

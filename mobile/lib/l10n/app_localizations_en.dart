@@ -8283,6 +8283,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get devWhoChoiceStays => 'Your choice stays with this chat.';
 
   @override
+  String get devUpdateToWrite => 'Update Kryfo to message Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Could not check Marios\'s key. Nothing was sent.';
 
@@ -8345,6 +8348,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'This is your own invite. Share it with someone else to connect.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id needs to update Kryfo before you can add each other.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {

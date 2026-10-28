@@ -191,6 +191,12 @@ Future<(String, bool)> handleHaloUriAdded(
   if (await session.keyBlocked(_keyHex(cardKey))) {
     return (l10n.appKeyBlocked, false);
   }
+  // a card without the post-quantum prekey is a 0.5.x phone's: no session
+  // can start on it, so nothing here changes for it
+  final card = parsed['bundle'];
+  if (card != null && bundleFault(card) is ClassicRefused) {
+    return (l10n.appLinkNeedsUpdate(parsed['id']!), false);
+  }
   // the signal store holds a shut vault's people too: a link of one of
   // theirs reads as any link that does not take, on their key or another.
   // an add would put an everyday row beside the hidden one and a fresh
@@ -448,11 +454,7 @@ List<int>? inviteSessionKey(String invite) {
   if (parsed == null) return null;
   final bundle = parsed['bundle'];
   if (bundle == null) return _xIdentity((parsed['xpub'] ?? '').toLowerCase());
-  try {
-    return preKeyBundleOf(bundle).getIdentityKey().serialize();
-  } catch (_) {
-    return null;
-  }
+  return _bundleIdentity(bundle);
 }
 
 /// the key number of [invite]: what the phone that shared it shows
@@ -476,21 +478,11 @@ bool firstPowHolds(UnwrappedMessage env) =>
     verifyPow(env.powText ?? env.message, env.powNonce!, powBits);
 
 /// what is wrong with a card's prekey bundle, null when a session can be
-/// built on it: it reads, and its signed prekey is signed by its identity
+/// built on it: it reads, carries the kyber prekey, and its identity signs
+/// both its prekeys. ClassicRefused for a 0.5.x card
 Object? bundleFault(String bundleB64) {
   try {
-    final b = preKeyBundleOf(bundleB64);
-    final spk = b.getSignedPreKey();
-    final sig = b.getSignedPreKeySignature();
-    if (spk == null ||
-        sig == null ||
-        !Curve.verifySignature(
-          b.getIdentityKey().publicKey,
-          spk.serialize(),
-          sig,
-        )) {
-      return const FormatException('signed prekey');
-    }
+    cardBundle(bundleB64);
     return null;
   } catch (e) {
     return e;

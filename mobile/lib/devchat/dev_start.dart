@@ -13,6 +13,9 @@ enum DevStart {
   ok,
   // the pinned key did not check out: nothing is saved or sent
   keyFailed,
+  // the pinned card has no post-quantum prekey: this app is too old to
+  // start a chat on it, nothing is saved or sent
+  needsUpdate,
   // nothing to start: the chat is gone, or there is no key to talk to
   none,
 }
@@ -23,6 +26,15 @@ class DevKeyCheckFailed implements Exception {
 
   @override
   String toString() => 'dev chat: the pinned key did not check out';
+}
+
+// the pinned card carries no post-quantum prekey, so no chat can start on
+// it here: a later app pins one
+class DevCardOld implements Exception {
+  const DevCardOld();
+
+  @override
+  String toString() => 'dev chat: the pinned card has no kyber prekey';
 }
 
 // a start or a seal that stopped at the key check, whoever threw it. the
@@ -116,7 +128,11 @@ class DevOpening extends ChangeNotifier {
       r = await _begin(anon: _anon);
     } catch (e) {
       // a start that broke half way sends nothing
-      r = devKeyFailed(e) ? DevStart.keyFailed : DevStart.none;
+      r = e is DevCardOld
+          ? DevStart.needsUpdate
+          : devKeyFailed(e)
+          ? DevStart.keyFailed
+          : DevStart.none;
     } finally {
       _running = null;
     }

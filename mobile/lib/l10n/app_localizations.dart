@@ -13379,6 +13379,12 @@ abstract class AppLocalizations {
   /// **'Your choice stays with this chat.'**
   String get devWhoChoiceStays;
 
+  /// screens/chat_screen.dart, dev chat: the card of Marios this app has built in is from before Kryfo 0.6 and has no post-quantum key, so no new chat with him can start; a later app has his new card. calm, not an error
+  ///
+  /// In en, this message translates to:
+  /// **'Update Kryfo to message Marios.'**
+  String get devUpdateToWrite;
+
   /// screens/chat_screen.dart: above the composer of the developer chat when his pinned key did not check out
   ///
   /// In en, this message translates to:
@@ -13486,6 +13492,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This is your own invite. Share it with someone else to connect.'**
   String get appYourOwnInvite;
+
+  /// app/links.dart, handleHaloUriAdded: a scanned or pasted card comes from a phone on Kryfo 0.5 or older, which has no post-quantum key; no chat can start until that person updates. id is their three words
+  ///
+  /// In en, this message translates to:
+  /// **'{id} needs to update Kryfo before you can add each other.'**
+  String appLinkNeedsUpdate(Object id);
 
   /// app/links.dart, handleHaloUriAdded: a scanned or pasted card, or the one behind a handle, names someone already here with another key, someone who was added or checked. which one is who they say only the safety number tells
   ///

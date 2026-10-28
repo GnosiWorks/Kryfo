@@ -8348,6 +8348,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Sua escolha fica valendo para esta conversa.';
 
   @override
+  String get devUpdateToWrite =>
+      'Atualize o Kryfo para mandar mensagem ao Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Não foi possível conferir a chave do Marios. Nada foi enviado.';
 
@@ -8410,6 +8414,11 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'Este é o seu próprio convite. Compartilhe com outra pessoa para se conectar.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id precisa atualizar o Kryfo antes que vocês possam se adicionar.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {

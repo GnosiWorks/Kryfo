@@ -8371,6 +8371,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre choix reste attaché à cette discussion.';
 
   @override
+  String get devUpdateToWrite => 'Mettez Kryfo à jour pour écrire à Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Impossible de vérifier la clé de Marios. Rien n’a été envoyé.';
 
@@ -8434,6 +8437,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'C’est votre propre invitation. Partagez-la avec quelqu’un d’autre pour vous connecter.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id doit mettre Kryfo à jour avant que vous puissiez vous ajouter.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {

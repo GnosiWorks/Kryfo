@@ -7915,6 +7915,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devWhoChoiceStays => '你的选择会一直跟着这个聊天。';
 
   @override
+  String get devUpdateToWrite => '更新 Kryfo 后即可给 Marios 发消息。';
+
+  @override
   String get devKeyCheckFailed => '无法核对 Marios 的密钥。什么都没有发送。';
 
   @override
@@ -7971,6 +7974,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appYourOwnInvite => '这是你自己的邀请。分享给别人才能互相连接。';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id 需要先更新 Kryfo，你们才能互相添加。';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -17171,6 +17179,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devWhoChoiceStays => '你的選擇會一直跟著這個聊天。';
 
   @override
+  String get devUpdateToWrite => '更新 Kryfo 後即可傳訊息給 Marios。';
+
+  @override
   String get devKeyCheckFailed => '無法核對 Marios 的金鑰。什麼都沒有傳送。';
 
   @override
@@ -17227,6 +17238,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get appYourOwnInvite => '這是你自己的邀請。分享給別人才能互相連線。';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id 需要先更新 Kryfo，你們才能互相新增。';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {

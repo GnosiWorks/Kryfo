@@ -8296,6 +8296,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get devWhoChoiceStays => 'आपका चुनाव इस चैट के साथ रहता है।';
 
   @override
+  String get devUpdateToWrite =>
+      'Marios को संदेश भेजने के लिए Kryfo अपडेट करें।';
+
+  @override
   String get devKeyCheckFailed =>
       'Marios की कुंजी जाँची नहीं जा सकी। कुछ नहीं भेजा गया।';
 
@@ -8358,6 +8362,11 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'यह आपका अपना आमंत्रण है। जुड़ने के लिए इसे किसी और के साथ शेयर करें।';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return 'एक-दूसरे को जोड़ने से पहले $id को Kryfo अपडेट करना होगा।';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
