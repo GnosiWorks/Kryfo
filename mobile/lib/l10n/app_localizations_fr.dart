@@ -9792,7 +9792,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get desktopLockNewBody =>
-      'Kryfo vous demandera cette phrase secrète à chaque démarrage. Elle verrouille vos messages, vos contacts et vos réglages sur cet ordinateur. Les photos, messages vocaux et fichiers gardés dans Kryfo ne sont pas encore verrouillés, gardez donc le chiffrement du disque de votre ordinateur activé.';
+      'Kryfo vous demandera cette phrase secrète à chaque démarrage. Elle verrouille vos messages, photos, messages vocaux, fichiers, contacts et clés sur cet ordinateur.';
 
   @override
   String get desktopLockHonest =>
@@ -9800,7 +9800,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get desktopLockForgot =>
-      'Sans la phrase secrète, vos messages ici ne peuvent pas être ouverts, pas même par nous.';
+      'Sans la phrase secrète, aucun de vos messages, fichiers ou clés ici ne peut être ouvert, pas même par nous.';
 
   @override
   String get desktopLockField => 'Phrase secrète';

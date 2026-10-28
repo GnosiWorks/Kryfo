@@ -9763,7 +9763,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get desktopLockNewBody =>
-      'O Kryfo vai pedir esta frase-senha sempre que abrir. Ela bloqueia suas mensagens, contatos e configurações neste computador. Fotos, mensagens de voz e arquivos guardados no Kryfo ainda não ficam bloqueados, então mantenha a criptografia de disco do computador ligada.';
+      'O Kryfo vai pedir esta frase-senha sempre que abrir. Ela bloqueia suas mensagens, fotos, mensagens de voz, arquivos, contatos e chaves neste computador.';
 
   @override
   String get desktopLockHonest =>
@@ -9771,7 +9771,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get desktopLockForgot =>
-      'Sem a frase-senha suas mensagens aqui não podem ser abertas, nem por nós.';
+      'Sem a frase-senha nenhuma das suas mensagens, arquivos ou chaves aqui pode ser aberta, nem por nós.';
 
   @override
   String get desktopLockField => 'Frase-senha';

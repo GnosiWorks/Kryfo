@@ -9862,7 +9862,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get desktopLockNewBody =>
-      'Kryfo будет спрашивать эту парольную фразу при каждом запуске. Она запирает ваши сообщения, контакты и настройки на этом компьютере. Фото, голосовые и файлы в Kryfo пока не запираются ею, поэтому не выключайте шифрование диска на компьютере.';
+      'Kryfo будет спрашивать эту парольную фразу при каждом запуске. Она запирает ваши сообщения, фото, голосовые, файлы, контакты и ключи на этом компьютере.';
 
   @override
   String get desktopLockHonest =>
@@ -9870,7 +9870,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get desktopLockForgot =>
-      'Без парольной фразы ваши сообщения здесь не открыть, даже нам.';
+      'Без парольной фразы здесь не открыть ни ваши сообщения, ни файлы, ни ключи, даже нам.';
 
   @override
   String get desktopLockField => 'Парольная фраза';

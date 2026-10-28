@@ -15680,7 +15680,7 @@ abstract class AppLocalizations {
   /// desktop/desktop_lock_screen.dart: under the first-start title
   ///
   /// In en, this message translates to:
-  /// **'Kryfo asks for this passphrase every time it starts. It locks your messages, contacts and settings on this computer. Photos, voice notes and files kept in Kryfo are not locked by it yet, so keep your computer\'s disk encryption on.'**
+  /// **'Kryfo asks for this passphrase every time it starts. It locks your messages, photos, voice notes, files, contacts and keys on this computer.'**
   String get desktopLockNewBody;
 
   /// desktop/desktop_lock_screen.dart: the small print on the first start: what the passphrase protects against and what it does not
@@ -15692,7 +15692,7 @@ abstract class AppLocalizations {
   /// desktop/desktop_lock_screen.dart: the small print when unlocking
   ///
   /// In en, this message translates to:
-  /// **'Without the passphrase your messages here cannot be opened, not even by us.'**
+  /// **'Without the passphrase none of your messages, files or keys here can be opened, not even by us.'**
   String get desktopLockForgot;
 
   /// desktop/desktop_lock_screen.dart: the label of the passphrase field

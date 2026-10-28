@@ -9241,14 +9241,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get desktopLockNewBody =>
-      'Kryfo 每次启动都会要求输入这个密码短语。它锁住你在这台电脑上的消息、联系人和设置。存在 Kryfo 里的照片、语音消息和文件暂时还没有被它锁住，所以请保持电脑的磁盘加密开启。';
+      'Kryfo 每次启动都会要求输入这个密码短语。它锁住你在这台电脑上的消息、照片、语音消息、文件、联系人和密钥。';
 
   @override
   String get desktopLockHonest =>
       '复制了 Kryfo 文件夹的人，可以在自己的电脑上尽其所能地快速尝试密码短语。四个以上的随机单词能扛住，短的密码短语扛不住。';
 
   @override
-  String get desktopLockForgot => '没有密码短语，这里的消息都打不开，连我们也不行。';
+  String get desktopLockForgot => '没有密码短语，这里你的任何消息、文件或密钥都打不开，连我们也不行。';
 
   @override
   String get desktopLockField => '密码短语';
@@ -18419,14 +18419,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get desktopLockNewBody =>
-      'Kryfo 每次啟動都會要求輸入這組密碼短語。它鎖住你在這台電腦上的訊息、聯絡人和設定。存在 Kryfo 裡的照片、語音訊息和檔案暫時還沒有被它鎖住，所以請保持電腦的磁碟加密開啟。';
+      'Kryfo 每次啟動都會要求輸入這組密碼短語。它鎖住你在這台電腦上的訊息、照片、語音訊息、檔案、聯絡人和金鑰。';
 
   @override
   String get desktopLockHonest =>
       '複製了 Kryfo 資料夾的人，可以在自己的電腦上盡其所能地快速嘗試密碼短語。四個以上的隨機單字撐得住，短的密碼短語撐不住。';
 
   @override
-  String get desktopLockForgot => '沒有密碼短語，這裡的訊息都打不開，連我們也不行。';
+  String get desktopLockForgot => '沒有密碼短語，這裡你的任何訊息、檔案或金鑰都打不開，連我們也不行。';
 
   @override
   String get desktopLockField => '密碼短語';

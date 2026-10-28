@@ -9696,7 +9696,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get desktopLockNewBody =>
-      'Kryfo हर बार शुरू होने पर यह पासफ़्रेज़ पूछेगा। यह इस कंप्यूटर पर आपके संदेश, संपर्क और सेटिंग्स लॉक रखता है। Kryfo में रखी फ़ोटो, वॉइस नोट और फ़ाइलें अभी इससे लॉक नहीं होतीं, इसलिए अपने कंप्यूटर का डिस्क एन्क्रिप्शन चालू रखें।';
+      'Kryfo हर बार शुरू होने पर यह पासफ़्रेज़ पूछेगा। यह इस कंप्यूटर पर आपके संदेश, फ़ोटो, वॉइस नोट, फ़ाइलें, संपर्क और कुंजियाँ लॉक रखता है।';
 
   @override
   String get desktopLockHonest =>
@@ -9704,7 +9704,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get desktopLockForgot =>
-      'पासफ़्रेज़ के बिना यहाँ आपके संदेश नहीं खुल सकते, हमसे भी नहीं।';
+      'पासफ़्रेज़ के बिना यहाँ आपका कोई संदेश, फ़ाइल या कुंजी नहीं खुल सकती, हमसे भी नहीं।';
 
   @override
   String get desktopLockField => 'पासफ़्रेज़';

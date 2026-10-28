@@ -9680,7 +9680,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get desktopLockNewBody =>
-      'Kryfo sẽ hỏi cụm mật khẩu này mỗi lần khởi động. Nó khóa tin nhắn, danh bạ và cài đặt của bạn trên máy tính này. Ảnh, tin nhắn thoại và tệp giữ trong Kryfo chưa được nó khóa, nên hãy giữ mã hóa ổ đĩa của máy tính luôn bật.';
+      'Kryfo sẽ hỏi cụm mật khẩu này mỗi lần khởi động. Nó khóa tin nhắn, ảnh, tin nhắn thoại, tệp, danh bạ và khóa của bạn trên máy tính này.';
 
   @override
   String get desktopLockHonest =>
@@ -9688,7 +9688,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get desktopLockForgot =>
-      'Không có cụm mật khẩu thì tin nhắn của bạn ở đây không mở được, kể cả chúng tôi.';
+      'Không có cụm mật khẩu thì không tin nhắn, tệp hay khóa nào của bạn ở đây mở được, kể cả chúng tôi.';
 
   @override
   String get desktopLockField => 'Cụm mật khẩu';

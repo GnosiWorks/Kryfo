@@ -9687,7 +9687,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get desktopLockNewBody =>
-      'Kryfo akan meminta frasa sandi ini setiap kali dibuka. Frasa ini mengunci pesan, kontak, dan pengaturanmu di komputer ini. Foto, pesan suara, dan file yang disimpan di Kryfo belum dikunci olehnya, jadi biarkan enkripsi disk komputermu tetap menyala.';
+      'Kryfo akan meminta frasa sandi ini setiap kali dibuka. Frasa ini mengunci pesan, foto, pesan suara, file, kontak, dan kuncimu di komputer ini.';
 
   @override
   String get desktopLockHonest =>
@@ -9695,7 +9695,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get desktopLockForgot =>
-      'Tanpa frasa sandi, pesanmu di sini tidak bisa dibuka, bahkan oleh kami.';
+      'Tanpa frasa sandi, tidak ada pesan, file, atau kuncimu di sini yang bisa dibuka, bahkan oleh kami.';
 
   @override
   String get desktopLockField => 'Frasa sandi';

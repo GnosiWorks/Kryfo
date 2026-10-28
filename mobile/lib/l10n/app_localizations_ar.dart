@@ -9823,7 +9823,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get desktopLockNewBody =>
-      'سيطلب Kryfo عبارة المرور هذه في كل مرة يبدأ فيها. إنها تقفل رسائلك وجهات اتصالك وإعداداتك على هذا الحاسوب. الصور والرسائل الصوتية والملفات المحفوظة في Kryfo لا تقفلها بعد، لذا أبقِ تشفير قرص حاسوبك مفعّلًا.';
+      'سيطلب Kryfo عبارة المرور هذه في كل مرة يبدأ فيها. إنها تقفل رسائلك وصورك ورسائلك الصوتية وملفاتك وجهات اتصالك ومفاتيحك على هذا الحاسوب.';
 
   @override
   String get desktopLockHonest =>
@@ -9831,7 +9831,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get desktopLockForgot =>
-      'لا يمكن فتح رسائلك هنا من دون عبارة المرور، ولا حتى من قبلنا.';
+      'من دون عبارة المرور لا يمكن فتح أي من رسائلك أو ملفاتك أو مفاتيحك هنا، ولا حتى من قبلنا.';
 
   @override
   String get desktopLockField => 'عبارة المرور';

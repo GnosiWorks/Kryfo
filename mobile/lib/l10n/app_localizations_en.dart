@@ -9683,7 +9683,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get desktopLockNewBody =>
-      'Kryfo asks for this passphrase every time it starts. It locks your messages, contacts and settings on this computer. Photos, voice notes and files kept in Kryfo are not locked by it yet, so keep your computer\'s disk encryption on.';
+      'Kryfo asks for this passphrase every time it starts. It locks your messages, photos, voice notes, files, contacts and keys on this computer.';
 
   @override
   String get desktopLockHonest =>
@@ -9691,7 +9691,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get desktopLockForgot =>
-      'Without the passphrase your messages here cannot be opened, not even by us.';
+      'Without the passphrase none of your messages, files or keys here can be opened, not even by us.';
 
   @override
   String get desktopLockField => 'Passphrase';
