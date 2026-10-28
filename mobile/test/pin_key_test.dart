@@ -776,21 +776,22 @@ void main() {
       expect(gOf(store, PinSlot.vault), 2);
     });
 
-    test(
-      'an old wipe hash that never wiped is not moved by the card',
-      () async {
-        store.m.remove('halo.lock.panic_enabled');
-        store.m['halo.lock.panic_salt'] = 'Yg==';
-        store.m['halo.lock.panic_hash'] = KeyEngine.legacyHash('7531', 'Yg==');
-        final s = await make(cardPad: Duration.zero);
-        await s.verifyPin('1234');
-        expect(s.panicEnabled, isFalse);
-        expect(await s.cardTry('7531'), CardAnswer.taken);
-        expect(s.panicEnabled, isFalse);
-        expect(store.m.containsKey('halo.lock.panic_enabled'), isFalse);
-        expect(store.m['halo.lock.panic_hash'], isNotNull);
-      },
-    );
+    test('an old wipe hash without its switch goes at load', () async {
+      store.m.remove('halo.lock.panic_enabled');
+      store.m['halo.lock.panic_salt'] = 'Yg==';
+      store.m['halo.lock.panic_hash'] = KeyEngine.legacyHash('7531', 'Yg==');
+      final s = await make(cardPad: Duration.zero);
+      expect(store.m.containsKey('halo.lock.panic_hash'), isFalse);
+      expect(store.m.containsKey('halo.lock.panic_salt'), isFalse);
+      expect(s.legacyWipe, isFalse);
+      await s.verifyPin('1234');
+      expect(await s.cardTry('7531'), CardAnswer.taken);
+      expect(s.panicEnabled, isFalse);
+      expect(store.m.containsKey('halo.lock.panic_enabled'), isFalse);
+      // and it no longer wipes: App lock never showed it
+      store.m['halo.lock.state'] = const LockCounters().encode();
+      expect(await (await make()).verifyPin('7531'), PinResult.invalid);
+    });
 
     test(
       'an old hash beside a pin set since never moves back over it',
@@ -826,5 +827,85 @@ void main() {
         expect(s.locked, isFalse);
       },
     );
+  });
+
+  group('review round 2', () {
+    test(
+      'with the key failing, a real pin a step does not take answers as any other',
+      () async {
+        final s = await make();
+        await s.verifyPin('1234'); // the header is v3, the vault entry still v2
+        keys.fail = KeyFail.busy;
+        store.m['halo.lock.state'] = const LockCounters().encode();
+        final s2 = await make();
+        final w1 = store.log.length;
+        final a = await s2.confirmPin('246810');
+        final first = store.log.sublist(w1);
+        final w2 = store.log.length;
+        final b = await s2.confirmPin('0000');
+        expect(a, PinResult.unavailable);
+        expect(b, PinResult.unavailable);
+        expect(store.log.sublist(w2), first);
+        final c = jsonDecode(store.m['halo.lock.state']!) as Map;
+        expect(c['r'], 0);
+        expect(c['u'], 2);
+        expect(s.locked, isFalse);
+      },
+    );
+
+    test(
+      'a decoy pin before the decoy is ready answers as any other then',
+      () async {
+        final s = await make();
+        await s.verifyPin('1234');
+        keys.fail = KeyFail.busy;
+        decoyReady = false;
+        expect(await s.verifyPin('5555'), PinResult.unavailable);
+        expect(await s.verifyPin('0000'), PinResult.unavailable);
+      },
+    );
+
+    test(
+      'a cached "no key" never makes reset sure, a busy read never resets',
+      () async {
+        await moved();
+        keys.infoFalseOnce = true;
+        final s = LockState(
+          store: store,
+          engine: engine,
+          clock: StillClock(),
+          bio: NoBio(),
+          keys: keys,
+          revealAfter: Duration.zero,
+          lostGap: Duration.zero,
+        );
+        await s.load();
+        expect(s.keyNote, KeyNote.lost);
+        // pins typed meanwhile ask nothing new of the keystore
+        await s.verifyPin('0000');
+        await s.verifyPin('0000');
+        expect(s.resetOffered, isFalse);
+        // the tap's own read: busy says nothing
+        keys.infoSilent = true;
+        expect(await s.recheckLost(), isFalse);
+        expect(s.resetOffered, isFalse);
+        keys.infoSilent = false;
+        expect(await s.recheckLost(), isFalse);
+        expect(s.keyNote, isNull);
+      },
+    );
+
+    test('a confirm the key answered clears the unanswered run', () async {
+      final s = await moved();
+      keys.fail = KeyFail.busy;
+      await s.confirmPin('0000');
+      expect((jsonDecode(store.m['halo.lock.state']!) as Map)['u'], 1);
+      keys.fail = null;
+      expect(await s.confirmPin('1234'), PinResult.normal);
+      expect(
+        (jsonDecode(store.m['halo.lock.state']!) as Map).containsKey('u'),
+        isFalse,
+      );
+    });
   });
 }

@@ -1286,7 +1286,9 @@ class LockState extends ChangeNotifier {
   // the front and before Reset, and Reset is offered only once two reads at
   // least [lostGap] apart said so, or the key answered with another check
   // value, which a busy keystore cannot do
-  void _lost({bool strong = false}) {
+  // [fresh]: the keystore was just asked and said so. only such a read can
+  // make it sure; a check that finds the key still marked absent cannot
+  void _lost({bool strong = false, bool fresh = false}) {
     final now = DateTime.now();
     if (_keyNote != KeyNote.lost) {
       dlog('lock: pin key gone');
@@ -1297,7 +1299,7 @@ class LockState extends ChangeNotifier {
       Timer(lostGap + const Duration(milliseconds: 200), () {
         if (_keyNote == KeyNote.lost && !_lostSure) unawaited(recheckLost());
       });
-    } else if (now.difference(_lostFirst) >= lostGap) {
+    } else if (fresh && now.difference(_lostFirst) >= lostGap) {
       _lostSure = true;
     }
     if (strong) _lostSure = true;
@@ -1311,19 +1313,21 @@ class LockState extends ChangeNotifier {
   bool get resetOffered => _keyNote == KeyNote.lost && _lostSure;
 
   // the key asked again while it reads as gone. back to normal when it
-  // answers with the table's check value. true when Reset is offered
+  // answers with the table's check value. true only when this read itself
+  // found no key (and Reset is offered) or another check value: a keystore
+  // that is busy now says nothing, so no Reset goes on from it
   Future<bool> recheckLost() async {
     if (_keyNote != KeyNote.lost) return false;
     final i = await _keyCall(_keys.info(), const Duration(seconds: 5));
-    if (i == null) return resetOffered;
+    if (i == null) return false;
     if (!i.exists) {
-      if (_v3) _lost();
+      if (_v3) _lost(fresh: true);
       return resetOffered;
     }
     final a =
         await _keyCall(_keys.kcv(), macWait) ??
         const KeyAnswer.failed(KeyFail.busy);
-    if (!a.ok) return resetOffered;
+    if (!a.ok) return false;
     final want = _header(_table)?['kc'];
     if (want is String && want != a.m) {
       _lost(strong: true);
@@ -1359,7 +1363,7 @@ class LockState extends ChangeNotifier {
     if (!i.supported || t == null) return;
     if (!i.exists) {
       // a v3 table without its key can only lose more by a new one
-      if (_tableVersion(t) >= 3) _lost();
+      if (_tableVersion(t) >= 3) _lost(fresh: true);
       return;
     }
     await _readKcv();
@@ -1370,7 +1374,7 @@ class LockState extends ChangeNotifier {
         await _keyCall(_keys.kcv(), macWait) ??
         const KeyAnswer.failed(KeyFail.busy);
     if (!a.ok) {
-      if (a.fail == KeyFail.gone && _v3) _lost();
+      if (a.fail == KeyFail.gone && _v3) _lost(fresh: true);
       return;
     }
     final want = _header(_table)?['kc'];
@@ -1443,7 +1447,7 @@ class LockState extends ChangeNotifier {
         }
       case KeyFail.gone:
         if (_v3) {
-          _lost();
+          _lost(fresh: true);
         } else {
           // a v2 table loses nothing: a key is made again at a later unlock
           _key = PinKeyInfo(exists: false, sdk: _key?.sdk ?? 0);
@@ -1623,7 +1627,9 @@ class LockState extends ChangeNotifier {
   Future<void> _dropLeftLegacy() async {
     try {
       if (_setApp && (_legacy['ah'] ?? '').isNotEmpty) await _dropLegacyApp();
-      if (_setWipe && legacyWipe) {
+      // an old wipe hash without its switch is a set that stopped half way:
+      // the old app never acted on it, and App lock shows no wipe pin
+      if ((_setWipe || !_panicEnabled) && legacyWipe) {
         await _store.delete(_kPanicHash);
         await _store.delete(_kPanicSalt);
         _legacy = {..._legacy, 'ws': '', 'wh': ''};
@@ -1673,16 +1679,8 @@ class LockState extends ChangeNotifier {
     return made;
   }
 
-  // a check that found nothing it could tell without the pin key, on a
-  // table with entries only the pin key opens
-  static bool _unchecked(_Checked c) {
-    final r = c.r;
-    return c.fail != null &&
-        c.v3 &&
-        (r['i'] as num?)?.toInt() == -1 &&
-        r['la'] != true &&
-        r['lw'] != true;
-  }
+  // the pin key was needed on a v3 table and did not answer
+  static bool _failed(_Checked c) => c.fail != null && c.v3;
 
   static bool _opened(PinResult r) =>
       r == PinResult.normal || r == PinResult.vault || r == PinResult.decoy;
@@ -1734,9 +1732,10 @@ class LockState extends ChangeNotifier {
     } else if (decoy && decoyReady) {
       result = PinResult.decoy;
       next = LockCounters(budget: base.budget, quiet: true);
-    } else if (_unchecked(c)) {
-      // the pin key did not answer: this may be a right pin. not a miss,
-      // but five in a row hold the pad as five misses would
+    } else if (_failed(c)) {
+      // the pin key did not answer: this may be a right pin. whatever
+      // matched, a pin that opens nothing answers alike: not a miss, but
+      // five in a row hold the pad as five misses would
       result = PinResult.unavailable;
       next = base.unanswered(uptime, boot);
     } else {
@@ -1989,14 +1988,6 @@ class LockState extends ChangeNotifier {
     final kind = (r['k'] as num?)?.toInt() ?? 0;
     if (kind == PinKind.wipe || r['lw'] == true) return PinResult.panic;
     if (base.holdLeft(uptime, boot) > 0) return PinResult.throttled;
-    // the pin key did not answer: not a miss, but counted in its own run
-    if (_unchecked(c)) {
-      _counters = base.unanswered(uptime, boot);
-      await _store.write(_kState, _counters.encode());
-      await _refreshHoldForScreen();
-      notifyListeners();
-      return PinResult.unavailable;
-    }
     final primary = _inDecoy
         ? kind == PinKind.decoy
         : kind == PinKind.everyday || r['la'] == true;
@@ -2005,12 +1996,26 @@ class LockState extends ChangeNotifier {
         r['c'] == _vaultContainer &&
         (r['u'] as String? ?? '').isNotEmpty;
     final ok = _inVault ? ownVault || (primary && !changesVault) : primary;
+    // the pin key did not answer: a pin this step does not take answers
+    // alike whatever it matched, never a miss, counted in its own run
+    if (!ok && _failed(c)) {
+      _counters = base.unanswered(uptime, boot);
+      await _store.write(_kState, _counters.encode());
+      await _refreshHoldForScreen();
+      notifyListeners();
+      return PinResult.unavailable;
+    }
     if (!ok) {
       _counters = base.miss(uptime, boot);
       await _store.write(_kState, _counters.encode());
       await _refreshHoldForScreen();
       notifyListeners();
       return PinResult.invalid;
+    }
+    // the pin key answered: its run of unanswered checks is cleared here too
+    if (base.unavail != _counters.unavail) {
+      _counters = base;
+      await _store.write(_kState, _counters.encode());
     }
     // taken: the pin moves under the pin key. a pin this flow does not take
     // moves nothing, so a miss here never writes more than any other miss

@@ -555,6 +555,8 @@ void main() {
         store.m['halo.lock.pin_hash'] = FakeEngine.legacyHash('2468', 'YQ==');
         store.m['halo.lock.panic_salt'] = 'Yg==';
         store.m['halo.lock.panic_hash'] = FakeEngine.legacyHash('1357', 'Yg==');
+        // a set the old app finished: its switch was written last
+        store.m['halo.lock.panic_enabled'] = 'true';
         final lock = await open();
         await lock.verifyPin('2468');
         await Future<void>.delayed(Duration.zero);
@@ -1060,6 +1062,7 @@ void main() {
       // a wipe pin still the legacy kind
       store.m['halo.lock.panic_salt'] = 'Yg==';
       store.m['halo.lock.panic_hash'] = FakeEngine.legacyHash('1357', 'Yg==');
+      store.m['halo.lock.panic_enabled'] = 'true';
       final v1 = store.m['halo.lock.table'];
 
       Future<void> samePins(LockState lock) async {
