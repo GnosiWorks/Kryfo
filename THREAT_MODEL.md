@@ -149,7 +149,7 @@ keys and settings are sealed on the disk under it. what follows is not.
   use encrypted swap or zram, and no hibernation, or turn swap off.
 - someone who can write to the folder can put back an older copy of a file
   and it opens: an older set of keys and settings, or an older picture under
-  the same name. kryfo does not notice.
+  the same name. Kryfo does not notice.
 - screenshots: a computer cannot keep Kryfo's window out of a screenshot.
 - malware running as you while Kryfo is open, or a keylogger, sees what you
   see and what you type.
