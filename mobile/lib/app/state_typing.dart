@@ -9,11 +9,21 @@ extension AppStateTyping on AppState {
 
   bool get typingOn => typing.on;
 
-  /// tor goes through a bridge, picked or found by automatic: typing is
+  /// tor may go through a bridge, picked or tried by automatic: typing is
   /// off then, as a network that needs one may be watched closely enough
   /// to match its signals. it comes back by itself when bridges are off
   bool get typingBridged =>
-      _sendMode == 'private' && (manualBridge || _bridgeStatus.throughBridge);
+      _sendMode == 'private' && (manualBridge || _bridgeStatus.mayRideBridge);
+
+  // the status as the engine has it now, not as the decoy last saw it:
+  // read again as a session opens, before a frame could go
+  void _typingBridgesRead() {
+    try {
+      takeBridgeStatus(engine.bridgeStatus());
+    } catch (e) {
+      dlog('typing: bridges not read (${e.runtimeType})');
+    }
+  }
 
   // bridges came into use: what shows goes at once
   void _typingBridgesMoved() {

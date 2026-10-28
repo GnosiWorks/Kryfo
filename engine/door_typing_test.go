@@ -236,3 +236,27 @@ func TestTypingDialTimeoutSparesARealSend(t *testing.T) {
 		t.Fatal("the typing line beat its own budget")
 	}
 }
+
+// the status says when tor's lines are bridge lines, in automatic too,
+// whatever step it is on, and a decoy never hears it
+func TestStatusSaysWhenTorIsOnBridges(t *testing.T) {
+	useFakeAuto(t, wifi())
+	autoMu.Lock()
+	bmMode = bmAuto
+	autoMu.Unlock()
+	stSet(func() { autoSt.phase, autoSt.method, autoSt.source = "trying", "", "" })
+	if bridgeStatus().OnBridge {
+		t.Fatal("no lines, but on a bridge")
+	}
+	bridgeMu.Lock()
+	bridgeList, bridgeOn = builtinLines("obfs4"), true
+	bridgeMu.Unlock()
+	if st := bridgeStatus(); !st.OnBridge || st.Phase != "trying" {
+		t.Fatalf("old lines still carry tor between steps: %+v", st)
+	}
+	setDecoy(true)
+	defer setDecoy(false)
+	if st := bridgeStatus(); st.OnBridge {
+		t.Fatalf("the decoy hears of the bridges: %+v", st)
+	}
+}

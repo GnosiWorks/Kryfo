@@ -370,6 +370,41 @@ void main() {
       expect(w.showing(_f), isTrue);
     });
 
+    test(
+      'automatic trying a bridge while tor already carries holds it off',
+      () async {
+        final w = await _World.make();
+        claimChat(_f);
+        w.app.takeBridgeStatus(
+          '{"mode":"auto","phase":"trying","method":"obfs4",'
+          '"source":"builtin","can_send":true}',
+        );
+        expect(w.app.torUsable, isTrue);
+        expect(w.app.typingBridged, isTrue);
+        await w.type(_f);
+        await w.typingFrom(_f);
+        expect(w.io.sent, isEmpty);
+        expect(w.showing(_f), isFalse);
+      },
+    );
+
+    test('between two steps, while old bridge lines still carry tor, it '
+        'stays off', () async {
+      final w = await _World.make();
+      claimChat(_f);
+      w.app.takeBridgeStatus(
+        '{"mode":"auto","phase":"trying","method":"","can_send":true,'
+        '"on_bridge":true}',
+      );
+      expect(w.app.typingBridged, isTrue);
+      await w.type(_f);
+      expect(w.io.sent, isEmpty);
+      w.app.takeBridgeStatus(
+        '{"mode":"auto","phase":"trying","method":"","can_send":true}',
+      );
+      expect(w.app.typingBridged, isFalse);
+    });
+
     test('a bridge picked by hand holds it off before it connects', () async {
       final w = await _World.make();
       claimChat(_f);
