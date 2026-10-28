@@ -566,6 +566,9 @@ func (s *socksStandIn) countAs(name string) int {
 // asking tor anything.
 func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*relayStandIn) {
 	t.Helper()
+	// made first, so it is removed only after the cleanup below saw the
+	// runners out: they write into it until then
+	dir := t.TempDir()
 	mu.Lock()
 	oldNode, oldPriv, oldPub := torNode, myXPriv, myXPub
 	torNode = &tor.Tor{}
@@ -597,7 +600,7 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 	}
 	nostrResetClient()
 	relayClearBenches()
-	setSavedDataDir(t.TempDir())
+	setSavedDataDir(dir)
 	var urls []string
 	for _, r := range relays {
 		urls = append(urls, r.url())
