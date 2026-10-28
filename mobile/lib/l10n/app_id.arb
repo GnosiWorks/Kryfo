@@ -1834,7 +1834,7 @@
   "motionBouncingThroughRelaysSo": "Memantul lewat relay-relay agar tidak ada yang bisa melacaknya kembali ke kamu.",
   "motionTellingTheNetworkYou": "Memberi tahu jaringan bahwa kamu online, tanpa mengungkap di mana.",
   "motionYourIpIsHidden": "IP-mu tersembunyi. Hanya orang yang punya Kryfo-mu yang bisa menghubungimu.",
-  "motionAddressFinishing": "Pesan sudah terkirim lewat Tor. Alamat pribadimu disiapkan di latar belakang.",
+  "motionAddressFinishing": "Pesan sudah bisa dikirim lewat Tor. Alamat pribadimu disiapkan di latar belakang.",
   "motionBuilding2": "membangun",
   "motionOpen": "terbuka",
   "motionLive": "aktif",

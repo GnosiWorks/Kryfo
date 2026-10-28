@@ -91,10 +91,11 @@ class LinkView {
   String get spoken => kind == LinkKind.climbing ? l10n.appConnecting2 : text;
 
   /// the sheet's line: the pill's words, and for a ready route whether our
-  /// address is still on its way. nothing waits for it
+  /// address is still on its way. nothing waits for it. a ready held through
+  /// a drop says only the pill's words: nothing sends meanwhile
   String get line {
     if (kind == LinkKind.off) return l10n.appTorIsOff;
-    if (kind != LinkKind.ready) return text;
+    if (kind != LinkKind.ready || held) return text;
     return switch (status) {
       TorStatus.reachable => l10n.appConnectedRoutedThrough3,
       TorStatus.publishing ||

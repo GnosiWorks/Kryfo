@@ -6552,7 +6552,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get motionAddressFinishing =>
-      'Pesan sudah terkirim lewat Tor. Alamat pribadimu disiapkan di latar belakang.';
+      'Pesan sudah bisa dikirim lewat Tor. Alamat pribadimu disiapkan di latar belakang.';
 
   @override
   String get motionBuilding2 => 'membangun';

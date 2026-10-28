@@ -1834,7 +1834,7 @@
   "motionBouncingThroughRelaysSo": "Đi vòng qua các relay để không ai lần ngược được về bạn.",
   "motionTellingTheNetworkYou": "Đang báo với mạng rằng bạn trực tuyến, mà không tiết lộ bạn ở đâu.",
   "motionYourIpIsHidden": "IP của bạn được ẩn. Chỉ những người có Kryfo của bạn mới liên lạc được với bạn.",
-  "motionAddressFinishing": "Tin nhắn đã đi qua Tor. Địa chỉ riêng của bạn đang hoàn tất ở chế độ nền.",
+  "motionAddressFinishing": "Tin nhắn đã có thể đi qua Tor. Địa chỉ riêng của bạn đang hoàn tất ở chế độ nền.",
   "motionBuilding2": "đang dựng",
   "motionOpen": "mở",
   "motionLive": "hoạt động",

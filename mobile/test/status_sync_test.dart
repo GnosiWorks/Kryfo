@@ -177,13 +177,10 @@ void main() {
       graph: l10n.motionReady,
     );
 
-    // the relays go quiet: inside the grace both hold ready
+    // the relays go quiet: inside the grace both hold ready, and the
+    // sheet's line claims no more than the pill while nothing sends
     await poll(t, 'reachable|100|1|0|1');
-    _says(
-      l10n.appTorReady,
-      line: l10n.appConnectedRoutedThrough3,
-      graph: l10n.motionReady,
-    );
+    _says(l10n.appTorReady, graph: l10n.motionReady);
     // past it both say the route is up with no relay through, never a
     // full green route under a pill that says otherwise
     appState.usableAtForTest = DateTime.now().subtract(
@@ -211,11 +208,7 @@ void main() {
       kPillGrace - const Duration(milliseconds: 300),
     );
     await poll(t, 'reachable|100|1|0|1');
-    _says(
-      l10n.appTorReady,
-      line: l10n.appConnectedRoutedThrough3,
-      graph: l10n.motionReady,
-    );
+    _says(l10n.appTorReady, graph: l10n.motionReady);
     // nothing polls meanwhile: the reading's own clock moves both
     await t.runAsync(() => Future.delayed(const Duration(milliseconds: 500)));
     await t.pump(const Duration(seconds: 1));
@@ -508,6 +501,21 @@ void main() {
       expect(_inGraph(l10n.motionYouReAnonymous), findsOneWidget);
       expect(find.text(l10n.motionReadyToChat), findsNothing);
       expect(find.text(l10n.motionAddressFinishing), findsNothing);
+      await gone(t);
+    });
+
+    testWidgets('a ready held through a drop never says ready to chat', (
+      t,
+    ) async {
+      await show(t);
+      await poll(t, 'publishing|100|0|1|1');
+      expect(_inSheet(l10n.appReadyToChatAddressFinishing), findsOneWidget);
+      // the relays go quiet inside the grace: nothing sends meanwhile
+      await poll(t, 'publishing|100|0|0|1');
+      expect(appState.linkUp, isFalse);
+      _says(l10n.appTorReady, graph: l10n.motionPublishing);
+      expect(find.text(l10n.appReadyToChatAddressFinishing), findsNothing);
+      expect(find.text(l10n.motionReadyToChat), findsNothing);
       await gone(t);
     });
 

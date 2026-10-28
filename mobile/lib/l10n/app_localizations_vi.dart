@@ -6541,7 +6541,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get motionAddressFinishing =>
-      'Tin nhắn đã đi qua Tor. Địa chỉ riêng của bạn đang hoàn tất ở chế độ nền.';
+      'Tin nhắn đã có thể đi qua Tor. Địa chỉ riêng của bạn đang hoàn tất ở chế độ nền.';
 
   @override
   String get motionBuilding2 => 'đang dựng';
