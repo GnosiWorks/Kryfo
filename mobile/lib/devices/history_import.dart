@@ -11,13 +11,17 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import '../search.dart' show searchBody;
+import '../l10n/l10n.dart';
 import 'history_export.dart'
     show
         HistoryChatGap,
+        HistoryChatLeft,
         HistoryChatRef,
+        historyLeftOf,
         kHistoryContactCols,
         kHistoryGroupCols,
-        kHistoryMessageCols;
+        kHistoryMessageCols,
+        kHistoryStaysShots;
 import 'history_ffi.dart';
 
 // files on their way in, beside the media folder's own
@@ -28,14 +32,27 @@ const _fileWaiting = 0;
 const _fileWhole = 1;
 const _fileLost = -1;
 
+// the phone sending one record that never opens, again and again: a spool
+// gone bad. past this many tries at one index the copy stops
+const kHistoryTries = 16;
+
+/// the line a chat that stayed on the phone shows on the new device. a
+/// screenshot block is the one reason there is
+String historyStaysText(String why) => l10n.historyChatStaysShots;
+
+// the stream key is kept here, inside the device's own encrypted database,
+// so a restart of the device can take the copy up again. the phone never
+// keeps it. clear and discard drop it
 Future<void> historyTables(DatabaseExecutor t) async {
   await t.execute(
     'CREATE TABLE IF NOT EXISTS history_in (k INTEGER PRIMARY KEY CHECK '
-    '(k = 1), stream TEXT NOT NULL, plan BLOB NOT NULL, state BLOB NOT NULL)',
+    '(k = 1), stream TEXT NOT NULL, stream_key TEXT NOT NULL, '
+    'bind TEXT NOT NULL, id TEXT NOT NULL, identity TEXT NOT NULL, '
+    'plan BLOB NOT NULL, state BLOB NOT NULL)',
   );
   await t.execute(
     'CREATE TABLE IF NOT EXISTS history_chats (n INTEGER PRIMARY KEY, '
-    'grp INTEGER NOT NULL, chat_id TEXT NOT NULL)',
+    'grp INTEGER NOT NULL, chat_id TEXT NOT NULL, stays TEXT)',
   );
   await t.execute(
     'CREATE TABLE IF NOT EXISTS history_rows (msg_id INTEGER PRIMARY KEY, '
@@ -55,12 +72,32 @@ const _kTables = [
   'history_files',
 ];
 
-/// the end of an import: what differs, and the tally for the phone
+/// a chat that came as its row alone, and why
+class HistoryStay {
+  const HistoryStay(this.chat, this.why);
+  final HistoryChatRef chat;
+  final String why;
+  String get line => historyStaysText(why);
+}
+
+/// the end of an import: what differs, what the phone could not send, the
+/// chats that stayed there, and the tally for the phone
 class HistoryResult {
-  const HistoryResult(this.gaps, this.tally);
+  const HistoryResult(
+    this.gaps,
+    this.left,
+    this.leftChats,
+    this.stays,
+    this.tally,
+  );
   final List<HistoryChatGap> gaps;
+  final List<HistoryChatLeft> left;
+  final int leftChats;
+  final List<HistoryStay> stays;
   final Uint8List tally;
-  bool get whole => gaps.isEmpty;
+
+  /// nothing lost on the way and nothing left out
+  bool get whole => gaps.isEmpty && left.isEmpty && leftChats == 0;
 }
 
 /// the device's side of one stream
@@ -70,8 +107,8 @@ class HistoryImport {
     this._media,
     this._key,
     this._bind,
+    this._id,
     this._identity,
-    this._verify,
     this._r,
   );
 
@@ -79,32 +116,39 @@ class HistoryImport {
   final String _media;
   final String _key;
   final String _bind;
+  final String _id;
   final String _identity;
-  final Future<bool> Function(Uint8List body, Uint8List sig) _verify;
   HistoryReceiver _r;
+  // a rewind that failed: nothing more until the import is opened again
+  bool _stopped = false;
+  int _triesAt = -1;
+  int _tries = 0;
   final _chats = <int, HistoryChatRef>{};
   final _files = <int, ({int chat, String name, int size, int ok})>{};
   final _cols = <String, Set<String>>{};
   bool _done = false;
 
-  /// opens the stream [bindHex] names, taken up where it was left when this
-  /// database holds its place. [verify] is ks_verify_ctx under the
-  /// identity, "history-counts", over the head's body and signature
+  /// opens the stream of the link [bindHex] from the sender [idHex] (the
+  /// phone's first answer gives it), taken up where it was left when this
+  /// database holds its place. a stream from another link or another sender
+  /// starts again from nothing: its text may be other text
   static Future<HistoryImport> open({
     required Database db,
     required String mediaDir,
     required String keyHex,
     required String bindHex,
+    required String idHex,
     required String identityHex,
-    required Future<bool> Function(Uint8List body, Uint8List sig) verify,
   }) async {
     await historyTables(db);
+    final stream = '$bindHex/$idHex';
     final held = await db.query('history_in', where: 'k = 1');
     HistoryReceiver? r;
-    if (held.isNotEmpty && held.first['stream'] == bindHex) {
+    if (held.isNotEmpty && held.first['stream'] == stream) {
       r = HistoryReceiver.resume(
         keyHex: keyHex,
         bindHex: bindHex,
+        idHex: idHex,
         identityHex: identityHex,
         plan: _blob(held.first['plan']),
         state: _blob(held.first['state']),
@@ -114,13 +158,13 @@ class HistoryImport {
       }
     } else if (held.isNotEmpty ||
         (await db.query('history_rows', limit: 1)).isNotEmpty) {
-      // another stream's rows: a new stream starts from nothing
       await _discard(db, mediaDir);
       await historyTables(db);
     }
     r ??= HistoryReceiver.open(
       keyHex: keyHex,
       bindHex: bindHex,
+      idHex: idHex,
       identityHex: identityHex,
     );
     final imp = HistoryImport._(
@@ -128,12 +172,32 @@ class HistoryImport {
       mediaDir,
       keyHex,
       bindHex,
+      idHex,
       identityHex,
-      verify,
       r,
     );
     await imp._load();
     return imp;
+  }
+
+  /// the copy this database holds the place of, after a restart of the
+  /// device; null when it holds none
+  static Future<HistoryImport?> reopen({
+    required Database db,
+    required String mediaDir,
+  }) async {
+    await historyTables(db);
+    final held = await db.query('history_in', where: 'k = 1');
+    if (held.isEmpty) return null;
+    final h = held.first;
+    return open(
+      db: db,
+      mediaDir: mediaDir,
+      keyHex: h['stream_key'] as String,
+      bindHex: h['bind'] as String,
+      idHex: h['id'] as String,
+      identityHex: h['identity'] as String,
+    );
   }
 
   static Uint8List _blob(Object? v) => v is Uint8List
@@ -181,13 +245,22 @@ class HistoryImport {
   /// one record from the phone. HistoryRefused when it is not the one due
   /// (send it again) or the stream cannot go on ([HistoryRefused.forGood])
   Future<HistoryEvent> take(Uint8List rec) async {
-    final ev = _r.take(rec);
+    if (_stopped) throw const HistoryRefused('open it again');
+    final at = _r.next;
+    final HistoryEvent ev;
     try {
-      if (ev.kind == 'head') {
-        final h = ev.head!;
-        final ok = await _verify(h.body!, h.sig!);
-        _r.trust(ok);
+      ev = _r.take(rec);
+    } on HistoryRefused catch (e) {
+      if (e.forGood) rethrow;
+      _tries = _triesAt == at ? _tries + 1 : 1;
+      _triesAt = at;
+      if (_tries >= kHistoryTries) {
+        throw const HistoryRefused('a record that never opens', forGood: true);
       }
+      rethrow;
+    }
+    _tries = 0;
+    try {
       if (ev.kind == 'data') await _write(ev);
       if (ev.kind == 'gone') await _drop(ev.file);
       await _db.transaction((t) async {
@@ -196,7 +269,11 @@ class HistoryImport {
         if (ev.planChanged) {
           await t.insert('history_in', {
             'k': 1,
-            'stream': _bind,
+            'stream': '$_bind/$_id',
+            'stream_key': _key,
+            'bind': _bind,
+            'id': _id,
+            'identity': _identity,
             'plan': _r.plan(),
             'state': _r.state(),
           }, conflictAlgorithm: ConflictAlgorithm.replace);
@@ -205,8 +282,14 @@ class HistoryImport {
         }
       });
     } catch (e) {
-      // the engine moved on and the database did not: back to its place
-      await _rewind();
+      // the engine moved on and the database did not: back to its place.
+      // when even that fails the import stops until it is opened again, and
+      // what is stored stays
+      try {
+        await _rewind();
+      } catch (_) {
+        _stopped = true;
+      }
       rethrow;
     }
     if (ev.kind == 'data' && ev.last && ev.ok) await _settle(ev.file);
@@ -225,6 +308,7 @@ class HistoryImport {
         : HistoryReceiver.resume(
             keyHex: _key,
             bindHex: _bind,
+            idHex: _id,
             identityHex: _identity,
             plan: _blob(held.first['plan']),
             state: _blob(held.first['state']),
@@ -234,6 +318,7 @@ class HistoryImport {
         HistoryReceiver.open(
           keyHex: _key,
           bindHex: _bind,
+          idHex: _id,
           identityHex: _identity,
         );
     await _load();
@@ -379,10 +464,12 @@ class HistoryImport {
         await t.update('contacts', c, where: 'halo_id = ?', whereArgs: [id]);
       }
     }
+    final stays = meta['stays'];
     await t.insert('history_chats', {
       'n': n,
       'grp': group ? 1 : 0,
       'chat_id': id,
+      'stays': stays is String ? stays : null,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     _chats[n] = HistoryChatRef(group, id);
   }
@@ -415,15 +502,25 @@ class HistoryImport {
       m['direction'] ??= 'in';
       m['plaintext'] ??= '';
       m['sent_at'] ??= 0;
-      // one that came here live before the copy is counted, not doubled
+      // one that came here live before the copy is counted, not doubled,
+      // but only when it is the same message: same chat, sender, direction
+      // and words. a uid alone is anyone's to claim
       int? id;
       var made = 0;
       final uid = m['msg_uid'];
       if (uid is String) {
         final there = await t.rawQuery(
-          'SELECT id FROM messages WHERE msg_uid = ? AND id NOT IN '
+          'SELECT id FROM messages WHERE msg_uid = ? AND peer_id = ? AND '
+          '${chat.group ? 'group_id = ?' : 'group_id IS NULL'} AND '
+          'direction = ? AND plaintext = ? AND id NOT IN '
           '(SELECT msg_id FROM history_rows) LIMIT 1',
-          [uid],
+          [
+            uid,
+            m['peer_id'],
+            if (chat.group) chat.id,
+            m['direction'],
+            m['plaintext'],
+          ],
         );
         if (there.isNotEmpty) id = there.first['id'] as int;
       }
@@ -518,14 +615,25 @@ class HistoryImport {
     if (!_done) throw const HistoryRefused('not whole yet');
     final got = await counts();
     final gaps = _r.check(got);
-    return HistoryResult([
-      for (final g in gaps)
-        HistoryChatGap(
-          _chats[g.chat] ?? HistoryChatRef(false, ''),
-          g.want,
-          g.got,
-        ),
-    ], _r.tally(got));
+    final head = _r.head()!;
+    final chats = [
+      for (var n = 0; n < head.chats.length; n++)
+        _chats[n] ?? const HistoryChatRef(false, ''),
+    ];
+    return HistoryResult(
+      [for (final g in gaps) HistoryChatGap(chats[g.chat], g.want, g.got)],
+      historyLeftOf(head, chats),
+      head.leftChats,
+      [
+        for (final c in await _db.query(
+          'history_chats',
+          where: 'stays IS NOT NULL',
+          orderBy: 'n',
+        ))
+          HistoryStay(chats[c['n'] as int], c['stays'] as String),
+      ],
+      _r.tally(got),
+    );
   }
 
   /// the bookkeeping goes once the person has seen the result; the rows

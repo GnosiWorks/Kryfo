@@ -1,20 +1,29 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// what the phone sends a newly linked device: every text, and the last 30
-// days of photos, videos, voice notes and files unless they are skipped.
-// read from the everyday database alone: hidden chats, the decoy and the
-// chat with the developer never go, and no hidden contact's key, address or
-// id is in any row that does
+// what the phone sends a newly linked device: every text and voice note,
+// and the last 30 days of photos, videos and files unless they are skipped.
+// read from the everyday database alone, every everyday chat as this phone
+// holds it. hidden chats (whole, by id), the decoy, the chat with the
+// developer, burner rooms, timed messages and chats with screenshots
+// blocked stay here
 import 'dart:typed_data';
 
 import 'package:path/path.dart' as p;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import '../container.dart';
-import '../router.dart' show hiddenNames;
+import '../router.dart' show hiddenChatIds;
+import '../voice_format.dart' show isVoiceName;
 import 'history_ffi.dart';
 
 /// how far back files go with the text
 const kHistoryMediaDays = 30;
+
+/// the spool's one name, in the folder the caller gives: the app's private
+/// no-backup folder
+const kHistorySpool = 'history.spool';
+
+/// why a chat came only as its row
+const kHistoryStaysShots = 'shots';
 
 /// the columns a chat or a message takes along. keys, sessions, wallpapers,
 /// counters and anything naming a third person stay on the phone
@@ -110,12 +119,41 @@ class HistoryChatGap {
   final HistoryCount got;
 }
 
+/// a chat the phone left rows or files of out: too big, unreadable, a name
+/// that cannot be one, a file outside its media folder
+class HistoryChatLeft {
+  const HistoryChatLeft(this.chat, this.rows, this.files);
+  final HistoryChatRef chat;
+  final int rows;
+  final int files;
+}
+
+List<HistoryChatLeft> historyLeftOf(
+  HistoryHead head,
+  List<HistoryChatRef> chats,
+) => [
+  for (var i = 0; i < head.chats.length && i < chats.length; i++)
+    if (head.chats[i].leftRows > 0 || head.chats[i].leftFiles > 0)
+      HistoryChatLeft(
+        chats[i],
+        head.chats[i].leftRows,
+        head.chats[i].leftFiles,
+      ),
+];
+
 /// the planned stream on the phone
 class HistoryOutgoing {
-  HistoryOutgoing._(this._s, this.head, this.chats);
+  HistoryOutgoing._(this._s, this.id, this.head, this.chats);
   final HistorySender _s;
+
+  /// the stream id the device needs with the first record, as hex
+  final String id;
   final HistoryHead head;
   final List<HistoryChatRef> chats;
+
+  /// what the phone could not send, chat by chat, and whole chats
+  List<HistoryChatLeft> get left => historyLeftOf(head, chats);
+  int get leftChats => head.leftChats;
 
   Uint8List record(int i) => _s.record(i);
 
@@ -130,29 +168,29 @@ class HistoryOutgoing {
 
 Future<bool> _hasTable(DatabaseExecutor db, String t) async =>
     (await db.rawQuery(
-      "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
+      "SELECT 1 FROM main.sqlite_master WHERE type = 'table' AND name = ?",
       [t],
     )).isNotEmpty;
 
 Future<Set<String>> _colsOf(DatabaseExecutor db, String t) async => {
-  for (final r in await db.rawQuery('PRAGMA table_info($t)'))
+  for (final r in await db.rawQuery('PRAGMA main.table_info($t)'))
     r['name'] as String,
 };
 
 bool _isDev(Object? id) => id is String && id.startsWith('dev:');
 
-/// builds and signs the stream for a new device. [db] is the everyday
-/// database, nothing attached; [mediaDir] its media folder; [sign] signs
-/// the head's body with the identity under "history-counts"
+/// builds the stream for a new device. [db] is the everyday database,
+/// nothing attached; [mediaDir] its media folder; [spoolDir] the app's
+/// private no-backup folder. [skipMedia] leaves photos, videos and files
+/// out; voice notes always go
 Future<HistoryOutgoing> exportHistory({
   required Database db,
   required HaloContainer container,
   required String mediaDir,
-  required String spool,
+  required String spoolDir,
   required String keyHex,
   required String bindHex,
   required String identityHex,
-  required Future<Uint8List> Function(Uint8List body) sign,
   bool skipMedia = false,
   DateTime? now,
   int chunk = 0,
@@ -166,20 +204,17 @@ Future<HistoryOutgoing> exportHistory({
       throw const HistoryNotHere('attached');
     }
   }
-  final hidden = await hiddenNames(db);
+  final hidden = await hiddenChatIds(db);
   final support = <String>{
     if (await _hasTable(db, 'support_chats'))
-      for (final r in await db.rawQuery('SELECT halo_id FROM support_chats'))
+      for (final r in await db.rawQuery(
+        'SELECT halo_id FROM main.support_chats',
+      ))
         r['halo_id'] as String,
   };
-  bool gone(Object? id) =>
-      id is String &&
-      (hidden.contains(id) || support.contains(id) || _isDev(id));
-  // a field naming a hidden person is dropped from the row that goes
-  Map<String, Object?> clean(Map<String, Object?> row) => {
-    for (final e in row.entries)
-      e.key: e.value is String && hidden.contains(e.value) ? null : e.value,
-  };
+  // whole chats that stay: the vault's, the developer's and what it started
+  bool stays(String id) =>
+      hidden.contains(id) || support.contains(id) || _isDev(id);
 
   final ccols = await _colsOf(db, 'contacts');
   final gcols = await _colsOf(db, 'groups');
@@ -191,6 +226,7 @@ Future<HistoryOutgoing> exportHistory({
   final groupCols = [
     for (final c in kHistoryGroupCols)
       if (gcols.contains(c)) c,
+    if (gcols.contains('shots_on')) 'shots_on',
   ];
   final msgCols = [
     for (final c in kHistoryMessageCols)
@@ -206,25 +242,25 @@ Future<HistoryOutgoing> exportHistory({
   // the chats, the one written in last first
   final last = <String, int>{};
   for (final r in await db.rawQuery(
-    'SELECT peer_id AS k, MAX($when) AS t FROM messages '
+    'SELECT peer_id AS k, MAX($when) AS t FROM main.messages '
     'WHERE group_id IS NULL GROUP BY peer_id',
   )) {
     last['p:${r['k']}'] = (r['t'] as num?)?.toInt() ?? 0;
   }
   for (final r in await db.rawQuery(
-    'SELECT group_id AS k, MAX($when) AS t FROM messages '
+    'SELECT group_id AS k, MAX($when) AS t FROM main.messages '
     'WHERE group_id IS NOT NULL GROUP BY group_id',
   )) {
     last['g:${r['k']}'] = (r['t'] as num?)?.toInt() ?? 0;
   }
   final peers = [
     for (final r in await db.rawQuery(
-      'SELECT ${contactCols.join(', ')} FROM contacts c '
+      'SELECT ${contactCols.join(', ')} FROM main.contacts c '
       'WHERE ${ccols.contains('accepted') ? 'c.accepted = 1 OR ' : ''}'
-      'EXISTS (SELECT 1 FROM messages m WHERE m.peer_id = c.halo_id '
+      'EXISTS (SELECT 1 FROM main.messages m WHERE m.peer_id = c.halo_id '
       'AND m.group_id IS NULL)',
     ))
-      if (!gone(r['halo_id'])) r,
+      if (!stays(r['halo_id'] as String)) r,
   ];
   // burner rooms burn: they stay on the phone that holds them
   final rooms = [
@@ -233,10 +269,10 @@ Future<HistoryOutgoing> exportHistory({
   ];
   final groups = [
     for (final r in await db.rawQuery(
-      'SELECT ${groupCols.join(', ')} FROM groups'
+      'SELECT ${groupCols.join(', ')} FROM main.groups'
       '${rooms.isEmpty ? '' : ' WHERE ${rooms.join(' AND ')}'}',
     ))
-      if (!gone(r['group_id'])) r,
+      if (!stays(r['group_id'] as String)) r,
   ];
   final order = [
     for (final r in peers) (false, r['halo_id'] as String, r),
@@ -255,7 +291,7 @@ Future<HistoryOutgoing> exportHistory({
     keyHex: keyHex,
     bindHex: bindHex,
     identityHex: identityHex,
-    spool: spool,
+    spool: p.join(spoolDir, kHistorySpool),
     root: mediaDir,
     skipMedia: skipMedia,
     chunk: chunk,
@@ -266,33 +302,34 @@ Future<HistoryOutgoing> exportHistory({
     final hasReactions = await _hasTable(db, 'reactions');
     final hasVotes = await _hasTable(db, 'poll_votes');
     for (final (group, id, row) in order) {
+      // a linux desktop cannot keep a screenshot block: the chat shows there
+      // as staying on this phone, nothing of what was said in it
+      final shots = row['shots_on'] == 1;
       final meta = <String, Object?>{
         'kind': group ? 'group' : 'peer',
         'id': id,
-        'row': clean(row),
+        'row': row,
+        if (shots) 'stays': kHistoryStaysShots,
       };
-      if (group) {
-        final members = [
-          for (final m in await db.rawQuery(
-            'SELECT halo_id, joined_at FROM group_members WHERE group_id = ?',
-            [id],
-          ))
-            if (!gone(m['halo_id'])) m,
-        ];
-        meta['members'] = members;
-        meta['people'] = [
-          for (final c in await db.rawQuery(
-            'SELECT halo_id, onion, xpub, first_seen FROM contacts '
-            'WHERE halo_id IN (SELECT halo_id FROM group_members '
-            'WHERE group_id = ?1 UNION SELECT peer_id FROM messages '
-            'WHERE group_id = ?1) ORDER BY halo_id',
-            [id],
-          ))
-            if (!gone(c['halo_id'])) c,
-        ];
+      if (group && !shots) {
+        meta['members'] = await db.rawQuery(
+          'SELECT halo_id, joined_at FROM main.group_members '
+          'WHERE group_id = ? ORDER BY halo_id',
+          [id],
+        );
+        meta['people'] = await db.rawQuery(
+          'SELECT halo_id, onion, xpub, first_seen FROM main.contacts '
+          'WHERE halo_id IN (SELECT halo_id FROM main.group_members '
+          'WHERE group_id = ?1 UNION SELECT peer_id FROM main.messages '
+          'WHERE group_id = ?1) ORDER BY halo_id',
+          [id],
+        );
       }
       final n = s.chat(meta);
+      // a row too big to go: counted in the head, the rest goes on
+      if (n == null) continue;
       chats.add(HistoryChatRef(group, id));
+      if (shots) continue;
       var after = 0;
       while (true) {
         final page = await db.rawQuery(
@@ -301,7 +338,7 @@ Future<HistoryOutgoing> exportHistory({
           '${mcols.contains('burn_at') ? ', burn_at' : ''}'
           '${mcols.contains('burn_secs') ? ', burn_secs' : ''}'
           '${mcols.contains('burn_unseen') ? ', burn_unseen' : ''} '
-          'FROM messages WHERE '
+          'FROM main.messages WHERE '
           '${group ? 'group_id = ?' : 'peer_id = ? AND group_id IS NULL'} '
           'AND id > ? ORDER BY id LIMIT 500',
           [id, after],
@@ -315,8 +352,7 @@ Future<HistoryOutgoing> exportHistory({
             if (m['via_dev'] != 1 &&
                 m['burn_at'] == null &&
                 m['burn_secs'] == null &&
-                (m['burn_unseen'] ?? 0) == 0 &&
-                !gone(m['peer_id']))
+                (m['burn_unseen'] ?? 0) == 0)
               m,
         ];
         final uids = [
@@ -329,11 +365,10 @@ Future<HistoryOutgoing> exportHistory({
           final marks = List.filled(uids.length, '?').join(', ');
           if (hasReactions) {
             for (final r in await db.rawQuery(
-              'SELECT msg_uid, reactor, emoji, reacted_at FROM reactions '
-              'WHERE msg_uid IN ($marks)',
+              'SELECT msg_uid, reactor, emoji, reacted_at FROM main.reactions '
+              'WHERE msg_uid IN ($marks) ORDER BY msg_uid, reactor',
               uids,
             )) {
-              if (gone(r['reactor'])) continue;
               (reactions[r['msg_uid'] as String] ??= []).add({
                 'reactor': r['reactor'],
                 'emoji': r['emoji'],
@@ -344,10 +379,10 @@ Future<HistoryOutgoing> exportHistory({
           if (hasVotes) {
             for (final r in await db.rawQuery(
               'SELECT poll_uid, voter, group_id, choices, seq, at '
-              'FROM poll_votes WHERE poll_uid IN ($marks)',
+              'FROM main.poll_votes WHERE poll_uid IN ($marks) '
+              'ORDER BY poll_uid, voter',
               uids,
             )) {
-              if (gone(r['voter'])) continue;
               (votes[r['poll_uid'] as String] ??= []).add({
                 'voter': r['voter'],
                 'group_id': r['group_id'],
@@ -362,34 +397,34 @@ Future<HistoryOutgoing> exportHistory({
           final row = <String, Object?>{for (final c in msgCols) c: m[c]};
           final at = (m['written_at'] as num? ?? m['sent_at'] as num? ?? 0)
               .toInt();
+          final voice = isVoiceName(m['file_name'] as String?);
           for (final col in const ['media_path', 'file_path']) {
             final path = row[col];
             if (path is! String || path.isEmpty) continue;
             // only a file of this container's own folder, by its name there
             if (!p.isWithin(mediaDir, path)) {
               row[col] = null;
+              s.left(n);
               continue;
             }
             final rel = p.posix.joinAll(
               p.split(p.relative(path, from: mediaDir)),
             );
             row[col] = rel;
-            if (!skipMedia && at >= since && media.add(rel)) {
-              s.media(n, at, rel);
-            }
+            final goes = voice || !skipMedia;
+            if (goes && at >= since && media.add(rel)) s.media(n, at, rel);
           }
           final uid = m['msg_uid'];
           if (uid is String) {
             if (reactions[uid] case final r?) row['x_reactions'] = r;
             if (votes[uid] case final v?) row['x_votes'] = v;
           }
-          s.message(clean(row));
+          s.message(row);
         }
       }
     }
-    final body = await s.plan();
-    s.signed(await sign(body));
-    return HistoryOutgoing._(s, s.head(), chats);
+    await s.plan();
+    return HistoryOutgoing._(s, s.id, s.head(), chats);
   } catch (_) {
     s.close();
     rethrow;

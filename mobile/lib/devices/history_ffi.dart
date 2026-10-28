@@ -48,10 +48,13 @@ typedef _BufStrC = Pointer<Utf8> Function(Int64, Pointer<Uint8>, Int32);
 typedef _BufStr = Pointer<Utf8> Function(int, Pointer<Uint8>, int);
 typedef _CloseC = Void Function(Int64);
 typedef _Close = void Function(int);
-typedef _RecvNewC = Int64 Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
-typedef _RecvNew = int Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
+typedef _RecvNewC =
+    Int64 Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
+typedef _RecvNew =
+    int Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
 typedef _ResumeC =
     Int64 Function(
+      Pointer<Utf8>,
       Pointer<Utf8>,
       Pointer<Utf8>,
       Pointer<Utf8>,
@@ -62,6 +65,7 @@ typedef _ResumeC =
     );
 typedef _Resume =
     int Function(
+      Pointer<Utf8>,
       Pointer<Utf8>,
       Pointer<Utf8>,
       Pointer<Utf8>,
@@ -98,15 +102,26 @@ class HistoryRefused implements Exception {
 
 /// one chat's share of a stream: messages, files and their bytes
 class HistoryCount {
-  const HistoryCount(this.messages, this.media, this.bytes);
+  const HistoryCount(
+    this.messages,
+    this.media,
+    this.bytes, {
+    this.leftRows = 0,
+    this.leftFiles = 0,
+  });
   final int messages;
   final int media;
   final int bytes;
+  // what the phone could not send of the chat
+  final int leftRows;
+  final int leftFiles;
 
   factory HistoryCount.fromJson(Map<String, dynamic> j) => HistoryCount(
     (j['m'] as num).toInt(),
     (j['f'] as num).toInt(),
     (j['b'] as num).toInt(),
+    leftRows: (j['lr'] as num? ?? 0).toInt(),
+    leftFiles: (j['lf'] as num? ?? 0).toInt(),
   );
   Map<String, int> toJson() => {'m': messages, 'f': media, 'b': bytes};
 
@@ -115,9 +130,11 @@ class HistoryCount {
       other is HistoryCount &&
       other.messages == messages &&
       other.media == media &&
-      other.bytes == bytes;
+      other.bytes == bytes &&
+      other.leftRows == leftRows &&
+      other.leftFiles == leftFiles;
   @override
-  int get hashCode => Object.hash(messages, media, bytes);
+  int get hashCode => Object.hash(messages, media, bytes, leftRows, leftFiles);
   @override
   String toString() => '($messages, $media, $bytes)';
 }
@@ -148,9 +165,7 @@ class HistoryHead {
     required this.files,
     required this.skipMedia,
     required this.chats,
-    this.skipped = 0,
-    this.body,
-    this.sig,
+    this.leftChats = 0,
   });
   final int records;
   // the whole stream on the wire, to show before it starts
@@ -159,11 +174,8 @@ class HistoryHead {
   final int files;
   final bool skipMedia;
   final List<HistoryCount> chats;
-  // files the phone could not read while planning
-  final int skipped;
-  // the signed body and its signature, on the device's side
-  final Uint8List? body;
-  final Uint8List? sig;
+  // chats the phone could not send at all
+  final int leftChats;
 
   factory HistoryHead.fromJson(Map<String, dynamic> j) => HistoryHead(
     records: (j['records'] as num).toInt(),
@@ -175,16 +187,9 @@ class HistoryHead {
       for (final c in j['chats'] as List)
         HistoryCount.fromJson(c as Map<String, dynamic>),
     ],
-    skipped: (j['skipped'] as num?)?.toInt() ?? 0,
-    body: j['body'] is String ? _unhex(j['body'] as String) : null,
-    sig: j['sig'] is String ? _unhex(j['sig'] as String) : null,
+    leftChats: (j['leftChats'] as num?)?.toInt() ?? 0,
   );
 }
-
-Uint8List _unhex(String h) => Uint8List.fromList([
-  for (var i = 0; i + 1 < h.length; i += 2)
-    int.parse(h.substring(i, i + 2), radix: 16),
-]);
 
 String historyHex(List<int> b) =>
     b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
@@ -294,54 +299,62 @@ class HistorySender {
     }
   }
 
-  /// starts a chat; its number in the stream
-  int chat(Map<String, Object?> meta) {
+  /// starts a chat; its number in the stream, or null when its row could
+  /// not go and is counted as left out (its messages then go nowhere)
+  int? chat(Map<String, Object?> meta) {
     final n = _bytes(
       _l.lookupFunction<_TakeC, _Take>('HaloHistSendChat'),
       utf8.encode(jsonEncode(meta)),
     );
+    if (n == -2) return null;
     if (n < 0) throw const HistoryRefused('chat');
     return n;
   }
 
-  /// a message of the chat started last
-  void message(Map<String, Object?> row) {
-    if (_bytes(
-          _l.lookupFunction<_TakeC, _Take>('HaloHistSendMessage'),
-          utf8.encode(jsonEncode(row)),
-        ) !=
-        0) {
-      throw const HistoryRefused('message');
-    }
+  /// a message of the chat started last. false when it was left out and
+  /// counted
+  bool message(Map<String, Object?> row) {
+    final n = _bytes(
+      _l.lookupFunction<_TakeC, _Take>('HaloHistSendMessage'),
+      utf8.encode(jsonEncode(row)),
+    );
+    if (n < 0) throw const HistoryRefused('message');
+    return n == 0;
   }
 
-  /// a file under root for [chat], [at] its time in ms
-  void media(int chat, int at, String name) {
+  /// a file under root for [chat], [at] its time in ms. false when its
+  /// name could not be one and it is counted as left out
+  bool media(int chat, int at, String name) {
     final fn = _l.lookupFunction<_MediaC, _Media>('HaloHistSendMedia');
     final n = name.toNativeUtf8();
     try {
-      if (fn(_h, chat, at, n) != 0) throw const HistoryRefused('media');
+      final r = fn(_h, chat, at, n);
+      if (r < 0) throw const HistoryRefused('media');
+      return r == 0;
     } finally {
       malloc.free(n);
     }
   }
 
-  /// closes the text and reads every file once, off the screen's isolate:
-  /// the head's body for the identity to sign
-  Future<Uint8List> plan() async {
-    final h = _h;
-    final hex = await Isolate.run(() {
-      final fn = _lib().lookupFunction<_StrC, _Str>('HaloHistSendPlan');
-      return _text(fn(h));
-    });
-    return _unhex(hex);
+  /// a file of [chat] that could not be handed over, counted as left out
+  void left(int chat) {
+    final fn = _l.lookupFunction<_IntC, _Int>('HaloHistSendLeft');
+    if (fn(_h, chat) != 0) throw const HistoryRefused('left');
   }
 
-  void signed(Uint8List sig) {
-    if (_bytes(_l.lookupFunction<_TakeC, _Take>('HaloHistSendSigned'), sig) !=
-        0) {
-      throw const HistoryRefused('signature');
-    }
+  /// the stream id the device needs with the first record, as hex
+  String get id {
+    final fn = _l.lookupFunction<_StrC, _Str>('HaloHistSendID');
+    return _text(fn(_h));
+  }
+
+  /// closes the text and reads every file once, off the screen's isolate
+  Future<void> plan() async {
+    final h = _h;
+    await Isolate.run(() {
+      final fn = _lib().lookupFunction<_StrC, _Str>('HaloHistSendPlan');
+      _text(fn(h));
+    });
   }
 
   HistoryHead head() {
@@ -378,22 +391,26 @@ class HistoryReceiver {
   final int _h;
   static DynamicLibrary get _l => _lib();
 
+  /// [idHex] is the stream id the phone gave with its first answer
   static HistoryReceiver open({
     required String keyHex,
     required String bindHex,
+    required String idHex,
     required String identityHex,
   }) {
     final fn = _l.lookupFunction<_RecvNewC, _RecvNew>('HaloHistRecvNew');
     final k = keyHex.toNativeUtf8();
     final b = bindHex.toNativeUtf8();
+    final d = idHex.toNativeUtf8();
     final i = identityHex.toNativeUtf8();
     try {
-      final h = fn(k, b, i);
+      final h = fn(k, b, d, i);
       if (h <= 0) throw const HistoryRefused('receiver');
       return HistoryReceiver._(h);
     } finally {
       freeSecret(k);
       malloc.free(b);
+      malloc.free(d);
       malloc.free(i);
     }
   }
@@ -402,6 +419,7 @@ class HistoryReceiver {
   static HistoryReceiver? resume({
     required String keyHex,
     required String bindHex,
+    required String idHex,
     required String identityHex,
     required Uint8List plan,
     required Uint8List state,
@@ -409,15 +427,17 @@ class HistoryReceiver {
     final fn = _l.lookupFunction<_ResumeC, _Resume>('HaloHistRecvResume');
     final k = keyHex.toNativeUtf8();
     final b = bindHex.toNativeUtf8();
+    final d = idHex.toNativeUtf8();
     final i = identityHex.toNativeUtf8();
     final p = _copyIn(plan);
     final s = _copyIn(state);
     try {
-      final h = fn(k, b, i, p, plan.length, s, state.length);
+      final h = fn(k, b, d, i, p, plan.length, s, state.length);
       return h <= 0 ? null : HistoryReceiver._(h);
     } finally {
       freeSecret(k);
       malloc.free(b);
+      malloc.free(d);
       malloc.free(i);
       calloc.free(p);
       calloc.free(s);
@@ -444,12 +464,12 @@ class HistoryReceiver {
     return HistoryEvent(j as Map<String, dynamic>, b.sublist(4 + jl));
   }
 
-  /// the shim's verdict on the head's signature
-  void trust(bool ok) {
-    final fn = _l.lookupFunction<_IntC, _Int>('HaloHistRecvTrust');
-    if (fn(_h, ok ? 1 : 0) != 0) {
-      throw const HistoryRefused('head', forGood: true);
-    }
+  /// the head taken, null before it
+  HistoryHead? head() {
+    final fn = _l.lookupFunction<_StrC, _Str>('HaloHistRecvHead');
+    final t = engineTake(fn(_h));
+    if (t.startsWith('error:')) return null;
+    return HistoryHead.fromJson(jsonDecode(t) as Map<String, dynamic>);
   }
 
   Uint8List state() {

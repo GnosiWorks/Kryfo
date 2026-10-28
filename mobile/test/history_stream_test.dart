@@ -13,6 +13,7 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/devices/history_export.dart';
 import 'package:kryfo/devices/history_ffi.dart';
 import 'package:kryfo/devices/history_import.dart';
+import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart' show searchTables;
 import 'package:path/path.dart' as p;
 
@@ -22,7 +23,6 @@ import 'sqlite_ffi.dart';
 // rfc 7748's first public key, as libsignal writes it
 const _identity =
     '058520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a';
-final _sig = Uint8List.fromList(List.filled(64, 0x11));
 
 const _ana = 'quiet-amber-harbor';
 const _ben = 'tall-cedar-window';
@@ -35,6 +35,8 @@ const _hidGroupOnion = 'hgmonionhgmonionhgmonionhgmonionhgmonionhgmonionhgmo';
 const _hidGroupXpub =
     'ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100';
 const _dev = 'dev:k7';
+const _cara = 'warm-slate-meadow';
+const _shotsGroup = 'g-0002';
 const _support = 'brisk-lime-anchor';
 const _group = 'g-0001';
 const _room = 'r-0001';
@@ -250,17 +252,52 @@ Future<_Phone> _phone({int ana = 30}) async {
   });
   await msg(_ana, 'room words', group: _room);
 
+  // a chat a crash left half moved into the vault: its everyday rows are
+  // still here, and it is hidden all the same
+  await msg(_hid, 'hidden one to one');
+  // screenshots blocked: the chats show on the device, nothing said in them
+  await contact(_cara, nick: 'Cara');
+  await db.update(
+    'contacts',
+    {'shots_on': 1, 'shots_at': now},
+    where: 'halo_id = ?',
+    whereArgs: [_cara],
+  );
+  await msg(_cara, 'shot secret words');
+  await db.insert('groups', {
+    'group_id': _shotsGroup,
+    'name': 'Quiet',
+    'created_at': now,
+    'shots_on': 1,
+  });
+  await msg(_ana, 'shot group words', group: _shotsGroup);
+  // a voice note goes even when files are skipped
+  await msg(
+    _ana,
+    '',
+    file: put('vn1.ogg', 2100, seed: 11),
+    ago: 6000,
+    more: {'file_name': 'voice.ogg'},
+  );
+  // what cannot go is counted: a name no device could hold, a row too big
+  await msg(
+    _ben,
+    'a file with a bad name',
+    file: put('bad\\name.jpg', 400),
+    ago: 2500,
+  );
+  await msg(_ben, 'x' * (1 << 21));
+
   ph.secrets.addAll([
-    _hid,
-    '${_hid}onion',
-    '${_hid}xpub',
+    'hidden one to one',
+    'shot secret words',
+    'shot group words',
     _hidOnion,
     _hidXpub,
     _hidGroupMember,
     _hidGroupOnion,
     _hidGroupXpub,
     'hg-0009',
-    'hidden one writes',
     _dev,
     'hello marios',
     _support,
@@ -305,24 +342,23 @@ Future<HistoryOutgoing> _export(
   db: ph.db,
   container: container,
   mediaDir: ph.media,
-  spool: p.join(ph.dir, 'spool-${l.bind.substring(0, 8)}-${_uid++}'),
+  spoolDir: ph.dir,
   keyHex: l.key,
   bindHex: l.bind,
   identityHex: _identity,
-  sign: (_) async => _sig,
   skipMedia: skip,
   now: DateTime.fromMillisecondsSinceEpoch(ph.now),
   chunk: 1024,
 );
 
-Future<HistoryImport> _open(_Device d, _Link l, {bool good = true}) =>
+Future<HistoryImport> _open(_Device d, _Link l, HistoryOutgoing out) =>
     HistoryImport.open(
       db: d.db,
       mediaDir: d.media,
       keyHex: l.key,
       bindHex: l.bind,
+      idHex: out.id,
       identityHex: _identity,
-      verify: (body, sig) async => good && sig.every((b) => b == 0x11),
     );
 
 Future<void> _pump(HistoryOutgoing out, HistoryImport imp, [int? upto]) async {
@@ -383,6 +419,7 @@ Future<List<Uint8List>> _everyByte(HistoryOutgoing out, _Link l) async {
   final r = HistoryReceiver.open(
     keyHex: l.key,
     bindHex: l.bind,
+    idHex: out.id,
     identityHex: _identity,
   );
   final out2 = <Uint8List>[];
@@ -391,7 +428,6 @@ Future<List<Uint8List>> _everyByte(HistoryOutgoing out, _Link l) async {
       final rec = out.record(i);
       out2.add(rec);
       final ev = r.take(rec);
-      if (ev.kind == 'head') r.trust(true);
       out2.add(utf8.encode(jsonEncode(ev.j)));
       out2.add(ev.bytes);
     }
@@ -424,14 +460,22 @@ void main() {
   test('a whole history lands and both sides count the same', () async {
     final ph = await _phone();
     final l = _Link();
+    // what a crash left at the spool's name goes first
+    File(p.join(ph.dir, kHistorySpool)).writeAsStringSync('stale');
     final out = await _export(ph, l);
     final d = await _device();
-    final imp = await _open(d, l);
+    final imp = await _open(d, l, out);
     await _pump(out, imp);
     expect(imp.done, isTrue);
     final res = await imp.finish();
-    expect(res.whole, isTrue);
+    expect(res.gaps, isEmpty);
     expect(out.checkTally(res.tally), isEmpty);
+    // what the phone could not send is said on both sides, chat by chat
+    String left(List<HistoryChatLeft> l) =>
+        [for (final x in l) '${x.chat.id} ${x.rows} ${x.files}'].join(', ');
+    expect(left(res.left), '$_ana 0 1, $_ben 1 1');
+    expect(left(out.left), left(res.left));
+    expect(res.whole, isFalse);
     var size = 0;
     for (var i = 0; i < out.head.records; i++) {
       size += out.record(i).length;
@@ -441,11 +485,11 @@ void main() {
     Future<Object?> n(String w) async => (await d.db.rawQuery(
       'SELECT COUNT(*) AS c FROM messages WHERE $w',
     )).first['c'];
-    expect(await n("peer_id = '$_ana' AND group_id IS NULL"), 34);
-    expect(await n("peer_id = '$_ben' AND group_id IS NULL"), 2);
-    expect(await n("group_id = '$_group'"), 2);
+    expect(await n("peer_id = '$_ana' AND group_id IS NULL"), 35);
+    expect(await n("peer_id = '$_ben' AND group_id IS NULL"), 3);
+    expect(await n("group_id = '$_group'"), 3);
     // the month's files, byte for byte; the older one stays on the phone
-    for (final f in ['p1.jpg', 'v1.mp4', 'doc.pdf']) {
+    for (final f in ['p1.jpg', 'v1.mp4', 'doc.pdf', 'vn1.ogg']) {
       expect(
         File(p.join(d.media, f)).readAsBytesSync(),
         ph.files[f],
@@ -463,8 +507,7 @@ void main() {
       where: "plaintext = 'a saved file'",
     );
     expect(saved.single['file_path'], isNull);
-    // the media list newest first
-    expect(out.head.files, 3);
+    expect(out.head.files, 4);
     // found by search as on the phone
     final hits = await d.db.rawQuery(
       "SELECT rowid FROM msg_fts WHERE msg_fts MATCH 'hello'",
@@ -484,21 +527,191 @@ void main() {
       for (final s in ph.secrets) {
         expect(_anywhere(all, s), isFalse, reason: s);
       }
-      // the hidden person's place in an everyday group goes with them
       final d = await _device();
-      final imp = await _open(d, l);
+      final imp = await _open(d, l, out);
       await _pump(out, imp);
-      expect((await imp.finish()).whole, isTrue);
+      expect((await imp.finish()).gaps, isEmpty);
       final dump = jsonEncode(await _dump(d));
       for (final s in ph.secrets) {
         expect(dump.contains(s), isFalse, reason: s);
       }
-      expect(dump.contains('group hello'), isTrue);
-      expect(dump.contains('👍'), isTrue);
       out.close();
     },
     skip: skip,
   );
+
+  test(
+    'a hidden contact in an everyday group: the copy is the everyday side',
+    () async {
+      final ph = await _phone();
+      final l = _Link();
+      final out = await _export(ph, l);
+      final d = await _device();
+      final imp = await _open(d, l, out);
+      await _pump(out, imp);
+      expect((await imp.finish()).gaps, isEmpty);
+      Future<List<Map<String, Object?>>> rows(SqliteMem db, String sql) =>
+          db.rawQuery(sql);
+      for (final sql in [
+        "SELECT peer_id, direction, plaintext, sent_at, msg_uid, poll "
+            "FROM messages WHERE group_id = '$_group' ORDER BY msg_uid",
+        "SELECT group_id, name, admin_id FROM groups WHERE group_id = '$_group'",
+        "SELECT halo_id FROM group_members WHERE group_id = '$_group' "
+            'ORDER BY halo_id',
+        'SELECT msg_uid, reactor, emoji FROM reactions ORDER BY 1, 2',
+        'SELECT poll_uid, voter, choices FROM poll_votes ORDER BY 1, 2',
+      ]) {
+        expect(await rows(d.db, sql), await rows(ph.db, sql), reason: sql);
+      }
+      // the hidden one is there as the group shows them
+      expect(
+        (await rows(
+          d.db,
+          "SELECT 1 FROM messages WHERE peer_id = '$_hid' "
+          "AND group_id = '$_group'",
+        )),
+        isNotEmpty,
+      );
+      // and their chat with this phone, hidden, is not
+      expect(
+        await rows(
+          d.db,
+          "SELECT 1 FROM messages WHERE peer_id = '$_hid' "
+          'AND group_id IS NULL',
+        ),
+        isEmpty,
+      );
+      expect(
+        await rows(
+          d.db,
+          "SELECT 1 FROM contacts WHERE halo_id = '$_hid' "
+          'AND accepted = 1',
+        ),
+        isEmpty,
+      );
+      out.close();
+    },
+    skip: skip,
+  );
+
+  test('a chat with screenshots blocked stays on the phone', () async {
+    final ph = await _phone();
+    final l = _Link();
+    final out = await _export(ph, l);
+    final d = await _device();
+    final imp = await _open(d, l, out);
+    await _pump(out, imp);
+    final res = await imp.finish();
+    expect(res.gaps, isEmpty);
+    expect({for (final x in res.stays) x.chat.id}, {_cara, _shotsGroup});
+    expect(res.stays.first.line, l10n.historyChatStaysShots);
+    // the chat shows, nothing said in it does
+    expect(
+      await d.db.query('contacts', where: "halo_id = '$_cara'"),
+      hasLength(1),
+    );
+    expect(
+      await d.db.query('groups', where: "group_id = '$_shotsGroup'"),
+      hasLength(1),
+    );
+    expect(await d.db.query('messages', where: "peer_id = '$_cara'"), isEmpty);
+    expect(
+      await d.db.query('messages', where: "group_id = '$_shotsGroup'"),
+      isEmpty,
+    );
+    out.close();
+  }, skip: skip);
+
+  test(
+    'a live row only counts as the copy when it is the same message',
+    () async {
+      final ph = await _phone(ana: 6);
+      final l = _Link();
+      final out = await _export(ph, l);
+      final d = await _device();
+      final real = (await ph.db.query(
+        'messages',
+        where: "plaintext = 'ana says 3'",
+      )).single;
+      // someone sends the new device a message under a uid of the past
+      await d.db.insert('contacts', {
+        'halo_id': _ana,
+        'onion': 'o',
+        'xpub': 'x',
+        'first_seen': 1,
+        'last_seen': 1,
+      });
+      await d.db.insert('messages', {
+        'peer_id': _ana,
+        'direction': 'in',
+        'plaintext': 'not what was said',
+        'sent_at': 1,
+        'msg_uid': real['msg_uid'],
+      });
+      final imp = await _open(d, l, out);
+      await _pump(out, imp);
+      expect((await imp.finish()).gaps, isEmpty);
+      final both = await d.db.query(
+        'messages',
+        where: 'msg_uid = ?',
+        whereArgs: [real['msg_uid']],
+      );
+      expect(
+        {for (final r in both) r['plaintext']},
+        {'ana says 3', 'not what was said'},
+      );
+      out.close();
+    },
+    skip: skip,
+  );
+
+  test(
+    'one sender per link, and a device restart takes the copy up again',
+    () async {
+      final ph = await _phone(ana: 4);
+      final l = _Link();
+      final out = await _export(ph, l);
+      await expectLater(_export(ph, l), throwsA(isA<HistoryRefused>()));
+      final d = await _device();
+      var imp = await _open(d, l, out);
+      await _pump(out, imp, out.head.text + 2);
+      imp.close();
+      // the device kept the stream key with its place, the phone did not
+      imp = (await HistoryImport.reopen(db: d.db, mediaDir: d.media))!;
+      expect(imp.next, out.head.text + 2);
+      await _pump(out, imp);
+      expect((await imp.finish()).gaps, isEmpty);
+      await imp.clear();
+      expect(await HistoryImport.reopen(db: d.db, mediaDir: d.media), isNull);
+      out.close();
+    },
+    skip: skip,
+  );
+
+  test('a record that never opens stops the copy after its tries', () async {
+    final ph = await _phone(ana: 2);
+    final l = _Link();
+    final out = await _export(ph, l);
+    final d = await _device();
+    final imp = await _open(d, l, out);
+    await _pump(out, imp, 2);
+    final bad = Uint8List.fromList(out.record(2))..[9] ^= 1;
+    for (var i = 1; i < kHistoryTries; i++) {
+      await expectLater(
+        imp.take(bad),
+        throwsA(
+          isA<HistoryRefused>().having((e) => e.forGood, 'for good', isFalse),
+        ),
+      );
+    }
+    await expectLater(
+      imp.take(bad),
+      throwsA(
+        isA<HistoryRefused>().having((e) => e.forGood, 'for good', isTrue),
+      ),
+    );
+    out.close();
+  }, skip: skip);
 
   test('only the everyday container, with nothing attached, sends', () async {
     final ph = await _phone();
@@ -517,26 +730,33 @@ void main() {
   }, skip: skip);
 
   test(
-    'skip photos and videos: no file, no media row, the text all there',
+    'skip photos, videos and files: none of them, every voice note and text',
     () async {
       final ph = await _phone();
       final l = _Link();
       final out = await _export(ph, l, skip: true);
       expect(out.head.skipMedia, isTrue);
-      expect(out.head.files, 0);
+      expect(out.head.files, 1);
       final all = await _everyByte(out, l);
-      for (final f in ph.files.values) {
-        final probe = String.fromCharCodes(f.sublist(0, 48));
-        expect(all.any((b) => holds(b, probe)), isFalse);
+      for (final e in ph.files.entries) {
+        if (e.key == 'vn1.ogg') continue;
+        final probe = String.fromCharCodes(e.value.sublist(0, 48));
+        expect(all.any((b) => holds(b, probe)), isFalse, reason: e.key);
       }
       final d = await _device();
-      final imp = await _open(d, l);
+      final imp = await _open(d, l, out);
       await _pump(out, imp);
-      expect(await d.db.query('history_files'), isEmpty);
-      expect((await imp.finish()).whole, isTrue);
       expect(
-        Directory(d.media).listSync(recursive: true).whereType<File>(),
-        isEmpty,
+        [for (final f in await d.db.query('history_files')) f['name']],
+        ['vn1.ogg'],
+      );
+      expect((await imp.finish()).gaps, isEmpty);
+      expect(
+        [
+          for (final f in Directory(d.media).listSync(recursive: true))
+            if (f is File) p.basename(f.path),
+        ],
+        ['vn1.ogg'],
       );
       expect(await d.db.query('media_chunks'), isEmpty);
       final photo = await d.db.query(
@@ -556,19 +776,19 @@ void main() {
       final l = _Link();
       final out = await _export(ph, l);
       final whole = await _device();
-      final w = await _open(whole, l);
+      final w = await _open(whole, l, out);
       await _pump(out, w);
       final want = await _dump(whole);
       for (var cut = 0; cut <= out.head.records; cut++) {
         final d = await _device();
-        var imp = await _open(d, l);
+        var imp = await _open(d, l, out);
         await _pump(out, imp, cut);
         imp.close();
-        imp = await _open(d, l);
+        imp = await _open(d, l, out);
         expect(imp.next, cut);
         await _pump(out, imp);
         final res = await imp.finish();
-        expect(res.whole, isTrue, reason: 'cut at $cut');
+        expect(res.gaps, isEmpty, reason: 'cut at $cut');
         expect(await _dump(d), want, reason: 'cut at $cut');
       }
       out.close();
@@ -583,11 +803,11 @@ void main() {
       final l = _Link();
       final out = await _export(ph, l);
       final whole = await _device();
-      await _pump(out, await _open(whole, l));
+      await _pump(out, await _open(whole, l, out));
       final want = await _dump(whole);
       for (var at = 1; at < out.head.records; at++) {
         final d = await _device();
-        final imp = await _open(d, l);
+        final imp = await _open(d, l, out);
         await _pump(out, imp, at);
         // the next commit fails inside sqlite, after its rows went in
         await d.db.execute('CREATE TABLE cut (x)');
@@ -606,7 +826,7 @@ void main() {
         expect(imp.next, at);
         await d.db.execute('DELETE FROM cut');
         await _pump(out, imp);
-        expect((await imp.finish()).whole, isTrue, reason: 'at $at');
+        expect((await imp.finish()).gaps, isEmpty, reason: 'at $at');
         await d.db.execute('DROP TRIGGER cut_in');
         await d.db.execute('DROP TRIGGER cut_up');
         await d.db.execute('DROP TABLE cut');
@@ -622,7 +842,7 @@ void main() {
     final l = _Link();
     final out = await _export(ph, l);
     final d = await _device();
-    var imp = await _open(d, l);
+    var imp = await _open(d, l, out);
     await _pump(out, imp);
     final f = File(p.join(d.media, 'p1.jpg'));
     final part = (await d.db.query(
@@ -632,9 +852,9 @@ void main() {
     final at = p.join(d.media, '.history', '$part.part');
     f.renameSync(at);
     imp.close();
-    imp = await _open(d, l);
+    imp = await _open(d, l, out);
     expect(f.readAsBytesSync(), ph.files['p1.jpg']);
-    expect((await imp.finish()).whole, isTrue);
+    expect((await imp.finish()).gaps, isEmpty);
     out.close();
   }, skip: skip);
 
@@ -643,7 +863,7 @@ void main() {
     final l = _Link();
     final out = await _export(ph, l);
     final d = await _device();
-    var imp = await _open(d, l);
+    var imp = await _open(d, l, out);
     // the first chunk of the newest file, then a cut
     await _pump(out, imp, out.head.text + 2);
     imp.close();
@@ -655,9 +875,9 @@ void main() {
       List.filled(9000, 0xee),
       mode: FileMode.append,
     );
-    imp = await _open(d, l);
+    imp = await _open(d, l, out);
     await _pump(out, imp);
-    expect((await imp.finish()).whole, isTrue);
+    expect((await imp.finish()).gaps, isEmpty);
     for (final f in ['p1.jpg', 'v1.mp4', 'doc.pdf']) {
       expect(
         File(p.join(d.media, f)).readAsBytesSync(),
@@ -675,7 +895,7 @@ void main() {
       final l = _Link();
       final out = await _export(ph, l);
       final d = await _device();
-      final imp = await _open(d, l);
+      final imp = await _open(d, l, out);
       final n = out.head.records;
       for (var i = 0; i < n; i++) {
         final rec = out.record(i);
@@ -700,7 +920,7 @@ void main() {
         }
         await imp.take(rec);
       }
-      expect((await imp.finish()).whole, isTrue);
+      expect((await imp.finish()).gaps, isEmpty);
       out.close();
     },
     skip: skip,
@@ -713,7 +933,7 @@ void main() {
       final l = _Link();
       final out = await _export(ph, l);
       final d = await _device();
-      final imp = await _open(d, l);
+      final imp = await _open(d, l, out);
       await _pump(out, imp);
       // a row lost and a file gone after the import
       await d.db.delete('messages', where: "plaintext = 'ana says 3'");
@@ -740,7 +960,7 @@ void main() {
       final out = await _export(ph, l);
       File(p.join(ph.media, 'v1.mp4')).writeAsBytesSync(List.filled(5200, 1));
       final d = await _device();
-      final imp = await _open(d, l);
+      final imp = await _open(d, l, out);
       await _pump(out, imp);
       final res = await imp.finish();
       expect(res.gaps.single.chat.id, _ana);
@@ -750,22 +970,6 @@ void main() {
     },
     skip: skip,
   );
-
-  test('a head the identity did not sign stops the stream for good', () async {
-    final ph = await _phone(ana: 1);
-    final l = _Link();
-    final out = await _export(ph, l);
-    final d = await _device();
-    final imp = await _open(d, l, good: false);
-    await expectLater(
-      imp.take(out.record(0)),
-      throwsA(
-        isA<HistoryRefused>().having((e) => e.forGood, 'for good', isTrue),
-      ),
-    );
-    expect(await d.db.query('messages'), isEmpty);
-    out.close();
-  }, skip: skip);
 
   test(
     'a new stream over a cut one starts clean and keeps what was here',
@@ -793,15 +997,15 @@ void main() {
         'sent_at': live['sent_at'],
         'msg_uid': live['msg_uid'],
       });
-      var imp = await _open(d, first);
+      var imp = await _open(d, first, out1);
       await _pump(out1, imp, out1.head.text + 1);
       imp.close();
       final second = _Link();
       final out2 = await _export(ph, second);
-      imp = await _open(d, second);
+      imp = await _open(d, second, out2);
       expect(imp.next, 0);
       await _pump(out2, imp);
-      expect((await imp.finish()).whole, isTrue);
+      expect((await imp.finish()).gaps, isEmpty);
       final ben = await d.db.query('messages', where: "plaintext = 'ben here'");
       expect(ben, hasLength(1));
       final ana = await d.db.query(
