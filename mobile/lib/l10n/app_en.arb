@@ -11745,7 +11745,7 @@
   "@notificationsGoogleNoStart": {
     "description": "toast: no token came from google"
   },
-  "notificationsGoogleNote": "Fake wake-ups are mixed in, which makes it harder for Google to tell when real messages arrive. Our relay only stores addresses it cannot link together. The push service runs on the same server and could link them, so whoever runs or seizes our server could too. If that matters to you, pick another way. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.",
+  "notificationsGoogleNote": "Fake wake-ups are mixed in, which makes it harder for Google to tell when real messages arrive. Our relay only stores addresses it cannot link together. The push service runs on the same server and could link them, and with Google's help to your Google account, so whoever runs or seizes our server could too. If that matters to you, pick another way. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.",
   "@notificationsGoogleNote": {
     "description": "screens/notifications_screen.dart: note under google push"
   },

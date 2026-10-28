@@ -9325,7 +9325,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Araya sahte uyandırmalar karışır; bu, Google’ın gerçek mesajların ne zaman geldiğini anlamasını zorlaştırır. Aktarıcımız yalnızca birbirine bağlayamadığı adresleri saklar. Bildirim hizmeti aynı sunucuda çalışır ve onları bağlayabilir; yani sunucumuzu işleten ya da ona el koyan da bağlayabilir. Bu senin için önemliyse başka bir yol seç. Gizli sohbetler, ilk birkaçından sonraki odalar ve ara sıra, aşağı yukarı beş ayda bir ay, sıradan bir kişi, Kryfo’nun yine de 15 dakikada bir yaptığı kontrolü bekler.';
+      'Araya sahte uyandırmalar karışır; bu, Google’ın gerçek mesajların ne zaman geldiğini anlamasını zorlaştırır. Aktarıcımız yalnızca birbirine bağlayamadığı adresleri saklar. Bildirim hizmeti aynı sunucuda çalışır ve onları, Google’ın yardımıyla Google hesabına kadar, bağlayabilir; yani sunucumuzu işleten ya da ona el koyan da bağlayabilir. Bu senin için önemliyse başka bir yol seç. Gizli sohbetler, ilk birkaçından sonraki odalar ve ara sıra, aşağı yukarı beş ayda bir ay, sıradan bir kişi, Kryfo’nun yine de 15 dakikada bir yaptığı kontrolü bekler.';
 
   @override
   String get notificationsGoogleRefused =>
