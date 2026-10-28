@@ -53,8 +53,12 @@ const (
 	pinPassMax = 256
 )
 
-// how long s waits for the keystore before it is zeroed
-var pinHoldLife = 15 * time.Second
+// how long s waits for the keystore before it is zeroed: a rewrap asks it
+// twice, each up to the app's ten seconds
+var pinHoldLife = 30 * time.Second
+
+// what a vault entry opens (the app's PinKind.vault)
+const pinKindVault = 4
 
 const (
 	pinXLabel   = "kryfo pin keystore in v3"
@@ -252,6 +256,14 @@ func pinNormal(pin []byte) ([]byte, error) {
 		return nil, errPinBad
 	}
 	return out, nil
+}
+
+// whether the kdf takes the pin as it is: the app asks before a passphrase
+// is set, so one nfc makes too long is refused there, not at setup
+func pinFits(pin []byte) bool {
+	p, err := pinNormal(pin)
+	zero(p)
+	return err == nil
 }
 
 // a decimal digit's value: unicode keeps each script's 0 to 9 in a row
@@ -585,8 +597,11 @@ func pinFinish(p *pinHeld, m []byte, t pinTable, old pinLegacy, key *pinKeyInfo)
 	target, moveMeta, moveKey, mv := at, randBytes(pinMetaLen), []byte(nil), ""
 	appTo, appOK := old.AppTo.meta()
 	wipeTo, wipeOK := old.WipeTo.meta()
+	// a vault entry whose key does not open never moves: the move would
+	// seal random bytes over its only copy
+	brokenVault := found && meta[0] == pinKindVault && vaultKey == nil
 	switch {
-	case found && anyNew == 0:
+	case found && anyNew == 0 && !brokenVault:
 		copy(moveMeta, meta)
 		moveKey, mv = vaultKey, "e"
 	case any == 0 && r.LegacyApp && !r.LegacyWipe && appOK:

@@ -107,6 +107,18 @@ func HaloPinBegin(cPin, cTable, cLegacy *C.char) *C.char {
 	return pinJSON(map[string]string{"h": h, "x": hex.EncodeToString(x)})
 }
 
+// 1 when the kdf takes the pin as it is, 0 when it is refused
+//
+//export HaloPinFits
+func HaloPinFits(cPin *C.char) C.int {
+	pin := pinBytes(cPin)
+	defer zero(pin)
+	if pinFits(pin) {
+		return 1
+	}
+	return 0
+}
+
 // a begun check that will not be finished: its s goes now
 //
 //export HaloPinDrop

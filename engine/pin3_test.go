@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 	"unicode"
@@ -454,5 +455,31 @@ func TestPinV3Passphrase(t *testing.T) {
 	}
 	if r := check3(t, "correct horse 12 battery", out, ks); r.Index != 3 || r.Unwrapped != hex.EncodeToString(vaultKeyA) {
 		t.Fatalf("the passphrase typed with ascii digits: %+v", r)
+	}
+}
+
+// a vault entry whose wrap does not open is never moved: its key would go
+func TestPinV3BrokenVaultStays(t *testing.T) {
+	tb := vaultTable(t)
+	tb.Entries[3].W = hex.EncodeToString(randBytes(pinWrapLen))
+	ks := newStandIn()
+	r := check3(t, "246810", tb, ks)
+	if r.Index != 3 || r.Kind != 4 || r.Unwrapped != "" || r.R != nil || r.Mv != "" {
+		t.Fatalf("a vault with no key moved: %+v", r)
+	}
+	// a whole one still moves
+	if r := check3(t, "135790", tb, ks); r.Mv != "e" || r.R == nil {
+		t.Fatalf("a whole vault did not move: %+v", r)
+	}
+}
+
+// a phrase nfc makes longer than the kdf takes is refused up front
+func TestPinFits(t *testing.T) {
+	qa := strings.Repeat("\u0958", 85) // 255 bytes, 510 after nfc
+	if pinFits([]byte(qa)) {
+		t.Fatal("a phrase too long after nfc fits")
+	}
+	if !pinFits([]byte("correct horse battery")) || pinFits([]byte("a\nb")) {
+		t.Fatal("fits is wrong for a plain phrase or a control character")
 	}
 }
