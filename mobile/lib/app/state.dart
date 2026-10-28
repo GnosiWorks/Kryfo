@@ -96,8 +96,12 @@ class AppState extends ChangeNotifier {
     devLane.open = () => live.open();
     wipeForget = _dropOpened;
     _afreshFrom = _afreshCard;
-    // a frame held for their first answer goes once it opened
-    signalSession.onAnswered = _cardCame;
+    // a frame held for their first answer goes once it opened: the outbox
+    // runs for it, whatever it knew of them before
+    signalSession.onAnswered = (peer) {
+      _cardCame(peer);
+      unawaited(drainOutbox());
+    };
   }
 
   // signal, the engine and android, as the receive side reaches them

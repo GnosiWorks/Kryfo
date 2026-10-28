@@ -19,6 +19,7 @@ import 'package:kryfo/main.dart'
         appState,
         makePreKeyBundleB64,
         processPeerBundle,
+        signalDecrypt,
         useDatabasesForTest,
         useEngineForTest,
         AppStateOutbox,
@@ -138,6 +139,10 @@ void main() {
       await makePreKeyBundleB64(them),
       into: signalSession,
     );
+    // they have answered: slices go plain, never held for a first answer
+    await _read(them, await signalSession.encryptTo(_peer, '{"m":"hi"}'));
+    final back = base64Decode(await them.encryptTo(_me, 'hey'));
+    await signalSession.open(_peer, back[0], Uint8List.sublistView(back, 1));
     final r = Random(5);
     note = File('${docs.path}/voice.wav')
       ..writeAsBytesSync([
@@ -332,5 +337,68 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 50));
     expect(wire.went, hasLength(2));
     expect(rowsOf('v-stop').single['sent'], 0);
+  });
+
+  test('a note to someone who has not answered a post-quantum session yet '
+      'waits, nothing sent, and goes once their first message opens', () async {
+    const p2 = 'amber-quiet-new';
+    final pair = testKeyPair();
+    final them2 = SignalSession();
+    await them2.bootstrap(
+      database: MemDb(),
+      xPubBytes: pair.publicKey.serialize().sublist(1),
+      xPrivBytes: pair.privateKey.serialize(),
+    );
+    await processPeerBundle(
+      p2,
+      await makePreKeyBundleB64(them2),
+      into: signalSession,
+    );
+    await mem.insert('contacts', {
+      'halo_id': p2,
+      'onion': '',
+      'xpub': 'cd' * 32,
+      'first_seen': 1,
+      'last_seen': 1,
+      'accepted': 1,
+      'back_paired': 1,
+    });
+    await mem.insert('messages', {
+      'peer_id': p2,
+      'direction': 'out',
+      'plaintext': '',
+      'sent_at': DateTime.now().millisecondsSinceEpoch - 120000,
+      'msg_uid': 'v-wait',
+      'sent': 0,
+      'file_path': note.path,
+      'file_name': 'voice.wav',
+    });
+    final r = await sendChunkedMediaTo(
+      peerId: p2,
+      peerOnion: '',
+      peerXPub: 'cd' * 32,
+      backPaired: true,
+      needPow: false,
+      path: note.path,
+      msgUid: 'v-wait',
+      fileName: 'voice.wav',
+      voice: true,
+      sender: asSender(_me),
+      progressKey: p2,
+    );
+    expect(r, 'parked');
+    expect(wire.went, isEmpty);
+    // a small first message goes, they read it and answer
+    final hi = await signalSession.encryptTo(p2, '{"m":"hi"}');
+    final w = base64Decode(hi);
+    await them2.open(_me, w[0], Uint8List.sublistView(w, 1));
+    expect(
+      await signalDecrypt(p2, await them2.encryptTo(_me, '{"m":"hey"}')),
+      isNotNull,
+    );
+    await _until(() => rowsOf('v-wait').single['sent'] == 1);
+    final read = [for (final c in wire.went) await _read(them2, c)];
+    expect(read, isNotEmpty);
+    expect(read.every((m) => m.msgUid == 'v-wait'), isTrue);
   });
 }
