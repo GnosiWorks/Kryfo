@@ -537,7 +537,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appScanTheirCode => 'Сканировать код';
 
   @override
-  String get appAKryfoLinkA => 'Ссылка Kryfo, ссылка на комнату или @wren';
+  String get appAKryfoLinkA => 'Ссылка Kryfo, ссылка на комнату или @name';
 
   @override
   String get appAddThem => 'Добавить';
@@ -3008,7 +3008,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Необязательно. Твои три слова работают в любом случае.';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Пара слов о себе · необязательно';

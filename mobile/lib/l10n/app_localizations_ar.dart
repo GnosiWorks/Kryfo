@@ -549,7 +549,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appScanTheirCode => 'اقرأ رمزه';
 
   @override
-  String get appAKryfoLinkA => 'رابط Kryfo أو رابط غرفة أو ‎@wren';
+  String get appAKryfoLinkA => 'رابط Kryfo أو رابط غرفة أو ‎@name';
 
   @override
   String get appAddThem => 'أضِفه';
@@ -3012,7 +3012,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'اختياري. كلماتك الثلاث تبقى صالحة في كل الأحوال.';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'سطر عنك · اختياري';

@@ -816,7 +816,7 @@ abstract class AppLocalizations {
   /// app/shell.dart
   ///
   /// In en, this message translates to:
-  /// **'A Kryfo link, a room link or @wren'**
+  /// **'A Kryfo link, a room link or @name'**
   String get appAKryfoLinkA;
 
   /// app/shell.dart
@@ -4650,8 +4650,8 @@ abstract class AppLocalizations {
   /// screens/handle_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'wren'**
-  String get handleWren;
+  /// **'name'**
+  String get handleHintName;
 
   /// screens/handle_screen.dart
   ///
@@ -12423,7 +12423,7 @@ abstract class AppLocalizations {
   /// **'Adding…'**
   String get peopleAdding;
 
-  /// toast after adding someone by their handle: the registry has no such handle. {handle} includes its @, e.g. @wren
+  /// toast after adding someone by their handle: the registry has no such handle. {handle} includes its @, e.g. @name
   ///
   /// In en, this message translates to:
   /// **'Nobody has claimed {handle}'**

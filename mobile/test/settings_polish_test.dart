@@ -220,7 +220,7 @@ void main() {
       final at = t.getCenter(find.text('@')).dx;
       final field = t.getCenter(find.byType(TextField).last).dx;
       expect(at, lessThan(field));
-      expect(find.text(l10n.handleWren), findsOneWidget);
+      expect(find.text(l10n.handleHintName), findsOneWidget);
       await drain(t);
     });
   });

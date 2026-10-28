@@ -501,7 +501,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appScanTheirCode => '扫描对方的二维码';
 
   @override
-  String get appAKryfoLinkA => 'Kryfo 链接、聊天室链接或 @wren';
+  String get appAKryfoLinkA => 'Kryfo 链接、聊天室链接或 @name';
 
   @override
   String get appAddThem => '添加对方';
@@ -2803,7 +2803,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get handleOptionalYourThreeWords => '可选。不管有没有，你的三个词都照常可用。';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => '一句话介绍自己 · 可选';
@@ -9450,7 +9450,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get appScanTheirCode => '掃描對方的 QR 碼';
 
   @override
-  String get appAKryfoLinkA => 'Kryfo 連結、聊天室連結或 @wren';
+  String get appAKryfoLinkA => 'Kryfo 連結、聊天室連結或 @name';
 
   @override
   String get appAddThem => '新增對方';
@@ -11752,7 +11752,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get handleOptionalYourThreeWords => '非必填。無論如何，你的三個詞都能繼續使用。';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => '一句關於你的介紹 · 非必填';

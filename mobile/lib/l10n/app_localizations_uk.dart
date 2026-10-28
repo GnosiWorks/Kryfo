@@ -537,7 +537,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get appAKryfoLinkA =>
-      'Посилання Kryfo, посилання на кімнату або @sova';
+      'Посилання Kryfo, посилання на кімнату або @name';
 
   @override
   String get appAddThem => 'Додати';
@@ -2995,7 +2995,7 @@ class AppLocalizationsUk extends AppLocalizations {
       'Необов’язково. Твої три слова працюють у будь-якому разі.';
 
   @override
-  String get handleWren => 'sova';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Рядок про тебе · необов’язково';

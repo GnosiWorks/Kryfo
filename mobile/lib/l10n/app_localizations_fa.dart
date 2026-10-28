@@ -518,7 +518,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get appScanTheirCode => 'اسکن کد او';
 
   @override
-  String get appAKryfoLinkA => 'پیوند Kryfo، پیوند اتاق یا ‎@bolbol';
+  String get appAKryfoLinkA => 'پیوند Kryfo، پیوند اتاق یا ‎@name';
 
   @override
   String get appAddThem => 'افزودن';
@@ -2935,7 +2935,7 @@ class AppLocalizationsFa extends AppLocalizations {
       'اختیاری است. سه واژه‌ی شما در هر حال کار می‌کند.';
 
   @override
-  String get handleWren => 'bolbol';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'یک خط درباره‌ی شما · اختیاری';

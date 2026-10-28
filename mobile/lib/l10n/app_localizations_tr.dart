@@ -519,7 +519,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get appAKryfoLinkA =>
-      'Bir Kryfo bağlantısı, oda bağlantısı ya da @wren';
+      'Bir Kryfo bağlantısı, oda bağlantısı ya da @name';
 
   @override
   String get appAddThem => 'Ekle';
@@ -2932,7 +2932,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'İsteğe bağlı. Üç kelimen her durumda çalışmaya devam eder.';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Hakkında bir satır · isteğe bağlı';

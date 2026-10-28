@@ -512,7 +512,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get appScanTheirCode => 'Pindai kodenya';
 
   @override
-  String get appAKryfoLinkA => 'Tautan Kryfo, tautan ruang, atau @wren';
+  String get appAKryfoLinkA => 'Tautan Kryfo, tautan ruang, atau @name';
 
   @override
   String get appAddThem => 'Tambahkan';
@@ -2923,7 +2923,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Opsional. Tiga katamu tetap berfungsi apa pun pilihanmu.';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Satu baris tentangmu · opsional';

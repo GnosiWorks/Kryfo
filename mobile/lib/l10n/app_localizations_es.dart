@@ -521,7 +521,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appScanTheirCode => 'Escanear su código';
 
   @override
-  String get appAKryfoLinkA => 'Un enlace de Kryfo, de sala o @wren';
+  String get appAKryfoLinkA => 'Un enlace de Kryfo, de sala o @name';
 
   @override
   String get appAddThem => 'Añadir';
@@ -2959,7 +2959,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Opcional. Tus tres palabras siguen funcionando igual.';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Una línea sobre ti · opcional';

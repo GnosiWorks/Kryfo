@@ -522,7 +522,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appScanTheirCode => 'Code scannen';
 
   @override
-  String get appAKryfoLinkA => 'Ein Kryfo-Link, ein Raumlink oder @amsel';
+  String get appAKryfoLinkA => 'Ein Kryfo-Link, ein Raumlink oder @name';
 
   @override
   String get appAddThem => 'Hinzufügen';
@@ -2961,7 +2961,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Optional. Deine drei Wörter funktionieren so oder so weiter.';
 
   @override
-  String get handleWren => 'amsel';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Eine Zeile über dich · optional';

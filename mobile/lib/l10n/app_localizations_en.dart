@@ -518,7 +518,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appScanTheirCode => 'Scan their code';
 
   @override
-  String get appAKryfoLinkA => 'A Kryfo link, a room link or @wren';
+  String get appAKryfoLinkA => 'A Kryfo link, a room link or @name';
 
   @override
   String get appAddThem => 'Add them';
@@ -2924,7 +2924,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Optional. Your three words keep working either way.';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'A line about you · optional';

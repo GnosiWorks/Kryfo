@@ -521,7 +521,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appScanTheirCode => 'Scanner son code';
 
   @override
-  String get appAKryfoLinkA => 'Un lien Kryfo, un lien de salon ou @merle';
+  String get appAKryfoLinkA => 'Un lien Kryfo, un lien de salon ou @name';
 
   @override
   String get appAddThem => 'Ajouter';
@@ -2958,7 +2958,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Facultatif. Vos trois mots marchent dans tous les cas.';
 
   @override
-  String get handleWren => 'merle';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Une ligne sur vous · facultatif';

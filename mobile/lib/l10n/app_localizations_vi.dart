@@ -511,7 +511,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appScanTheirCode => 'Quét mã của họ';
 
   @override
-  String get appAKryfoLinkA => 'Liên kết Kryfo, liên kết phòng hoặc @wren';
+  String get appAKryfoLinkA => 'Liên kết Kryfo, liên kết phòng hoặc @name';
 
   @override
   String get appAddThem => 'Thêm họ';
@@ -2919,7 +2919,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không bắt buộc. Ba từ của bạn vẫn hoạt động dù thế nào.';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Một dòng về bạn · không bắt buộc';
