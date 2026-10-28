@@ -5,10 +5,13 @@ package main
 // push gateway's pinned key once per slot (server/push/seal.go opens it).
 // hpke base mode, x25519, hkdf-sha256, chacha20-poly1305: a new ephemeral
 // key and nonce for every seal, so the sixteen endpoints of one token share
-// nothing the relay could match. on the wire: base64url, no padding, of a
-// version byte, the encapsulated key and the ciphertext.
+// nothing the relay could match. the token is padded with dots to one
+// length first, so no endpoint's length tells its token's. on the wire:
+// base64url, no padding, of a version byte, the encapsulated key and the
+// ciphertext.
 
 import (
+	"bytes"
 	"crypto/ecdh"
 	"crypto/hpke"
 	"encoding/base64"
@@ -23,6 +26,9 @@ const (
 	// what the gateway takes: an endpoint stays under the relay's 512
 	pushTokenMin = 20
 	pushTokenMax = 311
+	// every token is padded to this, with a byte no token has
+	pushPadded  = pushTokenMax
+	pushPadByte = '.'
 )
 
 var errPushSeal = errors.New("cannot seal")
@@ -55,7 +61,8 @@ func pushSeal(pubB64, token string) (string, error) {
 	if err != nil {
 		return "", errPushSeal
 	}
-	ct, err := hpke.Seal(pub, hpke.HKDFSHA256(), hpke.ChaCha20Poly1305(), []byte(pushSealInfo), []byte(token))
+	pt := append([]byte(token), bytes.Repeat([]byte{pushPadByte}, pushPadded-len(token))...)
+	ct, err := hpke.Seal(pub, hpke.HKDFSHA256(), hpke.ChaCha20Poly1305(), []byte(pushSealInfo), pt)
 	if err != nil {
 		return "", errPushSeal
 	}

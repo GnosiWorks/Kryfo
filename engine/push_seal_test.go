@@ -15,7 +15,7 @@ const (
 	pushVectorSeed   = "kryfo push test vector, never a real key"
 	pushVectorPub    = "SNrdb3PnM2ghYWfWaPYQZrJjXAb6T9jQFdg9Fvo_6ls"
 	pushVectorToken  = "fcmTestToken:APA91b_vector-only_0123456789"
-	pushVectorSealed = "AaXyvBam0p03IOjtNG0_yUPs_HH9gjKYr78eZKqAZ31YvMrawcY55G1oA0tcVibfPGbY-cL7xzQuciCnPwa_RBiQ7rp6mLk98bP-wBxw37krcfaz8Bv4wb4mHw"
+	pushVectorSealed = "AX4ZIJFmHcY44puFSkf2E5Q9IphFdswYnHBChNO9B8xziubrOBUxYXDNDOh20tbhE_jYRV2Qss7L1iseaZJQkfx-R0YchsjzEYbSrtA7OQBs3mR3RexKcsnooe65EIC9hQuOnp8ZnnP8H78fHuAVqIYpp1aTxnWFYsI5Rs5pU8p5o2_FArSt8W4XxyeQl4tEBA1upoU4lHg9_DimSsH9gbqFENXtCuXpSYOnI7m1qdFnMjFW8Zihk0AIk-WnqWh-vxRxvWtgU4Wa_bR5n4rdOKT0C7IPhTyAuamc-E9BnCILh9Y08Pot_jcyTr1VvMMknVud__gcEpTPOcTbLvm0fK13SO3YSFnd3OJQU0lmZhOdMR6Z9LiNOp8IionfZKc3DHDScTwirBWfkpssyH6qgMjx5TCXlpoFmGw2fGiyi5D5pkDPcJ6ThrmMVV9HSD2lmQgd1A2m9n4b0rBI3-A6heduo0EmnHak"
 )
 
 func pushTestKey(t *testing.T) hpke.PrivateKey {
@@ -40,7 +40,10 @@ func pushOpen(t *testing.T, k hpke.PrivateKey, sealed string) string {
 	if err != nil {
 		t.Fatalf("does not open: %v", err)
 	}
-	return string(pt)
+	if len(pt) != pushPadded {
+		t.Fatalf("plaintext of %d bytes, want the padded %d", len(pt), pushPadded)
+	}
+	return strings.TrimRight(string(pt), ".")
 }
 
 func TestPushSealSixteenDiffer(t *testing.T) {
@@ -61,8 +64,8 @@ func TestPushSealSixteenDiffer(t *testing.T) {
 		if got := pushOpen(t, k, s); got != pushVectorToken {
 			t.Fatalf("opened to %q", got)
 		}
-		// the endpoint fits the relay's limit with room to spare
-		if n := len("https://relay.kryfo.app/push/") + len(s); n > 300 {
+		// the endpoint fits the relay's limit
+		if n := len("https://relay.kryfo.app/push/") + len(s); n > 512 {
 			t.Fatalf("endpoint of %d characters", n)
 		}
 	}
@@ -98,5 +101,24 @@ func TestPushSealRefuses(t *testing.T) {
 		if s, err := pushSeal(c.pub, c.token); err == nil {
 			t.Errorf("sealed %q to %q: %s", c.token, c.pub, s)
 		}
+	}
+}
+
+// a seal's length says nothing of its token's: short and long seal alike
+func TestPushSealHidesTheTokenLength(t *testing.T) {
+	short, err := pushSeal(pushVectorPub, strings.Repeat("a", 140))
+	if err != nil {
+		t.Fatal(err)
+	}
+	long, err := pushSeal(pushVectorPub, strings.Repeat("b", 300))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(short) != len(long) || len(short) != 480 {
+		t.Fatalf("seals of %d and %d characters, want 480 both", len(short), len(long))
+	}
+	k := pushTestKey(t)
+	if pushOpen(t, k, short) != strings.Repeat("a", 140) || pushOpen(t, k, long) != strings.Repeat("b", 300) {
+		t.Fatal("the padding does not come off")
 	}
 }
