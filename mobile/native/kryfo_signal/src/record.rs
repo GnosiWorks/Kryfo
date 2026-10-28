@@ -139,3 +139,31 @@ pub fn date_pending(record: &[u8], now_ms: u64) -> Result<Option<Vec<u8>>, Error
     SessionRecord::deserialize(&out)?;
     Ok(Some(out))
 }
+
+/// [record] without the archived states below [min], and how many went.
+/// libsignal opens a message on any archived state, so a classic state
+/// left behind a post-quantum one would still take messages
+pub fn drop_below(record: &[u8], min: u32) -> Result<(Vec<u8>, u32), Error> {
+    SessionRecord::deserialize(record)?;
+    let r = Rec::decode(record).map_err(|_| Error::Session)?;
+    let cur = r.current.as_ref().ok_or(Error::NoSession)?;
+    match peek(cur)?.version {
+        0 => return Err(Error::NoSession),
+        v if v < min => return Err(Error::Session),
+        _ => {}
+    }
+    let mut previous = Vec::with_capacity(r.previous.len());
+    for p in &r.previous {
+        if peek(p)?.version >= min {
+            previous.push(p.clone());
+        }
+    }
+    let dropped = (r.previous.len() - previous.len()) as u32;
+    let out = Rec {
+        current: r.current,
+        previous,
+    }
+    .encode_to_vec();
+    SessionRecord::deserialize(&out)?;
+    Ok((out, dropped))
+}

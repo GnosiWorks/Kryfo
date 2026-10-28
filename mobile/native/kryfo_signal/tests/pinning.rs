@@ -634,3 +634,175 @@ fn a_pq_session_requires_spqr_on_both_sides() {
         assert_spqr_required(&bob.session("alice").unwrap(), "bob");
     }
 }
+
+// the shim's calls take framed fields: a u32 little endian length, the bytes
+fn frame(fields: &[&[u8]]) -> Vec<u8> {
+    let mut out = Vec::new();
+    for f in fields {
+        out.extend_from_slice(&(f.len() as u32).to_le_bytes());
+        out.extend_from_slice(f);
+    }
+    out
+}
+
+fn unframe(mut b: &[u8]) -> Vec<Vec<u8>> {
+    let mut out = Vec::new();
+    while !b.is_empty() {
+        let n = u32::from_le_bytes(b[..4].try_into().unwrap()) as usize;
+        out.push(b[4..4 + n].to_vec());
+        b = &b[4 + n..];
+    }
+    out
+}
+
+// case 7: the classic state left behind by a pq restart, gone from the
+// record, opens nothing in libsignal itself; the pq state goes on
+#[test]
+fn a_dropped_classic_state_opens_nothing() {
+    let f = fixture();
+    let mut bob = dart_bob(&f);
+    block_on(bob.store_session(
+        &addr("alice"),
+        &SessionRecord::deserialize(&f["bob_rec"]).unwrap(),
+    ))
+    .unwrap();
+    // alice's pq prekeys, and bob restarting the chat on them
+    let mut r = rng();
+    let alice_pair = IdentityKeyPair::try_from(f["alice_id"].as_slice()).unwrap();
+    let mut alice = InMemSignalProtocolStore::new(alice_pair, 11).unwrap();
+    let spk = KeyPair::generate(&mut r);
+    let spk_sig = alice_pair
+        .private_key()
+        .calculate_signature(&spk.public_key.serialize(), &mut r)
+        .unwrap();
+    let k = kem::KeyPair::generate(kem::KeyType::Kyber1024, &mut r);
+    let k_sig = alice_pair
+        .private_key()
+        .calculate_signature(&k.public_key.serialize(), &mut r)
+        .unwrap();
+    let ts = Timestamp::from_epoch_millis(1_760_000_000_000);
+    block_on(async {
+        alice
+            .save_signed_pre_key(
+                51.into(),
+                &SignedPreKeyRecord::new(51.into(), ts, &spk, &spk_sig),
+            )
+            .await
+            .unwrap();
+        alice
+            .save_kyber_pre_key(
+                52.into(),
+                &KyberPreKeyRecord::new(52.into(), ts, &k, &k_sig),
+            )
+            .await
+            .unwrap();
+        alice
+            .store_session(
+                &addr("bob"),
+                &SessionRecord::deserialize(&f["alice_rec"]).unwrap(),
+            )
+            .await
+            .unwrap();
+    });
+    let bundle = PreKeyBundle::new(
+        11,
+        DeviceId::new(1).unwrap(),
+        None,
+        51.into(),
+        spk.public_key,
+        spk_sig.to_vec(),
+        52.into(),
+        k.public_key,
+        k_sig.to_vec(),
+        *alice_pair.identity_key(),
+    )
+    .unwrap();
+    block_on(process_prekey_bundle(
+        &addr("alice"),
+        &addr("me"),
+        &mut bob.session_store,
+        &mut bob.identity_store,
+        &bundle,
+        now(),
+        &mut r,
+    ))
+    .unwrap();
+    let restarted = block_on(bob.load_session(&addr("alice"))).unwrap().unwrap();
+    assert_eq!(restarted.session_version().unwrap(), 4);
+    let m3 = SignalMessage::try_from(f["m3"].as_slice()).unwrap();
+    let open_m3 = |bob: &mut InMemSignalProtocolStore| {
+        block_on(message_decrypt_signal(
+            &m3,
+            &addr("alice"),
+            &addr("me"),
+            &mut bob.session_store,
+            &mut bob.identity_store,
+            &mut rng(),
+        ))
+    };
+    // before the drop the archived classic state still takes m3
+    let mut copy = dart_bob(&f);
+    block_on(copy.store_session(&addr("alice"), &restarted)).unwrap();
+    assert_eq!(open_m3(&mut copy).unwrap(), b"m3 from dart");
+    // after it, nothing does
+    let held = restarted.serialize().unwrap();
+    let out =
+        unframe(&kryfo_signal::session_drop_below(&frame(&[&held, &4u32.to_le_bytes()])).unwrap());
+    assert_eq!(out[1], 1u32.to_le_bytes());
+    let dropped = SessionRecord::deserialize(&out[0]).unwrap();
+    block_on(bob.store_session(&addr("alice"), &dropped)).unwrap();
+    assert!(open_m3(&mut bob).is_err());
+    let after = block_on(bob.load_session(&addr("alice"))).unwrap().unwrap();
+    assert_eq!(
+        after.serialize().unwrap(),
+        out[0],
+        "a failed open changed the record"
+    );
+    // the pq state goes on both ways
+    let sealed = block_on(message_encrypt(
+        b"on pq",
+        &addr("alice"),
+        &addr("me"),
+        &mut bob.session_store,
+        &mut bob.identity_store,
+        now(),
+        &mut rng(),
+    ))
+    .unwrap();
+    let opener = PreKeySignalMessage::try_from(sealed.serialize()).unwrap();
+    assert_eq!(opener.message_version(), 4);
+    let p = block_on(message_decrypt_prekey(
+        &opener,
+        &addr("bob"),
+        &addr("me"),
+        &mut alice.session_store,
+        &mut alice.identity_store,
+        &mut alice.pre_key_store,
+        &alice.signed_pre_key_store,
+        &mut alice.kyber_pre_key_store,
+        &mut rng(),
+    ))
+    .unwrap();
+    assert_eq!(p, b"on pq");
+    let reply = block_on(message_encrypt(
+        b"back",
+        &addr("bob"),
+        &addr("me"),
+        &mut alice.session_store,
+        &mut alice.identity_store,
+        now(),
+        &mut rng(),
+    ))
+    .unwrap();
+    let reply = SignalMessage::try_from(reply.serialize()).unwrap();
+    let p = block_on(message_decrypt_signal(
+        &reply,
+        &addr("alice"),
+        &addr("me"),
+        &mut bob.session_store,
+        &mut bob.identity_store,
+        &mut rng(),
+    ))
+    .unwrap();
+    assert_eq!(p, b"back");
+}

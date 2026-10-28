@@ -66,6 +66,8 @@ pub(crate) fn run(op: Op, w: &mut Writer) -> Result<Vec<Vec<u8>>, Error> {
             8 => Error::NoPrekey,
             9 => Error::Classic,
             10 => Error::Session,
+            11 => Error::Format,
+            12 => Error::Signer,
             _ => Error::Internal,
         });
     }
@@ -858,4 +860,201 @@ fn mte_canary() {
     let past = unsafe { std::ptr::read_volatile(p.add(16)) };
     drop(unsafe { Box::from_raw(p as *mut [u8; 16]) });
     std::hint::black_box(past);
+}
+
+#[test]
+fn classic_states_go_after_the_pq_restart() {
+    let f = fixture();
+    let bob_rec = &f["bob_rec"];
+    let alice_pub = run(session_info, w().bytes(bob_rec)).unwrap()[4].clone();
+    // alice's pq prekeys, and bob restarting the classic chat on them
+    let spk = run(
+        signed_prekey_generate,
+        w().bytes(&f["alice_id"]).u32(51).u64(NOW),
+    )
+    .unwrap();
+    let ky = run(
+        kyber_prekey_generate,
+        w().bytes(&f["alice_id"]).u32(52).u64(NOW),
+    )
+    .unwrap();
+    let bundle = run(
+        bundle_build,
+        w().u32(11)
+            .u32(1)
+            .opt(None)
+            .opt(None)
+            .u32(51)
+            .bytes(&spk[1])
+            .bytes(&spk[2])
+            .u32(52)
+            .bytes(&ky[1])
+            .bytes(&ky[2])
+            .bytes(&alice_pub),
+    )
+    .unwrap()
+    .remove(0);
+    let pq = run(
+        session_from_bundle,
+        w().bytes(&f["bob_id"])
+            .u32(22)
+            .bytes(bob_rec)
+            .bytes(&bundle)
+            .u64(NOW)
+            .opt(Some(&alice_pub)),
+    )
+    .unwrap()
+    .remove(0);
+    let info = run(session_info, w().bytes(&pq)).unwrap();
+    assert_eq!(u32_of(&info[1]), 4);
+    assert_eq!(u32_of(&info[7]), 1);
+    assert_eq!(u32_of(&info[8]), 3);
+    let m3 = |rec: &[u8]| {
+        run(
+            decrypt_signal,
+            w().bytes(&f["bob_id"])
+                .u32(22)
+                .bytes(rec)
+                .bytes(&f["m3"])
+                .opt(None),
+        )
+    };
+    assert_eq!(m3(&pq).unwrap()[0], b"m3 from dart");
+    let d = run(session_drop_below, w().bytes(&pq).u32(4)).unwrap();
+    assert_eq!(u32_of(&d[1]), 1);
+    let info = run(session_info, w().bytes(&d[0])).unwrap();
+    assert_eq!(u32_of(&info[1]), 4);
+    assert_eq!(u32_of(&info[7]), 0);
+    assert!(m3(&d[0]).is_err());
+    // the pq session goes on
+    let m = run(
+        encrypt,
+        w().bytes(&f["bob_id"])
+            .u32(22)
+            .bytes(&d[0])
+            .bytes(b"on pq")
+            .u64(NOW)
+            .opt(None),
+    )
+    .unwrap();
+    let o = run(
+        decrypt_prekey,
+        w().bytes(&f["alice_id"])
+            .u32(11)
+            .bytes(&f["alice_rec"])
+            .bytes(&m[1])
+            .opt(None)
+            .bytes(&spk[0])
+            .bytes(&ky[0])
+            .opt(None),
+    )
+    .unwrap();
+    assert_eq!(o[0], b"on pq");
+    // nothing left to drop; a state below the line, none, or no line
+    assert_eq!(
+        u32_of(&run(session_drop_below, w().bytes(&d[0]).u32(4)).unwrap()[1]),
+        0
+    );
+    assert_eq!(
+        run(session_drop_below, w().bytes(bob_rec).u32(4)),
+        Err(Error::Session)
+    );
+    assert_eq!(
+        run(session_drop_below, w().bytes(&pq).u32(0)),
+        Err(Error::Args)
+    );
+    assert_eq!(
+        run(session_drop_below, w().bytes(&pq).u32(5)),
+        Err(Error::Session)
+    );
+    assert_eq!(
+        run(session_drop_below, w().bytes(b"junk").u32(4)),
+        Err(Error::Session)
+    );
+    // a version 3 record keeps its own archived states below 3: none here
+    assert_eq!(
+        u32_of(&run(session_drop_below, w().bytes(bob_rec).u32(3)).unwrap()[1]),
+        0
+    );
+}
+
+#[test]
+fn every_call_takes_keys_in_their_one_form_only() {
+    let alice = Party::new(1);
+    let bob = Party::new(2);
+    let fields = run(bundle_parse, w().bytes(&bob.bundle())).unwrap();
+    let rebuild = |f: &[Vec<u8>]| {
+        let mut x = w();
+        for v in f {
+            x.bytes(v);
+        }
+        run(bundle_build, &mut x)
+    };
+    let top = |k: &[u8]| {
+        let mut k = k.to_vec();
+        k[32] |= 0x80;
+        k
+    };
+    // the identity, the spk and the one-time prekey with the top bit set,
+    // or a byte after them
+    for i in [3, 5, 10] {
+        let mut f = fields.clone();
+        f[i] = top(&f[i]);
+        assert_eq!(rebuild(&f), Err(Error::Key), "field {i}");
+        let mut f = fields.clone();
+        f[i].push(0);
+        assert_eq!(rebuild(&f), Err(Error::Key), "field {i}");
+    }
+    // a kyber key with a byte after it, or one short
+    let mut f = fields.clone();
+    f[8].push(0);
+    assert_eq!(rebuild(&f), Err(Error::Key));
+    let mut f = fields.clone();
+    f[8].pop();
+    assert_eq!(rebuild(&f), Err(Error::Key));
+    // a prekey signature in its second encoding
+    for i in [6, 9] {
+        let mut f = fields.clone();
+        crate::tests_formats::add_l(&mut f[i][32..]);
+        assert_eq!(rebuild(&f), Err(Error::Signature), "field {i}");
+    }
+    rebuild(&fields).unwrap();
+    // a pin in a second form
+    let mut x = w();
+    x.bytes(&alice.pair)
+        .u32(1)
+        .opt(None)
+        .bytes(&bob.bundle())
+        .u64(NOW)
+        .opt(Some(&top(&bob.public)));
+    assert_eq!(run(session_from_bundle, &mut x), Err(Error::Key));
+    // a pair whose halves do not belong together opens and seals nothing
+    let a = IdentityKeyPair::try_from(alice.pair.as_slice()).unwrap();
+    let b = IdentityKeyPair::try_from(bob.pair.as_slice()).unwrap();
+    let mixed = IdentityKeyPair::new(*b.identity_key(), *a.private_key()).serialize();
+    let mut x = w();
+    x.bytes(&mixed)
+        .u32(1)
+        .opt(None)
+        .bytes(&bob.bundle())
+        .u64(NOW)
+        .opt(None);
+    assert_eq!(run(session_from_bundle, &mut x), Err(Error::Key));
+    for k in [&mixed[..], &[1, 2, 3]] {
+        assert_eq!(
+            run(signed_prekey_generate, w().bytes(k).u32(1).u64(NOW)),
+            Err(Error::Key)
+        );
+    }
+    // a private key of any but 32 bytes
+    let p = a.private_key().serialize();
+    assert_eq!(
+        run(identity_from_private, w().bytes(&[&p[..], &[0]].concat())),
+        Err(Error::Key)
+    );
+    assert_eq!(
+        run(identity_from_private, w().bytes(&p[..31])),
+        Err(Error::Key)
+    );
+    run(identity_from_private, w().bytes(&p)).unwrap();
 }

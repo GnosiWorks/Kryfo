@@ -116,7 +116,7 @@ for t in "${TARGETS[@]}"; do
     "${CARGO[@]}" build --release --target "$t"
   so="target/$t/release/libkryfo_signal.so"
 
-  # exactly the 18 calls of the header, linked against libc and libdl only
+  # exactly the calls of the header, linked against libc and libdl only
   want=$(grep -o 'ks_[a-z_0-9]*' include/kryfo_signal.h | sort -u)
   got=$("$BIN/llvm-nm" -D --defined-only --format=just-symbols "$so" | sort -u)
   [[ "$got" == "$want" ]] || die "$abi exports differ from include/kryfo_signal.h: $(diff <(echo "$want") <(echo "$got") | grep '^[<>]' | tr '\n' ' ')"

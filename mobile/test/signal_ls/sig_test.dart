@@ -20,9 +20,11 @@ const _spqr =
     'git+https://github.com/signalapp/SparsePostQuantumRatchet.git?tag=v1.5.3'
     '#fd320484dcec89004021e6fdc7481825f5f261fa';
 
+// '-' is an empty field
 Uint8List _hex(String s) => Uint8List.fromList([
-  for (var i = 0; i < s.length; i += 2)
-    int.parse(s.substring(i, i + 2), radix: 16),
+  if (s != '-')
+    for (var i = 0; i < s.length; i += 2)
+      int.parse(s.substring(i, i + 2), radix: 16),
 ]);
 
 LsSigContext? _context(String wire) {
@@ -42,11 +44,15 @@ void main() {
     for (final f in lines)
       if (f[0] == 'key') f[1]: _hex(f[3]),
   };
+  final privates = {
+    for (final f in lines)
+      if (f[0] == 'key') f[1]: _hex(f[2]),
+  };
 
   test('the bindings and the shim share one context list', () {
     final rust = File('$_crate/src/sig.rs').readAsStringSync();
     final listed = RegExp(
-      r'\("([a-z-]+)", Body::',
+      r'\("([a-z-]+)", Kind::',
     ).allMatches(rust).map((m) => m[1]).toList();
     expect(listed, [for (final c in LsSigContext.values) c.wire]);
   });
@@ -98,52 +104,75 @@ void main() {
         expect(s.verifyCtx(key, c, pub, sig), isFalse);
       }
     }
-    // the shim signs no bare prekey under any context
+    // the shim signs no bare prekey under any context: it is no body
     final me = s.identityGenerate();
     final spk = s.signedPreKey(me, 1, 1000);
     for (final c in LsSigContext.values) {
       expect(
         () => s.sign(me, c, spk.public),
-        throwsA(isA<LsError>().having((e) => e.code, 'code', LsError.args)),
+        throwsA(isA<LsError>().having((e) => e.code, 'code', LsError.format)),
         reason: c.wire,
       );
     }
   }, skip: needsShim);
 
-  test('a move is signed by both identities over one body', () {
-    final s = shim!;
-    final old = s.identityGenerate();
-    final peer = s.identityGenerate();
-    final fresh = s.identityGenerate();
-    final body = Uint8List.fromList([
-      ...old.public,
-      ...peer.public,
-      ...List.filled(32, 7),
-    ]);
-    for (final me in [old, fresh]) {
-      final sig = s.sign(me, LsSigContext.move, body);
-      expect(s.verifyCtx(me.public, LsSigContext.move, body, sig), isTrue);
-      expect(s.verifyCtx(peer.public, LsSigContext.move, body, sig), isFalse);
-    }
-    // one byte short, or the same key twice
-    for (final bad in [
-      body.sublist(0, 97),
-      Uint8List.fromList([...old.public, ...old.public, ...List.filled(32, 7)]),
-    ]) {
-      expect(
-        () => s.sign(old, LsSigContext.move, bad),
-        throwsA(isA<LsError>().having((e) => e.code, 'code', LsError.args)),
-      );
-    }
-  }, skip: needsShim);
+  test(
+    'a move is signed by the old and the new identity over one body',
+    () {
+      final s = shim!;
+      final old = s.identityGenerate();
+      final peer = s.identityGenerate();
+      final fresh = s.identityGenerate();
+      final body = Uint8List.fromList([
+        ...old.public,
+        ...peer.public,
+        ...fresh.public,
+        ...List.filled(32, 7),
+      ]);
+      for (final me in [old, fresh]) {
+        final sig = s.sign(me, LsSigContext.move, body);
+        expect(s.verifyCtx(me.public, LsSigContext.move, body, sig), isTrue);
+        expect(s.verifyCtx(peer.public, LsSigContext.move, body, sig), isFalse);
+      }
+      // the peer, or a key the body does not name, signs nothing
+      for (final other in [peer, s.identityGenerate()]) {
+        expect(
+          () => s.sign(other, LsSigContext.move, body),
+          throwsA(isA<LsError>().having((e) => e.code, 'code', LsError.signer)),
+        );
+      }
+      // one byte short, the old body of two keys, or the same key twice
+      for (final bad in [
+        body.sublist(0, 130),
+        Uint8List.fromList([
+          ...old.public,
+          ...peer.public,
+          ...List.filled(32, 7),
+        ]),
+        Uint8List.fromList([
+          ...old.public,
+          ...peer.public,
+          ...old.public,
+          ...List.filled(32, 7),
+        ]),
+      ]) {
+        expect(
+          () => s.sign(old, LsSigContext.move, bad),
+          throwsA(isA<LsError>().having((e) => e.code, 'code', LsError.format)),
+        );
+      }
+    },
+    skip: needsShim,
+  );
 
   test(
     'sign makes what verifyCtx takes, and refuses a body out of place',
     () {
       final s = shim!;
-      final me = s.identityGenerate();
+      final good = lines.firstWhere((f) => f[0] == 'good' && f[3] == 'invite');
+      final me = s.identityFromPrivate(privates[good[2]]!);
       final other = s.identityGenerate();
-      final body = Uint8List.fromList([...'KIN4'.codeUnits, 1, 2, 3]);
+      final body = _hex(good[4]);
       final sig = s.sign(me, LsSigContext.invite, body);
       expect(sig, hasLength(64));
       expect(s.verifyCtx(me.public, LsSigContext.invite, body, sig), isTrue);
@@ -152,11 +181,16 @@ void main() {
         isFalse,
       );
       expect(s.verifyCtx(me.public, LsSigContext.hello, body, sig), isFalse);
-      // an invite signature only over something that opens as an invite
-      expect(
-        () => s.sign(me, LsSigContext.invite, [1, 2, 3]),
-        throwsA(isA<LsError>().having((e) => e.code, 'code', LsError.args)),
-      );
+      // an invite signature only over something that is an invite
+      for (final bad in [
+        [1, 2, 3],
+        [...'KIN4'.codeUnits, ...other.public],
+      ]) {
+        expect(
+          () => s.sign(me, LsSigContext.invite, bad),
+          throwsA(isA<LsError>().having((e) => e.code, 'code', LsError.format)),
+        );
+      }
       // the identity key in one encoding only
       final long = Uint8List.fromList([...me.public, 0]);
       expect(s.verifyCtx(long, LsSigContext.invite, body, sig), isFalse);
