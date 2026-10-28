@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 
 import '../chat_shots.dart' show ChatShots, ShotsPacer;
 import '../contact_status.dart';
+import '../devchat/dev_key.dart' show isDevChat;
 import '../lock_state.dart' show lockState;
 import '../supporter.dart' show SupporterTier, tierGlyph, tierLabel, tierOf;
 import '../main.dart'
@@ -148,6 +149,8 @@ class ContactScreen extends StatefulWidget {
   final String? nickname;
   // the key the chat already holds, for the safety number page
   final String peerXPub;
+  // a support chat on his phone: it came through the developer chat
+  final bool support;
   const ContactScreen({
     super.key,
     required this.haloId,
@@ -155,6 +158,7 @@ class ContactScreen extends StatefulWidget {
     required this.peerXPub,
     this.face,
     this.nickname,
+    this.support = false,
   });
   @override
   State<ContactScreen> createState() => _ContactScreenState();
@@ -600,8 +604,12 @@ class _ContactScreenState extends State<ContactScreen> {
               ),
               if (translationHubIfOn() case final hub?)
                 AutoTranslateRow(chatId: widget.haloId, hub: hub),
-              // both phones or neither, once theirs knows how
-              if (accepted && !blocked)
+              // both phones or neither, once theirs knows how. the developer
+              // chat never carries the block, so it is not offered there
+              if (accepted &&
+                  !blocked &&
+                  !widget.support &&
+                  !isDevChat(widget.haloId))
                 HaloRow(
                   icon: Icons.phonelink_lock_outlined,
                   label: l10n.chatBlockScreenshots,

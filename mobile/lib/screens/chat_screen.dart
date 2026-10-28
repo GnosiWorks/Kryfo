@@ -5682,7 +5682,7 @@ class _ChatScreenState extends State<ChatScreen>
             ),
             // both phones or neither: off, with the reason, until theirs
             // knows the block. someone blocked is not offered
-            if (!_blocked && !widget.support)
+            if (!_blocked && !widget.support && !_isDev)
               MenuSheetRow(
                 icon: Icons.phonelink_lock_outlined,
                 label: l10n.chatBlockScreenshots,
@@ -5782,6 +5782,7 @@ class _ChatScreenState extends State<ChatScreen>
           peerXPub: widget.peerXPub,
           face: _peerFace,
           nickname: _nickname,
+          support: widget.support,
         ),
       ),
     );
