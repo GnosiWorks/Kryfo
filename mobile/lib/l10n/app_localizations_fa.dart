@@ -9523,4 +9523,175 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'برای گوشی قفل صفحه بگذارید تا این محافظت وقتی گوشی قفل است هم برقرار بماند.';
+
+  @override
+  String get settingsDevices => 'دستگاه‌ها';
+
+  @override
+  String get devicesLinkedDevices => 'دستگاه‌های پیوندخورده';
+
+  @override
+  String get devicesThisPhoneOnly => 'فقط همین گوشی';
+
+  @override
+  String get devicesNameSeparator => '، ';
+
+  @override
+  String get devicesThisPhone => 'همین گوشی';
+
+  @override
+  String get devicesOnlyThisPhone =>
+      'فقط همین گوشی می‌تواند دستگاه پیوند دهد یا حذف کند';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return 'پیوند در ⁨$date⁩';
+  }
+
+  @override
+  String get devicesUsedToday => 'امروز استفاده شده';
+
+  @override
+  String get devicesUsedThisWeek => 'این هفته استفاده شده';
+
+  @override
+  String get devicesUsedThisMonth => 'این ماه استفاده شده';
+
+  @override
+  String get devicesNotUsedYet => 'هنوز استفاده نشده';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'اگر بازش نکنید ⁨$daysString⁩ روز دیگر جدا می‌شود',
+      one: 'اگر بازش نکنید فردا جدا می‌شود',
+      zero: 'اگر بازش نکنید امروز جدا می‌شود',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => 'Kryfo روی رایانه‌تان';
+
+  @override
+  String get devicesEmptyLine =>
+      'یک رایانه را پیوند دهید تا پیام‌هایتان را آن‌جا بخوانید و بفرستید. تا پنج دستگاه به‌جز همین گوشی.';
+
+  @override
+  String get devicesContactsSeeNothing =>
+      'برنامه‌ی مخاطبانتان دستگاه‌های شما را نشان نمی‌دهد.';
+
+  @override
+  String get devicesUnusedRule =>
+      'دستگاهی که ۳۰ روز بازش نکنید خودش جدا می‌شود و گفت‌وگوهایتان را از روی خودش پاک می‌کند.';
+
+  @override
+  String get devicesFull =>
+      'پنج دستگاه پیوند خورده‌اند. یکی را حذف کنید تا دستگاه دیگری را پیوند دهید.';
+
+  @override
+  String get devicesLinkADevice => 'پیوند دادن دستگاه';
+
+  @override
+  String get devicesRemoveAll => 'حذف همه‌ی دستگاه‌های دیگر';
+
+  @override
+  String get devicesRemoveAllTitle => 'همه‌ی دستگاه‌های دیگر حذف شوند؟';
+
+  @override
+  String get devicesRemoveAllLine =>
+      'وقتی برنامه‌ی مخاطبانتان این تغییر را بگیرد، دیگر پیام تازه نمی‌گیرند و نمی‌توانند به نام شما بفرستند. همه‌چیز روی همین گوشی می‌ماند.';
+
+  @override
+  String get devicesRemoveAllYes => 'حذف همه';
+
+  @override
+  String get devicesRemovedAll => 'حالا فقط همین گوشی';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return '⁨$name⁩ حذف شود؟';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      'وقتی برنامه‌ی مخاطبانتان این تغییر را بگیرد، دیگر پیام تازه نمی‌گیرد و نمی‌تواند به نام شما بفرستد. دفعه‌ی بعد که آنلاین شود گفت‌وگوهایتان را از روی خودش پاک می‌کند. دستگاهی که کسی در آن دست برده ممکن است آنچه را از قبل دارد نگه دارد.';
+
+  @override
+  String get devicesRemove => 'حذف';
+
+  @override
+  String devicesRemoved(Object name) {
+    return '⁨$name⁩ حذف شد';
+  }
+
+  @override
+  String get devicesRename => 'تغییر نام';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return 'تغییر نام ⁨$name⁩';
+  }
+
+  @override
+  String get devicesRenameLine =>
+      'این نام را فقط شما می‌بینید. مخاطبانتان هرگز نمی‌بینند.';
+
+  @override
+  String get devicesNameComputer => 'رایانه';
+
+  @override
+  String get devicesDeviceCode => 'کد دستگاه';
+
+  @override
+  String get devicesDeviceCodeLine =>
+      'همین کد روی خود دستگاه هم، در تنظیمات، دیده می‌شود.';
+
+  @override
+  String get devicesLinkStep1 =>
+      'Kryfo را روی رایانه‌تان باز کنید. یک کد نشان می‌دهد.';
+
+  @override
+  String get devicesLinkStep2 => 'کد را با همین گوشی اسکن کنید.';
+
+  @override
+  String get devicesLinkStep3 =>
+      'بررسی کنید هر دو صفحه همان شش رقم را نشان دهند.';
+
+  @override
+  String get devicesHistory => 'تاریخچه';
+
+  @override
+  String get devicesHistoryCopy => 'کپی گفت‌وگوهایم';
+
+  @override
+  String get devicesHistoryCopyHint =>
+      'همه‌ی پیام‌هایتان، با عکس‌ها و ویدیوهای ۳۰ روز گذشته.';
+
+  @override
+  String get devicesHistoryNone => 'شروع بدون تاریخچه';
+
+  @override
+  String get devicesHistoryNoneHint => 'فقط پیام‌های تازه به دستگاه می‌رسد.';
+
+  @override
+  String get devicesSkipMedia => 'بدون عکس و ویدیو';
+
+  @override
+  String get devicesSkipMediaHint =>
+      'فقط متن منتقل می‌شود. سریع‌تر، و چیز کمتری روی دستگاه می‌ماند.';
+
+  @override
+  String get devicesHiddenStay =>
+      'گفت‌وگوهای پنهان و فریب روی همین گوشی می‌مانند.';
+
+  @override
+  String get devicesScanCode => 'اسکن کد';
 }
