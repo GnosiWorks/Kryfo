@@ -1,6 +1,7 @@
 package main
 
-// the relay is a post box, not an archive. wraps go at fourteen days.
+// the relay is a post box, not an archive. wraps go at fourteen days, file
+// slices at seven days after they came.
 // dmrelay/ is not a drop-in: it gates reads with nip-42, which the app does
 // not speak yet. no delivery tracking either, wrapping the store's channel
 // leaves its iterator open when khatru stops draining early.
@@ -13,7 +14,10 @@ import (
 )
 
 const (
-	wrapTTL    = 14 * 24 * time.Hour
+	wrapTTL = 14 * 24 * time.Hour
+	// file slices take most of the disk, and a phone that has not come for
+	// its file in a week is not coming
+	bigTTL     = 7 * 24 * time.Hour
 	sweepEvery = 30 * time.Minute
 	// rows per delete. each delete is one write, so one wait for the lock
 	// and one sync, whatever it holds
@@ -58,11 +62,49 @@ func sweep(ctx context.Context, db execer, pause time.Duration) int {
 	}
 }
 
+// file slices a week after they came, by the marks the store kept for
+// them. the mark goes after its wrap, so a crash between leaves a mark
+// that the next sweep takes with a delete of nothing
+func sweepBig(ctx context.Context, db execer, pause time.Duration) int {
+	total := 0
+	for {
+		cut := time.Now().Add(-bigTTL).Unix()
+		res, err := db.ExecContext(ctx, `DELETE FROM event WHERE id IN (
+			SELECT id FROM big_wrap WHERE at <= ? ORDER BY at, id LIMIT ?)`,
+			cut, sweepBatch)
+		if err != nil {
+			log.Printf("sweep: %v", err)
+			return total
+		}
+		n, _ := res.RowsAffected()
+		total += int(n)
+		res, err = db.ExecContext(ctx, `DELETE FROM big_wrap WHERE id IN (
+			SELECT id FROM big_wrap WHERE at <= ? ORDER BY at, id LIMIT ?)`,
+			cut, sweepBatch)
+		if err != nil {
+			log.Printf("sweep: %v", err)
+			return total
+		}
+		marks, _ := res.RowsAffected()
+		if marks < sweepBatch {
+			return total
+		}
+		select {
+		case <-ctx.Done():
+			return total
+		case <-time.After(pause):
+		}
+	}
+}
+
 func startSweeper(db execer) {
 	go func() {
 		// wait out the reconnect burst after a restart
 		time.Sleep(3 * time.Minute)
 		for {
+			if n := sweepBig(context.Background(), db, sweepPause); n > 0 {
+				log.Printf("sweep: dropped %d file slices older than 7 days", n)
+			}
 			if n := sweep(context.Background(), db, sweepPause); n > 0 {
 				log.Printf("sweep: dropped %d wraps older than 14 days", n)
 			}

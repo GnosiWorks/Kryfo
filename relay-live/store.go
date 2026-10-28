@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/fiatjaf/eventstore/sqlite3"
+	"github.com/nbd-wtf/go-nostr"
 )
 
 const (
@@ -48,7 +49,48 @@ func openStore(path string) (*store, error) {
 		return nil, err
 	}
 	ckpt.SetMaxOpenConns(1)
+	if _, err := db.DB.Exec(bigWrapTable); err != nil {
+		ckpt.Close()
+		db.Close()
+		return nil, err
+	}
+	if _, err := db.DB.Exec(bigWrapIndex); err != nil {
+		ckpt.Close()
+		db.Close()
+		return nil, err
+	}
 	return &store{db, ckpt}, nil
+}
+
+// a file slice's id and when it came, for its shorter week (sweepBig).
+// when it came, not its stamp: a wrap's stamp is set back on purpose
+const (
+	bigWrapTable = `CREATE TABLE IF NOT EXISTS big_wrap (
+		id TEXT PRIMARY KEY, at INTEGER NOT NULL)`
+	bigWrapIndex = `CREATE INDEX IF NOT EXISTS big_wrap_at ON big_wrap(at, id)`
+)
+
+// a wrap this size is a slice of a file. the app fills a text to at most
+// 27841 bytes of wrap and a slice to 55149 (mobile/lib/wire_pad.dart): the
+// line sits between, so only the rare text longer than about 20000
+// characters is taken for one
+const bigContent = 40000
+
+func isBig(ev *nostr.Event) bool { return len(ev.Content) > bigContent }
+
+// saved as the backend saves it, and marked when it is a file slice. a
+// mark that fails leaves it the fourteen days of any wrap
+func (s *store) SaveEvent(ctx context.Context, ev *nostr.Event) error {
+	if err := s.SQLite3Backend.SaveEvent(ctx, ev); err != nil {
+		return err
+	}
+	if isBig(ev) {
+		if _, err := s.DB.ExecContext(ctx, `INSERT OR IGNORE INTO big_wrap (id, at) VALUES (?, ?)`,
+			ev.ID, time.Now().Unix()); err != nil {
+			log.Printf("store: a slice not marked: %v", err)
+		}
+	}
+	return nil
 }
 
 func (s *store) Close() {
