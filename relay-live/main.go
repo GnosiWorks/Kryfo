@@ -11,8 +11,8 @@ import (
 
 func main() {
 	relay := khatru.NewRelay()
-	relay.Info.Name = "halo relay"
-	relay.Info.Description = "private relay for halo messenger"
+	relay.Info.Name = "kryfo relay"
+	relay.Info.Description = "private relay for kryfo messenger"
 	relay.Info.Software = "khatru"
 
 	db, err := openStore("./data/halo.sqlite")
@@ -37,7 +37,7 @@ func main() {
 	startSweeper(db)
 	startCheckpoints(db)
 
-	fmt.Println("halo relay listening on", addr)
+	fmt.Println("kryfo relay listening on", addr)
 	srv := &http.Server{Addr: addr, Handler: relay, WriteTimeout: writeWait}
 	log.Fatal(srv.ListenAndServe())
 }
