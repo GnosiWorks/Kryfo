@@ -132,9 +132,7 @@ func quietChild() {
 		fail("tor is not started quiet")
 	}
 	dir := os.Getenv("KRYFO_QUIET_DIR")
-	mu.Lock()
-	savedDataDir = dir
-	mu.Unlock()
+	setSavedDataDir(dir)
 
 	atomic.StoreInt32(&debugOn, 0)
 	log.Println("secret line off")

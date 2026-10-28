@@ -75,11 +75,7 @@ func (q *quietLog) open() bool {
 	return true
 }
 
-// the caller may be logging with mu held, so never wait for it
+// an atomic read: the caller may be logging with mu held
 func dataDirPeek() string {
-	if !mu.TryLock() {
-		return ""
-	}
-	defer mu.Unlock()
-	return savedDataDir
+	return savedDataDir()
 }
