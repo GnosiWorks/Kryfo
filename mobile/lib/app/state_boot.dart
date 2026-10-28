@@ -79,10 +79,19 @@ extension AppStateBoot on AppState {
   // which files go is settled here; the zeros are written after, in the
   // background: nothing names these files, so nothing can reach them
   // [d]: a vault or the decoy's container as it opens, else the everyday one.
-  // a voice note's wav or a half made opus copy a stop left goes this way
-  Future<void> _sweepUnnamedMedia(DateTime before, [HaloDb? d]) async {
+  // a voice note's wav or a half made opus copy a stop left goes this way.
+  // [vaultOpen]: the decoy's, now its own vault is open (sweepableMedia)
+  Future<void> _sweepUnnamedMedia(
+    DateTime before, [
+    HaloDb? d,
+    bool vaultOpen = false,
+  ]) async {
     try {
-      final gone = await (d ?? live).unnamedMedia(before: before);
+      final gone = await sweepableMedia(
+        d ?? live,
+        before: before,
+        vaultOpen: vaultOpen,
+      );
       if (gone.isEmpty) return;
       dlog('media: ${gone.length} files no message names');
       unawaited(() async {

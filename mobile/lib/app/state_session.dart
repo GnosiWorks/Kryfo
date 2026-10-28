@@ -328,6 +328,7 @@ extension AppStateSession on AppState {
       await _sweepUnnamedMedia(before, v);
       if (decoy) {
         await _sweepUnnamedWallpapers(primary, before, vaultOpen: true);
+        await _sweepUnnamedMedia(before, primary, true);
       }
       // seats of people the everyday side let go while it was shut, and its
       // blocks and let-go words as its own rows hold them

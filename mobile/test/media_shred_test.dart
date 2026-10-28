@@ -210,7 +210,7 @@ void main() {
       expect(body.indexOf('repairVaultMoves()'), lessThan(sweep));
       // nothing else sweeps the media folder at start. a vault or the
       // decoy sweeps its own as it opens, once its moves are settled
-      expect('_sweepUnnamedMedia('.allMatches(src).length, 4);
+      expect('_sweepUnnamedMedia('.allMatches(src).length, 5);
       final open = src.indexOf('await _sweepUnnamedMedia(before, v);');
       expect(open, greaterThan(src.indexOf('await settleVault(v);')));
       expect(boot.indexOf('unnamedMedia('), -1);
