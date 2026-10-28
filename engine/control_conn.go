@@ -44,9 +44,17 @@ var (
 )
 
 // how long any one control command may take: far past anything healthy and
-// still short enough that a watchdog is not left hanging. a var so the test
-// that wedges a control port need not wait ten seconds a time.
-var ctrlDeadline = 10 * time.Second
+// still short enough that a watchdog is not left hanging. the tests that
+// wedge a control port set it shorter, while the watchers of an earlier
+// test still read it, so it is atomic
+var ctrlDeadlineNs atomic.Int64
+
+func ctrlDeadline() time.Duration {
+	if d := ctrlDeadlineNs.Load(); d > 0 {
+		return time.Duration(d)
+	}
+	return 10 * time.Second
+}
 
 func ctrlTimeoutCount() int64 { return atomic.LoadInt64(&ctrlTimeouts) }
 func ctrlDialCount() int64    { return atomic.LoadInt64(&ctrlDials) }
@@ -67,7 +75,7 @@ func ctrlOpen(t *tor.Tor) error {
 	}
 	// the handshake gets a deadline too. a tor that will not talk at all
 	// must not turn into a permanent dial.
-	_ = nc.SetDeadline(time.Now().Add(ctrlDeadline))
+	_ = nc.SetDeadline(time.Now().Add(ctrlDeadline()))
 	c := control.NewConn(textproto.NewConn(nc))
 	if err := c.Authenticate(""); err != nil {
 		_ = nc.Close()
@@ -120,7 +128,7 @@ func ctrlDo(t *tor.Tor, what string, f func(*control.Conn) error) error {
 			return ctrlFallback(t, what, f)
 		}
 	}
-	_ = ctrlSock.SetDeadline(time.Now().Add(ctrlDeadline))
+	_ = ctrlSock.SetDeadline(time.Now().Add(ctrlDeadline()))
 	err := f(ctrlConn)
 	if err == nil {
 		_ = ctrlSock.SetDeadline(time.Time{})
@@ -131,7 +139,7 @@ func ctrlDo(t *tor.Tor, what string, f func(*control.Conn) error) error {
 		atomic.AddInt64(&ctrlTimeouts, 1)
 		atomic.AddInt64(&ctrlSilent, 1)
 		log.Printf("halo: control port did not answer %s within %s, dropping the connection",
-			what, ctrlDeadline)
+			what, ctrlDeadline())
 		ctrlDrop()
 		return fmt.Errorf("control port timeout on %s", what)
 	}
@@ -166,11 +174,11 @@ func ctrlFallback(t *tor.Tor, what string, f func(*control.Conn) error) error {
 			atomic.StoreInt64(&ctrlSilent, 0)
 		}
 		return err
-	case <-time.After(ctrlDeadline):
+	case <-time.After(ctrlDeadline()):
 		atomic.AddInt64(&ctrlTimeouts, 1)
 		atomic.AddInt64(&ctrlSilent, 1)
 		log.Printf("halo: control port did not answer %s within %s (no socket of our own to close)",
-			what, ctrlDeadline)
+			what, ctrlDeadline())
 		return fmt.Errorf("control port timeout on %s", what)
 	}
 }

@@ -88,9 +88,8 @@ func (d *deadControl) close() { _ = d.ln.Close() }
 // take the engine with it: the call gives up on its own deadline, the socket
 // is dropped, and the very next call works once tor is answering again.
 func TestControlPortNeverAnswers(t *testing.T) {
-	old := ctrlDeadline
-	ctrlDeadline = 700 * time.Millisecond
-	defer func() { ctrlDeadline = old; ctrlReset() }()
+	setCtrlDeadline(t, 700*time.Millisecond)
+	defer ctrlReset()
 	ctrlReset()
 
 	d := newDeadControl(t)
@@ -113,7 +112,7 @@ func TestControlPortNeverAnswers(t *testing.T) {
 		t.Fatalf("want a timeout, got %v", err)
 	}
 	if took > 3*time.Second {
-		t.Fatalf("giving up took %s, deadline was %s", took, ctrlDeadline)
+		t.Fatalf("giving up took %s, deadline was %s", took, ctrlDeadline())
 	}
 	if ctrlDialCount() != dialsBefore+1 {
 		t.Fatalf("want exactly one dial, got %d", ctrlDialCount()-dialsBefore)
@@ -197,9 +196,8 @@ func TestOutcomeSaysRunningWhileRunning(t *testing.T) {
 // calls in a row that nothing answered are counted across redials, and one
 // answer clears the count: the app restarts the process on two or more
 func TestControlSilentCountsInARow(t *testing.T) {
-	old := ctrlDeadline
-	ctrlDeadline = 300 * time.Millisecond
-	defer func() { ctrlDeadline = old; ctrlReset(); atomic.StoreInt64(&ctrlSilent, 0) }()
+	setCtrlDeadline(t, 300*time.Millisecond)
+	defer func() { ctrlReset(); atomic.StoreInt64(&ctrlSilent, 0) }()
 	ctrlReset()
 	atomic.StoreInt64(&ctrlSilent, 0)
 
@@ -236,9 +234,8 @@ func TestControlSilentCountsInARow(t *testing.T) {
 // each silent call drops its socket and the next one dials again: the count
 // lives past the redial, so a fresh connection does not hide a dead port
 func TestControlSilentSurvivesRedial(t *testing.T) {
-	old := ctrlDeadline
-	ctrlDeadline = 300 * time.Millisecond
-	defer func() { ctrlDeadline = old; ctrlReset(); atomic.StoreInt64(&ctrlSilent, 0) }()
+	setCtrlDeadline(t, 300*time.Millisecond)
+	defer func() { ctrlReset(); atomic.StoreInt64(&ctrlSilent, 0) }()
 	ctrlReset()
 	atomic.StoreInt64(&ctrlSilent, 0)
 

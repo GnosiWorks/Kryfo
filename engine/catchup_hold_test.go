@@ -29,7 +29,10 @@ func TestWrapStampedIntoAWalkedStretchArrives(t *testing.T) {
 	freshInbox(t)
 	oldSpread := kickSpread
 	kickSpread = 0
-	defer func() { kickSpread = oldSpread }()
+	defer func() {
+		runnersGone(t)
+		kickSpread = oldSpread
+	}()
 	peer := newXid(t)
 	tag := hex.EncodeToString(peer.pub[:])
 	rcv := mustRcv(t, peer)
@@ -41,7 +44,7 @@ func TestWrapStampedIntoAWalkedStretchArrives(t *testing.T) {
 	now := time.Now()
 	ts := func(d time.Duration) nostr.Timestamp { return nostr.Timestamp(now.Add(d).Unix()) }
 	began := ts(-3 * time.Hour)
-	lastPath := savedDataDir + "/nostr_last_" + rcv[:16]
+	lastPath := savedDataDir() + "/nostr_last_" + rcv[:16]
 	anchor := func() int64 {
 		b, _ := os.ReadFile(lastPath)
 		v, _ := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64)
@@ -121,7 +124,10 @@ func newHalfWay(t *testing.T) *halfWay {
 	freshInbox(t)
 	oldSpread := kickSpread
 	kickSpread = 0
-	t.Cleanup(func() { kickSpread = oldSpread })
+	t.Cleanup(func() {
+		runnersGone(t)
+		kickSpread = oldSpread
+	})
 	h.peer = newXid(t)
 	h.tag = hex.EncodeToString(h.peer.pub[:])
 	h.rcv = mustRcv(t, h.peer)
@@ -142,7 +148,7 @@ func newHalfWay(t *testing.T) *halfWay {
 	return h
 }
 
-func (h *halfWay) lastPath() string { return savedDataDir + "/nostr_last_" + h.rcv[:16] }
+func (h *halfWay) lastPath() string { return savedDataDir() + "/nostr_last_" + h.rcv[:16] }
 
 func (h *halfWay) anchor() int64 {
 	b, _ := os.ReadFile(h.lastPath())
@@ -456,7 +462,7 @@ func TestPublicRelaysThatNeverGetThroughHoldNothing(t *testing.T) {
 	}
 	forgetCatchup(keys...)
 	t.Cleanup(func() { forgetCatchup(keys...) })
-	lastPath := savedDataDir + "/nostr_last_" + rcv[:16]
+	lastPath := savedDataDir() + "/nostr_last_" + rcv[:16]
 	anchor := func() int64 {
 		b, _ := os.ReadFile(lastPath)
 		v, _ := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64)
@@ -510,7 +516,7 @@ func TestOurRelayRefusingTheSubscriptionHoldsNothing(t *testing.T) {
 	keys := []string{catchupKey(closing, rcv), catchupKey(other.url(), rcv)}
 	forgetCatchup(keys...)
 	t.Cleanup(func() { forgetCatchup(keys...) })
-	lastPath := savedDataDir + "/nostr_last_" + rcv[:16]
+	lastPath := savedDataDir() + "/nostr_last_" + rcv[:16]
 	began := time.Now().Add(-8 * time.Hour).Unix()
 	if err := os.WriteFile(lastPath, []byte(strconv.FormatInt(began, 10)), 0600); err != nil {
 		t.Fatal(err)
@@ -553,7 +559,10 @@ func TestEitherEntryOfOurRelayLetsGo(t *testing.T) {
 			useRelays(o, h.ours.url(), h.other.url())
 			oldHost := ownRelayHost
 			ownRelayHost = strings.TrimPrefix(h.ours.url(), "ws://")
-			t.Cleanup(func() { ownRelayHost = oldHost })
+			t.Cleanup(func() {
+				runnersGone(t)
+				ownRelayHost = oldHost
+			})
 			ok := catchupKey(o, h.rcv)
 			forgetCatchup(ok)
 			t.Cleanup(func() { forgetCatchup(ok) })
