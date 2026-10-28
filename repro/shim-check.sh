@@ -4,21 +4,30 @@
 # lock names them. the app refuses any other library when it opens it
 # (lsCheckBuild); this refuses the apk before it ships. a consistency check
 # of the build, not an attestation of the code (LIBSIGNAL-SHIM.md)
-# usage: shim-check.sh <apk or libkryfo_signal.so>...
+# usage: shim-check.sh [--ref <commit>] <apk or libkryfo_signal.so>...
+# --ref reads the lock and the app's constants from that commit, the one
+# release.sh built; without it, from this checkout
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
-LOCK="$HERE/../mobile/native/kryfo_signal/Cargo.lock"
-DART="$HERE/../mobile/lib/signal_ffi/kryfo_signal.dart"
+REF=""
+if [ "${1:-}" = "--ref" ]; then REF="$2"; shift 2; fi
+LOCK_PATH=mobile/native/kryfo_signal/Cargo.lock
+DART_PATH=mobile/lib/signal_ffi/kryfo_signal.dart
+read_file() {
+  if [ -n "$REF" ]; then git -C "$HERE/.." show "$REF:$1"; else cat "$HERE/../$1"; fi
+}
+LOCK_TEXT=$(read_file "$LOCK_PATH") || { echo "no $LOCK_PATH at ${REF:-the checkout}" >&2; exit 1; }
+DART_TEXT=$(read_file "$DART_PATH") || { echo "no $DART_PATH at ${REF:-the checkout}" >&2; exit 1; }
 
 source_of() {
-  awk -v n="$1" '$0 == "name = \"" n "\"" { f = 1; next }
-    f && /^source = / { gsub(/^source = "|"$/, ""); print; exit }' "$LOCK"
+  printf '%s\n' "$LOCK_TEXT" | awk -v n="$1" '$0 == "name = \"" n "\"" { f = 1; next }
+    f && /^source = / { gsub(/^source = "|"$/, ""); print; exit }'
 }
 LIBSIGNAL=$(source_of libsignal-protocol)
 SPQR=$(source_of spqr)
-[ -n "$LIBSIGNAL" ] && [ -n "$SPQR" ] || { echo "no libsignal or spqr source in $LOCK" >&2; exit 1; }
+[ -n "$LIBSIGNAL" ] && [ -n "$SPQR" ] || { echo "no libsignal or spqr source in the lock" >&2; exit 1; }
 # the app takes the same two: its constants are the lock's, joined
-flat=$(tr -d " '\n" < "$DART")
+flat=$(printf '%s' "$DART_TEXT" | tr -d " '\n")
 for s in "$LIBSIGNAL" "$SPQR"; do
   case "$flat" in *"$s"*) ;; *) echo "the app does not name $s" >&2; exit 1 ;; esac
 done

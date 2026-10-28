@@ -103,4 +103,28 @@ void main() {
     expect(refused.exitCode, isNot(0));
     expect('${refused.stderr}', contains('was not built from'));
   });
+
+  test('the release check reads the pins of the commit it is told to', () {
+    const lib = 'native/kryfo_signal/target/release/libkryfo_signal.so';
+    if (!File(lib).existsSync()) {
+      markTestSkipped('libkryfo_signal not built');
+      return;
+    }
+    final here = Process.runSync('bash', [
+      '../repro/shim-check.sh',
+      '--ref',
+      'HEAD',
+      lib,
+    ]);
+    expect(here.exitCode, 0, reason: '${here.stderr}');
+    // the base of this branch named no build sources in the app yet
+    final before = Process.runSync('bash', [
+      '../repro/shim-check.sh',
+      '--ref',
+      '5f3fac55c',
+      lib,
+    ]);
+    expect(before.exitCode, isNot(0));
+    expect('${before.stderr}', contains('the app does not name'));
+  });
 }
