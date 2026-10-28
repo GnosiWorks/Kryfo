@@ -9611,4 +9611,282 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Pon un bloqueo de pantalla en el teléfono para que esta protección siga en pie cuando esté bloqueado.';
+
+  @override
+  String get groupShotsBlocksAll =>
+      'Bloquea las capturas y la grabación de pantalla en todos los teléfonos de este grupo, y copiar, reenviar o guardar los mensajes de los demás. No puede impedir las apps con permiso para leer la pantalla ni un teléfono o una app modificados para saltárselo.';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'Esperando a que todos aquí actualicen Kryfo';
+
+  @override
+  String get groupShotsOnForAll => 'Activado para todos aquí';
+
+  @override
+  String get groupShotsOffAdminOnly =>
+      'Desactivado. Solo el admin puede cambiarlo';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'Esperando a que todos aquí actualicen Kryfo. Solo el admin puede cambiarlo';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'Activado para todos aquí. Solo el admin puede cambiarlo';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Esperando a $countString personas',
+      one: 'Esperando a $countString persona',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'Falta que actualicen';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'El bloqueo de capturas cubre a todos en cuanto estas personas actualicen Kryfo. Toca a alguien para quitarlo del grupo.';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'Tiene que actualizar Kryfo, o no se ha conectado desde entonces';
+
+  @override
+  String get groupShotsBlockedByYou => 'Lo bloqueaste';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'Activaste el bloqueo de capturas. Cubrirá a todos en cuanto todos aquí hayan actualizado Kryfo.';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name activó el bloqueo de capturas. Cubrirá a todos en cuanto todos aquí hayan actualizado Kryfo.';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'El bloqueo de capturas está activado para todos aquí. Copiar, reenviar y guardar los mensajes de los demás también queda desactivado.';
+
+  @override
+  String get groupShotsPaused =>
+      'Alguien aquí todavía no puede bloquear capturas. Volverá a cubrir a todos en cuanto actualice Kryfo.';
+
+  @override
+  String get groupShotsCantYet => 'Todavía no puede bloquear capturas';
+
+  @override
+  String get groupShotsAddTitle => '¿Añadir de todos modos?';
+
+  @override
+  String get groupShotsAddPauses =>
+      'El bloqueo de capturas no cubrirá a todos aquí hasta que actualice Kryfo.';
+
+  @override
+  String get groupShotsLeaveStays =>
+      'El bloqueo de capturas se queda como está.';
+
+  @override
+  String get groupShotsBlockedHere =>
+      'Kryfo bloquea las capturas en este grupo';
+
+  @override
+  String get groupShotsMenuNote =>
+      'Copiar, reenviar y guardar los mensajes de los demás está desactivado en este grupo';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'Abrir archivos de los demás en otras apps está desactivado en este grupo';
+
+  @override
+  String get groupShotsOldNotice =>
+      'Activé el bloqueo de capturas en este grupo. Tu Kryfo todavía no puede hacerlo, así que actualízalo, por favor.';
+
+  @override
+  String get captureShotTaken => 'Captura hecha. No se avisó a nadie más.';
+
+  @override
+  String get captureRecording =>
+      'Se está grabando esta pantalla. No se avisó a nadie más.';
+
+  @override
+  String get settingsDevices => 'Dispositivos';
+
+  @override
+  String get devicesLinkedDevices => 'Dispositivos vinculados';
+
+  @override
+  String get devicesThisPhoneOnly => 'Solo este teléfono';
+
+  @override
+  String get devicesNameSeparator => ', ';
+
+  @override
+  String get devicesThisPhone => 'Este teléfono';
+
+  @override
+  String get devicesOnlyThisPhone =>
+      'Solo este teléfono puede vincular o quitar dispositivos';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return 'Vinculado el $date';
+  }
+
+  @override
+  String get devicesUsedToday => 'Usado hoy';
+
+  @override
+  String get devicesUsedThisWeek => 'Usado esta semana';
+
+  @override
+  String get devicesUsedThisMonth => 'Usado este mes';
+
+  @override
+  String get devicesNotUsedYet => 'Aún sin usar';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Se desvincula en $daysString días si no lo abres',
+      one: 'Se desvincula mañana si no lo abres',
+      zero: 'Se desvincula hoy si no lo abres',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => 'Kryfo en tu computadora';
+
+  @override
+  String get devicesEmptyLine =>
+      'Vincula una computadora para leer y enviar tus mensajes desde ella. Hasta cinco dispositivos además de este teléfono.';
+
+  @override
+  String get devicesContactsSeeNothing =>
+      'Las apps de tus contactos no muestran tus dispositivos.';
+
+  @override
+  String get devicesUnusedRule =>
+      'Un dispositivo que no abres en 30 días se desvincula solo y borra tus chats de él.';
+
+  @override
+  String get devicesFull =>
+      'Hay cinco dispositivos vinculados. Quita uno para vincular otro.';
+
+  @override
+  String get devicesLinkADevice => 'Vincular un dispositivo';
+
+  @override
+  String get devicesRemoveAll => 'Quitar todos los demás dispositivos';
+
+  @override
+  String get devicesRemoveAllTitle => '¿Quitar todos los demás dispositivos?';
+
+  @override
+  String get devicesRemoveAllLine =>
+      'Cuando las apps de tus contactos reciban el cambio, dejarán de recibir mensajes nuevos y no podrán enviar como tú. Este teléfono lo conserva todo.';
+
+  @override
+  String get devicesRemoveAllYes => 'Quitar todos';
+
+  @override
+  String get devicesRemovedAll => 'Ahora solo este teléfono';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return '¿Quitar $name?';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      'Cuando las apps de tus contactos reciban el cambio, dejará de recibir mensajes nuevos y no podrá enviar como tú. Borra tus chats la próxima vez que se conecte. Un dispositivo que alguien haya manipulado puede quedarse con lo que ya tiene.';
+
+  @override
+  String get devicesRemove => 'Quitar';
+
+  @override
+  String devicesRemoved(Object name) {
+    return '$name quitado';
+  }
+
+  @override
+  String get devicesRename => 'Renombrar';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return 'Renombrar $name';
+  }
+
+  @override
+  String get devicesRenameLine =>
+      'Solo tú ves este nombre. Tus contactos nunca.';
+
+  @override
+  String get devicesNameComputer => 'Computadora';
+
+  @override
+  String get devicesDeviceCode => 'Código del dispositivo';
+
+  @override
+  String get devicesDeviceCodeLine =>
+      'El mismo código aparece en el propio dispositivo, en Ajustes.';
+
+  @override
+  String get devicesLinkStep1 =>
+      'Abre Kryfo en tu computadora. Muestra un código.';
+
+  @override
+  String get devicesLinkStep2 => 'Escanea el código con este teléfono.';
+
+  @override
+  String get devicesLinkStep3 =>
+      'Comprueba que las dos pantallas muestran los mismos seis números.';
+
+  @override
+  String get devicesHistory => 'Historial';
+
+  @override
+  String get devicesHistoryCopy => 'Copiar mis chats';
+
+  @override
+  String get devicesHistoryCopyHint =>
+      'Todos tus mensajes, con las fotos y los videos de los últimos 30 días.';
+
+  @override
+  String get devicesHistoryNone => 'Empezar sin historial';
+
+  @override
+  String get devicesHistoryNoneHint =>
+      'Solo llegan los mensajes nuevos al dispositivo.';
+
+  @override
+  String get devicesSkipMedia => 'Omitir fotos y videos';
+
+  @override
+  String get devicesSkipMediaHint =>
+      'Solo pasa el texto. Más rápido y con menos que guardar en el dispositivo.';
+
+  @override
+  String get devicesHiddenStay =>
+      'Los chats ocultos y el señuelo se quedan en este teléfono.';
+
+  @override
+  String get devicesScanCode => 'Escanear el código';
 }

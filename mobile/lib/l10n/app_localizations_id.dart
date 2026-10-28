@@ -9534,4 +9534,282 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Pasang kunci layar di ponselmu supaya perlindungan ini tetap berlaku saat ponsel terkunci.';
+
+  @override
+  String get groupShotsBlocksAll =>
+      'Memblokir tangkapan layar dan rekaman layar di setiap ponsel dalam grup ini, juga menyalin, meneruskan, atau menyimpan pesan satu sama lain. Ini tidak bisa mencegah aplikasi yang diizinkan membaca layar, atau ponsel maupun aplikasi yang diubah untuk mengakalinya.';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'Menunggu semua orang di sini memperbarui Kryfo';
+
+  @override
+  String get groupShotsOnForAll => 'Menyala untuk semua orang di sini';
+
+  @override
+  String get groupShotsOffAdminOnly =>
+      'Mati. Hanya admin yang bisa mengubahnya';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'Menunggu semua orang di sini memperbarui Kryfo. Hanya admin yang bisa mengubahnya';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'Menyala untuk semua orang di sini. Hanya admin yang bisa mengubahnya';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Menunggu $countString orang',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'Belum memperbarui';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'Blokir tangkapan layar berlaku untuk semua orang setelah mereka memperbarui Kryfo. Ketuk seseorang untuk mengeluarkannya dari grup.';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'Perlu memperbarui Kryfo, atau belum online sejak itu';
+
+  @override
+  String get groupShotsBlockedByYou => 'Kamu blokir';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'Kamu menyalakan blokir tangkapan layar. Ini berlaku untuk semua orang setelah semua di sini memperbarui Kryfo.';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name menyalakan blokir tangkapan layar. Ini berlaku untuk semua orang setelah semua di sini memperbarui Kryfo.';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'Blokir tangkapan layar menyala untuk semua orang di sini. Menyalin, meneruskan, dan menyimpan pesan satu sama lain juga mati.';
+
+  @override
+  String get groupShotsPaused =>
+      'Seseorang di sini belum bisa memblokir tangkapan layar. Ini berlaku lagi untuk semua orang setelah dia memperbarui Kryfo.';
+
+  @override
+  String get groupShotsCantYet => 'Belum bisa memblokir tangkapan layar';
+
+  @override
+  String get groupShotsAddTitle => 'Tetap tambahkan?';
+
+  @override
+  String get groupShotsAddPauses =>
+      'Blokir tangkapan layar tidak berlaku untuk semua orang di sini sampai dia memperbarui Kryfo.';
+
+  @override
+  String get groupShotsLeaveStays =>
+      'Blokir tangkapan layar tetap seperti sekarang.';
+
+  @override
+  String get groupShotsBlockedHere =>
+      'Kryfo memblokir tangkapan layar di grup ini';
+
+  @override
+  String get groupShotsMenuNote =>
+      'Menyalin, meneruskan, dan menyimpan pesan orang lain mati di grup ini';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'Membuka file orang lain di aplikasi lain mati di grup ini';
+
+  @override
+  String get groupShotsOldNotice =>
+      'Aku menyalakan blokir tangkapan layar di grup ini. Kryfo-mu belum bisa melakukannya, jadi tolong perbarui.';
+
+  @override
+  String get captureShotTaken =>
+      'Tangkapan layar diambil. Tidak ada orang lain yang diberi tahu.';
+
+  @override
+  String get captureRecording =>
+      'Layar ini sedang direkam. Tidak ada orang lain yang diberi tahu.';
+
+  @override
+  String get settingsDevices => 'Perangkat';
+
+  @override
+  String get devicesLinkedDevices => 'Perangkat tertaut';
+
+  @override
+  String get devicesThisPhoneOnly => 'Hanya ponsel ini';
+
+  @override
+  String get devicesNameSeparator => ', ';
+
+  @override
+  String get devicesThisPhone => 'Ponsel ini';
+
+  @override
+  String get devicesOnlyThisPhone =>
+      'Hanya ponsel ini yang bisa menautkan atau menghapus perangkat';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return 'Ditautkan $date';
+  }
+
+  @override
+  String get devicesUsedToday => 'Dipakai hari ini';
+
+  @override
+  String get devicesUsedThisWeek => 'Dipakai minggu ini';
+
+  @override
+  String get devicesUsedThisMonth => 'Dipakai bulan ini';
+
+  @override
+  String get devicesNotUsedYet => 'Belum dipakai';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Terlepas dalam $daysString hari jika tidak kamu buka',
+      one: 'Terlepas besok jika tidak kamu buka',
+      zero: 'Terlepas hari ini jika tidak kamu buka',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => 'Kryfo di komputermu';
+
+  @override
+  String get devicesEmptyLine =>
+      'Tautkan komputer untuk membaca dan mengirim pesanmu dari sana. Hingga lima perangkat selain ponsel ini.';
+
+  @override
+  String get devicesContactsSeeNothing =>
+      'Aplikasi kontakmu tidak menampilkan perangkatmu.';
+
+  @override
+  String get devicesUnusedRule =>
+      'Perangkat yang tidak kamu buka selama 30 hari akan terlepas sendiri dan menghapus obrolanmu darinya.';
+
+  @override
+  String get devicesFull =>
+      'Lima perangkat sudah tertaut. Hapus satu untuk menautkan yang lain.';
+
+  @override
+  String get devicesLinkADevice => 'Tautkan perangkat';
+
+  @override
+  String get devicesRemoveAll => 'Hapus semua perangkat lain';
+
+  @override
+  String get devicesRemoveAllTitle => 'Hapus semua perangkat lain?';
+
+  @override
+  String get devicesRemoveAllLine =>
+      'Begitu aplikasi kontakmu menerima perubahannya, perangkat itu berhenti menerima pesan baru dan tidak bisa mengirim atas namamu. Ponsel ini menyimpan semuanya.';
+
+  @override
+  String get devicesRemoveAllYes => 'Hapus semua';
+
+  @override
+  String get devicesRemovedAll => 'Sekarang hanya ponsel ini';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return 'Hapus $name?';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      'Begitu aplikasi kontakmu menerima perubahannya, perangkat itu berhenti menerima pesan baru dan tidak bisa mengirim atas namamu. Obrolanmu terhapus darinya saat ia online lagi. Perangkat yang sudah diutak-atik orang bisa menyimpan apa yang sudah ada di dalamnya.';
+
+  @override
+  String get devicesRemove => 'Hapus';
+
+  @override
+  String devicesRemoved(Object name) {
+    return '$name dihapus';
+  }
+
+  @override
+  String get devicesRename => 'Ganti nama';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return 'Ganti nama $name';
+  }
+
+  @override
+  String get devicesRenameLine =>
+      'Hanya kamu yang melihat nama ini. Kontakmu tidak pernah melihatnya.';
+
+  @override
+  String get devicesNameComputer => 'Komputer';
+
+  @override
+  String get devicesDeviceCode => 'Kode perangkat';
+
+  @override
+  String get devicesDeviceCodeLine =>
+      'Kode yang sama muncul di perangkat itu sendiri, di Pengaturan.';
+
+  @override
+  String get devicesLinkStep1 =>
+      'Buka Kryfo di komputermu. Kryfo akan menampilkan kode.';
+
+  @override
+  String get devicesLinkStep2 => 'Pindai kodenya dengan ponsel ini.';
+
+  @override
+  String get devicesLinkStep3 =>
+      'Pastikan kedua layar menampilkan enam angka yang sama.';
+
+  @override
+  String get devicesHistory => 'Riwayat';
+
+  @override
+  String get devicesHistoryCopy => 'Salin obrolanku';
+
+  @override
+  String get devicesHistoryCopyHint =>
+      'Semua pesanmu, dengan foto dan video dari 30 hari terakhir.';
+
+  @override
+  String get devicesHistoryNone => 'Mulai tanpa riwayat';
+
+  @override
+  String get devicesHistoryNoneHint =>
+      'Hanya pesan baru yang sampai ke perangkat.';
+
+  @override
+  String get devicesSkipMedia => 'Lewati foto dan video';
+
+  @override
+  String get devicesSkipMediaHint =>
+      'Hanya teksnya yang disalin. Lebih cepat, dan lebih sedikit yang disimpan di perangkat.';
+
+  @override
+  String get devicesHiddenStay =>
+      'Obrolan tersembunyi dan umpan tetap di ponsel ini.';
+
+  @override
+  String get devicesScanCode => 'Pindai kode';
 }

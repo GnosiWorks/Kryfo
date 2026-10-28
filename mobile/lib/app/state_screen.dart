@@ -150,6 +150,7 @@ extension AppStateScreen on AppState {
     _shotsHeard(peer, word);
     // and what this phone understands, on every 1:1 frame (typing.dart)
     capsPut(body);
+    _toldCaps(peer);
     return shotsPut(body, word);
   }
 
@@ -169,10 +170,17 @@ extension AppStateScreen on AppState {
   bool shotsBlocksChat(String peer) =>
       contacts.any((c) => c.haloId == peer && c.shotsBlocking);
 
-  /// a room, which always blocks, as the list knows it
-  bool shotsBlocksGroup(String groupId) =>
-      groups.any((g) => g.groupId == groupId && g.expiresAt != null);
+  /// a room, which always blocks, or a group that does, as the list knows
+  /// it: read at once, before a screen opens on it
+  bool shotsBlocksGroup(String groupId) => groups.any(
+    (g) => g.groupId == groupId && (g.expiresAt != null || g.shotsBlocking),
+  );
   bool get secureForced => _secureHolds > 0;
+
+  /// the window refuses screenshots now: a chat or room that blocks them,
+  /// a viewer's hold, the app lock or the old switch's card
+  bool get windowSecure =>
+      secureForced || screenSecureByLock || _shotsCardWaits;
   // an app lock keeps screenshots and the recents picture off, whatever the
   // switch says: the settings then never say one thing while the app does
   // another. a lock turned off in the decoy is off here too, as anywhere

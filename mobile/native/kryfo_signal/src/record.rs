@@ -11,7 +11,7 @@ use crate::Error;
 
 // RecordStructure, its states left as bytes so they go back unchanged
 #[derive(Clone, PartialEq, Message)]
-struct Rec {
+pub(crate) struct Rec {
     #[prost(bytes = "vec", optional, tag = "1")]
     current: Option<Vec<u8>>,
     #[prost(bytes = "vec", repeated, tag = "2")]
@@ -44,6 +44,17 @@ pub struct State {
     pub version: u32,
     pub base_key: Vec<u8>,
     pub pq: bool,
+}
+
+// a record read as libsignal reads it: libsignal merges a repeated current
+// state, this reads the last one, so a record that does not encode back the
+// same is refused before anything rewrites it
+pub(crate) fn rec_of(record: &[u8]) -> Result<Rec, Error> {
+    let r = Rec::decode(record).map_err(|_| Error::Session)?;
+    if r.encode_to_vec() != record {
+        return Err(Error::Session);
+    }
+    Ok(r)
 }
 
 fn peek(b: &[u8]) -> Result<State, Error> {
@@ -91,7 +102,7 @@ pub fn promote(held: &[u8], newer: &[u8]) -> Result<Vec<u8>, Error> {
     h.archive_current_state()?;
     let h = Rec::decode(h.serialize()?.as_slice()).map_err(|_| Error::Session)?;
     SessionRecord::deserialize(newer)?;
-    let n = Rec::decode(newer).map_err(|_| Error::Session)?;
+    let n = rec_of(newer)?;
     let cur = n.current.ok_or(Error::NoSession)?;
     let key = peek(&cur)?;
     if key.version == 0 {
@@ -138,4 +149,38 @@ pub fn date_pending(record: &[u8], now_ms: u64) -> Result<Option<Vec<u8>>, Error
     let out = r.encode_to_vec();
     SessionRecord::deserialize(&out)?;
     Ok(Some(out))
+}
+
+/// [record] without the archived states below [min], and how many went.
+/// libsignal opens a message on any archived state, so a classic state
+/// left behind a post-quantum one would still take messages
+pub fn drop_below(record: &[u8], min: u32) -> Result<(Vec<u8>, u32), Error> {
+    SessionRecord::deserialize(record)?;
+    let r = rec_of(record)?;
+    let cur = r.current.as_ref().ok_or(Error::NoSession)?;
+    match peek(cur)?.version {
+        0 => return Err(Error::NoSession),
+        v if v < min => return Err(Error::Session),
+        _ => {}
+    }
+    // an opener the peer has not answered yet: until a message of theirs
+    // opens on this state, the old ones are all that reads them
+    let p = Peek::decode(cur.as_slice()).map_err(|_| Error::Session)?;
+    if p.pending_pre_key.is_some() {
+        return Err(Error::Session);
+    }
+    let mut previous = Vec::with_capacity(r.previous.len());
+    for p in &r.previous {
+        if peek(p)?.version >= min {
+            previous.push(p.clone());
+        }
+    }
+    let dropped = (r.previous.len() - previous.len()) as u32;
+    let out = Rec {
+        current: r.current,
+        previous,
+    }
+    .encode_to_vec();
+    SessionRecord::deserialize(&out)?;
+    Ok((out, dropped))
 }

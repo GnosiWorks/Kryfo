@@ -272,6 +272,12 @@ extension AppStateGroups on AppState {
         _bumpChatRev('group:$groupId');
         await refreshContacts();
         await refreshGroups();
+        // the block as the admin holds it, and this app's bits back to them
+        if (!isRoom) {
+          final w = gc.shots;
+          if (w != null) await _takeGroupShots(groupId, senderHaloId, w, db);
+          await _capsOnJoin(groupId, senderHaloId, db);
+        }
         break;
       case 'add':
         if (gc.members == null || !fromAdmin) return;
@@ -379,6 +385,18 @@ extension AppStateGroups on AppState {
         }
         _bumpChatRev('group:$groupId');
         await refreshGroups();
+        // the one it waited for may be gone
+        await _shotsRecount(db, groupId: groupId);
+        break;
+      case 'shots':
+        final w = gc.shots;
+        if (w == null || !fromAdmin) return;
+        await _takeGroupShots(groupId, senderHaloId, w, db);
+        break;
+      case 'caps':
+        // a member's app said what it can, on the envelope: the groups this
+        // phone runs take it as it came. this one counts again here too
+        await _shotsRecount(db, groupId: groupId);
         break;
     }
   }
@@ -461,6 +479,9 @@ extension AppStateGroups on AppState {
     // receiver has no contact for would otherwise throw InvalidKeyException
     // on encrypt. participants let the receiver upsert a stub.
     final rosterParts = amAdmin ? await _buildParticipants(members) : null;
+    final shots = amAdmin
+        ? await _groupShotsOnWire(_ownerOf(groupId), groupId)
+        : null;
     final wrapped = await wrapMessage(
       plain,
       msgUid: msgUid,
@@ -470,6 +491,7 @@ extension AppStateGroups on AppState {
       groupId: groupId,
       roster: amAdmin ? members : null,
       rosterParticipants: rosterParts,
+      groupShots: shots,
       supporterBadge: await sharedBadge(),
       sender: _mySender(),
       poll: poll?.toWire(),
@@ -632,6 +654,7 @@ extension AppStateGroups on AppState {
           groupId: groupId,
           roster: ids,
           rosterParticipants: parts,
+          groupShots: ids == null ? null : await _groupShotsOnWire(d, groupId),
           supporterBadge: await sharedBadge(),
           sender: _mySender(),
           writtenAt: written,
@@ -1027,8 +1050,11 @@ extension AppStateGroups on AppState {
         groupId,
         DateTime.now().millisecondsSinceEpoch,
       ),
+      shots: await _groupShotsOnWire(d, groupId),
     );
     await _queueControl(groupId, createGc, to: newHaloIds, on: d);
+    // someone whose app cannot block pauses it, for everyone
+    await _shotsRecount(d, groupId: groupId);
     await refreshGroups();
   }
 
@@ -1091,6 +1117,8 @@ extension AppStateGroups on AppState {
     }
     // the ones taken out hear it too, so they drop the group
     await _queueControl(groupId, gc, to: allMembers);
+    // the one it waited for may be gone
+    if (!room) await _shotsRecount(d, groupId: groupId);
     await refreshGroups();
   }
 
