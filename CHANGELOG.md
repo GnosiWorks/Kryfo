@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.0] - unreleased
+
+### Changed
+- your PINs now only work on this phone: they are tied to the phone's security chip, so they can't be tried on another device. your encrypted backup is the way back in if the chip ever loses its key. thanks to Ami (SleepingAmi) for suggesting it.
+
 ## [0.5.3] - 2026-10-22
 
 ### Added
