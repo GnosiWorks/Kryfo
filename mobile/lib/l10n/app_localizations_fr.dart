@@ -9854,4 +9854,12 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get desktopFolderNotPrivate =>
       'Kryfo n’a pas pu rendre son dossier privé pour vous, il ne s’ouvrira donc pas.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Ce verrou a été créé par une autre version de Kryfo, que celle-ci ne sait pas lire.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo a besoin d’un dossier privé en mémoire pendant qu’il fonctionne, et cet ordinateur n’en propose aucun, il ne s’ouvrira donc pas.';
 }

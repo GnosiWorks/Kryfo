@@ -74,7 +74,11 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
       } else if (!await widget.vault.open(pass)) {
         _first.clear();
         _firstFocus.requestFocus();
-        return _say(l10n.desktopLockWrong);
+        return _say(
+          widget.vault.madeByOtherVersion
+              ? l10n.desktopLockOtherVersion
+              : l10n.desktopLockWrong,
+        );
       }
     } catch (_) {
       return _say(l10n.desktopLockFailed);
@@ -249,6 +253,7 @@ class DesktopStopApp extends StatelessWidget {
                       DesktopStop.alreadyOpen => l10n.desktopAlreadyOpen,
                       DesktopStop.notYours => l10n.desktopFolderNotYours,
                       DesktopStop.notPrivate => l10n.desktopFolderNotPrivate,
+                      DesktopStop.noMemory => l10n.desktopNoMemoryFolder,
                     },
                     textAlign: TextAlign.center,
                     style: HaloType.sans(

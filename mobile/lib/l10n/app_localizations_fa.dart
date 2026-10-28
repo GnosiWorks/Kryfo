@@ -9767,4 +9767,12 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get desktopFolderNotPrivate =>
       'Kryfo نتوانست پوشه‌اش را فقط برای شما خصوصی کند، پس باز نمی‌شود.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'این قفل را نسخهٔ دیگری از Kryfo ساخته که این نسخه نمی‌تواند آن را بخواند.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo هنگام اجرا به یک پوشهٔ خصوصی در حافظه نیاز دارد و این رایانه چنین پوشه‌ای ندارد، پس باز نمی‌شود.';
 }

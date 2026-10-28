@@ -9776,4 +9776,12 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get desktopFolderNotPrivate =>
       'Kryfo klasörünü yalnızca sana özel yapamadı, bu yüzden açılmayacak.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Bu kilidi Kryfo\'nun bu sürümün okuyamadığı başka bir sürümü oluşturdu.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo çalışırken bellekte özel bir klasöre ihtiyaç duyar, bu bilgisayar böyle bir klasör sunmuyor, bu yüzden açılmayacak.';
 }

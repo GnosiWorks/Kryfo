@@ -15778,6 +15778,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Kryfo could not make its folder private to you, so it will not open.'**
   String get desktopFolderNotPrivate;
+
+  /// desktop/desktop_lock_screen.dart: the vault file is of a version this app does not read
+  ///
+  /// In en, this message translates to:
+  /// **'This lock was made by another version of Kryfo, which this one cannot read.'**
+  String get desktopLockOtherVersion;
+
+  /// desktop/desktop_lock_screen.dart: no XDG_RUNTIME_DIR or /dev/shm folder could be had
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo needs a private folder in memory while it runs, and this computer offers none, so it will not open.'**
+  String get desktopNoMemoryFolder;
 }
 
 class _AppLocalizationsDelegate

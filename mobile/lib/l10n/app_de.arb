@@ -2582,5 +2582,7 @@
   "desktopNoCamera": "Kryfo kann auf diesem Computer noch keine Kamera nutzen. Nimm stattdessen den Link oder den Code.",
   "desktopAlreadyOpen": "Kryfo ist auf diesem Computer schon geöffnet.",
   "desktopFolderNotYours": "Der Kryfo-Ordner gehört einem anderen Konto auf diesem Computer, deshalb öffnet Kryfo ihn nicht.",
-  "desktopFolderNotPrivate": "Kryfo konnte seinen Ordner nicht nur für dich zugänglich machen und öffnet sich deshalb nicht."
+  "desktopFolderNotPrivate": "Kryfo konnte seinen Ordner nicht nur für dich zugänglich machen und öffnet sich deshalb nicht.",
+  "desktopLockOtherVersion": "Diese Sperre stammt von einer anderen Kryfo-Version, die diese hier nicht lesen kann.",
+  "desktopNoMemoryFolder": "Kryfo braucht beim Laufen einen privaten Ordner im Arbeitsspeicher, und dieser Computer bietet keinen, deshalb öffnet es sich nicht."
 }

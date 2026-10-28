@@ -9744,4 +9744,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get desktopFolderNotPrivate =>
       'Kryfo could not make its folder private to you, so it will not open.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'This lock was made by another version of Kryfo, which this one cannot read.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo needs a private folder in memory while it runs, and this computer offers none, so it will not open.';
 }

@@ -12297,5 +12297,13 @@
   "desktopFolderNotPrivate": "Kryfo could not make its folder private to you, so it will not open.",
   "@desktopFolderNotPrivate": {
     "description": "desktop/desktop_lock_screen.dart: the data folder could not be made 0700"
+  },
+  "desktopLockOtherVersion": "This lock was made by another version of Kryfo, which this one cannot read.",
+  "@desktopLockOtherVersion": {
+    "description": "desktop/desktop_lock_screen.dart: the vault file is of a version this app does not read"
+  },
+  "desktopNoMemoryFolder": "Kryfo needs a private folder in memory while it runs, and this computer offers none, so it will not open.",
+  "@desktopNoMemoryFolder": {
+    "description": "desktop/desktop_lock_screen.dart: no XDG_RUNTIME_DIR or /dev/shm folder could be had"
   }
 }

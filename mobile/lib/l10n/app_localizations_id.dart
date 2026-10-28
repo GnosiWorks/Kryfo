@@ -9748,4 +9748,12 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get desktopFolderNotPrivate =>
       'Kryfo tidak bisa membuat foldernya hanya untukmu, jadi tidak akan dibuka.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Kunci ini dibuat oleh versi Kryfo lain yang tidak bisa dibaca versi ini.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo butuh folder pribadi di memori selama berjalan, dan komputer ini tidak menyediakannya, jadi Kryfo tidak akan dibuka.';
 }

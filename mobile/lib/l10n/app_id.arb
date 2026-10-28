@@ -2582,5 +2582,7 @@
   "desktopNoCamera": "Kryfo belum bisa memakai kamera di komputer ini. Pakai tautan atau kodenya saja.",
   "desktopAlreadyOpen": "Kryfo sudah terbuka di komputer ini.",
   "desktopFolderNotYours": "Folder Kryfo milik akun lain di komputer ini, jadi Kryfo tidak akan membukanya.",
-  "desktopFolderNotPrivate": "Kryfo tidak bisa membuat foldernya hanya untukmu, jadi tidak akan dibuka."
+  "desktopFolderNotPrivate": "Kryfo tidak bisa membuat foldernya hanya untukmu, jadi tidak akan dibuka.",
+  "desktopLockOtherVersion": "Kunci ini dibuat oleh versi Kryfo lain yang tidak bisa dibaca versi ini.",
+  "desktopNoMemoryFolder": "Kryfo butuh folder pribadi di memori selama berjalan, dan komputer ini tidak menyediakannya, jadi Kryfo tidak akan dibuka."
 }

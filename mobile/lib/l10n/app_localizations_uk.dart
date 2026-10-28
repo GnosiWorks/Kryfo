@@ -9914,4 +9914,12 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get desktopFolderNotPrivate =>
       'Kryfo не зміг зробити свою теку доступною лише вам, тому не відкриється.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Це блокування створила інша версія Kryfo, яку ця прочитати не може.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo потрібна особиста тека в пам’яті, поки він працює, а цей комп’ютер її не дає, тому Kryfo не відкриється.';
 }

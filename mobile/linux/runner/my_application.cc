@@ -14,6 +14,7 @@ struct _MyApplication {
   GtkStatusIcon* tray;
   GtkWidget* tray_menu;
   FlMethodChannel* desktop_channel;
+  guint quit_timer;
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
@@ -37,8 +38,32 @@ static void tray_open_cb(GtkMenuItem*, gpointer user_data) {
   show_window(MY_APPLICATION(user_data));
 }
 
+static gboolean quit_timed_out(gpointer user_data) {
+  MyApplication* self = MY_APPLICATION(user_data);
+  self->quit_timer = 0;
+  g_application_quit(G_APPLICATION(self));
+  return G_SOURCE_REMOVE;
+}
+
+static void quit_answered_cb(GObject*, GAsyncResult*, gpointer user_data) {
+  MyApplication* self = MY_APPLICATION(user_data);
+  if (self->quit_timer == 0) return;
+  g_source_remove(self->quit_timer);
+  self->quit_timer = 0;
+  g_application_quit(G_APPLICATION(self));
+}
+
+// dart keeps what it keeps and clears memory first; three seconds at most
 static void tray_quit_cb(GtkMenuItem*, gpointer user_data) {
-  g_application_quit(G_APPLICATION(user_data));
+  MyApplication* self = MY_APPLICATION(user_data);
+  if (self->desktop_channel == nullptr) {
+    g_application_quit(G_APPLICATION(self));
+    return;
+  }
+  if (self->quit_timer != 0) return;
+  self->quit_timer = g_timeout_add_seconds(3, quit_timed_out, self);
+  fl_method_channel_invoke_method(self->desktop_channel, "quit", nullptr,
+                                  nullptr, quit_answered_cb, self);
 }
 
 static void tray_activate_cb(GtkStatusIcon*, gpointer user_data) {

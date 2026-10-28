@@ -269,43 +269,73 @@ class DesktopVault {
     _map = {};
   }
 
-  /// false for a wrong passphrase or a changed file
+  /// set by [open]: the file is none this version or an older one reads
+  bool madeByOtherVersion = false;
+
+  /// false for a wrong passphrase or a changed file. a file of an older
+  /// version (1: no cost byte, scrypt 2^15; 2: no padding) opens and is
+  /// written again as this one, at today's cost
   Future<bool> open(String passphrase) async {
+    madeByOtherVersion = false;
     final raw = File(path).readAsBytesSync();
-    if (raw.length < _head + 16 ||
-        !listEquals(raw.sublist(0, 4), _magic) ||
-        raw[4] != _version) {
+    if (raw.length < 5 || !listEquals(raw.sublist(0, 4), _magic)) {
+      madeByOtherVersion = true;
       return false;
     }
-    final cost = raw[5];
-    final salt = Uint8List.fromList(raw.sublist(6, 6 + _saltLen));
-    final fresh = raw.sublist(6 + _saltLen, _head);
+    final version = raw[4];
+    if (version < 1 || version > _version) {
+      madeByOtherVersion = true;
+      return false;
+    }
+    // where the salt starts and the head ends, by version
+    final costAt = version >= 2 ? 5 : -1;
+    final saltAt = version >= 2 ? 6 : 5;
+    final head = saltAt + _saltLen + _freshLen;
+    if (raw.length < head + 16) return false;
+    final cost = costAt < 0 ? 15 : raw[costAt];
+    final salt = Uint8List.fromList(raw.sublist(saltAt, saltAt + _saltLen));
+    final fresh = raw.sublist(saltAt + _saltLen, head);
     final k = await _crypto.keyOf(passphrase, salt, cost);
     if (k == null) return false;
     final key = _unhex(k);
     final fileKey = _hex(Hmac(sha256, key).convert(fresh).bytes);
-    final plain = _crypto.open(fileKey, Uint8List.fromList(raw.sublist(_head)));
+    final plain = _crypto.open(fileKey, Uint8List.fromList(raw.sublist(head)));
     if (plain == null) {
       key.fillRange(0, key.length, 0);
       return false;
     }
     final Object? m;
     try {
-      m = jsonDecode(utf8.decode(unpadded(plain)));
+      m = jsonDecode(utf8.decode(version >= 3 ? unpadded(plain) : plain));
     } catch (_) {
       return false;
     } finally {
       plain.fillRange(0, plain.length, 0);
     }
     if (m is! Map) return false;
-    _salt = salt;
-    _cost = cost;
-    _key = key;
     _map = {
       for (final e in m.entries)
         if (e.key is String && e.value is String)
           e.key as String: e.value as String,
     };
+    if (version == _version && cost >= logN) {
+      _salt = salt;
+      _cost = cost;
+      _key = key;
+      return true;
+    }
+    // an older file: a new salt at today's cost, written as this version
+    key.fillRange(0, key.length, 0);
+    final newSalt = _bytes(_saltLen);
+    final nk = await _crypto.keyOf(passphrase, newSalt, logN);
+    if (nk == null) {
+      _map = null;
+      return false;
+    }
+    _salt = newSalt;
+    _cost = logN;
+    _key = _unhex(nk);
+    _persist(_map!);
     return true;
   }
 

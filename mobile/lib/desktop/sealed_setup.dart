@@ -11,6 +11,8 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
+import '../dlog.dart';
+
 import 'desktop_vault.dart';
 import 'sealed_file.dart';
 import 'sealed_format.dart';
@@ -265,6 +267,8 @@ class EngineFiles {
   String get _state => p.join(support, 'engine.state');
   static final _marks = RegExp(r'^nostr_(seen|last|heard)_');
 
+  String get _anchorsEntry => 'kryfo.anchors';
+
   /// every start, before the engine: what memory held from before goes,
   /// the folder is laid out, an older layout is moved in, the marks come
   /// back from their sealed copy
@@ -273,14 +277,29 @@ class EngineFiles {
     rawFileAccess(() {
       Directory(dir).createSync(recursive: true);
       Directory(p.join(docs, 'tor')).createSync(recursive: true);
-      final tor = Link(p.join(dir, 'tor'));
-      if (FileSystemEntity.typeSync(tor.path, followLinks: false) !=
-          FileSystemEntityType.link) {
-        tor.createSync(p.join(docs, 'tor'));
-      }
+      _linkTor();
     });
     await _fromOlderLayout(vault);
-    _restoreMarks();
+    _restoreMarks(vault);
+  }
+
+  // engine/tor is a link to docs/tor and nothing else: a real folder in
+  // its place, a file or a link elsewhere goes first
+  void _linkTor() {
+    final at = p.join(dir, 'tor');
+    final want = p.join(docs, 'tor');
+    switch (FileSystemEntity.typeSync(at, followLinks: false)) {
+      case FileSystemEntityType.link:
+        if (Link(at).targetSync() == want) return;
+        Link(at).deleteSync();
+      case FileSystemEntityType.directory:
+        Directory(at).deleteSync(recursive: true);
+      case FileSystemEntityType.notFound:
+        break;
+      default:
+        File(at).deleteSync();
+    }
+    Link(at).createSync(want);
   }
 
   // round two kept a link and the key in the vault; before that the key and
@@ -292,13 +311,23 @@ class EngineFiles {
       final kept = vault.read(kOnionEntry);
       if (kept != null) File(_sealedKey).writeAsBytesSync(base64.decode(kept));
     } else if (type == FileSystemEntityType.file && _plain(_sealedKey)) {
-      final k = rawFileAccess(() => File(_sealedKey).readAsBytesSync());
-      rawFileAccess(() {
-        _zero(_sealedKey);
-        File(_sealedKey).deleteSync();
-      });
-      File(_sealedKey).writeAsBytesSync(k);
-      k.fillRange(0, k.length, 0);
+      // the plain one is held open: the sealed copy takes its name, then
+      // its own bytes are zeroed where they lie
+      final held = rawFileAccess(
+        () => File(_sealedKey).openSync(mode: FileMode.append),
+      );
+      try {
+        held.setPositionSync(0);
+        final k = held.readSync(held.lengthSync());
+        File('$_sealedKey.new').writeAsBytesSync(k, flush: true);
+        rawFileAccess(() => File('$_sealedKey.new').renameSync(_sealedKey));
+        held.setPositionSync(0);
+        held.writeFromSync(Uint8List(k.length));
+        held.flushSync();
+        k.fillRange(0, k.length, 0);
+      } finally {
+        held.closeSync();
+      }
     }
     if (vault.read(kOnionEntry) != null) await vault.delete(kOnionEntry);
     final old = rawFileAccess(
@@ -309,7 +338,7 @@ class EngineFiles {
           .toList(),
     );
     if (old.isEmpty) return;
-    final m = _readState();
+    final m = readMarkState(_state) ?? {};
     for (final f in old) {
       final name = p.basename(f.path);
       m[name] = base64.encode(
@@ -320,62 +349,85 @@ class EngineFiles {
         File(f.path).deleteSync();
       });
     }
-    _writeState(m);
+    writeMarkState(_state, m);
   }
 
-  Map<String, String> _readState() {
-    final f = File(_state);
-    if (!f.existsSync()) return {};
-    try {
-      return (jsonDecode(f.readAsStringSync()) as Map).cast<String, String>();
-    } catch (_) {
-      return {};
+  void _restoreMarks(DesktopVault vault) {
+    var m = readMarkState(_state);
+    if (m == null) {
+      // neither copy reads: the relays are read again from the last anchors
+      // the vault holds, never from nothing
+      dlog('engine marks: neither copy reads, catch-up starts at the anchors');
+      m = {};
+      final kept = vault.read(_anchorsEntry);
+      if (kept != null) {
+        try {
+          m.addAll((jsonDecode(kept) as Map).cast<String, String>());
+        } catch (_) {}
+      }
     }
-  }
-
-  void _writeState(Map<String, String> m) {
-    final tmp = '$_state.new';
-    File(tmp).writeAsStringSync(jsonEncode(m), flush: true);
-    rawFileAccess(() => File(tmp).renameSync(_state));
-  }
-
-  void _restoreMarks() {
-    final m = _readState();
     rawFileAccess(() {
-      for (final e in m.entries) {
+      for (final e in m!.entries) {
         if (!_marks.hasMatch(e.key) || e.key.contains('/')) continue;
-        File(p.join(dir, e.key)).writeAsBytesSync(base64.decode(e.value));
+        // whole or not at all: the engine never reads half a file
+        final to = p.join(dir, e.key);
+        File('$to.new').writeAsBytesSync(base64.decode(e.value), flush: true);
+        File('$to.new').renameSync(to);
       }
     });
   }
 
-  /// the marks as they are now, sealed into their copy
-  void keepMarks() {
-    final files = rawFileAccess(() {
-      final d = Directory(dir);
-      if (!d.existsSync()) return <File>[];
-      return d
-          .listSync()
-          .whereType<File>()
-          .where((f) => _marks.hasMatch(p.basename(f.path)))
-          .toList();
-    });
-    final m = {
-      for (final f in files)
-        p.basename(f.path): base64.encode(
-          rawFileAccess(() => File(f.path).readAsBytesSync()),
-        ),
-    };
-    if (mapEquals(m, _readState())) return;
-    _writeState(m);
+  /// the marks as they are now, sealed into their copy, off the screen's
+  /// isolate. the anchors go to the vault too, as the floor if both copies
+  /// are ever lost
+  Future<void> keepMarksOff(DesktopVault vault) async {
+    final d = dir, st = _state;
+    final anchors = await runSealed(() => keepMarksIn(d, st));
+    await _keepAnchors(vault, anchors);
   }
 
-  void watch({Duration every = const Duration(minutes: 1)}) {
-    _watch ??= Timer.periodic(every, (_) {
+  Future<void> _keepAnchors(DesktopVault vault, Map<String, String> a) async {
+    if (a.isEmpty) return;
+    final text = jsonEncode(a);
+    if (vault.isOpen && vault.read(_anchorsEntry) != text) {
+      await vault.write(_anchorsEntry, text);
+    }
+  }
+
+  /// the same, here and now: as the app ends
+  void keepMarks() => keepMarksIn(dir, _state);
+
+  /// every minute: the marks kept, and a key the engine wrote sealed at
+  /// once, though it stays for the engine until a start succeeds
+  void watch(
+    DesktopVault vault, {
+    Duration every = const Duration(minutes: 1),
+  }) {
+    _watch ??= Timer.periodic(every, (_) async {
       try {
-        keepMarks();
+        sealNewKey();
+        await keepMarksOff(vault);
       } catch (_) {}
     });
+  }
+
+  /// a key in the engine's folder that the sealed copy does not hold yet,
+  /// sealed into it. the plain one stays
+  void sealNewKey() {
+    final k = rawFileAccess(() {
+      final f = File(_key);
+      return f.existsSync() ? f.readAsBytesSync() : null;
+    });
+    if (k == null || k.isEmpty) return;
+    try {
+      if (!File(_sealedKey).existsSync() ||
+          !listEquals(File(_sealedKey).readAsBytesSync(), k)) {
+        File('$_sealedKey.new').writeAsBytesSync(k, flush: true);
+        rawFileAccess(() => File('$_sealedKey.new').renameSync(_sealedKey));
+      }
+    } finally {
+      k.fillRange(0, k.length, 0);
+    }
   }
 
   /// the engine's start: the onion key in its folder only while it reads
@@ -394,18 +446,9 @@ class EngineFiles {
 
   /// a key the engine wrote kept sealed, and its plain copy zeroed
   void takeKey() {
-    final k = rawFileAccess(() {
-      final f = File(_key);
-      return f.existsSync() ? f.readAsBytesSync() : null;
-    });
-    if (k == null) return;
-    if (k.isNotEmpty &&
-        (!File(_sealedKey).existsSync() ||
-            !listEquals(File(_sealedKey).readAsBytesSync(), k))) {
-      File(_sealedKey).writeAsBytesSync(k, flush: true);
-    }
-    k.fillRange(0, k.length, 0);
+    sealNewKey();
     rawFileAccess(() {
+      if (!File(_key).existsSync()) return;
       _zero(_key);
       File(_key).deleteSync();
     });
@@ -461,4 +504,58 @@ class EngineFiles {
       } catch (_) {}
     });
   }
+}
+
+/// the marks' sealed copy at [state], or its previous one when the newest
+/// does not read (a write cut short). null when neither reads but one is
+/// there; an empty map when there are none yet
+@visibleForTesting
+Map<String, String>? readMarkState(String state) {
+  var any = false;
+  for (final f in [state, '$state.old']) {
+    if (!File(f).existsSync()) continue;
+    any = true;
+    try {
+      return (jsonDecode(File(f).readAsStringSync()) as Map)
+          .cast<String, String>();
+    } catch (_) {}
+  }
+  return any ? null : {};
+}
+
+/// [m] as the newest copy; the one before is kept as the previous
+@visibleForTesting
+void writeMarkState(String state, Map<String, String> m) {
+  final tmp = '$state.new';
+  File(tmp).writeAsStringSync(jsonEncode(m), flush: true);
+  rawFileAccess(() {
+    if (File(state).existsSync()) File(state).renameSync('$state.old');
+    File(tmp).renameSync(state);
+  });
+}
+
+/// the marks in [dir] sealed into [state] when they changed. answers the
+/// catch-up anchors (nostr_last_) as they are
+Map<String, String> keepMarksIn(String dir, String state) {
+  final marks = RegExp(r'^nostr_(seen|last|heard)_[0-9a-f]+$');
+  final files = rawFileAccess(() {
+    final d = Directory(dir);
+    if (!d.existsSync()) return <File>[];
+    return d
+        .listSync()
+        .whereType<File>()
+        .where((f) => marks.hasMatch(p.basename(f.path)))
+        .toList();
+  });
+  final m = {
+    for (final f in files)
+      p.basename(f.path): base64.encode(
+        rawFileAccess(() => File(f.path).readAsBytesSync()),
+      ),
+  };
+  if (!mapEquals(m, readMarkState(state))) writeMarkState(state, m);
+  return {
+    for (final e in m.entries)
+      if (e.key.startsWith('nostr_last_')) e.key: e.value,
+  };
 }

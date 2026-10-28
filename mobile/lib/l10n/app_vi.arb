@@ -2582,5 +2582,7 @@
   "desktopNoCamera": "Kryfo chưa dùng được camera trên máy tính này. Hãy dùng liên kết hoặc mã thay thế.",
   "desktopAlreadyOpen": "Kryfo đã mở sẵn trên máy tính này.",
   "desktopFolderNotYours": "Thư mục của Kryfo thuộc về một tài khoản khác trên máy tính này, nên Kryfo sẽ không mở nó.",
-  "desktopFolderNotPrivate": "Kryfo không thể đặt thư mục của nó thành riêng tư cho bạn, nên sẽ không mở."
+  "desktopFolderNotPrivate": "Kryfo không thể đặt thư mục của nó thành riêng tư cho bạn, nên sẽ không mở.",
+  "desktopLockOtherVersion": "Khóa này được tạo bởi một phiên bản Kryfo khác mà phiên bản này không đọc được.",
+  "desktopNoMemoryFolder": "Kryfo cần một thư mục riêng trong bộ nhớ khi chạy, và máy tính này không có, nên Kryfo sẽ không mở."
 }

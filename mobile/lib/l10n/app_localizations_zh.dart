@@ -9297,6 +9297,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get desktopFolderNotPrivate => 'Kryfo 无法把它的文件夹设为只有你能访问，所以不会打开。';
+
+  @override
+  String get desktopLockOtherVersion => '这个锁是另一个版本的 Kryfo 创建的，当前版本无法读取。';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo 运行时需要内存中的一个私有文件夹，而这台电脑没有提供，所以 Kryfo 不会打开。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -18475,4 +18482,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get desktopFolderNotPrivate => 'Kryfo 無法把它的資料夾設為只有你能存取，所以不會開啟。';
+
+  @override
+  String get desktopLockOtherVersion => '這個鎖是另一個版本的 Kryfo 建立的，目前的版本無法讀取。';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo 執行時需要記憶體中的一個私有資料夾，而這台電腦沒有提供，所以 Kryfo 不會開啟。';
 }

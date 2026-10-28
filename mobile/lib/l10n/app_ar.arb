@@ -2582,5 +2582,7 @@
   "desktopNoCamera": "لا يستطيع Kryfo استخدام كاميرا على هذا الحاسوب بعد. استخدم الرابط أو الرمز بدلًا من ذلك.",
   "desktopAlreadyOpen": "Kryfo مفتوح بالفعل على هذا الحاسوب.",
   "desktopFolderNotYours": "مجلد Kryfo يخص حسابًا آخر على هذا الحاسوب، لذا لن يفتحه Kryfo.",
-  "desktopFolderNotPrivate": "تعذّر على Kryfo جعل مجلده خاصًا بك، لذا لن يفتح."
+  "desktopFolderNotPrivate": "تعذّر على Kryfo جعل مجلده خاصًا بك، لذا لن يفتح.",
+  "desktopLockOtherVersion": "صنع هذا القفل إصدار آخر من Kryfo لا يستطيع هذا الإصدار قراءته.",
+  "desktopNoMemoryFolder": "يحتاج Kryfo إلى مجلد خاص في الذاكرة أثناء عمله، وهذا الحاسوب لا يوفّر واحدًا، لذا لن يفتح."
 }

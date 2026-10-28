@@ -9923,4 +9923,12 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get desktopFolderNotPrivate =>
       'Kryfo не смог сделать свою папку доступной только вам, поэтому не откроется.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Эту блокировку создала другая версия Kryfo, которую эта прочитать не может.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo нужна личная папка в памяти, пока он работает, а этот компьютер её не даёт, поэтому Kryfo не откроется.';
 }

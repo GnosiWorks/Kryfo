@@ -9741,4 +9741,12 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get desktopFolderNotPrivate =>
       'Kryfo không thể đặt thư mục của nó thành riêng tư cho bạn, nên sẽ không mở.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Khóa này được tạo bởi một phiên bản Kryfo khác mà phiên bản này không đọc được.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo cần một thư mục riêng trong bộ nhớ khi chạy, và máy tính này không có, nên Kryfo sẽ không mở.';
 }

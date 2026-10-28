@@ -2582,5 +2582,7 @@
   "desktopNoCamera": "Kryfo 暂时还不能在这台电脑上使用摄像头。请改用链接或代码。",
   "desktopAlreadyOpen": "Kryfo 已经在这台电脑上打开了。",
   "desktopFolderNotYours": "Kryfo 的文件夹属于这台电脑上的另一个账户，所以 Kryfo 不会打开它。",
-  "desktopFolderNotPrivate": "Kryfo 无法把它的文件夹设为只有你能访问，所以不会打开。"
+  "desktopFolderNotPrivate": "Kryfo 无法把它的文件夹设为只有你能访问，所以不会打开。",
+  "desktopLockOtherVersion": "这个锁是另一个版本的 Kryfo 创建的，当前版本无法读取。",
+  "desktopNoMemoryFolder": "Kryfo 运行时需要内存中的一个私有文件夹，而这台电脑没有提供，所以 Kryfo 不会打开。"
 }

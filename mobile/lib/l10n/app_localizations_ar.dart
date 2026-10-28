@@ -9884,4 +9884,12 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get desktopFolderNotPrivate =>
       'تعذّر على Kryfo جعل مجلده خاصًا بك، لذا لن يفتح.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'صنع هذا القفل إصدار آخر من Kryfo لا يستطيع هذا الإصدار قراءته.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'يحتاج Kryfo إلى مجلد خاص في الذاكرة أثناء عمله، وهذا الحاسوب لا يوفّر واحدًا، لذا لن يفتح.';
 }

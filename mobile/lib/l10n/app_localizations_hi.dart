@@ -9757,4 +9757,12 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get desktopFolderNotPrivate =>
       'Kryfo अपना फ़ोल्डर सिर्फ़ आपके लिए निजी नहीं बना पाया, इसलिए यह नहीं खुलेगा।';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'यह लॉक Kryfo के किसी दूसरे संस्करण ने बनाया है, जिसे यह संस्करण नहीं पढ़ सकता।';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'चलते समय Kryfo को मेमोरी में एक निजी फ़ोल्डर चाहिए, और यह कंप्यूटर ऐसा कोई फ़ोल्डर नहीं देता, इसलिए यह नहीं खुलेगा।';
 }
