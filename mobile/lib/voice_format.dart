@@ -3,6 +3,7 @@
 // and opus in ogg, a tenth of the size, for phones that have said they
 // play it. a note is a voice note by its name on the wire
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -23,6 +24,10 @@ const kOpusWire = 'op';
 String oggPathOf(String wav) => wav.toLowerCase().endsWith('.wav')
     ? '${wav.substring(0, wav.length - 4)}.ogg'
     : '$wav.ogg';
+
+/// the longest an ogg note is shown as: the mic's 30 minutes and a little
+/// over, as the engine reads at most
+const kOggLongestMs = 31 * 60 * 1000;
 
 bool isOggPath(String path) => path.toLowerCase().endsWith('.ogg');
 
@@ -62,7 +67,8 @@ int? oggOpusMs(Uint8List head, Uint8List tail) {
     final hi = t.getUint32(at + 10, Endian.little);
     if (hi != 0) return null;
     if (lo < preskip) return null;
-    return (lo - preskip) * 1000 ~/ 48000;
+    // no note is longer than the mic records, whatever its last page says
+    return math.min((lo - preskip) * 1000 ~/ 48000, kOggLongestMs);
   }
   return null;
 }
@@ -90,80 +96,103 @@ Future<int?> oggFileMs(String path) async {
 // a peer's newest word on it, as the screenshot block keeps its own
 // (shotsCanAfter): when their newest envelope was written, positive when
 // it carried the word, negative when a message of theirs came without it.
-// beside the chat, in the container that holds it; a contact deleted takes
-// its row along
-Future<void> voiceOpusTable(DatabaseExecutor db) async {
-  await db.execute('''
-    CREATE TABLE IF NOT EXISTS voice_opus (
-      halo_id TEXT PRIMARY KEY,
-      can INTEGER NOT NULL
-    )
-  ''');
-  await db.execute(
-    'CREATE TRIGGER IF NOT EXISTS voice_opus_follow AFTER DELETE ON '
-    'contacts BEGIN DELETE FROM voice_opus WHERE halo_id = old.halo_id; END',
+// on their contact row for a 1:1 chat, on their member row for a group or
+// a room, so it moves, ends and goes with the chat (opusColumns)
+const kOpusCol = 'opus_can';
+
+Future<bool> _take(
+  Database db,
+  String table,
+  String where,
+  List<Object?> args, {
+  required bool carried,
+  required bool counts,
+  int? written,
+}) => db.transaction((t) async {
+  final r = await t.query(
+    table,
+    columns: const [kOpusCol],
+    where: where,
+    whereArgs: args,
+    limit: 1,
   );
-}
-
-Future<Database> _ready(Database db) async {
-  await voiceOpusTable(db);
-  return db;
-}
-
-Future<int> _canOf(Database db, String peer) async {
-  final r = await db.query(
-    'voice_opus',
-    columns: const ['can'],
-    where: 'halo_id = ?',
-    whereArgs: [peer],
+  // only a row that is there already: nothing is made for anyone
+  if (r.isEmpty) return false;
+  final was = (r.first[kOpusCol] as num?)?.toInt() ?? 0;
+  final can = shotsCanAfter(
+    was,
+    carried: carried,
+    counts: counts,
+    written: written,
   );
-  return r.isEmpty ? 0 : (r.first['can'] as num).toInt();
-}
+  if (can == null) return false;
+  await t.update(table, {kOpusCol: can}, where: where, whereArgs: args);
+  return true;
+});
 
-/// what an envelope from [peer] says of their phone. [carried]: it had the
-/// word. [counts]: a message of theirs, which every phone that knows the
-/// word stamps. true when it changed
+/// what a 1:1 envelope from [peer] says of their phone, kept only on the
+/// row of a contact who was accepted. [carried]: it had the word.
+/// [counts]: a message of theirs, which every phone that knows the word
+/// stamps. true when it changed
 Future<bool> takePeerOpus(
   Database db,
   String peer, {
   required bool carried,
   required bool counts,
   int? written,
-}) async {
-  await _ready(db);
-  return db.transaction((t) async {
-    final r = await t.query(
-      'voice_opus',
-      columns: const ['can'],
-      where: 'halo_id = ?',
-      whereArgs: [peer],
-    );
-    final was = r.isEmpty ? 0 : (r.first['can'] as num).toInt();
-    final can = shotsCanAfter(
-      was,
-      carried: carried,
-      counts: counts,
-      written: written,
-    );
-    if (can == null) return false;
-    await t.insert('voice_opus', {
-      'halo_id': peer,
-      'can': can,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
-    return true;
-  });
-}
+}) => _take(
+  db,
+  'contacts',
+  'halo_id = ? AND accepted = 1',
+  [peer],
+  carried: carried,
+  counts: counts,
+  written: written,
+);
+
+/// as [takePeerOpus], for a member of group or room [groupId], kept only
+/// on a member row that is there
+Future<bool> takeMemberOpus(
+  Database db,
+  String groupId,
+  String member, {
+  required bool carried,
+  required bool counts,
+  int? written,
+}) => _take(
+  db,
+  'group_members',
+  'group_id = ? AND halo_id = ?',
+  [groupId, member],
+  carried: carried,
+  counts: counts,
+  written: written,
+);
 
 /// [peer]'s phone has said it plays opus, and has not gone back since
-Future<bool> peerPlaysOpus(Database db, String peer) async =>
-    await _canOf(await _ready(db), peer) > 0;
+Future<bool> peerPlaysOpus(Database db, String peer) async {
+  final r = await db.query(
+    'contacts',
+    columns: const [kOpusCol],
+    where: 'halo_id = ?',
+    whereArgs: [peer],
+    limit: 1,
+  );
+  return r.isNotEmpty && ((r.first[kOpusCol] as num?)?.toInt() ?? 0) > 0;
+}
 
-/// every one of [peers] plays opus. none known is no
-Future<bool> allPlayOpus(Database db, Iterable<String> peers) async {
-  if (peers.isEmpty) return false;
-  await _ready(db);
-  for (final p in peers) {
-    if (await _canOf(db, p) <= 0) return false;
-  }
-  return true;
+/// every member of [groupId] but [me] plays opus. none known is no
+Future<bool> groupPlaysOpus(Database db, String groupId, String me) async {
+  final r = await db.query(
+    'group_members',
+    columns: const ['halo_id', kOpusCol],
+    where: 'group_id = ?',
+    whereArgs: [groupId],
+  );
+  final others = [
+    for (final m in r)
+      if (m['halo_id'] != me) m,
+  ];
+  return others.isNotEmpty &&
+      others.every((m) => ((m[kOpusCol] as num?)?.toInt() ?? 0) > 0);
 }

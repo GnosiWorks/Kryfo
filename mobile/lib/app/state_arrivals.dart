@@ -391,7 +391,6 @@ extension AppStateArrivals on AppState {
       return to;
     }
     await _takeShots(senderHaloId, env, db);
-    await _takeOpus(senderHaloId, env, db);
     // delivery receipt, handled before the stranger gate and dedup so an ack
     // is never treated as a message or counted toward the cap. it leaves
     // back-paired alone: that flag lifts the sender-side cap, and a stranger
@@ -1144,6 +1143,8 @@ extension AppStateArrivals on AppState {
         if (!fits) album = null;
       }
     }
+    // past the gates: what it says of their phone is kept on their own row
+    await _takeOpus(senderHaloId, env, db);
     await db.saveMessage(
       senderHaloId,
       'in',

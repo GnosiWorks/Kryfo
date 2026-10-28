@@ -15,6 +15,8 @@ import 'package:kryfo/voice_length.dart';
 import 'package:kryfo/voice_opus.dart';
 import 'package:kryfo/widgets/voice_parts.dart';
 
+import 'package:kryfo/main.dart' show opusColumns;
+
 import 'mem_db.dart';
 import 'real_sqlite.dart';
 
@@ -42,6 +44,13 @@ Uint8List _wav(int frames) {
   tag(36, 'data');
   b.setUint32(40, frames * 2, Endian.little);
   return b.buffer.asUint8List();
+}
+
+int _lastPage(Uint8List b) {
+  for (var at = b.length - 4; at >= 0; at--) {
+    if (String.fromCharCodes(b.sublist(at, at + 4)) == 'OggS') return at;
+  }
+  return -1;
 }
 
 void main() {
@@ -94,6 +103,14 @@ void main() {
       expect(await voiceFileMs('${tmp.path}/none.ogg'), isNull);
     });
 
+    test('a last page that claims hours shows at most the mic\'s length', () {
+      final b = Uint8List.fromList(_note);
+      final last = _lastPage(b);
+      ByteData.sublistView(b).setUint32(last + 6, 0xF0000000, Endian.little);
+      expect(oggOpusMs(b, b), kOggLongestMs);
+      expect(kOggLongestMs, 31 * 60 * 1000);
+    });
+
     test('what is no whole ogg opus has no length', () {
       expect(oggOpusMs(_wav(160), _wav(160)), isNull);
       expect(oggOpusMs(Uint8List(0), Uint8List(0)), isNull);
@@ -130,24 +147,63 @@ void main() {
 
   group('which phones are sent opus', () {
     late MemDb db;
-    setUp(() => db = MemDb());
+    setUp(() async {
+      db = MemDb();
+      for (final (id, accepted) in [('calm-orbit', 1), ('a-request', 0)]) {
+        await db.insert('contacts', {
+          'halo_id': id,
+          'onion': '',
+          'xpub': 'ab' * 32,
+          'first_seen': 1,
+          'last_seen': 1,
+          'accepted': accepted,
+        });
+      }
+      for (final m in ['me', 'a', 'b', 'c']) {
+        await db.insert('group_members', {
+          'group_id': 'g1',
+          'halo_id': m,
+          'joined_at': 1,
+        });
+      }
+    });
 
-    Future<void> came(
+    Future<bool> came(
       String peer, {
       required bool op,
       int? at,
       bool msg = true,
     }) => takePeerOpus(db, peer, carried: op, counts: msg, written: at);
 
+    Future<bool> inGroup(String m, {required bool op, int? at}) =>
+        takeMemberOpus(db, 'g1', m, carried: op, counts: true, written: at);
+
+    int? col(String table, String id) {
+      for (final r in db.rows(table)) {
+        if (r['halo_id'] == id) return (r['opus_can'] as num?)?.toInt();
+      }
+      return null;
+    }
+
     test('none known is wav', () async {
       expect(await peerPlaysOpus(db, 'calm-orbit'), isFalse);
-      expect(await allPlayOpus(db, const []), isFalse);
+      expect(await peerPlaysOpus(db, 'nobody'), isFalse);
+      expect(await groupPlaysOpus(db, 'g1', 'me'), isFalse);
+      expect(await groupPlaysOpus(db, 'no-group', 'me'), isFalse);
     });
 
-    test('a phone that said so is sent opus', () async {
-      await came('calm-orbit', op: true, at: 10);
+    test('an accepted contact that said so is sent opus', () async {
+      expect(await came('calm-orbit', op: true, at: 10), isTrue);
       expect(await peerPlaysOpus(db, 'calm-orbit'), isTrue);
-      expect(await peerPlaysOpus(db, 'other-one'), isFalse);
+    });
+
+    test('a stranger or a request leaves nothing anywhere', () async {
+      final before = db.dump();
+      expect(await came('cold-stranger', op: true, at: 10), isFalse);
+      expect(await came('a-request', op: true, at: 10), isFalse);
+      expect(await inGroup('not-a-member', op: true, at: 10), isFalse);
+      expect(db.dump(), before);
+      expect(col('contacts', 'a-request'), 0);
     });
 
     test('a newer message without the word: the phone went back', () async {
@@ -167,30 +223,107 @@ void main() {
       expect(await peerPlaysOpus(db, 'calm-orbit'), isTrue);
     });
 
-    test('a group goes opus only when every member plays it', () async {
-      await came('a', op: true, at: 1);
-      await came('b', op: true, at: 1);
-      expect(await allPlayOpus(db, ['a', 'b']), isTrue);
-      expect(await allPlayOpus(db, ['a', 'b', 'c']), isFalse);
-      await came('b', op: false, at: 2);
-      expect(await allPlayOpus(db, ['a', 'b']), isFalse);
+    test('a group goes opus only when every other member plays it', () async {
+      await inGroup('a', op: true, at: 1);
+      await inGroup('b', op: true, at: 1);
+      expect(await groupPlaysOpus(db, 'g1', 'me'), isFalse);
+      await inGroup('c', op: true, at: 1);
+      // this phone's own row is not asked
+      expect(col('group_members', 'me'), 0);
+      expect(await groupPlaysOpus(db, 'g1', 'me'), isTrue);
+      await inGroup('b', op: false, at: 2);
+      expect(await groupPlaysOpus(db, 'g1', 'me'), isFalse);
+    });
+
+    test('a member gone takes the word with its row', () async {
+      for (final m in ['a', 'b', 'c']) {
+        await inGroup(m, op: true, at: 1);
+      }
+      await db.delete(
+        'group_members',
+        where: 'group_id = ? AND halo_id = ?',
+        whereArgs: ['g1', 'c'],
+      );
+      expect(col('group_members', 'c'), isNull);
+      expect(await groupPlaysOpus(db, 'g1', 'me'), isTrue);
+      await db.delete(
+        'group_members',
+        where: 'group_id = ?',
+        whereArgs: ['g1'],
+      );
+      expect(await groupPlaysOpus(db, 'g1', 'me'), isFalse);
     });
 
     final sql = RealSqlite.open();
     test(
-      'a contact deleted takes its row along',
+      'the upgrade to 87 adds the word to contacts and members, once',
       () async {
         final s = sql!;
         s.run('CREATE TABLE contacts (halo_id TEXT PRIMARY KEY)');
+        s.run(
+          'CREATE TABLE group_members (group_id TEXT NOT NULL, '
+          'halo_id TEXT NOT NULL, joined_at INTEGER NOT NULL)',
+        );
         s.run("INSERT INTO contacts VALUES ('calm-orbit')");
-        await voiceOpusTable(RealExecutor(s));
-        await voiceOpusTable(RealExecutor(s));
-        s.run("INSERT INTO voice_opus VALUES ('calm-orbit', 10)");
-        s.run("DELETE FROM contacts WHERE halo_id = 'calm-orbit'");
-        expect(s.run('SELECT * FROM voice_opus'), isEmpty);
+        s.run("INSERT INTO group_members VALUES ('g1', 'a', 1)");
+        await opusColumns(RealExecutor(s));
+        // a second run finds them there
+        await opusColumns(RealExecutor(s));
+        // the system's sqlite hands every value back as text
+        expect(s.run('SELECT opus_can FROM contacts').single, {
+          'opus_can': '0',
+        });
+        expect(s.run('SELECT opus_can FROM group_members').single, {
+          'opus_can': '0',
+        });
       },
       skip: sql == null ? 'no sqlite library here' : null,
     );
+
+    test('the upgrade is in the version steps, and a new install has it', () {
+      final src = File('lib/app/database.dart').readAsStringSync();
+      expect(src, contains('version: 87,'));
+      expect(src, contains('if (oldV < 87) {'));
+      expect(
+        RegExp(
+          r'CREATE TABLE contacts \([^;]*opus_can INTEGER NOT NULL',
+        ).hasMatch(src),
+        isTrue,
+      );
+      expect(
+        RegExp(
+          r'CREATE TABLE group_members \([^;]*opus_can INTEGER NOT NULL',
+        ).hasMatch(src),
+        isTrue,
+      );
+      // no table of its own any more
+      expect(
+        File('lib/voice_format.dart').readAsStringSync(),
+        isNot(contains('CREATE TABLE')),
+      );
+    });
+
+    test('a vault or the decoy, as it opens, sweeps its unnamed media', () {
+      // a wav a stop or a death left, or half an opus copy
+      final src = File('lib/app/state_session.dart').readAsStringSync();
+      expect(src, contains('await _sweepUnnamedMedia(before, v);'));
+      expect(src, contains('await _sweepUnnamedMedia(before, d);'));
+      final boot = File('lib/app/state_boot.dart').readAsStringSync();
+      expect(boot, contains('(d ?? live).unnamedMedia(before: before)'));
+    });
+
+    test('the word is taken past the gates, for nobody in the dev chat', () {
+      final arr = File('lib/app/state_arrivals.dart').readAsStringSync();
+      final take = arr.indexOf('await _takeOpus(');
+      expect(
+        take,
+        greaterThan(arr.indexOf('stranger lock + proof-of-work gate')),
+      );
+      expect(take, lessThan(arr.indexOf('await db.saveMessage(')));
+      expect('await _takeOpus('.allMatches(arr), hasLength(1));
+      final voice = File('lib/app/state_voice.dart').readAsStringSync();
+      expect(voice, contains('if (isDevId(peer)) return;'));
+    });
   });
 
   group('the encode', () {
@@ -243,6 +376,88 @@ void main() {
         expect(File(oggPathOf(wav)).existsSync(), isFalse);
       }
     });
+
+    test('one waiting its turn when the lock comes never starts', () async {
+      final first = Completer<String>();
+      var started = <String>[];
+      voiceOggForTest = (from, to) {
+        started.add(from);
+        return from.endsWith('a.wav') ? first.future : Future.value('ok 1 1');
+      };
+      var locked = false;
+      final a = encodeVoiceOgg('a.wav', '${tmp.path}/a.ogg');
+      final b = encodeVoiceOgg(
+        'b.wav',
+        '${tmp.path}/b.ogg',
+        stop: () => locked,
+      );
+      await Future<void>.delayed(Duration.zero);
+      locked = true;
+      first.complete('ok 1 1');
+      expect(await a, 1);
+      expect(await b, isNull);
+      expect(started, ['a.wav']);
+    });
+
+    test('one under way is told to stop by its path', () async {
+      final asked = <String>[];
+      voiceStopForTest = asked.add;
+      addTearDown(() => voiceStopForTest = null);
+      final done = Completer<String>();
+      voiceOggForTest = (_, _) => done.future;
+      var locked = false;
+      final run = encodeVoiceOgg(
+        wav,
+        '${tmp.path}/vn_u1.ogg',
+        stop: () => locked,
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      expect(asked, isEmpty);
+      locked = true;
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      expect(asked, ['${tmp.path}/vn_u1.ogg']);
+      done.complete('error: stopped');
+      expect(await run, isNull);
+      expect(File('${tmp.path}/vn_u1.ogg').existsSync(), isFalse);
+    });
+
+    test(
+      'a resend of an opus note to a phone that went back is a wav',
+      () async {
+        final ogg = '${tmp.path}/vn_u1.ogg';
+        File(ogg).writeAsBytesSync(_note);
+        // to one that still plays it, or a file of another kind: as it is
+        expect(await voiceAgain(ogg, 'voice.ogg', opus: true, scratch: 'x'), (
+          ogg,
+          'voice.ogg',
+          null,
+        ));
+        expect(await voiceAgain(wav, 'voice.wav', opus: false, scratch: 'x'), (
+          wav,
+          'voice.wav',
+          null,
+        ));
+        // with no engine here the decode fails: the ogg goes as it was, and
+        // no scratch is left
+        final scratch = '${tmp.path}/vn_u1_r.wav';
+        expect(
+          await voiceAgain(ogg, 'voice.ogg', opus: false, scratch: scratch),
+          (ogg, 'voice.ogg', null),
+        );
+        expect(File(scratch).existsSync(), isFalse);
+        // with one: the wav made from it, under the name a 0.5 phone plays
+        voiceWavForTest = (from, to) async {
+          File(to).writeAsBytesSync(_wav(16000));
+          return 'ok 1000';
+        };
+        addTearDown(() => voiceWavForTest = null);
+        expect(
+          await voiceAgain(ogg, 'voice.ogg', opus: false, scratch: scratch),
+          (scratch, 'voice.wav', scratch),
+        );
+        expect(await voiceFileMs(scratch), 1000);
+      },
+    );
 
     test('encodes take turns', () async {
       final order = <String>[];

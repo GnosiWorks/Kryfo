@@ -4,17 +4,34 @@
 part of '../main.dart';
 
 extension AppStateVoice on AppState {
-  // what an envelope says of the sender's phone: 1:1 and group alike, in
-  // the container its chat is in
+  // what a message kept here says of the sender's phone, in the container
+  // its chat is in: on an accepted contact's row, or on the member row of
+  // the group or room it came in. called past the stranger gate only, and
+  // never for the developer's chat
   Future<void> _takeOpus(String peer, UnwrappedMessage env, HaloDb db) async {
+    if (isDevId(peer)) return;
     try {
-      await takePeerOpus(
-        await db.open(),
-        peer,
-        carried: env.playsOpus,
-        counts: AppState._dataFrame(env) && env.msgUid != null,
-        written: env.writtenAt,
-      );
+      final d = await db.open();
+      final counts = AppState._dataFrame(env) && env.msgUid != null;
+      final g = env.groupId;
+      if (g != null) {
+        await takeMemberOpus(
+          d,
+          g,
+          peer,
+          carried: env.playsOpus,
+          counts: counts,
+          written: env.writtenAt,
+        );
+      } else {
+        await takePeerOpus(
+          d,
+          peer,
+          carried: env.playsOpus,
+          counts: counts,
+          written: env.writtenAt,
+        );
+      }
     } catch (e) {
       dlog('voice: opus word not taken (${e.runtimeType})');
     }
@@ -34,12 +51,11 @@ extension AppStateVoice on AppState {
   /// has said it plays it
   Future<bool> opusForGroup(String groupId) async {
     try {
-      final me = sessionId;
-      final others = [
-        for (final m in await session.getGroupMembers(groupId))
-          if (m != me) m,
-      ];
-      return await allPlayOpus(await session.chatDb(groupId), others);
+      return await groupPlaysOpus(
+        await session.chatDb(groupId),
+        groupId,
+        sessionId,
+      );
     } catch (e) {
       dlog('voice: group opus not read (${e.runtimeType})');
       return false;
