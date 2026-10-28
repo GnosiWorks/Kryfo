@@ -136,6 +136,10 @@ type subTurn struct {
 	up bool
 	// counted as a catch-up under way
 	held bool
+	// a socket on one of our relay's entries: first at a wake
+	own bool
+	// the wake it last had a turn in, see takeWake
+	wake int64
 }
 
 // waits the socket's turn, unless it has had one since the last kick or has
@@ -145,7 +149,11 @@ type subTurn struct {
 func (t *subTurn) take(ctx context.Context) bool {
 	// every dial is counted until it is over (dialed), turn or none
 	t.hold()
+	wakeCheck()
 	kc := kickChan()
+	if n, w, ok := wakeNow(); ok {
+		return t.takeWake(ctx, kc, n, w)
+	}
 	if t.kick == kc {
 		return ctx.Err() == nil
 	}
@@ -174,8 +182,48 @@ func (t *subTurn) take(ctx context.Context) bool {
 	}
 }
 
+// after a wake every redial takes a turn, with or without a kick: the
+// sockets the sleep killed find out at once or one ping at a time, and
+// either way they would redial together. one turn per wake, and one more
+// once it got through, as a socket that dies again after that does. ours
+// before the public relays, the first of ours at once
+func (t *subTurn) takeWake(ctx context.Context, kc chan struct{}, n int64, w wakeTurns) bool {
+	now := autoNow()
+	first := t.kick == nil && t.fresh.holds(kc, now)
+	had := t.wake == n
+	t.kick, t.wake, t.free = kc, n, first
+	// a retry after a failed turn goes at its own backoff's pace
+	if (had && !t.up) || first || isFirstTag(t.tag) {
+		return ctx.Err() == nil
+	}
+	t.up = false
+	if t.own && takeWakeFirst(n) {
+		return ctx.Err() == nil
+	}
+	d := w.turn(t.own, now)
+	if d <= 0 {
+		return ctx.Err() == nil
+	}
+	tm := time.NewTimer(d)
+	defer tm.Stop()
+	select {
+	case <-tm.C:
+		return true
+	case <-ctx.Done():
+		return false
+	}
+}
+
 // the kick was answered on the live socket: no turn for it
 func (t *subTurn) skip() { t.kick = kickChan() }
+
+// a kick's probe went out at the socket's turn: in a wake that was its
+// turn, and a redial after it failing goes at once
+func (t *subTurn) probed(ok bool) {
+	if n, _, waking := wakeNow(); waking {
+		t.wake, t.up = n, ok
+	}
+}
 
 // counted as a catch-up under way, until done
 func (t *subTurn) hold() {
