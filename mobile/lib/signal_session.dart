@@ -206,6 +206,13 @@ class SignalSession {
 
   final Map<String, Future<void>> _steps = {};
 
+  // peers a frame waits on: too big for an opener, it goes once they answer
+  final Set<String> _awaiting = {};
+
+  /// told when [peer]'s first message opened on a session a frame was
+  /// waiting on: what waited goes now
+  void Function(String peer)? onAnswered;
+
   /// [job] run after every earlier one queued for [peer] has ended
   Future<T> serial<T>(String peer, Future<T> Function() job) {
     final out = (_steps[peer] ?? Future<void>.value()).then((_) => job());
@@ -371,7 +378,36 @@ class SignalSession {
       throw const LsError(LsError.noSession);
     }
     final pinned = identityStore.pinnedFor(peer);
-    final body = Uint8List.fromList(utf8.encode(padSeal(plain)));
+    // a trial seal first, kept nowhere: whether this one goes out as an
+    // opener, which is filled to its own size
+    final opener =
+        lib
+            .encrypt(
+              identity,
+              registrationId,
+              record,
+              const [0],
+              _now(),
+              pinned: pinned,
+            )
+            .type ==
+        kLsPreKey;
+    if (onlySettled && opener) throw NotSettled(peer);
+    final String padded;
+    if (opener && lib.sessionInfo(record).version >= 4) {
+      // a post-quantum opener carries the kyber ciphertext: filled smaller,
+      // so it lands where a plain message does. one too big for that waits
+      // for their first answer, then goes plain
+      final o = padSealOpener(plain);
+      if (o == null) {
+        _awaiting.add(peer);
+        throw WaitsForAnswer(peer);
+      }
+      padded = o;
+    } else {
+      padded = padSeal(plain);
+    }
+    final body = Uint8List.fromList(utf8.encode(padded));
     final LsSealed m;
     try {
       m = lib.encrypt(
@@ -385,7 +421,6 @@ class SignalSession {
     } finally {
       body.fillRange(0, body.length, 0);
     }
-    if (onlySettled && m.type == kLsPreKey) throw NotSettled(peer);
     final their = lib.sessionInfo(m.record).remoteIdentity;
     if (their != null) await identityStore.saw(peer, their);
     await sessionStore.store(peer, m.record);
@@ -419,6 +454,7 @@ class SignalSession {
       check?.call(o.plaintext);
       if (await identityStore.saw(peer, o.identityKey)) moved?.call();
       await sessionStore.store(peer, o.record);
+      _answered(peer);
       return o.plaintext;
     }
     final info = lib.preKeyMessageInfo(body);
@@ -509,8 +545,13 @@ class SignalSession {
       if (print != null) await kyber.markRead(kyberId!, print);
     });
     if (changed) moved?.call();
+    _answered(peer);
     return o.plaintext;
   });
+
+  void _answered(String peer) {
+    if (_awaiting.remove(peer)) onAnswered?.call(peer);
+  }
 
   // what an opener is, by what its mac and its keys cover: the base key and
   // the message inside it. the fields around them (registration id, prekey
@@ -994,6 +1035,15 @@ class NotSettled implements Exception {
   final String peer;
   @override
   String toString() => 'NotSettled: no answered session';
+}
+
+/// a frame too big for a post-quantum opener: it waits in the outbox for
+/// [peer]'s first answer on the session, then goes as a plain message. the
+/// outbox holds it as it holds one waiting for a card
+class WaitsForAnswer extends StartingAfresh {
+  WaitsForAnswer(super.peer);
+  @override
+  String toString() => 'WaitsForAnswer: too big for an opener';
 }
 
 /// a seal to [peer] waits for a session started afresh: the one held came

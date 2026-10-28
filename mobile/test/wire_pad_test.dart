@@ -483,6 +483,93 @@ void main() {
       carol = (ss: await fixtureStore('carol'), name: 'carol');
     });
 
+    test('a post-quantum opener is filled smaller, lands on the second '
+        'gift wrap as a plain message does, and one too big waits for the '
+        'answer', () async {
+      expect(kPqOpenerSeal, kSealSizes[1] - kPqOpenerExtra);
+      final a = await _phone('a');
+      final b = await _phone('b');
+      await _start(a, b);
+      final held = <String>[];
+      var waited = 0;
+      for (final MapEntry(key: kind, value: (env, k))
+          in (await _kinds()).entries) {
+        final fits = padSealOpener(env) != null;
+        if (!fits) {
+          final before = await a.ss.sessionStore.load('b');
+          await expectLater(
+            a.ss.encryptTo('b', env),
+            throwsA(isA<WaitsForAnswer>()),
+            reason: kind,
+          );
+          // nothing of the seal is kept
+          expect(await a.ss.sessionStore.load('b'), before, reason: kind);
+          held.add(env);
+          waited++;
+          continue;
+        }
+        expect(k, 0, reason: '$kind fits an opener only from the first size');
+        final w = await a.ss.encryptTo('b', env);
+        expect(base64Decode(w)[0], kLsPreKey, reason: kind);
+        expect(_wrapOf(w.length), _wraps[1], reason: kind);
+        expect(_cellsOf(w.length), _cells[1], reason: kind);
+        expect(343 + _nip44(206 + w.length), lessThanOrEqualTo(65535));
+        expect(unpad(await _open(b, 'a', w)), env, reason: kind);
+      }
+      // every kind of the second size and up waits
+      expect(waited, greaterThan(0));
+      // their answer settles the session: what waited goes plain, each on
+      // its own size
+      final told = <String>[];
+      a.ss.onAnswered = told.add;
+      await _open(a, 'b', await b.ss.encryptTo('a', 'hey'));
+      expect(told, ['b']);
+      for (final env in held) {
+        final w = await a.ss.encryptTo('b', env);
+        expect(base64Decode(w)[0], kLsWhisper);
+        expect(_wraps, contains(_wrapOf(w.length)));
+        expect(343 + _nip44(206 + w.length), lessThanOrEqualTo(65535));
+        expect(unpad(await _open(b, 'a', w)), env);
+      }
+    });
+
+    test('an opener is no longer on the wire than a plain message of the '
+        'second size', () async {
+      final a = await _phone('a');
+      final b = await _phone('b');
+      await _start(a, b);
+      final openers = <int>{};
+      for (var i = 0; i < 4; i++) {
+        openers.add(
+          (await a.ss.encryptTo('b', padSealOpener('{"m":"x"}')!)).length,
+        );
+      }
+      await _open(b, 'a', await a.ss.encryptTo('b', 'hi'));
+      await _open(a, 'b', await b.ss.encryptTo('a', 'hey'));
+      final plain = <int>{};
+      final full = padSeal('{"m":"${'w' * (kSealSizes[1] - 60)}"}');
+      expect(utf8Length(full), kSealSizes[1]);
+      for (var i = 0; i < 6; i++) {
+        final w = await a.ss.encryptTo('b', full);
+        plain.add(w.length);
+        await _open(b, 'a', w);
+        await _open(a, 'b', await b.ss.encryptTo('a', full));
+      }
+      // ignore: avoid_print
+      print('pq opener wire $openers, plain at the second size $plain');
+      for (final n in openers) {
+        expect(n, lessThanOrEqualTo(plain.reduce(max)));
+        expect(_wrapOf(n), _wraps[1]);
+        expect(_cellsOf(n), _cells[1]);
+      }
+    });
+
+    test('an opener filler that does not fit is refused', () {
+      expect(padSealOpener('{"m":"${'w' * 2000}"}'), isNull);
+      expect(utf8Length(padSealOpener('{"m":"hi"}')!), kPqOpenerSeal);
+      expect(unpad(padSealOpener('{"m":"hi"}')!), '{"m":"hi"}');
+    });
+
     test('a post-quantum session seals plain messages to the same five '
         'gift wraps', () async {
       final a = await _phone('a');
