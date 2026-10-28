@@ -48,6 +48,8 @@ class PinKeyTest {
         // a make takes this long, and a delete waits on this
         var makeMs = 0L
         var deleteHang: CountDownLatch? = null
+        // deletes that throw, one each
+        var deleteFails = 0
         var clock = 0L
 
         override fun has(alias: String): Boolean {
@@ -83,6 +85,10 @@ class PinKeyTest {
 
         override fun delete(alias: String) {
             deleteHang?.await(5, TimeUnit.SECONDS)
+            if (deleteFails > 0) {
+                deleteFails--
+                throw ProviderException("busy")
+            }
             deletes++
             made.remove(alias)
         }
@@ -90,12 +96,18 @@ class PinKeyTest {
 
     private class Kept : PinKey.Notes {
         var v: Pair<Int, Int>? = null
+        var m = false
         override fun read() = v
         override fun write(unlocked: Int, level: Int) {
             v = unlocked to level
         }
         override fun clear() {
             v = null
+            m = false
+        }
+        override fun making() = m
+        override fun setMaking(on: Boolean) {
+            m = on
         }
     }
 
@@ -302,6 +314,31 @@ class PinKeyTest {
         assertTrue((System.nanoTime() - t0) / 1_000_000 < 2000)
         gate.countDown()
         keys.deleteHang = null
+    }
+
+    @Test
+    fun anUntestedKeyIsNeverHandedOut() {
+        // the strongbox key fails its test, and its delete fails too
+        keys.fixed = ByteArray(32) { 1 }
+        keys.deleteFails = 1
+        keys.refuseAll = false
+        val first = PinKey.make()
+        assertTrue(first.containsKey("e"))
+        assertTrue(notes.m)
+        // the next make deletes it first, then makes a tested one
+        keys.fixed = null
+        keys.makes.clear()
+        val again = PinKey.make()
+        assertEquals(true, again["k"])
+        assertTrue(keys.makes.isNotEmpty())
+        assertFalse(notes.m)
+        // a delete that keeps failing hands out nothing
+        PinKey.drop()
+        keys.fixed = ByteArray(32) { 1 }
+        keys.deleteFails = 10
+        PinKey.make()
+        keys.fixed = null
+        assertTrue(PinKey.make().containsKey("e"))
     }
 
     @Test

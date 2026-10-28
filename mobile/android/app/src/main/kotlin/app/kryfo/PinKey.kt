@@ -60,6 +60,9 @@ object PinKey {
         fun read(): Pair<Int, Int>?
         fun write(unlocked: Int, level: Int)
         fun clear()
+        // a make is under way, or stopped before its key passed its test
+        fun making(): Boolean
+        fun setMaking(on: Boolean)
     }
 
     object Store : Keys {
@@ -126,6 +129,12 @@ object PinKey {
 
         override fun clear() {
             p.edit().clear().commit()
+        }
+
+        override fun making(): Boolean = p.getBoolean("m", false)
+
+        override fun setMaking(on: Boolean) {
+            p.edit().putBoolean("m", on).commit()
         }
     }
 
@@ -222,7 +231,14 @@ object PinKey {
     // a first one just made and described
     @Synchronized
     fun make(): Map<String, Any> {
-        val has = hasKey() ?: return mapOf("e" to "busy")
+        var has = hasKey() ?: return mapOf("e" to "busy")
+        // a key a make left behind untested (its delete failed, or the process
+        // stopped) is never handed out: it goes first, or nothing is made
+        if (has && notes?.making() == true) {
+            dropQuietly()
+            has = hasKey() ?: return mapOf("e" to "busy")
+            if (has) return mapOf("e" to "busy")
+        }
         if (has) {
             val (kc, why) = sign(KCV_INPUT)
             if (kc == null) return mapOf("e" to why)
@@ -233,6 +249,7 @@ object PinKey {
         // there, and a face unlock does not open it
         val unlocked = sdk >= 35
         val tries = if (sdk >= 28) listOf(true, false) else listOf(false)
+        notes?.setMaking(true)
         for (strong in tries) {
             // generating over an alias replaces it: asked again right before
             if (hasKey() != false) return mapOf("e" to "busy")
@@ -269,8 +286,12 @@ object PinKey {
             }
             val u = if (unlocked) 1 else 0
             notes?.write(u, level)
+            notes?.setMaking(false)
             return mapOf("k" to true, "u" to u, "l" to level, "kc" to hex(kc), "ms" to slowest)
         }
+        // a failed key that would not go stays marked, so the next make
+        // deletes it before anything else
+        if (hasKey() == false) notes?.setMaking(false)
         return mapOf("e" to "refused")
     }
 
