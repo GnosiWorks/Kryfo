@@ -533,10 +533,17 @@ pub fn encrypt(input: &[u8]) -> R<Vec<u8>> {
 }
 
 fn prekey_message(b: &[u8]) -> R<PreKeySignalMessage> {
-    PreKeySignalMessage::try_from(b).map_err(|e| match e {
+    let m = PreKeySignalMessage::try_from(b).map_err(|e| match e {
         SignalProtocolError::LegacyCiphertextVersion(_) => Error::Classic,
         _ => Error::Message,
-    })
+    })?;
+    // libsignal reads both keys in any form: x25519 ignores the top bit and
+    // a clamped scalar kills an order 8 part, so one key would open under
+    // several byte forms and come back as the peer's identity in one of them
+    if !m.identity_key().public_key().is_canonical() || !m.base_key().is_canonical() {
+        return Err(Error::Key);
+    }
+    Ok(m)
 }
 
 /// message -> version, reg, prekey id?, signed id, kyber id?, base key,

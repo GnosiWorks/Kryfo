@@ -212,9 +212,10 @@ fn raw_signed(mut inv: Invite, by: &Id) -> Vec<u8> {
 /// an unsigned list of [phone]'s identity with [others], the answering one
 /// flagged
 pub(crate) fn list_of(rng: &mut Rng, phone: &Id, others: &[(&Id, bool)]) -> DeviceList {
-    let mut devices: Vec<u8> = Vec::new();
+    // the phone is device 1, the others random in 2..127
+    let mut devices: Vec<u8> = vec![PHONE_DEVICE];
     while devices.len() < others.len() + 1 {
-        let d = 1 + rng.below(127) as u8;
+        let d = 2 + rng.below(126) as u8;
         if !devices.contains(&d) {
             devices.push(d);
         }
@@ -821,6 +822,14 @@ pub(crate) fn bads(rng: &mut Rng, k: &Keys, g: &Goods) -> Vec<Vector> {
         Some("ana1"),
         link(&|x| x.block.as_mut().unwrap().device = 128),
     ));
+    // the phone's own bundle is on device 1, a device's never is
+    v.push(bad(
+        "block_phone_not_device_1",
+        "invite",
+        Format,
+        Some("ana1"),
+        link(&|x| x.block.as_mut().unwrap().device = 2),
+    ));
     let lb = g.link_ci.body();
     let flags_at = at("after_fc") + 5;
     let mut b = lb.clone();
@@ -957,6 +966,13 @@ pub(crate) fn bads(rng: &mut Rng, k: &Keys, g: &Goods) -> Vec<Vector> {
         Some("ana1"),
         pool(&|x| x.block.as_mut().unwrap().key = None),
     ));
+    v.push(bad(
+        "pool_block_on_device_1",
+        "invite",
+        Format,
+        Some("ana1"),
+        pool(&|x| x.block.as_mut().unwrap().device = PHONE_DEVICE),
+    ));
     let other_list = signed_list(list_of(rng, ana0, &[(desk, true)]), ana0);
     v.push(bad(
         "pool_list_of_another",
@@ -1078,6 +1094,30 @@ pub(crate) fn bads(rng: &mut Rng, k: &Keys, g: &Goods) -> Vec<Vector> {
         Format,
         Some("ana1"),
         lst(&|x| x.entries[1].device = 128),
+    ));
+    // the phone is device 1 and nothing else is
+    v.push(bad(
+        "list_phone_not_device_1",
+        "device-list",
+        Format,
+        Some("ana1"),
+        lst(&|x| {
+            x.entries[0].device = 3;
+            x.entries[1].device = PHONE_DEVICE;
+            x.entries.sort_by_key(|e| e.device);
+        }),
+    ));
+    v.push(bad(
+        "list_lone_phone_on_2",
+        "device-list",
+        Format,
+        Some("ana0"),
+        {
+            let mut x = list_of(rng, ana0, &[]);
+            x.entries[0].device = 2;
+            x.sig = Some(ana0.raw_sign(b"device-list", &x.body()));
+            x.encode()
+        },
     ));
     v.push(bad(
         "list_reg_zero",
@@ -1354,6 +1394,17 @@ pub(crate) fn bads(rng: &mut Rng, k: &Keys, g: &Goods) -> Vec<Vector> {
     let mut x = g.bundle_phone.encode();
     x[4] = 2;
     let mut kb = bad("bundle_version_2", "device-bundle", Format, None, x);
+    kb.identity = Some("ana0");
+    v.push(kb);
+    let mut x = g.bundle_phone.clone();
+    x.block.device = 5;
+    let mut kb = bad(
+        "bundle_phone_not_device_1",
+        "device-bundle",
+        Format,
+        None,
+        x.encode(),
+    );
     kb.identity = Some("ana0");
     v.push(kb);
 
@@ -1891,4 +1942,68 @@ fn write_vectors() {
         crate::tests_sig::sig_vectors(&k, &g),
     )
     .unwrap();
+}
+
+#[test]
+fn keys_with_a_torsion_part_are_refused() {
+    let k = Keys::new();
+    let ana0 = k.id("ana0");
+    let t8 = crate::tests::order8();
+    let mixed = |p: &[u8]| {
+        let a = CompressedEdwardsY(p.try_into().unwrap())
+            .decompress()
+            .unwrap();
+        (a + t8).compress().to_bytes().to_vec()
+    };
+    // not of small order, so only the torsion check refuses them
+    for key in [&k.ana_face.public, &k.ana_onion.public] {
+        let m = mixed(key);
+        let p = CompressedEdwardsY(m.clone().try_into().unwrap())
+            .decompress()
+            .unwrap();
+        assert!(!p.is_small_order() && !p.is_torsion_free());
+        assert_eq!(crate::keys::strict_ed(&m).err(), Some(Error::Key));
+    }
+    let face_of = |f: &dyn Fn(&mut Invite)| {
+        let mut x = with_face(
+            invite_of(&mut Rng(0xabad_1dea), ana0),
+            &k.ana_face,
+            &k.ana_onion,
+        );
+        f(&mut x);
+        raw_signed(x, ana0)
+    };
+    let good = face_of(&|_| {});
+    assert!(parse_of("invite", &good, None).is_ok());
+    let face = mixed(&k.ana_face.public);
+    let bad_face = face_of(&|x| x.face.as_mut().unwrap().0 = face.clone());
+    assert_eq!(parse_of("invite", &bad_face, None), Err(Error::Format));
+    let onion = mixed(&k.ana_onion.public);
+    let bad_onion = face_of(&|x| x.onion = Some(onion.clone()));
+    assert_eq!(parse_of("invite", &bad_onion, None), Err(Error::Format));
+}
+
+#[test]
+fn list_versions_stay_below_two_to_the_63() {
+    let k = Keys::new();
+    let mut rng = Rng(77);
+    let ana0 = k.id("ana0");
+    for (v, ok) in [
+        (0, true),
+        ((1u64 << 56) + (1 << 48), true),
+        (MAX_VERSION - 1, true),
+        (MAX_VERSION, false),
+        (u64::MAX, false),
+    ] {
+        let mut l = list_of(&mut rng, ana0, &[]);
+        l.version = v;
+        l.sig = Some(ana0.raw_sign(b"device-list", &l.body()));
+        let got = parse_of("device-list", &l.encode(), None);
+        assert_eq!(got.is_ok(), ok, "{v:#x}");
+        if !ok {
+            assert_eq!(got, Err(Error::Format));
+            // and nothing signs it
+            assert_eq!(ana0.sign(b"device-list", &l.body()), Err(Error::Format));
+        }
+    }
 }

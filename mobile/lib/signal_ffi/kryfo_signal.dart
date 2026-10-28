@@ -58,7 +58,7 @@ const kLsSigned = 1;
 const kLsKyber = 2;
 
 /// the abi these bindings were written for
-const kLsAbi = 3;
+const kLsAbi = 4;
 
 /// what a kryfo signature is made for. the shim holds the same list, signs
 /// under no other, and signs only a whole body of the context's format that
@@ -362,10 +362,14 @@ Uint8List _frame(List<Object?> fields) {
       case final List<int> v:
         put(v);
       case final _U64 v:
+        // dart ints are signed: a negative one would go out as a huge u64
+        if (v.v < 0) throw ArgumentError.value(v.v, 'u64');
         put(
           (ByteData(8)..setUint64(0, v.v, Endian.little)).buffer.asUint8List(),
         );
       case final int v:
+        // setUint32 keeps the low bits of anything wider
+        if (v < 0 || v > 0xffffffff) throw ArgumentError.value(v, 'u32');
         put((ByteData(4)..setUint32(0, v, Endian.little)).buffer.asUint8List());
       default:
         throw ArgumentError('field ${f.runtimeType}');
@@ -395,7 +399,14 @@ List<Uint8List> _unframe(Uint8List b) {
 }
 
 int _u32(Uint8List b) => ByteData.sublistView(b).getUint32(0, Endian.little);
-int _u64(Uint8List b) => ByteData.sublistView(b).getUint64(0, Endian.little);
+// the shim hands out no u64 at or above 2^63, which dart would read as
+// negative
+int _u64(Uint8List b) {
+  final v = ByteData.sublistView(b).getUint64(0, Endian.little);
+  if (v < 0) throw const LsError(LsError.internal);
+  return v;
+}
+
 int? _optU32(Uint8List b) => b.isEmpty ? null : _u32(b);
 Uint8List? _opt(Uint8List b) => b.isEmpty ? null : b;
 

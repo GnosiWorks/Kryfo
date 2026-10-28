@@ -25,7 +25,7 @@
 #include <stdint.h>
 
 /* what ks_abi_version returns for this header */
-#define KS_ABI_VERSION 3
+#define KS_ABI_VERSION 4
 
 #define KS_OK 0
 #define KS_ERR_ARGS 1      /* framing, a missing field, a wrong width */
@@ -76,14 +76,18 @@ KS_CALL(ks_verify);
  * kyber id, kyber, kyber signature, identity pub -> bundle.
  * both signatures are checked; no kyber is KS_ERR_CLASSIC */
 KS_CALL(ks_bundle_build);
-/* bundle -> the eleven fields ks_bundle_build takes, checked again */
+/* bundle -> the eleven fields ks_bundle_build takes, checked again. a
+ * kyber key is checked for its length and type only: libsignal has no
+ * check of its coefficients */
 KS_CALL(ks_bundle_parse);
 /* identity, reg, record?, bundle, now, pinned? -> record, their pub */
 KS_CALL(ks_session_from_bundle);
 /* identity, reg, record, plaintext, now, pinned? -> type, message, record */
 KS_CALL(ks_encrypt);
 /* message -> version, reg, prekey id?, signed id, kyber id?, base key,
- * their pub: which records to load for ks_decrypt_prekey */
+ * their pub: which records to load for ks_decrypt_prekey. an identity or
+ * base key not in its one form is KS_ERR_KEY, here and in
+ * ks_decrypt_prekey */
 KS_CALL(ks_prekey_message_info);
 /* identity, reg, record?, message, prekey?, signed prekey?, kyber prekey?,
  * pinned? -> plaintext, record, prekey used?, kyber prekey used?, their pub */
@@ -93,11 +97,14 @@ KS_CALL(ks_decrypt_signal);
 /* record -> has current, version, pq ratchet, base key, their pub?, local
  * reg, remote reg, n, then n times (version, base key) of archived states */
 KS_CALL(ks_session_info);
-/* held, newer -> held with newer's current state in front */
+/* held, newer -> held with newer's current state in front. a newer
+ * record that does not encode back the same is KS_ERR_SESSION */
 KS_CALL(ks_session_promote);
 /* record, version (u32, 1 or more) -> record without the archived states
- * below version, how many went (u32). a current state below version is
- * KS_ERR_SESSION, none KS_ERR_NO_SESSION */
+ * below version, how many went (u32). a current state below version, one
+ * whose opener the peer has not answered yet, or a record that does not
+ * encode back the same is KS_ERR_SESSION; no current state
+ * KS_ERR_NO_SESSION */
 KS_CALL(ks_session_drop_below);
 /* identity, context, message -> signature (64), xeddsa over
  * "kryfo-sig-v1" 0x00 context 0x00 message. context is one of invite,
@@ -127,15 +134,17 @@ KS_CALL(ks_build_info);
  * are u32 unless named u64; "block" is twelve fields, all empty when
  * there is no bundle: reg, device, key?, spk id, spk, spk sig, kyber id,
  * kyber, kyber sig, ec id?, ec?, then the bundle ks_session_from_bundle
- * takes. identity is given for device-bundle only.
+ * takes. identity is given for device-bundle only. the phone is device 1
+ * of every identity and its bundle runs on the identity; every other device
+ * has its own key and an id in 2..127.
  *   invite: flags, issued, expires, invite id, identity, first contact,
  *     onion?, face?, face sig?, device list? (a KDL2), answering key, sig,
  *     block
  *   hello: answers, owner, invite (a KIN4), sender, sig
  *   heal: restored, issued, nonce, identity, peer, since, signer, sig,
  *     block
- *   device-list: identity, version (u64), sig, n, then n times device,
- *     key, reg, flags
+ *   device-list: identity, version (u64, below 2^63), sig, n, then n
+ *     times device, key, reg, flags
  *   device-bundle: the key the bundle runs on, block
  *   move: old, peer, new, invite hash */
 KS_CALL(ks_parse);

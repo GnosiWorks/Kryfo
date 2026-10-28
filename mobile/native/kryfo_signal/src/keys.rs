@@ -66,12 +66,13 @@ pub fn strict_sig(b: &[u8]) -> R<&[u8; 64]> {
 
 // ed25519, for the legacy face and the onion key
 
-/// a canonical ed25519 point encoding, not of small order
+/// a canonical ed25519 point encoding in the prime order group. a torsion
+/// part would let a cofactored and a cofactorless verifier disagree
 pub fn strict_ed(b: &[u8]) -> R<EdwardsPoint> {
     let a: [u8; 32] = b.try_into().map_err(|_| Error::Key)?;
     let p = CompressedEdwardsY(a).decompress().ok_or(Error::Key)?;
     // decompress reduces y and takes x = 0 with either sign
-    if p.compress().to_bytes() != a || p.is_small_order() {
+    if p.compress().to_bytes() != a || p.is_small_order() || !p.is_torsion_free() {
         return Err(Error::Key);
     }
     Ok(p)

@@ -25,7 +25,7 @@ pub use sig::{build_info, sign, verify_ctx};
 
 /// bump on any change to a call's fields or to what a call refuses, so a
 /// library built before a rule changed is never taken for one after it
-pub const ABI_VERSION: u32 = 3;
+pub const ABI_VERSION: u32 = 4;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(i32)]

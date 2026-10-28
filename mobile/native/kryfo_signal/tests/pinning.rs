@@ -744,21 +744,7 @@ fn a_dropped_classic_state_opens_nothing() {
     let mut copy = dart_bob(&f);
     block_on(copy.store_session(&addr("alice"), &restarted)).unwrap();
     assert_eq!(open_m3(&mut copy).unwrap(), b"m3 from dart");
-    // after it, nothing does
-    let held = restarted.serialize().unwrap();
-    let out =
-        unframe(&kryfo_signal::session_drop_below(&frame(&[&held, &4u32.to_le_bytes()])).unwrap());
-    assert_eq!(out[1], 1u32.to_le_bytes());
-    let dropped = SessionRecord::deserialize(&out[0]).unwrap();
-    block_on(bob.store_session(&addr("alice"), &dropped)).unwrap();
-    assert!(open_m3(&mut bob).is_err());
-    let after = block_on(bob.load_session(&addr("alice"))).unwrap().unwrap();
-    assert_eq!(
-        after.serialize().unwrap(),
-        out[0],
-        "a failed open changed the record"
-    );
-    // the pq state goes on both ways
+    // bob's first pq message and alice's answer, on libsignal's stores
     let sealed = block_on(message_encrypt(
         b"on pq",
         &addr("alice"),
@@ -771,6 +757,14 @@ fn a_dropped_classic_state_opens_nothing() {
     .unwrap();
     let opener = PreKeySignalMessage::try_from(sealed.serialize()).unwrap();
     assert_eq!(opener.message_version(), 4);
+    // unanswered, the drop is refused: the classic state may still be all
+    // that reads the peer
+    let unanswered = block_on(bob.load_session(&addr("alice")))
+        .unwrap()
+        .unwrap()
+        .serialize()
+        .unwrap();
+    assert!(kryfo_signal::session_drop_below(&frame(&[&unanswered, &4u32.to_le_bytes()])).is_err());
     let p = block_on(message_decrypt_prekey(
         &opener,
         &addr("bob"),
@@ -805,4 +799,44 @@ fn a_dropped_classic_state_opens_nothing() {
     ))
     .unwrap();
     assert_eq!(p, b"back");
+    // answered: the drop goes, and after it the classic state opens nothing
+    let held = block_on(bob.load_session(&addr("alice")))
+        .unwrap()
+        .unwrap()
+        .serialize()
+        .unwrap();
+    let out =
+        unframe(&kryfo_signal::session_drop_below(&frame(&[&held, &4u32.to_le_bytes()])).unwrap());
+    assert_eq!(out[1], 1u32.to_le_bytes());
+    let dropped = SessionRecord::deserialize(&out[0]).unwrap();
+    block_on(bob.store_session(&addr("alice"), &dropped)).unwrap();
+    assert!(open_m3(&mut bob).is_err());
+    let after = block_on(bob.load_session(&addr("alice"))).unwrap().unwrap();
+    assert_eq!(
+        after.serialize().unwrap(),
+        out[0],
+        "a failed open changed the record"
+    );
+    // the pq state goes on
+    let again = block_on(message_encrypt(
+        b"still pq",
+        &addr("alice"),
+        &addr("me"),
+        &mut bob.session_store,
+        &mut bob.identity_store,
+        now(),
+        &mut rng(),
+    ))
+    .unwrap();
+    let again = SignalMessage::try_from(again.serialize()).unwrap();
+    let p = block_on(message_decrypt_signal(
+        &again,
+        &addr("bob"),
+        &addr("me"),
+        &mut alice.session_store,
+        &mut alice.identity_store,
+        &mut rng(),
+    ))
+    .unwrap();
+    assert_eq!(p, b"still pq");
 }

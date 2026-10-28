@@ -143,6 +143,11 @@ impl Block {
         } else {
             None
         };
+        // the phone is device 1 of every identity, and runs on the identity
+        // itself; every other device has a key of its own and an id above 1
+        if key.is_some() == (device == PHONE_DEVICE) {
+            return Err(Error::Format);
+        }
         let spk_id = c.u32()?;
         let spk = c.key()?;
         let spk_sig = c.sig()?;
@@ -237,6 +242,9 @@ impl Block {
 // the device list
 
 pub const MAX_DEVICES: usize = 6;
+/// the phone's device id in every identity; other devices use 2..127
+pub const PHONE_DEVICE: u8 = 1;
+pub const MAX_VERSION: u64 = 1 << 63;
 const ENTRY_PHONE: u8 = 1;
 const ENTRY_ANSWERS: u8 = 2;
 
@@ -269,7 +277,9 @@ impl DeviceList {
         let identity = c.key()?;
         let version = c.u64()?;
         let count = c.u8()? as usize;
-        if !(1..=MAX_DEVICES).contains(&count) {
+        // versions start below 2^56 and grow by at most 2^41 a restore; the
+        // top half is never reached and reads as negative in dart
+        if !(1..=MAX_DEVICES).contains(&count) || version >= MAX_VERSION {
             return Err(Error::Format);
         }
         let mut entries: Vec<Entry> = Vec::with_capacity(count);
@@ -280,8 +290,10 @@ impl DeviceList {
             let flags = c.u8()?;
             // sorted, so each list has one order
             let after = entries.last().map_or(0, |e| e.device);
+            let phone = flags & ENTRY_PHONE != 0;
             if device <= after
                 || device > 127
+                || phone != (device == PHONE_DEVICE)
                 || reg == 0
                 || flags & !(ENTRY_PHONE | ENTRY_ANSWERS) != 0
             {
@@ -291,7 +303,7 @@ impl DeviceList {
                 device,
                 key,
                 reg,
-                phone: flags & ENTRY_PHONE != 0,
+                phone,
                 answers: flags & ENTRY_ANSWERS != 0,
             });
         }

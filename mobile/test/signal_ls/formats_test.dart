@@ -131,7 +131,10 @@ void main() {
     expect(pool.block!.bundle.identityKey, publics['desk']);
     final list = pool.deviceList!;
     expect(list.identity, publics['ana1']);
-    expect(list.devices.where((d) => d.phone).single.key, publics['ana1']);
+    final phone = list.devices.where((d) => d.phone).single;
+    expect(phone.key, publics['ana1']);
+    expect(phone.deviceId, 1);
+    expect(p0.block!.deviceId, 1);
     final desk = list.devices.where((d) => d.answers).single;
     expect(desk.deviceId, pool.block!.deviceId);
     expect(desk.registrationId, pool.block!.registrationId);
@@ -271,18 +274,9 @@ void main() {
       String.fromCharCodes(s.decryptSignal(bob, 22, pq, f['m3']!).plaintext),
       'm3 from dart',
     );
-    final (dropped, n) = s.sessionDropBelow(pq, 4);
-    expect(n, 1);
-    expect(
-      s.sessionInfo(dropped).archived.where((a) => a.version < 4),
-      isEmpty,
-    );
-    expect(
-      () => s.decryptSignal(bob, 22, dropped, f['m3']!),
-      throwsA(isA<LsError>()),
-    );
-    // and the pq session goes on
-    final sealed = s.encrypt(bob, 22, dropped, [1, 2, 3], now);
+    // alice has not answered the restart: the classic state stays
+    expect(() => s.sessionDropBelow(pq, 4), _code(LsError.session));
+    final sealed = s.encrypt(bob, 22, pq, [1, 2, 3], now);
     expect(sealed.type, kLsPreKey);
     final opened = s.decryptPreKey(
       alice,
@@ -293,9 +287,32 @@ void main() {
       kyberPreKey: ky.record,
     );
     expect(opened.plaintext, [1, 2, 3]);
-    // nothing below the current state's own version is asked for twice
+    // she opened his pq opener, so her side drops at once
+    final (aliceRec, an) = s.sessionDropBelow(opened.record, 4);
+    expect(an, 1);
+    final reply = s.encrypt(alice, 11, aliceRec, [4, 5], now);
+    final back = s.decryptSignal(bob, 22, sealed.record, reply.message);
+    expect(back.plaintext, [4, 5]);
+    // answered: his side drops too, and m3 opens nowhere after it
+    final (dropped, n) = s.sessionDropBelow(back.record, 4);
+    expect(n, 1);
+    expect(
+      s.sessionInfo(dropped).archived.where((a) => a.version < 4),
+      isEmpty,
+    );
+    expect(
+      () => s.decryptSignal(bob, 22, dropped, f['m3']!),
+      throwsA(isA<LsError>()),
+    );
+    // and the pq session goes on
+    final more = s.encrypt(bob, 22, dropped, [6], now);
+    expect(s.decryptSignal(alice, 11, aliceRec, more.message).plaintext, [6]);
     expect(s.sessionDropBelow(dropped, 4).$2, 0);
     expect(() => s.sessionDropBelow(bobRec, 4), _code(LsError.session));
-    expect(() => s.sessionDropBelow(pq, 0), _code(LsError.args));
+    expect(() => s.sessionDropBelow(dropped, 0), _code(LsError.args));
+    // a number past what its field holds is refused here, not wrapped
+    expect(() => s.sessionDropBelow(dropped, 1 << 32), throwsArgumentError);
+    expect(() => s.sessionDropBelow(dropped, -1), throwsArgumentError);
+    expect(() => s.encrypt(bob, 22, dropped, [7], -1), throwsArgumentError);
   }, skip: needsShim);
 }
