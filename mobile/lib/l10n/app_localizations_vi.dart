@@ -9668,4 +9668,62 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Quét mã';
+
+  @override
+  String get desktopLockTitle => 'Kryfo đang khóa';
+
+  @override
+  String get desktopLockBody => 'Nhập cụm mật khẩu của máy tính này.';
+
+  @override
+  String get desktopLockNewTitle => 'Khóa Kryfo trên máy tính này';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo sẽ hỏi cụm mật khẩu này mỗi lần khởi động. Nó khóa tin nhắn, khóa và danh bạ của bạn trên máy tính này.';
+
+  @override
+  String get desktopLockHonest =>
+      'Ai sao chép thư mục của Kryfo đều có thể thử cụm mật khẩu trên máy của họ, nhanh đến mức máy cho phép. Bốn từ ngẫu nhiên trở lên sẽ trụ được. Cụm mật khẩu ngắn thì không.';
+
+  @override
+  String get desktopLockForgot =>
+      'Không có cụm mật khẩu thì không gì ở đây mở được, kể cả chúng tôi.';
+
+  @override
+  String get desktopLockField => 'Cụm mật khẩu';
+
+  @override
+  String get desktopLockRepeat => 'Nhập lại cụm mật khẩu';
+
+  @override
+  String get desktopLockSet => 'Khóa bằng cụm mật khẩu này';
+
+  @override
+  String get desktopLockOpen => 'Mở Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Ít nhất $countString ký tự';
+  }
+
+  @override
+  String get desktopLockMismatch => 'Hai cụm mật khẩu không khớp';
+
+  @override
+  String get desktopLockWrong => 'Đó không phải cụm mật khẩu';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo không mở được khóa ở đây. Hãy thử khởi động lại.';
+
+  @override
+  String get desktopTrayQuit => 'Thoát Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo đang chạy và nhận tin nhắn';
 }

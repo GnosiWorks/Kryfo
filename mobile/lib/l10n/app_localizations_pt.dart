@@ -9751,4 +9751,62 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Escanear o código';
+
+  @override
+  String get desktopLockTitle => 'O Kryfo está bloqueado';
+
+  @override
+  String get desktopLockBody => 'Digite a frase-senha deste computador.';
+
+  @override
+  String get desktopLockNewTitle => 'Bloquear o Kryfo neste computador';
+
+  @override
+  String get desktopLockNewBody =>
+      'O Kryfo vai pedir esta frase-senha sempre que abrir. Ela bloqueia suas mensagens, chaves e contatos neste computador.';
+
+  @override
+  String get desktopLockHonest =>
+      'Quem copiar a pasta do Kryfo pode testar frases-senha no próprio computador, tão rápido quanto ele permitir. Quatro ou mais palavras aleatórias resistem. Uma frase-senha curta, não.';
+
+  @override
+  String get desktopLockForgot =>
+      'Sem a frase-senha nada aqui pode ser aberto, nem por nós.';
+
+  @override
+  String get desktopLockField => 'Frase-senha';
+
+  @override
+  String get desktopLockRepeat => 'A mesma frase-senha de novo';
+
+  @override
+  String get desktopLockSet => 'Bloquear com esta frase-senha';
+
+  @override
+  String get desktopLockOpen => 'Abrir o Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Pelo menos $countString caracteres';
+  }
+
+  @override
+  String get desktopLockMismatch => 'As duas frases-senha não são iguais';
+
+  @override
+  String get desktopLockWrong => 'Essa não é a frase-senha';
+
+  @override
+  String get desktopLockFailed =>
+      'O Kryfo não conseguiu abrir o bloqueio aqui. Tente abri-lo de novo.';
+
+  @override
+  String get desktopTrayQuit => 'Sair do Kryfo';
+
+  @override
+  String get desktopTrayTip => 'O Kryfo está aberto e recebendo mensagens';
 }

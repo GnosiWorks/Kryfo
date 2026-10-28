@@ -2562,5 +2562,21 @@
   "devicesSkipMedia": "Omitir fotos y videos",
   "devicesSkipMediaHint": "Solo pasa el texto. Más rápido y con menos que guardar en el dispositivo.",
   "devicesHiddenStay": "Los chats ocultos y el señuelo se quedan en este teléfono.",
-  "devicesScanCode": "Escanear el código"
+  "devicesScanCode": "Escanear el código",
+  "desktopLockTitle": "Kryfo está bloqueado",
+  "desktopLockBody": "Escribe la frase de contraseña de este ordenador.",
+  "desktopLockNewTitle": "Bloquea Kryfo en este ordenador",
+  "desktopLockNewBody": "Kryfo te pedirá esta frase de contraseña cada vez que se inicie. Bloquea tus mensajes, claves y contactos en este ordenador.",
+  "desktopLockHonest": "Quien copie la carpeta de Kryfo puede probar frases de contraseña en su propio ordenador, tan rápido como este lo permita. Cuatro o más palabras al azar resisten. Una frase corta, no.",
+  "desktopLockForgot": "Sin la frase de contraseña no se puede abrir nada de lo que hay aquí, ni siquiera nosotros.",
+  "desktopLockField": "Frase de contraseña",
+  "desktopLockRepeat": "La misma frase de contraseña otra vez",
+  "desktopLockSet": "Bloquear con esta frase",
+  "desktopLockOpen": "Abrir Kryfo",
+  "desktopLockShort": "Al menos {count} caracteres",
+  "desktopLockMismatch": "Las dos frases no coinciden",
+  "desktopLockWrong": "Esa no es la frase de contraseña",
+  "desktopLockFailed": "Kryfo no pudo abrir su bloqueo aquí. Prueba a iniciarlo de nuevo.",
+  "desktopTrayQuit": "Salir de Kryfo",
+  "desktopTrayTip": "Kryfo está abierto y recibe mensajes"
 }

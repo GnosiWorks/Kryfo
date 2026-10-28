@@ -2562,5 +2562,21 @@
   "devicesSkipMedia": "Без фото й відео",
   "devicesSkipMediaHint": "Переноситься лише текст. Швидше, і на пристрої менше зберігається.",
   "devicesHiddenStay": "Приховані чати й приманка лишаються на цьому телефоні.",
-  "devicesScanCode": "Сканувати код"
+  "devicesScanCode": "Сканувати код",
+  "desktopLockTitle": "Kryfo заблоковано",
+  "desktopLockBody": "Введіть парольну фразу цього комп’ютера.",
+  "desktopLockNewTitle": "Заблокувати Kryfo на цьому комп’ютері",
+  "desktopLockNewBody": "Kryfo питатиме цю парольну фразу під час кожного запуску. Вона замикає ваші повідомлення, ключі й контакти на цьому комп’ютері.",
+  "desktopLockHonest": "Той, хто скопіює теку Kryfo, зможе перебирати парольні фрази на своєму комп’ютері так швидко, як той дозволяє. Чотири й більше випадкових слів витримають. Коротка фраза не витримає.",
+  "desktopLockForgot": "Без парольної фрази тут нічого не відкрити, навіть нам.",
+  "desktopLockField": "Парольна фраза",
+  "desktopLockRepeat": "Та сама парольна фраза ще раз",
+  "desktopLockSet": "Заблокувати цією фразою",
+  "desktopLockOpen": "Відкрити Kryfo",
+  "desktopLockShort": "Мінімум символів: {count}",
+  "desktopLockMismatch": "Парольні фрази не збігаються",
+  "desktopLockWrong": "Це не та парольна фраза",
+  "desktopLockFailed": "Kryfo не зміг відкрити блокування. Спробуйте запустити його знову.",
+  "desktopTrayQuit": "Вийти з Kryfo",
+  "desktopTrayTip": "Kryfo працює й отримує повідомлення"
 }

@@ -2562,5 +2562,21 @@
   "devicesSkipMedia": "Fotoğraf ve videoları atla",
   "devicesSkipMediaHint": "Yalnızca metin aktarılır. Daha hızlı ve cihazda daha az şey kalır.",
   "devicesHiddenStay": "Gizli sohbetler ve yem bu telefonda kalır.",
-  "devicesScanCode": "Kodu tara"
+  "devicesScanCode": "Kodu tara",
+  "desktopLockTitle": "Kryfo kilitli",
+  "desktopLockBody": "Bu bilgisayarın parola ifadesini yaz.",
+  "desktopLockNewTitle": "Kryfo'yu bu bilgisayarda kilitle",
+  "desktopLockNewBody": "Kryfo her açılışta bu parola ifadesini sorar. Mesajlarını, anahtarlarını ve kişilerini bu bilgisayarda kilitler.",
+  "desktopLockHonest": "Kryfo klasörünü kopyalayan biri, kendi bilgisayarında onun izin verdiği hızda parola ifadesi deneyebilir. Dört ya da daha fazla rastgele kelime dayanır. Kısa bir parola ifadesi dayanmaz.",
+  "desktopLockForgot": "Parola ifadesi olmadan buradaki hiçbir şey açılamaz, bizim tarafımızdan bile.",
+  "desktopLockField": "Parola ifadesi",
+  "desktopLockRepeat": "Aynı parola ifadesi bir daha",
+  "desktopLockSet": "Bu parola ifadesiyle kilitle",
+  "desktopLockOpen": "Kryfo'yu aç",
+  "desktopLockShort": "En az {count} karakter",
+  "desktopLockMismatch": "İki parola ifadesi aynı değil",
+  "desktopLockWrong": "Bu parola ifadesi doğru değil",
+  "desktopLockFailed": "Kryfo buradaki kilidini açamadı. Yeniden başlatmayı dene.",
+  "desktopTrayQuit": "Kryfo'dan çık",
+  "desktopTrayTip": "Kryfo açık ve mesaj alıyor"
 }

@@ -15658,6 +15658,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Scan the code'**
   String get devicesScanCode;
+
+  /// desktop/desktop_lock_screen.dart: the title of the passphrase screen the desktop app opens on
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo is locked'**
+  String get desktopLockTitle;
+
+  /// desktop/desktop_lock_screen.dart: under the title when a passphrase is set
+  ///
+  /// In en, this message translates to:
+  /// **'Type the passphrase for this computer.'**
+  String get desktopLockBody;
+
+  /// desktop/desktop_lock_screen.dart: the title on the first start, when a passphrase is chosen
+  ///
+  /// In en, this message translates to:
+  /// **'Lock Kryfo on this computer'**
+  String get desktopLockNewTitle;
+
+  /// desktop/desktop_lock_screen.dart: under the first-start title
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo asks for this passphrase every time it starts. It locks your messages, keys and contacts on this computer.'**
+  String get desktopLockNewBody;
+
+  /// desktop/desktop_lock_screen.dart: the small print on the first start: what the passphrase protects against and what it does not
+  ///
+  /// In en, this message translates to:
+  /// **'Someone who copies Kryfo\'s folder can try passphrases on their own computer, as fast as it allows. Four or more random words hold up. A short passphrase does not.'**
+  String get desktopLockHonest;
+
+  /// desktop/desktop_lock_screen.dart: the small print when unlocking
+  ///
+  /// In en, this message translates to:
+  /// **'Without the passphrase nothing here can be opened, not even by us.'**
+  String get desktopLockForgot;
+
+  /// desktop/desktop_lock_screen.dart: the label of the passphrase field
+  ///
+  /// In en, this message translates to:
+  /// **'Passphrase'**
+  String get desktopLockField;
+
+  /// desktop/desktop_lock_screen.dart: the label of the second field on the first start
+  ///
+  /// In en, this message translates to:
+  /// **'The same passphrase again'**
+  String get desktopLockRepeat;
+
+  /// desktop/desktop_lock_screen.dart: the button that sets the passphrase
+  ///
+  /// In en, this message translates to:
+  /// **'Lock with this passphrase'**
+  String get desktopLockSet;
+
+  /// desktop/desktop_lock_screen.dart: the button that unlocks; also the tray menu item that shows the window
+  ///
+  /// In en, this message translates to:
+  /// **'Open Kryfo'**
+  String get desktopLockOpen;
+
+  /// desktop/desktop_lock_screen.dart: the passphrase chosen is too short
+  ///
+  /// In en, this message translates to:
+  /// **'At least {count} characters'**
+  String desktopLockShort(int count);
+
+  /// desktop/desktop_lock_screen.dart: the two fields differ
+  ///
+  /// In en, this message translates to:
+  /// **'The two passphrases are not the same'**
+  String get desktopLockMismatch;
+
+  /// desktop/desktop_lock_screen.dart: a wrong passphrase was typed
+  ///
+  /// In en, this message translates to:
+  /// **'That is not the passphrase'**
+  String get desktopLockWrong;
+
+  /// desktop/desktop_lock_screen.dart: the lock could not be read or written
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo could not open its lock here. Try starting it again.'**
+  String get desktopLockFailed;
+
+  /// desktop/desktop_start.dart: the tray menu item that ends the app
+  ///
+  /// In en, this message translates to:
+  /// **'Quit Kryfo'**
+  String get desktopTrayQuit;
+
+  /// desktop/desktop_start.dart: the tray icon tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo is running and receiving messages'**
+  String get desktopTrayTip;
 }
 
 class _AppLocalizationsDelegate

@@ -2562,5 +2562,21 @@
   "devicesSkipMedia": "تخطي الصور والفيديوهات",
   "devicesSkipMediaHint": "يُنقل النص فقط. أسرع، وأقل ما يُحفظ على الجهاز.",
   "devicesHiddenStay": "تبقى المحادثات المخفية والتمويه على هذا الهاتف.",
-  "devicesScanCode": "قراءة الرمز"
+  "devicesScanCode": "قراءة الرمز",
+  "desktopLockTitle": "Kryfo مقفل",
+  "desktopLockBody": "اكتب عبارة المرور الخاصة بهذا الحاسوب.",
+  "desktopLockNewTitle": "اقفل Kryfo على هذا الحاسوب",
+  "desktopLockNewBody": "سيطلب Kryfo عبارة المرور هذه في كل مرة يبدأ فيها. إنها تقفل رسائلك ومفاتيحك وجهات اتصالك على هذا الحاسوب.",
+  "desktopLockHonest": "من ينسخ مجلد Kryfo يستطيع تجربة عبارات المرور على حاسوبه بأقصى سرعة يسمح بها. أربع كلمات عشوائية أو أكثر تصمد. أما العبارة القصيرة فلا.",
+  "desktopLockForgot": "لا يمكن فتح أي شيء هنا من دون عبارة المرور، ولا حتى من قبلنا.",
+  "desktopLockField": "عبارة المرور",
+  "desktopLockRepeat": "عبارة المرور نفسها مرة أخرى",
+  "desktopLockSet": "اقفل بهذه العبارة",
+  "desktopLockOpen": "افتح Kryfo",
+  "desktopLockShort": "{count} حرفًا على الأقل",
+  "desktopLockMismatch": "عبارتا المرور غير متطابقتين",
+  "desktopLockWrong": "هذه ليست عبارة المرور",
+  "desktopLockFailed": "تعذّر على Kryfo فتح قفله هنا. جرّب تشغيله مرة أخرى.",
+  "desktopTrayQuit": "أغلق Kryfo",
+  "desktopTrayTip": "Kryfo يعمل ويستقبل الرسائل"
 }

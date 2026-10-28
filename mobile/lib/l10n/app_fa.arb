@@ -2562,5 +2562,21 @@
   "devicesSkipMedia": "بدون عکس و ویدیو",
   "devicesSkipMediaHint": "فقط متن منتقل می‌شود. سریع‌تر، و چیز کمتری روی دستگاه می‌ماند.",
   "devicesHiddenStay": "گفت‌وگوهای پنهان و فریب روی همین گوشی می‌مانند.",
-  "devicesScanCode": "اسکن کد"
+  "devicesScanCode": "اسکن کد",
+  "desktopLockTitle": "Kryfo قفل است",
+  "desktopLockBody": "عبارت عبور این رایانه را بنویسید.",
+  "desktopLockNewTitle": "قفل کردن Kryfo روی این رایانه",
+  "desktopLockNewBody": "Kryfo هر بار که باز می‌شود این عبارت عبور را می‌پرسد. پیام‌ها، کلیدها و مخاطبان شما را روی این رایانه قفل می‌کند.",
+  "desktopLockHonest": "کسی که پوشهٔ Kryfo را کپی کند می‌تواند روی رایانهٔ خودش، با هر سرعتی که آن رایانه اجازه دهد، عبارت‌های عبور را امتحان کند. چهار کلمهٔ تصادفی یا بیشتر دوام می‌آورد. یک عبارت کوتاه نه.",
+  "desktopLockForgot": "بدون عبارت عبور هیچ چیزی اینجا باز نمی‌شود، حتی برای ما.",
+  "desktopLockField": "عبارت عبور",
+  "desktopLockRepeat": "همان عبارت عبور دوباره",
+  "desktopLockSet": "قفل با این عبارت",
+  "desktopLockOpen": "باز کردن Kryfo",
+  "desktopLockShort": "دست‌کم {count} کاراکتر",
+  "desktopLockMismatch": "عبارت‌های عبور یکی نیستند",
+  "desktopLockWrong": "این عبارت عبور درست نیست",
+  "desktopLockFailed": "Kryfo نتوانست قفلش را اینجا باز کند. دوباره اجرایش کنید.",
+  "desktopTrayQuit": "خروج از Kryfo",
+  "desktopTrayTip": "Kryfo در حال اجراست و پیام می‌گیرد"
 }

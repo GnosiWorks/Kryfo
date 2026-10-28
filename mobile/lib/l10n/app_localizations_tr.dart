@@ -9703,4 +9703,62 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Kodu tara';
+
+  @override
+  String get desktopLockTitle => 'Kryfo kilitli';
+
+  @override
+  String get desktopLockBody => 'Bu bilgisayarın parola ifadesini yaz.';
+
+  @override
+  String get desktopLockNewTitle => 'Kryfo\'yu bu bilgisayarda kilitle';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo her açılışta bu parola ifadesini sorar. Mesajlarını, anahtarlarını ve kişilerini bu bilgisayarda kilitler.';
+
+  @override
+  String get desktopLockHonest =>
+      'Kryfo klasörünü kopyalayan biri, kendi bilgisayarında onun izin verdiği hızda parola ifadesi deneyebilir. Dört ya da daha fazla rastgele kelime dayanır. Kısa bir parola ifadesi dayanmaz.';
+
+  @override
+  String get desktopLockForgot =>
+      'Parola ifadesi olmadan buradaki hiçbir şey açılamaz, bizim tarafımızdan bile.';
+
+  @override
+  String get desktopLockField => 'Parola ifadesi';
+
+  @override
+  String get desktopLockRepeat => 'Aynı parola ifadesi bir daha';
+
+  @override
+  String get desktopLockSet => 'Bu parola ifadesiyle kilitle';
+
+  @override
+  String get desktopLockOpen => 'Kryfo\'yu aç';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'En az $countString karakter';
+  }
+
+  @override
+  String get desktopLockMismatch => 'İki parola ifadesi aynı değil';
+
+  @override
+  String get desktopLockWrong => 'Bu parola ifadesi doğru değil';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo buradaki kilidini açamadı. Yeniden başlatmayı dene.';
+
+  @override
+  String get desktopTrayQuit => 'Kryfo\'dan çık';
+
+  @override
+  String get desktopTrayTip => 'Kryfo açık ve mesaj alıyor';
 }

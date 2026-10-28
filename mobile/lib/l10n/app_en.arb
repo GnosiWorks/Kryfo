@@ -12211,5 +12211,75 @@
   "devicesScanCode": "Scan the code",
   "@devicesScanCode": {
     "description": "screens/linked_devices_screen.dart: the button at the foot of the link page"
+  },
+  "desktopLockTitle": "Kryfo is locked",
+  "@desktopLockTitle": {
+    "description": "desktop/desktop_lock_screen.dart: the title of the passphrase screen the desktop app opens on"
+  },
+  "desktopLockBody": "Type the passphrase for this computer.",
+  "@desktopLockBody": {
+    "description": "desktop/desktop_lock_screen.dart: under the title when a passphrase is set"
+  },
+  "desktopLockNewTitle": "Lock Kryfo on this computer",
+  "@desktopLockNewTitle": {
+    "description": "desktop/desktop_lock_screen.dart: the title on the first start, when a passphrase is chosen"
+  },
+  "desktopLockNewBody": "Kryfo asks for this passphrase every time it starts. It locks your messages, keys and contacts on this computer.",
+  "@desktopLockNewBody": {
+    "description": "desktop/desktop_lock_screen.dart: under the first-start title"
+  },
+  "desktopLockHonest": "Someone who copies Kryfo's folder can try passphrases on their own computer, as fast as it allows. Four or more random words hold up. A short passphrase does not.",
+  "@desktopLockHonest": {
+    "description": "desktop/desktop_lock_screen.dart: the small print on the first start: what the passphrase protects against and what it does not"
+  },
+  "desktopLockForgot": "Without the passphrase nothing here can be opened, not even by us.",
+  "@desktopLockForgot": {
+    "description": "desktop/desktop_lock_screen.dart: the small print when unlocking"
+  },
+  "desktopLockField": "Passphrase",
+  "@desktopLockField": {
+    "description": "desktop/desktop_lock_screen.dart: the label of the passphrase field"
+  },
+  "desktopLockRepeat": "The same passphrase again",
+  "@desktopLockRepeat": {
+    "description": "desktop/desktop_lock_screen.dart: the label of the second field on the first start"
+  },
+  "desktopLockSet": "Lock with this passphrase",
+  "@desktopLockSet": {
+    "description": "desktop/desktop_lock_screen.dart: the button that sets the passphrase"
+  },
+  "desktopLockOpen": "Open Kryfo",
+  "@desktopLockOpen": {
+    "description": "desktop/desktop_lock_screen.dart: the button that unlocks; also the tray menu item that shows the window"
+  },
+  "desktopLockShort": "At least {count} characters",
+  "@desktopLockShort": {
+    "description": "desktop/desktop_lock_screen.dart: the passphrase chosen is too short",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "desktopLockMismatch": "The two passphrases are not the same",
+  "@desktopLockMismatch": {
+    "description": "desktop/desktop_lock_screen.dart: the two fields differ"
+  },
+  "desktopLockWrong": "That is not the passphrase",
+  "@desktopLockWrong": {
+    "description": "desktop/desktop_lock_screen.dart: a wrong passphrase was typed"
+  },
+  "desktopLockFailed": "Kryfo could not open its lock here. Try starting it again.",
+  "@desktopLockFailed": {
+    "description": "desktop/desktop_lock_screen.dart: the lock could not be read or written"
+  },
+  "desktopTrayQuit": "Quit Kryfo",
+  "@desktopTrayQuit": {
+    "description": "desktop/desktop_start.dart: the tray menu item that ends the app"
+  },
+  "desktopTrayTip": "Kryfo is running and receiving messages",
+  "@desktopTrayTip": {
+    "description": "desktop/desktop_start.dart: the tray icon tooltip"
   }
 }

@@ -2562,5 +2562,21 @@
   "devicesSkipMedia": "Bỏ qua ảnh và video",
   "devicesSkipMediaHint": "Chỉ chép phần chữ. Nhanh hơn và ít dữ liệu lưu trên thiết bị hơn.",
   "devicesHiddenStay": "Trò chuyện ẩn và phần ngụy trang ở lại trên điện thoại này.",
-  "devicesScanCode": "Quét mã"
+  "devicesScanCode": "Quét mã",
+  "desktopLockTitle": "Kryfo đang khóa",
+  "desktopLockBody": "Nhập cụm mật khẩu của máy tính này.",
+  "desktopLockNewTitle": "Khóa Kryfo trên máy tính này",
+  "desktopLockNewBody": "Kryfo sẽ hỏi cụm mật khẩu này mỗi lần khởi động. Nó khóa tin nhắn, khóa và danh bạ của bạn trên máy tính này.",
+  "desktopLockHonest": "Ai sao chép thư mục của Kryfo đều có thể thử cụm mật khẩu trên máy của họ, nhanh đến mức máy cho phép. Bốn từ ngẫu nhiên trở lên sẽ trụ được. Cụm mật khẩu ngắn thì không.",
+  "desktopLockForgot": "Không có cụm mật khẩu thì không gì ở đây mở được, kể cả chúng tôi.",
+  "desktopLockField": "Cụm mật khẩu",
+  "desktopLockRepeat": "Nhập lại cụm mật khẩu",
+  "desktopLockSet": "Khóa bằng cụm mật khẩu này",
+  "desktopLockOpen": "Mở Kryfo",
+  "desktopLockShort": "Ít nhất {count} ký tự",
+  "desktopLockMismatch": "Hai cụm mật khẩu không khớp",
+  "desktopLockWrong": "Đó không phải cụm mật khẩu",
+  "desktopLockFailed": "Kryfo không mở được khóa ở đây. Hãy thử khởi động lại.",
+  "desktopTrayQuit": "Thoát Kryfo",
+  "desktopTrayTip": "Kryfo đang chạy và nhận tin nhắn"
 }

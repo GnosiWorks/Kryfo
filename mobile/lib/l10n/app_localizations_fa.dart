@@ -9694,4 +9694,62 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'اسکن کد';
+
+  @override
+  String get desktopLockTitle => 'Kryfo قفل است';
+
+  @override
+  String get desktopLockBody => 'عبارت عبور این رایانه را بنویسید.';
+
+  @override
+  String get desktopLockNewTitle => 'قفل کردن Kryfo روی این رایانه';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo هر بار که باز می‌شود این عبارت عبور را می‌پرسد. پیام‌ها، کلیدها و مخاطبان شما را روی این رایانه قفل می‌کند.';
+
+  @override
+  String get desktopLockHonest =>
+      'کسی که پوشهٔ Kryfo را کپی کند می‌تواند روی رایانهٔ خودش، با هر سرعتی که آن رایانه اجازه دهد، عبارت‌های عبور را امتحان کند. چهار کلمهٔ تصادفی یا بیشتر دوام می‌آورد. یک عبارت کوتاه نه.';
+
+  @override
+  String get desktopLockForgot =>
+      'بدون عبارت عبور هیچ چیزی اینجا باز نمی‌شود، حتی برای ما.';
+
+  @override
+  String get desktopLockField => 'عبارت عبور';
+
+  @override
+  String get desktopLockRepeat => 'همان عبارت عبور دوباره';
+
+  @override
+  String get desktopLockSet => 'قفل با این عبارت';
+
+  @override
+  String get desktopLockOpen => 'باز کردن Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'دست‌کم $countString کاراکتر';
+  }
+
+  @override
+  String get desktopLockMismatch => 'عبارت‌های عبور یکی نیستند';
+
+  @override
+  String get desktopLockWrong => 'این عبارت عبور درست نیست';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo نتوانست قفلش را اینجا باز کند. دوباره اجرایش کنید.';
+
+  @override
+  String get desktopTrayQuit => 'خروج از Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo در حال اجراست و پیام می‌گیرد';
 }

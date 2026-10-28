@@ -2562,5 +2562,21 @@
   "devicesSkipMedia": "跳过照片和视频",
   "devicesSkipMediaHint": "只复制文字。更快，设备上存的也更少。",
   "devicesHiddenStay": "隐藏聊天和伪装都留在这部手机上。",
-  "devicesScanCode": "扫描二维码"
+  "devicesScanCode": "扫描二维码",
+  "desktopLockTitle": "Kryfo 已锁定",
+  "desktopLockBody": "输入这台电脑的密码短语。",
+  "desktopLockNewTitle": "在这台电脑上锁定 Kryfo",
+  "desktopLockNewBody": "Kryfo 每次启动都会要求输入这个密码短语。它锁住你在这台电脑上的消息、密钥和联系人。",
+  "desktopLockHonest": "复制了 Kryfo 文件夹的人，可以在自己的电脑上尽其所能地快速尝试密码短语。四个以上的随机单词能扛住，短的密码短语扛不住。",
+  "desktopLockForgot": "没有密码短语，这里的一切都打不开，连我们也不行。",
+  "desktopLockField": "密码短语",
+  "desktopLockRepeat": "再输入一次相同的密码短语",
+  "desktopLockSet": "用这个密码短语锁定",
+  "desktopLockOpen": "打开 Kryfo",
+  "desktopLockShort": "至少 {count} 个字符",
+  "desktopLockMismatch": "两次输入的密码短语不一致",
+  "desktopLockWrong": "密码短语不对",
+  "desktopLockFailed": "Kryfo 无法在这里打开它的锁。请重新启动试试。",
+  "desktopTrayQuit": "退出 Kryfo",
+  "desktopTrayTip": "Kryfo 正在运行并接收消息"
 }

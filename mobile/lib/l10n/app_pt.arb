@@ -2562,5 +2562,21 @@
   "devicesSkipMedia": "Pular fotos e vídeos",
   "devicesSkipMediaHint": "Só o texto é copiado. Mais rápido e com menos coisa guardada no aparelho.",
   "devicesHiddenStay": "As conversas ocultas e o disfarce ficam neste celular.",
-  "devicesScanCode": "Escanear o código"
+  "devicesScanCode": "Escanear o código",
+  "desktopLockTitle": "O Kryfo está bloqueado",
+  "desktopLockBody": "Digite a frase-senha deste computador.",
+  "desktopLockNewTitle": "Bloquear o Kryfo neste computador",
+  "desktopLockNewBody": "O Kryfo vai pedir esta frase-senha sempre que abrir. Ela bloqueia suas mensagens, chaves e contatos neste computador.",
+  "desktopLockHonest": "Quem copiar a pasta do Kryfo pode testar frases-senha no próprio computador, tão rápido quanto ele permitir. Quatro ou mais palavras aleatórias resistem. Uma frase-senha curta, não.",
+  "desktopLockForgot": "Sem a frase-senha nada aqui pode ser aberto, nem por nós.",
+  "desktopLockField": "Frase-senha",
+  "desktopLockRepeat": "A mesma frase-senha de novo",
+  "desktopLockSet": "Bloquear com esta frase-senha",
+  "desktopLockOpen": "Abrir o Kryfo",
+  "desktopLockShort": "Pelo menos {count} caracteres",
+  "desktopLockMismatch": "As duas frases-senha não são iguais",
+  "desktopLockWrong": "Essa não é a frase-senha",
+  "desktopLockFailed": "O Kryfo não conseguiu abrir o bloqueio aqui. Tente abri-lo de novo.",
+  "desktopTrayQuit": "Sair do Kryfo",
+  "desktopTrayTip": "O Kryfo está aberto e recebendo mensagens"
 }

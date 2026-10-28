@@ -9229,6 +9229,62 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get devicesScanCode => '扫描二维码';
+
+  @override
+  String get desktopLockTitle => 'Kryfo 已锁定';
+
+  @override
+  String get desktopLockBody => '输入这台电脑的密码短语。';
+
+  @override
+  String get desktopLockNewTitle => '在这台电脑上锁定 Kryfo';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo 每次启动都会要求输入这个密码短语。它锁住你在这台电脑上的消息、密钥和联系人。';
+
+  @override
+  String get desktopLockHonest =>
+      '复制了 Kryfo 文件夹的人，可以在自己的电脑上尽其所能地快速尝试密码短语。四个以上的随机单词能扛住，短的密码短语扛不住。';
+
+  @override
+  String get desktopLockForgot => '没有密码短语，这里的一切都打不开，连我们也不行。';
+
+  @override
+  String get desktopLockField => '密码短语';
+
+  @override
+  String get desktopLockRepeat => '再输入一次相同的密码短语';
+
+  @override
+  String get desktopLockSet => '用这个密码短语锁定';
+
+  @override
+  String get desktopLockOpen => '打开 Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '至少 $countString 个字符';
+  }
+
+  @override
+  String get desktopLockMismatch => '两次输入的密码短语不一致';
+
+  @override
+  String get desktopLockWrong => '密码短语不对';
+
+  @override
+  String get desktopLockFailed => 'Kryfo 无法在这里打开它的锁。请重新启动试试。';
+
+  @override
+  String get desktopTrayQuit => '退出 Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo 正在运行并接收消息';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -18339,4 +18395,60 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get devicesScanCode => '掃描 QR 碼';
+
+  @override
+  String get desktopLockTitle => 'Kryfo 已鎖定';
+
+  @override
+  String get desktopLockBody => '輸入這台電腦的密碼短語。';
+
+  @override
+  String get desktopLockNewTitle => '在這台電腦上鎖定 Kryfo';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo 每次啟動都會要求輸入這組密碼短語。它鎖住你在這台電腦上的訊息、金鑰和聯絡人。';
+
+  @override
+  String get desktopLockHonest =>
+      '複製了 Kryfo 資料夾的人，可以在自己的電腦上盡其所能地快速嘗試密碼短語。四個以上的隨機單字撐得住，短的密碼短語撐不住。';
+
+  @override
+  String get desktopLockForgot => '沒有密碼短語，這裡的一切都打不開，連我們也不行。';
+
+  @override
+  String get desktopLockField => '密碼短語';
+
+  @override
+  String get desktopLockRepeat => '再輸入一次相同的密碼短語';
+
+  @override
+  String get desktopLockSet => '用這組密碼短語鎖定';
+
+  @override
+  String get desktopLockOpen => '打開 Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '至少 $countString 個字元';
+  }
+
+  @override
+  String get desktopLockMismatch => '兩次輸入的密碼短語不一致';
+
+  @override
+  String get desktopLockWrong => '密碼短語不對';
+
+  @override
+  String get desktopLockFailed => 'Kryfo 無法在這裡打開它的鎖。請重新啟動試試。';
+
+  @override
+  String get desktopTrayQuit => '結束 Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo 正在執行並接收訊息';
 }

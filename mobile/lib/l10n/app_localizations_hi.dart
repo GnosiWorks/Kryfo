@@ -9684,4 +9684,62 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'कोड स्कैन करें';
+
+  @override
+  String get desktopLockTitle => 'Kryfo लॉक है';
+
+  @override
+  String get desktopLockBody => 'इस कंप्यूटर का पासफ़्रेज़ लिखें।';
+
+  @override
+  String get desktopLockNewTitle => 'इस कंप्यूटर पर Kryfo लॉक करें';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo हर बार शुरू होने पर यह पासफ़्रेज़ पूछेगा। यह इस कंप्यूटर पर आपके संदेश, कुंजियाँ और संपर्क लॉक रखता है।';
+
+  @override
+  String get desktopLockHonest =>
+      'जो कोई Kryfo का फ़ोल्डर कॉपी कर ले, वह अपने कंप्यूटर पर उतनी तेज़ी से पासफ़्रेज़ आज़मा सकता है जितना उसका कंप्यूटर चल सके। चार या ज़्यादा बेतरतीब शब्द टिकते हैं। छोटा पासफ़्रेज़ नहीं टिकता।';
+
+  @override
+  String get desktopLockForgot =>
+      'पासफ़्रेज़ के बिना यहाँ कुछ भी नहीं खुल सकता, हमसे भी नहीं।';
+
+  @override
+  String get desktopLockField => 'पासफ़्रेज़';
+
+  @override
+  String get desktopLockRepeat => 'वही पासफ़्रेज़ फिर से';
+
+  @override
+  String get desktopLockSet => 'इस पासफ़्रेज़ से लॉक करें';
+
+  @override
+  String get desktopLockOpen => 'Kryfo खोलें';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'कम से कम $countString अक्षर';
+  }
+
+  @override
+  String get desktopLockMismatch => 'दोनों पासफ़्रेज़ मेल नहीं खाते';
+
+  @override
+  String get desktopLockWrong => 'यह सही पासफ़्रेज़ नहीं है';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo यहाँ अपना लॉक नहीं खोल पाया। इसे फिर से शुरू करके देखें।';
+
+  @override
+  String get desktopTrayQuit => 'Kryfo बंद करें';
+
+  @override
+  String get desktopTrayTip => 'Kryfo चल रहा है और संदेश ले रहा है';
 }

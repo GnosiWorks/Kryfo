@@ -9779,4 +9779,64 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Scanner le code';
+
+  @override
+  String get desktopLockTitle => 'Kryfo est verrouillé';
+
+  @override
+  String get desktopLockBody =>
+      'Saisissez la phrase secrète de cet ordinateur.';
+
+  @override
+  String get desktopLockNewTitle => 'Verrouiller Kryfo sur cet ordinateur';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo vous demandera cette phrase secrète à chaque démarrage. Elle verrouille vos messages, vos clés et vos contacts sur cet ordinateur.';
+
+  @override
+  String get desktopLockHonest =>
+      'Quiconque copie le dossier de Kryfo peut essayer des phrases secrètes sur son propre ordinateur, aussi vite que celui-ci le permet. Quatre mots aléatoires ou plus tiennent bon. Une phrase courte, non.';
+
+  @override
+  String get desktopLockForgot =>
+      'Sans la phrase secrète, rien ici ne peut être ouvert, pas même par nous.';
+
+  @override
+  String get desktopLockField => 'Phrase secrète';
+
+  @override
+  String get desktopLockRepeat => 'La même phrase secrète, une seconde fois';
+
+  @override
+  String get desktopLockSet => 'Verrouiller avec cette phrase';
+
+  @override
+  String get desktopLockOpen => 'Ouvrir Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Au moins $countString caractères';
+  }
+
+  @override
+  String get desktopLockMismatch =>
+      'Les deux phrases secrètes ne sont pas identiques';
+
+  @override
+  String get desktopLockWrong => 'Ce n’est pas la phrase secrète';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo n’a pas pu ouvrir son verrou ici. Essayez de le relancer.';
+
+  @override
+  String get desktopTrayQuit => 'Quitter Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo est ouvert et reçoit des messages';
 }

@@ -2562,5 +2562,21 @@
   "devicesSkipMedia": "फ़ोटो और वीडियो छोड़ दें",
   "devicesSkipMediaHint": "सिर्फ़ टेक्स्ट आएगा। जल्दी होगा, और डिवाइस पर कम जगह लगेगी।",
   "devicesHiddenStay": "छिपी चैट और नकली Kryfo इसी फ़ोन पर रहते हैं।",
-  "devicesScanCode": "कोड स्कैन करें"
+  "devicesScanCode": "कोड स्कैन करें",
+  "desktopLockTitle": "Kryfo लॉक है",
+  "desktopLockBody": "इस कंप्यूटर का पासफ़्रेज़ लिखें।",
+  "desktopLockNewTitle": "इस कंप्यूटर पर Kryfo लॉक करें",
+  "desktopLockNewBody": "Kryfo हर बार शुरू होने पर यह पासफ़्रेज़ पूछेगा। यह इस कंप्यूटर पर आपके संदेश, कुंजियाँ और संपर्क लॉक रखता है।",
+  "desktopLockHonest": "जो कोई Kryfo का फ़ोल्डर कॉपी कर ले, वह अपने कंप्यूटर पर उतनी तेज़ी से पासफ़्रेज़ आज़मा सकता है जितना उसका कंप्यूटर चल सके। चार या ज़्यादा बेतरतीब शब्द टिकते हैं। छोटा पासफ़्रेज़ नहीं टिकता।",
+  "desktopLockForgot": "पासफ़्रेज़ के बिना यहाँ कुछ भी नहीं खुल सकता, हमसे भी नहीं।",
+  "desktopLockField": "पासफ़्रेज़",
+  "desktopLockRepeat": "वही पासफ़्रेज़ फिर से",
+  "desktopLockSet": "इस पासफ़्रेज़ से लॉक करें",
+  "desktopLockOpen": "Kryfo खोलें",
+  "desktopLockShort": "कम से कम {count} अक्षर",
+  "desktopLockMismatch": "दोनों पासफ़्रेज़ मेल नहीं खाते",
+  "desktopLockWrong": "यह सही पासफ़्रेज़ नहीं है",
+  "desktopLockFailed": "Kryfo यहाँ अपना लॉक नहीं खोल पाया। इसे फिर से शुरू करके देखें।",
+  "desktopTrayQuit": "Kryfo बंद करें",
+  "desktopTrayTip": "Kryfo चल रहा है और संदेश ले रहा है"
 }

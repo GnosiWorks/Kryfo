@@ -9675,4 +9675,62 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Pindai kode';
+
+  @override
+  String get desktopLockTitle => 'Kryfo terkunci';
+
+  @override
+  String get desktopLockBody => 'Ketik frasa sandi untuk komputer ini.';
+
+  @override
+  String get desktopLockNewTitle => 'Kunci Kryfo di komputer ini';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo akan meminta frasa sandi ini setiap kali dibuka. Frasa ini mengunci pesan, kunci, dan kontakmu di komputer ini.';
+
+  @override
+  String get desktopLockHonest =>
+      'Siapa pun yang menyalin folder Kryfo bisa mencoba frasa sandi di komputernya sendiri, secepat komputer itu mampu. Empat kata acak atau lebih akan bertahan. Frasa sandi yang pendek tidak.';
+
+  @override
+  String get desktopLockForgot =>
+      'Tanpa frasa sandi, tidak ada yang bisa dibuka di sini, bahkan oleh kami.';
+
+  @override
+  String get desktopLockField => 'Frasa sandi';
+
+  @override
+  String get desktopLockRepeat => 'Frasa sandi yang sama sekali lagi';
+
+  @override
+  String get desktopLockSet => 'Kunci dengan frasa sandi ini';
+
+  @override
+  String get desktopLockOpen => 'Buka Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Minimal $countString karakter';
+  }
+
+  @override
+  String get desktopLockMismatch => 'Kedua frasa sandi tidak sama';
+
+  @override
+  String get desktopLockWrong => 'Itu bukan frasa sandinya';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo tidak bisa membuka kuncinya di sini. Coba buka lagi.';
+
+  @override
+  String get desktopTrayQuit => 'Keluar dari Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo berjalan dan menerima pesan';
 }

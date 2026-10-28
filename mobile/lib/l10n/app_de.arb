@@ -2562,5 +2562,21 @@
   "devicesSkipMedia": "Fotos und Videos auslassen",
   "devicesSkipMediaHint": "Nur der Text kommt rüber. Schneller, und weniger auf dem Gerät.",
   "devicesHiddenStay": "Versteckte Chats und die Tarnung bleiben auf diesem Handy.",
-  "devicesScanCode": "Code scannen"
+  "devicesScanCode": "Code scannen",
+  "desktopLockTitle": "Kryfo ist gesperrt",
+  "desktopLockBody": "Gib die Passphrase für diesen Computer ein.",
+  "desktopLockNewTitle": "Kryfo auf diesem Computer sperren",
+  "desktopLockNewBody": "Kryfo fragt bei jedem Start nach dieser Passphrase. Sie sperrt deine Nachrichten, Schlüssel und Kontakte auf diesem Computer.",
+  "desktopLockHonest": "Wer den Kryfo-Ordner kopiert, kann auf dem eigenen Computer Passphrasen durchprobieren, so schnell dieser es erlaubt. Vier oder mehr zufällige Wörter halten stand. Eine kurze Passphrase nicht.",
+  "desktopLockForgot": "Ohne die Passphrase lässt sich hier nichts öffnen, auch nicht von uns.",
+  "desktopLockField": "Passphrase",
+  "desktopLockRepeat": "Dieselbe Passphrase noch einmal",
+  "desktopLockSet": "Mit dieser Passphrase sperren",
+  "desktopLockOpen": "Kryfo öffnen",
+  "desktopLockShort": "Mindestens {count} Zeichen",
+  "desktopLockMismatch": "Die beiden Passphrasen stimmen nicht überein",
+  "desktopLockWrong": "Das ist nicht die Passphrase",
+  "desktopLockFailed": "Kryfo konnte seine Sperre hier nicht öffnen. Starte es noch einmal.",
+  "desktopTrayQuit": "Kryfo beenden",
+  "desktopTrayTip": "Kryfo läuft und empfängt Nachrichten"
 }

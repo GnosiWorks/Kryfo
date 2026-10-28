@@ -9850,4 +9850,62 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get devicesScanCode => 'Сканировать код';
+
+  @override
+  String get desktopLockTitle => 'Kryfo заблокирован';
+
+  @override
+  String get desktopLockBody => 'Введите парольную фразу этого компьютера.';
+
+  @override
+  String get desktopLockNewTitle => 'Заблокировать Kryfo на этом компьютере';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo будет спрашивать эту парольную фразу при каждом запуске. Она запирает ваши сообщения, ключи и контакты на этом компьютере.';
+
+  @override
+  String get desktopLockHonest =>
+      'Тот, кто скопирует папку Kryfo, сможет перебирать парольные фразы на своём компьютере так быстро, как тот позволяет. Четыре и больше случайных слов выдержат. Короткая фраза не выдержит.';
+
+  @override
+  String get desktopLockForgot =>
+      'Без парольной фразы здесь ничего не открыть, даже нам.';
+
+  @override
+  String get desktopLockField => 'Парольная фраза';
+
+  @override
+  String get desktopLockRepeat => 'Та же парольная фраза ещё раз';
+
+  @override
+  String get desktopLockSet => 'Заблокировать этой фразой';
+
+  @override
+  String get desktopLockOpen => 'Открыть Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Минимум символов: $countString';
+  }
+
+  @override
+  String get desktopLockMismatch => 'Парольные фразы не совпадают';
+
+  @override
+  String get desktopLockWrong => 'Это не та парольная фраза';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo не смог открыть блокировку. Попробуйте запустить его снова.';
+
+  @override
+  String get desktopTrayQuit => 'Выйти из Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo работает и принимает сообщения';
 }
