@@ -10,9 +10,114 @@
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
+  GtkWindow* window;
+  GtkStatusIcon* tray;
+  GtkWidget* tray_menu;
+  FlMethodChannel* desktop_channel;
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
+
+// the tray keeps the app running with the window closed, so messages keep
+// arriving. gtk's status icon is the one tray every x11 desktop shows; on a
+// desktop without a tray, closing the window ends the app as before
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+
+static void show_window(MyApplication* self) {
+  if (self->window == nullptr) return;
+  gtk_widget_show(GTK_WIDGET(self->window));
+  gtk_window_present(self->window);
+}
+
+static gboolean tray_shown(MyApplication* self) {
+  return self->tray != nullptr && gtk_status_icon_is_embedded(self->tray);
+}
+
+static void tray_open_cb(GtkMenuItem*, gpointer user_data) {
+  show_window(MY_APPLICATION(user_data));
+}
+
+static void tray_quit_cb(GtkMenuItem*, gpointer user_data) {
+  g_application_quit(G_APPLICATION(user_data));
+}
+
+static void tray_activate_cb(GtkStatusIcon*, gpointer user_data) {
+  show_window(MY_APPLICATION(user_data));
+}
+
+static void tray_popup_cb(GtkStatusIcon* icon, guint button, guint time,
+                          gpointer user_data) {
+  MyApplication* self = MY_APPLICATION(user_data);
+  gtk_menu_popup(GTK_MENU(self->tray_menu), nullptr, nullptr,
+                 gtk_status_icon_position_menu, icon, button, time);
+}
+
+static gchar* icon_path() {
+  g_autofree gchar* exe = g_file_read_link("/proc/self/exe", nullptr);
+  if (exe == nullptr) return nullptr;
+  g_autofree gchar* dir = g_path_get_dirname(exe);
+  return g_build_filename(dir, "data", "kryfo.png", nullptr);
+}
+
+// dart sends the menu's words in the app's language once it knows them
+static void make_tray(MyApplication* self, const gchar* open,
+                      const gchar* quit, const gchar* tip) {
+  if (self->tray_menu != nullptr) gtk_widget_destroy(self->tray_menu);
+  self->tray_menu = gtk_menu_new();
+  GtkWidget* open_item = gtk_menu_item_new_with_label(open);
+  GtkWidget* quit_item = gtk_menu_item_new_with_label(quit);
+  g_signal_connect(open_item, "activate", G_CALLBACK(tray_open_cb), self);
+  g_signal_connect(quit_item, "activate", G_CALLBACK(tray_quit_cb), self);
+  gtk_menu_shell_append(GTK_MENU_SHELL(self->tray_menu), open_item);
+  gtk_menu_shell_append(GTK_MENU_SHELL(self->tray_menu), quit_item);
+  gtk_widget_show_all(self->tray_menu);
+  if (self->tray == nullptr) {
+    g_autofree gchar* path = icon_path();
+    self->tray = path != nullptr && g_file_test(path, G_FILE_TEST_EXISTS)
+                     ? gtk_status_icon_new_from_file(path)
+                     : gtk_status_icon_new_from_icon_name(APPLICATION_ID);
+    g_signal_connect(self->tray, "activate", G_CALLBACK(tray_activate_cb),
+                     self);
+    g_signal_connect(self->tray, "popup-menu", G_CALLBACK(tray_popup_cb),
+                     self);
+  }
+  gtk_status_icon_set_tooltip_text(self->tray, tip);
+  gtk_status_icon_set_title(self->tray, "Kryfo");
+}
+
+G_GNUC_END_IGNORE_DEPRECATIONS
+
+static const gchar* map_string(FlValue* args, const gchar* key) {
+  if (args == nullptr || fl_value_get_type(args) != FL_VALUE_TYPE_MAP) {
+    return "";
+  }
+  FlValue* v = fl_value_lookup_string(args, key);
+  if (v == nullptr || fl_value_get_type(v) != FL_VALUE_TYPE_STRING) return "";
+  return fl_value_get_string(v);
+}
+
+static void desktop_call_cb(FlMethodChannel* channel, FlMethodCall* call,
+                            gpointer user_data) {
+  MyApplication* self = MY_APPLICATION(user_data);
+  g_autoptr(FlMethodResponse) response = nullptr;
+  if (g_strcmp0(fl_method_call_get_name(call), "tray") == 0) {
+    FlValue* args = fl_method_call_get_args(call);
+    make_tray(self, map_string(args, "open"), map_string(args, "quit"),
+              map_string(args, "tip"));
+    response = FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
+  } else {
+    response = FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
+  }
+  fl_method_call_respond(call, response, nullptr);
+}
+
+// with a tray the window only hides, and the app goes on receiving
+static gboolean delete_cb(GtkWidget* widget, GdkEvent*, gpointer user_data) {
+  MyApplication* self = MY_APPLICATION(user_data);
+  if (!tray_shown(self)) return FALSE;
+  gtk_widget_hide(widget);
+  return TRUE;
+}
 
 static void first_frame_cb(MyApplication* self, FlView* view) {
   gtk_widget_show(gtk_widget_get_toplevel(GTK_WIDGET(view)));
@@ -20,8 +125,18 @@ static void first_frame_cb(MyApplication* self, FlView* view) {
 
 static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
+  // a second start brings the running one forward: two processes on one
+  // folder would fight over its database and its tor
+  if (self->window != nullptr) {
+    show_window(self);
+    return;
+  }
   GtkWindow* window =
       GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
+  self->window = window;
+  g_autofree gchar* icon = icon_path();
+  if (icon != nullptr) gtk_window_set_icon_from_file(window, icon, nullptr);
+  g_signal_connect(window, "delete-event", G_CALLBACK(delete_cb), self);
 
   gboolean use_header_bar = TRUE;
 #ifdef GDK_WINDOWING_X11
@@ -62,6 +177,13 @@ static void my_application_activate(GApplication* application) {
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
 
+  g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
+  self->desktop_channel = fl_method_channel_new(
+      fl_engine_get_binary_messenger(fl_view_get_engine(view)),
+      "kryfo/desktop", FL_METHOD_CODEC(codec));
+  fl_method_channel_set_method_call_handler(self->desktop_channel,
+                                            desktop_call_cb, self, nullptr);
+
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }
 
@@ -95,6 +217,8 @@ static void my_application_shutdown(GApplication* application) {
 static void my_application_dispose(GObject* object) {
   MyApplication* self = MY_APPLICATION(object);
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
+  g_clear_object(&self->desktop_channel);
+  g_clear_object(&self->tray);
   G_OBJECT_CLASS(my_application_parent_class)->dispose(object);
 }
 
@@ -114,5 +238,5 @@ MyApplication* my_application_new() {
 
   return MY_APPLICATION(g_object_new(my_application_get_type(),
                                      "application-id", APPLICATION_ID, "flags",
-                                     G_APPLICATION_NON_UNIQUE, nullptr));
+                                     G_APPLICATION_DEFAULT_FLAGS, nullptr));
 }
