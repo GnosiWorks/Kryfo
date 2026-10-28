@@ -178,9 +178,9 @@ void main() {
     skip: needsShim,
   );
 
-  group('an opener read again', () {
-    // alice's opener to bob and his store once he took it
-    Future<(SignalSession, SignalSession, String, Phone)> took() async {
+  group('an opener opens once', () {
+    // bob's store once he took alice's first opener, and the phones
+    Future<(SignalSession, SignalSession, String, Phone, Phone)> took() async {
       final a = Phone();
       final b = Phone();
       final alice = await a.openLs();
@@ -191,60 +191,108 @@ void main() {
       );
       final w = await alice.encryptTo('bob', 'first');
       expect(await b.read('alice', w), 'first');
-      return (alice, bob, w, b);
+      return (alice, bob, w, a, b);
     }
 
     Future<Map<String, Object?>> rows(Phone p) async => {
-      for (final t in ['sessions', 'prekeys', 'kyber_prekeys', 'kyber_used'])
+      for (final t in [
+        'sessions',
+        'prekeys',
+        'kyber_prekeys',
+        'kyber_used',
+        'opener_reads',
+        'peer_identities',
+      ])
         t: '${await p.db.query(t)}',
     };
 
-    test('under another name it reads while its session is held, and '
-        'nothing of it is kept', () async {
-      final (_, _, w, b) = await took();
-      final before = await rows(b);
-      expect(await b.read('another-name', w), 'first');
-      expect(await rows(b), before);
-      expect(await b.ls!.hasSession('another-name'), isFalse);
-    }, skip: needsShim);
+    Matcher dup() => throwsA(
+      isA<LsError>().having((e) => e.code, 'code', LsError.duplicate),
+    );
 
-    test('once the session it built is gone it is a duplicate, and '
-        'builds nothing', () async {
-      final (_, bob, w, b) = await took();
-      await bob.sessionStore.delete('alice');
+    // turns each way, more than the five chains a record keeps
+    Future<void> turns(Phone a, Phone b, int n) async {
+      for (var i = 0; i < n; i++) {
+        expect(await a.read('bob', await b.seal('alice', 'b$i')), 'b$i');
+        expect(await b.read('alice', await a.seal('bob', 'a$i')), 'a$i');
+      }
+    }
+
+    test('read once, then a copy is refused, right away or seven turns '
+        'later, as often as it comes', () async {
+      final (_, _, w, a, b) = await took();
+      await expectLater(b.read('alice', w), dup());
+      await turns(a, b, 7);
       final before = await rows(b);
-      for (final name in ['alice', 'another-name']) {
-        await expectLater(
-          b.read(name, w),
-          throwsA(
-            isA<LsError>().having((e) => e.code, 'code', LsError.duplicate),
-          ),
-        );
+      for (var i = 0; i < 3; i++) {
+        await expectLater(b.read('alice', w), dup());
       }
       expect(await rows(b), before);
     }, skip: needsShim);
 
-    test('in the first-contact slot it files its record there, and the '
-        'session held keeps going', () async {
-      final (alice, bob, w, b) = await took();
-      expect(await b.read(kFirstContactSlot, w), 'first');
-      final scratch = (await bob.sessionStore.load(kFirstContactSlot))!;
-      await bob.keepOpenedSession('alice', scratch);
-      expect(
-        await b.read('alice', await alice.encryptTo('bob', 'next')),
-        'next',
-      );
-      final back = base64Decode(await bob.encryptTo('alice', 'back'));
-      expect(
-        unpadText(
-          await alice.open('bob', back[0], Uint8List.fromList(back.sublist(1))),
-        ),
-        'back',
-      );
+    test('a copy in the first-contact slot seven turns later is refused, '
+        'and nothing is filed there', () async {
+      final (_, bob, w, a, b) = await took();
+      await turns(a, b, 7);
+      final before = await rows(b);
+      await expectLater(b.read(kFirstContactSlot, w), dup());
+      expect(await bob.hasSession(kFirstContactSlot), isFalse);
+      expect(await rows(b), before);
     }, skip: needsShim);
 
-    test('late, past the chains a record keeps, it still reads and the '
-        'session goes on as it was', () async {
+    test('under another name a copy is refused, and nothing is kept', () async {
+      final (_, _, w, _, b) = await took();
+      final before = await rows(b);
+      await expectLater(b.read('another-name', w), dup());
+      expect(await rows(b), before);
+    }, skip: needsShim);
+
+    test('once the session it built is gone it is refused, and builds '
+        'nothing', () async {
+      final (_, bob, w, _, b) = await took();
+      await bob.sessionStore.delete('alice');
+      final before = await rows(b);
+      for (final name in ['alice', 'another-name', kFirstContactSlot]) {
+        await expectLater(b.read(name, w), dup());
+      }
+      expect(await rows(b), before);
+    }, skip: needsShim);
+
+    test('a second opener never read opens in the first-contact slot, and '
+        'files only under the name holding its session', () async {
+      final a = Phone();
+      final b = Phone();
+      final alice = await a.openLs();
+      final bob = await b.openLs();
+      await alice.processBundle(
+        'bob',
+        lsBundleOf(shim!, await bob.makeBundleB64()),
+      );
+      final first = await alice.encryptTo('bob', 'one');
+      final second = await alice.encryptTo('bob', 'two');
+      expect(await b.read(kFirstContactSlot, first), 'one');
+      await bob.keepOpenedSession(
+        'alice',
+        (await bob.sessionStore.load(kFirstContactSlot))!,
+      );
+      await bob.sessionStore.delete(kFirstContactSlot);
+      // the second, sent before bob answered, comes in on the same slot
+      expect(await b.read(kFirstContactSlot, second), 'two');
+      final scratch = (await bob.sessionStore.load(kFirstContactSlot))!;
+      await expectLater(
+        bob.keepOpenedSession('mallory-words', scratch),
+        throwsStateError,
+      );
+      expect(await bob.hasSession('mallory-words'), isFalse);
+      await bob.keepOpenedSession('alice', scratch);
+      await bob.sessionStore.delete(kFirstContactSlot);
+      // and only once
+      await expectLater(b.read(kFirstContactSlot, second), dup());
+      expect(await a.read('bob', await bob.encryptTo('alice', 'back')), 'back');
+    }, skip: needsShim);
+
+    test('late, past the chains a record keeps, one never read opens once, '
+        'and the session goes on as it was', () async {
       final a = Phone();
       final b = Phone();
       final alice = await a.openLs();
@@ -256,17 +304,34 @@ void main() {
       final first = await alice.encryptTo('bob', 'one');
       final late = await alice.encryptTo('bob', 'two, late');
       expect(await b.read('alice', first), 'one');
-      for (var i = 0; i < 7; i++) {
-        expect(await a.read('bob', await bob.encryptTo('alice', 'b$i')), 'b$i');
-        expect(
-          await b.read('alice', await alice.encryptTo('bob', 'a$i')),
-          'a$i',
-        );
-      }
+      await turns(a, b, 7);
       final held = await bob.sessionStore.load('alice');
       expect(await b.read('alice', late), 'two, late');
       expect(await bob.sessionStore.load('alice'), held);
+      for (var i = 0; i < 3; i++) {
+        await expectLater(b.read('alice', late), dup());
+      }
       expect(await b.read('alice', await alice.encryptTo('bob', 'on')), 'on');
+    }, skip: needsShim);
+
+    test('the spend is one write: one that fails keeps nothing of the '
+        'open, and the opener opens later', () async {
+      final a = Phone();
+      final b = Phone();
+      final alice = await a.openLs();
+      final bob = await b.openLs();
+      await alice.processBundle(
+        'bob',
+        lsBundleOf(shim!, await bob.makeBundleB64()),
+      );
+      final w = await alice.encryptTo('bob', 'hi');
+      final before = await rows(b);
+      b.db.failOn = 'insert:opener_reads';
+      await expectLater(b.read('alice', w), throwsA(anything));
+      b.db.failOn = null;
+      expect(await rows(b), before);
+      expect(await bob.hasSession('alice'), isFalse);
+      expect(await b.read('alice', w), 'hi');
     }, skip: needsShim);
   });
 

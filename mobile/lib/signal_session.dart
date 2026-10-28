@@ -9,6 +9,8 @@ import 'dart:convert';
 import 'dart:math' show Random, min;
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart' show sha256;
+
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'dlog.dart';
@@ -148,6 +150,7 @@ class SignalSession {
     );
     await database.delete('${prefix}kyber_prekeys');
     await database.delete('${prefix}kyber_used');
+    await database.delete('${prefix}opener_reads');
     await bootstrap(
       database: database,
       xPubBytes: xPubBytes,
@@ -367,6 +370,7 @@ class SignalSession {
       if (onlySettled) throw NotSettled(peer);
       throw const LsError(LsError.noSession);
     }
+    final pinned = identityStore.pinnedFor(peer);
     final body = Uint8List.fromList(utf8.encode(padSeal(plain)));
     final LsSealed m;
     try {
@@ -376,7 +380,7 @@ class SignalSession {
         record,
         body,
         _now(),
-        pinned: identityStore.pinnedFor(peer),
+        pinned: pinned,
       );
     } finally {
       body.fillRange(0, body.length, 0);
@@ -421,21 +425,29 @@ class SignalSession {
     final known =
         held != null && lib.sessionInfo(held).holds(info.version, info.baseKey);
     final kyberId = info.kyberPreKeyId;
+    // one opener opens once, on whichever path it comes back
+    final print = kyberId == null ? null : _fingerprint(info, body);
+    if (print != null && await kyberPreKeyStore.wasRead(kyberId!, print)) {
+      throw const LsError(LsError.duplicate);
+    }
     if (!known &&
         kyberId != null &&
         await kyberPreKeyStore.wasUsed(kyberId, info.baseKey)) {
-      // a copy of an opener this store took before. read again only while
-      // a session it built is still held here, under any name: a relay's
-      // backlog, or one filed under another name. never once that is gone
-      if (!await _holdsState(info.version, info.baseKey)) {
+      // another opener of a session this store built: read only for the
+      // name holding it, or in the first-contact slot (filed there and
+      // then only under that name, see keepOpenedSession)
+      final holder = await _holder(info.version, info.baseKey);
+      if (holder == null || (peer != holder.$1 && peer != kFirstContactSlot)) {
         throw const LsError(LsError.duplicate);
       }
       return _openerAgain(
         peer,
         info,
+        print!,
         body,
         pinned,
         check,
+        holder.$2,
         keep: peer == kFirstContactSlot,
       );
     }
@@ -457,41 +469,79 @@ class SignalSession {
         pinned: pinned,
       );
     } on LsError catch (e) {
-      if (!known || e.code != LsError.message) rethrow;
-      // the state it names is held, the chain it was sealed on gone from
-      // it (libsignal keeps five)
-      return _openerAgain(peer, info, body, pinned, check);
+      if (!known || print == null || e.code != LsError.message) rethrow;
+      // the state it names is held here, the chain it was sealed on gone
+      // from the record (libsignal keeps five). never read before: the
+      // fingerprint says so
+      return _openerAgain(
+        peer,
+        info,
+        print,
+        body,
+        pinned,
+        check,
+        await identityStore.getIdentity(peer) ??
+            lib.sessionInfo(held).remoteIdentity,
+      );
     }
     if (!known) _requirePq(o.record);
     check?.call(o.plaintext);
-    if (await identityStore.saw(peer, o.identityKey)) moved?.call();
-    await sessionStore.store(peer, o.record);
-    final usedPk = o.usedPreKey;
-    if (usedPk != null) await preKeyStore.remove(usedPk);
-    final usedK = o.usedKyberPreKey;
-    if (usedK != null) {
-      await kyberPreKeyStore.markUsed(usedK, info.signedPreKeyId, info.baseKey);
-    }
+    var changed = false;
+    // the record, the key it runs on and every key it spent, in one write
+    await _db.transaction((txn) async {
+      final ids = LsIdentityStore(
+        txn,
+        identity,
+        registrationId,
+        prefix: _prefix,
+      );
+      final kyber = LsKyberPreKeyStore(txn, prefix: _prefix);
+      changed = await ids.saw(peer, o.identityKey);
+      await LsSessionStore(txn, prefix: _prefix).store(peer, o.record);
+      final usedPk = o.usedPreKey;
+      if (usedPk != null) {
+        await LsPreKeyStore(txn, prefix: _prefix).remove(usedPk);
+      }
+      final usedK = o.usedKyberPreKey;
+      if (usedK != null) {
+        await kyber.markUsed(usedK, info.signedPreKeyId, info.baseKey);
+      }
+      if (print != null) await kyber.markRead(kyberId!, print);
+    });
+    if (changed) moved?.call();
     return o.plaintext;
   });
 
-  // an opener read again on its own, from the keys it names, as when it
-  // first came: no key is spent and nothing is marked. the session held
-  // goes on as it was, and a copy of a message read before is the app's
-  // duplicate to drop. [keep]: the first-contact slot, which files its
-  // record where the session is held (keepOpenedSession keeps the held one)
+  // what an opener is, by what its mac and its keys cover: the base key and
+  // the message inside it. the fields around them (registration id, prekey
+  // ids) are not authenticated, so a copy with them changed is the same one
+  Uint8List _fingerprint(LsPreKeyMessageInfo info, Uint8List body) {
+    final inner = openerMessageOf(body);
+    if (inner == null) throw const LsError(LsError.message);
+    return Uint8List.fromList(
+      sha256.convert([...info.baseKey, ...inner]).bytes,
+    );
+  }
+
+  // an opener never read before, of a session held here, read on its own
+  // from the keys it names: nothing of its state is kept outside the
+  // first-contact slot, and no key is spent. its fingerprint is marked, so
+  // it opens once. [owner] is the identity the session holding it runs on:
+  // the opener must be on the same one
   Future<Uint8List> _openerAgain(
     String peer,
     LsPreKeyMessageInfo info,
+    Uint8List print,
     Uint8List body,
     Uint8List? pinned,
-    void Function(Uint8List plain)? check, {
+    void Function(Uint8List plain)? check,
+    Uint8List? owner, {
     bool keep = false,
   }) async {
     final pk = info.preKeyId;
-    final kyberId = info.kyberPreKeyId;
+    final kyberId = info.kyberPreKeyId!;
     final spk = await signedPreKeyStore.load(info.signedPreKeyId);
-    final kyber = kyberId == null ? null : await kyberPreKeyStore.load(kyberId);
+    final kyber = await kyberPreKeyStore.load(kyberId);
     if (spk == null || kyber == null) throw const LsError(LsError.noPreKey);
     final o = lib.decryptPreKey(
       identity,
@@ -504,36 +554,58 @@ class SignalSession {
       pinned: pinned,
     );
     _requirePq(o.record);
-    // the identity held for them, and no other
-    final held = await identityStore.getIdentity(peer);
-    if (held != null && !_eq(held, o.identityKey)) {
+    if (owner == null || !_eq(owner, o.identityKey)) {
       throw const LsError(LsError.untrusted);
     }
     check?.call(o.plaintext);
-    if (keep) {
-      await identityStore.saw(peer, o.identityKey);
-      await sessionStore.store(peer, o.record);
-    }
-    dlog('signal: an opener read again');
+    await _db.transaction((txn) async {
+      if (keep) {
+        await LsIdentityStore(
+          txn,
+          identity,
+          registrationId,
+          prefix: _prefix,
+        ).saw(peer, o.identityKey);
+        await LsSessionStore(txn, prefix: _prefix).store(peer, o.record);
+      }
+      await LsKyberPreKeyStore(txn, prefix: _prefix).markRead(kyberId, print);
+    });
+    dlog('signal: an opener of a held session read on its own');
     return o.plaintext;
   }
 
-  // a state of [version] on [baseKey] held in any session of this store
-  Future<bool> _holdsState(int version, List<int> baseKey) async {
-    for (final (_, r) in await sessionStore.all()) {
+  // the name holding a state of [version] on [baseKey], and the identity
+  // its session runs on. the first-contact slot holds nothing for this
+  Future<(String, Uint8List?)?> _holder(int version, List<int> baseKey) async {
+    for (final (name, r) in await sessionStore.all()) {
+      if (name == kFirstContactSlot) continue;
       try {
-        if (lib.sessionInfo(r).holds(version, baseKey)) return true;
+        final info = lib.sessionInfo(r);
+        if (!info.holds(version, baseKey)) continue;
+        return (
+          name,
+          await identityStore.getIdentity(name) ?? info.remoteIdentity,
+        );
       } on LsError {
         // a record that does not read holds nothing
       }
     }
-    return false;
+    return null;
   }
 
   /// an opener's session filed for [peer]: one held already is kept as it
   /// runs; a new one goes in front of it, the states before it kept behind
+  /// a state another name holds is never filed under [peer] as well: that
+  /// throws StateError, and nothing is written
   Future<void> keepOpenedSession(String peer, Uint8List record) =>
       serial<void>(peer, () async {
+        final cur0 = lib.sessionInfo(record).current;
+        if (cur0 != null) {
+          final h = await _holder(cur0.version, cur0.baseKey);
+          if (h != null && h.$1 != peer) {
+            throw StateError('signal: that session is held under another name');
+          }
+        }
         final held = await sessionStore.load(peer);
         if (held == null) {
           await sessionStore.store(peer, record);
@@ -783,6 +855,40 @@ class SignalSession {
       return null;
     }
   }
+}
+
+/// the whisper message inside an opener (a prekey message without the
+/// wire's type byte): field 4 of its protobuf, after the version byte.
+/// null when it does not read
+Uint8List? openerMessageOf(Uint8List opener) {
+  var at = 1;
+  int? varint() {
+    var v = 0;
+    for (var shift = 0; shift < 64; shift += 7) {
+      if (at >= opener.length) return null;
+      final x = opener[at++];
+      v |= (x & 0x7f) << shift;
+      if (x < 0x80) return v;
+    }
+    return null;
+  }
+
+  while (at < opener.length) {
+    final tag = varint();
+    if (tag == null) return null;
+    switch (tag & 7) {
+      case 0:
+        if (varint() == null) return null;
+      case 2:
+        final n = varint();
+        if (n == null || n < 0 || n > opener.length - at) return null;
+        if (tag >> 3 == 4) return Uint8List.sublistView(opener, at, at + n);
+        at += n;
+      default:
+        return null;
+    }
+  }
+  return null;
 }
 
 /// the x25519 public key of [private32], as the app's identities derive it

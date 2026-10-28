@@ -22,6 +22,7 @@ const kSignalTables = [
   'signal_meta',
   'kyber_prekeys',
   'kyber_used',
+  'opener_reads',
 ];
 
 // the anonymous dev chat's store
@@ -47,7 +48,7 @@ class LsIdentityStore {
     String prefix = '',
   }) : _t = '${prefix}peer_identities';
 
-  final Database _db;
+  final DatabaseExecutor _db;
   final LsIdentity identity;
   final int registrationId;
   final String _t;
@@ -140,7 +141,7 @@ class LsIdentityStore {
 // one table of records by id
 class _ById {
   _ById(this._db, this._t);
-  final Database _db;
+  final DatabaseExecutor _db;
   final String _t;
 
   Future<Uint8List?> load(int id) async {
@@ -174,7 +175,7 @@ class _ById {
 }
 
 class LsPreKeyStore extends _ById {
-  LsPreKeyStore(Database db, {String prefix = ''})
+  LsPreKeyStore(DatabaseExecutor db, {String prefix = ''})
     : super(db, '${prefix}prekeys');
 
   Future<void> store(int id, Uint8List record) =>
@@ -191,7 +192,7 @@ class LsPreKeyStore extends _ById {
 }
 
 class LsSignedPreKeyStore extends _ById {
-  LsSignedPreKeyStore(Database db, {String prefix = ''})
+  LsSignedPreKeyStore(DatabaseExecutor db, {String prefix = ''})
     : super(db, '${prefix}signed_prekeys');
 
   Future<void> store(int id, Uint8List record) => _put({
@@ -204,11 +205,32 @@ class LsSignedPreKeyStore extends _ById {
 }
 
 class LsKyberPreKeyStore extends _ById {
-  LsKyberPreKeyStore(Database db, {String prefix = ''})
+  LsKyberPreKeyStore(DatabaseExecutor db, {String prefix = ''})
     : _used = '${prefix}kyber_used',
+      _reads = '${prefix}opener_reads',
       super(db, '${prefix}kyber_prekeys');
 
   final String _used;
+  final String _reads;
+
+  /// [opener] (an opener's fingerprint) was read on kyber key [id]
+  Future<void> markRead(int id, List<int> opener) => _db.insert(_reads, {
+    'kyber_id': id,
+    'opener': Uint8List.fromList(opener),
+  }, conflictAlgorithm: ConflictAlgorithm.ignore);
+
+  /// whether [opener] was read on kyber key [id] before
+  Future<bool> wasRead(int id, List<int> opener) async {
+    for (final r in await _db.query(
+      _reads,
+      columns: ['opener'],
+      where: 'kyber_id = ?',
+      whereArgs: [id],
+    )) {
+      if (_eq(r['opener'] as List<int>, opener)) return true;
+    }
+    return false;
+  }
 
   Future<void> store(int id, Uint8List record, {bool lastResort = false}) =>
       _put({
@@ -255,15 +277,17 @@ class LsKyberPreKeyStore extends _ById {
     return false;
   }
 
+  // the openers a key took go with it: nothing opens on it after
   Future<void> remove(int id) async {
     await _drop(id);
     await _db.delete(_used, where: 'kyber_id = ?', whereArgs: [id]);
+    await _db.delete(_reads, where: 'kyber_id = ?', whereArgs: [id]);
   }
 }
 
 class LsSessionStore {
   LsSessionStore(this._db, {String prefix = ''}) : _t = '${prefix}sessions';
-  final Database _db;
+  final DatabaseExecutor _db;
   final String _t;
 
   Future<Uint8List?> load(String peer, [int device = 1]) async {

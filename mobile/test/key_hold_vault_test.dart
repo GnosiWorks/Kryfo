@@ -854,7 +854,7 @@ void main() {
     );
 
     test(
-      'whose session is kept before a later step fails keeps its key',
+      'that fails at a later step keeps nothing, and opens once that works',
       () async {
         final again = await _phone(name: bob.name);
         // a one-time prekey of this phone's, which the open then lets go of
@@ -869,21 +869,27 @@ void main() {
         final wire = await again.ss.encryptTo('me', 'new phone');
         store.failOn = 'delete:prekeys';
         addTearDown(() => store.failOn = null);
-        await signalDecrypt(bob.name, wire, flagKeyChange: true);
+        expect(
+          await signalDecrypt(bob.name, wire, flagKeyChange: true),
+          isNull,
+        );
         store.failOn = null;
         await _settle();
-        // the key the stored session is on, and the banner for it
+        // the session, the key and the spent prekey are one write: none of
+        // it stays, the key held and its marks are as they were
+        expect(_hex(key()), bob.xpub);
+        expect(row()['key_changed'], 0);
+        expect(store.rows('prekeys').any((r) => r['id'] == id), isTrue);
+        // the same opener opens once the write goes through, and moves
+        // the key then
+        expect(
+          await signalDecrypt(bob.name, wire, flagKeyChange: true),
+          'new phone',
+        );
+        await _settle();
         expect(_hex(key()), again.xpub);
         expect(row()['key_changed'], 1);
         expect(await app.keyHeld(bob.name, strict: true), isTrue);
-        expect(
-          await signalDecrypt(
-            bob.name,
-            await again.ss.encryptTo('me', 'and again'),
-            flagKeyChange: true,
-          ),
-          'and again',
-        );
       },
     );
   });

@@ -1558,6 +1558,7 @@ void main() {
       'signal_meta',
       'kyber_prekeys',
       'kyber_used',
+      'opener_reads',
       'search_meta',
       'hidden_chats',
       'vault_meta',

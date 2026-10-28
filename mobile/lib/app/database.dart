@@ -892,8 +892,9 @@ class HaloDb
           await dropFetchTable(db);
         }
         if (oldV < 91) {
-          // the post-quantum prekeys the shim keeps (signal_stores.dart)
-          await kyberTables(db);
+          // the post-quantum prekeys the shim keeps (signal_stores.dart),
+          // and what a kept first contact opened to
+          await upgradeTo91(db);
         }
       },
     );
@@ -1503,7 +1504,9 @@ Future<void> firstContactTables(DatabaseExecutor db) async {
       tries INTEGER NOT NULL DEFAULT 0,
       next_at INTEGER NOT NULL,
       reached_from INTEGER,
-      reached_until INTEGER
+      reached_until INTEGER,
+      opened_id TEXT,
+      opened_plain TEXT
     )
   ''');
   // the words an opener went as go with it, however it goes
@@ -1924,6 +1927,24 @@ Future<void> _signalTables(Database db, {String prefix = ''}) async {
   await db.execute(
     'CREATE TABLE IF NOT EXISTS ${prefix}kyber_used (kyber_id INTEGER NOT NULL, signed_id INTEGER NOT NULL, base_key BLOB NOT NULL, PRIMARY KEY (kyber_id, base_key))',
   );
+  // every opener read on a kyber key, by a fingerprint of what its mac
+  // covers: one opener opens once, whatever path it comes back on
+  await db.execute(
+    'CREATE TABLE IF NOT EXISTS ${prefix}opener_reads (kyber_id INTEGER NOT NULL, opener BLOB NOT NULL, PRIMARY KEY (kyber_id, opener))',
+  );
+}
+
+/// the upgrade to 91: the kyber tables, and a kept first contact's opened
+/// text, which signal opens once only
+@visibleForTesting
+Future<void> upgradeTo91(Database db) async {
+  await kyberTables(db);
+  try {
+    await addColumn(db, 'ALTER TABLE first_kept ADD COLUMN opened_id TEXT');
+    await addColumn(db, 'ALTER TABLE first_kept ADD COLUMN opened_plain TEXT');
+  } catch (e) {
+    dlog('first kept opened columns: $e');
+  }
 }
 
 /// one signal store's tables under [prefix], for a store kept in a file of

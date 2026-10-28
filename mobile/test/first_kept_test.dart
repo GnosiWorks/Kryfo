@@ -377,6 +377,7 @@ void main() {
           tries: 0,
           nextAt: 0,
           reached: null,
+          opened: null,
         );
         // a block that ended an hour before it was written
         live.blockSpans[s.id] = [(now - 3 * 3600000, now - 3600000)];
@@ -395,6 +396,7 @@ void main() {
         tries: 0,
         nextAt: 0,
         reached: null,
+        opened: null,
       );
       await app.retryFirsts();
       expect(live.kept, isEmpty);
@@ -760,6 +762,7 @@ void main() {
         tries: 0,
         nextAt: 0,
         reached: null,
+        opened: null,
       );
     }
     await app.resetInviteAddress();

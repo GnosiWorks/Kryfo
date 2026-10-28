@@ -577,7 +577,7 @@ void main() {
       final caught = await _sealCheck(
         madeFrames['text opener']!,
         anon: a,
-        who: 'through-${_n++}',
+        who: a.id,
         seal: through.encrypt,
       );
       expect(caught, contains('carries $everydayWords'));
@@ -587,7 +587,7 @@ void main() {
         await _sealCheck(
           madeFrames['introduction']!,
           anon: a,
-          who: 'through-${_n++}',
+          who: a.id,
           seal: through.encrypt,
         ),
         contains('went out: ${madeFrames['introduction']}'),
