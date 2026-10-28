@@ -26,6 +26,7 @@ import '../widgets/remembered_height.dart';
 import '../widgets/video_bubble.dart';
 import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
+import '../file_drop.dart' show dropTryLater;
 import '../file_kind.dart'
     show
         FileShape,
@@ -60,6 +61,7 @@ import '../stickers/sticker_wire.dart' show StickerWire;
 import '../main.dart'
     show
         appState,
+        AppStateFiles,
         session,
         sessionQuiet,
         claimChat,
@@ -2969,8 +2971,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
       return null;
     }
-    if (!fileFits(size)) {
-      if (mounted) showHaloToast(context, fileTooBigLine(size));
+    final most = await appState.fileLimitForGroup(widget.groupId);
+    if (!fileFits(size, most)) {
+      if (mounted) showHaloToast(context, fileTooBigLine(size, most));
       return null;
     }
     // a picture the lane cannot clean goes only once the sender has read
@@ -3183,6 +3186,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       appState.chatChanged('group:${widget.groupId}');
       return;
     }
+    if (dropTryLater(result)) showHaloToast(context, l10n.fileServerTryLater);
     // re-find the on-screen object; a reload may have replaced m.
     final live = _liveMsg(uid) ?? m;
     setState(() {

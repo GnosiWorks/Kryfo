@@ -45,6 +45,7 @@ import '../widgets/row_anchor.dart';
 import '../widgets/video_bubble.dart';
 import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
+import '../file_drop.dart' show dropTryLater;
 import '../file_kind.dart'
     show
         FileShape,
@@ -91,6 +92,7 @@ import '../widgets/kryfo_avatar.dart';
 import '../main.dart'
     show
         engine,
+        AppStateFiles,
         kNameAsk,
         kNameLater,
         kNotSent,
@@ -4078,8 +4080,9 @@ class _ChatScreenState extends State<ChatScreen>
       if (mounted) showHaloToast(context, l10n.chatCouldNotReadThat);
       return null;
     }
-    if (!fileFits(size)) {
-      if (mounted) showHaloToast(context, fileTooBigLine(size));
+    final most = await appState.fileLimitFor(widget.peerHaloId);
+    if (!fileFits(size, most)) {
+      if (mounted) showHaloToast(context, fileTooBigLine(size, most));
       return null;
     }
     final raw = (await readFileFactsFresh(src, name))?.raw ?? false;
@@ -4486,6 +4489,8 @@ class _ChatScreenState extends State<ChatScreen>
     final shown = _messages.where(
       (m) => m.msgUid != null && m.msgUid == msg.msgUid,
     );
+    final later = dropTryLater(result);
+    if (later) showHaloToast(context, l10n.fileServerTryLater);
     setState(() {
       for (final m in {msg, ...shown}) {
         m.sending = false;
@@ -4499,7 +4504,8 @@ class _ChatScreenState extends State<ChatScreen>
       } else if (result != 'ok' &&
           result != 'parked' &&
           result != kSendBlocked &&
-          !held) {
+          !held &&
+          !later) {
         _status = result;
       } else if (result == 'ok') {
         _devKeyFailed = false;

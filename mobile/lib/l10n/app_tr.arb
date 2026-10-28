@@ -2511,5 +2511,7 @@
   "cardAnswer": "Tamam. Bir tane daha yaz ya da bitince Bitti’ye dokun.",
   "keyLine": "PIN’lerin yalnızca bu telefonda çalışır. Telefon onları denetleyen anahtarı bir gün kaybederse Kryfo’yu sıfırlayıp bir yedeği geri yüklemen gerekir. Gizli sohbetler yalnızca açıkken alınmış bir yedekten geri gelir.",
   "keyLineUnlocked": "PIN’lerin yalnızca bu telefonda ve yalnızca telefonun kilidi açıkken çalışır. Telefon onları denetleyen anahtarı bir gün kaybederse Kryfo’yu sıfırlayıp bir yedeği geri yüklemen gerekir. Gizli sohbetler yalnızca açıkken alınmış bir yedekten geri gelir.",
-  "keyLineScreenLock": "Telefonuna bir ekran kilidi koy ki bu koruma telefon kilitliyken de sürsün."
+  "keyLineScreenLock": "Telefonuna bir ekran kilidi koy ki bu koruma telefon kilitliyken de sürsün.",
+  "fileServerTryLater": "Dosya sunucusu şu an dolu. Biraz sonra tekrar dene.",
+  "fileTooBigUntilUpdate": "Bu dosya {size}. Herkes Kryfo'yu güncelleyene kadar bu sohbette dosyalar en fazla {max} olabilir."
 }

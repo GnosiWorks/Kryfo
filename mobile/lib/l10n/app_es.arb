@@ -2511,5 +2511,7 @@
   "cardAnswer": "Listo. Escribe otro, o toca Listo cuando termines.",
   "keyLine": "Tus PIN solo funcionan en este teléfono. Si el teléfono pierde alguna vez la clave que los comprueba, tendrás que restablecer Kryfo y restaurar una copia de seguridad. Los chats ocultos solo vuelven de una copia hecha mientras estaban abiertos.",
   "keyLineUnlocked": "Tus PIN solo funcionan en este teléfono, y solo mientras está desbloqueado. Si el teléfono pierde alguna vez la clave que los comprueba, tendrás que restablecer Kryfo y restaurar una copia de seguridad. Los chats ocultos solo vuelven de una copia hecha mientras estaban abiertos.",
-  "keyLineScreenLock": "Pon un bloqueo de pantalla en el teléfono para que esta protección siga en pie cuando esté bloqueado."
+  "keyLineScreenLock": "Pon un bloqueo de pantalla en el teléfono para que esta protección siga en pie cuando esté bloqueado.",
+  "fileServerTryLater": "El servidor de archivos está lleno por ahora. Vuelve a intentarlo un poco más tarde.",
+  "fileTooBigUntilUpdate": "Este archivo pesa {size}. En este chat se pueden enviar archivos de hasta {max} hasta que todos actualicen Kryfo."
 }

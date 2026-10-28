@@ -2511,5 +2511,7 @@
   "cardAnswer": "C’est fait. Tapez-en un autre, ou touchez Terminé quand vous avez fini.",
   "keyLine": "Vos codes PIN ne fonctionnent que sur ce téléphone. Si le téléphone perd un jour la clé qui les vérifie, il faudra réinitialiser Kryfo et restaurer une sauvegarde. Les discussions masquées ne reviennent que d’une sauvegarde faite pendant qu’elles étaient ouvertes.",
   "keyLineUnlocked": "Vos codes PIN ne fonctionnent que sur ce téléphone, et seulement quand il est déverrouillé. Si le téléphone perd un jour la clé qui les vérifie, il faudra réinitialiser Kryfo et restaurer une sauvegarde. Les discussions masquées ne reviennent que d’une sauvegarde faite pendant qu’elles étaient ouvertes.",
-  "keyLineScreenLock": "Activez un verrouillage d’écran sur votre téléphone pour que cette protection tienne quand il est verrouillé."
+  "keyLineScreenLock": "Activez un verrouillage d’écran sur votre téléphone pour que cette protection tienne quand il est verrouillé.",
+  "fileServerTryLater": "Le serveur de fichiers est plein pour le moment. Réessayez un peu plus tard.",
+  "fileTooBigUntilUpdate": "Ce fichier fait {size}. Dans cette discussion, les fichiers peuvent faire jusqu’à {max} tant que tout le monde n’a pas mis à jour Kryfo."
 }

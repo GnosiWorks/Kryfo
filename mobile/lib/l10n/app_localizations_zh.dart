@@ -9050,6 +9050,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get keyLineScreenLock => '请为手机设置屏幕锁，这样手机锁定时这层保护依然有效。';
+
+  @override
+  String get fileServerTryLater => '文件服务器暂时已满，请稍后再试。';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return '这个文件有 $size。在所有人更新 Kryfo 之前，这个聊天里的文件最大为 $max。';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -17981,4 +17989,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get keyLineScreenLock => '請為手機設定螢幕鎖定，這樣手機鎖定時這層保護依然有效。';
+
+  @override
+  String get fileServerTryLater => '檔案伺服器暫時已滿，請稍後再試。';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return '這個檔案有 $size。在所有人更新 Kryfo 之前，這個聊天裡的檔案最大為 $max。';
+  }
 }

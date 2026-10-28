@@ -9622,4 +9622,13 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'اضبط قفل شاشة لهاتفك حتى تبقى هذه الحماية قائمة عندما يكون مقفلًا.';
+
+  @override
+  String get fileServerTryLater =>
+      'خادم الملفات ممتلئ حاليًا. حاول مرة أخرى بعد قليل.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'حجم هذا الملف ⁨$size⁩. في هذه المحادثة يمكن إرسال ملفات حتى ⁨$max⁩ إلى أن يحدّث الجميع Kryfo.';
+  }
 }

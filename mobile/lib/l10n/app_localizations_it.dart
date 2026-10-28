@@ -9565,4 +9565,13 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Imposta un blocco schermo sul telefono, così questa protezione regge anche quando è bloccato.';
+
+  @override
+  String get fileServerTryLater =>
+      'Il server dei file è pieno al momento. Riprova tra un po\'.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Questo file pesa $size. In questa chat i file possono arrivare a $max finché tutti non aggiornano Kryfo.';
+  }
 }

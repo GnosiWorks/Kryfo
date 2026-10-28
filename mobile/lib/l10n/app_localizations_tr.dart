@@ -9513,4 +9513,13 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Telefonuna bir ekran kilidi koy ki bu koruma telefon kilitliyken de sürsün.';
+
+  @override
+  String get fileServerTryLater =>
+      'Dosya sunucusu şu an dolu. Biraz sonra tekrar dene.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Bu dosya $size. Herkes Kryfo\'yu güncelleyene kadar bu sohbette dosyalar en fazla $max olabilir.';
+  }
 }

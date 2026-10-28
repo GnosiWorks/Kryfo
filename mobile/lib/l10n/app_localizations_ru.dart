@@ -9656,4 +9656,13 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Включите блокировку экрана на телефоне, чтобы эта защита действовала и тогда, когда он заблокирован.';
+
+  @override
+  String get fileServerTryLater =>
+      'Файловый сервер сейчас заполнен. Попробуй чуть позже.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Этот файл весит $size. В этом чате можно отправлять файлы до $max, пока все не обновят Kryfo.';
+  }
 }

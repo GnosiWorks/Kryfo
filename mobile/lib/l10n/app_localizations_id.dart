@@ -9483,4 +9483,13 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Pasang kunci layar di ponselmu supaya perlindungan ini tetap berlaku saat ponsel terkunci.';
+
+  @override
+  String get fileServerTryLater =>
+      'Server file sedang penuh. Coba lagi sebentar lagi.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'File ini berukuran $size. Di chat ini ukuran file maksimal $max sampai semua orang memperbarui Kryfo.';
+  }
 }

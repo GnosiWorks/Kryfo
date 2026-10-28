@@ -9587,4 +9587,13 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Richte eine Displaysperre auf deinem Handy ein, damit dieser Schutz auch hält, wenn es gesperrt ist.';
+
+  @override
+  String get fileServerTryLater =>
+      'Der Dateiserver ist gerade voll. Versuch es etwas später noch einmal.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Diese Datei hat $size. In diesem Chat gehen Dateien bis $max, bis alle hier Kryfo aktualisiert haben.';
+  }
 }
