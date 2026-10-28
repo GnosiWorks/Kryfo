@@ -2313,6 +2313,45 @@ class AppLocalizationsDe extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Abzeichen ab 20 \$';
 
   @override
+  String get donateShowTheAddress => 'Adresse zeigen';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount in Bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Was das Abzeichen bringt';
+
+  @override
+  String get donateGivesMark =>
+      'Ein Zeichen neben deinem Namen. Du entscheidest, wer es sieht, wenn überhaupt.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Eine signierte Quittung auf diesem Handy. Sie belegt das Abzeichen, ganz ohne Konto.';
+
+  @override
+  String get donateGivesFree =>
+      'Jede Datenschutzfunktion bleibt kostenlos, mit oder ohne Abzeichen.';
+
+  @override
+  String get donateAddressOnTap =>
+      'Die Adresse entsteht erst, wenn du unten tippst. Sie bleibt eine Stunde lang deine, wer zurückkommt, bekommt dieselbe.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin ist gerade ausgelastet. Versuch es später noch einmal oder zahl mit Karte.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Du kannst trotzdem Bitcoin an die Adresse unten senden. Sie bringt kein Abzeichen.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Das ist die Adresse, die du vorhin geöffnet hast. Wenn du schon gesendet hast, warte hier.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Verbinde mit dem Zahlungsdienst über Tor…';
 
@@ -2405,6 +2444,21 @@ class AppLocalizationsDe extends AppLocalizations {
           'On-chain verifiziert. Du unterstützt Kryfo jetzt als Hüter. Das kann dir niemand mehr nehmen.',
       'other':
           'On-chain verifiziert. Du unterstützt Kryfo jetzt als Unterstützer. Das kann dir niemand mehr nehmen.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'On-chain verifiziert. Danke, dass du noch einmal gibst. Dein Abzeichen bleibt: Unterstützer.',
+      'patron':
+          'On-chain verifiziert. Danke, dass du noch einmal gibst. Dein Abzeichen bleibt: Förderer.',
+      'guardian':
+          'On-chain verifiziert. Danke, dass du noch einmal gibst. Dein Abzeichen bleibt: Hüter.',
+      'other':
+          'On-chain verifiziert. Danke, dass du noch einmal gibst. Dein Abzeichen bleibt: Unterstützer.',
     });
     return '$_temp0';
   }

@@ -2285,6 +2285,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Badges start at \$20';
 
   @override
+  String get donateShowTheAddress => 'Show the address';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount in bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'What the badge gives';
+
+  @override
+  String get donateGivesMark =>
+      'A mark by your name. You choose who sees it, if anyone.';
+
+  @override
+  String get donateGivesReceipt =>
+      'A signed receipt kept on this phone. It proves the badge with no account.';
+
+  @override
+  String get donateGivesFree =>
+      'Every privacy feature stays free, badge or not.';
+
+  @override
+  String get donateAddressOnTap =>
+      'The address is made when you tap below. It stays yours for an hour, so coming back gives you the same one.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin is busy right now. Try again later or pay by card.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'You can still send bitcoin to the address below. It gives no badge.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'This is the address you opened earlier. If you already sent, wait here.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Reaching the payment service over Tor…';
 
@@ -2376,6 +2415,21 @@ class AppLocalizationsEn extends AppLocalizations {
           'Verified on-chain. You\'re a guardian now. No one can take that off you.',
       'other':
           'Verified on-chain. You\'re a supporter now. No one can take that off you.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Verified on-chain. Thank you for giving again. You keep your supporter badge.',
+      'patron':
+          'Verified on-chain. Thank you for giving again. You keep your patron badge.',
+      'guardian':
+          'Verified on-chain. Thank you for giving again. You keep your guardian badge.',
+      'other':
+          'Verified on-chain. Thank you for giving again. You keep your supporter badge.',
     });
     return '$_temp0';
   }

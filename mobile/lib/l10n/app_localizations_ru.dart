@@ -2346,6 +2346,45 @@ class AppLocalizationsRu extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Значки — от \$20';
 
   @override
+  String get donateShowTheAddress => 'Показать адрес';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount в bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Что даёт значок';
+
+  @override
+  String get donateGivesMark =>
+      'Знак рядом с твоим именем. Ты решаешь, кто его видит, если вообще кто-то.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Подписанная квитанция на этом телефоне. Она подтверждает значок без всякого аккаунта.';
+
+  @override
+  String get donateGivesFree =>
+      'Все функции приватности остаются бесплатными, со значком или без.';
+
+  @override
+  String get donateAddressOnTap =>
+      'Адрес создаётся, только когда ты нажмёшь ниже. Он остаётся твоим целый час, и если вернёшься, получишь тот же.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin сейчас перегружен. Попробуй позже или оплати картой.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Bitcoin всё равно можно отправить на адрес ниже. Значка он не даёт.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Это адрес, который ты открывал раньше. Если уже отправил, жди здесь.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Связываемся с платёжным сервисом через Tor…';
 
@@ -2438,6 +2477,21 @@ class AppLocalizationsRu extends AppLocalizations {
           'Проверено в блокчейне — теперь ты хранитель. Этого у тебя никто не отнимет.',
       'other':
           'Проверено в блокчейне — теперь ты сторонник. Этого у тебя никто не отнимет.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Проверено в блокчейне. Спасибо, что поддержал ещё раз. Твой значок «сторонник» остаётся с тобой.',
+      'patron':
+          'Проверено в блокчейне. Спасибо, что поддержал ещё раз. Твой значок «меценат» остаётся с тобой.',
+      'guardian':
+          'Проверено в блокчейне. Спасибо, что поддержал ещё раз. Твой значок «хранитель» остаётся с тобой.',
+      'other':
+          'Проверено в блокчейне. Спасибо, что поддержал ещё раз. Твой значок «сторонник» остаётся с тобой.',
     });
     return '$_temp0';
   }

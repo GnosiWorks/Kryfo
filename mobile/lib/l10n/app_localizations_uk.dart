@@ -2341,6 +2341,45 @@ class AppLocalizationsUk extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Значки від \$20';
 
   @override
+  String get donateShowTheAddress => 'Показати адресу';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount у bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Що дає значок';
+
+  @override
+  String get donateGivesMark =>
+      'Знак біля твого імені. Ти вирішуєш, хто його бачить, якщо взагалі хтось.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Підписана квитанція на цьому телефоні. Вона підтверджує значок без жодного акаунта.';
+
+  @override
+  String get donateGivesFree =>
+      'Усі функції приватності лишаються безкоштовними, зі значком чи без.';
+
+  @override
+  String get donateAddressOnTap =>
+      'Адреса з\'являється, лише коли ти натиснеш нижче. Вона лишається твоєю цілу годину, тож якщо повернешся, отримаєш ту саму.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin зараз перевантажений. Спробуй пізніше або оплати карткою.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Bitcoin усе одно можна надіслати на адресу нижче. Значка вона не дає.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Це адреса, яку ти відкривав раніше. Якщо вже надіслав, чекай тут.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Звертаємося до платіжного сервісу через Tor…';
 
@@ -2433,6 +2472,21 @@ class AppLocalizationsUk extends AppLocalizations {
           'Перевірено в блокчейні. Тепер у тебе статус хранителя. Ніхто не може цього в тебе забрати.',
       'other':
           'Перевірено в блокчейні. Тепер у тебе статус прихильника. Ніхто не може цього в тебе забрати.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Перевірено в блокчейні. Дякуємо, що підтримав ще раз. Твій значок «прихильник» лишається з тобою.',
+      'patron':
+          'Перевірено в блокчейні. Дякуємо, що підтримав ще раз. Твій значок «меценат» лишається з тобою.',
+      'guardian':
+          'Перевірено в блокчейні. Дякуємо, що підтримав ще раз. Твій значок «хранитель» лишається з тобою.',
+      'other':
+          'Перевірено в блокчейні. Дякуємо, що підтримав ще раз. Твій значок «прихильник» лишається з тобою.',
     });
     return '$_temp0';
   }

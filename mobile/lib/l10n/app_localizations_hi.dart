@@ -2294,6 +2294,45 @@ class AppLocalizationsHi extends AppLocalizations {
   String get donateBadgesStartAt20 => 'बैज \$20 से शुरू होते हैं';
 
   @override
+  String get donateShowTheAddress => 'पता दिखाएँ';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return 'bitcoin में $amount';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'बैज से क्या मिलता है';
+
+  @override
+  String get donateGivesMark =>
+      'आपके नाम के पास एक निशान। इसे कौन देखे, या कोई न देखे, यह आप तय करते हैं।';
+
+  @override
+  String get donateGivesReceipt =>
+      'इस फ़ोन पर रखी एक हस्ताक्षरित रसीद। यह बिना किसी खाते के बैज को साबित करती है।';
+
+  @override
+  String get donateGivesFree =>
+      'बैज हो या न हो, निजता की हर सुविधा मुफ़्त रहती है।';
+
+  @override
+  String get donateAddressOnTap =>
+      'पता तभी बनता है जब आप नीचे टैप करते हैं। यह एक घंटे तक आपका रहता है, इसलिए लौटने पर आपको वही पता मिलता है।';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin अभी व्यस्त है। बाद में फिर कोशिश करें या कार्ड से भुगतान करें।';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'आप अब भी नीचे दिए पते पर bitcoin भेज सकते हैं। इससे बैज नहीं मिलता।';
+
+  @override
+  String get donateSameAddressAgain =>
+      'यह वही पता है जो आपने पहले खोला था। अगर आप भेज चुके हैं, तो यहीं प्रतीक्षा करें।';
+
+  @override
   String get donateReachingThePaymentService =>
       'Tor से भुगतान सेवा तक पहुँच रहे हैं…';
 
@@ -2384,6 +2423,21 @@ class AppLocalizationsHi extends AppLocalizations {
           'चेन पर पुष्टि हो गई। अब आप रक्षक हैं। यह आपसे कोई नहीं छीन सकता।',
       'other':
           'चेन पर पुष्टि हो गई। अब आप समर्थक हैं। यह आपसे कोई नहीं छीन सकता।',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'चेन पर पुष्टि हो गई। फिर से सहयोग के लिए धन्यवाद। आपका समर्थक बैज आपके पास ही रहता है।',
+      'patron':
+          'चेन पर पुष्टि हो गई। फिर से सहयोग के लिए धन्यवाद। आपका संरक्षक बैज आपके पास ही रहता है।',
+      'guardian':
+          'चेन पर पुष्टि हो गई। फिर से सहयोग के लिए धन्यवाद। आपका रक्षक बैज आपके पास ही रहता है।',
+      'other':
+          'चेन पर पुष्टि हो गई। फिर से सहयोग के लिए धन्यवाद। आपका समर्थक बैज आपके पास ही रहता है।',
     });
     return '$_temp0';
   }

@@ -2313,6 +2313,45 @@ class AppLocalizationsEs extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Insignias desde 20 USD';
 
   @override
+  String get donateShowTheAddress => 'Mostrar la dirección';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount en bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Qué te da la insignia';
+
+  @override
+  String get donateGivesMark =>
+      'Una marca junto a tu nombre. Tú eliges quién la ve, si es que alguien.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Un recibo firmado guardado en este teléfono. Prueba la insignia sin ninguna cuenta.';
+
+  @override
+  String get donateGivesFree =>
+      'Todas las funciones de privacidad siguen siendo gratis, con insignia o sin ella.';
+
+  @override
+  String get donateAddressOnTap =>
+      'La dirección se crea cuando tocas abajo. Es tuya durante una hora, así que si vuelves te sale la misma.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin está saturado ahora mismo. Inténtalo más tarde o paga con tarjeta.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Aún puedes enviar bitcoin a la dirección de abajo. No da insignia.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Es la dirección que abriste antes. Si ya enviaste, espera aquí.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Contactando con el servicio de pago por Tor…';
 
@@ -2405,6 +2444,21 @@ class AppLocalizationsEs extends AppLocalizations {
           'Verificado en la cadena: ahora eres guardián. Nadie te lo puede quitar.',
       'other':
           'Verificado en la cadena: ahora eres colaborador. Nadie te lo puede quitar.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Verificado en la cadena. Gracias por volver a aportar. Conservas tu insignia de colaborador.',
+      'patron':
+          'Verificado en la cadena. Gracias por volver a aportar. Conservas tu insignia de mecenas.',
+      'guardian':
+          'Verificado en la cadena. Gracias por volver a aportar. Conservas tu insignia de guardián.',
+      'other':
+          'Verificado en la cadena. Gracias por volver a aportar. Conservas tu insignia de colaborador.',
     });
     return '$_temp0';
   }

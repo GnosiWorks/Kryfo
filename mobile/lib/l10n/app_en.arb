@@ -2870,6 +2870,51 @@
   "@donateBadgesStartAt20": {
     "description": "screens/donate_screen.dart"
   },
+  "donateShowTheAddress": "Show the address",
+  "@donateShowTheAddress": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateReviewAmount": "{amount} in bitcoin",
+  "@donateReviewAmount": {
+    "description": "screens/donate_screen.dart",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "donateWhatTheBadgeGives": "What the badge gives",
+  "@donateWhatTheBadgeGives": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateGivesMark": "A mark by your name. You choose who sees it, if anyone.",
+  "@donateGivesMark": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateGivesReceipt": "A signed receipt kept on this phone. It proves the badge with no account.",
+  "@donateGivesReceipt": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateGivesFree": "Every privacy feature stays free, badge or not.",
+  "@donateGivesFree": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateAddressOnTap": "The address is made when you tap below. It stays yours for an hour, so coming back gives you the same one.",
+  "@donateAddressOnTap": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateBitcoinBusy": "Bitcoin is busy right now. Try again later or pay by card.",
+  "@donateBitcoinBusy": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateBusyPlainAddress": "You can still send bitcoin to the address below. It gives no badge.",
+  "@donateBusyPlainAddress": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateSameAddressAgain": "This is the address you opened earlier. If you already sent, wait here.",
+  "@donateSameAddressAgain": {
+    "description": "screens/donate_screen.dart"
+  },
   "donateReachingThePaymentService": "Reaching the payment service over Tor…",
   "@donateReachingThePaymentService": {
     "description": "screens/donate_screen.dart"
@@ -2976,6 +3021,15 @@
   "donateVerifiedOnChainYou": "{tier, select, supporter{Verified on-chain. You're a supporter now. No one can take that off you.} patron{Verified on-chain. You're a patron now. No one can take that off you.} guardian{Verified on-chain. You're a guardian now. No one can take that off you.} other{Verified on-chain. You're a supporter now. No one can take that off you.}}",
   "@donateVerifiedOnChainYou": {
     "description": "screens/donate_screen.dart. tier is the supporter tier",
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "donateVerifiedBadgeStays": "{tier, select, supporter{Verified on-chain. Thank you for giving again. You keep your supporter badge.} patron{Verified on-chain. Thank you for giving again. You keep your patron badge.} guardian{Verified on-chain. Thank you for giving again. You keep your guardian badge.} other{Verified on-chain. Thank you for giving again. You keep your supporter badge.}}",
+  "@donateVerifiedBadgeStays": {
+    "description": "screens/donate_screen.dart",
     "placeholders": {
       "tier": {
         "type": "String"
