@@ -308,8 +308,13 @@ void main() {
       final src = File('lib/app/state_session.dart').readAsStringSync();
       expect(src, contains('await _sweepUnnamedMedia(before, v);'));
       expect(src, contains('await _sweepUnnamedMedia(before, d);'));
+      // the decoy's own vault open sweeps the decoy too, as its wallpapers
+      final vaultOpen = src.indexOf(
+        'await _sweepUnnamedMedia(before, primary, true);',
+      );
+      expect(vaultOpen, greaterThan(src.indexOf('await settleVault(v);')));
       final boot = File('lib/app/state_boot.dart').readAsStringSync();
-      expect(boot, contains('(d ?? live).unnamedMedia(before: before)'));
+      expect(boot, contains('await sweepableMedia('));
     });
 
     test('the word is taken past the gates, for nobody in the dev chat', () {
@@ -420,44 +425,6 @@ void main() {
       expect(await run, isNull);
       expect(File('${tmp.path}/vn_u1.ogg').existsSync(), isFalse);
     });
-
-    test(
-      'a resend of an opus note to a phone that went back is a wav',
-      () async {
-        final ogg = '${tmp.path}/vn_u1.ogg';
-        File(ogg).writeAsBytesSync(_note);
-        // to one that still plays it, or a file of another kind: as it is
-        expect(await voiceAgain(ogg, 'voice.ogg', opus: true, scratch: 'x'), (
-          ogg,
-          'voice.ogg',
-          null,
-        ));
-        expect(await voiceAgain(wav, 'voice.wav', opus: false, scratch: 'x'), (
-          wav,
-          'voice.wav',
-          null,
-        ));
-        // with no engine here the decode fails: the ogg goes as it was, and
-        // no scratch is left
-        final scratch = '${tmp.path}/vn_u1_r.wav';
-        expect(
-          await voiceAgain(ogg, 'voice.ogg', opus: false, scratch: scratch),
-          (ogg, 'voice.ogg', null),
-        );
-        expect(File(scratch).existsSync(), isFalse);
-        // with one: the wav made from it, under the name a 0.5 phone plays
-        voiceWavForTest = (from, to) async {
-          File(to).writeAsBytesSync(_wav(16000));
-          return 'ok 1000';
-        };
-        addTearDown(() => voiceWavForTest = null);
-        expect(
-          await voiceAgain(ogg, 'voice.ogg', opus: false, scratch: scratch),
-          (scratch, 'voice.wav', scratch),
-        );
-        expect(await voiceFileMs(scratch), 1000);
-      },
-    );
 
     test('encodes take turns', () async {
       final order = <String>[];

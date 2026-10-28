@@ -44,10 +44,6 @@ Future<String> _engineWav(String ogg, String wav) =>
 @visibleForTesting
 Future<String> Function(String wav, String ogg)? voiceOggForTest;
 
-/// stands in for the engine in tests: what HaloVoiceWav would answer
-@visibleForTesting
-Future<String> Function(String ogg, String wav)? voiceWavForTest;
-
 /// stands in for the engine in tests: what HaloVoicePeaks would answer
 @visibleForTesting
 String Function(String ogg, int bars)? voicePeaksForTest;
@@ -122,10 +118,7 @@ Future<int?> _encodeInTurn(String wav, String ogg, bool Function()? stop) {
 /// only. false with nothing at [wav]
 Future<bool> decodeVoiceWav(String ogg, String wav) async {
   try {
-    final hook = voiceWavForTest;
-    final said = hook != null
-        ? await hook(ogg, wav)
-        : await _engineWav(ogg, wav);
+    final said = await _engineWav(ogg, wav);
     if (said.startsWith('ok ')) return true;
     dlog('voice: not decoded ($said)');
   } catch (e) {
@@ -181,19 +174,4 @@ Future<(String, String)> voiceForWire(
   if (ogg == wav) return (wav, kVoiceWav);
   final ms = await encodeVoiceOgg(wav, ogg, stop: stop);
   return ms == null ? (wav, kVoiceWav) : (ogg, kVoiceOgg);
-}
-
-/// a voice note going again, whole: (path, name, scratch). an opus note to
-/// a phone that no longer says it plays opus goes as a wav made from it at
-/// [scratch], beside the takes the start sweeps, for the caller to shred
-/// once it went. anything else goes as it is, scratch null
-Future<(String, String?, String?)> voiceAgain(
-  String path,
-  String? name, {
-  required bool opus,
-  required String scratch,
-}) async {
-  if (name != kVoiceOgg || opus) return (path, name, null);
-  if (!await decodeVoiceWav(path, scratch)) return (path, name, null);
-  return (scratch, kVoiceWav, scratch);
 }

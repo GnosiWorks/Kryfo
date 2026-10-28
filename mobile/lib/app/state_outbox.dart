@@ -905,40 +905,29 @@ extension AppStateOutbox on AppState {
     final contact = await d.getContact(peer);
     if (contact == null) return;
     final backPaired = await d.isBackPaired(peer);
-    // a whole resend of an opus note to a phone that went back goes as wav
-    final (sendPath, fileName, scratch) = await voiceAgain(
-      path,
-      isFile ? r['file_name'] as String? : null,
-      opus: only != null || await opusFor(peer),
-      scratch: '${(await getTemporaryDirectory()).path}/vn_${uid}_r.wav',
+    final fileName = isFile ? r['file_name'] as String? : null;
+    final res = await sendChunkedMediaTo(
+      peerId: peer,
+      peerOnion: (contact['onion'] as String?) ?? '',
+      peerXPub: contact['xpub'] as String?,
+      backPaired: backPaired,
+      needPow: !backPaired,
+      path: path,
+      msgUid: uid,
+      caption: (r['plaintext'] as String?) ?? '',
+      fileName: fileName,
+      voice: isVoiceName(fileName),
+      voiceDisguised: ((r['voice_disguised'] as int?) ?? 0) == 1,
+      burnSeconds: (r['burn_secs'] as num?)?.toInt(),
+      secure: ((r['secure'] as int?) ?? 0) == 1,
+      replyTo: r['reply_to'] as String?,
+      album: AlbumTag.ofRow(r),
+      writtenAt: (r['sent_at'] as num?)?.toInt(),
+      sender: _mySender(),
+      only: only,
+      progressKey: d.container.chatKey(peer),
+      blockedHere: () => d.isBlocked(peer),
     );
-    final String res;
-    try {
-      res = await sendChunkedMediaTo(
-        peerId: peer,
-        peerOnion: (contact['onion'] as String?) ?? '',
-        peerXPub: contact['xpub'] as String?,
-        backPaired: backPaired,
-        needPow: !backPaired,
-        path: sendPath,
-        msgUid: uid,
-        caption: (r['plaintext'] as String?) ?? '',
-        fileName: fileName,
-        voice: isVoiceName(fileName),
-        voiceDisguised: ((r['voice_disguised'] as int?) ?? 0) == 1,
-        burnSeconds: (r['burn_secs'] as num?)?.toInt(),
-        secure: ((r['secure'] as int?) ?? 0) == 1,
-        replyTo: r['reply_to'] as String?,
-        album: AlbumTag.ofRow(r),
-        writtenAt: (r['sent_at'] as num?)?.toInt(),
-        sender: _mySender(),
-        only: only,
-        progressKey: d.container.chatKey(peer),
-        blockedHere: () => d.isBlocked(peer),
-      );
-    } finally {
-      if (scratch != null) await shredFile(scratch);
-    }
     if (only != null) {
       dlog('need $uid: resend ended $res');
       // a hold stopped it: the rest goes once the decoy is left

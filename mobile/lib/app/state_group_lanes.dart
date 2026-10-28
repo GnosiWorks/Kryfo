@@ -14,19 +14,12 @@ extension AppStateGroupLanes on AppState {
   }) async {
     final f = File(path);
     if (!await f.exists()) return;
-    // a whole resend of an opus note to a group that no longer all plays
-    // it goes as wav
-    final (sendPath, fileName, scratch) = await voiceAgain(
-      path,
-      isFile ? r['file_name'] as String? : null,
-      opus: await opusForGroup(groupId),
-      scratch: '${(await getTemporaryDirectory()).path}/vn_${uid}_r.wav',
-    );
+    final fileName = isFile ? r['file_name'] as String? : null;
     String res;
     try {
       res = await sendMediaToGroup(
         groupId,
-        sendPath,
+        path,
         msgUid: uid,
         caption: (r['plaintext'] as String?) ?? '',
         fileName: fileName,
@@ -39,8 +32,6 @@ extension AppStateGroupLanes on AppState {
       );
     } catch (e) {
       res = 'error: $e';
-    } finally {
-      if (scratch != null) await shredFile(scratch);
     }
     if (res == 'ok') {
       dlog('outbox: group media redelivered $uid');
