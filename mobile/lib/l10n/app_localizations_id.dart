@@ -2282,6 +2282,37 @@ class AppLocalizationsId extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Lencana mulai dari \$20';
 
   @override
+  String get donateShowTheAddress => 'Tampilkan alamat';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount dalam bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Yang kamu dapat dari lencana';
+
+  @override
+  String get donateGivesMark =>
+      'Tanda di samping namamu. Kamu yang memilih siapa yang melihatnya, atau tidak ada sama sekali.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Tanda terima bertanda tangan yang tersimpan di ponsel ini. Ini membuktikan lencana tanpa akun apa pun.';
+
+  @override
+  String get donateGivesFree =>
+      'Semua fitur privasi tetap gratis, dengan atau tanpa lencana.';
+
+  @override
+  String get donateAddressOnTap =>
+      'Alamat baru dibuat saat kamu mengetuk di bawah. Alamat itu milikmu selama satu jam, jadi saat kembali kamu mendapat yang sama.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin sedang sibuk. Coba lagi nanti atau bayar dengan kartu.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Menghubungi layanan pembayaran lewat Tor…';
 

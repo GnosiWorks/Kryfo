@@ -192,6 +192,10 @@ void main() {
       await t.pump(const Duration(milliseconds: 100));
       await t.tap(find.text(l10n.donatePayWithBitcoin));
       await t.pump(const Duration(seconds: 1));
+      await t.pump(const Duration(milliseconds: 300));
+      // the address is made on this tap, not on opening
+      await t.tap(find.text(l10n.donateShowTheAddress));
+      await t.pump(const Duration(seconds: 1));
       // the quarter hour runs out with nothing paid
       for (var i = 0; i < 16; i++) {
         await t.pump(const Duration(seconds: 59));

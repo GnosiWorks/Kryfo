@@ -3,7 +3,8 @@
 // and to contacts. all local; nothing here tracks who donated.
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'badge_client.dart' show fetchReceipt, kBadgeTiersShown, ReceiptState;
+import 'badge_client.dart'
+    show BadgeReceipt, fetchReceipt, kBadgeTiersShown, ReceiptState;
 import 'container.dart';
 import 'l10n/l10n.dart';
 
@@ -132,58 +133,155 @@ Future<void> saveShareBadge(
   await prefs.setBool(c.key(_shareKey), on);
 }
 
-// the bitcoin invoice we last opened and never saw settle. the screen's clock
-// is not the service's, so a payment at the edge can be honoured after the
-// screen gave up: asked about again when the donate screen next opens.
+// the bitcoin invoices opened and never seen to settle, one line each:
+// id|tier, and since invoices are handed back, |expires-at in ms. the
+// screen's clock is not the service's, so a payment at the edge can be
+// honoured after the screen gave up: asked about again when the donate
+// screen next opens.
 const _openInvoiceKey = 'badge_open_invoice';
 
+// enough for one per tier and a few left from before
+const _openInvoicesKept = 6;
+
+class OpenInvoice {
+  final String id;
+  final SupporterTier tier;
+  // when the service stops taking it; null from an older version
+  final DateTime? expiresAt;
+  const OpenInvoice(this.id, this.tier, [this.expiresAt]);
+
+  String get _line => expiresAt == null
+      ? '$id|${tier.name}'
+      : '$id|${tier.name}|${expiresAt!.millisecondsSinceEpoch}';
+}
+
+List<OpenInvoice> _parseOpen(String? raw) {
+  final out = <OpenInvoice>[];
+  for (final line in (raw ?? '').split(';')) {
+    final p = line.split('|');
+    if (p.length < 2 || p.length > 3 || p[0].isEmpty) continue;
+    final ms = p.length == 3 ? int.tryParse(p[2]) : null;
+    out.add(
+      OpenInvoice(
+        p[0],
+        _parseTier(p[1]),
+        ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms),
+      ),
+    );
+  }
+  return out;
+}
+
+Future<List<OpenInvoice>> loadOpenInvoices([
+  HaloContainer c = HaloContainer.everyday,
+]) async {
+  final prefs = await SharedPreferences.getInstance();
+  return _parseOpen(prefs.getString(c.key(_openInvoiceKey)));
+}
+
+Future<void> _storeOpen(
+  SharedPreferences prefs,
+  HaloContainer c,
+  List<OpenInvoice> list,
+) async {
+  if (list.isEmpty) {
+    await prefs.remove(c.key(_openInvoiceKey));
+    return;
+  }
+  final kept = list.length > _openInvoicesKept
+      ? list.sublist(list.length - _openInvoicesKept)
+      : list;
+  await prefs.setString(
+    c.key(_openInvoiceKey),
+    kept.map((i) => i._line).join(';'),
+  );
+}
+
+// added last, or moved there when the service handed the same one back
 Future<void> saveOpenInvoice(
   String id,
   SupporterTier tier, [
   HaloContainer c = HaloContainer.everyday,
+  DateTime? expiresAt,
 ]) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setString(c.key(_openInvoiceKey), '$id|${tier.name}');
+  final list = _parseOpen(prefs.getString(c.key(_openInvoiceKey)))
+    ..removeWhere((i) => i.id == id);
+  list.add(OpenInvoice(id, tier, expiresAt));
+  await _storeOpen(prefs, c, list);
 }
 
+// one invoice settled or gone, or all of them when no id is given
 Future<void> clearOpenInvoice([
   HaloContainer c = HaloContainer.everyday,
+  String? id,
 ]) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.remove(c.key(_openInvoiceKey));
+  if (id == null) {
+    await prefs.remove(c.key(_openInvoiceKey));
+    return;
+  }
+  final list = _parseOpen(prefs.getString(c.key(_openInvoiceKey)))
+    ..removeWhere((i) => i.id == id);
+  await _storeOpen(prefs, c, list);
 }
 
-// ask once about the remembered invoice. returns the tier if it was paid
-// (and grants it), null otherwise. leaves the record alone while the
-// service still says pending or cannot be reached.
+// this phone's open invoice for the tier, if it can still be paid: the
+// service hands it back instead of making a new address. the service checks
+// again, this only spares it an id that is surely done
+Future<String?> reusableInvoice(
+  SupporterTier tier, [
+  HaloContainer c = HaloContainer.everyday,
+  DateTime? now,
+]) async {
+  final at = now ?? DateTime.now();
+  final list = await loadOpenInvoices(c);
+  for (final i in list.reversed) {
+    final end = i.expiresAt;
+    if (i.tier == tier && end != null && end.isAfter(at)) return i.id;
+  }
+  return null;
+}
+
+// ask once about each remembered invoice. returns the tier if one was paid
+// (and grants it), null otherwise. leaves a record alone while the service
+// still says pending or cannot be reached.
 Future<SupporterTier?> settleOpenInvoice([
   HaloContainer c = HaloContainer.everyday,
 ]) async {
   // kept for when the tiers are back
   if (!kBadgeTiersShown) return null;
   final prefs = await SharedPreferences.getInstance();
-  final raw = prefs.getString(c.key(_openInvoiceKey));
-  if (raw == null) return null;
-  final parts = raw.split('|');
-  if (parts.length != 2) {
+  final list = _parseOpen(prefs.getString(c.key(_openInvoiceKey)));
+  if (list.isEmpty) {
     await prefs.remove(c.key(_openInvoiceKey));
     return null;
   }
-  final tier = _parseTier(parts[1]);
-  final r = await fetchReceipt(parts[0]);
-  switch (r.state) {
-    case ReceiptState.paid:
-      await prefs.remove(c.key(_openInvoiceKey));
-      if (tier == SupporterTier.none) return null;
-      await saveSupporterTier(tier, c);
-      if (r.payload != null && r.sig != null) {
-        await saveBadgeReceipt(r.payload!, r.sig!, c);
-      }
-      return tier;
-    case ReceiptState.expired:
-      await prefs.remove(c.key(_openInvoiceKey));
-      return null;
-    default:
-      return null;
+  SupporterTier? best;
+  BadgeReceipt? proof;
+  final left = <OpenInvoice>[];
+  for (final inv in list) {
+    final r = await fetchReceipt(inv.id);
+    switch (r.state) {
+      case ReceiptState.paid:
+        if (inv.tier != SupporterTier.none &&
+            (best == null || inv.tier.index > best.index)) {
+          best = inv.tier;
+          proof = r;
+        }
+      case ReceiptState.expired:
+        break;
+      default:
+        left.add(inv);
+    }
   }
+  await _storeOpen(prefs, c, left);
+  if (best == null) return null;
+  // an older, smaller invoice settling late never lowers a badge
+  if ((await loadSupporterTier(c)).index > best.index) return null;
+  await saveSupporterTier(best, c);
+  if (proof?.payload != null && proof?.sig != null) {
+    await saveBadgeReceipt(proof!.payload!, proof.sig!, c);
+  }
+  return best;
 }

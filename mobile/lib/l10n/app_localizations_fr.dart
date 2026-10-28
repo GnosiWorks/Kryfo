@@ -2311,6 +2311,37 @@ class AppLocalizationsFr extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Badges dès 20 \$';
 
   @override
+  String get donateShowTheAddress => 'Afficher l\'adresse';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount en bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Ce que le badge apporte';
+
+  @override
+  String get donateGivesMark =>
+      'Une marque à côté de votre nom. Vous choisissez qui la voit, ou personne.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Un reçu signé gardé sur ce téléphone. Il prouve le badge, sans compte.';
+
+  @override
+  String get donateGivesFree =>
+      'Toutes les fonctions de confidentialité restent gratuites, badge ou pas.';
+
+  @override
+  String get donateAddressOnTap =>
+      'L\'adresse est créée quand vous touchez le bouton ci-dessous. Elle reste la vôtre pendant une heure : en revenant, vous retrouvez la même.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin est saturé pour le moment. Réessayez plus tard ou payez par carte.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Connexion au service de paiement par Tor…';
 

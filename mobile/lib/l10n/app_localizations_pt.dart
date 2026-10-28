@@ -2307,6 +2307,37 @@ class AppLocalizationsPt extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Selos a partir de US\$ 20';
 
   @override
+  String get donateShowTheAddress => 'Mostrar o endereço';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount em bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'O que o selo traz';
+
+  @override
+  String get donateGivesMark =>
+      'Uma marca ao lado do seu nome. Você escolhe quem a vê, se alguém.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Um recibo assinado guardado neste telefone. Ele comprova o selo sem nenhuma conta.';
+
+  @override
+  String get donateGivesFree =>
+      'Todos os recursos de privacidade continuam gratuitos, com selo ou sem.';
+
+  @override
+  String get donateAddressOnTap =>
+      'O endereço é criado quando você toca abaixo. Ele fica seu por uma hora, então ao voltar você recebe o mesmo.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'O Bitcoin está sobrecarregado agora. Tente mais tarde ou pague com cartão.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Acessando o serviço de pagamento pelo Tor…';
 

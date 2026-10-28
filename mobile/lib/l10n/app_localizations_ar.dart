@@ -2351,6 +2351,37 @@ class AppLocalizationsAr extends AppLocalizations {
   String get donateBadgesStartAt20 => 'تبدأ الشارات من ٢٠ دولارًا';
 
   @override
+  String get donateShowTheAddress => 'أظهر العنوان';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount بـ bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'ما تمنحك إياه الشارة';
+
+  @override
+  String get donateGivesMark =>
+      'علامة بجانب اسمك. أنت تختار من يراها، أو لا أحد.';
+
+  @override
+  String get donateGivesReceipt =>
+      'إيصال موقَّع محفوظ على هذا الهاتف. يثبت الشارة دون أي حساب.';
+
+  @override
+  String get donateGivesFree =>
+      'تبقى كل ميزات الخصوصية مجانية، بشارة أو بدونها.';
+
+  @override
+  String get donateAddressOnTap =>
+      'لا يُنشأ العنوان إلا حين تنقر في الأسفل. يبقى لك لمدة ساعة، فإن عدت تحصل على العنوان نفسه.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin مشغول الآن. حاول لاحقًا أو ادفع بالبطاقة.';
+
+  @override
   String get donateReachingThePaymentService =>
       'جارٍ الوصول إلى خدمة الدفع عبر Tor…';
 

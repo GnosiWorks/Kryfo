@@ -2294,6 +2294,37 @@ class AppLocalizationsHi extends AppLocalizations {
   String get donateBadgesStartAt20 => 'बैज \$20 से शुरू होते हैं';
 
   @override
+  String get donateShowTheAddress => 'पता दिखाएँ';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return 'bitcoin में $amount';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'बैज से क्या मिलता है';
+
+  @override
+  String get donateGivesMark =>
+      'आपके नाम के पास एक निशान। इसे कौन देखे, या कोई न देखे, यह आप तय करते हैं।';
+
+  @override
+  String get donateGivesReceipt =>
+      'इस फ़ोन पर रखी एक हस्ताक्षरित रसीद। यह बिना किसी खाते के बैज को साबित करती है।';
+
+  @override
+  String get donateGivesFree =>
+      'बैज हो या न हो, निजता की हर सुविधा मुफ़्त रहती है।';
+
+  @override
+  String get donateAddressOnTap =>
+      'पता तभी बनता है जब आप नीचे टैप करते हैं। यह एक घंटे तक आपका रहता है, इसलिए लौटने पर आपको वही पता मिलता है।';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin अभी व्यस्त है। बाद में फिर कोशिश करें या कार्ड से भुगतान करें।';
+
+  @override
   String get donateReachingThePaymentService =>
       'Tor से भुगतान सेवा तक पहुँच रहे हैं…';
 
@@ -5279,6 +5310,23 @@ class AppLocalizationsHi extends AppLocalizations {
       'सिर्फ़ आपके फ़ोन पर जाँचा जाता है, कुछ भी बाहर नहीं जाता';
 
   @override
+  String get typingNow => 'Typing';
+
+  @override
+  String get settingsTypingIndicator => 'Typing indicator';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'You both see when the other is typing. It goes straight to them over Tor, never through a relay.';
+
+  @override
+  String get settingsTypingOnionOnly => 'Available on the Onion route';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      'Off while bridges are in use: someone watching your connection could match the typing signals. It comes back by itself when bridges are off.';
+
+  @override
   String get settingsLightTheme => 'हल्की थीम';
 
   @override
@@ -5882,8 +5930,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get whyKryfoNothingLeaks => 'कुछ भी लीक नहीं होता';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'पढ़ने की रसीद या टाइप करने के संकेत किसी को नहीं दिए जाते, कोई संपर्क सूची अपलोड नहीं होती। ज़्यादातर ऐप मेटाडेटा लीक करते हैं। Kryfo ऐसा न करने के लिए बना है।';
+  String get whyKryfoNoReceiptsTyping =>
+      'No read receipts, no contact list uploaded. Typing shows only to the person you write to, straight over Tor, never through a server. Most apps leak metadata. Kryfo is built not to.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'पक्का करें कि सच में वही हैं';

@@ -2313,6 +2313,37 @@ class AppLocalizationsEs extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Insignias desde 20 USD';
 
   @override
+  String get donateShowTheAddress => 'Mostrar la dirección';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount en bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Qué te da la insignia';
+
+  @override
+  String get donateGivesMark =>
+      'Una marca junto a tu nombre. Tú eliges quién la ve, si es que alguien.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Un recibo firmado guardado en este teléfono. Prueba la insignia sin ninguna cuenta.';
+
+  @override
+  String get donateGivesFree =>
+      'Todas las funciones de privacidad siguen siendo gratis, con insignia o sin ella.';
+
+  @override
+  String get donateAddressOnTap =>
+      'La dirección se crea cuando tocas abajo. Es tuya durante una hora, así que si vuelves te sale la misma.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin está saturado ahora mismo. Inténtalo más tarde o paga con tarjeta.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Contactando con el servicio de pago por Tor…';
 

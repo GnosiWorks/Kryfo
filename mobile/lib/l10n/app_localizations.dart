@@ -3692,6 +3692,54 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'Show the address'**
+  String get donateShowTheAddress;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} in bitcoin'**
+  String donateReviewAmount(String amount);
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'What the badge gives'**
+  String get donateWhatTheBadgeGives;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'A mark by your name. You choose who sees it, if anyone.'**
+  String get donateGivesMark;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'A signed receipt kept on this phone. It proves the badge with no account.'**
+  String get donateGivesReceipt;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Every privacy feature stays free, badge or not.'**
+  String get donateGivesFree;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'The address is made when you tap below. It stays yours for an hour, so coming back gives you the same one.'**
+  String get donateAddressOnTap;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Bitcoin is busy right now. Try again later or pay by card.'**
+  String get donateBitcoinBusy;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'Reaching the payment service over Tor…'**
   String get donateReachingThePaymentService;
 

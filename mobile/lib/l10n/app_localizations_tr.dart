@@ -2289,6 +2289,37 @@ class AppLocalizationsTr extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Rozet için en az 20 \$';
 
   @override
+  String get donateShowTheAddress => 'Adresi göster';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return 'Bitcoin ile $amount';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Rozet sana ne verir';
+
+  @override
+  String get donateGivesMark =>
+      'Adının yanında bir işaret. Kimin göreceğini, hatta görüp görmeyeceğini sen seçersin.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Bu telefonda saklanan imzalı bir makbuz. Rozeti hesap olmadan kanıtlar.';
+
+  @override
+  String get donateGivesFree =>
+      'Tüm gizlilik özellikleri rozetli de rozetsiz de ücretsiz kalır.';
+
+  @override
+  String get donateAddressOnTap =>
+      'Adres, aşağıya dokunduğunda oluşur. Bir saat boyunca senindir, geri dönersen aynısını alırsın.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin şu an yoğun. Daha sonra tekrar dene ya da kartla öde.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Ödeme servisine Tor üzerinden ulaşılıyor…';
 

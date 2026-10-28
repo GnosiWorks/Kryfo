@@ -2341,6 +2341,37 @@ class AppLocalizationsUk extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Значки від \$20';
 
   @override
+  String get donateShowTheAddress => 'Показати адресу';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount у bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Що дає значок';
+
+  @override
+  String get donateGivesMark =>
+      'Знак біля твого імені. Ти вирішуєш, хто його бачить, якщо взагалі хтось.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Підписана квитанція на цьому телефоні. Вона підтверджує значок без жодного акаунта.';
+
+  @override
+  String get donateGivesFree =>
+      'Усі функції приватності лишаються безкоштовними, зі значком чи без.';
+
+  @override
+  String get donateAddressOnTap =>
+      'Адреса з\'являється, лише коли ти натиснеш нижче. Вона лишається твоєю цілу годину, тож якщо повернешся, отримаєш ту саму.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin зараз перевантажений. Спробуй пізніше або оплати карткою.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Звертаємося до платіжного сервісу через Tor…';
 

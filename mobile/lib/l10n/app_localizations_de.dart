@@ -2313,6 +2313,37 @@ class AppLocalizationsDe extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Abzeichen ab 20 \$';
 
   @override
+  String get donateShowTheAddress => 'Adresse zeigen';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount in Bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Was das Abzeichen bringt';
+
+  @override
+  String get donateGivesMark =>
+      'Ein Zeichen neben deinem Namen. Du entscheidest, wer es sieht, wenn überhaupt.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Eine signierte Quittung auf diesem Handy. Sie belegt das Abzeichen, ganz ohne Konto.';
+
+  @override
+  String get donateGivesFree =>
+      'Jede Datenschutzfunktion bleibt kostenlos, mit oder ohne Abzeichen.';
+
+  @override
+  String get donateAddressOnTap =>
+      'Die Adresse entsteht erst, wenn du unten tippst. Sie bleibt eine Stunde lang deine, wer zurückkommt, bekommt dieselbe.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin ist gerade ausgelastet. Versuch es später noch einmal oder zahl mit Karte.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Verbinde mit dem Zahlungsdienst über Tor…';
 
