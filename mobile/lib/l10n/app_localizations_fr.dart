@@ -7529,6 +7529,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get languageNameAr => 'Arabe';
 
   @override
+  String get languageNameHi => 'Hindi';
+
+  @override
   String get languageLaterLine =>
       'Vous pouvez la changer à tout moment dans les paramètres.';
 

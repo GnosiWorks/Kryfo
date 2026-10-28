@@ -2353,7 +2353,7 @@ class _GroupRow extends StatelessWidget {
                                 style: HaloType.sans(
                                   size: 12,
                                   color: HaloColors.text2,
-                                ).copyWith(fontStyle: FontStyle.italic),
+                                ).copyWith(fontStyle: slant()),
                               )
                             : g.isRoom && g.joiningAt != null
                             ? RoomJoinLine(

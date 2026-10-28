@@ -7448,6 +7448,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get languageNameAr => 'Arab';
 
   @override
+  String get languageNameHi => 'Bahasa Hindi';
+
+  @override
   String get languageLaterLine =>
       'Kamu bisa mengubahnya kapan saja di pengaturan.';
 

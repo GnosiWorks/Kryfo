@@ -7532,6 +7532,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get languageNameAr => 'Arabisch';
 
   @override
+  String get languageNameHi => 'Hindi';
+
+  @override
   String get languageLaterLine =>
       'Du kannst das jederzeit in den Einstellungen ändern.';
 

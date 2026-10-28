@@ -7584,6 +7584,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get languageNameAr => 'Арабська';
 
   @override
+  String get languageNameHi => 'Гінді';
+
+  @override
   String get languageLaterLine =>
       'Мову можна будь-коли змінити в налаштуваннях.';
 

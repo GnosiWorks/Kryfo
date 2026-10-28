@@ -43,6 +43,7 @@ Future<void> _loadFonts() async {
     'Noto Sans Vietnamese': ['NotoSans-Vietnamese.ttf'],
     'Noto Naskh Arabic': ['NotoNaskhArabic-Kryfo.ttf'],
     'Noto Sans Arabic': ['NotoSansArabic-Kryfo.ttf'],
+    'Noto Sans Devanagari': ['NotoSansDevanagari-Kryfo.ttf'],
   };
   for (final e in families.entries) {
     final loader = FontLoader(e.key);
@@ -266,6 +267,7 @@ void main() {
     'id',
     'fa',
     'ar',
+    'hi',
   ]) {
     testWidgets('$code: the row, its sheet and its rows fit', (t) async {
       await _walk(t, Locale(code), 1);

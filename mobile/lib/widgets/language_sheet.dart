@@ -35,13 +35,14 @@ String languageNameHere(String tag) => switch (tag) {
   'zh_Hant' => l10n.languageNameZhHant,
   'vi' => l10n.languageNameVi,
   'id' => l10n.languageNameId,
+  'hi' => l10n.languageNameHi,
   'fa' => l10n.languageNameFa,
   'ar' => l10n.languageNameAr,
   _ => kLanguageNames[tag] ?? tag,
 };
 
 // a letter each language is known by, drawn like the initial on an avatar.
-// upright where a slant would be faked (chinese, arabic, persian).
+// upright where a slant would be faked (chinese, arabic, persian, hindi).
 const _glyph = <String, (String, bool)>{
   'en': ('&', true),
   // upright: a slanted ß in fraunces reads as a greek beta
@@ -57,6 +58,7 @@ const _glyph = <String, (String, bool)>{
   'zh_Hant': ('繁', false),
   'vi': ('ư', true),
   'id': ('ng', true),
+  'hi': ('अ', false),
   'fa': ('پ', false),
   'ar': ('ض', false),
 };
