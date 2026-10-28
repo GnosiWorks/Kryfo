@@ -1022,3 +1022,55 @@ func TestRangeWant(t *testing.T) {
 		}
 	}
 }
+
+// a condition on a range never turns it into the whole file: the bytes
+// served are the range, and the token is charged what was served
+func TestIfRangeServesTheRange(t *testing.T) {
+	r := newRig(t, testConfig())
+	u := newUpload(3, 1)
+	r.sendAll(u)
+	for i := 0; i < 20; i++ {
+		code, body := r.get(u, 0, map[string]string{"Range": "bytes=0-0", "If-Range": "x"})
+		if code != 206 || len(body) != 1 {
+			t.Fatalf("try %d: %d, %d bytes", i, code, len(body))
+		}
+	}
+	h, _ := unhash(sha(u.tokens[0]))
+	if got := r.s.drops[u.id].served[h]; got != 20 {
+		t.Fatalf("the token was charged %d bytes for 20", got)
+	}
+	// and whatever a download serves past what it took is charged too
+	_, took, err := r.s.whole(u.id, u.tokens[0], func(int64) int64 { return 1 })
+	if err != nil {
+		t.Fatal(err)
+	}
+	r.s.servedTo(u.id, u.tokens[0], took, 1000)
+	if got := r.s.drops[u.id].served[h]; got != 1020 {
+		t.Fatalf("served past the take: %d", got)
+	}
+}
+
+// what the sweep lets go leaves the log at once
+func TestDeliveredSweepRewritesTheLog(t *testing.T) {
+	r := newRig(t, testConfig())
+	u := newUpload(3, 1)
+	r.sendAll(u)
+	r.postJSON("/files/"+u.id+"/got", tokenReq{T: u.tokens[0]})
+	logPath := filepath.Join(r.dir, "delivered.log")
+	if b, _ := os.ReadFile(logPath); !strings.Contains(string(b), u.id) {
+		t.Fatal("not in the log")
+	}
+	r.clock = r.clock.Add(9 * 24 * time.Hour)
+	r.s.sweep()
+	b, _ := os.ReadFile(logPath)
+	if strings.Contains(string(b), u.id) || strings.Contains(string(b), sha(u.own)) {
+		t.Fatalf("the log kept what went: %q", b)
+	}
+	// and the log still takes what comes after
+	v := newUpload(3, 1)
+	r.sendAll(v)
+	r.postJSON("/files/"+v.id+"/got", tokenReq{T: v.tokens[0]})
+	if b, _ := os.ReadFile(logPath); !strings.Contains(string(b), v.id) {
+		t.Fatal("the log took nothing after the sweep")
+	}
+}

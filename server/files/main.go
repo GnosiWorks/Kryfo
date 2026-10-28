@@ -250,6 +250,11 @@ func (s *service) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	token := r.Header.Get(tokenHeader)
+	// a file has no time and no tag here: a condition would only turn a
+	// range into the whole file past what the token took
+	for _, h := range []string{"If-Range", "If-Match", "If-None-Match", "If-Modified-Since", "If-Unmodified-Since"} {
+		r.Header.Del(h)
+	}
 	size, took, err := s.whole(id, token, func(size int64) int64 { return rangeWant(r.Header.Get("Range"), size) })
 	if err != nil {
 		fail(w, err)

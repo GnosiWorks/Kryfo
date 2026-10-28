@@ -12,6 +12,7 @@ import (
 	"bufio"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -148,6 +149,12 @@ func (s *deliveredSet) sweep(now time.Time) int {
 		delete(s.m, id)
 		s.order = s.order[1:]
 		n++
+	}
+	// what went goes from the disk too, not only at the next start
+	if n > 0 {
+		if err := s.rewrite(); err != nil {
+			log.Printf("files: the delivered log was not written: %s", errKind(err))
+		}
 	}
 	return n
 }

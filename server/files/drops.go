@@ -702,16 +702,17 @@ func (s *service) whole(id, token string, want func(size int64) int64) (int64, i
 	return d.size, w, nil
 }
 
-// what a download did not serve of what it took, back on its token's count
+// what a download served against what it took: what it did not serve
+// goes back on its token's count, and anything past it is charged
 func (s *service) servedTo(id, token string, took, n int64) {
 	h, ok := unhash(hashHex(token))
-	if !ok || n >= took {
+	if !ok || n == took {
 		return
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if d := s.drops[id]; d != nil && d.served != nil {
-		d.served[h] -= took - n
+		d.served[h] += n - took
 	}
 }
 
