@@ -253,9 +253,11 @@ func (b *Book) settle() []Key {
 	return claimants
 }
 
-// Add starts a contact identity. one of this container's own keys, or a
-// key proven as another contact's device, is refused; an identity some
-// list only claims is taken, and that list's owner is the one to doubt.
+// Add starts a contact identity, which must already be proven: a KIN4
+// signed by it, or a session that runs on it. one of this container's own
+// keys, or a key proven as another contact's device, is refused; an
+// identity some list only claims is taken, and that list's owner is the
+// one to doubt.
 func (b *Book) Add(identity Key) ([]Key, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -278,37 +280,32 @@ func (b *Book) Forget(identity Key) []Key {
 }
 
 // Accept takes a signed list for the contact identity. a second body at the
-// version held is ErrEquivocation from any carrier; a list naming a key
-// someone else holds is ErrTaken, an alarm on this contact.
-func (b *Book) Accept(identity Key, list []byte, from From, v Verifier) (*List, Outcome, error) {
+// version held is ErrEquivocation from any carrier. an entry naming a key
+// someone else holds is taken but never routed to, and the contact comes
+// back among the claimants for the alarm: refusing the whole list would
+// let one clash hold back every later change, a removal included.
+func (b *Book) Accept(identity Key, list []byte, from From, v Verifier) (*List, Outcome, []Key, error) {
 	l, err := ReadList(list, v)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, nil, err
 	}
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	k, ok := b.known[identity]
 	if !ok {
-		return nil, 0, ErrUnknown
+		return nil, 0, nil, ErrUnknown
 	}
 	if l.Identity != identity {
-		return nil, 0, ErrWrongIdentity
+		return nil, 0, nil, ErrWrongIdentity
 	}
 	if k.equivocates(l) {
-		return nil, 0, ErrEquivocation
-	}
-	if k.cur == nil || !SameBody(l, k.cur) {
-		for _, e := range l.Devices {
-			if !e.Phone && b.heldElsewhere(e.Key, identity) {
-				return nil, 0, ErrTaken
-			}
-		}
+		return nil, 0, nil, ErrEquivocation
 	}
 	got, out, err := k.accept(l, from)
-	if err == nil {
-		b.settle()
+	if err != nil {
+		return nil, 0, nil, err
 	}
-	return got, out, err
+	return got, out, b.settle(), nil
 }
 
 // Proven records that a message from the contact identity decrypted on a

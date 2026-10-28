@@ -15,7 +15,10 @@ import (
 var sessionDoor = map[string]bool{}
 
 // a remote read out of a message would let anyone vouch for anyone, so
-// FromSession and Proven are called only where libsignal's own answer is
+// FromSession and Proven are called only where libsignal's own answer is.
+// libsignal binds the two device keys, not the contact: the identity given
+// to Proven is the one the pair address and session record belong to,
+// never one a message names
 func TestOnlyTheSessionLayerNamesARemote(t *testing.T) {
 	call := regexp.MustCompile(`devices\.FromSession\(|\.Proven\(`)
 	var seen []string

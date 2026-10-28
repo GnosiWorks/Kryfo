@@ -184,18 +184,23 @@ func (l *List) Restored(r io.Reader) (*List, error) {
 	return l.next(phone, versionRestore+uint64(binary.BigEndian.Uint32(b[:])))
 }
 
-// Above is the list with l's devices at a version past held, a list of
-// this identity that a contact sent back when it refused l as a rollback
-// (another copy of the phone signed it). held must already be verified
-// under the identity's own key. unknown is every device held names that
-// l does not: another copy of the phone linked it, and the owner is shown
-// each one before anything else.
-func (l *List) Above(held *List, r io.Reader) (next *List, unknown []Entry, err error) {
+// Above is the list with l's devices at a version past the held list a
+// contact sent back when it refused l as a rollback: another copy of the
+// phone signed it. held is checked here under the identity's own key, and
+// one more than the window above l is refused, since a contact could
+// otherwise push the version to the top and lock every change out. unknown
+// is every device held names that l does not: another copy of the phone
+// linked it, and the owner is shown each one before anything else.
+func (l *List) Above(heldWire []byte, v Verifier, r io.Reader) (next *List, unknown []Entry, err error) {
+	held, err := ReadList(heldWire, v)
+	if err != nil {
+		return nil, nil, err
+	}
 	if held.Identity != l.Identity {
 		return nil, nil, ErrWrongIdentity
 	}
-	if err := held.check(); err != nil {
-		return nil, nil, err
+	if held.Version > l.Version && held.Version-l.Version > VersionWindow {
+		return nil, nil, ErrJump
 	}
 	for _, e := range held.Devices {
 		if _, ok := l.FindKey(e.Key); !ok {
