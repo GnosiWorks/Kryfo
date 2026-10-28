@@ -9765,7 +9765,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get desktopLockNewBody =>
-      'Kryfo te pedirá esta frase de contraseña cada vez que se inicie. Bloquea tus mensajes, claves y contactos en este ordenador.';
+      'Kryfo te pedirá esta frase de contraseña cada vez que se inicie. Bloquea tus mensajes, contactos y ajustes en este ordenador. Las fotos, notas de voz y archivos guardados en Kryfo aún no quedan bloqueados, así que mantén activado el cifrado de disco de tu ordenador.';
 
   @override
   String get desktopLockHonest =>
@@ -9773,7 +9773,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get desktopLockForgot =>
-      'Sin la frase de contraseña no se puede abrir nada de lo que hay aquí, ni siquiera nosotros.';
+      'Sin la frase de contraseña no se pueden abrir tus mensajes aquí, ni siquiera nosotros.';
 
   @override
   String get desktopLockField => 'Frase de contraseña';
@@ -9815,4 +9815,15 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get desktopNoCamera =>
       'Kryfo aún no puede usar una cámara en este ordenador. Usa el enlace o el código.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo ya está abierto en este ordenador.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'La carpeta de Kryfo pertenece a otra cuenta de este ordenador, así que Kryfo no la abrirá.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo no pudo hacer que su carpeta fuera solo tuya, así que no se abrirá.';
 }

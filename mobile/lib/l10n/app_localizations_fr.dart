@@ -9792,7 +9792,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get desktopLockNewBody =>
-      'Kryfo vous demandera cette phrase secrète à chaque démarrage. Elle verrouille vos messages, vos clés et vos contacts sur cet ordinateur.';
+      'Kryfo vous demandera cette phrase secrète à chaque démarrage. Elle verrouille vos messages, vos contacts et vos réglages sur cet ordinateur. Les photos, messages vocaux et fichiers gardés dans Kryfo ne sont pas encore verrouillés, gardez donc le chiffrement du disque de votre ordinateur activé.';
 
   @override
   String get desktopLockHonest =>
@@ -9800,7 +9800,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get desktopLockForgot =>
-      'Sans la phrase secrète, rien ici ne peut être ouvert, pas même par nous.';
+      'Sans la phrase secrète, vos messages ici ne peuvent pas être ouverts, pas même par nous.';
 
   @override
   String get desktopLockField => 'Phrase secrète';
@@ -9843,4 +9843,15 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get desktopNoCamera =>
       'Kryfo ne peut pas encore utiliser de caméra sur cet ordinateur. Utilisez plutôt le lien ou le code.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo est déjà ouvert sur cet ordinateur.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'Le dossier de Kryfo appartient à un autre compte de cet ordinateur, Kryfo ne l’ouvrira donc pas.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo n’a pas pu rendre son dossier privé pour vous, il ne s’ouvrira donc pas.';
 }

@@ -9862,7 +9862,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get desktopLockNewBody =>
-      'Kryfo будет спрашивать эту парольную фразу при каждом запуске. Она запирает ваши сообщения, ключи и контакты на этом компьютере.';
+      'Kryfo будет спрашивать эту парольную фразу при каждом запуске. Она запирает ваши сообщения, контакты и настройки на этом компьютере. Фото, голосовые и файлы в Kryfo пока не запираются ею, поэтому не выключайте шифрование диска на компьютере.';
 
   @override
   String get desktopLockHonest =>
@@ -9870,7 +9870,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get desktopLockForgot =>
-      'Без парольной фразы здесь ничего не открыть, даже нам.';
+      'Без парольной фразы ваши сообщения здесь не открыть, даже нам.';
 
   @override
   String get desktopLockField => 'Парольная фраза';
@@ -9912,4 +9912,15 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get desktopNoCamera =>
       'Kryfo пока не может пользоваться камерой на этом компьютере. Используйте ссылку или код.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo уже открыт на этом компьютере.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'Папка Kryfo принадлежит другой учётной записи на этом компьютере, поэтому Kryfo её не откроет.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo не смог сделать свою папку доступной только вам, поэтому не откроется.';
 }

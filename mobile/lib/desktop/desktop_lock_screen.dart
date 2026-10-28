@@ -9,6 +9,7 @@ import '../widgets/fit_column.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/motion.dart';
 import '../widgets/secret_field.dart';
+import 'desktop_start.dart' show DesktopStop;
 import 'desktop_vault.dart';
 
 class DesktopLockScreen extends StatefulWidget {
@@ -159,17 +160,19 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
                     focusNode: _againFocus,
                   ),
                 ],
-                // the line below the fields grows in and out, never jumps;
-                // with motion reduced it is simply there
-                if (still)
-                  line
-                else
-                  AnimatedSize(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeOutCubic,
-                    alignment: Alignment.topCenter,
-                    child: line,
-                  ),
+                // the line below the fields fades in and out. a size
+                // animation would lie to the page's height measure, so the
+                // room it takes changes at once
+                AnimatedSwitcher(
+                  duration: still
+                      ? Duration.zero
+                      : const Duration(milliseconds: 180),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  layoutBuilder: (current, previous) =>
+                      current ?? const SizedBox(),
+                  child: KeyedSubtree(key: ValueKey(_error), child: line),
+                ),
                 const SizedBox(height: 10),
                 HaloPrimaryButton(
                   label: _isNew ? l10n.desktopLockSet : l10n.desktopLockOpen,
@@ -212,5 +215,55 @@ class DesktopLockApp extends StatelessWidget {
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: DesktopLockScreen(vault: vault, onOpen: onOpen),
+  );
+}
+
+/// the whole app when the folder cannot be had: one calm line
+class DesktopStopApp extends StatelessWidget {
+  const DesktopStopApp({super.key, required this.stop});
+
+  final DesktopStop stop;
+
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+    debugShowCheckedModeBanner: false,
+    title: 'Kryfo',
+    theme: buildHaloTheme(),
+    locale: l10nLocale,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(
+      backgroundColor: HaloColors.surface,
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: FitColumn(
+              padding: const EdgeInsets.all(28),
+              children: [
+                const Spacer(),
+                Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    switch (stop) {
+                      DesktopStop.alreadyOpen => l10n.desktopAlreadyOpen,
+                      DesktopStop.notYours => l10n.desktopFolderNotYours,
+                      DesktopStop.notPrivate => l10n.desktopFolderNotPrivate,
+                    },
+                    textAlign: TextAlign.center,
+                    style: HaloType.sans(
+                      size: 15,
+                      height: 1.45,
+                      color: HaloColors.text,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
   );
 }

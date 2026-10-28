@@ -15680,7 +15680,7 @@ abstract class AppLocalizations {
   /// desktop/desktop_lock_screen.dart: under the first-start title
   ///
   /// In en, this message translates to:
-  /// **'Kryfo asks for this passphrase every time it starts. It locks your messages, keys and contacts on this computer.'**
+  /// **'Kryfo asks for this passphrase every time it starts. It locks your messages, contacts and settings on this computer. Photos, voice notes and files kept in Kryfo are not locked by it yet, so keep your computer\'s disk encryption on.'**
   String get desktopLockNewBody;
 
   /// desktop/desktop_lock_screen.dart: the small print on the first start: what the passphrase protects against and what it does not
@@ -15692,7 +15692,7 @@ abstract class AppLocalizations {
   /// desktop/desktop_lock_screen.dart: the small print when unlocking
   ///
   /// In en, this message translates to:
-  /// **'Without the passphrase nothing here can be opened, not even by us.'**
+  /// **'Without the passphrase your messages here cannot be opened, not even by us.'**
   String get desktopLockForgot;
 
   /// desktop/desktop_lock_screen.dart: the label of the passphrase field
@@ -15760,6 +15760,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Kryfo cannot use a camera on this computer yet. Use the link or the code instead.'**
   String get desktopNoCamera;
+
+  /// desktop/desktop_lock_screen.dart: a second copy of the app was started on the same folder
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo is already open on this computer.'**
+  String get desktopAlreadyOpen;
+
+  /// desktop/desktop_lock_screen.dart: the app's data folder is owned by another user
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo\'s folder belongs to another account on this computer, so Kryfo will not open it.'**
+  String get desktopFolderNotYours;
+
+  /// desktop/desktop_lock_screen.dart: the data folder could not be made 0700
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo could not make its folder private to you, so it will not open.'**
+  String get desktopFolderNotPrivate;
 }
 
 class _AppLocalizationsDelegate

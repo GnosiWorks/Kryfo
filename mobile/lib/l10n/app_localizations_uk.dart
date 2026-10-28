@@ -9853,7 +9853,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get desktopLockNewBody =>
-      'Kryfo питатиме цю парольну фразу під час кожного запуску. Вона замикає ваші повідомлення, ключі й контакти на цьому комп’ютері.';
+      'Kryfo питатиме цю парольну фразу під час кожного запуску. Вона замикає ваші повідомлення, контакти й налаштування на цьому комп’ютері. Фото, голосові й файли в Kryfo вона поки не замикає, тому не вимикайте шифрування диска на комп’ютері.';
 
   @override
   String get desktopLockHonest =>
@@ -9861,7 +9861,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get desktopLockForgot =>
-      'Без парольної фрази тут нічого не відкрити, навіть нам.';
+      'Без парольної фрази ваші повідомлення тут не відкрити, навіть нам.';
 
   @override
   String get desktopLockField => 'Парольна фраза';
@@ -9903,4 +9903,15 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get desktopNoCamera =>
       'Kryfo поки не може користуватися камерою на цьому комп’ютері. Скористайтеся посиланням або кодом.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo вже відкрито на цьому комп’ютері.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'Тека Kryfo належить іншому обліковому запису на цьому комп’ютері, тому Kryfo її не відкриє.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo не зміг зробити свою теку доступною лише вам, тому не відкриється.';
 }

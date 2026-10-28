@@ -2566,9 +2566,9 @@
   "desktopLockTitle": "Kryfo 已鎖定",
   "desktopLockBody": "輸入這台電腦的密碼短語。",
   "desktopLockNewTitle": "在這台電腦上鎖定 Kryfo",
-  "desktopLockNewBody": "Kryfo 每次啟動都會要求輸入這組密碼短語。它鎖住你在這台電腦上的訊息、金鑰和聯絡人。",
+  "desktopLockNewBody": "Kryfo 每次啟動都會要求輸入這組密碼短語。它鎖住你在這台電腦上的訊息、聯絡人和設定。存在 Kryfo 裡的照片、語音訊息和檔案暫時還沒有被它鎖住，所以請保持電腦的磁碟加密開啟。",
   "desktopLockHonest": "複製了 Kryfo 資料夾的人，可以在自己的電腦上盡其所能地快速嘗試密碼短語。四個以上的隨機單字撐得住，短的密碼短語撐不住。",
-  "desktopLockForgot": "沒有密碼短語，這裡的一切都打不開，連我們也不行。",
+  "desktopLockForgot": "沒有密碼短語，這裡的訊息都打不開，連我們也不行。",
   "desktopLockField": "密碼短語",
   "desktopLockRepeat": "再輸入一次相同的密碼短語",
   "desktopLockSet": "用這組密碼短語鎖定",
@@ -2579,5 +2579,8 @@
   "desktopLockFailed": "Kryfo 無法在這裡打開它的鎖。請重新啟動試試。",
   "desktopTrayQuit": "結束 Kryfo",
   "desktopTrayTip": "Kryfo 正在執行並接收訊息",
-  "desktopNoCamera": "Kryfo 暫時還不能在這台電腦上使用相機。請改用連結或代碼。"
+  "desktopNoCamera": "Kryfo 暫時還不能在這台電腦上使用相機。請改用連結或代碼。",
+  "desktopAlreadyOpen": "Kryfo 已經在這台電腦上開啟了。",
+  "desktopFolderNotYours": "Kryfo 的資料夾屬於這台電腦上的另一個帳戶，所以 Kryfo 不會開啟它。",
+  "desktopFolderNotPrivate": "Kryfo 無法把它的資料夾設為只有你能存取，所以不會開啟。"
 }

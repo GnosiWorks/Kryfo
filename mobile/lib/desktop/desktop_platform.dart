@@ -11,6 +11,10 @@ import 'package:flutter/services.dart';
 
 import 'desktop_channels.dart';
 import 'desktop_db.dart';
+import 'desktop_posix.dart' show execSelf;
+
+/// flutter_secure_storage's channel to libsecret
+const keyringChannel = 'plugins.it_nomads.com/flutter_secure_storage';
 
 /// the android channels and what desktop answers on each
 const androidChannels = [
@@ -95,15 +99,22 @@ class DesktopHost {
     required this.dataDir,
     this.exit = _exit,
     this.relaunch = _relaunch,
+    this.destroyKeys,
   });
 
   final String dataDir;
   final void Function(int) exit;
   final Future<void> Function() relaunch;
+
+  /// the vault overwritten before the folder goes
+  void Function()? destroyKeys;
   final _since = Stopwatch()..start();
 
   static void _exit(int code) => io.exit(code);
+  // the same process becomes the new run, so a restart never ends with no
+  // app. a new process is the fallback, and it waits for this one's lock
   static Future<void> _relaunch() async {
+    execSelf(Platform.resolvedExecutable);
     await Process.start(
       Platform.resolvedExecutable,
       const [],
@@ -136,8 +147,11 @@ class DesktopHost {
   }
 
   /// the panic wipe's last step, as android's clear of the app's data: the
-  /// vault and every file go, and the process ends
+  /// vault is overwritten, then it and every file go, and the process ends
   Future<void> wipe() async {
+    try {
+      destroyKeys?.call();
+    } catch (_) {}
     try {
       Directory(dataDir).deleteSync(recursive: true);
     } catch (_) {}
@@ -191,11 +205,19 @@ Map<String, DesktopAnswer> desktopAnswers(DesktopHost host, DesktopDb db) {
 
   Object? none(MethodCall _) => notHere;
 
+  // libsecret hands a secret to any process of the user: the plugin's own
+  // channel is shut, so nothing reaches it even past the vault
+  Object? keyring(MethodCall _) => throw PlatformException(
+    code: 'desktop',
+    message: 'secrets live in the vault on desktop',
+  );
+
   return {
     'halo/platform': platformAsync,
     'halo/tools': tools,
     for (final ch in androidChannels)
       if (ch != 'halo/platform' && ch != 'halo/tools') ch: none,
     sqlcipherChannel: (c) => db.call(c.method, c.arguments),
+    keyringChannel: keyring,
   };
 }

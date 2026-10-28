@@ -35,7 +35,11 @@ typedef _Umask = int Function(int);
 
 /// mode 0700 on dir, made if missing. false when chmod failed
 bool makePrivateDir(String dir) {
-  Directory(dir).createSync(recursive: true);
+  try {
+    Directory(dir).createSync(recursive: true);
+  } catch (_) {
+    return false;
+  }
   if (Platform.isWindows) return true;
   final chmod = DynamicLibrary.process().lookupFunction<_ModeC, _Mode>('chmod');
   final path = dir.toNativeUtf8();

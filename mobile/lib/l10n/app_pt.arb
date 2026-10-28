@@ -2566,9 +2566,9 @@
   "desktopLockTitle": "O Kryfo está bloqueado",
   "desktopLockBody": "Digite a frase-senha deste computador.",
   "desktopLockNewTitle": "Bloquear o Kryfo neste computador",
-  "desktopLockNewBody": "O Kryfo vai pedir esta frase-senha sempre que abrir. Ela bloqueia suas mensagens, chaves e contatos neste computador.",
+  "desktopLockNewBody": "O Kryfo vai pedir esta frase-senha sempre que abrir. Ela bloqueia suas mensagens, contatos e configurações neste computador. Fotos, mensagens de voz e arquivos guardados no Kryfo ainda não ficam bloqueados, então mantenha a criptografia de disco do computador ligada.",
   "desktopLockHonest": "Quem copiar a pasta do Kryfo pode testar frases-senha no próprio computador, tão rápido quanto ele permitir. Quatro ou mais palavras aleatórias resistem. Uma frase-senha curta, não.",
-  "desktopLockForgot": "Sem a frase-senha nada aqui pode ser aberto, nem por nós.",
+  "desktopLockForgot": "Sem a frase-senha suas mensagens aqui não podem ser abertas, nem por nós.",
   "desktopLockField": "Frase-senha",
   "desktopLockRepeat": "A mesma frase-senha de novo",
   "desktopLockSet": "Bloquear com esta frase-senha",
@@ -2579,5 +2579,8 @@
   "desktopLockFailed": "O Kryfo não conseguiu abrir o bloqueio aqui. Tente abri-lo de novo.",
   "desktopTrayQuit": "Sair do Kryfo",
   "desktopTrayTip": "O Kryfo está aberto e recebendo mensagens",
-  "desktopNoCamera": "O Kryfo ainda não consegue usar uma câmera neste computador. Use o link ou o código."
+  "desktopNoCamera": "O Kryfo ainda não consegue usar uma câmera neste computador. Use o link ou o código.",
+  "desktopAlreadyOpen": "O Kryfo já está aberto neste computador.",
+  "desktopFolderNotYours": "A pasta do Kryfo pertence a outra conta deste computador, então o Kryfo não vai abri-la.",
+  "desktopFolderNotPrivate": "O Kryfo não conseguiu deixar a pasta dele só para você, então não vai abrir."
 }

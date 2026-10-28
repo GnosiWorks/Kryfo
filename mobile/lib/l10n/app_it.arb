@@ -2566,9 +2566,9 @@
   "desktopLockTitle": "Kryfo è bloccato",
   "desktopLockBody": "Scrivi la passphrase di questo computer.",
   "desktopLockNewTitle": "Blocca Kryfo su questo computer",
-  "desktopLockNewBody": "Kryfo ti chiederà questa passphrase a ogni avvio. Blocca i tuoi messaggi, le chiavi e i contatti su questo computer.",
+  "desktopLockNewBody": "Kryfo ti chiederà questa passphrase a ogni avvio. Blocca i tuoi messaggi, i contatti e le impostazioni su questo computer. Foto, messaggi vocali e file tenuti in Kryfo non sono ancora bloccati, quindi tieni attiva la cifratura del disco del computer.",
   "desktopLockHonest": "Chi copia la cartella di Kryfo può provare passphrase sul proprio computer, alla velocità che questo consente. Quattro o più parole casuali reggono. Una passphrase corta no.",
-  "desktopLockForgot": "Senza la passphrase qui non si apre nulla, nemmeno per noi.",
+  "desktopLockForgot": "Senza la passphrase i tuoi messaggi qui non si aprono, nemmeno per noi.",
   "desktopLockField": "Passphrase",
   "desktopLockRepeat": "La stessa passphrase di nuovo",
   "desktopLockSet": "Blocca con questa passphrase",
@@ -2579,5 +2579,8 @@
   "desktopLockFailed": "Kryfo non è riuscito ad aprire il suo blocco qui. Prova ad avviarlo di nuovo.",
   "desktopTrayQuit": "Esci da Kryfo",
   "desktopTrayTip": "Kryfo è attivo e riceve messaggi",
-  "desktopNoCamera": "Kryfo non può ancora usare una fotocamera su questo computer. Usa il link o il codice."
+  "desktopNoCamera": "Kryfo non può ancora usare una fotocamera su questo computer. Usa il link o il codice.",
+  "desktopAlreadyOpen": "Kryfo è già aperto su questo computer.",
+  "desktopFolderNotYours": "La cartella di Kryfo appartiene a un altro account di questo computer, quindi Kryfo non la apre.",
+  "desktopFolderNotPrivate": "Kryfo non è riuscito a rendere la sua cartella privata per te, quindi non si apre."
 }

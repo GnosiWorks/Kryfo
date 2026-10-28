@@ -2566,9 +2566,9 @@
   "desktopLockTitle": "Kryfo kilitli",
   "desktopLockBody": "Bu bilgisayarın parola ifadesini yaz.",
   "desktopLockNewTitle": "Kryfo'yu bu bilgisayarda kilitle",
-  "desktopLockNewBody": "Kryfo her açılışta bu parola ifadesini sorar. Mesajlarını, anahtarlarını ve kişilerini bu bilgisayarda kilitler.",
+  "desktopLockNewBody": "Kryfo her açılışta bu parola ifadesini sorar. Mesajlarını, kişilerini ve ayarlarını bu bilgisayarda kilitler. Kryfo'da tutulan fotoğraflar, sesli mesajlar ve dosyalar henüz kilitlenmiyor, bu yüzden bilgisayarının disk şifrelemesini açık tut.",
   "desktopLockHonest": "Kryfo klasörünü kopyalayan biri, kendi bilgisayarında onun izin verdiği hızda parola ifadesi deneyebilir. Dört ya da daha fazla rastgele kelime dayanır. Kısa bir parola ifadesi dayanmaz.",
-  "desktopLockForgot": "Parola ifadesi olmadan buradaki hiçbir şey açılamaz, bizim tarafımızdan bile.",
+  "desktopLockForgot": "Parola ifadesi olmadan buradaki mesajların açılamaz, bizim tarafımızdan bile.",
   "desktopLockField": "Parola ifadesi",
   "desktopLockRepeat": "Aynı parola ifadesi bir daha",
   "desktopLockSet": "Bu parola ifadesiyle kilitle",
@@ -2579,5 +2579,8 @@
   "desktopLockFailed": "Kryfo buradaki kilidini açamadı. Yeniden başlatmayı dene.",
   "desktopTrayQuit": "Kryfo'dan çık",
   "desktopTrayTip": "Kryfo açık ve mesaj alıyor",
-  "desktopNoCamera": "Kryfo bu bilgisayarda henüz kamera kullanamıyor. Bunun yerine bağlantıyı ya da kodu kullan."
+  "desktopNoCamera": "Kryfo bu bilgisayarda henüz kamera kullanamıyor. Bunun yerine bağlantıyı ya da kodu kullan.",
+  "desktopAlreadyOpen": "Kryfo bu bilgisayarda zaten açık.",
+  "desktopFolderNotYours": "Kryfo klasörü bu bilgisayardaki başka bir hesaba ait, bu yüzden Kryfo onu açmayacak.",
+  "desktopFolderNotPrivate": "Kryfo klasörünü yalnızca sana özel yapamadı, bu yüzden açılmayacak."
 }

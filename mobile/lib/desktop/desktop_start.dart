@@ -16,7 +16,8 @@ import 'package:just_audio_platform_interface/just_audio_platform_interface.dart
 import 'package:path/path.dart' as p;
 import 'package:path_provider_linux/path_provider_linux.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
-import 'package:shared_preferences_linux/shared_preferences_linux.dart';
+import 'package:shared_preferences_linux/shared_preferences_linux.dart'
+    show SharedPreferencesAsyncLinux;
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
@@ -30,6 +31,8 @@ import 'desktop_mode.dart';
 import 'desktop_net.dart';
 import 'desktop_paths.dart';
 import 'desktop_platform.dart';
+import 'desktop_posix.dart';
+import 'desktop_prefs.dart';
 import 'desktop_vault.dart';
 
 /// the binding whose messenger answers the android channels
@@ -114,39 +117,68 @@ Future<void> sayTrayWords() async {
   }
 }
 
+/// why the desktop will not start, before anything of it runs
+enum DesktopStop { alreadyOpen, notYours, notPrivate }
+
+/// the folder checks, in the order they are made: private, the user's own,
+/// and no other process on it. a reopen's new process may find the old one
+/// still letting go, so the lock is asked a few times
+@visibleForTesting
+Future<DesktopStop?> claimFolder(
+  String root, {
+  int Function() uid = getuid,
+  Duration wait = const Duration(seconds: 3),
+}) async {
+  if (!makePrivateDir(root)) return DesktopStop.notPrivate;
+  if (ownerOf(root) != uid()) return DesktopStop.notYours;
+  final lock = p.join(root, 'lock');
+  final until = DateTime.now().add(wait);
+  while (!holdLock(lock)) {
+    if (DateTime.now().isAfter(until)) return DesktopStop.alreadyOpen;
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+  }
+  return null;
+}
+
 Future<void> startDesktop(Future<void> Function() appMain) async {
   onDesktop = true;
   privateUmask();
   final root = desktopDataDir();
-  makePrivateDir(root);
+  final stop = await claimFolder(root);
+  if (stop != null) {
+    WidgetsFlutterBinding.ensureInitialized();
+    runApp(DesktopStopApp(stop: stop));
+    return;
+  }
   final db = DesktopDb();
   final host = DesktopHost(dataDir: root);
   DesktopBinding.install(desktopAnswers(host, db));
 
   final paths = DesktopPaths(root);
   PathProviderPlatform.instance = paths;
-  final support = (await paths.getApplicationSupportPath())!;
+  final vault = DesktopVault(p.join(root, 'vault.kv'));
+  host.destroyKeys = vault.destroy;
+  FlutterSecureStoragePlatform.instance = VaultStorage(vault);
+  SharedPreferencesStorePlatform.instance = VaultPrefs(vault);
   if (defaultTargetPlatform == TargetPlatform.linux) {
-    final prefs = SharedPreferencesStorePlatform.instance;
-    // the plugin's own seam for where its file goes, marked for tests
-    if (prefs is SharedPreferencesLinux) {
-      // ignore: invalid_use_of_visible_for_testing_member
-      prefs.pathProvider = _PrefsPlace(support);
-    }
     final async = SharedPreferencesAsyncPlatform.instance;
     if (async is SharedPreferencesAsyncLinux) {
+      // the plugin's own seam for where its file goes, marked for tests
       // ignore: invalid_use_of_visible_for_testing_member
-      async.pathProvider = _PrefsPlace(support);
+      async.pathProvider = _PrefsPlace(
+        (await paths.getApplicationSupportPath())!,
+      );
     }
     ConnectivityPlatform.instance = DesktopConnectivity();
     FlutterLocalNotificationsPlatform.instance = QuietLinuxNotifications();
+    Gst.registryDir = (await paths.getApplicationCachePath())!;
     JustAudioPlatform.instance = DesktopAudio();
   }
-
   CameraPlatform.instance = NoCameras();
-  final vault = DesktopVault(p.join(root, 'vault.kv'));
-  FlutterSecureStoragePlatform.instance = VaultStorage(vault);
+  assertVaultOnly();
 
+  // the prefs are shut until the vault opens: the lock screen speaks the
+  // system's language
   await loadAppLocale();
   unawaited(sayTrayWords());
   var started = false;
@@ -160,4 +192,12 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
       },
     ),
   );
+}
+
+/// secrets and prefs reach the vault and nothing else
+void assertVaultOnly() {
+  if (FlutterSecureStoragePlatform.instance is! VaultStorage ||
+      SharedPreferencesStorePlatform.instance is! VaultPrefs) {
+    throw StateError('desktop storage is not the vault');
+  }
 }

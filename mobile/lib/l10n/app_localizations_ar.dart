@@ -9823,7 +9823,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get desktopLockNewBody =>
-      'سيطلب Kryfo عبارة المرور هذه في كل مرة يبدأ فيها. إنها تقفل رسائلك ومفاتيحك وجهات اتصالك على هذا الحاسوب.';
+      'سيطلب Kryfo عبارة المرور هذه في كل مرة يبدأ فيها. إنها تقفل رسائلك وجهات اتصالك وإعداداتك على هذا الحاسوب. الصور والرسائل الصوتية والملفات المحفوظة في Kryfo لا تقفلها بعد، لذا أبقِ تشفير قرص حاسوبك مفعّلًا.';
 
   @override
   String get desktopLockHonest =>
@@ -9831,7 +9831,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get desktopLockForgot =>
-      'لا يمكن فتح أي شيء هنا من دون عبارة المرور، ولا حتى من قبلنا.';
+      'لا يمكن فتح رسائلك هنا من دون عبارة المرور، ولا حتى من قبلنا.';
 
   @override
   String get desktopLockField => 'عبارة المرور';
@@ -9873,4 +9873,15 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get desktopNoCamera =>
       'لا يستطيع Kryfo استخدام كاميرا على هذا الحاسوب بعد. استخدم الرابط أو الرمز بدلًا من ذلك.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo مفتوح بالفعل على هذا الحاسوب.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'مجلد Kryfo يخص حسابًا آخر على هذا الحاسوب، لذا لن يفتحه Kryfo.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'تعذّر على Kryfo جعل مجلده خاصًا بك، لذا لن يفتح.';
 }

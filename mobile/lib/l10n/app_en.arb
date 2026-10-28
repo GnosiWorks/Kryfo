@@ -12224,7 +12224,7 @@
   "@desktopLockNewTitle": {
     "description": "desktop/desktop_lock_screen.dart: the title on the first start, when a passphrase is chosen"
   },
-  "desktopLockNewBody": "Kryfo asks for this passphrase every time it starts. It locks your messages, keys and contacts on this computer.",
+  "desktopLockNewBody": "Kryfo asks for this passphrase every time it starts. It locks your messages, contacts and settings on this computer. Photos, voice notes and files kept in Kryfo are not locked by it yet, so keep your computer's disk encryption on.",
   "@desktopLockNewBody": {
     "description": "desktop/desktop_lock_screen.dart: under the first-start title"
   },
@@ -12232,7 +12232,7 @@
   "@desktopLockHonest": {
     "description": "desktop/desktop_lock_screen.dart: the small print on the first start: what the passphrase protects against and what it does not"
   },
-  "desktopLockForgot": "Without the passphrase nothing here can be opened, not even by us.",
+  "desktopLockForgot": "Without the passphrase your messages here cannot be opened, not even by us.",
   "@desktopLockForgot": {
     "description": "desktop/desktop_lock_screen.dart: the small print when unlocking"
   },
@@ -12285,5 +12285,17 @@
   "desktopNoCamera": "Kryfo cannot use a camera on this computer yet. Use the link or the code instead.",
   "@desktopNoCamera": {
     "description": "screens/scan_screen.dart, screens/camera_screen.dart: on desktop, where the phone would open its camera"
+  },
+  "desktopAlreadyOpen": "Kryfo is already open on this computer.",
+  "@desktopAlreadyOpen": {
+    "description": "desktop/desktop_lock_screen.dart: a second copy of the app was started on the same folder"
+  },
+  "desktopFolderNotYours": "Kryfo's folder belongs to another account on this computer, so Kryfo will not open it.",
+  "@desktopFolderNotYours": {
+    "description": "desktop/desktop_lock_screen.dart: the app's data folder is owned by another user"
+  },
+  "desktopFolderNotPrivate": "Kryfo could not make its folder private to you, so it will not open.",
+  "@desktopFolderNotPrivate": {
+    "description": "desktop/desktop_lock_screen.dart: the data folder could not be made 0700"
   }
 }

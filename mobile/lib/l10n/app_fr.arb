@@ -2566,9 +2566,9 @@
   "desktopLockTitle": "Kryfo est verrouillé",
   "desktopLockBody": "Saisissez la phrase secrète de cet ordinateur.",
   "desktopLockNewTitle": "Verrouiller Kryfo sur cet ordinateur",
-  "desktopLockNewBody": "Kryfo vous demandera cette phrase secrète à chaque démarrage. Elle verrouille vos messages, vos clés et vos contacts sur cet ordinateur.",
+  "desktopLockNewBody": "Kryfo vous demandera cette phrase secrète à chaque démarrage. Elle verrouille vos messages, vos contacts et vos réglages sur cet ordinateur. Les photos, messages vocaux et fichiers gardés dans Kryfo ne sont pas encore verrouillés, gardez donc le chiffrement du disque de votre ordinateur activé.",
   "desktopLockHonest": "Quiconque copie le dossier de Kryfo peut essayer des phrases secrètes sur son propre ordinateur, aussi vite que celui-ci le permet. Quatre mots aléatoires ou plus tiennent bon. Une phrase courte, non.",
-  "desktopLockForgot": "Sans la phrase secrète, rien ici ne peut être ouvert, pas même par nous.",
+  "desktopLockForgot": "Sans la phrase secrète, vos messages ici ne peuvent pas être ouverts, pas même par nous.",
   "desktopLockField": "Phrase secrète",
   "desktopLockRepeat": "La même phrase secrète, une seconde fois",
   "desktopLockSet": "Verrouiller avec cette phrase",
@@ -2579,5 +2579,8 @@
   "desktopLockFailed": "Kryfo n’a pas pu ouvrir son verrou ici. Essayez de le relancer.",
   "desktopTrayQuit": "Quitter Kryfo",
   "desktopTrayTip": "Kryfo est ouvert et reçoit des messages",
-  "desktopNoCamera": "Kryfo ne peut pas encore utiliser de caméra sur cet ordinateur. Utilisez plutôt le lien ou le code."
+  "desktopNoCamera": "Kryfo ne peut pas encore utiliser de caméra sur cet ordinateur. Utilisez plutôt le lien ou le code.",
+  "desktopAlreadyOpen": "Kryfo est déjà ouvert sur cet ordinateur.",
+  "desktopFolderNotYours": "Le dossier de Kryfo appartient à un autre compte de cet ordinateur, Kryfo ne l’ouvrira donc pas.",
+  "desktopFolderNotPrivate": "Kryfo n’a pas pu rendre son dossier privé pour vous, il ne s’ouvrira donc pas."
 }

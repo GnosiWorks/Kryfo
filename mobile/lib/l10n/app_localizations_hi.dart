@@ -9696,7 +9696,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get desktopLockNewBody =>
-      'Kryfo हर बार शुरू होने पर यह पासफ़्रेज़ पूछेगा। यह इस कंप्यूटर पर आपके संदेश, कुंजियाँ और संपर्क लॉक रखता है।';
+      'Kryfo हर बार शुरू होने पर यह पासफ़्रेज़ पूछेगा। यह इस कंप्यूटर पर आपके संदेश, संपर्क और सेटिंग्स लॉक रखता है। Kryfo में रखी फ़ोटो, वॉइस नोट और फ़ाइलें अभी इससे लॉक नहीं होतीं, इसलिए अपने कंप्यूटर का डिस्क एन्क्रिप्शन चालू रखें।';
 
   @override
   String get desktopLockHonest =>
@@ -9704,7 +9704,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get desktopLockForgot =>
-      'पासफ़्रेज़ के बिना यहाँ कुछ भी नहीं खुल सकता, हमसे भी नहीं।';
+      'पासफ़्रेज़ के बिना यहाँ आपके संदेश नहीं खुल सकते, हमसे भी नहीं।';
 
   @override
   String get desktopLockField => 'पासफ़्रेज़';
@@ -9746,4 +9746,15 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get desktopNoCamera =>
       'Kryfo अभी इस कंप्यूटर पर कैमरा इस्तेमाल नहीं कर सकता। इसके बजाय लिंक या कोड इस्तेमाल करें।';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo इस कंप्यूटर पर पहले से खुला है।';
+
+  @override
+  String get desktopFolderNotYours =>
+      'Kryfo का फ़ोल्डर इस कंप्यूटर के किसी दूसरे खाते का है, इसलिए Kryfo उसे नहीं खोलेगा।';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo अपना फ़ोल्डर सिर्फ़ आपके लिए निजी नहीं बना पाया, इसलिए यह नहीं खुलेगा।';
 }

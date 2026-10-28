@@ -9241,14 +9241,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get desktopLockNewBody =>
-      'Kryfo 每次启动都会要求输入这个密码短语。它锁住你在这台电脑上的消息、密钥和联系人。';
+      'Kryfo 每次启动都会要求输入这个密码短语。它锁住你在这台电脑上的消息、联系人和设置。存在 Kryfo 里的照片、语音消息和文件暂时还没有被它锁住，所以请保持电脑的磁盘加密开启。';
 
   @override
   String get desktopLockHonest =>
       '复制了 Kryfo 文件夹的人，可以在自己的电脑上尽其所能地快速尝试密码短语。四个以上的随机单词能扛住，短的密码短语扛不住。';
 
   @override
-  String get desktopLockForgot => '没有密码短语，这里的一切都打不开，连我们也不行。';
+  String get desktopLockForgot => '没有密码短语，这里的消息都打不开，连我们也不行。';
 
   @override
   String get desktopLockField => '密码短语';
@@ -9288,6 +9288,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get desktopNoCamera => 'Kryfo 暂时还不能在这台电脑上使用摄像头。请改用链接或代码。';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo 已经在这台电脑上打开了。';
+
+  @override
+  String get desktopFolderNotYours => 'Kryfo 的文件夹属于这台电脑上的另一个账户，所以 Kryfo 不会打开它。';
+
+  @override
+  String get desktopFolderNotPrivate => 'Kryfo 无法把它的文件夹设为只有你能访问，所以不会打开。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -18410,14 +18419,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get desktopLockNewBody =>
-      'Kryfo 每次啟動都會要求輸入這組密碼短語。它鎖住你在這台電腦上的訊息、金鑰和聯絡人。';
+      'Kryfo 每次啟動都會要求輸入這組密碼短語。它鎖住你在這台電腦上的訊息、聯絡人和設定。存在 Kryfo 裡的照片、語音訊息和檔案暫時還沒有被它鎖住，所以請保持電腦的磁碟加密開啟。';
 
   @override
   String get desktopLockHonest =>
       '複製了 Kryfo 資料夾的人，可以在自己的電腦上盡其所能地快速嘗試密碼短語。四個以上的隨機單字撐得住，短的密碼短語撐不住。';
 
   @override
-  String get desktopLockForgot => '沒有密碼短語，這裡的一切都打不開，連我們也不行。';
+  String get desktopLockForgot => '沒有密碼短語，這裡的訊息都打不開，連我們也不行。';
 
   @override
   String get desktopLockField => '密碼短語';
@@ -18457,4 +18466,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get desktopNoCamera => 'Kryfo 暫時還不能在這台電腦上使用相機。請改用連結或代碼。';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo 已經在這台電腦上開啟了。';
+
+  @override
+  String get desktopFolderNotYours => 'Kryfo 的資料夾屬於這台電腦上的另一個帳戶，所以 Kryfo 不會開啟它。';
+
+  @override
+  String get desktopFolderNotPrivate => 'Kryfo 無法把它的資料夾設為只有你能存取，所以不會開啟。';
 }

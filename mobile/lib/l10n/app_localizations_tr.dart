@@ -9715,7 +9715,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get desktopLockNewBody =>
-      'Kryfo her açılışta bu parola ifadesini sorar. Mesajlarını, anahtarlarını ve kişilerini bu bilgisayarda kilitler.';
+      'Kryfo her açılışta bu parola ifadesini sorar. Mesajlarını, kişilerini ve ayarlarını bu bilgisayarda kilitler. Kryfo\'da tutulan fotoğraflar, sesli mesajlar ve dosyalar henüz kilitlenmiyor, bu yüzden bilgisayarının disk şifrelemesini açık tut.';
 
   @override
   String get desktopLockHonest =>
@@ -9723,7 +9723,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get desktopLockForgot =>
-      'Parola ifadesi olmadan buradaki hiçbir şey açılamaz, bizim tarafımızdan bile.';
+      'Parola ifadesi olmadan buradaki mesajların açılamaz, bizim tarafımızdan bile.';
 
   @override
   String get desktopLockField => 'Parola ifadesi';
@@ -9765,4 +9765,15 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get desktopNoCamera =>
       'Kryfo bu bilgisayarda henüz kamera kullanamıyor. Bunun yerine bağlantıyı ya da kodu kullan.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo bu bilgisayarda zaten açık.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'Kryfo klasörü bu bilgisayardaki başka bir hesaba ait, bu yüzden Kryfo onu açmayacak.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo klasörünü yalnızca sana özel yapamadı, bu yüzden açılmayacak.';
 }
