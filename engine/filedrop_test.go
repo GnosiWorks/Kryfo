@@ -785,6 +785,24 @@ func TestDropWorkAskedAndKept(t *testing.T) {
 	}
 }
 
+// the work has a time budget: past it the send is busy, not a phone's
+// cores ground for an hour
+func TestDropWorkHasATimeBudget(t *testing.T) {
+	f, _ := dropRig(t)
+	f.bits = 28
+	old := dropPowBudget
+	dropPowBudget = 200 * time.Millisecond
+	defer func() { dropPowBudget = old }()
+	path, _ := writeRandom(t, 1000)
+	start := time.Now()
+	if r := dropSend(sendJob(path, "uid-z", "a")); r != "error: busy" {
+		t.Fatalf("past the budget: %s", r)
+	}
+	if time.Since(start) > 3*time.Second {
+		t.Fatalf("ground for %v", time.Since(start))
+	}
+}
+
 // a part answered busy, a writer of a dead circuit still on the file, is
 // sent again
 func TestDropBusyPartSentAgain(t *testing.T) {

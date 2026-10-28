@@ -410,8 +410,12 @@ func dropUploadParts(ctx context.Context, c *http.Client, base string, job dropS
 			return word
 		}
 		j.preparing.Store(true)
-		n, err := dropPow(ctx, v.id, sealed, begun.Bits)
+		n, err := dropPowWithin(ctx, v.id, sealed, begun.Bits)
 		j.preparing.Store(false)
+		if errors.Is(err, errDropPowLong) {
+			// more than a phone should spend: slices, or a calm try later
+			return "busy"
+		}
 		if err != nil {
 			return "cancelled"
 		}
@@ -496,6 +500,23 @@ func dropPow(ctx context.Context, id string, sealed int64, want int) (uint64, er
 // the most bits an engine grinds: past it the service is flooded, and the
 // send waits for later
 const dropPowMost = 30
+
+// and the most time: a flood, or a service that asks too much, never keeps
+// a slow phone's cores busy past this. a var for the tests
+var dropPowBudget = 60 * time.Second
+
+var errDropPowLong = errors.New("work past its time")
+
+// the work within its budget, or errDropPowLong
+func dropPowWithin(ctx context.Context, id string, sealed int64, want int) (uint64, error) {
+	tctx, cancel := context.WithTimeout(ctx, dropPowBudget)
+	defer cancel()
+	n, err := dropPow(tctx, id, sealed, want)
+	if err != nil && ctx.Err() == nil {
+		return 0, errDropPowLong
+	}
+	return n, err
+}
 
 type workDone struct {
 	n    uint64
