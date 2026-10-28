@@ -13,7 +13,8 @@ import 'shim_lib.dart';
 const _crate = 'native/kryfo_signal';
 
 const _libsignal =
-    'git+https://github.com/signalapp/libsignal?tag=v0.99.4'
+    'git+https://github.com/signalapp/libsignal'
+    '?rev=387da3e29ac87c821aedc697aee77646a1c72fff'
     '#387da3e29ac87c821aedc697aee77646a1c72fff';
 const _spqr =
     'git+https://github.com/signalapp/SparsePostQuantumRatchet.git?tag=v1.5.3'

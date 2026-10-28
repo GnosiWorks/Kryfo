@@ -65,7 +65,7 @@ export PROTOC="${PROTOC:-$(command -v protoc || true)}"
 [[ -n "$PROTOC" ]] || die "protoc not found: libsignal-protocol builds its protobufs with it"
 
 # the two git dependencies stay at the reviewed commits, whatever their tags say
-grep -q "git+https://github.com/signalapp/libsignal?tag=v0.99.4#$LIBSIGNAL_REV\"" Cargo.lock ||
+grep -q "git+https://github.com/signalapp/libsignal?rev=$LIBSIGNAL_REV#$LIBSIGNAL_REV\"" Cargo.lock ||
   die "Cargo.lock does not pin libsignal at $LIBSIGNAL_REV"
 grep -q "git+https://github.com/signalapp/SparsePostQuantumRatchet.git?tag=v1.5.3#$SPQR_REV\"" Cargo.lock ||
   die "Cargo.lock does not pin spqr at $SPQR_REV"

@@ -14,7 +14,7 @@ use libsignal_protocol::*;
 use rand::TryRngCore as _;
 use rand::rngs::OsRng;
 
-const LIBSIGNAL: &str = "git+https://github.com/signalapp/libsignal?tag=v0.99.4#387da3e29ac87c821aedc697aee77646a1c72fff";
+const LIBSIGNAL: &str = "git+https://github.com/signalapp/libsignal?rev=387da3e29ac87c821aedc697aee77646a1c72fff#387da3e29ac87c821aedc697aee77646a1c72fff";
 const SPQR: &str = "git+https://github.com/signalapp/SparsePostQuantumRatchet.git?tag=v1.5.3#fd320484dcec89004021e6fdc7481825f5f261fa";
 
 // the reference stores never wait
@@ -89,11 +89,22 @@ fn the_lock_names_the_reviewed_commits() {
         git.len() > 2,
         "libsignal's own crates come from the same commit"
     );
-    // the manifest asks for the same tags, so the lock is not stale
+    // the manifest names the same commit, so the lock is not stale, and
+    // says which tag it is; spqr stays on the tag libsignal's own manifest
+    // names, or the lock would hold it twice
     let toml = manifest("Cargo.toml");
+    assert!(
+        toml.contains(
+            "# libsignal v0.99.4, named by its commit: a tag can move, a commit cannot.\n"
+        )
+    );
     assert!(toml.contains(
-        "libsignal-protocol = { git = \"https://github.com/signalapp/libsignal\", tag = \"v0.99.4\" }"
+        "libsignal-protocol = { git = \"https://github.com/signalapp/libsignal\", rev = \"387da3e29ac87c821aedc697aee77646a1c72fff\" }\n"
     ));
+    assert!(toml.contains(
+        "spqr = { git = \"https://github.com/signalapp/SparsePostQuantumRatchet.git\", tag = \"v1.5.3\" }\n"
+    ));
+    assert_eq!(toml.matches("signalapp/").count(), 2);
     // and the builds take the lock as it is
     let host = manifest("build-host.sh");
     assert!(host.contains("cargo build --locked --release"));

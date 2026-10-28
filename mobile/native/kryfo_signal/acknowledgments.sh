@@ -21,13 +21,14 @@ CARGO_NET_GIT_FETCH_WITH_CLI=true cargo about generate --locked --format json \
   -c about.toml -o "$tmp/about.json"
 
 # one entry per crate, each licence text once, both in a fixed order
-python3 -I - "$tmp/about.json" Cargo.lock "$tmp/rust.json" <<'EOF'
+python3 -I - "$tmp/about.json" Cargo.lock Cargo.toml "$tmp/rust.json" <<'EOF'
 import hashlib, json, re, sys
 
-about, lock, out = sys.argv[1:]
+about, lock, manifest, out = sys.argv[1:]
 a = json.load(open(about))
 lock_bytes = open(lock, 'rb').read()
-tag = re.search(rb'signalapp/libsignal\?tag=(v[0-9.]+)#', lock_bytes).group(1).decode()
+# the manifest names libsignal by its commit and says which tag that is
+tag = re.search(r'^# libsignal (v[0-9.]+), named by its commit', open(manifest).read(), re.M).group(1)
 expr = {(c['package']['name'], c['package']['version']): c['license'] for c in a['crates']}
 uses = {}
 for l in a['licenses']:

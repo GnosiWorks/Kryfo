@@ -16,6 +16,7 @@ import 'package:kryfo/licences.dart';
 import 'package:kryfo/screens/licences_screen.dart';
 
 const _lock = 'native/kryfo_signal/Cargo.lock';
+const _manifest = 'native/kryfo_signal/Cargo.toml';
 final _asset = File(kRustLicencesAsset);
 final _engineAsset = File(kEngineLicencesAsset);
 const _libtor = '../engine/vendor/github.com/alexballas/go-libtor';
@@ -151,8 +152,9 @@ void main() {
             'Cargo.lock changed: run native/kryfo_signal/acknowledgments.sh',
       );
       final tag = RegExp(
-        r'signalapp/libsignal\?tag=(v[0-9.]+)#',
-      ).firstMatch(File(_lock).readAsStringSync())![1];
+        r'^# libsignal (v[0-9.]+), named by its commit',
+        multiLine: true,
+      ).firstMatch(File(_manifest).readAsStringSync())![1];
       expect(j['libsignal'], tag);
       expect(kLibsignalTag, tag, reason: 'the screen names this tag');
     });

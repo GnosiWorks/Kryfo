@@ -17,7 +17,9 @@ crate-type = ["cdylib", "rlib"]
 mtecheck = []
 
 [dependencies]
-libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0.99.4" }
+# libsignal v0.99.4, named by its commit: a tag can move, a commit cannot.
+# cargo takes one of tag, branch or rev
+libsignal-protocol = { git = "https://github.com/signalapp/libsignal", rev = "387da3e29ac87c821aedc697aee77646a1c72fff" }
 # the versions libsignal-protocol already pulls in, so nothing new is built
 async-trait = "0.1.92"
 prost = "0.14.4"
