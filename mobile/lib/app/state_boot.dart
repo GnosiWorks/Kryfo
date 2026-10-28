@@ -121,7 +121,11 @@ extension AppStateBoot on AppState {
       for (final r in await db.query('file_fetches', columns: const ['path']))
         r['path'] as String,
     };
-    return strayFetchFiles(await d.container.mediaDir(), named);
+    final media = await d.container.mediaDir();
+    return [
+      ...await strayFetchFiles(media, named),
+      ...await staleHeldFiles(media, DateTime.now()),
+    ];
   }
 
   // as for media: settled here, zeroed in the background

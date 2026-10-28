@@ -154,6 +154,7 @@ final frameParams = <String, Object>{
     key: 'cd' * 32,
     size: 100000,
     chunks: 2,
+    sum: '12' * 32,
     token: 'ef' * 32,
   ),
 };

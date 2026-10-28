@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show ChangeNotifier, visibleForTesting;
 import 'package:flutter/widgets.dart' show StringCharacters;
 
 import 'dlog.dart';
+import 'file_drop.dart' show kDropsWire;
 import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -103,8 +104,9 @@ bool looksLikeRoomKey(String id) =>
     id.length == 64 && RegExp(r'^[0-9a-f]+$').hasMatch(id);
 
 // what a room frame may not carry: the onion, the signing key, the push
-// endpoint, the badge, the face picked and the roster's keys
-const _roomStripped = ['o', 'e', 'p', 'bg', 'av', 'rp'];
+// endpoint, the badge, the face picked, the roster's keys, and the files
+// word, which rooms never use and which would tell versions apart
+const _roomStripped = ['o', 'e', 'p', 'bg', 'av', 'rp', kDropsWire];
 
 /// [wrapped] with every trace of who sent it gone and the room key [pub] in
 /// its place. null when it cannot be done, and the send has to be dropped:

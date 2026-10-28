@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:crypto/crypto.dart' show sha256;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'voice_format.dart' show takeCanWord, canWordHeld, canWordAll;
@@ -49,14 +50,18 @@ int dropPadChunks(int n) {
   return (n + step - 1) ~/ step * step;
 }
 
-/// where a file is, its key, and this recipient's token for saying it
-/// arrived. [token] is null on a frame from a sender that gave none
+/// where a file is, its key, its hash, and this recipient's token: the
+/// service gives the file only to a token it was given, and lets it go
+/// once every token said it has it. [token] is null only on the sender's
+/// own copy, before a recipient's is put in
 class DropFrame {
   final String host;
   final String id;
   final String key;
   final int size;
   final int chunks;
+  // the file's sha256 as the sender read it, checked once it is opened
+  final String sum;
   final String? token;
   const DropFrame({
     required this.host,
@@ -64,6 +69,7 @@ class DropFrame {
     required this.key,
     required this.size,
     required this.chunks,
+    required this.sum,
     this.token,
   });
 
@@ -73,6 +79,7 @@ class DropFrame {
     'k': key,
     's': size,
     'c': chunks,
+    'd': sum,
     't': ?token,
   };
 
@@ -82,40 +89,50 @@ class DropFrame {
     key: key,
     size: size,
     chunks: chunks,
+    sum: sum,
     token: t,
   );
 
   /// null for anything that is not a whole, sane frame of a file this
-  /// version would send
-  static DropFrame? fromWire(Object? raw) {
+  /// version would send. one without a token is no frame: every sender
+  /// gives one, and a file nobody can say got for would wait its week
+  static DropFrame? fromWire(Object? raw) => _parse(raw, token: true);
+
+  static DropFrame? _parse(Object? raw, {required bool token}) {
     if (raw is! Map) return null;
     final h = raw['h'], i = raw['i'], k = raw['k'], s = raw['s'];
-    final c = raw['c'], t = raw['t'];
+    final c = raw['c'], d = raw['d'], t = raw['t'];
     if (h is! String || !_hosts.contains(h)) return null;
     if (i is! String || !_hex32.hasMatch(i)) return null;
     if (k is! String || !_hex64.hasMatch(k)) return null;
+    if (d is! String || !_hex64.hasMatch(d)) return null;
     if (s is! int || s <= 0 || s > kFreeFileBytes) return null;
     final need = (s + kDropChunk - 1) ~/ kDropChunk;
     if (c is! int || c != dropPadChunks(need)) return null;
-    if (t != null && (t is! String || !_hex64.hasMatch(t))) return null;
+    if (token && (t is! String || !_hex64.hasMatch(t))) return null;
     return DropFrame(
       host: h,
       id: i,
       key: k,
       size: s,
       chunks: c,
-      token: t as String?,
+      sum: d,
+      token: t is String && _hex64.hasMatch(t) ? t : null,
     );
   }
 
-  /// what the engine fetches it with, into [path]
-  String fetchJob(String path) => jsonEncode({
+  /// what the engine fetches it with, into [path]. [blind]: the sealed
+  /// bytes only, with no key to open them (hidden chats closed)
+  String fetchJob(String path, {bool blind = false}) => jsonEncode({
     'host': host,
     'id': id,
-    'key': key,
+    if (!blind) 'key': key,
     'size': size,
     'chunks': chunks,
     'path': path,
+    'token': token ?? '',
+    if (!blind) 'sum': sum,
+    'blind': blind,
   });
 }
 
@@ -124,7 +141,10 @@ class DropFrame {
 class DropSent {
   final DropFrame frame;
   final Map<String, String> tokens;
-  const DropSent(this.frame, this.tokens);
+  // its parts went up in this send, not a file the service had whole
+  // already: what the day's own count counts
+  final bool sent;
+  const DropSent(this.frame, this.tokens, {this.sent = true});
 
   /// the frame as [member] gets it
   DropFrame frameFor(String member) => frame.withToken(tokens[member]);
@@ -136,20 +156,21 @@ DropSent? dropSentOf(String r) {
   try {
     final m = jsonDecode(r);
     if (m is! Map) return null;
-    final f = DropFrame.fromWire({
+    final f = DropFrame._parse({
       'h': kDropHost,
       'i': m['id'],
       'k': m['key'],
       's': m['size'],
       'c': m['chunks'],
-    });
+      'd': m['sum'],
+    }, token: false);
     final t = m['tokens'];
     if (f == null || t is! Map) return null;
     return DropSent(f, {
       for (final e in t.entries)
         if (e.key is String && e.value is String && _hex64.hasMatch(e.value))
           e.key as String: e.value as String,
-    });
+    }, sent: m['sent'] != false);
   } catch (_) {
     return null;
   }
@@ -160,13 +181,11 @@ String dropSendJob({
   required String path,
   required String uid,
   required List<String> members,
-  required String lane,
 }) => jsonEncode({
   'path': path,
   'uid': uid,
   'members': members,
   'host': kDropHost,
-  'lane': lane,
 });
 
 /// a file goes through the files service when it takes more than one
@@ -183,13 +202,42 @@ bool dropFallsBack(String r) => const {
   'error: tor',
 }.contains(r);
 
-/// a send that ended on the service being full or at its limits, which
-/// the chat answers with a calm try later
-bool dropTryLater(String r) => const {
-  'error: drop full',
-  'error: drop busy',
-  'error: drop limit',
-}.contains(r);
+/// a send that ended on the service being full or busy, which the chat
+/// answers with a calm try later
+bool dropTryLater(String r) =>
+    const {'error: drop full', 'error: drop busy'}.contains(r);
+
+/// a send past this phone's own day of big files
+bool dropDayDone(String r) => r == 'error: drop limit';
+
+// ---- this phone's own day of big files ----
+
+// what one container sends through the service in a day, counted here and
+// nowhere else: the service keeps no sender, so a sender's limit is the
+// phone's own. it keeps a looping or a very busy app from using everyone's
+// share
+const kDropDayBytes = 1024 * 1024 * 1024;
+const kDropDayFiles = 300;
+
+/// the day's count as kept: `utc-day bytes files`
+({String day, int bytes, int files}) dropDayOf(String? kept, DateTime now) {
+  final today = now.toUtc().toIso8601String().substring(0, 10);
+  final p = (kept ?? '').split(' ');
+  if (p.length != 3 || p[0] != today) return (day: today, bytes: 0, files: 0);
+  return (
+    day: today,
+    bytes: int.tryParse(p[1]) ?? 0,
+    files: int.tryParse(p[2]) ?? 0,
+  );
+}
+
+/// a file of [size] still fits the day
+bool dropDayFits(({String day, int bytes, int files}) d, int size) =>
+    d.bytes + size <= kDropDayBytes && d.files + 1 <= kDropDayFiles;
+
+/// the day with a file of [size] in it, as kept
+String dropDayAdd(({String day, int bytes, int files}) d, int size) =>
+    '${d.day} ${d.bytes + size} ${d.files + 1}';
 
 // ---- which phones fetch from the files service ----
 
@@ -258,6 +306,14 @@ Future<void> dropColumns(
 // state: 0 to fetch, 1 fetched into path, 2 gone from the service, 3 filed
 // with the got still to say
 Future<void> dropFetchTable(DatabaseExecutor db) async {
+  // the files a frame came for, by their id on the service, for a week:
+  // one file is fetched once, however many frames name it
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS file_seen (
+      file_id TEXT PRIMARY KEY,
+      at INTEGER NOT NULL
+    )
+  ''');
   await db.execute('''
     CREATE TABLE IF NOT EXISTS file_fetches (
       msg_uid TEXT PRIMARY KEY,
@@ -336,6 +392,47 @@ Future<DropFetch?> fetchOf(Database db, String uid) async {
     limit: 1,
   );
   return r.isEmpty ? null : DropFetch.fromRow(r.first);
+}
+
+/// files on their way in a container holds at most, and from one sender:
+/// a frame costs its sender a few hundred bytes, the file costs this phone
+/// up to 50 MB
+const kFetchMost = 200;
+const kFetchFromMost = 50;
+
+/// why a frame is not kept: null when it is
+Future<String?> fetchRefused(
+  Database db, {
+  required String sender,
+  required String fileId,
+}) async {
+  final seen = await db.query(
+    'file_seen',
+    where: 'file_id = ?',
+    whereArgs: [fileId],
+    limit: 1,
+  );
+  if (seen.isNotEmpty) return 'a file already here';
+  final all = await db.query('file_fetches', columns: const ['sender']);
+  if (all.length >= kFetchMost) return 'too many coming';
+  if (all.where((r) => r['sender'] == sender).length >= kFetchFromMost) {
+    return 'too many from one sender';
+  }
+  return null;
+}
+
+/// a file's id seen, so another frame naming it fetches nothing; a week on
+/// it is forgotten
+Future<void> noteSeen(Database db, String fileId, int now) async {
+  await db.insert('file_seen', {
+    'file_id': fileId,
+    'at': now,
+  }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  await db.delete(
+    'file_seen',
+    where: 'at < ?',
+    whereArgs: [now - kFetchKeptFor.inMilliseconds - 86400000],
+  );
 }
 
 /// a frame kept to fetch. a second copy of the same message keeps the
@@ -428,6 +525,44 @@ Future<String> fetchPathIn(Directory media) async {
       r.nextInt(256).toRadixString(16).padLeft(2, '0'),
   ].join();
   return '${dir.path}/$leaf';
+}
+
+/// what the chat answers a frame not kept: no message, no file
+const kDropRefused = '\u0000refused';
+
+// where a file fetched while hidden chats were closed waits, sealed: named
+// by its id, so the frame that opens later finds it, and by a hash of it,
+// so the name says nothing of the file
+Future<String> heldPathIn(Directory media, String fileId) async {
+  final dir = Directory('${media.path}/held');
+  await dir.create(recursive: true);
+  final name = sha256.convert(utf8.encode('kryfo-held:$fileId')).toString();
+  return '${dir.path}/${name.substring(0, 32)}';
+}
+
+/// the held sealed bytes for [fileId], moved to where its fetch goes on
+/// from them. false when there are none
+Future<bool> takeHeld(Directory media, String fileId, String fetchPath) async {
+  final held = File('${await heldPathIn(media, fileId)}.part');
+  if (!await held.exists()) return false;
+  try {
+    await held.rename('$fetchPath.part');
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+/// held files past the service's week and a day: their frame never opened
+Future<List<File>> staleHeldFiles(Directory media, DateTime now) async {
+  final dir = Directory('${media.path}/held');
+  if (!await dir.exists()) return const [];
+  final out = <File>[];
+  final cut = now.subtract(kFetchKeptFor + const Duration(days: 1));
+  await for (final e in dir.list(followLinks: false)) {
+    if (e is File && (await e.lastModified()).isBefore(cut)) out.add(e);
+  }
+  return out;
 }
 
 /// the fetch folder's files no fetch names: a fetch dropped while the app

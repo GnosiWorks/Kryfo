@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/file_drop.dart';
 import 'package:kryfo/file_kind.dart' show fileFits, kMaxFileBytes;
 import 'package:kryfo/message_envelope.dart';
+import 'package:kryfo/rooms.dart' show roomFrame;
 import 'package:kryfo/widgets/media_bubbles.dart' show fileTooBigLine;
 
 import 'mem_db.dart';
@@ -16,6 +17,7 @@ import 'mem_db.dart';
 final _id = 'ab' * 16;
 final _key = 'cd' * 32;
 final _tok = 'ef' * 32;
+final _sum = '12' * 32;
 
 Map<String, Object> _wire({
   String h = kDropHost,
@@ -24,12 +26,14 @@ Map<String, Object> _wire({
   int s = 100000,
   int? c,
   String? t,
+  String? d,
 }) => {
   'h': h,
   'i': i ?? _id,
   'k': k ?? _key,
   's': s,
   'c': c ?? dropPadChunks((s + kDropChunk - 1) ~/ kDropChunk),
+  'd': d ?? _sum,
   't': ?t,
 };
 
@@ -41,7 +45,9 @@ void main() {
       expect(f.chunks, 2);
       expect(f.token, _tok);
       expect(DropFrame.fromWire(f.toWire())!.toWire(), f.toWire());
-      expect(DropFrame.fromWire(_wire())!.token, isNull);
+      // one with no token is no frame: nobody could say got for it
+      expect(DropFrame.fromWire(_wire()), isNull);
+      expect(f.sum, _sum);
     });
 
     test('names a host by its key only, never a url', () {
@@ -52,14 +58,16 @@ void main() {
 
     test('refuses an id, key, size, count or token out of shape', () {
       final bad = [
-        _wire(i: 'AB' * 16),
-        _wire(i: '../../etc'),
-        _wire(k: 'cd' * 31),
-        _wire(s: 0),
-        _wire(s: kFreeFileBytes + 1),
-        _wire(s: 100000, c: 3),
-        _wire(s: 18 * kDropChunk, c: 19),
+        _wire(i: 'AB' * 16, t: _tok),
+        _wire(i: '../../etc', t: _tok),
+        _wire(k: 'cd' * 31, t: _tok),
+        _wire(s: 0, t: _tok),
+        _wire(s: kFreeFileBytes + 1, t: _tok),
+        _wire(s: 100000, c: 3, t: _tok),
+        _wire(s: 18 * kDropChunk, c: 19, t: _tok),
         _wire(t: 'zz' * 32),
+        _wire(t: _tok, d: 'ab'),
+        {..._wire(t: _tok)}..remove('d'),
       ];
       for (final w in bad) {
         expect(DropFrame.fromWire(w), isNull, reason: '$w');
@@ -109,10 +117,14 @@ void main() {
         'key': _key,
         'size': 100000,
         'chunks': 2,
+        'sum': _sum,
+        'sent': false,
         'tokens': {'alice': _tok, 'bob': 'aa' * 32, 'eve': 'short'},
       });
       final s = dropSentOf(r)!;
       expect(s.frame.id, _id);
+      expect(s.frame.sum, _sum);
+      expect(s.sent, isFalse);
       expect(s.frameFor('alice').token, _tok);
       expect(s.frameFor('bob').token, 'aa' * 32);
       // a token out of shape is no token
@@ -121,37 +133,39 @@ void main() {
       expect(dropSentOf('{"id":"x"}'), isNull);
     });
 
-    test('the send job names the files host and the container lane', () {
+    test('the send job names the files host and nothing of the sender', () {
       final j =
-          jsonDecode(
-                dropSendJob(
-                  path: '/m/f',
-                  uid: 'u',
-                  members: ['a'],
-                  lane: 'files:e',
-                ),
-              )
+          jsonDecode(dropSendJob(path: '/m/f', uid: 'u', members: ['a']))
               as Map;
+      expect(j.keys.toSet(), {'path', 'uid', 'members', 'host'});
       expect(j['host'], kDropHost);
-      expect(j['lane'], 'files:e');
-      expect(j['members'], ['a']);
+    });
+
+    test('a fetch asks with its token and checks the hash; a blind one '
+        'has no key', () {
+      final f = DropFrame.fromWire(_wire(t: _tok))!;
+      final j = jsonDecode(f.fetchJob('/m/x')) as Map;
+      expect(j['token'], _tok);
+      expect(j['sum'], _sum);
+      expect(j['key'], _key);
+      final b = jsonDecode(f.fetchJob('/m/x', blind: true)) as Map;
+      expect(b['blind'], isTrue);
+      expect(b.containsKey('key'), isFalse);
+      expect(b['token'], _tok);
     });
 
     test('each member gets its own token in the one frame', () async {
       final marker = 'tok${'1' * 32}';
-      final f = DropFrame.fromWire(_wire())!.withToken(marker);
+      final f = DropFrame.fromWire(_wire(t: _tok))!.withToken(marker);
       final w = await wrapMessage('', msgUid: 'u', drop: f);
       final a = unwrapMessage(withMemberToken(w, marker, _tok));
       expect(a.drop!.token, _tok);
+      // no token, no frame: the member gets the message without it
       final none = withMemberToken(w, marker, null);
       expect(none.contains(marker), isFalse);
-      expect(unwrapMessage(none).drop!.token, isNull);
-      expect(unwrapMessage(none).drop!.id, _id);
+      expect(unwrapMessage(none).drop, isNull);
       // a token out of shape is left out, never put in
-      expect(
-        unwrapMessage(withMemberToken(w, marker, '"}')).drop!.token,
-        isNull,
-      );
+      expect(unwrapMessage(withMemberToken(w, marker, '"}')).drop, isNull);
     });
   });
 
@@ -185,7 +199,10 @@ void main() {
         expect(dropFallsBack(r), isFalse, reason: r);
       }
       expect(dropTryLater('error: drop full'), isTrue);
-      expect(dropTryLater('error: drop limit'), isTrue);
+      expect(dropTryLater('error: drop busy'), isTrue);
+      // past this phone's own day: a toast of its own
+      expect(dropTryLater('error: drop limit'), isFalse);
+      expect(dropDayDone('error: drop limit'), isTrue);
       expect(dropTryLater('error: drop read'), isFalse);
       expect(dropTryLater('error: full'), isFalse);
     });
@@ -333,5 +350,101 @@ void main() {
       );
       expect(await groupTakesDrops(db, 'g1', 'me'), isTrue);
     });
+  });
+
+  group('this phone\'s day of big files', () {
+    test('counted per day, and a new day starts again', () {
+      final now = DateTime.utc(2026, 10, 28, 12);
+      var d = dropDayOf(null, now);
+      expect((d.bytes, d.files), (0, 0));
+      final kept = dropDayAdd(d, 40 << 20);
+      d = dropDayOf(kept, now);
+      expect((d.bytes, d.files), (40 << 20, 1));
+      expect(dropDayFits(d, kDropDayBytes - (40 << 20)), isTrue);
+      expect(dropDayFits(d, kDropDayBytes - (40 << 20) + 1), isFalse);
+      expect(dropDayOf(kept, now.add(const Duration(days: 1))).bytes, 0);
+      expect(dropDayOf('junk', now).bytes, 0);
+      final full = dropDayOf('${d.day} 0 $kDropDayFiles', now);
+      expect(dropDayFits(full, 1), isFalse);
+    });
+  });
+
+  group('what comes in has an end', () {
+    late MemDb db;
+    setUp(() => db = MemDb());
+
+    test('a file is taken once, whatever frame names it', () async {
+      expect(await fetchRefused(db, sender: 'wren', fileId: _id), isNull);
+      await noteSeen(db, _id, 1000);
+      expect(await fetchRefused(db, sender: 'orbit', fileId: _id), isNotNull);
+      // and forgotten after the service's week
+      await noteSeen(db, 'ff' * 16, 1000 + 9 * 86400000);
+      expect(await fetchRefused(db, sender: 'wren', fileId: _id), isNull);
+    });
+
+    test('so many coming at once, and so many from one sender', () async {
+      for (var i = 0; i < kFetchFromMost; i++) {
+        await noteFetch(
+          db,
+          uid: 'u$i',
+          sender: 'wren',
+          groupId: null,
+          wire: '',
+          backPair: false,
+          size: 1,
+          path: '/p$i',
+          now: 1,
+        );
+      }
+      expect(await fetchRefused(db, sender: 'wren', fileId: _id), isNotNull);
+      expect(await fetchRefused(db, sender: 'orbit', fileId: _id), isNull);
+      for (var i = kFetchFromMost; i < kFetchMost; i++) {
+        await noteFetch(
+          db,
+          uid: 'u$i',
+          sender: 's$i',
+          groupId: null,
+          wire: '',
+          backPair: false,
+          size: 1,
+          path: '/p$i',
+          now: 1,
+        );
+      }
+      expect(await fetchRefused(db, sender: 'orbit', fileId: _id), isNotNull);
+    });
+  });
+
+  group('held while hidden chats are closed', () {
+    test('a held file is found by its id, and its name says nothing', () async {
+      final tmp = Directory.systemTemp.createTempSync('held');
+      addTearDown(() => tmp.deleteSync(recursive: true));
+      final p = await heldPathIn(tmp, _id);
+      expect(p, isNot(contains(_id)));
+      expect(p, startsWith('${tmp.path}/held/'));
+      expect(await heldPathIn(tmp, _id), p);
+      File('$p.part').writeAsStringSync('sealed');
+      final fetch = await fetchPathIn(tmp);
+      expect(await takeHeld(tmp, _id, fetch), isTrue);
+      expect(File('$fetch.part').readAsStringSync(), 'sealed');
+      expect(await takeHeld(tmp, _id, fetch), isFalse);
+      File('$p.part').writeAsStringSync('old');
+      final later = DateTime.now().add(const Duration(days: 9));
+      expect(await staleHeldFiles(tmp, DateTime.now()), isEmpty);
+      expect(await staleHeldFiles(tmp, later), hasLength(1));
+    });
+
+    test('a frame sealed for hidden chats starts its file coming', () {
+      final src = File('lib/app/state_vault.dart').readAsStringSync();
+      final seal = src.substring(src.indexOf('Future<void> _sealArrival('));
+      expect(seal, contains('if (drop != null) unawaited(_holdDrop(drop));'));
+    });
+  });
+
+  test('a room frame says nothing of the files service', () async {
+    final w = await wrapMessage('hi', msgUid: 'u');
+    expect(w, contains('"fb":1'));
+    final r = roomFrame(w, 'ab' * 32)!;
+    expect(r, isNot(contains('"fb"')));
   });
 }

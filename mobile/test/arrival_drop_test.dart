@@ -4,6 +4,7 @@
 // is told this phone has it. a file that is gone shows the message with a
 // line saying so, a fetch that fails waits for its next try, and a take
 // back stops a fetch. the databases, signal and the engine are stand-ins
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -19,6 +20,7 @@ import 'package:kryfo/main.dart'
         HaloEngine,
         useDatabasesForTest,
         useEngineForTest;
+import 'package:kryfo/media_send.dart' show cancelMediaSend;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
@@ -46,11 +48,18 @@ class _Engine implements HaloEngine {
   final fetched = <String>[];
   final gots = <(String, String)>[];
   final cancels = <String>[];
+  final sends = <String>[];
+  final takeBacks = <String>[];
+  String gotAnswer = 'ok';
+  // runs while a fetch is under way: a chat cleared mid-fetch, say
+  Future<void> Function()? during;
+  String sendAnswer = '';
 
   @override
   Future<String> fileFetch(String job) async {
     final path = RegExp(r'"path":"([^"]+)"').firstMatch(job)!.group(1)!;
     fetched.add(path);
+    await during?.call();
     if (answer == 'ok') await File(path).writeAsBytes(bytes);
     return answer;
   }
@@ -58,6 +67,18 @@ class _Engine implements HaloEngine {
   @override
   Future<String> fileGot(String host, String id, String token) async {
     gots.add((id, token));
+    return gotAnswer;
+  }
+
+  @override
+  Future<String> fileSend(String job) async {
+    sends.add(job);
+    return sendAnswer;
+  }
+
+  @override
+  Future<String> fileTakeBack(String job) async {
+    takeBacks.add(job);
     return 'ok';
   }
 
@@ -78,6 +99,7 @@ DropFrame _frame([String id = 'ab']) => DropFrame(
   key: 'cd' * 32,
   size: 3,
   chunks: 1,
+  sum: '12' * 32,
   token: _tok,
 );
 
@@ -192,5 +214,100 @@ void main() {
     expect(eng.gots, [('12' * 16, _tok)]);
     await app.fetchDropsInForTest(live);
     expect(live.msg('f4'), isNull);
+  });
+
+  test('a second frame for a file already here fetches nothing', () async {
+    await from(_x, await drop('g1'));
+    await from(_x, await drop('g2'));
+    expect(await fetchOf(live.mem, 'g2'), isNull);
+    await app.fetchDropsInForTest(live);
+    expect(eng.fetched, hasLength(1));
+    expect(live.msg('g1'), isNotNull);
+    expect(live.msg('g2'), isNull);
+  });
+
+  test('a frame with no token is no file', () async {
+    final w = await wrapMessage(
+      'the plan',
+      msgUid: 'g3',
+      fileName: 'plan.pdf',
+      drop: _frame().withToken(null),
+      sender: asSender(_x),
+    );
+    await from(_x, w);
+    expect(await fetchOf(live.mem, 'g3'), isNull);
+    expect(eng.fetched, isEmpty);
+  });
+
+  test('a chat cleared while its file came does not come back', () async {
+    await from(_x, await drop('g4'));
+    eng.during = () async {
+      await live.mem.delete(
+        'file_fetches',
+        where: 'sender = ? AND group_id IS NULL',
+        whereArgs: [_x],
+      );
+    };
+    await app.fetchDropsInForTest(live);
+    expect(live.msg('g4'), isNull);
+    expect(eng.gots, [('ab' * 16, _tok)]);
+    expect(await fetchOf(live.mem, 'g4'), isNull);
+  });
+
+  test('a got the file does not name is not said again', () async {
+    eng.gotAnswer = 'error: denied';
+    await from(_x, await drop('g5'));
+    await app.fetchDropsInForTest(live);
+    expect(live.msg('g5'), isNotNull);
+    expect(await fetchOf(live.mem, 'g5'), isNull);
+  });
+
+  group('sending', () {
+    late String path;
+    setUp(() {
+      path = '${docs.path}/big.bin';
+      File(path).writeAsBytesSync(List.filled(40000, 1));
+    });
+    String sent({bool up = true}) => jsonEncode({
+      'id': 'ab' * 16,
+      'key': 'cd' * 32,
+      'size': 40000,
+      'chunks': 1,
+      'sum': '12' * 32,
+      'sent': up,
+      'tokens': {_x: _tok},
+    });
+
+    test('a stop once it was up takes it back', () async {
+      eng.sendAnswer = sent();
+      cancelMediaSend('s1');
+      final (d, r) = await app.sendDrop(path: path, uid: 's1', members: [_x]);
+      expect(d, isNull);
+      expect(r, 'error: cancelled');
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(eng.takeBacks, hasLength(1));
+    });
+
+    test('this phone\'s day of big files ends the day\'s sends', () async {
+      eng.sendAnswer = sent();
+      final (d, r) = await app.sendDrop(path: path, uid: 's2', members: [_x]);
+      expect(r, 'ok');
+      expect(d!.frameFor(_x).token, _tok);
+      final prefs = await SharedPreferences.getInstance();
+      final key = prefs.getKeys().singleWhere(
+        (k) => k.startsWith('files_day_'),
+      );
+      expect(prefs.getString(key), endsWith(' 40000 1'));
+      // a file the service had already is not counted again
+      eng.sendAnswer = sent(up: false);
+      await app.sendDrop(path: path, uid: 's2', members: [_x]);
+      expect(prefs.getString(key), endsWith(' 40000 1'));
+      final day = prefs.getString(key)!.split(' ').first;
+      await prefs.setString(key, '$day $kDropDayBytes 1');
+      final before = eng.sends.length;
+      final (_, r2) = await app.sendDrop(path: path, uid: 's3', members: [_x]);
+      expect(r2, 'error: limit');
+      expect(eng.sends.length, before);
+    });
   });
 }
