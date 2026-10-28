@@ -100,25 +100,29 @@ Future<int?> oggFileMs(String path) async {
 // a room, so it moves, ends and goes with the chat (opusColumns)
 const kOpusCol = 'opus_can';
 
-Future<bool> _take(
+/// a phone's word in column [col] of the row [where] picks, moved on by
+/// one envelope (shotsCanAfter). the opus word, and the files word
+/// (file_drop.dart) beside it
+Future<bool> takeCanWord(
   Database db,
   String table,
   String where,
   List<Object?> args, {
+  String col = kOpusCol,
   required bool carried,
   required bool counts,
   int? written,
 }) => db.transaction((t) async {
   final r = await t.query(
     table,
-    columns: const [kOpusCol],
+    columns: [col],
     where: where,
     whereArgs: args,
     limit: 1,
   );
   // only a row that is there already: nothing is made for anyone
   if (r.isEmpty) return false;
-  final was = (r.first[kOpusCol] as num?)?.toInt() ?? 0;
+  final was = (r.first[col] as num?)?.toInt() ?? 0;
   final can = shotsCanAfter(
     was,
     carried: carried,
@@ -126,7 +130,7 @@ Future<bool> _take(
     written: written,
   );
   if (can == null) return false;
-  await t.update(table, {kOpusCol: can}, where: where, whereArgs: args);
+  await t.update(table, {col: can}, where: where, whereArgs: args);
   return true;
 });
 
@@ -140,7 +144,7 @@ Future<bool> takePeerOpus(
   required bool carried,
   required bool counts,
   int? written,
-}) => _take(
+}) => takeCanWord(
   db,
   'contacts',
   'halo_id = ? AND accepted = 1',
@@ -159,7 +163,7 @@ Future<bool> takeMemberOpus(
   required bool carried,
   required bool counts,
   int? written,
-}) => _take(
+}) => takeCanWord(
   db,
   'group_members',
   'group_id = ? AND halo_id = ?',
@@ -170,22 +174,39 @@ Future<bool> takeMemberOpus(
 );
 
 /// [peer]'s phone has said it plays opus, and has not gone back since
-Future<bool> peerPlaysOpus(Database db, String peer) async {
+Future<bool> peerPlaysOpus(Database db, String peer) => canWordHeld(db, peer);
+
+/// every member of [groupId] but [me] plays opus. none known is no
+Future<bool> groupPlaysOpus(Database db, String groupId, String me) =>
+    canWordAll(db, groupId, me);
+
+/// [peer]'s phone has said the word in [col], and has not gone back since
+Future<bool> canWordHeld(
+  Database db,
+  String peer, {
+  String col = kOpusCol,
+}) async {
   final r = await db.query(
     'contacts',
-    columns: const [kOpusCol],
+    columns: [col],
     where: 'halo_id = ?',
     whereArgs: [peer],
     limit: 1,
   );
-  return r.isNotEmpty && ((r.first[kOpusCol] as num?)?.toInt() ?? 0) > 0;
+  return r.isNotEmpty && ((r.first[col] as num?)?.toInt() ?? 0) > 0;
 }
 
-/// every member of [groupId] but [me] plays opus. none known is no
-Future<bool> groupPlaysOpus(Database db, String groupId, String me) async {
+/// every member of [groupId] but [me] has said the word in [col]. none
+/// known is no
+Future<bool> canWordAll(
+  Database db,
+  String groupId,
+  String me, {
+  String col = kOpusCol,
+}) async {
   final r = await db.query(
     'group_members',
-    columns: const ['halo_id', kOpusCol],
+    columns: ['halo_id', col],
     where: 'group_id = ?',
     whereArgs: [groupId],
   );
@@ -194,5 +215,5 @@ Future<bool> groupPlaysOpus(Database db, String groupId, String me) async {
       if (m['halo_id'] != me) m,
   ];
   return others.isNotEmpty &&
-      others.every((m) => ((m[kOpusCol] as num?)?.toInt() ?? 0) > 0);
+      others.every((m) => ((m[col] as num?)?.toInt() ?? 0) > 0);
 }

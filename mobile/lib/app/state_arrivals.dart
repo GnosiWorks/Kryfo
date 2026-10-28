@@ -672,6 +672,8 @@ extension AppStateArrivals on AppState {
       if (await db.dropMediaChunks(env.unsend!, from: senderHaloId) > 0) {
         incomingMediaDone(db.container.chatKey(env.groupId ?? senderHaloId));
       }
+      // and a file still coming from the files service stops coming
+      await _dropFetchTakenBack(senderHaloId, env.unsend!, db);
       // refresh so it vanishes live if the peer's looking at the chat now,
       // not only after they leave and come back. home shows the count too
       await refreshContacts();
@@ -793,7 +795,8 @@ extension AppStateArrivals on AppState {
           : await db.countMessagesFrom(senderHaloId) +
                 await db.filesInFlightFrom(
                   senderHaloId,
-                  except: AppState._sliced(env) ? env.mediaId : null,
+                  // a file from the files service is its message's own
+                  except: AppState._sliced(env) ? env.mediaId : env.msgUid,
                 );
       if (strangerCapHolds(
         accepted: false,
@@ -998,7 +1001,8 @@ extension AppStateArrivals on AppState {
           env.preview != null &&
           env.message.isEmpty &&
           env.imageB64 == null &&
-          env.fileB64 == null;
+          env.fileB64 == null &&
+          env.drop == null;
       if (previewOnly) return to;
       if (known) {
         // already have it, but a re-send means our receipt never landed. ack
@@ -1016,6 +1020,39 @@ extension AppStateArrivals on AppState {
       }
       _inflightUids.add(uid);
       claims.add(uid);
+      if (env.drop != null) {
+        // a room's files go in slices, told by their bytes: a frame there
+        // carries none
+        if (isGroup && await _roomOf(env.groupId!, db) != null) {
+          dlog('room: a files service frame, dropped');
+          _inflightUids.remove(uid);
+          return to;
+        }
+        final got = await _dropArrived(
+          senderHaloId,
+          env,
+          db,
+          wire: wire,
+          fromBackPair: fromBackPair,
+        );
+        if (got == null) {
+          // here, its file still on the way: the sender can stop sending
+          // the frame, and the chat shows it once the file is in
+          _inflightUids.remove(uid);
+          claims.remove(uid);
+          if (!isGroup && !unsealing && senderHaloId != myId) {
+            unawaited(_sendDeliveryReceipt(senderHaloId, uid));
+          }
+          return to;
+        }
+        if (got.isEmpty) {
+          unsaved = true;
+        } else if (fileName != null) {
+          filePath = got;
+        } else {
+          mediaPath = got;
+        }
+      }
     }
     if (imgB64 != null && imgB64.isNotEmpty) {
       try {
@@ -1048,6 +1085,7 @@ extension AppStateArrivals on AppState {
     final bare =
         env.imageB64 == null &&
         env.fileB64 == null &&
+        env.drop == null &&
         env.fileName == null &&
         env.mediaId == null &&
         env.poll == null;
@@ -1117,7 +1155,10 @@ extension AppStateArrivals on AppState {
     // alone and rings for itself. one of an album that burned already
     // joins nothing and burns as it lands
     var album =
-        env.imageB64 != null || env.fileB64 != null || AppState._sliced(env)
+        env.imageB64 != null ||
+            env.fileB64 != null ||
+            env.drop != null ||
+            AppState._sliced(env)
         ? env.album
         : null;
     var albumSeen = false;
@@ -1145,6 +1186,7 @@ extension AppStateArrivals on AppState {
     }
     // past the gates: what it says of their phone is kept on their own row
     await _takeOpus(senderHaloId, env, db);
+    await _takeDrops(senderHaloId, env, db);
     await db.saveMessage(
       senderHaloId,
       'in',

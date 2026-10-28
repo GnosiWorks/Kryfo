@@ -282,7 +282,7 @@ void main() {
 
     test('the upgrade is in the version steps, and a new install has it', () {
       final src = File('lib/app/database.dart').readAsStringSync();
-      expect(src, contains('version: 87,'));
+      expect(src, contains('version: 88,'));
       expect(src, contains('if (oldV < 87) {'));
       expect(
         RegExp(

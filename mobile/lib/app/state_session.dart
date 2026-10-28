@@ -434,6 +434,7 @@ extension AppStateSession on AppState {
       // what was typed in it and never went, and files half arrived
       unawaited(drainOutbox());
       unawaited(askForMissingSlices());
+      unawaited(fetchDrops());
     } catch (e) {
       if (identical(_openVault, v)) {
         dlog('vault: after open (${e.runtimeType})');

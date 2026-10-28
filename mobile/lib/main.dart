@@ -23,7 +23,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
-import 'image_strip.dart' show photoToSendOffUi;
+import 'image_strip.dart' show cleanSavedPhoto, photoToSendOffUi;
 import 'package:path_provider/path_provider.dart';
 import 'notifications.dart';
 import 'orientation.dart' show appOrientations;
@@ -120,6 +120,7 @@ import 'router.dart';
 import 'vault_life.dart';
 import 'voice_choice.dart';
 import 'voice_format.dart';
+import 'file_drop.dart';
 import 'tools/tools_bridge.dart' show ToolsBridge;
 import 'devchat/dev_chat.dart';
 import 'devchat/dev_frame.dart' show DevSelf, devInFrame;
@@ -219,6 +220,7 @@ part 'app/state_search.dart';
 part 'app/state_session.dart';
 part 'app/state_vault.dart';
 part 'app/state_voice.dart';
+part 'app/state_files.dart';
 
 void main() async {
   dlog('launch main');

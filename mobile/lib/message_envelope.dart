@@ -9,6 +9,7 @@ import 'album.dart' show AlbumTag;
 import 'bidi_safe.dart';
 import 'chat_shots.dart' show ShotsWord, kShotsWire;
 import 'dlog.dart';
+import 'file_drop.dart' show DropFrame, kDropWire, kDropsWire;
 import 'media_resend.dart';
 import 'stickers/sticker_wire.dart' show StickerWire;
 import 'voice_format.dart' show kOpusWire;
@@ -62,6 +63,10 @@ class UnwrappedMessage {
   final bool endNotice;
   // 'op': the sender's phone plays opus voice notes (voice_format.dart)
   final bool playsOpus;
+  // 'fb': the sender's phone fetches from the files service (file_drop)
+  final bool takesDrops;
+  // 'bl': the file is on the files service, not in slices (file_drop)
+  final DropFrame? drop;
   final ShotsWord? shots; // 'ss': a 1:1 chat's screenshot block (chat_shots)
   final AlbumTag? album; // 'al': its place in an album, on every slice
   // 'w': when the sender wrote it, ms by their clock. set once and kept on
@@ -118,6 +123,8 @@ class UnwrappedMessage {
     this.writtenAt,
     this.endNotice = false,
     this.playsOpus = false,
+    this.takesDrops = false,
+    this.drop,
   });
 }
 
@@ -361,10 +368,14 @@ Future<String> wrapMessage(
   // when it was written: a retry, a resend or a slice passes the time the
   // row was written, anything else is written now
   int? writtenAt,
+  // the file's place on the files service, in place of its bytes
+  DropFrame? drop,
 }) async {
   final body = <String, dynamic>{'m': plain};
   body['w'] = writtenAt ?? DateTime.now().millisecondsSinceEpoch;
   body[kOpusWire] = 1;
+  body[kDropsWire] = 1;
+  if (drop != null) body[kDropWire] = drop.toWire();
   if (sticker != null) body['st'] = sticker;
   if (supportMarker != null) body['sp'] = supportMarker;
   if (endNotice) body['ge'] = 1;
@@ -576,6 +587,8 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       },
       endNotice: json['ge'] == 1,
       playsOpus: json[kOpusWire] == 1,
+      takesDrops: json[kDropsWire] == 1,
+      drop: DropFrame.fromWire(sent[kDropWire]),
     );
   } catch (e) {
     dlog(

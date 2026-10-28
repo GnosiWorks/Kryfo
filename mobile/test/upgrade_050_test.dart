@@ -294,11 +294,11 @@ void main() {
   });
 
   for (final f in _files.keys) {
-    test('$f opens at 87 with the schema of a new install', () async {
+    test('$f opens at 88 with the schema of a new install', () async {
       if (skip()) return;
       final db = _files[f]!();
       final raw = await db.open();
-      expect(await raw.getVersion(), 87);
+      expect(await raw.getVersion(), 88);
       final got = await _schema(raw);
       // key by key, so a miss names the table and the column
       for (final k in {...fresh[f]!.keys, ...got.keys}) {
@@ -385,7 +385,7 @@ void main() {
       final again = _files[f]!();
       final raw = await again.open();
       final said = sql!.said.sublist(from);
-      expect(await raw.getVersion(), 87);
+      expect(await raw.getVersion(), 88);
       expect(
         said.where(
           (s) => RegExp(
@@ -595,7 +595,7 @@ void main() {
     final raw = await db.open();
     final other = HaloDb(HaloContainer.decoy);
     final otherRaw = await other.open();
-    expect(await otherRaw.getVersion(), 87);
+    expect(await otherRaw.getVersion(), 88);
     final mine = await _store(raw, (await peerIdentityHex(otherRaw, _me))!);
     final hers = await _store(
       otherRaw,

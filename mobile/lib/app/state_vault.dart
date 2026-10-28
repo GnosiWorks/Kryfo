@@ -42,7 +42,8 @@ extension AppStateVault on AppState {
         env.preview != null &&
         env.message.isEmpty &&
         env.imageB64 == null &&
-        env.fileB64 == null;
+        env.fileB64 == null &&
+        env.drop == null;
     final ticks =
         env.groupId == null &&
         uid != null &&

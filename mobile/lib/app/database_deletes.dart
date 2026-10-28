@@ -506,6 +506,10 @@ mixin _DeleteRows {
       [peerId],
     );
     await t.delete('media_wants', where: 'peer_id = ?', whereArgs: [peerId]);
+    // and the ones still to come from the files service. what came of them
+    // is in the fetch folder, which the start sweep empties of what no
+    // fetch names
+    await t.delete('file_fetches', where: 'sender = ?', whereArgs: [peerId]);
     // weighed again from what is left
     _unfinished = null;
     // nothing more comes for them, so the banner would stay paused for a day
@@ -521,6 +525,7 @@ mixin _DeleteRows {
     String groupId, {
     Iterable<String> keys = const [],
   }) async {
+    await t.delete('file_fetches', where: 'group_id = ?', whereArgs: [groupId]);
     var n = await t.delete(
       'media_chunks',
       where: 'group_id = ?',

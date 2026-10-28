@@ -147,7 +147,7 @@ class HaloDb
     _db = await openDatabase(
       path,
       password: pw,
-      version: 87,
+      version: 88,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -191,7 +191,8 @@ class HaloDb
             shots_can INTEGER NOT NULL DEFAULT 0,
             shots_by INTEGER NOT NULL DEFAULT 0,
             shots_when INTEGER NOT NULL DEFAULT 0,
-            opus_can INTEGER NOT NULL DEFAULT 0
+            opus_can INTEGER NOT NULL DEFAULT 0,
+            files_can INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -281,6 +282,7 @@ class HaloDb
             halo_id TEXT NOT NULL,
             joined_at INTEGER NOT NULL,
             opus_can INTEGER NOT NULL DEFAULT 0,
+            files_can INTEGER NOT NULL DEFAULT 0,
             PRIMARY KEY (group_id, halo_id),
             FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
           )
@@ -310,6 +312,7 @@ class HaloDb
         await _pinsTable(db);
         await _framesTable(db);
         await _mediaWantsTable(db);
+        await dropFetchTable(db);
         await _heldTable(db);
         await _signalTables(db);
         await _pollTables(db);
@@ -865,6 +868,11 @@ class HaloDb
         if (oldV < 87) {
           // which phones play opus voice notes (voice_format.dart)
           await opusColumns(db);
+        }
+        if (oldV < 88) {
+          // which phones fetch from the files service, and the files on
+          // their way in from it (file_drop.dart)
+          await dropColumns(db, addColumn);
         }
       },
     );
