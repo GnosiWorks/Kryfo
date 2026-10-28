@@ -37,6 +37,12 @@ void main() {
       gradle,
       contains('if (abiVersionCode != null && variant.flavorName == "foss")'),
     );
+    // the universal apk sits below the per-abi ones of its version
+    expect(gradle, contains('if (abi == null) 0 else abiCodes[abi]'));
+    expect(
+      gradle,
+      contains('mapOf("armeabi-v7a" to 1, "arm64-v8a" to 2, "x86_64" to 3)'),
+    );
   });
 
   test('google code can only come in through the play flavor', () {
@@ -107,10 +113,17 @@ void main() {
   test('the repro build makes the foss apks under their old names', () {
     final repro = sourceOf('../repro/build-repro.sh');
     final builds = RegExp(r'flutter build apk[^\n]*').allMatches(repro);
-    expect(builds, hasLength(2));
+    // fetch and release, each per abi and universal
+    expect(builds, hasLength(4));
     for (final b in builds) {
       expect(b[0], contains('--flavor foss'));
     }
+    final universal = builds.where((b) => !b[0]!.contains('--split-per-abi'));
+    expect(universal, hasLength(2));
+    for (final b in universal) {
+      expect(b[0], contains('--target-platform android-arm,android-arm64'));
+    }
     expect(repro, contains("sed 's/-foss-release/-release/'"));
+    expect(repro, contains('app-universal-release'));
   });
 }
