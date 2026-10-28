@@ -444,8 +444,12 @@ func pinTake(h string) *pinHeld {
 	return p
 }
 
+// zeroed under the lock, so whoever looks next sees it gone
 func pinDrop(h string) {
-	if p := pinTake(h); p != nil {
+	pinHolds.Lock()
+	defer pinHolds.Unlock()
+	if p := pinHolds.m[h]; p != nil {
+		delete(pinHolds.m, h)
 		zero(p.s)
 	}
 }
