@@ -28,6 +28,24 @@ func setOwnClock(t *testing.T, f func() time.Duration) {
 	t.Cleanup(func() { ownClockFn.Store(nil) })
 }
 
+// the runners' context, ended and waited out before the stand-ins' cleanup
+// puts the data dir back under them
+func lanesCtx(t *testing.T) context.Context {
+	t.Helper()
+	before := ownSockets.Load() + pubSockets.Load()
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(func() {
+		cancel()
+		end := time.Now().Add(10 * time.Second)
+		for ownSockets.Load()+pubSockets.Load() > before && time.Now().Before(end) {
+			time.Sleep(20 * time.Millisecond)
+		}
+		// the last file writes after a socket's goroutine has counted out
+		time.Sleep(100 * time.Millisecond)
+	})
+	return ctx
+}
+
 // the room each socket gets at a wake, and the grace after it
 func setWakeGap(t *testing.T, gap, grace time.Duration) {
 	t.Helper()
@@ -120,8 +138,7 @@ func TestAWakeSpreadsTheRedials(t *testing.T) {
 	useStandIns(t, modeFast, nil, own, pub)
 	setWakeGap(t, 100*time.Millisecond, wakeGraceExtra)
 	sleep := fakeSleep(t)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := lanesCtx(t)
 	l := startLanes(t, ctx, 20, 0)
 	addrs := append(append([]string(nil), l.contacts...), l.fc)
 	waitFor(t, "every address on both relays", 15*time.Second, func() bool {
@@ -182,8 +199,7 @@ func TestASmallInboxIsBackAtOnceAfterAWake(t *testing.T) {
 	pub := newRelayStandIn(t, 0)
 	useStandIns(t, modeFast, nil, own, pub)
 	sleep := fakeSleep(t)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := lanesCtx(t)
 	l := startLanes(t, ctx, 2, 0)
 	addrs := append(append([]string(nil), l.contacts...), l.fc)
 	waitFor(t, "every address on both relays", 15*time.Second, func() bool {
@@ -334,8 +350,7 @@ func TestReadsDueInASleepAreSpreadOverTheWake(t *testing.T) {
 	setWakeGap(t, 200*time.Millisecond, wakeGraceExtra)
 	sleep := fakeSleep(t)
 	freshInbox(t)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := lanesCtx(t)
 	l := startLanes(t, ctx, 20, 0)
 	waitFor(t, "every address on our relay", 15*time.Second, func() bool {
 		for _, a := range l.contacts {
