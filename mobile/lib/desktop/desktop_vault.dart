@@ -79,8 +79,12 @@ class EngineVaultCrypto implements VaultCrypto {
   Future<String?> keyOf(String passphrase, Uint8List salt) =>
       Isolate.run(() => _engineKey(passphrase, salt));
 
-  Uint8List? _run(String fn, String keyHex, Uint8List data) {
-    final call = DynamicLibrary.process().lookupFunction<_ChunkC, _Chunk>(fn);
+  static final _sealChunk = DynamicLibrary.process()
+      .lookupFunction<_ChunkC, _Chunk>('HaloSealChunk');
+  static final _openChunk = DynamicLibrary.process()
+      .lookupFunction<_ChunkC, _Chunk>('HaloOpenChunk');
+
+  Uint8List? _run(_Chunk call, String keyHex, Uint8List data) {
     final k = keyHex.toNativeUtf8();
     final cap = data.length + 16;
     final inp = calloc<Uint8>(cap), out = calloc<Uint8>(cap);
@@ -100,7 +104,7 @@ class EngineVaultCrypto implements VaultCrypto {
 
   @override
   Uint8List seal(String keyHex, Uint8List plain) {
-    final s = _run('HaloSealChunk', keyHex, plain);
+    final s = _run(_sealChunk, keyHex, plain);
     if (s == null || s.length != plain.length + 16) {
       throw StateError('seal failed');
     }
@@ -110,7 +114,7 @@ class EngineVaultCrypto implements VaultCrypto {
   @override
   Uint8List? open(String keyHex, Uint8List sealed) {
     if (sealed.length < 16) return null;
-    return _run('HaloOpenChunk', keyHex, sealed);
+    return _run(_openChunk, keyHex, sealed);
   }
 }
 
