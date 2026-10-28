@@ -134,7 +134,7 @@ void main() {
   });
 
   test('what has no desktop meaning says not here', () async {
-    for (final mth in ['pinKeyInfo', 'bioUnlock', 'shareFile', 'openFile']) {
+    for (final mth in ['pinKeyInfo', 'bioUnlock', 'shareFile', 'videoInfo']) {
       await expectLater(
         ask('halo/platform', mth),
         throwsA(isA<MissingPluginException>()),
@@ -149,6 +149,8 @@ void main() {
       throwsA(isA<MissingPluginException>()),
     );
     expect(await ask('halo/tools', 'takeShared'), isNull);
+    // a file is never opened outside: it goes to a save
+    expect(await ask('halo/platform', 'openFile', {'path': '/x'}), 'refused');
     expect(await ask('halo/tools', 'freeBytes'), greaterThan(0));
   });
 

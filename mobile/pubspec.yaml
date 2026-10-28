@@ -55,6 +55,8 @@ dependencies:
     path: third_party/camera/camera_platform_interface
   sqflite_common: 2.5.8
   connectivity_plus_platform_interface: ^2.1.0
+  file_selector_linux: ^0.9.4+1
+  file_selector_platform_interface: ^2.7.0
   flutter_local_notifications_linux: ^8.0.1
   flutter_local_notifications_platform_interface: ^12.2.0
   flutter_secure_storage_platform_interface: ^2.1.1

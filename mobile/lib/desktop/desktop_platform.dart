@@ -8,10 +8,12 @@ import 'dart:io';
 import 'dart:io' as io show exit;
 
 import 'package:flutter/services.dart';
+import 'package:path/path.dart' as p;
 
 import 'desktop_channels.dart';
 import 'desktop_db.dart';
 import 'desktop_posix.dart' show execSelf;
+import 'desktop_save.dart';
 
 /// flutter_secure_storage's channel to libsecret
 const keyringChannel = 'plugins.it_nomads.com/flutter_secure_storage';
@@ -30,7 +32,7 @@ const androidChannels = [
 
 /// methods with a desktop answer on halo/platform. the rest say not here:
 /// the pin key, the finger, the launcher icon, android's settings pages,
-/// gallery and document saves, video, sharing
+/// video, sharing
 const platformAnswered = {
   'askNotifications',
   'notificationsEnabled',
@@ -49,6 +51,11 @@ const platformAnswered = {
   'lastExit',
   'reopen',
   'wipe',
+  'saveDocument',
+  'saveDocumentState',
+  'saveDocumentCancel',
+  'saveToPictures',
+  'openFile',
 };
 
 /// not here on desktop, each for a reason the caller already handles
@@ -62,9 +69,8 @@ const platformNotHere = {
   'copySensitive',
   // the caller sends the photo as it is
   'shrinkJpeg',
-  // files leave the app only through a save the person picks, later
-  'saveToPictures', 'openFile', 'shareFile', 'videoInfo',
-  'saveDocument', 'saveDocumentState', 'saveDocumentCancel',
+  // no share sheet, no android video reader
+  'shareFile', 'videoInfo',
 };
 
 /// the same for halo/tools: nothing is shared into a desktop app
@@ -75,6 +81,8 @@ const toolsAnswered = {
   'dropSharedText',
   'freeBytes',
   'sweep',
+  'saveToFiles',
+  'saveToGallery',
 };
 
 const toolsNotHere = {
@@ -159,7 +167,13 @@ class DesktopHost {
   }
 }
 
-Map<String, DesktopAnswer> desktopAnswers(DesktopHost host, DesktopDb db) {
+Map<String, DesktopAnswer> desktopAnswers(
+  DesktopHost host,
+  DesktopDb db, {
+  DesktopSave? save,
+}) {
+  final saver = save ?? DesktopSave();
+  String arg(MethodCall c, String k) => '${(c.arguments as Map?)?[k] ?? ''}';
   Object? platform(MethodCall c) => switch (c.method) {
     'askNotifications' => null,
     'notificationsEnabled' => true,
@@ -192,6 +206,21 @@ Map<String, DesktopAnswer> desktopAnswers(DesktopHost host, DesktopDb db) {
       case 'wipe':
         await host.wipe();
         return false;
+      // the dialog and kryfo's own copy, in the phone's answer shapes
+      case 'saveDocument':
+        return saver.save(arg(c, 'path'), arg(c, 'name'));
+      case 'saveDocumentState':
+        return saver.state();
+      case 'saveDocumentCancel':
+        saver.cancel();
+        return null;
+      case 'saveToPictures':
+        final b = (c.arguments as Map?)?['bytes'];
+        if (b is! List<int>) return false;
+        return saver.saveBytes(b, arg(c, 'name'), p.join(host.dataDir, 'tmp'));
+      // nothing outside opens a file kryfo holds: it goes to a save
+      case 'openFile':
+        return 'refused';
     }
     return platform(c);
   }
@@ -200,6 +229,8 @@ Map<String, DesktopAnswer> desktopAnswers(DesktopHost host, DesktopDb db) {
     'takeShared' || 'takeSharedText' => null,
     'seenSharedText' || 'dropSharedText' || 'sweep' => null,
     'freeBytes' => await host.freeBytes() ?? -1,
+    'saveToFiles' ||
+    'saveToGallery' => await saver.saveAs(arg(c, 'path'), arg(c, 'name')),
     _ => notHere,
   };
 
