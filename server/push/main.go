@@ -10,8 +10,10 @@ package main
 // (seal.go), sealed afresh for each of its sixteen endpoints, so a relay
 // holds sixteen strings with nothing in common. the gateway opens one in
 // memory and keeps nothing: no table, no file, no log line per token. in
-// ram, for an hour at most and gone with a restart, is a keyed hash of a
-// token with the times of its last pushes (the floor below).
+// ram, gone with a restart, is a keyed hash of a token with the times of
+// its last pushes, kept an hour (the floor below), a keyed hash of a token
+// fcm said is no phone's, kept a day, and for a knock folded into the next
+// push the token itself, up to 45 s.
 //
 //	kryfo-push                 serve
 //	kryfo-push keygen <file>   make the key, print the public key for the app
@@ -40,10 +42,15 @@ const (
 	// as the phone's own gate (KnockGate.kt): one push a phone every 45 s,
 	// thirty an hour. a knock inside the floor is folded into one that
 	// goes when the floor is up
-	floorGap    = 45 * time.Second
-	floorHour   = 30
-	floorKept   = 200_000
-	goneFor     = 24 * time.Hour
+	floorGap  = 45 * time.Second
+	floorHour = 30
+	floorKept = 200_000
+	goneFor   = 24 * time.Hour
+	// gone tokens have a table of their own, the oldest let go first, so
+	// junk sealed by anyone can never crowd out a phone
+	goneKept = 20_000
+	// a full table is swept at most this often, never on every knock
+	sweepEvery  = 10 * time.Second
 	maxBody     = 4 << 10
 	maxInFlight = 128
 	// the relay gives a post three seconds: answer within that, and let a
@@ -128,7 +135,12 @@ type gateway struct {
 
 	mu    sync.Mutex
 	floor map[[16]byte]*phone
-	st    stats
+	// gone tokens, and their order: each is kept goneFor, so the oldest
+	// added is the first to end
+	gone      map[[16]byte]time.Time
+	goneOrder [][16]byte
+	swept     time.Time
+	st        stats
 }
 
 // what is held for one token, under its keyed hash
@@ -137,7 +149,6 @@ type phone struct {
 	hourStart time.Time
 	inHour    int
 	trailing  bool
-	goneUntil time.Time
 }
 
 func newGateway(k hpke.PrivateKey, f pusher) *gateway {
@@ -151,6 +162,7 @@ func newGateway(k hpke.PrivateKey, f pusher) *gateway {
 		now:   time.Now,
 		after: func(d time.Duration, f func()) { time.AfterFunc(d, f) },
 		floor: map[[16]byte]*phone{},
+		gone:  map[[16]byte]time.Time{},
 	}
 }
 
@@ -216,14 +228,49 @@ func (g *gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // one knock for a token: now, folded into the one after the floor, or
-// refused for the hour
+// refused for the hour. a row in the table is made only for a push that is
+// let through: a refused knock holds nothing and counts toward nothing
 func (g *gateway) knock(token string) (int, time.Duration) {
 	h := g.hash(token)
 	now := g.now()
 	g.mu.Lock()
+	if until, ok := g.gone[h]; ok {
+		if now.Before(until) {
+			g.mu.Unlock()
+			g.st.gone.Add(1)
+			return http.StatusGone, 0
+		}
+		delete(g.gone, h)
+	}
 	p := g.floor[h]
-	if p == nil {
-		if len(g.floor) >= floorKept {
+	if p != nil {
+		if now.Sub(p.hourStart) >= time.Hour || now.Before(p.hourStart) {
+			p.hourStart, p.inHour = now, 0
+		}
+		if p.trailing {
+			// one is already waiting for the floor: this one goes with it
+			g.mu.Unlock()
+			g.st.folded.Add(1)
+			return http.StatusCreated, 0
+		}
+		if p.inHour >= floorHour {
+			wait := p.hourStart.Add(time.Hour).Sub(now)
+			g.mu.Unlock()
+			g.st.limited.Add(1)
+			return http.StatusTooManyRequests, wait
+		}
+		if !p.last.IsZero() && now.Sub(p.last) < floorGap && !now.Before(p.last) {
+			p.trailing = true
+			p.inHour++
+			wait := p.last.Add(floorGap).Sub(now)
+			g.mu.Unlock()
+			g.st.folded.Add(1)
+			g.after(wait, func() { g.trail(h, token) })
+			// as a push sent now answers: a fold says nothing of the phone
+			return http.StatusCreated, 0
+		}
+	} else if len(g.floor) >= floorKept {
+		if now.Sub(g.swept) >= sweepEvery {
 			g.sweepLocked(now)
 		}
 		if len(g.floor) >= floorKept {
@@ -231,37 +278,14 @@ func (g *gateway) knock(token string) (int, time.Duration) {
 			g.st.limited.Add(1)
 			return http.StatusTooManyRequests, 10 * time.Second
 		}
-		p = &phone{}
+	}
+	if code, wait, ok := g.admit(); !ok {
+		g.mu.Unlock()
+		return code, wait
+	}
+	if p == nil {
+		p = &phone{hourStart: now}
 		g.floor[h] = p
-	}
-	if now.Before(p.goneUntil) {
-		g.mu.Unlock()
-		g.st.gone.Add(1)
-		return http.StatusGone, 0
-	}
-	if now.Sub(p.hourStart) >= time.Hour || now.Before(p.hourStart) {
-		p.hourStart, p.inHour = now, 0
-	}
-	if p.trailing {
-		// one is already waiting for the floor: this one goes with it
-		g.mu.Unlock()
-		g.st.folded.Add(1)
-		return http.StatusAccepted, 0
-	}
-	if p.inHour >= floorHour {
-		wait := p.hourStart.Add(time.Hour).Sub(now)
-		g.mu.Unlock()
-		g.st.limited.Add(1)
-		return http.StatusTooManyRequests, wait
-	}
-	if !p.last.IsZero() && now.Sub(p.last) < floorGap && !now.Before(p.last) {
-		p.trailing = true
-		p.inHour++
-		wait := p.last.Add(floorGap).Sub(now)
-		g.mu.Unlock()
-		g.st.folded.Add(1)
-		g.after(wait, func() { g.trail(h, token) })
-		return http.StatusAccepted, 0
 	}
 	p.last = now
 	p.inHour++
@@ -269,30 +293,42 @@ func (g *gateway) knock(token string) (int, time.Duration) {
 	return g.send(h, token)
 }
 
-// the folded knock, once the floor is up
-func (g *gateway) trail(h [16]byte, token string) {
-	g.mu.Lock()
-	if p := g.floor[h]; p != nil {
-		p.trailing = false
-		p.last = g.now()
-	}
-	g.mu.Unlock()
-	g.send(h, token)
-}
-
-// asks fcm, and answers with what it said if it says it in time. a push
-// still running then finishes on its own
-func (g *gateway) send(h [16]byte, token string) (int, time.Duration) {
+// the global pace and a free slot, taken together or not at all
+func (g *gateway) admit() (int, time.Duration, bool) {
 	if !everyone.allow() {
 		g.st.limited.Add(1)
-		return http.StatusTooManyRequests, 2 * time.Second
+		return http.StatusTooManyRequests, 2 * time.Second, false
 	}
 	select {
 	case g.slot <- struct{}{}:
+		return 0, 0, true
 	default:
 		g.st.limited.Add(1)
-		return http.StatusTooManyRequests, 2 * time.Second
+		return http.StatusTooManyRequests, 2 * time.Second, false
 	}
+}
+
+// the folded knock, once the floor is up. refused then, it is dropped: the
+// knock before it went
+func (g *gateway) trail(h [16]byte, token string) {
+	g.mu.Lock()
+	p := g.floor[h]
+	if p != nil {
+		p.trailing = false
+	}
+	_, _, ok := g.admit()
+	if ok && p != nil {
+		p.last = g.now()
+	}
+	g.mu.Unlock()
+	if ok {
+		g.send(h, token)
+	}
+}
+
+// asks fcm, with a slot already taken, and answers with what it said if it
+// says it in time. a push still running then finishes on its own
+func (g *gateway) send(h [16]byte, token string) (int, time.Duration) {
 	type answer struct {
 		o    outcome
 		wait time.Duration
@@ -334,11 +370,11 @@ func (g *gateway) noted(h [16]byte, o outcome) {
 		g.st.sent.Add(1)
 	case gone:
 		g.st.gone.Add(1)
-		// asked again only after a day: the relay drops the endpoint anyway
+		// asked again only after a day: the relay drops the endpoint anyway.
+		// it leaves the phones' table for the gone one, which has its own cap
 		g.mu.Lock()
-		if p := g.floor[h]; p != nil {
-			p.goneUntil = g.now().Add(goneFor)
-		}
+		delete(g.floor, h)
+		g.addGoneLocked(h, g.now())
 		g.mu.Unlock()
 	case busy:
 		g.st.limited.Add(1)
@@ -347,10 +383,34 @@ func (g *gateway) noted(h [16]byte, o outcome) {
 	}
 }
 
+func (g *gateway) addGoneLocked(h [16]byte, now time.Time) {
+	if _, ok := g.gone[h]; !ok {
+		g.goneOrder = append(g.goneOrder, h)
+	}
+	g.gone[h] = now.Add(goneFor)
+	// the oldest first, when full or ended; an entry asked about and found
+	// ended was deleted already and is skipped
+	for len(g.goneOrder) > 0 {
+		first := g.goneOrder[0]
+		until, ok := g.gone[first]
+		if ok && len(g.gone) <= goneKept && now.Before(until) {
+			break
+		}
+		if ok && (len(g.gone) > goneKept || !now.Before(until)) {
+			delete(g.gone, first)
+		}
+		g.goneOrder = g.goneOrder[1:]
+	}
+	if cap(g.goneOrder) > 4*goneKept && len(g.goneOrder) < goneKept {
+		g.goneOrder = append([][16]byte(nil), g.goneOrder...)
+	}
+}
+
 // what has not pushed for an hour, and is not waiting or gone, is dropped
 func (g *gateway) sweepLocked(now time.Time) {
+	g.swept = now
 	for h, p := range g.floor {
-		if p.trailing || now.Before(p.goneUntil) {
+		if p.trailing {
 			continue
 		}
 		if now.Sub(p.last) >= time.Hour && now.Sub(p.hourStart) >= time.Hour {

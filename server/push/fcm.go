@@ -274,7 +274,11 @@ func (f *fcm) push(ctx context.Context, token string) (outcome, time.Duration) {
 	return failed, 0
 }
 
-// whether fcm's answer says the token belongs to no phone of this project
+// whether fcm's answer says the token belongs to no phone: unregistered,
+// or a registration token fcm calls invalid. anything else, a sender
+// mismatch or a bare 404 too, is ours or fcm's to fix and drops no
+// endpoint: a wrong service-account file must not cost every phone its
+// registrations
 func tokenGone(code int, body []byte) bool {
 	var e struct {
 		Error struct {
@@ -284,16 +288,19 @@ func tokenGone(code int, body []byte) bool {
 			} `json:"details"`
 		} `json:"error"`
 	}
-	json.Unmarshal(body, &e)
+	if json.Unmarshal(body, &e) != nil {
+		return false
+	}
 	for _, d := range e.Error.Details {
 		switch d.ErrorCode {
-		case "UNREGISTERED", "SENDER_ID_MISMATCH":
-			return true
+		case "UNREGISTERED":
+			return code == http.StatusNotFound || code == http.StatusBadRequest
 		case "INVALID_ARGUMENT":
-			return strings.Contains(strings.ToLower(e.Error.Message), "registration token")
+			return code == http.StatusBadRequest &&
+				strings.Contains(strings.ToLower(e.Error.Message), "registration token")
 		}
 	}
-	return code == http.StatusNotFound
+	return false
 }
 
 // seconds or an http date, at most ten minutes

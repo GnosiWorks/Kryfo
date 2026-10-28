@@ -4,8 +4,10 @@ package main
 // the sealed token. the app seals its fcm token to this gateway's x25519
 // key with hpke (base mode: x25519, hkdf-sha256, chacha20-poly1305), a new
 // ephemeral key and so a new key and nonce for every seal, so the sixteen
-// seals of one token share nothing. on the wire: base64url, no padding, of
-// one version byte, the 32-byte encapsulated key and the ciphertext.
+// seals of one token share nothing. the token is padded with dots to a
+// fixed length first, so every endpoint is as long as every other, whatever
+// the token. on the wire: base64url, no padding, of one version byte, the
+// 32-byte encapsulated key and the ciphertext.
 // engine/push_seal.go is the app's half and must stay the same.
 
 import (
@@ -27,9 +29,13 @@ const (
 	// under the relay's 512
 	minToken = 20
 	maxToken = 311
-	// in characters of the url: what those token lengths seal to
-	minSealed = (1 + 32 + 16 + minToken) * 4 / 3
-	maxSealed = 480
+	// what every token is padded to, with a byte no token has
+	padded  = maxToken
+	padByte = '.'
+	// in characters of the url: one length for every seal
+	sealedLen = (1 + 32 + 16 + padded) * 4 / 3
+	minSealed = sealedLen
+	maxSealed = sealedLen
 )
 
 var (
@@ -83,7 +89,11 @@ func open(k hpke.PrivateKey, sealed string) (string, error) {
 		return "", errSealed
 	}
 	pt, err := hpke.Open(k, suiteKDF, suiteAEAD, []byte(sealInfo), raw[1:])
-	if err != nil || !tokenOK(pt) {
+	if err != nil || len(pt) != padded {
+		return "", errSealed
+	}
+	pt = bytes.TrimRight(pt, string(padByte))
+	if !tokenOK(pt) {
 		return "", errSealed
 	}
 	return string(pt), nil
@@ -91,7 +101,11 @@ func open(k hpke.PrivateKey, sealed string) (string, error) {
 
 // what the app does, for the tests and the check after keygen
 func seal(pub hpke.PublicKey, token string) (string, error) {
-	ct, err := hpke.Seal(pub, suiteKDF, suiteAEAD, []byte(sealInfo), []byte(token))
+	if len(token) > padded {
+		return "", errSealed
+	}
+	pt := append([]byte(token), bytes.Repeat([]byte{padByte}, padded-len(token))...)
+	ct, err := hpke.Seal(pub, suiteKDF, suiteAEAD, []byte(sealInfo), pt)
 	if err != nil {
 		return "", err
 	}

@@ -13,6 +13,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -32,7 +33,7 @@ const (
 	vectorSeed   = "kryfo push test vector, never a real key"
 	vectorPub    = "SNrdb3PnM2ghYWfWaPYQZrJjXAb6T9jQFdg9Fvo_6ls"
 	vectorToken  = "fcmTestToken:APA91b_vector-only_0123456789"
-	vectorSealed = "AaXyvBam0p03IOjtNG0_yUPs_HH9gjKYr78eZKqAZ31YvMrawcY55G1oA0tcVibfPGbY-cL7xzQuciCnPwa_RBiQ7rp6mLk98bP-wBxw37krcfaz8Bv4wb4mHw"
+	vectorSealed = "AX4ZIJFmHcY44puFSkf2E5Q9IphFdswYnHBChNO9B8xziubrOBUxYXDNDOh20tbhE_jYRV2Qss7L1iseaZJQkfx-R0YchsjzEYbSrtA7OQBs3mR3RexKcsnooe65EIC9hQuOnp8ZnnP8H78fHuAVqIYpp1aTxnWFYsI5Rs5pU8p5o2_FArSt8W4XxyeQl4tEBA1upoU4lHg9_DimSsH9gbqFENXtCuXpSYOnI7m1qdFnMjFW8Zihk0AIk-WnqWh-vxRxvWtgU4Wa_bR5n4rdOKT0C7IPhTyAuamc-E9BnCILh9Y08Pot_jcyTr1VvMMknVud__gcEpTPOcTbLvm0fK13SO3YSFnd3OJQU0lmZhOdMR6Z9LiNOp8IionfZKc3DHDScTwirBWfkpssyH6qgMjx5TCXlpoFmGw2fGiyi5D5pkDPcJ6ThrmMVV9HSD2lmQgd1A2m9n4b0rBI3-A6heduo0EmnHak"
 	phoneToken   = "cTestPhone:APA91bHtest_token_for_tests_only-abcdefghijklmnopqrstuvwxyz0123456789"
 )
 
@@ -85,6 +86,9 @@ func TestOpensOnlyWellFormedSeals(t *testing.T) {
 	v2 := append([]byte(nil), raw...)
 	v2[0] = 2
 	badToken, _ := seal(k.PublicKey(), "a token with spaces, which fcm never makes")
+	// a token sealed as it is, unpadded: not this version's
+	unpaddedCT, _ := hpke.Seal(k.PublicKey(), suiteKDF, suiteAEAD, []byte(sealInfo), []byte(phoneToken))
+	unpadded := b64.EncodeToString(append([]byte{sealVersion}, unpaddedCT...))
 	shortToken, _ := seal(k.PublicKey(), "short")
 	for name, s := range map[string]string{
 		"empty":          "",
@@ -98,6 +102,7 @@ func TestOpensOnlyWellFormedSeals(t *testing.T) {
 		"not a token":    badToken,
 		"too short":      shortToken,
 		"path traversal": "..%2f..%2fetc",
+		"unpadded":       unpadded,
 	} {
 		if got, err := open(k, s); err == nil {
 			t.Errorf("%s: opened to %q", name, got)
@@ -403,10 +408,11 @@ func TestFloorFoldsKnocksLikeThePhone(t *testing.T) {
 	r.clock = r.clock.Add(10 * time.Second)
 	// another of the phone's endpoints, inside the floor: folded, and one
 	// push is owed when the floor is up
-	if w := r.post(t, r.endpoint(t, phoneToken), nil); w.Code != http.StatusAccepted {
+	// answered as a push sent now: a fold says nothing of the phone
+	if w := r.post(t, r.endpoint(t, phoneToken), nil); w.Code != http.StatusCreated {
 		t.Fatalf("inside the floor %d", w.Code)
 	}
-	if w := r.post(t, ep, nil); w.Code != http.StatusAccepted {
+	if w := r.post(t, ep, nil); w.Code != http.StatusCreated {
 		t.Fatalf("third %d", w.Code)
 	}
 	if len(r.timers) != 1 {
@@ -475,7 +481,10 @@ func TestFCMAnswers(t *testing.T) {
 		{"pacing", 429, `{"error":{"details":[{"errorCode":"QUOTA_EXCEEDED"}]}}`, http.Header{"Retry-After": {"30"}}, 429, "30"},
 		{"down", 503, `{}`, nil, 502, ""},
 		{"bad token", 400, `{"error":{"message":"The registration token is not a valid FCM registration token","details":[{"errorCode":"INVALID_ARGUMENT"}]}}`, nil, 410, ""},
-		{"other project", 403, `{"error":{"details":[{"errorCode":"SENDER_ID_MISMATCH"}]}}`, nil, 410, ""},
+		// a wrong service-account file is ours to fix: no phone loses its endpoints
+		{"other project", 403, `{"error":{"details":[{"errorCode":"SENDER_ID_MISMATCH"}]}}`, nil, 502, ""},
+		{"bare not found", 404, `{"error":{"code":404,"message":"Not found"}}`, nil, 502, ""},
+		{"not json", 404, `<html>gone</html>`, nil, 502, ""},
 		{"our credentials", 403, `{"error":{"details":[{"errorCode":"PERMISSION_DENIED"}]}}`, nil, 502, ""},
 		{"bad message", 400, `{"error":{"message":"Invalid JSON payload","details":[{"errorCode":"INVALID_ARGUMENT"}]}}`, nil, 502, ""},
 	} {
@@ -660,5 +669,143 @@ func TestPushTimesOut(t *testing.T) {
 	}
 	if time.Since(start) > time.Second {
 		t.Fatal("the push outlived its context")
+	}
+}
+
+// every seal is as long as every other, whatever its token's length
+func TestSealsAreOneLength(t *testing.T) {
+	k := vectorKey(t)
+	short, _ := seal(k.PublicKey(), strings.Repeat("a", 140))
+	long, _ := seal(k.PublicKey(), strings.Repeat("b", 300))
+	if len(short) != sealedLen || len(long) != sealedLen {
+		t.Fatalf("seals of %d and %d characters, want %d", len(short), len(long), sealedLen)
+	}
+	if got, err := open(k, short); err != nil || got != strings.Repeat("a", 140) {
+		t.Fatalf("short opened to %q, %v", got, err)
+	}
+}
+
+// fcm, answering at once with one outcome for every token but the phone's
+type stubFCM struct {
+	mu    sync.Mutex
+	asked int
+	phone string
+	junk  outcome
+}
+
+func (f *stubFCM) push(_ context.Context, token string) (outcome, time.Duration) {
+	f.mu.Lock()
+	f.asked++
+	f.mu.Unlock()
+	if token == f.phone {
+		return sent, 0
+	}
+	return f.junk, 0
+}
+
+func junkToken(i int) string { return fmt.Sprintf("junk%08d:%s", i, strings.Repeat("x", 40)) }
+
+// anyone can seal junk with the public key: 200 000 junk tokens, gone at
+// fcm, take no phone's row, keep a small table of their own, and a phone
+// new to the gateway still gets its push
+func TestJunkCannotLockPhonesOut(t *testing.T) {
+	r := newRig(t)
+	stub := &stubFCM{phone: phoneToken, junk: gone}
+	r.g.fcm = stub
+	everyone = newLimiter(1e9, 1e9)
+	for i := 0; i < floorKept; i++ {
+		r.g.knock(junkToken(i))
+	}
+	r.g.mu.Lock()
+	rows, gones := len(r.g.floor), len(r.g.gone)
+	r.g.mu.Unlock()
+	if rows != 0 {
+		t.Fatalf("junk holds %d phone rows", rows)
+	}
+	if gones > goneKept {
+		t.Fatalf("%d gone rows, the cap is %d", gones, goneKept)
+	}
+	if code, _ := r.g.knock(phoneToken); code != http.StatusCreated {
+		t.Fatalf("a real phone after the junk: %d", code)
+	}
+	// a day on, still: nothing junk left behind blocks it
+	r.clock = r.clock.Add(25 * time.Hour)
+	if code, _ := r.g.knock(phoneToken); code != http.StatusCreated {
+		t.Fatalf("a real phone a day on: %d", code)
+	}
+}
+
+// junk refused by the global pace takes no row and counts toward nothing
+func TestRefusedKnocksHoldNothing(t *testing.T) {
+	r := newRig(t)
+	r.g.fcm = &stubFCM{phone: phoneToken, junk: gone}
+	everyone = newLimiter(0.0001, 1)
+	everyone.allow()
+	for i := 0; i < 50_000; i++ {
+		if code, _ := r.g.knock(junkToken(i)); code != http.StatusTooManyRequests {
+			t.Fatalf("junk %d past an empty pace: %d", i, code)
+		}
+	}
+	r.g.mu.Lock()
+	rows, gones := len(r.g.floor), len(r.g.gone)
+	r.g.mu.Unlock()
+	if rows != 0 || gones != 0 {
+		t.Fatalf("refused junk holds %d rows and %d gone", rows, gones)
+	}
+	everyone = newLimiter(1000, 1000)
+	if code, _ := r.g.knock(phoneToken); code != http.StatusCreated {
+		t.Fatalf("the phone once the pace is back: %d", code)
+	}
+}
+
+// a full table of live phones is swept at most every few seconds, not on
+// every knock that finds it full
+func TestFullTableIsNotSweptPerKnock(t *testing.T) {
+	r := newRig(t)
+	r.g.fcm = &stubFCM{phone: phoneToken, junk: sent}
+	r.g.mu.Lock()
+	for i := 0; i < floorKept; i++ {
+		var h [16]byte
+		h[0], h[1], h[2] = byte(i), byte(i>>8), byte(i>>16)
+		r.g.floor[h] = &phone{last: r.clock, hourStart: r.clock}
+	}
+	r.g.mu.Unlock()
+	if code, _ := r.g.knock(junkToken(1)); code != http.StatusTooManyRequests {
+		t.Fatalf("a full table: %d", code)
+	}
+	r.g.mu.Lock()
+	first := r.g.swept
+	r.g.mu.Unlock()
+	start := time.Now()
+	for i := 2; i < 2000; i++ {
+		r.g.knock(junkToken(i))
+	}
+	if took := time.Since(start); took > time.Second {
+		t.Fatalf("2000 knocks on a full table took %v", took)
+	}
+	r.g.mu.Lock()
+	again := r.g.swept
+	r.g.mu.Unlock()
+	if !again.Equal(first) {
+		t.Fatal("swept again within the gap")
+	}
+}
+
+// the gone table lets its oldest go first, and a gone entry ends after a day
+func TestGoneTableKeepsItsCap(t *testing.T) {
+	r := newRig(t)
+	r.g.mu.Lock()
+	defer r.g.mu.Unlock()
+	for i := 0; i < goneKept+500; i++ {
+		r.g.addGoneLocked(r.g.hash(junkToken(i)), r.clock)
+	}
+	if len(r.g.gone) != goneKept {
+		t.Fatalf("%d gone rows", len(r.g.gone))
+	}
+	if _, ok := r.g.gone[r.g.hash(junkToken(0))]; ok {
+		t.Fatal("the oldest stayed")
+	}
+	if _, ok := r.g.gone[r.g.hash(junkToken(goneKept+499))]; !ok {
+		t.Fatal("the newest went")
 	}
 }
