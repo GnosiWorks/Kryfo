@@ -97,8 +97,17 @@ class GooglePushTest {
         assertTrue(com.google.firebase.FirebaseApp.getApps(app).isEmpty())
     }
 
+    @org.junit.After
+    fun tearDown() {
+        // the real ones back, for whatever runs next
+        GooglePush.deleter = GooglePush.firebaseDeleter
+        GooglePush.present = { GooglePush.available(it) }
+        GooglePush.fetch = { c, done -> GooglePush.token(c, done) }
+    }
+
     @Test
     fun aFailedDeleteIsOwedAndTriedAgain() {
+        GooglePush.present = { true }
         on(true)
         val tries = mutableListOf<Boolean>()
         var answer = false
@@ -118,7 +127,7 @@ class GooglePushTest {
             GooglePush.settle(app)
             assertEquals(3, tries.size)
         } finally {
-            GooglePush.deleter = { _, done -> done(true) }
+            GooglePush.deleter = GooglePush.firebaseDeleter
         }
     }
 
@@ -132,7 +141,59 @@ class GooglePushTest {
         GooglePush.deleter = { _, done -> tried = true; done(true) }
         GooglePush.settle(app)
         assertFalse(tried)
-        GooglePush.deleter = { _, done -> done(true) }
+    }
+
+    @Test
+    fun pickedAgainWhileADeleteRunsWaitsForIt() {
+        on(true)
+        var finish: ((Boolean) -> Unit)? = null
+        GooglePush.deleter = { _, done -> finish = done }
+        GooglePush.stop(app) {}
+        GooglePush.fetch = { _, done -> done("fresh") }
+        var asked = 0
+        GooglePush.start(app) { asked++ }
+        // no token is asked for while the delete could still kill it
+        assertEquals(0, asked)
+        finish!!(true)
+        assertEquals(1, asked)
+        assertTrue(GooglePush.isOn(app))
+        assertFalse(GooglePush.deleteOwed(app))
+    }
+
+    @Test
+    fun anOwedDeleteIsGivenUpAfterAMonth() {
+        GooglePush.present = { true }
+        on(true)
+        GooglePush.deleter = { _, done -> done(false) }
+        GooglePush.stop(app) {}
+        assertTrue(GooglePush.deleteOwed(app))
+        var tried = 0
+        GooglePush.deleter = { _, done -> tried++; done(false) }
+        GooglePush.settle(app, System.currentTimeMillis() + GooglePush.OWED_FOR_MS + 1000)
+        assertEquals(0, tried)
+        assertFalse(GooglePush.deleteOwed(app))
+    }
+
+    @Test
+    fun anOwedDeleteWaitsForPlayServices() {
+        GooglePush.present = { false }
+        on(true)
+        GooglePush.deleter = { _, done -> done(false) }
+        GooglePush.stop(app) {}
+        var tried = 0
+        GooglePush.deleter = { _, done -> tried++; done(true) }
+        GooglePush.settle(app)
+        assertEquals(0, tried)
+        assertTrue(GooglePush.deleteOwed(app))
+    }
+
+    @Test
+    fun offeredOnlyWhenPlayServicesWorkNow() {
+        val r = com.google.android.gms.common.ConnectionResult::class.java
+        fun code(name: String) = r.getField(name).getInt(null)
+        assertTrue(GooglePush.offerableFrom(code("SUCCESS")))
+        assertFalse(GooglePush.offerableFrom(code("SERVICE_VERSION_UPDATE_REQUIRED")))
+        assertFalse(GooglePush.offerableFrom(code("SERVICE_UPDATING")))
     }
 
     @Test

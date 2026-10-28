@@ -31,6 +31,10 @@ object GooglePush {
     // google push was left and google still holds this install's token or
     // installation: deleted again on each start and each return to the app
     private const val KEY_OWED = "delete_owed"
+    // since when, so a delete that can never go (play services removed) is
+    // given up after a month instead of tried for ever
+    private const val KEY_OWED_SINCE = "delete_owed_since"
+    const val OWED_FOR_MS = 30L * 24 * 3600 * 1000
 
     private fun prefs(c: Context) = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
@@ -46,11 +50,22 @@ object GooglePush {
         else -> true
     }
 
-    fun available(c: Context): Boolean = try {
-        availableFrom(GoogleApiAvailabilityLight.getInstance().isGooglePlayServicesAvailable(c))
+    // offered and picked only when play services work right now: one that
+    // wants an update first could not hand out a token
+    fun offerableFrom(code: Int): Boolean = code == ConnectionResult.SUCCESS
+
+    private fun code(c: Context): Int? = try {
+        GoogleApiAvailabilityLight.getInstance().isGooglePlayServicesAvailable(c)
     } catch (e: Exception) {
-        false
+        null
     }
+
+    fun available(c: Context): Boolean = code(c)?.let { availableFrom(it) } ?: false
+
+    fun offerable(c: Context): Boolean = code(c)?.let { offerableFrom(it) } ?: false
+
+    // whether an owed delete can go now, a stand-in in the tests
+    var present: (Context) -> Boolean = { available(it) }
 
     // firebase from the play build's own values, made the first time it is
     // needed. null when the build carries none
@@ -64,9 +79,16 @@ object GooglePush {
         }
     }
 
+    // a delete running now, and what waits for it to end: a token asked for
+    // meanwhile could be the one the delete then kills
+    private var deleting = false
+    // the token fetch, a stand-in in the tests
+    var fetch: (Context, (String?) -> Unit) -> Unit = { c, done -> token(c, done) }
+    private val afterDelete = mutableListOf<() -> Unit>()
+
     fun start(c: Context, done: (String?) -> Unit) {
         prefs(c).edit().putBoolean(KEY_ON, true).apply()
-        token(c, done)
+        if (deleting) afterDelete.add { fetch(c, done) } else fetch(c, done)
     }
 
     fun token(c: Context, done: (String?) -> Unit) {
@@ -98,32 +120,67 @@ object GooglePush {
             done()
             return
         }
-        prefs(c).edit().putBoolean(KEY_OWED, true).apply()
+        owe(c)
         deleteAll(c) { ok ->
-            if (ok && !isOn(c)) prefs(c).edit().putBoolean(KEY_OWED, false).apply()
+            if (ok) paid(c)
             done()
         }
+    }
+
+    private fun owe(c: Context) {
+        val p = prefs(c)
+        val e = p.edit().putBoolean(KEY_OWED, true)
+        if (!p.getBoolean(KEY_OWED, false)) e.putLong(KEY_OWED_SINCE, System.currentTimeMillis())
+        e.apply()
+    }
+
+    private fun paid(c: Context) {
+        prefs(c).edit().putBoolean(KEY_OWED, false).remove(KEY_OWED_SINCE).apply()
     }
 
     fun deleteOwed(c: Context): Boolean = prefs(c).getBoolean(KEY_OWED, false)
 
     // a delete owed from before goes again, unless google push was picked
-    // meanwhile
-    fun settle(c: Context, done: () -> Unit = {}) {
-        if (!deleteOwed(c) || isOn(c)) {
+    // meanwhile, play services are not there to take it, or it has been owed
+    // a month: firebase's own installation then lapses on google's side
+    fun settle(c: Context, now: Long = System.currentTimeMillis(), done: () -> Unit = {}) {
+        if (!deleteOwed(c) || isOn(c) || deleting) {
+            done()
+            return
+        }
+        val since = prefs(c).getLong(KEY_OWED_SINCE, now)
+        if (now - since >= OWED_FOR_MS || now < since - OWED_FOR_MS) {
+            paid(c)
+            done()
+            return
+        }
+        if (!present(c)) {
             done()
             return
         }
         deleteAll(c) { ok ->
-            if (ok && !isOn(c)) prefs(c).edit().putBoolean(KEY_OWED, false).apply()
+            if (ok) paid(c)
             done()
         }
     }
 
-    // the deletes, for the tests a stand-in that can fail
-    var deleter: (Context, (Boolean) -> Unit) -> Unit = { c, done -> firebaseDelete(c, done) }
+    // the deletes, for the tests a stand-in that can fail or hang
+    val firebaseDeleter: (Context, (Boolean) -> Unit) -> Unit = { c, done -> firebaseDelete(c, done) }
+    var deleter: (Context, (Boolean) -> Unit) -> Unit = firebaseDeleter
 
-    private fun deleteAll(c: Context, done: (Boolean) -> Unit) = deleter(c, done)
+    // one at a time. what waited for it goes once it ends; google push
+    // picked again while it ran gets a fresh token, and dart seals it anew
+    private fun deleteAll(c: Context, done: (Boolean) -> Unit) {
+        deleting = true
+        deleter(c) { ok ->
+            deleting = false
+            val waiting = afterDelete.toList()
+            afterDelete.clear()
+            done(ok)
+            waiting.forEach { it() }
+            if (waiting.isEmpty() && isOn(c)) tell("token")
+        }
+    }
 
     private fun firebaseDelete(c: Context, done: (Boolean) -> Unit) {
         if (app(c) == null) {
@@ -157,7 +214,8 @@ object GooglePush {
 
     fun handle(c: Context, call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
-            "available" -> result.success(available(c))
+            "available" -> result.success(offerable(c))
+            "present" -> result.success(available(c))
             "on" -> start(c) { result.success(it) }
             "token" -> token(c) { result.success(it) }
             "off" -> stop(c) { result.success(true) }
