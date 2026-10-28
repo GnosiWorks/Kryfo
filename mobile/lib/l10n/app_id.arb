@@ -2513,5 +2513,6 @@
   "keyLineUnlocked": "PIN-mu hanya berfungsi di ponsel ini, dan hanya saat ponsel tidak terkunci. Kalau suatu saat ponsel kehilangan kunci yang memeriksanya, kamu harus mengatur ulang Kryfo dan memulihkan cadangan. Obrolan tersembunyi hanya kembali dari cadangan yang dibuat saat obrolan itu terbuka.",
   "keyLineScreenLock": "Pasang kunci layar di ponselmu supaya perlindungan ini tetap berlaku saat ponsel terkunci.",
   "fileServerTryLater": "Server file sedang penuh. Coba lagi sebentar lagi.",
-  "fileTooBigUntilUpdate": "File ini berukuran {size}. Di chat ini ukuran file maksimal {max} sampai semua orang memperbarui Kryfo."
+  "fileTooBigUntilUpdate": "File ini berukuran {size}. Di chat ini ukuran file maksimal {max} sampai semua orang memperbarui Kryfo.",
+  "fileDayLimit": "Hari ini kamu sudah mengirim banyak file besar. Coba lagi besok."
 }

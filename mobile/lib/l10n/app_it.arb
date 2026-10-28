@@ -2513,5 +2513,6 @@
   "keyLineUnlocked": "I tuoi PIN funzionano solo su questo telefono, e solo mentre è sbloccato. Se il telefono perde la chiave che li controlla, dovrai reimpostare Kryfo e ripristinare un backup. Le chat nascoste tornano solo da un backup fatto mentre erano aperte.",
   "keyLineScreenLock": "Imposta un blocco schermo sul telefono, così questa protezione regge anche quando è bloccato.",
   "fileServerTryLater": "Il server dei file è pieno al momento. Riprova tra un po'.",
-  "fileTooBigUntilUpdate": "Questo file pesa {size}. In questa chat i file possono arrivare a {max} finché tutti non aggiornano Kryfo."
+  "fileTooBigUntilUpdate": "Questo file pesa {size}. In questa chat i file possono arrivare a {max} finché tutti non aggiornano Kryfo.",
+  "fileDayLimit": "Oggi hai già inviato molti file grandi. Riprova domani."
 }

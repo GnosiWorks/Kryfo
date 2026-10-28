@@ -26,7 +26,7 @@ import '../widgets/remembered_height.dart';
 import '../widgets/video_bubble.dart';
 import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
-import '../file_drop.dart' show dropTryLater;
+import '../file_drop.dart' show dropDayDone, dropTryLater;
 import '../file_kind.dart'
     show
         FileShape,
@@ -3078,6 +3078,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     mediaProgressEnd(uid);
     if (mounted) setState(() => m.removing = true);
     await Future.delayed(kLeaveGone);
+    await appState.takeDropBackOf(uid);
     await session.deleteMessage(uid);
     if (mounted) setState(() => _messages.remove(m));
     // the unsend goes to each member once the send has let go
@@ -3187,6 +3188,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       return;
     }
     if (dropTryLater(result)) showHaloToast(context, l10n.fileServerTryLater);
+    if (dropDayDone(result)) showHaloToast(context, l10n.fileDayLimit);
     // re-find the on-screen object; a reload may have replaced m.
     final live = _liveMsg(uid) ?? m;
     setState(() {

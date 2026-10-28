@@ -940,6 +940,8 @@ extension AppStateGroups on AppState {
     // a file still going, to everyone or to the members it missed, stops
     // before its row and its file go, and what they were owed goes too
     if (mediaInflight.contains(targetMsgUid)) cancelMediaSend(targetMsgUid);
+    // up on the files service already: it comes down with the row
+    await takeDropBackOf(targetMsgUid);
     await session.deleteMessage(targetMsgUid);
     groupOwedTick.value++;
     // a quiet session keeps it on this phone: nothing leaves

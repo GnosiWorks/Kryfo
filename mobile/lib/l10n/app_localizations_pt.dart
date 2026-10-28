@@ -9568,4 +9568,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String fileTooBigUntilUpdate(String size, String max) {
     return 'Este arquivo tem $size. Nesta conversa os arquivos podem ter até $max até que todos atualizem o Kryfo.';
   }
+
+  @override
+  String get fileDayLimit =>
+      'Você já enviou muitos arquivos grandes hoje. Tente de novo amanhã.';
 }

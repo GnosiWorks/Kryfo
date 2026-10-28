@@ -9486,4 +9486,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String fileTooBigUntilUpdate(String size, String max) {
     return 'Tệp này nặng $size. Trong cuộc trò chuyện này, tệp chỉ được tối đa $max cho đến khi mọi người cập nhật Kryfo.';
   }
+
+  @override
+  String get fileDayLimit =>
+      'Hôm nay bạn đã gửi nhiều tệp lớn. Hãy thử lại vào ngày mai.';
 }

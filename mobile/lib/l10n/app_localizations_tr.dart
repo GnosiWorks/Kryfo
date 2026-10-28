@@ -9522,4 +9522,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String fileTooBigUntilUpdate(String size, String max) {
     return 'Bu dosya $size. Herkes Kryfo\'yu güncelleyene kadar bu sohbette dosyalar en fazla $max olabilir.';
   }
+
+  @override
+  String get fileDayLimit =>
+      'Bugün çok sayıda büyük dosya gönderdin. Yarın tekrar dene.';
 }

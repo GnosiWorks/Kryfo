@@ -11997,5 +11997,9 @@
         "type": "String"
       }
     }
+  },
+  "fileDayLimit": "You have sent a lot of big files today. Try again tomorrow.",
+  "@fileDayLimit": {
+    "description": "chat and group: toast when this phone has sent its day of big files through the files service. calm, says when it works again"
   }
 }

@@ -9058,6 +9058,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String fileTooBigUntilUpdate(String size, String max) {
     return '这个文件有 $size。在所有人更新 Kryfo 之前，这个聊天里的文件最大为 $max。';
   }
+
+  @override
+  String get fileDayLimit => '你今天已经发送了很多大文件，请明天再试。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -17997,4 +18000,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String fileTooBigUntilUpdate(String size, String max) {
     return '這個檔案有 $size。在所有人更新 Kryfo 之前，這個聊天裡的檔案最大為 $max。';
   }
+
+  @override
+  String get fileDayLimit => '你今天已經傳送了很多大檔案，請明天再試。';
 }

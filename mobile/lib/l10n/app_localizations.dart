@@ -15362,6 +15362,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This file is {size}. This chat takes files up to {max} until everyone in it updates Kryfo.'**
   String fileTooBigUntilUpdate(String size, String max);
+
+  /// chat and group: toast when this phone has sent its day of big files through the files service. calm, says when it works again
+  ///
+  /// In en, this message translates to:
+  /// **'You have sent a lot of big files today. Try again tomorrow.'**
+  String get fileDayLimit;
 }
 
 class _AppLocalizationsDelegate

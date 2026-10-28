@@ -9631,4 +9631,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String fileTooBigUntilUpdate(String size, String max) {
     return 'حجم هذا الملف ⁨$size⁩. في هذه المحادثة يمكن إرسال ملفات حتى ⁨$max⁩ إلى أن يحدّث الجميع Kryfo.';
   }
+
+  @override
+  String get fileDayLimit =>
+      'أرسلت اليوم ملفات كبيرة كثيرة. حاول مرة أخرى غدًا.';
 }

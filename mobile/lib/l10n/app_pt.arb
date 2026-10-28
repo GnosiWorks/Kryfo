@@ -2513,5 +2513,6 @@
   "keyLineUnlocked": "Seus PINs só funcionam neste celular, e só enquanto ele está desbloqueado. Se o celular um dia perder a chave que os confere, será preciso redefinir o Kryfo e restaurar um backup. As conversas ocultas só voltam de um backup feito enquanto estavam abertas.",
   "keyLineScreenLock": "Ative um bloqueio de tela no celular para que esta proteção valha também quando ele estiver bloqueado.",
   "fileServerTryLater": "O servidor de arquivos está cheio agora. Tente de novo daqui a pouco.",
-  "fileTooBigUntilUpdate": "Este arquivo tem {size}. Nesta conversa os arquivos podem ter até {max} até que todos atualizem o Kryfo."
+  "fileTooBigUntilUpdate": "Este arquivo tem {size}. Nesta conversa os arquivos podem ter até {max} até que todos atualizem o Kryfo.",
+  "fileDayLimit": "Você já enviou muitos arquivos grandes hoje. Tente de novo amanhã."
 }

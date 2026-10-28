@@ -687,6 +687,13 @@ class HaloEngine {
     what: 'files',
   );
 
+  Future<String> fileValues(String job) => _ffiOnIsolate(
+    'HaloFileValues',
+    [job],
+    wait: const Duration(minutes: 1),
+    what: 'files',
+  );
+
   Future<String> fileTakeBack(String job) => _ffiOnIsolate(
     'HaloFileDrop',
     [job],

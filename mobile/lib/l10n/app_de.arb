@@ -2513,5 +2513,6 @@
   "keyLineUnlocked": "Deine PINs funktionieren nur auf diesem Handy und nur, solange es entsperrt ist. Falls das Handy den Schlüssel verliert, der sie prüft, musst du Kryfo zurücksetzen und ein Backup wiederherstellen. Versteckte Chats kommen nur aus einem Backup zurück, das gemacht wurde, während sie offen waren.",
   "keyLineScreenLock": "Richte eine Displaysperre auf deinem Handy ein, damit dieser Schutz auch hält, wenn es gesperrt ist.",
   "fileServerTryLater": "Der Dateiserver ist gerade voll. Versuch es etwas später noch einmal.",
-  "fileTooBigUntilUpdate": "Diese Datei hat {size}. In diesem Chat gehen Dateien bis {max}, bis alle hier Kryfo aktualisiert haben."
+  "fileTooBigUntilUpdate": "Diese Datei hat {size}. In diesem Chat gehen Dateien bis {max}, bis alle hier Kryfo aktualisiert haben.",
+  "fileDayLimit": "Du hast heute schon viele große Dateien gesendet. Versuch es morgen wieder."
 }
