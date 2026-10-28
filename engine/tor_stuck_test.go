@@ -35,18 +35,6 @@ type fakeControl struct {
 	circ atomic.Int32
 	mu   sync.Mutex
 	cmds []string
-	// the connections that asked for STATUS_CLIENT events
-	evc []net.Conn
-}
-
-// an async event to every connection listening for STATUS_CLIENT
-func (f *fakeControl) emit(line string) int {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	for _, c := range f.evc {
-		fmt.Fprintf(c, "650 %s\r\n", line)
-	}
-	return len(f.evc)
 }
 
 // the setconf and resetconf lines it was sent, in order
@@ -114,20 +102,6 @@ func (f *fakeControl) handle(c net.Conn) {
 				continue
 			}
 			fmt.Fprint(c, "250 OK\r\n")
-			if strings.HasPrefix(cmd, "SETEVENTS") {
-				f.mu.Lock()
-				kept := f.evc[:0]
-				for _, o := range f.evc {
-					if o != c {
-						kept = append(kept, o)
-					}
-				}
-				f.evc = kept
-				if strings.Contains(cmd, "STATUS_CLIENT") {
-					f.evc = append(f.evc, c)
-				}
-				f.mu.Unlock()
-			}
 		}
 	}
 }
