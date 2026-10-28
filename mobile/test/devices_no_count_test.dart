@@ -31,7 +31,7 @@ void main() {
             kv.value is String &&
             (kv.key.startsWith('devices') ||
                 RegExp(
-                  r'\bdevices?\b',
+                  r'\b(devices?|computers?)\b',
                   caseSensitive: false,
                 ).hasMatch(kv.value as String)))
           kv.key,
@@ -99,7 +99,10 @@ void main() {
       for (final kv in en.entries)
         if (!kv.key.startsWith('@') &&
             kv.value is String &&
-            RegExp(r'\bdevices\b', caseSensitive: false).hasMatch(kv.value))
+            RegExp(
+              r'\b(devices|computers?)\b',
+              caseSensitive: false,
+            ).hasMatch(kv.value))
           kv.key,
     };
     for (final p in contact) {

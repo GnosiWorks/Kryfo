@@ -9597,7 +9597,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get devicesRemoveAllLine =>
-      'Yeni mesaj almayı bırakırlar ve senin adına gönderemezler. Bu telefon her şeyi saklar.';
+      'Kişilerinin uygulamaları değişikliği aldığında yeni mesaj almayı bırakırlar ve senin adına gönderemezler. Bu telefon her şeyi saklar.';
 
   @override
   String get devicesRemoveAllYes => 'Hepsini kaldır';
@@ -9612,7 +9612,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get devicesRemoveLine =>
-      'Yeni mesaj almayı bırakır ve senin adına gönderemez. Bir sonraki çevrimiçi oluşunda sohbetlerini kendinden siler. Biri tarafından kurcalanmış bir cihaz elindekini saklayabilir.';
+      'Kişilerinin uygulamaları değişikliği aldığında yeni mesaj almayı bırakır ve senin adına gönderemez. Bir sonraki çevrimiçi oluşunda sohbetlerini kendinden siler. Biri tarafından kurcalanmış bir cihaz elindekini saklayabilir.';
 
   @override
   String get devicesRemove => 'Kaldır';

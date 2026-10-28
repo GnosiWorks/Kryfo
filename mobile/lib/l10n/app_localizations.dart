@@ -15474,7 +15474,7 @@ abstract class AppLocalizations {
   /// screens/linked_devices_screen.dart: under the question
   ///
   /// In en, this message translates to:
-  /// **'They stop getting new messages and can\'t send as you. This phone keeps everything.'**
+  /// **'Once your contacts\' apps get the change, they stop getting new messages and can\'t send as you. This phone keeps everything.'**
   String get devicesRemoveAllLine;
 
   /// screens/linked_devices_screen.dart: the rose button that removes them
@@ -15498,7 +15498,7 @@ abstract class AppLocalizations {
   /// screens/linked_devices_screen.dart: under the question; the last sentence is the honest part
   ///
   /// In en, this message translates to:
-  /// **'It stops getting new messages and can\'t send as you. It wipes your chats from itself the next time it\'s online. A device someone has tampered with may keep what it already has.'**
+  /// **'Once your contacts\' apps get the change, it stops getting new messages and can\'t send as you. It wipes your chats from itself the next time it\'s online. A device someone has tampered with may keep what it already has.'**
   String get devicesRemoveLine;
 
   /// screens/linked_devices_screen.dart: the rose row in a device sheet, and the button that removes it

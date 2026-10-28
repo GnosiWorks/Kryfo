@@ -9671,7 +9671,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get devicesRemoveAllLine =>
-      'Sie bekommen keine neuen Nachrichten mehr und können nicht als du senden. Dieses Handy behält alles.';
+      'Sobald die Apps deiner Kontakte die Änderung haben, bekommen sie keine neuen Nachrichten mehr und können nicht als du senden. Dieses Handy behält alles.';
 
   @override
   String get devicesRemoveAllYes => 'Alle entfernen';
@@ -9686,7 +9686,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get devicesRemoveLine =>
-      'Es bekommt keine neuen Nachrichten mehr und kann nicht als du senden. Es löscht deine Chats, sobald es das nächste Mal online ist. Ein Gerät, an dem jemand etwas verändert hat, kann behalten, was es schon hat.';
+      'Sobald die Apps deiner Kontakte die Änderung haben, bekommt es keine neuen Nachrichten mehr und kann nicht als du senden. Es löscht deine Chats, sobald es das nächste Mal online ist. Ein Gerät, an dem jemand etwas verändert hat, kann behalten, was es schon hat.';
 
   @override
   String get devicesRemove => 'Entfernen';

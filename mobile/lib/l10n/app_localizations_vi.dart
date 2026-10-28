@@ -9561,7 +9561,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get devicesRemoveAllLine =>
-      'Các thiết bị đó sẽ không nhận tin nhắn mới và không gửi được dưới tên bạn. Điện thoại này giữ lại mọi thứ.';
+      'Khi ứng dụng của danh bạ bạn nhận được thay đổi, các thiết bị đó sẽ không nhận tin nhắn mới và không gửi được dưới tên bạn. Điện thoại này giữ lại mọi thứ.';
 
   @override
   String get devicesRemoveAllYes => 'Gỡ tất cả';
@@ -9576,7 +9576,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get devicesRemoveLine =>
-      'Thiết bị sẽ không nhận tin nhắn mới và không gửi được dưới tên bạn. Nó tự xóa các cuộc trò chuyện của bạn vào lần trực tuyến tới. Thiết bị đã bị ai đó can thiệp có thể giữ lại những gì nó đã có.';
+      'Khi ứng dụng của danh bạ bạn nhận được thay đổi, thiết bị sẽ không nhận tin nhắn mới và không gửi được dưới tên bạn. Nó tự xóa các cuộc trò chuyện của bạn vào lần trực tuyến tới. Thiết bị đã bị ai đó can thiệp có thể giữ lại những gì nó đã có.';
 
   @override
   String get devicesRemove => 'Gỡ bỏ';

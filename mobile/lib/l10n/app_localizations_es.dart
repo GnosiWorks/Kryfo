@@ -9644,7 +9644,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get devicesRemoveAllLine =>
-      'Dejan de recibir mensajes nuevos y no pueden enviar como tú. Este teléfono lo conserva todo.';
+      'Cuando las apps de tus contactos reciban el cambio, dejarán de recibir mensajes nuevos y no podrán enviar como tú. Este teléfono lo conserva todo.';
 
   @override
   String get devicesRemoveAllYes => 'Quitar todos';
@@ -9659,7 +9659,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get devicesRemoveLine =>
-      'Deja de recibir mensajes nuevos y no puede enviar como tú. Borra tus chats la próxima vez que se conecte. Un dispositivo que alguien haya manipulado puede quedarse con lo que ya tiene.';
+      'Cuando las apps de tus contactos reciban el cambio, dejará de recibir mensajes nuevos y no podrá enviar como tú. Borra tus chats la próxima vez que se conecte. Un dispositivo que alguien haya manipulado puede quedarse con lo que ya tiene.';
 
   @override
   String get devicesRemove => 'Quitar';

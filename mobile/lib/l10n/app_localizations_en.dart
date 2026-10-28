@@ -9564,7 +9564,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devicesRemoveAllLine =>
-      'They stop getting new messages and can\'t send as you. This phone keeps everything.';
+      'Once your contacts\' apps get the change, they stop getting new messages and can\'t send as you. This phone keeps everything.';
 
   @override
   String get devicesRemoveAllYes => 'Remove all';
@@ -9579,7 +9579,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devicesRemoveLine =>
-      'It stops getting new messages and can\'t send as you. It wipes your chats from itself the next time it\'s online. A device someone has tampered with may keep what it already has.';
+      'Once your contacts\' apps get the change, it stops getting new messages and can\'t send as you. It wipes your chats from itself the next time it\'s online. A device someone has tampered with may keep what it already has.';
 
   @override
   String get devicesRemove => 'Remove';

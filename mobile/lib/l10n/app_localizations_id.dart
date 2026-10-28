@@ -9567,7 +9567,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get devicesRemoveAllLine =>
-      'Perangkat itu berhenti menerima pesan baru dan tidak bisa mengirim atas namamu. Ponsel ini menyimpan semuanya.';
+      'Begitu aplikasi kontakmu menerima perubahannya, perangkat itu berhenti menerima pesan baru dan tidak bisa mengirim atas namamu. Ponsel ini menyimpan semuanya.';
 
   @override
   String get devicesRemoveAllYes => 'Hapus semua';
@@ -9582,7 +9582,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get devicesRemoveLine =>
-      'Perangkat itu berhenti menerima pesan baru dan tidak bisa mengirim atas namamu. Obrolanmu terhapus darinya saat ia online lagi. Perangkat yang sudah diutak-atik orang bisa menyimpan apa yang sudah ada di dalamnya.';
+      'Begitu aplikasi kontakmu menerima perubahannya, perangkat itu berhenti menerima pesan baru dan tidak bisa mengirim atas namamu. Obrolanmu terhapus darinya saat ia online lagi. Perangkat yang sudah diutak-atik orang bisa menyimpan apa yang sudah ada di dalamnya.';
 
   @override
   String get devicesRemove => 'Hapus';

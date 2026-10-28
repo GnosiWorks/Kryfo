@@ -9671,7 +9671,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get devicesRemoveAllLine =>
-      'Ils ne reçoivent plus de nouveaux messages et ne peuvent plus envoyer en votre nom. Ce téléphone garde tout.';
+      'Dès que les applis de vos contacts reçoivent le changement, ils ne reçoivent plus de nouveaux messages et ne peuvent plus envoyer en votre nom. Ce téléphone garde tout.';
 
   @override
   String get devicesRemoveAllYes => 'Tout retirer';
@@ -9686,7 +9686,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get devicesRemoveLine =>
-      'Il ne reçoit plus de nouveaux messages et ne peut plus envoyer en votre nom. Il efface vos discussions la prochaine fois qu’il est en ligne. Un appareil que quelqu’un a trafiqué peut garder ce qu’il a déjà.';
+      'Dès que les applis de vos contacts reçoivent le changement, il ne reçoit plus de nouveaux messages et ne peut plus envoyer en votre nom. Il efface vos discussions la prochaine fois qu’il est en ligne. Un appareil que quelqu’un a trafiqué peut garder ce qu’il a déjà.';
 
   @override
   String get devicesRemove => 'Retirer';

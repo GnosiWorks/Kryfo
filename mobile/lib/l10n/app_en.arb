@@ -12073,7 +12073,7 @@
   "@devicesRemoveAllTitle": {
     "description": "screens/linked_devices_screen.dart: the sheet that asks"
   },
-  "devicesRemoveAllLine": "They stop getting new messages and can't send as you. This phone keeps everything.",
+  "devicesRemoveAllLine": "Once your contacts' apps get the change, they stop getting new messages and can't send as you. This phone keeps everything.",
   "@devicesRemoveAllLine": {
     "description": "screens/linked_devices_screen.dart: under the question"
   },
@@ -12094,7 +12094,7 @@
       }
     }
   },
-  "devicesRemoveLine": "It stops getting new messages and can't send as you. It wipes your chats from itself the next time it's online. A device someone has tampered with may keep what it already has.",
+  "devicesRemoveLine": "Once your contacts' apps get the change, it stops getting new messages and can't send as you. It wipes your chats from itself the next time it's online. A device someone has tampered with may keep what it already has.",
   "@devicesRemoveLine": {
     "description": "screens/linked_devices_screen.dart: under the question; the last sentence is the honest part"
   },

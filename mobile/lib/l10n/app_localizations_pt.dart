@@ -9643,7 +9643,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get devicesRemoveAllLine =>
-      'Eles param de receber mensagens novas e não podem enviar como você. Este celular guarda tudo.';
+      'Quando os apps dos seus contatos receberem a mudança, eles param de receber mensagens novas e não podem enviar como você. Este celular guarda tudo.';
 
   @override
   String get devicesRemoveAllYes => 'Remover todos';
@@ -9658,7 +9658,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get devicesRemoveLine =>
-      'Ele para de receber mensagens novas e não pode enviar como você. Ele apaga suas conversas na próxima vez que ficar online. Um aparelho que alguém adulterou pode guardar o que já tem.';
+      'Quando os apps dos seus contatos receberem a mudança, ele para de receber mensagens novas e não pode enviar como você. Ele apaga suas conversas na próxima vez que ficar online. Um aparelho que alguém adulterou pode guardar o que já tem.';
 
   @override
   String get devicesRemove => 'Remover';

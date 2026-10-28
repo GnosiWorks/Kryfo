@@ -9128,7 +9128,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devicesRemoveAllTitle => '移除其他所有设备？';
 
   @override
-  String get devicesRemoveAllLine => '它们不会再收到新消息，也不能以你的身份发送。这部手机保留一切。';
+  String get devicesRemoveAllLine =>
+      '等你的联系人的应用收到这项更改后，它们就不会再收到新消息，也不能以你的身份发送。这部手机保留一切。';
 
   @override
   String get devicesRemoveAllYes => '全部移除';
@@ -9143,7 +9144,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get devicesRemoveLine =>
-      '它不会再收到新消息，也不能以你的身份发送。下次联网时，它会抹除自己上面的聊天。被人动过手脚的设备可能会留下它已有的内容。';
+      '等你的联系人的应用收到这项更改后，它就不会再收到新消息，也不能以你的身份发送。下次联网时，它会抹除自己上面的聊天。被人动过手脚的设备可能会留下它已有的内容。';
 
   @override
   String get devicesRemove => '移除';
@@ -18217,7 +18218,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devicesRemoveAllTitle => '移除其他所有裝置？';
 
   @override
-  String get devicesRemoveAllLine => '它們不會再收到新訊息，也不能以你的身分傳送。這支手機保留一切。';
+  String get devicesRemoveAllLine =>
+      '等你的聯絡人的 App 收到這項變更後，它們就不會再收到新訊息，也不能以你的身分傳送。這支手機保留一切。';
 
   @override
   String get devicesRemoveAllYes => '全部移除';
@@ -18232,7 +18234,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get devicesRemoveLine =>
-      '它不會再收到新訊息，也不能以你的身分傳送。下次連上網路時，它會抹除自己上面的聊天。被人動過手腳的裝置可能會留下它已有的內容。';
+      '等你的聯絡人的 App 收到這項變更後，它就不會再收到新訊息，也不能以你的身分傳送。下次連上網路時，它會抹除自己上面的聊天。被人動過手腳的裝置可能會留下它已有的內容。';
 
   @override
   String get devicesRemove => '移除';

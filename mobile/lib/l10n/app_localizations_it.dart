@@ -9649,7 +9649,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get devicesRemoveAllLine =>
-      'Smettono di ricevere nuovi messaggi e non possono inviare a nome tuo. Questo telefono tiene tutto.';
+      'Quando le app dei tuoi contatti ricevono la modifica, smettono di ricevere nuovi messaggi e non possono inviare a nome tuo. Questo telefono tiene tutto.';
 
   @override
   String get devicesRemoveAllYes => 'Rimuovi tutti';
@@ -9664,7 +9664,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get devicesRemoveLine =>
-      'Smette di ricevere nuovi messaggi e non può inviare a nome tuo. Cancella le tue chat la prossima volta che è online. Un dispositivo manomesso da qualcuno può tenere ciò che ha già.';
+      'Quando le app dei tuoi contatti ricevono la modifica, smette di ricevere nuovi messaggi e non può inviare a nome tuo. Cancella le tue chat la prossima volta che è online. Un dispositivo manomesso da qualcuno può tenere ciò che ha già.';
 
   @override
   String get devicesRemove => 'Rimuovi';
