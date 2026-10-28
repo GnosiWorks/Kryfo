@@ -159,6 +159,36 @@ func knockPushHosts() map[string]bool {
 	return out
 }
 
+// our push gateway for google push (server/push), a known push server with
+// a share of its own: https://relay.kryfo.app/push/<sealed token>. the
+// token is a phone's fcm token sealed afresh for each of its endpoints, so
+// the relay sees sixteen strings that do not match. nothing else under the
+// gateway's domain is an endpoint. "" turns it off
+func knockGateway() string {
+	if v, ok := os.LookupEnv("RELAY_KNOCK_GATEWAY"); ok {
+		return strings.ToLower(strings.TrimSpace(v))
+	}
+	return "relay.kryfo.app"
+}
+
+// a sealed token as the gateway takes it: base64url, no padding, and as
+// long as an fcm token sealed (server/push/seal.go)
+const (
+	knockSealedMin = 92
+	knockSealedMax = 480
+)
+
+func knockGatewayPathOK(u *url.URL) bool {
+	if u.RawQuery != "" || u.ForceQuery || (u.RawPath != "" && u.RawPath != u.Path) {
+		return false
+	}
+	t, ok := strings.CutPrefix(u.Path, "/push/")
+	if !ok || len(t) < knockSealedMin || len(t) > knockSealedMax {
+		return false
+	}
+	return strings.Trim(t, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_") == ""
+}
+
 // the ports an endpoint may name: 443 unless told otherwise
 func knockPorts() map[string]bool {
 	out := map[string]bool{"443": true}
@@ -266,7 +296,9 @@ type knocker struct {
 	onions  bool
 	push    map[string]bool
 	ports   map[string]bool
-	stats   knockStats
+	// our push gateway's host, "" for none, and where this box reaches it
+	gateway, gatewayLocal string
+	stats                 knockStats
 	// the floor and the timers, for the tests
 	floor time.Duration
 	after func(time.Duration, func())
@@ -393,11 +425,15 @@ func newKnocker(store *knockStore, onions bool) *knocker {
 		onions:  onions,
 		push:    knockPushHosts(),
 		ports:   knockPorts(),
+		gateway: knockGateway(),
 		floor:   knockFloor,
 		after:   func(d time.Duration, f func()) { time.AfterFunc(d, f) },
 		names:   map[string]knockName{},
 		lookups: newBucket(20, 40),
 		v4:      true,
+	}
+	if d := knockDomainOf(k.gateway); d != "" {
+		k.push[d] = true
 	}
 	k.lookup = k.lookupOn(net.DefaultResolver)
 	k.q.init(k)
@@ -520,6 +556,9 @@ func (k *knocker) endpointOK(raw string) bool {
 	if net.ParseIP(host) != nil || numericHost(host) {
 		return false
 	}
+	if k.gateway != "" && knockDomainOf(host) == knockDomainOf(k.gateway) {
+		return host == k.gateway && (port == "" || port == "443") && knockGatewayPathOK(u)
+	}
 	if !knockQueryOK(u.RawQuery, host == knockFCMHost) {
 		return false
 	}
@@ -581,7 +620,7 @@ func queryName(k string) bool {
 
 // the endpoint check with the default ports, for the tests and the loader
 func knockEndpointOK(raw string, onions bool) bool {
-	k := &knocker{onions: onions, ports: knockPorts()}
+	k := &knocker{onions: onions, ports: knockPorts(), gateway: knockGateway()}
 	return k.endpointOK(raw)
 }
 
@@ -1158,7 +1197,8 @@ func startKnocks(relay *khatru.Relay, l *limits, dataDir string) (*knocker, erro
 	k := newKnocker(store, socks != "")
 	k.v4 = netw == "tcp4"
 	k.q.resolve = knockResolver(netw)
-	k.q.post = knockPoster(knockClient(netw, socks))
+	k.gatewayLocal = os.Getenv("RELAY_KNOCK_GATEWAY_LOCAL")
+	k.q.post = knockPosterVia(knockPoster(knockClient(netw, socks)), k.gateway, k.gatewayLocal)
 	if err := k.load(); err != nil {
 		store.close()
 		return nil, err
