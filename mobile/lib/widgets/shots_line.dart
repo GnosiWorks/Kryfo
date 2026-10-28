@@ -4,6 +4,7 @@
 // lands, no animation with reduced motion
 import 'package:flutter/material.dart';
 
+import '../group_shots.dart';
 import '../l10n/l10n.dart';
 import '../theme.dart';
 import 'motion.dart' show motionStill;
@@ -18,6 +19,32 @@ String shotsLineText({required bool on, required bool mine, String? name}) {
       ? l10n.chatShotsTheyTurnedOn(who)
       : l10n.chatShotsTheyTurnedOff(who);
 }
+
+/// what a group's line says: [line] as group_shots.dart names them, made
+/// by this phone's admin or by [name]. null for none
+String? groupShotsLineText(int line, {required bool mine, String? name}) {
+  final who = name ?? '';
+  return switch (line) {
+    kGroupLineOn => shotsLineText(on: true, mine: mine, name: who),
+    kGroupLineOnWait =>
+      mine
+          ? l10n.groupShotsYouTurnedOnWait
+          : l10n.groupShotsTheyTurnedOnWait(who),
+    kGroupLineStarted => l10n.groupShotsStarted,
+    kGroupLinePaused => l10n.groupShotsPaused,
+    kGroupLineOff => shotsLineText(on: false, mine: mine, name: who),
+    _ => null,
+  };
+}
+
+/// where a kept file is: each says so in its own words
+enum KeptIn { chat, group, room }
+
+String keptOpenLine(KeptIn where) => switch (where) {
+  KeptIn.chat => l10n.chatShotsKeptOpen,
+  KeptIn.group => l10n.groupShotsKeptOpen,
+  KeptIn.room => l10n.roomShotsKeptOpen,
+};
 
 class ShotsLine extends StatelessWidget {
   final String text;

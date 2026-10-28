@@ -15,9 +15,10 @@ const _explains = [
   'chatShotsBothPhones',
   'chatShotsBlocksBoth',
   'roomShotsBlocked',
+  'groupShotsBlocksAll',
 ];
 
-// the photo toast and the three explaining lines
+// the photo toast and the explaining lines
 const _shotLines = ['chatTheNextPhotoYou', ..._explains];
 
 // camera words per language, lowercase
@@ -52,6 +53,7 @@ void main() {
     expect(l10n.chatShotsBothPhones, endsWith(limit));
     expect(l10n.chatShotsBlocksBoth, endsWith(limit));
     expect(l10n.roomShotsBlocked, endsWith(limit));
+    expect(l10n.groupShotsBlocksAll, endsWith(limit));
     expect(
       l10n.chatTheNextPhotoYou,
       'The next photo you send opens protected · Kryfo blocks screenshots of '
@@ -62,7 +64,7 @@ void main() {
   test('every language carries the same limit on each explaining line', () {
     for (final lang in _langs) {
       final m = _arb(lang);
-      // the limit is the line's last sentence and the same in all three
+      // the limit is the line's last sentence and the same in each
       String tail(String k) {
         final v = (m[k] as String).trim();
         final cut = v.lastIndexOf(RegExp(r'[.。] ?'), v.length - 2);

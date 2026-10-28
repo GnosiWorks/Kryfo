@@ -9445,4 +9445,102 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Ative um bloqueio de tela no celular para que esta proteção valha também quando ele estiver bloqueado.';
+
+  @override
+  String get groupShotsBlocksAll =>
+      'Bloqueia capturas e gravação de tela em todos os celulares deste grupo, e também copiar, encaminhar ou salvar as mensagens dos outros. Não impede apps com permissão para ler a tela nem um celular ou app modificado para contornar isso.';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'Esperando todos aqui atualizarem o Kryfo';
+
+  @override
+  String get groupShotsOnForAll => 'Ativado para todos aqui';
+
+  @override
+  String get groupShotsOffAdminOnly => 'Desativado. Só o admin pode mudar isso';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'Esperando todos aqui atualizarem o Kryfo. Só o admin pode mudar isso';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'Ativado para todos aqui. Só o admin pode mudar isso';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Esperando $countString pessoas',
+      one: 'Esperando $countString pessoa',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'Ainda sem atualizar';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'O bloqueio de capturas vale para todos assim que essas pessoas atualizarem o Kryfo. Toque em alguém para remover do grupo.';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'Precisa atualizar o Kryfo, ou não ficou online desde então';
+
+  @override
+  String get groupShotsBlockedByYou => 'Bloqueado por você';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'Você ativou o bloqueio de capturas de tela. Ele vale para todos assim que todos aqui atualizarem o Kryfo.';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name ativou o bloqueio de capturas de tela. Ele vale para todos assim que todos aqui atualizarem o Kryfo.';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'O bloqueio de capturas está ativado para todos aqui. Copiar, encaminhar e salvar as mensagens dos outros também fica desativado.';
+
+  @override
+  String get groupShotsPaused =>
+      'Alguém aqui ainda não consegue bloquear capturas. Volta a valer para todos assim que essa pessoa atualizar o Kryfo.';
+
+  @override
+  String get groupShotsCantYet => 'Ainda não bloqueia capturas';
+
+  @override
+  String get groupShotsAddTitle => 'Adicionar mesmo assim?';
+
+  @override
+  String get groupShotsAddPauses =>
+      'O bloqueio de capturas não vai valer para todos aqui até essa pessoa atualizar o Kryfo.';
+
+  @override
+  String get groupShotsLeaveStays =>
+      'O bloqueio de capturas continua como está.';
+
+  @override
+  String get groupShotsBlockedHere =>
+      'O Kryfo bloqueia capturas de tela neste grupo';
+
+  @override
+  String get groupShotsMenuNote =>
+      'Copiar, encaminhar e salvar as mensagens dos outros está desativado neste grupo';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'Abrir arquivos dos outros em outros apps está desativado neste grupo';
+
+  @override
+  String get groupShotsOldNotice =>
+      'Ativei o bloqueio de capturas de tela neste grupo. Seu Kryfo ainda não consegue fazer isso, então atualize, por favor.';
 }

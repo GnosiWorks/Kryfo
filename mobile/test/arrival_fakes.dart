@@ -7,9 +7,11 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:kryfo/album.dart' show AlbumTag;
+import 'package:kryfo/caps.dart' show capsAfter;
 import 'package:kryfo/chat_shots.dart' show ChatShots;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart' show groupOwedGap;
+import 'package:kryfo/group_shots.dart';
 import 'package:kryfo/first_contact.dart' show firstKeepFits, firstRetryGap;
 import 'package:kryfo/main.dart'
     show
@@ -2109,6 +2111,128 @@ class ArrivalRows implements HaloDb {
   @override
   Future<ChatShots> shotsOf(String peer) async =>
       ChatShots.ofRow(people[peer], quiet: container.quiet);
+
+  // a group's screenshot block and each person's bits, as their rows say,
+  // by the same rules as the real tables
+  @override
+  Future<GroupShots> groupShotsOf(String groupId) async =>
+      GroupShots.ofRow(groupRows[groupId], quiet: container.quiet);
+
+  @override
+  Future<GroupShotsWord?> turnGroupShots(
+    String groupId, {
+    required bool on,
+    required bool all,
+  }) async {
+    final r = groupRows[groupId];
+    final was = GroupShots.ofRow(r);
+    if (r == null || was.room || was.ended || was.on == on) return null;
+    final put = groupShotsTurned(
+      was,
+      on: on,
+      all: all,
+      now: DateTime.now().millisecondsSinceEpoch,
+    );
+    _hit('turnGroupShots', groupId, null);
+    r.addAll(put);
+    return GroupShotsWord(on: on, all: on && all, at: put['shots_at'] as int);
+  }
+
+  @override
+  Future<GroupShotsWord?> moveGroupShotsAll(
+    String groupId, {
+    required bool all,
+  }) async {
+    final r = groupRows[groupId];
+    final was = GroupShots.ofRow(r);
+    if (r == null || was.room || was.ended) return null;
+    final put = groupShotsAllMoved(
+      was,
+      all: all,
+      now: DateTime.now().millisecondsSinceEpoch,
+    );
+    if (put == null) return null;
+    _hit('moveGroupShotsAll', groupId, null);
+    r.addAll(put);
+    return GroupShotsWord(on: true, all: all, at: put['shots_at'] as int);
+  }
+
+  @override
+  Future<bool> takeGroupShots(String groupId, GroupShotsWord word) async {
+    final r = groupRows[groupId];
+    final was = GroupShots.ofRow(r);
+    if (r == null || was.room || was.ended) return false;
+    final put = groupShotsTaken(
+      was,
+      word,
+      now: DateTime.now().millisecondsSinceEpoch,
+    );
+    if (put == null) return false;
+    _hit('takeGroupShots', groupId, null);
+    r.addAll(put);
+    return true;
+  }
+
+  @override
+  Future<void> shotsTold(String groupId, int at) async {
+    final r = groupRows[groupId];
+    if (r != null && ((r['shots_told'] as int?) ?? 0) < at) {
+      r['shots_told'] = at;
+    }
+  }
+
+  @override
+  Future<List<({String groupId, String admin})>> capsUntold() async => [
+    for (final r in groupRows.values)
+      if (((r['shots_told'] as int?) ?? 0) == 0 &&
+          r['is_admin'] != 1 &&
+          r['room_pub'] == null &&
+          r['ended_at'] == null &&
+          r['admin_id'] != null)
+        (groupId: r['group_id'] as String, admin: r['admin_id'] as String),
+  ];
+
+  @override
+  Future<List<String>> shotsRunHere(String me, {String? member}) async => [
+    for (final r in groupRows.values)
+      if (r['shots_on'] == 1 &&
+          r['is_admin'] == 1 &&
+          r['admin_id'] == me &&
+          r['room_pub'] == null &&
+          r['ended_at'] == null &&
+          (member == null ||
+              (members[r['group_id']] ?? const []).contains(member)))
+        r['group_id'] as String,
+  ];
+
+  @override
+  Future<Map<String, int>> capsOfPeople(Iterable<String> ids) async => {
+    for (final id in ids)
+      if (people[id] != null) id: (people[id]!['caps'] as int?) ?? 0,
+  };
+
+  @override
+  Future<bool> takeCaps(
+    String peer, {
+    required int? carried,
+    required bool counts,
+    int? written,
+  }) async {
+    final r = people[peer];
+    if (r == null) return false;
+    final was = (r['caps'] as int?) ?? 0;
+    final next = capsAfter(
+      was,
+      (r['caps_at'] as int?) ?? 0,
+      carried: carried,
+      counts: counts,
+      written: written,
+    );
+    if (next == null) return false;
+    r['caps'] = next.caps;
+    r['caps_at'] = next.at;
+    return next.caps != was;
+  }
 
   @override
   dynamic noSuchMethod(Invocation i) =>

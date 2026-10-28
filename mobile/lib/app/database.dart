@@ -19,7 +19,8 @@ class HaloDb
         _MediaRows,
         _GroupOwedRows,
         _NotifRows,
-        _DraftRows
+        _DraftRows,
+        _GroupShotsRows
     implements GroupOwedStore {
   HaloDb([this.container = HaloContainer.everyday]);
 
@@ -147,7 +148,7 @@ class HaloDb
     _db = await openDatabase(
       path,
       password: pw,
-      version: 86,
+      version: 87,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -190,7 +191,9 @@ class HaloDb
             shots_at INTEGER NOT NULL DEFAULT 0,
             shots_can INTEGER NOT NULL DEFAULT 0,
             shots_by INTEGER NOT NULL DEFAULT 0,
-            shots_when INTEGER NOT NULL DEFAULT 0
+            shots_when INTEGER NOT NULL DEFAULT 0,
+            caps INTEGER NOT NULL DEFAULT 0,
+            caps_at INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -271,7 +274,14 @@ class HaloDb
             door_was TEXT,
             voice_disguise INTEGER,
             ended_at INTEGER,
-            ended_by TEXT
+            ended_by TEXT,
+            shots_on INTEGER NOT NULL DEFAULT 0,
+            shots_at INTEGER NOT NULL DEFAULT 0,
+            shots_all INTEGER NOT NULL DEFAULT 0,
+            shots_by INTEGER NOT NULL DEFAULT 0,
+            shots_when INTEGER NOT NULL DEFAULT 0,
+            shots_line INTEGER NOT NULL DEFAULT 0,
+            shots_told INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -333,7 +343,7 @@ class HaloDb
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 to 86
+        // they add. 66 runs after it: it reads what they all make. 67 to 87
         // last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
@@ -859,6 +869,10 @@ class HaloDb
         if (oldV < 86) {
           // unsent words, kept per chat so a stopped process keeps them
           await draftsTable(db);
+        }
+        if (oldV < 87) {
+          // a group's screenshot block, and what each person's app can do
+          await groupShotsColumns(db);
         }
       },
     );

@@ -427,6 +427,8 @@ extension AppStateSession on AppState {
       await refreshHiddenCards();
       // what came sealed while it was shut
       await _unseal();
+      // its groups' screenshot blocks, as what came says
+      await _groupShotsAtOpen(v);
       // and what its shelf still holds for people it accepted
       unawaited(letHeldIn(v));
       unawaited(_fillSearch(v));

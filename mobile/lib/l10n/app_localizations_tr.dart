@@ -9399,4 +9399,103 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Telefonuna bir ekran kilidi koy ki bu koruma telefon kilitliyken de sürsün.';
+
+  @override
+  String get groupShotsBlocksAll =>
+      'Bu gruptaki her telefonda ekran görüntüsünü ve ekran kaydını engeller; birbirinizin mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi de. Ekranı okumasına izin verilen uygulamaları ya da bunu aşmak için değiştirilmiş bir telefonu veya uygulamayı durduramaz.';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'Buradaki herkesin Kryfo\'yu güncellemesi bekleniyor';
+
+  @override
+  String get groupShotsOnForAll => 'Buradaki herkes için açık';
+
+  @override
+  String get groupShotsOffAdminOnly =>
+      'Kapalı. Bunu yalnızca yönetici değiştirebilir';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'Buradaki herkesin Kryfo\'yu güncellemesi bekleniyor. Bunu yalnızca yönetici değiştirebilir';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'Buradaki herkes için açık. Bunu yalnızca yönetici değiştirebilir';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString kişi bekleniyor',
+      one: '$countString kişi bekleniyor',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'Henüz güncellemeyenler';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'Bu kişiler Kryfo\'yu güncellediğinde ekran görüntüsü engeli herkesi kapsar. Gruptan çıkarmak için birine dokun.';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'Kryfo\'yu güncellemesi gerekiyor ya da o zamandan beri çevrim dışı';
+
+  @override
+  String get groupShotsBlockedByYou => 'Senin engellediğin';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'Ekran görüntüsü engelini açtın. Buradaki herkes Kryfo\'yu güncellediğinde herkesi kapsar.';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name ekran görüntüsü engelini açtı. Buradaki herkes Kryfo\'yu güncellediğinde herkesi kapsar.';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'Ekran görüntüsü engeli buradaki herkes için açık. Birbirinizin mesajlarını kopyalamak, iletmek ve kaydetmek de kapalı.';
+
+  @override
+  String get groupShotsPaused =>
+      'Buradaki biri henüz ekran görüntüsünü engelleyemiyor. Kryfo\'yu güncellediğinde yeniden herkesi kapsar.';
+
+  @override
+  String get groupShotsCantYet => 'Henüz ekran görüntüsünü engelleyemiyor';
+
+  @override
+  String get groupShotsAddTitle => 'Yine de eklensin mi?';
+
+  @override
+  String get groupShotsAddPauses =>
+      'Bu kişi Kryfo\'yu güncelleyene kadar ekran görüntüsü engeli buradaki herkesi kapsamaz.';
+
+  @override
+  String get groupShotsLeaveStays =>
+      'Ekran görüntüsü engeli olduğu gibi kalır.';
+
+  @override
+  String get groupShotsBlockedHere =>
+      'Kryfo bu grupta ekran görüntüsünü engeller';
+
+  @override
+  String get groupShotsMenuNote =>
+      'Bu grupta başkalarının mesajlarını kopyalamak, iletmek ve kaydetmek kapalı';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'Bu grupta başkalarının dosyalarını başka uygulamalarda açmak kapalı';
+
+  @override
+  String get groupShotsOldNotice =>
+      'Bu grupta ekran görüntüsü engelini açtım. Senin Kryfo\'n bunu henüz yapamıyor, lütfen güncelle.';
 }

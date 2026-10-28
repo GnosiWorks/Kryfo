@@ -8942,6 +8942,90 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get keyLineScreenLock => '请为手机设置屏幕锁，这样手机锁定时这层保护依然有效。';
+
+  @override
+  String get groupShotsBlocksAll =>
+      '在这个群组的每部手机上禁止截屏和录屏，也禁止复制、转发或保存彼此的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
+
+  @override
+  String get groupShotsStartsWhenAll => '等这里的所有人更新 Kryfo';
+
+  @override
+  String get groupShotsOnForAll => '对这里的所有人开启';
+
+  @override
+  String get groupShotsOffAdminOnly => '已关闭。只有管理员能更改';
+
+  @override
+  String get groupShotsWaitAdminOnly => '等这里的所有人更新 Kryfo。只有管理员能更改';
+
+  @override
+  String get groupShotsOnAdminOnly => '对这里的所有人开启。只有管理员能更改';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '还在等 $countString 人',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => '还没更新的人';
+
+  @override
+  String get groupShotsWaitingHint => '这些人更新 Kryfo 后，禁止截屏就对所有人生效。点一个人可以把他移出群组。';
+
+  @override
+  String get groupShotsNeedsUpdate => '需要更新 Kryfo，或之后一直没上线';
+
+  @override
+  String get groupShotsBlockedByYou => '已被你屏蔽';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      '你开启了禁止截屏。等这里的所有人都更新 Kryfo 后，它会对所有人生效。';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name 开启了禁止截屏。等这里的所有人都更新 Kryfo 后，它会对所有人生效。';
+  }
+
+  @override
+  String get groupShotsStarted => '禁止截屏已对这里的所有人开启。复制、转发和保存彼此的消息也已关闭。';
+
+  @override
+  String get groupShotsPaused => '这里有人还不能禁止截屏。他更新 Kryfo 后，会再次对所有人生效。';
+
+  @override
+  String get groupShotsCantYet => '还不能禁止截屏';
+
+  @override
+  String get groupShotsAddTitle => '仍要添加吗？';
+
+  @override
+  String get groupShotsAddPauses => '在他更新 Kryfo 之前，禁止截屏不会对这里的所有人生效。';
+
+  @override
+  String get groupShotsLeaveStays => '禁止截屏会保持现状。';
+
+  @override
+  String get groupShotsBlockedHere => 'Kryfo 已在此群组中禁止截屏';
+
+  @override
+  String get groupShotsMenuNote => '此群组中不能复制、转发或保存别人的消息';
+
+  @override
+  String get groupShotsKeptOpen => '此群组中不能用其他应用打开别人的文件';
+
+  @override
+  String get groupShotsOldNotice => '我在这个群组开启了禁止截屏。你的 Kryfo 还做不到，请更新一下。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -17765,4 +17849,88 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get keyLineScreenLock => '請為手機設定螢幕鎖定，這樣手機鎖定時這層保護依然有效。';
+
+  @override
+  String get groupShotsBlocksAll =>
+      '在這個群組的每支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存彼此的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
+
+  @override
+  String get groupShotsStartsWhenAll => '等這裡的所有人更新 Kryfo';
+
+  @override
+  String get groupShotsOnForAll => '對這裡的所有人開啟';
+
+  @override
+  String get groupShotsOffAdminOnly => '已關閉。只有管理員能變更';
+
+  @override
+  String get groupShotsWaitAdminOnly => '等這裡的所有人更新 Kryfo。只有管理員能變更';
+
+  @override
+  String get groupShotsOnAdminOnly => '對這裡的所有人開啟。只有管理員能變更';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '還在等 $countString 人',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => '還沒更新的人';
+
+  @override
+  String get groupShotsWaitingHint => '這些人更新 Kryfo 後，禁止截圖就對所有人生效。點一個人可以把他移出群組。';
+
+  @override
+  String get groupShotsNeedsUpdate => '需要更新 Kryfo，或之後一直沒上線';
+
+  @override
+  String get groupShotsBlockedByYou => '已被你封鎖';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      '你開啟了禁止截圖。等這裡的所有人都更新 Kryfo 後，它會對所有人生效。';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name 開啟了禁止截圖。等這裡的所有人都更新 Kryfo 後，它會對所有人生效。';
+  }
+
+  @override
+  String get groupShotsStarted => '禁止截圖已對這裡的所有人開啟。複製、轉傳和儲存彼此的訊息也已關閉。';
+
+  @override
+  String get groupShotsPaused => '這裡有人還不能禁止截圖。他更新 Kryfo 後，會再次對所有人生效。';
+
+  @override
+  String get groupShotsCantYet => '還不能禁止截圖';
+
+  @override
+  String get groupShotsAddTitle => '仍要新增嗎？';
+
+  @override
+  String get groupShotsAddPauses => '在他更新 Kryfo 之前，禁止截圖不會對這裡的所有人生效。';
+
+  @override
+  String get groupShotsLeaveStays => '禁止截圖會維持現狀。';
+
+  @override
+  String get groupShotsBlockedHere => 'Kryfo 已在此群組中禁止截圖';
+
+  @override
+  String get groupShotsMenuNote => '此群組中不能複製、轉傳或儲存別人的訊息';
+
+  @override
+  String get groupShotsKeptOpen => '此群組中不能用其他應用程式開啟別人的檔案';
+
+  @override
+  String get groupShotsOldNotice => '我在這個群組開啟了禁止截圖。你的 Kryfo 還做不到，請更新一下。';
 }
