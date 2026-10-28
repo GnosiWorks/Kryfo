@@ -12006,6 +12006,117 @@
   "@keyLineScreenLock": {
     "description": "screens/pins_screen.dart"
   },
+  "groupShotsBlocksAll": "Blocks screenshots and screen recording on every phone in this group, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.",
+  "@groupShotsBlocksAll": {
+    "description": "screens/group_info_screen.dart: the admin's switch while it is off: what it does"
+  },
+  "groupShotsStartsWhenAll": "Waiting for everyone here to update Kryfo",
+  "@groupShotsStartsWhenAll": {
+    "description": "screens/group_info_screen.dart: the admin's switch, on while someone's app cannot block yet"
+  },
+  "groupShotsOnForAll": "On for everyone here",
+  "@groupShotsOnForAll": {
+    "description": "screens/group_info_screen.dart: the admin's switch, on for every member"
+  },
+  "groupShotsOffAdminOnly": "Off. Only the admin can change this",
+  "@groupShotsOffAdminOnly": {
+    "description": "screens/group_info_screen.dart: a member's read-only row, off"
+  },
+  "groupShotsWaitAdminOnly": "Waiting for everyone here to update Kryfo. Only the admin can change this",
+  "@groupShotsWaitAdminOnly": {
+    "description": "screens/group_info_screen.dart: a member's read-only row, on but waiting on someone"
+  },
+  "groupShotsOnAdminOnly": "On for everyone here. Only the admin can change this",
+  "@groupShotsOnAdminOnly": {
+    "description": "screens/group_info_screen.dart: a member's read-only row, on for every member"
+  },
+  "groupShotsWaitingFor": "{count, plural, one{Waiting for {count} person} other{Waiting for {count} people}}",
+  "@groupShotsWaitingFor": {
+    "description": "screens/group_info_screen.dart: the admin's row that opens the list of members whose app cannot block yet",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "groupShotsWaitingTitle": "Still to update",
+  "@groupShotsWaitingTitle": {
+    "description": "widgets/group_shots_sheet.dart: the title of that list"
+  },
+  "groupShotsWaitingHint": "Screenshot blocking covers everyone once these people update Kryfo. Tap someone to remove them from the group.",
+  "@groupShotsWaitingHint": {
+    "description": "widgets/group_shots_sheet.dart: the line under the title"
+  },
+  "groupShotsNeedsUpdate": "Needs to update Kryfo, or hasn’t been online since",
+  "@groupShotsNeedsUpdate": {
+    "description": "widgets/group_shots_sheet.dart: under a member's name"
+  },
+  "groupShotsBlockedByYou": "Blocked by you",
+  "@groupShotsBlockedByYou": {
+    "description": "widgets/group_shots_sheet.dart: under a member you blocked"
+  },
+  "groupShotsYouTurnedOnWait": "You turned on screenshot blocking. It covers everyone once all here have updated Kryfo.",
+  "@groupShotsYouTurnedOnWait": {
+    "description": "widgets/shots_line.dart: the line in the group where you turned it on and someone's app cannot block yet"
+  },
+  "groupShotsTheyTurnedOnWait": "{name} turned on screenshot blocking. It covers everyone once all here have updated Kryfo.",
+  "@groupShotsTheyTurnedOnWait": {
+    "description": "widgets/shots_line.dart: the same, turned on by the admin",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "groupShotsStarted": "Screenshot blocking is on for everyone here. Copying, forwarding and saving each other’s messages is off too.",
+  "@groupShotsStarted": {
+    "description": "widgets/shots_line.dart: every member's app can block now"
+  },
+  "groupShotsPaused": "Someone here can’t block screenshots yet. It covers everyone again once they update Kryfo.",
+  "@groupShotsPaused": {
+    "description": "widgets/shots_line.dart: someone whose app cannot block came in or went back to an older app"
+  },
+  "groupShotsCantYet": "Can’t block screenshots yet",
+  "@groupShotsCantYet": {
+    "description": "screens/group_info_screen.dart: in the add sheet, under someone whose app cannot block in groups yet"
+  },
+  "groupShotsAddTitle": "Add anyway?",
+  "@groupShotsAddTitle": {
+    "description": "screens/group_info_screen.dart: confirm title when adding such a person"
+  },
+  "groupShotsAddPauses": "Screenshot blocking won’t cover everyone here until they update Kryfo.",
+  "@groupShotsAddPauses": {
+    "description": "screens/group_info_screen.dart: confirm line when adding such a person"
+  },
+  "groupShotsLeaveStays": "Screenshot blocking stays as it is.",
+  "@groupShotsLeaveStays": {
+    "description": "screens/group_info_screen.dart: extra line in the admin's leave confirm while blocking is on"
+  },
+  "groupShotsBlockedHere": "Kryfo blocks screenshots in this group",
+  "@groupShotsBlockedHere": {
+    "description": "screens/group_chat_screen.dart: screen reader label of the lock in the header"
+  },
+  "groupShotsMenuNote": "Copying, forwarding and saving others’ messages is off in this group",
+  "@groupShotsMenuNote": {
+    "description": "screens/group_chat_screen.dart: note in the message menu"
+  },
+  "groupShotsKeptOpen": "Opening others’ files in other apps is off in this group",
+  "@groupShotsKeptOpen": {
+    "description": "widgets/video_bubble.dart: a file of someone else's in a group that blocks"
+  },
+  "groupShotsOldNotice": "I turned on screenshot blocking in this group. Your Kryfo can’t do it yet, so please update.",
+  "@groupShotsOldNotice": {
+    "description": "app/state_group_shots.dart: the message older versions show when the admin turns it on"
+  },
+  "captureShotTaken": "Screenshot taken. Nobody else was told.",
+  "@captureShotTaken": {
+    "description": "widgets/shots_line.dart: one quiet line on this phone when android says the chat was screenshotted. nothing is sent"
+  },
+  "captureRecording": "This screen is being recorded. Nobody else was told.",
+  "@captureRecording": {
+    "description": "widgets/shots_line.dart: the same when android says the screen is being recorded"
+  },
   "settingsDevices": "Devices",
   "@settingsDevices": {
     "description": "screens/settings_screen.dart: the section over the linked devices row"

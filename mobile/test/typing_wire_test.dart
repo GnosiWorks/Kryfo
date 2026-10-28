@@ -53,7 +53,8 @@ void main() {
     final body = shotsBodyOf(await wrapMessage('hi', msgUid: 'u1'))!;
     capsPut(body);
     final env = unwrapMessage('halo/1:${jsonEncode(body)}');
-    expect(env.caps, [kCapTyping]);
+    expect(env.caps, kMyCaps);
+    expect(env.caps, contains(kCapTyping));
     expect(unwrapMessage(await wrapMessage('hi')).caps, isNull);
   });
 

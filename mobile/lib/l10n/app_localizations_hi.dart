@@ -9515,6 +9515,110 @@ class AppLocalizationsHi extends AppLocalizations {
       'अपने फ़ोन पर स्क्रीन लॉक सेट करें, ताकि फ़ोन लॉक होने पर भी यह सुरक्षा बनी रहे।';
 
   @override
+  String get groupShotsBlocksAll =>
+      'इस ग्रुप के हर फ़ोन पर स्क्रीनशॉट और स्क्रीन रिकॉर्डिंग रोकता है, और एक-दूसरे के मैसेज कॉपी, फ़ॉरवर्ड या सेव करना भी। यह उन ऐप को नहीं रोक सकता जिन्हें स्क्रीन पढ़ने की अनुमति है, न ही ऐसे फ़ोन या ऐप को जिसे इससे बचने के लिए बदला गया हो।';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'यहाँ सबके Kryfo अपडेट करने का इंतज़ार है';
+
+  @override
+  String get groupShotsOnForAll => 'यहाँ सबके लिए चालू';
+
+  @override
+  String get groupShotsOffAdminOnly => 'बंद। इसे सिर्फ़ एडमिन बदल सकते हैं';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'यहाँ सबके Kryfo अपडेट करने का इंतज़ार है। इसे सिर्फ़ एडमिन बदल सकते हैं';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'यहाँ सबके लिए चालू। इसे सिर्फ़ एडमिन बदल सकते हैं';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString लोगों का इंतज़ार',
+      one: '$countString व्यक्ति का इंतज़ार',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'अभी अपडेट बाकी है';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'इन लोगों के Kryfo अपडेट करते ही स्क्रीनशॉट रोकना सब पर लागू होगा। किसी को ग्रुप से हटाने के लिए उस पर टैप करें।';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'Kryfo अपडेट करना है, या तब से ऑनलाइन नहीं आए';
+
+  @override
+  String get groupShotsBlockedByYou => 'आपने ब्लॉक किया है';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'आपने स्क्रीनशॉट रोकना चालू किया। यहाँ सबके Kryfo अपडेट करने के बाद यह सब पर लागू होगा।';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name ने स्क्रीनशॉट रोकना चालू किया। यहाँ सबके Kryfo अपडेट करने के बाद यह सब पर लागू होगा।';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'यहाँ सबके लिए स्क्रीनशॉट रोकना चालू है। एक-दूसरे के मैसेज कॉपी, फ़ॉरवर्ड और सेव करना भी बंद है।';
+
+  @override
+  String get groupShotsPaused =>
+      'यहाँ कोई अभी स्क्रीनशॉट नहीं रोक सकता। उनके Kryfo अपडेट करते ही यह फिर सब पर लागू होगा।';
+
+  @override
+  String get groupShotsCantYet => 'अभी स्क्रीनशॉट नहीं रोक सकते';
+
+  @override
+  String get groupShotsAddTitle => 'फिर भी जोड़ें?';
+
+  @override
+  String get groupShotsAddPauses =>
+      'जब तक वे Kryfo अपडेट नहीं करते, स्क्रीनशॉट रोकना यहाँ सब पर लागू नहीं होगा।';
+
+  @override
+  String get groupShotsLeaveStays => 'स्क्रीनशॉट रोकना जैसा है वैसा ही रहेगा।';
+
+  @override
+  String get groupShotsBlockedHere => 'Kryfo इस ग्रुप में स्क्रीनशॉट रोकता है';
+
+  @override
+  String get groupShotsMenuNote =>
+      'इस ग्रुप में दूसरों के मैसेज कॉपी, फ़ॉरवर्ड और सेव करना बंद है';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'इस ग्रुप में दूसरों की फ़ाइलें दूसरे ऐप में खोलना बंद है';
+
+  @override
+  String get groupShotsOldNotice =>
+      'मैंने इस ग्रुप में स्क्रीनशॉट रोकना चालू किया है। आपका Kryfo अभी ऐसा नहीं कर सकता, इसलिए कृपया अपडेट करें।';
+
+  @override
+  String get captureShotTaken =>
+      'स्क्रीनशॉट लिया गया। किसी और को नहीं बताया गया।';
+
+  @override
+  String get captureRecording =>
+      'यह स्क्रीन रिकॉर्ड हो रही है। किसी और को नहीं बताया गया।';
+
+  @override
   String get settingsDevices => 'डिवाइस';
 
   @override

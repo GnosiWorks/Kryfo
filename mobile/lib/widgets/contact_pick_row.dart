@@ -14,11 +14,14 @@ class ContactPickRow extends StatelessWidget {
   final ContactPreview contact;
   final bool picked;
   final VoidCallback onTap;
+  // one plain line under the name, for what the picker needs said of them
+  final String? note;
   const ContactPickRow({
     super.key,
     required this.contact,
     required this.picked,
     required this.onTap,
+    this.note,
   });
 
   @override
@@ -29,6 +32,7 @@ class ContactPickRow extends StatelessWidget {
       button: true,
       selected: picked,
       label: name ?? contact.haloId,
+      value: note,
       excludeSemantics: true,
       onTap: onTap,
       child: PressScale(
@@ -89,6 +93,18 @@ class ContactPickRow extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: HaloType.mono(size: 10, color: HaloColors.text2),
+                      ),
+                    if (note != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          note!,
+                          style: HaloType.sans(
+                            size: 12,
+                            color: HaloColors.amberText,
+                            height: 1.3,
+                          ),
+                        ),
                       ),
                   ],
                 ),

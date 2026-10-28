@@ -9525,6 +9525,113 @@ class AppLocalizationsFa extends AppLocalizations {
       'برای گوشی قفل صفحه بگذارید تا این محافظت وقتی گوشی قفل است هم برقرار بماند.';
 
   @override
+  String get groupShotsBlocksAll =>
+      'جلوی اسکرین‌شات و ضبط صفحه را در همه‌ی گوشی‌های این گروه می‌گیرد، و کپی، بازارسال یا ذخیره‌ی پیام‌های یکدیگر را هم. جلوی برنامه‌هایی که اجازه‌ی خواندن صفحه را دارند، یا گوشی و برنامه‌ای را که برای دور زدنش تغییر داده شده نمی‌گیرد.';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'در انتظار به‌روزرسانی Kryfo توسط همه‌ی اعضا';
+
+  @override
+  String get groupShotsOnForAll => 'برای همه‌ی اعضا روشن است';
+
+  @override
+  String get groupShotsOffAdminOnly =>
+      'خاموش. فقط مدیر می‌تواند این را تغییر دهد';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'در انتظار به‌روزرسانی Kryfo توسط همه‌ی اعضا. فقط مدیر می‌تواند این را تغییر دهد';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'برای همه‌ی اعضا روشن است. فقط مدیر می‌تواند این را تغییر دهد';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'در انتظار ⁨$countString⁩ نفر',
+      one: 'در انتظار ⁨$countString⁩ نفر',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'هنوز به‌روز نکرده‌اند';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'وقتی این افراد Kryfo را به‌روز کنند، جلوگیری از اسکرین‌شات همه را در بر می‌گیرد. برای حذف کسی از گروه، روی او بزنید.';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'باید Kryfo را به‌روز کند، یا از آن موقع آنلاین نشده';
+
+  @override
+  String get groupShotsBlockedByYou => 'شما مسدودش کرده‌اید';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'شما جلوگیری از اسکرین‌شات را روشن کردید. وقتی همه‌ی اعضا Kryfo را به‌روز کنند، همه را در بر می‌گیرد.';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '⁨$name⁩ جلوگیری از اسکرین‌شات را روشن کرد. وقتی همه‌ی اعضا Kryfo را به‌روز کنند، همه را در بر می‌گیرد.';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'جلوگیری از اسکرین‌شات برای همه‌ی اعضا روشن است. کپی، بازارسال و ذخیره‌ی پیام‌های یکدیگر هم خاموش است.';
+
+  @override
+  String get groupShotsPaused =>
+      'یکی از اعضا هنوز نمی‌تواند جلوی اسکرین‌شات را بگیرد. وقتی Kryfo را به‌روز کند، دوباره همه را در بر می‌گیرد.';
+
+  @override
+  String get groupShotsCantYet => 'هنوز نمی‌تواند جلوی اسکرین‌شات را بگیرد';
+
+  @override
+  String get groupShotsAddTitle => 'باز هم افزوده شود؟';
+
+  @override
+  String get groupShotsAddPauses =>
+      'تا وقتی Kryfo را به‌روز نکند، جلوگیری از اسکرین‌شات همه‌ی اعضا را در بر نمی‌گیرد.';
+
+  @override
+  String get groupShotsLeaveStays =>
+      'جلوگیری از اسکرین‌شات همان‌طور که هست می‌ماند.';
+
+  @override
+  String get groupShotsBlockedHere =>
+      'Kryfo در این گروه جلوی اسکرین‌شات را می‌گیرد';
+
+  @override
+  String get groupShotsMenuNote =>
+      'کپی، بازارسال و ذخیره‌ی پیام‌های دیگران در این گروه خاموش است';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'باز کردن فایل‌های دیگران در برنامه‌های دیگر در این گروه خاموش است';
+
+  @override
+  String get groupShotsOldNotice =>
+      'جلوگیری از اسکرین‌شات را در این گروه روشن کردم. Kryfo شما هنوز این کار را نمی‌کند، لطفاً به‌روزش کنید.';
+
+  @override
+  String get captureShotTaken =>
+      'اسکرین‌شات گرفته شد. به هیچ‌کس دیگری خبر داده نشد.';
+
+  @override
+  String get captureRecording =>
+      'این صفحه در حال ضبط است. به هیچ‌کس دیگری خبر داده نشد.';
+
+  @override
   String get settingsDevices => 'دستگاه‌ها';
 
   @override

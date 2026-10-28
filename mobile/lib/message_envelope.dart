@@ -9,9 +9,10 @@ import 'album.dart' show AlbumTag;
 import 'bidi_safe.dart';
 import 'chat_shots.dart' show ShotsWord, kShotsWire;
 import 'dlog.dart';
+import 'group_shots.dart' show GroupShotsWord, kGroupNudgeWire, kGroupShotsWire;
 import 'media_resend.dart';
 import 'stickers/sticker_wire.dart' show StickerWire;
-import 'typing.dart' show capsFromWire, kCapsWire, kTypingWire;
+import 'typing.dart' show capsFromWire, kCapsWire, kMyCaps, kTypingWire;
 import 'voice_format.dart' show kOpusWire;
 
 const _envelopePrefix = 'halo/1:';
@@ -64,11 +65,16 @@ class UnwrappedMessage {
   // 'op': the sender's phone plays opus voice notes (voice_format.dart)
   final bool playsOpus;
   final ShotsWord? shots; // 'ss': a 1:1 chat's screenshot block (chat_shots)
+  // 'gs': the admin's word on the group's screenshot block (group_shots)
+  final GroupShotsWord? groupShots;
+  // 'gu': the admin's words for versions that cannot block in groups. they
+  // show it as a message, this version never keeps it
+  final bool shotsNudge;
   // 'ty': the sender is typing in a 1:1 chat (typing.dart). nothing else
   // in the frame counts
   final bool typing;
-  // 'cp': what the sender's phone understands, on every 1:1 frame. null
-  // from a version without it
+  // 'cp': what the sender's phone understands, on every 1:1 and group
+  // frame. null from a version without it
   final List<String>? caps;
   final AlbumTag? album; // 'al': its place in an album, on every slice
   // 'w': when the sender wrote it, ms by their clock. set once and kept on
@@ -121,6 +127,8 @@ class UnwrappedMessage {
     this.sticker,
     this.supportMarker,
     this.shots,
+    this.groupShots,
+    this.shotsNudge = false,
     this.album,
     this.writtenAt,
     this.endNotice = false,
@@ -132,7 +140,8 @@ class UnwrappedMessage {
 
 /// a group state update. the 'm' body is ignored when this is present.
 class GroupControl {
-  // 'create' | 'add' | 'remove' | 'rename' | 'leave' | 'end'
+  // 'create' | 'add' | 'remove' | 'rename' | 'leave' | 'end' | 'shots' |
+  // 'caps'
   final String type;
   final String? name; // present on 'create' and 'rename'
   final List<String>?
@@ -151,6 +160,9 @@ class GroupControl {
   // those, sent before the remove and landing after it, and no other.
   // older versions ignore it and take none
   final Map<String, List<String>>? lateUids;
+  // on 'shots' and a group's 'create': the screenshot block as the admin
+  // holds it (group_shots.dart)
+  final GroupShotsWord? shots;
   const GroupControl({
     required this.type,
     this.name,
@@ -159,6 +171,7 @@ class GroupControl {
     this.stamp,
     this.fc,
     this.lateUids,
+    this.shots,
   });
 
   Map<String, dynamic> toWire() => {
@@ -169,6 +182,7 @@ class GroupControl {
     'v': ?stamp,
     'fc': ?fc,
     'lu': ?lateUids,
+    'ss': ?shots?.toWire(),
   };
 
   static GroupControl? fromWire(Object? raw) {
@@ -206,6 +220,7 @@ class GroupControl {
       stamp: stamp is int && stamp > 0 ? stamp : null,
       fc: fc is String ? fc : null,
       lateUids: late.isEmpty ? null : late,
+      shots: GroupShotsWord.fromWire(raw['ss']),
     );
   }
 
@@ -366,6 +381,8 @@ Future<String> wrapMessage(
   String? sticker,
   int? supportMarker,
   bool endNotice = false,
+  GroupShotsWord? groupShots,
+  bool shotsNudge = false,
   AlbumTag? album,
   // when it was written: a retry, a resend or a slice passes the time the
   // row was written, anything else is written now
@@ -377,6 +394,7 @@ Future<String> wrapMessage(
   if (sticker != null) body['st'] = sticker;
   if (supportMarker != null) body['sp'] = supportMarker;
   if (endNotice) body['ge'] = 1;
+  if (shotsNudge) body['gu'] = 1;
   if (poll != null) body['pl'] = poll;
   if (vote != null) {
     body['vt'] = {'u': vote.pollUid, 'c': vote.choices, 's': vote.seq};
@@ -423,6 +441,7 @@ Future<String> wrapMessage(
   if (pvImg) body['pi'] = 1;
   if (roster != null) body['rs'] = roster;
   if (rosterParticipants != null) body['rp'] = rosterParticipants;
+  if (groupShots != null) body['gs'] = groupShots.toWire();
   if (powNonce != null) body['pw'] = powNonce;
   if (powBitsUsed != null) body['pb'] = powBitsUsed;
   if (supporterBadge != null) body['bg'] = supporterBadge;
@@ -439,7 +458,12 @@ Future<String> wrapMessage(
   if (burnSeconds != null && burnSeconds > 0) {
     body['b'] = burnSeconds;
   }
-  if (groupId != null) body['g'] = groupId;
+  if (groupId != null) {
+    body['g'] = groupId;
+    // what this phone understands, inside the group's encryption. a room
+    // frame loses it again (roomFrame)
+    body['cp'] = kMyCaps;
+  }
   if (groupControl != null) body['gc'] = groupControl.toWire();
   return '$_envelopePrefix${jsonEncode(body)}';
 }
@@ -578,6 +602,8 @@ UnwrappedMessage unwrapMessage(String wrapped) {
         _ => null,
       },
       shots: ShotsWord.fromWire(json[kShotsWire]),
+      groupShots: GroupShotsWord.fromWire(json[kGroupShotsWire]),
+      shotsNudge: json[kGroupNudgeWire] == 1,
       album: AlbumTag.fromWire(json['al']),
       writtenAt: switch (json['w']) {
         final num n when n.isFinite && n > 0 => n.toInt(),

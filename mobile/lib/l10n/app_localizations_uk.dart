@@ -9669,6 +9669,112 @@ class AppLocalizationsUk extends AppLocalizations {
       'Увімкніть блокування екрана на телефоні, щоб цей захист діяв і тоді, коли він заблокований.';
 
   @override
+  String get groupShotsBlocksAll =>
+      'Блокує знімки екрана й запис екрана на кожному телефоні в цій групі, а також копіювання, пересилання й збереження повідомлень одне одного. Це не зупинить застосунки з доступом до екрана чи телефон або застосунок, змінені, щоб це обійти.';
+
+  @override
+  String get groupShotsStartsWhenAll => 'Чекає, поки всі тут оновлять Kryfo';
+
+  @override
+  String get groupShotsOnForAll => 'Увімкнено для всіх тут';
+
+  @override
+  String get groupShotsOffAdminOnly => 'Вимкнено. Змінити це може лише адмін';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'Чекає, поки всі тут оновлять Kryfo. Змінити це може лише адмін';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'Увімкнено для всіх тут. Змінити це може лише адмін';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Чекає на $countString людини',
+      many: 'Чекає на $countString людей',
+      few: 'Чекає на $countString людей',
+      one: 'Чекає на $countString людину',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'Ще не оновили';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'Блокування знімків екрана запрацює для всіх, щойно ці люди оновлять Kryfo. Торкнися людини, щоб прибрати її з групи.';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'Треба оновити Kryfo, або відтоді не був(-ла) в мережі';
+
+  @override
+  String get groupShotsBlockedByYou => 'Заблоковано тобою';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'Ти увімкнув(-ла) блокування знімків екрана. Воно запрацює для всіх, коли всі тут оновлять Kryfo.';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name увімкнув(-ла) блокування знімків екрана. Воно запрацює для всіх, коли всі тут оновлять Kryfo.';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'Блокування знімків екрана ввімкнено для всіх тут. Копіювати, пересилати й зберігати повідомлення одне одного теж не можна.';
+
+  @override
+  String get groupShotsPaused =>
+      'Хтось тут поки не може блокувати знімки екрана. Блокування знову буде для всіх, коли ця людина оновить Kryfo.';
+
+  @override
+  String get groupShotsCantYet => 'Поки не може блокувати знімки екрана';
+
+  @override
+  String get groupShotsAddTitle => 'Однаково додати?';
+
+  @override
+  String get groupShotsAddPauses =>
+      'Блокування знімків екрана не діятиме для всіх тут, доки ця людина не оновить Kryfo.';
+
+  @override
+  String get groupShotsLeaveStays =>
+      'Блокування знімків екрана залишиться як є.';
+
+  @override
+  String get groupShotsBlockedHere => 'Kryfo блокує знімки екрана в цій групі';
+
+  @override
+  String get groupShotsMenuNote =>
+      'У цій групі не можна копіювати, пересилати й зберігати чужі повідомлення';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'У цій групі не можна відкривати чужі файли в інших застосунках';
+
+  @override
+  String get groupShotsOldNotice =>
+      'Я увімкнув(-ла) блокування знімків екрана в цій групі. Твій Kryfo поки так не вміє, будь ласка, онови його.';
+
+  @override
+  String get captureShotTaken =>
+      'Зроблено знімок екрана. Більше ніхто про це не дізнався.';
+
+  @override
+  String get captureRecording =>
+      'Цей екран записується. Більше ніхто про це не дізнався.';
+
+  @override
   String get settingsDevices => 'Пристрої';
 
   @override

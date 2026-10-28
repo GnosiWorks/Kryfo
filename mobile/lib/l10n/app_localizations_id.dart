@@ -9505,6 +9505,112 @@ class AppLocalizationsId extends AppLocalizations {
       'Pasang kunci layar di ponselmu supaya perlindungan ini tetap berlaku saat ponsel terkunci.';
 
   @override
+  String get groupShotsBlocksAll =>
+      'Memblokir tangkapan layar dan rekaman layar di setiap ponsel dalam grup ini, juga menyalin, meneruskan, atau menyimpan pesan satu sama lain. Ini tidak bisa mencegah aplikasi yang diizinkan membaca layar, atau ponsel maupun aplikasi yang diubah untuk mengakalinya.';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'Menunggu semua orang di sini memperbarui Kryfo';
+
+  @override
+  String get groupShotsOnForAll => 'Menyala untuk semua orang di sini';
+
+  @override
+  String get groupShotsOffAdminOnly =>
+      'Mati. Hanya admin yang bisa mengubahnya';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'Menunggu semua orang di sini memperbarui Kryfo. Hanya admin yang bisa mengubahnya';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'Menyala untuk semua orang di sini. Hanya admin yang bisa mengubahnya';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Menunggu $countString orang',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'Belum memperbarui';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'Blokir tangkapan layar berlaku untuk semua orang setelah mereka memperbarui Kryfo. Ketuk seseorang untuk mengeluarkannya dari grup.';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'Perlu memperbarui Kryfo, atau belum online sejak itu';
+
+  @override
+  String get groupShotsBlockedByYou => 'Kamu blokir';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'Kamu menyalakan blokir tangkapan layar. Ini berlaku untuk semua orang setelah semua di sini memperbarui Kryfo.';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name menyalakan blokir tangkapan layar. Ini berlaku untuk semua orang setelah semua di sini memperbarui Kryfo.';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'Blokir tangkapan layar menyala untuk semua orang di sini. Menyalin, meneruskan, dan menyimpan pesan satu sama lain juga mati.';
+
+  @override
+  String get groupShotsPaused =>
+      'Seseorang di sini belum bisa memblokir tangkapan layar. Ini berlaku lagi untuk semua orang setelah dia memperbarui Kryfo.';
+
+  @override
+  String get groupShotsCantYet => 'Belum bisa memblokir tangkapan layar';
+
+  @override
+  String get groupShotsAddTitle => 'Tetap tambahkan?';
+
+  @override
+  String get groupShotsAddPauses =>
+      'Blokir tangkapan layar tidak berlaku untuk semua orang di sini sampai dia memperbarui Kryfo.';
+
+  @override
+  String get groupShotsLeaveStays =>
+      'Blokir tangkapan layar tetap seperti sekarang.';
+
+  @override
+  String get groupShotsBlockedHere =>
+      'Kryfo memblokir tangkapan layar di grup ini';
+
+  @override
+  String get groupShotsMenuNote =>
+      'Menyalin, meneruskan, dan menyimpan pesan orang lain mati di grup ini';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'Membuka file orang lain di aplikasi lain mati di grup ini';
+
+  @override
+  String get groupShotsOldNotice =>
+      'Aku menyalakan blokir tangkapan layar di grup ini. Kryfo-mu belum bisa melakukannya, jadi tolong perbarui.';
+
+  @override
+  String get captureShotTaken =>
+      'Tangkapan layar diambil. Tidak ada orang lain yang diberi tahu.';
+
+  @override
+  String get captureRecording =>
+      'Layar ini sedang direkam. Tidak ada orang lain yang diberi tahu.';
+
+  @override
   String get settingsDevices => 'Perangkat';
 
   @override

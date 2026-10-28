@@ -19,6 +19,7 @@ import 'motion.dart' show kText2, motionStill;
 import 'press_scale.dart';
 import 'text_ground.dart';
 import '../l10n/l10n.dart';
+import 'shots_line.dart' show KeptIn, keptOpenLine;
 import 'video_bubble.dart' show openReceivedFile;
 import 'video_frame.dart';
 import '../lock_guard.dart' show LockGuard, lockGuard;
@@ -39,7 +40,7 @@ Future<void> openVideo(
   String? fileName,
   // the other person's, in a chat that blocks: no other app (shotsKeeps)
   bool kept = false,
-  bool room = false,
+  KeptIn where = KeptIn.chat,
 }) async {
   FocusManager.instance.primaryFocus?.unfocus();
   final still = MediaQuery.disableAnimationsOf(context);
@@ -58,7 +59,7 @@ Future<void> openVideo(
             fileName: fileName,
             route: anim,
             kept: kept,
-            room: room,
+            where: where,
           ),
         ),
       ),
@@ -96,13 +97,13 @@ class _VideoViewer extends StatefulWidget {
   final String? fileName;
   final Animation<double> route;
   final bool kept;
-  final bool room;
+  final KeptIn where;
   const _VideoViewer({
     required this.path,
     this.fileName,
     required this.route,
     this.kept = false,
-    this.room = false,
+    this.where = KeptIn.chat,
   });
   @override
   State<_VideoViewer> createState() => _VideoViewerState();
@@ -560,7 +561,7 @@ class _VideoViewerState extends State<_VideoViewer>
           // the other person's, in a chat that blocks: no other app
           if (widget.kept)
             Text(
-              widget.room ? l10n.roomShotsKeptOpen : l10n.chatShotsKeptOpen,
+              keptOpenLine(widget.where),
               textAlign: TextAlign.center,
               style: HaloType.sans(size: 13, color: Colors.white, height: 1.4),
             )
