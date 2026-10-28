@@ -225,4 +225,76 @@ void main() {
       expect(out.sublist(2, 4), [0xFF, 0xDA]);
     });
   });
+
+  group('app0 and app14', () {
+    List<int> seg(int m, List<int> body) => [
+      0xFF,
+      m,
+      (body.length + 2) >> 8,
+      (body.length + 2) & 0xFF,
+      ...body,
+    ];
+    Uint8List pic(List<int> head) => Uint8List.fromList([
+      0xFF,
+      0xD8,
+      ...head,
+      ...seg(0xDB, List.filled(65, 3)),
+      ...seg(0xDA, [1, 1, 0, 0, 63, 0]),
+      0x12,
+      0xFF,
+      0xD9,
+    ]);
+    // jfif 1.02, dots per inch, 72 by 72, then a 2 by 1 thumbnail
+    final jfif = seg(0xE0, [
+      ...'JFIF\x00'.codeUnits,
+      1, 2, 1, 0, 72, 0, 72, 2, 1, //
+      ...List.filled(6, 0xAB),
+    ]);
+
+    test('jfif loses its thumbnail and keeps its density', () {
+      final out = stripJpegMetadata(pic(jfif))!;
+      expect(out.sublist(2, 20), [
+        0xFF, 0xE0, 0x00, 0x10, ...'JFIF\x00'.codeUnits, //
+        1, 2, 1, 0, 72, 0, 72, 0, 0,
+      ]);
+      expect(out.contains(0xAB), isFalse);
+    });
+
+    test('a jfxx thumbnail segment goes', () {
+      final jfxx = seg(0xE0, [
+        ...'JFXX\x00'.codeUnits,
+        0x10,
+        0xFF,
+        0xD8,
+        0xAB,
+        0xFF,
+        0xD9,
+      ]);
+      final out = stripJpegMetadata(pic([...jfif, ...jfxx]))!;
+      expect(String.fromCharCodes(out).contains('JFXX'), isFalse);
+      expect(out.contains(0xAB), isFalse);
+    });
+
+    test('adobe app14 stays with its colour transform', () {
+      final adobe = seg(0xEE, [...'Adobe'.codeUnits, 0, 100, 0x80, 0, 0, 0, 2]);
+      final out = stripJpegMetadata(pic(adobe))!;
+      final at = out.indexOf(0xEE) - 1;
+      expect(out.sublist(at, at + 16), [
+        0xFF, 0xEE, 0x00, 0x0E, ...'Adobe'.codeUnits, //
+        0, 100, 0, 0, 0, 0, 2,
+      ]);
+    });
+
+    test('the orientation follows the jfif header', () {
+      final exif = seg(0xE1, [
+        ...'Exif\x00\x00'.codeUnits,
+        0x4D, 0x4D, 0, 0x2A, 0, 0, 0, 8, 0, 1, //
+        0x01, 0x12, 0, 3, 0, 0, 0, 1, 0, 6, 0, 0,
+        0, 0, 0, 0,
+      ]);
+      final out = stripJpegMetadata(pic([...jfif, ...exif]))!;
+      expect(out.sublist(2, 4), [0xFF, 0xE0]);
+      expect(out.sublist(20, 22), [0xFF, 0xE1]);
+    });
+  });
 }

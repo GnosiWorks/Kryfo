@@ -512,7 +512,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get appScanTheirCode => 'Pindai kodenya';
 
   @override
-  String get appAKryfoLinkA => 'Tautan Kryfo, tautan ruang, atau @wren';
+  String get appAKryfoLinkA => 'Tautan Kryfo, tautan ruang, atau @name';
 
   @override
   String get appAddThem => 'Tambahkan';
@@ -609,9 +609,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get appSpeedPrivacy => 'Kecepatan & privasi →';
-
-  @override
-  String get appGettingMessages => 'Menerima pesan →';
 
   @override
   String get appDisableAppLock => 'Matikan kunci aplikasi?';
@@ -2002,6 +1999,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get cleanSamePictureSameQuality => 'Gambar sama, kualitas sama';
 
   @override
+  String get cleanSamePicture => 'Gambar sama';
+
+  @override
   String cleanRemoved(Object label) {
     return '$label, dihapus';
   }
@@ -2385,13 +2385,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get donateJustGladToHelp => 'Senang bisa membantu';
 
   @override
-  String get gettingMessagesGettingMessages => 'Menerima pesan';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach =>
-      'Cara pesan baru sampai ke ponsel ini. Kamu bisa mengubahnya kapan saja.';
-
-  @override
   String get gettingMessagesAlwaysOn => 'Selalu aktif';
 
   @override
@@ -2410,12 +2403,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get gettingMessagesKryfoLooksForMessages =>
       'Kryfo mencari pesan setiap 15 menit. Hemat baterai, tapi pesan bisa terlambat.';
-
-  @override
-  String get gettingMessagesOnTheLockScreen => 'Di layar kunci';
-
-  @override
-  String get gettingMessagesHideMessagePreview => 'Sembunyikan pratinjau pesan';
 
   @override
   String get gettingMessagesAGenericAlertWith =>
@@ -2926,7 +2913,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Opsional. Tiga katamu tetap berfungsi apa pun pilihanmu.';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Satu baris tentangmu · opsional';
@@ -3130,20 +3117,6 @@ class AppLocalizationsId extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString menunggu · terkirim saat kamu online lagi',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString menunggu · Tor masih menghubungkan',
     );
     return '$_temp0';
   }
@@ -3770,7 +3743,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Tambahkan aku di Kryfo. ID-ku $myId\n\nKetuk untuk menambahkanku:\n$uri\n\nKryfo adalah aplikasi pesan privat. Tanpa nomor telepon, tanpa email.';
+    return 'Tambahkan aku di Kryfo. Namaku di sana $myId\n\nKetuk untuk menambahkanku:\n$uri\n\nKryfo adalah aplikasi pesan privat. Tanpa nomor telepon, tanpa email.';
   }
 
   @override
@@ -3820,7 +3793,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get myKryfoTheLinkCarriesYour =>
-      'Tautan ini berisi ID-mu, alamatmu, dan kunci untuk memulai obrolan. Tautan ini berlaku sampai kamu meresetnya di pengaturan.';
+      'Tautan ini berisi tiga katamu, alamatmu, dan kunci untuk memulai obrolan. Tautan ini berlaku sampai kamu meresetnya di pengaturan.';
 
   @override
   String get myKryfoSendTheLink => 'Kirim tautan';
@@ -3907,6 +3880,13 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get newGroupAddAtLeastOne =>
       'Tambahkan minimal satu kontak dulu sebelum membuat grup.';
+
+  @override
+  String get newGroupNeedsContacts => 'Grup dibuat bersama kontakmu';
+
+  @override
+  String get newGroupAddSomeoneFirst =>
+      'Tambahkan seseorang dulu. Ruang tidak butuh kontak: siapa pun yang punya tautannya bisa bergabung.';
 
   @override
   String get notesDeleteThisNote => 'Hapus catatan ini?';
@@ -4082,7 +4062,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Kryfo bersumber terbuka';
 
   @override
-  String get onboardingYourKryfoId => 'ID KRYFO-MU';
+  String get onboardingYourKryfoId => 'NAMAMU';
 
   @override
   String get onboardingGeneratedFromAKey =>
@@ -4377,10 +4357,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get photoKnowsPhoto => 'Foto';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'Yang diketahui video ini';
+  String get photoKnowsVideoCleaner => 'Pembersih video';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'Yang diketahui foto ini';
+  String get photoKnowsPhotoCleaner => 'Pembersih foto';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'Hapus semuanya';
@@ -4456,6 +4436,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get pinsUnlockWithFingerprint => 'Buka kunci dengan sidik jari';
 
   @override
+  String get pinsFingerOpensDecoy =>
+      'Mati selama PIN umpan dipasang: jari hanya membuka umpan.';
+
+  @override
   String get pinsWipePin => 'PIN penghapus';
 
   @override
@@ -4489,7 +4473,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get profileChangeYourFace => 'Ganti wajahmu';
 
   @override
-  String get profileKryfoId => 'ID Kryfo';
+  String get profileKryfoId => 'Namamu';
 
   @override
   String get profileOnionAddress => 'Alamat onion';
@@ -5226,9 +5210,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsTorRouting => 'Perutean Tor';
 
   @override
-  String get settingsConnecting => 'Menghubungkan';
-
-  @override
   String get settingsOffMode => 'Mati · mode relay';
 
   @override
@@ -5251,9 +5232,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 lompatan';
-
-  @override
-  String get settingsGettingMessages => 'Menerima pesan';
 
   @override
   String settingsPreviewHidden(Object deliveryModeName) {
@@ -5293,6 +5271,23 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get settingsScamShieldHint =>
       'Diperiksa hanya di ponselmu, tidak ada yang keluar darinya';
+
+  @override
+  String get typingNow => 'Mengetik';
+
+  @override
+  String get settingsTypingIndicator => 'Indikator mengetik';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'Kalian berdua melihat saat yang lain sedang mengetik. Sinyalnya langsung ke dia lewat Tor, tidak pernah melalui relay.';
+
+  @override
+  String get settingsTypingOnionOnly => 'Tersedia di rute Onion';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      'Mati selama jembatan dipakai: orang yang mengawasi koneksimu bisa mencocokkan sinyal mengetik. Menyala lagi sendiri saat jembatan dimatikan.';
 
   @override
   String get settingsLightTheme => 'Tema terang';
@@ -5464,10 +5459,11 @@ class AppLocalizationsId extends AppLocalizations {
       'Semua di sini terjadi di ponsel ini. Tidak ada yang diunggah, dan orang lain tidak perlu memakai Kryfo.';
 
   @override
-  String get toolsWhatDoesThisPhoto => 'Apa yang diketahui foto ini?';
+  String get toolsPhotoCleaner => 'Pembersih foto';
 
   @override
-  String get toolsPlacePhoneTime => 'Tempat · ponsel · waktu';
+  String get toolsRemovesHiddenInfo =>
+      'Menghapus info tersembunyi (metadata) seperti tempat, waktu, dan model ponsel';
 
   @override
   String get toolsPickAPhotoAnd =>
@@ -5899,8 +5895,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get whyKryfoNothingLeaks => 'Tidak ada yang bocor';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'Tidak ada tanda dibaca atau tanda mengetik yang diserahkan ke siapa pun, tidak ada daftar kontak yang diunggah. Metadata adalah hal yang dibocorkan kebanyakan aplikasi. Kryfo dibuat agar tidak membocorkannya.';
+  String get whyKryfoNoReceiptsTyping =>
+      'Tanpa tanda dibaca, tanpa mengunggah daftar kontak. Bahwa kamu sedang mengetik hanya terlihat oleh orang yang kamu ajak bicara, langsung lewat Tor, tidak pernah melalui server. Kebanyakan aplikasi membocorkan metadata. Kryfo dibuat agar tidak begitu.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Pastikan itu benar-benar dia';
@@ -5939,6 +5935,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get cleanerContentCredentials => 'Kredensial konten';
+
+  @override
+  String get cleanerHdrLayer => 'Lapisan HDR';
 
   @override
   String get cleanerDataAfterThePicture => 'Data setelah gambar';
@@ -6403,6 +6402,35 @@ class AppLocalizationsId extends AppLocalizations {
   String get bootFailedCloseAndReopen => 'Tutup dan buka lagi Kryfo';
 
   @override
+  String get bootFailedStillStuck => 'Jika mencoba lagi tidak membantu';
+
+  @override
+  String get bootFailedRestoreBackup => 'Pulihkan cadangan';
+
+  @override
+  String get bootFailedStartFresh => 'Mulai dari awal';
+
+  @override
+  String get bootFailedStartFreshTitle => 'Mulai dari awal?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'Ini menghapus total semua yang disimpan Kryfo di ponsel ini: obrolan, kontak, media, obrolan tersembunyi, dan tiga katamu. File cadangan yang disimpan di tempat lain tidak tersentuh.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Lanjut';
+
+  @override
+  String get bootFailedStartFreshSure => 'Hapus total semua di ponsel ini?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'Ini tidak bisa dibatalkan. Kryfo tertutup dan terbuka lagi seperti baru dipasang.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Hapus total dan mulai dari awal';
+
+  @override
   String get kryfoLinkTextThatLinkIsNot => 'Tautan itu tidak bisa dibaca Kryfo';
 
   @override
@@ -6475,7 +6503,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get kryfoLinkTextYouJoinUnderA =>
-      'Kamu bergabung dengan kunci yang dibuat khusus untuk ruang ini. Tidak ada seorang pun di dalamnya yang melihat ID Kryfo-mu.';
+      'Kamu bergabung dengan kunci yang dibuat khusus untuk ruang ini. Tidak ada seorang pun di dalamnya yang melihat tiga katamu.';
 
   @override
   String get linkStubFetchedOverTorBy => 'Diambil lewat Tor · oleh perangkatmu';
@@ -7084,14 +7112,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesUsingTorProject => 'Memakai jembatan dari Tor Project';
 
   @override
-  String get bridgesKryfoTriesAgainOnItsOwn =>
-      'Kryfo mencoba lagi sendiri sesekali.';
-
-  @override
-  String get bridgesTheTorProjectCanSuggest =>
-      'Tor Project bisa menyarankan jembatan yang berfungsi di sini.';
-
-  @override
   String get bridgesBridgeRemoved => 'Jembatan dihapus';
 
   @override
@@ -7428,6 +7448,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get languageNameAr => 'Arab';
 
   @override
+  String get languageNameHi => 'Bahasa Hindi';
+
+  @override
   String get languageLaterLine =>
       'Kamu bisa mengubahnya kapan saja di pengaturan.';
 
@@ -7706,6 +7729,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get lockFingerRefused =>
       'Ponselmu tidak mau menyimpan buka kunci dengan sidik jari untuk Kryfo, jadi fitur ini mati. PIN tetap berfungsi.';
+
+  @override
+  String get lockFingerTryAgain =>
+      'Ponselmu sedang sibuk tadi. Coba lagi dengan sidik jari, atau pakai PIN.';
 
   @override
   String get pinsFingerRefused =>
@@ -8863,4 +8890,789 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'Kryfo menghapusnya dari ponsel setiap anggota yang sudah memperbarui aplikasinya.';
+
+  @override
+  String get translateAction => 'Terjemahkan';
+
+  @override
+  String get translateShowOriginal => 'Lihat aslinya';
+
+  @override
+  String translateBarTo(Object language) {
+    return 'Terjemahkan ke $language';
+  }
+
+  @override
+  String get translateBarMore => 'Opsi terjemahan';
+
+  @override
+  String translateBarAlways(Object language) {
+    return 'Selalu terjemahkan $language';
+  }
+
+  @override
+  String translateBarNever(Object language) {
+    return 'Jangan terjemahkan $language';
+  }
+
+  @override
+  String get translateBarHide => 'Sembunyikan di chat ini';
+
+  @override
+  String get translateWorking => 'Menerjemahkan…';
+
+  @override
+  String get translateFailed => 'Tidak bisa diterjemahkan';
+
+  @override
+  String translateFrom(Object language) {
+    return 'Diterjemahkan dari $language';
+  }
+
+  @override
+  String get translateLangZh => 'Tionghoa';
+
+  @override
+  String translatePackTitle(Object language) {
+    return 'Terjemahan di ponsel ini: $language';
+  }
+
+  @override
+  String translatePackLine(Object language, Object size) {
+    return 'Pesan diterjemahkan di ponsel ini dan tidak pernah keluar darinya. Untuk itu perlu paket bahasa $language, sekitar $size, diunduh sekali lewat Tor.';
+  }
+
+  @override
+  String get translatePackNoLib => 'Terjemahan tidak berfungsi di ponsel ini.';
+
+  @override
+  String translateDownload(Object size) {
+    return 'Unduh · sekitar $size';
+  }
+
+  @override
+  String get translateDownloadAnyway => 'Tetap unduh sekarang';
+
+  @override
+  String get translateResume => 'Lanjutkan unduhan';
+
+  @override
+  String translateProgress(Object done, Object total) {
+    return '$done dari $total';
+  }
+
+  @override
+  String get translateFinishing => 'Memeriksa file…';
+
+  @override
+  String translateInstalled(Object size) {
+    return 'Di ponsel ini · $size';
+  }
+
+  @override
+  String get translateNeedsWifi =>
+      '“Hanya Wi-Fi” aktif, dan ponsel ini tidak tersambung ke Wi-Fi.';
+
+  @override
+  String get translateFailNoTor =>
+      'Tor belum tersambung. Paket hanya diunduh lewat Tor, jadi coba lagi setelah tersambung.';
+
+  @override
+  String get translateFailNetwork =>
+      'Unduhan berhenti. Coba lagi dan unduhan lanjut dari titik terakhir.';
+
+  @override
+  String get translateFailBadFile =>
+      'Ada file yang tidak cocok dengan yang diharapkan Kryfo, jadi file itu dibuang. Coba lagi.';
+
+  @override
+  String get translateFailNoEngine =>
+      'Paket bahasa tidak bisa diunduh di ponsel ini.';
+
+  @override
+  String translatePaused(Object size) {
+    return 'Dijeda · $size sejauh ini';
+  }
+
+  @override
+  String get translateSettingsTitle => 'Terjemahan';
+
+  @override
+  String get translateSettingsRow => 'Terjemahkan pesan';
+
+  @override
+  String get translateSettingsHint => 'Di ponsel ini, tidak pernah di server';
+
+  @override
+  String get translatePacksSection => 'Paket bahasa';
+
+  @override
+  String translatePackPair(Object language) {
+    return '$language dan Inggris';
+  }
+
+  @override
+  String translateNotDownloaded(Object size) {
+    return 'Belum diunduh · sekitar $size';
+  }
+
+  @override
+  String get translateDownloading => 'Mengunduh lewat Tor';
+
+  @override
+  String translateDeleteTitle(Object language) {
+    return 'Hapus paket $language?';
+  }
+
+  @override
+  String translateDeleteLine(Object language) {
+    return 'Pesan berbahasa $language tidak bisa diterjemahkan sampai paketnya diunduh lagi.';
+  }
+
+  @override
+  String get translateLanguagesSection => 'Bahasa';
+
+  @override
+  String get translateMyLanguages => 'Bahasa yang kubaca';
+
+  @override
+  String get translateMyLanguagesHint =>
+      'Pesan dalam bahasa ini tidak ditawarkan untuk diterjemahkan. Bahasa aplikasi selalu termasuk.';
+
+  @override
+  String get translateInto => 'Terjemahkan ke';
+
+  @override
+  String get translateAppLanguage => 'Bahasa aplikasi';
+
+  @override
+  String get translateBehaviourSection => 'Unduhan dan obrolan';
+
+  @override
+  String get translateAutoDefault => 'Terjemahkan obrolan otomatis';
+
+  @override
+  String get translateAutoDefaultHint =>
+      'Untuk obrolan yang belum kamu atur sendiri. Setiap obrolan bisa menyalakan atau mematikannya.';
+
+  @override
+  String get translateWifiOnly => 'Unduh paket hanya lewat Wi-Fi';
+
+  @override
+  String get translatePrivacyTitle => 'Yang tetap privat';
+
+  @override
+  String get translatePrivacyNote =>
+      'Terjemahan terjadi di ponsel ini. Tidak ada pesan yang dikirim ke mana pun untuk diterjemahkan. Mengunduh paket memberi tahu server paket mana itu. Unduhannya lewat Tor, jadi server tidak tahu siapa yang meminta.';
+
+  @override
+  String get translateAutoInChat => 'Terjemahkan otomatis';
+
+  @override
+  String get translateAutoInChatHint =>
+      'Pesan dalam bahasa lain tampil terjemahannya. Aslinya tinggal satu ketukan.';
+
+  @override
+  String get bridgesNoneUntilOnion => 'Tidak ada sampai Onion aktif';
+
+  @override
+  String get bridgesRelayWorksWhereTor =>
+      'Mode relay tetap jalan saat Tor diblokir, dan kamu bisa kembali kapan saja.';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      'Mode relay bisa tembus saat Tor diblokir, tapi jaringan ini bisa melihat kamu terhubung ke Kryfo.';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      'Jaringan ini bisa melihat kamu terhubung ke Kryfo. Relay kami melihat alamatmu.';
+
+  @override
+  String get settingsLicences => 'Lisensi';
+
+  @override
+  String get settingsLicencesValue => 'Bahan pembuat Kryfo';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo adalah perangkat lunak bebas di bawah GNU General Public License, versi 3 atau yang lebih baru. Siapa pun boleh membaca, mengubah, dan membagikan kodenya.';
+
+  @override
+  String get licencesSourceCode => 'Kode sumber';
+
+  @override
+  String get licencesSignalTitle => 'Protokol Signal';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo memuat libsignal $version buatan Signal, di bawah GNU Affero General Public License, versi 3. Kode sumbernya ada di github.com/signalapp/libsignal dan di samping setiap rilis Kryfo.';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0, teks lengkap';
+
+  @override
+  String get licencesSignalSource => 'Kode sumber libsignal';
+
+  @override
+  String get licencesParts => 'Komponen sumber terbuka';
+
+  @override
+  String get licencesInSignal => 'Di pustaka Signal';
+
+  @override
+  String get licencesInApp => 'Di aplikasi';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString komponen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, teks lengkap';
+
+  @override
+  String get licencesInEngine => 'Di mesin jaringan';
+
+  @override
+  String get licencesLoadFailed => 'Tidak dapat dimuat';
+
+  @override
+  String get settingsCopyLinkHint => 'Salin tautan';
+
+  @override
+  String get appRelayNotAnswering => 'Relay diam';
+
+  @override
+  String get motionNoRelayYet => 'BELUM ADA RELAY';
+
+  @override
+  String get motionTheRouteIsUp => 'Rute sudah terbentuk';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Pesan terkirim begitu ada relay yang menjawab lewat rute ini.';
+
+  @override
+  String get motionOffline => 'OFFLINE';
+
+  @override
+  String get motionNoNetwork => 'Tidak ada jaringan';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Tanpa jaringan tidak ada yang terkirim. Tor lanjut lagi begitu jaringan kembali.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count menunggu · $state',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsIconAndNotifications => 'Ikon dan notifikasi';
+
+  @override
+  String iconSettingsValue(String icon) {
+    return '$icon, notifikasi polos';
+  }
+
+  @override
+  String get iconSectionTitle => 'Ikon aplikasi';
+
+  @override
+  String get iconHint =>
+      'Layar utama dan daftar aplikasimu menampilkan ikon dan nama ini, bukan Kryfo.';
+
+  @override
+  String get iconHintKryfo =>
+      'Pilih ikon dan nama yang biasa saja untuk layar utama dan daftar aplikasimu.';
+
+  @override
+  String get iconWhatChanges => 'Apa yang berubah';
+
+  @override
+  String iconConfirmTitle(String name) {
+    return 'Ganti ikon menjadi $name?';
+  }
+
+  @override
+  String iconConfirmLine(String name) {
+    return 'Kryfo tertutup lalu terbuka lagi. Kalau ikonnya hilang dari layar utama, cari $name di aplikasimu dan taruh lagi.';
+  }
+
+  @override
+  String get iconConfirmButton => 'Ganti ikon';
+
+  @override
+  String get iconNoPinLine =>
+      'Siapa pun yang mengetuknya akan melihat Kryfo. Pasang PIN aplikasi agar yang terlihat papan PIN.';
+
+  @override
+  String get iconSetPin => 'Buat PIN';
+
+  @override
+  String iconChanged(String name) {
+    return 'Ikon diganti menjadi $name';
+  }
+
+  @override
+  String iconPreviewLabel(String name) {
+    return 'Layar utamamu akan menampilkan $name';
+  }
+
+  @override
+  String iconButtonLabel(String name) {
+    return '$name, ikon aplikasi';
+  }
+
+  @override
+  String get notifShowAll => 'Nama dan pesan';
+
+  @override
+  String get notifShowNew => 'Hanya “Pesan baru”';
+
+  @override
+  String get notifShowPlain => 'Polos';
+
+  @override
+  String get notifPlainHint =>
+      'Tanpa nama, tanpa pesan, tanpa warna Kryfo. Ikon netral dan satu baris.';
+
+  @override
+  String get notifPlainLine => 'Ada yang baru';
+
+  @override
+  String get notifPlainChannel => 'Pemberitahuan';
+
+  @override
+  String get notifHeaderLimit =>
+      'Bagian atas setiap notifikasi tetap bertuliskan Kryfo. Android tidak mengizinkan aplikasi mengubahnya.';
+
+  @override
+  String get gettingMessagesWhatShows => 'Yang ditampilkan notifikasi';
+
+  @override
+  String get iconSheetChangesTitle => 'Yang berubah';
+
+  @override
+  String get iconSheetChanges =>
+      'Ikon dan nama di layar utama dan daftar aplikasimu, menu bagikan, dan tampilan aplikasi terbuka. Dengan Polos, juga isi notifikasi.';
+
+  @override
+  String get iconSheetStaysTitle => 'Yang tetap Kryfo';
+
+  @override
+  String get iconSheetStays =>
+      'Baris atas setiap notifikasi, halaman setelan dan baterai ponselmu, toko aplikasi, dan Kryfo sendiri saat seseorang membukanya.';
+
+  @override
+  String get iconSheetGlance =>
+      'Ini cukup untuk sekilas pandang ke layar utama. Ini tidak menyembunyikan Kryfo dari orang yang memeriksa setelan ponselmu.';
+
+  @override
+  String get iconSheetPrivateSpace =>
+      'Ponselmu mungkin punya cara sendiri untuk menyembunyikan aplikasi: ruang pribadi, di setelannya.';
+
+  @override
+  String get iconSheetSecureFolder =>
+      'Ponselmu mungkin punya cara sendiri untuk menyembunyikan aplikasi: Folder Aman, di setelannya.';
+
+  @override
+  String get iconSheetXiaomi =>
+      'Ponselmu mungkin punya cara sendiri untuk menyembunyikan aplikasi: aplikasi tersembunyi, di setelannya.';
+
+  @override
+  String get androidIconNotes => 'Catatan';
+
+  @override
+  String get androidIconWeather => 'Cuaca';
+
+  @override
+  String get androidIconTasks => 'Tugas';
+
+  @override
+  String get androidIconNews => 'Berita';
+
+  @override
+  String get androidServiceTitlePlain => 'Aktif';
+
+  @override
+  String get lockStateUnlockPlain => 'Buka kunci';
+
+  @override
+  String get iconSheetOthers =>
+      'Aplikasi di ponselmu tetap bisa melihat bahwa Kryfo terpasang, dan dialog serta permintaan Android sendiri bisa menampilkan namanya.';
+
+  @override
+  String get iconSheetSaves =>
+      'Selama ikon polos aktif, foto, video, dan file baru disimpan dengan nama biasa di folder ponselmu yang biasa. Yang sudah tersimpan tetap di tempatnya.';
+
+  @override
+  String get deliveryModeGooglePush => 'Push Google';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead =>
+      'Bagaimana pesan baru sampai ke ponsel ini, bunyinya, dan apa yang ditampilkan. Kamu bisa mengubahnya kapan saja.';
+
+  @override
+  String get notificationsHowTheyReachYou => 'Cara pesan sampai padamu';
+
+  @override
+  String get notificationsRecommended => 'Disarankan';
+
+  @override
+  String get notificationsGoogleBody =>
+      'Seketika dan ringan. Google bisa melihat kapan ponselmu dibangunkan, tidak pernah siapa yang menulis atau apa isinya.';
+
+  @override
+  String get notificationsGoogleStarting => 'Menyalakan…';
+
+  @override
+  String get notificationsGoogleNoStart =>
+      'Push Google tidak bisa dimulai. Periksa koneksi lalu coba lagi.';
+
+  @override
+  String get notificationsGoogleNote =>
+      'Ada juga panggilan bangun palsu, jadi Google lebih sulit tahu kapan pesan asli masuk. Relay kami hanya menyimpan alamat yang tidak bisa ia hubungkan satu sama lain. Layanan push berjalan di server yang sama dan bisa menghubungkannya, dan dengan bantuan Google ke akun Google-mu, jadi siapa pun yang menjalankan atau menyita server kami juga bisa. Kalau itu penting bagimu, pilih cara lain. Obrolan tersembunyi, ruang setelah beberapa ruang pertama, dan sesekali kontak biasa, kira-kira satu dari lima bulan, menunggu cek yang tetap dilakukan Kryfo setiap 15 menit.';
+
+  @override
+  String get notificationsGoogleRefused =>
+      'Relay kami sedang tidak menerima sebagian pendaftaran dari ponsel ini. Obrolan itu datang dengan cek setiap 15 menit, dan Kryfo terus mencoba.';
+
+  @override
+  String get notificationsSoundAndVibration => 'Suara dan getar';
+
+  @override
+  String get notificationsSoundHint => 'Di pengaturan Android sendiri';
+
+  @override
+  String get notificationsEachShows => 'Setiap notifikasi menampilkan';
+
+  @override
+  String get notificationsBatteryTips => 'Tips baterai';
+
+  @override
+  String get notificationsBatteryAllowed => 'Diizinkan';
+
+  @override
+  String get notificationsBatteryNotYet => 'Tidak diizinkan';
+
+  @override
+  String get notificationsMakerSwitch => 'Tombol dari pembuat ponselmu';
+
+  @override
+  String get onboardingDeliveryHeadline => 'Cara pesan *sampai padamu*.';
+
+  @override
+  String get onboardingDeliveryLead =>
+      'Kamu bisa mengubahnya kapan saja di Notifikasi.';
+
+  @override
+  String get homeGoogleTitle => 'Push Google sudah ada';
+
+  @override
+  String get homeGoogleLine =>
+      'Seketika dan hemat baterai. Google bisa melihat kapan ponselmu dibangunkan, tidak pernah siapa yang menulis atau apa isinya.';
+
+  @override
+  String get homeGoogleUse => 'Pakai';
+
+  @override
+  String get homeGoogleOn => 'Push Google menyala';
+
+  @override
+  String get homeGoogleGoneTitle => 'Push Google tidak tersedia';
+
+  @override
+  String get appNotificationsLink => 'Notifikasi →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'Push Google $got · diturunkan $low';
+  }
+
+  @override
+  String get passFieldLabel => 'Frasa sandi';
+
+  @override
+  String get padUseLetters => 'Pakai huruf';
+
+  @override
+  String get padUseDigits => 'Pakai angka';
+
+  @override
+  String get passWeak => 'Lemah';
+
+  @override
+  String get passFair => 'Cukup';
+
+  @override
+  String get passStrong => 'Kuat';
+
+  @override
+  String passStrengthIs(Object level) {
+    return 'Kekuatan: $level';
+  }
+
+  @override
+  String get lockKeyBusy =>
+      'Chip keamanan ponsel sedang sibuk. Coba lagi sebentar lagi.';
+
+  @override
+  String get lockKeyLocked =>
+      'Buka kunci ponselmu sekali dengan PIN ponsel itu sendiri, lalu coba lagi.';
+
+  @override
+  String get lockKeyWaiting => 'Chip keamanan ponsel masih memeriksa';
+
+  @override
+  String get lockKeyLost =>
+      'Ponsel ini kehilangan kunci yang memeriksa PIN-mu, jadi beberapa PIN mungkin tidak bisa membuka. Kryfo bisa diatur ulang lalu cadangan dipulihkan.';
+
+  @override
+  String get lockKeyReset => 'Atur ulang Kryfo';
+
+  @override
+  String get lockKeyResetTitle => 'Atur ulang Kryfo?';
+
+  @override
+  String get lockKeyResetLine =>
+      'Semua isi Kryfo di ponsel ini dihapus dan Kryfo ditutup. Setelah itu kamu bisa memulihkan cadangan. Obrolan tersembunyi hanya kembali dari cadangan yang dibuat saat obrolan itu terbuka.';
+
+  @override
+  String get lockKeyResetSureTitle => 'Ini tidak bisa dibatalkan';
+
+  @override
+  String get lockKeyResetSureLine =>
+      'Semua obrolan, kunci, dan pengaturan Kryfo di ponsel ini hilang sekarang.';
+
+  @override
+  String get lockKeyResetSure => 'Hapus semuanya';
+
+  @override
+  String get flowVaultPassLine =>
+      'Minimal 12 karakter. Keyboard ponsel melihat apa yang kamu ketik, jadi pakai keyboard yang tidak mempelajari atau menyinkronkan kata.';
+
+  @override
+  String get flowVaultPassAgain => 'Frasa sandi yang sama sekali lagi';
+
+  @override
+  String get cardTitle => 'Selesaikan pembaruan keamanan';
+
+  @override
+  String get cardLine =>
+      'Kalau kamu memakai PIN lain, ketik masing-masing sekali di sini.';
+
+  @override
+  String get cardType => 'Ketik PIN';
+
+  @override
+  String get cardAnswer =>
+      'Sudah. Ketik yang lain, atau ketuk Selesai kalau sudah.';
+
+  @override
+  String get keyLine =>
+      'PIN-mu hanya berfungsi di ponsel ini. Kalau suatu saat ponsel kehilangan kunci yang memeriksanya, kamu harus mengatur ulang Kryfo dan memulihkan cadangan. Obrolan tersembunyi hanya kembali dari cadangan yang dibuat saat obrolan itu terbuka.';
+
+  @override
+  String get keyLineUnlocked =>
+      'PIN-mu hanya berfungsi di ponsel ini, dan hanya saat ponsel tidak terkunci. Kalau suatu saat ponsel kehilangan kunci yang memeriksanya, kamu harus mengatur ulang Kryfo dan memulihkan cadangan. Obrolan tersembunyi hanya kembali dari cadangan yang dibuat saat obrolan itu terbuka.';
+
+  @override
+  String get keyLineScreenLock =>
+      'Pasang kunci layar di ponselmu supaya perlindungan ini tetap berlaku saat ponsel terkunci.';
+
+  @override
+  String get settingsDevices => 'Perangkat';
+
+  @override
+  String get devicesLinkedDevices => 'Perangkat tertaut';
+
+  @override
+  String get devicesThisPhoneOnly => 'Hanya ponsel ini';
+
+  @override
+  String get devicesNameSeparator => ', ';
+
+  @override
+  String get devicesThisPhone => 'Ponsel ini';
+
+  @override
+  String get devicesOnlyThisPhone =>
+      'Hanya ponsel ini yang bisa menautkan atau menghapus perangkat';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return 'Ditautkan $date';
+  }
+
+  @override
+  String get devicesUsedToday => 'Dipakai hari ini';
+
+  @override
+  String get devicesUsedThisWeek => 'Dipakai minggu ini';
+
+  @override
+  String get devicesUsedThisMonth => 'Dipakai bulan ini';
+
+  @override
+  String get devicesNotUsedYet => 'Belum dipakai';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Terlepas dalam $daysString hari jika tidak kamu buka',
+      one: 'Terlepas besok jika tidak kamu buka',
+      zero: 'Terlepas hari ini jika tidak kamu buka',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => 'Kryfo di komputermu';
+
+  @override
+  String get devicesEmptyLine =>
+      'Tautkan komputer untuk membaca dan mengirim pesanmu dari sana. Hingga lima perangkat selain ponsel ini.';
+
+  @override
+  String get devicesContactsSeeNothing =>
+      'Aplikasi kontakmu tidak menampilkan perangkatmu.';
+
+  @override
+  String get devicesUnusedRule =>
+      'Perangkat yang tidak kamu buka selama 30 hari akan terlepas sendiri dan menghapus obrolanmu darinya.';
+
+  @override
+  String get devicesFull =>
+      'Lima perangkat sudah tertaut. Hapus satu untuk menautkan yang lain.';
+
+  @override
+  String get devicesLinkADevice => 'Tautkan perangkat';
+
+  @override
+  String get devicesRemoveAll => 'Hapus semua perangkat lain';
+
+  @override
+  String get devicesRemoveAllTitle => 'Hapus semua perangkat lain?';
+
+  @override
+  String get devicesRemoveAllLine =>
+      'Begitu aplikasi kontakmu menerima perubahannya, perangkat itu berhenti menerima pesan baru dan tidak bisa mengirim atas namamu. Ponsel ini menyimpan semuanya.';
+
+  @override
+  String get devicesRemoveAllYes => 'Hapus semua';
+
+  @override
+  String get devicesRemovedAll => 'Sekarang hanya ponsel ini';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return 'Hapus $name?';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      'Begitu aplikasi kontakmu menerima perubahannya, perangkat itu berhenti menerima pesan baru dan tidak bisa mengirim atas namamu. Obrolanmu terhapus darinya saat ia online lagi. Perangkat yang sudah diutak-atik orang bisa menyimpan apa yang sudah ada di dalamnya.';
+
+  @override
+  String get devicesRemove => 'Hapus';
+
+  @override
+  String devicesRemoved(Object name) {
+    return '$name dihapus';
+  }
+
+  @override
+  String get devicesRename => 'Ganti nama';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return 'Ganti nama $name';
+  }
+
+  @override
+  String get devicesRenameLine =>
+      'Hanya kamu yang melihat nama ini. Kontakmu tidak pernah melihatnya.';
+
+  @override
+  String get devicesNameComputer => 'Komputer';
+
+  @override
+  String get devicesDeviceCode => 'Kode perangkat';
+
+  @override
+  String get devicesDeviceCodeLine =>
+      'Kode yang sama muncul di perangkat itu sendiri, di Pengaturan.';
+
+  @override
+  String get devicesLinkStep1 =>
+      'Buka Kryfo di komputermu. Kryfo akan menampilkan kode.';
+
+  @override
+  String get devicesLinkStep2 => 'Pindai kodenya dengan ponsel ini.';
+
+  @override
+  String get devicesLinkStep3 =>
+      'Pastikan kedua layar menampilkan enam angka yang sama.';
+
+  @override
+  String get devicesHistory => 'Riwayat';
+
+  @override
+  String get devicesHistoryCopy => 'Salin obrolanku';
+
+  @override
+  String get devicesHistoryCopyHint =>
+      'Semua pesanmu, dengan foto dan video dari 30 hari terakhir.';
+
+  @override
+  String get devicesHistoryNone => 'Mulai tanpa riwayat';
+
+  @override
+  String get devicesHistoryNoneHint =>
+      'Hanya pesan baru yang sampai ke perangkat.';
+
+  @override
+  String get devicesSkipMedia => 'Lewati foto dan video';
+
+  @override
+  String get devicesSkipMediaHint =>
+      'Hanya teksnya yang disalin. Lebih cepat, dan lebih sedikit yang disimpan di perangkat.';
+
+  @override
+  String get devicesHiddenStay =>
+      'Obrolan tersembunyi dan umpan tetap di ponsel ini.';
+
+  @override
+  String get devicesScanCode => 'Pindai kode';
 }

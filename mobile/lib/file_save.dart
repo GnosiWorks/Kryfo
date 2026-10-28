@@ -2,14 +2,18 @@
 // a received file saved where the person picks, through the system's own
 // save window, the way a backup is. android copies it from the media
 // folder as a stream, so nothing big goes through memory. the only way an
-// app installer leaves kryfo
+// app installer leaves kryfo. a picture or video goes as a clean copy
 import 'package:flutter/widgets.dart';
+import 'package:path_provider/path_provider.dart';
+
+import 'clean_media.dart' show cleanedForSave;
 
 import 'dlog.dart';
 import 'file_kind.dart';
 import 'l10n/l10n.dart';
 import 'lock_guard.dart' show LockDropped;
 import 'lock_state.dart';
+import 'shred.dart';
 import 'screens/backup_screen.dart' show SaveAnswer, SaveState, saveDocumentOut;
 import 'theme.dart' show showHaloToast;
 
@@ -40,19 +44,35 @@ Future<void> saveReceivedFile(
   if (savingFiles.value.contains(path)) return;
   _saving(path, true);
   SaveAnswer? answer;
+  String? copy;
   try {
     final facts = await readFileFacts(path, name);
     final shown = safeFileName(name, facts: facts);
-    await lockState.hold(() async {
-      answer = await saveDocumentOut(path, shown);
-      return answer;
-    });
+    String? from = path;
+    // an app installer is never media, whatever it is called
+    if (!facts.installer && await sendLaneCleans(path, name ?? '')) {
+      final out = await cleanedForSave(
+        path,
+        name,
+        await getTemporaryDirectory(),
+      );
+      copy = out.copy;
+      from = out.path;
+    }
+    final out = from;
+    if (out != null) {
+      await lockState.hold(() async {
+        answer = await saveDocumentOut(out, shown);
+        return answer;
+      });
+    }
   } on LockDropped {
     // the chat it was saved from is not on screen any more
     return;
   } catch (e) {
     dlog('file save: ${e.runtimeType}');
   } finally {
+    if (copy != null) await shredTree(copy);
     _saving(path, false);
   }
   if (!context.mounted) return;

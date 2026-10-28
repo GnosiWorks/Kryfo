@@ -8,17 +8,22 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
+
 import 'album.dart' show AlbumTag;
 import 'container.dart';
 import 'devchat/dev_chat.dart' show DevChat;
 import 'devchat/dev_key.dart' show isDevChat;
 import 'devchat/support.dart' show SupportChats;
 import 'dlog.dart';
+import 'drafts.dart' show KeptDraft;
 import 'main.dart' show HaloDb, kFrameReaction, kFrameUnsend, wallKey;
 import 'media_send.dart' show cancelMediaSend, mediaInflight;
 import 'polls.dart' show PollSpec, PollVote;
 import 'scam_prefs.dart' show loadScamShieldOn;
 import 'search.dart' show SearchKind;
+import 'translate/hub.dart' show TranslationHub;
+import 'translate/settings.dart' show forgetChatTranslate;
 
 class Session {
   Session(this.primary) : vault = null, _people = const {}, _groups = const {};
@@ -68,6 +73,26 @@ class Session {
   // container that holds it and its id
   String chatKey(String chatId) => _ofChat(chatId).container.chatKey(chatId);
 
+  // where a chat's draft is kept: the container that holds it, so a hidden
+  // chat's is never written outside the vault
+  HaloDb draftsOf(String chatId) => _ofChat(chatId);
+
+  /// the drafts home shows, newest first: each container's own rows, so a
+  /// chat both hold for a moment shows its owner's
+  Future<List<KeptDraft>> drafts() async {
+    final v = vault;
+    HaloDb owner(KeptDraft d) => d.group ? _ofGroup(d.chat) : _ofPeer(d.chat);
+    List<KeptDraft> own(HaloDb db, List<KeptDraft> all) => [
+      for (final d in all)
+        if (identical(owner(d), db)) d,
+    ];
+    final mine = own(primary, await primary.drafts());
+    if (v == null || !v.isOpen) return mine;
+    final hidden = own(v, await v.drafts());
+    return [...mine, ...hidden]
+      ..sort((a, b) => b.draft.at.compareTo(a.draft.at));
+  }
+
   // the tags a chat's notifications went under, in each container open
   Future<Set<String>> notifTagsOf(String chat) async {
     final v = vault;
@@ -114,6 +139,11 @@ class Session {
   Future<Directory> folderOf(String chatId, String name) =>
       _ofChat(chatId).container.folder(name);
   Future<Directory> mediaDirOf(String chatId) => folderOf(chatId, 'media');
+
+  // a feature's own small table (translate/settings.dart): its settings in
+  // the primary, a chat's row beside the chat
+  Future<Database> settingsDb() => primary.open();
+  Future<Database> chatDb(String chatId) => _ofChat(chatId).open();
 
   HaloDb _ofPeer(String haloId) {
     final v = vault;
@@ -219,8 +249,15 @@ class Session {
       _ofPeer(haloId).declineRequest(haloId);
   Future<int> deleteAllOf(String chatId) => _ofPeer(chatId).deleteAllOf(chatId);
 
-  Future<void> deleteConversation(String haloId) =>
-      _ofPeer(haloId).deleteConversation(haloId);
+  Future<void> deleteConversation(String haloId) async {
+    final db = _ofPeer(haloId);
+    await db.deleteConversation(haloId);
+    // the contact row stays, so its trigger does not take the chat's
+    // translate switch: it goes here, with what else was set for the chat
+    await forgetChatTranslate(db.open, haloId);
+    TranslationHub.instance?.forgetChat(haloId);
+  }
+
   Future<void> dismissShield(String haloId) =>
       _ofPeer(haloId).dismissShield(haloId);
   Future<void> dropHeld(String peerId) => _ofPeer(peerId).dropHeld(peerId);
@@ -292,6 +329,10 @@ class Session {
   ) => _ofPeer(peerId).messagesAfter(peerId, afterRowid);
   Future<List<Map<String, Object?>>> messagesFor(String peerId) =>
       _ofPeer(peerId).messagesFor(peerId);
+  Future<Map<String, Object?>?> messageIn(String peerId, String msgUid) =>
+      _ofPeer(peerId).messageIn(peerId, msgUid);
+  Future<Map<String, Object?>?> groupMessageIn(String groupId, String msgUid) =>
+      _ofGroup(groupId).groupMessageIn(groupId, msgUid);
   Future<List<Map<String, Object?>>> messagesPage(
     String peerId, {
     int? beforeRowid,

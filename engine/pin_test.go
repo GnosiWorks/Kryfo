@@ -80,10 +80,10 @@ func TestPinCheckSameWork(t *testing.T) {
 		v1.Entries[i].W = ""
 	}
 	old := pinLegacy{WipeSalt: "c2FsdA==", WipeHash: string(legacyHash([]byte("7777"), "c2FsdA=="))}
-	var first *struct{ kdf, mac, open, legacy int }
+	var first *struct{ kdf, mac, open, legacy, seal int }
 	for _, table := range []pinTable{tb, v1} {
 		for _, pin := range []string{"1234", "9999", "5555", "246810", "135790", "4444", "3333", "7777", "0000"} {
-			pinCount = struct{ kdf, mac, open, legacy int }{}
+			pinCount = struct{ kdf, mac, open, legacy, seal int }{}
 			if _, err := pinCheck([]byte(pin), table, old); err != nil {
 				t.Fatal(err)
 			}
@@ -95,7 +95,9 @@ func TestPinCheckSameWork(t *testing.T) {
 			}
 		}
 	}
-	if first.kdf != 1 || first.mac != pinEntries+2 || first.open != 2 || first.legacy != 2 {
+	// x twice, the new key, every tag under both keys, both keys' labels for
+	// one record and wrap, then the move sealed and opened again
+	if first.kdf != 1 || first.mac != 2*pinEntries+13 || first.open != 4 || first.legacy != 2 || first.seal != 2 {
 		t.Fatalf("unexpected work %+v", *first)
 	}
 }

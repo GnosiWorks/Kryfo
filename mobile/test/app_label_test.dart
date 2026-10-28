@@ -33,7 +33,12 @@ void main() {
         RegExp(r'android:label="[^"]*"').allMatches(src).map((x) => x[0]!),
       );
     }
-    expect(labels, [r'android:label="${appLabel}"']);
+    // the plain icons' entries carry the words for their own names
+    expect(labels.first, r'android:label="${appLabel}"');
+    expect(labels.skip(1), [
+      for (final f in ['notes', 'weather', 'tasks', 'news'])
+        'android:label="@string/icon_$f"',
+    ]);
   });
 
   test('every build is named Kryfo', () {

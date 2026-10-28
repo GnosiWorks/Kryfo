@@ -50,6 +50,31 @@ on a 32-bit phone, settings > transport: tor leaves "starting" and reaches
 
 reported upstream to alexballas/go-libtor.
 
+## go-libtor: tor 0.4.9.14
+
+go-libtor v1.0.8 ships tor 0.4.9.12. `vendor-patches/tor.patch` moves its
+tor to tor-0.4.9.14 (8fe2745aee2c35116ff1081f19b2952418b43069, the signed
+tag's commit), and vendor.sh applies it after go-libtor.patch. it changes
+`linux/tor/src/**`, the version strings in `tor_config/orconfig.*.h`,
+`tor_config/micro-revision.i`, the tor line of `lock.json` and the readme's
+table. openssl, libevent, zlib and every `libtor/*.go` wrapper stay as
+v1.0.8 has them: no tor source file was added or removed between the two
+tags, so the wrappers are the same.
+
+the tor sources are the tag's own, as go-libtor's `build/wrap.go
+--nobuild` produces them from that `lock.json`, with one difference:
+`src/ext/byteorder.h` keeps go-libtor's `#ifndef _le64toh` guard. go-libtor's
+`SYS_SECCOMP` guard in `src/lib/sandbox/sandbox.h` is dropped, 0.4.9.14
+fixes the same thing upstream. `APPROX_RELEASE_DATE` stays at go-libtor's
+2021-10-28.
+
+to redo it for a newer tor, or drop it once go-libtor ships one:
+
+    git -C tor checkout tor-0.4.9.x
+    # copy tor/LICENSE and tor/src/{app,core,ext,feature,lib,trunnel} files
+    # that go-libtor vendors over a copy of the module, keep byteorder.h,
+    # set the version strings, then diff -ruN against the module
+
 go-libtor's process types come from its own copy of bine's process package
 (github.com/alexballas/bine). tor_process.go hands them to cretz/bine, which
 the engine uses, through `libtorCreator`.
@@ -185,9 +210,11 @@ moved to that utls.
 
 moat runs meek_lite inside the engine, where a panic in its worker
 goroutine would end the app. `vendor-patches/meeklite.patch` puts a recover
-in `ioWorker`, which then closes the channels and the conn on every way out,
-and makes the worker give up handing a reply to a reader once the conn is
-closed, so a moat call that ends early leaves no goroutine behind. vendor.sh
+in `ioWorker`, which then closes the conn and the read channel on every way
+out, and makes the worker give up handing a reply to a reader once the conn
+is closed, so a moat call that ends early leaves no goroutine behind. the
+worker never closes the write channel: a write that came as it ended would
+send on a closed channel. a write waits on the conn's close instead. vendor.sh
 applies it after anet's.
 
     diff -u "$(go env GOMODCACHE)/gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird@<version>/transports/meeklite/meek.go" \

@@ -17,7 +17,15 @@ import '../l10n/l10n.dart';
 import '../l10n/numbers.dart' show whole;
 import '../lock_guard.dart' show lockGuard;
 import '../main.dart'
-    show appState, claimChat, currentChatPeer, releaseChat, session;
+    show
+        appState,
+        claimChat,
+        currentChatPeer,
+        releaseChat,
+        session,
+        AppStateContacts,
+        AppStateDevchat,
+        AppStateRefresh;
 import '../notifications.dart' show clearNotificationsFor;
 import '../theme.dart';
 import '../widgets/breathing_ring.dart';
@@ -36,6 +44,7 @@ import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart' show FadeSwap;
 import '../widgets/swipe_actions.dart';
 import 'chat_screen.dart';
+import '../voice_format.dart' show isVoiceName;
 
 Route<void> supportRoute() => haloRoute(const SupportScreen());
 
@@ -939,7 +948,7 @@ String _lastLine(SupportChat c) {
     body = l10n.homeRoomInvite;
   } else if (text.isNotEmpty) {
     body = text;
-  } else if (file == 'voice.wav') {
+  } else if (isVoiceName(file)) {
     body = l10n.appVoiceMessage2;
   } else if (file != null) {
     body = file;

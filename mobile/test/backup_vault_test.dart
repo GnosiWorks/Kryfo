@@ -19,7 +19,15 @@ import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloDb, session, sessionQuiet, useDatabasesForTest;
+    show
+        AppState,
+        HaloDb,
+        session,
+        sessionQuiet,
+        useDatabasesForTest,
+        AppStateVault,
+        AppStateSession,
+        AppStateIdentity;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/screens/backup_screen.dart';
 import 'package:kryfo/screens/pin_flow_screen.dart';
@@ -736,6 +744,23 @@ void main() {
       final out = await _write(d, root.path);
       final back = await readBackupManifest(out, _Cipher());
       expect(_names(back).where((n) => hiddenPart(n) != null), isEmpty);
+    });
+
+    test('carries no hidden chat\'s draft, were one ever left on the '
+        'everyday side', () async {
+      await _phone(docs);
+      final file = p.join(docs, 'halo.db');
+      final t = await _read(file);
+      t['drafts'] = [
+        for (final chat in [_v, _h, 'group:$_g2'])
+          {'chat': chat, 'body': 'words for $chat', 'updated_at': 1},
+      ];
+      await File(file).writeAsString(jsonEncode(t));
+      final d = await draftBackup(stage, side: side);
+      final carried = await _read(d.sources['halo.db']!);
+      expect([for (final r in carried['drafts']!) r['chat']], [_v]);
+      // the phone's own keeps them as they are
+      expect((await _read(file))['drafts']!.length, 3);
     });
 
     test('carries the supporter badge and the face picked', () async {

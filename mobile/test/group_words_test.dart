@@ -6,7 +6,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show AppState, GroupFull, useDatabasesForTest;
+import 'package:kryfo/main.dart'
+    show AppState, GroupFull, useDatabasesForTest, AppStateGroups;
 import 'package:kryfo/mentions.dart';
 import 'package:kryfo/rooms.dart';
 import 'package:kryfo/screens/group_info_screen.dart'
@@ -24,8 +25,9 @@ void main() {
 
   group('the member cap', () {
     late AppState app;
+    late ArrivalRows live;
     setUp(() {
-      final live = ArrivalRows(HaloContainer.everyday)
+      live = ArrivalRows(HaloContainer.everyday)
         ..group('grp000000001', ['me', 'one-two-three']);
       live.groupRows['grp000000001']!['is_admin'] = 1;
       useDatabasesForTest(live, Session(live));
@@ -51,6 +53,21 @@ void main() {
         'In eine Gruppe passen höchstens 50 Personen',
       );
     });
+
+    for (final who in [
+      <String>[],
+      ['me'],
+      ['me', 'me'],
+    ]) {
+      test('a group of nobody but you is never made ($who)', () async {
+        final before = {...live.groupRows.keys};
+        await expectLater(
+          app.createGroupAndAnnounce('alone', who),
+          throwsA(isA<StateError>()),
+        );
+        expect(live.groupRows.keys.toSet(), before);
+      });
+    }
 
     test('adding past it is turned down the same way', () async {
       await expectLater(

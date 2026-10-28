@@ -519,7 +519,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get appAKryfoLinkA =>
-      'Bir Kryfo bağlantısı, oda bağlantısı ya da @wren';
+      'Bir Kryfo bağlantısı, oda bağlantısı ya da @name';
 
   @override
   String get appAddThem => 'Ekle';
@@ -618,9 +618,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get appSpeedPrivacy => 'Hız ve gizlilik →';
-
-  @override
-  String get appGettingMessages => 'Mesaj alma →';
 
   @override
   String get appDisableAppLock => 'Uygulama kilidi kapatılsın mı?';
@@ -2014,6 +2011,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cleanSamePictureSameQuality => 'Aynı resim, aynı kalite';
 
   @override
+  String get cleanSamePicture => 'Aynı resim';
+
+  @override
   String cleanRemoved(Object label) {
     return '$label, kaldırıldı';
   }
@@ -2391,13 +2391,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get donateJustGladToHelp => 'Yardım etmek yeter';
 
   @override
-  String get gettingMessagesGettingMessages => 'Mesaj alma';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach =>
-      'Yeni mesajların bu telefona nasıl ulaştığı. İstediğin zaman değiştirebilirsin.';
-
-  @override
   String get gettingMessagesAlwaysOn => 'Hep açık';
 
   @override
@@ -2416,12 +2409,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get gettingMessagesKryfoLooksForMessages =>
       'Kryfo 15 dakikada bir mesajlara bakar. Pili yormaz ama mesajlar gecikebilir.';
-
-  @override
-  String get gettingMessagesOnTheLockScreen => 'Kilit ekranında';
-
-  @override
-  String get gettingMessagesHideMessagePreview => 'Mesaj önizlemesini gizle';
 
   @override
   String get gettingMessagesAGenericAlertWith =>
@@ -2935,7 +2922,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'İsteğe bağlı. Üç kelimen her durumda çalışmaya devam eder.';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Hakkında bir satır · isteğe bağlı';
@@ -3142,21 +3129,6 @@ class AppLocalizationsTr extends AppLocalizations {
       locale: localeName,
       other: '$countString bekliyor · bağlanınca gider',
       one: '$countString bekliyor · bağlanınca gider',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString bekliyor · Tor hâlâ bağlanıyor',
-      one: '$countString bekliyor · Tor hâlâ bağlanıyor',
     );
     return '$_temp0';
   }
@@ -3790,7 +3762,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Beni Kryfo’da ekle. Kimliğim: $myId\n\nBeni eklemek için dokun:\n$uri\n\nKryfo gizli bir mesajlaşma uygulaması. Telefon numarası yok, e-posta yok.';
+    return 'Beni Kryfo’da ekle. Oradaki adım: $myId\n\nBeni eklemek için dokun:\n$uri\n\nKryfo gizli bir mesajlaşma uygulaması. Telefon numarası yok, e-posta yok.';
   }
 
   @override
@@ -3840,7 +3812,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get myKryfoTheLinkCarriesYour =>
-      'Bağlantı kimliğini, adresini ve sohbet başlatmak için gereken anahtarları taşır. Ayarlardan sıfırlayana kadar çalışır.';
+      'Bağlantı üç kelimeni, adresini ve sohbet başlatmak için gereken anahtarları taşır. Ayarlardan sıfırlayana kadar çalışır.';
 
   @override
   String get myKryfoSendTheLink => 'Bağlantıyı gönder';
@@ -3928,6 +3900,13 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get newGroupAddAtLeastOne =>
       'Grup oluşturmadan önce en az bir kişi ekle.';
+
+  @override
+  String get newGroupNeedsContacts => 'Gruplar kişilerinle kurulur';
+
+  @override
+  String get newGroupAddSomeoneFirst =>
+      'Önce birini ekle. Oda için kişi gerekmez: bağlantısı olan herkes katılabilir.';
 
   @override
   String get notesDeleteThisNote => 'Bu not silinsin mi?';
@@ -4105,7 +4084,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Kryfo açık kaynaklı';
 
   @override
-  String get onboardingYourKryfoId => 'KRYFO KİMLİĞİN';
+  String get onboardingYourKryfoId => 'ADIN';
 
   @override
   String get onboardingGeneratedFromAKey =>
@@ -4398,10 +4377,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get photoKnowsPhoto => 'Fotoğraf';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'Bu video neler biliyor';
+  String get photoKnowsVideoCleaner => 'Video temizleyici';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'Bu fotoğraf neler biliyor';
+  String get photoKnowsPhotoCleaner => 'Fotoğraf temizleyici';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'Hepsini kaldır';
@@ -4477,6 +4456,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pinsUnlockWithFingerprint => 'Parmak iziyle kilidi aç';
 
   @override
+  String get pinsFingerOpensDecoy =>
+      'Yem PIN’i ayarlıyken kapalı: parmak yalnızca yemi açar.';
+
+  @override
   String get pinsWipePin => 'Silme PIN’i';
 
   @override
@@ -4510,7 +4493,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get profileChangeYourFace => 'Yüzünü değiştir';
 
   @override
-  String get profileKryfoId => 'Kryfo kimliği';
+  String get profileKryfoId => 'Adın';
 
   @override
   String get profileOnionAddress => 'Onion adresi';
@@ -5245,9 +5228,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsTorRouting => 'Tor yönlendirme';
 
   @override
-  String get settingsConnecting => 'Bağlanıyor';
-
-  @override
   String get settingsOffMode => 'Kapalı · aktarıcı modu';
 
   @override
@@ -5270,9 +5250,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 atlama';
-
-  @override
-  String get settingsGettingMessages => 'Mesaj alma';
 
   @override
   String settingsPreviewHidden(Object deliveryModeName) {
@@ -5312,6 +5289,23 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get settingsScamShieldHint =>
       'Yalnızca telefonunda kontrol edilir, hiçbir şey dışarı çıkmaz';
+
+  @override
+  String get typingNow => 'Yazıyor';
+
+  @override
+  String get settingsTypingIndicator => 'Yazıyor göstergesi';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'Karşı taraf yazarken ikiniz de görürsünüz. Doğrudan Tor üzerinden ona gider, asla bir aktarıcıdan geçmez.';
+
+  @override
+  String get settingsTypingOnionOnly => 'Onion rotasında kullanılabilir';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      'Köprüler kullanılırken kapalı: bağlantını izleyen biri yazıyor sinyallerini eşleştirebilir. Köprüler kapanınca kendiliğinden geri gelir.';
 
   @override
   String get settingsLightTheme => 'Açık tema';
@@ -5480,10 +5474,11 @@ class AppLocalizationsTr extends AppLocalizations {
       'Buradaki her şey bu telefonda olur. Hiçbir şey yüklenmez ve başka kimsenin Kryfo kullanması gerekmez.';
 
   @override
-  String get toolsWhatDoesThisPhoto => 'Bu fotoğraf neler biliyor?';
+  String get toolsPhotoCleaner => 'Fotoğraf temizleyici';
 
   @override
-  String get toolsPlacePhoneTime => 'Yer · telefon · zaman';
+  String get toolsRemovesHiddenInfo =>
+      'Yer, zaman ve telefon modeli gibi gizli bilgileri (meta veri) siler';
 
   @override
   String get toolsPickAPhotoAnd =>
@@ -5917,8 +5912,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get whyKryfoNothingLeaks => 'Hiçbir şey sızmaz';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'Okundu bilgisi ya da yazıyor işareti kimseye verilmez, kişi listesi yüklenmez. Çoğu uygulamanın sızdırdığı şey meta veridir. Kryfo sızdırmayacak şekilde yapıldı.';
+  String get whyKryfoNoReceiptsTyping =>
+      'Okundu bilgisi yok, kişi listesi yüklenmez. Yazdığını yalnızca yazdığın kişi görür, doğrudan Tor üzerinden, asla bir sunucudan geçmeden. Çoğu uygulama meta veri sızdırır. Kryfo sızdırmayacak şekilde yapıldı.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Gerçekten o olduğunu doğrula';
@@ -5958,6 +5953,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get cleanerContentCredentials => 'İçerik kimlik bilgileri';
+
+  @override
+  String get cleanerHdrLayer => 'HDR katmanı';
 
   @override
   String get cleanerDataAfterThePicture => 'Resimden sonraki veri';
@@ -6426,6 +6424,35 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bootFailedCloseAndReopen => 'Kryfo’yu kapat ve yeniden aç';
 
   @override
+  String get bootFailedStillStuck => 'Yeniden denemek işe yaramazsa';
+
+  @override
+  String get bootFailedRestoreBackup => 'Yedekten geri yükle';
+
+  @override
+  String get bootFailedStartFresh => 'Sıfırdan başla';
+
+  @override
+  String get bootFailedStartFreshTitle => 'Sıfırdan başlansın mı?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'Bu, Kryfo’nun bu telefonda tuttuğu her şeyi siler: sohbetler, kişiler, medya, gizli sohbetler ve üç kelimen. Başka bir yere kaydedilmiş yedek dosyasına dokunulmaz.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Devam et';
+
+  @override
+  String get bootFailedStartFreshSure => 'Bu telefondaki her şey silinsin mi?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'Bu geri alınamaz. Kryfo kapanır ve yeni kurulmuş gibi yeniden açılır.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Sil ve sıfırdan başla';
+
+  @override
   String get kryfoLinkTextThatLinkIsNot =>
       'Bu bağlantı Kryfo’nun okuyabileceği bir bağlantı değil';
 
@@ -6500,7 +6527,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get kryfoLinkTextYouJoinUnderA =>
-      'Bu oda için üretilmiş bir anahtarla katılırsın. İçerideki hiç kimse Kryfo kimliğini görmez.';
+      'Bu oda için üretilmiş bir anahtarla katılırsın. İçerideki hiç kimse üç kelimeni görmez.';
 
   @override
   String get linkStubFetchedOverTorBy =>
@@ -7110,14 +7137,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesUsingTorProject => 'Tor Projesinin köprüleri kullanılıyor';
 
   @override
-  String get bridgesKryfoTriesAgainOnItsOwn =>
-      'Kryfo ara sıra kendiliğinden yeniden dener.';
-
-  @override
-  String get bridgesTheTorProjectCanSuggest =>
-      'Tor Projesi burada işe yarayan bir köprü önerebilir.';
-
-  @override
   String get bridgesBridgeRemoved => 'Köprü kaldırıldı';
 
   @override
@@ -7455,6 +7474,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get languageNameAr => 'Arapça';
 
   @override
+  String get languageNameHi => 'Hintçe';
+
+  @override
   String get languageLaterLine =>
       'Bunu istediğin zaman ayarlardan değiştirebilirsin.';
 
@@ -7737,6 +7759,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get lockFingerRefused =>
       'Telefonun Kryfo için parmak iziyle kilit açmayı tutmadı, bu yüzden kapalı. PIN’in hâlâ çalışıyor.';
+
+  @override
+  String get lockFingerTryAgain =>
+      'Telefonun o an meşguldü. Parmak izini yeniden dene ya da PIN’ini kullan.';
 
   @override
   String get pinsFingerRefused =>
@@ -8894,4 +8920,787 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'Kryfo onu, güncellemeyi almış her üyenin telefonundan kaldırır.';
+
+  @override
+  String get translateAction => 'Çevir';
+
+  @override
+  String get translateShowOriginal => 'Orijinali göster';
+
+  @override
+  String translateBarTo(Object language) {
+    return 'Çevir · $language';
+  }
+
+  @override
+  String get translateBarMore => 'Çeviri seçenekleri';
+
+  @override
+  String translateBarAlways(Object language) {
+    return 'Her zaman çevir · $language';
+  }
+
+  @override
+  String translateBarNever(Object language) {
+    return 'Asla çevirme · $language';
+  }
+
+  @override
+  String get translateBarHide => 'Bu sohbette gizle';
+
+  @override
+  String get translateWorking => 'Çevriliyor…';
+
+  @override
+  String get translateFailed => 'Çevrilemedi';
+
+  @override
+  String translateFrom(Object language) {
+    return 'Çeviri · $language';
+  }
+
+  @override
+  String get translateLangZh => 'Çince';
+
+  @override
+  String translatePackTitle(Object language) {
+    return 'Bu telefonda çeviri: $language';
+  }
+
+  @override
+  String translatePackLine(Object language, Object size) {
+    return 'Mesajlar bu telefonda çevrilir ve telefondan hiç çıkmaz. Bunun için yaklaşık $size boyutundaki $language dil paketi gerekir ve Tor üzerinden bir kez indirilir.';
+  }
+
+  @override
+  String get translatePackNoLib => 'Çeviri bu telefonda çalışmıyor.';
+
+  @override
+  String translateDownload(Object size) {
+    return 'İndir · yaklaşık $size';
+  }
+
+  @override
+  String get translateDownloadAnyway => 'Yine de şimdi indir';
+
+  @override
+  String get translateResume => 'İndirmeye devam et';
+
+  @override
+  String translateProgress(Object done, Object total) {
+    return '$done / $total';
+  }
+
+  @override
+  String get translateFinishing => 'Dosyalar kontrol ediliyor…';
+
+  @override
+  String translateInstalled(Object size) {
+    return 'Bu telefonda · $size';
+  }
+
+  @override
+  String get translateNeedsWifi =>
+      '“Yalnızca Wi-Fi” açık ve bu telefon Wi-Fi\'ye bağlı değil.';
+
+  @override
+  String get translateFailNoTor =>
+      'Tor henüz bağlanmadı. Paketler yalnızca Tor üzerinden iner, bağlanınca tekrar dene.';
+
+  @override
+  String get translateFailNetwork =>
+      'İndirme durdu. Tekrar dene, kaldığı yerden devam eder.';
+
+  @override
+  String get translateFailBadFile =>
+      'Bir dosya Kryfo\'nun beklediğiyle eşleşmedi ve silindi. Tekrar dene.';
+
+  @override
+  String get translateFailNoEngine => 'Bu telefona dil paketi indirilemiyor.';
+
+  @override
+  String translatePaused(Object size) {
+    return 'Duraklatıldı · şimdiye kadar $size';
+  }
+
+  @override
+  String get translateSettingsTitle => 'Çeviri';
+
+  @override
+  String get translateSettingsRow => 'Mesajları çevir';
+
+  @override
+  String get translateSettingsHint => 'Bu telefonda, asla bir sunucuda değil';
+
+  @override
+  String get translatePacksSection => 'Dil paketleri';
+
+  @override
+  String translatePackPair(Object language) {
+    return '$language ve İngilizce';
+  }
+
+  @override
+  String translateNotDownloaded(Object size) {
+    return 'İndirilmedi · yaklaşık $size';
+  }
+
+  @override
+  String get translateDownloading => 'Tor üzerinden iniyor';
+
+  @override
+  String translateDeleteTitle(Object language) {
+    return '$language paketi silinsin mi?';
+  }
+
+  @override
+  String translateDeleteLine(Object language) {
+    return '$language mesajlar, paket yeniden indirilene kadar çevrilemez.';
+  }
+
+  @override
+  String get translateLanguagesSection => 'Diller';
+
+  @override
+  String get translateMyLanguages => 'Okuduğum diller';
+
+  @override
+  String get translateMyLanguagesHint =>
+      'Bu dillerdeki mesajlar için çeviri önerilmez. Uygulamanın dili her zaman bunlardan biridir.';
+
+  @override
+  String get translateInto => 'Çeviri dili';
+
+  @override
+  String get translateAppLanguage => 'Uygulamanın dili';
+
+  @override
+  String get translateBehaviourSection => 'İndirmeler ve sohbetler';
+
+  @override
+  String get translateAutoDefault => 'Sohbetleri otomatik çevir';
+
+  @override
+  String get translateAutoDefaultHint =>
+      'Kendin ayarlamadığın sohbetler için. Her sohbet bunu açıp kapatabilir.';
+
+  @override
+  String get translateWifiOnly => 'Paketleri yalnızca Wi-Fi ile indir';
+
+  @override
+  String get translatePrivacyTitle => 'Gizli kalanlar';
+
+  @override
+  String get translatePrivacyNote =>
+      'Çeviri bu telefonda yapılır. Hiçbir mesaj çevrilmek için bir yere gönderilmez. Bir paketi indirmek sunucuya hangi paket olduğunu söyler. İndirme Tor üzerinden yapılır, bu yüzden sunucu kimin istediğini bilmez.';
+
+  @override
+  String get translateAutoInChat => 'Otomatik çevir';
+
+  @override
+  String get translateAutoInChatHint =>
+      'Başka dillerdeki mesajlar çevrilmiş görünür. Orijinali bir dokunuş uzakta.';
+
+  @override
+  String get bridgesNoneUntilOnion => 'Onion açılana kadar yok';
+
+  @override
+  String get bridgesRelayWorksWhereTor =>
+      'Aktarıcı modu Tor’un engellendiği yerde de çalışır ve istediğin zaman geri dönebilirsin.';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      'Aktarıcı modu Tor’un engellendiği yerde de geçer, ama bu ağ Kryfo’ya bağlandığını görebilir.';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      'Bu ağ Kryfo’ya bağlandığını görebilir. Aktarıcımız adresini görür.';
+
+  @override
+  String get settingsLicences => 'Lisanslar';
+
+  @override
+  String get settingsLicencesValue => 'Kryfo neyle yapıldı';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo, GNU Genel Kamu Lisansı sürüm 3 veya sonrası altında özgür bir yazılımdır. Kodunu herkes okuyabilir, değiştirebilir ve paylaşabilir.';
+
+  @override
+  String get licencesSourceCode => 'Kaynak kodu';
+
+  @override
+  String get licencesSignalTitle => 'Signal protokolü';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo, Signal\'in yaptığı libsignal $version sürümünü GNU Affero Genel Kamu Lisansı sürüm 3 altında içerir. Kaynak kodu github.com/signalapp/libsignal adresinde ve her Kryfo sürümünün yanında bulunur.';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0, tam metin';
+
+  @override
+  String get licencesSignalSource => 'libsignal kaynak kodu';
+
+  @override
+  String get licencesParts => 'Açık kaynak parçalar';
+
+  @override
+  String get licencesInSignal => 'Signal kitaplığında';
+
+  @override
+  String get licencesInApp => 'Uygulamada';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString parça',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, tam metin';
+
+  @override
+  String get licencesInEngine => 'Ağ motorunda';
+
+  @override
+  String get licencesLoadFailed => 'Yüklenemedi';
+
+  @override
+  String get settingsCopyLinkHint => 'Bağlantıyı kopyala';
+
+  @override
+  String get appRelayNotAnswering => 'Aktarıcı sessiz';
+
+  @override
+  String get motionNoRelayYet => 'HENÜZ AKTARICI YOK';
+
+  @override
+  String get motionTheRouteIsUp => 'Rota kuruldu';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Bir aktarıcı bu rota üzerinden yanıt verir vermez mesajlar gider.';
+
+  @override
+  String get motionOffline => 'ÇEVRİMDIŞI';
+
+  @override
+  String get motionNoNetwork => 'Ağ yok';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Ağ olmadan hiçbir şey gitmez. Ağ geri gelince Tor kaldığı yerden devam eder.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bekliyor · $state',
+      one: '$count bekliyor · $state',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsIconAndNotifications => 'Simge ve bildirimler';
+
+  @override
+  String iconSettingsValue(String icon) {
+    return '$icon, sade bildirimler';
+  }
+
+  @override
+  String get iconSectionTitle => 'Uygulama simgesi';
+
+  @override
+  String get iconHint =>
+      'Ana ekranın ve uygulama listen Kryfo yerine bu simgeyi ve adı gösterir.';
+
+  @override
+  String get iconHintKryfo =>
+      'Ana ekranın ve uygulama listen için sıradan bir simge ve ad seç.';
+
+  @override
+  String get iconWhatChanges => 'Bu neyi değiştirir';
+
+  @override
+  String iconConfirmTitle(String name) {
+    return 'Simge $name olarak değişsin mi?';
+  }
+
+  @override
+  String iconConfirmLine(String name) {
+    return 'Kryfo kapanıp yeniden açılır. Simge ana ekrandan kalkarsa uygulamalarında $name simgesini bul ve yeniden yerleştir.';
+  }
+
+  @override
+  String get iconConfirmButton => 'Simgeyi değiştir';
+
+  @override
+  String get iconNoPinLine =>
+      'Ona dokunan Kryfo’yu görür. Uygulamaya PIN koyarsan onun yerine PIN tuş takımını görür.';
+
+  @override
+  String get iconSetPin => 'PIN belirle';
+
+  @override
+  String iconChanged(String name) {
+    return 'Simge $name olarak değişti';
+  }
+
+  @override
+  String iconPreviewLabel(String name) {
+    return 'Ana ekranın $name gösterecek';
+  }
+
+  @override
+  String iconButtonLabel(String name) {
+    return '$name, uygulama simgesi';
+  }
+
+  @override
+  String get notifShowAll => 'Ad ve mesaj';
+
+  @override
+  String get notifShowNew => 'Yalnızca “Yeni mesaj”';
+
+  @override
+  String get notifShowPlain => 'Sade';
+
+  @override
+  String get notifPlainHint =>
+      'Ad yok, mesaj yok, Kryfo renkleri yok. Nötr bir simge ve tek satır.';
+
+  @override
+  String get notifPlainLine => 'Yeni bir şey var';
+
+  @override
+  String get notifPlainChannel => 'Uyarılar';
+
+  @override
+  String get notifHeaderLimit =>
+      'Her bildirimin en üstünde yine Kryfo yazar. Android bir uygulamanın bunu değiştirmesine izin vermez.';
+
+  @override
+  String get gettingMessagesWhatShows => 'Bildirimler ne gösterir';
+
+  @override
+  String get iconSheetChangesTitle => 'Neler değişir';
+
+  @override
+  String get iconSheetChanges =>
+      'Ana ekranındaki ve uygulama listendeki simge ve ad, paylaşma menüsü ve açık uygulamalar ekranı. Sade ile bildirimlerin gösterdikleri de.';
+
+  @override
+  String get iconSheetStaysTitle => 'Ne Kryfo olarak kalır';
+
+  @override
+  String get iconSheetStays =>
+      'Her bildirimin üst satırı, telefonunun ayarlar ve pil sayfaları, uygulama mağazası ve biri açtığında Kryfo’nun kendisi.';
+
+  @override
+  String get iconSheetGlance =>
+      'Ana ekranına bir göz atmaya dayanır. Telefonunun ayarlarına bakan birinden Kryfo’yu gizlemez.';
+
+  @override
+  String get iconSheetPrivateSpace =>
+      'Telefonunun uygulamaları gizlemek için kendi yolu olabilir: ayarlarındaki özel alan.';
+
+  @override
+  String get iconSheetSecureFolder =>
+      'Telefonunun uygulamaları gizlemek için kendi yolu olabilir: ayarlarındaki Güvenli Klasör.';
+
+  @override
+  String get iconSheetXiaomi =>
+      'Telefonunun uygulamaları gizlemek için kendi yolu olabilir: ayarlarındaki gizli uygulamalar.';
+
+  @override
+  String get androidIconNotes => 'Notlar';
+
+  @override
+  String get androidIconWeather => 'Hava durumu';
+
+  @override
+  String get androidIconTasks => 'Görevler';
+
+  @override
+  String get androidIconNews => 'Haberler';
+
+  @override
+  String get androidServiceTitlePlain => 'Etkin';
+
+  @override
+  String get lockStateUnlockPlain => 'Kilidi aç';
+
+  @override
+  String get iconSheetOthers =>
+      'Telefonundaki uygulamalar Kryfo’nun yüklü olduğunu yine görebilir, Android’in kendi pencereleri ve istekleri de adını gösterebilir.';
+
+  @override
+  String get iconSheetSaves =>
+      'Sade bir simge açıkken yeni fotoğraflar, videolar ve dosyalar telefonunun olağan klasörlerine sıradan adlarla kaydedilir. Daha önce kaydedilenler olduğu yerde kalır.';
+
+  @override
+  String get deliveryModeGooglePush => 'Google bildirimi';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead =>
+      'Yeni mesajlar bu telefona nasıl ulaşır, nasıl ses verir ve ne gösterir. İstediğin zaman değiştirebilirsin.';
+
+  @override
+  String get notificationsHowTheyReachYou => 'Mesajlar sana nasıl ulaşır';
+
+  @override
+  String get notificationsRecommended => 'Önerilen';
+
+  @override
+  String get notificationsGoogleBody =>
+      'Anında ve hafif. Google telefonunun ne zaman uyandırıldığını görebilir, kimin yazdığını ya da ne yazıldığını asla.';
+
+  @override
+  String get notificationsGoogleStarting => 'Açılıyor…';
+
+  @override
+  String get notificationsGoogleNoStart =>
+      'Google bildirimi başlatılamadı. Bağlantıyı kontrol edip yeniden dene.';
+
+  @override
+  String get notificationsGoogleNote =>
+      'Araya sahte uyandırmalar karışır; bu, Google’ın gerçek mesajların ne zaman geldiğini anlamasını zorlaştırır. Aktarıcımız yalnızca birbirine bağlayamadığı adresleri saklar. Bildirim hizmeti aynı sunucuda çalışır ve onları, Google’ın yardımıyla Google hesabına kadar, bağlayabilir; yani sunucumuzu işleten ya da ona el koyan da bağlayabilir. Bu senin için önemliyse başka bir yol seç. Gizli sohbetler, ilk birkaçından sonraki odalar ve ara sıra, aşağı yukarı beş ayda bir ay, sıradan bir kişi, Kryfo’nun yine de 15 dakikada bir yaptığı kontrolü bekler.';
+
+  @override
+  String get notificationsGoogleRefused =>
+      'Aktarıcımız şu an bu telefonun bazı kayıtlarını almıyor. O sohbetler 15 dakikada bir yapılan kontrolle gelir ve Kryfo denemeye devam eder.';
+
+  @override
+  String get notificationsSoundAndVibration => 'Ses ve titreşim';
+
+  @override
+  String get notificationsSoundHint => 'Android’in kendi ayarlarında';
+
+  @override
+  String get notificationsEachShows => 'Her bildirim gösterir';
+
+  @override
+  String get notificationsBatteryTips => 'Pil ipuçları';
+
+  @override
+  String get notificationsBatteryAllowed => 'İzin verildi';
+
+  @override
+  String get notificationsBatteryNotYet => 'İzin verilmedi';
+
+  @override
+  String get notificationsMakerSwitch => 'Telefon üreticinin anahtarı';
+
+  @override
+  String get onboardingDeliveryHeadline => 'Mesajlar sana *nasıl ulaşır*.';
+
+  @override
+  String get onboardingDeliveryLead =>
+      'Bunu istediğin zaman Bildirimler’den değiştirebilirsin.';
+
+  @override
+  String get homeGoogleTitle => 'Google bildirimi geldi';
+
+  @override
+  String get homeGoogleLine =>
+      'Anında ve pili yormaz. Google telefonunun ne zaman uyandırıldığını görebilir, kimin yazdığını ya da ne yazıldığını asla.';
+
+  @override
+  String get homeGoogleUse => 'Kullan';
+
+  @override
+  String get homeGoogleOn => 'Google bildirimi açık';
+
+  @override
+  String get homeGoogleGoneTitle => 'Google bildirimi kullanılamıyor';
+
+  @override
+  String get appNotificationsLink => 'Bildirimler →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'Google bildirimleri $got · düşürülen $low';
+  }
+
+  @override
+  String get passFieldLabel => 'Parola ifadesi';
+
+  @override
+  String get padUseLetters => 'Harf kullan';
+
+  @override
+  String get padUseDigits => 'Rakam kullan';
+
+  @override
+  String get passWeak => 'Zayıf';
+
+  @override
+  String get passFair => 'Orta';
+
+  @override
+  String get passStrong => 'Güçlü';
+
+  @override
+  String passStrengthIs(Object level) {
+    return 'Güç: $level';
+  }
+
+  @override
+  String get lockKeyBusy =>
+      'Telefonun güvenlik çipi şu an meşgul. Birazdan yeniden dene.';
+
+  @override
+  String get lockKeyLocked =>
+      'Telefonunun kilidini bir kez kendi PIN’iyle aç, sonra yeniden dene.';
+
+  @override
+  String get lockKeyWaiting => 'Telefonun güvenlik çipi hâlâ denetliyor';
+
+  @override
+  String get lockKeyLost =>
+      'Bu telefon PIN’lerini denetleyen anahtarı kaybetti, bu yüzden bazı PIN’ler açmayabilir. Kryfo sıfırlanıp bir yedek geri yüklenebilir.';
+
+  @override
+  String get lockKeyReset => 'Kryfo’yu sıfırla';
+
+  @override
+  String get lockKeyResetTitle => 'Kryfo sıfırlansın mı?';
+
+  @override
+  String get lockKeyResetLine =>
+      'Bu telefondaki Kryfo’da ne varsa silinir ve Kryfo kapanır. Sonra bir yedeği geri yükleyebilirsin. Gizli sohbetler yalnızca açıkken alınmış bir yedekten geri gelir.';
+
+  @override
+  String get lockKeyResetSureTitle => 'Bu geri alınamaz';
+
+  @override
+  String get lockKeyResetSureLine =>
+      'Bu telefondaki Kryfo’nun tüm sohbetleri, anahtarları ve ayarları şimdi silinir.';
+
+  @override
+  String get lockKeyResetSure => 'Her şeyi sil';
+
+  @override
+  String get flowVaultPassLine =>
+      'En az 12 karakter. Telefonun klavyesi yazdığını görür, bu yüzden kelime öğrenmeyen ve eşitlemeyen bir klavye kullan.';
+
+  @override
+  String get flowVaultPassAgain => 'Aynı parola ifadesi bir kez daha';
+
+  @override
+  String get cardTitle => 'Güvenlik güncellemesini tamamla';
+
+  @override
+  String get cardLine =>
+      'Başka PIN’ler kullanıyorsan her birini burada bir kez yaz.';
+
+  @override
+  String get cardType => 'PIN yaz';
+
+  @override
+  String get cardAnswer =>
+      'Tamam. Bir tane daha yaz ya da bitince Bitti’ye dokun.';
+
+  @override
+  String get keyLine =>
+      'PIN’lerin yalnızca bu telefonda çalışır. Telefon onları denetleyen anahtarı bir gün kaybederse Kryfo’yu sıfırlayıp bir yedeği geri yüklemen gerekir. Gizli sohbetler yalnızca açıkken alınmış bir yedekten geri gelir.';
+
+  @override
+  String get keyLineUnlocked =>
+      'PIN’lerin yalnızca bu telefonda ve yalnızca telefonun kilidi açıkken çalışır. Telefon onları denetleyen anahtarı bir gün kaybederse Kryfo’yu sıfırlayıp bir yedeği geri yüklemen gerekir. Gizli sohbetler yalnızca açıkken alınmış bir yedekten geri gelir.';
+
+  @override
+  String get keyLineScreenLock =>
+      'Telefonuna bir ekran kilidi koy ki bu koruma telefon kilitliyken de sürsün.';
+
+  @override
+  String get settingsDevices => 'Cihazlar';
+
+  @override
+  String get devicesLinkedDevices => 'Bağlı cihazlar';
+
+  @override
+  String get devicesThisPhoneOnly => 'Yalnızca bu telefon';
+
+  @override
+  String get devicesNameSeparator => ', ';
+
+  @override
+  String get devicesThisPhone => 'Bu telefon';
+
+  @override
+  String get devicesOnlyThisPhone =>
+      'Cihaz bağlayıp kaldırabilen tek yer bu telefon';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return '$date tarihinde bağlandı';
+  }
+
+  @override
+  String get devicesUsedToday => 'Bugün kullanıldı';
+
+  @override
+  String get devicesUsedThisWeek => 'Bu hafta kullanıldı';
+
+  @override
+  String get devicesUsedThisMonth => 'Bu ay kullanıldı';
+
+  @override
+  String get devicesNotUsedYet => 'Henüz kullanılmadı';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Açmazsan $daysString gün içinde bağlantısı kesilir',
+      one: 'Açmazsan yarın bağlantısı kesilir',
+      zero: 'Açmazsan bugün bağlantısı kesilir',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => 'Bilgisayarında Kryfo';
+
+  @override
+  String get devicesEmptyLine =>
+      'Mesajlarını orada okuyup göndermek için bir bilgisayar bağla. Bu telefon dışında en çok beş cihaz.';
+
+  @override
+  String get devicesContactsSeeNothing =>
+      'Kişilerinin uygulamaları cihazlarını göstermez.';
+
+  @override
+  String get devicesUnusedRule =>
+      '30 gün açmadığın bir cihazın bağlantısı kendiliğinden kesilir ve sohbetlerin ondan silinir.';
+
+  @override
+  String get devicesFull =>
+      'Beş cihaz bağlı. Başka birini bağlamak için birini kaldır.';
+
+  @override
+  String get devicesLinkADevice => 'Cihaz bağla';
+
+  @override
+  String get devicesRemoveAll => 'Diğer tüm cihazları kaldır';
+
+  @override
+  String get devicesRemoveAllTitle => 'Diğer tüm cihazlar kaldırılsın mı?';
+
+  @override
+  String get devicesRemoveAllLine =>
+      'Kişilerinin uygulamaları değişikliği aldığında yeni mesaj almayı bırakırlar ve senin adına gönderemezler. Bu telefon her şeyi saklar.';
+
+  @override
+  String get devicesRemoveAllYes => 'Hepsini kaldır';
+
+  @override
+  String get devicesRemovedAll => 'Artık yalnızca bu telefon';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return '$name kaldırılsın mı?';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      'Kişilerinin uygulamaları değişikliği aldığında yeni mesaj almayı bırakır ve senin adına gönderemez. Bir sonraki çevrimiçi oluşunda sohbetlerini kendinden siler. Biri tarafından kurcalanmış bir cihaz elindekini saklayabilir.';
+
+  @override
+  String get devicesRemove => 'Kaldır';
+
+  @override
+  String devicesRemoved(Object name) {
+    return '$name kaldırıldı';
+  }
+
+  @override
+  String get devicesRename => 'Adı değiştir';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return '$name adını değiştir';
+  }
+
+  @override
+  String get devicesRenameLine =>
+      'Bu adı yalnızca sen görürsün. Kişilerin asla görmez.';
+
+  @override
+  String get devicesNameComputer => 'Bilgisayar';
+
+  @override
+  String get devicesDeviceCode => 'Cihaz kodu';
+
+  @override
+  String get devicesDeviceCodeLine =>
+      'Aynı kod cihazın kendisinde, Ayarlar’da görünür.';
+
+  @override
+  String get devicesLinkStep1 =>
+      'Bilgisayarında Kryfo’yu aç. Bir kod gösterir.';
+
+  @override
+  String get devicesLinkStep2 => 'Kodu bu telefonla tara.';
+
+  @override
+  String get devicesLinkStep3 =>
+      'İki ekranda da aynı altı rakamın göründüğünü kontrol et.';
+
+  @override
+  String get devicesHistory => 'Geçmiş';
+
+  @override
+  String get devicesHistoryCopy => 'Sohbetlerimi aktar';
+
+  @override
+  String get devicesHistoryCopyHint =>
+      'Tüm mesajların, son 30 günün fotoğraf ve videolarıyla.';
+
+  @override
+  String get devicesHistoryNone => 'Geçmiş olmadan başla';
+
+  @override
+  String get devicesHistoryNoneHint => 'Cihaza yalnızca yeni mesajlar gelir.';
+
+  @override
+  String get devicesSkipMedia => 'Fotoğraf ve videoları atla';
+
+  @override
+  String get devicesSkipMediaHint =>
+      'Yalnızca metin aktarılır. Daha hızlı ve cihazda daha az şey kalır.';
+
+  @override
+  String get devicesHiddenStay => 'Gizli sohbetler ve yem bu telefonda kalır.';
+
+  @override
+  String get devicesScanCode => 'Kodu tara';
 }

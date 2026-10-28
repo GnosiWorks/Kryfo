@@ -4,6 +4,7 @@
 // save through the system save window, under a name ending in its real
 // extension. the native side refuses it too, and asks for no permission
 // to install. the platform is a stand-in that records every call
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/open_file.dart';
+import 'package:kryfo/widgets/photo_viewer.dart' show PhotoViewer;
 import 'package:kryfo/widgets/video_bubble.dart' show openReceivedFile;
 
 import 'source_body.dart';
@@ -119,6 +121,124 @@ void main() {
     });
   });
 
+  // a 1x1 png: a real picture by its bytes, whatever its name says
+  const png = <int>[
+    0x89,
+    0x50,
+    0x4E,
+    0x47,
+    0x0D,
+    0x0A,
+    0x1A,
+    0x0A,
+    0x00,
+    0x00,
+    0x00,
+    0x0D,
+    0x49,
+    0x48,
+    0x44,
+    0x52,
+    0x00,
+    0x00,
+    0x00,
+    0x01,
+    0x00,
+    0x00,
+    0x00,
+    0x01,
+    0x08,
+    0x06,
+    0x00,
+    0x00,
+    0x00,
+    0x1F,
+    0x15,
+    0xC4,
+    0x89,
+    0x00,
+    0x00,
+    0x00,
+    0x0D,
+    0x49,
+    0x44,
+    0x41,
+    0x54,
+    0x78,
+    0x9C,
+    0x63,
+    0x00,
+    0x01,
+    0x00,
+    0x00,
+    0x05,
+    0x00,
+    0x01,
+    0x0D,
+    0x0A,
+    0x2D,
+    0xB4,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x49,
+    0x45,
+    0x4E,
+    0x44,
+    0xAE,
+    0x42,
+    0x60,
+    0x82,
+  ];
+
+  Future<void> tapPicture(
+    WidgetTester t,
+    String path,
+    String name, {
+    bool kept = false,
+  }) async {
+    late BuildContext ctx;
+    await t.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (c) {
+            ctx = c;
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+    // the viewer stays up until it is closed, so the tap is not awaited
+    await t.runAsync(() async {
+      unawaited(openReceivedFile(ctx, path, name, kept: kept));
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+    });
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 600));
+  }
+
+  testWidgets('a picture sent as a file opens in the app, never outside', (
+    t,
+  ) async {
+    final f = File('${tmp.path}/in_pq_photo_2a8a75ac.jpg')
+      ..writeAsBytesSync(png);
+    await tapPicture(t, f.path, 'photo_2a8a75ac.jpg');
+    expect(find.byType(PhotoViewer), findsOneWidget);
+    expect(methods(), isNot(contains('openFile')));
+    expect(methods(), isNot(contains('shareFile')));
+  });
+
+  testWidgets('in a chat that blocks, a picture still opens in the app', (
+    t,
+  ) async {
+    final f = File('${tmp.path}/in_rs_kept.png')..writeAsBytesSync(png);
+    await tapPicture(t, f.path, 'kept.png', kept: true);
+    expect(find.byType(PhotoViewer), findsOneWidget);
+    expect(find.text(l10n.chatShotsKeptOpen), findsNothing);
+    expect(methods(), isNot(contains('openFile')));
+  });
+
   testWidgets('a pdf opens in another app, by its type', (t) async {
     final f = File('${tmp.path}/in_ef_scan.jpg')
       ..writeAsBytesSync('%PDF-1.7\n'.codeUnits);
@@ -203,13 +323,10 @@ void main() {
 
   group('no permission to install', () {
     test('the manifest takes it out of whatever a plugin merges in', () {
-      for (final tag in [
-        'uses-permission',
-        'uses-permission-sdk-23',
-        'uses-permission-sdk-m',
-      ]) {
+      final manifest = sourceOf('android/app/src/main/AndroidManifest.xml');
+      for (final tag in ['uses-permission', 'uses-permission-sdk-23']) {
         expect(
-          sourceOf('android/app/src/main/AndroidManifest.xml'),
+          manifest,
           contains(
             '<$tag android:name="android.permission.'
             'REQUEST_INSTALL_PACKAGES" tools:node="remove" />',
@@ -217,6 +334,9 @@ void main() {
           reason: tag,
         );
       }
+      // the old name lint calls deprecated. the merger ignores
+      // tools:node on it, so gradle's check is what stops it
+      expect(manifest, isNot(contains('<uses-permission-sdk-m')));
     });
 
     test('gradle checks the merged manifest before every apk and bundle', () {

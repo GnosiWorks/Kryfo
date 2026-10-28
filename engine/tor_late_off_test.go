@@ -112,9 +112,8 @@ func TestLateNetworkOffIsRescued(t *testing.T) {
 	n := node(t)
 	real := n.ControlPort
 	slow := newSlowControl(t, "127.0.0.1:"+strconv.Itoa(real), 3*time.Second)
-	old := ctrlDeadline
-	ctrlDeadline = time.Second
-	defer func() { ctrlDeadline = old; n.ControlPort = real; ctrlReset(); eventReset() }()
+	setCtrlDeadline(t, time.Second)
+	defer func() { n.ControlPort = real; ctrlReset(); eventReset() }()
 	n.ControlPort = slow.port()
 	ctrlReset()
 	eventReset()

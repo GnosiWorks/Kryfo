@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- written by tool/icon_art.dart from lib/app_icon_art.dart -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="72"
+    android:viewportHeight="72">
+    <group
+        android:scaleX="1"
+        android:scaleY="1"
+        android:translateX="-18"
+        android:translateY="-18">
+        <path
+            android:fillColor="#FF5F8268"
+            android:pathData="M34,18 h40 a16,16 0 0 1 16,16 v40 a16,16 0 0 1 -16,16 h-40 a16,16 0 0 1 -16,-16 v-40 a16,16 0 0 1 16,-16 z" />
+        <path
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="3"
+            android:pathData="M39,32 h6 a3,3 0 0 1 3,3 v6 a3,3 0 0 1 -3,3 h-6 a3,3 0 0 1 -3,-3 v-6 a3,3 0 0 1 3,-3 z" />
+        <path
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="2.8"
+            android:strokeLineCap="round"
+            android:pathData="M39.2,38.2 L41.6,40.6" />
+        <path
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="2.8"
+            android:strokeLineCap="round"
+            android:pathData="M41.6,40.6 L45.2,35.6" />
+        <path
+            android:strokeColor="#FFE3ECE5"
+            android:strokeWidth="3.5"
+            android:strokeLineCap="round"
+            android:pathData="M54,38 L72,38" />
+        <path
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="3"
+            android:pathData="M39,48 h6 a3,3 0 0 1 3,3 v6 a3,3 0 0 1 -3,3 h-6 a3,3 0 0 1 -3,-3 v-6 a3,3 0 0 1 3,-3 z" />
+        <path
+            android:strokeColor="#FFE3ECE5"
+            android:strokeWidth="3.5"
+            android:strokeLineCap="round"
+            android:pathData="M54,54 L72,54" />
+        <path
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="3"
+            android:pathData="M39,64 h6 a3,3 0 0 1 3,3 v6 a3,3 0 0 1 -3,3 h-6 a3,3 0 0 1 -3,-3 v-6 a3,3 0 0 1 3,-3 z" />
+        <path
+            android:strokeColor="#FFE3ECE5"
+            android:strokeWidth="3.5"
+            android:strokeLineCap="round"
+            android:pathData="M54,70 L66,70" />
+    </group>
+</vector>

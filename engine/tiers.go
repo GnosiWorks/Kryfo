@@ -109,6 +109,8 @@ func switchMode(m string) (prev string) {
 	transportMode.Store(m)
 	// what answered the old way proves nothing about this one
 	routeBump()
+	// every runner starts again: the public relays' list is chosen anew
+	liveNewRun()
 	log.Printf("transport: mode %s -> %s", prev, m)
 	// the cached client is bound to one route; drop it so the next
 	// connection is built the new way.

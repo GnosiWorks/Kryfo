@@ -8,7 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/badge_client.dart' show kBadgeTiersShown;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloEngine, appState, showAddContact, useEngineForTest;
+    show HaloEngine, appState, showAddContact, useEngineForTest, AppStateRoute;
 import 'package:kryfo/screens/backup_screen.dart';
 import 'package:kryfo/screens/donate_screen.dart';
 import 'package:kryfo/screens/my_kryfo_screen.dart';

@@ -11,7 +11,13 @@ import 'package:share_plus/share_plus.dart';
 import '../contact_card.dart';
 import '../dlog.dart';
 import '../handle_lookup.dart' show handleFromInput;
-import '../main.dart' show appState, handleHaloUriAdded;
+import '../main.dart'
+    show
+        appState,
+        handleHaloUriAdded,
+        AppStateProfile,
+        AppStateSession,
+        AppStateRefresh;
 import '../widgets/kryfo_link_text.dart' show addScanned, takeOwnLink;
 import '../theme.dart';
 import '../widgets/copied_mark.dart';
@@ -611,7 +617,7 @@ class _Way3Card extends StatelessWidget {
                       decoration: InputDecoration(
                         border: InputBorder.none,
                         counterText: '',
-                        hintText: l10n.handleWren,
+                        hintText: l10n.handleHintName,
                         hintStyle: HaloType.mono(
                           size: 14,
                           color: HaloColors.text3,

@@ -6,7 +6,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kryfo/main.dart' show TorHalo, appState;
+import 'package:kryfo/main.dart' show TorHalo, appState, AppStateRoute;
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:kryfo/tools/geo.dart';
 import 'package:kryfo/widgets/breathing_ring.dart';

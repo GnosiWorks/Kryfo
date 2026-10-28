@@ -94,7 +94,10 @@ func TestReconnectsLeaveNothingBehind(t *testing.T) {
 	freshInbox(t)
 	oldSpread := kickSpread
 	kickSpread = 0
-	defer func() { kickSpread = oldSpread }()
+	defer func() {
+		runnersGone(t)
+		kickSpread = oldSpread
+	}()
 	peer := newXid(t)
 	rcv := mustRcv(t, peer)
 	ctx, cancel := context.WithCancel(context.Background())

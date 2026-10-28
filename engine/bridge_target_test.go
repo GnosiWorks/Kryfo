@@ -5,7 +5,6 @@ package main
 // that bridge line's own arguments, and nothing at all while bridges are off
 
 import (
-	"bytes"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
@@ -394,7 +393,7 @@ func TestSortBridgeLines(t *testing.T) {
 
 // logs never carry a bridge's address, whatever happens to it
 func TestBridgeLogsCarryNoAddress(t *testing.T) {
-	var buf bytes.Buffer
+	var buf logSink
 	old := log.Writer()
 	log.SetOutput(&buf)
 	t.Cleanup(func() { log.SetOutput(old) })
@@ -430,7 +429,7 @@ func TestBridgeAddressesCompareWhateverTheirSpelling(t *testing.T) {
 
 // tor's own log lines name bridges by address and fingerprint
 func TestTorLogLinesLoseBridgeAddresses(t *testing.T) {
-	var buf bytes.Buffer
+	var buf logSink
 	old := log.Writer()
 	log.SetOutput(&buf)
 	t.Cleanup(func() { log.SetOutput(old) })

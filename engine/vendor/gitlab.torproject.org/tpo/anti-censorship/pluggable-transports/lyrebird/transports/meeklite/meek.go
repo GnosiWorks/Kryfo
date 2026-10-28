@@ -244,13 +244,14 @@ func (c *meekConn) SetWriteDeadline(t time.Time) error {
 }
 
 func (c *meekConn) enqueueWrite(b []byte) (ok bool) {
-	defer func() {
-		if err := recover(); err != nil {
-			ok = false
-		}
-	}()
-	c.workerWrChan <- b
-	return true
+	// kryfo: the worker never closes workerWrChan, so a write racing its
+	// exit finds the conn closed instead of a closed channel.
+	select {
+	case c.workerWrChan <- b:
+		return true
+	case <-c.workerCloseChan:
+		return false
+	}
 }
 
 func (c *meekConn) roundTrip(sndBuf []byte) (recvBuf []byte, err error) {
@@ -306,13 +307,12 @@ func (c *meekConn) roundTrip(sndBuf []byte) (recvBuf []byte, err error) {
 }
 
 func (c *meekConn) ioWorker() {
-	// kryfo: in-process, a panic here would end the whole app. the
-	// channels close and the conn shuts whichever way the loop ends.
+	// kryfo: in-process, a panic here would end the whole app. the conn
+	// shuts and the reads end whichever way the loop ends.
 	defer func() {
 		_ = recover()
-		close(c.workerRdChan)
-		close(c.workerWrChan)
 		_ = c.Close()
+		close(c.workerRdChan)
 	}()
 
 	interval := initPollInterval

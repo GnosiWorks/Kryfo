@@ -7,13 +7,20 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/back_on_top.dart' show pageRoutes, routeStack;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_chat.dart';
 import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/devchat/support.dart' show SupportChats;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloDb, appState, haloUriV3, kNotSent, useDatabasesForTest;
+    show
+        HaloDb,
+        appState,
+        haloUriV3,
+        kNotSent,
+        useDatabasesForTest,
+        AppStateRefresh;
 import 'package:kryfo/screens/home_screen.dart';
 import 'package:kryfo/search.dart' show SearchKind;
 import 'package:kryfo/session.dart';
@@ -249,7 +256,10 @@ Widget devApp(
   bool still = false,
   Locale? locale,
   double scale = 1,
+  bool routes = false,
 }) => MaterialApp(
+  // the app's own route watchers, for a test that reads them
+  navigatorObservers: routes ? [pageRoutes, routeStack] : const [],
   locale: locale ?? l10nLocale,
   theme: buildHaloTheme(),
   localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -271,6 +281,7 @@ Future<void> devOpen(
   double scale = 1,
   Size size = const Size(1000, 1800),
   double ratio = 2,
+  bool routes = false,
 }) async {
   t.view.physicalSize = size;
   t.view.devicePixelRatio = ratio;
@@ -279,7 +290,9 @@ Future<void> devOpen(
   m.setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
   addTearDown(() => m.setMockMethodCallHandler(SystemChannels.platform, null));
   setL10nLocale(locale);
-  await t.pumpWidget(devApp(home, still: still, locale: locale, scale: scale));
+  await t.pumpWidget(
+    devApp(home, still: still, locale: locale, scale: scale, routes: routes),
+  );
   await t.pump(const Duration(seconds: 1));
 }
 

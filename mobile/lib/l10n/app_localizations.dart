@@ -11,6 +11,7 @@ import 'app_localizations_en.dart';
 import 'app_localizations_es.dart';
 import 'app_localizations_fa.dart';
 import 'app_localizations_fr.dart';
+import 'app_localizations_hi.dart';
 import 'app_localizations_id.dart';
 import 'app_localizations_it.dart';
 import 'app_localizations_pt.dart';
@@ -112,6 +113,7 @@ abstract class AppLocalizations {
     Locale('es'),
     Locale('fa'),
     Locale('fr'),
+    Locale('hi'),
     Locale('id'),
     Locale('it'),
     Locale('pt'),
@@ -816,7 +818,7 @@ abstract class AppLocalizations {
   /// app/shell.dart
   ///
   /// In en, this message translates to:
-  /// **'A Kryfo link, a room link or @wren'**
+  /// **'A Kryfo link, a room link or @name'**
   String get appAKryfoLinkA;
 
   /// app/shell.dart
@@ -1004,12 +1006,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Speed & privacy →'**
   String get appSpeedPrivacy;
-
-  /// app/dev_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Getting messages →'**
-  String get appGettingMessages;
 
   /// app/dev_screen.dart
   ///
@@ -1527,7 +1523,7 @@ abstract class AppLocalizations {
   /// **'Links to a lookalike of a well-known site'**
   String get scamShieldLinksToALookalike;
 
-  /// screens/archived_screen.dart, screens/blocked_screen.dart, screens/chat_screen.dart, screens/clean_screen.dart, screens/getting_messages_screen.dart, screens/group_chat_screen.dart, screens/group_info_screen.dart, screens/key_verification_screen.dart, screens/modes_screen.dart, screens/new_group_screen.dart, screens/pair_code_screen.dart, screens/photo_knows_screen.dart, screens/scan_screen.dart, widgets/media_bubbles.dart, widgets/tool_parts.dart
+  /// screens/archived_screen.dart, screens/blocked_screen.dart, screens/chat_screen.dart, screens/clean_screen.dart, screens/notifications_screen.dart, screens/group_chat_screen.dart, screens/group_info_screen.dart, screens/key_verification_screen.dart, screens/modes_screen.dart, screens/new_group_screen.dart, screens/pair_code_screen.dart, screens/photo_knows_screen.dart, screens/scan_screen.dart, widgets/media_bubbles.dart, widgets/tool_parts.dart
   ///
   /// In en, this message translates to:
   /// **'Back'**
@@ -3252,6 +3248,12 @@ abstract class AppLocalizations {
   /// screens/clean_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'Same picture'**
+  String get cleanSamePicture;
+
+  /// screens/clean_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'{label}, removed'**
   String cleanRemoved(Object label);
 
@@ -3837,79 +3839,55 @@ abstract class AppLocalizations {
   /// **'Just glad to help'**
   String get donateJustGladToHelp;
 
-  /// screens/getting_messages_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Getting messages'**
-  String get gettingMessagesGettingMessages;
-
-  /// screens/getting_messages_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'How new messages reach this phone. You can change it whenever you like.'**
-  String get gettingMessagesHowNewMessagesReach;
-
-  /// screens/getting_messages_screen.dart
+  /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Always on'**
   String get gettingMessagesAlwaysOn;
 
-  /// screens/getting_messages_screen.dart
+  /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Most private'**
   String get gettingMessagesMostPrivate;
 
-  /// screens/getting_messages_screen.dart
+  /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Messages arrive instantly. Nothing leaves Tor. Uses the most battery.'**
   String get gettingMessagesMessagesArriveInstantlyNothing;
 
-  /// screens/getting_messages_screen.dart
+  /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Check-ins'**
   String get gettingMessagesCheckIns;
 
-  /// screens/getting_messages_screen.dart
+  /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Lightest'**
   String get gettingMessagesLightest;
 
-  /// screens/getting_messages_screen.dart
+  /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Kryfo looks for messages every 15 minutes. Easy on battery, but messages can be late.'**
   String get gettingMessagesKryfoLooksForMessages;
 
-  /// screens/getting_messages_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'On the lock screen'**
-  String get gettingMessagesOnTheLockScreen;
-
-  /// screens/getting_messages_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Hide message preview'**
-  String get gettingMessagesHideMessagePreview;
-
-  /// screens/getting_messages_screen.dart
+  /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
   /// **'A generic alert, with no sender and no message text'**
   String get gettingMessagesAGenericAlertWith;
 
-  /// screens/getting_messages_screen.dart
+  /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Shows message text in notifications, even while Kryfo is locked.'**
   String get gettingMessagesShowsMessageTextIn;
 
-  /// screens/getting_messages_screen.dart
+  /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
   /// **'When the phone sits still, Android spaces check-ins further apart. The line above shows the real last one. While Kryfo is open it stays connected.'**
@@ -4656,8 +4634,8 @@ abstract class AppLocalizations {
   /// screens/handle_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'wren'**
-  String get handleWren;
+  /// **'name'**
+  String get handleHintName;
 
   /// screens/handle_screen.dart
   ///
@@ -4970,12 +4948,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, other{{count} waiting · sends when you\'re back}}'**
   String homeWaitingSendsWhenYou(int count);
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, other{{count} waiting · Tor is still connecting}}'**
-  String homeWaitingTorIsStill(int count);
 
   /// screens/home_screen.dart
   ///
@@ -5964,7 +5936,7 @@ abstract class AppLocalizations {
   /// screens/my_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Add me on Kryfo. My ID is {myId}\n\nTap to add me:\n{uri}\n\nKryfo is a private messenger. No phone number, no email.'**
+  /// **'Add me on Kryfo. My name there is {myId}\n\nTap to add me:\n{uri}\n\nKryfo is a private messenger. No phone number, no email.'**
   String myKryfoAddMeOnKryfo(Object myId, Object uri);
 
   /// screens/my_kryfo_screen.dart
@@ -6048,7 +6020,7 @@ abstract class AppLocalizations {
   /// screens/my_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The link carries your id, your address and the keys to start a chat. It works until you reset it in settings.'**
+  /// **'The link carries your three words, your address and the keys to start a chat. It works until you reset it in settings.'**
   String get myKryfoTheLinkCarriesYour;
 
   /// screens/my_kryfo_screen.dart
@@ -6188,6 +6160,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add at least one contact first before creating a group.'**
   String get newGroupAddAtLeastOne;
+
+  /// screens/new_group_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Groups are made with your contacts'**
+  String get newGroupNeedsContacts;
+
+  /// screens/new_group_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Add someone first. A room needs no contacts: anyone with its link can join.'**
+  String get newGroupAddSomeoneFirst;
 
   /// screens/notes_screen.dart
   ///
@@ -6480,7 +6464,7 @@ abstract class AppLocalizations {
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'YOUR KRYFO ID'**
+  /// **'YOUR NAME'**
   String get onboardingYourKryfoId;
 
   /// screens/onboarding_screen.dart
@@ -7002,14 +6986,14 @@ abstract class AppLocalizations {
   /// screens/photo_knows_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'What this video knows'**
-  String get photoKnowsWhatThisVideoKnows;
+  /// **'Video cleaner'**
+  String get photoKnowsVideoCleaner;
 
   /// screens/photo_knows_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'What this photo knows'**
-  String get photoKnowsWhatThisPhotoKnows;
+  /// **'Photo cleaner'**
+  String get photoKnowsPhotoCleaner;
 
   /// screens/photo_knows_screen.dart
   ///
@@ -7137,6 +7121,12 @@ abstract class AppLocalizations {
   /// **'Unlock with fingerprint'**
   String get pinsUnlockWithFingerprint;
 
+  /// screens/pins_screen.dart: under the fingerprint switch, which stays off in the everyday app while a decoy PIN is set
+  ///
+  /// In en, this message translates to:
+  /// **'Off while a decoy PIN is set: a finger opens only the decoy.'**
+  String get pinsFingerOpensDecoy;
+
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
@@ -7200,7 +7190,7 @@ abstract class AppLocalizations {
   /// screens/profile_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Kryfo id'**
+  /// **'Your name'**
   String get profileKryfoId;
 
   /// screens/profile_screen.dart
@@ -8436,12 +8426,6 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Connecting'**
-  String get settingsConnecting;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Off · relay mode'**
   String get settingsOffMode;
 
@@ -8460,7 +8444,7 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Blocked by android'**
+  /// **'Blocked by Android'**
   String get settingsBlockedByAndroid;
 
   /// screens/settings_screen.dart
@@ -8486,12 +8470,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Onion · 3 hops'**
   String get settingsOnion3Hops;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Getting messages'**
-  String get settingsGettingMessages;
 
   /// screens/settings_screen.dart
   ///
@@ -8558,6 +8536,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Checked only on your phone, nothing leaves it'**
   String get settingsScamShieldHint;
+
+  /// screens/chat_screen.dart and home_screen.dart: under a contact's name and in their chat list row while they type, three dots follow it. one word, sentence case
+  ///
+  /// In en, this message translates to:
+  /// **'Typing'**
+  String get typingNow;
+
+  /// screens/settings_screen.dart: the typing indicator switch in privacy
+  ///
+  /// In en, this message translates to:
+  /// **'Typing indicator'**
+  String get settingsTypingIndicator;
+
+  /// screens/settings_screen.dart: under the typing indicator switch
+  ///
+  /// In en, this message translates to:
+  /// **'You both see when the other is typing. It goes straight to them over Tor, never through a relay.'**
+  String get settingsTypingIndicatorHint;
+
+  /// screens/settings_screen.dart: under the typing indicator switch, dimmed, while the route is relay or fast. same words as gettingMessagesHelperOnionOnly
+  ///
+  /// In en, this message translates to:
+  /// **'Available on the Onion route'**
+  String get settingsTypingOnionOnly;
+
+  /// screens/settings_screen.dart: under the typing indicator switch, dimmed, while tor goes through a bridge. the switch shows off then
+  ///
+  /// In en, this message translates to:
+  /// **'Off while bridges are in use: someone watching your connection could match the typing signals. It comes back by itself when bridges are off.'**
+  String get settingsTypingBridgesOff;
 
   /// screens/settings_screen.dart
   ///
@@ -8868,14 +8876,14 @@ abstract class AppLocalizations {
   /// screens/tools_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'What does this photo know?'**
-  String get toolsWhatDoesThisPhoto;
+  /// **'Photo cleaner'**
+  String get toolsPhotoCleaner;
 
   /// screens/tools_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Place · phone · time'**
-  String get toolsPlacePhoneTime;
+  /// **'Removes hidden info (metadata) like place, time and phone model'**
+  String get toolsRemovesHiddenInfo;
 
   /// screens/tools_screen.dart
   ///
@@ -9558,8 +9566,8 @@ abstract class AppLocalizations {
   /// screens/why_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'No read receipts or typing tells handed to anyone, no contact list uploaded. Most apps leak metadata. Kryfo is built not to.'**
-  String get whyKryfoNoReadReceiptsOr;
+  /// **'No read receipts, no contact list uploaded. Typing shows only to the person you write to, straight over Tor, never through a server. Most apps leak metadata. Kryfo is built not to.'**
+  String get whyKryfoNoReceiptsTyping;
 
   /// screens/why_kryfo_screen.dart
   ///
@@ -9632,6 +9640,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Content credentials'**
   String get cleanerContentCredentials;
+
+  /// tools/cleaner.dart
+  ///
+  /// In en, this message translates to:
+  /// **'HDR layer'**
+  String get cleanerHdrLayer;
 
   /// tools/cleaner.dart
   ///
@@ -10263,6 +10277,60 @@ abstract class AppLocalizations {
   /// **'Close and reopen Kryfo'**
   String get bootFailedCloseAndReopen;
 
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'If trying again does not help'**
+  String get bootFailedStillStuck;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Restore a backup'**
+  String get bootFailedRestoreBackup;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Start fresh'**
+  String get bootFailedStartFresh;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Start fresh?'**
+  String get bootFailedStartFreshTitle;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'This deletes everything Kryfo keeps on this phone: chats, contacts, media, hidden chats and your three words. A backup file saved somewhere else is not touched.'**
+  String get bootFailedStartFreshLine;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get bootFailedStartFreshNext;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Delete everything on this phone?'**
+  String get bootFailedStartFreshSure;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'This cannot be undone. Kryfo closes and opens again as a new install.'**
+  String get bootFailedStartFreshSureLine;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Delete and start fresh'**
+  String get bootFailedStartFreshYes;
+
   /// widgets/kryfo_link_text.dart
   ///
   /// In en, this message translates to:
@@ -10356,7 +10424,7 @@ abstract class AppLocalizations {
   /// widgets/kryfo_link_text.dart
   ///
   /// In en, this message translates to:
-  /// **'You join under a key made for this room. Nobody in it sees your Kryfo id.'**
+  /// **'You join under a key made for this room. Nobody in it sees your three words.'**
   String get kryfoLinkTextYouJoinUnderA;
 
   /// widgets/link_stub.dart
@@ -11436,18 +11504,6 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Kryfo tries again by itself now and then.'**
-  String get bridgesKryfoTriesAgainOnItsOwn;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'The Tor Project can suggest a bridge that works here.'**
-  String get bridgesTheTorProjectCanSuggest;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Bridge removed'**
   String get bridgesBridgeRemoved;
 
@@ -12015,6 +12071,12 @@ abstract class AppLocalizations {
   /// **'Arabic'**
   String get languageNameAr;
 
+  /// the name of Hindi in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it
+  ///
+  /// In en, this message translates to:
+  /// **'Hindi'**
+  String get languageNameHi;
+
   /// under the title of the language sheet during onboarding: the choice is not final
   ///
   /// In en, this message translates to:
@@ -12429,7 +12491,7 @@ abstract class AppLocalizations {
   /// **'Adding…'**
   String get peopleAdding;
 
-  /// toast after adding someone by their handle: the registry has no such handle. {handle} includes its @, e.g. @wren
+  /// toast after adding someone by their handle: the registry has no such handle. {handle} includes its @, e.g. @name
   ///
   /// In en, this message translates to:
   /// **'Nobody has claimed {handle}'**
@@ -12464,6 +12526,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your phone would not keep fingerprint unlock for Kryfo, so it is off. Your PIN still works.'**
   String get lockFingerRefused;
+
+  /// lock screen, under the fingerprint button: the finger was taken but the phone was busy and did not finish; the finger stays on and the same finger may work in a moment
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone was busy just then. Try your fingerprint again, or use your PIN.'**
+  String get lockFingerTryAgain;
 
   /// toast: turning on Unlock with fingerprint failed because the phone would not make the fingerprint key; the switch stays off
   ///
@@ -14055,43 +14123,43 @@ abstract class AppLocalizations {
   /// **'Voice notes stop at 30 minutes. Listen to it, then send it.'**
   String get voiceStoppedAtLimit;
 
-  /// screens/getting_messages_screen.dart: the helper app card
+  /// screens/notifications_screen.dart: the helper app card
   ///
   /// In en, this message translates to:
   /// **'Instant and light. Its server sees your IP and when messages come, never what they say.'**
   String get gettingMessagesHelperBody;
 
-  /// screens/getting_messages_screen.dart: the pill on the greyed helper app card while the route is not Onion. switches the route to Onion
+  /// screens/notifications_screen.dart: the pill on the greyed helper app card while the route is not Onion. switches the route to Onion
   ///
   /// In en, this message translates to:
   /// **'Switch to Onion'**
   String get gettingMessagesHelperUseOnion;
 
-  /// screens/getting_messages_screen.dart: the pill on the helper app card once it can be picked. opens the sheet that finds or gets a helper app
+  /// screens/notifications_screen.dart: the pill on the helper app card once it can be picked. opens the sheet that finds or gets a helper app
   ///
   /// In en, this message translates to:
   /// **'Set up'**
   String get gettingMessagesHelperSetUp;
 
-  /// screens/getting_messages_screen.dart: under the status line in helper app mode
+  /// screens/notifications_screen.dart: under the status line in helper app mode
   ///
   /// In en, this message translates to:
   /// **'Fake wake-ups are mixed in, which makes it harder for the helper\'s server to tell when real messages arrive. A helper server of your own tells our relay its address. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.'**
   String get gettingMessagesHelperNote;
 
-  /// screens/getting_messages_screen.dart: under the helper app card, greyed out while the route is not Onion. a tap switches the route to Onion
+  /// screens/notifications_screen.dart: under the helper app card, greyed out while the route is not Onion. a tap switches the route to Onion
   ///
   /// In en, this message translates to:
   /// **'Available on the Onion route'**
   String get gettingMessagesHelperOnionOnly;
 
-  /// screens/getting_messages_screen.dart: on the helper app card while the app still asks our relay whether it can wake phones, with a small spinner
+  /// screens/notifications_screen.dart: on the helper app card while the app still asks our relay whether it can wake phones, with a small spinner
   ///
   /// In en, this message translates to:
   /// **'Checking…'**
   String get gettingMessagesHelperChecking;
 
-  /// screens/getting_messages_screen.dart: under the helper app card, greyed out on the Onion route while our relay has not said it can wake helper apps
+  /// screens/notifications_screen.dart: under the helper app card, greyed out on the Onion route while our relay has not said it can wake helper apps
   ///
   /// In en, this message translates to:
   /// **'Our relay does not offer this yet'**
@@ -14169,7 +14237,7 @@ abstract class AppLocalizations {
   /// **'The relay stopped waking Kryfo'**
   String get homeHelperRelayTitle;
 
-  /// screens/getting_messages_screen.dart: in helper app mode, when our relay keeps refusing some registrations
+  /// screens/notifications_screen.dart: in helper app mode, when our relay keeps refusing some registrations
   ///
   /// In en, this message translates to:
   /// **'Our relay is not taking some of this phone\'s registrations at the moment. Those chats arrive with the check-in every 15 minutes, and Kryfo keeps trying. Choosing another helper app or server can help too.'**
@@ -14318,6 +14386,1278 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Kryfo removes it from every member\'s phone that has the update.'**
   String get groupInfoEndGroupDetail;
+
+  /// translate/translate_bubble.dart and the message menu: under a message in another language
+  ///
+  /// In en, this message translates to:
+  /// **'Translate'**
+  String get translateAction;
+
+  /// under a translated message, and in its menu: back to the words as they were sent
+  ///
+  /// In en, this message translates to:
+  /// **'Show original'**
+  String get translateShowOriginal;
+
+  /// the bar at the top of a chat in another language: one tap translates the whole chat into the reader's language
+  ///
+  /// In en, this message translates to:
+  /// **'Translate to {language}'**
+  String translateBarTo(Object language);
+
+  /// the bar's small menu button, for screen readers
+  ///
+  /// In en, this message translates to:
+  /// **'Translation options'**
+  String get translateBarMore;
+
+  /// in the bar's menu: every chat translates this language on its own
+  ///
+  /// In en, this message translates to:
+  /// **'Always translate {language}'**
+  String translateBarAlways(Object language);
+
+  /// in the bar's menu: the language counts as one the person reads, nothing in it is offered for translation
+  ///
+  /// In en, this message translates to:
+  /// **'Never translate {language}'**
+  String translateBarNever(Object language);
+
+  /// in the bar's menu: the bar goes away in this chat
+  ///
+  /// In en, this message translates to:
+  /// **'Hide in this chat'**
+  String get translateBarHide;
+
+  /// under a message while it is translated on the phone
+  ///
+  /// In en, this message translates to:
+  /// **'Translating…'**
+  String get translateWorking;
+
+  /// under a message the translation library failed on; Try again follows it
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t translate'**
+  String get translateFailed;
+
+  /// the small label under a translated message: the language it was written in
+  ///
+  /// In en, this message translates to:
+  /// **'Translated from {language}'**
+  String translateFrom(Object language);
+
+  /// the chinese language pack, and a message in chinese, by name
+  ///
+  /// In en, this message translates to:
+  /// **'Chinese'**
+  String get translateLangZh;
+
+  /// translate/pack_sheet.dart: the sheet a translate tap opens when the language pack is not on the phone
+  ///
+  /// In en, this message translates to:
+  /// **'Translate {language} on this phone'**
+  String translatePackTitle(Object language);
+
+  /// under that title: what the pack is, its size, and how it comes
+  ///
+  /// In en, this message translates to:
+  /// **'Messages are translated on this phone and never leave it. That needs the {language} language pack, about {size}, downloaded once over Tor.'**
+  String translatePackLine(Object language, Object size);
+
+  /// in that sheet when the translation library does not load on this phone
+  ///
+  /// In en, this message translates to:
+  /// **'Translation doesn\'t work on this phone.'**
+  String get translatePackNoLib;
+
+  /// the button that starts a language pack download, with its size
+  ///
+  /// In en, this message translates to:
+  /// **'Download · about {size}'**
+  String translateDownload(Object size);
+
+  /// when wi-fi only is on and the phone is not on wi-fi: go now
+  ///
+  /// In en, this message translates to:
+  /// **'Download now anyway'**
+  String get translateDownloadAnyway;
+
+  /// a download that was stopped part way
+  ///
+  /// In en, this message translates to:
+  /// **'Resume download'**
+  String get translateResume;
+
+  /// under the download bar: how much of the pack is here
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total}'**
+  String translateProgress(Object done, Object total);
+
+  /// the download is in; its files are unpacked and checked
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the files…'**
+  String get translateFinishing;
+
+  /// a pack that is on the phone, with what it takes there
+  ///
+  /// In en, this message translates to:
+  /// **'On this phone · {size}'**
+  String translateInstalled(Object size);
+
+  /// a download asked for while wi-fi only is on and the phone is on mobile data
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi only is on, and this phone isn\'t on Wi-Fi.'**
+  String get translateNeedsWifi;
+
+  /// a download that could not start because tor is not up; it never goes another way
+  ///
+  /// In en, this message translates to:
+  /// **'Tor isn\'t connected yet. Packs download over Tor only, so try again once it is.'**
+  String get translateFailNoTor;
+
+  /// a download cut by the host or the circuit; the next try resumes
+  ///
+  /// In en, this message translates to:
+  /// **'The download stopped. Try again and it picks up where it left off.'**
+  String get translateFailNetwork;
+
+  /// a downloaded file did not match the hash built into the app
+  ///
+  /// In en, this message translates to:
+  /// **'A file didn\'t match what Kryfo expects, so it was thrown away. Try again.'**
+  String get translateFailBadFile;
+
+  /// the engine on this phone cannot download language packs
+  ///
+  /// In en, this message translates to:
+  /// **'Language packs can\'t be downloaded on this phone.'**
+  String get translateFailNoEngine;
+
+  /// a download stopped part way, with what it has so far
+  ///
+  /// In en, this message translates to:
+  /// **'Paused · {size} so far'**
+  String translatePaused(Object size);
+
+  /// screens/translation_screen.dart: its title, and the section on the settings page
+  ///
+  /// In en, this message translates to:
+  /// **'Translation'**
+  String get translateSettingsTitle;
+
+  /// settings: the row that opens the translation page
+  ///
+  /// In en, this message translates to:
+  /// **'Translate messages'**
+  String get translateSettingsRow;
+
+  /// under that row
+  ///
+  /// In en, this message translates to:
+  /// **'On this phone, never on a server'**
+  String get translateSettingsHint;
+
+  /// translation page: the section of language packs
+  ///
+  /// In en, this message translates to:
+  /// **'Language packs'**
+  String get translatePacksSection;
+
+  /// a pack on the translation page: both directions with english
+  ///
+  /// In en, this message translates to:
+  /// **'{language} and English'**
+  String translatePackPair(Object language);
+
+  /// a pack not on the phone, with its download size
+  ///
+  /// In en, this message translates to:
+  /// **'Not downloaded · about {size}'**
+  String translateNotDownloaded(Object size);
+
+  /// a pack being downloaded, on the translation page
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading over Tor'**
+  String get translateDownloading;
+
+  /// the sheet that asks before a pack is deleted
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the {language} pack?'**
+  String translateDeleteTitle(Object language);
+
+  /// under that title
+  ///
+  /// In en, this message translates to:
+  /// **'Messages in {language} can\'t be translated until it\'s downloaded again.'**
+  String translateDeleteLine(Object language);
+
+  /// translation page: the section of the person's languages
+  ///
+  /// In en, this message translates to:
+  /// **'Languages'**
+  String get translateLanguagesSection;
+
+  /// the languages the person reads, whose messages are not offered for translation
+  ///
+  /// In en, this message translates to:
+  /// **'Languages I read'**
+  String get translateMyLanguages;
+
+  /// under that row and in its sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Messages in these aren\'t offered for translation. The app\'s language is always one of them.'**
+  String get translateMyLanguagesHint;
+
+  /// the language messages are translated into
+  ///
+  /// In en, this message translates to:
+  /// **'Translate into'**
+  String get translateInto;
+
+  /// the choice that follows the app's own language
+  ///
+  /// In en, this message translates to:
+  /// **'The app\'s language'**
+  String get translateAppLanguage;
+
+  /// translation page: the section of downloads and automatic translation
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads and chats'**
+  String get translateBehaviourSection;
+
+  /// the default for chats nobody set: translate on its own
+  ///
+  /// In en, this message translates to:
+  /// **'Translate chats automatically'**
+  String get translateAutoDefault;
+
+  /// under that switch
+  ///
+  /// In en, this message translates to:
+  /// **'For chats you haven\'t set yourself. Each chat can turn it on or off.'**
+  String get translateAutoDefaultHint;
+
+  /// pack downloads wait for wi-fi
+  ///
+  /// In en, this message translates to:
+  /// **'Download packs on Wi-Fi only'**
+  String get translateWifiOnly;
+
+  /// translation page: the section on what a download says to whom
+  ///
+  /// In en, this message translates to:
+  /// **'What stays private'**
+  String get translatePrivacyTitle;
+
+  /// under that title
+  ///
+  /// In en, this message translates to:
+  /// **'Translation happens on this phone. No message is ever sent anywhere to be translated. Downloading a pack tells the host which pack it is. It comes over Tor, so the host doesn\'t learn who asked.'**
+  String get translatePrivacyNote;
+
+  /// contact page: this chat translates messages in other languages on its own
+  ///
+  /// In en, this message translates to:
+  /// **'Translate automatically'**
+  String get translateAutoInChat;
+
+  /// under that switch
+  ///
+  /// In en, this message translates to:
+  /// **'Messages in other languages show translated. The original is one tap away.'**
+  String get translateAutoInChatHint;
+
+  /// screens/bridges_screen.dart: the "In use" value while relay or fast mode is on, where no bridge is used
+  ///
+  /// In en, this message translates to:
+  /// **'None until onion is on'**
+  String get bridgesNoneUntilOnion;
+
+  /// bridge_mode.dart: the one line when automatic found no way in, over the button that switches to relay mode
+  ///
+  /// In en, this message translates to:
+  /// **'Relay mode works where Tor is blocked, and you can switch back any time.'**
+  String get bridgesRelayWorksWhereTor;
+
+  /// bridge_mode.dart: the one line when automatic found no way in, for someone who said Tor is blocked or watched: what relay mode costs on this network
+  ///
+  /// In en, this message translates to:
+  /// **'Relay mode gets through where Tor is blocked, but this network can see you connect to Kryfo.'**
+  String get bridgesRelayThisNetworkSees;
+
+  /// screens/onboarding_screen.dart: the cost under relay on the send step, for someone who said Tor is blocked or watched and took relay mode
+  ///
+  /// In en, this message translates to:
+  /// **'This network can see you connect to Kryfo. Our relay sees your address.'**
+  String get onboardingRelayThisNetworkSees;
+
+  /// screens/settings_screen.dart: the row in About that opens the licences
+  ///
+  /// In en, this message translates to:
+  /// **'Licences'**
+  String get settingsLicences;
+
+  /// screens/settings_screen.dart: the value beside that row
+  ///
+  /// In en, this message translates to:
+  /// **'What Kryfo is built on'**
+  String get settingsLicencesValue;
+
+  /// screens/licences_screen.dart: Kryfo's own licence, at the top
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo is free software under the GNU General Public License, version 3 or later. Anyone can read, change and share its code.'**
+  String get licencesKryfoLine;
+
+  /// screens/licences_screen.dart: the row that copies Kryfo's source link
+  ///
+  /// In en, this message translates to:
+  /// **'Source code'**
+  String get licencesSourceCode;
+
+  /// screens/licences_screen.dart: the section about libsignal
+  ///
+  /// In en, this message translates to:
+  /// **'Signal protocol'**
+  String get licencesSignalTitle;
+
+  /// screens/licences_screen.dart: version is the libsignal tag, like v0.99.4
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo includes libsignal {version}, made by Signal, under the GNU Affero General Public License, version 3. Its source code is at github.com/signalapp/libsignal and beside every Kryfo release.'**
+  String licencesSignalLine(String version);
+
+  /// screens/licences_screen.dart: the row that opens the AGPL text
+  ///
+  /// In en, this message translates to:
+  /// **'GNU AGPL 3.0, full text'**
+  String get licencesAgplText;
+
+  /// screens/licences_screen.dart: the row that copies libsignal's source link
+  ///
+  /// In en, this message translates to:
+  /// **'libsignal source code'**
+  String get licencesSignalSource;
+
+  /// screens/licences_screen.dart: the section listing every package
+  ///
+  /// In en, this message translates to:
+  /// **'Open source parts'**
+  String get licencesParts;
+
+  /// screens/licences_screen.dart: the rust crates inside the signal library
+  ///
+  /// In en, this message translates to:
+  /// **'In the Signal library'**
+  String get licencesInSignal;
+
+  /// screens/licences_screen.dart: the dart packages in the app
+  ///
+  /// In en, this message translates to:
+  /// **'In the app'**
+  String get licencesInApp;
+
+  /// screens/licences_screen.dart: how many packages a list holds
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} part} other{{count} parts}}'**
+  String licencesPartCount(int count);
+
+  /// screens/licences_screen.dart: the row that opens the GPL text Kryfo is under
+  ///
+  /// In en, this message translates to:
+  /// **'GNU GPL 3.0, full text'**
+  String get licencesGplText;
+
+  /// screens/licences_screen.dart: the go modules and c libraries inside Kryfo's network engine (tor, openssl and others)
+  ///
+  /// In en, this message translates to:
+  /// **'In the network engine'**
+  String get licencesInEngine;
+
+  /// screens/licences_screen.dart: the value of a row whose list or text failed to load
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load'**
+  String get licencesLoadFailed;
+
+  /// screens/settings_screen.dart, screens/licences_screen.dart: what a screen reader says a tap on a source link row does
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get settingsCopyLinkHint;
+
+  /// app/gates.dart: the home pill in relay mode while its relay has not answered for a while
+  ///
+  /// In en, this message translates to:
+  /// **'Relay not answering'**
+  String get appRelayNotAnswering;
+
+  /// widgets/motion.dart: the tor sheet's route label, all caps, while tor's route is up and no relay has answered through it
+  ///
+  /// In en, this message translates to:
+  /// **'NO RELAY YET'**
+  String get motionNoRelayYet;
+
+  /// widgets/motion.dart: the tor sheet's large italic line while tor's route is up and no relay has answered through it
+  ///
+  /// In en, this message translates to:
+  /// **'The route is up'**
+  String get motionTheRouteIsUp;
+
+  /// widgets/motion.dart: the tor sheet's small line under that
+  ///
+  /// In en, this message translates to:
+  /// **'Messages go out as soon as a relay answers through this route.'**
+  String get motionMessagesGoOnceARelay;
+
+  /// widgets/motion.dart: the tor sheet's route label, all caps, while the phone has no network
+  ///
+  /// In en, this message translates to:
+  /// **'OFFLINE'**
+  String get motionOffline;
+
+  /// widgets/motion.dart: the tor sheet's large italic line while the phone has no network
+  ///
+  /// In en, this message translates to:
+  /// **'No network'**
+  String get motionNoNetwork;
+
+  /// widgets/motion.dart: the tor sheet's small line under that
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing goes out without a network. Tor picks up again when one is back.'**
+  String get motionTorPicksUpAgain;
+
+  /// delivery_mode.dart: the check-ins line while not connected: the connection's words as the home pill shows them, then the last check-in
+  ///
+  /// In en, this message translates to:
+  /// **'{state} · {last}'**
+  String deliveryModeStateLast(String state, Object last);
+
+  /// screens/home_screen.dart: the strip over the chats while the phone cannot send: how many wait, then the connection's words as the home pill shows them
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{{count} waiting · {state}}}'**
+  String homeWaitingState(int count, String state);
+
+  /// screens/settings_screen.dart: the Security row into the icon screen, and that screen's title
+  ///
+  /// In en, this message translates to:
+  /// **'Icon and notifications'**
+  String get settingsIconAndNotifications;
+
+  /// screens/settings_screen.dart: that row's value with plain notifications on; icon is the icon's name
+  ///
+  /// In en, this message translates to:
+  /// **'{icon}, plain notifications'**
+  String iconSettingsValue(String icon);
+
+  /// screens/icon_screen.dart: the section with the icons
+  ///
+  /// In en, this message translates to:
+  /// **'App icon'**
+  String get iconSectionTitle;
+
+  /// screens/icon_screen.dart: under the icons when a plain one is picked
+  ///
+  /// In en, this message translates to:
+  /// **'Your home screen and app list show this icon and name instead of Kryfo.'**
+  String get iconHint;
+
+  /// screens/icon_screen.dart: under the icons while Kryfo's own is picked
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an everyday icon and name for your home screen and app list.'**
+  String get iconHintKryfo;
+
+  /// screens/icon_screen.dart: the link that opens the sheet about what changes, and that sheet's title
+  ///
+  /// In en, this message translates to:
+  /// **'What this changes'**
+  String get iconWhatChanges;
+
+  /// screens/icon_screen.dart: the confirm sheet's title; name is the icon's name
+  ///
+  /// In en, this message translates to:
+  /// **'Change the icon to {name}?'**
+  String iconConfirmTitle(String name);
+
+  /// screens/icon_screen.dart: the confirm sheet's line; name is the icon's name
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo closes and opens again. If the icon leaves your home screen, find {name} in your apps and place it again.'**
+  String iconConfirmLine(String name);
+
+  /// screens/icon_screen.dart: the button at the bottom and on the confirm sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Change icon'**
+  String get iconConfirmButton;
+
+  /// screens/icon_screen.dart: on the confirm sheet when no app PIN is set
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone who taps it sees Kryfo. Set an app PIN so they see a PIN pad instead.'**
+  String get iconNoPinLine;
+
+  /// screens/icon_screen.dart: the second button on that sheet, opens the PIN setup
+  ///
+  /// In en, this message translates to:
+  /// **'Set a PIN'**
+  String get iconSetPin;
+
+  /// screens/icon_screen.dart: the toast once Kryfo is open again; name is the icon's name
+  ///
+  /// In en, this message translates to:
+  /// **'Icon changed to {name}'**
+  String iconChanged(String name);
+
+  /// screens/icon_screen.dart: what a screen reader says for the home screen preview
+  ///
+  /// In en, this message translates to:
+  /// **'Your home screen will show {name}'**
+  String iconPreviewLabel(String name);
+
+  /// screens/icon_screen.dart: what a screen reader says for one icon in the grid
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, app icon'**
+  String iconButtonLabel(String name);
+
+  /// screens/icon_screen.dart: notifications show the sender and the message
+  ///
+  /// In en, this message translates to:
+  /// **'Name and message'**
+  String get notifShowAll;
+
+  /// screens/icon_screen.dart: notifications say only New message; quote the notification's own words
+  ///
+  /// In en, this message translates to:
+  /// **'Only “New message”'**
+  String get notifShowNew;
+
+  /// screens/icon_screen.dart: plain notifications, the option's name
+  ///
+  /// In en, this message translates to:
+  /// **'Plain'**
+  String get notifShowPlain;
+
+  /// screens/icon_screen.dart: under that option
+  ///
+  /// In en, this message translates to:
+  /// **'No name, no message, no Kryfo colours. A neutral icon and one line.'**
+  String get notifPlainHint;
+
+  /// notifications.dart: the one line a plain notification says
+  ///
+  /// In en, this message translates to:
+  /// **'Something new'**
+  String get notifPlainLine;
+
+  /// notifications.dart: the plain notifications' channel name in the phone's settings. says nothing about messages
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts'**
+  String get notifPlainChannel;
+
+  /// screens/icon_screen.dart: under the plain option, what Android keeps
+  ///
+  /// In en, this message translates to:
+  /// **'The top of each notification still says Kryfo. Android does not let an app change that.'**
+  String get notifHeaderLimit;
+
+  /// screens/notifications_screen.dart: the row into the notification choices
+  ///
+  /// In en, this message translates to:
+  /// **'What notifications show'**
+  String get gettingMessagesWhatShows;
+
+  /// screens/icon_screen.dart: the sheet, heading
+  ///
+  /// In en, this message translates to:
+  /// **'What changes'**
+  String get iconSheetChangesTitle;
+
+  /// screens/icon_screen.dart: the sheet, what changes
+  ///
+  /// In en, this message translates to:
+  /// **'The icon and name on your home screen and in your app list, the share menu and the app switcher. With Plain, what notifications show.'**
+  String get iconSheetChanges;
+
+  /// screens/icon_screen.dart: the sheet, heading
+  ///
+  /// In en, this message translates to:
+  /// **'What stays Kryfo'**
+  String get iconSheetStaysTitle;
+
+  /// screens/icon_screen.dart: the sheet, what keeps saying Kryfo
+  ///
+  /// In en, this message translates to:
+  /// **'The top line of every notification, your phone’s settings and battery pages, the app store, and Kryfo itself when someone opens it.'**
+  String get iconSheetStays;
+
+  /// screens/icon_screen.dart: the sheet, the limit. never promise more
+  ///
+  /// In en, this message translates to:
+  /// **'It holds up to a glance at your home screen. It does not hide Kryfo from someone who looks through your phone’s settings.'**
+  String get iconSheetGlance;
+
+  /// screens/icon_screen.dart: the sheet, phones on Android 15 and later. use Android's own name for private space
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone may have its own way to hide apps: private space, in its settings.'**
+  String get iconSheetPrivateSpace;
+
+  /// screens/icon_screen.dart: the sheet, Samsung phones. use Samsung's own name for Secure Folder
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone may have its own way to hide apps: Secure Folder, in its settings.'**
+  String get iconSheetSecureFolder;
+
+  /// screens/icon_screen.dart: the sheet, Xiaomi phones. use Xiaomi's own name for hidden apps
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone may have its own way to hide apps: hidden apps, in its settings.'**
+  String get iconSheetXiaomi;
+
+  /// android: the launcher name of the plain Notes icon. a common word, never an app's or a brand's name
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get androidIconNotes;
+
+  /// android: the launcher name of the plain Weather icon
+  ///
+  /// In en, this message translates to:
+  /// **'Weather'**
+  String get androidIconWeather;
+
+  /// android: the launcher name of the plain Tasks icon
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get androidIconTasks;
+
+  /// android: the launcher name of the plain News icon. not the word for text messages
+  ///
+  /// In en, this message translates to:
+  /// **'News'**
+  String get androidIconNews;
+
+  /// android: the staying-connected notification's title with plain notifications on, one plain word
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get androidServiceTitlePlain;
+
+  /// lock_state.dart: the fingerprint prompt's title while a plain icon is on. says nothing of Kryfo
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get lockStateUnlockPlain;
+
+  /// screens/icon_screen.dart: the sheet, what other apps and Android itself still show
+  ///
+  /// In en, this message translates to:
+  /// **'Apps on your phone can still see that Kryfo is installed, and Android’s own dialogs and prompts may show its name.'**
+  String get iconSheetOthers;
+
+  /// screens/icon_screen.dart: the sheet, where new saves go while a plain icon is on
+  ///
+  /// In en, this message translates to:
+  /// **'While a plain icon is on, new photos, videos and files are saved with ordinary names in your phone’s usual folders. What was saved before stays where it is.'**
+  String get iconSheetSaves;
+
+  /// delivery_mode.dart: the mode name, google push (play builds)
+  ///
+  /// In en, this message translates to:
+  /// **'Google push'**
+  String get deliveryModeGooglePush;
+
+  /// delivery_mode.dart: who wakes the phone in google push, in "Woken by Google"
+  ///
+  /// In en, this message translates to:
+  /// **'Google'**
+  String get deliveryModeGoogle;
+
+  /// screens/notifications_screen.dart: under the title
+  ///
+  /// In en, this message translates to:
+  /// **'How new messages reach this phone, how they sound and what they show. You can change it whenever you like.'**
+  String get notificationsLead;
+
+  /// screens/notifications_screen.dart: section over the ways messages arrive
+  ///
+  /// In en, this message translates to:
+  /// **'How messages reach you'**
+  String get notificationsHowTheyReachYou;
+
+  /// screens/notifications_screen.dart, screens/onboarding_screen.dart: tag on google push
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get notificationsRecommended;
+
+  /// google push card: what it does and what google sees
+  ///
+  /// In en, this message translates to:
+  /// **'Instant and light. Google can see when your phone is woken, never who wrote or what was said.'**
+  String get notificationsGoogleBody;
+
+  /// google push is starting
+  ///
+  /// In en, this message translates to:
+  /// **'Turning on…'**
+  String get notificationsGoogleStarting;
+
+  /// toast: no token came from google
+  ///
+  /// In en, this message translates to:
+  /// **'Google push could not start. Check the connection and try again.'**
+  String get notificationsGoogleNoStart;
+
+  /// screens/notifications_screen.dart: note under google push
+  ///
+  /// In en, this message translates to:
+  /// **'Fake wake-ups are mixed in, which makes it harder for Google to tell when real messages arrive. Our relay only stores addresses it cannot link together. The push service runs on the same server and could link them, and with Google\'s help to your Google account, so whoever runs or seizes our server could too. If that matters to you, pick another way. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.'**
+  String get notificationsGoogleNote;
+
+  /// screens/notifications_screen.dart: google push, the relay refuses some registrations
+  ///
+  /// In en, this message translates to:
+  /// **'Our relay is not taking some of this phone\'s registrations at the moment. Those chats arrive with the check-in every 15 minutes, and Kryfo keeps trying.'**
+  String get notificationsGoogleRefused;
+
+  /// screens/notifications_screen.dart: section
+  ///
+  /// In en, this message translates to:
+  /// **'Sound and vibration'**
+  String get notificationsSoundAndVibration;
+
+  /// screens/notifications_screen.dart: the row opens android's settings for the messages channel
+  ///
+  /// In en, this message translates to:
+  /// **'Set in Android’s own settings'**
+  String get notificationsSoundHint;
+
+  /// screens/notifications_screen.dart: row, opens what notifications show
+  ///
+  /// In en, this message translates to:
+  /// **'Each notification shows'**
+  String get notificationsEachShows;
+
+  /// screens/notifications_screen.dart: section
+  ///
+  /// In en, this message translates to:
+  /// **'Battery tips'**
+  String get notificationsBatteryTips;
+
+  /// screens/notifications_screen.dart: kryfo may run in the background
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed'**
+  String get notificationsBatteryAllowed;
+
+  /// screens/notifications_screen.dart: kryfo may not run in the background yet
+  ///
+  /// In en, this message translates to:
+  /// **'Not allowed'**
+  String get notificationsBatteryNotYet;
+
+  /// screens/notifications_screen.dart: row, the maker's own background switch
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone maker’s switch'**
+  String get notificationsMakerSwitch;
+
+  /// screens/onboarding_screen.dart: play builds, the step that asks how messages arrive. *marked* words are italic
+  ///
+  /// In en, this message translates to:
+  /// **'How messages *reach you*.'**
+  String get onboardingDeliveryHeadline;
+
+  /// screens/onboarding_screen.dart: under the headline
+  ///
+  /// In en, this message translates to:
+  /// **'You can change this any time in Notifications.'**
+  String get onboardingDeliveryLead;
+
+  /// screens/home_screen.dart: card offering google push after the update
+  ///
+  /// In en, this message translates to:
+  /// **'Google push is here'**
+  String get homeGoogleTitle;
+
+  /// screens/home_screen.dart: the card's line
+  ///
+  /// In en, this message translates to:
+  /// **'Instant and easy on the battery. Google can see when your phone is woken, never who wrote or what was said.'**
+  String get homeGoogleLine;
+
+  /// screens/home_screen.dart: button, turns google push on
+  ///
+  /// In en, this message translates to:
+  /// **'Use it'**
+  String get homeGoogleUse;
+
+  /// screens/home_screen.dart: toast
+  ///
+  /// In en, this message translates to:
+  /// **'Google push is on'**
+  String get homeGoogleOn;
+
+  /// screens/home_screen.dart: play services went, the phone checks in
+  ///
+  /// In en, this message translates to:
+  /// **'Google push is not available'**
+  String get homeGoogleGoneTitle;
+
+  /// app/dev_screen.dart: link to the notifications screen
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications →'**
+  String get appNotificationsLink;
+
+  /// app/dev_screen.dart: pushes come, and how many android lowered from high priority
+  ///
+  /// In en, this message translates to:
+  /// **'Google pushes {got} · lowered {low}'**
+  String devGooglePushes(int got, int low);
+
+  /// widgets/pass_pad.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Passphrase'**
+  String get passFieldLabel;
+
+  /// widgets/pass_pad.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Use letters'**
+  String get padUseLetters;
+
+  /// widgets/pass_pad.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Use digits'**
+  String get padUseDigits;
+
+  /// widgets/pass_pad.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Weak'**
+  String get passWeak;
+
+  /// widgets/pass_pad.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Fair'**
+  String get passFair;
+
+  /// widgets/pass_pad.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Strong'**
+  String get passStrong;
+
+  /// widgets/pass_pad.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Strength: {level}'**
+  String passStrengthIs(Object level);
+
+  /// screens/lock_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'The phone\'s security chip is busy. Try again in a moment.'**
+  String get lockKeyBusy;
+
+  /// screens/lock_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock your phone with its own PIN once, then try again.'**
+  String get lockKeyLocked;
+
+  /// screens/lock_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Still checking with the phone\'s security chip'**
+  String get lockKeyWaiting;
+
+  /// screens/lock_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'This phone lost the key that checks your PINs, so some PINs may not open. Kryfo can be reset and a backup restored.'**
+  String get lockKeyLost;
+
+  /// screens/lock_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Kryfo'**
+  String get lockKeyReset;
+
+  /// screens/lock_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Kryfo?'**
+  String get lockKeyResetTitle;
+
+  /// screens/lock_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Everything in Kryfo on this phone is deleted and Kryfo closes. Then you can restore a backup. Hidden chats come back only from a backup made while they were open.'**
+  String get lockKeyResetLine;
+
+  /// screens/lock_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'This cannot be undone'**
+  String get lockKeyResetSureTitle;
+
+  /// screens/lock_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'All chats, keys and settings in Kryfo on this phone go now.'**
+  String get lockKeyResetSureLine;
+
+  /// screens/lock_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Delete everything'**
+  String get lockKeyResetSure;
+
+  /// screens/pin_flow_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'At least 12 characters. The phone\'s keyboard sees what you type, so use one that does not learn or sync words.'**
+  String get flowVaultPassLine;
+
+  /// screens/pin_flow_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'The same passphrase again'**
+  String get flowVaultPassAgain;
+
+  /// screens/pins_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Finish the security update'**
+  String get cardTitle;
+
+  /// screens/pins_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'If you use other PINs, type them once here.'**
+  String get cardLine;
+
+  /// screens/pins_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Type a PIN'**
+  String get cardType;
+
+  /// screens/update_pins_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Done. Type another, or tap Done when you are finished.'**
+  String get cardAnswer;
+
+  /// screens/pins_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Your PINs only work on this phone. If the phone ever loses the key that checks them, you will have to reset Kryfo and restore a backup. Hidden chats come back only from a backup made while they were open.'**
+  String get keyLine;
+
+  /// screens/pins_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Your PINs only work on this phone, and only while it is unlocked. If the phone ever loses the key that checks them, you will have to reset Kryfo and restore a backup. Hidden chats come back only from a backup made while they were open.'**
+  String get keyLineUnlocked;
+
+  /// screens/pins_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Set a screen lock on your phone so this protection holds when it is locked.'**
+  String get keyLineScreenLock;
+
+  /// screens/settings_screen.dart: the section over the linked devices row
+  ///
+  /// In en, this message translates to:
+  /// **'Devices'**
+  String get settingsDevices;
+
+  /// screens/linked_devices_screen.dart and settings: the page of your own linked devices
+  ///
+  /// In en, this message translates to:
+  /// **'Linked devices'**
+  String get devicesLinkedDevices;
+
+  /// screens/linked_devices_screen.dart: the settings row value when nothing else is linked
+  ///
+  /// In en, this message translates to:
+  /// **'This phone only'**
+  String get devicesThisPhoneOnly;
+
+  /// screens/linked_devices_screen.dart: goes between device names on the settings row
+  ///
+  /// In en, this message translates to:
+  /// **', '**
+  String get devicesNameSeparator;
+
+  /// screens/linked_devices_screen.dart: the name of the phone in hand on the list
+  ///
+  /// In en, this message translates to:
+  /// **'This phone'**
+  String get devicesThisPhone;
+
+  /// screens/linked_devices_screen.dart: the line under this phone on the list
+  ///
+  /// In en, this message translates to:
+  /// **'Only this phone can link or remove devices'**
+  String get devicesOnlyThisPhone;
+
+  /// screens/linked_devices_screen.dart: when a device was linked, a day
+  ///
+  /// In en, this message translates to:
+  /// **'Linked {date}'**
+  String devicesLinkedOn(Object date);
+
+  /// screens/linked_devices_screen.dart: a device was used today, after the linked day
+  ///
+  /// In en, this message translates to:
+  /// **'Used today'**
+  String get devicesUsedToday;
+
+  /// screens/linked_devices_screen.dart: a device was used in the last seven days
+  ///
+  /// In en, this message translates to:
+  /// **'Used this week'**
+  String get devicesUsedThisWeek;
+
+  /// screens/linked_devices_screen.dart: a device was used in the last thirty days
+  ///
+  /// In en, this message translates to:
+  /// **'Used this month'**
+  String get devicesUsedThisMonth;
+
+  /// screens/linked_devices_screen.dart: a linked device that was never opened since
+  ///
+  /// In en, this message translates to:
+  /// **'Not used yet'**
+  String get devicesNotUsedYet;
+
+  /// screens/linked_devices_screen.dart: in amber, under a device close to the 30 days unused
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =0{Unlinks today unless you open it} =1{Unlinks tomorrow unless you open it} other{Unlinks in {days} days unless you open it}}'**
+  String devicesUnlinksSoon(int days);
+
+  /// screens/linked_devices_screen.dart: over the empty list, only this phone
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo on your computer'**
+  String get devicesEmptyTitle;
+
+  /// screens/linked_devices_screen.dart: under the empty title
+  ///
+  /// In en, this message translates to:
+  /// **'Link a computer to read and send your messages there. Up to five devices besides this phone.'**
+  String get devicesEmptyLine;
+
+  /// screens/linked_devices_screen.dart: a note under the list, about what contacts see
+  ///
+  /// In en, this message translates to:
+  /// **'Your contacts\' apps don\'t show your devices.'**
+  String get devicesContactsSeeNothing;
+
+  /// screens/linked_devices_screen.dart: a note under the list, the 30 day rule
+  ///
+  /// In en, this message translates to:
+  /// **'A device you don\'t open for 30 days unlinks itself and wipes your chats from it.'**
+  String get devicesUnusedRule;
+
+  /// screens/linked_devices_screen.dart: over the link button when five are linked
+  ///
+  /// In en, this message translates to:
+  /// **'Five devices are linked. Remove one to link another.'**
+  String get devicesFull;
+
+  /// screens/linked_devices_screen.dart: the button at the foot of the list, and the title of the page it opens
+  ///
+  /// In en, this message translates to:
+  /// **'Link a device'**
+  String get devicesLinkADevice;
+
+  /// screens/linked_devices_screen.dart: the rose row at the foot of the list
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all other devices'**
+  String get devicesRemoveAll;
+
+  /// screens/linked_devices_screen.dart: the sheet that asks
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all other devices?'**
+  String get devicesRemoveAllTitle;
+
+  /// screens/linked_devices_screen.dart: under the question
+  ///
+  /// In en, this message translates to:
+  /// **'Once your contacts\' apps get the change, they stop getting new messages and can\'t send as you. This phone keeps everything.'**
+  String get devicesRemoveAllLine;
+
+  /// screens/linked_devices_screen.dart: the rose button that removes them
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all'**
+  String get devicesRemoveAllYes;
+
+  /// screens/linked_devices_screen.dart: the toast once they are removed
+  ///
+  /// In en, this message translates to:
+  /// **'Only this phone now'**
+  String get devicesRemovedAll;
+
+  /// screens/linked_devices_screen.dart: the sheet that asks before one device goes
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}?'**
+  String devicesRemoveTitle(Object name);
+
+  /// screens/linked_devices_screen.dart: under the question; the last sentence is the honest part
+  ///
+  /// In en, this message translates to:
+  /// **'Once your contacts\' apps get the change, it stops getting new messages and can\'t send as you. It wipes your chats from itself the next time it\'s online. A device someone has tampered with may keep what it already has.'**
+  String get devicesRemoveLine;
+
+  /// screens/linked_devices_screen.dart: the rose row in a device sheet, and the button that removes it
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get devicesRemove;
+
+  /// screens/linked_devices_screen.dart: the toast once a device is removed
+  ///
+  /// In en, this message translates to:
+  /// **'{name} removed'**
+  String devicesRemoved(Object name);
+
+  /// screens/linked_devices_screen.dart: a row in a device sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get devicesRename;
+
+  /// screens/linked_devices_screen.dart: the sheet with the name field
+  ///
+  /// In en, this message translates to:
+  /// **'Rename {name}'**
+  String devicesRenameTitle(Object name);
+
+  /// screens/linked_devices_screen.dart: under the rename title
+  ///
+  /// In en, this message translates to:
+  /// **'Only you see this name. Your contacts never do.'**
+  String get devicesRenameLine;
+
+  /// screens/linked_devices_screen.dart: the hint in an empty name field
+  ///
+  /// In en, this message translates to:
+  /// **'Computer'**
+  String get devicesNameComputer;
+
+  /// screens/linked_devices_screen.dart: over the device code in a device sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Device code'**
+  String get devicesDeviceCode;
+
+  /// screens/linked_devices_screen.dart: under the device code
+  ///
+  /// In en, this message translates to:
+  /// **'The same code shows on the device itself, in Settings.'**
+  String get devicesDeviceCodeLine;
+
+  /// screens/linked_devices_screen.dart: the first step on the link page
+  ///
+  /// In en, this message translates to:
+  /// **'Open Kryfo on your computer. It shows a code.'**
+  String get devicesLinkStep1;
+
+  /// screens/linked_devices_screen.dart: the second step on the link page
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the code with this phone.'**
+  String get devicesLinkStep2;
+
+  /// screens/linked_devices_screen.dart: the third step on the link page
+  ///
+  /// In en, this message translates to:
+  /// **'Check that both screens show the same six numbers.'**
+  String get devicesLinkStep3;
+
+  /// screens/linked_devices_screen.dart: the section over the history choices
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get devicesHistory;
+
+  /// screens/linked_devices_screen.dart: the first history choice, picked to start
+  ///
+  /// In en, this message translates to:
+  /// **'Copy my chats'**
+  String get devicesHistoryCopy;
+
+  /// screens/linked_devices_screen.dart: under the first history choice
+  ///
+  /// In en, this message translates to:
+  /// **'All your messages, with photos and videos from the last 30 days.'**
+  String get devicesHistoryCopyHint;
+
+  /// screens/linked_devices_screen.dart: the second history choice
+  ///
+  /// In en, this message translates to:
+  /// **'Start with no history'**
+  String get devicesHistoryNone;
+
+  /// screens/linked_devices_screen.dart: under the second history choice
+  ///
+  /// In en, this message translates to:
+  /// **'Only new messages reach the device.'**
+  String get devicesHistoryNoneHint;
+
+  /// screens/linked_devices_screen.dart: the switch under the first history choice
+  ///
+  /// In en, this message translates to:
+  /// **'Skip photos and videos'**
+  String get devicesSkipMedia;
+
+  /// screens/linked_devices_screen.dart: under the switch
+  ///
+  /// In en, this message translates to:
+  /// **'Only the text comes over. Quicker, and less to keep on the device.'**
+  String get devicesSkipMediaHint;
+
+  /// screens/linked_devices_screen.dart: a note on the link page
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden chats and the decoy stay on this phone.'**
+  String get devicesHiddenStay;
+
+  /// screens/linked_devices_screen.dart: the button at the foot of the link page
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the code'**
+  String get devicesScanCode;
 }
 
 class _AppLocalizationsDelegate
@@ -14337,6 +15677,7 @@ class _AppLocalizationsDelegate
     'es',
     'fa',
     'fr',
+    'hi',
     'id',
     'it',
     'pt',
@@ -14378,6 +15719,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsFa();
     case 'fr':
       return AppLocalizationsFr();
+    case 'hi':
+      return AppLocalizationsHi();
     case 'id':
       return AppLocalizationsId();
     case 'it':

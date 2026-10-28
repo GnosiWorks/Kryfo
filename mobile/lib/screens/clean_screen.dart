@@ -494,6 +494,10 @@ class _Done extends StatelessWidget {
                                     Text(
                                       video
                                           ? l10n.cleanSameVideoSameQuality
+                                          // without its hdr layer it looks
+                                          // the same only on a plain screen
+                                          : result.before.hdrLayer
+                                          ? l10n.cleanSamePicture
                                           : l10n.cleanSamePictureSameQuality,
                                       style: HaloType.sans(
                                         size: 11.5,

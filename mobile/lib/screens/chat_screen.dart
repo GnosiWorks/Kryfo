@@ -5,6 +5,7 @@ import '../lock_state.dart';
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../container.dart' show HaloContainer;
 import '../drafts.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -27,7 +28,12 @@ import 'introduce_sheet.dart';
 import '../vouch_text.dart';
 import '../widgets/intro_chip.dart';
 import '../widgets/media_bubbles.dart'
-    show VoiceBubble, VoiceMakingBubble, fileCard, fileTooBigLine;
+    show
+        VoiceBubble,
+        VoiceMakingBubble,
+        fileCard,
+        fileTooBigLine,
+        voiceLengthKnown;
 import '../widgets/voice_mic.dart';
 import '../widgets/owned_text.dart';
 import '../widgets/confirm_sheet.dart';
@@ -42,7 +48,6 @@ import '../open_file.dart';
 import '../file_kind.dart'
     show
         FileShape,
-        bytesSayIsoVideo,
         fileFactsRead,
         fileFits,
         fileShapeNow,
@@ -63,9 +68,9 @@ import '../media_progress.dart';
 import '../msg_order.dart';
 import '../widgets/earlier_chip.dart';
 import '../media_send.dart'
-    show sendChunkedMediaTo, cancelMediaSend, mediaInflight;
+    show sendChunkedMediaTo, cancelMediaSend, mediaInflight, mediaSendsTick;
+import '../clean_media.dart';
 import '../image_strip.dart';
-import '../mp4_strip.dart';
 import '../widgets/decode_px.dart';
 import '../notifications.dart' show clearNotificationsFor;
 import '../devchat/dev_chat.dart' show DevChatRow, DevRow, DevState;
@@ -103,7 +108,22 @@ import '../main.dart'
         shredFile,
         torStrictGetOnIsolate,
         torValve,
-        TorHalo;
+        TorHalo,
+        LinkViewBuilder,
+        AppStateOutbox,
+        AppStateMessages,
+        AppStateRoute,
+        AppStatePrefs,
+        AppStateProfile,
+        AppStateScreen,
+        AppStateTyping,
+        AppStateVault,
+        AppStateContacts,
+        AppStateSession,
+        AppStateVoice,
+        AppStateDevchat,
+        AppStatePairing,
+        AppStateRefresh;
 import '../widgets/reconnect_valve.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/say_hi_card.dart';
@@ -159,6 +179,8 @@ import '../l10n/numbers.dart';
 import '../widgets/video_viewer.dart';
 import '../widgets/photo_viewer.dart';
 import '../widgets/swap.dart';
+import '../widgets/typing_mark.dart';
+import '../typing.dart' show composerEdit;
 import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
 import '../back_on_top.dart';
@@ -168,6 +190,14 @@ import '../widgets/key_held.dart';
 import '../first_contact.dart' show routeText, waitsForReceipt;
 import '../text_send.dart';
 import '../lock_guard.dart' show LockDropped, lockGuard, onScreen;
+import '../translate/chat_translation.dart';
+import '../translate/hub_live.dart' show translationHubIfOn;
+import '../translate/translate_bar.dart';
+import '../translate/translate_bubble.dart';
+import '../voice_format.dart' show isVoiceName, kVoiceWav;
+import '../voice_length.dart' show voiceFileMs;
+import '../voice_opus.dart' show voiceForWire;
+import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
 
 // the chats open in the stack, by id: shared words land in the one on top
 // rather than in a second copy of it
@@ -185,12 +215,26 @@ bool landInOpenChat(String id, String words) {
   return false;
 }
 
+/// whether [id]'s chat is the page in front, its own sheets over it or
+/// not: its composer is being typed in, not a draft left behind
+bool chatOnScreen(String id) => (_openChats[id] ?? const []).any(
+  (s) => s.mounted && pageInFront(ModalRoute.of(s.context)),
+);
+
+/// [id]'s timed draft in [c] went: a composer of it still open empties,
+/// its quote too
+void emptyChatComposer(HaloContainer c, String id) {
+  for (final s in _openChats[id] ?? const <_ChatScreenState>[]) {
+    if (s.mounted && s._memo == c.chatKey(id)) s._timedDraftGone();
+  }
+}
+
 /// a deleted chat's unsent words go with it, from an open composer too
-void dropChatDraft(String id) {
+Future<void> dropChatDraft(String id) {
   for (final s in _openChats[id] ?? const <_ChatScreenState>[]) {
     if (s.mounted) s._msgCtrl.clear();
   }
-  draftPerPeer.remove(session.chatKey(id));
+  return dropDraft(session.draftsOf(id), id, group: false);
 }
 
 /// the note on a contact. [save] runs before the sheet goes; true when it
@@ -504,16 +548,15 @@ Widget _mediaStamp(_Msg msg) {
       children: [
         Text(_fmtTime(msg.when), style: mono),
         // a received one has its time alone
+        // ours: a clock until their receipt, then the tick and Delivered
         if (msg.direction == 'out') ...[
           const SizedBox(width: 3),
-          SentTick(
-            delivered: msg.delivered,
-            deliveredLabel: l10n.chatDelivered,
-            color: Colors.white,
-            labelStyle: mono.copyWith(
-              fontSize: 8.5,
-              fontWeight: FontWeight.w600,
-              letterSpacing: track(0.3),
+          Builder(
+            builder: (context) => _outMark(
+              context,
+              msg,
+              unconfirmed: !msg.delivered,
+              color: Colors.white,
             ),
           ),
         ],
@@ -539,6 +582,8 @@ Widget _outMark(
           key: const ValueKey('unconfirmed'),
           size: 10,
           color: color,
+          // gone from here, its receipt not back yet
+          semanticLabel: l10n.motionSent,
         )
       : SentTick(
           key: const ValueKey('sent'),
@@ -594,7 +639,14 @@ bool _cannotSend() => !appState.online || !appState.torReady;
 // it has retried itself to the cap. online, the row keeps going on its own
 // and shows as pending.
 bool _sendLooksFailed(_Msg m) =>
-    m.failed && (m.gaveUp || m.notSent || _cannotSend());
+    m.failed && (m.gaveUp || m.notSent || _cannotSend() || _fileIdle(m));
+
+// a file of ours no send holds is not moving: it says not sent, and a tap
+// sends what is missing. one a send holds draws as sending
+bool _fileIdle(_Msg m) =>
+    m.direction == 'out' &&
+    (m.mediaPath != null || m.filePath != null) &&
+    (m.msgUid == null || !mediaInflight.contains(m.msgUid));
 
 // a row a block held back reads as not sent
 void _readNotSent(_Msg m, Map<String, Object?> r) {
@@ -608,9 +660,10 @@ String _friendlyStatus(String raw) {
   if (!appState.online && raw.startsWith('error:')) {
     return l10n.chatYouAreOfflineThis;
   }
-  if (raw.startsWith('error:') && !appState.torReady) {
-    return l10n.chatStillConnectingToTor;
-  }
+  // what the pill says while the route is not up, and the long words only
+  // while tor is still coming up
+  final waiting = appState.linkView.sendLine;
+  if (raw.startsWith('error:') && waiting != null) return waiting;
   // online, a transport error is not the user's problem: the row retries
   // itself and the bubble stays pending. no line.
   if (raw.startsWith('error:')) return '';
@@ -657,6 +710,8 @@ class _ChatScreenState extends State<ChatScreen>
   String? _firstUnreadKey;
   bool _unreadResolved = false;
   bool _ghost = _lastGhost; // restored from last use this session.
+  // the timed setting read: until then new words keep the draft's timer
+  bool _ghostKnown = false;
   // marks the next message so the other phone blocks screenshots of it. off
   // by default, since then neither side can screenshot the chat.
   bool _secureNext = false;
@@ -849,6 +904,7 @@ class _ChatScreenState extends State<ChatScreen>
       if (!o.removing) {
         o.removing = true;
         o.burnedAway = o.burnAt != null && o.burnAt! <= now;
+        _forgetTranslation(o);
         Future.delayed(kLeaveGone, () {
           if (mounted) setState(() => _messages.remove(o));
         });
@@ -889,6 +945,8 @@ class _ChatScreenState extends State<ChatScreen>
   // the message being replied to. cleared after send or by the X in the
   // quote bar.
   _Msg? _replyTo;
+  // the quote a kept draft had, until the messages are here to find it in
+  String? _draftReply;
 
   // search in chat. _matches are indices into _messages, _matchPos the
   // current hit, _matchKeys let a hit be scrolled into view.
@@ -1083,6 +1141,11 @@ class _ChatScreenState extends State<ChatScreen>
   DevOpening? _devOpening;
   // this chat in the session that opened it, for what is kept between visits
   late final String _memo;
+  // their messages in other languages, translated on the phone
+  late final ChatTranslation? _translation = switch (translationHubIfOn()) {
+    final hub? => ChatTranslation(hub, widget.peerHaloId),
+    null => null,
+  };
   // its row in this session's database, for when the chat was made
   DevChatRow? _devChat;
   // the pinned key did not check out: nothing was sent
@@ -1203,6 +1266,7 @@ class _ChatScreenState extends State<ChatScreen>
           _burnSeconds = p.$2;
           _lastGhost = p.$1;
           _lastBurnSeconds = p.$2;
+          _ghostKnown = true;
         });
       }
     });
@@ -1220,23 +1284,27 @@ class _ChatScreenState extends State<ChatScreen>
     }
     _loadShots();
     appState.addListener(_onAppStateChanged);
+    mediaSendsTick.addListener(_mediaSendsMoved);
     lockState.addListener(_lockLifted);
     claimChat(widget.peerHaloId);
     (_openChats[widget.peerHaloId] ??= []).add(this);
     // opened under the lock: marked read once it lifts
     lockGuard.isLocked() ? _underLock = true : _markRead();
     _unreadAfterRow = _lastReadPerPeer[_memo];
-    _msgCtrl.text = composerWith(draftPerPeer[_memo] ?? '', widget.initialText);
-    // save the draft live on every keystroke so it survives leaving the chat
-    // regardless of when dispose runs.
-    _msgCtrl.addListener(() {
-      final t = _msgCtrl.text;
-      if (t.trim().isEmpty) {
-        draftPerPeer.remove(_memo);
-      } else {
-        draftPerPeer[_memo] = t;
-      }
-    });
+    final rows = session.draftsOf(widget.peerHaloId);
+    final kept = heldDraft(rows.container, widget.peerHaloId, group: false);
+    _msgCtrl.text = composerWith(kept?.text ?? '', widget.initialText);
+    _draftReply = kept?.replyTo;
+    // after a stopped process the draft is only in its row
+    if (kept == null) unawaited(_readDraft(rows));
+    // kept on every keystroke, so it survives leaving the chat and the app
+    _msgCtrl.addListener(_keepDraft);
+    // what is typed from here on may tell them, words put back never do
+    _typedWas = _msgCtrl.text;
+    _msgCtrl.addListener(_typed);
+    // words handed in by a share or a forward are a draft from the start;
+    // after a stop, once the row they join is read
+    if (kept != null && _handedIn) _keepDraft();
     session.getContact(widget.peerHaloId).then((c) {
       if (mounted) {
         setState(() {
@@ -1274,11 +1342,7 @@ class _ChatScreenState extends State<ChatScreen>
     session.isVerified(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _verified = v);
     });
-    session.getContact(widget.peerHaloId).then((c) {
-      if (mounted) {
-        setState(() => _peerBadge = c?['supporter_badge'] as String?);
-      }
-    });
+    unawaited(_loadBadge());
     // request lock: are they an accepted contact, have they engaged, and how
     // many messages have we already sent while unaccepted.
     final barReads = <Future<void>>[
@@ -1397,6 +1461,7 @@ class _ChatScreenState extends State<ChatScreen>
         m.removing = true;
         m.burnedAway = true;
         if (m.msgUid != null) _earlier.drop(m.msgUid!);
+        _forgetTranslation(m);
       }
       if (back) {
         // it burned while the chat was out of view: gone, as it would be
@@ -1426,6 +1491,23 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
+  // the words of their last messages, what the translate bar looks at
+  List<String> _theirRecent() {
+    if (_translation == null) return const [];
+    final out = <String>[];
+    for (var i = _messages.length - 1; i >= 0 && out.length < 20; i--) {
+      final m = _messages[i];
+      if (m.direction != 'in' || m.welcome || m.sticker != null) continue;
+      if (m.removing || m.text.trim().isEmpty) continue;
+      out.add(m.text);
+    }
+    return out;
+  }
+
+  // its translation goes with it, not when the chat closes
+  void _forgetTranslation(_Msg m) =>
+      _translation?.forget(m.msgUid ?? '${m.came}', m.text);
+
   Future<void> _forgetBurnt(_Msg m) async {
     if (m.msgUid != null) await session.deleteMessage(m.msgUid!);
     // the home row was previewing what just burned
@@ -1445,6 +1527,8 @@ class _ChatScreenState extends State<ChatScreen>
       _tryAppendNew();
       unawaited(_refreshDelivered());
       _loadShots();
+      // their badge rides their messages: one that came now may change it
+      unawaited(_loadBadge());
     }
     _refreshRequestState();
     unawaited(_readKeyState());
@@ -1460,6 +1544,12 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Object? _devSeen;
+
+  Future<void> _loadBadge() async {
+    final c = await session.getContact(widget.peerHaloId);
+    final b = c?['supporter_badge'] as String?;
+    if (mounted && b != _peerBadge) setState(() => _peerBadge = b);
+  }
 
   // who vouched, as we know them. only accepted contacts come back, so a
   // voucher we deleted since is no longer named.
@@ -1606,6 +1696,73 @@ class _ChatScreenState extends State<ChatScreen>
     _wasReachable = reachable;
   }
 
+  // the sends this screen started, by row, until their verdict is drawn
+  final Map<String, int> _ownSends = {};
+  // rows seen held by a send this screen did not start
+  final Set<String> _seenGoing = {};
+  Timer? _followTimer;
+
+  // a beat after the tick, so a send that just let go has written its row
+  void _mediaSendsMoved() {
+    _followTimer?.cancel();
+    _followTimer = Timer(
+      const Duration(milliseconds: 400),
+      () => unawaited(_followMediaSends()),
+    );
+  }
+
+  // a file of ours that a send took up or let go of somewhere else: the
+  // outbox, or this chat left and opened again. one held shows as sending;
+  // one let go reads its row, and is done, waiting or not sent
+  Future<void> _followMediaSends() async {
+    if (!mounted) return;
+    var changed = false;
+    final ended = <_Msg>[];
+    for (final m in _messages) {
+      final uid = m.msgUid;
+      if (m.direction != 'out' ||
+          uid == null ||
+          (m.mediaPath == null && m.filePath == null) ||
+          _ownSends.containsKey(uid)) {
+        continue;
+      }
+      if (mediaInflight.contains(uid)) {
+        _seenGoing.add(uid);
+        if (!m.sending && (m.failed || m.parked) && !m.notSent) {
+          m
+            ..sending = true
+            ..failed = false
+            ..parked = false;
+          changed = true;
+        }
+      } else if (_seenGoing.remove(uid) && m.sending) {
+        ended.add(m);
+      }
+    }
+    if (ended.isNotEmpty) {
+      final backPaired = await session.isBackPaired(widget.peerHaloId);
+      for (final m in ended) {
+        final uid = m.msgUid!;
+        final s = await session.sendState(uid);
+        final held = !s.sent && await session.heldBack(uid);
+        if (!mounted) return;
+        // taken up again meanwhile, here or there
+        if (!m.sending || mediaInflight.contains(uid)) continue;
+        if (_ownSends.containsKey(uid)) continue;
+        m.sending = false;
+        if (!s.sent && !s.delivered) {
+          m.failed = held || backPaired;
+          m.parked = !held && !backPaired;
+          m.notSent = held;
+        } else {
+          await _takeBurn(m);
+        }
+        changed = true;
+      }
+    }
+    if (changed && mounted) setState(() {});
+  }
+
   // a receipt flips `delivered` in the db for a bubble already on screen,
   // which _tryAppendNew won't catch, so re-read it in place. the send state
   // too: a long upload may have been finished by an earlier screen, and the
@@ -1633,10 +1790,19 @@ class _ChatScreenState extends State<ChatScreen>
         m.parked = false;
         m.failed = false;
         if (m.msgUid != null) mediaProgressEnd(m.msgUid!);
+        await _takeBurn(m);
         changed = true;
       }
     }
     if (changed && mounted) setState(() {});
+  }
+
+  // a timed message of ours that another send finished: its clock runs from
+  // the row, started there if nothing started it yet
+  Future<void> _takeBurn(_Msg m) async {
+    if (m.burnSecs == null || m.burnAt != null || m.msgUid == null) return;
+    final at = await session.lightBurn(m.msgUid!);
+    if (at != null) m.burnAt = at;
   }
 
   // fast path for a live message: append rows newer than the newest we hold,
@@ -1908,7 +2074,7 @@ class _ChatScreenState extends State<ChatScreen>
         shareOn != null &&
         !_keptHere(shareOn) &&
         shareOn.filePath != null &&
-        shareOn.fileName != 'voice.wav';
+        !isVoiceName(shareOn.fileName);
     final going = album == null
         ? target.sending &&
               (target.mediaPath != null || target.filePath != null)
@@ -1938,15 +2104,24 @@ class _ChatScreenState extends State<ChatScreen>
     final offset = box.localToGlobal(Offset.zero);
     final bubbleSize = box.size;
     const pickerH = 54.0;
+    // theirs in a language the person does not read
+    final trKey = target.msgUid ?? '${target.came}';
+    final translation = _translation;
+    final canTranslate =
+        translation != null &&
+        !welcome &&
+        target.direction == 'in' &&
+        target.sticker == null &&
+        translation.offer(target.text) != null;
     // the card's height from its rows, so it is placed where it fits
     final out = target.direction == 'out';
     final media = target.mediaPath != null || target.filePath != null;
     final rows = welcome
         ? 1
-        : 3 +
+        : (canTranslate ? 4 : 3) +
               (target.text.isNotEmpty && target.sticker == null ? 1 : 0) +
               (target.sticker == null ? 1 : 0) +
-              (target.filePath != null && target.fileName != 'voice.wav'
+              (target.filePath != null && !isVoiceName(target.fileName)
                   ? 1
                   : 0) +
               (out && !media && target.sticker == null ? 1 : 0) -
@@ -2055,7 +2230,11 @@ class _ChatScreenState extends State<ChatScreen>
                     curve: kHouseCurve,
                     child: Material(
                       type: MaterialType.transparency,
-                      child: _Bubble(msg: target, album: album),
+                      child: _Bubble(
+                        msg: target,
+                        album: album,
+                        translation: _translation,
+                      ),
                     ),
                     builder: (_, t, child) => Transform.scale(
                       scale: 1.0 + 0.04 * t,
@@ -2152,6 +2331,21 @@ class _ChatScreenState extends State<ChatScreen>
                                 showHaloToast(context, l10n.commonCopied);
                               },
                       ),
+                      if (canTranslate)
+                        MenuAction(
+                          icon: Icons.translate_rounded,
+                          label: translation.shown(trKey, target.text)
+                              ? l10n.translateShowOriginal
+                              : l10n.translateAction,
+                          onTap: () => dismiss(
+                            then: () => askTranslate(
+                              context,
+                              translation,
+                              trKey,
+                              target.text,
+                            ),
+                          ),
+                        ),
                       // a sticker is not forwarded, copied or edited, and
                       // a photo, a file or a voice note is not forwarded
                       if (!welcome)
@@ -2207,7 +2401,7 @@ class _ChatScreenState extends State<ChatScreen>
                                 _keptHere(shareOn) ||
                                 shareOn.filePath == null ||
                                 shareOn.fileName == null ||
-                                shareOn.fileName == 'voice.wav'
+                                isVoiceName(shareOn.fileName)
                             ? null
                             : () {
                                 dismiss(now: true);
@@ -2866,6 +3060,10 @@ class _ChatScreenState extends State<ChatScreen>
         ).millisecondsSinceEpoch;
       }
     });
+    unawaited(_restoreReply());
+    // a stored draft that would not read is tried again
+    final kept = _draftRows;
+    if (_rowUnread && kept != null) unawaited(_readDraft(kept));
     // if a search is active, recompute matches against the fresh list.
     if (_searching && _query.isNotEmpty) {
       _onQueryChanged(_query);
@@ -2875,6 +3073,8 @@ class _ChatScreenState extends State<ChatScreen>
     } else if (snap) {
       _scrollToEnd(instant: true);
     }
+    // a file still going from a screen left since is followed to its end
+    unawaited(_followMediaSends());
     if (_earlier.count > 0) {
       await _pruneEarlier();
       _lookEarlierSoon();
@@ -3273,6 +3473,8 @@ class _ChatScreenState extends State<ChatScreen>
       _lastGhost = true;
       appState.saveGhostPref(true, picked);
     });
+    // the draft takes the chat's new clock
+    _keepDraft(clock: true);
   }
 
   // a one-shot amber ring on a bubble when a reaction lands on it
@@ -3367,7 +3569,7 @@ class _ChatScreenState extends State<ChatScreen>
       path: path,
       msgUid: msgUid,
       fileName: msg.fileName!,
-      voice: msg.fileName == 'voice.wav',
+      voice: isVoiceName(msg.fileName),
       voiceDisguised: msg.voiceDisguised,
       burnSeconds: msg.burnSecs,
       secure: msg.secure,
@@ -3557,7 +3759,7 @@ class _ChatScreenState extends State<ChatScreen>
     // note says
     final disguise = take.disguise || _devAnon;
     final msgUid = newMsgUid();
-    final replyToUid = _replyTo?.msgUid;
+    final replyToUid = _takeQuote();
     // sent is sent: leaving the chat does not stop it. the lock does, and
     // nothing of it outlives the lock
     var locked = false;
@@ -3592,7 +3794,7 @@ class _ChatScreenState extends State<ChatScreen>
           sending: true,
           msgUid: msgUid,
           replyTo: replyToUid,
-          fileName: 'voice.wav',
+          fileName: kVoiceWav,
           voiceDisguised: true,
           burnSecs: _ghost ? _burnSeconds : null,
         )..making = making.progress;
@@ -3602,6 +3804,8 @@ class _ChatScreenState extends State<ChatScreen>
           _status = '';
           _replyTo = null;
         });
+        // the quote is answered: the kept draft lets it go too
+        _keepDraft();
         _scrollToEnd();
         masked = await making.file;
         if (locked) return lockedOut(masked);
@@ -3654,7 +3858,7 @@ class _ChatScreenState extends State<ChatScreen>
             sending: true,
             msgUid: msgUid,
             replyTo: replyToUid,
-            fileName: 'voice.wav',
+            fileName: kVoiceWav,
             voiceDisguised: disguise,
             burnSecs: _ghost ? _burnSeconds : null,
             burnAt: null,
@@ -3669,12 +3873,34 @@ class _ChatScreenState extends State<ChatScreen>
           _status = '';
           _replyTo = null;
         });
+        // the quote is answered: the kept draft lets it go too
+        _keepDraft();
         _scrollToEnd();
         HapticFeedback.lightImpact();
       }
       // from here a lock takes it off the screen as one still being made
       pending = msg;
       await _answerSupport();
+      // what goes: opus to a phone that plays it, else the wav. the bubble
+      // shows the wav until the opus copy is there, then that
+      if (locked) return lockedOut(null, placed: filePath);
+      // a lock under way stops the encode, and both files go
+      final (wirePath, wireName) = await voiceForWire(
+        filePath,
+        opus: await appState.opusFor(peer),
+        stop: () => locked,
+      );
+      if (wirePath != filePath) {
+        voicePeaksSame(filePath, wirePath);
+        final ms = await voiceFileMs(wirePath);
+        if (ms != null) voiceLengthKnown(wirePath, ms);
+        msg
+          ..filePath = wirePath
+          ..fileName = wireName;
+        if (mounted) setState(() {});
+        unawaited(voiceFileFree(filePath).then((_) => shredFile(filePath)));
+      }
+      if (locked) return lockedOut(null, placed: wirePath);
       // the bubble, the row and the wire all say when it was begun
       final writtenAt = msg.when.millisecondsSinceEpoch;
       var kept = false;
@@ -3689,8 +3915,8 @@ class _ChatScreenState extends State<ChatScreen>
             wasAccepted: wasAccepted,
             writtenAt: writtenAt,
             replyTo: replyToUid,
-            filePath: filePath,
-            fileName: 'voice.wav',
+            filePath: wirePath,
+            fileName: wireName,
             voiceDisguised: disguise,
             burnAt: msg.burnAt,
             burnSecs: msg.burnSecs,
@@ -3700,10 +3926,10 @@ class _ChatScreenState extends State<ChatScreen>
       } catch (e) {
         dlog('voice: row not kept (${e.runtimeType})');
       }
-      if (!kept && locked) return lockedOut(null, placed: filePath);
+      if (!kept && locked) return lockedOut(null, placed: wirePath);
       if (!kept) {
         if (mounted) setState(() => _messages.remove(msg));
-        await shredFile(filePath);
+        await shredFile(wirePath);
         say(l10n.voiceNotSent);
         return;
       }
@@ -3712,9 +3938,9 @@ class _ChatScreenState extends State<ChatScreen>
       // left while it was made: the screen showing the chat now hears of it
       if (!mounted) appState.chatChanged(peer);
       _sendChunkedMedia(
-        path: filePath,
+        path: wirePath,
         msgUid: msgUid,
-        fileName: 'voice.wav',
+        fileName: wireName,
         voice: true,
         voiceDisguised: disguise,
         burnSeconds: msg.burnSecs,
@@ -3875,30 +4101,21 @@ class _ChatScreenState extends State<ChatScreen>
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
     final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
     final dest = File('${mediaDir.path}/f_${msgUid}_$safe');
-    await File(src).copy(dest.path);
-    // a gallery video carries where, on what and when, like a photo. it is
-    // stripped in place on our own copy, and one that cannot be walked is
-    // not sent. one renamed is told by its bytes
-    // a raw picture is not one, whatever it is called: the video cleaner
-    // would break it without cleaning it
-    if (!raw &&
-        (videoNameNeedsStrip(name) || await bytesSayIsoVideo(dest.path))) {
-      final ok = await stripMp4Metadata(dest.path);
-      final left = ok == null ? null : await mp4MetadataCount(dest.path);
-      if (ok == null || left != 0) {
-        await shredFile(dest.path);
-        if (mounted) showHaloToast(context, l10n.chatCouldNotCleanThat);
-        return null;
-      }
-    }
-    // a picture sent as a file is cleaned like one sent as a photo. it is
-    // told by its bytes, not its name: jpeg, png, webp, heic, avif. one the
-    // app cannot read through is not sent; the photo button re-encodes and
-    // will take it.
-    else if (await stripPictureFileOffUi(dest.path) == null) {
-      await shredFile(dest.path);
+    // a gallery video carries where, on what and when, like a photo, and a
+    // picture sent as a file is cleaned like one sent as a photo. both are
+    // told by their bytes and cleaned on our own copy by the one cleaner;
+    // one that cannot be read through, or still reads as anything after,
+    // is not sent. a raw picture is never walked as a video. the copy is
+    // made and cleaned out of the media folder and only moved in clean
+    final done = await copyClean(src, dest.path, name: name, raw: raw);
+    if (done.how == MediaClean.refused) {
       if (mounted) {
-        showHaloToast(context, l10n.chatCouldNotCleanThatPictureSend);
+        showHaloToast(
+          context,
+          done.video
+              ? l10n.chatCouldNotCleanThat
+              : l10n.chatCouldNotCleanThatPictureSend,
+        );
       }
       return null;
     }
@@ -3957,7 +4174,7 @@ class _ChatScreenState extends State<ChatScreen>
     // a file goes protected only when asked for in the preview
     final wantSecure = shown?.secure ?? secure ?? (!isFile && _secureNext);
     // a few photos at once: the first one answers
-    final replyToUid = shown == null ? _replyTo?.msgUid : shown.replyTo;
+    final replyToUid = shown == null ? _takeQuote() : shown.replyTo;
     final msg =
         shown ??
         _Msg(
@@ -3983,6 +4200,8 @@ class _ChatScreenState extends State<ChatScreen>
       _status = '';
       if (shown == null) _replyTo = null;
     });
+    // the quote is answered: the kept draft lets it go too
+    if (shown == null) _keepDraft();
     if (shown == null) _scrollToEnd();
     HapticFeedback.lightImpact();
     await _answerSupport();
@@ -4033,7 +4252,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (!mounted) return;
     final alone = _requestPending;
     final plan = albumPlan(r.items, r.caption, alone: alone);
-    final reply = _replyTo?.msgUid;
+    final reply = _takeQuote();
     final now = DateTime.now().millisecondsSinceEpoch;
     final waiting = [
       for (final (k, go) in plan.indexed)
@@ -4056,6 +4275,8 @@ class _ChatScreenState extends State<ChatScreen>
       _status = '';
       _replyTo = null;
     });
+    // the quote is answered: the kept draft lets it go too
+    _keepDraft();
     _scrollToEnd();
     final ready = <(_Msg, _Ready)>[];
     for (final (k, go) in plan.indexed) {
@@ -4184,39 +4405,70 @@ class _ChatScreenState extends State<ChatScreen>
   }) async {
     // a quiet session keeps it here: it waits, and nothing leaves
     if (sessionQuiet || appState.everydayHeld) return 'parked';
-    return sendChunkedMediaTo(
-      peerId: widget.peerHaloId,
-      peerOnion: widget.peerOnion,
-      peerXPub: _peerXPub ?? (widget.peerXPub.isEmpty ? null : widget.peerXPub),
-      backPaired: _backPaired,
-      needPow: _recvCount == 0 || !await hasSessionWith(widget.peerHaloId),
-      path: path,
-      msgUid: msgUid,
-      caption: caption,
-      fileName: fileName,
-      voice: voice,
-      voiceDisguised: voiceDisguised,
-      burnSeconds: burnSeconds,
-      secure: secure,
-      replyTo: replyTo,
-      album: album,
-      writtenAt: writtenAt,
-      sender: SenderInfo(
-        haloId: appState.sessionId,
-        edPub: appState.sessionEdPub,
-        onion: appState.sessionOnion,
-        xPub: appState.sessionXPub,
-        avatar: appState.myAvatar,
-      ),
-      progressKey: _memo,
-      blockedHere: () => session.isBlocked(widget.peerHaloId),
-    );
+    // its verdict is _finishMediaSend's, which lets go of the count; a send
+    // that throws lets go of it here
+    _ownSends[msgUid] = (_ownSends[msgUid] ?? 0) + 1;
+    try {
+      return await sendChunkedMediaTo(
+        peerId: widget.peerHaloId,
+        peerOnion: widget.peerOnion,
+        peerXPub:
+            _peerXPub ?? (widget.peerXPub.isEmpty ? null : widget.peerXPub),
+        backPaired: _backPaired,
+        needPow: _recvCount == 0 || !await hasSessionWith(widget.peerHaloId),
+        path: path,
+        msgUid: msgUid,
+        caption: caption,
+        fileName: fileName,
+        voice: voice,
+        voiceDisguised: voiceDisguised,
+        burnSeconds: burnSeconds,
+        secure: secure,
+        replyTo: replyTo,
+        album: album,
+        writtenAt: writtenAt,
+        sender: SenderInfo(
+          haloId: appState.sessionId,
+          edPub: appState.sessionEdPub,
+          onion: appState.sessionOnion,
+          xPub: appState.sessionXPub,
+          avatar: appState.myAvatar,
+        ),
+        progressKey: _memo,
+        blockedHere: () => session.isBlocked(widget.peerHaloId),
+      );
+    } catch (e) {
+      _ownSendDone(msgUid);
+      rethrow;
+    }
+  }
+
+  void _ownSendDone(String? uid) {
+    final n = uid == null ? null : _ownSends[uid];
+    if (n != null && n > 1) {
+      _ownSends[uid!] = n - 1;
+    } else if (n != null) {
+      _ownSends.remove(uid);
+    }
   }
 
   Future<void> _finishMediaSend(_Msg msg, String result) async {
+    try {
+      await _drawMediaVerdict(msg, result);
+    } finally {
+      final uid = msg.msgUid;
+      _ownSendDone(uid);
+      // another send may have it by now, the outbox's or one it lost to:
+      // followed like one this screen did not start
+      if (result != 'ok' && uid != null) unawaited(_followMediaSends());
+    }
+  }
+
+  Future<void> _drawMediaVerdict(_Msg msg, String result) async {
     // another sender already has this one; its verdict comes later. a
     // cancelled one has no row left to finish.
     if (result == 'busy' || result == 'cancelled') return;
+    if (msg.msgUid != null) _seenGoing.remove(msg.msgUid);
     if (msg.msgUid != null) mediaProgressEnd(msg.msgUid!);
     if (result == 'ok' && msg.msgUid != null) {
       await session.markSent(msg.msgUid!);
@@ -4462,7 +4714,7 @@ class _ChatScreenState extends State<ChatScreen>
     _sendTurn = turn.future;
     var handed = false;
     try {
-      final replyToUid = _replyTo?.msgUid;
+      final replyToUid = _takeQuote();
       // a pending preview only belongs to a message that still holds its link
       final url = typed ? firstUrl(text) : null;
       final preview = url != null && _pendingPreview?['url'] == url
@@ -4492,6 +4744,8 @@ class _ChatScreenState extends State<ChatScreen>
         if (typed) _pendingPreview = null;
       });
       if (typed) _msgCtrl.clear();
+      // the quote is answered: the kept draft lets it go too
+      _keepDraft();
       _scrollToEnd();
       // the sheet or the card already fired it
       if (typed) HapticFeedback.lightImpact();
@@ -4654,8 +4908,19 @@ class _ChatScreenState extends State<ChatScreen>
   @override
   void backOnTop() {
     // a copy of this chat opened over it may have changed the draft
-    final draft = draftPerPeer[_memo] ?? '';
-    if (draft.trim() != _msgCtrl.text.trim()) _takeDraft(draft);
+    final rows = _draftRows;
+    if (rows != null && !_rowUnread) {
+      final d = heldDraft(rows.container, widget.peerHaloId, group: false);
+      if (d == null && _msgCtrl.text.trim().isNotEmpty) {
+        // sent from a copy over it, or its timer ran out while a page was
+        // on top: gone here too, its row with it
+        _timedDraftGone();
+        unawaited(dropDraft(rows, widget.peerHaloId, group: false));
+      } else {
+        final draft = d?.text ?? '';
+        if (draft.trim() != _msgCtrl.text.trim()) _takeDraft(draft);
+      }
+    }
     if (lockGuard.isLocked()) {
       _underLock = true;
       return;
@@ -4861,7 +5126,7 @@ class _ChatScreenState extends State<ChatScreen>
         (m.preparing ||
             m.mediaPath != null ||
             (m.filePath != null &&
-                m.fileName != 'voice.wav' &&
+                !isVoiceName(m.fileName) &&
                 fileShapeNow(m.filePath, m.fileName) == FileShape.video) ||
             (m.direction == 'in' && m.filePath == null)),
   );
@@ -4970,7 +5235,7 @@ class _ChatScreenState extends State<ChatScreen>
           quoted = l10n.albumQuoted;
         } else if (original.mediaPath != null) {
           quoted = l10n.chatQuotedPhoto;
-        } else if (original.fileName == 'voice.wav') {
+        } else if (isVoiceName(original.fileName)) {
           quoted = l10n.chatVoiceMessage;
         } else if (original.fileName != null) {
           quoted = original.fileName;
@@ -5028,6 +5293,7 @@ class _ChatScreenState extends State<ChatScreen>
         child: _Bubble(
           key: isMatch ? _matchKeys[hitAt] : null,
           msg: m,
+          translation: _translation,
           album: run,
           stickers: _stickers,
           stickerOrder: i,
@@ -5168,6 +5434,7 @@ class _ChatScreenState extends State<ChatScreen>
       _replyTo = m;
       _replyFlash = m;
     });
+    _keepDraft();
     _composerFocus.requestFocus();
     Future.delayed(const Duration(milliseconds: 700), () {
       if (mounted && identical(_replyFlash, m)) {
@@ -5189,19 +5456,24 @@ class _ChatScreenState extends State<ChatScreen>
     if (open != null && open.isEmpty) _openChats.remove(widget.peerHaloId);
     lockState.removeListener(_lockLifted);
     appState.removeListener(_onAppStateChanged);
+    mediaSendsTick.removeListener(_mediaSendsMoved);
+    _followTimer?.cancel();
     wallpaperRevision.removeListener(_loadWall);
     _devOpening
       ?..removeListener(_onDevOpening)
       ..dispose();
+    _translation?.dispose();
     _lastReadPerPeer[_memo] = _messages.fold(
       0,
       (a, m) => m.rowid > a ? m.rowid : a,
     );
-    final draft = _msgCtrl.text;
-    if (draft.trim().isEmpty) {
-      draftPerPeer.remove(_memo);
-    } else {
-      draftPerPeer[_memo] = draft;
+    // left: what the composer holds is written now, not after the wait
+    _msgCtrl.removeListener(_keepDraft);
+    _msgCtrl.removeListener(_typed);
+    _keepDraft();
+    final rows = _draftRows;
+    if (rows != null) {
+      unawaited(writeDraftNow(rows, widget.peerHaloId, group: false));
     }
     _msgCtrl.dispose();
     _composerFocus.dispose();
@@ -5447,7 +5719,7 @@ class _ChatScreenState extends State<ChatScreen>
             ),
             // both phones or neither: off, with the reason, until theirs
             // knows the block. someone blocked is not offered
-            if (!_blocked && !widget.support)
+            if (!_blocked && !widget.support && !_isDev)
               MenuSheetRow(
                 icon: Icons.phonelink_lock_outlined,
                 label: l10n.chatBlockScreenshots,
@@ -5547,6 +5819,7 @@ class _ChatScreenState extends State<ChatScreen>
           peerXPub: widget.peerXPub,
           face: _peerFace,
           nickname: _nickname,
+          support: widget.support,
         ),
       ),
     );
@@ -5784,10 +6057,166 @@ class _ChatScreenState extends State<ChatScreen>
       _takeDraft(composerWith(_msgCtrl.text, words));
 
   void _takeDraft(String t) {
-    _msgCtrl.value = TextEditingValue(
-      text: t,
-      selection: TextSelection.collapsed(offset: t.length),
+    _byApp = true;
+    try {
+      _msgCtrl.value = TextEditingValue(
+        text: t,
+        selection: TextSelection.collapsed(offset: t.length),
+      );
+    } finally {
+      _byApp = false;
+    }
+  }
+
+  // the composer's words as the last change left them, and whether the
+  // app is the one changing them now
+  String _typedWas = '';
+  bool _byApp = false;
+
+  // a keystroke or a paste in the focused composer: their phone may show
+  // that this one is typing (typing.dart). the app's own changes, a draft
+  // put back or words handed in, say nothing
+  void _typed() {
+    final t = _msgCtrl.text;
+    final e = composerEdit(
+      _typedWas,
+      t,
+      byApp: _byApp,
+      focused: _composerFocus.hasFocus,
     );
+    _typedWas = t;
+    if (e == null || _isDev || widget.support) return;
+    unawaited(
+      appState.typingEdit(
+        widget.peerHaloId,
+        userEdit: e.userEdit,
+        nonEmpty: e.nonEmpty,
+      ),
+    );
+  }
+
+  // where this chat's draft is kept, while the session still holds the
+  // chat where it did when the chat opened: a chat left behind by a lock
+  // or a hide writes nothing
+  DraftRows? get _draftRows {
+    final rows = session.draftsOf(widget.peerHaloId);
+    return rows.container.chatKey(widget.peerHaloId) == _memo ? rows : null;
+  }
+
+  // [clock]: the person changed the timer, the draft takes it
+  void _keepDraft({bool clock = false}) {
+    final rows = _draftRows;
+    if (rows == null || _rowUnread) return;
+    typedDraft(
+      rows,
+      widget.peerHaloId,
+      Draft(
+        _msgCtrl.text,
+        replyTo: _replyTo?.msgUid ?? _draftReply,
+        at: DateTime.now().millisecondsSinceEpoch,
+        // a timed chat's draft goes as its messages would
+        burnSecs: _ghost ? _burnSeconds : null,
+      ),
+      group: false,
+      clock: clock,
+      timedKnown: _ghostKnown,
+    );
+  }
+
+  // the kept draft read back, unless something was typed meanwhile
+  Future<void> _readDraft(DraftRows rows) async {
+    final before = _msgCtrl.text;
+    final r = await readKeptDraft(rows, widget.peerHaloId, group: false);
+    if (!mounted) return;
+    // not read, with words handed in: they stay aside, nothing is written
+    // over the row, and the next load reads it again
+    if (!r.read) {
+      if (_handedIn) _rowUnread = true;
+      return;
+    }
+    final again = _rowUnread;
+    _rowUnread = false;
+    final d = r.draft;
+    if (d == null) {
+      final left = _msgCtrl.text.trim().isNotEmpty;
+      if (left && (again || (_handedIn && _msgCtrl.text == before))) {
+        _keepDraft();
+      }
+      return;
+    }
+    if (!again && _msgCtrl.text != before) return;
+    _draftReply = d.replyTo;
+    // read late: the row's words first, then what was put in meanwhile
+    _takeDraft(
+      composerWith(d.text, again ? _msgCtrl.text : widget.initialText),
+    );
+    unawaited(_restoreReply());
+  }
+
+  // the stored draft could not be read under handed-in words: nothing is
+  // written until it is, so they never take its place
+  bool _rowUnread = false;
+
+  // the quote a kept draft had, once the messages are here: from the pages
+  // held, else from its own row, as it may be older than them. only one
+  // gone from the chat is let go; until then the draft keeps its uid
+  Future<void> _restoreReply() async {
+    final uid = _draftReply;
+    if (uid == null || !_loaded || !mounted || _quoteLookup) return;
+    if (_replyTo != null) {
+      _draftReply = null;
+      return;
+    }
+    for (final m in _messages) {
+      if (m.msgUid == uid) {
+        _draftReply = null;
+        setState(() => _replyTo = m);
+        return;
+      }
+    }
+    Map<String, Object?>? row;
+    _quoteLookup = true;
+    try {
+      row = await session.messageIn(widget.peerHaloId, uid);
+    } catch (e) {
+      // not read: the uid stays, and the next load tries again
+      dlog('draft quote: not read (${e.runtimeType})');
+      return;
+    } finally {
+      _quoteLookup = false;
+    }
+    if (!mounted || _draftReply != uid) return;
+    _draftReply = null;
+    if (row == null || _replyTo != null) return;
+    final m = _Msg(
+      row['direction'] as String,
+      row['plaintext'] as String? ?? '',
+      DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(row)),
+      sticker: StickerWire.parse(row['sticker']),
+      msgUid: uid,
+      mediaPath: row['media_path'] as String?,
+      fileName: row['file_name'] as String?,
+    );
+    setState(() => _replyTo = m);
+  }
+
+  bool _quoteLookup = false;
+
+  bool get _handedIn => (widget.initialText ?? '').trim().isNotEmpty;
+
+  // what a send answers: the quote up, or a kept one still being looked
+  // up, which the send then takes so the lookup does not put it back
+  String? _takeQuote() {
+    final uid = _replyTo?.msgUid ?? _draftReply;
+    _draftReply = null;
+    return uid;
+  }
+
+  // its timed draft went with the chat's timer: words and quote both
+  void _timedDraftGone() {
+    _draftReply = null;
+    if (_replyTo != null) setState(() => _replyTo = null);
+    _msgCtrl.clear();
   }
 
   void _onScroll() {
@@ -5996,6 +6425,13 @@ class _ChatScreenState extends State<ChatScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // their messages in another language: the whole chat
+                    // translated with one tap. never in the decoy
+                    TranslateBarSlot(
+                      chat: _translation,
+                      theirs: _theirRecent(),
+                      allowed: !_isDev && !sessionQuiet && !_searching,
+                    ),
                     _Fold(
                       // his chat is no request: its lock line says the rest
                       (_flag != null && !_accepted) || _isDev
@@ -6253,33 +6689,37 @@ class _ChatScreenState extends State<ChatScreen>
                     )
                   : const SizedBox(key: ValueKey('status-none'), width: 0),
             ),
-            // tor still warming: messages typed now are queued. not on a
-            // phone whose identity has moved, where tor is off on purpose.
-            _Fold(
-              appState.sendMode == 'private' &&
-                      !appState.torUsable &&
-                      !appState.movedAway
-                  ? Padding(
-                      key: const ValueKey('tor-warm'),
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const TorHalo(),
-                          const SizedBox(width: 7),
-                          Flexible(
-                            child: Text(
-                              l10n.chatBuildingAPrivateRoute,
-                              style: HaloType.sans(
-                                size: 10.5,
-                                color: HaloColors.text2,
-                              ).copyWith(height: 1.35),
+            // the route not up: messages typed now are queued. the pill's
+            // reading, its grace and its words; the long words only while tor
+            // is still coming up. not on a phone whose identity has moved,
+            // where tor is off on purpose.
+            LinkViewBuilder(
+              builder: (_, link) => _Fold(
+                appState.sendMode == 'private' &&
+                        link.chatLine != null &&
+                        !appState.movedAway
+                    ? Padding(
+                        key: const ValueKey('tor-warm'),
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const TorHalo(),
+                            const SizedBox(width: 7),
+                            Flexible(
+                              child: Text(
+                                link.chatLine!,
+                                style: HaloType.sans(
+                                  size: 10.5,
+                                  color: HaloColors.text2,
+                                ).copyWith(height: 1.35),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : const SizedBox(key: ValueKey('tor-none'), width: 0),
+                          ],
+                        ),
+                      )
+                    : const SizedBox(key: ValueKey('tor-none'), width: 0),
+              ),
             ),
             // a send that has waited on tor a minute gets a way out
             ReconnectValve(
@@ -6314,10 +6754,14 @@ class _ChatScreenState extends State<ChatScreen>
                 axisAlignment: -1,
                 child: FadeTransition(opacity: anim, child: child),
               ),
-              child: _replyTo != null
+              // the quote is part of the composer the blocked bar replaces
+              child: _replyTo != null && !_blocked
                   ? _ReplyQuoteBar(
                       target: _replyTo!,
-                      onCancel: () => setState(() => _replyTo = null),
+                      onCancel: () {
+                        setState(() => _replyTo = null);
+                        _keepDraft();
+                      },
                     )
                   : const SizedBox.shrink(),
             ),
@@ -6424,11 +6868,14 @@ class _ChatScreenState extends State<ChatScreen>
                                     : l10n.chatPhotoProtectionOff,
                               );
                             },
-                            onToggleGhost: () => setState(() {
-                              _ghost = !_ghost;
-                              _lastGhost = _ghost;
-                              appState.saveGhostPref(_ghost, _burnSeconds);
-                            }),
+                            onToggleGhost: () {
+                              setState(() {
+                                _ghost = !_ghost;
+                                _lastGhost = _ghost;
+                                appState.saveGhostPref(_ghost, _burnSeconds);
+                              });
+                              _keepDraft(clock: true);
+                            },
                             onPickBurn: _pickBurnDuration,
                             burnSeconds: _burnSeconds,
                             controller: _msgCtrl,
@@ -7007,59 +7454,69 @@ class _ChatHead extends StatelessWidget {
                     ),
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.lock_outline,
-                          size: 10,
-                          // relay and tor told apart by their own colours,
-                          // never by the accent
-                          color: relay ? HaloColors.sky : HaloColors.violet,
-                        ),
-                        const SizedBox(width: 4),
-                        // a longer language at a big font size would run
-                        // past the header's buttons, so it ends in …
-                        Flexible(
-                          child: Text(
-                            relay
-                                ? l10n.chatEncryptedViaRelay
-                                : appState.sendMode == 'fast'
-                                ? l10n.chatEncryptedDirect
-                                : l10n.chatEncryptedOverTor,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: HaloType.mono(
-                              size: 10,
-                              color: relay ? HaloColors.sky : HaloColors.text2,
+                    // the line swaps to "Typing" while they type, in one
+                    // line either way, so the header keeps its height
+                    child: TypingSwap(
+                      showing: appState.typing.board.of(
+                        appState.typingKey(haloId),
+                      ),
+                      style: typingStyle(size: 10, mono: true),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.lock_outline,
+                            size: 10,
+                            // relay and tor told apart by their own colours,
+                            // never by the accent
+                            color: relay ? HaloColors.sky : HaloColors.violet,
+                          ),
+                          const SizedBox(width: 4),
+                          // a longer language at a big font size would run
+                          // past the header's buttons, so it ends in …
+                          Flexible(
+                            child: Text(
+                              relay
+                                  ? l10n.chatEncryptedViaRelay
+                                  : appState.sendMode == 'fast'
+                                  ? l10n.chatEncryptedDirect
+                                  : l10n.chatEncryptedOverTor,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: HaloType.mono(
+                                size: 10,
+                                color: relay
+                                    ? HaloColors.sky
+                                    : HaloColors.text2,
+                              ),
                             ),
                           ),
-                        ),
-                        AnimatedSwitcher(
-                          duration: Duration(
-                            milliseconds: motionStill(context) ? 0 : 220,
-                          ),
-                          child: shotsBlocked
-                              ? Padding(
-                                  key: const ValueKey('shots'),
-                                  padding: const EdgeInsetsDirectional.only(
-                                    start: 6,
-                                  ),
-                                  child: Semantics(
-                                    label: l10n.chatShotsBlockedHere,
-                                    child: Icon(
-                                      Icons.phonelink_lock_outlined,
-                                      size: 11,
-                                      color: HaloColors.text2,
+                          AnimatedSwitcher(
+                            duration: Duration(
+                              milliseconds: motionStill(context) ? 0 : 220,
+                            ),
+                            child: shotsBlocked
+                                ? Padding(
+                                    key: const ValueKey('shots'),
+                                    padding: const EdgeInsetsDirectional.only(
+                                      start: 6,
                                     ),
+                                    child: Semantics(
+                                      label: l10n.chatShotsBlockedHere,
+                                      child: Icon(
+                                        Icons.phonelink_lock_outlined,
+                                        size: 11,
+                                        color: HaloColors.text2,
+                                      ),
+                                    ),
+                                  )
+                                : const SizedBox(
+                                    key: ValueKey('no-shots'),
+                                    width: 0,
                                   ),
-                                )
-                              : const SizedBox(
-                                  key: ValueKey('no-shots'),
-                                  width: 0,
-                                ),
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   if ((note ?? '').isNotEmpty)
@@ -7405,9 +7862,12 @@ class _Bubble extends StatelessWidget {
   final AlbumRun<_Msg>? album;
   // a tile of the album held: the bubble's context and the tile
   final void Function(BuildContext, int)? onLongPressTile;
+  // the chat's translations: theirs in another language offer one
+  final ChatTranslation? translation;
   const _Bubble({
     super.key,
     required this.msg,
+    this.translation,
     this.album,
     this.onLongPressTile,
     this.stickers,
@@ -7438,7 +7898,7 @@ class _Bubble extends StatelessWidget {
 
   // builds the message body, underlining query matches in amber. plain
   // Text when there's no active query.
-  Widget _body(bool isOut, {bool image = false}) {
+  Widget _body(bool isOut, {bool image = false, String? words}) {
     final base = image
         ? HaloType.serif(size: 13.5, italic: true, color: HaloColors.text)
         : HaloType.sans(
@@ -7448,7 +7908,7 @@ class _Bubble extends StatelessWidget {
           );
     if (query.isEmpty) {
       return KryfoLinkText(
-        text: msg.text,
+        text: words ?? msg.text,
         style: base,
         onAmber: isOut && !image,
         linkColor: (isOut && !image) ? HaloColors.onAmber : HaloColors.amber,
@@ -7468,7 +7928,7 @@ class _Bubble extends StatelessWidget {
   // drawn by the name alone is drawn again then
   @override
   Widget build(BuildContext context) =>
-      msg.filePath == null || msg.fileName == 'voice.wav'
+      msg.filePath == null || isVoiceName(msg.fileName)
       ? _build(context)
       : ValueListenableBuilder<int>(
           valueListenable: fileFactsRead,
@@ -7489,7 +7949,7 @@ class _Bubble extends StatelessWidget {
     final isVideo =
         msg.filePath != null &&
         msg.text.isEmpty &&
-        msg.fileName != 'voice.wav' &&
+        !isVoiceName(msg.fileName) &&
         shape == FileShape.video;
     final frameless = isImage || isVideo;
     final failedShown = _sendLooksFailed(msg);
@@ -7497,10 +7957,11 @@ class _Bubble extends StatelessWidget {
     final pending = msg.sending || (msg.failed && !failedShown);
     // a finished media send means every slice was accepted somewhere, not
     // that it arrived: a relay taking the bytes is not the peer reading
-    // them. so media says nothing until the receipt lands, then Delivered.
+    // them. so media shows its time and a clock until the receipt lands,
+    // never a tick, then Delivered.
     final isMedia = msg.mediaPath != null || msg.filePath != null;
-    final ackOk = !isMedia || msg.delivered;
-    final showMeta = isOut && !pending && !failedShown && !parked && ackOk;
+    final waitsAck = isMedia && !msg.delivered;
+    final showMeta = isOut && !pending && !failedShown && !parked;
     // a photo, a video, a file or a voice note that came in says when, as
     // ours do: there is no text of it to place it by
     final showTime = showMeta || (!isOut && isMedia);
@@ -7759,14 +8220,16 @@ class _Bubble extends StatelessWidget {
                                           isOut: isOut,
                                         ),
                                       )
-                                    else if (msg.fileName == 'voice.wav' &&
+                                    else if (isVoiceName(msg.fileName) &&
                                         msg.filePath != null)
                                       Padding(
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 2,
                                         ),
                                         child: VoiceBubble(
-                                          key: ValueKey('vb_${msg.filePath}'),
+                                          key: ValueKey(
+                                            'vb_${msg.msgUid ?? msg.filePath}',
+                                          ),
                                           path: msg.filePath!,
                                           isOut: isOut,
                                           disguised: msg.voiceDisguised,
@@ -7997,9 +8460,25 @@ class _Bubble extends StatelessWidget {
                                           if (msg.text.isNotEmpty)
                                             writtenStart(
                                               msg.text,
-                                              _body(
-                                                isOut,
-                                                image: msg.mediaPath != null,
+                                              TranslatedBody(
+                                                chat: translation,
+                                                msgKey:
+                                                    msg.msgUid ?? '${msg.came}',
+                                                text: msg.text,
+                                                enabled:
+                                                    !isOut &&
+                                                    query.isEmpty &&
+                                                    msg.sticker == null &&
+                                                    !msg.welcome,
+                                                original: _body(
+                                                  isOut,
+                                                  image: msg.mediaPath != null,
+                                                ),
+                                                translated: (t) => _body(
+                                                  isOut,
+                                                  image: msg.mediaPath != null,
+                                                  words: t,
+                                                ),
                                               ),
                                             ),
                                           if (msg.url case final u?) ...[
@@ -8086,7 +8565,8 @@ class _Bubble extends StatelessWidget {
                                                             context,
                                                             msg,
                                                             unconfirmed:
-                                                                unconfirmed,
+                                                                unconfirmed ||
+                                                                waitsAck,
                                                             color: metaColor,
                                                           ),
                                                         if (msg.burnAt !=

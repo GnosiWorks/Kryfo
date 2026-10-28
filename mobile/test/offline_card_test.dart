@@ -10,7 +10,14 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/delivery_mode.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloEngine, appState, torValve, useDatabasesForTest, useEngineForTest;
+    show
+        HaloEngine,
+        appState,
+        torValve,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateDelivery;
 import 'package:kryfo/screens/home_screen.dart' show OfflineCard;
 import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';

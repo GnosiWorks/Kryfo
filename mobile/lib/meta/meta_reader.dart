@@ -1,8 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// what a picture or video carries beside itself, read without decoding it.
+// the cleaners rely on it twice: before, to say what will go, and after, to
+// refuse a copy that still reads as anything.
 import 'dart:convert';
+import 'dart:io' show ZLibDecoder;
 import 'dart:typed_data';
 
 import 'byte_source.dart';
+import 'c2pa.dart';
+import 'heif_items.dart';
+import 'iso.dart';
+import 'mp4_tracks.dart';
+import 'sef.dart';
 import 'tiff.dart';
 import '../l10n/l10n.dart';
 
@@ -55,6 +64,59 @@ class MetaReport {
   final List<String> videoTags = [];
   final List<String> extra = [];
 
+  /// the mobile network country code a samsung camera wrote
+  String? networkCountry;
+
+  /// block names in a samsung trailer
+  final List<String> sefEntries = [];
+
+  /// the id an apple live photo shares with its video
+  String? liveId;
+
+  /// the app or device named in content credentials
+  String? madeWith;
+
+  /// made by software, as the file declares
+  bool syntheticLabel = false;
+
+  /// png text fields that hold a prompt and its settings
+  final List<String> syntheticPrompt = [];
+
+  /// small copies besides the exif one: jfif, jfxx, photoshop, heif
+  int smallCopies = 0;
+  bool depthMap = false;
+  bool portraitMatte = false;
+
+  /// google's lens blur keeps the photo from before the blur
+  bool beforeBlur = false;
+
+  /// a gain map, the layer that brightens it on an hdr screen
+  bool hdrLayer = false;
+
+  /// pictures inside besides the one shown and the hdr layer
+  int extraPictures = 0;
+
+  /// photo sphere keys, how a 360 view is drawn
+  bool sphere = false;
+
+  /// xmp edit history and the ids that tie copies of one photo together
+  bool editHistory = false;
+
+  /// video: every track, as handler/format
+  final List<String> tracks = [];
+
+  /// tracks besides picture, sound and subtitles
+  int extraTracks = 0;
+  bool timecode = false;
+  int gpsPoints = 0;
+  bool motionSensors = false;
+
+  /// handler names and vendor fields that name the maker's software
+  bool handlerNames = false;
+
+  /// bytes left in free space or between the samples the file uses
+  int leftoverBytes = 0;
+
   bool get anything =>
       gps != null ||
       gpsBlank ||
@@ -81,7 +143,27 @@ class MetaReport {
       trailingBytes > 0 ||
       textKeys.isNotEmpty ||
       videoTags.isNotEmpty ||
-      extra.isNotEmpty;
+      extra.isNotEmpty ||
+      networkCountry != null ||
+      sefEntries.isNotEmpty ||
+      liveId != null ||
+      madeWith != null ||
+      syntheticLabel ||
+      syntheticPrompt.isNotEmpty ||
+      smallCopies > 0 ||
+      depthMap ||
+      portraitMatte ||
+      beforeBlur ||
+      hdrLayer ||
+      extraPictures > 0 ||
+      sphere ||
+      editHistory ||
+      extraTracks > 0 ||
+      timecode ||
+      gpsPoints > 0 ||
+      motionSensors ||
+      handlerNames ||
+      leftoverBytes > 0;
 }
 
 class _Unreadable implements Exception {
@@ -122,6 +204,9 @@ MetaReport _read(ByteSource src, bool strict) {
   } on _Unreadable catch (e) {
     r.status = MetaStatus.unreadable;
     r.why = e.why;
+  } on IsoError catch (e) {
+    r.status = MetaStatus.unreadable;
+    r.why = e.why;
   } on RangeError {
     r.status = MetaStatus.unreadable;
     r.why = l10n.metaReaderEndsBeforeItShould;
@@ -158,30 +243,15 @@ const _heifBrands = {
   'heim',
   'heis',
   'mif1',
+  'mif2',
+  'mif3',
   'msf1',
   'avif',
   'avis',
 };
-const _mp4Brands = {
-  'isom',
-  'iso2',
-  'iso4',
-  'iso5',
-  'iso6',
-  'mp41',
-  'mp42',
-  'avc1',
-  'M4V ',
-  'M4A ',
-  'qt  ',
-  '3gp4',
-  '3gp5',
-  '3gp6',
-  '3g2a',
-  'mmp4',
-  'dash',
-  'MSNV',
-};
+
+/// brands of an image sequence, whose moov is the animation
+const kHeifSequences = {'msf1', 'hevc', 'hevx', 'hevm', 'hevs', 'avis'};
 
 MetaKind _kindOf(ByteSource s) {
   if (s.length < 12) return MetaKind.unknown;
@@ -204,14 +274,11 @@ MetaKind _kindOf(ByteSource s) {
   if (_tag(h, 4) == 'ftyp') {
     final size = _be32(h, 0);
     final end = size < 16 ? 16 : (size > h.length ? h.length : size);
-    var mp4 = false;
     for (var i = 8; i + 4 <= end; i += 4) {
       if (i == 12) continue;
-      final b = _tag(h, i);
-      if (_heifBrands.contains(b)) return MetaKind.heif;
-      if (_mp4Brands.contains(b)) mp4 = true;
+      if (_heifBrands.contains(_tag(h, i))) return MetaKind.heif;
     }
-    return mp4 ? MetaKind.mp4 : MetaKind.mp4;
+    return MetaKind.mp4;
   }
   final t = _tag(h, 4);
   if (t == 'moov' || t == 'mdat' || t == 'wide' || t == 'free') {
@@ -239,6 +306,7 @@ void _takeExif(Uint8List tiff, MetaReport r) {
   r.accuracyM ??= e.accuracyM;
   r.fNumber ??= e.fNumber;
   r.exposure ??= e.exposure;
+  r.liveId ??= e.liveId;
   if (e.gpsBlank) r.gpsBlank = true;
   if (e.makerNote) r.makerNote = true;
   if (e.comment) r.comment = true;
@@ -255,6 +323,8 @@ final _xmpLat = RegExp(
 final _xmpLon = RegExp(
   r'GPSLongitude(?:>|=")\s*(\d{1,3})[,\s]+(\d{1,2}(?:\.\d+)?)(?:[,\s]+(\d{1,2}(?:\.\d+)?))?\s*([EW])',
 );
+final _gainSemantic = RegExp(r'Semantic\s*=\s*"GainMap"|Semantic>GainMap<');
+final _motionSemantic = RegExp(r'Semantic\s*=\s*"MotionPhoto"');
 
 void _takeXmp(Uint8List body, MetaReport r) {
   if (_allZero(body)) return;
@@ -274,8 +344,61 @@ void _takeXmp(Uint8List body, MetaReport r) {
   if (lat != null && lon != null && lat.abs() <= 90 && lon.abs() <= 180) {
     r.gps ??= GpsFix(lat, lon, from: 'xmp');
   }
-  if (s.contains('GContainer') || s.contains('MotionPhoto')) {
+  r.make ??= _xmpValue(s, 'tiff:Make');
+  r.model ??= _xmpValue(s, 'tiff:Model');
+  r.software ??= _xmpValue(s, 'xmp:CreatorTool');
+  r.taken ??=
+      _xmpValue(s, 'exif:DateTimeOriginal') ??
+      _xmpValue(s, 'photoshop:DateCreated') ??
+      _xmpValue(s, 'xmp:CreateDate');
+  if (s.contains('xmpMM:History') ||
+      s.contains('xmpMM:DerivedFrom') ||
+      s.contains('xmpMM:OriginalDocumentID')) {
+    r.editHistory = true;
+  }
+  _xmpSignals(s, r);
+}
+
+// a simple xmp property, written as an attribute or an element
+String? _xmpValue(String s, String key) {
+  final at = s.indexOf(key);
+  if (at < 0) return null;
+  final m = RegExp(
+    '${RegExp.escape(key)}(?:="([^"]{1,200})"|>([^<]{1,200})<)',
+  ).firstMatch(s.substring(at));
+  return _clean(m?.group(1) ?? m?.group(2) ?? '');
+}
+
+// what an xmp packet, or a piece of extended xmp, says is hung beside the
+// picture
+void _xmpSignals(String s, MetaReport r) {
+  if (_motionSemantic.hasMatch(s) ||
+      s.contains('MicroVideo') ||
+      s.contains('MotionPhoto=') ||
+      s.contains('MotionPhoto>')) {
     r.embeddedVideo = true;
+  }
+  if (_gainSemantic.hasMatch(s) ||
+      s.contains('hdrgm:') ||
+      s.contains('HDRGainMap')) {
+    r.hdrLayer = true;
+  }
+  if (s.contains('GPano:')) r.sphere = true;
+  if (s.contains('GDepth:')) r.depthMap = true;
+  if (s.contains('GImage:Data') || s.contains('GImage:Mime')) {
+    r.beforeBlur = true;
+  }
+  if (s.contains('DigitalSourceType') &&
+      kSyntheticSourceTypes.any(s.contains)) {
+    r.syntheticLabel = true;
+  }
+}
+
+void _takeCredentials(Credentials cr, MetaReport r) {
+  r.madeWith ??= cr.madeWith;
+  if (cr.syntheticLabel) r.syntheticLabel = true;
+  if (cr.lat != null && cr.lon != null) {
+    r.gps ??= GpsFix(cr.lat!, cr.lon!, from: 'credentials');
   }
 }
 
@@ -294,8 +417,16 @@ final _iccHead = [...latin1.encode('ICC_PROFILE'), 0];
 final _mpfHead = [...latin1.encode('MPF'), 0];
 final _psHead = latin1.encode('Photoshop 3.0');
 final _adobeHead = latin1.encode('Adobe');
+final _jfifHead = [...latin1.encode('JFIF'), 0];
+final _jfxxHead = [...latin1.encode('JFXX'), 0];
+
+class _JpegNotes {
+  final credentials = BytesBuilder(copy: false);
+  int mpfImages = 0;
+}
 
 void _jpeg(ByteSource s, MetaReport r) {
+  final notes = _JpegNotes();
   var i = 2;
   while (true) {
     if (i + 4 > s.length) throw const _Unreadable('no picture data');
@@ -316,17 +447,32 @@ void _jpeg(ByteSource s, MetaReport r) {
       throw const _Unreadable('segment runs past the file');
     }
     final body = s.read(i + 4, len - 2);
-    _jpegSegment(m, body, r);
+    _jpegSegment(m, body, r, notes);
     i += 2 + len;
   }
-  final end = _jpegEnd(s, i, r);
+  final end = _jpegEnd(s, i, r, notes);
   if (end < s.length) {
     r.trailingBytes = s.length - end;
     _sniffTrailer(s, end, r);
   }
+  final c = notes.credentials.toBytes();
+  if (c.isNotEmpty) {
+    final cr = readCredentials(c);
+    if (cr.found) {
+      r.credentials = true;
+      _takeCredentials(cr, r);
+    } else {
+      r.extra.add('app11');
+    }
+  }
+  if (notes.mpfImages > 1) {
+    var more = notes.mpfImages - 1;
+    if (r.hdrLayer) more--;
+    if (more > r.extraPictures) r.extraPictures = more;
+  }
 }
 
-void _jpegSegment(int m, Uint8List body, MetaReport r) {
+void _jpegSegment(int m, Uint8List body, MetaReport r, _JpegNotes notes) {
   if (m == 0xE1) {
     if (_startsWith(body, _exifHead)) {
       _takeExif(Uint8List.sublistView(body, 6), r);
@@ -334,6 +480,7 @@ void _jpegSegment(int m, Uint8List body, MetaReport r) {
       _takeXmp(Uint8List.sublistView(body, _xmpHead.length), r);
     } else if (_startsWith(body, _xmpExtHead)) {
       r.xmp = true;
+      _xmpSignals(latin1.decode(body, allowInvalid: true), r);
     } else {
       r.extra.add('app1');
     }
@@ -341,19 +488,36 @@ void _jpegSegment(int m, Uint8List body, MetaReport r) {
     if (_startsWith(body, _iccHead)) return;
     if (_startsWith(body, _mpfHead)) {
       r.secondImage = true;
+      final n = _mpfCount(Uint8List.sublistView(body, 4));
+      if (n > notes.mpfImages) notes.mpfImages = n;
     } else {
       r.extra.add('app2');
+    }
+  } else if (m == 0xEB) {
+    // content credentials, spread over as many segments as it needs: each
+    // starts "JP", a box instance, a sequence number, then the store
+    if (body.length > 8 && body[0] == 0x4A && body[1] == 0x50) {
+      notes.credentials.add(Uint8List.sublistView(body, 8));
+    } else {
+      r.extra.add('app11');
     }
   } else if (m == 0xED) {
     if (_startsWith(body, _psHead)) {
       r.iptc = true;
+      r.smallCopies += _photoshopThumbs(body);
     } else {
       r.extra.add('app13');
     }
   } else if (m == 0xEE && _startsWith(body, _adobeHead)) {
     return;
   } else if (m == 0xE0) {
-    return;
+    if (_startsWith(body, _jfifHead)) {
+      if (body.length >= 14 && body[12] * body[13] > 0) r.smallCopies++;
+    } else if (_startsWith(body, _jfxxHead)) {
+      r.smallCopies++;
+    } else {
+      r.extra.add('app0');
+    }
   } else if (m >= 0xE3 && m <= 0xEF) {
     r.extra.add('app${m - 0xE0}');
   } else if (m == 0xFE) {
@@ -361,7 +525,45 @@ void _jpegSegment(int m, Uint8List body, MetaReport r) {
   }
 }
 
-int _jpegEnd(ByteSource s, int sos, MetaReport r) {
+// the number of pictures an mpf index lists
+int _mpfCount(Uint8List t) {
+  if (t.length < 8) return 0;
+  final le = t[0] == 0x49;
+  int u16(int i) => le ? t[i] | (t[i + 1] << 8) : (t[i] << 8) | t[i + 1];
+  int u32(int i) => le
+      ? t[i] | (t[i + 1] << 8) | (t[i + 2] << 16) | (t[i + 3] << 24)
+      : (t[i] << 24) | (t[i + 1] << 16) | (t[i + 2] << 8) | t[i + 3];
+  final at = u32(4);
+  if (at + 2 > t.length) return 0;
+  final n = u16(at);
+  for (var k = 0; k < n && at + 2 + k * 12 + 12 <= t.length; k++) {
+    final e = at + 2 + k * 12;
+    if (u16(e) == 0xB001) return u32(e + 8);
+  }
+  return 0;
+}
+
+// photoshop resources 0x0409 and 0x040C are thumbnails
+int _photoshopThumbs(Uint8List b) {
+  var i = _psHead.length + 1;
+  var n = 0;
+  while (i + 12 <= b.length) {
+    if (b[i] != 0x38 || b[i + 1] != 0x42 || b[i + 2] != 0x49) break; // 8BI
+    final id = _be16(b, i + 4);
+    var p = i + 6;
+    final nameLen = b[p];
+    p += 1 + nameLen;
+    if (p & 1 == 1) p++;
+    if (p + 4 > b.length) break;
+    final size = _be32(b, p);
+    p += 4;
+    if (id == 0x0409 || id == 0x040C) n++;
+    i = p + size + (size & 1);
+  }
+  return n;
+}
+
+int _jpegEnd(ByteSource s, int sos, MetaReport r, _JpegNotes notes) {
   var i = sos;
   while (true) {
     final h = s.read(i, 4);
@@ -417,7 +619,7 @@ int _jpegEnd(ByteSource s, int sos, MetaReport r) {
       if (len < 2 || j + 2 + len > s.length) {
         throw const _Unreadable('segment runs past the file');
       }
-      _jpegSegment(marker!, s.read(j + 4, len - 2), r);
+      _jpegSegment(marker!, s.read(j + 4, len - 2), r, notes);
       j += 2 + len;
       final nx = s.read(j, 2);
       if (nx[0] != 0xFF) throw const _Unreadable('broken segment');
@@ -428,20 +630,46 @@ int _jpegEnd(ByteSource s, int sos, MetaReport r) {
 }
 
 void _sniffTrailer(ByteSource s, int from, MetaReport r) {
+  final sef = readSef(s, from: from);
+  if (sef != null) {
+    r.extra.add(l10n.metaReaderSamsungTrailer);
+    _sefFindings(s, sef, r);
+  }
   final n = s.length - from;
   final head = s.read(from, n < _scanChunk ? n : _scanChunk);
   final text = latin1.decode(head, allowInvalid: true);
   if (text.contains('ftyp')) r.embeddedVideo = true;
-  if (text.contains('SEFH') || text.contains('SEFT')) {
+  if (sef == null && (text.contains('SEFH') || text.contains('SEFT'))) {
     r.extra.add(l10n.metaReaderSamsungTrailer);
+  }
+  if (text.contains('hdrgm:') ||
+      text.contains('HDRGainMap') ||
+      text.contains('urn:iso:std:iso:ts:21496')) {
+    r.hdrLayer = true;
   }
   if (n > _scanChunk) {
     final tail = latin1.decode(
       s.read(s.length - _scanChunk, _scanChunk),
       allowInvalid: true,
     );
-    if (tail.contains('SEFT')) r.extra.add(l10n.metaReaderSamsungTrailer);
+    if (sef == null && tail.contains('SEFT')) {
+      r.extra.add(l10n.metaReaderSamsungTrailer);
+    }
     if (tail.contains('ftyp')) r.embeddedVideo = true;
+  }
+}
+
+void _sefFindings(ByteSource s, SefTrailer sef, MetaReport r) {
+  r.networkCountry ??= sef.networkCountry(s);
+  for (final e in sef.entries) {
+    r.sefEntries.add(e.name);
+    if (e.name == 'MotionPhoto_Data') r.embeddedVideo = true;
+    if (e.name.contains('DepthMap')) r.depthMap = true;
+    if (e.len >= 12) {
+      final b = s.read(e.at, 12);
+      if (b[0] == 0xFF && b[1] == 0xD8) r.extraPictures++;
+      if (_tag(b, 4) == 'ftyp') r.embeddedVideo = true;
+    }
   }
 }
 
@@ -468,6 +696,17 @@ const _pngKeep = {
   'fdAT',
 };
 
+// text keys image generators write their prompt and settings under
+const _promptKeys = {
+  'parameters',
+  'prompt',
+  'workflow',
+  'negative_prompt',
+  'sd-metadata',
+  'Dream',
+  'generation_data',
+};
+
 void _png(ByteSource s, MetaReport r) {
   var i = 8;
   var boxes = 0;
@@ -492,13 +731,27 @@ void _png(ByteSource s, MetaReport r) {
       );
       if (key == 'XML:com.adobe.xmp') {
         _takeXmp(body, r);
+      } else if (key.startsWith('Raw profile type ')) {
+        r.textKeys.add(key);
+        _rawProfile(type, body, z, key.substring(17), r);
       } else {
         r.textKeys.add(key);
+        final text = latin1.decode(body, allowInvalid: true);
+        if (_promptKeys.contains(key) ||
+            key.startsWith('invoke') ||
+            (key == 'Description' && text.contains('Job ID'))) {
+          r.syntheticPrompt.add(key);
+        }
+        if (kSyntheticSourceTypes.any(text.contains)) r.syntheticLabel = true;
       }
     } else if (type == 'tIME') {
       r.savedTime = true;
     } else if (type == 'caBX') {
       r.credentials = true;
+      final cr = readCredentials(
+        s.read(i + 8, len < _maxBlock ? len : _maxBlock),
+      );
+      _takeCredentials(cr, r);
     } else if (!_pngKeep.contains(type)) {
       r.extra.add(l10n.metaReaderChunk(type));
     }
@@ -508,11 +761,79 @@ void _png(ByteSource s, MetaReport r) {
   if (i < s.length) r.trailingBytes = s.length - i;
 }
 
+// imagemagick keeps exif, xmp and iptc in a text chunk as hex: a newline,
+// the profile name, its length, then the bytes
+void _rawProfile(
+  String type,
+  Uint8List body,
+  int z,
+  String name,
+  MetaReport r,
+) {
+  Uint8List? text;
+  if (type == 'tEXt') {
+    text = Uint8List.sublistView(body, z + 1);
+  } else if (type == 'zTXt' && z + 2 <= body.length) {
+    text = _inflate(Uint8List.sublistView(body, z + 2));
+  } else if (type == 'iTXt' && z + 3 <= body.length) {
+    final compressed = body[z + 1] == 1;
+    var q = z + 3;
+    for (var n = 0; n < 2; n++) {
+      final e = body.indexOf(0, q);
+      if (e < 0) return;
+      q = e + 1;
+    }
+    final rest = Uint8List.sublistView(body, q);
+    text = compressed ? _inflate(rest) : rest;
+  }
+  if (text == null) return;
+  final words = latin1
+      .decode(text, allowInvalid: true)
+      .split(RegExp(r'\s+'))
+      .where((w) => w.isNotEmpty)
+      .toList();
+  if (words.length < 3) return;
+  // the stated length, then hex; anything after it is not the profile
+  final n = int.tryParse(words[1]) ?? 0;
+  final hex = words.skip(2).join();
+  if (n == 0 || n > _maxBlock || hex.length < n * 2) return;
+  final bytes = Uint8List(n);
+  for (var i = 0; i < n; i++) {
+    final v = int.tryParse(hex.substring(i * 2, i * 2 + 2), radix: 16);
+    if (v == null) return;
+    bytes[i] = v;
+  }
+  switch (name) {
+    case 'exif' || 'APP1':
+      _takeExif(
+        _startsWith(bytes, _exifHead) ? Uint8List.sublistView(bytes, 6) : bytes,
+        r,
+      );
+    case 'xmp':
+      _takeXmp(bytes, r);
+    case 'iptc' || '8bim':
+      r.iptc = true;
+  }
+}
+
+Uint8List? _inflate(Uint8List b) {
+  try {
+    final out = ZLibDecoder().convert(b);
+    return out.length > 4 * _maxBlock ? null : Uint8List.fromList(out);
+  } on FormatException {
+    return null;
+  }
+}
+
+/// the webp chunks a picture is drawn from, still or animated
+const kWebpKeep = {'VP8 ', 'VP8L', 'VP8X', 'ALPH', 'ANIM', 'ANMF', 'ICCP'};
+
 void _webp(ByteSource s, MetaReport r) {
   final riffEnd = 8 + _le32(s.read(4, 4), 0);
   if (riffEnd > s.length) throw const _Unreadable('riff runs past the file');
   var i = 12;
   var boxes = 0;
+  var exifFlag = false, exifChunk = false;
   while (i < riffEnd) {
     if (++boxes > _maxBoxes) throw const _Unreadable('too many chunks');
     final h = s.read(i, 8);
@@ -523,17 +844,27 @@ void _webp(ByteSource s, MetaReport r) {
     }
     if (type == 'EXIF') {
       if (len > _maxBlock) throw const _Unreadable('exif too large');
+      exifChunk = true;
       final b = s.read(i + 8, len);
       _takeExif(_startsWith(b, _exifHead) ? Uint8List.sublistView(b, 6) : b, r);
     } else if (type == 'XMP ') {
       _takeXmp(s.read(i + 8, len < _maxBlock ? len : _maxBlock), r);
+    } else if (type == 'C2PA') {
+      r.credentials = true;
+      final cr = readCredentials(
+        s.read(i + 8, len < _maxBlock ? len : _maxBlock),
+      );
+      _takeCredentials(cr, r);
     } else if (type == 'VP8X' && len >= 1) {
       final f = s.read(i + 8, 1)[0];
-      if (f & 0x08 != 0) r.extra.add(l10n.metaReaderExifFlagSet);
+      if (f & 0x08 != 0) exifFlag = true;
       if (f & 0x04 != 0) r.extra.add(l10n.metaReaderXmpFlagSet);
+    } else if (!kWebpKeep.contains(type)) {
+      r.extra.add(l10n.metaReaderChunk(type));
     }
     i += 8 + len + (len & 1);
   }
+  if (exifFlag && !exifChunk) r.extra.add(l10n.metaReaderExifFlagSet);
   final end = riffEnd + (riffEnd & 1);
   if (end < s.length) r.trailingBytes = s.length - end;
 }
@@ -575,6 +906,8 @@ void _gif(ByteSource s, MetaReport r) {
         final id = latin1.decode(s.read(i + 3, 11), allowInvalid: true);
         if (id == 'XMP DataXMP') {
           r.xmp = true;
+        } else if (id.startsWith('C2PA_GIF')) {
+          r.credentials = true;
         } else if (id != 'NETSCAPE2.0' && id != 'ANIMEXTS1.0') {
           r.extra.add(l10n.metaReaderAppBlock(id));
         }
@@ -586,229 +919,338 @@ void _gif(ByteSource s, MetaReport r) {
   }
 }
 
-class _Box {
-  final String type;
-  final int body;
-  final int end;
-  const _Box(this.type, this.body, this.end);
-}
+String _printable(String tag) => tag.replaceAll(RegExp(r'[^A-Za-z0-9]'), '?');
 
-List<_Box> _boxes(ByteSource s, int from, int to, List<int> count) {
-  final out = <_Box>[];
-  var i = from;
-  while (i < to) {
-    if (++count[0] > _maxBoxes) throw const _Unreadable('too many boxes');
-    if (i + 8 > to) throw const _Unreadable('box header cut short');
-    final h = s.read(i, 8);
-    var size = _be32(h, 0);
-    final type = _tag(h, 4);
-    var head = 8;
-    if (size == 1) {
-      if (i + 16 > to) throw const _Unreadable('box header cut short');
-      final x = s.read(i + 8, 8);
-      if (_be32(x, 0) > 0x7fff) throw const _Unreadable('box too large');
-      size = (_be32(x, 0) << 32) | _be32(x, 4);
-      head = 16;
-    } else if (size == 0) {
-      size = to - i;
-    }
-    if (size < head || i + size > to) {
-      throw const _Unreadable('box runs past its parent');
-    }
-    out.add(_Box(type, i + head, i + size));
-    i += size;
-  }
-  return out;
-}
+// ---- heif and avif ----
 
-Uint8List _payload(ByteSource s, _Box b) {
-  final n = b.end - b.body;
-  if (n > _maxBlock) throw const _Unreadable('box too large to read');
-  return s.read(b.body, n);
-}
-
-const _heifTop = {'ftyp', 'meta', 'mdat', 'free', 'skip'};
-const _heifItems = {
-  'hvc1',
-  'hev1',
-  'av01',
-  'avc1',
-  'jpeg',
-  'grid',
-  'iovl',
-  'iden',
+/// meta children a heif picture needs
+const kHeifMetaKeep = {
+  'hdlr',
+  'pitm',
+  'iloc',
+  'iinf',
+  'iref',
+  'iprp',
+  'idat',
+  'grpl',
+  'dinf',
 };
 
-String _printable(String tag) => tag.replaceAll(RegExp(r'[^A-Za-z0-9]'), '?');
+Iterable<String> heifBrands(ByteSource s, IsoBox ftyp) sync* {
+  if (ftyp.type != 'ftyp' || ftyp.bodySize > 1024) return;
+  final b = s.read(ftyp.body, ftyp.bodySize);
+  for (var i = 0; i + 4 <= b.length; i += 4) {
+    if (i == 4) continue; // minor version
+    yield _tag(b, i);
+  }
+}
 
 void _heif(ByteSource s, MetaReport r) {
   final count = [0];
-  final top = _boxes(s, 0, s.length, count);
-  final metas = top.where((b) => b.type == 'meta').toList();
-  if (metas.isEmpty) throw const _Unreadable('no meta box');
-  final meta = metas.first;
-  final inner = _boxes(s, meta.body + 4, meta.end, count);
-  for (final b in top) {
-    if (b.type == 'moov' || b.type == 'mpvd') {
-      r.embeddedVideo = true;
-    } else if (b.type == 'uuid') {
-      r.extra.add(l10n.metaReaderUuidBox);
-    } else if (!_heifTop.contains(b.type)) {
-      r.extra.add(l10n.metaReaderBox(_printable(b.type)));
+  final top = isoBoxes(s, 0, s.length, count);
+  if (firstOf(top, 'mini') != null) {
+    throw const _Unreadable('a compact heif kryfo does not read yet');
+  }
+  final meta = firstOf(top, 'meta');
+  if (meta == null) throw const _Unreadable('no meta box');
+  final m = readHeifMeta(s, meta, count);
+  final sequence =
+      top.isNotEmpty && heifBrands(s, top.first).any(kHeifSequences.contains);
+  final picture = heifPictureItems(s, m);
+  if (picture.isEmpty) throw const _Unreadable('no picture item');
+
+  // what every byte of mdat and idat is there for
+  final used = Ranges();
+  final usedIdat = Ranges();
+  for (final id in m.items.keys) {
+    final p = m.places[id];
+    if (p == null) continue;
+    for (final e in p.extents) {
+      final to = e.len == 0 ? s.length : e.at + e.len;
+      if (p.method == 0) used.add(e.at, to);
+      if (p.method == 1) usedIdat.add(e.at, to);
     }
   }
 
-  final want = <int, String>{};
-  for (final x in inner.where((b) => b.type == 'iinf')) {
-    final p = _payload(s, x);
-    final v = p[0];
-    final at = x.body + 4 + (v == 0 ? 2 : 4);
-    for (final e in _boxes(s, at, x.end, count)) {
-      if (e.type != 'infe') continue;
-      final ep = _payload(s, e);
-      final ev = ep[0];
-      if (ev < 2) continue;
-      var q = 4;
-      final idLen = ev == 2 ? 2 : 4;
-      final id = idLen == 2 ? _be16(ep, q) : _be32(ep, q);
-      q += idLen + 2;
-      final type = _tag(ep, q);
-      q += 4;
-      if (type == 'Exif') {
-        want[id] = 'exif';
-      } else if (type == 'mime') {
-        final rest = latin1
-            .decode(ep.sublist(q), allowInvalid: true)
-            .toLowerCase();
-        if (rest.contains('xmp') || rest.contains('rdf+xml')) {
-          want[id] = 'xmp';
-        } else {
-          r.extra.add(l10n.metaReaderAttachedData);
+  for (final k in m.kids) {
+    if (k.type == 'hdlr') {
+      if (_handlerNamed(s, k)) r.handlerNames = true;
+    } else if (k.type == 'free' || k.type == 'skip') {
+      if (nonZero(s, k.body, k.bodySize)) r.leftoverBytes += k.bodySize;
+    } else if (!kHeifMetaKeep.contains(k.type)) {
+      if (nonZero(s, k.body, k.bodySize)) {
+        r.extra.add(l10n.metaReaderBox(_printable(k.type)));
+      }
+    }
+  }
+  // a description, a date or a vendor block hung on an item as a property
+  for (final p in m.props) {
+    if (!kHeifPropKeep.contains(p.type) && nonZero(s, p.body, p.bodySize)) {
+      r.extra.add(l10n.metaReaderBox(_printable(p.type)));
+    }
+  }
+  final idat = m.idat;
+  if (idat != null) {
+    for (final (a, b) in Ranges.gaps(usedIdat.merged, 0, idat.bodySize)) {
+      if (nonZero(s, idat.body + a, b - a)) r.leftoverBytes += b - a;
+    }
+  }
+
+  var hdr = false;
+  for (final id in m.items.keys) {
+    final role = heifRole(s, m, id, picture);
+    switch (role) {
+      case HeifRole.picture:
+        final t = m.items[id]?.type ?? '';
+        if (!kHeifCodings.contains(t)) {
+          r.extra.add(l10n.metaReaderItem(_printable(t)));
         }
-      } else if (!_heifItems.contains(type)) {
-        r.extra.add(l10n.metaReaderItem(_printable(type)));
-      }
+      case HeifRole.exif:
+        final body = _itemBytes(s, m, id);
+        if (body == null || body.isEmpty || _allZero(body)) break;
+        if (body.length < 8) {
+          r.extra.add(l10n.metaReaderExifThatCannotBe);
+          break;
+        }
+        final skip = 4 + _be32(body, 0);
+        if (skip < 4 || skip >= body.length) {
+          r.extra.add(l10n.metaReaderExifThatCannotBe);
+          break;
+        }
+        _takeExif(Uint8List.sublistView(body, skip), r);
+      case HeifRole.xmp:
+        final body = _itemBytes(s, m, id);
+        if (body != null) _takeXmp(body, r);
+      case HeifRole.thumbnail:
+        r.smallCopies++;
+      case HeifRole.depth:
+        r.depthMap = true;
+      case HeifRole.matte:
+        r.portraitMatte = true;
+      case HeifRole.hdr:
+        hdr = true;
+      case HeifRole.another:
+        r.extraPictures++;
+      case HeifRole.attached:
+        r.extra.add(l10n.metaReaderAttachedData);
+      case HeifRole.other:
+        final t = m.items[id]?.type ?? '';
+        r.extra.add(l10n.metaReaderItem(_printable(t)));
     }
   }
-  if (want.isEmpty) return;
+  if (hdr) r.hdrLayer = true;
 
-  final ilocs = inner.where((b) => b.type == 'iloc').toList();
-  if (ilocs.isEmpty) throw const _Unreadable('items without a location table');
-  final idat = inner.where((b) => b.type == 'idat').toList();
-  final p = _payload(s, ilocs.first);
-  var q = 0;
-  final v = p[q];
-  if (v > 2) throw const _Unreadable('unknown location table');
-  q += 4;
-  final offSize = p[q] >> 4, lenSize = p[q] & 15;
-  final baseSize = p[q + 1] >> 4;
-  final idxSize = v == 0 ? 0 : p[q + 1] & 15;
-  q += 2;
-  final n = v < 2 ? _be16(p, q) : _be32(p, q);
-  q += v < 2 ? 2 : 4;
-  int num(int size) {
-    if (size == 0) return 0;
-    if (size == 4) {
-      final x = _be32(p, q);
-      q += 4;
-      return x;
+  Mp4Layout? anim;
+  for (final b in top) {
+    switch (b.type) {
+      case 'ftyp' || 'mdat':
+        break;
+      case 'meta':
+        // the picture is read from the first one; another is beside it
+        if (b.start != meta.start) r.extra.add(l10n.metaReaderBox('meta'));
+      case 'free' || 'skip':
+        if (nonZero(s, b.body, b.bodySize)) r.leftoverBytes += b.bodySize;
+      case 'moov':
+        if (sequence && anim == null) {
+          anim = readMp4LayoutOf(s, top, count);
+          _moovFindings(s, anim, r, count);
+          used.addAll(anim.keptSamples);
+        } else {
+          r.embeddedVideo = true;
+        }
+      case 'mpvd':
+        r.embeddedVideo = true;
+      case 'uuid':
+        _uuid(s, b, r, picture: true);
+      default:
+        r.extra.add(l10n.metaReaderBox(_printable(b.type)));
     }
-    if (size == 8) {
-      if (_be32(p, q) != 0) throw const _Unreadable('offset too large');
-      final x = _be32(p, q + 4);
-      q += 8;
-      return x;
-    }
-    throw const _Unreadable('odd field size');
   }
+  // a second ftyp after the picture is a whole file hung behind it
+  if (top.skip(1).any((b) => b.type == 'ftyp')) r.embeddedVideo = true;
 
-  for (var k = 0; k < n; k++) {
-    final idLen = v < 2 ? 2 : 4;
-    final id = idLen == 2 ? _be16(p, q) : _be32(p, q);
-    q += idLen;
-    var method = 0;
-    if (v > 0) {
-      method = _be16(p, q) & 15;
-      q += 2;
-    }
-    q += 2;
-    final base = num(baseSize);
-    final extents = _be16(p, q);
-    q += 2;
-    final parts = BytesBuilder(copy: false);
-    for (var e = 0; e < extents; e++) {
-      if (idxSize > 0) num(idxSize);
-      final off = num(offSize), len = num(lenSize);
-      if (!want.containsKey(id)) continue;
-      int at;
-      if (method == 0) {
-        at = base + off;
-      } else if (method == 1 && idat.isNotEmpty) {
-        at = idat.first.body + base + off;
-      } else {
-        throw const _Unreadable('item stored in a way not handled');
-      }
-      if (len <= 0 || len > _maxBlock) {
-        throw const _Unreadable('item too large');
-      }
-      parts.add(s.read(at, len));
-    }
-    final what = want[id];
-    if (what == null) continue;
-    final body = parts.toBytes();
-    if (body.isEmpty || _allZero(body)) continue;
-    if (what == 'exif') {
-      if (body.length < 8) {
-        r.extra.add(l10n.metaReaderExifThatCannotBe);
-        continue;
-      }
-      final skip = 4 + _be32(body, 0);
-      if (skip < 4 || skip >= body.length) {
-        r.extra.add(l10n.metaReaderExifThatCannotBe);
-        continue;
-      }
-      _takeExif(Uint8List.sublistView(body, skip), r);
-    } else {
-      _takeXmp(body, r);
+  final merged = used.merged;
+  for (final b in top.where((b) => b.type == 'mdat')) {
+    for (final (x, y) in Ranges.gaps(merged, b.body, b.end)) {
+      if (nonZero(s, x, y - x)) r.leftoverBytes += y - x;
     }
   }
 }
 
-const _mp4Into = {'moov', 'trak', 'mdia', 'minf', 'stbl', 'edts', 'dinf'};
+Uint8List? _itemBytes(ByteSource s, HeifMeta m, int id) {
+  final ranges = m.fileRanges(id);
+  if (ranges == null) {
+    throw const _Unreadable('item stored in a way not handled');
+  }
+  final parts = BytesBuilder(copy: false);
+  for (final (a, b) in ranges) {
+    if (b - a <= 0 || b - a > _maxBlock) {
+      throw const _Unreadable('item too large');
+    }
+    parts.add(s.read(a, b - a));
+  }
+  return parts.toBytes();
+}
+
+// a hdlr box's name, or the vendor fields quicktime puts before it
+bool _handlerNamed(ByteSource s, IsoBox h) {
+  if (h.bodySize <= 12) return false;
+  return nonZero(s, h.body + 12, h.bodySize - 12);
+}
+
+void _uuid(ByteSource s, IsoBox b, MetaReport r, {bool picture = false}) {
+  final n = b.bodySize;
+  final p = s.read(b.body, n < _maxBlock ? n : _maxBlock);
+  if (_allZero(p)) return;
+  final cr = readCredentials(p);
+  if (cr.found) {
+    r.credentials = true;
+    _takeCredentials(cr, r);
+  } else if (picture) {
+    r.extra.add(l10n.metaReaderUuidBox);
+  } else {
+    r.videoTags.add('uuid');
+  }
+}
+
+// ---- mp4, mov, 3gp ----
+
 final _mac = DateTime.utc(1904, 1, 1);
 
 void _mp4(ByteSource s, MetaReport r) {
   final count = [0];
-  void walk(int from, int to, int depth) {
-    if (depth > 8) throw const _Unreadable('nested too deep');
-    for (final b in _boxes(s, from, to, count)) {
-      if (_mp4Into.contains(b.type)) {
-        walk(b.body, b.end, depth + 1);
-      } else if (b.type == 'mvhd' || b.type == 'tkhd' || b.type == 'mdhd') {
-        final p = s.read(b.body, (b.end - b.body).clamp(0, 24));
-        if (p.length < 12) throw const _Unreadable('short header box');
-        final v1 = p[0] == 1;
-        if (v1 && p.length < 20) throw const _Unreadable('short header box');
-        final c = v1 ? (_be32(p, 4) << 32) | _be32(p, 8) : _be32(p, 4);
-        final m = v1 ? (_be32(p, 12) << 32) | _be32(p, 16) : _be32(p, 8);
-        if (c != 0 || m != 0) {
-          r.stamps = true;
-          if (b.type == 'mvhd' && c != 0 && c < 0xFFFFFFFF * 2) {
-            r.created = _mac.add(Duration(seconds: c));
-          }
+  var end = s.length;
+  final sef = readSef(s);
+  if (sef != null) {
+    end = sef.start;
+    r.extra.add(l10n.metaReaderSamsungTrailer);
+    _sefFindings(s, sef, r);
+  }
+  final top = isoBoxes(s, 0, end, count);
+  final lay = readMp4LayoutOf(s, top, count);
+  for (final b in top) {
+    if (b.type == 'moov' || b.type == 'mdat') continue;
+    if (kFreeBoxes.contains(b.type)) {
+      if (nonZero(s, b.body, b.bodySize)) r.leftoverBytes += b.bodySize;
+    } else if (b.type == 'uuid') {
+      _uuid(s, b, r);
+    } else if (b.type == 'meta') {
+      _qtMeta(s, b, r, count);
+    } else if (!kMp4Top.contains(b.type)) {
+      if (nonZero(s, b.body, b.bodySize)) {
+        r.extra.add(l10n.metaReaderBox(_printable(b.type)));
+      }
+    } else if (b.type == 'moof') {
+      _moofFindings(s, b, r, count);
+    }
+  }
+  // without a moov no player reads mdat as a video
+  if (lay.moov == null) return;
+  _moovFindings(s, lay, r, count);
+  final merged = lay.keptSamples.merged;
+  for (final b in lay.mdats) {
+    for (final (x, y) in Ranges.gaps(merged, b.body, b.end)) {
+      if (nonZero(s, x, y - x)) r.leftoverBytes += y - x;
+    }
+  }
+}
+
+void _moofFindings(ByteSource s, IsoBox moof, MetaReport r, List<int> c) {
+  for (final b in isoBoxes(s, moof.body, moof.end, c)) {
+    if (b.type == 'traf') {
+      for (final t in isoBoxes(s, b.body, b.end, c)) {
+        if (!kTrafKeep.contains(t.type) && nonZero(s, t.body, t.bodySize)) {
+          r.videoTags.add(_printable(t.type));
         }
-      } else if (b.type == 'udta') {
-        _udta(s, b, r, count);
+      }
+    } else if (!kMoofKeep.contains(b.type) && nonZero(s, b.body, b.bodySize)) {
+      r.videoTags.add(_printable(b.type));
+    }
+  }
+}
+
+void _stamp(ByteSource s, IsoBox b, MetaReport r) {
+  final p = s.read(b.body, b.bodySize.clamp(0, 24));
+  if (p.length < 12) throw const _Unreadable('short header box');
+  final v1 = p[0] == 1;
+  if (v1 && p.length < 20) throw const _Unreadable('short header box');
+  final c = v1 ? (_be32(p, 4) << 32) | _be32(p, 8) : _be32(p, 4);
+  final m = v1 ? (_be32(p, 12) << 32) | _be32(p, 16) : _be32(p, 8);
+  if (c != 0 || m != 0) {
+    r.stamps = true;
+    if (b.type == 'mvhd' && c != 0 && c < 0xFFFFFFFF * 2) {
+      r.created = _mac.add(Duration(seconds: c));
+    }
+  }
+}
+
+void _moovFindings(ByteSource s, Mp4Layout lay, MetaReport r, List<int> c) {
+  for (final b in lay.moovKids) {
+    switch (b.type) {
+      case 'mvhd':
+        _stamp(s, b, r);
+      case 'trak' || 'mvex' || 'iods':
+        break;
+      case 'udta':
+        _udta(s, b, r, c);
+      case 'meta':
+        _qtMeta(s, b, r, c);
+      case 'uuid':
+        _uuid(s, b, r);
+      default:
+        if (kFreeBoxes.contains(b.type)) {
+          if (nonZero(s, b.body, b.bodySize)) r.leftoverBytes += b.bodySize;
+        } else if (nonZero(s, b.body, b.bodySize)) {
+          r.videoTags.add(_printable(b.type));
+        }
+    }
+  }
+  for (final t in lay.tracks) {
+    r.tracks.add('${t.handler}/${t.format}');
+    if (t.tkhd != null) _stamp(s, t.tkhd!, r);
+    if (t.mdhd != null) _stamp(s, t.mdhd!, r);
+    switch (t.role) {
+      case TrackRole.timecode:
+        r.timecode = true;
+      case TrackRole.data:
+        r.extraTracks++;
+        final d = timedData(s, t);
+        r.gpsPoints += d.gpsPoints;
+        if (d.motion) r.motionSensors = true;
+      default:
+        if (t.hdlrs.any((h) => _handlerNamed(s, h))) r.handlerNames = true;
+        for (final (a, b) in compressorNames(s, t, c)) {
+          if (nonZero(s, a, b - a)) r.handlerNames = true;
+        }
+        _trakExtras(s, t.trak, r, c);
+    }
+  }
+}
+
+// boxes in a kept track that are not what playing it needs
+void _trakExtras(ByteSource s, IsoBox trak, MetaReport r, List<int> c) {
+  void walk(IsoBox box, Set<String> keep, int depth) {
+    for (final b in isoBoxes(s, box.body, box.end, c)) {
+      if (b.type == 'udta') {
+        _udta(s, b, r, c);
       } else if (b.type == 'meta') {
-        _qtMeta(s, b, r, count);
-      } else if (b.type == 'uuid') {
-        final p = s.read(b.body, (b.end - b.body).clamp(0, 16));
-        if (!_allZero(p)) r.videoTags.add('uuid');
+        _qtMeta(s, b, r, c);
+      } else if (kFreeBoxes.contains(b.type)) {
+        if (nonZero(s, b.body, b.bodySize)) r.leftoverBytes += b.bodySize;
+      } else if (!keep.contains(b.type)) {
+        if (nonZero(s, b.body, b.bodySize)) r.videoTags.add(_printable(b.type));
+      } else if (depth < 3) {
+        final inner = switch (b.type) {
+          'mdia' => kMdiaKeep,
+          'minf' => kMinfKeep,
+          _ => null,
+        };
+        if (inner != null) walk(b, inner, depth + 1);
       }
     }
   }
 
-  walk(0, s.length, 0);
+  walk(trak, kTrakKeep, 0);
 }
 
 final _iso6709 = RegExp(
@@ -824,8 +1266,8 @@ void _place(String text, MetaReport r) {
   r.gps ??= GpsFix(lat, lon, altitude: alt, from: 'video');
 }
 
-void _udta(ByteSource s, _Box u, MetaReport r, List<int> count) {
-  for (final b in _boxes(s, u.body, u.end, count)) {
+void _udta(ByteSource s, IsoBox u, MetaReport r, List<int> count) {
+  for (final b in isoBoxes(s, u.body, u.end, count)) {
     if (b.type == 'free' || b.type == 'skip') continue;
     final n = b.end - b.body;
     final p = s.read(b.body, n < 4096 ? n : 4096);
@@ -868,15 +1310,15 @@ String? _clean(String s) {
   return t.isEmpty ? null : t;
 }
 
-void _qtMeta(ByteSource s, _Box m, MetaReport r, List<int> count) {
+void _qtMeta(ByteSource s, IsoBox m, MetaReport r, List<int> count) {
   if (m.end - m.body < 8) return;
   final peek = s.read(m.body, 8);
   if (_allZero(peek)) return;
   final full = _tag(peek, 4) != 'hdlr';
-  final inner = _boxes(s, m.body + (full ? 4 : 0), m.end, count);
+  final inner = isoBoxes(s, m.body + (full ? 4 : 0), m.end, count);
   final keys = <String>[];
   for (final b in inner.where((b) => b.type == 'keys')) {
-    final p = _payload(s, b);
+    final p = isoPayload(s, b, max: _maxBlock);
     if (p.length < 8) continue;
     final n = _be32(p, 4);
     var q = 8;
@@ -888,14 +1330,14 @@ void _qtMeta(ByteSource s, _Box m, MetaReport r, List<int> count) {
     }
   }
   for (final b in inner.where((b) => b.type == 'ilst')) {
-    for (final item in _boxes(s, b.body, b.end, count)) {
+    for (final item in isoBoxes(s, b.body, b.end, count)) {
       final raw = s.read(item.body - 4, 4);
       final idx = _be32(raw, 0);
       final name = idx >= 1 && idx <= keys.length ? keys[idx - 1] : item.type;
       String? value;
-      for (final d in _boxes(s, item.body, item.end, count)) {
+      for (final d in isoBoxes(s, item.body, item.end, count)) {
         if (d.type != 'data') continue;
-        final p = _payload(s, d);
+        final p = isoPayload(s, d, max: _maxBlock);
         if (p.length > 8) {
           value = _clean(utf8.decode(p.sublist(8), allowMalformed: true));
         }
@@ -908,6 +1350,7 @@ void _qtMeta(ByteSource s, _Box m, MetaReport r, List<int> count) {
       if (low.endsWith('.model')) r.model ??= value;
       if (low.endsWith('.software')) r.software ??= value;
       if (low.endsWith('creationdate')) r.taken ??= value;
+      if (low.endsWith('content.identifier')) r.liveId ??= value;
     }
   }
   if (keys.isEmpty && inner.any((b) => b.type == 'ilst')) {

@@ -11,7 +11,14 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloDb, QuietIdentity, tidyWallpapers;
+    show
+        AppState,
+        HaloDb,
+        QuietIdentity,
+        tidyWallpapers,
+        sweepableMedia,
+        AppStateVault,
+        AppStateSession;
 import 'package:kryfo/vault_life.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -161,4 +168,44 @@ void main() {
       orphan.path,
     ]);
   });
+
+  test('a decoy hide cut short between the rows and the files keeps its '
+      'media until the vault opens', () async {
+    final before = DateTime.now().subtract(const Duration(minutes: 10));
+    final old = before.subtract(const Duration(hours: 1));
+    final decoy = _Rows(MemDb(), HaloContainer.decoy);
+    // its rows went to the vault, which is on disk and shut, and the kill
+    // came before its voice note moved
+    File(await HaloContainer.decoyVault.dbPath()).writeAsStringSync('shut');
+    final media = await HaloContainer.decoy.mediaDir();
+    final note = File(p.join(media.path, 'vn_hid1.ogg'))
+      ..writeAsBytesSync([7])
+      ..setLastModifiedSync(old);
+    expect(await sweepableMedia(decoy, before: before), isEmpty);
+    expect(note.existsSync(), isTrue);
+    // the vault's open settles its moves first, then sweeps both sides
+    expect(
+      (await sweepableMedia(
+        decoy,
+        before: before,
+        vaultOpen: true,
+      )).map((f) => f.path),
+      [note.path],
+    );
+  });
+
+  test(
+    'a decoy with no vault on disk has its media swept at its open',
+    () async {
+      final before = DateTime.now().subtract(const Duration(minutes: 10));
+      final decoy = _Rows(MemDb(), HaloContainer.decoy);
+      final media = await HaloContainer.decoy.mediaDir();
+      final left = File(p.join(media.path, 'vn_left.wav'))
+        ..writeAsBytesSync([1])
+        ..setLastModifiedSync(before.subtract(const Duration(hours: 1)));
+      expect((await sweepableMedia(decoy, before: before)).map((f) => f.path), [
+        left.path,
+      ]);
+    },
+  );
 }

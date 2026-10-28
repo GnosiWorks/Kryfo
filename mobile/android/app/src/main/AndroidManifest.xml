@@ -23,7 +23,6 @@
          person picks; gradle checks the merged manifest for this too -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove" />
     <uses-permission-sdk-23 android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove" />
-    <uses-permission-sdk-m android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove" />
     <application
         android:label="${appLabel}"
         android:name=".HaloApplication"
@@ -36,10 +35,12 @@
              tap, link or share arriving while a picker or the camera is on
              top would otherwise stack a second, blank copy above it.
              portrait here too: the engine outlives this screen, and a lock
-             asked for from dart before it was attached never reaches it -->
+             asked for from dart before it was attached never reaches it.
+             no filter of its own: the launcher entries below are its way
+             in, and only one of them is on at a time (AppIcon.kt) -->
         <activity
-            android:name=".MainActivity"
-            android:exported="true"
+            android:name=".KryfoActivity"
+            android:exported="false"
             android:launchMode="singleTask"
             android:taskAffinity=""
             android:screenOrientation="portrait"
@@ -59,6 +60,18 @@
                 android:name="flutter_deeplinking_enabled"
                 android:value="false"
                 />
+        </activity>
+        <!-- the icon and name on the home screen, the share menu and "open
+             with". each entry takes links, photos, videos and words from
+             another app (those wait in memory for a chat to be picked, and
+             land in its composer unsent), so all of these follow the icon.
+             kryfo's keeps the screen's old name, so icons placed before
+             still open it. a long press menu, if one ever comes, goes on
+             every entry and names nothing -->
+        <activity-alias
+            android:name=".MainActivity"
+            android:targetActivity=".KryfoActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -75,14 +88,132 @@
                 <data android:mimeType="image/*" />
                 <data android:mimeType="video/*" />
             </intent-filter>
-            <!-- words and links from another app: they wait in memory for a
-                 chat to be picked, and land in its composer unsent -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+        <activity-alias
+            android:name=".IconNotes"
+            android:targetActivity=".KryfoActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:label="@string/icon_notes"
+            android:icon="@mipmap/ic_icon_notes"
+            android:roundIcon="@mipmap/ic_icon_notes">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kryfo" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="video/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".IconWeather"
+            android:targetActivity=".KryfoActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:label="@string/icon_weather"
+            android:icon="@mipmap/ic_icon_weather"
+            android:roundIcon="@mipmap/ic_icon_weather">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kryfo" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="video/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".IconTasks"
+            android:targetActivity=".KryfoActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:label="@string/icon_tasks"
+            android:icon="@mipmap/ic_icon_tasks"
+            android:roundIcon="@mipmap/ic_icon_tasks">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kryfo" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="video/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".IconNews"
+            android:targetActivity=".KryfoActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:label="@string/icon_news"
+            android:icon="@mipmap/ic_icon_news"
+            android:roundIcon="@mipmap/ic_icon_news">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kryfo" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="video/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity-alias>
         <service
             android:name=".HaloListenerService"
             android:enabled="true"
@@ -90,7 +221,7 @@
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Kryfo private messenger: keeps its own encrypted connection to its message relays open, over tor by default, so messages arrive while the app is closed, with no push service. Always on is the default in Getting messages; the user can switch to check-ins, which stops it." />
+                android:value="Kryfo private messenger: keeps its own encrypted connection to its message relays open, over tor by default, so messages arrive while the app is closed, with no push service. Always on is the default in Notifications; the user can switch to check-ins, which stops it." />
         </service>
         <receiver
             android:name=".BootReceiver"

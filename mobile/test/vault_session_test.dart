@@ -15,7 +15,14 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/container.dart';
-import 'package:kryfo/drafts.dart' show draftPerGroup, draftPerPeer;
+import 'package:kryfo/drafts.dart'
+    show
+        Draft,
+        endProcessForTest,
+        flushDrafts,
+        heldDraft,
+        kDraftWait,
+        typedDraft;
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
     show
@@ -27,7 +34,13 @@ import 'package:kryfo/main.dart'
         searchFill,
         session,
         sessionQuiet,
-        useDatabasesForTest;
+        useDatabasesForTest,
+        AppStateOutbox,
+        AppStateRoute,
+        AppStateVault,
+        AppStateSession,
+        AppStateReceive,
+        AppStateRefresh;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/notifications.dart' show kCancelRetryAfter;
 import 'package:kryfo/polls.dart';
@@ -171,6 +184,15 @@ class _Seal implements VaultSeal {
 // ---- signal, the engine and android ----
 
 class _Io implements AppIo {
+  // nothing here types
+  @override
+  Future<String> typingSeal(String peer, String plain) =>
+      throw UnimplementedError('typingSeal');
+  @override
+  Future<String> typingSend(String onion, String cipher) =>
+      throw UnimplementedError('typingSend');
+  @override
+  Future<String> pinFirst(List<String> xPubs) async => 'ok';
   @override
   Future<String?> decryptIf(
     String peer,
@@ -275,6 +297,8 @@ class _Io implements AppIo {
 // ---- one container's rows, and a handle on them ----
 
 class _Rows {
+  // the drafts table, by chat: a group's under group:
+  final drafts = <String, Draft>{};
   final people = <String, Map<String, Object?>>{};
   final groupRows = <String, Map<String, Object?>>{};
   final members = <String, List<String>>{};
@@ -414,6 +438,33 @@ class _Db implements HaloDb {
   @override
   HaloContainer get container => _container;
 
+  // ---- drafts ----
+  T _draft<T>(String name, T Function() f) {
+    if (untouchable) {
+      touched.add(name);
+      throw StateError('${_container.dbFile} was reached');
+    }
+    if (closed) throw StateError('${_container.dbFile} has no key here');
+    return f();
+  }
+
+  static String _chat(String id, bool group) => group ? 'group:$id' : id;
+
+  @override
+  bool get isOpen => !closed;
+  @override
+  Future<Draft?> draftOf(String chatId, {required bool group}) async =>
+      _draft('draftOf', () => r.drafts[_chat(chatId, group)]);
+  @override
+  Future<void> putDraft(String chatId, Draft d, {required bool group}) async =>
+      _draft('putDraft', () => r.drafts[_chat(chatId, group)] = d);
+  @override
+  Future<void> dropDraftRow(String chatId, {required bool group}) async =>
+      _draft('dropDraftRow', () => r.drafts.remove(_chat(chatId, group)));
+  @override
+  Future<List<({String chat, bool group})>> spentDrafts(int now) async =>
+      const [];
+
   @override
   Future<void> close() async {
     if (untouchable) touched.add('close');
@@ -550,6 +601,8 @@ class _Db implements HaloDb {
     void Function(String msgUid)? gone,
     Future<Set<String>> Function()? blocked,
     bool ifOpen = false,
+    bool Function(String chatId, bool group)? draftOnScreen,
+    void Function(HaloContainer c, String chatId, bool group)? draftGone,
   }) async {
     _hit('purgeExpired', null, null);
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -964,9 +1017,15 @@ class _Mover implements ChatMover {
           : m['peer_id'] == c.id && m['group_id'] == null;
       if (mine && d.msg(m['msg_uid'] as String) == null) d.msgs.add({...m});
     }
+    // as vault_life's drafts row goes with its chat
+    final draft = s.drafts[_key(c)];
+    if (draft != null) d.drafts[_key(c)] = draft;
   }
 
+  static String _key(ChatRef c) => c.group ? 'group:${c.id}' : c.id;
+
   void _drop(_Rows s, ChatRef c) {
+    s.drafts.remove(_key(c));
     if (c.group) {
       final who = s.members.remove(c.id) ?? const <String>[];
       s.groupRows.remove(c.id);
@@ -1067,6 +1126,11 @@ class _Mover implements ChatMover {
   @override
   Future<Map<String, (String, String)>> vaultCards() async {
     w.log.add('cards');
+    final hold = w.holdCards;
+    if (hold != null) {
+      w.cardsAsked?.complete();
+      await hold.future;
+    }
     return {
       for (final p in _v.people.values)
         if (p['accepted'] == 1)
@@ -1099,6 +1163,9 @@ class _World {
   late VaultRouter router;
   late AppState app;
   Completer<void>? holdMove;
+  // the cards read after a move's rows went, held there
+  Completer<void>? holdCards;
+  Completer<void>? cardsAsked;
   var _n = 0;
   // the decoy, and its own vault: the rows and key of halo_dv.db
   final decoyRows = _Rows();
@@ -1324,9 +1391,15 @@ class _CountingStore implements LockStore {
 class _CountingEngine extends MemEngine {
   var checks = 0;
   @override
-  Future<Map<String, dynamic>> check(String pin, String table, String legacy) {
+  Future<Map<String, dynamic>> check(
+    String pin,
+    String table,
+    String legacy, {
+    PinMac? mac,
+    String key = '',
+  }) {
     checks++;
-    return super.check(pin, table, legacy);
+    return super.check(pin, table, legacy, mac: mac, key: key);
   }
 }
 
@@ -1657,6 +1730,24 @@ void main() {
       expect(w.io.rang, [_v]);
     });
 
+    test('shut, with plain notifications: a hidden chat lights no plain '
+        'line either', () async {
+      // a plain line stands for nothing hidden: it rings only for what
+      // would ring anyway
+      SharedPreferences.setMockInitialValues({'notif_plain': true});
+      final w = await _World.make();
+      await w.open();
+      await w.lockUp();
+      await w.onion(
+        _h,
+        await wrapMessage('are you there', msgUid: 'p1', sender: _as(_h)),
+      );
+      await w.onion(_m, await wrapMessage('all', msgUid: 'p2', groupId: _g2));
+      expect(w.io.rang, isEmpty);
+      await w.onion(_v, await wrapMessage('yo', msgUid: 'p3', sender: _as(_v)));
+      expect(w.io.rang, [_v]);
+    });
+
     test(
       'open: a hidden chat rings like any other, and goes at the lock',
       () async {
@@ -1757,13 +1848,19 @@ void main() {
       final w = await _World.make();
       await w.open();
       expect(session.isHidden(_v), isFalse);
-      final draft = HaloContainer.everyday.chatKey(_v);
-      draftPerPeer[draft] = 'half a thought';
-      addTearDown(draftPerPeer.clear);
+      typedDraft(
+        session.draftsOf(_v),
+        _v,
+        const Draft('half a thought'),
+        group: false,
+      );
+      addTearDown(endProcessForTest);
+      expect(heldDraft(HaloContainer.everyday, _v, group: false), isNotNull);
       expect(await w.app.hideChats(people: [_v]), 1);
       expect(session.isHidden(_v), isTrue);
       // its unsent words stay nowhere outside the vault
-      expect(draftPerPeer.containsKey(draft), isFalse);
+      expect(heldDraft(HaloContainer.everyday, _v, group: false), isNull);
+      expect(heldDraft(HaloContainer.vault, _v, group: false), isNull);
       expect(w.app.contacts.firstWhere((c) => c.haloId == _v).hidden, isTrue);
       expect(w.router.hides(_v), isTrue);
       expect(w.vaultRows.uids, contains('v0'));
@@ -1784,6 +1881,75 @@ void main() {
       );
       expect(w.io.rang, [_v]);
       expect(w.store.inbox, hasLength(1));
+    });
+
+    test('words typed into a chat while it is hidden land nowhere outside '
+        'the vault', () async {
+      final w = await _World.make();
+      await w.open();
+      addTearDown(endProcessForTest);
+      final hold = Completer<void>();
+      final asked = Completer<void>();
+      w
+        ..holdCards = hold
+        ..cardsAsked = asked;
+      final hiding = w.app.hideChats(people: [_v]);
+      await asked.future;
+      // its rows are in the vault, and the session still names the
+      // everyday side: the screen still open on it writes there
+      expect(w.router.hides(_v), isTrue);
+      final rows = session.draftsOf(_v);
+      expect(rows.container, HaloContainer.everyday);
+      typedDraft(rows, _v, const Draft('typed as it went'), group: false);
+      w.holdCards = null;
+      hold.complete();
+      expect(await hiding, 1);
+      await Future<void>.delayed(kDraftWait * 2);
+      await flushDrafts();
+      expect(w.liveRows.drafts, isEmpty);
+      expect(heldDraft(HaloContainer.everyday, _v, group: false), isNull);
+      // once moved, the vault is where its words go
+      typedDraft(session.draftsOf(_v), _v, const Draft('now'), group: false);
+      await flushDrafts();
+      expect(w.vaultRows.drafts[_v]?.text, 'now');
+      expect(w.liveRows.drafts, isEmpty);
+    });
+
+    test('Show in chat list takes its draft out, the one still waiting '
+        'too, and the vault keeps none of it', () async {
+      final w = await _World.make();
+      await w.open();
+      addTearDown(endProcessForTest);
+      typedDraft(session.draftsOf(_h), _h, const Draft('ok'), group: false);
+      await flushDrafts();
+      // typed again just before: not written yet
+      typedDraft(
+        session.draftsOf(_h),
+        _h,
+        const Draft('ok, see you'),
+        group: false,
+      );
+      expect(await w.app.unhideChats(people: [_h]), 1);
+      expect(w.liveRows.drafts[_h]?.text, 'ok, see you');
+      expect(w.vaultRows.drafts, isEmpty);
+      expect(heldDraft(HaloContainer.vault, _h, group: false), isNull);
+      await Future<void>.delayed(kDraftWait * 2);
+      await flushDrafts();
+      expect(w.vaultRows.drafts, isEmpty);
+      expect(session.draftsOf(_h).container, HaloContainer.everyday);
+    });
+
+    test('the lock writes what waits for the vault into it, and lets go '
+        'of it', () async {
+      final w = await _World.make();
+      await w.open();
+      addTearDown(endProcessForTest);
+      typedDraft(session.draftsOf(_h), _h, const Draft('mid'), group: false);
+      expect(w.vaultRows.drafts, isEmpty);
+      await w.lockUp();
+      expect(w.vaultRows.drafts[_h]?.text, 'mid');
+      expect(heldDraft(HaloContainer.vault, _h, group: false), isNull);
+      expect(w.liveRows.drafts, isEmpty);
     });
 
     test('Show in chat list brings a chat back', () async {
@@ -1878,11 +2044,16 @@ void main() {
       // a new one set up from the decoy replaces it
       expect(await w.type(decoyPin), PinResult.decoy);
       expect(await w.app.createVault('112233'), isTrue);
-      final draft = HaloContainer.decoy.chatKey(_dg);
-      draftPerGroup[draft] = 'see you';
-      addTearDown(draftPerGroup.clear);
+      typedDraft(
+        session.draftsOf(_dg),
+        _dg,
+        const Draft('see you'),
+        group: true,
+      );
+      addTearDown(endProcessForTest);
+      expect(heldDraft(HaloContainer.decoy, _dg, group: true), isNotNull);
       expect(await w.app.hideChats(groups: [_dg]), 1);
-      expect(draftPerGroup.containsKey(draft), isFalse);
+      expect(heldDraft(HaloContainer.decoy, _dg, group: true), isNull);
       await w.app.vaultSetupDone();
       expect(w.homeIds, {_d1});
       await w.lockUpAll();
@@ -2261,12 +2432,18 @@ void main() {
             lock.inDecoy = true;
             lock.inVault = true;
         }
+        // words still waiting to be written as the wipe comes
+        addTearDown(endProcessForTest);
+        typedDraft(w.live, _v, const Draft('never kept'), group: false);
         if (from != 'the pin screen') {
           lock.lock();
           w.app.lockingUp();
         }
         await typeWipe(lock);
         await expectAllGone(exited);
+        expect(heldDraft(HaloContainer.everyday, _v, group: false), isNull);
+        await Future<void>.delayed(kDraftWait * 2);
+        expect(w.liveRows.drafts, isEmpty);
       });
     }
 

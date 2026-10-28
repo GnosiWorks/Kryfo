@@ -1,0 +1,12 @@
+{
+  "a": "figure-unfold-buffalo",
+  "b": "input-clump-traffic",
+  "safety": "04541 62392 11480 35635 94068 70176 22832 24501 39804 62706 74291 53452",
+  "a_messages": [
+    ["in", "Hello from B, first message"],
+    ["out", "Reply one from A"],
+    ["out", "I reply two from A"],
+    ["in", "Third from B"],
+    ["in", "I fourth from B"]
+  ]
+}

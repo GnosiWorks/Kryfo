@@ -83,7 +83,7 @@ void main() {
     expect(verify, isNot(matches(_accent)));
     final strip = _between(
       _src('lib/screens/home_screen.dart'),
-      'Widget _strip(BuildContext context, int n, bool offline) {',
+      'Widget _strip(BuildContext context, int n, bool offline, String state) {',
       'final head =',
     );
     expect(_accent.hasMatch(strip), isFalse, reason: 'waiting strip');
@@ -121,7 +121,7 @@ void main() {
   test('the chat header tells relay from tor by their own colours', () {
     final head = _between(
       _src('lib/screens/chat_screen.dart'),
-      'Icons.lock_outline,\n                          size: 10,',
+      'Icons.lock_outline,\n                            size: 10,',
       'const SizedBox(width: 4)',
     );
     expect(head, contains('relay ? HaloColors.sky : HaloColors.violet'));

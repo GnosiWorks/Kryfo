@@ -9,7 +9,7 @@ import 'dart:ui' show lerpDouble;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../main.dart' show appState;
+import '../main.dart' show appState, AppStateScreen;
 import '../theme.dart';
 import 'decode_px.dart';
 import 'halo_hero.dart';

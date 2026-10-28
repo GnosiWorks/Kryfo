@@ -461,12 +461,28 @@ class _DevScreenState extends State<DevScreen> {
               GestureDetector(
                 onTap: () => Navigator.of(
                   context,
-                ).push(haloRoute(const GettingMessagesScreen())),
+                ).push(haloRoute(const NotificationsScreen())),
                 child: Text(
-                  l10n.appGettingMessages,
+                  l10n.appNotificationsLink,
                   style: HaloType.mono(size: 11, color: HaloColors.amberText),
                 ),
               ),
+              // google push: pushes come, and how many android delivered
+              // below the high priority they were sent with
+              if (playBuild)
+                FutureBuilder<Map<String, int>>(
+                  future: GooglePush.instance.stats(),
+                  builder: (_, snap) => Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      l10n.devGooglePushes(
+                        snap.data?['got'] ?? 0,
+                        snap.data?['low'] ?? 0,
+                      ),
+                      style: HaloType.mono(size: 11, color: HaloColors.text2),
+                    ),
+                  ),
+                ),
               const SizedBox(height: 8),
               GestureDetector(
                 onTap: () async {

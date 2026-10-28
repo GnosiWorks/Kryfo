@@ -13,11 +13,13 @@ import 'package:flutter/services.dart';
 import '../backup.dart' show sealRestoredHidden;
 import '../l10n/l10n.dart';
 import '../lock_state.dart';
-import '../main.dart' show appState, session;
+import '../main.dart' show appState, session, AppStateVault, AppStateSession;
+import '../pass_rules.dart';
 import '../theme.dart';
 import '../widgets/fit_column.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/motion.dart' show haloRoute;
+import '../widgets/pass_pad.dart';
 import '../widgets/pin_pad.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/swap.dart';
@@ -124,6 +126,10 @@ class _PinFlowScreenState extends State<PinFlowScreen>
   bool _busy = false;
   // forward or back, for the direction the next page comes in from
   bool _forward = true;
+  // letters for a hidden chats passphrase: on the check, where a vault's own
+  // phrase is taken, and on a vault's choose and confirm. every page opens
+  // on digits but confirm, which keeps what choose used
+  bool _letters = false;
   late final AnimationController _shake;
 
   LockState get _lock => widget.lock ?? lockState;
@@ -146,8 +152,14 @@ class _PinFlowScreenState extends State<PinFlowScreen>
   // a hidden chats pin takes six digits. the pin that lets them in takes
   // what any pin does
   int get _min => _vault && (_step == _Step.choose || _step == _Step.confirm)
-      ? kVaultPinMin
+      ? (_letters ? kPassMin : kVaultPinMin)
       : kPinMin;
+  bool get _lettersHere =>
+      _step == _Step.check ||
+      (_vault && (_step == _Step.choose || _step == _Step.confirm));
+  // the phrase being chosen, as the engine will read it
+  bool get _choosingPhrase =>
+      _letters && _vault && (_step == _Step.choose || _step == _Step.confirm);
   bool get _still => MediaQuery.of(context).disableAnimations;
 
   @override
@@ -170,6 +182,8 @@ class _PinFlowScreenState extends State<PinFlowScreen>
   void _go(_Step s, {bool forward = true}) {
     setState(() {
       _forward = forward;
+      _letters =
+          _letters && _vault && (s == _Step.choose || s == _Step.confirm);
       _step = s;
       _pin = '';
       _error = null;
@@ -205,8 +219,16 @@ class _PinFlowScreenState extends State<PinFlowScreen>
     setState(() => _pin = _pin.substring(0, _pin.length - 1));
   }
 
+  void _onText(String t) {
+    if (_busy) return;
+    setState(() {
+      _pin = t;
+      _error = null;
+    });
+  }
+
   Future<void> _submit() async {
-    if (_busy || _pin.length < _min) return;
+    if (_busy || passLength(_pin) < _min) return;
     setState(() => _busy = true);
     try {
       switch (_step) {
@@ -220,6 +242,8 @@ class _PinFlowScreenState extends State<PinFlowScreen>
             await _fail(
               r == PinResult.throttled
                   ? tooManyTriesLine(_lock.throttleLeft)
+                  : r == PinResult.unavailable
+                  ? keyNoteLine(_lock)
                   : l10n.lockNotIt,
             );
             return;
@@ -232,7 +256,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
           HapticFeedback.selectionClick();
           _go(_Step.appConfirm);
         case _Step.appConfirm:
-          if (_pin != _first) {
+          if (passFold(_pin) != passFold(_first)) {
             await _again(
               l10n.panicSetupThoseWereDifferentFrom,
               to: _Step.appChoose,
@@ -251,7 +275,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
           HapticFeedback.selectionClick();
           _go(_Step.confirm);
         case _Step.confirm:
-          if (_pin != _first) {
+          if (passFold(_pin) != passFold(_first)) {
             await _again(l10n.panicSetupThoseWereDifferentFrom);
             return;
           }
@@ -280,7 +304,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
       }
     } catch (e) {
       await _again(
-        l10n.flowNotSet,
+        e is PinKeyBusy ? l10n.lockKeyBusy : l10n.flowNotSet,
         to: _step == _Step.appConfirm ? _Step.appChoose : _Step.choose,
       );
     } finally {
@@ -329,7 +353,9 @@ class _PinFlowScreenState extends State<PinFlowScreen>
       HapticFeedback.lightImpact();
       _go(_restoring ? _Step.done : _Step.pick);
     } catch (e) {
-      if (mounted) await _rechoose(l10n.flowNotSet);
+      if (mounted) {
+        await _rechoose(e is PinKeyBusy ? l10n.lockKeyBusy : l10n.flowNotSet);
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -515,7 +541,9 @@ class _PinFlowScreenState extends State<PinFlowScreen>
         _changing ? l10n.flowEnterHiddenPinLine : l10n.flowEnterYourPinLine,
       // six digits suggested, so the two pins look alike
       _Step.appChoose => l10n.flowVaultDigits,
+      _Step.confirm when _choosingPhrase => l10n.flowVaultPassAgain,
       _Step.confirm || _Step.appConfirm => l10n.panicSetupTheSameFourDigits,
+      _ when _choosingPhrase => l10n.flowVaultPassLine,
       _ => switch (widget.flow) {
         PinFlow.wipe => l10n.pinsWipeLine,
         PinFlow.decoy => l10n.flowDecoyDigits,
@@ -564,21 +592,44 @@ class _PinFlowScreenState extends State<PinFlowScreen>
         ),
         const SizedBox(height: 32),
         PinDots(
-          filled: _pin.length,
+          filled: passLength(_pin),
           color: app ? HaloColors.amber : _tint,
           wrong: _error != null,
           shake: _shake,
-          min: _min,
+          min: _min.clamp(kPinMin, kPinMax),
         ),
+        // how strong the phrase being chosen is
+        if (_choosingPhrase && _step == _Step.choose) ...[
+          const SizedBox(height: 18),
+          PassStrength(text: _pin),
+        ],
         const Spacer(flex: 3),
-        PinPad(
-          onDigit: _onDigit,
-          onBack: _back,
-          onEnter: _submit,
-          canEnter: _pin.length >= _min,
-          enabled: !_busy,
-        ),
-        const SizedBox(height: 22),
+        if (_lettersHere)
+          PassPad(
+            letters: _letters,
+            onLetters: (v) => setState(() {
+              _letters = v;
+              _pin = '';
+              _error = null;
+            }),
+            onDigit: _onDigit,
+            onBack: _back,
+            onText: _onText,
+            text: _pin,
+            onEnter: _submit,
+            canEnter: passLength(_pin) >= _min,
+            enabled: !_busy,
+          )
+        else
+          PinPad(
+            onDigit: _onDigit,
+            onBack: _back,
+            onEnter: _submit,
+            canEnter: _pin.length >= _min,
+            enabled: !_busy,
+          ),
+        if (!_lettersHere) const SizedBox(height: kPassKeyRoom),
+        const SizedBox(height: 12),
       ],
     );
   }

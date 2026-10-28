@@ -20,12 +20,12 @@ import 'package:kryfo/main.dart'
         HaloEngine,
         appState,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateBridges;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/rooms.dart' show roomDefaultCap;
 import 'package:kryfo/screens/bridges_screen.dart';
-import 'package:kryfo/screens/getting_messages_screen.dart';
 import 'package:kryfo/screens/lock_file_screen.dart';
 import 'package:kryfo/screens/notes_export_screen.dart';
 import 'package:kryfo/screens/pins_screen.dart';
@@ -275,17 +275,6 @@ void main() {
     await done(t);
   });
 
-  testWidgets('getting messages: hide message preview', (t) async {
-    phone(t);
-    await _open(t, _page(const GettingMessagesScreen()));
-    await _flips(
-      t,
-      l10n.gettingMessagesHideMessagePreview,
-      line: l10n.gettingMessagesAGenericAlertWith,
-    );
-    await done(t);
-  });
-
   testWidgets('lock a file: hide the file name', (t) async {
     phone(t);
     await _open(t, _page(const LockFileScreen(file: _file)));
@@ -397,7 +386,6 @@ void main() {
     }
     expect(uses..sort(), [
       'bridges_screen.dart',
-      'getting_messages_screen.dart',
       'halo_rows.dart',
       'handle_screen.dart',
       'lock_file_screen.dart',

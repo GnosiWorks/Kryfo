@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../widgets/halo_hero.dart';
 import '../widgets/kryfo_avatar.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, AppStateContacts;
 import '../lock_guard.dart' show lockGuard;
 import '../widgets/burn_fade.dart' show FadeFold;
 import '../widgets/hidden_mark.dart';

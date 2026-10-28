@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../back_on_top.dart' show backToPage;
 import '../lock_guard.dart' show lockGuard;
-import '../main.dart' show session, appState;
+import '../main.dart' show session, appState, AppStateContacts, AppStateRefresh;
 import '../theme.dart';
 import '../widgets/breathing_ring.dart';
 import '../widgets/burn_fade.dart' show FadeFold;

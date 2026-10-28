@@ -8,7 +8,8 @@ import io.flutter.plugin.common.MethodChannel
 
 // one flutter engine for the life of the process, not the life of a screen,
 // so tor and the poll timer keep running while the app is in the background.
-class HaloApplication : Application() {
+// open for the play build, which adds google push (src/play)
+open class HaloApplication : Application() {
     companion object {
         const val ENGINE_ID = "halo_engine"
     }
@@ -29,6 +30,24 @@ class HaloApplication : Application() {
                     "clock" -> result.success(QuietRestart.clock(this))
                     "arm" -> result.success(QuietRestart.arm(this))
                     "end" -> result.success(QuietRestart.end())
+                    else -> result.notImplemented()
+                }
+            }
+        // which icon the home screen shows, for a plain notification's glyph
+        // in a process with no screen too
+        MethodChannel(engine.dartExecutor.binaryMessenger, "kryfo/app_icon")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    // with the launcher's label in the phone's language, which
+                    // the app switcher's title takes. null when unread: the app
+                    // keeps the plain look and asks again
+                    "get" -> result.success(
+                        try {
+                            AppIcon.describe(this)
+                        } catch (e: Exception) {
+                            null
+                        }
+                    )
                     else -> result.notImplemented()
                 }
             }

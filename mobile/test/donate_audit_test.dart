@@ -9,7 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/badge_client.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
-import 'package:kryfo/main.dart' show appState;
+import 'package:kryfo/main.dart' show appState, AppStateRoute;
 import 'package:kryfo/open_outside.dart';
 import 'package:kryfo/screens/donate_screen.dart';
 import 'package:kryfo/theme.dart';
@@ -59,6 +59,7 @@ const _audited = {
   'zh_Hant': ['已稽核', '經過稽核', '通過稽核'],
   'ar': ['مُدقَّق', 'مدقق', 'خضع'],
   'fa': ['ممیزی‌شده', 'ممیزی شده'],
+  'hi': ['ऑडिट हो चुका', 'ऑडिट हुआ है', 'ऑडिट किया गया', 'प्रमाणित'],
 };
 
 void main() {

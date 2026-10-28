@@ -38,7 +38,12 @@ import 'package:kryfo/main.dart'
         signalDecrypt,
         unboundIdOf,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateVault,
+        AppStateContacts,
+        AppStateSession,
+        AppStateDevchat,
+        AppStateReceive;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/scam_shield.dart' show ShieldFlag;

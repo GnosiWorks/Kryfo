@@ -24,6 +24,7 @@ import '../widgets/unfold.dart';
 import 'hide_picker.dart';
 import 'lock_setup_screen.dart';
 import 'pin_flow_screen.dart';
+import 'update_pins_screen.dart';
 import '../widgets/confirm_sheet.dart';
 import '../l10n/l10n.dart';
 
@@ -46,6 +47,17 @@ class _PinsScreenState extends State<PinsScreen> {
   void initState() {
     super.initState();
     unawaited(_lock.recheckFinger());
+    unawaited(_lock.recheckKey());
+  }
+
+  Future<void> _typePins() async {
+    HapticFeedback.selectionClick();
+    await Navigator.of(context).push(haloRoute(UpdatePinsScreen(lock: _lock)));
+  }
+
+  Future<void> _cardDone() async {
+    HapticFeedback.mediumImpact();
+    await _lock.cardFinished();
   }
 
   PinsHost get _host => widget.host;
@@ -225,9 +237,28 @@ class _PinsScreenState extends State<PinsScreen> {
           final wipe = _lock.panicEnabled;
           final decoy = _decoyOn;
           final vault = _lock.inVault;
+          final keyLine = _lock.keyLine;
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
             children: staggerAll([
+              // the same card on every phone that had pins before the
+              // update, the decoy's side alike, whatever pins are set
+              Unfold(
+                open: _lock.updateCard,
+                child: _lock.updateCard
+                    ? Padding(
+                        key: const ValueKey('card'),
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _UpdateCard(
+                          onType: _typePins,
+                          onDone: _cardDone,
+                        ),
+                      )
+                    : const SizedBox(
+                        key: ValueKey('no card'),
+                        width: double.infinity,
+                      ),
+              ),
               _PinCard(
                 name: l10n.pinsYourPin,
                 state: on ? l10n.commonOn : l10n.commonOff,
@@ -249,7 +280,22 @@ class _PinsScreenState extends State<PinsScreen> {
                         on: _fingerTo ?? _lock.biometric,
                         onTap: _flipFinger,
                       )
+                    : on && _lock.fingerToDecoy
+                    ? _Toggle(
+                        label: l10n.pinsUnlockWithFingerprint,
+                        on: false,
+                        line: l10n.pinsFingerOpensDecoy,
+                      )
                     : null,
+              ),
+              Unfold(
+                open: on && keyLine != null,
+                child: on && keyLine != null
+                    ? _KeyLine(key: const ValueKey('key'), line: keyLine)
+                    : const SizedBox(
+                        key: ValueKey('no key'),
+                        width: double.infinity,
+                      ),
               ),
               const SizedBox(height: 22),
               _Advanced(
@@ -310,6 +356,164 @@ class _PinsScreenState extends State<PinsScreen> {
             ]),
           );
         },
+      ),
+    );
+  }
+}
+
+// the security update, until Done: other pins typed once move under the
+// phone's pin key. worded so it says nothing of which pins are set
+class _UpdateCard extends StatelessWidget {
+  const _UpdateCard({required this.onType, required this.onDone});
+  final VoidCallback onType;
+  final VoidCallback onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      decoration: BoxDecoration(
+        color: HaloColors.surface2,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: HaloColors.amber.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: HaloColors.amber.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.verified_user_outlined,
+                  size: 18,
+                  color: HaloColors.amber,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.cardTitle,
+                      style: HaloType.sans(
+                        size: 15,
+                        weight: FontWeight.w600,
+                        color: HaloColors.text,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      l10n.cardLine,
+                      style: HaloType.sans(
+                        size: 12.5,
+                        color: HaloColors.text2,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              _CardButton(label: l10n.commonDone, onTap: onDone),
+              _CardButton(label: l10n.cardType, onTap: onType, strong: true),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CardButton extends StatelessWidget {
+  const _CardButton({
+    required this.label,
+    required this.onTap,
+    this.strong = false,
+  });
+  final String label;
+  final VoidCallback onTap;
+  final bool strong;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    child: PressScale(
+      onTap: onTap,
+      haptic: false,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 40),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          color: strong
+              ? HaloColors.amber.withValues(alpha: 0.16)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          label,
+          style: HaloType.sans(
+            size: 13.5,
+            weight: FontWeight.w600,
+            color: strong ? HaloColors.amberText : HaloColors.text2,
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+// what the phone's pin key means here, from the phone's state alone: the
+// same on every side
+class _KeyLine extends StatelessWidget {
+  const _KeyLine({super.key, required this.line});
+  final KeyLine line;
+
+  @override
+  Widget build(BuildContext context) {
+    final words = [
+      line.unlocked ? l10n.keyLineUnlocked : l10n.keyLine,
+      if (!line.screenLock) l10n.keyLineScreenLock,
+    ].join(' ');
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(6, 14, 6, 0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 1),
+            child: Icon(
+              Icons.phonelink_lock_outlined,
+              size: 16,
+              color: HaloColors.amber,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              words,
+              style: HaloType.sans(
+                size: 12.5,
+                color: HaloColors.text2,
+                height: 1.45,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -672,36 +876,44 @@ class _PinCard extends StatelessWidget {
               Expanded(
                 child: HaloPrimaryButton(label: primary, onTap: onPrimary),
               ),
-              EaseSize(
-                child: FadeSwap(
-                  child: secondary == null
-                      ? const SizedBox(key: ValueKey('none'), height: 46)
-                      : Padding(
-                          key: ValueKey(secondary),
-                          padding: const EdgeInsetsDirectional.only(start: 8),
-                          child: PressScale(
-                            scale: 0.97,
-                            onTap: onSecondary,
-                            child: Container(
-                              height: 46,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(13),
-                                border: Border.all(color: HaloColors.line),
-                              ),
-                              child: Text(
-                                secondary!,
-                                style: HaloType.sans(
-                                  size: 14,
-                                  color: HaloColors.rose,
+              // a long word at a large font wraps here rather than
+              // pushing past the card
+              Flexible(
+                child: EaseSize(
+                  child: FadeSwap(
+                    child: secondary == null
+                        ? const SizedBox(key: ValueKey('none'), height: 46)
+                        : Padding(
+                            key: ValueKey(secondary),
+                            padding: const EdgeInsetsDirectional.only(start: 8),
+                            child: PressScale(
+                              scale: 0.97,
+                              onTap: onSecondary,
+                              child: Container(
+                                constraints: const BoxConstraints(
+                                  minHeight: 46,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 6,
+                                ),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(13),
+                                  border: Border.all(color: HaloColors.line),
+                                ),
+                                child: Text(
+                                  secondary!,
+                                  textAlign: TextAlign.center,
+                                  style: HaloType.sans(
+                                    size: 14,
+                                    color: HaloColors.rose,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
+                  ),
                 ),
               ),
             ],
@@ -714,30 +926,57 @@ class _PinCard extends StatelessWidget {
 
 // an on or off row is a switch, as in settings: the row and the switch
 // each flip it
+// [onTap] null: the switch cannot be used here, and [line] says why
 class _Toggle extends StatelessWidget {
   final String label;
   final bool on;
-  final VoidCallback onTap;
-  const _Toggle({required this.label, required this.on, required this.onTap});
+  final VoidCallback? onTap;
+  final String? line;
+  const _Toggle({required this.label, required this.on, this.onTap, this.line});
   @override
-  Widget build(BuildContext context) => MergeSemantics(
-    child: GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      excludeFromSemantics: true,
-      child: Row(
-        children: [
-          Icon(Icons.fingerprint, size: 18, color: HaloColors.amber),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              label,
-              style: HaloType.sans(size: 13.5, color: HaloColors.text),
+  Widget build(BuildContext context) {
+    final tap = onTap;
+    final why = line;
+    return MergeSemantics(
+      child: GestureDetector(
+        onTap: tap,
+        behavior: HitTestBehavior.opaque,
+        excludeFromSemantics: true,
+        child: Row(
+          children: [
+            Icon(
+              Icons.fingerprint,
+              size: 18,
+              color: tap == null ? HaloColors.text2 : HaloColors.amber,
             ),
-          ),
-          HaloSwitch(value: on, onChanged: (_) => onTap()),
-        ],
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: HaloType.sans(size: 13.5, color: HaloColors.text),
+                  ),
+                  if (why != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      why,
+                      style: HaloType.sans(
+                        size: 12,
+                        color: HaloColors.text2,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            HaloSwitch(value: on, onChanged: tap == null ? null : (_) => tap()),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }

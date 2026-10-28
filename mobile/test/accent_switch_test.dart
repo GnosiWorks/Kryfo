@@ -11,7 +11,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/atmosphere.dart' show AtmosphereWash;
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show appState, themeRevision;
+import 'package:kryfo/main.dart' show appState, themeRevision, AppStatePrefs;
 import 'package:kryfo/screens/appearance_screen.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/wallpaper.dart' show ChatWall;

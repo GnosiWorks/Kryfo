@@ -268,6 +268,7 @@ const containerKeys = {
   'kryfo.intro.accept',
   'kryfo.intro.sent',
   'kryfo.scamshield.on',
+  'kryfo.typing.on',
   'kryfo.gif.on',
   'kryfo.gif.asked',
   'kryfo.update.on',
@@ -332,7 +333,16 @@ const deviceKeys = {
   'helper_forget_tried',
   'helper_relay_knocks',
   'helper_gone',
+  // google push, the phone's as the helper app's are
+  'gpush_endpoints',
+  'gpush_sealed_for',
+  'gpush_on',
+  'gpush_offer',
   'kryfo.update.checked',
   'kryfo.update.latest',
   'kryfo.update.dismissed',
+  // plain notifications and the line after an icon switch: the icon is the
+  // phone's, so what goes with it is too
+  'notif_plain',
+  'icon_changed',
 };

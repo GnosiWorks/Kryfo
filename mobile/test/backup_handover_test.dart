@@ -19,6 +19,7 @@ import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pin_flow_fakes.dart' show phone, press;
+import 'package:kryfo/app_icon.dart' show AppFace, appFaceNow;
 
 class _Db implements HaloDb {
   _Db(this.container);
@@ -50,6 +51,9 @@ void main() {
 
   setUp(() {
     asked = [];
+    // kryfo's own icon: the names these were written for
+    appFaceNow.value = AppFace.kryfo;
+    addTearDown(() => appFaceNow.value = null);
     tmp = Directory.systemTemp.createTempSync('backup_handover');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(

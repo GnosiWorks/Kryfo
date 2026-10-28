@@ -3,20 +3,39 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../main.dart' show appState, session, sessionQuiet;
+import '../main.dart'
+    show
+        appState,
+        session,
+        sessionQuiet,
+        AppStateRoute,
+        AppStatePrefs,
+        AppStateProfile,
+        AppStateDelivery,
+        AppStateScreen,
+        AppStateTyping,
+        AppStateBridges,
+        AppStateSession,
+        AppStateDevchat,
+        LinkViewBuilder;
+import '../link_view.dart';
 import '../lock_state.dart';
 import '../intro_prefs.dart';
 import '../scam_prefs.dart';
+import '../typing.dart' show loadTypingOn;
 import '../gifs/gif_opt_in.dart' show showGifOptInSheet;
 import '../gifs/gif_source.dart' show loadGifSearchOn, saveGifSearchOn;
-import '../miui_autostart.dart';
+import '../widgets/press_scale.dart';
 import '../widgets/motion.dart' show haloRoute, houseSpring;
+import 'licences_screen.dart';
 import 'why_kryfo_screen.dart';
 import 'appearance_screen.dart';
 import 'transport_screen.dart';
 import 'bridges_screen.dart';
 import '../bridge_mode.dart' show BridgeChoice, bridgeChoiceName;
 import 'seen_screen.dart';
+import 'translation_screen.dart';
+import '../translate/hub_live.dart' show translationHubIfOn;
 import '../theme.dart';
 import '../notif_permission.dart';
 import 'modes_screen.dart';
@@ -28,11 +47,15 @@ import 'restore_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../notifications.dart';
 import '../delivery_mode.dart';
-import 'getting_messages_screen.dart';
+import 'notifications_screen.dart';
+import 'icon_screen.dart';
+import '../app_icon.dart' show AppFace, AppFaceWords, appFaceNow, readAppFace;
 import '../widgets/halo_rows.dart';
 import '../widgets/dev_avatar.dart' show DevRing;
 import 'dev_about_sheet.dart' show devChatOffered, writeToMarios;
 import 'follow_section.dart';
+import 'linked_devices_screen.dart';
+import '../devices/own_devices.dart' show kLinkedDevicesOn;
 import '../widgets/stagger_in.dart';
 import '../widgets/unfold.dart';
 import '../widgets/confirm_sheet.dart';
@@ -51,7 +74,19 @@ class ProtectionLine extends StatefulWidget {
   final String label;
   final bool on;
   final String state;
-  const ProtectionLine(this.label, this.on, this.state, {super.key});
+  // what makes a new state rather than new words in the same one: a
+  // climbing percent changes in place
+  final Object? stateKey;
+  // a line that leads somewhere: the whole line is the button
+  final VoidCallback? onTap;
+  const ProtectionLine(
+    this.label,
+    this.on,
+    this.state, {
+    this.stateKey,
+    super.key,
+    this.onTap,
+  });
   @override
   State<ProtectionLine> createState() => _ProtectionLineState();
 }
@@ -108,71 +143,92 @@ class _ProtectionLineState extends State<ProtectionLine>
           child: child,
         );
       },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-        child: Row(
-          children: [
-            AnimatedBuilder(
-              animation: _mark,
-              builder: (_, _) => CustomPaint(
-                size: const Size.square(18),
-                painter: _MarkPainter(
-                  _mark.value,
-                  HaloColors.amber,
-                  HaloColors.text3,
-                  HaloColors.onAmber,
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            // the label wraps and the state keeps its place: in a long
-            // language at a big font size the two do not fit one line
-            Expanded(
-              child: Text(
-                widget.label,
-                style: HaloType.sans(size: 13, color: HaloColors.text),
-              ),
-            ),
-            const SizedBox(width: 8),
-            // a long state wraps at its end rather than running off it
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.sizeOf(context).width * 0.4,
-              ),
-              child: AnimatedSwitcher(
-                duration: still
-                    ? Duration.zero
-                    : const Duration(milliseconds: 220),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                transitionBuilder: (c, a) => FadeTransition(
-                  opacity: a,
-                  child: SlideTransition(
-                    position: Tween(
-                      begin: const Offset(0, 0.35),
-                      end: Offset.zero,
-                    ).animate(a),
-                    child: c,
+      child: _tappable(
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+          child: Row(
+            children: [
+              AnimatedBuilder(
+                animation: _mark,
+                builder: (_, _) => CustomPaint(
+                  size: const Size.square(18),
+                  painter: _MarkPainter(
+                    _mark.value,
+                    HaloColors.amber,
+                    HaloColors.text3,
+                    HaloColors.onAmber,
                   ),
                 ),
-                layoutBuilder: (top, gone) => Stack(
-                  alignment: AlignmentDirectional.centerEnd,
-                  children: [...gone, ?top],
-                ),
+              ),
+              const SizedBox(width: 10),
+              // the label wraps and the state keeps its place: in a long
+              // language at a big font size the two do not fit one line
+              Expanded(
                 child: Text(
-                  widget.state,
-                  key: ValueKey(widget.state),
-                  textAlign: TextAlign.end,
-                  style: HaloType.mono(
-                    size: 10,
-                    color: on ? HaloColors.amberText : HaloColors.text3,
+                  widget.label,
+                  style: HaloType.sans(size: 13, color: HaloColors.text),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // a long state wraps at its end rather than running off it
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.sizeOf(context).width * 0.4,
+                ),
+                child: AnimatedSwitcher(
+                  duration: still
+                      ? Duration.zero
+                      : const Duration(milliseconds: 220),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (c, a) => FadeTransition(
+                    opacity: a,
+                    child: SlideTransition(
+                      position: Tween(
+                        begin: const Offset(0, 0.35),
+                        end: Offset.zero,
+                      ).animate(a),
+                      child: c,
+                    ),
+                  ),
+                  layoutBuilder: (top, gone) => Stack(
+                    alignment: AlignmentDirectional.centerEnd,
+                    children: [...gone, ?top],
+                  ),
+                  child: Text(
+                    widget.state,
+                    key: ValueKey(widget.stateKey ?? widget.state),
+                    textAlign: TextAlign.end,
+                    style: HaloType.mono(
+                      size: 10,
+                      color: on ? HaloColors.amberText : HaloColors.text3,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+              if (widget.onTap != null) ...[
+                const SizedBox(width: 2),
+                Icon(
+                  Directionality.of(context) == TextDirection.rtl
+                      ? Icons.chevron_left
+                      : Icons.chevron_right,
+                  size: 16,
+                  color: HaloColors.text3,
+                ),
+              ],
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _tappable(Widget child) {
+    final tap = widget.onTap;
+    if (tap == null) return child;
+    return Semantics(
+      button: true,
+      child: PressScale(scale: 0.98, onTap: tap, child: child),
     );
   }
 }
@@ -263,6 +319,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   // known already when anything read it before: the row never grows a line
   late bool? _hidePreview = hideNotifContentKnown(session.container);
+  // plain notifications, the phone's: they hide the preview too
+  bool? _plain = notifPlainKnown();
   Future<void> _confirmWipe() async {
     // step 1: explain what's about to happen
     final go = await showConfirmSheet(
@@ -294,6 +352,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool? _disguise;
   bool? _acceptIntros;
   bool? _shieldOn;
+  bool? _typingOn;
   bool? _gifOn;
   // only for copies from the site or github
   bool _updateOffered = false;
@@ -304,6 +363,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
+    readAppFace();
     _readHidePreview();
     // a PIN set on the App lock screen hides the preview too
     hideNotifRevision.addListener(_readHidePreview);
@@ -315,6 +375,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
     loadScamShieldOn(session.container).then((v) {
       if (mounted) setState(() => _shieldOn = v);
+    });
+    loadTypingOn(session.container).then((v) {
+      if (mounted) setState(() => _typingOn = v);
     });
     loadGifSearchOn(session.container).then((v) {
       if (mounted) setState(() => _gifOn = v);
@@ -334,9 +397,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  // how messages arrive, how they sound and what they show: one screen
+  Future<void> _openNotifications() async {
+    await Navigator.of(context).push(haloRoute(const NotificationsScreen()));
+    _readHidePreview();
+  }
+
   void _readHidePreview() {
     loadHideNotifContent(session.container).then((v) {
       if (mounted) setState(() => _hidePreview = v);
+    });
+    loadNotifPlain().then((v) {
+      if (mounted) setState(() => _plain = v);
     });
   }
 
@@ -367,91 +439,95 @@ class _SettingsScreenState extends State<SettingsScreen> {
           32 + MediaQuery.paddingOf(context).bottom,
         ),
         children: staggerAll([
-          ListenableBuilder(
-            listenable: Listenable.merge([appState, lockState]),
-            builder: (_, _) {
-              // the same predicate the home pill uses, or the two screens
-              // disagree about the same tor
-              final tor = appState.torUsable;
-              // relay and fast modes never use tor, so "connecting" there
-              // would be a promise nothing is trying to keep
-              final onTor = appState.sendMode == 'private';
-              final torOn = onTor && tor;
-              // the app lock covers every screen, and so does the old
-              // switch until home's card about it is answered. without
-              // them each chat has its own switch
-              final shots =
-                  appState.screenSecureByLock || appState.shotsCardCovers;
-              // as the App lock screen reads it: a lock turned off in a
-              // decoy session is off
-              final lock = lockState.lockOn;
-              return Container(
-                margin: const EdgeInsets.only(bottom: 24),
-                padding: const EdgeInsets.fromLTRB(12, 14, 12, 8),
-                decoration: BoxDecoration(
-                  color: HaloColors.surface2,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: HaloColors.line, width: 0.5),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              l10n.settingsYourProtections,
-                              style: HaloType.mono(
-                                size: 11,
-                                color: HaloColors.amberText,
+          LinkViewBuilder(
+            builder: (_, link) => ListenableBuilder(
+              listenable: lockState,
+              builder: (_, _) {
+                // the reading the home pill and the tor sheet show, grace and
+                // words alike, or the screens disagree about the same tor.
+                // relay and fast modes never use tor, so a state there would
+                // be a promise nothing is trying to keep
+                final onTor = appState.sendMode == 'private';
+                final torOn = onTor && link.kind == LinkKind.ready;
+                // the app lock covers every screen, and so does the old
+                // switch until home's card about it is answered. without
+                // them each chat has its own switch
+                final shots =
+                    appState.screenSecureByLock || appState.shotsCardCovers;
+                // as the App lock screen reads it: a lock turned off in a
+                // decoy session is off
+                final lock = lockState.lockOn;
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 24),
+                  padding: const EdgeInsets.fromLTRB(12, 14, 12, 8),
+                  decoration: BoxDecoration(
+                    color: HaloColors.surface2,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: HaloColors.line, width: 0.5),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                l10n.settingsYourProtections,
+                                style: HaloType.mono(
+                                  size: 11,
+                                  color: HaloColors.amberText,
+                                ),
                               ),
                             ),
-                          ),
-                          ProtectionMeter([torOn, shots, lock]),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ProtectionLine(
-                      l10n.settingsTorRouting,
-                      torOn,
-                      torOn
-                          ? l10n.settingsConnected
-                          : onTor
-                          ? l10n.settingsConnecting
-                          : appState.sendMode == 'fast'
-                          ? l10n.settingsOffFastMode
-                          : l10n.settingsOffMode,
-                    ),
-                    ProtectionLine(
-                      l10n.settingsScreenshots,
-                      shots,
-                      shots ? l10n.settingsBlocked2 : l10n.settingsPerChat,
-                    ),
-                    ProtectionLine(
-                      l10n.settingsAppLock,
-                      lock,
-                      lock ? l10n.settingsOn : l10n.settingsOff,
-                    ),
-                    // only when android is blocking them: a line that says
-                    // so outlives the home banner, which can be dismissed
-                    FutureBuilder<bool>(
-                      future: _notifs,
-                      builder: (_, snap) => Unfold(
-                        open: snap.data == false,
-                        child: ProtectionLine(
-                          l10n.settingsNotifications,
-                          false,
-                          l10n.settingsBlockedByAndroid,
+                            ProtectionMeter([torOn, shots, lock]),
+                          ],
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
+                      const SizedBox(height: 8),
+                      ProtectionLine(
+                        l10n.settingsTorRouting,
+                        stateKey: (onTor, link.kind),
+                        torOn,
+                        torOn
+                            ? l10n.settingsConnected
+                            : onTor
+                            ? link.text
+                            : appState.sendMode == 'fast'
+                            ? l10n.settingsOffFastMode
+                            : l10n.settingsOffMode,
+                      ),
+                      ProtectionLine(
+                        l10n.settingsScreenshots,
+                        shots,
+                        shots ? l10n.settingsBlocked2 : l10n.settingsPerChat,
+                      ),
+                      ProtectionLine(
+                        l10n.settingsAppLock,
+                        lock,
+                        lock ? l10n.settingsOn : l10n.settingsOff,
+                      ),
+                      // only when android is blocking them: a line that says
+                      // so outlives the home banner, which can be dismissed
+                      FutureBuilder<bool>(
+                        future: _notifs,
+                        builder: (_, snap) => Unfold(
+                          open: snap.data == false,
+                          child: ProtectionLine(
+                            l10n.settingsNotifications,
+                            false,
+                            l10n.settingsBlockedByAndroid,
+                            key: const ValueKey('notifsBlockedLine'),
+                            onTap: _openNotifications,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
 
           HaloGroup(
@@ -503,9 +579,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // one row: how messages arrive and what they say when they do
               // belong together
               HaloRow(
-                icon: Icons.mark_email_unread_outlined,
-                label: l10n.settingsGettingMessages,
-                value: switch (_hidePreview) {
+                icon: Icons.notifications_none_rounded,
+                label: l10n.settingsNotifications,
+                value: switch (_plain == true ? true : _hidePreview) {
                   null => deliveryModeName(appState.deliveryMode),
                   true => l10n.settingsPreviewHidden(
                     deliveryModeName(appState.deliveryMode),
@@ -514,21 +590,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     deliveryModeName(appState.deliveryMode),
                   ),
                 },
-                onTap: () async {
-                  await Navigator.of(
-                    context,
-                  ).push(haloRoute(const GettingMessagesScreen()));
-                  final v = await loadHideNotifContent(session.container);
-                  if (mounted) {
-                    setState(() => _hidePreview = v);
-                  }
-                },
-              ),
-              HaloRow(
-                icon: Icons.battery_saver,
-                label: l10n.settingsRunInBackground,
-                value: l10n.settingsSoMessagesArrive,
-                onTap: () => forceShowBackgroundPrompt(context),
+                onTap: _openNotifications,
               ),
               HaloRow(
                 icon: Icons.lan_outlined,
@@ -566,6 +628,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   final v = !(_shieldOn ?? true);
                   setState(() => _shieldOn = v);
                   await saveScamShieldOn(v, session.container);
+                },
+              ),
+              // on by default, and mutual: with it off nothing goes and
+              // nothing shows. it works on the onion route alone. a decoy's
+              // flips like this one and does nothing
+              // while bridges carry tor it is off and says why, and comes
+              // back by itself after. a decoy shows nothing of the bridges
+              ListenableBuilder(
+                listenable: appState,
+                builder: (_, _) {
+                  final bridged =
+                      !appState.inDecoyView && appState.typingBridged;
+                  return HaloRow(
+                    icon: Icons.more_horiz_rounded,
+                    label: l10n.settingsTypingIndicator,
+                    hint: l10n.settingsTypingIndicatorHint,
+                    note: appState.sendMode != 'private'
+                        ? l10n.settingsTypingOnionOnly
+                        : bridged
+                        ? l10n.settingsTypingBridgesOff
+                        : null,
+                    toggled: (_typingOn ?? true) && !bridged,
+                    pending: _typingOn == null,
+                    onTap: bridged
+                        ? null
+                        : () async {
+                            final v = !(_typingOn ?? true);
+                            setState(() => _typingOn = v);
+                            await appState.setTypingOn(v);
+                          },
+                  );
                 },
               ),
               // off by default: turning it on says first what it does. each
@@ -611,8 +704,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Navigator.of(context).push(haloRoute(const PinsScreen())),
                 ),
               ),
+              // the icon and the notifications read the phone's values, in
+              // any session
+              ValueListenableBuilder<AppFace?>(
+                valueListenable: appFaceNow,
+                builder: (_, face, _) {
+                  return HaloRow(
+                    icon: Icons.apps_rounded,
+                    label: l10n.settingsIconAndNotifications,
+                    value: face == null
+                        ? null
+                        : _plain == true
+                        ? l10n.iconSettingsValue(face.label)
+                        : face.label,
+                    onTap: () => Navigator.of(
+                      context,
+                    ).push(haloRoute(const IconScreen())),
+                  );
+                },
+              ),
             ],
           ),
+          if (kLinkedDevicesOn) ...[
+            HaloSection(l10n.settingsDevices),
+            HaloGroup(
+              children: [
+                HaloRow(
+                  icon: Icons.devices_rounded,
+                  label: l10n.devicesLinkedDevices,
+                  value: l10n.devicesThisPhoneOnly,
+                  onTap: () => Navigator.of(
+                    context,
+                  ).push(haloRoute(const LinkedDevicesScreen())),
+                ),
+              ],
+            ),
+          ],
           HaloSection(l10n.settingsAppearance),
           HaloGroup(
             children: [
@@ -676,6 +803,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
+          if (translationHubIfOn() case final hub?) ...[
+            HaloSection(l10n.translateSettingsTitle),
+            HaloGroup(
+              children: [
+                HaloRow(
+                  icon: Icons.translate_rounded,
+                  label: l10n.translateSettingsRow,
+                  hint: l10n.translateSettingsHint,
+                  onTap: () => Navigator.of(
+                    context,
+                  ).push(haloRoute(TranslationScreen(hub: hub))),
+                ),
+              ],
+            ),
+          ],
           HaloSection(l10n.settingsAbout),
           HaloGroup(
             children: [
@@ -761,6 +903,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.code,
                 label: l10n.settingsOpenSource,
                 value: 'github.com/GnosiWorks/Kryfo',
+                tapHint: l10n.settingsCopyLinkHint,
                 onTap: () async {
                   await Clipboard.setData(
                     const ClipboardData(
@@ -771,6 +914,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     showHaloToast(context, l10n.settingsLinkCopied);
                   }
                 },
+              ),
+              HaloRow(
+                icon: Icons.article_outlined,
+                label: l10n.settingsLicences,
+                value: l10n.settingsLicencesValue,
+                onTap: () =>
+                    Navigator.push(context, haloRoute(const LicencesScreen())),
               ),
             ],
           ),

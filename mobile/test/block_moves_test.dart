@@ -64,6 +64,8 @@ Future<void> _tables(SqliteMem db, String s) async {
         'INTEGER, at INTEGER, PRIMARY KEY (group_id, member, since))',
     'CREATE TABLE $s.wallpapers (chat TEXT PRIMARY KEY, atmo TEXT NOT NULL, '
         'photo BLOB)',
+    'CREATE TABLE $s.drafts (chat TEXT PRIMARY KEY, body TEXT NOT NULL, '
+        'reply_to TEXT, updated_at INTEGER NOT NULL, burn_secs INTEGER)',
     // a person's own, for a chat with them moved alone
     'CREATE TABLE $s.frames_out (id INTEGER PRIMARY KEY, peer_id TEXT)',
     'CREATE TABLE $s.first_kept (hash TEXT PRIMARY KEY, peer TEXT)',
@@ -301,4 +303,70 @@ void main() {
     expect(await walls('v'), isEmpty);
     expect(await walls('main'), ['', _f, 'group:$_g']);
   }, skip: skip);
+  Future<List<Object?>> drafts(SqliteMem db, String s) async => [
+    for (final r in await db.rawQuery(
+      'SELECT chat, body FROM $s.drafts ORDER BY chat',
+    ))
+      '${r['chat']} ${r['body']}',
+  ];
+
+  test('a chat\'s draft moves with it and back, a group\'s too; other '
+      'chats\' stay', () async {
+    final db = await _world();
+    for (final (chat, body) in [
+      ('group:$_g', 'who brings'),
+      (_f, 'see you'),
+      ('other-chat', 'stays'),
+    ]) {
+      await db.execute(
+        'INSERT INTO main.drafts (chat, body, updated_at) VALUES (?, ?, 1)',
+        [chat, body],
+      );
+    }
+    final mover = SqlChatMover(_NoDb(), _NoDb());
+    await mover.moveRowsOn(db, group, intoVault: true);
+    await mover.moveRowsOn(db, const ChatRef(_f), intoVault: true);
+    expect(await drafts(db, 'v'), ['$_f see you', 'group:$_g who brings']);
+    expect(await drafts(db, 'main'), ['other-chat stays']);
+    // shown again: out of the vault with them
+    await mover.moveRowsOn(db, group, intoVault: false);
+    await mover.moveRowsOn(db, const ChatRef(_f), intoVault: false);
+    expect(await drafts(db, 'v'), isEmpty);
+    expect(await drafts(db, 'main'), [
+      '$_f see you',
+      'group:$_g who brings',
+      'other-chat stays',
+    ]);
+  }, skip: skip);
+
+  for (final side in ['main', 'v']) {
+    test(
+      'a move goes on when $side has no drafts or wallpapers table',
+      () async {
+        final db = await _world();
+        await db.execute(
+          "INSERT INTO main.messages (msg_uid, peer_id, group_id) "
+          "VALUES ('g1', '$_f', '$_g')",
+        );
+        await db.execute('DROP TABLE $side.drafts');
+        await db.execute('DROP TABLE $side.wallpapers');
+        final mover = SqlChatMover(_NoDb(), _NoDb());
+        await mover.moveRowsOn(db, group, intoVault: true);
+        await mover.moveRowsOn(db, const ChatRef(_f), intoVault: true);
+        Future<List<Object?>> uids(String s) async => [
+          for (final r in await db.rawQuery(
+            'SELECT msg_uid FROM $s.messages ORDER BY msg_uid',
+          ))
+            r['msg_uid'],
+        ];
+        expect(await uids('v'), ['f1', 'g1']);
+        expect(await uids('main'), isEmpty);
+        await mover.moveRowsOn(db, group, intoVault: false);
+        await mover.moveRowsOn(db, const ChatRef(_f), intoVault: false);
+        expect(await uids('main'), ['f1', 'g1']);
+        expect(await uids('v'), isEmpty);
+      },
+      skip: skip,
+    );
+  }
 }

@@ -521,7 +521,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get appScanTheirCode => 'Scansiona il suo codice';
 
   @override
-  String get appAKryfoLinkA => 'Un link Kryfo, il link di una stanza o @merlo';
+  String get appAKryfoLinkA => 'Un link Kryfo, il link di una stanza o @name';
 
   @override
   String get appAddThem => 'Aggiungi';
@@ -618,9 +618,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get appSpeedPrivacy => 'Velocità e privacy →';
-
-  @override
-  String get appGettingMessages => 'Ricezione messaggi →';
 
   @override
   String get appDisableAppLock => 'Disattivare il blocco app?';
@@ -2028,6 +2025,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get cleanSamePictureSameQuality => 'Stessa immagine, stessa qualità';
 
   @override
+  String get cleanSamePicture => 'Stessa immagine';
+
+  @override
   String cleanRemoved(Object label) {
     return '$label, non c\'è più';
   }
@@ -2415,13 +2415,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get donateJustGladToHelp => 'Felice di aiutare';
 
   @override
-  String get gettingMessagesGettingMessages => 'Ricezione messaggi';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach =>
-      'Come arrivano i nuovi messaggi su questo telefono. Puoi cambiarlo quando vuoi.';
-
-  @override
   String get gettingMessagesAlwaysOn => 'Sempre attivo';
 
   @override
@@ -2440,12 +2433,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get gettingMessagesKryfoLooksForMessages =>
       'Kryfo cerca messaggi ogni 15 minuti. Leggero sulla batteria, ma i messaggi possono arrivare in ritardo.';
-
-  @override
-  String get gettingMessagesOnTheLockScreen => 'Sulla schermata di blocco';
-
-  @override
-  String get gettingMessagesHideMessagePreview => 'Nascondi anteprima';
 
   @override
   String get gettingMessagesAGenericAlertWith =>
@@ -2962,7 +2949,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Facoltativo. Le tue tre parole funzionano comunque.';
 
   @override
-  String get handleWren => 'merlo';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Una riga su di te · facoltativa';
@@ -3170,20 +3157,6 @@ class AppLocalizationsIt extends AppLocalizations {
       locale: localeName,
       other: '$countString in attesa · partono quando torni online',
       one: '$countString in attesa · parte quando torni online',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString in attesa · Tor si sta ancora connettendo',
     );
     return '$_temp0';
   }
@@ -3817,7 +3790,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Aggiungimi su Kryfo. Il mio ID è $myId\n\nTocca per aggiungermi:\n$uri\n\nKryfo è un messenger privato. Niente numero di telefono, niente email.';
+    return 'Aggiungimi su Kryfo. Lì mi chiamo $myId\n\nTocca per aggiungermi:\n$uri\n\nKryfo è un messenger privato. Niente numero di telefono, niente email.';
   }
 
   @override
@@ -3867,7 +3840,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get myKryfoTheLinkCarriesYour =>
-      'Il link contiene il tuo id, il tuo indirizzo e le chiavi per iniziare una chat. Funziona finché non lo reimposti nelle impostazioni.';
+      'Il link contiene le tue tre parole, il tuo indirizzo e le chiavi per iniziare una chat. Funziona finché non lo reimposti nelle impostazioni.';
 
   @override
   String get myKryfoSendTheLink => 'Invia il link';
@@ -3955,6 +3928,13 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get newGroupAddAtLeastOne =>
       'Prima di creare un gruppo, aggiungi almeno un contatto.';
+
+  @override
+  String get newGroupNeedsContacts => 'I gruppi si fanno con i tuoi contatti';
+
+  @override
+  String get newGroupAddSomeoneFirst =>
+      'Prima aggiungi qualcuno. Una stanza non ha bisogno di contatti: chiunque abbia il link può entrare.';
 
   @override
   String get notesDeleteThisNote => 'Eliminare questa nota?';
@@ -4131,7 +4111,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Kryfo è open source';
 
   @override
-  String get onboardingYourKryfoId => 'IL TUO ID KRYFO';
+  String get onboardingYourKryfoId => 'IL TUO NOME';
 
   @override
   String get onboardingGeneratedFromAKey =>
@@ -4425,10 +4405,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get photoKnowsPhoto => 'Foto';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'Cosa sa questo video';
+  String get photoKnowsVideoCleaner => 'Pulizia video';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'Cosa sa questa foto';
+  String get photoKnowsPhotoCleaner => 'Pulizia foto';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'Rimuovi tutto';
@@ -4505,6 +4485,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get pinsUnlockWithFingerprint => 'Sblocca con l\'impronta';
 
   @override
+  String get pinsFingerOpensDecoy =>
+      'Disattivato finché è impostato un PIN esca: un dito apre solo l\'esca.';
+
+  @override
   String get pinsWipePin => 'PIN di cancellazione';
 
   @override
@@ -4538,7 +4522,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get profileChangeYourFace => 'Cambia il tuo volto';
 
   @override
-  String get profileKryfoId => 'Id Kryfo';
+  String get profileKryfoId => 'Il tuo nome';
 
   @override
   String get profileOnionAddress => 'Indirizzo onion';
@@ -5278,9 +5262,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsTorRouting => 'Instradamento Tor';
 
   @override
-  String get settingsConnecting => 'In connessione';
-
-  @override
   String get settingsOffMode => 'Spento · modalità relay';
 
   @override
@@ -5290,7 +5271,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsAppLock => 'Blocco app';
 
   @override
-  String get settingsBlockedByAndroid => 'Bloccate da android';
+  String get settingsBlockedByAndroid => 'Bloccate da Android';
 
   @override
   String get settingsSpeedPrivacy => 'Velocità e privacy';
@@ -5303,9 +5284,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 salti';
-
-  @override
-  String get settingsGettingMessages => 'Ricezione messaggi';
 
   @override
   String settingsPreviewHidden(Object deliveryModeName) {
@@ -5345,6 +5323,23 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get settingsScamShieldHint =>
       'Controllato solo sul tuo telefono, non ne esce niente';
+
+  @override
+  String get typingNow => 'Sta scrivendo';
+
+  @override
+  String get settingsTypingIndicator => 'Indicatore di scrittura';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'Vedete entrambi quando l’altro sta scrivendo. Arriva direttamente via Tor, mai attraverso un relay.';
+
+  @override
+  String get settingsTypingOnionOnly => 'Disponibile sul percorso Onion';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      'Disattivato mentre usi i bridge: chi osserva la tua connessione potrebbe abbinare i segnali di scrittura. Torna da solo quando i bridge sono spenti.';
 
   @override
   String get settingsLightTheme => 'Tema chiaro';
@@ -5516,10 +5511,11 @@ class AppLocalizationsIt extends AppLocalizations {
       'Qui tutto avviene su questo telefono. Non viene caricato niente, e nessun altro deve essere su Kryfo.';
 
   @override
-  String get toolsWhatDoesThisPhoto => 'Cosa sa questa foto?';
+  String get toolsPhotoCleaner => 'Pulizia foto';
 
   @override
-  String get toolsPlacePhoneTime => 'Luogo · telefono · ora';
+  String get toolsRemovesHiddenInfo =>
+      'Rimuove le informazioni nascoste (metadati) come luogo, ora e modello del telefono';
 
   @override
   String get toolsPickAPhotoAnd =>
@@ -5955,8 +5951,8 @@ class AppLocalizationsIt extends AppLocalizations {
   String get whyKryfoNothingLeaks => 'Non trapela niente';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'Nessuna conferma di lettura o indicatore di scrittura consegnato a qualcuno, nessuna rubrica caricata. I metadati sono ciò che la maggior parte delle app lascia trapelare. Kryfo è fatto per non farlo.';
+  String get whyKryfoNoReceiptsTyping =>
+      'Nessuna conferma di lettura, nessuna rubrica caricata. Che stai scrivendo lo vede solo la persona a cui scrivi, direttamente via Tor, mai attraverso un server. La maggior parte delle app lascia trapelare metadati. Kryfo è fatto per non farlo.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Verifica che sia davvero chi dice';
@@ -5995,6 +5991,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get cleanerContentCredentials => 'Credenziali del contenuto';
+
+  @override
+  String get cleanerHdrLayer => 'Livello HDR';
 
   @override
   String get cleanerDataAfterThePicture => 'Dati dopo l\'immagine';
@@ -6470,6 +6469,35 @@ class AppLocalizationsIt extends AppLocalizations {
   String get bootFailedCloseAndReopen => 'Chiudi e riapri Kryfo';
 
   @override
+  String get bootFailedStillStuck => 'Se riprovare non basta';
+
+  @override
+  String get bootFailedRestoreBackup => 'Ripristina un backup';
+
+  @override
+  String get bootFailedStartFresh => 'Ricomincia da zero';
+
+  @override
+  String get bootFailedStartFreshTitle => 'Ricominciare da zero?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'Questo cancella tutto ciò che Kryfo tiene su questo telefono: chat, contatti, media, chat nascoste e le tue tre parole. Un file di backup salvato altrove non viene toccato.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Continua';
+
+  @override
+  String get bootFailedStartFreshSure => 'Cancellare tutto su questo telefono?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'Non si può annullare. Kryfo si chiude e si riapre come appena installato.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Cancella e ricomincia';
+
+  @override
   String get kryfoLinkTextThatLinkIsNot => 'Kryfo non sa leggere questo link';
 
   @override
@@ -6542,7 +6570,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get kryfoLinkTextYouJoinUnderA =>
-      'Entri con una chiave creata per questa stanza. Nessuno lì dentro vede il tuo ID Kryfo.';
+      'Entri con una chiave creata per questa stanza. Nessuno lì dentro vede le tue tre parole.';
 
   @override
   String get linkStubFetchedOverTorBy =>
@@ -7156,14 +7184,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get bridgesUsingTorProject => 'Tramite bridge del Progetto Tor';
 
   @override
-  String get bridgesKryfoTriesAgainOnItsOwn =>
-      'Kryfo riprova da solo ogni tanto.';
-
-  @override
-  String get bridgesTheTorProjectCanSuggest =>
-      'Il Progetto Tor può suggerire un bridge che funziona qui.';
-
-  @override
   String get bridgesBridgeRemoved => 'Bridge rimosso';
 
   @override
@@ -7501,6 +7521,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get languageNameAr => 'Arabo';
 
   @override
+  String get languageNameHi => 'Hindi';
+
+  @override
   String get languageLaterLine =>
       'Puoi cambiarla quando vuoi nelle impostazioni.';
 
@@ -7782,6 +7805,10 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get lockFingerRefused =>
       'Il telefono non ha mantenuto lo sblocco con l\'impronta per Kryfo, quindi è disattivato. Il PIN funziona ancora.';
+
+  @override
+  String get lockFingerTryAgain =>
+      'Il telefono era occupato in quel momento. Riprova con l\'impronta o usa il PIN.';
 
   @override
   String get pinsFingerRefused =>
@@ -8943,4 +8970,791 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'Kryfo lo rimuove dal telefono di ogni membro che ha l\'aggiornamento.';
+
+  @override
+  String get translateAction => 'Traduci';
+
+  @override
+  String get translateShowOriginal => 'Mostra originale';
+
+  @override
+  String translateBarTo(Object language) {
+    return 'Traduci · $language';
+  }
+
+  @override
+  String get translateBarMore => 'Opzioni di traduzione';
+
+  @override
+  String translateBarAlways(Object language) {
+    return 'Traduci sempre · $language';
+  }
+
+  @override
+  String translateBarNever(Object language) {
+    return 'Non tradurre mai · $language';
+  }
+
+  @override
+  String get translateBarHide => 'Nascondi in questa chat';
+
+  @override
+  String get translateWorking => 'Traduzione in corso…';
+
+  @override
+  String get translateFailed => 'Impossibile tradurre';
+
+  @override
+  String translateFrom(Object language) {
+    return 'Tradotto · $language';
+  }
+
+  @override
+  String get translateLangZh => 'Cinese';
+
+  @override
+  String translatePackTitle(Object language) {
+    return 'Traduzione su questo telefono: $language';
+  }
+
+  @override
+  String translatePackLine(Object language, Object size) {
+    return 'I messaggi vengono tradotti su questo telefono e non lo lasciano mai. Serve il pacchetto lingua $language, circa $size, scaricato una sola volta tramite Tor.';
+  }
+
+  @override
+  String get translatePackNoLib =>
+      'La traduzione non funziona su questo telefono.';
+
+  @override
+  String translateDownload(Object size) {
+    return 'Scarica · circa $size';
+  }
+
+  @override
+  String get translateDownloadAnyway => 'Scarica comunque adesso';
+
+  @override
+  String get translateResume => 'Riprendi download';
+
+  @override
+  String translateProgress(Object done, Object total) {
+    return '$done di $total';
+  }
+
+  @override
+  String get translateFinishing => 'Controllo dei file…';
+
+  @override
+  String translateInstalled(Object size) {
+    return 'Su questo telefono · $size';
+  }
+
+  @override
+  String get translateNeedsWifi =>
+      '«Solo Wi-Fi» è attivo e questo telefono non è connesso al Wi-Fi.';
+
+  @override
+  String get translateFailNoTor =>
+      'Tor non è ancora connesso. I pacchetti si scaricano solo tramite Tor, quindi riprova quando lo è.';
+
+  @override
+  String get translateFailNetwork =>
+      'Il download si è interrotto. Riprova e ripartirà da dove si era fermato.';
+
+  @override
+  String get translateFailBadFile =>
+      'Un file non corrispondeva a quanto Kryfo si aspetta ed è stato scartato. Riprova.';
+
+  @override
+  String get translateFailNoEngine =>
+      'Su questo telefono non si possono scaricare pacchetti lingua.';
+
+  @override
+  String translatePaused(Object size) {
+    return 'In pausa · $size finora';
+  }
+
+  @override
+  String get translateSettingsTitle => 'Traduzione';
+
+  @override
+  String get translateSettingsRow => 'Traduci i messaggi';
+
+  @override
+  String get translateSettingsHint => 'Su questo telefono, mai su un server';
+
+  @override
+  String get translatePacksSection => 'Pacchetti lingua';
+
+  @override
+  String translatePackPair(Object language) {
+    return '$language e inglese';
+  }
+
+  @override
+  String translateNotDownloaded(Object size) {
+    return 'Non scaricato · circa $size';
+  }
+
+  @override
+  String get translateDownloading => 'Download tramite Tor';
+
+  @override
+  String translateDeleteTitle(Object language) {
+    return 'Eliminare il pacchetto $language?';
+  }
+
+  @override
+  String translateDeleteLine(Object language) {
+    return 'I messaggi in $language non potranno essere tradotti finché non lo scarichi di nuovo.';
+  }
+
+  @override
+  String get translateLanguagesSection => 'Lingue';
+
+  @override
+  String get translateMyLanguages => 'Lingue che leggo';
+
+  @override
+  String get translateMyLanguagesHint =>
+      'I messaggi in queste lingue non vengono proposti per la traduzione. La lingua dell\'app è sempre una di queste.';
+
+  @override
+  String get translateInto => 'Traduci in';
+
+  @override
+  String get translateAppLanguage => 'La lingua dell\'app';
+
+  @override
+  String get translateBehaviourSection => 'Download e chat';
+
+  @override
+  String get translateAutoDefault => 'Traduci le chat automaticamente';
+
+  @override
+  String get translateAutoDefaultHint =>
+      'Per le chat che non hai impostato tu. Ogni chat può attivarlo o disattivarlo.';
+
+  @override
+  String get translateWifiOnly => 'Scarica i pacchetti solo con Wi-Fi';
+
+  @override
+  String get translatePrivacyTitle => 'Cosa resta privato';
+
+  @override
+  String get translatePrivacyNote =>
+      'La traduzione avviene su questo telefono. Nessun messaggio viene mandato da qualche parte per essere tradotto. Scaricare un pacchetto dice al server quale pacchetto è. Arriva tramite Tor, quindi il server non sa chi l\'ha chiesto.';
+
+  @override
+  String get translateAutoInChat => 'Traduci automaticamente';
+
+  @override
+  String get translateAutoInChatHint =>
+      'I messaggi in altre lingue appaiono tradotti. L\'originale è a un tocco.';
+
+  @override
+  String get bridgesNoneUntilOnion => 'Niente finché Onion non è attivo';
+
+  @override
+  String get bridgesRelayWorksWhereTor =>
+      'La modalità relay funziona dove Tor è bloccato, e puoi tornare indietro quando vuoi.';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      'La modalità relay passa dove Tor è bloccato, ma questa rete può vedere che ti connetti a Kryfo.';
+
+  @override
+  String get onboardingRelayThisNetworkSees =>
+      'Questa rete può vedere che ti connetti a Kryfo. Il nostro relay vede il tuo indirizzo.';
+
+  @override
+  String get settingsLicences => 'Licenze';
+
+  @override
+  String get settingsLicencesValue => 'Di cosa è fatto Kryfo';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo è software libero sotto la GNU General Public License, versione 3 o successiva. Chiunque può leggerne, modificarne e condividerne il codice.';
+
+  @override
+  String get licencesSourceCode => 'Codice sorgente';
+
+  @override
+  String get licencesSignalTitle => 'Protocollo Signal';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo include libsignal $version, creato da Signal, sotto la GNU Affero General Public License, versione 3. Il suo codice sorgente è su github.com/signalapp/libsignal e accanto a ogni versione di Kryfo.';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0, testo completo';
+
+  @override
+  String get licencesSignalSource => 'Codice sorgente di libsignal';
+
+  @override
+  String get licencesParts => 'Componenti open source';
+
+  @override
+  String get licencesInSignal => 'Nella libreria Signal';
+
+  @override
+  String get licencesInApp => 'Nell\'app';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString componenti',
+      one: '$countString componente',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, testo completo';
+
+  @override
+  String get licencesInEngine => 'Nel motore di rete';
+
+  @override
+  String get licencesLoadFailed => 'Impossibile caricare';
+
+  @override
+  String get settingsCopyLinkHint => 'Copia link';
+
+  @override
+  String get appRelayNotAnswering => 'Il relay tace';
+
+  @override
+  String get motionNoRelayYet => 'ANCORA NESSUN RELAY';
+
+  @override
+  String get motionTheRouteIsUp => 'Il percorso è aperto';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'I messaggi partono appena un relay risponde lungo questo percorso.';
+
+  @override
+  String get motionOffline => 'OFFLINE';
+
+  @override
+  String get motionNoNetwork => 'Nessuna rete';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Senza rete non parte niente. Tor riprende appena torna la rete.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count in attesa · $state',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsIconAndNotifications => 'Icona e notifiche';
+
+  @override
+  String iconSettingsValue(String icon) {
+    return '$icon, notifiche neutre';
+  }
+
+  @override
+  String get iconSectionTitle => 'Icona dell\'app';
+
+  @override
+  String get iconHint =>
+      'La schermata Home e l\'elenco delle app mostrano questa icona e questo nome al posto di Kryfo.';
+
+  @override
+  String get iconHintKryfo =>
+      'Scegli un\'icona e un nome comuni per la schermata Home e l\'elenco delle app.';
+
+  @override
+  String get iconWhatChanges => 'Cosa cambia';
+
+  @override
+  String iconConfirmTitle(String name) {
+    return 'Cambiare l\'icona in $name?';
+  }
+
+  @override
+  String iconConfirmLine(String name) {
+    return 'Kryfo si chiude e si riapre. Se l\'icona sparisce dalla schermata Home, cerca $name tra le tue app e rimettila al suo posto.';
+  }
+
+  @override
+  String get iconConfirmButton => 'Cambia icona';
+
+  @override
+  String get iconNoPinLine =>
+      'Chi la tocca vede Kryfo. Con un PIN per l\'app, vede invece un tastierino del PIN.';
+
+  @override
+  String get iconSetPin => 'Imposta un PIN';
+
+  @override
+  String iconChanged(String name) {
+    return 'Icona cambiata in $name';
+  }
+
+  @override
+  String iconPreviewLabel(String name) {
+    return 'La schermata Home mostrerà $name';
+  }
+
+  @override
+  String iconButtonLabel(String name) {
+    return '$name, icona dell\'app';
+  }
+
+  @override
+  String get notifShowAll => 'Nome e messaggio';
+
+  @override
+  String get notifShowNew => 'Solo «Nuovo messaggio»';
+
+  @override
+  String get notifShowPlain => 'Neutre';
+
+  @override
+  String get notifPlainHint =>
+      'Nessun nome, nessun messaggio, nessun colore di Kryfo. Un\'icona neutra e una riga.';
+
+  @override
+  String get notifPlainLine => 'Qualcosa di nuovo';
+
+  @override
+  String get notifPlainChannel => 'Avvisi';
+
+  @override
+  String get notifHeaderLimit =>
+      'In cima a ogni notifica resta scritto Kryfo. Android non permette a un\'app di cambiarlo.';
+
+  @override
+  String get gettingMessagesWhatShows => 'Cosa mostrano le notifiche';
+
+  @override
+  String get iconSheetChangesTitle => 'Che cosa cambia';
+
+  @override
+  String get iconSheetChanges =>
+      'L\'icona e il nome nella schermata Home e nell\'elenco delle app, il menu di condivisione e la vista delle app aperte. Con Neutre, anche ciò che mostrano le notifiche.';
+
+  @override
+  String get iconSheetStaysTitle => 'Cosa resta Kryfo';
+
+  @override
+  String get iconSheetStays =>
+      'La prima riga di ogni notifica, le pagine delle impostazioni e della batteria del telefono, lo store delle app e Kryfo stesso quando qualcuno lo apre.';
+
+  @override
+  String get iconSheetGlance =>
+      'Regge a un\'occhiata alla schermata Home. Non nasconde Kryfo a chi guarda nelle impostazioni del telefono.';
+
+  @override
+  String get iconSheetPrivateSpace =>
+      'Il tuo telefono potrebbe avere un suo modo di nascondere le app: lo spazio privato, nelle impostazioni.';
+
+  @override
+  String get iconSheetSecureFolder =>
+      'Il tuo telefono potrebbe avere un suo modo di nascondere le app: la Cartella protetta, nelle impostazioni.';
+
+  @override
+  String get iconSheetXiaomi =>
+      'Il tuo telefono potrebbe avere un suo modo di nascondere le app: le app nascoste, nelle impostazioni.';
+
+  @override
+  String get androidIconNotes => 'Note';
+
+  @override
+  String get androidIconWeather => 'Meteo';
+
+  @override
+  String get androidIconTasks => 'Attività';
+
+  @override
+  String get androidIconNews => 'Notizie';
+
+  @override
+  String get androidServiceTitlePlain => 'Attivo';
+
+  @override
+  String get lockStateUnlockPlain => 'Sblocca';
+
+  @override
+  String get iconSheetOthers =>
+      'Le app sul telefono possono comunque vedere che Kryfo è installato, e le finestre e le richieste di Android possono mostrarne il nome.';
+
+  @override
+  String get iconSheetSaves =>
+      'Finché è attiva un\'icona neutra, le nuove foto, i video e i file vengono salvati con nomi comuni nelle cartelle abituali del telefono. Ciò che è già salvato resta dov\'è.';
+
+  @override
+  String get deliveryModeGooglePush => 'Push di Google';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead =>
+      'Come arrivano i nuovi messaggi su questo telefono, come suonano e cosa mostrano. Puoi cambiarlo quando vuoi.';
+
+  @override
+  String get notificationsHowTheyReachYou => 'Come ti arrivano i messaggi';
+
+  @override
+  String get notificationsRecommended => 'Consigliato';
+
+  @override
+  String get notificationsGoogleBody =>
+      'Immediato e leggero. Google può vedere quando il tuo telefono viene svegliato, mai chi ha scritto o cosa è stato detto.';
+
+  @override
+  String get notificationsGoogleStarting => 'Attivazione…';
+
+  @override
+  String get notificationsGoogleNoStart =>
+      'Il push di Google non è partito. Controlla la connessione e riprova.';
+
+  @override
+  String get notificationsGoogleNote =>
+      'Vengono mescolati falsi risvegli, così per Google è più difficile capire quando arrivano i messaggi veri. Il nostro relay conserva solo indirizzi che non può collegare tra loro. Il servizio push gira sullo stesso server e potrebbe collegarli, e con l\'aiuto di Google al tuo account Google, quindi potrebbe farlo anche chi gestisce o sequestra il nostro server. Se per te conta, scegli un altro modo. Le chat nascoste, le stanze oltre le prime e, ogni tanto, un contatto normale, circa un mese su cinque, aspettano il controllo che Kryfo fa comunque ogni 15 minuti.';
+
+  @override
+  String get notificationsGoogleRefused =>
+      'Il nostro relay al momento non accetta alcune registrazioni di questo telefono. Quelle chat arrivano con il controllo ogni 15 minuti, e Kryfo continua a provare.';
+
+  @override
+  String get notificationsSoundAndVibration => 'Suono e vibrazione';
+
+  @override
+  String get notificationsSoundHint => 'Nelle impostazioni di Android';
+
+  @override
+  String get notificationsEachShows => 'Ogni notifica mostra';
+
+  @override
+  String get notificationsBatteryTips => 'Consigli per la batteria';
+
+  @override
+  String get notificationsBatteryAllowed => 'Consentito';
+
+  @override
+  String get notificationsBatteryNotYet => 'Non consentito';
+
+  @override
+  String get notificationsMakerSwitch => 'L’interruttore del produttore';
+
+  @override
+  String get onboardingDeliveryHeadline => 'Come ti *arrivano* i messaggi.';
+
+  @override
+  String get onboardingDeliveryLead =>
+      'Puoi cambiarlo quando vuoi in Notifiche.';
+
+  @override
+  String get homeGoogleTitle => 'È arrivato il push di Google';
+
+  @override
+  String get homeGoogleLine =>
+      'Immediato e leggero sulla batteria. Google può vedere quando il tuo telefono viene svegliato, mai chi ha scritto o cosa è stato detto.';
+
+  @override
+  String get homeGoogleUse => 'Usalo';
+
+  @override
+  String get homeGoogleOn => 'Il push di Google è attivo';
+
+  @override
+  String get homeGoogleGoneTitle => 'Il push di Google non è disponibile';
+
+  @override
+  String get appNotificationsLink => 'Notifiche →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'Push di Google $got · declassati $low';
+  }
+
+  @override
+  String get passFieldLabel => 'Passphrase';
+
+  @override
+  String get padUseLetters => 'Usa le lettere';
+
+  @override
+  String get padUseDigits => 'Usa le cifre';
+
+  @override
+  String get passWeak => 'Debole';
+
+  @override
+  String get passFair => 'Discreta';
+
+  @override
+  String get passStrong => 'Forte';
+
+  @override
+  String passStrengthIs(Object level) {
+    return 'Forza: $level';
+  }
+
+  @override
+  String get lockKeyBusy =>
+      'Il chip di sicurezza del telefono è occupato. Riprova tra un momento.';
+
+  @override
+  String get lockKeyLocked =>
+      'Sblocca una volta il telefono con il suo PIN, poi riprova.';
+
+  @override
+  String get lockKeyWaiting =>
+      'Il chip di sicurezza del telefono sta ancora controllando';
+
+  @override
+  String get lockKeyLost =>
+      'Questo telefono ha perso la chiave che controlla i tuoi PIN, quindi alcuni PIN potrebbero non aprire. Puoi reimpostare Kryfo e ripristinare un backup.';
+
+  @override
+  String get lockKeyReset => 'Reimposta Kryfo';
+
+  @override
+  String get lockKeyResetTitle => 'Reimpostare Kryfo?';
+
+  @override
+  String get lockKeyResetLine =>
+      'Tutto ciò che Kryfo ha su questo telefono viene eliminato e Kryfo si chiude. Poi puoi ripristinare un backup. Le chat nascoste tornano solo da un backup fatto mentre erano aperte.';
+
+  @override
+  String get lockKeyResetSureTitle => 'Non si può annullare';
+
+  @override
+  String get lockKeyResetSureLine =>
+      'Tutte le chat, le chiavi e le impostazioni di Kryfo su questo telefono spariscono adesso.';
+
+  @override
+  String get lockKeyResetSure => 'Elimina tutto';
+
+  @override
+  String get flowVaultPassLine =>
+      'Almeno 12 caratteri. La tastiera del telefono vede ciò che scrivi, quindi usane una che non impara e non sincronizza le parole.';
+
+  @override
+  String get flowVaultPassAgain => 'La stessa passphrase di nuovo';
+
+  @override
+  String get cardTitle => 'Completa l’aggiornamento di sicurezza';
+
+  @override
+  String get cardLine => 'Se usi altri PIN, scrivili qui una volta.';
+
+  @override
+  String get cardType => 'Scrivi un PIN';
+
+  @override
+  String get cardAnswer =>
+      'Fatto. Scrivine un altro, o tocca Fatto quando hai finito.';
+
+  @override
+  String get keyLine =>
+      'I tuoi PIN funzionano solo su questo telefono. Se il telefono perde la chiave che li controlla, dovrai reimpostare Kryfo e ripristinare un backup. Le chat nascoste tornano solo da un backup fatto mentre erano aperte.';
+
+  @override
+  String get keyLineUnlocked =>
+      'I tuoi PIN funzionano solo su questo telefono, e solo mentre è sbloccato. Se il telefono perde la chiave che li controlla, dovrai reimpostare Kryfo e ripristinare un backup. Le chat nascoste tornano solo da un backup fatto mentre erano aperte.';
+
+  @override
+  String get keyLineScreenLock =>
+      'Imposta un blocco schermo sul telefono, così questa protezione regge anche quando è bloccato.';
+
+  @override
+  String get settingsDevices => 'Dispositivi';
+
+  @override
+  String get devicesLinkedDevices => 'Dispositivi collegati';
+
+  @override
+  String get devicesThisPhoneOnly => 'Solo questo telefono';
+
+  @override
+  String get devicesNameSeparator => ', ';
+
+  @override
+  String get devicesThisPhone => 'Questo telefono';
+
+  @override
+  String get devicesOnlyThisPhone =>
+      'Solo questo telefono può collegare o rimuovere dispositivi';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return 'Collegato il $date';
+  }
+
+  @override
+  String get devicesUsedToday => 'Usato oggi';
+
+  @override
+  String get devicesUsedThisWeek => 'Usato questa settimana';
+
+  @override
+  String get devicesUsedThisMonth => 'Usato questo mese';
+
+  @override
+  String get devicesNotUsedYet => 'Non ancora usato';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Si scollega tra $daysString giorni se non lo apri',
+      one: 'Si scollega domani se non lo apri',
+      zero: 'Si scollega oggi se non lo apri',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => 'Kryfo sul tuo computer';
+
+  @override
+  String get devicesEmptyLine =>
+      'Collega un computer per leggere e mandare lì i tuoi messaggi. Fino a cinque dispositivi oltre a questo telefono.';
+
+  @override
+  String get devicesContactsSeeNothing =>
+      'Le app dei tuoi contatti non mostrano i tuoi dispositivi.';
+
+  @override
+  String get devicesUnusedRule =>
+      'Un dispositivo che non apri per 30 giorni si scollega da solo e cancella le tue chat.';
+
+  @override
+  String get devicesFull =>
+      'Ci sono cinque dispositivi collegati. Rimuovine uno per collegarne un altro.';
+
+  @override
+  String get devicesLinkADevice => 'Collega un dispositivo';
+
+  @override
+  String get devicesRemoveAll => 'Rimuovi tutti gli altri dispositivi';
+
+  @override
+  String get devicesRemoveAllTitle => 'Rimuovere tutti gli altri dispositivi?';
+
+  @override
+  String get devicesRemoveAllLine =>
+      'Quando le app dei tuoi contatti ricevono la modifica, smettono di ricevere nuovi messaggi e non possono inviare a nome tuo. Questo telefono tiene tutto.';
+
+  @override
+  String get devicesRemoveAllYes => 'Rimuovi tutti';
+
+  @override
+  String get devicesRemovedAll => 'Ora solo questo telefono';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return 'Rimuovere $name?';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      'Quando le app dei tuoi contatti ricevono la modifica, smette di ricevere nuovi messaggi e non può inviare a nome tuo. Cancella le tue chat la prossima volta che è online. Un dispositivo manomesso da qualcuno può tenere ciò che ha già.';
+
+  @override
+  String get devicesRemove => 'Rimuovi';
+
+  @override
+  String devicesRemoved(Object name) {
+    return '$name rimosso';
+  }
+
+  @override
+  String get devicesRename => 'Rinomina';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return 'Rinomina $name';
+  }
+
+  @override
+  String get devicesRenameLine =>
+      'Solo tu vedi questo nome. I tuoi contatti mai.';
+
+  @override
+  String get devicesNameComputer => 'Computer';
+
+  @override
+  String get devicesDeviceCode => 'Codice del dispositivo';
+
+  @override
+  String get devicesDeviceCodeLine =>
+      'Lo stesso codice compare sul dispositivo stesso, in Impostazioni.';
+
+  @override
+  String get devicesLinkStep1 =>
+      'Apri Kryfo sul tuo computer. Mostra un codice.';
+
+  @override
+  String get devicesLinkStep2 => 'Scansiona il codice con questo telefono.';
+
+  @override
+  String get devicesLinkStep3 =>
+      'Controlla che i due schermi mostrino gli stessi sei numeri.';
+
+  @override
+  String get devicesHistory => 'Cronologia';
+
+  @override
+  String get devicesHistoryCopy => 'Copia le mie chat';
+
+  @override
+  String get devicesHistoryCopyHint =>
+      'Tutti i tuoi messaggi, con foto e video degli ultimi 30 giorni.';
+
+  @override
+  String get devicesHistoryNone => 'Inizia senza cronologia';
+
+  @override
+  String get devicesHistoryNoneHint =>
+      'Sul dispositivo arrivano solo i nuovi messaggi.';
+
+  @override
+  String get devicesSkipMedia => 'Salta foto e video';
+
+  @override
+  String get devicesSkipMediaHint =>
+      'Arriva solo il testo. Più veloce, e meno da tenere sul dispositivo.';
+
+  @override
+  String get devicesHiddenStay =>
+      'Le chat nascoste e l’esca restano su questo telefono.';
+
+  @override
+  String get devicesScanCode => 'Scansiona il codice';
 }

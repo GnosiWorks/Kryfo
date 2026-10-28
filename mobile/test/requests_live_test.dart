@@ -13,7 +13,13 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
-    show appState, claimChat, openChatForHalo, rootNavKey, useDatabasesForTest;
+    show
+        appState,
+        claimChat,
+        openChatForHalo,
+        rootNavKey,
+        useDatabasesForTest,
+        AppStateRefresh;
 import 'package:kryfo/screens/requests_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';

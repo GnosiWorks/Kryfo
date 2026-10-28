@@ -3,13 +3,12 @@
 // container, made on create and on the upgrade to 73. one tag per chat,
 // stable, and read back to the chat on a tap. a group that goes takes its
 // tag, after its notifications are taken down by it
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/main.dart'
     show notifChatIn, notifTagIn, notifTagOfIn, notifTagTables;
 
 import 'mem_db.dart';
+import 'source_body.dart';
 import 'sqlite_ffi.dart';
 
 String _body(String src, String head) {
@@ -22,7 +21,7 @@ void main() {
   final src = [
     'lib/app/database.dart',
     'lib/app/state.dart',
-  ].map((f) => File(f).readAsStringSync()).join('\n');
+  ].map(sourceOf).join('\n');
   final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
   final steps = src.substring(upgrade, src.indexOf('\n    );', upgrade));
   final create = src.substring(

@@ -6,12 +6,13 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import '../file_kind.dart' show readFileFacts;
+import '../file_kind.dart' show FileShape, fileShapeOf, readFileFacts;
 import '../file_save.dart';
 import '../lock_state.dart';
 import '../open_file.dart';
 import '../theme.dart';
 import 'halo_hero.dart';
+import 'photo_viewer.dart';
 import 'press_scale.dart';
 import 'remembered_height.dart';
 import 'swap.dart';
@@ -19,8 +20,9 @@ import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import 'video_viewer.dart';
 
-/// a tap on a file or a video: open it in whatever the phone has for it,
-/// or the share sheet when nothing does. an app installer is never opened
+/// a tap on a file or a video: a picture opens in the app's own viewer;
+/// anything else in whatever the phone has for it, or the share sheet when
+/// nothing does. an app installer is never opened
 /// or shared: it is saved where the person picks. held against the app
 /// lock: leaving for the viewer is not leaving. [kept]: the other person's,
 /// in a chat that blocks, which goes to no other app (shotsKeeps)
@@ -32,6 +34,14 @@ Future<void> openReceivedFile(
   // a room's, which says so in its own words
   bool room = false,
 }) async {
+  final facts = await readFileFacts(path, name);
+  if (!context.mounted) return;
+  // a picture sent as a file opens here like a photo, so no other app gets
+  // a decrypted copy; in a chat that blocks, with screenshots blocked
+  if (!facts.installer && fileShapeOf(facts) == FileShape.picture) {
+    await openPhoto(context, path, secure: kept);
+    return;
+  }
   if (kept) {
     showHaloToast(
       context,
@@ -39,8 +49,8 @@ Future<void> openReceivedFile(
     );
     return;
   }
-  if ((await readFileFacts(path, name)).installer) {
-    if (context.mounted) await saveReceivedFile(context, path, name);
+  if (facts.installer) {
+    await saveReceivedFile(context, path, name);
     return;
   }
   final opened = await lockState.hold(

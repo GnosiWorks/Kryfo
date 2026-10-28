@@ -16,7 +16,13 @@ import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
-    show appState, useDatabasesForTest, useEngineForTest;
+    show
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateScreen,
+        AppStateRefresh;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/stickers/sticker_pack.dart';
@@ -412,9 +418,20 @@ void main() {
         ),
       ),
     );
-    unawaited(
-      openReceivedFile(ctx, '/x/plan.pdf', 'plan.pdf', kept: true, room: true),
-    );
+    // the file is read for what it is first, which is real io the fake
+    // clock never finishes, so the open starts on the real one
+    await t.runAsync(() async {
+      unawaited(
+        openReceivedFile(
+          ctx,
+          '/x/plan.pdf',
+          'plan.pdf',
+          kept: true,
+          room: true,
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    });
     await t.pump(const Duration(milliseconds: 300));
     expect(find.text(l10n.roomShotsKeptOpen), findsOneWidget);
     expect(calls.where((m) => m == 'openFile' || m == 'shareFile'), isEmpty);
@@ -436,7 +453,10 @@ void main() {
         ),
       ),
     );
-    unawaited(openReceivedFile(ctx, '/x/plan.pdf', 'plan.pdf', kept: true));
+    await t.runAsync(() async {
+      unawaited(openReceivedFile(ctx, '/x/plan.pdf', 'plan.pdf', kept: true));
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    });
     await t.pump(const Duration(milliseconds: 300));
     expect(calls.where((m) => m == 'openFile' || m == 'shareFile'), isEmpty);
     expect(find.text(l10n.chatShotsKeptOpen), findsOneWidget);

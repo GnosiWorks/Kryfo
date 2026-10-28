@@ -127,20 +127,22 @@ func fileGone(path string) bool {
 
 // where a receive address keeps the ids it has seen and how far it got
 func addressFiles(rcvPk string) (seenPath, lastPath string) {
-	if savedDataDir == "" {
+	dir := savedDataDir()
+	if dir == "" {
 		return "", ""
 	}
 	short := rcvPk
 	if len(short) > 16 {
 		short = short[:16]
 	}
-	return savedDataDir + "/nostr_seen_" + short, savedDataDir + "/nostr_last_" + short
+	return dir + "/nostr_seen_" + short, dir + "/nostr_last_" + short
 }
 
 // the files of a receive address, off the disk and never written again by
 // what is still finishing on them
 func dropAddressFiles(rcvPk string) {
 	dropHeard(rcvPk)
+	liveForget(rcvPk)
 	seenPath, lastPath := addressFiles(rcvPk)
 	if seenPath == "" {
 		return
@@ -711,6 +713,8 @@ type inboxDone struct {
 	// 0 when that is not known, and no later than until, 0 when the line
 	// says nothing of it
 	from, until int64
+	// from a public relay of a contact's address: no from on its held line
+	bare bool
 }
 
 // remembers every event of a batch the poll handed over, one write per file

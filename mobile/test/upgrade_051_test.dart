@@ -20,7 +20,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'sqlite_channel.dart';
 
 const _fixtures = 'test/fixtures/upgrade_051';
-const _version = 85;
+const _version = 88;
 
 // the keys each file opens with, under the names the app keeps them by
 final _keyFile =
@@ -52,11 +52,14 @@ final _steps = <int, (Future<void> Function(Database), String)>{
   83: (shotsColumns, 'ALTER TABLE contacts ADD COLUMN shots_on'),
   84: (albumColumns, 'ALTER TABLE messages ADD COLUMN album_id'),
   85: (wallpaperTable, 'CREATE TABLE IF NOT EXISTS wallpapers'),
+  86: (draftsTable, 'CREATE TABLE IF NOT EXISTS drafts'),
+  87: (opusColumns, 'ALTER TABLE contacts ADD COLUMN opus_can'),
+  88: (capsColumns, 'ALTER TABLE contacts ADD COLUMN caps'),
 };
 
 // whether the step to [step] runs on a file at [from]. test builds took 81
 // for each step alone, so a file at 81 to 84 takes them all again
-bool _runs(int step, int from) => step > from || from > 80;
+bool _runs(int step, int from) => step > from || (from > 80 && from < 85);
 
 // what the steps add, by table
 const _added = {
@@ -68,10 +71,13 @@ const _added = {
     'shots_can',
     'shots_by',
     'shots_when',
+    'caps',
+    'caps_at',
   ],
   'groups': ['ended_at', 'ended_by'],
   'messages': ['album_id', 'album_n', 'album_i'],
   'wallpapers': ['chat', 'atmo', 'photo'],
+  'drafts': ['chat', 'body', 'reply_to', 'updated_at'],
 };
 const _indexes = [
   'idx_media_chunks_group',

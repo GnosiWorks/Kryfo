@@ -3,7 +3,7 @@
 // sheet, one button. the link comes right after.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../main.dart' show appState, AppState;
+import '../main.dart' show appState, AppState, AppStateRooms;
 import '../rooms.dart';
 import '../theme.dart';
 import '../widgets/notice_banner.dart';

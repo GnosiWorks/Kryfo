@@ -2,16 +2,15 @@
 // which groups' texts went again to a member after their restore, made on
 // create and on the upgrade to 74, the last step. a phone from before gets
 // the table and keeps its rows; a group that goes takes its marks
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/main.dart' show groupResentTables;
 import 'package:kryfo/vault_life.dart' show chatTables;
 
+import 'source_body.dart';
 import 'sqlite_ffi.dart';
 
 void main() {
-  final src = File('lib/app/database.dart').readAsStringSync();
+  final src = sourceOf('lib/app/database.dart');
   final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
   final steps = src.substring(upgrade, src.indexOf('\n    );', upgrade));
   final create = src.substring(

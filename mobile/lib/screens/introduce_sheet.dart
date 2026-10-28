@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../intro_budget.dart';
 import '../container.dart';
-import '../main.dart' show appState, session;
+import '../main.dart' show appState, session, AppStateContacts;
 import '../screens/home_screen.dart' show ContactPreview;
 import '../theme.dart';
 import '../vouch_text.dart';

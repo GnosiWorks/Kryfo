@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'app_icon.dart';
 import 'back_on_top.dart';
 import 'l10n/app_localizations.dart';
 import 'lock_layer.dart';
@@ -15,6 +16,11 @@ MaterialApp haloAppShell({
   // the lock, around the navigator
   required Widget Function(Widget navigator) lock,
   Locale? locale,
+  // the icon the home screen shows: the app switcher's title and colour
+  // follow it. null while it is read
+  AppFace? face,
+  // the launcher's label for it, in the phone's language
+  String? faceLabel,
 }) {
   return MaterialApp(
     navigatorKey: navigatorKey,
@@ -23,7 +29,10 @@ MaterialApp haloAppShell({
     // back reaches android through the lock, which keeps it while it is up
     onNavigationNotification: lockBack.navigation,
     scaffoldMessengerKey: haloMessengerKey,
-    title: 'Kryfo',
+    // android's recents card and a screen reader read this as the app's
+    // name, over what the screen set when it opened
+    title: switcherTitle(face, faceLabel),
+    color: switcherColor(face),
     // the debug banner is drawn above everything, the lock too
     debugShowCheckedModeBanner: false,
     theme: buildHaloTheme(),
@@ -57,6 +66,19 @@ MaterialApp haloAppShell({
     // no stretch-glow
     scrollBehavior: const HaloScrollBehavior(),
     home: home,
+  );
+}
+
+/// builds the app again whenever android's answer about the icon comes in
+/// or changes, so the app switcher's title follows it
+class FacedShell extends StatelessWidget {
+  final Widget Function(AppFace? face, String? label) builder;
+  const FacedShell({super.key, required this.builder});
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: Listenable.merge([appFaceNow, appFaceLabel]),
+    builder: (_, _) => builder(appFaceNow.value, appFaceLabel.value),
   );
 }
 

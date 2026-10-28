@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the play build offers no way to pay and no way to update itself. flutter
 // test checks the normal build, which keeps its support tab, support card and
-// bitcoin code. the play side runs with the define:
-//   flutter test --dart-define=KRYFO_STORE=play test/play_build_test.dart
+// bitcoin code. the play side runs with the flavor:
+//   flutter test --flavor play test/play_build_test.dart
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -10,7 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show appState;
+import 'package:kryfo/main.dart' show appState, AppStateRoute;
 import 'package:kryfo/screens/profile_screen.dart';
 import 'package:kryfo/screens/qr_screen.dart';
 import 'package:kryfo/store.dart';
@@ -185,15 +185,16 @@ void main() {
   test('the store is read in one place', () {
     final hits = [
       for (final e in sources().entries)
-        if (e.value.contains('KRYFO_STORE')) e.key,
+        if (e.value.contains('FLUTTER_APP_FLAVOR') ||
+            e.value.contains('appFlavor'))
+          e.key,
     ];
     expect(hits, ['lib/store.dart']);
   });
 }
 
 final _takenAway = RegExp(
-  r'<uses-permission(-sdk-23|-sdk-m)? android:name="android\.permission\.'
+  r'<uses-permission(-sdk-23)? android:name="android\.permission\.'
   r'REQUEST_INSTALL_PACKAGES" tools:node="remove" />',
 );
-const _refused =
-    'const val MIME = "application/vnd.android.package-archive"';
+const _refused = 'const val MIME = "application/vnd.android.package-archive"';

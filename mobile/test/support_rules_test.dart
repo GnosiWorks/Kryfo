@@ -23,7 +23,12 @@ import 'package:kryfo/main.dart'
         claimChat,
         kRequestRows,
         releaseChat,
-        useDatabasesForTest;
+        useDatabasesForTest,
+        AppStateProfile,
+        AppStateContacts,
+        AppStateDevchat,
+        AppStateReceive,
+        AppStateRefresh;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
@@ -268,6 +273,15 @@ class _Phone extends HaloDb {
 
 // signal and the engine as the receive side reaches them
 class _Io implements AppIo {
+  // nothing here types
+  @override
+  Future<String> typingSeal(String peer, String plain) =>
+      throw UnimplementedError('typingSeal');
+  @override
+  Future<String> typingSend(String onion, String cipher) =>
+      throw UnimplementedError('typingSend');
+  @override
+  Future<String> pinFirst(List<String> xPubs) async => 'ok';
   @override
   Future<String?> decryptIf(
     String peer,

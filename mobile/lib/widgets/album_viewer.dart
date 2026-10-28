@@ -13,7 +13,7 @@ import 'package:flutter/services.dart';
 import '../dlog.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, AppStateScreen;
 import '../open_file.dart';
 import '../theme.dart';
 import 'album_grid.dart' show albumFlight, albumHeroTag;

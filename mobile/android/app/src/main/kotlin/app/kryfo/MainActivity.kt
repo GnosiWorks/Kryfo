@@ -9,7 +9,6 @@ import android.app.job.JobInfo
 import android.app.job.JobScheduler
 import android.content.BroadcastReceiver
 import android.content.ComponentName
-import android.content.ContentValues
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.os.PersistableBundle
@@ -49,7 +48,8 @@ import io.flutter.plugin.common.BasicMessageChannel
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.StringCodec
 
-class MainActivity : FlutterFragmentActivity() {
+// open for KryfoActivity, the name the manifest gives the screen
+open class MainActivity : FlutterFragmentActivity() {
     private val tools = ToolsBridge(this)
     private var videos: VideoPlayers? = null
     companion object {
@@ -301,6 +301,7 @@ class MainActivity : FlutterFragmentActivity() {
         }
         super.onCreate(savedInstanceState)
         underBars()
+        AppIcon.describeTask(this)
         windowSeen = WindowWatch(this).also {
             it.gone = { tellAway() }
             addContentView(it, ViewGroup.LayoutParams(0, 0))
@@ -382,12 +383,19 @@ class MainActivity : FlutterFragmentActivity() {
             MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "kryfo/video")
                 .setMethodCallHandler { call, result -> v.handle(call, result) }
         }
+        PinKey.attach(applicationContext)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "halo/platform")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "isMiui" -> result.success(isMiuiDevice())
+                    // the android version too, for the line about its own
+                    // way to hide apps (private space, 15 and later)
                     "phoneMaker" -> result.success(
-                        mapOf("manufacturer" to Build.MANUFACTURER, "brand" to Build.BRAND)
+                        mapOf(
+                            "manufacturer" to Build.MANUFACTURER,
+                            "brand" to Build.BRAND,
+                            "sdk" to Build.VERSION.SDK_INT.toString(),
+                        )
                     )
                     "photoPickerReady" -> result.success(PhotoPicker.ready(this))
                     "installSource" -> result.success(installSource())
@@ -413,9 +421,38 @@ class MainActivity : FlutterFragmentActivity() {
                     "bootedAtMs" -> result.success(
                         System.currentTimeMillis() - android.os.SystemClock.elapsedRealtime()
                     )
+                    // the pin key (PinKey.kt). each call waits on its own
+                    // thread, never behind the finger key's work
+                    "pinKeyInfo" -> Thread {
+                        val r = PinKey.info()
+                        runOnUiThread { result.success(r) }
+                    }.start()
+                    "pinKeyMake" -> Thread {
+                        val r = PinKey.make()
+                        runOnUiThread { result.success(r) }
+                    }.start()
+                    "pinKeyMac" -> {
+                        val x = call.argument<String>("x")
+                        Thread {
+                            val r = PinKey.mac(x)
+                            runOnUiThread { result.success(r) }
+                        }.start()
+                    }
+                    "pinKeyKcv" -> Thread {
+                        val r = PinKey.kcv()
+                        runOnUiThread { result.success(r) }
+                    }.start()
+                    "pinKeyDrop" -> Thread {
+                        PinKey.drop()
+                        runOnUiThread { result.success(true) }
+                    }.start()
                     // fingerprint unlock on a key a new finger invalidates
                     "bioReady" -> result.success(BioKey.ready())
-                    "bioState" -> result.success(BioKey.state())
+                    // the keystore may pause between tries: off the main thread
+                    "bioState" -> Thread {
+                        val s = BioKey.state()
+                        runOnUiThread { result.success(s) }
+                    }.start()
                     "bioSeal" -> {
                         val opens = call.argument<String>("opens")
                         if (opens.isNullOrEmpty()) {
@@ -437,8 +474,8 @@ class MainActivity : FlutterFragmentActivity() {
                         val title = call.argument<String>("title") ?: "kryfo"
                         val cancel = call.argument<String>("cancel") ?: "Cancel"
                         val seal = call.argument<String>("seal") ?: ""
-                        BioKey.unlock(this, title, cancel, seal) { r, opens ->
-                            result.success(mapOf("r" to r, "p" to opens))
+                        BioKey.unlock(this, title, cancel, seal) { r, opens, again ->
+                            result.success(mapOf("r" to r, "p" to opens, "s" to again))
                         }
                     }
                     // the pin hold runs on these: time since boot, which a
@@ -476,7 +513,7 @@ class MainActivity : FlutterFragmentActivity() {
                         )
                     }
                     "openNotificationSettings" -> {
-                        result.success(openNotificationSettings())
+                        result.success(openNotificationSettings(call.argument<String>("channel")))
                     }
                     "openWifiSettings" -> {
                         result.success(openWifiSettings())
@@ -499,7 +536,12 @@ class MainActivity : FlutterFragmentActivity() {
                     // and the process force-stopped. deletes from dart race
                     // the preference writes still queued for disk.
                     "wipe" -> {
-                        // the sticky listener goes first: if the clear is
+                        // the pin key before anything: what it sealed never
+                        // opens again, whatever the clear leaves. a keystore
+                        // that hangs gets half a second, never the clear
+                        // itself, which takes the key with the rest
+                        PinKey.dropWithin(500)
+                        // then the sticky listener: if the clear is
                         // refused and dart exits, nothing brings the app back
                         try {
                             HaloListenerService.stop(applicationContext)
@@ -515,6 +557,15 @@ class MainActivity : FlutterFragmentActivity() {
                             .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
                         val ok = try { am.clearApplicationUserData() } catch (e: Exception) { false }
                         result.success(ok)
+                    }
+                    // the home screen's icon and name. android leaves the
+                    // open screen up (DONT_KILL_APP), so kryfo closes and
+                    // opens again itself, through the entry now on: what
+                    // the shade and recents held named the old one
+                    "appIconSet" -> {
+                        val ok = AppIcon.set(this, call.argument<String>("icon"))
+                        result.success(ok)
+                        if (ok) ReopenActivity.start(this)
                     }
                     // a new process: a call stuck in a plugin's thread holds
                     // every call after it until this one is gone
@@ -818,9 +869,12 @@ class MainActivity : FlutterFragmentActivity() {
             type = "application/octet-stream"
             putExtra(Intent.EXTRA_TITLE, name)
             // a backup starts in the phone's own Download folder: a file made
-            // from the dialog's Downloads view can list there as 0 B
-            SaveDoc.startIn(backup)?.let {
-                putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI, Uri.parse(it))
+            // from the dialog's Downloads view can list there as 0 B. the
+            // extra is api 26, and startIn is null below it too
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                SaveDoc.startIn(backup)?.let {
+                    putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI, Uri.parse(it))
+                }
             }
         }
         val p = SaveDoc.begin(path) { result.success(it) }
@@ -914,20 +968,10 @@ class MainActivity : FlutterFragmentActivity() {
                 MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
             else
                 MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-            val values = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, name)
-                put(MediaStore.MediaColumns.MIME_TYPE, mime)
-                put(
-                    MediaStore.MediaColumns.RELATIVE_PATH,
-                    if (video) "Movies/Kryfo" else "Pictures/Kryfo"
-                )
-                put(MediaStore.MediaColumns.IS_PENDING, 1)
-            }
-            val uri = contentResolver.insert(collection, values) ?: return false
+            val uri = contentResolver.insert(collection, SavePlace.newRow(this, name, mime))
+                ?: return false
             contentResolver.openOutputStream(uri)?.use { it.write(bytes) } ?: return false
-            values.clear()
-            values.put(MediaStore.MediaColumns.IS_PENDING, 0)
-            contentResolver.update(uri, values, null, null)
+            contentResolver.update(uri, SavePlace.doneRow(), null, null)
             true
         } catch (e: Exception) {
             false
@@ -1016,7 +1060,25 @@ class MainActivity : FlutterFragmentActivity() {
 
     // android's own notification page for kryfo. the permission dialog is
     // gone for good once the answer is final, so this is the only way back.
-    private fun openNotificationSettings(): Boolean {
+    // with [channel], that channel's page: its sound and vibration are
+    // android's to change once it is made, not the app's
+    private fun openNotificationSettings(channel: String? = null): Boolean {
+        if (channel != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val nm = getSystemService(android.app.NotificationManager::class.java)
+            if (nm?.getNotificationChannel(channel) != null) {
+                try {
+                    startActivity(
+                        Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).apply {
+                            putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                            putExtra(Settings.EXTRA_CHANNEL_ID, channel)
+                        }
+                    )
+                    return true
+                } catch (e: Exception) {
+                    // the app's page below has every channel on it
+                }
+            }
+        }
         // the per-app notification page arrives in api 26. below that, and
         // on a build that does not carry it, the app details page has the
         // same switch one tap deeper.

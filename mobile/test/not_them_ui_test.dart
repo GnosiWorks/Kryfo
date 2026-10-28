@@ -14,7 +14,14 @@ import 'package:kryfo/key_number.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
-    show HaloDb, appState, kNameAsk, useDatabasesForTest, useEngineForTest;
+    show
+        HaloDb,
+        appState,
+        kNameAsk,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateRefresh;
 import 'package:kryfo/screens/blocked_screen.dart';
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/key_verification_screen.dart';

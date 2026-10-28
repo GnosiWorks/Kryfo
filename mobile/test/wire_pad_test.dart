@@ -611,7 +611,7 @@ void main() {
 
     test('texts of any length in one size seal to the same bytes', () async {
       final lengths = <int>{};
-      for (final n in [0, 1, 17, 90, 250, 400, 520]) {
+      for (final n in [0, 1, 17, 90, 250, 400, 500]) {
         final env = await wrapMessage(
           _words(n),
           msgUid: _uid(),

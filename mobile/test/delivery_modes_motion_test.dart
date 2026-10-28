@@ -8,8 +8,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show appState;
-import 'package:kryfo/screens/getting_messages_screen.dart';
+import 'package:kryfo/main.dart' show appState, AppStateDelivery;
+import 'package:kryfo/screens/notifications_screen.dart';
 import 'package:kryfo/screens/modes_screen.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/motion.dart' show BreathDot;
@@ -112,7 +112,7 @@ void main() {
       // the relay has answered, so the helper card has no check running
       appState.relaySaidNoForTest = true;
       addTearDown(() => appState.relaySaidNoForTest = false);
-      await t.pumpWidget(framed(const GettingMessagesScreen()));
+      await t.pumpWidget(framed(const NotificationsScreen()));
       await t.pump(const Duration(seconds: 1));
       await t.pump(const Duration(milliseconds: 500));
       expect(find.byType(BreathDot), findsNothing);
@@ -124,7 +124,7 @@ void main() {
       t,
     ) async {
       phone(t);
-      await t.pumpWidget(framed(const GettingMessagesScreen(), still: true));
+      await t.pumpWidget(framed(const NotificationsScreen(), still: true));
       await t.pump(const Duration(seconds: 1));
       await t.pump(const Duration(milliseconds: 500));
       expect(find.text(l10n.gettingMessagesHelperChecking), findsOneWidget);

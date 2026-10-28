@@ -1,5 +1,6 @@
 import com.android.build.gradle.internal.api.ApkVariantOutputImpl
 import java.io.FileInputStream
+import java.security.MessageDigest
 import java.util.Base64
 import java.util.Properties
 
@@ -17,13 +18,63 @@ val keystoreProperties = Properties().apply {
     }
 }
 
-// the google play build: --dart-define=KRYFO_STORE=play. read from the define
-// the dart side reads, so the two halves cannot disagree. every other build
-// leaves this false and comes out as before
-val playStore = (project.findProperty("dart-defines") as String?)
-    ?.split(",")
-    ?.any { String(Base64.getDecoder().decode(it)) == "KRYFO_STORE=play" }
-    ?: false
+// the play build was a dart define once. a script that still passes it would
+// get a foss bundle under play's name, so it stops here
+if ((project.findProperty("dart-defines") as String?)
+        ?.split(",")
+        ?.any { String(Base64.getDecoder().decode(it)).startsWith("KRYFO_STORE=") } == true
+) {
+    throw GradleException("KRYFO_STORE is gone. build the play bundle with --flavor play")
+}
+
+// google push in the play build: the firebase project's google-services.json
+// lives outside the repo (BUILDING.md), and only its few public values go into
+// the play build's resources, which FirebaseApp reads. no google-services
+// plugin. a build of foss tasks alone never opens the file
+val googleServicesFile: File? = listOfNotNull(
+    System.getenv("KRYFO_GOOGLE_SERVICES")?.takeIf { it.isNotEmpty() }?.let { File(it) },
+    file("src/play/google-services.json"),
+    File(System.getProperty("user.home"), ".kryfo-secrets/play/google-services.json"),
+).firstOrNull { it.isFile }
+val fossTasksOnly = gradle.startParameter.taskNames.let { t ->
+    t.isNotEmpty() && t.all { it.contains("foss", ignoreCase = true) }
+}
+// the values, or why there are none
+val firebaseValues: Result<Map<String, String>> = when (val f = googleServicesFile) {
+    null -> if (fossTasksOnly) Result.success(emptyMap()) else Result.failure(GradleException(
+        "google-services.json for the play build is missing.\n" +
+            "put the firebase project's file at ~/.kryfo-secrets/play/google-services.json\n" +
+            "or name it in KRYFO_GOOGLE_SERVICES. it never goes in git, and foss builds do not need it."
+    ))
+    else -> if (fossTasksOnly) Result.success(emptyMap()) else runCatching { firebaseValuesOf(f, "app.kryfo") }
+}
+
+fun firebaseValuesOf(f: File, pkg: String): Map<String, String> {
+    @Suppress("UNCHECKED_CAST")
+    val j = groovy.json.JsonSlurper().parse(f) as Map<String, Any?>
+    @Suppress("UNCHECKED_CAST")
+    val info = j["project_info"] as? Map<String, Any?> ?: emptyMap()
+    @Suppress("UNCHECKED_CAST")
+    val client = (j["client"] as? List<Map<String, Any?>>)?.firstOrNull {
+        val ci = it["client_info"] as? Map<String, Any?>
+        (ci?.get("android_client_info") as? Map<String, Any?>)?.get("package_name") == pkg
+    } ?: throw GradleException("${f.name} has no android app $pkg: download it again from the firebase console")
+    val appId = (client["client_info"] as Map<*, *>)["mobilesdk_app_id"] as? String
+    val apiKey = (client["api_key"] as? List<*>)?.firstNotNullOfOrNull { (it as? Map<*, *>)?.get("current_key") as? String }
+    val out = linkedMapOf(
+        "google_app_id" to appId,
+        "gcm_defaultSenderId" to info["project_number"] as? String,
+        "google_api_key" to apiKey,
+        "project_id" to info["project_id"] as? String,
+    )
+    val missing = out.filterValues { it.isNullOrEmpty() }.keys
+    if (missing.isNotEmpty()) throw GradleException("${f.name} lacks ${missing.joinToString(", ")}")
+    // what resources take: letters, digits and the few marks fcm's ids use
+    out.values.forEach {
+        if (!Regex("[A-Za-z0-9:_.-]+").matches(it!!)) throw GradleException("${f.name} holds a value no resource can")
+    }
+    return out.mapValues { it.value!! }
+}
 
 android {
     lint {
@@ -49,6 +100,10 @@ android {
     packaging {
         jniLibs {
             keepDebugSymbols += "**/libhalo.so"
+            // voice transcripts are off: a stray copy in jniLibs never ships
+            excludes += "**/libkryfo_voice.so"
+            // the shim's build script checks these exact bytes
+            keepDebugSymbols += "**/libkryfo_signal.so"
         }
     }
     compileSdk = flutter.compileSdkVersion
@@ -78,16 +133,28 @@ android {
         applicationId = "app.kryfo"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        // play gets one bundle per version, above the per-abi apks (N*10+1
-        // to +3, room left to +8) and below the next version's
-        versionCode = if (playStore) flutter.versionCode * 10 + 9 else flutter.versionCode
+        versionCode = flutter.versionCode
         versionName = flutter.versionName
         // the launcher name, see the label check below
         manifestPlaceholders["appLabel"] = "Kryfo"
     }
 
-    if (playStore) {
-        sourceSets.getByName("release").manifest.srcFile("src/play/AndroidManifest.xml")
+    // foss is what f-droid, github and the site ship, with no google code.
+    // play is the google play build: its code and dependencies go only in
+    // src/play and playImplementation, so foss never sees them. flutter hands
+    // the flavor to dart as well (lib/store.dart), so the halves agree
+    flavorDimensions += "store"
+    productFlavors {
+        create("foss") {
+            dimension = "store"
+        }
+        create("play") {
+            dimension = "store"
+            // play gets one bundle per version, above the per-abi apks
+            // (N*10+1 to +3, room left to +8) and below the next version's
+            versionCode = flutter.versionCode * 10 + 9
+            firebaseValues.getOrNull()?.forEach { (k, v) -> resValue("string", k, v) }
+        }
     }
 
     signingConfigs {
@@ -126,6 +193,15 @@ android {
 flutter {
     source = "../.."
 }
+
+// kotlin puts the module name into internal names, and the flavors turned
+// app_release into app_fossRelease. r8's code is the same either way but
+// its map id in classes.dex is not, so release builds keep the old name
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    if (name == "compileFossReleaseKotlin" || name == "compilePlayReleaseKotlin") {
+        compilerOptions.moduleName.set("app_release")
+    }
+}
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     // the camera shrink reads the orientation tag. the platform class is
@@ -133,6 +209,9 @@ dependencies {
     implementation("androidx.exifinterface:exifinterface:1.4.2")
     // the photo picker check. the version image_picker_android brings
     implementation("androidx.activity:activity:1.12.4")
+    // google push, the play build only: firebase's messaging and none of its
+    // other parts. foss never sees it (RELEASING.md checks the apk)
+    "playImplementation"("com.google.firebase:firebase-messaging:26.0.0")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.16.1")
 }
@@ -151,6 +230,86 @@ tasks.named("preBuild") {
                     "    cd engine && ./build.sh\n" +
                     "see BUILDING.md."
             )
+        }
+        checkSignalShim()
+    }
+}
+
+// the libsignal shim, built in this tree from this tree's crate: the stamp
+// build-android.sh leaves names the library's sha256 and the crate's source.
+// a library copied from another checkout or built from older code is refused
+fun checkSignalShim() {
+    val abis = listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+    val rebuild = "run mobile/native/kryfo_signal/build-android.sh (see BUILDING.md)"
+    val missing = abis.filter { !file("src/main/jniLibs/$it/libkryfo_signal.so").exists() }
+    if (missing.isNotEmpty()) {
+        throw GradleException(
+            "libkryfo_signal.so missing for ${missing.joinToString(", ")}.\n$rebuild"
+        )
+    }
+    // the fetch step of repro/release.sh builds with empty placeholders
+    if (System.getenv("HALO_STEP") == "fetch") return
+    val crate = rootProject.file("../native/kryfo_signal")
+    val tree = ProcessBuilder("bash", File(crate, "build-android.sh").path, "--tree-id")
+        .redirectErrorStream(true).start()
+    val treeId = tree.inputStream.bufferedReader().readText().trim()
+    if (tree.waitFor() != 0) throw GradleException("build-android.sh --tree-id failed: $treeId")
+    for (abi in abis) {
+        val so = file("src/main/jniLibs/$abi/libkryfo_signal.so")
+        val stamp = file("src/main/jniLibs/$abi/libkryfo_signal.stamp")
+        val fields = if (stamp.exists()) {
+            stamp.readLines().mapNotNull {
+                val parts = it.split(" ", limit = 2)
+                if (parts.size == 2) parts[0] to parts[1] else null
+            }.toMap()
+        } else emptyMap()
+        val sha = MessageDigest.getInstance("SHA-256")
+            .digest(so.readBytes()).joinToString("") { "%02x".format(it) }
+        when {
+            fields.isEmpty() -> throw GradleException("$abi/libkryfo_signal.so has no stamp.\n$rebuild")
+            fields["sha256"] != sha -> throw GradleException(
+                "$abi/libkryfo_signal.so is not the library its stamp names.\n$rebuild"
+            )
+            fields["tree"] != treeId -> throw GradleException(
+                "$abi/libkryfo_signal.so was built from other source than this checkout's.\n$rebuild"
+            )
+        }
+    }
+}
+
+// a play build without the firebase values stops here, saying where the
+// file goes. foss never asks
+android.applicationVariants.configureEach {
+    val variant = this
+    if (variant.flavorName == "play") {
+        variant.preBuildProvider.configure {
+            doFirst { firebaseValues.getOrThrow() }
+        }
+    }
+    // a play release seals to the gateway's own key, never the development
+    // one: with it every endpoint would answer 404. KRYFO_DEV_GATEWAY=1 lets
+    // a test release through
+    if (variant.flavorName == "play" && variant.buildType.name == "release") {
+        variant.preBuildProvider.configure {
+            doFirst {
+                val src = rootProject.file("../lib/google_push.dart").readText()
+                // the values, however they are written: the dev key named, or
+                // its literal copied in
+                fun value(name: String): String? =
+                    Regex("""const\s+$name\s*=\s*(?:'([^']*)'|"([^"]*)"|(\w+))\s*;""")
+                        .find(src)?.groupValues?.let { g -> g[1].ifEmpty { g[2] }.ifEmpty { g[3] } }
+                val devKey = value("kPushGatewayDevPub")
+                var pinned = value("kPushGatewayPub")
+                if (pinned == "kPushGatewayDevPub") pinned = devKey
+                val dev = pinned == null || pinned == devKey
+                if (dev && System.getenv("KRYFO_DEV_GATEWAY") != "1") {
+                    throw GradleException(
+                        "the play release pins the development push gateway key.\n" +
+                            "pin the server's key in mobile/lib/google_push.dart " +
+                            "(kPushGatewayPub, from kryfo-push pubkey on the server)."
+                    )
+                }
+            }
         }
     }
 }
@@ -250,7 +409,7 @@ android.applicationVariants.configureEach {
         val abiVersionCode =
             abiCodes[output.filters.find { it.filterType == "ABI" }?.identifier]
         // play builds a bundle and keeps its own code
-        if (abiVersionCode != null && !playStore) {
+        if (abiVersionCode != null && variant.flavorName == "foss") {
             (output as ApkVariantOutputImpl).versionCodeOverride =
                 variant.versionCode * 10 + abiVersionCode
         }

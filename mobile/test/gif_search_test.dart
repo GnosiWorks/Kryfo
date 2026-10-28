@@ -20,7 +20,13 @@ import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/l10n/numbers.dart';
 import 'package:kryfo/quiet_wait.dart';
 import 'package:kryfo/main.dart'
-    show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloDb,
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/stickers/sticker_pack.dart';
 import 'package:kryfo/stickers/sticker_recents.dart';

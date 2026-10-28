@@ -10,7 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/address_text.dart';
 import 'package:kryfo/badge_client.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show HaloEngine, appState, useEngineForTest;
+import 'package:kryfo/main.dart'
+    show HaloEngine, appState, useEngineForTest, AppStateRoute;
 import 'package:kryfo/screens/donate_screen.dart';
 import 'package:kryfo/screens/profile_screen.dart';
 import 'package:kryfo/supporter.dart';

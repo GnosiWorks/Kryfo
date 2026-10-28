@@ -68,6 +68,10 @@ bool motionStill(BuildContext context) =>
 
 enum TorStatus { off, starting, bootstrapped, publishing, reachable }
 
+/// what the route picture shows over tor's own stage: nothing, a route no
+/// relay has answered through, or no network
+enum GraphHold { none, relay, offline }
+
 enum PrivacyMode { fast, normal, private }
 
 // the shared screen transition: a short rise and fade. with reduced motion
@@ -140,15 +144,19 @@ int parseRouteGen(String raw) {
 // ---- tor warmup graph ----
 // 4 onions on a zig-zag wave (SELF/GUARD/MIDDLE/HSDIR). the curve fills as
 // tor progresses, the active onion glows with expanding rings, and on
-// reachable everything turns green and pulses in sequence.
+// reachable everything turns green and pulses in sequence. a hold says what
+// tor's stage alone does not: a route up that no relay has answered through
+// stays amber, and with no network the picture rests
 
 class TorWarmupGraph extends StatefulWidget {
   final TorStatus status;
   final int bootstrapPct;
+  final GraphHold hold;
   const TorWarmupGraph({
     super.key,
     required this.status,
     this.bootstrapPct = 0,
+    this.hold = GraphHold.none,
   });
   @override
   State<TorWarmupGraph> createState() => _TorWarmupGraphState();
@@ -166,15 +174,36 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
     _ctl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2400),
-    )..repeat();
+    );
     _phase = _targetPhase(widget.status);
+  }
+
+  // with reduced motion the picture rests: no glow running round, and a
+  // new stage shows at once
+  bool _rest = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _rest = motionStill(context);
+    if (_rest) {
+      _ctl.stop();
+      _phaseTimer?.cancel();
+      _phase = _targetPhase(widget.status);
+    } else if (!_ctl.isAnimating) {
+      _ctl.repeat();
+    }
   }
 
   @override
   void didUpdateWidget(TorWarmupGraph old) {
     super.didUpdateWidget(old);
     final target = _targetPhase(widget.status);
-    if (target != _phase) _walkTo(target);
+    if (_rest) {
+      _phase = target;
+    } else if (target != _phase) {
+      _walkTo(target);
+    }
   }
 
   @override
@@ -247,6 +276,8 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   }
 
   String get _label {
+    if (widget.hold == GraphHold.relay) return l10n.motionNoRelayYet;
+    if (widget.hold == GraphHold.offline) return l10n.motionOffline;
     switch (widget.status) {
       case TorStatus.off:
         return l10n.motionStandby;
@@ -262,6 +293,8 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   }
 
   String get _italic {
+    if (widget.hold == GraphHold.relay) return l10n.motionTheRouteIsUp;
+    if (widget.hold == GraphHold.offline) return l10n.motionNoNetwork;
     switch (widget.status) {
       case TorStatus.off:
         return l10n.motionPreparingToConnect;
@@ -277,6 +310,8 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   }
 
   String get _help {
+    if (widget.hold == GraphHold.relay) return l10n.motionMessagesGoOnceARelay;
+    if (widget.hold == GraphHold.offline) return l10n.motionTorPicksUpAgain;
     switch (widget.status) {
       case TorStatus.off:
         return l10n.motionTorIsStartingIn;
@@ -292,6 +327,8 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   }
 
   String get _circuit {
+    if (widget.hold == GraphHold.relay) return l10n.motionOpen;
+    if (widget.hold == GraphHold.offline) return '\u2014';
     switch (widget.status) {
       case TorStatus.off:
         return '\u2014';
@@ -323,8 +360,9 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
     }
   }
 
-  bool get _green => widget.status == TorStatus.reachable;
-  bool get _standby => _phase == 0;
+  bool get _held => widget.hold != GraphHold.none;
+  bool get _green => widget.status == TorStatus.reachable && !_held;
+  bool get _standby => _phase == 0 || widget.hold == GraphHold.offline;
   // dark keeps its pale grey; light needs real ink
   Color get _still =>
       HaloColors.isLight ? HaloColors.text3 : const Color(0xFFE5E5E5);
@@ -942,80 +980,6 @@ class _OnionSpinPainter extends CustomPainter {
   @override
   bool shouldRepaint(_OnionSpinPainter old) =>
       old.t != t || old.phase != phase || old.color != color;
-}
-
-// ---- typing dots ----
-// unused on purpose: kryfo sends no typing signal over the wire, and the why
-// kryfo screen promises that. do not wire this to the transport.
-class TypingDots extends StatefulWidget {
-  const TypingDots({super.key});
-  @override
-  State<TypingDots> createState() => _TypingDotsState();
-}
-
-class _TypingDotsState extends State<TypingDots>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctl;
-  @override
-  void initState() {
-    super.initState();
-    _ctl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _ctl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: const BoxDecoration(
-        color: kSurface3,
-        borderRadius: BorderRadiusDirectional.only(
-          topStart: Radius.circular(14),
-          topEnd: Radius.circular(14),
-          bottomEnd: Radius.circular(14),
-          bottomStart: Radius.circular(4),
-        ),
-      ),
-      child: AnimatedBuilder(
-        animation: _ctl,
-        builder: (ctx, _) => Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _dot(0),
-            const SizedBox(width: 3),
-            _dot(0.18),
-            const SizedBox(width: 3),
-            _dot(0.36),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _dot(double phase) {
-    final ph = (_ctl.value + phase) % 1.0;
-    final dy = ph < 0.3 ? -3.0 * (math.sin(ph / 0.3 * math.pi)) : 0.0;
-    final op = 0.4 + (ph < 0.3 ? 0.6 * math.sin(ph / 0.3 * math.pi) : 0.0);
-    return Transform.translate(
-      offset: Offset(0, dy),
-      child: Container(
-        width: 5,
-        height: 5,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: kAmber.withValues(alpha: op),
-        ),
-      ),
-    );
-  }
 }
 
 // ---- status dot ----

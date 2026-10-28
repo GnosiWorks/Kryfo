@@ -19,6 +19,7 @@ import 'package:kryfo/tools/age_ffi.dart';
 import 'package:path/path.dart' as p;
 
 import 'host_engine.dart';
+import 'source_body.dart';
 
 const _pass = 'correct-horse-battery-staple';
 
@@ -365,7 +366,7 @@ void main() {
         return '';
       }
 
-      final main = File('lib/app/state.dart').readAsStringSync();
+      final main = sourceOf('lib/app/state.dart');
       for (final head in [
         'void lockingUp()',
         'Future<void> _sessionFor(PinResult r, {String? vaultKey}) async',

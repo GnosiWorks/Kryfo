@@ -29,7 +29,11 @@ import 'package:kryfo/main.dart'
         roomDoorColumns,
         sayRoomJoined,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateGroupLanes,
+        AppStateGroups,
+        AppStateReceive,
+        AppStateRooms;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/rooms.dart';
 import 'package:kryfo/router.dart';

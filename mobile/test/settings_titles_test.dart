@@ -15,23 +15,36 @@ import 'package:kryfo/atmosphere.dart';
 import 'package:kryfo/bridge_mode.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateBridges;
+import 'package:kryfo/devices/own_devices.dart' show ThisPhoneOnly;
+import 'package:kryfo/screens/linked_devices_screen.dart';
 import 'package:kryfo/screens/appearance_screen.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
-import 'package:kryfo/screens/getting_messages_screen.dart';
+import 'package:kryfo/screens/notifications_screen.dart';
+import 'package:kryfo/screens/icon_screen.dart';
+import 'package:kryfo/screens/licences_screen.dart';
 import 'package:kryfo/screens/restore_screen.dart';
 import 'package:kryfo/screens/settings_screen.dart';
+import 'package:kryfo/screens/translation_screen.dart';
 import 'package:kryfo/screens/transport_screen.dart';
 import 'package:kryfo/screens/wallpaper_sheet.dart';
 import 'package:kryfo/screens/why_kryfo_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';
+import 'package:kryfo/translate/hub.dart';
 import 'package:kryfo/wallpaper.dart';
 import 'package:kryfo/widgets/halo_rows.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart' show DevTestDb, devApp, devMem, devWorld;
 import 'narrow_settings.dart' show loadAppFonts;
+import 'translate_fakes.dart' show fakeHub;
 
 // the pages and sheets settings opens, and the ones they open in turn
 const _settingsFiles = {
@@ -48,13 +61,18 @@ const _settingsFiles = {
   'pins_screen',
   'lock_setup_screen',
   'pin_flow_screen',
+  'update_pins_screen',
   'hide_picker',
   'backup_screen',
   'restore_screen',
-  'getting_messages_screen',
+  'notifications_screen',
+  'icon_screen',
   'helper_sheet',
   'follow_section',
   'dev_about_sheet',
+  'translation_screen',
+  'licences_screen',
+  'linked_devices_screen',
 };
 
 // opened from there, but not settings: a chat, the home and the camera
@@ -139,6 +157,16 @@ class _SheetOpener extends StatelessWidget {
 
 final _pages = [
   _Page(
+    'linked devices',
+    () => const LinkedDevicesScreen(source: ThisPhoneOnly(phoneName: 'Phone')),
+    () => [],
+  ),
+  _Page(
+    'link a device',
+    () => const LinkDeviceScreen(),
+    () => [l10n.devicesHistory],
+  ),
+  _Page(
     'settings',
     () => const SettingsScreen(),
     () => [
@@ -147,10 +175,13 @@ final _pages = [
       l10n.settingsAppearance,
       l10n.settingsBackup,
       l10n.settingsVoice,
+      l10n.translateSettingsTitle,
       l10n.settingsAbout,
       l10n.settingsFollowTitle,
       l10n.settingsDangerZone,
     ],
+    // translation's section shows only with a hub
+    setUp: () => TranslationHub.instance = fakeHub().hub,
   ),
   _Page(
     'appearance',
@@ -204,9 +235,19 @@ final _pages = [
     },
   ),
   _Page(
-    'getting messages',
-    () => const GettingMessagesScreen(),
-    () => [l10n.gettingMessagesOnTheLockScreen],
+    'notifications',
+    () => const NotificationsScreen(),
+    () => [
+      l10n.notificationsHowTheyReachYou,
+      l10n.notificationsSoundAndVibration,
+      l10n.gettingMessagesWhatShows,
+      l10n.notificationsBatteryTips,
+    ],
+  ),
+  _Page(
+    'icon and notifications',
+    () => IconScreen(hideLine: () async => null),
+    () => [l10n.iconSectionTitle, l10n.settingsNotifications],
   ),
   _Page(
     'restore',
@@ -218,6 +259,21 @@ final _pages = [
     'why kryfo',
     () => const WhyKryfoScreen(),
     () => [l10n.whyKryfoTheHonestPart],
+  ),
+  _Page(
+    'translation',
+    () => TranslationScreen(hub: fakeHub().hub),
+    () => [
+      l10n.translatePacksSection,
+      l10n.translateLanguagesSection,
+      l10n.translateBehaviourSection,
+      l10n.translatePrivacyTitle,
+    ],
+  ),
+  _Page(
+    'licences',
+    () => const LicencesScreen(),
+    () => [l10n.licencesSignalTitle, l10n.licencesParts],
   ),
 ];
 
@@ -324,6 +380,7 @@ void main() {
     addTearDown(() => HaloColors.setLight(false));
     addTearDown(() => HaloColors.setAccent(HaloAccent.yellow));
     addTearDown(() => appState.bridgeSetupForTest = const BridgeSetup());
+    addTearDown(() => TranslationHub.instance = null);
   }
 
   group('source', () {

@@ -29,7 +29,9 @@ import 'package:kryfo/relay_poll.dart' show Reached;
 import 'package:kryfo/rooms.dart' show kRoomJoinWait, kRoomRecent, roomUidPart;
 import 'package:kryfo/scam_shield.dart' show shieldRowOpen;
 import 'package:kryfo/router.dart';
-import 'package:kryfo/signal_session.dart' show signalSession;
+import 'package:kryfo/signal_session.dart'
+    show KeyHeld, NotSettled, StartingAfresh, signalSession;
+import 'package:kryfo/typing.dart' show capsAfter;
 import 'package:kryfo/stranger_gate.dart'
     show ShelfFull, Shelved, kShelfPlaces, shelfVerdict;
 
@@ -149,6 +151,8 @@ class ArrivalSeal implements VaultSeal {
 }
 
 class ArrivalIo implements AppIo {
+  @override
+  Future<String> pinFirst(List<String> xPubs) async => 'ok';
   // what a cipher opens to, and under whom
   final opens = <String, (String, String)>{};
   final tries = <String>[];
@@ -262,6 +266,33 @@ class ArrivalIo implements AppIo {
   Future<String> firstContactSend(String xPub, String fc, String cipher) async {
     sent.add(('fc $xPub', cipher));
     return 'ok';
+  }
+
+  // typing frames: what was sealed for whom, how a seal is turned down
+  // ('held', 'afresh' or 'opener'), and what the door answers
+  final typingSeals = <String>[];
+  String? typingRefuse;
+  String typingAnswer = 'ok';
+  void Function()? onTypingSeal;
+  @override
+  Future<String> typingSeal(String peer, String plain) async {
+    onTypingSeal?.call();
+    switch (typingRefuse) {
+      case 'held':
+        throw KeyHeld(peer);
+      case 'afresh':
+        throw StartingAfresh(peer);
+      case 'opener':
+        throw NotSettled(peer);
+    }
+    typingSeals.add('$peer $plain');
+    return 'typing to $peer';
+  }
+
+  @override
+  Future<String> typingSend(String onion, String cipher) async {
+    sent.add(('typing $onion', cipher));
+    return typingAnswer;
   }
 
   @override
@@ -2101,6 +2132,34 @@ class ArrivalRows implements HaloDb {
   Future<void> dropMediaWant(String mediaId) async {
     _hit('dropMediaWant', mediaId, null);
     wants.remove(mediaId);
+  }
+
+  // what a contact's phone understands, as typing.dart keeps it
+  var capsWrites = 0;
+  void Function()? onTakeCaps;
+  @override
+  Future<bool> takeCaps(
+    String peer, {
+    required List<String>? caps,
+    required bool counts,
+    int? written,
+  }) async {
+    _hit('takeCaps', peer, null);
+    onTakeCaps?.call();
+    final r = people[peer];
+    if (r == null || r['accepted'] != 1) return false;
+    final next = capsAfter(
+      (r['caps'] as String?) ?? '',
+      (r['caps_at'] as int?) ?? 0,
+      carried: caps,
+      counts: counts,
+      written: written,
+    );
+    if (next == null) return false;
+    r['caps'] = next.caps;
+    r['caps_at'] = next.at;
+    capsWrites++;
+    return true;
   }
 
   // a chat's screenshot block, as its row says

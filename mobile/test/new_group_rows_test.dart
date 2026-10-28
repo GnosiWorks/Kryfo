@@ -2,6 +2,8 @@
 // picking people for a new group: each row shows the name they were given
 // with the id under it, a tap answers with a click and a tick, and with
 // nobody to pick the page shows the same ring the other empty lists do.
+// + New on home with nobody to pick asks to add someone first and makes
+// nothing.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -123,5 +125,101 @@ void main() {
     expect(find.byType(BreathingRing), findsOneWidget);
     expect(find.text(l10n.newGroupAddAtLeastOne), findsOneWidget);
     await t.pumpWidget(const SizedBox());
+  });
+
+  group('+ New on home', () {
+    // a home page whose + New opens the way the shell does
+    Widget home(List<String> added) => MaterialApp(
+      theme: buildHaloTheme(),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Builder(
+        builder: (context) => Scaffold(
+          body: Center(
+            child: TextButton(
+              onPressed: () =>
+                  openNewGroup(context, onAdd: () async => added.add('add')),
+              child: const Text('new'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    for (final (name, people) in [
+      ('no contacts', <ContactPreview>[]),
+      (
+        'only blocked contacts',
+        [
+          ContactPreview(
+            haloId: 'moss-tide-lamp',
+            avatarSeed: 'm',
+            blocked: true,
+          ),
+        ],
+      ),
+    ]) {
+      testWidgets('with $name it asks to add someone, and makes nothing', (
+        t,
+      ) async {
+        listen(t);
+        appState.contacts = people;
+        final added = <String>[];
+        await t.pumpWidget(home(added));
+        await t.tap(find.text('new'));
+        await t.pumpAndSettle();
+        expect(find.byType(NewGroupScreen), findsNothing);
+        expect(find.text(l10n.newGroupNeedsContacts), findsOneWidget);
+        expect(find.text(l10n.newGroupAddSomeoneFirst), findsOneWidget);
+        expect(haptics, contains('HapticFeedbackType.selectionClick'));
+
+        // not now: back where it was, nothing asked for
+        await t.tap(find.text(l10n.homeNotNow));
+        await t.pumpAndSettle();
+        expect(find.text(l10n.newGroupNeedsContacts), findsNothing);
+        expect(added, isEmpty);
+
+        // add someone: the add sheet's way in
+        await t.tap(find.text('new'));
+        await t.pumpAndSettle();
+        await t.tap(find.text(l10n.homeAddSomeone));
+        await t.pumpAndSettle();
+        expect(added, ['add']);
+        expect(find.byType(NewGroupScreen), findsNothing);
+        await t.pumpWidget(const SizedBox());
+      });
+    }
+
+    testWidgets('with one contact it opens the picker', (t) async {
+      listen(t);
+      appState.contacts = [
+        ContactPreview(haloId: 'wren-velvet-march', avatarSeed: 'w'),
+      ];
+      final added = <String>[];
+      await t.pumpWidget(home(added));
+      await t.tap(find.text('new'));
+      await t.pumpAndSettle();
+      expect(find.byType(NewGroupScreen), findsOneWidget);
+      expect(find.text(l10n.newGroupNeedsContacts), findsNothing);
+      expect(added, isEmpty);
+      await t.pumpWidget(const SizedBox());
+    });
+
+    test('blocked people are nobody to make a group with', () {
+      expect(canMakeGroupWith(const []), isFalse);
+      expect(
+        canMakeGroupWith([
+          ContactPreview(haloId: 'a', avatarSeed: 'a', blocked: true),
+        ]),
+        isFalse,
+      );
+      expect(
+        canMakeGroupWith([
+          ContactPreview(haloId: 'a', avatarSeed: 'a', blocked: true),
+          ContactPreview(haloId: 'b', avatarSeed: 'b'),
+        ]),
+        isTrue,
+      );
+    });
   });
 }

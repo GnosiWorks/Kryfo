@@ -12,10 +12,11 @@ import 'source_body.dart';
 
 const _kt = 'android/app/src/main/kotlin/app/kryfo';
 
-// the intent filters of the main screen, each as written
+// the intent filters of kryfo's launcher entry, each as written. every
+// other entry has the same (app_icon_manifest_test.dart)
 List<String> _filters(String manifest) {
   final at = manifest.indexOf('android:name=".MainActivity"');
-  final end = manifest.indexOf('</activity>', at);
+  final end = manifest.indexOf('</activity-alias>', at);
   final main = manifest.substring(at, end);
   return RegExp(
     r'<intent-filter[\s\S]*?</intent-filter>',
@@ -38,7 +39,7 @@ void main() {
     final media = sends.singleWhere((f) => f.contains('image/*'));
     expect(media, contains('video/*'));
     expect(media, isNot(contains('text/')));
-    // no label or icon of its own: the share sheet shows the app's
+    // no label or icon of its own: the share sheet shows the entry's
     expect(text, isNot(contains('android:label')));
     expect(text, isNot(contains('android:icon')));
     expect(manifest, contains(r'android:label="${appLabel}"'));

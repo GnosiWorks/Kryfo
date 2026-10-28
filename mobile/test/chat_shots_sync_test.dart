@@ -8,7 +8,14 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/chat_shots.dart';
 import 'package:kryfo/container.dart';
-import 'package:kryfo/main.dart' show AppState, HaloDb, useDatabasesForTest;
+import 'package:kryfo/main.dart'
+    show
+        AppState,
+        HaloDb,
+        useDatabasesForTest,
+        AppStateRoute,
+        AppStateScreen,
+        AppStateReceive;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
@@ -183,6 +190,29 @@ void main() {
       await amy.wire('bob');
       await text(amy, bob, 'a2');
       expect(bob.shots('amy').on, isTrue);
+    },
+  );
+
+  test(
+    'a message through the developer chat says nothing of their phone',
+    () async {
+      // bob's phone knows the block: his chat said so
+      await text(bob, amy, 'b1');
+      expect(amy.shots('bob').peerCan, isTrue);
+      final was = amy.shots('bob').can;
+      // later he writes to amy's developer chat, whose frames are rebuilt
+      // without the word but with the support marker
+      bob.use();
+      final w = await wrapMessage(
+        'hi from the dev chat',
+        msgUid: 'b2',
+        supportMarker: 1,
+        sender: asSender(bob.me),
+        writtenAt: DateTime.now().millisecondsSinceEpoch + 5000,
+      );
+      await amy.take('bob', [w]);
+      expect(amy.shots('bob').peerCan, isTrue);
+      expect(amy.shots('bob').can, was);
     },
   );
 

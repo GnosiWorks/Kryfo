@@ -23,6 +23,7 @@ import 'package:kryfo/main.dart'
     show HaloDb, HaloEngine, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/notifications.dart' show loadHideNotifContent;
 import 'package:kryfo/scam_prefs.dart';
+import 'package:kryfo/typing.dart' show loadTypingOn;
 import 'package:kryfo/session.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -151,6 +152,7 @@ const _changedPrefs = <String, Object>{
   'notif_hide_content': false,
   'kryfo.scamshield.on': false,
   'kryfo.intro.accept': false,
+  'kryfo.typing.on': false,
   'delivery_mode': 'checkins',
   'app_locale': 'de',
 };
@@ -164,6 +166,9 @@ const _phoneOnly = <String, Object>{
   'delivery_last_check': 5678,
   'delivery_last_wake': 91011,
   'hb.listen': 'x',
+  // plain notifications and the icon belong to the phone
+  'notif_plain': true,
+  'icon_changed': true,
 };
 
 const _everydaySettings = {
@@ -174,6 +179,7 @@ const _everydaySettings = {
   Carried.previewsHidden: false,
   Carried.shield: false,
   Carried.intros: false,
+  Carried.typing: false,
   Carried.route: 'balanced',
   Carried.delivery: 'checkins',
   Carried.language: 'de',
@@ -187,6 +193,7 @@ const _defaults = {
   Carried.previewsHidden: true,
   Carried.shield: true,
   Carried.intros: true,
+  Carried.typing: true,
   Carried.route: 'private',
   Carried.delivery: 'always',
 };
@@ -264,6 +271,7 @@ void main() {
       'd.notif_hide_content': true,
       'd.kryfo.scamshield.on': true,
       'd.kryfo.intro.accept': true,
+      'd.kryfo.typing.on': true,
       'd.supporter_tier': 'decoy',
     });
     FlutterSecureStorage.setMockInitialValues({
@@ -324,6 +332,7 @@ void main() {
       Carried.previewsHidden: await loadHideNotifContent(c),
       Carried.shield: await loadScamShieldOn(c),
       Carried.intros: await loadAcceptIntros(c),
+      Carried.typing: await loadTypingOn(c),
       Carried.route: await st.read(key: 'send_mode') ?? 'private',
       Carried.delivery: (await loadDeliveryMode()).name,
       Carried.language: prefs.getString('app_locale') ?? 'system',
@@ -705,6 +714,7 @@ void main() {
         Carried.previewsHidden: true,
         Carried.shield: true,
         Carried.intros: true,
+        Carried.typing: true,
       });
       final text = jsonEncode(d.manifest);
       for (final k in _never.keys) {

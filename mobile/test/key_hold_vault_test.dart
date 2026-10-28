@@ -30,7 +30,10 @@ import 'package:kryfo/main.dart'
         processPeerBundle,
         session,
         signalDecrypt,
-        useDatabasesForTest;
+        useDatabasesForTest,
+        AppStateOutbox,
+        AppStateGroupLanes,
+        AppStateVault;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';

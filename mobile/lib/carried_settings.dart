@@ -28,6 +28,7 @@ const _kRoute = 'send_mode';
 const _kVoice = 'disguise_on';
 const _kPreviews = 'notif_hide_content';
 const _kShield = 'kryfo.scamshield.on';
+const _kTyping = 'kryfo.typing.on';
 const _kIntros = 'kryfo.intro.accept';
 
 // the routes a file may set. fast still asks again on a new install
@@ -52,6 +53,7 @@ abstract final class Carried {
   static const previewsHidden = 'previews_hidden';
   static const shield = 'shield';
   static const intros = 'intros';
+  static const typing = 'typing';
 }
 
 /// the settings of [c] and of the phone as they read now, every one with
@@ -68,6 +70,7 @@ Future<Map<String, Object>> readCarriedSettings(HaloContainer c) async {
     Carried.previewsHidden: prefs.getBool(c.key(_kPreviews)) ?? true,
     Carried.shield: prefs.getBool(c.key(_kShield)) ?? true,
     Carried.intros: prefs.getBool(c.key(_kIntros)) ?? true,
+    Carried.typing: prefs.getBool(c.key(_kTyping)) ?? true,
   };
   final accent = await st.read(key: c.key(_kAccent)) ?? 'yellow';
   if (_kAccents.contains(accent)) out[Carried.accent] = accent;
@@ -112,6 +115,7 @@ Future<bool> landCarriedSettings(
   await pref(Carried.previewsHidden, _kPreviews);
   await pref(Carried.shield, _kShield);
   await pref(Carried.intros, _kIntros);
+  await pref(Carried.typing, _kTyping);
   if (!phone) return true;
   if (carried[Carried.screenshots] == true) {
     await st.write(key: c.key(_kShots), value: 'true');

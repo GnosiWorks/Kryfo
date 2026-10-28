@@ -5,4 +5,9 @@
     <string name="service_text">Your encrypted line stays open so messages arrive</string>
     <string name="channel_name">Staying connected</string>
     <string name="channel_description">Keeps Kryfo connected so encrypted messages arrive while it is closed. Turning this off stops delivery.</string>
+    <string name="icon_notes">Notes</string>
+    <string name="icon_weather">Weather</string>
+    <string name="icon_tasks">Tasks</string>
+    <string name="icon_news">News</string>
+    <string name="service_title_plain">Active</string>
 </resources>

@@ -12,7 +12,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show AppIo, AppState, HaloDb, useDatabasesForTest;
+    show
+        AppIo,
+        AppState,
+        HaloDb,
+        useDatabasesForTest,
+        AppStateMessages,
+        AppStateVault,
+        AppStateReceive;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';
@@ -142,6 +149,22 @@ class _Seal implements VaultSeal {
 }
 
 class _Io implements AppIo {
+  // nothing here types
+  @override
+  Future<String> typingSeal(String peer, String plain) =>
+      throw UnimplementedError('typingSeal');
+  @override
+  Future<String> typingSend(String onion, String cipher) =>
+      throw UnimplementedError('typingSend');
+  // the pinned chats' keys the engine was told, each time
+  final pins = <List<String>>[];
+  @override
+  Future<String> pinFirst(List<String> xPubs) async {
+    pins.add([...xPubs]);
+    told.add('pins');
+    return 'ok';
+  }
+
   @override
   Future<String?> decryptIf(
     String peer,
@@ -196,7 +219,13 @@ class _Io implements AppIo {
   @override
   Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
   @override
-  void listen(String xPub, {bool fresh = false}) => listened.add(xPub);
+  void listen(String xPub, {bool fresh = false}) {
+    listened.add(xPub);
+    told.add('listen');
+  }
+
+  // listens and pin tellings, in the order they came
+  final told = <String>[];
   @override
   String edPub() => 'ed-me';
   @override
@@ -1544,6 +1573,55 @@ void main() {
       expect(w.redrawn, 0);
       expect(w.live.seen, hasLength(1));
     });
+  });
+
+  group('the public relays\' list', () {
+    // the engine keeps live sockets on the public relays for the pinned chats
+    // first. what it is told is the everyday rows' pins alone, so the vault
+    // opening or shutting changes no socket there
+    test(
+      'the vault opening or shutting changes nothing the engine is told',
+      () async {
+        final w = await _World.make();
+        w.live.people[_v]!['pinned'] = 1;
+        w.vault.people[_h]!['pinned'] = 1;
+        await w.app.subscribeKnown();
+        final listened = [...w.io.listened]..sort();
+        expect(w.io.pins, [
+          ['x-$_v'],
+        ]);
+        expect(listened, containsAll(['x-$_v', 'x-$_h']));
+        for (final open in [true, false, true]) {
+          w.io.listened.clear();
+          w.io.pins.clear();
+          w.io.dropped.clear();
+          if (open) {
+            await w.open();
+          } else {
+            w.close();
+          }
+          expect(w.io.listened, isEmpty);
+          expect(w.io.pins, isEmpty);
+          expect(w.io.dropped, isEmpty);
+          await w.app.subscribeKnown();
+          expect([...w.io.listened]..sort(), listened);
+          // the same pins as with the vault the other way: nothing new told
+          expect(w.io.pins, isEmpty);
+        }
+        // an unpin is told at the next listen, for the run after it
+        w.live.people[_v]!['pinned'] = 0;
+        await w.app.subscribeKnown();
+        expect(w.io.pins, [<String>[]]);
+      },
+    );
+  });
+
+  test('the pins are told before the first listen', () async {
+    final w = await _World.make();
+    w.live.people[_v]!['pinned'] = 1;
+    await w.app.subscribeKnown();
+    expect(w.io.told.first, 'pins');
+    expect(w.io.told.where((t) => t == 'listen'), isNotEmpty);
   });
 
   group('every way in', () {

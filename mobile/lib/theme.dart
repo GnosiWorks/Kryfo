@@ -103,8 +103,6 @@ enum HaloAccent {
       Color(0xFFFFFBF4),
       Color(0xFF824900),
     ),
-    bright: Color(0xFFE8960B),
-    brightDeep: Color(0xFFCC7006),
   ),
   grey(
     dark: AccentTones(
@@ -192,22 +190,9 @@ enum HaloAccent {
   );
 
   final AccentTones dark, light;
-  final Color? _bright, _brightDeep;
-  const HaloAccent({
-    required this.dark,
-    required this.light,
-    Color? bright,
-    Color? brightDeep,
-  }) : _bright = bright,
-       _brightDeep = brightDeep;
+  const HaloAccent({required this.dark, required this.light});
 
   AccentTones tones(bool light) => light ? this.light : dark;
-
-  // the bright card in tools, the same in both themes: the dark theme's
-  // tones unless the accent has its own
-  Color get bright => _bright ?? dark.accent;
-  Color get brightDeep => _brightDeep ?? dark.deep;
-  Color get onBright => dark.on;
 
   static HaloAccent byName(String? name) {
     for (final a in values) {
@@ -266,9 +251,6 @@ class HaloColors {
   // the accent's words on its own on colour (a chip or a button inside your
   // bubble): the accent itself, 4.5:1 there as its on colour is to it
   static Color get amberOnOn => _a.accent;
-  static Color get amberBright => _accent.bright;
-  static Color get amberBrightDeep => _accent.brightDeep;
-  static Color get onAmberBright => _accent.onBright;
 
   // the yellow, whatever the accent: avatars and the gold tier are
   // someone's look, not the app's
@@ -296,20 +278,34 @@ class HaloColors {
 // words keep their colour).
 bool get _joinedScript => const {'fa', 'ar'}.contains(l10nLocale.languageCode);
 
+// hindi's devanagari hangs a word from one line along its top, which
+// tracking breaks into pieces, and its font has no italic either
+bool get _devanagari => l10nLocale.languageCode == 'hi';
+
 /// letter spacing, or none where the script joins its letters
-double track(double v) => _joinedScript ? 0 : v;
+double track(double v) => _joinedScript || _devanagari ? 0 : v;
 
 /// italic, or upright where the script has no italic
-FontStyle slant() => _joinedScript ? FontStyle.normal : FontStyle.italic;
+FontStyle slant() =>
+    _joinedScript || _devanagari ? FontStyle.normal : FontStyle.italic;
 
 class HaloType {
   // what draws the letters our own fonts do not have. flutter asks these,
   // in order, for any character the family lacks, before the phone's fonts;
-  // they carry only cyrillic and arabic, so latin never reaches them.
-  // jetbrains mono has cyrillic itself; nothing monospaced has arabic.
-  static const serifFallback = ['Noto Serif Cyrillic', 'Noto Naskh Arabic'];
-  static const sansFallback = ['Noto Sans Cyrillic', 'Noto Sans Arabic'];
-  static const monoFallback = ['Noto Sans Arabic'];
+  // they carry only cyrillic, arabic and devanagari, so latin never reaches
+  // them. jetbrains mono has cyrillic itself; nothing monospaced has arabic
+  // or devanagari.
+  static const serifFallback = [
+    'Noto Serif Cyrillic',
+    'Noto Naskh Arabic',
+    'Noto Sans Devanagari',
+  ];
+  static const sansFallback = [
+    'Noto Sans Cyrillic',
+    'Noto Sans Arabic',
+    'Noto Sans Devanagari',
+  ];
+  static const monoFallback = ['Noto Sans Arabic', 'Noto Sans Devanagari'];
 
   // instrument sans has no vietnamese letters with stacked or hooked accents
   // (ế, ự, ỹ...), and a fallback letter mid-word shows in another typeface,
@@ -328,13 +324,19 @@ class HaloType {
       _joinedScript ? 'Noto Naskh Arabic' : 'Fraunces';
   static String get monoFamily =>
       _joinedScript ? 'Noto Sans Arabic' : 'JetBrains Mono';
-  static List<String> get serifFallbackNow =>
-      _joinedScript ? const ['Fraunces', 'Noto Serif Cyrillic'] : serifFallback;
+  static List<String> get serifFallbackNow => _joinedScript
+      ? const ['Fraunces', 'Noto Serif Cyrillic', 'Noto Sans Devanagari']
+      : serifFallback;
   static List<String> get sansFallbackNow => _joinedScript
-      ? const ['Instrument Sans', 'Noto Sans Cyrillic']
+      ? const ['Instrument Sans', 'Noto Sans Cyrillic', 'Noto Sans Devanagari']
       : sansFallback;
-  static List<String> get monoFallbackNow =>
-      _joinedScript ? const ['JetBrains Mono'] : monoFallback;
+  static List<String> get monoFallbackNow => _joinedScript
+      ? const ['JetBrains Mono', 'Noto Sans Devanagari']
+      : monoFallback;
+
+  // devanagari's vowel signs stand above and below the letters: a line set
+  // as tight as a latin headline would touch the next one
+  static double _lineHeight(double h) => _devanagari && h < 1.3 ? 1.3 : h;
 
   static TextStyle serif({
     double size = 26,
@@ -350,7 +352,7 @@ class HaloType {
     fontWeight: weight,
     fontStyle: italic ? slant() : FontStyle.normal,
     color: color ?? HaloColors.text,
-    height: height,
+    height: _lineHeight(height),
     letterSpacing: track(letter),
   );
 
@@ -370,7 +372,7 @@ class HaloType {
     fontSize: size,
     fontWeight: weight,
     color: color ?? HaloColors.text,
-    height: height,
+    height: _lineHeight(height),
     letterSpacing: track(letter),
   );
 

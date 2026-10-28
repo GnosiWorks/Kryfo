@@ -37,7 +37,8 @@
 set -e
 cd "$(dirname "$0")"
 
-IMAGE=kryfo-repro
+# KRYFO_REPRO_IMAGE names the image apart, for a box building two trees at once
+IMAGE=${KRYFO_REPRO_IMAGE:-kryfo-repro}
 REF=HEAD
 CACHE=
 KEEP=
@@ -86,6 +87,12 @@ differing() {
 }
 
 hash_of() { echo "$1" | awk -v e="$2" '$2==e {print substr($1,1,12)}'; }
+
+# an apk without the shim would match a build that skipped it too
+has_shim() {
+  unzip -l "$1" | grep -q " lib/$2/libkryfo_signal\.so\$"
+}
+shim_sha() { unzip -p "$1" "lib/$2/libkryfo_signal.so" | sha256sum | cut -c1-64; }
 
 # prints MATCH or the differing entries; returns 1 on a difference
 compare() {
@@ -228,7 +235,20 @@ for shipped in "${APKS[@]}"; do
     rc=1
     continue
   fi
+  if ! has_shim "$shipped" "$abi" || ! has_shim "$built" "$abi"; then
+    echo "  NO SHIM  $(basename "$shipped"): lib/$abi/libkryfo_signal.so is missing"
+    rc=1
+    continue
+  fi
   compare "$built" "$shipped" || rc=1
+done
+
+echo
+echo "== the signal shim in each apk (the stamp build-android.sh writes names the same)"
+for shipped in "${APKS[@]}"; do
+  abi=$(basename "$shipped" | sed -n 's/^app-\(.*\)-release.*\.apk$/\1/p')
+  [ -n "$abi" ] && has_shim "$shipped" "$abi" || continue
+  echo "  $abi shim sha256 $(shim_sha "$shipped" "$abi")"
 done
 
 if [ -n "$CROSS" ]; then

@@ -16,7 +16,15 @@ import 'package:kryfo/delivery_mode.dart' show kLastCheckRelaysKey;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/l10n/numbers.dart' show percent;
 import 'package:kryfo/main.dart'
-    show AppState, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        AppState,
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateDelivery,
+        AppStateReceive;
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';

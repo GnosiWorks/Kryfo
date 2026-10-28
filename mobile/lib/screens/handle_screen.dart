@@ -8,7 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../handle_repoint.dart' show handleRefusalLine;
-import '../main.dart' show appState, engine, sessionQuiet;
+import '../main.dart'
+    show appState, engine, sessionQuiet, AppStateProfile, AppStateSession;
 import '../quiet_wait.dart';
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
@@ -239,7 +240,7 @@ class _HandleScreenState extends State<HandleScreen> {
       const SizedBox(height: 20),
       _Field(
         ctrl: _ctrl,
-        hint: l10n.handleWren,
+        hint: l10n.handleHintName,
         prefix: '@',
         onChanged: _onTyped,
         max: 20,
@@ -378,7 +379,10 @@ class _ListingCardState extends State<_ListingCard> {
                     padding: const EdgeInsets.only(top: 10),
                     child: Text(
                       l10n.handleShownAs(name),
-                      style: HaloType.mono(size: 11, color: HaloColors.amberText),
+                      style: HaloType.mono(
+                        size: 11,
+                        color: HaloColors.amberText,
+                      ),
                     ),
                   )
                 : const SizedBox(width: double.infinity),

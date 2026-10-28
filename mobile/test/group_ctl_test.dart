@@ -17,7 +17,12 @@ import 'package:kryfo/main.dart'
         HaloEngine,
         groupUnsendRow,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateOutbox,
+        AppStateGroupLanes,
+        AppStateRoute,
+        AppStateGroups,
+        AppStateReceive;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/outbox.dart';
 import 'package:kryfo/polls.dart' show PollSpec;

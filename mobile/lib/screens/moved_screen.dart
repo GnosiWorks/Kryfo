@@ -8,7 +8,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../main.dart' show appState;
+import '../main.dart' show appState, AppStateSession, AppStateIdentity;
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/fit_column.dart';

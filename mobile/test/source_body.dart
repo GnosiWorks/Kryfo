@@ -3,7 +3,21 @@
 // path a screen's code takes where pumping the screen would prove nothing
 import 'dart:io';
 
-String sourceOf(String path) => File(path).readAsStringSync();
+/// the file at [path], and for lib/app/state.dart and lib/app/database.dart
+/// also their area files (state_*.dart, database_*.dart), as one text
+String sourceOf(String path) {
+  final split = RegExp(r'^lib/app/(state|database)\.dart$').firstMatch(path);
+  if (split == null) return File(path).readAsStringSync();
+  final areas =
+      Directory('lib/app')
+          .listSync()
+          .whereType<File>()
+          .map((f) => f.path)
+          .where((p) => RegExp('/${split[1]}_[a-z_]+\\.dart\$').hasMatch(p))
+          .toList()
+        ..sort();
+  return [path, ...areas].map((p) => File(p).readAsStringSync()).join('\n');
+}
 
 /// the text from [signature], which ends in its opening parenthesis, to the
 /// brace that closes its body

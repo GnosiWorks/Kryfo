@@ -9,7 +9,13 @@ import 'dart:convert';
 import 'package:kryfo/delivery_mode.dart';
 import 'package:kryfo/helper_delivery.dart';
 import 'package:kryfo/helper_push.dart';
-import 'package:kryfo/main.dart' show AppState, HaloEngine, useEngineForTest;
+import 'package:kryfo/main.dart'
+    show
+        AppState,
+        HaloEngine,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateDelivery;
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:shared_preferences/shared_preferences.dart';
 

@@ -13,6 +13,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"io"
+	"maps"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -60,6 +61,7 @@ type relayStandIn struct {
 	mu        sync.Mutex
 	pongDelay time.Duration
 	reqDelay  time.Duration // before stored events are sent
+	idsDelay  time.Duration // instead, before a req by ids is answered
 	conns     []*siConn
 	events    []nostr.Event
 	resent    int // stored events sent in answer to a req
@@ -82,6 +84,11 @@ type relayStandIn struct {
 	refuse string
 	// a probe (limit 0) gets no answer, as over a dead circuit
 	probesQuiet bool
+	// every dial is turned away, as by a relay that is down
+	down bool
+	// a req is taken and the socket closed with no answer, as a listener
+	// with nothing behind it does
+	hangUp bool
 }
 
 func newRelayStandIn(t *testing.T, pongDelay time.Duration) *relayStandIn {
@@ -105,6 +112,11 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 	c := &siConn{remote: r.RemoteAddr, opened: time.Now(), addrs: map[string]bool{},
 		published: map[string]bool{}, kill: cancel}
 	s.mu.Lock()
+	if s.down {
+		s.mu.Unlock()
+		http.Error(w, "down", http.StatusBadGateway)
+		return
+	}
 	s.conns = append(s.conns, c)
 	up := s.upgradeDelay
 	s.mu.Unlock()
@@ -164,7 +176,14 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 					match = append(match, ev)
 				}
 			}
+			if s.hangUp {
+				s.mu.Unlock()
+				return
+			}
 			delay := s.reqDelay
+			if len(f.IDs) > 0 && s.idsDelay > 0 {
+				delay = s.idsDelay
+			}
 			stall := false
 			if !f.LimitZero {
 				s.asked++
@@ -267,6 +286,10 @@ func (s *relayStandIn) snapshot() []siConn {
 		cp.subIDs = append([]string(nil), c.subIDs...)
 		cp.reqs = append([]siReq(nil), c.reqs...)
 		cp.pings = append([]time.Time(nil), c.pings...)
+		cp.got = append([]nostr.Event(nil), c.got...)
+		// the handler keeps writing to the live maps
+		cp.addrs = maps.Clone(c.addrs)
+		cp.published = maps.Clone(c.published)
 		out = append(out, cp)
 	}
 	return out
@@ -543,35 +566,43 @@ func (s *socksStandIn) countAs(name string) int {
 // asking tor anything.
 func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*relayStandIn) {
 	t.Helper()
+	// made first, so it is removed only after the cleanup below saw the
+	// runners out: they write into it until then
+	dir := t.TempDir()
 	mu.Lock()
 	oldNode, oldPriv, oldPub := torNode, myXPriv, myXPub
 	torNode = &tor.Tor{}
 	mu.Unlock()
 	oldMode := currentMode()
 	oldPin := atomic.LoadInt32(&pinnedSocks)
-	oldDir := savedDataDir
+	oldDir := savedDataDir()
 	nostrMu.Lock()
 	oldRelays := nostrRelays
 	nostrMu.Unlock()
 	t.Cleanup(func() {
+		runnersGone(t)
 		mu.Lock()
 		torNode, myXPriv, myXPub = oldNode, oldPriv, oldPub
 		mu.Unlock()
 		transportMode.Store(oldMode)
 		atomic.StoreInt32(&pinnedSocks, oldPin)
-		savedDataDir = oldDir
+		setSavedDataDir(oldDir)
 		setRelays(oldRelays)
 		nostrResetClient()
 		relayClearBenches()
+		wakeReset()
 	})
 
+	// addresses a test before this one left registered would crowd the cap
+	liveReset()
+	wakeReset()
 	transportMode.Store(mode)
 	if socks != nil {
 		atomic.StoreInt32(&pinnedSocks, int32(socks.port()))
 	}
 	nostrResetClient()
 	relayClearBenches()
-	savedDataDir = t.TempDir()
+	setSavedDataDir(dir)
 	var urls []string
 	for _, r := range relays {
 		urls = append(urls, r.url())
@@ -581,6 +612,49 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 	mu.Lock()
 	myXPriv, myXPub = me.priv, me.pub
 	mu.Unlock()
+}
+
+// a log sink a test reads while goroutines it did not start may still log
+type logSink struct {
+	mu sync.Mutex
+	b  bytes.Buffer
+}
+
+func (s *logSink) Write(p []byte) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.b.Write(p)
+}
+
+func (s *logSink) String() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.b.String()
+}
+
+func (s *logSink) Len() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.b.Len()
+}
+
+// the runners a test started are over, so what they read is the next
+// test's to change. a test cancels its own contexts first
+func runnersGone(t *testing.T) {
+	t.Helper()
+	nostrMu.Lock()
+	for k, cancel := range nostrSubs {
+		cancel()
+		delete(nostrSubs, k)
+	}
+	nostrMu.Unlock()
+	for end := time.Now().Add(15 * time.Second); runnersLive.Load() > 0; {
+		if time.Now().After(end) {
+			t.Errorf("%d runners still going", runnersLive.Load())
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 }
 
 func newXid(t *testing.T) xid {

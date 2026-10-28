@@ -14,7 +14,14 @@ import 'package:kryfo/bridge_mode.dart' show BridgeStatus;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloDb,
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateBridges;
 import 'package:kryfo/rooms.dart' show kRoomJoinWait;
 import 'package:kryfo/screens/archived_screen.dart';
 import 'package:kryfo/screens/chat_door.dart';
@@ -171,13 +178,15 @@ ContactPreview _chat(String id, {bool archived = false}) =>
 Widget _home({
   List<ContactPreview> contacts = const [],
   List<GroupSummary> groups = const [],
+  VoidCallback? onNewGroup,
+  VoidCallback? onNewRoom,
 }) => HomeScreen(
   haloId: 'neon-tiger-saturn',
   contacts: contacts,
   groups: groups,
   onAddContact: () {},
-  onNewGroup: () {},
-  onNewRoom: () {},
+  onNewGroup: onNewGroup ?? () {},
+  onNewRoom: onNewRoom ?? () {},
   onOpenDev: () {},
   onOpenSettingsDirect: () {},
   onOpenChat: (_) {},
@@ -268,6 +277,50 @@ void main() {
     expect(find.text('wren-oak-lamp'), findsOneWidget);
     expect(find.text('slow-kite-moss'), findsOneWidget);
     expect(find.text(l10n.homeSupporter), findsOneWidget);
+    await drain(t);
+  });
+
+  testWidgets('an empty home shows the groups row: a room needs no '
+      'contacts, and + New is there to say why a group does', (t) async {
+    phone(t);
+    final asked = <String>[];
+    await t.pumpWidget(
+      framed(
+        _home(
+          onNewGroup: () => asked.add('group'),
+          onNewRoom: () => asked.add('room'),
+        ),
+      ),
+    );
+    await t.pump(const Duration(seconds: 1));
+    expect(find.text(l10n.homeNoKryfosYet), findsOneWidget);
+    expect(find.text(l10n.homeGroups), findsOneWidget);
+    await t.tap(find.text(l10n.homeRoom));
+    await t.tap(find.text(l10n.homeNew));
+    await t.pump();
+    expect(asked, ['room', 'group']);
+    // the same row once the first chat comes
+    await t.pumpWidget(framed(_home(contacts: [_chat('wren-oak-lamp')])));
+    await t.pump(const Duration(seconds: 1));
+    expect(find.text(l10n.homeNoKryfosYet), findsNothing);
+    expect(find.text(l10n.homeGroups), findsOneWidget);
+    expect(find.text(l10n.homeRoom), findsOneWidget);
+    await drain(t);
+  });
+
+  testWidgets('an empty home at a large font scrolls, nothing cut', (t) async {
+    phone(t, size: const Size(360, 640));
+    await t.pumpWidget(
+      MediaQuery(
+        data: MediaQueryData.fromView(
+          t.view,
+        ).copyWith(textScaler: TextScaler.linear(2)),
+        child: framed(_home()),
+      ),
+    );
+    await t.pump(const Duration(seconds: 1));
+    expect(t.takeException(), isNull);
+    expect(find.text(l10n.homeGroups), findsOneWidget);
     await drain(t);
   });
 

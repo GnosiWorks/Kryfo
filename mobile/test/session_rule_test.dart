@@ -169,7 +169,7 @@ void main() {
     for (final f in _libFiles()) {
       if (f.path == 'lib/main.dart' ||
           f.path == 'lib/app/boot.dart' ||
-          f.path == 'lib/app/state.dart' ||
+          RegExp(r'^lib/app/state(_\w+)?\.dart$').hasMatch(f.path) ||
           f.path == 'lib/backup.dart') {
         continue;
       }

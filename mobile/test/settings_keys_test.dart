@@ -94,6 +94,19 @@ void main() {
     expect(HaloContainer.decoy.key('theme_light'), 'theme_light');
   });
 
+  test('plain notifications are the phone\'s: a decoy reads the same', () {
+    for (final k in ['notif_plain', 'icon_changed']) {
+      expect(deviceKeys, contains(k));
+      expect(HaloContainer.decoy.key(k), k);
+      expect(HaloContainer.vault.key(k), k);
+    }
+    // what notifications show stays the identity's own
+    expect(
+      HaloContainer.decoy.key('notif_hide_content'),
+      'd.notif_hide_content',
+    );
+  });
+
   test('no key is on both lists', () {
     expect(containerKeys.intersection(deviceKeys), isEmpty);
   });
