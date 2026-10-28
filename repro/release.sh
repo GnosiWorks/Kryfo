@@ -214,6 +214,8 @@ cp "$WORK/out/"app-*.apk out/
 for f in out/app-*.apk; do
   unzip -l "$f" | grep -q 'lib/[^/]*/libhalo\.so' || { echo "$f has no engine" >&2; exit 1; }
   unzip -l "$f" | grep -q 'lib/[^/]*/libkryfo_signal\.so' || { echo "$f has no signal shim" >&2; exit 1; }
+  # built from the libsignal and spqr the lock pins, as ks_build_info says
+  ./shim-check.sh "$f" || exit 1
   scan=$(mktemp -d)
   unzip -q -o "$f" 'lib/*/libhalo.so' -d "$scan"
   if ! ../engine/censor-scan.sh "$scan"/lib/*/libhalo.so; then
