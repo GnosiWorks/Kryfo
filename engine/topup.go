@@ -214,7 +214,13 @@ func topupReplay(key, b []byte) ([]topupItem, int) {
 	return kept, lines
 }
 
-func topupSize(it topupItem) int { return len(it.Ev.Content) + 512 }
+func topupSize(it topupItem) int {
+	n := len(it.Ev.Content) + 512
+	if it.Kept != nil {
+		n += it.Kept.size()
+	}
+	return n
+}
 
 // when an item stops being worth sending: fourteen days from the send, or
 // the wrap's own expiration if that comes first
@@ -262,6 +268,12 @@ func topupWriteSoon() {
 func topupWrite() {
 	topupFileMu.Lock()
 	defer topupFileMu.Unlock()
+	p, key := topupFile(), topupKey()
+	// nothing is let go of while the wipe holds the engine, or before there
+	// is a key to seal it with
+	if p == "" || key == nil || engineHeld.Load() || fileGone(p) {
+		return
+	}
 	topupMu.Lock()
 	recs := topupPend
 	topupPend = nil
@@ -271,10 +283,6 @@ func topupWrite() {
 		live = append(live, topupQueue...)
 	}
 	topupMu.Unlock()
-	p, key := topupFile(), topupKey()
-	if p == "" || key == nil || engineHeld.Load() || fileGone(p) {
-		return
-	}
 	line := func(r topupRec) string {
 		b, err := json.Marshal(r)
 		if err != nil {
@@ -331,6 +339,8 @@ func topupAdd(st, lane string, ev nostr.Event) {
 	it := topupItem{Store: st, Lane: lane, Ev: ev, At: time.Now().Unix()}
 	if k, ok := keptSealOf(ev.ID.Hex()); ok {
 		it.Kept = &k
+		// the queue has its own copy now
+		forgetSeal(ev.ID.Hex())
 	}
 	if !time.Now().Before(topupEnd(it)) {
 		return
@@ -512,13 +522,17 @@ func topupFlush(st, u string) bool {
 		case err == nil:
 			sent++
 			topupDone(st, it.Ev.ID)
-		case strings.HasPrefix(err.Error(), "msg: ") && !strings.Contains(err.Error(), "rate-limited"):
+		case topupBusy(err):
+			// the relay asks for later: that counts as a try
+			topupTried(st, it.Ev.ID)
+			log.Printf("nostr: store %s took %d waiting wraps, then: %v", st, sent, err)
+			return false
+		case strings.HasPrefix(err.Error(), "msg: "):
 			// the relay will not keep it: asking again changes nothing
 			log.Printf("nostr: store %s turned a waiting wrap away: %v", st, err)
 			topupDone(st, it.Ev.ID)
 		default:
-			// a busy relay, or the way to it gone: later
-			topupTried(st, it.Ev.ID)
+			// the way to it gone: later, and no try counted
 			log.Printf("nostr: store %s took %d waiting wraps, then: %v", st, sent, err)
 			return false
 		}
@@ -527,6 +541,12 @@ func topupFlush(st, u string) bool {
 		log.Printf("nostr: store %s took %d waiting wraps", st, sent)
 	}
 	return true
+}
+
+// the relay's own answer that it is busy or full for now
+func topupBusy(err error) bool {
+	e := err.Error()
+	return strings.HasPrefix(e, "msg: ") && (strings.Contains(e, "rate-limited") || strings.Contains(e, "error:"))
 }
 
 // whether the list set now names u

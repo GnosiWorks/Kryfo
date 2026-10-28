@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// a wrap is stamped up to six hours back when it is made, and readers ask
+// a wrap is stamped up to ten hours back when it is made, and readers ask
 // each store for twelve hours behind what they have. a wrap that reaches a
 // store hours late is stamped below that, and nobody asks for it there. so
 // the seal inside each wrap this phone makes is kept a while, and a late
@@ -27,21 +27,48 @@ type keptSeal struct {
 	Tags nostr2.Tags `json:"g,omitempty"`
 }
 
-// the seals of the wraps made lately, by the wrap's id, in memory only
+// the seals of the wraps on their way out, by the wrap's id, in memory
+// only: kept until every store took the wrap or the queue has its own copy,
+// the oldest out first past keptMaxBytes
 var (
 	keptMu    sync.Mutex
 	keptSeals = map[string]keptSeal{}
+	keptOrder []string
+	keptBytes int
 )
 
-const keptMax = 4096
+// a var for the tests. a photo is a hundred seals of about 40 kB, so this
+// holds a few of them in flight, small enough for a 32-bit phone
+var keptMaxBytes = 8 << 20
+
+func (k keptSeal) size() int {
+	n := len(k.Seal) + len(k.To) + 64
+	for _, tag := range k.Tags {
+		for _, v := range tag {
+			n += len(v)
+		}
+	}
+	return n
+}
 
 func keepSeal(id string, k keptSeal) {
 	keptMu.Lock()
 	defer keptMu.Unlock()
-	if len(keptSeals) >= keptMax {
-		keptSeals = map[string]keptSeal{}
+	if old, ok := keptSeals[id]; ok {
+		keptBytes -= old.size()
+	} else {
+		keptOrder = append(keptOrder, id)
 	}
 	keptSeals[id] = k
+	keptBytes += k.size()
+	for keptBytes > keptMaxBytes && len(keptOrder) > 0 {
+		oldest := keptOrder[0]
+		keptOrder = keptOrder[1:]
+		if o, ok := keptSeals[oldest]; ok {
+			keptBytes -= o.size()
+			delete(keptSeals, oldest)
+		}
+	}
 }
 
 func keptSealOf(id string) (keptSeal, bool) {
@@ -49,6 +76,27 @@ func keptSealOf(id string) (keptSeal, bool) {
 	defer keptMu.Unlock()
 	k, ok := keptSeals[id]
 	return k, ok
+}
+
+// the seal is not needed here any more: every store took the wrap, or the
+// queue holds its own copy
+func forgetSeal(id string) {
+	keptMu.Lock()
+	defer keptMu.Unlock()
+	if k, ok := keptSeals[id]; ok {
+		keptBytes -= k.size()
+		delete(keptSeals, id)
+	}
+	// the order is trimmed of ids that are gone once it has many of them
+	if len(keptOrder) > 2*len(keptSeals)+64 {
+		live := keptOrder[:0]
+		for _, o := range keptOrder {
+			if _, ok := keptSeals[o]; ok {
+				live = append(live, o)
+			}
+		}
+		keptOrder = live
+	}
 }
 
 // nip59.GiftWrap, with the seal kept for a fresh wrap later
@@ -83,8 +131,8 @@ func giftWrapKept(rumor nostr2.Event, recipient string,
 	return gw, nil
 }
 
-// the outer wrap around a seal: a key of its own, a stamp up to six hours
-// back as nip-59 has it, the recipient's p and the tags given
+// the outer wrap around a seal: a key of its own, a stamp up to ten hours
+// back as nip59.GiftWrap draws it, the recipient's p and the tags given
 func wrapSeal(sealJSON, recipient string, tags nostr2.Tags, modify func(*nostr2.Event)) (nostr2.Event, error) {
 	nonce := nostr2.GeneratePrivateKey()
 	ck, err := nip44.GenerateConversationKey(recipient, nonce)

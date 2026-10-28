@@ -1280,6 +1280,10 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 					}
 					public := tookPublic
 					tookMu.Unlock()
+					// every store has it: nothing will need it wrapped again
+					if len(missed) == 0 {
+						forgetSeal(ev.ID.Hex())
+					}
 					if !routeGone(routeC) {
 						for _, st := range missed {
 							topupAdd(st, lane, ev)

@@ -242,8 +242,10 @@ func liveNewRun() {
 	liveTaken = 0
 	liveJoinedAt, liveRunAt = time.Time{}, time.Now()
 	ownKnown, ownAnsweredAt, ownFailedAt = true, ownClock(), 0
-	if ownDown {
-		ownDown = false
+	// the first store down was the old route's, as ours down was
+	firstKnown, firstFailedAt = false, 0
+	if ownDown || firstDown {
+		ownDown, firstDown = false, false
 		liveWakeLocked()
 	}
 }

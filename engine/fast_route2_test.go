@@ -421,7 +421,7 @@ func TestATopUpGivesUpOnANo(t *testing.T) {
 		kept   bool
 	}{
 		{"rate-limited: slow down", true},
-		{"error: the relay is full, try later", false},
+		{"error: the relay is full, try later", true},
 		{"blocked: no", false},
 	} {
 		topupAdd(storeFirst, laneEveryday, ev)
@@ -624,5 +624,133 @@ func TestPrivateReadsAndWritesBothOnions(t *testing.T) {
 	}
 	for _, r := range []*relayStandIn{a, b, p} {
 		allThroughSocks(t, r, socks)
+	}
+}
+
+// a seal is kept only while it may be needed: gone once every store took the
+// wrap or the queue has its own copy, and never more than keptMaxBytes, the
+// oldest out first
+func TestKeptSealsGoWhenDoneAndStaySmall(t *testing.T) {
+	a, b := newRelayStandIn(t, 0), newRelayStandIn(t, 0)
+	useTwoStores(t, a, b)
+	peer := newXid(t)
+	both := wrapKeptAt(t, mustXid(), peer.pub, "both took it", time.Now())
+	if _, ok := keptSealOf(both.ID.Hex()); !ok {
+		t.Fatal("no seal kept for a wrap just made")
+	}
+	if ok := nostrPublishMulti(context.Background(), laneEveryday, both); ok < 1 {
+		t.Fatal("not sent")
+	}
+	waitFor(t, "the seal let go", 10*time.Second, func() bool {
+		_, ok := keptSealOf(both.ID.Hex())
+		return !ok
+	})
+	// queued: the queue holds the seal, the memory does not
+	standInDown(a, true)
+	missed := wrapKeptAt(t, mustXid(), peer.pub, "the first missed it", time.Now())
+	if ok := nostrPublishMulti(context.Background(), laneEveryday, missed); ok < 1 {
+		t.Fatal("not sent")
+	}
+	waitFor(t, "it waits", 10*time.Second, func() bool { return len(topupFor(storeFirst)) == 1 })
+	if topupFor(storeFirst)[0].Kept == nil {
+		t.Fatal("the queue has no seal to wrap it again")
+	}
+	if _, ok := keptSealOf(missed.ID.Hex()); ok {
+		t.Fatal("the seal stayed in memory with the queue holding it")
+	}
+
+	// past the cap the oldest go, the newest stay
+	keptMu.Lock()
+	keptSeals, keptOrder, keptBytes = map[string]keptSeal{}, nil, 0
+	keptMu.Unlock()
+	one := keptSeal{Seal: strings.Repeat("x", 1000), To: "p"}
+	old := keptMaxBytes
+	keptMaxBytes = 3*one.size() + 10
+	t.Cleanup(func() { keptMaxBytes = old })
+	for i := 0; i < 5; i++ {
+		keepSeal(strconv.Itoa(i), one)
+	}
+	for i, want := range []bool{false, false, true, true, true} {
+		if _, ok := keptSealOf(strconv.Itoa(i)); ok != want {
+			t.Fatalf("seal %d kept %v, want %v", i, ok, want)
+		}
+	}
+	keptMu.Lock()
+	bytes := keptBytes
+	keptMu.Unlock()
+	if bytes > keptMaxBytes {
+		t.Fatalf("%d bytes kept past the cap of %d", bytes, keptMaxBytes)
+	}
+}
+
+// the queue's byte cap counts the seals it holds
+func TestTheQueueCapCountsTheSeals(t *testing.T) {
+	a, b := newRelayStandIn(t, 0), newRelayStandIn(t, 0)
+	useTwoStores(t, a, b)
+	peer := newXid(t)
+	evs := []nostr.Event{
+		wrapKeptAt(t, mustXid(), peer.pub, "one", time.Now()),
+		wrapKeptAt(t, mustXid(), peer.pub, "two", time.Now()),
+	}
+	k, _ := keptSealOf(evs[0].ID.Hex())
+	// room for both wraps alone, not with their seals
+	old := topupMaxBytes
+	topupMaxBytes = 2*(len(evs[0].Content)+512) + k.size()/2
+	t.Cleanup(func() { topupMaxBytes = old })
+	for _, ev := range evs {
+		topupAdd(storeFirst, laneEveryday, ev)
+	}
+	got := topupFor(storeFirst)
+	if len(got) != 1 || got[0].Ev.ID != evs[1].ID {
+		t.Fatalf("%d waiting, want the newer one alone", len(got))
+	}
+}
+
+// a switch away from fast while our first store was down leaves the next
+// route's rounds as they are: nothing of the old route's outage carries over
+func TestASwitchForgetsTheFirstStoreDown(t *testing.T) {
+	a, b := newRelayStandIn(t, 0), newRelayStandIn(t, 0)
+	useTwoStores(t, a, b)
+	liveMu.Lock()
+	firstDown, firstKnown, firstFailedAt = true, true, ownClock()
+	liveMu.Unlock()
+	if sweepRound() != sweepEveryDown {
+		t.Fatal("the first store down did not shorten the round")
+	}
+	switchMode(modePrivate)
+	if firstStoreDown() {
+		t.Fatal("private took over fast's first store down")
+	}
+	if r := sweepRound(); r != sweepEvery {
+		t.Fatalf("private's round is %s after the switch, want %s", r, sweepEvery)
+	}
+	liveMu.Lock()
+	known, failed := firstKnown, firstFailedAt
+	liveMu.Unlock()
+	if known || failed != 0 {
+		t.Fatal("fast's failing span carried over")
+	}
+}
+
+// off the private route an onion is never dialled by the direct client
+func TestAnOnionGoesThroughTorOnFast(t *testing.T) {
+	socks := newSocksStandIn(t)
+	useStandIns(t, modeBalanced, socks)
+	setRelays([]string{"wss://relay.kryfo.app", "ws://" + secondOnionHost})
+	direct, err := torNostrClientFor(laneEveryday)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, u := range []string{"ws://" + secondOnionHost, "ws://someone.onion"} {
+		c, err := relayClientFor(laneEveryday, u)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if c == direct {
+			t.Fatalf("%s would be dialled directly", u)
+		}
+	}
+	if c, _ := relayClientFor(laneEveryday, "wss://relay.kryfo.app"); c != direct {
+		t.Fatal("our clearnet name went through tor on fast")
 	}
 }

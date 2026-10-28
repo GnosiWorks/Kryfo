@@ -8,9 +8,10 @@ package main
 //	balanced  the app's "fast": plain tls to our two relays, and nothing
 //	          else. they see your ip. your contacts do not, other relays do
 //	          not, and the message is still sealed the same way. public
-//	          relays only while neither of ours answers, through tor.
-//	fast      the old fast, plain tls to every relay. the app no longer asks
-//	          for it, and asked for it now is balanced.
+//	          relays only through tor, while our first relay is down.
+//
+// the old fast mode, plain tls to every relay, is gone: asked for, it is
+// balanced.
 //
 // the engine only decides whether to route through tor. which relays to talk
 // to is chosen on the dart side, where the list lives.
@@ -29,7 +30,8 @@ import (
 const (
 	modePrivate  = "private"
 	modeBalanced = "balanced"
-	modeFast     = "fast"
+	// the old fast mode's name: asked for, it is balanced
+	modeOldFast = "fast"
 )
 
 var transportMode atomic.Value // string
@@ -80,7 +82,7 @@ func HaloSetTransportMode(cMode *C.char) *C.char {
 func setTransportMode(m string) string {
 	switch m {
 	case modePrivate, modeBalanced:
-	case modeFast:
+	case modeOldFast:
 		// relay and fast are one route now: nothing goes to public relays
 		// in the clear, whatever an old setting says
 		m = modeBalanced

@@ -61,7 +61,7 @@ func setFailBurst(t *testing.T, d time.Duration) {
 func TestABurstOfRefusalsBenchesARelayAtMostOnce(t *testing.T) {
 	own := newRelayStandIn(t, 0)
 	pub := newRefuserStandIn(t)
-	useStandIns(t, modeFast, nil, own)
+	useStandIns(t, modeBalanced, nil, own)
 	setRelays([]string{own.url(), pub.url()})
 	// all thirty dial the public relay at once, none past the cap
 	setLiveCap(t, 30, time.Hour)
@@ -95,7 +95,7 @@ func TestABurstOfRefusalsBenchesARelayAtMostOnce(t *testing.T) {
 // one begun after that count is a new failure.
 func TestFailuresOfAttemptsBegunTogetherCountOnce(t *testing.T) {
 	pub := newRefuserStandIn(t)
-	useStandIns(t, modeFast, nil)
+	useStandIns(t, modeBalanced, nil)
 	setRelays([]string{"ws://own.invalid", pub.url()})
 	u := pub.url()
 
@@ -131,7 +131,7 @@ func TestFailuresOfAttemptsBegunTogetherCountOnce(t *testing.T) {
 // name, for its short ceiling only. a public relay still goes to five
 // minutes.
 func TestOurRelayIsNeverBenchedPastItsCeiling(t *testing.T) {
-	useStandIns(t, modeFast, nil)
+	useStandIns(t, modeBalanced, nil)
 	old := ownRelayHost
 	ownRelayHost = "own.example"
 	t.Cleanup(func() { ownRelayHost = old })
@@ -164,7 +164,7 @@ func TestOurRelayIsNeverBenchedPastItsCeiling(t *testing.T) {
 // a public relay's failures one after another bench it as before: three
 // are free, then ten seconds doubling to five minutes
 func TestPublicRelayBenchScheduleUnchanged(t *testing.T) {
-	useStandIns(t, modeFast, nil)
+	useStandIns(t, modeBalanced, nil)
 	pub := "wss://public.example"
 	setRelays([]string{"ws://own.invalid", pub})
 	setFailBurst(t, 20*time.Millisecond)
@@ -247,7 +247,7 @@ func checkSlowOnionLanded(t *testing.T, own *relayStandIn, res, want string, too
 // in the list, while no other way in answers. a public relay still waits up
 // to five minutes.
 func TestOurRelayDroppingYoungWaitsItsCeiling(t *testing.T) {
-	useStandIns(t, modeFast, nil)
+	useStandIns(t, modeBalanced, nil)
 	old := ownRelayHost
 	ownRelayHost = "own.example"
 	t.Cleanup(func() { ownRelayHost = old })
@@ -271,7 +271,7 @@ func TestOurRelayDroppingYoungWaitsItsCeiling(t *testing.T) {
 func TestAPublishTriesOurRelayWhileItIsBenched(t *testing.T) {
 	first := newRefuserStandIn(t)
 	clear := newRelayStandIn(t, 0)
-	useStandIns(t, modeFast, nil)
+	useStandIns(t, modeBalanced, nil)
 	old := ownRelayHost
 	ownRelayHost = strings.TrimPrefix(clear.url(), "ws://")
 	t.Cleanup(func() { ownRelayHost = old })
@@ -298,7 +298,7 @@ func TestAPublishTriesOurRelayWhileItIsBenched(t *testing.T) {
 func TestOurClearnetNameBacksOffWhileTheOnionAnswers(t *testing.T) {
 	onion := newRelayStandIn(t, 0)
 	clear := newRefuserStandIn(t)
-	useStandIns(t, modeFast, nil)
+	useStandIns(t, modeBalanced, nil)
 	old := ownRelayHost
 	ownRelayHost = strings.TrimPrefix(clear.url(), "ws://")
 	t.Cleanup(func() { ownRelayHost = old })
@@ -347,7 +347,7 @@ func TestOurClearnetNameBacksOffWhileTheOnionAnswers(t *testing.T) {
 // our relay's waits are spread a fifth either way, so its runners do not
 // redial in step. a public relay's are not
 func TestOurRelayWaitsAreSpread(t *testing.T) {
-	useStandIns(t, modeFast, nil)
+	useStandIns(t, modeBalanced, nil)
 	onion := "ws://ownrelayabc.onion"
 	pub := "wss://public.example"
 	setRelays([]string{onion, pub})

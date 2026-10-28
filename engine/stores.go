@@ -367,23 +367,35 @@ func backupClientFor(lane string) (*http.Client, error) {
 	return torClientFor(lane)
 }
 
-// the client for relay u. off the private route only our own stores are
-// dialled in the clear: a backup, or any relay that is not ours, always goes
-// through tor. the old fast mode, which no setting reaches any more, is left
-// as it was
+// the client for relay u. off the private route only our own stores'
+// clearnet names are dialled in the clear: a backup, an onion, or any relay
+// that is not ours always goes through tor
 func relayClientFor(lane, u string) (*http.Client, error) {
 	if isBackup(u) {
 		return backupClientFor(lane)
 	}
-	if m := currentMode(); m == modeBalanced {
+	if currentMode() != modePrivate {
 		nostrMu.Lock()
 		urls := nostrRelays
 		nostrMu.Unlock()
-		if storeOf(urls, u) == "" {
+		if isOnion(u) || (storeOf(urls, u) == "" && !clearForTests(u)) {
 			return backupClientFor(lane)
 		}
 	}
 	return torNostrClientFor(lane)
+}
+
+// stand-ins the tests reach in the clear as public relays, where they have
+// no tor to go through. none in the app
+var clearTestHosts sync.Map
+
+func clearForTests(u string) bool {
+	p, err := url.Parse(u)
+	if err != nil {
+		return false
+	}
+	_, ok := clearTestHosts.Load(strings.ToLower(p.Host))
+	return ok
 }
 
 // the relays a send or a one-shot ask goes to now: the list, and the

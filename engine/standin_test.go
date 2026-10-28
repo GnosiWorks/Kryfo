@@ -568,15 +568,31 @@ func (s *socksStandIn) countAs(name string) int {
 	return s.byName[name]
 }
 
+// the engine no longer has a mode by this name: the tests set it directly
+// for a route with no tor that is not the app's fast
+const modeFast = "fast"
+
 // the tests' lists name our relay first, as the app's do, under names of
-// their own: the first entry is taken as ours unless it is ours by name
+// their own: the first entry is taken as ours unless it is ours by name.
+// with no tor stand-in pinned, the others are reached in the clear as public
+// relays, as there is nothing to go through
 func init() {
 	relaysSetHook = func(urls []string) {
-		if len(urls) == 0 || storeOf(urls, urls[0]) != "" {
+		if len(urls) == 0 {
 			return
 		}
-		if p, err := url.Parse(urls[0]); err == nil && p.Host != "" {
-			otherFirstHosts.Store(strings.ToLower(p.Host), true)
+		if storeOf(urls, urls[0]) == "" {
+			if p, err := url.Parse(urls[0]); err == nil && p.Host != "" {
+				otherFirstHosts.Store(strings.ToLower(p.Host), true)
+			}
+		}
+		if atomic.LoadInt32(&pinnedSocks) != 0 {
+			return
+		}
+		for _, u := range urls {
+			if p, err := url.Parse(u); err == nil && p.Host != "" {
+				clearTestHosts.Store(strings.ToLower(p.Host), true)
+			}
 		}
 	}
 }
@@ -600,6 +616,7 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 	// every test starts from the app's names
 	ownRelayHost = "relay.kryfo.app"
 	otherFirstHosts.Clear()
+	clearTestHosts.Clear()
 	nostrMu.Lock()
 	oldRelays := nostrRelays
 	nostrMu.Unlock()
@@ -614,6 +631,7 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 		ownRelayHost = oldHost
 		setRelays(oldRelays)
 		otherFirstHosts.Clear()
+		clearTestHosts.Clear()
 		setBackups(nil)
 		topupForget()
 		relayMsClear()
