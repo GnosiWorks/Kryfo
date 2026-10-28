@@ -3144,21 +3144,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString bekliyor · Tor hâlâ bağlanıyor',
-      one: '$countString bekliyor · Tor hâlâ bağlanıyor',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'Henüz Kryfo yok.';
 
   @override
@@ -4395,10 +4380,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get photoKnowsPhoto => 'Fotoğraf';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'Bu video neler biliyor';
+  String get photoKnowsVideoCleaner => 'Video temizleyici';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'Bu fotoğraf neler biliyor';
+  String get photoKnowsPhotoCleaner => 'Fotoğraf temizleyici';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'Hepsini kaldır';
@@ -5242,9 +5227,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsTorRouting => 'Tor yönlendirme';
 
   @override
-  String get settingsConnecting => 'Bağlanıyor';
-
-  @override
   String get settingsOffMode => 'Kapalı · aktarıcı modu';
 
   @override
@@ -5477,10 +5459,11 @@ class AppLocalizationsTr extends AppLocalizations {
       'Buradaki her şey bu telefonda olur. Hiçbir şey yüklenmez ve başka kimsenin Kryfo kullanması gerekmez.';
 
   @override
-  String get toolsWhatDoesThisPhoto => 'Bu fotoğraf neler biliyor?';
+  String get toolsPhotoCleaner => 'Fotoğraf temizleyici';
 
   @override
-  String get toolsPlacePhoneTime => 'Yer · telefon · zaman';
+  String get toolsRemovesHiddenInfo =>
+      'Yer, zaman ve telefon modeli gibi gizli bilgileri (meta veri) siler';
 
   @override
   String get toolsPickAPhotoAnd =>
@@ -9147,6 +9130,45 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Bağlantıyı kopyala';
+
+  @override
+  String get appRelayNotAnswering => 'Aktarıcı sessiz';
+
+  @override
+  String get motionNoRelayYet => 'HENÜZ AKTARICI YOK';
+
+  @override
+  String get motionTheRouteIsUp => 'Rota kuruldu';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Bir aktarıcı bu rota üzerinden yanıt verir vermez mesajlar gider.';
+
+  @override
+  String get motionOffline => 'ÇEVRİMDIŞI';
+
+  @override
+  String get motionNoNetwork => 'Ağ yok';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Ağ olmadan hiçbir şey gitmez. Ağ geri gelince Tor kaldığı yerden devam eder.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bekliyor · $state',
+      one: '$count bekliyor · $state',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsIconAndNotifications => 'Simge ve bildirimler';

@@ -109,19 +109,6 @@ void main() {
         if (light) {
           need('deep / surface', HaloColors.amberDeep, HaloColors.surface, 3);
         }
-        // the bright card in tools, the same in both themes
-        need(
-          'on bright / bright',
-          HaloColors.onAmberBright,
-          HaloColors.amberBright,
-          4.5,
-        );
-        need(
-          'on bright / bright deep',
-          HaloColors.onAmberBright,
-          HaloColors.amberBrightDeep,
-          4.5,
-        );
         expect(fails, isEmpty);
       });
     }

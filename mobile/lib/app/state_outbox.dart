@@ -11,6 +11,8 @@ extension AppStateOutbox on AppState {
   @visibleForTesting
   int outboxTriesForTest(String uid) => _outboxTries[uid] ?? 0;
   @visibleForTesting
+  set queuedForTest(int n) => _q = _Queue(n, 0, const {}, const {});
+  @visibleForTesting
   int? outboxNextAtForTest(String uid) => _outboxNextAt[uid];
   // counted off the everyday outbox, so a quiet session shows none of it
   int get queued => sessionQuiet ? 0 : _q.n + _vq.n;

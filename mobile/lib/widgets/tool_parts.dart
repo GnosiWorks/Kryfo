@@ -158,7 +158,9 @@ class ToolWideButton extends StatelessWidget {
             ? Duration.zero
             : const Duration(milliseconds: 180),
         curve: Curves.easeOut,
-        height: height ?? (filled ? 54 : 50),
+        // large text takes a second line and a taller button, never "…"
+        constraints: BoxConstraints(minHeight: height ?? (filled ? 54 : 50)),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: filled ? (on ? HaloColors.amber : HaloColors.surface3) : null,
           borderRadius: BorderRadius.circular(14),
@@ -173,13 +175,18 @@ class ToolWideButton extends StatelessWidget {
               StrokeIcon(icon!, size: 19, color: ink),
               const SizedBox(width: 9),
             ],
-            ExcludeSemantics(
-              child: Text(
-                label,
-                style: HaloType.sans(
-                  size: filled ? 15 : 14,
-                  weight: filled ? FontWeight.w600 : FontWeight.w500,
-                  color: ink,
+            Flexible(
+              child: ExcludeSemantics(
+                child: Text(
+                  label,
+                  maxLines: 2,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: HaloType.sans(
+                    size: filled ? 15 : 14,
+                    weight: filled ? FontWeight.w600 : FontWeight.w500,
+                    color: ink,
+                  ),
                 ),
               ),
             ),

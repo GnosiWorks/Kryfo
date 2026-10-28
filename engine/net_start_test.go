@@ -183,3 +183,26 @@ func TestANewHandleAloneBounces(t *testing.T) {
 		t.Fatalf("a new handle alone: %d reconnects, want 1", got)
 	}
 }
+
+// tor already on the new network: no bounce, and the live sockets are
+// asked at once, so the bumped route is proven in seconds
+func TestNoBounceKicksTheLiveSockets(t *testing.T) {
+	rigFlips(t, 30*time.Millisecond, 50*time.Millisecond, 200*time.Millisecond)
+	keepNetDetail(t)
+	keepNetOn(t)
+	networkDetail(`{"on":true,"validated":true,"kind":"wifi","net":100}`)
+	networkChangedTo(true)
+	time.Sleep(10 * time.Millisecond)
+	netWentOn()
+	kick := kickChan()
+	waitUntil(time.Second, func() bool {
+		netMu.Lock()
+		defer netMu.Unlock()
+		return !netWorker
+	})
+	select {
+	case <-kick:
+	case <-time.After(time.Second):
+		t.Fatal("the sockets were not asked after a change with no bounce")
+	}
+}

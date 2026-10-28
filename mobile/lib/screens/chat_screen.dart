@@ -104,6 +104,7 @@ import '../main.dart'
         torStrictGetOnIsolate,
         torValve,
         TorHalo,
+        LinkViewBuilder,
         AppStateOutbox,
         AppStateMessages,
         AppStateRoute,
@@ -646,9 +647,10 @@ String _friendlyStatus(String raw) {
   if (!appState.online && raw.startsWith('error:')) {
     return l10n.chatYouAreOfflineThis;
   }
-  if (raw.startsWith('error:') && !appState.torReady) {
-    return l10n.chatStillConnectingToTor;
-  }
+  // what the pill says while the route is not up, and the long words only
+  // while tor is still coming up
+  final waiting = appState.linkView.sendLine;
+  if (raw.startsWith('error:') && waiting != null) return waiting;
   // online, a transport error is not the user's problem: the row retries
   // itself and the bubble stays pending. no line.
   if (raw.startsWith('error:')) return '';
@@ -6613,33 +6615,37 @@ class _ChatScreenState extends State<ChatScreen>
                     )
                   : const SizedBox(key: ValueKey('status-none'), width: 0),
             ),
-            // tor still warming: messages typed now are queued. not on a
-            // phone whose identity has moved, where tor is off on purpose.
-            _Fold(
-              appState.sendMode == 'private' &&
-                      !appState.torUsable &&
-                      !appState.movedAway
-                  ? Padding(
-                      key: const ValueKey('tor-warm'),
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const TorHalo(),
-                          const SizedBox(width: 7),
-                          Flexible(
-                            child: Text(
-                              l10n.chatBuildingAPrivateRoute,
-                              style: HaloType.sans(
-                                size: 10.5,
-                                color: HaloColors.text2,
-                              ).copyWith(height: 1.35),
+            // the route not up: messages typed now are queued. the pill's
+            // reading, its grace and its words; the long words only while tor
+            // is still coming up. not on a phone whose identity has moved,
+            // where tor is off on purpose.
+            LinkViewBuilder(
+              builder: (_, link) => _Fold(
+                appState.sendMode == 'private' &&
+                        link.chatLine != null &&
+                        !appState.movedAway
+                    ? Padding(
+                        key: const ValueKey('tor-warm'),
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const TorHalo(),
+                            const SizedBox(width: 7),
+                            Flexible(
+                              child: Text(
+                                link.chatLine!,
+                                style: HaloType.sans(
+                                  size: 10.5,
+                                  color: HaloColors.text2,
+                                ).copyWith(height: 1.35),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : const SizedBox(key: ValueKey('tor-none'), width: 0),
+                          ],
+                        ),
+                      )
+                    : const SizedBox(key: ValueKey('tor-none'), width: 0),
+              ),
             ),
             // a send that has waited on tor a minute gets a way out
             ReconnectValve(
