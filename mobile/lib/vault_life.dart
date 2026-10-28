@@ -505,9 +505,10 @@ class SqlChatMover implements ChatMover {
       ];
       await t.execute(
         'INSERT OR IGNORE INTO $dst.contacts (halo_id, onion, xpub, '
-        'first_seen, last_seen, back_paired, blocked, accepted) '
+        'first_seen, last_seen, back_paired, blocked, accepted, ident) '
         'SELECT halo_id, onion, xpub, first_seen, first_seen, back_paired, '
-        'blocked, 0 FROM $src.contacts WHERE halo_id IN (${_peopleOf(src)})',
+        'blocked, 0, ident FROM $src.contacts '
+        'WHERE halo_id IN (${_peopleOf(src)})',
         [c.id],
       );
       // and their blocks with them, or one blocked lands there blocked with
@@ -640,7 +641,7 @@ class SqlChatMover implements ChatMover {
       return;
     }
     final row = await t.rawQuery(
-      'SELECT onion, xpub, first_seen, back_paired, blocked '
+      'SELECT onion, xpub, first_seen, back_paired, blocked, ident, ikey '
       'FROM $s.contacts WHERE halo_id = ?1',
       [c.id],
     );
@@ -649,8 +650,8 @@ class SqlChatMover implements ChatMover {
     final r = row.first;
     await t.execute(
       'INSERT INTO $s.contacts (halo_id, onion, xpub, first_seen, '
-      'last_seen, back_paired, blocked, accepted) '
-      'VALUES (?, ?, ?, ?, ?, ?, ?, 0)',
+      'last_seen, back_paired, blocked, accepted, ident, ikey) '
+      'VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?)',
       [
         c.id,
         r['onion'],
@@ -659,6 +660,8 @@ class SqlChatMover implements ChatMover {
         r['first_seen'],
         r['back_paired'],
         r['blocked'],
+        r['ident'],
+        r['ikey'],
       ],
     );
   }
