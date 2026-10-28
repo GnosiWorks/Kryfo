@@ -12,7 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
-import 'package:kryfo/devchat/dev_key.dart' show useDevKeysForTest;
+import 'package:kryfo/devchat/dev_key.dart' show DevKey, useDevKeysForTest;
 import 'package:kryfo/main.dart' show HaloDb, signalDecrypt, signalStoreTables;
 import 'package:kryfo/signal_ffi/kryfo_signal.dart';
 import 'package:kryfo/signal_session.dart' as now;
@@ -501,5 +501,94 @@ void main() {
       );
       expect(await a.read(_b, await b.encryptTo(_a, 'after')), 'after');
     });
+  });
+
+  group('a dev chat 0.5.3 started, after the update', () {
+    String hex(List<int> b) =>
+        b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
+
+    test(
+      'made by 0.5.3\'s own layer with his key pinned, it goes on both '
+      'ways with either phone updated, and his key stays the only one',
+      () async {
+        if (sql == null) return markTestSkipped('no sqlite on this host');
+        const keyId = 'm9';
+        const dev = 'dev:$keyId';
+        final kDev = freshKeys();
+        final kUser = freshKeys();
+        final devDb = await fresh053('devphone.db');
+        final userDb = await fresh053('user.db');
+        await signalStoreTables(userDb, prefix: 'dev_');
+        // 0.5.3 on both: his phone, and a user's anonymous dev chat store
+        final dev053 = await Phone053.open(
+          devDb,
+          xPub: kDev.pub,
+          xPriv: kDev.priv,
+        );
+        final devKeyBytes = Uint8List.fromList([0x05, ...kDev.pub]);
+        pinDevKeyForTest(keyId, devKeyBytes);
+        final user053 = await Phone053.initiator(
+          userDb,
+          xPub: kUser.pub,
+          xPriv: kUser.priv,
+          prefix: 'dev_',
+        );
+        final card = await dev053.card();
+        await user053.startFrom(dev, card);
+        await _chat(_Old(user053), 'user', _Old(dev053), dev);
+        // his phone updates first, the user's chat still on 0.5.3
+        await signalStoreTables(devDb);
+        final devNew = await onShim(devDb, kDev);
+        await _chat(_Old(user053), 'user', _New(devNew), dev);
+        // then the user's: the same dev_ store, his key pinned as the app pins
+        useDevKeysForTest([
+          DevKey(
+            keyId: keyId,
+            threeWords: 'test-dev-words',
+            xPub: hex(kDev.pub),
+            bundle: card,
+            fc: 'ab' * 32,
+          ),
+        ]);
+        addTearDown(() => useDevKeysForTest(null));
+        final userNew = now.SignalSession(_lib);
+        await userNew.bootstrapInitiator(
+          database: userDb,
+          xPubBytes: kUser.pub,
+          xPrivBytes: kUser.priv,
+          prefix: 'dev_',
+        );
+        expect(userNew.identityStore.pinnedFor(dev), devKeyBytes);
+        await _chat(_New(userNew), 'user', _New(devNew), dev);
+        expect((await userNew.sessionInfo(dev))!.version, 3);
+        // and back to his phone on 0.5.3's layer, the user on this version
+        final devBack = await Phone053.open(
+          devDb,
+          xPub: kDev.pub,
+          xPriv: kDev.priv,
+        );
+        await _chat(_New(userNew), 'user', _Old(devBack), dev);
+        // a pinned key that is not his: nothing seals or opens on the chat
+        useDevKeysForTest([
+          DevKey(
+            keyId: keyId,
+            threeWords: 'test-dev-words',
+            xPub: hex(freshKeys().pub),
+            bundle: card,
+            fc: 'ab' * 32,
+          ),
+        ]);
+        final before = await userDb.query('dev_sessions');
+        await expectLater(
+          userNew.encryptTo(dev, 'to someone else'),
+          throwsA(isA<LsError>()),
+        );
+        await expectLater(
+          _New(userNew).read(dev, await devBack.seal('user', 'from him')),
+          throwsA(isA<LsError>()),
+        );
+        expect(await userDb.query('dev_sessions'), before);
+      },
+    );
   });
 }

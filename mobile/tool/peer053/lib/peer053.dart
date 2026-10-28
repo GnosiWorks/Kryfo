@@ -13,6 +13,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'signal_session.dart';
 import 'wire_pad.dart';
 
+export 'devchat/dev_key.dart' show pinDevKeyForTest;
 export 'signal_session.dart' show SignalSession;
 
 /// one 0.5.3 phone: its signal layer on its own file
@@ -29,6 +30,24 @@ class Phone053 {
   }) async {
     final ss = SignalSession();
     await ss.bootstrap(
+      database: db,
+      xPubBytes: xPub,
+      xPrivBytes: xPriv,
+      prefix: prefix,
+    );
+    return Phone053(ss);
+  }
+
+  /// a store that only starts sessions, as 0.5.3's anonymous dev chat
+  /// keeps one under its own prefix
+  static Future<Phone053> initiator(
+    Database db, {
+    required Uint8List xPub,
+    required Uint8List xPriv,
+    required String prefix,
+  }) async {
+    final ss = SignalSession();
+    await ss.bootstrapInitiator(
       database: db,
       xPubBytes: xPub,
       xPrivBytes: xPriv,
