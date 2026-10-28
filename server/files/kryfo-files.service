@@ -2,13 +2,14 @@
 Description=Kryfo files
 After=network-online.target
 Wants=network-online.target
-# the files live on a disk of their own: no mount, no start
+# the files live on a disk of their own, root's, with one folder in it the
+# service writes: no mount, no start
 RequiresMountsFor=/var/lib/kryfo-files
 
 [Service]
 ExecStart=/opt/kryfo-files/kryfo-files
 Environment=FILES_ADDR=127.0.0.1:3342
-Environment=FILES_DATA=/var/lib/kryfo-files
+Environment=FILES_DATA=/var/lib/kryfo-files/data
 # the limits, read by systemd as root before the service starts. none of
 # them is a secret
 EnvironmentFile=-/etc/kryfo-files/limits.env
@@ -16,7 +17,7 @@ Restart=always
 RestartSec=3
 User=kryfo-files
 Group=kryfo-files
-ReadWritePaths=/var/lib/kryfo-files
+ReadWritePaths=/var/lib/kryfo-files/data
 # logs to ram only, same posture as the relay: counts once an hour
 StandardOutput=journal
 StandardError=journal

@@ -22,7 +22,7 @@ import (
 
 func main() {
 	addr := env("FILES_ADDR", "127.0.0.1:3342")
-	data := env("FILES_DATA", "/var/lib/kryfo-files")
+	data := env("FILES_DATA", "/var/lib/kryfo-files/data")
 	cfg := configFromEnv()
 	blobs := filepath.Join(data, "blobs")
 	store, err := newDiskStore(blobs)
