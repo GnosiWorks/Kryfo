@@ -335,7 +335,13 @@ class DesktopVault {
     _salt = newSalt;
     _cost = logN;
     _key = _unhex(nk);
-    _persist(_map!);
+    try {
+      _persist(_map!);
+    } catch (_) {
+      // not written as this version: nothing of it stays open in memory
+      close();
+      rethrow;
+    }
     return true;
   }
 
@@ -344,6 +350,8 @@ class DesktopVault {
     final k = _key;
     if (k != null) k.fillRange(0, k.length, 0);
     _key = null;
+    // dart strings cannot be zeroed: the map is emptied and let go
+    _map?.clear();
     _map = null;
     _waiting.clear();
   }
