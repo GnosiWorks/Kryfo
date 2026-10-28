@@ -37,7 +37,7 @@ class DesktopBinding extends WidgetsFlutterBinding {
   // the field is set before the base constructor asks for the messenger
   DesktopBinding._(this._answers);
 
-  static DesktopBinding ensure(Map<String, DesktopAnswer> answers) {
+  static DesktopBinding install(Map<String, DesktopAnswer> answers) {
     DesktopBinding._(answers);
     return WidgetsBinding.instance as DesktopBinding;
   }
@@ -121,7 +121,7 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   makePrivateDir(root);
   final db = DesktopDb();
   final host = DesktopHost(dataDir: root);
-  DesktopBinding.ensure(desktopAnswers(host, db));
+  DesktopBinding.install(desktopAnswers(host, db));
 
   final paths = DesktopPaths(root);
   PathProviderPlatform.instance = paths;
