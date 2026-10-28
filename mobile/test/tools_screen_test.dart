@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/screens/tools_screen.dart';
 import 'package:kryfo/theme.dart';
+import 'package:kryfo/widgets/stroke_icon.dart';
 
 Widget host(Widget child, {double scale = 1, bool still = false}) =>
     MaterialApp(
@@ -62,18 +64,178 @@ void main() {
     }
   });
 
-  test('the bright card\'s ink holds 4.5:1 in every accent', () {
-    addTearDown(() => HaloColors.setAccent(HaloAccent.yellow));
-    for (final accent in HaloAccent.values) {
-      HaloColors.setAccent(accent);
-      for (final bg in [HaloColors.amberBright, HaloColors.amberBrightDeep]) {
-        final a = bg.computeLuminance();
-        final b = HaloColors.onAmberBright.computeLuminance();
-        final r = a > b ? (a + 0.05) / (b + 0.05) : (b + 0.05) / (a + 0.05);
-        expect(r, greaterThan(4.5), reason: accent.name);
+  double contrast(Color x, Color y) {
+    final a = x.computeLuminance(), b = y.computeLuminance();
+    return a > b ? (a + 0.05) / (b + 0.05) : (b + 0.05) / (a + 0.05);
+  }
+
+  test('the card\'s words hold their contrast in every accent and theme', () {
+    addTearDown(() {
+      HaloColors.setAccent(HaloAccent.yellow);
+      HaloColors.setLight(false);
+    });
+    for (final light in [false, true]) {
+      HaloColors.setLight(light);
+      for (final accent in HaloAccent.values) {
+        HaloColors.setAccent(accent);
+        final why = '${accent.name} ${light ? 'light' : 'dark'}';
+        for (final a in [0.04, 0.10]) {
+          final ground = photoCardWash(a);
+          expect(contrast(HaloColors.text, ground), greaterThan(4.5));
+          expect(contrast(HaloColors.warm, ground), greaterThan(4.5));
+          final button = Color.alphaBlend(photoButtonFill(), ground);
+          expect(
+            contrast(HaloColors.text, button),
+            greaterThan(4.5),
+            reason: why,
+          );
+          expect(
+            contrast(HaloColors.amberText, button),
+            greaterThan(3),
+            reason: why,
+          );
+        }
       }
     }
   });
+
+  BoxDecoration buttonLook(WidgetTester t, String label) =>
+      t
+              .widget<Container>(
+                find
+                    .ancestor(
+                      of: find.text(label),
+                      matching: find.byType(Container),
+                    )
+                    .first,
+              )
+              .decoration!
+          as BoxDecoration;
+
+  for (final light in [false, true]) {
+    testWidgets('the main button is a soft wash of the accent, '
+        '${light ? 'light' : 'dark'}', (t) async {
+      HaloColors.setLight(light);
+      addTearDown(() => HaloColors.setLight(false));
+      await t.pumpWidget(host(const ToolsScreen(), still: true));
+      await t.pumpAndSettle(const Duration(milliseconds: 50));
+      final main = buttonLook(t, 'Pick a photo');
+      // a wash, never the solid block it was
+      expect(main.color, photoButtonFill());
+      expect(main.color!.a, lessThan(0.3));
+      expect(main.gradient, isNull);
+      final words = t.widget<Text>(find.text('Pick a photo'));
+      expect(words.style!.color, HaloColors.text);
+      // the quiet one is an outline in the page's ink
+      final video = buttonLook(t, 'Video');
+      expect(video.color, isNull);
+      expect(t.widget<Text>(find.text('Video')).style!.color, HaloColors.text);
+      // no glow under the card either
+      final cards = [
+        for (final c in t.widgetList<Container>(
+          find.ancestor(
+            of: find.text('Photo cleaner'),
+            matching: find.byType(Container),
+          ),
+        ))
+          if ((c.decoration as BoxDecoration?)?.gradient != null) c,
+      ];
+      expect(cards, hasLength(1));
+      expect((cards.single.decoration! as BoxDecoration).boxShadow, isNull);
+      expect(
+        t.widget<Text>(find.text('Photo cleaner')).style!.color,
+        HaloColors.text,
+      );
+    });
+  }
+
+  testWidgets('the card says photo cleaner and what it removes', (t) async {
+    await t.pumpWidget(host(const ToolsScreen(), still: true));
+    await t.pumpAndSettle(const Duration(milliseconds: 50));
+    expect(find.text('Photo cleaner'), findsOneWidget);
+    expect(
+      find.text(
+        'Removes hidden info (metadata) like place, time and phone model',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('What does this photo know?'), findsNothing);
+    expect(find.text('Place · phone · time'), findsNothing);
+  });
+
+  testWidgets('right to left: the card reads in arabic from the right', (
+    t,
+  ) async {
+    setL10nLocale(const Locale('ar'));
+    addTearDown(() => setL10nLocale(const Locale('en')));
+    await t.pumpWidget(
+      host(
+        const Directionality(
+          textDirection: TextDirection.rtl,
+          child: ToolsScreen(),
+        ),
+        still: true,
+      ),
+    );
+    await t.pumpAndSettle(const Duration(milliseconds: 50));
+    final title = find.text('منظّف الصور');
+    expect(title, findsOneWidget);
+    expect(
+      find.text(
+        'يزيل المعلومات المخفية (البيانات الوصفية) مثل المكان والوقت وطراز الهاتف',
+      ),
+      findsOneWidget,
+    );
+    // the eye leads on the right, the title follows to its left
+    final eye = find.byType(StrokeIcon).first;
+    expect(t.getCenter(eye).dx, greaterThan(t.getCenter(title).dx));
+    expect(t.getTopRight(title).dx, greaterThan(250));
+    expect(t.takeException(), isNull);
+  });
+
+  for (final lang in ['en', 'de', 'ar']) {
+    testWidgets(
+      'largest text: the card\'s words and buttons show whole, $lang',
+      (t) async {
+        setL10nLocale(Locale(lang));
+        addTearDown(() => setL10nLocale(const Locale('en')));
+        await t.pumpWidget(
+          host(
+            Directionality(
+              textDirection: lang == 'ar'
+                  ? TextDirection.rtl
+                  : TextDirection.ltr,
+              child: const ToolsScreen(),
+            ),
+            scale: 2,
+            still: true,
+          ),
+        );
+        await t.pumpAndSettle(const Duration(milliseconds: 50));
+        expect(t.takeException(), isNull);
+        for (final s in [
+          l10n.toolsPhotoCleaner,
+          l10n.toolsRemovesHiddenInfo,
+          l10n.toolsPickAPhoto,
+          l10n.toolsVideo,
+        ]) {
+          final p = t.renderObject<RenderParagraph>(find.text(s));
+          expect(p.didExceedMaxLines, isFalse, reason: s);
+        }
+        // the buttons grow with their words instead of cutting them
+        final button = t.getSize(
+          find
+              .ancestor(
+                of: find.text(l10n.toolsPickAPhoto),
+                matching: find.byType(Container),
+              )
+              .first,
+        );
+        final words = t.getSize(find.text(l10n.toolsPickAPhoto));
+        expect(button.height, greaterThanOrEqualTo(words.height));
+      },
+    );
+  }
 
   testWidgets('largest font fits a small phone by scrolling', (t) async {
     await t.pumpWidget(host(const ToolsScreen(), scale: 2, still: true));
