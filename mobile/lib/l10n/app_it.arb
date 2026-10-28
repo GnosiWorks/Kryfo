@@ -2578,5 +2578,6 @@
   "desktopLockWrong": "Non è la passphrase giusta",
   "desktopLockFailed": "Kryfo non è riuscito ad aprire il suo blocco qui. Prova ad avviarlo di nuovo.",
   "desktopTrayQuit": "Esci da Kryfo",
-  "desktopTrayTip": "Kryfo è attivo e riceve messaggi"
+  "desktopTrayTip": "Kryfo è attivo e riceve messaggi",
+  "desktopNoCamera": "Kryfo non può ancora usare una fotocamera su questo computer. Usa il link o il codice."
 }

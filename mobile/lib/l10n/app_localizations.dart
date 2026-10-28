@@ -15754,6 +15754,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Kryfo is running and receiving messages'**
   String get desktopTrayTip;
+
+  /// screens/scan_screen.dart, screens/camera_screen.dart: on desktop, where the phone would open its camera
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo cannot use a camera on this computer yet. Use the link or the code instead.'**
+  String get desktopNoCamera;
 }
 
 class _AppLocalizationsDelegate

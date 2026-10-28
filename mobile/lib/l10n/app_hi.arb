@@ -2578,5 +2578,6 @@
   "desktopLockWrong": "यह सही पासफ़्रेज़ नहीं है",
   "desktopLockFailed": "Kryfo यहाँ अपना लॉक नहीं खोल पाया। इसे फिर से शुरू करके देखें।",
   "desktopTrayQuit": "Kryfo बंद करें",
-  "desktopTrayTip": "Kryfo चल रहा है और संदेश ले रहा है"
+  "desktopTrayTip": "Kryfo चल रहा है और संदेश ले रहा है",
+  "desktopNoCamera": "Kryfo अभी इस कंप्यूटर पर कैमरा इस्तेमाल नहीं कर सकता। इसके बजाय लिंक या कोड इस्तेमाल करें।"
 }

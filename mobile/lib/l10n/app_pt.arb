@@ -2578,5 +2578,6 @@
   "desktopLockWrong": "Essa não é a frase-senha",
   "desktopLockFailed": "O Kryfo não conseguiu abrir o bloqueio aqui. Tente abri-lo de novo.",
   "desktopTrayQuit": "Sair do Kryfo",
-  "desktopTrayTip": "O Kryfo está aberto e recebendo mensagens"
+  "desktopTrayTip": "O Kryfo está aberto e recebendo mensagens",
+  "desktopNoCamera": "O Kryfo ainda não consegue usar uma câmera neste computador. Use o link ou o código."
 }

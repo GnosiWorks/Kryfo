@@ -9729,4 +9729,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get desktopTrayTip => 'Kryfo is running and receiving messages';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo cannot use a camera on this computer yet. Use the link or the code instead.';
 }

@@ -9752,4 +9752,8 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get desktopTrayTip => 'Kryfo در حال اجراست و پیام می‌گیرد';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo هنوز نمی‌تواند روی این رایانه از دوربین استفاده کند. به‌جایش از پیوند یا کد استفاده کنید.';
 }

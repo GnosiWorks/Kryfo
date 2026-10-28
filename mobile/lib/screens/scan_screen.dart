@@ -10,6 +10,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
 import 'package:permission_handler/permission_handler.dart'
     show openAppSettings;
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../bridge_mode.dart' show looksLikeBridges;
 import '../theme.dart';
 import '../l10n/l10n.dart';
@@ -90,7 +91,11 @@ class _ScanScreenState extends State<ScanScreen>
     if (scanReaderForTest != null) return;
     try {
       if ((await availableCameras()).isEmpty) {
-        _fail(l10n.cameraNoCameraOnThis, denied: false, again: false);
+        _fail(
+          onDesktop ? l10n.desktopNoCamera : l10n.cameraNoCameraOnThis,
+          denied: false,
+          again: false,
+        );
       }
     } catch (_) {}
   }

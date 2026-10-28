@@ -2578,5 +2578,6 @@
   "desktopLockWrong": "Das ist nicht die Passphrase",
   "desktopLockFailed": "Kryfo konnte seine Sperre hier nicht öffnen. Starte es noch einmal.",
   "desktopTrayQuit": "Kryfo beenden",
-  "desktopTrayTip": "Kryfo läuft und empfängt Nachrichten"
+  "desktopTrayTip": "Kryfo läuft und empfängt Nachrichten",
+  "desktopNoCamera": "Kryfo kann auf diesem Computer noch keine Kamera nutzen. Nimm stattdessen den Link oder den Code."
 }

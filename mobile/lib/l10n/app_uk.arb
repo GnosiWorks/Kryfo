@@ -2578,5 +2578,6 @@
   "desktopLockWrong": "Це не та парольна фраза",
   "desktopLockFailed": "Kryfo не зміг відкрити блокування. Спробуйте запустити його знову.",
   "desktopTrayQuit": "Вийти з Kryfo",
-  "desktopTrayTip": "Kryfo працює й отримує повідомлення"
+  "desktopTrayTip": "Kryfo працює й отримує повідомлення",
+  "desktopNoCamera": "Kryfo поки не може користуватися камерою на цьому комп’ютері. Скористайтеся посиланням або кодом."
 }

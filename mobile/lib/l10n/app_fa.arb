@@ -2578,5 +2578,6 @@
   "desktopLockWrong": "این عبارت عبور درست نیست",
   "desktopLockFailed": "Kryfo نتوانست قفلش را اینجا باز کند. دوباره اجرایش کنید.",
   "desktopTrayQuit": "خروج از Kryfo",
-  "desktopTrayTip": "Kryfo در حال اجراست و پیام می‌گیرد"
+  "desktopTrayTip": "Kryfo در حال اجراست و پیام می‌گیرد",
+  "desktopNoCamera": "Kryfo هنوز نمی‌تواند روی این رایانه از دوربین استفاده کند. به‌جایش از پیوند یا کد استفاده کنید."
 }

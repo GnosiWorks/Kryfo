@@ -2578,5 +2578,6 @@
   "desktopLockWrong": "Bu parola ifadesi doğru değil",
   "desktopLockFailed": "Kryfo buradaki kilidini açamadı. Yeniden başlatmayı dene.",
   "desktopTrayQuit": "Kryfo'dan çık",
-  "desktopTrayTip": "Kryfo açık ve mesaj alıyor"
+  "desktopTrayTip": "Kryfo açık ve mesaj alıyor",
+  "desktopNoCamera": "Kryfo bu bilgisayarda henüz kamera kullanamıyor. Bunun yerine bağlantıyı ya da kodu kullan."
 }

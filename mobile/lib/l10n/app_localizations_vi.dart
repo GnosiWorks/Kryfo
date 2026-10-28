@@ -9726,4 +9726,8 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get desktopTrayTip => 'Kryfo đang chạy và nhận tin nhắn';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo chưa dùng được camera trên máy tính này. Hãy dùng liên kết hoặc mã thay thế.';
 }

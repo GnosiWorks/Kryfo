@@ -2578,5 +2578,6 @@
   "desktopLockWrong": "هذه ليست عبارة المرور",
   "desktopLockFailed": "تعذّر على Kryfo فتح قفله هنا. جرّب تشغيله مرة أخرى.",
   "desktopTrayQuit": "أغلق Kryfo",
-  "desktopTrayTip": "Kryfo يعمل ويستقبل الرسائل"
+  "desktopTrayTip": "Kryfo يعمل ويستقبل الرسائل",
+  "desktopNoCamera": "لا يستطيع Kryfo استخدام كاميرا على هذا الحاسوب بعد. استخدم الرابط أو الرمز بدلًا من ذلك."
 }

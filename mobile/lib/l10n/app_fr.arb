@@ -2578,5 +2578,6 @@
   "desktopLockWrong": "Ce n’est pas la phrase secrète",
   "desktopLockFailed": "Kryfo n’a pas pu ouvrir son verrou ici. Essayez de le relancer.",
   "desktopTrayQuit": "Quitter Kryfo",
-  "desktopTrayTip": "Kryfo est ouvert et reçoit des messages"
+  "desktopTrayTip": "Kryfo est ouvert et reçoit des messages",
+  "desktopNoCamera": "Kryfo ne peut pas encore utiliser de caméra sur cet ordinateur. Utilisez plutôt le lien ou le code."
 }

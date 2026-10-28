@@ -2578,5 +2578,6 @@
   "desktopLockWrong": "Đó không phải cụm mật khẩu",
   "desktopLockFailed": "Kryfo không mở được khóa ở đây. Hãy thử khởi động lại.",
   "desktopTrayQuit": "Thoát Kryfo",
-  "desktopTrayTip": "Kryfo đang chạy và nhận tin nhắn"
+  "desktopTrayTip": "Kryfo đang chạy và nhận tin nhắn",
+  "desktopNoCamera": "Kryfo chưa dùng được camera trên máy tính này. Hãy dùng liên kết hoặc mã thay thế."
 }

@@ -12281,5 +12281,9 @@
   "desktopTrayTip": "Kryfo is running and receiving messages",
   "@desktopTrayTip": {
     "description": "desktop/desktop_start.dart: the tray icon tooltip"
+  },
+  "desktopNoCamera": "Kryfo cannot use a camera on this computer yet. Use the link or the code instead.",
+  "@desktopNoCamera": {
+    "description": "screens/scan_screen.dart, screens/camera_screen.dart: on desktop, where the phone would open its camera"
   }
 }

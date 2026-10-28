@@ -111,7 +111,7 @@ packages:
     source: path
     version: "0.10.0+2"
   camera_platform_interface:
-    dependency: "direct overridden"
+    dependency: "direct main"
     description:
       path: "third_party/camera/camera_platform_interface"
       relative: true

@@ -2578,5 +2578,6 @@
   "desktopLockWrong": "Itu bukan frasa sandinya",
   "desktopLockFailed": "Kryfo tidak bisa membuka kuncinya di sini. Coba buka lagi.",
   "desktopTrayQuit": "Keluar dari Kryfo",
-  "desktopTrayTip": "Kryfo berjalan dan menerima pesan"
+  "desktopTrayTip": "Kryfo berjalan dan menerima pesan",
+  "desktopNoCamera": "Kryfo belum bisa memakai kamera di komputer ini. Pakai tautan atau kodenya saja."
 }

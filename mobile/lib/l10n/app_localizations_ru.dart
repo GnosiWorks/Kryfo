@@ -9908,4 +9908,8 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get desktopTrayTip => 'Kryfo работает и принимает сообщения';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo пока не может пользоваться камерой на этом компьютере. Используйте ссылку или код.';
 }

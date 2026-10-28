@@ -9285,6 +9285,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get desktopTrayTip => 'Kryfo 正在运行并接收消息';
+
+  @override
+  String get desktopNoCamera => 'Kryfo 暂时还不能在这台电脑上使用摄像头。请改用链接或代码。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -18451,4 +18454,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get desktopTrayTip => 'Kryfo 正在執行並接收訊息';
+
+  @override
+  String get desktopNoCamera => 'Kryfo 暫時還不能在這台電腦上使用相機。請改用連結或代碼。';
 }

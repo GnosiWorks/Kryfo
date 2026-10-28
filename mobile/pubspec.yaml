@@ -51,6 +51,8 @@ dependencies:
   sqflite_common_ffi: ^2.3.7
   sqlite3: ^2.9.4
   # the plugins' desktop sides, replaced or set up in lib/desktop
+  camera_platform_interface:
+    path: third_party/camera/camera_platform_interface
   sqflite_common: ^2.5.8
   connectivity_plus_platform_interface: ^2.1.0
   flutter_local_notifications_linux: ^8.0.1

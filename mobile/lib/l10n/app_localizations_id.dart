@@ -9733,4 +9733,8 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get desktopTrayTip => 'Kryfo berjalan dan menerima pesan';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo belum bisa memakai kamera di komputer ini. Pakai tautan atau kodenya saja.';
 }

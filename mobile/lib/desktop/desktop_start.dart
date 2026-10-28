@@ -4,6 +4,7 @@
 // and only then the app itself
 import 'dart:async';
 
+import 'package:camera_platform_interface/camera_platform_interface.dart';
 import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -82,6 +83,13 @@ class QuietLinuxNotifications extends LinuxFlutterLocalNotificationsPlugin {
   );
 }
 
+/// no camera plugin for desktop yet: none to offer, so the scan and the
+/// camera screens say so instead of waiting on a reader that never starts
+class NoCameras extends CameraPlatform {
+  @override
+  Future<List<CameraDescription>> availableCameras() async => const [];
+}
+
 /// shared preferences in the app's own folder, not the plugin's own one
 class _PrefsPlace extends PathProviderLinux {
   _PrefsPlace(this.dir);
@@ -135,6 +143,7 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     JustAudioPlatform.instance = DesktopAudio();
   }
 
+  CameraPlatform.instance = NoCameras();
   final vault = DesktopVault(p.join(root, 'vault.kv'));
   FlutterSecureStoragePlatform.instance = VaultStorage(vault);
 

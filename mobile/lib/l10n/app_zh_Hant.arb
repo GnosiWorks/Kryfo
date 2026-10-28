@@ -2578,5 +2578,6 @@
   "desktopLockWrong": "密碼短語不對",
   "desktopLockFailed": "Kryfo 無法在這裡打開它的鎖。請重新啟動試試。",
   "desktopTrayQuit": "結束 Kryfo",
-  "desktopTrayTip": "Kryfo 正在執行並接收訊息"
+  "desktopTrayTip": "Kryfo 正在執行並接收訊息",
+  "desktopNoCamera": "Kryfo 暫時還不能在這台電腦上使用相機。請改用連結或代碼。"
 }

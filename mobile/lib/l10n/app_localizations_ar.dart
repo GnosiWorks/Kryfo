@@ -9851,7 +9851,7 @@ class AppLocalizationsAr extends AppLocalizations {
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
-    return '$countString أحرف على الأقل';
+    return '$countString حرفًا على الأقل';
   }
 
   @override
@@ -9869,4 +9869,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get desktopTrayTip => 'Kryfo يعمل ويستقبل الرسائل';
+
+  @override
+  String get desktopNoCamera =>
+      'لا يستطيع Kryfo استخدام كاميرا على هذا الحاسوب بعد. استخدم الرابط أو الرمز بدلًا من ذلك.';
 }
