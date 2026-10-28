@@ -1153,6 +1153,8 @@ class _ChatScreenState extends State<ChatScreen>
   DevChatRow? _devChat;
   // the pinned key did not check out: nothing was sent
   bool _devKeyFailed = false;
+  // the pinned card is too old to start a chat on: an update brings one
+  bool _devCardOld = false;
 
   // the dev chat as home shows it, while it is this one
   DevRow? get _devShown {
@@ -1221,6 +1223,10 @@ class _ChatScreenState extends State<ChatScreen>
       case DevStart.keyFailed:
         HapticFeedback.heavyImpact();
         setState(() => _devKeyFailed = true);
+        return false;
+      case DevStart.needsUpdate:
+        HapticFeedback.lightImpact();
+        setState(() => _devCardOld = true);
         return false;
       case DevStart.none:
         return false;
@@ -6354,6 +6360,14 @@ class _ChatScreenState extends State<ChatScreen>
                 glyph: NoticeGlyph.shield,
                 text: l10n.devKeyCheckFailed,
                 color: HaloColors.rose,
+                margin: const EdgeInsets.fromLTRB(14, 4, 14, 6),
+              )
+            : _devCardOld
+            ? NoticeBanner(
+                key: const ValueKey('dev-old'),
+                glyph: NoticeGlyph.clock,
+                text: l10n.devUpdateToWrite,
+                color: HaloColors.violet,
                 margin: const EdgeInsets.fromLTRB(14, 4, 14, 6),
               )
             : const SizedBox(key: ValueKey('dev-key-none'), width: 0),

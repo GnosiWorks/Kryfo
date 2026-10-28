@@ -8300,6 +8300,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get devWhoChoiceStays => 'Tu elección se mantiene en este chat.';
 
   @override
+  String get devUpdateToWrite => 'Actualiza Kryfo para escribir a Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'No se pudo comprobar la clave de Marios. No se envió nada.';
 

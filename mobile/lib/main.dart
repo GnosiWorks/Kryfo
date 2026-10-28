@@ -84,7 +84,7 @@ import 'screens/requests_screen.dart' show RequestsScreen, backToRequests;
 import 'screens/chat_door.dart' show openChatAt;
 import 'screens/chat_screen.dart';
 import 'screens/dev_about_sheet.dart' show devChatRoute;
-import 'devchat/dev_start.dart' show DevKeyCheckFailed, DevStart;
+import 'devchat/dev_start.dart' show DevCardOld, DevKeyCheckFailed, DevStart;
 import 'screens/pair_code_screen.dart';
 import 'screens/scan_screen.dart';
 import 'screens/modes_screen.dart';

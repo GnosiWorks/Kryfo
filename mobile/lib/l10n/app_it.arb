@@ -2172,6 +2172,7 @@
   "devWhoAnon": "Se scrivi in forma anonima, Kryfo crea un nuovo nome e nuove chiavi solo per questa chat. Restano su questo telefono e non vengono mai usati altrove.",
   "devWhoNothingYet": "Niente lascia il tuo telefono finché non invii il primo messaggio.",
   "devWhoChoiceStays": "La tua scelta resta legata a questa chat.",
+  "devUpdateToWrite": "Aggiorna Kryfo per scrivere a Marios.",
   "devKeyCheckFailed": "Impossibile verificare la chiave di Marios. Non è stato inviato nulla.",
   "devLockLine": "Marios li leggerà. Potrai scrivere ancora appena ti risponde.",
   "devNewKey": "Marios ha una nuova chiave",

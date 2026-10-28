@@ -8380,6 +8380,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get devWhoChoiceStays => 'Твій вибір збережеться для цього чату.';
 
   @override
+  String get devUpdateToWrite => 'Онови Kryfo, щоб написати Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Не вдалося перевірити ключ Marios. Нічого не надіслано.';
 

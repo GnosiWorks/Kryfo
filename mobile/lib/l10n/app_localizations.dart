@@ -13313,6 +13313,12 @@ abstract class AppLocalizations {
   /// **'Your choice stays with this chat.'**
   String get devWhoChoiceStays;
 
+  /// screens/chat_screen.dart, dev chat: the card of Marios this app has built in is from before Kryfo 0.6 and has no post-quantum key, so no new chat with him can start; a later app has his new card. calm, not an error
+  ///
+  /// In en, this message translates to:
+  /// **'Update Kryfo to message Marios.'**
+  String get devUpdateToWrite;
+
   /// screens/chat_screen.dart: above the composer of the developer chat when his pinned key did not check out
   ///
   /// In en, this message translates to:

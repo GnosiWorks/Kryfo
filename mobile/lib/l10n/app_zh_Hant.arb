@@ -2172,6 +2172,7 @@
   "devWhoAnon": "匿名傳送時，Kryfo 會專門為這個聊天產生新的名字和金鑰。它們只留在這支手機上，絕不會在別處使用。",
   "devWhoNothingYet": "在你傳出第一則訊息之前，什麼都不會離開你的手機。",
   "devWhoChoiceStays": "你的選擇會一直跟著這個聊天。",
+  "devUpdateToWrite": "更新 Kryfo 後即可傳訊息給 Marios。",
   "devKeyCheckFailed": "無法核對 Marios 的金鑰。什麼都沒有傳送。",
   "devLockLine": "Marios 會讀到這些訊息。等他回覆後，你就能繼續寫。",
   "devNewKey": "Marios 有了新金鑰",

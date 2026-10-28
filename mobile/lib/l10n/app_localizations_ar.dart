@@ -8364,6 +8364,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get devWhoChoiceStays => 'يبقى اختيارك مع هذه المحادثة.';
 
   @override
+  String get devUpdateToWrite => 'حدّث Kryfo لتراسل Marios.';
+
+  @override
   String get devKeyCheckFailed => 'تعذّر التحقق من مفتاح Marios. لم يُرسل شيء.';
 
   @override

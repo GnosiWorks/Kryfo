@@ -2172,6 +2172,7 @@
   "devWhoAnon": "Anonim yazarsan Kryfo yalnızca bu sohbet için yeni bir ad ve anahtarlar oluşturur. Bunlar bu telefonda kalır ve başka hiçbir yerde kullanılmaz.",
   "devWhoNothingYet": "İlk mesajını gönderene kadar telefonundan hiçbir şey çıkmaz.",
   "devWhoChoiceStays": "Seçimin bu sohbette kalır.",
+  "devUpdateToWrite": "Marios’a yazmak için Kryfo’yu güncelle.",
   "devKeyCheckFailed": "Marios’un anahtarı kontrol edilemedi. Hiçbir şey gönderilmedi.",
   "devLockLine": "Marios bunları okuyacak. O yanıt verince daha fazla yazabilirsin.",
   "devNewKey": "Marios’un yeni bir anahtarı var",

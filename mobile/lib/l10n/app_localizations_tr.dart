@@ -8257,6 +8257,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get devWhoChoiceStays => 'Seçimin bu sohbette kalır.';
 
   @override
+  String get devUpdateToWrite => 'Marios’a yazmak için Kryfo’yu güncelle.';
+
+  @override
   String get devKeyCheckFailed =>
       'Marios’un anahtarı kontrol edilemedi. Hiçbir şey gönderilmedi.';
 

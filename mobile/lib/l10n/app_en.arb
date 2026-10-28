@@ -10347,6 +10347,10 @@
   "@devWhoChoiceStays": {
     "description": "widgets/dev_note.dart: the last line of the sheet Who sees what: after the first message the choice is fixed"
   },
+  "devUpdateToWrite": "Update Kryfo to message Marios.",
+  "@devUpdateToWrite": {
+    "description": "screens/chat_screen.dart, dev chat: the card of Marios this app has built in is from before Kryfo 0.6 and has no post-quantum key, so no new chat with him can start; a later app has his new card. calm, not an error"
+  },
   "devKeyCheckFailed": "Could not check Marios's key. Nothing was sent.",
   "@devKeyCheckFailed": {
     "description": "screens/chat_screen.dart: above the composer of the developer chat when his pinned key did not check out"

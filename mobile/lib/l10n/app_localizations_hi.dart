@@ -8242,6 +8242,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get devWhoChoiceStays => 'आपका चुनाव इस चैट के साथ रहता है।';
 
   @override
+  String get devUpdateToWrite =>
+      'Marios को संदेश भेजने के लिए Kryfo अपडेट करें।';
+
+  @override
   String get devKeyCheckFailed =>
       'Marios की कुंजी जाँची नहीं जा सकी। कुछ नहीं भेजा गया।';
 

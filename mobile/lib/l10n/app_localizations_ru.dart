@@ -8391,6 +8391,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get devWhoChoiceStays => 'Твой выбор сохранится для этого чата.';
 
   @override
+  String get devUpdateToWrite => 'Обнови Kryfo, чтобы написать Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Не удалось проверить ключ Marios. Ничего не отправлено.';
 

@@ -8227,6 +8227,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get devWhoChoiceStays => 'Pilihanmu melekat pada obrolan ini.';
 
   @override
+  String get devUpdateToWrite =>
+      'Perbarui Kryfo untuk mengirim pesan ke Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Tidak bisa memeriksa kunci Marios. Tidak ada yang terkirim.';
 

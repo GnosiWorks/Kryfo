@@ -2172,6 +2172,7 @@
   "devWhoAnon": "Jika kamu menulis secara anonim, Kryfo membuat nama dan kunci baru khusus untuk obrolan ini. Semuanya tetap di ponsel ini dan tidak pernah dipakai di tempat lain.",
   "devWhoNothingYet": "Tidak ada yang keluar dari ponselmu sampai kamu mengirim pesan pertamamu.",
   "devWhoChoiceStays": "Pilihanmu melekat pada obrolan ini.",
+  "devUpdateToWrite": "Perbarui Kryfo untuk mengirim pesan ke Marios.",
   "devKeyCheckFailed": "Tidak bisa memeriksa kunci Marios. Tidak ada yang terkirim.",
   "devLockLine": "Marios akan membaca pesan-pesan ini. Kamu bisa menulis lagi setelah dia membalas.",
   "devNewKey": "Marios punya kunci baru",

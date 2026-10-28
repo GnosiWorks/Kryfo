@@ -8217,6 +8217,9 @@ class AppLocalizationsVi extends AppLocalizations {
       'Lựa chọn của bạn gắn liền với cuộc trò chuyện này.';
 
   @override
+  String get devUpdateToWrite => 'Hãy cập nhật Kryfo để nhắn tin cho Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Không thể kiểm tra khóa của Marios. Không có gì được gửi đi.';
 

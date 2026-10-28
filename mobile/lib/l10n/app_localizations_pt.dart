@@ -8294,6 +8294,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Sua escolha fica valendo para esta conversa.';
 
   @override
+  String get devUpdateToWrite =>
+      'Atualize o Kryfo para mandar mensagem ao Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Não foi possível conferir a chave do Marios. Nada foi enviado.';
 

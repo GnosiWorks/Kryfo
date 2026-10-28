@@ -8229,6 +8229,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get devWhoChoiceStays => 'Your choice stays with this chat.';
 
   @override
+  String get devUpdateToWrite => 'Update Kryfo to message Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Could not check Marios\'s key. Nothing was sent.';
 

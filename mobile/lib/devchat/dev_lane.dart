@@ -222,6 +222,19 @@ bool devCardChecks(DevKey k) {
   }
 }
 
+/// [k]'s card is from before 0.6: it carries no post-quantum prekey, so no
+/// chat starts on it here (a later app pins a new one)
+bool devCardOld(DevKey k) {
+  try {
+    cardBundle(k.bundle);
+    return false;
+  } on ClassicRefused {
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 /// a new dev chat can start on [k]'s card: it carries the post-quantum
 /// prekey and every check on it holds
 bool devCardStarts(DevKey k) {

@@ -39,6 +39,8 @@ extension AppStateDevchat on AppState {
     if (key == null) return DevStart.none;
     // his card as pinned, checked the same way in every container
     if (!devCardChecks(key)) throw const DevKeyCheckFailed();
+    // one without the post-quantum prekey starts nothing: no classic chat
+    if (devCardOld(key)) throw const DevCardOld();
     final made = anon ? _devMadeName() : null;
     if (quiet) {
       // a decoy keeps its chat on this phone: no store, no lane, nothing

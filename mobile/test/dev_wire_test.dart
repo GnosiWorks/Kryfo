@@ -630,6 +630,32 @@ void main() {
 
     for (final anon in [false, true]) {
       final how = anon ? 'anonymous' : 'three words';
+      test('$how: a pinned card without the kyber prekey starts nothing, '
+          'and says an update is needed', () async {
+        await everythingButASend();
+        final j =
+            Map<String, Object?>.from(
+                jsonDecode(utf8.decode(base64Decode(_m1.bundle))) as Map,
+              )
+              ..remove('kyberPreKeyId')
+              ..remove('kyberPreKeyPublic')
+              ..remove('kyberPreKeySignature');
+        useDevKeysForTest([_card(base64Encode(utf8.encode(jsonEncode(j))))]);
+        await expectLater(
+          _app.devBegin(anon: anon),
+          throwsA(isA<DevCardOld>()),
+        );
+        expect(_row().state, DevState.fresh);
+        expect(_kept('sessions'), isEmpty);
+        expect(_anonRows(), 0);
+        expect(_io.listened, isEmpty);
+        expect(_io.sent, isEmpty);
+        useDevKeysForTest([_m1]);
+      });
+    }
+
+    for (final anon in [false, true]) {
+      final how = anon ? 'anonymous' : 'three words';
       test('$how: the first send makes his session and listens once, and '
           'sends nothing itself', () async {
         await everythingButASend();
