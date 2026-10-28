@@ -2,6 +2,7 @@
 // identity containers: each one is a database under its own key, its own
 // media folders and its own slice of settings
 
+import 'desktop/desktop_mode.dart' show onDesktop;
 import 'dart:io';
 import 'secure_store.dart';
 import 'dart:math';
@@ -28,25 +29,38 @@ class HaloContainer {
   const HaloContainer._({
     required this.id,
     required this.binding,
-    required this.dbFile,
+    required String dbFile,
     required this.keyName,
-    required this.suffix,
+    required String suffix,
     required this.prefix,
     required this.rawKey,
     this.extendsId,
     this.wrapped = false,
-  }) : assert((keyName == null) == wrapped),
+  }) : _dbFile = dbFile,
+       _suffix = suffix,
+       assert((keyName == null) == wrapped),
        assert((extendsId != null) == (binding == Binding.extending));
 
   // the id sealed into a pin table entry: sixteen bytes, hex
   final String id;
   final Binding binding;
   // the database file, in the documents folder
-  final String dbFile;
+  final String _dbFile;
+  String get dbFile => onDesktop ? _desk.$1 : _dbFile;
   // where its database key sits in secure storage. none when wrapped
   final String? keyName;
   // after the media and wallpapers folder names, '' for the everyday one
-  final String suffix;
+  final String _suffix;
+  String get suffix => onDesktop ? _desk.$2 : _suffix;
+
+  // a copied desktop folder names no decoy and no vault: the files of the
+  // others go by number. the everyday one keeps the names backups carry
+  (String, String) get _desk => switch (id) {
+    '00000000000000000000000000000002' => ('k2.db', '_k2'),
+    '00000000000000000000000000000003' => ('k3.db', '_k3'),
+    '00000000000000000000000000000004' => ('k4.db', '_k4'),
+    _ => (_dbFile, _suffix),
+  };
   // settings prefix, '' for the everyday one
   final String prefix;
   // a raw 32-byte key, so sqlcipher skips its key derivation
