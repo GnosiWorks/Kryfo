@@ -12,9 +12,9 @@ backups are files you make and control. they are encrypted with a passphrase onl
 
 ## what travels over the network
 
-to deliver a message, Kryfo routes it through tor and, when the other person is offline, leaves it in an encrypted mailbox on nostr relays: a few public ones and ours in onion and fast mode, only ours in relay mode. relays only ever hold sealed, encrypted data. they do not hold your contact list or a record of your account, because no such account exists. messages from 0.5.2 on are padded to one of five sizes, so a relay sees roughly how big a message is, not how long. how many you send and when still shows.
+to deliver a message, Kryfo routes it through tor and, when the other person is offline, leaves it in an encrypted mailbox on nostr relays: a few public ones and ours in private mode, only our two in fast mode. relays only ever hold sealed, encrypted data. they do not hold your contact list or a record of your account, because no such account exists. messages from 0.5.2 on are padded to one of five sizes, so a relay sees roughly how big a message is, not how long. how many you send and when still shows.
 
-your ip is hidden behind tor on the default private mode. relay mode and fast mode skip tor to go quicker. relay mode connects straight to our own relay, which then sees your ip for that connection and writes nothing down. fast mode adds public relays, and each of them sees your ip too. both are off by default and labeled where you turn them on.
+your ip is hidden behind tor on the default private mode. fast mode skips tor to go quicker. it connects straight to our two relays, run at two different hosting companies, which then see your ip for that connection and write nothing down. each message goes to both, so one can stop without messages stopping. only if both are down does fast mode read and send through public relays, and then only through tor, so they never see your ip. fast mode is off by default and labeled where you turn it on. relay mode was merged into it.
 
 ## typing
 
@@ -40,13 +40,13 @@ a handle (@name) is optional. without one, nothing about you sits anywhere centr
 
 people search is a second choice on top of that, off by default. only handles whose owner turned on "Show me in search" come up, next to a name they picked. turning it off takes you out of search at once. releasing the handle deletes its entry at once. the server keeps one backup copy a day and deletes each copy once it is a week old, so no copy of a released handle is left after 8 days.
 
-the app reaches the registry, people search and the badge service over tor on every route, also in relay and fast modes. the registry keeps no record of who looked anyone up or what was searched for.
+the app reaches the registry, people search and the badge service over tor on every route, also in fast mode. the registry keeps no record of who looked anyone up or what was searched for.
 
 ## the developer chat
 
 the "Marios · built Kryfo" chat at the top of the list talks to the person who builds the app. its key is built into Kryfo, so nobody else can answer in it. nothing connects and nothing is sent until you write the first message: no hello, no lookup, no app version, no logs.
 
-with your three words, Marios sees them and can write back like any contact. the face you picked, your onion address and any supporter badge are not sent. "Write anonymously" makes a new name and keys for that chat alone: they stay on your phone, are never used anywhere else and are left out of backups. either way Marios sees what you write and when, and delivery receipts tell each side when a message arrived. anonymous does not hide your writing style, the details you share, or your ip in relay and fast modes. voice notes in an anonymous chat always go through the voice disguise.
+with your three words, Marios sees them and can write back like any contact. the face you picked, your onion address and any supporter badge are not sent. "Write anonymously" makes a new name and keys for that chat alone: they stay on your phone, are never used anywhere else and are left out of backups. either way Marios sees what you write and when, and delivery receipts tell each side when a message arrived. anonymous does not hide your writing style, the details you share, or your ip in fast mode. voice notes in an anonymous chat always go through the voice disguise.
 
 deleting the chat deletes it on your phone, and it does not come back unless you open it again from settings. Marios keeps a copy of what you sent, as any person you write to does.
 

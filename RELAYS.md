@@ -37,6 +37,21 @@ first.
 it needs cgo (`go-sqlite3`). with `CGO_ENABLED=0` it builds and then panics at
 start.
 
+### two of them
+
+the same `relay-live` runs on a second box at another hosting company,
+`relay2.kryfo.app`, with a store of its own. the boxes never copy from each
+other: a feed of every wrap between them is what `limits.go` refuses anyone.
+the app's fast route writes to both and reads both. the first ok ends a send,
+the first copy is the one shown, and a wrap one store missed waits on the
+phone and is offered again once that store answers, for up to 14 days, with
+the same id (`engine/topup.go`). each store keeps its own catch-up anchor per
+address (`engine/stores.go`), so a back-dated wrap only one of them holds is
+never stepped over because the other moved on. public relays are the fast
+route's backup only while neither store answers, and are reached through tor.
+the private route lists the first store only, through its onion and its
+clearnet name.
+
 ## `dmrelay/`: next, not deployable yet
 
 badger instead of sqlite, expiration checks, a kind allow-list, and nip-42
