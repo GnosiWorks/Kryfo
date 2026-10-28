@@ -392,6 +392,8 @@ func startListener(dataDir string) string {
 	}
 	mu.Lock()
 	torNode = t
+	// a new tor publishes its onion afresh
+	publishedOnce.Store(false)
 	close(torGone)
 	torGone = make(chan struct{})
 	mu.Unlock()
@@ -580,6 +582,13 @@ var torRestarting int32
 
 var lastTorRestart int64 // unix seconds of the last one, for the cooldown
 
+// how often and how long a publish seen early waits for the status to leave
+// starting
+var (
+	publishSettle    = 200 * time.Millisecond
+	publishSettleMax = time.Minute
+)
+
 // one watcher of each kind at a time. each parks on a control event listener,
 // and one left behind per reconnect is a leak.
 var (
@@ -646,6 +655,7 @@ func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionI
 	}
 	for {
 		if watchHSDirUpload(t, hsCh, hsSubbed, onionID, gone) {
+			publishedOnce.Store(true)
 			break
 		}
 		select {
@@ -661,6 +671,19 @@ func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionI
 		}
 		// no confirmed upload yet: the same listener stays live, so wait for
 		// a late descriptor instead of claiming reachable.
+	}
+	// up before 100% was read: the flip waits for the status to catch up
+	// rather than being lost, within this route
+	gen, waited := routeGeneration(), time.Now()
+	for torStatusNow() == "starting" {
+		if routeGeneration() != gen || time.Since(waited) > publishSettleMax {
+			return
+		}
+		select {
+		case <-gone:
+			return
+		case <-time.After(publishSettle):
+		}
 	}
 	statusMu.Lock()
 	if torStatus == "publishing" {
@@ -1393,8 +1416,34 @@ func HaloSendTo(cAddr *C.char, cMsg *C.char) *C.char {
 // relay at once, as for a direct route that is down
 const errNotPublished = "error: not published yet"
 
+// set once this tor has put our descriptor up, kept through bounces and
+// wakes: tor keeps its intro points through those and uploads again only
+// on its own clock, an hour or two later
+var publishedOnce atomic.Bool
+
+// how long a first publish may hold the direct route, for an upload that
+// is never heard of (no event subscription, a stuck event connection)
+var directAfter = 30 * time.Second
+
 // the direct route joins once our onion is published: until then a send
-// goes by the relays alone instead of waiting on a dial beside the publish
+// goes by the relays alone instead of waiting on a dial beside the publish.
+// only the first publish of this tor counts, so a bounce changes nothing
+func directOpen() bool {
+	switch torStatusNow() {
+	case "reachable":
+		return true
+	case "publishing":
+		if publishedOnce.Load() {
+			return true
+		}
+		txMu.RLock()
+		since := pubSince
+		txMu.RUnlock()
+		return !since.IsZero() && time.Since(since) > directAfter
+	}
+	return false
+}
+
 func sendDirect(addr, msg string) string {
 	mu.Lock()
 	t := torNode
@@ -1402,7 +1451,7 @@ func sendDirect(addr, msg string) string {
 	if t == nil {
 		return "error: tor not started"
 	}
-	if torStatusNow() != "reachable" {
+	if !directOpen() {
 		return errNotPublished
 	}
 	if err := sendTo(t, addr, msg); err != nil {

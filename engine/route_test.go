@@ -31,6 +31,7 @@ func resetRoute(t *testing.T, status string, pct int) {
 	atomic.StoreInt32(&reconnectRunning, 0)
 	atomic.StoreInt32(&torRestarting, 0)
 	atomic.StoreInt32(&bounceOff, 0)
+	publishedOnce.Store(false)
 }
 
 // the gaps exact, as the tests count them

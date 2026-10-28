@@ -233,6 +233,12 @@ func statusLine() string {
 	statusMu.RLock()
 	st, pct, up := torStatus, bootstrapPct, hsdirUploads
 	statusMu.RUnlock()
+	// after this tor's first publish the address stays up through a bounce:
+	// tor keeps the descriptor and its intro points, and uploads again on
+	// its own clock, so publishing would stand for an hour or two
+	if st == "publishing" && publishedOnce.Load() {
+		st = "reachable"
+	}
 	ok, gen := routeVerdict(st)
 	n := 0
 	if ok {
