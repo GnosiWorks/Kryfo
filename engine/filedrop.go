@@ -295,6 +295,9 @@ type dropSent struct {
 	// the file's sha256, which the recipient checks once it is opened
 	Sum    string            `json:"sum"`
 	Tokens map[string]string `json:"tokens"`
+	// its parts went up in this call: false for a file the service had
+	// whole already, or every recipient has
+	Sent bool `json:"sent"`
 }
 
 // seals the file at path and sends it up, going on from what a send before
@@ -349,7 +352,9 @@ func dropSend(jobJSON string) string {
 		out.Tokens[m] = t
 		got = append(got, sha256Hex(t))
 	}
-	if word := dropUpload(ctx, c, base, job, v, size, chunks, sealed, got, j); word != "" {
+	word, sent := dropUpload(ctx, c, base, job, v, size, chunks, sealed, got, j)
+	out.Sent = sent
+	if word != "" {
 		if word == "cancelled" {
 			// what went up of it goes too
 			dropTakeBack(c, base, v)
@@ -360,7 +365,16 @@ func dropSend(jobJSON string) string {
 	return string(b)
 }
 
-func dropUpload(ctx context.Context, c *http.Client, base string, job dropSendJob, v dropValues, size int64, chunks int, sealed int64, got []string, j *dropJob) string {
+func dropUpload(ctx context.Context, c *http.Client, base string, job dropSendJob, v dropValues, size int64, chunks int, sealed int64, got []string, j *dropJob) (string, bool) {
+	w := dropUploadParts(ctx, c, base, job, v, size, chunks, sealed, got, j)
+	if w == "whole" {
+		return "", false
+	}
+	return w, true
+}
+
+// "" once the parts are up, "whole" for a file that needed none
+func dropUploadParts(ctx context.Context, c *http.Client, base string, job dropSendJob, v dropValues, size int64, chunks int, sealed int64, got []string, j *dropJob) string {
 	pow, err := dropPow(ctx, v.id, sealed)
 	if err != nil {
 		return "cancelled"
@@ -382,7 +396,7 @@ func dropUpload(ctx context.Context, c *http.Client, base string, job dropSendJo
 	// file does not
 	if begun.End || begun.Gone {
 		j.done.Store(sealed)
-		return ""
+		return "whole"
 	}
 	f, err := os.Open(job.Path)
 	if err != nil {

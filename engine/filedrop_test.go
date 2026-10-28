@@ -287,7 +287,7 @@ func TestDropSendAndFetch(t *testing.T) {
 	f, lanes := dropRig(t)
 	path, plain := writeRandom(t, 2*80*dropChunk+12345)
 	s := mustSend(t, sendJob(path, "uid1", "alice"))
-	if s.Size != int64(len(plain)) || s.Chunks != dropPadChunks(161) || len(s.Tokens) != 1 {
+	if s.Size != int64(len(plain)) || s.Chunks != dropPadChunks(161) || len(s.Tokens) != 1 || !s.Sent || len(s.Sum) != 64 {
 		t.Fatalf("sent %+v", s)
 	}
 	stored := f.files[s.ID]
@@ -611,7 +611,7 @@ func TestDropNoUploadAfterGot(t *testing.T) {
 	v, _, _, _ := dropValuesFor(path, "uid-d")
 	f.goneIDs[v.id] = true
 	s := mustSend(t, sendJob(path, "uid-d", "a"))
-	if f.puts.Load() != 0 || s.ID != v.id {
+	if f.puts.Load() != 0 || s.ID != v.id || s.Sent {
 		t.Fatalf("%d parts sent for a file every recipient has", f.puts.Load())
 	}
 }
