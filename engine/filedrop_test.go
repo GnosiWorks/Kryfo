@@ -525,6 +525,15 @@ func TestDropTakeBack(t *testing.T) {
 	if r := dropDrop(sendJob(path, "uid8", "a")); r != "ok" {
 		t.Fatalf("drop again: %s", r)
 	}
+	// by the values alone, read while the file was there
+	s = mustSend(t, sendJob(path, "uid8b", "a"))
+	var vals map[string]string
+	json.Unmarshal([]byte(dropValuesJSON(sendJob(path, "uid8b"))), &vals)
+	os.Remove(path)
+	b, _ := json.Marshal(dropSendJob{Host: "f1", ID: vals["id"], Own: vals["own"]})
+	if r := dropDrop(string(b)); r != "ok" || f.files[s.ID] != nil {
+		t.Fatalf("drop by values: %s", r)
+	}
 }
 
 // a cancel stops a send part way and takes back what went up

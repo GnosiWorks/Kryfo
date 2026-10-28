@@ -285,6 +285,9 @@ type dropSendJob struct {
 	UID     string   `json:"uid"`
 	Members []string `json:"members"`
 	Host    string   `json:"host"`
+	// a take back by the values alone, read from the file before it went
+	ID  string `json:"id"`
+	Own string `json:"own"`
 }
 
 type dropSent struct {
@@ -640,9 +643,17 @@ func dropDrop(jobJSON string) string {
 	if !ok {
 		return "error: bad"
 	}
-	v, _, _, err := dropValuesFor(job.Path, job.UID)
-	if err != nil {
-		return "error: read"
+	var v dropValues
+	if job.ID != "" {
+		if !dropIDShape(job.ID) || !dropHexShape(job.Own) {
+			return "error: bad"
+		}
+		v = dropValues{id: job.ID, own: job.Own}
+	} else {
+		var err error
+		if v, _, _, err = dropValuesFor(job.Path, job.UID); err != nil {
+			return "error: read"
+		}
 	}
 	defer dropLane("files:" + v.id)
 	c, err := dropClient("files:" + v.id)
@@ -654,6 +665,28 @@ func dropDrop(jobJSON string) string {
 		return "error: " + word
 	}
 	return "ok"
+}
+
+// the id and the sender's token of a file sent under this message, read
+// from the file: what a take back needs once the file is gone from here.
+// {"id","own"} or "error: read"
+//
+//export HaloFileValues
+func HaloFileValues(cJob *C.char) *C.char {
+	return C.CString(dropValuesJSON(goStr(cJob)))
+}
+
+func dropValuesJSON(jobJSON string) string {
+	var job dropSendJob
+	if json.Unmarshal([]byte(jobJSON), &job) != nil || job.Path == "" || job.UID == "" {
+		return "error: bad"
+	}
+	v, _, _, err := dropValuesFor(job.Path, job.UID)
+	if err != nil {
+		return "error: read"
+	}
+	b, _ := json.Marshal(map[string]string{"id": v.id, "own": v.own})
+	return string(b)
 }
 
 // a recipient has the whole file: the service lets it go once every
