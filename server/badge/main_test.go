@@ -762,3 +762,41 @@ func TestGapSinceMustParse(t *testing.T) {
 		t.Fatal(gapSinceLine())
 	}
 }
+
+// a reservation the allowance may give back is no hold: no line saying
+// held, and none saying open again after it
+func TestGapGuardSaysNoFalseHold(t *testing.T) {
+	setup(t, &fakeBTCPay{})
+	var lines []string
+	old := logf
+	logf = func(f string, a ...any) { lines = append(lines, fmt.Sprintf(f, a...)) }
+	t.Cleanup(func() { logf = old })
+	now := time.Now()
+	gap = &gapGuard{unpaid: gapLimit - 1, checked: now}
+	if ok, _ := gap.reserve(now); !ok {
+		t.Fatal("one under the limit was refused")
+	}
+	// a second ask while the first is still in flight
+	if ok, _ := gap.reserve(now); ok || gap.held {
+		t.Fatalf("ok=%v held=%v", ok, gap.held)
+	}
+	gap.giveBack()
+	if ok, _ := gap.reserve(now); !ok {
+		t.Fatal("refused after the give back")
+	}
+	gap.done()
+	if len(lines) != 0 {
+		t.Fatalf("journal: %q", lines)
+	}
+	// a real hold is said once, and its end once
+	if ok, _ := gap.reserve(now); ok || !gap.held || len(lines) != 1 ||
+		!strings.HasPrefix(lines[0], "INVOICES HELD: 15 unpaid") {
+		t.Fatalf("ok=%v held=%v %q", ok, gap.held, lines)
+	}
+	gap.reserve(now)
+	gap.unpaid = 3
+	if ok, _ := gap.reserve(now); !ok || len(lines) != 2 ||
+		!strings.HasPrefix(lines[1], "invoices open again") {
+		t.Fatalf("ok=%v %q", ok, lines)
+	}
+}

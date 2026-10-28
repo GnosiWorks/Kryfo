@@ -378,6 +378,9 @@ const gapSayEvery = time.Hour
 
 var gap = &gapGuard{}
 
+// the guard's journal lines, caught by the tests
+var logf = log.Printf
+
 func (g *gapGuard) reserve(now time.Time) (bool, error) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
@@ -389,8 +392,13 @@ func (g *gapGuard) reserve(now time.Time) (bool, error) {
 		g.unpaid, g.checked = n+g.inflight, now
 	}
 	if g.unpaid >= gapLimit {
+		// asks still in flight may yet be given back: only invoices really
+		// made count as a hold worth saying
+		if g.unpaid-g.inflight < gapLimit {
+			return false, nil
+		}
 		if !g.held || now.Sub(g.said) >= gapSayEvery {
-			log.Printf("INVOICES HELD: %d unpaid in a row, the limit is %d. badges wait, the app "+
+			logf("INVOICES HELD: %d unpaid in a row, the limit is %d. badges wait, the app "+
 				"shows the fixed address. reopens on a payment, or set BADGE_GAP_SINCE once the "+
 				"wallet sees every address", g.unpaid, gapLimit)
 			g.said = now
@@ -399,7 +407,7 @@ func (g *gapGuard) reserve(now time.Time) (bool, error) {
 		return false, nil
 	}
 	if g.held {
-		log.Printf("invoices open again: %d unpaid in a row", g.unpaid)
+		logf("invoices open again: %d unpaid in a row", g.unpaid)
 	}
 	g.held = false
 	g.unpaid++
