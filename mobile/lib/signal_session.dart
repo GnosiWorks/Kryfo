@@ -206,6 +206,10 @@ class SignalSession {
 
   final Map<String, Future<void>> _steps = {};
 
+  // the opener read again in the first-contact slot last, not marked read
+  // until it is filed: (version, base key, kyber id, fingerprint)
+  (int, Uint8List, int, Uint8List)? _slotRead;
+
   // peers a frame waits on: too big for an opener, it goes once they answer
   final Set<String> _awaiting = {};
 
@@ -462,7 +466,9 @@ class SignalSession {
         held != null && lib.sessionInfo(held).holds(info.version, info.baseKey);
     final kyberId = info.kyberPreKeyId;
     // one opener opens once, on whichever path it comes back
-    final print = kyberId == null ? null : _fingerprint(info, body);
+    // every opener read strictly first, the classic ones too
+    final whole = _fingerprint(info, body);
+    final print = kyberId == null ? null : whole;
     if (print != null && await kyberPreKeyStore.wasRead(kyberId!, print)) {
       throw const LsError(LsError.duplicate);
     }
@@ -557,10 +563,14 @@ class SignalSession {
   // the message inside it. the fields around them (registration id, prekey
   // ids) are not authenticated, so a copy with them changed is the same one
   Uint8List _fingerprint(LsPreKeyMessageInfo info, Uint8List body) {
-    final inner = openerMessageOf(body);
-    if (inner == null) throw const LsError(LsError.message);
+    final outer = strictOpener(body);
+    // the same keys libsignal read, or the two reads differ
+    if (!_eq(outer.baseKey, info.baseKey) ||
+        !_eq(outer.identity, info.identityKey)) {
+      throw const LsError(LsError.message);
+    }
     return Uint8List.fromList(
-      sha256.convert([...info.baseKey, ...inner]).bytes,
+      sha256.convert([...outer.baseKey, ...outer.message]).bytes,
     );
   }
 
@@ -608,8 +618,12 @@ class SignalSession {
           prefix: _prefix,
         ).saw(peer, o.identityKey);
         await LsSessionStore(txn, prefix: _prefix).store(peer, o.record);
+        // marked read once it is filed under the name holding it
+        // (keepOpenedSession): one turned away there can come again
+        _slotRead = (info.version, info.baseKey, kyberId, print);
+      } else {
+        await LsKyberPreKeyStore(txn, prefix: _prefix).markRead(kyberId, print);
       }
-      await LsKyberPreKeyStore(txn, prefix: _prefix).markRead(kyberId, print);
     });
     dlog('signal: an opener of a held session read on its own');
     return o.plaintext;
@@ -655,6 +669,12 @@ class SignalSession {
         final cur = lib.sessionInfo(record).current;
         if (cur != null &&
             lib.sessionInfo(held).holds(cur.version, cur.baseKey)) {
+          // a slot re-read filed where its session is: read now, for good
+          final r = _slotRead;
+          if (r != null && r.$1 == cur.version && _eq(r.$2, cur.baseKey)) {
+            await kyberPreKeyStore.markRead(r.$3, r.$4);
+            _slotRead = null;
+          }
           dlog('back-pair: an opener held already, the session kept');
           return;
         }
@@ -898,38 +918,59 @@ class SignalSession {
   }
 }
 
-/// the whisper message inside an opener (a prekey message without the
-/// wire's type byte): field 4 of its protobuf, after the version byte.
-/// null when it does not read
-Uint8List? openerMessageOf(Uint8List opener) {
+/// an opener's protobuf (a prekey message without the wire's type byte),
+/// read the one way libsignal could read it too: after the version byte,
+/// each field at most once, only the eight fields an opener has, each with
+/// its wire type, every varint in its shortest form and the ids under 2^32,
+/// nothing left over. libsignal keeps the last copy of a field, so a second
+/// one would make the opener mean another thing to a reader of the first:
+/// any of that is refused (KS_ERR_MESSAGE) before anything is decrypted
+({Uint8List message, Uint8List baseKey, Uint8List identity}) strictOpener(
+  Uint8List opener,
+) {
+  Never bad() => throw const LsError(LsError.message);
+  if (opener.length < 2) bad();
   var at = 1;
-  int? varint() {
+  int varint() {
     var v = 0;
     for (var shift = 0; shift < 64; shift += 7) {
-      if (at >= opener.length) return null;
+      if (at >= opener.length) bad();
       final x = opener[at++];
       v |= (x & 0x7f) << shift;
-      if (x < 0x80) return v;
+      if (x < 0x80) {
+        // the shortest form: no last byte of zero after the first
+        if (x == 0 && shift > 0) bad();
+        return v;
+      }
     }
-    return null;
+    bad();
   }
 
+  const ids = {1, 5, 6, 7};
+  const bytes = {2, 3, 4, 8};
+  final seen = <int>{};
+  final got = <int, Uint8List>{};
   while (at < opener.length) {
     final tag = varint();
-    if (tag == null) return null;
-    switch (tag & 7) {
-      case 0:
-        if (varint() == null) return null;
-      case 2:
-        final n = varint();
-        if (n == null || n < 0 || n > opener.length - at) return null;
-        if (tag >> 3 == 4) return Uint8List.sublistView(opener, at, at + n);
-        at += n;
-      default:
-        return null;
+    final field = tag >> 3;
+    final kind = tag & 7;
+    if (!seen.add(field)) bad();
+    if (ids.contains(field)) {
+      if (kind != 0) bad();
+      if (varint() > 0xffffffff) bad();
+    } else if (bytes.contains(field)) {
+      if (kind != 2) bad();
+      final n = varint();
+      if (n < 0 || n > opener.length - at) bad();
+      got[field] = Uint8List.sublistView(opener, at, at + n);
+      at += n;
+    } else {
+      bad();
     }
   }
-  return null;
+  final message = got[4], baseKey = got[2], identity = got[3];
+  if (message == null || baseKey == null || identity == null) bad();
+  return (message: message, baseKey: baseKey, identity: identity);
 }
 
 /// the x25519 public key of [private32], as the app's identities derive it

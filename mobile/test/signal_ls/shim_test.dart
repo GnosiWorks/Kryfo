@@ -284,6 +284,9 @@ void main() {
         throwsStateError,
       );
       expect(await bob.hasSession('mallory-words'), isFalse);
+      // turned away there, it is not read yet: it comes again, and files
+      await bob.sessionStore.delete(kFirstContactSlot);
+      expect(await b.read(kFirstContactSlot, second), 'two');
       await bob.keepOpenedSession('alice', scratch);
       await bob.sessionStore.delete(kFirstContactSlot);
       // and only once
