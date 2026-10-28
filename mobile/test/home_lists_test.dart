@@ -312,7 +312,9 @@ void main() {
     phone(t, size: const Size(360, 640));
     await t.pumpWidget(
       MediaQuery(
-        data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+        data: MediaQueryData.fromView(
+          t.view,
+        ).copyWith(textScaler: TextScaler.linear(2)),
         child: framed(_home()),
       ),
     );

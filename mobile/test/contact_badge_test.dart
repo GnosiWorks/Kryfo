@@ -85,7 +85,9 @@ void main() {
     );
     await t.pumpWidget(
       MediaQuery(
-        data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+        data: MediaQueryData.fromView(
+          t.view,
+        ).copyWith(textScaler: TextScaler.linear(scale)),
         child: app(
           const ContactScreen(haloId: _peer, avatarSeed: _peer, peerXPub: ''),
           locale: locale,

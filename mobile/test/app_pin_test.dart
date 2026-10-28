@@ -233,7 +233,9 @@ void main() {
       final lock = await makeLock(_withDecoy, bio: SealBio());
       await t.pumpWidget(
         MediaQuery(
-          data: const MediaQueryData(textScaler: TextScaler.linear(1.6)),
+          data: MediaQueryData.fromView(
+            t.view,
+          ).copyWith(textScaler: TextScaler.linear(1.6)),
           child: app(
             PinsScreen(
               lock: lock.state,
