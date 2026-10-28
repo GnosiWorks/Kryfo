@@ -296,6 +296,7 @@ func pubRelayAnswered() {
 // an entry of our relay answered: an eose, an event or a probe's reply
 func ownRelayAnswered() {
 	wakeRouteProven()
+	wakeOwnProven()
 	liveMu.Lock()
 	defer liveMu.Unlock()
 	ownKnown, ownAnsweredAt, ownFailedAt = true, ownClock(), 0
@@ -333,10 +334,11 @@ func ownRelayFailed() {
 
 // the phone slept: a span of failures begun before it ends there, so a
 // public relay answering before ours at the wake finds no span to finish
-func liveSlept() {
+func liveSlept() (cut bool) {
 	liveMu.Lock()
-	ownFailedAt = 0
+	cut, ownFailedAt = ownFailedAt != 0, 0
 	liveMu.Unlock()
+	return cut
 }
 
 // whether the round now is the one for our relay down

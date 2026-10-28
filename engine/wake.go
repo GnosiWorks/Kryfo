@@ -74,6 +74,8 @@ var (
 	// this wake's widths, in thousandths: a fifth either way, so the length
 	// of the burst a relay sees does not give the inbox's size away
 	wakeOwnK, wakePubK int64 = 1000, 1000
+	// our relay answered since a wake last cut its failing span
+	wakeOwnFresh = true
 )
 
 // looks for a sleep since the last look. true when this look found one
@@ -122,7 +124,18 @@ func wokeLocked(slept time.Duration) {
 	relayClearBenches()
 	routeSlept()
 	armRelayWatch()
-	liveSlept()
+	// our relay's failing span is cut once per answer of ours: a real outage
+	// slept through in short bursts is still found
+	if wakeOwnFresh && liveSlept() {
+		wakeOwnFresh = false
+	}
+}
+
+// our relay answered: the next wake may cut its failing span again
+func wakeOwnProven() {
+	wakeMu.Lock()
+	wakeOwnFresh = true
+	wakeMu.Unlock()
 }
 
 // a relay answered: the next wake may reset and excuse again
@@ -136,7 +149,7 @@ func wakeRouteProven() {
 func wakeReset() {
 	wakeMu.Lock()
 	wakeLooked, wakeAt, wakeGraceTill, wakeFirstGone = false, time.Time{}, time.Time{}, false
-	wakeTurnsAt, wakeSpent = time.Time{}, false
+	wakeTurnsAt, wakeSpent, wakeOwnFresh = time.Time{}, false, true
 	wakeMu.Unlock()
 }
 
@@ -145,12 +158,22 @@ func wakeReset() {
 // circuits again
 func wakeExcuses(began time.Time) bool {
 	wakeCheck()
+	// a check-in begun after the wake was seen gets no longer than its own
+	// turns either: the app stops waiting at 120 s
+	end, inCheck := checkInTurnsEnd()
+	now := time.Now()
 	wakeMu.Lock()
 	defer wakeMu.Unlock()
 	if wakeAt.IsZero() {
 		return false
 	}
-	return began.Before(wakeAt) || time.Now().Before(wakeGraceTill)
+	till := wakeGraceTill
+	if inCheck {
+		if most := now.Add(end.Sub(autoNow()) + wakeGraceExtra); most.Before(till) {
+			till = most
+		}
+	}
+	return began.Before(wakeAt) || now.Before(till)
 }
 
 // how wide a wake's turns are now

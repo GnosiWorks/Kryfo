@@ -24,8 +24,8 @@ func fakeSleep(t *testing.T) func(time.Duration) {
 // a clock of the test's own in place of the boot clock, the real one back after
 func setOwnClock(t *testing.T, f func() time.Duration) {
 	t.Helper()
-	ownClockFn.Store(&f)
-	t.Cleanup(func() { ownClockFn.Store(nil) })
+	old := ownClockFn.Swap(&f)
+	t.Cleanup(func() { ownClockFn.Store(old) })
 }
 
 // the runners' context, ended and waited out before the stand-ins' cleanup
@@ -545,4 +545,50 @@ func TestALightSleepStillRescuesADeadRoute(t *testing.T) {
 			t.Fatal("a dead route was never rescued with the phone sleeping between looks")
 		})
 	}
+}
+
+// a wake seen a moment before the check-in begins excuses no longer than
+// the check-in's turns: the full windows outlasted the app's 120 s
+func TestACheckInAfterTheWakeShortensTheGrace(t *testing.T) {
+	countSockets(t, 542, 1084)
+	sleep := fakeSleep(t)
+	sleep(2 * time.Hour)
+	if !wakeCheck() {
+		t.Fatal("no wake")
+	}
+	underCheckIn(t)
+	late := time.Now().Add(checkInTurnsBy + wakeGraceExtra + time.Second)
+	wakeMu.Lock()
+	wakeAt = wakeAt.Add(-time.Millisecond)
+	wakeMu.Unlock()
+	// as if that much of the check-in had gone: a failure then is counted
+	oldNow := autoNow
+	autoNow = func() time.Time { return oldNow().Add(late.Sub(time.Now())) }
+	defer func() { autoNow = oldNow }()
+	if wakeExcuses(time.Now()) {
+		t.Fatal("a failure past the check-in's turns was excused by a wake seen before it")
+	}
+}
+
+// our relay down while the phone sleeps in bursts of over three minutes,
+// the public relays answering: each wake cut our relay's failing span, so
+// the outage round never began. one cut per answer of ours
+func TestOurRelayDownIsFoundThroughLightSleeps(t *testing.T) {
+	liveReset()
+	t.Cleanup(liveReset)
+	setDownRound(t, time.Minute, 10*time.Minute, 2*time.Minute)
+	sleep := fakeSleep(t)
+	ownRelayAnswered()
+	sleep(11 * time.Minute)
+	wakeCheck()
+	for i := 0; i < 10; i++ {
+		pubRelayAnswered()
+		ownRelayFailed()
+		if ownRelayDown() {
+			t.Logf("down after %d failures", i+1)
+			return
+		}
+		sleep(200 * time.Second)
+	}
+	t.Fatal("our relay failing through light sleeps was never down")
 }
