@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/lock_state.dart';
+import 'package:kryfo/pass_rules.dart';
 
 import 'host_engine.dart';
 
@@ -138,5 +139,13 @@ void main() {
       final r = await e.check('1234', t, '', mac: (_) async => odd);
       expect(r['i'], -1, reason: odd);
     }
+  }, skip: skip);
+
+  test('a phrase nfc makes too long is refused before it is set', () {
+    // 255 bytes as typed, 510 once the engine composes it
+    final qa = '\u0958' * 85;
+    expect(passUsable(qa), isTrue);
+    expect(enginePinFits(qa), isFalse);
+    expect(enginePinFits('correct horse battery'), isTrue);
   }, skip: skip);
 }

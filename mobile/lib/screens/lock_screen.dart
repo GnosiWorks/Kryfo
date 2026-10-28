@@ -85,6 +85,8 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // a phone that said no before the app had a screen is asked again
       if (!_lock.bioSupported) unawaited(_lock.recheckFinger());
+      // and a pin key that read as gone
+      if (_lock.keyNote == KeyNote.lost) unawaited(_lock.recheckLost());
       _fingerWhenInFront();
     });
   }
@@ -174,6 +176,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
       // the phone's pin key did not answer: no shake, nothing counted, the
       // line under the dots says why
       if (result == PinResult.unavailable && mounted) {
+        _watchHold();
         HapticFeedback.lightImpact();
         setState(() {
           _pin = '';
@@ -211,7 +214,9 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                     style: HaloType.sans(size: 12.5, color: HaloColors.text2),
                   ),
                 ),
-                if (note == KeyNote.lost) ...[
+                // Reset only once the key read as gone twice: a busy
+                // keystore can read as gone for a moment
+                if (note == KeyNote.lost && _lock.resetOffered) ...[
                   const SizedBox(height: 6),
                   PressScale(
                     onTap: _reset,
@@ -250,6 +255,8 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   // then a backup brings it back
   Future<void> _reset() async {
     HapticFeedback.selectionClick();
+    // asked again first: a key that answers now needs no reset
+    if (!await _lock.recheckLost() || !mounted) return;
     final first = await showConfirmSheet(
       context,
       title: l10n.lockKeyResetTitle,

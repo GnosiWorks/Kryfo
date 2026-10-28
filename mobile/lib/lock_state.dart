@@ -259,6 +259,27 @@ class PlatformLockBio implements LockBio {
   }
 }
 
+// whether the engine takes [pin] as it is: its nfc can make a phrase longer
+// than the 256 bytes dart counted. null where there is no engine, as in tests
+bool? enginePinFits(String pin) {
+  if (pin.isEmpty || pin.contains('\u0000')) return false;
+  try {
+    final fn = FfiPinEngine._lib()
+        .lookupFunction<
+          Int32 Function(Pointer<Utf8>),
+          int Function(Pointer<Utf8>)
+        >('HaloPinFits');
+    final p = pin.toNativeUtf8();
+    try {
+      return fn(p) == 1;
+    } finally {
+      FfiPinEngine._wipeFree(p);
+    }
+  } on ArgumentError {
+    return null;
+  }
+}
+
 // tells the engine whether a decoy session is open. it asks the tor
 // project for nothing while one is, or before it has been told. without
 // the engine, as in tests, there is no one to tell.
@@ -324,6 +345,10 @@ class FfiPinEngine implements PinEngine {
   static String _err(String s) {
     if (s == 'error: collision') throw PinCollision();
     if (s == 'error: keystore') throw PinKeyBusy();
+    // the handle outlived its life while the pin key took its time
+    if (s == 'error: no such check' || s == 'error: stale check') {
+      throw PinKeyBusy();
+    }
     if (s == 'error: bad pin') throw ArgumentError('not a pin');
     return s;
   }
@@ -599,6 +624,9 @@ class LockCounters {
   final int holdLen;
   final int holdBoot;
   final bool quiet;
+  // checks in a row the pin key gave no answer for: not misses, but a pad
+  // that never held would let them be guessed without end
+  final int unavail;
   const LockCounters({
     this.run = 0,
     this.budget = 0,
@@ -606,6 +634,7 @@ class LockCounters {
     this.holdLen = 0,
     this.holdBoot = -1,
     this.quiet = false,
+    this.unavail = 0,
   });
 
   factory LockCounters.parse(String? s) {
@@ -620,6 +649,7 @@ class LockCounters {
         holdLen: n('hl'),
         holdBoot: (j['hb'] as num?)?.toInt() ?? -1,
         quiet: j['q'] == true,
+        unavail: n('u'),
       );
     } catch (_) {
       // unreadable: a hold rather than none
@@ -634,20 +664,31 @@ class LockCounters {
     'hl': holdLen,
     'hb': holdBoot,
     'q': quiet,
+    if (unavail > 0) 'u': unavail,
   });
+
+  LockCounters _with({
+    int? run,
+    int? budget,
+    int? holdStart,
+    int? holdLen,
+    int? holdBoot,
+    int? unavail,
+  }) => LockCounters(
+    run: run ?? this.run,
+    budget: budget ?? this.budget,
+    holdStart: holdStart ?? this.holdStart,
+    holdLen: holdLen ?? this.holdLen,
+    holdBoot: holdBoot ?? this.holdBoot,
+    quiet: quiet,
+    unavail: unavail ?? this.unavail,
+  );
 
   // after a reboot the uptime clock starts from zero: the whole hold starts
   // again from the first check that sees the new boot
   LockCounters rebased(int uptime, int boot) {
     if (holdLen <= 0 || boot == holdBoot) return this;
-    return LockCounters(
-      run: run,
-      budget: budget,
-      holdStart: uptime,
-      holdLen: holdLen,
-      holdBoot: boot,
-      quiet: quiet,
-    );
+    return _with(holdStart: uptime, holdBoot: boot);
   }
 
   // what is left of the hold. after a reboot the whole hold starts again
@@ -670,23 +711,27 @@ class LockCounters {
       len = max(len, min(long, 8 * 3600000));
     }
     return len > 0
-        ? LockCounters(
+        ? _with(
             run: r,
             budget: b,
             holdStart: uptime,
             holdLen: len,
             holdBoot: boot,
-            quiet: quiet,
           )
-        : LockCounters(
-            run: r,
-            budget: b,
-            holdStart: holdStart,
-            holdLen: holdLen,
-            holdBoot: holdBoot,
-            quiet: quiet,
-          );
+        : _with(run: r, budget: b);
   }
+
+  // a check the pin key did not answer: every fifth in a row holds the pad
+  // as a miss would, 30 s, doubling. never a miss, never the budget
+  LockCounters unanswered(int uptime, int boot) {
+    final u = unavail + 1;
+    if (u % 5 != 0) return _with(unavail: u);
+    final len = 30000 * (1 << ((u ~/ 5) - 1).clamp(0, 6));
+    return _with(unavail: u, holdStart: uptime, holdLen: len, holdBoot: boot);
+  }
+
+  // the pin key answered: its run starts again
+  LockCounters answered() => unavail == 0 ? this : _with(unavail: 0);
 }
 
 // set once the decoy session exists. until then a decoy match counts as a
@@ -718,11 +763,13 @@ enum CardAnswer { taken, held, unavailable }
 
 // a check and how the pin key took it
 class _Checked {
-  const _Checked(this.r, this.fail, this.v3);
+  const _Checked(this.r, this.fail, this.v3, {this.answered = false});
   final Map<String, dynamic> r;
   // set when the pin key was needed and gave no answer
   final KeyFail? fail;
   final bool v3;
+  // the pin key was asked and answered
+  final bool answered;
 }
 
 class LockState extends ChangeNotifier {
@@ -737,6 +784,7 @@ class LockState extends ChangeNotifier {
     this.dropWait = const Duration(seconds: 5),
     this.macWait = const Duration(seconds: 10),
     this.cardPad = const Duration(milliseconds: 1200),
+    this.lostGap = const Duration(seconds: 1),
   }) : _store = store ?? SecureLockStore(),
        _engine = engine ?? FfiPinEngine(),
        _clock = clock ?? PlatformLockClock(),
@@ -776,6 +824,8 @@ class LockState extends ChangeNotifier {
   final Duration macWait;
   // every answer of the update card shows this long after the tap
   final Duration cardPad;
+  // how far apart two "gone" reads must be before Reset is offered
+  final Duration lostGap;
 
   FingerNote? _fingerNote;
   FingerNote? get fingerNote => _fingerNote;
@@ -981,12 +1031,16 @@ class LockState extends ChangeNotifier {
         if (now == null) return;
         final moved = r['r'];
         final mv = r['mv'];
-        final take = moved is Map && !_inDecoy && now == from;
+        final take =
+            moved is Map &&
+            !_inDecoy &&
+            now == from &&
+            !(mv == 'e' && _keyless(r));
         final t = take ? jsonEncode(moved) : now;
         await _store.write(_kTable, t);
         _table = t;
         if (!take) return;
-        if (mv == 'a') await _dropLegacyApp();
+        if (mv == 'a') await _appMoved();
         if (mv == 'w') await _wipeMoved();
       });
 
@@ -1044,6 +1098,8 @@ class LockState extends ChangeNotifier {
       _cardFlag = await _store.read(_kCard);
       _cardDone = await _store.read(_kCardDone) == 'true';
       _dCardDone = await _store.read(_kDCardDone) == 'true';
+      _setApp = await _store.read(_kSetApp) == 'true';
+      _setWipe = await _store.read(_kSetWipe) == 'true';
       _unreadable = false;
     } catch (e) {
       dlog('lock: storage read failed: $e');
@@ -1067,6 +1123,7 @@ class LockState extends ChangeNotifier {
       dlog('lock: decoy finger left (${e.runtimeType})');
     }
     await _upgradeTable();
+    await _dropLeftLegacy();
     await _markCard();
     await _readKey();
     _standIn ??= await _engine.newTable(14);
@@ -1223,13 +1280,63 @@ class LockState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // gone for good: shown on the lock screen, nothing is made over it, and
-  // no wrong pin is counted while it lasts
-  void _lost() {
-    if (_keyNote == KeyNote.lost) return;
-    dlog('lock: pin key gone');
-    _keyNote = KeyNote.lost;
+  // the pin key reads as gone: shown on the lock screen, nothing is made
+  // over it, and no wrong pin is counted while it lasts. a busy keystore
+  // can read as gone for a moment, so it is asked again on every return to
+  // the front and before Reset, and Reset is offered only once two reads at
+  // least [lostGap] apart said so, or the key answered with another check
+  // value, which a busy keystore cannot do
+  void _lost({bool strong = false}) {
+    final now = DateTime.now();
+    if (_keyNote != KeyNote.lost) {
+      dlog('lock: pin key gone');
+      _keyNote = KeyNote.lost;
+      _lostFirst = now;
+      // asked again a beat later, so a passing misread clears by itself
+      // and a real loss is sure without waiting for a return to the front
+      Timer(lostGap + const Duration(milliseconds: 200), () {
+        if (_keyNote == KeyNote.lost && !_lostSure) unawaited(recheckLost());
+      });
+    } else if (now.difference(_lostFirst) >= lostGap) {
+      _lostSure = true;
+    }
+    if (strong) _lostSure = true;
     notifyListeners();
+  }
+
+  var _lostFirst = DateTime.fromMillisecondsSinceEpoch(0);
+  bool _lostSure = false;
+
+  // Reset is offered: the key read as gone twice, or answered as another
+  bool get resetOffered => _keyNote == KeyNote.lost && _lostSure;
+
+  // the key asked again while it reads as gone. back to normal when it
+  // answers with the table's check value. true when Reset is offered
+  Future<bool> recheckLost() async {
+    if (_keyNote != KeyNote.lost) return false;
+    final i = await _keyCall(_keys.info(), const Duration(seconds: 5));
+    if (i == null) return resetOffered;
+    if (!i.exists) {
+      if (_v3) _lost();
+      return resetOffered;
+    }
+    final a =
+        await _keyCall(_keys.kcv(), macWait) ??
+        const KeyAnswer.failed(KeyFail.busy);
+    if (!a.ok) return resetOffered;
+    final want = _header(_table)?['kc'];
+    if (want is String && want != a.m) {
+      _lost(strong: true);
+      return true;
+    }
+    dlog('lock: pin key back');
+    _key = i;
+    _kc = a.m;
+    _kcvRead = true;
+    _keyNote = null;
+    _lostSure = false;
+    notifyListeners();
+    return false;
   }
 
   Future<T?> _keyCall<T>(Future<T?> call, Duration most) async {
@@ -1269,7 +1376,7 @@ class LockState extends ChangeNotifier {
     final want = _header(_table)?['kc'];
     if (want is String && want != a.m) {
       // another key under the same name: not the one the table needs
-      _lost();
+      _lost(strong: true);
       return;
     }
     _kc = a.m;
@@ -1382,10 +1489,15 @@ class LockState extends ChangeNotifier {
             : null,
         key: _keyJson,
       );
-      return _Checked(r, fail, v3);
+      return _Checked(r, fail, v3, answered: on && fail == null);
     } on ArgumentError {
       // nothing the pad or the field lets through: matches nothing
       return _Checked(const {'i': -1, 'k': 0}, fail, v3);
+    } on PinKeyBusy {
+      // the pin key took longer than the engine keeps the pin: no answer,
+      // whatever the table
+      fail = KeyFail.busy;
+      return _Checked(const {'i': -1, 'k': 0}, fail, true);
     } finally {
       slow?.cancel();
       if (_keyNote == KeyNote.waiting) _setNote(null);
@@ -1420,11 +1532,23 @@ class LockState extends ChangeNotifier {
   }
 
   // the legacy pins and where each moves once typed with the pin key there
+  // never into a slot 0.6 set itself (a crash could have left an old hash
+  // beside a newer pin), and a legacy wipe pin only while the wipe pin shows
+  // on, as an old version that stopped half way could leave one that never
+  // wiped
   String _legacyFor() => jsonEncode({
     ..._legacy,
-    'am': {'i': PinSlot.app, 'k': PinKind.everyday, 'c': everydayContainer},
-    'wm': {'i': PinSlot.wipe, 'k': PinKind.wipe, 'c': everydayContainer},
+    if (!_setApp)
+      'am': {'i': PinSlot.app, 'k': PinKind.everyday, 'c': everydayContainer},
+    if (!_setWipe && _panicEnabled)
+      'wm': {'i': PinSlot.wipe, 'k': PinKind.wipe, 'c': everydayContainer},
   });
+
+  // a vault entry whose key did not open never moves: the move would seal
+  // random bytes over its only copy
+  static bool _keyless(Map<String, dynamic> r) =>
+      (r['k'] as num?)?.toInt() == PinKind.vault &&
+      (r['u'] as String? ?? '').isEmpty;
 
   // the table a check moved, written in the lane when the table is still
   // the one it was worked out from. a stale one is dropped: the old entry
@@ -1436,13 +1560,14 @@ class LockState extends ChangeNotifier {
     if (moved is! Map || from != _table || _inDecoy && mv != 'e') {
       return false;
     }
+    if (mv == 'e' && _keyless(r)) return false;
     try {
       return await _tableOp(() async {
         if (_table != from) return false;
         final t = jsonEncode(moved);
         await _store.write(_kTable, t);
         _table = t;
-        if (mv == 'a') await _dropLegacyApp();
+        if (mv == 'a') await _appMoved();
         if (mv == 'w') await _wipeMoved();
         return true;
       });
@@ -1452,13 +1577,60 @@ class LockState extends ChangeNotifier {
     }
   }
 
-  // the legacy wipe pin is in the table now: its old hash goes
+  // the legacy wipe pin is in the table now: the slot is marked first, so a
+  // stop before the hash goes deletes it at the next start, then the hash
+  // goes. the wipe pin showed on already: it moves only then
   Future<void> _wipeMoved() async {
-    await _store.write(_kWipeOn, 'true');
-    _panicEnabled = true;
+    await _markSlot(PinSlot.wipe);
     await _store.delete(_kPanicHash);
     await _store.delete(_kPanicSalt);
     _legacy = {..._legacy, 'ws': '', 'wh': ''};
+  }
+
+  Future<void> _appStillThere() async {
+    try {
+      await _appMoved();
+    } catch (e) {
+      dlog('lock: old app hash left (${e.runtimeType})');
+    }
+  }
+
+  // the same for the legacy app pin
+  Future<void> _appMoved() async {
+    await _markSlot(PinSlot.app);
+    await _dropLegacyApp();
+  }
+
+  // the app or wipe slot holds a pin 0.6 set: no legacy hash moves into it
+  // again, and one left beside it goes at the next start
+  bool _setApp = false;
+  bool _setWipe = false;
+  static const _kSetApp = 'halo.lock.set.app';
+  static const _kSetWipe = 'halo.lock.set.wipe';
+
+  Future<void> _markSlot(int slot) async {
+    if (slot == PinSlot.app && !_setApp) {
+      await _store.write(_kSetApp, 'true');
+      _setApp = true;
+    }
+    if (slot == PinSlot.wipe && !_setWipe) {
+      await _store.write(_kSetWipe, 'true');
+      _setWipe = true;
+    }
+  }
+
+  // legacy hashes a stop left beside a pin set since
+  Future<void> _dropLeftLegacy() async {
+    try {
+      if (_setApp && (_legacy['ah'] ?? '').isNotEmpty) await _dropLegacyApp();
+      if (_setWipe && legacyWipe) {
+        await _store.delete(_kPanicHash);
+        await _store.delete(_kPanicSalt);
+        _legacy = {..._legacy, 'ws': '', 'wh': ''};
+      }
+    } catch (e) {
+      dlog('lock: old hashes left (${e.runtimeType})');
+    }
   }
 
   Future<void> _dropLegacyApp() async {
@@ -1524,7 +1696,7 @@ class LockState extends ChangeNotifier {
     final t0 = DateTime.now();
     final uptime = await _clock.uptimeMs();
     final boot = await _clock.bootCount();
-    final base = _counters.rebased(uptime, boot);
+    var base = _counters.rebased(uptime, boot);
     final held = base.holdLeft(uptime, boot) > 0;
     _standIn ??= await _engine.newTable(14);
     // what the phone's state asks for, the same whatever is typed
@@ -1532,6 +1704,8 @@ class LockState extends ChangeNotifier {
     final table = _table ?? _standIn!;
     final c = await _check(pin, table, _legacyFor());
     final r = c.r;
+    // the pin key answered: the run of checks it did not answer starts again
+    if (c.answered) base = base.answered();
     final kind = (r['k'] as num?)?.toInt() ?? 0;
     final everyday = kind == PinKind.everyday || r['la'] == true;
     final wipe = kind == PinKind.wipe || r['lw'] == true;
@@ -1542,7 +1716,7 @@ class LockState extends ChangeNotifier {
     final decoy = kind == PinKind.decoy || decoysVault;
 
     var result = PinResult.invalid;
-    LockCounters? next;
+    final LockCounters next;
     if (wipe) {
       // someone forced to open the phone can always wipe it, held or not
       result = PinResult.panic;
@@ -1561,16 +1735,15 @@ class LockState extends ChangeNotifier {
       result = PinResult.decoy;
       next = LockCounters(budget: base.budget, quiet: true);
     } else if (_unchecked(c)) {
-      // the pin key did not answer: this may be a right pin. nothing is
-      // counted and nothing written
+      // the pin key did not answer: this may be a right pin. not a miss,
+      // but five in a row hold the pad as five misses would
       result = PinResult.unavailable;
+      next = base.unanswered(uptime, boot);
     } else {
       next = base.miss(uptime, boot);
     }
-    if (next != null) {
-      await _store.write(_kState, next.encode());
-      _counters = next;
-    }
+    await _store.write(_kState, next.encode());
+    _counters = next;
     final opensVault =
         result == PinResult.vault || (result == PinResult.decoy && decoysVault);
     result = await _open(result, opensVault ? r['u'] as String? ?? '' : null);
@@ -1599,7 +1772,9 @@ class LockState extends ChangeNotifier {
 
     if (_opened(result)) _locked = false;
 
-    if (result == PinResult.invalid || result == PinResult.throttled) {
+    if (result == PinResult.invalid ||
+        result == PinResult.throttled ||
+        result == PinResult.unavailable) {
       await _refreshHoldForScreen();
     }
     notifyListeners();
@@ -1615,6 +1790,14 @@ class LockState extends ChangeNotifier {
         r['la'] == true &&
         !moved) {
       unawaited(_migrateApp(pin));
+    }
+    // the app entry opens with this pin already: an old hash left beside it
+    // by a stop half way goes
+    if (result == PinResult.normal &&
+        kind == PinKind.everyday &&
+        r['la'] == true &&
+        !_inDecoy) {
+      unawaited(_appStillThere());
     }
     return result;
   }
@@ -1670,7 +1853,7 @@ class LockState extends ChangeNotifier {
         final t = jsonEncode(out['t']);
         await _store.write(_kTable, t);
         _table = t;
-        await _dropLegacyApp();
+        await _appMoved();
       });
     } catch (e) {
       dlog('lock: migrate failed: $e');
@@ -1796,17 +1979,24 @@ class LockState extends ChangeNotifier {
   Future<PinResult> confirmPin(String pin, {bool changesVault = false}) async {
     final uptime = await _clock.uptimeMs();
     final boot = await _clock.bootCount();
-    final base = _counters.rebased(uptime, boot);
+    var base = _counters.rebased(uptime, boot);
     _standIn ??= await _engine.newTable(14);
     await _keyReady();
     final table = _table ?? _standIn!;
     final c = await _check(pin, table, _legacyFor());
     final r = c.r;
+    if (c.answered) base = base.answered();
     final kind = (r['k'] as num?)?.toInt() ?? 0;
     if (kind == PinKind.wipe || r['lw'] == true) return PinResult.panic;
     if (base.holdLeft(uptime, boot) > 0) return PinResult.throttled;
-    // the pin key did not answer: not a miss
-    if (_unchecked(c)) return PinResult.unavailable;
+    // the pin key did not answer: not a miss, but counted in its own run
+    if (_unchecked(c)) {
+      _counters = base.unanswered(uptime, boot);
+      await _store.write(_kState, _counters.encode());
+      await _refreshHoldForScreen();
+      notifyListeners();
+      return PinResult.unavailable;
+    }
     final primary = _inDecoy
         ? kind == PinKind.decoy
         : kind == PinKind.everyday || r['la'] == true;
@@ -1827,6 +2017,9 @@ class LockState extends ChangeNotifier {
     final moved = await _move(table, r);
     if (!_inDecoy && kind != PinKind.everyday && r['la'] == true && !moved) {
       await _migrateApp(pin);
+    }
+    if (!_inDecoy && kind == PinKind.everyday && r['la'] == true) {
+      await _appStillThere();
     }
     return PinResult.normal;
   }
@@ -1994,6 +2187,9 @@ class LockState extends ChangeNotifier {
       }
     });
     if (!set) return _clash();
+    if (!_inDecoy && (slot == PinSlot.app || slot == PinSlot.wipe)) {
+      await _markSlot(slot);
+    }
     if (slot == PinSlot.app) {
       await _store.delete(_kHash);
       await _store.delete(_kSalt);
@@ -2089,6 +2285,8 @@ class LockState extends ChangeNotifier {
       _kCard,
       _kCardDone,
       _kDCardDone,
+      _kSetApp,
+      _kSetWipe,
     ]) {
       await _store.delete(k);
     }
@@ -2107,6 +2305,8 @@ class LockState extends ChangeNotifier {
     _cardFlag = null;
     _cardDone = false;
     _dCardDone = false;
+    _setApp = false;
+    _setWipe = false;
     _legacy = const {};
     _counters = const LockCounters();
     _enabled = false;
@@ -2435,6 +2635,8 @@ class LockState extends ChangeNotifier {
   // locks here; a hold that left ended has locked already.
   void returned() {
     unawaited(_probeBioAgain());
+    // a key that read as gone is asked again each time the app is back
+    if (_keyNote == KeyNote.lost) unawaited(recheckLost());
     if (!_leftWhileHeld) return;
     _leftWhileHeld = false;
     lock();

@@ -312,16 +312,22 @@ void main() {
 
   group('a pin key that fails', () {
     test(
-      'busy: a pin only it could check is no miss and writes nothing',
+      'busy: a pin only it could check is no miss and moves nothing',
       () async {
         final s = await moved();
         keys.fail = KeyFail.busy;
         keys.calls.clear();
-        final writes = store.writes;
+        final table = store.m['halo.lock.table'];
+        final w = store.log.length;
         for (final pin in ['1234', '0000', '246810']) {
           expect(await s.verifyPin(pin), PinResult.unavailable, reason: pin);
         }
-        expect(store.writes, writes);
+        // only its own run is written: no table, no miss
+        expect(store.log.sublist(w).toSet(), {'w halo.lock.state'});
+        expect(store.m['halo.lock.table'], table);
+        final c = jsonDecode(store.m['halo.lock.state']!) as Map;
+        expect(c['r'], 0);
+        expect(c['u'], 3);
         expect(s.keyNote, KeyNote.busy);
         expect(s.throttleLeft, Duration.zero);
         keys.fail = null;
@@ -388,7 +394,7 @@ void main() {
       keys.calls.clear();
       final s = await make();
       expect(s.keyNote, KeyNote.lost);
-      for (var i = 0; i < 12; i++) {
+      for (var i = 0; i < 4; i++) {
         expect(await s.verifyPin('0000'), PinResult.unavailable);
       }
       expect(s.throttleLeft, Duration.zero);
@@ -573,6 +579,8 @@ void main() {
       await s.disablePanicPin();
       store.m['halo.lock.panic_salt'] = 'Yg==';
       store.m['halo.lock.panic_hash'] = KeyEngine.legacyHash('7531', 'Yg==');
+      // an old version's wipe pin that showed on
+      store.m['halo.lock.panic_enabled'] = 'true';
       final s2 = await make(cardPad: Duration.zero);
       expect(s2.legacyWipe, isTrue);
       expect(await s2.cardTry('7531'), CardAnswer.taken);
@@ -666,6 +674,157 @@ void main() {
     expect(
       DateTime.now().difference(t0),
       greaterThanOrEqualTo(const Duration(milliseconds: 200)),
+    );
+  });
+
+  group('review fixes', () {
+    test('one false "no key" read clears and offers no reset', () async {
+      await moved();
+      keys.infoFalseOnce = true;
+      keys.calls.clear();
+      final s = await make();
+      expect(s.keyNote, KeyNote.lost);
+      expect(s.resetOffered, isFalse);
+      expect(await s.recheckLost(), isFalse);
+      expect(s.keyNote, isNull);
+      expect(await s.verifyPin('1234'), PinResult.normal);
+      expect(keys.calls, isNot(contains('make')));
+    });
+
+    test('a loss that holds across two reads offers reset', () async {
+      await moved();
+      keys.exists = false;
+      final s = LockState(
+        store: store,
+        engine: engine,
+        clock: StillClock(),
+        bio: NoBio(),
+        keys: keys,
+        revealAfter: Duration.zero,
+        lostGap: Duration.zero,
+      );
+      await s.load();
+      expect(s.keyNote, KeyNote.lost);
+      expect(await s.recheckLost(), isTrue);
+      expect(s.resetOffered, isTrue);
+      // a key with another check value is sure at once
+      keys.exists = true;
+      keys.replace();
+      final r = await make();
+      expect(r.resetOffered, isTrue);
+    });
+
+    test(
+      'five unanswered checks in a row hold the pad, an answer clears it',
+      () async {
+        final s = await moved();
+        keys.fail = KeyFail.busy;
+        for (var i = 0; i < 4; i++) {
+          expect(await s.verifyPin('0000'), PinResult.unavailable);
+        }
+        expect(s.throttleLeft, Duration.zero);
+        expect(await s.verifyPin('0000'), PinResult.unavailable);
+        expect(s.throttleLeft, greaterThan(Duration.zero));
+        expect(await s.verifyPin('0000'), PinResult.throttled);
+        store.m['halo.lock.state'] = const LockCounters(unavail: 4).encode();
+        final s2 = await make();
+        keys.fail = null;
+        expect(await s2.verifyPin('0000'), PinResult.invalid);
+        final c = jsonDecode(store.m['halo.lock.state']!) as Map;
+        expect(c.containsKey('u'), isFalse);
+        expect(c['r'], 1);
+      },
+    );
+
+    test('a handle the engine dropped is an unanswered check', () async {
+      final s = await moved();
+      engine.handleGone = true;
+      expect(await s.verifyPin('1234'), PinResult.unavailable);
+      expect(await s.verifyPin('1234'), PinResult.normal);
+    });
+
+    test('a vault entry whose key did not open is never moved', () async {
+      store = CountStore();
+      engine = KeyEngine();
+      keys = FakeKeys(exists: true);
+      store.m['halo.lock.enabled'] = 'true';
+      store.m['halo.lock.table'] = jsonEncode({
+        'v': 2,
+        'n': 15,
+        'e': {
+          '0': {
+            'p': '1234',
+            'k': 1,
+            'c': HaloContainer.everyday.id,
+            'w': '',
+            'g': 2,
+          },
+          '3': {
+            'p': '246810',
+            'k': 4,
+            'c': HaloContainer.vault.id,
+            'w': '',
+            'g': 2,
+          },
+        },
+      });
+      final s = await make(cardPad: Duration.zero);
+      await s.verifyPin('1234');
+      await s.verifyPin('246810');
+      expect(gOf(store, PinSlot.vault), 2);
+      await s.cardTry('246810');
+      expect(gOf(store, PinSlot.vault), 2);
+    });
+
+    test(
+      'an old wipe hash that never wiped is not moved by the card',
+      () async {
+        store.m.remove('halo.lock.panic_enabled');
+        store.m['halo.lock.panic_salt'] = 'Yg==';
+        store.m['halo.lock.panic_hash'] = KeyEngine.legacyHash('7531', 'Yg==');
+        final s = await make(cardPad: Duration.zero);
+        await s.verifyPin('1234');
+        expect(s.panicEnabled, isFalse);
+        expect(await s.cardTry('7531'), CardAnswer.taken);
+        expect(s.panicEnabled, isFalse);
+        expect(store.m.containsKey('halo.lock.panic_enabled'), isFalse);
+        expect(store.m['halo.lock.panic_hash'], isNotNull);
+      },
+    );
+
+    test(
+      'an old hash beside a pin set since never moves back over it',
+      () async {
+        final s = await make(cardPad: Duration.zero);
+        await s.verifyPin('1234');
+        expect(await s.setupPanicPin('8080'), isTrue);
+        expect(store.m['halo.lock.set.wipe'], 'true');
+        // a stop between the table and the deletes left the old hash
+        store.m['halo.lock.panic_salt'] = 'Yg==';
+        store.m['halo.lock.panic_hash'] = KeyEngine.legacyHash('7531', 'Yg==');
+        store.m['halo.lock.state'] = const LockCounters().encode();
+        final s2 = await make(cardPad: Duration.zero);
+        expect(store.m.containsKey('halo.lock.panic_hash'), isFalse);
+        expect(s2.legacyWipe, isFalse);
+        await s2.cardTry('7531');
+        expect((entriesOf(store)['${PinSlot.wipe}'] as Map)['p'], '8080');
+      },
+    );
+
+    test(
+      'an old app hash beside the same app pin goes after an open',
+      () async {
+        final s = await make();
+        await s.verifyPin('1234');
+        store.m['halo.lock.pin_salt'] = 'YQ==';
+        store.m['halo.lock.pin_hash'] = KeyEngine.legacyHash('1234', 'YQ==');
+        final s2 = await make();
+        expect(await s2.verifyPin('1234'), PinResult.normal);
+        await Future<void>.delayed(Duration.zero);
+        expect(store.m.containsKey('halo.lock.pin_hash'), isFalse);
+        expect(store.m['halo.lock.set.app'], 'true');
+        expect(s.locked, isFalse);
+      },
     );
   });
 }

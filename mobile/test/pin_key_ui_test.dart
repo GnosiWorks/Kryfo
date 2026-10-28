@@ -7,7 +7,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart' hide LockState;
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
@@ -194,15 +193,48 @@ void main() {
         bio: NoBio(),
         keys: keys,
         revealAfter: Duration.zero,
+        lostGap: Duration.zero,
       );
       await lock.load();
       await t.pumpWidget(app(LockScreen(lock: lock), still: true));
       await t.pump();
       expect(find.text(l10n.lockKeyLost), findsOneWidget);
+      // the screen reads again as it comes up and a beat later: still no key
+      await t.pump(const Duration(milliseconds: 300));
+      await t.pump();
+      expect(find.text(l10n.lockKeyReset), findsOneWidget);
       await t.tap(find.text(l10n.lockKeyReset));
       await t.pumpAndSettle();
       expect(find.text(l10n.lockKeyResetTitle), findsOneWidget);
       expect(find.text(l10n.lockKeyResetLine), findsOneWidget);
+    });
+
+    testWidgets('one false "no key" read goes away and offers no reset', (
+      t,
+    ) async {
+      phone(t);
+      final (first, store, keys) = await keyLock();
+      expect(first.keyNote, isNull);
+      keys.infoFalseOnce = true;
+      final lock = LockState(
+        store: store,
+        engine: KeyEngine(),
+        clock: StillClock(),
+        bio: NoBio(),
+        keys: keys,
+        revealAfter: Duration.zero,
+        lostGap: Duration.zero,
+      );
+      await lock.load();
+      expect(lock.keyNote, KeyNote.lost);
+      await t.pumpWidget(app(LockScreen(lock: lock), still: true));
+      await t.pump();
+      expect(find.text(l10n.lockKeyReset), findsNothing);
+      await t.pump(const Duration(milliseconds: 300));
+      await t.pump();
+      expect(find.text(l10n.lockKeyLost), findsNothing);
+      expect(find.text(l10n.lockKeyReset), findsNothing);
+      expect(lock.keyNote, isNull);
     });
   });
 

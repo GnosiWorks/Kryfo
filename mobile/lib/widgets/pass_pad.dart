@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
+import '../lock_state.dart' show enginePinFits;
 import '../pass_rules.dart';
 import '../theme.dart';
 import 'pin_pad.dart';
@@ -214,7 +215,10 @@ class _PassFormatter extends TextInputFormatter {
     TextEditingValue newValue,
   ) {
     final clean = passTyped(newValue.text);
-    if (!passUsable(clean) && clean.isNotEmpty) return oldValue;
+    if (clean.isNotEmpty &&
+        (!passUsable(clean) || enginePinFits(clean) == false)) {
+      return oldValue;
+    }
     if (clean == newValue.text) return newValue;
     return TextEditingValue(
       text: clean,

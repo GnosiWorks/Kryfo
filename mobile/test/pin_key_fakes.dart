@@ -35,6 +35,8 @@ class FakeKeys implements PinKeystore {
   Completer<void>? hang;
   bool refuseMake = false;
   bool infoSilent = false;
+  // the next info says no key once, as a busy keystore may
+  bool infoFalseOnce = false;
 
   String _m(String x) => sha256.convert(utf8.encode('$id:$x')).toString();
   String get kc => _m('kcv');
@@ -43,8 +45,10 @@ class FakeKeys implements PinKeystore {
   Future<PinKeyInfo?> info() async {
     calls.add('info');
     if (infoSilent) return null;
+    final there = exists && !infoFalseOnce;
+    infoFalseOnce = false;
     return PinKeyInfo(
-      exists: exists,
+      exists: there,
       unlocked: exists ? unlocked : 0,
       level: level,
       screenLock: screenLock,
@@ -105,6 +109,8 @@ class KeyEngine implements PinEngine {
   final List<String> calls = [];
   // a check waits here while set, after it asked the pin key
   Completer<void>? gate;
+  // the next check finds its handle gone, as after a slow pin key
+  bool handleGone = false;
 
   static String legacyHash(String pin, String salt) =>
       sha256.convert(utf8.encode('$salt:$pin')).toString();
@@ -145,6 +151,10 @@ class KeyEngine implements PinEngine {
     final m = mac == null ? '' : await mac(fakeX(pin));
     final g = gate;
     if (g != null) await g.future;
+    if (handleGone) {
+      handleGone = false;
+      throw PinKeyBusy();
+    }
     final t = _t(table);
     final e = Map<String, dynamic>.from(t['e'] as Map);
     final l = jsonDecode(legacy) as Map<String, dynamic>;
