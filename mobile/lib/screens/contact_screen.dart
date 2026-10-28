@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import '../chat_shots.dart' show ChatShots, ShotsPacer;
 import '../contact_status.dart';
 import '../lock_state.dart' show lockState;
+import '../supporter.dart' show SupporterTier, tierGlyph, tierLabel, tierOf;
 import '../main.dart'
     show
         appState,
@@ -368,6 +369,10 @@ class _ContactScreenState extends State<ContactScreen> {
         ? HaloColors.amber
         : HaloColors.text2;
     final note = c?['note'] as String?;
+    // the tier they share, as their last message carried it
+    final badge = c != null
+        ? c['supporter_badge'] as String?
+        : _seen?.supporterBadge;
     final still = motionStill(context);
     return Scaffold(
       backgroundColor: HaloColors.surface,
@@ -467,6 +472,14 @@ class _ContactScreenState extends State<ContactScreen> {
                       ),
                     ),
                   ],
+                  EaseSize(
+                    child: badge != null
+                        ? Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: _Badge(tier: tierOf(badge)),
+                          )
+                        : const SizedBox(width: double.infinity),
+                  ),
                   const SizedBox(height: 10),
                   // a new status rises in over the last, and the note eases
                   // in once it loads instead of shoving the page down
@@ -694,6 +707,35 @@ class _ContactScreenState extends State<ContactScreen> {
 // the three facts about a person: a tick, a count, a duration. a card only
 // exists when there is something to say, and a zero is never drawn. the
 // vouch count is your own contacts who vouched, never a global number.
+// their supporter badge, the tier with its glyph. a tier from a newer app
+// reads as a plain supporter
+class _Badge extends StatelessWidget {
+  final SupporterTier tier;
+  const _Badge({required this.tier});
+
+  @override
+  Widget build(BuildContext context) {
+    final known = tier != SupporterTier.none;
+    final label = known ? tierLabel(tier) : l10n.chatSupporter;
+    return Semantics(
+      label: label,
+      excludeSemantics: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: HaloColors.amber.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: HaloColors.amber.withValues(alpha: 0.4)),
+        ),
+        child: Text(
+          known ? '${tierGlyph(tier)} $label' : label,
+          style: HaloType.mono(size: 11, color: HaloColors.amberText),
+        ),
+      ),
+    );
+  }
+}
+
 class _Stats extends StatelessWidget {
   final bool verified;
   final int vouches;

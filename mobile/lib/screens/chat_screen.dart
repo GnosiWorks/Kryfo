@@ -1326,11 +1326,7 @@ class _ChatScreenState extends State<ChatScreen>
     session.isVerified(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _verified = v);
     });
-    session.getContact(widget.peerHaloId).then((c) {
-      if (mounted) {
-        setState(() => _peerBadge = c?['supporter_badge'] as String?);
-      }
-    });
+    unawaited(_loadBadge());
     // request lock: are they an accepted contact, have they engaged, and how
     // many messages have we already sent while unaccepted.
     final barReads = <Future<void>>[
@@ -1515,6 +1511,8 @@ class _ChatScreenState extends State<ChatScreen>
       _tryAppendNew();
       unawaited(_refreshDelivered());
       _loadShots();
+      // their badge rides their messages: one that came now may change it
+      unawaited(_loadBadge());
     }
     _refreshRequestState();
     unawaited(_readKeyState());
@@ -1530,6 +1528,12 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Object? _devSeen;
+
+  Future<void> _loadBadge() async {
+    final c = await session.getContact(widget.peerHaloId);
+    final b = c?['supporter_badge'] as String?;
+    if (mounted && b != _peerBadge) setState(() => _peerBadge = b);
+  }
 
   // who vouched, as we know them. only accepted contacts come back, so a
   // voucher we deleted since is no longer named.
