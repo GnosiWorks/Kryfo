@@ -1402,6 +1402,38 @@ func HaloSendTo(cAddr *C.char, cMsg *C.char) *C.char {
 	return C.CString("ok")
 }
 
+// a typing frame straight to the peer's door (sendTyping). nothing about
+// it is logged: not the onion, not the size, not the outcome
+//
+//export HaloSendTyping
+func HaloSendTyping(cAddr *C.char, cMsg *C.char) *C.char {
+	addr := goStr(cAddr)
+	msg := goStr(cMsg)
+	mu.Lock()
+	t := torNode
+	mu.Unlock()
+	if t == nil {
+		return C.CString("error: tor not started")
+	}
+	if err := sendTyping(t, addr, msg); err != nil {
+		return C.CString("error: " + typingWhy(err))
+	}
+	return C.CString("ok")
+}
+
+// what dart hears of a failed typing line: the kind of failure, never a
+// dial error that could name the onion
+func typingWhy(err error) string {
+	switch {
+	case errors.Is(err, errTypingRoute), errors.Is(err, errTypingShape), errors.Is(err, errTypingTo):
+		return err.Error()
+	case errors.Is(err, context.DeadlineExceeded):
+		return "timeout"
+	default:
+		return "not delivered"
+	}
+}
+
 // the door answers "ack\n" and nothing else. only that many bytes are read,
 // and anything other than exactly that is no ack
 func readAck(r io.Reader) error {

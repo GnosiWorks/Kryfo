@@ -16,11 +16,13 @@ package main
 import (
 	"bufio"
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -152,6 +154,13 @@ func doorDial(ctx context.Context, t *tor.Tor, onion string) (net.Conn, error) {
 
 // one line, and its ack
 func (s *doorStream) send(line string) error {
+	return s.sendWithin(line, 10*time.Second, 15*time.Second, true)
+}
+
+// one line, its write and its ack each given their own wait. giveUp says a
+// late ack ends the stream; without it the line just stops waiting and the
+// ack, when it comes, is read off in its turn
+func (s *doorStream) sendWithin(line string, write, ack time.Duration, giveUp bool) error {
 	ch := make(chan error, 1)
 	s.wmu.Lock()
 	s.mu.Lock()
@@ -163,7 +172,7 @@ func (s *doorStream) send(line string) error {
 	}
 	s.waiting = append(s.waiting, ch)
 	s.mu.Unlock()
-	s.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+	s.conn.SetWriteDeadline(time.Now().Add(write))
 	_, err := s.conn.Write([]byte(line + "\n"))
 	s.wmu.Unlock()
 	if err != nil {
@@ -173,7 +182,10 @@ func (s *doorStream) send(line string) error {
 	select {
 	case err := <-ch:
 		return err
-	case <-time.After(15 * time.Second):
+	case <-time.After(ack):
+		if !giveUp {
+			return errors.New("no ack: timeout")
+		}
 		s.fail(errors.New("no ack: timeout"), false)
 		return <-ch
 	}
@@ -360,4 +372,71 @@ func readDoorLine(r *bufio.Reader) (string, error) {
 		}
 		return string(b), nil
 	}
+}
+
+// how long a typing line may take in all, dial included
+var typingBudget = 8 * time.Second
+
+// a typing line is one short whisper message, never an opener
+const typingLineMost = 4096
+
+var (
+	errTypingRoute = errors.New("not on the onion route")
+	errTypingShape = errors.New("not a typing line")
+	errTypingTo    = errors.New("not an onion")
+)
+
+// a typing line to a peer's door: the private route only, one try on the
+// kept stream or one dial, inside typingBudget. it is worth nothing once
+// late, so a failure is not tried again and nothing is kept for later
+func sendTyping(t *tor.Tor, onion, line string) error {
+	if currentMode() != modePrivate {
+		return errTypingRoute
+	}
+	if !strings.HasSuffix(onion, ".onion") || strings.ContainsAny(onion, ":/ ") {
+		return errTypingTo
+	}
+	if len(line) > typingLineMost || !inboxShapeOK(line) {
+		return errTypingShape
+	}
+	if raw, _ := base64.StdEncoding.DecodeString(line); raw[0] != 2 {
+		return errTypingShape
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), typingBudget)
+	defer cancel()
+	if doorOneLineOnly(onion) {
+		return sendOneLineBy(ctx, t, onion, line)
+	}
+	s, _, err := doorGet(ctx, t, onion)
+	if err != nil {
+		return err
+	}
+	defer s.done()
+	left := time.Until(deadlineOf(ctx))
+	if left <= 0 {
+		return ctx.Err()
+	}
+	return s.sendWithin(line, left, left, false)
+}
+
+func deadlineOf(ctx context.Context) time.Time {
+	d, _ := ctx.Deadline()
+	return d
+}
+
+// sendOneLine held to the deadline of ctx
+func sendOneLineBy(ctx context.Context, t *tor.Tor, onion, line string) error {
+	conn, err := doorDial(ctx, t, onion)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+	conn.SetDeadline(deadlineOf(ctx))
+	if _, err := conn.Write([]byte(line + "\n")); err != nil {
+		return fmt.Errorf("write: %v", err)
+	}
+	if err := readAck(conn); err != nil {
+		return fmt.Errorf("no ack: %v", err)
+	}
+	return nil
 }
