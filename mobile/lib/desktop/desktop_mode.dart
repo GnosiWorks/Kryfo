@@ -25,13 +25,16 @@ Future<R> Function<R>(FutureOr<R> Function() f)? isolateRunner;
 /// code outside dart that reads [ins] and writes [outs] by path: on desktop
 /// a sealed one is handed over as memory, never as a plain file. the phone
 /// passes the paths as they are
+/// [ok] says whether the code's answer means it wrote whole outputs: only
+/// then are they kept
 Future<T> withNativeFiles<T>(
   List<String> ins,
   List<String> outs,
-  Future<T> Function(List<String> ins, List<String> outs) run,
-) {
+  Future<T> Function(List<String> ins, List<String> outs) run, {
+  bool Function(T answer)? ok,
+}) {
   final h = nativeFiles;
-  return h == null ? run(ins, outs) : h(ins, outs, run);
+  return h == null ? run(ins, outs) : h(ins, outs, run, ok);
 }
 
 /// set by the desktop start
@@ -39,6 +42,7 @@ Future<T> Function<T>(
   List<String> ins,
   List<String> outs,
   Future<T> Function(List<String> ins, List<String> outs) run,
+  bool Function(T answer)? ok,
 )?
 nativeFiles;
 
@@ -61,3 +65,25 @@ const rawFilesZoneKey = #kryfoRawFiles;
 /// there, sealed or not. the same as [f] on the phone
 R rawFiles<R>(R Function() f) =>
     onDesktop ? runZoned(f, zoneValues: {rawFilesZoneKey: true}) : f();
+
+/// the engine's own folder for a start in [docs]: on desktop one in memory,
+/// whose files are kept sealed between runs
+String engineDir(String docs) => engineDirOf?.call(docs) ?? docs;
+
+/// set by the desktop start
+String Function(String docs)? engineDirOf;
+
+/// the engine's start, with what the desktop puts in its folder first and
+/// takes back after: the onion key, only while the engine reads it
+Future<String> startEngineIn(
+  String docs,
+  Future<String> Function(String dir) start,
+) => engineStarter == null ? start(docs) : engineStarter!(docs, start);
+
+/// set by the desktop start
+Future<String> Function(String docs, Future<String> Function(String dir) start)?
+engineStarter;
+
+/// where a backup is made: on desktop on the disk, not in memory, as it is
+/// encrypted already and can be large
+Future<String> Function()? bulkTempDir;

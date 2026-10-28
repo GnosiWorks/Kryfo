@@ -40,15 +40,21 @@ Future<String> _engineOgg(
   String wav,
   String ogg, [
   void Function(String engineOut)? out,
-]) => withNativeFiles([wav], [ogg], (i, o) {
-  out?.call(o[0]);
-  return Isolate.run(() => _two('HaloVoiceOgg', i[0], o[0]));
-});
+]) => withNativeFiles(
+  [wav],
+  [ogg],
+  (i, o) {
+    out?.call(o[0]);
+    return Isolate.run(() => _two('HaloVoiceOgg', i[0], o[0]));
+  },
+  ok: (r) => r.startsWith('ok '),
+);
 
 Future<String> _engineWav(String ogg, String wav) => withNativeFiles(
   [ogg],
   [wav],
   (i, o) => Isolate.run(() => _two('HaloVoiceWav', i[0], o[0])),
+  ok: (r) => r.startsWith('ok '),
 );
 
 /// stands in for the engine in tests: what HaloVoiceOgg would answer

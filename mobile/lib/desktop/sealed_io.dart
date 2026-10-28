@@ -39,13 +39,27 @@ R rawFileAccess<R>(R Function() f) =>
 
 bool get _raw => Zone.current[rawFilesZoneKey] == true;
 
+const plainOutZoneKey = #kryfoPlainOut;
+
+/// [f] may carry sealed files out to plain places on the disk: a save the
+/// person picked, nothing else
+R plainOutAllowed<R>(R Function() f) =>
+    runZoned(f, zoneValues: {plainOutZoneKey: true});
+
 /// where things are sealed and under which key. sendable, so an isolate
 /// gets the same
 class SealedAreas {
-  SealedAreas({required this.docs, required this.support});
+  SealedAreas({required this.docs, required this.support, this.runtime});
 
   final String docs;
   final String support;
+
+  /// the folder in memory: a sealed file may be carried there in the clear
+  final String? runtime;
+
+  /// areas the start's sweep has finished: a plain file there now is one
+  /// someone put there, and reads as damaged
+  final Set<String> swept = {};
 
   /// a container's folder suffix to its key, while it is open
   final Map<String, Uint8List> containerKeys = {};
@@ -57,7 +71,10 @@ class SealedAreas {
   static const _plainSupport = {'translate', 'voice'};
 
   static final _media = RegExp(r'^(media|wallpapers)(_k[234])?$');
-  static final _waitingOnion = RegExp(r'^onion_k[234]\.key$');
+  static final _waitingOnion = RegExp(r'^onion(_k[234])?\.key$');
+
+  // a restore's staging folders in docs: the files key, as support's
+  static const _staging = {'restore_stage', 'restore_hidden'};
 
   /// a key not handed over yet but kept in the vault (the everyday
   /// container's and the decoy's): a restore moves files in before their
@@ -79,6 +96,7 @@ class SealedAreas {
         return '*';
       }
       if (parts.length < 2) return null;
+      if (_staging.contains(parts.first)) return '*';
       final m = _media.firstMatch(parts.first);
       return m == null ? null : (m.group(2) ?? '');
     }
@@ -109,19 +127,33 @@ class SealedAreas {
   /// true when [path] lies in a sealed area, open or not
   bool sealedPlace(String path) => areaOf(path) != null;
 
+  /// true when a sealed file may be carried to [path] in the clear: memory
+  /// only (the runtime folder, an anonymous file), or a save that asked
+  bool plainOutAllowed(String path) {
+    if (Zone.current[plainOutZoneKey] == true) return true;
+    final full = p.normalize(p.absolute(path));
+    if (full.startsWith('/proc/self/fd/')) return true;
+    final r = runtime;
+    return r != null && p.isWithin(r, full);
+  }
+
   /// a copy for another isolate
   Map<String, Object?> toMessage() => {
     'docs': docs,
     'support': support,
+    'runtime': runtime,
     'files': filesKey,
     'keys': Map.of(containerKeys),
+    'swept': swept.toList(),
   };
 
   static SealedAreas fromMessage(Map<String, Object?> m) {
     final a = SealedAreas(
       docs: m['docs'] as String,
       support: m['support'] as String,
+      runtime: m['runtime'] as String?,
     );
+    a.swept.addAll((m['swept'] as List).cast<String>());
     a.filesKey = m['files'] as Uint8List?;
     a.containerKeys.addAll((m['keys'] as Map).cast<String, Uint8List>());
     return a;
@@ -283,11 +315,16 @@ class SealedFile implements File {
     final n = _raw.lengthSync();
     if (n == 0) return false;
     final f = _raw.openSync();
+    final bool plain;
     try {
-      return !isSealedHead(f.readSync(sealedHead));
+      plain = !isSealedHead(f.readSync(sealedHead));
     } finally {
       f.closeSync();
     }
+    if (plain && _io.areas.swept.contains(_io.areas.areaOf(path))) {
+      throw SealedDamaged(path, 'plain where all is sealed');
+    }
+    return plain;
   }
 
   @override
@@ -450,6 +487,12 @@ class SealedFile implements File {
 
   // a copy or a move to another place: through both seams, a block at a time
   void _carry(File to) {
+    final areas = _io.areas;
+    if (_here &&
+        !areas.sealedPlace(to.path) &&
+        !areas.plainOutAllowed(to.path)) {
+      throw FileSystemException('a sealed file goes out only by a save', path);
+    }
     final src = openSync();
     final dst = to.openSync(mode: FileMode.write);
     try {

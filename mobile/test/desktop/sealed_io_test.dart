@@ -66,7 +66,8 @@ void main() {
     // sqlite's files, the engine's, the models and the folders themselves
     expect(a.areaOf(p.join(docs, 'halo.db')), isNull);
     expect(a.areaOf(p.join(support, 'backup_stage', 'halo.db-wal')), isNull);
-    expect(a.areaOf(p.join(docs, 'onion.key')), isNull);
+    // the onion key is kept sealed: the engine gets it in memory
+    expect(a.areaOf(p.join(docs, 'onion.key')), '*');
     expect(a.areaOf(p.join(docs, 'tor', 'state')), isNull);
     expect(a.areaOf(p.join(docs, 'media')), isNull);
     expect(a.areaOf(p.join(support, 'translate', 'm.bin')), isNull);

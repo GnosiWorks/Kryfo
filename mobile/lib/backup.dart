@@ -45,7 +45,7 @@ import 'backup_stream.dart';
 import 'dart:math';
 import 'l10n/l10n.dart';
 import 'desktop/desktop_mode.dart'
-    show containerClosed, containerOpened, runIsolated;
+    show containerClosed, containerOpened, engineDir, runIsolated;
 
 const _kDbPassphrase = 'halo.db.passphrase';
 const _secureStorage = secureStore;
@@ -385,7 +385,7 @@ Future<void> landV1Payload(
     // a v1 file carries no catch-up: the relays are read again whole
     await _holdRelays();
     await _clearShade();
-    await landCatchUpAnchors(docsDir.path, null);
+    await landCatchUpAnchors(engineDir(docsDir.path), null);
     await _livesHereNow(payload['ts']);
 
     // a v1 backup carries none of these; what is here is the old identity's
@@ -984,7 +984,9 @@ Future<BackupDraft> draftBackup(
   // read before the database is copied: no anchor is past what it holds.
   // a file without the hidden chats carries none, vault or no vault, and
   // its restore reads every relay whole
-  final catchUp = hidden ? await catchUpAnchors(docs) : const <String, int>{};
+  final catchUp = hidden
+      ? await catchUpAnchors(engineDir(docs))
+      : const <String, int>{};
   final dbKey = await _secureStorage.read(key: _kDbPassphrase);
   if (dbKey == null) throw BackupError('db passphrase missing');
   final prefs = await SharedPreferences.getInstance();
@@ -1874,7 +1876,7 @@ Future<void> _restoreFile(
     await restorePrefs(manifest['prefs']);
     await _holdRelays();
     await _clearShade();
-    await landCatchUpAnchors(docs.path, manifest['catchUp']);
+    await landCatchUpAnchors(engineDir(docs.path), manifest['catchUp']);
     // in place before the restart reads them
     _restoredSettings = await landCarriedSettings(
       manifest['settings'],

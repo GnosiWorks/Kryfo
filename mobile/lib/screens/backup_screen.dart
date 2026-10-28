@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import '../desktop/desktop_mode.dart' show canShareOut;
+import '../desktop/desktop_mode.dart' show bulkTempDir, canShareOut;
 import '../open_file.dart' show ShareEnd, shareFileOut;
 import '../backup.dart';
 import '../main.dart' hide live;
@@ -116,10 +116,13 @@ class _BackupScreenState extends State<BackupScreen> {
     final String name;
     final move = _move && !widget.withHiddenChats;
     try {
-      final tempDir = await getTemporaryDirectory();
+      final bulk = bulkTempDir;
+      final tempDir = bulk != null
+          ? await bulk()
+          : (await getTemporaryDirectory()).path;
       // a restore finds it by its contents: a plain icon's plain name too
       name = backupName(plain: savesPlain());
-      path = p.join(tempDir.path, name);
+      path = p.join(tempDir, name);
       void onProgress(int a, int b) {
         if (mounted && b > 0) setState(() => _progress = a / b);
       }

@@ -219,6 +219,15 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   unawaited(sayTrayWords());
   // the key goes from memory as the engine lets the app go
   closeOnDetach = AppLifecycleListener(onDetach: vault.close);
+  // what memory held from a run before goes now, before anything is plain
+  if (runtime != null) {
+    final docs = (await paths.getApplicationDocumentsPath())!;
+    EngineFiles(
+      docs: docs,
+      support: (await paths.getApplicationSupportPath())!,
+      runtime: runtime,
+    ).clearMemory();
+  }
   var started = false;
   runApp(
     DesktopLockApp(
@@ -252,7 +261,8 @@ Future<void> openSeal({
 }) async {
   final docs = (await paths.getApplicationDocumentsPath())!;
   final support = (await paths.getApplicationSupportPath())!;
-  final areas = SealedAreas(docs: docs, support: support)
+  final temp = (await paths.getTemporaryPath())!;
+  final areas = SealedAreas(docs: docs, support: support, runtime: temp)
     ..filesKey = await filesKeyFrom(vault);
   final io = SealedIO(areas, const EngineChunkCrypto());
   IOOverrides.global = io;
@@ -262,21 +272,42 @@ Future<void> openSeal({
         List<String> ins,
         List<String> outs,
         Future<T> Function(List<String>, List<String>) run,
-      ) => nativeFilesSealed(areas, ins, outs, run);
-  // a container's plain leftovers are sealed once its key is here
+        bool Function(T)? ok,
+      ) => nativeFilesSealed(areas, ins, outs, run, ok);
+  // a backup is encrypted already and may be large: on the disk
+  bulkTempDir = () async {
+    final d = p.join(root, 'tmp');
+    makePrivateDir(d);
+    return d;
+  };
+
+  for (final area in ['', '_k2', '_k3', '_k4', '*']) {
+    if (vault.read(sweptEntry(area)) != null) areas.swept.add(area);
+  }
+  // an area's sweep done once: from then a plain file there is damage
+  Future<void> sweep(String area, List<String> dirs) async {
+    if (areas.swept.contains(area)) return;
+    try {
+      for (final d in dirs) {
+        await runSealed(() => sealPlainUnder(d));
+      }
+      await vault.write(sweptEntry(area), '1');
+      areas.swept.add(area);
+    } catch (_) {
+      // the next start sweeps again
+    }
+  }
+
   final keys = ContainerKeys(
     areas,
-    onOpened: (suffix) {
-      for (final f in ['media', 'wallpapers']) {
-        final dir = p.join(docs, '$f$suffix');
-        unawaited(
-          runSealed(() => sealPlainUnder(dir)).then((_) {}, onError: (_) {}),
-        );
-      }
-    },
+    onOpened: (suffix) => unawaited(
+      sweep(suffix, [
+        for (final f in ['media', 'wallpapers']) p.join(docs, '$f$suffix'),
+      ]),
+    ),
   );
   containerOpened = keys.opened;
-  containerClosed = keys.closed;
+  containerClosed = (id) => keys.closed(id, HaloContainer.byId(id)?.suffix);
   areas.lateKey = (suffix) {
     for (final c in [HaloContainer.everyday, HaloContainer.decoy]) {
       if (c.suffix != suffix) continue;
@@ -286,26 +317,44 @@ Future<void> openSeal({
     return null;
   };
   unawaited(
-    runSealed(() => sealPlainUnder(support)).then((_) {}, onError: (_) {}),
+    sweep('*', [
+      support,
+      p.join(docs, 'restore_stage'),
+      p.join(docs, 'restore_hidden'),
+    ]),
   );
   makePlaceholders(docs);
   containersSwept = () => makePlaceholders(docs);
+
+  final vaultGone = host.destroyKeys;
+  EngineFiles? engineFiles;
   if (runtime != null) {
-    final onion = OnionKeyLink(docs: docs, runtime: runtime, vault: vault);
-    await onion.place();
-    onion.watch();
-    final vaultGone = host.destroyKeys;
-    host.destroyKeys = () {
-      onion.destroy();
-      vaultGone?.call();
-      // what was plain in memory goes with the rest
-      rawFileAccess(() {
-        try {
-          Directory(runtime).deleteSync(recursive: true);
-        } catch (_) {}
-      });
-    };
+    final ef = engineFiles = EngineFiles(
+      docs: docs,
+      support: support,
+      runtime: runtime,
+    );
+    await ef.prepare(vault);
+    ef.watch();
+    engineDirOf = (_) => ef.dir;
+    engineStarter = (_, start) => ef.start(start);
   }
+  host.destroyKeys = () {
+    engineFiles?.destroy();
+    keys.closeAll();
+    vaultGone?.call();
+  };
+  host.beforeExit = () {
+    engineFiles?.detach();
+    keys.closeAll();
+  };
+  closeOnDetach?.dispose();
+  closeOnDetach = AppLifecycleListener(
+    onDetach: () {
+      host.beforeExit?.call();
+      vault.close();
+    },
+  );
 }
 
 /// held so the listener lives as long as the app

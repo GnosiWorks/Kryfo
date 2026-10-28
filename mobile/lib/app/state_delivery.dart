@@ -723,7 +723,7 @@ extension AppStateDelivery on AppState {
       return false;
     }
     _torHeld = false;
-    final addr = await engine.startListenerBg(_docsPath);
+    final addr = await startEngineIn(_docsPath, engine.startListenerBg);
     if (addr.isEmpty || addr.startsWith('error')) {
       dlog('delivery: tor did not start: $addr');
       return false;

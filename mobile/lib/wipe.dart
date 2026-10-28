@@ -17,6 +17,7 @@ import 'package:path_provider/path_provider.dart';
 import 'main.dart'
     show appState, engine, session, sessionQuiet, AppStateProfile;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'desktop/desktop_mode.dart' show rawFiles;
 import 'dlog.dart';
 import 'drafts.dart' show forgetAllDrafts;
 import 'shred.dart' show shredFile;
@@ -182,34 +183,38 @@ Future<void> _erase({Set<String> keep = const {}}) async {
     final behind = <String>[];
     // the ones that would not move
     final stuck = <FileSystemEntity>[];
-    for (final d in dirs) {
-      if (!await d.exists()) continue;
-      await for (final entry in d.list(followLinks: false)) {
-        final name = p.basename(entry.path);
-        if (d.path == docs.path && keep.contains(name)) continue;
-        if (!_sealed(name) && entry is! Link) {
-          final to = p.join(held, _rnd());
-          _moving.add(to);
+    // on desktop the entries move as the disk holds them: sealed ones stay
+    // sealed in the folder they wait in to be shredded
+    await rawFiles(() async {
+      for (final d in dirs) {
+        if (!await d.exists()) continue;
+        await for (final entry in d.list(followLinks: false)) {
+          final name = p.basename(entry.path);
+          if (d.path == docs.path && keep.contains(name)) continue;
+          if (!_sealed(name) && entry is! Link) {
+            final to = p.join(held, _rnd());
+            _moving.add(to);
+            try {
+              await Directory(held).create(recursive: true);
+              behind.add((await entry.rename(to)).path);
+              continue;
+            } catch (e) {
+              dlog('wipe: an entry not moved (${e.runtimeType})');
+              _moving.remove(to);
+              stuck.add(entry);
+              continue;
+            }
+          }
           try {
-            await Directory(held).create(recursive: true);
-            behind.add((await entry.rename(to)).path);
-            continue;
+            await entry.delete(recursive: true);
           } catch (e) {
-            dlog('wipe: an entry not moved (${e.runtimeType})');
-            _moving.remove(to);
-            stuck.add(entry);
-            continue;
+            // one that will not go must not keep the rest. the native call
+            // below is the real erase
+            dlog('wipe: an entry stayed (${e.runtimeType})');
           }
         }
-        try {
-          await entry.delete(recursive: true);
-        } catch (e) {
-          // one that will not go must not keep the rest. the native call
-          // below is the real erase
-          dlog('wipe: an entry stayed (${e.runtimeType})');
-        }
       }
-    }
+    });
     _shredBehind(behind, held);
     if (stuck.isNotEmpty) {
       // shredded where they lie, for a moment at most, then unlinked with

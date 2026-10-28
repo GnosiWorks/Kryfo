@@ -11,7 +11,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/backup_stream.dart';
 import 'package:kryfo/desktop/desktop_mode.dart';
 import 'package:kryfo/desktop/desktop_save.dart';
-import 'package:kryfo/desktop/desktop_vault.dart';
 import 'package:kryfo/desktop/sealed_format.dart';
 import 'package:kryfo/desktop/sealed_io.dart';
 import 'package:kryfo/desktop/sealed_native.dart';
@@ -19,7 +18,6 @@ import 'package:kryfo/desktop/sealed_setup.dart';
 import 'package:kryfo/shred.dart';
 import 'package:path/path.dart' as p;
 
-import 'desktop_start_test.dart' show ToyVaultCrypto;
 import 'sealed_file_test.dart' show ToyCrypto;
 
 Uint8List _k(int b) => Uint8List.fromList(List.filled(32, b));
@@ -226,41 +224,4 @@ void main() {
     expect(io.areas.containerKeys, isNot(contains('_k3')));
     expect(mediaKeyOf('db key', '3'), isNot(mediaKeyOf('db key', '4')));
   });
-
-  test(
-    'the onion key lives in the vault, the engine reads it from memory',
-    () async {
-      final run = p.join(root.path, 'run');
-      Directory(run).createSync();
-      final vault = DesktopVault(
-        p.join(root.path, 'vault.kv'),
-        crypto: ToyVaultCrypto(),
-      );
-      await vault.create('four random words here');
-      final key = List.generate(64, (i) => i);
-      io.rawFile(p.join(docs, 'onion.key')).writeAsBytesSync(key);
-      final link = OnionKeyLink(docs: docs, runtime: run, vault: vault);
-      await sealed(() => link.place());
-      expect(
-        FileSystemEntity.typeSync(
-          p.join(docs, 'onion.key'),
-          followLinks: false,
-        ),
-        FileSystemEntityType.link,
-      );
-      expect(File(p.join(docs, 'onion.key')).readAsBytesSync(), key);
-      expect(base64.decode(vault.read(kOnionEntry)!), key);
-      // the engine makes a new one: it reaches the vault
-      final fresh = List.generate(64, (i) => 255 - i);
-      File(p.join(run, 'onion.key')).writeAsBytesSync(fresh);
-      await sealed(() => link.pull());
-      expect(base64.decode(vault.read(kOnionEntry)!), fresh);
-      // a new boot: memory is empty, the vault fills it
-      File(p.join(run, 'onion.key')).deleteSync();
-      await sealed(() => link.place());
-      expect(File(p.join(docs, 'onion.key')).readAsBytesSync(), fresh);
-      link.destroy();
-      expect(File(p.join(run, 'onion.key')).existsSync(), isFalse);
-    },
-  );
 }

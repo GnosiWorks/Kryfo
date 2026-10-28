@@ -19,6 +19,10 @@ import 'sealed_io.dart';
 const kFilesKeyEntry = 'kryfo.files';
 const kOnionEntry = 'kryfo.onion';
 
+/// the vault's word that an area's sweep finished: '*' or a container's
+/// folder suffix
+String sweptEntry(String area) => 'kryfo.swept.$area';
+
 /// a container's files key, from its database key: no second secret to
 /// keep, and it goes wherever that key goes (the vault, or a pin entry)
 Uint8List mediaKeyOf(String dbKey, String containerId) => Uint8List.fromList(
@@ -58,15 +62,29 @@ class ContainerKeys {
     onOpened?.call(suffix);
   }
 
-  void closed(String id) {
+  /// [suffix] names the container's folders: a key a restore took from
+  /// the vault before its database opened goes with the rest
+  void closed(String id, [String? suffix]) {
     final n = (_count[id] ?? 0) - 1;
     if (n > 0) {
       _count[id] = n;
       return;
     }
     _count.remove(id);
-    final k = areas.containerKeys.remove(_suffix.remove(id));
+    final k = areas.containerKeys.remove(_suffix.remove(id) ?? suffix);
     k?.fillRange(0, k.length, 0);
+  }
+
+  bool holds(String id) => (_count[id] ?? 0) > 0;
+
+  /// the app ends: every key zeroed
+  void closeAll() {
+    for (final k in areas.containerKeys.values) {
+      k.fillRange(0, k.length, 0);
+    }
+    areas.containerKeys.clear();
+    _count.clear();
+    _suffix.clear();
   }
 }
 
@@ -123,6 +141,11 @@ SealSweep sealPlainUnder(String dir) {
       src.closeSync();
       dst.closeSync();
     }
+    // the copy is read back whole before the plain one is touched
+    if (!_opens(tmp)) {
+      rawFileAccess(() => File(tmp).deleteSync());
+      continue;
+    }
     rawFileAccess(() {
       _zero(path);
       File(tmp).renameSync(path);
@@ -144,14 +167,19 @@ bool _plain(String path) => rawFileAccess(() {
   }
 });
 
-// a whole sealed file: its head, and every chunk to the last one opens
+// a whole sealed file: its head, and every chunk read through to the last
+// one, before anything it stands in for is zeroed
 bool _opens(String path) {
   if (rawFileAccess(() => File(path).lengthSync()) == 0 || _plain(path)) {
     return false;
   }
   try {
     final r = File(path).openSync();
-    r.closeSync();
+    try {
+      while (r.readSync(chunkPlain).isNotEmpty) {}
+    } finally {
+      r.closeSync();
+    }
     return true;
   } on SealedDamaged {
     return false;
@@ -214,75 +242,222 @@ void makePlaceholders(String docs, {Random? random}) {
   });
 }
 
-/// docs/onion.key: the engine reads and writes it by path, so it is a
-/// link to a file in memory, filled from the vault before the engine
-/// starts and read back into the vault when the engine or a restore wrote
-/// a new one
-class OnionKeyLink {
-  OnionKeyLink({
+/// the engine's folder on desktop: in memory, so the names of its files
+/// (which carry the start of receive keys) and their contents never reach
+/// the disk as they are. what it keeps between runs is sealed: the onion
+/// key as docs/onion.key, the relay marks in support/engine.state. tor's
+/// own state stays on the disk through a link, docs/tor
+class EngineFiles {
+  EngineFiles({
     required this.docs,
+    required this.support,
     required this.runtime,
-    required this.vault,
   });
 
   final String docs;
+  final String support;
   final String runtime;
-  final DesktopVault vault;
   Timer? _watch;
 
-  String get _link => p.join(docs, 'onion.key');
-  String get _target => p.join(runtime, 'onion.key');
+  String get dir => p.join(runtime, 'engine');
+  String get _key => p.join(dir, 'onion.key');
+  String get _sealedKey => p.join(docs, 'onion.key');
+  String get _state => p.join(support, 'engine.state');
+  static final _marks = RegExp(r'^nostr_(seen|last|heard)_');
 
-  /// before the engine starts
-  Future<void> place() async {
-    await rawFileAccess(() async {
-      final link = Link(_link);
-      final type = FileSystemEntity.typeSync(_link, followLinks: false);
-      if (type == FileSystemEntityType.file) {
-        // one a version before this left plain: into the vault, then gone
-        final k = File(_link).readAsBytesSync();
-        if (k.isNotEmpty) await vault.write(kOnionEntry, base64.encode(k));
-        _zero(_link);
-        File(_link).deleteSync();
+  /// every start, before the engine: what memory held from before goes,
+  /// the folder is laid out, an older layout is moved in, the marks come
+  /// back from their sealed copy
+  Future<void> prepare(DesktopVault vault) async {
+    clearMemory();
+    rawFileAccess(() {
+      Directory(dir).createSync(recursive: true);
+      Directory(p.join(docs, 'tor')).createSync(recursive: true);
+      final tor = Link(p.join(dir, 'tor'));
+      if (FileSystemEntity.typeSync(tor.path, followLinks: false) !=
+          FileSystemEntityType.link) {
+        tor.createSync(p.join(docs, 'tor'));
       }
-      await pull();
+    });
+    await _fromOlderLayout(vault);
+    _restoreMarks();
+  }
+
+  // round two kept a link and the key in the vault; before that the key and
+  // the marks lay plain in docs
+  Future<void> _fromOlderLayout(DesktopVault vault) async {
+    final type = FileSystemEntity.typeSync(_sealedKey, followLinks: false);
+    if (type == FileSystemEntityType.link) {
+      rawFileAccess(() => Link(_sealedKey).deleteSync());
       final kept = vault.read(kOnionEntry);
-      final t = File(_target);
-      if (!t.existsSync() && kept != null) {
-        t.writeAsBytesSync(base64.decode(kept), flush: true);
-      }
-      if (FileSystemEntity.typeSync(_link, followLinks: false) !=
-              FileSystemEntityType.link ||
-          link.targetSync() != _target) {
-        if (link.existsSync()) link.deleteSync();
-        link.createSync(_target);
+      if (kept != null) File(_sealedKey).writeAsBytesSync(base64.decode(kept));
+    } else if (type == FileSystemEntityType.file && _plain(_sealedKey)) {
+      final k = rawFileAccess(() => File(_sealedKey).readAsBytesSync());
+      rawFileAccess(() {
+        _zero(_sealedKey);
+        File(_sealedKey).deleteSync();
+      });
+      File(_sealedKey).writeAsBytesSync(k);
+      k.fillRange(0, k.length, 0);
+    }
+    if (vault.read(kOnionEntry) != null) await vault.delete(kOnionEntry);
+    final old = rawFileAccess(
+      () => Directory(docs)
+          .listSync()
+          .whereType<File>()
+          .where((f) => _marks.hasMatch(p.basename(f.path)))
+          .toList(),
+    );
+    if (old.isEmpty) return;
+    final m = _readState();
+    for (final f in old) {
+      final name = p.basename(f.path);
+      m[name] = base64.encode(
+        rawFileAccess(() => File(f.path).readAsBytesSync()),
+      );
+      rawFileAccess(() {
+        _zero(f.path);
+        File(f.path).deleteSync();
+      });
+    }
+    _writeState(m);
+  }
+
+  Map<String, String> _readState() {
+    final f = File(_state);
+    if (!f.existsSync()) return {};
+    try {
+      return (jsonDecode(f.readAsStringSync()) as Map).cast<String, String>();
+    } catch (_) {
+      return {};
+    }
+  }
+
+  void _writeState(Map<String, String> m) {
+    final tmp = '$_state.new';
+    File(tmp).writeAsStringSync(jsonEncode(m), flush: true);
+    rawFileAccess(() => File(tmp).renameSync(_state));
+  }
+
+  void _restoreMarks() {
+    final m = _readState();
+    rawFileAccess(() {
+      for (final e in m.entries) {
+        if (!_marks.hasMatch(e.key) || e.key.contains('/')) continue;
+        File(p.join(dir, e.key)).writeAsBytesSync(base64.decode(e.value));
       }
     });
   }
 
-  /// a key written into memory since, kept in the vault
-  Future<void> pull() async {
-    final t = rawFileAccess(() => File(_target));
-    if (!t.existsSync()) return;
-    final now = base64.encode(t.readAsBytesSync());
-    if (now.isEmpty || vault.read(kOnionEntry) == now) return;
-    await vault.write(kOnionEntry, now);
+  /// the marks as they are now, sealed into their copy
+  void keepMarks() {
+    final files = rawFileAccess(() {
+      final d = Directory(dir);
+      if (!d.existsSync()) return <File>[];
+      return d
+          .listSync()
+          .whereType<File>()
+          .where((f) => _marks.hasMatch(p.basename(f.path)))
+          .toList();
+    });
+    final m = {
+      for (final f in files)
+        p.basename(f.path): base64.encode(
+          rawFileAccess(() => File(f.path).readAsBytesSync()),
+        ),
+    };
+    if (mapEquals(m, _readState())) return;
+    _writeState(m);
   }
 
-  void watch({Duration every = const Duration(seconds: 10)}) {
-    _watch ??= Timer.periodic(
-      every,
-      (_) => unawaited(pull().catchError((_) {})),
-    );
+  void watch({Duration every = const Duration(minutes: 1)}) {
+    _watch ??= Timer.periodic(every, (_) {
+      try {
+        keepMarks();
+      } catch (_) {}
+    });
   }
 
-  /// the wipe's: the key in memory zeroed and gone
-  void destroy() {
-    _watch?.cancel();
+  /// the engine's start: the onion key in its folder only while it reads
+  /// it. a new one it made is sealed into docs/onion.key. after an error
+  /// the key stays, for the engine's own retry
+  Future<String> start(Future<String> Function(String dir) run) async {
+    if (File(_sealedKey).existsSync()) {
+      final k = File(_sealedKey).readAsBytesSync();
+      rawFileAccess(() => File(_key).writeAsBytesSync(k, flush: true));
+      k.fillRange(0, k.length, 0);
+    }
+    final r = await run(dir);
+    if (!r.startsWith('error')) takeKey();
+    return r;
+  }
+
+  /// a key the engine wrote kept sealed, and its plain copy zeroed
+  void takeKey() {
+    final k = rawFileAccess(() {
+      final f = File(_key);
+      return f.existsSync() ? f.readAsBytesSync() : null;
+    });
+    if (k == null) return;
+    if (k.isNotEmpty &&
+        (!File(_sealedKey).existsSync() ||
+            !listEquals(File(_sealedKey).readAsBytesSync(), k))) {
+      File(_sealedKey).writeAsBytesSync(k, flush: true);
+    }
+    k.fillRange(0, k.length, 0);
+    rawFileAccess(() {
+      _zero(_key);
+      File(_key).deleteSync();
+    });
+  }
+
+  /// the plain things memory holds: the onion key and the temporary files,
+  /// zeroed and gone. at every start and as the app ends
+  void clearMemory() {
     rawFileAccess(() {
       try {
-        _zero(_target);
-        File(_target).deleteSync();
+        if (File(_key).existsSync()) {
+          _zero(_key);
+          File(_key).deleteSync();
+        }
+      } catch (_) {}
+      final tmp = Directory(p.join(runtime, 'tmp'));
+      if (!tmp.existsSync()) return;
+      for (final e in tmp.listSync(recursive: true, followLinks: false)) {
+        if (e is File) {
+          try {
+            _zero(e.path);
+          } catch (_) {}
+        }
+      }
+      for (final e in tmp.listSync(followLinks: false)) {
+        try {
+          e.deleteSync(recursive: true);
+        } catch (_) {}
+      }
+    });
+  }
+
+  /// the app ends: the marks kept, memory cleared
+  void detach() {
+    _watch?.cancel();
+    try {
+      keepMarks();
+    } catch (_) {}
+    clearMemory();
+  }
+
+  /// the wipe's: all of it zeroed and gone
+  void destroy() {
+    _watch?.cancel();
+    clearMemory();
+    rawFileAccess(() {
+      try {
+        final d = Directory(dir);
+        for (final e in d.listSync(followLinks: false)) {
+          if (e is File) _zero(e.path);
+        }
+        Directory(runtime).deleteSync(recursive: true);
       } catch (_) {}
     });
   }

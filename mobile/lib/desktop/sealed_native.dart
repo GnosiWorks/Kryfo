@@ -107,8 +107,9 @@ Future<T> nativeFilesSealed<T>(
   SealedAreas areas,
   List<String> ins,
   List<String> outs,
-  Future<T> Function(List<String> ins, List<String> outs) run,
-) async {
+  Future<T> Function(List<String> ins, List<String> outs) run, [
+  bool Function(T answer)? ok,
+]) async {
   final mems = <MemFile>[];
   try {
     final i = <String>[];
@@ -134,6 +135,8 @@ Future<T> nativeFilesSealed<T>(
       }
     }
     final r = await run(i, o);
+    // what a failed write left is not kept
+    if (ok != null && !ok(r)) return r;
     for (final (m, to) in back) {
       if (rawFileAccess(() => File(m.path).lengthSync()) > 0) {
         sealFromMem(m, to);

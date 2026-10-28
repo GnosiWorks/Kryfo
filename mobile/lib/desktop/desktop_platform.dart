@@ -116,6 +116,9 @@ class DesktopHost {
 
   /// the vault overwritten before the folder goes
   void Function()? destroyKeys;
+
+  /// what is kept and cleared as the process ends or becomes a new run
+  void Function()? beforeExit;
   final _since = Stopwatch()..start();
 
   static void _exit(int code) => io.exit(code);
@@ -200,6 +203,7 @@ Map<String, DesktopAnswer> desktopAnswers(
   Future<Object?> platformAsync(MethodCall c) async {
     switch (c.method) {
       case 'reopen':
+        host.beforeExit?.call();
         await host.relaunch();
         host.exit(0);
         return null;
