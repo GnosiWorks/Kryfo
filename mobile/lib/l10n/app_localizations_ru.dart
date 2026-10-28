@@ -6531,6 +6531,35 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bootFailedCloseAndReopen => 'Закрыть и снова открыть Kryfo';
 
   @override
+  String get bootFailedStillStuck => 'Если повторная попытка не помогает';
+
+  @override
+  String get bootFailedRestoreBackup => 'Восстановить из копии';
+
+  @override
+  String get bootFailedStartFresh => 'Начать заново';
+
+  @override
+  String get bootFailedStartFreshTitle => 'Начать заново?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'Это сотрёт всё, что Kryfo хранит на этом телефоне: чаты, контакты, медиа, скрытые чаты и твои три слова. Файл резервной копии, сохранённый в другом месте, не пострадает.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Продолжить';
+
+  @override
+  String get bootFailedStartFreshSure => 'Стереть всё на этом телефоне?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'Это нельзя отменить. Kryfo закроется и откроется как после новой установки.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Стереть и начать заново';
+
+  @override
   String get kryfoLinkTextThatLinkIsNot =>
       'Эту ссылку Kryfo прочитать не может';
 

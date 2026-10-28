@@ -10269,6 +10269,60 @@ abstract class AppLocalizations {
   /// **'Close and reopen Kryfo'**
   String get bootFailedCloseAndReopen;
 
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'If trying again does not help'**
+  String get bootFailedStillStuck;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Restore a backup'**
+  String get bootFailedRestoreBackup;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Start fresh'**
+  String get bootFailedStartFresh;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Start fresh?'**
+  String get bootFailedStartFreshTitle;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'This deletes everything Kryfo keeps on this phone: chats, contacts, media, hidden chats and your three words. A backup file saved somewhere else is not touched.'**
+  String get bootFailedStartFreshLine;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get bootFailedStartFreshNext;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Delete everything on this phone?'**
+  String get bootFailedStartFreshSure;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'This cannot be undone. Kryfo closes and opens again as a new install.'**
+  String get bootFailedStartFreshSureLine;
+
+  /// widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help
+  ///
+  /// In en, this message translates to:
+  /// **'Delete and start fresh'**
+  String get bootFailedStartFreshYes;
+
   /// widgets/kryfo_link_text.dart
   ///
   /// In en, this message translates to:

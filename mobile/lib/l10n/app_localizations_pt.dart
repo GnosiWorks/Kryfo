@@ -6450,6 +6450,35 @@ class AppLocalizationsPt extends AppLocalizations {
   String get bootFailedCloseAndReopen => 'Fechar e reabrir o Kryfo';
 
   @override
+  String get bootFailedStillStuck => 'Se tentar de novo não ajudar';
+
+  @override
+  String get bootFailedRestoreBackup => 'Restaurar um backup';
+
+  @override
+  String get bootFailedStartFresh => 'Começar do zero';
+
+  @override
+  String get bootFailedStartFreshTitle => 'Começar do zero?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'Isso apaga tudo o que o Kryfo guarda neste celular: conversas, contatos, mídia, conversas ocultas e suas três palavras. Um arquivo de backup salvo em outro lugar não é afetado.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Continuar';
+
+  @override
+  String get bootFailedStartFreshSure => 'Apagar tudo neste celular?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'Isso não pode ser desfeito. O Kryfo fecha e abre de novo como se tivesse acabado de ser instalado.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Apagar e começar do zero';
+
+  @override
   String get kryfoLinkTextThatLinkIsNot =>
       'Esse link não é um que o Kryfo consegue ler';
 

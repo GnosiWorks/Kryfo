@@ -8046,6 +8046,42 @@
   "@bootFailedCloseAndReopen": {
     "description": "widgets/boot_failed.dart"
   },
+  "bootFailedStillStuck": "If trying again does not help",
+  "@bootFailedStillStuck": {
+    "description": "widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help"
+  },
+  "bootFailedRestoreBackup": "Restore a backup",
+  "@bootFailedRestoreBackup": {
+    "description": "widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help"
+  },
+  "bootFailedStartFresh": "Start fresh",
+  "@bootFailedStartFresh": {
+    "description": "widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help"
+  },
+  "bootFailedStartFreshTitle": "Start fresh?",
+  "@bootFailedStartFreshTitle": {
+    "description": "widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help"
+  },
+  "bootFailedStartFreshLine": "This deletes everything Kryfo keeps on this phone: chats, contacts, media, hidden chats and your three words. A backup file saved somewhere else is not touched.",
+  "@bootFailedStartFreshLine": {
+    "description": "widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help"
+  },
+  "bootFailedStartFreshNext": "Continue",
+  "@bootFailedStartFreshNext": {
+    "description": "widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help"
+  },
+  "bootFailedStartFreshSure": "Delete everything on this phone?",
+  "@bootFailedStartFreshSure": {
+    "description": "widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help"
+  },
+  "bootFailedStartFreshSureLine": "This cannot be undone. Kryfo closes and opens again as a new install.",
+  "@bootFailedStartFreshSureLine": {
+    "description": "widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help"
+  },
+  "bootFailedStartFreshYes": "Delete and start fresh",
+  "@bootFailedStartFreshYes": {
+    "description": "widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help"
+  },
   "kryfoLinkTextThatLinkIsNot": "That link is not one Kryfo can read",
   "@kryfoLinkTextThatLinkIsNot": {
     "description": "widgets/kryfo_link_text.dart"

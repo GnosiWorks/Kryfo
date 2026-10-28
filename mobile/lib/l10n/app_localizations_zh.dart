@@ -6126,6 +6126,34 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bootFailedCloseAndReopen => '关闭并重新打开 Kryfo';
 
   @override
+  String get bootFailedStillStuck => '如果重试也没用';
+
+  @override
+  String get bootFailedRestoreBackup => '从备份恢复';
+
+  @override
+  String get bootFailedStartFresh => '重新开始';
+
+  @override
+  String get bootFailedStartFreshTitle => '要重新开始吗？';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      '这会抹掉 Kryfo 在这台手机上的一切：聊天、联系人、媒体、隐藏的聊天和你的三个词。保存在别处的备份文件不受影响。';
+
+  @override
+  String get bootFailedStartFreshNext => '继续';
+
+  @override
+  String get bootFailedStartFreshSure => '抹掉这台手机上的一切？';
+
+  @override
+  String get bootFailedStartFreshSureLine => '此操作无法撤销。Kryfo 会关闭，再次打开时如同新安装。';
+
+  @override
+  String get bootFailedStartFreshYes => '抹掉并重新开始';
+
+  @override
   String get kryfoLinkTextThatLinkIsNot => '这个链接 Kryfo 读不了';
 
   @override
@@ -15074,6 +15102,34 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bootFailedCloseAndReopen => '關閉並重新開啟 Kryfo';
+
+  @override
+  String get bootFailedStillStuck => '如果重試也沒用';
+
+  @override
+  String get bootFailedRestoreBackup => '從備份還原';
+
+  @override
+  String get bootFailedStartFresh => '重新開始';
+
+  @override
+  String get bootFailedStartFreshTitle => '要重新開始嗎？';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      '這會清除 Kryfo 在這支手機上的一切：聊天、聯絡人、媒體、隱藏的聊天和你的三個詞。存在別處的備份檔案不受影響。';
+
+  @override
+  String get bootFailedStartFreshNext => '繼續';
+
+  @override
+  String get bootFailedStartFreshSure => '清除這支手機上的一切？';
+
+  @override
+  String get bootFailedStartFreshSureLine => '此操作無法復原。Kryfo 會關閉，再次開啟時就像剛安裝。';
+
+  @override
+  String get bootFailedStartFreshYes => '清除並重新開始';
 
   @override
   String get kryfoLinkTextThatLinkIsNot => '這個連結不是 Kryfo 能讀取的';

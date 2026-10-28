@@ -6398,6 +6398,35 @@ class AppLocalizationsId extends AppLocalizations {
   String get bootFailedCloseAndReopen => 'Tutup dan buka lagi Kryfo';
 
   @override
+  String get bootFailedStillStuck => 'Jika mencoba lagi tidak membantu';
+
+  @override
+  String get bootFailedRestoreBackup => 'Pulihkan cadangan';
+
+  @override
+  String get bootFailedStartFresh => 'Mulai dari awal';
+
+  @override
+  String get bootFailedStartFreshTitle => 'Mulai dari awal?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'Ini menghapus total semua yang disimpan Kryfo di ponsel ini: obrolan, kontak, media, obrolan tersembunyi, dan tiga katamu. File cadangan yang disimpan di tempat lain tidak tersentuh.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Lanjut';
+
+  @override
+  String get bootFailedStartFreshSure => 'Hapus total semua di ponsel ini?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'Ini tidak bisa dibatalkan. Kryfo tertutup dan terbuka lagi seperti baru dipasang.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Hapus total dan mulai dari awal';
+
+  @override
   String get kryfoLinkTextThatLinkIsNot => 'Tautan itu tidak bisa dibaca Kryfo';
 
   @override

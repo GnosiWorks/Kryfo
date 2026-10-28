@@ -6397,6 +6397,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bootFailedCloseAndReopen => 'Close and reopen Kryfo';
 
   @override
+  String get bootFailedStillStuck => 'If trying again does not help';
+
+  @override
+  String get bootFailedRestoreBackup => 'Restore a backup';
+
+  @override
+  String get bootFailedStartFresh => 'Start fresh';
+
+  @override
+  String get bootFailedStartFreshTitle => 'Start fresh?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'This deletes everything Kryfo keeps on this phone: chats, contacts, media, hidden chats and your three words. A backup file saved somewhere else is not touched.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Continue';
+
+  @override
+  String get bootFailedStartFreshSure => 'Delete everything on this phone?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'This cannot be undone. Kryfo closes and opens again as a new install.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Delete and start fresh';
+
+  @override
   String get kryfoLinkTextThatLinkIsNot =>
       'That link is not one Kryfo can read';
 

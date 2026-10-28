@@ -6387,6 +6387,36 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bootFailedCloseAndReopen => 'Đóng và mở lại Kryfo';
 
   @override
+  String get bootFailedStillStuck => 'Nếu thử lại vẫn không được';
+
+  @override
+  String get bootFailedRestoreBackup => 'Khôi phục bản sao lưu';
+
+  @override
+  String get bootFailedStartFresh => 'Bắt đầu lại từ đầu';
+
+  @override
+  String get bootFailedStartFreshTitle => 'Bắt đầu lại từ đầu?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'Thao tác này xóa sạch mọi thứ Kryfo lưu trên điện thoại này: cuộc trò chuyện, liên hệ, tệp phương tiện, cuộc trò chuyện ẩn và ba từ của bạn. Tệp sao lưu lưu ở nơi khác không bị ảnh hưởng.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Tiếp tục';
+
+  @override
+  String get bootFailedStartFreshSure =>
+      'Xóa sạch mọi thứ trên điện thoại này?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'Không thể hoàn tác. Kryfo sẽ đóng và mở lại như mới cài đặt.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Xóa sạch và bắt đầu lại';
+
+  @override
   String get kryfoLinkTextThatLinkIsNot => 'Kryfo không đọc được liên kết đó';
 
   @override
