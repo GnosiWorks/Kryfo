@@ -9308,4 +9308,95 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       'Sade bir simge açıkken yeni fotoğraflar, videolar ve dosyalar telefonunun olağan klasörlerine sıradan adlarla kaydedilir. Daha önce kaydedilenler olduğu yerde kalır.';
+
+  @override
+  String get passFieldLabel => 'Parola ifadesi';
+
+  @override
+  String get padUseLetters => 'Harf kullan';
+
+  @override
+  String get padUseDigits => 'Rakam kullan';
+
+  @override
+  String get passWeak => 'Zayıf';
+
+  @override
+  String get passFair => 'Orta';
+
+  @override
+  String get passStrong => 'Güçlü';
+
+  @override
+  String passStrengthIs(Object level) {
+    return 'Güç: $level';
+  }
+
+  @override
+  String get lockKeyBusy =>
+      'Telefonun güvenlik çipi şu an meşgul. Birazdan yeniden dene.';
+
+  @override
+  String get lockKeyLocked =>
+      'Telefonunun kilidini bir kez kendi PIN’iyle aç, sonra yeniden dene.';
+
+  @override
+  String get lockKeyWaiting => 'Telefonun güvenlik çipi hâlâ denetliyor';
+
+  @override
+  String get lockKeyLost =>
+      'Bu telefon PIN’lerini denetleyen anahtarı kaybetti, bu yüzden bazı PIN’ler açmayabilir. Kryfo sıfırlanıp bir yedek geri yüklenebilir.';
+
+  @override
+  String get lockKeyReset => 'Kryfo’yu sıfırla';
+
+  @override
+  String get lockKeyResetTitle => 'Kryfo sıfırlansın mı?';
+
+  @override
+  String get lockKeyResetLine =>
+      'Bu telefondaki Kryfo’da ne varsa silinir ve Kryfo kapanır. Sonra bir yedeği geri yükleyebilirsin. Gizli sohbetler yalnızca açıkken alınmış bir yedekten geri gelir.';
+
+  @override
+  String get lockKeyResetSureTitle => 'Bu geri alınamaz';
+
+  @override
+  String get lockKeyResetSureLine =>
+      'Bu telefondaki Kryfo’nun tüm sohbetleri, anahtarları ve ayarları şimdi silinir.';
+
+  @override
+  String get lockKeyResetSure => 'Her şeyi sil';
+
+  @override
+  String get flowVaultPassLine =>
+      'En az 12 karakter. Telefonun klavyesi yazdığını görür, bu yüzden kelime öğrenmeyen ve eşitlemeyen bir klavye kullan.';
+
+  @override
+  String get flowVaultPassAgain => 'Aynı parola ifadesi bir kez daha';
+
+  @override
+  String get cardTitle => 'Güvenlik güncellemesini tamamla';
+
+  @override
+  String get cardLine =>
+      'Başka PIN’ler kullanıyorsan her birini burada bir kez yaz.';
+
+  @override
+  String get cardType => 'PIN yaz';
+
+  @override
+  String get cardAnswer =>
+      'Tamam. Bir tane daha yaz ya da bitince Bitti’ye dokun.';
+
+  @override
+  String get keyLine =>
+      'PIN’lerin yalnızca bu telefonda çalışır. Telefon onları denetleyen anahtarı bir gün kaybederse Kryfo’yu sıfırlayıp bir yedeği geri yüklemen gerekir. Gizli sohbetler yalnızca açıkken alınmış bir yedekten geri gelir.';
+
+  @override
+  String get keyLineUnlocked =>
+      'PIN’lerin yalnızca bu telefonda ve yalnızca telefonun kilidi açıkken çalışır. Telefon onları denetleyen anahtarı bir gün kaybederse Kryfo’yu sıfırlayıp bir yedeği geri yüklemen gerekir. Gizli sohbetler yalnızca açıkken alınmış bir yedekten geri gelir.';
+
+  @override
+  String get keyLineScreenLock =>
+      'Telefonuna bir ekran kilidi koy ki bu koruma telefon kilitliyken de sürsün.';
 }

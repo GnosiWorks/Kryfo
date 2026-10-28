@@ -9383,4 +9383,94 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       'Solange ein schlichtes Symbol an ist, werden neue Fotos, Videos und Dateien mit gewöhnlichen Namen in den üblichen Ordnern deines Handys gespeichert. Was schon gespeichert ist, bleibt, wo es ist.';
+
+  @override
+  String get passFieldLabel => 'Passphrase';
+
+  @override
+  String get padUseLetters => 'Buchstaben verwenden';
+
+  @override
+  String get padUseDigits => 'Ziffern verwenden';
+
+  @override
+  String get passWeak => 'Schwach';
+
+  @override
+  String get passFair => 'Mittel';
+
+  @override
+  String get passStrong => 'Stark';
+
+  @override
+  String passStrengthIs(Object level) {
+    return 'Stärke: $level';
+  }
+
+  @override
+  String get lockKeyBusy =>
+      'Der Sicherheitschip deines Handys ist gerade beschäftigt. Versuch es gleich noch einmal.';
+
+  @override
+  String get lockKeyLocked =>
+      'Entsperr dein Handy einmal mit seiner eigenen PIN und versuch es dann noch einmal.';
+
+  @override
+  String get lockKeyWaiting => 'Der Sicherheitschip des Handys prüft noch';
+
+  @override
+  String get lockKeyLost =>
+      'Dieses Handy hat den Schlüssel verloren, der deine PINs prüft. Manche PINs öffnen daher vielleicht nicht. Kryfo lässt sich zurücksetzen und ein Backup wiederherstellen.';
+
+  @override
+  String get lockKeyReset => 'Kryfo zurücksetzen';
+
+  @override
+  String get lockKeyResetTitle => 'Kryfo zurücksetzen?';
+
+  @override
+  String get lockKeyResetLine =>
+      'Alles in Kryfo auf diesem Handy wird gelöscht und Kryfo schließt sich. Danach kannst du ein Backup wiederherstellen. Versteckte Chats kommen nur aus einem Backup zurück, das gemacht wurde, während sie offen waren.';
+
+  @override
+  String get lockKeyResetSureTitle => 'Das lässt sich nicht rückgängig machen';
+
+  @override
+  String get lockKeyResetSureLine =>
+      'Alle Chats, Schlüssel und Einstellungen in Kryfo auf diesem Handy werden jetzt gelöscht.';
+
+  @override
+  String get lockKeyResetSure => 'Alles löschen';
+
+  @override
+  String get flowVaultPassLine =>
+      'Mindestens 12 Zeichen. Die Tastatur deines Handys sieht, was du tippst. Nimm also eine, die keine Wörter lernt oder synchronisiert.';
+
+  @override
+  String get flowVaultPassAgain => 'Die gleiche Passphrase noch einmal';
+
+  @override
+  String get cardTitle => 'Sicherheitsupdate abschließen';
+
+  @override
+  String get cardLine => 'Wenn du weitere PINs nutzt, gib sie hier einmal ein.';
+
+  @override
+  String get cardType => 'PIN eingeben';
+
+  @override
+  String get cardAnswer =>
+      'Erledigt. Gib eine weitere ein oder tippe auf Fertig, wenn du fertig bist.';
+
+  @override
+  String get keyLine =>
+      'Deine PINs funktionieren nur auf diesem Handy. Falls das Handy den Schlüssel verliert, der sie prüft, musst du Kryfo zurücksetzen und ein Backup wiederherstellen. Versteckte Chats kommen nur aus einem Backup zurück, das gemacht wurde, während sie offen waren.';
+
+  @override
+  String get keyLineUnlocked =>
+      'Deine PINs funktionieren nur auf diesem Handy und nur, solange es entsperrt ist. Falls das Handy den Schlüssel verliert, der sie prüft, musst du Kryfo zurücksetzen und ein Backup wiederherstellen. Versteckte Chats kommen nur aus einem Backup zurück, das gemacht wurde, während sie offen waren.';
+
+  @override
+  String get keyLineScreenLock =>
+      'Richte eine Displaysperre auf deinem Handy ein, damit dieser Schutz auch hält, wenn es gesperrt ist.';
 }

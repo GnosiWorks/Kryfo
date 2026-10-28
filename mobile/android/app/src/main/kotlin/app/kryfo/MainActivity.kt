@@ -383,6 +383,7 @@ open class MainActivity : FlutterFragmentActivity() {
             MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "kryfo/video")
                 .setMethodCallHandler { call, result -> v.handle(call, result) }
         }
+        PinKey.attach(applicationContext)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "halo/platform")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -420,6 +421,31 @@ open class MainActivity : FlutterFragmentActivity() {
                     "bootedAtMs" -> result.success(
                         System.currentTimeMillis() - android.os.SystemClock.elapsedRealtime()
                     )
+                    // the pin key (PinKey.kt). each call waits on its own
+                    // thread, never behind the finger key's work
+                    "pinKeyInfo" -> Thread {
+                        val r = PinKey.info()
+                        runOnUiThread { result.success(r) }
+                    }.start()
+                    "pinKeyMake" -> Thread {
+                        val r = PinKey.make()
+                        runOnUiThread { result.success(r) }
+                    }.start()
+                    "pinKeyMac" -> {
+                        val x = call.argument<String>("x")
+                        Thread {
+                            val r = PinKey.mac(x)
+                            runOnUiThread { result.success(r) }
+                        }.start()
+                    }
+                    "pinKeyKcv" -> Thread {
+                        val r = PinKey.kcv()
+                        runOnUiThread { result.success(r) }
+                    }.start()
+                    "pinKeyDrop" -> Thread {
+                        PinKey.drop()
+                        runOnUiThread { result.success(true) }
+                    }.start()
                     // fingerprint unlock on a key a new finger invalidates
                     "bioReady" -> result.success(BioKey.ready())
                     // the keystore may pause between tries: off the main thread
@@ -510,7 +536,12 @@ open class MainActivity : FlutterFragmentActivity() {
                     // and the process force-stopped. deletes from dart race
                     // the preference writes still queued for disk.
                     "wipe" -> {
-                        // the sticky listener goes first: if the clear is
+                        // the pin key before anything: what it sealed never
+                        // opens again, whatever the clear leaves. a keystore
+                        // that hangs gets half a second, never the clear
+                        // itself, which takes the key with the rest
+                        PinKey.dropWithin(500)
+                        // then the sticky listener: if the clear is
                         // refused and dart exits, nothing brings the app back
                         try {
                             HaloListenerService.stop(applicationContext)

@@ -6,10 +6,12 @@ import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
 
 import '../lock_state.dart';
+import '../pass_rules.dart';
 import '../widgets/fit_column.dart';
 import '../theme.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/halo_sheet.dart';
+import '../widgets/pass_pad.dart';
 import '../widgets/pin_pad.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/swap.dart';
@@ -37,6 +39,9 @@ class _LockSetupScreenState extends State<LockSetupScreen>
   String? _notIt;
   // the title comes in from where reading goes, or back from where it was
   bool _forward = true;
+  // letters on the check, where a hidden chats passphrase is taken inside
+  // them. it opens on digits
+  bool _letters = false;
 
   LockState get _lock => widget.lock ?? lockState;
   late final AnimationController _shake = AnimationController(
@@ -80,6 +85,8 @@ class _LockSetupScreenState extends State<LockSetupScreen>
         _mismatch = true;
         _notIt = r == PinResult.throttled
             ? tooManyTriesLine(_lock.throttleLeft)
+            : r == PinResult.unavailable
+            ? keyNoteLine(_lock)
             : l10n.lockNotIt;
       });
       if (!MediaQuery.disableAnimationsOf(context)) {
@@ -92,13 +99,14 @@ class _LockSetupScreenState extends State<LockSetupScreen>
     setState(() {
       _hold = false;
       _checking = false;
+      _letters = false;
       _forward = true;
       _pin = '';
     });
   }
 
   Future<void> _submit() async {
-    if (_hold || _pin.length < kPinMin) return;
+    if (_hold || passLength(_pin) < kPinMin) return;
     if (_checking) return _check();
     if (!_confirming) {
       setState(() => _hold = true);
@@ -128,11 +136,18 @@ class _LockSetupScreenState extends State<LockSetupScreen>
       });
       return;
     }
-    final ok = await _lock.setupPin(_pin);
+    bool ok;
+    String? why;
+    try {
+      ok = await _lock.setupPin(_pin);
+    } on PinKeyBusy {
+      ok = false;
+      why = l10n.lockKeyBusy;
+    }
     if (!ok) {
       HapticFeedback.heavyImpact();
       if (!mounted) return;
-      showHaloToast(context, pinNotTakenLine(_lock));
+      showHaloToast(context, why ?? pinNotTakenLine(_lock));
       setState(() {
         _first = '';
         _pin = '';
@@ -281,20 +296,41 @@ class _LockSetupScreenState extends State<LockSetupScreen>
             ),
             const SizedBox(height: 32),
             PinDots(
-              filled: _pin.length,
+              filled: passLength(_pin),
               color: HaloColors.amber,
               wrong: _mismatch,
               shake: _shake,
             ),
             const Spacer(flex: 3),
-            PinPad(
-              onDigit: _onDigit,
-              onBack: _back,
-              onEnter: _submit,
-              canEnter: _pin.length >= kPinMin,
-              enabled: !_hold,
-            ),
-            const SizedBox(height: 22),
+            if (_checking)
+              PassPad(
+                letters: _letters,
+                onLetters: (v) => setState(() {
+                  _letters = v;
+                  _pin = '';
+                }),
+                onDigit: _onDigit,
+                onBack: _back,
+                onText: (t) => setState(() {
+                  _pin = t;
+                  _mismatch = false;
+                  _notIt = null;
+                }),
+                text: _pin,
+                onEnter: _submit,
+                canEnter: passLength(_pin) >= kPinMin,
+                enabled: !_hold,
+              )
+            else
+              PinPad(
+                onDigit: _onDigit,
+                onBack: _back,
+                onEnter: _submit,
+                canEnter: _pin.length >= kPinMin,
+                enabled: !_hold,
+              ),
+            if (!_checking) const SizedBox(height: kPassKeyRoom),
+            const SizedBox(height: 12),
           ],
         ),
       ),

@@ -9356,4 +9356,94 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       'Mientras un icono neutro esté activo, las fotos, los vídeos y los archivos nuevos se guardan con nombres corrientes en las carpetas habituales de tu teléfono. Lo que ya se guardó se queda donde está.';
+
+  @override
+  String get passFieldLabel => 'Frase de contraseña';
+
+  @override
+  String get padUseLetters => 'Usar letras';
+
+  @override
+  String get padUseDigits => 'Usar números';
+
+  @override
+  String get passWeak => 'Débil';
+
+  @override
+  String get passFair => 'Aceptable';
+
+  @override
+  String get passStrong => 'Fuerte';
+
+  @override
+  String passStrengthIs(Object level) {
+    return 'Seguridad: $level';
+  }
+
+  @override
+  String get lockKeyBusy =>
+      'El chip de seguridad del teléfono está ocupado. Vuelve a intentarlo en un momento.';
+
+  @override
+  String get lockKeyLocked =>
+      'Desbloquea el teléfono una vez con su propio PIN y vuelve a intentarlo.';
+
+  @override
+  String get lockKeyWaiting =>
+      'El chip de seguridad del teléfono sigue comprobando';
+
+  @override
+  String get lockKeyLost =>
+      'Este teléfono perdió la clave que comprueba tus PIN, así que puede que algunos PIN no abran. Puedes restablecer Kryfo y restaurar una copia de seguridad.';
+
+  @override
+  String get lockKeyReset => 'Restablecer Kryfo';
+
+  @override
+  String get lockKeyResetTitle => '¿Restablecer Kryfo?';
+
+  @override
+  String get lockKeyResetLine =>
+      'Se borra todo lo de Kryfo en este teléfono y Kryfo se cierra. Después puedes restaurar una copia de seguridad. Los chats ocultos solo vuelven de una copia hecha mientras estaban abiertos.';
+
+  @override
+  String get lockKeyResetSureTitle => 'Esto no se puede deshacer';
+
+  @override
+  String get lockKeyResetSureLine =>
+      'Todos los chats, claves y ajustes de Kryfo en este teléfono se borran ahora.';
+
+  @override
+  String get lockKeyResetSure => 'Borrar todo';
+
+  @override
+  String get flowVaultPassLine =>
+      'Al menos 12 caracteres. El teclado del teléfono ve lo que escribes, así que usa uno que no aprenda ni sincronice palabras.';
+
+  @override
+  String get flowVaultPassAgain => 'La misma frase otra vez';
+
+  @override
+  String get cardTitle => 'Termina la actualización de seguridad';
+
+  @override
+  String get cardLine => 'Si usas otros PIN, escríbelos aquí una vez.';
+
+  @override
+  String get cardType => 'Escribir un PIN';
+
+  @override
+  String get cardAnswer => 'Listo. Escribe otro, o toca Listo cuando termines.';
+
+  @override
+  String get keyLine =>
+      'Tus PIN solo funcionan en este teléfono. Si el teléfono pierde alguna vez la clave que los comprueba, tendrás que restablecer Kryfo y restaurar una copia de seguridad. Los chats ocultos solo vuelven de una copia hecha mientras estaban abiertos.';
+
+  @override
+  String get keyLineUnlocked =>
+      'Tus PIN solo funcionan en este teléfono, y solo mientras está desbloqueado. Si el teléfono pierde alguna vez la clave que los comprueba, tendrás que restablecer Kryfo y restaurar una copia de seguridad. Los chats ocultos solo vuelven de una copia hecha mientras estaban abiertos.';
+
+  @override
+  String get keyLineScreenLock =>
+      'Pon un bloqueo de pantalla en el teléfono para que esta protección siga en pie cuando esté bloqueado.';
 }
