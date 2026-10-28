@@ -8444,6 +8444,11 @@ class AppLocalizationsUk extends AppLocalizations {
       'Це твоє власне запрошення. Поділися ним з кимось, щоб зв’язатися.';
 
   @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id треба оновити Kryfo, перш ніж ви зможете додати одне одного.';
+  }
+
+  @override
   String appLinkWordsTaken(Object id) {
     return 'Тут уже є $id з іншим ключем. Звір із ним номер безпеки, щоб зрозуміти, хто є хто. Нічого не додано.';
   }

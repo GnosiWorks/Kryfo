@@ -20,7 +20,7 @@ import 'package:kryfo/main.dart'
         tieVerifiedToKeys,
         verifiedNow;
 import 'package:kryfo/signal_stores.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 
 import 'mem_db.dart';
 
@@ -100,17 +100,10 @@ void main() {
     () async {
       final db = await _db(identity: _keyA);
       await markVerified(db, _peer, true, key: _hex(_keyA));
-      final store = HaloIdentityKeyStore(db, generateIdentityKeyPair(), 1);
-      final addr = SignalProtocolAddress(_peer, 1);
-      await store.saveIdentity(
-        addr,
-        IdentityKey(Curve.decodePoint(Uint8List.fromList([5, ..._keyA]), 0)),
-      );
+      final store = LsIdentityStore(db, KryfoSignal.shared.identityGenerate(), 1);
+      await store.saw(_peer, Uint8List.fromList([5, ..._keyA]));
       expect(db.rows('contacts').first['verified'], 1);
-      await store.saveIdentity(
-        addr,
-        IdentityKey(Curve.decodePoint(Uint8List.fromList([5, ..._keyB]), 0)),
-      );
+      await store.saw(_peer, Uint8List.fromList([5, ..._keyB]));
       expect(db.rows('contacts').first['verified'], 0);
     },
   );
@@ -193,17 +186,10 @@ void main() {
     var told = 0;
     onPeerKeyChanged = () => told++;
     addTearDown(() => onPeerKeyChanged = null);
-    final store = HaloIdentityKeyStore(db, generateIdentityKeyPair(), 1);
-    final addr = SignalProtocolAddress(_peer, 1);
-    await store.saveIdentity(
-      addr,
-      IdentityKey(Curve.decodePoint(Uint8List.fromList([5, ..._keyA]), 0)),
-    );
+    final store = LsIdentityStore(db, KryfoSignal.shared.identityGenerate(), 1);
+    await store.saw(_peer, Uint8List.fromList([5, ..._keyA]));
     expect(told, 0);
-    await store.saveIdentity(
-      addr,
-      IdentityKey(Curve.decodePoint(Uint8List.fromList([5, ..._keyB]), 0)),
-    );
+    await store.saw(_peer, Uint8List.fromList([5, ..._keyB]));
     expect(told, 1);
   });
 
@@ -237,11 +223,8 @@ void main() {
     var told = 0;
     onPeerKeyChanged = () => told++;
     addTearDown(() => onPeerKeyChanged = null);
-    final store = HaloIdentityKeyStore(db, generateIdentityKeyPair(), 1);
-    await store.saveIdentity(
-      SignalProtocolAddress(_peer, 1),
-      IdentityKey(Curve.decodePoint(Uint8List.fromList([5, ..._keyA]), 0)),
-    );
+    final store = LsIdentityStore(db, KryfoSignal.shared.identityGenerate(), 1);
+    await store.saw(_peer, Uint8List.fromList([5, ..._keyA]));
     expect(told, 1);
   });
 }

@@ -2190,6 +2190,7 @@
   "nameTakenUse": "使用這個連結",
   "nameTakenKeep": "保留現有的",
   "appYourOwnInvite": "這是你自己的邀請。分享給別人才能互相連線。",
+  "appLinkNeedsUpdate": "{id} 需要先更新 Kryfo，你們才能互相新增。",
   "appLinkWordsTaken": "這裡已經有人叫 {id}，金鑰不同。和對方核對安全碼，就知道誰是誰。未新增。",
   "appLinkWordsVerified": "你已用另一組金鑰驗證過 {id}。未新增。",
   "appTheyAreBlocked": "你已封鎖 {id}。請在設定的「已封鎖」中解除封鎖後再新增。",

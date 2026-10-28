@@ -6,9 +6,8 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/signal_ffi/kryfo_signal.dart';
-import 'package:kryfo/signal_session_ls.dart';
-import 'package:kryfo/signal_stores.dart' show invitePreKeyId;
-import 'package:kryfo/signal_stores_ls.dart';
+import 'package:kryfo/signal_session.dart';
+import 'package:kryfo/signal_stores.dart';
 
 import 'shim_lib.dart';
 
@@ -178,6 +177,98 @@ void main() {
     },
     skip: needsShim,
   );
+
+  group('an opener read again', () {
+    // alice's opener to bob and his store once he took it
+    Future<(SignalSession, SignalSession, String, Phone)> took() async {
+      final a = Phone();
+      final b = Phone();
+      final alice = await a.openLs();
+      final bob = await b.openLs();
+      await alice.processBundle(
+        'bob',
+        lsBundleOf(shim!, await bob.makeBundleB64()),
+      );
+      final w = await alice.encryptTo('bob', 'first');
+      expect(await b.read('alice', w), 'first');
+      return (alice, bob, w, b);
+    }
+
+    Future<Map<String, Object?>> rows(Phone p) async => {
+      for (final t in ['sessions', 'prekeys', 'kyber_prekeys', 'kyber_used'])
+        t: '${await p.db.query(t)}',
+    };
+
+    test('under another name it reads while its session is held, and '
+        'nothing of it is kept', () async {
+      final (_, _, w, b) = await took();
+      final before = await rows(b);
+      expect(await b.read('another-name', w), 'first');
+      expect(await rows(b), before);
+      expect(await b.ls!.hasSession('another-name'), isFalse);
+    }, skip: needsShim);
+
+    test('once the session it built is gone it is a duplicate, and '
+        'builds nothing', () async {
+      final (_, bob, w, b) = await took();
+      await bob.sessionStore.delete('alice');
+      final before = await rows(b);
+      for (final name in ['alice', 'another-name']) {
+        await expectLater(
+          b.read(name, w),
+          throwsA(
+            isA<LsError>().having((e) => e.code, 'code', LsError.duplicate),
+          ),
+        );
+      }
+      expect(await rows(b), before);
+    }, skip: needsShim);
+
+    test('in the first-contact slot it files its record there, and the '
+        'session held keeps going', () async {
+      final (alice, bob, w, b) = await took();
+      expect(await b.read(kFirstContactSlot, w), 'first');
+      final scratch = (await bob.sessionStore.load(kFirstContactSlot))!;
+      await bob.keepOpenedSession('alice', scratch);
+      expect(
+        await b.read('alice', await alice.encryptTo('bob', 'next')),
+        'next',
+      );
+      final back = base64Decode(await bob.encryptTo('alice', 'back'));
+      expect(
+        unpadText(
+          await alice.open('bob', back[0], Uint8List.fromList(back.sublist(1))),
+        ),
+        'back',
+      );
+    }, skip: needsShim);
+
+    test('late, past the chains a record keeps, it still reads and the '
+        'session goes on as it was', () async {
+      final a = Phone();
+      final b = Phone();
+      final alice = await a.openLs();
+      final bob = await b.openLs();
+      await alice.processBundle(
+        'bob',
+        lsBundleOf(shim!, await bob.makeBundleB64()),
+      );
+      final first = await alice.encryptTo('bob', 'one');
+      final late = await alice.encryptTo('bob', 'two, late');
+      expect(await b.read('alice', first), 'one');
+      for (var i = 0; i < 7; i++) {
+        expect(await a.read('bob', await bob.encryptTo('alice', 'b$i')), 'b$i');
+        expect(
+          await b.read('alice', await alice.encryptTo('bob', 'a$i')),
+          'a$i',
+        );
+      }
+      final held = await bob.sessionStore.load('alice');
+      expect(await b.read('alice', late), 'two, late');
+      expect(await bob.sessionStore.load('alice'), held);
+      expect(await b.read('alice', await alice.encryptTo('bob', 'on')), 'on');
+    }, skip: needsShim);
+  });
 
   test('a changed key is flagged and the message still arrives', () async {
     final a = Phone();

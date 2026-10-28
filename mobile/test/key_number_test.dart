@@ -17,7 +17,7 @@ import 'package:kryfo/main.dart'
         makePreKeyBundleB64,
         processPeerBundle;
 import 'package:kryfo/signal_session.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 
 import 'mem_db.dart';
 
@@ -27,7 +27,7 @@ String _hex(List<int> b) =>
     [for (final x in b) x.toRadixString(16).padLeft(2, '0')].join();
 
 Future<SignalSession> _phone() async {
-  final pair = Curve.generateKeyPair();
+  final pair = testKeyPair();
   final ss = SignalSession();
   await ss.bootstrap(
     database: MemDb(),
@@ -38,7 +38,7 @@ Future<SignalSession> _phone() async {
 }
 
 List<int> _own(SignalSession ss) =>
-    ss.identityKeyPair.getPublicKey().serialize();
+    ss.identity.public;
 
 Future<String> _inviteOf(SignalSession ss, {String id = _words}) async =>
     haloUriV3(
@@ -90,10 +90,7 @@ void main() {
     final invite = await _inviteOf(alice);
     final bundle = Uri.parse(invite).queryParameters['bundle']!;
     await processPeerBundle(_words, bundle, into: bob);
-    final record = await bob.sessionStore.loadSession(
-      SignalProtocolAddress(_words, 1),
-    );
-    final used = record.sessionState.getRemoteIdentityKey()!.serialize();
+    final used = (await bob.sessionIdentity(_words))!;
     expect(inviteSessionKey(invite), used);
     expect(inviteKeyNumber(invite), keyNumber(used));
     expect(keyNumber(used), keyNumber(_own(alice)));

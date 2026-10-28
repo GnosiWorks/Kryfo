@@ -13421,6 +13421,12 @@ abstract class AppLocalizations {
   /// **'This is your own invite. Share it with someone else to connect.'**
   String get appYourOwnInvite;
 
+  /// app/links.dart, handleHaloUriAdded: a scanned or pasted card comes from a phone on Kryfo 0.5 or older, which has no post-quantum key; no chat can start until that person updates. id is their three words
+  ///
+  /// In en, this message translates to:
+  /// **'{id} needs to update Kryfo before you can add each other.'**
+  String appLinkNeedsUpdate(Object id);
+
   /// app/links.dart, handleHaloUriAdded: a scanned or pasted card, or the one behind a handle, names someone already here with another key, someone who was added or checked. which one is who they say only the safety number tells
   ///
   /// In en, this message translates to:

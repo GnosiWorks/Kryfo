@@ -22,7 +22,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/signal_stores.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 
 import 'dev_frames.dart';
 import 'mem_db.dart';
@@ -40,7 +40,7 @@ String _rndHex(int n) => _hex([for (var i = 0; i < n; i++) _rnd.nextInt(256)]);
 
 // a phone's signal store, bootstrapped the way the app does it
 Future<({SignalSession ss, MemDb db, String xPub})> _phone() async {
-  final pair = Curve.generateKeyPair();
+  final pair = testKeyPair();
   final xPub = pair.publicKey.serialize().sublist(1);
   final db = MemDb();
   final ss = SignalSession();
@@ -52,22 +52,11 @@ Future<({SignalSession ss, MemDb db, String xPub})> _phone() async {
   return (ss: ss, db: db, xPub: _hex(xPub));
 }
 
-SessionCipher _cipher(SignalSession ss, String to) => SessionCipher(
-  ss.sessionStore,
-  ss.preKeyStore,
-  ss.signedPreKeyStore,
-  ss.identityStore,
-  SignalProtocolAddress(to, 1),
-);
-
 // what he reads of a cipher, as [from]
 Future<String> _open(SignalSession his, String from, String cipher) async {
   final w = base64Decode(cipher);
   final body = Uint8List.fromList(w.sublist(1));
-  final c = _cipher(his, from);
-  final plain = w[0] == CiphertextMessage.prekeyType
-      ? await c.decrypt(PreKeySignalMessage(body))
-      : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
+  final plain = await his.open(from, w[0], body);
   return utf8.decode(plain);
 }
 
@@ -143,19 +132,16 @@ Future<List<String>> _sealCheck(
   if (!devTokens.has(cipher)) problems.add('not minted');
   // the cipher itself: whose identity and registration it carries
   final raw = base64Decode(cipher);
-  final everydayKey = signalSession.identityKeyPair
-      .getPublicKey()
-      .serialize()
-      .sublist(1);
+  final everydayKey = signalSession.identity.public.sublist(1);
   if (isAnon && _holds(raw, everydayKey)) {
     problems.add('the everyday identity key');
   }
-  if (raw[0] == CiphertextMessage.prekeyType) {
-    final pkm = PreKeySignalMessage(Uint8List.fromList(raw.sublist(1)));
-    final id = _hex(pkm.getIdentityKey().serialize().sublist(1));
+  if (raw[0] == kLsPreKey) {
+    final pkm = KryfoSignal.shared.preKeyMessageInfo(raw.sublist(1));
+    final id = _hex(pkm.identityKey.sublist(1));
     final want = isAnon ? _selfOf(anon).xPub : _hex(everydayKey);
     if (id != want) problems.add('sealed as another identity');
-    final reg = pkm.getRegistrationId();
+    final reg = pkm.registrationId;
     if (isAnon && reg == _everydayReg) {
       problems.add('the everyday registration');
     }
@@ -191,7 +177,7 @@ void main() {
     // the person's phone: its everyday store over its own database
     _db = MemDb();
     await _db.insert('signal_meta', {'k': 'regId', 'v': '$_everydayReg'});
-    final pair = Curve.generateKeyPair();
+    final pair = testKeyPair();
     await signalSession.bootstrap(
       database: _db,
       xPubBytes: pair.publicKey.serialize().sublist(1),
@@ -223,16 +209,16 @@ void main() {
       final c = await signalEncrypt(_dev, await buildFrame({'sender'}));
       // he answers, and it opens in the chat's own store
       await _open(_marios.ss, a.id, c);
-      final reply = await _cipher(
-        _marios.ss,
+      final reply = await _marios.ss.encryptTo(
         a.id,
-      ).encrypt(utf8.encode(await wrapMessage('hello there')));
-      expect(reply, isA<SignalMessage>());
+        await wrapMessage('hello there'),
+      );
+      expect(isOpener(reply), isFalse);
       expect(
         unwrapMessage(
           (await signalDecrypt(
             _dev,
-            base64Encode([reply.getType(), ...reply.serialize()]),
+            reply,
             flagKeyChange: true,
           ))!,
         ).message,
@@ -256,9 +242,7 @@ void main() {
       );
       // the everyday store holds no session with him
       expect(
-        await signalSession.sessionStore.containsSession(
-          const SignalProtocolAddress(_dev, 1),
-        ),
+        await signalSession.sessionStore.contains(_dev),
         isFalse,
       );
     });
@@ -270,7 +254,7 @@ void main() {
         final ss = (await signalFor(_dev))!;
         expect(ss, isNot(same(signalSession)));
         expect(
-          _hex(ss.identityKeyPair.getPublicKey().serialize().sublist(1)),
+          _hex(ss.identity.public.sublist(1)),
           _selfOf(a).xPub,
         );
         expect(ss.registrationId, isNot(_everydayReg));
@@ -349,7 +333,7 @@ void main() {
       expect(second, isNot(same(first)));
       expect(_selfOf(b).xPub, isNot(_selfOf(a).xPub));
       expect(
-        _hex(second.identityKeyPair.getPublicKey().serialize().sublist(1)),
+        _hex(second.identity.public.sublist(1)),
         _selfOf(b).xPub,
       );
     });
@@ -366,9 +350,7 @@ void main() {
       );
       await processPeerBundle(_dev, _m1.bundle, into: ss);
       expect(
-        await ss.sessionStore.containsSession(
-          const SignalProtocolAddress(_dev, 1),
-        ),
+        await ss.sessionStore.contains(_dev),
         isTrue,
       );
       expect(await _chat.begin(_m1, anon: a), isTrue);
@@ -420,7 +402,7 @@ void main() {
         _dev,
         await buildFrame({'msgUid'}, m: 'after the restore'),
       );
-      expect(base64Decode(c).first, CiphertextMessage.prekeyType);
+      expect(base64Decode(c).first, kLsPreKey);
       expect(
         frameRead(await _open(_marios.ss, everydayWords, c))['m'],
         'after the restore',
@@ -519,22 +501,16 @@ void main() {
     test('a forged answer opens nowhere and writes nothing', () async {
       await _start(anon: true);
       final grinder = await _phone();
-      await SessionBuilder(
-        grinder.ss.sessionStore,
-        grinder.ss.preKeyStore,
-        grinder.ss.signedPreKeyStore,
-        grinder.ss.identityStore,
-        const SignalProtocolAddress('them', 1),
-      ).processPreKeyBundle(_bundleOf(await makePreKeyBundleB64(_marios.ss)));
-      final forged = await _cipher(
-        grinder.ss,
+      await grinder.ss.processBundle(
         'them',
-      ).encrypt(utf8.encode('it is me, marios'));
+        cardBundle(await makePreKeyBundleB64(_marios.ss)),
+      );
+      final forged = await grinder.ss.encryptTo('them', 'it is me, marios');
       final log = _db.log.length;
       expect(
         await signalDecrypt(
           _dev,
-          base64Encode([forged.getType(), ...forged.serialize()]),
+          forged,
           flagKeyChange: true,
         ),
         isNull,
@@ -546,7 +522,7 @@ void main() {
       'his key is checked before every seal, both ways of writing',
       () async {
         // another x25519 key, as libsignal keeps one
-        final other = Curve.generateKeyPair().publicKey.serialize();
+        final other = testKeyPair().publicKey.serialize();
         for (final anon in [true, false]) {
           for (final spoil in ['store', 'row']) {
             await _chat.delete();
@@ -609,9 +585,7 @@ void main() {
         );
         expect(caught, contains('sealed as another identity'));
         expect(caught, contains('the everyday registration'));
-        await signalSession.sessionStore.deleteSession(
-          const SignalProtocolAddress(_dev, 1),
-        );
+        await signalSession.sessionStore.delete(_dev);
       },
     );
 
@@ -708,17 +682,3 @@ class _WrongStore extends DevLane {
   }
 }
 
-PreKeyBundle _bundleOf(String b64) {
-  final j = jsonDecode(utf8.decode(base64Decode(b64))) as Map<String, dynamic>;
-  Uint8List b(String k) => base64Decode(j[k] as String);
-  return PreKeyBundle(
-    j['registrationId'] as int,
-    j['deviceId'] as int,
-    j['preKeyId'] as int,
-    Curve.decodePoint(b('preKeyPublic'), 0),
-    j['signedPreKeyId'] as int,
-    Curve.decodePoint(b('signedPreKeyPublic'), 0),
-    b('signedPreKeySignature'),
-    IdentityKey(Curve.decodePoint(b('identityKey'), 0)),
-  );
-}

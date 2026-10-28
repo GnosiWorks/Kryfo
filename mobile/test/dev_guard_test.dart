@@ -38,7 +38,7 @@ import 'package:kryfo/router.dart';
 import 'package:kryfo/stranger_gate.dart' show Shelved;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -61,7 +61,7 @@ String _rnd64() {
 // a phone's signal store, bootstrapped the way the app does it, over a
 // database kept in maps
 Future<({SignalSession ss, MemDb db, String xPub})> _phone() async {
-  final pair = Curve.generateKeyPair();
+  final pair = testKeyPair();
   final xPub = pair.publicKey.serialize().sublist(1);
   final db = MemDb();
   final ss = SignalSession();
@@ -81,37 +81,6 @@ late ({SignalSession ss, MemDb db, String xPub}) _grinder;
 
 SenderInfo _as(String id, {String? x}) =>
     SenderInfo(haloId: id, edPub: 'ed-$id', onion: 'o-$id', xPub: x ?? 'x-$id');
-
-PreKeyBundle _bundleOf(String b64) {
-  final j = jsonDecode(utf8.decode(base64Decode(b64))) as Map<String, dynamic>;
-  Uint8List b(String k) => base64Decode(j[k] as String);
-  return PreKeyBundle(
-    j['registrationId'] as int,
-    j['deviceId'] as int,
-    j['preKeyId'] as int,
-    Curve.decodePoint(b('preKeyPublic'), 0),
-    j['signedPreKeyId'] as int,
-    Curve.decodePoint(b('signedPreKeyPublic'), 0),
-    b('signedPreKeySignature'),
-    IdentityKey(Curve.decodePoint(b('identityKey'), 0)),
-  );
-}
-
-SessionBuilder _builder(SignalSession ss, String to) => SessionBuilder(
-  ss.sessionStore,
-  ss.preKeyStore,
-  ss.signedPreKeyStore,
-  ss.identityStore,
-  SignalProtocolAddress(to, 1),
-);
-
-SessionCipher _cipher(SignalSession ss, String to) => SessionCipher(
-  ss.sessionStore,
-  ss.preKeyStore,
-  ss.signedPreKeyStore,
-  ss.identityStore,
-  SignalProtocolAddress(to, 1),
-);
 
 // what a store kept for an address, or wrote anywhere about it
 List<Map<String, Object?>> _kept(MemDb db, String table, String address) => [
@@ -1013,7 +982,7 @@ class _World {
     );
     io.firstContact = (haloId: id, plain: plain, env: unwrapMessage(plain));
     await app.receiveOnion([
-      base64Encode([CiphertextMessage.prekeyType, _n++, 7, 7]),
+      base64Encode([kLsPreKey, _n++, 7, 7]),
     ]);
     await _settle();
   }
@@ -1064,11 +1033,9 @@ void main() {
   tearDown(() => useDevKeysForTest(null));
 
   group('the signal store', () {
-    final dev = SignalProtocolAddress(_dev, 1);
-
     // the app's own store, for the paths that reach it by name
     setUpAll(() async {
-      final pair = Curve.generateKeyPair();
+      final pair = testKeyPair();
       await signalSession.bootstrap(
         database: MemDb(),
         xPubBytes: pair.publicKey.serialize().sublist(1),
@@ -1081,30 +1048,16 @@ void main() {
       () async {
         final me = await _phone();
         final store = me.ss.identityStore;
-        final his = IdentityKey(Curve.decodePoint(pinnedIdentity(_m1), 0));
-        final theirs = _grinder.ss.identityKeyPair.getPublicKey();
+        final his = pinnedIdentity(_m1);
+        final theirs = _grinder.ss.identity.public;
         final log = me.db.log.length;
-        for (final d in Direction.values) {
-          expect(await store.isTrustedIdentity(dev, theirs, d), isFalse);
-          expect(await store.isTrustedIdentity(dev, his, d), isTrue);
-        }
-        expect(await store.saveIdentity(dev, theirs), isFalse);
+        // the one key the shim is told to take for the chat
+        expect(store.pinnedFor(_dev), his);
+        expect(store.pinnedFor('amber-fox-run'), isNull);
+        expect(await store.saw(_dev, theirs), isFalse);
         expect(_kept(me.db, 'peer_identities', _dev), isEmpty);
         // no first use to trust, no warning, nothing written at all
         expect(me.db.log.skip(log), isEmpty);
-        // a key already on file changes nothing either
-        await me.db.insert('peer_identities', {
-          'address': _dev,
-          'identity_key': theirs.serialize(),
-        });
-        expect(
-          await store.isTrustedIdentity(dev, theirs, Direction.receiving),
-          isFalse,
-        );
-        expect(
-          await store.isTrustedIdentity(dev, his, Direction.sending),
-          isTrue,
-        );
         // a retired key, or one gone from the list, is trusted for nothing
         useDevKeysForTest([
           DevKey(
@@ -1116,15 +1069,11 @@ void main() {
             status: DevKeyStatus.retired,
           ),
         ]);
-        expect(
-          await store.isTrustedIdentity(dev, his, Direction.sending),
-          isFalse,
-        );
+        expect(() => store.pinnedFor(_dev), throwsA(isA<LsError>()));
+        expect(await store.saw(_dev, his), isFalse);
         useDevKeysForTest(const []);
-        expect(
-          await store.isTrustedIdentity(dev, his, Direction.sending),
-          isFalse,
-        );
+        expect(() => store.pinnedFor(_dev), throwsA(isA<LsError>()));
+        expect(_kept(me.db, 'peer_identities', _dev), isEmpty);
       },
     );
 
@@ -1133,45 +1082,36 @@ void main() {
       final log = me.db.log.length;
       // someone else's card under the dev chat's address
       await expectLater(
-        _builder(me.ss, _dev).processPreKeyBundle(
-          _bundleOf(await makePreKeyBundleB64(_grinder.ss)),
+        me.ss.processBundle(
+          _dev,
+          cardBundle(await makePreKeyBundleB64(_grinder.ss)),
         ),
-        throwsA(isA<UntrustedIdentityException>()),
+        throwsA(
+          isA<LsError>().having((e) => e.code, 'code', LsError.untrusted),
+        ),
       );
       expect(_kept(me.db, 'sessions', _dev), isEmpty);
       expect(_kept(me.db, 'peer_identities', _dev), isEmpty);
       expect(me.db.log.skip(log).where((l) => l.contains('contacts')), isEmpty);
       // his own card builds it, and he reads and answers
-      await _builder(me.ss, _dev).processPreKeyBundle(_bundleOf(_m1.bundle));
-      final out = await _cipher(me.ss, _dev).encrypt(utf8.encode('hi'));
-      final got = await _cipher(
-        _marios.ss,
-        'someone',
-      ).decrypt(out as PreKeySignalMessage);
-      expect(utf8.decode(got), 'hi');
-      final back = await _cipher(
-        _marios.ss,
-        'someone',
-      ).encrypt(utf8.encode('hello'));
-      expect(
-        utf8.decode(
-          await _cipher(me.ss, _dev).decryptFromSignal(back as SignalMessage),
-        ),
-        'hello',
-      );
+      await me.ss.processBundle(_dev, cardBundle(_m1.bundle));
+      final out = await me.ss.encryptTo(_dev, 'hi');
+      expect(await openWire(_marios.ss, 'someone', out), 'hi');
+      final back = await _marios.ss.encryptTo('someone', 'hello');
+      expect(isOpener(back), isFalse);
+      expect(await openWire(me.ss, _dev, back), 'hello');
       // a stranger writing as the dev chat is refused, and nothing written
-      await _builder(
-        _grinder.ss,
+      await _grinder.ss.processBundle(
         'someone',
-      ).processPreKeyBundle(_bundleOf(await makePreKeyBundleB64(me.ss)));
-      final forged = await _cipher(
-        _grinder.ss,
-        'someone',
-      ).encrypt(utf8.encode('it is me, marios'));
+        cardBundle(await makePreKeyBundleB64(me.ss)),
+      );
+      final forged = await _grinder.ss.encryptTo('someone', 'it is me, marios');
       final before = me.db.log.length;
       await expectLater(
-        _cipher(me.ss, _dev).decrypt(forged as PreKeySignalMessage),
-        throwsA(isA<UntrustedIdentityException>()),
+        openWire(me.ss, _dev, forged),
+        throwsA(
+          isA<LsError>().having((e) => e.code, 'code', LsError.untrusted),
+        ),
       );
       expect(
         me.db.log.skip(before).where((l) => l.contains('contacts')),
@@ -1186,7 +1126,6 @@ void main() {
     test('everyone else: trust on first use, and the warning', () async {
       final me = await _phone();
       final store = me.ss.identityStore;
-      final a = SignalProtocolAddress('amber-fox-run', 1);
       await me.db.insert('contacts', {
         'halo_id': 'amber-fox-run',
         'onion': '',
@@ -1195,33 +1134,27 @@ void main() {
         'last_seen': 1,
         'accepted': 1,
       });
-      final first = _grinder.ss.identityKeyPair.getPublicKey();
-      expect(
-        await store.isTrustedIdentity(a, first, Direction.sending),
-        isTrue,
-      );
-      await store.saveIdentity(a, first);
-      final next = _marios.ss.identityKeyPair.getPublicKey();
-      expect(
-        await store.isTrustedIdentity(a, next, Direction.receiving),
-        isTrue,
-      );
+      // the first key seen is taken as theirs
+      expect(await store.saw('amber-fox-run', _grinder.ss.identity.public), isFalse);
+      expect(me.db.rows('contacts').single['key_changed'], 0);
+      // another one is taken too, and flagged
+      expect(await store.saw('amber-fox-run', _marios.ss.identity.public), isTrue);
       final row = me.db.rows('contacts').single;
       expect(row['key_changed'], 1);
       expect(row['verified'], 0);
+      expect(
+        await store.getIdentity('amber-fox-run'),
+        _marios.ss.identity.public,
+      );
     });
 
     test('a key that is not his never flags the dev chat', () async {
       final w = await _World.make();
-      await _builder(
-        _grinder.ss,
+      await _grinder.ss.processBundle(
         'phone',
-      ).processPreKeyBundle(_bundleOf(await makePreKeyBundleB64()));
-      final forged = await _cipher(
-        _grinder.ss,
-        'phone',
-      ).encrypt(utf8.encode('marios here'));
-      final wire = base64Encode([forged.getType(), ...forged.serialize()]);
+        cardBundle(await makePreKeyBundleB64()),
+      );
+      final wire = await _grinder.ss.encryptTo('phone', 'marios here');
       expect(await signalDecrypt(_dev, wire, flagKeyChange: true), isNull);
       expect(w.live.calls.where((c) => c.startsWith('setKeyChanged')), isEmpty);
     });
@@ -1615,7 +1548,7 @@ void main() {
     expect(claim, lessThan(body.indexOf('keepOpenedSession(')));
     expect(
       body.substring(claim, body.indexOf('return null;', claim)),
-      contains('deleteSession(tempAddr)'),
+      contains('sessionStore.delete(tempPeer)'),
     );
   });
 
@@ -1664,7 +1597,7 @@ void main() {
     // an everyday dev chat opens in the app's own store
     setUpAll(() async {
       if (signalSession.ready) return;
-      final pair = Curve.generateKeyPair();
+      final pair = testKeyPair();
       await signalSession.bootstrap(
         database: MemDb(),
         xPubBytes: pair.publicKey.serialize().sublist(1),

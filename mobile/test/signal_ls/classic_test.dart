@@ -2,7 +2,8 @@
 // no new classic session through the shim: a card without the kyber
 // prekey, a card with it stripped or its signature broken, and a version 3
 // opener for a session not held are all refused, and nothing is stored for
-// them. a classic session already held goes on
+// them. a classic session already held goes on. the same against a phone
+// still running 0.5.3's own library is in tool/peer053
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -10,10 +11,35 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/signal_ffi/kryfo_signal.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:kryfo/signal_session_ls.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 
+import '../mem_db.dart';
 import 'shim_lib.dart';
+
+final _fixture =
+    jsonDecode(File('test/signal_stored_before.json').readAsStringSync())
+        as Map<String, dynamic>;
+
+Object? _value(Object? v) => v is Map ? base64Decode(v['b64'] as String) : v;
+
+// a phone off the 0.7.4 fixture, its store as the old library wrote it,
+// leaving out the rows [skip] names
+Future<Phone> _stored(String who, {bool Function(Map row)? skip}) async {
+  final db = MemDb();
+  for (final r in (_fixture[who] as Map)['rows'] as List) {
+    final row = (r as Map)['row'] as Map;
+    if (skip?.call(r) ?? false) continue;
+    await db.insert(r['t'] as String, {
+      for (final e in row.entries) e.key as String: _value(e.value),
+    });
+  }
+  final me = _fixture[who] as Map;
+  return Phone.of((
+    pub: base64Decode(me['pub'] as String),
+    priv: base64Decode(me['priv'] as String),
+  ), db);
+}
+
+String _wire(String k) => (_fixture['wire'] as Map)[k] as String;
 
 Map<String, dynamic> _json(String card) =>
     jsonDecode(utf8.decode(base64Decode(card))) as Map<String, dynamic>;
@@ -31,9 +57,9 @@ void main() {
     final a = Phone();
     final b = Phone();
     final alice = await a.openLs();
-    await b.openOld();
+    await b.openLs();
     // a 0.5.x card
-    final card = await b.oldCard();
+    final card = await b.classicCard();
     expect(() => lsBundleOf(shim!, card), throwsA(isA<ClassicRefused>()));
     // the shim says the same when asked directly
     final j = _json(card);
@@ -122,86 +148,52 @@ void main() {
   }, skip: needsShim);
 
   test('(c) a version 3 opener for a new session is refused', () async {
-    final a = Phone();
-    final b = Phone();
-    final alice = await a.openOld();
-    final bob = await b.openLs();
-    // an old app reads the new card, skips what it does not know, and
-    // builds a classic session on a one-time prekey of bob's
-    final j = _json(await bob.makeBundleB64());
-    final pk = PreKeyRecord.fromBuffer((await bob.preKeyStore.load(4))!);
-    final classic = PreKeyBundle(
-      j['registrationId'] as int,
-      1,
-      4,
-      pk.getKeyPair().publicKey,
-      j['signedPreKeyId'] as int,
-      Curve.decodePoint(base64Decode(j['signedPreKeyPublic'] as String), 0),
-      base64Decode(j['signedPreKeySignature'] as String),
-      IdentityKey(
-        Curve.decodePoint(base64Decode(j['identityKey'] as String), 0),
-      ),
+    // the 0.7.4 fixture's opener from carol, on a prekey bob still holds,
+    // with bob's session with her gone
+    final b = await _stored(
+      'bob',
+      skip: (r) => r['t'] == 'sessions' && (r['row'] as Map)['address'] == 'carol',
     );
-    await alice.processBundle('bob', classic);
-    final wire = await alice.encryptTo('bob', 'classic hello');
-    expect(base64Decode(wire)[0], CiphertextMessage.prekeyType);
-    expect(shim!.preKeyMessageInfo(base64Decode(wire).sublist(1)).version, 3);
-    await expectLater(b.read('alice', wire), _code(LsError.classic));
-    // nothing of it kept, and the one-time prekey is still there
-    expect(await bob.hasSession('alice'), isFalse);
-    expect(await bob.identityStore.getIdentity('alice'), isNull);
-    expect(await bob.preKeyStore.contains(4), isTrue);
-
-    // the 0.7.4 fixture's opener from carol, on a prekey bob still holds
-    final f =
-        jsonDecode(File('test/signal_stored_before.json').readAsStringSync())
-            as Map<String, dynamic>;
-    final c1 = (f['wire'] as Map)['c1'] as String;
+    final bob = await b.openLs();
+    final c1 = _wire('c1');
     final body = base64Decode(c1).sublist(1);
-    expect(shim!.preKeyMessageInfo(body).version, 3);
+    final info = shim!.preKeyMessageInfo(body);
+    expect(info.version, 3);
+    expect(await bob.preKeyStore.contains(info.preKeyId!), isTrue);
+    final carolKey = await bob.identityStore.getIdentity('carol');
     await expectLater(
       bob.open('carol', base64Decode(c1)[0], Uint8List.fromList(body)),
       _code(LsError.classic),
     );
+    // nothing of it kept, and the one-time prekey is still there
+    expect(await bob.hasSession('carol'), isFalse);
+    expect(await bob.identityStore.getIdentity('carol'), carolKey);
+    expect(await bob.preKeyStore.contains(info.preKeyId!), isTrue);
+    // under a name nobody holds, as a first contact would read it
+    await expectLater(
+      bob.open('_pending_back_pair_', kLsPreKey, Uint8List.fromList(body)),
+      _code(LsError.classic),
+    );
+    expect(await bob.hasSession('_pending_back_pair_'), isFalse);
+    expect(await bob.preKeyStore.contains(info.preKeyId!), isTrue);
   }, skip: needsShim);
 
   test('(d) a version 3 session already held still seals and opens', () async {
-    final a = Phone();
-    final b = Phone();
-    final alice = await a.openOld();
-    await b.openOld();
-    await alice.processBundle('bob', preKeyBundleOf(await b.oldCard()));
-    // the opener is read on the old library, before bob updates
-    expect(await b.read('alice', await alice.encryptTo('bob', 'hi')), 'hi');
+    final a = await _stored('alice');
+    final b = await _stored('bob');
+    final alice = await a.openLs();
     final bob = await b.openLs();
+    expect(await b.read('alice', _wire('a6')), 'a6 pending');
     for (var i = 0; i < 3; i++) {
       final w = await bob.encryptTo('alice', 'b$i');
       expect(base64Decode(w)[0], kLsWhisper);
       expect(await a.read('bob', w), 'b$i');
       expect(await b.read('alice', await alice.encryptTo('bob', 'a$i')), 'a$i');
     }
-    final info = (await bob.sessionInfo('alice'))!;
-    expect(info.version, 3);
-    expect(info.pq, isFalse);
+    for (final s in [alice, bob]) {
+      final info = (await s.sessionInfo(s == alice ? 'bob' : 'alice'))!;
+      expect(info.version, 3);
+      expect(info.pq, isFalse);
+    }
   }, skip: needsShim);
-
-  test(
-    'an unanswered classic opener held on the shim still goes out',
-    () async {
-      // alice built a classic session on 0.5.x and updated before bob
-      // answered: her next seal is still the version 3 opener, which bob,
-      // still on the old library, takes
-      final a = Phone();
-      final b = Phone();
-      final old = await a.openOld();
-      await b.openOld();
-      await old.processBundle('bob', preKeyBundleOf(await b.oldCard()));
-      final alice = await a.openLs();
-      final w = await alice.encryptTo('bob', 'still classic');
-      expect(base64Decode(w)[0], kLsPreKey);
-      expect(await b.read('alice', w), 'still classic');
-      expect(await a.read('bob', await b.seal('alice', 'back')), 'back');
-    },
-    skip: needsShim,
-  );
 }

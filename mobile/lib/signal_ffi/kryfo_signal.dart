@@ -60,6 +60,30 @@ const kLsKyber = 2;
 /// the abi these bindings were written for
 const kLsAbi = 4;
 
+/// the libsignal and spqr sources the reviewed library is built from, as
+/// Cargo.lock names them. a library that names others is not opened
+const kLsLibsignal =
+    'git+https://github.com/signalapp/libsignal'
+    '?rev=387da3e29ac87c821aedc697aee77646a1c72fff'
+    '#387da3e29ac87c821aedc697aee77646a1c72fff';
+const kLsSpqr =
+    'git+https://github.com/signalapp/SparsePostQuantumRatchet.git?tag=v1.5.3'
+    '#fd320484dcec89004021e6fdc7481825f5f261fa';
+
+/// what a library built from other sources than these is refused with
+class LsBuildRefused extends StateError {
+  LsBuildRefused(this.libsignal, this.spqr)
+    : super('libkryfo_signal was built from other sources');
+  final String libsignal;
+  final String spqr;
+}
+
+/// [got] is the build these bindings take
+void lsCheckBuild(({String libsignal, String spqr}) got) {
+  if (got.libsignal == kLsLibsignal && got.spqr == kLsSpqr) return;
+  throw LsBuildRefused(got.libsignal, got.spqr);
+}
+
 /// what a kryfo signature is made for. the shim holds the same list, signs
 /// under no other, and signs only a whole body of the context's format that
 /// names the signing key as its signer, so a signature for one never holds
@@ -436,7 +460,9 @@ int? _abiOf(DynamicLibrary lib) {
 class KryfoSignal {
   factory KryfoSignal._(DynamicLibrary lib) {
     lsCheckAbi(_abiOf(lib));
-    return KryfoSignal._bound(lib);
+    final k = KryfoSignal._bound(lib);
+    lsCheckBuild(k.buildInfo());
+    return k;
   }
 
   KryfoSignal._bound(DynamicLibrary lib)
@@ -492,9 +518,8 @@ class KryfoSignal {
 
   static KryfoSignal? _shared;
 
-  /// the platform's library, opened on first use rather than at app start,
-  /// so an app that never calls the shim never loads it. a failed open is
-  /// not kept: the next call tries again and throws the same way
+  /// the platform's library, opened on first use. a failed open is not
+  /// kept: the next call tries again and throws the same way
   static KryfoSignal get shared => _shared ??= open();
 
   /// the env var the host tests name the library by
@@ -503,11 +528,18 @@ class KryfoSignal {
   // where build-host.sh leaves it, from the app's directory
   static const _hostBuilt = 'native/kryfo_signal/target/release';
 
-  /// the library at [path], else the env var's, else the platform's own
-  /// name for it. throws when it does not load
+  static const _product = bool.fromEnvironment('dart.vm.product');
+
+  /// the library at [path], else the env var's, else (outside a release,
+  /// on a desktop) the one build-host.sh left, else the platform's own name
+  /// for it. throws when it does not load
   static KryfoSignal open([String? path]) {
     final p = path ?? Platform.environment[envVar];
     if (p != null && p.isNotEmpty) return KryfoSignal._(DynamicLibrary.open(p));
+    if (!_product && !Platform.isAndroid && !Platform.isIOS) {
+      final host = forHostTests();
+      if (host != null) return host;
+    }
     if (Platform.isIOS) return KryfoSignal._(DynamicLibrary.process());
     if (Platform.isMacOS) {
       return KryfoSignal._(DynamicLibrary.open('libkryfo_signal.dylib'));

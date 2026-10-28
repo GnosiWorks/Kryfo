@@ -8388,6 +8388,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Das ist deine eigene Einladung. Teile sie mit jemand anderem, um euch zu verbinden.';
 
   @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id muss Kryfo aktualisieren, bevor ihr euch gegenseitig hinzufügen könnt.';
+  }
+
+  @override
   String appLinkWordsTaken(Object id) {
     return 'Hier gibt es schon jemanden als $id, mit einem anderen Schlüssel. Vergleich die Sicherheitsnummer mit der Person, um zu wissen, wer wer ist. Nichts wurde hinzugefügt.';
   }

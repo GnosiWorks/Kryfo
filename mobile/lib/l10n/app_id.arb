@@ -2190,6 +2190,7 @@
   "nameTakenUse": "Pakai tautan ini",
   "nameTakenKeep": "Tetap yang sudah ada",
   "appYourOwnInvite": "Ini undanganmu sendiri. Bagikan ke orang lain untuk terhubung.",
+  "appLinkNeedsUpdate": "{id} perlu memperbarui Kryfo sebelum kalian bisa saling menambahkan.",
   "appLinkWordsTaken": "Sudah ada seseorang di sini sebagai {id}, dengan kunci lain. Bandingkan nomor keamanan dengannya untuk tahu siapa yang mana. Tidak ada yang ditambahkan.",
   "appLinkWordsVerified": "Kamu sudah memverifikasi {id} dengan kunci lain. Tidak ada yang ditambahkan.",
   "appTheyAreBlocked": "Kamu memblokir {id}. Buka blokirnya di “Diblokir” pada Pengaturan untuk menambahkannya lagi.",

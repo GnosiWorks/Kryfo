@@ -11,7 +11,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/signal_stores.dart' show kSignalTables;
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 
 import 'mem_db.dart';
 
@@ -47,16 +47,7 @@ Future<({SignalSession ss, MemDb db})> _load(String who) async {
 Future<String> _open(SignalSession ss, String peer, String wireB64) async {
   final wire = base64Decode(wireB64);
   final body = Uint8List.fromList(wire.sublist(1));
-  final c = SessionCipher(
-    ss.sessionStore,
-    ss.preKeyStore,
-    ss.signedPreKeyStore,
-    ss.identityStore,
-    SignalProtocolAddress(peer, 1),
-  );
-  final plain = wire[0] == CiphertextMessage.prekeyType
-      ? await c.decrypt(PreKeySignalMessage(body))
-      : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
+  final plain = await ss.open(peer, wire[0], body);
   return utf8.decode(plain);
 }
 
@@ -85,28 +76,44 @@ void main() {
       // nothing was made fresh: a new signed prekey would orphan every
       // bundle already handed out
       for (final t in kSignalTables) {
+        if (t.startsWith('kyber_')) continue;
         final before = _rows(who).where((r) => r['t'] == t).length;
         expect(await db.query(t), hasLength(before), reason: '$who $t');
       }
+      // the one key a store from before the shim lacks: the invite's kyber
+      // prekey, made once
+      expect(await db.query('kyber_prekeys'), hasLength(1), reason: who);
+      expect(await db.query('kyber_used'), isEmpty, reason: who);
       expect(ss.ready, isTrue);
     }
   });
 
-  test('stored records read and write back byte for byte', () async {
+  test('every stored record reads on the shim', () async {
+    final lib = KryfoSignal.shared;
     for (final who in ['alice', 'bob', 'carol']) {
       for (final r in _rows(who)) {
         final t = r['t'] as String;
-        final raw = _value((r['row'] as Map)['record']);
+        final row = r['row'] as Map;
+        final raw = _value(row['record']);
         if (raw is! Uint8List) continue;
-        final again = switch (t) {
-          'sessions' => SessionRecord.fromSerialized(raw).serialize(),
-          'prekeys' => PreKeyRecord.fromBuffer(raw).serialize(),
-          'signed_prekeys' => SignedPreKeyRecord.fromSerialized(
-            raw,
-          ).serialize(),
-          _ => throw StateError('unexpected table $t'),
-        };
-        expect(again, raw, reason: '$who $t');
+        switch (t) {
+          case 'sessions':
+            final info = lib.sessionInfo(raw);
+            expect(info.current, isNotNull, reason: '$who $t');
+            expect(info.version, 3, reason: '$who $t');
+          case 'prekeys':
+            expect(
+              lib.preKeyPublic(kLsOneTime, raw).id,
+              _value(row['id']),
+              reason: '$who $t',
+            );
+          case 'signed_prekeys':
+            final spk = lib.preKeyPublic(kLsSigned, raw);
+            final me = (await _load(who)).ss.identity.public;
+            expect(lib.verify(me, spk.public, spk.signature), isTrue);
+          default:
+            throw StateError('unexpected table $t');
+        }
       }
     }
   });
@@ -138,12 +145,22 @@ void main() {
 
     // the current session
     expect(await _open(bob, 'alice', _wire('a6')), 'a6 pending');
-    // a first message on one of bob's one-time prekeys, which it uses up
-    expect(await bob.preKeyStore.containsPreKey(3), isTrue);
-    expect(await _open(bob, 'carol', _wire('c1')), 'c1 first');
-    expect(await bob.preKeyStore.containsPreKey(3), isFalse);
+    // a classic first message on one of bob's one-time prekeys builds no
+    // session now: refused, and the prekey kept
+    expect(await bob.preKeyStore.contains(3), isTrue);
+    await expectLater(
+      _open(bob, 'carol', _wire('c1')),
+      throwsA(isA<LsError>().having((e) => e.code, 'code', LsError.classic)),
+    );
+    expect(await bob.preKeyStore.contains(3), isTrue);
+    expect(await bob.hasSession('carol'), isFalse);
+    // carol's next one is the same classic opener, refused the same way
+    await expectLater(
+      _open(bob, 'carol', await carol.encryptTo('bob', 'c again')),
+      throwsA(isA<LsError>().having((e) => e.code, 'code', LsError.classic)),
+    );
 
-    // on from there, both ways
+    // the held session goes on, both ways
     for (var i = 0; i < 3; i++) {
       expect(
         await _open(alice, 'bob', await bob.encryptTo('alice', 'b$i')),
@@ -153,19 +170,13 @@ void main() {
         await _open(bob, 'alice', await alice.encryptTo('bob', 'a$i')),
         'a$i',
       );
-      expect(
-        await _open(carol, 'bob', await bob.encryptTo('carol', 'b$i')),
-        'b$i',
-      );
-      expect(
-        await _open(bob, 'carol', await carol.encryptTo('bob', 'c$i')),
-        'c$i',
-      );
     }
     // a message opens once
     await expectLater(
       _open(bob, 'alice', _wire('a6')),
-      throwsA(isA<DuplicateMessageException>()),
+      throwsA(
+        isA<LsError>().having((e) => e.code, 'code', LsError.duplicate),
+      ),
     );
   });
 
@@ -173,26 +184,20 @@ void main() {
     final alice = (await _load('alice')).ss;
     final bob = (await _load('bob')).ss;
     final carol = (await _load('carol')).ss;
-    final bobKnowsAlice = await bob.identityStore.getIdentity(
-      SignalProtocolAddress('alice', 1),
-    );
+    final bobKnowsAlice = await bob.identityStore.getIdentity('alice');
     expect(
-      bobKnowsAlice?.serialize(),
-      alice.identityKeyPair.getPublicKey().serialize(),
+      bobKnowsAlice,
+      alice.identity.public,
     );
-    final aliceKnowsBob = await alice.identityStore.getIdentity(
-      SignalProtocolAddress('bob', 1),
-    );
+    final aliceKnowsBob = await alice.identityStore.getIdentity('bob');
     expect(
-      aliceKnowsBob?.serialize(),
-      bob.identityKeyPair.getPublicKey().serialize(),
+      aliceKnowsBob,
+      bob.identity.public,
     );
-    final carolKnowsBob = await carol.identityStore.getIdentity(
-      SignalProtocolAddress('bob', 1),
-    );
+    final carolKnowsBob = await carol.identityStore.getIdentity('bob');
     expect(
-      carolKnowsBob?.serialize(),
-      bob.identityKeyPair.getPublicKey().serialize(),
+      carolKnowsBob,
+      bob.identity.public,
     );
   });
 }

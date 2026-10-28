@@ -8310,6 +8310,11 @@ class AppLocalizationsFa extends AppLocalizations {
       'این دعوت خودتان است. برای ارتباط، آن را با کس دیگری هم‌رسانی کنید.';
 
   @override
+  String appLinkNeedsUpdate(Object id) {
+    return '⁨$id⁩ باید Kryfo را به‌روز کند تا بتوانید همدیگر را اضافه کنید.';
+  }
+
+  @override
   String appLinkWordsTaken(Object id) {
     return 'کسی از قبل با نام ⁨$id⁩ اینجاست، با کلیدی دیگر. شماره‌ی امنیتی را با او مقایسه کنید تا بدانید چه کسی کیست. چیزی افزوده نشد.';
   }

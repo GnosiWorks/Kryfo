@@ -16,11 +16,10 @@ import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/rooms.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:kryfo/signal_stores.dart';
 import 'package:kryfo/stranger_gate.dart'
     show kShelfBytes, kShelfFileSlices, kShelfPlaces;
 import 'package:kryfo/wire_pad.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 
 import 'mem_db.dart';
 import 'old_wire/envelope_050.dart' as v050;
@@ -58,7 +57,7 @@ int _cellsOf(int n) => (n + 1 + 497) ~/ 498;
 typedef _Phone = ({SignalSession ss, String name});
 
 Future<_Phone> _phone(String name) async {
-  final pair = Curve.generateKeyPair();
+  final pair = testKeyPair();
   final ss = SignalSession();
   await ss.bootstrap(
     database: MemDb(),
@@ -69,25 +68,9 @@ Future<_Phone> _phone(String name) async {
 }
 
 Future<void> _start(_Phone from, _Phone to) async {
-  final spk = await to.ss.signedPreKeyStore.loadSignedPreKey(1);
-  final pk = await to.ss.preKeyStore.loadPreKey(invitePreKeyId);
-  await SessionBuilder(
-    from.ss.sessionStore,
-    from.ss.preKeyStore,
-    from.ss.signedPreKeyStore,
-    from.ss.identityStore,
-    SignalProtocolAddress(to.name, 1),
-  ).processPreKeyBundle(
-    PreKeyBundle(
-      to.ss.registrationId,
-      1,
-      pk.id,
-      pk.getKeyPair().publicKey,
-      spk.id,
-      spk.getKeyPair().publicKey,
-      spk.signature,
-      to.ss.identityKeyPair.getPublicKey(),
-    ),
+  await from.ss.processBundle(
+    to.name,
+    lsBundleOf(from.ss.lib, await to.ss.makeBundleB64()),
   );
 }
 
@@ -95,16 +78,7 @@ Future<void> _start(_Phone from, _Phone to) async {
 Future<String> _open(_Phone at, String from, String wireB64) async {
   final wire = base64Decode(wireB64);
   final body = Uint8List.fromList(wire.sublist(1));
-  final c = SessionCipher(
-    at.ss.sessionStore,
-    at.ss.preKeyStore,
-    at.ss.signedPreKeyStore,
-    at.ss.identityStore,
-    SignalProtocolAddress(from, 1),
-  );
-  final plain = wire[0] == CiphertextMessage.prekeyType
-      ? await c.decrypt(PreKeySignalMessage(body))
-      : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
+  final plain = await at.ss.open(from, wire[0], body);
   return utf8.decode(plain);
 }
 
@@ -499,18 +473,40 @@ void main() {
   });
 
   group('on the wire', () {
-    late _Phone alice, bob, carol, dan;
+    late _Phone alice, bob, carol;
     setUpAll(() async {
-      // alice and bob have talked: plain messages. carol never heard back
-      // from dan: every seal is an opener
-      alice = await _phone('alice');
-      bob = await _phone('bob');
-      carol = await _phone('carol');
-      dan = await _phone('dan');
-      await _start(alice, bob);
-      await _start(carol, dan);
-      await _open(bob, 'alice', await alice.ss.encryptTo('bob', 'hi'));
-      await _open(alice, 'bob', await bob.ss.encryptTo('alice', 'hey'));
+      // the sessions every chat held before 0.6, classic ones the old
+      // library made: bob answers alice on theirs, plain messages. carol
+      // never heard back from bob: every seal is an opener
+      alice = (ss: await fixtureStore('alice'), name: 'alice');
+      bob = (ss: await fixtureStore('bob'), name: 'bob');
+      carol = (ss: await fixtureStore('carol'), name: 'carol');
+    });
+
+    test('a post-quantum session seals plain messages to the same five '
+        'gift wraps', () async {
+      final a = await _phone('a');
+      final b = await _phone('b');
+      await _start(a, b);
+      await _open(b, 'a', await a.ss.encryptTo('b', 'hi'));
+      await _open(a, 'b', await b.ss.encryptTo('a', 'hey'));
+      for (var k = 0; k < 5; k++) {
+        final env = padSeal('{"m":"${'w' * (kSealSizes[k] - 60)}"}');
+        expect(utf8Length(env), kSealSizes[k]);
+        for (var i = 0; i < 6; i++) {
+          final there = await a.ss.encryptTo('b', env);
+          final back = await b.ss.encryptTo('a', env);
+          for (final w in [there, back]) {
+            expect(base64Decode(w)[0], kLsWhisper);
+            // the pq ratchet's part rides in some messages and not others
+            expect(w.length - _plainWire[k], inInclusiveRange(0, 64));
+            expect(_wrapOf(w.length), _wraps[k], reason: '$k');
+            expect(_cellsOf(w.length), _cells[k], reason: '$k');
+          }
+          await _open(b, 'a', there);
+          await _open(a, 'b', back);
+        }
+      }
     });
 
     test('the five sizes wrap and cross the onion as one each', () {
@@ -529,17 +525,23 @@ void main() {
       final seen = <int>{};
       for (final MapEntry(key: kind, value: (env, k))
           in (await _kinds()).entries) {
-        final plain = await alice.ss.encryptTo('bob', env);
-        final opener = await carol.ss.encryptTo('dan', env);
-        expect(base64Decode(plain)[0], CiphertextMessage.whisperType);
-        expect(base64Decode(opener)[0], CiphertextMessage.prekeyType);
+        final plain = await bob.ss.encryptTo('alice', env);
+        final opener = await carol.ss.encryptTo('bob', env);
+        expect(base64Decode(plain)[0], kLsWhisper);
+        expect(base64Decode(opener)[0], kLsPreKey);
         expect(plain.length, _plainWire[k], reason: kind);
-        expect(opener.length, _openerWire[k], reason: kind);
+        // carol's opener names a one-time prekey, a shorter id than the
+        // invite's: a few characters under the invite opener's size
+        expect(
+          opener.length,
+          inInclusiveRange(_openerWire[k] - 8, _openerWire[k]),
+          reason: kind,
+        );
         expect(_wrapOf(plain.length), _wraps[k], reason: kind);
         expect(_wrapOf(opener.length), _wraps[k], reason: kind);
         seen.add(k);
         // and it opens to what was sent
-        expect(unpad(await _open(bob, 'alice', plain)), env, reason: kind);
+        expect(unpad(await _open(alice, 'bob', plain)), env, reason: kind);
       }
       expect(seen, {0, 1, 2, 3, 4});
     });
@@ -591,6 +593,7 @@ void main() {
           ),
           3,
         ),
+        // the card carries the kyber prekey now: the second size
         'bundle frame': (
           jsonEncode({
             'halo_ctl': 'bundle',
@@ -599,7 +602,7 @@ void main() {
             'want': true,
             'since': _at,
           }),
-          0,
+          1,
         ),
       };
       for (final MapEntry(key: kind, value: (f, k)) in frames.entries) {
@@ -618,7 +621,7 @@ void main() {
           sender: _me,
           writtenAt: _at,
         );
-        lengths.add((await alice.ss.encryptTo('bob', env)).length);
+        lengths.add((await bob.ss.encryptTo('alice', env)).length);
       }
       expect(lengths, {_plainWire[0]});
     });
@@ -659,13 +662,13 @@ void main() {
     test('a frame too big for any route is not sealed', () async {
       final huge = 'halo/1:${jsonEncode({'m': 'x' * kSealOnionMost})}';
       await expectLater(
-        alice.ss.encryptTo('bob', huge),
+        bob.ss.encryptTo('alice', huge),
         throwsA(isA<FrameTooLarge>()),
       );
       // the session goes on as it was
       final env = await wrapMessage('after', sender: _me);
       expect(
-        unpad(await _open(bob, 'alice', await alice.ss.encryptTo('bob', env))),
+        unpad(await _open(alice, 'bob', await bob.ss.encryptTo('alice', env))),
         env,
       );
     });
@@ -683,9 +686,9 @@ void main() {
 
     test('the filler is inside the seal', () async {
       final env = await wrapMessage('hi', msgUid: _uid(), sender: _me);
-      final wire = await alice.ss.encryptTo('bob', env);
+      final wire = await bob.ss.encryptTo('alice', env);
       // what the other side's signal opens: the filler came through it
-      final opened = await _open(bob, 'alice', wire);
+      final opened = await _open(alice, 'bob', wire);
       expect(opened, startsWith('halo/1:{"pz":"000'));
       expect(utf8Length(opened), kSealSizes[0]);
       // and nothing of it shows outside: the wire is signal's base64,

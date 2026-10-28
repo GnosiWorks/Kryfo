@@ -10,8 +10,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show Curve, SignalProtocolAddress;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import '../dlog.dart';
@@ -158,7 +156,7 @@ class DevLane {
     final cipher = await s.store.encryptTo(
       peer,
       out,
-      afresh: () async => preKeyBundleOf(s.key.bundle),
+      afresh: () async => lsBundleOf(s.store.lib, s.key.bundle),
     );
     tokens.mint(cipher);
     return cipher;
@@ -168,10 +166,8 @@ class DevLane {
   // row are the pinned one, byte for byte
   Future<bool> _pinnedStill(DevSeat s, String peer) async {
     try {
-      final held = await s.store.identityStore.getIdentity(
-        SignalProtocolAddress(peer, 1),
-      );
-      if (held == null || !_same(held.serialize(), pinnedIdentity(s.key))) {
+      final held = await s.store.identityStore.getIdentity(peer);
+      if (held == null || !_same(held, pinnedIdentity(s.key))) {
         return false;
       }
       final o = open;
@@ -200,19 +196,39 @@ class DevLane {
 }
 
 /// his card as it is pinned: its identity is his pinned key, and that key
-/// signs the card's signed prekey. checked before a first send keeps
-/// anything, in every container
+/// signs the card's signed prekey, and its kyber prekey where it carries
+/// one. checked before a first send keeps anything, in every container
 bool devCardChecks(DevKey k) {
   try {
     final j = jsonDecode(utf8.decode(base64Decode(k.bundle)));
     if (j is! Map) return false;
     final id = base64Decode(j['identityKey'] as String);
     if (!_same(id, pinnedIdentity(k))) return false;
-    return Curve.verifySignature(
-      Curve.decodePoint(id, 0),
+    if (!preKeySigned(
+      id,
       base64Decode(j['signedPreKeyPublic'] as String),
       base64Decode(j['signedPreKeySignature'] as String),
+    )) {
+      return false;
+    }
+    if (!j.containsKey('kyberPreKeyPublic')) return true;
+    return preKeySigned(
+      id,
+      base64Decode(j['kyberPreKeyPublic'] as String),
+      base64Decode(j['kyberPreKeySignature'] as String),
     );
+  } catch (_) {
+    return false;
+  }
+}
+
+/// a new dev chat can start on [k]'s card: it carries the post-quantum
+/// prekey and every check on it holds
+bool devCardStarts(DevKey k) {
+  if (!devCardChecks(k)) return false;
+  try {
+    cardBundle(k.bundle);
+    return true;
   } catch (_) {
     return false;
   }

@@ -8,15 +8,15 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:kryfo/signal_stores.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'package:kryfo/signal_stores.dart' show kDevSignalPrefix;
+import 'signal_kit.dart';
 
 import 'mem_db.dart';
 
 typedef _Phone = ({SignalSession ss, MemDb db, String name, String prefix});
 
 Future<_Phone> _phone(String name, String prefix) async {
-  final pair = Curve.generateKeyPair();
+  final pair = testKeyPair();
   final db = MemDb();
   final ss = SignalSession();
   await ss.bootstrap(
@@ -28,29 +28,11 @@ Future<_Phone> _phone(String name, String prefix) async {
   return (ss: ss, db: db, name: name, prefix: prefix);
 }
 
-SignalProtocolAddress _addr(_Phone p) => SignalProtocolAddress(p.name, 1);
-
 // [from] starts a session with [to] from its invite, archiving any it had
 Future<void> _start(_Phone from, _Phone to) async {
-  final spk = await to.ss.signedPreKeyStore.loadSignedPreKey(1);
-  final pk = await to.ss.preKeyStore.loadPreKey(invitePreKeyId);
-  await SessionBuilder(
-    from.ss.sessionStore,
-    from.ss.preKeyStore,
-    from.ss.signedPreKeyStore,
-    from.ss.identityStore,
-    _addr(to),
-  ).processPreKeyBundle(
-    PreKeyBundle(
-      to.ss.registrationId,
-      1,
-      pk.id,
-      pk.getKeyPair().publicKey,
-      spk.id,
-      spk.getKeyPair().publicKey,
-      spk.signature,
-      to.ss.identityKeyPair.getPublicKey(),
-    ),
+  await from.ss.processBundle(
+    to.name,
+    lsBundleOf(from.ss.lib, await to.ss.makeBundleB64()),
   );
 }
 
@@ -60,16 +42,7 @@ Future<String> _send(_Phone from, _Phone to, String text) =>
 Future<String> _open(_Phone at, _Phone from, String wireB64) async {
   final wire = base64Decode(wireB64);
   final body = Uint8List.fromList(wire.sublist(1));
-  final c = SessionCipher(
-    at.ss.sessionStore,
-    at.ss.preKeyStore,
-    at.ss.signedPreKeyStore,
-    at.ss.identityStore,
-    _addr(from),
-  );
-  final plain = wire[0] == CiphertextMessage.prekeyType
-      ? await c.decrypt(PreKeySignalMessage(body))
-      : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
+  final plain = await at.ss.open(from.name, wire[0], body);
   return utf8.decode(plain);
 }
 
@@ -146,7 +119,7 @@ void main() {
 
     test('$store: replies open both ways after a late first message', () async {
       final (:alice, :bob, :late) = await _startedOver(prefix, opener: true);
-      expect(base64Decode(late).first, CiphertextMessage.prekeyType);
+      expect(base64Decode(late).first, kLsPreKey);
       expect(await _open(bob, alice, late), 'late');
       for (var i = 0; i < 3; i++) {
         await _roundTrip(alice, bob, 'after $i');
@@ -166,10 +139,8 @@ void main() {
             bob,
             alice,
             base64Encode([
-              CiphertextMessage.whisperType,
-              ...PreKeySignalMessage(
-                Uint8List.fromList(foreign.sublist(1)),
-              ).getWhisperMessage().serialize(),
+              kLsWhisper,
+              ...openerMessage(foreign.sublist(1)),
             ]),
           ),
           throwsException,
@@ -182,11 +153,10 @@ void main() {
     test('$store: a record holds each session once', () async {
       final (:alice, :bob, :late) = await _startedOver(prefix);
       expect(await _open(bob, alice, late), 'late');
-      final record = await bob.ss.sessionStore.loadSession(_addr(alice));
+      final info = (await bob.ss.sessionInfo(alice.name))!;
       final keys = [
-        base64Encode(record.sessionState.aliceBaseKey),
-        for (final s in record.previousSessionStates)
-          base64Encode(s.aliceBaseKey),
+        base64Encode(info.current!.baseKey),
+        for (final s in info.archived) base64Encode(s.baseKey),
       ];
       expect(keys.toSet(), hasLength(keys.length));
       expect(keys, hasLength(2));

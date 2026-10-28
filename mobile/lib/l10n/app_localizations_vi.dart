@@ -8282,6 +8282,11 @@ class AppLocalizationsVi extends AppLocalizations {
       'Đây là lời mời của chính bạn. Hãy chia sẻ cho người khác để kết nối.';
 
   @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id cần cập nhật Kryfo trước khi hai bạn có thể thêm nhau.';
+  }
+
+  @override
   String appLinkWordsTaken(Object id) {
     return 'Ở đây đã có người mang tên $id, với một khóa khác. Hãy so sánh số an toàn với họ để biết ai là ai. Không có gì được thêm.';
   }

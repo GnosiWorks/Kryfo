@@ -8306,6 +8306,11 @@ class AppLocalizationsHi extends AppLocalizations {
       'यह आपका अपना आमंत्रण है। जुड़ने के लिए इसे किसी और के साथ शेयर करें।';
 
   @override
+  String appLinkNeedsUpdate(Object id) {
+    return 'एक-दूसरे को जोड़ने से पहले $id को Kryfo अपडेट करना होगा।';
+  }
+
+  @override
   String appLinkWordsTaken(Object id) {
     return 'यहाँ कोई पहले से $id नाम से है, एक अलग कुंजी के साथ। कौन कौन है, यह जानने के लिए उनके साथ सुरक्षा नंबर मिलाएँ। कुछ नहीं जोड़ा गया।';
   }

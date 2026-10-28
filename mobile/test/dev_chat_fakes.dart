@@ -25,13 +25,13 @@ import 'package:kryfo/screens/home_screen.dart';
 import 'package:kryfo/search.dart' show SearchKind;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart' as signal;
+import 'signal_kit.dart';
 
 import 'mem_db.dart';
 
 // a card as a v3 invite carries it, read by the app's own parser
 DevKey devCard(String keyId, {DevKeyStatus status = DevKeyStatus.current}) {
-  final pair = signal.Curve.generateKeyPair();
+  final pair = testKeyPair();
   final bundle = base64Encode(
     utf8.encode(
       jsonEncode({'identityKey': base64Encode(pair.publicKey.serialize())}),

@@ -2190,6 +2190,7 @@
   "nameTakenUse": "Dùng liên kết này",
   "nameTakenKeep": "Giữ người đang có",
   "appYourOwnInvite": "Đây là lời mời của chính bạn. Hãy chia sẻ cho người khác để kết nối.",
+  "appLinkNeedsUpdate": "{id} cần cập nhật Kryfo trước khi hai bạn có thể thêm nhau.",
   "appLinkWordsTaken": "Ở đây đã có người mang tên {id}, với một khóa khác. Hãy so sánh số an toàn với họ để biết ai là ai. Không có gì được thêm.",
   "appLinkWordsVerified": "Bạn đã xác minh {id} với một khóa khác. Không có gì được thêm.",
   "appTheyAreBlocked": "Bạn đã chặn {id}. Hãy bỏ chặn trong mục “Đã chặn” ở Cài đặt để thêm lại.",

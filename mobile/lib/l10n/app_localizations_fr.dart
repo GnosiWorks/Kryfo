@@ -8382,6 +8382,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'C’est votre propre invitation. Partagez-la avec quelqu’un d’autre pour vous connecter.';
 
   @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id doit mettre Kryfo à jour avant que vous puissiez vous ajouter.';
+  }
+
+  @override
   String appLinkWordsTaken(Object id) {
     return 'Quelqu’un ici s’appelle déjà $id, avec une autre clé. Comparez le numéro de sécurité avec cette personne pour savoir qui est qui. Rien n’a été ajouté.';
   }

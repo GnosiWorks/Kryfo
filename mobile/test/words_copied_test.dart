@@ -34,7 +34,7 @@ import 'package:kryfo/router.dart';
 import 'package:kryfo/scam_shield.dart' show ShieldFlag;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'arrival_fakes.dart';
@@ -51,7 +51,7 @@ String _rndHex(int n) => _hex([for (var i = 0; i < n; i++) _rnd.nextInt(256)]);
 typedef _Phone = ({SignalSession ss, String xPub});
 
 Future<_Phone> _phone() async {
-  final pair = Curve.generateKeyPair();
+  final pair = testKeyPair();
   final xPub = pair.publicKey.serialize().sublist(1);
   final ss = SignalSession();
   await ss.bootstrap(
@@ -62,7 +62,7 @@ Future<_Phone> _phone() async {
   return (ss: ss, xPub: _hex(xPub));
 }
 
-List<int> _keyOf(_Phone p) => p.ss.identityKeyPair.getPublicKey().serialize();
+List<int> _keyOf(_Phone p) => p.ss.identity.public;
 
 typedef _IdC = Pointer<Utf8> Function(Pointer<Utf8>);
 
@@ -135,16 +135,7 @@ Future<String?> _reads(SignalSession ss, String cipher) async {
   try {
     final w = base64Decode(cipher);
     final body = Uint8List.fromList(w.sublist(1));
-    final c = SessionCipher(
-      ss.sessionStore,
-      ss.preKeyStore,
-      ss.signedPreKeyStore,
-      ss.identityStore,
-      SignalProtocolAddress(_me, 1),
-    );
-    final plain = w[0] == CiphertextMessage.prekeyType
-        ? await c.decrypt(PreKeySignalMessage(body))
-        : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
+    final plain = await ss.open(_me, w[0], body);
     return utf8.decode(plain);
   } catch (_) {
     return null;
@@ -172,7 +163,7 @@ void main() {
           const MethodChannel('plugins.flutter.io/path_provider'),
           (call) async => docs.path,
         );
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     useEngineForTest(_Engine(_hex(me.publicKey.serialize().sublist(1))));
     await signalSession.bootstrap(
       database: MemDb(),
@@ -225,17 +216,11 @@ void main() {
     );
   }
 
-  Future<List<int>?> sessionKey(String id) async {
-    final addr = SignalProtocolAddress(id, 1);
-    if (!await signalSession.sessionStore.containsSession(addr)) return null;
-    final r = await signalSession.sessionStore.loadSession(addr);
-    return r.sessionState.getRemoteIdentityKey()?.serialize();
-  }
+  Future<List<int>?> sessionKey(String id) =>
+      signalSession.sessionIdentity(id);
 
-  Future<List<int>?> savedKey(String id) async =>
-      (await signalSession.identityStore.getIdentity(
-        SignalProtocolAddress(id, 1),
-      ))?.serialize();
+  Future<List<int>?> savedKey(String id) =>
+      signalSession.identityStore.getIdentity(id);
 
   List<String> textsOf(String id) => [
     for (final m in live.msgs)

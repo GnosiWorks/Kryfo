@@ -134,7 +134,6 @@ extension AppStateContacts on AppState {
   Future<void> releaseName(String id) async {
     final row = await live.getContact(id);
     if (row == null) return;
-    final addr = SignalProtocolAddress(id, 1);
     final xs = {
       ((row['xpub'] as String?) ?? '').trim().toLowerCase(),
       (await signalSession.peerXPubHex(id)) ?? '',
@@ -145,8 +144,8 @@ extension AppStateContacts on AppState {
       await live.declineRequest(id);
     }
     await signalSession.serial<void>(id, () async {
-      await signalSession.sessionStore.deleteSession(addr);
-      await signalSession.identityStore.removePeerIdentity(addr);
+      await signalSession.sessionStore.delete(id);
+      await signalSession.identityStore.removePeerIdentity(id);
     });
     for (final x in xs) {
       if (_xPubToHaloId[x] == id) _xPubToHaloId.remove(x);
@@ -196,9 +195,8 @@ extension AppStateContacts on AppState {
         final went = await s.removeAndBlockKey(haloId, key);
         // the everyday store holds every session, a hidden chat's too
         if (!quiet && signalSession.ready) {
-          final addr = SignalProtocolAddress(haloId, 1);
-          await signalSession.sessionStore.deleteSession(addr);
-          await signalSession.identityStore.removePeerIdentity(addr);
+          await signalSession.sessionStore.delete(haloId);
+          await signalSession.identityStore.removePeerIdentity(haloId);
         }
         return went;
       }

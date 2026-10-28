@@ -28,7 +28,7 @@ import 'package:kryfo/media_send.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -92,16 +92,7 @@ class _Wire implements HaloEngine {
 Future<UnwrappedMessage> _read(SignalSession them, String cipher) async {
   final w = base64Decode(cipher);
   final body = Uint8List.fromList(w.sublist(1));
-  final c = SessionCipher(
-    them.sessionStore,
-    them.preKeyStore,
-    them.signedPreKeyStore,
-    them.identityStore,
-    SignalProtocolAddress(_me, 1),
-  );
-  final plain = w[0] == CiphertextMessage.prekeyType
-      ? await c.decrypt(PreKeySignalMessage(body))
-      : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
+  final plain = await them.open(_me, w[0], body);
   return unwrapMessage(utf8.decode(plain));
 }
 
@@ -129,13 +120,13 @@ void main() {
           const MethodChannel('plugins.flutter.io/path_provider'),
           (call) async => docs.path,
         );
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     await signalSession.bootstrap(
       database: MemDb(),
       xPubBytes: me.publicKey.serialize().sublist(1),
       xPrivBytes: me.privateKey.serialize(),
     );
-    final pair = Curve.generateKeyPair();
+    final pair = testKeyPair();
     them = SignalSession();
     await them.bootstrap(
       database: MemDb(),

@@ -8455,6 +8455,11 @@ class AppLocalizationsRu extends AppLocalizations {
       'Это твоё собственное приглашение. Поделись им с кем-нибудь, чтобы связаться.';
 
   @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id нужно обновить Kryfo, прежде чем вы сможете добавить друг друга.';
+  }
+
+  @override
   String appLinkWordsTaken(Object id) {
     return 'Здесь уже есть $id с другим ключом. Сверь с ним код безопасности, чтобы понять, кто есть кто. Ничего не добавлено.';
   }

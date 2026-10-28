@@ -8293,6 +8293,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'This is your own invite. Share it with someone else to connect.';
 
   @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id needs to update Kryfo before you can add each other.';
+  }
+
+  @override
   String appLinkWordsTaken(Object id) {
     return 'Someone here already goes by $id, with a different key. Compare the safety number with them to know who is who. Nothing was added.';
   }

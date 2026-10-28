@@ -63,7 +63,7 @@ class AppIo {
       signalSession.sessionStore.allSessionAddresses();
 
   Future<void> dropSession(String peer) =>
-      signalSession.sessionStore.deleteSession(SignalProtocolAddress(peer, 1));
+      signalSession.sessionStore.delete(peer);
 
   // a first message from someone with no session yet: opened under a
   // placeholder, the sender's claim checked against their key, and the
@@ -73,15 +73,14 @@ class AppIo {
   Future<({String haloId, String plain, UnwrappedMessage env})?>
   openFirstContact(String cipher) async {
     const tempPeer = '_pending_back_pair_';
-    final tempAddr = SignalProtocolAddress(tempPeer, 1);
     try {
       // always start clean: a leftover temp session or parked identity from
       // a prior pairing would poison this prekey decrypt.
-      await signalSession.sessionStore.deleteSession(tempAddr);
-      await signalSession.identityStore.removePeerIdentity(tempAddr);
+      await signalSession.sessionStore.delete(tempPeer);
+      await signalSession.identityStore.removePeerIdentity(tempPeer);
       final plain = await signalDecrypt(tempPeer, cipher);
       if (plain == null) {
-        await signalSession.sessionStore.deleteSession(tempAddr);
+        await signalSession.sessionStore.delete(tempPeer);
         firstFails.note('decrypt');
         return null;
       }
@@ -89,32 +88,35 @@ class AppIo {
       final h = env.senderHaloId;
       final e = env.senderEdPub;
       if (h == null || e == null) {
-        await signalSession.sessionStore.deleteSession(tempAddr);
+        await signalSession.sessionStore.delete(tempPeer);
         dlog('back-pair: envelope missing identity fields');
         throw const FirstRefused('shape');
       }
       final derived = engine.idFromEdPub(e);
       if (derived != h) {
-        await signalSession.sessionStore.deleteSession(tempAddr);
+        await signalSession.sessionStore.delete(tempPeer);
         dlog('back-pair: HaloID mismatch');
         throw const FirstRefused('id');
       }
       // nobody starts a chat as the developer: his three words are only 33
       // bits and his keys are pinned. no session is kept under them
       if (devCardClaim(id: h, xPub: env.senderXPub)) {
-        await signalSession.sessionStore.deleteSession(tempAddr);
+        await signalSession.sessionStore.delete(tempPeer);
         dlog('back-pair: claims the developer, dropped');
         throw const FirstRefused('claim');
       }
-      final record = await signalSession.sessionStore.loadSession(tempAddr);
-      final key = record.sessionState.getRemoteIdentityKey()?.serialize();
+      final record = await signalSession.sessionStore.load(tempPeer);
+      final key = record == null
+          ? null
+          : signalSession.lib.sessionInfo(record).remoteIdentity;
       // the x key it gives for itself is the one its session runs on
       final x = env.senderXPub;
-      if (key == null ||
+      if (record == null ||
+          key == null ||
           (x != null &&
               x.isNotEmpty &&
               !_eqBytes(_xIdentity(x.toLowerCase()) ?? const [], key))) {
-        await signalSession.sessionStore.deleteSession(tempAddr);
+        await signalSession.sessionStore.delete(tempPeer);
         dlog('back-pair: key mismatch');
         firstFails.note('key');
         return null;
@@ -122,7 +124,7 @@ class AppIo {
       // a key "this isn't them" blocked opens nothing, under any name
       final kx = _keyHex(key);
       if (await _receiving._keyBlockedHere(kx)) {
-        await signalSession.sessionStore.deleteSession(tempAddr);
+        await signalSession.sessionStore.delete(tempPeer);
         dlog('back-pair: dropped');
         // what the debug list says names no block the screen does not show
         throw FirstRefused(await live.keyBlocked(kx) ? 'blocked' : 'decrypt');
@@ -153,15 +155,15 @@ class AppIo {
           row: live.getContact,
         );
         if (held != null && !_eqBytes(held, key)) {
-          await signalSession.sessionStore.deleteSession(tempAddr);
+          await signalSession.sessionStore.delete(tempPeer);
           firstFails.note('bound');
           return null;
         }
         dlog('back-pair: a name bound to another key, filed on its own');
       }
       // move session from temp to where it is filed
-      await keepOpenedSession(SignalProtocolAddress(at, 1), record);
-      await signalSession.sessionStore.deleteSession(tempAddr);
+      await keepOpenedSession(at, record);
+      await signalSession.sessionStore.delete(tempPeer);
       return (haloId: at, plain: plain, env: env);
     } on FirstRefused {
       rethrow;
@@ -169,7 +171,7 @@ class AppIo {
       dlog('back-pair error: $e');
       firstFails.note('open');
       try {
-        await signalSession.sessionStore.deleteSession(tempAddr);
+        await signalSession.sessionStore.delete(tempPeer);
       } catch (_) {
         // the next first contact clears the placeholder before it starts
       }

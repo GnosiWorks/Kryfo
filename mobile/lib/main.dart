@@ -20,7 +20,7 @@ export 'shred.dart' show shredFile, shredTree;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart' hide Curve;
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'image_strip.dart' show photoToSendOffUi;
@@ -135,12 +135,12 @@ import 'widgets/pair_join.dart' show pairUnreached;
 import 'widgets/pair_code_panel.dart' show PairCodes;
 import 'widgets/kryfo_link_text.dart'
     show addScanned, askTakeNameSheet, takeOutsideLink, takeOwnLink;
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_ffi/kryfo_signal.dart';
 import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
 import 'key_number.dart';
 import 'signal_stores.dart'
-    show invitePreKeyId, kDevSignalPrefix, onPeerKeyChanged;
+    show kDevSignalPrefix, onPeerKeyChanged;
 import 'dart:isolate';
 import 'dlog.dart';
 import 'read_burn.dart' show burnStartBy, burnWaitsRow, burnWaitsSql, kBurnSkew;

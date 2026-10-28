@@ -7,16 +7,15 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:kryfo/signal_stores.dart';
 import 'package:kryfo/typing.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 
 import 'mem_db.dart';
 
 typedef _Phone = ({SignalSession ss, String name});
 
 Future<_Phone> _phone(String name) async {
-  final pair = Curve.generateKeyPair();
+  final pair = testKeyPair();
   final ss = SignalSession();
   await ss.bootstrap(
     database: MemDb(),
@@ -27,48 +26,21 @@ Future<_Phone> _phone(String name) async {
 }
 
 Future<void> _start(_Phone from, _Phone to) async {
-  final spk = await to.ss.signedPreKeyStore.loadSignedPreKey(1);
-  final pk = await to.ss.preKeyStore.loadPreKey(invitePreKeyId);
-  await SessionBuilder(
-    from.ss.sessionStore,
-    from.ss.preKeyStore,
-    from.ss.signedPreKeyStore,
-    from.ss.identityStore,
-    SignalProtocolAddress(to.name, 1),
-  ).processPreKeyBundle(
-    PreKeyBundle(
-      to.ss.registrationId,
-      1,
-      pk.id,
-      pk.getKeyPair().publicKey,
-      spk.id,
-      spk.getKeyPair().publicKey,
-      spk.signature,
-      to.ss.identityKeyPair.getPublicKey(),
-    ),
+  await from.ss.processBundle(
+    to.name,
+    lsBundleOf(from.ss.lib, await to.ss.makeBundleB64()),
   );
 }
 
 Future<String> _open(_Phone at, _Phone from, String wireB64) async {
   final wire = base64Decode(wireB64);
   final body = Uint8List.fromList(wire.sublist(1));
-  final c = SessionCipher(
-    at.ss.sessionStore,
-    at.ss.preKeyStore,
-    at.ss.signedPreKeyStore,
-    at.ss.identityStore,
-    SignalProtocolAddress(from.name, 1),
-  );
-  final plain = wire[0] == CiphertextMessage.prekeyType
-      ? await c.decrypt(PreKeySignalMessage(body))
-      : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
+  final plain = await at.ss.open(from.name, wire[0], body);
   return utf8.decode(plain);
 }
 
-Future<int> _counter(_Phone p, String peer) async =>
-    (await p.ss.sessionStore.loadSession(
-      SignalProtocolAddress(peer, 1),
-    )).sessionState.getSenderChainKey().index;
+Future<List<int>?> _counter(_Phone p, String peer) =>
+    p.ss.sessionStore.load(peer);
 
 void main() {
   test('no session, nothing sealed', () async {
@@ -111,7 +83,7 @@ void main() {
         wrapTyping(writtenAt: 7),
         onlySettled: true,
       );
-      expect(base64Decode(wire)[0], CiphertextMessage.whisperType);
+      expect(base64Decode(wire)[0], kLsWhisper);
       expect(await _open(bob, alice, wire), contains('"ty":1'));
     },
   );

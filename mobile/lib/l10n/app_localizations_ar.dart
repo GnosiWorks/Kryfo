@@ -8425,6 +8425,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appYourOwnInvite => 'هذه دعوتك أنت. شاركها مع شخص آخر للتواصل.';
 
   @override
+  String appLinkNeedsUpdate(Object id) {
+    return 'يحتاج ⁨$id⁩ إلى تحديث Kryfo قبل أن تتمكنا من إضافة بعضكما.';
+  }
+
+  @override
   String appLinkWordsTaken(Object id) {
     return 'هناك من يحمل ⁨$id⁩ هنا بالفعل، بمفتاح مختلف. قارن رقم الأمان معه لتعرف من هو من. لم تتم إضافة شيء.';
   }

@@ -37,7 +37,7 @@ import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -193,7 +193,7 @@ String _hex(List<int> b) =>
     [for (final x in b) x.toRadixString(16).padLeft(2, '0')].join();
 
 Future<_Peer> _peer() async {
-  final pair = Curve.generateKeyPair();
+  final pair = testKeyPair();
   final ss = SignalSession();
   final x = pair.publicKey.serialize().sublist(1);
   await ss.bootstrap(
@@ -216,31 +216,8 @@ Future<_Peer> _peer() async {
 Future<String?> _atPeer(_Peer p, String wireB64) async {
   final wire = base64Decode(wireB64);
   final body = Uint8List.fromList(wire.sublist(1));
-  final addr = SignalProtocolAddress('me', 1);
-  final c = SessionCipher(
-    p.ss.sessionStore,
-    p.ss.preKeyStore,
-    p.ss.signedPreKeyStore,
-    p.ss.identityStore,
-    addr,
-  );
-  Future<Uint8List> open() async {
-    if (wire[0] != CiphertextMessage.prekeyType) {
-      return c.decryptFromSignal(SignalMessage.fromSerialized(body));
-    }
-    final pkm = PreKeySignalMessage(body);
-    if (await p.ss.sessionStore.containsSession(addr)) {
-      try {
-        return await c.decryptFromSignal(pkm.getWhisperMessage());
-      } catch (_) {
-        return c.decrypt(pkm);
-      }
-    }
-    return c.decrypt(pkm);
-  }
-
   try {
-    return utf8.decode(await p.ss.serial('me', open));
+    return utf8.decode(await p.ss.open('me', wire[0], body));
   } catch (_) {
     return null;
   }
@@ -267,7 +244,7 @@ void main() {
   late ArrivalStore vaultList;
 
   setUpAll(() async {
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     await signalSession.bootstrap(
       database: store,
       xPubBytes: me.publicKey.serialize().sublist(1),
@@ -465,7 +442,7 @@ void main() {
     // side drops it as a duplicate
     final first = await _toPeer(p, 'b7 restored 10');
     expect(await _atPeer(p, first), 'b7 restored 10');
-    expect(base64Decode(first).first, CiphertextMessage.prekeyType);
+    expect(base64Decode(first).first, kLsPreKey);
     expect(
       await _atMe(p, await _fromPeer(p, 'B7 to restored 10')),
       'B7 to restored 10',
@@ -504,16 +481,15 @@ void main() {
 
     final one = await _toPeer(p, 'one');
     final two = await _toPeer(p, 'two');
-    List<int> base(String w) => PreKeySignalMessage(
-      Uint8List.fromList(base64Decode(w).sublist(1)),
-    ).getBaseKey().serialize();
+    List<int> base(String w) =>
+        KryfoSignal.shared.preKeyMessageInfo(base64Decode(w).sublist(1)).baseKey;
     expect(base(two), base(one));
     expect(await signalSession.sealsOnRestored(p.name), isFalse);
     expect(await _atPeer(p, two), 'two');
     expect(await _atPeer(p, one), 'one');
     expect(await _atMe(p, await _fromPeer(p, 'both')), 'both');
     final three = await _toPeer(p, 'three');
-    expect(base64Decode(three).first, CiphertextMessage.whisperType);
+    expect(base64Decode(three).first, kLsWhisper);
     expect(await _atPeer(p, three), 'three');
   });
 
@@ -651,7 +627,7 @@ void main() {
   test('the store marks what a restore brought back as it opens, only after '
       'a restore, and the mark holds across starts', () async {
     final db = MemDb();
-    final pair = Curve.generateKeyPair();
+    final pair = testKeyPair();
     Future<SignalSession> start() async {
       final ss = SignalSession();
       await openSignalStore(
@@ -697,9 +673,9 @@ void main() {
     final w = await ss.encryptTo(
       p.name,
       'card',
-      afresh: () async => preKeyBundleOf(p.card),
+      afresh: () async => cardBundle(p.card),
     );
-    expect(base64Decode(w).first, CiphertextMessage.prekeyType);
+    expect(base64Decode(w).first, kLsPreKey);
     expect(await ss.sealsOnRestored(p.name), isFalse);
   });
 
@@ -872,7 +848,7 @@ void main() {
     expect(signalSession.restoredFrom, isNotNull);
     // a text of theirs that does not open here
     final junk = base64Encode([
-      CiphertextMessage.whisperType,
+      kLsWhisper,
       ...List.filled(60, 7),
     ]);
     await app.receiveRelay([(peer: q.xpub, cipher: junk)]);
@@ -1074,7 +1050,7 @@ void main() {
   test('someone who never answers is asked again later and later, and the '
       'marks go once every session has started afresh', () async {
     final db = MemDb();
-    final pair = Curve.generateKeyPair();
+    final pair = testKeyPair();
     Future<SignalSession> start() async {
       final ss = SignalSession();
       await ss.bootstrap(
@@ -1113,7 +1089,7 @@ void main() {
     await ss.encryptTo(
       p.name,
       'afresh',
-      afresh: () async => preKeyBundleOf(p.card),
+      afresh: () async => cardBundle(p.card),
     );
     expect(await ss.dropRestoredWhenDone(), isTrue);
     expect(ss.hasRestored, isFalse);
@@ -1498,9 +1474,7 @@ void main() {
     expect(await atThem(p), isEmpty);
     // their session stays as it was: a held seal is no broken one
     expect(
-      await signalSession.sessionStore.containsSession(
-        SignalProtocolAddress(p.name, 1),
-      ),
+      await signalSession.sessionStore.contains(p.name),
       isTrue,
     );
 

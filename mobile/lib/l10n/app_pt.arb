@@ -2190,6 +2190,7 @@
   "nameTakenUse": "Usar este link",
   "nameTakenKeep": "Manter o que já tenho",
   "appYourOwnInvite": "Este é o seu próprio convite. Compartilhe com outra pessoa para se conectar.",
+  "appLinkNeedsUpdate": "{id} precisa atualizar o Kryfo antes que vocês possam se adicionar.",
   "appLinkWordsTaken": "Já tem alguém aqui como {id}, com outra chave. Compare o número de segurança com a pessoa para saber quem é quem. Nada foi adicionado.",
   "appLinkWordsVerified": "Você verificou {id} com outra chave. Nada foi adicionado.",
   "appTheyAreBlocked": "Você bloqueou {id}. Desbloqueie em “Bloqueados”, nas Configurações, para adicionar de novo.",

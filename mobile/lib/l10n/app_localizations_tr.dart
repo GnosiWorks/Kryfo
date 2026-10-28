@@ -8321,6 +8321,11 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu senin kendi davetin. Bağlanmak için başka biriyle paylaş.';
 
   @override
+  String appLinkNeedsUpdate(Object id) {
+    return 'Birbirinizi eklemeden önce $id Kryfo\'yu güncellemeli.';
+  }
+
+  @override
   String appLinkWordsTaken(Object id) {
     return 'Burada zaten $id adıyla biri var, farklı bir anahtarla. Kimin kim olduğunu anlamak için güvenlik numarasını onunla karşılaştır. Hiçbir şey eklenmedi.';
   }

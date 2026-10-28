@@ -33,8 +33,7 @@ import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/stranger_gate.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show CiphertextMessage, Curve;
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart'
     show ConflictAlgorithm, Database;
@@ -57,7 +56,7 @@ String _hex(List<int> b) =>
 
 // the public half the engine gives for a private x25519 key
 String _pubOf(List<int> priv) => _hex(
-  Curve.generateKeyPairFromPrivate(
+  testKeyPairFromPrivate(
     Uint8List.fromList(priv),
   ).publicKey.serialize().sublist(1),
 );
@@ -445,7 +444,7 @@ class _World {
       ..myId = _me
       ..myXPub = dev
           ? _pubOf(_hisPriv)
-          : _pubOf(Curve.generateKeyPair().privateKey.serialize());
+          : _pubOf(testKeyPair().privateKey.serialize());
     useDatabasesForTest(w.phone, Session(w.phone));
     return w;
   }
@@ -492,7 +491,7 @@ class _World {
   Future<void> firstContact(String id, String plain) async {
     io.firstContact = (haloId: id, plain: plain, env: unwrapMessage(plain));
     await app.receiveOnion([
-      base64Encode([CiphertextMessage.prekeyType, _n++, 7, 7]),
+      base64Encode([kLsPreKey, _n++, 7, 7]),
     ]);
     await _settle();
   }
@@ -512,7 +511,7 @@ void main() {
           const MethodChannel('plugins.flutter.io/path_provider'),
           (call) async => docs.path,
         );
-    _hisPriv = Curve.generateKeyPair().privateKey.serialize();
+    _hisPriv = testKeyPair().privateKey.serialize();
     _m1 = _key(_pubOf(_hisPriv));
   });
 
@@ -580,7 +579,7 @@ void main() {
       w.app.myXPub = _pubOf(_hisPriv);
       expect(w.app.devMode, isTrue);
       // another key is not, whatever three words the identity has
-      final other = Curve.generateKeyPair().privateKey.serialize();
+      final other = testKeyPair().privateKey.serialize();
       w.app
         ..myId = _words
         ..myXPub = _pubOf(other);
@@ -968,7 +967,7 @@ void main() {
       expect(w.phone.row(_r)!['accepted'], 0);
       await w.stranger(_s);
       await w.onion(_s, await w.frame('hi'));
-      w.app.myXPub = _pubOf(Curve.generateKeyPair().privateKey.serialize());
+      w.app.myXPub = _pubOf(testKeyPair().privateKey.serialize());
       expect(await w.app.answerSupport(_s), isFalse);
       expect(w.phone.row(_s)!['accepted'], 0);
     });
@@ -1523,7 +1522,7 @@ void main() {
     List<String> moding(bool Function(String xPub, String words) mode) {
       final bad = <String>[];
       final his = _pubOf(_hisPriv);
-      final other = _pubOf(Curve.generateKeyPair().privateKey.serialize());
+      final other = _pubOf(testKeyPair().privateKey.serialize());
       if (!mode(his, _me)) bad.add('his own key refused');
       // anyone can grind his three words: they make no developer
       if (mode(other, _words)) bad.add('his words on another key');

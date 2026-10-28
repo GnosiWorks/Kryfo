@@ -7930,6 +7930,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appYourOwnInvite => '这是你自己的邀请。分享给别人才能互相连接。';
 
   @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id 需要先更新 Kryfo，你们才能互相添加。';
+  }
+
+  @override
   String appLinkWordsTaken(Object id) {
     return '这里已经有人叫 $id，密钥不同。和对方核对安全码，就知道谁是谁。未添加。';
   }
@@ -16878,6 +16883,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get appYourOwnInvite => '這是你自己的邀請。分享給別人才能互相連線。';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id 需要先更新 Kryfo，你們才能互相新增。';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {

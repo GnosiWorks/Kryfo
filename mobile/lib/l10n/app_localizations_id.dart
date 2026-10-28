@@ -8291,6 +8291,11 @@ class AppLocalizationsId extends AppLocalizations {
       'Ini undanganmu sendiri. Bagikan ke orang lain untuk terhubung.';
 
   @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id perlu memperbarui Kryfo sebelum kalian bisa saling menambahkan.';
+  }
+
+  @override
   String appLinkWordsTaken(Object id) {
     return 'Sudah ada seseorang di sini sebagai $id, dengan kunci lain. Bandingkan nomor keamanan dengannya untuk tahu siapa yang mana. Tidak ada yang ditambahkan.';
   }
