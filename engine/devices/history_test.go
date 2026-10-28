@@ -520,6 +520,15 @@ func TestHistoryHeadHoldsTheText(t *testing.T) {
 	if err := takeForged(t, w, f); err != nil {
 		t.Fatal(err)
 	}
+	// a head naming another stream id than the one its key comes from
+	g := *f
+	h := *f.head
+	h.ID[0] ^= 1
+	g.recs = append([][]byte{f.keys.seal(0, recHead, h.encode())}, f.recs[1:]...)
+	r := w.recvFor(f.head.ID)
+	if _, err := r.Take(g.recs[0]); !errors.Is(err, ErrHead) {
+		t.Fatalf("a head with another stream id: %v", err)
+	}
 }
 
 func TestHistoryFileChangedAfterThePlan(t *testing.T) {
