@@ -9,6 +9,9 @@ part of '../main.dart';
 // one fetch pass at a time: a big file on tor takes minutes, and two
 // passes would fetch it twice
 bool _dropFetchRunning = false;
+
+// this phone's day of big files, a container's own, in memory
+final Map<String, String> _dropDays = {};
 bool _dropFetchAgain = false;
 
 extension AppStateFiles on AppState {
@@ -60,12 +63,16 @@ extension AppStateFiles on AppState {
     }
   }
 
-  /// the most a file to this 1:1 chat may be
+  /// the most a file to this 1:1 chat may be. off the private route tor
+  /// may not be there to carry the files service: then the relay's
+  /// slices are all there is
   Future<int> fileLimitFor(String peer) async =>
-      fileLimit(drops: await dropsFor(peer));
+      fileLimit(drops: _dropsRoute && await dropsFor(peer));
 
   Future<int> fileLimitForGroup(String groupId) async =>
-      fileLimit(drops: await dropsForGroup(groupId));
+      fileLimit(drops: _dropsRoute && await dropsForGroup(groupId));
+
+  bool get _dropsRoute => sendMode == 'private' || servicesReady;
 
   // ---- sending ----
 
@@ -79,9 +86,10 @@ extension AppStateFiles on AppState {
     required List<String> members,
     bool progress = true,
   }) async {
-    final dayKey = 'files_day_${session.container.id}';
-    final prefs = await SharedPreferences.getInstance();
-    final day = dropDayOf(prefs.getString(dayKey), DateTime.now());
+    // in memory only: a count on disk would say what this container sent,
+    // and a restart that starts the day over binds an honest app as well
+    final dayKey = session.container.id;
+    final day = dropDayOf(_dropDays[dayKey], DateTime.now());
     final int size;
     try {
       size = await File(path).length();
@@ -92,18 +100,18 @@ extension AppStateFiles on AppState {
     final key = 's:$uid';
     final watch = Timer.periodic(const Duration(milliseconds: 400), (_) {
       if (mediaCancelled.contains(uid)) engine.fileCancel(key);
-      final p = engine.fileProgress(key);
+      final p = engine.fileProgressOf(key);
+      if (p == null || !progress) return;
+      mediaPreparingSet(uid, p.preparing);
       // the last few percent are the frame's own send
-      if (p != null && progress) mediaProgressUpdate(uid, 0.97 * p.$1 / p.$2);
+      mediaProgressUpdate(uid, 0.97 * p.done / p.total);
     });
     try {
       final r = await engine.fileSend(
         dropSendJob(path: path, uid: uid, members: members),
       );
       final sent = dropSentOf(r);
-      if (sent != null && sent.sent) {
-        await prefs.setString(dayKey, dropDayAdd(day, size));
-      }
+      if (sent != null && sent.sent) _dropDays[dayKey] = dropDayAdd(day, size);
       // stopped in the last of it, after the file was up: it comes down
       // again, as one stopped part way does in the engine
       if (sent != null && mediaCancelled.contains(uid)) {
@@ -113,8 +121,16 @@ extension AppStateFiles on AppState {
       return (sent, sent == null ? r : 'ok');
     } finally {
       watch.cancel();
+      mediaPreparingSet(uid, false);
     }
   }
+
+  @visibleForTesting
+  String? get dropDayForTest => _dropDays[session.container.id];
+  @visibleForTesting
+  set dropDayForTest(String? kept) => kept == null
+      ? _dropDays.remove(session.container.id)
+      : _dropDays[session.container.id] = kept;
 
   /// a file sent through the service taken back from it: an unsend. the
   /// service lets it go on its own a week on, so a miss here costs nothing
@@ -184,17 +200,19 @@ extension AppStateFiles on AppState {
     final f = await fetchOf(d, uid);
     if (f == null) {
       // a file is fetched once, and what comes in at once has a ceiling
+      // never in silence: a frame not kept shows as its message with the
+      // line that its file could not be saved, in a group as in a 1:1
       final why = await fetchRefused(d, sender: sender, fileId: frame.id);
       if (why != null) {
         dlog('files: a frame not kept ($why)');
-        return kDropRefused;
+        return '';
       }
       final now = DateTime.now().millisecondsSinceEpoch;
       final media = await db.container.mediaDir();
       final path = await fetchPathIn(media);
       // the sealed bytes fetched while hidden chats were closed: the fetch
       // goes on from them
-      await takeHeld(media, frame.id, path);
+      await takeHeld(media, frame.token!, path);
       await noteSeen(d, frame.id, now);
       await noteFetch(
         d,
@@ -254,7 +272,9 @@ extension AppStateFiles on AppState {
         ? HaloContainer.decoyVault
         : HaloContainer.vault;
     try {
-      final path = await heldPathIn(await c.mediaDir(), frame.id);
+      final t = frame.token;
+      if (t == null) return;
+      final path = await heldPathIn(await c.mediaDir(), t);
       for (var t = 0; t < 3 && !haloWiping; t++) {
         if (t > 0) await Future<void>.delayed(const Duration(seconds: 30));
         final r = await engine.fileFetch(frame.fetchJob(path, blind: true));
@@ -325,6 +345,8 @@ extension AppStateFiles on AppState {
         if (now - f.at > kFetchKeptFor.inMilliseconds) {
           await fetchState(db, f.uid, kFetchGone);
         } else {
+          // a blind fetch may have finished since the frame was kept
+          await takeHeld(await d.container.mediaDir(), frame.token!, f.path);
           final r = await _fetchOne(f, frame, chat);
           // the chat was cleared or put away while it came: nothing of it
           // is filed, and the service hears this phone is done with it

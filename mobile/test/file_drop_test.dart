@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/file_drop.dart';
 import 'package:kryfo/file_kind.dart' show fileFits, kMaxFileBytes;
+import 'package:kryfo/media_progress.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/rooms.dart' show roomFrame;
 import 'package:kryfo/widgets/media_bubbles.dart' show fileTooBigLine;
@@ -367,13 +368,13 @@ void main() {
       expect(await fetchRefused(db, sender: 'wren', fileId: _id), isNull);
     });
 
-    test('so many coming at once, and so many from one sender', () async {
-      for (var i = 0; i < kFetchFromMost; i++) {
+    test('a floor under a flood, nothing per sender', () async {
+      for (var i = 0; i < 60; i++) {
         await noteFetch(
           db,
           uid: 'u$i',
           sender: 'wren',
-          groupId: null,
+          groupId: 'g1',
           wire: '',
           backPair: false,
           size: 1,
@@ -381,22 +382,9 @@ void main() {
           now: 1,
         );
       }
-      expect(await fetchRefused(db, sender: 'wren', fileId: _id), isNotNull);
-      expect(await fetchRefused(db, sender: 'orbit', fileId: _id), isNull);
-      for (var i = kFetchFromMost; i < kFetchMost; i++) {
-        await noteFetch(
-          db,
-          uid: 'u$i',
-          sender: 's$i',
-          groupId: null,
-          wire: '',
-          backPair: false,
-          size: 1,
-          path: '/p$i',
-          now: 1,
-        );
-      }
-      expect(await fetchRefused(db, sender: 'orbit', fileId: _id), isNotNull);
+      // sixty photos from one member are all kept
+      expect(await fetchRefused(db, sender: 'wren', fileId: _id), isNull);
+      expect(kFetchMost, greaterThanOrEqualTo(1000));
     });
   });
 
@@ -404,15 +392,22 @@ void main() {
     test('a held file is found by its id, and its name says nothing', () async {
       final tmp = Directory.systemTemp.createTempSync('held');
       addTearDown(() => tmp.deleteSync(recursive: true));
-      final p = await heldPathIn(tmp, _id);
-      expect(p, isNot(contains(_id)));
+      // named by the token, which the service never sees: not the file id
+      final p = await heldPathIn(tmp, _tok);
+      expect(p, isNot(contains(_tok)));
+      expect(p, isNot(endsWith(_id)));
       expect(p, startsWith('${tmp.path}/held/'));
-      expect(await heldPathIn(tmp, _id), p);
+      expect(await heldPathIn(tmp, _tok), p);
+      expect(await heldPathIn(tmp, 'aa' * 32), isNot(p));
       File('$p.part').writeAsStringSync('sealed');
       final fetch = await fetchPathIn(tmp);
-      expect(await takeHeld(tmp, _id, fetch), isTrue);
+      expect(await takeHeld(tmp, _tok, fetch), isTrue);
       expect(File('$fetch.part').readAsStringSync(), 'sealed');
-      expect(await takeHeld(tmp, _id, fetch), isFalse);
+      expect(await takeHeld(tmp, _tok, fetch), isFalse);
+      // a fetch with bytes of its own keeps them
+      File('$p.part').writeAsStringSync('later');
+      expect(await takeHeld(tmp, _tok, fetch), isFalse);
+      expect(File('$fetch.part').readAsStringSync(), 'sealed');
       File('$p.part').writeAsStringSync('old');
       final later = DateTime.now().add(const Duration(days: 9));
       expect(await staleHeldFiles(tmp, DateTime.now()), isEmpty);
@@ -432,5 +427,42 @@ void main() {
     final r = roomFrame(w, 'ab' * 32)!;
     expect(r, isNot(contains('"cp"')));
     expect(r, isNot(contains('"fb"')));
+  });
+
+  test('the engine says when a send is still doing its work', () {
+    expect(parseFileProgress('0 100 1'), (
+      done: 0,
+      total: 100,
+      preparing: true,
+    ));
+    expect(parseFileProgress('40 100 0')!.preparing, isFalse);
+    expect(parseFileProgress('40 100')!.done, 40);
+    expect(parseFileProgress(''), isNull);
+    expect(parseFileProgress('1 0 0'), isNull);
+  });
+
+  test('a send doing its work shows as preparing, until it ends', () {
+    mediaProgressStart('p1', chatKey: 'c1');
+    mediaPreparingSet('p1', true);
+    expect(mediaPreparing, contains('p1'));
+    mediaPreparingSet('p1', false);
+    expect(mediaPreparing, isNot(contains('p1')));
+    mediaPreparingSet('p1', true);
+    mediaProgressEnd('p1');
+    expect(mediaPreparing, isNot(contains('p1')));
+  });
+
+  test('off the private route, 50 mb only while tor carries the service', () {
+    final src = File('lib/app/state_files.dart').readAsStringSync();
+    expect(
+      src,
+      contains(
+        "bool get _dropsRoute => sendMode == 'private' || servicesReady;",
+      ),
+    );
+    expect(
+      src,
+      contains('fileLimit(drops: _dropsRoute && await dropsFor(peer))'),
+    );
   });
 }

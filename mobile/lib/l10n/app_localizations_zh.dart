@@ -9081,6 +9081,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get fileDayLimit => '你今天已经发送了很多大文件，请明天再试。';
+
+  @override
+  String get mediaProgressPreparing => '正在准备 · 请保持应用打开';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -18043,4 +18046,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get fileDayLimit => '你今天已經傳送了很多大檔案，請明天再試。';
+
+  @override
+  String get mediaProgressPreparing => '正在準備 · 請保持 App 開啟';
 }

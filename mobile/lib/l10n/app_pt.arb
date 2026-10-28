@@ -2520,5 +2520,6 @@
   "keyLineScreenLock": "Ative um bloqueio de tela no celular para que esta proteção valha também quando ele estiver bloqueado.",
   "fileServerTryLater": "O servidor de arquivos está cheio agora. Tente de novo daqui a pouco.",
   "fileTooBigUntilUpdate": "Este arquivo tem {size}. Nesta conversa os arquivos podem ter até {max} até que todos atualizem o Kryfo.",
-  "fileDayLimit": "Você já enviou muitos arquivos grandes hoje. Tente de novo amanhã."
+  "fileDayLimit": "Você já enviou muitos arquivos grandes hoje. Tente de novo amanhã.",
+  "mediaProgressPreparing": "Preparando · mantenha o app aberto"
 }

@@ -2520,5 +2520,6 @@
   "keyLineScreenLock": "請為手機設定螢幕鎖定，這樣手機鎖定時這層保護依然有效。",
   "fileServerTryLater": "檔案伺服器暫時已滿，請稍後再試。",
   "fileTooBigUntilUpdate": "這個檔案有 {size}。在所有人更新 Kryfo 之前，這個聊天裡的檔案最大為 {max}。",
-  "fileDayLimit": "你今天已經傳送了很多大檔案，請明天再試。"
+  "fileDayLimit": "你今天已經傳送了很多大檔案，請明天再試。",
+  "mediaProgressPreparing": "正在準備 · 請保持 App 開啟"
 }

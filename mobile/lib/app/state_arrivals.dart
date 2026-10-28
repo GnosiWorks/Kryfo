@@ -1041,11 +1041,6 @@ extension AppStateArrivals on AppState {
           wire: wire,
           fromBackPair: fromBackPair,
         );
-        if (got == kDropRefused) {
-          _inflightUids.remove(uid);
-          claims.remove(uid);
-          return to;
-        }
         if (got == null) {
           // here, its file still on the way: the sender can stop sending
           // the frame, and the chat shows it once the file is in

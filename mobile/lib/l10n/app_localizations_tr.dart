@@ -9546,4 +9546,7 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get fileDayLimit =>
       'Bugün çok sayıda büyük dosya gönderdin. Yarın tekrar dene.';
+
+  @override
+  String get mediaProgressPreparing => 'Hazırlanıyor · uygulamayı açık tut';
 }

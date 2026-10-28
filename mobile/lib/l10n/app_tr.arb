@@ -2520,5 +2520,6 @@
   "keyLineScreenLock": "Telefonuna bir ekran kilidi koy ki bu koruma telefon kilitliyken de sürsün.",
   "fileServerTryLater": "Dosya sunucusu şu an dolu. Biraz sonra tekrar dene.",
   "fileTooBigUntilUpdate": "Bu dosya {size}. Herkes Kryfo'yu güncelleyene kadar bu sohbette dosyalar en fazla {max} olabilir.",
-  "fileDayLimit": "Bugün çok sayıda büyük dosya gönderdin. Yarın tekrar dene."
+  "fileDayLimit": "Bugün çok sayıda büyük dosya gönderdin. Yarın tekrar dene.",
+  "mediaProgressPreparing": "Hazırlanıyor · uygulamayı açık tut"
 }

@@ -708,12 +708,16 @@ class HaloEngine {
 
   /// (done, total) bytes of a transfer under way, or null
   (int, int)? fileProgress(String key) {
+    final p = fileProgressOf(key);
+    return p == null ? null : (p.done, p.total);
+  }
+
+  /// the same, and whether a send is still doing its work, before any
+  /// byte goes
+  ({int done, int total, bool preparing})? fileProgressOf(String key) {
     final k = key.toNativeUtf8();
     try {
-      final parts = engineTake(_fileProgress(k)).split(' ');
-      if (parts.length != 2) return null;
-      final d = int.tryParse(parts[0]), t = int.tryParse(parts[1]);
-      return d == null || t == null || t <= 0 ? null : (d, t);
+      return parseFileProgress(engineTake(_fileProgress(k)));
     } finally {
       malloc.free(k);
     }

@@ -12025,5 +12025,9 @@
   "fileDayLimit": "You have sent a lot of big files today. Try again tomorrow.",
   "@fileDayLimit": {
     "description": "chat and group: toast when this phone has sent its day of big files through the files service. calm, says when it works again"
+  },
+  "mediaProgressPreparing": "Preparing · keep the app open",
+  "@mediaProgressPreparing": {
+    "description": "the strip above the composer while a big file is made ready to go through the files service, before any of it is sent"
   }
 }

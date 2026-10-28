@@ -405,11 +405,10 @@ Future<DropFetch?> fetchOf(Database db, String uid) async {
   return r.isEmpty ? null : DropFetch.fromRow(r.first);
 }
 
-/// files on their way in a container holds at most, and from one sender:
-/// a frame costs its sender a few hundred bytes, the file costs this phone
-/// up to 50 MB
-const kFetchMost = 200;
-const kFetchFromMost = 50;
+/// files on their way in a container holds at most. a frame is a few
+/// hundred bytes and fetches run one at a time, so the bound is on the
+/// work, and this is only a floor under a flood
+const kFetchMost = 5000;
 
 /// why a frame is not kept: null when it is
 Future<String?> fetchRefused(
@@ -424,11 +423,8 @@ Future<String?> fetchRefused(
     limit: 1,
   );
   if (seen.isNotEmpty) return 'a file already here';
-  final all = await db.query('file_fetches', columns: const ['sender']);
+  final all = await db.query('file_fetches', columns: const ['msg_uid']);
   if (all.length >= kFetchMost) return 'too many coming';
-  if (all.where((r) => r['sender'] == sender).length >= kFetchFromMost) {
-    return 'too many from one sender';
-  }
   return null;
 }
 
@@ -538,23 +534,30 @@ Future<String> fetchPathIn(Directory media) async {
   return '${dir.path}/$leaf';
 }
 
-/// what the chat answers a frame not kept: no message, no file
-const kDropRefused = '\u0000refused';
+/// `done total preparing` as the engine says it, or null
+({int done, int total, bool preparing})? parseFileProgress(String s) {
+  final p = s.split(' ');
+  if (p.length < 2) return null;
+  final d = int.tryParse(p[0]), t = int.tryParse(p[1]);
+  if (d == null || t == null || t <= 0) return null;
+  return (done: d, total: t, preparing: p.length > 2 && p[2] == '1');
+}
 
 // where a file fetched while hidden chats were closed waits, sealed: named
-// by its id, so the frame that opens later finds it, and by a hash of it,
-// so the name says nothing of the file
-Future<String> heldPathIn(Directory media, String fileId) async {
+// by a hash of this phone's token, which the frame that opens later holds
+// and the service never sees, so nothing ties the name to its record there
+Future<String> heldPathIn(Directory media, String token) async {
   final dir = Directory('${media.path}/held');
   await dir.create(recursive: true);
-  final name = sha256.convert(utf8.encode('kryfo-held:$fileId')).toString();
+  final name = sha256.convert(utf8.encode('kryfo-held:$token')).toString();
   return '${dir.path}/${name.substring(0, 32)}';
 }
 
-/// the held sealed bytes for [fileId], moved to where its fetch goes on
-/// from them. false when there are none
-Future<bool> takeHeld(Directory media, String fileId, String fetchPath) async {
-  final held = File('${await heldPathIn(media, fileId)}.part');
+/// the held sealed bytes for [token]'s file, moved to where its fetch goes
+/// on from them. false when there are none, or the fetch has its own
+Future<bool> takeHeld(Directory media, String token, String fetchPath) async {
+  if (await File('$fetchPath.part').exists()) return false;
+  final held = File('${await heldPathIn(media, token)}.part');
   if (!await held.exists()) return false;
   try {
     await held.rename('$fetchPath.part');

@@ -86,6 +86,9 @@ class _Engine implements HaloEngine {
   (int, int)? fileProgress(String key) => null;
 
   @override
+  ({int done, int total, bool preparing})? fileProgressOf(String key) => null;
+
+  @override
   void fileCancel(String key) => cancels.add(key);
 
   @override
@@ -223,7 +226,9 @@ void main() {
     await app.fetchDropsInForTest(live);
     expect(eng.fetched, hasLength(1));
     expect(live.msg('g1'), isNotNull);
-    expect(live.msg('g2'), isNull);
+    // never in silence: it shows, with the line that its file is not here
+    expect(live.msg('g2')!['file_path'], isNull);
+    expect('${live.msg('g2')!['plaintext']}', contains('the plan'));
   });
 
   test('a frame with no token is no file', () async {
@@ -265,6 +270,7 @@ void main() {
   group('sending', () {
     late String path;
     setUp(() {
+      app.dropDayForTest = null;
       path = '${docs.path}/big.bin';
       File(path).writeAsBytesSync(List.filled(40000, 1));
     });
@@ -293,17 +299,16 @@ void main() {
       final (d, r) = await app.sendDrop(path: path, uid: 's2', members: [_x]);
       expect(r, 'ok');
       expect(d!.frameFor(_x).token, _tok);
+      // kept in memory, never in the plain settings on disk
       final prefs = await SharedPreferences.getInstance();
-      final key = prefs.getKeys().singleWhere(
-        (k) => k.startsWith('files_day_'),
-      );
-      expect(prefs.getString(key), endsWith(' 40000 1'));
+      expect(prefs.getKeys().where((k) => k.contains('files')), isEmpty);
+      expect(app.dropDayForTest, endsWith(' 40000 1'));
       // a file the service had already is not counted again
       eng.sendAnswer = sent(up: false);
       await app.sendDrop(path: path, uid: 's2', members: [_x]);
-      expect(prefs.getString(key), endsWith(' 40000 1'));
-      final day = prefs.getString(key)!.split(' ').first;
-      await prefs.setString(key, '$day $kDropDayBytes 1');
+      expect(app.dropDayForTest, endsWith(' 40000 1'));
+      final day = app.dropDayForTest!.split(' ').first;
+      app.dropDayForTest = '$day $kDropDayBytes 1';
       final before = eng.sends.length;
       final (_, r2) = await app.sendDrop(path: path, uid: 's3', members: [_x]);
       expect(r2, 'error: limit');

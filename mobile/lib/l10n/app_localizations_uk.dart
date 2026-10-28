@@ -9680,4 +9680,7 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get fileDayLimit =>
       'Сьогодні ти вже надіслав багато великих файлів. Спробуй завтра.';
+
+  @override
+  String get mediaProgressPreparing => 'Підготовка · не закривай застосунок';
 }

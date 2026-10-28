@@ -9655,4 +9655,7 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get fileDayLimit =>
       'أرسلت اليوم ملفات كبيرة كثيرة. حاول مرة أخرى غدًا.';
+
+  @override
+  String get mediaProgressPreparing => 'جارٍ التحضير · أبقِ التطبيق مفتوحًا';
 }

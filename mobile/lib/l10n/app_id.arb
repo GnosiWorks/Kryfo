@@ -2520,5 +2520,6 @@
   "keyLineScreenLock": "Pasang kunci layar di ponselmu supaya perlindungan ini tetap berlaku saat ponsel terkunci.",
   "fileServerTryLater": "Server file sedang penuh. Coba lagi sebentar lagi.",
   "fileTooBigUntilUpdate": "File ini berukuran {size}. Di chat ini ukuran file maksimal {max} sampai semua orang memperbarui Kryfo.",
-  "fileDayLimit": "Hari ini kamu sudah mengirim banyak file besar. Coba lagi besok."
+  "fileDayLimit": "Hari ini kamu sudah mengirim banyak file besar. Coba lagi besok.",
+  "mediaProgressPreparing": "Menyiapkan · biarkan aplikasi terbuka"
 }

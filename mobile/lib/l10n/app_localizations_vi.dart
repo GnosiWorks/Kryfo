@@ -9510,4 +9510,7 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get fileDayLimit =>
       'Hôm nay bạn đã gửi nhiều tệp lớn. Hãy thử lại vào ngày mai.';
+
+  @override
+  String get mediaProgressPreparing => 'Đang chuẩn bị · giữ ứng dụng mở';
 }

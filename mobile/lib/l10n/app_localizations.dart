@@ -15406,6 +15406,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You have sent a lot of big files today. Try again tomorrow.'**
   String get fileDayLimit;
+
+  /// the strip above the composer while a big file is made ready to go through the files service, before any of it is sent
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing · keep the app open'**
+  String get mediaProgressPreparing;
 }
 
 class _AppLocalizationsDelegate
