@@ -36,8 +36,10 @@ func FuzzParseList(f *testing.F) {
 	})
 }
 
+// the kyber key stays fixed but for one changed byte, the rest is fuzzed
 func FuzzParseBundle(f *testing.F) {
 	k := fixedKey(f, 3)
+	var kyber []byte
 	for _, key := range []*Key{nil, &k} {
 		for _, ec := range []bool{false, true} {
 			b := testBlockF(f, key, ec)
@@ -45,10 +47,15 @@ func FuzzParseBundle(f *testing.F) {
 			if err != nil {
 				f.Fatal(err)
 			}
-			f.Add(p)
+			at := bytes.Index(p, b.Kyber)
+			kyber = b.Kyber
+			f.Add(p[:at], uint16(0), byte(0), p[at+KyberSize:])
 		}
 	}
-	f.Fuzz(func(t *testing.T, p []byte) {
+	f.Fuzz(func(t *testing.T, head []byte, off uint16, val byte, tail []byte) {
+		ky := bytes.Clone(kyber)
+		ky[int(off)%len(ky)] ^= val
+		p := append(append(bytes.Clone(head), ky...), tail...)
 		b, err := ParseBundle(p)
 		if err != nil {
 			return

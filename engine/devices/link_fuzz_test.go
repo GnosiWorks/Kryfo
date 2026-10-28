@@ -3,6 +3,7 @@ package devices
 
 import (
 	"bytes"
+	"crypto/mlkem"
 	"testing"
 )
 
@@ -45,8 +46,11 @@ func cloneLinker(p *Linker) *Linker {
 	return &c
 }
 
-// any bytes in place of the phone's answer: refused, or a reveal the phone
-// cannot open
+// the ml-kem parts are long and the fuzzer slows to a crawl on long inputs,
+// so they stay fixed and take one changed byte; the short parts are fuzzed
+// whole
+
+// any answer: refused, or a reveal the phone cannot open
 func FuzzAccept(f *testing.F) {
 	k := fixedKey(f, 10)
 	j, err := StartJoin(k, 1, t0)
@@ -57,9 +61,14 @@ func FuzzAccept(f *testing.F) {
 	if err != nil {
 		f.Fatal(err)
 	}
-	f.Add(accept)
-	f.Add([]byte(acceptMagic))
-	f.Fuzz(func(t *testing.T, msg []byte) {
+	ek := accept[36:]
+	f.Add(accept[:36], uint16(0), byte(0))
+	f.Add(accept[:36], uint16(5), byte(0xff))
+	f.Add([]byte(acceptMagic), uint16(0), byte(0))
+	f.Fuzz(func(t *testing.T, head []byte, off uint16, val byte) {
+		tail := bytes.Clone(ek)
+		tail[int(off)%len(tail)] ^= val
+		msg := append(bytes.Clone(head), tail...)
 		jc := cloneJoiner(j)
 		reveal, err := jc.HandleAccept(msg, t0)
 		if err != nil {
@@ -77,7 +86,7 @@ func FuzzAccept(f *testing.F) {
 	})
 }
 
-// any bytes in place of the reveal end the phone's side
+// any reveal ends the phone's side unless it is the one sealed
 func FuzzReveal(f *testing.F) {
 	k := fixedKey(f, 10)
 	j, _ := StartJoin(k, 1, t0)
@@ -89,8 +98,14 @@ func FuzzReveal(f *testing.F) {
 	if err != nil {
 		f.Fatal(err)
 	}
-	f.Add(reveal)
-	f.Fuzz(func(t *testing.T, msg []byte) {
+	ctEnd := 4 + mlkem.CiphertextSize1024
+	ct := reveal[4:ctEnd]
+	f.Add([]byte(revealMagic), uint16(0), byte(0), reveal[ctEnd:])
+	f.Add([]byte(revealMagic), uint16(9), byte(1), reveal[ctEnd:])
+	f.Fuzz(func(t *testing.T, magic []byte, off uint16, val byte, sealed []byte) {
+		c := bytes.Clone(ct)
+		c[int(off)%len(c)] ^= val
+		msg := append(append(bytes.Clone(magic), c...), sealed...)
 		pc := cloneLinker(p)
 		err := pc.HandleReveal(msg, t0)
 		if bytes.Equal(msg, reveal) {
