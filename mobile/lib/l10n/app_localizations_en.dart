@@ -5272,6 +5272,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Checked only on your phone, nothing leaves it';
 
   @override
+  String get typingNow => 'Typing';
+
+  @override
+  String get settingsTypingIndicator => 'Typing indicator';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'You both see when the other is typing. It goes straight to them over Tor, never through a relay.';
+
+  @override
+  String get settingsTypingOnionOnly => 'Available on the Onion route';
+
+  @override
   String get settingsLightTheme => 'Light theme';
 
   @override
@@ -5874,8 +5887,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get whyKryfoNothingLeaks => 'Nothing leaks';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'No read receipts or typing tells handed to anyone, no contact list uploaded. Most apps leak metadata. Kryfo is built not to.';
+  String get whyKryfoNoReceiptsTyping =>
+      'No read receipts, no contact list uploaded. Typing shows only to the person you write to, straight over Tor, never through a server. Most apps leak metadata. Kryfo is built not to.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Verify it is really them';

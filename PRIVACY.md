@@ -16,6 +16,12 @@ to deliver a message, Kryfo routes it through tor and, when the other person is 
 
 your ip is hidden behind tor on the default private mode. relay mode and fast mode skip tor to go quicker. relay mode connects straight to our own relay, which then sees your ip for that connection and writes nothing down. fast mode adds public relays, and each of them sees your ip too. both are off by default and labeled where you turn them on.
 
+## typing
+
+typing is on by default. while you write in a 1:1 chat, your phone tells that contact over tor, straight to their phone, never through a relay or any server. they can tell you are online then. you see theirs only while yours is on, and only on the onion route. groups, the decoy and hidden chats behind a shut vault never send or show it. nothing about it is written to disk.
+
+the contact's phone learns when you type and pause, never what. the tor relays on the way see a few small cells every few seconds, not who sends them or to whom. someone who watches both your connection and your contact's at once could match those moments more easily than single messages. turn it off under settings, privacy.
+
 ## bridges
 
 bridges help tor start when your network blocks it. on automatic, where new installs start, Kryfo first tries tor the usual way and only tries a bridge when that is blocked. you can also pick a bridge yourself, or pick direct, and then Kryfo makes none of the connections below on its own.

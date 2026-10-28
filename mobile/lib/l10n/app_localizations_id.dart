@@ -5275,6 +5275,19 @@ class AppLocalizationsId extends AppLocalizations {
       'Diperiksa hanya di ponselmu, tidak ada yang keluar darinya';
 
   @override
+  String get typingNow => 'Mengetik';
+
+  @override
+  String get settingsTypingIndicator => 'Indikator mengetik';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'Kalian berdua melihat saat yang lain sedang mengetik. Sinyalnya langsung ke dia lewat Tor, tidak pernah melalui relay.';
+
+  @override
+  String get settingsTypingOnionOnly => 'Tersedia di rute Onion';
+
+  @override
   String get settingsLightTheme => 'Tema terang';
 
   @override
@@ -5880,8 +5893,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get whyKryfoNothingLeaks => 'Tidak ada yang bocor';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'Tidak ada tanda dibaca atau tanda mengetik yang diserahkan ke siapa pun, tidak ada daftar kontak yang diunggah. Metadata adalah hal yang dibocorkan kebanyakan aplikasi. Kryfo dibuat agar tidak membocorkannya.';
+  String get whyKryfoNoReceiptsTyping =>
+      'Tanpa tanda dibaca, tanpa mengunggah daftar kontak. Bahwa kamu sedang mengetik hanya terlihat oleh orang yang kamu ajak bicara, langsung lewat Tor, tidak pernah melalui server. Kebanyakan aplikasi membocorkan metadata. Kryfo dibuat agar tidak begitu.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Pastikan itu benar-benar dia';

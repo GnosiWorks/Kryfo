@@ -5386,6 +5386,19 @@ class AppLocalizationsRu extends AppLocalizations {
       'Проверка только на твоём телефоне, ничего не покидает его';
 
   @override
+  String get typingNow => 'Печатает';
+
+  @override
+  String get settingsTypingIndicator => 'Индикатор набора';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'Вы оба видите, когда собеседник печатает. Это идёт к нему напрямую через Tor, никогда через ретранслятор.';
+
+  @override
+  String get settingsTypingOnionOnly => 'Доступно на маршруте Onion';
+
+  @override
   String get settingsLightTheme => 'Светлая тема';
 
   @override
@@ -5998,8 +6011,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get whyKryfoNothingLeaks => 'Ничего не утекает';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'Никому не передаются отметки о прочтении или наборе текста, список контактов никуда не загружается. Большинство приложений сливают метаданные — Kryfo сделан так, чтобы этого не делать.';
+  String get whyKryfoNoReceiptsTyping =>
+      'Никаких отметок о прочтении, список контактов никуда не загружается. То, что вы печатаете, видит только тот, кому вы пишете, и только напрямую через Tor, никогда через сервер. Большинство приложений сливают метаданные. Kryfo сделан так, чтобы этого не делать.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Убедись, что это тот самый человек';

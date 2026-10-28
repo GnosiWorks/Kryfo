@@ -46,6 +46,7 @@ import '../widgets/row_motion.dart';
 import '../widgets/count_badge.dart';
 import '../widgets/chat_parts.dart' show GrowSwap;
 import '../widgets/swap.dart';
+import '../widgets/typing_mark.dart';
 import '../widgets/card_action.dart';
 import '../widgets/message_menu.dart' show MenuSheet, MenuSheetRow;
 import '../widgets/confirm_sheet.dart';
@@ -2881,21 +2882,31 @@ class _Row extends StatelessWidget {
                     Row(
                       children: [
                         Expanded(
-                          child: Text(
-                            // a room link is an invitation, not a line of
-                            // two hundred characters
-                            (c.preview ?? '').contains('kryfo://room?')
-                                ? l10n.homeRoomInvite
-                                : (c.preview ?? ''),
-                            // unread reads in full colour until it is read
-                            style: HaloType.sans(
-                              size: 12,
-                              color: c.unread > 0
-                                  ? HaloColors.text
-                                  : HaloColors.text2,
+                          // "Typing" takes the preview's place while they
+                          // type, over a draft too
+                          child: TypingSwap(
+                            showing: c.blocked
+                                ? const AlwaysStoppedAnimation(false)
+                                : appState.typing.board.of(
+                                    appState.typingKey(c.haloId),
+                                  ),
+                            style: typingStyle(size: 12),
+                            child: Text(
+                              // a room link is an invitation, not a line of
+                              // two hundred characters
+                              (c.preview ?? '').contains('kryfo://room?')
+                                  ? l10n.homeRoomInvite
+                                  : (c.preview ?? ''),
+                              // unread reads in full colour until it is read
+                              style: HaloType.sans(
+                                size: 12,
+                                color: c.unread > 0
+                                    ? HaloColors.text
+                                    : HaloColors.text2,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         CountBadge(count: c.unread, lead: 8),

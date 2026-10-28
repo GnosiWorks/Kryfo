@@ -54,7 +54,7 @@ class WhyKryfoScreen extends StatelessWidget {
               _principle(
                 Icons.visibility_off_outlined,
                 l10n.whyKryfoNothingLeaks,
-                l10n.whyKryfoNoReadReceiptsOr,
+                l10n.whyKryfoNoReceiptsTyping,
               ),
               _principle(
                 Icons.verified_user_outlined,

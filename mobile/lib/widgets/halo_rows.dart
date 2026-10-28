@@ -86,6 +86,9 @@ class HaloRow extends StatelessWidget {
   final String? value;
   // one plain line under the label saying what the switch does
   final String? hint;
+  // a line under the hint while the setting does nothing where the phone
+  // is now, as off the route it needs
+  final String? note;
   final VoidCallback? onTap;
   final IconData? icon;
   // drawn in the tile in place of the icon
@@ -105,6 +108,7 @@ class HaloRow extends StatelessWidget {
     required this.label,
     this.value,
     this.hint,
+    this.note,
     this.onTap,
     this.icon,
     this.mark,
@@ -173,6 +177,21 @@ class HaloRow extends StatelessWidget {
                           size: 12.5,
                           color: HaloColors.text2,
                           height: 1.35,
+                        ),
+                      ),
+                    ),
+                  if (note != null)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(
+                        top: 4,
+                        end: 10,
+                      ),
+                      child: Text(
+                        note!,
+                        style: HaloType.sans(
+                          size: 12,
+                          color: HaloColors.text2,
+                          height: 1.3,
                         ),
                       ),
                     ),

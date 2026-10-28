@@ -5039,6 +5039,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsScamShieldHint => '只在你的手机上检查，什么都不会离开手机';
 
   @override
+  String get typingNow => '正在输入';
+
+  @override
+  String get settingsTypingIndicator => '输入状态提示';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      '对方在输入时，你们双方都能看到。提示经 Tor 直接发给对方，从不经过中继。';
+
+  @override
+  String get settingsTypingOnionOnly => '在 Onion 线路上可用';
+
+  @override
   String get settingsLightTheme => '浅色主题';
 
   @override
@@ -5629,8 +5642,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get whyKryfoNothingLeaks => '什么都不泄露';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      '不会把已读回执或“正在输入”提示交给任何人，也不上传联系人列表。元数据是大多数应用泄露的东西——Kryfo 的设计就是不泄露它。';
+  String get whyKryfoNoReceiptsTyping =>
+      '没有已读回执，也不上传联系人列表。你正在输入，只有你在对话的那个人能看到，经 Tor 直接送达，从不经过服务器。大多数应用都会泄露元数据，Kryfo 的设计就是不泄露。';
 
   @override
   String get whyKryfoVerifyItIsReally => '确认真的是对方';
@@ -13980,6 +13993,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsScamShieldHint => '只在你的手機上檢查，不會有任何東西離開手機';
 
   @override
+  String get typingNow => '正在輸入';
+
+  @override
+  String get settingsTypingIndicator => '輸入狀態提示';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      '對方在輸入時，你們雙方都看得到。提示經 Tor 直接傳給對方，從不經過中繼。';
+
+  @override
+  String get settingsTypingOnionOnly => '在 Onion 路線上可用';
+
+  @override
   String get settingsLightTheme => '淺色主題';
 
   @override
@@ -14570,8 +14596,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get whyKryfoNothingLeaks => '什麼都不外洩';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      '不會把已讀回條或正在輸入的提示交給任何人，也不會上傳聯絡人清單。中繼資料是大多數應用程式會外洩的東西，而 Kryfo 的設計就是不外洩。';
+  String get whyKryfoNoReceiptsTyping =>
+      '沒有已讀回條，也不上傳聯絡人清單。你正在輸入，只有你在對話的那個人看得到，經 Tor 直接送達，從不經過伺服器。大多數應用程式都會外洩中繼資料，Kryfo 的設計就是不外洩。';
 
   @override
   String get whyKryfoVerifyItIsReally => '確認真的是對方';

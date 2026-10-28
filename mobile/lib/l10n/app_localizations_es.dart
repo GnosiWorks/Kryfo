@@ -5325,6 +5325,19 @@ class AppLocalizationsEs extends AppLocalizations {
       'Se revisa solo en tu teléfono, nada sale de él';
 
   @override
+  String get typingNow => 'Escribiendo';
+
+  @override
+  String get settingsTypingIndicator => 'Indicador de escritura';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'Los dos veis cuándo el otro está escribiendo. Va directo a esa persona por Tor, nunca por un relé.';
+
+  @override
+  String get settingsTypingOnionOnly => 'Disponible en la ruta Onion';
+
+  @override
   String get settingsLightTheme => 'Tema claro';
 
   @override
@@ -5930,8 +5943,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get whyKryfoNothingLeaks => 'Nada se filtra';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'No se entregan a nadie confirmaciones de lectura ni avisos de escritura, y no se sube ninguna lista de contactos. Los metadatos son lo que filtran la mayoría de las apps; Kryfo está hecho para no filtrarlos.';
+  String get whyKryfoNoReceiptsTyping =>
+      'Sin confirmaciones de lectura y sin subir ninguna lista de contactos. Que estás escribiendo solo lo ve la persona a quien escribes, directo por Tor, nunca a través de un servidor. La mayoría de las apps filtran metadatos. Kryfo está hecho para no hacerlo.';
 
   @override
   String get whyKryfoVerifyItIsReally =>

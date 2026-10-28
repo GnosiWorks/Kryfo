@@ -5363,6 +5363,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsScamShieldHint => 'يُفحص على هاتفك فقط، ولا شيء يغادره';
 
   @override
+  String get typingNow => 'يكتب';
+
+  @override
+  String get settingsTypingIndicator => 'مؤشر الكتابة';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'يرى كلٌّ منكما متى يكتب الآخر. تصل الإشارة إليه مباشرةً عبر Tor، ولا تمرّ أبدًا عبر مُرحِّل.';
+
+  @override
+  String get settingsTypingOnionOnly => 'متاح على مسار Onion';
+
+  @override
   String get settingsLightTheme => 'المظهر الفاتح';
 
   @override
@@ -5980,8 +5993,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get whyKryfoNothingLeaks => 'لا شيء يتسرّب';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'لا إشعارات قراءة ولا مؤشرات كتابة تُسلَّم لأحد، ولا قائمة جهات اتصال تُرفع. البيانات الوصفية هي ما تسرّبه معظم التطبيقات. أما Kryfo فمبني كي لا يفعل.';
+  String get whyKryfoNoReceiptsTyping =>
+      'لا إشعارات قراءة، ولا قائمة جهات اتصال تُرفع. لا يرى أنك تكتب إلا من تكتب إليه، مباشرةً عبر Tor، ولا يمرّ ذلك أبدًا عبر خادم. معظم التطبيقات تسرّب البيانات الوصفية. أما Kryfo فمبني كي لا يفعل.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'تحقّق من أنه هو فعلًا';
