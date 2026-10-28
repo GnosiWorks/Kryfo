@@ -9868,7 +9868,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get serversBackupsLine =>
-      'Seulement si nos deux serveurs tombent, et seulement par Tor : ils ne voient jamais votre adresse IP.';
+      'Utilisés pendant que le Serveur 1 est en panne, et seulement par Tor : ils ne voient jamais votre adresse IP.';
 
   @override
   String get serversStandingBy => 'En attente';
@@ -9894,7 +9894,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeOursDownLine =>
-      'Les messages attendent sur votre téléphone et partent dès que l\'un revient. En attendant, vous pouvez passer à Privé.';
+      'Après quelques minutes, les messages passent aussi par des relais publics via Tor, et reviennent à nos serveurs dès que l\'un répond.';
 
   @override
   String get homeUsePrivate => 'Utiliser Privé';
@@ -9923,7 +9923,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get seenIpWhy =>
-      'Sur Privé tout passe par Tor et nos serveurs voient un nœud de sortie, jamais vous. Sur Rapide la connexion va directement vers nos deux serveurs : ils voient votre adresse IP pendant que vous êtes connecté et n\'en gardent aucune trace. Si les deux tombent, Rapide se rabat sur des relais publics, et seulement par Tor.';
+      'Sur Privé tout passe par Tor et nos serveurs voient un nœud de sortie, jamais vous. Sur Rapide la connexion va directement vers nos deux serveurs : ils voient votre adresse IP pendant que vous êtes connecté et n\'en gardent aucune trace. Pendant que le premier est en panne, Rapide utilise aussi des relais publics, seulement par Tor.';
 
   @override
   String get onboardingHidesFromEveryone =>
@@ -9931,7 +9931,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get onboardingFastSees =>
-      'Nos serveurs voient votre adresse pendant que vous êtes connecté. Personne d’autre.';
+      'Nos serveurs voient votre adresse seulement pendant que vous êtes connecté.';
 
   @override
   String get onboardingFastNetworkSees =>

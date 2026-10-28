@@ -9806,7 +9806,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'Ohne Tor, so kommen Nachrichten schneller an und brauchen weniger Akku. Unsere Server sehen deine IP-Adresse nur, solange du verbunden bist, und speichern oder behalten sie nie. Nie, was du sagst. Deine Kontakte sehen sie nie.';
+      'Ohne Tor kommen Nachrichten schneller an, und der Akku hält länger. Unsere Server sehen deine IP-Adresse nur, solange du verbunden bist, und protokollieren oder speichern sie nie. Nie, was du sagst. Deine Kontakte sehen sie nie.';
 
   @override
   String get modesFastConnected => 'Schnell · verbunden';
@@ -9869,7 +9869,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get serversBackupsLine =>
-      'Nur wenn unsere beiden ausfallen, und nur über Tor, so sehen sie deine IP-Adresse nie.';
+      'Im Einsatz, solange Server 1 ausfällt, und nur über Tor, so sehen sie deine IP-Adresse nie.';
 
   @override
   String get serversStandingBy => 'In Bereitschaft';
@@ -9895,7 +9895,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get homeOursDownLine =>
-      'Nachrichten warten auf deinem Handy und gehen raus, sobald einer zurück ist. Du kannst solange zu Privat wechseln.';
+      'Nach ein paar Minuten gehen Nachrichten auch über öffentliche Relais via Tor, und wieder über unsere Server, sobald einer antwortet.';
 
   @override
   String get homeUsePrivate => 'Privat nutzen';
@@ -9924,7 +9924,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get seenIpWhy =>
-      'Bei Privat geht alles über Tor, und unsere Server sehen einen Exit-Knoten, nie dich. Bei Schnell geht die Verbindung direkt zu unseren zwei Servern: Sie sehen deine IP-Adresse, solange du verbunden bist, und halten nichts davon fest. Fallen beide aus, weicht Schnell auf öffentliche Relais aus, und zwar nur über Tor.';
+      'Bei Privat geht alles über Tor, und unsere Server sehen einen Exit-Knoten, nie dich. Bei Schnell geht die Verbindung direkt zu unseren zwei Servern: Sie sehen deine IP-Adresse, solange du verbunden bist, und halten nichts davon fest. Solange der erste ausfällt, nutzt Schnell zusätzlich öffentliche Relais, nur über Tor.';
 
   @override
   String get onboardingHidesFromEveryone =>
@@ -9932,7 +9932,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onboardingFastSees =>
-      'Unsere Server sehen deine Adresse, solange du verbunden bist. Sonst niemand.';
+      'Unsere Server sehen deine Adresse nur, solange du verbunden bist.';
 
   @override
   String get onboardingFastNetworkSees =>

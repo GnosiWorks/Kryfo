@@ -2,9 +2,13 @@
 // relay and fast are one route: whoever was on either starts on it, hears of
 // it once, and the route talks to our two servers, with the public relays
 // only as the engine's backup behind them.
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/backup.dart' show landCatchUpAnchors;
 import 'package:kryfo/carried_settings.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
@@ -146,6 +150,81 @@ void main() {
         reason: old,
       );
     }
+  });
+
+  test('the card goes with a backup: seen stays seen, an old relay or fast '
+      'file still has it to see', () async {
+    for (final (note, route, want) in [
+      ('done', 'balanced', 'done'),
+      ('due', 'balanced', 'due'),
+      (null, 'balanced', 'due'),
+      (null, 'fast', 'due'),
+      (null, 'private', null),
+    ]) {
+      FlutterSecureStorage.setMockInitialValues({kRouteMergeNote: 'done'});
+      if (want == null) FlutterSecureStorage.setMockInitialValues({});
+      await landCarriedSettings(
+        {Carried.route: route, Carried.routeNote: ?note},
+        HaloContainer.everyday,
+        phone: true,
+      );
+      expect(
+        await secureStore.read(key: kRouteMergeNote),
+        want,
+        reason: '$note $route',
+      );
+    }
+    // read back for the next backup, never from a decoy
+    FlutterSecureStorage.setMockInitialValues({kRouteMergeNote: 'done'});
+    expect(
+      (await readCarriedSettings(HaloContainer.everyday))[Carried.routeNote],
+      'done',
+    );
+    expect(
+      (await readCarriedSettings(HaloContainer.decoy))[Carried.routeNote],
+      isNull,
+    );
+  });
+
+  test(
+    'the old fast marker goes, and a restore takes the relay queue',
+    () async {
+      final dir = Directory.systemTemp.createTempSync('route_merge');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            (_) async => dir.path,
+          );
+      addTearDown(
+        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(
+              const MethodChannel('plugins.flutter.io/path_provider'),
+              null,
+            ),
+      );
+      final marker = File('${dir.path}/fast_ok')..writeAsStringSync('1');
+      FlutterSecureStorage.setMockInitialValues({'send_mode': 'fast'});
+      await AppState().loadSendMode();
+      for (var i = 0; i < 20 && marker.existsSync(); i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
+      expect(marker.existsSync(), isFalse);
+      final queue = File('${dir.path}/nostr_topup')..writeAsStringSync('x');
+      await landCatchUpAnchors(dir.path, null);
+      expect(queue.existsSync(), isFalse);
+    },
+  );
+
+  test('the private route has both servers, each through its onion', () {
+    final private = AppState().relaysFor('private').split(',');
+    expect(private, hasLength(7));
+    expect(private[0], startsWith('ws://z4waup3c'));
+    expect(private[1], startsWith('ws://cvwpee5z'));
+    expect(private[1], endsWith('.onion'));
+    expect(private[2], 'wss://relay.kryfo.app');
+    // no top-up and no backups after a |: private sends to all of them
+    expect(AppState().relaysFor('private'), isNot(contains('|')));
   });
 
   for (final dir in [TextDirection.ltr, TextDirection.rtl]) {

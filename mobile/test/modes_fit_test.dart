@@ -227,6 +227,14 @@ void main() {
       ),
       findsOneWidget,
     );
+    // private in use: the second server stands behind it too
+    expect(
+      find.text(
+        'A backup is always ready, so you stay connected even if one goes '
+        'down.',
+      ),
+      findsOneWidget,
+    );
     // no third card, no relay
     expect(find.text('Relay'), findsNothing);
     expect(find.text('Onion'), findsNothing);

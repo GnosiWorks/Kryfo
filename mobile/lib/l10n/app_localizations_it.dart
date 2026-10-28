@@ -9846,7 +9846,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get serversBackupsLine =>
-      'Solo se entrambi i nostri sono fermi, e solo tramite Tor, così non vedono mai il tuo indirizzo IP.';
+      'Usati mentre il Server 1 è fermo, e solo tramite Tor, così non vedono mai il tuo indirizzo IP.';
 
   @override
   String get serversStandingBy => 'In attesa';
@@ -9872,7 +9872,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get homeOursDownLine =>
-      'I messaggi aspettano sul telefono e partono appena uno torna. Nel frattempo puoi passare a Privato.';
+      'Dopo qualche minuto i messaggi passano anche da relay pubblici tramite Tor, e tornano ai nostri server appena uno risponde.';
 
   @override
   String get homeUsePrivate => 'Usa Privato';
@@ -9901,7 +9901,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get seenIpWhy =>
-      'Su Privato tutto esce tramite Tor e i nostri server vedono un nodo di uscita, mai te. Su Veloce la connessione va dritta ai nostri due server: vedono il tuo indirizzo IP mentre sei connesso e non ne tengono traccia. Se sono fermi entrambi, Veloce ripiega su relay pubblici, e solo tramite Tor.';
+      'Su Privato tutto esce tramite Tor e i nostri server vedono un nodo di uscita, mai te. Su Veloce la connessione va dritta ai nostri due server: vedono il tuo indirizzo IP mentre sei connesso e non ne tengono traccia. Mentre il primo è fermo, Veloce usa anche relay pubblici, solo tramite Tor.';
 
   @override
   String get onboardingHidesFromEveryone =>
@@ -9909,7 +9909,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get onboardingFastSees =>
-      'I nostri server vedono il tuo indirizzo mentre sei connesso. Nessun altro.';
+      'I nostri server vedono il tuo indirizzo solo mentre sei connesso.';
 
   @override
   String get onboardingFastNetworkSees =>

@@ -9772,7 +9772,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get serversBackupsLine =>
-      'सिर्फ़ तब, जब हमारे दोनों सर्वर बंद हों, और सिर्फ़ Tor से, इसलिए ये आपका IP पता कभी नहीं देखते।';
+      'जब तक सर्वर 1 बंद है, तब तक इस्तेमाल होते हैं, और सिर्फ़ Tor से, इसलिए ये आपका IP पता कभी नहीं देखते।';
 
   @override
   String get serversStandingBy => 'तैयार खड़े';
@@ -9798,7 +9798,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get homeOursDownLine =>
-      'संदेश आपके फ़ोन पर इंतज़ार करते हैं और एक सर्वर लौटते ही चले जाते हैं। तब तक आप प्राइवेट पर जा सकते हैं।';
+      'कुछ मिनट बाद संदेश Tor के ज़रिए सार्वजनिक रिले से भी जाते हैं, और जैसे ही हमारा कोई सर्वर जवाब दे, फिर उसी से।';
 
   @override
   String get homeUsePrivate => 'प्राइवेट चुनें';
@@ -9827,7 +9827,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get seenIpWhy =>
-      'प्राइवेट पर सब कुछ Tor से निकलता है और हमारे सर्वर एक एग्ज़िट नोड देखते हैं, आपको कभी नहीं। तेज़ पर कनेक्शन सीधे हमारे दो सर्वर तक जाता है: जब तक आप जुड़े हैं वे आपका IP पता देखते हैं और उसका कोई रिकॉर्ड नहीं रखते। दोनों बंद हों तो तेज़ सार्वजनिक रिले का सहारा लेता है, और सिर्फ़ Tor से।';
+      'प्राइवेट पर सब कुछ Tor से निकलता है और हमारे सर्वर एक एग्ज़िट नोड देखते हैं, आपको कभी नहीं। तेज़ पर कनेक्शन सीधे हमारे दो सर्वर तक जाता है: जब तक आप जुड़े हैं वे आपका IP पता देखते हैं और उसका कोई रिकॉर्ड नहीं रखते। जब पहला बंद हो, तेज़ सार्वजनिक रिले भी इस्तेमाल करता है, सिर्फ़ Tor से।';
 
   @override
   String get onboardingHidesFromEveryone =>
@@ -9835,7 +9835,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingFastSees =>
-      'जब तक आप जुड़े हैं, हमारे सर्वर आपका पता देखते हैं। और कोई नहीं।';
+      'हमारे सर्वर आपका पता सिर्फ़ तब देखते हैं जब आप जुड़े हों।';
 
   @override
   String get onboardingFastNetworkSees =>

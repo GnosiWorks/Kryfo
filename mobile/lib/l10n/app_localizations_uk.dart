@@ -9930,7 +9930,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get serversBackupsLine =>
-      'Лише якщо обидва наші недоступні й лише через Tor, тож твою IP-адресу вони не бачать.';
+      'Використовуються, поки Сервер 1 недоступний, і лише через Tor, тож твою IP-адресу вони не бачать.';
 
   @override
   String get serversStandingBy => 'Напоготові';
@@ -9956,7 +9956,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get homeOursDownLine =>
-      'Повідомлення чекають на телефоні й підуть, щойно один повернеться. Поки що можна перейти на Приватний.';
+      'За кілька хвилин повідомлення підуть ще й через публічні ретранслятори по Tor, а щойно один із наших серверів відповість, знову через нього.';
 
   @override
   String get homeUsePrivate => 'Приватний';
@@ -9985,7 +9985,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get seenIpWhy =>
-      'У режимі «Приватний» усе йде через Tor, і наші сервери бачать вихідний вузол, а не тебе. У режимі «Швидкий» з’єднання йде напряму до двох наших серверів: вони бачать твою IP-адресу, поки ти підключений, і нічого про неї не зберігають. Якщо обидва недоступні, «Швидкий» переходить на публічні ретранслятори, і лише через Tor.';
+      'У режимі «Приватний» усе йде через Tor, і наші сервери бачать вихідний вузол, а не тебе. У режимі «Швидкий» з’єднання йде напряму до двох наших серверів: вони бачать твою IP-адресу, поки ти підключений, і нічого про неї не зберігають. Поки перший недоступний, «Швидкий» використовує ще й публічні ретранслятори, лише через Tor.';
 
   @override
   String get onboardingHidesFromEveryone =>
@@ -9993,7 +9993,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get onboardingFastSees =>
-      'Наші сервери бачать твою адресу, поки ти підключений. Більше ніхто.';
+      'Наші сервери бачать твою адресу лише поки ти підключений.';
 
   @override
   String get onboardingFastNetworkSees =>

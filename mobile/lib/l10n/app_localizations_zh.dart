@@ -9289,7 +9289,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get serversBackupsLine =>
-      '只在我们两台都停摆时使用，而且只经 Tor 连接，所以它们永远看不到你的 IP 地址。';
+      '在服务器 1 停摆期间使用，而且只经 Tor 连接，所以它们永远看不到你的 IP 地址。';
 
   @override
   String get serversStandingBy => '待命中';
@@ -9314,7 +9314,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeOursDownTitle => '我们的服务器没有响应';
 
   @override
-  String get homeOursDownLine => '消息会在手机上等着，等任意一台恢复就发出。这期间你可以切换到私密。';
+  String get homeOursDownLine => '几分钟后，消息也会经 Tor 走公共中继，我们任意一台服务器一响应就换回来。';
 
   @override
   String get homeUsePrivate => '使用私密';
@@ -9342,13 +9342,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get seenIpWhy =>
-      '私密模式下一切都经 Tor 发出，我们的服务器看到的是出口节点，永远不是你。快速模式下连接直达我们的两台服务器：你连接期间它们能看到你的 IP 地址，但不留任何记录。两台都停摆时，快速模式会改用公共中继，而且只经 Tor 连接。';
+      '私密模式下一切都经 Tor 发出，我们的服务器看到的是出口节点，永远不是你。快速模式下连接直达我们的两台服务器：你连接期间它们能看到你的 IP 地址，但不留任何记录。第一台停摆期间，快速模式也会使用公共中继，而且只经 Tor 连接。';
 
   @override
   String get onboardingHidesFromEveryone => '对所有人隐藏你的地址，包括我们的服务器。';
 
   @override
-  String get onboardingFastSees => '你连接期间我们的服务器能看到你的地址。其他人都看不到。';
+  String get onboardingFastSees => '我们的服务器只在你连接期间看到你的地址。';
 
   @override
   String get onboardingFastNetworkSees => '这个网络能看到你在连接 Kryfo。我们的服务器能看到你的地址。';
@@ -18528,7 +18528,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get serversBackupsLine =>
-      '只在我們兩台都停擺時使用，而且只經 Tor 連線，所以它們永遠看不到你的 IP 位址。';
+      '在伺服器 1 停擺期間使用，而且只經 Tor 連線，所以它們永遠看不到你的 IP 位址。';
 
   @override
   String get serversStandingBy => '待命中';
@@ -18553,7 +18553,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeOursDownTitle => '我們的伺服器沒有回應';
 
   @override
-  String get homeOursDownLine => '訊息會在手機上等著，等任一台恢復就送出。這段期間你可以切換到私密。';
+  String get homeOursDownLine => '幾分鐘後，訊息也會經 Tor 走公共中繼，我們任一台伺服器一回應就換回來。';
 
   @override
   String get homeUsePrivate => '使用私密';
@@ -18581,13 +18581,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get seenIpWhy =>
-      '私密模式下一切都經 Tor 送出，我們的伺服器看到的是出口節點，永遠不是你。快速模式下連線直達我們的兩台伺服器：你連線期間它們能看到你的 IP 位址，但不留任何紀錄。兩台都停擺時，快速模式會改用公共中繼，而且只經 Tor 連線。';
+      '私密模式下一切都經 Tor 送出，我們的伺服器看到的是出口節點，永遠不是你。快速模式下連線直達我們的兩台伺服器：你連線期間它們能看到你的 IP 位址，但不留任何紀錄。第一台停擺期間，快速模式也會使用公共中繼，而且只經 Tor 連線。';
 
   @override
   String get onboardingHidesFromEveryone => '對所有人隱藏你的位址，包括我們的伺服器。';
 
   @override
-  String get onboardingFastSees => '你連線期間我們的伺服器能看到你的位址。其他人都看不到。';
+  String get onboardingFastSees => '我們的伺服器只在你連線期間看到你的位址。';
 
   @override
   String get onboardingFastNetworkSees => '這個網路能看到你在連線 Kryfo。我們的伺服器能看到你的位址。';

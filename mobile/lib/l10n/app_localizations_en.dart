@@ -9759,7 +9759,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serversBackupsLine =>
-      'Used only if both of ours are down, and only through Tor, so they never see your IP address.';
+      'Used while Server 1 is down, and only through Tor, so they never see your IP address.';
 
   @override
   String get serversStandingBy => 'Standing by';
@@ -9785,7 +9785,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeOursDownLine =>
-      'Messages wait on your phone and go out when one is back. You can switch to Private meanwhile.';
+      'After a few minutes messages also go through public relays over Tor, and back through our servers as soon as one answers.';
 
   @override
   String get homeUsePrivate => 'Use Private';
@@ -9814,7 +9814,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seenIpWhy =>
-      'On Private everything leaves through Tor and our servers see an exit node, never you. On Fast the connection goes straight to our two servers: they see your IP address while you\'re connected and keep no record of it. If both are down, Fast falls back on public relays, and only through Tor.';
+      'On Private everything leaves through Tor and our servers see an exit node, never you. On Fast the connection goes straight to our two servers: they see your IP address while you\'re connected and keep no record of it. While the first one is down, Fast also uses public relays, only through Tor.';
 
   @override
   String get onboardingHidesFromEveryone =>
@@ -9822,7 +9822,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingFastSees =>
-      'Our servers see your address while you\'re connected. Nobody else does.';
+      'Our servers see your address only while you\'re connected.';
 
   @override
   String get onboardingFastNetworkSees =>

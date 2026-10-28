@@ -134,6 +134,8 @@ class _ModesScreenState extends State<ModesScreen> {
                 active: !fast,
                 switching: _going > 0 && !fast,
                 chip: l10n.modesDefault,
+                // both our servers back the private route as well
+                status: fast ? null : const _PrivateBackup(),
                 onTap: () => _pick('private'),
               ),
               const SizedBox(height: 14),
@@ -517,6 +519,22 @@ class _FastStatus extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+// the private card while it is in use: the second server stands behind the
+// first here too
+class _PrivateBackup extends StatelessWidget {
+  const _PrivateBackup();
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Text(
+        l10n.modesBackupReady,
+        style: HaloType.sans(size: 13, color: HaloColors.text2, height: 1.5),
+      ),
     );
   }
 }

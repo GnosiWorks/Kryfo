@@ -9842,7 +9842,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get serversBackupsLine =>
-      'Solo si los dos nuestros caen, y solo a través de Tor, así que nunca ven tu dirección IP.';
+      'Se usan mientras el Servidor 1 está caído, y solo a través de Tor, así que nunca ven tu dirección IP.';
 
   @override
   String get serversStandingBy => 'En espera';
@@ -9868,7 +9868,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get homeOursDownLine =>
-      'Los mensajes esperan en tu teléfono y salen cuando vuelva uno. Mientras tanto puedes cambiar a Privado.';
+      'En unos minutos los mensajes también van por repetidores públicos a través de Tor, y vuelven a nuestros servidores en cuanto uno responde.';
 
   @override
   String get homeUsePrivate => 'Usar Privado';
@@ -9897,7 +9897,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get seenIpWhy =>
-      'En Privado todo sale por Tor y nuestros servidores ven un nodo de salida, nunca a ti. En Rápido la conexión va directa a nuestros dos servidores: ven tu dirección IP mientras estás conectado y no guardan ningún registro. Si los dos caen, Rápido recurre a repetidores públicos, y solo a través de Tor.';
+      'En Privado todo sale por Tor y nuestros servidores ven un nodo de salida, nunca a ti. En Rápido la conexión va directa a nuestros dos servidores: ven tu dirección IP mientras estás conectado y no guardan ningún registro. Mientras el primero está caído, Rápido también usa repetidores públicos, solo a través de Tor.';
 
   @override
   String get onboardingHidesFromEveryone =>
@@ -9905,7 +9905,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get onboardingFastSees =>
-      'Nuestros servidores ven tu dirección mientras estás conectado. Nadie más.';
+      'Nuestros servidores ven tu dirección solo mientras estás conectado.';
 
   @override
   String get onboardingFastNetworkSees =>

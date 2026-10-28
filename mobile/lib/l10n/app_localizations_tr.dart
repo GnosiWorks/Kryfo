@@ -9794,7 +9794,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get serversBackupsLine =>
-      'Yalnızca bizim ikisi de çökerse ve yalnızca Tor üzerinden, bu yüzden IP adresini asla görmezler.';
+      'Sunucu 1 çalışmadığı sürece ve yalnızca Tor üzerinden kullanılır, bu yüzden IP adresini asla görmezler.';
 
   @override
   String get serversStandingBy => 'Beklemede';
@@ -9820,7 +9820,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get homeOursDownLine =>
-      'Mesajlar telefonunda bekler ve biri geri gelince gönderilir. Bu arada Özel’e geçebilirsin.';
+      'Birkaç dakika sonra mesajlar Tor üzerinden herkese açık aktarıcılardan da gider, sunucularımızdan biri yanıt verir vermez yine oradan.';
 
   @override
   String get homeUsePrivate => 'Özel’i kullan';
@@ -9849,7 +9849,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get seenIpWhy =>
-      'Özel’de her şey Tor üzerinden çıkar ve sunucularımız seni değil, bir çıkış düğümünü görür. Hızlı’da bağlantı doğrudan iki sunucumuza gider: bağlıyken IP adresini görürler ve hiçbir kaydını tutmazlar. İkisi de çökerse Hızlı herkese açık aktarıcılara geçer, yalnızca Tor üzerinden.';
+      'Özel’de her şey Tor üzerinden çıkar ve sunucularımız seni değil, bir çıkış düğümünü görür. Hızlı’da bağlantı doğrudan iki sunucumuza gider: bağlıyken IP adresini görürler ve hiçbir kaydını tutmazlar. İlki çalışmadığı sürece Hızlı herkese açık aktarıcıları da kullanır, yalnızca Tor üzerinden.';
 
   @override
   String get onboardingHidesFromEveryone =>
@@ -9857,7 +9857,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get onboardingFastSees =>
-      'Bağlıyken sunucularımız adresini görür. Başka kimse görmez.';
+      'Sunucularımız adresini yalnızca bağlıyken görür.';
 
   @override
   String get onboardingFastNetworkSees =>

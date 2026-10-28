@@ -27,6 +27,8 @@ extension AppStateRoute on AppState {
 
   Future<void> loadSendMode() async {
     final stored = await secureStore.read(key: 'send_mode');
+    // the old fast mode's marker has nothing left to say
+    unawaited(_dropFastMarker());
     // relay and fast are one route now, and whoever was on either is on it
     _sendMode = routeAtBoot(stored);
     if (_sendMode != (stored ?? 'private')) {
@@ -40,6 +42,16 @@ extension AppStateRoute on AppState {
       await secureStore.write(key: kRouteMergeNote, value: _routeMergeNote);
     }
     notifyListeners();
+  }
+
+  Future<void> _dropFastMarker() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final f = File('${dir.path}/fast_ok');
+      if (await f.exists()) await f.delete();
+    } catch (e) {
+      dlog('fast marker: ${e.runtimeType}');
+    }
   }
 
   /// home's one-time card: relay and fast are one now. only while the
@@ -76,11 +88,18 @@ extension AppStateRoute on AppState {
         return '$_clearnetRelay,$_secondRelay|$_publicRelays';
       default:
         // our relay's clearnet name rides along, dialled over tor like the
-        // rest, since a friend in relay mode publishes only there
+        // rest, since a friend on an older relay mode publishes only there.
+        // the second server's onion comes right after the first's
         return 'ws://z4waup3c6j6gknkjba72cqjjuffhgg6gtgqfu3vetzcvgoluvr42srid'
-            '.onion,$_clearnetRelay,$_publicRelays';
+            '.onion,${_privateSecond ? '$_secondOnion,' : ''}'
+            '$_clearnetRelay,$_publicRelays';
     }
   }
+
+  // the second server's onion on the private route, its own store as on fast
+  static const _privateSecond = true;
+  static const _secondOnion =
+      'ws://cvwpee5zgbargtxd5wtbtnc6lkbgzxj5byfig3e53ic4t7su7r45n4yd.onion';
 
   Future<void> setSendMode(String m) {
     m = routeOf(m);

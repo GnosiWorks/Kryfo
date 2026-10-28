@@ -9902,7 +9902,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get serversBackupsLine =>
-      'تُستخدم فقط إذا توقف خادمانا كلاهما، وعبر Tor فقط، فلا ترى عنوان IP الخاص بك أبدًا.';
+      'تُستخدم أثناء توقف الخادم 1، وعبر Tor فقط، فلا ترى عنوان IP الخاص بك أبدًا.';
 
   @override
   String get serversStandingBy => 'في وضع الاستعداد';
@@ -9928,7 +9928,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get homeOursDownLine =>
-      'تنتظر الرسائل على هاتفك وتُرسل عند عودة أحدها. يمكنك التبديل إلى الخاص في هذه الأثناء.';
+      'بعد دقائق قليلة تمر الرسائل أيضًا عبر مُرحِّلات عامة من خلال Tor، وتعود عبر خوادمنا حالما يرد أحدها.';
 
   @override
   String get homeUsePrivate => 'استخدم الخاص';
@@ -9957,15 +9957,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get seenIpWhy =>
-      'في الخاص يخرج كل شيء عبر Tor وترى خوادمنا عقدة خروج، لا أنت أبدًا. في السريع يذهب الاتصال مباشرة إلى خادمينا: يريان عنوان IP الخاص بك أثناء اتصالك ولا يحتفظان بأي سجل له. إذا توقف كلاهما يلجأ السريع إلى مُرحِّلات عامة، وعبر Tor فقط.';
+      'في الخاص يخرج كل شيء عبر Tor وترى خوادمنا عقدة خروج، لا أنت أبدًا. في السريع يذهب الاتصال مباشرة إلى خادمينا: يريان عنوان IP الخاص بك أثناء اتصالك ولا يحتفظان بأي سجل له. أثناء توقف الأول يستخدم السريع أيضًا مُرحِّلات عامة، عبر Tor فقط.';
 
   @override
   String get onboardingHidesFromEveryone =>
       'يخفي عنوانك عن الجميع، بما في ذلك خوادمنا.';
 
   @override
-  String get onboardingFastSees =>
-      'ترى خوادمنا عنوانك أثناء اتصالك. لا أحد غيرها.';
+  String get onboardingFastSees => 'ترى خوادمنا عنوانك أثناء اتصالك فقط.';
 
   @override
   String get onboardingFastNetworkSees =>

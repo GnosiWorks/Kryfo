@@ -9786,7 +9786,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get serversBackupsLine =>
-      'فقط وقتی هر دو سرور ما از کار بیفتند، و فقط از راه Tor، پس هرگز آدرس IP شما را نمی‌بینند.';
+      'تا وقتی سرور ۱ از کار افتاده استفاده می‌شوند، و فقط از راه Tor، پس هرگز آدرس IP شما را نمی‌بینند.';
 
   @override
   String get serversStandingBy => 'آماده به کار';
@@ -9812,7 +9812,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get homeOursDownLine =>
-      'پیام‌ها روی گوشی‌تان منتظر می‌مانند و وقتی یکی برگردد فرستاده می‌شوند. در این فاصله می‌توانید به خصوصی بروید.';
+      'پس از چند دقیقه پیام‌ها از راه رله‌های عمومی روی Tor هم می‌روند، و به محض اینکه یکی از سرورهای ما پاسخ دهد دوباره از آن‌ها می‌روند.';
 
   @override
   String get homeUsePrivate => 'خصوصی';
@@ -9841,7 +9841,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get seenIpWhy =>
-      'در خصوصی همه‌چیز از راه Tor خارج می‌شود و سرورهای ما یک گره خروجی می‌بینند، نه شما را. در سریع اتصال مستقیم به دو سرور ما می‌رود: تا وقتی وصل هستید آدرس IP شما را می‌بینند و هیچ سابقه‌ای از آن نگه نمی‌دارند. اگر هر دو از کار بیفتند، سریع سراغ رله‌های عمومی می‌رود، و فقط از راه Tor.';
+      'در خصوصی همه‌چیز از راه Tor خارج می‌شود و سرورهای ما یک گره خروجی می‌بینند، نه شما را. در سریع اتصال مستقیم به دو سرور ما می‌رود: تا وقتی وصل هستید آدرس IP شما را می‌بینند و هیچ سابقه‌ای از آن نگه نمی‌دارند. تا وقتی اولی از کار افتاده، سریع از رله‌های عمومی هم استفاده می‌کند، فقط از راه Tor.';
 
   @override
   String get onboardingHidesFromEveryone =>
@@ -9849,7 +9849,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get onboardingFastSees =>
-      'سرورهای ما تا وقتی وصل هستید آدرس شما را می‌بینند. هیچ‌کس دیگری نه.';
+      'سرورهای ما آدرس شما را فقط تا وقتی وصل هستید می‌بینند.';
 
   @override
   String get onboardingFastNetworkSees =>

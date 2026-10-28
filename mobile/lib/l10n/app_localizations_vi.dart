@@ -9755,7 +9755,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get serversBackupsLine =>
-      'Chỉ dùng khi cả hai máy chủ của chúng tôi đều ngừng, và chỉ qua Tor, nên chúng không bao giờ thấy địa chỉ IP của bạn.';
+      'Được dùng khi Máy chủ 1 ngừng, và chỉ qua Tor, nên chúng không bao giờ thấy địa chỉ IP của bạn.';
 
   @override
   String get serversStandingBy => 'Đang chờ sẵn';
@@ -9781,7 +9781,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get homeOursDownLine =>
-      'Tin nhắn chờ trên điện thoại và sẽ được gửi khi một máy chủ trở lại. Trong lúc đó bạn có thể chuyển sang Riêng tư.';
+      'Sau vài phút, tin nhắn cũng đi qua relay công cộng bằng Tor, và trở lại qua máy chủ của chúng tôi ngay khi một máy phản hồi.';
 
   @override
   String get homeUsePrivate => 'Dùng Riêng tư';
@@ -9810,7 +9810,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get seenIpWhy =>
-      'Với Riêng tư, mọi thứ đi qua Tor và máy chủ của chúng tôi chỉ thấy một nút thoát, không bao giờ thấy bạn. Với Nhanh, kết nối đi thẳng tới hai máy chủ của chúng tôi: chúng thấy địa chỉ IP của bạn khi bạn đang kết nối và không lưu lại gì. Nếu cả hai đều ngừng, Nhanh chuyển sang relay công cộng, và chỉ qua Tor.';
+      'Với Riêng tư, mọi thứ đi qua Tor và máy chủ của chúng tôi chỉ thấy một nút thoát, không bao giờ thấy bạn. Với Nhanh, kết nối đi thẳng tới hai máy chủ của chúng tôi: chúng thấy địa chỉ IP của bạn khi bạn đang kết nối và không lưu lại gì. Khi máy chủ đầu tiên ngừng, Nhanh dùng thêm relay công cộng, chỉ qua Tor.';
 
   @override
   String get onboardingHidesFromEveryone =>
@@ -9818,7 +9818,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get onboardingFastSees =>
-      'Máy chủ của chúng tôi thấy địa chỉ của bạn khi bạn đang kết nối. Không ai khác.';
+      'Máy chủ của chúng tôi chỉ thấy địa chỉ của bạn khi bạn đang kết nối.';
 
   @override
   String get onboardingFastNetworkSees =>

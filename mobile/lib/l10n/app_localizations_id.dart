@@ -9765,7 +9765,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get serversBackupsLine =>
-      'Hanya dipakai jika kedua server kami mati, dan hanya lewat Tor, jadi mereka tidak pernah melihat alamat IP-mu.';
+      'Dipakai selama Server 1 mati, dan hanya lewat Tor, jadi mereka tidak pernah melihat alamat IP-mu.';
 
   @override
   String get serversStandingBy => 'Siaga';
@@ -9791,7 +9791,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get homeOursDownLine =>
-      'Pesan menunggu di ponselmu dan terkirim saat salah satunya kembali. Sementara itu kamu bisa pindah ke Privat.';
+      'Setelah beberapa menit pesan juga lewat relay publik melalui Tor, dan kembali lewat server kami begitu salah satunya menjawab.';
 
   @override
   String get homeUsePrivate => 'Pakai Privat';
@@ -9820,7 +9820,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get seenIpWhy =>
-      'Di Privat semuanya keluar lewat Tor dan server kami melihat node keluar, bukan kamu. Di Cepat koneksi langsung ke dua server kami: mereka melihat alamat IP-mu selama terhubung dan tidak menyimpan catatannya. Jika keduanya mati, Cepat beralih ke relay publik, dan hanya lewat Tor.';
+      'Di Privat semuanya keluar lewat Tor dan server kami melihat node keluar, bukan kamu. Di Cepat koneksi langsung ke dua server kami: mereka melihat alamat IP-mu selama terhubung dan tidak menyimpan catatannya. Selama server pertama mati, Cepat juga memakai relay publik, hanya lewat Tor.';
 
   @override
   String get onboardingHidesFromEveryone =>
@@ -9828,7 +9828,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get onboardingFastSees =>
-      'Server kami melihat alamatmu selama kamu terhubung. Tidak ada yang lain.';
+      'Server kami melihat alamatmu hanya selama kamu terhubung.';
 
   @override
   String get onboardingFastNetworkSees =>

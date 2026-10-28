@@ -52,7 +52,7 @@ void main() {
     expect(l.serversBackups, "Public relays");
     expect(
       l.serversBackupsLine,
-      "Used only if both of ours are down, and only through Tor, so they never see your IP address.",
+      "Used while Server 1 is down, and only through Tor, so they never see your IP address.",
     );
     expect(l.serversStandingBy, "Standing by");
     expect(l.serversInUse, "In use");
@@ -66,7 +66,7 @@ void main() {
     expect(l.homeOursDownTitle, "Our servers aren't answering");
     expect(
       l.homeOursDownLine,
-      "Messages wait on your phone and go out when one is back. You can switch to Private meanwhile.",
+      "After a few minutes messages also go through public relays over Tor, and back through our servers as soon as one answers.",
     );
     expect(l.homeUsePrivate, "Use Private");
     expect(l.homeSwitchedToPrivate, "Switched to Private");
@@ -81,7 +81,7 @@ void main() {
     expect(l.seenOurServers, "Our servers");
     expect(
       l.seenIpWhy,
-      "On Private everything leaves through Tor and our servers see an exit node, never you. On Fast the connection goes straight to our two servers: they see your IP address while you're connected and keep no record of it. If both are down, Fast falls back on public relays, and only through Tor.",
+      "On Private everything leaves through Tor and our servers see an exit node, never you. On Fast the connection goes straight to our two servers: they see your IP address while you're connected and keep no record of it. While the first one is down, Fast also uses public relays, only through Tor.",
     );
     expect(
       l.onboardingHidesFromEveryone,
@@ -89,7 +89,7 @@ void main() {
     );
     expect(
       l.onboardingFastSees,
-      "Our servers see your address while you're connected. Nobody else does.",
+      "Our servers see your address only while you're connected.",
     );
     expect(
       l.onboardingFastNetworkSees,

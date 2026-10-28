@@ -15740,7 +15740,7 @@ abstract class AppLocalizations {
   /// servers page, under the public relays row
   ///
   /// In en, this message translates to:
-  /// **'Used only if both of ours are down, and only through Tor, so they never see your IP address.'**
+  /// **'Used while Server 1 is down, and only through Tor, so they never see your IP address.'**
   String get serversBackupsLine;
 
   /// public relays row status while ours answer
@@ -15788,7 +15788,7 @@ abstract class AppLocalizations {
   /// home card while neither server answers on Fast
   ///
   /// In en, this message translates to:
-  /// **'Messages wait on your phone and go out when one is back. You can switch to Private meanwhile.'**
+  /// **'After a few minutes messages also go through public relays over Tor, and back through our servers as soon as one answers.'**
   String get homeOursDownLine;
 
   /// button that switches to the Tor route
@@ -15842,7 +15842,7 @@ abstract class AppLocalizations {
   /// what we can see table, why for the IP address row
   ///
   /// In en, this message translates to:
-  /// **'On Private everything leaves through Tor and our servers see an exit node, never you. On Fast the connection goes straight to our two servers: they see your IP address while you\'re connected and keep no record of it. If both are down, Fast falls back on public relays, and only through Tor.'**
+  /// **'On Private everything leaves through Tor and our servers see an exit node, never you. On Fast the connection goes straight to our two servers: they see your IP address while you\'re connected and keep no record of it. While the first one is down, Fast also uses public relays, only through Tor.'**
   String get seenIpWhy;
 
   /// onboarding, the Private card
@@ -15854,7 +15854,7 @@ abstract class AppLocalizations {
   /// onboarding, the Fast card
   ///
   /// In en, this message translates to:
-  /// **'Our servers see your address while you\'re connected. Nobody else does.'**
+  /// **'Our servers see your address only while you\'re connected.'**
   String get onboardingFastSees;
 
   /// onboarding where Tor is blocked, the Fast card

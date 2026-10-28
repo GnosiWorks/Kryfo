@@ -55,6 +55,7 @@ abstract final class Carried {
   static const shield = 'shield';
   static const intros = 'intros';
   static const typing = 'typing';
+  static const routeNote = 'route_note';
 }
 
 /// the settings of [c] and of the phone as they read now, every one with
@@ -77,6 +78,9 @@ Future<Map<String, Object>> readCarriedSettings(HaloContainer c) async {
   if (_kAccents.contains(accent)) out[Carried.accent] = accent;
   final route = await st.read(key: c.key(_kRoute)) ?? 'private';
   if (_kRoutes.contains(route)) out[Carried.route] = route;
+  // whether the card about relay and fast becoming one was seen
+  final note = c.quiet ? null : await st.read(key: kRouteMergeNote);
+  if (note == 'due' || note == 'done') out[Carried.routeNote] = note!;
   final delivery = prefs.getString(c.key(kDeliveryModeKey)) ?? 'always';
   if (_kDeliveries.contains(delivery)) out[Carried.delivery] = delivery;
   final language = prefs.getString(c.key(kAppLocaleKey));
@@ -129,6 +133,14 @@ Future<bool> landCarriedSettings(
   final route = carried[Carried.route];
   if (route is String && _kRoutes.contains(route)) {
     await st.write(key: c.key(_kRoute), value: routeAtBoot(route));
+    // the card goes with the phone it was seen on. a file from before the
+    // two were one, on relay or fast, has it still to see
+    final note = carried[Carried.routeNote];
+    if (note == 'due' || note == 'done') {
+      await st.write(key: kRouteMergeNote, value: note as String);
+    } else if (routeAtBoot(route) == 'balanced') {
+      await st.write(key: kRouteMergeNote, value: 'due');
+    }
   }
   final delivery = carried[Carried.delivery];
   final was = prefs.getString(c.key(kDeliveryModeKey)) ?? 'always';
