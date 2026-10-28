@@ -28,3 +28,20 @@ foreach(lib HALO_ENGINE_LIB HALO_SIGNAL_LIB)
     message(WARNING "no ${path}: the app builds but stops at start without it")
   endif()
 endforeach()
+
+# the sqlcipher the database opens with (build-sqlcipher.sh). the dart side
+# opens it from lib/ by name and refuses any sqlite without the cipher
+set(HALO_SQLCIPHER_LIB
+  "${CMAKE_CURRENT_SOURCE_DIR}/out/libsqlcipher.so.0"
+  CACHE FILEPATH "libsqlcipher.so.0 for the linux app")
+if(EXISTS "${HALO_SQLCIPHER_LIB}")
+  install(FILES "${HALO_SQLCIPHER_LIB}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+    COMPONENT Runtime)
+else()
+  message(WARNING "no ${HALO_SQLCIPHER_LIB}: the app cannot open its database")
+endif()
+
+# the window's and the tray's icon
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../assets/icon/halo_icon.png"
+  DESTINATION "${INSTALL_BUNDLE_DATA_DIR}" RENAME "kryfo.png"
+  COMPONENT Runtime)
