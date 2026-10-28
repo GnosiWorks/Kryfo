@@ -2456,7 +2456,7 @@
   "notificationsGoogleBody": "即时且省电。Google 能看到你的手机何时被唤醒，但从不知道是谁写的或说了什么。",
   "notificationsGoogleStarting": "正在开启…",
   "notificationsGoogleNoStart": "谷歌推送没能启动。请检查网络后再试一次。",
-  "notificationsGoogleNote": "其中混有假的唤醒，让 Google 更难分辨真消息何时到达。我们的中继只保存它无法彼此关联的地址。推送服务运行在同一台服务器上，能够把它们关联起来，所以运营或查扣我们服务器的人也能做到。如果你在意这一点，请选择其他方式。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。",
+  "notificationsGoogleNote": "其中混有假的唤醒，让 Google 更难分辨真消息何时到达。我们的中继只保存它无法彼此关联的地址。推送服务运行在同一台服务器上，能够把它们关联起来，借助 Google 还能关联到你的 Google 账号，所以运营或查扣我们服务器的人也能做到。如果你在意这一点，请选择其他方式。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。",
   "notificationsGoogleRefused": "我们的中继暂时不接受这部手机的部分登记。这些聊天会随每 15 分钟一次的定时查收到达，Kryfo 会继续尝试。",
   "notificationsSoundAndVibration": "声音和振动",
   "notificationsSoundHint": "在 Android 自己的设置里",

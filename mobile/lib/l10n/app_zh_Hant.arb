@@ -2456,7 +2456,7 @@
   "notificationsGoogleBody": "即時且省電。Google 能看到你的手機何時被喚醒，但從不知道是誰寫的或說了什麼。",
   "notificationsGoogleStarting": "正在開啟…",
   "notificationsGoogleNoStart": "Google 推播沒能啟動。請檢查網路後再試一次。",
-  "notificationsGoogleNote": "其中混有假的喚醒，讓 Google 更難分辨真訊息何時送達。我們的中繼只保存它無法彼此關聯的位址。推播服務執行在同一台伺服器上，能夠把它們關聯起來，所以營運或查扣我們伺服器的人也能做到。如果你在意這一點，請選擇其他方式。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。",
+  "notificationsGoogleNote": "其中混有假的喚醒，讓 Google 更難分辨真訊息何時送達。我們的中繼只保存它無法彼此關聯的位址。推播服務執行在同一台伺服器上，能夠把它們關聯起來，借助 Google 還能關聯到你的 Google 帳號，所以營運或查扣我們伺服器的人也能做到。如果你在意這一點，請選擇其他方式。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。",
   "notificationsGoogleRefused": "我們的中繼暫時不接受這支手機的部分登記。這些聊天會隨每 15 分鐘一次的定時查收送達，Kryfo 會繼續嘗試。",
   "notificationsSoundAndVibration": "聲音和震動",
   "notificationsSoundHint": "在 Android 自己的設定中",

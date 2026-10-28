@@ -9295,7 +9295,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Ada juga panggilan bangun palsu, jadi Google lebih sulit tahu kapan pesan asli masuk. Relay kami hanya menyimpan alamat yang tidak bisa ia hubungkan satu sama lain. Layanan push berjalan di server yang sama dan bisa menghubungkannya, jadi siapa pun yang menjalankan atau menyita server kami juga bisa. Kalau itu penting bagimu, pilih cara lain. Obrolan tersembunyi, ruang setelah beberapa ruang pertama, dan sesekali kontak biasa, kira-kira satu dari lima bulan, menunggu cek yang tetap dilakukan Kryfo setiap 15 menit.';
+      'Ada juga panggilan bangun palsu, jadi Google lebih sulit tahu kapan pesan asli masuk. Relay kami hanya menyimpan alamat yang tidak bisa ia hubungkan satu sama lain. Layanan push berjalan di server yang sama dan bisa menghubungkannya, dan dengan bantuan Google ke akun Google-mu, jadi siapa pun yang menjalankan atau menyita server kami juga bisa. Kalau itu penting bagimu, pilih cara lain. Obrolan tersembunyi, ruang setelah beberapa ruang pertama, dan sesekali kontak biasa, kira-kira satu dari lima bulan, menunggu cek yang tetap dilakukan Kryfo setiap 15 menit.';
 
   @override
   String get notificationsGoogleRefused =>
