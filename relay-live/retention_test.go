@@ -166,8 +166,21 @@ func TestFileSlicesGoAfterAWeek(t *testing.T) {
 	if n := marks(t, db); n != 2 {
 		t.Fatalf("%d marks, want the two slices", n)
 	}
-	eight := time.Now().Add(-8 * 24 * time.Hour).Unix()
+	// a mark is the day the slice came, never the second
+	var at int64
+	if err := db.DB.QueryRow(`SELECT at FROM big_wrap WHERE id = ?`, fresh.ID).Scan(&at); err != nil {
+		t.Fatal(err)
+	}
+	if at%86400 != 0 || at != dayOf(time.Now()) {
+		t.Fatalf("a mark holds %d, not the day", at)
+	}
+	eight := time.Now().Add(-9 * 24 * time.Hour).Unix()
 	if _, err := db.DB.Exec(`UPDATE big_wrap SET at = ? WHERE id = ?`, eight, old.ID); err != nil {
+		t.Fatal(err)
+	}
+	// seven days and a bit after its day: not yet, the day runs to its end
+	seven := dayOf(time.Now()) - 7*86400 - 3600
+	if _, err := db.DB.Exec(`UPDATE big_wrap SET at = ? WHERE id = ?`, seven+3600, fresh.ID); err != nil {
 		t.Fatal(err)
 	}
 	if n := sweepBig(ctx, db, 0); n != 1 {
@@ -202,7 +215,7 @@ func TestFileSliceSweepBatches(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if _, err := db.DB.Exec(`UPDATE big_wrap SET at = ?`, time.Now().Add(-8*24*time.Hour).Unix()); err != nil {
+	if _, err := db.DB.Exec(`UPDATE big_wrap SET at = ?`, time.Now().Add(-9*24*time.Hour).Unix()); err != nil {
 		t.Fatal(err)
 	}
 	if n := sweepBig(ctx, db, 0); n != want {

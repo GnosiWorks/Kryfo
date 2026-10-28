@@ -62,8 +62,10 @@ func openStore(path string) (*store, error) {
 	return &store{db, ckpt}, nil
 }
 
-// a file slice's id and when it came, for its shorter week (sweepBig).
-// when it came, not its stamp: a wrap's stamp is set back on purpose
+// a file slice's id and the day it came, for its shorter week (sweepBig).
+// the day it came, not its stamp: a wrap's stamp is set back on purpose.
+// the day, not the second: a copy of the disk must not tell when each
+// slice came, and with that whose burst it was
 const (
 	bigWrapTable = `CREATE TABLE IF NOT EXISTS big_wrap (
 		id TEXT PRIMARY KEY, at INTEGER NOT NULL)`
@@ -78,6 +80,9 @@ const bigContent = 40000
 
 func isBig(ev *nostr.Event) bool { return len(ev.Content) > bigContent }
 
+// the start of the utc day of t, in unix seconds
+func dayOf(t time.Time) int64 { return t.Unix() / 86400 * 86400 }
+
 // saved as the backend saves it, and marked when it is a file slice. a
 // mark that fails leaves it the fourteen days of any wrap
 func (s *store) SaveEvent(ctx context.Context, ev *nostr.Event) error {
@@ -86,7 +91,7 @@ func (s *store) SaveEvent(ctx context.Context, ev *nostr.Event) error {
 	}
 	if isBig(ev) {
 		if _, err := s.DB.ExecContext(ctx, `INSERT OR IGNORE INTO big_wrap (id, at) VALUES (?, ?)`,
-			ev.ID, time.Now().Unix()); err != nil {
+			ev.ID, dayOf(time.Now())); err != nil {
 			log.Printf("store: a slice not marked: %v", err)
 		}
 	}

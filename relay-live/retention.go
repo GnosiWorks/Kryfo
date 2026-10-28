@@ -68,7 +68,9 @@ func sweep(ctx context.Context, db execer, pause time.Duration) int {
 func sweepBig(ctx context.Context, db execer, pause time.Duration) int {
 	total := 0
 	for {
-		cut := time.Now().Add(-bigTTL).Unix()
+		// a mark holds the day it came: a slice of late that day goes at
+		// the end of its seventh day after
+		cut := time.Now().Add(-bigTTL - 24*time.Hour).Unix()
 		res, err := db.ExecContext(ctx, `DELETE FROM event WHERE id IN (
 			SELECT id FROM big_wrap WHERE at <= ? ORDER BY at, id LIMIT ?)`,
 			cut, sweepBatch)
