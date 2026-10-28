@@ -14,30 +14,21 @@ bool _dropFetchAgain = false;
 extension AppStateFiles on AppState {
   // ---- which phones fetch from the files service ----
 
+  // what a group frame says of the member's phone, on their row. a 1:1
+  // frame's list is kept by the typing code (_takeCaps); a room's frames
+  // carry none, and say nothing of anyone's phone
   Future<void> _takeDrops(String peer, UnwrappedMessage env, HaloDb db) async {
-    if (isDevId(peer)) return;
+    final g = env.groupId;
+    if (isDevId(peer) || g == null) return;
     try {
-      final d = await db.open();
-      final counts = AppState._dataFrame(env) && env.msgUid != null;
-      final g = env.groupId;
-      if (g != null) {
-        await takeMemberDrops(
-          d,
-          g,
-          peer,
-          carried: env.takesDrops,
-          counts: counts,
-          written: env.writtenAt,
-        );
-      } else {
-        await takePeerDrops(
-          d,
-          peer,
-          carried: env.takesDrops,
-          counts: counts,
-          written: env.writtenAt,
-        );
-      }
+      if (await _roomOf(g, db) != null) return;
+      await takeMemberCaps(
+        await db.open(),
+        peer,
+        caps: env.caps,
+        counts: AppState._dataFrame(env) && env.msgUid != null,
+        written: env.writtenAt,
+      );
     } catch (e) {
       dlog('files: word not taken (${e.runtimeType})');
     }

@@ -224,10 +224,15 @@ class SignalSession {
     Future<PreKeyBundle?> Function()? afresh,
     Future<bool> Function()? held,
     void Function()? keyMoved,
+    // only on a session that is past its opener: never one to start one
+    bool onlySettled = false,
   }) => serial(peer, () async {
     // asked in the lane, right before the seal: a key that came in a frame
     // opened ahead of this one is the key this one would go to
     if (held != null && await held()) throw KeyHeld(peer);
+    if (onlySettled && (await sealsOnRestored(peer) || !await settled(peer))) {
+      throw NotSettled(peer);
+    }
     if (await sealsOnRestored(peer)) {
       final card = afresh == null ? null : await afresh();
       if (card == null) throw StartingAfresh(peer);
@@ -301,6 +306,15 @@ class SignalSession {
       where: 'halo_id = ?',
       whereArgs: [peer],
     );
+  }
+
+  /// a session with [peer] that they have answered on: a seal on it is a
+  /// plain whisper message, never an opener
+  Future<bool> settled(String peer) async {
+    final addr = SignalProtocolAddress(peer, 1);
+    if (!await sessionStore.containsSession(addr)) return false;
+    final record = await sessionStore.loadSession(addr);
+    return !record.sessionState.hasUnacknowledgedPreKeyMessage();
   }
 
   /// whether the session a seal to [peer] would use came back with a restore
@@ -587,6 +601,15 @@ class KeyHeld implements Exception {
   final String peer;
   @override
   String toString() => 'KeyHeld: their key moved since it was verified';
+}
+
+/// a seal asked only on a settled session found none: no session, one
+/// their side has not answered on yet, or one a restore brought back
+class NotSettled implements Exception {
+  NotSettled(this.peer);
+  final String peer;
+  @override
+  String toString() => 'NotSettled: no answered session';
 }
 
 /// a seal to [peer] waits for a session started afresh: the one held came

@@ -6576,6 +6576,26 @@
   "@settingsScamShieldHint": {
     "description": "screens/settings_screen.dart: under the scam shield switch"
   },
+  "typingNow": "Typing",
+  "@typingNow": {
+    "description": "screens/chat_screen.dart and home_screen.dart: under a contact's name and in their chat list row while they type, three dots follow it. one word, sentence case"
+  },
+  "settingsTypingIndicator": "Typing indicator",
+  "@settingsTypingIndicator": {
+    "description": "screens/settings_screen.dart: the typing indicator switch in privacy"
+  },
+  "settingsTypingIndicatorHint": "You both see when the other is typing. It goes straight to them over Tor, never through a relay.",
+  "@settingsTypingIndicatorHint": {
+    "description": "screens/settings_screen.dart: under the typing indicator switch"
+  },
+  "settingsTypingOnionOnly": "Available on the Onion route",
+  "@settingsTypingOnionOnly": {
+    "description": "screens/settings_screen.dart: under the typing indicator switch, dimmed, while the route is relay or fast. same words as gettingMessagesHelperOnionOnly"
+  },
+  "settingsTypingBridgesOff": "Off while bridges are in use: someone watching your connection could match the typing signals. It comes back by itself when bridges are off.",
+  "@settingsTypingBridgesOff": {
+    "description": "screens/settings_screen.dart: under the typing indicator switch, dimmed, while tor goes through a bridge. the switch shows off then"
+  },
   "settingsLightTheme": "Light theme",
   "@settingsLightTheme": {
     "description": "screens/settings_screen.dart"
@@ -7377,8 +7397,8 @@
   "@whyKryfoNothingLeaks": {
     "description": "screens/why_kryfo_screen.dart"
   },
-  "whyKryfoNoReadReceiptsOr": "No read receipts or typing tells handed to anyone, no contact list uploaded. Most apps leak metadata. Kryfo is built not to.",
-  "@whyKryfoNoReadReceiptsOr": {
+  "whyKryfoNoReceiptsTyping": "No read receipts, no contact list uploaded. Typing shows only to the person you write to, straight over Tor, never through a server. Most apps leak metadata. Kryfo is built not to.",
+  "@whyKryfoNoReceiptsTyping": {
     "description": "screens/why_kryfo_screen.dart"
   },
   "whyKryfoVerifyItIsReally": "Verify it is really them",
@@ -9401,6 +9421,10 @@
   "languageNameAr": "Arabic",
   "@languageNameAr": {
     "description": "the name of Arabic in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
+  },
+  "languageNameHi": "Hindi",
+  "@languageNameHi": {
+    "description": "the name of Hindi in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
   },
   "languageLaterLine": "You can change this any time in settings.",
   "@languageLaterLine": {

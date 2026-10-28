@@ -5336,6 +5336,23 @@ class AppLocalizationsDe extends AppLocalizations {
       'Nur auf deinem Handy geprüft, nichts verlässt es';
 
   @override
+  String get typingNow => 'Schreibt';
+
+  @override
+  String get settingsTypingIndicator => 'Tippanzeige';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'Ihr seht beide, wenn die andere Person schreibt. Das geht direkt über Tor, nie über ein Relay.';
+
+  @override
+  String get settingsTypingOnionOnly => 'Verfügbar auf der Onion-Route';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      'Aus, solange Brücken genutzt werden: Wer deine Verbindung beobachtet, könnte die Tippsignale zuordnen. Ohne Brücken ist es von selbst wieder an.';
+
+  @override
   String get settingsLightTheme => 'Helles Design';
 
   @override
@@ -5943,8 +5960,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get whyKryfoNothingLeaks => 'Nichts sickert durch';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'Keine Lesebestätigungen oder Tipp-Anzeigen, die an irgendwen gehen, keine hochgeladene Kontaktliste. Metadaten sind das, was die meisten Apps preisgeben. Kryfo ist so gebaut, dass es das nicht tut.';
+  String get whyKryfoNoReceiptsTyping =>
+      'Keine Lesebestätigungen, keine hochgeladene Kontaktliste. Dass du schreibst, sieht nur die Person, der du schreibst, direkt über Tor, nie über einen Server. Die meisten Apps geben Metadaten preis. Kryfo ist so gebaut, dass es das nicht tut.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Prüfe, ob es wirklich die Person ist';
@@ -7513,6 +7530,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get languageNameAr => 'Arabisch';
+
+  @override
+  String get languageNameHi => 'Hindi';
 
   @override
   String get languageLaterLine =>

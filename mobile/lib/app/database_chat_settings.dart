@@ -314,6 +314,43 @@ mixin _ChatSettingRows {
     });
   }
 
+  /// what a 1:1 frame from [peer] says their phone understands, kept
+  /// only on an accepted contact's row and written only when it changes
+  /// (capsAfter). true when it did
+  Future<bool> takeCaps(
+    String peer, {
+    required List<String>? caps,
+    required bool counts,
+    int? written,
+  }) async {
+    final db = await open();
+    return db.transaction((t) async {
+      final r = await t.query(
+        'contacts',
+        columns: const ['caps', 'caps_at'],
+        where: 'halo_id = ? AND accepted = 1',
+        whereArgs: [peer],
+        limit: 1,
+      );
+      if (r.isEmpty) return false;
+      final next = capsAfter(
+        (r.first['caps'] as String?) ?? '',
+        (r.first['caps_at'] as num?)?.toInt() ?? 0,
+        carried: caps,
+        counts: counts,
+        written: written,
+      );
+      if (next == null) return false;
+      await t.update(
+        'contacts',
+        {'caps': next.caps, 'caps_at': next.at},
+        where: 'halo_id = ?',
+        whereArgs: [peer],
+      );
+      return true;
+    });
+  }
+
   // accepted chats whose phones know the block and that do not block yet
   Future<List<String>> shotsCanTurnOn() async {
     final db = await open();

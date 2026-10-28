@@ -18,6 +18,14 @@ void main() {
     expect(isWipeWord('إمسح', 'امسح'), isTrue); // hamza under the alef
   });
 
+  test('the hindi word, with or without its dot and moon', () {
+    expect(isWipeWord('मिटाएँ', 'मिटाएँ'), isTrue);
+    expect(isWipeWord('मिटाएं', 'मिटाएँ'), isTrue); // anusvara for chandrabindu
+    expect(isWipeWord('फोटो', '\u095Eोटो'), isTrue); // no dot
+    expect(isWipeWord('फ़ोटो', '\u095Eोटो'), isTrue); // dot as a mark
+    expect(isWipeWord('मिटा', 'मिटाएँ'), isFalse);
+  });
+
   test('rejects anything else', () {
     expect(isWipeWord('xo', 'xóa'), isFalse);
     expect(isWipeWord('', 'xóa'), isFalse);

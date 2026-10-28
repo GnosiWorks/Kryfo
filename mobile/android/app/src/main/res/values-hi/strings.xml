@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- written by tool/arb_android.py from lib/l10n/app_hi.arb -->
+<resources>
+    <string name="service_title">Kryfo चालू है</string>
+    <string name="service_text">आपकी एन्क्रिप्टेड लाइन खुली रहती है ताकि मैसेज आते रहें</string>
+    <string name="channel_name">जुड़े रहना</string>
+    <string name="channel_description">Kryfo को जोड़े रखता है ताकि उसके बंद रहने पर भी एन्क्रिप्टेड मैसेज आते रहें। इसे बंद करने से मैसेज आना रुक जाता है।</string>
+    <string name="icon_notes">नोट्स</string>
+    <string name="icon_weather">मौसम</string>
+    <string name="icon_tasks">काम</string>
+    <string name="icon_news">ख़बरें</string>
+    <string name="service_title_plain">सक्रिय</string>
+</resources>

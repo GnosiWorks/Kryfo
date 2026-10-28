@@ -74,6 +74,7 @@ Future<void> _loadFonts() async {
     'Noto Sans Cyrillic': ['NotoSans-Cyrillic.ttf'],
     'Noto Naskh Arabic': ['NotoNaskhArabic-Kryfo.ttf'],
     'Noto Sans Arabic': ['NotoSansArabic-Kryfo.ttf'],
+    'Noto Sans Devanagari': ['NotoSansDevanagari-Kryfo.ttf'],
   };
   for (final e in families.entries) {
     final loader = FontLoader(e.key);
@@ -311,7 +312,18 @@ void main() {
 
   // the pill's longest words, in the languages that run longest, beside
   // the three buttons at large text: nothing overflows, the id stays legible
-  for (final code in ['de', 'ru', 'pt', 'es', 'fr', 'tr', 'vi', 'fa', 'ar']) {
+  for (final code in [
+    'de',
+    'ru',
+    'pt',
+    'es',
+    'fr',
+    'tr',
+    'vi',
+    'fa',
+    'ar',
+    'hi',
+  ]) {
     for (final state in ['relay-wait', 'relay-down', 'climbing']) {
       testWidgets('the header fits the pill saying $state in $code', (t) async {
         addTearDown(() {

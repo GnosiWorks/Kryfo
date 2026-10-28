@@ -5368,6 +5368,23 @@ class AppLocalizationsUk extends AppLocalizations {
       'Перевірка лише на твоєму телефоні, нічого не залишає його';
 
   @override
+  String get typingNow => 'Друкує';
+
+  @override
+  String get settingsTypingIndicator => 'Індикатор набору';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'Ви обоє бачите, коли співрозмовник друкує. Це йде до нього напряму через Tor, ніколи через ретранслятор.';
+
+  @override
+  String get settingsTypingOnionOnly => 'Доступно на маршруті Onion';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      'Вимкнено, поки використовуються мости: той, хто стежить за вашим з’єднанням, міг би зіставити сигнали набору. Увімкнеться саме, коли мости вимкнено.';
+
+  @override
   String get settingsLightTheme => 'Світла тема';
 
   @override
@@ -5981,8 +5998,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get whyKryfoNothingLeaks => 'Нічого не витікає';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'Жодних звітів про прочитання чи індикаторів набору, які хтось отримує, жодного вивантаженого списку контактів. З більшості застосунків витікають метадані, а Kryfo створено так, щоб цього не було.';
+  String get whyKryfoNoReceiptsTyping =>
+      'Жодних звітів про прочитання, список контактів нікуди не вивантажується. Те, що ви друкуєте, бачить лише той, кому ви пишете, і лише напряму через Tor, ніколи через сервер. З більшості застосунків витікають метадані. Kryfo створено так, щоб цього не було.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Перевір, що це справді та людина';
@@ -7565,6 +7582,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get languageNameAr => 'Арабська';
+
+  @override
+  String get languageNameHi => 'Гінді';
 
   @override
   String get languageLaterLine =>

@@ -240,6 +240,8 @@ extension AppStateSession on AppState {
     final want = decoy ? _decoyDb : live;
     if (want == null) return;
     lockState.inDecoy = decoy;
+    // out of the decoy the bridges are seen again at once (typing)
+    if (!decoy) _typingBridgesRead();
     if (identical(_session.primary, want)) return;
     // no reads here: what home shows of the other session was read ahead,
     // and swapping it in costs the same whichever way it goes
@@ -372,6 +374,7 @@ extension AppStateSession on AppState {
       );
     }
     lockState.inDecoy = decoy;
+    if (!decoy) _typingBridgesRead();
     _dropOpened();
     _session = s;
     _quiet = decoy ? _decoyId : null;

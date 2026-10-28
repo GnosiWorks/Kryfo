@@ -12,11 +12,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart' show sha256;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
-import 'voice_format.dart' show takeCanWord, canWordHeld, canWordAll;
-
-/// the envelope's word for "this phone fetches files from the files
-/// service". every envelope this version wraps carries it
-const kDropsWire = 'fb';
+import 'typing.dart' show capsAfter, capsOfText, kCapDrops;
 
 /// the frame's field in an envelope
 const kDropWire = 'bl';
@@ -241,62 +237,77 @@ String dropDayAdd(({String day, int bytes, int files}) d, int size) =>
 
 // ---- which phones fetch from the files service ----
 
-/// on a contact's row and a member's, as the opus word is kept
-const kDropsCol = 'files_can';
+// the name 'fb' in the phone's caps list (typing.dart), kept on the
+// contacts row: a 1:1 frame's by the typing code, a group frame's here, on
+// the member's row whether it is a contact or a member's card
 
-Future<bool> takePeerDrops(
+/// what a group frame from [member] says their phone understands, on their
+/// row (capsAfter). true when it changed
+Future<bool> takeMemberCaps(
   Database db,
-  String peer, {
-  required bool carried,
-  required bool counts,
-  int? written,
-}) => takeCanWord(
-  db,
-  'contacts',
-  'halo_id = ? AND accepted = 1',
-  [peer],
-  col: kDropsCol,
-  carried: carried,
-  counts: counts,
-  written: written,
-);
-
-Future<bool> takeMemberDrops(
-  Database db,
-  String groupId,
   String member, {
-  required bool carried,
+  required List<String>? caps,
   required bool counts,
   int? written,
-}) => takeCanWord(
-  db,
-  'group_members',
-  'group_id = ? AND halo_id = ?',
-  [groupId, member],
-  col: kDropsCol,
-  carried: carried,
-  counts: counts,
-  written: written,
-);
+}) => db.transaction((t) async {
+  final r = await t.query(
+    'contacts',
+    columns: const ['caps', 'caps_at'],
+    where: 'halo_id = ?',
+    whereArgs: [member],
+    limit: 1,
+  );
+  // only a row that is there already: nothing is made for anyone
+  if (r.isEmpty) return false;
+  final next = capsAfter(
+    (r.first['caps'] as String?) ?? '',
+    (r.first['caps_at'] as num?)?.toInt() ?? 0,
+    carried: caps,
+    counts: counts,
+    written: written,
+  );
+  if (next == null) return false;
+  await t.update(
+    'contacts',
+    {'caps': next.caps, 'caps_at': next.at},
+    where: 'halo_id = ?',
+    whereArgs: [member],
+  );
+  return true;
+});
 
-Future<bool> peerTakesDrops(Database db, String peer) =>
-    canWordHeld(db, peer, col: kDropsCol);
+Future<bool> _fetches(DatabaseExecutor db, String peer) async {
+  final r = await db.query(
+    'contacts',
+    columns: const ['caps'],
+    where: 'halo_id = ?',
+    whereArgs: [peer],
+    limit: 1,
+  );
+  return r.isNotEmpty &&
+      capsOfText(r.first['caps'] as String?).contains(kCapDrops);
+}
 
-Future<bool> groupTakesDrops(Database db, String groupId, String me) =>
-    canWordAll(db, groupId, me, col: kDropsCol);
+/// [peer]'s phone fetches from the files service, as its newest word says
+Future<bool> peerTakesDrops(Database db, String peer) => _fetches(db, peer);
 
-// the upgrade to 88: the word beside the opus one, and the files coming in
-Future<void> dropColumns(
-  DatabaseExecutor db,
-  Future<void> Function(DatabaseExecutor, String) addColumn,
-) async {
-  for (final table in const ['contacts', 'group_members']) {
-    await addColumn(
-      db,
-      'ALTER TABLE $table ADD COLUMN $kDropsCol INTEGER NOT NULL DEFAULT 0',
-    );
+/// every member of [groupId] but [me] fetches from it. none known is no
+Future<bool> groupTakesDrops(Database db, String groupId, String me) async {
+  final r = await db.query(
+    'group_members',
+    columns: const ['halo_id'],
+    where: 'group_id = ?',
+    whereArgs: [groupId],
+  );
+  final others = [
+    for (final m in r)
+      if (m['halo_id'] != me) m['halo_id'] as String,
+  ];
+  if (others.isEmpty) return false;
+  for (final m in others) {
+    if (!await _fetches(db, m)) return false;
   }
-  await dropFetchTable(db);
+  return true;
 }
 
 // ---- files coming in ----

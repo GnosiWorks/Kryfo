@@ -147,7 +147,7 @@ class HaloDb
     _db = await openDatabase(
       path,
       password: pw,
-      version: 88,
+      version: 90,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -192,7 +192,8 @@ class HaloDb
             shots_by INTEGER NOT NULL DEFAULT 0,
             shots_when INTEGER NOT NULL DEFAULT 0,
             opus_can INTEGER NOT NULL DEFAULT 0,
-            files_can INTEGER NOT NULL DEFAULT 0
+            caps TEXT NOT NULL DEFAULT '',
+            caps_at INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -282,7 +283,6 @@ class HaloDb
             halo_id TEXT NOT NULL,
             joined_at INTEGER NOT NULL,
             opus_can INTEGER NOT NULL DEFAULT 0,
-            files_can INTEGER NOT NULL DEFAULT 0,
             PRIMARY KEY (group_id, halo_id),
             FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
           )
@@ -338,7 +338,7 @@ class HaloDb
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 to 86
+        // they add. 66 runs after it: it reads what they all make. 67 to 88
         // last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
@@ -870,9 +870,13 @@ class HaloDb
           await opusColumns(db);
         }
         if (oldV < 88) {
-          // which phones fetch from the files service, and the files on
-          // their way in from it (file_drop.dart)
-          await dropColumns(db, addColumn);
+          // what a contact's phone understands (typing.dart)
+          await capsColumns(db);
+        }
+        if (oldV < 90) {
+          // the files on their way in from the files service, and the ids
+          // of the ones already here (file_drop.dart)
+          await dropFetchTable(db);
         }
       },
     );
@@ -1142,6 +1146,19 @@ Future<void> opusColumns(DatabaseExecutor db) async {
       'ALTER TABLE $table ADD COLUMN $kOpusCol INTEGER NOT NULL DEFAULT 0',
     );
   }
+}
+
+// the upgrade to 88: what a contact's phone has said it understands, and
+// when by their clock (capsAfter)
+Future<void> capsColumns(DatabaseExecutor db) async {
+  await addColumn(
+    db,
+    "ALTER TABLE contacts ADD COLUMN caps TEXT NOT NULL DEFAULT ''",
+  );
+  await addColumn(
+    db,
+    'ALTER TABLE contacts ADD COLUMN caps_at INTEGER NOT NULL DEFAULT 0',
+  );
 }
 
 // the upgrade to 78. a row from before says when it came

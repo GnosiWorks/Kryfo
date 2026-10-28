@@ -100,6 +100,8 @@ class AppState extends ChangeNotifier {
 
   // signal, the engine and android, as the receive side reaches them
   final AppIo _io;
+  // who is typing, and when this phone may say it is (typing.dart)
+  final typing = Typing();
   // the hidden chats, as receiving sees them while their vault is shut
   final VaultRouter _router;
   // the pin entry, a new vault's file, the shade and the disk, as the

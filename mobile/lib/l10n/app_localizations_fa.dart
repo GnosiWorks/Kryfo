@@ -5284,6 +5284,23 @@ class AppLocalizationsFa extends AppLocalizations {
       'فقط روی گوشی شما بررسی می‌شود، چیزی از آن بیرون نمی‌رود';
 
   @override
+  String get typingNow => 'در حال نوشتن';
+
+  @override
+  String get settingsTypingIndicator => 'نشانگر نوشتن';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'هر دو می‌بینید کِی دیگری در حال نوشتن است. این نشانه مستقیم از راه Tor به او می‌رسد و هرگز از رله نمی‌گذرد.';
+
+  @override
+  String get settingsTypingOnionOnly => 'در مسیر Onion در دسترس است';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      'تا وقتی از پل‌ها استفاده می‌شود خاموش است: کسی که اتصالت را زیر نظر دارد می‌تواند نشانه‌های نوشتن را با هم تطبیق دهد. با خاموش شدن پل‌ها خودش برمی‌گردد.';
+
+  @override
   String get settingsLightTheme => 'پوسته‌ی روشن';
 
   @override
@@ -5887,8 +5904,8 @@ class AppLocalizationsFa extends AppLocalizations {
   String get whyKryfoNothingLeaks => 'هیچ چیز نشت نمی‌کند';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'نه رسید خواندن و نه نشانه‌ی «در حال نوشتن» به کسی داده نمی‌شود، و هیچ فهرست مخاطبی بارگذاری نمی‌شود. فراداده همان چیزی است که بیشتر برنامه‌ها نشت می‌دهند. Kryfo طوری ساخته شده که ندهد.';
+  String get whyKryfoNoReceiptsTyping =>
+      'نه رسید خواندن، نه بارگذاری فهرست مخاطبان. اینکه در حال نوشتنی را فقط کسی می‌بیند که برایش می‌نویسی، مستقیم از راه Tor و هرگز از راه سرور. بیشتر برنامه‌ها فراداده نشت می‌دهند. Kryfo طوری ساخته شده که ندهد.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'مطمئن شوید واقعاً خودش است';
@@ -7443,6 +7460,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get languageNameAr => 'عربی';
+
+  @override
+  String get languageNameHi => 'هندی';
 
   @override
   String get languageLaterLine =>

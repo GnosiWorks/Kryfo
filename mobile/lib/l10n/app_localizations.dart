@@ -11,6 +11,7 @@ import 'app_localizations_en.dart';
 import 'app_localizations_es.dart';
 import 'app_localizations_fa.dart';
 import 'app_localizations_fr.dart';
+import 'app_localizations_hi.dart';
 import 'app_localizations_id.dart';
 import 'app_localizations_it.dart';
 import 'app_localizations_pt.dart';
@@ -112,6 +113,7 @@ abstract class AppLocalizations {
     Locale('es'),
     Locale('fa'),
     Locale('fr'),
+    Locale('hi'),
     Locale('id'),
     Locale('it'),
     Locale('pt'),
@@ -8535,6 +8537,36 @@ abstract class AppLocalizations {
   /// **'Checked only on your phone, nothing leaves it'**
   String get settingsScamShieldHint;
 
+  /// screens/chat_screen.dart and home_screen.dart: under a contact's name and in their chat list row while they type, three dots follow it. one word, sentence case
+  ///
+  /// In en, this message translates to:
+  /// **'Typing'**
+  String get typingNow;
+
+  /// screens/settings_screen.dart: the typing indicator switch in privacy
+  ///
+  /// In en, this message translates to:
+  /// **'Typing indicator'**
+  String get settingsTypingIndicator;
+
+  /// screens/settings_screen.dart: under the typing indicator switch
+  ///
+  /// In en, this message translates to:
+  /// **'You both see when the other is typing. It goes straight to them over Tor, never through a relay.'**
+  String get settingsTypingIndicatorHint;
+
+  /// screens/settings_screen.dart: under the typing indicator switch, dimmed, while the route is relay or fast. same words as gettingMessagesHelperOnionOnly
+  ///
+  /// In en, this message translates to:
+  /// **'Available on the Onion route'**
+  String get settingsTypingOnionOnly;
+
+  /// screens/settings_screen.dart: under the typing indicator switch, dimmed, while tor goes through a bridge. the switch shows off then
+  ///
+  /// In en, this message translates to:
+  /// **'Off while bridges are in use: someone watching your connection could match the typing signals. It comes back by itself when bridges are off.'**
+  String get settingsTypingBridgesOff;
+
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
@@ -9534,8 +9566,8 @@ abstract class AppLocalizations {
   /// screens/why_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'No read receipts or typing tells handed to anyone, no contact list uploaded. Most apps leak metadata. Kryfo is built not to.'**
-  String get whyKryfoNoReadReceiptsOr;
+  /// **'No read receipts, no contact list uploaded. Typing shows only to the person you write to, straight over Tor, never through a server. Most apps leak metadata. Kryfo is built not to.'**
+  String get whyKryfoNoReceiptsTyping;
 
   /// screens/why_kryfo_screen.dart
   ///
@@ -12038,6 +12070,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Arabic'**
   String get languageNameAr;
+
+  /// the name of Hindi in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it
+  ///
+  /// In en, this message translates to:
+  /// **'Hindi'**
+  String get languageNameHi;
 
   /// under the title of the language sheet during onboarding: the choice is not final
   ///
@@ -15387,6 +15425,7 @@ class _AppLocalizationsDelegate
     'es',
     'fa',
     'fr',
+    'hi',
     'id',
     'it',
     'pt',
@@ -15428,6 +15467,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsFa();
     case 'fr':
       return AppLocalizationsFr();
+    case 'hi':
+      return AppLocalizationsHi();
     case 'id':
       return AppLocalizationsId();
     case 'it':

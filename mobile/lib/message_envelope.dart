@@ -9,9 +9,10 @@ import 'album.dart' show AlbumTag;
 import 'bidi_safe.dart';
 import 'chat_shots.dart' show ShotsWord, kShotsWire;
 import 'dlog.dart';
-import 'file_drop.dart' show DropFrame, kDropWire, kDropsWire;
+import 'file_drop.dart' show DropFrame, kDropWire;
 import 'media_resend.dart';
 import 'stickers/sticker_wire.dart' show StickerWire;
+import 'typing.dart' show capsFromWire, capsPut, kCapsWire, kTypingWire;
 import 'voice_format.dart' show kOpusWire;
 
 const _envelopePrefix = 'halo/1:';
@@ -63,11 +64,16 @@ class UnwrappedMessage {
   final bool endNotice;
   // 'op': the sender's phone plays opus voice notes (voice_format.dart)
   final bool playsOpus;
-  // 'fb': the sender's phone fetches from the files service (file_drop)
-  final bool takesDrops;
   // 'bl': the file is on the files service, not in slices (file_drop)
   final DropFrame? drop;
   final ShotsWord? shots; // 'ss': a 1:1 chat's screenshot block (chat_shots)
+  // 'ty': the sender is typing in a 1:1 chat (typing.dart). nothing else
+  // in the frame counts
+  final bool typing;
+  // 'cp': what the sender's phone understands, on every 1:1 frame and
+  // every group frame (a room's strips it). null
+  // from a version without it
+  final List<String>? caps;
   final AlbumTag? album; // 'al': its place in an album, on every slice
   // 'w': when the sender wrote it, ms by their clock. set once and kept on
   // every retry, so a copy wrapped again still says when it was written.
@@ -123,7 +129,8 @@ class UnwrappedMessage {
     this.writtenAt,
     this.endNotice = false,
     this.playsOpus = false,
-    this.takesDrops = false,
+    this.typing = false,
+    this.caps,
     this.drop,
   });
 }
@@ -374,7 +381,6 @@ Future<String> wrapMessage(
   final body = <String, dynamic>{'m': plain};
   body['w'] = writtenAt ?? DateTime.now().millisecondsSinceEpoch;
   body[kOpusWire] = 1;
-  body[kDropsWire] = 1;
   if (drop != null) body[kDropWire] = drop.toWire();
   if (sticker != null) body['st'] = sticker;
   if (supportMarker != null) body['sp'] = supportMarker;
@@ -441,7 +447,13 @@ Future<String> wrapMessage(
   if (burnSeconds != null && burnSeconds > 0) {
     body['b'] = burnSeconds;
   }
-  if (groupId != null) body['g'] = groupId;
+  if (groupId != null) {
+    body['g'] = groupId;
+    // what this phone understands, for each member to keep: a file goes to
+    // a group through the files service only when every phone in it can
+    // fetch from there. a 1:1 frame gets its list at the seal
+    capsPut(body);
+  }
   if (groupControl != null) body['gc'] = groupControl.toWire();
   return '$_envelopePrefix${jsonEncode(body)}';
 }
@@ -587,7 +599,8 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       },
       endNotice: json['ge'] == 1,
       playsOpus: json[kOpusWire] == 1,
-      takesDrops: json[kDropsWire] == 1,
+      typing: json[kTypingWire] == 1,
+      caps: capsFromWire(json[kCapsWire]),
       drop: DropFrame.fromWire(sent[kDropWire]),
     );
   } catch (e) {

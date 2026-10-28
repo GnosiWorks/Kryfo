@@ -87,7 +87,8 @@ void main() {
       }
     });
 
-    test('rides in an envelope and every envelope says the word', () async {
+    test('rides in an envelope; a group frame says what the phone '
+        'understands, fb with it', () async {
       final f = DropFrame.fromWire(_wire(t: _tok))!;
       final w = await wrapMessage(
         'cap',
@@ -98,14 +99,11 @@ void main() {
       final env = unwrapMessage(w);
       expect(env.drop!.toWire(), f.toWire());
       expect(env.fileB64, isNull);
-      expect(env.takesDrops, isTrue);
-      expect(unwrapMessage(await wrapMessage('hi')).takesDrops, isTrue);
-      // a version before says nothing, and only the word itself counts
-      expect(unwrapMessage('halo/1:{"m":"hi","w":5}').takesDrops, isFalse);
-      expect(
-        unwrapMessage('halo/1:{"m":"hi","w":5,"fb":"1"}').takesDrops,
-        isFalse,
-      );
+      // a 1:1 frame gets its list at the seal (shotsOnWire), not here
+      expect(env.caps, isNull);
+      final g = unwrapMessage(await wrapMessage('hi', groupId: 'g1'));
+      expect(g.caps, containsAll(['fb', 'ty']));
+      expect(w.contains('"fb"'), isFalse);
       expect(unwrapMessage('halo/1:{"m":"hi","bl":{"h":"x"}}').drop, isNull);
     });
   });
@@ -297,58 +295,45 @@ void main() {
       }
     });
 
-    test('a contact that said so, and only while it still says so', () async {
+    Future<void> said(String who, List<String>? caps, int at) =>
+        takeMemberCaps(db, who, caps: caps, counts: true, written: at);
+
+    test('a phone that said fb, and only while it still says so', () async {
       expect(await peerTakesDrops(db, 'calm-orbit'), isFalse);
-      await takePeerDrops(
-        db,
-        'calm-orbit',
-        carried: true,
-        counts: true,
-        written: 10,
-      );
+      await said('calm-orbit', ['ty', 'fb'], 10);
       expect(await peerTakesDrops(db, 'calm-orbit'), isTrue);
-      await takePeerDrops(
-        db,
-        'calm-orbit',
-        carried: false,
-        counts: true,
-        written: 20,
-      );
+      // a newer frame without it: the phone went back
+      await said('calm-orbit', ['ty'], 20);
+      expect(await peerTakesDrops(db, 'calm-orbit'), isFalse);
+      // an older one that had it changes nothing
+      await said('calm-orbit', ['fb'], 15);
       expect(await peerTakesDrops(db, 'calm-orbit'), isFalse);
     });
 
-    test('the word is its own: opus says nothing of files', () async {
-      await takePeerDrops(
-        db,
-        'calm-orbit',
-        carried: true,
-        counts: true,
-        written: 10,
-      );
+    test('kept on the shared caps row, nowhere of its own', () async {
+      await said('calm-orbit', ['fb'], 10);
       final r = db.rows('contacts').single;
-      expect(r['files_can'], isNot(0));
-      expect(r['opus_can'], 0);
+      expect(r['caps'], 'fb');
+      expect(r.containsKey('files_can'), isFalse);
     });
 
     test('a group only when every other member fetches', () async {
-      await takeMemberDrops(
-        db,
-        'g1',
-        'a',
-        carried: true,
-        counts: true,
-        written: 1,
-      );
+      for (final m in ['a', 'b']) {
+        await db.insert('contacts', {
+          'halo_id': m,
+          'onion': '',
+          'xpub': 'cd' * 32,
+          'first_seen': 1,
+          'last_seen': 1,
+          'accepted': 0,
+        });
+      }
+      await said('a', ['fb'], 1);
       expect(await groupTakesDrops(db, 'g1', 'me'), isFalse);
-      await takeMemberDrops(
-        db,
-        'g1',
-        'b',
-        carried: true,
-        counts: true,
-        written: 1,
-      );
+      // a member's card, never accepted, keeps the word too
+      await said('b', ['fb'], 1);
       expect(await groupTakesDrops(db, 'g1', 'me'), isTrue);
+      expect(await groupTakesDrops(db, 'none', 'me'), isFalse);
     });
   });
 
@@ -441,10 +426,11 @@ void main() {
     });
   });
 
-  test('a room frame says nothing of the files service', () async {
-    final w = await wrapMessage('hi', msgUid: 'u');
-    expect(w, contains('"fb":1'));
+  test('a room frame says nothing of what the phone understands', () async {
+    final w = await wrapMessage('hi', msgUid: 'u', groupId: 'g1');
+    expect(w, contains('"cp"'));
     final r = roomFrame(w, 'ab' * 32)!;
+    expect(r, isNot(contains('"cp"')));
     expect(r, isNot(contains('"fb"')));
   });
 }

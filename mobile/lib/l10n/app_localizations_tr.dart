@@ -5291,6 +5291,23 @@ class AppLocalizationsTr extends AppLocalizations {
       'Yalnızca telefonunda kontrol edilir, hiçbir şey dışarı çıkmaz';
 
   @override
+  String get typingNow => 'Yazıyor';
+
+  @override
+  String get settingsTypingIndicator => 'Yazıyor göstergesi';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'Karşı taraf yazarken ikiniz de görürsünüz. Doğrudan Tor üzerinden ona gider, asla bir aktarıcıdan geçmez.';
+
+  @override
+  String get settingsTypingOnionOnly => 'Onion rotasında kullanılabilir';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      'Köprüler kullanılırken kapalı: bağlantını izleyen biri yazıyor sinyallerini eşleştirebilir. Köprüler kapanınca kendiliğinden geri gelir.';
+
+  @override
   String get settingsLightTheme => 'Açık tema';
 
   @override
@@ -5895,8 +5912,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get whyKryfoNothingLeaks => 'Hiçbir şey sızmaz';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'Okundu bilgisi ya da yazıyor işareti kimseye verilmez, kişi listesi yüklenmez. Çoğu uygulamanın sızdırdığı şey meta veridir. Kryfo sızdırmayacak şekilde yapıldı.';
+  String get whyKryfoNoReceiptsTyping =>
+      'Okundu bilgisi yok, kişi listesi yüklenmez. Yazdığını yalnızca yazdığın kişi görür, doğrudan Tor üzerinden, asla bir sunucudan geçmeden. Çoğu uygulama meta veri sızdırır. Kryfo sızdırmayacak şekilde yapıldı.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Gerçekten o olduğunu doğrula';
@@ -7455,6 +7472,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get languageNameAr => 'Arapça';
+
+  @override
+  String get languageNameHi => 'Hintçe';
 
   @override
   String get languageLaterLine =>

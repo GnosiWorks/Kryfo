@@ -5268,6 +5268,23 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chỉ kiểm tra trên điện thoại của bạn, không gì rời khỏi máy';
 
   @override
+  String get typingNow => 'Đang nhập';
+
+  @override
+  String get settingsTypingIndicator => 'Báo đang nhập';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'Cả hai đều thấy khi người kia đang nhập. Tín hiệu đi thẳng tới họ qua Tor, không bao giờ qua máy chuyển tiếp.';
+
+  @override
+  String get settingsTypingOnionOnly => 'Có trên tuyến Onion';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      'Tắt khi đang dùng cầu nối: ai theo dõi kết nối của bạn có thể khớp các tín hiệu đang nhập. Tự bật lại khi tắt cầu nối.';
+
+  @override
   String get settingsLightTheme => 'Giao diện sáng';
 
   @override
@@ -5873,8 +5890,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get whyKryfoNothingLeaks => 'Không gì bị lộ';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'Không trao cho ai thông báo đã đọc hay dấu hiệu đang gõ, không tải danh bạ lên. Siêu dữ liệu là thứ hầu hết ứng dụng để lộ. Kryfo được xây dựng để không như vậy.';
+  String get whyKryfoNoReceiptsTyping =>
+      'Không có thông báo đã đọc, không tải danh bạ lên. Việc bạn đang nhập chỉ người bạn đang nhắn mới thấy, đi thẳng qua Tor, không bao giờ qua máy chủ. Hầu hết ứng dụng để lộ siêu dữ liệu. Kryfo được làm để không như vậy.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Xác minh đúng là họ';
@@ -7421,6 +7438,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get languageNameAr => 'Tiếng Ả Rập';
+
+  @override
+  String get languageNameHi => 'Tiếng Hindi';
 
   @override
   String get languageLaterLine =>

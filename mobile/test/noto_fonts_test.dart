@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the arabic subsets cover the spacing, punctuation, digits and direction
-// marks arabic and persian text uses. reads the cmaps of the committed fonts,
-// so a re-subset (assets/fonts/noto-subset.sh) cannot drop one.
+// marks arabic and persian text uses, and the devanagari one every letter
+// hindi's strings use. reads the cmaps of the committed fonts, so a
+// re-subset (assets/fonts/noto-subset.sh) cannot drop one.
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -110,4 +112,32 @@ void main() {
       }
     });
   }
+
+  test('the devanagari font has every letter the hindi strings use', () {
+    final maps = _unicodeMaps(
+      File('assets/fonts/NotoSansDevanagari-Kryfo.ttf').readAsBytesSync(),
+    );
+    final arb =
+        jsonDecode(File('lib/l10n/app_hi.arb').readAsStringSync())
+            as Map<String, dynamic>;
+    // devanagari, the joiners, and the rupee sign
+    bool ours(int c) =>
+        (c >= 0x0900 && c <= 0x097F) || c == 0x200C || c == 0x200D;
+    final used = {
+      for (final v in arb.values.whereType<String>())
+        for (final c in v.runes)
+          if (ours(c)) c,
+      0x20B9,
+    };
+    expect(used.length, greaterThan(40));
+    expect(maps, isNotEmpty);
+    for (final m in maps) {
+      expect([
+        for (final c in used)
+          if (!m.contains(c)) _hex(c),
+      ], isEmpty);
+      // latin stays with our own fonts
+      expect(m.contains(0x41), isFalse);
+    }
+  });
 }

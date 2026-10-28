@@ -16,11 +16,13 @@ package main
 import (
 	"bufio"
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -59,6 +61,10 @@ type doorStream struct {
 
 	wmu sync.Mutex // one line on the wire at a time
 
+	// the dial gave up on the budget of the line that started it, not on
+	// the door: a line that waited on it with time left dials again
+	cutShort bool
+
 	mu      sync.Mutex
 	waiting []chan error // one per line written, in order
 	acks    int
@@ -88,6 +94,18 @@ func doorOneLineOnly(onion string) bool {
 // the kept stream to onion, or a new one. fresh says it was dialled for
 // this line. lines that come while it is being dialled wait for it.
 func doorGet(ctx context.Context, t *tor.Tor, onion string) (*doorStream, bool, error) {
+	for {
+		s, fresh, err := doorGetOnce(ctx, t, onion)
+		if s == nil && !fresh && errors.Is(err, errDialCutShort) && ctx.Err() == nil {
+			continue
+		}
+		return s, fresh, err
+	}
+}
+
+var errDialCutShort = errors.New("dial ran out of its line's budget")
+
+func doorGetOnce(ctx context.Context, t *tor.Tor, onion string) (*doorStream, bool, error) {
 	doorMu.Lock()
 	if s := doorStreams[onion]; s != nil {
 		s.mu.Lock()
@@ -109,6 +127,9 @@ func doorGet(ctx context.Context, t *tor.Tor, onion string) (*doorStream, bool, 
 			}
 			if s.conn == nil {
 				s.done()
+				if s.cutShort {
+					return nil, false, errDialCutShort
+				}
 				return nil, false, s.err
 			}
 			return s, false, nil
@@ -124,6 +145,8 @@ func doorGet(ctx context.Context, t *tor.Tor, onion string) (*doorStream, bool, 
 		s.mu.Lock()
 		s.err = err
 		s.mu.Unlock()
+		// read by waiters only after ready closes
+		s.cutShort = ctx.Err() != nil
 		doorMu.Lock()
 		if doorStreams[onion] == s {
 			delete(doorStreams, onion)
@@ -152,6 +175,13 @@ func doorDial(ctx context.Context, t *tor.Tor, onion string) (net.Conn, error) {
 
 // one line, and its ack
 func (s *doorStream) send(line string) error {
+	return s.sendWithin(line, 10*time.Second, 15*time.Second, true)
+}
+
+// one line, its write and its ack each given their own wait. giveUp says a
+// late ack ends the stream; without it the line just stops waiting and the
+// ack, when it comes, is read off in its turn
+func (s *doorStream) sendWithin(line string, write, ack time.Duration, giveUp bool) error {
 	ch := make(chan error, 1)
 	s.wmu.Lock()
 	s.mu.Lock()
@@ -163,7 +193,7 @@ func (s *doorStream) send(line string) error {
 	}
 	s.waiting = append(s.waiting, ch)
 	s.mu.Unlock()
-	s.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+	s.conn.SetWriteDeadline(time.Now().Add(write))
 	_, err := s.conn.Write([]byte(line + "\n"))
 	s.wmu.Unlock()
 	if err != nil {
@@ -173,7 +203,10 @@ func (s *doorStream) send(line string) error {
 	select {
 	case err := <-ch:
 		return err
-	case <-time.After(15 * time.Second):
+	case <-time.After(ack):
+		if !giveUp {
+			return errors.New("no ack: timeout")
+		}
 		s.fail(errors.New("no ack: timeout"), false)
 		return <-ch
 	}
@@ -360,4 +393,91 @@ func readDoorLine(r *bufio.Reader) (string, error) {
 		}
 		return string(b), nil
 	}
+}
+
+// how long a typing line may take in all, dial included
+var typingBudget = 8 * time.Second
+
+// a typing line is one short whisper message, never an opener
+const typingLineMost = 4096
+
+var (
+	errTypingRoute = errors.New("not on the onion route")
+	errTypingShape = errors.New("not a typing line")
+	errTypingTo    = errors.New("not an onion")
+)
+
+// a typing line to a peer's door: the private route only, on the kept
+// stream or one dial, inside typingBudget. it is worth nothing once late,
+// so it is never kept for later. the one second try is for a kept stream
+// the door shut under it, as it does each doorLife, so steady typing does
+// not go dark
+func sendTyping(t *tor.Tor, onion, line string) error {
+	if currentMode() != modePrivate {
+		return errTypingRoute
+	}
+	if !strings.HasSuffix(onion, ".onion") || strings.ContainsAny(onion, ":/ ") {
+		return errTypingTo
+	}
+	if len(line) > typingLineMost || !inboxShapeOK(line) {
+		return errTypingShape
+	}
+	if raw, _ := base64.StdEncoding.DecodeString(line); raw[0] != 2 {
+		return errTypingShape
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), typingBudget)
+	defer cancel()
+	if doorOneLineOnly(onion) {
+		return sendOneLineBy(ctx, t, onion, line)
+	}
+	s, fresh, err := doorGet(ctx, t, onion)
+	if err != nil {
+		return err
+	}
+	err = typingOn(ctx, s, line)
+	var shut doorShut
+	if err == nil || fresh || !errors.As(err, &shut) || ctx.Err() != nil {
+		return err
+	}
+	if doorOneLineOnly(onion) {
+		return sendOneLineBy(ctx, t, onion, line)
+	}
+	s, _, err = doorGet(ctx, t, onion)
+	if err != nil {
+		return err
+	}
+	return typingOn(ctx, s, line)
+}
+
+// one typing line on s, in what is left of the budget. a late ack leaves
+// the stream to the lines behind it
+func typingOn(ctx context.Context, s *doorStream, line string) error {
+	defer s.done()
+	left := time.Until(deadlineOf(ctx))
+	if left <= 0 {
+		return ctx.Err()
+	}
+	return s.sendWithin(line, left, left, false)
+}
+
+func deadlineOf(ctx context.Context) time.Time {
+	d, _ := ctx.Deadline()
+	return d
+}
+
+// sendOneLine held to the deadline of ctx
+func sendOneLineBy(ctx context.Context, t *tor.Tor, onion, line string) error {
+	conn, err := doorDial(ctx, t, onion)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+	conn.SetDeadline(deadlineOf(ctx))
+	if _, err := conn.Write([]byte(line + "\n")); err != nil {
+		return fmt.Errorf("write: %v", err)
+	}
+	if err := readAck(conn); err != nil {
+		return fmt.Errorf("no ack: %v", err)
+	}
+	return nil
 }

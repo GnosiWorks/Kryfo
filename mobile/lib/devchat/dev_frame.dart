@@ -34,9 +34,9 @@ final kDevPow = _set('pw pb');
 // who sent it. out, rewritten; in, checked against his pinned key
 final kDevSender = _set('h e x o');
 
-// the face, the supporter tier and the files word: never sent to him, never
-// taken from him
-final kDevIgnored = _set('av bg fb');
+// the face, the supporter tier and what a phone understands: never sent to
+// him, never taken from him
+final kDevIgnored = _set('av bg cp');
 
 // group controls and rosters, an ended group's words, introductions and
 // polls, a file on the files service: no such frame goes to him or is taken

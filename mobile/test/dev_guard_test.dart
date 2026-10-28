@@ -122,6 +122,13 @@ List<Map<String, Object?>> _kept(MemDb db, String table, String address) => [
 // signal and the engine as the receive side reaches them: what a cipher
 // opens to, and a note of every call
 class _Io implements AppIo {
+  // nothing here types
+  @override
+  Future<String> typingSeal(String peer, String plain) =>
+      throw UnimplementedError('typingSeal');
+  @override
+  Future<String> typingSend(String onion, String cipher) =>
+      throw UnimplementedError('typingSend');
   @override
   Future<String> pinFirst(List<String> xPubs) async => 'ok';
   @override
@@ -1585,7 +1592,7 @@ void main() {
       final files = Directory(
         'lib/l10n',
       ).listSync().map((f) => f.path).where((f) => f.endsWith('.arb')).toList();
-      expect(files, hasLength(15));
+      expect(files, hasLength(16));
       for (final f in files) {
         final arb = jsonDecode(File(f).readAsStringSync()) as Map;
         expect(arb['devLinkMismatch'], contains('Marios'), reason: f);
