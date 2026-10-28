@@ -11,6 +11,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
+
+import 'pin_key_fakes.dart' show fakeX;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FakeStore implements LockStore {
@@ -86,8 +88,11 @@ class FakeEngine implements PinEngine {
   Future<Map<String, dynamic>> check(
     String pin,
     String table,
-    String legacy,
-  ) async {
+    String legacy, {
+    PinMac? mac,
+    String key = '',
+  }) async {
+    if (mac != null) await mac(fakeX(pin));
     calls.add('check');
     final e = _t(table)['e'] as Map<String, dynamic>;
     final l = jsonDecode(legacy) as Map<String, dynamic>;
@@ -124,8 +129,11 @@ class FakeEngine implements PinEngine {
     int index,
     int kind,
     String container,
-    String wrapPlain,
-  ) async {
+    String wrapPlain, {
+    PinMac? mac,
+    String key = '',
+  }) async {
+    if (mac != null) await mac(fakeX(pin));
     calls.add('setup');
     final t = _t(table);
     final e = Map<String, dynamic>.from(t['e'] as Map);
@@ -143,8 +151,14 @@ class FakeEngine implements PinEngine {
     String newPin,
     String table,
     String legacy,
-    int index,
-  ) async {
+    int index, {
+    PinMac? mac,
+    String key = '',
+  }) async {
+    if (mac != null) {
+      await mac(fakeX(oldPin));
+      await mac(fakeX(newPin));
+    }
     calls.add('rewrap');
     final t = _t(table);
     final e = Map<String, dynamic>.from(t['e'] as Map);
@@ -1060,8 +1074,10 @@ void main() {
       store.log.clear();
       engine.calls.clear();
       lock = await make();
+      // and the update card is due: the table is from before the pin key
       expect(store.log.where((l) => !l.startsWith('r ')), [
         'w halo.lock.table',
+        'w halo.lock.card',
       ]);
       expect(engine.calls.where((c) => c == 'upgrade'), hasLength(1));
       expect(jsonDecode(store.m['halo.lock.table']!)['v'], 2);

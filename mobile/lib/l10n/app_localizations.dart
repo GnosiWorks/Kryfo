@@ -14948,6 +14948,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'While a plain icon is on, new photos, videos and files are saved with ordinary names in your phone’s usual folders. What was saved before stays where it is.'**
   String get iconSheetSaves;
+
+  /// widgets/pass_pad.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Passphrase'**
+  String get passFieldLabel;
+
+  /// widgets/pass_pad.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Use letters'**
+  String get padUseLetters;
+
+  /// widgets/pass_pad.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Use digits'**
+  String get padUseDigits;
+
+  /// widgets/pass_pad.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Weak'**
+  String get passWeak;
+
+  /// widgets/pass_pad.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Fair'**
+  String get passFair;
+
+  /// widgets/pass_pad.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Strong'**
+  String get passStrong;
+
+  /// widgets/pass_pad.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Strength: {level}'**
+  String passStrengthIs(Object level);
+
+  /// screens/lock_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'The phone\'s security chip is busy. Try again in a moment.'**
+  String get lockKeyBusy;
+
+  /// screens/lock_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock your phone with its own PIN once, then try again.'**
+  String get lockKeyLocked;
+
+  /// screens/lock_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Still checking with the phone\'s security chip'**
+  String get lockKeyWaiting;
+
+  /// screens/lock_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'This phone lost the key that checks your PINs, so some PINs may not open. Kryfo can be reset and a backup restored.'**
+  String get lockKeyLost;
+
+  /// screens/lock_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Kryfo'**
+  String get lockKeyReset;
+
+  /// screens/lock_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Kryfo?'**
+  String get lockKeyResetTitle;
+
+  /// screens/lock_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Everything in Kryfo on this phone is deleted and Kryfo closes. Then you can restore a backup. Hidden chats come back only from a backup made while they were open.'**
+  String get lockKeyResetLine;
+
+  /// screens/lock_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'This cannot be undone'**
+  String get lockKeyResetSureTitle;
+
+  /// screens/lock_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'All chats, keys and settings in Kryfo on this phone go now.'**
+  String get lockKeyResetSureLine;
+
+  /// screens/lock_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Delete everything'**
+  String get lockKeyResetSure;
+
+  /// screens/pin_flow_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'At least 12 characters. The phone\'s keyboard sees what you type, so use one that does not learn or sync words.'**
+  String get flowVaultPassLine;
+
+  /// screens/pin_flow_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'The same passphrase again'**
+  String get flowVaultPassAgain;
+
+  /// screens/pins_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Finish the security update'**
+  String get cardTitle;
+
+  /// screens/pins_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'If you use other PINs, type them once here.'**
+  String get cardLine;
+
+  /// screens/pins_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Type a PIN'**
+  String get cardType;
+
+  /// screens/update_pins_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Done. Type another, or tap Done when you are finished.'**
+  String get cardAnswer;
+
+  /// screens/pins_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Your PINs only work on this phone. If the phone ever loses the key that checks them, you will have to reset Kryfo and restore a backup. Hidden chats come back only from a backup made while they were open.'**
+  String get keyLine;
+
+  /// screens/pins_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Your PINs only work on this phone, and only while it is unlocked. If the phone ever loses the key that checks them, you will have to reset Kryfo and restore a backup. Hidden chats come back only from a backup made while they were open.'**
+  String get keyLineUnlocked;
+
+  /// screens/pins_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Set a screen lock on your phone so this protection holds when it is locked.'**
+  String get keyLineScreenLock;
 }
 
 class _AppLocalizationsDelegate

@@ -13,6 +13,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
+
+import 'pin_key_fakes.dart' show fakeX;
 import 'package:kryfo/screens/hide_picker.dart';
 import 'package:kryfo/screens/pin_flow_screen.dart';
 
@@ -52,8 +54,11 @@ class MemEngine implements PinEngine {
   Future<Map<String, dynamic>> check(
     String pin,
     String table,
-    String legacy,
-  ) async {
+    String legacy, {
+    PinMac? mac,
+    String key = '',
+  }) async {
+    if (mac != null) await mac(fakeX(pin));
     var r = <String, dynamic>{
       'i': -1,
       'k': 0,
@@ -85,8 +90,11 @@ class MemEngine implements PinEngine {
     int index,
     int kind,
     String container,
-    String wrapPlain,
-  ) async {
+    String wrapPlain, {
+    PinMac? mac,
+    String key = '',
+  }) async {
+    if (mac != null) await mac(fakeX(pin));
     final t = _t(table);
     final e = Map<String, dynamic>.from(t['e'] as Map);
     if (_clashes(e, index, pin)) throw PinCollision();
@@ -102,8 +110,14 @@ class MemEngine implements PinEngine {
     String newPin,
     String table,
     String legacy,
-    int index,
-  ) async {
+    int index, {
+    PinMac? mac,
+    String key = '',
+  }) async {
+    if (mac != null) {
+      await mac(fakeX(oldPin));
+      await mac(fakeX(newPin));
+    }
     final t = _t(table);
     final e = Map<String, dynamic>.from(t['e'] as Map);
     final at = e['$index'] as Map?;

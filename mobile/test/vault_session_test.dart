@@ -1384,9 +1384,15 @@ class _CountingStore implements LockStore {
 class _CountingEngine extends MemEngine {
   var checks = 0;
   @override
-  Future<Map<String, dynamic>> check(String pin, String table, String legacy) {
+  Future<Map<String, dynamic>> check(
+    String pin,
+    String table,
+    String legacy, {
+    PinMac? mac,
+    String key = '',
+  }) {
     checks++;
-    return super.check(pin, table, legacy);
+    return super.check(pin, table, legacy, mac: mac, key: key);
   }
 }
 

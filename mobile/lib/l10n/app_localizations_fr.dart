@@ -9358,4 +9358,96 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get iconSheetSaves =>
       'Tant qu’une icône neutre est active, les nouvelles photos, vidéos et fichiers sont enregistrés sous des noms ordinaires dans les dossiers habituels de votre téléphone. Ce qui est déjà enregistré reste où il est.';
+
+  @override
+  String get passFieldLabel => 'Phrase secrète';
+
+  @override
+  String get padUseLetters => 'Utiliser des lettres';
+
+  @override
+  String get padUseDigits => 'Utiliser des chiffres';
+
+  @override
+  String get passWeak => 'Faible';
+
+  @override
+  String get passFair => 'Correcte';
+
+  @override
+  String get passStrong => 'Forte';
+
+  @override
+  String passStrengthIs(Object level) {
+    return 'Solidité : $level';
+  }
+
+  @override
+  String get lockKeyBusy =>
+      'La puce de sécurité du téléphone est occupée. Réessayez dans un instant.';
+
+  @override
+  String get lockKeyLocked =>
+      'Déverrouillez une fois votre téléphone avec son propre code PIN, puis réessayez.';
+
+  @override
+  String get lockKeyWaiting =>
+      'La puce de sécurité du téléphone vérifie encore';
+
+  @override
+  String get lockKeyLost =>
+      'Ce téléphone a perdu la clé qui vérifie vos codes PIN, certains codes PIN risquent donc de ne pas ouvrir. Vous pouvez réinitialiser Kryfo et restaurer une sauvegarde.';
+
+  @override
+  String get lockKeyReset => 'Réinitialiser Kryfo';
+
+  @override
+  String get lockKeyResetTitle => 'Réinitialiser Kryfo ?';
+
+  @override
+  String get lockKeyResetLine =>
+      'Tout ce que Kryfo contient sur ce téléphone est effacé et Kryfo se ferme. Vous pourrez ensuite restaurer une sauvegarde. Les discussions masquées ne reviennent que d’une sauvegarde faite pendant qu’elles étaient ouvertes.';
+
+  @override
+  String get lockKeyResetSureTitle => 'Impossible de revenir en arrière';
+
+  @override
+  String get lockKeyResetSureLine =>
+      'Toutes les discussions, clés et réglages de Kryfo sur ce téléphone disparaissent maintenant.';
+
+  @override
+  String get lockKeyResetSure => 'Tout effacer';
+
+  @override
+  String get flowVaultPassLine =>
+      'Au moins 12 caractères. Le clavier du téléphone voit ce que vous tapez : choisissez-en un qui n’apprend ni ne synchronise les mots.';
+
+  @override
+  String get flowVaultPassAgain => 'La même phrase secrète encore une fois';
+
+  @override
+  String get cardTitle => 'Terminer la mise à jour de sécurité';
+
+  @override
+  String get cardLine =>
+      'Si vous utilisez d’autres codes PIN, tapez-les une fois ici.';
+
+  @override
+  String get cardType => 'Taper un code PIN';
+
+  @override
+  String get cardAnswer =>
+      'C’est fait. Tapez-en un autre, ou touchez Terminé quand vous avez fini.';
+
+  @override
+  String get keyLine =>
+      'Vos codes PIN ne fonctionnent que sur ce téléphone. Si le téléphone perd un jour la clé qui les vérifie, il faudra réinitialiser Kryfo et restaurer une sauvegarde. Les discussions masquées ne reviennent que d’une sauvegarde faite pendant qu’elles étaient ouvertes.';
+
+  @override
+  String get keyLineUnlocked =>
+      'Vos codes PIN ne fonctionnent que sur ce téléphone, et seulement quand il est déverrouillé. Si le téléphone perd un jour la clé qui les vérifie, il faudra réinitialiser Kryfo et restaurer une sauvegarde. Les discussions masquées ne reviennent que d’une sauvegarde faite pendant qu’elles étaient ouvertes.';
+
+  @override
+  String get keyLineScreenLock =>
+      'Activez un verrouillage d’écran sur votre téléphone pour que cette protection tienne quand il est verrouillé.';
 }
