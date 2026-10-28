@@ -1197,7 +1197,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cameraCouldNotSaveA => '无法在这部手机上保存副本';
 
   @override
-  String get cameraTooLongForA => '太长，无法作为消息发送 · 最大 15 MB';
+  String get cameraTooLongForA => '太长，无法作为消息发送 · 最大 50 MB';
 
   @override
   String get cameraNeverSavedToYour => '不会保存到你的相册';
@@ -2192,6 +2192,38 @@ class AppLocalizationsZh extends AppLocalizations {
   String get donateBadgesStartAt20 => '徽章 \$20 起';
 
   @override
+  String get donateShowTheAddress => '显示地址';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount，以 bitcoin 支付';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => '徽章能给你什么';
+
+  @override
+  String get donateGivesMark => '名字旁边的一个标记。给谁看、给不给人看，都由你决定。';
+
+  @override
+  String get donateGivesReceipt => '一张保存在这台手机上的签名收据。无需任何账号即可证明徽章。';
+
+  @override
+  String get donateGivesFree => '无论有没有徽章，所有隐私功能都一直免费。';
+
+  @override
+  String get donateAddressOnTap => '点下方按钮时才会生成地址。它在一小时内都归你，回来时还是同一个。';
+
+  @override
+  String get donateBitcoinBusy => 'Bitcoin 现在很忙。请稍后再试，或用银行卡支付。';
+
+  @override
+  String get donateBusyPlainAddress => '你仍然可以向下方地址发送 bitcoin，但不会获得徽章。';
+
+  @override
+  String get donateSameAddressAgain => '这是你之前打开的地址。如果已经发送，请在这里等待。';
+
+  @override
   String get donateReachingThePaymentService => '正在经由 Tor 连接支付服务…';
 
   @override
@@ -2275,6 +2307,17 @@ class AppLocalizationsZh extends AppLocalizations {
       'patron': '已在链上验证——你现在是赞助人了。谁也拿不走。',
       'guardian': '已在链上验证——你现在是守护者了。谁也拿不走。',
       'other': '已在链上验证——你现在是支持者了。谁也拿不走。',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '已在链上验证。感谢你再次支持。你的支持者徽章保持不变。',
+      'patron': '已在链上验证。感谢你再次支持。你的赞助人徽章保持不变。',
+      'guardian': '已在链上验证。感谢你再次支持。你的守护者徽章保持不变。',
+      'other': '已在链上验证。感谢你再次支持。你的支持者徽章保持不变。',
     });
     return '$_temp0';
   }
@@ -7872,6 +7915,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devWhoChoiceStays => '你的选择会一直跟着这个聊天。';
 
   @override
+  String get devUpdateToWrite => '更新 Kryfo 后即可给 Marios 发消息。';
+
+  @override
   String get devKeyCheckFailed => '无法核对 Marios 的密钥。什么都没有发送。';
 
   @override
@@ -7928,6 +7974,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appYourOwnInvite => '这是你自己的邀请。分享给别人才能互相连接。';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id 需要先更新 Kryfo，你们才能互相添加。';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9072,6 +9123,110 @@ class AppLocalizationsZh extends AppLocalizations {
   String get keyLineScreenLock => '请为手机设置屏幕锁，这样手机锁定时这层保护依然有效。';
 
   @override
+  String get fileServerTryLater => '文件服务器暂时已满，请稍后再试。';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return '这个文件有 $size。在所有人更新 Kryfo 之前，这个聊天里的文件最大为 $max。';
+  }
+
+  @override
+  String get fileDayLimit => '你今天已经发送了很多大文件，请明天再试。';
+
+  @override
+  String get mediaProgressPreparing => '正在准备 · 请保持应用打开';
+
+  @override
+  String get groupShotsBlocksAll =>
+      '在这个群组的每部手机上禁止截屏和录屏，也禁止复制、转发或保存彼此的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
+
+  @override
+  String get groupShotsStartsWhenAll => '等这里的所有人更新 Kryfo';
+
+  @override
+  String get groupShotsOnForAll => '对这里的所有人开启';
+
+  @override
+  String get groupShotsOffAdminOnly => '已关闭。只有管理员能更改';
+
+  @override
+  String get groupShotsWaitAdminOnly => '等这里的所有人更新 Kryfo。只有管理员能更改';
+
+  @override
+  String get groupShotsOnAdminOnly => '对这里的所有人开启。只有管理员能更改';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '还在等 $countString 人',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => '还没更新的人';
+
+  @override
+  String get groupShotsWaitingHint => '这些人更新 Kryfo 后，禁止截屏就对所有人生效。点一个人可以把他移出群组。';
+
+  @override
+  String get groupShotsNeedsUpdate => '需要更新 Kryfo，或之后一直没上线';
+
+  @override
+  String get groupShotsBlockedByYou => '已被你屏蔽';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      '你开启了禁止截屏。等这里的所有人都更新 Kryfo 后，它会对所有人生效。';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name 开启了禁止截屏。等这里的所有人都更新 Kryfo 后，它会对所有人生效。';
+  }
+
+  @override
+  String get groupShotsStarted => '禁止截屏已对这里的所有人开启。复制、转发和保存彼此的消息也已关闭。';
+
+  @override
+  String get groupShotsPaused => '这里有人还不能禁止截屏。他更新 Kryfo 后，会再次对所有人生效。';
+
+  @override
+  String get groupShotsCantYet => '还不能禁止截屏';
+
+  @override
+  String get groupShotsAddTitle => '仍要添加吗？';
+
+  @override
+  String get groupShotsAddPauses => '在他更新 Kryfo 之前，禁止截屏不会对这里的所有人生效。';
+
+  @override
+  String get groupShotsLeaveStays => '禁止截屏会保持现状。';
+
+  @override
+  String get groupShotsBlockedHere => 'Kryfo 已在此群组中禁止截屏';
+
+  @override
+  String get groupShotsMenuNote => '此群组中不能复制、转发或保存别人的消息';
+
+  @override
+  String get groupShotsKeptOpen => '此群组中不能用其他应用打开别人的文件';
+
+  @override
+  String get groupShotsOldNotice => '我在这个群组开启了禁止截屏。你的 Kryfo 还做不到，请更新一下。';
+
+  @override
+  String get captureShotTaken => '已截屏。没有通知任何其他人。';
+
+  @override
+  String get captureRecording => '此屏幕正在被录制。没有通知任何其他人。';
+
+  @override
   String get settingsDevices => '设备';
 
   @override
@@ -9297,6 +9452,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get desktopFolderNotPrivate => 'Kryfo 无法把它的文件夹设为只有你能访问，所以不会打开。';
+
+  @override
+  String get desktopLockOtherVersion => '这个锁是另一个版本的 Kryfo 创建的，当前版本无法读取。';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo 运行时需要内存中的一个私有文件夹，而这台电脑没有提供，所以 Kryfo 不会打开。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -10492,7 +10654,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cameraCouldNotSaveA => '無法在這支手機上儲存副本';
 
   @override
-  String get cameraTooLongForA => '太長了，無法用訊息傳送 · 上限 15 MB';
+  String get cameraTooLongForA => '太長了，無法用訊息傳送 · 上限 50 MB';
 
   @override
   String get cameraNeverSavedToYour => '不會存到你的相簿';
@@ -11486,6 +11648,38 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get donateBadgesStartAt20 => '徽章從 \$20 起';
 
   @override
+  String get donateShowTheAddress => '顯示地址';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount，以 bitcoin 付款';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => '徽章能給你什麼';
+
+  @override
+  String get donateGivesMark => '名字旁的一個標記。給誰看、給不給人看，都由你決定。';
+
+  @override
+  String get donateGivesReceipt => '一張保存在這支手機上的簽名收據。不需任何帳號就能證明徽章。';
+
+  @override
+  String get donateGivesFree => '無論有沒有徽章，所有隱私功能都一直免費。';
+
+  @override
+  String get donateAddressOnTap => '點下方按鈕時才會產生地址。它在一小時內都屬於你，回來時還是同一個。';
+
+  @override
+  String get donateBitcoinBusy => 'Bitcoin 現在很忙。請稍後再試，或刷卡付款。';
+
+  @override
+  String get donateBusyPlainAddress => '你仍然可以向下方地址傳送 bitcoin，但不會獲得徽章。';
+
+  @override
+  String get donateSameAddressAgain => '這是你之前開啟的地址。如果已經傳送，請在這裡等候。';
+
+  @override
   String get donateReachingThePaymentService => '正在經由 Tor 連線到付款服務…';
 
   @override
@@ -11569,6 +11763,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       'patron': '已在鏈上驗證：你現在是贊助人了。沒有人能把這拿走。',
       'guardian': '已在鏈上驗證：你現在是守護者了。沒有人能把這拿走。',
       'other': '已在鏈上驗證：你現在是支持者了。沒有人能把這拿走。',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '已在鏈上驗證。感謝你再次支持。你的支持者徽章維持不變。',
+      'patron': '已在鏈上驗證。感謝你再次支持。你的贊助人徽章維持不變。',
+      'guardian': '已在鏈上驗證。感謝你再次支持。你的守護者徽章維持不變。',
+      'other': '已在鏈上驗證。感謝你再次支持。你的支持者徽章維持不變。',
     });
     return '$_temp0';
   }
@@ -17049,6 +17254,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devWhoChoiceStays => '你的選擇會一直跟著這個聊天。';
 
   @override
+  String get devUpdateToWrite => '更新 Kryfo 後即可傳訊息給 Marios。';
+
+  @override
   String get devKeyCheckFailed => '無法核對 Marios 的金鑰。什麼都沒有傳送。';
 
   @override
@@ -17105,6 +17313,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get appYourOwnInvite => '這是你自己的邀請。分享給別人才能互相連線。';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id 需要先更新 Kryfo，你們才能互相新增。';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -18250,6 +18463,110 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get keyLineScreenLock => '請為手機設定螢幕鎖定，這樣手機鎖定時這層保護依然有效。';
 
   @override
+  String get fileServerTryLater => '檔案伺服器暫時已滿，請稍後再試。';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return '這個檔案有 $size。在所有人更新 Kryfo 之前，這個聊天裡的檔案最大為 $max。';
+  }
+
+  @override
+  String get fileDayLimit => '你今天已經傳送了很多大檔案，請明天再試。';
+
+  @override
+  String get mediaProgressPreparing => '正在準備 · 請保持 App 開啟';
+
+  @override
+  String get groupShotsBlocksAll =>
+      '在這個群組的每支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存彼此的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
+
+  @override
+  String get groupShotsStartsWhenAll => '等這裡的所有人更新 Kryfo';
+
+  @override
+  String get groupShotsOnForAll => '對這裡的所有人開啟';
+
+  @override
+  String get groupShotsOffAdminOnly => '已關閉。只有管理員能變更';
+
+  @override
+  String get groupShotsWaitAdminOnly => '等這裡的所有人更新 Kryfo。只有管理員能變更';
+
+  @override
+  String get groupShotsOnAdminOnly => '對這裡的所有人開啟。只有管理員能變更';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '還在等 $countString 人',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => '還沒更新的人';
+
+  @override
+  String get groupShotsWaitingHint => '這些人更新 Kryfo 後，禁止截圖就對所有人生效。點一個人可以把他移出群組。';
+
+  @override
+  String get groupShotsNeedsUpdate => '需要更新 Kryfo，或之後一直沒上線';
+
+  @override
+  String get groupShotsBlockedByYou => '已被你封鎖';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      '你開啟了禁止截圖。等這裡的所有人都更新 Kryfo 後，它會對所有人生效。';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name 開啟了禁止截圖。等這裡的所有人都更新 Kryfo 後，它會對所有人生效。';
+  }
+
+  @override
+  String get groupShotsStarted => '禁止截圖已對這裡的所有人開啟。複製、轉傳和儲存彼此的訊息也已關閉。';
+
+  @override
+  String get groupShotsPaused => '這裡有人還不能禁止截圖。他更新 Kryfo 後，會再次對所有人生效。';
+
+  @override
+  String get groupShotsCantYet => '還不能禁止截圖';
+
+  @override
+  String get groupShotsAddTitle => '仍要新增嗎？';
+
+  @override
+  String get groupShotsAddPauses => '在他更新 Kryfo 之前，禁止截圖不會對這裡的所有人生效。';
+
+  @override
+  String get groupShotsLeaveStays => '禁止截圖會維持現狀。';
+
+  @override
+  String get groupShotsBlockedHere => 'Kryfo 已在此群組中禁止截圖';
+
+  @override
+  String get groupShotsMenuNote => '此群組中不能複製、轉傳或儲存別人的訊息';
+
+  @override
+  String get groupShotsKeptOpen => '此群組中不能用其他應用程式開啟別人的檔案';
+
+  @override
+  String get groupShotsOldNotice => '我在這個群組開啟了禁止截圖。你的 Kryfo 還做不到，請更新一下。';
+
+  @override
+  String get captureShotTaken => '已截圖。沒有通知任何其他人。';
+
+  @override
+  String get captureRecording => '此螢幕正在被錄影。沒有通知任何其他人。';
+
+  @override
   String get settingsDevices => '裝置';
 
   @override
@@ -18475,4 +18792,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get desktopFolderNotPrivate => 'Kryfo 無法把它的資料夾設為只有你能存取，所以不會開啟。';
+
+  @override
+  String get desktopLockOtherVersion => '這個鎖是另一個版本的 Kryfo 建立的，目前的版本無法讀取。';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo 執行時需要記憶體中的一個私有資料夾，而這台電腦沒有提供，所以 Kryfo 不會開啟。';
 }

@@ -1250,7 +1250,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get cameraTooLongForA =>
-      'برای یک پیام زیادی طولانی است · حداکثر ۱۵ مگابایت';
+      'برای یک پیام زیادی طولانی است · حداکثر ۵۰ مگابایت';
 
   @override
   String get cameraNeverSavedToYour => 'هرگز در عکس‌هایتان ذخیره نمی‌شود';
@@ -2289,6 +2289,45 @@ class AppLocalizationsFa extends AppLocalizations {
   String get donateBadgesStartAt20 => 'نشان‌ها از ۲۰ دلار';
 
   @override
+  String get donateShowTheAddress => 'نمایش نشانی';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount با bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'نشان چه به شما می‌دهد';
+
+  @override
+  String get donateGivesMark =>
+      'علامتی کنار نامتان. شما انتخاب می‌کنید چه کسی آن را ببیند، یا هیچ‌کس.';
+
+  @override
+  String get donateGivesReceipt =>
+      'رسیدی امضاشده که روی همین گوشی می‌ماند. نشان را بدون هیچ حسابی ثابت می‌کند.';
+
+  @override
+  String get donateGivesFree =>
+      'همهٔ قابلیت‌های حریم خصوصی رایگان می‌مانند، با نشان یا بی‌نشان.';
+
+  @override
+  String get donateAddressOnTap =>
+      'نشانی فقط وقتی ساخته می‌شود که پایین را لمس کنید. تا یک ساعت مال شماست، پس اگر برگردید همان را می‌گیرید.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin الان شلوغ است. بعداً دوباره امتحان کنید یا با کارت پرداخت کنید.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'هنوز می‌توانید bitcoin را به نشانی زیر بفرستید، فقط نشان باز نمی‌کند.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'این همان نشانی‌ای است که پیش‌تر باز کردید. اگر فرستاده‌اید، همین‌جا منتظر بمانید.';
+
+  @override
   String get donateReachingThePaymentService =>
       'در حال رسیدن به سرویس پرداخت از راه Tor…';
 
@@ -2381,6 +2420,21 @@ class AppLocalizationsFa extends AppLocalizations {
           'روی زنجیره تأیید شد. حالا شما نگهبان هستید. هیچ‌کس نمی‌تواند این را از شما بگیرد.',
       'other':
           'روی زنجیره تأیید شد. حالا شما هوادار هستید. هیچ‌کس نمی‌تواند این را از شما بگیرد.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'روی زنجیره تأیید شد. ممنون که دوباره کمک کردید. نشان هوادار شما سر جایش می‌ماند.',
+      'patron':
+          'روی زنجیره تأیید شد. ممنون که دوباره کمک کردید. نشان حامی شما سر جایش می‌ماند.',
+      'guardian':
+          'روی زنجیره تأیید شد. ممنون که دوباره کمک کردید. نشان نگهبان شما سر جایش می‌ماند.',
+      'other':
+          'روی زنجیره تأیید شد. ممنون که دوباره کمک کردید. نشان هوادار شما سر جایش می‌ماند.',
     });
     return '$_temp0';
   }
@@ -8246,6 +8300,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get devWhoChoiceStays => 'انتخاب شما با این گفت‌وگو می‌ماند.';
 
   @override
+  String get devUpdateToWrite =>
+      'برای پیام دادن به Marios، Kryfo را به‌روز کنید.';
+
+  @override
   String get devKeyCheckFailed =>
       'بررسی کلید Marios ممکن نشد. چیزی فرستاده نشد.';
 
@@ -8308,6 +8366,11 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'این دعوت خودتان است. برای ارتباط، آن را با کس دیگری هم‌رسانی کنید.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '⁨$id⁩ باید Kryfo را به‌روز کند تا بتوانید همدیگر را اضافه کنید.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9525,6 +9588,130 @@ class AppLocalizationsFa extends AppLocalizations {
       'برای گوشی قفل صفحه بگذارید تا این محافظت وقتی گوشی قفل است هم برقرار بماند.';
 
   @override
+  String get fileServerTryLater =>
+      'سرور فایل فعلاً پر است. کمی بعد دوباره امتحان کن.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'حجم این فایل ⁨$size⁩ است. در این گفتگو تا وقتی همه Kryfo را به‌روز نکرده‌اند، فایل‌ها حداکثر می‌توانند ⁨$max⁩ باشند.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'امروز فایل‌های بزرگ زیادی فرستاده‌ای. فردا دوباره امتحان کن.';
+
+  @override
+  String get mediaProgressPreparing =>
+      'در حال آماده‌سازی · برنامه را باز نگه دار';
+
+  @override
+  String get groupShotsBlocksAll =>
+      'جلوی اسکرین‌شات و ضبط صفحه را در همه‌ی گوشی‌های این گروه می‌گیرد، و کپی، بازارسال یا ذخیره‌ی پیام‌های یکدیگر را هم. جلوی برنامه‌هایی که اجازه‌ی خواندن صفحه را دارند، یا گوشی و برنامه‌ای را که برای دور زدنش تغییر داده شده نمی‌گیرد.';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'در انتظار به‌روزرسانی Kryfo توسط همه‌ی اعضا';
+
+  @override
+  String get groupShotsOnForAll => 'برای همه‌ی اعضا روشن است';
+
+  @override
+  String get groupShotsOffAdminOnly =>
+      'خاموش. فقط مدیر می‌تواند این را تغییر دهد';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'در انتظار به‌روزرسانی Kryfo توسط همه‌ی اعضا. فقط مدیر می‌تواند این را تغییر دهد';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'برای همه‌ی اعضا روشن است. فقط مدیر می‌تواند این را تغییر دهد';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'در انتظار ⁨$countString⁩ نفر',
+      one: 'در انتظار ⁨$countString⁩ نفر',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'هنوز به‌روز نکرده‌اند';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'وقتی این افراد Kryfo را به‌روز کنند، جلوگیری از اسکرین‌شات همه را در بر می‌گیرد. برای حذف کسی از گروه، روی او بزنید.';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'باید Kryfo را به‌روز کند، یا از آن موقع آنلاین نشده';
+
+  @override
+  String get groupShotsBlockedByYou => 'شما مسدودش کرده‌اید';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'شما جلوگیری از اسکرین‌شات را روشن کردید. وقتی همه‌ی اعضا Kryfo را به‌روز کنند، همه را در بر می‌گیرد.';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '⁨$name⁩ جلوگیری از اسکرین‌شات را روشن کرد. وقتی همه‌ی اعضا Kryfo را به‌روز کنند، همه را در بر می‌گیرد.';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'جلوگیری از اسکرین‌شات برای همه‌ی اعضا روشن است. کپی، بازارسال و ذخیره‌ی پیام‌های یکدیگر هم خاموش است.';
+
+  @override
+  String get groupShotsPaused =>
+      'یکی از اعضا هنوز نمی‌تواند جلوی اسکرین‌شات را بگیرد. وقتی Kryfo را به‌روز کند، دوباره همه را در بر می‌گیرد.';
+
+  @override
+  String get groupShotsCantYet => 'هنوز نمی‌تواند جلوی اسکرین‌شات را بگیرد';
+
+  @override
+  String get groupShotsAddTitle => 'باز هم افزوده شود؟';
+
+  @override
+  String get groupShotsAddPauses =>
+      'تا وقتی Kryfo را به‌روز نکند، جلوگیری از اسکرین‌شات همه‌ی اعضا را در بر نمی‌گیرد.';
+
+  @override
+  String get groupShotsLeaveStays =>
+      'جلوگیری از اسکرین‌شات همان‌طور که هست می‌ماند.';
+
+  @override
+  String get groupShotsBlockedHere =>
+      'Kryfo در این گروه جلوی اسکرین‌شات را می‌گیرد';
+
+  @override
+  String get groupShotsMenuNote =>
+      'کپی، بازارسال و ذخیره‌ی پیام‌های دیگران در این گروه خاموش است';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'باز کردن فایل‌های دیگران در برنامه‌های دیگر در این گروه خاموش است';
+
+  @override
+  String get groupShotsOldNotice =>
+      'جلوگیری از اسکرین‌شات را در این گروه روشن کردم. Kryfo شما هنوز این کار را نمی‌کند، لطفاً به‌روزش کنید.';
+
+  @override
+  String get captureShotTaken =>
+      'اسکرین‌شات گرفته شد. به هیچ‌کس دیگری خبر داده نشد.';
+
+  @override
+  String get captureRecording =>
+      'این صفحه در حال ضبط است. به هیچ‌کس دیگری خبر داده نشد.';
+
+  @override
   String get settingsDevices => 'دستگاه‌ها';
 
   @override
@@ -9767,4 +9954,12 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get desktopFolderNotPrivate =>
       'Kryfo نتوانست پوشه‌اش را فقط برای شما خصوصی کند، پس باز نمی‌شود.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'این قفل را نسخهٔ دیگری از Kryfo ساخته که این نسخه نمی‌تواند آن را بخواند.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo هنگام اجرا به یک پوشهٔ خصوصی در حافظه نیاز دارد و این رایانه چنین پوشه‌ای ندارد، پس باز نمی‌شود.';
 }

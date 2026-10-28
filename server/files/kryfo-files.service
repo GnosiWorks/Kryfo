@@ -1,0 +1,55 @@
+[Unit]
+Description=Kryfo files
+After=network-online.target
+Wants=network-online.target
+# the files live on a disk of their own, root's, with one folder in it the
+# service writes: no mount, no start
+RequiresMountsFor=/var/lib/kryfo-files
+
+[Service]
+ExecStart=/opt/kryfo-files/kryfo-files
+Environment=FILES_ADDR=127.0.0.1:3342
+Environment=FILES_DATA=/var/lib/kryfo-files/data
+# the limits, read by systemd as root before the service starts. none of
+# them is a secret
+EnvironmentFile=-/etc/kryfo-files/limits.env
+Restart=always
+RestartSec=3
+User=kryfo-files
+Group=kryfo-files
+ReadWritePaths=/var/lib/kryfo-files/data
+# logs to ram only, same posture as the relay: counts once an hour
+StandardOutput=journal
+StandardError=journal
+
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+ProcSubset=pid
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+UMask=0077
+# sixteen parts of 5 MB in memory at most, and room around them
+MemoryMax=384M
+TasksMax=512
+
+[Install]
+WantedBy=multi-user.target

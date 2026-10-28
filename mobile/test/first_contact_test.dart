@@ -423,6 +423,7 @@ void main() {
         tries: 0,
         nextAt: 0,
         reached: null,
+        opened: null,
       );
       everyday.kept['h1'] = kept;
       firstFails

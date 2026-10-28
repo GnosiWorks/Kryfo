@@ -30,14 +30,7 @@ import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/stickers/sticker_pack.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show
-        CiphertextMessage,
-        Curve,
-        PreKeySignalMessage,
-        SessionCipher,
-        SignalMessage,
-        SignalProtocolAddress;
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart';
@@ -73,27 +66,18 @@ void main() {
   Future<String> words(String cipher) async {
     final w = base64Decode(cipher);
     final body = Uint8List.fromList(w.sublist(1));
-    final c = SessionCipher(
-      amber.sessionStore,
-      amber.preKeyStore,
-      amber.signedPreKeyStore,
-      amber.identityStore,
-      SignalProtocolAddress('me', 1),
-    );
-    final plain = w[0] == CiphertextMessage.prekeyType
-        ? await c.decrypt(PreKeySignalMessage(body))
-        : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
+    final plain = await amber.open('me', w[0], body);
     return unwrapMessage(utf8.decode(plain)).message;
   }
 
   setUpAll(() async {
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     await signalSession.bootstrap(
       database: MemDb(),
       xPubBytes: me.publicKey.serialize().sublist(1),
       xPrivBytes: me.privateKey.serialize(),
     );
-    final pair = Curve.generateKeyPair();
+    final pair = testKeyPair();
     amber = SignalSession();
     await amber.bootstrap(
       database: MemDb(),

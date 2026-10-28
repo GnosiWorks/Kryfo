@@ -2,6 +2,7 @@
 // chat screen: bubbles, composer, live receive over tor.
 
 import '../lock_state.dart';
+import '../capture_watch.dart';
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -46,6 +47,7 @@ import '../widgets/row_anchor.dart';
 import '../widgets/video_bubble.dart';
 import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
+import '../file_drop.dart' show dropDayDone, dropTryLater;
 import '../file_kind.dart'
     show
         FileShape,
@@ -92,6 +94,7 @@ import '../widgets/kryfo_avatar.dart';
 import '../main.dart'
     show
         engine,
+        AppStateFiles,
         kNameAsk,
         kNameLater,
         kNotSent,
@@ -1151,6 +1154,8 @@ class _ChatScreenState extends State<ChatScreen>
   DevChatRow? _devChat;
   // the pinned key did not check out: nothing was sent
   bool _devKeyFailed = false;
+  // the pinned card is too old to start a chat on: an update brings one
+  bool _devCardOld = false;
 
   // the dev chat as home shows it, while it is this one
   DevRow? get _devShown {
@@ -1220,6 +1225,10 @@ class _ChatScreenState extends State<ChatScreen>
         HapticFeedback.heavyImpact();
         setState(() => _devKeyFailed = true);
         return false;
+      case DevStart.needsUpdate:
+        HapticFeedback.lightImpact();
+        setState(() => _devCardOld = true);
+        return false;
       case DevStart.none:
         return false;
     }
@@ -1227,9 +1236,22 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _chooseDevName(bool anon) => _devOpening?.choose(anon: anon);
 
+  // android's word that this chat was screenshotted or is recorded: one
+  // quiet line here, on this phone alone
+  VoidCallback? _unwatchCaptures;
+  void _captured(Capture what) {
+    if (!mounted || lockState.locked) return;
+    // a secure window came out black: until a phone shows the callback
+    // stays quiet there, nothing is said
+    if (appState.windowSecure) return;
+    if (ModalRoute.of(context)?.isCurrent == false) return;
+    showHaloToast(context, captureLine(what));
+  }
+
   @override
   void initState() {
     super.initState();
+    _unwatchCaptures = captureWatch.watch(_captured);
     _memo = session.chatKey(widget.peerHaloId);
     if (_isDev) {
       final d = _devShown;
@@ -2559,6 +2581,8 @@ class _ChatScreenState extends State<ChatScreen>
     mediaProgressEnd(uid);
     if (mounted) setState(() => m.removing = true);
     await Future.delayed(kLeaveGone);
+    // up on the files service already: it comes down with the row
+    await appState.takeDropBackOf(uid);
     await session.deleteMessage(uid);
     if (mounted) setState(() => _messages.remove(m));
     unawaited(appState.refreshContacts());
@@ -2581,6 +2605,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (mounted) setState(() => m.removing = true);
     // it burns, then its row folds (LeaveFold); pulled sooner, it pops
     await Future.delayed(kLeaveGone);
+    await appState.takeDropBackOf(m.msgUid!);
     await session.deleteMessage(m.msgUid!);
     if (mounted) setState(() => _messages.remove(m));
     // the home row still previews the message just unsent
@@ -2635,6 +2660,7 @@ class _ChatScreenState extends State<ChatScreen>
     }
     await Future.delayed(kLeaveGone);
     for (final x in ms) {
+      await appState.takeDropBackOf(x.msgUid!);
       await session.deleteMessage(x.msgUid!);
     }
     if (mounted) setState(() => _messages.removeWhere(ms.contains));
@@ -4086,8 +4112,9 @@ class _ChatScreenState extends State<ChatScreen>
       if (mounted) showHaloToast(context, l10n.chatCouldNotReadThat);
       return null;
     }
-    if (!fileFits(size)) {
-      if (mounted) showHaloToast(context, fileTooBigLine(size));
+    final most = await appState.fileLimitFor(widget.peerHaloId);
+    if (!fileFits(size, most)) {
+      if (mounted) showHaloToast(context, fileTooBigLine(size, most));
       return null;
     }
     final raw = (await readFileFactsFresh(src, name))?.raw ?? false;
@@ -4494,6 +4521,9 @@ class _ChatScreenState extends State<ChatScreen>
     final shown = _messages.where(
       (m) => m.msgUid != null && m.msgUid == msg.msgUid,
     );
+    final later = dropTryLater(result) || dropDayDone(result);
+    if (dropTryLater(result)) showHaloToast(context, l10n.fileServerTryLater);
+    if (dropDayDone(result)) showHaloToast(context, l10n.fileDayLimit);
     setState(() {
       for (final m in {msg, ...shown}) {
         m.sending = false;
@@ -4507,7 +4537,8 @@ class _ChatScreenState extends State<ChatScreen>
       } else if (result != 'ok' &&
           result != 'parked' &&
           result != kSendBlocked &&
-          !held) {
+          !held &&
+          !later) {
         _status = result;
       } else if (result == 'ok') {
         _devKeyFailed = false;
@@ -5447,6 +5478,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   void dispose() {
+    _unwatchCaptures?.call();
     for (final land in List.of(_flights)) {
       land();
     }
@@ -6330,6 +6362,14 @@ class _ChatScreenState extends State<ChatScreen>
                 glyph: NoticeGlyph.shield,
                 text: l10n.devKeyCheckFailed,
                 color: HaloColors.rose,
+                margin: const EdgeInsets.fromLTRB(14, 4, 14, 6),
+              )
+            : _devCardOld
+            ? NoticeBanner(
+                key: const ValueKey('dev-old'),
+                glyph: NoticeGlyph.clock,
+                text: l10n.devUpdateToWrite,
+                color: HaloColors.violet,
                 margin: const EdgeInsets.fromLTRB(14, 4, 14, 6),
               )
             : const SizedBox(key: ValueKey('dev-key-none'), width: 0),

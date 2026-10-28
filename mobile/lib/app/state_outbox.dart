@@ -94,6 +94,7 @@ extension AppStateOutbox on AppState {
     if (everydayHeld || haloWiping) return;
     unawaited(drainOutbox());
     unawaited(askForMissingSlices());
+    unawaited(fetchDrops());
     _maybeRepoint();
   }
 
@@ -156,6 +157,8 @@ extension AppStateOutbox on AppState {
     _outboxTimer = Timer.periodic(const Duration(seconds: 20), (_) {
       if (haloWiping) return;
       unawaited(drainOutbox());
+      // files on their way in from the files service, as they come due
+      unawaited(fetchDrops());
     });
     _needTimer?.cancel();
     // the catch-up that comes with the start may not have begun yet
@@ -1043,6 +1046,52 @@ extension AppStateOutbox on AppState {
     xPub: _io.xPub(),
     avatar: _myAvatar,
   );
+
+  // the small opener a waiting frame needs: the empty envelope, with the
+  // proof of work a first contact asks for. one at a time per peer
+  Future<void> _sendStarter(String peer) async {
+    if (!_startersGoing.add(peer)) return;
+    try {
+      final to = await _reach(peer);
+      if (to == null) return;
+      final pow = to.backPaired ? null : await compute(_outboxGrind, '');
+      final wrapped = await wrapMessage(
+        '',
+        sender: _mySender(),
+        powNonce: pow,
+        powBitsUsed: pow == null ? null : powBits,
+      );
+      await _sendOneEnvelope(peer, wrapped);
+      dlog('send: a small opener went ahead of a waiting frame');
+    } catch (e) {
+      dlog('send: the small opener did not go ($e)');
+    } finally {
+      _startersGoing.remove(peer);
+    }
+  }
+
+  // an accepted contact started their session again: the empty envelope
+  // answers it, so what they hold for the answer goes
+  Future<void> _answerNewSession(String peer) async {
+    if (isDevId(peer)) return;
+    // as a receipt is: one in 30 s per contact, so one who starts sessions
+    // over and over gets no frame back for each
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final last = _answeredNewAt[peer];
+    if (last != null && now - last < 30000) return;
+    _answeredNewAt[peer] = now;
+    if (_answeredNewAt.length > 500) {
+      _answeredNewAt.removeWhere((_, t) => now - t > 300000);
+    }
+    try {
+      final to = await _reach(peer);
+      if (to == null || !to.backPaired) return;
+      if (!await (to.on ?? live).isAccepted(peer)) return;
+      await _sendOneEnvelope(peer, await wrapMessage('', sender: _mySender()));
+    } catch (e) {
+      dlog('send: a new session not answered ($e)');
+    }
+  }
 
   // [member]: a group's frame, which the group's own rules send.
   // [takeBack]: an unsend, which only withdraws and goes to anyone

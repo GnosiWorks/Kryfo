@@ -8,27 +8,67 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
-
 // the chain a cipher was sent on and its number there, null when it is not
-// a signal message
+// a signal message. read off the message's own fields: a whisper message is
+// its version byte, the protobuf, then an 8 byte mac; an opener carries one
+// whole in its field 4
 (String, int)? _place(String wireB64) {
   try {
     final w = base64Decode(wireB64);
     if (w.length < 2) return null;
-    final body = Uint8List.fromList(w.sublist(1));
-    final SignalMessage m;
-    if (w[0] == CiphertextMessage.prekeyType) {
-      m = PreKeySignalMessage(body).getWhisperMessage();
-    } else if (w[0] == CiphertextMessage.whisperType) {
-      m = SignalMessage.fromSerialized(body);
-    } else {
+    var m = Uint8List.sublistView(w, 1);
+    if (w[0] == 3) {
+      final inner = _fields(Uint8List.sublistView(m, 1))?[4];
+      if (inner is! Uint8List) return null;
+      m = inner;
+    } else if (w[0] != 2) {
       return null;
     }
-    return (base64Encode(m.getSenderRatchetKey().serialize()), m.getCounter());
+    if (m.length < 1 + 8) return null;
+    final f = _fields(Uint8List.sublistView(m, 1, m.length - 8));
+    final key = f?[1];
+    if (key is! Uint8List || key.isEmpty) return null;
+    final n = f?[2];
+    return (base64Encode(key), n is int ? n : 0);
   } catch (_) {
     return null;
   }
+}
+
+// a protobuf message's fields by number, the last of each: varints as ints,
+// length-delimited ones as bytes. null when it does not read
+Map<int, Object>? _fields(Uint8List b) {
+  final out = <int, Object>{};
+  var at = 0;
+  int? varint() {
+    var v = 0;
+    for (var shift = 0; shift < 64; shift += 7) {
+      if (at >= b.length) return null;
+      final x = b[at++];
+      v |= (x & 0x7f) << shift;
+      if (x < 0x80) return v;
+    }
+    return null;
+  }
+
+  while (at < b.length) {
+    final tag = varint();
+    if (tag == null) return null;
+    switch (tag & 7) {
+      case 0:
+        final v = varint();
+        if (v == null) return null;
+        out[tag >> 3] = v;
+      case 2:
+        final n = varint();
+        if (n == null || n < 0 || n > b.length - at) return null;
+        out[tag >> 3] = Uint8List.sublistView(b, at, at + n);
+        at += n;
+      default:
+        return null;
+    }
+  }
+  return out;
 }
 
 // room frames are not signal: roomsInSendOrder puts them in order by the

@@ -1239,7 +1239,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không lưu được bản sao trên điện thoại này';
 
   @override
-  String get cameraTooLongForA => 'Quá dài cho một tin nhắn · tối đa 15 MB';
+  String get cameraTooLongForA => 'Quá dài cho một tin nhắn · tối đa 50 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Không bao giờ lưu vào thư viện ảnh';
@@ -2278,6 +2278,45 @@ class AppLocalizationsVi extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Huy hiệu từ \$20';
 
   @override
+  String get donateShowTheAddress => 'Hiện địa chỉ';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount bằng bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Huy hiệu mang lại gì';
+
+  @override
+  String get donateGivesMark =>
+      'Một dấu bên cạnh tên bạn. Bạn chọn ai được thấy, hoặc không ai cả.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Một biên nhận có chữ ký lưu trên điện thoại này. Nó chứng minh huy hiệu mà không cần tài khoản.';
+
+  @override
+  String get donateGivesFree =>
+      'Mọi tính năng riêng tư vẫn miễn phí, dù có huy hiệu hay không.';
+
+  @override
+  String get donateAddressOnTap =>
+      'Địa chỉ chỉ được tạo khi bạn chạm vào bên dưới. Nó là của bạn trong một giờ, nên quay lại bạn vẫn nhận đúng địa chỉ đó.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin đang bận. Hãy thử lại sau hoặc thanh toán bằng thẻ.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Bạn vẫn có thể gửi bitcoin đến địa chỉ bên dưới. Địa chỉ này không mở huy hiệu.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Đây là địa chỉ bạn đã mở lúc trước. Nếu đã gửi rồi, hãy chờ ở đây.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Đang kết nối tới dịch vụ thanh toán qua Tor…';
 
@@ -2370,6 +2409,21 @@ class AppLocalizationsVi extends AppLocalizations {
           'Đã xác minh trên chuỗi. Giờ bạn là người bảo hộ. Không ai có thể lấy đi điều đó.',
       'other':
           'Đã xác minh trên chuỗi. Giờ bạn là người ủng hộ. Không ai có thể lấy đi điều đó.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu người ủng hộ.',
+      'patron':
+          'Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu nhà bảo trợ.',
+      'guardian':
+          'Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu người bảo hộ.',
+      'other':
+          'Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu người ủng hộ.',
     });
     return '$_temp0';
   }
@@ -8217,6 +8271,9 @@ class AppLocalizationsVi extends AppLocalizations {
       'Lựa chọn của bạn gắn liền với cuộc trò chuyện này.';
 
   @override
+  String get devUpdateToWrite => 'Hãy cập nhật Kryfo để nhắn tin cho Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Không thể kiểm tra khóa của Marios. Không có gì được gửi đi.';
 
@@ -8280,6 +8337,11 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'Đây là lời mời của chính bạn. Hãy chia sẻ cho người khác để kết nối.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id cần cập nhật Kryfo trước khi hai bạn có thể thêm nhau.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9499,6 +9561,125 @@ class AppLocalizationsVi extends AppLocalizations {
       'Hãy đặt khóa màn hình cho điện thoại để lớp bảo vệ này vẫn giữ được khi máy bị khóa.';
 
   @override
+  String get fileServerTryLater =>
+      'Máy chủ tệp đang đầy. Hãy thử lại sau một lúc.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Tệp này nặng $size. Trong cuộc trò chuyện này, tệp chỉ được tối đa $max cho đến khi mọi người cập nhật Kryfo.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'Hôm nay bạn đã gửi nhiều tệp lớn. Hãy thử lại vào ngày mai.';
+
+  @override
+  String get mediaProgressPreparing => 'Đang chuẩn bị · giữ ứng dụng mở';
+
+  @override
+  String get groupShotsBlocksAll =>
+      'Chặn chụp màn hình và quay màn hình trên mọi điện thoại trong nhóm này, cũng như sao chép, chuyển tiếp hoặc lưu tin nhắn của nhau. Nó không chặn được các ứng dụng được phép đọc màn hình, hay điện thoại hoặc ứng dụng đã bị sửa để lách qua.';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'Đang chờ mọi người ở đây cập nhật Kryfo';
+
+  @override
+  String get groupShotsOnForAll => 'Đã bật cho mọi người ở đây';
+
+  @override
+  String get groupShotsOffAdminOnly =>
+      'Đang tắt. Chỉ quản trị viên mới đổi được';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'Đang chờ mọi người ở đây cập nhật Kryfo. Chỉ quản trị viên mới đổi được';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'Đã bật cho mọi người ở đây. Chỉ quản trị viên mới đổi được';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Đang chờ $countString người',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'Chưa cập nhật';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'Chặn chụp màn hình sẽ áp dụng cho mọi người khi những người này cập nhật Kryfo. Chạm vào một người để gỡ họ khỏi nhóm.';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'Cần cập nhật Kryfo, hoặc chưa trực tuyến từ lúc đó';
+
+  @override
+  String get groupShotsBlockedByYou => 'Bạn đã chặn';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'Bạn đã bật chặn chụp màn hình. Nó sẽ áp dụng cho mọi người khi tất cả ở đây đã cập nhật Kryfo.';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name đã bật chặn chụp màn hình. Nó sẽ áp dụng cho mọi người khi tất cả ở đây đã cập nhật Kryfo.';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'Chặn chụp màn hình đã bật cho mọi người ở đây. Việc sao chép, chuyển tiếp và lưu tin nhắn của nhau cũng bị tắt.';
+
+  @override
+  String get groupShotsPaused =>
+      'Có người ở đây chưa chặn chụp màn hình được. Nó sẽ lại áp dụng cho mọi người khi họ cập nhật Kryfo.';
+
+  @override
+  String get groupShotsCantYet => 'Chưa chặn chụp màn hình được';
+
+  @override
+  String get groupShotsAddTitle => 'Vẫn thêm?';
+
+  @override
+  String get groupShotsAddPauses =>
+      'Chặn chụp màn hình sẽ không áp dụng cho mọi người ở đây cho đến khi họ cập nhật Kryfo.';
+
+  @override
+  String get groupShotsLeaveStays => 'Chặn chụp màn hình vẫn giữ nguyên.';
+
+  @override
+  String get groupShotsBlockedHere => 'Kryfo chặn chụp màn hình trong nhóm này';
+
+  @override
+  String get groupShotsMenuNote =>
+      'Không thể sao chép, chuyển tiếp hoặc lưu tin nhắn của người khác trong nhóm này';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'Không thể mở tệp của người khác bằng ứng dụng khác trong nhóm này';
+
+  @override
+  String get groupShotsOldNotice =>
+      'Mình đã bật chặn chụp màn hình trong nhóm này. Kryfo của bạn chưa làm được việc đó, hãy cập nhật nhé.';
+
+  @override
+  String get captureShotTaken => 'Đã chụp màn hình. Không ai khác được báo.';
+
+  @override
+  String get captureRecording =>
+      'Màn hình này đang bị quay. Không ai khác được báo.';
+
+  @override
   String get settingsDevices => 'Thiết bị';
 
   @override
@@ -9741,4 +9922,12 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get desktopFolderNotPrivate =>
       'Kryfo không thể đặt thư mục của nó thành riêng tư cho bạn, nên sẽ không mở.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Khóa này được tạo bởi một phiên bản Kryfo khác mà phiên bản này không đọc được.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo cần một thư mục riêng trong bộ nhớ khi chạy, và máy tính này không có, nên Kryfo sẽ không mở.';
 }

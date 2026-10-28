@@ -9,6 +9,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show ValueNotifier;
 
+import 'file_drop.dart' show kFreeFileBytes;
 import 'file_name.dart';
 import 'image_strip.dart' show PictureKind, pictureHead, pictureKind;
 import 'mp4_strip.dart' show videoNameNeedsStrip;
@@ -51,11 +52,12 @@ class FileFacts {
   bool get installer => kind == FileKind.installer;
 }
 
-// the most a file may be when it goes out. every slice of it crosses tor and
-// a relay, and the receiver keeps the slices until the last one is in
-const kMaxFileBytes = 15 * 1024 * 1024;
+// the most a file may be when it goes out, to phones that fetch from the
+// files service. a chat with a phone that does not yet takes less
+// (fileLimit in file_drop.dart)
+const kMaxFileBytes = kFreeFileBytes;
 
-bool fileFits(int bytes) => bytes <= kMaxFileBytes;
+bool fileFits(int bytes, [int max = kMaxFileBytes]) => bytes <= max;
 
 const _installerExts = {'apk', 'apks', 'apkm', 'xapk', 'aab'};
 

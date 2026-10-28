@@ -1283,7 +1283,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get cameraTooLongForA =>
-      'Слишком длинно для сообщения · максимум 15 МБ';
+      'Слишком длинно для сообщения · максимум 50 МБ';
 
   @override
   String get cameraNeverSavedToYour => 'Никогда не сохраняется в галерею';
@@ -2346,6 +2346,45 @@ class AppLocalizationsRu extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Значки — от \$20';
 
   @override
+  String get donateShowTheAddress => 'Показать адрес';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount в bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Что даёт значок';
+
+  @override
+  String get donateGivesMark =>
+      'Знак рядом с твоим именем. Ты решаешь, кто его видит, если вообще кто-то.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Подписанная квитанция на этом телефоне. Она подтверждает значок без всякого аккаунта.';
+
+  @override
+  String get donateGivesFree =>
+      'Все функции приватности остаются бесплатными, со значком или без.';
+
+  @override
+  String get donateAddressOnTap =>
+      'Адрес создаётся, только когда ты нажмёшь ниже. Он остаётся твоим целый час, и если вернёшься, получишь тот же.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin сейчас перегружен. Попробуй позже или оплати картой.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Bitcoin всё равно можно отправить на адрес ниже. Значка он не даёт.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Это адрес, который ты открывал раньше. Если уже отправил, жди здесь.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Связываемся с платёжным сервисом через Tor…';
 
@@ -2438,6 +2477,21 @@ class AppLocalizationsRu extends AppLocalizations {
           'Проверено в блокчейне — теперь ты хранитель. Этого у тебя никто не отнимет.',
       'other':
           'Проверено в блокчейне — теперь ты сторонник. Этого у тебя никто не отнимет.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Проверено в блокчейне. Спасибо, что поддержал ещё раз. Твой значок «сторонник» остаётся с тобой.',
+      'patron':
+          'Проверено в блокчейне. Спасибо, что поддержал ещё раз. Твой значок «меценат» остаётся с тобой.',
+      'guardian':
+          'Проверено в блокчейне. Спасибо, что поддержал ещё раз. Твой значок «хранитель» остаётся с тобой.',
+      'other':
+          'Проверено в блокчейне. Спасибо, что поддержал ещё раз. Твой значок «сторонник» остаётся с тобой.',
     });
     return '$_temp0';
   }
@@ -8391,6 +8445,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get devWhoChoiceStays => 'Твой выбор сохранится для этого чата.';
 
   @override
+  String get devUpdateToWrite => 'Обнови Kryfo, чтобы написать Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Не удалось проверить ключ Marios. Ничего не отправлено.';
 
@@ -8453,6 +8510,11 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'Это твоё собственное приглашение. Поделись им с кем-нибудь, чтобы связаться.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id нужно обновить Kryfo, прежде чем вы сможете добавить друг друга.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9678,6 +9740,128 @@ class AppLocalizationsRu extends AppLocalizations {
       'Включите блокировку экрана на телефоне, чтобы эта защита действовала и тогда, когда он заблокирован.';
 
   @override
+  String get fileServerTryLater =>
+      'Файловый сервер сейчас заполнен. Попробуй чуть позже.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Этот файл весит $size. В этом чате можно отправлять файлы до $max, пока все не обновят Kryfo.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'Сегодня ты уже отправил много больших файлов. Попробуй завтра.';
+
+  @override
+  String get mediaProgressPreparing => 'Подготовка · не закрывай приложение';
+
+  @override
+  String get groupShotsBlocksAll =>
+      'Запрещает скриншоты и запись экрана на каждом телефоне в этой группе, а также копировать, пересылать и сохранять сообщения друг друга. Это не остановит приложения с доступом к экрану или телефон и приложение, изменённые, чтобы это обойти.';
+
+  @override
+  String get groupShotsStartsWhenAll => 'Ждёт, пока все здесь обновят Kryfo';
+
+  @override
+  String get groupShotsOnForAll => 'Включено для всех здесь';
+
+  @override
+  String get groupShotsOffAdminOnly =>
+      'Выключено. Изменить это может только админ';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'Ждёт, пока все здесь обновят Kryfo. Изменить это может только админ';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'Включено для всех здесь. Изменить это может только админ';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ждёт $countString человека',
+      many: 'Ждёт $countString человек',
+      few: 'Ждёт $countString человек',
+      one: 'Ждёт $countString человека',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'Ещё не обновили';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'Запрет скриншотов заработает для всех, как только эти люди обновят Kryfo. Нажми на человека, чтобы удалить его из группы.';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'Нужно обновить Kryfo, или не был(а) в сети с тех пор';
+
+  @override
+  String get groupShotsBlockedByYou => 'Заблокирован(а) тобой';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'Ты включил(а) запрет скриншотов. Он заработает для всех, когда все здесь обновят Kryfo.';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name включил(а) запрет скриншотов. Он заработает для всех, когда все здесь обновят Kryfo.';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'Запрет скриншотов включён для всех здесь. Копировать, пересылать и сохранять сообщения друг друга тоже нельзя.';
+
+  @override
+  String get groupShotsPaused =>
+      'Кто-то здесь пока не может запрещать скриншоты. Запрет снова будет для всех, когда этот человек обновит Kryfo.';
+
+  @override
+  String get groupShotsCantYet => 'Пока не может запрещать скриншоты';
+
+  @override
+  String get groupShotsAddTitle => 'Всё равно добавить?';
+
+  @override
+  String get groupShotsAddPauses =>
+      'Запрет скриншотов не будет действовать для всех здесь, пока этот человек не обновит Kryfo.';
+
+  @override
+  String get groupShotsLeaveStays => 'Запрет скриншотов останется как есть.';
+
+  @override
+  String get groupShotsBlockedHere => 'Kryfo запрещает скриншоты в этой группе';
+
+  @override
+  String get groupShotsMenuNote =>
+      'В этой группе нельзя копировать, пересылать и сохранять чужие сообщения';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'В этой группе нельзя открывать чужие файлы в других приложениях';
+
+  @override
+  String get groupShotsOldNotice =>
+      'Я включил(а) запрет скриншотов в этой группе. Твой Kryfo пока так не умеет, пожалуйста, обнови его.';
+
+  @override
+  String get captureShotTaken =>
+      'Сделан скриншот. Больше никто об этом не узнал.';
+
+  @override
+  String get captureRecording =>
+      'Этот экран записывается. Больше никто об этом не узнал.';
+
+  @override
   String get settingsDevices => 'Устройства';
 
   @override
@@ -9923,4 +10107,12 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get desktopFolderNotPrivate =>
       'Kryfo не смог сделать свою папку доступной только вам, поэтому не откроется.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Эту блокировку создала другая версия Kryfo, которую эта прочитать не может.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo нужна личная папка в памяти, пока он работает, а этот компьютер её не даёт, поэтому Kryfo не откроется.';
 }

@@ -12,6 +12,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_key.dart';
+import 'package:kryfo/file_drop.dart' show dropFetchTable;
 import 'package:kryfo/main.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,7 +21,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'sqlite_channel.dart';
 
 const _fixtures = 'test/fixtures/upgrade_051';
-const _version = 88;
+const _version = 91;
 
 // the keys each file opens with, under the names the app keeps them by
 final _keyFile =
@@ -55,6 +56,9 @@ final _steps = <int, (Future<void> Function(Database), String)>{
   86: (draftsTable, 'CREATE TABLE IF NOT EXISTS drafts'),
   87: (opusColumns, 'ALTER TABLE contacts ADD COLUMN opus_can'),
   88: (capsColumns, 'ALTER TABLE contacts ADD COLUMN caps'),
+  89: (groupShotsColumns, 'ALTER TABLE groups ADD COLUMN shots_on'),
+  90: (dropFetchTable, 'CREATE TABLE IF NOT EXISTS file_seen'),
+  91: (upgradeTo91, 'CREATE TABLE IF NOT EXISTS kyber_prekeys'),
 };
 
 // whether the step to [step] runs on a file at [from]. test builds took 81
@@ -74,10 +78,28 @@ const _added = {
     'caps',
     'caps_at',
   ],
-  'groups': ['ended_at', 'ended_by'],
+  'groups': [
+    'ended_at',
+    'ended_by',
+    'shots_on',
+    'shots_at',
+    'shots_all',
+    'shots_by',
+    'shots_when',
+    'shots_line',
+    'shots_told',
+  ],
   'messages': ['album_id', 'album_n', 'album_i'],
   'wallpapers': ['chat', 'atmo', 'photo'],
   'drafts': ['chat', 'body', 'reply_to', 'updated_at'],
+  'file_fetches': ['msg_uid', 'sender', 'wire', 'path', 'state'],
+  'kyber_prekeys': ['id', 'record', 'last_resort', 'created_at'],
+  'kyber_used': ['kyber_id', 'signed_id', 'base_key'],
+  'dev_kyber_prekeys': ['id', 'record', 'last_resort', 'created_at'],
+  'dev_kyber_used': ['kyber_id', 'signed_id', 'base_key'],
+  'opener_reads': ['kyber_id', 'opener'],
+  'dev_opener_reads': ['kyber_id', 'opener'],
+  'first_kept': ['opened_id', 'opened_plain'],
 };
 const _indexes = [
   'idx_media_chunks_group',

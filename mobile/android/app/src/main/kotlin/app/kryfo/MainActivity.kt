@@ -111,6 +111,8 @@ open class MainActivity : FlutterFragmentActivity() {
 
     // the window and the user leaving lock too, not only the lifecycle
     private var awayChannel: BasicMessageChannel<String>? = null
+    // screenshots and recordings of this window, as android tells them
+    private val captures = CaptureWatch(this)
     private fun tellAway() {
         awayChannel?.send("away")
     }
@@ -149,8 +151,14 @@ open class MainActivity : FlutterFragmentActivity() {
         SharePick.wait.paused()
     }
 
+    override fun onStart() {
+        super.onStart()
+        captures.start()
+    }
+
     override fun onStop() {
         super.onStop()
+        captures.stop()
         stoppedSinceResume = true
         SaveDoc.coveredNow()
     }
@@ -373,6 +381,7 @@ open class MainActivity : FlutterFragmentActivity() {
         // hold on to it so the next activity attaches to this same engine
         FlutterEngineCache.getInstance().put(ENGINE_ID, flutterEngine)
         awayChannel = BasicMessageChannel(flutterEngine.dartExecutor.binaryMessenger, "kryfo/window", StringCodec.INSTANCE)
+        captures.channel = BasicMessageChannel(flutterEngine.dartExecutor.binaryMessenger, "kryfo/capture", StringCodec.INSTANCE)
         tools.attach(MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ToolsBridge.CHANNEL))
         // a share is offered once. a screen rebuilt after the process went,
         // or opened again from recents, still carries the old one

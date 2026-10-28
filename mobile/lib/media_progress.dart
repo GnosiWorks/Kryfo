@@ -16,6 +16,14 @@ import 'l10n/numbers.dart';
 /// outgoing: msgUid -> 0..1
 final Map<String, double> mediaSendProgress = {};
 
+/// outgoing sends still doing the work the files service asks, before any
+/// byte goes: the strip says preparing, not 0%
+final Set<String> mediaPreparing = {};
+
+void mediaPreparingSet(String msgUid, bool on) {
+  if (on ? mediaPreparing.add(msgUid) : mediaPreparing.remove(msgUid)) _bump();
+}
+
 /// incoming: chat key (groupId or peer haloId) -> 0..1
 final Map<String, double> incomingMediaProgress = {};
 final Map<String, int> _incomingTouch = {};
@@ -69,6 +77,7 @@ void mediaProgressUpdate(String msgUid, double v) {
 
 void mediaProgressEnd(String msgUid) {
   _sendChat.remove(msgUid);
+  mediaPreparing.remove(msgUid);
   if (mediaSendProgress.remove(msgUid) != null) _bump();
 }
 
@@ -179,7 +188,9 @@ class IncomingMediaBanner extends StatelessWidget {
                 const SizedBox(width: 9),
                 Flexible(
                   child: Text(
-                    sending
+                    sending && mediaPreparing.contains(cancelUid)
+                        ? l10n.mediaProgressPreparing
+                        : sending
                         ? l10n.mediaProgressSendingKeepTheApp(percent(v))
                         : stalled && count != null
                         ? l10n.mediaProgressPausedOfWaitingFor(

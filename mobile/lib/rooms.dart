@@ -103,8 +103,9 @@ bool looksLikeRoomKey(String id) =>
     id.length == 64 && RegExp(r'^[0-9a-f]+$').hasMatch(id);
 
 // what a room frame may not carry: the onion, the signing key, the push
-// endpoint, the badge, the face picked and the roster's keys
-const _roomStripped = ['o', 'e', 'p', 'bg', 'av', 'rp'];
+// endpoint, the badge, the face picked, the roster's keys and what the app
+// can do, which tells its version
+const _roomStripped = ['o', 'e', 'p', 'bg', 'av', 'rp', 'cp'];
 
 /// [wrapped] with every trace of who sent it gone and the room key [pub] in
 /// its place. null when it cannot be done, and the send has to be dropped:

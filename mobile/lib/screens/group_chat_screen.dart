@@ -5,6 +5,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import '../lock_state.dart';
+import '../capture_watch.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
@@ -26,6 +27,7 @@ import '../widgets/remembered_height.dart';
 import '../widgets/video_bubble.dart';
 import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
+import '../file_drop.dart' show dropDayDone, dropTryLater;
 import '../file_kind.dart'
     show
         FileShape,
@@ -60,6 +62,7 @@ import '../stickers/sticker_wire.dart' show StickerWire;
 import '../main.dart'
     show
         appState,
+        AppStateFiles,
         session,
         sessionQuiet,
         claimChat,
@@ -139,7 +142,9 @@ import '../l10n/dates.dart';
 import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
 import '../widgets/video_viewer.dart';
-import '../chat_shots.dart' show shotsKeeps;
+import '../chat_shots.dart' show ShotsPacer, kShotsByMe, shotsKeeps;
+import '../group_shots.dart';
+import '../widgets/shots_line.dart';
 import '../widgets/photo_viewer.dart' show photoHeroTag;
 import '../widgets/voice_mic.dart';
 import '../polls.dart';
@@ -498,6 +503,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   bool _adminGone = false;
   // its admin ended it: what it held is gone, and nothing is written here
   GroupEnd? _end;
+  // its screenshot block, and this screen's hold on the window's flag:
+  // from the list before the first frame, a room's or a group's
+  GroupShots _shots = const GroupShots();
+  late final _shotsHold = ShotsPacer(appState.forceSecure);
+  // who its lines name: the admin on record
+  String? _adminId;
   bool _sending = false;
   // at most six stickers play at once in the whole chat
   final _stickers = StickerBudget(6);
@@ -587,9 +598,22 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // visits
   late final String _memo;
 
+  // android's word that this chat was screenshotted or is recorded: one
+  // quiet line here, on this phone alone
+  VoidCallback? _unwatchCaptures;
+  void _captured(Capture what) {
+    if (!mounted || lockState.locked) return;
+    // a secure window came out black: until a phone shows the callback
+    // stays quiet there, nothing is said
+    if (appState.windowSecure) return;
+    if (ModalRoute.of(context)?.isCurrent == false) return;
+    showHaloToast(context, captureLine(what));
+  }
+
   @override
   void initState() {
     super.initState();
+    _unwatchCaptures = captureWatch.watch(_captured);
     _memo = session.chatKey(widget.groupId);
     _loadWall();
     // set from its info page or under appearance: shown at once
@@ -604,8 +628,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       _roomExpiresAt = g.expiresAt;
       _joiningAt = g.joiningAt;
       if (g.endedBy != null) _end = (at: 0, by: g.endedBy!);
+      // and the menus are kept from the first frame on
+      if (g.shotsBlocking && g.expiresAt == null) {
+        _shots = GroupShots(on: true, all: g.shotsForAll, known: true);
+      }
       break;
     }
+    // never drawn uncovered: the read below settles it
+    _shotsHold.want(appState.shotsBlocksGroup(widget.groupId), now: true);
 
     claimChat('group:${widget.groupId}');
     (_openGroups[widget.groupId] ??= []).add(this);
@@ -615,7 +645,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     StickerLibrary.load().ignore();
     lockState.addListener(_lockLifted);
     // a room is never in the app switcher and never screenshotted. the flag
-    // is set the moment we know it is a room and cleared on the way out.
+    // is set the moment we know it is a room, if the list did not know it
+    // yet, and cleared on the way out.
     session.getGroup(widget.groupId).then((g) async {
       if (!mounted || g == null || g['room_pub'] == null) return;
       setState(() {
@@ -623,7 +654,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _roomBanner = (g['room_seen'] as int? ?? 0) == 0;
       });
       // gone already: nothing is held for a screen that let go
-      if (!_left) _holdSecure(true);
+      if (!_left) _shotsHold.want(true);
       // the creator's first open: hand them the invite right away, that is
       // the only thing an empty room is for
       if (_roomBanner && (g['is_admin'] as int? ?? 0) == 1) {
@@ -1084,6 +1115,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _isAdmin = ((g['is_admin'] as int?) ?? 0) == 1;
         _adminGone = g['admin_id'] == kAdminGone && g['room_pub'] == null;
         _end = groupEndOf(g);
+        _shots = GroupShots.ofRow(g, quiet: sessionQuiet);
+        _adminId = g['admin_id'] as String?;
         _reach = reach;
         // a reload rebuilds every row; the retry count rides across, or a
         // failed send never reaches its cap and spins forever
@@ -1171,6 +1204,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _lookEarlierSoon();
       }
       _loaded = true;
+      // a block turned on goes at once, one turned off five seconds after
+      // the last change, so a fast flipper cannot flash the window
+      if (!_left) _shotsHold.want(_isRoom || _shots.blocking);
       unawaited(_restoreReply());
       unawaited(_refreshPinCount());
     } finally {
@@ -1789,6 +1825,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       mainAxisSize: MainAxisSize.min,
       children: [
         if (showDate) _dateDivider(m.when, row.msgUid ?? 'r${row.rowid}'),
+        ?_shotsLineAt(i, below: false),
         // the bubble alone: what says it has been read
         RowAnchor(
           anchors: _anchors,
@@ -1823,6 +1860,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       album: run,
                       showSender: showSender,
                       kept: _keeps(m),
+                      keptIn: _isRoom ? KeptIn.room : KeptIn.group,
                       stickers: _stickers,
                       stickerOrder: _messages.length - 1 - i,
                       landing: landing,
@@ -1914,6 +1952,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             ),
           ),
         ),
+        ?_shotsLineAt(i, below: true),
       ],
     );
   }
@@ -2970,8 +3009,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
       return null;
     }
-    if (!fileFits(size)) {
-      if (mounted) showHaloToast(context, fileTooBigLine(size));
+    final most = await appState.fileLimitForGroup(widget.groupId);
+    if (!fileFits(size, most)) {
+      if (mounted) showHaloToast(context, fileTooBigLine(size, most));
       return null;
     }
     // a picture the lane cannot clean goes only once the sender has read
@@ -3076,6 +3116,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     mediaProgressEnd(uid);
     if (mounted) setState(() => m.removing = true);
     await Future.delayed(kLeaveGone);
+    await appState.takeDropBackOf(uid);
     await session.deleteMessage(uid);
     if (mounted) setState(() => _messages.remove(m));
     // the unsend goes to each member once the send has let go
@@ -3184,6 +3225,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       appState.chatChanged('group:${widget.groupId}');
       return;
     }
+    if (dropTryLater(result)) showHaloToast(context, l10n.fileServerTryLater);
+    if (dropDayDone(result)) showHaloToast(context, l10n.fileDayLimit);
     // re-find the on-screen object; a reload may have replaced m.
     final live = _liveMsg(uid) ?? m;
     setState(() {
@@ -3558,10 +3601,55 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     unguard = lockGuard.closeOnLock(finish);
   }
 
-  // someone else's, in a room, which always blocks: not copied,
-  // forwarded, shared, saved or opened elsewhere (shotsKeeps)
-  bool _keeps(_GMsg m) =>
-      shotsKeeps(blocking: _isRoom, mine: m.direction == 'out');
+  // someone else's, in a room, which always blocks, or in a group that
+  // does: not copied, forwarded, shared, saved or opened elsewhere
+  // (shotsKeeps)
+  bool _keeps(_GMsg m) => shotsKeeps(
+    blocking: _isRoom || _shots.blocking,
+    mine: m.direction == 'out',
+  );
+
+  // where the block last changed: over the first row since, or under the
+  // newest one when nothing came after it. an album's member is drawn by
+  // its lead, so the line goes with the lead's row. a room has none
+  Widget? _shotsLineAt(int ix, {required bool below}) {
+    final s = _shots;
+    if (_isRoom || s.line == kGroupLineNone || s.when <= 0) return null;
+    if (_messages.isEmpty || _end != null) return null;
+    final admin = _adminId;
+    final text = groupShotsLineText(
+      s.line,
+      mine: s.by == kShotsByMe,
+      name: admin == null ? null : _nameOf(admin),
+    );
+    if (text == null) return null;
+    final at = DateTime.fromMillisecondsSinceEpoch(s.when);
+    final run = _albums.runOf(_messages[ix]);
+    final here = run == null
+        ? _shotsLineBy(ix, at, below: below)
+        : run.present.any(
+            (x) => _shotsLineBy(
+              _messages.lastIndexWhere((m) => identical(m, x)),
+              at,
+              below: below,
+            ),
+          );
+    if (!here) return null;
+    return ShotsLine(
+      key: const ValueKey('shots-line'),
+      on: s.on && s.line != kGroupLinePaused,
+      text: text,
+    );
+  }
+
+  // whether the line falls over row [ix], or under it
+  bool _shotsLineBy(int ix, DateTime at, {required bool below}) {
+    if (ix < 0) return false;
+    final m = _messages[ix];
+    if (below) return ix == _messages.length - 1 && m.when.isBefore(at);
+    if (m.when.isBefore(at)) return false;
+    return ix == 0 ? !_hasMore : _messages[ix - 1].when.isBefore(at);
+  }
 
   // what can be done to one message, under it while the menu is open
   Widget _menuCard(
@@ -3578,7 +3666,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final saveOn = held ?? anchor;
     final shareOn = album == null ? target : held;
     return MessageMenuCard(
-      note: kept ? l10n.roomShotsMenuNote : null,
+      note: !kept
+          ? null
+          : _isRoom
+          ? l10n.roomShotsMenuNote
+          : l10n.groupShotsMenuNote,
       actions: [
         MenuAction(
           icon: anchor.pinned ? Icons.push_pin : Icons.push_pin_outlined,
@@ -4367,19 +4459,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void _leaveRoomScreen() {
     if (_left) return;
     _left = true;
-    _holdSecure(false);
+    _shotsHold.release();
     // a room still waiting never showed its line
     if (_isRoom && _roomBanner && !_waiting) {
       session.markRoomSeen(widget.groupId);
     }
-  }
-
-  // this screen's one hold on the shield, taken and let go once each
-  bool _secureHeld = false;
-  void _holdSecure(bool on) {
-    if (on == _secureHeld) return;
-    _secureHeld = on;
-    appState.forceSecure(on);
   }
 
   @override
@@ -4387,11 +4471,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     super.activate();
     // came back after a deactivate that was only a reparent
     _left = false;
-    if (_isRoom) _holdSecure(true);
+    _shotsHold.want(_isRoom || _shots.blocking, now: true);
   }
 
   @override
   void dispose() {
+    _unwatchCaptures?.call();
     wallpaperRevision.removeListener(_loadWall);
     final open = _openGroups[widget.groupId]?..remove(this);
     if (open != null && open.isEmpty) _openGroups.remove(widget.groupId);
@@ -4464,6 +4549,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       expiresAt: _roomExpiresAt,
                       joiningAt: _waiting ? _joiningAt : null,
                       ended: _end != null,
+                      shotsForAll: !_isRoom && _end == null && _shots.forAll,
                       onBack: () => Navigator.of(context).pop(),
                       onSearch: _waiting || _end != null ? null : _openSearch,
                       pinnedCount: _end != null ? 0 : _pinCount,
@@ -4922,6 +5008,8 @@ class _Header extends StatelessWidget {
   final int? joiningAt;
   // its admin ended it: no count under the name
   final bool ended;
+  // every member's phone blocks screenshots: a small lock by the count
+  final bool shotsForAll;
   final VoidCallback onBack;
   final VoidCallback onTapInfo;
   final VoidCallback? onSearch;
@@ -4935,6 +5023,7 @@ class _Header extends StatelessWidget {
     this.expiresAt,
     this.joiningAt,
     this.ended = false,
+    this.shotsForAll = false,
     required this.onBack,
     required this.onTapInfo,
     this.onSearch,
@@ -5012,40 +5101,74 @@ class _Header extends StatelessWidget {
                             ),
                           ),
                           // let in, the waiting line rises into the clock
-                          RiseSwap(
-                            child: ended
-                                // the page and its bar say it: no count
-                                ? const SizedBox(key: ValueKey('ended'))
-                                : joiningAt != null
-                                ? RoomJoinLine(
-                                    key: const ValueKey('joining'),
-                                    joiningAt: joiningAt!,
-                                    full: appState.roomFull(groupId),
-                                  )
-                                : expiresAt != null
-                                ? SlotLine(
-                                    key: const ValueKey('room'),
-                                    msg: (t) =>
-                                        l10n.groupChatHere(memberCount, t),
-                                    slot: RoomCountdown(
-                                      expiresAt: expiresAt!,
-                                      size: 10,
-                                    ),
-                                    style: HaloType.mono(
-                                      size: 10,
-                                      color: HaloColors.text2,
-                                    ),
-                                  )
-                                : Text(
-                                    l10n.groupChatMembers(memberCount),
-                                    key: const ValueKey('members'),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: HaloType.mono(
-                                      size: 10,
-                                      color: HaloColors.text2,
-                                    ),
-                                  ),
+                          Row(
+                            children: [
+                              Flexible(
+                                child: RiseSwap(
+                                  child: ended
+                                      // the page and its bar say it: no count
+                                      ? const SizedBox(key: ValueKey('ended'))
+                                      : joiningAt != null
+                                      ? RoomJoinLine(
+                                          key: const ValueKey('joining'),
+                                          joiningAt: joiningAt!,
+                                          full: appState.roomFull(groupId),
+                                        )
+                                      : expiresAt != null
+                                      ? SlotLine(
+                                          key: const ValueKey('room'),
+                                          msg: (t) => l10n.groupChatHere(
+                                            memberCount,
+                                            t,
+                                          ),
+                                          slot: RoomCountdown(
+                                            expiresAt: expiresAt!,
+                                            size: 10,
+                                          ),
+                                          style: HaloType.mono(
+                                            size: 10,
+                                            color: HaloColors.text2,
+                                          ),
+                                        )
+                                      : Text(
+                                          l10n.groupChatMembers(memberCount),
+                                          key: const ValueKey('members'),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: HaloType.mono(
+                                            size: 10,
+                                            color: HaloColors.text2,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                              // every phone in it blocks: a lock by the count
+                              AnimatedSwitcher(
+                                duration: Duration(
+                                  milliseconds: motionStill(context) ? 0 : 220,
+                                ),
+                                child: shotsForAll
+                                    ? Padding(
+                                        key: const ValueKey('shots'),
+                                        padding:
+                                            const EdgeInsetsDirectional.only(
+                                              start: 6,
+                                            ),
+                                        child: Semantics(
+                                          label: l10n.groupShotsBlockedHere,
+                                          child: Icon(
+                                            Icons.phonelink_lock_outlined,
+                                            size: 11,
+                                            color: HaloColors.text2,
+                                          ),
+                                        ),
+                                      )
+                                    : const SizedBox(
+                                        key: ValueKey('no-shots'),
+                                        width: 0,
+                                      ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -5655,10 +5778,13 @@ class _GroupBubble extends StatelessWidget {
     this.linkTitle,
     this.linkBySender = false,
     this.kept = false,
+    this.keptIn = KeptIn.room,
   });
 
-  // someone else's, in a room: opened in no other app
+  // someone else's, in a room or a group that blocks: opened in no other
+  // app, and said so in the words of where it is
   final bool kept;
+  final KeptIn keptIn;
 
   // a search steps what is not a hit back, as in the 1:1 chat
   @override
@@ -5993,7 +6119,7 @@ class _GroupBubble extends StatelessWidget {
                                                   path: m.filePath!,
                                                   fileName: m.fileName,
                                                   kept: kept,
-                                                  room: true,
+                                                  where: keptIn,
                                                 );
                                               },
                                               stamp: m.failed
@@ -6012,7 +6138,7 @@ class _GroupBubble extends StatelessWidget {
                                                     m.filePath!,
                                                     m.fileName,
                                                     kept: kept,
-                                                    room: true,
+                                                    where: keptIn,
                                                   );
                                                 }
                                               },

@@ -24,8 +24,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/screens/handle_screen.dart';
 import 'package:kryfo/secure_store.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show Curve;
+import 'signal_kit.dart';
 import 'package:kryfo/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -95,7 +94,7 @@ void main() {
 
   // the invite a claim sends is built from this phone's own keys
   setUpAll(() async {
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     await signalSession.bootstrap(
       database: MemDb(),
       xPubBytes: me.publicKey.serialize().sublist(1),

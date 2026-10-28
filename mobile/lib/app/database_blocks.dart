@@ -69,6 +69,8 @@ mixin _BlockRows {
         ('reactions', 'reactor'),
         ('poll_votes', 'voter'),
         ('media_chunks', 'sender'),
+        // their files coming in groups too: nothing of theirs stays
+        ('file_fetches', 'sender'),
         ('frame_order', 'sender'),
         ('frames_out', 'peer_id'),
         ('pins_out', 'peer_id'),

@@ -153,7 +153,7 @@ Future<void> sayTrayWords() async {
 }
 
 /// why the desktop will not start, before anything of it runs
-enum DesktopStop { alreadyOpen, notYours, notPrivate }
+enum DesktopStop { alreadyOpen, notYours, notPrivate, noMemory }
 
 /// the folder checks, in the order they are made: private, the user's own,
 /// and no other process on it. a reopen's new process may find the old one
@@ -190,6 +190,14 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   DesktopBinding.install(desktopAnswers(host, db));
 
   final runtime = desktopRuntimeDir(uid: getuid());
+  // without a folder in memory the engine's files and the temporary ones
+  // would be plain on the disk while the app runs: linux refuses that.
+  // windows has no tmpfs and keeps them in <root>/tmp (its own branch)
+  if (runtime == null && !Platform.isWindows) {
+    runApp(const DesktopStopApp(stop: DesktopStop.noMemory));
+    return;
+  }
+  sweepOldRuntimeDirs(runtime, uid: getuid());
   final paths = DesktopPaths(root, runtime: runtime);
   PathProviderPlatform.instance = paths;
   final vault = DesktopVault(p.join(root, 'vault.kv'));
@@ -219,6 +227,25 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   unawaited(sayTrayWords());
   // the key goes from memory as the engine lets the app go
   closeOnDetach = AppLifecycleListener(onDetach: vault.close);
+  // ended from outside, or from the tray: the marks kept, memory cleared,
+  // the key let go, before the process goes
+  void ending() {
+    try {
+      host.beforeExit?.call();
+    } catch (_) {}
+    vault.close();
+  }
+
+  if (!Platform.isWindows) {
+    ProcessSignal.sigterm.watch().listen((_) {
+      ending();
+      exit(0);
+    });
+  }
+  _desktopChannel.setMethodCallHandler((call) async {
+    if (call.method == 'quit') ending();
+    return null;
+  });
   // what memory held from a run before goes now, before anything is plain
   if (runtime != null) {
     final docs = (await paths.getApplicationDocumentsPath())!;
@@ -261,9 +288,13 @@ Future<void> openSeal({
 }) async {
   final docs = (await paths.getApplicationDocumentsPath())!;
   final support = (await paths.getApplicationSupportPath())!;
-  final temp = (await paths.getTemporaryPath())!;
-  final areas = SealedAreas(docs: docs, support: support, runtime: temp)
-    ..filesKey = await filesKeyFrom(vault);
+  // a sealed file may go out in the clear only into memory: not into a
+  // temporary folder that is on the disk
+  final areas = SealedAreas(
+    docs: docs,
+    support: support,
+    runtime: runtime == null ? null : (await paths.getTemporaryPath())!,
+  )..filesKey = await filesKeyFrom(vault);
   final io = SealedIO(areas, const EngineChunkCrypto());
   IOOverrides.global = io;
   isolateRunner = <R>(FutureOr<R> Function() f) => runSealed(f);
@@ -328,14 +359,16 @@ Future<void> openSeal({
 
   final vaultGone = host.destroyKeys;
   EngineFiles? engineFiles;
-  if (runtime != null) {
+  {
+    // the engine is never handed docs: on windows its folder is on the disk
+    // under <root>/tmp, its marks still sealed between runs
     final ef = engineFiles = EngineFiles(
       docs: docs,
       support: support,
-      runtime: runtime,
+      runtime: runtime ?? p.join(root, 'tmp'),
     );
     await ef.prepare(vault);
-    ef.watch();
+    ef.watch(vault);
     engineDirOf = (_) => ef.dir;
     engineStarter = (_, start) => ef.start(start);
   }

@@ -1,0 +1,7 @@
+# the peer's own: lib/ holds 0.5.3's files as they were
+analyzer:
+  exclude:
+    - lib/signal_session.dart
+    - lib/signal_stores.dart
+    - lib/dlog.dart
+    - lib/wire_pad.dart

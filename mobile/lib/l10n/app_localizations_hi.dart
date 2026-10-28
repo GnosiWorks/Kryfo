@@ -1252,7 +1252,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get cameraCouldNotSaveA => 'इस फ़ोन पर कॉपी सेव नहीं हो पाई';
 
   @override
-  String get cameraTooLongForA => 'मैसेज के लिए बहुत लंबा · अधिकतम 15 MB';
+  String get cameraTooLongForA => 'मैसेज के लिए बहुत लंबा · अधिकतम 50 MB';
 
   @override
   String get cameraNeverSavedToYour => 'आपकी फ़ोटो में कभी सेव नहीं होती';
@@ -2294,6 +2294,45 @@ class AppLocalizationsHi extends AppLocalizations {
   String get donateBadgesStartAt20 => 'बैज \$20 से शुरू होते हैं';
 
   @override
+  String get donateShowTheAddress => 'पता दिखाएँ';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return 'bitcoin में $amount';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'बैज से क्या मिलता है';
+
+  @override
+  String get donateGivesMark =>
+      'आपके नाम के पास एक निशान। इसे कौन देखे, या कोई न देखे, यह आप तय करते हैं।';
+
+  @override
+  String get donateGivesReceipt =>
+      'इस फ़ोन पर रखी एक हस्ताक्षरित रसीद। यह बिना किसी खाते के बैज को साबित करती है।';
+
+  @override
+  String get donateGivesFree =>
+      'बैज हो या न हो, निजता की हर सुविधा मुफ़्त रहती है।';
+
+  @override
+  String get donateAddressOnTap =>
+      'पता तभी बनता है जब आप नीचे टैप करते हैं। यह एक घंटे तक आपका रहता है, इसलिए लौटने पर आपको वही पता मिलता है।';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin अभी व्यस्त है। बाद में फिर कोशिश करें या कार्ड से भुगतान करें।';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'आप अब भी नीचे दिए पते पर bitcoin भेज सकते हैं। इससे बैज नहीं मिलता।';
+
+  @override
+  String get donateSameAddressAgain =>
+      'यह वही पता है जो आपने पहले खोला था। अगर आप भेज चुके हैं, तो यहीं प्रतीक्षा करें।';
+
+  @override
   String get donateReachingThePaymentService =>
       'Tor से भुगतान सेवा तक पहुँच रहे हैं…';
 
@@ -2384,6 +2423,21 @@ class AppLocalizationsHi extends AppLocalizations {
           'चेन पर पुष्टि हो गई। अब आप रक्षक हैं। यह आपसे कोई नहीं छीन सकता।',
       'other':
           'चेन पर पुष्टि हो गई। अब आप समर्थक हैं। यह आपसे कोई नहीं छीन सकता।',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'चेन पर पुष्टि हो गई। फिर से सहयोग के लिए धन्यवाद। आपका समर्थक बैज आपके पास ही रहता है।',
+      'patron':
+          'चेन पर पुष्टि हो गई। फिर से सहयोग के लिए धन्यवाद। आपका संरक्षक बैज आपके पास ही रहता है।',
+      'guardian':
+          'चेन पर पुष्टि हो गई। फिर से सहयोग के लिए धन्यवाद। आपका रक्षक बैज आपके पास ही रहता है।',
+      'other':
+          'चेन पर पुष्टि हो गई। फिर से सहयोग के लिए धन्यवाद। आपका समर्थक बैज आपके पास ही रहता है।',
     });
     return '$_temp0';
   }
@@ -8242,6 +8296,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get devWhoChoiceStays => 'आपका चुनाव इस चैट के साथ रहता है।';
 
   @override
+  String get devUpdateToWrite =>
+      'Marios को संदेश भेजने के लिए Kryfo अपडेट करें।';
+
+  @override
   String get devKeyCheckFailed =>
       'Marios की कुंजी जाँची नहीं जा सकी। कुछ नहीं भेजा गया।';
 
@@ -8304,6 +8362,11 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'यह आपका अपना आमंत्रण है। जुड़ने के लिए इसे किसी और के साथ शेयर करें।';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return 'एक-दूसरे को जोड़ने से पहले $id को Kryfo अपडेट करना होगा।';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9515,6 +9578,126 @@ class AppLocalizationsHi extends AppLocalizations {
       'अपने फ़ोन पर स्क्रीन लॉक सेट करें, ताकि फ़ोन लॉक होने पर भी यह सुरक्षा बनी रहे।';
 
   @override
+  String get fileServerTryLater =>
+      'फ़ाइल सर्वर अभी भरा हुआ है। थोड़ी देर बाद फिर से कोशिश करें।';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'यह फ़ाइल $size की है। जब तक इस चैट में सभी Kryfo अपडेट नहीं करते, यहाँ $max तक की फ़ाइलें जा सकती हैं।';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'आज आपने बहुत सारी बड़ी फ़ाइलें भेज दी हैं। कल फिर से कोशिश करें।';
+
+  @override
+  String get mediaProgressPreparing => 'तैयार हो रहा है · ऐप खुला रखें';
+
+  @override
+  String get groupShotsBlocksAll =>
+      'इस ग्रुप के हर फ़ोन पर स्क्रीनशॉट और स्क्रीन रिकॉर्डिंग रोकता है, और एक-दूसरे के मैसेज कॉपी, फ़ॉरवर्ड या सेव करना भी। यह उन ऐप को नहीं रोक सकता जिन्हें स्क्रीन पढ़ने की अनुमति है, न ही ऐसे फ़ोन या ऐप को जिसे इससे बचने के लिए बदला गया हो।';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'यहाँ सबके Kryfo अपडेट करने का इंतज़ार है';
+
+  @override
+  String get groupShotsOnForAll => 'यहाँ सबके लिए चालू';
+
+  @override
+  String get groupShotsOffAdminOnly => 'बंद। इसे सिर्फ़ एडमिन बदल सकते हैं';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'यहाँ सबके Kryfo अपडेट करने का इंतज़ार है। इसे सिर्फ़ एडमिन बदल सकते हैं';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'यहाँ सबके लिए चालू। इसे सिर्फ़ एडमिन बदल सकते हैं';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString लोगों का इंतज़ार',
+      one: '$countString व्यक्ति का इंतज़ार',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'अभी अपडेट बाकी है';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'इन लोगों के Kryfo अपडेट करते ही स्क्रीनशॉट रोकना सब पर लागू होगा। किसी को ग्रुप से हटाने के लिए उस पर टैप करें।';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'Kryfo अपडेट करना है, या तब से ऑनलाइन नहीं आए';
+
+  @override
+  String get groupShotsBlockedByYou => 'आपने ब्लॉक किया है';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'आपने स्क्रीनशॉट रोकना चालू किया। यहाँ सबके Kryfo अपडेट करने के बाद यह सब पर लागू होगा।';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name ने स्क्रीनशॉट रोकना चालू किया। यहाँ सबके Kryfo अपडेट करने के बाद यह सब पर लागू होगा।';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'यहाँ सबके लिए स्क्रीनशॉट रोकना चालू है। एक-दूसरे के मैसेज कॉपी, फ़ॉरवर्ड और सेव करना भी बंद है।';
+
+  @override
+  String get groupShotsPaused =>
+      'यहाँ कोई अभी स्क्रीनशॉट नहीं रोक सकता। उनके Kryfo अपडेट करते ही यह फिर सब पर लागू होगा।';
+
+  @override
+  String get groupShotsCantYet => 'अभी स्क्रीनशॉट नहीं रोक सकते';
+
+  @override
+  String get groupShotsAddTitle => 'फिर भी जोड़ें?';
+
+  @override
+  String get groupShotsAddPauses =>
+      'जब तक वे Kryfo अपडेट नहीं करते, स्क्रीनशॉट रोकना यहाँ सब पर लागू नहीं होगा।';
+
+  @override
+  String get groupShotsLeaveStays => 'स्क्रीनशॉट रोकना जैसा है वैसा ही रहेगा।';
+
+  @override
+  String get groupShotsBlockedHere => 'Kryfo इस ग्रुप में स्क्रीनशॉट रोकता है';
+
+  @override
+  String get groupShotsMenuNote =>
+      'इस ग्रुप में दूसरों के मैसेज कॉपी, फ़ॉरवर्ड और सेव करना बंद है';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'इस ग्रुप में दूसरों की फ़ाइलें दूसरे ऐप में खोलना बंद है';
+
+  @override
+  String get groupShotsOldNotice =>
+      'मैंने इस ग्रुप में स्क्रीनशॉट रोकना चालू किया है। आपका Kryfo अभी ऐसा नहीं कर सकता, इसलिए कृपया अपडेट करें।';
+
+  @override
+  String get captureShotTaken =>
+      'स्क्रीनशॉट लिया गया। किसी और को नहीं बताया गया।';
+
+  @override
+  String get captureRecording =>
+      'यह स्क्रीन रिकॉर्ड हो रही है। किसी और को नहीं बताया गया।';
+
+  @override
   String get settingsDevices => 'डिवाइस';
 
   @override
@@ -9757,4 +9940,12 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get desktopFolderNotPrivate =>
       'Kryfo अपना फ़ोल्डर सिर्फ़ आपके लिए निजी नहीं बना पाया, इसलिए यह नहीं खुलेगा।';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'यह लॉक Kryfo के किसी दूसरे संस्करण ने बनाया है, जिसे यह संस्करण नहीं पढ़ सकता।';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'चलते समय Kryfo को मेमोरी में एक निजी फ़ोल्डर चाहिए, और यह कंप्यूटर ऐसा कोई फ़ोल्डर नहीं देता, इसलिए यह नहीं खुलेगा।';
 }

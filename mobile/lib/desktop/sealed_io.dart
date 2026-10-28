@@ -71,7 +71,7 @@ class SealedAreas {
   static const _plainSupport = {'translate', 'voice'};
 
   static final _media = RegExp(r'^(media|wallpapers)(_k[234])?$');
-  static final _waitingOnion = RegExp(r'^onion(_k[234])?\.key$');
+  static final _waitingOnion = RegExp(r'^onion(_k[234])?\.key(\.new)?$');
 
   // a restore's staging folders in docs: the files key, as support's
   static const _staging = {'restore_stage', 'restore_hidden'};

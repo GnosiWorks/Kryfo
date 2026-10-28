@@ -671,14 +671,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.2"
-  libsignal_protocol_dart:
-    dependency: "direct main"
-    description:
-      name: libsignal_protocol_dart
-      sha256: "3ed4455f09c7299934a6b9ca0028daff87940d446142056e1ec25997de0e41bf"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.8.2"
   lints:
     dependency: transitive
     description:
@@ -783,14 +775,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "9.5.0"
-  optional:
-    dependency: transitive
-    description:
-      name: optional
-      sha256: f80327d7a3335a0be68418072668043c7ab291df575c21aa42e0c5633641da39
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.1.0+1"
   package_config:
     dependency: transitive
     description:
@@ -927,14 +911,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.8"
-  pointycastle:
-    dependency: transitive
-    description:
-      name: pointycastle
-      sha256: "92aa3841d083cc4b0f4709b5c74fd6409a3e6ba833ffc7dc6a8fee096366acf5"
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.0.0"
   posix:
     dependency: transitive
     description:
@@ -943,14 +919,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.5.2"
-  protobuf:
-    dependency: transitive
-    description:
-      name: protobuf
-      sha256: "13b6717366aa7ec3792dd62c19c7d33a785708224365f2db23c5ca01f1c1a0f2"
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.1.0"
   pub_semver:
     dependency: transitive
     description:
@@ -1356,14 +1324,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
-  x25519:
-    dependency: transitive
-    description:
-      name: x25519
-      sha256: "5108a324e1704a04f174507cf162cfce345f99585573356236c6421a4df45324"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.2"
   xdg_directories:
     dependency: transitive
     description:

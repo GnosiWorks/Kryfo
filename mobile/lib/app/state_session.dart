@@ -437,12 +437,15 @@ extension AppStateSession on AppState {
       await refreshHiddenCards();
       // what came sealed while it was shut
       await _unseal();
+      // its groups' screenshot blocks, as what came says
+      await _groupShotsAtOpen(v);
       // and what its shelf still holds for people it accepted
       unawaited(letHeldIn(v));
       unawaited(_fillSearch(v));
       // what was typed in it and never went, and files half arrived
       unawaited(drainOutbox());
       unawaited(askForMissingSlices());
+      unawaited(fetchDrops());
     } catch (e) {
       if (identical(_openVault, v)) {
         dlog('vault: after open (${e.runtimeType})');

@@ -1994,7 +1994,7 @@ abstract class AppLocalizations {
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Too long for a message · 15 MB max'**
+  /// **'Too long for a message · 50 MB max'**
   String get cameraTooLongForA;
 
   /// screens/camera_screen.dart
@@ -3692,6 +3692,66 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'Show the address'**
+  String get donateShowTheAddress;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} in bitcoin'**
+  String donateReviewAmount(String amount);
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'What the badge gives'**
+  String get donateWhatTheBadgeGives;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'A mark by your name. You choose who sees it, if anyone.'**
+  String get donateGivesMark;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'A signed receipt kept on this phone. It proves the badge with no account.'**
+  String get donateGivesReceipt;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Every privacy feature stays free, badge or not.'**
+  String get donateGivesFree;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'The address is made when you tap below. It stays yours for an hour, so coming back gives you the same one.'**
+  String get donateAddressOnTap;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Bitcoin is busy right now. Try again later or pay by card.'**
+  String get donateBitcoinBusy;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'You can still send bitcoin to the address below. It gives no badge.'**
+  String get donateBusyPlainAddress;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'This is the address you opened earlier. If you already sent, wait here.'**
+  String get donateSameAddressAgain;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'Reaching the payment service over Tor…'**
   String get donateReachingThePaymentService;
 
@@ -3826,6 +3886,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{tier, select, supporter{Verified on-chain. You\'re a supporter now. No one can take that off you.} patron{Verified on-chain. You\'re a patron now. No one can take that off you.} guardian{Verified on-chain. You\'re a guardian now. No one can take that off you.} other{Verified on-chain. You\'re a supporter now. No one can take that off you.}}'**
   String donateVerifiedOnChainYou(String tier);
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'{tier, select, supporter{Verified on-chain. Thank you for giving again. You keep your supporter badge.} patron{Verified on-chain. Thank you for giving again. You keep your patron badge.} guardian{Verified on-chain. Thank you for giving again. You keep your guardian badge.} other{Verified on-chain. Thank you for giving again. You keep your supporter badge.}}'**
+  String donateVerifiedBadgeStays(String tier);
 
   /// screens/donate_screen.dart
   ///
@@ -13313,6 +13379,12 @@ abstract class AppLocalizations {
   /// **'Your choice stays with this chat.'**
   String get devWhoChoiceStays;
 
+  /// screens/chat_screen.dart, dev chat: the card of Marios this app has built in is from before Kryfo 0.6 and has no post-quantum key, so no new chat with him can start; a later app has his new card. calm, not an error
+  ///
+  /// In en, this message translates to:
+  /// **'Update Kryfo to message Marios.'**
+  String get devUpdateToWrite;
+
   /// screens/chat_screen.dart: above the composer of the developer chat when his pinned key did not check out
   ///
   /// In en, this message translates to:
@@ -13420,6 +13492,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This is your own invite. Share it with someone else to connect.'**
   String get appYourOwnInvite;
+
+  /// app/links.dart, handleHaloUriAdded: a scanned or pasted card comes from a phone on Kryfo 0.5 or older, which has no post-quantum key; no chat can start until that person updates. id is their three words
+  ///
+  /// In en, this message translates to:
+  /// **'{id} needs to update Kryfo before you can add each other.'**
+  String appLinkNeedsUpdate(Object id);
 
   /// app/links.dart, handleHaloUriAdded: a scanned or pasted card, or the one behind a handle, names someone already here with another key, someone who was added or checked. which one is who they say only the safety number tells
   ///
@@ -15389,6 +15467,180 @@ abstract class AppLocalizations {
   /// **'Set a screen lock on your phone so this protection holds when it is locked.'**
   String get keyLineScreenLock;
 
+  /// chat and group: toast when the files service has no room for a big file right now. calm, says to try later
+  ///
+  /// In en, this message translates to:
+  /// **'The file server is full for now. Try again a little later.'**
+  String get fileServerTryLater;
+
+  /// chat and group: toast when a picked file is over what an older Kryfo in the chat takes. size and max are like 30.2 mb and 15.0 mb
+  ///
+  /// In en, this message translates to:
+  /// **'This file is {size}. This chat takes files up to {max} until everyone in it updates Kryfo.'**
+  String fileTooBigUntilUpdate(String size, String max);
+
+  /// chat and group: toast when this phone has sent its day of big files through the files service. calm, says when it works again
+  ///
+  /// In en, this message translates to:
+  /// **'You have sent a lot of big files today. Try again tomorrow.'**
+  String get fileDayLimit;
+
+  /// the strip above the composer while a big file is made ready to go through the files service, before any of it is sent
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing · keep the app open'**
+  String get mediaProgressPreparing;
+
+  /// screens/group_info_screen.dart: the admin's switch while it is off: what it does
+  ///
+  /// In en, this message translates to:
+  /// **'Blocks screenshots and screen recording on every phone in this group, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.'**
+  String get groupShotsBlocksAll;
+
+  /// screens/group_info_screen.dart: the admin's switch, on while someone's app cannot block yet
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for everyone here to update Kryfo'**
+  String get groupShotsStartsWhenAll;
+
+  /// screens/group_info_screen.dart: the admin's switch, on for every member
+  ///
+  /// In en, this message translates to:
+  /// **'On for everyone here'**
+  String get groupShotsOnForAll;
+
+  /// screens/group_info_screen.dart: a member's read-only row, off
+  ///
+  /// In en, this message translates to:
+  /// **'Off. Only the admin can change this'**
+  String get groupShotsOffAdminOnly;
+
+  /// screens/group_info_screen.dart: a member's read-only row, on but waiting on someone
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for everyone here to update Kryfo. Only the admin can change this'**
+  String get groupShotsWaitAdminOnly;
+
+  /// screens/group_info_screen.dart: a member's read-only row, on for every member
+  ///
+  /// In en, this message translates to:
+  /// **'On for everyone here. Only the admin can change this'**
+  String get groupShotsOnAdminOnly;
+
+  /// screens/group_info_screen.dart: the admin's row that opens the list of members whose app cannot block yet
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Waiting for {count} person} other{Waiting for {count} people}}'**
+  String groupShotsWaitingFor(int count);
+
+  /// widgets/group_shots_sheet.dart: the title of that list
+  ///
+  /// In en, this message translates to:
+  /// **'Still to update'**
+  String get groupShotsWaitingTitle;
+
+  /// widgets/group_shots_sheet.dart: the line under the title
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot blocking covers everyone once these people update Kryfo. Tap someone to remove them from the group.'**
+  String get groupShotsWaitingHint;
+
+  /// widgets/group_shots_sheet.dart: under a member's name
+  ///
+  /// In en, this message translates to:
+  /// **'Needs to update Kryfo, or hasn’t been online since'**
+  String get groupShotsNeedsUpdate;
+
+  /// widgets/group_shots_sheet.dart: under a member you blocked
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked by you'**
+  String get groupShotsBlockedByYou;
+
+  /// widgets/shots_line.dart: the line in the group where you turned it on and someone's app cannot block yet
+  ///
+  /// In en, this message translates to:
+  /// **'You turned on screenshot blocking. It covers everyone once all here have updated Kryfo.'**
+  String get groupShotsYouTurnedOnWait;
+
+  /// widgets/shots_line.dart: the same, turned on by the admin
+  ///
+  /// In en, this message translates to:
+  /// **'{name} turned on screenshot blocking. It covers everyone once all here have updated Kryfo.'**
+  String groupShotsTheyTurnedOnWait(String name);
+
+  /// widgets/shots_line.dart: every member's app can block now
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot blocking is on for everyone here. Copying, forwarding and saving each other’s messages is off too.'**
+  String get groupShotsStarted;
+
+  /// widgets/shots_line.dart: someone whose app cannot block came in or went back to an older app
+  ///
+  /// In en, this message translates to:
+  /// **'Someone here can’t block screenshots yet. It covers everyone again once they update Kryfo.'**
+  String get groupShotsPaused;
+
+  /// screens/group_info_screen.dart: in the add sheet, under someone whose app cannot block in groups yet
+  ///
+  /// In en, this message translates to:
+  /// **'Can’t block screenshots yet'**
+  String get groupShotsCantYet;
+
+  /// screens/group_info_screen.dart: confirm title when adding such a person
+  ///
+  /// In en, this message translates to:
+  /// **'Add anyway?'**
+  String get groupShotsAddTitle;
+
+  /// screens/group_info_screen.dart: confirm line when adding such a person
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot blocking won’t cover everyone here until they update Kryfo.'**
+  String get groupShotsAddPauses;
+
+  /// screens/group_info_screen.dart: extra line in the admin's leave confirm while blocking is on
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot blocking stays as it is.'**
+  String get groupShotsLeaveStays;
+
+  /// screens/group_chat_screen.dart: screen reader label of the lock in the header
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo blocks screenshots in this group'**
+  String get groupShotsBlockedHere;
+
+  /// screens/group_chat_screen.dart: note in the message menu
+  ///
+  /// In en, this message translates to:
+  /// **'Copying, forwarding and saving others’ messages is off in this group'**
+  String get groupShotsMenuNote;
+
+  /// widgets/video_bubble.dart: a file of someone else's in a group that blocks
+  ///
+  /// In en, this message translates to:
+  /// **'Opening others’ files in other apps is off in this group'**
+  String get groupShotsKeptOpen;
+
+  /// app/state_group_shots.dart: the message older versions show when the admin turns it on
+  ///
+  /// In en, this message translates to:
+  /// **'I turned on screenshot blocking in this group. Your Kryfo can’t do it yet, so please update.'**
+  String get groupShotsOldNotice;
+
+  /// widgets/shots_line.dart: one quiet line on this phone when android says the chat was screenshotted. nothing is sent
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot taken. Nobody else was told.'**
+  String get captureShotTaken;
+
+  /// widgets/shots_line.dart: the same when android says the screen is being recorded
+  ///
+  /// In en, this message translates to:
+  /// **'This screen is being recorded. Nobody else was told.'**
+  String get captureRecording;
+
   /// screens/settings_screen.dart: the section over the linked devices row
   ///
   /// In en, this message translates to:
@@ -15778,6 +16030,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Kryfo could not make its folder private to you, so it will not open.'**
   String get desktopFolderNotPrivate;
+
+  /// desktop/desktop_lock_screen.dart: the vault file is of a version this app does not read
+  ///
+  /// In en, this message translates to:
+  /// **'This lock was made by another version of Kryfo, which this one cannot read.'**
+  String get desktopLockOtherVersion;
+
+  /// desktop/desktop_lock_screen.dart: no XDG_RUNTIME_DIR or /dev/shm folder could be had
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo needs a private folder in memory while it runs, and this computer offers none, so it will not open.'**
+  String get desktopNoMemoryFolder;
 }
 
 class _AppLocalizationsDelegate

@@ -19,7 +19,8 @@ class HaloDb
         _MediaRows,
         _GroupOwedRows,
         _NotifRows,
-        _DraftRows
+        _DraftRows,
+        _GroupShotsRows
     implements GroupOwedStore {
   HaloDb([this.container = HaloContainer.everyday]);
 
@@ -154,7 +155,7 @@ class HaloDb
     _db = await openDatabase(
       path,
       password: pw,
-      version: 88,
+      version: 91,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -281,7 +282,14 @@ class HaloDb
             door_was TEXT,
             voice_disguise INTEGER,
             ended_at INTEGER,
-            ended_by TEXT
+            ended_by TEXT,
+            shots_on INTEGER NOT NULL DEFAULT 0,
+            shots_at INTEGER NOT NULL DEFAULT 0,
+            shots_all INTEGER NOT NULL DEFAULT 0,
+            shots_by INTEGER NOT NULL DEFAULT 0,
+            shots_when INTEGER NOT NULL DEFAULT 0,
+            shots_line INTEGER NOT NULL DEFAULT 0,
+            shots_told INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -290,6 +298,7 @@ class HaloDb
             halo_id TEXT NOT NULL,
             joined_at INTEGER NOT NULL,
             opus_can INTEGER NOT NULL DEFAULT 0,
+            shots_nudged INTEGER NOT NULL DEFAULT 0,
             PRIMARY KEY (group_id, halo_id),
             FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
           )
@@ -319,6 +328,7 @@ class HaloDb
         await _pinsTable(db);
         await _framesTable(db);
         await _mediaWantsTable(db);
+        await dropFetchTable(db);
         await _heldTable(db);
         await _signalTables(db);
         await _pollTables(db);
@@ -344,7 +354,7 @@ class HaloDb
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 to 88
+        // they add. 66 runs after it: it reads what they all make. 67 to 89
         // last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
@@ -878,6 +888,20 @@ class HaloDb
         if (oldV < 88) {
           // what a contact's phone understands (typing.dart)
           await capsColumns(db);
+        }
+        if (oldV < 89) {
+          // a group's screenshot block (group_shots.dart)
+          await groupShotsColumns(db);
+        }
+        if (oldV < 90) {
+          // the files on their way in from the files service, and the ids
+          // of the ones already here (file_drop.dart)
+          await dropFetchTable(db);
+        }
+        if (oldV < 91) {
+          // the post-quantum prekeys the shim keeps (signal_stores.dart),
+          // and what a kept first contact opened to
+          await upgradeTo91(db);
         }
       },
     );
@@ -1487,7 +1511,9 @@ Future<void> firstContactTables(DatabaseExecutor db) async {
       tries INTEGER NOT NULL DEFAULT 0,
       next_at INTEGER NOT NULL,
       reached_from INTEGER,
-      reached_until INTEGER
+      reached_until INTEGER,
+      opened_id TEXT,
+      opened_plain TEXT
     )
   ''');
   // the words an opener went as go with it, however it goes
@@ -1900,6 +1926,42 @@ Future<void> _signalTables(Database db, {String prefix = ''}) async {
   await db.execute(
     'CREATE TABLE IF NOT EXISTS ${prefix}signal_meta (k TEXT PRIMARY KEY, v TEXT NOT NULL)',
   );
+  await db.execute(
+    'CREATE TABLE IF NOT EXISTS ${prefix}kyber_prekeys (id INTEGER PRIMARY KEY, record BLOB NOT NULL, last_resort INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL)',
+  );
+  // a last resort kyber key outlives its use: the base keys it opened for,
+  // so a replayed opener does not build a second session on it
+  await db.execute(
+    'CREATE TABLE IF NOT EXISTS ${prefix}kyber_used (kyber_id INTEGER NOT NULL, signed_id INTEGER NOT NULL, base_key BLOB NOT NULL, PRIMARY KEY (kyber_id, base_key))',
+  );
+  // every opener read on a kyber key, by a fingerprint of what its mac
+  // covers: one opener opens once, whatever path it comes back on
+  await db.execute(
+    'CREATE TABLE IF NOT EXISTS ${prefix}opener_reads (kyber_id INTEGER NOT NULL, opener BLOB NOT NULL, PRIMARY KEY (kyber_id, opener))',
+  );
+}
+
+/// the upgrade to 91: the kyber tables, and a kept first contact's opened
+/// text, which signal opens once only
+@visibleForTesting
+Future<void> upgradeTo91(Database db) async {
+  await kyberTables(db);
+  // addColumn takes a column there already; anything else fails the open,
+  // and the step runs again
+  await addColumn(db, 'ALTER TABLE first_kept ADD COLUMN opened_id TEXT');
+  await addColumn(db, 'ALTER TABLE first_kept ADD COLUMN opened_plain TEXT');
+}
+
+/// one signal store's tables under [prefix], for a store kept in a file of
+/// its own
+Future<void> signalStoreTables(Database db, {String prefix = ''}) =>
+    _signalTables(db, prefix: prefix);
+
+/// the kyber prekey tables of the everyday store and the dev chat's, with
+/// whatever else of either store a file lacks (version 91)
+Future<void> kyberTables(Database db) async {
+  await _signalTables(db);
+  await _devSignalTables(db);
 }
 
 // wrapped like the dev chat's row: without them an anonymous start fails

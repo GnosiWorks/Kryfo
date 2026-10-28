@@ -1251,7 +1251,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cameraCouldNotSaveA => 'Bu telefona kopya kaydedilemedi';
 
   @override
-  String get cameraTooLongForA => 'Mesaj için çok uzun · en fazla 15 MB';
+  String get cameraTooLongForA => 'Mesaj için çok uzun · en fazla 50 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Fotoğraflarına asla kaydedilmez';
@@ -2289,6 +2289,45 @@ class AppLocalizationsTr extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Rozet için en az 20 \$';
 
   @override
+  String get donateShowTheAddress => 'Adresi göster';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return 'Bitcoin ile $amount';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Rozet sana ne verir';
+
+  @override
+  String get donateGivesMark =>
+      'Adının yanında bir işaret. Kimin göreceğini, hatta görüp görmeyeceğini sen seçersin.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Bu telefonda saklanan imzalı bir makbuz. Rozeti hesap olmadan kanıtlar.';
+
+  @override
+  String get donateGivesFree =>
+      'Tüm gizlilik özellikleri rozetli de rozetsiz de ücretsiz kalır.';
+
+  @override
+  String get donateAddressOnTap =>
+      'Adres, aşağıya dokunduğunda oluşur. Bir saat boyunca senindir, geri dönersen aynısını alırsın.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin şu an yoğun. Daha sonra tekrar dene ya da kartla öde.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Aşağıdaki adrese yine de bitcoin gönderebilirsin. Rozet vermez.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Bu, daha önce açtığın adres. Zaten gönderdiysen burada bekle.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Ödeme servisine Tor üzerinden ulaşılıyor…';
 
@@ -2380,6 +2419,21 @@ class AppLocalizationsTr extends AppLocalizations {
           'Zincirde doğrulandı. Artık bir koruyucusun. Bunu kimse elinden alamaz.',
       'other':
           'Zincirde doğrulandı. Artık bir destekçisin. Bunu kimse elinden alamaz.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Zincirde doğrulandı. Yeniden destek verdiğin için teşekkürler. Destekçi rozetin seninle kalıyor.',
+      'patron':
+          'Zincirde doğrulandı. Yeniden destek verdiğin için teşekkürler. Hami rozetin seninle kalıyor.',
+      'guardian':
+          'Zincirde doğrulandı. Yeniden destek verdiğin için teşekkürler. Koruyucu rozetin seninle kalıyor.',
+      'other':
+          'Zincirde doğrulandı. Yeniden destek verdiğin için teşekkürler. Destekçi rozetin seninle kalıyor.',
     });
     return '$_temp0';
   }
@@ -8257,6 +8311,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get devWhoChoiceStays => 'Seçimin bu sohbette kalır.';
 
   @override
+  String get devUpdateToWrite => 'Marios’a yazmak için Kryfo’yu güncelle.';
+
+  @override
   String get devKeyCheckFailed =>
       'Marios’un anahtarı kontrol edilemedi. Hiçbir şey gönderilmedi.';
 
@@ -8319,6 +8376,11 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'Bu senin kendi davetin. Bağlanmak için başka biriyle paylaş.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return 'Birbirinizi eklemeden önce $id Kryfo\'yu güncellemeli.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9535,6 +9597,129 @@ class AppLocalizationsTr extends AppLocalizations {
       'Telefonuna bir ekran kilidi koy ki bu koruma telefon kilitliyken de sürsün.';
 
   @override
+  String get fileServerTryLater =>
+      'Dosya sunucusu şu an dolu. Biraz sonra tekrar dene.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Bu dosya $size. Herkes Kryfo\'yu güncelleyene kadar bu sohbette dosyalar en fazla $max olabilir.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'Bugün çok sayıda büyük dosya gönderdin. Yarın tekrar dene.';
+
+  @override
+  String get mediaProgressPreparing => 'Hazırlanıyor · uygulamayı açık tut';
+
+  @override
+  String get groupShotsBlocksAll =>
+      'Bu gruptaki her telefonda ekran görüntüsünü ve ekran kaydını engeller; birbirinizin mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi de. Ekranı okumasına izin verilen uygulamaları ya da bunu aşmak için değiştirilmiş bir telefonu veya uygulamayı durduramaz.';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'Buradaki herkesin Kryfo\'yu güncellemesi bekleniyor';
+
+  @override
+  String get groupShotsOnForAll => 'Buradaki herkes için açık';
+
+  @override
+  String get groupShotsOffAdminOnly =>
+      'Kapalı. Bunu yalnızca yönetici değiştirebilir';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'Buradaki herkesin Kryfo\'yu güncellemesi bekleniyor. Bunu yalnızca yönetici değiştirebilir';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'Buradaki herkes için açık. Bunu yalnızca yönetici değiştirebilir';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString kişi bekleniyor',
+      one: '$countString kişi bekleniyor',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'Henüz güncellemeyenler';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'Bu kişiler Kryfo\'yu güncellediğinde ekran görüntüsü engeli herkesi kapsar. Gruptan çıkarmak için birine dokun.';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'Kryfo\'yu güncellemesi gerekiyor ya da o zamandan beri çevrim dışı';
+
+  @override
+  String get groupShotsBlockedByYou => 'Senin engellediğin';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'Ekran görüntüsü engelini açtın. Buradaki herkes Kryfo\'yu güncellediğinde herkesi kapsar.';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name ekran görüntüsü engelini açtı. Buradaki herkes Kryfo\'yu güncellediğinde herkesi kapsar.';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'Ekran görüntüsü engeli buradaki herkes için açık. Birbirinizin mesajlarını kopyalamak, iletmek ve kaydetmek de kapalı.';
+
+  @override
+  String get groupShotsPaused =>
+      'Buradaki biri henüz ekran görüntüsünü engelleyemiyor. Kryfo\'yu güncellediğinde yeniden herkesi kapsar.';
+
+  @override
+  String get groupShotsCantYet => 'Henüz ekran görüntüsünü engelleyemiyor';
+
+  @override
+  String get groupShotsAddTitle => 'Yine de eklensin mi?';
+
+  @override
+  String get groupShotsAddPauses =>
+      'Bu kişi Kryfo\'yu güncelleyene kadar ekran görüntüsü engeli buradaki herkesi kapsamaz.';
+
+  @override
+  String get groupShotsLeaveStays =>
+      'Ekran görüntüsü engeli olduğu gibi kalır.';
+
+  @override
+  String get groupShotsBlockedHere =>
+      'Kryfo bu grupta ekran görüntüsünü engeller';
+
+  @override
+  String get groupShotsMenuNote =>
+      'Bu grupta başkalarının mesajlarını kopyalamak, iletmek ve kaydetmek kapalı';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'Bu grupta başkalarının dosyalarını başka uygulamalarda açmak kapalı';
+
+  @override
+  String get groupShotsOldNotice =>
+      'Bu grupta ekran görüntüsü engelini açtım. Senin Kryfo\'n bunu henüz yapamıyor, lütfen güncelle.';
+
+  @override
+  String get captureShotTaken =>
+      'Ekran görüntüsü alındı. Başka kimseye haber verilmedi.';
+
+  @override
+  String get captureRecording =>
+      'Bu ekran kaydediliyor. Başka kimseye haber verilmedi.';
+
+  @override
   String get settingsDevices => 'Cihazlar';
 
   @override
@@ -9776,4 +9961,12 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get desktopFolderNotPrivate =>
       'Kryfo klasörünü yalnızca sana özel yapamadı, bu yüzden açılmayacak.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Bu kilidi Kryfo\'nun bu sürümün okuyamadığı başka bir sürümü oluşturdu.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo çalışırken bellekte özel bir klasöre ihtiyaç duyar, bu bilgisayar böyle bir klasör sunmuyor, bu yüzden açılmayacak.';
 }

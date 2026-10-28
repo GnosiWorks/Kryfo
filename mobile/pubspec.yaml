@@ -16,7 +16,6 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
-  libsignal_protocol_dart: ^0.8.2
   sqflite_sqlcipher: ^3.4.0
   qr_flutter: ^4.1.0
   ffi: ^2.2.0

@@ -105,6 +105,47 @@ String? desktopRuntimeDir({
 
 int? _ownerOf(String path) => posix.ownerOf(path);
 
+/// folders a run before made by chance (kryfo-XXXXXX, see
+/// [desktopRuntimeDir]) and left behind: ours, no link, not [keep]. what
+/// they hold is zeroed before they go
+void sweepOldRuntimeDirs(
+  String? keep, {
+  Map<String, String>? env,
+  required int uid,
+  int? Function(String path)? owner,
+}) {
+  if (Platform.isWindows) return;
+  final e = env ?? Platform.environment;
+  final ownerOf_ = owner ?? _ownerOf;
+  final run = e['XDG_RUNTIME_DIR'];
+  final bases = [if (run != null && p.isAbsolute(run)) run, '/dev/shm'];
+  final made = RegExp(r'^kryfo-[A-Za-z0-9]{6}$');
+  for (final base in bases) {
+    final d = Directory(base);
+    if (!d.existsSync()) continue;
+    for (final x in d.listSync(followLinks: false)) {
+      final name = p.basename(x.path);
+      if (x is! Directory || !made.hasMatch(name) || name == 'kryfo-$uid') {
+        continue;
+      }
+      if (keep != null && p.equals(x.path, keep)) continue;
+      if (ownerOf_(x.path) != uid) continue;
+      try {
+        for (final f in x.listSync(recursive: true, followLinks: false)) {
+          if (f is File) {
+            final n = f.lengthSync();
+            final r = f.openSync(mode: FileMode.writeOnlyAppend);
+            r.setPositionSync(0);
+            r.writeFromSync(List.filled(n, 0));
+            r.closeSync();
+          }
+        }
+        x.deleteSync(recursive: true);
+      } catch (_) {}
+    }
+  }
+}
+
 int? _modeOf(String path) {
   try {
     return FileStat.statSync(path).mode & 511;

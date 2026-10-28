@@ -106,6 +106,9 @@ class GroupPreview {
   final bool hidden;
   // its admin ended it: who, null while it runs
   final String? endedBy;
+  // its screenshot block holds on this phone, and on every member's
+  final bool shotsBlocking;
+  final bool shotsForAll;
   const GroupPreview({
     required this.groupId,
     required this.name,
@@ -118,6 +121,8 @@ class GroupPreview {
     this.joiningAt,
     this.hidden = false,
     this.endedBy,
+    this.shotsBlocking = false,
+    this.shotsForAll = false,
   });
 
   bool get ended => endedBy != null;

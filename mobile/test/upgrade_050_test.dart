@@ -21,7 +21,7 @@ import 'package:kryfo/router.dart';
 import 'package:kryfo/search.dart' show SearchKind;
 import 'package:kryfo/secure_store.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -189,16 +189,7 @@ Future<Map<String, List<String>>> _rows(
 Future<String> _openFrom(SignalSession s, String from, String wire) async {
   final raw = base64Decode(wire);
   final body = Uint8List.fromList(raw.sublist(1));
-  final c = SessionCipher(
-    s.sessionStore,
-    s.preKeyStore,
-    s.signedPreKeyStore,
-    s.identityStore,
-    SignalProtocolAddress(from, 1),
-  );
-  final plain = raw[0] == CiphertextMessage.prekeyType
-      ? await c.decrypt(PreKeySignalMessage(body))
-      : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
+  final plain = await s.open(from, raw[0], body);
   return utf8.decode(plain);
 }
 
@@ -294,11 +285,11 @@ void main() {
   });
 
   for (final f in _files.keys) {
-    test('$f opens at 87 with the schema of a new install', () async {
+    test('$f opens at 90 with the schema of a new install', () async {
       if (skip()) return;
       final db = _files[f]!();
       final raw = await db.open();
-      expect(await raw.getVersion(), 88);
+      expect(await raw.getVersion(), 91);
       final got = await _schema(raw);
       // key by key, so a miss names the table and the column
       for (final k in {...fresh[f]!.keys, ...got.keys}) {
@@ -385,7 +376,7 @@ void main() {
       final again = _files[f]!();
       final raw = await again.open();
       final said = sql!.said.sublist(from);
-      expect(await raw.getVersion(), 88);
+      expect(await raw.getVersion(), 91);
       expect(
         said.where(
           (s) => RegExp(
@@ -595,14 +586,14 @@ void main() {
     final raw = await db.open();
     final other = HaloDb(HaloContainer.decoy);
     final otherRaw = await other.open();
-    expect(await otherRaw.getVersion(), 88);
+    expect(await otherRaw.getVersion(), 91);
     final mine = await _store(raw, (await peerIdentityHex(otherRaw, _me))!);
     final hers = await _store(
       otherRaw,
       (await db.getContact(_alice))!['xpub'] as String,
     );
     final out = await mine.encryptTo(_alice, 'after the update');
-    expect(base64Decode(out)[0], CiphertextMessage.whisperType);
+    expect(base64Decode(out)[0], kLsWhisper);
     expect(await _openFrom(hers, _me, out), 'after the update');
     final back = await hers.encryptTo(_me, 'and on this side too');
     expect(await _openFrom(mine, _alice, back), 'and on this side too');

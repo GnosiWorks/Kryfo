@@ -1261,7 +1261,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get cameraTooLongForA =>
-      'Demasiado largo para un mensaje · máx. 15 MB';
+      'Demasiado largo para un mensaje · máx. 50 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Nunca se guarda en tus fotos';
@@ -2313,6 +2313,45 @@ class AppLocalizationsEs extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Insignias desde 20 USD';
 
   @override
+  String get donateShowTheAddress => 'Mostrar la dirección';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount en bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Qué te da la insignia';
+
+  @override
+  String get donateGivesMark =>
+      'Una marca junto a tu nombre. Tú eliges quién la ve, si es que alguien.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Un recibo firmado guardado en este teléfono. Prueba la insignia sin ninguna cuenta.';
+
+  @override
+  String get donateGivesFree =>
+      'Todas las funciones de privacidad siguen siendo gratis, con insignia o sin ella.';
+
+  @override
+  String get donateAddressOnTap =>
+      'La dirección se crea cuando tocas abajo. Es tuya durante una hora, así que si vuelves te sale la misma.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin está saturado ahora mismo. Inténtalo más tarde o paga con tarjeta.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Aún puedes enviar bitcoin a la dirección de abajo. No da insignia.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Es la dirección que abriste antes. Si ya enviaste, espera aquí.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Contactando con el servicio de pago por Tor…';
 
@@ -2405,6 +2444,21 @@ class AppLocalizationsEs extends AppLocalizations {
           'Verificado en la cadena: ahora eres guardián. Nadie te lo puede quitar.',
       'other':
           'Verificado en la cadena: ahora eres colaborador. Nadie te lo puede quitar.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Verificado en la cadena. Gracias por volver a aportar. Conservas tu insignia de colaborador.',
+      'patron':
+          'Verificado en la cadena. Gracias por volver a aportar. Conservas tu insignia de mecenas.',
+      'guardian':
+          'Verificado en la cadena. Gracias por volver a aportar. Conservas tu insignia de guardián.',
+      'other':
+          'Verificado en la cadena. Gracias por volver a aportar. Conservas tu insignia de colaborador.',
     });
     return '$_temp0';
   }
@@ -8300,6 +8354,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get devWhoChoiceStays => 'Tu elección se mantiene en este chat.';
 
   @override
+  String get devUpdateToWrite => 'Actualiza Kryfo para escribir a Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'No se pudo comprobar la clave de Marios. No se envió nada.';
 
@@ -8362,6 +8419,11 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'Es tu propia invitación. Compártela con otra persona para conectar.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id tiene que actualizar Kryfo antes de que podáis añadiros.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9582,6 +9644,128 @@ class AppLocalizationsEs extends AppLocalizations {
       'Pon un bloqueo de pantalla en el teléfono para que esta protección siga en pie cuando esté bloqueado.';
 
   @override
+  String get fileServerTryLater =>
+      'El servidor de archivos está lleno por ahora. Vuelve a intentarlo un poco más tarde.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Este archivo pesa $size. En este chat se pueden enviar archivos de hasta $max hasta que todos actualicen Kryfo.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'Hoy ya has enviado muchos archivos grandes. Vuelve a intentarlo mañana.';
+
+  @override
+  String get mediaProgressPreparing => 'Preparando · mantén la app abierta';
+
+  @override
+  String get groupShotsBlocksAll =>
+      'Bloquea las capturas y la grabación de pantalla en todos los teléfonos de este grupo, y copiar, reenviar o guardar los mensajes de los demás. No puede impedir las apps con permiso para leer la pantalla ni un teléfono o una app modificados para saltárselo.';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'Esperando a que todos aquí actualicen Kryfo';
+
+  @override
+  String get groupShotsOnForAll => 'Activado para todos aquí';
+
+  @override
+  String get groupShotsOffAdminOnly =>
+      'Desactivado. Solo el admin puede cambiarlo';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'Esperando a que todos aquí actualicen Kryfo. Solo el admin puede cambiarlo';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'Activado para todos aquí. Solo el admin puede cambiarlo';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Esperando a $countString personas',
+      one: 'Esperando a $countString persona',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'Falta que actualicen';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'El bloqueo de capturas cubre a todos en cuanto estas personas actualicen Kryfo. Toca a alguien para quitarlo del grupo.';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'Tiene que actualizar Kryfo, o no se ha conectado desde entonces';
+
+  @override
+  String get groupShotsBlockedByYou => 'Lo bloqueaste';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'Activaste el bloqueo de capturas. Cubrirá a todos en cuanto todos aquí hayan actualizado Kryfo.';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name activó el bloqueo de capturas. Cubrirá a todos en cuanto todos aquí hayan actualizado Kryfo.';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'El bloqueo de capturas está activado para todos aquí. Copiar, reenviar y guardar los mensajes de los demás también queda desactivado.';
+
+  @override
+  String get groupShotsPaused =>
+      'Alguien aquí todavía no puede bloquear capturas. Volverá a cubrir a todos en cuanto actualice Kryfo.';
+
+  @override
+  String get groupShotsCantYet => 'Todavía no puede bloquear capturas';
+
+  @override
+  String get groupShotsAddTitle => '¿Añadir de todos modos?';
+
+  @override
+  String get groupShotsAddPauses =>
+      'El bloqueo de capturas no cubrirá a todos aquí hasta que actualice Kryfo.';
+
+  @override
+  String get groupShotsLeaveStays =>
+      'El bloqueo de capturas se queda como está.';
+
+  @override
+  String get groupShotsBlockedHere =>
+      'Kryfo bloquea las capturas en este grupo';
+
+  @override
+  String get groupShotsMenuNote =>
+      'Copiar, reenviar y guardar los mensajes de los demás está desactivado en este grupo';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'Abrir archivos de los demás en otras apps está desactivado en este grupo';
+
+  @override
+  String get groupShotsOldNotice =>
+      'Activé el bloqueo de capturas en este grupo. Tu Kryfo todavía no puede hacerlo, así que actualízalo, por favor.';
+
+  @override
+  String get captureShotTaken => 'Captura hecha. No se avisó a nadie más.';
+
+  @override
+  String get captureRecording =>
+      'Se está grabando esta pantalla. No se avisó a nadie más.';
+
+  @override
   String get settingsDevices => 'Dispositivos';
 
   @override
@@ -9826,4 +10010,12 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get desktopFolderNotPrivate =>
       'Kryfo no pudo hacer que su carpeta fuera solo tuya, así que no se abrirá.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Este bloqueo lo hizo otra versión de Kryfo, que esta no puede leer.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo necesita una carpeta privada en memoria mientras funciona, y este ordenador no ofrece ninguna, así que no se abrirá.';
 }

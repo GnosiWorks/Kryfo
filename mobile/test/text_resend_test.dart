@@ -35,14 +35,7 @@ import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/widgets/motion.dart' show SendPill, TorStatus;
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show
-        CiphertextMessage,
-        Curve,
-        PreKeySignalMessage,
-        SessionCipher,
-        SignalMessage,
-        SignalProtocolAddress;
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart';
@@ -284,13 +277,13 @@ void main() {
   late Directory docs;
 
   setUpAll(() async {
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     await signalSession.bootstrap(
       database: MemDb(),
       xPubBytes: me.publicKey.serialize().sublist(1),
       xPrivBytes: me.privateKey.serialize(),
     );
-    final pair = Curve.generateKeyPair();
+    final pair = testKeyPair();
     amber = SignalSession();
     await amber.bootstrap(
       database: MemDb(),
@@ -444,16 +437,7 @@ void main() {
   Future<Map<String, dynamic>> ambersRead(String cipher) async {
     final w = base64Decode(cipher);
     final body = Uint8List.fromList(w.sublist(1));
-    final c = SessionCipher(
-      amber.sessionStore,
-      amber.preKeyStore,
-      amber.signedPreKeyStore,
-      amber.identityStore,
-      const SignalProtocolAddress('me-to-amber', 1),
-    );
-    final plain = w[0] == CiphertextMessage.prekeyType
-        ? await c.decrypt(PreKeySignalMessage(body))
-        : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
+    final plain = await amber.open('me-to-amber', w[0], body);
     final s = utf8.decode(plain);
     expect(s, startsWith('halo/1:'));
     return jsonDecode(s.substring(7)) as Map<String, dynamic>;
