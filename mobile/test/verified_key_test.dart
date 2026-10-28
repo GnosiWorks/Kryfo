@@ -100,7 +100,11 @@ void main() {
     () async {
       final db = await _db(identity: _keyA);
       await markVerified(db, _peer, true, key: _hex(_keyA));
-      final store = LsIdentityStore(db, KryfoSignal.shared.identityGenerate(), 1);
+      final store = LsIdentityStore(
+        db,
+        KryfoSignal.shared.identityGenerate(),
+        1,
+      );
       await store.saw(_peer, Uint8List.fromList([5, ..._keyA]));
       expect(db.rows('contacts').first['verified'], 1);
       await store.saw(_peer, Uint8List.fromList([5, ..._keyB]));

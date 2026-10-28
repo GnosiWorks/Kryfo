@@ -1135,10 +1135,16 @@ void main() {
         'accepted': 1,
       });
       // the first key seen is taken as theirs
-      expect(await store.saw('amber-fox-run', _grinder.ss.identity.public), isFalse);
+      expect(
+        await store.saw('amber-fox-run', _grinder.ss.identity.public),
+        isFalse,
+      );
       expect(me.db.rows('contacts').single['key_changed'], 0);
       // another one is taken too, and flagged
-      expect(await store.saw('amber-fox-run', _marios.ss.identity.public), isTrue);
+      expect(
+        await store.saw('amber-fox-run', _marios.ss.identity.public),
+        isTrue,
+      );
       final row = me.db.rows('contacts').single;
       expect(row['key_changed'], 1);
       expect(row['verified'], 0);

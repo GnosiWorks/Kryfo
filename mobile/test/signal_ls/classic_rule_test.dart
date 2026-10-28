@@ -68,7 +68,9 @@ void main() {
   test('nothing in lib names its session types', () {
     final found = <String>[];
     for (final path in _dart('lib')) {
-      for (final m in _starts.allMatches(_code(File(path).readAsStringSync()))) {
+      for (final m in _starts.allMatches(
+        _code(File(path).readAsStringSync()),
+      )) {
         found.add('$path: ${m[1]}');
       }
     }

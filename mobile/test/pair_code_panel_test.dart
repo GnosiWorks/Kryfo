@@ -138,9 +138,7 @@ void main() {
     e.answer = 'ok';
     await share(t);
     await t.pump(const Duration(milliseconds: 400));
-    final own = keyNumber(
-      signalSession.identity.public,
-    )!;
+    final own = keyNumber(signalSession.identity.public)!;
     // the joiner reads the same off what it fetches
     expect(inviteKeyNumber(e.payloads.last), own);
     expect(find.text(l10n.pairCodeKeyNumber), findsOneWidget);

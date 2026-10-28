@@ -174,9 +174,7 @@ void main() {
     // a message opens once
     await expectLater(
       _open(bob, 'alice', _wire('a6')),
-      throwsA(
-        isA<LsError>().having((e) => e.code, 'code', LsError.duplicate),
-      ),
+      throwsA(isA<LsError>().having((e) => e.code, 'code', LsError.duplicate)),
     );
   });
 
@@ -185,19 +183,10 @@ void main() {
     final bob = (await _load('bob')).ss;
     final carol = (await _load('carol')).ss;
     final bobKnowsAlice = await bob.identityStore.getIdentity('alice');
-    expect(
-      bobKnowsAlice,
-      alice.identity.public,
-    );
+    expect(bobKnowsAlice, alice.identity.public);
     final aliceKnowsBob = await alice.identityStore.getIdentity('bob');
-    expect(
-      aliceKnowsBob,
-      bob.identity.public,
-    );
+    expect(aliceKnowsBob, bob.identity.public);
     final carolKnowsBob = await carol.identityStore.getIdentity('bob');
-    expect(
-      carolKnowsBob,
-      bob.identity.public,
-    );
+    expect(carolKnowsBob, bob.identity.public);
   });
 }

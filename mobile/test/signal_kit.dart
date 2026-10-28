@@ -15,7 +15,14 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'mem_db.dart';
 
 export 'package:kryfo/signal_ffi/kryfo_signal.dart'
-    show KryfoSignal, LsError, kLsKyber, kLsOneTime, kLsPreKey, kLsSigned, kLsWhisper;
+    show
+        KryfoSignal,
+        LsError,
+        kLsKyber,
+        kLsOneTime,
+        kLsPreKey,
+        kLsSigned,
+        kLsWhisper;
 
 final _rnd = Random.secure();
 
@@ -136,9 +143,7 @@ Future<String> cardWithOneTime(SignalSession ss, int id) async {
 }
 
 final _storedBefore = () {
-  return jsonDecode(
-        File('test/signal_stored_before.json').readAsStringSync(),
-      )
+  return jsonDecode(File('test/signal_stored_before.json').readAsStringSync())
       as Map<String, dynamic>;
 }();
 

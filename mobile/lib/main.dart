@@ -139,8 +139,7 @@ import 'signal_ffi/kryfo_signal.dart';
 import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
 import 'key_number.dart';
-import 'signal_stores.dart'
-    show kDevSignalPrefix, onPeerKeyChanged;
+import 'signal_stores.dart' show kDevSignalPrefix, onPeerKeyChanged;
 import 'dart:isolate';
 import 'dlog.dart';
 import 'read_burn.dart' show burnStartBy, burnWaitsRow, burnWaitsSql, kBurnSkew;

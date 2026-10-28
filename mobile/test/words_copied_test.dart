@@ -216,8 +216,7 @@ void main() {
     );
   }
 
-  Future<List<int>?> sessionKey(String id) =>
-      signalSession.sessionIdentity(id);
+  Future<List<int>?> sessionKey(String id) => signalSession.sessionIdentity(id);
 
   Future<List<int>?> savedKey(String id) =>
       signalSession.identityStore.getIdentity(id);

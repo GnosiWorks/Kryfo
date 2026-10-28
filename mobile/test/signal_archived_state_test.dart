@@ -138,10 +138,7 @@ void main() {
           _open(
             bob,
             alice,
-            base64Encode([
-              kLsWhisper,
-              ...openerMessage(foreign.sublist(1)),
-            ]),
+            base64Encode([kLsWhisper, ...openerMessage(foreign.sublist(1))]),
           ),
           throwsException,
         );

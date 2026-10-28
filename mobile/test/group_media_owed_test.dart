@@ -82,8 +82,7 @@ class _Io extends ArrivalIo {
   @override
   Future<bool> hasSession(String peer) async =>
       !noSession.contains(peer) ||
-      signalSession.ready &&
-          await signalSession.sessionStore.contains(peer);
+      signalSession.ready && await signalSession.sessionStore.contains(peer);
 
   @override
   Future<String> relaySend(String xPub, String cipher) async {
@@ -719,9 +718,7 @@ void main() {
           greaterThan(DateTime.now().millisecondsSinceEpoch),
         );
         // signal's store outlives the test: the next starts with no session
-        addTearDown(
-          () => signalSession.sessionStore.delete('carol'),
-        );
+        addTearDown(() => signalSession.sessionStore.delete('carol'));
         // carol's keys come in over the relay and the session is made. her
         // card carries the key her x key makes, as a real one does
         final k = await _keysOf();

@@ -118,8 +118,7 @@ bool _isPreKeyWire(String wireB64) {
 // the identity a store holds for an address: the one it trusts, else the
 // one its session was built with
 Future<List<int>?> _storedIdentity(SignalSession ss, String peer) async =>
-    await ss.identityStore.getIdentity(peer) ??
-    await ss.sessionIdentity(peer);
+    await ss.identityStore.getIdentity(peer) ?? await ss.sessionIdentity(peer);
 
 // the identity key a card's prekey bundle carries, null when it does not
 // read

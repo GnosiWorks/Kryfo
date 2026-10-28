@@ -152,7 +152,8 @@ void main() {
     // with bob's session with her gone
     final b = await _stored(
       'bob',
-      skip: (r) => r['t'] == 'sessions' && (r['row'] as Map)['address'] == 'carol',
+      skip: (r) =>
+          r['t'] == 'sessions' && (r['row'] as Map)['address'] == 'carol',
     );
     final bob = await b.openLs();
     final c1 = _wire('c1');

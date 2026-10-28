@@ -37,8 +37,7 @@ Future<SignalSession> _phone() async {
   return ss;
 }
 
-List<int> _own(SignalSession ss) =>
-    ss.identity.public;
+List<int> _own(SignalSession ss) => ss.identity.public;
 
 Future<String> _inviteOf(SignalSession ss, {String id = _words}) async =>
     haloUriV3(

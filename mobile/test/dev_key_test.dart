@@ -180,10 +180,7 @@ void main() {
       expect(k.onion, isEmpty);
       // the signal identity is the x25519 key itself
       expect(k.xPub, _hex(card.xPub));
-      expect(
-        pinnedIdentity(k),
-        card.ss.identity.public,
-      );
+      expect(pinnedIdentity(k), card.ss.identity.public);
       expect(pinnedIdentity(k), hasLength(33));
     });
 

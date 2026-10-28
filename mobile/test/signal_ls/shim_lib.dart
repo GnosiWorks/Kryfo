@@ -45,7 +45,7 @@ class Phone {
   Future<String> classicCard() async {
     final j =
         jsonDecode(utf8.decode(base64Decode(await ls!.makeBundleB64())))
-            as Map<String, dynamic>
+              as Map<String, dynamic>
           ..remove('kyberPreKeyId')
           ..remove('kyberPreKeyPublic')
           ..remove('kyberPreKeySignature');

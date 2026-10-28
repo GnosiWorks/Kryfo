@@ -481,8 +481,9 @@ void main() {
 
     final one = await _toPeer(p, 'one');
     final two = await _toPeer(p, 'two');
-    List<int> base(String w) =>
-        KryfoSignal.shared.preKeyMessageInfo(base64Decode(w).sublist(1)).baseKey;
+    List<int> base(String w) => KryfoSignal.shared
+        .preKeyMessageInfo(base64Decode(w).sublist(1))
+        .baseKey;
     expect(base(two), base(one));
     expect(await signalSession.sealsOnRestored(p.name), isFalse);
     expect(await _atPeer(p, two), 'two');
@@ -847,10 +848,7 @@ void main() {
     expect(await signalSession.sealsOnRestored(q.name), isFalse);
     expect(signalSession.restoredFrom, isNotNull);
     // a text of theirs that does not open here
-    final junk = base64Encode([
-      kLsWhisper,
-      ...List.filled(60, 7),
-    ]);
+    final junk = base64Encode([kLsWhisper, ...List.filled(60, 7)]);
     await app.receiveRelay([(peer: q.xpub, cipher: junk)]);
     await _settle();
     final asks = [
@@ -1473,10 +1471,7 @@ void main() {
     expect(app.outboxTriesForTest('h1'), 0);
     expect(await atThem(p), isEmpty);
     // their session stays as it was: a held seal is no broken one
-    expect(
-      await signalSession.sessionStore.contains(p.name),
-      isTrue,
-    );
+    expect(await signalSession.sessionStore.contains(p.name), isTrue);
 
     await session.acceptNewKey(p.name);
     await app.drainOutbox();

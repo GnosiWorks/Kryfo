@@ -216,11 +216,7 @@ void main() {
       expect(isOpener(reply), isFalse);
       expect(
         unwrapMessage(
-          (await signalDecrypt(
-            _dev,
-            reply,
-            flagKeyChange: true,
-          ))!,
+          (await signalDecrypt(_dev, reply, flagKeyChange: true))!,
         ).message,
         'hello there',
       );
@@ -241,10 +237,7 @@ void main() {
         pinnedIdentity(_m1),
       );
       // the everyday store holds no session with him
-      expect(
-        await signalSession.sessionStore.contains(_dev),
-        isFalse,
-      );
+      expect(await signalSession.sessionStore.contains(_dev), isFalse);
     });
 
     test(
@@ -253,10 +246,7 @@ void main() {
         final a = (await _start(anon: true))!;
         final ss = (await signalFor(_dev))!;
         expect(ss, isNot(same(signalSession)));
-        expect(
-          _hex(ss.identity.public.sublist(1)),
-          _selfOf(a).xPub,
-        );
+        expect(_hex(ss.identity.public.sublist(1)), _selfOf(a).xPub);
         expect(ss.registrationId, isNot(_everydayReg));
         expect(
           _db.rows('${kDevSignalPrefix}signal_meta').single['v'],
@@ -332,10 +322,7 @@ void main() {
       final second = (await signalFor(_dev))!;
       expect(second, isNot(same(first)));
       expect(_selfOf(b).xPub, isNot(_selfOf(a).xPub));
-      expect(
-        _hex(second.identity.public.sublist(1)),
-        _selfOf(b).xPub,
-      );
+      expect(_hex(second.identity.public.sublist(1)), _selfOf(b).xPub);
     });
 
     test('a start is seeded by the caller into the store it names', () async {
@@ -349,10 +336,7 @@ void main() {
         prefix: kDevSignalPrefix,
       );
       await processPeerBundle(_dev, _m1.bundle, into: ss);
-      expect(
-        await ss.sessionStore.contains(_dev),
-        isTrue,
-      );
+      expect(await ss.sessionStore.contains(_dev), isTrue);
       expect(await _chat.begin(_m1, anon: a), isTrue);
       expect(await hasSessionWith(_dev), isTrue);
     });
@@ -507,14 +491,7 @@ void main() {
       );
       final forged = await grinder.ss.encryptTo('them', 'it is me, marios');
       final log = _db.log.length;
-      expect(
-        await signalDecrypt(
-          _dev,
-          forged,
-          flagKeyChange: true,
-        ),
-        isNull,
-      );
+      expect(await signalDecrypt(_dev, forged, flagKeyChange: true), isNull);
       expect(_db.log.skip(log).where((l) => !l.startsWith('PRAGMA')), isEmpty);
     });
 
@@ -681,4 +658,3 @@ class _WrongStore extends DevLane {
     );
   }
 }
-

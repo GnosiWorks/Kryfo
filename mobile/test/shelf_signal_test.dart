@@ -68,10 +68,7 @@ Future<(String, int)> _cardWithOneTime() async {
     id++;
     if (id > 500) throw StateError('no one-time prekey');
   }
-  final pk = ss.lib.preKeyPublic(
-    kLsOneTime,
-    (await ss.preKeyStore.load(id))!,
-  );
+  final pk = ss.lib.preKeyPublic(kLsOneTime, (await ss.preKeyStore.load(id))!);
   final card =
       jsonDecode(utf8.decode(base64Decode(await ss.makeBundleB64())))
           as Map<String, dynamic>;
