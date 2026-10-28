@@ -95,6 +95,7 @@ func resetByCensor(a *attemptSeen, el time.Duration) {
 
 func useFakeAuto(t *testing.T, n netInfo) *fakeAuto {
 	t.Helper()
+	stopAutoLoops(t)
 	f := &fakeAuto{now: t0Auto, started: true, script: map[string]func(*attemptSeen, time.Duration){}, applyErr: map[string]string{}}
 	oldNow, oldSleep, oldW := autoNow, autoSleep, autoW
 	autoNow = func() time.Time {
@@ -136,10 +137,28 @@ func useFakeAuto(t *testing.T, n netInfo) *fakeAuto {
 	resetRoute(t, "publishing", 100)
 	setNetInfo(n)
 	t.Cleanup(func() {
+		stopAutoLoops(t)
 		autoNow, autoSleep, autoW, autoRunPass = oldNow, oldSleep, oldW, runPass
 		resetAuto(t)
 	})
 	return f
+}
+
+// the loops a mode change started are gone, so what they read is the
+// test's to swap
+func stopAutoLoops(t *testing.T) {
+	t.Helper()
+	autoMu.Lock()
+	autoGenN++
+	autoMu.Unlock()
+	for end := time.Now().Add(10 * time.Second); autoLoopRuns.Load() > 0; {
+		if time.Now().After(end) {
+			t.Errorf("%d automatic loops still running", autoLoopRuns.Load())
+			return
+		}
+		autoKick()
+		time.Sleep(time.Millisecond)
+	}
 }
 
 func resetAuto(t *testing.T) {
