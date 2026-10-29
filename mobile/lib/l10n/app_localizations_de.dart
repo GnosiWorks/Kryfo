@@ -9876,6 +9876,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Kryfo braucht beim Laufen einen privaten Ordner im Arbeitsspeicher, und dieser Computer bietet keinen, deshalb öffnet es sich nicht.';
 
   @override
+  String get historyChatStaysShots =>
+      'Dieser Chat bleibt auf deinem Handy, weil Screenshots darin blockiert sind.';
+
+  @override
   String get modesPickHow =>
       'Wähle, wie deine Nachrichten reisen. Du kannst es jederzeit ändern.';
 

@@ -9935,6 +9935,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Kryfo потрібна особиста тека в пам’яті, поки він працює, а цей комп’ютер її не дає, тому Kryfo не відкриється.';
 
   @override
+  String get historyChatStaysShots =>
+      'Цей чат лишається на твоєму телефоні, бо в ньому заблоковано знімки екрана.';
+
+  @override
   String get modesPickHow =>
       'Обери, як ідуть твої повідомлення. Це можна змінити будь-коли.';
 

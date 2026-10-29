@@ -9293,6 +9293,9 @@ class AppLocalizationsZh extends AppLocalizations {
       'Kryfo 运行时需要内存中的一个私有文件夹，而这台电脑没有提供，所以 Kryfo 不会打开。';
 
   @override
+  String get historyChatStaysShots => '此聊天禁止截屏，所以只留在你的手机上。';
+
+  @override
   String get modesPickHow => '选择消息的传送方式。随时都可以更改。';
 
   @override
@@ -18613,6 +18616,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo 執行時需要記憶體中的一個私有資料夾，而這台電腦沒有提供，所以 Kryfo 不會開啟。';
+
+  @override
+  String get historyChatStaysShots => '此聊天禁止截圖，所以只留在你的手機上。';
 
   @override
   String get modesPickHow => '選擇訊息的傳送方式。隨時都可以更改。';

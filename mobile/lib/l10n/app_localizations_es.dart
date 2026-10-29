@@ -9848,6 +9848,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Kryfo necesita una carpeta privada en memoria mientras funciona, y este ordenador no ofrece ninguna, así que no se abrirá.';
 
   @override
+  String get historyChatStaysShots =>
+      'Este chat se queda en tu teléfono porque las capturas están bloqueadas en él.';
+
+  @override
   String get modesPickHow =>
       'Elige cómo viajan tus mensajes. Puedes cambiarlo cuando quieras.';
 

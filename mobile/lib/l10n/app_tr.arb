@@ -2575,6 +2575,7 @@
   "desktopFolderNotPrivate": "Kryfo klasörünü yalnızca sana özel yapamadı, bu yüzden açılmayacak.",
   "desktopLockOtherVersion": "Bu kilidi Kryfo'nun bu sürümün okuyamadığı başka bir sürümü oluşturdu.",
   "desktopNoMemoryFolder": "Kryfo çalışırken bellekte özel bir klasöre ihtiyaç duyar, bu bilgisayar böyle bir klasör sunmuyor, bu yüzden açılmayacak.",
+  "historyChatStaysShots": "Bu sohbet telefonunda kalır, çünkü içinde ekran görüntüsü engelli.",
   "modesPickHow": "Mesajlarının nasıl gideceğini seç. İstediğin zaman değiştirebilirsin.",
   "modesPrivate": "Özel",
   "modesPrivateTag": "Tor · gerekince köprüler",

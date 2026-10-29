@@ -9771,6 +9771,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Kryfo butuh folder pribadi di memori selama berjalan, dan komputer ini tidak menyediakannya, jadi Kryfo tidak akan dibuka.';
 
   @override
+  String get historyChatStaysShots =>
+      'Obrolan ini tetap di ponselmu karena tangkapan layar diblokir di sini.';
+
+  @override
   String get modesPickHow =>
       'Pilih cara pesanmu dikirim. Kamu bisa mengubahnya kapan saja.';
 

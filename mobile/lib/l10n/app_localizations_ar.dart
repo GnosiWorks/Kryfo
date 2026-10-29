@@ -9907,6 +9907,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'يحتاج Kryfo إلى مجلد خاص في الذاكرة أثناء عمله، وهذا الحاسوب لا يوفّر واحدًا، لذا لن يفتح.';
 
   @override
+  String get historyChatStaysShots =>
+      'تبقى هذه المحادثة على هاتفك لأن لقطات الشاشة محظورة فيها.';
+
+  @override
   String get modesPickHow =>
       'اختر كيف تنتقل رسائلك. يمكنك تغيير ذلك في أي وقت.';
 

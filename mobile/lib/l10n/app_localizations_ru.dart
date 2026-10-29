@@ -9944,6 +9944,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Kryfo нужна личная папка в памяти, пока он работает, а этот компьютер её не даёт, поэтому Kryfo не откроется.';
 
   @override
+  String get historyChatStaysShots =>
+      'Этот чат остаётся на твоём телефоне, потому что в нём запрещены скриншоты.';
+
+  @override
   String get modesPickHow =>
       'Выбери, как идут твои сообщения. Это можно поменять в любой момент.';
 

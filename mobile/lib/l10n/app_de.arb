@@ -2575,6 +2575,7 @@
   "desktopFolderNotPrivate": "Kryfo konnte seinen Ordner nicht nur für dich zugänglich machen und öffnet sich deshalb nicht.",
   "desktopLockOtherVersion": "Diese Sperre stammt von einer anderen Kryfo-Version, die diese hier nicht lesen kann.",
   "desktopNoMemoryFolder": "Kryfo braucht beim Laufen einen privaten Ordner im Arbeitsspeicher, und dieser Computer bietet keinen, deshalb öffnet es sich nicht.",
+  "historyChatStaysShots": "Dieser Chat bleibt auf deinem Handy, weil Screenshots darin blockiert sind.",
   "modesPickHow": "Wähle, wie deine Nachrichten reisen. Du kannst es jederzeit ändern.",
   "modesPrivate": "Privat",
   "modesPrivateTag": "Tor · Bridges bei Bedarf",

@@ -2575,6 +2575,7 @@
   "desktopFolderNotPrivate": "Kryfo non è riuscito a rendere la sua cartella privata per te, quindi non si apre.",
   "desktopLockOtherVersion": "Questo blocco è stato creato da un'altra versione di Kryfo, che questa non sa leggere.",
   "desktopNoMemoryFolder": "Kryfo ha bisogno di una cartella privata in memoria mentre è in uso, e questo computer non ne offre, quindi non si apre.",
+  "historyChatStaysShots": "Questa chat resta sul tuo telefono perché qui gli screenshot sono bloccati.",
   "modesPickHow": "Scegli come viaggiano i tuoi messaggi. Puoi cambiarlo quando vuoi.",
   "modesPrivate": "Privato",
   "modesPrivateTag": "Tor · bridge se servono",

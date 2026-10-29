@@ -2575,6 +2575,7 @@
   "desktopFolderNotPrivate": "Kryfo không thể đặt thư mục của nó thành riêng tư cho bạn, nên sẽ không mở.",
   "desktopLockOtherVersion": "Khóa này được tạo bởi một phiên bản Kryfo khác mà phiên bản này không đọc được.",
   "desktopNoMemoryFolder": "Kryfo cần một thư mục riêng trong bộ nhớ khi chạy, và máy tính này không có, nên Kryfo sẽ không mở.",
+  "historyChatStaysShots": "Cuộc trò chuyện này ở lại trên điện thoại của bạn vì đã chặn chụp màn hình trong đó.",
   "modesPickHow": "Chọn cách tin nhắn của bạn được gửi đi. Bạn có thể đổi bất cứ lúc nào.",
   "modesPrivate": "Riêng tư",
   "modesPrivateTag": "Tor · cầu nối khi cần",

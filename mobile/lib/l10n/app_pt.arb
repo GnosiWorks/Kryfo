@@ -2575,6 +2575,7 @@
   "desktopFolderNotPrivate": "O Kryfo não conseguiu deixar a pasta dele só para você, então não vai abrir.",
   "desktopLockOtherVersion": "Este bloqueio foi feito por outra versão do Kryfo, que esta não consegue ler.",
   "desktopNoMemoryFolder": "O Kryfo precisa de uma pasta privada na memória enquanto roda, e este computador não oferece nenhuma, então ele não vai abrir.",
+  "historyChatStaysShots": "Esta conversa fica no seu celular porque as capturas de tela estão bloqueadas nela.",
   "modesPickHow": "Escolha como suas mensagens viajam. Você pode mudar quando quiser.",
   "modesPrivate": "Privado",
   "modesPrivateTag": "Tor · pontes quando preciso",

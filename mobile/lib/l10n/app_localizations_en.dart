@@ -9764,6 +9764,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Kryfo needs a private folder in memory while it runs, and this computer offers none, so it will not open.';
 
   @override
+  String get historyChatStaysShots =>
+      'This chat stays on your phone because screenshots are blocked in it.';
+
+  @override
   String get modesPickHow =>
       'Pick how your messages travel. You can change it any time.';
 
