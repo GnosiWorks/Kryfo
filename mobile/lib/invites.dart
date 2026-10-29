@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'dart:math' show Random;
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart' show sha256;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'identities.dart';
@@ -258,7 +259,7 @@ Future<InviteRow> makeInvite(
   final r = random ?? Random.secure();
   final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
   final oneTime = kind == kInviteOneTime;
-  if (face != null && (kind != kInviteMain || ss.ident != kMainIdent)) {
+  if (face != null && (kind == kInviteRoster || ss.ident != kMainIdent)) {
     throw ArgumentError('only the main identity shows its face');
   }
   late Uint8List id;
@@ -611,4 +612,145 @@ bool isV4Link(String raw) {
   } catch (_) {
     return false;
   }
+}
+
+/// how long a hello's hash is kept, so a copy is taken once (3.3 rule 5)
+const kHelloSeenDays = 16;
+
+/// a hello's name in the seen store
+String helloHash(List<int> hello) => sha256.convert(hello).toString();
+
+/// a hello of [ss]'s identity answering invite [answers] (all zero for a
+/// v3 link) of [owner]: a fresh one-time invite of mine with its bundle,
+/// inside a KHL1 signed by me and read back by the shim. the hello and the
+/// one-time invite it carries
+Future<(Uint8List, InviteRow)> makeHello(
+  Database db,
+  SignalSession ss, {
+  required List<int> answers,
+  required List<int> owner,
+  required String Function(Uint8List sk) fcPkOf,
+  InviteFace? face,
+  int? nowMs,
+}) async {
+  final once = await makeInvite(
+    db,
+    ss,
+    kind: kInviteOneTime,
+    fcPkOf: fcPkOf,
+    face: face,
+    nowMs: nowMs,
+  );
+  final hello = signedFrame(
+    ss,
+    LsSigContext.hello,
+    khl1Body(answers: answers, owner: owner, invite: once.link),
+  );
+  ss.lib.parseHello(hello);
+  return (hello, once);
+}
+
+/// why a hello is dropped (3.3); nothing of it is shown or kept
+enum HelloFault { shape, invite, answers, seal, used, seen }
+
+/// [bytes] as an owner takes a hello at invite [at] of mine (null: my v3
+/// first-contact address, which takes only zero answers), sealed with
+/// [sealPk]: the five rules of 3.3. [mine] is my identity key; [sealOf]
+/// the hello seal key my identity wants from a sender x key
+({LsHello? hello, HelloFault? fault}) checkHello(
+  KryfoSignal lib,
+  List<int> bytes, {
+  required InviteRow? at,
+  required List<int> mine,
+  required String sealPk,
+  required String Function(String senderX) sealOf,
+  required bool seen,
+  int? nowMs,
+}) {
+  final LsHello h;
+  try {
+    // rule 1 and the shape of rule 2: the shim checks the signature, the
+    // inner invite's, its bundle and that it is one-time
+    h = lib.parseHello(bytes);
+  } catch (_) {
+    return (hello: null, fault: HelloFault.shape);
+  }
+  try {
+    readInvite(lib, h.inviteBytes, nowMs: nowMs);
+  } on InviteRefused {
+    return (hello: null, fault: HelloFault.invite);
+  }
+  final zero = h.answers.every((b) => b == 0);
+  // rule 3: one of my invites, live, and mine; zero only on the v3 address
+  if (at == null
+      ? !zero
+      : zero || _hexB(h.answers) != at.id || !at.openAt(unixHours(nowMs))) {
+    return (hello: null, fault: HelloFault.answers);
+  }
+  if (!_eqB(h.owner, mine)) return (hello: null, fault: HelloFault.answers);
+  // rule 4: the seal is the hello seal key of the invite's answering key
+  // and the sender
+  final want = sealOf(_hexB(h.invite.identity.sublist(1)));
+  if (want.startsWith('error') || want != sealPk.toLowerCase()) {
+    return (hello: null, fault: HelloFault.seal);
+  }
+  // rule 5
+  if (at != null && at.oneTime && at.usedAt != null) {
+    return (hello: null, fault: HelloFault.used);
+  }
+  if (seen) return (hello: null, fault: HelloFault.seen);
+  return (hello: h, fault: null);
+}
+
+/// whether [hash] was seen by [ident] in the last 16 days; older ones go
+Future<bool> helloSeen(
+  DatabaseExecutor db,
+  int ident,
+  String hash, {
+  int? nowMs,
+}) async {
+  final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
+  await db.delete(
+    'hello_seen',
+    where: 'at < ?',
+    whereArgs: [now - kHelloSeenDays * 24 * 3600 * 1000],
+  );
+  return (await db.query(
+    'hello_seen',
+    where: 'ident = ? AND hash = ?',
+    whereArgs: [ident, hash],
+    limit: 1,
+  )).isNotEmpty;
+}
+
+Future<void> noteHelloSeen(
+  DatabaseExecutor db,
+  int ident,
+  String hash, {
+  int? nowMs,
+}) => db.insert('hello_seen', {
+  'ident': ident,
+  'hash': hash,
+  'at': nowMs ?? DateTime.now().millisecondsSinceEpoch,
+}, conflictAlgorithm: ConflictAlgorithm.ignore);
+
+/// crossed hellos (3.4b, R22): with my hello to them out and theirs in,
+/// the one whose sender key is smaller as bytes is answered. true when
+/// theirs is the one to answer
+bool answerTheirs(List<int> mine, List<int> theirs) {
+  for (var i = 0; i < mine.length && i < theirs.length; i++) {
+    if (theirs[i] != mine[i]) return theirs[i] < mine[i];
+  }
+  return theirs.length < mine.length;
+}
+
+String _hexB(List<int> b) =>
+    b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
+
+bool _eqB(List<int> a, List<int> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
 }

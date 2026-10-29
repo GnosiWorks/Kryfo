@@ -122,3 +122,17 @@ func TestHelloSealIsTheOwnersCheck(t *testing.T) {
 		t.Fatal("a v3 first contact sealed with the hello seal key")
 	}
 }
+
+// a hello on the v3 first-contact address carries its seal key to the app;
+// anything else goes as it came
+func TestHelloLineOnTheV3Address(t *testing.T) {
+	seal := strings.Repeat("ab", 32)
+	if got := helloLine("S0hMMQEAAA", seal); got != "khl:"+seal+"|S0hMMQEAAA" {
+		t.Fatal(got)
+	}
+	for _, c := range []string{"AwAAAA", "{\"halo_ctl\":1}", ""} {
+		if got := helloLine(c, seal); got != c {
+			t.Fatalf("%q became %q", c, got)
+		}
+	}
+}

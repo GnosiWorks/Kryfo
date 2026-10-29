@@ -14,6 +14,10 @@ import 'package:ed25519_edwards/ed25519_edwards.dart' as ed;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/identities.dart';
 import 'package:kryfo/invites.dart';
+import 'package:kryfo/main.dart'
+    show InviteArrival, inviteOpenerHolds, inviteOpenerSeed;
+import 'package:kryfo/message_envelope.dart'
+    show kEnvelopePrefix, unwrapMessage;
 import 'package:kryfo/signal_ffi/kryfo_signal.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/signal_stores.dart';
@@ -360,6 +364,213 @@ void main() {
       isNull,
     );
   });
+  test(
+    'a hello: taken on the five rules, refused re-addressed, under a '
+    'foreign seal, twice on a one-time invite or once seen; zero answers '
+    'only on the v3 address; the smaller sender key of two crossed',
+    () async {
+      // the owner's invites: a main and a one-time one
+      final main = await makeInvite(
+        db,
+        ss,
+        kind: kInviteMain,
+        fcPkOf: _fcPkOf,
+        face: _face,
+        nowMs: _now,
+      );
+      final once = await makeInvite(
+        db,
+        ss,
+        kind: kInviteOneTime,
+        fcPkOf: _fcPkOf,
+        nowMs: _now,
+      );
+      // the sender, its own store and rows, with a face of its own
+      final bdb = MemDb();
+      final b = await testStore(db: bdb);
+      final bFaceKeys = ed.newKeyFromSeed(
+        Uint8List.fromList(List.filled(32, 3)),
+      );
+      final bFace = InviteFace(
+        onionKey: _face.onionKey,
+        face: Uint8List.fromList(ed.public(bFaceKeys).bytes),
+        sign: (m) => Uint8List.fromList(ed.sign(bFaceKeys, m)),
+      );
+      Future<Uint8List> hello(List<int> answers) async => (await makeHello(
+        bdb,
+        b,
+        answers: answers,
+        owner: ss.identity.public,
+        fcPkOf: _fcPkOf,
+        face: bFace,
+        nowMs: _now,
+      )).$1;
+      final toMain = await hello(_unhex(main.id));
+      expect(toMain.length, 4 + 1 + 16 + 33 + 2069 + 64);
+      final bx = _hex(b.identity.public.sublist(1));
+      String sealOf(String x) => x == bx ? 'ab' * 32 : 'cd' * 32;
+      ({LsHello? hello, HelloFault? fault}) check(
+        List<int> bytes, {
+        InviteRow? at,
+        bool v3 = false,
+        String seal = '',
+        bool seen = false,
+        int? nowMs,
+      }) => checkHello(
+        ss.lib,
+        bytes,
+        at: v3 ? null : (at ?? main),
+        mine: ss.identity.public,
+        sealPk: seal.isEmpty ? 'ab' * 32 : seal,
+        sealOf: sealOf,
+        seen: seen,
+        nowMs: nowMs ?? _now,
+      );
+      final ok = check(toMain);
+      expect(ok.fault, isNull);
+      expect(ok.hello!.invite.identity, b.identity.public);
+      expect(ok.hello!.invite.oneTime, isTrue);
+      expect(ok.hello!.invite.block!.bundle.preKeyId, isNotNull);
+      // a main invite answered twice is taken; a hello seen is not
+      expect(check(toMain).fault, isNull);
+      expect(check(toMain, seen: true).fault, HelloFault.seen);
+      // passed on to another invite: its id or its owner changed breaks it
+      final moved = Uint8List.fromList(toMain)..[5] ^= 1;
+      expect(check(moved).fault, HelloFault.shape);
+      final owned = Uint8List.fromList(toMain)..[30] ^= 1;
+      expect(check(owned).fault, HelloFault.shape);
+      // to my one-time invite, but read at the main one: not its answer
+      final toOnce = await hello(_unhex(once.id));
+      expect(check(toOnce).fault, HelloFault.answers);
+      expect(check(toOnce, at: once).fault, isNull);
+      final used = InviteRow(
+        ident: once.ident,
+        id: once.id,
+        kind: once.kind,
+        issued: once.issued,
+        expires: once.expires,
+        link: once.link,
+        usedAt: _now,
+      );
+      expect(check(toOnce, at: used).fault, HelloFault.answers);
+      // a seal by anyone but the sender's hello seal key
+      expect(check(toMain, seal: 'cd' * 32).fault, HelloFault.seal);
+      // zero answers: the v3 address only
+      final toV3 = await hello(List.filled(16, 0));
+      expect(check(toV3).fault, HelloFault.answers);
+      expect(check(toV3, v3: true).fault, isNull);
+      expect(check(toMain, v3: true).fault, HelloFault.answers);
+      // its inner invite expired: refused
+      expect(
+        check(toMain, nowMs: _now + (kOneTimeHours + 26) * _hour).fault,
+        isNotNull,
+      );
+      // crossed: the smaller sender key's hello is answered
+      final small = [5, 1, 2], big = [5, 1, 3];
+      expect(answerTheirs(big, small), isTrue);
+      expect(answerTheirs(small, big), isFalse);
+    },
+  );
+  test('an opener at an invite is opened only under the hello seal key, on '
+      'that invite\'s own keys, and only with its seed and a face signature '
+      'for that invite', () async {
+    final a = await makeInvite(
+      db,
+      ss,
+      kind: kInviteMain,
+      fcPkOf: _fcPkOf,
+      face: _face,
+      nowMs: _now,
+    );
+    final other = await makeInvite(
+      db,
+      ss,
+      kind: kInviteOneTime,
+      fcPkOf: _fcPkOf,
+      nowMs: _now,
+    );
+    final b = await testStore();
+    final bx = _hex(b.identity.public.sublist(1));
+    String sealOf(int ident, String x) =>
+        ident == ss.ident && x == bx ? 'ab' * 32 : 'cd' * 32;
+    Future<Uint8List> openerTo(InviteRow r) async {
+      final inv = readInvite(ss.lib, r.link, nowMs: _now);
+      await b.processBundle('a${r.id}', inv.block!.bundle);
+      final w = base64Decode(await b.encryptTo('a${r.id}', 'hi'));
+      return Uint8List.sublistView(w, 1);
+    }
+
+    final toA = await openerTo(a);
+    bool holds(InviteRow r, Uint8List body, String seal) => inviteOpenerHolds(
+      ss.lib,
+      InviteArrival(ss.ident, r, seal),
+      body,
+      helloSealPk: sealOf,
+    );
+    expect(holds(a, toA, 'ab' * 32), isTrue);
+    expect(holds(a, toA, 'AB' * 32), isTrue);
+    // sealed by anyone else
+    expect(holds(a, toA, 'cd' * 32), isFalse);
+    // on another invite's keys
+    final toOther = await openerTo(other);
+    expect(holds(a, toOther, 'ab' * 32), isFalse);
+    expect(holds(other, toOther, 'ab' * 32), isTrue);
+    // on the v3 card's keys
+    final c = await testStore();
+    await c.processBundle('v3', lsBundleOf(ss.lib, await ss.makeBundleB64()));
+    final w3 = base64Decode(await c.encryptTo('v3', 'hi'));
+    expect(holds(a, Uint8List.sublistView(w3, 1), 'ab' * 32), isFalse);
+    expect(holds(a, Uint8List.fromList([1, 2, 3]), 'ab' * 32), isFalse);
+
+    // what it opens to: the seed, and a face signature by its face over
+    // its own key and this invite's id
+    final bFace = ed.newKeyFromSeed(Uint8List.fromList(List.filled(32, 5)));
+    final seed = List.generate(32, (i) => i);
+    String env(Map<String, Object?> j) => '$kEnvelopePrefix${jsonEncode(j)}';
+    String fsFor(String inviteId) =>
+        _hex(ed.sign(bFace, faceText(b.identity.public, _unhex(inviteId))));
+    final good = {
+      'm': 'hi',
+      'h': 'some-three-words',
+      'e': _hex(ed.public(bFace).bytes),
+      'o': 'x.onion',
+      'pg': 4,
+      'as': _hex(seed),
+      'fs': fsFor(a.id),
+    };
+    expect(
+      inviteOpenerSeed(unwrapMessage(env(good)), b.identity.public, a.id),
+      seed,
+    );
+    for (final bad in <Map<String, Object?>>[
+      {...good}..remove('as'),
+      {...good, 'pg': 3},
+      {...good, 'as': 'ab'},
+      {...good}..remove('fs'),
+      {...good, 'fs': fsFor(other.id)},
+      {...good, 'fs': '00' * 64},
+    ]) {
+      expect(
+        inviteOpenerSeed(unwrapMessage(env(bad)), b.identity.public, a.id),
+        isNull,
+        reason: '$bad',
+      );
+    }
+    // the same signature for another key: refused
+    expect(
+      inviteOpenerSeed(unwrapMessage(env(good)), c.identity.public, a.id),
+      isNull,
+    );
+    // no face shown, none asked
+    final faceless = {...good}
+      ..remove('e')
+      ..remove('fs')
+      ..remove('h');
+    expect(
+      inviteOpenerSeed(unwrapMessage(env(faceless)), b.identity.public, a.id),
+      seed,
+    );
+  });
 }
 
 bool _eqList(List<int> a, List<int> b) {
@@ -369,3 +580,8 @@ bool _eqList(List<int> a, List<int> b) {
   }
   return true;
 }
+
+Uint8List _unhex(String h) => Uint8List.fromList([
+  for (var i = 0; i + 1 < h.length; i += 2)
+    int.parse(h.substring(i, i + 2), radix: 16),
+]);

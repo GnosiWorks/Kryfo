@@ -1322,10 +1322,24 @@ func nostrSubscribeRunner(ctx context.Context, tag string, c convPair, rcvPk str
 // a first-contact address: what lands on it is opened with its key alone
 func nostrSubscribeRunnerFc(ctx context.Context, tag, fcSk, fcPk string) {
 	nostrSubscribeRunnerAt(ctx, laneFirstContact, tag, fcPk, func(gw nostr2.Event) (string, nostr2.Timestamp, error) {
-		content, _, at, err := nip17UnwrapFirstContactWithStamped(fcSk, gw)
-		return content, at, err
+		content, sealPk, at, err := nip17UnwrapFirstContactWithStamped(fcSk, gw)
+		return helloLine(content, sealPk), at, err
 	})
 }
+
+// a hello (KHL1, base64) on the v3 first-contact address goes to the app
+// with the key its seal was signed with, which the app checks (identity
+// v4 3.3, 11 step 7); anything else as it came
+func helloLine(content, sealPk string) string {
+	if strings.HasPrefix(content, khl1B64) {
+		return "khl:" + sealPk + "|" + content
+	}
+	return content
+}
+
+// what base64 of "KHL1" starts with
+const khl1B64 = "S0hMMQ"
+
 
 // the general runner: one receive address, one way to open what lands on
 // it, one tag the inbox line carries so dart knows who it was for, and the
