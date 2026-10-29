@@ -20,6 +20,17 @@ bool Reopened() {
   return r;
 }
 
+// the first copy's window, found by its class and title even while it sits
+// in the tray: it gets this start's kryfo: link and comes forward
+bool SendLinkToFirst() {
+  HWND w = ::FindWindowW(L"FLUTTER_RUNNER_WIN32_WINDOW", L"Kryfo");
+  if (w == nullptr) return false;
+  SendAppLink(w);
+  ::ShowWindow(w, ::IsIconic(w) ? SW_RESTORE : SW_SHOW);
+  ::SetForegroundWindow(w);
+  return true;
+}
+
 }  // namespace
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
@@ -32,7 +43,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   bool reopen = Reopened();
   if (!kryfo::FirstCopy() && !reopen) {
     for (int i = 0; i < 15; i++) {
-      if (SendAppLinkToInstance()) return EXIT_SUCCESS;
+      if (SendLinkToFirst()) return EXIT_SUCCESS;
       ::Sleep(200);
     }
   }

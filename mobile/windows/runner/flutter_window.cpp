@@ -1,5 +1,6 @@
 #include "flutter_window.h"
 
+#include <flutter/method_result_functions.h>
 #include <flutter/standard_method_codec.h>
 
 #include <optional>
