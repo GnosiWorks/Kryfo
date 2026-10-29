@@ -484,6 +484,17 @@ void main() {
     expect(left(), isEmpty);
   }, skip: !engine);
 
+  // no export is still being made when the test ends: one left running
+  // lives on in this test's clock, and the next test's drop would wait on
+  // it for good. a drop answers once none is
+  Future<void> drained(WidgetTester t) async {
+    var done = false;
+    unawaited(dropNotesExports(tmp).then((_) => done = true));
+    await until(t, () => done);
+    expect(done, isTrue);
+    expect(left(), isEmpty);
+  }
+
   // a lock or a switch to another pin takes the page while the file is
   // made: nothing of it stays, and no save window opens
   Future<void> lockMidway(WidgetTester t) async {
@@ -498,6 +509,7 @@ void main() {
     expect(left(), isEmpty);
     expect(asked, isNot(contains('saveDocument')));
     await t.pumpAndSettle();
+    await drained(t);
   }
 
   void bigPhoto(_Db into, [int size = 256 << 20]) {
@@ -531,6 +543,7 @@ void main() {
     await until(t, () => left().isEmpty);
     expect(left(), isEmpty);
     expect(asked, isNot(contains('saveDocument')));
+    await drained(t);
   });
 
   testWidgets('a lock while a plain zip is made leaves nothing', (t) async {
