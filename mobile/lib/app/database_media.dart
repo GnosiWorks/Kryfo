@@ -312,6 +312,47 @@ mixin _MediaRows {
     return r.isEmpty ? null : r.first;
   }
 
+  /// where an incoming row's file goes: its file's path, or its picture's.
+  /// null when the row is gone or names none
+  Future<String?> incomingFilePath(String msgUid) async {
+    final db = await open();
+    final r = await db.query(
+      'messages',
+      columns: const ['file_path', 'media_path'],
+      where: "msg_uid = ? AND direction = 'in'",
+      whereArgs: [msgUid],
+      limit: 1,
+    );
+    if (r.isEmpty) return null;
+    return (r.first['file_path'] ?? r.first['media_path']) as String?;
+  }
+
+  /// an incoming row filed before its file, whose file will not come now:
+  /// its paths go and it says so under what it said. false when it is gone
+  Future<bool> fileNeverCame(String msgUid, String line) async {
+    final db = await open();
+    final r = await db.query(
+      'messages',
+      columns: const ['plaintext'],
+      where: "msg_uid = ? AND direction = 'in'",
+      whereArgs: [msgUid],
+      limit: 1,
+    );
+    if (r.isEmpty) return false;
+    final said = (r.first['plaintext'] as String?) ?? '';
+    await db.update(
+      'messages',
+      {
+        'plaintext': [said, line].where((s) => s.trim().isNotEmpty).join('\n'),
+        'media_path': null,
+        'file_path': null,
+      },
+      where: "msg_uid = ? AND direction = 'in'",
+      whereArgs: [msgUid],
+    );
+    return true;
+  }
+
   // a transfer nobody ever finished shouldn't sit in the db forever.
   // a week for a file from someone here, a day for one from a stranger:
   // someone not accepted and in no group

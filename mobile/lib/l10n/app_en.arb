@@ -12645,5 +12645,179 @@
         "format": "decimalPattern"
       }
     }
+  },
+  "transferDoneOf": "{done} of {total}",
+  "@transferDoneOf": {
+    "description": "transfer strip and notification: part done of a file, like 12.4 mb of 40.0 mb",
+    "placeholders": {
+      "done": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "transferDoneLeft": "{done} · {left}",
+  "@transferDoneLeft": {
+    "description": "transfer strip: the part done, then the time left (transferLeft*)",
+    "placeholders": {
+      "done": {
+        "type": "String"
+      },
+      "left": {
+        "type": "String"
+      }
+    }
+  },
+  "transferLeftSoon": "less than a minute left",
+  "@transferLeftSoon": {
+    "description": "transfer strip: time left, a fragment after a dot, so lowercase"
+  },
+  "transferLeftMinutes": "about {n} min left",
+  "@transferLeftMinutes": {
+    "description": "transfer strip: time left in minutes, a fragment after a dot, so lowercase",
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "transferLeftHours": "about {n} h left",
+  "@transferLeftHours": {
+    "description": "transfer strip: time left in hours, a fragment after a dot, so lowercase",
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "transferSending": "Sending · {detail}",
+  "@transferSending": {
+    "description": "transfer strip and notification: a file sending, detail is like 12.4 mb of 40.0 mb · about 2 min left",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "transferReceiving": "Receiving · {detail}",
+  "@transferReceiving": {
+    "description": "transfer strip, file bubble and notification: a file coming in, detail as in transferSending",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "transferBoth": "Sending and receiving · {detail}",
+  "@transferBoth": {
+    "description": "transfer notification: files going both ways, detail as in transferSending",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "transferPause": "Pause",
+  "@transferPause": {
+    "description": "transfer strip: button that pauses a download"
+  },
+  "transferPauseDownload": "Pause the download",
+  "@transferPauseDownload": {
+    "description": "transfer strip and file bubble: what a screen reader says the pause button does"
+  },
+  "transferDownload": "Download",
+  "@transferDownload": {
+    "description": "waiting file bubble: what a screen reader says the download button does"
+  },
+  "transferResume": "Resume",
+  "@transferResume": {
+    "description": "waiting file bubble: what a screen reader says the button does for a paused download"
+  },
+  "transferOnWifi": "Downloads on Wi-Fi",
+  "@transferOnWifi": {
+    "description": "waiting file bubble: the file comes by itself once the phone is on wi-fi, a tap brings it now"
+  },
+  "transferPausedAt": "Paused · {detail}",
+  "@transferPausedAt": {
+    "description": "waiting file bubble: a download the person paused, detail like 12.4 mb of 40.0 mb",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "transferTapToDownload": "Tap to download",
+  "@transferTapToDownload": {
+    "description": "waiting file bubble: automatic download is off for this kind of file"
+  },
+  "transferSizeLine": "{size} · {state}",
+  "@transferSizeLine": {
+    "description": "waiting file bubble: the file size, then transferOnWifi or transferTapToDownload",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "state": {
+        "type": "String"
+      }
+    }
+  },
+  "transferNoteTitle": "File transfer",
+  "@transferNoteTitle": {
+    "description": "notification title while files send or download. never names a chat or a file"
+  },
+  "transferChannel": "File transfers",
+  "@transferChannel": {
+    "description": "android notification channel name for the transfer notification"
+  },
+  "transferChannelLine": "Shows while files send or download. It never names a chat or a file.",
+  "@transferChannelLine": {
+    "description": "android notification channel description"
+  },
+  "autoGetTitle": "Automatic download",
+  "@autoGetTitle": {
+    "description": "settings: row and screen title for which files download without a tap"
+  },
+  "autoGetLine": "Files come without a tap as set here. One that waits stays on the file server for you, a week at most.",
+  "@autoGetLine": {
+    "description": "automatic download screen: line under the title"
+  },
+  "autoGetPhotos": "Photos",
+  "@autoGetPhotos": {
+    "description": "automatic download screen: row for photos"
+  },
+  "autoGetVideos": "Videos",
+  "@autoGetVideos": {
+    "description": "automatic download screen: row for videos"
+  },
+  "autoGetFiles": "Files",
+  "@autoGetFiles": {
+    "description": "automatic download screen: row for other files"
+  },
+  "autoGetAlways": "On Wi-Fi and mobile data",
+  "@autoGetAlways": {
+    "description": "automatic download: download on any network"
+  },
+  "autoGetWifi": "On Wi-Fi only",
+  "@autoGetWifi": {
+    "description": "automatic download: download only on wi-fi"
+  },
+  "autoGetNever": "Never, I tap to download",
+  "@autoGetNever": {
+    "description": "automatic download: never by itself, the person taps the file"
+  },
+  "autoGetVoice": "Voice notes always download.",
+  "@autoGetVoice": {
+    "description": "automatic download screen: line at the bottom"
+  },
+  "settingsFiles": "Files",
+  "@settingsFiles": {
+    "description": "settings: section header for files and downloads"
+  },
+  "fileSheetOpenWith": "Open with another app",
+  "@fileSheetOpenWith": {
+    "description": "file sheet: hands the file to an app the person picks"
   }
 }

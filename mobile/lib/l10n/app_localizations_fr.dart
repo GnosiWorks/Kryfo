@@ -10153,4 +10153,114 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done sur $total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'moins d’une minute restante';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'environ $n min restantes';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'environ $n h restantes';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'Envoi · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'Réception · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'Envoi et réception · $detail';
+  }
+
+  @override
+  String get transferPause => 'Pause';
+
+  @override
+  String get transferPauseDownload => 'Mettre le téléchargement en pause';
+
+  @override
+  String get transferDownload => 'Télécharger';
+
+  @override
+  String get transferResume => 'Reprendre';
+
+  @override
+  String get transferOnWifi => 'Se télécharge en Wi-Fi';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'En pause · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'Touchez pour télécharger';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'Transfert de fichiers';
+
+  @override
+  String get transferChannel => 'Transferts de fichiers';
+
+  @override
+  String get transferChannelLine =>
+      'S’affiche pendant l’envoi ou le téléchargement de fichiers. Ne nomme jamais une discussion ni un fichier.';
+
+  @override
+  String get autoGetTitle => 'Téléchargement automatique';
+
+  @override
+  String get autoGetLine =>
+      'Les fichiers arrivent sans toucher, selon vos choix ici. Un fichier en attente reste pour vous sur le serveur de fichiers, une semaine au plus.';
+
+  @override
+  String get autoGetPhotos => 'Photos';
+
+  @override
+  String get autoGetVideos => 'Vidéos';
+
+  @override
+  String get autoGetFiles => 'Fichiers';
+
+  @override
+  String get autoGetAlways => 'En Wi-Fi et données mobiles';
+
+  @override
+  String get autoGetWifi => 'En Wi-Fi uniquement';
+
+  @override
+  String get autoGetNever => 'Jamais, je touche pour télécharger';
+
+  @override
+  String get autoGetVoice => 'Les messages vocaux se téléchargent toujours.';
+
+  @override
+  String get settingsFiles => 'Fichiers';
+
+  @override
+  String get fileSheetOpenWith => 'Ouvrir avec une autre appli';
 }

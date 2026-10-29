@@ -11,6 +11,7 @@ import '../file_save.dart';
 import '../lock_state.dart';
 import '../open_file.dart';
 import '../theme.dart';
+import 'file_sheet.dart';
 import 'halo_hero.dart';
 import 'photo_viewer.dart';
 import 'press_scale.dart';
@@ -22,8 +23,8 @@ import '../l10n/numbers.dart';
 import 'video_viewer.dart';
 
 /// a tap on a file or a video: a picture opens in the app's own viewer;
-/// anything else in whatever the phone has for it, or the share sheet when
-/// nothing does. an app installer is never opened
+/// anything else gets the file sheet, which opens it in whatever the phone
+/// has for it (the share sheet when nothing does), saves or shares it. an app installer is never opened
 /// or shared: it is saved where the person picks. held against the app
 /// lock: leaving for the viewer is not leaving. [kept]: the other person's,
 /// in a chat that blocks, which goes to no other app (shotsKeeps)
@@ -49,6 +50,22 @@ Future<void> openReceivedFile(
   }
   if (facts.installer) {
     await saveReceivedFile(context, path, name);
+    return;
+  }
+  // what it is first, then where it goes: another app, a save, a share
+  final pick = await showFileSheet(
+    context,
+    path: path,
+    name: name,
+    facts: facts,
+  );
+  if (pick == null || !context.mounted) return;
+  if (pick == FileSheetPick.save) {
+    await saveReceivedFile(context, path, name);
+    return;
+  }
+  if (pick == FileSheetPick.share) {
+    await lockState.hold(() => shareFileOut(path, name: name));
     return;
   }
   final opened = await lockState.hold(

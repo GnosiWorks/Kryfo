@@ -10054,4 +10054,114 @@ class AppLocalizationsHi extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$total में से $done';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'एक मिनट से कम बाकी';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'लगभग $n मिनट बाकी';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'लगभग $n घंटे बाकी';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'भेजा जा रहा है · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'आ रहा है · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'भेजा और पाया जा रहा है · $detail';
+  }
+
+  @override
+  String get transferPause => 'रोकें';
+
+  @override
+  String get transferPauseDownload => 'डाउनलोड रोकें';
+
+  @override
+  String get transferDownload => 'डाउनलोड करें';
+
+  @override
+  String get transferResume => 'फिर शुरू करें';
+
+  @override
+  String get transferOnWifi => 'Wi-Fi पर डाउनलोड होगा';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'रुका हुआ · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'डाउनलोड करने के लिए टैप करें';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'फ़ाइल ट्रांसफ़र';
+
+  @override
+  String get transferChannel => 'फ़ाइल ट्रांसफ़र';
+
+  @override
+  String get transferChannelLine =>
+      'फ़ाइलें भेजते या डाउनलोड होते समय दिखता है। कभी किसी चैट या फ़ाइल का नाम नहीं बताता।';
+
+  @override
+  String get autoGetTitle => 'अपने आप डाउनलोड';
+
+  @override
+  String get autoGetLine =>
+      'फ़ाइलें यहाँ की सेटिंग के हिसाब से बिना टैप के आती हैं। इंतज़ार वाली फ़ाइल आपके लिए फ़ाइल सर्वर पर रहती है, ज़्यादा से ज़्यादा एक हफ़्ता।';
+
+  @override
+  String get autoGetPhotos => 'फ़ोटो';
+
+  @override
+  String get autoGetVideos => 'वीडियो';
+
+  @override
+  String get autoGetFiles => 'फ़ाइलें';
+
+  @override
+  String get autoGetAlways => 'Wi-Fi और मोबाइल डेटा पर';
+
+  @override
+  String get autoGetWifi => 'सिर्फ़ Wi-Fi पर';
+
+  @override
+  String get autoGetNever => 'कभी नहीं, मैं टैप करके डाउनलोड करूँगा';
+
+  @override
+  String get autoGetVoice => 'वॉइस मैसेज हमेशा डाउनलोड होते हैं।';
+
+  @override
+  String get settingsFiles => 'फ़ाइलें';
+
+  @override
+  String get fileSheetOpenWith => 'दूसरे ऐप से खोलें';
 }

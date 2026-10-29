@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'theme.dart';
 import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
+import 'transfers.dart';
+import 'widgets/motion.dart' show motionStill;
 
 /// outgoing: msgUid -> 0..1
 final Map<String, double> mediaSendProgress = {};
@@ -37,6 +39,56 @@ final Set<String> incomingMediaStalled = {};
 /// banner can show sender-side progress too.
 final Map<String, String> _sendChat = {};
 
+// a transfer's size in bytes and its pace, by msgUid for a send and by
+// chat key for what comes in. the file a chat's strip fetches now, so the
+// strip can pause it
+final Map<String, int> _bytes = {};
+final Map<String, TransferPace> _pace = {};
+final Map<String, String> _fetchUid = {};
+
+void _paceAdd(String key, double share) => (_pace[key] ??= TransferPace()).add(
+  DateTime.now().millisecondsSinceEpoch,
+  share,
+);
+
+/// what a strip or the transfer notification says of one transfer:
+/// "12.4 MB of 40.0 MB · about 2 min left", or null with no size known
+String? transferDetail(String key, double share) {
+  final b = _bytes[key];
+  if (b == null) return null;
+  final left = _pace[key]?.secondsLeft();
+  final done = doneOfText(share, b);
+  return left == null ? done : l10n.transferDoneLeft(done, leftText(left));
+}
+
+/// every transfer under way now, for the notification: sends by msgUid,
+/// what comes in by chat. (sending, receiving, bytes done, bytes in all)
+({int sending, int receiving, int done, int total}) transfersNow() {
+  var sending = 0, receiving = 0, done = 0, total = 0;
+  for (final e in mediaSendProgress.entries) {
+    sending++;
+    final b = _bytes[e.key] ?? 0;
+    total += b;
+    done += (b * e.value).round();
+  }
+  for (final e in incomingMediaProgress.entries) {
+    if (incomingMediaStalled.contains(e.key)) continue;
+    receiving++;
+    final b = _bytes[e.key] ?? 0;
+    total += b;
+    done += (b * e.value).round();
+  }
+  // a waiting file counts only while its fetch runs and bytes come
+  final at = DateTime.now().millisecondsSinceEpoch;
+  for (final MapEntry(key: uid, value: e) in fileWaits.value.entries) {
+    if (e.state != WaitState.coming || !fileWaitMoves(uid, at)) continue;
+    receiving++;
+    total += e.size;
+    done += (e.size * e.share).round();
+  }
+  return (sending: sending, receiving: receiving, done: done, total: total);
+}
+
 final ValueNotifier<int> mediaProgressTick = ValueNotifier(0);
 Timer? _sweeper;
 
@@ -54,6 +106,9 @@ void _ensureSweeper() {
         incomingMediaProgress.remove(e.key);
         _incomingTouch.remove(e.key);
         _incomingCount.remove(e.key);
+        _bytes.remove(e.key);
+        _pace.remove(e.key);
+        _fetchUid.remove(e.key);
         incomingMediaStalled.remove(e.key);
         changed = true;
       } else if (quiet > 75000 && incomingMediaStalled.add(e.key)) {
@@ -64,29 +119,56 @@ void _ensureSweeper() {
   });
 }
 
-void mediaProgressStart(String msgUid, {String? chatKey}) {
+/// [bytes]: the file's size, for the strip's "of" and its time left
+@visibleForTesting
+void stopMediaSweeper() {
+  _sweeper?.cancel();
+  _sweeper = null;
+}
+
+void mediaProgressStart(String msgUid, {String? chatKey, int? bytes}) {
   mediaSendProgress.putIfAbsent(msgUid, () => 0);
   if (chatKey != null) _sendChat[msgUid] = chatKey;
+  if (bytes != null && bytes > 0) _bytes[msgUid] = bytes;
   _bump();
 }
 
 void mediaProgressUpdate(String msgUid, double v) {
   mediaSendProgress[msgUid] = v;
+  _paceAdd(msgUid, v);
   _bump();
 }
 
 void mediaProgressEnd(String msgUid) {
   _sendChat.remove(msgUid);
   mediaPreparing.remove(msgUid);
+  _bytes.remove(msgUid);
+  _pace.remove(msgUid);
   if (mediaSendProgress.remove(msgUid) != null) _bump();
 }
 
-void incomingMediaUpdate(String chatKey, int received, int total) {
+/// [uid]: the message a fetch from the files service is for, which the
+/// strip can pause. [bytes]: the file's size
+void incomingMediaUpdate(
+  String chatKey,
+  int received,
+  int total, {
+  String? uid,
+  int? bytes,
+}) {
   if (total <= 0) return;
   incomingMediaProgress[chatKey] = received / total;
   _incomingCount[chatKey] = (received, total);
   incomingMediaStalled.remove(chatKey);
   _incomingTouch[chatKey] = DateTime.now().millisecondsSinceEpoch;
+  // slices are 12288 bytes of the file, the last one short
+  _bytes[chatKey] = bytes ?? total * 12288;
+  if (uid != null) {
+    _fetchUid[chatKey] = uid;
+  } else {
+    _fetchUid.remove(chatKey);
+  }
+  _paceAdd(chatKey, received / total);
   _ensureSweeper();
   _bump();
 }
@@ -95,6 +177,9 @@ void incomingMediaDone(String chatKey) {
   _incomingTouch.remove(chatKey);
   _incomingCount.remove(chatKey);
   incomingMediaStalled.remove(chatKey);
+  _bytes.remove(chatKey);
+  _pace.remove(chatKey);
+  _fetchUid.remove(chatKey);
   if (incomingMediaProgress.remove(chatKey) != null) _bump();
 }
 
@@ -127,16 +212,27 @@ class SendProgressLabel extends StatelessWidget {
   }
 }
 
-/// slim "receiving media" pill above the composer. self-hiding.
+/// slim "receiving media" pill above the composer. self-hiding: it grows
+/// in and out, its ring and its words follow the transfer
 class IncomingMediaBanner extends StatelessWidget {
   final String chatKey;
 
   /// stops an outgoing send from the strip itself
   final void Function(String msgUid)? onCancel;
-  const IncomingMediaBanner({super.key, required this.chatKey, this.onCancel});
+
+  /// pauses a file coming in from the files service. its message is
+  /// filed then, and goes on with a tap on its bubble
+  final void Function(String msgUid)? onPause;
+  const IncomingMediaBanner({
+    super.key,
+    required this.chatKey,
+    this.onCancel,
+    this.onPause,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final still = motionStill(context);
     return ValueListenableBuilder<int>(
       valueListenable: mediaProgressTick,
       builder: (_, _, _) {
@@ -155,85 +251,148 @@ class IncomingMediaBanner extends StatelessWidget {
           }
         }
         final v = outV ?? incomingMediaProgress[chatKey];
-        if (v == null) return const SizedBox.shrink();
-        final sending = outV != null;
-        // captured as locals so the tap closure keeps a non-null pair
-        final cancelUid = outUid;
-        final cancel = onCancel;
-        final stalled = !sending && incomingMediaStalled.contains(chatKey);
-        final count = _incomingCount[chatKey];
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-            decoration: BoxDecoration(
-              color: HaloColors.surface,
-              borderRadius: BorderRadius.circular(9),
-              border: Border.all(
-                color: HaloColors.amber.withValues(alpha: 0.35),
-              ),
-            ),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 10,
-                  height: 10,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 1.6,
-                    value: v.clamp(0.05, 1.0),
-                    color: HaloColors.amber,
-                    backgroundColor: HaloColors.line,
-                  ),
-                ),
-                const SizedBox(width: 9),
-                Flexible(
-                  child: Text(
-                    sending && mediaPreparing.contains(cancelUid)
-                        ? l10n.mediaProgressPreparing
-                        : sending
-                        ? l10n.mediaProgressSendingKeepTheApp(percent(v))
-                        : stalled && count != null
-                        ? l10n.mediaProgressPausedOfWaitingFor(
-                            whole(count.$1),
-                            whole(count.$2),
-                          )
-                        : l10n.mediaProgressReceivingMedia(percent(v)),
-                    style: HaloType.mono(
-                      size: 10.5,
-                      color: stalled ? HaloColors.text2 : HaloColors.amberText,
-                    ),
-                  ),
-                ),
-                if (sending && cancelUid != null && cancel != null) ...[
-                  const SizedBox(width: 10),
-                  Semantics(
-                    button: true,
-                    label: l10n.mediaProgressCancelSending,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => cancel(cancelUid),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 3,
-                        ),
-                        child: Text(
-                          l10n.commonCancel,
-                          style: HaloType.mono(
-                            size: 10.5,
-                            weight: FontWeight.w700,
-                            color: HaloColors.text2,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
+        Widget strip = const SizedBox(width: double.infinity);
+        if (v != null) {
+          strip = _strip(
+            v: v,
+            outUid: outUid,
+            sending: outV != null,
+            still: still,
+          );
+        }
+        return AnimatedSize(
+          duration: still ? Duration.zero : const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.bottomCenter,
+          child: AnimatedSwitcher(
+            duration: still ? Duration.zero : const Duration(milliseconds: 180),
+            child: KeyedSubtree(
+              key: ValueKey(v == null ? 'none' : outUid ?? 'in'),
+              child: strip,
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _strip({
+    required double v,
+    required String? outUid,
+    required bool sending,
+    required bool still,
+  }) {
+    // captured as locals so the tap closures keep a non-null pair
+    final cancelUid = outUid;
+    final cancel = onCancel;
+    final pauseUid = sending ? null : _fetchUid[chatKey];
+    final pause = onPause;
+    final stalled = !sending && incomingMediaStalled.contains(chatKey);
+    final count = _incomingCount[chatKey];
+    final detail = transferDetail(sending ? cancelUid! : chatKey, v);
+    final line = sending && mediaPreparing.contains(cancelUid)
+        ? l10n.mediaProgressPreparing
+        : sending
+        ? detail == null
+              ? l10n.mediaProgressSendingKeepTheApp(percent(v))
+              : l10n.transferSending(detail)
+        : stalled && count != null
+        ? l10n.mediaProgressPausedOfWaitingFor(whole(count.$1), whole(count.$2))
+        : detail == null
+        ? l10n.mediaProgressReceivingMedia(percent(v))
+        : l10n.transferReceiving(detail);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: HaloColors.surface,
+          borderRadius: BorderRadius.circular(9),
+          border: Border.all(color: HaloColors.amber.withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 10,
+              height: 10,
+              // the ring eases to each new share instead of jumping
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(end: v.clamp(0.05, 1.0)),
+                duration: still
+                    ? Duration.zero
+                    : const Duration(milliseconds: 400),
+                curve: Curves.easeOutCubic,
+                builder: (_, x, _) => CircularProgressIndicator(
+                  strokeWidth: 1.6,
+                  value: x,
+                  color: HaloColors.amber,
+                  backgroundColor: HaloColors.line,
+                ),
+              ),
+            ),
+            const SizedBox(width: 9),
+            Flexible(
+              child: Text(
+                line,
+                style: HaloType.mono(
+                  size: 10.5,
+                  color: stalled ? HaloColors.text2 : HaloColors.amberText,
+                ),
+              ),
+            ),
+            if (pauseUid != null && pause != null && !stalled)
+              _StripAction(
+                label: l10n.transferPause,
+                hint: l10n.transferPauseDownload,
+                onTap: () => pause(pauseUid),
+              ),
+            if (sending && cancelUid != null && cancel != null)
+              _StripAction(
+                label: l10n.commonCancel,
+                hint: l10n.mediaProgressCancelSending,
+                onTap: () => cancel(cancelUid),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StripAction extends StatelessWidget {
+  final String label;
+  final String hint;
+  final VoidCallback onTap;
+  const _StripAction({
+    required this.label,
+    required this.hint,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(start: 10),
+      child: Semantics(
+        button: true,
+        label: hint,
+        excludeSemantics: true,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            child: Text(
+              label,
+              style: HaloType.mono(
+                size: 10.5,
+                weight: FontWeight.w700,
+                color: HaloColors.text2,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

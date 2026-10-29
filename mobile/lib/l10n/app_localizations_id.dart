@@ -10044,4 +10044,114 @@ class AppLocalizationsId extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done dari $total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'kurang dari semenit lagi';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'sekitar $n mnt lagi';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'sekitar $n jam lagi';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'Mengirim · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'Menerima · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'Mengirim dan menerima · $detail';
+  }
+
+  @override
+  String get transferPause => 'Jeda';
+
+  @override
+  String get transferPauseDownload => 'Jeda unduhan';
+
+  @override
+  String get transferDownload => 'Unduh';
+
+  @override
+  String get transferResume => 'Lanjutkan';
+
+  @override
+  String get transferOnWifi => 'Diunduh lewat Wi-Fi';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'Dijeda · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'Ketuk untuk mengunduh';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'Transfer file';
+
+  @override
+  String get transferChannel => 'Transfer file';
+
+  @override
+  String get transferChannelLine =>
+      'Muncul selama file dikirim atau diunduh. Tidak pernah menyebut chat atau file.';
+
+  @override
+  String get autoGetTitle => 'Unduh otomatis';
+
+  @override
+  String get autoGetLine =>
+      'File datang tanpa diketuk sesuai pilihanmu di sini. File yang menunggu tetap ada di server file untukmu, paling lama seminggu.';
+
+  @override
+  String get autoGetPhotos => 'Foto';
+
+  @override
+  String get autoGetVideos => 'Video';
+
+  @override
+  String get autoGetFiles => 'File';
+
+  @override
+  String get autoGetAlways => 'Lewat Wi-Fi dan data seluler';
+
+  @override
+  String get autoGetWifi => 'Hanya lewat Wi-Fi';
+
+  @override
+  String get autoGetNever => 'Tidak pernah, aku ketuk untuk mengunduh';
+
+  @override
+  String get autoGetVoice => 'Pesan suara selalu diunduh.';
+
+  @override
+  String get settingsFiles => 'File';
+
+  @override
+  String get fileSheetOpenWith => 'Buka dengan aplikasi lain';
 }

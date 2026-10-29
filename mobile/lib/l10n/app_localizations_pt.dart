@@ -10122,4 +10122,114 @@ class AppLocalizationsPt extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done de $total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'falta menos de um minuto';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'faltam uns $n min';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'faltam umas $n h';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'Enviando · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'Recebendo · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'Enviando e recebendo · $detail';
+  }
+
+  @override
+  String get transferPause => 'Pausar';
+
+  @override
+  String get transferPauseDownload => 'Pausar o download';
+
+  @override
+  String get transferDownload => 'Baixar';
+
+  @override
+  String get transferResume => 'Retomar';
+
+  @override
+  String get transferOnWifi => 'Baixa no Wi-Fi';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'Pausado · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'Toque para baixar';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'Transferência de arquivos';
+
+  @override
+  String get transferChannel => 'Transferências de arquivos';
+
+  @override
+  String get transferChannelLine =>
+      'Aparece enquanto arquivos são enviados ou baixados. Nunca cita uma conversa ou um arquivo.';
+
+  @override
+  String get autoGetTitle => 'Download automático';
+
+  @override
+  String get autoGetLine =>
+      'Os arquivos chegam sem toque, conforme você escolher aqui. Um que espera fica no servidor de arquivos para você, uma semana no máximo.';
+
+  @override
+  String get autoGetPhotos => 'Fotos';
+
+  @override
+  String get autoGetVideos => 'Vídeos';
+
+  @override
+  String get autoGetFiles => 'Arquivos';
+
+  @override
+  String get autoGetAlways => 'No Wi-Fi e nos dados móveis';
+
+  @override
+  String get autoGetWifi => 'Só no Wi-Fi';
+
+  @override
+  String get autoGetNever => 'Nunca, eu toco para baixar';
+
+  @override
+  String get autoGetVoice => 'Mensagens de voz sempre são baixadas.';
+
+  @override
+  String get settingsFiles => 'Arquivos';
+
+  @override
+  String get fileSheetOpenWith => 'Abrir com outro app';
 }

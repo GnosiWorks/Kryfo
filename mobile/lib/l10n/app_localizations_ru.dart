@@ -10225,4 +10225,114 @@ class AppLocalizationsRu extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done из $total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'осталось меньше минуты';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'осталось около $n мин';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'осталось около $n ч';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'Отправка · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'Получение · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'Отправка и получение · $detail';
+  }
+
+  @override
+  String get transferPause => 'Пауза';
+
+  @override
+  String get transferPauseDownload => 'Приостановить загрузку';
+
+  @override
+  String get transferDownload => 'Скачать';
+
+  @override
+  String get transferResume => 'Продолжить';
+
+  @override
+  String get transferOnWifi => 'Скачается по Wi-Fi';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'Пауза · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'Нажми, чтобы скачать';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'Передача файлов';
+
+  @override
+  String get transferChannel => 'Передача файлов';
+
+  @override
+  String get transferChannelLine =>
+      'Видно, пока файлы отправляются или скачиваются. Никогда не называет чат или файл.';
+
+  @override
+  String get autoGetTitle => 'Автозагрузка';
+
+  @override
+  String get autoGetLine =>
+      'Файлы приходят без нажатия, как настроено здесь. Ожидающий файл хранится для тебя на файловом сервере, не дольше недели.';
+
+  @override
+  String get autoGetPhotos => 'Фото';
+
+  @override
+  String get autoGetVideos => 'Видео';
+
+  @override
+  String get autoGetFiles => 'Файлы';
+
+  @override
+  String get autoGetAlways => 'По Wi-Fi и мобильной сети';
+
+  @override
+  String get autoGetWifi => 'Только по Wi-Fi';
+
+  @override
+  String get autoGetNever => 'Никогда, скачаю нажатием';
+
+  @override
+  String get autoGetVoice => 'Голосовые сообщения скачиваются всегда.';
+
+  @override
+  String get settingsFiles => 'Файлы';
+
+  @override
+  String get fileSheetOpenWith => 'Открыть в другом приложении';
 }

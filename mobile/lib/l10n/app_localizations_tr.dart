@@ -10070,4 +10070,114 @@ class AppLocalizationsTr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done / $total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'bir dakikadan az kaldı';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'yaklaşık $n dk kaldı';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'yaklaşık $n sa kaldı';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'Gönderiliyor · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'Alınıyor · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'Gönderiliyor ve alınıyor · $detail';
+  }
+
+  @override
+  String get transferPause => 'Duraklat';
+
+  @override
+  String get transferPauseDownload => 'İndirmeyi duraklat';
+
+  @override
+  String get transferDownload => 'İndir';
+
+  @override
+  String get transferResume => 'Sürdür';
+
+  @override
+  String get transferOnWifi => 'Wi-Fi’da iner';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'Duraklatıldı · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'İndirmek için dokun';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'Dosya aktarımı';
+
+  @override
+  String get transferChannel => 'Dosya aktarımları';
+
+  @override
+  String get transferChannelLine =>
+      'Dosyalar gönderilirken veya inerken görünür. Hiçbir sohbetin ya da dosyanın adını vermez.';
+
+  @override
+  String get autoGetTitle => 'Otomatik indirme';
+
+  @override
+  String get autoGetLine =>
+      'Dosyalar burada seçtiğin gibi dokunmadan gelir. Bekleyen bir dosya senin için dosya sunucusunda kalır, en fazla bir hafta.';
+
+  @override
+  String get autoGetPhotos => 'Fotoğraflar';
+
+  @override
+  String get autoGetVideos => 'Videolar';
+
+  @override
+  String get autoGetFiles => 'Dosyalar';
+
+  @override
+  String get autoGetAlways => 'Wi-Fi ve mobil veride';
+
+  @override
+  String get autoGetWifi => 'Yalnızca Wi-Fi’da';
+
+  @override
+  String get autoGetNever => 'Asla, indirmek için dokunurum';
+
+  @override
+  String get autoGetVoice => 'Sesli mesajlar her zaman iner.';
+
+  @override
+  String get settingsFiles => 'Dosyalar';
+
+  @override
+  String get fileSheetOpenWith => 'Başka bir uygulamayla aç';
 }
