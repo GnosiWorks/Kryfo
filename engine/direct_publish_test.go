@@ -128,6 +128,10 @@ func TestDirectRouteAfterABounce(t *testing.T) {
 	if l := statusLine(); !strings.HasPrefix(l, "reachable|") {
 		t.Fatalf("status line %q", l)
 	}
+	// the transport page too, though the bounce zeroes the uploads
+	if v := transportSnapshot(); !v.PublishedOnce {
+		t.Fatalf("transport state not published: %+v", v)
+	}
 }
 
 // no upload is ever heard of (the subscription failed): direct still joins
