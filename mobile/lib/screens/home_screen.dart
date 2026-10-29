@@ -80,6 +80,10 @@ Future<void> Function(BuildContext context) homeBackgroundAsk =
 @visibleForTesting
 void askBackgroundAgainForTest() => _miuiPromptChecked = false;
 
+/// the clock the date head reads. a test hands in its own
+@visibleForTesting
+DateTime Function() homeClock = DateTime.now;
+
 class HomeScreen extends StatefulWidget {
   final String haloId; // "neon-tiger-saturn"
   final List<ContactPreview> contacts;
@@ -436,7 +440,7 @@ class _ChatsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
+    final now = homeClock();
     final visible = contacts.where((c) => !c.archived).toList();
     // an archived developer chat counts with the rest in the archive
     final dev = devRow;
