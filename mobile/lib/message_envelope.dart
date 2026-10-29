@@ -12,6 +12,7 @@ import 'dlog.dart';
 import 'file_drop.dart' show DropFrame, kDropWire;
 import 'group_shots.dart' show GroupShotsWord, kGroupNudgeWire, kGroupShotsWire;
 import 'media_resend.dart';
+import 'profile_photo.dart' show PhotoFrame, kPhotoWire;
 import 'stickers/sticker_wire.dart' show StickerWire;
 import 'typing.dart' show capsFromWire, kCapsWire, kMyCaps, kTypingWire;
 import 'voice_format.dart' show kOpusWire;
@@ -79,6 +80,9 @@ class UnwrappedMessage {
   // 'cp': what the sender's phone understands, on every 1:1 and group
   // frame. null from a version without it
   final List<String>? caps;
+  // 'pp': a slice of the sender's profile photo, or its take-back
+  // (profile_photo.dart). nothing else in the frame counts
+  final PhotoFrame? photo;
   final AlbumTag? album; // 'al': its place in an album, on every slice
   // 'w': when the sender wrote it, ms by their clock. set once and kept on
   // every retry, so a copy wrapped again still says when it was written.
@@ -139,6 +143,7 @@ class UnwrappedMessage {
     this.typing = false,
     this.caps,
     this.drop,
+    this.photo,
   });
 }
 
@@ -621,6 +626,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       typing: json[kTypingWire] == 1,
       caps: capsFromWire(json[kCapsWire]),
       drop: DropFrame.fromWire(sent[kDropWire]),
+      photo: PhotoFrame.fromWire(sent[kPhotoWire]),
     );
   } catch (e) {
     dlog(

@@ -10046,4 +10046,63 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo a besoin d’un dossier privé en mémoire pendant qu’il fonctionne, et cet ordinateur n’en propose aucun, il ne s’ouvrira donc pas.';
+
+  @override
+  String get photoCropTitle => 'Déplacer et redimensionner';
+
+  @override
+  String get photoCropUse => 'Utiliser la photo';
+
+  @override
+  String get photoCropLabel =>
+      'Ta photo dans le cercle. Pince pour zoomer, fais glisser pour déplacer';
+
+  @override
+  String get photoCouldNotUse =>
+      'Essaie une autre photo. Celle-ci n\'a pas pu être lue.';
+
+  @override
+  String get photoTake => 'Prendre une photo';
+
+  @override
+  String get photoChoose => 'Choisir dans la galerie';
+
+  @override
+  String get photoPickFace => 'Choisir un visage';
+
+  @override
+  String get photoView => 'Voir la photo';
+
+  @override
+  String get photoRemove => 'Retirer la photo';
+
+  @override
+  String get photoYourPhoto => 'Ta photo';
+
+  @override
+  String get photoYourPhotoLine =>
+      'Seuls tes contacts la voient, chiffrée de bout en bout.';
+
+  @override
+  String get photoSetTheirs => 'Ajouter une photo';
+
+  @override
+  String get photoChangeTheirs => 'Changer la photo';
+
+  @override
+  String get photoOnlyHere => 'Seulement sur ce téléphone';
+
+  @override
+  String photoForThem(Object name) {
+    return 'Une photo pour $name';
+  }
+
+  @override
+  String get photoOnlyHereLine =>
+      'Toi seul la vois. Elle reste sur ce téléphone.';
+
+  @override
+  String photoOf(Object name) {
+    return 'Photo de $name';
+  }
 }

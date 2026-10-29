@@ -2626,5 +2626,22 @@
   "desktopFolderNotYours": "La cartella di Kryfo appartiene a un altro account di questo computer, quindi Kryfo non la apre.",
   "desktopFolderNotPrivate": "Kryfo non è riuscito a rendere la sua cartella privata per te, quindi non si apre.",
   "desktopLockOtherVersion": "Questo blocco è stato creato da un'altra versione di Kryfo, che questa non sa leggere.",
-  "desktopNoMemoryFolder": "Kryfo ha bisogno di una cartella privata in memoria mentre è in uso, e questo computer non ne offre, quindi non si apre."
+  "desktopNoMemoryFolder": "Kryfo ha bisogno di una cartella privata in memoria mentre è in uso, e questo computer non ne offre, quindi non si apre.",
+  "photoCropTitle": "Sposta e ridimensiona",
+  "photoCropUse": "Usa la foto",
+  "photoCropLabel": "La tua foto nel cerchio. Pizzica per ingrandire, trascina per spostare",
+  "photoCouldNotUse": "Prova un'altra foto. Questa non si è potuta leggere.",
+  "photoTake": "Scatta una foto",
+  "photoChoose": "Scegli dalla galleria",
+  "photoPickFace": "Scegli un volto",
+  "photoView": "Vedi la foto",
+  "photoRemove": "Rimuovi la foto",
+  "photoYourPhoto": "La tua foto",
+  "photoYourPhotoLine": "La vedono solo i tuoi contatti, cifrata end-to-end.",
+  "photoSetTheirs": "Imposta una foto",
+  "photoChangeTheirs": "Cambia la foto",
+  "photoOnlyHere": "Solo su questo telefono",
+  "photoForThem": "Una foto per {name}",
+  "photoOnlyHereLine": "La vedi solo tu. Resta su questo telefono.",
+  "photoOf": "Foto di {name}"
 }

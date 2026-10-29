@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // avatar drawn from a seed string, or from a chosen face. the palette comes
-// from the seed, so the same id draws the same avatar on every phone.
+// from the seed, so the same id draws the same avatar on every phone. a
+// profile photo the session holds for the id shows over the face
+// (profile_photo.dart)
 
+import 'package:flutter/foundation.dart' show Uint8List;
 import 'package:flutter/material.dart';
+import '../profile_photo.dart' show PhotoBook, photoBook;
 import '../theme.dart';
 import 'avatar_mark.dart';
 
@@ -16,17 +20,50 @@ class KryfoAvatar extends StatelessWidget {
   // null draws the seed's palette and serif initial. anything else is a
   // chosen face, packed in one int.
   final int? choice;
+  // false: always the face, as the face picker draws its choices
+  final bool photo;
+  // stands in for the app's book in tests
+  final PhotoBook? book;
   const KryfoAvatar({
     super.key,
     required this.seed,
     required this.size,
     this.choice,
+    this.photo = true,
+    this.book,
   });
 
   // a picture: its letters are drawn from the id, and a screen reader that
   // read them out would announce a name nobody gave
   @override
-  Widget build(BuildContext context) => ExcludeSemantics(child: _draw());
+  Widget build(BuildContext context) {
+    if (!photo) return ExcludeSemantics(child: _draw());
+    final b = book ?? photoBook;
+    return ExcludeSemantics(
+      child: ListenableBuilder(
+        listenable: b,
+        builder: (context, _) {
+          final bytes = b.of(seed);
+          final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+          return AnimatedSwitcher(
+            duration: still ? Duration.zero : const Duration(milliseconds: 260),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            layoutBuilder: (cur, prev) =>
+                Stack(alignment: Alignment.center, children: [...prev, ?cur]),
+            child: bytes == null
+                ? KeyedSubtree(key: const ValueKey('face'), child: _draw())
+                : _Photo(
+                    key: ValueKey(identityHashCode(bytes)),
+                    bytes: bytes,
+                    size: size,
+                    face: _draw,
+                  ),
+          );
+        },
+      ),
+    );
+  }
 
   Widget _draw() {
     if (choice != null) return _markedAvatar(choice!, size);
@@ -104,6 +141,37 @@ class KryfoAvatar extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// a profile photo, round, decoded at the size it is drawn. one that will
+// not decode shows the face
+class _Photo extends StatelessWidget {
+  const _Photo({
+    super.key,
+    required this.bytes,
+    required this.size,
+    required this.face,
+  });
+  final Uint8List bytes;
+  final double size;
+  final Widget Function() face;
+
+  @override
+  Widget build(BuildContext context) {
+    final px = (size * MediaQuery.devicePixelRatioOf(context)).ceil();
+    return ClipOval(
+      child: Image.memory(
+        bytes,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        cacheWidth: px,
+        gaplessPlayback: true,
+        filterQuality: FilterQuality.medium,
+        errorBuilder: (_, _, _) => face(),
       ),
     );
   }

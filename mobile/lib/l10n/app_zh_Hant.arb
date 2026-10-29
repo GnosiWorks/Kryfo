@@ -2626,5 +2626,22 @@
   "desktopFolderNotYours": "Kryfo 的資料夾屬於這台電腦上的另一個帳戶，所以 Kryfo 不會開啟它。",
   "desktopFolderNotPrivate": "Kryfo 無法把它的資料夾設為只有你能存取，所以不會開啟。",
   "desktopLockOtherVersion": "這個鎖是另一個版本的 Kryfo 建立的，目前的版本無法讀取。",
-  "desktopNoMemoryFolder": "Kryfo 執行時需要記憶體中的一個私有資料夾，而這台電腦沒有提供，所以 Kryfo 不會開啟。"
+  "desktopNoMemoryFolder": "Kryfo 執行時需要記憶體中的一個私有資料夾，而這台電腦沒有提供，所以 Kryfo 不會開啟。",
+  "photoCropTitle": "移動和縮放",
+  "photoCropUse": "使用照片",
+  "photoCropLabel": "圓圈裡是你的照片。雙指縮放，拖動移動",
+  "photoCouldNotUse": "換一張照片試試。這張無法讀取。",
+  "photoTake": "拍照",
+  "photoChoose": "從相簿選擇",
+  "photoPickFace": "選擇頭像",
+  "photoView": "查看照片",
+  "photoRemove": "移除照片",
+  "photoYourPhoto": "你的照片",
+  "photoYourPhotoLine": "只有你的聯絡人看得到，端對端加密。",
+  "photoSetTheirs": "設定照片",
+  "photoChangeTheirs": "更換照片",
+  "photoOnlyHere": "只在這支手機上",
+  "photoForThem": "給{name}的照片",
+  "photoOnlyHereLine": "只有你看得到。只存在這支手機上。",
+  "photoOf": "{name}的照片"
 }

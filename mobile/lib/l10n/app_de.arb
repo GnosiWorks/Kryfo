@@ -2626,5 +2626,22 @@
   "desktopFolderNotYours": "Der Kryfo-Ordner gehört einem anderen Konto auf diesem Computer, deshalb öffnet Kryfo ihn nicht.",
   "desktopFolderNotPrivate": "Kryfo konnte seinen Ordner nicht nur für dich zugänglich machen und öffnet sich deshalb nicht.",
   "desktopLockOtherVersion": "Diese Sperre stammt von einer anderen Kryfo-Version, die diese hier nicht lesen kann.",
-  "desktopNoMemoryFolder": "Kryfo braucht beim Laufen einen privaten Ordner im Arbeitsspeicher, und dieser Computer bietet keinen, deshalb öffnet es sich nicht."
+  "desktopNoMemoryFolder": "Kryfo braucht beim Laufen einen privaten Ordner im Arbeitsspeicher, und dieser Computer bietet keinen, deshalb öffnet es sich nicht.",
+  "photoCropTitle": "Verschieben und skalieren",
+  "photoCropUse": "Foto verwenden",
+  "photoCropLabel": "Dein Foto im Kreis. Zum Zoomen auseinanderziehen, zum Verschieben ziehen",
+  "photoCouldNotUse": "Nimm ein anderes Foto. Dieses ließ sich nicht lesen.",
+  "photoTake": "Foto aufnehmen",
+  "photoChoose": "Aus der Galerie wählen",
+  "photoPickFace": "Gesicht wählen",
+  "photoView": "Foto ansehen",
+  "photoRemove": "Foto entfernen",
+  "photoYourPhoto": "Dein Foto",
+  "photoYourPhotoLine": "Nur deine Kontakte sehen es, Ende-zu-Ende-verschlüsselt.",
+  "photoSetTheirs": "Foto festlegen",
+  "photoChangeTheirs": "Foto ändern",
+  "photoOnlyHere": "Nur auf diesem Handy",
+  "photoForThem": "Ein Foto für {name}",
+  "photoOnlyHereLine": "Nur du siehst es. Es bleibt auf diesem Handy.",
+  "photoOf": "Foto von {name}"
 }

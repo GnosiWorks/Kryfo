@@ -2626,5 +2626,22 @@
   "desktopFolderNotYours": "Kryfo klasörü bu bilgisayardaki başka bir hesaba ait, bu yüzden Kryfo onu açmayacak.",
   "desktopFolderNotPrivate": "Kryfo klasörünü yalnızca sana özel yapamadı, bu yüzden açılmayacak.",
   "desktopLockOtherVersion": "Bu kilidi Kryfo'nun bu sürümün okuyamadığı başka bir sürümü oluşturdu.",
-  "desktopNoMemoryFolder": "Kryfo çalışırken bellekte özel bir klasöre ihtiyaç duyar, bu bilgisayar böyle bir klasör sunmuyor, bu yüzden açılmayacak."
+  "desktopNoMemoryFolder": "Kryfo çalışırken bellekte özel bir klasöre ihtiyaç duyar, bu bilgisayar böyle bir klasör sunmuyor, bu yüzden açılmayacak.",
+  "photoCropTitle": "Taşı ve ölçekle",
+  "photoCropUse": "Fotoğrafı kullan",
+  "photoCropLabel": "Daire içindeki fotoğrafın. Yakınlaştırmak için iki parmakla aç, taşımak için sürükle",
+  "photoCouldNotUse": "Başka bir fotoğraf dene. Bu okunamadı.",
+  "photoTake": "Fotoğraf çek",
+  "photoChoose": "Galeriden seç",
+  "photoPickFace": "Bir yüz seç",
+  "photoView": "Fotoğrafı gör",
+  "photoRemove": "Fotoğrafı kaldır",
+  "photoYourPhoto": "Fotoğrafın",
+  "photoYourPhotoLine": "Yalnızca kişilerin görür, uçtan uca şifreli.",
+  "photoSetTheirs": "Fotoğraf koy",
+  "photoChangeTheirs": "Fotoğrafı değiştir",
+  "photoOnlyHere": "Yalnızca bu telefonda",
+  "photoForThem": "{name} için bir fotoğraf",
+  "photoOnlyHereLine": "Yalnızca sen görürsün. Bu telefonda kalır.",
+  "photoOf": "{name} fotoğrafı"
 }

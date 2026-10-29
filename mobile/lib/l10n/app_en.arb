@@ -12507,5 +12507,83 @@
   "desktopNoMemoryFolder": "Kryfo needs a private folder in memory while it runs, and this computer offers none, so it will not open.",
   "@desktopNoMemoryFolder": {
     "description": "desktop/desktop_lock_screen.dart: no XDG_RUNTIME_DIR or /dev/shm folder could be had"
+  },
+  "photoCropTitle": "Move and scale",
+  "@photoCropTitle": {
+    "description": "screens/photo_crop_screen.dart: title over the round crop of a profile photo"
+  },
+  "photoCropUse": "Use photo",
+  "@photoCropUse": {
+    "description": "screens/photo_crop_screen.dart: button that keeps the crop"
+  },
+  "photoCropLabel": "Your photo in the circle. Pinch to zoom, drag to move",
+  "@photoCropLabel": {
+    "description": "screens/photo_crop_screen.dart: screen reader label of the picture under the crop circle"
+  },
+  "photoCouldNotUse": "Try another photo. This one could not be read.",
+  "@photoCouldNotUse": {
+    "description": "toast: a picked profile photo could not be read or made clean"
+  },
+  "photoTake": "Take a photo",
+  "@photoTake": {
+    "description": "widgets/photo_sheet.dart: row that opens the camera for a profile photo"
+  },
+  "photoChoose": "Choose from gallery",
+  "@photoChoose": {
+    "description": "widgets/photo_sheet.dart: row that opens the gallery for a profile photo"
+  },
+  "photoPickFace": "Pick a face",
+  "@photoPickFace": {
+    "description": "widgets/photo_sheet.dart: row that opens the drawn face picker"
+  },
+  "photoView": "View photo",
+  "@photoView": {
+    "description": "widgets/photo_sheet.dart: row that opens the profile photo larger"
+  },
+  "photoRemove": "Remove photo",
+  "@photoRemove": {
+    "description": "widgets/photo_sheet.dart: row that takes the profile photo off"
+  },
+  "photoYourPhoto": "Your photo",
+  "@photoYourPhoto": {
+    "description": "screens/profile_screen.dart: title of the sheet for your own profile photo"
+  },
+  "photoYourPhotoLine": "Only your contacts see it, end to end encrypted.",
+  "@photoYourPhotoLine": {
+    "description": "screens/profile_screen.dart: who sees your profile photo"
+  },
+  "photoSetTheirs": "Set a photo",
+  "@photoSetTheirs": {
+    "description": "screens/contact_screen.dart: row to set a photo for a contact, kept on this phone"
+  },
+  "photoChangeTheirs": "Change photo",
+  "@photoChangeTheirs": {
+    "description": "screens/contact_screen.dart: the same row once a photo is set"
+  },
+  "photoOnlyHere": "Only on this phone",
+  "@photoOnlyHere": {
+    "description": "screens/contact_screen.dart: hint under the row: the photo is never sent"
+  },
+  "photoForThem": "A photo for {name}",
+  "@photoForThem": {
+    "description": "screens/contact_screen.dart: title of the sheet for a contact's photo",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoOnlyHereLine": "Only you see it. It stays on this phone.",
+  "@photoOnlyHereLine": {
+    "description": "screens/contact_screen.dart: line in the sheet for a contact's photo"
+  },
+  "photoOf": "Photo of {name}",
+  "@photoOf": {
+    "description": "widgets/face_view.dart: screen reader label of a contact's photo, larger",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
   }
 }

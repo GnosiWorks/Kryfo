@@ -9459,6 +9459,61 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo 运行时需要内存中的一个私有文件夹，而这台电脑没有提供，所以 Kryfo 不会打开。';
+
+  @override
+  String get photoCropTitle => '移动和缩放';
+
+  @override
+  String get photoCropUse => '使用照片';
+
+  @override
+  String get photoCropLabel => '圆圈里是你的照片。双指缩放，拖动移动';
+
+  @override
+  String get photoCouldNotUse => '换一张照片试试。这张无法读取。';
+
+  @override
+  String get photoTake => '拍照';
+
+  @override
+  String get photoChoose => '从相册选择';
+
+  @override
+  String get photoPickFace => '选择头像';
+
+  @override
+  String get photoView => '查看照片';
+
+  @override
+  String get photoRemove => '移除照片';
+
+  @override
+  String get photoYourPhoto => '你的照片';
+
+  @override
+  String get photoYourPhotoLine => '只有你的联系人能看到，端到端加密。';
+
+  @override
+  String get photoSetTheirs => '设置照片';
+
+  @override
+  String get photoChangeTheirs => '更换照片';
+
+  @override
+  String get photoOnlyHere => '只在这部手机上';
+
+  @override
+  String photoForThem(Object name) {
+    return '给$name的照片';
+  }
+
+  @override
+  String get photoOnlyHereLine => '只有你能看到。只保存在这部手机上。';
+
+  @override
+  String photoOf(Object name) {
+    return '$name的照片';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -18799,4 +18854,59 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo 執行時需要記憶體中的一個私有資料夾，而這台電腦沒有提供，所以 Kryfo 不會開啟。';
+
+  @override
+  String get photoCropTitle => '移動和縮放';
+
+  @override
+  String get photoCropUse => '使用照片';
+
+  @override
+  String get photoCropLabel => '圓圈裡是你的照片。雙指縮放，拖動移動';
+
+  @override
+  String get photoCouldNotUse => '換一張照片試試。這張無法讀取。';
+
+  @override
+  String get photoTake => '拍照';
+
+  @override
+  String get photoChoose => '從相簿選擇';
+
+  @override
+  String get photoPickFace => '選擇頭像';
+
+  @override
+  String get photoView => '查看照片';
+
+  @override
+  String get photoRemove => '移除照片';
+
+  @override
+  String get photoYourPhoto => '你的照片';
+
+  @override
+  String get photoYourPhotoLine => '只有你的聯絡人看得到，端對端加密。';
+
+  @override
+  String get photoSetTheirs => '設定照片';
+
+  @override
+  String get photoChangeTheirs => '更換照片';
+
+  @override
+  String get photoOnlyHere => '只在這支手機上';
+
+  @override
+  String photoForThem(Object name) {
+    return '給$name的照片';
+  }
+
+  @override
+  String get photoOnlyHereLine => '只有你看得到。只存在這支手機上。';
+
+  @override
+  String photoOf(Object name) {
+    return '$name的照片';
+  }
 }

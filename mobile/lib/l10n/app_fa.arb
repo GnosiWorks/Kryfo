@@ -2626,5 +2626,22 @@
   "desktopFolderNotYours": "پوشهٔ Kryfo مال حساب دیگری روی این رایانه است، پس Kryfo آن را باز نمی‌کند.",
   "desktopFolderNotPrivate": "Kryfo نتوانست پوشه‌اش را فقط برای شما خصوصی کند، پس باز نمی‌شود.",
   "desktopLockOtherVersion": "این قفل را نسخهٔ دیگری از Kryfo ساخته که این نسخه نمی‌تواند آن را بخواند.",
-  "desktopNoMemoryFolder": "Kryfo هنگام اجرا به یک پوشهٔ خصوصی در حافظه نیاز دارد و این رایانه چنین پوشه‌ای ندارد، پس باز نمی‌شود."
+  "desktopNoMemoryFolder": "Kryfo هنگام اجرا به یک پوشهٔ خصوصی در حافظه نیاز دارد و این رایانه چنین پوشه‌ای ندارد، پس باز نمی‌شود.",
+  "photoCropTitle": "جابه‌جا و اندازه کنید",
+  "photoCropUse": "استفاده از عکس",
+  "photoCropLabel": "عکس شما داخل دایره. برای بزرگ‌نمایی دو انگشت را باز کنید و برای جابه‌جایی بکشید",
+  "photoCouldNotUse": "عکس دیگری را امتحان کنید. این یکی خوانده نشد.",
+  "photoTake": "گرفتن عکس",
+  "photoChoose": "انتخاب از گالری",
+  "photoPickFace": "انتخاب چهره",
+  "photoView": "دیدن عکس",
+  "photoRemove": "برداشتن عکس",
+  "photoYourPhoto": "عکس شما",
+  "photoYourPhotoLine": "فقط مخاطبانتان آن را می‌بینند، با رمزگذاری سرتاسری.",
+  "photoSetTheirs": "گذاشتن عکس",
+  "photoChangeTheirs": "تغییر عکس",
+  "photoOnlyHere": "فقط روی این گوشی",
+  "photoForThem": "عکسی برای {name}",
+  "photoOnlyHereLine": "فقط خودتان آن را می‌بینید. روی این گوشی می‌ماند.",
+  "photoOf": "عکس {name}"
 }

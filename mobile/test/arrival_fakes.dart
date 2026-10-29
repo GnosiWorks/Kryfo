@@ -23,8 +23,14 @@ import 'package:kryfo/main.dart'
         groupUnsendOf,
         groupUnsendRow,
         kAdminGone,
+        PhotoPeer,
+        photoTables,
         session;
 import 'package:kryfo/media_resend.dart';
+import 'package:kryfo/profile_photo.dart' show PhotoFrame, PhotoSendFacts;
+import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
+
+import 'sqlite_ffi.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/relay_poll.dart' show Reached;
@@ -2317,9 +2323,104 @@ class ArrivalRows implements HaloDb {
     return true;
   }
 
+  // ---- profile photos: the app's own rows on the host's sqlite, with the
+  // people above copied in as each is asked ----
+  _PhotoHost? _photoHost;
+  SqliteMem? get photoMem => _photoHost?.mem;
+  Future<HaloDb> _photos() async {
+    var h = _photoHost;
+    if (h == null) {
+      final mem = SqliteMem.open()!;
+      await mem.execute('''
+        CREATE TABLE contacts (halo_id TEXT PRIMARY KEY,
+          accepted INTEGER NOT NULL DEFAULT 1,
+          back_paired INTEGER NOT NULL DEFAULT 0,
+          blocked INTEGER NOT NULL DEFAULT 0,
+          caps TEXT NOT NULL DEFAULT '')
+      ''');
+      await photoTables(mem);
+      h = _photoHost = _PhotoHost(mem, _container);
+    }
+    for (final r in people.values) {
+      await h.mem.execute(
+        'INSERT INTO contacts (halo_id, accepted, back_paired, blocked, caps) '
+        'VALUES (?, ?, ?, ?, ?) ON CONFLICT(halo_id) DO UPDATE SET '
+        'accepted = excluded.accepted, back_paired = excluded.back_paired, '
+        'blocked = excluded.blocked, caps = excluded.caps',
+        [
+          r['halo_id'],
+          r['accepted'] ?? 1,
+          r['back_paired'] ?? 0,
+          r['blocked'] ?? 0,
+          r['caps'] ?? '',
+        ],
+      );
+    }
+    return h;
+  }
+
+  @override
+  Future<({int ver, Uint8List? photo})?> myPhoto() async =>
+      (await _photos()).myPhoto();
+  @override
+  Future<void> putMyPhoto(int ver, Uint8List? photo) async =>
+      (await _photos()).putMyPhoto(ver, photo);
+  @override
+  Future<Map<String, Uint8List>> contactPhotos() async =>
+      (await _photos()).contactPhotos();
+  @override
+  Future<({Uint8List? mine, Uint8List? theirs, int theirVer})> photosOf(
+    String id,
+  ) async => (await _photos()).photosOf(id);
+  @override
+  Future<bool> setMinePhoto(String id, Uint8List? photo) async =>
+      (await _photos()).setMinePhoto(id, photo);
+  @override
+  Future<bool> takePhotoSlice(String from, PhotoFrame f, {int? now}) async {
+    _hit('takePhotoSlice', from, null);
+    return (await _photos()).takePhotoSlice(from, f, now: now);
+  }
+
+  @override
+  Future<bool> takePhotoDrop(String from, int ver, {int? now}) async {
+    _hit('takePhotoDrop', from, null);
+    return (await _photos()).takePhotoDrop(from, ver, now: now);
+  }
+
+  @override
+  Future<void> dropStalePhotoParts({int? now}) async =>
+      (await _photos()).dropStalePhotoParts(now: now);
+  @override
+  Future<List<({PhotoSendFacts facts, PhotoPeer peer})>> photoPeople() async =>
+      (await _photos()).photoPeople();
+  @override
+  Future<void> owePhoto(String id, int? want, {required int at}) async =>
+      (await _photos()).owePhoto(id, want, at: at);
+  @override
+  Future<List<PhotoPeer>> duePhotoPeers(int now) async =>
+      (await _photos()).duePhotoPeers(now);
+  @override
+  Future<int?> nextPhotoDue() async => (await _photos()).nextPhotoDue();
+  @override
+  Future<void> photoSent(String id, int want, int stamp) async =>
+      (await _photos()).photoSent(id, want, stamp);
+  @override
+  Future<void> photoLater(String id, int stamp, int at) async =>
+      (await _photos()).photoLater(id, stamp, at);
+  @override
+  Future<void> dropPhotosOf(String id) async =>
+      (await _photos()).dropPhotosOf(id);
+
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('the stand-in was asked for ${i.memberName}');
+}
+
+class _PhotoHost extends HaloDb {
+  _PhotoHost(this.mem, super.container);
+  final SqliteMem mem;
+  @override
+  Future<Database> open() async => mem;
 }
 
 SenderInfo asSender(String id) =>

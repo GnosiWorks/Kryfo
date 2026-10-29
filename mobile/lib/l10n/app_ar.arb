@@ -2626,5 +2626,22 @@
   "desktopFolderNotYours": "مجلد Kryfo يخص حسابًا آخر على هذا الحاسوب، لذا لن يفتحه Kryfo.",
   "desktopFolderNotPrivate": "تعذّر على Kryfo جعل مجلده خاصًا بك، لذا لن يفتح.",
   "desktopLockOtherVersion": "صنع هذا القفل إصدار آخر من Kryfo لا يستطيع هذا الإصدار قراءته.",
-  "desktopNoMemoryFolder": "يحتاج Kryfo إلى مجلد خاص في الذاكرة أثناء عمله، وهذا الحاسوب لا يوفّر واحدًا، لذا لن يفتح."
+  "desktopNoMemoryFolder": "يحتاج Kryfo إلى مجلد خاص في الذاكرة أثناء عمله، وهذا الحاسوب لا يوفّر واحدًا، لذا لن يفتح.",
+  "photoCropTitle": "حرّك وغيّر الحجم",
+  "photoCropUse": "استخدم الصورة",
+  "photoCropLabel": "صورتك داخل الدائرة. باعد إصبعيك للتكبير واسحب للتحريك",
+  "photoCouldNotUse": "جرّب صورة أخرى. تعذّرت قراءة هذه الصورة.",
+  "photoTake": "التقط صورة",
+  "photoChoose": "اختر من المعرض",
+  "photoPickFace": "اختر وجهًا",
+  "photoView": "عرض الصورة",
+  "photoRemove": "إزالة الصورة",
+  "photoYourPhoto": "صورتك",
+  "photoYourPhotoLine": "لا يراها إلا جهات اتصالك، مشفّرة من طرف إلى طرف.",
+  "photoSetTheirs": "ضع صورة",
+  "photoChangeTheirs": "غيّر الصورة",
+  "photoOnlyHere": "على هذا الهاتف فقط",
+  "photoForThem": "صورة لـ {name}",
+  "photoOnlyHereLine": "لا يراها أحد غيرك. تبقى على هذا الهاتف.",
+  "photoOf": "صورة {name}"
 }

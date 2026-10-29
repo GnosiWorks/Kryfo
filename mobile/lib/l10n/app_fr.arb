@@ -2626,5 +2626,22 @@
   "desktopFolderNotYours": "Le dossier de Kryfo appartient à un autre compte de cet ordinateur, Kryfo ne l’ouvrira donc pas.",
   "desktopFolderNotPrivate": "Kryfo n’a pas pu rendre son dossier privé pour vous, il ne s’ouvrira donc pas.",
   "desktopLockOtherVersion": "Ce verrou a été créé par une autre version de Kryfo, que celle-ci ne sait pas lire.",
-  "desktopNoMemoryFolder": "Kryfo a besoin d’un dossier privé en mémoire pendant qu’il fonctionne, et cet ordinateur n’en propose aucun, il ne s’ouvrira donc pas."
+  "desktopNoMemoryFolder": "Kryfo a besoin d’un dossier privé en mémoire pendant qu’il fonctionne, et cet ordinateur n’en propose aucun, il ne s’ouvrira donc pas.",
+  "photoCropTitle": "Déplacer et redimensionner",
+  "photoCropUse": "Utiliser la photo",
+  "photoCropLabel": "Ta photo dans le cercle. Pince pour zoomer, fais glisser pour déplacer",
+  "photoCouldNotUse": "Essaie une autre photo. Celle-ci n'a pas pu être lue.",
+  "photoTake": "Prendre une photo",
+  "photoChoose": "Choisir dans la galerie",
+  "photoPickFace": "Choisir un visage",
+  "photoView": "Voir la photo",
+  "photoRemove": "Retirer la photo",
+  "photoYourPhoto": "Ta photo",
+  "photoYourPhotoLine": "Seuls tes contacts la voient, chiffrée de bout en bout.",
+  "photoSetTheirs": "Ajouter une photo",
+  "photoChangeTheirs": "Changer la photo",
+  "photoOnlyHere": "Seulement sur ce téléphone",
+  "photoForThem": "Une photo pour {name}",
+  "photoOnlyHereLine": "Toi seul la vois. Elle reste sur ce téléphone.",
+  "photoOf": "Photo de {name}"
 }

@@ -2626,5 +2626,22 @@
   "desktopFolderNotYours": "Тека Kryfo належить іншому обліковому запису на цьому комп’ютері, тому Kryfo її не відкриє.",
   "desktopFolderNotPrivate": "Kryfo не зміг зробити свою теку доступною лише вам, тому не відкриється.",
   "desktopLockOtherVersion": "Це блокування створила інша версія Kryfo, яку ця прочитати не може.",
-  "desktopNoMemoryFolder": "Kryfo потрібна особиста тека в пам’яті, поки він працює, а цей комп’ютер її не дає, тому Kryfo не відкриється."
+  "desktopNoMemoryFolder": "Kryfo потрібна особиста тека в пам’яті, поки він працює, а цей комп’ютер її не дає, тому Kryfo не відкриється.",
+  "photoCropTitle": "Перемістіть і масштабуйте",
+  "photoCropUse": "Вибрати фото",
+  "photoCropLabel": "Ваше фото в колі. Зведіть пальці, щоб наблизити, проведіть, щоб зсунути",
+  "photoCouldNotUse": "Спробуйте інше фото. Це не вдалося прочитати.",
+  "photoTake": "Зробити фото",
+  "photoChoose": "Вибрати з галереї",
+  "photoPickFace": "Вибрати обличчя",
+  "photoView": "Переглянути фото",
+  "photoRemove": "Видалити фото",
+  "photoYourPhoto": "Ваше фото",
+  "photoYourPhotoLine": "Його бачать лише ваші контакти, з наскрізним шифруванням.",
+  "photoSetTheirs": "Поставити фото",
+  "photoChangeTheirs": "Змінити фото",
+  "photoOnlyHere": "Лише на цьому телефоні",
+  "photoForThem": "Фото для {name}",
+  "photoOnlyHereLine": "Його бачите лише ви. Воно залишається на цьому телефоні.",
+  "photoOf": "Фото {name}"
 }

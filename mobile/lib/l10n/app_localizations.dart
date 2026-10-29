@@ -16042,6 +16042,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Kryfo needs a private folder in memory while it runs, and this computer offers none, so it will not open.'**
   String get desktopNoMemoryFolder;
+
+  /// screens/photo_crop_screen.dart: title over the round crop of a profile photo
+  ///
+  /// In en, this message translates to:
+  /// **'Move and scale'**
+  String get photoCropTitle;
+
+  /// screens/photo_crop_screen.dart: button that keeps the crop
+  ///
+  /// In en, this message translates to:
+  /// **'Use photo'**
+  String get photoCropUse;
+
+  /// screens/photo_crop_screen.dart: screen reader label of the picture under the crop circle
+  ///
+  /// In en, this message translates to:
+  /// **'Your photo in the circle. Pinch to zoom, drag to move'**
+  String get photoCropLabel;
+
+  /// toast: a picked profile photo could not be read or made clean
+  ///
+  /// In en, this message translates to:
+  /// **'Try another photo. This one could not be read.'**
+  String get photoCouldNotUse;
+
+  /// widgets/photo_sheet.dart: row that opens the camera for a profile photo
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo'**
+  String get photoTake;
+
+  /// widgets/photo_sheet.dart: row that opens the gallery for a profile photo
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from gallery'**
+  String get photoChoose;
+
+  /// widgets/photo_sheet.dart: row that opens the drawn face picker
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a face'**
+  String get photoPickFace;
+
+  /// widgets/photo_sheet.dart: row that opens the profile photo larger
+  ///
+  /// In en, this message translates to:
+  /// **'View photo'**
+  String get photoView;
+
+  /// widgets/photo_sheet.dart: row that takes the profile photo off
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get photoRemove;
+
+  /// screens/profile_screen.dart: title of the sheet for your own profile photo
+  ///
+  /// In en, this message translates to:
+  /// **'Your photo'**
+  String get photoYourPhoto;
+
+  /// screens/profile_screen.dart: who sees your profile photo
+  ///
+  /// In en, this message translates to:
+  /// **'Only your contacts see it, end to end encrypted.'**
+  String get photoYourPhotoLine;
+
+  /// screens/contact_screen.dart: row to set a photo for a contact, kept on this phone
+  ///
+  /// In en, this message translates to:
+  /// **'Set a photo'**
+  String get photoSetTheirs;
+
+  /// screens/contact_screen.dart: the same row once a photo is set
+  ///
+  /// In en, this message translates to:
+  /// **'Change photo'**
+  String get photoChangeTheirs;
+
+  /// screens/contact_screen.dart: hint under the row: the photo is never sent
+  ///
+  /// In en, this message translates to:
+  /// **'Only on this phone'**
+  String get photoOnlyHere;
+
+  /// screens/contact_screen.dart: title of the sheet for a contact's photo
+  ///
+  /// In en, this message translates to:
+  /// **'A photo for {name}'**
+  String photoForThem(Object name);
+
+  /// screens/contact_screen.dart: line in the sheet for a contact's photo
+  ///
+  /// In en, this message translates to:
+  /// **'Only you see it. It stays on this phone.'**
+  String get photoOnlyHereLine;
+
+  /// widgets/face_view.dart: screen reader label of a contact's photo, larger
+  ///
+  /// In en, this message translates to:
+  /// **'Photo of {name}'**
+  String photoOf(Object name);
 }
 
 class _AppLocalizationsDelegate

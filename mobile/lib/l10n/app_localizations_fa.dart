@@ -9962,4 +9962,63 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo هنگام اجرا به یک پوشهٔ خصوصی در حافظه نیاز دارد و این رایانه چنین پوشه‌ای ندارد، پس باز نمی‌شود.';
+
+  @override
+  String get photoCropTitle => 'جابه‌جا و اندازه کنید';
+
+  @override
+  String get photoCropUse => 'استفاده از عکس';
+
+  @override
+  String get photoCropLabel =>
+      'عکس شما داخل دایره. برای بزرگ‌نمایی دو انگشت را باز کنید و برای جابه‌جایی بکشید';
+
+  @override
+  String get photoCouldNotUse =>
+      'عکس دیگری را امتحان کنید. این یکی خوانده نشد.';
+
+  @override
+  String get photoTake => 'گرفتن عکس';
+
+  @override
+  String get photoChoose => 'انتخاب از گالری';
+
+  @override
+  String get photoPickFace => 'انتخاب چهره';
+
+  @override
+  String get photoView => 'دیدن عکس';
+
+  @override
+  String get photoRemove => 'برداشتن عکس';
+
+  @override
+  String get photoYourPhoto => 'عکس شما';
+
+  @override
+  String get photoYourPhotoLine =>
+      'فقط مخاطبانتان آن را می‌بینند، با رمزگذاری سرتاسری.';
+
+  @override
+  String get photoSetTheirs => 'گذاشتن عکس';
+
+  @override
+  String get photoChangeTheirs => 'تغییر عکس';
+
+  @override
+  String get photoOnlyHere => 'فقط روی این گوشی';
+
+  @override
+  String photoForThem(Object name) {
+    return 'عکسی برای $name';
+  }
+
+  @override
+  String get photoOnlyHereLine =>
+      'فقط خودتان آن را می‌بینید. روی این گوشی می‌ماند.';
+
+  @override
+  String photoOf(Object name) {
+    return 'عکس $name';
+  }
 }

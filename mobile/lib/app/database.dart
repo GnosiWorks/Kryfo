@@ -20,7 +20,8 @@ class HaloDb
         _GroupOwedRows,
         _NotifRows,
         _DraftRows,
-        _GroupShotsRows
+        _GroupShotsRows,
+        _PhotoRows
     implements GroupOwedStore {
   HaloDb([this.container = HaloContainer.everyday]);
 
@@ -155,7 +156,7 @@ class HaloDb
     _db = await openDatabase(
       path,
       password: pw,
-      version: 91,
+      version: 93,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -351,6 +352,7 @@ class HaloDb
         await groupEndIndexes(db);
         await wallpaperTable(db);
         await draftsTable(db);
+        await photoTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
@@ -902,6 +904,10 @@ class HaloDb
           // the post-quantum prekeys the shim keeps (signal_stores.dart),
           // and what a kept first contact opened to
           await upgradeTo91(db);
+        }
+        if (oldV < 93) {
+          // profile photos (profile_photo.dart)
+          await photoTables(db);
         }
       },
     );

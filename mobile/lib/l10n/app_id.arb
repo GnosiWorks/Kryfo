@@ -2626,5 +2626,22 @@
   "desktopFolderNotYours": "Folder Kryfo milik akun lain di komputer ini, jadi Kryfo tidak akan membukanya.",
   "desktopFolderNotPrivate": "Kryfo tidak bisa membuat foldernya hanya untukmu, jadi tidak akan dibuka.",
   "desktopLockOtherVersion": "Kunci ini dibuat oleh versi Kryfo lain yang tidak bisa dibaca versi ini.",
-  "desktopNoMemoryFolder": "Kryfo butuh folder pribadi di memori selama berjalan, dan komputer ini tidak menyediakannya, jadi Kryfo tidak akan dibuka."
+  "desktopNoMemoryFolder": "Kryfo butuh folder pribadi di memori selama berjalan, dan komputer ini tidak menyediakannya, jadi Kryfo tidak akan dibuka.",
+  "photoCropTitle": "Geser dan atur ukuran",
+  "photoCropUse": "Pakai foto",
+  "photoCropLabel": "Fotomu di dalam lingkaran. Cubit untuk memperbesar, seret untuk menggeser",
+  "photoCouldNotUse": "Coba foto lain. Foto ini tidak bisa dibaca.",
+  "photoTake": "Ambil foto",
+  "photoChoose": "Pilih dari galeri",
+  "photoPickFace": "Pilih wajah",
+  "photoView": "Lihat foto",
+  "photoRemove": "Hapus foto",
+  "photoYourPhoto": "Fotomu",
+  "photoYourPhotoLine": "Hanya kontakmu yang melihatnya, terenkripsi ujung ke ujung.",
+  "photoSetTheirs": "Pasang foto",
+  "photoChangeTheirs": "Ganti foto",
+  "photoOnlyHere": "Hanya di ponsel ini",
+  "photoForThem": "Foto untuk {name}",
+  "photoOnlyHereLine": "Hanya kamu yang melihatnya. Tetap di ponsel ini.",
+  "photoOf": "Foto {name}"
 }
