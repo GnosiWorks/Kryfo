@@ -273,7 +273,17 @@ class AppState extends ChangeNotifier {
   Timer? _repointTimer;
 
   late HandleRepoint _handleRepoint = HandleRepoint(
-    invite: () => buildHaloUriV3(myId, myOnion, _fcCounter),
+    // the main v4 invite once it is made (identity v4 7): a registry
+    // without the v=4 change refuses it, and the handle keeps the v3 one
+    invite: () async {
+      try {
+        final v4 = await myV4Invite();
+        if (v4 != null) return v4;
+      } catch (e) {
+        dlog('repoint: no v4 invite (${e.runtimeType})');
+      }
+      return buildHaloUriV3(myId, myOnion, _fcCounter);
+    },
     claim: (h, invite, bio) => engine.handleClaim(h, invite, bio),
     lookup: (url) => engine.torGetJson(url),
     myKey: () => engine.myEdPubkey(),
