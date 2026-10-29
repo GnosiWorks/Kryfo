@@ -2,6 +2,7 @@
 #include "kryfo_tray.h"
 
 #include <shellapi.h>
+#include <windowsx.h>
 
 #include "resource.h"
 
@@ -35,7 +36,7 @@ bool Tray::Add() {
             ::Shell_NotifyIconW(NIM_ADD, &data);
   if (ok) {
     data.uVersion = NOTIFYICON_VERSION_4;
-    ::Shell_NotifyIconW(NIM_SETVERSION, &data);
+    v4_ = ::Shell_NotifyIconW(NIM_SETVERSION, &data) != FALSE;
   }
   if (data.hIcon) ::DestroyIcon(data.hIcon);
   return ok;
@@ -44,8 +45,8 @@ bool Tray::Add() {
 void Tray::Show(HWND window, const std::wstring& open, const std::wstring& quit,
                 const std::wstring& tip) {
   window_ = window;
-  open_ = open;
-  quit_ = quit;
+  open_ = open.empty() ? L"Open Kryfo" : open;
+  quit_ = quit.empty() ? L"Quit Kryfo" : quit;
   tip_ = tip.empty() ? L"Kryfo" : tip;
   shown_ = Add() || shown_;
 }
@@ -60,6 +61,28 @@ void Tray::Hide() {
   shown_ = false;
 }
 
+TrayEvent Tray::EventOf(bool v4, UINT event) {
+  if (v4) {
+    // version 4 sends the mouse messages too, then its own: only its own
+    // count, or a click opens twice and a right click makes two menus
+    switch (event) {
+      case NIN_SELECT:
+      case NIN_KEYSELECT:
+        return TrayEvent::kOpen;
+      case WM_CONTEXTMENU:
+        return TrayEvent::kMenu;
+    }
+    return TrayEvent::kNone;
+  }
+  switch (event) {
+    case WM_LBUTTONUP:
+      return TrayEvent::kOpen;
+    case WM_RBUTTONUP:
+      return TrayEvent::kMenu;
+  }
+  return TrayEvent::kNone;
+}
+
 bool Tray::Handle(UINT message, WPARAM wparam, LPARAM lparam,
                   const std::function<void()>& on_open, const std::function<void()>& on_quit) {
   if (message == taskbar_created_ && taskbar_created_ != 0) {
@@ -70,33 +93,50 @@ bool Tray::Handle(UINT message, WPARAM wparam, LPARAM lparam,
     return false;
   }
   if (message != kMessage) return false;
-  switch (LOWORD(lparam)) {
-    case NIN_SELECT:
-    case NIN_KEYSELECT:
-    case WM_LBUTTONUP:
+  switch (EventOf(v4_, LOWORD(lparam))) {
+    case TrayEvent::kOpen:
       on_open();
-      return true;
-    case WM_CONTEXTMENU:
-    case WM_RBUTTONUP: {
-      HMENU menu = ::CreatePopupMenu();
-      ::AppendMenuW(menu, MF_STRING, kOpen, open_.c_str());
-      ::AppendMenuW(menu, MF_STRING, kQuit, quit_.c_str());
+      break;
+    case TrayEvent::kMenu: {
+      // one menu at a time: its own loop passes tray messages on to here
+      if (in_menu_) break;
       POINT at;
-      ::GetCursorPos(&at);
-      // the menu closes when the user clicks elsewhere only if the window
-      // is in front
-      ::SetForegroundWindow(window_);
-      UINT pick = ::TrackPopupMenu(menu, TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTBUTTON, at.x,
-                                   at.y, 0, window_, nullptr);
-      ::DestroyMenu(menu);
-      ::PostMessageW(window_, WM_NULL, 0, 0);
+      if (v4_) {
+        at.x = GET_X_LPARAM(wparam);
+        at.y = GET_Y_LPARAM(wparam);
+      } else {
+        ::GetCursorPos(&at);
+      }
+      UINT pick = Menu(at);
       if (pick == kOpen) on_open();
       if (pick == kQuit) on_quit();
-      return true;
+      break;
     }
+    case TrayEvent::kNone:
+      break;
   }
-  (void)wparam;
   return true;
+}
+
+UINT Tray::Menu(POINT at) {
+  HMENU menu = ::CreatePopupMenu();
+  if (!menu) return 0;
+  ::AppendMenuW(menu, MF_STRING, kOpen, open_.c_str());
+  ::AppendMenuW(menu, MF_STRING, kQuit, quit_.c_str());
+  ::SetMenuDefaultItem(menu, kOpen, FALSE);
+  in_menu_ = true;
+  // the menu closes on a click elsewhere only while the window is in
+  // front, hidden or not
+  ::SetForegroundWindow(window_);
+  UINT align = ::GetSystemMetrics(SM_MENUDROPALIGNMENT) ? TPM_RIGHTALIGN : TPM_LEFTALIGN;
+  UINT pick = static_cast<UINT>(::TrackPopupMenuEx(
+      menu, align | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD | TPM_NONOTIFY, at.x,
+      at.y, window_, nullptr));
+  // lets the next right click open the menu again
+  ::PostMessageW(window_, WM_NULL, 0, 0);
+  in_menu_ = false;
+  ::DestroyMenu(menu);
+  return pick;
 }
 
 }  // namespace kryfo

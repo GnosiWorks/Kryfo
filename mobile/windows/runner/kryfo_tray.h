@@ -11,6 +11,8 @@
 
 namespace kryfo {
 
+enum class TrayEvent { kNone, kOpen, kMenu };
+
 class Tray {
  public:
   // the window's messages for the tray
@@ -30,11 +32,17 @@ class Tray {
   bool Handle(UINT message, WPARAM wparam, LPARAM lparam,
               const std::function<void()>& on_open, const std::function<void()>& on_quit);
 
+  // what a callback's event means, by the version the shell took
+  static TrayEvent EventOf(bool v4, UINT event);
+
  private:
   bool Add();
+  UINT Menu(POINT at);
 
   HWND window_ = nullptr;
   bool shown_ = false;
+  bool v4_ = false;
+  bool in_menu_ = false;
   std::wstring open_, quit_, tip_;
   // explorer sends it when it starts again: the icon is added again
   UINT taskbar_created_ = 0;

@@ -11,6 +11,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'l10n/l10n.dart';
 import 'app_icon.dart' show AppFace, AppFaceWords, readAppFace;
 import 'container.dart';
+import 'desktop/desktop_toasts.dart' show windowsToastSettings;
 import 'devchat/support.dart' show kSupportPayload, supportSummaryLine;
 import 'lock_guard.dart' show lockGuard;
 import 'lock_state.dart' show quietNow;
@@ -31,6 +32,7 @@ Future<void> initNotifications({
   final initSettings = InitializationSettings(
     android: androidInit,
     linux: LinuxInitializationSettings(defaultActionName: l10n.desktopLockOpen),
+    windows: windowsToastSettings(),
   );
   await notifPlugin.initialize(
     settings: initSettings,

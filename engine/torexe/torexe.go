@@ -4,6 +4,7 @@
 package torexe
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -13,6 +14,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 // tor\tor.exe next to the app, as the expert bundle lays it out
@@ -28,11 +30,13 @@ func PidPath(dataDir string) string {
 // and never gets to close it. the pid file lets the next start stop one
 // that has not noticed yet.
 func Args(pid int, args []string) []string {
-	out := make([]string, 0, len(args)+4)
+	out := make([]string, 0, len(args)+6)
 	out = append(out, args...)
 	if d := ArgValue(args, "--DataDirectory"); d != "" {
 		out = append(out, "--PidFile", PidPath(d))
 	}
+	// warnings and errors to stdout, which only the engine reads (Tail)
+	out = append(out, "--Log", "warn stdout")
 	return append(out, "--__OwningControllerProcess", strconv.Itoa(pid))
 }
 
@@ -114,9 +118,100 @@ func Env(environ []string, torDir string) []string {
 }
 
 // tor.exe's process dacl: the user's other processes may wait on it, ask
-// its name and end it, never read its memory or dump it. the owner rights
-// entry keeps the owner from rewriting the dacl. kryfo.exe keeps the full
-// handle it got when it made the process
+// its name, end it and put it in a job (which kryfo.exe does so tor ends
+// with it), never read its memory or dump it. the owner rights entry keeps
+// the owner from rewriting the dacl
 func ProcessSDDL(userSID string) string {
-	return "D:P(A;;0x101001;;;OW)(A;;0x101001;;;" + userSID + ")"
+	return "D:P(A;;0x101101;;;OW)(A;;0x101101;;;" + userSID + ")"
+}
+
+// the tor started on dataDir, told by its command line
+func ForDataDir(args []string, dataDir string) bool {
+	d := ArgValue(args, "--DataDirectory")
+	return d != "" && dataDir != "" && strings.EqualFold(winPath(d), winPath(dataDir))
+}
+
+// either slash, no trailing separator
+func winPath(s string) string {
+	return strings.TrimRight(strings.ReplaceAll(s, "/", `\`), `\`)
+}
+
+// tor's warnings and errors go to stdout (Args), and the last of them are
+// kept in memory to tell why a start failed. never written anywhere
+type Tail struct {
+	mu    sync.Mutex
+	lines []string
+	part  []byte
+}
+
+const tailLines = 32
+
+func (t *Tail) Write(p []byte) (int, error) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.part = append(t.part, p...)
+	for {
+		i := bytes.IndexByte(t.part, '\n')
+		if i < 0 {
+			break
+		}
+		t.add(string(bytes.TrimRight(t.part[:i], "\r")))
+		t.part = t.part[i+1:]
+	}
+	if len(t.part) > 4096 {
+		t.add(string(t.part))
+		t.part = nil
+	}
+	return len(p), nil
+}
+
+func (t *Tail) add(line string) {
+	t.lines = append(t.lines, line)
+	if len(t.lines) > tailLines {
+		t.lines = t.lines[len(t.lines)-tailLines:]
+	}
+}
+
+func (t *Tail) Lines() []string {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return append(append([]string(nil), t.lines...), string(t.part))
+}
+
+// why tor ended before it was up, from its last lines, in words the app's
+// error line can carry. nothing of tor's own text, which may name addresses
+func Reason(lines []string, exitCode uint32) string {
+	has := func(s string) bool {
+		for _, l := range lines {
+			if strings.Contains(l, s) {
+				return true
+			}
+		}
+		return false
+	}
+	switch {
+	case has("another Tor process is running with the same data directory"):
+		return "another tor holds the data folder"
+	case has("Could not bind to"), has("Failed to bind one of the listener ports"):
+		return "a port tor needs is in use"
+	case has("for locking"):
+		return "tor cannot open its lock in the data folder"
+	case has("Reading config failed"), has("Failed to parse/validate config"):
+		return "tor refused its options"
+	}
+	return fmt.Sprintf("tor exited with code %d", exitCode)
+}
+
+// why tor.exe did not start at all. errno 5 is access denied, 2 and 3 a
+// missing file or folder, 1260 a policy block
+func StartReason(errno uintptr) string {
+	switch errno {
+	case 5:
+		return "windows refused to start tor.exe (access denied)"
+	case 2, 3:
+		return "tor.exe is missing"
+	case 1260:
+		return "a policy blocks tor.exe"
+	}
+	return fmt.Sprintf("tor.exe did not start (error %d)", errno)
 }
