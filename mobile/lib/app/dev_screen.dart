@@ -125,7 +125,7 @@ class _DevScreenState extends State<DevScreen> {
     final docsDir = await getApplicationDocumentsDirectory();
     // off the ui thread: starting tor blocks on socket i/o long enough to
     // trip an anr
-    final addr = await _startListenerOnIsolate(docsDir.path);
+    final addr = await startEngineIn(docsDir.path, _startListenerOnIsolate);
     setState(() {
       if (addr.startsWith('error')) {
         _status = addr;

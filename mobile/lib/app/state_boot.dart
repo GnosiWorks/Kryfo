@@ -311,7 +311,7 @@ extension AppStateBoot on AppState {
       _docsPath = docsDir.path;
     } else {
       _docsPath = docsDir.path;
-      _startListenerOnIsolate(docsDir.path).then((addr) {
+      startEngineIn(docsDir.path, engine.startListenerBg).then((addr) {
         if (addr.isNotEmpty && !addr.startsWith('error')) {
           myOnion = addr;
           _maybeRepoint();
@@ -338,7 +338,7 @@ extension AppStateBoot on AppState {
           DateTime.now().difference(torKickedAt).inSeconds > 45) {
         torKickedAt = DateTime.now();
         dlog('tor watchdog: tor off, restarting listener');
-        _startListenerOnIsolate(docsDir.path).then((addr) {
+        startEngineIn(docsDir.path, engine.startListenerBg).then((addr) {
           if (addr.isNotEmpty && !addr.startsWith('error')) {
             myOnion = addr;
             notifyListeners();
