@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -26,6 +27,22 @@ object FileTransfers {
     @Volatile
     var note: Notification? = null
         private set
+
+    // a foreground start on its way, its onStartCommand not run yet: a stop
+    // now would take the process down
+    @Volatile
+    var starting = false
+        internal set
+
+    // android said no, or the day's time ran out: no more tries until the
+    // transfers end
+    @Volatile
+    var refused = false
+        internal set
+
+    // the app on screen: the only time a foreground start is asked for
+    @VisibleForTesting
+    var onScreen: () -> Boolean = { QuietRestart.onScreen(QuietRestart.importance()) }
 
     fun start(context: Context, engine: FlutterEngine) {
         MethodChannel(engine.dartExecutor.binaryMessenger, CHANNEL)
@@ -66,8 +83,10 @@ object FileTransfers {
         nm.createNotificationChannel(ch)
     }
 
-    // done and total in kilobytes: an int holds them
-    private fun show(
+    // done and total in kilobytes: an int holds them. plain: the listener's
+    // one neutral word and no line, whatever dart sent
+    @VisibleForTesting
+    internal fun show(
         context: Context,
         channelName: String,
         channelLine: String,
@@ -79,6 +98,9 @@ object FileTransfers {
         hold: Boolean,
     ) {
         channel(context, channelName, channelLine)
+        val words = if (plain) {
+            AppLocale.context(context).getString(R.string.service_title_plain)
+        } else title
         val open = Intent().setComponent(AppIcon.entry(context)).apply {
             addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
@@ -95,7 +117,7 @@ object FileTransfers {
             }
         } else R.drawable.ic_halo_notification
         val b = NotificationCompat.Builder(context, NOTE_CHANNEL)
-            .setContentTitle(title)
+            .setContentTitle(words)
             .setSmallIcon(icon)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
@@ -105,23 +127,26 @@ object FileTransfers {
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .setContentIntent(tap)
             .setShowWhen(false)
-        if (!text.isNullOrEmpty()) b.setContentText(text)
+        if (!plain && !text.isNullOrEmpty()) b.setContentText(text)
         if (total > 0) b.setProgress(total, done.coerceIn(0, total), false)
         else b.setProgress(0, 0, true)
         if (!plain) b.setColor(0xFFF59E0B.toInt())
         val n = b.build()
         note = n
         val nm = context.getSystemService(NotificationManager::class.java)
-        if (hold && !FileTransferService.running) {
-            // android refuses a foreground start from the background: then
-            // the note shows all the same, and the always on service or the
-            // screen keeps the process
+        // asked for once, and only on screen: from the background android
+        // says no, or lets it in and refuses it inside startForeground. a
+        // no is kept until the transfers end; the note shows all the same
+        if (hold && !FileTransferService.running && !starting && !refused && onScreen()) {
             try {
+                starting = true
                 val i = Intent(context, FileTransferService::class.java)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context.startForegroundService(i)
                 else context.startService(i)
                 return
             } catch (e: Exception) {
+                starting = false
+                refused = true
                 HaloListenerService.debugLog(context, "transfers: no foreground start")
             }
         }
@@ -130,7 +155,12 @@ object FileTransfers {
 
     fun end(context: Context) {
         note = null
-        context.stopService(Intent(context, FileTransferService::class.java))
+        refused = false
+        // one still starting stops itself once in front (onStartCommand
+        // finds no note); one that never got there is not stopped
+        if (!starting && FileTransferService.running) {
+            context.stopService(Intent(context, FileTransferService::class.java))
+        }
         context.getSystemService(NotificationManager::class.java)?.cancel(NOTE_ID)
     }
 }
@@ -145,19 +175,28 @@ class FileTransferService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        FileTransfers.starting = false
         val n = FileTransfers.note
         if (n == null) {
-            // ended before it started: a foreground start still owes its call
-            front(placeholder())
-            stopSelf()
+            // ended before it started: a foreground start still owes its
+            // call, then it goes. one android refused is never stopped
+            try {
+                front(placeholder())
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                stopSelf()
+            } catch (e: Exception) {
+                FileTransfers.refused = true
+            }
             return START_NOT_STICKY
         }
         try {
             front(n)
             running = true
         } catch (e: Exception) {
+            // refused inside startForeground (android 15's day of data
+            // sync spent, say): not stopped, and not asked for again
             running = false
-            stopSelf()
+            FileTransfers.refused = true
         }
         return START_NOT_STICKY
     }
@@ -178,6 +217,7 @@ class FileTransferService : Service() {
 
     override fun onTimeout(startId: Int, fgsType: Int) {
         running = false
+        FileTransfers.refused = true
         stopForeground(STOP_FOREGROUND_DETACH)
         stopSelf()
     }
