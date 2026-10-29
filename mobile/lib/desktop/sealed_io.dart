@@ -46,6 +46,9 @@ const plainOutZoneKey = #kryfoPlainOut;
 R plainOutAllowed<R>(R Function() f) =>
     runZoned(f, zoneValues: {plainOutZoneKey: true});
 
+/// the engine's folder inside the memory folder, or inside windows' tmp
+const kEngineFolder = 'engine';
+
 /// where things are sealed and under which key. sendable, so an isolate
 /// gets the same
 class SealedAreas {
@@ -118,7 +121,12 @@ class SealedAreas {
       return '*';
     }
     final t = tmp;
-    if (t != null && p.isWithin(t, full)) return '~';
+    if (t != null && p.isWithin(t, full)) {
+      // the engine's own folder: go reads and writes it by path, plain
+      final e = p.join(t, kEngineFolder);
+      if (p.equals(e, full) || p.isWithin(e, full)) return null;
+      return '~';
+    }
     return null;
   }
 

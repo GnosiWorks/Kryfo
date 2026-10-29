@@ -57,6 +57,10 @@ void main() {
       expect(a.areaOf(p.join(tmp, 'deep', 'x')), '~');
       expect(a.keyFor(p.join(tmp, 'take.wav')), _k(7));
       expect(a.areaOf(p.join(root.path, 'vault.kv')), isNull);
+      // the engine reads its folder by path: the onion key, its marks
+      expect(a.areaOf(p.join(tmp, 'engine')), isNull);
+      expect(a.areaOf(p.join(tmp, 'engine', 'onion.key')), isNull);
+      expect(a.areaOf(p.join(tmp, 'engines', 'x')), '~');
     });
 
     test('what dart writes there is sealed on the disk', () {
@@ -82,7 +86,10 @@ void main() {
       );
       // the media key alone opens it: the run's key is not needed
       expect(
-        IOOverrides.runWithIOOverrides(() => File(to).readAsStringSync(), other),
+        IOOverrides.runWithIOOverrides(
+          () => File(to).readAsStringSync(),
+          other,
+        ),
         'a picked photo',
       );
     });
@@ -91,8 +98,7 @@ void main() {
       final f = p.join(tmp, 'take.wav');
       sealed(() => File(f).writeAsStringSync('speech'));
       final next = SealedIO(
-        SealedAreas(docs: docs, support: support, tmp: tmp)
-          ..sessionKey = _k(8),
+        SealedAreas(docs: docs, support: support, tmp: tmp)..sessionKey = _k(8),
         ToyCrypto(),
       );
       expect(

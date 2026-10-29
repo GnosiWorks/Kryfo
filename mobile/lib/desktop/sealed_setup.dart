@@ -261,7 +261,7 @@ class EngineFiles {
   final String runtime;
   Timer? _watch;
 
-  String get dir => p.join(runtime, 'engine');
+  String get dir => p.join(runtime, kEngineFolder);
   String get _key => p.join(dir, 'onion.key');
   String get _sealedKey => p.join(docs, 'onion.key');
   String get _state => p.join(support, 'engine.state');
