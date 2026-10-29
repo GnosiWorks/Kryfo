@@ -119,27 +119,10 @@ func knockTargets() []knockTarget {
 			out = append(out, knockTarget{inv.pk, inv.sk, laneFirstContact, "firstcontact:" + inv.pk, ""})
 			continue
 		}
-		switch {
-		case k == "firstcontact" && mainErr == nil:
+		if k == "firstcontact" && mainErr == nil {
 			sk, pk, err := nip17FirstContactKeysAs(main, fc)
 			if err == nil {
 				out = append(out, knockTarget{pk, sk, laneFirstContact, "firstcontact:" + pk, ""})
-			}
-		case isHexKey(k):
-			// the main identity's: any other's was noted as it was
-			// subscribed
-			peer, err := peerArr(k)
-			if err != nil {
-				continue
-			}
-			c, err := pairOf(mainIdent, peer)
-			if err != nil {
-				continue
-			}
-			sk, pk, err := c.rcvAddress()
-			if err == nil {
-				lane := receiveLane(pk)
-				out = append(out, knockTarget{pk, sk, lane, lane, strings.ToLower(k)})
 			}
 		}
 	}

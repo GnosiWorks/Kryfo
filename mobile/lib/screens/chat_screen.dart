@@ -104,9 +104,8 @@ import '../main.dart'
         nameCheckOf,
         session,
         sessionQuiet,
-        signalEncrypt,
+        signalSeal,
         peerXPubOf,
-        AppStateDoor,
         hasSessionWith,
         appState,
         currentChatPeer,
@@ -3310,15 +3309,17 @@ class _ChatScreenState extends State<ChatScreen>
 
   // a text's cipher onto the wire once a route is up, unless it was taken
   // back while it waited
-  Future<String> _wireText(String? uid, String cipher) => wireWhenReady(
-    ready: _torReadyToSend,
-    kept: () async => uid == null || await session.messageExists(uid),
-    send: () => _routeText(cipher, uid),
-  );
+  Future<String> _wireText(String? uid, String cipher, int ident) =>
+      wireWhenReady(
+        ready: _torReadyToSend,
+        kept: () async => uid == null || await session.messageExists(uid),
+        send: () => _routeText(cipher, ident, uid),
+      );
 
   // before the peer back-pairs, direct onion first so their drain runs the
   // back-pair flow, with the first-contact copy beside it (routeText)
-  Future<String> _routeText(String cipher, [String? uid]) async {
+  // [ident]: the identity the door sealed it on, and the one it goes on
+  Future<String> _routeText(String cipher, int ident, [String? uid]) async {
     // a quiet session keeps it here, waiting. a block here keeps it not
     // sent, one in the other container only waits
     if (sessionQuiet || appState.everydayHeld) return 'parked';
@@ -3349,15 +3350,8 @@ class _ChatScreenState extends State<ChatScreen>
         widget.peerHaloId,
         backPaired: _backPaired,
       ),
-      viaFirst: (x, fc) => engine.sendFirstContact(
-        appState.identOf(widget.peerHaloId),
-        x,
-        fc,
-        cipher,
-      ),
-      viaRelay: (x) => Future(
-        () => engine.nostrSend(appState.identOf(widget.peerHaloId), x, cipher),
-      ),
+      viaFirst: (x, fc) => engine.sendFirstContact(ident, x, fc, cipher),
+      viaRelay: (x) => Future(() => engine.nostrSend(ident, x, cipher)),
       log: (l) => dlog('chat send: $l'),
       // both its copies went: past their two it waits held, not lost
       bothWent: uid == null
@@ -3463,6 +3457,7 @@ class _ChatScreenState extends State<ChatScreen>
         if (!mounted) return;
       }
       final String cipher;
+      final int sealedOn;
       try {
         final wrapped = await wrapMessage(
           msg.text,
@@ -3485,7 +3480,9 @@ class _ChatScreenState extends State<ChatScreen>
           // when it was written, not now
           writtenAt: msg.when.millisecondsSinceEpoch,
         );
-        cipher = await signalEncrypt(widget.peerHaloId, wrapped);
+        final sealed = await signalSeal(widget.peerHaloId, wrapped);
+        cipher = sealed.cipher;
+        sealedOn = sealed.ident;
       } catch (e) {
         if (!mounted) return;
         // waiting on their card: still going, as the first send has it
@@ -3499,7 +3496,7 @@ class _ChatScreenState extends State<ChatScreen>
       }
       if (_devKeyFailed && mounted) setState(() => _devKeyFailed = false);
       handed = true;
-      await Future<String>(() => _wireText(uid, cipher))
+      await Future<String>(() => _wireText(uid, cipher, sealedOn))
           .whenComplete(() {
             if (own) appState.releaseSend(uid);
           })
@@ -4859,6 +4856,7 @@ class _ChatScreenState extends State<ChatScreen>
       // the receiver's verifyPow expects.
       int? powNonce;
       final String cipher;
+      final int sealedOn;
       try {
         // a fresh session is an opener whatever the history: the far side
         // may have let us go and its gate asks again
@@ -4900,7 +4898,9 @@ class _ChatScreenState extends State<ChatScreen>
         _encryptGate = gate.future;
         try {
           await prev;
-          cipher = await signalEncrypt(widget.peerHaloId, wrapped);
+          final sealed = await signalSeal(widget.peerHaloId, wrapped);
+          cipher = sealed.cipher;
+          sealedOn = sealed.ident;
         } finally {
           gate.complete();
         }
@@ -4933,7 +4933,7 @@ class _ChatScreenState extends State<ChatScreen>
 
       mounted ? setState(sealed) : sealed();
       handed = true;
-      Future<String>(() => _wireText(msgUid, cipher))
+      Future<String>(() => _wireText(msgUid, cipher, sealedOn))
           .whenComplete(() => appState.releaseSend(msgUid))
           .then((result) => _finishTextSend(msg, result));
     } finally {

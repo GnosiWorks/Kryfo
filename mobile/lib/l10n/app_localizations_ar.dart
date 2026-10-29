@@ -1422,10 +1422,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'ستُحذف من الهاتفين، إلا إذا كانت قد حُفظت. لا يمكن التراجع عن هذا.';
 
   @override
-  String get chatAlbumItDisappearsWithNo =>
-      'سيُحذف الألبوم من الهاتفين، إلا إذا كان قد حُفظ. لا يمكن التراجع عن هذا.';
-
-  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -2687,10 +2683,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'ستُحذف من هواتف الجميع، إلا إذا كانت قد حُفظت. لا يمكن التراجع عن هذا.';
 
   @override
-  String get groupChatAlbumItDisappearsWithNo =>
-      'سيُحذف الألبوم من هواتف الجميع، إلا إذا كان قد حُفظ. لا يمكن التراجع عن هذا.';
-
-  @override
   String get groupChatUnsend => 'سحب';
 
   @override
@@ -3264,9 +3256,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get homeAddSomeone => 'إضافة شخص';
-
-  @override
-  String get homeInviteSomeone => 'ادعُ شخصًا';
 
   @override
   String get homeArchived => 'الأرشيف';
@@ -4141,42 +4130,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onboardingContinue => 'متابعة ←';
-
-  @override
-  String get onboardingNameHeadline => '*اسم عام*، إن أردت.';
-
-  @override
-  String get onboardingNameLine =>
-      'يتيح الاسم العام للناس أن يجدوك. التخطي يبقيك أكثر خصوصية، ويمكنك دائمًا إضافة اسم لاحقًا.';
-
-  @override
-  String get onboardingNameSkip => 'التخطي الآن ←';
-
-  @override
-  String onboardingNameClaim(Object handle) {
-    return 'احجز ⁦@$handle⁩ ←';
-  }
-
-  @override
-  String get onboardingInviteHeadline => 'والآن، *ادعُ شخصًا*.';
-
-  @override
-  String get onboardingInviteLead =>
-      'أرسل رابطًا عبر أي تطبيق مراسلة. يفتح Kryfo، أو يريهم من أين يحصلون عليه.';
-
-  @override
-  String get onboardingInviteSomeone => 'ادعُ شخصًا ←';
-
-  @override
-  String get onboardingInviteGettingReady => 'جارٍ تجهيز رابطك…';
-
-  @override
-  String inviteShareText(Object myId, Object link, Object download) {
-    return 'أضفني على Kryfo. اسمي هناك ⁨$myId⁩\n\nاضغط لإضافتي:\n⁨$link⁩\n\nليس لديك Kryfo بعد؟ احصل عليه من هنا:\n⁨$download⁩\n\nتطبيق Kryfo للمراسلة الخاصة. بلا رقم هاتف، وبلا بريد إلكتروني.';
-  }
-
-  @override
-  String get inviteNotReady => 'رابطك جاهز تقريبًا. حاول مجددًا بعد لحظة.';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -9870,6 +9823,215 @@ class AppLocalizationsAr extends AppLocalizations {
       'يحتاج Kryfo إلى مجلد خاص في الذاكرة أثناء عمله، وهذا الحاسوب لا يوفّر واحدًا، لذا لن يفتح.';
 
   @override
+  String get inviteNotYet =>
+      'هذه الدعوة ليست صالحة بعد. تحقّق من الوقت على هاتفك.';
+
+  @override
+  String get inviteExpired => 'انتهت صلاحية هذه الدعوة. اطلب دعوة جديدة.';
+
+  @override
+  String get inviteDamaged => 'هذه الدعوة تالفة. اطلب دعوة جديدة.';
+
+  @override
+  String get helloSent => 'أُرسل الطلب. سيرونه عندما يكونون متصلين.';
+
+  @override
+  String get inviteNeeds06 => 'يحتاج إلى Kryfo 0.6 أو أحدث.';
+
+  @override
+  String get helloSentOld =>
+      'أُرسل الطلب. إذا كانوا يستخدمون إصدارًا أقدم من Kryfo، فعليهم التحديث أولًا.';
+
+  @override
+  String get modesPickHow =>
+      'اختر كيف تنتقل رسائلك. يمكنك تغيير ذلك في أي وقت.';
+
+  @override
+  String get modesPrivate => 'خاص';
+
+  @override
+  String get modesPrivateTag => 'Tor · جسور عند الحاجة';
+
+  @override
+  String get modesPrivateLine =>
+      'لا أحد يعرف عنوان IP الخاص بك أو من أنت، ولا حتى خوادمنا. يجد طريقًا حول الحجب بنفسه.';
+
+  @override
+  String get modesDefault => 'الافتراضي';
+
+  @override
+  String get modesFastTag => 'مباشرة إلى خوادمنا';
+
+  @override
+  String get modesFastLine =>
+      'يتخطى Tor، فتصل الرسائل أسرع وتستهلك بطارية أقل. ترى خوادمنا عنوان IP الخاص بك فقط أثناء اتصالك، ولا تسجله أو تحتفظ به أبدًا. ولا ترى أبدًا ما تقوله. جهات اتصالك لا تراه أبدًا.';
+
+  @override
+  String get modesFastConnected => 'سريع · متصل';
+
+  @override
+  String get modesFastConnecting => 'سريع · جارٍ الاتصال';
+
+  @override
+  String get modesFastDown => 'سريع · خوادمنا لا ترد';
+
+  @override
+  String get modesBackupReady =>
+      'هناك احتياطي جاهز دائمًا، فتبقى متصلًا حتى لو توقف أحدها.';
+
+  @override
+  String get modesDetails => 'التفاصيل';
+
+  @override
+  String get modesBothLine =>
+      'كلاهما يُبقي كل رسالة مشفرة من طرف إلى طرف. ما يتغير فقط هو من يمكنه رؤية عنوان IP الخاص بك.';
+
+  @override
+  String get modesConnectionBridges => 'الاتصال والجسور';
+
+  @override
+  String get modesWhatServersSee => 'ما يمكن لخوادمنا رؤيته';
+
+  @override
+  String get serversTitle => 'خوادم الوضع السريع';
+
+  @override
+  String get serversLine =>
+      'تذهب كل رسالة إلى الخادمين معًا. الذي يرد أولًا يحملها، والآخر يتولى الأمر إذا توقف أحدهما.';
+
+  @override
+  String get serversOne => 'الخادم 1';
+
+  @override
+  String get serversTwo => 'الخادم 2 · مزوّد ثانٍ';
+
+  @override
+  String get serversConnected => 'متصل';
+
+  @override
+  String get serversConnecting => 'جارٍ الاتصال';
+
+  @override
+  String get serversNotAnswering => 'لا يرد';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms م.ث';
+  }
+
+  @override
+  String get serversQuicker => 'الأسرع';
+
+  @override
+  String get serversBackups => 'مُرحِّلات عامة';
+
+  @override
+  String get serversBackupsLine =>
+      'تُستخدم أثناء توقف الخادم 1، وعبر Tor فقط، فلا ترى عنوان IP الخاص بك أبدًا.';
+
+  @override
+  String get serversStandingBy => 'في وضع الاستعداد';
+
+  @override
+  String get serversInUse => 'قيد الاستخدام';
+
+  @override
+  String get homeMergedTitle => 'أصبح المُرحِّل والسريع واحدًا الآن';
+
+  @override
+  String get homeMergedLine =>
+      'أنت على الوضع السريع. هناك خادم احتياطي جاهز دائمًا، فتبقى متصلًا حتى لو توقف أحدها. ترى خوادمنا عنوان IP الخاص بك، ولا ترى أبدًا ما تقوله.';
+
+  @override
+  String get homeMergedGotIt => 'فهمت';
+
+  @override
+  String get homeMergedUsePrivate => 'استخدم الخاص بدلًا من ذلك';
+
+  @override
+  String get homeOursDownTitle => 'خوادمنا لا ترد';
+
+  @override
+  String get homeOursDownLine =>
+      'بعد دقائق قليلة، حين يتصل Tor، تمر الرسائل أيضًا عبر مُرحِّلات عامة، وتعود عبر خوادمنا حالما يرد أحدها.';
+
+  @override
+  String get homeUsePrivate => 'استخدم الخاص';
+
+  @override
+  String get homeSwitchedToPrivate => 'تم التبديل إلى الخاص';
+
+  @override
+  String get homeUseFast => 'استخدم السريع';
+
+  @override
+  String get homeSwitchedToFastRoute => 'تم التبديل إلى السريع';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'السريع يذهب مباشرة إلى خوادمنا وعادةً ما ينجح. أو دع Kryfo يجد طريقًا بنفسه.';
+
+  @override
+  String get appServersNotAnswering => 'الخوادم لا ترد';
+
+  @override
+  String get settingsPrivateTor => 'خاص · Tor';
+
+  @override
+  String get seenOurServers => 'خوادمنا';
+
+  @override
+  String get seenIpWhy =>
+      'في الخاص يخرج كل شيء عبر Tor وترى خوادمنا عقدة خروج، لا أنت أبدًا. في السريع يذهب الاتصال مباشرة إلى خادمينا: يريان عنوان IP الخاص بك أثناء اتصالك ولا يحتفظان بأي سجل له. أثناء توقف الأول يستخدم السريع أيضًا مُرحِّلات عامة، عبر Tor فقط.';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'سيُحذف الألبوم من الهاتفين، إلا إذا كان قد حُفظ. لا يمكن التراجع عن هذا.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'سيُحذف الألبوم من هواتف الجميع، إلا إذا كان قد حُفظ. لا يمكن التراجع عن هذا.';
+
+  @override
+  String get homeInviteSomeone => 'ادعُ شخصًا';
+
+  @override
+  String get onboardingNameHeadline => '*اسم عام*، إن أردت.';
+
+  @override
+  String get onboardingNameLine =>
+      'يتيح الاسم العام للناس أن يجدوك. التخطي يبقيك أكثر خصوصية، ويمكنك دائمًا إضافة اسم لاحقًا.';
+
+  @override
+  String get onboardingNameSkip => 'التخطي الآن ←';
+
+  @override
+  String onboardingNameClaim(Object handle) {
+    return 'احجز ⁦@$handle⁩ ←';
+  }
+
+  @override
+  String get onboardingInviteHeadline => 'والآن، *ادعُ شخصًا*.';
+
+  @override
+  String get onboardingInviteLead =>
+      'أرسل رابطًا عبر أي تطبيق مراسلة. يفتح Kryfo، أو يريهم من أين يحصلون عليه.';
+
+  @override
+  String get onboardingInviteSomeone => 'ادعُ شخصًا ←';
+
+  @override
+  String get onboardingInviteGettingReady => 'جارٍ تجهيز رابطك…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'أضفني على Kryfo. اسمي هناك ⁨$myId⁩\n\nاضغط لإضافتي:\n⁨$link⁩\n\nليس لديك Kryfo بعد؟ احصل عليه من هنا:\n⁨$download⁩\n\nتطبيق Kryfo للمراسلة الخاصة. بلا رقم هاتف، وبلا بريد إلكتروني.';
+  }
+
+  @override
+  String get inviteNotReady => 'رابطك جاهز تقريبًا. حاول مجددًا بعد لحظة.';
+
+  @override
   String get photoCropTitle => 'حرّك وغيّر الحجم';
 
   @override
@@ -10029,146 +10191,4 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get modesPickHow =>
-      'اختر كيف تنتقل رسائلك. يمكنك تغيير ذلك في أي وقت.';
-
-  @override
-  String get modesPrivate => 'خاص';
-
-  @override
-  String get modesPrivateTag => 'Tor · جسور عند الحاجة';
-
-  @override
-  String get modesPrivateLine =>
-      'لا أحد يعرف عنوان IP الخاص بك أو من أنت، ولا حتى خوادمنا. يجد طريقًا حول الحجب بنفسه.';
-
-  @override
-  String get modesDefault => 'الافتراضي';
-
-  @override
-  String get modesFastTag => 'مباشرة إلى خوادمنا';
-
-  @override
-  String get modesFastLine =>
-      'يتخطى Tor، فتصل الرسائل أسرع وتستهلك بطارية أقل. ترى خوادمنا عنوان IP الخاص بك فقط أثناء اتصالك، ولا تسجله أو تحتفظ به أبدًا. ولا ترى أبدًا ما تقوله. جهات اتصالك لا تراه أبدًا.';
-
-  @override
-  String get modesFastConnected => 'سريع · متصل';
-
-  @override
-  String get modesFastConnecting => 'سريع · جارٍ الاتصال';
-
-  @override
-  String get modesFastDown => 'سريع · خوادمنا لا ترد';
-
-  @override
-  String get modesBackupReady =>
-      'هناك احتياطي جاهز دائمًا، فتبقى متصلًا حتى لو توقف أحدها.';
-
-  @override
-  String get modesDetails => 'التفاصيل';
-
-  @override
-  String get modesBothLine =>
-      'كلاهما يُبقي كل رسالة مشفرة من طرف إلى طرف. ما يتغير فقط هو من يمكنه رؤية عنوان IP الخاص بك.';
-
-  @override
-  String get modesConnectionBridges => 'الاتصال والجسور';
-
-  @override
-  String get modesWhatServersSee => 'ما يمكن لخوادمنا رؤيته';
-
-  @override
-  String get serversTitle => 'خوادم الوضع السريع';
-
-  @override
-  String get serversLine =>
-      'تذهب كل رسالة إلى الخادمين معًا. الذي يرد أولًا يحملها، والآخر يتولى الأمر إذا توقف أحدهما.';
-
-  @override
-  String get serversOne => 'الخادم 1';
-
-  @override
-  String get serversTwo => 'الخادم 2 · مزوّد ثانٍ';
-
-  @override
-  String get serversConnected => 'متصل';
-
-  @override
-  String get serversConnecting => 'جارٍ الاتصال';
-
-  @override
-  String get serversNotAnswering => 'لا يرد';
-
-  @override
-  String serversMs(int ms) {
-    return '$ms م.ث';
-  }
-
-  @override
-  String get serversQuicker => 'الأسرع';
-
-  @override
-  String get serversBackups => 'مُرحِّلات عامة';
-
-  @override
-  String get serversBackupsLine =>
-      'تُستخدم أثناء توقف الخادم 1، وعبر Tor فقط، فلا ترى عنوان IP الخاص بك أبدًا.';
-
-  @override
-  String get serversStandingBy => 'في وضع الاستعداد';
-
-  @override
-  String get serversInUse => 'قيد الاستخدام';
-
-  @override
-  String get homeMergedTitle => 'أصبح المُرحِّل والسريع واحدًا الآن';
-
-  @override
-  String get homeMergedLine =>
-      'أنت على الوضع السريع. هناك خادم احتياطي جاهز دائمًا، فتبقى متصلًا حتى لو توقف أحدها. ترى خوادمنا عنوان IP الخاص بك، ولا ترى أبدًا ما تقوله.';
-
-  @override
-  String get homeMergedGotIt => 'فهمت';
-
-  @override
-  String get homeMergedUsePrivate => 'استخدم الخاص بدلًا من ذلك';
-
-  @override
-  String get homeOursDownTitle => 'خوادمنا لا ترد';
-
-  @override
-  String get homeOursDownLine =>
-      'بعد دقائق قليلة، حين يتصل Tor، تمر الرسائل أيضًا عبر مُرحِّلات عامة، وتعود عبر خوادمنا حالما يرد أحدها.';
-
-  @override
-  String get homeUsePrivate => 'استخدم الخاص';
-
-  @override
-  String get homeSwitchedToPrivate => 'تم التبديل إلى الخاص';
-
-  @override
-  String get homeUseFast => 'استخدم السريع';
-
-  @override
-  String get homeSwitchedToFastRoute => 'تم التبديل إلى السريع';
-
-  @override
-  String get bridgesFastGetsThrough =>
-      'السريع يذهب مباشرة إلى خوادمنا وعادةً ما ينجح. أو دع Kryfo يجد طريقًا بنفسه.';
-
-  @override
-  String get appServersNotAnswering => 'الخوادم لا ترد';
-
-  @override
-  String get settingsPrivateTor => 'خاص · Tor';
-
-  @override
-  String get seenOurServers => 'خوادمنا';
-
-  @override
-  String get seenIpWhy =>
-      'في الخاص يخرج كل شيء عبر Tor وترى خوادمنا عقدة خروج، لا أنت أبدًا. في السريع يذهب الاتصال مباشرة إلى خادمينا: يريان عنوان IP الخاص بك أثناء اتصالك ولا يحتفظان بأي سجل له. أثناء توقف الأول يستخدم السريع أيضًا مُرحِّلات عامة، عبر Tor فقط.';
 }

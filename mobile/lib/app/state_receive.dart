@@ -207,6 +207,12 @@ extension AppStateReceive on AppState {
       signalWait,
       onTimeout: () => dlog('listen: signal not ready, contacts go on'),
     );
+    // my v4 invites kept, and each live one listened on
+    try {
+      await keepMyInvites();
+    } catch (e) {
+      dlog('invites: not kept (${e.runtimeType})');
+    }
     var heard = <String>{};
     var short = true;
     try {
@@ -254,6 +260,9 @@ extension AppStateReceive on AppState {
     // who is on an identity of their own, and those identities in the
     // engine before anything listens on them
     await loadIdents();
+    // every seeded pair's seed in the engine before the first listen: a
+    // call that comes without it is refused there as well
+    await pushPairSeeds();
     // subscribe off the xpub stored on the contact row, the same key the
     // send path uses. the signal store has none until a session exists, so
     // the scanned side could never receive the first message.
@@ -691,6 +700,38 @@ extension AppStateReceive on AppState {
       await live.markSeen(h);
       notifyListeners();
       arrived();
+      return;
+    }
+    // a hello on my v3 first-contact address: zero answers only (11 step 7)
+    if (m.peer == 'firstcontact' && m.cipher.startsWith('khl:')) {
+      final bar = m.cipher.indexOf('|');
+      final hw = bar == 68 ? helloOfWire(m.cipher.substring(69)) : null;
+      if (hw == null) {
+        await live.markSeenLong(h);
+        arrived();
+        return;
+      }
+      await _receiveHello(
+        kMainIdent,
+        null,
+        m.cipher.substring(4, 68),
+        hw.hello,
+        hw.nonce,
+        h,
+        arrived,
+      );
+      return;
+    }
+    // a line from one of my invites' first-contact addresses
+    if (inviteTagOf(m.peer) case (final ident, final invite)) {
+      await _receiveAtInvite(
+        ident,
+        invite,
+        m.cipher,
+        h,
+        arrived,
+        reached: reached,
+      );
       return;
     }
     if (m.cipher.startsWith('{')) {

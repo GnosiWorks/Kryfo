@@ -99,6 +99,7 @@ class AppState extends ChangeNotifier {
     // the wire asks the everyday container's dev chat, never a decoy's or
     // a vault's: only the everyday identity goes online. its seal and its
     // store read the same row
+    _madeApp = this;
     devGate.chat = () => live.devChat.load();
     _keyMoved = flagKeyChanged;
     devLane.chat = () => live.devChat.load();
@@ -281,7 +282,17 @@ class AppState extends ChangeNotifier {
   Timer? _repointTimer;
 
   late HandleRepoint _handleRepoint = HandleRepoint(
-    invite: () => buildHaloUriV3(myId, myOnion, _fcCounter),
+    // the main v4 invite once it is made (identity v4 7): a registry
+    // without the v=4 change refuses it, and the handle keeps the v3 one
+    invite: () async {
+      try {
+        final v4 = await myV4Invite();
+        if (v4 != null) return v4;
+      } catch (e) {
+        dlog('repoint: no v4 invite (${e.runtimeType})');
+      }
+      return buildHaloUriV3(myId, myOnion, _fcCounter);
+    },
     claim: (h, invite, bio) => engine.handleClaim(h, invite, bio),
     lookup: (url) => engine.torGetJson(url),
     myKey: () => engine.myEdPubkey(),
@@ -831,6 +842,10 @@ class AppState extends ChangeNotifier {
   final _signalReady = Completer<void>();
   Future<void>? _signalBoot;
 
+  // the invite upkeep or reset under way, and when the last upkeep began
+  Future<void>? _invitesKeep;
+  var _invitesKeptAt = 0;
+
   // ids "this isn't them" is taking off this phone right now: nothing of
   // theirs is filed meanwhile
   final _removing = <String>{};
@@ -982,4 +997,7 @@ class AppState extends ChangeNotifier {
 }
 
 final appState = AppState();
+
+// the app state made last, read where touching appState would make one
+AppState? _madeApp;
 AppState get _app => appState;

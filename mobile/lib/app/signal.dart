@@ -82,16 +82,30 @@ Future<String> signalEncrypt(
   String peerId,
   String plaintext, {
   bool onlySettled = false,
+}) async =>
+    (await signalSeal(peerId, plaintext, onlySettled: onlySettled)).cipher;
+
+/// as signalEncrypt, with the identity the door sealed on: every relay call
+/// that carries the cipher takes this one, never a second lookup
+Future<({int ident, String cipher})> signalSeal(
+  String peerId,
+  String plaintext, {
+  bool onlySettled = false,
 }) async {
   if (isDevId(peerId)) {
     if (onlySettled) throw NotSettled(peerId);
-    return devLane.encrypt(peerId, plaintext);
+    return (
+      ident: kMainIdent,
+      cipher: await devLane.encrypt(peerId, plaintext),
+    );
   }
   plaintext = await appState.shotsOnWire(peerId, plaintext);
+  // a v4 first contact's frames carry the pair's seed until they answer
+  plaintext = await appState.v4OpenerFields(peerId, plaintext);
   final (ident, framed) = await appState.doorFor(peerId, plaintext);
   final ss = await signalOfIdent(ident);
   final from = _afreshFrom;
-  return ss.encryptTo(
+  final cipher = await ss.encryptTo(
     peerId,
     framed,
     onlySettled: onlySettled,
@@ -101,6 +115,7 @@ Future<String> signalEncrypt(
     // a card naming another key: flagged as on an open, once out of the lane
     keyMoved: () => unawaited(_keyMoved?.call(peerId)),
   );
+  return (ident: ident, cipher: cipher);
 }
 
 // where a seal finds a peer's card to start a session afresh from, after a
@@ -326,8 +341,11 @@ bool _takeOpenedBefore(String wireB64) =>
 // a second one sent before they heard back) leaves it as it runs, its text
 // still handed on for the uid checks to know. a new one goes in front of it
 // as a fresh start does, the states before it kept behind
-Future<void> keepOpenedSession(String peer, Uint8List record) =>
-    signalSession.keepOpenedSession(peer, record);
+Future<void> keepOpenedSession(
+  String peer,
+  Uint8List record, {
+  Future<void> Function(Transaction t)? also,
+}) => signalSession.keepOpenedSession(peer, record, also: also);
 
 // a first contact's session moved off a name a hidden chat binds to
 // another key, onto the sender's own id. a name with a trusted key was

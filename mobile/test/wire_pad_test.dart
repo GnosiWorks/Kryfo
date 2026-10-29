@@ -11,6 +11,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/devchat/dev_frame.dart' show devOutFrame;
+import 'package:kryfo/invites.dart' show helloOfWire, helloWireOf, kHelloWireLength;
 import 'package:kryfo/main.dart' show makePreKeyBundleB64;
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
@@ -561,6 +562,44 @@ void main() {
         expect(n, lessThanOrEqualTo(plain.reduce(max)));
         expect(_wrapOf(n), _wraps[1]);
         expect(_cellsOf(n), _cells[1]);
+      }
+    });
+
+    test('a hello lands on a v4 opener\'s gift wrap and cells, whatever '
+        'its nonce, and reads back without its filler', () {
+      // KHL1, a version, the invite answered, the owner, a one-time
+      // invite with its bundle and the signature (3.3)
+      final hello = Uint8List.fromList([
+        ...ascii.encode('KHL1'),
+        ...List.filled(1 + 16 + 33 + 2069 + 64, 7),
+      ]);
+      for (final nonce in [0, 7, 123456, 999999999999999]) {
+        final w = helloWireOf(hello, nonce);
+        expect(_wrapOf(rumorLength(w)), _wraps[1]);
+        expect(_wrapOf(rumorLength(w)), _wrapOf(_openerWire[1]));
+        expect(_cellsOf(w.length), _cells[1]);
+        final back = helloOfWire(w)!;
+        expect(back.nonce, nonce);
+        expect(back.hello, hello);
+      }
+      final b64 = base64Encode(hello);
+      expect(helloOfWire('$b64.12.000'), isNotNull);
+      expect(helloOfWire('$b64.12.001'), isNull);
+      expect(helloOfWire('$b64.12.'), isNull);
+      expect(helloOfWire('$b64.12.0.0'), isNull);
+    });
+
+    test('a hello too long to pad is refused, never sent unpadded', () {
+      // the longest hello that still takes a filler, with the longest nonce
+      final room = (kHelloWireLength - '.999999999999999.0'.length) ~/ 4 * 3;
+      final fits = Uint8List(room);
+      expect(helloWireOf(fits, 999999999999999).length, kHelloWireLength);
+      expect(
+        () => helloWireOf(Uint8List(room + 3), 999999999999999),
+        throwsArgumentError,
+      );
+      for (final n in [kHelloWireLength ~/ 4 * 3, 4000]) {
+        expect(() => helloWireOf(Uint8List(n), 0), throwsArgumentError);
       }
     });
 

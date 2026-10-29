@@ -2192,12 +2192,6 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'This album will be removed from both phones, unless it has already been saved. This can\'t be undone.'**
-  String get chatAlbumItDisappearsWithNo;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'{count, plural, one{This chat has {count} pin already} other{This chat has {count} pins already}}'**
   String chatThisChatHasPins(int count);
 
@@ -4214,12 +4208,6 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'This album will be removed from everyone\'s phones, unless it has already been saved. This can\'t be undone.'**
-  String get groupChatAlbumItDisappearsWithNo;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Unsend'**
   String get groupChatUnsend;
 
@@ -4990,12 +4978,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add someone'**
   String get homeAddSomeone;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Invite someone'**
-  String get homeInviteSomeone;
 
   /// screens/home_screen.dart
   ///
@@ -6376,66 +6358,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue →'**
   String get onboardingContinue;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'A public *@name*, if you like.'**
-  String get onboardingNameHeadline;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'A public name lets people find you. Skipping keeps you more private, you can always add one later.'**
-  String get onboardingNameLine;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Skip for now →'**
-  String get onboardingNameSkip;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Claim @{handle} →'**
-  String onboardingNameClaim(Object handle);
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Now, *invite someone*.'**
-  String get onboardingInviteHeadline;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Send a link in any messenger. It opens Kryfo, or shows them where to get it.'**
-  String get onboardingInviteLead;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Invite someone →'**
-  String get onboardingInviteSomeone;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Getting your link ready…'**
-  String get onboardingInviteGettingReady;
-
-  /// invite_share.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Add me on Kryfo. My name there is {myId}\n\nTap to add me:\n{link}\n\nNo Kryfo yet? Get it here:\n{download}\n\nKryfo is a private messenger. No phone number, no email.'**
-  String inviteShareText(Object myId, Object link, Object download);
-
-  /// invite_share.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Your link is almost ready. Try again in a moment.'**
-  String get inviteNotReady;
 
   /// screens/onboarding_screen.dart
   ///
@@ -15665,203 +15587,41 @@ abstract class AppLocalizations {
   /// **'Kryfo needs a private folder in memory while it runs, and this computer offers none, so it will not open.'**
   String get desktopNoMemoryFolder;
 
-  /// screens/photo_crop_screen.dart: title over the round crop of a profile photo
+  /// a v4 invite issued more than a day ahead of this phone clock
   ///
   /// In en, this message translates to:
-  /// **'Move and scale'**
-  String get photoCropTitle;
+  /// **'This invite isn\'t valid yet. Check the time on your phone.'**
+  String get inviteNotYet;
 
-  /// screens/photo_crop_screen.dart: button that keeps the crop
+  /// a v4 invite past its expiry and a day
   ///
   /// In en, this message translates to:
-  /// **'Use photo'**
-  String get photoCropUse;
+  /// **'This invite has expired. Ask for a new one.'**
+  String get inviteExpired;
 
-  /// screens/photo_crop_screen.dart: screen reader label of the picture under the crop circle
+  /// a v4 invite that does not parse or whose signature does not hold
   ///
   /// In en, this message translates to:
-  /// **'Your photo in the circle. Pinch to zoom, drag to move'**
-  String get photoCropLabel;
+  /// **'This invite is damaged. Ask for a new one.'**
+  String get inviteDamaged;
 
-  /// toast: a picked profile photo could not be read or made clean
+  /// after a qr without a bundle is read: a hello went and waits for their accept
   ///
   /// In en, this message translates to:
-  /// **'Try another photo. This one could not be read.'**
-  String get photoCouldNotUse;
+  /// **'Request sent. They\'ll see it when they\'re online.'**
+  String get helloSent;
 
-  /// widgets/photo_sheet.dart: row that opens the camera for a profile photo
+  /// under a shared v4 invite link: older versions read it as an invalid link
   ///
   /// In en, this message translates to:
-  /// **'Take a photo'**
-  String get photoTake;
+  /// **'Needs Kryfo 0.6 or newer.'**
+  String get inviteNeeds06;
 
-  /// widgets/photo_sheet.dart: row that opens the gallery for a profile photo
+  /// after a v3 link is read: a hello went to its owner, and an owner on an older version cannot answer it
   ///
   /// In en, this message translates to:
-  /// **'Choose from gallery'**
-  String get photoChoose;
-
-  /// widgets/photo_sheet.dart: row that opens the drawn face picker
-  ///
-  /// In en, this message translates to:
-  /// **'Pick a face'**
-  String get photoPickFace;
-
-  /// widgets/photo_sheet.dart: row that opens the profile photo larger
-  ///
-  /// In en, this message translates to:
-  /// **'View photo'**
-  String get photoView;
-
-  /// widgets/photo_sheet.dart: row that takes the profile photo off
-  ///
-  /// In en, this message translates to:
-  /// **'Remove photo'**
-  String get photoRemove;
-
-  /// screens/profile_screen.dart: title of the sheet for your own profile photo
-  ///
-  /// In en, this message translates to:
-  /// **'Your photo'**
-  String get photoYourPhoto;
-
-  /// screens/profile_screen.dart: who sees your profile photo
-  ///
-  /// In en, this message translates to:
-  /// **'Only your contacts see it, end to end encrypted.'**
-  String get photoYourPhotoLine;
-
-  /// screens/contact_screen.dart: row to set a photo for a contact, kept on this phone
-  ///
-  /// In en, this message translates to:
-  /// **'Set a photo'**
-  String get photoSetTheirs;
-
-  /// screens/contact_screen.dart: the same row once a photo is set
-  ///
-  /// In en, this message translates to:
-  /// **'Change photo'**
-  String get photoChangeTheirs;
-
-  /// screens/contact_screen.dart: hint under the row: the photo is never sent
-  ///
-  /// In en, this message translates to:
-  /// **'Only on this phone'**
-  String get photoOnlyHere;
-
-  /// screens/contact_screen.dart: title of the sheet for a contact's photo
-  ///
-  /// In en, this message translates to:
-  /// **'A photo for {name}'**
-  String photoForThem(Object name);
-
-  /// screens/contact_screen.dart: line in the sheet for a contact's photo
-  ///
-  /// In en, this message translates to:
-  /// **'Only you see it. It stays on this phone.'**
-  String get photoOnlyHereLine;
-
-  /// widgets/face_view.dart: screen reader label of a contact's photo, larger
-  ///
-  /// In en, this message translates to:
-  /// **'Photo of {name}'**
-  String photoOf(Object name);
-
-  /// devices/history_import.dart: on a newly linked device, for a chat that stayed on the phone because screenshot blocking is on in it
-  ///
-  /// In en, this message translates to:
-  /// **'This chat stays on your phone because screenshots are blocked in it.'**
-  String get historyChatStaysShots;
-
-  /// widgets/pin_pad.dart: the pin dots to a screen reader, the count only
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =0{No digits} =1{1 digit} other{{count} digits}}'**
-  String a11yPinDigits(int count);
-
-  /// widgets/pin_pad.dart: the passphrase dots to a screen reader, the count only
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =0{No characters} =1{1 character} other{{count} characters}}'**
-  String a11yPassChars(int count);
-
-  /// screens/backup_screen.dart: the progress bar's name to a screen reader
-  ///
-  /// In en, this message translates to:
-  /// **'Backup progress'**
-  String get a11yBackupProgress;
-
-  /// screens/restore_screen.dart: the progress bar's name to a screen reader
-  ///
-  /// In en, this message translates to:
-  /// **'Restore progress'**
-  String get a11yRestoreProgress;
-
-  /// screens/notes_export_screen.dart: the progress bar's name to a screen reader
-  ///
-  /// In en, this message translates to:
-  /// **'Export progress'**
-  String get a11yExportProgress;
-
-  /// screens/lock_file_screen.dart: the progress bar's name to a screen reader
-  ///
-  /// In en, this message translates to:
-  /// **'Locking progress'**
-  String get a11yLockFileProgress;
-
-  /// screens/clean_screen.dart: the progress bar's name to a screen reader
-  ///
-  /// In en, this message translates to:
-  /// **'Cleaning progress'**
-  String get a11yCleanProgress;
-
-  /// widgets/menu_backdrop.dart: the long-press menu's name to a screen reader
-  ///
-  /// In en, this message translates to:
-  /// **'Message actions'**
-  String get a11yMessageActions;
-
-  /// widgets/voice_mic.dart: the mic with a screen reader on, a tap records
-  ///
-  /// In en, this message translates to:
-  /// **'Record a voice note'**
-  String get a11yRecordVoiceNote;
-
-  /// widgets/voice_mic.dart: said once when a tap starts a recording
-  ///
-  /// In en, this message translates to:
-  /// **'Recording'**
-  String get a11yRecording;
-
-  /// widgets/media_bubbles.dart: a photo tile to a screen reader
-  ///
-  /// In en, this message translates to:
-  /// **'Photo, {date}'**
-  String a11yPhotoOn(String date);
-
-  /// widgets/media_bubbles.dart: a photo tile to a screen reader, with who sent it
-  ///
-  /// In en, this message translates to:
-  /// **'Photo from {name}, {date}'**
-  String a11yPhotoFrom(String name, String date);
-
-  /// widgets/media_bubbles.dart: a video tile to a screen reader
-  ///
-  /// In en, this message translates to:
-  /// **'Video, {date}'**
-  String a11yVideoOn(String date);
-
-  /// widgets/media_bubbles.dart: a video tile to a screen reader, with who sent it
-  ///
-  /// In en, this message translates to:
-  /// **'Video from {name}, {date}'**
-  String a11yVideoFrom(String name, String date);
-
-  /// widgets/say.dart: new messages in the open chat, said with a screen reader on
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{New message} other{{count} new messages}}'**
-  String a11yNewMessages(int count);
+  /// **'Request sent. If they use an older Kryfo, they\'ll need to update first.'**
+  String get helloSentOld;
 
   /// Speed and privacy page, the line under the title
   ///
@@ -16120,6 +15880,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'On Private everything leaves through Tor and our servers see an exit node, never you. On Fast the connection goes straight to our two servers: they see your IP address while you\'re connected and keep no record of it. While the first one is down, Fast also uses public relays, only through Tor.'**
   String get seenIpWhy;
+
+  /// screens/chat_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'This album will be removed from both phones, unless it has already been saved. This can\'t be undone.'**
+  String get chatAlbumItDisappearsWithNo;
+
+  /// screens/group_chat_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'This album will be removed from everyone\'s phones, unless it has already been saved. This can\'t be undone.'**
+  String get groupChatAlbumItDisappearsWithNo;
+
+  /// screens/home_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Invite someone'**
+  String get homeInviteSomeone;
+
+  /// screens/onboarding_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'A public *@name*, if you like.'**
+  String get onboardingNameHeadline;
+
+  /// screens/onboarding_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'A public name lets people find you. Skipping keeps you more private, you can always add one later.'**
+  String get onboardingNameLine;
+
+  /// screens/onboarding_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now →'**
+  String get onboardingNameSkip;
+
+  /// screens/onboarding_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Claim @{handle} →'**
+  String onboardingNameClaim(Object handle);
+
+  /// screens/onboarding_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Now, *invite someone*.'**
+  String get onboardingInviteHeadline;
+
+  /// screens/onboarding_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Send a link in any messenger. It opens Kryfo, or shows them where to get it.'**
+  String get onboardingInviteLead;
+
+  /// screens/onboarding_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Invite someone →'**
+  String get onboardingInviteSomeone;
+
+  /// screens/onboarding_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Getting your link ready…'**
+  String get onboardingInviteGettingReady;
+
+  /// invite_share.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Add me on Kryfo. My name there is {myId}\n\nTap to add me:\n{link}\n\nNo Kryfo yet? Get it here:\n{download}\n\nKryfo is a private messenger. No phone number, no email.'**
+  String inviteShareText(Object myId, Object link, Object download);
+
+  /// invite_share.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Your link is almost ready. Try again in a moment.'**
+  String get inviteNotReady;
+
+  /// screens/photo_crop_screen.dart: title over the round crop of a profile photo
+  ///
+  /// In en, this message translates to:
+  /// **'Move and scale'**
+  String get photoCropTitle;
+
+  /// screens/photo_crop_screen.dart: button that keeps the crop
+  ///
+  /// In en, this message translates to:
+  /// **'Use photo'**
+  String get photoCropUse;
+
+  /// screens/photo_crop_screen.dart: screen reader label of the picture under the crop circle
+  ///
+  /// In en, this message translates to:
+  /// **'Your photo in the circle. Pinch to zoom, drag to move'**
+  String get photoCropLabel;
+
+  /// toast: a picked profile photo could not be read or made clean
+  ///
+  /// In en, this message translates to:
+  /// **'Try another photo. This one could not be read.'**
+  String get photoCouldNotUse;
+
+  /// widgets/photo_sheet.dart: row that opens the camera for a profile photo
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo'**
+  String get photoTake;
+
+  /// widgets/photo_sheet.dart: row that opens the gallery for a profile photo
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from gallery'**
+  String get photoChoose;
+
+  /// widgets/photo_sheet.dart: row that opens the drawn face picker
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a face'**
+  String get photoPickFace;
+
+  /// widgets/photo_sheet.dart: row that opens the profile photo larger
+  ///
+  /// In en, this message translates to:
+  /// **'View photo'**
+  String get photoView;
+
+  /// widgets/photo_sheet.dart: row that takes the profile photo off
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get photoRemove;
+
+  /// screens/profile_screen.dart: title of the sheet for your own profile photo
+  ///
+  /// In en, this message translates to:
+  /// **'Your photo'**
+  String get photoYourPhoto;
+
+  /// screens/profile_screen.dart: who sees your profile photo
+  ///
+  /// In en, this message translates to:
+  /// **'Only your contacts see it, end to end encrypted.'**
+  String get photoYourPhotoLine;
+
+  /// screens/contact_screen.dart: row to set a photo for a contact, kept on this phone
+  ///
+  /// In en, this message translates to:
+  /// **'Set a photo'**
+  String get photoSetTheirs;
+
+  /// screens/contact_screen.dart: the same row once a photo is set
+  ///
+  /// In en, this message translates to:
+  /// **'Change photo'**
+  String get photoChangeTheirs;
+
+  /// screens/contact_screen.dart: hint under the row: the photo is never sent
+  ///
+  /// In en, this message translates to:
+  /// **'Only on this phone'**
+  String get photoOnlyHere;
+
+  /// screens/contact_screen.dart: title of the sheet for a contact's photo
+  ///
+  /// In en, this message translates to:
+  /// **'A photo for {name}'**
+  String photoForThem(Object name);
+
+  /// screens/contact_screen.dart: line in the sheet for a contact's photo
+  ///
+  /// In en, this message translates to:
+  /// **'Only you see it. It stays on this phone.'**
+  String get photoOnlyHereLine;
+
+  /// widgets/face_view.dart: screen reader label of a contact's photo, larger
+  ///
+  /// In en, this message translates to:
+  /// **'Photo of {name}'**
+  String photoOf(Object name);
+
+  /// devices/history_import.dart: on a newly linked device, for a chat that stayed on the phone because screenshot blocking is on in it
+  ///
+  /// In en, this message translates to:
+  /// **'This chat stays on your phone because screenshots are blocked in it.'**
+  String get historyChatStaysShots;
+
+  /// widgets/pin_pad.dart: the pin dots to a screen reader, the count only
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No digits} =1{1 digit} other{{count} digits}}'**
+  String a11yPinDigits(int count);
+
+  /// widgets/pin_pad.dart: the passphrase dots to a screen reader, the count only
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No characters} =1{1 character} other{{count} characters}}'**
+  String a11yPassChars(int count);
+
+  /// screens/backup_screen.dart: the progress bar's name to a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Backup progress'**
+  String get a11yBackupProgress;
+
+  /// screens/restore_screen.dart: the progress bar's name to a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Restore progress'**
+  String get a11yRestoreProgress;
+
+  /// screens/notes_export_screen.dart: the progress bar's name to a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Export progress'**
+  String get a11yExportProgress;
+
+  /// screens/lock_file_screen.dart: the progress bar's name to a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Locking progress'**
+  String get a11yLockFileProgress;
+
+  /// screens/clean_screen.dart: the progress bar's name to a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaning progress'**
+  String get a11yCleanProgress;
+
+  /// widgets/menu_backdrop.dart: the long-press menu's name to a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Message actions'**
+  String get a11yMessageActions;
+
+  /// widgets/voice_mic.dart: the mic with a screen reader on, a tap records
+  ///
+  /// In en, this message translates to:
+  /// **'Record a voice note'**
+  String get a11yRecordVoiceNote;
+
+  /// widgets/voice_mic.dart: said once when a tap starts a recording
+  ///
+  /// In en, this message translates to:
+  /// **'Recording'**
+  String get a11yRecording;
+
+  /// widgets/media_bubbles.dart: a photo tile to a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Photo, {date}'**
+  String a11yPhotoOn(String date);
+
+  /// widgets/media_bubbles.dart: a photo tile to a screen reader, with who sent it
+  ///
+  /// In en, this message translates to:
+  /// **'Photo from {name}, {date}'**
+  String a11yPhotoFrom(String name, String date);
+
+  /// widgets/media_bubbles.dart: a video tile to a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Video, {date}'**
+  String a11yVideoOn(String date);
+
+  /// widgets/media_bubbles.dart: a video tile to a screen reader, with who sent it
+  ///
+  /// In en, this message translates to:
+  /// **'Video from {name}, {date}'**
+  String a11yVideoFrom(String name, String date);
+
+  /// widgets/say.dart: new messages in the open chat, said with a screen reader on
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{New message} other{{count} new messages}}'**
+  String a11yNewMessages(int count);
 }
 
 class _AppLocalizationsDelegate

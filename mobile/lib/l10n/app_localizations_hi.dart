@@ -1381,10 +1381,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'यह दोनों फ़ोन से हट जाएगा, अगर पहले ही सेव न किया गया हो। इसे पलटा नहीं जा सकता।';
 
   @override
-  String get chatAlbumItDisappearsWithNo =>
-      'यह एल्बम दोनों फ़ोन से हट जाएगा, अगर पहले ही सेव न किया गया हो। इसे पलटा नहीं जा सकता।';
-
-  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -2630,10 +2626,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'यह सबके फ़ोन से हट जाएगा, अगर पहले ही सेव न किया गया हो। इसे पलटा नहीं जा सकता।';
 
   @override
-  String get groupChatAlbumItDisappearsWithNo =>
-      'यह एल्बम सबके फ़ोन से हट जाएगा, अगर पहले ही सेव न किया गया हो। इसे पलटा नहीं जा सकता।';
-
-  @override
   String get groupChatUnsend => 'वापस लें';
 
   @override
@@ -3181,9 +3173,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get homeAddSomeone => 'किसी को जोड़ें';
-
-  @override
-  String get homeInviteSomeone => 'किसी को बुलाएँ';
 
   @override
   String get homeArchived => 'आर्काइव';
@@ -4046,43 +4035,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingContinue => 'आगे बढ़ें →';
-
-  @override
-  String get onboardingNameHeadline => 'चाहें तो एक सार्वजनिक *@नाम*।';
-
-  @override
-  String get onboardingNameLine =>
-      'सार्वजनिक नाम से लोग आपको ढूँढ सकते हैं। इसे छोड़ने से आप ज़्यादा निजी रहते हैं, आप इसे बाद में कभी भी जोड़ सकते हैं।';
-
-  @override
-  String get onboardingNameSkip => 'अभी छोड़ें →';
-
-  @override
-  String onboardingNameClaim(Object handle) {
-    return '@$handle लें →';
-  }
-
-  @override
-  String get onboardingInviteHeadline => 'अब, *किसी को बुलाएँ*।';
-
-  @override
-  String get onboardingInviteLead =>
-      'किसी भी मैसेंजर में एक लिंक भेजें। वह Kryfo खोलता है, या दिखाता है कि उसे कहाँ से पाएँ।';
-
-  @override
-  String get onboardingInviteSomeone => 'किसी को बुलाएँ →';
-
-  @override
-  String get onboardingInviteGettingReady => 'आपका लिंक तैयार हो रहा है…';
-
-  @override
-  String inviteShareText(Object myId, Object link, Object download) {
-    return 'मुझे Kryfo पर जोड़ें। वहाँ मेरा नाम $myId है\n\nमुझे जोड़ने के लिए टैप करें:\n$link\n\nअभी Kryfo नहीं है? यहाँ से पाएँ:\n$download\n\nKryfo एक निजी मैसेंजर है। न फ़ोन नंबर, न ईमेल।';
-  }
-
-  @override
-  String get inviteNotReady =>
-      'आपका लिंक लगभग तैयार है। थोड़ी देर में फिर कोशिश करें।';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -9740,6 +9692,216 @@ class AppLocalizationsHi extends AppLocalizations {
       'चलते समय Kryfo को मेमोरी में एक निजी फ़ोल्डर चाहिए, और यह कंप्यूटर ऐसा कोई फ़ोल्डर नहीं देता, इसलिए यह नहीं खुलेगा।';
 
   @override
+  String get inviteNotYet =>
+      'यह न्योता अभी मान्य नहीं है। अपने फ़ोन का समय जाँचें।';
+
+  @override
+  String get inviteExpired => 'यह न्योता समाप्त हो गया है। नया माँगें।';
+
+  @override
+  String get inviteDamaged => 'यह न्योता खराब है। नया माँगें।';
+
+  @override
+  String get helloSent => 'अनुरोध भेजा गया। ऑनलाइन होने पर वे इसे देखेंगे।';
+
+  @override
+  String get inviteNeeds06 => 'Kryfo 0.6 या नया चाहिए।';
+
+  @override
+  String get helloSentOld =>
+      'अनुरोध भेजा गया। अगर वे Kryfo का पुराना संस्करण इस्तेमाल करते हैं, तो उन्हें पहले अपडेट करना होगा।';
+
+  @override
+  String get modesPickHow =>
+      'चुनें कि आपके संदेश कैसे जाएँ। आप इसे कभी भी बदल सकते हैं।';
+
+  @override
+  String get modesPrivate => 'प्राइवेट';
+
+  @override
+  String get modesPrivateTag => 'Tor · ज़रूरत पर ब्रिज';
+
+  @override
+  String get modesPrivateLine =>
+      'आपका IP पता या आप कौन हैं, यह कोई नहीं जान पाता, हमारे सर्वर भी नहीं। रोक के आसपास रास्ता खुद ढूँढ लेता है।';
+
+  @override
+  String get modesDefault => 'डिफ़ॉल्ट';
+
+  @override
+  String get modesFastTag => 'सीधे हमारे सर्वर तक';
+
+  @override
+  String get modesFastLine =>
+      'Tor को छोड़ देता है, इसलिए संदेश जल्दी पहुँचते हैं और बैटरी कम लगती है। हमारे सर्वर आपका IP पता सिर्फ़ तब देखते हैं जब आप जुड़े हों, और उसे कभी दर्ज नहीं करते, न रखते हैं। आप क्या कहते हैं, यह कभी नहीं। आपके संपर्क इसे कभी नहीं देखते।';
+
+  @override
+  String get modesFastConnected => 'तेज़ · जुड़ा है';
+
+  @override
+  String get modesFastConnecting => 'तेज़ · जुड़ रहा है';
+
+  @override
+  String get modesFastDown => 'तेज़ · हमारे सर्वर जवाब नहीं दे रहे';
+
+  @override
+  String get modesBackupReady =>
+      'एक बैकअप हमेशा तैयार रहता है, इसलिए एक बंद हो जाए तब भी आप जुड़े रहते हैं।';
+
+  @override
+  String get modesDetails => 'विवरण';
+
+  @override
+  String get modesBothLine =>
+      'दोनों हर संदेश को एंड-टू-एंड एन्क्रिप्टेड रखते हैं। बस यह बदलता है कि आपका IP पता कौन देख सकता है।';
+
+  @override
+  String get modesConnectionBridges => 'कनेक्शन और ब्रिज';
+
+  @override
+  String get modesWhatServersSee => 'हमारे सर्वर क्या देख सकते हैं';
+
+  @override
+  String get serversTitle => 'तेज़ के सर्वर';
+
+  @override
+  String get serversLine =>
+      'हर संदेश एक साथ दोनों सर्वर पर जाता है। जो पहले जवाब दे, वही उसे पहुँचाता है, और एक रुक जाए तो दूसरा संभाल लेता है।';
+
+  @override
+  String get serversOne => 'सर्वर 1';
+
+  @override
+  String get serversTwo => 'सर्वर 2 · दूसरी कंपनी';
+
+  @override
+  String get serversConnected => 'जुड़ा है';
+
+  @override
+  String get serversConnecting => 'जुड़ रहा है';
+
+  @override
+  String get serversNotAnswering => 'जवाब नहीं दे रहा';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String get serversQuicker => 'ज़्यादा तेज़';
+
+  @override
+  String get serversBackups => 'सार्वजनिक रिले';
+
+  @override
+  String get serversBackupsLine =>
+      'जब तक सर्वर 1 बंद है, तब तक इस्तेमाल होते हैं, और सिर्फ़ Tor से, इसलिए ये आपका IP पता कभी नहीं देखते।';
+
+  @override
+  String get serversStandingBy => 'तैयार खड़े';
+
+  @override
+  String get serversInUse => 'इस्तेमाल में';
+
+  @override
+  String get homeMergedTitle => 'रिले और तेज़ अब एक हैं';
+
+  @override
+  String get homeMergedLine =>
+      'आप तेज़ पर हैं। एक बैकअप सर्वर हमेशा तैयार रहता है, इसलिए एक बंद हो जाए तब भी आप जुड़े रहते हैं। हमारे सर्वर आपका IP पता देखते हैं, आप क्या कहते हैं यह कभी नहीं।';
+
+  @override
+  String get homeMergedGotIt => 'समझ गया';
+
+  @override
+  String get homeMergedUsePrivate => 'इसकी जगह प्राइवेट चुनें';
+
+  @override
+  String get homeOursDownTitle => 'हमारे सर्वर जवाब नहीं दे रहे';
+
+  @override
+  String get homeOursDownLine =>
+      'कुछ मिनट बाद, जब Tor जुड़ जाए, संदेश सार्वजनिक रिले से भी जाते हैं, और जैसे ही हमारा कोई सर्वर जवाब दे, फिर उसी से।';
+
+  @override
+  String get homeUsePrivate => 'प्राइवेट चुनें';
+
+  @override
+  String get homeSwitchedToPrivate => 'प्राइवेट पर आ गए';
+
+  @override
+  String get homeUseFast => 'तेज़ चुनें';
+
+  @override
+  String get homeSwitchedToFastRoute => 'तेज़ पर आ गए';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'तेज़ सीधे हमारे सर्वर तक जाता है और आम तौर पर पहुँच जाता है। या Kryfo को खुद रास्ता ढूँढने दें।';
+
+  @override
+  String get appServersNotAnswering => 'सर्वर चुप हैं';
+
+  @override
+  String get settingsPrivateTor => 'प्राइवेट · Tor';
+
+  @override
+  String get seenOurServers => 'हमारे सर्वर';
+
+  @override
+  String get seenIpWhy =>
+      'प्राइवेट पर सब कुछ Tor से निकलता है और हमारे सर्वर एक एग्ज़िट नोड देखते हैं, आपको कभी नहीं। तेज़ पर कनेक्शन सीधे हमारे दो सर्वर तक जाता है: जब तक आप जुड़े हैं वे आपका IP पता देखते हैं और उसका कोई रिकॉर्ड नहीं रखते। जब पहला बंद हो, तेज़ सार्वजनिक रिले भी इस्तेमाल करता है, सिर्फ़ Tor से।';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'यह एल्बम दोनों फ़ोन से हट जाएगा, अगर पहले ही सेव न किया गया हो। इसे पलटा नहीं जा सकता।';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'यह एल्बम सबके फ़ोन से हट जाएगा, अगर पहले ही सेव न किया गया हो। इसे पलटा नहीं जा सकता।';
+
+  @override
+  String get homeInviteSomeone => 'किसी को बुलाएँ';
+
+  @override
+  String get onboardingNameHeadline => 'चाहें तो एक सार्वजनिक *@नाम*।';
+
+  @override
+  String get onboardingNameLine =>
+      'सार्वजनिक नाम से लोग आपको ढूँढ सकते हैं। इसे छोड़ने से आप ज़्यादा निजी रहते हैं, आप इसे बाद में कभी भी जोड़ सकते हैं।';
+
+  @override
+  String get onboardingNameSkip => 'अभी छोड़ें →';
+
+  @override
+  String onboardingNameClaim(Object handle) {
+    return '@$handle लें →';
+  }
+
+  @override
+  String get onboardingInviteHeadline => 'अब, *किसी को बुलाएँ*।';
+
+  @override
+  String get onboardingInviteLead =>
+      'किसी भी मैसेंजर में एक लिंक भेजें। वह Kryfo खोलता है, या दिखाता है कि उसे कहाँ से पाएँ।';
+
+  @override
+  String get onboardingInviteSomeone => 'किसी को बुलाएँ →';
+
+  @override
+  String get onboardingInviteGettingReady => 'आपका लिंक तैयार हो रहा है…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'मुझे Kryfo पर जोड़ें। वहाँ मेरा नाम $myId है\n\nमुझे जोड़ने के लिए टैप करें:\n$link\n\nअभी Kryfo नहीं है? यहाँ से पाएँ:\n$download\n\nKryfo एक निजी मैसेंजर है। न फ़ोन नंबर, न ईमेल।';
+  }
+
+  @override
+  String get inviteNotReady =>
+      'आपका लिंक लगभग तैयार है। थोड़ी देर में फिर कोशिश करें।';
+
+  @override
   String get photoCropTitle => 'खिसकाएँ और आकार बदलें';
 
   @override
@@ -9892,146 +10054,4 @@ class AppLocalizationsHi extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get modesPickHow =>
-      'चुनें कि आपके संदेश कैसे जाएँ। आप इसे कभी भी बदल सकते हैं।';
-
-  @override
-  String get modesPrivate => 'प्राइवेट';
-
-  @override
-  String get modesPrivateTag => 'Tor · ज़रूरत पर ब्रिज';
-
-  @override
-  String get modesPrivateLine =>
-      'आपका IP पता या आप कौन हैं, यह कोई नहीं जान पाता, हमारे सर्वर भी नहीं। रोक के आसपास रास्ता खुद ढूँढ लेता है।';
-
-  @override
-  String get modesDefault => 'डिफ़ॉल्ट';
-
-  @override
-  String get modesFastTag => 'सीधे हमारे सर्वर तक';
-
-  @override
-  String get modesFastLine =>
-      'Tor को छोड़ देता है, इसलिए संदेश जल्दी पहुँचते हैं और बैटरी कम लगती है। हमारे सर्वर आपका IP पता सिर्फ़ तब देखते हैं जब आप जुड़े हों, और उसे कभी दर्ज नहीं करते, न रखते हैं। आप क्या कहते हैं, यह कभी नहीं। आपके संपर्क इसे कभी नहीं देखते।';
-
-  @override
-  String get modesFastConnected => 'तेज़ · जुड़ा है';
-
-  @override
-  String get modesFastConnecting => 'तेज़ · जुड़ रहा है';
-
-  @override
-  String get modesFastDown => 'तेज़ · हमारे सर्वर जवाब नहीं दे रहे';
-
-  @override
-  String get modesBackupReady =>
-      'एक बैकअप हमेशा तैयार रहता है, इसलिए एक बंद हो जाए तब भी आप जुड़े रहते हैं।';
-
-  @override
-  String get modesDetails => 'विवरण';
-
-  @override
-  String get modesBothLine =>
-      'दोनों हर संदेश को एंड-टू-एंड एन्क्रिप्टेड रखते हैं। बस यह बदलता है कि आपका IP पता कौन देख सकता है।';
-
-  @override
-  String get modesConnectionBridges => 'कनेक्शन और ब्रिज';
-
-  @override
-  String get modesWhatServersSee => 'हमारे सर्वर क्या देख सकते हैं';
-
-  @override
-  String get serversTitle => 'तेज़ के सर्वर';
-
-  @override
-  String get serversLine =>
-      'हर संदेश एक साथ दोनों सर्वर पर जाता है। जो पहले जवाब दे, वही उसे पहुँचाता है, और एक रुक जाए तो दूसरा संभाल लेता है।';
-
-  @override
-  String get serversOne => 'सर्वर 1';
-
-  @override
-  String get serversTwo => 'सर्वर 2 · दूसरी कंपनी';
-
-  @override
-  String get serversConnected => 'जुड़ा है';
-
-  @override
-  String get serversConnecting => 'जुड़ रहा है';
-
-  @override
-  String get serversNotAnswering => 'जवाब नहीं दे रहा';
-
-  @override
-  String serversMs(int ms) {
-    return '$ms ms';
-  }
-
-  @override
-  String get serversQuicker => 'ज़्यादा तेज़';
-
-  @override
-  String get serversBackups => 'सार्वजनिक रिले';
-
-  @override
-  String get serversBackupsLine =>
-      'जब तक सर्वर 1 बंद है, तब तक इस्तेमाल होते हैं, और सिर्फ़ Tor से, इसलिए ये आपका IP पता कभी नहीं देखते।';
-
-  @override
-  String get serversStandingBy => 'तैयार खड़े';
-
-  @override
-  String get serversInUse => 'इस्तेमाल में';
-
-  @override
-  String get homeMergedTitle => 'रिले और तेज़ अब एक हैं';
-
-  @override
-  String get homeMergedLine =>
-      'आप तेज़ पर हैं। एक बैकअप सर्वर हमेशा तैयार रहता है, इसलिए एक बंद हो जाए तब भी आप जुड़े रहते हैं। हमारे सर्वर आपका IP पता देखते हैं, आप क्या कहते हैं यह कभी नहीं।';
-
-  @override
-  String get homeMergedGotIt => 'समझ गया';
-
-  @override
-  String get homeMergedUsePrivate => 'इसकी जगह प्राइवेट चुनें';
-
-  @override
-  String get homeOursDownTitle => 'हमारे सर्वर जवाब नहीं दे रहे';
-
-  @override
-  String get homeOursDownLine =>
-      'कुछ मिनट बाद, जब Tor जुड़ जाए, संदेश सार्वजनिक रिले से भी जाते हैं, और जैसे ही हमारा कोई सर्वर जवाब दे, फिर उसी से।';
-
-  @override
-  String get homeUsePrivate => 'प्राइवेट चुनें';
-
-  @override
-  String get homeSwitchedToPrivate => 'प्राइवेट पर आ गए';
-
-  @override
-  String get homeUseFast => 'तेज़ चुनें';
-
-  @override
-  String get homeSwitchedToFastRoute => 'तेज़ पर आ गए';
-
-  @override
-  String get bridgesFastGetsThrough =>
-      'तेज़ सीधे हमारे सर्वर तक जाता है और आम तौर पर पहुँच जाता है। या Kryfo को खुद रास्ता ढूँढने दें।';
-
-  @override
-  String get appServersNotAnswering => 'सर्वर चुप हैं';
-
-  @override
-  String get settingsPrivateTor => 'प्राइवेट · Tor';
-
-  @override
-  String get seenOurServers => 'हमारे सर्वर';
-
-  @override
-  String get seenIpWhy =>
-      'प्राइवेट पर सब कुछ Tor से निकलता है और हमारे सर्वर एक एग्ज़िट नोड देखते हैं, आपको कभी नहीं। तेज़ पर कनेक्शन सीधे हमारे दो सर्वर तक जाता है: जब तक आप जुड़े हैं वे आपका IP पता देखते हैं और उसका कोई रिकॉर्ड नहीं रखते। जब पहला बंद हो, तेज़ सार्वजनिक रिले भी इस्तेमाल करता है, सिर्फ़ Tor से।';
 }

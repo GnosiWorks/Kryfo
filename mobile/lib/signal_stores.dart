@@ -213,6 +213,9 @@ class LsPreKeyStore extends _ById {
     await _drop(id);
   }
 
+  /// the v3 invite's key gone for good (its invite's year is over)
+  Future<void> dropInvite() => _drop(invitePreKeyId);
+
   /// a new key in the invite's slot (reset my invite link)
   Future<void> replaceInvite(Uint8List record) => store(invitePreKeyId, record);
 }

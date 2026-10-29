@@ -771,6 +771,33 @@ mixin _ContactRows {
 
   // someone who asked, or asked and was let go: adding them by their card
   // is the accept they were waiting for
+  /// [onion] for a contact accepted here who has none yet; a held one
+  /// stays
+  Future<void> fillOnion(String haloId, String onion) async {
+    final db = await open();
+    await db.update(
+      'contacts',
+      {'onion': onion},
+      where: "halo_id = ? AND accepted = 1 AND (onion IS NULL OR onion = '')",
+      whereArgs: [haloId],
+    );
+  }
+
+  /// a hello owed to the identity [ownerHex] (0x05 and its x key),
+  /// answering its invite [answersHex] (all zero: a v3 link) at the
+  /// first-contact key [fc]: kept until it went
+  Future<void> oweHello(String ownerHex, String answersHex, String fc) async {
+    final db = await open();
+    await db.insert('hellos', {
+      'ident': kMainIdent,
+      'way': kHelloWant,
+      'peer': ownerHex,
+      'invite_id': answersHex,
+      'fc': fc,
+      'at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
   Future<bool> askedBefore(String haloId) async {
     final db = await open();
     final r = await db.rawQuery(
@@ -1305,7 +1332,9 @@ const kRequestRows =
     'EXISTS (SELECT 1 FROM messages m WHERE m.peer_id = contacts.halo_id '
     'AND m.group_id IS NULL) OR '
     'EXISTS (SELECT 1 FROM held_onion h WHERE h.peer_id = contacts.halo_id) OR '
-    'EXISTS (SELECT 1 FROM vouches v WHERE v.halo_id = contacts.halo_id))';
+    'EXISTS (SELECT 1 FROM vouches v WHERE v.halo_id = contacts.halo_id) OR '
+    "EXISTS (SELECT 1 FROM hellos hl WHERE hl.way = 'in' "
+    'AND hl.peer = contacts.ikey AND hl.ident = contacts.ident))';
 
 /// a request as the inbox shows it, or one declined and parked since
 @visibleForTesting

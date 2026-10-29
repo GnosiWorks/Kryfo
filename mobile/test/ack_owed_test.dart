@@ -73,6 +73,10 @@ class _Io extends ArrivalIo {
   Exception Function(String peer)? sealWaits;
 
   @override
+  Future<({int ident, String cipher})> seal(String peer, String plain) async =>
+      (ident: 0, cipher: await encrypt(peer, plain));
+
+  @override
   Future<String> encrypt(String peer, String plain) async {
     final w = sealWaits;
     if (w != null) throw w(peer);

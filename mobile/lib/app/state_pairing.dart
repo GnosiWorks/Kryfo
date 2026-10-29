@@ -218,6 +218,7 @@ extension AppStatePairing on AppState {
   Future<(String, RouteTo)?> backPairFromCipher(
     String cipher, {
     Reached? reached,
+    InviteArrival? v4,
   }) async {
     final epoch = _openedEpoch;
     final k = sha256.convert(utf8.encode(cipher)).toString();
@@ -228,7 +229,9 @@ extension AppStatePairing on AppState {
       o = _firstOpened.take(k);
       if (o == null) {
         _receiver = this;
-        final opened = await _io.openFirstContact(cipher);
+        final opened = v4 == null
+            ? await _io.openFirstContact(cipher)
+            : await _openFirst(cipher, v4: v4);
         if (opened == null) return null;
         o = _FirstOpen(opened.haloId, opened.plain, opened.env);
       }

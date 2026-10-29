@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'desktop/desktop_mode.dart' show canShareOut;
+import 'invites.dart' show isV4Link;
 import 'l10n/app_locale.dart' show currentLanguage;
 import 'l10n/l10n.dart';
 import 'lock_state.dart';
@@ -45,14 +46,16 @@ final _webInvite = RegExp(
   caseSensitive: false,
 );
 
-/// the text the share sheet carries: the name, the page, the download page
+/// the text the share sheet carries: the name, the page, the download page,
+/// and for a v4 link the line saying it needs 0.6 (0.5 reads it as invalid)
 String inviteShareText(String id, String kryfo, {String? lang}) {
   final web = webInviteOf(kryfo) ?? kryfo;
-  return l10n.inviteShareText(
+  final text = l10n.inviteShareText(
     id,
     web,
     downloadPageFor(lang ?? currentLanguage),
   );
+  return isV4Link(kryfo) ? '$text\n${l10n.inviteNeeds06}' : text;
 }
 
 /// the invite once the onion address is known: the first start may still be

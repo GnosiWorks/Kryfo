@@ -1414,10 +1414,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Оно удалится с обоих телефонов, если его ещё не сохранили. Это нельзя отменить.';
 
   @override
-  String get chatAlbumItDisappearsWithNo =>
-      'Альбом удалится с обоих телефонов, если его ещё не сохранили. Это нельзя отменить.';
-
-  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -2685,10 +2681,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Оно удалится с телефонов всех участников, если его ещё не сохранили. Это нельзя отменить.';
 
   @override
-  String get groupChatAlbumItDisappearsWithNo =>
-      'Альбом удалится с телефонов всех участников, если его ещё не сохранили. Это нельзя отменить.';
-
-  @override
   String get groupChatUnsend => 'Отозвать';
 
   @override
@@ -3257,9 +3249,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get homeAddSomeone => 'Добавить человека';
-
-  @override
-  String get homeInviteSomeone => 'Пригласить';
 
   @override
   String get homeArchived => 'Архив';
@@ -4140,43 +4129,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get onboardingContinue => 'Дальше →';
-
-  @override
-  String get onboardingNameHeadline => 'Публичное *@имя*, если хочешь.';
-
-  @override
-  String get onboardingNameLine =>
-      'Публичное имя помогает людям найти тебя. Без него ты приватнее, а добавить его можно в любой момент.';
-
-  @override
-  String get onboardingNameSkip => 'Пока пропустить →';
-
-  @override
-  String onboardingNameClaim(Object handle) {
-    return 'Занять @$handle →';
-  }
-
-  @override
-  String get onboardingInviteHeadline => 'Теперь *пригласи кого-нибудь*.';
-
-  @override
-  String get onboardingInviteLead =>
-      'Отправь ссылку в любом мессенджере. Она откроет Kryfo или покажет, где его скачать.';
-
-  @override
-  String get onboardingInviteSomeone => 'Пригласить →';
-
-  @override
-  String get onboardingInviteGettingReady => 'Готовим ссылку…';
-
-  @override
-  String inviteShareText(Object myId, Object link, Object download) {
-    return 'Добавь меня в Kryfo. Там меня зовут $myId\n\nНажми, чтобы добавить:\n$link\n\nЕщё нет Kryfo? Скачай здесь:\n$download\n\nKryfo — приватный мессенджер. Без номера телефона и без почты.';
-  }
-
-  @override
-  String get inviteNotReady =>
-      'Ссылка почти готова. Попробуй ещё раз чуть позже.';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -9905,6 +9857,216 @@ class AppLocalizationsRu extends AppLocalizations {
       'Kryfo нужна личная папка в памяти, пока он работает, а этот компьютер её не даёт, поэтому Kryfo не откроется.';
 
   @override
+  String get inviteNotYet =>
+      'Это приглашение ещё не действует. Проверьте время на телефоне.';
+
+  @override
+  String get inviteExpired => 'Срок этого приглашения истёк. Попросите новое.';
+
+  @override
+  String get inviteDamaged => 'Это приглашение повреждено. Попросите новое.';
+
+  @override
+  String get helloSent => 'Запрос отправлен. Его увидят, когда будут в сети.';
+
+  @override
+  String get inviteNeeds06 => 'Нужен Kryfo 0.6 или новее.';
+
+  @override
+  String get helloSentOld =>
+      'Запрос отправлен. Если у них старая версия Kryfo, им сначала нужно обновиться.';
+
+  @override
+  String get modesPickHow =>
+      'Выбери, как идут твои сообщения. Это можно поменять в любой момент.';
+
+  @override
+  String get modesPrivate => 'Приватный';
+
+  @override
+  String get modesPrivateTag => 'Tor · мосты при необходимости';
+
+  @override
+  String get modesPrivateLine =>
+      'Никто не узнаёт твой IP-адрес и кто ты, даже наши серверы. Сам находит обход блокировок.';
+
+  @override
+  String get modesDefault => 'По умолчанию';
+
+  @override
+  String get modesFastTag => 'Напрямую к нашим серверам';
+
+  @override
+  String get modesFastLine =>
+      'Без Tor сообщения приходят быстрее и тратят меньше заряда. Наши серверы видят твой IP-адрес только пока ты подключён и никогда его не записывают и не хранят. И никогда не видят, что ты пишешь. Твои контакты его никогда не видят.';
+
+  @override
+  String get modesFastConnected => 'Быстрый · подключено';
+
+  @override
+  String get modesFastConnecting => 'Быстрый · подключение';
+
+  @override
+  String get modesFastDown => 'Быстрый · наши серверы не отвечают';
+
+  @override
+  String get modesBackupReady =>
+      'Запасной всегда наготове, так что связь не пропадёт, даже если один упадёт.';
+
+  @override
+  String get modesDetails => 'Подробнее';
+
+  @override
+  String get modesBothLine =>
+      'Оба шифруют каждое сообщение сквозным шифрованием. Меняется только то, кто видит твой IP-адрес.';
+
+  @override
+  String get modesConnectionBridges => 'Подключение и мосты';
+
+  @override
+  String get modesWhatServersSee => 'Что видят наши серверы';
+
+  @override
+  String get serversTitle => 'Серверы режима «Быстрый»';
+
+  @override
+  String get serversLine =>
+      'Каждое сообщение идёт сразу на оба сервера. Доставляет тот, кто ответит первым, а если один остановится, его подхватит второй.';
+
+  @override
+  String get serversOne => 'Сервер 1';
+
+  @override
+  String get serversTwo => 'Сервер 2 · другой хостинг';
+
+  @override
+  String get serversConnected => 'Подключён';
+
+  @override
+  String get serversConnecting => 'Подключение';
+
+  @override
+  String get serversNotAnswering => 'Не отвечает';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms мс';
+  }
+
+  @override
+  String get serversQuicker => 'Быстрее';
+
+  @override
+  String get serversBackups => 'Публичные ретрансляторы';
+
+  @override
+  String get serversBackupsLine =>
+      'Используются, пока Сервер 1 недоступен, и только через Tor, так что твой IP-адрес они не видят.';
+
+  @override
+  String get serversStandingBy => 'Наготове';
+
+  @override
+  String get serversInUse => 'Используются';
+
+  @override
+  String get homeMergedTitle => 'Ретранслятор и Быстрый теперь одно';
+
+  @override
+  String get homeMergedLine =>
+      'Ты на режиме «Быстрый». Запасной сервер всегда наготове, так что связь не пропадёт, даже если один упадёт. Наши серверы видят твой IP-адрес, но никогда не видят, что ты пишешь.';
+
+  @override
+  String get homeMergedGotIt => 'Понятно';
+
+  @override
+  String get homeMergedUsePrivate => 'Лучше Приватный';
+
+  @override
+  String get homeOursDownTitle => 'Наши серверы не отвечают';
+
+  @override
+  String get homeOursDownLine =>
+      'Через несколько минут, когда Tor пробьётся, сообщения пойдут ещё и через публичные ретрансляторы, а как только один из наших серверов ответит, снова через него.';
+
+  @override
+  String get homeUsePrivate => 'Приватный';
+
+  @override
+  String get homeSwitchedToPrivate => 'Включён Приватный';
+
+  @override
+  String get homeUseFast => 'Быстрый';
+
+  @override
+  String get homeSwitchedToFastRoute => 'Включён Быстрый';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'Быстрый идёт напрямую к нашим серверам и обычно проходит. Или пусть Kryfo сам найдёт путь.';
+
+  @override
+  String get appServersNotAnswering => 'Серверы не отвечают';
+
+  @override
+  String get settingsPrivateTor => 'Приватный · Tor';
+
+  @override
+  String get seenOurServers => 'Наши серверы';
+
+  @override
+  String get seenIpWhy =>
+      'В режиме «Приватный» всё уходит через Tor, и наши серверы видят выходной узел, а не тебя. В режиме «Быстрый» соединение идёт напрямую к двум нашим серверам: они видят твой IP-адрес, пока ты подключён, и ничего о нём не хранят. Пока первый недоступен, «Быстрый» использует ещё и публичные ретрансляторы, только через Tor.';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'Альбом удалится с обоих телефонов, если его ещё не сохранили. Это нельзя отменить.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'Альбом удалится с телефонов всех участников, если его ещё не сохранили. Это нельзя отменить.';
+
+  @override
+  String get homeInviteSomeone => 'Пригласить';
+
+  @override
+  String get onboardingNameHeadline => 'Публичное *@имя*, если хочешь.';
+
+  @override
+  String get onboardingNameLine =>
+      'Публичное имя помогает людям найти тебя. Без него ты приватнее, а добавить его можно в любой момент.';
+
+  @override
+  String get onboardingNameSkip => 'Пока пропустить →';
+
+  @override
+  String onboardingNameClaim(Object handle) {
+    return 'Занять @$handle →';
+  }
+
+  @override
+  String get onboardingInviteHeadline => 'Теперь *пригласи кого-нибудь*.';
+
+  @override
+  String get onboardingInviteLead =>
+      'Отправь ссылку в любом мессенджере. Она откроет Kryfo или покажет, где его скачать.';
+
+  @override
+  String get onboardingInviteSomeone => 'Пригласить →';
+
+  @override
+  String get onboardingInviteGettingReady => 'Готовим ссылку…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'Добавь меня в Kryfo. Там меня зовут $myId\n\nНажми, чтобы добавить:\n$link\n\nЕщё нет Kryfo? Скачай здесь:\n$download\n\nKryfo — приватный мессенджер. Без номера телефона и без почты.';
+  }
+
+  @override
+  String get inviteNotReady =>
+      'Ссылка почти готова. Попробуй ещё раз чуть позже.';
+
+  @override
   String get photoCropTitle => 'Переместите и масштабируйте';
 
   @override
@@ -10063,146 +10225,4 @@ class AppLocalizationsRu extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get modesPickHow =>
-      'Выбери, как идут твои сообщения. Это можно поменять в любой момент.';
-
-  @override
-  String get modesPrivate => 'Приватный';
-
-  @override
-  String get modesPrivateTag => 'Tor · мосты при необходимости';
-
-  @override
-  String get modesPrivateLine =>
-      'Никто не узнаёт твой IP-адрес и кто ты, даже наши серверы. Сам находит обход блокировок.';
-
-  @override
-  String get modesDefault => 'По умолчанию';
-
-  @override
-  String get modesFastTag => 'Напрямую к нашим серверам';
-
-  @override
-  String get modesFastLine =>
-      'Без Tor сообщения приходят быстрее и тратят меньше заряда. Наши серверы видят твой IP-адрес только пока ты подключён и никогда его не записывают и не хранят. И никогда не видят, что ты пишешь. Твои контакты его никогда не видят.';
-
-  @override
-  String get modesFastConnected => 'Быстрый · подключено';
-
-  @override
-  String get modesFastConnecting => 'Быстрый · подключение';
-
-  @override
-  String get modesFastDown => 'Быстрый · наши серверы не отвечают';
-
-  @override
-  String get modesBackupReady =>
-      'Запасной всегда наготове, так что связь не пропадёт, даже если один упадёт.';
-
-  @override
-  String get modesDetails => 'Подробнее';
-
-  @override
-  String get modesBothLine =>
-      'Оба шифруют каждое сообщение сквозным шифрованием. Меняется только то, кто видит твой IP-адрес.';
-
-  @override
-  String get modesConnectionBridges => 'Подключение и мосты';
-
-  @override
-  String get modesWhatServersSee => 'Что видят наши серверы';
-
-  @override
-  String get serversTitle => 'Серверы режима «Быстрый»';
-
-  @override
-  String get serversLine =>
-      'Каждое сообщение идёт сразу на оба сервера. Доставляет тот, кто ответит первым, а если один остановится, его подхватит второй.';
-
-  @override
-  String get serversOne => 'Сервер 1';
-
-  @override
-  String get serversTwo => 'Сервер 2 · другой хостинг';
-
-  @override
-  String get serversConnected => 'Подключён';
-
-  @override
-  String get serversConnecting => 'Подключение';
-
-  @override
-  String get serversNotAnswering => 'Не отвечает';
-
-  @override
-  String serversMs(int ms) {
-    return '$ms мс';
-  }
-
-  @override
-  String get serversQuicker => 'Быстрее';
-
-  @override
-  String get serversBackups => 'Публичные ретрансляторы';
-
-  @override
-  String get serversBackupsLine =>
-      'Используются, пока Сервер 1 недоступен, и только через Tor, так что твой IP-адрес они не видят.';
-
-  @override
-  String get serversStandingBy => 'Наготове';
-
-  @override
-  String get serversInUse => 'Используются';
-
-  @override
-  String get homeMergedTitle => 'Ретранслятор и Быстрый теперь одно';
-
-  @override
-  String get homeMergedLine =>
-      'Ты на режиме «Быстрый». Запасной сервер всегда наготове, так что связь не пропадёт, даже если один упадёт. Наши серверы видят твой IP-адрес, но никогда не видят, что ты пишешь.';
-
-  @override
-  String get homeMergedGotIt => 'Понятно';
-
-  @override
-  String get homeMergedUsePrivate => 'Лучше Приватный';
-
-  @override
-  String get homeOursDownTitle => 'Наши серверы не отвечают';
-
-  @override
-  String get homeOursDownLine =>
-      'Через несколько минут, когда Tor пробьётся, сообщения пойдут ещё и через публичные ретрансляторы, а как только один из наших серверов ответит, снова через него.';
-
-  @override
-  String get homeUsePrivate => 'Приватный';
-
-  @override
-  String get homeSwitchedToPrivate => 'Включён Приватный';
-
-  @override
-  String get homeUseFast => 'Быстрый';
-
-  @override
-  String get homeSwitchedToFastRoute => 'Включён Быстрый';
-
-  @override
-  String get bridgesFastGetsThrough =>
-      'Быстрый идёт напрямую к нашим серверам и обычно проходит. Или пусть Kryfo сам найдёт путь.';
-
-  @override
-  String get appServersNotAnswering => 'Серверы не отвечают';
-
-  @override
-  String get settingsPrivateTor => 'Приватный · Tor';
-
-  @override
-  String get seenOurServers => 'Наши серверы';
-
-  @override
-  String get seenIpWhy =>
-      'В режиме «Приватный» всё уходит через Tor, и наши серверы видят выходной узел, а не тебя. В режиме «Быстрый» соединение идёт напрямую к двум нашим серверам: они видят твой IP-адрес, пока ты подключён, и ничего о нём не хранят. Пока первый недоступен, «Быстрый» использует ещё и публичные ретрансляторы, только через Tor.';
 }
