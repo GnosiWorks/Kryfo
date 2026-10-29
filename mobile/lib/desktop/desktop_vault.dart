@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// secure storage on desktop. there is no keystore: libsecret and dpapi hand
-// a secret to any process of the same user. so everything the app keeps in
-// secure storage (database keys, identity keys, settings) lives in one
-// file sealed under a key made from a passphrase asked at every start:
-// scrypt (n 2^17, r 8, p 1) to a key, an hmac of it with fresh bytes for
-// every write, aes-256-gcm through the engine
+// secure storage on desktop. everything the app keeps in secure storage
+// (database keys, identity keys, settings) lives in one file sealed under a
+// random data key, aes-256-gcm through the engine with a key of its own for
+// every write. the data key is kept by the computer account (the system
+// keyring, dpapi), or wrapped under a passphrase asked at every start:
+// scrypt (n 2^17, r 8, p 1)
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi';
@@ -20,6 +20,7 @@ import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage
 
 import '../engine_strings.dart' show engineTakeSecret, freeSecret;
 import 'desktop_posix.dart' show syncFolder;
+import 'system_seal.dart';
 
 /// the shortest passphrase the desktop takes, in characters: as a backup
 const kVaultMinLength = 12;
@@ -29,14 +30,12 @@ const kVaultMinLength = 12;
 const kVaultLogN = 17;
 
 const _magic = [0x4b, 0x52, 0x59, 0x56]; // KRYV
-const _version = 3;
+const _version = 4;
 
 /// the file's size steps: how much is kept shows only to the nearest step
 const kVaultBucket = 16 * 1024;
 const _saltLen = 16;
 const _freshLen = 32;
-// magic, version, cost, salt, fresh bytes
-const _head = 4 + 1 + 1 + _saltLen + _freshLen;
 // the record type the seal binds
 const _type = 0x56;
 
@@ -217,7 +216,38 @@ class _Change {
   }
 }
 
-/// the sealed file and, once opened, what it holds
+/// how the vault's data key is kept: under a passphrase, or by the
+/// computer account
+enum VaultLockKind { passphrase, system }
+
+/// what [DesktopVault.openSealed] found
+enum SealedOpen { opened, missing, unreachable, otherVersion }
+
+// one way to the data key, as written in the file's head
+class _Slot {
+  const _Slot(this.kind, this.data);
+  final int kind;
+  final Uint8List data;
+}
+
+const _slotPass = 1;
+const _slotSystem = 2;
+const _idLen = 16;
+const _slotFreshLen = 16;
+const _dkLen = 32;
+const _wrappedLen = _dkLen + 16;
+
+// the head of a version 4 file, read without any key
+class _Head {
+  const _Head(this.id, this.slots, this.length);
+  final Uint8List id;
+  final List<_Slot> slots;
+  final int length;
+}
+
+/// the sealed file and, once opened, what it holds. version 4: a random
+/// data key seals the body; the head holds that key wrapped once, under a
+/// passphrase or under a secret the computer account keeps
 class DesktopVault {
   DesktopVault(
     this.path, {
@@ -235,8 +265,11 @@ class DesktopVault {
   final Random _random;
   final VaultDisk _disk;
 
-  Uint8List? _salt;
-  int _cost = kVaultLogN;
+  // not secret: both are in the file's head. kept after close so a wipe
+  // can still find what the system keeps
+  Uint8List? _id;
+  List<_Slot> _slots = const [];
+  // the data key
   List<int>? _key;
   // what the file on disk holds
   Map<String, String>? _map;
@@ -246,12 +279,82 @@ class DesktopVault {
   bool get exists => File(path).existsSync();
   bool get isOpen => _map != null;
 
+  /// what the file asks for, read from its head. null without a file. a
+  /// file of an older or unknown version asks for a passphrase: [open]
+  /// tells which
+  VaultLockKind? get lockKind {
+    final Uint8List raw;
+    try {
+      raw = File(path).readAsBytesSync();
+    } catch (_) {
+      return null;
+    }
+    final h = _headOf(raw);
+    if (h == null) return VaultLockKind.passphrase;
+    return h.slots.any((s) => s.kind == _slotPass) || h.slots.isEmpty
+        ? VaultLockKind.passphrase
+        : VaultLockKind.system;
+  }
+
+  /// open, and a passphrase is what opens it
+  bool get hasPassphrase => _slots.any((s) => s.kind == _slotPass);
+
   Uint8List _bytes(int n) =>
       Uint8List.fromList(List.generate(n, (_) => _random.nextInt(256)));
 
-  // a key of its own for every write, so no two seals share key and nonce
-  String _fileKey(List<int> fresh) =>
-      _hex(Hmac(sha256, _key!).convert(fresh).bytes);
+  static final _bodyLabel = utf8.encode('kryfo vault body');
+  static final _slotLabel = utf8.encode('kryfo vault slot');
+
+  // a key of its own for every write, bound to the whole head: a slot
+  // swapped, added or dropped and the body no longer opens
+  String _bodyKey(List<int> dk, List<int> head) =>
+      _hex(Hmac(sha256, dk).convert([..._bodyLabel, ...head]).bytes);
+
+  String _wrapKey(List<int> kek, List<int> fresh) =>
+      _hex(Hmac(sha256, kek).convert([..._slotLabel, ...fresh]).bytes);
+
+  Uint8List? _unwrap(List<int> kek, Uint8List fresh, Uint8List wrapped) {
+    final dk = _crypto.open(_wrapKey(kek, fresh), wrapped);
+    if (dk == null) return null;
+    if (dk.length != _dkLen) {
+      dk.fillRange(0, dk.length, 0);
+      return null;
+    }
+    return dk;
+  }
+
+  _Slot _passSlot(List<int> kek, Uint8List salt, int cost, List<int> dk) {
+    final fresh = _bytes(_slotFreshLen);
+    final w = _crypto.seal(_wrapKey(kek, fresh), Uint8List.fromList(dk));
+    return _Slot(
+      _slotPass,
+      Uint8List.fromList([cost, ...salt, ...fresh, ...w]),
+    );
+  }
+
+  _Slot _systemSlot(SealedSecret s, List<int> sk, List<int> dk) {
+    final fresh = _bytes(_slotFreshLen);
+    final w = _crypto.seal(_wrapKey(sk, fresh), Uint8List.fromList(dk));
+    return _Slot(
+      _slotSystem,
+      Uint8List.fromList([s.how, ...fresh, ...w, ...s.data]),
+    );
+  }
+
+  // a passphrase to a key encryption key, at [cost]
+  Future<List<int>?> _kek(String passphrase, Uint8List salt, int cost) async {
+    final k = await _crypto.keyOf(passphrase, salt, cost);
+    return k == null ? null : _unhex(k);
+  }
+
+  static bool _sameBytes(List<int> a, List<int> b) {
+    if (a.length != b.length) return false;
+    var d = 0;
+    for (var i = 0; i < a.length; i++) {
+      d |= a[i] ^ b[i];
+    }
+    return d == 0;
+  }
 
   /// a new file under [passphrase]. never over one that is there
   Future<void> create(String passphrase) async {
@@ -260,34 +363,205 @@ class DesktopVault {
       throw ArgumentError('passphrase too short');
     }
     final salt = _bytes(_saltLen);
-    final k = await _crypto.keyOf(passphrase, salt, logN);
-    if (k == null) throw StateError('no key from the engine');
-    _salt = salt;
-    _cost = logN;
-    _key = _unhex(k);
-    _persist(const {});
+    final kek = await _kek(passphrase, salt, logN);
+    if (kek == null) throw StateError('no key from the engine');
+    final dk = _bytes(_dkLen);
+    final slot = _passSlot(kek, salt, logN, dk);
+    kek.fillRange(0, kek.length, 0);
+    _start(_bytes(_idLen), dk, [slot]);
+  }
+
+  /// a new file whose data key the computer account keeps. throws
+  /// [SealError] when [seal] keeps nothing
+  Future<void> createSealed(SystemSeal seal) async {
+    if (exists) throw StateError('a vault is already there');
+    final id = _bytes(_idLen);
+    final sk = _bytes(_dkLen);
+    final dk = _bytes(_dkLen);
+    try {
+      final kept = await seal.keep(id, sk);
+      try {
+        _start(id, dk, [_systemSlot(kept, sk, dk)]);
+      } catch (_) {
+        // no file to need it: the keyring keeps nothing of a vault not made
+        try {
+          await seal.forget(id, kept.how, kept.data);
+        } catch (_) {}
+        rethrow;
+      }
+    } finally {
+      sk.fillRange(0, sk.length, 0);
+    }
+  }
+
+  void _start(Uint8List id, Uint8List dk, List<_Slot> slots) {
+    _id = id;
+    _key = dk;
+    try {
+      _persist(const {}, slots);
+    } catch (_) {
+      _key = null;
+      dk.fillRange(0, dk.length, 0);
+      rethrow;
+    }
+    _slots = slots;
     _map = {};
   }
 
   /// set by [open]: the file is none this version or an older one reads
   bool madeByOtherVersion = false;
 
-  /// false for a wrong passphrase or a changed file. a file of an older
-  /// version (1: no cost byte, scrypt 2^15; 2: no padding) opens and is
-  /// written again as this one, at today's cost
+  // null: not a vault of this version. throws for a cut head
+  _Head? _headOf(Uint8List raw) {
+    if (raw.length < 5 || !listEquals(raw.sublist(0, 4), _magic)) return null;
+    if (raw[4] != _version) return null;
+    var at = 5;
+    Uint8List take(int n) {
+      if (at + n > raw.length) throw const FormatException('cut');
+      final b = Uint8List.fromList(raw.sublist(at, at + n));
+      at += n;
+      return b;
+    }
+
+    try {
+      final id = take(_idLen);
+      final n = take(1)[0];
+      final slots = <_Slot>[];
+      for (var i = 0; i < n; i++) {
+        final kind = take(1)[0];
+        final len = ByteData.sublistView(take(2)).getUint16(0);
+        slots.add(_Slot(kind, take(len)));
+      }
+      take(_freshLen);
+      return _Head(id, slots, at);
+    } on FormatException {
+      return _Head(Uint8List(0), const [], -1);
+    }
+  }
+
+  bool _openBody(Uint8List raw, _Head h, Uint8List dk) {
+    final plain = _crypto.open(
+      _bodyKey(dk, raw.sublist(0, h.length)),
+      Uint8List.fromList(raw.sublist(h.length)),
+    );
+    if (plain == null) {
+      dk.fillRange(0, dk.length, 0);
+      return false;
+    }
+    final Object? m;
+    try {
+      m = jsonDecode(utf8.decode(unpadded(plain)));
+    } catch (_) {
+      dk.fillRange(0, dk.length, 0);
+      return false;
+    } finally {
+      plain.fillRange(0, plain.length, 0);
+    }
+    if (m is! Map) {
+      dk.fillRange(0, dk.length, 0);
+      return false;
+    }
+    _id = h.id;
+    _slots = h.slots;
+    _key = dk;
+    _map = _stringsOf(m);
+    return true;
+  }
+
+  static Map<String, String> _stringsOf(Map m) => {
+    for (final e in m.entries)
+      if (e.key is String && e.value is String)
+        e.key as String: e.value as String,
+  };
+
+  /// false for a wrong passphrase, a changed file or one the computer
+  /// keeps. a file of an older version (1 to 3: sealed straight under the
+  /// passphrase) opens and is written again as this one
   Future<bool> open(String passphrase) async {
     madeByOtherVersion = false;
     final raw = File(path).readAsBytesSync();
-    if (raw.length < 5 || !listEquals(raw.sublist(0, 4), _magic)) {
+    if (raw.length >= 5 &&
+        listEquals(raw.sublist(0, 4), _magic) &&
+        raw[4] >= 1 &&
+        raw[4] < _version) {
+      return _openOlder(raw, passphrase);
+    }
+    final h = _headOf(raw);
+    if (h == null) {
       madeByOtherVersion = true;
       return false;
     }
+    if (h.length < 0) return false;
+    for (final s in h.slots) {
+      if (s.kind != _slotPass || s.data.length != 1 + _saltLen + 16 + 48) {
+        continue;
+      }
+      final d = s.data;
+      final kek = await _kek(
+        passphrase,
+        Uint8List.sublistView(d, 1, 1 + _saltLen),
+        d[0],
+      );
+      if (kek == null) return false;
+      final at = 1 + _saltLen;
+      final dk = _unwrap(
+        kek,
+        Uint8List.sublistView(d, at, at + _slotFreshLen),
+        Uint8List.sublistView(d, at + _slotFreshLen),
+      );
+      kek.fillRange(0, kek.length, 0);
+      if (dk == null) return false;
+      return _openBody(raw, h, dk);
+    }
+    return false;
+  }
+
+  /// opens with what the computer account keeps, asking nothing
+  Future<SealedOpen> openSealed(SystemSeal seal) async {
+    madeByOtherVersion = false;
+    final raw = File(path).readAsBytesSync();
+    final h = _headOf(raw);
+    if (h == null) {
+      madeByOtherVersion = true;
+      return SealedOpen.otherVersion;
+    }
+    for (final s in h.slots) {
+      final d = s.data;
+      if (s.kind != _slotSystem || d.length < 1 + _slotFreshLen + _wrappedLen) {
+        continue;
+      }
+      final Uint8List sk;
+      try {
+        sk = await seal.fetch(
+          h.id,
+          d[0],
+          Uint8List.sublistView(d, 1 + _slotFreshLen + _wrappedLen),
+        );
+      } on SealError catch (e) {
+        return e.why == SealFail.unreachable
+            ? SealedOpen.unreachable
+            : SealedOpen.missing;
+      }
+      final dk = _unwrap(
+        sk,
+        Uint8List.sublistView(d, 1, 1 + _slotFreshLen),
+        Uint8List.sublistView(
+          d,
+          1 + _slotFreshLen,
+          1 + _slotFreshLen + _wrappedLen,
+        ),
+      );
+      sk.fillRange(0, sk.length, 0);
+      // another secret under the same name: as good as none
+      if (dk == null) return SealedOpen.missing;
+      return _openBody(raw, h, dk) ? SealedOpen.opened : SealedOpen.missing;
+    }
+    return SealedOpen.missing;
+  }
+
+  // versions 1 (no cost byte, scrypt 2^15), 2 (no padding) and 3
+  Future<bool> _openOlder(Uint8List raw, String passphrase) async {
     final version = raw[4];
-    if (version < 1 || version > _version) {
-      madeByOtherVersion = true;
-      return false;
-    }
-    // where the salt starts and the head ends, by version
     final costAt = version >= 2 ? 5 : -1;
     final saltAt = version >= 2 ? 6 : 5;
     final head = saltAt + _saltLen + _freshLen;
@@ -295,15 +569,12 @@ class DesktopVault {
     final cost = costAt < 0 ? 15 : raw[costAt];
     final salt = Uint8List.fromList(raw.sublist(saltAt, saltAt + _saltLen));
     final fresh = raw.sublist(saltAt + _saltLen, head);
-    final k = await _crypto.keyOf(passphrase, salt, cost);
-    if (k == null) return false;
-    final key = _unhex(k);
+    final key = await _kek(passphrase, salt, cost);
+    if (key == null) return false;
     final fileKey = _hex(Hmac(sha256, key).convert(fresh).bytes);
+    key.fillRange(0, key.length, 0);
     final plain = _crypto.open(fileKey, Uint8List.fromList(raw.sublist(head)));
-    if (plain == null) {
-      key.fillRange(0, key.length, 0);
-      return false;
-    }
+    if (plain == null) return false;
     final Object? m;
     try {
       m = jsonDecode(utf8.decode(version >= 3 ? unpadded(plain) : plain));
@@ -313,36 +584,118 @@ class DesktopVault {
       plain.fillRange(0, plain.length, 0);
     }
     if (m is! Map) return false;
-    _map = {
-      for (final e in m.entries)
-        if (e.key is String && e.value is String)
-          e.key as String: e.value as String,
-    };
-    if (version == _version && cost >= logN) {
-      _salt = salt;
-      _cost = cost;
-      _key = key;
-      return true;
-    }
-    // an older file: a new salt at today's cost, written as this version
-    key.fillRange(0, key.length, 0);
+    // written again as this version: a new data key under a new salt at
+    // today's cost
     final newSalt = _bytes(_saltLen);
-    final nk = await _crypto.keyOf(passphrase, newSalt, logN);
-    if (nk == null) {
-      _map = null;
-      return false;
-    }
-    _salt = newSalt;
-    _cost = logN;
-    _key = _unhex(nk);
+    final kek = await _kek(passphrase, newSalt, logN);
+    if (kek == null) return false;
+    final dk = _bytes(_dkLen);
+    final slot = _passSlot(kek, newSalt, logN, dk);
+    kek.fillRange(0, kek.length, 0);
+    _id = _bytes(_idLen);
+    _key = dk;
+    _map = _stringsOf(m);
     try {
-      _persist(_map!);
+      _persist(_map!, [slot]);
     } catch (_) {
       // not written as this version: nothing of it stays open in memory
       close();
       rethrow;
     }
+    _slots = [slot];
     return true;
+  }
+
+  // the open vault's passphrase is [passphrase]
+  Future<bool> _isPassphrase(String passphrase) async {
+    final dk = _key;
+    if (dk == null) throw const VaultLocked();
+    for (final s in _slots) {
+      if (s.kind != _slotPass) continue;
+      final d = s.data;
+      final kek = await _kek(
+        passphrase,
+        Uint8List.sublistView(d, 1, 1 + _saltLen),
+        d[0],
+      );
+      if (kek == null) return false;
+      final at = 1 + _saltLen;
+      final got = _unwrap(
+        kek,
+        Uint8List.sublistView(d, at, at + _slotFreshLen),
+        Uint8List.sublistView(d, at + _slotFreshLen),
+      );
+      kek.fillRange(0, kek.length, 0);
+      if (got == null) return false;
+      final same = _sameBytes(got, dk);
+      got.fillRange(0, got.length, 0);
+      return same;
+    }
+    return false;
+  }
+
+  /// from now on [passphrase] opens the vault, and only it. what the
+  /// computer kept goes once the file no longer needs it
+  Future<void> addPassphrase(String passphrase, {SystemSeal? seal}) async {
+    if (passphrase.runes.length < kVaultMinLength) {
+      throw ArgumentError('passphrase too short');
+    }
+    final dk = _key ?? (throw const VaultLocked());
+    final old = _slots;
+    final salt = _bytes(_saltLen);
+    final kek = await _kek(passphrase, salt, logN);
+    if (kek == null) throw StateError('no key from the engine');
+    final slot = _passSlot(kek, salt, logN, dk);
+    kek.fillRange(0, kek.length, 0);
+    await _queueSlots([slot]);
+    if (seal != null) await _forget(seal, old);
+  }
+
+  /// false when [current] is not the passphrase
+  Future<bool> changePassphrase(String current, String next) async {
+    if (next.runes.length < kVaultMinLength) {
+      throw ArgumentError('passphrase too short');
+    }
+    if (!await _isPassphrase(current)) return false;
+    await addPassphrase(next);
+    return true;
+  }
+
+  /// the computer account keeps the key from now on. false when [current]
+  /// is not the passphrase; throws [SealError] when [seal] keeps nothing,
+  /// and the passphrase then stays
+  Future<bool> removePassphrase(String current, SystemSeal seal) async {
+    if (!await _isPassphrase(current)) return false;
+    final dk = _key ?? (throw const VaultLocked());
+    final sk = _bytes(_dkLen);
+    try {
+      final kept = await seal.keep(_id!, sk);
+      await _queueSlots([_systemSlot(kept, sk, dk)]);
+    } finally {
+      sk.fillRange(0, sk.length, 0);
+    }
+    return true;
+  }
+
+  /// what the computer kept for this vault goes. best effort
+  Future<void> forgetSystem(SystemSeal seal) => _forget(seal, _slots);
+
+  Future<void> _forget(SystemSeal seal, List<_Slot> slots) async {
+    final id = _id;
+    if (id == null) return;
+    for (final s in slots) {
+      final d = s.data;
+      if (s.kind != _slotSystem || d.isEmpty) continue;
+      try {
+        await seal.forget(
+          id,
+          d[0],
+          d.length < 1 + _slotFreshLen + _wrappedLen
+              ? Uint8List(0)
+              : Uint8List.sublistView(d, 1 + _slotFreshLen + _wrappedLen),
+        );
+      } catch (_) {}
+    }
   }
 
   /// the key goes from memory; the file stays
@@ -387,7 +740,7 @@ class DesktopVault {
       try {
         final next = Map.of(_held);
         c.apply(next);
-        _persist(next);
+        _persist(next, _slots);
         _map = next;
       } finally {
         _waiting.remove(c);
@@ -397,28 +750,47 @@ class DesktopVault {
     return done;
   }
 
-  void _persist(Map<String, String> m) {
-    final fresh = _bytes(_freshLen);
-    final plain = padded(utf8.encode(jsonEncode(m)), _head + 16);
+  // a new head, in the same line as the writes
+  Future<void> _queueSlots(List<_Slot> next) {
+    _held;
+    final done = _writes.catchError((_) {}).then((_) {
+      _persist(Map.of(_held), next);
+      _slots = next;
+    });
+    _writes = done;
+    return done;
+  }
+
+  void _persist(Map<String, String> m, List<_Slot> slots) {
+    final dk = _key ?? (throw const VaultLocked());
+    final head = BytesBuilder(copy: false)
+      ..add(_magic)
+      ..addByte(_version)
+      ..add(_id!)
+      ..addByte(slots.length);
+    for (final s in slots) {
+      head
+        ..addByte(s.kind)
+        ..addByte(s.data.length >> 8)
+        ..addByte(s.data.length & 0xff)
+        ..add(s.data);
+    }
+    head.add(_bytes(_freshLen));
+    final h = head.takeBytes();
+    final plain = padded(utf8.encode(jsonEncode(m)), h.length + 16);
     final Uint8List sealed;
     try {
-      sealed = _crypto.seal(_fileKey(fresh), plain);
+      sealed = _crypto.seal(_bodyKey(dk, h), plain);
     } finally {
       plain.fillRange(0, plain.length, 0);
     }
-    final out = BytesBuilder(copy: false)
-      ..add(_magic)
-      ..addByte(_version)
-      ..addByte(_cost)
-      ..add(_salt!)
-      ..add(fresh)
-      ..add(sealed);
-    _disk.replace(path, out.takeBytes());
+    _disk.replace(path, Uint8List.fromList([...h, ...sealed]));
   }
 
   /// the panic wipe: the file overwritten with random bytes and flushed
   /// before it goes. best effort: a journaling or copy-on-write disk, an
-  /// ssd's remapping or a backup may still hold the old bytes
+  /// ssd's remapping or a backup may still hold the old bytes.
+  /// [forgetSystem] after it takes what the computer kept
   void destroy() {
     close();
     for (final f in [File(path), File('$path.new')]) {

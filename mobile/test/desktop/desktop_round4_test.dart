@@ -21,7 +21,7 @@ import 'sealed_file_test.dart' show ToyCrypto;
 
 const _pass = 'four random words here';
 
-// a vault file as version 1 (no cost byte) or 2 (no padding) wrote it
+// a vault file as version 1 (no cost byte), 2 (no padding) or 3 wrote it
 Future<Uint8List> oldVaultFile(int version, Map<String, String> m) async {
   final c = ToyVaultCrypto();
   final salt = Uint8List.fromList(List.generate(16, (i) => i));
@@ -32,7 +32,14 @@ Future<Uint8List> oldVaultFile(int version, Map<String, String> m) async {
       int.parse(k.substring(i, i + 2), radix: 16),
   ];
   final fk = Hmac(sha256, key).convert(fresh).toString();
-  final sealed = c.seal(fk, Uint8List.fromList(utf8.encode(jsonEncode(m))));
+  final body = utf8.encode(jsonEncode(m));
+  // version 3 padded the body so the file filled whole steps
+  final sealed = c.seal(
+    fk,
+    version >= 3
+        ? padded(body, 4 + 1 + 1 + 16 + 32 + 16)
+        : Uint8List.fromList(body),
+  );
   return Uint8List.fromList([
     0x4b,
     0x52,
@@ -55,7 +62,7 @@ void main() {
   });
 
   group('the vault', () {
-    for (final v in [1, 2]) {
+    for (final v in [1, 2, 3]) {
       test(
         'a version $v file opens and is written again as today\'s',
         () async {
@@ -65,8 +72,10 @@ void main() {
           expect(await vault.open(_pass), isTrue);
           expect(vault.read('db'), 'key $v');
           final now = File(path).readAsBytesSync();
-          expect(now[4], 3);
-          expect(now[5], kVaultLogN);
+          expect(now[4], 4);
+          // the passphrase slot's cost, after magic, version, id, count,
+          // kind and length
+          expect(now[25], kVaultLogN);
           expect(now.length % kVaultBucket, 0);
           final again = DesktopVault(path, crypto: ToyVaultCrypto());
           expect(await again.open(_pass), isTrue);

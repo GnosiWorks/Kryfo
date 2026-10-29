@@ -211,7 +211,7 @@ void main() {
     test('the cost is in the file', () async {
       final v = DesktopVault(path, crypto: _Toy(), logN: 16);
       await v.create(_pass);
-      expect(File(path).readAsBytesSync()[5], 16);
+      expect(File(path).readAsBytesSync()[25], 16);
       expect(kVaultLogN, 17);
     });
 
