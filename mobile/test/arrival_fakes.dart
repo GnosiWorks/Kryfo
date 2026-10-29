@@ -255,11 +255,14 @@ class ArrivalIo implements AppIo {
   String xPub() => 'x-me';
   // no route reaches anyone: every send says so
   var down = false;
+  // called as each relay send goes
+  void Function()? onRelay;
 
   @override
   Future<String> relaySend(String xPub, String cipher) async {
     if (down) return 'error: down';
     sent.add(('relay $xPub', cipher));
+    onRelay?.call();
     return 'ok';
   }
 

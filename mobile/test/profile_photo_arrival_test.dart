@@ -32,6 +32,7 @@ import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/typing.dart' show kCapPhotos, kCapTyping;
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
+import 'package:kryfo/wipe.dart' show haloWiping;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'arrival_fakes.dart';
@@ -443,6 +444,22 @@ void main() {
         greaterThan(kPhotoBackoff.first.inMilliseconds ~/ 2),
       );
       w.app.stopPhotos();
+    }, skip: skip);
+
+    test('a wipe begun mid-send stops the next slice, and the book '
+        'empties', () async {
+      final w = await _World.make();
+      addTearDown(() => haloWiping = false);
+      await w.app.setMyPhoto(_clean);
+      expect(photoSlices(_clean, 1).length, greaterThan(1));
+      expect(photoBook.length, 1);
+      await w.app.photoSweep();
+      await w.allDue();
+      w.io.onRelay = () => haloWiping = true;
+      await w.app.photoSendDue();
+      expect(w.photoSends, hasLength(1));
+      w.app.stopPhotos();
+      expect(photoBook.length, 0);
     }, skip: skip);
 
     test('the decoy keeps its own photo and sends nothing', () async {

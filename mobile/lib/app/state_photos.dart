@@ -325,6 +325,8 @@ extension AppStatePhotos on AppState {
       if (frames.isEmpty) return false;
     }
     for (final f in frames) {
+      // a wipe or a decoy begun meanwhile: not one more slice
+      if (_photoHeld) return false;
       final wire = await shotsOnWire(peer, wrapPhotoFrame(f, writtenAt: now));
       final ok = await _sendOneEnvelope(peer, wire, takeBack: want == 0);
       if (!ok) return false;
@@ -338,5 +340,6 @@ extension AppStatePhotos on AppState {
     _photoPace.run = null;
     _photoPace.waits?.cancel();
     _photoPace.waits = null;
+    photoBook.clear();
   }
 }
