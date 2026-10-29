@@ -2,7 +2,7 @@
 # builds the release apks in the pinned container, at the path f-droid
 # builds in, then signs them here with apksigner.
 #
-# this is the release build, not a check on one. the three apks it leaves
+# this is the release build, not a check on one. the four apks it leaves
 # in repro/out are what goes on the github release, so there is nothing to
 # reconcile afterwards: f-droid rebuilding the tag gets the same bytes by
 # construction. the dart snapshot and two plugin libraries bake in the
@@ -266,7 +266,20 @@ for f in "$OUT"/app-*.apk; do
     exit 1
   fi
   rm -rf "$scan"
+  # the universal apk: both arm abis, each whole, and no other
+  case "$f" in
+    */app-universal-release*)
+      got=$(unzip -Z1 "$f" 'lib/*' | grep -v '/$' | cut -d/ -f2 | sort -u | tr '\n' ' ')
+      [ "$got" = "arm64-v8a armeabi-v7a " ] || { echo "$f carries the abis $got" >&2; exit 1; }
+      for a in arm64-v8a armeabi-v7a; do
+        for l in libflutter libapp libhalo libkryfo_signal; do
+          unzip -Z1 "$f" | grep -qx "lib/$a/$l.so" || { echo "$f has no lib/$a/$l.so" >&2; exit 1; }
+        done
+      done
+      ;;
+  esac
 done
+ls "$OUT"/app-universal-release*.apk >/dev/null 2>&1 || { echo "the container made no universal apk" >&2; exit 1; }
 
 # the shim's complete source goes on the release page beside the apks
 # (agpl and gpl section 6), from the vendor dir this build used
@@ -332,4 +345,4 @@ echo
 echo "these are the release. attach them and the shim's source tarball to"
 echo "the github release."
 echo "to have someone else confirm them, or to check them later:"
-echo "  ${BUILD_NAME:+HALO_BUILD_NAME=$BUILD_NAME }./verify.sh --ref $REF $OUT/app-arm64-v8a-release*.apk ..."
+echo "  ${BUILD_NAME:+HALO_BUILD_NAME=$BUILD_NAME }./verify.sh --ref $REF $OUT/app-*-release*.apk"
