@@ -217,7 +217,7 @@ class TransportScreen extends StatelessWidget {
                             l10n.transportWithNoContactsThe,
                             style: HaloType.mono(
                               size: 11.5,
-                              color: HaloColors.roseText.withValues(alpha: 0.9),
+                              color: HaloColors.roseText,
                             ),
                           ),
                         ),
