@@ -1554,9 +1554,14 @@ void main() {
   // of him before it keeps any session under it
   test('back-pair keeps no session under his words', () {
     final src = File('lib/app/arrivals.dart').readAsStringSync();
-    final at = src.indexOf('openFirstContact(String cipher) async {');
+    // AppIo.openFirstContact hands to _openFirst
+    expect(
+      src,
+      contains('openFirstContact(String cipher) => _openFirst(cipher);'),
+    );
+    final at = src.indexOf('env})?> _openFirst(');
     expect(at, isNonNegative);
-    final body = src.substring(at, src.indexOf('\n  }\n', at));
+    final body = src.substring(at, src.indexOf('\n}\n', at));
     final claim = body.indexOf(
       'if (devCardClaim(id: h, xPub: env.senderXPub)) {',
     );

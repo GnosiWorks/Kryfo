@@ -1572,6 +1572,10 @@ void main() {
       'identities',
       'pairs',
       'fc_keys',
+      // my v4 invites, and the hellos on them: the store's, by key
+      'invites',
+      'hellos',
+      'hello_seen',
     };
     final src = [
       'lib/app/database.dart',

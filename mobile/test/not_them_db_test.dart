@@ -60,6 +60,9 @@ const _apart = {
   'groups',
   'room_keys',
   'group_roster',
+  // a hello's peer is an identity key, not a name: the rows of a v4 first
+  // contact, kept by key as the pairs are
+  'hellos',
 };
 
 void main() {
