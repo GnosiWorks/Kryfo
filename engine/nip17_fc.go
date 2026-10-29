@@ -67,7 +67,7 @@ func nip17WrapFirstContactAs(me xid, peer [32]byte, fcPk, msg string) (nostr2.Ev
 		return nostr2.Event{}, err
 	}
 	exp := wrapExpiry(time.Now())
-	return nip59.GiftWrap(rumor, fcPk,
+	return giftWrapKept(rumor, fcPk,
 		func(pt string) (string, error) { return nip44.Encrypt(pt, ck) },
 		func(e *nostr2.Event) error { return e.Sign(sndSk) },
 		func(e *nostr2.Event) { e.Tags = append(e.Tags, nostr2.Tag{"expiration", exp}) },

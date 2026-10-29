@@ -20,11 +20,11 @@ import 'gif_source.dart';
 import '../widgets/shift_tap_guard.dart';
 
 /// how the phone reaches our server, as the transport screen names it
-enum GifRoute { onion, relay, fast }
+enum GifRoute { onion, fast }
 
 GifRoute gifRouteOf(String sendMode) => switch (sendMode) {
-  'balanced' => GifRoute.relay,
-  'fast' => GifRoute.fast,
+  // relay and fast are one route now, straight to our servers
+  'balanced' || 'fast' => GifRoute.fast,
   _ => GifRoute.onion,
 };
 
@@ -314,11 +314,6 @@ class GifPanelState extends State<GifPanel> {
         l10n.settingsOnion3Hops,
         HaloColors.violet,
         Icons.lock_rounded,
-      ),
-      GifRoute.relay => (
-        l10n.settingsRelay1Hop,
-        HaloColors.amber,
-        Icons.swap_horiz_rounded,
       ),
       GifRoute.fast => (
         l10n.settingsFast,

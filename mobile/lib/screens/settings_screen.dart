@@ -494,9 +494,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ? l10n.settingsConnected
                             : onTor
                             ? link.text
-                            : appState.sendMode == 'fast'
-                            ? l10n.settingsOffFastMode
-                            : l10n.settingsOffMode,
+                            // relay and fast are one route now
+                            : l10n.settingsOffFastMode,
                       ),
                       ProtectionLine(
                         l10n.settingsScreenshots,
@@ -546,11 +545,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               HaloRow(
                 icon: Icons.shield_outlined,
                 label: l10n.settingsSpeedPrivacy,
-                value: appState.sendMode == 'fast'
-                    ? l10n.settingsFast
-                    : appState.sendMode == 'balanced'
-                    ? l10n.settingsRelay1Hop
-                    : l10n.settingsOnion3Hops,
+                value: appState.sendMode == 'private'
+                    ? l10n.settingsPrivateTor
+                    : l10n.settingsFast,
                 onTap: () async {
                   await Navigator.of(
                     context,

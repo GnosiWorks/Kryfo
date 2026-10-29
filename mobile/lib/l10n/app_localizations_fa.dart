@@ -667,16 +667,10 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get appRelayAndFastModes =>
-      'حالت‌های رله و سریع Tor را دور می‌زنند و سریع‌ترند. این حالت‌ها در تنظیمات، زیر «سرعت و حریم خصوصی» هستند و هر کدام می‌گوید چه بهایی دارد.';
-
-  @override
-  String get appViaRelay => 'از راه رله';
+      'حالت سریع از Tor عبور نمی‌کند و تندتر است. در تنظیمات، زیر سرعت و حریم خصوصی است و می‌گوید چه هزینه‌ای دارد.';
 
   @override
   String get appOffline => 'آفلاین';
-
-  @override
-  String get appFast => 'سریع';
 
   @override
   String get appTorOff => 'Tor خاموش';
@@ -1717,9 +1711,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get chatSupporter => 'هوادار';
-
-  @override
-  String get chatEncryptedViaRelay => 'رمزگذاری‌شده · از راه رله';
 
   @override
   String get chatEncryptedDirect => 'رمزگذاری‌شده · مستقیم';
@@ -3145,26 +3136,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get homeLeaveThemOff => 'خاموش بماند';
 
   @override
-  String get homeOurRelayIsQuiet => 'رله‌ی ما ساکت است';
-
-  @override
-  String get homeRelayModeUsesOnly =>
-      'حالت رله فقط از رله‌ی خود ما استفاده می‌کند، و آن الان پاسخ نمی‌دهد. حالت سریع رله‌های عمومی را هم کنارش اضافه می‌کند، پس پیام‌ها باز هم می‌رسند. در هر دو حالت همه‌چیز مهروموم‌شده می‌ماند.';
-
-  @override
-  String get homeSwitchedToFast => 'حالت سریع فعال شد';
-
-  @override
-  String get homeUseFastMode => 'استفاده از حالت سریع';
-
-  @override
   String get homeKeepWaiting => 'منتظر ماندن';
-
-  @override
-  String get homeSwitchedToRelay => 'حالت رله فعال شد';
-
-  @override
-  String get homeUseOurRelay => 'استفاده از رله‌ی ما';
 
   @override
   String get homeOffline => 'آفلاین';
@@ -3661,41 +3633,7 @@ class AppLocalizationsFa extends AppLocalizations {
       'چهار رقم یا بیشتر، هر چه یادتان بماند';
 
   @override
-  String get modesOnion => 'Onion';
-
-  @override
-  String get modesFullOnionRoutingThree =>
-      'مسیریابی کامل onion، سه گام. هر پیام دو تا پنج ثانیه طول می‌کشد. هیچ‌کس نمی‌بیند با چه کسی حرف می‌زنید.';
-
-  @override
-  String get modesSlower => 'کندتر';
-
-  @override
-  String get modesRelay => 'رله';
-
-  @override
-  String get modesOneSealedConnectionTo =>
-      'یک اتصال مهروموم‌شده به رله‌ی خود Kryfo، مثل یک VPN که چیزی برای ثبت ندارد. ارسال‌ها در حدود یک ثانیه می‌رسند، و جایی که Tor مسدود است هم کار می‌کند.';
-
-  @override
-  String get modesQuick => 'چابک';
-
-  @override
-  String get modesRelayOnly => 'فقط رله';
-
-  @override
   String get modesFast => 'سریع';
-
-  @override
-  String get modesPlainConnectionsToEvery =>
-      'اتصال‌های ساده به همه‌ی رله‌ها. تقریباً آنی، و کمترین حریم خصوصی را در میان این سه دارد.';
-
-  @override
-  String get modesInstant => 'آنی';
-
-  @override
-  String get modesEveryRelayYouUse =>
-      'هر رله‌ای که استفاده می‌کنید نشانی‌ای را که از آن وصل می‌شوید می‌داند، نه فقط رله‌ی ما. پیام‌ها همچنان مهروموم‌شده‌اند، اما اینکه پیامی فرستاده‌اید، نه. به‌طور پیش‌فرض خاموش است و بعد از نصب دوباره هم خاموش می‌شود.';
 
   @override
   String get modesNotChanged => 'حالت تغییر نکرد. دوباره امتحان کنید.';
@@ -3708,53 +3646,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get modesPrivacy => 'و حریم خصوصی';
-
-  @override
-  String get modesChangeGloballyOrPer =>
-      'برای همه تغییر دهید، یا برای هر گفت‌وگو جدا';
-
-  @override
-  String get modesSoon => 'به‌زودی';
-
-  @override
-  String get modesActive => 'فعال';
-
-  @override
-  String get modesSpeed2 => 'سرعت';
-
-  @override
-  String get modesHops => 'گام‌ها';
-
-  @override
-  String get modesIp => 'IP';
-
-  @override
-  String get modesVisible => 'آشکار';
-
-  @override
-  String get modesHidden => 'پنهان';
-
-  @override
-  String modesHeadsUp(Object warning) {
-    return '*حواستان باشد:* ⁨$warning⁩';
-  }
-
-  @override
-  String get modesOnionIsTheDefault =>
-      'Onion پیش‌فرض است و همین‌طور می‌ماند، مگر اینکه خودتان عوضش کنید. تغییر از پیام بعدی اعمال می‌شود.';
-
-  @override
-  String get modesFastMode => 'حالت سریع';
-
-  @override
-  String get modesPlainConnectionsToEveryRelayQuicker =>
-      'اتصال‌های ساده به همه‌ی رله‌ها. سریع‌تر است، و رله‌ها می‌توانند نشانی IP شما را ببینند. پیام‌ها در هر حال سرتاسری رمزگذاری‌شده می‌مانند.';
-
-  @override
-  String get modesTurnOnFastMode => 'روشن کردن حالت سریع';
-
-  @override
-  String get modesKeepItOff => 'خاموش بماند';
 
   @override
   String get movedWipeThisPhone => 'Kryfo از این گوشی پاک شود؟';
@@ -4176,22 +4067,8 @@ class AppLocalizationsFa extends AppLocalizations {
       'هر وقت خواستید می‌توانید این را در تنظیمات تغییر دهید، برای همه یا برای یک گفت‌وگو.';
 
   @override
-  String get onboardingOnion => 'Onion';
-
-  @override
   String get onboardingSlowerAMessageTakes =>
       'کندتر. هر پیام دو تا پنج ثانیه طول می‌کشد.';
-
-  @override
-  String get onboardingHidesYourAddressFrom =>
-      'نشانی شما را از همه پنهان می‌کند، حتی از رله‌ی ما.';
-
-  @override
-  String get onboardingRelay => 'رله';
-
-  @override
-  String get onboardingOurRelaySeesYour =>
-      'رله‌ی ما نشانی شما را می‌بیند. هیچ‌کس دیگری نه.';
 
   @override
   String get onboardingAboutASecondWorks =>
@@ -4202,23 +4079,7 @@ class AppLocalizationsFa extends AppLocalizations {
       '«خودکار» خودش راهی برای دور زدن مسدودسازی پیدا می‌کند.';
 
   @override
-  String get onboardingFast => 'سریع';
-
-  @override
-  String get onboardingEveryRelayYouUse =>
-      'هر رله‌ای که استفاده می‌کنید نشانی شما را می‌بیند. کمترین حریم خصوصی در میان این سه.';
-
-  @override
-  String get onboardingNearInstant => 'تقریباً آنی.';
-
-  @override
-  String get onboardingKeepOnion => 'همان onion ←';
-
-  @override
   String get onboardingUseThis => 'استفاده از این ←';
-
-  @override
-  String get onboardingSkipOnionIsA => 'رد شدن · onion پیش‌فرض خوبی است';
 
   @override
   String get onboardingThreeThingsThen => 'سه نکته،\nبعد *وارد می‌شوید*.';
@@ -5170,16 +5031,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get seenYourIpAddress => 'نشانی IP شما';
 
   @override
-  String get seenOurRelay => 'رله‌ی ما';
-
-  @override
-  String get seenEveryRelay => 'همه‌ی رله‌ها';
-
-  @override
-  String get seenOnOnionEverythingLeaves =>
-      'در حالت onion همه‌چیز از راه Tor بیرون می‌رود و رله یک گره خروجی می‌بیند، هرگز شما را. در حالت رله، اتصال مستقیم به رله‌ی خود ما می‌رود: هیچ چیز نشانی شما را به جای دیگری نمی‌فرستد و هیچ چیز ثبت نمی‌شود، اما همان یک اتصال را ما می‌بینیم. در حالت سریع، هر رله‌ی عمومی می‌فهمد که شما وصل شده‌اید، هرچند نه به چه کسی و نه اینکه چه گفتید.';
-
-  @override
   String get seenYourContactGraph => 'شبکه‌ی مخاطبان شما';
 
   @override
@@ -5235,12 +5086,6 @@ class AppLocalizationsFa extends AppLocalizations {
       'لایه‌های ratchet و ذخیره‌سازی استاندارد هستند. لایه‌ای که آن‌ها را به هم وصل می‌کند مال ماست و هیچ‌کس مستقلی آن را بازبینی نکرده. این نرم‌افزار در مرحله‌ی آلفا است.';
 
   @override
-  String get seenOnion => 'Onion';
-
-  @override
-  String get seenRelay => 'رله';
-
-  @override
   String get seenFast => 'سریع';
 
   @override
@@ -5275,9 +5120,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsTorRouting => 'مسیریابی Tor';
 
   @override
-  String get settingsOffMode => 'خاموش · حالت رله';
-
-  @override
   String get settingsOffFastMode => 'خاموش · حالت سریع';
 
   @override
@@ -5291,9 +5133,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get settingsFast => 'سریع';
-
-  @override
-  String get settingsRelay1Hop => 'رله · یک گام';
 
   @override
   String get settingsOnion3Hops => 'Onion · سه گام';
@@ -7325,10 +7164,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get bridgesTheTorProjectSGuess => 'حدس پروژه‌ی Tor';
 
   @override
-  String get bridgesOurRelayUsuallyGets =>
-      'رله‌ی ما یک اتصال ساده است و معمولاً راه پیدا می‌کند. یا بگذارید Kryfo خودش راهی پیدا کند.';
-
-  @override
   String get bridgesUseThisBridge => 'استفاده از این پل';
 
   @override
@@ -9160,15 +8995,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bridgesRelayWorksWhereTor =>
-      'حالت رله جایی که Tor مسدود است هم کار می‌کند و هر وقت خواستی می‌توانی برگردی.';
+      'حالت سریع جایی که Tor مسدود است کار می‌کند و هر وقت بخواهید می‌توانید برگردید.';
 
   @override
   String get bridgesRelayThisNetworkSees =>
-      'حالت رله جایی که Tor مسدود است هم رد می‌شود، اما این شبکه می‌تواند ببیند که به Kryfo وصل می‌شوی.';
-
-  @override
-  String get onboardingRelayThisNetworkSees =>
-      'این شبکه می‌تواند ببیند که به Kryfo وصل می‌شوید. رله‌ی ما نشانی شما را می‌بیند.';
+      'حالت سریع جایی که Tor مسدود است رد می‌شود، اما این شبکه می‌تواند ببیند به Kryfo وصل می‌شوید.';
 
   @override
   String get settingsLicences => 'مجوزها';
@@ -9231,9 +9062,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'کپی پیوند';
-
-  @override
-  String get appRelayNotAnswering => 'رله ساکت است';
 
   @override
   String get motionNoRelayYet => 'هنوز رله‌ای نیست';
@@ -9966,4 +9794,164 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get historyChatStaysShots =>
       'این گفت‌وگو روی گوشی شما می‌ماند، چون اسکرین‌شات در آن مسدود است.';
+
+  @override
+  String get modesPickHow =>
+      'انتخاب کنید پیام‌هایتان چطور ارسال شوند. هر وقت بخواهید می‌توانید عوضش کنید.';
+
+  @override
+  String get modesPrivate => 'خصوصی';
+
+  @override
+  String get modesPrivateTag => 'Tor · پل در صورت نیاز';
+
+  @override
+  String get modesPrivateLine =>
+      'هیچ‌کس، حتی سرورهای ما، آدرس IP شما یا اینکه چه کسی هستید را نمی‌فهمد. خودش راهی برای دور زدن مسدودسازی پیدا می‌کند.';
+
+  @override
+  String get modesDefault => 'پیش‌فرض';
+
+  @override
+  String get modesFastTag => 'مستقیم به سرورهای ما';
+
+  @override
+  String get modesFastLine =>
+      'از Tor عبور نمی‌کند، پس پیام‌ها زودتر می‌رسند و باتری کمتری مصرف می‌کنند. سرورهای ما آدرس IP شما را فقط تا وقتی وصل هستید می‌بینند و هرگز آن را ثبت یا نگه نمی‌دارند. هرگز چیزی را که می‌گویید نمی‌بینند. مخاطبانتان هرگز آن را نمی‌بینند.';
+
+  @override
+  String get modesFastConnected => 'سریع · وصل';
+
+  @override
+  String get modesFastConnecting => 'سریع · در حال اتصال';
+
+  @override
+  String get modesFastDown => 'سریع · سرورهای ما پاسخ نمی‌دهند';
+
+  @override
+  String get modesBackupReady =>
+      'همیشه یک پشتیبان آماده است، پس حتی اگر یکی از کار بیفتد وصل می‌مانید.';
+
+  @override
+  String get modesDetails => 'جزئیات';
+
+  @override
+  String get modesBothLine =>
+      'هر دو همهٔ پیام‌ها را سرتاسری رمزگذاری می‌کنند. فقط اینکه چه کسی آدرس IP شما را می‌بیند فرق می‌کند.';
+
+  @override
+  String get modesConnectionBridges => 'اتصال و پل‌ها';
+
+  @override
+  String get modesWhatServersSee => 'سرورهای ما چه چیزی را می‌بینند';
+
+  @override
+  String get serversTitle => 'سرورهای حالت سریع';
+
+  @override
+  String get serversLine =>
+      'هر پیام هم‌زمان به هر دو سرور می‌رود. هر کدام زودتر پاسخ دهد آن را می‌رساند و اگر یکی بایستد، دیگری جایش را می‌گیرد.';
+
+  @override
+  String get serversOne => 'سرور ۱';
+
+  @override
+  String get serversTwo => 'سرور ۲ · ارائه‌دهندهٔ دوم';
+
+  @override
+  String get serversConnected => 'وصل';
+
+  @override
+  String get serversConnecting => 'در حال اتصال';
+
+  @override
+  String get serversNotAnswering => 'پاسخ نمی‌دهد';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms میلی‌ثانیه';
+  }
+
+  @override
+  String get serversQuicker => 'سریع‌تر';
+
+  @override
+  String get serversBackups => 'رله‌های عمومی';
+
+  @override
+  String get serversBackupsLine =>
+      'تا وقتی سرور ۱ از کار افتاده استفاده می‌شوند، و فقط از راه Tor، پس هرگز آدرس IP شما را نمی‌بینند.';
+
+  @override
+  String get serversStandingBy => 'آماده به کار';
+
+  @override
+  String get serversInUse => 'در حال استفاده';
+
+  @override
+  String get homeMergedTitle => 'رله و سریع حالا یکی شده‌اند';
+
+  @override
+  String get homeMergedLine =>
+      'روی حالت سریع هستید. همیشه یک سرور پشتیبان آماده است، پس حتی اگر یکی از کار بیفتد وصل می‌مانید. سرورهای ما آدرس IP شما را می‌بینند، هرگز چیزی را که می‌گویید.';
+
+  @override
+  String get homeMergedGotIt => 'متوجه شدم';
+
+  @override
+  String get homeMergedUsePrivate => 'به جایش خصوصی';
+
+  @override
+  String get homeOursDownTitle => 'سرورهای ما پاسخ نمی‌دهند';
+
+  @override
+  String get homeOursDownLine =>
+      'پس از چند دقیقه، وقتی Tor وصل شود، پیام‌ها از راه رله‌های عمومی هم می‌روند، و به محض اینکه یکی از سرورهای ما پاسخ دهد دوباره از آن‌ها می‌روند.';
+
+  @override
+  String get homeUsePrivate => 'خصوصی';
+
+  @override
+  String get homeSwitchedToPrivate => 'به خصوصی رفتید';
+
+  @override
+  String get homeUseFast => 'سریع';
+
+  @override
+  String get homeSwitchedToFastRoute => 'به سریع رفتید';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'سریع مستقیم به سرورهای ما می‌رود و معمولاً رد می‌شود. یا بگذارید Kryfo خودش راهی پیدا کند.';
+
+  @override
+  String get appServersNotAnswering => 'سرورها پاسخ نمی‌دهند';
+
+  @override
+  String get settingsPrivateTor => 'خصوصی · Tor';
+
+  @override
+  String get seenOurServers => 'سرورهای ما';
+
+  @override
+  String get seenIpWhy =>
+      'در خصوصی همه‌چیز از راه Tor خارج می‌شود و سرورهای ما یک گره خروجی می‌بینند، نه شما را. در سریع اتصال مستقیم به دو سرور ما می‌رود: تا وقتی وصل هستید آدرس IP شما را می‌بینند و هیچ سابقه‌ای از آن نگه نمی‌دارند. تا وقتی اولی از کار افتاده، سریع از رله‌های عمومی هم استفاده می‌کند، فقط از راه Tor.';
+
+  @override
+  String get onboardingHidesFromEveryone =>
+      'آدرس شما را از همه پنهان می‌کند، حتی از سرورهای ما.';
+
+  @override
+  String get onboardingFastSees =>
+      'سرورهای ما آدرس شما را فقط تا وقتی وصل هستید می‌بینند.';
+
+  @override
+  String get onboardingFastNetworkSees =>
+      'این شبکه می‌تواند ببیند به Kryfo وصل می‌شوید. سرورهای ما آدرس شما را می‌بینند.';
+
+  @override
+  String get onboardingKeepPrivate => 'همان خصوصی ←';
+
+  @override
+  String get onboardingSkipPrivate => 'رد شدن · خصوصی پیش‌فرض خوبی است';
 }

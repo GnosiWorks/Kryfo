@@ -57,6 +57,7 @@ const _settingsFiles = {
   'bridge_sheets',
   'seen_screen',
   'modes_screen',
+  'fast_servers_screen',
   'blocked_screen',
   'pins_screen',
   'lock_setup_screen',

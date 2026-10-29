@@ -11,6 +11,8 @@ import (
 	"encoding/json"
 	"os"
 	"testing"
+
+	nostr2 "github.com/nbd-wtf/go-nostr"
 )
 
 const v4VectorFile = "testdata/address_v4.json"
@@ -246,5 +248,37 @@ func TestFirstContactSealOfAnotherIdentity(t *testing.T) {
 	want, _ := v4HelloSealPk(b, a.pub)
 	if sealPk != want {
 		t.Fatalf("sealed by %s, want the hello seal key %s", sealPk, want)
+	}
+}
+
+// every wrap the phone makes keeps its seal, so a late top-up goes as a
+// fresh wrap whatever the pair: v3, v4 and both first contacts
+func TestEveryWrapKeepsItsSeal(t *testing.T) {
+	a, b := fixedXid(t, v4Keys["a"]), fixedXid(t, v4Keys["b"])
+	putIdentity(43, a)
+	defer identDrop(43)
+	fcPk, err := fcKeyPk(hex.EncodeToString(fixedSeed(9)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	v3, _ := pairOf(43, b.pub)
+	var s [32]byte
+	copy(s[:], fixedSeed(1))
+	v4 := v3
+	v4.seed = &s
+	main := convPair{ident: mainIdent, me: a, peer: b.pub}
+	for name, wrap := range map[string]func() (nostr2.Event, error){
+		"v3":                  func() (nostr2.Event, error) { return v3.wrap("x") },
+		"v4":                  func() (nostr2.Event, error) { return v4.wrap("x") },
+		"main first contact":  func() (nostr2.Event, error) { return main.wrapFirstContact(fcPk, "x") },
+		"other first contact": func() (nostr2.Event, error) { return v3.wrapFirstContact(fcPk, "x") },
+	} {
+		gw, err := wrap()
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if _, ok := keptSealOf(gw.ID); !ok {
+			t.Fatalf("%s: no seal kept", name)
+		}
 	}
 }

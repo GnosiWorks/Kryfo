@@ -7,8 +7,7 @@ put you in danger, read all of it.
 
 - network observers. by default your messages go through tor. your isp sees
   a tor connection, or a bridge when tor is blocked, not who you talk to or
-  what you say. relay and fast modes, which you can choose, skip tor for
-  speed.
+  what you say. fast mode, which you can choose, skips tor for speed.
 - networks that block tor. automatic mode tries tor the usual way first.
   when tor's own signals say the network cuts it off, it tries bridges one
   at a time: what the tor project suggests (only after you say yes), the
@@ -20,8 +19,14 @@ put you in danger, read all of it.
   messages from 0.5.2 on are padded to one of five sizes, so a relay sees
   roughly how big a message is, not how long. how many you send and when
   still shows. on the onion route, the relays never learn your ip address
-  or who you are.
-  in relay and fast mode, the relays see your ip address, never what you say.
+  or who you are. it writes to both our relays, each through its own onion,
+  and to a few public ones, so one of ours can stop without messages
+  stopping.
+  in fast mode, our two relays see your ip address, never what you say. each
+  of them sees which mailboxes one ip address reads and writes, and when both
+  people in a chat use fast mode, it can see that two ip addresses share a
+  mailbox. while the first relay is down, fast mode also reaches public
+  relays, through tor, never directly.
 - server seizure. there is no central server holding a contact graph or
   message history. our relay deletes sealed messages after 14 days.
 - casual device access. the database is sqlcipher encrypted, the app can
@@ -122,7 +127,7 @@ put you in danger, read all of it.
   the law where you are and where you travel.
 - anonymous developer chats against their own content. writing anonymously
   hides your three words, not your writing style or what you say, and in
-  relay and fast modes the relay sees your ip.
+  fast mode our relays see your ip.
 - this integration itself. the crypto is standard libraries (libsignal, tor,
   sqlcipher, nip-44/59) but the way they are wired together here is new and
   has not had an independent review.

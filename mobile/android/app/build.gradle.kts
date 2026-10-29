@@ -402,16 +402,34 @@ androidComponents {
 
 // one apk per abi, each with its own version code. f-droid needs to tell
 // them apart, and a shared code means only one of them is ever offered.
+// the universal apk (no abi filter) is N*10, below the per-abi apks of its
+// version, so a phone can always move from it to the smaller one
 val abiCodes = mapOf("armeabi-v7a" to 1, "arm64-v8a" to 2, "x86_64" to 3)
 android.applicationVariants.configureEach {
     val variant = this
     variant.outputs.forEach { output ->
-        val abiVersionCode =
-            abiCodes[output.filters.find { it.filterType == "ABI" }?.identifier]
+        val abi = output.filters.find { it.filterType == "ABI" }?.identifier
+        val abiVersionCode = if (abi == null) 0 else abiCodes[abi]
         // play builds a bundle and keeps its own code
         if (abiVersionCode != null && variant.flavorName == "foss") {
             (output as ApkVariantOutputImpl).versionCodeOverride =
                 variant.versionCode * 10 + abiVersionCode
         }
+    }
+}
+
+// a universal apk carries only the abis flutter was asked for
+// (--target-platform android-arm,android-arm64). flutter's own filter names
+// all three, and jniLibs' x86_64 engine and shim would ride along with no
+// flutter engine beside them
+val platformAbis = mapOf("android-arm" to "armeabi-v7a", "android-arm64" to "arm64-v8a", "android-x64" to "x86_64")
+val splitPerAbi = project.findProperty("split-per-abi")?.toString()?.toBoolean() ?: false
+val targetAbis = (project.findProperty("target-platform") as String?)
+    ?.split(",")
+    ?.mapNotNull { platformAbis[it] }
+if (!splitPerAbi && !targetAbis.isNullOrEmpty()) {
+    android.buildTypes.configureEach {
+        ndk.abiFilters.clear()
+        ndk.abiFilters.addAll(targetAbis)
     }
 }
