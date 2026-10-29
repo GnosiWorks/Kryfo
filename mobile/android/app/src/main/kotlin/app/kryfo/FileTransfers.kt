@@ -1,0 +1,191 @@
+package app.kryfo
+
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
+import android.content.Context
+import android.content.Intent
+import android.content.pm.ServiceInfo
+import android.os.Build
+import android.os.IBinder
+import androidx.core.app.NotificationCompat
+import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.MethodChannel
+
+// the notification of files sending or coming in, and a foreground service
+// that keeps the process up while they do, for a phone without the always
+// on service. it says how far, never which chat or which file. dart says
+// what it shows and when it goes
+object FileTransfers {
+    const val CHANNEL = "kryfo/transfers"
+    const val NOTE_CHANNEL = "kryfo_files"
+    const val NOTE_ID = 7
+
+    @Volatile
+    var note: Notification? = null
+        private set
+
+    fun start(context: Context, engine: FlutterEngine) {
+        MethodChannel(engine.dartExecutor.binaryMessenger, CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "show" -> {
+                        show(
+                            context,
+                            channelName = call.argument<String>("channel") ?: "",
+                            channelLine = call.argument<String>("channelLine") ?: "",
+                            title = call.argument<String>("title") ?: "",
+                            text = call.argument<String>("text"),
+                            done = call.argument<Int>("done") ?: 0,
+                            total = call.argument<Int>("total") ?: 0,
+                            plain = call.argument<Boolean>("plain") ?: false,
+                            hold = call.argument<Boolean>("hold") ?: false,
+                        )
+                        result.success(true)
+                    }
+                    "end" -> {
+                        end(context)
+                        result.success(true)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+    }
+
+    private fun channel(context: Context, name: String, line: String) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val nm = context.getSystemService(NotificationManager::class.java) ?: return
+        val ch = NotificationChannel(NOTE_CHANNEL, name, NotificationManager.IMPORTANCE_LOW).apply {
+            description = line
+            setShowBadge(false)
+            enableVibration(false)
+            setSound(null, null)
+        }
+        nm.createNotificationChannel(ch)
+    }
+
+    // done and total in kilobytes: an int holds them
+    private fun show(
+        context: Context,
+        channelName: String,
+        channelLine: String,
+        title: String,
+        text: String?,
+        done: Int,
+        total: Int,
+        plain: Boolean,
+        hold: Boolean,
+    ) {
+        channel(context, channelName, channelLine)
+        val open = Intent().setComponent(AppIcon.entry(context)).apply {
+            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+        val tap = PendingIntent.getActivity(
+            context, NOTE_ID, open,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        // plain notifications: the home screen's glyph and no colour
+        val icon = if (plain) {
+            try {
+                AppIcon.current(context).glyph
+            } catch (e: Exception) {
+                AppIcon.kryfo.glyph
+            }
+        } else R.drawable.ic_halo_notification
+        val b = NotificationCompat.Builder(context, NOTE_CHANNEL)
+            .setContentTitle(title)
+            .setSmallIcon(icon)
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setSilent(true)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            .setContentIntent(tap)
+            .setShowWhen(false)
+        if (!text.isNullOrEmpty()) b.setContentText(text)
+        if (total > 0) b.setProgress(total, done.coerceIn(0, total), false)
+        else b.setProgress(0, 0, true)
+        if (!plain) b.setColor(0xFFF59E0B.toInt())
+        val n = b.build()
+        note = n
+        val nm = context.getSystemService(NotificationManager::class.java)
+        if (hold && !FileTransferService.running) {
+            // android refuses a foreground start from the background: then
+            // the note shows all the same, and the always on service or the
+            // screen keeps the process
+            try {
+                val i = Intent(context, FileTransferService::class.java)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context.startForegroundService(i)
+                else context.startService(i)
+                return
+            } catch (e: Exception) {
+                HaloListenerService.debugLog(context, "transfers: no foreground start")
+            }
+        }
+        nm?.notify(NOTE_ID, n)
+    }
+
+    fun end(context: Context) {
+        note = null
+        context.stopService(Intent(context, FileTransferService::class.java))
+        context.getSystemService(NotificationManager::class.java)?.cancel(NOTE_ID)
+    }
+}
+
+// up only while files move. android gives a data sync service six hours a
+// day on 15 and later: past them it stops, and the note stays as a plain one
+class FileTransferService : Service() {
+    companion object {
+        @Volatile
+        var running = false
+            private set
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val n = FileTransfers.note
+        if (n == null) {
+            // ended before it started: a foreground start still owes its call
+            front(placeholder())
+            stopSelf()
+            return START_NOT_STICKY
+        }
+        try {
+            front(n)
+            running = true
+        } catch (e: Exception) {
+            running = false
+            stopSelf()
+        }
+        return START_NOT_STICKY
+    }
+
+    private fun placeholder(): Notification =
+        NotificationCompat.Builder(this, FileTransfers.NOTE_CHANNEL)
+            .setSmallIcon(R.drawable.ic_halo_notification)
+            .setSilent(true)
+            .build()
+
+    private fun front(n: Notification) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(FileTransfers.NOTE_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        } else {
+            startForeground(FileTransfers.NOTE_ID, n)
+        }
+    }
+
+    override fun onTimeout(startId: Int, fgsType: Int) {
+        running = false
+        stopForeground(STOP_FOREGROUND_DETACH)
+        stopSelf()
+    }
+
+    override fun onDestroy() {
+        running = false
+        super.onDestroy()
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+}

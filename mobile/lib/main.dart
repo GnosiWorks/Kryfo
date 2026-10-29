@@ -43,6 +43,8 @@ import 'group_end.dart';
 import 'group_shots.dart';
 import 'group_media_send.dart';
 import 'media_progress.dart';
+import 'transfers.dart';
+import 'transfer_note.dart';
 import 'media_send.dart';
 import 'msg_order.dart';
 import 'send_order.dart';
