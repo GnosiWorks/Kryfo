@@ -4,18 +4,23 @@
 part of '../main.dart';
 
 extension AppStateScreen on AppState {
+  // the lock going up or down moves the flag, a pin set or not the recents
+  // picture. only the second changes what settings show
   void _lockMoved() {
-    if (_lockWasOn == lockState.lockOn) return;
-    _lockWasOn = lockState.lockOn;
+    final now = (lockState.lockOn, lockState.locked);
+    final was = _lockWas;
+    if (was == now) return;
+    _lockWas = now;
     unawaited(_applyScreenSecure());
-    notifyListeners();
+    if (was?.$1 != now.$1) notifyListeners();
   }
 
   Future<void> loadScreenSecure() async {
-    if (_lockWasOn == null) {
-      _lockWasOn = lockState.lockOn;
+    if (_lockWas == null) {
+      _lockWas = (lockState.lockOn, lockState.locked);
       lockState.addListener(_lockMoved);
     }
+    pinShieldHold = (on) => unawaited(forceSecure(on));
     try {
       _shotsCardWaits = (await secureStore.read(key: kOldShotsKey)) == 'true';
       if (_shotsCardWaits) await _readShotsCard();
@@ -178,13 +183,13 @@ extension AppStateScreen on AppState {
   bool get secureForced => _secureHolds > 0;
 
   /// the window refuses screenshots now: a chat or room that blocks them,
-  /// a viewer's hold, the app lock or the old switch's card
-  bool get windowSecure =>
-      secureForced || screenSecureByLock || _shotsCardWaits;
-  // an app lock keeps screenshots and the recents picture off, whatever the
-  // switch says: the settings then never say one thing while the app does
-  // another. a lock turned off in the decoy is off here too, as anywhere
-  bool get screenSecureByLock => lockState.lockOn;
+  /// a viewer's or a pin screen's hold, the lock screen or the old switch's
+  /// card
+  bool get windowSecure => secureForced || lockState.locked || _shotsCardWaits;
+
+  /// a pin is set: recents shows no picture of the app. a lock turned off
+  /// in the decoy is off here too, as anywhere
+  bool get recentsHidden => lockState.lockOn || lockState.locked;
 
   Future<void> forceSecure(bool on) async {
     _secureHolds = on ? _secureHolds + 1 : max(0, _secureHolds - 1);
@@ -192,14 +197,26 @@ extension AppStateScreen on AppState {
   }
 
   Future<void> _applyScreenSecure() async {
-    final on = secureForced || screenSecureByLock || _shotsCardWaits;
-    if (on == _secureSent) return;
-    _secureSent = on;
+    final on = windowSecure;
+    if (on != _secureSent) {
+      _secureSent = on;
+      try {
+        await AppState._platformChannel.invokeMethod('setSecure', {'on': on});
+      } catch (e) {
+        _secureSent = null;
+        dlog('setSecure: $e');
+      }
+    }
+    final hide = recentsHidden;
+    if (hide == _recentsSent) return;
+    _recentsSent = hide;
     try {
-      await AppState._platformChannel.invokeMethod('setSecure', {'on': on});
+      await AppState._platformChannel.invokeMethod('setRecentsHidden', {
+        'on': hide,
+      });
     } catch (e) {
-      _secureSent = null;
-      dlog('setSecure: $e');
+      _recentsSent = null;
+      dlog('setRecentsHidden: $e');
     }
   }
 }

@@ -869,6 +869,13 @@ class LockState extends ChangeNotifier {
     _paused = false;
   }
 
+  // tests lift the lock as a right pin would, and say so
+  @visibleForTesting
+  void liftForTest() {
+    _locked = false;
+    notifyListeners();
+  }
+
   // a keystore that would not answer. the lock stays shut and load tries
   // again rather than opening the app to whoever holds the phone
   bool _unreadable = false;

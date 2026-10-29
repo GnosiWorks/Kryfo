@@ -2,7 +2,7 @@
 // the shield is held once per screen that wants it. a room opened over
 // another room lets go of its own hold when it closes, and the room under
 // it stays shielded until it closes too. a lock turned off in the decoy
-// lets the window go as a turn off anywhere does
+// shows the app in recents again as a turn off anywhere does
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,9 +16,11 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late List<bool> told;
+  late List<bool> recents;
 
   setUp(() {
     told = [];
+    recents = [];
     FlutterSecureStorage.setMockInitialValues({});
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(const MethodChannel('halo/platform'), (
@@ -26,6 +28,9 @@ void main() {
         ) async {
           if (call.method == 'setSecure') {
             told.add((call.arguments as Map)['on'] as bool);
+          }
+          if (call.method == 'setRecentsHidden') {
+            recents.add((call.arguments as Map)['on'] as bool);
           }
           return null;
         });
@@ -62,7 +67,7 @@ void main() {
     expect(app.secureForced, isFalse);
   });
 
-  test('a lock turned off in the decoy no longer holds the window', () async {
+  test('a lock turned off in the decoy shows the app in recents', () async {
     lockState.openForTest(enabled: true);
     addTearDown(() {
       lockState.inDecoy = false;
@@ -70,13 +75,15 @@ void main() {
     });
     final app = await make();
     await app.loadScreenSecure();
-    expect(app.screenSecureByLock, isTrue);
-    expect(told.last, isTrue);
+    expect(app.recentsHidden, isTrue);
+    expect(recents.last, isTrue);
+    expect(told.last, isFalse);
     lockState.inDecoy = true;
     await lockState.disable();
     await Future<void>.delayed(Duration.zero);
     // the same as a turn off in the everyday app
-    expect(app.screenSecureByLock, isFalse);
+    expect(app.recentsHidden, isFalse);
+    expect(recents.last, isFalse);
     expect(told.last, isFalse);
   });
 }

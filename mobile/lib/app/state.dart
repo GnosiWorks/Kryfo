@@ -390,8 +390,8 @@ class AppState extends ChangeNotifier {
   // the check-in's clock, which a test moves on its own
   DateTime Function() _checkClock = DateTime.now;
 
-  // the lock turned on or off: the window follows at once
-  bool? _lockWasOn;
+  // the lock set or not, up or not: the window follows at once
+  (bool, bool)? _lockWas;
 
   // the old switch for the whole app was on: the whole window stays
   // covered as it was until home's card is answered. the card asks once
@@ -504,6 +504,7 @@ class AppState extends ChangeNotifier {
   // which dart shares, so an unchanged value is not sent: a room closing
   // in a session switch would otherwise hold the decoy's reveal alone
   bool? _secureSent;
+  bool? _recentsSent;
 
   // the first fill of the search index for a history from before it: a
   // batch, a pause, the next, so the app never waits on it. each container
