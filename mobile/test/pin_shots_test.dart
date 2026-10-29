@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a pin set blocks no screenshots on its own: it keeps the app out of
-// recents. the lock screen and every screen a pin is typed on block, a
-// chat that blocks keeps blocking after an unlock, and the decoy does the
-// same as the everyday app
+// a pin set blocks no screenshots on its own on android 13 and newer: it
+// keeps the app out of recents. older android has no switch for that, so a
+// pin blocks there the whole time. the lock screen, the hidden chats and
+// every screen a pin or passphrase is typed on block, a chat that blocks
+// keeps blocking after an unlock, and the decoy does the same as the
+// everyday app. nothing is sent before the lock is read
 import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -28,10 +30,13 @@ void main() {
   bool? shotsOff;
   bool? hiddenNow;
   AppState? shared;
+  // the phone's android, as the platform says it
+  var sdk = 34;
 
   setUp(() {
     secure = [];
     recents = [];
+    sdk = 34;
     FlutterSecureStorage.setMockInitialValues({});
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(const MethodChannel('halo/platform'), (
@@ -46,10 +51,12 @@ void main() {
             recents.add(on as bool);
             hiddenNow = on;
           }
+          if (call.method == 'phoneMaker') return {'sdk': '$sdk'};
           return null;
         });
     addTearDown(() {
       lockState.inDecoy = false;
+      lockState.inVault = false;
       lockState.openForTest();
       pinShieldHold = null;
     });
@@ -159,6 +166,71 @@ void main() {
       await settle();
       expect(heard, 0);
     });
+  });
+
+  group('android 12 and older', () {
+    test('a pin blocks screenshots the whole time, as before', () async {
+      sdk = 30;
+      lockState.openForTest(enabled: true);
+      final app = await make();
+      expect(app.pinBlocksShots, isTrue);
+      expect(app.windowSecure, isTrue);
+      expect((hiddenNow, shotsOff), (true, true));
+      lockState.lock();
+      await settle();
+      lockState.liftForTest();
+      await settle();
+      expect(app.windowSecure, isTrue);
+      expect(shotsOff, isTrue);
+    });
+
+    test('no pin: screenshots work', () async {
+      sdk = 30;
+      lockState.openForTest();
+      final app = await make();
+      expect(app.pinBlocksShots, isFalse);
+      expect((hiddenNow, shotsOff), (false, false));
+    });
+
+    test('android 13 keeps them per chat', () async {
+      sdk = 33;
+      lockState.openForTest(enabled: true);
+      final app = await make();
+      expect(app.pinBlocksShots, isFalse);
+      expect((hiddenNow, shotsOff), (true, false));
+    });
+  });
+
+  test('the hidden chats block while they are open', () async {
+    lockState.openForTest(enabled: true);
+    final app = await make();
+    secure.clear();
+    lockState.inVault = true;
+    await settle();
+    expect(app.windowSecure, isTrue);
+    lockState.inVault = false;
+    await settle();
+    expect(app.windowSecure, isFalse);
+    expect(secure, [true, false]);
+  });
+
+  test('until the lock is read nothing is sent, then what holds', () async {
+    lockState.openForTest();
+    final app = await make();
+    lockState.unloadForTest();
+    secure.clear();
+    recents.clear();
+    await app.loadScreenSecure();
+    await app.forceSecure(true);
+    expect(secure, isEmpty);
+    expect(recents, isEmpty);
+    lockState.openForTest(enabled: true);
+    lockState.liftForTest();
+    await settle();
+    expect(secure, [true]);
+    expect(recents, [true]);
+    await app.forceSecure(false);
+    expect(secure, [true, false]);
   });
 
   group('pin screens hold the window while open', () {

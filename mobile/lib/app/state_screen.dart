@@ -4,20 +4,24 @@
 part of '../main.dart';
 
 extension AppStateScreen on AppState {
-  // the lock going up or down moves the flag, a pin set or not the recents
-  // picture. only the second changes what settings show
+  // the lock read, set, up, and the vault open move the flag and the
+  // recents picture. only a pin set or not changes what settings show
+  (bool, bool, bool, bool) get _lockNow =>
+      (lockState.loaded, lockState.lockOn, lockState.locked, lockState.inVault);
+
   void _lockMoved() {
-    final now = (lockState.lockOn, lockState.locked);
+    final now = _lockNow;
     final was = _lockWas;
     if (was == now) return;
     _lockWas = now;
     unawaited(_applyScreenSecure());
-    if (was?.$1 != now.$1) notifyListeners();
+    if (was?.$2 != now.$2) notifyListeners();
   }
 
   Future<void> loadScreenSecure() async {
+    _noRecentsSwitch = await _oldAndroid();
     if (_lockWas == null) {
-      _lockWas = (lockState.lockOn, lockState.locked);
+      _lockWas = _lockNow;
       lockState.addListener(_lockMoved);
     }
     pinShieldHold = (on) => unawaited(forceSecure(on));
@@ -29,6 +33,20 @@ extension AppStateScreen on AppState {
     }
     await _applyScreenSecure();
     notifyListeners();
+  }
+
+  // android 12 and older, from the platform. one that will not say is
+  // taken for old there
+  Future<bool> _oldAndroid() async {
+    try {
+      final m = await AppState._platformChannel.invokeMapMethod<String, String>(
+        'phoneMaker',
+      );
+      final sdk = int.tryParse(m?['sdk'] ?? '') ?? 0;
+      return sdk > 0 && sdk < 33;
+    } catch (e) {
+      return Platform.isAndroid;
+    }
   }
 
   bool get shotsCardDue =>
@@ -183,9 +201,18 @@ extension AppStateScreen on AppState {
   bool get secureForced => _secureHolds > 0;
 
   /// the window refuses screenshots now: a chat or room that blocks them,
-  /// a viewer's or a pin screen's hold, the lock screen or the old switch's
-  /// card
-  bool get windowSecure => secureForced || lockState.locked || _shotsCardWaits;
+  /// a viewer's or a pin screen's hold, the lock screen, the hidden chats,
+  /// a pin on android 12 and older or the old switch's card
+  bool get windowSecure =>
+      secureForced ||
+      lockState.locked ||
+      lockState.inVault ||
+      pinBlocksShots ||
+      _shotsCardWaits;
+
+  /// a pin set on android 12 and older, which has no switch for the
+  /// recents picture: screenshots stay blocked the whole time, as before
+  bool get pinBlocksShots => _noRecentsSwitch && lockState.lockOn;
 
   /// a pin is set: recents shows no picture of the app. a lock turned off
   /// in the decoy is off here too, as anywhere
@@ -197,6 +224,9 @@ extension AppStateScreen on AppState {
   }
 
   Future<void> _applyScreenSecure() async {
+    // until the lock is read the cover hides the app, and what the last
+    // run left stays
+    if (!lockState.loaded) return;
     final on = windowSecure;
     if (on != _secureSent) {
       _secureSent = on;

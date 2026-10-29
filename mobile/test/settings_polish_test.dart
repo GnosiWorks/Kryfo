@@ -331,6 +331,49 @@ void main() {
       expect((line.on, line.state), (true, l10n.settingsBlocked2));
       await devClose(t);
     });
+
+    for (final (sdk, blocked) in [(30, true), (33, false)]) {
+      testWidgets('a pin on android $sdk: the screenshots line says '
+          '${blocked ? 'blocked' : 'per chat'}', (t) async {
+        SharedPreferences.setMockInitialValues({
+          'battery_opt_prompt_seen': true,
+          'miui_autostart_prompt_seen': true,
+        });
+        await devWorld();
+        FlutterSecureStorage.setMockInitialValues({});
+        t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          const MethodChannel('halo/platform'),
+          (c) async => c.method == 'phoneMaker' ? {'sdk': '$sdk'} : null,
+        );
+        lockState.openForTest(enabled: true);
+        await t.runAsync(() => appState.loadScreenSecure());
+        addTearDown(() async {
+          t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+            const MethodChannel('halo/platform'),
+            (_) async => null,
+          );
+          lockState.openForTest();
+          await appState.loadScreenSecure();
+        });
+        t.view.physicalSize = const Size(1000, 6000);
+        t.view.devicePixelRatio = 2;
+        addTearDown(t.view.reset);
+        await t.pumpWidget(devApp(const SettingsScreen()));
+        await t.pump(const Duration(seconds: 1));
+        final line = t.widget<ProtectionLine>(
+          find.byWidgetPredicate(
+            (w) => w is ProtectionLine && w.label == l10n.settingsScreenshots,
+          ),
+        );
+        expect(
+          (line.on, line.state),
+          blocked
+              ? (true, l10n.settingsBlocked2)
+              : (false, l10n.settingsPerChat),
+        );
+        await devClose(t);
+      });
+    }
   });
 
   group('gif search row', () {

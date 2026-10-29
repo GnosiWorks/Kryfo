@@ -450,9 +450,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 final onTor = appState.sendMode == 'private';
                 final torOn = onTor && link.kind == LinkKind.ready;
                 // the old switch covers every screen until home's card
-                // about it is answered. otherwise each chat has its own
-                // switch, with a pin set too
-                final shots = appState.shotsCardCovers;
+                // about it is answered, and so does a pin on android 12
+                // and older. otherwise each chat has its own switch
+                final shots =
+                    appState.shotsCardCovers || appState.pinBlocksShots;
                 // as the App lock screen reads it: a lock turned off in a
                 // decoy session is off
                 final lock = lockState.lockOn;

@@ -21,6 +21,8 @@ void main() {
   setUp(() {
     told = [];
     recents = [];
+    // a lock that was read: nothing is sent before
+    lockState.openForTest();
     FlutterSecureStorage.setMockInitialValues({});
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(const MethodChannel('halo/platform'), (

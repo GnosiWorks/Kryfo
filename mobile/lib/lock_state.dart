@@ -869,6 +869,16 @@ class LockState extends ChangeNotifier {
     _paused = false;
   }
 
+  // tests stand in a lock not read yet, as at a start
+  @visibleForTesting
+  void unloadForTest() {
+    _loaded = false;
+    _locked = true;
+    _enabled = false;
+    _paused = false;
+    notifyListeners();
+  }
+
   // tests lift the lock as a right pin would, and say so
   @visibleForTesting
   void liftForTest() {

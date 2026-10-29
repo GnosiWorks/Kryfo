@@ -390,8 +390,12 @@ class AppState extends ChangeNotifier {
   // the check-in's clock, which a test moves on its own
   DateTime Function() _checkClock = DateTime.now;
 
-  // the lock set or not, up or not: the window follows at once
-  (bool, bool)? _lockWas;
+  // the lock read or not, set or not, up or not, the vault open or not:
+  // the window follows at once
+  (bool, bool, bool, bool)? _lockWas;
+  // android before 13 has no switch for the recents picture: a pin set
+  // keeps the flag on there. read at boot
+  bool _noRecentsSwitch = false;
 
   // the old switch for the whole app was on: the whole window stays
   // covered as it was until home's card is answered. the card asks once
