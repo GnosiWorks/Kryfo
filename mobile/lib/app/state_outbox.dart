@@ -1136,8 +1136,10 @@ extension AppStateOutbox on AppState {
         dlog('send: $memberId unreachable (no session/bundle), skipping');
         return false;
       }
+      // the identity the door sealed it on goes with it to the relay
+      var ident = kMainIdent;
       try {
-        cipher = await _io.encrypt(memberId, wrapped);
+        (ident: ident, cipher: cipher) = await _io.seal(memberId, wrapped);
       } on StartingAfresh {
         // waits on their card, asked for as it falls due (_afreshCard)
         rethrow;
@@ -1160,13 +1162,11 @@ extension AppStateOutbox on AppState {
           unawaited(_sendBundleCtl(memberId, want: true));
           rethrow;
         }
-        cipher = await _io.encrypt(memberId, wrapped);
+        (ident: ident, cipher: cipher) = await _io.seal(memberId, wrapped);
       }
       final backPaired = to.backPaired;
       final xpub = to.xpub;
       final onion = to.onion;
-      // the identity the door sealed it on goes with it to the relay
-      final ident = identOf(memberId);
       final pairWay = await pairRead(memberId, backPaired: backPaired);
 
       // the onion and a fresh pair copy at its own time, never the

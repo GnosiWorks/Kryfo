@@ -82,16 +82,28 @@ Future<String> signalEncrypt(
   String peerId,
   String plaintext, {
   bool onlySettled = false,
+}) async =>
+    (await signalSeal(peerId, plaintext, onlySettled: onlySettled)).cipher;
+
+/// as signalEncrypt, with the identity the door sealed on: every relay call
+/// that carries the cipher takes this one, never a second lookup
+Future<({int ident, String cipher})> signalSeal(
+  String peerId,
+  String plaintext, {
+  bool onlySettled = false,
 }) async {
   if (isDevId(peerId)) {
     if (onlySettled) throw NotSettled(peerId);
-    return devLane.encrypt(peerId, plaintext);
+    return (
+      ident: kMainIdent,
+      cipher: await devLane.encrypt(peerId, plaintext),
+    );
   }
   plaintext = await appState.shotsOnWire(peerId, plaintext);
   final (ident, framed) = await appState.doorFor(peerId, plaintext);
   final ss = await signalOfIdent(ident);
   final from = _afreshFrom;
-  return ss.encryptTo(
+  final cipher = await ss.encryptTo(
     peerId,
     framed,
     onlySettled: onlySettled,
@@ -101,6 +113,7 @@ Future<String> signalEncrypt(
     // a card naming another key: flagged as on an open, once out of the lane
     keyMoved: () => unawaited(_keyMoved?.call(peerId)),
   );
+  return (ident: ident, cipher: cipher);
 }
 
 // where a seal finds a peer's card to start a session afresh from, after a

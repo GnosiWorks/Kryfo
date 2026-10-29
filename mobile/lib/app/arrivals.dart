@@ -188,6 +188,11 @@ class AppIo {
   Future<String> encrypt(String peer, String plain) =>
       signalEncrypt(peer, plain);
 
+  // as encrypt, with the identity the door sealed on: the relay call that
+  // carries it takes that one
+  Future<({int ident, String cipher})> seal(String peer, String plain) =>
+      signalSeal(peer, plain);
+
   void listen(int ident, String xPub, {bool fresh = false}) =>
       engine.nostrSubscribeBg(ident, xPub, fresh: fresh);
 
