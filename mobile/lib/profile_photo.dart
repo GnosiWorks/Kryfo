@@ -257,6 +257,7 @@ class PhotoSendFacts {
     required this.blocked,
     required this.peerCan,
     required this.mainIdentity,
+    this.support = false,
   });
 
   // a decoy session, or a decoy container
@@ -273,11 +274,15 @@ class PhotoSendFacts {
   // contact of another identity never gets it, and one not known is not
   // taken for main
   final bool mainIdentity;
+  // on the developer's phone: someone who wrote in through his chat. they
+  // see the Kryfo face, never his photo
+  final bool support;
 }
 
 /// whether [f]'s contact should hold our photo now
 bool photoOwedTo(PhotoSendFacts f) =>
     !f.dev &&
+    !f.support &&
     f.mainIdentity &&
     f.accepted &&
     f.backPaired &&

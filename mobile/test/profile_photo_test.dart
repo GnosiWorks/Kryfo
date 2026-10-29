@@ -13,6 +13,7 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart' show getCrc32;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/chat_shots.dart';
+import 'package:kryfo/devchat/support.dart' show supportTables;
 import 'package:kryfo/image_strip.dart' show pictureKind, PictureKind;
 import 'package:kryfo/jpeg_strip.dart' show jpegHasExif;
 import 'package:kryfo/main.dart' show HaloDb, photoTables;
@@ -658,6 +659,19 @@ void main() {
       await db.owePhoto(_peer, 7, at: 1);
       expect(await db.duePhotoPeers(1 << 62), isEmpty);
       expect(await db.nextPhotoDue(), isNull);
+      await db.owePhoto(_peer, 0, at: 1);
+      expect((await db.duePhotoPeers(1 << 62)).single.want, 0);
+    }, skip: skip);
+
+    test('on the developer\'s phone, someone who wrote in through his chat '
+        'is never owed it', () async {
+      final db = await rows();
+      await supportTables(db.mem);
+      expect(await owed(db), isTrue);
+      await db.mem.insert('support_chats', {'halo_id': _peer, 'first_at': 1});
+      expect(await owed(db), isFalse);
+      await db.owePhoto(_peer, 7, at: 1);
+      expect(await db.duePhotoPeers(1 << 62), isEmpty);
       await db.owePhoto(_peer, 0, at: 1);
       expect((await db.duePhotoPeers(1 << 62)).single.want, 0);
     }, skip: skip);

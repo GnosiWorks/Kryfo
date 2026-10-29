@@ -234,10 +234,10 @@ mixin _PhotoRows {
   /// every contact here as the photo sees them, with what they hold
   Future<List<({PhotoSendFacts facts, PhotoPeer peer})>> photoPeople() async {
     final db = await open();
-    final ident = await _identCol(db);
+    final (:ident, :support) = await _photoCols(db);
     final rows = await db.rawQuery('''
       SELECT c.halo_id AS id, c.accepted, c.back_paired, c.blocked, c.caps,
-        $ident AS ident,
+        $ident AS ident, $support AS support,
         p.held, p.want, p.stamp, p.next_at, p.tries
       FROM contacts c LEFT JOIN photo_peers p ON p.halo_id = c.halo_id
     ''');
@@ -253,17 +253,31 @@ mixin _PhotoRows {
             blocked: (r['blocked'] as int? ?? 0) == 1,
             peerCan: capsOfText(r['caps'] as String?).contains(kCapPhotos),
             mainIdentity: r['ident'] == 0,
+            support: r['support'] != 0,
           ),
           peer: _peerOf(r),
         ),
     ];
   }
 
-  // which identity a contact knows: the column where identities have one,
-  // else every contact knows the main one
-  static Future<String> _identCol(DatabaseExecutor db) async {
+  // as sql over contacts c: the identity a contact knows, from the column
+  // where identities have one, else the main one; and whether they wrote
+  // in through the developer's chat, on his phone
+  static Future<({String ident, String support})> _photoCols(
+    DatabaseExecutor db,
+  ) async {
     final cols = await db.rawQuery('PRAGMA table_info(contacts)');
-    return cols.any((c) => c['name'] == 'ident') ? 'c.ident' : '0';
+    final inbox = await db.rawQuery(
+      "SELECT 1 FROM sqlite_master WHERE type = 'table' "
+      "AND name = 'support_chats'",
+    );
+    return (
+      ident: cols.any((c) => c['name'] == 'ident') ? 'c.ident' : '0',
+      support: inbox.isEmpty
+          ? '0'
+          : 'EXISTS (SELECT 1 FROM support_chats s '
+                'WHERE s.halo_id = c.halo_id)',
+    );
   }
 
   static PhotoPeer _peerOf(Map<String, Object?> r) => (
@@ -303,13 +317,13 @@ mixin _PhotoRows {
   /// know the main identity; a take-back goes
   Future<List<PhotoPeer>> duePhotoPeers(int now) async {
     final db = await open();
-    final ident = await _identCol(db);
+    final (:ident, :support) = await _photoCols(db);
     final rows = await db.rawQuery(
       '''
       SELECT p.halo_id AS id, p.held, p.want, p.stamp, p.next_at, p.tries
       FROM photo_peers p LEFT JOIN contacts c ON c.halo_id = p.halo_id
       WHERE p.want IS NOT NULL AND p.next_at <= ?
-        AND (p.want = 0 OR $ident IS 0)
+        AND (p.want = 0 OR ($ident IS 0 AND NOT $support))
       ORDER BY p.next_at
     ''',
       [now],
@@ -320,12 +334,12 @@ mixin _PhotoRows {
   /// the next time one is due, or null
   Future<int?> nextPhotoDue() async {
     final db = await open();
-    final ident = await _identCol(db);
+    final (:ident, :support) = await _photoCols(db);
     final r = await db.rawQuery('''
       SELECT MIN(p.next_at) AS at
       FROM photo_peers p LEFT JOIN contacts c ON c.halo_id = p.halo_id
       WHERE p.want IS NOT NULL
-        AND (p.want = 0 OR $ident IS 0)
+        AND (p.want = 0 OR ($ident IS 0 AND NOT $support))
     ''');
     return r.isEmpty ? null : r.first['at'] as int?;
   }
