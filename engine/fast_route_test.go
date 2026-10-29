@@ -127,7 +127,7 @@ func TestFastFailsOverWithoutAGap(t *testing.T) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
-	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 	waitFor(t, "a carries", 10*time.Second, func() bool {
 		c := a.snapshot()
 		return len(c) > 0 && len(c[0].reqs) > 0
@@ -230,7 +230,7 @@ func TestTheSecondStoreHasItsOwnAnchor(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
-	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 	waitFor(t, "the wrap only b holds", 10*time.Second, func() bool {
 		return inboxHas(tag+"|only b, stamped back") && inboxHas(tag+"|both")
 	})
@@ -280,7 +280,7 @@ func TestASecondStoreWithNoFileWalksAllItHolds(t *testing.T) {
 	b.store(wrapToAt(t, peer, myXPub, "since it went live, only b", at))
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
-	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 	waitFor(t, "the wrap only b holds", 10*time.Second, func() bool {
 		return inboxHas(tag + "|since it went live, only b")
 	})
