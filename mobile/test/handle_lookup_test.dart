@@ -92,7 +92,7 @@ void main() {
   });
 
   group('a v4 invite from the registry (R11)', () {
-    const f = 'ab' * 32;
+    final f = 'ab' * 32;
     const link = 'kryfo://share?v=4&i=S0lONAE';
     String body(String claimer) =>
         '{"names":{"wren":"$claimer"},"invite":"$link"}';
