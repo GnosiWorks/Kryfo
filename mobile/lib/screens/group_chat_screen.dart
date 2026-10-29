@@ -4341,7 +4341,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (!mounted || (_draftReply ?? _hiddenQuote) != uid) return;
     _draftReply = null;
     final from = row?['peer_id'] as String?;
-    if (row == null || from == null) {
+    // a reply picked meanwhile wins over the kept one
+    if (row == null || from == null || _replyTo != null) {
       _hiddenQuote = null;
       return;
     }
@@ -4351,7 +4352,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       return;
     }
     _hiddenQuote = null;
-    if (_replyTo != null) return;
     final m = _GMsg(
       sender: from,
       senderName: _nameOf(from),
