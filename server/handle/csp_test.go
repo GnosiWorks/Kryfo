@@ -16,7 +16,7 @@ func TestPagesMatchTheirCSP(t *testing.T) {
 	srv, _ := service(t, newLimiter(100, 100))
 	c := srv.Client()
 	claim(t, c, srv.URL, "wren", newOwner(t))
-	for _, path := range []string{"/@wren", "/@nobody", "/"} {
+	for _, path := range []string{"/@wren", "/@nobody", "/", "/i?" + goodQuery, "/i?id=x"} {
 		resp, err := c.Get(srv.URL + path)
 		if err != nil {
 			t.Fatal(err)

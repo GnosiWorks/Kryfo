@@ -674,6 +674,22 @@ func routes(st *store, lim *limiter) http.Handler {
 		})
 	})
 
+	// the invite page. the query is checked, shown escaped, never kept
+	mux.HandleFunc("/i", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+			w.Header().Set("Allow", "GET, HEAD")
+			http.Error(w, "", http.StatusMethodNotAllowed)
+			return
+		}
+		body, ok := invitePage(r.URL.RawQuery)
+		writeHTMLHeaders(w)
+		w.Header().Set("Cache-Control", "no-store")
+		if !ok {
+			w.WriteHeader(http.StatusNotFound)
+		}
+		fmt.Fprint(w, body)
+	})
+
 	// the public page. one link for a bio, opening straight into a private
 	// chat. static, no analytics, nothing recorded about whoever reads it.
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -724,29 +740,119 @@ func fingerprint(pub string) string {
 
 var busyPage = `<!doctype html><meta charset=utf-8>` + head + `
 <div class=wrap><div class=card>
-<div class=name>busy</div>
-<p class=bio>too many people are looking right now. try again in a minute.</p>
+<div class=name>Busy</div>
+<p class=bio>Too many people are looking right now. Try again in a minute.</p>
 </div></div>`
+
+const foot = `<div class=foot>This page learns nothing about you · No analytics, no cookies, no logs</div>`
+
+// play stays off until the listing is public: HANDLE_PLAY_URL empty means
+// no play link, and only an https link to play is taken
+func playURL() string {
+	u := os.Getenv("HANDLE_PLAY_URL")
+	if !strings.HasPrefix(u, "https://play.google.com/") {
+		return ""
+	}
+	return u
+}
+
+// the same lines for every visitor: on an iphone or a desktop a kryfo://
+// link does nothing, so the page always says where to get the app
+func getKryfo() string {
+	s := `<div class=get>
+  <p>New to Kryfo? It is on Android for now.</p>
+  <a class=dl href="https://kryfo.app/download">Download from kryfo.app</a>
+  <a class=dl href="https://f-droid.org/packages/app.kryfo/">Get it on F-Droid</a>`
+	if p := playURL(); p != "" {
+		s += `
+  <a class=dl href="` + html.EscapeString(p) + `">Get it on Google Play</a>`
+	}
+	return s + `
+</div>`
+}
 
 func page(handle, bio, invite, fp string) string {
 	if invite == "" {
 		return `<!doctype html><meta charset=utf-8>` + head + `
 <div class=wrap><div class=card>
-<div class=name>not here</div>
-<p class=bio>no one has claimed this handle.</p>
+<div class=name>Not here</div>
+<p class=bio>No one has claimed this handle.</p>
+` + getKryfo() + `
+` + foot + `
 </div></div>`
 	}
 	return `<!doctype html><meta charset=utf-8>` + head + `
 <div class=wrap><div class=card>
   <div class=seal>` + html.EscapeString(strings.ToUpper(handle[:1])) + `</div>
   <div class=name>@` + html.EscapeString(handle) + `</div>
-  <div class=verified>verified handle</div>
+  <div class=verified>Verified handle</div>
   <p class=bio>` + html.EscapeString(bio) + `</p>
-  <a class=btn href="` + html.EscapeString(invite) + `">message on kryfo</a>
-  <div class=fp>key fingerprint · ` + html.EscapeString(fp) + `<br><span>check it matches in the app before you trust it</span></div>
-  <div class=foot>this page learns nothing about you · no analytics, no cookies, no log</div>
+  <a class=btn href="` + html.EscapeString(invite) + `">Open in Kryfo</a>
+  ` + getKryfo() + `
+  <div class=fp>Key fingerprint · ` + html.EscapeString(fp) + `</div>
+  ` + foot + `
 </div></div>`
 }
+
+const kryfoIs = `Kryfo is an encrypted messenger that works without a phone number, an email address or an account.`
+
+// the invite page: https://relay.kryfo.app/i?<query of kryfo://share?..>,
+// so an invite can be tapped in any messenger. the query is checked with the
+// same rule as a claimed invite and is never written anywhere.
+func invitePage(raw string) (string, bool) {
+	inv := "kryfo://share?" + raw
+	id, ok := inviteID(inv)
+	if !ok {
+		return `<!doctype html><meta charset=utf-8>` + head + `
+<div class=wrap><div class=card>
+<div class=name>Not a whole invite</div>
+<p class=bio>This link is missing a part. Ask for a new invite, or get Kryfo below.</p>
+` + getKryfo() + `
+` + foot + `
+</div></div>`, false
+	}
+	return `<!doctype html><meta charset=utf-8>` + head + `
+<div class=wrap><div class=card>
+  <div class=seal>K</div>
+  <div class=name>` + html.EscapeString(id) + `</div>
+  <div class=verified>Invites you to a private chat</div>
+  <p class=bio>` + kryfoIs + `</p>
+  <a class=btn href="` + html.EscapeString(inv) + `">Open in Kryfo</a>
+  ` + getKryfo() + `
+  ` + foot + `
+</div></div>`, true
+}
+
+// the id of an invite the app built: three words from the list, nothing else
+// gets onto the page
+func inviteID(inv string) (string, bool) {
+	if !inviteOK(inv) {
+		return "", false
+	}
+	u, err := url.Parse(inv)
+	if err != nil {
+		return "", false
+	}
+	id := u.Query().Get("id")
+	w := strings.Split(id, "-")
+	if len(w) != 3 {
+		return "", false
+	}
+	for _, x := range w {
+		if !wordSet[x] {
+			return "", false
+		}
+	}
+	return id, true
+}
+
+var wordSet = func() map[string]bool {
+	m := make(map[string]bool, len(wordList))
+	for _, w := range wordList {
+		m[w] = true
+	}
+	return m
+}()
 
 // no script-src at all, so nothing on this page can execute, not even a
 // javascript: url in an href. the fonts and the one <style> block below are
@@ -773,7 +879,7 @@ func writeHTMLHeaders(w http.ResponseWriter) {
 
 const head = `<meta name=viewport content="width=device-width,initial-scale=1">
 <meta name=referrer content=no-referrer>
-<title>kryfo</title>
+<title>Kryfo</title>
 <style>
 @font-face{font-family:Fraunces;font-weight:100 900;font-display:swap;src:url(/handle/font/Fraunces.ttf) format('truetype')}
 @font-face{font-family:'Instrument Sans';font-weight:400 700;font-display:swap;src:url(/handle/font/InstrumentSans.ttf) format('truetype')}
@@ -796,7 +902,10 @@ body{margin:0;min-height:100vh;background:#0D0B09;color:#F5F1EA;
      text-decoration:none;font-weight:600;font-size:14.5px}
 .fp{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#A79E92;
     margin-top:22px;line-height:1.7}
-.fp span{color:#8F8579}
+.get{margin:22px 0 0}
+.get p{color:#C8C0B5;font-size:13px;line-height:1.6;margin:0 0 12px}
+.dl{display:block;margin-top:8px;padding:11px;border-radius:999px;border:1px solid #F59E0B;
+    color:#F59E0B;text-decoration:none;font-weight:600;font-size:13.5px}
 .foot{margin-top:20px;padding-top:18px;border-top:1px solid #2F2922;
       font-size:11px;color:#A79E92}
 </style>`
