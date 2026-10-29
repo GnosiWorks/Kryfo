@@ -154,8 +154,13 @@ key. that key is kept one of two ways.
 - without a passphrase, a reset keyring, a password reset by an admin or a
   cleared tpm loses the key on that computer. a Kryfo backup is the way
   back.
-- an older copy of the folder still opens with what opened it then: an old
-  passphrase, or an old keyring item.
+- adding, changing or removing the passphrase seals Kryfo's key file under
+  a new random key, so an older copy of that file no longer opens the
+  current one. an older copy of the folder opens only the data as it was
+  then, with what opened it then: an old passphrase, or an old keyring
+  item. the keys of the databases and files inside stay the same, so that
+  older copy together with a copy of today's databases and files opens
+  those too.
 
 what follows is not covered by either.
 

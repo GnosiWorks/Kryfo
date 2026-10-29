@@ -2,9 +2,11 @@
 // the vault's data key kept by the computer account or by a passphrase,
 // with the keyring, dpapi and the tpm stood in for
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/desktop/desktop_platform.dart';
 import 'package:kryfo/desktop/desktop_vault.dart';
@@ -51,6 +53,15 @@ class FakeKeyring implements SystemSeal {
   Future<void> forget(Uint8List id, int how, Uint8List data) async {
     forgotten.add(hexOf(id));
     items.remove(hexOf(id));
+  }
+}
+
+class _Full implements VaultDisk {
+  static bool full = false;
+  @override
+  void replace(String path, Uint8List bytes) {
+    if (full) throw const FileSystemException('full');
+    const RealVaultDisk().replace(path, bytes);
   }
 }
 
@@ -134,6 +145,67 @@ class _Win implements WinCrypt {
     deleted.add(name);
     keys.remove(name);
   }
+}
+
+// the head of a version 4 file as someone with a copy reads it: its slots
+// and where the body starts
+(List<(int, Uint8List)>, int) _headOf(Uint8List raw) {
+  var at = 5 + 16;
+  final n = raw[at++];
+  final slots = <(int, Uint8List)>[];
+  for (var i = 0; i < n; i++) {
+    final kind = raw[at];
+    final len = raw[at + 1] << 8 | raw[at + 2];
+    slots.add((kind, Uint8List.fromList(raw.sublist(at + 3, at + 3 + len))));
+    at += 3 + len;
+  }
+  return (slots, at + 32);
+}
+
+String _hexOf(List<int> b) =>
+    b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
+
+/// the data key out of an older copy, with the passphrase or the system
+/// secret that opened it then
+Future<Uint8List?> dataKeyOfCopy(
+  Uint8List raw, {
+  String? pass,
+  Uint8List? secret,
+}) async {
+  final toy = ToyVaultCrypto();
+  final (kind, d) = _headOf(raw).$1.first;
+  List<int> kek;
+  int at;
+  if (kind == 1) {
+    final k = await toy.keyOf(pass!, Uint8List.sublistView(d, 1, 17), d[0]);
+    kek = [
+      for (var i = 0; i < 64; i += 2)
+        int.parse(k!.substring(i, i + 2), radix: 16),
+    ];
+    at = 17;
+  } else {
+    kek = secret!;
+    at = 1;
+  }
+  final fresh = d.sublist(at, at + 16);
+  final wrap = Hmac(
+    sha256,
+    kek,
+  ).convert([...utf8.encode('kryfo vault slot'), ...fresh]);
+  return toy.open(
+    _hexOf(wrap.bytes),
+    Uint8List.sublistView(d, at + 16, at + 16 + 48),
+  );
+}
+
+/// whether [dk] opens the body of the file [raw]
+bool opensBody(Uint8List raw, Uint8List dk) {
+  final at = _headOf(raw).$2;
+  final body = Hmac(
+    sha256,
+    dk,
+  ).convert([...utf8.encode('kryfo vault body'), ...raw.sublist(0, at)]);
+  return ToyVaultCrypto().open(_hexOf(body.bytes), raw.sublist(at)) != null;
 }
 
 void main() {
@@ -346,6 +418,65 @@ void main() {
         expect(w.hasPassphrase, isTrue);
       },
     );
+  });
+
+  group('an older copy of the file', () {
+    test('a passphrase added shuts out a copy kept by the keyring', () async {
+      final v = vault();
+      await v.createSealed(ring);
+      await v.write('db', 'key');
+      final copy = File(path).readAsBytesSync();
+      final item = Uint8List.fromList(ring.items.values.single);
+      final dk = (await dataKeyOfCopy(copy, secret: item))!;
+      expect(opensBody(copy, dk), isTrue);
+      await v.addPassphrase(_pass, seal: ring);
+      await v.write('db', 'later');
+      expect(opensBody(File(path).readAsBytesSync(), dk), isFalse);
+      final w = vault();
+      expect(await w.open(_pass), isTrue);
+      expect(w.read('db'), 'later');
+    });
+
+    test('a changed passphrase shuts out a copy under the old one', () async {
+      final v = vault();
+      await v.create(_pass);
+      await v.write('db', 'key');
+      final copy = File(path).readAsBytesSync();
+      final dk = (await dataKeyOfCopy(copy, pass: _pass))!;
+      expect(opensBody(copy, dk), isTrue);
+      expect(await v.changePassphrase(_pass, _next), isTrue);
+      expect(opensBody(File(path).readAsBytesSync(), dk), isFalse);
+      await v.write('b', '2');
+      final w = vault();
+      expect(await w.open(_next), isTrue);
+      expect(w.readAll(), {'db': 'key', 'b': '2'});
+    });
+
+    test('a removed passphrase shuts out a copy under it', () async {
+      final v = vault();
+      await v.create(_pass);
+      final copy = File(path).readAsBytesSync();
+      final dk = (await dataKeyOfCopy(copy, pass: _pass))!;
+      expect(await v.removePassphrase(_pass, ring), isTrue);
+      expect(opensBody(File(path).readAsBytesSync(), dk), isFalse);
+      expect(await vault().openSealed(ring), SealedOpen.opened);
+    });
+
+    test('a failed write keeps the key it had', () async {
+      final v = DesktopVault(path, crypto: ToyVaultCrypto(), disk: _Full());
+      await DesktopVault(path, crypto: ToyVaultCrypto()).create(_pass);
+      expect(await v.open(_pass), isTrue);
+      _Full.full = true;
+      await expectLater(
+        v.addPassphrase(_next),
+        throwsA(isA<FileSystemException>()),
+      );
+      _Full.full = false;
+      await v.write('a', '1');
+      final w = vault();
+      expect(await w.open(_pass), isTrue);
+      expect(w.read('a'), '1');
+    });
   });
 
   group('the linux keyring', () {

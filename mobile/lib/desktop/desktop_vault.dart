@@ -634,20 +634,22 @@ class DesktopVault {
     return false;
   }
 
-  /// from now on [passphrase] opens the vault, and only it. what the
-  /// computer kept goes once the file no longer needs it
+  /// from now on [passphrase] opens the vault, and only it, under a new
+  /// data key. what the computer kept goes once the file no longer needs it
   Future<void> addPassphrase(String passphrase, {SystemSeal? seal}) async {
     if (passphrase.runes.length < kVaultMinLength) {
       throw ArgumentError('passphrase too short');
     }
-    final dk = _key ?? (throw const VaultLocked());
+    if (_key == null) throw const VaultLocked();
     final old = _slots;
     final salt = _bytes(_saltLen);
     final kek = await _kek(passphrase, salt, logN);
     if (kek == null) throw StateError('no key from the engine');
-    final slot = _passSlot(kek, salt, logN, dk);
-    kek.fillRange(0, kek.length, 0);
-    await _queueSlots([slot]);
+    try {
+      await _rekey((dk) => [_passSlot(kek, salt, logN, dk)]);
+    } finally {
+      kek.fillRange(0, kek.length, 0);
+    }
     if (seal != null) await _forget(seal, old);
   }
 
@@ -666,11 +668,11 @@ class DesktopVault {
   /// and the passphrase then stays
   Future<bool> removePassphrase(String current, SystemSeal seal) async {
     if (!await _isPassphrase(current)) return false;
-    final dk = _key ?? (throw const VaultLocked());
+    if (_key == null) throw const VaultLocked();
     final sk = _bytes(_dkLen);
     try {
       final kept = await seal.keep(_id!, sk);
-      await _queueSlots([_systemSlot(kept, sk, dk)]);
+      await _rekey((dk) => [_systemSlot(kept, sk, dk)]);
     } finally {
       sk.fillRange(0, sk.length, 0);
     }
@@ -750,19 +752,32 @@ class DesktopVault {
     return done;
   }
 
-  // a new head, in the same line as the writes
-  Future<void> _queueSlots(List<_Slot> next) {
+  // a new head under a new data key, in the same line as the writes: an
+  // older copy of the file, with what opened it, opens only itself. the
+  // old key goes once the write landed; a failed write keeps it
+  Future<void> _rekey(List<_Slot> Function(Uint8List dk) slots) {
     _held;
     final done = _writes.catchError((_) {}).then((_) {
-      _persist(Map.of(_held), next);
+      final dk = _bytes(_dkLen);
+      final List<_Slot> next;
+      try {
+        next = slots(dk);
+        _persist(Map.of(_held), next, dk);
+      } catch (_) {
+        dk.fillRange(0, dk.length, 0);
+        rethrow;
+      }
+      final old = _key;
+      _key = dk;
       _slots = next;
+      if (old != null && !identical(old, dk)) old.fillRange(0, old.length, 0);
     });
     _writes = done;
     return done;
   }
 
-  void _persist(Map<String, String> m, List<_Slot> slots) {
-    final dk = _key ?? (throw const VaultLocked());
+  void _persist(Map<String, String> m, List<_Slot> slots, [List<int>? key]) {
+    final dk = key ?? _key ?? (throw const VaultLocked());
     final head = BytesBuilder(copy: false)
       ..add(_magic)
       ..addByte(_version)
