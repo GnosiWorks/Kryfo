@@ -2626,5 +2626,8 @@
   "desktopFolderNotYours": "Folder Kryfo milik akun lain di komputer ini, jadi Kryfo tidak akan membukanya.",
   "desktopFolderNotPrivate": "Kryfo tidak bisa membuat foldernya hanya untukmu, jadi tidak akan dibuka.",
   "desktopLockOtherVersion": "Kunci ini dibuat oleh versi Kryfo lain yang tidak bisa dibaca versi ini.",
-  "desktopNoMemoryFolder": "Kryfo butuh folder pribadi di memori selama berjalan, dan komputer ini tidak menyediakannya, jadi Kryfo tidak akan dibuka."
+  "desktopNoMemoryFolder": "Kryfo butuh folder pribadi di memori selama berjalan, dan komputer ini tidak menyediakannya, jadi Kryfo tidak akan dibuka.",
+  "inviteNotYet": "Undangan ini belum berlaku. Periksa jam di ponselmu.",
+  "inviteExpired": "Undangan ini sudah kedaluwarsa. Minta yang baru.",
+  "inviteDamaged": "Undangan ini rusak. Minta yang baru."
 }

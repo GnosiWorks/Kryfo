@@ -10017,4 +10017,14 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'O Kryfo precisa de uma pasta privada na memória enquanto roda, e este computador não oferece nenhuma, então ele não vai abrir.';
+
+  @override
+  String get inviteNotYet =>
+      'Este convite ainda não é válido. Confira a hora do seu celular.';
+
+  @override
+  String get inviteExpired => 'Este convite expirou. Peça um novo.';
+
+  @override
+  String get inviteDamaged => 'Este convite está danificado. Peça um novo.';
 }

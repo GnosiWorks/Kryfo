@@ -144,7 +144,17 @@ Future<(String, bool)> handleHaloUriAdded(
     if (r.isEmpty || r == l10n.appYouAreAlreadyIn) openRoomSoon(room.roomId);
     return (r, false);
   }
-  final parsed = parseHaloUri(raw);
+  // a v4 invite: read through the shim with every check and the times
+  LsInvite? v4;
+  var parsed = parseHaloUri(raw);
+  if (parsed == null && isV4Link(raw)) {
+    final got = v4OfLink(raw);
+    if (got is InviteFault) return (inviteFaultLine(got), false);
+    v4 = got as LsInvite;
+    parsed = v4Parsed(v4);
+    // one without a bundle (a qr) is answered with a hello, a later step
+    if (parsed == null) return (l10n.appInvalidUri, false);
+  }
   if (parsed == null) return (l10n.appInvalidUri, false);
   // one's own invite adds no one: a row and a session with oneself would
   // only put oneself in the chat list
@@ -279,6 +289,45 @@ Future<(String, bool)> handleHaloUriAdded(
   // while nothing of theirs is kept. the blocked list lets them back
   if (await session.isBlocked(parsed['id']!)) {
     return (l10n.appTheyAreBlocked(parsed['id']!), false);
+  }
+  if (v4 != null) {
+    final id = parsed['id']!;
+    final already = await session.isAccepted(id);
+    final asked = !already && await session.askedBefore(id);
+    if (!sessionQuiet) {
+      try {
+        await appState.startFromInvite(id, v4);
+      } catch (e) {
+        return (l10n.appBundleError(e), false);
+      }
+    }
+    // no onion until they answer: the opener goes to the invite's address
+    // alone, where its seal is checked
+    await session.upsertContact(id, '', parsed['xpub']!, owe: asked);
+    if (untombed) await appState._untomb(id);
+    await appState._untombShut(id);
+    await _noteHowAdded(
+      id,
+      scanned: scanned,
+      already: already,
+      taken: taken,
+      untombed: untombed,
+    );
+    if (sessionQuiet) {
+      await appState.refreshContacts();
+      openAddedChatLater(id);
+      return (already ? l10n.appAlreadySaved(id) : '', true);
+    }
+    await appState.rememberPeerFc(id, parsed['fc']!);
+    await appState.subscribePeer(id, fresh: true);
+    if (asked) await appState.afterAccept(id);
+    await appState.refreshContacts();
+    if (!already && await appState.inboxChatOf(id)) {
+      askInboxMove(id);
+    } else {
+      openAddedChatLater(id);
+    }
+    return (already ? l10n.appAlreadySaved(id) : '', true);
   }
   if (parsed['v'] == '2' || parsed['v'] == '3') {
     final id = parsed['id']!;
@@ -580,4 +629,41 @@ Future<(LinkKin, String)> _linkKin(
     }
   }
   return (LinkKin.stranger, id);
+}
+
+/// the invite a v4 link carries, read as a reader reads it, or why not
+Object v4OfLink(String raw) {
+  final b = inviteOfLink(raw);
+  if (b == null) return InviteFault.damaged;
+  try {
+    return readInvite(signalSession.lib, b);
+  } on InviteRefused catch (e) {
+    return e.fault;
+  }
+}
+
+/// what the person reads for an invite turned away
+String inviteFaultLine(InviteFault f) => switch (f) {
+  InviteFault.damaged => l10n.inviteDamaged,
+  InviteFault.notYet => l10n.inviteNotYet,
+  InviteFault.expired => l10n.inviteExpired,
+};
+
+/// a v4 invite as the link parts an add reads: the words of its face, its
+/// onion, its key and its first-contact address. null for one a session
+/// cannot start from here (no face, no onion or no bundle)
+Map<String, String>? v4Parsed(LsInvite inv) {
+  final f = inv.face;
+  final o = inv.onion;
+  if (f == null || o == null || inv.block == null) return null;
+  final id = engine.idFromEdPub(_hexOf(f));
+  final onion = engine.onionOfKey(_hexOf(o));
+  if (!_wordsShape.hasMatch(id) || !onion.endsWith('.onion')) return null;
+  return {
+    'id': id,
+    'onion': onion,
+    'xpub': _hexOf(inv.identity.sublist(1)),
+    'fc': _hexOf(inv.firstContact),
+    'v': '4',
+  };
 }

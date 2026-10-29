@@ -9941,4 +9941,15 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo butuh folder pribadi di memori selama berjalan, dan komputer ini tidak menyediakannya, jadi Kryfo tidak akan dibuka.';
+
+  @override
+  String get inviteNotYet =>
+      'Undangan ini belum berlaku. Periksa jam di ponselmu.';
+
+  @override
+  String get inviteExpired =>
+      'Undangan ini sudah kedaluwarsa. Minta yang baru.';
+
+  @override
+  String get inviteDamaged => 'Undangan ini rusak. Minta yang baru.';
 }

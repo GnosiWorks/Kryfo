@@ -9933,4 +9933,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo needs a private folder in memory while it runs, and this computer offers none, so it will not open.';
+
+  @override
+  String get inviteNotYet =>
+      'This invite isn\'t valid yet. Check the time on your phone.';
+
+  @override
+  String get inviteExpired => 'This invite has expired. Ask for a new one.';
+
+  @override
+  String get inviteDamaged => 'This invite is damaged. Ask for a new one.';
 }

@@ -10046,4 +10046,16 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo braucht beim Laufen einen privaten Ordner im Arbeitsspeicher, und dieser Computer bietet keinen, deshalb öffnet es sich nicht.';
+
+  @override
+  String get inviteNotYet =>
+      'Diese Einladung gilt noch nicht. Prüfe die Uhrzeit auf deinem Handy.';
+
+  @override
+  String get inviteExpired =>
+      'Diese Einladung ist abgelaufen. Bitte um eine neue.';
+
+  @override
+  String get inviteDamaged =>
+      'Diese Einladung ist beschädigt. Bitte um eine neue.';
 }

@@ -10018,4 +10018,14 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo necesita una carpeta privada en memoria mientras funciona, y este ordenador no ofrece ninguna, así que no se abrirá.';
+
+  @override
+  String get inviteNotYet =>
+      'Esta invitación aún no es válida. Revisa la hora de tu teléfono.';
+
+  @override
+  String get inviteExpired => 'Esta invitación ha caducado. Pide una nueva.';
+
+  @override
+  String get inviteDamaged => 'Esta invitación está dañada. Pide una nueva.';
 }

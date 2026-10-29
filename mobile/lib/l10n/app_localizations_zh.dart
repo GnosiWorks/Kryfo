@@ -9459,6 +9459,15 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo 运行时需要内存中的一个私有文件夹，而这台电脑没有提供，所以 Kryfo 不会打开。';
+
+  @override
+  String get inviteNotYet => '此邀请尚未生效。请检查手机上的时间。';
+
+  @override
+  String get inviteExpired => '此邀请已过期。请索取新的邀请。';
+
+  @override
+  String get inviteDamaged => '此邀请已损坏。请索取新的邀请。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -18799,4 +18808,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo 執行時需要記憶體中的一個私有資料夾，而這台電腦沒有提供，所以 Kryfo 不會開啟。';
+
+  @override
+  String get inviteNotYet => '此邀請尚未生效。請檢查手機上的時間。';
+
+  @override
+  String get inviteExpired => '此邀請已過期。請索取新的邀請。';
+
+  @override
+  String get inviteDamaged => '此邀請已損壞。請索取新的邀請。';
 }

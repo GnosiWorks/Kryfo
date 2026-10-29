@@ -9930,4 +9930,14 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo cần một thư mục riêng trong bộ nhớ khi chạy, và máy tính này không có, nên Kryfo sẽ không mở.';
+
+  @override
+  String get inviteNotYet =>
+      'Lời mời này chưa có hiệu lực. Hãy kiểm tra giờ trên điện thoại.';
+
+  @override
+  String get inviteExpired => 'Lời mời này đã hết hạn. Hãy xin lời mời mới.';
+
+  @override
+  String get inviteDamaged => 'Lời mời này bị hỏng. Hãy xin lời mời mới.';
 }

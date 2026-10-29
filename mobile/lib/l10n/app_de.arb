@@ -2626,5 +2626,8 @@
   "desktopFolderNotYours": "Der Kryfo-Ordner gehört einem anderen Konto auf diesem Computer, deshalb öffnet Kryfo ihn nicht.",
   "desktopFolderNotPrivate": "Kryfo konnte seinen Ordner nicht nur für dich zugänglich machen und öffnet sich deshalb nicht.",
   "desktopLockOtherVersion": "Diese Sperre stammt von einer anderen Kryfo-Version, die diese hier nicht lesen kann.",
-  "desktopNoMemoryFolder": "Kryfo braucht beim Laufen einen privaten Ordner im Arbeitsspeicher, und dieser Computer bietet keinen, deshalb öffnet es sich nicht."
+  "desktopNoMemoryFolder": "Kryfo braucht beim Laufen einen privaten Ordner im Arbeitsspeicher, und dieser Computer bietet keinen, deshalb öffnet es sich nicht.",
+  "inviteNotYet": "Diese Einladung gilt noch nicht. Prüfe die Uhrzeit auf deinem Handy.",
+  "inviteExpired": "Diese Einladung ist abgelaufen. Bitte um eine neue.",
+  "inviteDamaged": "Diese Einladung ist beschädigt. Bitte um eine neue."
 }

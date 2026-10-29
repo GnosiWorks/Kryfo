@@ -12507,5 +12507,17 @@
   "desktopNoMemoryFolder": "Kryfo needs a private folder in memory while it runs, and this computer offers none, so it will not open.",
   "@desktopNoMemoryFolder": {
     "description": "desktop/desktop_lock_screen.dart: no XDG_RUNTIME_DIR or /dev/shm folder could be had"
+  },
+  "inviteNotYet": "This invite isn't valid yet. Check the time on your phone.",
+  "@inviteNotYet": {
+    "description": "a v4 invite issued more than a day ahead of this phone clock"
+  },
+  "inviteExpired": "This invite has expired. Ask for a new one.",
+  "@inviteExpired": {
+    "description": "a v4 invite past its expiry and a day"
+  },
+  "inviteDamaged": "This invite is damaged. Ask for a new one.",
+  "@inviteDamaged": {
+    "description": "a v4 invite that does not parse or whose signature does not hold"
   }
 }

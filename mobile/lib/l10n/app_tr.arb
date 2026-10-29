@@ -2626,5 +2626,8 @@
   "desktopFolderNotYours": "Kryfo klasörü bu bilgisayardaki başka bir hesaba ait, bu yüzden Kryfo onu açmayacak.",
   "desktopFolderNotPrivate": "Kryfo klasörünü yalnızca sana özel yapamadı, bu yüzden açılmayacak.",
   "desktopLockOtherVersion": "Bu kilidi Kryfo'nun bu sürümün okuyamadığı başka bir sürümü oluşturdu.",
-  "desktopNoMemoryFolder": "Kryfo çalışırken bellekte özel bir klasöre ihtiyaç duyar, bu bilgisayar böyle bir klasör sunmuyor, bu yüzden açılmayacak."
+  "desktopNoMemoryFolder": "Kryfo çalışırken bellekte özel bir klasöre ihtiyaç duyar, bu bilgisayar böyle bir klasör sunmuyor, bu yüzden açılmayacak.",
+  "inviteNotYet": "Bu davet henüz geçerli değil. Telefonundaki saati kontrol et.",
+  "inviteExpired": "Bu davetin süresi doldu. Yenisini iste.",
+  "inviteDamaged": "Bu davet bozuk. Yenisini iste."
 }

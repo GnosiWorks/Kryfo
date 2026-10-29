@@ -10115,4 +10115,14 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo нужна личная папка в памяти, пока он работает, а этот компьютер её не даёт, поэтому Kryfo не откроется.';
+
+  @override
+  String get inviteNotYet =>
+      'Это приглашение ещё не действует. Проверьте время на телефоне.';
+
+  @override
+  String get inviteExpired => 'Срок этого приглашения истёк. Попросите новое.';
+
+  @override
+  String get inviteDamaged => 'Это приглашение повреждено. Попросите новое.';
 }

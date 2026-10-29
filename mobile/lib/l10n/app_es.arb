@@ -2626,5 +2626,8 @@
   "desktopFolderNotYours": "La carpeta de Kryfo pertenece a otra cuenta de este ordenador, así que Kryfo no la abrirá.",
   "desktopFolderNotPrivate": "Kryfo no pudo hacer que su carpeta fuera solo tuya, así que no se abrirá.",
   "desktopLockOtherVersion": "Este bloqueo lo hizo otra versión de Kryfo, que esta no puede leer.",
-  "desktopNoMemoryFolder": "Kryfo necesita una carpeta privada en memoria mientras funciona, y este ordenador no ofrece ninguna, así que no se abrirá."
+  "desktopNoMemoryFolder": "Kryfo necesita una carpeta privada en memoria mientras funciona, y este ordenador no ofrece ninguna, así que no se abrirá.",
+  "inviteNotYet": "Esta invitación aún no es válida. Revisa la hora de tu teléfono.",
+  "inviteExpired": "Esta invitación ha caducado. Pide una nueva.",
+  "inviteDamaged": "Esta invitación está dañada. Pide una nueva."
 }

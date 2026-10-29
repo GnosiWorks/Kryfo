@@ -16042,6 +16042,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Kryfo needs a private folder in memory while it runs, and this computer offers none, so it will not open.'**
   String get desktopNoMemoryFolder;
+
+  /// a v4 invite issued more than a day ahead of this phone clock
+  ///
+  /// In en, this message translates to:
+  /// **'This invite isn\'t valid yet. Check the time on your phone.'**
+  String get inviteNotYet;
+
+  /// a v4 invite past its expiry and a day
+  ///
+  /// In en, this message translates to:
+  /// **'This invite has expired. Ask for a new one.'**
+  String get inviteExpired;
+
+  /// a v4 invite that does not parse or whose signature does not hold
+  ///
+  /// In en, this message translates to:
+  /// **'This invite is damaged. Ask for a new one.'**
+  String get inviteDamaged;
 }
 
 class _AppLocalizationsDelegate

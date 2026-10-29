@@ -2626,5 +2626,8 @@
   "desktopFolderNotYours": "Kryfo 的資料夾屬於這台電腦上的另一個帳戶，所以 Kryfo 不會開啟它。",
   "desktopFolderNotPrivate": "Kryfo 無法把它的資料夾設為只有你能存取，所以不會開啟。",
   "desktopLockOtherVersion": "這個鎖是另一個版本的 Kryfo 建立的，目前的版本無法讀取。",
-  "desktopNoMemoryFolder": "Kryfo 執行時需要記憶體中的一個私有資料夾，而這台電腦沒有提供，所以 Kryfo 不會開啟。"
+  "desktopNoMemoryFolder": "Kryfo 執行時需要記憶體中的一個私有資料夾，而這台電腦沒有提供，所以 Kryfo 不會開啟。",
+  "inviteNotYet": "此邀請尚未生效。請檢查手機上的時間。",
+  "inviteExpired": "此邀請已過期。請索取新的邀請。",
+  "inviteDamaged": "此邀請已損壞。請索取新的邀請。"
 }

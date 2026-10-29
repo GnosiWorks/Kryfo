@@ -112,7 +112,7 @@ void main() {
     final from = sql!.said.length;
     final db = HaloDb();
     final raw = await db.open();
-    expect(await raw.getVersion(), 92);
+    expect(await raw.getVersion(), 94);
     final got = await _schema(raw);
     for (final k in {...want.keys, ...got.keys}) {
       expect(got[k], want[k], reason: k);
@@ -182,7 +182,7 @@ void main() {
     final from = sql!.said.length;
     final again = HaloDb();
     final raw = await again.open();
-    expect(await raw.getVersion(), 92);
+    expect(await raw.getVersion(), 94);
     expect(
       sql!.said
           .sublist(from)

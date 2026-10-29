@@ -10106,4 +10106,14 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo потрібна особиста тека в пам’яті, поки він працює, а цей комп’ютер її не дає, тому Kryfo не відкриється.';
+
+  @override
+  String get inviteNotYet =>
+      'Це запрошення ще не дійсне. Перевірте час на телефоні.';
+
+  @override
+  String get inviteExpired => 'Термін цього запрошення минув. Попросіть нове.';
+
+  @override
+  String get inviteDamaged => 'Це запрошення пошкоджене. Попросіть нове.';
 }

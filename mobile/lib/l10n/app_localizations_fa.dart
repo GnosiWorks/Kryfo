@@ -9962,4 +9962,14 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo هنگام اجرا به یک پوشهٔ خصوصی در حافظه نیاز دارد و این رایانه چنین پوشه‌ای ندارد، پس باز نمی‌شود.';
+
+  @override
+  String get inviteNotYet =>
+      'این دعوت هنوز معتبر نیست. ساعت گوشی‌تان را بررسی کنید.';
+
+  @override
+  String get inviteExpired => 'این دعوت منقضی شده است. یک دعوت تازه بخواهید.';
+
+  @override
+  String get inviteDamaged => 'این دعوت خراب است. یک دعوت تازه بخواهید.';
 }

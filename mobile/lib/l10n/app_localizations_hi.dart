@@ -9948,4 +9948,14 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'चलते समय Kryfo को मेमोरी में एक निजी फ़ोल्डर चाहिए, और यह कंप्यूटर ऐसा कोई फ़ोल्डर नहीं देता, इसलिए यह नहीं खुलेगा।';
+
+  @override
+  String get inviteNotYet =>
+      'यह न्योता अभी मान्य नहीं है। अपने फ़ोन का समय जाँचें।';
+
+  @override
+  String get inviteExpired => 'यह न्योता समाप्त हो गया है। नया माँगें।';
+
+  @override
+  String get inviteDamaged => 'यह न्योता खराब है। नया माँगें।';
 }

@@ -9969,4 +9969,14 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo çalışırken bellekte özel bir klasöre ihtiyaç duyar, bu bilgisayar böyle bir klasör sunmuyor, bu yüzden açılmayacak.';
+
+  @override
+  String get inviteNotYet =>
+      'Bu davet henüz geçerli değil. Telefonundaki saati kontrol et.';
+
+  @override
+  String get inviteExpired => 'Bu davetin süresi doldu. Yenisini iste.';
+
+  @override
+  String get inviteDamaged => 'Bu davet bozuk. Yenisini iste.';
 }

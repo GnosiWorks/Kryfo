@@ -10076,4 +10076,14 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'يحتاج Kryfo إلى مجلد خاص في الذاكرة أثناء عمله، وهذا الحاسوب لا يوفّر واحدًا، لذا لن يفتح.';
+
+  @override
+  String get inviteNotYet =>
+      'هذه الدعوة ليست صالحة بعد. تحقّق من الوقت على هاتفك.';
+
+  @override
+  String get inviteExpired => 'انتهت صلاحية هذه الدعوة. اطلب دعوة جديدة.';
+
+  @override
+  String get inviteDamaged => 'هذه الدعوة تالفة. اطلب دعوة جديدة.';
 }
