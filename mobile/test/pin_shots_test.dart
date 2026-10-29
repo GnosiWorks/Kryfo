@@ -246,6 +246,16 @@ void main() {
       expect(app.pinBlocksShots, isTrue);
       expect(shotsOff, isTrue);
     });
+
+    for (final none in [null, 0]) {
+      test('an answer of $none blocks with a pin', () async {
+        sdk = none;
+        lockState.openForTest(enabled: true);
+        final app = await make();
+        expect(app.pinBlocksShots, isTrue);
+        expect(shotsOff, isTrue);
+      });
+    }
   });
 
   test('the hidden chats block while they are open', () async {
