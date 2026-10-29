@@ -2799,8 +2799,8 @@ func nostrUnsubscribe(ident int, peerHex string) error {
 	if _, rcvPk, err := c.rcvAddress(); err == nil {
 		dropAddressFiles(rcvPk)
 	}
-	// what waits to reach them goes with them
-	if _, dst, err := nip17DeriveRole(peer, nip17RcvInfo, peerHex); err == nil {
+	// what waits to reach them on this identity goes with them
+	if dst, err := c.theirAddress(); err == nil {
 		topupPurgeAddr(dst)
 	}
 	return nil
