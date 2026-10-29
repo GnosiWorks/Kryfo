@@ -413,6 +413,86 @@ void main() {
     expect(await app.myV4Invite(), inviteLink(now.link));
   });
 
+  test('a hello from someone a shut vault hides is never filed on the '
+      'everyday side', () async {
+    final main = await myMain();
+    final p = await _Phone.make('hidden-vault-one', 21);
+    // the vault holds them, and the signal store their words' key
+    final hidden = ArrivalStore();
+    await hidden.putHidden(
+      p.words,
+      kHiddenPeer,
+      peerCard(RouterCard(p.words, 'o-p', p.x)),
+      1,
+    );
+    await hidden.putMeta('pub', 'pub-A');
+    await world(hidden: hidden);
+    await signalSession.identityStore.saw(p.words, p.key);
+    final h = await p.helloTo(main.id);
+    await app.receiveRelay([(peer: 'f0:${main.id}', cipher: h.line)]);
+    await _settle();
+    expect(live.people[p.words], isNull);
+    expect(live.people[unboundIdOf(p.key)], isNull);
+    expect(await hellosOf('in', p.keyHex), isEmpty);
+  });
+
+  test('a hello giving words bound here to another key, or let go by "this '
+      'isn\'t them", is filed on an id of its own', () async {
+    final main = await myMain();
+    final p = await _Phone.make('bound-elsewhere-one', 31);
+    final other = await _Phone.make('bound-elsewhere-two', 33);
+    await signalSession.identityStore.saw(p.words, other.key);
+    final h = await p.helloTo(main.id);
+    await app.receiveRelay([(peer: 'f0:${main.id}', cipher: h.line)]);
+    await _settle();
+    expect(live.people[p.words], isNull);
+    expect(live.people[unboundIdOf(p.key)]?['accepted'], 0);
+    final q = await _Phone.make('let-go-words', 35);
+    live.tombedNames.add(q.words);
+    final h2 = await q.helloTo(main.id);
+    await app.receiveRelay([(peer: 'f0:${main.id}', cipher: h2.line)]);
+    await _settle();
+    expect(live.people[q.words], isNull);
+    expect(live.people[unboundIdOf(q.key)]?['accepted'], 0);
+  });
+
+  test('a qr goes through every check a link does: a shut vault\'s person '
+      'reads as any link that does not take, and the developer\'s opens his '
+      'chat', () async {
+    final p = await _Phone.make('hidden-qr-one', 41);
+    final inv = await p.mainInvite();
+    final qr = inviteLink(inv.qr!);
+    expect(
+      await handleHaloUriAdded(qr, hidden: (id) => id == p.words, app: app),
+      (l10n.appInvalidUri, false),
+    );
+    expect(await db.query('hellos'), isEmpty);
+    expect(live.people[p.words], isNull);
+    // the developer's own qr
+    final dev = await _Phone.make('dev-pinned-words', 43);
+    final devInv = await dev.mainInvite();
+    useDevKeysForTest([
+      DevKey(
+        keyId: 'k-hello',
+        threeWords: dev.words,
+        xPub: dev.x,
+        bundle: '',
+        fc: '00' * 32,
+      ),
+    ]);
+    addTearDown(() => useDevKeysForTest(null));
+    final chats = <String>[];
+    final was = openDevChatLater;
+    openDevChatLater = chats.add;
+    addTearDown(() => openDevChatLater = was);
+    expect(await handleHaloUriAdded(inviteLink(devInv.qr!), app: app), (
+      '',
+      true,
+    ));
+    expect(chats, [currentDevKey!.chatId]);
+    expect(await db.query('hellos'), isEmpty);
+  });
+
   Future<(String, InviteRow)> owed(_Phone p) async {
     live.person(p.words, xpub: p.x);
     await live.upsertContact(p.words, '', p.x);

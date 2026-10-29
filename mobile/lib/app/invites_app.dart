@@ -690,42 +690,6 @@ extension AppStateInvites on AppState {
     return false;
   }
 
-  // an add from a v4 invite without a bundle (a qr): their row, and a
-  // hello that waits for their accept
-  Future<(String, bool)> _addByHello(
-    LsInvite inv, {
-    required bool scanned,
-  }) async {
-    final p = v4Parsed(inv, bundle: false);
-    if (p == null) return (l10n.appInvalidUri, false);
-    final id = p['id']!;
-    if (id == sessionId) return (l10n.appYourOwnInvite, false);
-    if (await session.keyBlocked(_keyHex(inv.identity))) {
-      return (l10n.appKeyBlocked, false);
-    }
-    // a name held here on another key is not taken by a hello
-    final row = await session.getContact(id);
-    if (row != null &&
-        (row['xpub'] as String? ?? '').toLowerCase() != p['xpub']) {
-      return (l10n.appLinkWordsTaken(id), false);
-    }
-    if (await session.isBlocked(id)) return (l10n.appTheyAreBlocked(id), false);
-    final already = await session.isAccepted(id);
-    await session.upsertContact(id, row?['onion'] as String? ?? '', p['xpub']!);
-    await _noteHowAdded(id, scanned: scanned, already: already, taken: false);
-    if (!await hasSessionWith(id)) {
-      await signalSession.identityStore.saw(id, inv.identity);
-      await wantHello(
-        owner: inv.identity,
-        answers: inv.id,
-        fc: _hexOf(inv.firstContact),
-      );
-    }
-    await refreshContacts();
-    openAddedChatLater(id);
-    return (already ? l10n.appAlreadySaved(id) : l10n.helloSent, true);
-  }
-
   /// a hello at invite [at] of mine (null: my v3 first-contact address),
   /// sealed with [sealPk], with [nonce] its proof of work: taken on the
   /// five rules of 3.3 and kept as a
@@ -782,18 +746,8 @@ extension AppStateInvites on AppState {
       return;
     }
     await noteHelloSeen(db, ident, hash);
-    // the words of their face, unless someone here holds them on another
-    // key: then an id of its own, as a first contact gets
-    var id = fields!['id']!;
-    final row = await live.getContact(id);
-    if (row != null &&
-        (row['xpub'] as String? ?? '').toLowerCase() != fields['xpub']) {
-      id = unboundIdOf(hl!.invite.identity);
-    }
-    // someone blocked here, by words or by key, asks nothing
-    if (await live.keyBlocked(_keyHex(hl!.invite.identity)) ||
-        await blockedAnywhere(id)) {
-      firstFails.note('hello');
+    final id = await _helloIdOf(hl!.invite.identity, fields!);
+    if (id == null) {
       await live.markSeenLong(h);
       arrived();
       return;
@@ -822,6 +776,53 @@ extension AppStateInvites on AppState {
     await refreshContacts();
     notifyListeners();
     arrived();
+  }
+
+  // where a hello from [key] giving [fields] is filed, as a first contact
+  // is (_openFirst): the words of their face, unless they are bound here to
+  // another key or let go by "this isn't them", then an id of its own. null
+  // drops it: the developer's words or key, a key blocked here or by a shut
+  // vault, someone blocked, and anyone a vault keeps, shut or open, who is
+  // never filed on the everyday side
+  Future<String?> _helloIdOf(
+    List<int> key,
+    Map<String, String> fields,
+  ) async {
+    final said = fields['id']!;
+    if (devCardClaim(id: said, xPub: fields['xpub'])) {
+      firstFails.note('claim');
+      return null;
+    }
+    if (await _keyBlockedHere(_keyHex(key))) {
+      firstFails.note('hello');
+      return null;
+    }
+    var id = said;
+    final bound = await _boundIdentity(
+      said,
+      ss: signalSession,
+      row: live.getContact,
+    );
+    if ((bound != null && !_eqBytes(bound, key)) ||
+        (bound == null && await _tombedArriving(said))) {
+      id = unboundIdOf(key);
+      final held = await _boundIdentity(
+        id,
+        ss: signalSession,
+        row: live.getContact,
+      );
+      if (held != null && !_eqBytes(held, key)) {
+        firstFails.note('bound');
+        return null;
+      }
+    }
+    if (_routeOf(id, null) != RouteTo.everyday ||
+        _removing.contains(id) ||
+        await blockedAnywhere(id)) {
+      firstFails.note('hello');
+      return null;
+    }
+    return id;
   }
 
   /// the person accepted [haloId]: a hello of theirs waiting here is

@@ -147,15 +147,18 @@ Future<(String, bool)> handleHaloUriAdded(
   }
   // a v4 invite: read through the shim with every check and the times
   LsInvite? v4;
+  // one without a bundle (a qr): a hello, answered once they accept. it
+  // goes through every check a link goes through first
+  var qrHello = false;
   var parsed = parseHaloUri(raw);
   if (parsed == null && isV4Link(raw)) {
     final got = v4OfLink(raw);
     if (got is InviteFault) return (inviteFaultLine(got), false);
     v4 = got as LsInvite;
     parsed = v4Parsed(v4);
-    // one without a bundle (a qr): a hello, answered once they accept
     if (parsed == null && v4.block == null && !sessionQuiet) {
-      return appState._addByHello(v4, scanned: scanned);
+      parsed = v4Parsed(v4, bundle: false);
+      qrHello = parsed != null;
     }
     if (parsed == null) return (l10n.appInvalidUri, false);
   }
@@ -298,6 +301,18 @@ Future<(String, bool)> handleHaloUriAdded(
   // while nothing of theirs is kept. the blocked list lets them back
   if (await session.isBlocked(parsed['id']!)) {
     return (l10n.appTheyAreBlocked(parsed['id']!), false);
+  }
+  if (v4 != null && qrHello) {
+    return _addV3ByHello(
+      appState,
+      parsed['id']!,
+      cardKey,
+      parsed['fc']!,
+      answers: v4.id,
+      scanned: scanned,
+      taken: taken,
+      untombed: untombed,
+    );
   }
   if (v4 != null) {
     final id = parsed['id']!;
@@ -470,14 +485,16 @@ Future<(String, bool)> handleHaloUriAdded(
   }
 }
 
-// an add from a v3 link (11 step 7): their row, and a hello to the
-// link's first-contact address that waits for their accept. one with a
-// session on their key already is taken in as it is: nothing to ask
+// an add from a v3 link (11 step 7), or a v4 qr answering its invite
+// [answers]: their row, and a hello to the first-contact address that waits
+// for their accept. one with a session on their key already is taken in as
+// it is, and one whose hello waits here is answered: nothing to ask
 Future<(String, bool)> _addV3ByHello(
   AppState appState,
   String id,
   List<int> cardKey,
   String fc, {
+  List<int>? answers,
   required bool scanned,
   required bool taken,
   required bool untombed,
@@ -522,7 +539,11 @@ Future<(String, bool)> _addV3ByHello(
     // the key the link gives is the one their answer has to come on, as a
     // session built from the card would have held it
     await signalSession.identityStore.saw(id, cardKey);
-    await appState.wantHello(owner: cardKey, answers: Uint8List(16), fc: fc);
+    await appState.wantHello(
+      owner: cardKey,
+      answers: answers ?? Uint8List(16),
+      fc: fc,
+    );
   }
   // as the accept button would: they hear they are in, and what was held
   // for them opens
@@ -535,7 +556,7 @@ Future<(String, bool)> _addV3ByHello(
   }
   return (
     !settled && !theirs
-        ? l10n.helloSentOld
+        ? (answers == null ? l10n.helloSentOld : l10n.helloSent)
         : already
         ? l10n.appAlreadySaved(id)
         : '',
