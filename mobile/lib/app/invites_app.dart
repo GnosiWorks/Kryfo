@@ -131,8 +131,9 @@ Future<void> seedPairAfresh(
   await putSeededPair(db, ident, peerKeyHex, seed);
 }
 
-// whether [cipher] is an opener on one of my v4 invites' signed prekeys:
-// those open only at the invite's own address, after its checks
+// whether [cipher] is an opener on any of my v4 invites' keys (signed,
+// kyber or ec): those open only at the invite's own address, after its
+// checks
 Future<bool> _onInviteKeys(String cipher) async {
   final Uint8List w;
   try {
@@ -141,28 +142,41 @@ Future<bool> _onInviteKeys(String cipher) async {
     return false;
   }
   if (w.isEmpty || w[0] != kLsPreKey) return false;
-  final int spk;
+  final LsPreKeyMessageInfo info;
   try {
-    spk = signalSession.lib
-        .preKeyMessageInfo(Uint8List.sublistView(w, 1))
-        .signedPreKeyId;
+    info = signalSession.lib.preKeyMessageInfo(Uint8List.sublistView(w, 1));
   } catch (_) {
     return false;
   }
   // rows that do not read: the store the opener would open in is the same
   // file, so nothing opens on an invite's keys then either
   try {
-    final db = await live.open();
-    return (await db.query(
-      'invites',
-      columns: ['id'],
-      where: 'ident = ? AND spk_id = ?',
-      whereArgs: [signalSession.ident, spk],
-      limit: 1,
-    )).isNotEmpty;
+    return onInviteKeys(await live.open(), signalSession.ident, info);
   } catch (_) {
     return false;
   }
+}
+
+/// whether an opener named by [info] is on any key of one of [ident]'s
+/// invites: its signed prekey, its kyber prekey or its ec prekey
+Future<bool> onInviteKeys(
+  DatabaseExecutor db,
+  int ident,
+  LsPreKeyMessageInfo info,
+) async {
+  final rows = await db.query(
+    'invites',
+    columns: ['spk_id', 'kyber_id', 'ec_id'],
+    where: 'ident = ?',
+    whereArgs: [ident],
+  );
+  bool on(Object? id, int? used) => used != null && id == used;
+  return rows.any(
+    (r) =>
+        on(r['spk_id'], info.signedPreKeyId) ||
+        on(r['kyber_id'], info.kyberPreKeyId) ||
+        on(r['ec_id'], info.preKeyId),
+  );
 }
 
 /// the identity and invite id an invite address's lines are tagged with

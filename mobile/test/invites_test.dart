@@ -15,7 +15,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/identities.dart';
 import 'package:kryfo/invites.dart';
 import 'package:kryfo/main.dart'
-    show InviteArrival, inviteOpenerHolds, inviteOpenerSeed;
+    show
+        InviteArrival,
+        inviteOpenerHolds,
+        inviteOpenerSeed,
+        onInviteKeys,
+        v4OfLink;
 import 'package:kryfo/message_envelope.dart'
     show grindPow, kEnvelopePrefix, powBits, unwrapMessage;
 import 'package:kryfo/signal_ffi/kryfo_signal.dart';
@@ -571,6 +576,46 @@ void main() {
       inviteOpenerSeed(unwrapMessage(env(faceless)), b.identity.public, a.id),
       seed,
     );
+  });
+
+  test('an opener off an invite\'s address is known by any of its keys: '
+      'the v3 signed prekey with an invite\'s kyber prekey too', () async {
+    final main = await makeInvite(
+      db,
+      ss,
+      kind: kInviteMain,
+      fcPkOf: _fcPkOf,
+      face: _face,
+      nowMs: _now,
+    );
+    final card =
+        jsonDecode(utf8.decode(base64Decode(await ss.makeBundleB64())))
+            as Map<String, dynamic>;
+    // the invite's kyber key is public in its link
+    final k = ss.lib.preKeyPublic(
+      kLsKyber,
+      (await ss.kyberPreKeyStore.load(main.kyberId!))!,
+    );
+    Future<LsPreKeyMessageInfo> openerOn(Map<String, dynamic> j) async {
+      final b = await testStore();
+      await b.processBundle(
+        'owner',
+        lsBundleOf(ss.lib, base64Encode(utf8.encode(jsonEncode(j)))),
+      );
+      final w = base64Decode(await b.encryptTo('owner', 'hi'));
+      return ss.lib.preKeyMessageInfo(Uint8List.sublistView(w, 1));
+    }
+
+    final v3 = await openerOn(card);
+    expect(await onInviteKeys(db, ss.ident, v3), isFalse);
+    final mixed = await openerOn({
+      ...card,
+      'kyberPreKeyId': k.id,
+      'kyberPreKeyPublic': base64Encode(k.public),
+      'kyberPreKeySignature': base64Encode(k.signature),
+    });
+    expect(mixed.signedPreKeyId, 1);
+    expect(await onInviteKeys(db, ss.ident, mixed), isTrue);
   });
 
   test('a hello carries its proof of work over its whole hash: the wire '
