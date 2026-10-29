@@ -402,9 +402,11 @@ extension AppStateInvites on AppState {
 
   /// "reset my invite link" for the v4 link, qr and handle: the main
   /// invite handed out goes at once, keys, address and row, and a new one
-  /// is made and listened on. a failure throws: nothing says it was reset
+  /// is made and listened on. a failure throws: nothing says it was reset.
+  /// before signal is ready it waits for it, and throws if it does not come
   Future<void> resetMyInvite({int? nowMs}) async {
-    if (sessionQuiet || !signalSession.ready || devModeOf(myXPub)) return;
+    if (sessionQuiet || devModeOf(myXPub)) return;
+    await _signalReadyForReset();
     // an upkeep under way ends first, and one asked for meanwhile joins
     // this reset
     for (var busy = _invitesKeep; busy != null; busy = _invitesKeep) {
@@ -417,6 +419,14 @@ extension AppStateInvites on AppState {
         .then<void>((_) {}, onError: (_) {})
         .whenComplete(() => _invitesKeep = null);
     await run;
+  }
+
+  /// signal ready for a reset: waited for while the start still boots it,
+  /// a throw if it never came, so nothing says a link was reset
+  Future<void> _signalReadyForReset() async {
+    if (signalSession.ready) return;
+    await _signalReady.future.timeout(signalWait, onTimeout: () {});
+    if (!signalSession.ready) throw StateError('signal not ready');
   }
 
   Future<void> _resetMyInvite({int? nowMs}) async {

@@ -360,6 +360,8 @@ extension AppStateProfile on AppState {
     // the everyday invite's key and address: never from a quiet session,
     // and never on the developer's own phone, whose card every install pins
     if (sessionQuiet || _devIdentity) return;
+    // nothing moves before signal is ready: the v4 link would stay as it was
+    await _signalReadyForReset();
     // what was kept goes in now if it can: nothing opens it after this
     await retryFirsts(all: true);
     // the link, qr and handle people hold: the main v4 invite goes now
