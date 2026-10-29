@@ -102,9 +102,17 @@ const _added = {
   'dev_opener_reads': ['kyber_id', 'opener'],
   'first_kept': ['opened_id', 'opened_plain'],
   'my_photo': ['id', 'ver', 'photo'],
-  'contact_photos': ['halo_id', 'mine', 'theirs', 'their_ver'],
+  'contact_photos': ['halo_id', 'mine', 'theirs', 'their_ver', 'took_at'],
   'photo_parts': ['halo_id', 'idx', 'ver', 'total', 'part', 'at'],
-  'photo_peers': ['halo_id', 'held', 'want', 'stamp', 'next_at', 'tries'],
+  'photo_peers': [
+    'halo_id',
+    'held',
+    'want',
+    'stamp',
+    'next_at',
+    'tries',
+    'sent_at',
+  ],
 };
 const _indexes = [
   'idx_media_chunks_group',

@@ -128,9 +128,9 @@ mixin _PhotoRows {
   Future<bool> takePhotoSlice(String from, PhotoFrame f, {int? now}) async {
     final at = now ?? DateTime.now().millisecondsSinceEpoch;
     final db = await open();
-    return db.transaction((t) async {
+    final whole = await db.transaction((t) async {
       final held = await _theirVer(t, from);
-      if (!photoVersionTakes(f.version, held, now: at)) return false;
+      if (!photoVersionTakes(f.version, held, now: at)) return null;
       // a newer one already on its way in wins
       final ahead = await t.query(
         'photo_parts',
@@ -139,7 +139,7 @@ mixin _PhotoRows {
         whereArgs: [from, f.version],
         limit: 1,
       );
-      if (ahead.isNotEmpty) return false;
+      if (ahead.isNotEmpty) return null;
       await t.delete(
         'photo_parts',
         where: 'halo_id = ? AND (ver < ? OR total <> ?)',
@@ -162,22 +162,101 @@ mixin _PhotoRows {
       final whole = joinPhotoSlices({
         for (final r in rows) r['idx'] as int: _blob(r['part'])!,
       }, f.total);
-      if (whole == null) return false;
-      await t.delete('photo_parts', where: 'halo_id = ?', whereArgs: [from]);
-      // only what our phones send is kept: anything else is let go, and
-      // their face stays
-      final fit = photoTakeIn(whole);
+      // one again so soon waits, whole, for the gap
+      if (whole == null || await _tookLately(t, from, at)) return null;
+      return whole;
+    });
+    if (whole == null) return false;
+    return _takeWhole(db, from, f.version, whole, at);
+  }
+
+  // [whole], their version [ver], read off the ui isolate, then kept if it
+  // is still the one waiting. only what our phones send is kept: anything
+  // else is let go, and their face stays
+  static Future<bool> _takeWhole(
+    Database db,
+    String from,
+    int ver,
+    Uint8List whole,
+    int at,
+  ) async {
+    final fit = await photoTakeInOffUi(whole);
+    return db.transaction((t) async {
+      final still = await t.query(
+        'photo_parts',
+        columns: ['ver'],
+        where: 'halo_id = ? AND ver = ?',
+        whereArgs: [from, ver],
+        limit: 1,
+      );
+      if (still.isEmpty) return false;
+      await t.delete(
+        'photo_parts',
+        where: 'halo_id = ? AND ver <= ?',
+        whereArgs: [from, ver],
+      );
       if (fit == null) {
         dlog('photo: one from a contact did not read clean');
         return false;
       }
-      await _putTheirs(t, from, fit, f.version);
+      if (!photoVersionTakes(ver, await _theirVer(t, from), now: at)) {
+        return false;
+      }
+      await _putTheirs(t, from, fit, ver, at);
       return true;
     });
   }
 
+  /// photos that came whole inside the gap, taken now it has passed. true
+  /// when what this phone shows changed
+  Future<bool> takeWaitingPhotos({int? now}) async {
+    final at = now ?? DateTime.now().millisecondsSinceEpoch;
+    final db = await open();
+    final waiting = await db.rawQuery('''
+      SELECT halo_id, ver, total FROM photo_parts
+      GROUP BY halo_id, ver, total HAVING COUNT(*) = total
+    ''');
+    var moved = false;
+    for (final w in waiting) {
+      final id = w['halo_id'] as String;
+      final ver = w['ver'] as int;
+      final whole = await db.transaction((t) async {
+        if (await _tookLately(t, id, at)) return null;
+        final rows = await t.query(
+          'photo_parts',
+          columns: ['idx', 'part'],
+          where: 'halo_id = ? AND ver = ?',
+          whereArgs: [id, ver],
+        );
+        return joinPhotoSlices({
+          for (final r in rows) r['idx'] as int: _blob(r['part'])!,
+        }, w['total'] as int);
+      });
+      if (whole != null && await _takeWhole(db, id, ver, whole, at)) {
+        moved = true;
+      }
+    }
+    return moved;
+  }
+
+  // a photo or a take-back from [id] was taken inside the gap before [at]
+  static Future<bool> _tookLately(DatabaseExecutor t, String id, int at) async {
+    final r = await t.query(
+      'contact_photos',
+      columns: ['took_at'],
+      where: 'halo_id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    final took = r.isEmpty ? 0 : r.first['took_at'] as int? ?? 0;
+    if (took <= 0) return false;
+    final since = at - took;
+    return since >= 0 && since < kPhotoTakeGap.inMilliseconds;
+  }
+
   /// [from] took their photo back. true when one was shown
   Future<bool> takePhotoDrop(String from, int ver, {int? now}) async {
+    final at = now ?? DateTime.now().millisecondsSinceEpoch;
     final db = await open();
     return db.transaction((t) async {
       final r = await t.query(
@@ -188,9 +267,9 @@ mixin _PhotoRows {
         limit: 1,
       );
       final held = r.isEmpty ? 0 : r.first['their_ver'] as int? ?? 0;
-      if (!photoVersionTakes(ver, held, now: now)) return false;
+      if (!photoVersionTakes(ver, held, now: at)) return false;
       await t.delete('photo_parts', where: 'halo_id = ?', whereArgs: [from]);
-      await _putTheirs(t, from, null, ver);
+      await _putTheirs(t, from, null, ver, at);
       return r.isNotEmpty && r.first['theirs'] != null;
     });
   }
@@ -211,10 +290,11 @@ mixin _PhotoRows {
     String id,
     Uint8List? photo,
     int ver,
+    int at,
   ) async {
     final n = await t.update(
       'contact_photos',
-      {'theirs': photo, 'their_ver': ver},
+      {'theirs': photo, 'their_ver': ver, 'took_at': at},
       where: 'halo_id = ?',
       whereArgs: [id],
     );
@@ -223,6 +303,7 @@ mixin _PhotoRows {
       'halo_id': id,
       'theirs': photo,
       'their_ver': ver,
+      'took_at': at,
     });
   }
 
@@ -313,14 +394,19 @@ mixin _PhotoRows {
         limit: 1,
       );
       final was = r.isEmpty ? 0 : r.first['stamp'] as int? ?? 0;
+      final sent = r.isEmpty ? 0 : r.first['sent_at'] as int? ?? 0;
       final now = DateTime.now().millisecondsSinceEpoch;
       await t.insert('photo_peers', {
         'halo_id': id,
         'held': r.isEmpty ? 0 : r.first['held'] as int? ?? 0,
         'want': want,
         'stamp': want == null ? was : max(now, was + 1),
-        'next_at': at,
+        // a new photo keeps the gap their phone takes them at
+        'next_at': want != null && want > 0 && sent > 0
+            ? max(at, sent + kPhotoSendGap.inMilliseconds)
+            : at,
         'tries': 0,
+        'sent_at': sent,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     });
   }
@@ -362,7 +448,12 @@ mixin _PhotoRows {
     final db = await open();
     await db.update(
       'photo_peers',
-      {'held': want, 'want': null, 'tries': 0},
+      {
+        'held': want,
+        'want': null,
+        'tries': 0,
+        'sent_at': DateTime.now().millisecondsSinceEpoch,
+      },
       where: 'halo_id = ? AND want = ? AND stamp = ?',
       whereArgs: [id, want, stamp],
     );
@@ -415,7 +506,8 @@ Future<void> photoTables(DatabaseExecutor db) async {
         halo_id TEXT PRIMARY KEY,
         mine BLOB,
         theirs BLOB,
-        their_ver INTEGER NOT NULL DEFAULT 0
+        their_ver INTEGER NOT NULL DEFAULT 0,
+        took_at INTEGER NOT NULL DEFAULT 0
       )
     ''');
     await db.execute('''
@@ -436,9 +528,23 @@ Future<void> photoTables(DatabaseExecutor db) async {
         want INTEGER,
         stamp INTEGER NOT NULL DEFAULT 0,
         next_at INTEGER NOT NULL DEFAULT 0,
-        tries INTEGER NOT NULL DEFAULT 0
+        tries INTEGER NOT NULL DEFAULT 0,
+        sent_at INTEGER NOT NULL DEFAULT 0
       )
     ''');
+    // files made before these columns
+    for (final (t, c) in const [
+      ('contact_photos', 'took_at'),
+      ('photo_peers', 'sent_at'),
+    ]) {
+      try {
+        await db.execute(
+          'ALTER TABLE $t ADD COLUMN $c INTEGER NOT NULL DEFAULT 0',
+        );
+      } catch (_) {
+        // there already
+      }
+    }
     for (final t in const ['contact_photos', 'photo_parts', 'photo_peers']) {
       await db.execute(
         'CREATE TRIGGER IF NOT EXISTS ${t}_contacts_gone AFTER DELETE ON '

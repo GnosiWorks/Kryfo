@@ -534,8 +534,11 @@ void main() {
       expect((await db.photosOf(_peer)).theirs, isNull);
       expect(await _takeAll(db, 100, 200), isFalse);
       expect(await db.contactPhotos(), isEmpty);
-      // and a newer photo after it is
-      expect(await _takeAll(db, 160, 200), isTrue);
+      // and a newer photo after it is, once the gap has passed
+      expect(
+        await _takeAll(db, 160, 200 + kPhotoTakeGap.inMilliseconds),
+        isTrue,
+      );
     }, skip: skip);
 
     test('slices of a newer photo drop an older one half in', () async {
@@ -696,6 +699,67 @@ void main() {
       await db.mem.update('contacts', {'shots_can': 0});
       expect(await quiet.contactPhotos(), isEmpty);
       expect((await db.contactPhotos()).keys, [_peer]);
+    }, skip: skip);
+
+    test('a second photo inside the gap waits whole, then goes in', () async {
+      final db = await rows();
+      const t0 = 1000000;
+      final gap = kPhotoTakeGap.inMilliseconds;
+      expect(await _takeAll(db, 100, t0), isTrue);
+      expect(await _takeAll(db, 200, t0 + 1000), isFalse);
+      expect((await db.photosOf(_peer)).theirVer, 100);
+      expect(await db.takeWaitingPhotos(now: t0 + gap - 1), isFalse);
+      expect((await db.photosOf(_peer)).theirVer, 100);
+      expect(await db.takeWaitingPhotos(now: t0 + gap), isTrue);
+      expect((await db.photosOf(_peer)).theirVer, 200);
+      expect(await db.mem.query('photo_parts'), isEmpty);
+      // nothing waits now
+      expect(await db.takeWaitingPhotos(now: t0 + 2 * gap), isFalse);
+    }, skip: skip);
+
+    test('a take-back is always taken, and counts toward the gap', () async {
+      final db = await rows();
+      const t0 = 1000000;
+      expect(await _takeAll(db, 100, t0), isTrue);
+      expect(await db.takePhotoDrop(_peer, 150, now: t0 + 1), isTrue);
+      expect(
+        await _takeAll(db, 160, t0 + kPhotoTakeGap.inMilliseconds),
+        isFalse,
+      );
+      expect((await db.photosOf(_peer)).theirs, isNull);
+      expect(
+        await db.takeWaitingPhotos(now: t0 + 1 + kPhotoTakeGap.inMilliseconds),
+        isTrue,
+      );
+      expect((await db.photosOf(_peer)).theirs, isNotNull);
+    }, skip: skip);
+
+    test('the picture is read off the ui isolate, outside any write', () {
+      final src = sourceOf('lib/app/database_photos.dart');
+      final at = src.indexOf('static Future<bool> _takeWhole(');
+      final body = src.substring(at, src.indexOf('\n  }\n', at));
+      expect(
+        body.indexOf('await photoTakeInOffUi(whole)'),
+        allOf(greaterThan(0), lessThan(body.indexOf('db.transaction('))),
+      );
+      expect(src.indexOf('photoTakeIn('), -1);
+    });
+
+    test('a new photo keeps the gap their phone takes them at; a take-back '
+        'does not wait', () async {
+      expect(kPhotoSendGap, greaterThan(kPhotoTakeGap));
+      final db = await rows();
+      await db.owePhoto(_peer, 7, at: 50);
+      final first = (await db.duePhotoPeers(50)).single.stamp;
+      final before = DateTime.now().millisecondsSinceEpoch;
+      await db.photoSent(_peer, 7, first);
+      await db.owePhoto(_peer, 8, at: 60);
+      expect(
+        await db.nextPhotoDue(),
+        greaterThanOrEqualTo(before + kPhotoSendGap.inMilliseconds),
+      );
+      await db.owePhoto(_peer, 0, at: 60);
+      expect(await db.nextPhotoDue(), 60);
     }, skip: skip);
 
     test('your own photo, and its removal keeping the time', () async {

@@ -2397,6 +2397,9 @@ class ArrivalRows implements HaloDb {
   Future<void> dropStalePhotoParts({int? now}) async =>
       (await _photos()).dropStalePhotoParts(now: now);
   @override
+  Future<bool> takeWaitingPhotos({int? now}) async =>
+      (await _photos()).takeWaitingPhotos(now: now);
+  @override
   Future<List<({PhotoSendFacts facts, PhotoPeer peer})>> photoPeople() async =>
       (await _photos()).photoPeople();
   @override

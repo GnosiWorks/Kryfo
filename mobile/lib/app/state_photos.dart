@@ -7,6 +7,8 @@ part of '../main.dart';
 // what the photo sends keep in memory, per app
 class _PhotoPace {
   Timer? run;
+  // a photo that came whole inside the gap is looked at again after it
+  Timer? waits;
   Future<void>? going;
   // the session the book was last read for
   Session? shown;
@@ -149,7 +151,10 @@ extension AppStatePhotos on AppState {
       final moved = f.drop
           ? await db.takePhotoDrop(sender, f.version)
           : await db.takePhotoSlice(sender, f);
-      if (!moved) return;
+      if (!moved) {
+        if (!f.drop) _photoWaitArm();
+        return;
+      }
       // only the book of a session that shows this container
       final s = session;
       if (identical(s.primary, db) || identical(s.vault, db)) {
@@ -171,6 +176,31 @@ extension AppStatePhotos on AppState {
 
   bool get _photoHeld => everydayHeld || haloWiping;
 
+  // a photo held back by the gap goes in once it has passed
+  void _photoWaitArm() {
+    final p = _photoPace;
+    if (p.waits != null) return;
+    p.waits = Timer(kPhotoTakeGap + const Duration(seconds: 5), () {
+      p.waits = null;
+      unawaited(photoTakeWaiting());
+    });
+  }
+
+  /// photos held back by the gap, taken in where it has passed
+  @visibleForTesting
+  Future<void> photoTakeWaiting() async {
+    if (_photoHeld) return;
+    var moved = false;
+    for (final d in _photoHomes) {
+      try {
+        if (await d.takeWaitingPhotos()) moved = true;
+      } catch (e) {
+        dlog('photo: waiting not taken (${e.runtimeType})');
+      }
+    }
+    if (moved) await reloadPhotos();
+  }
+
   /// what each contact should hold of ours worked out again, and owed
   /// where it is not what they hold. a new owe goes at a random time a
   /// few minutes out, so a change is no burst
@@ -180,6 +210,7 @@ extension AppStatePhotos on AppState {
       final me = await live.myPhoto();
       final mine = me?.photo == null ? 0 : me!.ver;
       final now = DateTime.now().millisecondsSinceEpoch;
+      unawaited(photoTakeWaiting());
       for (final d in _photoHomes) {
         await d.dropStalePhotoParts(now: now);
         for (final (:facts, :peer) in await d.photoPeople()) {
@@ -305,5 +336,7 @@ extension AppStatePhotos on AppState {
   void stopPhotos() {
     _photoPace.run?.cancel();
     _photoPace.run = null;
+    _photoPace.waits?.cancel();
+    _photoPace.waits = null;
   }
 }

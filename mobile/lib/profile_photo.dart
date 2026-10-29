@@ -7,6 +7,7 @@
 // a file. the decoy sends nothing and takes nothing in
 import 'dart:collection' show UnmodifiableMapView;
 import 'dart:convert';
+import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -32,6 +33,14 @@ const kPhotoBytesMost = kPhotoSliceBytes * kPhotoSlicesMost;
 
 /// a version written further ahead of this clock is not taken
 const kPhotoAheadMost = Duration(days: 1);
+
+/// a contact's photos are taken at most this often: one that comes sooner
+/// waits, whole, for the gap. a take-back is always taken, and counts
+const kPhotoTakeGap = Duration(minutes: 10);
+
+/// a new photo goes to a contact no sooner than this after the last send,
+/// a little past the gap their phone keeps
+const kPhotoSendGap = Duration(minutes: 12);
 
 /// a photo half in waits this long for its other slices
 const kPhotoPartsKeep = Duration(days: 14);
@@ -173,6 +182,10 @@ ImageProvider photoImage(Uint8List bytes, int px) => ResizeImage(
   height: px,
   policy: ResizeImagePolicy.fit,
 );
+
+/// the same, off the ui isolate
+Future<Uint8List?> photoTakeInOffUi(Uint8List b) =>
+    Isolate.run(() => photoTakeIn(b));
 
 /// whether [b] is a jpeg with exactly one frame, baseline or progressive,
 /// [side] x [side], and nothing after its end. every marker is walked, so
