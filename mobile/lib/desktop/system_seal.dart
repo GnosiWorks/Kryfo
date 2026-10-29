@@ -49,8 +49,10 @@ abstract class SystemSeal {
   /// the secret kept for [id]. throws [SealError]
   Future<Uint8List> fetch(Uint8List id, int how, Uint8List data);
 
-  /// the kept secret goes. best effort
-  Future<void> forget(Uint8List id, int how, Uint8List data);
+  /// whatever is kept for the vault [id] goes, whichever way its file says
+  /// it was kept: a search first that never unlocks or asks, then a clear
+  /// of what it found. true when nothing is left
+  Future<bool> forget(Uint8List id);
 }
 
 /// blocking native calls run off the frame's thread

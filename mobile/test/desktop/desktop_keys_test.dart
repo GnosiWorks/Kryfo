@@ -49,10 +49,15 @@ class FakeKeyring implements SystemSeal {
     return Uint8List.fromList(s);
   }
 
+  // a locked keyring keeps what a clear asks for
+  bool locked = false;
+
   @override
-  Future<void> forget(Uint8List id, int how, Uint8List data) async {
+  Future<bool> forget(Uint8List id) async {
     forgotten.add(hexOf(id));
+    if (locked) return !items.containsKey(hexOf(id));
     items.remove(hexOf(id));
+    return true;
   }
 }
 
@@ -90,7 +95,14 @@ class _Api implements SecretApi {
   @override
   bool clear(Map<String, String> attrs) {
     cleared.add(attrs);
+    if (answer == KeyringFind.locked) return false;
     return store_.remove(attrs.toString()) != null;
+  }
+
+  @override
+  bool? there(Map<String, String> attrs) {
+    if (answer == KeyringFind.error) return null;
+    return store_.containsKey(attrs.toString());
   }
 }
 
@@ -141,9 +153,10 @@ class _Win implements WinCrypt {
   }
 
   @override
-  void tpmDelete(String name) {
+  bool tpmDelete(String name) {
     deleted.add(name);
     keys.remove(name);
+    return true;
   }
 }
 
@@ -479,6 +492,80 @@ void main() {
     });
   });
 
+  group('what the computer kept, cleared by the vault id', () {
+    test('the wipe clears it on a passphrase vault too', () async {
+      final v = vault();
+      await v.createSealed(ring);
+      // a clear that did not land when the passphrase was added
+      ring.locked = true;
+      await v.addPassphrase(_pass, seal: ring);
+      expect(ring.items, hasLength(1));
+      ring.locked = false;
+      v.destroy();
+      await v.forgetSystem(ring);
+      expect(ring.items, isEmpty);
+    });
+
+    test('a passphrase open clears what is owed, once it can', () async {
+      final v = vault();
+      await v.createSealed(ring);
+      ring.locked = true;
+      await v.addPassphrase(_pass, seal: ring);
+      expect(ring.items, hasLength(1));
+      // still locked: it stays owed and nothing asks
+      final w = vault();
+      expect(await w.open(_pass, seal: ring), isTrue);
+      await w.forgetting;
+      expect(ring.items, hasLength(1));
+      expect(w.read(kVaultForgetOwed), isNotNull);
+      w.close();
+      ring
+        ..locked = false
+        ..forgotten.clear();
+      final x = vault();
+      expect(await x.open(_pass, seal: ring), isTrue);
+      await x.forgetting;
+      expect(ring.items, isEmpty);
+      expect(x.read(kVaultForgetOwed), isNull);
+      x.close();
+      // nothing owed: the keyring is not asked again
+      ring.forgotten.clear();
+      final y = vault();
+      expect(await y.open(_pass, seal: ring), isTrue);
+      await y.forgetting;
+      expect(ring.forgotten, isEmpty);
+    });
+
+    test('a cut between the write and the clear is cleared later', () async {
+      final v = vault();
+      await v.createSealed(ring);
+      // the passphrase written, and the app gone before the clear
+      await v.addPassphrase(_pass);
+      expect(ring.items, hasLength(1));
+      final w = vault();
+      expect(await w.open(_pass, seal: ring), isTrue);
+      await w.forgetting;
+      expect(ring.items, isEmpty);
+      expect(w.read(kVaultForgetOwed), isNull);
+    });
+
+    test('the keyring clears only after a search found it', () async {
+      final api = _Api();
+      final seal = KeyringSeal(api, run: _here);
+      final id = Uint8List(16);
+      expect(await seal.forget(id), isTrue);
+      expect(api.cleared, isEmpty);
+      await seal.keep(id, Uint8List(32));
+      api.answer = KeyringFind.locked;
+      expect(await seal.forget(id), isFalse);
+      api.answer = KeyringFind.error;
+      expect(await seal.forget(id), isFalse);
+      api.answer = null;
+      expect(await seal.forget(id), isTrue);
+      expect(api.store_, isEmpty);
+    });
+  });
+
   group('the linux keyring', () {
     late _Api api;
     late KeyringSeal seal;
@@ -502,7 +589,7 @@ void main() {
       expect(kept.data, isEmpty);
       expect(api.store_.keys.single, {'kryfo-vault': hexOf(id)}.toString());
       expect(await seal.fetch(id, kept.how, kept.data), secret);
-      await seal.forget(id, kept.how, kept.data);
+      expect(await seal.forget(id), isTrue);
       expect(api.cleared.single, {'kryfo-vault': hexOf(id)});
     });
 
@@ -564,7 +651,7 @@ void main() {
       expect(k.how, SealHow.tpm);
       expect(api.keys.keys.single, 'Kryfo vault ${hexOf(id)}');
       expect(await seal.fetch(id, k.how, k.data), secret);
-      await seal.forget(id, k.how, k.data);
+      expect(await seal.forget(id), isTrue);
       expect(api.deleted, ['Kryfo vault ${hexOf(id)}']);
       expect(await why(k), SealFail.missing);
     });
@@ -581,9 +668,15 @@ void main() {
       expect(k2.how, SealHow.dpapi);
       expect(api.deleted, isNotEmpty);
       expect(await seal.fetch(id, k2.how, k2.data), secret);
-      // nothing in a tpm to forget
+      // forgotten by name whatever the slot says: nothing is left
       api.deleted.clear();
-      await seal.forget(id, k2.how, k2.data);
+      expect(await seal.forget(id), isTrue);
+      expect(api.deleted, ['Kryfo vault ${hexOf(id)}']);
+      // no tpm here at all: nothing to look for
+      api
+        ..tpm = false
+        ..deleted.clear();
+      expect(await seal.forget(id), isTrue);
       expect(api.deleted, isEmpty);
     });
 

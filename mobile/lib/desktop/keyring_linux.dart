@@ -23,6 +23,10 @@ abstract class SecretApi {
   bool store(Map<String, String> attrs, String label, Uint8List secret);
 
   bool clear(Map<String, String> attrs);
+
+  /// an item under [attrs], locked or not, found without unlocking
+  /// anything; null when the keyring did not answer
+  bool? there(Map<String, String> attrs);
 }
 
 const _attr = 'kryfo-vault';
@@ -67,12 +71,19 @@ class KeyringSeal implements SystemSeal {
     });
   }
 
+  // libsecret clears unlocked items only, so a locked keyring keeps its
+  // item for the next try and shows no prompt
   @override
-  Future<void> forget(Uint8List id, int how, Uint8List data) async {
-    if (how != SealHow.keyring) return;
+  Future<bool> forget(Uint8List id) async {
     final api = this.api;
     final attrs = _attrs(id);
-    await _run(() => api.clear(attrs));
+    return _run(() {
+      final t = api.there(attrs);
+      if (t == null) return false;
+      if (!t) return true;
+      api.clear(attrs);
+      return api.there(attrs) == false;
+    });
   }
 }
 
@@ -175,7 +186,8 @@ typedef _Len = int Function(Pointer<Void>);
 typedef _FreeFullC = Void Function(Pointer<Void>, Pointer<Void>);
 typedef _FreeFull = void Function(Pointer<Void>, Pointer<Void>);
 
-// SECRET_SEARCH_ALL: locked items too, and nothing unlocked or loaded
+// SECRET_SEARCH_ALL: every match, locked or not. no SECRET_SEARCH_UNLOCK,
+// so nothing is unlocked and no prompt shows
 const _searchAll = 1 << 1;
 
 /// libsecret over dart:ffi. holds only the library's name, so it can be
@@ -241,6 +253,19 @@ class FfiSecretApi implements SecretApi {
         calloc.free(pw);
         calloc.free(lb);
       }
+    });
+  }
+
+  @override
+  bool? there(Map<String, String> attrs) {
+    final l = _Lib.of(library);
+    if (l == null) return null;
+    return l.withCall(attrs, (schema, table, err) {
+      return switch (l.lockedThere(schema, table)) {
+        KeyringFind.locked => true,
+        KeyringFind.none => false,
+        _ => null,
+      };
     });
   }
 
@@ -361,7 +386,8 @@ class _Lib {
     }
   }
 
-  /// an item under [table] that a search finds only with locked ones in
+  /// an item under [table], found by a search that unlocks nothing:
+  /// locked (or not) when there is one
   KeyringFind lockedThere(Pointer<_Schema> schema, Pointer<Void> table) {
     final err = calloc<Pointer<_GError>>();
     try {

@@ -40,7 +40,7 @@ void main() {
       seal.fetch(id(2), kept.how, kept.data),
       throwsA(isA<SealError>().having((e) => e.why, 'why', SealFail.missing)),
     );
-    await seal.forget(id(1), kept.how, kept.data);
+    expect(await seal.forget(id(1)), isTrue);
     await expectLater(
       seal.fetch(id(1), kept.how, kept.data),
       throwsA(isA<SealError>().having((e) => e.why, 'why', SealFail.missing)),
@@ -76,6 +76,9 @@ void main() {
           isA<SealError>().having((e) => e.why, 'why', SealFail.unreachable),
         ),
       );
+      // a clear by the vault id leaves a locked item, asks nothing, and
+      // says it is still there
+      expect(await seal.forget(id(3)), isFalse);
     },
     skip: tool == null ? 'no KRYFO_SECRET_TOOL' : skip,
   );

@@ -45,7 +45,8 @@ abstract class WinCrypt {
   /// throws [WinCryptError]
   Uint8List tpmUnwrap(String name, Uint8List wrapped);
 
-  void tpmDelete(String name);
+  /// the key [name] goes. true when there is none left
+  bool tpmDelete(String name);
 }
 
 class WindowsSeal implements SystemSeal {
@@ -119,11 +120,14 @@ class WindowsSeal implements SystemSeal {
     });
   }
 
+  // the dpapi blob lives in the vault's file; only a tpm key stays behind.
+  // opened silently, so nothing asks
   @override
-  Future<void> forget(Uint8List id, int how, Uint8List data) async {
-    if (how != SealHow.tpm) return;
+  Future<bool> forget(Uint8List id) async {
     final api = this.api;
-    await _run(() => api.tpmDelete(_name(id)));
+    final name = _name(id);
+    // no platform crypto provider: no tpm key was ever made
+    return _run(() => !api.tpmThere() || api.tpmDelete(name));
   }
 }
 
@@ -457,9 +461,9 @@ class FfiWinCrypt implements WinCrypt {
       _withKey(name, (n, key) => _crypt(n, key, false, wrapped));
 
   @override
-  void tpmDelete(String name) {
+  bool tpmDelete(String name) {
     try {
-      _withProvider((n, prov) {
+      return _withProvider((n, prov) {
         final k = calloc<IntPtr>();
         final kn = name.toNativeUtf16();
         try {
@@ -470,17 +474,19 @@ class FfiWinCrypt implements WinCrypt {
             0,
             _silent,
           );
-          if (st != 0) return;
+          if (st != 0) return WinCryptError(st & 0xffffffff).keyGone;
           // frees the handle too
-          n.lookupFunction<_HandleFlagsC, _HandleFlags>('NCryptDeleteKey')(
-            k.value,
-            _silent,
-          );
+          return n.lookupFunction<_HandleFlagsC, _HandleFlags>(
+                'NCryptDeleteKey',
+              )(k.value, _silent) ==
+              0;
         } finally {
           calloc.free(k);
           calloc.free(kn);
         }
       });
-    } catch (_) {}
+    } catch (_) {
+      return false;
+    }
   }
 }

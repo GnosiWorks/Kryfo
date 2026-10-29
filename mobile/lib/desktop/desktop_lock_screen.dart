@@ -192,7 +192,7 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
     try {
       if (isNew) {
         await widget.vault.create(pass);
-      } else if (!await widget.vault.open(pass)) {
+      } else if (!await widget.vault.open(pass, seal: widget.seal)) {
         _first.clear();
         _firstFocus.requestFocus();
         return _say(

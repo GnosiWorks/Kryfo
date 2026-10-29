@@ -22,6 +22,9 @@ import '../engine_strings.dart' show engineTakeSecret, freeSecret;
 import 'desktop_posix.dart' show syncFolder;
 import 'system_seal.dart';
 
+/// in the vault while what the computer kept for it may still be there
+const kVaultForgetOwed = 'kryfo.vault.forget';
+
 /// the shortest passphrase the desktop takes, in characters: as a backup
 const kVaultMinLength = 12;
 
@@ -385,7 +388,7 @@ class DesktopVault {
       } catch (_) {
         // no file to need it: the keyring keeps nothing of a vault not made
         try {
-          await seal.forget(id, kept.how, kept.data);
+          await seal.forget(id);
         } catch (_) {}
         rethrow;
       }
@@ -477,7 +480,13 @@ class DesktopVault {
   /// false for a wrong passphrase, a changed file or one the computer
   /// keeps. a file of an older version (1 to 3: sealed straight under the
   /// passphrase) opens and is written again as this one
-  Future<bool> open(String passphrase) async {
+  Future<bool> open(String passphrase, {SystemSeal? seal}) async {
+    final ok = await _openPass(passphrase);
+    if (ok && seal != null) forgetting = _forgetOwed(seal);
+    return ok;
+  }
+
+  Future<bool> _openPass(String passphrase) async {
     madeByOtherVersion = false;
     final raw = File(path).readAsBytesSync();
     if (raw.length >= 5 &&
@@ -646,11 +655,15 @@ class DesktopVault {
     final kek = await _kek(passphrase, salt, logN);
     if (kek == null) throw StateError('no key from the engine');
     try {
-      await _rekey((dk) => [_passSlot(kek, salt, logN, dk)]);
+      await _rekey(
+        (dk) => [_passSlot(kek, salt, logN, dk)],
+        // what the computer kept is owed a clear until one lands
+        owe: old.any((s) => s.kind == _slotSystem),
+      );
     } finally {
       kek.fillRange(0, kek.length, 0);
     }
-    if (seal != null) await _forget(seal, old);
+    if (seal != null) await _forgetOwed(seal);
   }
 
   /// false when [current] is not the passphrase
@@ -679,26 +692,30 @@ class DesktopVault {
     return true;
   }
 
-  /// what the computer kept for this vault goes. best effort
-  Future<void> forgetSystem(SystemSeal seal) => _forget(seal, _slots);
-
-  Future<void> _forget(SystemSeal seal, List<_Slot> slots) async {
+  /// what the computer kept for this vault goes, by the vault's id and
+  /// whatever its file says. best effort; the panic wipe's
+  Future<void> forgetSystem(SystemSeal seal) async {
     final id = _id;
     if (id == null) return;
-    for (final s in slots) {
-      final d = s.data;
-      if (s.kind != _slotSystem || d.isEmpty) continue;
-      try {
-        await seal.forget(
-          id,
-          d[0],
-          d.length < 1 + _slotFreshLen + _wrappedLen
-              ? Uint8List(0)
-              : Uint8List.sublistView(d, 1 + _slotFreshLen + _wrappedLen),
-        );
-      } catch (_) {}
-    }
+    try {
+      await seal.forget(id);
+    } catch (_) {}
   }
+
+  // a clear that did not land (a locked keyring, a timeout, a cut between
+  // the write and the clear) is tried again at the next passphrase open,
+  // until one does
+  Future<void> _forgetOwed(SystemSeal seal) async {
+    final id = _id;
+    if (id == null || _map?[kVaultForgetOwed] == null) return;
+    try {
+      if (await seal.forget(id) && isOpen) await delete(kVaultForgetOwed);
+    } catch (_) {}
+  }
+
+  /// the clear owed after [open], for tests to wait on
+  @visibleForTesting
+  Future<void> forgetting = Future.value();
 
   /// the key goes from memory; the file stays
   void close() {
@@ -755,14 +772,19 @@ class DesktopVault {
   // a new head under a new data key, in the same line as the writes: an
   // older copy of the file, with what opened it, opens only itself. the
   // old key goes once the write landed; a failed write keeps it
-  Future<void> _rekey(List<_Slot> Function(Uint8List dk) slots) {
+  Future<void> _rekey(
+    List<_Slot> Function(Uint8List dk) slots, {
+    bool owe = false,
+  }) {
     _held;
     final done = _writes.catchError((_) {}).then((_) {
       final dk = _bytes(_dkLen);
       final List<_Slot> next;
+      final m = Map.of(_held);
+      if (owe) m[kVaultForgetOwed] = '1';
       try {
         next = slots(dk);
-        _persist(Map.of(_held), next, dk);
+        _persist(m, next, dk);
       } catch (_) {
         dk.fillRange(0, dk.length, 0);
         rethrow;
@@ -770,6 +792,7 @@ class DesktopVault {
       final old = _key;
       _key = dk;
       _slots = next;
+      _map = m;
       if (old != null && !identical(old, dk)) old.fillRange(0, old.length, 0);
     });
     _writes = done;
