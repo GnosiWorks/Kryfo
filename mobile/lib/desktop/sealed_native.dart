@@ -29,6 +29,8 @@ class MemFile {
   String get path => '/proc/self/fd/$fd';
 
   static MemFile create() {
+    // memfd is linux's: windows hands the engine bytes instead
+    if (!Platform.isLinux) throw const FileSystemException('no memfd');
     final libc = DynamicLibrary.process();
     final f = libc.lookupFunction<_MemfdC, _Memfd>('memfd_create');
     final n = 'kryfo'.toNativeUtf8();
@@ -55,7 +57,9 @@ class MemFile {
         r.closeSync();
       } catch (_) {}
     });
-    DynamicLibrary.process().lookupFunction<_CloseC, _Close>('close')(fd);
+    if (Platform.isLinux) {
+      DynamicLibrary.process().lookupFunction<_CloseC, _Close>('close')(fd);
+    }
   }
 }
 
