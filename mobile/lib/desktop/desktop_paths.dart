@@ -3,9 +3,11 @@
 // documents is ~/Documents, which file indexers read and sync clients copy,
 // so every directory the app asks for is under one folder of its own, mode
 // 0700, and the process makes its files 0600
+import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:ffi/ffi.dart';
 import 'desktop_posix.dart' as posix show ownerOf;
 import 'package:path/path.dart' as p;
@@ -66,6 +68,7 @@ void privateUmask() {
 String? desktopRuntimeDir({
   Map<String, String>? env,
   required int uid,
+  required String root,
   int? Function(String path)? owner,
   int? Function(String path)? mode,
 }) {
@@ -73,12 +76,15 @@ String? desktopRuntimeDir({
   final e = env ?? Platform.environment;
   final ownerOf_ = owner ?? _ownerOf;
   final modeOf = mode ?? _modeOf;
+  final tag = runtimeTag(root);
   final bases = <(String, String)>[];
   final run = e['XDG_RUNTIME_DIR'];
   if (run != null && p.isAbsolute(run) && Directory(run).existsSync()) {
-    bases.add((run, 'kryfo'));
+    bases.add((run, 'kryfo-$tag'));
   }
-  if (Directory('/dev/shm').existsSync()) bases.add(('/dev/shm', 'kryfo-$uid'));
+  if (Directory('/dev/shm').existsSync()) {
+    bases.add(('/dev/shm', 'kryfo-$uid-$tag'));
+  }
   for (final (base, name) in bases) {
     final d = p.join(base, name);
     final type = FileSystemEntity.typeSync(d, followLinks: false);
@@ -95,7 +101,9 @@ String? desktopRuntimeDir({
     }
     // someone else's, a link, or open to others: one of our own, by chance
     try {
-      final t = Directory(base).createTempSync('kryfo-');
+      final t = Directory(base).createTempSync('kryfo-$tag-');
+      // dart makes it under the umask, not 0700 as mkdtemp would
+      makePrivateDir(t.path);
       if (ownerOf_(t.path) == uid && modeOf(t.path) == 448) return t.path;
       t.deleteSync();
     } catch (_) {}
@@ -105,13 +113,21 @@ String? desktopRuntimeDir({
 
 int? _ownerOf(String path) => posix.ownerOf(path);
 
-/// folders a run before made by chance (kryfo-XXXXXX, see
+/// the memory folder's part of a name for the data folder [root]: two data
+/// folders never share one
+String runtimeTag(String root) => sha256
+    .convert(utf8.encode(p.normalize(p.absolute(root))))
+    .toString()
+    .substring(0, 16);
+
+/// folders a run before made by chance (`kryfo-<tag>-XXXXXX`, see
 /// [desktopRuntimeDir]) and left behind: ours, no link, not [keep]. what
 /// they hold is zeroed before they go
 void sweepOldRuntimeDirs(
   String? keep, {
   Map<String, String>? env,
   required int uid,
+  required String root,
   int? Function(String path)? owner,
 }) {
   if (Platform.isWindows) return;
@@ -119,7 +135,8 @@ void sweepOldRuntimeDirs(
   final ownerOf_ = owner ?? _ownerOf;
   final run = e['XDG_RUNTIME_DIR'];
   final bases = [if (run != null && p.isAbsolute(run)) run, '/dev/shm'];
-  final made = RegExp(r'^kryfo-[A-Za-z0-9]{6}$');
+  // this data folder's own, and the unnamed ones of builds before
+  final made = RegExp('^kryfo-(${runtimeTag(root)}-)?[A-Za-z0-9]{6}\$');
   for (final base in bases) {
     final d = Directory(base);
     if (!d.existsSync()) continue;

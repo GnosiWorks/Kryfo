@@ -16,6 +16,20 @@ import 'wire_pad.dart';
 export 'devchat/dev_key.dart' show pinDevKeyForTest;
 export 'signal_session.dart' show SignalSession;
 
+/// one store's tables under [prefix] as 0.5.3 made them (v0.5.3,
+/// lib/app/database.dart _signalTables): no identity in any key
+Future<void> tables053(Database db, {String prefix = ''}) async {
+  for (final t in [
+    '${prefix}prekeys (id INTEGER PRIMARY KEY, record BLOB NOT NULL)',
+    '${prefix}signed_prekeys (id INTEGER PRIMARY KEY, record BLOB NOT NULL, created_at INTEGER NOT NULL)',
+    '${prefix}sessions (address TEXT NOT NULL, device_id INTEGER NOT NULL, record BLOB NOT NULL, PRIMARY KEY (address, device_id))',
+    '${prefix}peer_identities (address TEXT PRIMARY KEY, identity_key BLOB NOT NULL)',
+    '${prefix}signal_meta (k TEXT PRIMARY KEY, v TEXT NOT NULL)',
+  ]) {
+    await db.execute('CREATE TABLE IF NOT EXISTS $t');
+  }
+}
+
 /// one 0.5.3 phone: its signal layer on its own file
 class Phone053 {
   Phone053(this.ss);

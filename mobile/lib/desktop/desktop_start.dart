@@ -189,7 +189,7 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   final host = DesktopHost(dataDir: root);
   DesktopBinding.install(desktopAnswers(host, db));
 
-  final runtime = desktopRuntimeDir(uid: getuid());
+  final runtime = desktopRuntimeDir(uid: getuid(), root: root);
   // without a folder in memory the engine's files and the temporary ones
   // would be plain on the disk while the app runs: linux refuses that.
   // windows has no tmpfs and keeps them in <root>/tmp (its own branch)
@@ -197,7 +197,7 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     runApp(const DesktopStopApp(stop: DesktopStop.noMemory));
     return;
   }
-  sweepOldRuntimeDirs(runtime, uid: getuid());
+  sweepOldRuntimeDirs(runtime, uid: getuid(), root: root);
   final paths = DesktopPaths(root, runtime: runtime);
   PathProviderPlatform.instance = paths;
   final vault = DesktopVault(p.join(root, 'vault.kv'));
@@ -236,11 +236,18 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     vault.close();
   }
 
+  // a logout, a terminal's ctrl-c, a closed terminal: one way out
   if (!Platform.isWindows) {
-    ProcessSignal.sigterm.watch().listen((_) {
-      ending();
-      exit(0);
-    });
+    for (final sig in [
+      ProcessSignal.sigterm,
+      ProcessSignal.sigint,
+      ProcessSignal.sighup,
+    ]) {
+      sig.watch().listen((_) {
+        ending();
+        exit(0);
+      });
+    }
   }
   _desktopChannel.setMethodCallHandler((call) async {
     if (call.method == 'quit') ending();
@@ -380,6 +387,9 @@ Future<void> openSeal({
   host.beforeExit = () {
     engineFiles?.detach();
     keys.closeAll();
+    final f = areas.filesKey;
+    f?.fillRange(0, f.length, 0);
+    areas.filesKey = null;
   };
   closeOnDetach?.dispose();
   closeOnDetach = AppLifecycleListener(

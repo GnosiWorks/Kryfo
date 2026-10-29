@@ -62,14 +62,14 @@ extension AppStateIdentity on AppState {
     }
     var xPub = await d.contactXPub(haloId);
     if (xPub == null || xPub.isEmpty) {
-      xPub = await signalSession.peerXPubHex(haloId);
+      xPub = await peerXPubOf(haloId);
       if (xPub != null && xPub.isNotEmpty) {
         await d.setContactXPub(haloId, xPub);
       }
     }
     if (xPub == null || xPub.isEmpty) return;
     _xPubToHaloId[xPub] = haloId;
-    _io.listen(xPub, fresh: fresh);
+    _io.listen(identOf(haloId), xPub, fresh: fresh);
     // the chat on screen whose key was not known when it opened
     if (haloId == _firstChat) unawaited(_tellFirst());
   }

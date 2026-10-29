@@ -245,7 +245,7 @@ class _Engine implements HaloEngine {
   final ciphers = <String>[];
 
   @override
-  Future<String> nostrSend(String peerXPubHex, String b64Cipher) {
+  Future<String> nostrSend(int ident, String peerXPubHex, String b64Cipher) {
     final c = Completer<String>();
     sends.add(c);
     ciphers.add(b64Cipher);
@@ -257,9 +257,9 @@ class _Engine implements HaloEngine {
   @override
   String myXPubkey() => 'x-me';
   @override
-  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {}
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) {}
   @override
-  void nostrUnsubscribeBg(String peerXPubHex) {}
+  void nostrUnsubscribeBg(int ident, String peerXPubHex) {}
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('engine: ${i.memberName}');

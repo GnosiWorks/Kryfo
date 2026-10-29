@@ -1313,25 +1313,19 @@ func probeProves(u string, ask func() bool) bool {
 // how long a runner waits for tor before it tries again
 var torRetryWait = 10 * time.Second
 
-// run a long-lived subscription against all configured relays for events from `pk`.
-// dedupes across relays. exits when ctx is cancelled.
-func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]byte, rcvPk string) {
-	nostrSubscribeRunnerMode(ctx, peerXPubHex, peerArr, rcvPk, false, 0)
+// run a long-lived subscription against all configured relays for what
+// lands on pair c's receive address rcvPk, tagged [tag] (its subscription
+// key). dedupes across relays. exits when ctx is cancelled.
+func nostrSubscribeRunner(ctx context.Context, tag string, c convPair, rcvPk string) {
+	nostrSubscribeRunnerAt(ctx, receiveLane(rcvPk), tag, rcvPk, c.unwrapStamped)
 }
 
-func nostrSubscribeRunnerMode(ctx context.Context, peerXPubHex string, peerArr [32]byte, rcvPk string, fc bool, fcCounter int) {
-	lane := receiveLane(rcvPk)
-	tag := peerXPubHex
-	unwrap := func(gw nostr2.Event) (string, nostr2.Timestamp, error) { return nip17UnwrapStamped(peerArr, gw) }
-	if fc {
-		lane = laneFirstContact
-		tag = "firstcontact"
-		unwrap = func(gw nostr2.Event) (string, nostr2.Timestamp, error) {
-			content, _, at, err := nip17UnwrapFirstContactStamped(fcCounter, gw)
-			return content, at, err
-		}
-	}
-	nostrSubscribeRunnerAt(ctx, lane, tag, rcvPk, unwrap)
+// a first-contact address: what lands on it is opened with its key alone
+func nostrSubscribeRunnerFc(ctx context.Context, tag, fcSk, fcPk string) {
+	nostrSubscribeRunnerAt(ctx, laneFirstContact, tag, fcPk, func(gw nostr2.Event) (string, nostr2.Timestamp, error) {
+		content, _, at, err := nip17UnwrapFirstContactWithStamped(fcSk, gw)
+		return content, at, err
+	})
 }
 
 // the general runner: one receive address, one way to open what lands on
@@ -2288,19 +2282,24 @@ func HaloNostrInit(cRelaysCSV *C.char) *C.char {
 }
 
 //export HaloNostrSend
-func HaloNostrSend(cPeerXPubHex, cMsg *C.char) *C.char {
-	return C.CString(nostrSend(goStr(cPeerXPubHex), goStr(cMsg)))
+func HaloNostrSend(cIdent C.int, cPeerXPubHex, cMsg *C.char) *C.char {
+	return C.CString(nostrSend(identArg(cIdent), goStr(cPeerXPubHex), goStr(cMsg)))
 }
 
-func nostrSend(peerHex, msg string) string {
+// msg to peerHex from my identity [ident], on their pair's addresses
+func nostrSend(ident int, peerHex, msg string) string {
 	peerBytes, err := hex.DecodeString(peerHex)
 	if err != nil || len(peerBytes) != 32 {
 		return "error: bad peer pubkey"
 	}
 	var peerArr [32]byte
 	copy(peerArr[:], peerBytes)
+	c, err := pairOf(ident, peerArr)
+	if err != nil {
+		return fmt.Sprintf("error: wrap: %v", err)
+	}
 
-	gw, err := nip17Wrap(peerArr, msg)
+	gw, err := c.wrap(msg)
 	if err != nil {
 		return fmt.Sprintf("error: wrap: %v", err)
 	}
@@ -2326,7 +2325,7 @@ func nostrSend(peerHex, msg string) string {
 	// log the drop-box we published to. if a peer isn't receiving, compare this
 	// against the "at addr" in their subscribe line: a mismatch means the two
 	// sides derived different addresses and nothing will ever arrive.
-	_, dst, derr := nip17DeriveRole(peerArr, nip17RcvInfo, hex.EncodeToString(peerArr[:]))
+	dst, derr := c.theirAddress()
 	if derr == nil {
 		log.Printf("nostr: sent event %s to %d relays, addr %s...", ev.ID.Hex()[:12], ok, dst[:12])
 	} else {
@@ -2336,49 +2335,60 @@ func nostrSend(peerHex, msg string) string {
 }
 
 //export HaloNostrSubscribe
-func HaloNostrSubscribe(cPeerXPubHex *C.char) *C.char {
-	return C.CString(nostrSubscribe(goStr(cPeerXPubHex), false))
+func HaloNostrSubscribe(cIdent C.int, cPeerXPubHex *C.char) *C.char {
+	return C.CString(nostrSubscribe(identArg(cIdent), goStr(cPeerXPubHex), false))
 }
 
 // as HaloNostrSubscribe, for someone the user just added or accepted: the
 // first turn of each socket is free (subTurn.fresh)
 //
 //export HaloNostrSubscribeNew
-func HaloNostrSubscribeNew(cPeerXPubHex *C.char) *C.char {
-	return C.CString(nostrSubscribe(goStr(cPeerXPubHex), true))
+func HaloNostrSubscribeNew(cIdent C.int, cPeerXPubHex *C.char) *C.char {
+	return C.CString(nostrSubscribe(identArg(cIdent), goStr(cPeerXPubHex), true))
 }
 
-func nostrSubscribe(peerHex string, fresh bool) string {
+// listen on my identity [ident]'s receive address for peerHex
+func nostrSubscribe(ident int, peerHex string, fresh bool) string {
 	peerBytes, err := hex.DecodeString(peerHex)
 	if err != nil || len(peerBytes) != 32 {
 		return "error: bad peer pubkey"
 	}
 	var peerArr [32]byte
 	copy(peerArr[:], peerBytes)
-
-	_, rcvPk, err := nip17RcvAddress(peerArr)
+	c, err := pairOf(ident, peerArr)
 	if err != nil {
 		return fmt.Sprintf("error: derive: %v", err)
 	}
-	nostrSubscribeAt(peerHex, peerArr, rcvPk, fresh)
+	rcvSk, rcvPk, err := c.rcvAddress()
+	if err != nil {
+		return fmt.Sprintf("error: derive: %v", err)
+	}
+	nostrSubscribeAt(c, peerHex, rcvSk, rcvPk, fresh)
 	return "ok"
 }
 
-// a runner for the peer's address, in place of any running one
-func nostrSubscribeAt(peerHex string, peerArr [32]byte, rcvPk string, fresh bool) {
+// a runner for the pair's address, in place of any running one. the main
+// identity's go by the peer's key, as before; another's say whose they are,
+// and the knocks take their address as noted
+func nostrSubscribeAt(c convPair, peerHex, rcvSk, rcvPk string, fresh bool) {
+	key := subKey(c.ident, peerHex)
+	if c.ident != mainIdent {
+		lane := receiveLane(rcvPk)
+		noteKnockTarget(key, knockTarget{rcvPk, rcvSk, lane, lane, strings.ToLower(peerHex)})
+	}
 	nostrMu.Lock()
-	if cancel, exists := nostrSubs[peerHex]; exists {
+	if cancel, exists := nostrSubs[key]; exists {
 		cancel()
-		delete(nostrSubs, peerHex)
+		delete(nostrSubs, key)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	nostrSubs[peerHex] = cancel
+	nostrSubs[key] = cancel
 	nostrMu.Unlock()
 	if fresh {
 		ctx = asFresh(ctx)
 	}
 
-	go nostrSubscribeRunner(ctx, peerHex, peerArr, rcvPk)
+	go nostrSubscribeRunner(ctx, key, c, rcvPk)
 	log.Printf("nostr: subscribed for peer %s... at addr %s...", peerHex[:12], rcvPk[:12])
 }
 
@@ -2389,21 +2399,22 @@ func nostrSubscribeAt(peerHex string, peerArr [32]byte, rcvPk string, fresh bool
 // nothing where nothing is held
 //
 //export HaloNostrLetHeld
-func HaloNostrLetHeld(cPeerXPubHex, cHow *C.char) *C.char {
-	if err := nostrLetHeld(goStr(cPeerXPubHex), goStr(cHow)); err != nil {
+func HaloNostrLetHeld(cIdent C.int, cPeerXPubHex, cHow *C.char) *C.char {
+	if err := nostrLetHeld(identArg(cIdent), goStr(cPeerXPubHex), goStr(cHow)); err != nil {
 		return C.CString("error: " + err.Error())
 	}
 	return C.CString("ok")
 }
 
-// "mark" for each peer of a json list of x keys, on a start or an unlock:
+// "mark" for each peer of a json list of {"i": identity, "x": x key}, on a
+// start or an unlock:
 // an accept that died before its fetch goes on at the peer's runner's
 // next connection or probe. its own address only, where something is
 // held, and nothing restarts
 //
 //export HaloNostrMarkHeld
 func HaloNostrMarkHeld(cPeersJSON *C.char) *C.char {
-	var peers []string
+	var peers []identPeer
 	if err := json.Unmarshal([]byte(goStr(cPeersJSON)), &peers); err != nil {
 		return C.CString("error: bad list")
 	}
@@ -2411,12 +2422,13 @@ func HaloNostrMarkHeld(cPeersJSON *C.char) *C.char {
 	return C.CString("ok")
 }
 
-// the pinned chats, which keep live sockets on the public relays first.
-// they count from the next start or mode switch on, and stay in memory
+// the pinned chats, which keep live sockets on the public relays first,
+// as a json list of {"i": identity, "x": x key}. they count from the next
+// start or mode switch on, and stay in memory
 //
 //export HaloNostrPinned
 func HaloNostrPinned(cPeersJSON *C.char) *C.char {
-	var peers []string
+	var peers []identPeer
 	if err := json.Unmarshal([]byte(goStr(cPeersJSON)), &peers); err != nil {
 		return C.CString("error: bad list")
 	}
@@ -2424,30 +2436,33 @@ func HaloNostrPinned(cPeersJSON *C.char) *C.char {
 	return C.CString("ok")
 }
 
-func nostrPinned(peers []string) {
+// each peer's receive address on the identity it is reached on
+func peerAddresses(peers []identPeer) []string {
 	var rcv []string
 	for _, h := range peers {
-		peer, err := peerArr(h)
+		peer, err := peerArr(h.X)
 		if err != nil {
 			continue
 		}
-		if _, rcvPk, err := nip17RcvAddress(peer); err == nil {
+		c, err := pairOf(h.I, peer)
+		if err != nil {
+			continue
+		}
+		if _, rcvPk, err := c.rcvAddress(); err == nil {
 			rcv = append(rcv, rcvPk)
 		}
 	}
-	livePin(rcv)
+	return rcv
 }
 
-func nostrMarkHeld(peers []string) {
-	for _, h := range peers {
-		peer, err := peerArr(h)
-		if err != nil {
-			continue
-		}
-		if _, rcvPk, err := nip17RcvAddress(peer); err == nil {
-			if p, _ := addressFiles(rcvPk); heldOnFile(p) > 0 {
-				markHeldFile(p, seenFreeMark)
-			}
+func nostrPinned(peers []identPeer) {
+	livePin(peerAddresses(peers))
+}
+
+func nostrMarkHeld(peers []identPeer) {
+	for _, rcvPk := range peerAddresses(peers) {
+		if p, _ := addressFiles(rcvPk); heldOnFile(p) > 0 {
+			markHeldFile(p, seenFreeMark)
 		}
 	}
 }
@@ -2465,7 +2480,7 @@ func heldOnFile(path string) int {
 	return loadSeen(path).heldCount()
 }
 
-func nostrLetHeld(peerHex, how string) error {
+func nostrLetHeld(ident int, peerHex, how string) error {
 	if how != "free" && how != "drop" && how != "mark" {
 		return errors.New("bad how")
 	}
@@ -2473,7 +2488,11 @@ func nostrLetHeld(peerHex, how string) error {
 	if err != nil {
 		return err
 	}
-	_, rcvPk, err := nip17RcvAddress(peer)
+	c, err := pairOf(ident, peer)
+	if err != nil {
+		return err
+	}
+	rcvSk, rcvPk, err := c.rcvAddress()
 	if err != nil {
 		return err
 	}
@@ -2483,14 +2502,18 @@ func nostrLetHeld(peerHex, how string) error {
 		return nil
 	}
 	nostrMu.Lock()
-	_, on := nostrSubs[peerHex]
+	_, on := nostrSubs[subKey(ident, peerHex)]
 	_, fcOn := nostrSubs["firstcontact"]
 	fc := fcCounterNow
 	nostrMu.Unlock()
 	fcPath := ""
 	if fcOn && how == "free" {
-		if _, fcPk, err := nip17FirstContactKeys(fc); err == nil {
-			fcPath, _ = addressFiles(fcPk)
+		// the main identity's v3 first-contact address: what a stranger
+		// sent before an accept lands there
+		if me, err := identityOf(mainIdent); err == nil {
+			if _, fcPk, err := nip17FirstContactKeysAs(me, fc); err == nil {
+				fcPath, _ = addressFiles(fcPk)
+			}
 		}
 	}
 	// that lane is everyone's: whoever else it held is asked for again and
@@ -2511,7 +2534,7 @@ func nostrLetHeld(peerHex, how string) error {
 	// a runner reads the mark as it starts. free comes with an accept, so
 	// it asks at once as the accept's own listen would
 	if own && on {
-		nostrSubscribeAt(peerHex, peer, rcvPk, true)
+		nostrSubscribeAt(c, peerHex, rcvSk, rcvPk, true)
 	}
 	if lane {
 		// only the listener read above: a new invite address may have
@@ -2528,25 +2551,30 @@ var letHeldHook func()
 // disk with it
 //
 //export HaloNostrUnsubscribe
-func HaloNostrUnsubscribe(cPeerXPubHex *C.char) *C.char {
-	if err := nostrUnsubscribe(goStr(cPeerXPubHex)); err != nil {
+func HaloNostrUnsubscribe(cIdent C.int, cPeerXPubHex *C.char) *C.char {
+	if err := nostrUnsubscribe(identArg(cIdent), goStr(cPeerXPubHex)); err != nil {
 		return C.CString("error: " + err.Error())
 	}
 	return C.CString("ok")
 }
 
-func nostrUnsubscribe(peerHex string) error {
+func nostrUnsubscribe(ident int, peerHex string) error {
 	peer, err := peerArr(peerHex)
 	if err != nil {
 		return err
 	}
+	key := subKey(ident, peerHex)
 	nostrMu.Lock()
-	if cancel, exists := nostrSubs[peerHex]; exists {
+	if cancel, exists := nostrSubs[key]; exists {
 		cancel()
-		delete(nostrSubs, peerHex)
+		delete(nostrSubs, key)
 	}
 	nostrMu.Unlock()
-	if _, rcvPk, err := nip17RcvAddress(peer); err == nil {
+	c, err := pairOf(ident, peer)
+	if err != nil {
+		return err
+	}
+	if _, rcvPk, err := c.rcvAddress(); err == nil {
 		dropAddressFiles(rcvPk)
 	}
 	return nil
@@ -2555,9 +2583,12 @@ func nostrUnsubscribe(peerHex string) error {
 // the public half of our first-contact address. goes in the invite so a
 // stranger can reach us before either side knows the other's key.
 //
+// the main identity's v3 one, for the v3 links it hands out: any other
+// identity's first-contact keys are random, one per invite (HaloFcKeyPk)
+//
 //export HaloFirstContactPk
-func HaloFirstContactPk(counter C.int) *C.char {
-	_, pk, err := nip17FirstContactKeys(int(counter))
+func HaloFirstContactPk(cIdent C.int, counter C.int) *C.char {
+	_, pk, err := mainFirstContactKeys(identArg(cIdent), int(counter))
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: %v", err))
 	}
@@ -2594,20 +2625,38 @@ func firstContactRelays() int {
 // roster can still be reached.
 //
 //export HaloNostrSubscribeFirstContact
-func HaloNostrSubscribeFirstContact(counter C.int) *C.char {
-	if err := subscribeFirstContact(int(counter)); err != nil {
+func HaloNostrSubscribeFirstContact(cIdent C.int, counter C.int) *C.char {
+	if err := subscribeFirstContact(identArg(cIdent), int(counter)); err != nil {
 		return C.CString(fmt.Sprintf("error: derive: %v", err))
 	}
 	return C.CString("ok")
 }
 
-func subscribeFirstContact(counter int) error { return firstContactOn(counter, false) }
+// the v3 first-contact keys of [ident] at [counter]: the main identity's
+// only. nothing else has an address derived from its key
+func mainFirstContactKeys(ident, counter int) (sk, pk string, err error) {
+	if ident != mainIdent {
+		return "", "", errors.New("only the main identity has a v3 first-contact address")
+	}
+	me, err := identityOf(mainIdent)
+	if err != nil {
+		return "", "", err
+	}
+	return nip17FirstContactKeysAs(me, counter)
+}
+
+func subscribeFirstContact(ident, counter int) error {
+	if ident != mainIdent {
+		return errors.New("only the main identity has a v3 first-contact address")
+	}
+	return firstContactOn(counter, false)
+}
 
 // the first-contact listener on counter started again, if it still runs
 func restartFirstContact(counter int) error { return firstContactOn(counter, true) }
 
 func firstContactOn(counter int, again bool) error {
-	_, fcPk, err := nip17FirstContactKeys(counter)
+	fcSk, fcPk, err := mainFirstContactKeys(mainIdent, counter)
 	if err != nil {
 		return err
 	}
@@ -2632,8 +2681,7 @@ func firstContactOn(counter int, again bool) error {
 		dropLane(laneFirstContact)
 	}
 
-	var zero [32]byte
-	go nostrSubscribeRunnerMode(ctx, "firstcontact", zero, fcPk, true, counter)
+	go nostrSubscribeRunnerFc(ctx, "firstcontact", fcSk, fcPk)
 	log.Printf("nostr: watching first-contact addr %s...", fcPk[:12])
 	return nil
 }
@@ -2643,11 +2691,11 @@ func firstContactOn(counter int, again bool) error {
 // verification applies to everything after this.
 //
 //export HaloNostrSendFirstContact
-func HaloNostrSendFirstContact(cPeerXPubHex, cFcPk, cMsg *C.char) *C.char {
-	return C.CString(nostrSendFirstContact(goStr(cPeerXPubHex), goStr(cFcPk), goStr(cMsg)))
+func HaloNostrSendFirstContact(cIdent C.int, cPeerXPubHex, cFcPk, cMsg *C.char) *C.char {
+	return C.CString(nostrSendFirstContact(identArg(cIdent), goStr(cPeerXPubHex), goStr(cFcPk), goStr(cMsg)))
 }
 
-func nostrSendFirstContact(peerHex, fcPk, msg string) string {
+func nostrSendFirstContact(ident int, peerHex, fcPk, msg string) string {
 	peerBytes, err := hex.DecodeString(peerHex)
 	if err != nil || len(peerBytes) != 32 {
 		return "error: bad peer pubkey"
@@ -2658,7 +2706,11 @@ func nostrSendFirstContact(peerHex, fcPk, msg string) string {
 	var peerArr [32]byte
 	copy(peerArr[:], peerBytes)
 
-	gw, err := nip17WrapFirstContact(peerArr, fcPk, msg)
+	c, err := pairOf(ident, peerArr)
+	if err != nil {
+		return fmt.Sprintf("error: wrap: %v", err)
+	}
+	gw, err := c.wrapFirstContact(fcPk, msg)
 	if err != nil {
 		return fmt.Sprintf("error: wrap: %v", err)
 	}

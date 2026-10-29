@@ -582,7 +582,8 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 	t.Cleanup(func() {
 		runnersGone(t)
 		mu.Lock()
-		torNode, myXPriv, myXPub = oldNode, oldPriv, oldPub
+		torNode = oldNode
+		setMainForTest(oldPriv, oldPub)
 		mu.Unlock()
 		transportMode.Store(oldMode)
 		atomic.StoreInt32(&pinnedSocks, oldPin)
@@ -610,7 +611,7 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 	setRelays(urls)
 	me := newXid(t)
 	mu.Lock()
-	myXPriv, myXPub = me.priv, me.pub
+	setMainForTest(me.priv, me.pub)
 	mu.Unlock()
 }
 
@@ -692,21 +693,20 @@ func startLanes(t *testing.T, ctx context.Context, contacts, rooms int) lanesUp 
 	var l lanesUp
 	for i := 0; i < contacts; i++ {
 		p := newXid(t)
-		_, rcv, err := nip17RcvAddress(p.pub)
+		_, rcv, err := nip17RcvAddressAs(testMain(), p.pub)
 		if err != nil {
 			t.Fatal(err)
 		}
 		l.contacts = append(l.contacts, rcv)
 		l.peers = append(l.peers, p)
-		go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), p.pub, rcv)
+		go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), mainPair(p.pub), rcv)
 	}
-	_, fcPk, err := nip17FirstContactKeys(0)
+	fcSk, fcPk, err := nip17FirstContactKeysAs(testMain(), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
 	l.fc = fcPk
-	var zero [32]byte
-	go nostrSubscribeRunnerMode(ctx, "firstcontact", zero, fcPk, true, 0)
+	go nostrSubscribeRunnerFc(ctx, "firstcontact", fcSk, fcPk)
 	for i := 0; i < rooms; i++ {
 		rk := newXid(t)
 		rp := newXid(t)

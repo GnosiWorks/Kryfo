@@ -107,19 +107,36 @@ func knockTargets() []knockTarget {
 		}
 	}
 	knockNotesMu.Unlock()
+	fcKeysMu.Lock()
+	invites := map[string]fcKey{}
+	for k, v := range fcKeys {
+		invites[k] = v
+	}
+	fcKeysMu.Unlock()
+	main, mainErr := identityOf(mainIdent)
 	for _, k := range keys {
+		if inv, ok := invites[k]; ok {
+			out = append(out, knockTarget{inv.pk, inv.sk, laneFirstContact, "firstcontact:" + inv.pk, ""})
+			continue
+		}
 		switch {
-		case k == "firstcontact":
-			sk, pk, err := nip17FirstContactKeys(fc)
+		case k == "firstcontact" && mainErr == nil:
+			sk, pk, err := nip17FirstContactKeysAs(main, fc)
 			if err == nil {
 				out = append(out, knockTarget{pk, sk, laneFirstContact, "firstcontact:" + pk, ""})
 			}
 		case isHexKey(k):
+			// the main identity's: any other's was noted as it was
+			// subscribed
 			peer, err := peerArr(k)
 			if err != nil {
 				continue
 			}
-			sk, pk, err := nip17RcvAddress(peer)
+			c, err := pairOf(mainIdent, peer)
+			if err != nil {
+				continue
+			}
+			sk, pk, err := c.rcvAddress()
 			if err == nil {
 				lane := receiveLane(pk)
 				out = append(out, knockTarget{pk, sk, lane, lane, strings.ToLower(k)})
@@ -138,10 +155,11 @@ func isHexKey(s string) bool {
 	return err == nil
 }
 
-// a keyed hash under this identity: the same every start, and it says
-// nothing of what went in to whoever reads the app's settings
+// a keyed hash under the main identity: the same every start, and it says
+// nothing of what went in to whoever reads the app's settings. it never
+// leaves the phone
 func knockID(s string) string {
-	me, err := myXid()
+	me, err := identityOf(mainIdent)
 	if err != nil {
 		return ""
 	}

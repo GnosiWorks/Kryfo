@@ -29,8 +29,8 @@ func newIdentity(t *testing.T) (priv, pub [32]byte) {
 
 func useIdentity(priv, pub [32]byte) func() {
 	oldPriv, oldPub := myXPriv, myXPub
-	myXPriv, myXPub = priv, pub
-	return func() { myXPriv, myXPub = oldPriv, oldPub }
+	setMainForTest(priv, pub)
+	return func() { setMainForTest(oldPriv, oldPub) }
 }
 
 // the address must not move between runs, or a restart loses every pending
@@ -79,7 +79,7 @@ func TestFirstContactRoundTrip(t *testing.T) {
 
 	// bob publishes his invite. this is the only thing alice gets.
 	restore := useIdentity(bobPriv, bobPub)
-	_, bobFcPk, err := nip17FirstContactKeys(0)
+	_, bobFcPk, err := nip17FirstContactKeysAs(testMain(), 0)
 	restore()
 	if err != nil {
 		t.Fatal(err)
@@ -87,7 +87,7 @@ func TestFirstContactRoundTrip(t *testing.T) {
 
 	// alice wraps an introduction to it, knowing bob's xpub and fc pk only.
 	restore = useIdentity(alicePriv, alicePub)
-	gw, err := nip17WrapFirstContact(bobPub, bobFcPk, "hello from a stranger")
+	gw, err := nip17WrapFirstContactAs(testMain(), bobPub, bobFcPk, "hello from a stranger")
 	restore()
 	if err != nil {
 		t.Fatal(err)
@@ -95,7 +95,7 @@ func TestFirstContactRoundTrip(t *testing.T) {
 
 	// bob reads it with no prior knowledge of alice.
 	restore = useIdentity(bobPriv, bobPub)
-	got, sealPk, err := nip17UnwrapFirstContact(0, gw)
+	got, sealPk, err := nip17UnwrapFirstContactWith(mustFcSk(t, 0), gw)
 	restore()
 	if err != nil {
 		t.Fatalf("bob could not unwrap: %v", err)
@@ -116,18 +116,18 @@ func TestFirstContactNotReadableByThirdParty(t *testing.T) {
 	evePriv, evePub := newIdentity(t)
 
 	restore := useIdentity(bobPriv, bobPub)
-	_, bobFcPk, _ := nip17FirstContactKeys(0)
+	_, bobFcPk, _ := nip17FirstContactKeysAs(testMain(), 0)
 	restore()
 
 	restore = useIdentity(alicePriv, alicePub)
-	gw, err := nip17WrapFirstContact(bobPub, bobFcPk, "for bob only")
+	gw, err := nip17WrapFirstContactAs(testMain(), bobPub, bobFcPk, "for bob only")
 	restore()
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	restore = useIdentity(evePriv, evePub)
-	_, _, err = nip17UnwrapFirstContact(0, gw)
+	_, _, err = nip17UnwrapFirstContactWith(mustFcSk(t, 0), gw)
 	restore()
 	if err == nil {
 		t.Fatal("a third party decrypted a first-contact wrap")
@@ -141,20 +141,30 @@ func TestRotateRetiresOldInvite(t *testing.T) {
 	alicePriv, alicePub := newIdentity(t)
 
 	restore := useIdentity(bobPriv, bobPub)
-	_, oldFcPk, _ := nip17FirstContactKeys(0)
+	_, oldFcPk, _ := nip17FirstContactKeysAs(testMain(), 0)
 	restore()
 
 	restore = useIdentity(alicePriv, alicePub)
-	gw, err := nip17WrapFirstContact(bobPub, oldFcPk, "sent to a retired invite")
+	gw, err := nip17WrapFirstContactAs(testMain(), bobPub, oldFcPk, "sent to a retired invite")
 	restore()
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	restore = useIdentity(bobPriv, bobPub)
-	_, _, err = nip17UnwrapFirstContact(1, gw)
+	_, _, err = nip17UnwrapFirstContactWith(mustFcSk(t, 1), gw)
 	restore()
 	if err == nil {
 		t.Fatal("a retired invite still worked")
 	}
+}
+
+// the main identity's v3 first-contact key at [counter]
+func mustFcSk(t *testing.T, counter int) string {
+	t.Helper()
+	sk, _, err := nip17FirstContactKeysAs(testMain(), counter)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return sk
 }

@@ -38,8 +38,14 @@ Future<void> openSignalStore(
 // dev chat the one it was started with. null for a dev chat that has none
 // (not started, deleted, restored without its made name) and for any other
 // id shaped like one: nothing falls back to the everyday store for it
-Future<SignalSession?> signalFor(String peer) async =>
-    isDevId(peer) ? (await devLane.seat(peer))?.store : signalSession;
+// any other contact's is the store of the identity they know (door.dart)
+Future<SignalSession?> signalFor(String peer) async => isDevId(peer)
+    ? (await devLane.seat(peer))?.store
+    : await signalOfIdent(identOfPeer(peer));
+
+/// the x key [peer]'s store holds for them, on the identity they know
+Future<String?> peerXPubOf(String peer) async =>
+    (await signalFor(peer))?.peerXPubHex(peer);
 
 // a session with [haloId] built from their card, in [into] or the store
 // signalFor names
@@ -67,9 +73,10 @@ Future<bool> hasSessionWith(String peerId) async {
   return ss != null && await ss.hasSession(peerId);
 }
 
-// the one place a frame is sealed for a peer. every frame for the dev chat
-// goes through its own seal instead: the allowlist, its store, the token
-// the wire asks for. either store seals one frame at a time per peer
+// the one place a frame is sealed for a peer: through the door, on the
+// store of the identity they know. every frame for the dev chat goes
+// through its own seal instead: the allowlist, its store, the token the
+// wire asks for. either store seals one frame at a time per peer
 // [onlySettled]: a frame that must never open a session (a typing frame)
 Future<String> signalEncrypt(
   String peerId,
@@ -81,10 +88,12 @@ Future<String> signalEncrypt(
     return devLane.encrypt(peerId, plaintext);
   }
   plaintext = await appState.shotsOnWire(peerId, plaintext);
+  final (ident, framed) = await appState.doorFor(peerId, plaintext);
+  final ss = await signalOfIdent(ident);
   final from = _afreshFrom;
-  return signalSession.encryptTo(
+  return ss.encryptTo(
     peerId,
-    plaintext,
+    framed,
     onlySettled: onlySettled,
     afresh: from == null ? null : () => from(peerId),
     // a read that fails seals nothing

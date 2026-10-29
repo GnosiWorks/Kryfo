@@ -80,16 +80,16 @@ class _Io extends ArrivalIo {
   }
 
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     tried.add(xPub);
     await hold?.future;
-    return super.relaySend(xPub, cipher);
+    return super.relaySend(ident, xPub, cipher);
   }
 
   @override
-  void listen(String xPub, {bool fresh = false}) {
+  void listen(int ident, String xPub, {bool fresh = false}) {
     if (fresh) this.fresh.add(xPub);
-    super.listen(xPub);
+    super.listen(ident, xPub);
   }
 }
 

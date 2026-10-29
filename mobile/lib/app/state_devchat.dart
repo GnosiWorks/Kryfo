@@ -203,7 +203,7 @@ extension AppStateDevchat on AppState {
         k.status == DevKeyStatus.retired) {
       return;
     }
-    _io.listen(k.xPub);
+    _io.listen(kMainIdent, k.xPub);
   }
 
   // a line on one of his lanes. taken only by the everyday chat running on
@@ -429,9 +429,9 @@ extension AppStateDevchat on AppState {
     Future<bool> one(String c) async {
       final fc = t.fc;
       if (fc != null && fc.isNotEmpty) {
-        return await _io.firstContactSend(t.xPub, fc, c) == 'ok';
+        return await _io.firstContactSend(kMainIdent, t.xPub, fc, c) == 'ok';
       }
-      return await _io.relaySend(t.xPub, c) == 'ok' && t.backPaired;
+      return await _io.relaySend(kMainIdent, t.xPub, c) == 'ok' && t.backPaired;
     }
 
     Future<void> lane() async {

@@ -251,6 +251,9 @@ extension AppStateReceive on AppState {
     bool cache = false,
     Set<String> skip = const {},
   }) async {
+    // who is on an identity of their own, and those identities in the
+    // engine before anything listens on them
+    await loadIdents();
     // subscribe off the xpub stored on the contact row, the same key the
     // send path uses. the signal store has none until a session exists, so
     // the scanned side could never receive the first message.
@@ -291,7 +294,7 @@ extension AppStateReceive on AppState {
         if (xPub == null || xPub.isEmpty) {
           // with no signal yet the store says nothing: tried again later
           if (!signalSession.ready) short = true;
-          xPub = await signalSession.peerXPubHex(haloId);
+          xPub = await peerXPubOf(haloId);
           if (xPub != null && xPub.isNotEmpty) {
             try {
               await live.setContactXPub(haloId, xPub);
@@ -305,7 +308,7 @@ extension AppStateReceive on AppState {
         // a key someone else is heard on stays theirs
         if (r['blocked'] == 1 && _heardAsOther(xPub, haloId)) continue;
         _xPubToHaloId[xPub] = haloId;
-        if (!skip.contains(xPub)) _io.listen(xPub);
+        if (!skip.contains(xPub)) _io.listen(identOf(haloId), xPub);
         fresh[xPub] = haloId;
       } catch (e) {
         short = true;
@@ -321,7 +324,7 @@ extension AppStateReceive on AppState {
     for (final h in hidden.entries) {
       try {
         _xPubToHaloId[h.key] = h.value;
-        if (!skip.contains(h.key)) _io.listen(h.key);
+        if (!skip.contains(h.key)) _io.listen(identOf(h.value), h.key);
         heard.add(h.key);
       } catch (e) {
         short = true;
@@ -339,23 +342,24 @@ extension AppStateReceive on AppState {
   }
 
   Future<void> _pinFirst(List<Map<String, Object?>> rows) async {
-    final pins = <String>[];
+    final pins = <(int, String)>[];
     for (final r in rows) {
       if (r['pinned'] != 1) continue;
+      final ident = identOf(r['halo_id'] as String? ?? '');
       var xPub = r['xpub'] as String?;
       if (xPub == null || xPub.isEmpty) {
         final haloId = r['halo_id'] as String?;
         if (haloId == null) continue;
         try {
-          xPub = await signalSession.peerXPubHex(haloId);
+          xPub = await peerXPubOf(haloId);
         } catch (_) {
           continue;
         }
       }
-      if (xPub != null && xPub.isNotEmpty) pins.add(xPub);
+      if (xPub != null && xPub.isNotEmpty) pins.add((ident, xPub));
     }
     // the engine starts with none and keeps what it was told
-    final told = (pins..sort()).join(',');
+    final told = ([for (final (i, x) in pins) '$i:$x']..sort()).join(',');
     if (told == _pinsTold) return;
     try {
       await _io.pinFirst(pins);
@@ -392,7 +396,7 @@ extension AppStateReceive on AppState {
             : old.contains(e.value);
         if (!gone) continue;
         _xPubToHaloId.remove(e.key);
-        _io.unlisten(e.key);
+        _io.unlisten(identOf(e.value), e.key);
       }
     } catch (e) {
       dlog('old blocks: still listened on ($e)');

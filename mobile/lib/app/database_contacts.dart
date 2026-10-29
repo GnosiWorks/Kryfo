@@ -22,16 +22,40 @@ mixin _ContactRows {
     };
   }
 
+  // the main identity's row goes with it, in one write: its key, and the
+  // registration id the store has given out so far
   Future<void> saveIdentity(String id, String edPriv, String xPriv) async {
     final db = await open();
-    await db.delete('identity');
-    await db.insert('identity', {
-      'id': id,
-      'ed_priv': edPriv,
-      'x_priv': xPriv,
-      'created_at': DateTime.now().millisecondsSinceEpoch,
+    await db.transaction((t) async {
+      await t.delete('identity');
+      await t.insert('identity', {
+        'id': id,
+        'ed_priv': edPriv,
+        'x_priv': xPriv,
+        'created_at': DateTime.now().millisecondsSinceEpoch,
+      });
+      final reg = await t.query(
+        'signal_meta',
+        columns: ['v'],
+        where: 'k = ?',
+        whereArgs: ['regId'],
+        limit: 1,
+      );
+      final had = await identityRow(t, kMainIdent);
+      await putMainIdentity(
+        t,
+        _hexBytes(xPriv),
+        regId: reg.isEmpty
+            ? had?.regId
+            : int.tryParse(reg.first['v'] as String) ?? had?.regId,
+      );
     });
   }
+
+  static Uint8List _hexBytes(String h) => Uint8List.fromList([
+    for (var i = 0; i + 1 < h.length; i += 2)
+      int.parse(h.substring(i, i + 2), radix: 16),
+  ]);
 
   Future<void> setNote(String haloId, String note) async {
     final db = await open();
@@ -120,6 +144,7 @@ mixin _ContactRows {
       // and the name is whatever the card said
       'name_check': kNameAsk | kNameSays,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    await claimContactKeys(db, only: haloId);
   }
 
   Future<bool> keyChanged(String haloId) async {
@@ -359,6 +384,7 @@ mixin _ContactRows {
       where: 'halo_id = ?',
       whereArgs: [haloId],
     );
+    await claimContactKeys(db, only: haloId);
   }
 
   Future<List<Map<String, Object?>>> contacts() async {
@@ -598,6 +624,8 @@ mixin _ContactRows {
       await t.delete('vouches', where: 'halo_id = ?', whereArgs: [haloId]);
       await t.delete('vouches', where: 'voucher_id = ?', whereArgs: [haloId]);
       await t.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
+      // the key it held is free for whoever holds it next
+      await claimContactKeys(t, only: haloId);
       return atmo;
     });
     await _dropPhotos([atmo]);
@@ -909,6 +937,8 @@ mixin _ContactRows {
         whereArgs: [haloId],
       );
     }
+    // one contact per identity key (identities.dart)
+    await claimContactKeys(db, only: haloId);
   }
 
   Future<void> markBackPaired(String peerId) async {

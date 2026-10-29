@@ -314,7 +314,7 @@ extension AppStatePairing on AppState {
     final heardAs = opened.heardAs;
     if (to != RouteTo.dropped && x != null && x.isNotEmpty) {
       _xPubToHaloId[x] = h;
-      _io.listen(x);
+      _io.listen(identOf(h), x);
     }
     var went = to;
     try {
@@ -339,7 +339,7 @@ extension AppStatePairing on AppState {
         if (x != null && x.isNotEmpty && _xPubToHaloId[x] == h) {
           if (heardAs == null) {
             _xPubToHaloId.remove(x);
-            _io.unlisten(x);
+            _io.unlisten(identOf(h), x);
           } else {
             _xPubToHaloId[x] = heardAs;
           }
