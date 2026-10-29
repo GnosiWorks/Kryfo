@@ -248,17 +248,21 @@ void makePlaceholders(String docs, {Random? random}) {
 /// (which carry the start of receive keys) and their contents never reach
 /// the disk as they are. what it keeps between runs is sealed: the onion
 /// key as docs/onion.key, the relay marks in support/engine.state. tor's
-/// own state stays on the disk through a link, docs/tor
+/// own state stays on the disk through a link, docs/tor. windows makes a
+/// link only for an admin or in developer mode, and its engine folder is
+/// on the disk already: tor's is a real folder there, kept across starts
 class EngineFiles {
   EngineFiles({
     required this.docs,
     required this.support,
     required this.runtime,
-  });
+    bool? windows,
+  }) : windows = windows ?? Platform.isWindows;
 
   final String docs;
   final String support;
   final String runtime;
+  final bool windows;
   Timer? _watch;
 
   String get dir => p.join(runtime, kEngineFolder);
@@ -288,6 +292,7 @@ class EngineFiles {
   void _linkTor() {
     final at = p.join(dir, 'tor');
     final want = p.join(docs, 'tor');
+    if (windows) return _torFolderOnWindows(at, want);
     switch (FileSystemEntity.typeSync(at, followLinks: false)) {
       case FileSystemEntityType.link:
         if (Link(at).targetSync() == want) return;
@@ -302,6 +307,23 @@ class EngineFiles {
     Link(at).createSync(want);
   }
 
+  // a link a developer mode run made to docs/tor stays; any other link or
+  // a file goes, and a real folder takes its place
+  void _torFolderOnWindows(String at, String want) {
+    switch (FileSystemEntity.typeSync(at, followLinks: false)) {
+      case FileSystemEntityType.link:
+        if (p.equals(Link(at).targetSync(), want)) return;
+        Link(at).deleteSync();
+      case FileSystemEntityType.directory:
+        return;
+      case FileSystemEntityType.notFound:
+        break;
+      default:
+        File(at).deleteSync();
+    }
+    Directory(at).createSync(recursive: true);
+  }
+
   // round two kept a link and the key in the vault; before that the key and
   // the marks lay plain in docs
   Future<void> _fromOlderLayout(DesktopVault vault) async {
@@ -311,23 +333,7 @@ class EngineFiles {
       final kept = vault.read(kOnionEntry);
       if (kept != null) File(_sealedKey).writeAsBytesSync(base64.decode(kept));
     } else if (type == FileSystemEntityType.file && _plain(_sealedKey)) {
-      // the plain one is held open: the sealed copy takes its name, then
-      // its own bytes are zeroed where they lie
-      final held = rawFileAccess(
-        () => File(_sealedKey).openSync(mode: FileMode.append),
-      );
-      try {
-        held.setPositionSync(0);
-        final k = held.readSync(held.lengthSync());
-        File('$_sealedKey.new').writeAsBytesSync(k, flush: true);
-        rawFileAccess(() => File('$_sealedKey.new').renameSync(_sealedKey));
-        held.setPositionSync(0);
-        held.writeFromSync(Uint8List(k.length));
-        held.flushSync();
-        k.fillRange(0, k.length, 0);
-      } finally {
-        held.closeSync();
-      }
+      _sealPlainKey();
     }
     if (vault.read(kOnionEntry) != null) await vault.delete(kOnionEntry);
     final old = rawFileAccess(
@@ -350,6 +356,30 @@ class EngineFiles {
       });
     }
     writeMarkState(_state, m);
+  }
+
+  // a plain docs/onion.key sealed where it lies: the sealed copy is written
+  // and read back whole, the plain bytes zeroed, then the copy takes the
+  // name. nothing is held open over the rename, which windows refuses. a
+  // whole copy found beside it is such a run cut short, and wins
+  void _sealPlainKey() {
+    final fresh = '$_sealedKey.new';
+    if (!rawFileAccess(() => File(fresh).existsSync()) || !_opens(fresh)) {
+      final k = rawFileAccess(() => File(_sealedKey).readAsBytesSync());
+      try {
+        File(fresh).writeAsBytesSync(k, flush: true);
+        final back = File(fresh).readAsBytesSync();
+        final same = listEquals(back, k);
+        back.fillRange(0, back.length, 0);
+        if (!same) throw FileSystemException('not sealed whole', fresh);
+      } finally {
+        k.fillRange(0, k.length, 0);
+      }
+    }
+    rawFileAccess(() {
+      _zero(_sealedKey);
+      File(fresh).renameSync(_sealedKey);
+    });
   }
 
   void _restoreMarks(DesktopVault vault) {

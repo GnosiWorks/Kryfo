@@ -144,6 +144,15 @@ Future<void> showWindow() async {
   } catch (_) {}
 }
 
+/// frames asked for by the windows runner for a few seconds: a screen that
+/// comes up with an animation moves without waiting for input there
+Future<void> askFrames() async {
+  if (!Platform.isWindows) return;
+  try {
+    await _desktopChannel.invokeMethod<void>('frames');
+  } catch (_) {}
+}
+
 Future<void> sayTrayWords() async {
   try {
     await _desktopChannel.invokeMethod<void>('tray', {
@@ -271,7 +280,13 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     return null;
   });
   // a run before's temporary files: its key died with it, they go unread
-  if (Platform.isWindows) clearFolder(p.join(root, 'tmp'));
+  // tor's own folder stays: its state is no secret of the run
+  if (Platform.isWindows) {
+    clearFolder(
+      p.join(root, 'tmp'),
+      keep: [p.join(root, 'tmp', kEngineFolder, 'tor')],
+    );
+  }
   // what memory held from a run before goes now, before anything is plain
   if (runtime != null) {
     final docs = (await paths.getApplicationDocumentsPath())!;
@@ -303,6 +318,7 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
             trace('seal open');
             await appMain();
             trace('app started');
+            unawaited(askFrames());
           } catch (e, st) {
             // said, not left as a lock screen that never moves
             dlog('desktop start: $step ${e.runtimeType}');
@@ -322,23 +338,37 @@ Uint8List sessionKey() {
   return Uint8List.fromList(List.generate(32, (_) => r.nextInt(256)));
 }
 
-/// every file under [dir] zeroed and removed, the folder kept. best effort:
-/// a file windows still holds stays for the next start
+/// every file under [dir] zeroed and removed, the folder kept, but for
+/// what lies under [keep]. best effort: a file windows still holds stays
+/// for the next start
 @visibleForTesting
-void clearFolder(String dir) {
+void clearFolder(String dir, {List<String> keep = const []}) {
   final d = Directory(dir);
-  if (!d.existsSync()) return;
-  for (final e in d.listSync(recursive: true, followLinks: false)) {
+  final List<FileSystemEntity> all;
+  try {
+    if (!d.existsSync()) return;
+    all = d.listSync(recursive: true, followLinks: false);
+  } catch (e, st) {
+    traceError('clear', e, st);
+    return;
+  }
+  for (final e in all) {
     if (e is! File) continue;
+    if (keep.any((k) => p.equals(k, e.path) || p.isWithin(k, e.path))) {
+      continue;
+    }
     try {
       final n = e.lengthSync();
       final r = e.openSync(mode: FileMode.writeOnlyAppend);
-      r.setPositionSync(0);
-      for (var at = 0; at < n; at += 1 << 16) {
-        r.writeFromSync(Uint8List(n - at < 1 << 16 ? n - at : 1 << 16));
+      try {
+        r.setPositionSync(0);
+        for (var at = 0; at < n; at += 1 << 16) {
+          r.writeFromSync(Uint8List(n - at < 1 << 16 ? n - at : 1 << 16));
+        }
+        r.flushSync();
+      } finally {
+        r.closeSync();
       }
-      r.flushSync();
-      r.closeSync();
       e.deleteSync();
     } catch (_) {}
   }
@@ -398,8 +428,9 @@ Future<void> openSeal({
       }
       await vault.write(sweptEntry(area), '1');
       areas.swept.add(area);
-    } catch (_) {
+    } catch (e, st) {
       // the next start sweeps again
+      traceError('sweep', e, st);
     }
   }
 
