@@ -97,7 +97,10 @@ class _ScanScreenState extends State<ScanScreen>
           again: false,
         );
       }
-    } catch (_) {}
+    } catch (_) {
+      // windows has no camera plugin or reader library
+      if (onDesktop) _fail(l10n.desktopNoCamera, denied: false, again: false);
+    }
   }
 
   void _onCreated(CameraController? c, Exception? e) {
