@@ -218,9 +218,9 @@ _Cols _cellWidth(BuildContext context, List<_Row> rows) {
 }
 
 Color _tint(_Tone t) => switch (t) {
-  _Tone.good => HaloColors.green,
+  _Tone.good => HaloColors.greenText,
   _Tone.warn => HaloColors.warnText,
-  _Tone.bad => HaloColors.rose,
+  _Tone.bad => HaloColors.roseText,
 };
 
 // the column of the route in use, a soft amber band down the table, so

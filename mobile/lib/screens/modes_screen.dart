@@ -396,7 +396,7 @@ class _ModeCard extends StatelessWidget {
                               text: TextSpan(
                                 style: HaloType.sans(
                                   size: 10,
-                                  color: HaloColors.rose,
+                                  color: HaloColors.roseText,
                                   height: 1.4,
                                 ),
                                 children: markedSpans(
@@ -404,7 +404,7 @@ class _ModeCard extends StatelessWidget {
                                   HaloType.sans(
                                     size: 10,
                                     weight: FontWeight.w500,
-                                    color: HaloColors.rose,
+                                    color: HaloColors.roseText,
                                   ),
                                 ),
                               ),
@@ -449,7 +449,7 @@ class _Meta extends StatelessWidget {
             size: 10,
             weight: FontWeight.w500,
             color: red
-                ? HaloColors.rose
+                ? HaloColors.roseText
                 : warn
                 ? HaloColors.amber
                 : HaloColors.text,

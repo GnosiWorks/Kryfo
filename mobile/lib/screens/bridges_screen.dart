@@ -169,7 +169,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                               style: HaloType.mono(
                                 size: 12,
                                 weight: FontWeight.w600,
-                                color: HaloColors.violet,
+                                color: HaloColors.violetText,
                               ),
                             ),
                           ),
@@ -580,7 +580,7 @@ class _ChoiceCard extends StatelessWidget {
                                     size: 10.5,
                                     weight: FontWeight.w600,
                                     color: t == l10n.bridgesConnected
-                                        ? HaloColors.green
+                                        ? HaloColors.greenText
                                         : HaloColors.amberText,
                                   ),
                                 ),
@@ -621,7 +621,7 @@ class _FriendLinesRow extends StatelessWidget {
         Expanded(
           child: Text(
             l10n.bridges1LineSaved(count),
-            style: HaloType.mono(size: 11, color: HaloColors.violet),
+            style: HaloType.mono(size: 11, color: HaloColors.violetText),
           ),
         ),
         PressScale(
@@ -936,7 +936,7 @@ class _InfoRow extends StatelessWidget {
               value,
               key: ValueKey(value),
               textAlign: TextAlign.end,
-              style: HaloType.mono(size: 12, color: HaloColors.violet),
+              style: HaloType.mono(size: 12, color: HaloColors.violetText),
             ),
           ),
         ),
@@ -1125,7 +1125,10 @@ class _CountryRowState extends State<_CountryRow> {
                     value,
                     key: ValueKey(value),
                     textAlign: TextAlign.end,
-                    style: HaloType.mono(size: 12, color: HaloColors.violet),
+                    style: HaloType.mono(
+                      size: 12,
+                      color: HaloColors.violetText,
+                    ),
                   ),
                 ),
               ),
@@ -1190,7 +1193,7 @@ class _LineRow extends StatelessWidget {
                       : from,
                   style: HaloType.sans(
                     size: 12,
-                    color: bad ? HaloColors.rose : HaloColors.text2,
+                    color: bad ? HaloColors.roseText : HaloColors.text2,
                   ),
                 ),
               ],

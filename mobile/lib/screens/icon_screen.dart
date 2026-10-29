@@ -757,7 +757,7 @@ class _ShowRow extends StatelessWidget {
                           warn ?? '',
                           style: HaloType.sans(
                             size: 12,
-                            color: HaloColors.rose,
+                            color: HaloColors.roseText,
                             height: 1.35,
                           ),
                         ),
