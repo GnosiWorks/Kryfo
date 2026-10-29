@@ -501,15 +501,49 @@ Future<InviteUpkeep> keepInvites(
     await dropInvite(db, ss, r);
     out.dropped.add(r.id);
   }
-  // the v3 invite's keys: the first v4 main invite's predecessor
+  // the v3 invite's keys: the first v4 main invite's predecessor, counted
+  // from when it was made, whatever a reset dropped since
   if (!dev && ss.ident == kMainIdent) {
-    final first = mains.isEmpty ? out.made : mains.first;
-    if (first != null &&
-        !first.neverExpires &&
-        h > first.issued + kMainHours + kSkewHours) {
+    final firstH =
+        await _mainMadeHour(db, ss.ident) ??
+        (mains.isEmpty ? out.made : mains.first)?.issued;
+    if (firstH != null && h > firstH + kMainHours + kSkewHours) {
       out.legacyGone = await ss.dropLegacyInviteKeys();
     }
   }
+  return out;
+}
+
+/// "reset my invite link" (2.3): every main invite of [ss]'s identity
+/// handed out goes now with its keys, its first-contact key and its row,
+/// none answered until it expires, and a new one is made when there is a
+/// [face] to show (else the next upkeep makes it). never the developer's,
+/// which every install pins
+Future<InviteUpkeep> resetMainInvite(
+  Database db,
+  SignalSession ss, {
+  required String Function(Uint8List sk) fcPkOf,
+  InviteFace? face,
+  int? nowMs,
+}) async {
+  final out = InviteUpkeep();
+  final mains = await invitesOf(db, ss.ident, kind: kInviteMain);
+  if (mains.any((r) => r.neverExpires)) return out;
+  final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
+  for (final r in mains) {
+    await dropInvite(db, ss, r);
+    out.dropped.add(r.id);
+  }
+  if (face == null) return out;
+  out.made = await makeInvite(
+    db,
+    ss,
+    kind: kInviteMain,
+    fcPkOf: fcPkOf,
+    face: face,
+    nowMs: now,
+  );
+  if (!await _mainMade(db, ss.ident)) await _noteMainMade(db, ss.ident, now);
   return out;
 }
 
@@ -524,6 +558,18 @@ Future<bool> _mainMade(DatabaseExecutor db, int ident) async => (await db.query(
   whereArgs: [_mainMadeKey(ident)],
   limit: 1,
 )).isNotEmpty;
+
+// the unix hour the first main invite was made, null when unknown
+Future<int?> _mainMadeHour(DatabaseExecutor db, int ident) async {
+  final r = await db.query(
+    'signal_meta',
+    where: 'k = ?',
+    whereArgs: [_mainMadeKey(ident)],
+    limit: 1,
+  );
+  final at = r.isEmpty ? null : int.tryParse('${r.first['v']}');
+  return at == null ? null : unixHours(at);
+}
 
 Future<void> _noteMainMade(DatabaseExecutor db, int ident, int at) => db.insert(
   'signal_meta',

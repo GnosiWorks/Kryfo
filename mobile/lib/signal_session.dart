@@ -1208,11 +1208,14 @@ class SignalSession {
   }
 
   /// a new invite prekey under the same id, and a new kyber one: every
-  /// card handed out before names keys that are gone
-  Future<void> rotateInvitePreKey() async {
+  /// card handed out before names keys that are gone. none once the v3
+  /// invite's keys went: they never come back. true when they were made
+  Future<bool> rotateInvitePreKey() async {
+    if (await _legacyGone()) return false;
     await preKeyStore.replaceInvite(lib.preKey(invitePreKeyId).record);
     await _newInviteKyber();
     dlog('signal: rotated the invite prekeys');
+    return true;
   }
 
   // the registration id of this store's identity row. the main one's row

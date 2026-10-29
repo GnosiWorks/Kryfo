@@ -360,6 +360,26 @@ extension AppStateInvites on AppState {
     unawaited(sendHellosOwed(nowMs: nowMs));
   }
 
+  /// "reset my invite link" for the v4 link, qr and handle: the main
+  /// invite handed out goes at once, keys, address and row, and a new one
+  /// is made and listened on. a failure throws: nothing says it was reset
+  Future<void> resetMyInvite({int? nowMs}) async {
+    if (sessionQuiet || !signalSession.ready || devModeOf(myXPub)) return;
+    final db = await live.open();
+    final up = await resetMainInvite(
+      db,
+      signalSession,
+      fcPkOf: _fcPkOfKey,
+      face: _mainInviteFace(),
+      nowMs: nowMs,
+    );
+    for (final id in up.dropped) {
+      await engine.unsubscribeFcKey(kMainIdent, id);
+    }
+    dlog('invites: the main invite reset');
+    await _listenMyInvites(db, nowMs: nowMs);
+  }
+
   Future<void> _listenMyInvites(DatabaseExecutor db, {int? nowMs}) async {
     final h = unixHours(nowMs);
     final keys = await fcKeysOf(db, kMainIdent);

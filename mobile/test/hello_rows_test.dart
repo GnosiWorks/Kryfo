@@ -400,6 +400,19 @@ void main() {
         whereArgs: [way, peer],
       );
 
+  test('a reset drops the main invite people hold at once and makes a new '
+      'one; once the v3 keys went it makes none of them again', () async {
+    final first = await myMain();
+    await app.resetInviteAddress();
+    final now = (await currentMainInvite(db, kMainIdent))!;
+    expect(now.id, isNot(first.id));
+    expect(await inviteOf(db, kMainIdent, first.id), isNull);
+    expect(await signalSession.signedPreKeyStore.contains(first.spkId!), isFalse);
+    expect(engine.unsubscribed, contains(first.id));
+    expect((await fcKeysOf(db, kMainIdent)).keys, [now.id]);
+    expect(await app.myV4Invite(), inviteLink(now.link));
+  });
+
   test('a session made again and its pair\'s seed are kept together: a '
       'failed write leaves the old pair as it was', () async {
     final p = await _Phone.make('seed-together', 71);

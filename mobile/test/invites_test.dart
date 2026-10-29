@@ -372,6 +372,77 @@ void main() {
     expect(await again.kyberPreKeyStore.contains(kInviteKyberId), isFalse);
   });
 
+  test('a reset drops every main invite handed out at once, keys and '
+      'address, and makes a new one; the v3 keys still go a year and a day '
+      'after the first, and a reset never makes them again', () async {
+    final first = (await keepInvites(
+      db,
+      ss,
+      fcPkOf: _fcPkOf,
+      face: _face,
+      nowMs: _now,
+    )).made!;
+    final at6 = _now + kMainReissueHours * _hour;
+    final second = (await keepInvites(
+      db,
+      ss,
+      fcPkOf: _fcPkOf,
+      face: _face,
+      nowMs: at6,
+    )).made!;
+    final at = at6 + _day;
+    final r = await resetMainInvite(
+      db,
+      ss,
+      fcPkOf: _fcPkOf,
+      face: _face,
+      nowMs: at,
+    );
+    expect(r.dropped, unorderedEquals([first.id, second.id]));
+    final made = r.made!;
+    expect((await currentMainInvite(db, kMainIdent))!.id, made.id);
+    for (final old in [first, second]) {
+      expect(await inviteOf(db, kMainIdent, old.id), isNull);
+      expect(await ss.signedPreKeyStore.contains(old.spkId!), isFalse);
+      expect(await ss.kyberPreKeyStore.contains(old.kyberId!), isFalse);
+    }
+    expect((await fcKeysOf(db, kMainIdent)).keys, [made.id]);
+    // no face yet: the old ones go all the same, the next upkeep makes one
+    final faceless = await resetMainInvite(
+      db,
+      ss,
+      fcPkOf: _fcPkOf,
+      nowMs: at,
+    );
+    expect(faceless.dropped, [made.id]);
+    expect(faceless.made, isNull);
+    expect(await currentMainInvite(db, kMainIdent), isNull);
+    final again = (await keepInvites(
+      db,
+      ss,
+      fcPkOf: _fcPkOf,
+      face: _face,
+      nowMs: at,
+    )).made!;
+    // the v3 keys: a year and a day after the first main invite was made
+    expect(await ss.rotateInvitePreKey(), isTrue);
+    final past = (first.issued + kMainHours + kSkewHours + 1) * _hour;
+    final up = await keepInvites(
+      db,
+      ss,
+      fcPkOf: _fcPkOf,
+      face: _face,
+      nowMs: past,
+    );
+    expect(up.legacyGone, isTrue);
+    expect(await inviteOf(db, kMainIdent, again.id), isNotNull);
+    // and a reset after that makes none of them again
+    expect(await ss.rotateInvitePreKey(), isFalse);
+    expect(await ss.kyberPreKeyStore.contains(kInviteKyberId), isFalse);
+    expect(await ss.preKeyStore.contains(invitePreKeyId), isFalse);
+    expect(await ss.signedPreKeyStore.contains(1), isFalse);
+  });
+
   test('the developer\'s main invite is made once and never replaced or '
       'dropped; one made and lost is not made again', () async {
     final made = (await keepInvites(
@@ -395,6 +466,11 @@ void main() {
     expect(up.made, isNull);
     expect(up.dropped, isEmpty);
     expect(up.legacyGone, isFalse);
+    expect((await currentMainInvite(db, kMainIdent))!.id, made.id);
+    // a reset never touches it
+    final r = await resetMainInvite(db, ss, fcPkOf: _fcPkOf, face: _face);
+    expect(r.dropped, isEmpty);
+    expect(r.made, isNull);
     expect((await currentMainInvite(db, kMainIdent))!.id, made.id);
     expect(await ss.signedPreKeyStore.contains(made.spkId!), isTrue);
     expect(made.openAt(unixHours(years)), isTrue);
