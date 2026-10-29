@@ -394,6 +394,8 @@ extension AppStateFiles on AppState {
   // cleared, a take back, a vault closed) leave. one on its way that no
   // fetch runs for waits until one does
   Future<void> _loadFileWaits() async {
+    // a decoy never reads the everyday side
+    if (sessionQuiet) return;
     try {
       final before = fileWaits.value.keys.toSet();
       final rules = await loadAutoGet(session.container);
