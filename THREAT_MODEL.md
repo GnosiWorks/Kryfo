@@ -145,8 +145,14 @@ key. that key is kept one of two ways.
   windows' own data protection (with the tpm where there is one). Kryfo
   then opens without a question, and so it does for anyone or anything
   running as you: a person at your unlocked account, malware, another app
-  that may read your keyring. a copy of the folder alone does not open,
-  and neither does it on another account or computer.
+  that may read your keyring. without a passphrase the key is as safe as
+  your computer account's password. a copy of Kryfo's folder alone does not
+  open. what does: an account or keyring with no password (a login keyring
+  with an empty password, as automatic login often sets it up, lies
+  unencrypted on the disk; so does a windows account with no password on a
+  computer without a tpm), and a full copy of your home folder together
+  with your account's password, on another computer too (on windows only
+  without a tpm). disk encryption keeps a stolen disk closed.
 - with a passphrase, asked at every start, the key is wrapped under it
   instead and the computer keeps nothing. someone who copies Kryfo's folder
   can try passphrases on their own computer as fast as it allows. a long
