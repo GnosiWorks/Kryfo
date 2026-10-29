@@ -239,7 +239,7 @@ Future<String> _sendChunkedMediaInner({
   if (total > 1 && only == null && await appState.dropsFor(peerId)) {
     final bytes = await File(path).length();
     if (dropFits(bytes)) {
-      mediaProgressStart(msgUid, chatKey: progressKey);
+      mediaProgressStart(msgUid, chatKey: progressKey, bytes: bytes);
       final (sent, r) = await appState.sendDrop(
         path: path,
         uid: msgUid,
@@ -265,7 +265,13 @@ Future<String> _sendChunkedMediaInner({
   }
   // a voice note as well: a long one is a megabyte and more of wav
   final showProgress = total > 1 && only == null;
-  if (showProgress) mediaProgressStart(msgUid, chatKey: progressKey);
+  if (showProgress) {
+    mediaProgressStart(
+      msgUid,
+      chatKey: progressKey,
+      bytes: drop?.size ?? total * _sliceBytes,
+    );
+  }
   int? pow;
   if (needPow) {
     pow = await compute(_mediaGrind, caption);
