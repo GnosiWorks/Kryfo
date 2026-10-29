@@ -10142,12 +10142,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String transferLeftMinutes(String n) {
-    return 'circa $n min rimasti';
+    return 'mancano circa $n min';
   }
 
   @override
   String transferLeftHours(String n) {
-    return 'circa $n h rimaste';
+    return 'mancano circa $n h';
   }
 
   @override
