@@ -9946,4 +9946,8 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get inviteNeeds06 => 'Cần Kryfo 0.6 trở lên.';
+
+  @override
+  String get helloSentOld =>
+      'Đã gửi yêu cầu. Nếu họ dùng Kryfo phiên bản cũ, họ cần cập nhật trước.';
 }

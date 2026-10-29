@@ -208,7 +208,10 @@ Future<(String, bool)> handleHaloUriAdded(
   // a card without the post-quantum prekey is a 0.5.x phone's: no session
   // can start on it, so nothing here changes for it
   final card = parsed['bundle'];
-  if (card != null && bundleFault(card) is ClassicRefused) {
+  // a v3 link with its first-contact address: a hello goes there, which an
+  // owner on 0.6 answers whatever card the link carries (11 step 7)
+  final helloFc = parsed['v'] == '3' && !sessionQuiet ? parsed['fc'] : null;
+  if (card != null && helloFc == null && bundleFault(card) is ClassicRefused) {
     return (l10n.appLinkNeedsUpdate(parsed['id']!), false);
   }
   // the signal store holds a shut vault's people too: a link of one of
@@ -254,7 +257,9 @@ Future<(String, bool)> handleHaloUriAdded(
     final bundle = parsed['bundle'];
     if (bundle != null) {
       final bad = bundleFault(bundle);
-      if (bad != null) return (l10n.appBundleError(bad), false);
+      if (bad != null && !(helloFc != null && bad is ClassicRefused)) {
+        return (l10n.appBundleError(bad), false);
+      }
     }
     if (hold == NameHold.ask &&
         !await askTakeName(
@@ -298,16 +303,34 @@ Future<(String, bool)> handleHaloUriAdded(
     final id = parsed['id']!;
     final already = await session.isAccepted(id);
     final asked = !already && await session.askedBefore(id);
+    // a session on their key already goes on as it is: a re-add starts
+    // nothing afresh
+    final row = await session.getContact(id);
+    var settled = false;
     if (!sessionQuiet) {
-      try {
-        await appState.startFromInvite(id, v4);
-      } catch (e) {
-        return (l10n.appBundleError(e), false);
+      final b = await _boundIdentity(
+        id,
+        ss: signalSession,
+        row: session.getContact,
+      );
+      settled =
+          b != null && _eqBytes(b, v4.identity) && await hasSessionWith(id);
+      if (!settled) {
+        try {
+          await appState.startFromInvite(id, v4);
+        } catch (e) {
+          return (l10n.appBundleError(e), false);
+        }
       }
     }
     // no onion until they answer: the opener goes to the invite's address
-    // alone, where its seal is checked
-    await session.upsertContact(id, '', parsed['xpub']!, owe: asked);
+    // alone, where its seal is checked. one known here keeps theirs
+    await session.upsertContact(
+      id,
+      row?['onion'] as String? ?? '',
+      parsed['xpub']!,
+      owe: asked,
+    );
     if (untombed) await appState._untomb(id);
     await appState._untombShut(id);
     await _noteHowAdded(
@@ -322,7 +345,7 @@ Future<(String, bool)> handleHaloUriAdded(
       openAddedChatLater(id);
       return (already ? l10n.appAlreadySaved(id) : '', true);
     }
-    await appState.rememberPeerFc(id, parsed['fc']!);
+    if (!settled) await appState.rememberPeerFc(id, parsed['fc']!);
     await appState.subscribePeer(id, fresh: true);
     if (asked) await appState.afterAccept(id);
     await appState.refreshContacts();
@@ -332,6 +355,25 @@ Future<(String, bool)> handleHaloUriAdded(
       openAddedChatLater(id);
     }
     return (already ? l10n.appAlreadySaved(id) : '', true);
+  }
+  if (helloFc != null) {
+    // a card that does not read at all is no link of theirs; a 0.5.x one
+    // still takes the hello
+    final bad = card == null ? null : bundleFault(card);
+    if (bad != null &&
+        (bad is! ClassicRefused ||
+            !classicCardHolds(signalSession.lib, card!))) {
+      return (l10n.appBundleError(bad), false);
+    }
+    return _addV3ByHello(
+      appState,
+      parsed['id']!,
+      cardKey,
+      helloFc,
+      scanned: scanned,
+      taken: taken,
+      untombed: untombed,
+    );
   }
   if (parsed['v'] == '2' || parsed['v'] == '3') {
     final id = parsed['id']!;
@@ -426,6 +468,79 @@ Future<(String, bool)> handleHaloUriAdded(
     }
     return (wasIn ? l10n.appAlreadySaved(id) : '', true);
   }
+}
+
+// an add from a v3 link (11 step 7): their row, and a hello to the
+// link's first-contact address that waits for their accept. one with a
+// session on their key already is taken in as it is: nothing to ask
+Future<(String, bool)> _addV3ByHello(
+  AppState appState,
+  String id,
+  List<int> cardKey,
+  String fc, {
+  required bool scanned,
+  required bool taken,
+  required bool untombed,
+}) async {
+  if (cardKey.length != 33 || cardKey[0] != 0x05) {
+    return (l10n.appInvalidUri, false);
+  }
+  final already = await session.isAccepted(id);
+  final asked = !already && await session.askedBefore(id);
+  final row = await session.getContact(id);
+  final bound = await _boundIdentity(
+    id,
+    ss: signalSession,
+    row: session.getContact,
+  );
+  final settled =
+      bound != null && _eqBytes(bound, cardKey) && await hasSessionWith(id);
+  // they asked first on this key: their opener, let in now, starts the
+  // session, and a hello would only start a second one
+  final theirs =
+      asked &&
+      ((row?['xpub'] as String?) ?? '').toLowerCase() == _keyHex(cardKey);
+  // no onion until they answer, as a v4 add: their opener brings it
+  await session.upsertContact(
+    id,
+    row?['onion'] as String? ?? '',
+    _keyHex(cardKey),
+    owe: asked,
+  );
+  if (untombed) await appState._untomb(id);
+  await appState._untombShut(id);
+  await _noteHowAdded(
+    id,
+    scanned: scanned,
+    already: already,
+    taken: taken,
+    untombed: untombed,
+  );
+  if (settled || theirs) {
+    await appState.subscribePeer(id, fresh: true);
+  } else {
+    // the key the link gives is the one their answer has to come on, as a
+    // session built from the card would have held it
+    await signalSession.identityStore.saw(id, cardKey);
+    await appState.wantHello(owner: cardKey, answers: Uint8List(16), fc: fc);
+  }
+  // as the accept button would: they hear they are in, and what was held
+  // for them opens
+  if (asked) await appState.afterAccept(id);
+  await appState.refreshContacts();
+  if (!already && await appState.inboxChatOf(id)) {
+    askInboxMove(id);
+  } else {
+    openAddedChatLater(id);
+  }
+  return (
+    !settled && !theirs
+        ? l10n.helloSentOld
+        : already
+        ? l10n.appAlreadySaved(id)
+        : '',
+    true,
+  );
 }
 
 String buildHaloUri(String id, String onion, String xpub) {
@@ -529,6 +644,22 @@ bool _firstWouldPass(UnwrappedMessage env) =>
 bool firstPowHolds(UnwrappedMessage env) =>
     env.powNonce != null &&
     verifyPow(env.powText ?? env.message, env.powNonce!, powBits);
+
+/// whether a 0.5.x card (no kyber prekey) is one its key made: its signed
+/// prekey is signed by its identity key. nothing is built on it, but a
+/// card no key stands behind is no link of anyone's
+bool classicCardHolds(KryfoSignal lib, String bundleB64) {
+  try {
+    final j = jsonDecode(utf8.decode(base64Decode(bundleB64))) as Map;
+    final id = base64Decode(j['identityKey'] as String);
+    final spk = base64Decode(j['signedPreKeyPublic'] as String);
+    final sig = base64Decode(j['signedPreKeySignature'] as String);
+    if (id.length != 33 || spk.length != 33 || sig.length != 64) return false;
+    return lib.verify(id, spk, sig);
+  } catch (_) {
+    return false;
+  }
+}
 
 /// what is wrong with a card's prekey bundle, null when a session can be
 /// built on it: it reads, carries the kyber prekey, and its identity signs

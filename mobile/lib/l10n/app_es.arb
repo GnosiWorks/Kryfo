@@ -2631,5 +2631,6 @@
   "inviteExpired": "Esta invitación ha caducado. Pide una nueva.",
   "inviteDamaged": "Esta invitación está dañada. Pide una nueva.",
   "helloSent": "Solicitud enviada. La verá cuando esté en línea.",
-  "inviteNeeds06": "Necesita Kryfo 0.6 o posterior."
+  "inviteNeeds06": "Necesita Kryfo 0.6 o posterior.",
+  "helloSentOld": "Solicitud enviada. Si usa una versión anterior de Kryfo, primero tendrá que actualizarla."
 }

@@ -2631,5 +2631,6 @@
   "inviteExpired": "Bu davetin süresi doldu. Yenisini iste.",
   "inviteDamaged": "Bu davet bozuk. Yenisini iste.",
   "helloSent": "İstek gönderildi. Çevrimiçi olduğunda görecek.",
-  "inviteNeeds06": "Kryfo 0.6 veya daha yenisi gerekir."
+  "inviteNeeds06": "Kryfo 0.6 veya daha yenisi gerekir.",
+  "helloSentOld": "İstek gönderildi. Kryfo'nun eski bir sürümünü kullanıyorsa önce güncellemesi gerekecek."
 }

@@ -2631,5 +2631,6 @@
   "inviteExpired": "Lời mời này đã hết hạn. Hãy xin lời mời mới.",
   "inviteDamaged": "Lời mời này bị hỏng. Hãy xin lời mời mới.",
   "helloSent": "Đã gửi yêu cầu. Họ sẽ thấy khi trực tuyến.",
-  "inviteNeeds06": "Cần Kryfo 0.6 trở lên."
+  "inviteNeeds06": "Cần Kryfo 0.6 trở lên.",
+  "helloSentOld": "Đã gửi yêu cầu. Nếu họ dùng Kryfo phiên bản cũ, họ cần cập nhật trước."
 }

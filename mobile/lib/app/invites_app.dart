@@ -319,8 +319,23 @@ extension AppStateInvites on AppState {
     if (up.made != null) dlog('invites: a main invite made');
     for (final id in up.dropped) {
       await engine.unsubscribeFcKey(kMainIdent, id);
+      // a hello of mine whose one-time invite went waits for nothing more
+      await db.delete(
+        'hellos',
+        where: 'ident = ? AND way = ? AND invite_id = ?',
+        whereArgs: [kMainIdent, kHelloOut, id],
+      );
     }
+    // a hello waiting for an accept past its invite's life and a day
+    // builds on keys its sender let go
+    final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
+    await db.delete(
+      'hellos',
+      where: 'way = ? AND at < ?',
+      whereArgs: [kHelloIn, now - (kOneTimeHours + kSkewHours) * 3600 * 1000],
+    );
     await _listenMyInvites(db, nowMs: nowMs);
+    unawaited(sendHellosOwed(nowMs: nowMs));
   }
 
   Future<void> _listenMyInvites(DatabaseExecutor db, {int? nowMs}) async {
@@ -420,40 +435,130 @@ extension AppStateInvites on AppState {
     );
   }
 
-  /// a hello to the owner of [inv], an invite without a bundle (a qr):
-  /// a fresh one-time invite of mine in a KHL1, sealed with the hello seal
-  /// key to the invite's first-contact address, and that one-time invite
-  /// listened on for their opener (3.3)
-  Future<String> helloToInvite(LsInvite inv) async {
+  /// a hello to [owner], answering their invite [answers] (all zero: a v3
+  /// link) at its first-contact key [fc] (3.3, 11 step 7): kept until it
+  /// went, and sent now when it can be
+  Future<void> wantHello({
+    required List<int> owner,
+    required List<int> answers,
+    required String fc,
+  }) async {
+    await live.oweHello(_hexOf(owner), _hexOf(answers), fc);
+    unawaited(sendHellosOwed());
+  }
+
+  /// every hello owed sent, one pass at a time: at each start, after an
+  /// add and, with [due], as the outbox drains, once in kHelloRetry. one
+  /// that does not go is made again on the next pass
+  Future<void> sendHellosOwed({int? nowMs, bool due = false}) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (due && now - _helloPassAt < kHelloRetry.inMilliseconds) {
+      return Future.value();
+    }
+    _helloPassAt = now;
+    return _helloPass ??= _sendHellos(nowMs: nowMs).whenComplete(() {
+      _helloPass = null;
+    });
+  }
+
+  Future<void> _sendHellos({int? nowMs}) async {
+    try {
+      if (sessionQuiet || everydayHeld || !signalSession.ready) return;
+      final db = await live.open();
+      final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
+      await db.delete(
+        'hellos',
+        where: 'way = ? AND at < ?',
+        whereArgs: [kHelloWant, now - kHelloWantDays * 24 * 3600 * 1000],
+      );
+      final rows = await db.query(
+        'hellos',
+        where: 'ident = ? AND way = ?',
+        whereArgs: [kMainIdent, kHelloWant],
+      );
+      for (final r in rows) {
+        if (everydayHeld) return;
+        if (!await _sendOneHello(db, r, nowMs: nowMs)) return;
+      }
+    } catch (e) {
+      dlog('hello: not sent (${e.runtimeType})');
+    }
+  }
+
+  // [r]'s hello made and sent: a fresh one-time invite of mine in a KHL1,
+  // sealed with the hello seal key to the invite's first-contact address,
+  // and that one-time invite listened on for their opener. one that did
+  // not go takes its one-time invite with it. false stops the pass
+  Future<bool> _sendOneHello(
+    Database db,
+    Map<String, Object?> r, {
+    int? nowMs,
+  }) async {
+    final peer = r['peer'] as String;
+    final answers = r['invite_id'] as String;
+    final fc = r['fc'] as String? ?? '';
+    Future<void> done() => db.delete(
+      'hellos',
+      where: 'ident = ? AND way = ? AND peer = ? AND invite_id = ?',
+      whereArgs: [kMainIdent, kHelloWant, peer, answers],
+    );
+    // answered already: a session on their key needs no hello
+    final c = await db.query(
+      'contacts',
+      columns: ['halo_id'],
+      where: 'ikey = ?',
+      whereArgs: [peer],
+      limit: 1,
+    );
+    if (c.isNotEmpty && await hasSessionWith(c.first['halo_id'] as String)) {
+      await done();
+      return true;
+    }
     final face = _mainInviteFace();
-    if (face == null) return 'error: no face yet';
-    final db = await live.open();
+    if (face == null) {
+      dlog('hello: no face yet, sent on a later pass');
+      return false;
+    }
     final (hello, once) = await makeHello(
       db,
       signalSession,
-      answers: inv.id,
-      owner: inv.identity,
+      answers: _bytesOfHex(answers),
+      owner: _bytesOfHex(peer),
       fcPkOf: _fcPkOfKey,
       face: face,
+      nowMs: nowMs,
     );
     await db.insert('hellos', {
       'ident': kMainIdent,
       'way': kHelloOut,
-      'peer': _hexOf(inv.identity),
+      'peer': peer,
       'invite_id': once.id,
-      'fc': _hexOf(inv.firstContact),
+      'fc': fc,
       'at': DateTime.now().millisecondsSinceEpoch,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     final sk = (await fcKeysOf(db, kMainIdent))[once.id];
     if (sk != null) {
       await engine.subscribeFcKey(kMainIdent, once.id, _hexOf(sk));
     }
-    return engine.sendHello(
+    final res = await engine.sendHello(
       kMainIdent,
-      _hexOf(inv.identity.sublist(1)),
-      _hexOf(inv.firstContact),
-      base64Encode(hello),
+      peer.substring(2),
+      fc,
+      await helloWire(hello),
     );
+    if (res == 'ok') {
+      await done();
+      return true;
+    }
+    dlog('hello: not sent ($res)');
+    await spendOneTime(db, signalSession, once);
+    await engine.unsubscribeFcKey(kMainIdent, once.id);
+    await db.delete(
+      'hellos',
+      where: 'ident = ? AND way = ? AND invite_id = ?',
+      whereArgs: [kMainIdent, kHelloOut, once.id],
+    );
+    return false;
   }
 
   // an add from a v4 invite without a bundle (a qr): their row, and a
@@ -477,16 +582,19 @@ extension AppStateInvites on AppState {
     }
     if (await session.isBlocked(id)) return (l10n.appTheyAreBlocked(id), false);
     final already = await session.isAccepted(id);
-    await session.upsertContact(id, '', p['xpub']!);
+    await session.upsertContact(id, row?['onion'] as String? ?? '', p['xpub']!);
     await _noteHowAdded(id, scanned: scanned, already: already, taken: false);
-    final r = await helloToInvite(inv);
-    await refreshContacts();
-    if (r != 'ok') {
-      dlog('hello: not sent ($r)');
-      return (l10n.appBundleError(r), true);
+    if (!await hasSessionWith(id)) {
+      await signalSession.identityStore.saw(id, inv.identity);
+      await wantHello(
+        owner: inv.identity,
+        answers: inv.id,
+        fc: _hexOf(inv.firstContact),
+      );
     }
+    await refreshContacts();
     openAddedChatLater(id);
-    return (l10n.helloSent, true);
+    return (already ? l10n.appAlreadySaved(id) : l10n.helloSent, true);
   }
 
   /// a hello at invite [at] of mine (null: my v3 first-contact address),
@@ -521,8 +629,8 @@ extension AppStateInvites on AppState {
       // smaller; mine then waits for their opener
       final out = await db.query(
         'hellos',
-        where: 'ident = ? AND way = ? AND peer = ?',
-        whereArgs: [ident, kHelloOut, senderKey],
+        where: 'ident = ? AND way IN (?, ?) AND peer = ?',
+        whereArgs: [ident, kHelloOut, kHelloWant, senderKey],
         limit: 1,
       );
       drop =
@@ -544,6 +652,14 @@ extension AppStateInvites on AppState {
         (row['xpub'] as String? ?? '').toLowerCase() != fields['xpub']) {
       id = unboundIdOf(hl!.invite.identity);
     }
+    // someone blocked here, by words or by key, asks nothing
+    if (await live.keyBlocked(_keyHex(hl!.invite.identity)) ||
+        await blockedAnywhere(id)) {
+      firstFails.note('hello');
+      await live.markSeenLong(h);
+      arrived();
+      return;
+    }
     await db.insert('hellos', {
       'ident': ident,
       'way': kHelloIn,
@@ -552,10 +668,19 @@ extension AppStateInvites on AppState {
       'hello': bytes,
       'at': DateTime.now().millisecondsSinceEpoch,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
-    if (await live.getContact(id) == null) {
+    final have = await live.getContact(id);
+    if (have == null) {
       await live.upsertContact(id, '', fields['xpub']!, accepted: 0);
     }
     await live.markSeen(h);
+    // someone here already, on this key (a reinstall that kept it): no
+    // request, their hello is answered as an accept would
+    final known =
+        have != null &&
+        (have['accepted'] as int? ?? 0) == 1 &&
+        (have['blocked'] as int? ?? 0) == 0 &&
+        have['ikey'] == senderKey;
+    if (known) unawaited(afterAccept(id));
     await refreshContacts();
     notifyListeners();
     arrived();
@@ -586,10 +711,11 @@ extension AppStateInvites on AppState {
     final hl = signalSession.lib.parseHello(rows.first['hello'] as List<int>);
     await startFromInvite(haloId, hl.invite);
     await rememberPeerFc(haloId, _hexOf(hl.invite.firstContact));
+    // theirs answered: one of mine still owed to them goes nowhere
     await db.delete(
       'hellos',
-      where: 'ident = ? AND way = ? AND peer = ?',
-      whereArgs: [ident, kHelloIn, key],
+      where: 'ident = ? AND way IN (?, ?) AND peer = ?',
+      whereArgs: [ident, kHelloIn, kHelloWant, key],
     );
   }
 
@@ -606,6 +732,13 @@ extension AppStateInvites on AppState {
     final seed = Uint8List.fromList(List.generate(32, (_) => r.nextInt(256)));
     await signalSession.processBundle(id, bundle);
     await seedPairAfresh(db, kMainIdent, key, seed);
+    // a pair made again: its frames carry the seed until they answer
+    await db.update(
+      'contacts',
+      {'back_paired': 0},
+      where: 'halo_id = ?',
+      whereArgs: [id],
+    );
     await db.insert('hellos', {
       'ident': kMainIdent,
       'way': kHelloOpen,
@@ -627,3 +760,19 @@ extension AppStateInvites on AppState {
 const kHelloOpen = 'open';
 const kHelloOut = 'out';
 const kHelloIn = 'in';
+
+/// a hellos row: a hello owed, made and sent once it can be
+const kHelloWant = 'want';
+
+/// how long a hello owed is tried before it is let go
+const kHelloWantDays = 7;
+
+// the one pass sending hellos owed, and when the last began
+Future<void>? _helloPass;
+var _helloPassAt = 0;
+
+/// how often the outbox's drain tries the hellos owed again
+const kHelloRetry = Duration(minutes: 5);
+
+/// [hello] as it goes on the wire: base64
+Future<String> helloWire(Uint8List hello) async => base64Encode(hello);

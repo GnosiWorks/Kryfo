@@ -2327,6 +2327,12 @@ class ArrivalRows implements HaloDb {
     return true;
   }
 
+  // hellos owed: (owner key, invite answered, first-contact key)
+  final hellosOwed = <(String, String, String)>[];
+  @override
+  Future<void> oweHello(String ownerHex, String answersHex, String fc) async =>
+      hellosOwed.add((ownerHex, answersHex, fc));
+
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('the stand-in was asked for ${i.memberName}');

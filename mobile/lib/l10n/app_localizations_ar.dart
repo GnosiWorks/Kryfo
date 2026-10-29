@@ -10092,4 +10092,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get inviteNeeds06 => 'يحتاج إلى Kryfo 0.6 أو أحدث.';
+
+  @override
+  String get helloSentOld =>
+      'أُرسل الطلب. إذا كانوا يستخدمون إصدارًا أقدم من Kryfo، فعليهم التحديث أولًا.';
 }

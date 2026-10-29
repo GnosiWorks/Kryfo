@@ -771,6 +771,21 @@ mixin _ContactRows {
 
   // someone who asked, or asked and was let go: adding them by their card
   // is the accept they were waiting for
+  /// a hello owed to the identity [ownerHex] (0x05 and its x key),
+  /// answering its invite [answersHex] (all zero: a v3 link) at the
+  /// first-contact key [fc]: kept until it went
+  Future<void> oweHello(String ownerHex, String answersHex, String fc) async {
+    final db = await open();
+    await db.insert('hellos', {
+      'ident': kMainIdent,
+      'way': kHelloWant,
+      'peer': ownerHex,
+      'invite_id': answersHex,
+      'fc': fc,
+      'at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
   Future<bool> askedBefore(String haloId) async {
     final db = await open();
     final r = await db.rawQuery(

@@ -16072,6 +16072,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Needs Kryfo 0.6 or newer.'**
   String get inviteNeeds06;
+
+  /// after a v3 link is read: a hello went to its owner, and an owner on an older version cannot answer it
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent. If they use an older Kryfo, they\'ll need to update first.'**
+  String get helloSentOld;
 }
 
 class _AppLocalizationsDelegate

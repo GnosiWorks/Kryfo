@@ -429,6 +429,8 @@ extension AppStateOutbox on AppState {
       return;
     }
     _outboxWasReady = true;
+    // hellos owed go with the outbox, a few minutes apart at most
+    unawaited(sendHellosOwed(due: true));
     // a decoy open: all of it waits for the session that wrote it
     if (everydayHeld) return;
     unawaited(_replayHeld());

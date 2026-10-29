@@ -2631,5 +2631,6 @@
   "inviteExpired": "Este convite expirou. Peça um novo.",
   "inviteDamaged": "Este convite está danificado. Peça um novo.",
   "helloSent": "Pedido enviado. A pessoa verá quando estiver online.",
-  "inviteNeeds06": "Requer o Kryfo 0.6 ou mais recente."
+  "inviteNeeds06": "Requer o Kryfo 0.6 ou mais recente.",
+  "helloSentOld": "Pedido enviado. Se a pessoa usar uma versão antiga do Kryfo, precisará atualizar primeiro."
 }

@@ -12527,5 +12527,9 @@
   "inviteNeeds06": "Needs Kryfo 0.6 or newer.",
   "@inviteNeeds06": {
     "description": "under a shared v4 invite link: older versions read it as an invalid link"
+  },
+  "helloSentOld": "Request sent. If they use an older Kryfo, they'll need to update first.",
+  "@helloSentOld": {
+    "description": "after a v3 link is read: a hello went to its owner, and an owner on an older version cannot answer it"
   }
 }

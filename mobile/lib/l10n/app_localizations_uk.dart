@@ -10123,4 +10123,8 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get inviteNeeds06 => 'Потрібен Kryfo 0.6 або новіший.';
+
+  @override
+  String get helloSentOld =>
+      'Запит надіслано. Якщо в них старіша версія Kryfo, спершу їм треба оновитися.';
 }
