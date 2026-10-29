@@ -365,9 +365,10 @@ class FfiWinCrypt implements WinCrypt {
 
   // oaep with sha-1: what every platform crypto provider takes
   Uint8List _crypt(DynamicLibrary n, int key, bool enc, Uint8List data) {
-    final fn = n.lookupFunction<_CryptC, _Crypt>(
-      enc ? 'NCryptEncrypt' : 'NCryptDecrypt',
-    );
+    // each by its own name: the binding scan reads names, not variables
+    final fn = enc
+        ? n.lookupFunction<_CryptC, _Crypt>('NCryptEncrypt')
+        : n.lookupFunction<_CryptC, _Crypt>('NCryptDecrypt');
     final pad = calloc<_Oaep>();
     final alg = 'SHA1'.toNativeUtf16();
     final inP = calloc<Uint8>(data.length);
