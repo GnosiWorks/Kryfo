@@ -381,23 +381,26 @@ void main() {
         ..setPositionSync(2 << 30)
         ..writeByteSync(1)
         ..closeSync();
-      var moved = false;
+      // each step is one 256 KiB piece: at once is a piece, not the clock
+      var steps = 0;
       final making = makeNotesExport(
         [_note('x', at, photo: big.path)],
         format: NotesFormat.text,
         passphrase: null,
         dir: out,
-        progress: (_) => moved = true,
+        progress: (_) => steps++,
       );
       final stops = expectLater(making, throwsA(isA<NotesExportStopped>()));
       // a file is being written when the lock comes
-      for (var i = 0; !moved && i < 2000; i++) {
+      final w = Stopwatch()..start();
+      while (steps == 0 && w.elapsed < const Duration(seconds: 30)) {
         await Future<void>.delayed(const Duration(milliseconds: 5));
       }
       expect(_left(out), isNotEmpty);
-      final watch = Stopwatch()..start();
-      await dropNotesExports(tmp).timeout(const Duration(seconds: 10));
-      expect(watch.elapsed, lessThan(const Duration(seconds: 2)));
+      final before = steps;
+      await dropNotesExports(tmp).timeout(const Duration(seconds: 60));
+      // the piece under way may finish; 2 GB would be 8192 more
+      expect(steps - before, lessThanOrEqualTo(1));
       await stops;
       expect(_left(out), isEmpty);
     });
