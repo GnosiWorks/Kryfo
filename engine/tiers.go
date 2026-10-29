@@ -5,10 +5,13 @@ package main
 // in some places, so someone can knowingly trade it away.
 //
 //	private   tor for everything. nobody learns your ip. slow first connect.
-//	balanced  plain tls to our own relay, and nothing else. our relay sees
-//	          your ip. your contacts do not, other relays do not, and the
-//	          message is still sealed the same way.
-//	fast      plain tls to every relay. all of them see your ip.
+//	balanced  the app's "fast": plain tls to our two relays, and nothing
+//	          else. they see your ip. your contacts do not, other relays do
+//	          not, and the message is still sealed the same way. public
+//	          relays only through tor, while our first relay is down.
+//
+// the old fast mode, plain tls to every relay, is gone: asked for, it is
+// balanced.
 //
 // the engine only decides whether to route through tor. which relays to talk
 // to is chosen on the dart side, where the list lives.
@@ -27,7 +30,8 @@ import (
 const (
 	modePrivate  = "private"
 	modeBalanced = "balanced"
-	modeFast     = "fast"
+	// the old fast mode's name: asked for, it is balanced
+	modeOldFast = "fast"
 )
 
 var transportMode atomic.Value // string
@@ -77,7 +81,11 @@ func HaloSetTransportMode(cMode *C.char) *C.char {
 // HaloSetTransportMode in plain go, for the tests
 func setTransportMode(m string) string {
 	switch m {
-	case modePrivate, modeBalanced, modeFast:
+	case modePrivate, modeBalanced:
+	case modeOldFast:
+		// relay and fast are one route now: nothing goes to public relays
+		// in the clear, whatever an old setting says
+		m = modeBalanced
 	default:
 		m = modePrivate
 	}

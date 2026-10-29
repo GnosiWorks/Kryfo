@@ -585,7 +585,7 @@ void main() {
         300,
         scrollable: find.byType(Scrollable).first,
       );
-      expect(find.text(l10n.seenDevChatCell), findsNWidgets(3));
+      expect(find.text(l10n.seenDevChatCell), findsNWidgets(2));
       await t.tap(find.text(l10n.seenDevChat));
       await t.pump(const Duration(milliseconds: 400));
       expect(find.text(l10n.seenDevChatLine), findsOneWidget);

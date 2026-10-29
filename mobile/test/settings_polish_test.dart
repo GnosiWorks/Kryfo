@@ -231,12 +231,12 @@ void main() {
       FlutterSecureStorage.setMockInitialValues({'send_mode': 'balanced'});
       appState.sendModeForTest = 'balanced';
       await t.pumpWidget(framed(const ModesScreen()));
-      final pill = find.ancestor(
-        of: find.text(l10n.modesActive),
-        matching: find.byType(Row),
-      );
+      // the tick is on the fast card from the first frame
       expect(
-        find.descendant(of: pill.first, matching: find.text(l10n.modesRelay)),
+        find.descendant(
+          of: find.byKey(const ValueKey('fast')),
+          matching: find.byKey(const ValueKey('on')),
+        ),
         findsOneWidget,
       );
       await rest(t);

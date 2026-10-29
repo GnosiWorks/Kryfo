@@ -1094,26 +1094,14 @@ abstract class AppLocalizations {
   /// app/gates.dart
   ///
   /// In en, this message translates to:
-  /// **'Relay and fast modes skip Tor and are quicker. They are in settings, under speed & privacy, and each says what it costs.'**
+  /// **'Fast skips Tor and is quicker. It is in settings, under speed & privacy, and says what it costs.'**
   String get appRelayAndFastModes;
-
-  /// app/gates.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Via relay'**
-  String get appViaRelay;
 
   /// app/gates.dart
   ///
   /// In en, this message translates to:
   /// **'Offline'**
   String get appOffline;
-
-  /// app/gates.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Fast'**
-  String get appFast;
 
   /// app/gates.dart
   ///
@@ -2740,12 +2728,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Supporter'**
   String get chatSupporter;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Encrypted · via relay'**
-  String get chatEncryptedViaRelay;
 
   /// screens/chat_screen.dart
   ///
@@ -4952,44 +4934,8 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Our relay is quiet'**
-  String get homeOurRelayIsQuiet;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Relay mode uses only our own relay, and it is not answering right now. Fast mode adds public relays alongside it, so messages still land. Everything stays sealed either way.'**
-  String get homeRelayModeUsesOnly;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Switched to fast'**
-  String get homeSwitchedToFast;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Use fast mode'**
-  String get homeUseFastMode;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Keep waiting'**
   String get homeKeepWaiting;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Switched to relay'**
-  String get homeSwitchedToRelay;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Use our relay'**
-  String get homeUseOurRelay;
 
   /// screens/home_screen.dart
   ///
@@ -5732,68 +5678,8 @@ abstract class AppLocalizations {
   /// screens/modes_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Onion'**
-  String get modesOnion;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Full onion routing, three hops. A message takes two to five seconds. Nobody sees who you talk to.'**
-  String get modesFullOnionRoutingThree;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Slower'**
-  String get modesSlower;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Relay'**
-  String get modesRelay;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'One sealed connection to Kryfo\'s own relay, like a vpn with nothing to log. Sends land in about a second, and it works where Tor is blocked.'**
-  String get modesOneSealedConnectionTo;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Quick'**
-  String get modesQuick;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Relay only'**
-  String get modesRelayOnly;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Fast'**
   String get modesFast;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Plain connections to every relay. Near instant, and the least private of the three.'**
-  String get modesPlainConnectionsToEvery;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Instant'**
-  String get modesInstant;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Every relay you use knows the address you connect from, not only ours. Messages are still sealed, but the fact that you sent one is not. Off by default, and off again after a reinstall.'**
-  String get modesEveryRelayYouUse;
 
   /// toast when a mode could not be saved and nothing changed
   ///
@@ -5818,90 +5704,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'& privacy'**
   String get modesPrivacy;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Change globally, or per chat'**
-  String get modesChangeGloballyOrPer;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Soon'**
-  String get modesSoon;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Active'**
-  String get modesActive;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'SPEED'**
-  String get modesSpeed2;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'HOPS'**
-  String get modesHops;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'IP'**
-  String get modesIp;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Visible'**
-  String get modesVisible;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Hidden'**
-  String get modesHidden;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'*Heads up:* {warning}'**
-  String modesHeadsUp(Object warning);
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Onion is the default and stays that way unless you change it. Switching takes effect on the next message.'**
-  String get modesOnionIsTheDefault;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Fast mode'**
-  String get modesFastMode;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Plain connections to every relay. Quicker, and the relays can see your ip address. Messages stay end to end encrypted either way.'**
-  String get modesPlainConnectionsToEveryRelayQuicker;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Turn on fast mode'**
-  String get modesTurnOnFastMode;
-
-  /// screens/modes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Keep it off'**
-  String get modesKeepItOff;
 
   /// screens/moved_screen.dart
   ///
@@ -6608,32 +6410,8 @@ abstract class AppLocalizations {
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Onion'**
-  String get onboardingOnion;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Slower. A message takes two to five seconds.'**
   String get onboardingSlowerAMessageTakes;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Hides your address from everyone, our relay included.'**
-  String get onboardingHidesYourAddressFrom;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Relay'**
-  String get onboardingRelay;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Our relay sees your address. Nobody else does.'**
-  String get onboardingOurRelaySeesYour;
 
   /// screens/onboarding_screen.dart
   ///
@@ -6650,38 +6428,8 @@ abstract class AppLocalizations {
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Fast'**
-  String get onboardingFast;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Every relay you use sees your address. The least private of the three.'**
-  String get onboardingEveryRelayYouUse;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Near instant.'**
-  String get onboardingNearInstant;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Keep onion →'**
-  String get onboardingKeepOnion;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Use this →'**
   String get onboardingUseThis;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Skip · onion is a fine default'**
-  String get onboardingSkipOnionIsA;
 
   /// screens/onboarding_screen.dart
   ///
@@ -8306,24 +8054,6 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Our relay'**
-  String get seenOurRelay;
-
-  /// screens/seen_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Every relay'**
-  String get seenEveryRelay;
-
-  /// screens/seen_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'On onion everything leaves through Tor and the relay sees an exit node, never you. On relay mode the connection goes straight to our own relay: nothing forwards your address and nothing is written down, but that one connection is ours to see. On fast every public relay learns that you connected, though not to whom or what you said.'**
-  String get seenOnOnionEverythingLeaves;
-
-  /// screens/seen_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Your contact graph'**
   String get seenYourContactGraph;
 
@@ -8420,18 +8150,6 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Onion'**
-  String get seenOnion;
-
-  /// screens/seen_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Relay'**
-  String get seenRelay;
-
-  /// screens/seen_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Fast'**
   String get seenFast;
 
@@ -8492,12 +8210,6 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Off · relay mode'**
-  String get settingsOffMode;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Off · fast mode'**
   String get settingsOffFastMode;
 
@@ -8524,12 +8236,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fast'**
   String get settingsFast;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Relay · 1 hop'**
-  String get settingsRelay1Hop;
 
   /// screens/settings_screen.dart
   ///
@@ -11807,12 +11513,6 @@ abstract class AppLocalizations {
   /// **'The Tor Project\'s guess'**
   String get bridgesTheTorProjectSGuess;
 
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Our relay is one plain connection and usually gets through. Or let Kryfo find a way by itself.'**
-  String get bridgesOurRelayUsuallyGets;
-
   /// screens/bridge_sheets.dart: the button when one bridge line is pasted or scanned
   ///
   /// In en, this message translates to:
@@ -14762,20 +14462,14 @@ abstract class AppLocalizations {
   /// bridge_mode.dart: the one line when automatic found no way in, over the button that switches to relay mode
   ///
   /// In en, this message translates to:
-  /// **'Relay mode works where Tor is blocked, and you can switch back any time.'**
+  /// **'Fast works where Tor is blocked, and you can switch back any time.'**
   String get bridgesRelayWorksWhereTor;
 
   /// bridge_mode.dart: the one line when automatic found no way in, for someone who said Tor is blocked or watched: what relay mode costs on this network
   ///
   /// In en, this message translates to:
-  /// **'Relay mode gets through where Tor is blocked, but this network can see you connect to Kryfo.'**
+  /// **'Fast gets through where Tor is blocked, but this network can see you connect to Kryfo.'**
   String get bridgesRelayThisNetworkSees;
-
-  /// screens/onboarding_screen.dart: the cost under relay on the send step, for someone who said Tor is blocked or watched and took relay mode
-  ///
-  /// In en, this message translates to:
-  /// **'This network can see you connect to Kryfo. Our relay sees your address.'**
-  String get onboardingRelayThisNetworkSees;
 
   /// screens/settings_screen.dart: the row in About that opens the licences
   ///
@@ -14872,12 +14566,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copy link'**
   String get settingsCopyLinkHint;
-
-  /// app/gates.dart: the home pill in relay mode while its relay has not answered for a while
-  ///
-  /// In en, this message translates to:
-  /// **'Relay not answering'**
-  String get appRelayNotAnswering;
 
   /// widgets/motion.dart: the tor sheet's route label, all caps, while tor's route is up and no relay has answered through it
   ///
@@ -16042,6 +15730,294 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Kryfo needs a private folder in memory while it runs, and this computer offers none, so it will not open.'**
   String get desktopNoMemoryFolder;
+
+  /// Speed and privacy page, the line under the title
+  ///
+  /// In en, this message translates to:
+  /// **'Pick how your messages travel. You can change it any time.'**
+  String get modesPickHow;
+
+  /// name of the Tor route, a card title
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get modesPrivate;
+
+  /// small line under the Private card title
+  ///
+  /// In en, this message translates to:
+  /// **'Tor · bridges when needed'**
+  String get modesPrivateTag;
+
+  /// Private card, what it means
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody learns your IP address or who you are, not even our servers. Finds a way around blocks by itself.'**
+  String get modesPrivateLine;
+
+  /// small chip on the Private card
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get modesDefault;
+
+  /// small line under the Fast card title
+  ///
+  /// In en, this message translates to:
+  /// **'Straight to our servers'**
+  String get modesFastTag;
+
+  /// Fast card, what it means and who sees the IP address
+  ///
+  /// In en, this message translates to:
+  /// **'Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you\'re connected, and never log or keep it. Never what you say. Your contacts never see it.'**
+  String get modesFastLine;
+
+  /// status of the Fast route, on its card and on the home pill
+  ///
+  /// In en, this message translates to:
+  /// **'Fast · connected'**
+  String get modesFastConnected;
+
+  /// status of the Fast route while it connects
+  ///
+  /// In en, this message translates to:
+  /// **'Fast · connecting'**
+  String get modesFastConnecting;
+
+  /// status of the Fast route while neither server answers
+  ///
+  /// In en, this message translates to:
+  /// **'Fast · our servers aren\'t answering'**
+  String get modesFastDown;
+
+  /// Fast card, under its status
+  ///
+  /// In en, this message translates to:
+  /// **'A backup is always ready, so you stay connected even if one goes down.'**
+  String get modesBackupReady;
+
+  /// small link on the Fast card to the servers page
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get modesDetails;
+
+  /// Speed and privacy page, under the two cards
+  ///
+  /// In en, this message translates to:
+  /// **'Both keep every message end-to-end encrypted. Only who can see your IP address changes.'**
+  String get modesBothLine;
+
+  /// link at the bottom of the page while Private is chosen
+  ///
+  /// In en, this message translates to:
+  /// **'Connection and bridges'**
+  String get modesConnectionBridges;
+
+  /// link at the bottom of the page while Fast is chosen
+  ///
+  /// In en, this message translates to:
+  /// **'What our servers can see'**
+  String get modesWhatServersSee;
+
+  /// title of the page behind Details
+  ///
+  /// In en, this message translates to:
+  /// **'Fast servers'**
+  String get serversTitle;
+
+  /// servers page, the line at the top
+  ///
+  /// In en, this message translates to:
+  /// **'Every message goes to both servers at once. Whichever answers first carries it, and the other takes over if one stops.'**
+  String get serversLine;
+
+  /// servers page, our first server
+  ///
+  /// In en, this message translates to:
+  /// **'Server 1'**
+  String get serversOne;
+
+  /// servers page, our second server, at another hosting company
+  ///
+  /// In en, this message translates to:
+  /// **'Server 2 · second provider'**
+  String get serversTwo;
+
+  /// a server row status
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get serversConnected;
+
+  /// a server row status
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting'**
+  String get serversConnecting;
+
+  /// a server row status
+  ///
+  /// In en, this message translates to:
+  /// **'Not answering'**
+  String get serversNotAnswering;
+
+  /// a server row, its last round trip in milliseconds
+  ///
+  /// In en, this message translates to:
+  /// **'{ms} ms'**
+  String serversMs(int ms);
+
+  /// chip on the server that answers quicker now
+  ///
+  /// In en, this message translates to:
+  /// **'Quicker'**
+  String get serversQuicker;
+
+  /// servers page, the last way in, behind our two servers
+  ///
+  /// In en, this message translates to:
+  /// **'Public relays'**
+  String get serversBackups;
+
+  /// servers page, under the public relays row
+  ///
+  /// In en, this message translates to:
+  /// **'Used while Server 1 is down, and only through Tor, so they never see your IP address.'**
+  String get serversBackupsLine;
+
+  /// public relays row status while ours answer
+  ///
+  /// In en, this message translates to:
+  /// **'Standing by'**
+  String get serversStandingBy;
+
+  /// public relays row status while ours are down
+  ///
+  /// In en, this message translates to:
+  /// **'In use'**
+  String get serversInUse;
+
+  /// home, one-time card after the update
+  ///
+  /// In en, this message translates to:
+  /// **'Relay and Fast are one now'**
+  String get homeMergedTitle;
+
+  /// home, one-time card after the update
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re on Fast. A backup server is always ready, so you stay connected even if one goes down. Our servers see your IP address, never what you say.'**
+  String get homeMergedLine;
+
+  /// home, one-time card, the button that closes it
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get homeMergedGotIt;
+
+  /// home, one-time card, switches to the Tor route
+  ///
+  /// In en, this message translates to:
+  /// **'Use Private instead'**
+  String get homeMergedUsePrivate;
+
+  /// home card while neither server answers on Fast
+  ///
+  /// In en, this message translates to:
+  /// **'Our servers aren\'t answering'**
+  String get homeOursDownTitle;
+
+  /// home card while neither server answers on Fast
+  ///
+  /// In en, this message translates to:
+  /// **'After a few minutes, when Tor gets through, messages also go through public relays, and back through our servers as soon as one answers.'**
+  String get homeOursDownLine;
+
+  /// button that switches to the Tor route
+  ///
+  /// In en, this message translates to:
+  /// **'Use Private'**
+  String get homeUsePrivate;
+
+  /// toast after switching to the Tor route
+  ///
+  /// In en, this message translates to:
+  /// **'Switched to Private'**
+  String get homeSwitchedToPrivate;
+
+  /// button that switches to the Fast route where Tor gets nowhere
+  ///
+  /// In en, this message translates to:
+  /// **'Use Fast'**
+  String get homeUseFast;
+
+  /// toast after switching to the Fast route
+  ///
+  /// In en, this message translates to:
+  /// **'Switched to Fast'**
+  String get homeSwitchedToFastRoute;
+
+  /// where Tor seems blocked, the line that offers Fast
+  ///
+  /// In en, this message translates to:
+  /// **'Fast goes straight to our servers and usually gets through. Or let Kryfo find a way by itself.'**
+  String get bridgesFastGetsThrough;
+
+  /// home pill while neither of our servers answers
+  ///
+  /// In en, this message translates to:
+  /// **'Servers not answering'**
+  String get appServersNotAnswering;
+
+  /// settings row value for the Tor route
+  ///
+  /// In en, this message translates to:
+  /// **'Private · Tor'**
+  String get settingsPrivateTor;
+
+  /// what we can see table, Fast column, IP address row
+  ///
+  /// In en, this message translates to:
+  /// **'Our servers'**
+  String get seenOurServers;
+
+  /// what we can see table, why for the IP address row
+  ///
+  /// In en, this message translates to:
+  /// **'On Private everything leaves through Tor and our servers see an exit node, never you. On Fast the connection goes straight to our two servers: they see your IP address while you\'re connected and keep no record of it. While the first one is down, Fast also uses public relays, only through Tor.'**
+  String get seenIpWhy;
+
+  /// onboarding, the Private card
+  ///
+  /// In en, this message translates to:
+  /// **'Hides your address from everyone, our servers included.'**
+  String get onboardingHidesFromEveryone;
+
+  /// onboarding, the Fast card
+  ///
+  /// In en, this message translates to:
+  /// **'Our servers see your address only while you\'re connected.'**
+  String get onboardingFastSees;
+
+  /// onboarding where Tor is blocked, the Fast card
+  ///
+  /// In en, this message translates to:
+  /// **'This network can see you connect to Kryfo. Our servers see your address.'**
+  String get onboardingFastNetworkSees;
+
+  /// onboarding button that keeps the Tor route
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Private →'**
+  String get onboardingKeepPrivate;
+
+  /// onboarding link that skips the step
+  ///
+  /// In en, this message translates to:
+  /// **'Skip · Private is a fine default'**
+  String get onboardingSkipPrivate;
 }
 
 class _AppLocalizationsDelegate

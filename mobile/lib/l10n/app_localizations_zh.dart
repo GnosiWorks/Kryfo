@@ -645,17 +645,10 @@ class AppLocalizationsZh extends AppLocalizations {
       'Tor 已启动，但还没有中继响应。Kryfo 会继续尝试，消息会在这里等候，直到有中继响应。';
 
   @override
-  String get appRelayAndFastModes =>
-      '中继模式和快速模式不走 Tor，速度更快。它们在设置的“速度与隐私”里，每种模式都写明了代价。';
-
-  @override
-  String get appViaRelay => '经由中继';
+  String get appRelayAndFastModes => '快速模式不经过 Tor，所以更快。它在设置的“速度与隐私”里，并说明了代价。';
 
   @override
   String get appOffline => '离线';
-
-  @override
-  String get appFast => '快速';
 
   @override
   String get appTorOff => 'Tor 已关';
@@ -1643,9 +1636,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatSupporter => '支持者';
-
-  @override
-  String get chatEncryptedViaRelay => '已加密 · 经由中继';
 
   @override
   String get chatEncryptedDirect => '已加密 · 直连';
@@ -2998,26 +2988,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeLeaveThemOff => '保持关闭';
 
   @override
-  String get homeOurRelayIsQuiet => '我们的中继没有响应';
-
-  @override
-  String get homeRelayModeUsesOnly =>
-      '中继模式只用我们自己的中继，而它现在没有响应。快速模式会同时加入公共中继，所以消息仍能送达。无论哪种方式，一切都仍是加密的。';
-
-  @override
-  String get homeSwitchedToFast => '已切换到快速模式';
-
-  @override
-  String get homeUseFastMode => '使用快速模式';
-
-  @override
   String get homeKeepWaiting => '继续等待';
-
-  @override
-  String get homeSwitchedToRelay => '已切换到中继';
-
-  @override
-  String get homeUseOurRelay => '使用我们的中继';
 
   @override
   String get homeOffline => '离线';
@@ -3488,40 +3459,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lockSetupFourDigitsAnythingYou => '四位或更多数字，选一个你记得住的';
 
   @override
-  String get modesOnion => 'Onion';
-
-  @override
-  String get modesFullOnionRoutingThree =>
-      '完整的 onion 路由，3 跳。一条消息需要两到五秒。没有人看得到你在和谁聊天。';
-
-  @override
-  String get modesSlower => '较慢';
-
-  @override
-  String get modesRelay => '中继';
-
-  @override
-  String get modesOneSealedConnectionTo =>
-      '一条加密连接，直通 Kryfo 自己的中继，就像一个无日志可记的 VPN。消息大约一秒送达，在 Tor 被封锁的地方也能用。';
-
-  @override
-  String get modesQuick => '快';
-
-  @override
-  String get modesRelayOnly => '仅中继';
-
-  @override
   String get modesFast => '快速';
-
-  @override
-  String get modesPlainConnectionsToEvery => '与每个中继的普通连接。几乎即时，也是三种模式中最不私密的。';
-
-  @override
-  String get modesInstant => '即时';
-
-  @override
-  String get modesEveryRelayYouUse =>
-      '你用到的每个中继都知道你连接时的地址，而不只是我们的中继。消息仍然是加密的，但你发过消息这件事并没有被加密。默认关闭，重装后也会重新关闭。';
 
   @override
   String get modesNotChanged => '模式没有更改，请重试。';
@@ -3534,52 +3472,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get modesPrivacy => '与隐私';
-
-  @override
-  String get modesChangeGloballyOrPer => '全局更改，或按聊天单独设置';
-
-  @override
-  String get modesSoon => '即将推出';
-
-  @override
-  String get modesActive => '使用中';
-
-  @override
-  String get modesSpeed2 => '速度';
-
-  @override
-  String get modesHops => '跳数';
-
-  @override
-  String get modesIp => 'IP';
-
-  @override
-  String get modesVisible => '可见';
-
-  @override
-  String get modesHidden => '已隐藏';
-
-  @override
-  String modesHeadsUp(Object warning) {
-    return '*注意：*$warning';
-  }
-
-  @override
-  String get modesOnionIsTheDefault =>
-      'Onion 是默认模式，除非你更改，否则一直如此。切换会从下一条消息开始生效。';
-
-  @override
-  String get modesFastMode => '快速模式';
-
-  @override
-  String get modesPlainConnectionsToEveryRelayQuicker =>
-      '与每个中继的普通连接。更快，但中继能看到你的 IP 地址。无论哪种方式，消息都保持端到端加密。';
-
-  @override
-  String get modesTurnOnFastMode => '开启快速模式';
-
-  @override
-  String get modesKeepItOff => '保持关闭';
 
   @override
   String get movedWipeThisPhone => '要从这部手机上抹除 Kryfo 吗？';
@@ -3971,19 +3863,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingYouCanChangeThis => '你随时可以在设置里更改，对所有人或单个聊天都行。';
 
   @override
-  String get onboardingOnion => 'Onion';
-
-  @override
   String get onboardingSlowerAMessageTakes => '较慢。一条消息需要两到五秒。';
-
-  @override
-  String get onboardingHidesYourAddressFrom => '对所有人隐藏你的地址，包括我们的中继。';
-
-  @override
-  String get onboardingRelay => '中继';
-
-  @override
-  String get onboardingOurRelaySeesYour => '我们的中继能看到你的地址。其他人都看不到。';
 
   @override
   String get onboardingAboutASecondWorks => '大约一秒。在 Tor 被封锁的地方也能用。';
@@ -3992,22 +3872,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingAutoFindsAWay => '“自动”会自己找到绕过封锁的方法。';
 
   @override
-  String get onboardingFast => '快速';
-
-  @override
-  String get onboardingEveryRelayYouUse => '你用到的每个中继都能看到你的地址。三种模式中最不私密的。';
-
-  @override
-  String get onboardingNearInstant => '几乎即时。';
-
-  @override
-  String get onboardingKeepOnion => '保留 onion →';
-
-  @override
   String get onboardingUseThis => '用这个 →';
-
-  @override
-  String get onboardingSkipOnionIsA => '跳过 · onion 就是不错的默认选择';
 
   @override
   String get onboardingThreeThingsThen => '三件事，\n然后*就可以开始了*。';
@@ -4915,16 +4780,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get seenYourIpAddress => '你的 IP 地址';
 
   @override
-  String get seenOurRelay => '我们的中继';
-
-  @override
-  String get seenEveryRelay => '每个中继';
-
-  @override
-  String get seenOnOnionEverythingLeaves =>
-      '在 onion 模式下，一切都经由 Tor 发出，中继看到的是一个出口节点，永远看不到你。在中继模式下，连接直达我们自己的中继：没有任何东西转发你的地址，也不做任何记录，但这一条连接我们看得到。在快速模式下，每个公共中继都会知道你连接过，但不知道你联系了谁，也不知道你说了什么。';
-
-  @override
   String get seenYourContactGraph => '你的联系人关系图';
 
   @override
@@ -4979,12 +4834,6 @@ class AppLocalizationsZh extends AppLocalizations {
       '棘轮层和存储层都是标准实现。连接它们的那一层是我们自己写的，还没有任何独立第三方审查过。这是 alpha 版本。';
 
   @override
-  String get seenOnion => 'Onion';
-
-  @override
-  String get seenRelay => '中继';
-
-  @override
   String get seenFast => '快速';
 
   @override
@@ -5018,9 +4867,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsTorRouting => 'Tor 路由';
 
   @override
-  String get settingsOffMode => '关 · 中继模式';
-
-  @override
   String get settingsOffFastMode => '关 · 快速模式';
 
   @override
@@ -5034,9 +4880,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsFast => '快速';
-
-  @override
-  String get settingsRelay1Hop => '中继 · 1 跳';
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 跳';
@@ -6992,10 +6835,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesTheTorProjectSGuess => 'Tor 项目的判断';
 
   @override
-  String get bridgesOurRelayUsuallyGets =>
-      '我们的中继只是一条普通连接，通常都能连通。也可以让 Kryfo 自己找办法。';
-
-  @override
   String get bridgesUseThisBridge => '使用这个网桥';
 
   @override
@@ -8719,15 +8558,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesNoneUntilOnion => '开启 Onion 前不使用';
 
   @override
-  String get bridgesRelayWorksWhereTor => '中继模式在 Tor 被封锁的地方也能用，随时可以切换回来。';
+  String get bridgesRelayWorksWhereTor => '在 Tor 被封锁的地方，快速模式也能用，随时可以切换回来。';
 
   @override
   String get bridgesRelayThisNetworkSees =>
-      '中继模式在 Tor 被封锁的地方也能连上，但这个网络能看到你在连接 Kryfo。';
-
-  @override
-  String get onboardingRelayThisNetworkSees =>
-      '这个网络能看到你在连接 Kryfo。我们的中继能看到你的地址。';
+      '在 Tor 被封锁的地方快速模式也能连通，但这个网络能看到你在连接 Kryfo。';
 
   @override
   String get settingsLicences => '许可证';
@@ -8790,9 +8625,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => '复制链接';
-
-  @override
-  String get appRelayNotAnswering => '中继无响应';
 
   @override
   String get motionNoRelayYet => '暂无中继';
@@ -9459,6 +9291,156 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo 运行时需要内存中的一个私有文件夹，而这台电脑没有提供，所以 Kryfo 不会打开。';
+
+  @override
+  String get modesPickHow => '选择消息的传送方式。随时都可以更改。';
+
+  @override
+  String get modesPrivate => '私密';
+
+  @override
+  String get modesPrivateTag => 'Tor · 需要时用网桥';
+
+  @override
+  String get modesPrivateLine => '没有人能知道你的 IP 地址或你是谁，连我们的服务器也不能。遇到封锁会自己找到出路。';
+
+  @override
+  String get modesDefault => '默认';
+
+  @override
+  String get modesFastTag => '直连我们的服务器';
+
+  @override
+  String get modesFastLine =>
+      '不经过 Tor，消息到得更快，也更省电。我们的服务器只在你连接期间看到你的 IP 地址，从不记录或保存。也从不知道你说了什么。你的联系人永远看不到它。';
+
+  @override
+  String get modesFastConnected => '快速 · 已连接';
+
+  @override
+  String get modesFastConnecting => '快速 · 正在连接';
+
+  @override
+  String get modesFastDown => '快速 · 我们的服务器没有响应';
+
+  @override
+  String get modesBackupReady => '始终有一台备用服务器待命，即使其中一台出问题，你也不会断线。';
+
+  @override
+  String get modesDetails => '详情';
+
+  @override
+  String get modesBothLine => '两种方式都对每条消息端到端加密。不同的只是谁能看到你的 IP 地址。';
+
+  @override
+  String get modesConnectionBridges => '连接与网桥';
+
+  @override
+  String get modesWhatServersSee => '我们的服务器能看到什么';
+
+  @override
+  String get serversTitle => '快速模式的服务器';
+
+  @override
+  String get serversLine => '每条消息同时发往两台服务器。先响应的那台负责送达，一台停了另一台就接手。';
+
+  @override
+  String get serversOne => '服务器 1';
+
+  @override
+  String get serversTwo => '服务器 2 · 另一家服务商';
+
+  @override
+  String get serversConnected => '已连接';
+
+  @override
+  String get serversConnecting => '正在连接';
+
+  @override
+  String get serversNotAnswering => '没有响应';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms 毫秒';
+  }
+
+  @override
+  String get serversQuicker => '更快';
+
+  @override
+  String get serversBackups => '公共中继';
+
+  @override
+  String get serversBackupsLine =>
+      '在服务器 1 停摆期间使用，而且只经 Tor 连接，所以它们永远看不到你的 IP 地址。';
+
+  @override
+  String get serversStandingBy => '待命中';
+
+  @override
+  String get serversInUse => '使用中';
+
+  @override
+  String get homeMergedTitle => '中继和快速现已合二为一';
+
+  @override
+  String get homeMergedLine =>
+      '你正在使用快速模式。始终有一台备用服务器待命，即使其中一台出问题，你也不会断线。我们的服务器能看到你的 IP 地址，但永远看不到你说了什么。';
+
+  @override
+  String get homeMergedGotIt => '知道了';
+
+  @override
+  String get homeMergedUsePrivate => '改用私密';
+
+  @override
+  String get homeOursDownTitle => '我们的服务器没有响应';
+
+  @override
+  String get homeOursDownLine => '几分钟后，只要 Tor 能连通，消息也会走公共中继，我们任意一台服务器一响应就换回来。';
+
+  @override
+  String get homeUsePrivate => '使用私密';
+
+  @override
+  String get homeSwitchedToPrivate => '已切换到私密';
+
+  @override
+  String get homeUseFast => '使用快速';
+
+  @override
+  String get homeSwitchedToFastRoute => '已切换到快速';
+
+  @override
+  String get bridgesFastGetsThrough => '快速模式直连我们的服务器，通常都能连通。也可以让 Kryfo 自己找办法。';
+
+  @override
+  String get appServersNotAnswering => '服务器没有响应';
+
+  @override
+  String get settingsPrivateTor => '私密 · Tor';
+
+  @override
+  String get seenOurServers => '我们的服务器';
+
+  @override
+  String get seenIpWhy =>
+      '私密模式下一切都经 Tor 发出，我们的服务器看到的是出口节点，永远不是你。快速模式下连接直达我们的两台服务器：你连接期间它们能看到你的 IP 地址，但不留任何记录。第一台停摆期间，快速模式也会使用公共中继，而且只经 Tor 连接。';
+
+  @override
+  String get onboardingHidesFromEveryone => '对所有人隐藏你的地址，包括我们的服务器。';
+
+  @override
+  String get onboardingFastSees => '我们的服务器只在你连接期间看到你的地址。';
+
+  @override
+  String get onboardingFastNetworkSees => '这个网络能看到你在连接 Kryfo。我们的服务器能看到你的地址。';
+
+  @override
+  String get onboardingKeepPrivate => '保持私密 →';
+
+  @override
+  String get onboardingSkipPrivate => '跳过 · 默认私密就很好';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -10102,17 +10084,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       'Tor 已啟動，但還沒有中繼回應。Kryfo 會繼續嘗試，訊息會在這裡等候，直到有中繼回應。';
 
   @override
-  String get appRelayAndFastModes =>
-      '中繼和快速模式會略過 Tor，速度更快。它們在設定的「速度與隱私」裡，每種模式都會說明代價。';
-
-  @override
-  String get appViaRelay => '經由中繼';
+  String get appRelayAndFastModes => '快速模式不經過 Tor，所以更快。它在設定的「速度與隱私」裡，並說明了代價。';
 
   @override
   String get appOffline => '離線';
-
-  @override
-  String get appFast => '快速';
 
   @override
   String get appTorOff => 'Tor 關閉';
@@ -11099,9 +11074,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatSupporter => '支持者';
-
-  @override
-  String get chatEncryptedViaRelay => '已加密 · 經由中繼';
 
   @override
   String get chatEncryptedDirect => '已加密 · 直連';
@@ -12456,26 +12428,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeLeaveThemOff => '保持關閉';
 
   @override
-  String get homeOurRelayIsQuiet => '我們的中繼沒有回應';
-
-  @override
-  String get homeRelayModeUsesOnly =>
-      '中繼模式只使用我們自己的中繼，而它現在沒有回應。快速模式會同時加入公共中繼，讓訊息仍能送達。無論哪種模式，一切都保持密封。';
-
-  @override
-  String get homeSwitchedToFast => '已切換到快速';
-
-  @override
-  String get homeUseFastMode => '使用快速模式';
-
-  @override
   String get homeKeepWaiting => '繼續等待';
-
-  @override
-  String get homeSwitchedToRelay => '已切換到中繼';
-
-  @override
-  String get homeUseOurRelay => '使用我們的中繼';
 
   @override
   String get homeOffline => '離線';
@@ -12946,40 +12899,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get lockSetupFourDigitsAnythingYou => '四位或更多數字，選一組你記得住的';
 
   @override
-  String get modesOnion => 'Onion';
-
-  @override
-  String get modesFullOnionRoutingThree =>
-      '完整的 onion 路由，3 跳。一則訊息需要兩到五秒。沒有人看得到你在和誰聊天。';
-
-  @override
-  String get modesSlower => '較慢';
-
-  @override
-  String get modesRelay => '中繼';
-
-  @override
-  String get modesOneSealedConnectionTo =>
-      '一條密封連線，直通 Kryfo 自己的中繼，就像一個沒有東西可記錄的 VPN。訊息大約一秒送達，在 Tor 被封鎖的地方也能用。';
-
-  @override
-  String get modesQuick => '較快';
-
-  @override
-  String get modesRelayOnly => '只用中繼';
-
-  @override
   String get modesFast => '快速';
-
-  @override
-  String get modesPlainConnectionsToEvery => '以普通連線直接連到每個中繼。幾乎即時，也是三種模式中最不私密的。';
-
-  @override
-  String get modesInstant => '即時';
-
-  @override
-  String get modesEveryRelayYouUse =>
-      '你使用的每個中繼都會知道你連線的來源位址，不只是我們的中繼。訊息仍然是密封的，但「你傳了訊息」這件事不是。預設關閉，重新安裝後也會再次關閉。';
 
   @override
   String get modesNotChanged => '模式沒有變更，請再試一次。';
@@ -12992,52 +12912,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get modesPrivacy => '與隱私';
-
-  @override
-  String get modesChangeGloballyOrPer => '可全域變更，或依聊天個別設定';
-
-  @override
-  String get modesSoon => '即將推出';
-
-  @override
-  String get modesActive => '使用中';
-
-  @override
-  String get modesSpeed2 => '速度';
-
-  @override
-  String get modesHops => '跳數';
-
-  @override
-  String get modesIp => 'IP';
-
-  @override
-  String get modesVisible => '可見';
-
-  @override
-  String get modesHidden => '隱藏';
-
-  @override
-  String modesHeadsUp(Object warning) {
-    return '*注意：*$warning';
-  }
-
-  @override
-  String get modesOnionIsTheDefault =>
-      'Onion 是預設模式，除非你更改，否則會一直維持。切換會從下一則訊息開始生效。';
-
-  @override
-  String get modesFastMode => '快速模式';
-
-  @override
-  String get modesPlainConnectionsToEveryRelayQuicker =>
-      '以普通連線直接連到每個中繼。比較快，而且中繼看得到你的 IP 位址。無論如何，訊息都保持端對端加密。';
-
-  @override
-  String get modesTurnOnFastMode => '開啟快速模式';
-
-  @override
-  String get modesKeepItOff => '保持關閉';
 
   @override
   String get movedWipeThisPhone => '要從這支手機抹除 Kryfo 嗎？';
@@ -13429,19 +13303,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingYouCanChangeThis => '你隨時可以在設定中更改，套用到所有人或單一聊天。';
 
   @override
-  String get onboardingOnion => 'Onion';
-
-  @override
   String get onboardingSlowerAMessageTakes => '較慢。一則訊息需要兩到五秒。';
-
-  @override
-  String get onboardingHidesYourAddressFrom => '對所有人隱藏你的位址，包括我們的中繼。';
-
-  @override
-  String get onboardingRelay => '中繼';
-
-  @override
-  String get onboardingOurRelaySeesYour => '我們的中繼看得到你的位址。其他人都看不到。';
 
   @override
   String get onboardingAboutASecondWorks => '大約一秒。在 Tor 被封鎖的地方也能用。';
@@ -13450,22 +13312,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingAutoFindsAWay => '「自動」會自己找到繞過封鎖的方法。';
 
   @override
-  String get onboardingFast => '快速';
-
-  @override
-  String get onboardingEveryRelayYouUse => '你使用的每個中繼都看得到你的位址。三種之中最不私密。';
-
-  @override
-  String get onboardingNearInstant => '幾乎即時。';
-
-  @override
-  String get onboardingKeepOnion => '保持 Onion →';
-
-  @override
   String get onboardingUseThis => '使用這個 →';
-
-  @override
-  String get onboardingSkipOnionIsA => '略過 · Onion 是不錯的預設';
 
   @override
   String get onboardingThreeThingsThen => '三件事，\n之後*就可以開始了*。';
@@ -14373,16 +14220,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get seenYourIpAddress => '你的 IP 位址';
 
   @override
-  String get seenOurRelay => '我們的中繼';
-
-  @override
-  String get seenEveryRelay => '每個中繼';
-
-  @override
-  String get seenOnOnionEverythingLeaves =>
-      '在 Onion 模式下，一切都經由 Tor 送出，中繼看到的是出口節點，永遠不會是你。在中繼模式下，連線會直接連到我們自己的中繼：沒有任何東西會轉送你的位址，也不會留下任何紀錄，但這條連線我們看得到。在快速模式下，每個公共中繼都會知道你連線了，但不知道你和誰聯絡，也不知道你說了什麼。';
-
-  @override
   String get seenYourContactGraph => '你的聯絡人關係圖';
 
   @override
@@ -14437,12 +14274,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '棘輪和儲存層都是標準做法。連接兩者的那一層是我們自己寫的，還沒有任何獨立的第三方審查過。這是 alpha 版本。';
 
   @override
-  String get seenOnion => 'Onion';
-
-  @override
-  String get seenRelay => '中繼';
-
-  @override
   String get seenFast => '快速';
 
   @override
@@ -14476,9 +14307,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsTorRouting => 'Tor 路由';
 
   @override
-  String get settingsOffMode => '關閉 · 中繼模式';
-
-  @override
   String get settingsOffFastMode => '關閉 · 快速模式';
 
   @override
@@ -14492,9 +14320,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsFast => '快速';
-
-  @override
-  String get settingsRelay1Hop => '中繼 · 1 跳';
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 跳';
@@ -16450,10 +16275,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesTheTorProjectSGuess => 'Tor 專案的判斷';
 
   @override
-  String get bridgesOurRelayUsuallyGets =>
-      '我們的中繼只是一條普通連線，通常都能連通。也可以讓 Kryfo 自己找辦法。';
-
-  @override
   String get bridgesUseThisBridge => '使用這個橋接';
 
   @override
@@ -18058,15 +17879,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesNoneUntilOnion => '開啟 Onion 前不使用';
 
   @override
-  String get bridgesRelayWorksWhereTor => '中繼模式在 Tor 被封鎖的地方也能用，隨時可以切換回來。';
+  String get bridgesRelayWorksWhereTor => '在 Tor 被封鎖的地方，快速模式也能用，隨時可以切換回來。';
 
   @override
   String get bridgesRelayThisNetworkSees =>
-      '中繼模式在 Tor 被封鎖的地方也能連上，但這個網路看得到你在連線 Kryfo。';
-
-  @override
-  String get onboardingRelayThisNetworkSees =>
-      '這個網路看得到你在連線 Kryfo。我們的中繼看得到你的位址。';
+      '在 Tor 被封鎖的地方快速模式也能連通，但這個網路能看到你在連線 Kryfo。';
 
   @override
   String get settingsLicences => '授權條款';
@@ -18129,9 +17946,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsCopyLinkHint => '複製連結';
-
-  @override
-  String get appRelayNotAnswering => '中繼無回應';
 
   @override
   String get motionNoRelayYet => '尚無中繼';
@@ -18799,4 +18613,154 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo 執行時需要記憶體中的一個私有資料夾，而這台電腦沒有提供，所以 Kryfo 不會開啟。';
+
+  @override
+  String get modesPickHow => '選擇訊息的傳送方式。隨時都可以更改。';
+
+  @override
+  String get modesPrivate => '私密';
+
+  @override
+  String get modesPrivateTag => 'Tor · 需要時用網橋';
+
+  @override
+  String get modesPrivateLine => '沒有人能知道你的 IP 位址或你是誰，連我們的伺服器也不能。遇到封鎖會自己找到出路。';
+
+  @override
+  String get modesDefault => '預設';
+
+  @override
+  String get modesFastTag => '直連我們的伺服器';
+
+  @override
+  String get modesFastLine =>
+      '不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。也從不知道你說了什麼。你的聯絡人永遠看不到它。';
+
+  @override
+  String get modesFastConnected => '快速 · 已連線';
+
+  @override
+  String get modesFastConnecting => '快速 · 連線中';
+
+  @override
+  String get modesFastDown => '快速 · 我們的伺服器沒有回應';
+
+  @override
+  String get modesBackupReady => '始終有一台備用伺服器待命，即使其中一台出問題，你也不會斷線。';
+
+  @override
+  String get modesDetails => '詳情';
+
+  @override
+  String get modesBothLine => '兩種方式都對每則訊息端對端加密。不同的只是誰能看到你的 IP 位址。';
+
+  @override
+  String get modesConnectionBridges => '連線與網橋';
+
+  @override
+  String get modesWhatServersSee => '我們的伺服器能看到什麼';
+
+  @override
+  String get serversTitle => '快速模式的伺服器';
+
+  @override
+  String get serversLine => '每則訊息同時送往兩台伺服器。先回應的那台負責送達，一台停了另一台就接手。';
+
+  @override
+  String get serversOne => '伺服器 1';
+
+  @override
+  String get serversTwo => '伺服器 2 · 另一家服務商';
+
+  @override
+  String get serversConnected => '已連線';
+
+  @override
+  String get serversConnecting => '連線中';
+
+  @override
+  String get serversNotAnswering => '沒有回應';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms 毫秒';
+  }
+
+  @override
+  String get serversQuicker => '更快';
+
+  @override
+  String get serversBackups => '公共中繼';
+
+  @override
+  String get serversBackupsLine =>
+      '在伺服器 1 停擺期間使用，而且只經 Tor 連線，所以它們永遠看不到你的 IP 位址。';
+
+  @override
+  String get serversStandingBy => '待命中';
+
+  @override
+  String get serversInUse => '使用中';
+
+  @override
+  String get homeMergedTitle => '中繼和快速現已合而為一';
+
+  @override
+  String get homeMergedLine =>
+      '你正在使用快速模式。始終有一台備用伺服器待命，即使其中一台出問題，你也不會斷線。我們的伺服器能看到你的 IP 位址，但永遠看不到你說了什麼。';
+
+  @override
+  String get homeMergedGotIt => '知道了';
+
+  @override
+  String get homeMergedUsePrivate => '改用私密';
+
+  @override
+  String get homeOursDownTitle => '我們的伺服器沒有回應';
+
+  @override
+  String get homeOursDownLine => '幾分鐘後，只要 Tor 能連通，訊息也會走公共中繼，我們任一台伺服器一回應就換回來。';
+
+  @override
+  String get homeUsePrivate => '使用私密';
+
+  @override
+  String get homeSwitchedToPrivate => '已切換到私密';
+
+  @override
+  String get homeUseFast => '使用快速';
+
+  @override
+  String get homeSwitchedToFastRoute => '已切換到快速';
+
+  @override
+  String get bridgesFastGetsThrough => '快速模式直連我們的伺服器，通常都能連通。也可以讓 Kryfo 自己找辦法。';
+
+  @override
+  String get appServersNotAnswering => '伺服器沒有回應';
+
+  @override
+  String get settingsPrivateTor => '私密 · Tor';
+
+  @override
+  String get seenOurServers => '我們的伺服器';
+
+  @override
+  String get seenIpWhy =>
+      '私密模式下一切都經 Tor 送出，我們的伺服器看到的是出口節點，永遠不是你。快速模式下連線直達我們的兩台伺服器：你連線期間它們能看到你的 IP 位址，但不留任何紀錄。第一台停擺期間，快速模式也會使用公共中繼，而且只經 Tor 連線。';
+
+  @override
+  String get onboardingHidesFromEveryone => '對所有人隱藏你的位址，包括我們的伺服器。';
+
+  @override
+  String get onboardingFastSees => '我們的伺服器只在你連線期間看到你的位址。';
+
+  @override
+  String get onboardingFastNetworkSees => '這個網路能看到你在連線 Kryfo。我們的伺服器能看到你的位址。';
+
+  @override
+  String get onboardingKeepPrivate => '保持私密 →';
+
+  @override
+  String get onboardingSkipPrivate => '略過 · 預設私密就很好';
 }

@@ -667,16 +667,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appRelayAndFastModes =>
-      'Relay and fast modes skip Tor and are quicker. They are in settings, under speed & privacy, and each says what it costs.';
-
-  @override
-  String get appViaRelay => 'Via relay';
+      'Fast skips Tor and is quicker. It is in settings, under speed & privacy, and says what it costs.';
 
   @override
   String get appOffline => 'Offline';
-
-  @override
-  String get appFast => 'Fast';
 
   @override
   String get appTorOff => 'Tor off';
@@ -1711,9 +1705,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatSupporter => 'Supporter';
-
-  @override
-  String get chatEncryptedViaRelay => 'Encrypted · via relay';
 
   @override
   String get chatEncryptedDirect => 'Encrypted · direct';
@@ -3134,26 +3125,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeLeaveThemOff => 'Leave them off';
 
   @override
-  String get homeOurRelayIsQuiet => 'Our relay is quiet';
-
-  @override
-  String get homeRelayModeUsesOnly =>
-      'Relay mode uses only our own relay, and it is not answering right now. Fast mode adds public relays alongside it, so messages still land. Everything stays sealed either way.';
-
-  @override
-  String get homeSwitchedToFast => 'Switched to fast';
-
-  @override
-  String get homeUseFastMode => 'Use fast mode';
-
-  @override
   String get homeKeepWaiting => 'Keep waiting';
-
-  @override
-  String get homeSwitchedToRelay => 'Switched to relay';
-
-  @override
-  String get homeUseOurRelay => 'Use our relay';
 
   @override
   String get homeOffline => 'Offline';
@@ -3650,41 +3622,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Four digits or more, anything you will remember';
 
   @override
-  String get modesOnion => 'Onion';
-
-  @override
-  String get modesFullOnionRoutingThree =>
-      'Full onion routing, three hops. A message takes two to five seconds. Nobody sees who you talk to.';
-
-  @override
-  String get modesSlower => 'Slower';
-
-  @override
-  String get modesRelay => 'Relay';
-
-  @override
-  String get modesOneSealedConnectionTo =>
-      'One sealed connection to Kryfo\'s own relay, like a vpn with nothing to log. Sends land in about a second, and it works where Tor is blocked.';
-
-  @override
-  String get modesQuick => 'Quick';
-
-  @override
-  String get modesRelayOnly => 'Relay only';
-
-  @override
   String get modesFast => 'Fast';
-
-  @override
-  String get modesPlainConnectionsToEvery =>
-      'Plain connections to every relay. Near instant, and the least private of the three.';
-
-  @override
-  String get modesInstant => 'Instant';
-
-  @override
-  String get modesEveryRelayYouUse =>
-      'Every relay you use knows the address you connect from, not only ours. Messages are still sealed, but the fact that you sent one is not. Off by default, and off again after a reinstall.';
 
   @override
   String get modesNotChanged => 'The mode didn\'t change. Try again.';
@@ -3697,52 +3635,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get modesPrivacy => '& privacy';
-
-  @override
-  String get modesChangeGloballyOrPer => 'Change globally, or per chat';
-
-  @override
-  String get modesSoon => 'Soon';
-
-  @override
-  String get modesActive => 'Active';
-
-  @override
-  String get modesSpeed2 => 'SPEED';
-
-  @override
-  String get modesHops => 'HOPS';
-
-  @override
-  String get modesIp => 'IP';
-
-  @override
-  String get modesVisible => 'Visible';
-
-  @override
-  String get modesHidden => 'Hidden';
-
-  @override
-  String modesHeadsUp(Object warning) {
-    return '*Heads up:* $warning';
-  }
-
-  @override
-  String get modesOnionIsTheDefault =>
-      'Onion is the default and stays that way unless you change it. Switching takes effect on the next message.';
-
-  @override
-  String get modesFastMode => 'Fast mode';
-
-  @override
-  String get modesPlainConnectionsToEveryRelayQuicker =>
-      'Plain connections to every relay. Quicker, and the relays can see your ip address. Messages stay end to end encrypted either way.';
-
-  @override
-  String get modesTurnOnFastMode => 'Turn on fast mode';
-
-  @override
-  String get modesKeepItOff => 'Keep it off';
 
   @override
   String get movedWipeThisPhone => 'Wipe Kryfo from this phone?';
@@ -4160,22 +4052,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'You can change this any time in settings, for everyone or for one chat.';
 
   @override
-  String get onboardingOnion => 'Onion';
-
-  @override
   String get onboardingSlowerAMessageTakes =>
       'Slower. A message takes two to five seconds.';
-
-  @override
-  String get onboardingHidesYourAddressFrom =>
-      'Hides your address from everyone, our relay included.';
-
-  @override
-  String get onboardingRelay => 'Relay';
-
-  @override
-  String get onboardingOurRelaySeesYour =>
-      'Our relay sees your address. Nobody else does.';
 
   @override
   String get onboardingAboutASecondWorks =>
@@ -4186,23 +4064,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Automatic finds a way around the block by itself.';
 
   @override
-  String get onboardingFast => 'Fast';
-
-  @override
-  String get onboardingEveryRelayYouUse =>
-      'Every relay you use sees your address. The least private of the three.';
-
-  @override
-  String get onboardingNearInstant => 'Near instant.';
-
-  @override
-  String get onboardingKeepOnion => 'Keep onion →';
-
-  @override
   String get onboardingUseThis => 'Use this →';
-
-  @override
-  String get onboardingSkipOnionIsA => 'Skip · onion is a fine default';
 
   @override
   String get onboardingThreeThingsThen => 'Three things,\nthen *you\'re in*.';
@@ -5156,16 +5018,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get seenYourIpAddress => 'Your ip address';
 
   @override
-  String get seenOurRelay => 'Our relay';
-
-  @override
-  String get seenEveryRelay => 'Every relay';
-
-  @override
-  String get seenOnOnionEverythingLeaves =>
-      'On onion everything leaves through Tor and the relay sees an exit node, never you. On relay mode the connection goes straight to our own relay: nothing forwards your address and nothing is written down, but that one connection is ours to see. On fast every public relay learns that you connected, though not to whom or what you said.';
-
-  @override
   String get seenYourContactGraph => 'Your contact graph';
 
   @override
@@ -5221,12 +5073,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'The ratchet and storage layers are standard. The layer joining them is ours and no one independent has reviewed it. It is alpha software.';
 
   @override
-  String get seenOnion => 'Onion';
-
-  @override
-  String get seenRelay => 'Relay';
-
-  @override
   String get seenFast => 'Fast';
 
   @override
@@ -5261,9 +5107,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTorRouting => 'Tor routing';
 
   @override
-  String get settingsOffMode => 'Off · relay mode';
-
-  @override
   String get settingsOffFastMode => 'Off · fast mode';
 
   @override
@@ -5277,9 +5120,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsFast => 'Fast';
-
-  @override
-  String get settingsRelay1Hop => 'Relay · 1 hop';
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 hops';
@@ -7310,10 +7150,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bridgesTheTorProjectSGuess => 'The Tor Project\'s guess';
 
   @override
-  String get bridgesOurRelayUsuallyGets =>
-      'Our relay is one plain connection and usually gets through. Or let Kryfo find a way by itself.';
-
-  @override
   String get bridgesUseThisBridge => 'Use this bridge';
 
   @override
@@ -9136,15 +8972,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bridgesRelayWorksWhereTor =>
-      'Relay mode works where Tor is blocked, and you can switch back any time.';
+      'Fast works where Tor is blocked, and you can switch back any time.';
 
   @override
   String get bridgesRelayThisNetworkSees =>
-      'Relay mode gets through where Tor is blocked, but this network can see you connect to Kryfo.';
-
-  @override
-  String get onboardingRelayThisNetworkSees =>
-      'This network can see you connect to Kryfo. Our relay sees your address.';
+      'Fast gets through where Tor is blocked, but this network can see you connect to Kryfo.';
 
   @override
   String get settingsLicences => 'Licences';
@@ -9208,9 +9040,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Copy link';
-
-  @override
-  String get appRelayNotAnswering => 'Relay not answering';
 
   @override
   String get motionNoRelayYet => 'NO RELAY YET';
@@ -9933,4 +9762,164 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo needs a private folder in memory while it runs, and this computer offers none, so it will not open.';
+
+  @override
+  String get modesPickHow =>
+      'Pick how your messages travel. You can change it any time.';
+
+  @override
+  String get modesPrivate => 'Private';
+
+  @override
+  String get modesPrivateTag => 'Tor · bridges when needed';
+
+  @override
+  String get modesPrivateLine =>
+      'Nobody learns your IP address or who you are, not even our servers. Finds a way around blocks by itself.';
+
+  @override
+  String get modesDefault => 'Default';
+
+  @override
+  String get modesFastTag => 'Straight to our servers';
+
+  @override
+  String get modesFastLine =>
+      'Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you\'re connected, and never log or keep it. Never what you say. Your contacts never see it.';
+
+  @override
+  String get modesFastConnected => 'Fast · connected';
+
+  @override
+  String get modesFastConnecting => 'Fast · connecting';
+
+  @override
+  String get modesFastDown => 'Fast · our servers aren\'t answering';
+
+  @override
+  String get modesBackupReady =>
+      'A backup is always ready, so you stay connected even if one goes down.';
+
+  @override
+  String get modesDetails => 'Details';
+
+  @override
+  String get modesBothLine =>
+      'Both keep every message end-to-end encrypted. Only who can see your IP address changes.';
+
+  @override
+  String get modesConnectionBridges => 'Connection and bridges';
+
+  @override
+  String get modesWhatServersSee => 'What our servers can see';
+
+  @override
+  String get serversTitle => 'Fast servers';
+
+  @override
+  String get serversLine =>
+      'Every message goes to both servers at once. Whichever answers first carries it, and the other takes over if one stops.';
+
+  @override
+  String get serversOne => 'Server 1';
+
+  @override
+  String get serversTwo => 'Server 2 · second provider';
+
+  @override
+  String get serversConnected => 'Connected';
+
+  @override
+  String get serversConnecting => 'Connecting';
+
+  @override
+  String get serversNotAnswering => 'Not answering';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String get serversQuicker => 'Quicker';
+
+  @override
+  String get serversBackups => 'Public relays';
+
+  @override
+  String get serversBackupsLine =>
+      'Used while Server 1 is down, and only through Tor, so they never see your IP address.';
+
+  @override
+  String get serversStandingBy => 'Standing by';
+
+  @override
+  String get serversInUse => 'In use';
+
+  @override
+  String get homeMergedTitle => 'Relay and Fast are one now';
+
+  @override
+  String get homeMergedLine =>
+      'You\'re on Fast. A backup server is always ready, so you stay connected even if one goes down. Our servers see your IP address, never what you say.';
+
+  @override
+  String get homeMergedGotIt => 'Got it';
+
+  @override
+  String get homeMergedUsePrivate => 'Use Private instead';
+
+  @override
+  String get homeOursDownTitle => 'Our servers aren\'t answering';
+
+  @override
+  String get homeOursDownLine =>
+      'After a few minutes, when Tor gets through, messages also go through public relays, and back through our servers as soon as one answers.';
+
+  @override
+  String get homeUsePrivate => 'Use Private';
+
+  @override
+  String get homeSwitchedToPrivate => 'Switched to Private';
+
+  @override
+  String get homeUseFast => 'Use Fast';
+
+  @override
+  String get homeSwitchedToFastRoute => 'Switched to Fast';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'Fast goes straight to our servers and usually gets through. Or let Kryfo find a way by itself.';
+
+  @override
+  String get appServersNotAnswering => 'Servers not answering';
+
+  @override
+  String get settingsPrivateTor => 'Private · Tor';
+
+  @override
+  String get seenOurServers => 'Our servers';
+
+  @override
+  String get seenIpWhy =>
+      'On Private everything leaves through Tor and our servers see an exit node, never you. On Fast the connection goes straight to our two servers: they see your IP address while you\'re connected and keep no record of it. While the first one is down, Fast also uses public relays, only through Tor.';
+
+  @override
+  String get onboardingHidesFromEveryone =>
+      'Hides your address from everyone, our servers included.';
+
+  @override
+  String get onboardingFastSees =>
+      'Our servers see your address only while you\'re connected.';
+
+  @override
+  String get onboardingFastNetworkSees =>
+      'This network can see you connect to Kryfo. Our servers see your address.';
+
+  @override
+  String get onboardingKeepPrivate => 'Keep Private →';
+
+  @override
+  String get onboardingSkipPrivate => 'Skip · Private is a fine default';
 }
