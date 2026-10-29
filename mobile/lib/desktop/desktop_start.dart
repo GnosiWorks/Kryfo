@@ -23,6 +23,7 @@ import 'package:shared_preferences_linux/shared_preferences_linux.dart'
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
+import '../dlog.dart';
 import '../l10n/app_locale.dart' show loadAppLocale;
 import '../l10n/l10n.dart';
 import 'desktop_audio.dart';
@@ -33,6 +34,7 @@ import 'desktop_lock_screen.dart';
 import 'desktop_mode.dart';
 import 'desktop_net.dart';
 import 'desktop_paths.dart';
+import 'desktop_trace.dart';
 import 'desktop_platform.dart';
 import 'desktop_posix.dart';
 import 'desktop_prefs.dart';
@@ -154,7 +156,7 @@ Future<void> sayTrayWords() async {
 }
 
 /// why the desktop will not start, before anything of it runs
-enum DesktopStop { alreadyOpen, notYours, notPrivate, noMemory }
+enum DesktopStop { alreadyOpen, notYours, notPrivate, noMemory, failed }
 
 /// the folder checks, in the order they are made: private, the user's own,
 /// and no other process on it. a reopen's new process may find the old one
@@ -194,6 +196,7 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   privateUmask();
   final root = desktopDataDir();
   final stop = await claimFolder(root);
+  if (stop == null) startTrace(root);
   if (stop != null) {
     WidgetsFlutterBinding.ensureInitialized();
     runApp(DesktopStopApp(stop: stop));
@@ -280,14 +283,26 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
         if (started) return;
         started = true;
         unawaited(() async {
-          await openSeal(
-            root: root,
-            runtime: runtime,
-            vault: vault,
-            host: host,
-            paths: paths,
-          );
-          await appMain();
+          var step = 'seal';
+          try {
+            trace('vault open');
+            await openSeal(
+              root: root,
+              runtime: runtime,
+              vault: vault,
+              host: host,
+              paths: paths,
+            );
+            step = 'app';
+            trace('seal open');
+            await appMain();
+            trace('app started');
+          } catch (e, st) {
+            // said, not left as a lock screen that never moves
+            dlog('desktop start: $step ${e.runtimeType}');
+            traceError(step, e, st);
+            runApp(const DesktopStopApp(stop: DesktopStop.failed));
+          }
         }());
       },
     ),

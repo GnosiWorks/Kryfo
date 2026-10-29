@@ -11,6 +11,7 @@ import '../widgets/halo_buttons.dart';
 import '../widgets/motion.dart';
 import '../widgets/secret_field.dart';
 import 'desktop_start.dart' show DesktopStop;
+import 'desktop_trace.dart';
 import 'desktop_vault.dart';
 
 class DesktopLockScreen extends StatefulWidget {
@@ -69,10 +70,12 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
       _busy = true;
       _error = null;
     });
+    trace(_isNew ? 'lock create' : 'lock open');
     try {
       if (_isNew) {
         await widget.vault.create(pass);
       } else if (!await widget.vault.open(pass)) {
+        trace('lock refused');
         _first.clear();
         _firstFocus.requestFocus();
         return _say(
@@ -81,11 +84,13 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
               : l10n.desktopLockWrong,
         );
       }
-    } catch (e) {
+    } catch (e, st) {
       // the type only: a message could carry a path or a key
       dlog('desktop lock: ${e.runtimeType}');
+      traceError('lock', e, st);
       return _say(l10n.desktopLockFailed);
     }
+    trace('lock opened');
     _first.clear();
     _again.clear();
     widget.onOpen();
@@ -257,6 +262,7 @@ class DesktopStopApp extends StatelessWidget {
                       DesktopStop.notYours => l10n.desktopFolderNotYours,
                       DesktopStop.notPrivate => l10n.desktopFolderNotPrivate,
                       DesktopStop.noMemory => l10n.desktopNoMemoryFolder,
+                      DesktopStop.failed => l10n.desktopLockFailed,
                     },
                     textAlign: TextAlign.center,
                     style: HaloType.sans(
