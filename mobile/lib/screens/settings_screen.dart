@@ -786,12 +786,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
           HaloSection(l10n.settingsBackup),
           HaloGroup(
             children: [
-              HaloRow(
-                icon: Icons.save_alt,
-                label: l10n.settingsBackUpIdentity,
-                value: l10n.settingsEncryptedFile,
-                onTap: () =>
-                    Navigator.of(context).push(haloRoute(const BackupScreen())),
+              // windows without a passphrase: a backup is the way back if
+              // the computer's key goes
+              ListenableBuilder(
+                listenable: Listenable.merge([?computerLock, lockState]),
+                builder: (_, _) => HaloRow(
+                  icon: Icons.save_alt,
+                  label: l10n.settingsBackUpIdentity,
+                  value: l10n.settingsEncryptedFile,
+                  hint:
+                      computerLock?.backupWise(decoy: lockState.inDecoy) ??
+                          false
+                      ? l10n.desktopBackupHint
+                      : null,
+                  onTap: () => Navigator.of(
+                    context,
+                  ).push(haloRoute(const BackupScreen())),
+                ),
               ),
               HaloRow(
                 icon: Icons.restore,

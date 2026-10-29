@@ -191,6 +191,47 @@ void main() {
     await both((l) => l.add(_pass));
   });
 
+  group('the backup card on windows', () {
+    test('without a passphrase: once on each side, apart', () async {
+      final win = FakeKeyring(place: SealPlace.windows);
+      final v = DesktopVault(path(), crypto: ToyVaultCrypto());
+      await v.createSealed(win);
+      final lock = DesktopComputerLock(v, win);
+      expect(lock.backupWise(decoy: false), isTrue);
+      expect(lock.backupCardDue(decoy: false), isTrue);
+      expect(lock.backupCardDue(decoy: true), isTrue);
+      final before = File(path()).readAsBytesSync();
+      await lock.backupCardSeen(decoy: true);
+      expect(lock.backupCardDue(decoy: true), isFalse);
+      expect(lock.backupCardDue(decoy: false), isTrue);
+      expect(File(path()).readAsBytesSync(), before);
+      await lock.backupCardSeen(decoy: false);
+      expect(lock.backupCardDue(decoy: false), isFalse);
+      // put away for good: the next start reads it back
+      final w = DesktopVault(path(), crypto: ToyVaultCrypto());
+      expect(await w.openSealed(win), SealedOpen.opened);
+      expect(DesktopComputerLock(w, win).backupCardDue(decoy: false), isFalse);
+      final d = DesktopComputerLock(w, win)..decoyNoteRead(note);
+      expect(d.backupCardDue(decoy: true), isFalse);
+    });
+
+    test('a passphrase, or linux, needs no card', () async {
+      final win = FakeKeyring(place: SealPlace.windows);
+      final v = DesktopVault(path(), crypto: ToyVaultCrypto());
+      await v.createSealed(win);
+      final lock = DesktopComputerLock(v, win);
+      // a passphrase set in the decoy hides the decoy's card only
+      await lock.lockFor(decoy: true).add(_pass);
+      expect(lock.backupWise(decoy: true), isFalse);
+      expect(lock.backupWise(decoy: false), isTrue);
+      await lock.lockFor(decoy: false).add(_pass);
+      expect(lock.backupCardDue(decoy: false), isFalse);
+      final l = DesktopVault(path('l.kv'), crypto: ToyVaultCrypto());
+      await l.createSealed(ring);
+      expect(DesktopComputerLock(l, ring).backupCardDue(decoy: false), isFalse);
+    });
+  });
+
   group('the page', () {
     // every line the page shows, in order
     List<String> shown(WidgetTester t) => [
