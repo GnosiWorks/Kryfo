@@ -256,6 +256,7 @@ class PhotoSendFacts {
     required this.backPaired,
     required this.blocked,
     required this.peerCan,
+    required this.mainIdentity,
   });
 
   // a decoy session, or a decoy container
@@ -268,11 +269,20 @@ class PhotoSendFacts {
   final bool blocked;
   // their phone said 'pp'
   final bool peerCan;
+  // they know the main identity. a photo is the main one's only, so a
+  // contact of another identity never gets it, and one not known is not
+  // taken for main
+  final bool mainIdentity;
 }
 
 /// whether [f]'s contact should hold our photo now
 bool photoOwedTo(PhotoSendFacts f) =>
-    !f.dev && f.accepted && f.backPaired && !f.blocked && f.peerCan;
+    !f.dev &&
+    f.mainIdentity &&
+    f.accepted &&
+    f.backPaired &&
+    !f.blocked &&
+    f.peerCan;
 
 /// whether anything may go to them at all now. a take-back still goes to
 /// someone blocked or deleted: it only withdraws

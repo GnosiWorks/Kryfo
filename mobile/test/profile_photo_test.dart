@@ -150,7 +150,9 @@ PhotoSendFacts _facts({
   bool blocked = false,
   bool peerCan = true,
   bool dev = false,
+  bool mainIdentity = true,
 }) => PhotoSendFacts(
+  mainIdentity: mainIdentity,
   quiet: false,
   held: false,
   dev: dev,
@@ -636,6 +638,29 @@ void main() {
       },
       skip: skip,
     );
+
+    Future<bool> owed(_Rows db) async => photoOwedTo(
+      (await db.photoPeople()).firstWhere((x) => x.peer.id == _peer).facts,
+    );
+
+    test('only a contact of the main identity is owed it; a take-back '
+        'goes to anyone', () async {
+      final db = await rows();
+      // no identities on this file yet: everyone knows the main one
+      expect(await owed(db), isTrue);
+      await db.mem.execute(
+        'ALTER TABLE contacts ADD COLUMN ident INTEGER NOT NULL DEFAULT 0',
+      );
+      expect(await owed(db), isTrue);
+      await db.mem.update('contacts', {'ident': 1});
+      expect(await owed(db), isFalse);
+      // owed before it moved: the photo waits, a take-back does not
+      await db.owePhoto(_peer, 7, at: 1);
+      expect(await db.duePhotoPeers(1 << 62), isEmpty);
+      expect(await db.nextPhotoDue(), isNull);
+      await db.owePhoto(_peer, 0, at: 1);
+      expect((await db.duePhotoPeers(1 << 62)).single.want, 0);
+    }, skip: skip);
 
     test('your own photo, and its removal keeping the time', () async {
       final db = await rows();

@@ -234,8 +234,10 @@ mixin _PhotoRows {
   /// every contact here as the photo sees them, with what they hold
   Future<List<({PhotoSendFacts facts, PhotoPeer peer})>> photoPeople() async {
     final db = await open();
+    final ident = await _identCol(db);
     final rows = await db.rawQuery('''
       SELECT c.halo_id AS id, c.accepted, c.back_paired, c.blocked, c.caps,
+        $ident AS ident,
         p.held, p.want, p.stamp, p.next_at, p.tries
       FROM contacts c LEFT JOIN photo_peers p ON p.halo_id = c.halo_id
     ''');
@@ -250,10 +252,18 @@ mixin _PhotoRows {
             backPaired: (r['back_paired'] as int? ?? 0) == 1,
             blocked: (r['blocked'] as int? ?? 0) == 1,
             peerCan: capsOfText(r['caps'] as String?).contains(kCapPhotos),
+            mainIdentity: r['ident'] == 0,
           ),
           peer: _peerOf(r),
         ),
     ];
+  }
+
+  // which identity a contact knows: the column where identities have one,
+  // else every contact knows the main one
+  static Future<String> _identCol(DatabaseExecutor db) async {
+    final cols = await db.rawQuery('PRAGMA table_info(contacts)');
+    return cols.any((c) => c['name'] == 'ident') ? 'c.ident' : '0';
   }
 
   static PhotoPeer _peerOf(Map<String, Object?> r) => (
@@ -289,15 +299,20 @@ mixin _PhotoRows {
     });
   }
 
-  /// the contacts whose turn it is
+  /// the contacts whose turn it is. a photo waits for anyone not known to
+  /// know the main identity; a take-back goes
   Future<List<PhotoPeer>> duePhotoPeers(int now) async {
     final db = await open();
-    final rows = await db.query(
-      'photo_peers',
-      columns: ['halo_id AS id', 'held', 'want', 'stamp', 'next_at', 'tries'],
-      where: 'want IS NOT NULL AND next_at <= ?',
-      whereArgs: [now],
-      orderBy: 'next_at',
+    final ident = await _identCol(db);
+    final rows = await db.rawQuery(
+      '''
+      SELECT p.halo_id AS id, p.held, p.want, p.stamp, p.next_at, p.tries
+      FROM photo_peers p LEFT JOIN contacts c ON c.halo_id = p.halo_id
+      WHERE p.want IS NOT NULL AND p.next_at <= ?
+        AND (p.want = 0 OR $ident IS 0)
+      ORDER BY p.next_at
+    ''',
+      [now],
     );
     return [for (final r in rows) _peerOf(r)];
   }
@@ -305,9 +320,13 @@ mixin _PhotoRows {
   /// the next time one is due, or null
   Future<int?> nextPhotoDue() async {
     final db = await open();
-    final r = await db.rawQuery(
-      'SELECT MIN(next_at) AS at FROM photo_peers WHERE want IS NOT NULL',
-    );
+    final ident = await _identCol(db);
+    final r = await db.rawQuery('''
+      SELECT MIN(p.next_at) AS at
+      FROM photo_peers p LEFT JOIN contacts c ON c.halo_id = p.halo_id
+      WHERE p.want IS NOT NULL
+        AND (p.want = 0 OR $ident IS 0)
+    ''');
     return r.isEmpty ? null : r.first['at'] as int?;
   }
 
