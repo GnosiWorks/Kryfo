@@ -489,6 +489,17 @@ Uint8List? _blob(Object? v) => v is Uint8List
     ? Uint8List.fromList(v)
     : null;
 
+/// a copy that leaves the phone: no contact is taken to hold any photo of
+/// ours, so after a restore the next sweep sends each what the phone shows
+/// then, whatever changed since the copy
+Future<void> photosUnsentInCopy(DatabaseExecutor db) async {
+  final t = await db.rawQuery(
+    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'photo_peers'",
+  );
+  if (t.isEmpty) return;
+  await db.update('photo_peers', {'held': -1, 'want': null, 'tries': 0});
+}
+
 // the upgrade to 93: profile photos (profile_photo.dart). a table that will
 // not make costs only the photos: their reads give up quietly, and a vault
 // move goes on without them

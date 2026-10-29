@@ -17,7 +17,7 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/support.dart' show supportTables;
 import 'package:kryfo/image_strip.dart' show pictureKind, PictureKind;
 import 'package:kryfo/jpeg_strip.dart' show jpegHasExif;
-import 'package:kryfo/main.dart' show HaloDb, photoTables;
+import 'package:kryfo/main.dart' show HaloDb, photoTables, photosUnsentInCopy;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/meta/byte_source.dart';
 import 'package:kryfo/meta/meta_reader.dart';
@@ -773,6 +773,31 @@ void main() {
       expect(s % 60000, 0);
       await db.owePhoto(_peer, 0, at: 1);
       expect((await db.duePhotoPeers(1)).single.stamp, s + 1);
+    }, skip: skip);
+
+    test('a copy that leaves the phone says no one holds our photo', () async {
+      final db = await rows();
+      await db.owePhoto(_peer, 7, at: 1);
+      final s = (await db.duePhotoPeers(1)).single.stamp;
+      await db.photoSent(_peer, 7, s);
+      await photosUnsentInCopy(db.mem);
+      final p = (await db.photoPeople())
+          .firstWhere((x) => x.peer.id == _peer)
+          .peer;
+      expect((p.held, p.want), (-1, null));
+      // the next sweep sends what the phone shows then, a photo or none
+      expect(photoTarget(sent: p.held, mine: 7, owed: true), 7);
+      expect(photoTarget(sent: p.held, mine: 9, owed: true), 9);
+      expect(photoTarget(sent: p.held, mine: 0, owed: true), 0);
+      // a file from before photos is left as it is
+      await photosUnsentInCopy(SqliteMem.open()!);
+      // and every copy goes through it
+      final src = sourceOf('lib/backup.dart');
+      final at = src.indexOf('Future<void> settleBurns(');
+      expect(
+        src.substring(at, src.indexOf('\n  }\n', at)),
+        contains('await photosUnsentInCopy(t);'),
+      );
     }, skip: skip);
 
     test('your own photo, and its removal keeping the time', () async {
