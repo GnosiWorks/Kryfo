@@ -227,6 +227,17 @@ func TestPairModeComesWithTheCall(t *testing.T) {
 	if _, _, err := pairArg(41, bHex+"."+hex.EncodeToString(other[:])); err == nil {
 		t.Fatal("a pair took a second seed")
 	}
+	// made again by a new first contact (HaloPairSeed): the new seed holds,
+	// a call on the old one fails closed, and back again
+	copy(other[:], fixedSeed(2))
+	putPairSeedAfresh(41, b.pub, other)
+	if _, _, err := pairArg(41, bHex+"."+hex.EncodeToString(other[:])); err != nil {
+		t.Fatalf("the new seed refused: %v", err)
+	}
+	if _, _, err := pairArg(41, bHex+"."+hex.EncodeToString(s[:])); err == nil {
+		t.Fatal("a call on the old seed taken")
+	}
+	putPairSeedAfresh(41, b.pub, s)
 	for _, bad := range []string{bHex + ".", bHex + ".abcd", bHex + "." + strings.Repeat("zz", 32)} {
 		if _, _, err := pairArg(41, bad); err == nil {
 			t.Fatalf("%q taken", bad)

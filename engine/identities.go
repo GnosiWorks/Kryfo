@@ -128,7 +128,7 @@ func identDrop(ident int) {
 
 // the address seed of a pair made by a v4 first contact: from now on its
 // addresses mix it in. a new first contact with the same peer (a re-add)
-// makes the pair again with its own seed; each call names the seed it is on
+// makes the pair again with its own seed, which replaces the one held
 //
 //export HaloPairSeed
 func HaloPairSeed(cIdent C.int, cPeer, cSeedHex *C.char) *C.char {
@@ -142,19 +142,29 @@ func HaloPairSeed(cIdent C.int, cPeer, cSeedHex *C.char) *C.char {
 	}
 	var s [32]byte
 	copy(s[:], b)
-	if err := putPairSeed(int(cIdent), peer, s); err != nil {
-		return C.CString("error: " + err.Error())
-	}
+	putPairSeedAfresh(int(cIdent), peer, s)
 	return C.CString("ok")
 }
 
+// a call naming a seed for the pair: one it has not seen it takes, another
+// than the one it holds is refused (a call on a stale pair fails closed)
 func putPairSeed(ident int, peer [32]byte, s [32]byte) error {
 	identsMu.Lock()
 	defer identsMu.Unlock()
-	// the map only refuses a call without a seed for a seeded pair: the
-	// seed itself always comes with the call
-	pairSeeds[pairKey{ident, hex.EncodeToString(peer[:])}] = s
+	k := pairKey{ident, hex.EncodeToString(peer[:])}
+	if had, ok := pairSeeds[k]; ok && had != s {
+		return errors.New("the pair has another seed")
+	}
+	pairSeeds[k] = s
 	return nil
+}
+
+// the pair made again by a new first contact (HaloPairSeed, which the app
+// calls only then and at start): its seed replaces the one held
+func putPairSeedAfresh(ident int, peer [32]byte, s [32]byte) {
+	identsMu.Lock()
+	defer identsMu.Unlock()
+	pairSeeds[pairKey{ident, hex.EncodeToString(peer[:])}] = s
 }
 
 // the subscription of [ident]'s pair with [peerHex]: the main identity's
