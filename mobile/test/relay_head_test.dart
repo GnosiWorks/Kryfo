@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// relay has one colour, sky: the chat header's route line and the home
-// pill, in both themes and across a live theme switch. over tor and direct
-// keep text2 in the header
+// fast has one colour, green: the chat header's route line and the home
+// pill, in both themes and across a live theme switch. over tor keeps text2
+// in the header
 import 'dart:io';
 
 import 'package:flutter/material.dart' hide Curve;
@@ -45,7 +45,7 @@ const _chat = ChatScreen(
 );
 
 String _line(String mode) => switch (mode) {
-  'balanced' => l10n.chatEncryptedViaRelay,
+  'balanced' => l10n.chatEncryptedDirect,
   'fast' => l10n.chatEncryptedDirect,
   _ => l10n.chatEncryptedOverTor,
 };
@@ -128,12 +128,13 @@ void main() {
         appState.sendModeForTest = mode;
         await devOpen(t, _chat);
         await _settle(t);
-        if (mode == 'balanced') {
-          expect(_textColour(t, mode), HaloColors.sky);
-          expect(_lockColour(t), HaloColors.sky);
+        // relay and fast are one route now, in fast's green
+        if (mode != 'private') {
+          expect(_textColour(t, mode), HaloColors.greenText);
+          expect(_lockColour(t), HaloColors.greenText);
         } else {
           expect(_textColour(t, mode), HaloColors.text2);
-          // tor and direct wear tor's own violet, never the accent
+          // tor wears its own violet, never the accent
           expect(_lockColour(t), HaloColors.violet);
         }
         await devClose(t);
@@ -169,21 +170,25 @@ void main() {
       ),
     );
     await _settle(t);
-    expect(_textColour(t, 'balanced'), HaloColors.sky);
+    expect(_textColour(t, 'balanced'), HaloColors.greenText);
     for (final light in [true, false, true]) {
       HaloColors.setLight(light);
       themeRevision.value++;
       await t.pump();
       await t.pump(const Duration(seconds: 1));
-      expect(_textColour(t, 'balanced'), HaloColors.sky, reason: '$light');
-      expect(_lockColour(t), HaloColors.sky, reason: '$light');
+      expect(
+        _textColour(t, 'balanced'),
+        HaloColors.greenText,
+        reason: '$light',
+      );
+      expect(_lockColour(t), HaloColors.greenText, reason: '$light');
     }
     await devClose(t);
   });
 
   group('the home pill', () {
     Color? label(WidgetTester t) =>
-        t.widget<Text>(find.text(l10n.appViaRelay)).style?.color;
+        t.widget<Text>(find.text(l10n.modesFastConnected)).style?.color;
 
     // the 5px dot in the middle of the ring
     Color? dot(WidgetTester t) => t
@@ -204,7 +209,7 @@ void main() {
       appState.noteOnline(true);
     });
 
-    // relay does not ride tor: the pill is sky whether tor is off, coming
+    // fast does not ride tor: the pill is green whether tor is off, coming
     // up or reachable
     for (final light in [false, true]) {
       for (final tor in [
@@ -213,7 +218,7 @@ void main() {
         TorStatus.reachable,
       ]) {
         testWidgets('${light ? 'light' : 'dark'} theme, tor ${tor.name}: '
-            'relay is sky', (t) async {
+            'fast is green', (t) async {
           HaloColors.setLight(light);
           appState.setTorStatusForTest(tor);
           await devOpen(
@@ -221,8 +226,8 @@ void main() {
             const Center(child: TorHalo(label: true)),
             still: true,
           );
-          expect(label(t), HaloColors.sky);
-          expect(dot(t), HaloColors.sky);
+          expect(label(t), HaloColors.greenText);
+          expect(dot(t), HaloColors.greenText);
           await devClose(t);
         });
       }
@@ -234,8 +239,8 @@ void main() {
         await appState.setLight(light);
         await t.pump();
         await t.pump(const Duration(milliseconds: 400));
-        expect(label(t), HaloColors.sky, reason: '$light');
-        expect(dot(t), HaloColors.sky, reason: '$light');
+        expect(label(t), HaloColors.greenText, reason: '$light');
+        expect(dot(t), HaloColors.greenText, reason: '$light');
       }
       await devClose(t);
     });

@@ -17,6 +17,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -89,6 +90,8 @@ type relayStandIn struct {
 	// a req is taken and the socket closed with no answer, as a listener
 	// with nothing behind it does
 	hangUp bool
+	// before a publish's ok goes back, as from a relay far away
+	okDelay time.Duration
 }
 
 func newRelayStandIn(t *testing.T, pongDelay time.Duration) *relayStandIn {
@@ -239,7 +242,11 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 			if refuse == "" {
 				s.accepted++
 			}
+			okDelay := s.okDelay
 			s.mu.Unlock()
+			if okDelay > 0 {
+				time.Sleep(okDelay)
+			}
 			b, _ := nostr.OKEnvelope{EventID: e.Event.ID, OK: refuse == "", Reason: refuse}.MarshalJSON()
 			if conn.Write(ctx, ws.MessageText, b) != nil {
 				return
@@ -561,6 +568,35 @@ func (s *socksStandIn) countAs(name string) int {
 	return s.byName[name]
 }
 
+// the engine no longer has a mode by this name: the tests set it directly
+// for a route with no tor that is not the app's fast
+const modeFast = "fast"
+
+// the tests' lists name our relay first, as the app's do, under names of
+// their own: the first entry is taken as ours unless it is ours by name.
+// with no tor stand-in pinned, the others are reached in the clear as public
+// relays, as there is nothing to go through
+func init() {
+	relaysSetHook = func(urls []string) {
+		if len(urls) == 0 {
+			return
+		}
+		if storeOf(urls, urls[0]) == "" {
+			if p, err := url.Parse(urls[0]); err == nil && p.Host != "" {
+				otherFirstHosts.Store(strings.ToLower(p.Host), true)
+			}
+		}
+		if atomic.LoadInt32(&pinnedSocks) != 0 {
+			return
+		}
+		for _, u := range urls {
+			if p, err := url.Parse(u); err == nil && p.Host != "" {
+				clearTestHosts.Store(strings.ToLower(p.Host), true)
+			}
+		}
+	}
+}
+
 // the engine's relay state pointed at the stand-ins, put back afterwards.
 // in private mode tor is the socks stand-in: a pinned port answers without
 // asking tor anything.
@@ -576,6 +612,11 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 	oldMode := currentMode()
 	oldPin := atomic.LoadInt32(&pinnedSocks)
 	oldDir := savedDataDir()
+	oldHost := ownRelayHost
+	// every test starts from the app's names
+	ownRelayHost = "relay.kryfo.app"
+	otherFirstHosts.Clear()
+	clearTestHosts.Clear()
 	nostrMu.Lock()
 	oldRelays := nostrRelays
 	nostrMu.Unlock()
@@ -588,7 +629,13 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 		transportMode.Store(oldMode)
 		atomic.StoreInt32(&pinnedSocks, oldPin)
 		setSavedDataDir(oldDir)
+		ownRelayHost = oldHost
 		setRelays(oldRelays)
+		otherFirstHosts.Clear()
+		clearTestHosts.Clear()
+		setBackups(nil)
+		topupForget()
+		relayMsClear()
 		nostrResetClient()
 		relayClearBenches()
 		wakeReset()
@@ -597,6 +644,9 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 	// addresses a test before this one left registered would crowd the cap
 	liveReset()
 	wakeReset()
+	setBackups(nil)
+	topupForget()
+	relayMsClear()
 	transportMode.Store(mode)
 	if socks != nil {
 		atomic.StoreInt32(&pinnedSocks, int32(socks.port()))
@@ -609,6 +659,10 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 		urls = append(urls, r.url())
 	}
 	setRelays(urls)
+	// the first stand-in is our relay, by its name as the app's is
+	if len(relays) > 0 {
+		ownRelayHost = strings.TrimPrefix(relays[0].url(), "ws://")
+	}
 	me := newXid(t)
 	mu.Lock()
 	setMainForTest(me.priv, me.pub)

@@ -661,16 +661,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get appRelayAndFastModes =>
-      'Mode relay dan cepat tidak memakai Tor dan lebih cepat. Keduanya ada di pengaturan, di bagian kecepatan & privasi, dan masing-masing menjelaskan apa yang dikorbankan.';
-
-  @override
-  String get appViaRelay => 'Lewat relay';
+      'Cepat melewati Tor dan lebih gesit. Ada di pengaturan, di bawah kecepatan & privasi, dan menjelaskan apa harganya.';
 
   @override
   String get appOffline => 'Offline';
-
-  @override
-  String get appFast => 'Cepat';
 
   @override
   String get appTorOff => 'Tor mati';
@@ -1701,9 +1695,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatSupporter => 'Pendukung';
-
-  @override
-  String get chatEncryptedViaRelay => 'Terenkripsi · lewat relay';
 
   @override
   String get chatEncryptedDirect => 'Terenkripsi · langsung';
@@ -3131,26 +3122,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get homeLeaveThemOff => 'Biarkan mati';
 
   @override
-  String get homeOurRelayIsQuiet => 'Relay kami sedang diam';
-
-  @override
-  String get homeRelayModeUsesOnly =>
-      'Mode relay hanya memakai relay milik kami, dan saat ini relay itu tidak menjawab. Mode cepat menambahkan relay publik di sampingnya, jadi pesan tetap sampai. Apa pun modenya, semuanya tetap tersegel.';
-
-  @override
-  String get homeSwitchedToFast => 'Beralih ke cepat';
-
-  @override
-  String get homeUseFastMode => 'Pakai mode cepat';
-
-  @override
   String get homeKeepWaiting => 'Tunggu lagi';
-
-  @override
-  String get homeSwitchedToRelay => 'Beralih ke relay';
-
-  @override
-  String get homeUseOurRelay => 'Pakai relay kami';
 
   @override
   String get homeOffline => 'Offline';
@@ -3645,41 +3617,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Empat angka atau lebih, apa saja yang bisa kamu ingat';
 
   @override
-  String get modesOnion => 'Onion';
-
-  @override
-  String get modesFullOnionRoutingThree =>
-      'Perutean onion penuh, tiga lompatan. Satu pesan butuh dua sampai lima detik. Tidak ada yang melihat dengan siapa kamu bicara.';
-
-  @override
-  String get modesSlower => 'Lebih lambat';
-
-  @override
-  String get modesRelay => 'Relay';
-
-  @override
-  String get modesOneSealedConnectionTo =>
-      'Satu koneksi tersegel ke relay milik Kryfo, seperti vpn yang tidak punya apa-apa untuk dicatat. Kiriman sampai dalam sekitar satu detik, dan tetap jalan di tempat Tor diblokir.';
-
-  @override
-  String get modesQuick => 'Cepat';
-
-  @override
-  String get modesRelayOnly => 'Hanya relay';
-
-  @override
   String get modesFast => 'Cepat';
-
-  @override
-  String get modesPlainConnectionsToEvery =>
-      'Koneksi biasa ke setiap relay. Hampir seketika, dan paling tidak privat di antara ketiganya.';
-
-  @override
-  String get modesInstant => 'Seketika';
-
-  @override
-  String get modesEveryRelayYouUse =>
-      'Setiap relay yang kamu pakai tahu alamat asal koneksimu, bukan hanya relay kami. Pesan tetap tersegel, tapi fakta bahwa kamu mengirimnya tidak. Mati secara bawaan, dan mati lagi setelah instal ulang.';
 
   @override
   String get modesNotChanged => 'Mode tidak berubah. Coba lagi.';
@@ -3692,52 +3630,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get modesPrivacy => '& privasi';
-
-  @override
-  String get modesChangeGloballyOrPer => 'Ubah untuk semua, atau per obrolan';
-
-  @override
-  String get modesSoon => 'Segera';
-
-  @override
-  String get modesActive => 'Aktif';
-
-  @override
-  String get modesSpeed2 => 'KECEPATAN';
-
-  @override
-  String get modesHops => 'LOMPATAN';
-
-  @override
-  String get modesIp => 'IP';
-
-  @override
-  String get modesVisible => 'Terlihat';
-
-  @override
-  String get modesHidden => 'Tersembunyi';
-
-  @override
-  String modesHeadsUp(Object warning) {
-    return '*Perhatian:* $warning';
-  }
-
-  @override
-  String get modesOnionIsTheDefault =>
-      'Onion adalah bawaan dan tetap begitu kecuali kamu mengubahnya. Perubahan berlaku mulai pesan berikutnya.';
-
-  @override
-  String get modesFastMode => 'Mode cepat';
-
-  @override
-  String get modesPlainConnectionsToEveryRelayQuicker =>
-      'Koneksi biasa ke setiap relay. Lebih cepat, dan relay-relay itu bisa melihat alamat IP-mu. Apa pun modenya, pesan tetap terenkripsi ujung ke ujung.';
-
-  @override
-  String get modesTurnOnFastMode => 'Nyalakan mode cepat';
-
-  @override
-  String get modesKeepItOff => 'Biarkan mati';
 
   @override
   String get movedWipeThisPhone => 'Hapus total Kryfo dari ponsel ini?';
@@ -4159,22 +4051,8 @@ class AppLocalizationsId extends AppLocalizations {
       'Kamu bisa mengubahnya kapan saja di pengaturan, untuk semua atau untuk satu obrolan.';
 
   @override
-  String get onboardingOnion => 'Onion';
-
-  @override
   String get onboardingSlowerAMessageTakes =>
       'Lebih lambat. Satu pesan butuh dua sampai lima detik.';
-
-  @override
-  String get onboardingHidesYourAddressFrom =>
-      'Menyembunyikan alamatmu dari semua orang, termasuk relay kami.';
-
-  @override
-  String get onboardingRelay => 'Relay';
-
-  @override
-  String get onboardingOurRelaySeesYour =>
-      'Relay kami melihat alamatmu. Tidak ada pihak lain yang melihatnya.';
 
   @override
   String get onboardingAboutASecondWorks =>
@@ -4185,24 +4063,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Otomatis mencari sendiri jalan melewati blokir.';
 
   @override
-  String get onboardingFast => 'Cepat';
-
-  @override
-  String get onboardingEveryRelayYouUse =>
-      'Setiap relay yang kamu pakai melihat alamatmu. Paling tidak privat di antara ketiganya.';
-
-  @override
-  String get onboardingNearInstant => 'Hampir seketika.';
-
-  @override
-  String get onboardingKeepOnion => 'Tetap onion →';
-
-  @override
   String get onboardingUseThis => 'Pakai ini →';
-
-  @override
-  String get onboardingSkipOnionIsA =>
-      'Lewati · onion sudah pilihan bawaan yang baik';
 
   @override
   String get onboardingThreeThingsThen => 'Tiga hal,\nlalu *kamu masuk*.';
@@ -5159,16 +5020,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get seenYourIpAddress => 'Alamat IP-mu';
 
   @override
-  String get seenOurRelay => 'Relay kami';
-
-  @override
-  String get seenEveryRelay => 'Setiap relay';
-
-  @override
-  String get seenOnOnionEverythingLeaves =>
-      'Di mode onion semuanya keluar lewat Tor dan relay hanya melihat exit node, tidak pernah kamu. Di mode relay koneksinya langsung ke relay milik kami: tidak ada yang meneruskan alamatmu dan tidak ada yang dicatat, tapi koneksi yang satu itu bisa kami lihat. Di mode cepat setiap relay publik tahu bahwa kamu terhubung, tapi tidak tahu ke siapa atau apa yang kamu katakan.';
-
-  @override
   String get seenYourContactGraph => 'Jaringan kontakmu';
 
   @override
@@ -5224,12 +5075,6 @@ class AppLocalizationsId extends AppLocalizations {
       'Lapisan ratchet dan penyimpanan memakai standar. Lapisan yang menyatukannya buatan kami dan belum ada pihak independen yang memeriksanya. Ini perangkat lunak versi alfa.';
 
   @override
-  String get seenOnion => 'Onion';
-
-  @override
-  String get seenRelay => 'Relay';
-
-  @override
   String get seenFast => 'Cepat';
 
   @override
@@ -5264,9 +5109,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsTorRouting => 'Perutean Tor';
 
   @override
-  String get settingsOffMode => 'Mati · mode relay';
-
-  @override
   String get settingsOffFastMode => 'Mati · mode cepat';
 
   @override
@@ -5280,9 +5122,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsFast => 'Cepat';
-
-  @override
-  String get settingsRelay1Hop => 'Relay · 1 lompatan';
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 lompatan';
@@ -7311,10 +7150,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesTheTorProjectSGuess => 'Tebakan Tor Project';
 
   @override
-  String get bridgesOurRelayUsuallyGets =>
-      'Relay kami cukup satu koneksi biasa dan biasanya tembus. Atau biarkan Kryfo mencari cara sendiri.';
-
-  @override
   String get bridgesUseThisBridge => 'Pakai jembatan ini';
 
   @override
@@ -9140,15 +8975,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bridgesRelayWorksWhereTor =>
-      'Mode relay tetap jalan saat Tor diblokir, dan kamu bisa kembali kapan saja.';
+      'Cepat bisa dipakai di tempat Tor diblokir, dan kamu bisa kembali kapan saja.';
 
   @override
   String get bridgesRelayThisNetworkSees =>
-      'Mode relay bisa tembus saat Tor diblokir, tapi jaringan ini bisa melihat kamu terhubung ke Kryfo.';
-
-  @override
-  String get onboardingRelayThisNetworkSees =>
-      'Jaringan ini bisa melihat kamu terhubung ke Kryfo. Relay kami melihat alamatmu.';
+      'Cepat bisa tembus di tempat Tor diblokir, tapi jaringan ini bisa melihat kamu terhubung ke Kryfo.';
 
   @override
   String get settingsLicences => 'Lisensi';
@@ -9211,9 +9042,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Salin tautan';
-
-  @override
-  String get appRelayNotAnswering => 'Relay diam';
 
   @override
   String get motionNoRelayYet => 'BELUM ADA RELAY';
@@ -9963,4 +9791,164 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get helloSentOld =>
       'Permintaan terkirim. Jika mereka memakai Kryfo versi lama, mereka perlu memperbarui dulu.';
+
+  @override
+  String get modesPickHow =>
+      'Pilih cara pesanmu dikirim. Kamu bisa mengubahnya kapan saja.';
+
+  @override
+  String get modesPrivate => 'Privat';
+
+  @override
+  String get modesPrivateTag => 'Tor · bridge bila perlu';
+
+  @override
+  String get modesPrivateLine =>
+      'Tak ada yang tahu alamat IP-mu atau siapa kamu, bahkan server kami. Mencari jalan sendiri melewati blokir.';
+
+  @override
+  String get modesDefault => 'Bawaan';
+
+  @override
+  String get modesFastTag => 'Langsung ke server kami';
+
+  @override
+  String get modesFastLine =>
+      'Melewati Tor, jadi pesan sampai lebih cepat dan lebih hemat baterai. Server kami melihat alamat IP-mu hanya selama kamu terhubung, dan tidak pernah mencatat atau menyimpannya. Tidak pernah isi pesanmu. Kontakmu tidak pernah melihatnya.';
+
+  @override
+  String get modesFastConnected => 'Cepat · terhubung';
+
+  @override
+  String get modesFastConnecting => 'Cepat · menghubungkan';
+
+  @override
+  String get modesFastDown => 'Cepat · server kami tidak menjawab';
+
+  @override
+  String get modesBackupReady =>
+      'Cadangan selalu siap, jadi kamu tetap terhubung walau satu mati.';
+
+  @override
+  String get modesDetails => 'Detail';
+
+  @override
+  String get modesBothLine =>
+      'Keduanya mengenkripsi setiap pesan secara end-to-end. Yang berbeda hanya siapa yang bisa melihat alamat IP-mu.';
+
+  @override
+  String get modesConnectionBridges => 'Koneksi dan bridge';
+
+  @override
+  String get modesWhatServersSee => 'Apa yang bisa dilihat server kami';
+
+  @override
+  String get serversTitle => 'Server Cepat';
+
+  @override
+  String get serversLine =>
+      'Setiap pesan dikirim ke kedua server sekaligus. Yang menjawab duluan membawanya, dan yang lain mengambil alih jika satu berhenti.';
+
+  @override
+  String get serversOne => 'Server 1';
+
+  @override
+  String get serversTwo => 'Server 2 · penyedia kedua';
+
+  @override
+  String get serversConnected => 'Terhubung';
+
+  @override
+  String get serversConnecting => 'Menghubungkan';
+
+  @override
+  String get serversNotAnswering => 'Tidak menjawab';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms md';
+  }
+
+  @override
+  String get serversQuicker => 'Lebih cepat';
+
+  @override
+  String get serversBackups => 'Relay publik';
+
+  @override
+  String get serversBackupsLine =>
+      'Dipakai selama Server 1 mati, dan hanya lewat Tor, jadi mereka tidak pernah melihat alamat IP-mu.';
+
+  @override
+  String get serversStandingBy => 'Siaga';
+
+  @override
+  String get serversInUse => 'Dipakai';
+
+  @override
+  String get homeMergedTitle => 'Relay dan Cepat kini jadi satu';
+
+  @override
+  String get homeMergedLine =>
+      'Kamu memakai Cepat. Server cadangan selalu siap, jadi kamu tetap terhubung walau satu mati. Server kami melihat alamat IP-mu, tidak pernah isi pesanmu.';
+
+  @override
+  String get homeMergedGotIt => 'Mengerti';
+
+  @override
+  String get homeMergedUsePrivate => 'Pakai Privat saja';
+
+  @override
+  String get homeOursDownTitle => 'Server kami tidak menjawab';
+
+  @override
+  String get homeOursDownLine =>
+      'Setelah beberapa menit, saat Tor tembus, pesan juga lewat relay publik, dan kembali lewat server kami begitu salah satunya menjawab.';
+
+  @override
+  String get homeUsePrivate => 'Pakai Privat';
+
+  @override
+  String get homeSwitchedToPrivate => 'Pindah ke Privat';
+
+  @override
+  String get homeUseFast => 'Pakai Cepat';
+
+  @override
+  String get homeSwitchedToFastRoute => 'Pindah ke Cepat';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'Cepat langsung ke server kami dan biasanya tembus. Atau biarkan Kryfo mencari cara sendiri.';
+
+  @override
+  String get appServersNotAnswering => 'Server tidak menjawab';
+
+  @override
+  String get settingsPrivateTor => 'Privat · Tor';
+
+  @override
+  String get seenOurServers => 'Server kami';
+
+  @override
+  String get seenIpWhy =>
+      'Di Privat semuanya keluar lewat Tor dan server kami melihat node keluar, bukan kamu. Di Cepat koneksi langsung ke dua server kami: mereka melihat alamat IP-mu selama terhubung dan tidak menyimpan catatannya. Selama server pertama mati, Cepat juga memakai relay publik, hanya lewat Tor.';
+
+  @override
+  String get onboardingHidesFromEveryone =>
+      'Menyembunyikan alamatmu dari semua orang, termasuk server kami.';
+
+  @override
+  String get onboardingFastSees =>
+      'Server kami melihat alamatmu hanya selama kamu terhubung.';
+
+  @override
+  String get onboardingFastNetworkSees =>
+      'Jaringan ini bisa melihat kamu terhubung ke Kryfo. Server kami melihat alamatmu.';
+
+  @override
+  String get onboardingKeepPrivate => 'Tetap Privat →';
+
+  @override
+  String get onboardingSkipPrivate => 'Lewati · Privat sudah pilihan bagus';
 }

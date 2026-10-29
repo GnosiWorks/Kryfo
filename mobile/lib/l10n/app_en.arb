@@ -820,20 +820,12 @@
   "@appTorNoRelayYet": {
     "description": "app/gates.dart"
   },
-  "appRelayAndFastModes": "Relay and fast modes skip Tor and are quicker. They are in settings, under speed & privacy, and each says what it costs.",
+  "appRelayAndFastModes": "Fast skips Tor and is quicker. It is in settings, under speed & privacy, and says what it costs.",
   "@appRelayAndFastModes": {
-    "description": "app/gates.dart"
-  },
-  "appViaRelay": "Via relay",
-  "@appViaRelay": {
     "description": "app/gates.dart"
   },
   "appOffline": "Offline",
   "@appOffline": {
-    "description": "app/gates.dart"
-  },
-  "appFast": "Fast",
-  "@appFast": {
     "description": "app/gates.dart"
   },
   "appTorOff": "Tor off",
@@ -2143,10 +2135,6 @@
   },
   "chatSupporter": "Supporter",
   "@chatSupporter": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatEncryptedViaRelay": "Encrypted · via relay",
-  "@chatEncryptedViaRelay": {
     "description": "screens/chat_screen.dart"
   },
   "chatEncryptedDirect": "Encrypted · direct",
@@ -3881,32 +3869,8 @@
   "@homeLeaveThemOff": {
     "description": "screens/home_screen.dart"
   },
-  "homeOurRelayIsQuiet": "Our relay is quiet",
-  "@homeOurRelayIsQuiet": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeRelayModeUsesOnly": "Relay mode uses only our own relay, and it is not answering right now. Fast mode adds public relays alongside it, so messages still land. Everything stays sealed either way.",
-  "@homeRelayModeUsesOnly": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeSwitchedToFast": "Switched to fast",
-  "@homeSwitchedToFast": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeUseFastMode": "Use fast mode",
-  "@homeUseFastMode": {
-    "description": "screens/home_screen.dart"
-  },
   "homeKeepWaiting": "Keep waiting",
   "@homeKeepWaiting": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeSwitchedToRelay": "Switched to relay",
-  "@homeSwitchedToRelay": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeUseOurRelay": "Use our relay",
-  "@homeUseOurRelay": {
     "description": "screens/home_screen.dart"
   },
   "homeOffline": "Offline",
@@ -4537,48 +4501,8 @@
   "@lockSetupFourDigitsAnythingYou": {
     "description": "screens/lock_setup_screen.dart"
   },
-  "modesOnion": "Onion",
-  "@modesOnion": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesFullOnionRoutingThree": "Full onion routing, three hops. A message takes two to five seconds. Nobody sees who you talk to.",
-  "@modesFullOnionRoutingThree": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesSlower": "Slower",
-  "@modesSlower": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesRelay": "Relay",
-  "@modesRelay": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesOneSealedConnectionTo": "One sealed connection to Kryfo's own relay, like a vpn with nothing to log. Sends land in about a second, and it works where Tor is blocked.",
-  "@modesOneSealedConnectionTo": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesQuick": "Quick",
-  "@modesQuick": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesRelayOnly": "Relay only",
-  "@modesRelayOnly": {
-    "description": "screens/modes_screen.dart"
-  },
   "modesFast": "Fast",
   "@modesFast": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesPlainConnectionsToEvery": "Plain connections to every relay. Near instant, and the least private of the three.",
-  "@modesPlainConnectionsToEvery": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesInstant": "Instant",
-  "@modesInstant": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesEveryRelayYouUse": "Every relay you use knows the address you connect from, not only ours. Messages are still sealed, but the fact that you sent one is not. Off by default, and off again after a reinstall.",
-  "@modesEveryRelayYouUse": {
     "description": "screens/modes_screen.dart"
   },
   "modesNotChanged": "The mode didn't change. Try again.",
@@ -4595,67 +4519,6 @@
   },
   "modesPrivacy": "& privacy",
   "@modesPrivacy": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesChangeGloballyOrPer": "Change globally, or per chat",
-  "@modesChangeGloballyOrPer": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesSoon": "Soon",
-  "@modesSoon": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesActive": "Active",
-  "@modesActive": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesSpeed2": "SPEED",
-  "@modesSpeed2": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesHops": "HOPS",
-  "@modesHops": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesIp": "IP",
-  "@modesIp": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesVisible": "Visible",
-  "@modesVisible": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesHidden": "Hidden",
-  "@modesHidden": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesHeadsUp": "*Heads up:* {warning}",
-  "@modesHeadsUp": {
-    "description": "screens/modes_screen.dart",
-    "placeholders": {
-      "warning": {
-        "type": "Object"
-      }
-    }
-  },
-  "modesOnionIsTheDefault": "Onion is the default and stays that way unless you change it. Switching takes effect on the next message.",
-  "@modesOnionIsTheDefault": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesFastMode": "Fast mode",
-  "@modesFastMode": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesPlainConnectionsToEveryRelayQuicker": "Plain connections to every relay. Quicker, and the relays can see your ip address. Messages stay end to end encrypted either way.",
-  "@modesPlainConnectionsToEveryRelayQuicker": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesTurnOnFastMode": "Turn on fast mode",
-  "@modesTurnOnFastMode": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesKeepItOff": "Keep it off",
-  "@modesKeepItOff": {
     "description": "screens/modes_screen.dart"
   },
   "movedWipeThisPhone": "Wipe Kryfo from this phone?",
@@ -5161,24 +5024,8 @@
   "@onboardingYouCanChangeThis": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingOnion": "Onion",
-  "@onboardingOnion": {
-    "description": "screens/onboarding_screen.dart"
-  },
   "onboardingSlowerAMessageTakes": "Slower. A message takes two to five seconds.",
   "@onboardingSlowerAMessageTakes": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingHidesYourAddressFrom": "Hides your address from everyone, our relay included.",
-  "@onboardingHidesYourAddressFrom": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingRelay": "Relay",
-  "@onboardingRelay": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingOurRelaySeesYour": "Our relay sees your address. Nobody else does.",
-  "@onboardingOurRelaySeesYour": {
     "description": "screens/onboarding_screen.dart"
   },
   "onboardingAboutASecondWorks": "About a second. Works where Tor is blocked.",
@@ -5189,28 +5036,8 @@
   "@onboardingAboutASecondWorks": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingFast": "Fast",
-  "@onboardingFast": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingEveryRelayYouUse": "Every relay you use sees your address. The least private of the three.",
-  "@onboardingEveryRelayYouUse": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingNearInstant": "Near instant.",
-  "@onboardingNearInstant": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingKeepOnion": "Keep onion →",
-  "@onboardingKeepOnion": {
-    "description": "screens/onboarding_screen.dart"
-  },
   "onboardingUseThis": "Use this →",
   "@onboardingUseThis": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingSkipOnionIsA": "Skip · onion is a fine default",
-  "@onboardingSkipOnionIsA": {
     "description": "screens/onboarding_screen.dart"
   },
   "onboardingThreeThingsThen": "Three things,\nthen *you're in*.",
@@ -6415,18 +6242,6 @@
   "@seenYourIpAddress": {
     "description": "screens/seen_screen.dart"
   },
-  "seenOurRelay": "Our relay",
-  "@seenOurRelay": {
-    "description": "screens/seen_screen.dart"
-  },
-  "seenEveryRelay": "Every relay",
-  "@seenEveryRelay": {
-    "description": "screens/seen_screen.dart"
-  },
-  "seenOnOnionEverythingLeaves": "On onion everything leaves through Tor and the relay sees an exit node, never you. On relay mode the connection goes straight to our own relay: nothing forwards your address and nothing is written down, but that one connection is ours to see. On fast every public relay learns that you connected, though not to whom or what you said.",
-  "@seenOnOnionEverythingLeaves": {
-    "description": "screens/seen_screen.dart"
-  },
   "seenYourContactGraph": "Your contact graph",
   "@seenYourContactGraph": {
     "description": "screens/seen_screen.dart"
@@ -6491,14 +6306,6 @@
   "@seenTheRatchetAndStorage": {
     "description": "screens/seen_screen.dart"
   },
-  "seenOnion": "Onion",
-  "@seenOnion": {
-    "description": "screens/seen_screen.dart"
-  },
-  "seenRelay": "Relay",
-  "@seenRelay": {
-    "description": "screens/seen_screen.dart"
-  },
   "seenFast": "Fast",
   "@seenFast": {
     "description": "screens/seen_screen.dart"
@@ -6544,10 +6351,6 @@
   "@settingsTorRouting": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsOffMode": "Off · relay mode",
-  "@settingsOffMode": {
-    "description": "screens/settings_screen.dart"
-  },
   "settingsOffFastMode": "Off · fast mode",
   "@settingsOffFastMode": {
     "description": "screens/settings_screen.dart"
@@ -6566,10 +6369,6 @@
   },
   "settingsFast": "Fast",
   "@settingsFast": {
-    "description": "screens/settings_screen.dart"
-  },
-  "settingsRelay1Hop": "Relay · 1 hop",
-  "@settingsRelay1Hop": {
     "description": "screens/settings_screen.dart"
   },
   "settingsOnion3Hops": "Onion · 3 hops",
@@ -8973,9 +8772,6 @@
   "@bridgesThisLineIsTooLong": {
     "description": "screens/bridges_screen.dart"
   },
-  "@bridgesOurRelayUsuallyGets": {
-    "description": "screens/bridges_screen.dart"
-  },
   "transportBridgeError": "Last error",
   "bridgesDirect": "Direct",
   "bridgesAskingTheTorProject": "Asking the Tor Project what works here…",
@@ -9252,7 +9048,6 @@
   "@bridgesNothingGotThrough": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesOurRelayUsuallyGets": "Our relay is one plain connection and usually gets through. Or let Kryfo find a way by itself.",
   "@bridgesSavedLines": {
     "description": "screens/bridges_screen.dart"
   },
@@ -11531,17 +11326,13 @@
   "@bridgesNoneUntilOnion": {
     "description": "screens/bridges_screen.dart: the \"In use\" value while relay or fast mode is on, where no bridge is used"
   },
-  "bridgesRelayWorksWhereTor": "Relay mode works where Tor is blocked, and you can switch back any time.",
+  "bridgesRelayWorksWhereTor": "Fast works where Tor is blocked, and you can switch back any time.",
   "@bridgesRelayWorksWhereTor": {
     "description": "bridge_mode.dart: the one line when automatic found no way in, over the button that switches to relay mode"
   },
-  "bridgesRelayThisNetworkSees": "Relay mode gets through where Tor is blocked, but this network can see you connect to Kryfo.",
+  "bridgesRelayThisNetworkSees": "Fast gets through where Tor is blocked, but this network can see you connect to Kryfo.",
   "@bridgesRelayThisNetworkSees": {
     "description": "bridge_mode.dart: the one line when automatic found no way in, for someone who said Tor is blocked or watched: what relay mode costs on this network"
-  },
-  "onboardingRelayThisNetworkSees": "This network can see you connect to Kryfo. Our relay sees your address.",
-  "@onboardingRelayThisNetworkSees": {
-    "description": "screens/onboarding_screen.dart: the cost under relay on the send step, for someone who said Tor is blocked or watched and took relay mode"
   },
   "settingsLicences": "Licences",
   "@settingsLicences": {
@@ -11617,10 +11408,6 @@
   "settingsCopyLinkHint": "Copy link",
   "@settingsCopyLinkHint": {
     "description": "screens/settings_screen.dart, screens/licences_screen.dart: what a screen reader says a tap on a source link row does"
-  },
-  "appRelayNotAnswering": "Relay not answering",
-  "@appRelayNotAnswering": {
-    "description": "app/gates.dart: the home pill in relay mode while its relay has not answered for a while"
   },
   "motionNoRelayYet": "NO RELAY YET",
   "@motionNoRelayYet": {
@@ -12531,5 +12318,202 @@
   "helloSentOld": "Request sent. If they use an older Kryfo, they'll need to update first.",
   "@helloSentOld": {
     "description": "after a v3 link is read: a hello went to its owner, and an owner on an older version cannot answer it"
+  },
+  "modesPickHow": "Pick how your messages travel. You can change it any time.",
+  "@modesPickHow": {
+    "description": "Speed and privacy page, the line under the title"
+  },
+  "modesPrivate": "Private",
+  "@modesPrivate": {
+    "description": "name of the Tor route, a card title"
+  },
+  "modesPrivateTag": "Tor · bridges when needed",
+  "@modesPrivateTag": {
+    "description": "small line under the Private card title"
+  },
+  "modesPrivateLine": "Nobody learns your IP address or who you are, not even our servers. Finds a way around blocks by itself.",
+  "@modesPrivateLine": {
+    "description": "Private card, what it means"
+  },
+  "modesDefault": "Default",
+  "@modesDefault": {
+    "description": "small chip on the Private card"
+  },
+  "modesFastTag": "Straight to our servers",
+  "@modesFastTag": {
+    "description": "small line under the Fast card title"
+  },
+  "modesFastLine": "Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you're connected, and never log or keep it. Never what you say. Your contacts never see it.",
+  "@modesFastLine": {
+    "description": "Fast card, what it means and who sees the IP address"
+  },
+  "modesFastConnected": "Fast · connected",
+  "@modesFastConnected": {
+    "description": "status of the Fast route, on its card and on the home pill"
+  },
+  "modesFastConnecting": "Fast · connecting",
+  "@modesFastConnecting": {
+    "description": "status of the Fast route while it connects"
+  },
+  "modesFastDown": "Fast · our servers aren't answering",
+  "@modesFastDown": {
+    "description": "status of the Fast route while neither server answers"
+  },
+  "modesBackupReady": "A backup is always ready, so you stay connected even if one goes down.",
+  "@modesBackupReady": {
+    "description": "Fast card, under its status"
+  },
+  "modesDetails": "Details",
+  "@modesDetails": {
+    "description": "small link on the Fast card to the servers page"
+  },
+  "modesBothLine": "Both keep every message end-to-end encrypted. Only who can see your IP address changes.",
+  "@modesBothLine": {
+    "description": "Speed and privacy page, under the two cards"
+  },
+  "modesConnectionBridges": "Connection and bridges",
+  "@modesConnectionBridges": {
+    "description": "link at the bottom of the page while Private is chosen"
+  },
+  "modesWhatServersSee": "What our servers can see",
+  "@modesWhatServersSee": {
+    "description": "link at the bottom of the page while Fast is chosen"
+  },
+  "serversTitle": "Fast servers",
+  "@serversTitle": {
+    "description": "title of the page behind Details"
+  },
+  "serversLine": "Every message goes to both servers at once. Whichever answers first carries it, and the other takes over if one stops.",
+  "@serversLine": {
+    "description": "servers page, the line at the top"
+  },
+  "serversOne": "Server 1",
+  "@serversOne": {
+    "description": "servers page, our first server"
+  },
+  "serversTwo": "Server 2 · second provider",
+  "@serversTwo": {
+    "description": "servers page, our second server, at another hosting company"
+  },
+  "serversConnected": "Connected",
+  "@serversConnected": {
+    "description": "a server row status"
+  },
+  "serversConnecting": "Connecting",
+  "@serversConnecting": {
+    "description": "a server row status"
+  },
+  "serversNotAnswering": "Not answering",
+  "@serversNotAnswering": {
+    "description": "a server row status"
+  },
+  "serversMs": "{ms} ms",
+  "@serversMs": {
+    "description": "a server row, its last round trip in milliseconds",
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "serversQuicker": "Quicker",
+  "@serversQuicker": {
+    "description": "chip on the server that answers quicker now"
+  },
+  "serversBackups": "Public relays",
+  "@serversBackups": {
+    "description": "servers page, the last way in, behind our two servers"
+  },
+  "serversBackupsLine": "Used while Server 1 is down, and only through Tor, so they never see your IP address.",
+  "@serversBackupsLine": {
+    "description": "servers page, under the public relays row"
+  },
+  "serversStandingBy": "Standing by",
+  "@serversStandingBy": {
+    "description": "public relays row status while ours answer"
+  },
+  "serversInUse": "In use",
+  "@serversInUse": {
+    "description": "public relays row status while ours are down"
+  },
+  "homeMergedTitle": "Relay and Fast are one now",
+  "@homeMergedTitle": {
+    "description": "home, one-time card after the update"
+  },
+  "homeMergedLine": "You're on Fast. A backup server is always ready, so you stay connected even if one goes down. Our servers see your IP address, never what you say.",
+  "@homeMergedLine": {
+    "description": "home, one-time card after the update"
+  },
+  "homeMergedGotIt": "Got it",
+  "@homeMergedGotIt": {
+    "description": "home, one-time card, the button that closes it"
+  },
+  "homeMergedUsePrivate": "Use Private instead",
+  "@homeMergedUsePrivate": {
+    "description": "home, one-time card, switches to the Tor route"
+  },
+  "homeOursDownTitle": "Our servers aren't answering",
+  "@homeOursDownTitle": {
+    "description": "home card while neither server answers on Fast"
+  },
+  "homeOursDownLine": "After a few minutes, when Tor gets through, messages also go through public relays, and back through our servers as soon as one answers.",
+  "@homeOursDownLine": {
+    "description": "home card while neither server answers on Fast"
+  },
+  "homeUsePrivate": "Use Private",
+  "@homeUsePrivate": {
+    "description": "button that switches to the Tor route"
+  },
+  "homeSwitchedToPrivate": "Switched to Private",
+  "@homeSwitchedToPrivate": {
+    "description": "toast after switching to the Tor route"
+  },
+  "homeUseFast": "Use Fast",
+  "@homeUseFast": {
+    "description": "button that switches to the Fast route where Tor gets nowhere"
+  },
+  "homeSwitchedToFastRoute": "Switched to Fast",
+  "@homeSwitchedToFastRoute": {
+    "description": "toast after switching to the Fast route"
+  },
+  "bridgesFastGetsThrough": "Fast goes straight to our servers and usually gets through. Or let Kryfo find a way by itself.",
+  "@bridgesFastGetsThrough": {
+    "description": "where Tor seems blocked, the line that offers Fast"
+  },
+  "appServersNotAnswering": "Servers not answering",
+  "@appServersNotAnswering": {
+    "description": "home pill while neither of our servers answers"
+  },
+  "settingsPrivateTor": "Private · Tor",
+  "@settingsPrivateTor": {
+    "description": "settings row value for the Tor route"
+  },
+  "seenOurServers": "Our servers",
+  "@seenOurServers": {
+    "description": "what we can see table, Fast column, IP address row"
+  },
+  "seenIpWhy": "On Private everything leaves through Tor and our servers see an exit node, never you. On Fast the connection goes straight to our two servers: they see your IP address while you're connected and keep no record of it. While the first one is down, Fast also uses public relays, only through Tor.",
+  "@seenIpWhy": {
+    "description": "what we can see table, why for the IP address row"
+  },
+  "onboardingHidesFromEveryone": "Hides your address from everyone, our servers included.",
+  "@onboardingHidesFromEveryone": {
+    "description": "onboarding, the Private card"
+  },
+  "onboardingFastSees": "Our servers see your address only while you're connected.",
+  "@onboardingFastSees": {
+    "description": "onboarding, the Fast card"
+  },
+  "onboardingFastNetworkSees": "This network can see you connect to Kryfo. Our servers see your address.",
+  "@onboardingFastNetworkSees": {
+    "description": "onboarding where Tor is blocked, the Fast card"
+  },
+  "onboardingKeepPrivate": "Keep Private →",
+  "@onboardingKeepPrivate": {
+    "description": "onboarding button that keeps the Tor route"
+  },
+  "onboardingSkipPrivate": "Skip · Private is a fine default",
+  "@onboardingSkipPrivate": {
+    "description": "onboarding link that skips the step"
   }
 }

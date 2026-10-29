@@ -250,6 +250,8 @@ func roomForget(privHex string, peers []string) error {
 	if _, fcPk, err := fcKeysFrom(me.priv, 0); err == nil {
 		dropAddressFiles(fcPk)
 	}
+	// what the room sent and still waits goes with it
+	topupPurgeLane(roomLane(hex.EncodeToString(me.pub[:])))
 	return nil
 }
 

@@ -296,7 +296,8 @@ func knockTorClient(lane string) (*http.Client, error) {
 
 // sends one registration to our relay on lane. a var for the tests
 var knockPublish = func(ctx context.Context, lane string, ev nostr.Event) error {
-	own := ownRelays(relaysWhenSet(ctx))
+	// the first store's entries alone: the knock table lives with it
+	own := storeEntries(relaysWhenSet(ctx), storeFirst)
 	if len(own) == 0 {
 		return fmt.Errorf("no relay")
 	}
@@ -485,7 +486,7 @@ func HaloKnockCheck() *C.char { return C.CString(knockCheck()) }
 func knockCheck() string {
 	ctx, cancel := context.WithTimeout(context.Background(), knockWait)
 	defer cancel()
-	own := ownRelays(relaysWhenSet(ctx))
+	own := storeEntries(relaysWhenSet(ctx), storeFirst)
 	if len(own) == 0 {
 		return "error: no relay"
 	}

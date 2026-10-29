@@ -118,13 +118,15 @@ void main() {
     expect(short, contains('_ when short => HaloColors.warnText'));
   });
 
-  test('the chat header tells relay from tor by their own colours', () {
+  test('the chat header tells fast from tor by their own colours', () {
     final head = _between(
       _src('lib/screens/chat_screen.dart'),
       'Icons.lock_outline,\n                            size: 10,',
       'const SizedBox(width: 4)',
     );
-    expect(head, contains('relay ? HaloColors.sky : HaloColors.violet'));
+    expect(head, contains('color: fast'));
+    expect(head, contains('? HaloColors.greenText'));
+    expect(head, contains(': HaloColors.violet'));
     expect(_accent.hasMatch(head), isFalse);
   });
 

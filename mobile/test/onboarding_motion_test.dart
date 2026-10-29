@@ -206,12 +206,12 @@ void main() {
       isChecked: on,
     );
     SemanticsNode card(String title) => t.getSemantics(find.text(title));
-    expect(card(l10n.onboardingOnion), radio(true));
-    expect(card(l10n.onboardingRelay), radio(false));
-    await t.tap(find.text(l10n.onboardingRelay));
+    expect(card(l10n.modesPrivate), radio(true));
+    expect(card(l10n.modesFast), radio(false));
+    await t.tap(find.text(l10n.modesFast));
     await t.pump();
-    expect(card(l10n.onboardingOnion), radio(false));
-    expect(card(l10n.onboardingRelay), radio(true));
+    expect(card(l10n.modesPrivate), radio(false));
+    expect(card(l10n.modesFast), radio(true));
     expect(find.text(l10n.onboardingUseThis), findsOneWidget);
     await t.pumpWidget(const SizedBox());
     sem.dispose();
@@ -260,7 +260,7 @@ void main() {
           l10n.onboardingBegin,
           l10n.onboardingUseThisName,
           l10n.onboardingContinue,
-          l10n.onboardingKeepOnion,
+          l10n.onboardingKeepPrivate,
           l10n.onboardingIUnderstand,
           l10n.onboardingGotIt,
           l10n.onboardingNotNowAddPeople,

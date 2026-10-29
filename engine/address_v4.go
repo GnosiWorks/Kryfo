@@ -159,7 +159,7 @@ func giftWrapAs(sndSk, sndPk, rcvPk, msg string) (nostr2.Event, error) {
 		return nostr2.Event{}, err
 	}
 	exp := wrapExpiry(time.Now())
-	return nip59.GiftWrap(rumor, rcvPk,
+	return giftWrapKept(rumor, rcvPk,
 		func(pt string) (string, error) { return nip44.Encrypt(pt, ck) },
 		func(e *nostr2.Event) error { return e.Sign(sndSk) },
 		func(e *nostr2.Event) { e.Tags = append(e.Tags, nostr2.Tag{"expiration", exp}) },
@@ -290,7 +290,7 @@ func helloWrap(me xid, answering [32]byte, fcPk, msg string) (nostr2.Event, erro
 		return nostr2.Event{}, err
 	}
 	exp := wrapExpiry(time.Now())
-	return nip59.GiftWrap(rumor, fcPk,
+	return giftWrapKept(rumor, fcPk,
 		func(pt string) (string, error) { return nip44.Encrypt(pt, ck) },
 		func(e *nostr2.Event) error { return e.Sign(sk) },
 		func(e *nostr2.Event) { e.Tags = append(e.Tags, nostr2.Tag{"expiration", exp}) },

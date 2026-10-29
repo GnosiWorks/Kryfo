@@ -149,3 +149,11 @@ func subscribeRelayOptions() nostr.RelayOptions {
 	}
 	return nostr.RelayOptions{PingInterval: torPingInterval, PongTimeout: torPongTimeout}
 }
+
+// the same for relay u: a backup goes through tor on every route
+func relayOptionsFor(u string) nostr.RelayOptions {
+	if isBackup(u) {
+		return nostr.RelayOptions{PingInterval: torPingInterval, PongTimeout: torPongTimeout}
+	}
+	return subscribeRelayOptions()
+}

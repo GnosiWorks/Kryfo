@@ -688,16 +688,10 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get appRelayAndFastModes =>
-      'Режим ретранслятора і швидкий режим обходять Tor і працюють швидше. Вони в налаштуваннях, у розділі «Швидкість і приватність», і кожен каже, чим за це платиш.';
-
-  @override
-  String get appViaRelay => 'Ретранслятор';
+      'Режим «Швидкий» обходиться без Tor і працює швидше. Він у налаштуваннях, у розділі швидкості й приватності, і там сказано, чим за це платиш.';
 
   @override
   String get appOffline => 'Офлайн';
-
-  @override
-  String get appFast => 'Швидкий';
 
   @override
   String get appTorOff => 'Tor вимкнено';
@@ -1750,9 +1744,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get chatSupporter => 'Прихильник';
-
-  @override
-  String get chatEncryptedViaRelay => 'Зашифровано · через ретранслятор';
 
   @override
   String get chatEncryptedDirect => 'Зашифровано · напряму';
@@ -3211,26 +3202,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get homeLeaveThemOff => 'Залишити вимкненими';
 
   @override
-  String get homeOurRelayIsQuiet => 'Наш ретранслятор мовчить';
-
-  @override
-  String get homeRelayModeUsesOnly =>
-      'Режим ретранслятора використовує лише наш власний ретранслятор, а він зараз не відповідає. Швидкий режим додає до нього публічні ретранслятори, тож повідомлення все одно доходять. У будь-якому разі все лишається запечатаним.';
-
-  @override
-  String get homeSwitchedToFast => 'Тепер швидкий режим';
-
-  @override
-  String get homeUseFastMode => 'Перейти на швидкий';
-
-  @override
   String get homeKeepWaiting => 'Чекати далі';
-
-  @override
-  String get homeSwitchedToRelay => 'Тепер через ретранслятор';
-
-  @override
-  String get homeUseOurRelay => 'Ретранслятор';
 
   @override
   String get homeOffline => 'Офлайн';
@@ -3735,41 +3707,7 @@ class AppLocalizationsUk extends AppLocalizations {
       'Чотири цифри або більше, які ти запам’ятаєш';
 
   @override
-  String get modesOnion => 'Onion';
-
-  @override
-  String get modesFullOnionRoutingThree =>
-      'Повна onion-маршрутизація, три вузли. Повідомлення йде від двох до п’яти секунд. Ніхто не бачить, з ким ти спілкуєшся.';
-
-  @override
-  String get modesSlower => 'Повільніше';
-
-  @override
-  String get modesRelay => 'Ретранслятор';
-
-  @override
-  String get modesOneSealedConnectionTo =>
-      'Одне запечатане з’єднання з власним ретранслятором Kryfo, як VPN, якому нічого записувати в журнал. Повідомлення доходять приблизно за секунду, і це працює там, де Tor заблоковано.';
-
-  @override
-  String get modesQuick => 'Швидко';
-
-  @override
-  String get modesRelayOnly => 'Лише ретранслятор';
-
-  @override
   String get modesFast => 'Швидкий';
-
-  @override
-  String get modesPlainConnectionsToEvery =>
-      'Звичайні з’єднання з кожним ретранслятором. Майже миттєво, і найменш приватно з трьох.';
-
-  @override
-  String get modesInstant => 'Миттєво';
-
-  @override
-  String get modesEveryRelayYouUse =>
-      'Кожен ретранслятор, яким ти користуєшся, а не лише наш, знає адресу, з якої ти підключаєшся. Повідомлення й далі запечатані, але сам факт надсилання - ні. За замовчуванням вимкнено і знову вимикається після перевстановлення.';
 
   @override
   String get modesNotChanged => 'Режим не змінився. Спробуй ще раз.';
@@ -3782,53 +3720,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get modesPrivacy => 'і приватність';
-
-  @override
-  String get modesChangeGloballyOrPer =>
-      'Змінюй для всіх чатів або для кожного окремо';
-
-  @override
-  String get modesSoon => 'Скоро';
-
-  @override
-  String get modesActive => 'Активний';
-
-  @override
-  String get modesSpeed2 => 'ШВИДКІСТЬ';
-
-  @override
-  String get modesHops => 'ВУЗЛИ';
-
-  @override
-  String get modesIp => 'IP';
-
-  @override
-  String get modesVisible => 'Видима';
-
-  @override
-  String get modesHidden => 'Прихована';
-
-  @override
-  String modesHeadsUp(Object warning) {
-    return '*Увага:* $warning';
-  }
-
-  @override
-  String get modesOnionIsTheDefault =>
-      'Onion - режим за замовчуванням, і так буде, доки ти його не зміниш. Зміна діє з наступного повідомлення.';
-
-  @override
-  String get modesFastMode => 'Швидкий режим';
-
-  @override
-  String get modesPlainConnectionsToEveryRelayQuicker =>
-      'Звичайні з’єднання з кожним ретранслятором. Швидше, і ретранслятори можуть бачити твою IP-адресу. Повідомлення в будь-якому разі лишаються наскрізно зашифрованими.';
-
-  @override
-  String get modesTurnOnFastMode => 'Увімкнути швидкий режим';
-
-  @override
-  String get modesKeepItOff => 'Не вмикати';
 
   @override
   String get movedWipeThisPhone => 'Стерти Kryfo з цього телефона?';
@@ -4253,22 +4144,8 @@ class AppLocalizationsUk extends AppLocalizations {
       'Це можна будь-коли змінити в налаштуваннях - для всіх чатів або для одного.';
 
   @override
-  String get onboardingOnion => 'Onion';
-
-  @override
   String get onboardingSlowerAMessageTakes =>
       'Повільніше. Повідомлення йде від двох до п’яти секунд.';
-
-  @override
-  String get onboardingHidesYourAddressFrom =>
-      'Приховує твою адресу від усіх, зокрема від нашого ретранслятора.';
-
-  @override
-  String get onboardingRelay => 'Ретранслятор';
-
-  @override
-  String get onboardingOurRelaySeesYour =>
-      'Наш ретранслятор бачить твою адресу. Більше ніхто.';
 
   @override
   String get onboardingAboutASecondWorks =>
@@ -4279,24 +4156,7 @@ class AppLocalizationsUk extends AppLocalizations {
       'Режим «Авто» сам знаходить спосіб обійти блокування.';
 
   @override
-  String get onboardingFast => 'Швидкий';
-
-  @override
-  String get onboardingEveryRelayYouUse =>
-      'Кожен ретранслятор, яким ти користуєшся, бачить твою адресу. Найменш приватний з трьох.';
-
-  @override
-  String get onboardingNearInstant => 'Майже миттєво.';
-
-  @override
-  String get onboardingKeepOnion => 'Лишити Onion →';
-
-  @override
   String get onboardingUseThis => 'Обрати цей →';
-
-  @override
-  String get onboardingSkipOnionIsA =>
-      'Пропустити · Onion - добрий вибір за замовчуванням';
 
   @override
   String get onboardingThreeThingsThen => 'Три речі,\nі *можна починати*.';
@@ -5254,16 +5114,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get seenYourIpAddress => 'Твоя IP-адреса';
 
   @override
-  String get seenOurRelay => 'Наш ретран-слятор';
-
-  @override
-  String get seenEveryRelay => 'Усі ретран-слятори';
-
-  @override
-  String get seenOnOnionEverythingLeaves =>
-      'В Onion усе виходить через Tor, і ретранслятор бачить вихідний вузол, ніколи не тебе. У режимі ретранслятора з’єднання йде прямо на наш власний ретранслятор: ніщо не пересилає твою адресу далі й ніщо не записується, але саме це з’єднання бачимо ми. У швидкому режимі кожен публічний ретранслятор дізнається про твоє підключення, але не те, з ким ти говориш і що кажеш.';
-
-  @override
   String get seenYourContactGraph => 'Твій граф контактів';
 
   @override
@@ -5319,12 +5169,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Шар ratchet-шифрування і шар сховища стандартні. Шар, що їх поєднує, наш, і ніхто незалежний його не перевіряв. Це альфа-версія.';
 
   @override
-  String get seenOnion => 'Onion';
-
-  @override
-  String get seenRelay => 'Ретрансл.';
-
-  @override
   String get seenFast => 'Швидкий';
 
   @override
@@ -5359,9 +5203,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsTorRouting => 'Маршрутизація Tor';
 
   @override
-  String get settingsOffMode => 'Вимкнено · ретранслятор';
-
-  @override
   String get settingsOffFastMode => 'Вимкнено · швидкий режим';
 
   @override
@@ -5375,9 +5216,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settingsFast => 'Швидкий';
-
-  @override
-  String get settingsRelay1Hop => 'Ретранслятор · 1 вузол';
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 вузли';
@@ -7444,10 +7282,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get bridgesTheTorProjectSGuess => 'За версією проєкту Tor';
 
   @override
-  String get bridgesOurRelayUsuallyGets =>
-      'Наш ретранслятор працює через одне звичайне з’єднання і зазвичай пробивається. Або хай Kryfo сам знайде шлях.';
-
-  @override
   String get bridgesUseThisBridge => 'Використати цей міст';
 
   @override
@@ -9299,15 +9133,11 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get bridgesRelayWorksWhereTor =>
-      'Режим ретранслятора працює там, де Tor заблоковано, а повернутися можна будь-коли.';
+      'Режим «Швидкий» працює там, де Tor заблоковано, і повернутися можна будь-коли.';
 
   @override
   String get bridgesRelayThisNetworkSees =>
-      'Режим ретранслятора проходить там, де Tor заблоковано, але ця мережа може бачити, що ти підключаєшся до Kryfo.';
-
-  @override
-  String get onboardingRelayThisNetworkSees =>
-      'Ця мережа може бачити, що ти підключаєшся до Kryfo. Наш ретранслятор бачить твою адресу.';
+      'Режим «Швидкий» проходить там, де Tor заблоковано, але ця мережа може бачити, що ти підключаєшся до Kryfo.';
 
   @override
   String get settingsLicences => 'Ліцензії';
@@ -9373,9 +9203,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Скопіювати посилання';
-
-  @override
-  String get appRelayNotAnswering => 'Ретранслятор мовчить';
 
   @override
   String get motionNoRelayYet => 'РЕТРАНСЛЯТОРА ПОКИ НЕМАЄ';
@@ -10127,4 +9954,164 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get helloSentOld =>
       'Запит надіслано. Якщо в них старіша версія Kryfo, спершу їм треба оновитися.';
+
+  @override
+  String get modesPickHow =>
+      'Обери, як ідуть твої повідомлення. Це можна змінити будь-коли.';
+
+  @override
+  String get modesPrivate => 'Приватний';
+
+  @override
+  String get modesPrivateTag => 'Tor · мости за потреби';
+
+  @override
+  String get modesPrivateLine =>
+      'Ніхто не дізнається твою IP-адресу чи хто ти, навіть наші сервери. Сам знаходить обхід блокувань.';
+
+  @override
+  String get modesDefault => 'Типово';
+
+  @override
+  String get modesFastTag => 'Напряму до наших серверів';
+
+  @override
+  String get modesFastLine =>
+      'Без Tor повідомлення приходять швидше й витрачають менше заряду. Наші сервери бачать твою IP-адресу лише поки ти підключений і ніколи її не записують і не зберігають. І ніколи не бачать, що ти пишеш. Твої контакти її ніколи не бачать.';
+
+  @override
+  String get modesFastConnected => 'Швидкий · підключено';
+
+  @override
+  String get modesFastConnecting => 'Швидкий · підключення';
+
+  @override
+  String get modesFastDown => 'Швидкий · наші сервери не відповідають';
+
+  @override
+  String get modesBackupReady =>
+      'Запасний завжди напоготові, тож зв’язок не зникне, навіть якщо один впаде.';
+
+  @override
+  String get modesDetails => 'Докладніше';
+
+  @override
+  String get modesBothLine =>
+      'Обидва шифрують кожне повідомлення наскрізно. Змінюється лише те, хто бачить твою IP-адресу.';
+
+  @override
+  String get modesConnectionBridges => 'Підключення і мости';
+
+  @override
+  String get modesWhatServersSee => 'Що бачать наші сервери';
+
+  @override
+  String get serversTitle => 'Сервери режиму «Швидкий»';
+
+  @override
+  String get serversLine =>
+      'Кожне повідомлення йде одразу на обидва сервери. Доставляє той, хто відповість першим, а якщо один зупиниться, його підхопить другий.';
+
+  @override
+  String get serversOne => 'Сервер 1';
+
+  @override
+  String get serversTwo => 'Сервер 2 · інший хостинг';
+
+  @override
+  String get serversConnected => 'Підключено';
+
+  @override
+  String get serversConnecting => 'Підключення';
+
+  @override
+  String get serversNotAnswering => 'Не відповідає';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms мс';
+  }
+
+  @override
+  String get serversQuicker => 'Швидший';
+
+  @override
+  String get serversBackups => 'Публічні ретранслятори';
+
+  @override
+  String get serversBackupsLine =>
+      'Використовуються, поки Сервер 1 недоступний, і лише через Tor, тож твою IP-адресу вони не бачать.';
+
+  @override
+  String get serversStandingBy => 'Напоготові';
+
+  @override
+  String get serversInUse => 'Використовуються';
+
+  @override
+  String get homeMergedTitle => 'Ретранслятор і Швидкий тепер одне';
+
+  @override
+  String get homeMergedLine =>
+      'Ти на режимі «Швидкий». Запасний сервер завжди напоготові, тож зв’язок не зникне, навіть якщо один впаде. Наші сервери бачать твою IP-адресу, але ніколи не бачать, що ти пишеш.';
+
+  @override
+  String get homeMergedGotIt => 'Зрозуміло';
+
+  @override
+  String get homeMergedUsePrivate => 'Краще Приватний';
+
+  @override
+  String get homeOursDownTitle => 'Наші сервери не відповідають';
+
+  @override
+  String get homeOursDownLine =>
+      'За кілька хвилин, коли Tor проб’ється, повідомлення підуть ще й через публічні ретранслятори, а щойно один із наших серверів відповість, знову через нього.';
+
+  @override
+  String get homeUsePrivate => 'Приватний';
+
+  @override
+  String get homeSwitchedToPrivate => 'Увімкнено Приватний';
+
+  @override
+  String get homeUseFast => 'Швидкий';
+
+  @override
+  String get homeSwitchedToFastRoute => 'Увімкнено Швидкий';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'Швидкий іде напряму до наших серверів і зазвичай проходить. Або нехай Kryfo сам знайде шлях.';
+
+  @override
+  String get appServersNotAnswering => 'Сервери не відповідають';
+
+  @override
+  String get settingsPrivateTor => 'Приватний · Tor';
+
+  @override
+  String get seenOurServers => 'Наші сервери';
+
+  @override
+  String get seenIpWhy =>
+      'У режимі «Приватний» усе йде через Tor, і наші сервери бачать вихідний вузол, а не тебе. У режимі «Швидкий» з’єднання йде напряму до двох наших серверів: вони бачать твою IP-адресу, поки ти підключений, і нічого про неї не зберігають. Поки перший недоступний, «Швидкий» використовує ще й публічні ретранслятори, лише через Tor.';
+
+  @override
+  String get onboardingHidesFromEveryone =>
+      'Приховує твою адресу від усіх, зокрема від наших серверів.';
+
+  @override
+  String get onboardingFastSees =>
+      'Наші сервери бачать твою адресу лише поки ти підключений.';
+
+  @override
+  String get onboardingFastNetworkSees =>
+      'Ця мережа може бачити, що ти підключаєшся до Kryfo. Наші сервери бачать твою адресу.';
+
+  @override
+  String get onboardingKeepPrivate => 'Залишити Приватний →';
+
+  @override
+  String get onboardingSkipPrivate => 'Пропустити · Приватний типово підійде';
 }

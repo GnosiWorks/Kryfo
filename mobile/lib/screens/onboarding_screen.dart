@@ -1193,7 +1193,7 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
 }
 
 // ---- 04 how your messages travel ----
-// three ways, each with its cost in plain words, onion picked already. one
+// two ways, each with its cost in plain words, private picked already. one
 // tap skips it and keeps the safest.
 
 class _TransportScreen extends StatefulWidget {
@@ -1206,8 +1206,8 @@ class _TransportScreen extends StatefulWidget {
 class _TransportScreenState extends State<_TransportScreen> {
   // said tor is blocked or watched at the start
   final bool _blocked = appState.bridge.skipDirect;
-  // relay on when this step opens, taken where nothing got through: picked
-  // here, onion one tap away
+  // fast on when this step opens, taken where nothing got through: picked
+  // here, private one tap away
   final bool _relayTaken = appState.sendMode == 'balanced';
   late String _pick = _relayTaken ? 'balanced' : 'private';
   bool _busy = false;
@@ -1237,9 +1237,9 @@ class _TransportScreenState extends State<_TransportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // tor blocked or watched: onion through a bridge only. relay and fast
-    // are plain connections a watcher sees, and stay in settings. relay
-    // taken where nothing got through stays the pick
+    // tor blocked or watched: private through a bridge only. fast is a
+    // plain connection a watcher sees, and stays in settings. fast taken
+    // where nothing got through stays the pick
     if (_blocked) {
       return _StepPage(
         footer: [_Cta(label: l10n.onboardingContinue, onTap: _go)],
@@ -1250,7 +1250,7 @@ class _TransportScreenState extends State<_TransportScreen> {
           const SizedBox(height: 24),
           ...staggerAll([
             _ModeCard(
-              title: l10n.onboardingOnion,
+              title: l10n.modesPrivate,
               cost: l10n.onboardingSlowerAMessageTakes,
               gain: l10n.onboardingAutoFindsAWay,
               on: _relayTaken && _pick == 'private',
@@ -1260,10 +1260,10 @@ class _TransportScreenState extends State<_TransportScreen> {
             ),
             if (_relayTaken) ...[
               const SizedBox(height: 10),
-              // this network sees the plain connection to our relay
+              // this network sees the plain connection to our servers
               _ModeCard(
-                title: l10n.onboardingRelay,
-                cost: l10n.onboardingRelayThisNetworkSees,
+                title: l10n.modesFast,
+                cost: l10n.onboardingFastNetworkSees,
                 gain: l10n.onboardingAboutASecondWorks,
                 on: _pick == 'balanced',
                 onTap: () => setState(() => _pick = 'balanced'),
@@ -1277,16 +1277,16 @@ class _TransportScreenState extends State<_TransportScreen> {
       footer: [
         _Cta(
           label: _pick == 'private'
-              ? l10n.onboardingKeepOnion
+              ? l10n.onboardingKeepPrivate
               : l10n.onboardingUseThis,
           onTap: _go,
         ),
         const SizedBox(height: 2),
         Center(
           child: _TextLink(
-            label: l10n.onboardingSkipOnionIsA,
+            label: l10n.onboardingSkipPrivate,
             onTap: () async {
-              // skip means onion. make it so rather than assume it.
+              // skip means private. make it so rather than assume it.
               if (!await _save('private')) return;
               if (mounted) widget.onContinue();
             },
@@ -1300,27 +1300,20 @@ class _TransportScreenState extends State<_TransportScreen> {
         const SizedBox(height: 24),
         ...staggerAll([
           _ModeCard(
-            title: l10n.onboardingOnion,
+            title: l10n.modesPrivate,
             cost: l10n.onboardingSlowerAMessageTakes,
-            gain: l10n.onboardingHidesYourAddressFrom,
+            gain: l10n.onboardingHidesFromEveryone,
             on: _pick == 'private',
             onTap: () => setState(() => _pick = 'private'),
           ),
           const SizedBox(height: 10),
+          // relay and fast are one route: our two servers
           _ModeCard(
-            title: l10n.onboardingRelay,
-            cost: l10n.onboardingOurRelaySeesYour,
+            title: l10n.modesFast,
+            cost: l10n.onboardingFastSees,
             gain: l10n.onboardingAboutASecondWorks,
             on: _pick == 'balanced',
             onTap: () => setState(() => _pick = 'balanced'),
-          ),
-          const SizedBox(height: 10),
-          _ModeCard(
-            title: l10n.onboardingFast,
-            cost: l10n.onboardingEveryRelayYouUse,
-            gain: l10n.onboardingNearInstant,
-            on: _pick == 'fast',
-            onTap: () => setState(() => _pick = 'fast'),
           ),
         ]),
       ],
