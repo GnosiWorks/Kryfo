@@ -288,15 +288,8 @@ extension AppStateDoor on AppState {
   Future<int> identForSeal(String peer) async {
     final found = <int>{};
     for (final d in [live, ?_openVault]) {
-      final db = await d.open();
-      for (final r in await db.query(
-        'contacts',
-        columns: ['ident'],
-        where: 'halo_id = ?',
-        whereArgs: [peer],
-      )) {
-        found.add(r['ident'] as int? ?? kMainIdent);
-      }
+      final r = await d.getContact(peer);
+      if (r != null) found.add((r['ident'] as num?)?.toInt() ?? kMainIdent);
     }
     if (found.length > 1) throw const OtherIdentity('two identities');
     final ident = found.isEmpty ? kMainIdent : found.single;
@@ -318,14 +311,12 @@ extension AppStateDoor on AppState {
     bool outside = false,
   }) async {
     final ident = await identForSeal(peer);
-    final rows = await identityRows(await live.open());
-    // no identity but the main one: nothing to keep apart, and its frames
-    // go as they always did
-    if (ident == kMainIdent &&
-        rows.every((r) => r.id == kMainIdent) &&
-        _identStores.isEmpty) {
+    // no contact on any other identity and none opened: the main identity
+    // alone, nothing to keep apart, and its frames go as they always did
+    if (ident == kMainIdent && _idents.isEmpty && _identStores.isEmpty) {
       return (ident, frame);
     }
+    final rows = await identityRows(await live.open());
     final face = await faceOf(ident);
     final others = [
       for (final r in rows)

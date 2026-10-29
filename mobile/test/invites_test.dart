@@ -118,9 +118,9 @@ void main() {
     expect(spk.single['invite_id'], row.id);
     expect((await fcKeysOf(db, kMainIdent)).keys, [row.id]);
     expect((await currentMainInvite(db, kMainIdent))!.id, row.id);
-    // only the main identity's main invite shows a face
+    // only the main identity shows a face, and never on a roster invite
     await expectLater(
-      makeInvite(db, ss, kind: kInviteOneTime, fcPkOf: _fcPkOf, face: _face),
+      makeInvite(db, ss, kind: kInviteRoster, fcPkOf: _fcPkOf, face: _face),
       throwsArgumentError,
     );
   });
@@ -170,7 +170,7 @@ void main() {
     final b = Uint8List.fromList(List.generate(40, (i) => i * 7));
     final l = inviteLink(b);
     expect(l, startsWith(kInviteLinkPrefix));
-    expect(l, isNot(contains('=')));
+    expect(l.substring(kInviteLinkPrefix.length), isNot(contains('=')));
     expect(inviteOfLink(l), b);
     expect(inviteOfLink('  $l\n'), b);
     expect(isV4Link(l), isTrue);

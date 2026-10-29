@@ -37,14 +37,17 @@ Future<String> pairArgOf(int ident, String xHex) async {
       throw PairRefused('container (${e.runtimeType})');
     }
     try {
-      for (final r in await db.query(
-        'contacts',
-        columns: ['ident'],
-        where: 'lower(xpub) = ? OR ikey = ?',
-        whereArgs: [x, key],
-      )) {
-        final i = r['ident'] as int? ?? kMainIdent;
-        if (i != ident) throw const PairRefused('another identity');
+      // xpub as written (lowercase), ikey for any row claimed
+      for (final (col, v) in [('xpub', x), ('ikey', key)]) {
+        for (final r in await db.query(
+          'contacts',
+          columns: ['ident'],
+          where: '$col = ?',
+          whereArgs: [v],
+        )) {
+          final i = r['ident'] as int? ?? kMainIdent;
+          if (i != ident) throw const PairRefused('another identity');
+        }
       }
       final p = await pairOf(db, ident, key);
       if (p.conv == kConvSeeded) {

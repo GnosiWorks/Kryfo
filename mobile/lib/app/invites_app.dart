@@ -149,14 +149,20 @@ Future<bool> _onInviteKeys(String cipher) async {
   } catch (_) {
     return false;
   }
-  final db = await live.open();
-  return (await db.query(
-    'invites',
-    columns: ['id'],
-    where: 'ident = ? AND spk_id = ?',
-    whereArgs: [signalSession.ident, spk],
-    limit: 1,
-  )).isNotEmpty;
+  // rows that do not read: the store the opener would open in is the same
+  // file, so nothing opens on an invite's keys then either
+  try {
+    final db = await live.open();
+    return (await db.query(
+      'invites',
+      columns: ['id'],
+      where: 'ident = ? AND spk_id = ?',
+      whereArgs: [signalSession.ident, spk],
+      limit: 1,
+    )).isNotEmpty;
+  } catch (_) {
+    return false;
+  }
 }
 
 /// the identity and invite id an invite address's lines are tagged with
@@ -344,13 +350,38 @@ extension AppStateInvites on AppState {
     if (!frame.startsWith(kEnvelopePrefix)) return frame;
     // rows that do not read add nothing: the far side refuses an opener
     // without its seed, so nothing goes on the wrong addresses
-    final DatabaseExecutor db;
+    final ({int ident, String key, String invite, Uint8List seed})? o;
     try {
-      db = await live.open();
+      o = await _openHello(peer);
     } catch (e) {
       dlog('v4 opener: rows not read (${e.runtimeType})');
       return frame;
     }
+    if (o == null) return frame;
+    final j =
+        jsonDecode(frame.substring(kEnvelopePrefix.length))
+            as Map<String, dynamic>;
+    j['pg'] = 4;
+    j['as'] = _hexOf(o.seed);
+    // the face signature only with the face: a frame with no words shows
+    // none
+    if (o.ident == kMainIdent && j['e'] != null) {
+      final fs = engine.faceSign(
+        _hexOf(faceText(signalSession.identity.public, _bytesOfHex(o.invite))),
+      );
+      if (fs.length != 128) throw const OtherIdentity('no face signature');
+      j['fs'] = fs;
+    }
+    return '$kEnvelopePrefix${jsonEncode(j)}';
+  }
+
+  // the v4 first contact to [peer] that waits for its answer: my identity,
+  // their key, their invite's id and the pair's seed. null with none, and
+  // its row goes once they answered
+  Future<({int ident, String key, String invite, Uint8List seed})?> _openHello(
+    String peer,
+  ) async {
+    final db = await live.open();
     final c = await db.query(
       'contacts',
       columns: ['xpub', 'back_paired', 'ident'],
@@ -358,9 +389,9 @@ extension AppStateInvites on AppState {
       whereArgs: [peer],
       limit: 1,
     );
-    if (c.isEmpty) return frame;
+    if (c.isEmpty) return null;
     final key = identityKeyHex(c.first['xpub'] as String?);
-    if (key == null) return frame;
+    if (key == null) return null;
     final ident = c.first['ident'] as int? ?? kMainIdent;
     final o = await db.query(
       'hellos',
@@ -369,37 +400,24 @@ extension AppStateInvites on AppState {
       whereArgs: [ident, kHelloOpen, key],
       limit: 1,
     );
-    if (o.isEmpty) return frame;
+    if (o.isEmpty) return null;
     if ((c.first['back_paired'] as int? ?? 0) == 1) {
       await db.delete(
         'hellos',
         where: 'ident = ? AND way = ? AND peer = ?',
         whereArgs: [ident, kHelloOpen, key],
       );
-      return frame;
+      return null;
     }
     final p = await pairOf(db, ident, key);
-    if (p.conv != kConvSeeded || p.seed == null) return frame;
-    final j =
-        jsonDecode(frame.substring(kEnvelopePrefix.length))
-            as Map<String, dynamic>;
-    j['pg'] = 4;
-    j['as'] = _hexOf(p.seed!);
-    // the face signature only with the face: a frame with no words shows
-    // none
-    if (ident == kMainIdent && j['e'] != null) {
-      final fs = engine.faceSign(
-        _hexOf(
-          faceText(
-            signalSession.identity.public,
-            _bytesOfHex(o.first['invite_id'] as String),
-          ),
-        ),
-      );
-      if (fs.length != 128) throw const OtherIdentity('no face signature');
-      j['fs'] = fs;
-    }
-    return '$kEnvelopePrefix${jsonEncode(j)}';
+    final seed = p.seed;
+    if (p.conv != kConvSeeded || seed == null) return null;
+    return (
+      ident: ident,
+      key: key,
+      invite: o.first['invite_id'] as String,
+      seed: seed,
+    );
   }
 
   /// a hello to the owner of [inv], an invite without a bundle (a qr):
