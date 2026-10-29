@@ -8,6 +8,17 @@ import 'avatar_mark.dart';
 
 // how many distinct avatars exist
 int get avatarChoiceCount => _palettes.length * markCount * rotCount;
+
+/// the face a new name starts with, drawn from its words: the same words
+/// give the same face, and the profile changes it
+int autoFace(String seed) {
+  // the last four bytes are the hash of the whole seed
+  final b = _seedBytes('face:$seed');
+  final k = b.length - 4;
+  final n = b[k] | (b[k + 1] << 8) | (b[k + 2] << 16);
+  return n % avatarChoiceCount;
+}
+
 int get avatarPaletteCount => _palettes.length;
 
 class KryfoAvatar extends StatelessWidget {

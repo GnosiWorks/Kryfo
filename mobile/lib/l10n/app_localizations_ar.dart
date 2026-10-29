@@ -3258,6 +3258,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeAddSomeone => 'إضافة شخص';
 
   @override
+  String get homeInviteSomeone => 'ادعُ شخصًا';
+
+  @override
   String get homeArchived => 'الأرشيف';
 
   @override
@@ -3802,11 +3805,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'نُسخت الدعوة · تُزال من الحافظة بعد ٦٠ ث';
 
   @override
-  String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'أضفني على Kryfo. اسمي هناك ⁨$myId⁩\n\nاضغط لإضافتي:\n⁨$uri⁩\n\nتطبيق Kryfo للمراسلة الخاصة. بلا رقم هاتف، وبلا بريد إلكتروني.';
-  }
-
-  @override
   String get myKryfoAddMeOnKryfo2 => 'أضفني على Kryfo';
 
   @override
@@ -4134,70 +4132,46 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingThreeWords => 'ثلاث كلمات. *لك وحدك.*';
 
   @override
-  String get onboardingPickA => 'اختر *وجهًا*.';
-
-  @override
-  String get onboardingDrawnOnThisPhone =>
-      'يُرسم على هذا الهاتف من رقم، ولا يُرفع أبدًا. غيّره متى شئت.';
-
-  @override
-  String get onboardingThePeopleYouMessage => 'يراه أيضًا من تراسلهم';
-
-  @override
-  String get onboardingKeepMyInitial => 'الإبقاء على حرفي الأول';
-
-  @override
-  String get onboardingThatOne => 'هذا ←';
-
-  @override
   String get onboardingContinue => 'متابعة ←';
 
   @override
-  String get onboardingHowYourMessages => 'كيف *تنتقل* رسائلك.';
+  String get onboardingNameHeadline => '*اسم عام*، إن أردت.';
 
   @override
-  String get onboardingYouCanChangeThis =>
-      'يمكنك تغيير هذا في أي وقت من الإعدادات، للجميع أو لمحادثة واحدة.';
+  String get onboardingNameLine =>
+      'يتيح الاسم العام للناس أن يجدوك. التخطي يبقيك أكثر خصوصية، ويمكنك دائمًا إضافة اسم لاحقًا.';
 
   @override
-  String get onboardingSlowerAMessageTakes =>
-      'أبطأ. تستغرق الرسالة من ثانيتين إلى خمس ثوانٍ.';
+  String get onboardingNameSkip => 'التخطي الآن ←';
 
   @override
-  String get onboardingAboutASecondWorks => 'نحو ثانية. يعمل حيث يُحجب Tor.';
+  String onboardingNameClaim(Object handle) {
+    return 'احجز ⁦@$handle⁩ ←';
+  }
 
   @override
-  String get onboardingAutoFindsAWay =>
-      'يجد «تلقائي» طريقًا لتجاوز الحجب بنفسه.';
+  String get onboardingInviteHeadline => 'والآن، *ادعُ شخصًا*.';
+
+  @override
+  String get onboardingInviteLead =>
+      'أرسل رابطًا عبر أي تطبيق مراسلة. يفتح Kryfo، أو يريهم من أين يحصلون عليه.';
+
+  @override
+  String get onboardingInviteSomeone => 'ادعُ شخصًا ←';
+
+  @override
+  String get onboardingInviteGettingReady => 'جارٍ تجهيز رابطك…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'أضفني على Kryfo. اسمي هناك ⁨$myId⁩\n\nاضغط لإضافتي:\n⁨$link⁩\n\nليس لديك Kryfo بعد؟ احصل عليه من هنا:\n⁨$download⁩\n\nتطبيق Kryfo للمراسلة الخاصة. بلا رقم هاتف، وبلا بريد إلكتروني.';
+  }
+
+  @override
+  String get inviteNotReady => 'رابطك جاهز تقريبًا. حاول مجددًا بعد لحظة.';
 
   @override
   String get onboardingUseThis => 'استخدام هذا ←';
-
-  @override
-  String get onboardingThreeThingsThen => 'ثلاثة أشياء،\nثم *تدخل*.';
-
-  @override
-  String get onboardingEverythingElseTheApp =>
-      'وكل ما عدا ذلك سيخبرك به التطبيق حين يهمّ.';
-
-  @override
-  String get onboardingYourNameIsThreeWords => 'اسمك ثلاث كلمات';
-
-  @override
-  String get onboardingThatIsTheWhole =>
-      'هذه هي الهوية كلها. لا رقم ولا بريد يمكن أن يتسرّب أو يُبحث عنه. من تتحدث معهم يرون هذه الكلمات والوجه الذي اخترته.';
-
-  @override
-  String get onboardingNobodyCanReachYou =>
-      'لا أحد يستطيع الوصول إليك حتى تسمح له بالدخول';
-
-  @override
-  String get onboardingAStrangerWithYour =>
-      'الغريب الذي يعرف كلماتك لا يستطيع إلا أن يطرق الباب. تنتظر رسالته الأولى في الطلبات حتى توافق، ويمكنك الرفض دون أن يعلم أبدًا.';
-
-  @override
-  String get onboardingTheFirstConnectionTakesAMinute =>
-      'الاتصال الأول يستغرق دقيقة';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -4206,9 +4180,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get onboardingYourIdentityLivesOn =>
       'هويتك موجودة على هذا الهاتف. انسخها احتياطيًا من الإعدادات حين تكون مستعدًا.';
-
-  @override
-  String get onboardingIUnderstand => 'فهمت ←';
 
   @override
   String get onboardingOneQuiet => '*إشعار* واحد هادئ.';
@@ -4228,13 +4199,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingGotIt => 'حسنًا ←';
 
   @override
-  String get onboardingNow => 'والآن، *أضف شخصًا*.';
-
-  @override
-  String get onboardingTheAppIsReady =>
-      'التطبيق جاهز. لا أحد يستطيع مراسلتك حتى تضيفه أو تسمح له بالدخول.';
-
-  @override
   String get onboardingEveryWayToAdd => 'كل طرق إضافة شخص';
 
   @override
@@ -4246,9 +4210,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onboardingPointTheCameraAt => 'وجّه الكاميرا نحو رمزه';
-
-  @override
-  String get onboardingTheAppIsReadyWhenYou => 'التطبيق جاهز حين تكون مستعدًا.';
 
   @override
   String get onboardingNotNowAddPeople => 'ليس الآن · أضف الناس لاحقًا';
@@ -10047,21 +10008,4 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'في الخاص يخرج كل شيء عبر Tor وترى خوادمنا عقدة خروج، لا أنت أبدًا. في السريع يذهب الاتصال مباشرة إلى خادمينا: يريان عنوان IP الخاص بك أثناء اتصالك ولا يحتفظان بأي سجل له. أثناء توقف الأول يستخدم السريع أيضًا مُرحِّلات عامة، عبر Tor فقط.';
-
-  @override
-  String get onboardingHidesFromEveryone =>
-      'يخفي عنوانك عن الجميع، بما في ذلك خوادمنا.';
-
-  @override
-  String get onboardingFastSees => 'ترى خوادمنا عنوانك أثناء اتصالك فقط.';
-
-  @override
-  String get onboardingFastNetworkSees =>
-      'يمكن لهذه الشبكة أن ترى اتصالك بـ Kryfo. ترى خوادمنا عنوانك.';
-
-  @override
-  String get onboardingKeepPrivate => 'الإبقاء على الخاص ←';
-
-  @override
-  String get onboardingSkipPrivate => 'تخطٍّ · الخاص خيار افتراضي جيد';
 }

@@ -3154,6 +3154,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeAddSomeone => 'Thêm người';
 
   @override
+  String get homeInviteSomeone => 'Mời một người';
+
+  @override
   String get homeArchived => 'Đã lưu trữ';
 
   @override
@@ -3682,11 +3685,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Đã sao chép lời mời · tự xóa sau 60s';
 
   @override
-  String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Thêm tôi trên Kryfo. Tên của tôi ở đó là $myId\n\nChạm để thêm tôi:\n$uri\n\nKryfo là ứng dụng nhắn tin riêng tư. Không cần số điện thoại, không cần email.';
-  }
-
-  @override
   String get myKryfoAddMeOnKryfo2 => 'Thêm tôi trên Kryfo';
 
   @override
@@ -4017,72 +4015,47 @@ class AppLocalizationsVi extends AppLocalizations {
   String get onboardingThreeWords => 'Ba từ. *Của riêng bạn.*';
 
   @override
-  String get onboardingPickA => 'Chọn một *khuôn mặt*.';
-
-  @override
-  String get onboardingDrawnOnThisPhone =>
-      'Được vẽ trên điện thoại này từ một con số, không bao giờ tải lên. Đổi bất cứ lúc nào bạn muốn.';
-
-  @override
-  String get onboardingThePeopleYouMessage =>
-      'Những người mà bạn nhắn tin cũng thấy khuôn mặt này';
-
-  @override
-  String get onboardingKeepMyInitial => 'Giữ chữ cái đầu';
-
-  @override
-  String get onboardingThatOne => 'Cái này →';
-
-  @override
   String get onboardingContinue => 'Tiếp tục →';
 
   @override
-  String get onboardingHowYourMessages => 'Cách tin nhắn của bạn *đi*.';
+  String get onboardingNameHeadline => 'Một *@tên* công khai, nếu bạn muốn.';
 
   @override
-  String get onboardingYouCanChangeThis =>
-      'Bạn có thể đổi bất cứ lúc nào trong cài đặt, cho mọi người hoặc cho một cuộc trò chuyện.';
+  String get onboardingNameLine =>
+      'Tên công khai giúp mọi người tìm thấy bạn. Bỏ qua giúp bạn riêng tư hơn, bạn luôn có thể thêm sau.';
 
   @override
-  String get onboardingSlowerAMessageTakes =>
-      'Chậm hơn. Mỗi tin nhắn mất từ hai đến năm giây.';
+  String get onboardingNameSkip => 'Bỏ qua lúc này →';
 
   @override
-  String get onboardingAboutASecondWorks =>
-      'Khoảng một giây. Hoạt động cả ở nơi Tor bị chặn.';
+  String onboardingNameClaim(Object handle) {
+    return 'Lấy @$handle →';
+  }
 
   @override
-  String get onboardingAutoFindsAWay =>
-      'Chế độ Tự động tự tìm cách vượt qua việc chặn.';
+  String get onboardingInviteHeadline => 'Giờ thì, *mời một người*.';
+
+  @override
+  String get onboardingInviteLead =>
+      'Gửi một liên kết qua bất kỳ ứng dụng nhắn tin nào. Liên kết mở Kryfo, hoặc chỉ chỗ tải về.';
+
+  @override
+  String get onboardingInviteSomeone => 'Mời một người →';
+
+  @override
+  String get onboardingInviteGettingReady => 'Đang chuẩn bị liên kết…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'Thêm tôi trên Kryfo. Tên của tôi ở đó là $myId\n\nChạm để thêm tôi:\n$link\n\nChưa có Kryfo? Tải tại đây:\n$download\n\nKryfo là ứng dụng nhắn tin riêng tư. Không cần số điện thoại, không cần email.';
+  }
+
+  @override
+  String get inviteNotReady =>
+      'Liên kết của bạn sắp xong. Thử lại sau giây lát.';
 
   @override
   String get onboardingUseThis => 'Dùng chế độ này →';
-
-  @override
-  String get onboardingThreeThingsThen => 'Ba điều thôi,\nrồi *vào luôn*.';
-
-  @override
-  String get onboardingEverythingElseTheApp =>
-      'Mọi thứ khác, ứng dụng sẽ cho bạn biết khi cần.';
-
-  @override
-  String get onboardingYourNameIsThreeWords => 'Tên bạn là ba từ';
-
-  @override
-  String get onboardingThatIsTheWhole =>
-      'Đó là toàn bộ danh tính. Không có số điện thoại hay email nào để bị lộ hoặc bị tra cứu. Những người trò chuyện với bạn sẽ thấy ba từ này và khuôn mặt bạn đã chọn.';
-
-  @override
-  String get onboardingNobodyCanReachYou =>
-      'Không ai liên lạc được với bạn cho đến khi bạn cho phép';
-
-  @override
-  String get onboardingAStrangerWithYour =>
-      'Người lạ biết ba từ của bạn chỉ có thể gõ cửa. Tin nhắn đầu tiên của họ chờ trong mục yêu cầu cho đến khi bạn đồng ý, và bạn có thể từ chối mà họ không bao giờ biết.';
-
-  @override
-  String get onboardingTheFirstConnectionTakesAMinute =>
-      'Lần kết nối đầu tiên mất một phút';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -4091,9 +4064,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get onboardingYourIdentityLivesOn =>
       'Danh tính của bạn nằm trên điện thoại này. Hãy sao lưu nó trong cài đặt khi bạn sẵn sàng.';
-
-  @override
-  String get onboardingIUnderstand => 'Tôi hiểu rồi →';
 
   @override
   String get onboardingOneQuiet => 'Một *thông báo* lặng lẽ.';
@@ -4113,13 +4083,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get onboardingGotIt => 'Đã hiểu →';
 
   @override
-  String get onboardingNow => 'Giờ thì, *thêm một người*.';
-
-  @override
-  String get onboardingTheAppIsReady =>
-      'Ứng dụng đã sẵn sàng. Không ai nhắn tin được cho bạn cho đến khi bạn thêm họ hoặc cho họ vào.';
-
-  @override
   String get onboardingEveryWayToAdd => 'Mọi cách để thêm người';
 
   @override
@@ -4131,10 +4094,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get onboardingPointTheCameraAt => 'Hướng máy ảnh vào mã của họ';
-
-  @override
-  String get onboardingTheAppIsReadyWhenYou =>
-      'Ứng dụng sẵn sàng bất cứ khi nào bạn muốn.';
 
   @override
   String get onboardingNotNowAddPeople => 'Để sau · thêm người sau';
@@ -9900,22 +9859,4 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'Với Riêng tư, mọi thứ đi qua Tor và máy chủ của chúng tôi chỉ thấy một nút thoát, không bao giờ thấy bạn. Với Nhanh, kết nối đi thẳng tới hai máy chủ của chúng tôi: chúng thấy địa chỉ IP của bạn khi bạn đang kết nối và không lưu lại gì. Khi máy chủ đầu tiên ngừng, Nhanh dùng thêm relay công cộng, chỉ qua Tor.';
-
-  @override
-  String get onboardingHidesFromEveryone =>
-      'Ẩn địa chỉ của bạn với mọi người, kể cả máy chủ của chúng tôi.';
-
-  @override
-  String get onboardingFastSees =>
-      'Máy chủ của chúng tôi chỉ thấy địa chỉ của bạn khi bạn đang kết nối.';
-
-  @override
-  String get onboardingFastNetworkSees =>
-      'Mạng này có thể thấy bạn kết nối tới Kryfo. Máy chủ của chúng tôi thấy địa chỉ của bạn.';
-
-  @override
-  String get onboardingKeepPrivate => 'Giữ Riêng tư →';
-
-  @override
-  String get onboardingSkipPrivate => 'Bỏ qua · Riêng tư là mặc định tốt';
 }

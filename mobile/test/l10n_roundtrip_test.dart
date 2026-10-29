@@ -83,20 +83,6 @@ void main() {
       l.seenIpWhy,
       "On Private everything leaves through Tor and our servers see an exit node, never you. On Fast the connection goes straight to our two servers: they see your IP address while you're connected and keep no record of it. While the first one is down, Fast also uses public relays, only through Tor.",
     );
-    expect(
-      l.onboardingHidesFromEveryone,
-      "Hides your address from everyone, our servers included.",
-    );
-    expect(
-      l.onboardingFastSees,
-      "Our servers see your address only while you're connected.",
-    );
-    expect(
-      l.onboardingFastNetworkSees,
-      "This network can see you connect to Kryfo. Our servers see your address.",
-    );
-    expect(l.onboardingKeepPrivate, "Keep Private →");
-    expect(l.onboardingSkipPrivate, "Skip · Private is a fine default");
     expect(l.atmosphereNone, "None");
     expect(l.atmosphereEmber, "Ember");
     expect(l.atmosphereDusk, "Dusk");
@@ -1453,6 +1439,7 @@ void main() {
       "Scan their code, send them a link, or type the @handle they gave you.",
     );
     expect(l.homeAddSomeone, "Add someone");
+    expect(l.homeInviteSomeone, "Invite someone");
     expect(l.homeArchived, "Archived");
     expect(l.home1Chat(0), "0 chats");
     expect(l.home1Chat(1), "1 chat");
@@ -1756,10 +1743,6 @@ void main() {
     expect(l.movedIMNotMoving, "I'm not moving after all");
     expect(l.myKryfoAHandleIs3, "A handle is 3 to 20 letters, digits or _");
     expect(l.myKryfoInviteCopiedClearsIn, "Invite copied · clears in 60s");
-    expect(
-      l.myKryfoAddMeOnKryfo("<myId>", "<uri>"),
-      "Add me on Kryfo. My name there is <myId>\n\nTap to add me:\n<uri>\n\nKryfo is a private messenger. No phone number, no email.",
-    );
     expect(l.myKryfoAddMeOnKryfo2, "Add me on Kryfo");
     expect(l.myKryfoAddSomeone, "Add someone");
     expect(
@@ -1877,54 +1860,30 @@ void main() {
     expect(l.onboardingTryAnother, "Try another");
     expect(l.onboardingUseThisName, "Use this name →");
     expect(l.onboardingThreeWords, "Three words. *Yours alone.*");
-    expect(l.onboardingPickA, "Pick a *face*.");
-    expect(
-      l.onboardingDrawnOnThisPhone,
-      "Drawn on this phone from a number, never uploaded. Change it whenever you like.",
-    );
-    expect(
-      l.onboardingThePeopleYouMessage,
-      "The people you message see this too",
-    );
-    expect(l.onboardingKeepMyInitial, "Keep my initial");
-    expect(l.onboardingThatOne, "That one →");
     expect(l.onboardingContinue, "Continue →");
-    expect(l.onboardingHowYourMessages, "How your messages *travel*.");
+    expect(l.onboardingNameHeadline, "A public *@name*, if you like.");
     expect(
-      l.onboardingYouCanChangeThis,
-      "You can change this any time in settings, for everyone or for one chat.",
+      l.onboardingNameLine,
+      "A public name lets people find you. Skipping keeps you more private, you can always add one later.",
+    );
+    expect(l.onboardingNameSkip, "Skip for now →");
+    expect(l.onboardingNameClaim("<handle>"), "Claim @<handle> →");
+    expect(l.onboardingInviteHeadline, "Now, *invite someone*.");
+    expect(
+      l.onboardingInviteLead,
+      "Send a link in any messenger. It opens Kryfo, or shows them where to get it.",
+    );
+    expect(l.onboardingInviteSomeone, "Invite someone →");
+    expect(l.onboardingInviteGettingReady, "Getting your link ready…");
+    expect(
+      l.inviteShareText("<myId>", "<link>", "<download>"),
+      "Add me on Kryfo. My name there is <myId>\n\nTap to add me:\n<link>\n\nNo Kryfo yet? Get it here:\n<download>\n\nKryfo is a private messenger. No phone number, no email.",
     );
     expect(
-      l.onboardingSlowerAMessageTakes,
-      "Slower. A message takes two to five seconds.",
-    );
-    expect(
-      l.onboardingAboutASecondWorks,
-      "About a second. Works where Tor is blocked.",
+      l.inviteNotReady,
+      "Your link is almost ready. Try again in a moment.",
     );
     expect(l.onboardingUseThis, "Use this →");
-    expect(l.onboardingThreeThingsThen, "Three things,\nthen *you're in*.");
-    expect(
-      l.onboardingEverythingElseTheApp,
-      "Everything else the app will tell you when it matters.",
-    );
-    expect(l.onboardingYourNameIsThreeWords, "Your name is three words");
-    expect(
-      l.onboardingThatIsTheWhole,
-      "That is the whole identity. There is no number or email to leak or look up. People you talk to see these words and the face you picked.",
-    );
-    expect(
-      l.onboardingNobodyCanReachYou,
-      "Nobody can reach you until you let them in",
-    );
-    expect(
-      l.onboardingAStrangerWithYour,
-      "A stranger with your words can only knock. Their first message waits in requests until you say yes, and you can say no without them ever knowing.",
-    );
-    expect(
-      l.onboardingTheFirstConnectionTakesAMinute,
-      "The first connection takes a minute",
-    );
     expect(
       l.onboardingKryfoBuildsAPrivateRouteBefore,
       "Kryfo builds a private route before it sends anything. While you are offline, messages wait and arrive when you are back.",
@@ -1933,7 +1892,6 @@ void main() {
       l.onboardingYourIdentityLivesOn,
       "Your identity lives on this phone. Back it up from settings when you are ready.",
     );
-    expect(l.onboardingIUnderstand, "I understand →");
     expect(l.onboardingOneQuiet, "One quiet *notification*.");
     expect(
       l.onboardingAndroidNeedsAVisible,
@@ -1948,11 +1906,6 @@ void main() {
       "It never buzzes. Turn it off and messages wait until you open the app again.",
     );
     expect(l.onboardingGotIt, "Got it →");
-    expect(l.onboardingNow, "Now, *add someone*.");
-    expect(
-      l.onboardingTheAppIsReady,
-      "The app is ready. Nobody can message you until you add them or let them in.",
-    );
     expect(l.onboardingEveryWayToAdd, "Every way to add someone");
     expect(
       l.onboardingShowYourCodeSend,
@@ -1960,7 +1913,6 @@ void main() {
     );
     expect(l.onboardingScanTheirs, "Scan theirs");
     expect(l.onboardingPointTheCameraAt, "Point the camera at their code");
-    expect(l.onboardingTheAppIsReadyWhenYou, "The app is ready when you are.");
     expect(l.onboardingNotNowAddPeople, "Not now · add people later");
     expect(l.openLockedOpened, "Opened");
     expect(l.openLockedOpenALockedFile, "Open a locked file");
@@ -3554,10 +3506,6 @@ void main() {
     expect(
       l.torBootSplashNeverTriesTorPlainly,
       "Kryfo never tries Tor plainly here. It finds a bridge that works, or you can pick your own next.",
-    );
-    expect(
-      l.onboardingAutoFindsAWay,
-      "Automatic finds a way around the block by itself.",
     );
     expect(l.pairCodeKeyNumber, "Key number");
     expect(l.pairCodeNumberDiffers, "The number is different");

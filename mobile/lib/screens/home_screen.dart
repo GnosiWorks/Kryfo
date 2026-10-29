@@ -24,6 +24,8 @@ import '../store.dart';
 import '../widgets/nav_bar.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
+import '../invite_share.dart' show shareInvite;
+import '../desktop/desktop_mode.dart' show canShareOut;
 import '../widgets/room_countdown.dart';
 import '../widgets/room_join.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -1720,6 +1722,20 @@ class _EmptyStateState extends State<_EmptyState>
     super.dispose();
   }
 
+  bool _sharing = false;
+
+  // no share sheet on a desktop: the add page has the link to copy
+  Future<void> _invite() async {
+    if (!canShareOut) return widget.onAdd();
+    if (_sharing) return;
+    _sharing = true;
+    try {
+      await shareInvite(context);
+    } finally {
+      _sharing = false;
+    }
+  }
+
   Widget _mark() {
     const core = 56.0, room = 92.0;
     return SizedBox.square(
@@ -1810,8 +1826,10 @@ class _EmptyStateState extends State<_EmptyState>
               style: HaloType.sans(size: 13, color: HaloColors.text2),
             ),
             const SizedBox(height: 22),
+            // one clear way: the invite goes out in any messenger. the
+            // code and the @name sit under it
             PressScale(
-              onTap: widget.onAdd,
+              onTap: _invite,
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
@@ -1833,7 +1851,7 @@ class _EmptyStateState extends State<_EmptyState>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons.add_rounded,
+                      Icons.ios_share_rounded,
                       size: 16,
                       color: HaloColors.onAmber,
                     ),
@@ -1841,7 +1859,7 @@ class _EmptyStateState extends State<_EmptyState>
                     // a large font wraps the label instead of cutting it
                     Flexible(
                       child: Text(
-                        l10n.homeAddSomeone,
+                        l10n.homeInviteSomeone,
                         textAlign: TextAlign.center,
                         style: HaloType.sans(
                           size: 13.5,
@@ -1852,6 +1870,28 @@ class _EmptyStateState extends State<_EmptyState>
                       ),
                     ),
                   ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Semantics(
+              button: true,
+              child: PressScale(
+                onTap: widget.onAdd,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Text(
+                    l10n.homeAddSomeone,
+                    textAlign: TextAlign.center,
+                    style: HaloType.sans(
+                      size: 13,
+                      weight: FontWeight.w500,
+                      color: HaloColors.amberText,
+                    ),
+                  ),
                 ),
               ),
             ),

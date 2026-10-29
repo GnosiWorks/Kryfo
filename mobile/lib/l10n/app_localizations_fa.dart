@@ -3172,6 +3172,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get homeAddSomeone => 'افزودن یک نفر';
 
   @override
+  String get homeInviteSomeone => 'دعوت از یک نفر';
+
+  @override
   String get homeArchived => 'بایگانی';
 
   @override
@@ -3704,11 +3707,6 @@ class AppLocalizationsFa extends AppLocalizations {
       'دعوت کپی شد · ۶۰ ثانیه‌ی دیگر از بریده‌دان حذف می‌شود';
 
   @override
-  String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'مرا در Kryfo اضافه کنید. نام من آنجا ⁨$myId⁩ است\n\nبرای افزودن من بزنید:\n⁨$uri⁩\n\nبرنامه‌ی Kryfo یک پیام‌رسان خصوصی است. بدون شماره تلفن، بدون ایمیل.';
-  }
-
-  @override
   String get myKryfoAddMeOnKryfo2 => 'مرا در Kryfo اضافه کنید';
 
   @override
@@ -4040,72 +4038,47 @@ class AppLocalizationsFa extends AppLocalizations {
   String get onboardingThreeWords => 'سه واژه. *فقط مال شما.*';
 
   @override
-  String get onboardingPickA => 'یک *چهره* انتخاب کنید.';
-
-  @override
-  String get onboardingDrawnOnThisPhone =>
-      'روی همین گوشی از یک عدد کشیده می‌شود و هرگز بارگذاری نمی‌شود. هر وقت خواستید عوضش کنید.';
-
-  @override
-  String get onboardingThePeopleYouMessage =>
-      'کسانی که به آن‌ها پیام می‌دهید هم این را می‌بینند';
-
-  @override
-  String get onboardingKeepMyInitial => 'حرف اولم بماند';
-
-  @override
-  String get onboardingThatOne => 'همین ←';
-
-  @override
   String get onboardingContinue => 'ادامه ←';
 
   @override
-  String get onboardingHowYourMessages => 'پیام‌هایتان چطور *سفر می‌کنند*.';
+  String get onboardingNameHeadline => 'یک *نام عمومی*، اگر بخواهید.';
 
   @override
-  String get onboardingYouCanChangeThis =>
-      'هر وقت خواستید می‌توانید این را در تنظیمات تغییر دهید، برای همه یا برای یک گفت‌وگو.';
+  String get onboardingNameLine =>
+      'نام عمومی به دیگران امکان می‌دهد شما را پیدا کنند. رد کردنش شما را خصوصی‌تر نگه می‌دارد، و همیشه می‌توانید بعداً یکی اضافه کنید.';
 
   @override
-  String get onboardingSlowerAMessageTakes =>
-      'کندتر. هر پیام دو تا پنج ثانیه طول می‌کشد.';
+  String get onboardingNameSkip => 'فعلاً رد شوید ←';
 
   @override
-  String get onboardingAboutASecondWorks =>
-      'حدود یک ثانیه. جایی که Tor مسدود است هم کار می‌کند.';
+  String onboardingNameClaim(Object handle) {
+    return 'گرفتن ⁦@$handle⁩ ←';
+  }
 
   @override
-  String get onboardingAutoFindsAWay =>
-      '«خودکار» خودش راهی برای دور زدن مسدودسازی پیدا می‌کند.';
+  String get onboardingInviteHeadline => 'حالا *یک نفر را دعوت کنید*.';
+
+  @override
+  String get onboardingInviteLead =>
+      'یک پیوند در هر پیام‌رسانی بفرستید. Kryfo را باز می‌کند، یا نشان می‌دهد از کجا آن را بگیرند.';
+
+  @override
+  String get onboardingInviteSomeone => 'دعوت از یک نفر ←';
+
+  @override
+  String get onboardingInviteGettingReady => 'در حال آماده کردن پیوند شما…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'مرا در Kryfo اضافه کنید. نام من آنجا ⁨$myId⁩ است\n\nبرای افزودن من بزنید:\n⁨$link⁩\n\nهنوز Kryfo ندارید؟ از اینجا بگیرید:\n⁨$download⁩\n\nبرنامه‌ی Kryfo یک پیام‌رسان خصوصی است. بدون شماره تلفن، بدون ایمیل.';
+  }
+
+  @override
+  String get inviteNotReady =>
+      'پیوند شما تقریباً آماده است. کمی بعد دوباره امتحان کنید.';
 
   @override
   String get onboardingUseThis => 'استفاده از این ←';
-
-  @override
-  String get onboardingThreeThingsThen => 'سه نکته،\nبعد *وارد می‌شوید*.';
-
-  @override
-  String get onboardingEverythingElseTheApp =>
-      'بقیه‌ی چیزها را برنامه هر وقت لازم شد می‌گوید.';
-
-  @override
-  String get onboardingYourNameIsThreeWords => 'نام شما سه واژه است';
-
-  @override
-  String get onboardingThatIsTheWhole =>
-      'کل هویت همین است. هیچ شماره یا ایمیلی نیست که لو برود یا جست‌وجو شود. کسانی که با آن‌ها حرف می‌زنید این واژه‌ها و چهره‌ای را که انتخاب کرده‌اید می‌بینند.';
-
-  @override
-  String get onboardingNobodyCanReachYou =>
-      'هیچ‌کس نمی‌تواند به شما برسد، مگر اینکه راهش بدهید';
-
-  @override
-  String get onboardingAStrangerWithYour =>
-      'غریبه‌ای که واژه‌های شما را دارد فقط می‌تواند در بزند. پیام اولش در درخواست‌ها منتظر می‌ماند تا شما بله بگویید، و می‌توانید نه بگویید بی‌آنکه او هرگز بفهمد.';
-
-  @override
-  String get onboardingTheFirstConnectionTakesAMinute =>
-      'اولین اتصال یک دقیقه طول می‌کشد';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -4114,9 +4087,6 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get onboardingYourIdentityLivesOn =>
       'هویت شما روی این گوشی زندگی می‌کند. هر وقت آماده بودید، از تنظیمات از آن پشتیبان بگیرید.';
-
-  @override
-  String get onboardingIUnderstand => 'متوجه شدم ←';
 
   @override
   String get onboardingOneQuiet => 'یک *اعلان* بی‌صدا.';
@@ -4136,13 +4106,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get onboardingGotIt => 'فهمیدم ←';
 
   @override
-  String get onboardingNow => 'حالا *یک نفر را اضافه کنید*.';
-
-  @override
-  String get onboardingTheAppIsReady =>
-      'برنامه آماده است. هیچ‌کس نمی‌تواند به شما پیام دهد تا وقتی او را اضافه کنید یا راهش بدهید.';
-
-  @override
   String get onboardingEveryWayToAdd => 'همه‌ی راه‌های افزودن';
 
   @override
@@ -4154,10 +4117,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get onboardingPointTheCameraAt => 'دوربین را رو به کد او بگیرید';
-
-  @override
-  String get onboardingTheAppIsReadyWhenYou =>
-      'هر وقت شما آماده باشید، برنامه آماده است.';
 
   @override
   String get onboardingNotNowAddPeople =>
@@ -9932,22 +9891,4 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'در خصوصی همه‌چیز از راه Tor خارج می‌شود و سرورهای ما یک گره خروجی می‌بینند، نه شما را. در سریع اتصال مستقیم به دو سرور ما می‌رود: تا وقتی وصل هستید آدرس IP شما را می‌بینند و هیچ سابقه‌ای از آن نگه نمی‌دارند. تا وقتی اولی از کار افتاده، سریع از رله‌های عمومی هم استفاده می‌کند، فقط از راه Tor.';
-
-  @override
-  String get onboardingHidesFromEveryone =>
-      'آدرس شما را از همه پنهان می‌کند، حتی از سرورهای ما.';
-
-  @override
-  String get onboardingFastSees =>
-      'سرورهای ما آدرس شما را فقط تا وقتی وصل هستید می‌بینند.';
-
-  @override
-  String get onboardingFastNetworkSees =>
-      'این شبکه می‌تواند ببیند به Kryfo وصل می‌شوید. سرورهای ما آدرس شما را می‌بینند.';
-
-  @override
-  String get onboardingKeepPrivate => 'همان خصوصی ←';
-
-  @override
-  String get onboardingSkipPrivate => 'رد شدن · خصوصی پیش‌فرض خوبی است';
 }

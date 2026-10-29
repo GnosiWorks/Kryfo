@@ -4982,6 +4982,12 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'Invite someone'**
+  String get homeInviteSomeone;
+
+  /// screens/home_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'Archived'**
   String get homeArchived;
 
@@ -5804,12 +5810,6 @@ abstract class AppLocalizations {
   /// screens/my_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Add me on Kryfo. My name there is {myId}\n\nTap to add me:\n{uri}\n\nKryfo is a private messenger. No phone number, no email.'**
-  String myKryfoAddMeOnKryfo(Object myId, Object uri);
-
-  /// screens/my_kryfo_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Add me on Kryfo'**
   String get myKryfoAddMeOnKryfo2;
 
@@ -6362,116 +6362,74 @@ abstract class AppLocalizations {
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Pick a *face*.'**
-  String get onboardingPickA;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Drawn on this phone from a number, never uploaded. Change it whenever you like.'**
-  String get onboardingDrawnOnThisPhone;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'The people you message see this too'**
-  String get onboardingThePeopleYouMessage;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Keep my initial'**
-  String get onboardingKeepMyInitial;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'That one →'**
-  String get onboardingThatOne;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Continue →'**
   String get onboardingContinue;
 
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'How your messages *travel*.'**
-  String get onboardingHowYourMessages;
+  /// **'A public *@name*, if you like.'**
+  String get onboardingNameHeadline;
 
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'You can change this any time in settings, for everyone or for one chat.'**
-  String get onboardingYouCanChangeThis;
+  /// **'A public name lets people find you. Skipping keeps you more private, you can always add one later.'**
+  String get onboardingNameLine;
 
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Slower. A message takes two to five seconds.'**
-  String get onboardingSlowerAMessageTakes;
+  /// **'Skip for now →'**
+  String get onboardingNameSkip;
 
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'About a second. Works where Tor is blocked.'**
-  String get onboardingAboutASecondWorks;
+  /// **'Claim @{handle} →'**
+  String onboardingNameClaim(Object handle);
 
-  /// screens/onboarding_screen.dart: on the Onion card when the person said Tor is blocked at the start
+  /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Automatic finds a way around the block by itself.'**
-  String get onboardingAutoFindsAWay;
+  /// **'Now, *invite someone*.'**
+  String get onboardingInviteHeadline;
+
+  /// screens/onboarding_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Send a link in any messenger. It opens Kryfo, or shows them where to get it.'**
+  String get onboardingInviteLead;
+
+  /// screens/onboarding_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Invite someone →'**
+  String get onboardingInviteSomeone;
+
+  /// screens/onboarding_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Getting your link ready…'**
+  String get onboardingInviteGettingReady;
+
+  /// invite_share.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Add me on Kryfo. My name there is {myId}\n\nTap to add me:\n{link}\n\nNo Kryfo yet? Get it here:\n{download}\n\nKryfo is a private messenger. No phone number, no email.'**
+  String inviteShareText(Object myId, Object link, Object download);
+
+  /// invite_share.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Your link is almost ready. Try again in a moment.'**
+  String get inviteNotReady;
 
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Use this →'**
   String get onboardingUseThis;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Three things,\nthen *you\'re in*.'**
-  String get onboardingThreeThingsThen;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Everything else the app will tell you when it matters.'**
-  String get onboardingEverythingElseTheApp;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Your name is three words'**
-  String get onboardingYourNameIsThreeWords;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'That is the whole identity. There is no number or email to leak or look up. People you talk to see these words and the face you picked.'**
-  String get onboardingThatIsTheWhole;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Nobody can reach you until you let them in'**
-  String get onboardingNobodyCanReachYou;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'A stranger with your words can only knock. Their first message waits in requests until you say yes, and you can say no without them ever knowing.'**
-  String get onboardingAStrangerWithYour;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'The first connection takes a minute'**
-  String get onboardingTheFirstConnectionTakesAMinute;
 
   /// screens/onboarding_screen.dart
   ///
@@ -6484,12 +6442,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your identity lives on this phone. Back it up from settings when you are ready.'**
   String get onboardingYourIdentityLivesOn;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'I understand →'**
-  String get onboardingIUnderstand;
 
   /// screens/onboarding_screen.dart
   ///
@@ -6524,18 +6476,6 @@ abstract class AppLocalizations {
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Now, *add someone*.'**
-  String get onboardingNow;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'The app is ready. Nobody can message you until you add them or let them in.'**
-  String get onboardingTheAppIsReady;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Every way to add someone'**
   String get onboardingEveryWayToAdd;
 
@@ -6556,12 +6496,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Point the camera at their code'**
   String get onboardingPointTheCameraAt;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'The app is ready when you are.'**
-  String get onboardingTheAppIsReadyWhenYou;
 
   /// screens/onboarding_screen.dart
   ///
@@ -15988,36 +15922,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'On Private everything leaves through Tor and our servers see an exit node, never you. On Fast the connection goes straight to our two servers: they see your IP address while you\'re connected and keep no record of it. While the first one is down, Fast also uses public relays, only through Tor.'**
   String get seenIpWhy;
-
-  /// onboarding, the Private card
-  ///
-  /// In en, this message translates to:
-  /// **'Hides your address from everyone, our servers included.'**
-  String get onboardingHidesFromEveryone;
-
-  /// onboarding, the Fast card
-  ///
-  /// In en, this message translates to:
-  /// **'Our servers see your address only while you\'re connected.'**
-  String get onboardingFastSees;
-
-  /// onboarding where Tor is blocked, the Fast card
-  ///
-  /// In en, this message translates to:
-  /// **'This network can see you connect to Kryfo. Our servers see your address.'**
-  String get onboardingFastNetworkSees;
-
-  /// onboarding button that keeps the Tor route
-  ///
-  /// In en, this message translates to:
-  /// **'Keep Private →'**
-  String get onboardingKeepPrivate;
-
-  /// onboarding link that skips the step
-  ///
-  /// In en, this message translates to:
-  /// **'Skip · Private is a fine default'**
-  String get onboardingSkipPrivate;
 }
 
 class _AppLocalizationsDelegate

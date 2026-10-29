@@ -156,6 +156,7 @@ import 'mentions.dart';
 import 'gifs/gif_source.dart' show sweepGifParts;
 import 'notes_export.dart' show dropNotesExports, sweepNotesExports;
 import 'handle_lookup.dart';
+import 'invite_share.dart' show kryfoInviteOf;
 import 'handle_repoint.dart';
 import 'widgets/sheet_handle.dart';
 import 'widgets/halo_sheet.dart';

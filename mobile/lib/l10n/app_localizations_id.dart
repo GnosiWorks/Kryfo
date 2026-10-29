@@ -3158,6 +3158,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get homeAddSomeone => 'Tambah orang';
 
   @override
+  String get homeInviteSomeone => 'Undang seseorang';
+
+  @override
   String get homeArchived => 'Arsip';
 
   @override
@@ -3688,11 +3691,6 @@ class AppLocalizationsId extends AppLocalizations {
       'Undangan disalin · dihapus dalam 60 dtk';
 
   @override
-  String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Tambahkan aku di Kryfo. Namaku di sana $myId\n\nKetuk untuk menambahkanku:\n$uri\n\nKryfo adalah aplikasi pesan privat. Tanpa nomor telepon, tanpa email.';
-  }
-
-  @override
   String get myKryfoAddMeOnKryfo2 => 'Tambahkan aku di Kryfo';
 
   @override
@@ -4024,72 +4022,46 @@ class AppLocalizationsId extends AppLocalizations {
   String get onboardingThreeWords => 'Tiga kata. *Hanya milikmu.*';
 
   @override
-  String get onboardingPickA => 'Pilih *wajah*.';
-
-  @override
-  String get onboardingDrawnOnThisPhone =>
-      'Digambar di ponsel ini dari sebuah angka, tidak pernah diunggah. Ganti kapan saja kamu mau.';
-
-  @override
-  String get onboardingThePeopleYouMessage =>
-      'Orang yang kamu kirimi pesan juga melihat ini';
-
-  @override
-  String get onboardingKeepMyInitial => 'Tetap pakai inisialku';
-
-  @override
-  String get onboardingThatOne => 'Yang itu →';
-
-  @override
   String get onboardingContinue => 'Lanjut →';
 
   @override
-  String get onboardingHowYourMessages => 'Cara pesanmu *berjalan*.';
+  String get onboardingNameHeadline => 'Sebuah *@nama* publik, kalau mau.';
 
   @override
-  String get onboardingYouCanChangeThis =>
-      'Kamu bisa mengubahnya kapan saja di pengaturan, untuk semua atau untuk satu obrolan.';
+  String get onboardingNameLine =>
+      'Nama publik membuat orang bisa menemukanmu. Melewatinya membuatmu lebih privat, kamu selalu bisa menambahkannya nanti.';
 
   @override
-  String get onboardingSlowerAMessageTakes =>
-      'Lebih lambat. Satu pesan butuh dua sampai lima detik.';
+  String get onboardingNameSkip => 'Lewati dulu →';
 
   @override
-  String get onboardingAboutASecondWorks =>
-      'Sekitar satu detik. Tetap jalan di tempat Tor diblokir.';
+  String onboardingNameClaim(Object handle) {
+    return 'Ambil @$handle →';
+  }
 
   @override
-  String get onboardingAutoFindsAWay =>
-      'Otomatis mencari sendiri jalan melewati blokir.';
+  String get onboardingInviteHeadline => 'Sekarang, *undang seseorang*.';
+
+  @override
+  String get onboardingInviteLead =>
+      'Kirim tautan lewat aplikasi pesan apa pun. Tautan itu membuka Kryfo, atau menunjukkan tempat mengunduhnya.';
+
+  @override
+  String get onboardingInviteSomeone => 'Undang seseorang →';
+
+  @override
+  String get onboardingInviteGettingReady => 'Menyiapkan tautanmu…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'Tambahkan aku di Kryfo. Namaku di sana $myId\n\nKetuk untuk menambahkanku:\n$link\n\nBelum punya Kryfo? Unduh di sini:\n$download\n\nKryfo adalah aplikasi pesan privat. Tanpa nomor telepon, tanpa email.';
+  }
+
+  @override
+  String get inviteNotReady => 'Tautanmu hampir siap. Coba lagi sebentar lagi.';
 
   @override
   String get onboardingUseThis => 'Pakai ini →';
-
-  @override
-  String get onboardingThreeThingsThen => 'Tiga hal,\nlalu *kamu masuk*.';
-
-  @override
-  String get onboardingEverythingElseTheApp =>
-      'Hal lain akan diberi tahu aplikasi saat dibutuhkan.';
-
-  @override
-  String get onboardingYourNameIsThreeWords => 'Namamu tiga kata';
-
-  @override
-  String get onboardingThatIsTheWhole =>
-      'Itulah seluruh identitasmu. Tidak ada nomor atau email yang bisa bocor atau dicari. Orang yang kamu ajak bicara melihat kata-kata ini dan wajah yang kamu pilih.';
-
-  @override
-  String get onboardingNobodyCanReachYou =>
-      'Tidak ada yang bisa menghubungimu sampai kamu mengizinkannya masuk';
-
-  @override
-  String get onboardingAStrangerWithYour =>
-      'Orang asing yang tahu kata-katamu hanya bisa mengetuk. Pesan pertamanya menunggu di permintaan sampai kamu bilang ya, dan kamu bisa menolak tanpa dia pernah tahu.';
-
-  @override
-  String get onboardingTheFirstConnectionTakesAMinute =>
-      'Koneksi pertama butuh satu menit';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -4098,9 +4070,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get onboardingYourIdentityLivesOn =>
       'Identitasmu tinggal di ponsel ini. Cadangkan dari pengaturan saat kamu siap.';
-
-  @override
-  String get onboardingIUnderstand => 'Aku mengerti →';
 
   @override
   String get onboardingOneQuiet => 'Satu *notifikasi* senyap.';
@@ -4121,13 +4090,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get onboardingGotIt => 'Mengerti →';
 
   @override
-  String get onboardingNow => 'Sekarang, *tambah orang*.';
-
-  @override
-  String get onboardingTheAppIsReady =>
-      'Aplikasi sudah siap. Tidak ada yang bisa mengirimimu pesan sampai kamu menambahkan atau mengizinkannya masuk.';
-
-  @override
   String get onboardingEveryWayToAdd => 'Semua cara menambah orang';
 
   @override
@@ -4139,10 +4101,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get onboardingPointTheCameraAt => 'Arahkan kamera ke kodenya';
-
-  @override
-  String get onboardingTheAppIsReadyWhenYou =>
-      'Aplikasi siap kapan pun kamu siap.';
 
   @override
   String get onboardingNotNowAddPeople =>
@@ -9911,22 +9869,4 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'Di Privat semuanya keluar lewat Tor dan server kami melihat node keluar, bukan kamu. Di Cepat koneksi langsung ke dua server kami: mereka melihat alamat IP-mu selama terhubung dan tidak menyimpan catatannya. Selama server pertama mati, Cepat juga memakai relay publik, hanya lewat Tor.';
-
-  @override
-  String get onboardingHidesFromEveryone =>
-      'Menyembunyikan alamatmu dari semua orang, termasuk server kami.';
-
-  @override
-  String get onboardingFastSees =>
-      'Server kami melihat alamatmu hanya selama kamu terhubung.';
-
-  @override
-  String get onboardingFastNetworkSees =>
-      'Jaringan ini bisa melihat kamu terhubung ke Kryfo. Server kami melihat alamatmu.';
-
-  @override
-  String get onboardingKeepPrivate => 'Tetap Privat →';
-
-  @override
-  String get onboardingSkipPrivate => 'Lewati · Privat sudah pilihan bagus';
 }
