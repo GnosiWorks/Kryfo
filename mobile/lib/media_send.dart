@@ -24,6 +24,8 @@ import 'main.dart'
         appState,
         engine,
         signalEncrypt,
+        peerXPubOf,
+        AppStateDoor,
         AppStateOutbox,
         AppStateRoute,
         AppStateProfile,
@@ -414,18 +416,25 @@ Future<String> _sendChunkedMediaInner({
             // their door holds it in memory only: the first-contact copy
             // goes too until they add us back, behind the slice's ok
             final fc = appState.peerFcFor(peerId);
-            xpub ??= await signalSession.peerXPubHex(peerId);
+            xpub ??= await peerXPubOf(peerId);
             if (fc != null && fc.isNotEmpty && xpub != null) {
               unawaited(
-                engine.sendFirstContact(xpub!, fc, cipher).then(
-                  (f) {
-                    if (f != 'ok') {
-                      dlog('media first-contact copy did not go: $f');
-                    }
-                  },
-                  onError: (Object e) =>
-                      dlog('media first-contact copy did not go: $e'),
-                ),
+                engine
+                    .sendFirstContact(
+                      appState.identOf(peerId),
+                      xpub!,
+                      fc,
+                      cipher,
+                    )
+                    .then(
+                      (f) {
+                        if (f != 'ok') {
+                          dlog('media first-contact copy did not go: $f');
+                        }
+                      },
+                      onError: (Object e) =>
+                          dlog('media first-contact copy did not go: $e'),
+                    ),
               );
             }
             break;
@@ -434,13 +443,18 @@ Future<String> _sendChunkedMediaInner({
           onionDead = true;
           dlog('media onion gave up for this send: $tor');
         }
-        xpub ??= await signalSession.peerXPubHex(peerId);
+        xpub ??= await peerXPubOf(peerId);
         // their first-contact address is the one relay route that reaches
         // them before they add us back, and the pair address is not
         // written beside it
         final fc = backPaired ? null : appState.peerFcFor(peerId);
         if (xpub != null && fc != null && fc.isNotEmpty) {
-          final fr = await engine.sendFirstContact(xpub!, fc, cipher);
+          final fr = await engine.sendFirstContact(
+            appState.identOf(peerId),
+            xpub!,
+            fc,
+            cipher,
+          );
           if (fr == 'ok') {
             sent = true;
             route = 'first-contact';
@@ -448,7 +462,11 @@ Future<String> _sendChunkedMediaInner({
           }
           lastErr = fr;
         } else if (xpub != null) {
-          final r = await engine.nostrSend(xpub!, cipher);
+          final r = await engine.nostrSend(
+            appState.identOf(peerId),
+            xpub!,
+            cipher,
+          );
           if (r == 'ok') {
             pairWay ??= await appState.pairRead(peerId, backPaired: backPaired);
             if (!backPaired && !pairWay!) {

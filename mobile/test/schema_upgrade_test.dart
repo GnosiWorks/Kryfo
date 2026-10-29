@@ -58,7 +58,8 @@ void main() {
     });
   }
 
-  test('every ALTER in the app goes through it', () {
+  // a rename (a table rebuilt with a new key, _identColumns) adds no column
+  test('every ALTER that adds a column goes through it', () {
     for (final f in [
       'lib/app/database.dart',
       'lib/router.dart',
@@ -66,7 +67,9 @@ void main() {
       'lib/devchat/support.dart',
     ]) {
       final src = File(f).readAsStringSync();
-      final all = RegExp(r"'ALTER TABLE").allMatches(src).length;
+      final all = RegExp(
+        r"'ALTER TABLE [^']*ADD COLUMN",
+      ).allMatches(src).length;
       final through = RegExp(
         r"addColumn\(\s*db,\s*'ALTER TABLE",
       ).allMatches(src).length;

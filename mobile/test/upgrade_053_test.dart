@@ -14,6 +14,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_key.dart';
+import 'package:kryfo/identities.dart';
 import 'package:kryfo/main.dart';
 import 'package:kryfo/screens/key_verification_screen.dart';
 import 'package:kryfo/signal_ffi/kryfo_signal.dart';
@@ -41,6 +42,13 @@ final _expected =
     jsonDecode(File('$_fixtures/expected.json').readAsStringSync())
         as Map<String, dynamic>;
 const _files = ['halo.db', 'halo_d.db', 'halo_v.db', 'peers.db'];
+const _identTablesForTest = [
+  'prekeys',
+  'signed_prekeys',
+  'sessions',
+  'peer_identities',
+  'kyber_prekeys',
+];
 
 Uint8List _hex(String s) => Uint8List.fromList([
   for (var i = 0; i < s.length; i += 2)
@@ -302,4 +310,156 @@ void main() {
       expect((await mine.sessionInfo(peer))!.version, 3, reason: peer);
     }
   }, skip: needsShim);
+
+  // identity v4 (version 92): the main identity is row 0, from the key and
+  // the registration id 0.5.3 kept; every contact is on it, at the
+  // addresses of 0.5 (conv 3), and every signal row is its
+  group('identity v4', () {
+    Future<Map<String, int>> counts(Database db) async => {
+      for (final t in const [
+        'prekeys',
+        'signed_prekeys',
+        'sessions',
+        'peer_identities',
+      ])
+        t: Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM $t'))!,
+    };
+
+    test('row 0 is the key 0.5.3 kept, each container its own', () async {
+      if (skip()) return;
+      for (final (f, who) in [('halo.db', me), ('halo_d.db', alice)]) {
+        final raw = await openDatabase(
+          p.absolute('$_fixtures/$f'),
+          readOnly: true,
+          singleInstance: false,
+        );
+        final reg = await raw.query(
+          'signal_meta',
+          where: 'k = ?',
+          whereArgs: ['regId'],
+        );
+        await raw.close();
+        final db = await (f == 'halo.db' ? everyday() : decoy());
+        expect(await db.getVersion(), 92, reason: f);
+        final rows = await identityRows(db);
+        expect(rows.map((r) => r.id), [kMainIdent], reason: f);
+        final row = rows.single;
+        expect(_hexOf(row.xPriv), who['x_priv'], reason: f);
+        expect(row.kind, kIdentFace, reason: f);
+        expect(row.retiredAt, isNull, reason: f);
+        if (reg.isNotEmpty) {
+          expect(row.regId, int.parse(reg.single['v'] as String), reason: f);
+        }
+      }
+    });
+
+    test(
+      'every contact is on row 0, its key claimed, its pair at conv 3',
+      () async {
+        if (skip()) return;
+        final db = await everyday();
+        final contacts = await db.query('contacts');
+        expect(contacts, isNotEmpty);
+        final keyed = <String>{};
+        for (final c in contacts) {
+          final id = c['halo_id'] as String;
+          expect(c['ident'], kMainIdent, reason: id);
+          final want = identityKeyHex(c['xpub'] as String?);
+          if (want == null) {
+            expect(c['ikey'], isNull, reason: id);
+            continue;
+          }
+          if (keyed.add(want)) expect(c['ikey'], want, reason: id);
+          expect(await contactOfKey(db, c['xpub'] as String), isNotNull);
+        }
+        final pairs = await db.query('pairs');
+        expect(pairs.map((r) => r['peer']).toSet(), keyed);
+        for (final r in pairs) {
+          expect(r['ident'], kMainIdent);
+          expect(r['conv'], kConvClassic);
+          expect(r['seed'], isNull);
+          expect(r['their_device'], 1);
+          expect(r['my_device'], 1);
+        }
+        for (final peer in [_alice, _bob, _dave]) {
+          final c = await db.query(
+            'contacts',
+            where: 'halo_id = ?',
+            whereArgs: [peer],
+          );
+          final pair = await pairOf(
+            db,
+            kMainIdent,
+            identityKeyHex(c.single['xpub'] as String)!,
+          );
+          expect(pair.conv, kConvClassic, reason: peer);
+        }
+      },
+    );
+
+    test(
+      'every signal row is row 0\'s, none lost, the invite keys kept',
+      () async {
+        if (skip()) return;
+        final raw = await openDatabase(
+          p.absolute('$_fixtures/halo.db'),
+          readOnly: true,
+          singleInstance: false,
+        );
+        final before = await counts(raw);
+        final spk = (await raw.query('signed_prekeys', where: 'id = 1')).single;
+        final sessions = {
+          for (final r in await raw.query('sessions'))
+            '${r['address']}/${r['device_id']}': base64Encode(
+              r['record'] as List<int>,
+            ),
+        };
+        await raw.close();
+        final db = await everyday();
+        expect(await counts(db), before);
+        for (final t in [
+          ..._identTablesForTest,
+          'opener_reads',
+          'kyber_used',
+        ]) {
+          expect(await db.query(t, where: 'ident != 0'), isEmpty, reason: t);
+        }
+        expect({
+          for (final r in await db.query('sessions'))
+            '${r['address']}/${r['device_id']}': base64Encode(
+              r['record'] as List<int>,
+            ),
+        }, sessions);
+        final kept = (await db.query('signed_prekeys', where: 'id = 1')).single;
+        expect(kept['record'], spk['record']);
+        expect(kept['use'], 'invite');
+        expect(kept['invite_id'], '');
+        // the first start on it makes the session prekeys, and keeps the
+        // invite's
+        final mine = await shimOn(db, _keys(me));
+        final made = await db.query(
+          'signed_prekeys',
+          where: 'use = ?',
+          whereArgs: ['session'],
+        );
+        expect(made, hasLength(1));
+        expect(made.single['ident'], kMainIdent);
+        expect(
+          await db.query('kyber_prekeys', where: "use = 'session'"),
+          hasLength(1),
+        );
+        expect(
+          (await db.query('signed_prekeys', where: 'id = 1')).single['record'],
+          spk['record'],
+        );
+        expect(mine.registrationId, (await identityRow(db, 0))!.regId);
+        // and the chats go on, both ways
+        await goesOn(
+          _Shim(mine),
+          _Shim(await shimOn(await decoy(), _keys(alice))),
+        );
+      },
+      skip: needsShim,
+    );
+  });
 }

@@ -90,7 +90,7 @@ func TestMeasureCatchup(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	start := time.Now()
-	go nostrSubscribeRunner(ctx, peerHex, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, peerHex, mainPair(peer.pub), rcv)
 	var prev time.Time
 	for round := 1; round <= rounds; round++ {
 		roundStart := time.Now()

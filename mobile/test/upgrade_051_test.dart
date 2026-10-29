@@ -21,7 +21,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'sqlite_channel.dart';
 
 const _fixtures = 'test/fixtures/upgrade_051';
-const _version = 91;
+const _version = 92;
 
 // the keys each file opens with, under the names the app keeps them by
 final _keyFile =
@@ -59,6 +59,7 @@ final _steps = <int, (Future<void> Function(Database), String)>{
   89: (groupShotsColumns, 'ALTER TABLE groups ADD COLUMN shots_on'),
   90: (dropFetchTable, 'CREATE TABLE IF NOT EXISTS file_seen'),
   91: (upgradeTo91, 'CREATE TABLE IF NOT EXISTS kyber_prekeys'),
+  92: (upgradeTo92, 'CREATE TABLE IF NOT EXISTS identities'),
 };
 
 // whether the step to [step] runs on a file at [from]. test builds took 81
@@ -77,6 +78,8 @@ const _added = {
     'shots_when',
     'caps',
     'caps_at',
+    'ident',
+    'ikey',
   ],
   'groups': [
     'ended_at',
@@ -100,11 +103,19 @@ const _added = {
   'opener_reads': ['kyber_id', 'opener'],
   'dev_opener_reads': ['kyber_id', 'opener'],
   'first_kept': ['opened_id', 'opened_plain'],
+  'identities': ['id', 'kind', 'x_priv', 'reg_id', 'created_at', 'retired_at'],
+  'pairs': ['ident', 'peer', 'their_device', 'my_device', 'conv', 'seed'],
+  'fc_keys': ['ident', 'invite_id', 'sk', 'created_at', 'retired_at'],
+  'sessions': ['ident', 'address', 'device_id', 'record'],
+  'peer_identities': ['ident', 'address', 'identity_key'],
+  'prekeys': ['ident', 'id', 'record'],
+  'signed_prekeys': ['ident', 'id', 'use', 'invite_id', 'retired_at'],
 };
 const _indexes = [
   'idx_media_chunks_group',
   'idx_group_media_owed_group',
   'idx_messages_album',
+  'idx_contacts_ikey',
 ];
 
 // what the file holds, as sqlite describes it: each table's columns by

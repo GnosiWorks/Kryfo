@@ -37,7 +37,7 @@ class _Engine implements HaloEngine {
   final shared = <String>[];
   final payloads = <String>[];
   @override
-  String firstContactPk(int counter) => 'ab' * 32;
+  String firstContactPk(int ident, int counter) => 'ab' * 32;
   @override
   Future<String> pairCodePublish(String code, String payload) async {
     shared.add(code);

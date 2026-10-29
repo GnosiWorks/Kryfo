@@ -32,7 +32,7 @@ func TestFirstContactRelaysCountsLiveLoops(t *testing.T) {
 	if n := firstContactRelays(); n != -1 {
 		t.Fatalf("no listener reads %d, not -1", n)
 	}
-	if err := subscribeFirstContact(0); err != nil {
+	if err := subscribeFirstContact(mainIdent, 0); err != nil {
 		t.Fatal(err)
 	}
 	waitFor(t, "both relays listened on", 10*time.Second, func() bool {
@@ -41,7 +41,7 @@ func TestFirstContactRelaysCountsLiveLoops(t *testing.T) {
 
 	// started again on an empty list: on no relay at all
 	setRelays(nil)
-	if err := subscribeFirstContact(0); err != nil {
+	if err := subscribeFirstContact(mainIdent, 0); err != nil {
 		t.Fatal(err)
 	}
 	waitFor(t, "the listener on no relay", 10*time.Second, func() bool {
@@ -49,7 +49,7 @@ func TestFirstContactRelaysCountsLiveLoops(t *testing.T) {
 	})
 
 	setRelays([]string{a.url()})
-	if err := subscribeFirstContact(0); err != nil {
+	if err := subscribeFirstContact(mainIdent, 0); err != nil {
 		t.Fatal(err)
 	}
 	waitFor(t, "one relay listened on", 10*time.Second, func() bool {

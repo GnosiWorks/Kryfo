@@ -29,6 +29,22 @@ typedef FourArgFnDart =
       Pointer<Utf8>,
       Pointer<Utf8>,
     );
+// the calls that seal, open, listen or derive an address: the identity
+// they run on comes first (identities.dart)
+typedef IdentFn = Pointer<Utf8> Function(Int32);
+typedef IdentFnDart = Pointer<Utf8> Function(int);
+typedef IdentOneFn = Pointer<Utf8> Function(Int32, Pointer<Utf8>);
+typedef IdentOneFnDart = Pointer<Utf8> Function(int, Pointer<Utf8>);
+typedef IdentTwoFn =
+    Pointer<Utf8> Function(Int32, Pointer<Utf8>, Pointer<Utf8>);
+typedef IdentTwoFnDart =
+    Pointer<Utf8> Function(int, Pointer<Utf8>, Pointer<Utf8>);
+typedef IdentThreeFn =
+    Pointer<Utf8> Function(Int32, Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
+typedef IdentThreeFnDart =
+    Pointer<Utf8> Function(int, Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
+typedef IdentCounterFn = Pointer<Utf8> Function(Int32, Int32);
+typedef IdentCounterFnDart = Pointer<Utf8> Function(int, int);
 typedef CounterFn = Pointer<Utf8> Function(Int32);
 typedef CounterFnDart = Pointer<Utf8> Function(int);
 typedef StrCounterFn = Pointer<Utf8> Function(Pointer<Utf8>, Int32);
@@ -44,8 +60,8 @@ class HaloEngine {
   late final CStrFnDart _myXPub;
   late final CStrFnDart _myEdPriv;
   late final CStrFnDart _myXPriv;
-  late final TwoArgFnDart _encryptFor;
-  late final TwoArgFnDart _decryptFrom;
+  late final IdentTwoFnDart _encryptFor;
+  late final IdentTwoFnDart _decryptFrom;
   late final Pointer<Utf8> Function(Pointer<Utf8>) _start;
   late final CStrFnDart _drainInbox;
   late final IntArgFnDart _setDebug;
@@ -53,9 +69,9 @@ class HaloEngine {
   late final CStrFnDart _nostrKick;
   late final CStrFnDart _memStats;
   late final OneArgFnDart _nostrInit;
-  late final OneArgFnDart _nostrSubscribe;
+  late final IdentOneFnDart _nostrSubscribe;
   late final CStrFnDart _nostrPoll;
-  late final CounterFnDart _fcPk;
+  late final IdentCounterFnDart _fcPk;
   late final CStrFnDart _txState;
   late final int Function() _torPaused;
   late final CStrFnDart _restartTor;
@@ -79,8 +95,10 @@ class HaloEngine {
     _myXPub = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMyXPubkey');
     _myEdPriv = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMyEdPrivkey');
     _myXPriv = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMyXPrivkey');
-    _encryptFor = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloEncryptFor');
-    _decryptFrom = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>(
+    _encryptFor = _lib.lookupFunction<IdentTwoFn, IdentTwoFnDart>(
+      'HaloEncryptFor',
+    );
+    _decryptFrom = _lib.lookupFunction<IdentTwoFn, IdentTwoFnDart>(
       'HaloDecryptFrom',
     );
     _start = _lib
@@ -93,11 +111,13 @@ class HaloEngine {
     _nostrKick = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloNostrKick');
     _memStats = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMemStats');
     _nostrInit = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrInit');
-    _nostrSubscribe = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
+    _nostrSubscribe = _lib.lookupFunction<IdentOneFn, IdentOneFnDart>(
       'HaloNostrSubscribe',
     );
     _nostrPoll = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloNostrPoll');
-    _fcPk = _lib.lookupFunction<CounterFn, CounterFnDart>('HaloFirstContactPk');
+    _fcPk = _lib.lookupFunction<IdentCounterFn, IdentCounterFnDart>(
+      'HaloFirstContactPk',
+    );
     _txState = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloTransportState');
     _torPaused = _lib.lookupFunction<Int32 Function(), int Function()>(
       'HaloTorPaused',
@@ -235,7 +255,7 @@ class HaloEngine {
   // offloaded to a background isolate so a slow relay never freezes the ui.
   // the 1:1 doors ask the dev gate first: a pinned key's lane is the dev
   // chat's alone
-  Future<String> nostrSend(String peerXPubHex, String b64Cipher) =>
+  Future<String> nostrSend(int ident, String peerXPubHex, String b64Cipher) =>
       devGate.nostrSend(
         peerXPubHex,
         b64Cipher,
@@ -244,6 +264,7 @@ class HaloEngine {
         out: () =>
             _sendOnIsolate((
               nostr: true,
+              ident: ident,
               a: peerXPubHex,
               b: padRumor(b64Cipher),
             )).timeout(
@@ -254,11 +275,11 @@ class HaloEngine {
       );
 
   // [fresh]: someone just added or accepted, heard without a turn
-  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) {
     _background(
       devGate.listen(
         peerXPubHex,
-        out: () => _subscribeOnIsolate(peerXPubHex, fresh: fresh),
+        out: () => _subscribeOnIsolate(ident, peerXPubHex, fresh: fresh),
         room: (priv) async {
           roomSubscribeBg(priv, peerXPubHex);
           return 'ok';
@@ -559,7 +580,50 @@ class HaloEngine {
     }
   }
 
-  String firstContactPk(int counter) => engineTake(_fcPk(counter));
+  // the main identity's v3 first-contact address at [counter]: no other
+  // identity has one (fcKeyPk)
+  String firstContactPk(int ident, int counter) =>
+      engineTake(_fcPk(ident, counter));
+
+  // the public half of an invite's random first-contact key, an error
+  // string for 32 bytes that are not a secp256k1 key
+  late final OneArgFnDart _fcKeyPk = _lib
+      .lookupFunction<OneArgFn, OneArgFnDart>('HaloFcKeyPk');
+  String fcKeyPk(String skHex) {
+    final p = skHex.toNativeUtf8();
+    try {
+      return engineTake(_fcKeyPk(p));
+    } finally {
+      freeSecret(p);
+    }
+  }
+
+  // listen on, or let go of, invite [inviteId]'s first-contact key of
+  // [ident]
+  Future<String> subscribeFcKey(int ident, String inviteId, String skHex) =>
+      _identFfiOnIsolate('HaloNostrSubscribeFcKey', ident, [inviteId, skHex]);
+  Future<String> unsubscribeFcKey(int ident, String inviteId) =>
+      _identFfiOnIsolate('HaloNostrUnsubscribeFcKey', ident, [inviteId]);
+
+  // an identity other than the main one, by its x25519 key, and let go
+  late final IdentOneFnDart _identityPut = _lib
+      .lookupFunction<IdentOneFn, IdentOneFnDart>('HaloIdentityPut');
+  late final IdentFnDart _identityDrop = _lib
+      .lookupFunction<IdentFn, IdentFnDart>('HaloIdentityDrop');
+  String identityPut(int ident, String xPrivHex) {
+    final p = xPrivHex.toNativeUtf8();
+    try {
+      return engineTake(_identityPut(ident, p));
+    } finally {
+      freeSecret(p);
+    }
+  }
+
+  String identityDrop(int ident) => engineTake(_identityDrop(ident));
+
+  // a pair a v4 first contact made: its address seed
+  Future<String> pairSeed(int ident, String peerXPubHex, String seedHex) =>
+      _identFfiOnIsolate('HaloPairSeed', ident, [peerXPubHex, seedHex]);
 
   // put an invite where a six digit code points, and look for one there. a
   // look that never came back heard from no relay, so it says nothing about
@@ -577,13 +641,13 @@ class HaloEngine {
   ).timeout(const Duration(seconds: 40), onTimeout: () => pairUnreached);
 
   // unlike every other subscription this needs no contacts
-  void subscribeFirstContactBg(int counter) {
-    _background(_fcSubscribeOnIsolate(counter), 'first contact listen');
+  void subscribeFirstContactBg(int ident, int counter) {
+    _background(_fcSubscribeOnIsolate(ident, counter), 'first contact listen');
   }
 
   // the same, waited on: 'ok', or why the address is not listened on
-  Future<String> subscribeFirstContact(int counter) =>
-      _fcSubscribeOnIsolate(counter);
+  Future<String> subscribeFirstContact(int ident, int counter) =>
+      _fcSubscribeOnIsolate(ident, counter);
 
   late final int Function() _fcRelays = _lib
       .lookupFunction<Int32 Function(), int Function()>(
@@ -595,6 +659,7 @@ class HaloEngine {
 
   // introduce ourselves to someone who has never heard of us.
   Future<String> sendFirstContact(
+    int ident,
     String peerXPubHex,
     String fcPk,
     String b64Cipher,
@@ -602,19 +667,20 @@ class HaloEngine {
     peerXPubHex,
     fcPk,
     b64Cipher,
-    out: () => _fcSendOnIsolate(peerXPubHex, fcPk, padRumor(b64Cipher)).timeout(
-      const Duration(seconds: 60),
-      onTimeout: () => 'error: relay timeout',
-    ),
+    out: () =>
+        _fcSendOnIsolate(ident, peerXPubHex, fcPk, padRumor(b64Cipher)).timeout(
+          const Duration(seconds: 60),
+          onTimeout: () => 'error: relay timeout',
+        ),
     room: (priv) => roomSendFirstContact(priv, peerXPubHex, fcPk, b64Cipher),
   );
 
   // it cannot wait on the dev chat, so it never names a pinned key
-  String nostrSubscribe(String peerXPubHex) {
+  String nostrSubscribe(int ident, String peerXPubHex) {
     if (devGate.names(xPub: peerXPubHex)) return kDevRefused;
     final ptr = peerXPubHex.toNativeUtf8();
     try {
-      return engineTake(_nostrSubscribe(ptr));
+      return engineTake(_nostrSubscribe(ident, ptr));
     } finally {
       malloc.free(ptr);
     }
@@ -877,22 +943,22 @@ class HaloEngine {
     }
   }
 
-  String encryptFor(String peerPub, String plain) {
+  String encryptFor(int ident, String peerPub, String plain) {
     final cPub = peerPub.toNativeUtf8();
     final cPlain = plain.toNativeUtf8();
     try {
-      return engineTake(_encryptFor(cPub, cPlain));
+      return engineTake(_encryptFor(ident, cPub, cPlain));
     } finally {
       calloc.free(cPub);
       calloc.free(cPlain);
     }
   }
 
-  String decryptFrom(String peerPub, String b64) {
+  String decryptFrom(int ident, String peerPub, String b64) {
     final cPub = peerPub.toNativeUtf8();
     final cB64 = b64.toNativeUtf8();
     try {
-      return engineTakeSecret(_decryptFrom(cPub, cB64));
+      return engineTakeSecret(_decryptFrom(ident, cPub, cB64));
     } finally {
       calloc.free(cPub);
       calloc.free(cB64);
@@ -902,10 +968,16 @@ class HaloEngine {
   // offloaded to a background isolate so a slow tor dial never freezes the ui.
   Future<String> sendTo(String addr, String msg) => devGate.sendTo(
     addr,
-    out: () => _sendOnIsolate((nostr: false, a: addr, b: msg)).timeout(
-      const Duration(seconds: 15),
-      onTimeout: () => 'error: onion timeout',
-    ),
+    out: () =>
+        _sendOnIsolate((
+          nostr: false,
+          ident: kMainIdent,
+          a: addr,
+          b: msg,
+        )).timeout(
+          const Duration(seconds: 15),
+          onTimeout: () => 'error: onion timeout',
+        ),
   );
 
   // a typing frame to a peer's door (HaloSendTyping): the private route
@@ -1016,20 +1088,24 @@ class HaloEngine {
   // what a full shelf left on the peer's address: "mark" lets it go for the
   // runner's next connection or probe, "free" fetches it by id now, "drop"
   // takes it as kept
-  Future<String> nostrLetHeld(String peerXPubHex, String how) =>
-      _roomFfiOnIsolate('HaloNostrLetHeld', [peerXPubHex, how]);
+  Future<String> nostrLetHeld(int ident, String peerXPubHex, String how) =>
+      _identFfiOnIsolate('HaloNostrLetHeld', ident, [peerXPubHex, how]);
 
-  // "mark" for each of the peers, in one call
-  Future<String> nostrMarkHeld(List<String> peerXPubHexes) =>
-      _roomFfiOnIsolate('HaloNostrMarkHeld', [jsonEncode(peerXPubHexes)]);
+  // "mark" for each of the peers, in one call: each with its identity
+  Future<String> nostrMarkHeld(List<(int, String)> peers) =>
+      _roomFfiOnIsolate('HaloNostrMarkHeld', [_identPeers(peers)]);
 
   // the pinned chats' keys (HaloNostrPinned)
-  Future<String> nostrPinned(List<String> peerXPubHexes) =>
-      _roomFfiOnIsolate('HaloNostrPinned', [jsonEncode(peerXPubHexes)]);
+  Future<String> nostrPinned(List<(int, String)> peers) =>
+      _roomFfiOnIsolate('HaloNostrPinned', [_identPeers(peers)]);
+
+  static String _identPeers(List<(int, String)> peers) => jsonEncode([
+    for (final (i, x) in peers) {'i': i, 'x': x},
+  ]);
 
   // no more listening for a peer, and its address's files gone
-  void nostrUnsubscribeBg(String peerXPubHex) => _background(
-    _roomFfiOnIsolate('HaloNostrUnsubscribe', [peerXPubHex]),
+  void nostrUnsubscribeBg(int ident, String peerXPubHex) => _background(
+    _identFfiOnIsolate('HaloNostrUnsubscribe', ident, [peerXPubHex]),
     'unlisten',
   );
 }
@@ -1093,19 +1169,66 @@ Future<String> _roomFfiOnIsolate(String name, List<String> args) {
   });
 }
 
-Future<String> _fcSendOnIsolate(String peerXPub, String fcPk, String msg) {
+// a call that names the identity it runs on, then one to three strings
+Future<String> _identFfiOnIsolate(String name, int ident, List<String> args) {
   return Isolate.run(() {
     final lib = Platform.isAndroid
         ? DynamicLibrary.open('libhalo.so')
         : DynamicLibrary.process();
-    final fn = lib.lookupFunction<ThreeArgFn, ThreeArgFnDart>(
+    final ptrs = [for (final a in args) a.toNativeUtf8()];
+    try {
+      switch (ptrs.length) {
+        case 1:
+          return engineTake(
+            lib.lookupFunction<IdentOneFn, IdentOneFnDart>(name)(
+              ident,
+              ptrs[0],
+            ),
+          );
+        case 2:
+          return engineTake(
+            lib.lookupFunction<IdentTwoFn, IdentTwoFnDart>(name)(
+              ident,
+              ptrs[0],
+              ptrs[1],
+            ),
+          );
+        default:
+          return engineTake(
+            lib.lookupFunction<IdentThreeFn, IdentThreeFnDart>(name)(
+              ident,
+              ptrs[0],
+              ptrs[1],
+              ptrs[2],
+            ),
+          );
+      }
+    } finally {
+      for (final p in ptrs) {
+        freeSecret(p);
+      }
+    }
+  });
+}
+
+Future<String> _fcSendOnIsolate(
+  int ident,
+  String peerXPub,
+  String fcPk,
+  String msg,
+) {
+  return Isolate.run(() {
+    final lib = Platform.isAndroid
+        ? DynamicLibrary.open('libhalo.so')
+        : DynamicLibrary.process();
+    final fn = lib.lookupFunction<IdentThreeFn, IdentThreeFnDart>(
       'HaloNostrSendFirstContact',
     );
     final a = peerXPub.toNativeUtf8();
     final b = fcPk.toNativeUtf8();
     final c = msg.toNativeUtf8();
     try {
-      return engineTake(fn(a, b, c));
+      return engineTake(fn(ident, a, b, c));
     } finally {
       malloc.free(a);
       malloc.free(b);
@@ -1159,15 +1282,15 @@ Future<String> _pairCodeOnIsolate(String code, String? payload) {
   });
 }
 
-Future<String> _fcSubscribeOnIsolate(int counter) {
+Future<String> _fcSubscribeOnIsolate(int ident, int counter) {
   return Isolate.run(() {
     final lib = Platform.isAndroid
         ? DynamicLibrary.open('libhalo.so')
         : DynamicLibrary.process();
-    final fn = lib.lookupFunction<CounterFn, CounterFnDart>(
+    final fn = lib.lookupFunction<IdentCounterFn, IdentCounterFnDart>(
       'HaloNostrSubscribeFirstContact',
     );
-    return engineTake(fn(counter));
+    return engineTake(fn(ident, counter));
   });
 }
 
@@ -1272,17 +1395,27 @@ Future<String> _ffiOnIsolate(
   }).timeout(wait, onTimeout: () => 'error: $what timeout');
 }
 
-Future<String> _sendOnIsolate(({bool nostr, String a, String b}) args) {
+// [ident]: the identity a relay send seals on; an onion send has none
+Future<String> _sendOnIsolate(
+  ({bool nostr, int ident, String a, String b}) args,
+) {
   return Isolate.run(() {
     final lib = Platform.isAndroid
         ? DynamicLibrary.open('libhalo.so')
         : DynamicLibrary.process();
-    final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>(
-      args.nostr ? 'HaloNostrSend' : 'HaloSendTo',
-    );
     final p1 = args.a.toNativeUtf8();
     final p2 = args.b.toNativeUtf8();
     try {
+      if (args.nostr) {
+        return engineTake(
+          lib.lookupFunction<IdentTwoFn, IdentTwoFnDart>('HaloNostrSend')(
+            args.ident,
+            p1,
+            p2,
+          ),
+        );
+      }
+      final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloSendTo');
       return engineTake(fn(p1, p2));
     } finally {
       malloc.free(p1);
@@ -1291,23 +1424,21 @@ Future<String> _sendOnIsolate(({bool nostr, String a, String b}) args) {
   });
 }
 
-Future<String> _subscribeOnIsolate(String xPub, {bool fresh = false}) {
+Future<String> _subscribeOnIsolate(
+  int ident,
+  String xPub, {
+  bool fresh = false,
+}) {
   return Isolate.run(() {
     final lib = Platform.isAndroid
         ? DynamicLibrary.open('libhalo.so')
         : DynamicLibrary.process();
-    OneArgFnDart fn;
-    try {
-      fn = lib.lookupFunction<OneArgFn, OneArgFnDart>(
-        fresh ? 'HaloNostrSubscribeNew' : 'HaloNostrSubscribe',
-      );
-    } on ArgumentError {
-      // an engine without it hears them all the same, after a turn
-      fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrSubscribe');
-    }
+    final fn = lib.lookupFunction<IdentOneFn, IdentOneFnDart>(
+      fresh ? 'HaloNostrSubscribeNew' : 'HaloNostrSubscribe',
+    );
     final p = xPub.toNativeUtf8();
     try {
-      return engineTake(fn(p));
+      return engineTake(fn(ident, p));
     } finally {
       malloc.free(p);
     }

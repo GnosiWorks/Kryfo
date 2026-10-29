@@ -115,6 +115,7 @@ func TestMeasureReceiveLanes(t *testing.T) {
 		t.Fatal(err)
 	}
 	curve25519.ScalarBaseMult(&myXPub, &myXPriv)
+	setMainForTest(myXPriv, myXPub)
 	mu.Unlock()
 	relays := strings.Split(measureRelays, ",")
 	nostrMu.Lock()
@@ -132,13 +133,13 @@ func TestMeasureReceiveLanes(t *testing.T) {
 			t.Fatal(err)
 		}
 		curve25519.ScalarBaseMult(&peer, &peerPriv)
-		_, rcv, err := nip17RcvAddress(peer)
+		_, rcv, err := nip17RcvAddressAs(testMain(), peer)
 		if err != nil {
 			t.Fatal(err)
 		}
 		rcvs = append(rcvs, rcv)
 		lanes[receiveLane(rcv)] = true
-		go nostrSubscribeRunner(ctx, hex.EncodeToString(peer[:]), peer, rcv)
+		go nostrSubscribeRunner(ctx, hex.EncodeToString(peer[:]), mainPair(peer), rcv)
 	}
 
 	// a subscription is settled once the catch-up of its latest connection

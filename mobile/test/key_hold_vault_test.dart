@@ -164,13 +164,13 @@ class _Rows extends HaloDb {
 
 class _Io extends AppIo {
   @override
-  Future<String> relaySend(String xPub, String cipher) async => 'ok';
+  Future<String> relaySend(int ident, String xPub, String cipher) async => 'ok';
   @override
   Future<String> onionSend(String onion, String cipher) async => 'error: off';
   @override
-  void listen(String xPub, {bool fresh = false}) {}
+  void listen(int ident, String xPub, {bool fresh = false}) {}
   @override
-  void unlisten(String xPub) {}
+  void unlisten(int ident, String xPub) {}
   @override
   String edPub() => 'ed-me';
   @override
