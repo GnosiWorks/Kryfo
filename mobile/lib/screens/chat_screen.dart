@@ -8939,7 +8939,9 @@ class _Bubble extends StatelessWidget {
     video: x.mediaPath == null && x.filePath != null,
     lost: !x.preparing && x.mediaPath == null && x.filePath == null,
     sendingUid: x.direction == 'out' && x.sending ? x.msgUid : null,
-    waitUid: x.direction == 'in' ? x.msgUid : null,
+    waitUid: x.direction == 'in' && fileWaitOf(x.msgUid) != null
+        ? x.msgUid
+        : null,
   );
 
   TextStyle _quoteStyle(bool isOut) => HaloType.sans(

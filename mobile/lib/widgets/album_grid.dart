@@ -161,27 +161,17 @@ class _Cell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // here before its file: it follows its wait, and fades into its photo
-    // or video once the file is in
-    if (tile?.waitUid case final uid?) {
-      return ValueListenableBuilder<Map<String, FileWait>>(
-        valueListenable: fileWaits,
-        builder: (context, waits, _) {
-          final w = waits[uid];
-          return FadeSwap(
-            child: KeyedSubtree(
-              key: ValueKey(w == null ? 'have' : 'waits'),
-              child: _cell(context, w),
-            ),
-          );
-        },
-      );
-    }
-    return _cell(context, null);
+    // or video once the screen drops its wait
+    final uid = tile?.waitUid;
+    return FadeSwap(
+      child: uid == null
+          ? KeyedSubtree(key: const ValueKey('have'), child: _cell(context))
+          : _WaitFace(key: const ValueKey('waits'), uid: uid, cell: this),
+    );
   }
 
-  Widget _cell(BuildContext context, FileWait? wait) {
+  Widget _cell(BuildContext context) {
     final t = tile;
-    if (wait != null) return _waiting(t!.waitUid!, wait);
     final path = t?.path;
     final video = t?.video ?? false;
     final lost = t?.lost ?? false;
@@ -246,6 +236,32 @@ class _Cell extends StatelessWidget {
       ),
     );
   }
+}
+
+// keeps the last wait it saw, so a wait that ends draws no photo of its own
+// while it fades out
+class _WaitFace extends StatefulWidget {
+  final String uid;
+  final _Cell cell;
+  const _WaitFace({super.key, required this.uid, required this.cell});
+  @override
+  State<_WaitFace> createState() => _WaitFaceState();
+}
+
+class _WaitFaceState extends State<_WaitFace> {
+  FileWait? _last;
+
+  @override
+  Widget build(BuildContext context) =>
+      ValueListenableBuilder<Map<String, FileWait>>(
+        valueListenable: fileWaits,
+        builder: (context, waits, _) {
+          final w = waits[widget.uid] ?? _last;
+          if (w == null) return widget.cell._cell(context);
+          _last = w;
+          return widget.cell._waiting(widget.uid, w);
+        },
+      );
 }
 
 extension on _Cell {

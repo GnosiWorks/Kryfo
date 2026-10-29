@@ -6733,7 +6733,9 @@ class _GroupBubble extends StatelessWidget {
                   lost:
                       !x.preparing && x.mediaPath == null && x.filePath == null,
                   sendingUid: isOut && x.sending ? x.msgUid : null,
-                  waitUid: x.direction == 'in' ? x.msgUid : null,
+                  waitUid: x.direction == 'in' && fileWaitOf(x.msgUid) != null
+                      ? x.msgUid
+                      : null,
                 ),
       ],
       width: 260,
