@@ -199,6 +199,15 @@ mixin _PhotoRows {
         dlog('photo: one from a contact did not read clean');
         return false;
       }
+      // blocked or no longer accepted while it waited out the gap
+      final may = await t.query(
+        'contacts',
+        columns: ['halo_id'],
+        where: 'halo_id = ? AND accepted = 1 AND blocked = 0',
+        whereArgs: [from],
+        limit: 1,
+      );
+      if (may.isEmpty) return false;
       if (!photoVersionTakes(ver, await _theirVer(t, from), now: at)) {
         return false;
       }

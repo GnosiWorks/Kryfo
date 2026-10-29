@@ -739,6 +739,29 @@ void main() {
       expect(await db.takeWaitingPhotos(now: t0 + 2 * gap), isFalse);
     }, skip: skip);
 
+    test('one that waited out the gap is let go when they were blocked or '
+        'are no longer accepted meanwhile', () async {
+      const t0 = 1000000;
+      final gap = kPhotoTakeGap.inMilliseconds;
+      for (final turned in [
+        {'blocked': 1},
+        {'accepted': 0},
+      ]) {
+        final db = await rows();
+        expect(await _takeAll(db, 100, t0), isTrue);
+        expect(await _takeAll(db, 200, t0 + 1000), isFalse);
+        await db.mem.update(
+          'contacts',
+          turned,
+          where: 'halo_id = ?',
+          whereArgs: [_peer],
+        );
+        expect(await db.takeWaitingPhotos(now: t0 + gap), isFalse);
+        expect((await db.photosOf(_peer)).theirVer, 100, reason: '$turned');
+        expect(await db.mem.query('photo_parts'), isEmpty);
+      }
+    }, skip: skip);
+
     test('a take-back is always taken, and counts toward the gap', () async {
       final db = await rows();
       const t0 = 1000000;
