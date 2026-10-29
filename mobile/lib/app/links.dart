@@ -120,6 +120,7 @@ Future<(String, bool)> handleHaloUriAdded(
       h,
       _torGetJsonOnIsolate,
       idOf: engine.idFromEdPub,
+      v4FaceOf: v4FaceOfLink,
     );
     // the lookup answers in fixed english words; the person reads their own
     if (r.startsWith('error:')) {
@@ -669,4 +670,13 @@ Map<String, String>? v4Parsed(LsInvite inv, {bool bundle = true}) {
     'fc': _hexOf(inv.firstContact),
     'v': '4',
   };
+}
+
+/// the face key (hex) of a v4 link that passes every reader check and
+/// shows a face, null for any other
+String? v4FaceOfLink(String link) {
+  final got = v4OfLink(link);
+  if (got is! LsInvite || got.flags & kLsInviteFace == 0) return null;
+  final f = got.face;
+  return f == null ? null : _hexOf(f);
 }
