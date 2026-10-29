@@ -164,6 +164,8 @@ extension AppStateGroups on AppState {
     UnwrappedMessage env,
     HaloDb db, {
     int? at,
+    // it came as a first contact's opener
+    bool opener = false,
   }) async {
     final gc = env.groupControl!;
     final groupId = env.groupId;
@@ -268,6 +270,18 @@ extension AppStateGroups on AppState {
             }
           }
         }
+        // the members' roster invites, and mine to the admin in our own
+        // session (4.3)
+        if (!isRoom) {
+          await _takeRosterInvites(
+            groupId,
+            gc.participants,
+            db,
+            seats: seats,
+            out: out,
+          );
+          await _tellRosterInvite(db, groupId, senderHaloId);
+        }
         // an open info page reads the roster again
         _bumpChatRev('group:$groupId');
         await refreshContacts();
@@ -310,10 +324,35 @@ extension AppStateGroups on AppState {
             }
           }
         }
+        if (!isRoom) {
+          await _takeRosterInvites(
+            groupId,
+            gc.participants,
+            db,
+            seats: seats,
+            out: out,
+          );
+        }
         // an open info page reads the roster again
         _bumpChatRev('group:$groupId');
         await refreshContacts();
         await refreshGroups();
+        break;
+      case 'ri':
+        await _takeMemberRosterInvite(senderHaloId, groupId, gc, db);
+        break;
+      case 'roster':
+        if (!fromAdmin || !await adminHere()) return;
+        await _takeRosterInvites(
+          groupId,
+          gc.participants,
+          db,
+          seats: await _seats(gc.participants, db, room: false),
+          out: await _keyBlockedSeats(gc.participants, room: false),
+        );
+        break;
+      case 'pair':
+        await _answerPair(senderHaloId, groupId, db, opener: opener);
         break;
       case 'remove':
         if (gc.members == null || !fromAdmin) return;
@@ -1011,20 +1050,43 @@ extension AppStateGroups on AppState {
   // build participant info {h,o,x} for each halo_id we have as a contact
   // (or for our own kryfo). used to give group invites enough info that
   // recipients can fan-out to members they don't yet know.
+  // [invites]: a control's roster, which carries each member's roster
+  // invite the group holds, and mine, beside their keys (4.3). an older
+  // version reads the keys and leaves the rest
   Future<List<Map<String, String>>> _buildParticipants(
-    List<String> haloIds,
-  ) async {
+    List<String> haloIds, {
+    ({HaloDb db, String groupId})? invites,
+  }) async {
+    Map<String, RosterInviteRow> held = const {};
+    String? mine;
+    // rows that do not read leave them out: the keys go as before
+    try {
+      if (invites != null && await _rosterGroup(invites.db, invites.groupId)) {
+        held = await rosterInvitesIn(await invites.db.open(), invites.groupId);
+        final r = await currentRosterInvite(await live.open(), kMainIdent);
+        if (r != null) mine = base64Encode(r.link);
+      }
+    } catch (e) {
+      dlog('roster invite: not read for the roster (${e.runtimeType})');
+    }
     final out = <Map<String, String>>[];
     for (final h in haloIds) {
       if (h == myId) {
-        out.add({'h': myId, 'o': myOnion, 'x': engine.myXPubkey()});
+        out.add({
+          'h': myId,
+          'o': myOnion,
+          'x': engine.myXPubkey(),
+          'ri': ?mine,
+        });
       } else {
         final c = await session.getContact(h);
         if (c != null) {
+          final ri = held[h];
           out.add({
             'h': h,
             'o': c['onion'] as String,
             'x': c['xpub'] as String,
+            if (ri != null) 'ri': base64Encode(ri.invite),
           });
         }
       }
@@ -1056,7 +1118,10 @@ extension AppStateGroups on AppState {
       return groupId;
     }
     final d = _ownerOf(groupId);
-    final participants = await _buildParticipants(full);
+    final participants = await _buildParticipants(
+      full,
+      invites: (db: d, groupId: groupId),
+    );
     final gc = GroupControl(
       type: 'create',
       name: name,
@@ -1095,7 +1160,10 @@ extension AppStateGroups on AppState {
       return;
     }
     final d = _ownerOf(groupId);
-    final newParticipants = await _buildParticipants(newHaloIds);
+    final newParticipants = await _buildParticipants(
+      newHaloIds,
+      invites: (db: d, groupId: groupId),
+    );
     final addGc = GroupControl(
       type: 'add',
       members: newHaloIds,
@@ -1103,7 +1171,10 @@ extension AppStateGroups on AppState {
     );
     await _queueControl(groupId, addGc, to: existingMembers, on: d);
     final allMembers = await session.getGroupMembers(groupId);
-    final allParticipants = await _buildParticipants(allMembers);
+    final allParticipants = await _buildParticipants(
+      allMembers,
+      invites: (db: d, groupId: groupId),
+    );
     final createGc = GroupControl(
       type: 'create',
       name: group['name'] as String,

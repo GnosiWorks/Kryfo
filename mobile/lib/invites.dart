@@ -260,7 +260,9 @@ Future<InviteRow> makeInvite(
   final r = random ?? Random.secure();
   final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
   final oneTime = kind == kInviteOneTime;
-  if (face != null && (kind == kInviteRoster || ss.ident != kMainIdent)) {
+  // a roster invite has no bundle: its hellos carry one (4.3)
+  final roster = kind == kInviteRoster;
+  if (face != null && (roster || ss.ident != kMainIdent)) {
     throw ArgumentError('only the main identity shows its face');
   }
   late Uint8List id;
@@ -277,16 +279,20 @@ Future<InviteRow> makeInvite(
     (sk) => !fcPkOf(sk).startsWith('error'),
   );
   final fc = _unhex(fcPkOf(sk));
-  final keys = await ss.makeInviteKeys(idHex, ec: oneTime, now: now);
+  final keys = roster
+      ? null
+      : await ss.makeInviteKeys(idHex, ec: oneTime, now: now);
   final identity = ss.identity.public;
   (List<int>, List<int>)? f;
   if (face != null) f = (face.face, face.sign(faceText(identity, id)));
-  final block = bundleBlock(
-    registrationId: ss.registrationId,
-    spk: keys.spk,
-    kyber: keys.kyber,
-    ec: keys.ec,
-  );
+  final block = keys == null
+      ? null
+      : bundleBlock(
+          registrationId: ss.registrationId,
+          spk: keys.spk,
+          kyber: keys.kyber,
+          ec: keys.ec,
+        );
   Uint8List frame(List<int>? withBlock) => signedFrame(
     ss,
     LsSigContext.invite,
@@ -316,9 +322,9 @@ Future<InviteRow> makeInvite(
     expires: expires,
     link: link,
     qr: qr,
-    spkId: keys.spk.id,
-    kyberId: keys.kyber.id,
-    ecId: keys.ec?.id,
+    spkId: keys?.spk.id,
+    kyberId: keys?.kyber.id,
+    ecId: keys?.ec?.id,
     neverExpires: neverExpires,
   );
   await db.insert('invites', {
@@ -376,6 +382,117 @@ Future<InviteRow?> currentMainInvite(DatabaseExecutor db, int ident) async {
   return null;
 }
 
+/// the roster invite handed to my groups' admins now: the newest live one
+Future<InviteRow?> currentRosterInvite(DatabaseExecutor db, int ident) async {
+  final all = await invitesOf(db, ident, kind: kInviteRoster);
+  for (final r in all.reversed) {
+    if (r.retiredAt == null) return r;
+  }
+  return null;
+}
+
+/// a member's roster invite as a group holds it (4.3): the admin keeps the
+/// one each member sent, a member the ones the admin passed on
+class RosterInviteRow {
+  const RosterInviteRow(this.member, this.id, this.issued, this.invite);
+  final String member;
+  final String id;
+  final int issued;
+  final Uint8List invite;
+
+  static RosterInviteRow of(Map<String, Object?> r) => RosterInviteRow(
+    r['member'] as String,
+    r['id'] as String,
+    r['issued'] as int,
+    Uint8List.fromList(r['invite'] as List<int>),
+  );
+}
+
+/// [member]'s roster invite [invite] (id [id], issued [issued]) kept for
+/// [groupId], unless one issued later is held already. true when it was
+/// kept: with [passOn] it is still to go to the other members
+Future<bool> keepRosterInvite(
+  DatabaseExecutor db,
+  String groupId,
+  String member,
+  Uint8List invite, {
+  required String id,
+  required int issued,
+  bool passOn = false,
+}) async {
+  final had = await rosterInviteOf(db, groupId, member);
+  if (had != null && (had.id == id || had.issued > issued)) return false;
+  await db.insert('roster_invites', {
+    'group_id': groupId,
+    'member': member,
+    'id': id,
+    'issued': issued,
+    'invite': invite,
+    'pushed': passOn ? 0 : 1,
+  }, conflictAlgorithm: ConflictAlgorithm.replace);
+  return true;
+}
+
+Future<RosterInviteRow?> rosterInviteOf(
+  DatabaseExecutor db,
+  String groupId,
+  String member,
+) async {
+  final rows = await db.query(
+    'roster_invites',
+    where: 'group_id = ? AND member = ?',
+    whereArgs: [groupId, member],
+    limit: 1,
+  );
+  return rows.isEmpty ? null : RosterInviteRow.of(rows.first);
+}
+
+/// every roster invite [groupId] holds, by member
+Future<Map<String, RosterInviteRow>> rosterInvitesIn(
+  DatabaseExecutor db,
+  String groupId,
+) async => {
+  for (final r in await db.query(
+    'roster_invites',
+    where: 'group_id = ?',
+    whereArgs: [groupId],
+  ))
+    r['member'] as String: RosterInviteRow.of(r),
+};
+
+/// the groups and members holding roster invite [id]
+Future<List<({String groupId, String member})>> rosterInviteHolders(
+  DatabaseExecutor db,
+  String id,
+) async => [
+  for (final r in await db.query(
+    'roster_invites',
+    columns: ['group_id', 'member'],
+    where: 'id = ?',
+    whereArgs: [id],
+  ))
+    (groupId: r['group_id'] as String, member: r['member'] as String),
+];
+
+/// the groups with a member's roster invite not passed on yet
+Future<Set<String>> rosterInvitesToPass(DatabaseExecutor db) async => {
+  for (final r in await db.query(
+    'roster_invites',
+    columns: ['group_id'],
+    where: 'pushed = ?',
+    whereArgs: [0],
+  ))
+    r['group_id'] as String,
+};
+
+Future<void> rosterInvitesPassed(DatabaseExecutor db, String groupId) =>
+    db.update(
+      'roster_invites',
+      {'pushed': 1},
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+    );
+
 /// a one-time invite took its first opener: its keys and its address go,
 /// so a forwarded copy reaches nothing (2.3)
 Future<void> spendOneTime(
@@ -430,6 +547,9 @@ class InviteUpkeep {
   InviteUpkeep();
   // the main invite made now, when one was
   InviteRow? made;
+  // the roster invite made now, when one was: the admins of my groups are
+  // told it
+  InviteRow? roster;
   // invites whose keys and address went
   final dropped = <String>[];
   // the legacy v3 invite's keys went with them
@@ -494,6 +614,33 @@ Future<InviteUpkeep> keepInvites(
     }
   }
   if (out.made != null && !made) await _noteMainMade(db, ss.ident, now);
+  // the roster invite: the main identity's, a year's life and made again
+  // at six months; the old one is answered until it expires. no face and
+  // no onion (160 bytes): the roster gives both, and a group of fifty
+  // carries fifty of them in one frame
+  if (ss.ident == kMainIdent && face != null) {
+    final rosters = [
+      for (final r in await invitesOf(db, ss.ident, kind: kInviteRoster))
+        if (r.retiredAt == null) r,
+    ];
+    if (rosters.isEmpty || h >= rosters.last.issued + kMainReissueHours) {
+      out.roster = await makeInvite(
+        db,
+        ss,
+        kind: kInviteRoster,
+        fcPkOf: fcPkOf,
+        nowMs: now,
+      );
+      for (final r in rosters) {
+        await db.update(
+          'invites',
+          {'retired_at': now},
+          where: 'ident = ? AND id = ?',
+          whereArgs: [r.ident, r.id],
+        );
+      }
+    }
+  }
   for (final r in await invitesOf(db, ss.ident)) {
     if (r.neverExpires) continue;
     final gone = r.usedAt != null || h > r.expires + kSkewHours;

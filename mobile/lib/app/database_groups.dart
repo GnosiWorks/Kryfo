@@ -149,6 +149,33 @@ mixin _GroupRows {
       }, conflictAlgorithm: ConflictAlgorithm.ignore);
     }
     await batch.commit(noResult: true);
+    for (final m in (await rosterInvitesIn(db, groupId)).keys) {
+      if (!members.contains(m)) await _dropRosterInvites(db, groupId, m);
+    }
+  }
+
+  // a member's roster invite goes with them, and a hello owed to it
+  Future<void> _dropRosterInvites(
+    DatabaseExecutor db,
+    String groupId, [
+    String? member,
+  ]) async {
+    final rows = member == null
+        ? (await rosterInvitesIn(db, groupId)).values
+        : [?await rosterInviteOf(db, groupId, member)];
+    for (final r in rows) {
+      await db.delete(
+        'roster_invites',
+        where: 'group_id = ? AND member = ?',
+        whereArgs: [groupId, r.member],
+      );
+      if ((await rosterInviteHolders(db, r.id)).isNotEmpty) continue;
+      await db.delete(
+        'hellos',
+        where: 'way = ? AND invite_id = ?',
+        whereArgs: [kHelloWant, r.id],
+      );
+    }
   }
 
   Future<void> removeGroupMember(String groupId, String haloId) async {
@@ -158,6 +185,7 @@ mixin _GroupRows {
       where: 'group_id = ? AND halo_id = ?',
       whereArgs: [groupId, haloId],
     );
+    await _dropRosterInvites(db, groupId, haloId);
     await db.transaction((t) async {
       await _owedGone(t, 'group_id = ? AND member = ?', [groupId, haloId]);
       // our edits and reactions are no longer theirs to get. take-backs
@@ -229,6 +257,7 @@ mixin _GroupRows {
     for (final table in const ['group_media_owed', 'group_resent']) {
       await db.delete(table, where: 'group_id = ?', whereArgs: [groupId]);
     }
+    await _dropRosterInvites(db, groupId);
     final gone = goneGroupPrefix(groupId);
     for (final k in {
       for (final r in await db.query('gone_in', columns: ['peer_id']))
@@ -347,6 +376,7 @@ mixin _GroupRows {
     ]) {
       await db.delete(table, where: 'group_id = ?', whereArgs: [groupId]);
     }
+    await _dropRosterInvites(db, groupId);
     // what of it came in and went is known no longer
     final gone = goneGroupPrefix(groupId);
     for (final k in {

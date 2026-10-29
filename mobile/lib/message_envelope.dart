@@ -161,7 +161,9 @@ class UnwrappedMessage {
 /// a group state update. the 'm' body is ignored when this is present.
 class GroupControl {
   // 'create' | 'add' | 'remove' | 'rename' | 'leave' | 'end' | 'shots' |
-  // 'caps'
+  // 'caps' | 'ri' (a member's roster invite to the admin) | 'roster' (the
+  // admin's roster invites to the members) | 'pair' (a member pair's first
+  // frame, and its answer)
   final String type;
   final String? name; // present on 'create' and 'rename'
   final List<String>?
@@ -183,6 +185,9 @@ class GroupControl {
   // on 'shots' and a group's 'create': the screenshot block as the admin
   // holds it (group_shots.dart)
   final GroupShotsWord? shots;
+  // on 'ri': the sender's roster invite, a KIN4 in base64. a participant's
+  // 'ri' is the same, on 'create', 'add' and 'roster'
+  final String? invite;
   const GroupControl({
     required this.type,
     this.name,
@@ -192,6 +197,7 @@ class GroupControl {
     this.fc,
     this.lateUids,
     this.shots,
+    this.invite,
   });
 
   Map<String, dynamic> toWire() => {
@@ -203,6 +209,7 @@ class GroupControl {
     'fc': ?fc,
     'lu': ?lateUids,
     'ss': ?shots?.toWire(),
+    'ri': ?invite,
   };
 
   static GroupControl? fromWire(Object? raw) {
@@ -241,6 +248,7 @@ class GroupControl {
       fc: fc is String ? fc : null,
       lateUids: late.isEmpty ? null : late,
       shots: GroupShotsWord.fromWire(raw['ss']),
+      invite: raw['ri'] is String ? raw['ri'] as String : null,
     );
   }
 

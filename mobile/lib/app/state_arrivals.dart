@@ -493,7 +493,13 @@ extension AppStateArrivals on AppState {
     if (await _endRefuses(senderHaloId, env.groupId, env, db)) return to;
     // a group control
     if (env.groupControl != null) {
-      await _applyGroupControl(senderHaloId, env, db, at: arrivedAt);
+      await _applyGroupControl(
+        senderHaloId,
+        env,
+        db,
+        at: arrivedAt,
+        opener: fromBackPair,
+      );
       changed();
       return to;
     }

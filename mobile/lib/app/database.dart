@@ -2074,6 +2074,19 @@ Future<void> inviteTables(DatabaseExecutor db) async {
       PRIMARY KEY (ident, hash)
     )
   ''');
+  // each group's members' roster invites (4.3), in the container the group
+  // is in. pushed 0: an admin's, still to go to the other members
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS roster_invites (
+      group_id TEXT NOT NULL,
+      member TEXT NOT NULL,
+      id TEXT NOT NULL,
+      issued INTEGER NOT NULL,
+      invite BLOB NOT NULL,
+      pushed INTEGER NOT NULL DEFAULT 1,
+      PRIMARY KEY (group_id, member)
+    )
+  ''');
 }
 
 // my identity for each contact, and their identity key (0x05 and the x

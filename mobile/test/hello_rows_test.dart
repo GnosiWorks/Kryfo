@@ -406,7 +406,12 @@ void main() {
       isFalse,
     );
     expect(engine.unsubscribed, contains(first.id));
-    expect((await fcKeysOf(db, kMainIdent)).keys, [now.id]);
+    // the roster invite keeps its own: a reset is of the link alone
+    final roster = (await currentRosterInvite(db, kMainIdent))!;
+    expect(
+      (await fcKeysOf(db, kMainIdent)).keys,
+      unorderedEquals([now.id, roster.id]),
+    );
     expect(await app.myV4Invite(), inviteLink(now.link));
   });
 
@@ -744,6 +749,11 @@ void main() {
     await Future.wait([app.keepMyInvites(), app.resetMyInvite()]);
     final mains = await invitesOf(db, kMainIdent, kind: kInviteMain);
     expect(mains, hasLength(1));
-    expect((await fcKeysOf(db, kMainIdent)).keys, [mains.single.id]);
+    final rosters = await invitesOf(db, kMainIdent, kind: kInviteRoster);
+    expect(rosters, hasLength(1));
+    expect(
+      (await fcKeysOf(db, kMainIdent)).keys,
+      unorderedEquals([mains.single.id, rosters.single.id]),
+    );
   });
 }
