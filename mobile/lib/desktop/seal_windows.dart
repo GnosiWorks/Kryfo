@@ -339,7 +339,7 @@ String _systemDir() {
   try {
     final n = fn(buf.cast(), cap);
     if (n == 0 || n >= cap) return '';
-    return buf.cast<Utf16>().toDartString(length: n);
+    return String.fromCharCodes(buf.asTypedList(n));
   } finally {
     calloc.free(buf);
   }
