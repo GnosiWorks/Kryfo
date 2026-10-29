@@ -575,16 +575,16 @@ class _PinFlowScreenState extends State<PinFlowScreen>
             alignment: Alignment.center,
             // an error is heard as it appears
             child: Semantics(
+              key: ValueKey(
+                making
+                    ? ('making', '')
+                    : _error != null
+                    ? ('error', _error!)
+                    : ('line', line),
+              ),
               liveRegion: _error != null,
               child: Text(
                 making ? l10n.newGroupCreating : _error ?? line,
-                key: ValueKey(
-                  making
-                      ? ('making', '')
-                      : _error != null
-                      ? ('error', _error!)
-                      : ('line', line),
-                ),
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 13,
