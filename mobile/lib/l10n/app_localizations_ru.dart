@@ -9952,6 +9952,107 @@ class AppLocalizationsRu extends AppLocalizations {
       'Kryfo нужна личная папка в памяти, пока он работает, а этот компьютер её не даёт, поэтому Kryfo не откроется.';
 
   @override
+  String get historyChatStaysShots =>
+      'Этот чат остаётся на твоём телефоне, потому что в нём запрещены скриншоты.';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString цифры',
+      many: '$countString цифр',
+      few: '$countString цифры',
+      one: '$countString цифра',
+      zero: 'Нет цифр',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString символа',
+      many: '$countString символов',
+      few: '$countString символа',
+      one: '$countString символ',
+      zero: 'Нет символов',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'Ход резервного копирования';
+
+  @override
+  String get a11yRestoreProgress => 'Ход восстановления';
+
+  @override
+  String get a11yExportProgress => 'Ход экспорта';
+
+  @override
+  String get a11yLockFileProgress => 'Ход запирания';
+
+  @override
+  String get a11yCleanProgress => 'Ход очистки';
+
+  @override
+  String get a11yMessageActions => 'Действия с сообщением';
+
+  @override
+  String get a11yRecordVoiceNote => 'Записать голосовое сообщение';
+
+  @override
+  String get a11yRecording => 'Идёт запись';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'Фото, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return 'Фото от $name, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'Видео, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return 'Видео от $name, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString новых сообщения',
+      many: '$countString новых сообщений',
+      few: '$countString новых сообщения',
+      one: '$countString новое сообщение',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get modesPickHow =>
       'Выбери, как идут твои сообщения. Это можно поменять в любой момент.';
 

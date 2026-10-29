@@ -219,7 +219,7 @@ class _NotThemFoldState extends State<NotThemFold> {
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w600,
-                      color: HaloColors.rose,
+                      color: HaloColors.roseText,
                     ),
                   ),
                 ),

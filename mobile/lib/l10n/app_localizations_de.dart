@@ -9884,6 +9884,101 @@ class AppLocalizationsDe extends AppLocalizations {
       'Kryfo braucht beim Laufen einen privaten Ordner im Arbeitsspeicher, und dieser Computer bietet keinen, deshalb öffnet es sich nicht.';
 
   @override
+  String get historyChatStaysShots =>
+      'Dieser Chat bleibt auf deinem Handy, weil Screenshots darin blockiert sind.';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Ziffern',
+      one: '1 Ziffer',
+      zero: 'Keine Ziffern',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Zeichen',
+      one: '1 Zeichen',
+      zero: 'Keine Zeichen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'Fortschritt des Backups';
+
+  @override
+  String get a11yRestoreProgress => 'Fortschritt der Wiederherstellung';
+
+  @override
+  String get a11yExportProgress => 'Fortschritt des Exports';
+
+  @override
+  String get a11yLockFileProgress => 'Fortschritt beim Verschließen';
+
+  @override
+  String get a11yCleanProgress => 'Fortschritt beim Bereinigen';
+
+  @override
+  String get a11yMessageActions => 'Aktionen für die Nachricht';
+
+  @override
+  String get a11yRecordVoiceNote => 'Sprachnachricht aufnehmen';
+
+  @override
+  String get a11yRecording => 'Aufnahme läuft';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'Foto, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return 'Foto von $name, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'Video, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return 'Video von $name, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString neue Nachrichten',
+      one: 'Neue Nachricht',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get modesPickHow =>
       'Wähle, wie deine Nachrichten reisen. Du kannst es jederzeit ändern.';
 

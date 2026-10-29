@@ -9768,6 +9768,99 @@ class AppLocalizationsVi extends AppLocalizations {
       'Kryfo cần một thư mục riêng trong bộ nhớ khi chạy, và máy tính này không có, nên Kryfo sẽ không mở.';
 
   @override
+  String get historyChatStaysShots =>
+      'Cuộc trò chuyện này ở lại trên điện thoại của bạn vì đã chặn chụp màn hình trong đó.';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString chữ số',
+      zero: 'Chưa có chữ số',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString ký tự',
+      zero: 'Chưa có ký tự',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'Tiến độ sao lưu';
+
+  @override
+  String get a11yRestoreProgress => 'Tiến độ khôi phục';
+
+  @override
+  String get a11yExportProgress => 'Tiến độ xuất';
+
+  @override
+  String get a11yLockFileProgress => 'Tiến độ khóa';
+
+  @override
+  String get a11yCleanProgress => 'Tiến độ làm sạch';
+
+  @override
+  String get a11yMessageActions => 'Thao tác với tin nhắn';
+
+  @override
+  String get a11yRecordVoiceNote => 'Ghi tin nhắn thoại';
+
+  @override
+  String get a11yRecording => 'Đang ghi âm';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'Ảnh, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return 'Ảnh từ $name, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'Video, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return 'Video từ $name, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString tin nhắn mới',
+      one: 'Tin nhắn mới',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get modesPickHow =>
       'Chọn cách tin nhắn của bạn được gửi đi. Bạn có thể đổi bất cứ lúc nào.';
 

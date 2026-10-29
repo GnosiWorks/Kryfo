@@ -12303,6 +12303,114 @@
   "@desktopNoMemoryFolder": {
     "description": "desktop/desktop_lock_screen.dart: no XDG_RUNTIME_DIR or /dev/shm folder could be had"
   },
+  "historyChatStaysShots": "This chat stays on your phone because screenshots are blocked in it.",
+  "@historyChatStaysShots": {
+    "description": "devices/history_import.dart: on a newly linked device, for a chat that stayed on the phone because screenshot blocking is on in it"
+  },
+  "a11yPinDigits": "{count, plural, =0{No digits} =1{1 digit} other{{count} digits}}",
+  "@a11yPinDigits": {
+    "description": "widgets/pin_pad.dart: the pin dots to a screen reader, the count only",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "a11yPassChars": "{count, plural, =0{No characters} =1{1 character} other{{count} characters}}",
+  "@a11yPassChars": {
+    "description": "widgets/pin_pad.dart: the passphrase dots to a screen reader, the count only",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "a11yBackupProgress": "Backup progress",
+  "@a11yBackupProgress": {
+    "description": "screens/backup_screen.dart: the progress bar's name to a screen reader"
+  },
+  "a11yRestoreProgress": "Restore progress",
+  "@a11yRestoreProgress": {
+    "description": "screens/restore_screen.dart: the progress bar's name to a screen reader"
+  },
+  "a11yExportProgress": "Export progress",
+  "@a11yExportProgress": {
+    "description": "screens/notes_export_screen.dart: the progress bar's name to a screen reader"
+  },
+  "a11yLockFileProgress": "Locking progress",
+  "@a11yLockFileProgress": {
+    "description": "screens/lock_file_screen.dart: the progress bar's name to a screen reader"
+  },
+  "a11yCleanProgress": "Cleaning progress",
+  "@a11yCleanProgress": {
+    "description": "screens/clean_screen.dart: the progress bar's name to a screen reader"
+  },
+  "a11yMessageActions": "Message actions",
+  "@a11yMessageActions": {
+    "description": "widgets/menu_backdrop.dart: the long-press menu's name to a screen reader"
+  },
+  "a11yRecordVoiceNote": "Record a voice note",
+  "@a11yRecordVoiceNote": {
+    "description": "widgets/voice_mic.dart: the mic with a screen reader on, a tap records"
+  },
+  "a11yRecording": "Recording",
+  "@a11yRecording": {
+    "description": "widgets/voice_mic.dart: said once when a tap starts a recording"
+  },
+  "a11yPhotoOn": "Photo, {date}",
+  "@a11yPhotoOn": {
+    "description": "widgets/media_bubbles.dart: a photo tile to a screen reader",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yPhotoFrom": "Photo from {name}, {date}",
+  "@a11yPhotoFrom": {
+    "description": "widgets/media_bubbles.dart: a photo tile to a screen reader, with who sent it",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yVideoOn": "Video, {date}",
+  "@a11yVideoOn": {
+    "description": "widgets/media_bubbles.dart: a video tile to a screen reader",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yVideoFrom": "Video from {name}, {date}",
+  "@a11yVideoFrom": {
+    "description": "widgets/media_bubbles.dart: a video tile to a screen reader, with who sent it",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yNewMessages": "{count, plural, =1{New message} other{{count} new messages}}",
+  "@a11yNewMessages": {
+    "description": "widgets/say.dart: new messages in the open chat, said with a screen reader on",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
   "modesPickHow": "Pick how your messages travel. You can change it any time.",
   "@modesPickHow": {
     "description": "Speed and privacy page, the line under the title"

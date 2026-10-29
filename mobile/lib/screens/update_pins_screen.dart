@@ -158,7 +158,11 @@ class _UpdatePinsScreenState extends State<UpdatePinsScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            PinDots(filled: passLength(_pin), color: HaloColors.amber),
+            PinDots(
+              filled: passLength(_pin),
+              color: HaloColors.amber,
+              letters: _letters,
+            ),
             const Spacer(flex: 3),
             PassPad(
               letters: _letters,

@@ -133,7 +133,7 @@ class HaloRow extends StatelessWidget {
         (v.isNotEmpty &&
             _width(v, valueStyle, scaler, Directionality.of(context)) >
                 MediaQuery.sizeOf(context).width * 0.35);
-    final fg = rose ? HaloColors.rose : HaloColors.text;
+    final fg = rose ? HaloColors.roseText : HaloColors.text;
     final tile = rose
         ? HaloColors.rose.withValues(alpha: 0.12)
         : HaloColors.amberSoft;

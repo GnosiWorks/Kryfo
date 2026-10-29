@@ -205,7 +205,9 @@ class _ShotsWaitingSheetState extends State<_ShotsWaitingSheet> {
                       line,
                       style: HaloType.sans(
                         size: 12.5,
-                        color: w.blocked ? HaloColors.rose : HaloColors.text2,
+                        color: w.blocked
+                            ? HaloColors.roseText
+                            : HaloColors.text2,
                         height: 1.35,
                       ),
                     ),

@@ -4,6 +4,78 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../l10n/l10n.dart';
+
+/// a long-press menu to a screen reader and a keyboard: one named layer
+/// the chat behind cannot be reached through, focus inside it, and escape
+/// closes it
+class MenuScope extends StatefulWidget {
+  final VoidCallback onDismiss;
+  final Widget child;
+  const MenuScope({super.key, required this.onDismiss, required this.child});
+
+  @override
+  State<MenuScope> createState() => _MenuScopeState();
+}
+
+class _MenuScopeState extends State<MenuScope> {
+  final _scope = FocusScopeNode(debugLabel: 'message menu');
+
+  @override
+  void initState() {
+    super.initState();
+    // autofocus loses to anything that had focus before, the composer
+    // first among them: the menu takes it outright once it is laid out
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _scope.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scope.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => BlockSemantics(
+    child: Semantics(
+      scopesRoute: true,
+      namesRoute: true,
+      explicitChildNodes: true,
+      label: l10n.a11yMessageActions,
+      child: CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.escape): widget.onDismiss,
+        },
+        child: FocusScope(node: _scope, child: widget.child),
+      ),
+    ),
+  );
+}
+
+/// the backdrop's tap, named, so a screen reader can close the menu too
+class MenuCloser extends StatelessWidget {
+  final VoidCallback onDismiss;
+  final Widget child;
+  const MenuCloser({super.key, required this.onDismiss, required this.child});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: l10n.commonClose,
+    onTap: onDismiss,
+    onDismiss: onDismiss,
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      excludeFromSemantics: true,
+      onTap: onDismiss,
+      child: child,
+    ),
+  );
+}
 
 class MenuBackdrop extends StatefulWidget {
   // the menu is going: the dim fades back out

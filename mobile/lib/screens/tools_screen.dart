@@ -125,7 +125,7 @@ class _Head extends StatelessWidget {
                   l10n.toolsWorksOfflineNoContacts,
                   style: HaloType.mono(
                     size: 10.5,
-                    color: HaloColors.green,
+                    color: HaloColors.greenText,
                     letter: 0.14,
                   ),
                 ),

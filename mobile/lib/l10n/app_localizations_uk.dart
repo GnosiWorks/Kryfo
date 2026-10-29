@@ -9943,6 +9943,107 @@ class AppLocalizationsUk extends AppLocalizations {
       'Kryfo потрібна особиста тека в пам’яті, поки він працює, а цей комп’ютер її не дає, тому Kryfo не відкриється.';
 
   @override
+  String get historyChatStaysShots =>
+      'Цей чат лишається на твоєму телефоні, бо в ньому заблоковано знімки екрана.';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString цифри',
+      many: '$countString цифр',
+      few: '$countString цифри',
+      one: '$countString цифра',
+      zero: 'Немає цифр',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString символу',
+      many: '$countString символів',
+      few: '$countString символи',
+      one: '$countString символ',
+      zero: 'Немає символів',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'Перебіг резервного копіювання';
+
+  @override
+  String get a11yRestoreProgress => 'Перебіг відновлення';
+
+  @override
+  String get a11yExportProgress => 'Перебіг експорту';
+
+  @override
+  String get a11yLockFileProgress => 'Перебіг замикання';
+
+  @override
+  String get a11yCleanProgress => 'Перебіг очищення';
+
+  @override
+  String get a11yMessageActions => 'Дії з повідомленням';
+
+  @override
+  String get a11yRecordVoiceNote => 'Записати голосове повідомлення';
+
+  @override
+  String get a11yRecording => 'Триває запис';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'Фото, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return 'Фото від $name, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'Відео, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return 'Відео від $name, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString нового повідомлення',
+      many: '$countString нових повідомлень',
+      few: '$countString нові повідомлення',
+      one: '$countString нове повідомлення',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get modesPickHow =>
       'Обери, як ідуть твої повідомлення. Це можна змінити будь-коли.';
 

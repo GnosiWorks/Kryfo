@@ -9807,6 +9807,99 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kryfo çalışırken bellekte özel bir klasöre ihtiyaç duyar, bu bilgisayar böyle bir klasör sunmuyor, bu yüzden açılmayacak.';
 
   @override
+  String get historyChatStaysShots =>
+      'Bu sohbet telefonunda kalır, çünkü içinde ekran görüntüsü engelli.';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString rakam',
+      zero: 'Rakam yok',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString karakter',
+      zero: 'Karakter yok',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'Yedekleme ilerlemesi';
+
+  @override
+  String get a11yRestoreProgress => 'Geri yükleme ilerlemesi';
+
+  @override
+  String get a11yExportProgress => 'Dışa aktarma ilerlemesi';
+
+  @override
+  String get a11yLockFileProgress => 'Kilitleme ilerlemesi';
+
+  @override
+  String get a11yCleanProgress => 'Temizleme ilerlemesi';
+
+  @override
+  String get a11yMessageActions => 'Mesaj işlemleri';
+
+  @override
+  String get a11yRecordVoiceNote => 'Sesli mesaj kaydet';
+
+  @override
+  String get a11yRecording => 'Kaydediliyor';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'Fotoğraf, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return '$name kişisinden fotoğraf, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'Video, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return '$name kişisinden video, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString yeni mesaj',
+      one: 'Yeni mesaj',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get modesPickHow =>
       'Mesajlarının nasıl gideceğini seç. İstediğin zaman değiştirebilirsin.';
 
