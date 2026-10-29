@@ -157,6 +157,8 @@ extension AppStateOutbox on AppState {
     _outboxTimer = Timer.periodic(const Duration(seconds: 20), (_) {
       if (haloWiping) return;
       unawaited(drainOutbox());
+      // my invites kept once an hour, network or not
+      unawaited(keepMyInvitesDue());
       // files on their way in from the files service, as they come due
       unawaited(fetchDrops());
     });

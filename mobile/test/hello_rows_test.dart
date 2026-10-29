@@ -439,4 +439,27 @@ void main() {
     expect(await signalSession.sessionStore.load(p.words), session);
   });
 
+  test('the upkeep runs again once an hour while the app runs: an expired '
+      'invite\'s keys go without a start', () async {
+    final t0 = DateTime.now().millisecondsSinceEpoch;
+    await app.keepMyInvites(nowMs: t0);
+    final once = await makeInvite(
+      db,
+      signalSession,
+      kind: kInviteOneTime,
+      fcPkOf: _fcPkOf,
+      nowMs: t0,
+    );
+    await app.keepMyInvitesDue(nowMs: t0 + 10 * 60 * 1000);
+    expect(await inviteOf(db, kMainIdent, once.id), isNotNull);
+    await app.keepMyInvitesDue(
+      nowMs: t0 + (kOneTimeHours + kSkewHours + 2) * 3600 * 1000,
+    );
+    expect(await inviteOf(db, kMainIdent, once.id), isNull);
+    expect(
+      await signalSession.signedPreKeyStore.contains(once.spkId!),
+      isFalse,
+    );
+    expect(engine.unsubscribed, contains(once.id));
+  });
 }

@@ -319,11 +319,27 @@ extension AppStateInvites on AppState {
     }
   }
 
+  /// the upkeep again once kInviteUpkeep has passed since the last, from
+  /// the outbox's tick: an always-on phone lets an expired invite's keys
+  /// and the v3 keys go on time (R23), and makes the main one again at six
+  /// months, without waiting for a start
+  Future<void> keepMyInvitesDue({int? nowMs}) {
+    final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
+    if (_invitesKeep != null ||
+        (now - _invitesKeptAt).abs() < kInviteUpkeep.inMilliseconds) {
+      return Future.value();
+    }
+    return _invitesKeep ??= keepMyInvites(nowMs: nowMs)
+        .catchError((Object e) => dlog('invites: not kept (${e.runtimeType})'))
+        .whenComplete(() => _invitesKeep = null);
+  }
+
   /// the main identity's invites kept (made, made again at six months,
   /// dropped a day after expiry, the developer's never) and each live one
   /// listened on. the everyday side only: a quiet session has none
   Future<void> keepMyInvites({int? nowMs}) async {
     if (sessionQuiet || !signalSession.ready) return;
+    _invitesKeptAt = nowMs ?? DateTime.now().millisecondsSinceEpoch;
     final face = _mainInviteFace();
     if (face == null) {
       dlog('invites: no face yet, kept next start');
@@ -825,6 +841,13 @@ const kHelloWantDays = 7;
 // the one pass sending hellos owed, and when the last began
 Future<void>? _helloPass;
 var _helloPassAt = 0;
+
+// the invite upkeep under way, and when the last one began
+Future<void>? _invitesKeep;
+var _invitesKeptAt = 0;
+
+/// how often a running app keeps its invites
+const kInviteUpkeep = Duration(hours: 1);
 
 /// how often the outbox's drain tries the hellos owed again
 const kHelloRetry = Duration(minutes: 5);
