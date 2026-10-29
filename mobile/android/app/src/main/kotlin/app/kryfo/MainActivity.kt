@@ -295,6 +295,46 @@ open class MainActivity : FlutterFragmentActivity() {
         }
     }
 
+    // a profile photo: the square at left, top, side of an upright jpeg,
+    // drawn at edge x edge and written as a jpeg, quality stepping down
+    // until it fits in most bytes. decoded pixels carry no metadata.
+    private fun squareJpeg(
+        bytes: ByteArray, left: Int, top: Int, side: Int, edge: Int, most: Int,
+    ): ByteArray? {
+        return try {
+            val src = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: return null
+            val s = minOf(side, src.width - left, src.height - top)
+            if (left < 0 || top < 0 || s <= 0) {
+                src.recycle()
+                return null
+            }
+            val out = Bitmap.createBitmap(edge, edge, Bitmap.Config.ARGB_8888)
+            val canvas = android.graphics.Canvas(out)
+            canvas.drawColor(android.graphics.Color.BLACK)
+            val paint = android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG)
+            canvas.drawBitmap(
+                src,
+                android.graphics.Rect(left, top, left + s, top + s),
+                android.graphics.Rect(0, 0, edge, edge),
+                paint,
+            )
+            src.recycle()
+            var q = 82
+            var made: ByteArray
+            while (true) {
+                val bos = ByteArrayOutputStream()
+                out.compress(Bitmap.CompressFormat.JPEG, q, bos)
+                made = bos.toByteArray()
+                if (made.size <= most || q <= 50) break
+                q -= 8
+            }
+            out.recycle()
+            if (made.size <= most) made else null
+        } catch (e: Throwable) {
+            null
+        }
+    }
+
     // this screen was rebuilt from a saved state
     private var restored = false
 
@@ -605,6 +645,19 @@ open class MainActivity : FlutterFragmentActivity() {
                         // a decode of a big frame takes long enough to freeze the ui
                         Thread {
                             val out = if (bytes == null) null else shrinkJpeg(bytes, maxEdge, quality)
+                            runOnUiThread { result.success(out) }
+                        }.start()
+                    }
+                    "squareJpeg" -> {
+                        val bytes = call.argument<ByteArray>("bytes")
+                        val left = call.argument<Int>("left") ?: 0
+                        val top = call.argument<Int>("top") ?: 0
+                        val side = call.argument<Int>("side") ?: 0
+                        val edge = call.argument<Int>("edge") ?: 512
+                        val most = call.argument<Int>("most") ?: (96 * 1024)
+                        Thread {
+                            val out = if (bytes == null) null
+                                else squareJpeg(bytes, left, top, side, edge, most)
                             runOnUiThread { result.success(out) }
                         }.start()
                     }

@@ -1726,7 +1726,6 @@ final _calls = <_Call>[
   ('pinsTheLockScreenKeeps', [], (l) => l.pinsTheLockScreenKeeps),
   ('profileCopied', ["⟨what⟩"], (l) => l.profileCopied("⟨what⟩")),
   ('profileProfile', [], (l) => l.profileProfile),
-  ('profileChangeYourFace', [], (l) => l.profileChangeYourFace),
   ('profileKryfoId', [], (l) => l.profileKryfoId),
   ('profileOnionAddress', [], (l) => l.profileOnionAddress),
   ('profileSupporterBadge', [], (l) => l.profileSupporterBadge),

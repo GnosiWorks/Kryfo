@@ -2066,7 +2066,6 @@ void main() {
     );
     expect(l.profileCopied("<what>"), "<what> copied");
     expect(l.profileProfile, "Profile");
-    expect(l.profileChangeYourFace, "Change your face");
     expect(l.profileKryfoId, "Your name");
     expect(l.profileOnionAddress, "Onion address");
     expect(l.profileSupporterBadge, "Supporter badge");

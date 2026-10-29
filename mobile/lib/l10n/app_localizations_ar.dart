@@ -4497,9 +4497,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profileProfile => 'الملف الشخصي';
 
   @override
-  String get profileChangeYourFace => 'تغيير وجهك';
-
-  @override
   String get profileKryfoId => 'اسمك';
 
   @override
@@ -9913,6 +9910,63 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'يحتاج Kryfo إلى مجلد خاص في الذاكرة أثناء عمله، وهذا الحاسوب لا يوفّر واحدًا، لذا لن يفتح.';
+
+  @override
+  String get photoCropTitle => 'حرّك وغيّر الحجم';
+
+  @override
+  String get photoCropUse => 'استخدم الصورة';
+
+  @override
+  String get photoCropLabel =>
+      'صورتك داخل الدائرة. باعد إصبعيك للتكبير واسحب للتحريك';
+
+  @override
+  String get photoCouldNotUse => 'جرّب صورة أخرى. تعذّرت قراءة هذه الصورة.';
+
+  @override
+  String get photoTake => 'التقط صورة';
+
+  @override
+  String get photoChoose => 'اختر من المعرض';
+
+  @override
+  String get photoPickFace => 'اختر وجهًا';
+
+  @override
+  String get photoView => 'عرض الصورة';
+
+  @override
+  String get photoRemove => 'إزالة الصورة';
+
+  @override
+  String get photoYourPhoto => 'صورتك';
+
+  @override
+  String get photoYourPhotoLine =>
+      'لا يراها إلا جهات اتصالك، مشفّرة من طرف إلى طرف.';
+
+  @override
+  String get photoSetTheirs => 'ضع صورة';
+
+  @override
+  String get photoChangeTheirs => 'غيّر الصورة';
+
+  @override
+  String get photoOnlyHere => 'على هذا الهاتف فقط';
+
+  @override
+  String photoForThem(Object name) {
+    return 'صورة لـ $name';
+  }
+
+  @override
+  String get photoOnlyHereLine => 'لا يراها أحد غيرك. تبقى على هذا الهاتف.';
+
+  @override
+  String photoOf(Object name) {
+    return 'صورة $name';
+  }
 
   @override
   String get historyChatStaysShots =>

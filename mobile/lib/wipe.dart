@@ -15,7 +15,13 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'main.dart'
-    show appState, engine, session, sessionQuiet, AppStateProfile;
+    show
+        appState,
+        engine,
+        session,
+        sessionQuiet,
+        AppStateProfile,
+        AppStatePhotos;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'desktop/desktop_mode.dart' show rawFiles;
 import 'dlog.dart';
@@ -76,6 +82,7 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
   // release below
   try {
     appState.stopRepoint();
+    appState.stopPhotos();
   } catch (e) {
     dlog('wipe: repoint not stopped (${e.runtimeType})');
   }

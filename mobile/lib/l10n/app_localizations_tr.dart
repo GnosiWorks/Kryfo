@@ -4413,9 +4413,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get profileProfile => 'Profil';
 
   @override
-  String get profileChangeYourFace => 'Yüzünü değiştir';
-
-  @override
   String get profileKryfoId => 'Adın';
 
   @override
@@ -9805,6 +9802,63 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo çalışırken bellekte özel bir klasöre ihtiyaç duyar, bu bilgisayar böyle bir klasör sunmuyor, bu yüzden açılmayacak.';
+
+  @override
+  String get photoCropTitle => 'Taşı ve ölçekle';
+
+  @override
+  String get photoCropUse => 'Fotoğrafı kullan';
+
+  @override
+  String get photoCropLabel =>
+      'Daire içindeki fotoğrafın. Yakınlaştırmak için iki parmakla aç, taşımak için sürükle';
+
+  @override
+  String get photoCouldNotUse => 'Başka bir fotoğraf dene. Bu okunamadı.';
+
+  @override
+  String get photoTake => 'Fotoğraf çek';
+
+  @override
+  String get photoChoose => 'Galeriden seç';
+
+  @override
+  String get photoPickFace => 'Bir yüz seç';
+
+  @override
+  String get photoView => 'Fotoğrafı gör';
+
+  @override
+  String get photoRemove => 'Fotoğrafı kaldır';
+
+  @override
+  String get photoYourPhoto => 'Fotoğrafın';
+
+  @override
+  String get photoYourPhotoLine =>
+      'Yalnızca kişilerin görür, uçtan uca şifreli.';
+
+  @override
+  String get photoSetTheirs => 'Fotoğraf koy';
+
+  @override
+  String get photoChangeTheirs => 'Fotoğrafı değiştir';
+
+  @override
+  String get photoOnlyHere => 'Yalnızca bu telefonda';
+
+  @override
+  String photoForThem(Object name) {
+    return '$name için bir fotoğraf';
+  }
+
+  @override
+  String get photoOnlyHereLine => 'Yalnızca sen görürsün. Bu telefonda kalır.';
+
+  @override
+  String photoOf(Object name) {
+    return '$name fotoğrafı';
+  }
 
   @override
   String get historyChatStaysShots =>

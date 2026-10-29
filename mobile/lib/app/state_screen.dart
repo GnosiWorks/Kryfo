@@ -72,10 +72,10 @@ extension AppStateScreen on AppState {
     final was = (await db.shotsOf(peer)).blocking;
     final at = await db.turnShots(peer, on: on);
     if (at == null) return;
+    final now = (await db.shotsOf(peer)).blocking;
     // blocking from now: what the shade still shows of the chat goes
-    if (!was && (await db.shotsOf(peer)).blocking) {
-      unawaited(_io.unnotify(peer));
-    }
+    if (!was && now) unawaited(_io.unnotify(peer));
+    _photoShotsMoved(peer, blocking: now);
     // queued first: a route that is down carries it later
     await db.queueFrame(shotsUid(peer), kFrameShots, peer, '$at');
     _bumpChatRev(peer);
@@ -111,13 +111,13 @@ extension AppStateScreen on AppState {
         written: env.writtenAt,
       );
       if (!changed) return;
+      final now = (await db.shotsOf(peer)).blocking;
+      _photoShotsMoved(peer, blocking: now);
       _bumpChatRev(peer);
       notifyListeners();
       // blocking from now: what the shade still shows of the chat goes,
       // once, and never what rang since
-      if (!was && (await db.shotsOf(peer)).blocking) {
-        unawaited(_io.unnotify(peer));
-      }
+      if (!was && now) unawaited(_io.unnotify(peer));
       await refreshContacts();
       if (_shotsCardWaits && identical(db, live)) await _readShotsCard();
     } catch (e) {

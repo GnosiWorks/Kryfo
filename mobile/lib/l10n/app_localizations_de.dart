@@ -4452,9 +4452,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get profileProfile => 'Profil';
 
   @override
-  String get profileChangeYourFace => 'Gesicht ändern';
-
-  @override
   String get profileKryfoId => 'Dein Name';
 
   @override
@@ -9882,6 +9879,65 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo braucht beim Laufen einen privaten Ordner im Arbeitsspeicher, und dieser Computer bietet keinen, deshalb öffnet es sich nicht.';
+
+  @override
+  String get photoCropTitle => 'Verschieben und skalieren';
+
+  @override
+  String get photoCropUse => 'Foto verwenden';
+
+  @override
+  String get photoCropLabel =>
+      'Dein Foto im Kreis. Zum Zoomen auseinanderziehen, zum Verschieben ziehen';
+
+  @override
+  String get photoCouldNotUse =>
+      'Nimm ein anderes Foto. Dieses ließ sich nicht lesen.';
+
+  @override
+  String get photoTake => 'Foto aufnehmen';
+
+  @override
+  String get photoChoose => 'Aus der Galerie wählen';
+
+  @override
+  String get photoPickFace => 'Gesicht wählen';
+
+  @override
+  String get photoView => 'Foto ansehen';
+
+  @override
+  String get photoRemove => 'Foto entfernen';
+
+  @override
+  String get photoYourPhoto => 'Dein Foto';
+
+  @override
+  String get photoYourPhotoLine =>
+      'Nur deine Kontakte sehen es, Ende-zu-Ende-verschlüsselt.';
+
+  @override
+  String get photoSetTheirs => 'Foto festlegen';
+
+  @override
+  String get photoChangeTheirs => 'Foto ändern';
+
+  @override
+  String get photoOnlyHere => 'Nur auf diesem Handy';
+
+  @override
+  String photoForThem(Object name) {
+    return 'Ein Foto für $name';
+  }
+
+  @override
+  String get photoOnlyHereLine =>
+      'Nur du siehst es. Es bleibt auf diesem Handy.';
+
+  @override
+  String photoOf(Object name) {
+    return 'Foto von $name';
+  }
 
   @override
   String get historyChatStaysShots =>

@@ -4393,9 +4393,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get profileProfile => 'Profil';
 
   @override
-  String get profileChangeYourFace => 'Ganti wajahmu';
-
-  @override
   String get profileKryfoId => 'Namamu';
 
   @override
@@ -9777,6 +9774,64 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo butuh folder pribadi di memori selama berjalan, dan komputer ini tidak menyediakannya, jadi Kryfo tidak akan dibuka.';
+
+  @override
+  String get photoCropTitle => 'Geser dan atur ukuran';
+
+  @override
+  String get photoCropUse => 'Pakai foto';
+
+  @override
+  String get photoCropLabel =>
+      'Fotomu di dalam lingkaran. Cubit untuk memperbesar, seret untuk menggeser';
+
+  @override
+  String get photoCouldNotUse => 'Coba foto lain. Foto ini tidak bisa dibaca.';
+
+  @override
+  String get photoTake => 'Ambil foto';
+
+  @override
+  String get photoChoose => 'Pilih dari galeri';
+
+  @override
+  String get photoPickFace => 'Pilih wajah';
+
+  @override
+  String get photoView => 'Lihat foto';
+
+  @override
+  String get photoRemove => 'Hapus foto';
+
+  @override
+  String get photoYourPhoto => 'Fotomu';
+
+  @override
+  String get photoYourPhotoLine =>
+      'Hanya kontakmu yang melihatnya, terenkripsi ujung ke ujung.';
+
+  @override
+  String get photoSetTheirs => 'Pasang foto';
+
+  @override
+  String get photoChangeTheirs => 'Ganti foto';
+
+  @override
+  String get photoOnlyHere => 'Hanya di ponsel ini';
+
+  @override
+  String photoForThem(Object name) {
+    return 'Foto untuk $name';
+  }
+
+  @override
+  String get photoOnlyHereLine =>
+      'Hanya kamu yang melihatnya. Tetap di ponsel ini.';
+
+  @override
+  String photoOf(Object name) {
+    return 'Foto $name';
+  }
 
   @override
   String get historyChatStaysShots =>

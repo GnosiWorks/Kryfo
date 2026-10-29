@@ -4385,9 +4385,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileProfile => 'Hồ sơ';
 
   @override
-  String get profileChangeYourFace => 'Đổi khuôn mặt';
-
-  @override
   String get profileKryfoId => 'Tên của bạn';
 
   @override
@@ -9766,6 +9763,64 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo cần một thư mục riêng trong bộ nhớ khi chạy, và máy tính này không có, nên Kryfo sẽ không mở.';
+
+  @override
+  String get photoCropTitle => 'Di chuyển và thu phóng';
+
+  @override
+  String get photoCropUse => 'Dùng ảnh';
+
+  @override
+  String get photoCropLabel =>
+      'Ảnh của bạn trong vòng tròn. Chụm để phóng to, kéo để di chuyển';
+
+  @override
+  String get photoCouldNotUse => 'Hãy thử ảnh khác. Không đọc được ảnh này.';
+
+  @override
+  String get photoTake => 'Chụp ảnh';
+
+  @override
+  String get photoChoose => 'Chọn từ thư viện';
+
+  @override
+  String get photoPickFace => 'Chọn khuôn mặt';
+
+  @override
+  String get photoView => 'Xem ảnh';
+
+  @override
+  String get photoRemove => 'Gỡ ảnh';
+
+  @override
+  String get photoYourPhoto => 'Ảnh của bạn';
+
+  @override
+  String get photoYourPhotoLine =>
+      'Chỉ danh bạ của bạn thấy, được mã hóa đầu cuối.';
+
+  @override
+  String get photoSetTheirs => 'Đặt ảnh';
+
+  @override
+  String get photoChangeTheirs => 'Đổi ảnh';
+
+  @override
+  String get photoOnlyHere => 'Chỉ trên điện thoại này';
+
+  @override
+  String photoForThem(Object name) {
+    return 'Ảnh cho $name';
+  }
+
+  @override
+  String get photoOnlyHereLine =>
+      'Chỉ bạn thấy. Ảnh ở lại trên điện thoại này.';
+
+  @override
+  String photoOf(Object name) {
+    return 'Ảnh của $name';
+  }
 
   @override
   String get historyChatStaysShots =>

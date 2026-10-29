@@ -4405,9 +4405,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get profileProfile => 'प्रोफ़ाइल';
 
   @override
-  String get profileChangeYourFace => 'अपना चेहरा बदलें';
-
-  @override
   String get profileKryfoId => 'आपका नाम';
 
   @override
@@ -9784,6 +9781,65 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'चलते समय Kryfo को मेमोरी में एक निजी फ़ोल्डर चाहिए, और यह कंप्यूटर ऐसा कोई फ़ोल्डर नहीं देता, इसलिए यह नहीं खुलेगा।';
+
+  @override
+  String get photoCropTitle => 'खिसकाएँ और आकार बदलें';
+
+  @override
+  String get photoCropUse => 'फ़ोटो इस्तेमाल करें';
+
+  @override
+  String get photoCropLabel =>
+      'गोले में आपकी फ़ोटो। ज़ूम के लिए उँगलियाँ फैलाएँ, खिसकाने के लिए खींचें';
+
+  @override
+  String get photoCouldNotUse =>
+      'कोई दूसरी फ़ोटो आज़माएँ। यह फ़ोटो पढ़ी नहीं जा सकी।';
+
+  @override
+  String get photoTake => 'फ़ोटो लें';
+
+  @override
+  String get photoChoose => 'गैलरी से चुनें';
+
+  @override
+  String get photoPickFace => 'चेहरा चुनें';
+
+  @override
+  String get photoView => 'फ़ोटो देखें';
+
+  @override
+  String get photoRemove => 'फ़ोटो हटाएँ';
+
+  @override
+  String get photoYourPhoto => 'आपकी फ़ोटो';
+
+  @override
+  String get photoYourPhotoLine =>
+      'इसे सिर्फ़ आपके संपर्क देखते हैं, एंड-टू-एंड एन्क्रिप्टेड।';
+
+  @override
+  String get photoSetTheirs => 'फ़ोटो लगाएँ';
+
+  @override
+  String get photoChangeTheirs => 'फ़ोटो बदलें';
+
+  @override
+  String get photoOnlyHere => 'सिर्फ़ इसी फ़ोन पर';
+
+  @override
+  String photoForThem(Object name) {
+    return '$name के लिए फ़ोटो';
+  }
+
+  @override
+  String get photoOnlyHereLine =>
+      'इसे सिर्फ़ आप देखते हैं। यह इसी फ़ोन पर रहती है।';
+
+  @override
+  String photoOf(Object name) {
+    return '$name की फ़ोटो';
+  }
 
   @override
   String get historyChatStaysShots =>

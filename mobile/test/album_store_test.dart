@@ -72,7 +72,7 @@ void main() {
     if (skip()) return;
     final db = HaloDb();
     final raw = await db.open();
-    expect(await raw.getVersion(), 92);
+    expect(await raw.getVersion(), 93);
     await db.saveMessage(_alice, 'in', 'before', msgUid: 'u-old');
     // the file as 83 left it: no album columns, no index
     await raw.execute('DROP INDEX idx_messages_album');
@@ -84,7 +84,7 @@ void main() {
 
     final again = HaloDb();
     final up = await again.open();
-    expect(await up.getVersion(), 92);
+    expect(await up.getVersion(), 93);
     final cols = [
       for (final c in await up.rawQuery("PRAGMA table_info('messages')"))
         c['name'],

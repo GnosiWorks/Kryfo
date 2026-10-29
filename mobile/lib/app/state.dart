@@ -38,12 +38,21 @@ class QuietIdentity {
 // what home shows of a session: its chats, requests, groups, avatar and
 // the developer chat's row
 class _Shown {
-  const _Shown(this.contacts, this.pending, this.groups, this.avatar, this.dev);
+  const _Shown(
+    this.contacts,
+    this.pending,
+    this.groups,
+    this.avatar,
+    this.dev,
+    this.photos,
+  );
   final List<ContactPreview> contacts;
   final int pending;
   final List<GroupPreview> groups;
   final int? avatar;
   final DevRow? dev;
+  // its photo book, so a swap shows no photo of the other side
+  final Map<String, Uint8List> photos;
 }
 
 // the everyday container's database. what arrives lands here whichever
