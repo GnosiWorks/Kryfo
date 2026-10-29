@@ -190,13 +190,58 @@ final ValueNotifier<Map<String, FileWait>> fileWaits = ValueNotifier(const {});
 
 final Map<String, TransferPace> _waitPace = {};
 
+// the waiting files whose fetch runs now, and when a byte of each last
+// came. only these move: a wait left coming by a fetch that stopped,
+// backs off or never started holds nothing
+final Map<String, int> _waitMoving = {};
+
+/// a wait with no byte for this long has stalled and moves nothing
+const kWaitStall = Duration(seconds: 75);
+
 void setFileWait(String uid, FileWait? w) {
   final now = {...fileWaits.value};
   if (w == null) {
     if (now.remove(uid) == null) return;
     _waitPace.remove(uid);
+    _waitMoving.remove(uid);
   } else {
     now[uid] = w;
+  }
+  fileWaits.value = now;
+}
+
+/// [uid]'s fetch starts or ends
+void fileWaitFetching(String uid, bool on) {
+  if (on) {
+    _waitMoving[uid] = DateTime.now().millisecondsSinceEpoch;
+  } else if (_waitMoving.remove(uid) == null) {
+    return;
+  }
+  // the note hears it
+  fileWaits.value = {...fileWaits.value};
+}
+
+/// [uid]'s fetch runs and a byte came within [kWaitStall]
+bool fileWaitMoves(String uid, [int? atMs]) {
+  final t = _waitMoving[uid];
+  if (t == null) return false;
+  final now = atMs ?? DateTime.now().millisecondsSinceEpoch;
+  return now - t < kWaitStall.inMilliseconds;
+}
+
+/// the waits of [among] whose rows are gone leave: the registry was read
+/// again from the databases. one set since the read began stays
+void keepOnlyWaits(Set<String> uids, Set<String> among) {
+  final gone = [
+    for (final u in fileWaits.value.keys)
+      if (among.contains(u) && !uids.contains(u)) u,
+  ];
+  if (gone.isEmpty) return;
+  final now = {...fileWaits.value};
+  for (final u in gone) {
+    now.remove(u);
+    _waitPace.remove(u);
+    _waitMoving.remove(u);
   }
   fileWaits.value = now;
 }
@@ -205,10 +250,10 @@ void setFileWait(String uid, FileWait? w) {
 void fileWaitShare(String uid, double share) {
   final w = fileWaits.value[uid];
   if (w == null) return;
-  (_waitPace[uid] ??= TransferPace()).add(
-    DateTime.now().millisecondsSinceEpoch,
-    share,
-  );
+  final at = DateTime.now().millisecondsSinceEpoch;
+  (_waitPace[uid] ??= TransferPace()).add(at, share);
+  if (share > w.share && _waitMoving.containsKey(uid)) _waitMoving[uid] = at;
+  if (w.state == WaitState.coming && w.share == share) return;
   setFileWait(uid, w.copyWith(state: WaitState.coming, share: share));
 }
 

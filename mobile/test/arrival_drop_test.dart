@@ -20,6 +20,7 @@ import 'package:kryfo/main.dart'
         HaloEngine,
         useDatabasesForTest,
         useEngineForTest;
+import 'package:kryfo/media_progress.dart' show transfersNow;
 import 'package:kryfo/media_send.dart' show cancelMediaSend;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
@@ -382,6 +383,66 @@ void main() {
       expect('${row['plaintext']}'.split('\n'), hasLength(2));
       expect(fileWaitOf('w7'), isNull);
       expect(await fetchOf(live.mem, 'w7'), isNull);
+    });
+
+    test('a retry leaves it waiting, moving nothing', () async {
+      await rule(GetKind.file, AutoGet.never);
+      await from(_x, await drop('r1'));
+      await app.downloadNow('r1');
+      eng.answer = 'error: tor';
+      var during = false;
+      eng.during = () async {
+        // while its fetch runs it counts as coming in
+        during = fileWaitMoves('r1') && transfersNow().receiving == 1;
+      };
+      await app.fetchDropsInForTest(live);
+      expect(during, isTrue);
+      // the row backs off for its next try; the wait no longer says coming
+      expect((await fetchOf(live.mem, 'r1'))!.state, kFetchComing);
+      expect(fileWaitOf('r1')!.state, WaitState.asks);
+      expect(fileWaitMoves('r1'), isFalse);
+      expect(transfersNow().receiving, 0);
+      // a tap brings it at once
+      eng.answer = 'ok';
+      eng.during = null;
+      await app.downloadNow('r1');
+      await app.fetchDropsInForTest(live);
+      expect(fileWaitOf('r1'), isNull);
+    });
+
+    test('one read on its way with no fetch running waits', () async {
+      await rule(GetKind.file, AutoGet.never);
+      await from(_x, await drop('r2'));
+      await app.downloadNow('r2');
+      // a restart: the row says coming, nothing fetches it yet
+      fileWaits.value = const {};
+      await app.loadFileWaitsForTest();
+      expect(fileWaitOf('r2')!.state, WaitState.asks);
+      expect(transfersNow().receiving, 0);
+    });
+
+    test('a wait whose row went leaves the registry', () async {
+      await rule(GetKind.file, AutoGet.never);
+      await from(_x, await drop('r3'));
+      expect(fileWaitOf('r3'), isNotNull);
+      // a chat cleared, a take back, a vault closed
+      await dropFetchRow(live.mem, 'r3');
+      await app.loadFileWaitsForTest();
+      expect(fileWaitOf('r3'), isNull);
+    });
+
+    test('closed hidden chats stop their own fetch, no other', () async {
+      await rule(GetKind.file, AutoGet.never);
+      await from(_x, await drop('r4'));
+      await app.downloadNow('r4');
+      eng.answer = 'error: cancelled';
+      eng.during = () async => app.vaultClosedForTest(_Rows());
+      await app.fetchDropsInForTest(live);
+      expect(eng.cancels, isEmpty);
+      await app.downloadNow('r4');
+      eng.during = () async => app.vaultClosedForTest(live);
+      await app.fetchDropsInForTest(live);
+      expect(eng.cancels, ['f:${'ab' * 16}']);
     });
 
     test('a waiting file whose message was deleted is let go', () async {

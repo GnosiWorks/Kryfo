@@ -219,6 +219,7 @@ void main() {
           share: 0.5,
         ),
       );
+      fileWaitFetching('w', true);
       // one that waits for a tap moves nothing
       setFileWait(
         'x',
@@ -231,6 +232,7 @@ void main() {
       expect(now.done, 500 + 1000 + 1000);
       mediaProgressEnd('s');
       incomingMediaDone('k');
+      fileWaitFetching('w', false);
       fileWaits.value = const {};
       expect(transfersNow().total, 0);
     });

@@ -78,8 +78,10 @@ String? transferDetail(String key, double share) {
     total += b;
     done += (b * e.value).round();
   }
-  for (final e in fileWaits.value.values) {
-    if (e.state != WaitState.coming) continue;
+  // a waiting file counts only while its fetch runs and bytes come
+  final at = DateTime.now().millisecondsSinceEpoch;
+  for (final MapEntry(key: uid, value: e) in fileWaits.value.entries) {
+    if (e.state != WaitState.coming || !fileWaitMoves(uid, at)) continue;
     receiving++;
     total += e.size;
     done += (e.size * e.share).round();

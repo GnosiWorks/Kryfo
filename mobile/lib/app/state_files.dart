@@ -14,6 +14,10 @@ bool _dropFetchRunning = false;
 final Map<String, String> _dropDays = {};
 bool _dropFetchAgain = false;
 
+// the fetch under way: its database, its engine key and its chat, so a
+// vault that closes stops its own
+({HaloDb d, String key, String chat})? _fetching;
+
 extension AppStateFiles on AppState {
   // ---- which phones fetch from the files service ----
 
@@ -370,7 +374,10 @@ extension AppStateFiles on AppState {
       do {
         _dropFetchAgain = false;
         for (final d in [live, ?_openVault]) {
-          if (everydayHeld || haloWiping || !linkUp) return;
+          if (everydayHeld || haloWiping || !linkUp) {
+            _waitsHalted();
+            return;
+          }
           try {
             await _fetchDropsIn(d);
           } catch (e) {
@@ -383,28 +390,64 @@ extension AppStateFiles on AppState {
     }
   }
 
+  // the waits as the databases hold them: new rows join, rows gone (a chat
+  // cleared, a take back, a vault closed) leave. one on its way that no
+  // fetch runs for waits until one does
   Future<void> _loadFileWaits() async {
     try {
+      final before = fileWaits.value.keys.toSet();
       final rules = await loadAutoGet(session.container);
+      final seen = <String>{};
       for (final d in [live, ?_openVault]) {
         for (final f in await filedFetches(await d.open())) {
+          seen.add(f.uid);
           if (fileWaitOf(f.uid) != null) continue;
           final env = unwrapMessage(f.wire);
           final kind = getKindOf(env.fileName);
+          final state = _waitStateOf(f.state);
           setFileWait(
             f.uid,
             FileWait(
               size: f.size,
-              state: _waitStateOf(f.state),
+              state: state == WaitState.coming && !fileWaitMoves(f.uid)
+                  ? WaitState.asks
+                  : state,
               rule: kind == null ? AutoGet.always : rules[kind]!,
             ),
           );
         }
       }
+      keepOnlyWaits(seen, before);
     } catch (e) {
       dlog('files: waits not read (${e.runtimeType})');
     }
   }
+
+  @visibleForTesting
+  Future<void> loadFileWaitsForTest() => _loadFileWaits();
+
+  // no link, or held: what was on its way waits for the next pass
+  void _waitsHalted() {
+    for (final MapEntry(key: uid, value: w) in fileWaits.value.entries) {
+      if (w.state == WaitState.coming && !fileWaitMoves(uid)) {
+        setFileWait(uid, w.copyWith(state: WaitState.asks));
+      }
+    }
+  }
+
+  /// hidden chats closed: their fetch stops where it is (its .part stays
+  /// for the next open) and their waits leave the registry
+  void _vaultFetchStops(HaloDb v) {
+    final f = _fetching;
+    if (f != null && identical(f.d, v)) {
+      engine.fileCancel(f.key);
+      incomingMediaDone(f.chat);
+    }
+    unawaited(_loadFileWaits());
+  }
+
+  @visibleForTesting
+  void vaultClosedForTest(HaloDb v) => _vaultFetchStops(v);
 
   @visibleForTesting
   Future<void> fetchDropsInForTest(HaloDb d) =>
@@ -446,7 +489,7 @@ extension AppStateFiles on AppState {
         } else {
           // a blind fetch may have finished since the frame was kept
           await takeHeld(await d.container.mediaDir(), frame.token!, f.path);
-          final r = await _fetchOne(f, frame, chat);
+          final r = await _fetchOne(d, f, frame, chat);
           // the chat was cleared or put away while it came: nothing of it
           // is filed, and the service hears this phone is done with it
           final after = await fetchOf(db, f.uid);
@@ -555,7 +598,7 @@ extension AppStateFiles on AppState {
       ),
     );
     if (state != kFetchComing) return;
-    final r = await _fetchOne(f, frame, chat, waiting: true);
+    final r = await _fetchOne(d, f, frame, chat, waiting: true);
     final after = await fetchOf(db, f.uid);
     if (after == null || await d.incomingFilePath(f.uid) == null) {
       setFileWait(f.uid, null);
@@ -586,6 +629,9 @@ extension AppStateFiles on AppState {
     } else {
       dlog('files: fetch to try again ($r)');
       await fetchTried(db, f.uid, f.tries + 1, now);
+      // it waits for its next try, or a tap
+      final w = fileWaitOf(f.uid);
+      if (w != null) setFileWait(f.uid, w.copyWith(state: WaitState.asks));
     }
   }
 
@@ -605,12 +651,16 @@ extension AppStateFiles on AppState {
   // one fetch, its progress on the chat's strip, or on its own bubble for
   // a file whose message is filed already
   Future<String> _fetchOne(
+    HaloDb d,
     DropFetch f,
     DropFrame frame,
     String chat, {
     bool waiting = false,
   }) async {
     final key = 'f:${frame.id}';
+    final mine = (d: d, key: key, chat: chat);
+    _fetching = mine;
+    if (waiting) fileWaitFetching(f.uid, true);
     final watch = Timer.periodic(const Duration(milliseconds: 500), (_) {
       final p = engine.fileProgress(key);
       if (p == null) return;
@@ -632,6 +682,8 @@ extension AppStateFiles on AppState {
       return 'error: ${e.runtimeType}';
     } finally {
       watch.cancel();
+      if (waiting) fileWaitFetching(f.uid, false);
+      if (identical(_fetching, mine)) _fetching = null;
     }
   }
 

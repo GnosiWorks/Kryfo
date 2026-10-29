@@ -497,6 +497,8 @@ extension AppStateSession on AppState {
     _session = Session(was.primary);
     lockState.inVault = false;
     _forgetVaultSide();
+    // its file on the way stops, and its waits go
+    _vaultFetchStops(v);
     // its contacts' photos off at once, before anything is drawn
     photoBook.put({
       for (final MapEntry(:key, :value) in photoBook.all.entries)
