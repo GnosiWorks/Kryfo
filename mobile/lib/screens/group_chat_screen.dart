@@ -4220,7 +4220,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
               child: Text(
-                l10n.groupChatItDisappearsWithNo,
+                album
+                    ? l10n.groupChatAlbumItDisappearsWithNo
+                    : l10n.groupChatItDisappearsWithNo,
                 style: HaloType.sans(size: 13, color: HaloColors.text2),
               ),
             ),
@@ -4351,7 +4353,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (!mounted || (_draftReply ?? _hiddenQuote) != uid) return;
     _draftReply = null;
     final from = row?['peer_id'] as String?;
-    if (row == null || from == null) {
+    // a reply picked meanwhile wins over the kept one
+    if (row == null || from == null || _replyTo != null) {
       _hiddenQuote = null;
       return;
     }
@@ -4361,7 +4364,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       return;
     }
     _hiddenQuote = null;
-    if (_replyTo != null) return;
     final m = _GMsg(
       sender: from,
       senderName: _nameOf(from),
