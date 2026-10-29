@@ -17,10 +17,15 @@ void main() {
 
   late List<bool> told;
   late List<bool> recents;
+  // calls the window refuses, one each
+  var refuse = 0;
+  var refuseRecents = 0;
 
   setUp(() {
     told = [];
     recents = [];
+    refuse = 0;
+    refuseRecents = 0;
     // a lock that was read: nothing is sent before
     lockState.openForTest();
     FlutterSecureStorage.setMockInitialValues({});
@@ -30,9 +35,17 @@ void main() {
         ) async {
           if (call.method == 'setSecure') {
             told.add((call.arguments as Map)['on'] as bool);
+            if (refuse > 0) {
+              refuse--;
+              throw PlatformException(code: 'refused');
+            }
           }
           if (call.method == 'setRecentsHidden') {
             recents.add((call.arguments as Map)['on'] as bool);
+            if (refuseRecents > 0) {
+              refuseRecents--;
+              throw PlatformException(code: 'refused');
+            }
           }
           return null;
         });
@@ -58,6 +71,40 @@ void main() {
     await app.forceSecure(false);
     expect(app.secureForced, isFalse);
     expect(told, [true, false]);
+  });
+
+  test('a block the window refused is asked for once more', () async {
+    final app = await make();
+    refuse = 1;
+    await app.forceSecure(true);
+    expect(told, [true, true]);
+    // refused twice: the next change asks again, never takes it as on
+    await app.forceSecure(false);
+    told.clear();
+    refuse = 2;
+    await app.forceSecure(true);
+    expect(told, [true, true]);
+    await app.forceSecure(true);
+    expect(told, [true, true, true]);
+  });
+
+  test('a recents hide the window refused is asked for once more', () async {
+    lockState.openForTest(enabled: true);
+    addTearDown(lockState.openForTest);
+    var app = await make();
+    refuseRecents = 1;
+    await app.loadScreenSecure();
+    expect(recents, [true, true]);
+    await app.forceSecure(true);
+    expect(recents, [true, true]);
+    // refused twice: the next change asks again
+    recents.clear();
+    app = await make();
+    refuseRecents = 2;
+    await app.loadScreenSecure();
+    expect(recents, [true, true]);
+    await app.forceSecure(true);
+    expect(recents, [true, true, true]);
   });
 
   test('a release nobody holds takes no one else\'s', () async {

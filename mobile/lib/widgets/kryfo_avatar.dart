@@ -1,13 +1,28 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // avatar drawn from a seed string, or from a chosen face. the palette comes
-// from the seed, so the same id draws the same avatar on every phone.
+// from the seed, so the same id draws the same avatar on every phone. a
+// profile photo the session holds for the id shows over the face
+// (profile_photo.dart)
 
+import 'package:flutter/foundation.dart' show Uint8List;
 import 'package:flutter/material.dart';
+import '../profile_photo.dart' show PhotoBook, photoBook, photoImage;
 import '../theme.dart';
 import 'avatar_mark.dart';
 
 // how many distinct avatars exist
 int get avatarChoiceCount => _palettes.length * markCount * rotCount;
+
+/// the face a new name starts with, drawn from its words: the same words
+/// give the same face, and the profile changes it
+int autoFace(String seed) {
+  // the last four bytes are the hash of the whole seed
+  final b = _seedBytes('face:$seed');
+  final k = b.length - 4;
+  final n = b[k] | (b[k + 1] << 8) | (b[k + 2] << 16);
+  return n % avatarChoiceCount;
+}
+
 int get avatarPaletteCount => _palettes.length;
 
 class KryfoAvatar extends StatelessWidget {
@@ -16,17 +31,50 @@ class KryfoAvatar extends StatelessWidget {
   // null draws the seed's palette and serif initial. anything else is a
   // chosen face, packed in one int.
   final int? choice;
+  // false: always the face, as the face picker draws its choices
+  final bool photo;
+  // stands in for the app's book in tests
+  final PhotoBook? book;
   const KryfoAvatar({
     super.key,
     required this.seed,
     required this.size,
     this.choice,
+    this.photo = true,
+    this.book,
   });
 
   // a picture: its letters are drawn from the id, and a screen reader that
   // read them out would announce a name nobody gave
   @override
-  Widget build(BuildContext context) => ExcludeSemantics(child: _draw());
+  Widget build(BuildContext context) {
+    if (!photo) return ExcludeSemantics(child: _draw());
+    final b = book ?? photoBook;
+    return ExcludeSemantics(
+      child: ListenableBuilder(
+        listenable: b,
+        builder: (context, _) {
+          final bytes = b.of(seed);
+          final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+          return AnimatedSwitcher(
+            duration: still ? Duration.zero : const Duration(milliseconds: 260),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            layoutBuilder: (cur, prev) =>
+                Stack(alignment: Alignment.center, children: [...prev, ?cur]),
+            child: bytes == null
+                ? KeyedSubtree(key: const ValueKey('face'), child: _draw())
+                : _Photo(
+                    key: ValueKey(identityHashCode(bytes)),
+                    bytes: bytes,
+                    size: size,
+                    face: _draw,
+                  ),
+          );
+        },
+      ),
+    );
+  }
 
   Widget _draw() {
     if (choice != null) return _markedAvatar(choice!, size);
@@ -104,6 +152,36 @@ class KryfoAvatar extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// a profile photo, round, decoded at the size it is drawn. one that will
+// not decode shows the face
+class _Photo extends StatelessWidget {
+  const _Photo({
+    super.key,
+    required this.bytes,
+    required this.size,
+    required this.face,
+  });
+  final Uint8List bytes;
+  final double size;
+  final Widget Function() face;
+
+  @override
+  Widget build(BuildContext context) {
+    final px = (size * MediaQuery.devicePixelRatioOf(context)).ceil();
+    return ClipOval(
+      child: Image(
+        image: photoImage(bytes, px),
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+        filterQuality: FilterQuality.medium,
+        errorBuilder: (_, _, _) => face(),
       ),
     );
   }

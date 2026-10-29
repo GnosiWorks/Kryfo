@@ -106,6 +106,10 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({});
     appState.sendModeForTest = 'balanced';
+    // a claim waits for the onion: the registry takes no invite without one
+    final was = appState.myOnion;
+    appState.myOnion = 'abc.onion';
+    addTearDown(() => appState.myOnion = was);
   });
 
   // made inside the test, so its answers land in the test's own clock

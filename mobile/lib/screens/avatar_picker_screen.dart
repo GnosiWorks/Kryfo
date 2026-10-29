@@ -83,6 +83,7 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
               ),
             ),
       child: KryfoAvatar(
+        photo: false,
         key: ValueKey(_choice),
         seed: id,
         size: 96,
@@ -111,6 +112,7 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
                 ),
                 onTap: () => _pick(() => _rot = r),
                 child: KryfoAvatar(
+                  photo: false,
                   seed: id,
                   size: 50,
                   choice: _pal * markCount * rotCount + shape * rotCount + r,
@@ -157,7 +159,7 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
                 selected: _shape == null,
                 label: l10n.avatarPickerYourInitial,
                 onTap: () => _pick(() => _shape = null),
-                child: KryfoAvatar(seed: id, size: 50),
+                child: KryfoAvatar(seed: id, size: 50, photo: false),
               ),
               for (var m = 0; m < markCount; m++)
                 _Swatch(
@@ -169,6 +171,7 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
                   ),
                   onTap: () => _pick(() => _shape = m),
                   child: KryfoAvatar(
+                    photo: false,
                     seed: id,
                     size: 50,
                     choice: _pal * markCount * rotCount + m * rotCount + _rot,
@@ -194,6 +197,7 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
                   ),
                   onTap: () => _pick(() => _pal = p),
                   child: KryfoAvatar(
+                    photo: false,
                     seed: id,
                     size: 50,
                     choice:

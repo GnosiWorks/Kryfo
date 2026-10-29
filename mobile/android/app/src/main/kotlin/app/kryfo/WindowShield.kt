@@ -5,8 +5,8 @@ package app.kryfo
 // for the lock screen, pin screens, the chats that block and, below android
 // 13, the whole time a pin is set. a pin set keeps the app out of recents:
 // android 13 and later have a switch for that ([picture] is null before).
-// each step goes on its own and nothing of it reaches the caller: a step
-// refused is tried again on the next change
+// each step goes on its own and never throws to the caller: a step
+// refused is tried again on the next change, and hold and hide say false
 internal class WindowShield(
     private val flag: (secure: Boolean) -> Unit,
     private val picture: ((recentsPicture: Boolean) -> Unit)?,
@@ -33,22 +33,24 @@ internal class WindowShield(
         push()
     }
 
-    fun hold(on: Boolean) {
+    // true when the window is as asked
+    fun hold(on: Boolean): Boolean {
         held = on
-        push()
+        return push()
     }
 
-    fun hide(on: Boolean) {
+    fun hide(on: Boolean): Boolean {
         hidden = on
-        push()
+        return push()
     }
 
-    private fun push() {
+    private fun push(): Boolean {
         val s = secure
         if (s != flagSent) flagSent = if (step { flag(s) }) s else null
         val p = recentsPicture
-        val pic = picture ?: return
+        val pic = picture ?: return flagSent == s
         if (p != pictureSent) pictureSent = if (step { pic(p) }) p else null
+        return flagSent == s && pictureSent == p
     }
 
     private inline fun step(body: () -> Unit): Boolean = try {
@@ -56,5 +58,18 @@ internal class WindowShield(
         true
     } catch (_: Throwable) {
         false
+    }
+
+    companion object {
+        // dart's call: true when the block was asked on and did not all go
+        // on, so dart hears an error and asks again. never a quiet success
+        fun refusedOn(on: Boolean, set: (Boolean) -> Boolean): Boolean {
+            val ok = try {
+                set(on)
+            } catch (_: Throwable) {
+                false
+            }
+            return on && !ok
+        }
     }
 }

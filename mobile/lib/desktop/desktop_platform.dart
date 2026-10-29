@@ -71,6 +71,8 @@ const platformNotHere = {
   'copySensitive',
   // the caller sends the photo as it is
   'shrinkJpeg',
+  // no profile photo is added on desktop (photoAddOffered)
+  'squareJpeg',
   // no share sheet, no android video reader
   'shareFile', 'videoInfo',
 };

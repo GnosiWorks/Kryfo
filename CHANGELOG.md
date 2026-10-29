@@ -3,10 +3,14 @@
 ## [0.6.0] - unreleased
 
 ### Added
+- invite someone from the first minute: the link you share opens a page that says what Kryfo is and where to get it, then opens Kryfo. it works in any messenger, also for people who don't have Kryfo yet.
+- you can pick a public @name while setting up, or skip it and stay unfindable.
 - typing indicator: in a 1:1 chat you see "Typing" under your contact's name and in the chat list while they write, and they see yours. it goes straight to them over tor, never through a relay, and only while you both have it on. it is on for everyone, also after the update, and off by itself while tor goes through a bridge or the chat is archived. turn it off under settings, privacy.
 - a universal apk with both arm builds in one file, on github and the site. it installs on every arm phone, so nobody has to know which one they need.
 
 ### Changed
+- setup is shorter: five steps. your face is drawn from your name (change it in your profile), the route stays private (change it in settings), and the battery guide comes right after notifications.
+- a message you write while Kryfo is still connecting shows as sending and goes as soon as the route is up.
 - on Android 13 and newer, screenshots work again with a PIN set, in chats that don't block them, and Kryfo stays hidden in recent apps. the lock screen, PIN and passphrase screens, hidden chats and blocking chats still block them. on older Android a PIN keeps screenshots blocked, as before.
 - your PINs now only work on this phone: they are tied to the phone's security chip, so they can't be tried on another device. your encrypted backup is the way back in if the chip ever loses its key. thanks to Ami (SleepingAmi) for suggesting it.
 

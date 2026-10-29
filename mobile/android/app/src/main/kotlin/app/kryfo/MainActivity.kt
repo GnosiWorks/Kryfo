@@ -303,6 +303,46 @@ open class MainActivity : FlutterFragmentActivity() {
         }
     }
 
+    // a profile photo: the square at left, top, side of an upright jpeg,
+    // drawn at edge x edge and written as a jpeg, quality stepping down
+    // until it fits in most bytes. decoded pixels carry no metadata.
+    private fun squareJpeg(
+        bytes: ByteArray, left: Int, top: Int, side: Int, edge: Int, most: Int,
+    ): ByteArray? {
+        return try {
+            val src = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: return null
+            val s = minOf(side, src.width - left, src.height - top)
+            if (left < 0 || top < 0 || s <= 0) {
+                src.recycle()
+                return null
+            }
+            val out = Bitmap.createBitmap(edge, edge, Bitmap.Config.ARGB_8888)
+            val canvas = android.graphics.Canvas(out)
+            canvas.drawColor(android.graphics.Color.BLACK)
+            val paint = android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG)
+            canvas.drawBitmap(
+                src,
+                android.graphics.Rect(left, top, left + s, top + s),
+                android.graphics.Rect(0, 0, edge, edge),
+                paint,
+            )
+            src.recycle()
+            var q = 82
+            var made: ByteArray
+            while (true) {
+                val bos = ByteArrayOutputStream()
+                out.compress(Bitmap.CompressFormat.JPEG, q, bos)
+                made = bos.toByteArray()
+                if (made.size <= most || q <= 50) break
+                q -= 8
+            }
+            out.recycle()
+            if (made.size <= most) made else null
+        } catch (e: Throwable) {
+            null
+        }
+    }
+
     // this screen was rebuilt from a saved state
     private var restored = false
 
@@ -355,26 +395,30 @@ open class MainActivity : FlutterFragmentActivity() {
     // flag_secure on the window is not enough on every phone: flutter draws
     // into a surfaceview with its own secure bit, so the surface is told
     // directly
-    // each step on its own: one refused never stops the others
-    private fun setSecureWindow(on: Boolean) {
-        shield.hold(on)
+    // each step on its own: one refused never stops the others. true when
+    // every step went through
+    private fun setSecureWindow(on: Boolean): Boolean {
+        val held = shield.hold(on)
         quietly { android.util.Log.i("kryfo", "setSecure on=$on") }
-        quietly { getSharedPreferences("kryfo_window", MODE_PRIVATE).edit().putBoolean("secure", on).apply() }
-        quietly { findSurface(window.decorView)?.setSecure(on) }
+        val kept = quietly { getSharedPreferences("kryfo_window", MODE_PRIVATE).edit().putBoolean("secure", on).apply() }
+        val surface = quietly { findSurface(window.decorView)?.setSecure(on) }
         // no surface recreate on the way off, it flashes the window. one ui
         // may keep the bit until the next start
+        return held && kept && surface
     }
 
-    private fun setRecentsHidden(on: Boolean) {
-        shield.hide(on)
-        quietly { getSharedPreferences("kryfo_window", MODE_PRIVATE).edit().putBoolean("recents", on).apply() }
+    private fun setRecentsHidden(on: Boolean): Boolean {
+        val hidden = shield.hide(on)
+        val kept = quietly { getSharedPreferences("kryfo_window", MODE_PRIVATE).edit().putBoolean("recents", on).apply() }
+        return hidden && kept
     }
 
-    private inline fun quietly(step: () -> Unit) {
-        try {
-            step()
-        } catch (_: Throwable) {
-        }
+    // true when the step ran
+    private inline fun quietly(step: () -> Unit): Boolean = try {
+        step()
+        true
+    } catch (_: Throwable) {
+        false
     }
 
     private fun findSurface(v: View): SurfaceView? {
@@ -553,18 +597,19 @@ open class MainActivity : FlutterFragmentActivity() {
                         val on = call.argument<Boolean>("on") ?: false
                         // the engine outlives the window, so this can be
                         // called with nothing attached
-                        try {
-                            setSecureWindow(on)
-                        } catch (e: Exception) {
+                        if (WindowShield.refusedOn(on) { setSecureWindow(it) }) {
+                            result.error("refused", null, null)
+                        } else {
+                            result.success(null)
                         }
-                        result.success(null)
                     }
                     "setRecentsHidden" -> {
-                        try {
-                            setRecentsHidden(call.argument<Boolean>("on") ?: false)
-                        } catch (e: Exception) {
+                        val on = call.argument<Boolean>("on") ?: false
+                        if (WindowShield.refusedOn(on) { setRecentsHidden(it) }) {
+                            result.error("refused", null, null)
+                        } else {
+                            result.success(null)
                         }
-                        result.success(null)
                     }
                     // the wipe: what the settings "clear storage" button does,
                     // every file and preference gone in one synchronous call
@@ -631,6 +676,19 @@ open class MainActivity : FlutterFragmentActivity() {
                         // a decode of a big frame takes long enough to freeze the ui
                         Thread {
                             val out = if (bytes == null) null else shrinkJpeg(bytes, maxEdge, quality)
+                            runOnUiThread { result.success(out) }
+                        }.start()
+                    }
+                    "squareJpeg" -> {
+                        val bytes = call.argument<ByteArray>("bytes")
+                        val left = call.argument<Int>("left") ?: 0
+                        val top = call.argument<Int>("top") ?: 0
+                        val side = call.argument<Int>("side") ?: 0
+                        val edge = call.argument<Int>("edge") ?: 512
+                        val most = call.argument<Int>("most") ?: (96 * 1024)
+                        Thread {
+                            val out = if (bytes == null) null
+                                else squareJpeg(bytes, left, top, side, edge, most)
                             runOnUiThread { result.success(out) }
                         }.start()
                     }

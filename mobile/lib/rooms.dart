@@ -262,7 +262,10 @@ String roomLinkName(String raw) {
 
 // a kryfo link inside whatever it arrived in. people paste the whole
 // message, "join us kryfo://room?...", and both parsers want the link alone.
-final _kryfoLink = RegExp(r'kryfo://(?:room|share)\?[^\s]+');
+// a right-to-left text wraps a link in direction marks, which end it
+final _kryfoLink = RegExp(
+  r'kryfo://(?:room|share)\?[^\s\u200e\u200f\u202a-\u202e\u2066-\u2069]+',
+);
 
 /// the first kryfo link in [text], or null
 String? firstKryfoLink(String text) => _kryfoLink.firstMatch(text)?.group(0);

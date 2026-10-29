@@ -3915,6 +3915,10 @@
   "@homeAddSomeone": {
     "description": "screens/home_screen.dart"
   },
+  "homeInviteSomeone": "Invite someone",
+  "@homeInviteSomeone": {
+    "description": "screens/home_screen.dart"
+  },
   "homeArchived": "Archived",
   "@homeArchived": {
     "description": "screens/home_screen.dart"
@@ -4603,18 +4607,6 @@
   "@myKryfoInviteCopiedClearsIn": {
     "description": "screens/my_kryfo_screen.dart"
   },
-  "myKryfoAddMeOnKryfo": "Add me on Kryfo. My name there is {myId}\n\nTap to add me:\n{uri}\n\nKryfo is a private messenger. No phone number, no email.",
-  "@myKryfoAddMeOnKryfo": {
-    "description": "screens/my_kryfo_screen.dart",
-    "placeholders": {
-      "myId": {
-        "type": "Object"
-      },
-      "uri": {
-        "type": "Object"
-      }
-    }
-  },
   "myKryfoAddMeOnKryfo2": "Add me on Kryfo",
   "@myKryfoAddMeOnKryfo2": {
     "description": "screens/my_kryfo_screen.dart"
@@ -5000,81 +4992,65 @@
   "@onboardingThreeWords": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingPickA": "Pick a *face*.",
-  "@onboardingPickA": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingDrawnOnThisPhone": "Drawn on this phone from a number, never uploaded. Change it whenever you like.",
-  "@onboardingDrawnOnThisPhone": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingThePeopleYouMessage": "The people you message see this too",
-  "@onboardingThePeopleYouMessage": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingKeepMyInitial": "Keep my initial",
-  "@onboardingKeepMyInitial": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingThatOne": "That one →",
-  "@onboardingThatOne": {
-    "description": "screens/onboarding_screen.dart"
-  },
   "onboardingContinue": "Continue →",
   "@onboardingContinue": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingHowYourMessages": "How your messages *travel*.",
-  "@onboardingHowYourMessages": {
+  "onboardingNameHeadline": "A public *@name*, if you like.",
+  "@onboardingNameHeadline": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingYouCanChangeThis": "You can change this any time in settings, for everyone or for one chat.",
-  "@onboardingYouCanChangeThis": {
+  "onboardingNameLine": "A public name lets people find you. Skipping keeps you more private, you can always add one later.",
+  "@onboardingNameLine": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingSlowerAMessageTakes": "Slower. A message takes two to five seconds.",
-  "@onboardingSlowerAMessageTakes": {
+  "onboardingNameSkip": "Skip for now →",
+  "@onboardingNameSkip": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingAboutASecondWorks": "About a second. Works where Tor is blocked.",
-  "onboardingAutoFindsAWay": "Automatic finds a way around the block by itself.",
-  "@onboardingAutoFindsAWay": {
-    "description": "screens/onboarding_screen.dart: on the Onion card when the person said Tor is blocked at the start"
+  "onboardingNameClaim": "Claim @{handle} →",
+  "@onboardingNameClaim": {
+    "description": "screens/onboarding_screen.dart",
+    "placeholders": {
+      "handle": {
+        "type": "Object"
+      }
+    }
   },
-  "@onboardingAboutASecondWorks": {
+  "onboardingInviteHeadline": "Now, *invite someone*.",
+  "@onboardingInviteHeadline": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingUseThis": "Use this →",
-  "@onboardingUseThis": {
+  "onboardingInviteLead": "Send a link in any messenger. It opens Kryfo, or shows them where to get it.",
+  "@onboardingInviteLead": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingThreeThingsThen": "Three things,\nthen *you're in*.",
-  "@onboardingThreeThingsThen": {
+  "onboardingInviteSomeone": "Invite someone →",
+  "@onboardingInviteSomeone": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingEverythingElseTheApp": "Everything else the app will tell you when it matters.",
-  "@onboardingEverythingElseTheApp": {
+  "onboardingInviteGettingReady": "Getting your link ready…",
+  "@onboardingInviteGettingReady": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingYourNameIsThreeWords": "Your name is three words",
-  "@onboardingYourNameIsThreeWords": {
-    "description": "screens/onboarding_screen.dart"
+  "inviteShareText": "Add me on Kryfo. My name there is {myId}\n\nTap to add me:\n{link}\n\nNo Kryfo yet? Get it here:\n{download}\n\nKryfo is a private messenger. No phone number, no email.",
+  "@inviteShareText": {
+    "description": "invite_share.dart",
+    "placeholders": {
+      "myId": {
+        "type": "Object"
+      },
+      "link": {
+        "type": "Object"
+      },
+      "download": {
+        "type": "Object"
+      }
+    }
   },
-  "onboardingThatIsTheWhole": "That is the whole identity. There is no number or email to leak or look up. People you talk to see these words and the face you picked.",
-  "@onboardingThatIsTheWhole": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingNobodyCanReachYou": "Nobody can reach you until you let them in",
-  "@onboardingNobodyCanReachYou": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingAStrangerWithYour": "A stranger with your words can only knock. Their first message waits in requests until you say yes, and you can say no without them ever knowing.",
-  "@onboardingAStrangerWithYour": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingTheFirstConnectionTakesAMinute": "The first connection takes a minute",
-  "@onboardingTheFirstConnectionTakesAMinute": {
-    "description": "screens/onboarding_screen.dart"
+  "inviteNotReady": "Your link is almost ready. Try again in a moment.",
+  "@inviteNotReady": {
+    "description": "invite_share.dart"
   },
   "onboardingKryfoBuildsAPrivateRouteBefore": "Kryfo builds a private route before it sends anything. While you are offline, messages wait and arrive when you are back.",
   "@onboardingKryfoBuildsAPrivateRouteBefore": {
@@ -5082,10 +5058,6 @@
   },
   "onboardingYourIdentityLivesOn": "Your identity lives on this phone. Back it up from settings when you are ready.",
   "@onboardingYourIdentityLivesOn": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingIUnderstand": "I understand →",
-  "@onboardingIUnderstand": {
     "description": "screens/onboarding_screen.dart"
   },
   "onboardingOneQuiet": "One quiet *notification*.",
@@ -5108,14 +5080,6 @@
   "@onboardingGotIt": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingNow": "Now, *add someone*.",
-  "@onboardingNow": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingTheAppIsReady": "The app is ready. Nobody can message you until you add them or let them in.",
-  "@onboardingTheAppIsReady": {
-    "description": "screens/onboarding_screen.dart"
-  },
   "onboardingEveryWayToAdd": "Every way to add someone",
   "@onboardingEveryWayToAdd": {
     "description": "screens/onboarding_screen.dart"
@@ -5130,10 +5094,6 @@
   },
   "onboardingPointTheCameraAt": "Point the camera at their code",
   "@onboardingPointTheCameraAt": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingTheAppIsReadyWhenYou": "The app is ready when you are.",
-  "@onboardingTheAppIsReadyWhenYou": {
     "description": "screens/onboarding_screen.dart"
   },
   "onboardingNotNowAddPeople": "Not now · add people later",
@@ -5450,10 +5410,6 @@
   },
   "profileProfile": "Profile",
   "@profileProfile": {
-    "description": "screens/profile_screen.dart"
-  },
-  "profileChangeYourFace": "Change your face",
-  "@profileChangeYourFace": {
     "description": "screens/profile_screen.dart"
   },
   "profileKryfoId": "Your name",
@@ -12303,6 +12259,84 @@
   "@desktopNoMemoryFolder": {
     "description": "desktop/desktop_lock_screen.dart: no XDG_RUNTIME_DIR or /dev/shm folder could be had"
   },
+  "photoCropTitle": "Move and scale",
+  "@photoCropTitle": {
+    "description": "screens/photo_crop_screen.dart: title over the round crop of a profile photo"
+  },
+  "photoCropUse": "Use photo",
+  "@photoCropUse": {
+    "description": "screens/photo_crop_screen.dart: button that keeps the crop"
+  },
+  "photoCropLabel": "Your photo in the circle. Pinch to zoom, drag to move",
+  "@photoCropLabel": {
+    "description": "screens/photo_crop_screen.dart: screen reader label of the picture under the crop circle"
+  },
+  "photoCouldNotUse": "Try another photo. This one could not be read.",
+  "@photoCouldNotUse": {
+    "description": "toast: a picked profile photo could not be read or made clean"
+  },
+  "photoTake": "Take a photo",
+  "@photoTake": {
+    "description": "widgets/photo_sheet.dart: row that opens the camera for a profile photo"
+  },
+  "photoChoose": "Choose from gallery",
+  "@photoChoose": {
+    "description": "widgets/photo_sheet.dart: row that opens the gallery for a profile photo"
+  },
+  "photoPickFace": "Pick a face",
+  "@photoPickFace": {
+    "description": "widgets/photo_sheet.dart: row that opens the drawn face picker"
+  },
+  "photoView": "View photo",
+  "@photoView": {
+    "description": "widgets/photo_sheet.dart: row that opens the profile photo larger"
+  },
+  "photoRemove": "Remove photo",
+  "@photoRemove": {
+    "description": "widgets/photo_sheet.dart: row that takes the profile photo off"
+  },
+  "photoYourPhoto": "Your photo",
+  "@photoYourPhoto": {
+    "description": "screens/profile_screen.dart: title of the sheet for your own profile photo"
+  },
+  "photoYourPhotoLine": "Only your contacts see it, end to end encrypted.",
+  "@photoYourPhotoLine": {
+    "description": "screens/profile_screen.dart: who sees your profile photo"
+  },
+  "photoSetTheirs": "Set a photo",
+  "@photoSetTheirs": {
+    "description": "screens/contact_screen.dart: row to set a photo for a contact, kept on this phone"
+  },
+  "photoChangeTheirs": "Change photo",
+  "@photoChangeTheirs": {
+    "description": "screens/contact_screen.dart: the same row once a photo is set"
+  },
+  "photoOnlyHere": "Only on this phone",
+  "@photoOnlyHere": {
+    "description": "screens/contact_screen.dart: hint under the row: the photo is never sent"
+  },
+  "photoForThem": "A photo for {name}",
+  "@photoForThem": {
+    "description": "screens/contact_screen.dart: title of the sheet for a contact's photo",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoOnlyHereLine": "Only you see it. It stays on this phone.",
+  "@photoOnlyHereLine": {
+    "description": "screens/contact_screen.dart: line in the sheet for a contact's photo"
+  },
+  "photoOf": "Photo of {name}",
+  "@photoOf": {
+    "description": "widgets/face_view.dart: screen reader label of a contact's photo, larger",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
   "historyChatStaysShots": "This chat stays on your phone because screenshots are blocked in it.",
   "@historyChatStaysShots": {
     "description": "devices/history_import.dart: on a newly linked device, for a chat that stayed on the phone because screenshot blocking is on in it"
@@ -12587,25 +12621,5 @@
   "seenIpWhy": "On Private everything leaves through Tor and our servers see an exit node, never you. On Fast the connection goes straight to our two servers: they see your IP address while you're connected and keep no record of it. While the first one is down, Fast also uses public relays, only through Tor.",
   "@seenIpWhy": {
     "description": "what we can see table, why for the IP address row"
-  },
-  "onboardingHidesFromEveryone": "Hides your address from everyone, our servers included.",
-  "@onboardingHidesFromEveryone": {
-    "description": "onboarding, the Private card"
-  },
-  "onboardingFastSees": "Our servers see your address only while you're connected.",
-  "@onboardingFastSees": {
-    "description": "onboarding, the Fast card"
-  },
-  "onboardingFastNetworkSees": "This network can see you connect to Kryfo. Our servers see your address.",
-  "@onboardingFastNetworkSees": {
-    "description": "onboarding where Tor is blocked, the Fast card"
-  },
-  "onboardingKeepPrivate": "Keep Private →",
-  "@onboardingKeepPrivate": {
-    "description": "onboarding button that keeps the Tor route"
-  },
-  "onboardingSkipPrivate": "Skip · Private is a fine default",
-  "@onboardingSkipPrivate": {
-    "description": "onboarding link that skips the step"
   }
 }

@@ -94,10 +94,10 @@ extension AppStateScreen on AppState {
     final was = (await db.shotsOf(peer)).blocking;
     final at = await db.turnShots(peer, on: on);
     if (at == null) return;
+    final now = (await db.shotsOf(peer)).blocking;
     // blocking from now: what the shade still shows of the chat goes
-    if (!was && (await db.shotsOf(peer)).blocking) {
-      unawaited(_io.unnotify(peer));
-    }
+    if (!was && now) unawaited(_io.unnotify(peer));
+    _photoShotsMoved(peer, blocking: now);
     // queued first: a route that is down carries it later
     await db.queueFrame(shotsUid(peer), kFrameShots, peer, '$at');
     _bumpChatRev(peer);
@@ -133,13 +133,13 @@ extension AppStateScreen on AppState {
         written: env.writtenAt,
       );
       if (!changed) return;
+      final now = (await db.shotsOf(peer)).blocking;
+      _photoShotsMoved(peer, blocking: now);
       _bumpChatRev(peer);
       notifyListeners();
       // blocking from now: what the shade still shows of the chat goes,
       // once, and never what rang since
-      if (!was && (await db.shotsOf(peer)).blocking) {
-        unawaited(_io.unnotify(peer));
-      }
+      if (!was && now) unawaited(_io.unnotify(peer));
       await refreshContacts();
       if (_shotsCardWaits && identical(db, live)) await _readShotsCard();
     } catch (e) {
@@ -226,26 +226,41 @@ extension AppStateScreen on AppState {
     // until the lock is read the cover hides the app, and what the last
     // run left stays
     if (!lockState.loaded) return;
+    // a step the window refused is asked for once more, then again at the
+    // next change: never taken as done
     final on = windowSecure;
     if (on != _secureSent) {
       _secureSent = on;
-      try {
-        await AppState._platformChannel.invokeMethod('setSecure', {'on': on});
-      } catch (e) {
-        _secureSent = null;
-        dlog('setSecure: $e');
+      var ok = false;
+      for (var tries = 0; tries < 2; tries++) {
+        try {
+          await AppState._platformChannel.invokeMethod('setSecure', {'on': on});
+          ok = true;
+          break;
+        } catch (e) {
+          dlog('setSecure: $e');
+          // a newer call took over
+          if (_secureSent != on) break;
+        }
       }
+      if (!ok && _secureSent == on) _secureSent = null;
     }
     final hide = recentsHidden;
     if (hide == _recentsSent) return;
     _recentsSent = hide;
-    try {
-      await AppState._platformChannel.invokeMethod('setRecentsHidden', {
-        'on': hide,
-      });
-    } catch (e) {
-      _recentsSent = null;
-      dlog('setRecentsHidden: $e');
+    var told = false;
+    for (var tries = 0; tries < 2; tries++) {
+      try {
+        await AppState._platformChannel.invokeMethod('setRecentsHidden', {
+          'on': hide,
+        });
+        told = true;
+        break;
+      } catch (e) {
+        dlog('setRecentsHidden: $e');
+        if (_recentsSent != hide) break;
+      }
     }
+    if (!told && _recentsSent == hide) _recentsSent = null;
   }
 }

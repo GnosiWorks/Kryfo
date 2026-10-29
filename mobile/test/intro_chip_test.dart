@@ -62,10 +62,12 @@ void main() {
     );
     // still invisible before the delay has passed
     await tester.pump(const Duration(milliseconds: 100));
-    final chipFade = find.descendant(
-      of: find.byType(IntroducedBy),
-      matching: find.byType(FadeTransition),
-    );
+    final chipFade = find
+        .descendant(
+          of: find.byType(IntroducedBy),
+          matching: find.byType(FadeTransition),
+        )
+        .first; // the chip's own; the face's crossfade sits under it
     final before = tester.widget<FadeTransition>(chipFade);
     expect(before.opacity.value, 0);
     // let the delay elapse, then the pop itself

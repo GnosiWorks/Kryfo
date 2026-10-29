@@ -7,8 +7,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 // a pin keeps the app out of recents without blocking screenshots; the
-// flag is only ever dart's, on every android. a refused step never throws
-// and never stops the other
+// flag is only ever dart's, on every android. a refused step never throws,
+// never stops the other and is told back as false
 class WindowShieldTest {
     private val told = mutableListOf<String>()
     private var refuse: String? = null
@@ -89,8 +89,31 @@ class WindowShieldTest {
             w.start(held = true, hidden = true)
             assertEquals(listOf("flag=true", "picture=false") - "$f=${f == "flag"}", told)
             refuse = null
-            w.hide(true)
+            assertTrue(w.hide(true))
             assertEquals("$f=${f == "flag"}", told.last())
         }
+    }
+
+    @Test
+    fun aLinkageErrorIsARefusedStep() {
+        var odd = true
+        val w = WindowShield(
+            { if (odd) throw NoSuchMethodError("addFlags") else told.add("flag=$it") },
+            { p -> if (odd) throw UnsatisfiedLinkError("odd rom") else told.add("picture=$p") },
+        )
+        assertFalse(w.hold(true))
+        assertTrue(told.isEmpty())
+        odd = false
+        assertTrue(w.hold(true))
+        assertEquals(listOf("flag=true", "picture=false"), told)
+    }
+
+    @Test
+    fun aBlockThatWouldNotGoOnIsRefusedToDart() {
+        assertTrue(WindowShield.refusedOn(true) { false })
+        assertTrue(WindowShield.refusedOn(true) { throw LinkageError("odd rom") })
+        assertFalse(WindowShield.refusedOn(true) { true })
+        // a clear that fails leaves the window secure
+        assertFalse(WindowShield.refusedOn(false) { false })
     }
 }

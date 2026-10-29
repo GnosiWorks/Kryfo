@@ -11,9 +11,12 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/app_icon.dart';
+import 'package:kryfo/chat_shots.dart' show ChatShots;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/main.dart' show AppIo, HaloDb;
 import 'package:kryfo/notifications.dart';
+import 'package:kryfo/profile_photo.dart' show photoBook;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Shade extends AndroidFlutterLocalNotificationsPlugin {
@@ -69,6 +72,18 @@ class _Faces implements AppFaceChannel {
 
 final _faces = _Faces();
 
+// the rows a ring asks for its tag and keeps its id in
+class _Tags implements HaloDb {
+  @override
+  Future<String> notifTag(String chat) async => 't-$chat';
+  @override
+  Future<void> noteRing(int id, String chat, String msgUid) async {}
+  @override
+  Future<ChatShots> shotsOf(String peer) async => const ChatShots();
+  @override
+  dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
 _Shade _start({Map<String, Object> prefs = const {}, bool quiet = false}) {
   debugDefaultTargetPlatformOverride = TargetPlatform.android;
   addTearDown(() => debugDefaultTargetPlatformOverride = null);
@@ -115,6 +130,23 @@ void main() {
     await setNotifPlain(true);
     expect(await loadNotifPlain(), isTrue);
     expect(notifPlainKnown(), isTrue);
+  });
+
+  test('a contact\'s photo never goes to the shade, with the message '
+      'shown either', () async {
+    final shade = _start(prefs: {'notif_hide_content': false});
+    photoBook.put({
+      'bob': Uint8List.fromList(const [0xFF, 0xD8, 0xFF, 0xD9]),
+    });
+    addTearDown(photoBook.clear);
+    await const AppIo().notify(
+      title: 'Bob Marsh',
+      body: 'hi',
+      payload: 'bob',
+      on: _Tags(),
+      msgUid: 'u1',
+    );
+    expect(shade.shown.single.d.largeIcon, isNull);
   });
 
   test('a plain one says one line and nothing of anyone', () async {

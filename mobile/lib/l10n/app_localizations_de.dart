@@ -3209,6 +3209,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get homeAddSomeone => 'Jemanden hinzufügen';
 
   @override
+  String get homeInviteSomeone => 'Jemanden einladen';
+
+  @override
   String get homeArchived => 'Archiv';
 
   @override
@@ -3746,11 +3749,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Einladung kopiert · verschwindet in 60s';
 
   @override
-  String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Füg mich auf Kryfo hinzu. Dort heiße ich $myId\n\nTippe, um mich hinzuzufügen:\n$uri\n\nKryfo ist ein privater Messenger. Keine Telefonnummer, keine E-Mail.';
-  }
-
-  @override
   String get myKryfoAddMeOnKryfo2 => 'Füg mich auf Kryfo hinzu';
 
   @override
@@ -4086,72 +4084,45 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingThreeWords => 'Drei Wörter. *Nur deine.*';
 
   @override
-  String get onboardingPickA => 'Wähle ein *Gesicht*.';
-
-  @override
-  String get onboardingDrawnOnThisPhone =>
-      'Auf diesem Handy aus einer Zahl gezeichnet, nie hochgeladen. Ändere es, wann immer du willst.';
-
-  @override
-  String get onboardingThePeopleYouMessage =>
-      'Die Leute, denen du schreibst, sehen das auch';
-
-  @override
-  String get onboardingKeepMyInitial => 'Initiale behalten';
-
-  @override
-  String get onboardingThatOne => 'Das hier →';
-
-  @override
   String get onboardingContinue => 'Weiter →';
 
   @override
-  String get onboardingHowYourMessages => 'Wie deine Nachrichten *reisen*.';
+  String get onboardingNameHeadline =>
+      'Ein öffentlicher *@Name*, wenn du willst.';
 
   @override
-  String get onboardingYouCanChangeThis =>
-      'Du kannst das jederzeit in den Einstellungen ändern, für alle oder für einen Chat.';
+  String get onboardingNameLine =>
+      'Mit einem öffentlichen Namen können dich Leute finden. Ohne bleibst du privater, du kannst jederzeit später einen hinzufügen.';
 
   @override
-  String get onboardingSlowerAMessageTakes =>
-      'Langsamer. Eine Nachricht braucht zwei bis fünf Sekunden.';
+  String get onboardingNameSkip => 'Erst mal überspringen →';
 
   @override
-  String get onboardingAboutASecondWorks =>
-      'Etwa eine Sekunde. Funktioniert, wo Tor blockiert ist.';
+  String onboardingNameClaim(Object handle) {
+    return '@$handle sichern →';
+  }
 
   @override
-  String get onboardingAutoFindsAWay =>
-      '„Automatisch“ findet selbst einen Weg um die Sperre.';
+  String get onboardingInviteHeadline => 'Jetzt *lade jemanden ein*.';
 
   @override
-  String get onboardingUseThis => 'Das nehmen →';
+  String get onboardingInviteLead =>
+      'Schick einen Link in einem beliebigen Messenger. Er öffnet Kryfo oder zeigt, wo es Kryfo gibt.';
 
   @override
-  String get onboardingThreeThingsThen => 'Drei Dinge,\ndann *bist du drin*.';
+  String get onboardingInviteSomeone => 'Jemanden einladen →';
 
   @override
-  String get onboardingEverythingElseTheApp =>
-      'Alles andere sagt dir die App, wenn es wichtig wird.';
+  String get onboardingInviteGettingReady => 'Dein Link wird vorbereitet…';
 
   @override
-  String get onboardingYourNameIsThreeWords => 'Dein Name sind drei Wörter';
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'Füg mich auf Kryfo hinzu. Dort heiße ich $myId\n\nTippe, um mich hinzuzufügen:\n$link\n\nNoch kein Kryfo? Hier gibt es Kryfo:\n$download\n\nKryfo ist ein privater Messenger. Keine Telefonnummer, keine E-Mail.';
+  }
 
   @override
-  String get onboardingThatIsTheWhole =>
-      'Das ist die ganze Identität. Es gibt keine Nummer und keine E-Mail, die durchsickern oder nachgeschlagen werden kann. Wer mit dir schreibt, sieht diese Wörter und das Gesicht, das du gewählt hast.';
-
-  @override
-  String get onboardingNobodyCanReachYou =>
-      'Niemand kann dich erreichen, bis du es erlaubst';
-
-  @override
-  String get onboardingAStrangerWithYour =>
-      'Jemand Fremdes mit deinen Wörtern kann nur anklopfen. Die erste Nachricht wartet in den Anfragen, bis du ja sagst, und du kannst nein sagen, ohne dass die Person es je erfährt.';
-
-  @override
-  String get onboardingTheFirstConnectionTakesAMinute =>
-      'Die erste Verbindung dauert eine Minute';
+  String get inviteNotReady =>
+      'Dein Link ist fast fertig. Versuch es gleich noch mal.';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -4160,9 +4131,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get onboardingYourIdentityLivesOn =>
       'Deine Identität liegt auf diesem Handy. Sichere sie in den Einstellungen, wenn du so weit bist.';
-
-  @override
-  String get onboardingIUnderstand => 'Verstanden →';
 
   @override
   String get onboardingOneQuiet => 'Eine stille *Benachrichtigung*.';
@@ -4183,13 +4151,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingGotIt => 'Alles klar →';
 
   @override
-  String get onboardingNow => 'Jetzt *füge jemanden hinzu*.';
-
-  @override
-  String get onboardingTheAppIsReady =>
-      'Die App ist bereit. Niemand kann dir schreiben, bis du die Person hinzufügst oder reinlässt.';
-
-  @override
   String get onboardingEveryWayToAdd => 'Alle Wege, jemanden hinzuzufügen';
 
   @override
@@ -4202,10 +4163,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get onboardingPointTheCameraAt =>
       'Richte die Kamera auf den Code der Person';
-
-  @override
-  String get onboardingTheAppIsReadyWhenYou =>
-      'Die App ist bereit, wenn du es bist.';
 
   @override
   String get onboardingNotNowAddPeople =>
@@ -4450,9 +4407,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get profileProfile => 'Profil';
-
-  @override
-  String get profileChangeYourFace => 'Gesicht ändern';
 
   @override
   String get profileKryfoId => 'Dein Name';
@@ -9884,6 +9838,65 @@ class AppLocalizationsDe extends AppLocalizations {
       'Kryfo braucht beim Laufen einen privaten Ordner im Arbeitsspeicher, und dieser Computer bietet keinen, deshalb öffnet es sich nicht.';
 
   @override
+  String get photoCropTitle => 'Verschieben und skalieren';
+
+  @override
+  String get photoCropUse => 'Foto verwenden';
+
+  @override
+  String get photoCropLabel =>
+      'Dein Foto im Kreis. Zum Zoomen auseinanderziehen, zum Verschieben ziehen';
+
+  @override
+  String get photoCouldNotUse =>
+      'Nimm ein anderes Foto. Dieses ließ sich nicht lesen.';
+
+  @override
+  String get photoTake => 'Foto aufnehmen';
+
+  @override
+  String get photoChoose => 'Aus der Galerie wählen';
+
+  @override
+  String get photoPickFace => 'Gesicht wählen';
+
+  @override
+  String get photoView => 'Foto ansehen';
+
+  @override
+  String get photoRemove => 'Foto entfernen';
+
+  @override
+  String get photoYourPhoto => 'Dein Foto';
+
+  @override
+  String get photoYourPhotoLine =>
+      'Nur deine Kontakte sehen es, Ende-zu-Ende-verschlüsselt.';
+
+  @override
+  String get photoSetTheirs => 'Foto festlegen';
+
+  @override
+  String get photoChangeTheirs => 'Foto ändern';
+
+  @override
+  String get photoOnlyHere => 'Nur auf diesem Handy';
+
+  @override
+  String photoForThem(Object name) {
+    return 'Ein Foto für $name';
+  }
+
+  @override
+  String get photoOnlyHereLine =>
+      'Nur du siehst es. Es bleibt auf diesem Handy.';
+
+  @override
+  String photoOf(Object name) {
+    return 'Foto von $name';
+  }
+
+  @override
   String get historyChatStaysShots =>
       'Dieser Chat bleibt auf deinem Handy, weil Screenshots darin blockiert sind.';
 
@@ -10119,23 +10132,4 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'Bei Privat geht alles über Tor, und unsere Server sehen einen Exit-Knoten, nie dich. Bei Schnell geht die Verbindung direkt zu unseren zwei Servern: Sie sehen deine IP-Adresse, solange du verbunden bist, und halten nichts davon fest. Solange der erste ausfällt, nutzt Schnell zusätzlich öffentliche Relais, nur über Tor.';
-
-  @override
-  String get onboardingHidesFromEveryone =>
-      'Verbirgt deine Adresse vor allen, auch vor unseren Servern.';
-
-  @override
-  String get onboardingFastSees =>
-      'Unsere Server sehen deine Adresse nur, solange du verbunden bist.';
-
-  @override
-  String get onboardingFastNetworkSees =>
-      'Dieses Netz kann sehen, dass du dich mit Kryfo verbindest. Unsere Server sehen deine Adresse.';
-
-  @override
-  String get onboardingKeepPrivate => 'Privat behalten →';
-
-  @override
-  String get onboardingSkipPrivate =>
-      'Überspringen · Privat ist ein guter Standard';
 }

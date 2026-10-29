@@ -88,6 +88,7 @@ import '../main.dart'
         AppStateRooms;
 import '../widgets/reconnect_valve.dart';
 import '../theme.dart';
+import '../link_view.dart' show sendReadsBlocked;
 import '../media_progress.dart';
 import '../msg_order.dart';
 import '../widgets/earlier_chip.dart';
@@ -4886,6 +4887,13 @@ String _fmtBurn(int s) {
 // the phone cannot send at all: no network, or onion mode without a route
 bool _cannotSend() => !appState.online || !appState.torReady;
 
+// tor still coming up is not a failure: what waits for it reads as sending
+bool _readsBlocked() => sendReadsBlocked(
+  online: appState.online,
+  torReady: appState.torReady,
+  link: appState.linkView,
+);
+
 // the time on a photo or a video with no caption: a small dark pill in the
 // corner, since there is no bubble under it to carry it
 Widget _groupStamp(_GMsg m) => Container(
@@ -4942,7 +4950,7 @@ class _GMsg with WordLinks {
   // stops that after six goes
   int autoRetries = 0;
   bool gaveUp = false;
-  bool get looksFailed => failed && (gaveUp || _cannotSend());
+  bool get looksFailed => failed && (gaveUp || _readsBlocked());
   bool get pending => sending || (failed && !looksFailed);
   bool removing = false;
   bool fresh = false; // one-shot: animate entrance, then cleared on first build
