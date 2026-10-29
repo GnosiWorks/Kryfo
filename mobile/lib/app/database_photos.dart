@@ -152,8 +152,9 @@ mixin _PhotoRows {
       }, f.total);
       if (whole == null) return false;
       await t.delete('photo_parts', where: 'halo_id = ?', whereArgs: [from]);
-      // one that is no clean picture is let go, and their face stays
-      final fit = photoFit(whole);
+      // only what our phones send is kept: anything else is let go, and
+      // their face stays
+      final fit = photoTakeIn(whole);
       if (fit == null) {
         dlog('photo: one from a contact did not read clean');
         return false;

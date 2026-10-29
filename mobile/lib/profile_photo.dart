@@ -10,6 +10,8 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart'
+    show ImageProvider, MemoryImage, ResizeImage, ResizeImagePolicy;
 
 import 'image_strip.dart' show PictureKind, photoToSend, pictureKind;
 
@@ -151,6 +153,87 @@ Uint8List? photoFit(Uint8List b) {
     return null;
   }
   return photoToSend(b);
+}
+
+/// a photo from a contact as it may be kept: only what our phones send, a
+/// jpeg of one kPhotoSide square frame, then cleaned. any other kind or
+/// size could make every avatar decode a huge or moving picture. null:
+/// dropped
+Uint8List? photoTakeIn(Uint8List b) {
+  if (!photoSquareJpeg(b)) return null;
+  final out = photoFit(b);
+  return out != null && photoSquareJpeg(out) ? out : null;
+}
+
+/// [bytes] decoded at most [px] on either side, whatever it says it is
+ImageProvider photoImage(Uint8List bytes, int px) => ResizeImage(
+  MemoryImage(bytes),
+  width: px,
+  height: px,
+  policy: ResizeImagePolicy.fit,
+);
+
+/// whether [b] is a jpeg with exactly one frame, baseline or progressive,
+/// [side] x [side], and nothing after its end. every marker is walked, so
+/// a size hidden in a comment or a second frame is seen
+bool photoSquareJpeg(Uint8List b, {int side = kPhotoSide}) {
+  final n = b.length;
+  if (n < 4 || b[0] != 0xFF || b[1] != 0xD8) return false;
+  var i = 2;
+  var frame = false;
+  var scan = false;
+  while (true) {
+    if (i >= n || b[i] != 0xFF) return false;
+    while (i < n && b[i] == 0xFF) {
+      i++;
+    }
+    if (i >= n) return false;
+    final m = b[i++];
+    if (m == 0xD9) return frame && scan && i == n;
+    // a marker that stands alone, outside a scan, or one no frame of ours
+    // holds: the frame's height given later, or a hierarchical frame
+    if (m == 0x01 ||
+        (m >= 0xD0 && m <= 0xD8) ||
+        m == 0xDC ||
+        m == 0xDE ||
+        m == 0xDF) {
+      return false;
+    }
+    if (i + 2 > n) return false;
+    final len = b[i] << 8 | b[i + 1];
+    if (len < 2 || i + len > n) return false;
+    final sof = m >= 0xC0 && m <= 0xCF && m != 0xC4 && m != 0xC8 && m != 0xCC;
+    if (sof) {
+      if (frame || (m != 0xC0 && m != 0xC2)) return false;
+      if (len < 8) return false;
+      final h = b[i + 3] << 8 | b[i + 4];
+      final w = b[i + 5] << 8 | b[i + 6];
+      final nf = b[i + 7];
+      if (b[i + 2] != 8 || h != side || w != side) return false;
+      if ((nf != 1 && nf != 3) || len != 8 + 3 * nf) return false;
+      frame = true;
+    }
+    if (m == 0xDA && !frame) return false;
+    i += len;
+    if (m != 0xDA) continue;
+    scan = true;
+    // the scan's data runs to the next marker that is not a stuffed byte
+    // or a restart
+    while (i + 1 < n) {
+      if (b[i] != 0xFF) {
+        i++;
+        continue;
+      }
+      final x = b[i + 1];
+      if (x == 0x00 || (x >= 0xD0 && x <= 0xD7)) {
+        i += 2;
+      } else if (x == 0xFF) {
+        i++;
+      } else {
+        break;
+      }
+    }
+  }
 }
 
 /// a version from [sender] is taken when it is newer than the one held and

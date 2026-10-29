@@ -10,6 +10,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:archive/archive.dart' show getCrc32;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/chat_shots.dart';
 import 'package:kryfo/image_strip.dart' show pictureKind, PictureKind;
@@ -38,8 +39,104 @@ class _Rows extends HaloDb {
 const _peer = 'calm-orbit-river';
 final _gps = File('test/fixtures/gallery_gps.jpg').readAsBytesSync();
 
-// a jpeg the photo lane keeps as it is: the cleaned real phone file
-final Uint8List _clean = photoFit(_gps)!;
+// the real phone photo drawn at kPhotoSide, as our phones send one
+final _square = File('test/fixtures/photo_512.jpg').readAsBytesSync();
+
+// a jpeg the photo lane keeps as it is
+final Uint8List _clean = photoFit(_square)!;
+
+// a png chunk with its length and crc
+List<int> _chunk(String type, List<int> data) {
+  final t = ascii.encode(type);
+  final len = ByteData(4)..setUint32(0, data.length);
+  final crc = ByteData(4)..setUint32(0, getCrc32([...t, ...data]));
+  return [
+    ...len.buffer.asUint8List(),
+    ...t,
+    ...data,
+    ...crc.buffer.asUint8List(),
+  ];
+}
+
+// a 1-bit grey png of side x side, all black, its rows squeezed by zlib. a
+// big side is a few kilobytes that decode to gigabytes. [moving] adds the
+// chunk that makes it an apng of two frames
+Uint8List _png(int side, {bool moving = false}) {
+  final ihdr = ByteData(13)
+    ..setUint32(0, side)
+    ..setUint32(4, side)
+    ..setUint8(8, 1);
+  final z = <int>[];
+  final sink = ZLibEncoder(
+    level: 9,
+  ).startChunkedConversion(ByteConversionSink.withCallback(z.addAll));
+  final row = Uint8List(1 + (side + 7) ~/ 8);
+  for (var y = 0; y < side; y++) {
+    sink.add(row);
+  }
+  sink.close();
+  final actl = ByteData(8)..setUint32(0, 2);
+  return Uint8List.fromList([
+    0x89,
+    0x50,
+    0x4E,
+    0x47,
+    0x0D,
+    0x0A,
+    0x1A,
+    0x0A,
+    ..._chunk('IHDR', ihdr.buffer.asUint8List()),
+    if (moving) ..._chunk('acTL', actl.buffer.asUint8List()),
+    ..._chunk('IDAT', z),
+    ..._chunk('IEND', const []),
+  ]);
+}
+
+// an animated webp of kPhotoSide: the canvas, the loop, and one frame
+Uint8List _movingWebp() {
+  List<int> chunk(String type, List<int> data) {
+    final len = ByteData(4)..setUint32(0, data.length, Endian.little);
+    return [
+      ...ascii.encode(type),
+      ...len.buffer.asUint8List(),
+      ...data,
+      if (data.length.isOdd) 0,
+    ];
+  }
+
+  const s = kPhotoSide - 1;
+  final side = [s & 0xFF, s >> 8 & 0xFF, 0];
+  final body = [
+    ...ascii.encode('WEBP'),
+    ...chunk('VP8X', [0x02, 0, 0, 0, ...side, ...side]),
+    ...chunk('ANIM', [0, 0, 0, 0, 0, 0]),
+    ...chunk('ANMF', [0, 0, 0, 0, 0, 0, ...side, ...side, 100, 0, 0, 0]),
+  ];
+  final len = ByteData(4)..setUint32(0, body.length, Endian.little);
+  return Uint8List.fromList([
+    ...ascii.encode('RIFF'),
+    ...len.buffer.asUint8List(),
+    ...body,
+  ]);
+}
+
+// where the photo's one frame header starts
+int _sofAt(Uint8List b) {
+  for (var i = 2; i + 1 < b.length; i++) {
+    if (b[i] == 0xFF && b[i + 1] == 0xC0) return i;
+  }
+  throw StateError('no frame');
+}
+
+// [b] with its frame saying [h] x [w]
+Uint8List _sized(Uint8List b, int h, int w) {
+  final out = Uint8List.fromList(b);
+  final at = _sofAt(out);
+  ByteData.sublistView(out)
+    ..setUint16(at + 5, h)
+    ..setUint16(at + 7, w);
+  return out;
+}
 
 String _sealed(String wrapped) {
   final body = shotsBodyOf(wrapped)!;
@@ -62,6 +159,52 @@ PhotoSendFacts _facts({
   blocked: blocked,
   peerCan: peerCan,
 );
+
+// what a modified client could send: each decodes far bigger than
+// our square, or moves in every avatar
+Map<String, Uint8List> _refused() {
+  final at = _sofAt(_clean);
+  final big = _sized(_clean, 4096, 4096);
+  // a comment that holds a 512 frame header, before the real one
+  final fake = _clean.sublist(at, at + 19);
+  final hidden = Uint8List.fromList([
+    0xFF, 0xD8, 0xFF, 0xFE, 0x00, 21, ...fake, //
+    ...big.sublist(2),
+  ]);
+  // a second frame after the first
+  final twice = Uint8List.fromList([
+    ..._clean.sublist(0, at + 19),
+    ...big.sublist(at, at + 19),
+    ..._clean.sublist(at + 19),
+  ]);
+  // its height given again after the scan
+  final dnl = Uint8List.fromList([
+    ..._clean.sublist(0, _clean.length - 2),
+    0xFF, 0xDC, 0x00, 0x04, 0x10, 0x00, 0xFF, 0xD9, //
+  ]);
+  return {
+    'a png bomb': _png(20000),
+    'an apng': _png(kPhotoSide, moving: true),
+    'an animated webp': _movingWebp(),
+    'a 4096 px jpeg': big,
+    'a real phone jpeg of another size': photoFit(_gps)!,
+    'a 512 frame header hidden in a comment': hidden,
+    'a second frame': twice,
+    'a height given after the scan': dnl,
+    'a second picture after the end': Uint8List.fromList([..._clean, ...big]),
+    'a jpeg cut short': _clean.sublist(0, _clean.length - 100),
+  };
+}
+
+// every slice of our photo as [ver] from the peer at [at]. true when one
+// made it show
+Future<bool> _takeAll(HaloDb db, int ver, int at) async {
+  var took = false;
+  for (final f in photoSlices(_clean, ver)) {
+    took = await db.takePhotoSlice(_peer, f, now: at) || took;
+  }
+  return took;
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -169,6 +312,15 @@ void main() {
       expect(photoFit(Uint8List.fromList(utf8.encode('<svg/>'))), isNull);
       final big = Uint8List(kPhotoBytesMost + 1)..setAll(0, [0xFF, 0xD8, 0xFF]);
       expect(photoFit(big), isNull);
+    });
+
+    test('from a contact: only a jpeg of our square, one frame', () {
+      expect(photoSquareJpeg(_clean), isTrue);
+      expect(photoTakeIn(_square), _clean);
+      for (final MapEntry(key: what, value: b) in _refused().entries) {
+        expect(b.length, lessThanOrEqualTo(kPhotoBytesMost), reason: what);
+        expect(photoTakeIn(b), isNull, reason: what);
+      }
     });
 
     test('the drawn square goes through the same check: a tagged real file '
@@ -370,29 +522,14 @@ void main() {
 
     test('an older version, or one after a take-back, is not taken', () async {
       final db = await rows();
-      final one = photoSlices(_clean, 100).single;
-      expect(await db.takePhotoSlice(_peer, one, now: 200), isTrue);
-      expect(
-        await db.takePhotoSlice(
-          _peer,
-          photoSlices(_clean, 90).single,
-          now: 200,
-        ),
-        isFalse,
-      );
+      expect(await _takeAll(db, 100, 200), isTrue);
+      expect(await _takeAll(db, 90, 200), isFalse);
       expect(await db.takePhotoDrop(_peer, 150, now: 200), isTrue);
       expect((await db.photosOf(_peer)).theirs, isNull);
-      expect(await db.takePhotoSlice(_peer, one, now: 200), isFalse);
+      expect(await _takeAll(db, 100, 200), isFalse);
       expect(await db.contactPhotos(), isEmpty);
       // and a newer photo after it is
-      expect(
-        await db.takePhotoSlice(
-          _peer,
-          photoSlices(_clean, 160).single,
-          now: 200,
-        ),
-        isTrue,
-      );
+      expect(await _takeAll(db, 160, 200), isTrue);
     }, skip: skip);
 
     test('slices of a newer photo drop an older one half in', () async {
@@ -420,12 +557,26 @@ void main() {
       expect(await db.mem.query('photo_parts'), isEmpty);
     }, skip: skip);
 
+    test('a whole photo that is not our square is let go, all of it', () async {
+      for (final MapEntry(key: what, value: b) in _refused().entries) {
+        final db = await rows();
+        var whole = false;
+        for (final f in photoSlices(b, 100)) {
+          whole = await db.takePhotoSlice(_peer, f, now: 200) || whole;
+        }
+        expect(whole, isFalse, reason: what);
+        expect((await db.photosOf(_peer)).theirs, isNull, reason: what);
+        expect(await db.mem.query('photo_parts'), isEmpty, reason: what);
+        expect(await db.contactPhotos(), isEmpty, reason: what);
+      }
+    }, skip: skip);
+
     test(
       'yours for them shows over theirs, and stays after their take-back',
       () async {
         final db = await rows();
         final mine = Uint8List.fromList([..._clean, 0]);
-        await db.takePhotoSlice(_peer, photoSlices(_clean, 100).single, now: 1);
+        await _takeAll(db, 100, 1);
         expect(await db.setMinePhoto(_peer, mine), isTrue);
         expect((await db.contactPhotos())[_peer], mine);
         await db.takePhotoDrop(_peer, 101, now: 1);
@@ -469,7 +620,7 @@ void main() {
       'a deleted chat loses both photos and keeps what they hold of ours',
       () async {
         final db = await rows();
-        await db.takePhotoSlice(_peer, photoSlices(_clean, 100).single, now: 1);
+        await _takeAll(db, 100, 1);
         await db.setMinePhoto(_peer, _clean);
         await db.owePhoto(_peer, 7, at: 1);
         await db.dropPhotosOf(_peer);

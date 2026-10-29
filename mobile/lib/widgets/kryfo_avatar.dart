@@ -6,7 +6,7 @@
 
 import 'package:flutter/foundation.dart' show Uint8List;
 import 'package:flutter/material.dart';
-import '../profile_photo.dart' show PhotoBook, photoBook;
+import '../profile_photo.dart' show PhotoBook, photoBook, photoImage;
 import '../theme.dart';
 import 'avatar_mark.dart';
 
@@ -163,12 +163,11 @@ class _Photo extends StatelessWidget {
   Widget build(BuildContext context) {
     final px = (size * MediaQuery.devicePixelRatioOf(context)).ceil();
     return ClipOval(
-      child: Image.memory(
-        bytes,
+      child: Image(
+        image: photoImage(bytes, px),
         width: size,
         height: size,
         fit: BoxFit.cover,
-        cacheWidth: px,
         gaplessPlayback: true,
         filterQuality: FilterQuality.medium,
         errorBuilder: (_, _, _) => face(),

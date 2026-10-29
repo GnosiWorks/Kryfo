@@ -15,8 +15,10 @@ import 'package:kryfo/screens/photo_crop_screen.dart';
 import 'package:kryfo/widgets/kryfo_avatar.dart';
 import 'package:kryfo/widgets/photo_sheet.dart';
 
-final _gps = File('test/fixtures/gallery_gps.jpg').readAsBytesSync();
-final Uint8List _clean = photoFit(_gps)!;
+import 'source_body.dart';
+
+final _square = File('test/fixtures/photo_512.jpg').readAsBytesSync();
+final Uint8List _clean = photoFit(_square)!;
 
 Widget _app(
   Widget home, {
@@ -147,6 +149,26 @@ void main() {
       await t.pump();
       await t.pump();
       expect(find.text('COR'), findsNothing);
+    });
+
+    testWidgets('decoded no bigger than drawn, both ways', (t) async {
+      final book = PhotoBook()..put({'calm-orbit-river': _clean});
+      await t.pumpWidget(
+        _app(
+          Center(
+            child: KryfoAvatar(seed: 'calm-orbit-river', size: 56, book: book),
+          ),
+        ),
+      );
+      final img = t.widget<Image>(find.byType(Image)).image as ResizeImage;
+      final px = (56 * t.view.devicePixelRatio).ceil();
+      expect(img.width, px);
+      expect(img.height, px);
+      expect(img.policy, ResizeImagePolicy.fit);
+      // the big view the same, at the square's own side
+      final face = sourceOf('lib/widgets/face_view.dart');
+      expect(face, contains('photoImage(bytes, kPhotoSide)'));
+      expect(face, isNot(contains('MemoryImage(')));
     });
 
     testWidgets('the face picker draws faces', (t) async {

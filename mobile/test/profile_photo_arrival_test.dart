@@ -43,8 +43,9 @@ const _s = 'guitar-present-kid'; // a request
 const _b = 'blocked-one-here'; // blocked
 const _o = 'old-phone-here'; // a version without photos
 
-final _gps = File('test/fixtures/gallery_gps.jpg').readAsBytesSync();
-final Uint8List _clean = photoFit(_gps)!;
+// the real phone photo drawn at kPhotoSide, as our phones send one
+final _square = File('test/fixtures/photo_512.jpg').readAsBytesSync();
+final Uint8List _clean = photoFit(_square)!;
 
 class _Engine implements HaloEngine {
   @override
@@ -152,9 +153,8 @@ void main() {
     test('a contact\'s photo shows once whole, and leaves nothing else '
         'behind', () async {
       final w = await _World.make();
-      final big = Uint8List.fromList([..._clean, ...List.filled(20000, 0)]);
       final ver = DateTime.now().millisecondsSinceEpoch;
-      final slices = photoSlices(big, ver);
+      final slices = photoSlices(_clean, ver);
       expect(slices.length, greaterThan(1));
       for (final f in slices.take(slices.length - 1)) {
         await w.from(_f, wrapPhotoFrame(f, writtenAt: ver));
@@ -165,6 +165,30 @@ void main() {
       expect(w.live.msgs, isEmpty);
       expect(w.io.rang, isEmpty);
       expect([for (final (to, _) in w.io.sent) to], isEmpty);
+    }, skip: skip);
+
+    test('a picture bigger than our square: nothing kept, nothing '
+        'read again', () async {
+      final w = await _World.make();
+      final big = Uint8List.fromList(_clean);
+      for (var i = 2; i + 1 < big.length; i++) {
+        if (big[i] == 0xFF && big[i + 1] == 0xC0) {
+          ByteData.sublistView(big)
+            ..setUint16(i + 5, 4096)
+            ..setUint16(i + 7, 4096);
+          break;
+        }
+      }
+      var told = 0;
+      void tell() => told++;
+      photoBook.addListener(tell);
+      addTearDown(() => photoBook.removeListener(tell));
+      await w.photoFrom(_f, big, DateTime.now().millisecondsSinceEpoch);
+      expect(photoBook.has(_f), isFalse);
+      expect(told, 0);
+      expect(await w.live.contactPhotos(), isEmpty);
+      expect(await w.live.photoMem!.query('photo_parts'), isEmpty);
+      expect(w.live.msgs, isEmpty);
     }, skip: skip);
 
     test('its take-back shows the face again', () async {

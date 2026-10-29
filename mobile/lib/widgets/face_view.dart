@@ -4,7 +4,7 @@
 // is up. a face with no photo opens nothing
 import 'package:flutter/widgets.dart';
 
-import '../profile_photo.dart' show photoBook;
+import '../profile_photo.dart' show kPhotoSide, photoBook, photoImage;
 import 'photo_viewer.dart' show openPhotoImage;
 
 /// whether [id] has a photo to open
@@ -22,7 +22,7 @@ Future<void> openFace(
   if (bytes == null) return;
   await openPhotoImage(
     context,
-    MemoryImage(bytes),
+    photoImage(bytes, kPhotoSide),
     tag: tag,
     radius: radius,
     secure: true,
