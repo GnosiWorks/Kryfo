@@ -228,25 +228,12 @@ class AppIo {
       tag: await on.notifTag(payload),
       msgUid: msgUid,
       burnAt: burnAt,
-      face: await _faceFor(payload, on),
     );
     if (id == null || msgUid == null) return;
     try {
       await on.noteRing(id, payload, msgUid);
     } catch (e) {
       dlog('ring: not kept (${e.runtimeType})');
-    }
-  }
-
-  // a contact's photo for the shade: none for a group, or for a chat that
-  // blocks screenshots
-  Future<Uint8List?> _faceFor(String payload, HaloDb on) async {
-    final face = photoBook.of(payload);
-    if (face == null || payload.startsWith('group:')) return null;
-    try {
-      return (await on.shotsOf(payload)).blocking ? null : face;
-    } catch (_) {
-      return null;
     }
   }
 

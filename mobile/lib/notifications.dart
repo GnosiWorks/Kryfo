@@ -567,8 +567,6 @@ Future<int?> showMessageNotification({
   required String tag,
   String? msgUid,
   int? burnAt,
-  // their profile photo, handed over as bytes, never as a file
-  Uint8List? face,
 }) async {
   // a decoy session is open: no notification at all
   if (await quietNow()) return null;
@@ -612,7 +610,6 @@ Future<int?> showMessageNotification({
     autoCancel: true,
     timeoutAfter: left,
     when: DateTime.now().millisecondsSinceEpoch,
-    largeIcon: hidden || face == null ? null : ByteArrayAndroidBitmap(face),
     // sender on top, message underneath, expands for long text
     styleInformation: BigTextStyleInformation(
       body,
