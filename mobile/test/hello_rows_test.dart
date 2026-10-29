@@ -110,6 +110,8 @@ class _Engine implements HaloEngine {
   final String x;
   final unsubscribed = <String>[];
   final hellos = <String>[];
+  // the x keys whose pair's seed the engine was handed
+  final seeded = <String>[];
   @override
   String idFromEdPub(String hexPub) => _idOf[hexPub] ?? 'no-such-id';
   @override
@@ -125,8 +127,7 @@ class _Engine implements HaloEngine {
   @override
   String onionOfKey(String keyHex) => _onionOf(_unhex(keyHex));
   @override
-  String faceSign(String msgHex) =>
-      _hex(ed.sign(_myFace, _unhex(msgHex)));
+  String faceSign(String msgHex) => _hex(ed.sign(_myFace, _unhex(msgHex)));
   @override
   String fcKeyPk(String skHex) => _fcPkOf(_unhex(skHex));
   @override
@@ -139,7 +140,11 @@ class _Engine implements HaloEngine {
   }
 
   @override
-  Future<String> pairSeed(int ident, String x, String seed) async => 'ok';
+  Future<String> pairSeed(int ident, String x, String seed) async {
+    seeded.add(x);
+    return 'ok';
+  }
+
   @override
   Future<String> sendHello(int ident, String owner, String fc, String m) async {
     hellos.add(owner);
@@ -300,20 +305,12 @@ class _Phone {
       fcPkOf: _fcPkOf,
       face: face,
     );
-    final wire = helloWireOf(
-      hello,
-      grindPow(helloPowSeed(hello), powBits),
-    );
+    final wire = helloWireOf(hello, grindPow(helloPowSeed(hello), powBits));
     return (line: '${_sealOf(x)}|$wire', hello: hello, once: once);
   }
 
-  Future<InviteRow> mainInvite() => makeInvite(
-    db,
-    ss,
-    kind: kInviteMain,
-    fcPkOf: _fcPkOf,
-    face: face,
-  );
+  Future<InviteRow> mainInvite() =>
+      makeInvite(db, ss, kind: kInviteMain, fcPkOf: _fcPkOf, face: face);
 }
 
 Future<void> _settle() =>
@@ -380,6 +377,7 @@ void main() {
     );
     engine.unsubscribed.clear();
     engine.hellos.clear();
+    engine.seeded.clear();
     live = _Rows(db);
     await world();
     opened.clear();
@@ -394,11 +392,7 @@ void main() {
   }
 
   Future<List<Map<String, Object?>>> hellosOf(String way, String peer) =>
-      db.query(
-        'hellos',
-        where: 'way = ? AND peer = ?',
-        whereArgs: [way, peer],
-      );
+      db.query('hellos', where: 'way = ? AND peer = ?', whereArgs: [way, peer]);
 
   test('a reset drops the main invite people hold at once and makes a new '
       'one; once the v3 keys went it makes none of them again', () async {
@@ -407,7 +401,10 @@ void main() {
     final now = (await currentMainInvite(db, kMainIdent))!;
     expect(now.id, isNot(first.id));
     expect(await inviteOf(db, kMainIdent, first.id), isNull);
-    expect(await signalSession.signedPreKeyStore.contains(first.spkId!), isFalse);
+    expect(
+      await signalSession.signedPreKeyStore.contains(first.spkId!),
+      isFalse,
+    );
     expect(engine.unsubscribed, contains(first.id));
     expect((await fcKeysOf(db, kMainIdent)).keys, [now.id]);
     expect(await app.myV4Invite(), inviteLink(now.link));
@@ -674,6 +671,40 @@ void main() {
       isFalse,
     );
     expect(engine.unsubscribed, contains(once.id));
+  });
+
+  test('an opener at my main invite seeds the pair under their whole '
+      'identity key, and the engine takes their x key', () async {
+    final main = await myMain();
+    final p = await _Phone.make('seeds-the-pair', 83);
+    final inv = readInvite(p.ss.lib, main.link);
+    await p.ss.processBundle('me', inv.block!.bundle);
+    final frame = await wrapMessage(
+      'hi',
+      msgUid: 'u-seeded',
+      sender: SenderInfo(
+        haloId: p.words,
+        edPub: _hex(p.face.face),
+        onion: 'o-p',
+        xPub: p.x,
+      ),
+    );
+    final j =
+        jsonDecode(frame.substring(kEnvelopePrefix.length))
+            as Map<String, dynamic>;
+    final seed = List<int>.generate(32, (i) => 200 - i);
+    j['pg'] = 4;
+    j['as'] = _hex(seed);
+    j['fs'] = _hex(p.face.sign(faceText(p.key, _unhex(main.id))));
+    final c = await p.ss.encryptTo('me', '$kEnvelopePrefix${jsonEncode(j)}');
+    await app.receiveRelay([
+      (peer: 'f0:${main.id}', cipher: '${_sealOf(p.x)}|$c'),
+    ]);
+    await _settle();
+    final pair = await pairOf(db, kMainIdent, p.keyHex);
+    expect(pair.conv, kConvSeeded);
+    expect(pair.seed, seed);
+    expect(engine.seeded, [p.x]);
   });
 
   test('the upkeep runs again once an hour while the app runs: an expired '
