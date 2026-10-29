@@ -14,6 +14,7 @@ import '../widgets/motion.dart' show haloRoute;
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../widgets/shift_tap_guard.dart';
+import '../wide/wide_pane.dart';
 
 // a group is made with contacts: someone not blocked to pick
 bool canMakeGroupWith(Iterable<ContactPreview> contacts) =>
@@ -26,7 +27,7 @@ Future<void> openNewGroup(
   required Future<void> Function() onAdd,
 }) async {
   if (canMakeGroupWith(appState.contacts)) {
-    await Navigator.of(context).push(haloRoute(const NewGroupScreen()));
+    await deskPush(context, haloRoute(const NewGroupScreen()));
     return;
   }
   HapticFeedback.selectionClick();

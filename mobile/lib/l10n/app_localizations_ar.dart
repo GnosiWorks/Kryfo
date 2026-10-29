@@ -10191,4 +10191,13 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get wideSelectChat => 'اختر محادثة';
+
+  @override
+  String get wideSelectChatLine => 'اختر محادثة من القائمة لتبدأ الكتابة.';
+
+  @override
+  String get wideListWidth => 'عرض قائمة المحادثات';
 }

@@ -2645,5 +2645,8 @@
   "a11yPhotoFrom": "{name} kişisinden fotoğraf, {date}",
   "a11yVideoOn": "Video, {date}",
   "a11yVideoFrom": "{name} kişisinden video, {date}",
-  "a11yNewMessages": "{count, plural, =1{Yeni mesaj} other{{count} yeni mesaj}}"
+  "a11yNewMessages": "{count, plural, =1{Yeni mesaj} other{{count} yeni mesaj}}",
+  "wideSelectChat": "Bir sohbet seçin",
+  "wideSelectChatLine": "Yazmaya başlamak için listeden bir sohbet seçin.",
+  "wideListWidth": "Sohbet listesi genişliği"
 }

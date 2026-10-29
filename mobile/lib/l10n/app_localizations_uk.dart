@@ -10217,4 +10217,13 @@ class AppLocalizationsUk extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get wideSelectChat => 'Виберіть чат';
+
+  @override
+  String get wideSelectChatLine => 'Виберіть чат у списку, щоб почати писати.';
+
+  @override
+  String get wideListWidth => 'Ширина списку чатів';
 }

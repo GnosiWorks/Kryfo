@@ -2645,5 +2645,8 @@
   "a11yPhotoFrom": "عکس از ⁨{name}⁩، ⁨{date}⁩",
   "a11yVideoOn": "ویدیو، ⁨{date}⁩",
   "a11yVideoFrom": "ویدیو از ⁨{name}⁩، ⁨{date}⁩",
-  "a11yNewMessages": "{count, plural, =1{پیام تازه} other{⁨{count}⁩ پیام تازه}}"
+  "a11yNewMessages": "{count, plural, =1{پیام تازه} other{⁨{count}⁩ پیام تازه}}",
+  "wideSelectChat": "یک گفت‌وگو انتخاب کنید",
+  "wideSelectChatLine": "یک گفت‌وگو را از فهرست انتخاب کنید تا نوشتن را شروع کنید.",
+  "wideListWidth": "پهنای فهرست گفت‌وگوها"
 }

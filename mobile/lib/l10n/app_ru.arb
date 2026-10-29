@@ -2645,5 +2645,8 @@
   "a11yPhotoFrom": "Фото от {name}, {date}",
   "a11yVideoOn": "Видео, {date}",
   "a11yVideoFrom": "Видео от {name}, {date}",
-  "a11yNewMessages": "{count, plural, one{{count} новое сообщение} few{{count} новых сообщения} many{{count} новых сообщений} other{{count} новых сообщения}}"
+  "a11yNewMessages": "{count, plural, one{{count} новое сообщение} few{{count} новых сообщения} many{{count} новых сообщений} other{{count} новых сообщения}}",
+  "wideSelectChat": "Выберите чат",
+  "wideSelectChatLine": "Выберите чат в списке, чтобы начать писать.",
+  "wideListWidth": "Ширина списка чатов"
 }

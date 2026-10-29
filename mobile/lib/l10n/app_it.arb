@@ -2645,5 +2645,8 @@
   "a11yPhotoFrom": "Foto da {name}, {date}",
   "a11yVideoOn": "Video, {date}",
   "a11yVideoFrom": "Video da {name}, {date}",
-  "a11yNewMessages": "{count, plural, =1{Nuovo messaggio} other{{count} nuovi messaggi}}"
+  "a11yNewMessages": "{count, plural, =1{Nuovo messaggio} other{{count} nuovi messaggi}}",
+  "wideSelectChat": "Scegli una chat",
+  "wideSelectChatLine": "Scegli una chat dall'elenco per iniziare a scrivere.",
+  "wideListWidth": "Larghezza dell'elenco chat"
 }

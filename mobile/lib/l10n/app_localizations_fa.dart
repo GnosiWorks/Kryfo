@@ -10066,4 +10066,14 @@ class AppLocalizationsFa extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get wideSelectChat => 'یک گفت‌وگو انتخاب کنید';
+
+  @override
+  String get wideSelectChatLine =>
+      'یک گفت‌وگو را از فهرست انتخاب کنید تا نوشتن را شروع کنید.';
+
+  @override
+  String get wideListWidth => 'پهنای فهرست گفت‌وگوها';
 }

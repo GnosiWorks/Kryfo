@@ -2645,5 +2645,8 @@
   "a11yPhotoFrom": "{name} 傳來的照片，{date}",
   "a11yVideoOn": "影片，{date}",
   "a11yVideoFrom": "{name} 傳來的影片，{date}",
-  "a11yNewMessages": "{count, plural, =1{新訊息} other{{count} 則新訊息}}"
+  "a11yNewMessages": "{count, plural, =1{新訊息} other{{count} 則新訊息}}",
+  "wideSelectChat": "選擇一個聊天",
+  "wideSelectChatLine": "從列表中選擇一個聊天，開始寫訊息。",
+  "wideListWidth": "聊天列表寬度"
 }

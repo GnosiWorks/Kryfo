@@ -12,8 +12,25 @@ final Set<Route<dynamic>> _chatRoutes = {};
 /// true when [r] is a chat's own page
 bool isChatPage(Route<dynamic> r) => _chatRoutes.contains(r);
 
+/// what watches the navigator [r] is on: the app's own, or the desktop
+/// pane's, which stands in the app's [host] route
+typedef RouteWatch = ({
+  RouteObserver<PageRoute<dynamic>> pages,
+  RouteStack stack,
+  Route<dynamic>? host,
+});
+
+RouteWatch _appWatch(Route<dynamic> r) =>
+    (pages: pageRoutes, stack: routeStack, host: null);
+
+/// set by the desktop pane while it is up
+RouteWatch Function(Route<dynamic> r) watchOf = _appWatch;
+
+void resetWatchOf() => watchOf = _appWatch;
+
 mixin BackOnTop<T extends StatefulWidget> on State<T> implements RouteAware {
   PageRoute<dynamic>? _route;
+  RouteObserver<PageRoute<dynamic>> _pages = pageRoutes;
 
   // the page above is gone and this one shows again
   void backOnTop();
@@ -24,17 +41,18 @@ mixin BackOnTop<T extends StatefulWidget> on State<T> implements RouteAware {
     final r = ModalRoute.of(context);
     if (r is! PageRoute<dynamic> || identical(r, _route)) return;
     if (_route != null) {
-      pageRoutes.unsubscribe(this);
+      _pages.unsubscribe(this);
       _chatRoutes.remove(_route);
     }
     _route = r;
     _chatRoutes.add(r);
-    pageRoutes.subscribe(this, r);
+    _pages = watchOf(r).pages;
+    _pages.subscribe(this, r);
   }
 
   @override
   void dispose() {
-    pageRoutes.unsubscribe(this);
+    _pages.unsubscribe(this);
     _chatRoutes.remove(_route);
     super.dispose();
   }
@@ -104,7 +122,9 @@ final routeStack = RouteStack();
 /// a chat's own timer picker or menu. another page over it is not
 bool pageInFront(Route<dynamic>? r) {
   if (r == null || !r.isActive) return false;
+  final w = watchOf(r);
+  if (w.host != null && !pageInFront(w.host)) return false;
   if (r.isCurrent) return true;
-  final over = routeStack.above(r);
+  final over = w.stack.above(r);
   return over.isNotEmpty && !over.any((x) => x is PageRoute);
 }

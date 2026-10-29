@@ -2645,5 +2645,8 @@
   "a11yPhotoFrom": "صورة من ⁨{name}⁩، ⁨{date}⁩",
   "a11yVideoOn": "فيديو، ⁨{date}⁩",
   "a11yVideoFrom": "فيديو من ⁨{name}⁩، ⁨{date}⁩",
-  "a11yNewMessages": "{count, plural, =1{رسالة جديدة} two{رسالتان جديدتان} few{⁨{count}⁩ رسائل جديدة} many{⁨{count}⁩ رسالة جديدة} other{⁨{count}⁩ رسالة جديدة}}"
+  "a11yNewMessages": "{count, plural, =1{رسالة جديدة} two{رسالتان جديدتان} few{⁨{count}⁩ رسائل جديدة} many{⁨{count}⁩ رسالة جديدة} other{⁨{count}⁩ رسالة جديدة}}",
+  "wideSelectChat": "اختر محادثة",
+  "wideSelectChatLine": "اختر محادثة من القائمة لتبدأ الكتابة.",
+  "wideListWidth": "عرض قائمة المحادثات"
 }

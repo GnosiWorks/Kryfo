@@ -10121,4 +10121,14 @@ class AppLocalizationsEs extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get wideSelectChat => 'Elige un chat';
+
+  @override
+  String get wideSelectChatLine =>
+      'Elige un chat de la lista para empezar a escribir.';
+
+  @override
+  String get wideListWidth => 'Ancho de la lista de chats';
 }

@@ -10054,4 +10054,14 @@ class AppLocalizationsHi extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get wideSelectChat => 'कोई चैट चुनें';
+
+  @override
+  String get wideSelectChatLine =>
+      'लिखना शुरू करने के लिए सूची से कोई चैट चुनें।';
+
+  @override
+  String get wideListWidth => 'चैट सूची की चौड़ाई';
 }

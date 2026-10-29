@@ -16156,6 +16156,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{New message} other{{count} new messages}}'**
   String a11yNewMessages(int count);
+
+  /// wide/wide_home.dart: on a wide desktop window, the chat pane with no chat open
+  ///
+  /// In en, this message translates to:
+  /// **'Select a chat'**
+  String get wideSelectChat;
+
+  /// wide/wide_home.dart: the line under wideSelectChat
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a chat from the list to start writing.'**
+  String get wideSelectChatLine;
+
+  /// wide/wide_home.dart: screen reader name of the divider that resizes the chat list on a wide desktop window
+  ///
+  /// In en, this message translates to:
+  /// **'Chat list width'**
+  String get wideListWidth;
 }
 
 class _AppLocalizationsDelegate

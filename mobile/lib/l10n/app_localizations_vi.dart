@@ -10032,4 +10032,14 @@ class AppLocalizationsVi extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get wideSelectChat => 'Chọn một cuộc trò chuyện';
+
+  @override
+  String get wideSelectChatLine =>
+      'Chọn một cuộc trò chuyện trong danh sách để bắt đầu viết.';
+
+  @override
+  String get wideListWidth => 'Độ rộng danh sách trò chuyện';
 }

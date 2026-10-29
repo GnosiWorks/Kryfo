@@ -10070,4 +10070,14 @@ class AppLocalizationsTr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get wideSelectChat => 'Bir sohbet seçin';
+
+  @override
+  String get wideSelectChatLine =>
+      'Yazmaya başlamak için listeden bir sohbet seçin.';
+
+  @override
+  String get wideListWidth => 'Sohbet listesi genişliği';
 }

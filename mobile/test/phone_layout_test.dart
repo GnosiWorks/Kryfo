@@ -11,7 +11,11 @@ import 'package:kryfo/desktop/desktop_mode.dart' show onDesktop;
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
-    show AppStateRefresh, AppStateRoute, appState, useDatabasesForTest,
+    show
+        AppStateRefresh,
+        AppStateRoute,
+        appState,
+        useDatabasesForTest,
         useEngineForTest;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/home_screen.dart';

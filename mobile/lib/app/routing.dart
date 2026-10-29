@@ -14,7 +14,7 @@ void openRoomSoon(String groupId) {
     () => lockGuard.afterUnlock(
       key: lockGuard.isLocked() ? 'room:$groupId' : null,
       () async {
-        final nav = rootNavKey.currentState;
+        final nav = chatNavigator(rootNavKey.currentState);
         if (nav == null || !await session.groupExists(groupId)) return;
         if (backToOpenGroup(nav, groupId)) return;
         nav.push(haloRoute(GroupChatScreen(groupId: groupId)));
@@ -159,7 +159,8 @@ Future<NotifTarget?> notifTargetFor(String payload) async {
 
 Future<void> _openChatFor(String? haloId, [String? uid]) async {
   if (haloId == null || haloId.isEmpty) return;
-  final nav = rootNavKey.currentState;
+  // on desktop into the chat pane
+  final nav = chatNavigator(rootNavKey.currentState);
   if (nav == null) return;
   // the developer's own phone: its support inbox, or one of its chats
   if (haloId.startsWith(kSupportPayload)) {

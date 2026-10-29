@@ -26,6 +26,7 @@ import 'package:flutter/services.dart';
 import '../l10n/l10n.dart';
 import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
+import '../wide/wide_pane.dart';
 
 // the page about the audit backers help pay for. sent as is: no query, no tag
 const kAuditUrl = 'https://kryfo.app/audit';
@@ -724,7 +725,8 @@ class _DonateScreenState extends State<DonateScreen> {
     if (tier == SupporterTier.none) return;
     final key = tierKey(tier);
     HapticFeedback.mediumImpact();
-    Navigator.of(context).push(
+    deskPush(
+      context,
       haloRoute(
         _InvoiceScreen(
           tier: tier,
@@ -905,9 +907,7 @@ class _DonateScreenState extends State<DonateScreen> {
               PressScale(
                 onTap: () async {
                   HapticFeedback.selectionClick();
-                  await Navigator.of(
-                    context,
-                  ).push(haloRoute(const ModesScreen()));
+                  await deskPush(context, haloRoute(const ModesScreen()));
                   if (mounted) setState(() {});
                 },
                 child: Container(
@@ -1345,7 +1345,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
             ),
             const SizedBox(height: 24),
             _fillButton(l10n.donateSwitchToOnion, () async {
-              await Navigator.of(context).push(haloRoute(const ModesScreen()));
+              await deskPush(context, haloRoute(const ModesScreen()));
               // back on onion: the review, and still no address until asked
               if (mounted && _onOnion) setState(() => _phase = _Phase.review);
             }),

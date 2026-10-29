@@ -10044,4 +10044,14 @@ class AppLocalizationsId extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get wideSelectChat => 'Pilih obrolan';
+
+  @override
+  String get wideSelectChatLine =>
+      'Pilih obrolan dari daftar untuk mulai menulis.';
+
+  @override
+  String get wideListWidth => 'Lebar daftar obrolan';
 }
