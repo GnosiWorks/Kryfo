@@ -745,6 +745,8 @@ open class MainActivity : FlutterFragmentActivity() {
                     else -> result.notImplemented()
                 }
             }
+        // last, once halo/platform answers for this screen
+        WindowShield.tellAttached { awayChannel?.send(it) }
     }
 
     // "open with" and share. another app cannot read our files, and must

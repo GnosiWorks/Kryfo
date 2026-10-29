@@ -135,4 +135,55 @@ void main() {
     expect(recents.last, isFalse);
     expect(told.last, isFalse);
   });
+
+  test('a new screen on the engine gets both again, unchanged', () async {
+    lockState.openForTest(enabled: true);
+    addTearDown(lockState.openForTest);
+    final app = await make();
+    await app.loadScreenSecure();
+    await app.forceSecure(true);
+    expect(told.last, isTrue);
+    expect(recents.last, isTrue);
+    told.clear();
+    recents.clear();
+    // nothing changed on this side, and the new window still hears it
+    await app.windowAttached();
+    expect(told, [true]);
+    expect(recents, [true]);
+    // and only once: the next unchanged value is not sent again
+    await app.forceSecure(true);
+    expect(told, [true]);
+    expect(recents, [true]);
+    await app.forceSecure(false);
+    await app.forceSecure(false);
+    expect(told, [true, false]);
+  });
+
+  test('a new screen that refuses is asked again at the next change', () async {
+    final app = await make();
+    await app.loadScreenSecure();
+    await app.forceSecure(true);
+    told.clear();
+    refuse = 2;
+    await app.windowAttached();
+    expect(told, [true, true]);
+    // never taken as on: the next hold sends it again
+    await app.forceSecure(true);
+    expect(told, [true, true, true]);
+    // and the next screen too
+    await app.windowAttached();
+    expect(told, [true, true, true, true]);
+  });
+
+  test('a screen before the first load sends nothing of its own', () async {
+    lockState.openForTest(enabled: true);
+    addTearDown(lockState.openForTest);
+    final app = await make();
+    await app.windowAttached();
+    expect(told, isEmpty);
+    expect(recents, isEmpty);
+    await app.loadScreenSecure();
+    expect(told, [false]);
+    expect(recents, [true]);
+  });
 }
