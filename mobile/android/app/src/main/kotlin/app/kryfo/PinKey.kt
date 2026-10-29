@@ -64,7 +64,7 @@ object PinKey {
         fun making(): Boolean
         fun setMaking(on: Boolean)
         // the keystore here keeps keys in software only: no pin key is made,
-        // the table stays as it was
+        // the table stays as it was. holds for the build it was asked under
         fun soft(): Boolean = false
         fun setSoft() {}
     }
@@ -142,11 +142,14 @@ object PinKey {
             p.edit().putBoolean("m", on).commit()
         }
 
-        override fun soft(): Boolean = p.getBoolean("s", false)
+        // an os update may bring a keystore with hardware: asked again then
+        override fun soft(): Boolean = p.getBoolean("s", false) && p.getString("f", null) == build()
 
         override fun setSoft() {
-            p.edit().putBoolean("s", true).commit()
+            p.edit().putBoolean("s", true).putString("f", build()).commit()
         }
+
+        private fun build(): String = Build.FINGERPRINT ?: ""
     }
 
     @Volatile

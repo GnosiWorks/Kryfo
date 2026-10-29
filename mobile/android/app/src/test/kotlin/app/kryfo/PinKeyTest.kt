@@ -17,7 +17,9 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowBuild
 
 // the pin key's life on keystores that refuse, stall, answer oddly or lose
 // the key: it is never made over one that is there, never deleted on an
@@ -149,6 +151,7 @@ class PinKeyTest {
         PinKey.sdk = android.os.Build.VERSION.SDK_INT
         PinKey.nanos = System::nanoTime
         PinKey.pause = { Thread.sleep(it) }
+        PinKey.secure = { false }
     }
 
     private val x = ByteArray(32) { it.toByte() }
@@ -235,6 +238,23 @@ class PinKeyTest {
         paused.clear()
         assertEquals(true, PinKey.info()["n"])
         assertTrue(paused.isEmpty())
+    }
+
+    @Test
+    fun anotherBuildAsksTheKeystoreAgain() {
+        PinKey.attach(RuntimeEnvironment.getApplication())
+        ShadowBuild.setFingerprint("kryfo/one")
+        keys.levelIs = PinKey.SOFTWARE
+        assertEquals("software", PinKey.make()["e"])
+        keys.makes.clear()
+        assertEquals("software", PinKey.make()["e"])
+        assertTrue(keys.makes.isEmpty())
+        // an os update that brought a keystore with hardware
+        ShadowBuild.setFingerprint("kryfo/two")
+        keys.levelIs = null
+        assertEquals(null, PinKey.info()["n"])
+        assertEquals(PinKey.STRONGBOX, PinKey.make()["l"])
+        PinKey.drop()
     }
 
     @Test
