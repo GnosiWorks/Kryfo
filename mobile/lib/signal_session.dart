@@ -58,6 +58,11 @@ class SignalSession {
   bool get ready => _ready;
   late Database _db;
   String _prefix = '';
+
+  /// the database and table prefix this store writes in: DeviceSessions
+  /// keeps its rows in the same tables and transactions
+  Database get database => _db;
+  String get tablePrefix => _prefix;
   // the base keys of the sessions a restore brought back. the phone the
   // file was made on went on sealing on them after it, so the peer has
   // spent their next message keys already: none is sealed on again (see
