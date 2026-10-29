@@ -7771,7 +7771,7 @@ class _SearchHeadState extends State<SearchHead> {
               child: hasQuery
                   ? Padding(
                       key: const ValueKey('search-meta'),
-                      // the arrows' 48 boxes stand in for the old top gap
+                      // the arrows' 48 boxes make the row's top gap
                       padding: const EdgeInsetsDirectional.fromSTEB(6, 0, 0, 0),
                       child: Row(
                         children: [
