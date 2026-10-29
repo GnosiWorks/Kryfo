@@ -1,0 +1,405 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// v4 invites in the app (identity v4 2.3, 3.1): the main invite kept and
+// listened on, the link and qr handed out, a first contact made from a
+// link's bundle, and an opener at one of my invites checked before it opens
+
+part of '../main.dart';
+
+const _b32 = 'abcdefghijklmnopqrstuvwxyz234567';
+
+/// the 32-byte service key of v3 onion address [onion], null for anything
+/// else: base32 of the key, two checksum bytes and version 3, and the
+/// engine gives back the same address for the key
+Uint8List? onionKeyOf(String onion) {
+  final s = onion.endsWith('.onion')
+      ? onion.substring(0, onion.length - 6)
+      : onion;
+  if (s.length != 56) return null;
+  final out = <int>[];
+  var acc = 0, bits = 0;
+  for (final c in s.split('')) {
+    final v = _b32.indexOf(c);
+    if (v < 0) return null;
+    acc = (acc << 5) | v;
+    bits += 5;
+    if (bits >= 8) {
+      bits -= 8;
+      out.add((acc >> bits) & 0xff);
+    }
+  }
+  if (out.length != 35 || out[34] != 3) return null;
+  final key = Uint8List.fromList(out.sublist(0, 32));
+  try {
+    if (engine.onionOfKey(_hexOf(key)) != '$s.onion') return null;
+  } catch (_) {
+    return null;
+  }
+  return key;
+}
+
+String _hexOf(List<int> b) =>
+    b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
+
+Uint8List _bytesOfHex(String h) => Uint8List.fromList([
+  for (var i = 0; i + 1 < h.length; i += 2)
+    int.parse(h.substring(i, i + 2), radix: 16),
+]);
+
+/// a v4 opener at one of my invites, as its line came: the invite, the
+/// identity it is of and the key the wrap's seal was signed with
+class InviteArrival {
+  const InviteArrival(this.ident, this.invite, this.sealPk);
+  final int ident;
+  final InviteRow invite;
+  final String sealPk;
+}
+
+/// [arrival]'s opener checked before anything is decrypted (3.1, 3.4): its
+/// seal is the hello seal key of my identity and the key it names, and it
+/// is on the invite's own prekeys. false drops it, and spends nothing
+bool inviteOpenerHolds(
+  KryfoSignal lib,
+  InviteArrival arrival,
+  Uint8List body, {
+  required String Function(int ident, String senderX) helloSealPk,
+}) {
+  final LsPreKeyMessageInfo info;
+  try {
+    info = lib.preKeyMessageInfo(body);
+  } catch (_) {
+    return false;
+  }
+  if (info.version < 4 || info.identityKey.length != 33) return false;
+  final want = helloSealPk(arrival.ident, _hexOf(info.identityKey.sublist(1)));
+  if (want.startsWith('error') || want != arrival.sealPk.toLowerCase()) {
+    return false;
+  }
+  final inv = arrival.invite;
+  return info.signedPreKeyId == inv.spkId &&
+      info.kyberPreKeyId == inv.kyberId &&
+      (info.preKeyId == null || info.preKeyId == inv.ecId);
+}
+
+/// a v4 opener's envelope checked after it opened (3.1): it carries the
+/// pair's seed, and a face signature over its own key and my invite's id
+/// whenever it shows a face. the seed, or null to refuse it
+Uint8List? inviteOpenerSeed(
+  UnwrappedMessage env,
+  List<int> sessionKey,
+  String inviteId,
+) {
+  final s = env.addrSeed;
+  if (env.protoGen != 4 || s == null || s.length != 64) return null;
+  final Uint8List seed;
+  try {
+    seed = _bytesOfHex(s);
+  } catch (_) {
+    return null;
+  }
+  if (seed.length != 32) return null;
+  final e = env.senderEdPub;
+  if (e != null) {
+    final fs = env.faceSig;
+    if (fs == null || fs.length != 128 || e.length != 64) return null;
+    try {
+      final ok = ed.verify(
+        ed.PublicKey(_bytesOfHex(e)),
+        faceText(sessionKey, _bytesOfHex(inviteId)),
+        _bytesOfHex(fs),
+      );
+      if (!ok) return null;
+    } catch (_) {
+      return null;
+    }
+  }
+  return seed;
+}
+
+/// the pair of my [ident] with identity key [peerKeyHex] made again by a
+/// v4 first contact: its addresses mix [seed] in from the first message
+Future<void> seedPairAfresh(
+  DatabaseExecutor db,
+  int ident,
+  String peerKeyHex,
+  Uint8List seed,
+) async {
+  await db.delete(
+    'pairs',
+    where: 'ident = ? AND peer = ? AND their_device = 1 AND my_device = 1',
+    whereArgs: [ident, peerKeyHex],
+  );
+  await putSeededPair(db, ident, peerKeyHex, seed);
+}
+
+// whether [cipher] is an opener on one of my v4 invites' signed prekeys:
+// those open only at the invite's own address, after its checks
+Future<bool> _onInviteKeys(String cipher) async {
+  final Uint8List w;
+  try {
+    w = base64Decode(cipher);
+  } catch (_) {
+    return false;
+  }
+  if (w.isEmpty || w[0] != kLsPreKey) return false;
+  final int spk;
+  try {
+    spk = signalSession.lib
+        .preKeyMessageInfo(Uint8List.sublistView(w, 1))
+        .signedPreKeyId;
+  } catch (_) {
+    return false;
+  }
+  final db = await live.open();
+  return (await db.query(
+    'invites',
+    columns: ['id'],
+    where: 'ident = ? AND spk_id = ?',
+    whereArgs: [signalSession.ident, spk],
+    limit: 1,
+  )).isNotEmpty;
+}
+
+/// the identity and invite id an invite address's lines are tagged with
+/// (`f<ident>:<invite>`), null for any other tag
+(int, String)? inviteTagOf(String tag) {
+  final m = RegExp(r'^f(\d{1,4}):([0-9a-f]{32})$').firstMatch(tag);
+  if (m == null) return null;
+  return (int.parse(m.group(1)!), m.group(2)!);
+}
+
+extension AppStateInvites on AppState {
+  /// a line from one of my invites' first-contact addresses: the seal's
+  /// key, a bar and what came. an opener is opened only when its seal and
+  /// its keys are the invite's (3.1); one that fails a check is dropped and
+  /// spends nothing; a one-time invite goes with its first opener
+  Future<void> _receiveAtInvite(
+    int ident,
+    String inviteId,
+    String line,
+    String h,
+    void Function() arrived, {
+    Reached? reached,
+  }) async {
+    final bar = line.indexOf('|');
+    final sealPk = bar == 64 ? line.substring(0, 64) : '';
+    final cipher = bar == 64 ? line.substring(65) : '';
+    final db = await live.open();
+    final row = ident == signalSession.ident
+        ? await inviteOf(db, ident, inviteId)
+        : null;
+    final Uint8List w;
+    try {
+      w = base64Decode(cipher);
+    } catch (_) {
+      await live.markSeenLong(h);
+      arrived();
+      return;
+    }
+    if (row == null ||
+        !row.openAt(unixHours()) ||
+        w.isEmpty ||
+        w[0] != kLsPreKey) {
+      // hellos are read in a later step; anything else is nobody's
+      dlog('invite: a line dropped');
+      await live.markSeenLong(h);
+      arrived();
+      return;
+    }
+    final arrival = InviteArrival(ident, row, sealPk);
+    if (!inviteOpenerHolds(
+      signalSession.lib,
+      arrival,
+      Uint8List.sublistView(w, 1),
+      helloSealPk: engine.helloSealPk,
+    )) {
+      firstFails.note('seal');
+      await live.markSeenLong(h);
+      arrived();
+      return;
+    }
+    final (String, RouteTo)? paired;
+    try {
+      paired = await backPairFromCipher(cipher, reached: reached, v4: arrival);
+    } on FirstRefused catch (e) {
+      firstFails.note(e.why);
+      await live.markSeenLong(h);
+      arrived();
+      return;
+    }
+    if (paired == null) {
+      // opened and not filed, or not opened yet: it comes again
+      throw StateError('invite: an opener not filed');
+    }
+    if (row.oneTime) {
+      await spendOneTime(db, signalSession, row);
+      await engine.unsubscribeFcKey(ident, inviteId);
+    }
+    await live.markSeen(h);
+    if (AppState._shown(paired.$2)) arrived();
+  }
+
+  // my face on the main invite: the onion key, F and F's signature
+  InviteFace? _mainInviteFace() {
+    final onion = onionKeyOf(myOnion);
+    final f = engine.myEdPubkey();
+    if (onion == null || f.length != 64) return null;
+    return InviteFace(
+      onionKey: onion,
+      face: _bytesOfHex(f),
+      sign: (m) {
+        final s = engine.faceSign(_hexOf(m));
+        if (s.length != 128) throw StateError('no face signature');
+        return _bytesOfHex(s);
+      },
+    );
+  }
+
+  String _fcPkOfKey(Uint8List sk) {
+    try {
+      return engine.fcKeyPk(_hexOf(sk));
+    } catch (e) {
+      return 'error: $e';
+    }
+  }
+
+  /// the main identity's invites kept (made, made again at six months,
+  /// dropped a day after expiry, the developer's never) and each live one
+  /// listened on. the everyday side only: a quiet session has none
+  Future<void> keepMyInvites({int? nowMs}) async {
+    if (sessionQuiet || !signalSession.ready) return;
+    final face = _mainInviteFace();
+    if (face == null) {
+      dlog('invites: no face yet, kept next start');
+      return;
+    }
+    final db = await live.open();
+    final up = await keepInvites(
+      db,
+      signalSession,
+      fcPkOf: _fcPkOfKey,
+      face: face,
+      dev: devModeOf(myXPub),
+      nowMs: nowMs,
+    );
+    if (up.made != null) dlog('invites: a main invite made');
+    for (final id in up.dropped) {
+      await engine.unsubscribeFcKey(kMainIdent, id);
+    }
+    await _listenMyInvites(db, nowMs: nowMs);
+  }
+
+  Future<void> _listenMyInvites(DatabaseExecutor db, {int? nowMs}) async {
+    final h = unixHours(nowMs);
+    final keys = await fcKeysOf(db, kMainIdent);
+    for (final r in await invitesOf(db, kMainIdent)) {
+      final sk = keys[r.id];
+      if (sk == null || !r.openAt(h)) continue;
+      final res = await engine.subscribeFcKey(kMainIdent, r.id, _hexOf(sk));
+      if (res != 'ok') dlog('invites: not listened on ($res)');
+    }
+  }
+
+  /// my v4 link (with the bundle) or, with [qr], its qr form; null before
+  /// the main invite is made
+  Future<String?> myV4Invite({bool qr = false}) async {
+    final r = await currentMainInvite(await live.open(), kMainIdent);
+    if (r == null) return null;
+    final b = qr ? r.qr : r.link;
+    return b == null ? null : inviteLink(b);
+  }
+
+  /// a v4 first contact to [peer] waits for its answer: every frame to them
+  /// until then carries the pair's seed and my face signature for their
+  /// invite (3.1). the frame as it goes
+  Future<String> v4OpenerFields(String peer, String frame) async {
+    if (!frame.startsWith(kEnvelopePrefix)) return frame;
+    // rows that do not read add nothing: the far side refuses an opener
+    // without its seed, so nothing goes on the wrong addresses
+    final DatabaseExecutor db;
+    try {
+      db = await live.open();
+    } catch (e) {
+      dlog('v4 opener: rows not read (${e.runtimeType})');
+      return frame;
+    }
+    final c = await db.query(
+      'contacts',
+      columns: ['xpub', 'back_paired', 'ident'],
+      where: 'halo_id = ?',
+      whereArgs: [peer],
+      limit: 1,
+    );
+    if (c.isEmpty) return frame;
+    final key = identityKeyHex(c.first['xpub'] as String?);
+    if (key == null) return frame;
+    final ident = c.first['ident'] as int? ?? kMainIdent;
+    final o = await db.query(
+      'hellos',
+      columns: ['invite_id'],
+      where: 'ident = ? AND way = ? AND peer = ?',
+      whereArgs: [ident, kHelloOpen, key],
+      limit: 1,
+    );
+    if (o.isEmpty) return frame;
+    if ((c.first['back_paired'] as int? ?? 0) == 1) {
+      await db.delete(
+        'hellos',
+        where: 'ident = ? AND way = ? AND peer = ?',
+        whereArgs: [ident, kHelloOpen, key],
+      );
+      return frame;
+    }
+    final p = await pairOf(db, ident, key);
+    if (p.conv != kConvSeeded || p.seed == null) return frame;
+    final j =
+        jsonDecode(frame.substring(kEnvelopePrefix.length))
+            as Map<String, dynamic>;
+    j['pg'] = 4;
+    j['as'] = _hexOf(p.seed!);
+    // the face signature only with the face: a frame with no words shows
+    // none
+    if (ident == kMainIdent && j['e'] != null) {
+      final fs = engine.faceSign(
+        _hexOf(
+          faceText(
+            signalSession.identity.public,
+            _bytesOfHex(o.first['invite_id'] as String),
+          ),
+        ),
+      );
+      if (fs.length != 128) throw const OtherIdentity('no face signature');
+      j['fs'] = fs;
+    }
+    return '$kEnvelopePrefix${jsonEncode(j)}';
+  }
+
+  /// a contact added from a v4 invite [inv]: the session from its bundle
+  /// and the pair seeded afresh, so the first message goes to the invite's
+  /// first-contact address sealed with the hello seal key and carries the
+  /// seed (the caller keeps the address once the contact is written)
+  Future<void> startFromInvite(String id, LsInvite inv) async {
+    final bundle = inv.block!.bundle;
+    final key = _hexOf(inv.identity);
+    final x = key.substring(2);
+    final db = await live.open();
+    final r = Random.secure();
+    final seed = Uint8List.fromList(List.generate(32, (_) => r.nextInt(256)));
+    await signalSession.processBundle(id, bundle);
+    await seedPairAfresh(db, kMainIdent, key, seed);
+    await db.insert('hellos', {
+      'ident': kMainIdent,
+      'way': kHelloOpen,
+      'peer': key,
+      'invite_id': _hexOf(inv.id),
+      'fc': _hexOf(inv.firstContact),
+      'at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    dlog('pair: v4 invite, seeded pair');
+    // the engine takes the seed with every call from now on
+    final res = await engine.pairSeed(kMainIdent, x, _hexOf(seed));
+    if (res != 'ok') dlog('pair: seed not taken ($res)');
+  }
+}
+
+/// a hellos row: a v4 first contact I sent, waiting for its answer
+const kHelloOpen = 'open';

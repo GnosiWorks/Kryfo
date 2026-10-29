@@ -100,6 +100,8 @@ Future<({int ident, String cipher})> signalSeal(
     );
   }
   plaintext = await appState.shotsOnWire(peerId, plaintext);
+  // a v4 first contact's frames carry the pair's seed until they answer
+  plaintext = await appState.v4OpenerFields(peerId, plaintext);
   final (ident, framed) = await appState.doorFor(peerId, plaintext);
   final ss = await signalOfIdent(ident);
   final from = _afreshFrom;

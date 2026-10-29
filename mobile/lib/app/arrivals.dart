@@ -75,113 +75,7 @@ class AppIo {
   // sender then gets an id of their own (unboundIdOf). null when any of it
   // fails in a way that may pass later, FirstRefused when it never opens
   Future<({String haloId, String plain, UnwrappedMessage env})?>
-  openFirstContact(String cipher) async {
-    const tempPeer = '_pending_back_pair_';
-    try {
-      // always start clean: a leftover temp session or parked identity from
-      // a prior pairing would poison this prekey decrypt.
-      await signalSession.sessionStore.delete(tempPeer);
-      await signalSession.identityStore.removePeerIdentity(tempPeer);
-      final plain = await signalDecrypt(tempPeer, cipher);
-      if (plain == null) {
-        await signalSession.sessionStore.delete(tempPeer);
-        firstFails.note('decrypt');
-        return null;
-      }
-      final env = unwrapMessage(plain);
-      final h = env.senderHaloId;
-      final e = env.senderEdPub;
-      if (h == null || e == null) {
-        await signalSession.sessionStore.delete(tempPeer);
-        dlog('back-pair: envelope missing identity fields');
-        throw const FirstRefused('shape');
-      }
-      final derived = engine.idFromEdPub(e);
-      if (derived != h) {
-        await signalSession.sessionStore.delete(tempPeer);
-        dlog('back-pair: HaloID mismatch');
-        throw const FirstRefused('id');
-      }
-      // nobody starts a chat as the developer: his three words are only 33
-      // bits and his keys are pinned. no session is kept under them
-      if (devCardClaim(id: h, xPub: env.senderXPub)) {
-        await signalSession.sessionStore.delete(tempPeer);
-        dlog('back-pair: claims the developer, dropped');
-        throw const FirstRefused('claim');
-      }
-      final record = await signalSession.sessionStore.load(tempPeer);
-      final key = record == null
-          ? null
-          : signalSession.lib.sessionInfo(record).remoteIdentity;
-      // the x key it gives for itself is the one its session runs on
-      final x = env.senderXPub;
-      if (record == null ||
-          key == null ||
-          (x != null &&
-              x.isNotEmpty &&
-              !_eqBytes(_xIdentity(x.toLowerCase()) ?? const [], key))) {
-        await signalSession.sessionStore.delete(tempPeer);
-        dlog('back-pair: key mismatch');
-        firstFails.note('key');
-        return null;
-      }
-      // a key "this isn't them" blocked opens nothing, under any name
-      final kx = _keyHex(key);
-      if (await _receiving._keyBlockedHere(kx)) {
-        await signalSession.sessionStore.delete(tempPeer);
-        dlog('back-pair: dropped');
-        // what the debug list says names no block the screen does not show
-        throw FirstRefused(await live.keyBlocked(kx) ? 'blocked' : 'decrypt');
-      }
-      // a name stays with the key first seen for it
-      var at = h;
-      final bound = await _boundIdentity(
-        h,
-        ss: signalSession,
-        row: live.getContact,
-      );
-      // unless the name came with a request, an introduction or a group,
-      // nobody checked it and its chat was deleted: then it is free
-      if (bound != null &&
-          !_eqBytes(bound, key) &&
-          _firstWouldPass(env) &&
-          await appState._nameFree(h, await live.getContact(h))) {
-        await appState.releaseName(h);
-        dlog('back-pair: a deleted name let go');
-      } else if ((bound != null && !_eqBytes(bound, key)) ||
-          (bound == null && await _receiving._tombedArriving(h))) {
-        // bound to another key, or let go by "this isn't them": the words
-        // go to no one who writes first
-        at = unboundIdOf(key);
-        final held = await _boundIdentity(
-          at,
-          ss: signalSession,
-          row: live.getContact,
-        );
-        if (held != null && !_eqBytes(held, key)) {
-          await signalSession.sessionStore.delete(tempPeer);
-          firstFails.note('bound');
-          return null;
-        }
-        dlog('back-pair: a name bound to another key, filed on its own');
-      }
-      // move session from temp to where it is filed
-      await keepOpenedSession(at, record);
-      await signalSession.sessionStore.delete(tempPeer);
-      return (haloId: at, plain: plain, env: env);
-    } on FirstRefused {
-      rethrow;
-    } catch (e) {
-      dlog('back-pair error: $e');
-      firstFails.note('open');
-      try {
-        await signalSession.sessionStore.delete(tempPeer);
-      } catch (_) {
-        // the next first contact clears the placeholder before it starts
-      }
-      return null;
-    }
-  }
+  openFirstContact(String cipher) => _openFirst(cipher);
 
   Future<bool> hasSession(String peer) => hasSessionWith(peer);
 
@@ -363,4 +257,148 @@ class _HeldIn extends CapHeld {
 // a first contact without its proof of work: nothing of it is kept
 class _NoProof implements Exception {
   const _NoProof();
+}
+
+/// a first message from someone with no session yet, as
+/// AppIo.openFirstContact. [v4]: an opener at one of my v4 invites, checked
+/// already for its seal and its keys (inviteOpenerHolds): it must carry the
+/// pair's seed and, with a face, the face signature for that invite, and
+/// its pair is seeded before anything is sent. without it, an opener on a
+/// v4 invite's keys is refused: those open only at the invite's address
+Future<({String haloId, String plain, UnwrappedMessage env})?> _openFirst(
+  String cipher, {
+  InviteArrival? v4,
+}) async {
+  {
+    const tempPeer = '_pending_back_pair_';
+    try {
+      if (v4 == null && await _onInviteKeys(cipher)) {
+        dlog('back-pair: an invite opener off its address, dropped');
+        throw const FirstRefused('invite');
+      }
+      // always start clean: a leftover temp session or parked identity from
+      // a prior pairing would poison this prekey decrypt.
+      await signalSession.sessionStore.delete(tempPeer);
+      await signalSession.identityStore.removePeerIdentity(tempPeer);
+      final plain = await signalDecrypt(tempPeer, cipher);
+      if (plain == null) {
+        await signalSession.sessionStore.delete(tempPeer);
+        firstFails.note('decrypt');
+        return null;
+      }
+      final env = unwrapMessage(plain);
+      final h = env.senderHaloId;
+      final e = env.senderEdPub;
+      if (h == null || e == null) {
+        await signalSession.sessionStore.delete(tempPeer);
+        dlog('back-pair: envelope missing identity fields');
+        throw const FirstRefused('shape');
+      }
+      final derived = engine.idFromEdPub(e);
+      if (derived != h) {
+        await signalSession.sessionStore.delete(tempPeer);
+        dlog('back-pair: HaloID mismatch');
+        throw const FirstRefused('id');
+      }
+      // nobody starts a chat as the developer: his three words are only 33
+      // bits and his keys are pinned. no session is kept under them
+      if (devCardClaim(id: h, xPub: env.senderXPub)) {
+        await signalSession.sessionStore.delete(tempPeer);
+        dlog('back-pair: claims the developer, dropped');
+        throw const FirstRefused('claim');
+      }
+      final record = await signalSession.sessionStore.load(tempPeer);
+      final key = record == null
+          ? null
+          : signalSession.lib.sessionInfo(record).remoteIdentity;
+      // the x key it gives for itself is the one its session runs on
+      final x = env.senderXPub;
+      if (record == null ||
+          key == null ||
+          (x != null &&
+              x.isNotEmpty &&
+              !_eqBytes(_xIdentity(x.toLowerCase()) ?? const [], key))) {
+        await signalSession.sessionStore.delete(tempPeer);
+        dlog('back-pair: key mismatch');
+        firstFails.note('key');
+        return null;
+      }
+      // a key "this isn't them" blocked opens nothing, under any name
+      final kx = _keyHex(key);
+      if (await _receiving._keyBlockedHere(kx)) {
+        await signalSession.sessionStore.delete(tempPeer);
+        dlog('back-pair: dropped');
+        // what the debug list says names no block the screen does not show
+        throw FirstRefused(await live.keyBlocked(kx) ? 'blocked' : 'decrypt');
+      }
+      // a name stays with the key first seen for it
+      var at = h;
+      final bound = await _boundIdentity(
+        h,
+        ss: signalSession,
+        row: live.getContact,
+      );
+      // unless the name came with a request, an introduction or a group,
+      // nobody checked it and its chat was deleted: then it is free
+      if (bound != null &&
+          !_eqBytes(bound, key) &&
+          _firstWouldPass(env) &&
+          await appState._nameFree(h, await live.getContact(h))) {
+        await appState.releaseName(h);
+        dlog('back-pair: a deleted name let go');
+      } else if ((bound != null && !_eqBytes(bound, key)) ||
+          (bound == null && await _receiving._tombedArriving(h))) {
+        // bound to another key, or let go by "this isn't them": the words
+        // go to no one who writes first
+        at = unboundIdOf(key);
+        final held = await _boundIdentity(
+          at,
+          ss: signalSession,
+          row: live.getContact,
+        );
+        if (held != null && !_eqBytes(held, key)) {
+          await signalSession.sessionStore.delete(tempPeer);
+          firstFails.note('bound');
+          return null;
+        }
+        dlog('back-pair: a name bound to another key, filed on its own');
+      }
+      // a v4 opener carries its pair's seed, and its face signs for the
+      // invite it came to
+      Uint8List? seed;
+      if (v4 != null) {
+        seed = inviteOpenerSeed(env, key, v4.invite.id);
+        if (seed == null) {
+          await signalSession.sessionStore.delete(tempPeer);
+          dlog('back-pair: a v4 opener without its seed or face, dropped');
+          throw const FirstRefused('seed');
+        }
+      }
+      // move session from temp to where it is filed
+      await keepOpenedSession(at, record);
+      await signalSession.sessionStore.delete(tempPeer);
+      if (v4 != null && seed != null) {
+        // the pair on its v4 addresses before anything goes to them
+        await seedPairAfresh(await live.open(), v4.ident, kx, seed);
+        final res = await engine.pairSeed(
+          v4.ident,
+          kx.substring(2),
+          _hexOf(seed),
+        );
+        if (res != 'ok') dlog('back-pair: seed not taken ($res)');
+      }
+      return (haloId: at, plain: plain, env: env);
+    } on FirstRefused {
+      rethrow;
+    } catch (e) {
+      dlog('back-pair error: $e');
+      firstFails.note('open');
+      try {
+        await signalSession.sessionStore.delete(tempPeer);
+      } catch (_) {
+        // the next first contact clears the placeholder before it starts
+      }
+      return null;
+    }
+  }
 }

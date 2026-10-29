@@ -207,6 +207,12 @@ extension AppStateReceive on AppState {
       signalWait,
       onTimeout: () => dlog('listen: signal not ready, contacts go on'),
     );
+    // my v4 invites kept, and each live one listened on
+    try {
+      await keepMyInvites();
+    } catch (e) {
+      dlog('invites: not kept (${e.runtimeType})');
+    }
     var heard = <String>{};
     var short = true;
     try {
@@ -694,6 +700,18 @@ extension AppStateReceive on AppState {
       await live.markSeen(h);
       notifyListeners();
       arrived();
+      return;
+    }
+    // a line from one of my invites' first-contact addresses
+    if (inviteTagOf(m.peer) case (final ident, final invite)) {
+      await _receiveAtInvite(
+        ident,
+        invite,
+        m.cipher,
+        h,
+        arrived,
+        reached: reached,
+      );
       return;
     }
     if (m.cipher.startsWith('{')) {
