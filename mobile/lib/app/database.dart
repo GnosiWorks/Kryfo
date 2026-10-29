@@ -155,7 +155,7 @@ class HaloDb
     _db = await openDatabase(
       path,
       password: pw,
-      version: 92,
+      version: 94,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -334,6 +334,7 @@ class HaloDb
         await _heldTable(db);
         await _signalTables(db);
         await identityTables(db);
+        await inviteTables(db);
         await contactKeyIndex(db);
         await _pollTables(db);
         await searchTables(db, fresh: true);
@@ -910,6 +911,12 @@ class HaloDb
         if (oldV < 92) {
           // identities, and the signal stores per identity (identities.dart)
           await upgradeTo92(db);
+        }
+        // 93 is profile photos' (safe to run again, as this one is)
+        if (oldV < 94) {
+          // v4 invites, the hellos waiting on them, the hellos seen
+          // (invites.dart)
+          await inviteTables(db);
         }
       },
     );
@@ -2014,6 +2021,52 @@ Future<void> identityTables(DatabaseExecutor db) async {
       created_at INTEGER NOT NULL,
       retired_at INTEGER,
       PRIMARY KEY (ident, invite_id)
+    )
+  ''');
+}
+
+// v4 invites (identity v4 2.3): a row per invite with its times (unix
+// hours), its keys by id and its signed frames, with and without the
+// bundle. hellos (3.3): one in, waiting for the person's accept, or one
+// out, waiting for the opener to my one-time invite inside it. the hellos
+// seen, by hash, for 16 days
+Future<void> inviteTables(DatabaseExecutor db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS invites (
+      ident INTEGER NOT NULL,
+      id TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      issued INTEGER NOT NULL,
+      expires INTEGER NOT NULL,
+      used_at INTEGER,
+      retired_at INTEGER,
+      spk_id INTEGER,
+      kyber_id INTEGER,
+      ec_id INTEGER,
+      link BLOB NOT NULL,
+      qr BLOB,
+      never_expires INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (ident, id)
+    )
+  ''');
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS hellos (
+      ident INTEGER NOT NULL,
+      way TEXT NOT NULL,
+      peer TEXT NOT NULL,
+      invite_id TEXT NOT NULL,
+      hello BLOB,
+      fc TEXT,
+      at INTEGER NOT NULL,
+      PRIMARY KEY (ident, way, peer, invite_id)
+    )
+  ''');
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS hello_seen (
+      ident INTEGER NOT NULL,
+      hash TEXT NOT NULL,
+      at INTEGER NOT NULL,
+      PRIMARY KEY (ident, hash)
     )
   ''');
 }

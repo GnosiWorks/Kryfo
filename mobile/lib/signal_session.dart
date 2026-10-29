@@ -91,8 +91,11 @@ class SignalSession {
       restoredFrom: restoredFrom,
     );
 
+    // the v3 invite's keys went with the first v4 main invite's year: none
+    // is made again (identity v4 2.3, R23)
+    final legacy = !await _legacyGone();
     // a signed prekey the old library made reads here as it is
-    final spk = await signedPreKeyStore.load(1);
+    final spk = legacy ? await signedPreKeyStore.load(1) : null;
     var spkOk = false;
     if (spk != null) {
       try {
@@ -104,7 +107,7 @@ class SignalSession {
       dlog('signal: existing spk self-verify = $spkOk');
       if (!spkOk) await signedPreKeyStore.remove(1);
     }
-    if (!spkOk) {
+    if (!spkOk && legacy) {
       final fresh = lib.signedPreKey(identity, 1, _now());
       await signedPreKeyStore.store(1, fresh.record);
       dlog('signal: generated signed prekey id=1');
@@ -112,15 +115,18 @@ class SignalSession {
 
     // prekeys 0-9 topped up by the ids present, and the invite's own
     final have = (await preKeyStore.ids()).toSet();
-    for (final id in [for (var i = 0; i < 10; i++) i, invitePreKeyId]) {
+    for (final id in [
+      for (var i = 0; i < 10; i++) i,
+      if (legacy) invitePreKeyId,
+    ]) {
       if (have.contains(id)) continue;
       await preKeyStore.store(id, lib.preKey(id).record);
     }
 
     // the invite's kyber prekey: a last resort key, kept like the invite's
     // ec prekey, and made again when it no longer holds under this identity
-    final k = await kyberPreKeyStore.load(kInviteKyberId);
-    var kOk = false;
+    final k = legacy ? await kyberPreKeyStore.load(kInviteKyberId) : null;
+    var kOk = !legacy;
     if (k != null) {
       try {
         final p = lib.preKeyPublic(kLsKyber, k);
@@ -1071,6 +1077,106 @@ class SignalSession {
     } catch (_) {
       return {};
     }
+  }
+
+  /// the keys of v4 invite [inviteId] (identity v4 2.1): a signed prekey
+  /// and a last resort kyber prekey with random ids, named by the invite,
+  /// and with [ec] a one-time ec prekey (a one-time invite's). they live
+  /// and go with the invite, never with the session prekeys
+  Future<({LsPreKey spk, LsPreKey kyber, LsPreKey? ec})> makeInviteKeys(
+    String inviteId, {
+    bool ec = false,
+    int? now,
+  }) async {
+    final at = now ?? _now();
+    final spkId = await _freeId(signedPreKeyStore.contains);
+    final kId = await _freeId(kyberPreKeyStore.contains);
+    final spk = lib.signedPreKey(identity, spkId, at);
+    final k = lib.kyberPreKey(identity, kId, at);
+    LsPreKey? e;
+    if (ec) {
+      // never one of the old ids: 0-9 and the v3 invite's
+      final id = await _freeId(
+        (id) async =>
+            id < 10 || id == invitePreKeyId || await preKeyStore.contains(id),
+      );
+      e = lib.preKey(id);
+    }
+    await _db.transaction((t) async {
+      await LsSignedPreKeyStore(
+        t,
+        prefix: _prefix,
+        ident: ident,
+      ).store(spkId, spk.record, inviteId: inviteId, createdAt: at);
+      await LsKyberPreKeyStore(t, prefix: _prefix, ident: ident).store(
+        kId,
+        k.record,
+        lastResort: true,
+        inviteId: inviteId,
+        createdAt: at,
+      );
+      if (e != null) {
+        await LsPreKeyStore(
+          t,
+          prefix: _prefix,
+          ident: ident,
+        ).store(e.id, e.record);
+      }
+    });
+    return (spk: spk, kyber: k, ec: e);
+  }
+
+  /// the keys an invite named, gone with every opener read on its kyber
+  /// key: nothing sealed to them opens here again (R23)
+  Future<void> dropInviteKeys({
+    required int? spkId,
+    required int? kyberId,
+    required int? ecId,
+  }) => _db.transaction((t) async {
+    if (spkId != null) {
+      await LsSignedPreKeyStore(t, prefix: _prefix, ident: ident).remove(spkId);
+    }
+    if (kyberId != null) {
+      await LsKyberPreKeyStore(
+        t,
+        prefix: _prefix,
+        ident: ident,
+      ).remove(kyberId);
+    }
+    if (ecId != null) {
+      await LsPreKeyStore(t, prefix: _prefix, ident: ident).remove(ecId);
+    }
+  });
+
+  static const _kLegacyGone = 'v3_invite_gone';
+
+  Future<bool> _legacyGone() async => (await _db.query(
+    '${_prefix}signal_meta',
+    where: 'k = ?',
+    whereArgs: [_meta(_kLegacyGone)],
+    limit: 1,
+  )).isNotEmpty;
+
+  /// the v3 invite's keys (signed prekey 1, kyber 1, ec 999999) gone with
+  /// every opener read on them, and never made again. true when they went
+  /// now
+  Future<bool> dropLegacyInviteKeys() async {
+    if (await _legacyGone()) return false;
+    await _db.transaction((t) async {
+      await LsSignedPreKeyStore(t, prefix: _prefix, ident: ident).remove(1);
+      await LsKyberPreKeyStore(
+        t,
+        prefix: _prefix,
+        ident: ident,
+      ).remove(kInviteKyberId);
+      await LsPreKeyStore(t, prefix: _prefix, ident: ident).dropInvite();
+      await t.insert('${_prefix}signal_meta', {
+        'k': _meta(_kLegacyGone),
+        'v': '${_now()}',
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    });
+    dlog('signal: the v3 invite keys went');
+    return true;
   }
 
   /// a new invite prekey under the same id, and a new kyber one: every
