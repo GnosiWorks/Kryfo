@@ -34,6 +34,10 @@ class FakeKeys implements PinKeystore {
   // macs never answer while set
   Completer<void>? hang;
   bool refuseMake = false;
+  // a keystore that keeps keys in software only: makes none, and says so
+  // once it was asked
+  bool soft = false;
+  bool softSeen = false;
   bool infoSilent = false;
   // the next info says no key once, as a busy keystore may
   bool infoFalseOnce = false;
@@ -53,6 +57,7 @@ class FakeKeys implements PinKeystore {
       level: level,
       screenLock: screenLock,
       sdk: 35,
+      hardware: there || !softSeen,
     );
   }
 
@@ -60,6 +65,10 @@ class FakeKeys implements PinKeystore {
   Future<PinKeyInfo?> make() async {
     calls.add('make');
     if (refuseMake) return null;
+    if (soft) {
+      softSeen = true;
+      return const PinKeyInfo(exists: false, hardware: false);
+    }
     exists = true;
     return PinKeyInfo(
       exists: true,

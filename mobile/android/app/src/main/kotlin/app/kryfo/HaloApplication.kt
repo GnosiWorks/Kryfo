@@ -1,6 +1,7 @@
 package app.kryfo
 
 import android.app.Application
+import android.os.Build
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.embedding.engine.dart.DartExecutor
@@ -48,6 +49,15 @@ open class HaloApplication : Application() {
                             null
                         }
                     )
+                    else -> result.notImplemented()
+                }
+            }
+        // the phone's android, for the window rules: boot reads it before a
+        // screen is there, and in a process with none
+        MethodChannel(engine.dartExecutor.binaryMessenger, "kryfo/phone")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "sdk" -> result.success(Build.VERSION.SDK_INT)
                     else -> result.notImplemented()
                 }
             }

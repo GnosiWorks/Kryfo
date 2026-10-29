@@ -41,6 +41,7 @@ import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/stranger_gate.dart' show ShelfFull;
 import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
 import 'arrival_fakes.dart';
 import 'mem_db.dart';
@@ -201,6 +202,14 @@ Future<String?> _reads(SignalSession ss, String cipher) async {
 
 Future<void> _settle() =>
     Future<void>.delayed(const Duration(milliseconds: 30));
+
+// the everyday rows, with the invite tables in a file of rows beside them
+class _InviteRows extends ArrivalRows {
+  _InviteRows() : super(HaloContainer.everyday);
+  final db = MemDb();
+  @override
+  Future<Database> open() async => db;
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -748,6 +757,10 @@ void main() {
 
   test('a new invite link lets go of what was kept: nothing opens it '
       'after', () async {
+    // a reset lets go of the main v4 invite too, in the invite tables
+    live = _InviteRows();
+    useDatabasesForTest(live, Session(live));
+    app = await start();
     FlutterSecureStorage.setMockInitialValues({'fc_counter': '1'});
     await app.loadFirstContact();
     final s = await stranger('stray-old-link');

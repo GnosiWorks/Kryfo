@@ -1388,10 +1388,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Ela será removida dos dois celulares, a menos que já tenha sido salva. Isso não pode ser desfeito.';
 
   @override
-  String get chatAlbumItDisappearsWithNo =>
-      'O álbum será removido dos dois celulares, a menos que já tenha sido salvo. Isso não pode ser desfeito.';
-
-  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -2645,10 +2641,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Ela será removida dos celulares de todos, a menos que já tenha sido salva. Isso não pode ser desfeito.';
 
   @override
-  String get groupChatAlbumItDisappearsWithNo =>
-      'O álbum será removido dos celulares de todos, a menos que já tenha sido salvo. Isso não pode ser desfeito.';
-
-  @override
   String get groupChatUnsend => 'Desfazer envio';
 
   @override
@@ -3197,9 +3189,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get homeAddSomeone => 'Adicionar alguém';
-
-  @override
-  String get homeInviteSomeone => 'Convidar alguém';
 
   @override
   String get homeArchived => 'Arquivadas';
@@ -4068,43 +4057,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get onboardingContinue => 'Continuar →';
-
-  @override
-  String get onboardingNameHeadline => 'Um *@nome* público, se quiser.';
-
-  @override
-  String get onboardingNameLine =>
-      'Um nome público permite que as pessoas encontrem você. Pular mantém você mais privado, e você sempre pode adicionar um depois.';
-
-  @override
-  String get onboardingNameSkip => 'Pular por enquanto →';
-
-  @override
-  String onboardingNameClaim(Object handle) {
-    return 'Ficar com @$handle →';
-  }
-
-  @override
-  String get onboardingInviteHeadline => 'Agora, *convide alguém*.';
-
-  @override
-  String get onboardingInviteLead =>
-      'Envie um link em qualquer mensageiro. Ele abre o Kryfo ou mostra onde baixá-lo.';
-
-  @override
-  String get onboardingInviteSomeone => 'Convidar alguém →';
-
-  @override
-  String get onboardingInviteGettingReady => 'Preparando seu link…';
-
-  @override
-  String inviteShareText(Object myId, Object link, Object download) {
-    return 'Me adicione no Kryfo. Lá meu nome é $myId\n\nToque para me adicionar:\n$link\n\nAinda não tem o Kryfo? Baixe aqui:\n$download\n\nO Kryfo é um mensageiro privado. Sem número de telefone, sem e-mail.';
-  }
-
-  @override
-  String get inviteNotReady =>
-      'Seu link está quase pronto. Tente de novo em um instante.';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -9809,6 +9761,217 @@ class AppLocalizationsPt extends AppLocalizations {
       'O Kryfo precisa de uma pasta privada na memória enquanto roda, e este computador não oferece nenhuma, então ele não vai abrir.';
 
   @override
+  String get inviteNotYet =>
+      'Este convite ainda não é válido. Confira a hora do seu celular.';
+
+  @override
+  String get inviteExpired => 'Este convite expirou. Peça um novo.';
+
+  @override
+  String get inviteDamaged => 'Este convite está danificado. Peça um novo.';
+
+  @override
+  String get helloSent =>
+      'Pedido enviado. A pessoa verá quando estiver online.';
+
+  @override
+  String get inviteNeeds06 => 'Requer o Kryfo 0.6 ou mais recente.';
+
+  @override
+  String get helloSentOld =>
+      'Pedido enviado. Se a pessoa usar uma versão antiga do Kryfo, precisará atualizar primeiro.';
+
+  @override
+  String get modesPickHow =>
+      'Escolha como suas mensagens viajam. Você pode mudar quando quiser.';
+
+  @override
+  String get modesPrivate => 'Privado';
+
+  @override
+  String get modesPrivateTag => 'Tor · pontes quando preciso';
+
+  @override
+  String get modesPrivateLine =>
+      'Ninguém fica sabendo seu endereço IP nem quem você é, nem nossos servidores. Encontra sozinho um jeito de contornar bloqueios.';
+
+  @override
+  String get modesDefault => 'Padrão';
+
+  @override
+  String get modesFastTag => 'Direto para nossos servidores';
+
+  @override
+  String get modesFastLine =>
+      'Pula o Tor, então as mensagens chegam mais rápido e gastam menos bateria. Nossos servidores veem seu endereço IP só enquanto você está conectado, e nunca registram nem guardam. Nunca o que você diz. Seus contatos nunca veem.';
+
+  @override
+  String get modesFastConnected => 'Rápido · conectado';
+
+  @override
+  String get modesFastConnecting => 'Rápido · conectando';
+
+  @override
+  String get modesFastDown => 'Rápido · nossos servidores não respondem';
+
+  @override
+  String get modesBackupReady =>
+      'Um reserva está sempre pronto, então você continua conectado mesmo se um cair.';
+
+  @override
+  String get modesDetails => 'Detalhes';
+
+  @override
+  String get modesBothLine =>
+      'Os dois mantêm cada mensagem com criptografia de ponta a ponta. Só muda quem pode ver seu endereço IP.';
+
+  @override
+  String get modesConnectionBridges => 'Conexão e pontes';
+
+  @override
+  String get modesWhatServersSee => 'O que nossos servidores podem ver';
+
+  @override
+  String get serversTitle => 'Servidores do Rápido';
+
+  @override
+  String get serversLine =>
+      'Cada mensagem vai para os dois servidores ao mesmo tempo. O que responde primeiro a leva, e o outro assume se um parar.';
+
+  @override
+  String get serversOne => 'Servidor 1';
+
+  @override
+  String get serversTwo => 'Servidor 2 · segundo provedor';
+
+  @override
+  String get serversConnected => 'Conectado';
+
+  @override
+  String get serversConnecting => 'Conectando';
+
+  @override
+  String get serversNotAnswering => 'Não responde';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String get serversQuicker => 'Mais rápido';
+
+  @override
+  String get serversBackups => 'Retransmissores públicos';
+
+  @override
+  String get serversBackupsLine =>
+      'Usados enquanto o Servidor 1 está fora, e só pelo Tor, então nunca veem seu endereço IP.';
+
+  @override
+  String get serversStandingBy => 'Em espera';
+
+  @override
+  String get serversInUse => 'Em uso';
+
+  @override
+  String get homeMergedTitle => 'Retransmissor e Rápido agora são um só';
+
+  @override
+  String get homeMergedLine =>
+      'Você está no Rápido. Um servidor reserva está sempre pronto, então você continua conectado mesmo se um cair. Nossos servidores veem seu endereço IP, nunca o que você diz.';
+
+  @override
+  String get homeMergedGotIt => 'Entendi';
+
+  @override
+  String get homeMergedUsePrivate => 'Usar Privado no lugar';
+
+  @override
+  String get homeOursDownTitle => 'Nossos servidores não respondem';
+
+  @override
+  String get homeOursDownLine =>
+      'Depois de alguns minutos, quando o Tor consegue passar, as mensagens também vão por retransmissores públicos, e voltam aos nossos servidores assim que um responde.';
+
+  @override
+  String get homeUsePrivate => 'Usar Privado';
+
+  @override
+  String get homeSwitchedToPrivate => 'Mudou para Privado';
+
+  @override
+  String get homeUseFast => 'Usar Rápido';
+
+  @override
+  String get homeSwitchedToFastRoute => 'Mudou para Rápido';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'O Rápido vai direto para nossos servidores e costuma passar. Ou deixe o Kryfo encontrar um jeito sozinho.';
+
+  @override
+  String get appServersNotAnswering => 'Servidores sem resposta';
+
+  @override
+  String get settingsPrivateTor => 'Privado · Tor';
+
+  @override
+  String get seenOurServers => 'Nossos servidores';
+
+  @override
+  String get seenIpWhy =>
+      'No Privado tudo sai pelo Tor e nossos servidores veem um nó de saída, nunca você. No Rápido a conexão vai direto para nossos dois servidores: eles veem seu endereço IP enquanto você está conectado e não guardam registro. Enquanto o primeiro está fora, o Rápido também usa retransmissores públicos, só pelo Tor.';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'O álbum será removido dos dois celulares, a menos que já tenha sido salvo. Isso não pode ser desfeito.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'O álbum será removido dos celulares de todos, a menos que já tenha sido salvo. Isso não pode ser desfeito.';
+
+  @override
+  String get homeInviteSomeone => 'Convidar alguém';
+
+  @override
+  String get onboardingNameHeadline => 'Um *@nome* público, se quiser.';
+
+  @override
+  String get onboardingNameLine =>
+      'Um nome público permite que as pessoas encontrem você. Pular mantém você mais privado, e você sempre pode adicionar um depois.';
+
+  @override
+  String get onboardingNameSkip => 'Pular por enquanto →';
+
+  @override
+  String onboardingNameClaim(Object handle) {
+    return 'Ficar com @$handle →';
+  }
+
+  @override
+  String get onboardingInviteHeadline => 'Agora, *convide alguém*.';
+
+  @override
+  String get onboardingInviteLead =>
+      'Envie um link em qualquer mensageiro. Ele abre o Kryfo ou mostra onde baixá-lo.';
+
+  @override
+  String get onboardingInviteSomeone => 'Convidar alguém →';
+
+  @override
+  String get onboardingInviteGettingReady => 'Preparando seu link…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'Me adicione no Kryfo. Lá meu nome é $myId\n\nToque para me adicionar:\n$link\n\nAinda não tem o Kryfo? Baixe aqui:\n$download\n\nO Kryfo é um mensageiro privado. Sem número de telefone, sem e-mail.';
+  }
+
+  @override
+  String get inviteNotReady =>
+      'Seu link está quase pronto. Tente de novo em um instante.';
+
+  @override
   String get photoCropTitle => 'Mover e ajustar';
 
   @override
@@ -9959,148 +10122,6 @@ class AppLocalizationsPt extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get modesPickHow =>
-      'Escolha como suas mensagens viajam. Você pode mudar quando quiser.';
-
-  @override
-  String get modesPrivate => 'Privado';
-
-  @override
-  String get modesPrivateTag => 'Tor · pontes quando preciso';
-
-  @override
-  String get modesPrivateLine =>
-      'Ninguém fica sabendo seu endereço IP nem quem você é, nem nossos servidores. Encontra sozinho um jeito de contornar bloqueios.';
-
-  @override
-  String get modesDefault => 'Padrão';
-
-  @override
-  String get modesFastTag => 'Direto para nossos servidores';
-
-  @override
-  String get modesFastLine =>
-      'Pula o Tor, então as mensagens chegam mais rápido e gastam menos bateria. Nossos servidores veem seu endereço IP só enquanto você está conectado, e nunca registram nem guardam. Nunca o que você diz. Seus contatos nunca veem.';
-
-  @override
-  String get modesFastConnected => 'Rápido · conectado';
-
-  @override
-  String get modesFastConnecting => 'Rápido · conectando';
-
-  @override
-  String get modesFastDown => 'Rápido · nossos servidores não respondem';
-
-  @override
-  String get modesBackupReady =>
-      'Um reserva está sempre pronto, então você continua conectado mesmo se um cair.';
-
-  @override
-  String get modesDetails => 'Detalhes';
-
-  @override
-  String get modesBothLine =>
-      'Os dois mantêm cada mensagem com criptografia de ponta a ponta. Só muda quem pode ver seu endereço IP.';
-
-  @override
-  String get modesConnectionBridges => 'Conexão e pontes';
-
-  @override
-  String get modesWhatServersSee => 'O que nossos servidores podem ver';
-
-  @override
-  String get serversTitle => 'Servidores do Rápido';
-
-  @override
-  String get serversLine =>
-      'Cada mensagem vai para os dois servidores ao mesmo tempo. O que responde primeiro a leva, e o outro assume se um parar.';
-
-  @override
-  String get serversOne => 'Servidor 1';
-
-  @override
-  String get serversTwo => 'Servidor 2 · segundo provedor';
-
-  @override
-  String get serversConnected => 'Conectado';
-
-  @override
-  String get serversConnecting => 'Conectando';
-
-  @override
-  String get serversNotAnswering => 'Não responde';
-
-  @override
-  String serversMs(int ms) {
-    return '$ms ms';
-  }
-
-  @override
-  String get serversQuicker => 'Mais rápido';
-
-  @override
-  String get serversBackups => 'Retransmissores públicos';
-
-  @override
-  String get serversBackupsLine =>
-      'Usados enquanto o Servidor 1 está fora, e só pelo Tor, então nunca veem seu endereço IP.';
-
-  @override
-  String get serversStandingBy => 'Em espera';
-
-  @override
-  String get serversInUse => 'Em uso';
-
-  @override
-  String get homeMergedTitle => 'Retransmissor e Rápido agora são um só';
-
-  @override
-  String get homeMergedLine =>
-      'Você está no Rápido. Um servidor reserva está sempre pronto, então você continua conectado mesmo se um cair. Nossos servidores veem seu endereço IP, nunca o que você diz.';
-
-  @override
-  String get homeMergedGotIt => 'Entendi';
-
-  @override
-  String get homeMergedUsePrivate => 'Usar Privado no lugar';
-
-  @override
-  String get homeOursDownTitle => 'Nossos servidores não respondem';
-
-  @override
-  String get homeOursDownLine =>
-      'Depois de alguns minutos, quando o Tor consegue passar, as mensagens também vão por retransmissores públicos, e voltam aos nossos servidores assim que um responde.';
-
-  @override
-  String get homeUsePrivate => 'Usar Privado';
-
-  @override
-  String get homeSwitchedToPrivate => 'Mudou para Privado';
-
-  @override
-  String get homeUseFast => 'Usar Rápido';
-
-  @override
-  String get homeSwitchedToFastRoute => 'Mudou para Rápido';
-
-  @override
-  String get bridgesFastGetsThrough =>
-      'O Rápido vai direto para nossos servidores e costuma passar. Ou deixe o Kryfo encontrar um jeito sozinho.';
-
-  @override
-  String get appServersNotAnswering => 'Servidores sem resposta';
-
-  @override
-  String get settingsPrivateTor => 'Privado · Tor';
-
-  @override
-  String get seenOurServers => 'Nossos servidores';
-
-  @override
-  String get seenIpWhy =>
-      'No Privado tudo sai pelo Tor e nossos servidores veem um nó de saída, nunca você. No Rápido a conexão vai direto para nossos dois servidores: eles veem seu endereço IP enquanto você está conectado e não guardam registro. Enquanto o primeiro está fora, o Rápido também usa retransmissores públicos, só pelo Tor.';
 
   @override
   String transferDoneOf(String done, String total) {

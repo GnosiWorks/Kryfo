@@ -97,6 +97,7 @@ extension AppStateContacts on AppState {
     // the chat is gone (NameHold.free). any other deleted chat's words go
     // only to an add the person makes, and asks (NameHold.ask)
     await dropChatDraft(haloId);
+    final hellos = await hellosKeysOf(haloId);
     await session.deleteConversation(haloId);
     // their photo and the one set for them go; ours is taken back
     try {
@@ -106,6 +107,8 @@ extension AppStateContacts on AppState {
     }
     unawaited(photoSweep());
     await _forgetPairSeen({haloId});
+    // no hello goes to them after it, and none of theirs waits
+    await dropHellos(hellos);
     // keep _xPubToHaloId: the row and subscription both survive so they can
     // still reach us, in requests instead of a live chat.
     await refreshContacts();
@@ -210,11 +213,13 @@ extension AppStateContacts on AppState {
         return went;
       }
 
+      final hellos = await hellosKeysOf(haloId, keys: xs);
       final uids = quiet
           ? await run()
           : await signalSession.serial(haloId, run);
       if (uids == null) return false;
       await dropChatDraft(haloId);
+      await dropHellos(hellos);
       if (!quiet) {
         // what the relay held is not fetched again, and the shade lets go
         // of their chat and of what they said in groups
@@ -497,6 +502,7 @@ extension AppStateContacts on AppState {
   // may name someone the everyday app has in the shade
   Future<void> block(String haloId) async {
     await session.setBlocked(haloId, true);
+    await dropHellos(await hellosKeysOf(haloId));
     // what was typed for them stays, under the blocked bar, for an unblock
     await _recardBlock(haloId);
     // an open chat reads its rows again: what waited is not sent now
@@ -573,6 +579,12 @@ extension AppStateContacts on AppState {
       await _oweAck(haloId);
       await refreshContacts();
       return;
+    }
+    // a hello waiting here: its session first, so the ack is its opener
+    try {
+      await answerHello(haloId);
+    } catch (e) {
+      dlog('hello: not answered (${e.runtimeType})');
     }
     unawaited(subscribePeer(haloId, fresh: true));
     unawaited(_ackOnAccept(haloId));

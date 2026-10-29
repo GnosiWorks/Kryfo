@@ -241,6 +241,10 @@ class _Io implements AppIo {
   @override
   Future<bool> hasSession(String peer) async => true;
   @override
+  Future<({int ident, String cipher})> seal(String peer, String plain) async =>
+      (ident: 0, cipher: await encrypt(peer, plain));
+
+  @override
   Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
   @override
   void listen(int ident, String xPub, {bool fresh = false}) {}
@@ -1552,16 +1556,25 @@ void main() {
         // a copy's text phase, held open for the whole test
         final reading = Completer<void>();
         final copy = w.app.withVaultStill(() => reading.future);
+        // each pin's fastest answer over five rounds, taken in turn: a
+        // pin that waits on the copy is late in every round, a loaded
+        // machine's stall in one
         final shown = <String, int>{};
-        for (final pin in [appPin, vaultPin, '0000']) {
-          final t = Stopwatch()..start();
-          await lock.verifyPin(pin);
-          shown[pin] = t.elapsedMilliseconds;
-          lock.lock();
-          w.app.lockingUp();
-          await _settle();
+        for (var round = 0; round < 5; round++) {
+          for (final pin in [appPin, vaultPin, '0000']) {
+            final t = Stopwatch()..start();
+            await lock.verifyPin(pin);
+            final took = t.elapsedMilliseconds;
+            if (took < (shown[pin] ?? took + 1)) shown[pin] = took;
+            lock.lock();
+            w.app.lockingUp();
+            await _settle();
+          }
         }
         expect(session.vault, isNull);
+        for (final e in shown.entries) {
+          expect(e.value, greaterThanOrEqualTo(reveal.inMilliseconds - 2));
+        }
         final ms = shown.values.toList()..sort();
         expect(ms.last - ms.first, lessThan(120), reason: '$shown');
         // a hide waits for the copy, and goes once it is read
@@ -1575,6 +1588,7 @@ void main() {
         await hiding;
         expect(hid, isTrue);
       },
+      timeout: const Timeout(Duration(seconds: 90)),
     );
 
     test('a history copy never starts inside vault work', () async {

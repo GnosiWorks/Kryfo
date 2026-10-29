@@ -1380,10 +1380,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Daha önce kaydedilmediyse iki telefondan da silinecek. Bu geri alınamaz.';
 
   @override
-  String get chatAlbumItDisappearsWithNo =>
-      'Daha önce kaydedilmediyse albüm iki telefondan da silinecek. Bu geri alınamaz.';
-
-  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -2624,10 +2620,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Daha önce kaydedilmediyse herkesin telefonundan silinecek. Bu geri alınamaz.';
 
   @override
-  String get groupChatAlbumItDisappearsWithNo =>
-      'Daha önce kaydedilmediyse albüm herkesin telefonundan silinecek. Bu geri alınamaz.';
-
-  @override
   String get groupChatUnsend => 'Geri çek';
 
   @override
@@ -3176,9 +3168,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get homeAddSomeone => 'Birini ekle';
-
-  @override
-  String get homeInviteSomeone => 'Birini davet et';
 
   @override
   String get homeArchived => 'Arşiv';
@@ -4052,43 +4041,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get onboardingContinue => 'Devam →';
-
-  @override
-  String get onboardingNameHeadline => 'İstersen herkese açık bir *@ad*.';
-
-  @override
-  String get onboardingNameLine =>
-      'Herkese açık bir ad, insanların seni bulmasını sağlar. Atlamak seni daha gizli tutar, istediğin zaman sonra ekleyebilirsin.';
-
-  @override
-  String get onboardingNameSkip => 'Şimdilik atla →';
-
-  @override
-  String onboardingNameClaim(Object handle) {
-    return '@$handle adını al →';
-  }
-
-  @override
-  String get onboardingInviteHeadline => 'Şimdi *birini davet et*.';
-
-  @override
-  String get onboardingInviteLead =>
-      'Herhangi bir mesajlaşma uygulamasında bir bağlantı gönder. Kryfo’yu açar ya da nereden indirileceğini gösterir.';
-
-  @override
-  String get onboardingInviteSomeone => 'Birini davet et →';
-
-  @override
-  String get onboardingInviteGettingReady => 'Bağlantın hazırlanıyor…';
-
-  @override
-  String inviteShareText(Object myId, Object link, Object download) {
-    return 'Beni Kryfo’da ekle. Oradaki adım: $myId\n\nBeni eklemek için dokun:\n$link\n\nHenüz Kryfo yok mu? Buradan indir:\n$download\n\nKryfo gizli bir mesajlaşma uygulaması. Telefon numarası yok, e-posta yok.';
-  }
-
-  @override
-  String get inviteNotReady =>
-      'Bağlantın neredeyse hazır. Birazdan tekrar dene.';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -9760,6 +9712,216 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kryfo çalışırken bellekte özel bir klasöre ihtiyaç duyar, bu bilgisayar böyle bir klasör sunmuyor, bu yüzden açılmayacak.';
 
   @override
+  String get inviteNotYet =>
+      'Bu davet henüz geçerli değil. Telefonundaki saati kontrol et.';
+
+  @override
+  String get inviteExpired => 'Bu davetin süresi doldu. Yenisini iste.';
+
+  @override
+  String get inviteDamaged => 'Bu davet bozuk. Yenisini iste.';
+
+  @override
+  String get helloSent => 'İstek gönderildi. Çevrimiçi olduğunda görecek.';
+
+  @override
+  String get inviteNeeds06 => 'Kryfo 0.6 veya daha yenisi gerekir.';
+
+  @override
+  String get helloSentOld =>
+      'İstek gönderildi. Kryfo\'nun eski bir sürümünü kullanıyorsa önce güncellemesi gerekecek.';
+
+  @override
+  String get modesPickHow =>
+      'Mesajlarının nasıl gideceğini seç. İstediğin zaman değiştirebilirsin.';
+
+  @override
+  String get modesPrivate => 'Özel';
+
+  @override
+  String get modesPrivateTag => 'Tor · gerekince köprüler';
+
+  @override
+  String get modesPrivateLine =>
+      'IP adresini ya da kim olduğunu kimse öğrenmez, sunucularımız bile. Engelleri aşmanın yolunu kendisi bulur.';
+
+  @override
+  String get modesDefault => 'Varsayılan';
+
+  @override
+  String get modesFastTag => 'Doğrudan sunucularımıza';
+
+  @override
+  String get modesFastLine =>
+      'Tor’u atlar, böylece mesajlar daha hızlı ulaşır ve daha az pil harcar. Sunucularımız IP adresini yalnızca bağlıyken görür, asla kaydetmez ya da saklamaz. Ne söylediğini asla görmez. Kişilerin onu asla görmez.';
+
+  @override
+  String get modesFastConnected => 'Hızlı · bağlı';
+
+  @override
+  String get modesFastConnecting => 'Hızlı · bağlanıyor';
+
+  @override
+  String get modesFastDown => 'Hızlı · sunucularımız yanıt vermiyor';
+
+  @override
+  String get modesBackupReady =>
+      'Bir yedek her zaman hazır, biri çökse bile bağlı kalırsın.';
+
+  @override
+  String get modesDetails => 'Ayrıntılar';
+
+  @override
+  String get modesBothLine =>
+      'İkisi de her mesajı uçtan uca şifreler. Değişen tek şey IP adresini kimin görebildiği.';
+
+  @override
+  String get modesConnectionBridges => 'Bağlantı ve köprüler';
+
+  @override
+  String get modesWhatServersSee => 'Sunucularımız neyi görebilir';
+
+  @override
+  String get serversTitle => 'Hızlı sunucuları';
+
+  @override
+  String get serversLine =>
+      'Her mesaj aynı anda iki sunucuya da gider. Önce yanıt veren taşır, biri durursa diğeri devralır.';
+
+  @override
+  String get serversOne => 'Sunucu 1';
+
+  @override
+  String get serversTwo => 'Sunucu 2 · ikinci sağlayıcı';
+
+  @override
+  String get serversConnected => 'Bağlı';
+
+  @override
+  String get serversConnecting => 'Bağlanıyor';
+
+  @override
+  String get serversNotAnswering => 'Yanıt vermiyor';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String get serversQuicker => 'Daha hızlı';
+
+  @override
+  String get serversBackups => 'Herkese açık aktarıcılar';
+
+  @override
+  String get serversBackupsLine =>
+      'Sunucu 1 çalışmadığı sürece ve yalnızca Tor üzerinden kullanılır, bu yüzden IP adresini asla görmezler.';
+
+  @override
+  String get serversStandingBy => 'Beklemede';
+
+  @override
+  String get serversInUse => 'Kullanımda';
+
+  @override
+  String get homeMergedTitle => 'Aktarıcı ve Hızlı artık tek';
+
+  @override
+  String get homeMergedLine =>
+      'Hızlı’dasın. Yedek bir sunucu her zaman hazır, biri çökse bile bağlı kalırsın. Sunucularımız IP adresini görür, ne söylediğini asla görmez.';
+
+  @override
+  String get homeMergedGotIt => 'Anladım';
+
+  @override
+  String get homeMergedUsePrivate => 'Bunun yerine Özel’i kullan';
+
+  @override
+  String get homeOursDownTitle => 'Sunucularımız yanıt vermiyor';
+
+  @override
+  String get homeOursDownLine =>
+      'Birkaç dakika sonra, Tor bağlanınca mesajlar herkese açık aktarıcılardan da gider, sunucularımızdan biri yanıt verir vermez yine oradan.';
+
+  @override
+  String get homeUsePrivate => 'Özel’i kullan';
+
+  @override
+  String get homeSwitchedToPrivate => 'Özel’e geçildi';
+
+  @override
+  String get homeUseFast => 'Hızlı’yı kullan';
+
+  @override
+  String get homeSwitchedToFastRoute => 'Hızlı’ya geçildi';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'Hızlı doğrudan sunucularımıza gider ve genelde geçer. Ya da Kryfo’nun kendi yolunu bulmasına izin ver.';
+
+  @override
+  String get appServersNotAnswering => 'Sunucular yanıt vermiyor';
+
+  @override
+  String get settingsPrivateTor => 'Özel · Tor';
+
+  @override
+  String get seenOurServers => 'Sunucularımız';
+
+  @override
+  String get seenIpWhy =>
+      'Özel’de her şey Tor üzerinden çıkar ve sunucularımız seni değil, bir çıkış düğümünü görür. Hızlı’da bağlantı doğrudan iki sunucumuza gider: bağlıyken IP adresini görürler ve hiçbir kaydını tutmazlar. İlki çalışmadığı sürece Hızlı herkese açık aktarıcıları da kullanır, yalnızca Tor üzerinden.';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'Daha önce kaydedilmediyse albüm iki telefondan da silinecek. Bu geri alınamaz.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'Daha önce kaydedilmediyse albüm herkesin telefonundan silinecek. Bu geri alınamaz.';
+
+  @override
+  String get homeInviteSomeone => 'Birini davet et';
+
+  @override
+  String get onboardingNameHeadline => 'İstersen herkese açık bir *@ad*.';
+
+  @override
+  String get onboardingNameLine =>
+      'Herkese açık bir ad, insanların seni bulmasını sağlar. Atlamak seni daha gizli tutar, istediğin zaman sonra ekleyebilirsin.';
+
+  @override
+  String get onboardingNameSkip => 'Şimdilik atla →';
+
+  @override
+  String onboardingNameClaim(Object handle) {
+    return '@$handle adını al →';
+  }
+
+  @override
+  String get onboardingInviteHeadline => 'Şimdi *birini davet et*.';
+
+  @override
+  String get onboardingInviteLead =>
+      'Herhangi bir mesajlaşma uygulamasında bir bağlantı gönder. Kryfo’yu açar ya da nereden indirileceğini gösterir.';
+
+  @override
+  String get onboardingInviteSomeone => 'Birini davet et →';
+
+  @override
+  String get onboardingInviteGettingReady => 'Bağlantın hazırlanıyor…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'Beni Kryfo’da ekle. Oradaki adım: $myId\n\nBeni eklemek için dokun:\n$link\n\nHenüz Kryfo yok mu? Buradan indir:\n$download\n\nKryfo gizli bir mesajlaşma uygulaması. Telefon numarası yok, e-posta yok.';
+  }
+
+  @override
+  String get inviteNotReady =>
+      'Bağlantın neredeyse hazır. Birazdan tekrar dene.';
+
+  @override
   String get photoCropTitle => 'Taşı ve ölçekle';
 
   @override
@@ -9908,148 +10070,6 @@ class AppLocalizationsTr extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get modesPickHow =>
-      'Mesajlarının nasıl gideceğini seç. İstediğin zaman değiştirebilirsin.';
-
-  @override
-  String get modesPrivate => 'Özel';
-
-  @override
-  String get modesPrivateTag => 'Tor · gerekince köprüler';
-
-  @override
-  String get modesPrivateLine =>
-      'IP adresini ya da kim olduğunu kimse öğrenmez, sunucularımız bile. Engelleri aşmanın yolunu kendisi bulur.';
-
-  @override
-  String get modesDefault => 'Varsayılan';
-
-  @override
-  String get modesFastTag => 'Doğrudan sunucularımıza';
-
-  @override
-  String get modesFastLine =>
-      'Tor’u atlar, böylece mesajlar daha hızlı ulaşır ve daha az pil harcar. Sunucularımız IP adresini yalnızca bağlıyken görür, asla kaydetmez ya da saklamaz. Ne söylediğini asla görmez. Kişilerin onu asla görmez.';
-
-  @override
-  String get modesFastConnected => 'Hızlı · bağlı';
-
-  @override
-  String get modesFastConnecting => 'Hızlı · bağlanıyor';
-
-  @override
-  String get modesFastDown => 'Hızlı · sunucularımız yanıt vermiyor';
-
-  @override
-  String get modesBackupReady =>
-      'Bir yedek her zaman hazır, biri çökse bile bağlı kalırsın.';
-
-  @override
-  String get modesDetails => 'Ayrıntılar';
-
-  @override
-  String get modesBothLine =>
-      'İkisi de her mesajı uçtan uca şifreler. Değişen tek şey IP adresini kimin görebildiği.';
-
-  @override
-  String get modesConnectionBridges => 'Bağlantı ve köprüler';
-
-  @override
-  String get modesWhatServersSee => 'Sunucularımız neyi görebilir';
-
-  @override
-  String get serversTitle => 'Hızlı sunucuları';
-
-  @override
-  String get serversLine =>
-      'Her mesaj aynı anda iki sunucuya da gider. Önce yanıt veren taşır, biri durursa diğeri devralır.';
-
-  @override
-  String get serversOne => 'Sunucu 1';
-
-  @override
-  String get serversTwo => 'Sunucu 2 · ikinci sağlayıcı';
-
-  @override
-  String get serversConnected => 'Bağlı';
-
-  @override
-  String get serversConnecting => 'Bağlanıyor';
-
-  @override
-  String get serversNotAnswering => 'Yanıt vermiyor';
-
-  @override
-  String serversMs(int ms) {
-    return '$ms ms';
-  }
-
-  @override
-  String get serversQuicker => 'Daha hızlı';
-
-  @override
-  String get serversBackups => 'Herkese açık aktarıcılar';
-
-  @override
-  String get serversBackupsLine =>
-      'Sunucu 1 çalışmadığı sürece ve yalnızca Tor üzerinden kullanılır, bu yüzden IP adresini asla görmezler.';
-
-  @override
-  String get serversStandingBy => 'Beklemede';
-
-  @override
-  String get serversInUse => 'Kullanımda';
-
-  @override
-  String get homeMergedTitle => 'Aktarıcı ve Hızlı artık tek';
-
-  @override
-  String get homeMergedLine =>
-      'Hızlı’dasın. Yedek bir sunucu her zaman hazır, biri çökse bile bağlı kalırsın. Sunucularımız IP adresini görür, ne söylediğini asla görmez.';
-
-  @override
-  String get homeMergedGotIt => 'Anladım';
-
-  @override
-  String get homeMergedUsePrivate => 'Bunun yerine Özel’i kullan';
-
-  @override
-  String get homeOursDownTitle => 'Sunucularımız yanıt vermiyor';
-
-  @override
-  String get homeOursDownLine =>
-      'Birkaç dakika sonra, Tor bağlanınca mesajlar herkese açık aktarıcılardan da gider, sunucularımızdan biri yanıt verir vermez yine oradan.';
-
-  @override
-  String get homeUsePrivate => 'Özel’i kullan';
-
-  @override
-  String get homeSwitchedToPrivate => 'Özel’e geçildi';
-
-  @override
-  String get homeUseFast => 'Hızlı’yı kullan';
-
-  @override
-  String get homeSwitchedToFastRoute => 'Hızlı’ya geçildi';
-
-  @override
-  String get bridgesFastGetsThrough =>
-      'Hızlı doğrudan sunucularımıza gider ve genelde geçer. Ya da Kryfo’nun kendi yolunu bulmasına izin ver.';
-
-  @override
-  String get appServersNotAnswering => 'Sunucular yanıt vermiyor';
-
-  @override
-  String get settingsPrivateTor => 'Özel · Tor';
-
-  @override
-  String get seenOurServers => 'Sunucularımız';
-
-  @override
-  String get seenIpWhy =>
-      'Özel’de her şey Tor üzerinden çıkar ve sunucularımız seni değil, bir çıkış düğümünü görür. Hızlı’da bağlantı doğrudan iki sunucumuza gider: bağlıyken IP adresini görürler ve hiçbir kaydını tutmazlar. İlki çalışmadığı sürece Hızlı herkese açık aktarıcıları da kullanır, yalnızca Tor üzerinden.';
 
   @override
   String transferDoneOf(String done, String total) {

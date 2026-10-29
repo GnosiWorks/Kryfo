@@ -220,7 +220,7 @@ void main() {
     final app = File('lib/app/engine.dart').readAsStringSync();
     final call = RegExp(
       r"void nostrUnsubscribeBg\(int \w+, String \w+\) => _background\(\s*"
-      r"_identFfiOnIsolate\('(\w+)'",
+      r"_onPair\([^;]*?_identFfiOnIsolate\('(\w+)'",
     ).firstMatch(app)?.group(1);
     expect(call, 'HaloNostrUnsubscribe');
     final engine = [

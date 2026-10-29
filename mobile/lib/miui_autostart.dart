@@ -52,7 +52,7 @@ Future<void> maybeShowBackgroundPrompt(BuildContext context) async {
   }
   final prefs = await SharedPreferences.getInstance();
   if (prefs.getBool(_battPrefKey) ?? false) return;
-  if (await Permission.ignoreBatteryOptimizations.isGranted) {
+  if (await batteryExempt()) {
     await prefs.setBool(_battPrefKey, true);
     return;
   }
@@ -69,7 +69,7 @@ Future<void> forceShowBackgroundPrompt(BuildContext context) async {
     if (context.mounted) await _askBrand(context, brand, guide);
     if (!context.mounted) return;
   }
-  if (await Permission.ignoreBatteryOptimizations.isGranted) {
+  if (await batteryExempt()) {
     if (context.mounted) {
       showHaloToast(context, l10n.miuiAutostartAlreadyAllowedToRun);
     }
@@ -118,7 +118,13 @@ Future<void> _askBattery(BuildContext context) async {
     keep: l10n.commonSkip,
     rose: false,
   );
-  if (ok) await Permission.ignoreBatteryOptimizations.request();
+  if (!ok) return;
+  try {
+    await Permission.ignoreBatteryOptimizations.request();
+  } catch (_) {
+    // a system without the battery page: said once, never asked in a loop
+    if (context.mounted) showHaloToast(context, l10n.homeCouldnTOpenIt);
+  }
 }
 
 Future<void> _maybeAskBrand(

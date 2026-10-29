@@ -19,7 +19,9 @@ package main
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	nostr2 "github.com/nbd-wtf/go-nostr"
@@ -173,13 +175,56 @@ type convPair struct {
 	seed  *[32]byte
 }
 
+// the v3 pair of my [ident] with [peer]: the two keys alone. a pair the
+// engine has seen seeded is refused here, so nothing falls back to its v3
+// addresses (pairArg)
 func pairOf(ident int, peer [32]byte) (convPair, error) {
 	me, err := identityOf(ident)
 	if err != nil {
 		return convPair{}, err
 	}
-	s, _ := pairSeed(ident, peer)
-	return convPair{ident: ident, me: me, peer: peer, seed: s}, nil
+	if _, ok := pairSeed(ident, peer); ok {
+		return convPair{}, errSeedMissing
+	}
+	return convPair{ident: ident, me: me, peer: peer}, nil
+}
+
+// the seeded pair of my [ident] with [peer]: its seed is kept for the
+// refusal above, and a second seed for the pair is refused
+func seededPairOf(ident int, peer [32]byte, seed [32]byte) (convPair, error) {
+	me, err := identityOf(ident)
+	if err != nil {
+		return convPair{}, err
+	}
+	if err := putPairSeed(ident, peer, seed); err != nil {
+		return convPair{}, err
+	}
+	return convPair{ident: ident, me: me, peer: peer, seed: &seed}, nil
+}
+
+// the pair a call names. [arg] is the peer's x key in hex (a v3 pair), or
+// the key, a dot and the pair's seed in hex (a pair made by a v4 first
+// contact). the mode comes from the call alone, never from what the engine
+// holds; the peer's key in hex comes back as the subscription names it
+func pairArg(ident int, arg string) (convPair, string, error) {
+	x, seedHex, seeded := strings.Cut(arg, ".")
+	peer, err := peerArr(x)
+	if err != nil {
+		return convPair{}, "", err
+	}
+	x = strings.ToLower(x)
+	if !seeded {
+		c, err := pairOf(ident, peer)
+		return c, x, err
+	}
+	b, err := hex.DecodeString(seedHex)
+	if err != nil || len(b) != 32 {
+		return convPair{}, "", errors.New("a seed is 32 bytes")
+	}
+	var s [32]byte
+	copy(s[:], b)
+	c, err := seededPairOf(ident, peer, s)
+	return c, x, err
 }
 
 func (c convPair) v4() v4Pair { return phonePair(c.me, c.peer, c.seed[:]) }
@@ -216,13 +261,20 @@ func (c convPair) unwrapStamped(gw nostr2.Event) (string, nostr2.Timestamp, erro
 }
 
 // an opener or a hello for a stranger's first-contact address [fcPk]. the
-// main identity seals it as 0.5 does, so a 0.5 phone reads it; any other
-// with its hello seal key, which needs no seed
+// main identity's v3 pair seals it as 0.5 does, so a 0.5 phone reads it;
+// a seeded pair (a v4 first contact) and any other identity with the hello
+// seal key, which needs no seed
 func (c convPair) wrapFirstContact(fcPk, msg string) (nostr2.Event, error) {
-	if c.ident == mainIdent {
+	if c.ident == mainIdent && c.seed == nil {
 		return nip17WrapFirstContactAs(c.me, c.peer, fcPk, msg)
 	}
-	sk, pk, err := v4HelloSealKey(c.me, c.peer)
+	return helloWrap(c.me, c.peer, fcPk, msg)
+}
+
+// [msg] from [me] to the first-contact key [fcPk] of an invite answered by
+// [answering], sealed with the two's hello seal key
+func helloWrap(me xid, answering [32]byte, fcPk, msg string) (nostr2.Event, error) {
+	sk, pk, err := v4HelloSealKey(me, answering)
 	if err != nil {
 		return nostr2.Event{}, err
 	}

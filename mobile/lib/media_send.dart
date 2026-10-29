@@ -23,9 +23,8 @@ import 'main.dart'
     show
         appState,
         engine,
-        signalEncrypt,
+        signalSeal,
         peerXPubOf,
-        AppStateDoor,
         AppStateOutbox,
         AppStateRoute,
         AppStateProfile,
@@ -369,6 +368,7 @@ Future<String> _sendChunkedMediaInner({
         return;
       }
       final String cipher;
+      final int sealedOn;
       try {
         // name + voice flags ride every slice: the receiver rebuilds off
         // whichever chunk lands last, and that one decides file vs image.
@@ -396,7 +396,9 @@ Future<String> _sendChunkedMediaInner({
           canResend: total > 1,
           writtenAt: written,
         );
-        cipher = await signalEncrypt(peerId, wrapped);
+        final sealed = await signalSeal(peerId, wrapped);
+        cipher = sealed.cipher;
+        sealedOn = sealed.ident;
       } on KeyHeld {
         // waits on a check of their new number: going, not failed
         parked = true;
@@ -425,22 +427,15 @@ Future<String> _sendChunkedMediaInner({
             xpub ??= await peerXPubOf(peerId);
             if (fc != null && fc.isNotEmpty && xpub != null) {
               unawaited(
-                engine
-                    .sendFirstContact(
-                      appState.identOf(peerId),
-                      xpub!,
-                      fc,
-                      cipher,
-                    )
-                    .then(
-                      (f) {
-                        if (f != 'ok') {
-                          dlog('media first-contact copy did not go: $f');
-                        }
-                      },
-                      onError: (Object e) =>
-                          dlog('media first-contact copy did not go: $e'),
-                    ),
+                engine.sendFirstContact(sealedOn, xpub!, fc, cipher).then(
+                  (f) {
+                    if (f != 'ok') {
+                      dlog('media first-contact copy did not go: $f');
+                    }
+                  },
+                  onError: (Object e) =>
+                      dlog('media first-contact copy did not go: $e'),
+                ),
               );
             }
             break;
@@ -455,12 +450,7 @@ Future<String> _sendChunkedMediaInner({
         // written beside it
         final fc = backPaired ? null : appState.peerFcFor(peerId);
         if (xpub != null && fc != null && fc.isNotEmpty) {
-          final fr = await engine.sendFirstContact(
-            appState.identOf(peerId),
-            xpub!,
-            fc,
-            cipher,
-          );
+          final fr = await engine.sendFirstContact(sealedOn, xpub!, fc, cipher);
           if (fr == 'ok') {
             sent = true;
             route = 'first-contact';
@@ -468,11 +458,7 @@ Future<String> _sendChunkedMediaInner({
           }
           lastErr = fr;
         } else if (xpub != null) {
-          final r = await engine.nostrSend(
-            appState.identOf(peerId),
-            xpub!,
-            cipher,
-          );
+          final r = await engine.nostrSend(sealedOn, xpub!, cipher);
           if (r == 'ok') {
             pairWay ??= await appState.pairRead(peerId, backPaired: backPaired);
             if (!backPaired && !pairWay!) {

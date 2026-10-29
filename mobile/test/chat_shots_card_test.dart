@@ -65,6 +65,8 @@ void main() {
 
   setUp(() async {
     told = [];
+    // a lock that was read: nothing is sent before
+    lockState.openForTest();
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({'block_screenshots': 'true'});
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger

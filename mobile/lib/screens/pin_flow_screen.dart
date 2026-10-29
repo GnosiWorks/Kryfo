@@ -15,6 +15,7 @@ import '../l10n/l10n.dart';
 import '../lock_state.dart';
 import '../main.dart' show appState, session, AppStateVault, AppStateSession;
 import '../pass_rules.dart';
+import '../pin_shield.dart';
 import '../theme.dart';
 import '../widgets/fit_column.dart';
 import '../widgets/halo_buttons.dart';
@@ -114,7 +115,7 @@ class PinFlowScreen extends StatefulWidget {
 }
 
 class _PinFlowScreenState extends State<PinFlowScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, PinShield {
   late _Step _step = widget.skipIntro ? _Step.check : _Step.intro;
   String _pin = '';
   String _first = '';

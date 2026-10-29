@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/handle_claim.dart';
 import 'package:kryfo/invite_share.dart';
+import 'package:kryfo/invites.dart' show kInviteLinkPrefix;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/link_view.dart';
 import 'package:kryfo/main.dart'
@@ -167,6 +168,18 @@ void main() {
       final lines = s.split('\n');
       expect(lines, contains(webInviteOf(_v3)));
       expect(lines, contains('https://kryfo.app/download'));
+    });
+
+    test('a v4 link\'s share text says it needs 0.6, on its own line, and '
+        'still reads back as the invite; a v3 link\'s does not', () {
+      setL10nLocale(const Locale('en'));
+      final v4 = '${kInviteLinkPrefix}AAAA-bbbb_CCCC';
+      final s = inviteShareText('amber-river-lantern', v4, lang: 'en');
+      expect(s.split('\n').last, l10n.inviteNeeds06);
+      expect(s, contains(webInviteOf(v4)!));
+      expect(firstKryfoLink(kryfoInviteOf(s)), v4);
+      final old = inviteShareText('amber-river-lantern', _v3, lang: 'en');
+      expect(old, isNot(contains(l10n.inviteNeeds06)));
     });
 
     test('in another language: its download page', () {

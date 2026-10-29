@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:kryfo/album.dart' show kPickMax;
+import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/picked.dart';
 import 'package:kryfo/screens/media_send_screen.dart';
 
@@ -47,6 +48,8 @@ void main() {
   }) async {
     phone(t);
     secure = [];
+    // a lock that was read: nothing is sent before
+    lockState.openForTest();
     final m = t.binding.defaultBinaryMessenger;
     const platform = MethodChannel('halo/platform');
     m.setMockMethodCallHandler(SystemChannels.platform, (_) async => null);

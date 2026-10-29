@@ -60,6 +60,9 @@ const _apart = {
   'groups',
   'room_keys',
   'group_roster',
+  // a hello's peer is an identity key, not a name: the rows of a v4 first
+  // contact, kept by key as the pairs are
+  'hellos',
 };
 
 void main() {
@@ -578,7 +581,7 @@ void main() {
     await db.close();
     db = HaloDb();
     raw = await db.open();
-    expect(await raw.getVersion(), 93);
+    expect(await raw.getVersion(), 94);
     final cols = await raw.rawQuery("PRAGMA table_info('contacts')");
     expect(cols.any((c) => c['name'] == 'ack_owed'), isTrue);
     expect(
@@ -590,7 +593,7 @@ void main() {
   test('an upgrade from 80 makes the tables and keeps every row', () async {
     if (skip()) return;
     var raw = await db.open();
-    expect(await raw.getVersion(), 93);
+    expect(await raw.getVersion(), 94);
     await person(_q);
     await raw.execute('DROP TABLE blocked_keys');
     await raw.execute('DROP TABLE name_tombs');
@@ -598,7 +601,7 @@ void main() {
     await db.close();
     db = HaloDb();
     raw = await db.open();
-    expect(await raw.getVersion(), 93);
+    expect(await raw.getVersion(), 94);
     expect(
       await raw.rawQuery("PRAGMA table_info('blocked_keys')"),
       hasLength(2),

@@ -99,6 +99,7 @@ class AppState extends ChangeNotifier {
     // the wire asks the everyday container's dev chat, never a decoy's or
     // a vault's: only the everyday identity goes online. its seal and its
     // store read the same row
+    _madeApp = this;
     devGate.chat = () => live.devChat.load();
     _keyMoved = flagKeyChanged;
     devLane.chat = () => live.devChat.load();
@@ -281,7 +282,17 @@ class AppState extends ChangeNotifier {
   Timer? _repointTimer;
 
   late HandleRepoint _handleRepoint = HandleRepoint(
-    invite: () => buildHaloUriV3(myId, myOnion, _fcCounter),
+    // the main v4 invite once it is made (identity v4 7): a registry
+    // without the v=4 change refuses it, and the handle keeps the v3 one
+    invite: () async {
+      try {
+        final v4 = await myV4Invite();
+        if (v4 != null) return v4;
+      } catch (e) {
+        dlog('repoint: no v4 invite (${e.runtimeType})');
+      }
+      return buildHaloUriV3(myId, myOnion, _fcCounter);
+    },
     claim: (h, invite, bio) => engine.handleClaim(h, invite, bio),
     lookup: (url) => engine.torGetJson(url),
     myKey: () => engine.myEdPubkey(),
@@ -303,6 +314,12 @@ class AppState extends ChangeNotifier {
   String _pinsTold = '';
 
   static const _platformChannel = MethodChannel('halo/platform');
+  // the process engine's own, answered before a screen is there too
+  static const _phoneChannel = MethodChannel('kryfo/phone');
+
+  /// android or not, for the tests of what a failed read means
+  @visibleForTesting
+  static bool? androidForTest;
 
   // the heartbeat. listen is the last tick the relay queue was read, drain
   // the last time something came out of it. written once a minute, so after
@@ -399,8 +416,12 @@ class AppState extends ChangeNotifier {
   // the check-in's clock, which a test moves on its own
   DateTime Function() _checkClock = DateTime.now;
 
-  // the lock turned on or off: the window follows at once
-  bool? _lockWasOn;
+  // the lock read or not, set or not, up or not, the vault open or not:
+  // the window follows at once
+  (bool, bool, bool, bool)? _lockWas;
+  // android before 13 has no switch for the recents picture: a pin set
+  // keeps the flag on there. read at boot
+  bool _noRecentsSwitch = false;
 
   // the old switch for the whole app was on: the whole window stays
   // covered as it was until home's card is answered. the card asks once
@@ -513,6 +534,7 @@ class AppState extends ChangeNotifier {
   // which dart shares, so an unchanged value is not sent: a room closing
   // in a session switch would otherwise hold the decoy's reveal alone
   bool? _secureSent;
+  bool? _recentsSent;
 
   // the first fill of the search index for a history from before it: a
   // batch, a pause, the next, so the app never waits on it. each container
@@ -820,6 +842,10 @@ class AppState extends ChangeNotifier {
   final _signalReady = Completer<void>();
   Future<void>? _signalBoot;
 
+  // the invite upkeep or reset under way, and when the last upkeep began
+  Future<void>? _invitesKeep;
+  var _invitesKeptAt = 0;
+
   // ids "this isn't them" is taking off this phone right now: nothing of
   // theirs is filed meanwhile
   final _removing = <String>{};
@@ -971,4 +997,7 @@ class AppState extends ChangeNotifier {
 }
 
 final appState = AppState();
+
+// the app state made last, read where touching appState would make one
+AppState? _madeApp;
 AppState get _app => appState;

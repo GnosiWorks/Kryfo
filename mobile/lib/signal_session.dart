@@ -91,8 +91,11 @@ class SignalSession {
       restoredFrom: restoredFrom,
     );
 
+    // the v3 invite's keys went with the first v4 main invite's year: none
+    // is made again (identity v4 2.3, R23)
+    final legacy = !await _legacyGone();
     // a signed prekey the old library made reads here as it is
-    final spk = await signedPreKeyStore.load(1);
+    final spk = legacy ? await signedPreKeyStore.load(1) : null;
     var spkOk = false;
     if (spk != null) {
       try {
@@ -104,7 +107,7 @@ class SignalSession {
       dlog('signal: existing spk self-verify = $spkOk');
       if (!spkOk) await signedPreKeyStore.remove(1);
     }
-    if (!spkOk) {
+    if (!spkOk && legacy) {
       final fresh = lib.signedPreKey(identity, 1, _now());
       await signedPreKeyStore.store(1, fresh.record);
       dlog('signal: generated signed prekey id=1');
@@ -112,15 +115,18 @@ class SignalSession {
 
     // prekeys 0-9 topped up by the ids present, and the invite's own
     final have = (await preKeyStore.ids()).toSet();
-    for (final id in [for (var i = 0; i < 10; i++) i, invitePreKeyId]) {
+    for (final id in [
+      for (var i = 0; i < 10; i++) i,
+      if (legacy) invitePreKeyId,
+    ]) {
       if (have.contains(id)) continue;
       await preKeyStore.store(id, lib.preKey(id).record);
     }
 
     // the invite's kyber prekey: a last resort key, kept like the invite's
     // ec prekey, and made again when it no longer holds under this identity
-    final k = await kyberPreKeyStore.load(kInviteKyberId);
-    var kOk = false;
+    final k = legacy ? await kyberPreKeyStore.load(kInviteKyberId) : null;
+    var kOk = !legacy;
     if (k != null) {
       try {
         final p = lib.preKeyPublic(kLsKyber, k);
@@ -428,11 +434,36 @@ class SignalSession {
   }
 
   /// a session with [peer] built from their card, in front of any held.
-  /// the guard: only a pqxdh session with the pq ratchet is ever stored
-  Future<void> processBundle(String peer, LsBundle bundle) =>
-      serial(peer, () => _build(peer, bundle));
+  /// the guard: only a pqxdh session with the pq ratchet is ever stored.
+  /// [also] is written in the session's own transaction (a pair's seed):
+  /// both are kept or neither
+  Future<void> processBundle(
+    String peer,
+    LsBundle bundle, {
+    Future<void> Function(Transaction t)? also,
+  }) => serial(peer, () => _build(peer, bundle, also: also));
 
-  Future<void> _build(String peer, LsBundle bundle) async {
+  // [record] kept for [peer], and [also] with it in one transaction
+  Future<void> _storeWith(
+    String peer,
+    Uint8List record,
+    Future<void> Function(Transaction t)? also,
+  ) => also == null
+      ? sessionStore.store(peer, record)
+      : _db.transaction((t) async {
+          await LsSessionStore(
+            t,
+            prefix: _prefix,
+            ident: ident,
+          ).store(peer, record);
+          await also(t);
+        });
+
+  Future<void> _build(
+    String peer,
+    LsBundle bundle, {
+    Future<void> Function(Transaction t)? also,
+  }) async {
     final (record, their) = lib.sessionFromBundle(
       identity,
       registrationId,
@@ -443,7 +474,7 @@ class SignalSession {
     );
     _requirePq(record);
     await identityStore.saw(peer, their);
-    await sessionStore.store(peer, record);
+    await _storeWith(peer, record, also);
   }
 
   void _requirePq(Uint8List record) {
@@ -846,31 +877,34 @@ class SignalSession {
   /// runs; a new one goes in front of it, the states before it kept behind
   /// a state another name holds is never filed under [peer] as well: that
   /// throws StateError, and nothing is written
-  Future<void> keepOpenedSession(String peer, Uint8List record) =>
-      serial<void>(peer, () async {
-        final cur0 = lib.sessionInfo(record).current;
-        if (cur0 != null) {
-          final h = await _holder(cur0.version, cur0.baseKey);
-          if (h != null && h.$1 != peer) {
-            throw StateError('signal: that session is held under another name');
-          }
-        }
-        final held = await sessionStore.load(peer);
-        if (held == null) {
-          await sessionStore.store(peer, record);
-          return;
-        }
-        final cur = lib.sessionInfo(record).current;
-        if (cur != null &&
-            lib.sessionInfo(held).holds(cur.version, cur.baseKey)) {
-          // a slot re-read filed where its session is: read now, for good
-          final r = _slotReads.remove(_recordKey(record));
-          if (r != null) await kyberPreKeyStore.markRead(r.$1, r.$2);
-          dlog('back-pair: an opener held already, the session kept');
-          return;
-        }
-        await sessionStore.store(peer, lib.sessionPromote(held, record));
-      });
+  Future<void> keepOpenedSession(
+    String peer,
+    Uint8List record, {
+    Future<void> Function(Transaction t)? also,
+  }) => serial<void>(peer, () async {
+    final cur0 = lib.sessionInfo(record).current;
+    if (cur0 != null) {
+      final h = await _holder(cur0.version, cur0.baseKey);
+      if (h != null && h.$1 != peer) {
+        throw StateError('signal: that session is held under another name');
+      }
+    }
+    final held = await sessionStore.load(peer);
+    if (held == null) {
+      await _storeWith(peer, record, also);
+      return;
+    }
+    final cur = lib.sessionInfo(record).current;
+    if (cur != null && lib.sessionInfo(held).holds(cur.version, cur.baseKey)) {
+      // a slot re-read filed where its session is: read now, for good
+      final r = _slotReads.remove(_recordKey(record));
+      if (r != null) await kyberPreKeyStore.markRead(r.$1, r.$2);
+      if (also != null) await _db.transaction(also);
+      dlog('back-pair: an opener held already, the session kept');
+      return;
+    }
+    await _storeWith(peer, lib.sessionPromote(held, record), also);
+  });
 
   Future<IdentityMarks> marksOf(String peer) async {
     final k = await _db.query(
@@ -1073,12 +1107,115 @@ class SignalSession {
     }
   }
 
+  /// the keys of v4 invite [inviteId] (identity v4 2.1): a signed prekey
+  /// and a last resort kyber prekey with random ids, named by the invite,
+  /// and with [ec] a one-time ec prekey (a one-time invite's). they live
+  /// and go with the invite, never with the session prekeys
+  Future<({LsPreKey spk, LsPreKey kyber, LsPreKey? ec})> makeInviteKeys(
+    String inviteId, {
+    bool ec = false,
+    int? now,
+  }) async {
+    final at = now ?? _now();
+    final spkId = await _freeId(signedPreKeyStore.contains);
+    final kId = await _freeId(kyberPreKeyStore.contains);
+    final spk = lib.signedPreKey(identity, spkId, at);
+    final k = lib.kyberPreKey(identity, kId, at);
+    LsPreKey? e;
+    if (ec) {
+      // never one of the old ids: 0-9 and the v3 invite's
+      final id = await _freeId(
+        (id) async =>
+            id < 10 || id == invitePreKeyId || await preKeyStore.contains(id),
+      );
+      e = lib.preKey(id);
+    }
+    await _db.transaction((t) async {
+      await LsSignedPreKeyStore(
+        t,
+        prefix: _prefix,
+        ident: ident,
+      ).store(spkId, spk.record, inviteId: inviteId, createdAt: at);
+      await LsKyberPreKeyStore(t, prefix: _prefix, ident: ident).store(
+        kId,
+        k.record,
+        lastResort: true,
+        inviteId: inviteId,
+        createdAt: at,
+      );
+      if (e != null) {
+        await LsPreKeyStore(
+          t,
+          prefix: _prefix,
+          ident: ident,
+        ).store(e.id, e.record);
+      }
+    });
+    return (spk: spk, kyber: k, ec: e);
+  }
+
+  /// the keys an invite named, gone with every opener read on its kyber
+  /// key: nothing sealed to them opens here again (R23)
+  Future<void> dropInviteKeys({
+    required int? spkId,
+    required int? kyberId,
+    required int? ecId,
+  }) => _db.transaction((t) async {
+    if (spkId != null) {
+      await LsSignedPreKeyStore(t, prefix: _prefix, ident: ident).remove(spkId);
+    }
+    if (kyberId != null) {
+      await LsKyberPreKeyStore(
+        t,
+        prefix: _prefix,
+        ident: ident,
+      ).remove(kyberId);
+    }
+    if (ecId != null) {
+      await LsPreKeyStore(t, prefix: _prefix, ident: ident).remove(ecId);
+    }
+  });
+
+  static const _kLegacyGone = 'v3_invite_gone';
+
+  Future<bool> _legacyGone() async => (await _db.query(
+    '${_prefix}signal_meta',
+    where: 'k = ?',
+    whereArgs: [_meta(_kLegacyGone)],
+    limit: 1,
+  )).isNotEmpty;
+
+  /// the v3 invite's keys (signed prekey 1, kyber 1, ec 999999) gone with
+  /// every opener read on them, and never made again. true when they went
+  /// now
+  Future<bool> dropLegacyInviteKeys() async {
+    if (await _legacyGone()) return false;
+    await _db.transaction((t) async {
+      await LsSignedPreKeyStore(t, prefix: _prefix, ident: ident).remove(1);
+      await LsKyberPreKeyStore(
+        t,
+        prefix: _prefix,
+        ident: ident,
+      ).remove(kInviteKyberId);
+      await LsPreKeyStore(t, prefix: _prefix, ident: ident).dropInvite();
+      await t.insert('${_prefix}signal_meta', {
+        'k': _meta(_kLegacyGone),
+        'v': '${_now()}',
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    });
+    dlog('signal: the v3 invite keys went');
+    return true;
+  }
+
   /// a new invite prekey under the same id, and a new kyber one: every
-  /// card handed out before names keys that are gone
-  Future<void> rotateInvitePreKey() async {
+  /// card handed out before names keys that are gone. none once the v3
+  /// invite's keys went: they never come back. true when they were made
+  Future<bool> rotateInvitePreKey() async {
+    if (await _legacyGone()) return false;
     await preKeyStore.replaceInvite(lib.preKey(invitePreKeyId).record);
     await _newInviteKyber();
     dlog('signal: rotated the invite prekeys');
+    return true;
   }
 
   // the registration id of this store's identity row. the main one's row
