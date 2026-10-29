@@ -261,16 +261,20 @@ class HaloEngine {
         b64Cipher,
         // a frame no signal seal covers is filled out here, inside the
         // relay's encryption
-        out: () =>
-            _sendOnIsolate((
-              nostr: true,
-              ident: ident,
-              a: peerXPubHex,
-              b: padRumor(b64Cipher),
-            )).timeout(
-              const Duration(seconds: 60),
-              onTimeout: () => 'error: relay timeout',
-            ),
+        out: () => _onPair(
+          ident,
+          peerXPubHex,
+          (pair) =>
+              _sendOnIsolate((
+                nostr: true,
+                ident: ident,
+                a: pair,
+                b: padRumor(b64Cipher),
+              )).timeout(
+                const Duration(seconds: 60),
+                onTimeout: () => 'error: relay timeout',
+              ),
+        ),
         room: (priv) => roomSend(priv, peerXPubHex, b64Cipher),
       );
 
@@ -279,7 +283,11 @@ class HaloEngine {
     _background(
       devGate.listen(
         peerXPubHex,
-        out: () => _subscribeOnIsolate(ident, peerXPubHex, fresh: fresh),
+        out: () => _onPair(
+          ident,
+          peerXPubHex,
+          (pair) => _subscribeOnIsolate(ident, pair, fresh: fresh),
+        ),
         room: (priv) async {
           roomSubscribeBg(priv, peerXPubHex);
           return 'ok';
@@ -667,11 +675,15 @@ class HaloEngine {
     peerXPubHex,
     fcPk,
     b64Cipher,
-    out: () =>
-        _fcSendOnIsolate(ident, peerXPubHex, fcPk, padRumor(b64Cipher)).timeout(
-          const Duration(seconds: 60),
-          onTimeout: () => 'error: relay timeout',
-        ),
+    out: () => _onPair(
+      ident,
+      peerXPubHex,
+      (pair) =>
+          _fcSendOnIsolate(ident, pair, fcPk, padRumor(b64Cipher)).timeout(
+            const Duration(seconds: 60),
+            onTimeout: () => 'error: relay timeout',
+          ),
+    ),
     room: (priv) => roomSendFirstContact(priv, peerXPubHex, fcPk, b64Cipher),
   );
 
@@ -1089,25 +1101,65 @@ class HaloEngine {
   // runner's next connection or probe, "free" fetches it by id now, "drop"
   // takes it as kept
   Future<String> nostrLetHeld(int ident, String peerXPubHex, String how) =>
-      _identFfiOnIsolate('HaloNostrLetHeld', ident, [peerXPubHex, how]);
+      _onPair(
+        ident,
+        peerXPubHex,
+        (pair) => _identFfiOnIsolate('HaloNostrLetHeld', ident, [pair, how]),
+      );
 
   // "mark" for each of the peers, in one call: each with its identity
-  Future<String> nostrMarkHeld(List<(int, String)> peers) =>
-      _roomFfiOnIsolate('HaloNostrMarkHeld', [_identPeers(peers)]);
+  Future<String> nostrMarkHeld(List<(int, String)> peers) async =>
+      _roomFfiOnIsolate('HaloNostrMarkHeld', [await _identPeers(peers)]);
 
   // the pinned chats' keys (HaloNostrPinned)
-  Future<String> nostrPinned(List<(int, String)> peers) =>
-      _roomFfiOnIsolate('HaloNostrPinned', [_identPeers(peers)]);
+  Future<String> nostrPinned(List<(int, String)> peers) async =>
+      _roomFfiOnIsolate('HaloNostrPinned', [await _identPeers(peers)]);
 
-  static String _identPeers(List<(int, String)> peers) => jsonEncode([
-    for (final (i, x) in peers) {'i': i, 'x': x},
-  ]);
+  // each with its pair's seed when it has one; a peer whose pair is
+  // refused is left out
+  static Future<String> _identPeers(List<(int, String)> peers) async {
+    final out = <Map<String, Object>>[];
+    for (final (i, x) in peers) {
+      try {
+        final pair = await pairArgOf(i, x);
+        final (key, seed) = switch (pair.split('.')) {
+          [final k, final s] => (k, s),
+          _ => (pair, ''),
+        };
+        out.add({'i': i, 'x': key, if (seed.isNotEmpty) 's': seed});
+      } on PairRefused catch (e) {
+        dlog('pairs: a peer left out ($e)');
+      }
+    }
+    return jsonEncode(out);
+  }
 
   // no more listening for a peer, and its address's files gone
   void nostrUnsubscribeBg(int ident, String peerXPubHex) => _background(
-    _identFfiOnIsolate('HaloNostrUnsubscribe', ident, [peerXPubHex]),
+    _onPair(
+      ident,
+      peerXPubHex,
+      (pair) => _identFfiOnIsolate('HaloNostrUnsubscribe', ident, [pair]),
+    ),
     'unlisten',
   );
+
+  // [run] on the pair the containers name for [ident] and [x] now; a pair
+  // refused goes nowhere
+  static Future<String> _onPair(
+    int ident,
+    String x,
+    Future<String> Function(String pair) run,
+  ) async {
+    final String pair;
+    try {
+      pair = await pairArgOf(ident, x);
+    } on PairRefused catch (e) {
+      dlog('pairs: refused ($e)');
+      return 'error: pair refused';
+    }
+    return run(pair);
+  }
 }
 
 // a knock left to wait its room's turn: offered again, not an error

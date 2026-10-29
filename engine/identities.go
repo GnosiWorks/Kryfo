@@ -35,6 +35,9 @@ type pairKey struct {
 
 var errNoSuchIdentity = errors.New("no such identity")
 
+// a call for a seeded pair that came without its seed
+var errSeedMissing = errors.New("the pair is seeded and the call has no seed")
+
 // identity [ident], as the app put it
 func identityOf(ident int) (xid, error) {
 	identsMu.Lock()
@@ -193,6 +196,16 @@ func identArg(c C.int) int { return int(c) }
 type identPeer struct {
 	I int    `json:"i"`
 	X string `json:"x"`
+	// the pair's seed in hex, for a pair made by a v4 first contact
+	S string `json:"s,omitempty"`
+}
+
+// the pair as pairArg reads it
+func (p identPeer) arg() string {
+	if p.S == "" {
+		return p.X
+	}
+	return p.X + "." + p.S
 }
 
 func (p identPeer) String() string { return fmt.Sprintf("%d:%s", p.I, p.X) }

@@ -9,7 +9,9 @@ package main
 import (
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -184,31 +186,49 @@ func TestAddressV4WrapOpensOnItsPair(t *testing.T) {
 	}
 }
 
-// the engine's own pair: a seed put for the pair moves its addresses to
-// v4, for that identity and peer only
-func TestPairSeedMovesThePairOnly(t *testing.T) {
+// the call names the pair's mode: a seed in the call moves its addresses
+// to v4, for that identity and peer only, and once seen the pair is
+// refused without it (review finding 2: never by what the engine holds)
+func TestPairModeComesWithTheCall(t *testing.T) {
 	a, b := fixedXid(t, v4Keys["a"]), fixedXid(t, v4Keys["b"])
 	putIdentity(41, a)
 	defer identDrop(41)
 	var s [32]byte
 	copy(s[:], fixedSeed(1))
-	before, err := pairOf(41, b.pub)
+	bHex := hex.EncodeToString(b.pub[:])
+	before, x, err := pairArg(41, strings.ToUpper(bHex))
+	if err != nil || x != bHex {
+		t.Fatal(x, err)
+	}
+	_, v3, _ := before.rcvAddress()
+	// a fresh engine, nothing held: the seed in the call alone gives v4
+	after, _, err := pairArg(41, bHex+"."+hex.EncodeToString(s[:]))
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, v3, _ := before.rcvAddress()
-	if err := putPairSeed(41, b.pub, s); err != nil {
-		t.Fatal(err)
-	}
-	after, _ := pairOf(41, b.pub)
 	_, v4, _ := after.rcvAddress()
 	_, want, _ := v4RcvAddress(phonePair(a, b.pub, s[:]))
 	if v4 != want || v4 == v3 {
 		t.Fatalf("v4 %s, want %s (v3 %s)", v4, want, v3)
 	}
+	// seen seeded, a call without the seed fails closed
+	if _, _, err := pairArg(41, bHex); !errors.Is(err, errSeedMissing) {
+		t.Fatalf("a seeded pair taken without its seed: %v", err)
+	}
+	if res := nostrSend(41, bHex, "x"); !strings.Contains(res, "seeded") {
+		t.Fatalf("send without the seed: %s", res)
+	}
+	if res := nostrSubscribe(41, bHex, false); !strings.Contains(res, "seeded") {
+		t.Fatalf("listen without the seed: %s", res)
+	}
 	var other [32]byte
-	if err := putPairSeed(41, b.pub, other); err == nil {
+	if _, _, err := pairArg(41, bHex+"."+hex.EncodeToString(other[:])); err == nil {
 		t.Fatal("a pair took a second seed")
+	}
+	for _, bad := range []string{bHex + ".", bHex + ".abcd", bHex + "." + strings.Repeat("zz", 32)} {
+		if _, _, err := pairArg(41, bad); err == nil {
+			t.Fatalf("%q taken", bad)
+		}
 	}
 	gw, err := after.wrap("seeded")
 	if err != nil {
@@ -220,6 +240,13 @@ func TestPairSeedMovesThePairOnly(t *testing.T) {
 	}
 	if _, ok := pairSeed(mainIdent, b.pub); ok {
 		t.Fatal("the seed reached another identity")
+	}
+	// the list calls carry it as "s"
+	if got := peerAddresses([]identPeer{{I: 41, X: bHex, S: hex.EncodeToString(s[:])}}); len(got) != 1 || got[0] != want {
+		t.Fatalf("list with the seed: %v", got)
+	}
+	if got := peerAddresses([]identPeer{{I: 41, X: bHex}}); len(got) != 0 {
+		t.Fatalf("list without the seed: %v", got)
 	}
 }
 

@@ -196,6 +196,7 @@ part 'app/files.dart';
 part 'app/gates.dart';
 part 'app/groups.dart';
 part 'app/links.dart';
+part 'app/pairs.dart';
 part 'app/routing.dart';
 part 'app/sending.dart';
 part 'app/shell.dart';

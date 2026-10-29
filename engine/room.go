@@ -16,6 +16,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -30,11 +31,13 @@ func roomKey(privHex string) (xid, error) {
 	return xidFromPrivHex(privHex)
 }
 
+var errBadPeer = errors.New("bad peer pubkey")
+
 func peerArr(pubHex string) ([32]byte, error) {
 	var out [32]byte
 	b, err := hex.DecodeString(pubHex)
 	if err != nil || len(b) != 32 {
-		return out, fmt.Errorf("bad peer pubkey")
+		return out, errBadPeer
 	}
 	copy(out[:], b)
 	return out, nil

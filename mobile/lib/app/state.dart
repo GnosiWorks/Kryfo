@@ -90,6 +90,7 @@ class AppState extends ChangeNotifier {
     // the wire asks the everyday container's dev chat, never a decoy's or
     // a vault's: only the everyday identity goes online. its seal and its
     // store read the same row
+    _madeApp = this;
     devGate.chat = () => live.devChat.load();
     _keyMoved = flagKeyChanged;
     devLane.chat = () => live.devChat.load();
@@ -957,4 +958,7 @@ class AppState extends ChangeNotifier {
 }
 
 final appState = AppState();
+
+// the app state made last, read where touching appState would make one
+AppState? _madeApp;
 AppState get _app => appState;

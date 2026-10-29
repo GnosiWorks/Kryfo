@@ -254,6 +254,9 @@ extension AppStateReceive on AppState {
     // who is on an identity of their own, and those identities in the
     // engine before anything listens on them
     await loadIdents();
+    // every seeded pair's seed in the engine before the first listen: a
+    // call that comes without it is refused there as well
+    await pushPairSeeds();
     // subscribe off the xpub stored on the contact row, the same key the
     // send path uses. the signal store has none until a session exists, so
     // the scanned side could never receive the first message.
