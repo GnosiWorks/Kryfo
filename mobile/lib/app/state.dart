@@ -294,6 +294,12 @@ class AppState extends ChangeNotifier {
   String _pinsTold = '';
 
   static const _platformChannel = MethodChannel('halo/platform');
+  // the process engine's own, answered before a screen is there too
+  static const _phoneChannel = MethodChannel('kryfo/phone');
+
+  /// android or not, for the tests of what a failed read means
+  @visibleForTesting
+  static bool? androidForTest;
 
   // the heartbeat. listen is the last tick the relay queue was read, drain
   // the last time something came out of it. written once a minute, so after

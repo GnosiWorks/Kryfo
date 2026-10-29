@@ -35,17 +35,14 @@ extension AppStateScreen on AppState {
     notifyListeners();
   }
 
-  // android 12 and older, from the platform. one that will not say is
-  // taken for old there
+  // android 12 and older, from the process engine, which answers in a
+  // process with no screen too. one that will not say is taken for old there
   Future<bool> _oldAndroid() async {
     try {
-      final m = await AppState._platformChannel.invokeMapMethod<String, String>(
-        'phoneMaker',
-      );
-      final sdk = int.tryParse(m?['sdk'] ?? '') ?? 0;
+      final sdk = await AppState._phoneChannel.invokeMethod<int>('sdk') ?? 0;
       return sdk > 0 && sdk < 33;
     } catch (e) {
-      return Platform.isAndroid;
+      return AppState.androidForTest ?? Platform.isAndroid;
     }
   }
 

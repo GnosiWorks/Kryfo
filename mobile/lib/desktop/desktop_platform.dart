@@ -27,6 +27,7 @@ const androidChannels = [
   'halo/gpush',
   'kryfo/app_icon',
   'kryfo/net',
+  'kryfo/phone',
   'kryfo/video',
 ];
 

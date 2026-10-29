@@ -25,6 +25,7 @@ import 'package:kryfo/tools/tools_bridge.dart' show PickedFile;
 
 import 'arrival_fakes.dart';
 import 'pin_flow_fakes.dart';
+import 'source_body.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -36,14 +37,22 @@ void main() {
   bool? shotsOff;
   bool? hiddenNow;
   AppState? shared;
-  // the phone's android, as the platform says it
-  var sdk = 34;
+  // the phone's android, as the app's own channel says it
+  Object? sdk = 34;
 
   setUp(() {
     secure = [];
     recents = [];
     sdk = 34;
+    AppState.androidForTest = true;
     FlutterSecureStorage.setMockInitialValues({});
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(const MethodChannel('kryfo/phone'), (
+          call,
+        ) async {
+          if (sdk is Exception) throw sdk as Exception;
+          return call.method == 'sdk' ? sdk : null;
+        });
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(const MethodChannel('halo/platform'), (
           call,
@@ -57,10 +66,15 @@ void main() {
             recents.add(on as bool);
             hiddenNow = on;
           }
-          if (call.method == 'phoneMaker') return {'sdk': '$sdk'};
+          // as in a process with no screen: halo/platform is the
+          // activity's, so it has no phoneMaker there
+          if (call.method == 'phoneMaker') throw MissingPluginException();
           return null;
         });
     addTearDown(() {
+      AppState.androidForTest = null;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(const MethodChannel('kryfo/phone'), null);
       lockState.inDecoy = false;
       lockState.inVault = false;
       lockState.openForTest();
@@ -204,6 +218,33 @@ void main() {
       final app = await make();
       expect(app.pinBlocksShots, isFalse);
       expect((hiddenNow, shotsOff), (true, false));
+    });
+  });
+
+  group('the android version', () {
+    test('comes from the process, so a start with no screen keeps them '
+        'per chat on 14', () async {
+      lockState.openForTest(enabled: true);
+      final app = await make();
+      expect(app.pinBlocksShots, isFalse);
+      expect(app.windowSecure, isFalse);
+      expect((hiddenNow, shotsOff), (true, false));
+    });
+
+    test('is answered by the process engine, not a screen', () {
+      const kt = 'android/app/src/main/kotlin/app/kryfo';
+      final app = sourceOf('$kt/HaloApplication.kt');
+      expect(app, contains('"kryfo/phone"'));
+      expect(app, contains('"sdk" -> result.success(Build.VERSION.SDK_INT)'));
+      expect(sourceOf('$kt/MainActivity.kt'), isNot(contains('"kryfo/phone"')));
+    });
+
+    test('one that will not say blocks with a pin', () async {
+      sdk = PlatformException(code: 'x');
+      lockState.openForTest(enabled: true);
+      final app = await make();
+      expect(app.pinBlocksShots, isTrue);
+      expect(shotsOff, isTrue);
     });
   });
 

@@ -343,14 +343,18 @@ void main() {
         FlutterSecureStorage.setMockInitialValues({});
         t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
           const MethodChannel('halo/platform'),
-          (c) async => c.method == 'phoneMaker' ? {'sdk': '$sdk'} : null,
+          (_) async => null,
+        );
+        t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          const MethodChannel('kryfo/phone'),
+          (c) async => c.method == 'sdk' ? sdk : null,
         );
         lockState.openForTest(enabled: true);
         await t.runAsync(() => appState.loadScreenSecure());
         addTearDown(() async {
           t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-            const MethodChannel('halo/platform'),
-            (_) async => null,
+            const MethodChannel('kryfo/phone'),
+            null,
           );
           lockState.openForTest();
           await appState.loadScreenSecure();
