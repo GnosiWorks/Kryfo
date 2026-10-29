@@ -343,8 +343,7 @@ open class MainActivity : FlutterFragmentActivity() {
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         restored = savedInstanceState != null
         if (getSharedPreferences("kryfo_window", MODE_PRIVATE).getBoolean("secure", false)) {
-            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-            if (android.os.Build.VERSION.SDK_INT >= 33) setRecentsScreenshotEnabled(false)
+            SecureWindow.apply(true, secureSteps(atStart = true))
             secureNow = true
         }
         super.onCreate(savedInstanceState)
@@ -381,21 +380,31 @@ open class MainActivity : FlutterFragmentActivity() {
         enableEdgeToEdge(clear, nav)
     }
 
-    private fun setSecureWindow(on: Boolean) {
-        android.util.Log.i("kryfo", "setSecure on=$on was=$secureNow")
-        if (on) {
-            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        } else {
-            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        }
-        // android 13 and later keep their own picture for recents
-        if (android.os.Build.VERSION.SDK_INT >= 33) setRecentsScreenshotEnabled(!on)
-        getSharedPreferences("kryfo_window", MODE_PRIVATE).edit().putBoolean("secure", on).apply()
-        val surface = findSurface(window.decorView)
-        surface?.setSecure(on)
+    // at start the setting is already kept and dart has drawn nothing yet
+    private fun secureSteps(atStart: Boolean = false) = SecureWindow.Steps(
+        flag = { on ->
+            if (on) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            } else {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            }
+        },
+        recents = if (Build.VERSION.SDK_INT >= 33) { on -> setRecentsScreenshotEnabled(!on) } else null,
+        keep = { on ->
+            if (!atStart) {
+                getSharedPreferences("kryfo_window", MODE_PRIVATE).edit().putBoolean("secure", on).apply()
+            }
+        },
         // no surface recreate on the way off, it flashes the window. one ui
         // may keep the bit until the next start, and the switch says so.
+        surface = { on -> if (!atStart) findSurface(window.decorView)?.setSecure(on) },
+    )
+
+    private fun setSecureWindow(on: Boolean): Boolean {
+        android.util.Log.i("kryfo", "setSecure on=$on was=$secureNow")
+        val ok = SecureWindow.apply(on, secureSteps())
         secureNow = on
+        return ok
     }
 
     private fun findSurface(v: View): SurfaceView? {
@@ -574,11 +583,11 @@ open class MainActivity : FlutterFragmentActivity() {
                         val on = call.argument<Boolean>("on") ?: false
                         // the engine outlives the window, so this can be
                         // called with nothing attached
-                        try {
-                            setSecureWindow(on)
-                        } catch (e: Exception) {
+                        if (SecureWindow.refusedOn(on) { setSecureWindow(it) }) {
+                            result.error("refused", null, null)
+                        } else {
+                            result.success(null)
                         }
-                        result.success(null)
                     }
                     // the wipe: what the settings "clear storage" button does,
                     // every file and preference gone in one synchronous call
