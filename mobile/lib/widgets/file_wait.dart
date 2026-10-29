@@ -93,21 +93,6 @@ class _WaitingFileCardState extends State<WaitingFileCard> {
       left: fileWaitLeft(widget.uid),
     );
     final coming = w.state == WaitState.coming;
-    final Widget mark = coming
-        ? Icon(
-            Icons.pause_rounded,
-            key: const ValueKey('pause'),
-            size: 20,
-            color: HaloColors.amber,
-          )
-        : Icon(
-            w.state == WaitState.paused
-                ? Icons.play_arrow_rounded
-                : Icons.arrow_downward_rounded,
-            key: ValueKey(w.state),
-            size: 20,
-            color: HaloColors.amber,
-          );
     return Semantics(
       container: true,
       button: true,
@@ -132,60 +117,7 @@ class _WaitingFileCardState extends State<WaitingFileCard> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(
-                width: 42,
-                height: 42,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: HaloColors.amberSoft,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    // the ring eases in and fills as the file comes
-                    AnimatedOpacity(
-                      opacity: w.state == WaitState.asks ? 0 : 1,
-                      duration: still
-                          ? Duration.zero
-                          : const Duration(milliseconds: 200),
-                      child: TweenAnimationBuilder<double>(
-                        tween: Tween(end: w.share.clamp(0.03, 1.0)),
-                        duration: still
-                            ? Duration.zero
-                            : const Duration(milliseconds: 450),
-                        curve: Curves.easeOutCubic,
-                        builder: (_, v, _) => SizedBox(
-                          width: 40,
-                          height: 40,
-                          child: CircularProgressIndicator(
-                            value: v,
-                            strokeWidth: 2.2,
-                            color: HaloColors.amber,
-                            backgroundColor: HaloColors.line,
-                          ),
-                        ),
-                      ),
-                    ),
-                    AnimatedSwitcher(
-                      duration: still
-                          ? Duration.zero
-                          : const Duration(milliseconds: 220),
-                      switchInCurve: kHouseCurve,
-                      switchOutCurve: Curves.easeInCubic,
-                      transitionBuilder: (c, a) => FadeTransition(
-                        opacity: a,
-                        child: ScaleTransition(
-                          scale: Tween(begin: 0.6, end: 1.0).animate(a),
-                          child: c,
-                        ),
-                      ),
-                      child: mark,
-                    ),
-                  ],
-                ),
-              ),
+              FileWaitMark(wait: w),
               const SizedBox(width: 10),
               Flexible(
                 child: Column(
@@ -247,6 +179,85 @@ class _WaitingFileCardState extends State<WaitingFileCard> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// the round mark of a file still to come: an arrow that brings it, a ring
+/// that fills as it comes with a pause in it, a play mark that goes on
+class FileWaitMark extends StatelessWidget {
+  final FileWait wait;
+  const FileWaitMark({super.key, required this.wait});
+
+  @override
+  Widget build(BuildContext context) {
+    final w = wait;
+    final still = motionStill(context);
+    final coming = w.state == WaitState.coming;
+    final Widget mark = coming
+        ? Icon(
+            Icons.pause_rounded,
+            key: const ValueKey('pause'),
+            size: 20,
+            color: HaloColors.amber,
+          )
+        : Icon(
+            w.state == WaitState.paused
+                ? Icons.play_arrow_rounded
+                : Icons.arrow_downward_rounded,
+            key: ValueKey(w.state),
+            size: 20,
+            color: HaloColors.amber,
+          );
+    return SizedBox(
+      width: 42,
+      height: 42,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: HaloColors.amberSoft,
+              shape: BoxShape.circle,
+            ),
+          ),
+          // the ring eases in and fills as the file comes
+          AnimatedOpacity(
+            opacity: w.state == WaitState.asks ? 0 : 1,
+            duration: still ? Duration.zero : const Duration(milliseconds: 200),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(end: w.share.clamp(0.03, 1.0)),
+              duration: still
+                  ? Duration.zero
+                  : const Duration(milliseconds: 450),
+              curve: Curves.easeOutCubic,
+              builder: (_, v, _) => SizedBox(
+                width: 40,
+                height: 40,
+                child: CircularProgressIndicator(
+                  value: v,
+                  strokeWidth: 2.2,
+                  color: HaloColors.amber,
+                  backgroundColor: HaloColors.line,
+                ),
+              ),
+            ),
+          ),
+          AnimatedSwitcher(
+            duration: still ? Duration.zero : const Duration(milliseconds: 220),
+            switchInCurve: kHouseCurve,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (c, a) => FadeTransition(
+              opacity: a,
+              child: ScaleTransition(
+                scale: Tween(begin: 0.6, end: 1.0).animate(a),
+                child: c,
+              ),
+            ),
+            child: mark,
+          ),
+        ],
       ),
     );
   }

@@ -13,8 +13,11 @@ import '../l10n/numbers.dart';
 import '../media_progress.dart';
 import '../open_file.dart';
 import '../theme.dart';
+import '../transfers.dart';
 import 'decode_px.dart';
+import 'file_wait.dart' show FileWaitMark;
 import 'halo_hero.dart';
+import 'media_bubbles.dart' show humanFileSize;
 import 'motion.dart' show motionStill;
 import 'photo_viewer.dart' show PhotoTileFade;
 import 'press_scale.dart';
@@ -31,11 +34,15 @@ class AlbumTile {
   final bool lost;
   // ours and still going: its own progress shows on it
   final String? sendingUid;
+  // here before its file: the message it came with, while it waits for a
+  // tap or for wi-fi, or comes. [path] is where it lands
+  final String? waitUid;
   const AlbumTile({
     this.path,
     this.video = false,
     this.lost = false,
     this.sendingUid,
+    this.waitUid,
   });
 }
 
@@ -47,6 +54,9 @@ class AlbumGrid extends StatelessWidget {
   final bool captioned;
   final void Function(int index)? onOpen;
   final void Function(int index)? onLongPress;
+  // a waiting tile's tap: bring it, or pause it while it comes
+  final void Function(String uid)? onGet;
+  final void Function(String uid)? onPause;
   // the time and tick, in the bottom corner on the end side, or the start
   // side where something hangs at the end
   final Widget? stamp;
@@ -58,6 +68,8 @@ class AlbumGrid extends StatelessWidget {
     this.captioned = false,
     this.onOpen,
     this.onLongPress,
+    this.onGet,
+    this.onPause,
     this.stamp,
     this.stampAtStart = false,
     this.radius = 14,
@@ -103,6 +115,8 @@ class AlbumGrid extends StatelessWidget {
                     more: c.more,
                     onOpen: any ? onOpen : null,
                     onLongPress: onLongPress,
+                    onGet: onGet,
+                    onPause: onPause,
                   ),
                 ),
               if (stamp case final s?)
@@ -129,6 +143,8 @@ class _Cell extends StatelessWidget {
   final int more;
   final void Function(int index)? onOpen;
   final void Function(int index)? onLongPress;
+  final void Function(String uid)? onGet;
+  final void Function(String uid)? onPause;
   const _Cell({
     super.key,
     required this.width,
@@ -138,11 +154,26 @@ class _Cell extends StatelessWidget {
     required this.more,
     this.onOpen,
     this.onLongPress,
+    this.onGet,
+    this.onPause,
   });
 
   @override
   Widget build(BuildContext context) {
+    // here before its file: it follows its wait, and turns into its photo
+    // or video once the file is in
+    if (tile?.waitUid case final uid?) {
+      return ValueListenableBuilder<Map<String, FileWait>>(
+        valueListenable: fileWaits,
+        builder: (context, waits, _) => _cell(context, waits[uid]),
+      );
+    }
+    return _cell(context, null);
+  }
+
+  Widget _cell(BuildContext context, FileWait? wait) {
     final t = tile;
+    if (wait != null) return _waiting(t!.waitUid!, wait);
     final path = t?.path;
     final video = t?.video ?? false;
     final lost = t?.lost ?? false;
@@ -203,6 +234,74 @@ class _Cell extends StatelessWidget {
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+extension on _Cell {
+  // a tap brings it, or pauses it while it comes. the viewer has nothing
+  // of it to show yet
+  Widget _waiting(String uid, FileWait w) {
+    final coming = w.state == WaitState.coming;
+    final tap = coming
+        ? (onPause == null ? null : () => onPause!(uid))
+        : (onGet == null ? null : () => onGet!(uid));
+    final what = (tile?.video ?? false) ? l10n.videoBubbleVideo : l10n.appPhoto;
+    return Semantics(
+      container: true,
+      button: tap != null,
+      label:
+          '$what, ${l10n.albumCounter(whole(at + 1), whole(of))}, '
+          '${humanFileSize(w.size)}',
+      hint: switch (w.state) {
+        WaitState.coming => l10n.transferPauseDownload,
+        WaitState.paused => l10n.transferResume,
+        WaitState.asks => l10n.transferDownload,
+      },
+      value: more > 0 ? l10n.albumMore(whole(more)) : null,
+      excludeSemantics: true,
+      onTap: tap,
+      child: PressScale(
+        scale: 0.97,
+        onTap: tap,
+        onLongPress: onLongPress == null ? null : () => onLongPress!(at),
+        child: ColoredBox(
+          key: const ValueKey('wait'),
+          color: HaloColors.surface2,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    FileWaitMark(wait: w),
+                    const SizedBox(height: 6),
+                    Text(
+                      humanFileSize(w.size),
+                      style: HaloType.mono(size: 10, color: HaloColors.text),
+                    ),
+                  ],
+                ),
+              ),
+              if (more > 0)
+                ColoredBox(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  child: Center(
+                    child: Text(
+                      '+${whole(more)}',
+                      style: HaloType.sans(
+                        size: 26,
+                        weight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

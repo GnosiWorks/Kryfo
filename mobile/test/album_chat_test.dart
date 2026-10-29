@@ -31,7 +31,8 @@ import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/transfers.dart';
 import 'package:kryfo/widgets/album_grid.dart';
-import 'package:kryfo/widgets/file_wait.dart' show WaitingFileCard;
+import 'package:kryfo/widgets/file_wait.dart'
+    show FileWaitMark, WaitingFileCard;
 import 'package:kryfo/widgets/shots_line.dart';
 import 'package:kryfo/widgets/video_bubble.dart' show VideoBubble;
 import 'package:kryfo/widgets/message_menu.dart' show MessageMenuCard;
@@ -369,6 +370,38 @@ void main() {
     setFileWait('w-1', null);
     await settle(t);
     expect(find.byType(WaitingFileCard), findsNothing);
+    await devClose(t);
+  });
+
+  testWidgets('a waiting photo keeps its place in its album', (t) async {
+    await item(0, 2);
+    await item(1, 2);
+    final later = File('${docs.path}/p_${_id}1.png')..deleteSync();
+    setFileWait(
+      'in-$_id-1',
+      const FileWait(size: 4096, state: WaitState.asks, rule: AutoGet.wifi),
+    );
+    await devOpen(t, chat());
+    await settle(t);
+    expect(find.byType(AlbumGrid), findsOneWidget);
+    expect(find.byType(WaitingFileCard), findsNothing);
+    expect(
+      find.descendant(of: tile(1), matching: find.byType(FileWaitMark)),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: tile(0), matching: find.byType(FileWaitMark)),
+      findsNothing,
+    );
+    // in: the tile turns into its photo
+    later.writeAsBytesSync(_png);
+    setFileWait('in-$_id-1', null);
+    await settle(t);
+    expect(find.byType(FileWaitMark), findsNothing);
+    expect(
+      find.descendant(of: tile(1), matching: find.byType(Image)),
+      findsOneWidget,
+    );
     await devClose(t);
   });
 

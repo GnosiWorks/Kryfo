@@ -10,6 +10,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/file_drop.dart';
 import 'package:kryfo/main.dart'
@@ -471,6 +472,26 @@ void main() {
         expect(eng.fetched, hasLength(1));
       },
     );
+
+    test('a waiting album stays one album and rings once', () async {
+      await rule(GetKind.photo, AutoGet.never);
+      const id = 'a1b2c3d4e5f60718';
+      Future<String> photo(String uid, String fid, int i) => wrapMessage(
+        '',
+        msgUid: uid,
+        drop: _frame(fid),
+        album: AlbumTag(id, 2, i),
+        sender: asSender(_x),
+      );
+      final before = io.rang.length;
+      await from(_x, await photo('al0', '21', 0));
+      await from(_x, await photo('al1', '22', 1));
+      expect(AlbumTag.ofRow(live.msg('al0')!), const AlbumTag(id, 2, 0));
+      expect(AlbumTag.ofRow(live.msg('al1')!), const AlbumTag(id, 2, 1));
+      expect(io.rang.length - before, 1);
+      expect(fileWaitOf('al0')!.state, WaitState.asks);
+      expect(fileWaitOf('al1')!.state, WaitState.asks);
+    });
 
     test('a waiting file whose message was deleted is let go', () async {
       await rule(GetKind.file, AutoGet.never);

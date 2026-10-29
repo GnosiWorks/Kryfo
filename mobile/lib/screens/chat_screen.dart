@@ -516,16 +516,16 @@ void _openFullImage(
 // an album full screen from its tile [at]: what is here of it, in its
 // order. one marked item keeps the whole viewer protected
 void _openAlbumAt(BuildContext context, List<_Msg?> shown, int at) {
+  // one still to come has nothing to show yet
+  String? here(_Msg? x) => x == null || fileWaitOf(x.msgUid) != null
+      ? null
+      : x.mediaPath ?? x.filePath;
   final items = <AlbumItem>[
     for (final x in shown)
-      if (x != null && (x.mediaPath ?? x.filePath) != null)
-        AlbumItem(
-          (x.mediaPath ?? x.filePath)!,
-          video: x.mediaPath == null,
-          fileName: x.fileName,
-        ),
+      if (here(x) case final p?)
+        AlbumItem(p, video: x!.mediaPath == null, fileName: x.fileName),
   ];
-  final paths = [for (final x in shown) x?.mediaPath ?? x?.filePath];
+  final paths = [for (final x in shown) here(x)];
   final start = albumOpenAt(paths, at);
   if (start == null) return;
   openAlbum(
@@ -8295,7 +8295,8 @@ class _Bubble extends StatelessWidget {
                                       ),
                                     // here before its file: a card that
                                     // brings it, in place of the file
-                                    if (!isOut &&
+                                    if (album == null &&
+                                        !isOut &&
                                         fileWaitOf(msg.msgUid) != null)
                                       Padding(
                                         padding: const EdgeInsets.symmetric(
@@ -8927,6 +8928,8 @@ class _Bubble extends StatelessWidget {
         onAct?.call();
         _openAlbumAt(context, shown, i);
       },
+      onGet: appState.downloadNow,
+      onPause: appState.pauseDownload,
       onLongPress: hold == null ? null : (i) => hold(context, i),
     );
   }
@@ -8936,6 +8939,7 @@ class _Bubble extends StatelessWidget {
     video: x.mediaPath == null && x.filePath != null,
     lost: !x.preparing && x.mediaPath == null && x.filePath == null,
     sendingUid: x.direction == 'out' && x.sending ? x.msgUid : null,
+    waitUid: x.direction == 'in' ? x.msgUid : null,
   );
 
   TextStyle _quoteStyle(bool isOut) => HaloType.sans(

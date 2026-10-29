@@ -6103,7 +6103,8 @@ class _GroupBubble extends StatelessWidget {
                                           ],
                                           // here before its file: a card
                                           // that brings it
-                                          if (!isOut &&
+                                          if (album == null &&
+                                              !isOut &&
                                               fileWaitOf(m.msgUid) != null)
                                             Padding(
                                               padding: EdgeInsets.only(
@@ -6732,6 +6733,7 @@ class _GroupBubble extends StatelessWidget {
                   lost:
                       !x.preparing && x.mediaPath == null && x.filePath == null,
                   sendingUid: isOut && x.sending ? x.msgUid : null,
+                  waitUid: x.direction == 'in' ? x.msgUid : null,
                 ),
       ],
       width: 260,
@@ -6741,19 +6743,21 @@ class _GroupBubble extends StatelessWidget {
       stampAtStart: isOut,
       onOpen: (i) {
         onAct?.call();
+        // one still to come has nothing to show yet
+        String? here(_GMsg? x) => x == null || fileWaitOf(x.msgUid) != null
+            ? null
+            : x.mediaPath ?? x.filePath;
         final items = <AlbumItem>[
           for (final x in shown)
-            if (x != null && (x.mediaPath ?? x.filePath) != null)
-              AlbumItem(
-                (x.mediaPath ?? x.filePath)!,
-                video: x.mediaPath == null,
-                fileName: x.fileName,
-              ),
+            if (here(x) case final p?)
+              AlbumItem(p, video: x!.mediaPath == null, fileName: x.fileName),
         ];
-        final paths = [for (final x in shown) x?.mediaPath ?? x?.filePath];
+        final paths = [for (final x in shown) here(x)];
         final start = albumOpenAt(paths, i);
         if (start != null) openAlbum(context, items, start: start);
       },
+      onGet: appState.downloadNow,
+      onPause: appState.pauseDownload,
       onLongPress: hold == null ? null : (i) => hold(context, i),
     );
   }
