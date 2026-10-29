@@ -158,11 +158,14 @@ class _Open {
   final HistorySender s;
   late final void Function() off;
   bool ended = false;
+  // the engine holds the sender's lock while it reads the files, so a close
+  // then would stall the hide for all of it: the export closes it after
+  bool planning = false;
 
   void end() {
     if (ended) return;
     ended = true;
-    s.close();
+    if (!planning) s.close();
   }
 }
 
@@ -567,19 +570,23 @@ Future<HistoryOutgoing> exportHistory({
   try {
     await (hold ?? (w) => w())(text);
     final o = open!;
+    o.planning = true;
     try {
       await o.s.plan();
-    } on HistoryRefused {
-      // a hide closed it while the files were read
-      if (o.ended) throw const HistoryHiddenMeanwhile();
-      rethrow;
+    } finally {
+      o.planning = false;
     }
     if (o.ended) throw const HistoryHiddenMeanwhile();
     return HistoryOutgoing._(o, o.s.id, o.s.head(), chats);
-  } catch (_) {
+  } catch (e) {
+    final ended = open?.ended ?? false;
     open?.off();
     open?.end();
     sender?.close();
+    // a hide ended it on the way, whatever else went wrong then
+    if (ended && e is! HistoryHiddenMeanwhile) {
+      throw const HistoryHiddenMeanwhile();
+    }
     rethrow;
   }
 }

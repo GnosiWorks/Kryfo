@@ -1128,6 +1128,59 @@ void main() {
     expect(historyCopiesOpen, 0);
   }, skip: skip);
 
+  test('a hide while the files are read does not wait for them', () async {
+    final ph = await _phone(ana: 6);
+    // a file nothing writes: reading it waits until something opens it
+    final slow = p.join(ph.media, 'slow.jpg');
+    expect((await Process.run('mkfifo', [slow])).exitCode, 0);
+    await ph.db.insert('messages', {
+      'peer_id': _ben,
+      'direction': 'in',
+      'plaintext': 'slow',
+      'sent_at': ph.now - 100,
+      'written_at': ph.now - 100,
+      'msg_uid': 'slow',
+      'media_path': slow,
+    });
+    final l = _Link();
+    var took = Duration.zero;
+    late Future<void> hid;
+    await expectLater(
+      exportHistory(
+        db: ph.db,
+        container: HaloContainer.everyday,
+        mediaDir: ph.media,
+        spoolDir: ph.dir,
+        keyHex: l.key,
+        bindHex: l.bind,
+        identityHex: _identity,
+        now: DateTime.fromMillisecondsSinceEpoch(ph.now),
+        chunk: 1024,
+        hold: (work) async {
+          await work();
+          hid = () async {
+            await Future<void>.delayed(const Duration(milliseconds: 300));
+            // lets the read go on after two seconds, from outside
+            final opener = await Process.start('sh', [
+              '-c',
+              'sleep 2; : > "\$0"',
+              slow,
+            ]);
+            await hide(ph.db, _ana);
+            final sw = Stopwatch()..start();
+            endHistoryCopies();
+            took = sw.elapsed;
+            await opener.exitCode;
+          }();
+        },
+      ),
+      throwsA(isA<HistoryHiddenMeanwhile>()),
+    );
+    await hid;
+    expect(took, lessThan(const Duration(seconds: 1)));
+    expect(historyCopiesOpen, 0);
+  }, skip: skip);
+
   test('only the everyday container, with nothing attached, sends', () async {
     final ph = await _phone();
     for (final c in [
