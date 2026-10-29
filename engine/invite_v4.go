@@ -18,9 +18,9 @@ import (
 	"fmt"
 	"log"
 
+	"fiatjaf.com/nostr"
 	"github.com/cretz/bine/torutil"
 	bed25519 "github.com/cretz/bine/torutil/ed25519"
-	"fiatjaf.com/nostr"
 	"github.com/mailru/easyjson"
 )
 

@@ -1413,7 +1413,6 @@ func helloLine(content, sealPk string) string {
 // what base64 of "KHL1" starts with
 const khl1B64 = "S0hMMQ"
 
-
 // the general runner: one receive address, one way to open what lands on
 // it, one tag the inbox line carries so dart knows who it was for, and the
 // lane whose circuits it may use.
