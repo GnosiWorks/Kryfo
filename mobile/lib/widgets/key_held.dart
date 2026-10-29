@@ -282,7 +282,10 @@ class KeyHeldMark extends StatelessWidget {
                       l10n.chatSecurityCodeChanged,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: HaloType.sans(size: 11.5, color: HaloColors.warnText),
+                      style: HaloType.sans(
+                        size: 11.5,
+                        color: HaloColors.warnText,
+                      ),
                     ),
                   ),
                 ],

@@ -9,6 +9,7 @@ import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/screens/lock_screen.dart';
 import 'package:kryfo/widgets/halo_switch.dart';
+import 'package:kryfo/widgets/pass_pad.dart';
 import 'package:kryfo/widgets/pin_pad.dart';
 import 'package:kryfo/widgets/press_scale.dart';
 
@@ -124,6 +125,45 @@ void main() {
     await t.sendKeyEvent(LogicalKeyboardKey.enter);
     await t.pumpAndSettle();
     expect(seen, [PinResult.normal]);
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('back from letters, the pad takes typed digits again', (t) async {
+    final letters = ValueNotifier(false);
+    final typed = <String>[];
+    await t.pumpWidget(
+      bare(
+        Scaffold(
+          body: Center(
+            child: ValueListenableBuilder(
+              valueListenable: letters,
+              builder: (_, on, _) => PassPad(
+                letters: on,
+                onLetters: (v) => letters.value = v,
+                onDigit: typed.add,
+                onBack: () {},
+                onText: (_) {},
+                text: '',
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await t.pumpAndSettle();
+    letters.value = true;
+    await t.pumpAndSettle();
+    expect(find.byType(TextField), findsOneWidget);
+    // off the field to the 123 key, and pressed
+    await t.sendKeyEvent(LogicalKeyboardKey.tab);
+    await t.pump();
+    await t.sendKeyEvent(LogicalKeyboardKey.space);
+    await t.pumpAndSettle();
+    expect(letters.value, isFalse);
+    expect(find.byType(TextField), findsNothing);
+    await t.sendKeyEvent(LogicalKeyboardKey.digit7);
+    await t.pump();
+    expect(typed, ['7']);
     await t.pumpWidget(const SizedBox());
   });
 }

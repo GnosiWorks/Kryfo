@@ -133,6 +133,8 @@ class PinPad extends StatefulWidget {
   final VoidCallback? onEnter;
   final bool canEnter;
   final bool enabled;
+  // take focus outright on arrival, not only when nothing else has it
+  final bool grab;
   const PinPad({
     super.key,
     required this.onDigit,
@@ -140,6 +142,7 @@ class PinPad extends StatefulWidget {
     this.onEnter,
     this.canEnter = false,
     this.enabled = true,
+    this.grab = false,
   });
 
   @override
@@ -148,6 +151,16 @@ class PinPad extends StatefulWidget {
 
 class _PinPadState extends State<PinPad> {
   final _pad = FocusNode(debugLabel: 'pin pad');
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.grab) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _pad.requestFocus();
+      });
+    }
+  }
 
   @override
   void dispose() {
