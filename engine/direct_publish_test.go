@@ -32,6 +32,7 @@ func TestDirectRouteWaitsForThePublish(t *testing.T) {
 	socks := newSocksStandIn(t)
 	d := newTestDoor(t, handleConn)
 	doorSetup(t, socks, map[string]*testDoor{"aaaa.onion": d})
+	publishedForTest(t)
 	for _, st := range []string{"starting", "bootstrapped", "publishing"} {
 		statusForTest(t, st)
 		began := time.Now()
@@ -86,14 +87,18 @@ func uploads(ch chan control.Event, onion string, n int) {
 	}
 }
 
+// a fresh publish: nothing heard yet and no publish running, before and
+// after (an earlier test's watcher can leave pubSince a minute old)
 func publishedForTest(t *testing.T) {
 	t.Helper()
-	t.Cleanup(func() {
+	fresh := func() {
 		publishedOnce.Store(false)
 		txMu.Lock()
 		pubSince = time.Time{}
 		txMu.Unlock()
-	})
+	}
+	fresh()
+	t.Cleanup(fresh)
 }
 
 // published once, then a bounce: tor keeps its descriptor and does not
