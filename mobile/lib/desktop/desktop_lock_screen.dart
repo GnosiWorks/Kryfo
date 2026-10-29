@@ -52,6 +52,8 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
   bool _slow = false;
   Timer? _slowTimer;
   String? _error;
+  // a file this version cannot read: a try again changes nothing
+  bool _otherVersion = false;
 
   @override
   void initState() {
@@ -75,6 +77,11 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
           _busy = true;
           Future.microtask(_openSealed);
         }
+      // said at once, before anything is typed or asked
+      case VaultLockKind.otherVersion:
+        _view = _View.sealed;
+        _otherVersion = true;
+        _error = l10n.desktopLockOtherVersion;
     }
     _slowTimer = Timer(const Duration(milliseconds: 400), () {
       if (mounted) setState(() => _slow = true);
@@ -134,6 +141,7 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
       case SealedOpen.unreachable:
         _say(l10n.desktopKeyUnreachable);
       case SealedOpen.otherVersion:
+        _otherVersion = true;
         _say(l10n.desktopLockOtherVersion);
     }
   }
@@ -365,12 +373,14 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 28),
-          HaloPrimaryButton(
-            label: l10n.commonTryAgain,
-            busy: _busy,
-            onTap: widget.seal == null ? null : _openSealed,
-          ),
+          if (!_otherVersion) ...[
+            const SizedBox(height: 28),
+            HaloPrimaryButton(
+              label: l10n.commonTryAgain,
+              busy: _busy,
+              onTap: widget.seal == null ? null : _openSealed,
+            ),
+          ],
         ];
 
   @override

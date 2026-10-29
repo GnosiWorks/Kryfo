@@ -2,6 +2,7 @@
 // the desktop's first screen and the settings page when the computer can
 // keep the key: the choice, the quiet open, and the passphrase made optional
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -134,6 +135,27 @@ void main() {
       ring.failFetch = SealFail.unreachable;
       await show(t, seal: ring);
       expect(find.text(l10n.desktopKeyUnreachable), findsOneWidget);
+      expect(opened, 0);
+    });
+
+    testWidgets('a newer or cut file says so before anything is typed', (
+      t,
+    ) async {
+      await vault.create(_pass);
+      vault.close();
+      final f = File(p.join(dir.path, 'vault.kv'));
+      final raw = f.readAsBytesSync();
+      for (final bad in [
+        Uint8List.fromList(raw)..[4] = 9,
+        Uint8List.fromList(raw.sublist(0, 30)),
+      ]) {
+        f.writeAsBytesSync(bad);
+        await show(t, seal: ring);
+        expect(find.text(l10n.desktopLockOtherVersion), findsOneWidget);
+        expect(find.byType(TextField), findsNothing);
+        expect(find.text(l10n.commonTryAgain), findsNothing);
+        await t.pumpWidget(const SizedBox());
+      }
       expect(opened, 0);
     });
 

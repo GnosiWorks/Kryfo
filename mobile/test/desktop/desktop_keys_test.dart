@@ -306,6 +306,21 @@ void main() {
       expect(await vault().openSealed(ring), SealedOpen.missing);
     });
 
+    test('a newer or cut file is told by its head, not after a try', () async {
+      await vault().create(_pass);
+      final raw = File(path).readAsBytesSync();
+      File(path).writeAsBytesSync(Uint8List.fromList(raw)..[4] = 9);
+      expect(vault().lockKind, VaultLockKind.otherVersion);
+      File(path).writeAsBytesSync(raw.sublist(0, 30));
+      expect(vault().lockKind, VaultLockKind.otherVersion);
+      final w = vault();
+      expect(await w.open(_pass), isFalse);
+      expect(w.madeByOtherVersion, isTrue);
+      // an older version still asks for its passphrase
+      File(path).writeAsBytesSync(await oldVaultFile(3, {'db': 'old'}));
+      expect(vault().lockKind, VaultLockKind.passphrase);
+    });
+
     test('an unknown version says so', () async {
       await vault().createSealed(ring);
       final raw = File(path).readAsBytesSync()..[4] = 9;

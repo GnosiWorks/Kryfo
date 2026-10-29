@@ -220,8 +220,9 @@ class _Change {
 }
 
 /// how the vault's data key is kept: under a passphrase, or by the
-/// computer account
-enum VaultLockKind { passphrase, system }
+/// computer account. [otherVersion]: neither this version nor an older one
+/// reads the file (a newer version, or a cut head)
+enum VaultLockKind { passphrase, system, otherVersion }
 
 /// what [DesktopVault.openSealed] found
 enum SealedOpen { opened, missing, unreachable, otherVersion }
@@ -282,9 +283,8 @@ class DesktopVault {
   bool get exists => File(path).existsSync();
   bool get isOpen => _map != null;
 
-  /// what the file asks for, read from its head. null without a file. a
-  /// file of an older or unknown version asks for a passphrase: [open]
-  /// tells which
+  /// what the file asks for, read from its head. null without a file. an
+  /// older version (1 to 3) asks for its passphrase
   VaultLockKind? get lockKind {
     final Uint8List raw;
     try {
@@ -292,12 +292,21 @@ class DesktopVault {
     } catch (_) {
       return null;
     }
+    if (_isOlder(raw)) return VaultLockKind.passphrase;
     final h = _headOf(raw);
-    if (h == null) return VaultLockKind.passphrase;
-    return h.slots.any((s) => s.kind == _slotPass) || h.slots.isEmpty
-        ? VaultLockKind.passphrase
-        : VaultLockKind.system;
+    if (h == null || h.length < 0) return VaultLockKind.otherVersion;
+    if (h.slots.any((s) => s.kind == _slotPass)) {
+      return VaultLockKind.passphrase;
+    }
+    if (h.slots.any((s) => s.kind == _slotSystem)) return VaultLockKind.system;
+    return VaultLockKind.otherVersion;
   }
+
+  static bool _isOlder(Uint8List raw) =>
+      raw.length >= 5 &&
+      listEquals(raw.sublist(0, 4), _magic) &&
+      raw[4] >= 1 &&
+      raw[4] < _version;
 
   /// open, and a passphrase is what opens it
   bool get hasPassphrase => _slots.any((s) => s.kind == _slotPass);
@@ -489,18 +498,12 @@ class DesktopVault {
   Future<bool> _openPass(String passphrase) async {
     madeByOtherVersion = false;
     final raw = File(path).readAsBytesSync();
-    if (raw.length >= 5 &&
-        listEquals(raw.sublist(0, 4), _magic) &&
-        raw[4] >= 1 &&
-        raw[4] < _version) {
-      return _openOlder(raw, passphrase);
-    }
+    if (_isOlder(raw)) return _openOlder(raw, passphrase);
     final h = _headOf(raw);
-    if (h == null) {
+    if (h == null || h.length < 0) {
       madeByOtherVersion = true;
       return false;
     }
-    if (h.length < 0) return false;
     for (final s in h.slots) {
       if (s.kind != _slotPass || s.data.length != 1 + _saltLen + 16 + 48) {
         continue;
@@ -530,7 +533,7 @@ class DesktopVault {
     madeByOtherVersion = false;
     final raw = File(path).readAsBytesSync();
     final h = _headOf(raw);
-    if (h == null) {
+    if (h == null || h.length < 0) {
       madeByOtherVersion = true;
       return SealedOpen.otherVersion;
     }
