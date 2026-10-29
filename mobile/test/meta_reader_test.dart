@@ -11,6 +11,7 @@ import 'package:kryfo/meta/meta_reader.dart';
 import 'package:kryfo/mp4_strip.dart';
 
 import 'meta_fixtures.dart';
+import 'photo_crafted.dart';
 
 MetaReport read(Uint8List b) => readMetaStrict(MemorySource(b));
 
@@ -78,6 +79,33 @@ void main() {
       final cut = read(jpeg(eoi: false));
       expect(cut.status, MetaStatus.unreadable);
       expect(cut.why, isNotNull);
+    });
+
+    test('exif behind ff 00, where a decoder reads on, is unreadable', () {
+      final gps = File('test/fixtures/gallery_gps.jpg').readAsBytesSync();
+      expect(read(gps).status, MetaStatus.found);
+      var at = 2;
+      while (gps[at + 1] != 0xE1) {
+        at += 2 + (gps[at + 2] << 8 | gps[at + 3]);
+      }
+      final hid = hiddenSegment(gps, at);
+      expect(read(hid).status, MetaStatus.unreadable);
+      expect(photoToSend(hid), isNull);
+      // and between two scans
+      final b = jpeg();
+      final app1 = [0xFF, 0xE1, 0, 7, ...t('hello')];
+      Uint8List two(List<int> gap) => Uint8List.fromList([
+        ...b.sublist(0, b.length - 2),
+        0xFF, 0xC4, 0, 4, 1, 2, ...gap, 0xFF, 0xDA, 0, 4, 1, 1, 9, //
+        0xFF, 0xD9,
+      ]);
+      expect(read(two(const [])).status, MetaStatus.nothing);
+      expect(read(two([0xFF])).status, MetaStatus.nothing);
+      expect(
+        read(two([0xFF, 0x00, 0, 2 + app1.length, ...app1])).status,
+        MetaStatus.unreadable,
+      );
+      expect(read(two(app1)).status, MetaStatus.found);
     });
 
     test('orientation alone reads as nothing', () {

@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart'
@@ -183,9 +184,30 @@ ImageProvider photoImage(Uint8List bytes, int px) => ResizeImage(
   policy: ResizeImagePolicy.fit,
 );
 
-/// the same, off the ui isolate
-Future<Uint8List?> photoTakeInOffUi(Uint8List b) =>
-    Isolate.run(() => photoTakeIn(b));
+/// the same, off the ui isolate, then held to the size the decoder itself
+/// reads in the header, so no gap between this walker and the decoder can
+/// let a bigger picture in
+Future<Uint8List?> photoTakeInOffUi(Uint8List b) async {
+  final out = await Isolate.run(() => photoTakeIn(b));
+  if (out == null || !await photoDecodesAs(out, kPhotoSide)) return null;
+  return out;
+}
+
+/// whether the decoder reads [b]'s header as [side] x [side]. no pixels
+Future<bool> photoDecodesAs(Uint8List b, int side) async {
+  ui.ImmutableBuffer? buf;
+  ui.ImageDescriptor? d;
+  try {
+    buf = await ui.ImmutableBuffer.fromUint8List(b);
+    d = await ui.ImageDescriptor.encoded(buf);
+    return d.width == side && d.height == side;
+  } catch (_) {
+    return false;
+  } finally {
+    d?.dispose();
+    buf?.dispose();
+  }
+}
 
 /// whether [b] is a jpeg with exactly one frame, baseline or progressive,
 /// [side] x [side], and nothing after its end. every marker is walked, so
@@ -204,21 +226,24 @@ bool photoSquareJpeg(Uint8List b, {int side = kPhotoSide}) {
     if (i >= n) return false;
     final m = b[i++];
     if (m == 0xD9) return frame && scan && i == n;
-    // a marker that stands alone, outside a scan, or one no frame of ours
-    // holds: the frame's height given later, or a hierarchical frame
-    if (m == 0x01 ||
-        (m >= 0xD0 && m <= 0xD8) ||
-        m == 0xDC ||
-        m == 0xDE ||
-        m == 0xDF) {
+    // only what our encoder writes or the strip leaves. a decoder skips ff 00
+    // between segments and reads on at the next marker, so anything else
+    // could hide a header from this walk
+    final sof = m == 0xC0 || m == 0xC2;
+    if (!sof &&
+        m != 0xC4 &&
+        m != 0xDB &&
+        m != 0xDD &&
+        m != 0xDA &&
+        m != 0xFE &&
+        (m < 0xE0 || m > 0xEF)) {
       return false;
     }
     if (i + 2 > n) return false;
     final len = b[i] << 8 | b[i + 1];
     if (len < 2 || i + len > n) return false;
-    final sof = m >= 0xC0 && m <= 0xCF && m != 0xC4 && m != 0xC8 && m != 0xCC;
     if (sof) {
-      if (frame || (m != 0xC0 && m != 0xC2)) return false;
+      if (frame) return false;
       if (len < 8) return false;
       final h = b[i + 3] << 8 | b[i + 4];
       final w = b[i + 5] << 8 | b[i + 6];

@@ -36,6 +36,7 @@ import 'package:kryfo/wipe.dart' show haloWiping;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'arrival_fakes.dart';
+import 'photo_crafted.dart';
 import 'source_body.dart';
 import 'sqlite_ffi.dart';
 
@@ -191,6 +192,26 @@ void main() {
       expect(await w.live.contactPhotos(), isEmpty);
       expect(await w.live.photoMem!.query('photo_parts'), isEmpty);
       expect(w.live.msgs, isEmpty);
+    }, skip: skip);
+
+    test('a bigger frame hidden behind ff 00: nothing kept, nothing read '
+        'again', () async {
+      for (final b in [
+        hiddenFrame(_clean, 60000),
+        hiddenFrame(_clean, 12000, progressive: true),
+      ]) {
+        final w = await _World.make();
+        var told = 0;
+        void tell() => told++;
+        photoBook.addListener(tell);
+        await w.photoFrom(_f, b, DateTime.now().millisecondsSinceEpoch);
+        photoBook.removeListener(tell);
+        expect(photoBook.has(_f), isFalse);
+        expect(told, 0);
+        expect(await w.live.contactPhotos(), isEmpty);
+        expect(await w.live.photoMem!.query('photo_parts'), isEmpty);
+        expect(w.live.msgs, isEmpty);
+      }
     }, skip: skip);
 
     test('its take-back shows the face again', () async {

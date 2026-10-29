@@ -28,6 +28,7 @@ import 'package:kryfo/vault_life.dart' show chatTables;
 import 'package:kryfo/wire_pad.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
+import 'photo_crafted.dart';
 import 'source_body.dart';
 import 'sqlite_ffi.dart';
 
@@ -197,6 +198,12 @@ Map<String, Uint8List> _refused() {
     'a height given after the scan': dnl,
     'a second picture after the end': Uint8List.fromList([..._clean, ...big]),
     'a jpeg cut short': _clean.sublist(0, _clean.length - 100),
+    'a 60000 px frame behind ff 00': hiddenFrame(_clean, 60000),
+    'a 12000 px progressive frame behind ff 00': hiddenFrame(
+      _clean,
+      12000,
+      progressive: true,
+    ),
   };
 }
 
@@ -325,6 +332,21 @@ void main() {
         expect(b.length, lessThanOrEqualTo(kPhotoBytesMost), reason: what);
         expect(photoTakeIn(b), isNull, reason: what);
       }
+    });
+
+    test('the decoder\'s own read of the header holds it to our square, '
+        'whatever the walk saw', () async {
+      expect(await photoDecodesAs(_clean, kPhotoSide), isTrue);
+      expect(await photoTakeInOffUi(_square), _clean);
+      for (final (b, side) in [
+        (hiddenFrame(_clean, 60000), 60000),
+        (hiddenFrame(_clean, 12000, progressive: true), 12000),
+      ]) {
+        expect(await photoDecodesAs(b, side), isTrue);
+        expect(await photoDecodesAs(b, kPhotoSide), isFalse);
+        expect(await photoTakeInOffUi(b), isNull);
+      }
+      expect(await photoDecodesAs(Uint8List(8), kPhotoSide), isFalse);
     });
 
     test('the drawn square goes through the same check: a tagged real file '
