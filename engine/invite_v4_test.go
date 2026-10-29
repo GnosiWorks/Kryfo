@@ -9,19 +9,33 @@ import (
 	"testing"
 )
 
-// the face key signs a face text and nothing else
+// the face key signs a face text and nothing else, and only for the main
+// identity's key
 func TestFaceSignsOnlyAFaceText(t *testing.T) {
 	_, priv, _ := ed25519.GenerateKey(nil)
 	mu.Lock()
 	was := myEdPriv
 	myEdPriv = priv
 	mu.Unlock()
+	identsMu.Lock()
+	wasMain, hadMain := idents[mainIdent]
+	identsMu.Unlock()
+	var mainPriv, mainPub [32]byte
+	mainPriv[0], mainPub = 1, [32]byte(bytes.Repeat([]byte{7}, 32))
+	putIdentity(mainIdent, xid{priv: mainPriv, pub: mainPub})
 	defer func() {
 		mu.Lock()
 		myEdPriv = was
 		mu.Unlock()
+		identsMu.Lock()
+		if hadMain {
+			idents[mainIdent] = wasMain
+		} else {
+			delete(idents, mainIdent)
+		}
+		identsMu.Unlock()
 	}()
-	ik := append([]byte{5}, bytes.Repeat([]byte{7}, 32)...)
+	ik := append([]byte{5}, mainPub[:]...)
 	id := bytes.Repeat([]byte{9}, 16)
 	msg := append(append(append([]byte{}, faceText...), ik...), id...)
 	sig, err := faceSign(msg)
@@ -36,6 +50,8 @@ func TestFaceSignsOnlyAFaceText(t *testing.T) {
 		append(append([]byte{}, msg...), 0),
 		append([]byte("kryfo-face-v5:"), msg[len(faceText):]...),
 		append(append(append([]byte{}, faceText...), append([]byte{8}, ik[1:]...)...), id...),
+		// another identity's key, a Ci say
+		append(append(append([]byte{}, faceText...), append([]byte{5}, bytes.Repeat([]byte{6}, 32)...)...), id...),
 		[]byte("anything"),
 	} {
 		if _, err := faceSign(bad); err == nil {

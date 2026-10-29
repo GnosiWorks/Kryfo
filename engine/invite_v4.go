@@ -28,12 +28,20 @@ import (
 // with the face key here
 var faceText = []byte("kryfo-face-v4:")
 
-// the face signature over [msg]: "kryfo-face-v4:", a 33-byte identity key
-// and a 16-byte invite id, by my ed key
+// the face signature over [msg]: "kryfo-face-v4:", the main identity's key
+// (0x05 and its x key) and a 16-byte invite id, by my ed key. no other key
+// is ever linked to the face
 func faceSign(msg []byte) ([]byte, error) {
 	if len(msg) != len(faceText)+33+16 || !bytes.HasPrefix(msg, faceText) ||
 		msg[len(faceText)] != 0x05 {
 		return nil, errors.New("not a face text")
+	}
+	me, err := identityOf(mainIdent)
+	if err != nil {
+		return nil, err
+	}
+	if !bytes.Equal(msg[len(faceText)+1:len(faceText)+33], me.pub[:]) {
+		return nil, errors.New("not the main identity's key")
 	}
 	mu.Lock()
 	priv := myEdPriv
