@@ -47,6 +47,8 @@ class MyKryfoScreen extends StatefulWidget {
 
 class _MyKryfoScreenState extends State<MyKryfoScreen> {
   String? _uri;
+  // what the qr code shows (sessionInviteQr)
+  String? _qr;
   _Way _open = _Way.none;
   // bumped on each copy, so what was copied shows a tick for a moment
   int _linkCopies = 0;
@@ -74,10 +76,16 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
   Future<void> _load() async {
     if (appState.sessionOnion.isEmpty) return;
     final uri = await appState.sessionInvite();
+    final qr = await appState.sessionInviteQr();
     // debug builds only: a second device on the desk can import it off
     // logcat instead of scanning a screen
     dlog('invite: $uri');
-    if (mounted) setState(() => _uri = uri);
+    if (mounted) {
+      setState(() {
+        _uri = uri;
+        _qr = qr;
+      });
+    }
   }
 
   void _toggle(_Way w) {
@@ -213,7 +221,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
             _Way1Card(
               open: _open == _Way.here,
               onToggle: () => _toggle(_Way.here),
-              uri: _uri,
+              uri: _qr ?? _uri,
               onScan: _scanTheirs,
               onCode: () async {
                 await Navigator.of(
