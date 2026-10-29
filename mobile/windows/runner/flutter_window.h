@@ -36,8 +36,14 @@ class FlutterWindow : public Win32Window {
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> desktop_;
   kryfo::Tray tray_;
 
+  // ends when the window comes up, see PumpFrames
+  ULONGLONG pump_until_ = 0;
+
   void ShowAndRaise();
+  void PumpFrames();
+  void PumpTick();
   void Quit();
+  void EndNow();
 };
 
 #endif  // RUNNER_FLUTTER_WINDOW_H_

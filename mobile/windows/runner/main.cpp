@@ -87,6 +87,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     ::DispatchMessage(&msg);
   }
 
-  ::CoUninitialize();
+  // no engine shutdown or dll unload after the loop: either can wait
+  // forever on a native call still running (flutter_window.cpp, EndNow)
+  ::TerminateProcess(::GetCurrentProcess(), EXIT_SUCCESS);
   return EXIT_SUCCESS;
 }

@@ -9,6 +9,9 @@
 
 namespace {
 constexpr UINT_PTR kQuitTimer = 0x4B51;
+constexpr UINT_PTR kFrameTimer = 0x4B52;
+// how long the window asks for frames itself after it comes up
+constexpr ULONGLONG kPumpMs = 3000;
 }  // namespace
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
@@ -56,6 +59,9 @@ bool FlutterWindow::OnCreate() {
     } else if (call.method_name() == "show") {
       ShowAndRaise();
       result->Success();
+    } else if (call.method_name() == "frames") {
+      PumpFrames();
+      result->Success();
     } else {
       result->NotImplemented();
     }
@@ -80,15 +86,60 @@ bool FlutterWindow::OnCreate() {
 void FlutterWindow::ShowAndRaise() {
   HWND w = GetHandle();
   if (!w) return;
-  if (!::IsWindowVisible(w)) ::ShowWindow(w, SW_SHOW);
-  if (::IsIconic(w)) ::ShowWindow(w, SW_RESTORE);
+  ::ShowWindow(w, ::IsIconic(w) ? SW_RESTORE : SW_SHOWNORMAL);
+  // over the other windows even when windows keeps the focus where it is
+  ::SetWindowPos(w, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+  ::SetWindowPos(w, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+  // the focus may move only from the thread that has it: joined for this
+  HWND front = ::GetForegroundWindow();
+  DWORD mine = ::GetCurrentThreadId();
+  DWORD theirs = front ? ::GetWindowThreadProcessId(front, nullptr) : 0;
+  bool joined = theirs != 0 && theirs != mine && ::AttachThreadInput(mine, theirs, TRUE);
   ::SetForegroundWindow(w);
   ::BringWindowToTop(w);
+  ::SetActiveWindow(w);
   if (flutter_controller_) {
     ::SetFocus(flutter_controller_->view()->GetNativeWindow());
-    // what was drawn while hidden may be stale: a fresh frame now
-    flutter_controller_->ForceRedraw();
   }
+  if (joined) ::AttachThreadInput(mine, theirs, FALSE);
+  PumpFrames();
+}
+
+// frames asked for from here for a while: what was drawn while hidden is
+// stale, and an animation that starts with the window would otherwise move
+// only on input
+void FlutterWindow::PumpFrames() {
+  HWND w = GetHandle();
+  if (!w || !flutter_controller_) return;
+  pump_until_ = ::GetTickCount64() + kPumpMs;
+  flutter_controller_->ForceRedraw();
+  ::SetTimer(w, kFrameTimer, 16, nullptr);
+}
+
+void FlutterWindow::PumpTick() {
+  HWND w = GetHandle();
+  if (!w || !flutter_controller_ || ::GetTickCount64() >= pump_until_ ||
+      !::IsWindowVisible(w)) {
+    if (w) ::KillTimer(w, kFrameTimer);
+    return;
+  }
+  HWND view = flutter_controller_->view()->GetNativeWindow();
+  ::InvalidateRect(view, nullptr, FALSE);
+  flutter_controller_->ForceRedraw();
+}
+
+// the window goes, then the process, at once: no engine shutdown or dll
+// unload that can wait forever on a native call still running. tor.exe is
+// in kryfo's job and ends with it
+void FlutterWindow::EndNow() {
+  HWND w = GetHandle();
+  if (w) {
+    ::KillTimer(w, kQuitTimer);
+    ::KillTimer(w, kFrameTimer);
+    ::ShowWindow(w, SW_HIDE);
+  }
+  tray_.Hide();
+  ::TerminateProcess(::GetCurrentProcess(), 0);
 }
 
 // dart keeps its marks and lets its keys go first, then the window goes.
@@ -122,14 +173,34 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
   // the tray's own before flutter's: with a tray, closing only hides, every
-  // time, without asking dart whether the app may end
+  // time, without asking dart whether the app may end. without one it ends
+  // the app as the tray's quit does
   if (tray_.Handle(message, wparam, lparam, [this]() { ShowAndRaise(); },
                    [this]() { Quit(); })) {
     return 0;
   }
-  if (message == WM_CLOSE && tray_.shown()) {
-    ::ShowWindow(hwnd, SW_HIDE);
+  if (message == WM_CLOSE) {
+    if (tray_.shown()) {
+      ::ShowWindow(hwnd, SW_HIDE);
+    } else {
+      Quit();
+    }
     return 0;
+  }
+  switch (message) {
+    case WM_TIMER:
+      if (wparam == kFrameTimer) {
+        PumpTick();
+        return 0;
+      }
+      if (wparam == kQuitTimer) {
+        EndNow();
+        return 0;
+      }
+      break;
+    case WM_APP + 2:
+      EndNow();
+      return 0;
   }
 
   // Give Flutter, including plugins, an opportunity to handle window messages.
@@ -145,15 +216,6 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
   switch (message) {
     case WM_FONTCHANGE:
       flutter_controller_->engine()->ReloadSystemFonts();
-      break;
-    case WM_TIMER:
-    case WM_APP + 2:
-      if (message == WM_APP + 2 || wparam == kQuitTimer) {
-        ::KillTimer(hwnd, kQuitTimer);
-        tray_.Hide();
-        ::DestroyWindow(hwnd);
-        return 0;
-      }
       break;
   }
 

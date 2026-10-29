@@ -63,11 +63,14 @@ void Tray::Hide() {
 
 TrayEvent Tray::EventOf(bool v4, UINT event) {
   if (v4) {
-    // version 4 sends the mouse messages too, then its own: only its own
-    // count, or a click opens twice and a right click makes two menus
+    // version 4 sends the mouse messages too, then its own. a right click
+    // counts once, or it makes two menus; a left click opens on either, as
+    // a shell that leaves out its own select still brings the window, and
+    // opening twice does nothing more
     switch (event) {
       case NIN_SELECT:
       case NIN_KEYSELECT:
+      case WM_LBUTTONUP:
         return TrayEvent::kOpen;
       case WM_CONTEXTMENU:
         return TrayEvent::kMenu;
