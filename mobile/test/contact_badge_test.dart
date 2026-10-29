@@ -157,7 +157,7 @@ void main() {
     testWidgets('it fits in $lang at a large font', (t) async {
       setL10nLocale(Locale(lang));
       addTearDown(() => setL10nLocale(const Locale('en')));
-      await open(t, 'guardian', locale: Locale(lang), scale: 1.6);
+      await open(t, 'guardian', locale: Locale(lang), scale: 2.0);
       expect(t.takeException(), isNull);
       expect(find.text('✦ ${l10n.donateTierGuardian}'), findsOneWidget);
       await close(t);

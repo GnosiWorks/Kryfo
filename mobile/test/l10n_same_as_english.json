@@ -15,6 +15,7 @@
   "qrWiFi"
  ],
  "de": [
+  "a11yVideoOn",
   "albumQuoted",
   "appOffline",
   "appOk",
@@ -103,6 +104,7 @@
   "videoViewerPause"
  ],
  "es": [
+  "a11yVideoOn",
   "appDev",
   "appOk",
   "appS",
@@ -213,6 +215,7 @@
   "qrWiFi"
  ],
  "fr": [
+  "a11yPhotoOn",
   "albumQuoted",
   "androidIconNotes",
   "appNotificationsLink",
@@ -323,6 +326,7 @@
   "videoBubbleMb"
  ],
  "id": [
+  "a11yVideoOn",
   "albumQuoted",
   "appOffline",
   "appOk",
@@ -399,6 +403,7 @@
   "videoBubbleVideo"
  ],
  "it": [
+  "a11yVideoOn",
   "accentLime",
   "albumQuoted",
   "appDev",
@@ -596,6 +601,7 @@
   "qrWiFi"
  ],
  "tr": [
+  "a11yVideoOn",
   "appTor",
   "bridgesBelarus",
   "bridgesHongKong",
@@ -664,6 +670,7 @@
   "qrWiFi"
  ],
  "vi": [
+  "a11yVideoOn",
   "albumQuoted",
   "appDev",
   "appOk",

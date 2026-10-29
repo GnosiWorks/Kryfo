@@ -9782,6 +9782,97 @@ class AppLocalizationsHi extends AppLocalizations {
       'यह चैट आपके फ़ोन पर ही रहती है, क्योंकि इसमें स्क्रीनशॉट रोके गए हैं।';
 
   @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString अंक',
+      one: '1 अंक',
+      zero: 'कोई अंक नहीं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString अक्षर',
+      one: '1 अक्षर',
+      zero: 'कोई अक्षर नहीं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'बैकअप की प्रगति';
+
+  @override
+  String get a11yRestoreProgress => 'रीस्टोर की प्रगति';
+
+  @override
+  String get a11yExportProgress => 'एक्सपोर्ट की प्रगति';
+
+  @override
+  String get a11yLockFileProgress => 'लॉक करने की प्रगति';
+
+  @override
+  String get a11yCleanProgress => 'सफ़ाई की प्रगति';
+
+  @override
+  String get a11yMessageActions => 'मैसेज के विकल्प';
+
+  @override
+  String get a11yRecordVoiceNote => 'वॉइस नोट रिकॉर्ड करें';
+
+  @override
+  String get a11yRecording => 'रिकॉर्ड हो रहा है';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'फ़ोटो, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return '$name से आई फ़ोटो, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'वीडियो, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return '$name से आया वीडियो, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString नए मैसेज',
+      one: 'नया मैसेज',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get modesPickHow =>
       'चुनें कि आपके संदेश कैसे जाएँ। आप इसे कभी भी बदल सकते हैं।';
 

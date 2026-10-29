@@ -418,7 +418,7 @@ class _FriendSheetState extends State<_FriendSheet> {
                           key: ValueKey(err),
                           style: HaloType.sans(
                             size: 12.5,
-                            color: HaloColors.rose,
+                            color: HaloColors.roseText,
                           ),
                         ),
                       ),

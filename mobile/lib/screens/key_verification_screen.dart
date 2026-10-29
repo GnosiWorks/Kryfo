@@ -449,7 +449,7 @@ class _VerifyButton extends StatelessWidget {
                   style: HaloType.sans(
                     size: 14,
                     weight: FontWeight.w500,
-                    color: verified ? HaloColors.green : HaloColors.text,
+                    color: verified ? HaloColors.greenText : HaloColors.text,
                   ),
                 ),
               ),

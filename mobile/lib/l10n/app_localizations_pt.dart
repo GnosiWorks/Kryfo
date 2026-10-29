@@ -9852,6 +9852,97 @@ class AppLocalizationsPt extends AppLocalizations {
       'Esta conversa fica no seu celular porque as capturas de tela estão bloqueadas nela.';
 
   @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString dígitos',
+      one: '1 dígito',
+      zero: 'Nenhum dígito',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString caracteres',
+      one: '1 caractere',
+      zero: 'Nenhum caractere',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'Progresso do backup';
+
+  @override
+  String get a11yRestoreProgress => 'Progresso da restauração';
+
+  @override
+  String get a11yExportProgress => 'Progresso da exportação';
+
+  @override
+  String get a11yLockFileProgress => 'Progresso do trancamento';
+
+  @override
+  String get a11yCleanProgress => 'Progresso da limpeza';
+
+  @override
+  String get a11yMessageActions => 'Ações da mensagem';
+
+  @override
+  String get a11yRecordVoiceNote => 'Gravar um áudio';
+
+  @override
+  String get a11yRecording => 'Gravando';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'Foto, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return 'Foto de $name, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'Vídeo, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return 'Vídeo de $name, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString novas mensagens',
+      one: 'Nova mensagem',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get modesPickHow =>
       'Escolha como suas mensagens viajam. Você pode mudar quando quiser.';
 

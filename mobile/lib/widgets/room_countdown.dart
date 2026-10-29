@@ -101,8 +101,8 @@ class _RoomCountdownState extends State<RoomCountdown> {
     final left = _left;
     final color = switch (countdownTone(left)) {
       CountdownTone.calm => HaloColors.text2,
-      CountdownTone.amber => HaloColors.amber,
-      CountdownTone.rose => HaloColors.rose,
+      CountdownTone.amber => HaloColors.amberText,
+      CountdownTone.rose => HaloColors.roseText,
     };
     final label = '${widget.prefix}${countdownLabel(left)}';
     return AnimatedSwitcher(

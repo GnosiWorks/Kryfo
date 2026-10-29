@@ -1985,7 +1985,7 @@ void main() {
       appState.contacts = [_contact(_anna, nick: 'Anna Maria Magdalena')];
       await t.pumpWidget(
         MediaQuery(
-          data: const MediaQueryData(textScaler: TextScaler.linear(1.6)),
+          data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
           child: app(const GroupChatScreen(groupId: _group)),
         ),
       );

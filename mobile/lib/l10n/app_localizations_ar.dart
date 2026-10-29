@@ -9911,6 +9911,106 @@ class AppLocalizationsAr extends AppLocalizations {
       'تبقى هذه المحادثة على هاتفك لأن لقطات الشاشة محظورة فيها.';
 
   @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ رقم',
+      many: '⁨$countString⁩ رقمًا',
+      few: '⁨$countString⁩ أرقام',
+      two: 'رقمان',
+      one: 'رقم واحد',
+      zero: 'لا أرقام',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ حرف',
+      many: '⁨$countString⁩ حرفًا',
+      few: '⁨$countString⁩ أحرف',
+      two: 'حرفان',
+      one: 'حرف واحد',
+      zero: 'لا أحرف',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'تقدّم النسخ الاحتياطي';
+
+  @override
+  String get a11yRestoreProgress => 'تقدّم الاستعادة';
+
+  @override
+  String get a11yExportProgress => 'تقدّم التصدير';
+
+  @override
+  String get a11yLockFileProgress => 'تقدّم القفل';
+
+  @override
+  String get a11yCleanProgress => 'تقدّم التنظيف';
+
+  @override
+  String get a11yMessageActions => 'إجراءات الرسالة';
+
+  @override
+  String get a11yRecordVoiceNote => 'سجّل رسالة صوتية';
+
+  @override
+  String get a11yRecording => 'جارٍ التسجيل';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'صورة، ⁨$date⁩';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return 'صورة من ⁨$name⁩، ⁨$date⁩';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'فيديو، ⁨$date⁩';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return 'فيديو من ⁨$name⁩، ⁨$date⁩';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ رسالة جديدة',
+      many: '⁨$countString⁩ رسالة جديدة',
+      few: '⁨$countString⁩ رسائل جديدة',
+      two: 'رسالتان جديدتان',
+      one: 'رسالة جديدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get modesPickHow =>
       'اختر كيف تنتقل رسائلك. يمكنك تغيير ذلك في أي وقت.';
 

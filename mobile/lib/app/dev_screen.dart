@@ -359,7 +359,7 @@ class _DevScreenState extends State<DevScreen> {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     l10n.appRestoredFromDisk,
-                    style: HaloType.mono(size: 9, color: HaloColors.green),
+                    style: HaloType.mono(size: 9, color: HaloColors.greenText),
                   ),
                 ),
               const SizedBox(height: 16),
@@ -410,7 +410,7 @@ class _DevScreenState extends State<DevScreen> {
                   ),
                   child: Text(
                     _peerId,
-                    style: HaloType.mono(size: 14, color: HaloColors.green),
+                    style: HaloType.mono(size: 14, color: HaloColors.greenText),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -522,7 +522,7 @@ class _DevScreenState extends State<DevScreen> {
                               l10n.appDisable,
                               style: HaloType.sans(
                                 size: 13,
-                                color: HaloColors.rose,
+                                color: HaloColors.roseText,
                               ),
                             ),
                           ),

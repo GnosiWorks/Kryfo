@@ -145,7 +145,7 @@ class _HidePickerState extends State<HidePicker> {
                       style: HaloType.sans(
                         size: 13.5,
                         color: _error != null
-                            ? HaloColors.rose
+                            ? HaloColors.roseText
                             : HaloColors.text2,
                         height: 1.45,
                       ),
@@ -364,7 +364,11 @@ class _GroupFace extends StatelessWidget {
     ),
     child: Text(
       name.isEmpty ? '·' : name.characters.first.toUpperCase(),
-      style: HaloType.serif(size: 19, italic: true, color: HaloColors.amberText),
+      style: HaloType.serif(
+        size: 19,
+        italic: true,
+        color: HaloColors.amberText,
+      ),
     ),
   );
 }

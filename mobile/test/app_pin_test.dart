@@ -235,7 +235,7 @@ void main() {
         MediaQuery(
           data: MediaQueryData.fromView(
             t.view,
-          ).copyWith(textScaler: TextScaler.linear(1.6)),
+          ).copyWith(textScaler: TextScaler.linear(2.0)),
           child: app(
             PinsScreen(
               lock: lock.state,

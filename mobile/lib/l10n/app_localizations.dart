@@ -15737,6 +15737,96 @@ abstract class AppLocalizations {
   /// **'This chat stays on your phone because screenshots are blocked in it.'**
   String get historyChatStaysShots;
 
+  /// widgets/pin_pad.dart: the pin dots to a screen reader, the count only
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No digits} =1{1 digit} other{{count} digits}}'**
+  String a11yPinDigits(int count);
+
+  /// widgets/pin_pad.dart: the passphrase dots to a screen reader, the count only
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No characters} =1{1 character} other{{count} characters}}'**
+  String a11yPassChars(int count);
+
+  /// screens/backup_screen.dart: the progress bar's name to a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Backup progress'**
+  String get a11yBackupProgress;
+
+  /// screens/restore_screen.dart: the progress bar's name to a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Restore progress'**
+  String get a11yRestoreProgress;
+
+  /// screens/notes_export_screen.dart: the progress bar's name to a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Export progress'**
+  String get a11yExportProgress;
+
+  /// screens/lock_file_screen.dart: the progress bar's name to a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Locking progress'**
+  String get a11yLockFileProgress;
+
+  /// screens/clean_screen.dart: the progress bar's name to a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaning progress'**
+  String get a11yCleanProgress;
+
+  /// widgets/menu_backdrop.dart: the long-press menu's name to a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Message actions'**
+  String get a11yMessageActions;
+
+  /// widgets/voice_mic.dart: the mic with a screen reader on, a tap records
+  ///
+  /// In en, this message translates to:
+  /// **'Record a voice note'**
+  String get a11yRecordVoiceNote;
+
+  /// widgets/voice_mic.dart: said once when a tap starts a recording
+  ///
+  /// In en, this message translates to:
+  /// **'Recording'**
+  String get a11yRecording;
+
+  /// widgets/media_bubbles.dart: a photo tile to a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Photo, {date}'**
+  String a11yPhotoOn(String date);
+
+  /// widgets/media_bubbles.dart: a photo tile to a screen reader, with who sent it
+  ///
+  /// In en, this message translates to:
+  /// **'Photo from {name}, {date}'**
+  String a11yPhotoFrom(String name, String date);
+
+  /// widgets/media_bubbles.dart: a video tile to a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Video, {date}'**
+  String a11yVideoOn(String date);
+
+  /// widgets/media_bubbles.dart: a video tile to a screen reader, with who sent it
+  ///
+  /// In en, this message translates to:
+  /// **'Video from {name}, {date}'**
+  String a11yVideoFrom(String name, String date);
+
+  /// widgets/say.dart: new messages in the open chat, said with a screen reader on
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{New message} other{{count} new messages}}'**
+  String a11yNewMessages(int count);
+
   /// Speed and privacy page, the line under the title
   ///
   /// In en, this message translates to:
