@@ -2641,7 +2641,7 @@ class _ChatScreenState extends State<ChatScreen>
     final confirm = await showConfirmSheet(
       context,
       title: l10n.albumUnsendTitle,
-      line: l10n.chatItDisappearsWithNo,
+      line: l10n.chatAlbumItDisappearsWithNo,
       yes: l10n.chatUnsend,
     );
     FocusManager.instance.primaryFocus?.unfocus();

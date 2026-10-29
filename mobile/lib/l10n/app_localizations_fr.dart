@@ -1386,7 +1386,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'Il est supprimé des deux téléphones, sauf s’il a déjà été enregistré. C’est irréversible.';
+      'Il sera supprimé des deux téléphones, sauf s’il a déjà été enregistré. C’est irréversible.';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'L’album sera supprimé des deux téléphones, sauf s’il a déjà été enregistré. C’est irréversible.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -2640,7 +2644,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'Il est supprimé des téléphones de tout le monde, sauf s’il a déjà été enregistré. C’est irréversible.';
+      'Il sera supprimé des téléphones de tout le monde, sauf s’il a déjà été enregistré. C’est irréversible.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'L’album sera supprimé des téléphones de tout le monde, sauf s’il a déjà été enregistré. C’est irréversible.';
 
   @override
   String get groupChatUnsend => 'Annuler l’envoi';

@@ -1719,8 +1719,12 @@
   "@chatUnsendMessage": {
     "description": "screens/chat_screen.dart"
   },
-  "chatItDisappearsWithNo": "It's removed from both phones, unless it was already saved. This can't be undone.",
+  "chatItDisappearsWithNo": "It will be removed from both phones, unless it has already been saved. This can't be undone.",
   "@chatItDisappearsWithNo": {
+    "description": "screens/chat_screen.dart"
+  },
+  "chatAlbumItDisappearsWithNo": "This album will be removed from both phones, unless it has already been saved. This can't be undone.",
+  "@chatAlbumItDisappearsWithNo": {
     "description": "screens/chat_screen.dart"
   },
   "chatThisChatHasPins": "{count, plural, one{This chat has {count} pin already} other{This chat has {count} pins already}}",
@@ -3246,8 +3250,12 @@
   "@groupChatUnsendMessage": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupChatItDisappearsWithNo": "It's removed from everyone's phones, unless it was already saved. This can't be undone.",
+  "groupChatItDisappearsWithNo": "It will be removed from everyone's phones, unless it has already been saved. This can't be undone.",
   "@groupChatItDisappearsWithNo": {
+    "description": "screens/group_chat_screen.dart"
+  },
+  "groupChatAlbumItDisappearsWithNo": "This album will be removed from everyone's phones, unless it has already been saved. This can't be undone.",
+  "@groupChatAlbumItDisappearsWithNo": {
     "description": "screens/group_chat_screen.dart"
   },
   "groupChatUnsend": "Unsend",

@@ -1410,6 +1410,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Воно зникне з обох телефонів, якщо його ще не зберегли. Цю дію не можна скасувати.';
 
   @override
+  String get chatAlbumItDisappearsWithNo =>
+      'Альбом зникне з обох телефонів, якщо його ще не зберегли. Цю дію не можна скасувати.';
+
+  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -2671,6 +2675,10 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get groupChatItDisappearsWithNo =>
       'Воно зникне з телефонів усіх учасників, якщо його ще не зберегли. Цю дію не можна скасувати.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'Альбом зникне з телефонів усіх учасників, якщо його ще не зберегли. Цю дію не можна скасувати.';
 
   @override
   String get groupChatUnsend => 'Відкликати';

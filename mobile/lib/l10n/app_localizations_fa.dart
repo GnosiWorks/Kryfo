@@ -1376,7 +1376,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'از هر دو گوشی پاک می‌شود، مگر اینکه قبلاً ذخیره شده باشد. این کار برگشت ندارد.';
+      'از هر دو گوشی پاک خواهد شد، مگر اینکه قبلاً ذخیره شده باشد. این کار برگشت ندارد.';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'این آلبوم از هر دو گوشی پاک خواهد شد، مگر اینکه قبلاً ذخیره شده باشد. این کار برگشت ندارد.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -2619,7 +2623,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'از گوشی همه پاک می‌شود، مگر اینکه قبلاً ذخیره شده باشد. این کار برگشت ندارد.';
+      'از گوشی همه پاک خواهد شد، مگر اینکه قبلاً ذخیره شده باشد. این کار برگشت ندارد.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'این آلبوم از گوشی همه پاک خواهد شد، مگر اینکه قبلاً ذخیره شده باشد. این کار برگشت ندارد.';
 
   @override
   String get groupChatUnsend => 'پس گرفتن';

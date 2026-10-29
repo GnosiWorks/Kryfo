@@ -1387,6 +1387,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Sie wird von beiden Handys entfernt, außer sie wurde schon gespeichert. Das lässt sich nicht rückgängig machen.';
 
   @override
+  String get chatAlbumItDisappearsWithNo =>
+      'Das Album wird von beiden Handys entfernt, außer es wurde schon gespeichert. Das lässt sich nicht rückgängig machen.';
+
+  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -2644,6 +2648,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get groupChatItDisappearsWithNo =>
       'Sie wird von den Handys aller entfernt, außer sie wurde schon gespeichert. Das lässt sich nicht rückgängig machen.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'Das Album wird von den Handys aller entfernt, außer es wurde schon gespeichert. Das lässt sich nicht rückgängig machen.';
 
   @override
   String get groupChatUnsend => 'Zurückholen';
