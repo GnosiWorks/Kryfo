@@ -192,6 +192,29 @@ func TestInviteScriptTakesRealInvites(t *testing.T) {
 			t.Errorf("takes %.40q", q)
 		}
 	}
+	// the words shown under the button: three of the bip-39 list's lengths
+	w := regexp.MustCompile(`\.test\(id\)`).FindStringIndex(inviteJS)
+	if w == nil {
+		t.Fatal("no words check in the script")
+	}
+	i := strings.LastIndex(inviteJS[:w[0]], "/^")
+	words := regexp.MustCompile(inviteJS[i+1 : w[0]-1])
+	for _, id := range []string{"food-october-trial", "zoo-act-absorb", "abstract-umbrella-squirrel"} {
+		if !words.MatchString(id) {
+			t.Errorf("refuses the words %q", id)
+		}
+	}
+	for _, id := range []string{
+		"food-october-trialling", "ab-october-trial", "a-b-c", "food-october", "food-october-trial-x",
+		"Food-october-trial", "food-" + strings.Repeat("a", 8000) + "-trial", "",
+	} {
+		if words.MatchString(id) {
+			t.Errorf("shows the words %.40q", id)
+		}
+	}
+	if !strings.Contains(head, "overflow-wrap:anywhere}") {
+		t.Error("long words can run off the card")
+	}
 }
 
 func TestPreviewCardIsGenericAndLocal(t *testing.T) {

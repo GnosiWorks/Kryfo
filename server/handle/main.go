@@ -863,7 +863,8 @@ func invitePage(lang string) string {
 
 // reads the invite after the '#', checks it has the shape the app builds
 // and only then makes the button: always kryfo://share? and the invite,
-// never another scheme. v1-v3 show the three words. no network: the csp
+// never another scheme. v1-v3 show the three words, each as long as
+// the bip-39 list's (3 to 8 letters). no network: the csp
 // has no connect-src, and nothing here asks for one
 //
 //	id=..&onion=..&xpub=..                v1
@@ -874,7 +875,7 @@ const inviteJS = `(function(){var d=document,h=location.hash.slice(1),id="",ok=f
 	`try{if(h.length<=` + maxInviteLink + `&&/^[A-Za-z0-9._~%+\/=&-]+$/.test(h)){` +
 	`var p=new URLSearchParams(h),v=p.get("v")||"1";id=p.get("id")||"";` +
 	`ok=v=="4"?!id&&/^[A-Za-z0-9_-]+$/.test(p.get("i")||""):` +
-	`/^[123]$/.test(v)&&/^[a-z]+-[a-z]+-[a-z]+$/.test(id)&&!!p.get("onion")&&!!p.get(v=="1"?"xpub":"bundle")}}catch(e){ok=false}` +
+	`/^[123]$/.test(v)&&/^[a-z]{3,8}-[a-z]{3,8}-[a-z]{3,8}$/.test(id)&&!!p.get("onion")&&!!p.get(v=="1"?"xpub":"bundle")}}catch(e){ok=false}` +
 	`if(ok){var a=d.getElementById("go");a.href="kryfo://share?"+h;a.hidden=false;` +
 	`if(id){var w=d.getElementById("w");w.textContent=id;w.hidden=false}}` +
 	`else d.getElementById("bad").hidden=false})()`
@@ -940,7 +941,7 @@ body{margin:0;min-height:100vh;background:#0D0B09;color:#F5F1EA;
 .bio{color:#C8C0B5;font-size:14px;line-height:1.6;margin:20px 0 24px}
 .btn{display:block;padding:13px;border-radius:999px;background:#F59E0B;color:#0D0B09;
      text-decoration:none;font-weight:600;font-size:14.5px}
-.words{font-family:'JetBrains Mono',monospace;font-size:13px;color:#F5F1EA;margin-top:8px}
+.words{font-family:'JetBrains Mono',monospace;font-size:13px;color:#F5F1EA;margin-top:8px;overflow-wrap:anywhere}
 .fp{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#A79E92;
     margin-top:22px;line-height:1.7}
 .get{margin:22px 0 0}
