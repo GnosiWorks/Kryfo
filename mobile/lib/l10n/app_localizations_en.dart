@@ -1375,7 +1375,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'It will be removed from both phones, unless it was already saved. This can\'t be undone.';
+      'It will be removed from both phones, unless it has already been saved. This can\'t be undone.';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'This album will be removed from both phones, unless it has already been saved. This can\'t be undone.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -2610,7 +2614,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'It will be removed from everyone\'s phones, unless it was already saved. This can\'t be undone.';
+      'It will be removed from everyone\'s phones, unless it has already been saved. This can\'t be undone.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'This album will be removed from everyone\'s phones, unless it has already been saved. This can\'t be undone.';
 
   @override
   String get groupChatUnsend => 'Unsend';

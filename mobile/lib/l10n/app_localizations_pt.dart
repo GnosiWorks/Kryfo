@@ -1388,6 +1388,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Ela será removida dos dois celulares, a menos que já tenha sido salva. Isso não pode ser desfeito.';
 
   @override
+  String get chatAlbumItDisappearsWithNo =>
+      'O álbum será removido dos dois celulares, a menos que já tenha sido salvo. Isso não pode ser desfeito.';
+
+  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -2639,6 +2643,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get groupChatItDisappearsWithNo =>
       'Ela será removida dos celulares de todos, a menos que já tenha sido salva. Isso não pode ser desfeito.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'O álbum será removido dos celulares de todos, a menos que já tenha sido salvo. Isso não pode ser desfeito.';
 
   @override
   String get groupChatUnsend => 'Desfazer envio';

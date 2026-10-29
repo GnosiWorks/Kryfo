@@ -2186,8 +2186,14 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'It will be removed from both phones, unless it was already saved. This can\'t be undone.'**
+  /// **'It will be removed from both phones, unless it has already been saved. This can\'t be undone.'**
   String get chatItDisappearsWithNo;
+
+  /// screens/chat_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'This album will be removed from both phones, unless it has already been saved. This can\'t be undone.'**
+  String get chatAlbumItDisappearsWithNo;
 
   /// screens/chat_screen.dart
   ///
@@ -4202,8 +4208,14 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'It will be removed from everyone\'s phones, unless it was already saved. This can\'t be undone.'**
+  /// **'It will be removed from everyone\'s phones, unless it has already been saved. This can\'t be undone.'**
   String get groupChatItDisappearsWithNo;
+
+  /// screens/group_chat_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'This album will be removed from everyone\'s phones, unless it has already been saved. This can\'t be undone.'**
+  String get groupChatAlbumItDisappearsWithNo;
 
   /// screens/group_chat_screen.dart
   ///

@@ -1381,6 +1381,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'यह दोनों फ़ोन से हट जाएगा, अगर पहले ही सेव न किया गया हो। इसे पलटा नहीं जा सकता।';
 
   @override
+  String get chatAlbumItDisappearsWithNo =>
+      'यह एल्बम दोनों फ़ोन से हट जाएगा, अगर पहले ही सेव न किया गया हो। इसे पलटा नहीं जा सकता।';
+
+  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -2624,6 +2628,10 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get groupChatItDisappearsWithNo =>
       'यह सबके फ़ोन से हट जाएगा, अगर पहले ही सेव न किया गया हो। इसे पलटा नहीं जा सकता।';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'यह एल्बम सबके फ़ोन से हट जाएगा, अगर पहले ही सेव न किया गया हो। इसे पलटा नहीं जा सकता।';
 
   @override
   String get groupChatUnsend => 'वापस लें';

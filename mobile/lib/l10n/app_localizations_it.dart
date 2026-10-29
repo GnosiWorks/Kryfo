@@ -1386,6 +1386,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Sarà rimosso da entrambi i telefoni, a meno che non sia già stato salvato. Non si può annullare.';
 
   @override
+  String get chatAlbumItDisappearsWithNo =>
+      'L\'album sarà rimosso da entrambi i telefoni, a meno che non sia già stato salvato. Non si può annullare.';
+
+  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -2643,6 +2647,10 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get groupChatItDisappearsWithNo =>
       'Sarà rimosso dai telefoni di tutti, a meno che non sia già stato salvato. Non si può annullare.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'L\'album sarà rimosso dai telefoni di tutti, a meno che non sia già stato salvato. Non si può annullare.';
 
   @override
   String get groupChatUnsend => 'Ritira';

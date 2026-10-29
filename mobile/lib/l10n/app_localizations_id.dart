@@ -1367,6 +1367,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Pesan ini akan dihapus dari kedua ponsel, kecuali sudah disimpan. Ini tidak bisa dibatalkan.';
 
   @override
+  String get chatAlbumItDisappearsWithNo =>
+      'Album ini akan dihapus dari kedua ponsel, kecuali sudah disimpan. Ini tidak bisa dibatalkan.';
+
+  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -2612,6 +2616,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get groupChatItDisappearsWithNo =>
       'Pesan ini akan dihapus dari ponsel semua orang, kecuali sudah disimpan. Ini tidak bisa dibatalkan.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'Album ini akan dihapus dari ponsel semua orang, kecuali sudah disimpan. Ini tidak bisa dibatalkan.';
 
   @override
   String get groupChatUnsend => 'Tarik pesan';
