@@ -18,6 +18,11 @@ Future<String?> Function() claimInvite = readyInvite;
 
 const _unreached = 'error: bad answer from the registry';
 
+/// claims on their way to the registry. while one runs the key must stay:
+/// the registry may already hold this key's invite under the name
+final claimsInFlight = ValueNotifier<int>(0);
+bool get claimInFlight => claimsInFlight.value > 0;
+
 class HandleClaimer extends ChangeNotifier {
   final TextEditingController ctrl;
   HandleClaimer(this.ctrl);
@@ -99,23 +104,28 @@ class HandleClaimer extends ChangeNotifier {
     final h = typed;
     if (h.isEmpty || state != 'free' || busy) return null;
     busy = true;
+    claimsInFlight.value++;
     asking(true);
     _changed();
-    // same invite the qr code carries, so the registry only holds what is
-    // already public. on a first start it waits for the onion: the registry
-    // takes no invite without one
-    final uri = sessionQuiet ? null : await claimInvite();
-    final r = sessionQuiet
-        ? await unreachedLater(_unreached)
-        : uri == null
-        ? _unreached
-        : await engine.handleClaim(h, uri, bio);
-    // kept even when the page is gone: the registry already holds it
-    if (r == 'ok') await appState.setMyHandle(h, bio: bio, invite: uri);
-    busy = false;
-    asking(false);
-    _changed();
-    return r;
+    try {
+      // same invite the qr code carries, so the registry only holds what is
+      // already public. on a first start it waits for the onion: the registry
+      // takes no invite without one
+      final uri = sessionQuiet ? null : await claimInvite();
+      final r = sessionQuiet
+          ? await unreachedLater(_unreached)
+          : uri == null
+          ? _unreached
+          : await engine.handleClaim(h, uri, bio);
+      // kept even when the page is gone: the registry already holds it
+      if (r == 'ok') await appState.setMyHandle(h, bio: bio, invite: uri);
+      return r;
+    } finally {
+      claimsInFlight.value--;
+      busy = false;
+      asking(false);
+      _changed();
+    }
   }
 
   /// the registry answers a quiet session after a wait like this one

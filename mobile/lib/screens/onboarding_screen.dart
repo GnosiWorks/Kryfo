@@ -122,7 +122,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   // system back walks one step back; only the first step leaves the app
   void _back() {
     final to = _at - 1;
-    if (to < 0) return;
+    // a claim on its way holds this key: the key step stays out of reach
+    if (to < 0 || claimInFlight) return;
     HapticFeedback.selectionClick();
     _go(to);
   }
@@ -731,7 +732,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
   bool _busy = false;
 
   Future<void> _regenerate() async {
-    if (_busy || widget.appState.myHandle != null) return;
+    if (_busy || widget.appState.myHandle != null || claimInFlight) return;
     final still = motionStill(context);
     _reveal.value = 1;
     setState(() {
@@ -839,8 +840,9 @@ class _IdentityScreenState extends State<_IdentityScreen>
               // a claimed @name points at this key's invite: a new key would
               // leave it pointing at one nobody holds, so the words stay
               ListenableBuilder(
-                listenable: widget.appState,
-                builder: (_, _) => widget.appState.myHandle != null
+                listenable: Listenable.merge([widget.appState, claimsInFlight]),
+                builder: (_, _) =>
+                    widget.appState.myHandle != null || claimInFlight
                     ? const SizedBox.shrink()
                     : Padding(
                         padding: const EdgeInsets.only(top: 10),

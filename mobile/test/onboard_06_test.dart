@@ -273,6 +273,41 @@ void main() {
       await t.pumpWidget(const SizedBox());
     });
 
+    testWidgets('a claim on its way keeps the key: no back, no new key', (
+      t,
+    ) async {
+      final gate = Completer<String?>();
+      claimInvite = () => gate.future;
+      addTearDown(() => claimInvite = readyInvite);
+      addTearDown(() => appState.setMyHandle(null));
+      final pages = await toName(t);
+      await t.enterText(find.byType(TextField), 'wren');
+      await t.pump(const Duration(milliseconds: 600));
+      await t.pump();
+      await t.tap(find.text(l10n.onboardingNameClaim('wren')));
+      await t.pump();
+      expect(find.text(l10n.handleClaiming), findsOneWidget);
+      // system back and the bar's arrow both stay on the step
+      await t.binding.handlePopRoute();
+      await t.pump(const Duration(seconds: 1));
+      expect(pages.page, 2);
+      await t.tap(find.byTooltip(l10n.commonBack));
+      await t.pump(const Duration(seconds: 1));
+      expect(pages.page, 2);
+      // the key step reached anyway: no new key on offer
+      pages.jumpToPage(1);
+      await t.pump();
+      await t.pump(const Duration(seconds: 2));
+      expect(find.text(l10n.onboardingUseThisName), findsOneWidget);
+      expect(find.text(l10n.onboardingTryAnother), findsNothing);
+      gate.complete(_v3);
+      await t.pump();
+      await t.pump(const Duration(seconds: 1));
+      expect(appState.myHandle, 'wren');
+      expect(claimInFlight, isFalse);
+      await t.pumpWidget(const SizedBox());
+    });
+
     test('a claim waits for the invite with its onion', () async {
       expect(claimInvite, readyInvite);
       var gate = Completer<String?>();
