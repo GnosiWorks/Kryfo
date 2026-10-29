@@ -65,6 +65,33 @@ class FakeKeyring implements SystemSeal {
   }
 }
 
+// the toy crypto, holding on to every key it was handed or made
+class _Watched implements VaultCrypto {
+  final keys = <Uint8List>[];
+  final _toy = ToyVaultCrypto();
+
+  @override
+  Future<Uint8List?> keyOf(String passphrase, Uint8List salt, int logN) async {
+    final k = await _toy.keyOf(passphrase, salt, logN);
+    keys.add(k!);
+    return k;
+  }
+
+  @override
+  Uint8List seal(Uint8List key, Uint8List plain) {
+    keys.add(key);
+    return _toy.seal(key, plain);
+  }
+
+  @override
+  Uint8List? open(Uint8List key, Uint8List sealed) {
+    keys.add(key);
+    return _toy.open(key, sealed);
+  }
+
+  bool get allZero => keys.every((k) => k.every((b) => b == 0));
+}
+
 class _Full implements VaultDisk {
   static bool full = false;
   @override
@@ -89,8 +116,11 @@ class _Api implements SecretApi {
     return s == null ? (null, KeyringFind.none) : (s, KeyringFind.found);
   }
 
+  Uint8List? handed;
+
   @override
   bool store(Map<String, String> attrs, String label, Uint8List secret) {
+    handed = secret;
     if (!storeOk) return false;
     store_[attrs.toString()] = Uint8List.fromList(secret);
     return true;
@@ -119,8 +149,11 @@ class _Win implements WinCrypt {
   final keys = <String, int>{};
   final deleted = <String>[];
 
+  final handed = <Uint8List>[];
+
   @override
   Uint8List? protect(Uint8List data, Uint8List entropy) {
+    handed.add(data);
     if (!protectOk) return null;
     return Uint8List.fromList([entropy.length, ...entropy, ...data.reversed]);
   }
@@ -141,6 +174,7 @@ class _Win implements WinCrypt {
 
   @override
   Uint8List tpmWrap(String name, Uint8List secret) {
+    handed.add(secret);
     if (tpmBreaks) throw const WinCryptError(0x80284001);
     final k = keys[name] = (keys[name] ?? 0) + 1;
     return Uint8List.fromList([for (final b in secret) b ^ k, 0xee]);
@@ -179,9 +213,6 @@ class _Win implements WinCrypt {
   return (slots, at + 32);
 }
 
-String _hexOf(List<int> b) =>
-    b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
-
 /// the data key out of an older copy, with the passphrase or the system
 /// secret that opened it then
 Future<Uint8List?> dataKeyOfCopy(
@@ -194,11 +225,7 @@ Future<Uint8List?> dataKeyOfCopy(
   List<int> kek;
   int at;
   if (kind == 1) {
-    final k = await toy.keyOf(pass!, Uint8List.sublistView(d, 1, 17), d[0]);
-    kek = [
-      for (var i = 0; i < 64; i += 2)
-        int.parse(k!.substring(i, i + 2), radix: 16),
-    ];
+    kek = (await toy.keyOf(pass!, Uint8List.sublistView(d, 1, 17), d[0]))!;
     at = 17;
   } else {
     kek = secret!;
@@ -210,7 +237,7 @@ Future<Uint8List?> dataKeyOfCopy(
     kek,
   ).convert([...utf8.encode('kryfo vault slot'), ...fresh]);
   return toy.open(
-    _hexOf(wrap.bytes),
+    Uint8List.fromList(wrap.bytes),
     Uint8List.sublistView(d, at + 16, at + 16 + 48),
   );
 }
@@ -222,7 +249,11 @@ bool opensBody(Uint8List raw, Uint8List dk) {
     sha256,
     dk,
   ).convert([...utf8.encode('kryfo vault body'), ...raw.sublist(0, at)]);
-  return ToyVaultCrypto().open(_hexOf(body.bytes), raw.sublist(at)) != null;
+  return ToyVaultCrypto().open(
+        Uint8List.fromList(body.bytes),
+        raw.sublist(at),
+      ) !=
+      null;
 }
 
 void main() {
@@ -582,6 +613,52 @@ void main() {
       api.answer = null;
       expect(await seal.forget(id), isTrue);
       expect(api.store_, isEmpty);
+    });
+  });
+
+  group('keys left in memory', () {
+    test('every key the vault derives is zeroed once used', () async {
+      final c = _Watched();
+      DesktopVault v() => DesktopVault(path, crypto: c);
+      final a = v();
+      await a.create(_pass);
+      await a.write('db', 'key');
+      expect(await a.changePassphrase(_pass, _next), isTrue);
+      expect(await a.removePassphrase(_next, ring), isTrue);
+      await a.addPassphrase(_pass, seal: ring);
+      a.close();
+      final b = v();
+      expect(await b.open(_pass, seal: ring), isTrue);
+      await b.forgetting;
+      expect(await b.open('not it at all here'), isFalse);
+      b.close();
+      File(path).writeAsBytesSync(await oldVaultFile(3, {'db': 'old'}));
+      final o = v();
+      expect(await o.open(_pass), isTrue);
+      o.close();
+      expect(c.keys, isNotEmpty);
+      expect(c.allZero, isTrue);
+    });
+
+    test('the keyring worker gets a copy, zeroed after', () async {
+      final api = _Api();
+      final seal = KeyringSeal(api, run: _here);
+      final secret = Uint8List.fromList(List.generate(32, (i) => i + 1));
+      await seal.keep(Uint8List(16), secret);
+      expect(identical(api.handed, secret), isFalse);
+      expect(api.handed!.every((b) => b == 0), isTrue);
+      expect(secret.first, 1);
+    });
+
+    test('the windows worker gets a copy, zeroed after', () async {
+      final api = _Win();
+      final seal = WindowsSeal(api, run: _here);
+      final secret = Uint8List.fromList(List.generate(32, (i) => i + 1));
+      await seal.keep(Uint8List(16), secret);
+      final given = api.handed.first;
+      expect(identical(given, secret), isFalse);
+      expect(given.every((b) => b == 0), isTrue);
+      expect(secret.first, 1);
     });
   });
 

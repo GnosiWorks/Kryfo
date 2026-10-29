@@ -87,25 +87,40 @@ class WindowsSeal implements SystemSeal {
   @override
   Future<SealedSecret> keep(Uint8List id, Uint8List secret) async {
     final api = this.api;
-    return _run(() {
-      var how = SealHow.dpapi;
-      var inner = secret;
-      if (api.tpmThere()) {
+    // a copy of its own goes to the worker, zeroed there and here: the
+    // caller's stays as it was
+    final s = Uint8List.fromList(secret);
+    try {
+      return await _run(() {
         try {
-          inner = api.tpmWrap(_name(id), secret);
-          how = SealHow.tpm;
-        } catch (_) {
-          // a tpm that will not make or use a key: dpapi alone
-          api.tpmDelete(_name(id));
+          return _keep(api, id, s);
+        } finally {
+          s.fillRange(0, s.length, 0);
         }
+      });
+    } finally {
+      s.fillRange(0, s.length, 0);
+    }
+  }
+
+  static SealedSecret _keep(WinCrypt api, Uint8List id, Uint8List secret) {
+    var how = SealHow.dpapi;
+    var inner = secret;
+    if (api.tpmThere()) {
+      try {
+        inner = api.tpmWrap(_name(id), secret);
+        how = SealHow.tpm;
+      } catch (_) {
+        // a tpm that will not make or use a key: dpapi alone
+        api.tpmDelete(_name(id));
       }
-      final blob = api.protect(inner, _entropy(id));
-      if (blob == null) {
-        if (how == SealHow.tpm) api.tpmDelete(_name(id));
-        throw const SealError(SealFail.refused);
-      }
-      return SealedSecret(how, blob);
-    });
+    }
+    final blob = api.protect(inner, _entropy(id));
+    if (blob == null) {
+      if (how == SealHow.tpm) api.tpmDelete(_name(id));
+      throw const SealError(SealFail.refused);
+    }
+    return SealedSecret(how, blob);
   }
 
   @override

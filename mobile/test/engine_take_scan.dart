@@ -72,6 +72,7 @@ List<String> takeMisses(Map<String, String> files, Set<String> goStrings) {
     final takers = {
       'engineTake',
       'engineTakeSecret',
+      'engineTakeSecretKey',
       ...RegExp(
         r'(\w+)\s*\(\s*Pointer<Utf8>\s+(\w+)\s*\)\s*(?:=>|\{)\s*'
         r'(?:final\s+\w+\s*=\s*)?engineTake(?:Secret)?\(\s*\2\s*\)',

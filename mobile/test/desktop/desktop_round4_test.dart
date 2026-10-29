@@ -26,12 +26,8 @@ Future<Uint8List> oldVaultFile(int version, Map<String, String> m) async {
   final c = ToyVaultCrypto();
   final salt = Uint8List.fromList(List.generate(16, (i) => i));
   final fresh = Uint8List.fromList(List.generate(32, (i) => 100 + i));
-  final k = await c.keyOf(_pass, salt, 15);
-  final key = [
-    for (var i = 0; i < k!.length; i += 2)
-      int.parse(k.substring(i, i + 2), radix: 16),
-  ];
-  final fk = Hmac(sha256, key).convert(fresh).toString();
+  final key = (await c.keyOf(_pass, salt, 15))!;
+  final fk = Uint8List.fromList(Hmac(sha256, key).convert(fresh).bytes);
   final body = utf8.encode(jsonEncode(m));
   // version 3 padded the body so the file filled whole steps
   final sealed = c.seal(

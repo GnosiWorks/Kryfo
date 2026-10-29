@@ -17,42 +17,38 @@ import '../host_engine.dart';
 class _Toy implements VaultCrypto {
   int derived = 0;
   @override
-  Future<String?> keyOf(String passphrase, Uint8List salt, int logN) async {
+  Future<Uint8List?> keyOf(String passphrase, Uint8List salt, int logN) async {
     derived++;
-    return sha256.convert([...utf8.encode(passphrase), ...salt]).toString();
+    return Uint8List.fromList(
+      sha256.convert([...utf8.encode(passphrase), ...salt]).bytes,
+    );
   }
 
-  List<int> _stream(String k, int n) {
+  List<int> _stream(Uint8List k, int n) {
     final out = <int>[];
     var i = 0;
     while (out.length < n) {
-      out.addAll(sha256.convert([...utf8.encode(k), i++]).bytes);
+      out.addAll(sha256.convert([...k, i++]).bytes);
     }
     return out.sublist(0, n);
   }
 
   @override
-  Uint8List seal(String keyHex, Uint8List plain) {
-    final s = _stream(keyHex, plain.length);
+  Uint8List seal(Uint8List key, Uint8List plain) {
+    final s = _stream(key, plain.length);
     final c = [for (var i = 0; i < plain.length; i++) plain[i] ^ s[i]];
-    final tag = Hmac(
-      sha256,
-      utf8.encode(keyHex),
-    ).convert(c).bytes.sublist(0, 16);
+    final tag = Hmac(sha256, key).convert(c).bytes.sublist(0, 16);
     return Uint8List.fromList([...c, ...tag]);
   }
 
   @override
-  Uint8List? open(String keyHex, Uint8List sealed) {
+  Uint8List? open(Uint8List key, Uint8List sealed) {
     final c = sealed.sublist(0, sealed.length - 16);
-    final tag = Hmac(
-      sha256,
-      utf8.encode(keyHex),
-    ).convert(c).bytes.sublist(0, 16);
+    final tag = Hmac(sha256, key).convert(c).bytes.sublist(0, 16);
     for (var i = 0; i < 16; i++) {
       if (tag[i] != sealed[c.length + i]) return null;
     }
-    final s = _stream(keyHex, c.length);
+    final s = _stream(key, c.length);
     return Uint8List.fromList([for (var i = 0; i < c.length; i++) c[i] ^ s[i]]);
   }
 }
@@ -261,14 +257,14 @@ void main() {
       const c = EngineVaultCrypto();
       final salt = Uint8List.fromList(List.generate(16, (i) => i));
       final a = await c.keyOf(_pass, salt, 15);
-      expect(a, matches(RegExp(r'^[0-9a-f]{64}$')));
+      expect(a, hasLength(32));
       expect(await c.keyOf(_pass, salt, 15), a);
       expect(await c.keyOf('$_pass.', salt, 15), isNot(a));
       expect(await c.keyOf(_pass, salt, 16), isNot(a));
       expect(await c.keyOf(_pass, salt, 14), isNull);
       final sealed = c.seal(a!, Uint8List.fromList(utf8.encode('{}')));
       expect(sealed.length, 2 + 16);
-      expect(c.open('00' * 32, sealed), isNull);
+      expect(c.open(Uint8List(32), sealed), isNull);
       expect(utf8.decode(c.open(a, sealed)!), '{}');
     }, skip: skip);
   });

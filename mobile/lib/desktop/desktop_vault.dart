@@ -18,7 +18,7 @@ import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage_platform_interface.dart';
 
-import '../engine_strings.dart' show engineTakeSecret, freeSecret;
+import '../engine_strings.dart' show engineTakeSecretKey, freeSecret;
 import 'desktop_posix.dart' show syncFolder;
 import 'system_seal.dart';
 
@@ -42,14 +42,17 @@ const _freshLen = 32;
 // the record type the seal binds
 const _type = 0x56;
 
-/// the cryptography, behind a seam so a test can run it on the host engine
+/// the cryptography, behind a seam so a test can run it on the host engine.
+/// keys are 32 bytes, never a string, so the vault can zero every copy it
+/// holds once it is done with it
 abstract class VaultCrypto {
-  /// 64 hex, or null when the engine refused
-  Future<String?> keyOf(String passphrase, Uint8List salt, int logN);
-  Uint8List seal(String keyHex, Uint8List plain);
+  /// the key scrypt makes, or null when the engine refused. the caller
+  /// zeroes it
+  Future<Uint8List?> keyOf(String passphrase, Uint8List salt, int logN);
+  Uint8List seal(Uint8List key, Uint8List plain);
 
   /// null when the key is wrong or a byte changed
-  Uint8List? open(String keyHex, Uint8List sealed);
+  Uint8List? open(Uint8List key, Uint8List sealed);
 }
 
 typedef _KeyC = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Uint8>, Int32);
@@ -66,7 +69,7 @@ typedef _ChunkC =
 typedef _Chunk =
     int Function(Pointer<Utf8>, int, int, Pointer<Uint8>, int, Pointer<Uint8>);
 
-String? _engineKey(String passphrase, Uint8List salt, int logN) {
+Uint8List? _engineKey(String passphrase, Uint8List salt, int logN) {
   final fn = DynamicLibrary.process().lookupFunction<_KeyC, _Key>(
     'HaloVaultKey',
   );
@@ -74,8 +77,7 @@ String? _engineKey(String passphrase, Uint8List salt, int logN) {
   final ps = calloc<Uint8>(_saltLen);
   try {
     ps.asTypedList(_saltLen).setAll(0, salt);
-    final r = engineTakeSecret(fn(pp, ps, logN));
-    return r.startsWith('error') ? null : r;
+    return engineTakeSecretKey(fn(pp, ps, logN));
   } finally {
     freeSecret(pp);
     calloc.free(ps);
@@ -86,9 +88,10 @@ String? _engineKey(String passphrase, Uint8List salt, int logN) {
 class EngineVaultCrypto implements VaultCrypto {
   const EngineVaultCrypto();
 
-  // scrypt takes a tenth of a second or so: never on the frame's thread
+  // scrypt takes a tenth of a second or so: never on the frame's thread.
+  // the key comes back moved, not copied (Isolate.exit)
   @override
-  Future<String?> keyOf(String passphrase, Uint8List salt, int logN) =>
+  Future<Uint8List?> keyOf(String passphrase, Uint8List salt, int logN) =>
       Isolate.run(() => _engineKey(passphrase, salt, logN));
 
   static final _sealChunk = DynamicLibrary.process()
@@ -96,13 +99,20 @@ class EngineVaultCrypto implements VaultCrypto {
   static final _openChunk = DynamicLibrary.process()
       .lookupFunction<_ChunkC, _Chunk>('HaloOpenChunk');
 
-  Uint8List? _run(_Chunk call, String keyHex, Uint8List data) {
-    final k = keyHex.toNativeUtf8();
+  // the key as the engine reads it, 64 hex in native memory zeroed after
+  Uint8List? _run(_Chunk call, Uint8List key, Uint8List data) {
+    if (key.length != 32) throw ArgumentError('key length');
+    final k = calloc<Uint8>(65);
+    const digits = '0123456789abcdef';
+    for (var i = 0; i < 32; i++) {
+      k[2 * i] = digits.codeUnitAt(key[i] >> 4);
+      k[2 * i + 1] = digits.codeUnitAt(key[i] & 15);
+    }
     final cap = data.length + 16;
     final inp = calloc<Uint8>(cap), out = calloc<Uint8>(cap);
     try {
       inp.asTypedList(cap).setAll(0, data);
-      final n = call(k, 0, _type, inp, data.length, out);
+      final n = call(k.cast(), 0, _type, inp, data.length, out);
       if (n < 0 || n > cap) return null;
       return Uint8List.fromList(out.asTypedList(n));
     } finally {
@@ -110,13 +120,14 @@ class EngineVaultCrypto implements VaultCrypto {
       out.asTypedList(cap).fillRange(0, cap, 0);
       calloc.free(inp);
       calloc.free(out);
-      freeSecret(k);
+      k.asTypedList(65).fillRange(0, 65, 0);
+      calloc.free(k);
     }
   }
 
   @override
-  Uint8List seal(String keyHex, Uint8List plain) {
-    final s = _run(_sealChunk, keyHex, plain);
+  Uint8List seal(Uint8List key, Uint8List plain) {
+    final s = _run(_sealChunk, key, plain);
     if (s == null || s.length != plain.length + 16) {
       throw StateError('seal failed');
     }
@@ -124,19 +135,11 @@ class EngineVaultCrypto implements VaultCrypto {
   }
 
   @override
-  Uint8List? open(String keyHex, Uint8List sealed) {
+  Uint8List? open(Uint8List key, Uint8List sealed) {
     if (sealed.length < 16) return null;
-    return _run(_openChunk, keyHex, sealed);
+    return _run(_openChunk, key, sealed);
   }
 }
-
-String _hex(List<int> b) =>
-    b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
-
-List<int> _unhex(String h) => [
-  for (var i = 0; i + 1 < h.length; i += 2)
-    int.parse(h.substring(i, i + 2), radix: 16),
-];
 
 class VaultLocked implements Exception {
   const VaultLocked();
@@ -274,7 +277,7 @@ class DesktopVault {
   Uint8List? _id;
   List<_Slot> _slots = const [];
   // the data key
-  List<int>? _key;
+  Uint8List? _key;
   // what the file on disk holds
   Map<String, String>? _map;
   final _waiting = <_Change>[];
@@ -311,22 +314,41 @@ class DesktopVault {
   /// open, and a passphrase is what opens it
   bool get hasPassphrase => _slots.any((s) => s.kind == _slotPass);
 
-  Uint8List _bytes(int n) =>
-      Uint8List.fromList(List.generate(n, (_) => _random.nextInt(256)));
+  // filled in place: no other list ever holds them
+  Uint8List _bytes(int n) {
+    final b = Uint8List(n);
+    for (var i = 0; i < n; i++) {
+      b[i] = _random.nextInt(256);
+    }
+    return b;
+  }
+
+  // an hmac's bytes as they come, for the caller to zero. the hmac's own
+  // padded copies of its key sit inside package:crypto, out of reach
+  static Uint8List _mac(List<int> key, List<int> data) {
+    final b = Hmac(sha256, key).convert(data).bytes;
+    return b is Uint8List ? b : Uint8List.fromList(b);
+  }
 
   static final _bodyLabel = utf8.encode('kryfo vault body');
   static final _slotLabel = utf8.encode('kryfo vault slot');
 
   // a key of its own for every write, bound to the whole head: a slot
   // swapped, added or dropped and the body no longer opens
-  String _bodyKey(List<int> dk, List<int> head) =>
-      _hex(Hmac(sha256, dk).convert([..._bodyLabel, ...head]).bytes);
+  Uint8List _bodyKey(List<int> dk, List<int> head) =>
+      _mac(dk, [..._bodyLabel, ...head]);
 
-  String _wrapKey(List<int> kek, List<int> fresh) =>
-      _hex(Hmac(sha256, kek).convert([..._slotLabel, ...fresh]).bytes);
+  Uint8List _wrapKey(List<int> kek, List<int> fresh) =>
+      _mac(kek, [..._slotLabel, ...fresh]);
 
   Uint8List? _unwrap(List<int> kek, Uint8List fresh, Uint8List wrapped) {
-    final dk = _crypto.open(_wrapKey(kek, fresh), wrapped);
+    final w = _wrapKey(kek, fresh);
+    final Uint8List? dk;
+    try {
+      dk = _crypto.open(w, wrapped);
+    } finally {
+      w.fillRange(0, w.length, 0);
+    }
     if (dk == null) return null;
     if (dk.length != _dkLen) {
       dk.fillRange(0, dk.length, 0);
@@ -335,18 +357,28 @@ class DesktopVault {
     return dk;
   }
 
-  _Slot _passSlot(List<int> kek, Uint8List salt, int cost, List<int> dk) {
+  // [dk] sealed as it is: no copy of it made
+  Uint8List _wrapped(List<int> kek, Uint8List fresh, Uint8List dk) {
+    final k = _wrapKey(kek, fresh);
+    try {
+      return _crypto.seal(k, dk);
+    } finally {
+      k.fillRange(0, k.length, 0);
+    }
+  }
+
+  _Slot _passSlot(List<int> kek, Uint8List salt, int cost, Uint8List dk) {
     final fresh = _bytes(_slotFreshLen);
-    final w = _crypto.seal(_wrapKey(kek, fresh), Uint8List.fromList(dk));
+    final w = _wrapped(kek, fresh, dk);
     return _Slot(
       _slotPass,
       Uint8List.fromList([cost, ...salt, ...fresh, ...w]),
     );
   }
 
-  _Slot _systemSlot(SealedSecret s, List<int> sk, List<int> dk) {
+  _Slot _systemSlot(SealedSecret s, List<int> sk, Uint8List dk) {
     final fresh = _bytes(_slotFreshLen);
-    final w = _crypto.seal(_wrapKey(sk, fresh), Uint8List.fromList(dk));
+    final w = _wrapped(sk, fresh, dk);
     return _Slot(
       _slotSystem,
       Uint8List.fromList([s.how, ...fresh, ...w, ...s.data]),
@@ -354,10 +386,8 @@ class DesktopVault {
   }
 
   // a passphrase to a key encryption key, at [cost]
-  Future<List<int>?> _kek(String passphrase, Uint8List salt, int cost) async {
-    final k = await _crypto.keyOf(passphrase, salt, cost);
-    return k == null ? null : _unhex(k);
-  }
+  Future<Uint8List?> _kek(String passphrase, Uint8List salt, int cost) =>
+      _crypto.keyOf(passphrase, salt, cost);
 
   static bool _sameBytes(List<int> a, List<int> b) {
     if (a.length != b.length) return false;
@@ -452,10 +482,13 @@ class DesktopVault {
   }
 
   bool _openBody(Uint8List raw, _Head h, Uint8List dk) {
-    final plain = _crypto.open(
-      _bodyKey(dk, raw.sublist(0, h.length)),
-      Uint8List.fromList(raw.sublist(h.length)),
-    );
+    final bk = _bodyKey(dk, raw.sublist(0, h.length));
+    final Uint8List? plain;
+    try {
+      plain = _crypto.open(bk, Uint8List.fromList(raw.sublist(h.length)));
+    } finally {
+      bk.fillRange(0, bk.length, 0);
+    }
     if (plain == null) {
       dk.fillRange(0, dk.length, 0);
       return false;
@@ -583,9 +616,14 @@ class DesktopVault {
     final fresh = raw.sublist(saltAt + _saltLen, head);
     final key = await _kek(passphrase, salt, cost);
     if (key == null) return false;
-    final fileKey = _hex(Hmac(sha256, key).convert(fresh).bytes);
+    final fileKey = _mac(key, fresh);
     key.fillRange(0, key.length, 0);
-    final plain = _crypto.open(fileKey, Uint8List.fromList(raw.sublist(head)));
+    final Uint8List? plain;
+    try {
+      plain = _crypto.open(fileKey, Uint8List.fromList(raw.sublist(head)));
+    } finally {
+      fileKey.fillRange(0, fileKey.length, 0);
+    }
     if (plain == null) return false;
     final Object? m;
     try {
@@ -802,7 +840,7 @@ class DesktopVault {
     return done;
   }
 
-  void _persist(Map<String, String> m, List<_Slot> slots, [List<int>? key]) {
+  void _persist(Map<String, String> m, List<_Slot> slots, [Uint8List? key]) {
     final dk = key ?? _key ?? (throw const VaultLocked());
     final head = BytesBuilder(copy: false)
       ..add(_magic)
@@ -819,10 +857,12 @@ class DesktopVault {
     head.add(_bytes(_freshLen));
     final h = head.takeBytes();
     final plain = padded(utf8.encode(jsonEncode(m)), h.length + 16);
+    final bk = _bodyKey(dk, h);
     final Uint8List sealed;
     try {
-      sealed = _crypto.seal(_bodyKey(dk, h), plain);
+      sealed = _crypto.seal(bk, plain);
     } finally {
+      bk.fillRange(0, bk.length, 0);
       plain.fillRange(0, plain.length, 0);
     }
     _disk.replace(path, Uint8List.fromList([...h, ...sealed]));

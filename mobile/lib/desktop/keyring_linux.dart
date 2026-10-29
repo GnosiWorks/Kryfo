@@ -55,7 +55,21 @@ class KeyringSeal implements SystemSeal {
   Future<SealedSecret> keep(Uint8List id, Uint8List secret) async {
     final api = this.api;
     final attrs = _attrs(id);
-    final ok = await _run(() => api.store(attrs, 'Kryfo', secret));
+    // a copy of its own goes to the worker, zeroed there and here: the
+    // caller's stays as it was
+    final s = Uint8List.fromList(secret);
+    final bool ok;
+    try {
+      ok = await _run(() {
+        try {
+          return api.store(attrs, 'Kryfo', s);
+        } finally {
+          s.fillRange(0, s.length, 0);
+        }
+      });
+    } finally {
+      s.fillRange(0, s.length, 0);
+    }
     if (!ok) throw const SealError(SealFail.refused);
     return SealedSecret(SealHow.keyring, Uint8List(0));
   }
