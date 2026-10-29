@@ -28,6 +28,7 @@ const androidChannels = [
   'kryfo/app_icon',
   'kryfo/net',
   'kryfo/video',
+  'kryfo/transfers',
 ];
 
 /// methods with a desktop answer on halo/platform. the rest say not here:
