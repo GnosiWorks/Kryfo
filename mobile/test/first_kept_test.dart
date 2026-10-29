@@ -82,11 +82,11 @@ class _Engine implements HaloEngine {
   @override
   String myEdPubkey() => ed;
   @override
-  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {}
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) {}
   @override
-  String firstContactPk(int counter) => 'fc$counter';
+  String firstContactPk(int ident, int counter) => 'fc$counter';
   @override
-  Future<String> subscribeFirstContact(int counter) async => 'ok';
+  Future<String> subscribeFirstContact(int ident, int counter) async => 'ok';
   var onion = 'ok';
   @override
   Future<String> sendTo(String addr, String msg) async => onion;
@@ -94,7 +94,7 @@ class _Engine implements HaloEngine {
   final firsts = <String>[];
   Completer<String>? firstGate;
   @override
-  Future<String> sendFirstContact(String x, String fc, String c) {
+  Future<String> sendFirstContact(int ident, String x, String fc, String c) {
     firsts.add(c);
     return firstGate?.future ?? Future.value('ok');
   }
@@ -102,7 +102,7 @@ class _Engine implements HaloEngine {
   // what went to a pair address
   final pairs = <String>[];
   @override
-  Future<String> nostrSend(String x, String c) async {
+  Future<String> nostrSend(int ident, String x, String c) async {
     pairs.add(c);
     return 'ok';
   }
@@ -144,11 +144,11 @@ class _Io extends AppIo {
   }
 
   @override
-  void listen(String xPub, {bool fresh = false}) {}
+  void listen(int ident, String xPub, {bool fresh = false}) {}
   @override
-  void unlisten(String xPub) {}
+  void unlisten(int ident, String xPub) {}
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     sent.add(('relay', cipher));
     return 'ok';
   }
@@ -160,7 +160,12 @@ class _Io extends AppIo {
   }
 
   @override
-  Future<String> firstContactSend(String x, String fc, String c) async {
+  Future<String> firstContactSend(
+    int ident,
+    String x,
+    String fc,
+    String c,
+  ) async {
     sent.add(('fc', c));
     return 'ok';
   }

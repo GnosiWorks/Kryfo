@@ -37,7 +37,7 @@ func knockSubs(t *testing.T, contacts int) *knockWorld {
 		startSub(h, idle)
 		w.keys = append(w.keys, h)
 		w.peers = append(w.peers, h)
-		_, pk, _ := nip17RcvAddress(p.pub)
+		_, pk, _ := nip17RcvAddressAs(testMain(), p.pub)
 		w.contacts = append(w.contacts, pk)
 	}
 	startSub("firstcontact", idle)
@@ -46,7 +46,7 @@ func knockSubs(t *testing.T, contacts int) *knockWorld {
 	oldFc := fcCounterNow
 	fcCounterNow = 0
 	nostrMu.Unlock()
-	_, w.fc, _ = nip17FirstContactKeys(0)
+	_, w.fc, _ = nip17FirstContactKeysAs(testMain(), 0)
 	w.room = newXid(t)
 	member := newXid(t)
 	sk, pk, err := nip17RcvAddressAs(w.room, member.pub)
@@ -304,7 +304,7 @@ func TestKnockFirstContactResetTakesANewCircuit(t *testing.T) {
 	fcCounterNow = 1
 	nostrMu.Unlock()
 	dropLane(laneFirstContact)
-	_, fresh, _ := nip17FirstContactKeys(1)
+	_, fresh, _ := nip17FirstContactKeysAs(testMain(), 1)
 	out := runRegister(t, []knockItem{{I: knockID(fresh), E: "https://push.example.org/b"}, {I: knockID(w.fc), E: ""}})
 	if len(out.Done) != 1 || out.Done[0] != knockID(fresh) {
 		t.Fatalf("after the reset: %+v", out)

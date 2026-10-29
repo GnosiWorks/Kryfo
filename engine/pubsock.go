@@ -107,7 +107,7 @@ func pubGet(ctx context.Context, key pubKey, client *http.Client) (s *pubSock, f
 	// not tied to this caller's context, only to the route its client is of
 	// a burst can outlast a minute, and over a busy circuit the library's
 	// 800ms pong wait closes a socket that is only slow
-	r := nostr.NewRelay(context.Background(), key.url, subscribeRelayOptions())
+	r := nostr.NewRelay(context.Background(), key.url, relayOptionsFor(key.url))
 	base, bcancel := context.Background(), context.CancelFunc(func() {})
 	if route := routeOf(ctx); route != nil {
 		base, bcancel = onRoute(base, route)
@@ -213,6 +213,24 @@ func pubCloseAll(lane string) {
 	defer pubMu.Unlock()
 	for k, s := range pubSocks {
 		if lane != "" && k.lane != lane {
+			continue
+		}
+		delete(pubSocks, k)
+		if s.idle != nil {
+			s.idle.Stop()
+		}
+		if s.r != nil {
+			s.r.Close()
+		}
+	}
+}
+
+// every kept socket to relay u goes
+func pubCloseURL(u string) {
+	pubMu.Lock()
+	defer pubMu.Unlock()
+	for k, s := range pubSocks {
+		if k.url != u {
 			continue
 		}
 		delete(pubSocks, k)

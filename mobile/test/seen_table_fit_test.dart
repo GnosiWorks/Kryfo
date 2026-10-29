@@ -52,16 +52,14 @@ Future<void> _loadFonts() async {
 
 // the words of the table's cells and column names
 Set<String> _cells() => {
-  l10n.seenOnion,
-  l10n.seenRelay,
+  l10n.modesPrivate,
   l10n.seenFast,
   l10n.seenHidden,
   l10n.seenNever,
   l10n.seenOnDevice,
   l10n.seenYours,
   l10n.seenUnaudited,
-  l10n.seenOurRelay,
-  l10n.seenEveryRelay,
+  l10n.seenOurServers,
   l10n.seenIntroducer,
   l10n.seenRoomKeys,
   l10n.seenOverTor,

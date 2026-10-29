@@ -98,9 +98,10 @@ class _Engine implements HaloEngine {
   @override
   String myEdPubkey() => ed;
   @override
-  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {}
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) {}
   @override
-  void nostrUnsubscribeBg(String peerXPubHex) => dropped.add(peerXPubHex);
+  void nostrUnsubscribeBg(int ident, String peerXPubHex) =>
+      dropped.add(peerXPubHex);
   @override
   dynamic noSuchMethod(Invocation i) {
     engineAsked.add(i.memberName);
@@ -121,15 +122,20 @@ final unheard = <String>[];
 class _Io extends AppIo {
   const _Io();
   @override
-  void listen(String xPub, {bool fresh = false}) {}
+  void listen(int ident, String xPub, {bool fresh = false}) {}
   @override
-  void unlisten(String xPub) => unheard.add(xPub);
+  void unlisten(int ident, String xPub) => unheard.add(xPub);
   @override
-  Future<String> relaySend(String xPub, String cipher) async => 'ok';
+  Future<String> relaySend(int ident, String xPub, String cipher) async => 'ok';
   @override
   Future<String> onionSend(String onion, String cipher) async => 'ok';
   @override
-  Future<String> firstContactSend(String x, String fc, String c) async => 'ok';
+  Future<String> firstContactSend(
+    int ident,
+    String x,
+    String fc,
+    String c,
+  ) async => 'ok';
   @override
   Future<void> notify({
     required String title,

@@ -220,7 +220,7 @@ BridgeLine shownBridgeLine() {
   return appState.bridge.skipDirect ? line.watched() : line;
 }
 
-/// relay mode in one tap, where tor found no way in
+/// fast in one tap, where tor found no way in
 Future<void> switchToRelay(BuildContext context) async {
   HapticFeedback.mediumImpact();
   try {
@@ -229,7 +229,7 @@ Future<void> switchToRelay(BuildContext context) async {
     if (context.mounted) showHaloToast(context, l10n.modesNotChanged);
     return;
   }
-  if (context.mounted) showHaloToast(context, l10n.homeSwitchedToRelay);
+  if (context.mounted) showHaloToast(context, l10n.homeSwitchedToFastRoute);
 }
 
 /// android's wi-fi page, where a network's sign-in page is offered. no
@@ -324,10 +324,10 @@ class _BridgeStatusViewState extends State<BridgeStatusView> {
     final relay = line.offerRelay ? widget.onRelay : null;
     // the first filled, the second quiet under it
     final buttons = <(String, VoidCallback)>[
-      if (relay != null && line.relayFirst) (l10n.homeUseOurRelay, relay),
+      if (relay != null && line.relayFirst) (l10n.homeUseFast, relay),
       if (action != null)
         (bridgeActionLabel(action), () => widget.onAction!(action)),
-      if (relay != null && !line.relayFirst) (l10n.homeUseOurRelay, relay),
+      if (relay != null && !line.relayFirst) (l10n.homeUseFast, relay),
     ];
     final base = _base;
     final clock = base == null ? null : bridgeClock(base + _ticks * 1000);

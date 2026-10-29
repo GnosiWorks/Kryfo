@@ -49,15 +49,19 @@ class AppIo {
 
   // what a full shelf left on the relay for [xPub]: "mark", "free" or
   // "drop" (HaloNostrLetHeld)
-  Future<String> letHeld(String xPub, String how) =>
-      engine.nostrLetHeld(xPub, how);
+  // every call below that reaches the relays names the identity it runs
+  // on: [ident] is the one the contact knows (AppState.identOf)
+  Future<String> letHeld(int ident, String xPub, String how) =>
+      engine.nostrLetHeld(ident, xPub, how);
 
-  // "mark" for each of [xPubs] where anything is held: nothing restarts
-  Future<String> markHeld(List<String> xPubs) => engine.nostrMarkHeld(xPubs);
+  // "mark" for each of [peers] where anything is held: nothing restarts
+  Future<String> markHeld(List<(int, String)> peers) =>
+      engine.nostrMarkHeld(peers);
 
   // the pinned chats, live on the public relays first from the next start
   // or route switch on. the engine keeps them in memory only
-  Future<String> pinFirst(List<String> xPubs) => engine.nostrPinned(xPubs);
+  Future<String> pinFirst(List<(int, String)> peers) =>
+      engine.nostrPinned(peers);
 
   Future<List<String>> sessionAddresses() =>
       signalSession.sessionStore.allSessionAddresses();
@@ -184,17 +188,18 @@ class AppIo {
   Future<String> encrypt(String peer, String plain) =>
       signalEncrypt(peer, plain);
 
-  void listen(String xPub, {bool fresh = false}) =>
-      engine.nostrSubscribeBg(xPub, fresh: fresh);
+  void listen(int ident, String xPub, {bool fresh = false}) =>
+      engine.nostrSubscribeBg(ident, xPub, fresh: fresh);
 
-  void unlisten(String xPub) => engine.nostrUnsubscribeBg(xPub);
+  void unlisten(int ident, String xPub) =>
+      engine.nostrUnsubscribeBg(ident, xPub);
 
   String edPub() => engine.myEdPubkey();
 
   String xPub() => engine.myXPubkey();
 
-  Future<String> relaySend(String xPub, String cipher) =>
-      engine.nostrSend(xPub, cipher);
+  Future<String> relaySend(int ident, String xPub, String cipher) =>
+      engine.nostrSend(ident, xPub, cipher);
 
   Future<String> onionSend(String onion, String cipher) =>
       engine.sendTo(onion, cipher);
@@ -207,8 +212,12 @@ class AppIo {
   Future<String> typingSend(String onion, String cipher) =>
       engine.sendTyping(onion, cipher);
 
-  Future<String> firstContactSend(String xPub, String fc, String cipher) =>
-      engine.sendFirstContact(xPub, fc, cipher);
+  Future<String> firstContactSend(
+    int ident,
+    String xPub,
+    String fc,
+    String cipher,
+  ) => engine.sendFirstContact(ident, xPub, fc, cipher);
 
   // [payload] names the chat here only: android gets the tag [on] keeps
   // for it

@@ -90,7 +90,7 @@ class _Engine implements HaloEngine {
   var relays = 2;
 
   @override
-  Future<String> subscribeFirstContact(int counter) async {
+  Future<String> subscribeFirstContact(int ident, int counter) async {
     asked.add(counter);
     return answers.isEmpty ? 'ok' : answers.removeAt(0);
   }

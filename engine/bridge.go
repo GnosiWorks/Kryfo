@@ -115,6 +115,7 @@ func setStatus(s string) {
 			notePublished()
 		}
 		torStatus = s
+		torStatusMoved()
 	}
 }
 
@@ -144,6 +145,7 @@ func HaloGenerateIdentity() *C.char {
 		return C.CString(fmt.Sprintf("error: x keygen: %v", err))
 	}
 	curve25519.ScalarBaseMult(&myXPub, &myXPriv)
+	putIdentity(mainIdent, xid{priv: myXPriv, pub: myXPub})
 
 	myId = idFromPubkey(pub)
 	log.Printf("halo: identity generated: %s", myId)
@@ -175,6 +177,7 @@ func HaloRestoreIdentity(cEdPriv *C.char, cXPriv *C.char) *C.char {
 
 	copy(myXPriv[:], xPrivBytes)
 	curve25519.ScalarBaseMult(&myXPub, &myXPriv)
+	putIdentity(mainIdent, xid{priv: myXPriv, pub: myXPub})
 
 	myId = idFromPubkey(myEdPub)
 	log.Printf("halo: identity restored: %s", myId)
@@ -245,8 +248,12 @@ func idFromPubkey(pub []byte) string {
 	return fmt.Sprintf("%s-%s-%s", w1, w2, w3)
 }
 
-func deriveSharedKey(peerXPubHex string) ([32]byte, error) {
+func deriveSharedKey(ident int, peerXPubHex string) ([32]byte, error) {
 	var key [32]byte
+	me, err := identityOf(ident)
+	if err != nil {
+		return key, err
+	}
 	peerPub, err := hex.DecodeString(peerXPubHex)
 	if err != nil || len(peerPub) != 32 {
 		return key, fmt.Errorf("bad peer pubkey")
@@ -254,7 +261,7 @@ func deriveSharedKey(peerXPubHex string) ([32]byte, error) {
 	var peer [32]byte
 	copy(peer[:], peerPub)
 
-	shared, err := curve25519.X25519(myXPriv[:], peer[:])
+	shared, err := curve25519.X25519(me.priv[:], peer[:])
 	if err != nil {
 		return key, err
 	}
@@ -263,11 +270,11 @@ func deriveSharedKey(peerXPubHex string) ([32]byte, error) {
 }
 
 //export HaloEncryptFor
-func HaloEncryptFor(cPeerPub *C.char, cPlain *C.char) *C.char {
+func HaloEncryptFor(cIdent C.int, cPeerPub *C.char, cPlain *C.char) *C.char {
 	peerPub := goStr(cPeerPub)
 	plain := goStr(cPlain)
 
-	key, err := deriveSharedKey(peerPub)
+	key, err := deriveSharedKey(identArg(cIdent), peerPub)
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: derive: %v", err))
 	}
@@ -290,11 +297,11 @@ func HaloEncryptFor(cPeerPub *C.char, cPlain *C.char) *C.char {
 }
 
 //export HaloDecryptFrom
-func HaloDecryptFrom(cPeerPub *C.char, cB64 *C.char) *C.char {
+func HaloDecryptFrom(cIdent C.int, cPeerPub *C.char, cB64 *C.char) *C.char {
 	peerPub := goStr(cPeerPub)
 	b64 := goStr(cB64)
 
-	key, err := deriveSharedKey(peerPub)
+	key, err := deriveSharedKey(identArg(cIdent), peerPub)
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: derive: %v", err))
 	}
@@ -666,6 +673,7 @@ func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionI
 	if torStatus == "publishing" {
 		log.Println("halo: status publishing -> reachable (HSDir uploaded)")
 		torStatus = "reachable"
+		torStatusMoved()
 		notePublished()
 		go func() {
 			for _, lane := range mainLanes() {

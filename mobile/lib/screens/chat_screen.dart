@@ -104,6 +104,8 @@ import '../main.dart'
         session,
         sessionQuiet,
         signalEncrypt,
+        peerXPubOf,
+        AppStateDoor,
         hasSessionWith,
         appState,
         currentChatPeer,
@@ -1346,7 +1348,7 @@ class _ChatScreenState extends State<ChatScreen>
     _loadWall();
     // a new default under appearance shows here at once
     wallpaperRevision.addListener(_loadWall);
-    signalSession.peerXPubHex(widget.peerHaloId).then((v) {
+    peerXPubOf(widget.peerHaloId).then((v) {
       // only adopt the session value if we don't already have the widget key;
       // never clobber a good key with a null the store hasn't filled yet.
       if (mounted && v != null && v.isNotEmpty) {
@@ -3326,7 +3328,7 @@ class _ChatScreenState extends State<ChatScreen>
       xPub: () async {
         var xpub = _peerXPub;
         xpub ??= widget.peerXPub.isEmpty ? null : widget.peerXPub;
-        xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
+        xpub ??= await peerXPubOf(widget.peerHaloId);
         if (xpub != null) _peerXPub = xpub;
         return xpub;
       },
@@ -3339,8 +3341,15 @@ class _ChatScreenState extends State<ChatScreen>
         widget.peerHaloId,
         backPaired: _backPaired,
       ),
-      viaFirst: (x, fc) => engine.sendFirstContact(x, fc, cipher),
-      viaRelay: (x) => Future(() => engine.nostrSend(x, cipher)),
+      viaFirst: (x, fc) => engine.sendFirstContact(
+        appState.identOf(widget.peerHaloId),
+        x,
+        fc,
+        cipher,
+      ),
+      viaRelay: (x) => Future(
+        () => engine.nostrSend(appState.identOf(widget.peerHaloId), x, cipher),
+      ),
       log: (l) => dlog('chat send: $l'),
       // both its copies went: past their two it waits held, not lost
       bothWent: uid == null
@@ -7405,7 +7414,7 @@ class _ChatHead extends StatelessWidget {
     // the palette swaps in place: depending on the theme repaints the
     // header when it switches under an open chat
     Theme.of(context);
-    final relay = appState.sendMode == 'balanced';
+    final fast = appState.sendMode != 'private';
     return Container(
       padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 8, 12),
       decoration: BoxDecoration(
@@ -7522,26 +7531,26 @@ class _ChatHead extends StatelessWidget {
                           Icon(
                             Icons.lock_outline,
                             size: 10,
-                            // relay and tor told apart by their own colours,
+                            // fast and tor told apart by their own colours,
                             // never by the accent
-                            color: relay ? HaloColors.sky : HaloColors.violet,
+                            color: fast
+                                ? HaloColors.greenText
+                                : HaloColors.violet,
                           ),
                           const SizedBox(width: 4),
                           // a longer language at a big font size would run
                           // past the header's buttons, so it ends in …
                           Flexible(
                             child: Text(
-                              relay
-                                  ? l10n.chatEncryptedViaRelay
-                                  : appState.sendMode == 'fast'
+                              fast
                                   ? l10n.chatEncryptedDirect
                                   : l10n.chatEncryptedOverTor,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: HaloType.mono(
                                 size: 10,
-                                color: relay
-                                    ? HaloColors.sky
+                                color: fast
+                                    ? HaloColors.greenText
                                     : HaloColors.text2,
                               ),
                             ),
@@ -9724,11 +9733,8 @@ class MediaGalleryScreen extends StatelessWidget {
 }
 
 // the saved mode string as the pill's enum. private is full tor, 3 hops.
-PrivacyMode _pmFrom(String m) => m == 'fast'
-    ? PrivacyMode.fast
-    : m == 'balanced'
-    ? PrivacyMode.normal
-    : PrivacyMode.private;
+PrivacyMode _pmFrom(String m) =>
+    m == 'private' ? PrivacyMode.private : PrivacyMode.fast;
 
 // the compare card, or once put off the quiet line in its place. one
 // grows or shrinks into the other while it fades, at once when the phone

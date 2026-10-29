@@ -296,13 +296,14 @@ class _Io extends AppIo {
   }
 
   @override
-  void listen(String xPub, {bool fresh = false}) => listened.add(xPub);
+  void listen(int ident, String xPub, {bool fresh = false}) =>
+      listened.add(xPub);
   @override
   String edPub() => _myEd;
   @override
   String xPub() => _myX;
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     sent.add(('relay $xPub', cipher));
     return 'ok';
   }
@@ -317,7 +318,12 @@ class _Io extends AppIo {
   final answers = <Future<String>>[];
 
   @override
-  Future<String> firstContactSend(String xPub, String fc, String cipher) async {
+  Future<String> firstContactSend(
+    int ident,
+    String xPub,
+    String fc,
+    String cipher,
+  ) async {
     sent.add(('fc $xPub $fc', cipher));
     return answers.isEmpty ? 'ok' : answers.removeAt(0);
   }

@@ -147,7 +147,7 @@ class _DevScreenState extends State<DevScreen> {
       final msgs = engine.drainInbox();
       if (msgs.isEmpty || _peerXPub.isEmpty) return;
       for (final r in msgs) {
-        final plain = engine.decryptFrom(_peerXPub, r);
+        final plain = engine.decryptFrom(kMainIdent, _peerXPub, r);
         if (!plain.startsWith('error')) {
           session.saveMessage(_peerId, 'in', plain);
         }
@@ -163,7 +163,7 @@ class _DevScreenState extends State<DevScreen> {
     }
     setState(() => _status = l10n.appEncryptingSending30s);
     final plain = _msgCtrl.text;
-    final cipher = engine.encryptFor(_peerXPub, plain);
+    final cipher = engine.encryptFor(kMainIdent, _peerXPub, plain);
     if (cipher.startsWith('error')) {
       setState(() => _status = cipher);
       return;

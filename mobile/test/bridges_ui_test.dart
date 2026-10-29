@@ -599,14 +599,14 @@ void main() {
       );
       expect(find.text(l10n.bridgesRelayWorksWhereTor), findsOneWidget);
       // relay first, the tor project's way under it
-      final relay = t.getRect(find.text(l10n.homeUseOurRelay));
+      final relay = t.getRect(find.text(l10n.homeUseFast));
       final ask = t.getRect(find.text(l10n.bridgesGetABridge));
       expect(relay.top, lessThan(ask.top));
-      await t.tap(find.text(l10n.homeUseOurRelay));
+      await t.tap(find.text(l10n.homeUseFast));
       // the switch waits on the store, off the fake clock
       for (
         var i = 0;
-        i < 50 && find.text(l10n.homeSwitchedToRelay).evaluate().isEmpty;
+        i < 50 && find.text(l10n.homeSwitchedToFastRoute).evaluate().isEmpty;
         i++
       ) {
         await t.runAsync(
@@ -617,7 +617,7 @@ void main() {
       await t.pump();
       expect(_eng.modes, ['balanced']);
       expect(appState.sendMode, 'balanced');
-      expect(find.text(l10n.homeSwitchedToRelay), findsOneWidget);
+      expect(find.text(l10n.homeSwitchedToFastRoute), findsOneWidget);
       await _done(t);
     });
 
@@ -638,7 +638,7 @@ void main() {
         status: const BridgeStatus(mode: 'auto', phase: 'exhausted'),
       );
       expect(find.text(l10n.bridgesRelayThisNetworkSees), findsNothing);
-      expect(filled(t, l10n.homeUseOurRelay), isTrue);
+      expect(filled(t, l10n.homeUseFast), isTrue);
       expect(filled(t, l10n.bridgesGetABridge), isFalse);
       await _done(t);
     });
@@ -660,10 +660,10 @@ void main() {
         expect(find.text(l10n.bridgesRelayThisNetworkSees), findsOneWidget);
         expect(find.text(l10n.bridgesRelayWorksWhereTor), findsNothing);
         final ask = t.getRect(find.text(l10n.bridgesGetABridge));
-        final relay = t.getRect(find.text(l10n.homeUseOurRelay));
+        final relay = t.getRect(find.text(l10n.homeUseFast));
         expect(ask.top, lessThan(relay.top));
         expect(filled(t, l10n.bridgesGetABridge), isTrue);
-        expect(filled(t, l10n.homeUseOurRelay), isFalse);
+        expect(filled(t, l10n.homeUseFast), isFalse);
         await _done(t);
       });
     }
@@ -674,7 +674,7 @@ void main() {
         t,
         status: const BridgeStatus(mode: 'auto', phase: 'exhausted'),
       );
-      expect(find.text(l10n.homeUseOurRelay), findsNothing);
+      expect(find.text(l10n.homeUseFast), findsNothing);
       await _done(t);
     });
   });

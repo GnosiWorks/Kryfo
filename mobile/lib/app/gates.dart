@@ -362,7 +362,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
           // one route, one colour: onion stays violet whether tor is merely
           // usable or fully published
           final accent = switch (v.kind) {
-            LinkKind.relay => HaloColors.sky,
+            LinkKind.relay => HaloColors.greenText,
             LinkKind.off => HaloColors.text2,
             LinkKind.offline => HaloColors.warn,
             LinkKind.fast => HaloColors.greenText,

@@ -54,10 +54,10 @@ class _Io extends ArrivalIo {
   }
 
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     if (_misses('relay', xPub.substring(2), cipher)) return 'error: down';
     onSend?.call();
-    return super.relaySend(xPub, cipher);
+    return super.relaySend(ident, xPub, cipher);
   }
 
   @override

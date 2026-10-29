@@ -191,7 +191,7 @@ extension AppStateProfile on AppState {
     _fcListenTimer = null;
     String r;
     try {
-      r = await engine.subscribeFirstContact(_fcCounter);
+      r = await engine.subscribeFirstContact(kMainIdent, _fcCounter);
     } catch (e) {
       r = 'error: ${e.runtimeType}';
     }

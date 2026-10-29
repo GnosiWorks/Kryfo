@@ -13,6 +13,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	neturl "net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,6 +28,15 @@ var torFileTypes = map[string]bool{"image/gif": true, "image/webp": true}
 
 // the client for the gif lane; tests stand their own in
 var gifClient = func() (*http.Client, error) { return torNostrClientFor(laneGifs) }
+
+// the one host the gif calls go to: our relay. a var for the tests
+var gifHost = "relay.kryfo.app"
+
+// anything else is refused before a connection is made
+func gifHostOK(u string) bool {
+	p, err := neturl.Parse(u)
+	return err == nil && strings.EqualFold(p.Host, gifHost)
+}
 
 // POST json to the gif relay. the body of a 2xx, or "error: ...".
 //
@@ -50,6 +60,9 @@ func HaloGifGetFile(cUrl, cPath *C.char) *C.char {
 	url, path := goStr(cUrl), goStr(cPath)
 	if url == "" || path == "" {
 		return C.CString("error: empty url")
+	}
+	if !gifHostOK(url) {
+		return C.CString("error: not our gif relay")
 	}
 	c, err := gifClient()
 	if err != nil {
@@ -80,6 +93,9 @@ const gifAskMax = 256 << 10
 func gifAsk(method, url, body string) string {
 	if url == "" {
 		return "error: empty url"
+	}
+	if !gifHostOK(url) {
+		return "error: not our gif relay"
 	}
 	c, err := gifClient()
 	if err != nil {

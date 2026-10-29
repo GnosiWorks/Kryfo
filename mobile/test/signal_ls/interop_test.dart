@@ -9,7 +9,8 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/signal_ffi/kryfo_signal.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:kryfo/signal_stores.dart' show kSignalTables;
+import 'package:kryfo/signal_stores.dart'
+    show kSignalTables, kUseInvite, kUseSession;
 
 import '../mem_db.dart';
 import 'shim_lib.dart';
@@ -73,7 +74,12 @@ void main() {
       for (final t in kSignalTables) {
         if (t.startsWith('kyber_')) continue;
         final before = _rows(who).where((r) => r['t'] == t).toList();
-        final now = await p.db.query(t);
+        // the identity's session prekeys are new, and never in a bundle
+        final now = await p.db.query(
+          t,
+          where: t == 'signed_prekeys' ? 'use != ?' : null,
+          whereArgs: t == 'signed_prekeys' ? [kUseSession] : null,
+        );
         expect(now, hasLength(before.length), reason: '$who $t');
         for (final r in before) {
           final key = t == 'sessions'
@@ -91,7 +97,14 @@ void main() {
         }
       }
       // only the kyber prekey is new
-      expect(await p.db.query('kyber_prekeys'), hasLength(1));
+      expect(
+        await p.db.query(
+          'kyber_prekeys',
+          where: 'use = ?',
+          whereArgs: [kUseInvite],
+        ),
+        hasLength(1),
+      );
     }
   }, skip: needsShim);
 

@@ -155,7 +155,7 @@ class HaloDb
     _db = await openDatabase(
       path,
       password: pw,
-      version: 91,
+      version: 92,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -201,7 +201,9 @@ class HaloDb
             shots_when INTEGER NOT NULL DEFAULT 0,
             opus_can INTEGER NOT NULL DEFAULT 0,
             caps TEXT NOT NULL DEFAULT '',
-            caps_at INTEGER NOT NULL DEFAULT 0
+            caps_at INTEGER NOT NULL DEFAULT 0,
+            ident INTEGER NOT NULL DEFAULT 0,
+            ikey TEXT
           )
         ''');
         await db.execute('''
@@ -331,6 +333,8 @@ class HaloDb
         await dropFetchTable(db);
         await _heldTable(db);
         await _signalTables(db);
+        await identityTables(db);
+        await contactKeyIndex(db);
         await _pollTables(db);
         await searchTables(db, fresh: true);
         await routerTables(db);
@@ -902,6 +906,10 @@ class HaloDb
           // the post-quantum prekeys the shim keeps (signal_stores.dart),
           // and what a kept first contact opened to
           await upgradeTo91(db);
+        }
+        if (oldV < 92) {
+          // identities, and the signal stores per identity (identities.dart)
+          await upgradeTo92(db);
         }
       },
     );
@@ -1909,36 +1917,197 @@ Future<void> _vouchTable(Database db) async {
   );
 }
 
-// one store's tables. under a prefix, another store in the same database
-Future<void> _signalTables(Database db, {String prefix = ''}) async {
-  await db.execute(
-    'CREATE TABLE IF NOT EXISTS ${prefix}prekeys (id INTEGER PRIMARY KEY, record BLOB NOT NULL)',
+// one store's tables. under a prefix, another store in the same database.
+// every row names the identity it belongs to (identities.id, 0 the main
+// one); the prekey tables also say what each key is for: 'invite' (with
+// the invite's id, '' for the main one), 'session' or 'heal'
+Future<void> _signalTables(
+  DatabaseExecutor db, {
+  String prefix = '',
+  // each statement as it runs, or null to skip it (a rebuild, _identColumns)
+  String? Function(String sql)? as,
+}) async {
+  Future<void> x(String sql) async {
+    final run = as == null ? sql : as(sql);
+    if (run != null) await db.execute(run);
+  }
+
+  await x(
+    'CREATE TABLE IF NOT EXISTS ${prefix}prekeys (ident INTEGER NOT NULL DEFAULT 0, id INTEGER NOT NULL, record BLOB NOT NULL, PRIMARY KEY (ident, id))',
   );
-  await db.execute(
-    'CREATE TABLE IF NOT EXISTS ${prefix}signed_prekeys (id INTEGER PRIMARY KEY, record BLOB NOT NULL, created_at INTEGER NOT NULL)',
+  await x(
+    "CREATE TABLE IF NOT EXISTS ${prefix}signed_prekeys (ident INTEGER NOT NULL DEFAULT 0, id INTEGER NOT NULL, record BLOB NOT NULL, created_at INTEGER NOT NULL, use TEXT NOT NULL DEFAULT 'invite', invite_id TEXT NOT NULL DEFAULT '', retired_at INTEGER, PRIMARY KEY (ident, id))",
   );
-  await db.execute(
-    'CREATE TABLE IF NOT EXISTS ${prefix}sessions (address TEXT NOT NULL, device_id INTEGER NOT NULL, record BLOB NOT NULL, PRIMARY KEY (address, device_id))',
+  await x(
+    'CREATE TABLE IF NOT EXISTS ${prefix}sessions (ident INTEGER NOT NULL DEFAULT 0, address TEXT NOT NULL, device_id INTEGER NOT NULL, record BLOB NOT NULL, PRIMARY KEY (ident, address, device_id))',
   );
-  await db.execute(
-    'CREATE TABLE IF NOT EXISTS ${prefix}peer_identities (address TEXT PRIMARY KEY, identity_key BLOB NOT NULL)',
+  await x(
+    'CREATE TABLE IF NOT EXISTS ${prefix}peer_identities (ident INTEGER NOT NULL DEFAULT 0, address TEXT NOT NULL, identity_key BLOB NOT NULL, PRIMARY KEY (ident, address))',
   );
-  await db.execute(
+  await x(
     'CREATE TABLE IF NOT EXISTS ${prefix}signal_meta (k TEXT PRIMARY KEY, v TEXT NOT NULL)',
   );
-  await db.execute(
-    'CREATE TABLE IF NOT EXISTS ${prefix}kyber_prekeys (id INTEGER PRIMARY KEY, record BLOB NOT NULL, last_resort INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL)',
+  await x(
+    "CREATE TABLE IF NOT EXISTS ${prefix}kyber_prekeys (ident INTEGER NOT NULL DEFAULT 0, id INTEGER NOT NULL, record BLOB NOT NULL, last_resort INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, use TEXT NOT NULL DEFAULT 'invite', invite_id TEXT NOT NULL DEFAULT '', retired_at INTEGER, PRIMARY KEY (ident, id))",
   );
   // a last resort kyber key outlives its use: the base keys it opened for,
   // so a replayed opener does not build a second session on it
-  await db.execute(
-    'CREATE TABLE IF NOT EXISTS ${prefix}kyber_used (kyber_id INTEGER NOT NULL, signed_id INTEGER NOT NULL, base_key BLOB NOT NULL, PRIMARY KEY (kyber_id, base_key))',
+  await x(
+    'CREATE TABLE IF NOT EXISTS ${prefix}kyber_used (ident INTEGER NOT NULL DEFAULT 0, kyber_id INTEGER NOT NULL, signed_id INTEGER NOT NULL, base_key BLOB NOT NULL, PRIMARY KEY (ident, kyber_id, base_key))',
   );
   // every opener read on a kyber key, by a fingerprint of what its mac
   // covers: one opener opens once, whatever path it comes back on
-  await db.execute(
-    'CREATE TABLE IF NOT EXISTS ${prefix}opener_reads (kyber_id INTEGER NOT NULL, opener BLOB NOT NULL, PRIMARY KEY (kyber_id, opener))',
+  await x(
+    'CREATE TABLE IF NOT EXISTS ${prefix}opener_reads (ident INTEGER NOT NULL DEFAULT 0, kyber_id INTEGER NOT NULL, opener BLOB NOT NULL, PRIMARY KEY (ident, kyber_id, opener))',
   );
+}
+
+// the signal tables that carry an identity, with the columns each had
+// before it did
+const _identTables = {
+  'prekeys': ['id', 'record'],
+  'signed_prekeys': ['id', 'record', 'created_at'],
+  'sessions': ['address', 'device_id', 'record'],
+  'peer_identities': ['address', 'identity_key'],
+  'kyber_prekeys': ['id', 'record', 'last_resort', 'created_at'],
+  'kyber_used': ['kyber_id', 'signed_id', 'base_key'],
+  'opener_reads': ['kyber_id', 'opener'],
+};
+
+// the identities this container holds: 0 the main one (its words, onion
+// and face), the others with keys of their own and nothing else. each has
+// its own random keys: nothing is derived from another
+Future<void> identityTables(DatabaseExecutor db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS identities (
+      id INTEGER PRIMARY KEY,
+      kind TEXT NOT NULL,
+      x_priv BLOB NOT NULL,
+      reg_id INTEGER NOT NULL,
+      created_at INTEGER NOT NULL,
+      retired_at INTEGER,
+      name TEXT,
+      photo INTEGER,
+      about TEXT
+    )
+  ''');
+  // the addresses of one pair of devices: 3 from the two keys alone, as
+  // every chat before 0.6; 4 with the seed the opener carried
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS pairs (
+      ident INTEGER NOT NULL,
+      peer TEXT NOT NULL,
+      their_device INTEGER NOT NULL DEFAULT 1,
+      my_device INTEGER NOT NULL DEFAULT 1,
+      conv INTEGER NOT NULL,
+      seed BLOB,
+      PRIMARY KEY (ident, peer, their_device, my_device),
+      CHECK ((conv = 3 AND seed IS NULL) OR (conv = 4 AND length(seed) = 32))
+    )
+  ''');
+  // a random first-contact key per invite, retired with it
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS fc_keys (
+      ident INTEGER NOT NULL,
+      invite_id TEXT NOT NULL,
+      sk BLOB NOT NULL,
+      created_at INTEGER NOT NULL,
+      retired_at INTEGER,
+      PRIMARY KEY (ident, invite_id)
+    )
+  ''');
+}
+
+// my identity for each contact, and their identity key (0x05 and the x
+// key, hex): one contact per key
+Future<void> contactIdentColumns(DatabaseExecutor db) async {
+  await addColumn(
+    db,
+    'ALTER TABLE contacts ADD COLUMN ident INTEGER NOT NULL DEFAULT 0',
+  );
+  await addColumn(db, 'ALTER TABLE contacts ADD COLUMN ikey TEXT');
+  await contactKeyIndex(db);
+}
+
+Future<void> contactKeyIndex(DatabaseExecutor db) => db.execute(
+  'CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_ikey ON contacts(ikey)',
+);
+
+/// the upgrade to 92: identities, the signal tables per identity, pairs,
+/// first-contact keys and the contacts' identity keys. the main identity
+/// is row 0, from the key and registration id the file holds; every
+/// contact is on it, on the addresses of 0.5 (conv 3)
+@visibleForTesting
+Future<void> upgradeTo92(DatabaseExecutor db) async {
+  for (final prefix in const ['', kDevSignalPrefix]) {
+    await _identColumns(db, prefix);
+  }
+  await identityTables(db);
+  await contactIdentColumns(db);
+  final me = await db.query('identity', columns: ['x_priv'], limit: 1);
+  final x = me.isEmpty ? null : _unhex(me.first['x_priv'] as String?);
+  if (x != null && x.length == 32) {
+    final reg = await db.query(
+      'signal_meta',
+      columns: ['v'],
+      where: 'k = ?',
+      whereArgs: ['regId'],
+      limit: 1,
+    );
+    await db.insert('identities', {
+      'id': 0,
+      'kind': kIdentFace,
+      'x_priv': x,
+      'reg_id': reg.isEmpty
+          ? newRegistrationId()
+          : int.parse(reg.first['v'] as String),
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+  await claimContactKeys(db);
+}
+
+// one store's tables with the identity in their keys: sqlite changes no
+// primary key, so each table made before is renamed, made again, its rows
+// copied in as the main identity's, and dropped. a table that has it, or
+// that the store never made, is left
+Future<void> _identColumns(DatabaseExecutor db, String prefix) async {
+  for (final e in _identTables.entries) {
+    final t = '$prefix${e.key}';
+    final cols = [
+      for (final c in await db.rawQuery(
+        'SELECT name FROM pragma_table_info(?)',
+        [t],
+      ))
+        '${c['name']}',
+    ];
+    if (cols.isEmpty || cols.contains('ident')) continue;
+    // the table as a new install makes it, under a name of its own first
+    final made = 'IF NOT EXISTS $t (';
+    await _signalTables(
+      db,
+      prefix: prefix,
+      as: (sql) =>
+          sql.contains(made) ? sql.replaceFirst(made, '${t}_92 (') : null,
+    );
+    final keep = e.value.join(', ');
+    await db.execute(
+      'INSERT INTO ${t}_92 (ident, $keep) SELECT 0, $keep FROM $t',
+    );
+    await db.execute('DROP TABLE $t');
+    await db.execute('ALTER TABLE ${t}_92 RENAME TO $t');
+  }
+}
+
+Uint8List? _unhex(String? h) {
+  if (h == null || h.length.isOdd) return null;
+  final out = Uint8List(h.length ~/ 2);
+  for (var i = 0; i < out.length; i++) {
+    final b = int.tryParse(h.substring(i * 2, i * 2 + 2), radix: 16);
+    if (b == null) return null;
+    out[i] = b;
+  }
+  return out;
 }
 
 /// the upgrade to 91: the kyber tables, and a kept first contact's opened
@@ -1953,9 +2122,15 @@ Future<void> upgradeTo91(Database db) async {
 }
 
 /// one signal store's tables under [prefix], for a store kept in a file of
-/// its own
+/// its own, as this version keeps them: one made before has the identity
+/// put in its keys, in one write
 Future<void> signalStoreTables(Database db, {String prefix = ''}) =>
-    _signalTables(db, prefix: prefix);
+    db.transaction((t) async {
+      await _identColumns(t, prefix);
+      await _signalTables(t, prefix: prefix);
+      // the main store's identity is a row (identities.dart)
+      if (prefix.isEmpty) await identityTables(t);
+    });
 
 /// the kyber prekey tables of the everyday store and the dev chat's, with
 /// whatever else of either store a file lacks (version 91)

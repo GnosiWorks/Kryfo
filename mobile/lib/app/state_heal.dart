@@ -293,14 +293,21 @@ extension AppStateHeal on AppState {
       if (to == null || await blockedAnywhere(memberId)) return false;
       final xpub = to.xpub;
       if (xpub.isEmpty) return false;
+      // outside the session, so through the door as it is: the card of
+      // the identity they know, and words only for the main one's
+      final ident = identOf(memberId);
+      final main = ident == kMainIdent;
       final payload = jsonEncode({
         'halo_ctl': 'bundle',
-        'from': myId,
-        'bundle': await _myBundle(),
+        if (main) 'from': myId,
+        'bundle': main
+            ? await _myBundle()
+            : await makePreKeyBundleB64(await signalOfIdent(ident)),
         'want': want,
         'since': ?since,
       });
-      final r = await Future(() => _io.relaySend(xpub, payload));
+      final (on, framed) = await doorFor(memberId, payload, outside: true);
+      final r = await Future(() => _io.relaySend(on, xpub, framed));
       dlog('bundle ctl (want=$want) to $memberId: $r');
       return r == 'ok';
     } catch (e) {
@@ -340,7 +347,9 @@ extension AppStateHeal on AppState {
       final bj =
           jsonDecode(utf8.decode(base64Decode(bundle))) as Map<String, dynamic>;
       final claimed = base64Decode(bj['identityKey'] as String);
-      final known = await signalSession.identityStore.getIdentity(from);
+      // the store of the identity they know
+      final ss = await signalOfIdent(identOf(from));
+      final known = await ss.identityStore.getIdentity(from);
       // with none pinned yet, the key is the one their x key makes: the
       // relay vouched for that one
       final ok = known != null
@@ -372,12 +381,12 @@ extension AppStateHeal on AppState {
           return;
         }
         try {
-          await signalSession.processBundle(from, card);
+          await ss.processBundle(from, card);
         } on ClassicRefused {
           rethrow;
         } catch (e) {
           // one that does not read goes
-          await signalSession.rebuild(from, card);
+          await ss.rebuild(from, card);
         }
         rebuilt = true;
         dlog('healed session for $from (bundle exchange)');

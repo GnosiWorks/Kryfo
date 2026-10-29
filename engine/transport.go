@@ -162,6 +162,16 @@ type relayView struct {
 	CatchupEvents  int `json:"catchup_events"`
 	CatchupSubs    int `json:"catchup_subs"`
 	CatchupDropped int `json:"catchup_subs_dropped"`
+	// which of our stores it reaches, "" for a public relay. backup: read
+	// only while none of ours answers, through tor, and in use now
+	Store  string `json:"store,omitempty"`
+	Backup bool   `json:"backup,omitempty"`
+	InUse  bool   `json:"in_use,omitempty"`
+	// the last round trip it showed, and whether it answers lately
+	Ms int  `json:"ms"`
+	Up bool `json:"up"`
+	// its store is the quicker of two that answer
+	Quicker bool `json:"quicker,omitempty"`
 }
 
 type transportView struct {
@@ -213,6 +223,7 @@ func transportSnapshot() transportView {
 
 	nostrMu.Lock()
 	urls := append([]string(nil), nostrRelays...)
+	backups := append([]string(nil), nostrBackups...)
 	for tag := range nostrSubs {
 		v.Subs = append(v.Subs, tag)
 	}
@@ -221,9 +232,19 @@ func transportSnapshot() transportView {
 	v.SubCount = len(v.Subs)
 
 	now := time.Now()
+	quick := quickerStore(urls)
+	inUse := len(backups) > 0 && backupsOn()
 	relayHealthMu.Lock()
-	for _, u := range urls {
+	for _, u := range append(urls, backups...) {
 		rv := relayView{URL: u, Fails: relayFails[u]}
+		rv.Store = storeOf(urls, u)
+		rv.Backup = containsStr(backups, u) && !containsStr(urls, u)
+		rv.InUse = rv.Backup && inUse
+		rv.Quicker = rv.Store != "" && rv.Store == quick
+		rv.Ms = relayMsOf(u)
+		if at, ok := relayUpAt[u]; ok && relayFails[u] == 0 && now.Sub(at) < ownUpRecent {
+			rv.Up = true
+		}
 		rv.CatchupMs, rv.CatchupDrop, rv.CatchupLong, rv.CatchupSeen = catchupOf(u)
 		rv.ConnectMs, rv.CatchupPages, rv.CatchupEvents, rv.CatchupSubs, rv.CatchupDropped = catchupDetailOf(u)
 		if till, ok := relayCoolTill[u]; ok && now.Before(till) {

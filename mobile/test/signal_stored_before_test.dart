@@ -10,7 +10,8 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:kryfo/signal_stores.dart' show kSignalTables;
+import 'package:kryfo/signal_stores.dart'
+    show kSignalTables, kUseInvite, kUseSession;
 import 'signal_kit.dart';
 
 import 'mem_db.dart';
@@ -74,15 +75,32 @@ void main() {
         }
       }
       // nothing was made fresh: a new signed prekey would orphan every
-      // bundle already handed out
+      // bundle already handed out. the identity's session prekeys are new,
+      // and never in a bundle
       for (final t in kSignalTables) {
         if (t.startsWith('kyber_')) continue;
         final before = _rows(who).where((r) => r['t'] == t).length;
-        expect(await db.query(t), hasLength(before), reason: '$who $t');
+        expect(
+          await db.query(
+            t,
+            where: t == 'signed_prekeys' ? 'use != ?' : null,
+            whereArgs: t == 'signed_prekeys' ? [kUseSession] : null,
+          ),
+          hasLength(before),
+          reason: '$who $t',
+        );
       }
       // the one key a store from before the shim lacks: the invite's kyber
       // prekey, made once
-      expect(await db.query('kyber_prekeys'), hasLength(1), reason: who);
+      expect(
+        await db.query(
+          'kyber_prekeys',
+          where: 'use = ?',
+          whereArgs: [kUseInvite],
+        ),
+        hasLength(1),
+        reason: who,
+      );
       expect(await db.query('kyber_used'), isEmpty, reason: who);
       expect(ss.ready, isTrue);
     }

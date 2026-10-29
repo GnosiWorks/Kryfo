@@ -71,9 +71,7 @@ void main() {
     expect(said.last['label'], 'Kryfo');
   });
 
-  testWidgets('the launcher\'s own words, in the phone\'s language', (
-    t,
-  ) async {
+  testWidgets('the launcher\'s own words, in the phone\'s language', (t) async {
     final said = _listen(t);
     // the app in english, the phone in german
     await t.pumpWidget(

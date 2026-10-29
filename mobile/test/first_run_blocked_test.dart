@@ -114,8 +114,8 @@ void main() {
           find.text(l10n.torBootSplashNeverTriesTorPlainly),
           findsOneWidget,
         );
-        expect(find.text(l10n.onboardingRelay), findsNothing);
-        expect(find.text(l10n.modesRelay), findsNothing);
+        expect(find.text(l10n.modesFast), findsNothing);
+        expect(find.text(l10n.modesFast), findsNothing);
         expect(
           find.byWidgetPredicate(
             (w) => w is Semantics && w.properties.checked != null,
@@ -159,7 +159,7 @@ void main() {
     phone(t);
     await t.pumpWidget(devApp(const ModesScreen()));
     await t.pump(const Duration(seconds: 2));
-    final relay = find.text(l10n.modesRelay);
+    final relay = find.text(l10n.modesFast);
     await t.ensureVisible(relay);
     await t.pump();
     expect(relay.hitTestable(), findsOneWidget);
@@ -255,12 +255,12 @@ void main() {
     expect(find.text(l10n.bridgesRelayThisNetworkSees), findsOneWidget);
     expect(
       t.getRect(find.text(l10n.bridgesGetABridge)).top,
-      lessThan(t.getRect(find.text(l10n.homeUseOurRelay)).top),
+      lessThan(t.getRect(find.text(l10n.homeUseFast)).top),
     );
-    await t.tap(find.text(l10n.homeUseOurRelay));
+    await t.tap(find.text(l10n.homeUseFast));
     for (
       var i = 0;
-      i < 50 && find.text(l10n.homeSwitchedToRelay).evaluate().isEmpty;
+      i < 50 && find.text(l10n.homeSwitchedToFastRoute).evaluate().isEmpty;
       i++
     ) {
       await t.runAsync(
@@ -279,12 +279,11 @@ void main() {
     pages.jumpToPage(3);
     await t.pump();
     await t.pump(const Duration(seconds: 1));
-    expect(find.text(l10n.onboardingFast), findsNothing);
-    expect(checked(t, l10n.onboardingRelay), isTrue);
-    expect(checked(t, l10n.onboardingOnion), isFalse);
+    expect(checked(t, l10n.modesFast), isTrue);
+    expect(checked(t, l10n.modesPrivate), isFalse);
     // this network sees the connection to our relay: said, not "nobody else"
-    expect(find.text(l10n.onboardingRelayThisNetworkSees), findsOneWidget);
-    expect(find.text(l10n.onboardingOurRelaySeesYour), findsNothing);
+    expect(find.text(l10n.onboardingFastNetworkSees), findsOneWidget);
+    expect(find.text(l10n.onboardingFastSees), findsNothing);
     await t.tap(find.text(l10n.onboardingContinue));
     await t.pump();
     for (var i = 0; i < 20 && pages.page != 4; i++) {
@@ -310,7 +309,7 @@ void main() {
     );
     await t.pump();
     await t.pump(const Duration(seconds: 2));
-    await t.tap(find.text(l10n.homeUseOurRelay));
+    await t.tap(find.text(l10n.homeUseFast));
     for (var i = 0; i < 50 && appState.sendMode != 'balanced'; i++) {
       await t.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 20)),
@@ -329,8 +328,8 @@ void main() {
     t.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(3);
     await t.pump();
     await t.pump(const Duration(seconds: 1));
-    expect(find.text(l10n.onboardingOnion), findsOneWidget);
-    expect(find.text(l10n.onboardingRelay), findsNothing);
+    expect(find.text(l10n.modesPrivate), findsOneWidget);
+    expect(find.text(l10n.modesFast), findsNothing);
     await done(t);
   });
 
@@ -349,17 +348,17 @@ void main() {
       CardAction card(String label) => t.widget<CardAction>(
         find.ancestor(of: find.text(label), matching: find.byType(CardAction)),
       );
-      final relay = t.getRect(find.text(l10n.homeUseOurRelay));
+      final relay = t.getRect(find.text(l10n.homeUseFast));
       final ask = t.getRect(find.text(l10n.bridgesGetABridge));
       if (watched) {
         expect(find.text(l10n.bridgesRelayThisNetworkSees), findsOneWidget);
         expect(ask.left, lessThan(relay.left));
         expect(card(l10n.bridgesGetABridge).fill, isNotNull);
-        expect(card(l10n.homeUseOurRelay).fill, isNull);
+        expect(card(l10n.homeUseFast).fill, isNull);
       } else {
         expect(find.text(l10n.bridgesRelayWorksWhereTor), findsOneWidget);
         expect(relay.left, lessThan(ask.left));
-        expect(card(l10n.homeUseOurRelay).fill, isNotNull);
+        expect(card(l10n.homeUseFast).fill, isNotNull);
         expect(card(l10n.bridgesGetABridge).fill, isNull);
       }
       await done(t);
@@ -378,20 +377,20 @@ void main() {
       await t.pump(const Duration(seconds: 1));
     }
 
-    testWidgets('connect picked: onion, relay and fast, as before', (t) async {
+    testWidgets('connect picked: private and fast, one card each', (t) async {
       await appState.pickFirstRun(risky: false);
       await toSend(t);
-      expect(find.text(l10n.onboardingHidesYourAddressFrom), findsOneWidget);
+      expect(find.text(l10n.onboardingHidesFromEveryone), findsOneWidget);
       expect(find.text(l10n.onboardingAutoFindsAWay), findsNothing);
-      expect(find.text(l10n.onboardingRelay), findsOneWidget);
+      expect(find.text(l10n.modesFast), findsOneWidget);
       expect(find.text(l10n.onboardingAboutASecondWorks), findsOneWidget);
-      expect(find.text(l10n.onboardingFast), findsOneWidget);
-      expect(find.text(l10n.onboardingSkipOnionIsA), findsOneWidget);
-      expect(checked(t, l10n.onboardingOnion), isTrue);
+      expect(find.text(l10n.onboardingFastSees), findsOneWidget);
+      expect(find.text(l10n.onboardingSkipPrivate), findsOneWidget);
+      expect(checked(t, l10n.modesPrivate), isTrue);
       // relay is there to take
-      await t.tap(find.text(l10n.onboardingRelay));
+      await t.tap(find.text(l10n.modesFast));
       await t.pump(const Duration(milliseconds: 300));
-      expect(checked(t, l10n.onboardingRelay), isTrue);
+      expect(checked(t, l10n.modesFast), isTrue);
       await t.tap(find.text(l10n.onboardingUseThis));
       await t.pump();
       await t.runAsync(
@@ -417,15 +416,13 @@ void main() {
         t.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(3);
         await t.pump();
         await t.pump(const Duration(seconds: 1));
-        expect(find.text(l10n.onboardingOnion), findsOneWidget);
+        expect(find.text(l10n.modesPrivate), findsOneWidget);
         expect(find.text(l10n.onboardingAutoFindsAWay), findsOneWidget);
         // nothing of relay or fast, and nothing that reads as a choice
-        expect(find.text(l10n.onboardingRelay), findsNothing);
-        expect(find.text(l10n.onboardingOurRelaySeesYour), findsNothing);
-        expect(find.text(l10n.onboardingFast), findsNothing);
-        expect(find.text(l10n.onboardingEveryRelayYouUse), findsNothing);
-        expect(find.text(l10n.onboardingKeepOnion), findsNothing);
-        expect(find.text(l10n.onboardingSkipOnionIsA), findsNothing);
+        expect(find.text(l10n.modesFast), findsNothing);
+        expect(find.text(l10n.onboardingFastSees), findsNothing);
+        expect(find.text(l10n.onboardingKeepPrivate), findsNothing);
+        expect(find.text(l10n.onboardingSkipPrivate), findsNothing);
         expect(
           find.byWidgetPredicate(
             (w) => w is Semantics && w.properties.checked != null,

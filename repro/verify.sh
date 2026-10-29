@@ -20,6 +20,7 @@
 #
 # usage:
 #   ./verify.sh app-arm64-v8a-release.apk [more.apk...]
+#   ./verify.sh app-universal-release.apk    the universal one (both arm abis)
 #   ./verify.sh --ref v0.2.8 app-arm64-v8a-release.apk
 #   ./verify.sh --compare built.apk published.apk    no container, diff only
 #
@@ -64,7 +65,7 @@ while [ $# -gt 0 ]; do
     --keep) KEEP=1; shift ;;
     --no-cross) CROSS=; shift ;;
     --compare) shift; COMPARE_ONLY=1 ;;
-    -h|--help) sed -n '2,36p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,37p' "$0"; exit 0 ;;
     *) APKS+=("$1"); shift ;;
   esac
 done
@@ -88,9 +89,15 @@ differing() {
 
 hash_of() { echo "$1" | awk -v e="$2" '$2==e {print substr($1,1,12)}'; }
 
+# the universal apk carries both arm abis
+abis_in() { if [ "$1" = universal ]; then echo armeabi-v7a arm64-v8a; else echo "$1"; fi; }
+
 # an apk without the shim would match a build that skipped it too
 has_shim() {
-  unzip -l "$1" | grep -q " lib/$2/libkryfo_signal\.so\$"
+  local a
+  for a in $(abis_in "$2"); do
+    unzip -l "$1" | grep -q " lib/$a/libkryfo_signal\.so\$" || return 1
+  done
 }
 shim_sha() { unzip -p "$1" "lib/$2/libkryfo_signal.so" | sha256sum | cut -c1-64; }
 
@@ -237,7 +244,7 @@ for shipped in "${APKS[@]}"; do
     continue
   fi
   if ! has_shim "$shipped" "$abi" || ! has_shim "$built" "$abi"; then
-    echo "  NO SHIM  $(basename "$shipped"): lib/$abi/libkryfo_signal.so is missing"
+    echo "  NO SHIM  $(basename "$shipped"): a lib/*/libkryfo_signal.so is missing"
     rc=1
     continue
   fi
@@ -249,7 +256,9 @@ echo "== the signal shim in each apk (the stamp build-android.sh writes names th
 for shipped in "${APKS[@]}"; do
   abi=$(basename "$shipped" | sed -n 's/^app-\(.*\)-release.*\.apk$/\1/p')
   [ -n "$abi" ] && has_shim "$shipped" "$abi" || continue
-  echo "  $abi shim sha256 $(shim_sha "$shipped" "$abi")"
+  for a in $(abis_in "$abi"); do
+    echo "  $abi $a shim sha256 $(shim_sha "$shipped" "$a")"
+  done
 done
 
 if [ -n "$CROSS" ]; then

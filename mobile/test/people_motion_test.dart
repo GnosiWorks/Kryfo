@@ -197,7 +197,7 @@ void main() {
     testWidgets('the band sits under the route in use', (t) async {
       await open(t);
       final band = bandIn(t);
-      final relay = t.getCenter(find.text(l10n.seenRelay));
+      final relay = t.getCenter(find.text(l10n.seenFast));
       expect(band.left, lessThan(relay.dx));
       expect(band.right, greaterThan(relay.dx));
     });
@@ -205,7 +205,7 @@ void main() {
     testWidgets('right to left: the band follows the column', (t) async {
       await open(t, dir: TextDirection.rtl);
       final band = bandIn(t);
-      final relay = t.getCenter(find.text(l10n.seenRelay));
+      final relay = t.getCenter(find.text(l10n.seenFast));
       expect(band.left, lessThan(relay.dx));
       expect(band.right, greaterThan(relay.dx));
     });
