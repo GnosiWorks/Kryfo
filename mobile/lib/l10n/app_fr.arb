@@ -2575,6 +2575,7 @@
   "desktopFolderNotPrivate": "Kryfo n’a pas pu rendre son dossier privé pour vous, il ne s’ouvrira donc pas.",
   "desktopLockOtherVersion": "Ce verrou a été créé par une autre version de Kryfo, que celle-ci ne sait pas lire.",
   "desktopNoMemoryFolder": "Kryfo a besoin d’un dossier privé en mémoire pendant qu’il fonctionne, et cet ordinateur n’en propose aucun, il ne s’ouvrira donc pas.",
+  "historyChatStaysShots": "Cette discussion reste sur votre téléphone, car les captures d’écran y sont bloquées.",
   "a11yPinDigits": "{count, plural, =0{Aucun chiffre} =1{1 chiffre} other{{count} chiffres}}",
   "a11yPassChars": "{count, plural, =0{Aucun caractère} =1{1 caractère} other{{count} caractères}}",
   "a11yBackupProgress": "Progression de la sauvegarde",

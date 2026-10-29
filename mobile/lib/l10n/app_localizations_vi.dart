@@ -9760,6 +9760,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Kryfo cần một thư mục riêng trong bộ nhớ khi chạy, và máy tính này không có, nên Kryfo sẽ không mở.';
 
   @override
+  String get historyChatStaysShots =>
+      'Cuộc trò chuyện này ở lại trên điện thoại của bạn vì đã chặn chụp màn hình trong đó.';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

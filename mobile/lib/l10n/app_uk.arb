@@ -2575,6 +2575,7 @@
   "desktopFolderNotPrivate": "Kryfo не зміг зробити свою теку доступною лише вам, тому не відкриється.",
   "desktopLockOtherVersion": "Це блокування створила інша версія Kryfo, яку ця прочитати не може.",
   "desktopNoMemoryFolder": "Kryfo потрібна особиста тека в пам’яті, поки він працює, а цей комп’ютер її не дає, тому Kryfo не відкриється.",
+  "historyChatStaysShots": "Цей чат лишається на твоєму телефоні, бо в ньому заблоковано знімки екрана.",
   "a11yPinDigits": "{count, plural, =0{Немає цифр} one{{count} цифра} few{{count} цифри} many{{count} цифр} other{{count} цифри}}",
   "a11yPassChars": "{count, plural, =0{Немає символів} one{{count} символ} few{{count} символи} many{{count} символів} other{{count} символу}}",
   "a11yBackupProgress": "Перебіг резервного копіювання",

@@ -9848,6 +9848,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'O Kryfo precisa de uma pasta privada na memória enquanto roda, e este computador não oferece nenhuma, então ele não vai abrir.';
 
   @override
+  String get historyChatStaysShots =>
+      'Esta conversa fica no seu celular porque as capturas de tela estão bloqueadas nela.';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

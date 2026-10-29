@@ -9799,6 +9799,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kryfo çalışırken bellekte özel bir klasöre ihtiyaç duyar, bu bilgisayar böyle bir klasör sunmuyor, bu yüzden açılmayacak.';
 
   @override
+  String get historyChatStaysShots =>
+      'Bu sohbet telefonunda kalır, çünkü içinde ekran görüntüsü engelli.';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

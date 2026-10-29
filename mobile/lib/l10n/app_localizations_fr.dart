@@ -9875,6 +9875,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Kryfo a besoin d’un dossier privé en mémoire pendant qu’il fonctionne, et cet ordinateur n’en propose aucun, il ne s’ouvrira donc pas.';
 
   @override
+  String get historyChatStaysShots =>
+      'Cette discussion reste sur votre téléphone, car les captures d’écran y sont bloquées.';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

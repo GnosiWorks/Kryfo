@@ -9792,6 +9792,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'Kryfo هنگام اجرا به یک پوشهٔ خصوصی در حافظه نیاز دارد و این رایانه چنین پوشه‌ای ندارد، پس باز نمی‌شود.';
 
   @override
+  String get historyChatStaysShots =>
+      'این گفت‌وگو روی گوشی شما می‌ماند، چون اسکرین‌شات در آن مسدود است.';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

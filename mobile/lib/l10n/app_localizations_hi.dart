@@ -9778,6 +9778,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'चलते समय Kryfo को मेमोरी में एक निजी फ़ोल्डर चाहिए, और यह कंप्यूटर ऐसा कोई फ़ोल्डर नहीं देता, इसलिए यह नहीं खुलेगा।';
 
   @override
+  String get historyChatStaysShots =>
+      'यह चैट आपके फ़ोन पर ही रहती है, क्योंकि इसमें स्क्रीनशॉट रोके गए हैं।';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

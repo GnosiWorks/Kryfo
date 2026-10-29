@@ -9851,6 +9851,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Kryfo ha bisogno di una cartella privata in memoria mentre è in uso, e questo computer non ne offre, quindi non si apre.';
 
   @override
+  String get historyChatStaysShots =>
+      'Questa chat resta sul tuo telefono perché qui gli screenshot sono bloccati.';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

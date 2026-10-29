@@ -2575,6 +2575,7 @@
   "desktopFolderNotPrivate": "Kryfo 无法把它的文件夹设为只有你能访问，所以不会打开。",
   "desktopLockOtherVersion": "这个锁是另一个版本的 Kryfo 创建的，当前版本无法读取。",
   "desktopNoMemoryFolder": "Kryfo 运行时需要内存中的一个私有文件夹，而这台电脑没有提供，所以 Kryfo 不会打开。",
+  "historyChatStaysShots": "此聊天禁止截屏，所以只留在你的手机上。",
   "a11yPinDigits": "{count, plural, =0{没有数字} other{{count} 位数字}}",
   "a11yPassChars": "{count, plural, =0{没有字符} other{{count} 个字符}}",
   "a11yBackupProgress": "备份进度",

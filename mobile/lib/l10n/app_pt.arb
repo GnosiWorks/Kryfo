@@ -2575,6 +2575,7 @@
   "desktopFolderNotPrivate": "O Kryfo não conseguiu deixar a pasta dele só para você, então não vai abrir.",
   "desktopLockOtherVersion": "Este bloqueio foi feito por outra versão do Kryfo, que esta não consegue ler.",
   "desktopNoMemoryFolder": "O Kryfo precisa de uma pasta privada na memória enquanto roda, e este computador não oferece nenhuma, então ele não vai abrir.",
+  "historyChatStaysShots": "Esta conversa fica no seu celular porque as capturas de tela estão bloqueadas nela.",
   "a11yPinDigits": "{count, plural, =0{Nenhum dígito} =1{1 dígito} other{{count} dígitos}}",
   "a11yPassChars": "{count, plural, =0{Nenhum caractere} =1{1 caractere} other{{count} caracteres}}",
   "a11yBackupProgress": "Progresso do backup",

@@ -12295,6 +12295,10 @@
   "@desktopNoMemoryFolder": {
     "description": "desktop/desktop_lock_screen.dart: no XDG_RUNTIME_DIR or /dev/shm folder could be had"
   },
+  "historyChatStaysShots": "This chat stays on your phone because screenshots are blocked in it.",
+  "@historyChatStaysShots": {
+    "description": "devices/history_import.dart: on a newly linked device, for a chat that stayed on the phone because screenshot blocking is on in it"
+  },
   "a11yPinDigits": "{count, plural, =0{No digits} =1{1 digit} other{{count} digits}}",
   "@a11yPinDigits": {
     "description": "widgets/pin_pad.dart: the pin dots to a screen reader, the count only",
