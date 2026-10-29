@@ -72,6 +72,14 @@ import '../widgets/update_card.dart' show UpdateHint;
 
 bool _miuiPromptChecked = false;
 
+/// the battery and phone maker asks, once per start. a test hands in its own
+@visibleForTesting
+Future<void> Function(BuildContext context) homeBackgroundAsk =
+    maybeShowBackgroundPrompt;
+
+@visibleForTesting
+void askBackgroundAgainForTest() => _miuiPromptChecked = false;
+
 class HomeScreen extends StatefulWidget {
   final String haloId; // "neon-tiger-saturn"
   final List<ContactPreview> contacts;
@@ -440,7 +448,9 @@ class _ChatsTab extends StatelessWidget {
     if (!_miuiPromptChecked) {
       _miuiPromptChecked = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        maybeShowBackgroundPrompt(context);
+        // google push wakes the phone itself, as setup says
+        if (appState.deliveryMode == DeliveryMode.google) return;
+        homeBackgroundAsk(context);
       });
     }
     return SafeArea(
