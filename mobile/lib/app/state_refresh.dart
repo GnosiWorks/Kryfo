@@ -10,6 +10,7 @@ extension AppStateRefresh on AppState {
     final waiting = _devModeIn(s) ? await s.support.waiting() : null;
     // a session swapped while this read keeps what it was given
     if (!identical(s, _session)) return;
+    _photosFollow(s);
     contacts = list;
     pendingCount = pending;
     devRow = dev;
@@ -158,6 +159,7 @@ extension AppStateRefresh on AppState {
       final members = groupEndOf(r) != null
           ? const <String>[]
           : await s.getGroupMembers(gid);
+      final shots = GroupShots.ofRow(r, quiet: s.container.quiet);
       list.add(
         GroupPreview(
           groupId: gid,
@@ -173,6 +175,8 @@ extension AppStateRefresh on AppState {
           joiningAt: r['joining_at'] as int?,
           hidden: s.isHidden(gid),
           endedBy: groupEndOf(r)?.by,
+          shotsBlocking: shots.blocking,
+          shotsForAll: shots.forAll,
         ),
       );
     }

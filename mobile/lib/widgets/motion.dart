@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// shared motion: the house spring, the tor warmup graph, send pills, typing,
-// cursor and the status dot.
+// shared motion: the house spring, the tor warmup graph, send pills and the
+// status dot.
 
 import 'dart:async';
 import 'dart:math' as math;
@@ -860,7 +860,19 @@ class _SendPillState extends State<SendPill>
       duration: Duration(
         milliseconds: widget.mode == PrivacyMode.private ? 1400 : 800,
       ),
-    )..repeat();
+    );
+  }
+
+  // with reduced motion the onions and the trail rest on a middle frame
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (motionStill(context)) {
+      _ctl.stop();
+      _ctl.value = 0.5;
+    } else if (!_ctl.isAnimating) {
+      _ctl.repeat();
+    }
   }
 
   @override
@@ -892,16 +904,17 @@ class _SendPillState extends State<SendPill>
     }
   }
 
-  // the route has a colour of its own, so the mode reads at a glance
+  // the route has a colour of its own, so the mode reads at a glance. the
+  // text tones, so the words hold 4.5:1 in light too
   Color get _color {
-    if (widget.delivered) return kGreen;
+    if (widget.delivered) return HaloColors.greenText;
     switch (widget.mode) {
       case PrivacyMode.private:
-        return kViolet;
+        return HaloColors.violetText;
       case PrivacyMode.normal:
-        return kCyan;
+        return HaloColors.sky;
       case PrivacyMode.fast:
-        return kGreen;
+        return HaloColors.greenText;
     }
   }
 
@@ -913,7 +926,7 @@ class _SendPillState extends State<SendPill>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
       decoration: BoxDecoration(
-        color: _color.withValues(alpha: 0.14),
+        color: _color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -1043,80 +1056,6 @@ class _OnionSpinPainter extends CustomPainter {
       old.t != t || old.phase != phase || old.color != color;
 }
 
-// ---- typing dots ----
-// unused on purpose: kryfo sends no typing signal over the wire, and the why
-// kryfo screen promises that. do not wire this to the transport.
-class TypingDots extends StatefulWidget {
-  const TypingDots({super.key});
-  @override
-  State<TypingDots> createState() => _TypingDotsState();
-}
-
-class _TypingDotsState extends State<TypingDots>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctl;
-  @override
-  void initState() {
-    super.initState();
-    _ctl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _ctl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: const BoxDecoration(
-        color: kSurface3,
-        borderRadius: BorderRadiusDirectional.only(
-          topStart: Radius.circular(14),
-          topEnd: Radius.circular(14),
-          bottomEnd: Radius.circular(14),
-          bottomStart: Radius.circular(4),
-        ),
-      ),
-      child: AnimatedBuilder(
-        animation: _ctl,
-        builder: (ctx, _) => Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _dot(0),
-            const SizedBox(width: 3),
-            _dot(0.18),
-            const SizedBox(width: 3),
-            _dot(0.36),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _dot(double phase) {
-    final ph = (_ctl.value + phase) % 1.0;
-    final dy = ph < 0.3 ? -3.0 * (math.sin(ph / 0.3 * math.pi)) : 0.0;
-    final op = 0.4 + (ph < 0.3 ? 0.6 * math.sin(ph / 0.3 * math.pi) : 0.0);
-    return Transform.translate(
-      offset: Offset(0, dy),
-      child: Container(
-        width: 5,
-        height: 5,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: kAmber.withValues(alpha: op),
-        ),
-      ),
-    );
-  }
-}
-
 // ---- status dot ----
 class BreathDot extends StatefulWidget {
   final Color color;
@@ -1179,47 +1118,6 @@ class _BreathDotState extends State<BreathDot>
       },
     );
   }
-}
-
-// ---- blinking cursor ----
-class BlinkCursor extends StatefulWidget {
-  final Color color;
-  final double height;
-  const BlinkCursor({super.key, this.color = kAmber, this.height = 11});
-  @override
-  State<BlinkCursor> createState() => _BlinkCursorState();
-}
-
-class _BlinkCursorState extends State<BlinkCursor>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctl;
-  @override
-  void initState() {
-    super.initState();
-    _ctl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _ctl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-    animation: _ctl,
-    builder: (ctx, _) {
-      final visible = _ctl.value < 0.5;
-      return Container(
-        width: 1.5,
-        height: widget.height,
-        color: visible ? widget.color : Colors.transparent,
-      );
-    },
-  );
 }
 
 // the node names under the tor graph. dark keeps its soft tones; light

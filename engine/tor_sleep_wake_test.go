@@ -72,6 +72,7 @@ func TestSleepWakeThenModeSwitch(t *testing.T) {
 		t.Fatal(err)
 	}
 	curve25519.ScalarBaseMult(&myXPub, &myXPriv)
+	setMainForTest(myXPriv, myXPub)
 	mu.Unlock()
 	nostrMu.Lock()
 	nostrRelays = strings.Split(testRelays, ",")
@@ -80,7 +81,7 @@ func TestSleepWakeThenModeSwitch(t *testing.T) {
 		var peer [32]byte
 		peer[0], peer[31] = byte(i+1), 0x42
 		peerHex := hex.EncodeToString(peer[:])
-		_, rcvPk, err := nip17RcvAddress(peer)
+		_, rcvPk, err := nip17RcvAddressAs(testMain(), peer)
 		if err != nil {
 			t.Fatalf("derive %d: %v", i, err)
 		}
@@ -89,7 +90,7 @@ func TestSleepWakeThenModeSwitch(t *testing.T) {
 		nostrSubs[peerHex] = cancel
 		nostrMu.Unlock()
 		defer cancel()
-		go nostrSubscribeRunner(ctx, peerHex, peer, rcvPk)
+		go nostrSubscribeRunner(ctx, peerHex, mainPair(peer), rcvPk)
 	}
 	kickRelays()
 	time.Sleep(20 * time.Second) // let the runners build a client and dial

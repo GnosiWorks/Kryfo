@@ -40,7 +40,7 @@ import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/signal_stores.dart' show invitePreKeyId;
 import 'package:kryfo/vault_life.dart'
     show ChatMover, ChatRef, VaultHost, hiddenCard;
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart'
     show ConflictAlgorithm, Database;
@@ -164,13 +164,13 @@ class _Rows extends HaloDb {
 
 class _Io extends AppIo {
   @override
-  Future<String> relaySend(String xPub, String cipher) async => 'ok';
+  Future<String> relaySend(int ident, String xPub, String cipher) async => 'ok';
   @override
   Future<String> onionSend(String onion, String cipher) async => 'error: off';
   @override
-  void listen(String xPub, {bool fresh = false}) {}
+  void listen(int ident, String xPub, {bool fresh = false}) {}
   @override
-  void unlisten(String xPub) {}
+  void unlisten(int ident, String xPub) {}
   @override
   String edPub() => 'ed-me';
   @override
@@ -197,7 +197,7 @@ var _n = 0;
 // a phone with a signal identity of its own. [name]: the same person on a
 // new install
 Future<_Peer> _phone({String? name}) async {
-  final pair = Curve.generateKeyPair();
+  final pair = testKeyPair();
   final ss = SignalSession();
   final x = pair.publicKey.serialize().sublist(1);
   await ss.bootstrap(
@@ -215,13 +215,7 @@ Future<_Peer> _phone({String? name}) async {
 
 // a text from [p] to this phone, on a session started from this phone's card
 Future<String> _opener(_Peer p, String text) async {
-  await SessionBuilder(
-    p.ss.sessionStore,
-    p.ss.preKeyStore,
-    p.ss.signedPreKeyStore,
-    p.ss.identityStore,
-    SignalProtocolAddress('me', 1),
-  ).processPreKeyBundle(preKeyBundleOf(await makePreKeyBundleB64()));
+  await p.ss.processBundle('me', cardBundle(await makePreKeyBundleB64()));
   return p.ss.encryptTo('me', text);
 }
 
@@ -325,7 +319,7 @@ void main() {
   late ArrivalStore vaultList;
 
   setUpAll(() async {
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     await signalSession.bootstrap(
       database: store,
       xPubBytes: me.publicKey.serialize().sublist(1),
@@ -783,19 +777,8 @@ void main() {
     test('that fails its mac after the key check changes nothing', () async {
       final again = await _phone(name: bob.name);
       final wire = base64Decode(await _opener(again, 'forged'));
-      final pkm = PreKeySignalMessage(Uint8List.fromList(wire.sublist(1)));
-      final inner = Uint8List.fromList(pkm.getWhisperMessage().serialize());
-      inner[inner.length - 1] ^= 1;
-      final bad = PreKeySignalMessage.from(
-        pkm.getMessageVersion(),
-        pkm.getRegistrationId(),
-        pkm.getPreKeyId(),
-        pkm.getSignedPreKeyId(),
-        pkm.getBaseKey(),
-        pkm.getIdentityKey(),
-        SignalMessage.fromSerialized(inner),
-      );
-      final forged = base64Encode([wire[0], ...bad.serialize()]);
+      final bad = flipOpenerMac(wire.sublist(1));
+      final forged = base64Encode([wire[0], ...bad]);
       expect(
         await signalDecrypt(bob.name, forged, flagKeyChange: true),
         isNull,
@@ -846,32 +829,24 @@ void main() {
         );
         final again = await _phone(name: bob.name);
         final wire = base64Decode(await _opener(again, 'forged'));
-        final pkm = PreKeySignalMessage(Uint8List.fromList(wire.sublist(1)));
-        final inner = Uint8List.fromList(pkm.getWhisperMessage().serialize());
-        inner[inner.length - 1] ^= 1;
-        final bad = PreKeySignalMessage.from(
-          pkm.getMessageVersion(),
-          pkm.getRegistrationId(),
-          pkm.getPreKeyId(),
-          pkm.getSignedPreKeyId(),
-          pkm.getBaseKey(),
-          pkm.getIdentityKey(),
-          SignalMessage.fromSerialized(inner),
-        );
-        Future<void>? accepted;
-        store.onInsert = (t) {
-          if (t == 'peer_identities') accepted ??= rows.acceptNewKey(bob.name);
-        };
+        final bad = flipOpenerMac(wire.sublist(1));
+        // the accept goes in while the forged open runs: nothing about them
+        // is written before an open goes through, so nothing of it is put
+        // back over the accept after
+        final writes = <String>[];
+        store.onInsert = writes.add;
         addTearDown(() => store.onInsert = null);
+        final accepted = rows.acceptNewKey(bob.name);
         expect(
           await signalDecrypt(
             bob.name,
-            base64Encode([wire[0], ...bad.serialize()]),
+            base64Encode([wire[0], ...bad]),
             flagKeyChange: true,
           ),
           isNull,
         );
         await accepted;
+        expect(writes, isNot(contains('peer_identities')));
         expect(row()['key_changed'], 0);
         expect(row()['verified'], 0);
         expect(row()['verified_key'], isNull);
@@ -879,7 +854,7 @@ void main() {
     );
 
     test(
-      'whose session is kept before a later step fails keeps its key',
+      'that fails at a later step keeps nothing, and opens once that works',
       () async {
         final again = await _phone(name: bob.name);
         // a one-time prekey of this phone's, which the open then lets go of
@@ -887,44 +862,34 @@ void main() {
             .rows('prekeys')
             .map((r) => r['id'] as int)
             .firstWhere((i) => i != invitePreKeyId);
-        final pk = await signalSession.preKeyStore.loadPreKey(id);
-        final spk = await signalSession.signedPreKeyStore.loadSignedPreKey(1);
-        await SessionBuilder(
-          again.ss.sessionStore,
-          again.ss.preKeyStore,
-          again.ss.signedPreKeyStore,
-          again.ss.identityStore,
-          SignalProtocolAddress('me', 1),
-        ).processPreKeyBundle(
-          PreKeyBundle(
-            signalSession.registrationId,
-            1,
-            id,
-            pk.getKeyPair().publicKey,
-            spk.id,
-            spk.getKeyPair().publicKey,
-            spk.signature,
-            signalSession.identityKeyPair.getPublicKey(),
-          ),
+        await again.ss.processBundle(
+          'me',
+          cardBundle(await cardWithOneTime(signalSession, id)),
         );
         final wire = await again.ss.encryptTo('me', 'new phone');
         store.failOn = 'delete:prekeys';
         addTearDown(() => store.failOn = null);
-        await signalDecrypt(bob.name, wire, flagKeyChange: true);
+        expect(
+          await signalDecrypt(bob.name, wire, flagKeyChange: true),
+          isNull,
+        );
         store.failOn = null;
         await _settle();
-        // the key the stored session is on, and the banner for it
+        // the session, the key and the spent prekey are one write: none of
+        // it stays, the key held and its marks are as they were
+        expect(_hex(key()), bob.xpub);
+        expect(row()['key_changed'], 0);
+        expect(store.rows('prekeys').any((r) => r['id'] == id), isTrue);
+        // the same opener opens once the write goes through, and moves
+        // the key then
+        expect(
+          await signalDecrypt(bob.name, wire, flagKeyChange: true),
+          'new phone',
+        );
+        await _settle();
         expect(_hex(key()), again.xpub);
         expect(row()['key_changed'], 1);
         expect(await app.keyHeld(bob.name, strict: true), isTrue);
-        expect(
-          await signalDecrypt(
-            bob.name,
-            await again.ss.encryptTo('me', 'and again'),
-            flagKeyChange: true,
-          ),
-          'and again',
-        );
       },
     );
   });
@@ -933,7 +898,7 @@ void main() {
     'a session started afresh on an old card is held before it seals',
     () async {
       final db = MemDb();
-      final pair = Curve.generateKeyPair();
+      final pair = testKeyPair();
       final me = SignalSession();
       await me.bootstrap(
         database: db,
@@ -941,13 +906,7 @@ void main() {
         xPrivBytes: pair.privateKey.serialize(),
       );
       final bob = await _phone();
-      await SessionBuilder(
-        me.sessionStore,
-        me.preKeyStore,
-        me.signedPreKeyStore,
-        me.identityStore,
-        SignalProtocolAddress(bob.name, 1),
-      ).processPreKeyBundle(preKeyBundleOf(bob.card));
+      await me.processBundle(bob.name, cardBundle(bob.card));
       await me.markRestored();
       // they came back on a new phone, and its number was checked
       final again = await _phone(name: bob.name);
@@ -958,7 +917,7 @@ void main() {
           bob.name,
           'hi',
           // the card kept from the first pairing
-          afresh: () async => preKeyBundleOf(bob.card),
+          afresh: () async => cardBundle(bob.card),
           held: () => keyHeldIn(db, bob.name),
         ),
         throwsA(isA<KeyHeld>()),

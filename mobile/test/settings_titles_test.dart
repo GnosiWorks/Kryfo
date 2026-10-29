@@ -22,6 +22,8 @@ import 'package:kryfo/main.dart'
         useEngineForTest,
         AppStateRoute,
         AppStateBridges;
+import 'package:kryfo/devices/own_devices.dart' show ThisPhoneOnly;
+import 'package:kryfo/screens/linked_devices_screen.dart';
 import 'package:kryfo/screens/appearance_screen.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/screens/notifications_screen.dart';
@@ -55,6 +57,7 @@ const _settingsFiles = {
   'bridge_sheets',
   'seen_screen',
   'modes_screen',
+  'fast_servers_screen',
   'blocked_screen',
   'pins_screen',
   'lock_setup_screen',
@@ -70,6 +73,7 @@ const _settingsFiles = {
   'dev_about_sheet',
   'translation_screen',
   'licences_screen',
+  'linked_devices_screen',
 };
 
 // opened from there, but not settings: a chat, the home and the camera
@@ -153,6 +157,16 @@ class _SheetOpener extends StatelessWidget {
 }
 
 final _pages = [
+  _Page(
+    'linked devices',
+    () => const LinkedDevicesScreen(source: ThisPhoneOnly(phoneName: 'Phone')),
+    () => [],
+  ),
+  _Page(
+    'link a device',
+    () => const LinkDeviceScreen(),
+    () => [l10n.devicesHistory],
+  ),
   _Page(
     'settings',
     () => const SettingsScreen(),

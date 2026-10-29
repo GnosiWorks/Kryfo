@@ -2,6 +2,7 @@
 // chat screen: bubbles, composer, live receive over tor.
 
 import '../lock_state.dart';
+import '../capture_watch.dart';
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -13,10 +14,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../picked.dart';
 import '../album.dart';
+import '../widgets/say.dart' show sayArrivals;
 import '../widgets/album_grid.dart';
 import '../widgets/album_viewer.dart';
 import 'media_send_screen.dart';
 import '../sent_name.dart';
+import '../desktop/desktop_mode.dart' show canShareOut;
 import 'dart:io';
 import 'dart:convert';
 import 'key_verification_screen.dart';
@@ -45,6 +48,7 @@ import '../widgets/row_anchor.dart';
 import '../widgets/video_bubble.dart';
 import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
+import '../file_drop.dart' show dropDayDone, dropTryLater;
 import '../file_kind.dart'
     show
         FileShape,
@@ -64,6 +68,7 @@ import '../message_envelope.dart'
     show wrapMessage, SenderInfo, grindPow, powBits;
 import '../outbox.dart' show powFits;
 import '../theme.dart';
+import '../link_view.dart' show sendReadsBlocked;
 import '../media_progress.dart';
 import '../msg_order.dart';
 import '../widgets/earlier_chip.dart';
@@ -91,6 +96,7 @@ import '../widgets/kryfo_avatar.dart';
 import '../main.dart'
     show
         engine,
+        AppStateFiles,
         kNameAsk,
         kNameLater,
         kNotSent,
@@ -98,7 +104,8 @@ import '../main.dart'
         nameCheckOf,
         session,
         sessionQuiet,
-        signalEncrypt,
+        signalSeal,
+        peerXPubOf,
         hasSessionWith,
         appState,
         currentChatPeer,
@@ -116,6 +123,7 @@ import '../main.dart'
         AppStatePrefs,
         AppStateProfile,
         AppStateScreen,
+        AppStateTyping,
         AppStateVault,
         AppStateContacts,
         AppStateSession,
@@ -178,6 +186,8 @@ import '../l10n/numbers.dart';
 import '../widgets/video_viewer.dart';
 import '../widgets/photo_viewer.dart';
 import '../widgets/swap.dart';
+import '../widgets/typing_mark.dart';
+import '../typing.dart' show composerEdit;
 import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
 import '../back_on_top.dart';
@@ -636,7 +646,14 @@ bool _cannotSend() => !appState.online || !appState.torReady;
 // it has retried itself to the cap. online, the row keeps going on its own
 // and shows as pending.
 bool _sendLooksFailed(_Msg m) =>
-    m.failed && (m.gaveUp || m.notSent || _cannotSend() || _fileIdle(m));
+    m.failed && (m.gaveUp || m.notSent || _readsBlocked() || _fileIdle(m));
+
+// tor still coming up is not a failure: what waits for it reads as sending
+bool _readsBlocked() => sendReadsBlocked(
+  online: appState.online,
+  torReady: appState.torReady,
+  link: appState.linkView,
+);
 
 // a file of ours no send holds is not moving: it says not sent, and a tap
 // sends what is missing. one a send holds draws as sending
@@ -1147,6 +1164,8 @@ class _ChatScreenState extends State<ChatScreen>
   DevChatRow? _devChat;
   // the pinned key did not check out: nothing was sent
   bool _devKeyFailed = false;
+  // the pinned card is too old to start a chat on: an update brings one
+  bool _devCardOld = false;
 
   // the dev chat as home shows it, while it is this one
   DevRow? get _devShown {
@@ -1216,6 +1235,10 @@ class _ChatScreenState extends State<ChatScreen>
         HapticFeedback.heavyImpact();
         setState(() => _devKeyFailed = true);
         return false;
+      case DevStart.needsUpdate:
+        HapticFeedback.lightImpact();
+        setState(() => _devCardOld = true);
+        return false;
       case DevStart.none:
         return false;
     }
@@ -1223,9 +1246,22 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _chooseDevName(bool anon) => _devOpening?.choose(anon: anon);
 
+  // android's word that this chat was screenshotted or is recorded: one
+  // quiet line here, on this phone alone
+  VoidCallback? _unwatchCaptures;
+  void _captured(Capture what) {
+    if (!mounted || lockState.locked) return;
+    // a secure window came out black: until a phone shows the callback
+    // stays quiet there, nothing is said
+    if (appState.windowSecure) return;
+    if (ModalRoute.of(context)?.isCurrent == false) return;
+    showHaloToast(context, captureLine(what));
+  }
+
   @override
   void initState() {
     super.initState();
+    _unwatchCaptures = captureWatch.watch(_captured);
     _memo = session.chatKey(widget.peerHaloId);
     if (_isDev) {
       final d = _devShown;
@@ -1296,6 +1332,9 @@ class _ChatScreenState extends State<ChatScreen>
     if (kept == null) unawaited(_readDraft(rows));
     // kept on every keystroke, so it survives leaving the chat and the app
     _msgCtrl.addListener(_keepDraft);
+    // what is typed from here on may tell them, words put back never do
+    _typedWas = _msgCtrl.text;
+    _msgCtrl.addListener(_typed);
     // words handed in by a share or a forward are a draft from the start;
     // after a stop, once the row they join is read
     if (kept != null && _handedIn) _keepDraft();
@@ -1316,7 +1355,7 @@ class _ChatScreenState extends State<ChatScreen>
     _loadWall();
     // a new default under appearance shows here at once
     wallpaperRevision.addListener(_loadWall);
-    signalSession.peerXPubHex(widget.peerHaloId).then((v) {
+    peerXPubOf(widget.peerHaloId).then((v) {
       // only adopt the session value if we don't already have the widget key;
       // never clobber a good key with a null the store hasn't filled yet.
       if (mounted && v != null && v.isNotEmpty) {
@@ -1942,6 +1981,7 @@ class _ChatScreenState extends State<ChatScreen>
       _normaliseMessages();
       if (!follow) _unseenNew += theirs;
     });
+    if (mounted) sayArrivals(context, theirs);
     _lookEarlierSoon();
     _applySecureContent();
     // clear the home badge for what we are reading. a backed-out chat stays
@@ -2203,253 +2243,265 @@ class _ChatScreenState extends State<ChatScreen>
       builder: (_) {
         return IgnorePointer(
           ignoring: closing,
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: dismiss,
-                  child: MenuBackdrop(closing: closing),
+          child: MenuScope(
+            onDismiss: dismiss,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: MenuCloser(
+                    onDismiss: dismiss,
+                    child: MenuBackdrop(closing: closing),
+                  ),
                 ),
-              ),
-              // the offset is from the left edge, in either direction
-              Positioned(
-                left: offset.dx,
-                top: offset.dy,
-                width: bubbleSize.width,
-                child: IgnorePointer(
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0.0, end: still || closing ? 0.0 : 1.0),
-                    duration: kHouseTime,
-                    curve: kHouseCurve,
-                    child: Material(
-                      type: MaterialType.transparency,
-                      child: _Bubble(
-                        msg: target,
-                        album: album,
-                        translation: _translation,
+                // the offset is from the left edge, in either direction
+                Positioned(
+                  left: offset.dx,
+                  top: offset.dy,
+                  width: bubbleSize.width,
+                  // a copy of the bubble: heard once, on the chat
+                  child: IgnorePointer(
+                    child: ExcludeSemantics(
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween(
+                          begin: 0.0,
+                          end: still || closing ? 0.0 : 1.0,
+                        ),
+                        duration: kHouseTime,
+                        curve: kHouseCurve,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: _Bubble(
+                            msg: target,
+                            album: album,
+                            translation: _translation,
+                          ),
+                        ),
+                        builder: (_, t, child) => Transform.scale(
+                          scale: 1.0 + 0.04 * t,
+                          alignment: alignRight
+                              ? AlignmentDirectional.centerEnd
+                              : AlignmentDirectional.centerStart,
+                          child: child,
+                        ),
                       ),
-                    ),
-                    builder: (_, t, child) => Transform.scale(
-                      scale: 1.0 + 0.04 * t,
-                      alignment: alignRight
-                          ? AlignmentDirectional.centerEnd
-                          : AlignmentDirectional.centerStart,
-                      child: child,
                     ),
                   ),
                 ),
-              ),
 
-              if (!welcome && _canReact)
+                if (!welcome && _canReact)
+                  PositionedDirectional(
+                    top: reactTop,
+                    start: alignRight ? null : 12,
+                    end: alignRight ? 12 : null,
+                    child: MenuPop(
+                      fromRight: alignRight,
+                      closing: closing,
+                      child: ReactionPicker(
+                        replyLabel: l10n.chatReply,
+                        emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
+                        selected: target.reactions[''],
+                        onPick: (e) => dismiss(
+                          then: () {
+                            final added = reactOn.reactions[''] != e;
+                            _toggleReaction(reactOn, e);
+                            if (added) _flashReaction(reactOn);
+                          },
+                        ),
+                        // no reply bar or keyboard over the lock
+                        onReply: () => dismiss(
+                          then: () {
+                            if (!lockGuard.isLocked()) _replyWith(anchor);
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
                 PositionedDirectional(
-                  top: reactTop,
+                  top: menuTop,
+                  bottom: menuBottom,
                   start: alignRight ? null : 12,
                   end: alignRight ? 12 : null,
                   child: MenuPop(
                     fromRight: alignRight,
                     closing: closing,
-                    child: ReactionPicker(
-                      replyLabel: l10n.chatReply,
-                      emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
-                      selected: target.reactions[''],
-                      onPick: (e) => dismiss(
-                        then: () {
-                          final added = reactOn.reactions[''] != e;
-                          _toggleReaction(reactOn, e);
-                          if (added) _flashReaction(reactOn);
-                        },
-                      ),
-                      // no reply bar or keyboard over the lock
-                      onReply: () => dismiss(
-                        then: () {
-                          if (!lockGuard.isLocked()) _replyWith(anchor);
-                        },
-                      ),
+                    child: MessageMenuCard(
+                      note: kept ? l10n.chatShotsMenuNote : null,
+                      actions: [
+                        // his first line: copy, and nothing else
+                        if (!welcome)
+                          MenuAction(
+                            icon: target.pinned
+                                ? Icons.push_pin
+                                : Icons.push_pin_outlined,
+                            label: target.pinned
+                                ? l10n.chatUnpin
+                                : l10n.chatPin,
+                            onTap: () {
+                              dismiss();
+                              _togglePin(anchor);
+                            },
+                          ),
+                        // in an album, the one held
+                        if (!welcome)
+                          MenuAction(
+                            icon: saveOn?.saved ?? false
+                                ? Icons.bookmark
+                                : Icons.bookmark_outline,
+                            label: saveOn?.saved ?? false
+                                ? l10n.chatUnsave
+                                : l10n.commonSave,
+                            tint: saveOn?.saved ?? false
+                                ? HaloColors.amber
+                                : null,
+                            // one saved before stays, and can be let go
+                            onTap: saveOn == null || (kept && !saveOn.saved)
+                                ? null
+                                : () =>
+                                      dismiss(then: () => _toggleSaved(saveOn)),
+                          ),
+                        MenuAction(
+                          icon: Icons.copy_rounded,
+                          label: l10n.commonCopy,
+                          onTap:
+                              kept ||
+                                  target.text.isEmpty ||
+                                  target.sticker != null
+                              ? null
+                              : () {
+                                  dismiss();
+                                  Clipboard.setData(
+                                    ClipboardData(text: target.text),
+                                  );
+                                  showHaloToast(context, l10n.commonCopied);
+                                },
+                        ),
+                        if (canTranslate)
+                          MenuAction(
+                            icon: Icons.translate_rounded,
+                            label: translation.shown(trKey, target.text)
+                                ? l10n.translateShowOriginal
+                                : l10n.translateAction,
+                            onTap: () => dismiss(
+                              then: () => askTranslate(
+                                context,
+                                translation,
+                                trKey,
+                                target.text,
+                              ),
+                            ),
+                          ),
+                        // a sticker is not forwarded, copied or edited, and
+                        // a photo, a file or a voice note is not forwarded
+                        if (!welcome)
+                          MenuAction(
+                            icon: Icons.forward_rounded,
+                            label: l10n.chatForward,
+                            onTap:
+                                kept ||
+                                    !canForward(
+                                      text: target.text,
+                                      mediaPath: target.mediaPath,
+                                      filePath: target.filePath,
+                                      sticker: target.sticker != null,
+                                    )
+                                ? null
+                                : () {
+                                    // a sheet takes its place: no copy over it
+                                    dismiss(now: true);
+                                    _forwardMessage(target);
+                                  },
+                          ),
+                        // a tap opens a file, so sharing it lives here. an
+                        // app installer is only ever saved
+                        if (canShareOut)
+                          MenuAction(
+                            icon: Icons.ios_share_rounded,
+                            label: l10n.commonShare,
+                            onTap:
+                                kept ||
+                                    !canShare ||
+                                    knownInstaller(
+                                      shareOn.filePath!,
+                                      shareOn.fileName,
+                                    )
+                                ? null
+                                : () {
+                                    dismiss(now: true);
+                                    lockState.hold(
+                                      () => shareFileOut(
+                                        shareOn.filePath!,
+                                        name: shareOn.fileName,
+                                      ),
+                                    );
+                                  },
+                          ),
+                        MenuAction(
+                          icon: Icons.download_rounded,
+                          label: l10n.fileSaveToDevice,
+                          // in an album, the one held. nothing kept to this
+                          // chat leaves it
+                          onTap:
+                              kept ||
+                                  shareOn == null ||
+                                  _keptHere(shareOn) ||
+                                  shareOn.filePath == null ||
+                                  shareOn.fileName == null ||
+                                  isVoiceName(shareOn.fileName)
+                              ? null
+                              : () {
+                                  dismiss(now: true);
+                                  saveReceivedFile(
+                                    context,
+                                    shareOn.filePath!,
+                                    shareOn.fileName,
+                                  );
+                                },
+                        ),
+                        // words can be edited; a photo, a file or a voice note
+                        // is what it is
+                        MenuAction(
+                          icon: Icons.edit_outlined,
+                          label: l10n.commonEdit,
+                          tint: HaloColors.amber,
+                          onTap:
+                              target.direction != 'out' ||
+                                  target.mediaPath != null ||
+                                  target.filePath != null ||
+                                  target.sticker != null
+                              ? null
+                              : () {
+                                  dismiss(now: true);
+                                  _editMessage(target);
+                                },
+                        ),
+                        MenuAction(
+                          icon: Icons.delete_outline,
+                          danger: true,
+                          label: going ? l10n.chatStopSending : l10n.chatUnsend,
+                          onTap: target.direction != 'out'
+                              ? null
+                              : () {
+                                  dismiss(now: true);
+                                  // a photo or file still on its way stops here
+                                  // and the other side drops what it has. an
+                                  // album goes back whole
+                                  if (album != null) {
+                                    going
+                                        ? _stopAlbum(album)
+                                        : _unsendAlbum(album);
+                                  } else if (going) {
+                                    _stopSending(target);
+                                  } else {
+                                    _unsendMessage(target);
+                                  }
+                                },
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              PositionedDirectional(
-                top: menuTop,
-                bottom: menuBottom,
-                start: alignRight ? null : 12,
-                end: alignRight ? 12 : null,
-                child: MenuPop(
-                  fromRight: alignRight,
-                  closing: closing,
-                  child: MessageMenuCard(
-                    note: kept ? l10n.chatShotsMenuNote : null,
-                    actions: [
-                      // his first line: copy, and nothing else
-                      if (!welcome)
-                        MenuAction(
-                          icon: target.pinned
-                              ? Icons.push_pin
-                              : Icons.push_pin_outlined,
-                          label: target.pinned ? l10n.chatUnpin : l10n.chatPin,
-                          onTap: () {
-                            dismiss();
-                            _togglePin(anchor);
-                          },
-                        ),
-                      // in an album, the one held
-                      if (!welcome)
-                        MenuAction(
-                          icon: saveOn?.saved ?? false
-                              ? Icons.bookmark
-                              : Icons.bookmark_outline,
-                          label: saveOn?.saved ?? false
-                              ? l10n.chatUnsave
-                              : l10n.commonSave,
-                          tint: saveOn?.saved ?? false
-                              ? HaloColors.amber
-                              : null,
-                          // one saved before stays, and can be let go
-                          onTap: saveOn == null || (kept && !saveOn.saved)
-                              ? null
-                              : () => dismiss(then: () => _toggleSaved(saveOn)),
-                        ),
-                      MenuAction(
-                        icon: Icons.copy_rounded,
-                        label: l10n.commonCopy,
-                        onTap:
-                            kept ||
-                                target.text.isEmpty ||
-                                target.sticker != null
-                            ? null
-                            : () {
-                                dismiss();
-                                Clipboard.setData(
-                                  ClipboardData(text: target.text),
-                                );
-                                showHaloToast(context, l10n.commonCopied);
-                              },
-                      ),
-                      if (canTranslate)
-                        MenuAction(
-                          icon: Icons.translate_rounded,
-                          label: translation.shown(trKey, target.text)
-                              ? l10n.translateShowOriginal
-                              : l10n.translateAction,
-                          onTap: () => dismiss(
-                            then: () => askTranslate(
-                              context,
-                              translation,
-                              trKey,
-                              target.text,
-                            ),
-                          ),
-                        ),
-                      // a sticker is not forwarded, copied or edited, and
-                      // a photo, a file or a voice note is not forwarded
-                      if (!welcome)
-                        MenuAction(
-                          icon: Icons.forward_rounded,
-                          label: l10n.chatForward,
-                          onTap:
-                              kept ||
-                                  !canForward(
-                                    text: target.text,
-                                    mediaPath: target.mediaPath,
-                                    filePath: target.filePath,
-                                    sticker: target.sticker != null,
-                                  )
-                              ? null
-                              : () {
-                                  // a sheet takes its place: no copy over it
-                                  dismiss(now: true);
-                                  _forwardMessage(target);
-                                },
-                        ),
-                      // a tap opens a file, so sharing it lives here. an
-                      // app installer is only ever saved
-                      MenuAction(
-                        icon: Icons.ios_share_rounded,
-                        label: l10n.commonShare,
-                        onTap:
-                            kept ||
-                                !canShare ||
-                                knownInstaller(
-                                  shareOn.filePath!,
-                                  shareOn.fileName,
-                                )
-                            ? null
-                            : () {
-                                dismiss(now: true);
-                                lockState.hold(
-                                  () => shareFileOut(
-                                    shareOn.filePath!,
-                                    name: shareOn.fileName,
-                                  ),
-                                );
-                              },
-                      ),
-                      MenuAction(
-                        icon: Icons.download_rounded,
-                        label: l10n.fileSaveToDevice,
-                        // in an album, the one held. nothing kept to this
-                        // chat leaves it
-                        onTap:
-                            kept ||
-                                shareOn == null ||
-                                _keptHere(shareOn) ||
-                                shareOn.filePath == null ||
-                                shareOn.fileName == null ||
-                                isVoiceName(shareOn.fileName)
-                            ? null
-                            : () {
-                                dismiss(now: true);
-                                saveReceivedFile(
-                                  context,
-                                  shareOn.filePath!,
-                                  shareOn.fileName,
-                                );
-                              },
-                      ),
-                      // words can be edited; a photo, a file or a voice note
-                      // is what it is
-                      MenuAction(
-                        icon: Icons.edit_outlined,
-                        label: l10n.commonEdit,
-                        tint: HaloColors.amber,
-                        onTap:
-                            target.direction != 'out' ||
-                                target.mediaPath != null ||
-                                target.filePath != null ||
-                                target.sticker != null
-                            ? null
-                            : () {
-                                dismiss(now: true);
-                                _editMessage(target);
-                              },
-                      ),
-                      MenuAction(
-                        icon: Icons.delete_outline,
-                        danger: true,
-                        label: going ? l10n.chatStopSending : l10n.chatUnsend,
-                        onTap: target.direction != 'out'
-                            ? null
-                            : () {
-                                dismiss(now: true);
-                                // a photo or file still on its way stops here
-                                // and the other side drops what it has. an
-                                // album goes back whole
-                                if (album != null) {
-                                  going
-                                      ? _stopAlbum(album)
-                                      : _unsendAlbum(album);
-                                } else if (going) {
-                                  _stopSending(target);
-                                } else {
-                                  _unsendMessage(target);
-                                }
-                              },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -2551,6 +2603,8 @@ class _ChatScreenState extends State<ChatScreen>
     mediaProgressEnd(uid);
     if (mounted) setState(() => m.removing = true);
     await Future.delayed(kLeaveGone);
+    // up on the files service already: it comes down with the row
+    await appState.takeDropBackOf(uid);
     await session.deleteMessage(uid);
     if (mounted) setState(() => _messages.remove(m));
     unawaited(appState.refreshContacts());
@@ -2573,6 +2627,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (mounted) setState(() => m.removing = true);
     // it burns, then its row folds (LeaveFold); pulled sooner, it pops
     await Future.delayed(kLeaveGone);
+    await appState.takeDropBackOf(m.msgUid!);
     await session.deleteMessage(m.msgUid!);
     if (mounted) setState(() => _messages.remove(m));
     // the home row still previews the message just unsent
@@ -2593,7 +2648,7 @@ class _ChatScreenState extends State<ChatScreen>
     final confirm = await showConfirmSheet(
       context,
       title: l10n.albumUnsendTitle,
-      line: l10n.chatItDisappearsWithNo,
+      line: l10n.chatAlbumItDisappearsWithNo,
       yes: l10n.chatUnsend,
     );
     FocusManager.instance.primaryFocus?.unfocus();
@@ -2627,6 +2682,7 @@ class _ChatScreenState extends State<ChatScreen>
     }
     await Future.delayed(kLeaveGone);
     for (final x in ms) {
+      await appState.takeDropBackOf(x.msgUid!);
       await session.deleteMessage(x.msgUid!);
     }
     if (mounted) setState(() => _messages.removeWhere(ms.contains));
@@ -3253,15 +3309,17 @@ class _ChatScreenState extends State<ChatScreen>
 
   // a text's cipher onto the wire once a route is up, unless it was taken
   // back while it waited
-  Future<String> _wireText(String? uid, String cipher) => wireWhenReady(
-    ready: _torReadyToSend,
-    kept: () async => uid == null || await session.messageExists(uid),
-    send: () => _routeText(cipher, uid),
-  );
+  Future<String> _wireText(String? uid, String cipher, int ident) =>
+      wireWhenReady(
+        ready: _torReadyToSend,
+        kept: () async => uid == null || await session.messageExists(uid),
+        send: () => _routeText(cipher, ident, uid),
+      );
 
   // before the peer back-pairs, direct onion first so their drain runs the
   // back-pair flow, with the first-contact copy beside it (routeText)
-  Future<String> _routeText(String cipher, [String? uid]) async {
+  // [ident]: the identity the door sealed it on, and the one it goes on
+  Future<String> _routeText(String cipher, int ident, [String? uid]) async {
     // a quiet session keeps it here, waiting. a block here keeps it not
     // sent, one in the other container only waits
     if (sessionQuiet || appState.everydayHeld) return 'parked';
@@ -3279,7 +3337,7 @@ class _ChatScreenState extends State<ChatScreen>
       xPub: () async {
         var xpub = _peerXPub;
         xpub ??= widget.peerXPub.isEmpty ? null : widget.peerXPub;
-        xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
+        xpub ??= await peerXPubOf(widget.peerHaloId);
         if (xpub != null) _peerXPub = xpub;
         return xpub;
       },
@@ -3292,8 +3350,8 @@ class _ChatScreenState extends State<ChatScreen>
         widget.peerHaloId,
         backPaired: _backPaired,
       ),
-      viaFirst: (x, fc) => engine.sendFirstContact(x, fc, cipher),
-      viaRelay: (x) => Future(() => engine.nostrSend(x, cipher)),
+      viaFirst: (x, fc) => engine.sendFirstContact(ident, x, fc, cipher),
+      viaRelay: (x) => Future(() => engine.nostrSend(ident, x, cipher)),
       log: (l) => dlog('chat send: $l'),
       // both its copies went: past their two it waits held, not lost
       bothWent: uid == null
@@ -3399,6 +3457,7 @@ class _ChatScreenState extends State<ChatScreen>
         if (!mounted) return;
       }
       final String cipher;
+      final int sealedOn;
       try {
         final wrapped = await wrapMessage(
           msg.text,
@@ -3421,7 +3480,9 @@ class _ChatScreenState extends State<ChatScreen>
           // when it was written, not now
           writtenAt: msg.when.millisecondsSinceEpoch,
         );
-        cipher = await signalEncrypt(widget.peerHaloId, wrapped);
+        final sealed = await signalSeal(widget.peerHaloId, wrapped);
+        cipher = sealed.cipher;
+        sealedOn = sealed.ident;
       } catch (e) {
         if (!mounted) return;
         // waiting on their card: still going, as the first send has it
@@ -3435,7 +3496,7 @@ class _ChatScreenState extends State<ChatScreen>
       }
       if (_devKeyFailed && mounted) setState(() => _devKeyFailed = false);
       handed = true;
-      await Future<String>(() => _wireText(uid, cipher))
+      await Future<String>(() => _wireText(uid, cipher, sealedOn))
           .whenComplete(() {
             if (own) appState.releaseSend(uid);
           })
@@ -4078,8 +4139,9 @@ class _ChatScreenState extends State<ChatScreen>
       if (mounted) showHaloToast(context, l10n.chatCouldNotReadThat);
       return null;
     }
-    if (!fileFits(size)) {
-      if (mounted) showHaloToast(context, fileTooBigLine(size));
+    final most = await appState.fileLimitFor(widget.peerHaloId);
+    if (!fileFits(size, most)) {
+      if (mounted) showHaloToast(context, fileTooBigLine(size, most));
       return null;
     }
     final raw = (await readFileFactsFresh(src, name))?.raw ?? false;
@@ -4486,6 +4548,9 @@ class _ChatScreenState extends State<ChatScreen>
     final shown = _messages.where(
       (m) => m.msgUid != null && m.msgUid == msg.msgUid,
     );
+    final later = dropTryLater(result) || dropDayDone(result);
+    if (dropTryLater(result)) showHaloToast(context, l10n.fileServerTryLater);
+    if (dropDayDone(result)) showHaloToast(context, l10n.fileDayLimit);
     setState(() {
       for (final m in {msg, ...shown}) {
         m.sending = false;
@@ -4499,7 +4564,8 @@ class _ChatScreenState extends State<ChatScreen>
       } else if (result != 'ok' &&
           result != 'parked' &&
           result != kSendBlocked &&
-          !held) {
+          !held &&
+          !later) {
         _status = result;
       } else if (result == 'ok') {
         _devKeyFailed = false;
@@ -4790,6 +4856,7 @@ class _ChatScreenState extends State<ChatScreen>
       // the receiver's verifyPow expects.
       int? powNonce;
       final String cipher;
+      final int sealedOn;
       try {
         // a fresh session is an opener whatever the history: the far side
         // may have let us go and its gate asks again
@@ -4831,7 +4898,9 @@ class _ChatScreenState extends State<ChatScreen>
         _encryptGate = gate.future;
         try {
           await prev;
-          cipher = await signalEncrypt(widget.peerHaloId, wrapped);
+          final sealed = await signalSeal(widget.peerHaloId, wrapped);
+          cipher = sealed.cipher;
+          sealedOn = sealed.ident;
         } finally {
           gate.complete();
         }
@@ -4864,7 +4933,7 @@ class _ChatScreenState extends State<ChatScreen>
 
       mounted ? setState(sealed) : sealed();
       handed = true;
-      Future<String>(() => _wireText(msgUid, cipher))
+      Future<String>(() => _wireText(msgUid, cipher, sealedOn))
           .whenComplete(() => appState.releaseSend(msgUid))
           .then((result) => _finishTextSend(msg, result));
     } finally {
@@ -5439,6 +5508,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   void dispose() {
+    _unwatchCaptures?.call();
     for (final land in List.of(_flights)) {
       land();
     }
@@ -5463,6 +5533,7 @@ class _ChatScreenState extends State<ChatScreen>
     );
     // left: what the composer holds is written now, not after the wait
     _msgCtrl.removeListener(_keepDraft);
+    _msgCtrl.removeListener(_typed);
     _keepDraft();
     final rows = _draftRows;
     if (rows != null) {
@@ -6050,9 +6121,41 @@ class _ChatScreenState extends State<ChatScreen>
       _takeDraft(composerWith(_msgCtrl.text, words));
 
   void _takeDraft(String t) {
-    _msgCtrl.value = TextEditingValue(
-      text: t,
-      selection: TextSelection.collapsed(offset: t.length),
+    _byApp = true;
+    try {
+      _msgCtrl.value = TextEditingValue(
+        text: t,
+        selection: TextSelection.collapsed(offset: t.length),
+      );
+    } finally {
+      _byApp = false;
+    }
+  }
+
+  // the composer's words as the last change left them, and whether the
+  // app is the one changing them now
+  String _typedWas = '';
+  bool _byApp = false;
+
+  // a keystroke or a paste in the focused composer: their phone may show
+  // that this one is typing (typing.dart). the app's own changes, a draft
+  // put back or words handed in, say nothing
+  void _typed() {
+    final t = _msgCtrl.text;
+    final e = composerEdit(
+      _typedWas,
+      t,
+      byApp: _byApp,
+      focused: _composerFocus.hasFocus,
+    );
+    _typedWas = t;
+    if (e == null || _isDev || widget.support) return;
+    unawaited(
+      appState.typingEdit(
+        widget.peerHaloId,
+        userEdit: e.userEdit,
+        nonEmpty: e.nonEmpty,
+      ),
     );
   }
 
@@ -6289,6 +6392,14 @@ class _ChatScreenState extends State<ChatScreen>
                 glyph: NoticeGlyph.shield,
                 text: l10n.devKeyCheckFailed,
                 color: HaloColors.rose,
+                margin: const EdgeInsets.fromLTRB(14, 4, 14, 6),
+              )
+            : _devCardOld
+            ? NoticeBanner(
+                key: const ValueKey('dev-old'),
+                glyph: NoticeGlyph.clock,
+                text: l10n.devUpdateToWrite,
+                color: HaloColors.violet,
                 margin: const EdgeInsets.fromLTRB(14, 4, 14, 6),
               )
             : const SizedBox(key: ValueKey('dev-key-none'), width: 0),
@@ -7311,7 +7422,7 @@ class _ChatHead extends StatelessWidget {
     // the palette swaps in place: depending on the theme repaints the
     // header when it switches under an open chat
     Theme.of(context);
-    final relay = appState.sendMode == 'balanced';
+    final fast = appState.sendMode != 'private';
     return Container(
       padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 8, 12),
       decoration: BoxDecoration(
@@ -7415,59 +7526,69 @@ class _ChatHead extends StatelessWidget {
                     ),
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.lock_outline,
-                          size: 10,
-                          // relay and tor told apart by their own colours,
-                          // never by the accent
-                          color: relay ? HaloColors.sky : HaloColors.violet,
-                        ),
-                        const SizedBox(width: 4),
-                        // a longer language at a big font size would run
-                        // past the header's buttons, so it ends in …
-                        Flexible(
-                          child: Text(
-                            relay
-                                ? l10n.chatEncryptedViaRelay
-                                : appState.sendMode == 'fast'
-                                ? l10n.chatEncryptedDirect
-                                : l10n.chatEncryptedOverTor,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: HaloType.mono(
-                              size: 10,
-                              color: relay ? HaloColors.sky : HaloColors.text2,
+                    // the line swaps to "Typing" while they type, in one
+                    // line either way, so the header keeps its height
+                    child: TypingSwap(
+                      showing: appState.typing.board.of(
+                        appState.typingKey(haloId),
+                      ),
+                      style: typingStyle(size: 10, mono: true),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.lock_outline,
+                            size: 10,
+                            // fast and tor told apart by their own colours,
+                            // never by the accent
+                            color: fast
+                                ? HaloColors.greenText
+                                : HaloColors.violet,
+                          ),
+                          const SizedBox(width: 4),
+                          // a longer language at a big font size would run
+                          // past the header's buttons, so it ends in …
+                          Flexible(
+                            child: Text(
+                              fast
+                                  ? l10n.chatEncryptedDirect
+                                  : l10n.chatEncryptedOverTor,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: HaloType.mono(
+                                size: 10,
+                                color: fast
+                                    ? HaloColors.greenText
+                                    : HaloColors.text2,
+                              ),
                             ),
                           ),
-                        ),
-                        AnimatedSwitcher(
-                          duration: Duration(
-                            milliseconds: motionStill(context) ? 0 : 220,
-                          ),
-                          child: shotsBlocked
-                              ? Padding(
-                                  key: const ValueKey('shots'),
-                                  padding: const EdgeInsetsDirectional.only(
-                                    start: 6,
-                                  ),
-                                  child: Semantics(
-                                    label: l10n.chatShotsBlockedHere,
-                                    child: Icon(
-                                      Icons.phonelink_lock_outlined,
-                                      size: 11,
-                                      color: HaloColors.text2,
+                          AnimatedSwitcher(
+                            duration: Duration(
+                              milliseconds: motionStill(context) ? 0 : 220,
+                            ),
+                            child: shotsBlocked
+                                ? Padding(
+                                    key: const ValueKey('shots'),
+                                    padding: const EdgeInsetsDirectional.only(
+                                      start: 6,
                                     ),
+                                    child: Semantics(
+                                      label: l10n.chatShotsBlockedHere,
+                                      child: Icon(
+                                        Icons.phonelink_lock_outlined,
+                                        size: 11,
+                                        color: HaloColors.text2,
+                                      ),
+                                    ),
+                                  )
+                                : const SizedBox(
+                                    key: ValueKey('no-shots'),
+                                    width: 0,
                                   ),
-                                )
-                              : const SizedBox(
-                                  key: ValueKey('no-shots'),
-                                  width: 0,
-                                ),
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   if ((note ?? '').isNotEmpty)
@@ -7667,7 +7788,8 @@ class _SearchHeadState extends State<SearchHead> {
               child: hasQuery
                   ? Padding(
                       key: const ValueKey('search-meta'),
-                      padding: const EdgeInsets.fromLTRB(6, 9, 6, 0),
+                      // the arrows' 48 boxes make the row's top gap
+                      padding: const EdgeInsetsDirectional.fromSTEB(6, 0, 0, 0),
                       child: Row(
                         children: [
                           Text.rich(
@@ -7707,7 +7829,6 @@ class _SearchHeadState extends State<SearchHead> {
                             enabled: widget.matchCount > 0,
                             onTap: widget.onPrev,
                           ),
-                          const SizedBox(width: 5),
                           _NavBtn(
                             icon: Icons.keyboard_arrow_down_rounded,
                             label: l10n.chatNextMatch,
@@ -7744,26 +7865,33 @@ class _NavBtn extends StatelessWidget {
       label: label,
       button: true,
       enabled: enabled,
+      // a 48 box to tap, the 24 square drawn in its middle
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: enabled ? onTap : null,
-        child: Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            color: enabled ? HaloColors.amberSoft : HaloColors.surface2,
-            borderRadius: BorderRadius.circular(7),
-            border: Border.all(
-              color: enabled
-                  ? HaloColors.amber.withValues(alpha: 0.45)
-                  : HaloColors.line2,
-              width: 0.5,
+        child: SizedBox.square(
+          dimension: 48,
+          child: Center(
+            child: Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: enabled ? HaloColors.amberSoft : HaloColors.surface2,
+                borderRadius: BorderRadius.circular(7),
+                border: Border.all(
+                  color: enabled
+                      ? HaloColors.amber.withValues(alpha: 0.45)
+                      : HaloColors.line2,
+                  width: 0.5,
+                ),
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                icon,
+                size: 16,
+                color: enabled ? HaloColors.amber : HaloColors.text3,
+              ),
             ),
-          ),
-          alignment: Alignment.center,
-          child: Icon(
-            icon,
-            size: 16,
-            color: enabled ? HaloColors.amber : HaloColors.text3,
           ),
         ),
       ),
@@ -7919,9 +8047,10 @@ class _Bubble extends StatelessWidget {
     final showPill = isOut && pending;
     final reacted = msg.reactions.isNotEmpty;
     final roomTime = motionStill(context) ? Duration.zero : kHouseTime;
-    // lighter than the message, so the words lead
+    // full ink for 4.5:1 on every accent: the small mono size keeps it
+    // behind the message
     final metaColor = (isOut && !frameless)
-        ? HaloColors.onAmber.withValues(alpha: 0.55)
+        ? HaloColors.onAmber
         : HaloColors.text3;
     // under a photo or a video there is no amber behind the words
     final onAmberText = isOut && !frameless;
@@ -9612,11 +9741,8 @@ class MediaGalleryScreen extends StatelessWidget {
 }
 
 // the saved mode string as the pill's enum. private is full tor, 3 hops.
-PrivacyMode _pmFrom(String m) => m == 'fast'
-    ? PrivacyMode.fast
-    : m == 'balanced'
-    ? PrivacyMode.normal
-    : PrivacyMode.private;
+PrivacyMode _pmFrom(String m) =>
+    m == 'private' ? PrivacyMode.private : PrivacyMode.fast;
 
 // the compare card, or once put off the quiet line in its place. one
 // grows or shrinks into the other while it fades, at once when the phone

@@ -77,9 +77,10 @@ class LinkView {
     LinkKind.climbing => l10n.appConnecting(percent(pct / 100)),
     LinkKind.relayWait => l10n.appWaitingForARelay,
     LinkKind.ready => l10n.appTorReady,
-    LinkKind.relay => l10n.appViaRelay,
-    LinkKind.relayDown => l10n.appRelayNotAnswering,
-    LinkKind.fast => l10n.appFast,
+    // relay is the fast route now: our two servers
+    LinkKind.relay => l10n.modesFastConnected,
+    LinkKind.relayDown => l10n.appServersNotAnswering,
+    LinkKind.fast => l10n.modesFastConnected,
   };
 
   /// a shorter phrase for the same state, for a language whose words do not
@@ -177,6 +178,15 @@ class LinkView {
   String toString() => 'LinkView($kind, $status, $pct%, held: $held)';
 }
 
+/// whether a send that did not go reads as failed: with no network, or with
+/// the route down and not on its way. while tor is still coming up, a
+/// message typed meanwhile waits for it and reads as sending
+bool sendReadsBlocked({
+  required bool online,
+  required bool torReady,
+  required LinkView link,
+}) => !online || (!torReady && !link.pulsing);
+
 /// the reading for one moment. [usable] is the engine's verdict that a relay
 /// answered through tor (AppState.torUsable), [usableAt] when the status
 /// poll last saw it, [tryingSince] when tor began trying, [relayDownSince]
@@ -203,7 +213,7 @@ LinkView linkViewOf({
     final at = since.add(kRelayDownAfter);
     return now.isBefore(at) ? v(LinkKind.relay, at: at) : v(LinkKind.relayDown);
   }
-  if (mode == 'fast') return v(LinkKind.fast);
+  if (mode == 'fast') return v(LinkKind.relay);
   if (off) return v(LinkKind.off);
   if (usable) return v(LinkKind.ready);
   final grace = pillGraceEnds(

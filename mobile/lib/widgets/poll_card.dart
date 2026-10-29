@@ -307,7 +307,8 @@ class _PollCardState extends State<PollCard> {
                       },
                       label: l10n.pollVote,
                       child: Container(
-                        height: 38,
+                        constraints: const BoxConstraints(minHeight: 38),
+                        padding: const EdgeInsets.symmetric(vertical: 6),
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
                           color: HaloColors.amber,

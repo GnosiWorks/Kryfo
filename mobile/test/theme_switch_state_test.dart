@@ -30,8 +30,7 @@ import 'package:kryfo/stickers/sticker_pack.dart' show StickerLibrary;
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/theme_refresh.dart';
 import 'package:kryfo/widgets/voice_mic.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show Curve;
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart';
@@ -95,13 +94,13 @@ void main() {
 
   group('composer', () {
     setUpAll(() async {
-      final me = Curve.generateKeyPair();
+      final me = testKeyPair();
       await signalSession.bootstrap(
         database: MemDb(),
         xPubBytes: me.publicKey.serialize().sublist(1),
         xPrivBytes: me.privateKey.serialize(),
       );
-      final pair = Curve.generateKeyPair();
+      final pair = testKeyPair();
       final amber = SignalSession();
       await amber.bootstrap(
         database: MemDb(),

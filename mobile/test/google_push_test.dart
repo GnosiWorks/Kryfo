@@ -364,6 +364,37 @@ void main() {
       expect(fb.calls.last, 'off');
     });
 
+    test('a play build on a system without play services never offers '
+        'it', () async {
+      playBuildForTest = true;
+      fb.available = false;
+      final app = AppState()..sendModeForTest = 'private';
+      expect(await app.lookForGoogle(), isFalse);
+      expect(app.googleOffered, isFalse);
+      expect(
+        onboardingModes(google: app.googleOffered),
+        isNot(contains(DeliveryMode.google)),
+      );
+      expect(
+        onboardingPick(google: app.googleOffered, onion: true),
+        DeliveryMode.always,
+      );
+      expect(await app.useGoogle(), isFalse);
+      expect(fb.calls, ['available']);
+    });
+
+    test(
+      'a play build whose google channel never answers offers nothing',
+      () async {
+        playBuildForTest = true;
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(_g, null);
+        final app = AppState()..sendModeForTest = 'private';
+        expect(await app.lookForGoogle(), isFalse);
+        expect(app.googleOffered, isFalse);
+      },
+    );
+
     test('a foss build never offers it', () async {
       playBuildForTest = false;
       final app = AppState()

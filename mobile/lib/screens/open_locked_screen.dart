@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../pin_shield.dart';
 import '../seen_timers.dart';
 import '../theme.dart';
 import '../tools/age_ffi.dart';
@@ -35,7 +36,7 @@ class OpenLockedScreen extends StatefulWidget {
   State<OpenLockedScreen> createState() => _OpenLockedScreenState();
 }
 
-class _OpenLockedScreenState extends State<OpenLockedScreen> {
+class _OpenLockedScreenState extends State<OpenLockedScreen> with PinShield {
   final _pw = TextEditingController();
   late PickedFile _file = widget.file;
   // the progress, read while the file is written and the page is seen:

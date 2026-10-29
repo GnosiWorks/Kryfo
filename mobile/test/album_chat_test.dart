@@ -33,8 +33,7 @@ import 'package:kryfo/widgets/album_grid.dart';
 import 'package:kryfo/widgets/shots_line.dart';
 import 'package:kryfo/widgets/video_bubble.dart' show VideoBubble;
 import 'package:kryfo/widgets/message_menu.dart' show MessageMenuCard;
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show Curve;
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart';
@@ -178,9 +177,9 @@ class _Engine implements HaloEngine {
   @override
   String myXPubkey() => 'x-me';
   @override
-  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {}
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) {}
   @override
-  void nostrUnsubscribeBg(String peerXPubHex) {}
+  void nostrUnsubscribeBg(int ident, String peerXPubHex) {}
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('engine: ${i.memberName}');
@@ -197,13 +196,13 @@ void main() {
   final base = DateTime.now().millisecondsSinceEpoch - 3600000;
 
   setUpAll(() async {
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     await signalSession.bootstrap(
       database: MemDb(),
       xPubBytes: me.publicKey.serialize().sublist(1),
       xPrivBytes: me.privateKey.serialize(),
     );
-    final pair = Curve.generateKeyPair();
+    final pair = testKeyPair();
     final amber = SignalSession();
     await amber.bootstrap(
       database: MemDb(),
@@ -401,6 +400,9 @@ void main() {
     await settle(t, 4);
     // the sheet asks once, for the album
     expect(find.text(l10n.albumUnsendTitle), findsOneWidget);
+    // its own line, not the one for a message
+    expect(find.text(l10n.chatAlbumItDisappearsWithNo), findsOneWidget);
+    expect(find.text(l10n.chatItDisappearsWithNo), findsNothing);
     await t.tap(find.text(l10n.chatUnsend).last);
     await settle(t, 12);
     final uids = ['out-$_id-0', 'out-$_id-1', 'out-$_id-2'];

@@ -27,6 +27,7 @@ import 'main.dart'
         TwoArgFnDart,
         appState,
         live,
+        photosUnsentInCopy,
         session,
         sessionQuiet,
         engine,
@@ -44,6 +45,8 @@ import 'dart:typed_data';
 import 'backup_stream.dart';
 import 'dart:math';
 import 'l10n/l10n.dart';
+import 'desktop/desktop_mode.dart'
+    show containerClosed, containerOpened, engineDir, runIsolated;
 
 const _kDbPassphrase = 'halo.db.passphrase';
 const _secureStorage = secureStore;
@@ -383,7 +386,7 @@ Future<void> landV1Payload(
     // a v1 file carries no catch-up: the relays are read again whole
     await _holdRelays();
     await _clearShade();
-    await landCatchUpAnchors(docsDir.path, null);
+    await landCatchUpAnchors(engineDir(docsDir.path), null);
     await _livesHereNow(payload['ts']);
 
     // a v1 backup carries none of these; what is here is the old identity's
@@ -863,11 +866,15 @@ class BackupSide {
   }
 
   // every copy of a container's database that leaves the phone: what waits
-  // to be read counts from [at] in it (settleWaitingBurns)
+  // to be read counts from [at] in it (settleWaitingBurns), and no contact
+  // is taken to hold our photo (photosUnsentInCopy)
   Future<void> settleBurns(String copy, String key, int at) async {
     final db = await openDatabase(copy, password: key, singleInstance: false);
     try {
-      await db.transaction((t) => settleWaitingBurns(t, at));
+      await db.transaction((t) async {
+        await settleWaitingBurns(t, at);
+        await photosUnsentInCopy(t);
+      });
       await db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
     } finally {
       await db.close();
@@ -982,7 +989,9 @@ Future<BackupDraft> draftBackup(
   // read before the database is copied: no anchor is past what it holds.
   // a file without the hidden chats carries none, vault or no vault, and
   // its restore reads every relay whole
-  final catchUp = hidden ? await catchUpAnchors(docs) : const <String, int>{};
+  final catchUp = hidden
+      ? await catchUpAnchors(engineDir(docs))
+      : const <String, int>{};
   final dbKey = await _secureStorage.read(key: _kDbPassphrase);
   if (dbKey == null) throw BackupError('db passphrase missing');
   final prefs = await SharedPreferences.getInstance();
@@ -1315,7 +1324,7 @@ class _Job {
 }
 
 Future<Object?> _runJob(Future<Object?> Function(_Job) job, _Job j) =>
-    Isolate.run(() => job(j));
+    runIsolated(() => job(j));
 
 Future<Object?> _exportJob(_Job j) async {
   final lib = _engineLib();
@@ -1564,6 +1573,7 @@ Future<void> landHidden(
   HaloContainer into = HaloContainer.vault,
 }) async {
   _restoredKey = null;
+  HaloContainer? keyed;
   try {
     // an open vault on the files about to go takes nothing more: an arrival
     // stored there would be acknowledged and gone at the restart
@@ -1575,6 +1585,10 @@ Future<void> landHidden(
     if (key == null || from == null) return;
     if (!await File(p.join(from, 'halo_v.db')).exists()) return;
     final c = into;
+    // on desktop the hidden chats' files are sealed under their own key on
+    // the way in, before anything opens their database
+    containerOpened?.call(c.id, c.suffix, "x'$key'");
+    keyed = c;
     for (final f in manifest['files'] as List) {
       final rest = hiddenPart((f as Map<String, dynamic>)['name'] as String);
       if (rest == null) continue;
@@ -1593,6 +1607,7 @@ Future<void> landHidden(
     _restoredKey = key;
     _restoredInto = c;
   } finally {
+    if (keyed != null) containerClosed?.call(keyed.id);
     try {
       if (from != null) await shredTree(from);
     } catch (_) {
@@ -1866,7 +1881,7 @@ Future<void> _restoreFile(
     await restorePrefs(manifest['prefs']);
     await _holdRelays();
     await _clearShade();
-    await landCatchUpAnchors(docs.path, manifest['catchUp']);
+    await landCatchUpAnchors(engineDir(docs.path), manifest['catchUp']);
     // in place before the restart reads them
     _restoredSettings = await landCarriedSettings(
       manifest['settings'],
@@ -1928,7 +1943,10 @@ Future<void> landCatchUpAnchors(String docs, Object? carried) async {
   try {
     await for (final e in Directory(docs).list()) {
       final name = p.basename(e.path);
-      if (name.startsWith('nostr_last_') || name.startsWith('nostr_seen_')) {
+      // the queue of wraps for our relays belongs to the phone it was made on
+      if (name.startsWith('nostr_last_') ||
+          name.startsWith('nostr_seen_') ||
+          name.startsWith('nostr_topup')) {
         await e.delete();
       }
     }

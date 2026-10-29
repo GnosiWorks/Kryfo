@@ -155,7 +155,7 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 
 	// one send of each kind, as the exports make them
 	friend := newXid(t)
-	me, err := myXid()
+	me, err := identityOf(mainIdent)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -377,15 +377,14 @@ func TestReceiveLanesDialApart(t *testing.T) {
 		for _, p := range peers {
 			rcv := mustRcv(t, p)
 			groups[lane] = append(groups[lane], rcv)
-			go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), p.pub, rcv)
+			go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), mainPair(p.pub), rcv)
 		}
 	}
-	_, fcPk, err := nip17FirstContactKeys(0)
+	fcSk, fcPk, err := nip17FirstContactKeysAs(testMain(), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	var zero [32]byte
-	go nostrSubscribeRunnerMode(ctx, "firstcontact", zero, fcPk, true, 0)
+	go nostrSubscribeRunnerFc(ctx, "firstcontact", fcSk, fcPk)
 	groups[laneFirstContact] = []string{fcPk}
 	subs := 0
 	for _, addrs := range groups {
@@ -404,10 +403,10 @@ func TestReceiveLanesDialApart(t *testing.T) {
 	// through the app's own send paths, so their lane choice is what is checked
 	peer := newXid(t)
 	peerHex := hex.EncodeToString(peer.pub[:])
-	if res := nostrSend(peerHex, "hi"); res != "ok" {
+	if res := nostrSend(mainIdent, peerHex, "hi"); res != "ok" {
 		t.Fatalf("send: %s", res)
 	}
-	_, sent, err := nip17DeriveRole(peer.pub, nip17RcvInfo, peerHex)
+	_, sent, err := nip17DeriveRoleAs(testMain(), peer.pub, nip17RcvInfo, peerHex)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -416,7 +415,7 @@ func TestReceiveLanesDialApart(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res := nostrSendFirstContact(hex.EncodeToString(stranger.pub[:]), strangerFc, "hi"); res != "ok" {
+	if res := nostrSendFirstContact(mainIdent, hex.EncodeToString(stranger.pub[:]), strangerFc, "hi"); res != "ok" {
 		t.Fatalf("first-contact send: %s", res)
 	}
 	waitFor(t, "the sends on the relay", 15*time.Second, func() bool {
@@ -485,7 +484,7 @@ func slowPongRun(t *testing.T, interval, pongWait time.Duration, until func(conn
 	r := newRelayStandIn(t, 1200*time.Millisecond)
 	useStandIns(t, modePrivate, socks, r)
 	peer := newXid(t)
-	_, rcv, err := nip17RcvAddress(peer.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), peer.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -494,7 +493,7 @@ func slowPongRun(t *testing.T, interval, pongWait time.Duration, until func(conn
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), rcv)
 	waitFor(t, "pings at the set interval", 30*time.Second, func() bool { return until(r.snapshot()) })
 	r.mu.Lock()
 	resent = r.resent
@@ -504,7 +503,7 @@ func slowPongRun(t *testing.T, interval, pongWait time.Duration, until func(conn
 
 func mustRcv(t *testing.T, peer xid) string {
 	t.Helper()
-	_, rcv, err := nip17RcvAddress(peer.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), peer.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -633,7 +632,7 @@ func TestMeasureKeepalive(t *testing.T) {
 				slow.store(ev)
 			}
 			ctx, cancel := context.WithCancel(context.Background())
-			go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, mustRcv(t, peer))
+			go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), mustRcv(t, peer))
 			l := startLanes(t, ctx, 3, 1)
 			time.Sleep(window)
 			cancel()
@@ -684,10 +683,10 @@ func TestNewFirstContactAddressGetsANewCircuit(t *testing.T) {
 
 	nameFor := func(counter int) string {
 		t.Helper()
-		if err := subscribeFirstContact(counter); err != nil {
+		if err := subscribeFirstContact(mainIdent, counter); err != nil {
 			t.Fatal(err)
 		}
-		_, fcPk, err := nip17FirstContactKeys(counter)
+		_, fcPk, err := nip17FirstContactKeysAs(testMain(), counter)
 		if err != nil {
 			t.Fatal(err)
 		}

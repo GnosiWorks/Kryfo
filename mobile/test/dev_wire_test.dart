@@ -41,7 +41,7 @@ import 'package:kryfo/stranger_gate.dart' show Shelved;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/signal_stores.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -65,7 +65,7 @@ var _n = 0;
 
 // a phone's signal store, bootstrapped the way the app does it
 Future<({SignalSession ss, MemDb db, String xPub})> _phone() async {
-  final pair = Curve.generateKeyPair();
+  final pair = testKeyPair();
   final xPub = pair.publicKey.serialize().sublist(1);
   final db = MemDb();
   final ss = SignalSession();
@@ -80,7 +80,7 @@ Future<({SignalSession ss, MemDb db, String xPub})> _phone() async {
 // a name as the engine makes one: an x25519 pair, and an ed key of seed
 // then public half
 Map<String, dynamic> _newName() {
-  final x = Curve.generateKeyPair();
+  final x = testKeyPair();
   final edPub = _rndHex(32);
   return {
     'id': 'made-name-${_n++}',
@@ -296,13 +296,14 @@ class _Io extends AppIo {
   }
 
   @override
-  void listen(String xPub, {bool fresh = false}) => listened.add(xPub);
+  void listen(int ident, String xPub, {bool fresh = false}) =>
+      listened.add(xPub);
   @override
   String edPub() => _myEd;
   @override
   String xPub() => _myX;
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     sent.add(('relay $xPub', cipher));
     return 'ok';
   }
@@ -317,7 +318,12 @@ class _Io extends AppIo {
   final answers = <Future<String>>[];
 
   @override
-  Future<String> firstContactSend(String xPub, String fc, String cipher) async {
+  Future<String> firstContactSend(
+    int ident,
+    String xPub,
+    String fc,
+    String cipher,
+  ) async {
     sent.add(('fc $xPub $fc', cipher));
     return answers.isEmpty ? 'ok' : answers.removeAt(0);
   }
@@ -457,16 +463,7 @@ Future<String> _frame(String text) => wrapMessage(
 Future<Map<String, dynamic>> _hisRead(String from, String cipher) async {
   final w = base64Decode(cipher);
   final body = Uint8List.fromList(w.sublist(1));
-  final c = SessionCipher(
-    _marios.ss.sessionStore,
-    _marios.ss.preKeyStore,
-    _marios.ss.signedPreKeyStore,
-    _marios.ss.identityStore,
-    SignalProtocolAddress(from, 1),
-  );
-  final plain = w[0] == CiphertextMessage.prekeyType
-      ? await c.decrypt(PreKeySignalMessage(body))
-      : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
+  final plain = await _marios.ss.open(from, w[0], body);
   final s = utf8.decode(plain);
   expect(s, startsWith('halo/1:'));
   return jsonDecode(s.substring(7)) as Map<String, dynamic>;
@@ -583,7 +580,7 @@ void main() {
       fc: _rndHex(32),
     );
     await _mem.insert('signal_meta', {'k': 'regId', 'v': '$_everydayReg'});
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     _myX = _hex(me.publicKey.serialize().sublist(1));
     _myXPriv = _hex(me.privateKey.serialize());
     await signalSession.bootstrap(
@@ -636,6 +633,32 @@ void main() {
       expect(_app.peerFcFor(_dev), _m1.fc);
       expect(await _wire('c'), isEmpty);
     });
+
+    for (final anon in [false, true]) {
+      final how = anon ? 'anonymous' : 'three words';
+      test('$how: a pinned card without the kyber prekey starts nothing, '
+          'and says an update is needed', () async {
+        await everythingButASend();
+        final j =
+            Map<String, Object?>.from(
+                jsonDecode(utf8.decode(base64Decode(_m1.bundle))) as Map,
+              )
+              ..remove('kyberPreKeyId')
+              ..remove('kyberPreKeyPublic')
+              ..remove('kyberPreKeySignature');
+        useDevKeysForTest([_card(base64Encode(utf8.encode(jsonEncode(j))))]);
+        await expectLater(
+          _app.devBegin(anon: anon),
+          throwsA(isA<DevCardOld>()),
+        );
+        expect(_row().state, DevState.fresh);
+        expect(_kept('sessions'), isEmpty);
+        expect(_anonRows(), 0);
+        expect(_io.listened, isEmpty);
+        expect(_io.sent, isEmpty);
+        useDevKeysForTest([_m1]);
+      });
+    }
 
     for (final anon in [false, true]) {
       final how = anon ? 'anonymous' : 'three words';
@@ -711,9 +734,9 @@ void main() {
       // what he reads is sealed by the made name alone
       final cipher = await signalEncrypt(_dev, await _frame('hello'));
       final raw = base64Decode(cipher);
-      final pkm = PreKeySignalMessage(Uint8List.fromList(raw.sublist(1)));
-      expect(_hex(pkm.getIdentityKey().serialize().sublist(1)), s.xPub);
-      expect(pkm.getRegistrationId(), isNot(_everydayReg));
+      final pkm = KryfoSignal.shared.preKeyMessageInfo(raw.sublist(1));
+      expect(_hex(pkm.identityKey.sublist(1)), s.xPub);
+      expect(pkm.registrationId, isNot(_everydayReg));
       final read = await _hisRead('anon-${_n++}', cipher);
       expect(
         [read['h'], read['e'], read['x'], read['o']],
@@ -1467,7 +1490,7 @@ void main() {
       final made = DevSelf.ofKeys(
         'made-one',
         _rndHex(64),
-        _hex(Curve.generateKeyPair().privateKey.serialize()),
+        _hex(testKeyPair().privateKey.serialize()),
       )!;
       DevChatRow row(DevState s, {String? priv, String? id}) => DevChatRow(
         state: s,
@@ -1477,7 +1500,7 @@ void main() {
         anonEdPriv: priv == null ? null : _rndHex(64),
         anonXPriv: priv,
       );
-      final anonPriv = _hex(Curve.generateKeyPair().privateKey.serialize());
+      final anonPriv = _hex(testKeyPair().privateKey.serialize());
       final anonRow = row(DevState.anon, priv: anonPriv, id: 'made-two');
       final anonSelf = DevSelf.ofKeys(
         anonRow.anonId,
@@ -1523,7 +1546,7 @@ void main() {
       // with three words the store would refuse it too
       await expectLater(
         processPeerBundle(_dev, spoiled.bundle, into: (await _phone()).ss),
-        throwsA(isA<InvalidKeyException>()),
+        throwsA(isA<LsError>()),
       );
     });
 

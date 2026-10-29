@@ -4,7 +4,6 @@
 import 'saved_screen.dart';
 import 'transport_screen.dart';
 import '../widgets/press_scale.dart';
-import 'modes_screen.dart' show showFastGateSheet;
 import '../widgets/stagger_in.dart';
 import 'requests_screen.dart';
 import 'dart:async';
@@ -25,6 +24,8 @@ import '../store.dart';
 import '../widgets/nav_bar.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
+import '../invite_share.dart' show shareInvite;
+import '../desktop/desktop_mode.dart' show canShareOut;
 import '../widgets/room_countdown.dart';
 import '../widgets/room_join.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -38,6 +39,7 @@ import '../main.dart' hide live;
 import '../tor_valve.dart' show ValveStage;
 import '../link_view.dart' show LinkKind;
 import '../widgets/motion.dart';
+import '../widgets/route_merged_card.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/halo_hero.dart';
 import '../widgets/shift_in_place.dart';
@@ -46,6 +48,7 @@ import '../widgets/row_motion.dart';
 import '../widgets/count_badge.dart';
 import '../widgets/chat_parts.dart' show GrowSwap;
 import '../widgets/swap.dart';
+import '../widgets/typing_mark.dart';
 import '../widgets/card_action.dart';
 import '../widgets/message_menu.dart' show MenuSheet, MenuSheetRow;
 import '../widgets/confirm_sheet.dart';
@@ -68,6 +71,14 @@ import 'support_screen.dart' show SupportPin, supportRoute;
 import '../widgets/update_card.dart' show UpdateHint;
 
 bool _miuiPromptChecked = false;
+
+/// the battery and phone maker asks, once per start. a test hands in its own
+@visibleForTesting
+Future<void> Function(BuildContext context) homeBackgroundAsk =
+    maybeShowBackgroundPrompt;
+
+@visibleForTesting
+void askBackgroundAgainForTest() => _miuiPromptChecked = false;
 
 class HomeScreen extends StatefulWidget {
   final String haloId; // "neon-tiger-saturn"
@@ -437,7 +448,9 @@ class _ChatsTab extends StatelessWidget {
     if (!_miuiPromptChecked) {
       _miuiPromptChecked = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        maybeShowBackgroundPrompt(context);
+        // google push wakes the phone itself, as setup says
+        if (appState.deliveryMode == DeliveryMode.google) return;
+        homeBackgroundAsk(context);
       });
     }
     return SafeArea(
@@ -460,6 +473,7 @@ class _ChatsTab extends StatelessWidget {
           const _BridgeHint(),
           const _BridgeStuckHint(),
           const _RelayDownHint(),
+          const _RouteMergedCard(),
           const OfflineCard(),
           const _KeepsStoppingCard(),
           const _HelperGoneCard(),
@@ -1285,21 +1299,17 @@ class _RelayDownHint extends StatelessWidget {
     return ListenableBuilder(
       listenable: appState,
       builder: (context, _) => _HomeCard(
-        show: appState.suggestFastFallback,
+        show: appState.suggestPrivateFallback,
         id: 'relay-down',
         tint: HaloColors.amber,
-        title: l10n.homeOurRelayIsQuiet,
-        line: l10n.homeRelayModeUsesOnly,
+        title: l10n.homeOursDownTitle,
+        line: l10n.homeOursDownLine,
         actions: [
           CardAction(
-            label: l10n.homeUseFastMode,
+            label: l10n.homeUsePrivate,
             onTap: () async {
-              // same warning as the modes screen: fast mode shows your
-              // address to public relays
-              final ok = await showFastGateSheet(context);
-              if (!ok || !context.mounted) return;
               try {
-                await appState.setSendMode('fast');
+                await appState.setSendMode('private');
               } catch (_) {
                 if (context.mounted) {
                   showHaloToast(context, l10n.modesNotChanged);
@@ -1307,7 +1317,7 @@ class _RelayDownHint extends StatelessWidget {
                 return;
               }
               if (context.mounted) {
-                showHaloToast(context, l10n.homeSwitchedToFast);
+                showHaloToast(context, l10n.homeSwitchedToPrivate);
               }
             },
             fill: HaloColors.amber,
@@ -1319,6 +1329,46 @@ class _RelayDownHint extends StatelessWidget {
             ink: HaloColors.text2,
           ),
         ],
+      ),
+    );
+  }
+}
+
+// once, after the update, for whoever was on relay or fast: the two are one
+// route now, and private is a tap away
+class _RouteMergedCard extends StatelessWidget {
+  const _RouteMergedCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: appState,
+      builder: (context, _) => GrowSwap(
+        alignment: Alignment.topCenter,
+        child: !appState.routeMergeCardDue
+            ? const SizedBox(key: ValueKey('no-merged'), width: 1)
+            : RouteMergedCard(
+                key: const ValueKey('merged'),
+                onGotIt: () {
+                  HapticFeedback.selectionClick();
+                  appState.routeMergeCardSeen();
+                },
+                onPrivate: () async {
+                  HapticFeedback.mediumImpact();
+                  try {
+                    await appState.setSendMode('private');
+                  } catch (_) {
+                    if (context.mounted) {
+                      showHaloToast(context, l10n.modesNotChanged);
+                    }
+                    return;
+                  }
+                  await appState.routeMergeCardSeen();
+                  if (context.mounted) {
+                    showHaloToast(context, l10n.homeSwitchedToPrivate);
+                  }
+                },
+              ),
       ),
     );
   }
@@ -1337,7 +1387,7 @@ class _AutoStrip extends StatelessWidget {
         final line = shownBridgeLine();
         final a = line.action;
         final relay = CardAction(
-          label: l10n.homeUseOurRelay,
+          label: l10n.homeUseFast,
           onTap: () => switchToRelay(context),
           fill: line.relayFirst ? kCyan : null,
           ink: line.relayFirst ? HaloColors.amberInk : HaloColors.amberText,
@@ -1464,10 +1514,10 @@ class _BridgeHint extends StatelessWidget {
         tint: HaloColors.violet,
         wash: true,
         title: l10n.bridgesTorSeemsBlocked,
-        line: l10n.bridgesOurRelayUsuallyGets,
+        line: l10n.bridgesFastGetsThrough,
         actions: [
           CardAction(
-            label: l10n.homeUseOurRelay,
+            label: l10n.homeUseFast,
             onTap: () async {
               try {
                 await appState.setSendMode('balanced');
@@ -1478,7 +1528,7 @@ class _BridgeHint extends StatelessWidget {
                 return;
               }
               if (context.mounted) {
-                showHaloToast(context, l10n.homeSwitchedToRelay);
+                showHaloToast(context, l10n.homeSwitchedToFastRoute);
               }
             },
             fill: kCyan,
@@ -1682,6 +1732,20 @@ class _EmptyStateState extends State<_EmptyState>
     super.dispose();
   }
 
+  bool _sharing = false;
+
+  // no share sheet on a desktop: the add page has the link to copy
+  Future<void> _invite() async {
+    if (!canShareOut) return widget.onAdd();
+    if (_sharing) return;
+    _sharing = true;
+    try {
+      await shareInvite(context);
+    } finally {
+      _sharing = false;
+    }
+  }
+
   Widget _mark() {
     const core = 56.0, room = 92.0;
     return SizedBox.square(
@@ -1772,8 +1836,10 @@ class _EmptyStateState extends State<_EmptyState>
               style: HaloType.sans(size: 13, color: HaloColors.text2),
             ),
             const SizedBox(height: 22),
+            // one clear way: the invite goes out in any messenger. the
+            // code and the @name sit under it
             PressScale(
-              onTap: widget.onAdd,
+              onTap: _invite,
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
@@ -1795,7 +1861,7 @@ class _EmptyStateState extends State<_EmptyState>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons.add_rounded,
+                      Icons.ios_share_rounded,
                       size: 16,
                       color: HaloColors.onAmber,
                     ),
@@ -1803,7 +1869,7 @@ class _EmptyStateState extends State<_EmptyState>
                     // a large font wraps the label instead of cutting it
                     Flexible(
                       child: Text(
-                        l10n.homeAddSomeone,
+                        l10n.homeInviteSomeone,
                         textAlign: TextAlign.center,
                         style: HaloType.sans(
                           size: 13.5,
@@ -1814,6 +1880,28 @@ class _EmptyStateState extends State<_EmptyState>
                       ),
                     ),
                   ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Semantics(
+              button: true,
+              child: PressScale(
+                onTap: widget.onAdd,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Text(
+                    l10n.homeAddSomeone,
+                    textAlign: TextAlign.center,
+                    style: HaloType.sans(
+                      size: 13,
+                      weight: FontWeight.w500,
+                      color: HaloColors.amberText,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -2073,7 +2161,10 @@ class _GroupsHead extends StatelessWidget {
                     width: double.infinity,
                     child: Text(
                       l10n.homeRoomExpired(expired),
-                      style: HaloType.mono(size: 10, color: HaloColors.violet),
+                      style: HaloType.mono(
+                        size: 10,
+                        color: HaloColors.violetText,
+                      ),
                     ),
                   ),
                 ),
@@ -2097,15 +2188,18 @@ class _SectionHead extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: HaloType.mono(
-                size: 10,
-                color: HaloColors.text2,
-                weight: FontWeight.w500,
-                letter: 0.14,
+            child: Semantics(
+              header: true,
+              child: Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: HaloType.mono(
+                  size: 10,
+                  color: HaloColors.text2,
+                  weight: FontWeight.w500,
+                  letter: 0.14,
+                ),
               ),
             ),
           ),
@@ -2306,7 +2400,7 @@ class _GroupRow extends StatelessWidget {
                         color: g.ended
                             ? HaloColors.text2
                             : g.isRoom
-                            ? HaloColors.violet
+                            ? HaloColors.violetText
                             : HaloColors.amberText,
                       ),
                     ),
@@ -2352,7 +2446,7 @@ class _GroupRow extends StatelessWidget {
                                 style: HaloType.sans(
                                   size: 12,
                                   color: HaloColors.text2,
-                                ).copyWith(fontStyle: FontStyle.italic),
+                                ).copyWith(fontStyle: slant()),
                               )
                             : g.isRoom && g.joiningAt != null
                             ? RoomJoinLine(
@@ -2991,21 +3085,31 @@ class _Row extends StatelessWidget {
                     Row(
                       children: [
                         Expanded(
-                          child: Text(
-                            // a room link is an invitation, not a line of
-                            // two hundred characters
-                            (c.preview ?? '').contains('kryfo://room?')
-                                ? l10n.homeRoomInvite
-                                : (c.preview ?? ''),
-                            // unread reads in full colour until it is read
-                            style: HaloType.sans(
-                              size: 12,
-                              color: c.unread > 0
-                                  ? HaloColors.text
-                                  : HaloColors.text2,
+                          // "Typing" takes the preview's place while they
+                          // type, over a draft too
+                          child: TypingSwap(
+                            showing: c.blocked
+                                ? const AlwaysStoppedAnimation(false)
+                                : appState.typing.board.of(
+                                    appState.typingKey(c.haloId),
+                                  ),
+                            style: typingStyle(size: 12),
+                            child: Text(
+                              // a room link is an invitation, not a line of
+                              // two hundred characters
+                              (c.preview ?? '').contains('kryfo://room?')
+                                  ? l10n.homeRoomInvite
+                                  : (c.preview ?? ''),
+                              // unread reads in full colour until it is read
+                              style: HaloType.sans(
+                                size: 12,
+                                color: c.unread > 0
+                                    ? HaloColors.text
+                                    : HaloColors.text2,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         CountBadge(count: c.unread, lead: 8),

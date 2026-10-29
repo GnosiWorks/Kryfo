@@ -617,6 +617,7 @@ Set<String> _ours() => {
   l10n.devWhoNothingYet,
   l10n.devWhoChoiceStays,
   l10n.devKeyCheckFailed,
+  l10n.devUpdateToWrite,
   l10n.devLockLine,
   l10n.devNamelessLine,
   l10n.devStartNewChat,
@@ -662,6 +663,7 @@ Future<void> _loadFonts() async {
     'Noto Sans Vietnamese': ['NotoSans-Vietnamese.ttf'],
     'Noto Naskh Arabic': ['NotoNaskhArabic-Kryfo.ttf'],
     'Noto Sans Arabic': ['NotoSansArabic-Kryfo.ttf'],
+    'Noto Sans Devanagari': ['NotoSansDevanagari-Kryfo.ttf'],
   };
   for (final e in families.entries) {
     final loader = FontLoader(e.key);
@@ -1015,6 +1017,25 @@ void main() {
       expect(_begun, [false, false]);
       expect(find.text(l10n.devKeyCheckFailed), findsNothing);
       expect(_sent(), hasLength(1));
+      await _close(t);
+    });
+
+    testWidgets('a pinned card too old to start on says to update, calmly, '
+        'and saves nothing', (t) async {
+      await _world();
+      await _open(t);
+      _answer = DevStart.needsUpdate;
+      await _type(t, 'hello marios');
+      await _send(t);
+      expect(find.text(l10n.devUpdateToWrite), findsOneWidget);
+      expect(find.text(l10n.devKeyCheckFailed), findsNothing);
+      expect(_mem.rows('messages'), isEmpty);
+      expect(_row()!.state, DevState.fresh);
+      expect(find.text('hello marios'), findsOneWidget);
+      expect(_sent(), isEmpty);
+      _answer = DevStart.ok;
+      // the words typed stay as a draft: cleared, so the next chat opens empty
+      await _type(t, '');
       await _close(t);
     });
 
@@ -1854,6 +1875,7 @@ void main() {
       'id',
       'fa',
       'ar',
+      'hi',
     ]) {
       testWidgets('$code at the biggest font on a small phone: the note, its '
           'sheet and the chat\'s lines fit', (t) async {
@@ -2016,10 +2038,12 @@ void main() {
       expect(o.started, isFalse);
       thrown = const DevKeyCheckFailed();
       expect(await o.ensure(), DevStart.keyFailed);
+      thrown = const DevCardOld();
+      expect(await o.ensure(), DevStart.needsUpdate);
       thrown = StateError('half way');
       expect(await o.ensure(), DevStart.none);
       expect(o.started, isFalse);
-      expect(asked, 3);
+      expect(asked, 4);
       expect(o.busy, isFalse);
     });
 

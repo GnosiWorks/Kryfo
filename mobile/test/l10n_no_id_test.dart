@@ -13,7 +13,7 @@ Map<String, dynamic> _arb(String locale) =>
 
 // the keys that talk about the three words or the person
 const _aboutYou = [
-  'myKryfoAddMeOnKryfo',
+  'inviteShareText',
   'myKryfoTheLinkCarriesYour',
   'onboardingYourKryfoId',
   'profileKryfoId',
@@ -25,6 +25,7 @@ const _localId = {
   'fa': ['شناسه'],
   'ar': ['معرّف'],
   'tr': ['kimli', 'KİMLİ'],
+  'hi': ['आईडी', 'आइडी'],
 };
 
 String _words(String s) => s.replaceAll(RegExp(r'\{\w+\}'), '');
@@ -72,13 +73,20 @@ void main() {
   test('the shared invite calls the words a name', () {
     final en = lookupAppLocalizations(const Locale('en'));
     expect(
-      en.myKryfoAddMeOnKryfo('a-b-c', 'kryfo://x'),
+      en.inviteShareText('a-b-c', 'https://x', 'https://d'),
       'Add me on Kryfo. My name there is a-b-c\n\nTap to add me:\n'
-      'kryfo://x\n\nKryfo is a private messenger. No phone number, no email.',
+      'https://x\n\nNo Kryfo yet? Get it here:\nhttps://d\n\n'
+      'Kryfo is a private messenger. No phone number, no email.',
     );
     for (final l in AppLocalizations.supportedLocales) {
-      final s = lookupAppLocalizations(l).myKryfoAddMeOnKryfo('a-b-c', 'u');
-      expect('\n'.allMatches(s).length, 5, reason: '$l');
+      final s = lookupAppLocalizations(l).inviteShareText('a-b-c', 'u', 'd');
+      expect('\n'.allMatches(s).length, 8, reason: '$l');
+      // the page link and the download page each on a line of their own
+      expect(
+        s.split('\n').map((x) => x.replaceAll(RegExp('[\u2068\u2069]'), '')),
+        containsAll(['u', 'd']),
+        reason: '$l',
+      );
     }
   });
 }

@@ -32,6 +32,7 @@ const kLanguageNames = <String, String>{
   'zh_Hant': '繁體中文',
   'vi': 'Tiếng Việt',
   'id': 'Bahasa Indonesia',
+  'hi': 'हिन्दी',
   'fa': 'فارسی',
   'ar': 'العربية',
 };

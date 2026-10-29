@@ -8,6 +8,8 @@ import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../desktop/desktop_mode.dart' show canShareOut;
+
 import '../contact_card.dart';
 import '../dlog.dart';
 import '../handle_lookup.dart' show handleFromInput;
@@ -20,6 +22,7 @@ import '../main.dart'
         AppStateRefresh;
 import '../widgets/kryfo_link_text.dart' show addScanned, takeOwnLink;
 import '../theme.dart';
+import '../invite_share.dart' show inviteShareText, webInviteOf;
 import '../widgets/copied_mark.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -45,6 +48,8 @@ class MyKryfoScreen extends StatefulWidget {
 
 class _MyKryfoScreenState extends State<MyKryfoScreen> {
   String? _uri;
+  // what the qr code shows (sessionInviteQr)
+  String? _qr;
   _Way _open = _Way.none;
   // bumped on each copy, so what was copied shows a tick for a moment
   int _linkCopies = 0;
@@ -72,10 +77,16 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
   Future<void> _load() async {
     if (appState.sessionOnion.isEmpty) return;
     final uri = await appState.sessionInvite();
+    final qr = await appState.sessionInviteQr();
     // debug builds only: a second device on the desk can import it off
     // logcat instead of scanning a screen
     dlog('invite: $uri');
-    if (mounted) setState(() => _uri = uri);
+    if (mounted) {
+      setState(() {
+        _uri = uri;
+        _qr = qr;
+      });
+    }
   }
 
   void _toggle(_Way w) {
@@ -127,18 +138,19 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
   void _copyLink() {
     if (_uri == null) return;
     HapticFeedback.mediumImpact();
-    copySensitive(_uri!);
+    // the page link: a kryfo link is not tappable in many messengers
+    copySensitive(webInviteOf(_uri!) ?? _uri!);
     setState(() => _linkCopies++);
     showHaloToast(context, l10n.myKryfoInviteCopiedClearsIn);
   }
 
   void _shareLink() {
-    if (_uri == null) return;
+    if (_uri == null || !canShareOut) return;
     HapticFeedback.selectionClick();
     lockState.hold(
       () => SharePlus.instance.share(
         ShareParams(
-          text: l10n.myKryfoAddMeOnKryfo(appState.sessionId, '$_uri'),
+          text: inviteShareText(appState.sessionId, _uri!),
           subject: l10n.myKryfoAddMeOnKryfo2,
         ),
       ),
@@ -169,10 +181,12 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 10),
+                  // the invite page is for people not added yet: the face
                   KryfoAvatar(
                     seed: id.isEmpty ? 'kryfo' : id,
                     size: 96,
                     choice: appState.myAvatar,
+                    photo: false,
                   ),
                   const SizedBox(height: 18),
                   Text(
@@ -211,7 +225,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
             _Way1Card(
               open: _open == _Way.here,
               onToggle: () => _toggle(_Way.here),
-              uri: _uri,
+              uri: _qr ?? _uri,
               onScan: _scanTheirs,
               onCode: () async {
                 await Navigator.of(
@@ -478,6 +492,7 @@ class _Way2Card extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ready = uri != null;
+    final share = canShareOut;
     return _WayCard(
       title: l10n.myKryfoTheyReSomewhereElse,
       line: l10n.myKryfoSendThemALink,
@@ -527,31 +542,32 @@ class _Way2Card extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           HaloPrimaryButton(
-            label: l10n.myKryfoSendTheLink,
-            onTap: ready ? onShare : null,
+            label: share ? l10n.myKryfoSendTheLink : l10n.commonCopy,
+            onTap: ready ? (share ? onShare : onCopy) : null,
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _Ghost(
-                  icon: Icons.badge_outlined,
-                  label: l10n.myKryfoAsACard,
-                  sub: l10n.myKryfoAnImageWithThe,
-                  onTap: ready ? onCard : null,
+          if (share) const SizedBox(height: 10),
+          if (share)
+            Row(
+              children: [
+                Expanded(
+                  child: _Ghost(
+                    icon: Icons.badge_outlined,
+                    label: l10n.myKryfoAsACard,
+                    sub: l10n.myKryfoAnImageWithThe,
+                    onTap: ready ? onCard : null,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _Ghost(
-                  icon: Icons.contact_page_outlined,
-                  label: l10n.myKryfoAsAFile,
-                  sub: l10n.myKryfoContactFile,
-                  onTap: ready ? onFile : null,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _Ghost(
+                    icon: Icons.contact_page_outlined,
+                    label: l10n.myKryfoAsAFile,
+                    sub: l10n.myKryfoContactFile,
+                    onTap: ready ? onFile : null,
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
         ],
       ),
     );

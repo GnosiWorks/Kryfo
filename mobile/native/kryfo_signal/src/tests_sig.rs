@@ -3,21 +3,12 @@
 // between kryfo's signatures and libsignal's own
 use libsignal_protocol::{IdentityKey, IdentityKeyPair, PrivateKey, PublicKey};
 
-use crate::sig::{Body, CONTEXTS, MOVE_LEN, PREFIX, body_fits, canonical_s, signed_text};
+use crate::formats::{self, Kind, MOVE_LEN};
+use crate::keys::canonical_s;
+use crate::sig::{CONTEXTS, PREFIX, signed_text, signers};
 use crate::tests::{Party, Rng, mutate, raw, run, w};
+use crate::tests_formats::{Goods, Id, Keys, add_l, bad_keys, goods, hex, to_hex};
 use crate::*;
-
-fn hex(s: &str) -> Vec<u8> {
-    assert!(s.len() % 2 == 0, "odd hex {s}");
-    (0..s.len())
-        .step_by(2)
-        .map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap())
-        .collect()
-}
-
-fn to_hex(b: &[u8]) -> String {
-    b.iter().map(|x| format!("{x:02x}")).collect()
-}
 
 struct Good {
     name: String,
@@ -127,39 +118,81 @@ fn raw_sign_with(private: &PrivateKey, context: &[u8], message: &[u8]) -> Vec<u8
         .to_vec()
 }
 
-fn raw_sign(pair: &[u8], context: &[u8], message: &[u8]) -> Vec<u8> {
-    raw_sign_with(
-        IdentityKeyPair::try_from(pair).unwrap().private_key(),
-        context,
-        message,
-    )
+// one real body per context, with the keys that sign it and one that may not
+struct Body {
+    context: &'static str,
+    message: Vec<u8>,
+    signers: Vec<Id>,
+    not: Id,
 }
 
-// a body of the shape [body] asks for, [a] and [b] the keys a move names
-fn body_for(body: Body, a: &[u8], b: &[u8]) -> Vec<u8> {
-    match body {
-        Body::Magic(m) => [&m[..], b" some body"].concat(),
-        Body::Move => [a, b, &[7; 32]].concat(),
-    }
+fn bodies(k: &Keys, g: &Goods) -> Vec<Body> {
+    let id = |n: &str| k.id(n).clone();
+    vec![
+        Body {
+            context: "invite",
+            message: g.qr_ci.body(),
+            signers: vec![id("ana1")],
+            not: id("ana0"),
+        },
+        Body {
+            context: "hello",
+            message: g.hello.body(),
+            signers: vec![id("ben0")],
+            not: id("ana0"),
+        },
+        Body {
+            context: "heal",
+            message: g.heal.body(),
+            signers: vec![id("ana0")],
+            not: id("ben0"),
+        },
+        Body {
+            context: "heal",
+            message: g.heal_device.body(),
+            signers: vec![id("desk")],
+            not: id("ana1"),
+        },
+        Body {
+            context: "device-list",
+            message: g.list_pool.body(),
+            signers: vec![id("ana1")],
+            not: id("desk"),
+        },
+        Body {
+            context: "move",
+            message: g.mv.encode(),
+            signers: vec![id("ana0"), id("ana1")],
+            not: id("ben0"),
+        },
+    ]
+}
+
+fn fresh() -> (Keys, Goods) {
+    let k = Keys::new();
+    let mut rng = Rng(0x7777_1111_3333_5555);
+    let g = goods(&mut rng, &k);
+    (k, g)
 }
 
 // move bodies one step off the one shape
-fn moves_refused(a: &[u8], b: &[u8]) -> Vec<(&'static str, Vec<u8>)> {
-    let good = body_for(Body::Move, a, b);
-    let mut top = good.clone();
-    top[65] |= 0x80;
-    let mut typed = good.clone();
+fn moves_refused(m: &[u8]) -> Vec<(&'static str, Vec<u8>)> {
+    let mut top = m.to_vec();
+    top[98] |= 0x80;
+    let mut typed = m.to_vec();
     typed[33] = 0x06;
     let p: Vec<u8> = [&[0x05u8][..], &[0xed], &[0xff; 30], &[0x7f]].concat();
     let zero: Vec<u8> = [&[0x05u8][..], &[0; 32]].concat();
     vec![
-        ("short", good[..MOVE_LEN - 1].to_vec()),
-        ("long", [&good[..], &[0]].concat()),
-        ("same_key_twice", [a, a, &[7; 32]].concat()),
-        ("second_key_top_bit", top),
-        ("second_key_type", typed),
-        ("first_key_at_p", [&p[..], b, &[7; 32]].concat()),
-        ("first_key_zero", [&zero[..], b, &[7; 32]].concat()),
+        ("short", m[..MOVE_LEN - 1].to_vec()),
+        ("long", [m, &[0]].concat()),
+        ("two_keys", [&m[..66], &m[99..]].concat()),
+        ("old_twice", [&m[..33], &m[..33], &m[66..]].concat()),
+        ("new_is_peer", [&m[..66], &m[33..66], &m[99..]].concat()),
+        ("new_key_top_bit", top),
+        ("peer_key_type", typed),
+        ("old_key_at_p", [&p[..], &m[33..]].concat()),
+        ("peer_key_zero", [&m[..33], &zero[..], &m[66..]].concat()),
     ]
 }
 
@@ -209,6 +242,15 @@ fn a_signature_holds_under_its_own_context_only() {
                 g.name
             );
         }
+        // the context in the text alone keeps them apart, with no body
+        // rule in the way
+        let key = PublicKey::deserialize(&g.key).unwrap();
+        for (c, _) in CONTEXTS.iter().filter(|c| c.0 != g.context) {
+            assert!(!key.verify_signature(&signed_text(c.as_bytes(), &g.message), &g.sig));
+        }
+        for c in ["face-claim", "link-proof", "", "kryfo"] {
+            assert!(!key.verify_signature(&signed_text(c.as_bytes(), &g.message), &g.sig));
+        }
         // nor for another key, another message, or the message bare
         for (_, _, other) in v.keys.iter().filter(|k| k.2 != g.key) {
             assert_eq!(
@@ -222,7 +264,6 @@ fn a_signature_holds_under_its_own_context_only() {
             verify_ctx_of(&g.key, g.context.as_bytes(), &m, &g.sig),
             Err(Error::Signature)
         );
-        let key = PublicKey::deserialize(&g.key).unwrap();
         assert!(!key.verify_signature(&g.message, &g.sig));
     }
 }
@@ -231,7 +272,13 @@ fn a_signature_holds_under_its_own_context_only() {
 fn the_refusals_hold() {
     let v = vectors();
     assert!(v.bad.iter().any(|b| b.lax && b.want == Error::Key));
-    assert!(v.bad.iter().any(|b| b.lax && b.want == Error::Signature));
+    assert!(
+        v.bad
+            .iter()
+            .filter(|b| b.lax && b.want == Error::Signature)
+            .count()
+            > 10
+    );
     for b in &v.bad {
         assert_eq!(
             verify_ctx_of(&b.key, b.context.as_bytes(), &b.message, &b.sig),
@@ -273,7 +320,7 @@ fn prekey_and_kryfo_signatures_never_cross() {
     }
     // a kryfo text over a prekey's key or another identity, signed past
     // the shim's checks, is neither libsignal signature
-    let (_, k1, k1_public) = v.keys.iter().find(|k| k.0 == "k1").unwrap();
+    let (_, k1, k1_public) = v.keys.iter().find(|k| k.0 == "ana0").unwrap();
     let k1 = PrivateKey::deserialize(k1).unwrap();
     for (key, public, _) in &v.prekeys {
         assert_eq!(key, k1_public);
@@ -319,22 +366,23 @@ fn a_kryfo_signature_builds_no_bundle() {
         }
         run(bundle_build, &mut x)
     };
+    let pair = IdentityKeyPair::try_from(bob.pair.as_slice()).unwrap();
     for (c, _) in CONTEXTS {
-        // the shim signs no bare prekey under any context
+        // the shim signs no bare prekey under any context: it is no body
         for i in [5, 8] {
             assert_eq!(
                 sign_of(&bob.pair, c.as_bytes(), &fields[i]),
-                Err(Error::Args),
+                Err(Error::Format),
                 "{c}"
             );
         }
         // and the same text signed past the shim stands in for no
         // prekey signature
         let mut f = fields.clone();
-        f[6] = raw_sign(&bob.pair, c.as_bytes(), &fields[5]);
+        f[6] = raw_sign_with(pair.private_key(), c.as_bytes(), &fields[5]);
         assert_eq!(rebuild(&f), Err(Error::Signature), "{c}");
         let mut f = fields.clone();
-        f[9] = raw_sign(&bob.pair, c.as_bytes(), &fields[8]);
+        f[9] = raw_sign_with(pair.private_key(), c.as_bytes(), &fields[8]);
         assert_eq!(rebuild(&f), Err(Error::Signature), "{c}");
     }
     // the fields as they came build, so the refusals were the signatures'
@@ -343,39 +391,54 @@ fn a_kryfo_signature_builds_no_bundle() {
 
 #[test]
 fn sign_then_verify() {
-    let alice = Party::new(1);
-    let bob = Party::new(2);
-    for (c, body) in CONTEXTS {
-        let m = body_for(*body, &alice.public, &bob.public);
-        assert!(body_fits(*body, &m), "{c}");
-        let s = sign_of(&alice.pair, c.as_bytes(), &m).unwrap();
-        assert_eq!(s.len(), 64);
-        verify_ctx_of(&alice.public, c.as_bytes(), &m, &s).unwrap();
-        assert!(canonical_s(s.as_slice().try_into().unwrap()));
+    let (k, g) = fresh();
+    for b in bodies(&k, &g) {
+        let c = b.context.as_bytes();
+        for me in &b.signers {
+            let s = sign_of(&me.pair, c, &b.message).unwrap();
+            assert_eq!(s.len(), 64);
+            verify_ctx_of(&me.public, c, &b.message, &s).unwrap();
+            assert!(canonical_s(s.as_slice().try_into().unwrap()));
+            assert_eq!(
+                verify_ctx_of(&b.not.public, c, &b.message, &s),
+                Err(Error::Signature)
+            );
+            // randomised: two signatures over one text differ, both hold
+            let t = sign_of(&me.pair, c, &b.message).unwrap();
+            assert_ne!(s, t);
+            verify_ctx_of(&me.public, c, &b.message, &t).unwrap();
+        }
+        // a key the body names in no signing role signs nothing, and its
+        // signature made past the shim does not verify either
         assert_eq!(
-            verify_ctx_of(&bob.public, c.as_bytes(), &m, &s),
+            sign_of(&b.not.pair, c, &b.message),
+            Err(Error::Signer),
+            "{}",
+            b.context
+        );
+        let s = b.not.raw_sign(c, &b.message);
+        assert_eq!(
+            verify_ctx_of(&b.not.public, c, &b.message, &s),
             Err(Error::Signature)
         );
-        // randomised: two signatures over one text differ, both hold
-        let t = sign_of(&alice.pair, c.as_bytes(), &m).unwrap();
-        assert_ne!(s, t);
-        verify_ctx_of(&alice.public, c.as_bytes(), &m, &t).unwrap();
+        let kind = crate::sig::kind_of(c).unwrap();
+        assert_eq!(
+            signers(kind, &b.message).unwrap(),
+            b.signers
+                .iter()
+                .map(|i| i.public.clone())
+                .collect::<Vec<_>>()
+        );
     }
-    // a move is signed by both identities over one body, and the new one
-    // is not in it
-    let carol = Party::new(3);
-    let m = body_for(Body::Move, &alice.public, &bob.public);
-    let s = sign_of(&carol.pair, b"move", &m).unwrap();
-    verify_ctx_of(&carol.public, b"move", &m, &s).unwrap();
 }
 
 #[test]
 fn sign_refuses() {
-    let alice = Party::new(1);
-    let bob = Party::new(2);
-    let mv = body_for(Body::Move, &alice.public, &bob.public);
-    // a context off the list in any spelling, one that is gone and one
-    // whose format is not here yet
+    let (k, g) = fresh();
+    let ana1 = k.id("ana1");
+    let invite = g.qr_ci.body();
+    // a context off the list in any spelling, one that is gone, one whose
+    // format is not here yet, and a format that is never signed
     for c in [
         &b"Invite"[..],
         b"invite\0",
@@ -384,68 +447,126 @@ fn sign_refuses() {
         b"x",
         b"link-proof",
         b"face-claim",
+        b"device-bundle",
     ] {
-        assert_eq!(sign_of(&alice.pair, c, b"KIN4 x"), Err(Error::Args));
-        assert_eq!(sign_of(&alice.pair, c, &mv), Err(Error::Args));
+        assert_eq!(sign_of(&ana1.pair, c, &invite), Err(Error::Args));
         assert_eq!(
-            verify_ctx_of(&alice.public, c, b"KIN4 x", &[0; 64]),
+            verify_ctx_of(&ana1.public, c, &invite, &[0; 64]),
             Err(Error::Args)
         );
     }
     // nothing to sign, or no context
-    assert_eq!(sign_of(&alice.pair, b"move", b""), Err(Error::Args));
-    assert_eq!(sign_of(&alice.pair, b"", &mv), Err(Error::Args));
-    // a body of another context's shape, a cut magic, a magic in another
-    // case
-    for (c, body) in CONTEXTS {
-        for (_, other) in CONTEXTS.iter().filter(|o| o.1 != *body) {
-            let m = body_for(*other, &alice.public, &bob.public);
-            assert_eq!(
-                sign_of(&alice.pair, c.as_bytes(), &m),
-                Err(Error::Args),
-                "{c}"
+    assert_eq!(sign_of(&ana1.pair, b"invite", b""), Err(Error::Args));
+    assert_eq!(sign_of(&ana1.pair, b"", &invite), Err(Error::Args));
+    // a magic and another identity's key is no invite, and neither is an
+    // invite naming another identity
+    let other = [&b"KIN4"[..], &k.id("ana0").public].concat();
+    assert_eq!(sign_of(&ana1.pair, b"invite", &other), Err(Error::Format));
+    assert_eq!(
+        sign_of(&k.id("ana0").pair, b"invite", &invite),
+        Err(Error::Signer)
+    );
+    // a body of another context's format
+    let bs = bodies(&k, &g);
+    for b in &bs {
+        for (c, _) in CONTEXTS.iter().filter(|c| c.0 != b.context) {
+            assert!(
+                matches!(
+                    sign_of(&b.signers[0].pair, c.as_bytes(), &b.message),
+                    Err(Error::Format)
+                ),
+                "{} as {c}",
+                b.context
             );
         }
-        if let Body::Magic(m) = body {
-            let mut lower = m.to_vec();
-            lower[0] |= 0x20;
-            for x in [&m[..3], &lower[..]] {
-                assert_eq!(sign_of(&alice.pair, c.as_bytes(), x), Err(Error::Args));
-            }
-        }
     }
+    // a whole frame, its own signature still on it
+    assert_eq!(
+        sign_of(&ana1.pair, b"invite", &g.qr_ci.encode()),
+        Err(Error::Format)
+    );
+    assert_eq!(
+        sign_of(&k.id("ben0").pair, b"hello", &g.hello.encode()),
+        Err(Error::Format)
+    );
+    // a body whose signatures inside do not hold
+    let mut h = g.hello.clone();
+    h.invite.sig.as_mut().unwrap()[0] ^= 1;
+    assert_eq!(
+        sign_of(&k.id("ben0").pair, b"hello", &h.body()),
+        Err(Error::Signature)
+    );
+    let mut x = g.link_ci.clone();
+    x.block.as_mut().unwrap().spk_sig[1] ^= 1;
+    assert_eq!(
+        sign_of(&ana1.pair, b"invite", &x.body()),
+        Err(Error::Signature)
+    );
+    // a move by the peer, or by a key it does not name
+    assert_eq!(
+        sign_of(&k.id("ben0").pair, b"move", &g.mv.encode()),
+        Err(Error::Signer)
+    );
+    assert_eq!(
+        sign_of(&k.id("dev2").pair, b"move", &g.mv.encode()),
+        Err(Error::Signer)
+    );
     // a move body one step off: refused, and signed past the shim it
     // still does not hold
-    for (what, m) in moves_refused(&alice.public, &bob.public) {
-        assert!(!body_fits(Body::Move, &m), "{what}");
+    for (what, m) in moves_refused(&g.mv.encode()) {
         assert_eq!(
-            sign_of(&alice.pair, b"move", &m),
-            Err(Error::Args),
+            sign_of(&k.id("ana0").pair, b"move", &m),
+            Err(Error::Format),
             "{what}"
         );
-        let s = raw_sign(&alice.pair, b"move", &m);
+        let s = k.id("ana0").raw_sign(b"move", &m);
         assert_eq!(
-            verify_ctx_of(&alice.public, b"move", &m, &s),
+            verify_ctx_of(&k.id("ana0").public, b"move", &m, &s),
             Err(Error::Signature),
             "{what}"
         );
     }
     // a key pair whose halves do not belong together
-    let a = IdentityKeyPair::try_from(alice.pair.as_slice()).unwrap();
-    let b = IdentityKeyPair::try_from(bob.pair.as_slice()).unwrap();
+    let a = IdentityKeyPair::try_from(ana1.pair.as_slice()).unwrap();
+    let b = IdentityKeyPair::try_from(k.id("ana0").pair.as_slice()).unwrap();
     let mixed = IdentityKeyPair::new(*b.identity_key(), *a.private_key()).serialize();
-    assert_eq!(sign_of(&mixed, b"move", &mv), Err(Error::Key));
+    assert_eq!(sign_of(&mixed, b"invite", &invite), Err(Error::Key));
     // a pair whose public half is its key with the top bit set
-    let mut top = alice.public.clone();
+    let mut top = ana1.public.clone();
     top[32] |= 0x80;
     let lax = IdentityKeyPair::new(IdentityKey::decode(&top).unwrap(), *a.private_key());
-    assert_eq!(sign_of(&lax.serialize(), b"move", &mv), Err(Error::Key));
+    assert_eq!(
+        sign_of(&lax.serialize(), b"invite", &invite),
+        Err(Error::Key)
+    );
     // a pair that does not read
-    assert_eq!(sign_of(&[1, 2, 3], b"move", &mv), Err(Error::Key));
+    assert_eq!(sign_of(&[1, 2, 3], b"invite", &invite), Err(Error::Key));
     // fields left over
     let mut x = w();
-    x.bytes(&alice.pair).bytes(b"move").bytes(&mv).bytes(b"y");
+    x.bytes(&ana1.pair)
+        .bytes(b"invite")
+        .bytes(&invite)
+        .bytes(b"y");
     assert_eq!(run(sign, &mut x), Err(Error::Args));
+}
+
+#[test]
+fn verify_ctx_says_false_for_empty_fields() {
+    let (k, g) = fresh();
+    let ana1 = k.id("ana1");
+    let m = g.qr_ci.body();
+    let s = ana1.sign(b"invite", &m).unwrap();
+    assert_eq!(verify_ctx_of(&[], b"invite", &m, &s), Err(Error::Key));
+    assert_eq!(
+        verify_ctx_of(&ana1.public, b"invite", &[], &s),
+        Err(Error::Signature)
+    );
+    assert_eq!(
+        verify_ctx_of(&ana1.public, b"invite", &m, &[]),
+        Err(Error::Signature)
+    );
+    assert_eq!(verify_ctx_of(&ana1.public, b"", &m, &s), Err(Error::Args));
+    verify_ctx_of(&ana1.public, b"invite", &m, &s).unwrap();
 }
 
 #[test]
@@ -479,6 +600,18 @@ fn verify_takes_only_prekey_keys() {
             Err(Error::Key)
         );
     }
+    // the signature in one form only: s + l holds for libsignal alone
+    let mut sl = spk[2].clone();
+    add_l(&mut sl[32..]);
+    assert!(
+        PublicKey::deserialize(&bob.public)
+            .unwrap()
+            .verify_signature(&spk[1], &sl)
+    );
+    assert_eq!(
+        run(verify, w().bytes(&bob.public).bytes(&spk[1]).bytes(&sl)),
+        Err(Error::Signature)
+    );
 }
 
 #[test]
@@ -490,7 +623,12 @@ fn build_info_names_the_lock() {
         let s = std::str::from_utf8(s).unwrap();
         assert!(lock.contains(&format!("source = \"{s}\"")), "{s}");
     }
-    assert!(o[0].starts_with(b"git+https://github.com/signalapp/libsignal?"));
+    // libsignal by its commit, spqr by the tag libsignal's manifest names
+    let rev = "387da3e29ac87c821aedc697aee77646a1c72fff";
+    assert_eq!(
+        o[0],
+        format!("git+https://github.com/signalapp/libsignal?rev={rev}#{rev}").as_bytes()
+    );
     assert!(o[1].starts_with(b"git+https://github.com/signalapp/SparsePostQuantumRatchet.git?"));
     assert_eq!(run(build_info, w().bytes(b"x")), Err(Error::Args));
 }
@@ -504,7 +642,14 @@ fn the_header_matches_the_library() {
         .lines()
         .filter_map(|l| l.strip_prefix("KS_CALL(")?.strip_suffix(");"))
         .collect();
-    for c in ["ks_sign", "ks_verify_ctx", "ks_build_info", "ks_verify"] {
+    for c in [
+        "ks_sign",
+        "ks_verify_ctx",
+        "ks_build_info",
+        "ks_verify",
+        "ks_parse",
+        "ks_session_drop_below",
+    ] {
         assert!(calls.contains(&c), "{c}");
     }
     let lib = include_str!("lib.rs");
@@ -512,110 +657,124 @@ fn the_header_matches_the_library() {
         assert!(lib.contains(&format!("    {c} => ")), "{c} not exported");
     }
     assert_eq!(
-        lib.matches(" => ops::").count() + lib.matches(" => sig::").count(),
+        lib.matches(" => ops::").count()
+            + lib.matches(" => sig::").count()
+            + lib.matches(" => formats::").count(),
         calls.len()
     );
+    // every error code the library has is in the header
+    for (name, e) in [
+        ("KS_ERR_FORMAT", Error::Format),
+        ("KS_ERR_SIGNER", Error::Signer),
+        ("KS_ERR_SESSION", Error::Session),
+    ] {
+        assert!(
+            h.contains(&format!("#define {name} {} ", e as i32)),
+            "{name}"
+        );
+    }
+    // and each format ks_parse takes, with each context ks_sign takes
+    for (n, _) in formats::KINDS {
+        assert!(h.contains(n), "{n}");
+    }
+    assert!(
+        CONTEXTS
+            .iter()
+            .all(|(c, k)| formats::kind_of(c.as_bytes()) == Ok(*k))
+    );
+    assert!(!CONTEXTS.iter().any(|(_, k)| *k == Kind::DeviceBundle));
 }
 
 #[test]
 fn signature_calls_take_garbage() {
-    let alice = Party::new(1);
-    let s = sign_of(&alice.pair, b"invite", b"KIN4 garbage").unwrap();
-    let seeds: Vec<(Op, Vec<u8>)> = vec![
-        (
+    let (k, g) = fresh();
+    let mut seeds: Vec<(Op, Vec<u8>)> = vec![(build_info, Vec::new())];
+    for b in bodies(&k, &g) {
+        let me = &b.signers[0];
+        let s = me.sign(b.context.as_bytes(), &b.message).unwrap();
+        seeds.push((
             sign,
-            w().bytes(&alice.pair)
-                .bytes(b"invite")
-                .bytes(b"KIN4 x")
+            w().bytes(&me.pair)
+                .bytes(b.context.as_bytes())
+                .bytes(&b.message)
                 .done(),
-        ),
-        (
+        ));
+        seeds.push((
             verify_ctx,
-            w().bytes(&alice.public)
-                .bytes(b"invite")
-                .bytes(b"KIN4 garbage")
+            w().bytes(&me.public)
+                .bytes(b.context.as_bytes())
+                .bytes(&b.message)
                 .bytes(&s)
                 .done(),
-        ),
-        (
-            sign,
-            w().bytes(&alice.pair)
-                .bytes(b"move")
-                .bytes(&body_for(Body::Move, &alice.public, &Party::new(2).public))
-                .done(),
-        ),
-        (build_info, Vec::new()),
-    ];
+        ));
+    }
     let mut rng = Rng(0x2545f4914f6cdd1d);
     for (op, seed) in &seeds {
-        for _ in 0..300 {
+        for _ in 0..80 {
             raw(*op, &mutate(&mut rng, seed));
         }
     }
 }
 
-// makes testdata/sig_v1.txt: cargo test write_sig_vectors -- --ignored
-// --nocapture. xeddsa is randomised, so a new run gives new signatures; the
-// file is what the tests hold to
-#[test]
-#[ignore]
-fn write_sig_vectors() {
-    let k1 = run(identity_generate, &mut w()).unwrap();
-    let k2 = run(identity_generate, &mut w()).unwrap();
-    let k3 = run(identity_generate, &mut w()).unwrap();
-    let private = |pair: &[u8]| {
-        IdentityKeyPair::try_from(pair)
-            .unwrap()
-            .private_key()
-            .serialize()
+/// testdata/sig_v1.txt, made by write_vectors (tests_formats.rs) with the
+/// keys and bodies of formats_v1.txt
+pub(crate) fn sig_vectors(k: &Keys, g: &Goods) -> String {
+    let mut out = String::new();
+    let mut line = |s: String| {
+        out.push_str(&s);
+        out.push('\n');
     };
-    println!("# kryfo signatures, version 1: xeddsa by a libsignal identity key over");
-    println!("# \"kryfo-sig-v1\" 00 context 00 message. xeddsa is randomised, so these are");
-    println!("# only checked, never made again (src/tests_sig.rs). test keys only");
-    println!("# key name private public");
-    println!("# good name key context message text signature");
-    println!("# bad name refused-as lax|strict public context message signature");
-    println!("#   lax: libsignal's own verify takes it, only the shim refuses it");
-    println!("# prekey key public signature: libsignal's own prekey signature");
-    println!("# alt key other signature: libsignal's alternate identity signature");
-    for (name, k) in [("k1", &k1), ("k2", &k2), ("k3", &k3)] {
-        println!("key {name} {} {}", to_hex(&private(&k[0])), to_hex(&k[1]));
+    line("# kryfo signatures, version 1: xeddsa by a libsignal identity key over".into());
+    line("# \"kryfo-sig-v1\" 00 context 00 message, the message a whole body of the".into());
+    line("# context's format without its own signature (formats_v1.txt has the frames).".into());
+    line("# xeddsa is randomised, so these are only checked, never made again".into());
+    line("# (src/tests_sig.rs). test keys only".into());
+    line("# key name private public".into());
+    line("# good name key context message text signature".into());
+    line("# bad name refused-as lax|strict public context message signature".into());
+    line("#   lax: libsignal's own verify takes it, only the shim refuses it".into());
+    line("# prekey key public signature: libsignal's own prekey signature".into());
+    line("# alt key other signature: libsignal's alternate identity signature".into());
+    for (n, id) in &k.ids {
+        line(format!(
+            "key {n} {} {}",
+            to_hex(&id.private),
+            to_hex(&id.public)
+        ));
     }
-    // k1 moves its chat with k3 to k2: both k1 and k2 sign the one body
-    let mv = [&k1[1][..], &k3[1], &[0x33; 32]].concat();
+    let named: Vec<(&str, Body)> = [
+        "invite_1",
+        "hello_1",
+        "heal_1",
+        "heal_2",
+        "device_list_1",
+        "move",
+    ]
+    .into_iter()
+    .zip(bodies(k, g))
+    .collect();
     let mut good = Vec::new();
-    let bodies: Vec<(&str, &str, &str, Vec<u8>)> = vec![
-        (
-            "invite_1",
-            "k1",
-            "invite",
-            [&b"KIN4"[..], &[1; 28]].concat(),
-        ),
-        ("hello_1", "k1", "hello", [&b"KHL1"[..], &[2; 20]].concat()),
-        ("heal_1", "k1", "heal", [&b"KHB1"[..], &[3; 24]].concat()),
-        (
-            "device_list_1",
-            "k1",
-            "device-list",
-            [&b"KDL2"[..], &k1[1]].concat(),
-        ),
-        ("move_1", "k1", "move", mv.clone()),
-        ("move_2", "k2", "move", mv.clone()),
-    ];
-    for (name, signer, context, message) in bodies {
-        let pair = if signer == "k1" { &k1[0] } else { &k2[0] };
-        let s = sign_of(pair, context.as_bytes(), &message).unwrap();
-        let text = signed_text(context.as_bytes(), &message);
-        println!(
-            "good {name} {signer} {context} {} {} {}",
-            to_hex(&message),
-            to_hex(&text),
-            to_hex(&s)
-        );
-        good.push((context, message, s));
+    for (name, b) in &named {
+        for (i, me) in b.signers.iter().enumerate() {
+            let name = if b.context == "move" {
+                format!("move_{}", i + 1)
+            } else {
+                name.to_string()
+            };
+            let s = me.sign(b.context.as_bytes(), &b.message).unwrap();
+            let text = signed_text(b.context.as_bytes(), &b.message);
+            line(format!(
+                "good {name} {} {} {} {} {}",
+                k.name_of(&me.public),
+                b.context,
+                to_hex(&b.message),
+                to_hex(&text),
+                to_hex(&s)
+            ));
+            good.push((b.context, b.message.clone(), s, me.clone()));
+        }
     }
-
-    let bad = |name: &str, want: &str, lax: bool, key: &[u8], c: &str, m: &[u8], s: &[u8]| {
+    let mut bad = |name: &str, want: &str, lax: bool, key: &[u8], c: &str, m: &[u8], s: &[u8]| {
         if lax {
             let k = PublicKey::deserialize(key).unwrap();
             assert!(
@@ -623,61 +782,69 @@ fn write_sig_vectors() {
                 "{name}"
             );
         }
-        println!(
+        line(format!(
             "bad {name} {want} {} {} {c} {} {}",
             if lax { "lax" } else { "strict" },
             to_hex(key),
             to_hex(m),
             to_hex(s)
-        );
+        ));
     };
-    let (c, m, s) = &good[0];
+    let (c, m, s, me) = &good[0];
+    let key = &me.public;
     // s + l: the same signature in a second encoding
     let mut sl = s.clone();
     let sign_bit = sl[63] & 0x80;
     sl[63] &= 0x7f;
-    let mut carry = 0u16;
-    for i in 0..32 {
-        let l = [
-            0xedu8, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58, 0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9,
-            0xde, 0x14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x10,
-        ][i];
-        let t = sl[32 + i] as u16 + l as u16 + carry;
-        sl[32 + i] = t as u8;
-        carry = t >> 8;
-    }
-    assert_eq!(carry, 0);
+    add_l(&mut sl[32..]);
     sl[63] |= sign_bit;
-    bad("s_plus_l", "signature", true, &k1[1], c, m, &sl);
+    bad("s_plus_l", "signature", true, key, c, m, &sl);
     // the key with its top bit set, and with a byte after it
-    let mut top = k1[1].clone();
-    top[32] |= 0x80;
-    bad("key_top_bit", "key", true, &top, c, m, s);
-    let mut trail = k1[1].clone();
-    trail.push(0);
-    bad("key_trailing_byte", "key", true, &trail, c, m, s);
-    bad("key_no_type", "key", false, &k1[1][1..], c, m, s);
-    let mut typed = k1[1].clone();
+    let bk = bad_keys(key);
+    bad("key_top_bit", "key", true, &bk.top_bit, c, m, s);
+    bad(
+        "key_trailing_byte",
+        "key",
+        true,
+        &[&key[..], &[0]].concat(),
+        c,
+        m,
+        s,
+    );
+    bad("key_no_type", "key", false, &key[1..], c, m, s);
+    let mut typed = key.clone();
     typed[0] = 0x06;
     bad("key_type", "key", false, &typed, c, m, s);
     let p: Vec<u8> = [&[0x05u8][..], &[0xed], &[0xff; 30], &[0x7f]].concat();
     bad("key_p", "key", false, &p, c, m, s);
-    let zero: Vec<u8> = [&[0x05u8][..], &[0; 32]].concat();
-    bad("key_zero", "key", false, &zero, c, m, s);
-    let mut one = zero.clone();
+    bad("key_base_plus_p", "key", false, &bk.base_plus_p, c, m, s);
+    bad("key_zero", "key", false, &bk.zero, c, m, s);
+    let mut one = bk.zero.clone();
     one[1] = 1;
     bad("key_one", "key", false, &one, c, m, s);
-    bad("other_key", "signature", false, &k2[1], c, m, s);
-    bad("sig_short", "signature", false, &k1[1], c, m, &s[..63]);
+    bad("key_mixed_order", "key", false, &bk.mixed_order, c, m, s);
+    bad("key_twist", "key", false, &bk.twist, c, m, s);
+    bad("key_empty", "key", false, &[], c, m, s);
+    bad(
+        "other_key",
+        "signature",
+        false,
+        &k.id("ana0").public,
+        c,
+        m,
+        s,
+    );
+    bad("sig_short", "signature", false, key, c, m, &s[..63]);
     bad(
         "sig_long",
         "signature",
         false,
-        &k1[1],
+        key,
         c,
         m,
         &[&s[..], &[0]].concat(),
     );
+    bad("sig_empty", "signature", false, key, c, m, &[]);
     for (name, i, bit) in [
         ("sig_r_flip", 3, 1),
         ("sig_s_flip", 40, 4),
@@ -685,77 +852,170 @@ fn write_sig_vectors() {
     ] {
         let mut f = s.clone();
         f[i] ^= bit;
-        bad(name, "signature", false, &k1[1], c, m, &f);
+        bad(name, "signature", false, key, c, m, &f);
     }
     let mut mm = m.clone();
-    mm[10] ^= 1;
-    bad("message_changed", "signature", false, &k1[1], c, &mm, s);
+    mm[20] ^= 1;
+    bad("message_changed", "signature", false, key, c, &mm, s);
+    bad("message_empty", "signature", false, key, c, &[], s);
     bad(
         "invite_without_magic",
         "signature",
         false,
-        &k1[1],
+        key,
         "invite",
         &m[4..],
         s,
     );
-    let (_, m5, s5) = &good[4];
-    bad("move_as_heal", "signature", false, &k1[1], "heal", m5, s5);
+    // the whole frame with its signature is not the body
+    let whole = [&m[..], s].concat();
+    let ws = me.raw_sign(b"invite", &whole);
+    bad(
+        "invite_with_its_sig",
+        "signature",
+        true,
+        key,
+        "invite",
+        &whole,
+        &ws,
+    );
+    let (_, mv, ms, mk) = good.iter().find(|g| g.0 == "move").unwrap();
+    bad(
+        "move_as_heal",
+        "signature",
+        false,
+        &mk.public,
+        "heal",
+        mv,
+        ms,
+    );
     bad(
         "move_as_link_proof",
         "args",
         false,
-        &k1[1],
+        &mk.public,
         "link-proof",
-        m5,
-        s5,
+        mv,
+        ms,
     );
     bad(
         "move_as_face_claim",
         "args",
         false,
-        &k1[1],
+        &mk.public,
         "face-claim",
-        m5,
-        s5,
+        mv,
+        ms,
     );
-    let (_, m2, s2) = &good[2];
-    bad("heal_as_hello", "signature", false, &k1[1], "hello", m2, s2);
+    let (_, hm, hs, hk) = good.iter().find(|g| g.0 == "heal").unwrap();
+    bad(
+        "heal_as_hello",
+        "signature",
+        false,
+        &hk.public,
+        "hello",
+        hm,
+        hs,
+    );
     // bodies only the shim refuses: signed past its checks
-    for (name, m) in moves_refused(&k1[1], &k3[1]) {
-        let s = raw_sign(&k1[0], b"move", &m);
+    let old = k.id("ana0");
+    for (name, m) in moves_refused(mv) {
+        let s = old.raw_sign(b"move", &m);
         bad(
             &format!("move_{name}"),
             "signature",
             true,
-            &k1[1],
+            &old.public,
             "move",
             &m,
             &s,
         );
     }
     let raw = [3u8; 28];
-    let hs = raw_sign(&k1[0], b"heal", &raw);
+    let hs = old.raw_sign(b"heal", &raw);
     bad(
         "heal_without_magic",
         "signature",
         true,
-        &k1[1],
+        &old.public,
         "heal",
         &raw,
         &hs,
     );
-    bad("context_case", "args", false, &k1[1], "Invite", m, s);
-    bad("context_unknown", "args", false, &k1[1], "kryfo", m, s);
+    // a key in no signing role, signing past the shim
+    for b in bodies(k, g) {
+        let s = b.not.raw_sign(b.context.as_bytes(), &b.message);
+        let name = format!(
+            "{}_by_{}",
+            b.context.replace('-', "_"),
+            k.name_of(&b.not.public)
+        );
+        bad(
+            &name,
+            "signature",
+            true,
+            &b.not.public,
+            b.context,
+            &b.message,
+            &s,
+        );
+    }
+    bad("context_case", "args", false, key, "Invite", m, s);
+    bad("context_unknown", "args", false, key, "kryfo", m, s);
 
-    let spk = run(signed_prekey_generate, w().bytes(&k1[0]).u32(1).u64(1)).unwrap();
-    println!("prekey k1 {} {}", to_hex(&spk[1]), to_hex(&spk[2]));
-    let ky = run(kyber_prekey_generate, w().bytes(&k1[0]).u32(2).u64(1)).unwrap();
-    println!("prekey k1 {} {}", to_hex(&ky[1]), to_hex(&ky[2]));
-    let pair = IdentityKeyPair::try_from(k1[0].as_slice()).unwrap();
-    let other = IdentityKey::decode(&k2[1]).unwrap();
+    let spk = run(signed_prekey_generate, w().bytes(&old.pair).u32(1).u64(1)).unwrap();
+    line(format!(
+        "prekey ana0 {} {}",
+        to_hex(&spk[1]),
+        to_hex(&spk[2])
+    ));
+    let ky = run(kyber_prekey_generate, w().bytes(&old.pair).u32(2).u64(1)).unwrap();
+    line(format!("prekey ana0 {} {}", to_hex(&ky[1]), to_hex(&ky[2])));
+    let pair = IdentityKeyPair::try_from(old.pair.as_slice()).unwrap();
+    let other = IdentityKey::decode(&k.id("ben0").public).unwrap();
     let alt = pair
         .sign_alternate_identity(&other, &mut crate::ops::rng())
         .unwrap();
-    println!("alt k1 {} {}", to_hex(&k2[1]), to_hex(&alt));
+    line(format!(
+        "alt ana0 {} {}",
+        to_hex(&k.id("ben0").public),
+        to_hex(&alt)
+    ));
+    out
+}
+
+#[test]
+fn every_good_body_is_a_frame_of_its_context() {
+    let v = vectors();
+    for g in &v.good {
+        let kind = crate::sig::kind_of(g.context.as_bytes()).unwrap();
+        assert!(
+            signers(kind, &g.message).unwrap().contains(&g.key),
+            "{}",
+            g.name
+        );
+    }
+    // the file's bodies are the frames' bodies in formats_v1.txt
+    let f = crate::tests_formats::file();
+    for g in v.good.iter().filter(|g| g.context != "move") {
+        assert!(
+            f.vectors.iter().any(|x| x.want.is_none()
+                && x.kind == g.context
+                && x.bytes.len() == g.message.len() + 64
+                && x.bytes[..g.message.len()] == g.message[..]),
+            "{}",
+            g.name
+        );
+    }
+}
+
+#[test]
+fn bodies_name_their_signers() {
+    let (k, g) = fresh();
+    let i = formats::invite(&g.qr_ci.body(), false).unwrap();
+    assert_eq!(i.identity, k.id("ana1").public);
+    // the pool invite answers on the desktop, its list signed by the phone
+    let p = formats::invite(&g.pool_link.encode(), true).unwrap();
+    assert_eq!(p.answering(), k.id("desk").public);
+    assert_eq!(p.list.unwrap().identity, k.id("ana1").public);
 }

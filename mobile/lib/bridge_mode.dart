@@ -231,6 +231,8 @@ class BridgeStatus {
   final String snowflake;
   final String errorCode;
   final bool askConsent;
+  // tor runs on bridge lines now, in any phase (the engine's on_bridge)
+  final bool onBridge;
 
   const BridgeStatus({
     this.mode = '',
@@ -247,6 +249,7 @@ class BridgeStatus {
     this.snowflake = '',
     this.errorCode = '',
     this.askConsent = false,
+    this.onBridge = false,
   });
 
   /// before the engine has said anything
@@ -274,6 +277,7 @@ class BridgeStatus {
         snowflake: s('snowflake'),
         errorCode: s('error_code'),
         askConsent: b('ask_consent'),
+        onBridge: b('on_bridge'),
       );
     } catch (_) {
       return none;
@@ -298,6 +302,7 @@ class BridgeStatus {
     snowflake: snowflake,
     errorCode: errorCode,
     askConsent: askConsent,
+    onBridge: onBridge,
   );
 
   /// automatic is past the usual way: tor looked blocked or a disguise is
@@ -310,6 +315,11 @@ class BridgeStatus {
   /// a bridge carries tor now
   bool get throughBridge =>
       phase == 'connected' && method.isNotEmpty && method != 'direct';
+
+  /// tor may be on bridge lines now: the engine says so, or a step with a
+  /// bridge's method is on, in any phase
+  bool get mayRideBridge =>
+      onBridge || (method.isNotEmpty && method != 'direct');
 
   @override
   bool operator ==(Object other) =>
@@ -326,7 +336,8 @@ class BridgeStatus {
       other.limited == limited &&
       other.snowflake == snowflake &&
       other.errorCode == errorCode &&
-      other.askConsent == askConsent;
+      other.askConsent == askConsent &&
+      other.onBridge == onBridge;
 
   @override
   int get hashCode => Object.hash(
@@ -342,6 +353,7 @@ class BridgeStatus {
     snowflake,
     errorCode,
     askConsent,
+    onBridge,
   );
 }
 

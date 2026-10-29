@@ -606,6 +606,7 @@ extension AppStateDelivery on AppState {
     // vault is tidied right after a removal in it, and as it opens, never
     // as it shuts
     if (!front) {
+      _typingClear();
       unawaited(_tidy(live));
       if (sessionQuiet) unawaited(_tidy(_session.primary));
     }
@@ -722,7 +723,7 @@ extension AppStateDelivery on AppState {
       return false;
     }
     _torHeld = false;
-    final addr = await engine.startListenerBg(_docsPath);
+    final addr = await startEngineIn(_docsPath, engine.startListenerBg);
     if (addr.isEmpty || addr.startsWith('error')) {
       dlog('delivery: tor did not start: $addr');
       return false;

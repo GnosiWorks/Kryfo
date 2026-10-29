@@ -11,7 +11,6 @@ import "C"
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -135,7 +134,13 @@ func endRoute() {
 	routeEndMu.Unlock()
 }
 
+// called with every list set, for the tests
+var relaysSetHook func([]string)
+
 func setRelays(urls []string) {
+	if h := relaysSetHook; h != nil {
+		h(urls)
+	}
 	nostrMu.Lock()
 	nostrRelays = urls
 	nostrRelaysStale = false
@@ -264,11 +269,7 @@ const youngConn = time.Minute
 // the usual pause for the first, doubling from there to a ceiling. our own
 // relay's ceiling is low, as with failed dials, see ownWaitRule.
 func youngDropWait(u string, rejoin time.Duration, drops int, own bool) time.Duration {
-	mine, short := ownWaitRule(u, own)
-	ceiling := 5 * time.Minute
-	if short {
-		ceiling = ownRelayCeiling
-	}
+	mine, ceiling := ownWaitRule(u, own)
 	d := rejoin
 	for i := 1; i < drops && d < ceiling; i++ {
 		d *= 2
@@ -498,13 +499,13 @@ func catchupHoldOf(key string) catchup.Hold {
 // it at a stand-in.
 var ownRelayHost = "relay.kryfo.app"
 
-// the entries of a relay list that reach our relay: the first, and any on
-// its clearnet name. they are ways into one store, the only one that holds
-// the anchor, see catchup.Book.
+// the entries of a relay list that reach our stores: the first, and any on
+// one of their clearnet names. each store holds its own anchor, see
+// catchup.Book and stores.go.
 func ownRelays(urls []string) []string {
 	var own []string
-	for i, u := range urls {
-		if i == 0 || relayHostIs(u, ownRelayHost) {
+	for _, u := range urls {
+		if storeOf(urls, u) != "" {
 			own = append(own, u)
 		}
 	}
@@ -527,15 +528,6 @@ func isOwnRelay(u string) bool {
 func relayHostIs(u, host string) bool {
 	p, err := url.Parse(u)
 	return err == nil && strings.EqualFold(p.Host, host)
-}
-
-// our relay's entries for an address, as catch-up keys
-func ownCatchupKeys(urls []string, rcvPk string) []string {
-	var keys []string
-	for _, u := range ownRelays(urls) {
-		keys = append(keys, catchupKey(u, rcvPk))
-	}
-	return keys
 }
 
 // a connection on key, from the anchor last at now. own: our relay's keys
@@ -858,31 +850,45 @@ func relayUp(u string) {
 	relayHealthMu.Unlock()
 }
 
-// mine: u reaches our relay, in the list now set or as the runner's first
-// entry (own). short: it gets the low ceiling, which is only while no other
-// way into our relay answers. while one does, nothing waits on u, and
-// redialling it every few seconds from every runner gains nothing.
-func ownWaitRule(u string, own bool) (mine, short bool) {
+// the longest any relay is benched
+const relayMaxBench = 5 * time.Minute
+
+// mine: u reaches one of our stores, in the list now set or as the runner's
+// first entry (own). ceiling: the longest it waits. another way into the
+// same store that answers leaves it the usual backoff, as nothing waits on
+// u then. the other store answering leaves it a short one, so it is back
+// within minutes of returning. with none of ours answering it gets the low
+// ceiling and is redialled seconds apart.
+func ownWaitRule(u string, own bool) (mine bool, ceiling time.Duration) {
 	nostrMu.Lock()
 	urls := nostrRelays
 	nostrMu.Unlock()
-	others := ownRelays(urls)
-	for _, o := range others {
-		if o == u {
-			mine = true
-		}
+	st := storeOf(urls, u)
+	if st == "" && !own {
+		return false, relayMaxBench
 	}
-	if !mine && !own {
-		return false, false
+	if st == "" {
+		st = storeFirst
 	}
 	relayHealthMu.Lock()
 	defer relayHealthMu.Unlock()
-	for _, o := range others {
-		if at, ok := relayUpAt[o]; ok && o != u && time.Since(at) < ownUpRecent {
-			return true, false
+	other := false
+	for _, o := range ownRelays(urls) {
+		at, ok := relayUpAt[o]
+		if !ok || o == u || time.Since(at) >= ownUpRecent {
+			continue
+		}
+		if storeOf(urls, o) == st {
+			return true, relayMaxBench
+		}
+		if relayFails[o] == 0 {
+			other = true
 		}
 	}
-	return true, true
+	if other {
+		return true, otherStoreCeiling
+	}
+	return true, ownRelayCeiling
 }
 
 // a fifth either way, so the runners of one relay do not all redial it in
@@ -940,8 +946,9 @@ func relayFailed(u string, began time.Time) { relayFailedAs(u, began, true) }
 
 // route: the failure may speak for the route, not only for u
 func relayFailedAs(u string, began time.Time, route bool) {
-	// only tor's warmup can make a connect failure meaningless
-	if modeNeedsTor() && !torReadyNow() {
+	// only tor's warmup can make a connect failure meaningless, also for a
+	// backup, which goes through tor on every route
+	if (modeNeedsTor() && !torReadyNow()) || (isBackup(u) && !torCarriesNow()) {
 		return
 	}
 	// nor can a sleep, or the first stretch of the wake after it. a refusal
@@ -949,27 +956,36 @@ func relayFailedAs(u string, began time.Time, route bool) {
 	if route && wakeExcuses(began) {
 		return
 	}
-	if modeNeedsTor() && route {
+	if modeNeedsTor() && route && !isBackup(u) {
 		routeNoteFailFrom(u, began)
 	}
-	_, short := ownWaitRule(u, false)
+	_, ceiling := ownWaitRule(u, false)
+	nostrMu.Lock()
+	urls := nostrRelays
+	nostrMu.Unlock()
 	relayHealthMu.Lock()
-	defer relayHealthMu.Unlock()
 	now := time.Now()
 	// an attempt already under way when the last failure was counted, or
 	// failing right after it, went down in the same hiccup
 	if last, ok := relayFailAt[u]; ok && (began.Before(last) || now.Sub(last) < relayFailBurst) {
+		relayHealthMu.Unlock()
 		return
 	}
 	relayFailAt[u] = now
 	relayFails[u]++
 	d := relayBackoff(relayFails[u])
-	if short && d > ownRelayCeiling {
-		d = ownRelayCeiling
+	if d > ceiling {
+		d = ceiling
 	}
 	if d > 0 {
 		relayCoolTill[u] = now.Add(d)
 		log.Printf("nostr: benching %s for %s, %d failures in a row", u, d, relayFails[u])
+	}
+	gone := oursAllGoneLocked(urls, u)
+	relayHealthMu.Unlock()
+	if gone {
+		log.Println("nostr: none of our relays answers, every one of them is tried again now")
+		oursGoneWake()
 	}
 }
 
@@ -1000,7 +1016,7 @@ func relayListed(ctx context.Context, u string) bool {
 			return true
 		}
 	}
-	return false
+	return isBackup(u)
 }
 
 // end every runner's backoff now, so it dials again instead of waiting out a
@@ -1015,13 +1031,15 @@ func kickRelays() {
 func relayOK(u string) {
 	wakeRouteProven()
 	relayHealthMu.Lock()
-	defer relayHealthMu.Unlock()
 	relayUpAt[u] = time.Now()
 	if relayFails[u] != 0 {
 		delete(relayFails, u)
 		delete(relayCoolTill, u)
 		delete(relayFailAt, u)
 	}
+	relayHealthMu.Unlock()
+	// a store that answers takes what it missed meanwhile
+	topupKick(u)
 }
 
 // how long to wait before the next attempt, never shorter than the caller's
@@ -1029,13 +1047,13 @@ func relayOK(u string) {
 // (see ownWaitRule): exempt, every subscription would redial a failing relay
 // every few seconds, around the clock, on whatever connection the phone has.
 func relayRetryAfter(u string, base time.Duration, own bool) time.Duration {
-	mine, short := ownWaitRule(u, own)
+	mine, ceiling := ownWaitRule(u, own)
 	relayHealthMu.Lock()
 	n := relayFails[u]
 	relayHealthMu.Unlock()
 	d := relayBackoff(n)
-	if short && d > ownRelayCeiling {
-		d = ownRelayCeiling
+	if d > ceiling {
+		d = ceiling
 	}
 	if d < base {
 		d = base
@@ -1133,21 +1151,32 @@ func torNostrClient() (*http.Client, error) { return torNostrClientFor(laneEvery
 // microseconds, and a resume or a reconnect that resets the client never
 // waits on a relay runner (see control_events.go).
 func torNostrClientFor(lane string) (*http.Client, error) {
+	if modeNeedsTor() {
+		return torClientFor(lane)
+	}
 	cachedNostrClientMu.Lock()
 	defer cachedNostrClientMu.Unlock()
-	key := lane
-	if !modeNeedsTor() {
-		key = ""
-	}
-	if c := cachedNostrClients[key]; c != nil {
+	if c := cachedNostrClients[""]; c != nil {
 		return c, nil
 	}
 	// balanced and fast do not go through tor at all, so there is nothing to
 	// wait for and no dialer to build.
-	if !modeNeedsTor() {
-		c := directNostrClient()
-		cachedNostrClients[key] = c
-		log.Printf("nostr: direct client (%s mode, not via tor)", currentMode())
+	c := directNostrClient()
+	cachedNostrClients[""] = c
+	log.Printf("nostr: direct client (%s mode, not via tor)", currentMode())
+	return c, nil
+}
+
+// the lane's client over tor's socks listener, on any route
+func torClientFor(lane string) (*http.Client, error) {
+	cachedNostrClientMu.Lock()
+	defer cachedNostrClientMu.Unlock()
+	// "" is the direct client's
+	key := lane
+	if key == "" {
+		key = "tor"
+	}
+	if c := cachedNostrClients[key]; c != nil {
 		return c, nil
 	}
 	mu.Lock()
@@ -1199,7 +1228,7 @@ func nostrPublishMulti(ctx context.Context, lane string, ev nostr.Event) (ok int
 // client comes from a newer route, or whose publish is still going when the
 // route ends, is left out
 func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-chan struct{}) (ok int) {
-	all := relaysWhenSet(ctx)
+	all := relaysInUse(ctx)
 
 	// our relay's entries are never left out: it carries the traffic and the
 	// tor watchdog already covers it going away.
@@ -1228,16 +1257,48 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 
 	result := make(chan bool, len(urls))
 	var pending int32 = int32(len(urls))
+	// which stores took it, and whether anyone did, for the top-up
+	var tookMu sync.Mutex
+	took := map[string]bool{}
+	anyTook, tookPublic := false, false
+	stores := storesIn(all)
 	for _, url := range urls {
 		go func(u string) {
 			began := time.Now()
-			// last publisher out turns off the lights (frees bg).
+			// last publisher out turns off the lights (frees bg). a store
+			// none of whose entries took it gets it once it answers
 			defer func() {
 				if atomic.AddInt32(&pending, -1) == 0 {
 					bgCancel()
+					tookMu.Lock()
+					var missed []string
+					for _, st := range stores {
+						if anyTook && !took[st] {
+							missed = append(missed, st)
+						}
+					}
+					public, took := tookPublic, anyTook
+					tookMu.Unlock()
+					// every store has it: nothing will need it wrapped again.
+					// a route that ended before anyone took it sends it again
+					if len(missed) == 0 && (took || !routeGone(routeC)) {
+						forgetSeal(ev.ID.Hex())
+					}
+					if !routeGone(routeC) {
+						for _, st := range missed {
+							topupAdd(st, lane, ev)
+						}
+						// on fast, a send our first store missed also goes to
+						// the public relays through tor, as a private sender's
+						// does: private readers and versions before the second
+						// store read the first store and those alone
+						if containsStr(missed, storeFirst) && !public {
+							go publishToBackups(lane, ev, routeC)
+						}
+					}
 				}
 			}()
-			client, err := torNostrClientFor(lane)
+			client, err := relayClientFor(lane, u)
 			if err != nil {
 				log.Printf("nostr: tor not ready, skipping publish to %s: %v", u, err)
 				result <- false
@@ -1270,7 +1331,18 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 				result <- false
 				return
 			}
-			routeAliveOn(gen, u)
+			if !isBackup(u) {
+				routeAliveOn(gen, u)
+			}
+			noteRelayMs(u, time.Since(began))
+			tookMu.Lock()
+			anyTook = true
+			if st := storeOf(all, u); st != "" {
+				took[st] = true
+			} else {
+				tookPublic = true
+			}
+			tookMu.Unlock()
 			relayOK(u)
 			noteSend()
 			log.Printf("nostr: published to %s ok", u)
@@ -1313,26 +1385,33 @@ func probeProves(u string, ask func() bool) bool {
 // how long a runner waits for tor before it tries again
 var torRetryWait = 10 * time.Second
 
-// run a long-lived subscription against all configured relays for events from `pk`.
-// dedupes across relays. exits when ctx is cancelled.
-func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]byte, rcvPk string) {
-	nostrSubscribeRunnerMode(ctx, peerXPubHex, peerArr, rcvPk, false, 0)
+// run a long-lived subscription against all configured relays for what
+// lands on pair c's receive address rcvPk, tagged [tag] (its subscription
+// key). dedupes across relays. exits when ctx is cancelled.
+func nostrSubscribeRunner(ctx context.Context, tag string, c convPair, rcvPk string) {
+	nostrSubscribeRunnerAt(ctx, receiveLane(rcvPk), tag, rcvPk, c.unwrapStamped)
 }
 
-func nostrSubscribeRunnerMode(ctx context.Context, peerXPubHex string, peerArr [32]byte, rcvPk string, fc bool, fcCounter int) {
-	lane := receiveLane(rcvPk)
-	tag := peerXPubHex
-	unwrap := func(gw nostr2.Event) (string, nostr2.Timestamp, error) { return nip17UnwrapStamped(peerArr, gw) }
-	if fc {
-		lane = laneFirstContact
-		tag = "firstcontact"
-		unwrap = func(gw nostr2.Event) (string, nostr2.Timestamp, error) {
-			content, _, at, err := nip17UnwrapFirstContactStamped(fcCounter, gw)
-			return content, at, err
-		}
-	}
-	nostrSubscribeRunnerAt(ctx, lane, tag, rcvPk, unwrap)
+// a first-contact address: what lands on it is opened with its key alone
+func nostrSubscribeRunnerFc(ctx context.Context, tag, fcSk, fcPk string) {
+	nostrSubscribeRunnerAt(ctx, laneFirstContact, tag, fcPk, func(gw nostr2.Event) (string, nostr2.Timestamp, error) {
+		content, sealPk, at, err := nip17UnwrapFirstContactWithStamped(fcSk, gw)
+		return helloLine(content, sealPk), at, err
+	})
 }
+
+// a hello (KHL1, base64) on the v3 first-contact address goes to the app
+// with the key its seal was signed with, which the app checks (identity
+// v4 3.3, 11 step 7); anything else as it came
+func helloLine(content, sealPk string) string {
+	if strings.HasPrefix(content, khl1B64) {
+		return "khl:" + sealPk + "|" + content
+	}
+	return content
+}
+
+// what base64 of "KHL1" starts with
+const khl1B64 = "S0hMMQ"
 
 // the general runner: one receive address, one way to open what lands on
 // it, one tag the inbox line carries so dart knows who it was for, and the
@@ -1353,14 +1432,36 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 	if ctx.Err() != nil {
 		return
 	}
+	// the public relays fast falls back on, read only while none of ours
+	// answers, see stores.go
+	backups := backupsNow()
 
 	// remember ids and the high-water timestamp on disk so a relaunch picks
 	// up where it left off rather than refetch the whole window.
 	seenPath := ""
 	lastPath := ""
-	var lastSaved int64
-	// what the file holds, -1 while there is none
-	lastOnDisk := int64(-1)
+	// each of our stores keeps its own anchor: a wrap only one of them holds
+	// is never stepped over because the other moved on. the public relays
+	// go with the first store's, as they always did; the backups have one of
+	// their own that nothing is written for
+	type storeAnchor struct {
+		saved int64
+		// what the file holds, -1 while there is none
+		onDisk int64
+		path   string
+		keys   []string
+		// no file yet: its first walk is the whole store
+		fresh bool
+	}
+	stores := storesIn(urls)
+	if len(stores) == 0 {
+		stores = []string{storeFirst}
+	}
+	anchors := map[string]*storeAnchor{}
+	for _, st := range stores {
+		anchors[st] = &storeAnchor{onDisk: -1, keys: storeCatchupKeys(urls, st, rcvPk)}
+	}
+	const anchorBackup = "backup"
 	var lastMu sync.Mutex
 	if savedDataDir() != "" {
 		seenPath, lastPath = addressFiles(rcvPk)
@@ -1369,27 +1470,50 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			goneFiles.Delete(p)
 		}
 		loadHeard(rcvPk)
-		if b, err := os.ReadFile(lastPath); err == nil {
-			if v, perr := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64); perr == nil {
-				lastOnDisk = v
-				lastSaved = anchorNow(v, time.Now())
+		for _, st := range stores {
+			a := anchors[st]
+			a.path = storeLastPath(lastPath, st)
+			goneFiles.Delete(a.path)
+			if b, err := os.ReadFile(a.path); err == nil {
+				if v, perr := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64); perr == nil {
+					a.onDisk = v
+					a.saved = anchorNow(v, time.Now())
+				}
+			} else if st == storeSecond {
+				// the second store with no file yet walks all it holds, which
+				// is nothing from before the day it went live: what it alone
+				// took before this phone first read it is in there
+				a.fresh = true
+				a.saved = anchorNow(secondLiveAt, time.Now())
 			}
 		}
 	}
-	// the file is no later than anything our relay owed before, so it holds
-	// from there until a pass on it is clean. the list is this runner's for
-	// good, and so are our relay's entries in it
-	ownKeys := ownCatchupKeys(urls, rcvPk)
-	catchupStart(ownKeys, nostr.Timestamp(lastSaved), nostr.Timestamp(time.Now().Unix()))
+	firstKey := stores[0]
+	if anchors[storeFirst] != nil {
+		firstKey = storeFirst
+	}
+	first := anchors[firstKey]
+	// the backups start from the newest any store has got to
+	backupAnchor := int64(0)
+	for _, a := range anchors {
+		backupAnchor = max(backupAnchor, a.saved)
+	}
+	// each file is no later than anything its store owed before, so it
+	// holds from there until a pass on it is clean. the list is this
+	// runner's for good, and so are our stores' entries in it
+	for _, st := range stores {
+		a := anchors[st]
+		catchupStart(a.keys, nostr.Timestamp(a.saved), nostr.Timestamp(time.Now().Unix()))
+	}
 	seen := loadSeen(seenPath)
 	seenWhileRunning(ctx, seen)
 	// the anchor as this runner found it, before our relay moves it
-	startAnchor := lastSaved
+	startAnchor := first.saved
 	// a contact's address is ranked for the public relays, see public_live.go.
 	// one just added counts as heard now and is live until the next start
 	var live *liveAddr
 	if rankedLane(lane) {
-		heard := lastSaved
+		heard := first.saved
 		if freshOf(ctx) != nil {
 			heard = time.Now().Unix()
 		}
@@ -1401,7 +1525,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 	}
 	ownURLs := ownRelays(urls)
 	if live != nil {
-		for _, u := range urls {
+		for _, u := range append(slices.Clone(urls), backups...) {
 			if !slices.Contains(ownURLs, u) {
 				heardInMemory(catchupKey(u, rcvPk))
 			}
@@ -1409,27 +1533,42 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 	}
 	// runners share the anchor and read it back, or a relay that never sees
 	// a new event stays pinned to the launch window for the whole process.
-	loadLast := func() int64 {
+	loadLast := func(st string) int64 {
 		lastMu.Lock()
 		defer lastMu.Unlock()
-		return anchorNow(lastSaved, time.Now())
+		if st == anchorBackup {
+			return anchorNow(backupAnchor, time.Now())
+		}
+		a := anchors[st]
+		if a == nil {
+			a = first
+		}
+		return anchorNow(a.saved, time.Now())
 	}
 
 	// the anchor only moves forward. the file follows it whenever the two
 	// differ, which also puts back one that was later than now and leaves a
-	// file once an address has been caught up. it stays at or below what our
-	// relay still owes: after a restart no walk is remembered, and its first
+	// file once an address has been caught up. it stays at or below what its
+	// store still owes: after a restart no walk is remembered, and its first
 	// window comes from the file. so whenever a walk is left owing,
 	// saveLast(0) takes the file down to it at once. it stays at or below
 	// every line the app has not kept yet too, and moves up once it has.
-	saveLast := func(ts int64) {
+	saveLast := func(st string, ts int64) {
 		lastMu.Lock()
 		defer lastMu.Unlock()
-		if ts > lastSaved {
-			lastSaved = ts
+		if st == anchorBackup {
+			backupAnchor = max(backupAnchor, ts)
+			return
 		}
-		disk := lastSaved
-		if f, held := catchupFloor(ownKeys); held && int64(f) < disk {
+		a := anchors[st]
+		if a == nil {
+			a = first
+		}
+		if ts > a.saved {
+			a.saved = ts
+		}
+		disk := a.saved
+		if f, held := catchupFloor(a.keys); held && int64(f) < disk {
 			disk = int64(f)
 		}
 		// nor past what the app has not kept yet: a death before it does
@@ -1437,16 +1576,22 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 		if f, owed := owedFloor(seen); owed && int64(f) < disk {
 			disk = int64(f)
 		}
-		if lastPath == "" || disk == lastOnDisk || engineHeld.Load() {
+		if a.path == "" || disk == a.onDisk || engineHeld.Load() {
 			return
 		}
 		seenFileMu.Lock()
 		defer seenFileMu.Unlock()
-		if fileGone(lastPath) {
+		if fileGone(a.path) {
 			return
 		}
-		if os.WriteFile(lastPath, []byte(strconv.FormatInt(disk, 10)), 0600) == nil {
-			lastOnDisk = disk
+		if os.WriteFile(a.path, []byte(strconv.FormatInt(disk, 10)), 0600) == nil {
+			a.onDisk = disk
+		}
+	}
+	// every file looks again, as the app keeps lines
+	saveAll := func(int64) {
+		for _, st := range stores {
+			saveLast(st, 0)
 		}
 	}
 
@@ -1467,10 +1612,11 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			return false, false
 		}
 		if !seen.claim(ev.ID) {
-			// the app took it before, maybe in a process before this one.
-			// it moves the anchor again, or after a restart the anchor
-			// stays at the file until the contact sends something new
-			return false, seen.handed(ev.ID)
+			// the app took it before, maybe in a process before this one,
+			// or has it on the way from another store. it moves the anchor
+			// again, of this store too, or after a restart the anchor stays
+			// at the file until the contact sends something new
+			return false, seen.taken(ev.ID)
 		}
 		var gw nostr2.Event
 		if err := easyjson.Unmarshal([]byte(ev.String()), &gw); err != nil {
@@ -1494,7 +1640,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 		}
 		nostrMu.Lock()
 		nostrInbox = append(nostrInbox, tag+"|"+content)
-		nostrInboxDone = append(nostrInboxDone, inboxDone{set: seen, id: ev.ID, at: ev.CreatedAt, sent: int64(sent), resave: saveLast, from: from, until: until, bare: bare})
+		nostrInboxDone = append(nostrInboxDone, inboxDone{set: seen, id: ev.ID, at: ev.CreatedAt, sent: int64(sent), resave: saveAll, from: from, until: until, bare: bare})
 		nostrMu.Unlock()
 		short := tag
 		if len(short) > 12 {
@@ -1516,14 +1662,47 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 		}
 	}
 
-	for i, url := range urls {
-		// first relay is our own: it carries the traffic, heal it hard
-		own := i == 0
+	for _, url := range append(slices.Clone(urls), backups...) {
+		// the first entry of each of our stores carries its traffic: heal
+		// it hard
+		own := storeLead(urls, url)
+		backup := !slices.Contains(urls, url)
 		runnersLive.Add(1)
 		go func(u string) {
 			defer runnersLive.Add(-1)
-			// a wait a kick ends early, and so does the runner's end
-			nap := func(d time.Duration) { sleepOrKickCtx(ctx, kickChan(), d) }
+			// one of our stores' entries
+			ownEntry := slices.Contains(ownURLs, u)
+			// whose anchor this relay reads and moves
+			anchorKey := storeOf(urls, u)
+			if anchorKey == "" {
+				anchorKey = firstKey
+			}
+			if backup {
+				anchorKey = anchorBackup
+			}
+			loadLast := func() int64 { return loadLast(anchorKey) }
+			saveLast := func(ts int64) { saveLast(anchorKey, ts) }
+			// the keys of this relay's store: a pass on one lets only these go
+			storeKeys := []string(nil)
+			if ownEntry {
+				storeKeys = anchors[anchorKey].keys
+			}
+			// a wait a kick ends early, and so does the runner's end. ours
+			// also wake when none of ours answers any more
+			nap := func(d time.Duration) { napFor(ctx, d, ownEntry) }
+			// the second store's first walk of every address, at its own
+			// time: an update does not walk all of it for everyone at once
+			if ownEntry && storeLead(urls, u) && anchors[anchorKey].fresh {
+				if d := secondFirstWalk(); d > 0 {
+					t := time.NewTimer(d)
+					select {
+					case <-ctx.Done():
+						t.Stop()
+						return
+					case <-t.C:
+					}
+				}
+			}
 			if tag == laneFirstContact {
 				fcRelaysLive.Add(1)
 				defer fcRelaysLive.Add(-1)
@@ -1531,8 +1710,6 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			// this subscription's catch-up record, apart from every other
 			// contact's on the same relay
 			ck := catchupKey(u, rcvPk)
-			// one of our relay's entries
-			ownEntry := slices.Contains(ownURLs, u)
 			// counted for the width of a wake's turns
 			socks := &pubSockets
 			if ownEntry {
@@ -1583,6 +1760,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			ownMiss := func() {
 				if ownEntry && !(modeNeedsTor() && !torReadyNow()) {
 					ownRelayFailed()
+					storeFailed(anchorKey)
 				}
 			}
 			turn := subTurn{tag: tag, fresh: freshOf(ctx), own: ownEntry}
@@ -1597,6 +1775,24 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				default:
 				}
 				sweeping = false
+				// a backup is read only while our first store is down and tor
+				// carries. the wait ends when either changes
+				if backup {
+					wake, torMoved := liveWakeChan(), torWakeChan()
+					if !backupsOn() {
+						t := time.NewTimer(backupLook)
+						select {
+						case <-ctx.Done():
+							t.Stop()
+							return
+						case <-wake:
+						case <-torMoved:
+						case <-t.C:
+						}
+						t.Stop()
+						continue
+					}
+				}
 				// both channels before the look, so a change of the round or
 				// a kick right after it still wakes the wait
 				onPub, kc0 := true, kickChan()
@@ -1671,7 +1867,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					sleepOrKickCtx(ctx, kc, 15*time.Minute)
 					continue
 				}
-				client, err := torNostrClientFor(lane)
+				client, err := relayClientFor(lane, u)
 				if err != nil {
 					// it asks as tor comes up, beside the start's first
 					// socket, not at the add
@@ -1708,7 +1904,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// everything the library starts for it end with the connection
 				// and not with the subscription. ending it closes the relay.
 				conn, connDone := context.WithCancel(ctx)
-				r := nostr.NewRelay(conn, u, subscribeRelayOptions())
+				r := nostr.NewRelay(conn, u, relayOptionsFor(u))
 				dialAt := time.Now()
 				dialGen := routeGeneration()
 				noteRelayDial(u)
@@ -1769,7 +1965,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				last = nostr.Timestamp(loadLast())
 				// our relay, still walking its window or owing one more
 				// pass over it, takes the window from where that walk began
-				cc := catchupConnect(ck, ownKeys, last, nostr.Timestamp(connected.Unix()))
+				cc := catchupConnect(ck, storeKeys, last, nostr.Timestamp(connected.Unix()))
 				resumed, base := cc.Resumed, cc.Base
 				// a public relay's window reaches back to what it is known to
 				// have handed over, not only to the anchor: our relay moves
@@ -1842,6 +2038,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					if ownEntry {
 						spoke = true
 						ownRelayAnswered()
+						storeAnswered(anchorKey)
 					} else {
 						pubRelayAnswered()
 					}
@@ -1853,9 +2050,11 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// whenever the socket was dialled: a bump that tore nothing
 				// down leaves it carrying
 				probe := func() bool {
+					asked := time.Now()
 					if !probeProves(u, func() bool { return relayResponds(conn, r, rcvPk) }) {
 						return false
 					}
+					noteRelayMs(u, time.Since(asked))
 					aliveNow()
 					return true
 				}
@@ -1933,6 +2132,11 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				}
 				// the select's copy, nil once it has been looked at
 				sweptC := (<-chan struct{})(caughtC)
+				// a backup closes once ours answer again
+				var backupWake <-chan struct{}
+				if backup {
+					backupWake = liveWakeChan()
+				}
 				// a read closes once what it asked by ids is answered too, or
 				// the ask gave up on its own quiet: the held ones may be on
 				// this relay alone
@@ -2067,9 +2271,14 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					case <-eose:
 						eose = nil
 						firstOpen.Store(false)
+						// an empty answer is one round trip
+						if stored == 0 {
+							noteRelayMs(u, time.Since(time.UnixMilli(subAt)))
+						}
 						if ownEntry {
 							spoke = true
 							ownRelayAnswered()
+							storeAnswered(anchorKey)
 						} else {
 							pubRelayAnswered()
 						}
@@ -2131,6 +2340,16 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							caught()
 							saveLast(atomic.LoadInt64(&pending))
 						}(oldest)
+					case <-backupWake:
+						if backupsOn() {
+							backupWake = liveWakeChan()
+							continue
+						}
+						log.Printf("nostr: our first relay answers again, %s closed", u)
+						idle.Stop()
+						stopKick()
+						r.Close()
+						goto reconnect
 					case <-sweptC:
 						sweptC = nil
 						log.Printf("nostr: %s read for addr %s..., closed until the next round", u, rcvPk[:12])
@@ -2265,42 +2484,55 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 	}
 }
 
+// the relays, comma separated, then after a | the backups: public relays
+// read through tor only while none of ours answers (fast). the backups are
+// set first, so a runner that sees the new list sees its backups too
+//
 //export HaloNostrInit
 func HaloNostrInit(cRelaysCSV *C.char) *C.char {
-	csv := goStr(cRelaysCSV)
-	if csv == "" {
-		return C.CString("error: empty relay list")
+	return C.CString(nostrInit(goStr(cRelaysCSV)))
+}
+
+func nostrInit(csv string) string {
+	main, back, _ := strings.Cut(csv, "|")
+	clean, backups := relayCSV(main), relayCSV(back)
+	if len(clean) == 0 {
+		return "error: no valid relay urls"
 	}
-	urls := strings.Split(csv, ",")
-	clean := make([]string, 0, len(urls))
-	for _, u := range urls {
-		u = strings.TrimSpace(u)
-		if u != "" {
-			clean = append(clean, u)
+	setBackups(backups)
+	setRelays(clean)
+	log.Printf("nostr: configured %d relays: %v, %d backups", len(clean), clean, len(backups))
+	return "ok"
+}
+
+func relayCSV(csv string) []string {
+	var out []string
+	for _, u := range strings.Split(csv, ",") {
+		if u = strings.TrimSpace(u); u != "" {
+			out = append(out, u)
 		}
 	}
-	if len(clean) == 0 {
-		return C.CString("error: no valid relay urls")
-	}
-	setRelays(clean)
-	log.Printf("nostr: configured %d relays: %v", len(clean), clean)
-	return C.CString("ok")
+	return out
 }
 
 //export HaloNostrSend
-func HaloNostrSend(cPeerXPubHex, cMsg *C.char) *C.char {
-	return C.CString(nostrSend(goStr(cPeerXPubHex), goStr(cMsg)))
+func HaloNostrSend(cIdent C.int, cPeerXPubHex, cMsg *C.char) *C.char {
+	return C.CString(nostrSend(identArg(cIdent), goStr(cPeerXPubHex), goStr(cMsg)))
 }
 
-func nostrSend(peerHex, msg string) string {
-	peerBytes, err := hex.DecodeString(peerHex)
-	if err != nil || len(peerBytes) != 32 {
-		return "error: bad peer pubkey"
+// msg to peerHex from my identity [ident], on their pair's addresses
+//
+// [peerArg] names the pair as pairArg reads it
+func nostrSend(ident int, peerArg, msg string) string {
+	c, _, err := pairArg(ident, peerArg)
+	if err != nil {
+		if errors.Is(err, errBadPeer) {
+			return "error: bad peer pubkey"
+		}
+		return fmt.Sprintf("error: wrap: %v", err)
 	}
-	var peerArr [32]byte
-	copy(peerArr[:], peerBytes)
 
-	gw, err := nip17Wrap(peerArr, msg)
+	gw, err := c.wrap(msg)
 	if err != nil {
 		return fmt.Sprintf("error: wrap: %v", err)
 	}
@@ -2326,7 +2558,7 @@ func nostrSend(peerHex, msg string) string {
 	// log the drop-box we published to. if a peer isn't receiving, compare this
 	// against the "at addr" in their subscribe line: a mismatch means the two
 	// sides derived different addresses and nothing will ever arrive.
-	_, dst, derr := nip17DeriveRole(peerArr, nip17RcvInfo, hex.EncodeToString(peerArr[:]))
+	dst, derr := c.theirAddress()
 	if derr == nil {
 		log.Printf("nostr: sent event %s to %d relays, addr %s...", ev.ID.Hex()[:12], ok, dst[:12])
 	} else {
@@ -2336,49 +2568,57 @@ func nostrSend(peerHex, msg string) string {
 }
 
 //export HaloNostrSubscribe
-func HaloNostrSubscribe(cPeerXPubHex *C.char) *C.char {
-	return C.CString(nostrSubscribe(goStr(cPeerXPubHex), false))
+func HaloNostrSubscribe(cIdent C.int, cPeerXPubHex *C.char) *C.char {
+	return C.CString(nostrSubscribe(identArg(cIdent), goStr(cPeerXPubHex), false))
 }
 
 // as HaloNostrSubscribe, for someone the user just added or accepted: the
 // first turn of each socket is free (subTurn.fresh)
 //
 //export HaloNostrSubscribeNew
-func HaloNostrSubscribeNew(cPeerXPubHex *C.char) *C.char {
-	return C.CString(nostrSubscribe(goStr(cPeerXPubHex), true))
+func HaloNostrSubscribeNew(cIdent C.int, cPeerXPubHex *C.char) *C.char {
+	return C.CString(nostrSubscribe(identArg(cIdent), goStr(cPeerXPubHex), true))
 }
 
-func nostrSubscribe(peerHex string, fresh bool) string {
-	peerBytes, err := hex.DecodeString(peerHex)
-	if err != nil || len(peerBytes) != 32 {
-		return "error: bad peer pubkey"
+// listen on my identity [ident]'s receive address for peerHex
+func nostrSubscribe(ident int, peerArg string, fresh bool) string {
+	c, peerHex, err := pairArg(ident, peerArg)
+	if err != nil {
+		if errors.Is(err, errBadPeer) {
+			return "error: bad peer pubkey"
+		}
+		return fmt.Sprintf("error: derive: %v", err)
 	}
-	var peerArr [32]byte
-	copy(peerArr[:], peerBytes)
-
-	_, rcvPk, err := nip17RcvAddress(peerArr)
+	rcvSk, rcvPk, err := c.rcvAddress()
 	if err != nil {
 		return fmt.Sprintf("error: derive: %v", err)
 	}
-	nostrSubscribeAt(peerHex, peerArr, rcvPk, fresh)
+	nostrSubscribeAt(c, peerHex, rcvSk, rcvPk, fresh)
 	return "ok"
 }
 
-// a runner for the peer's address, in place of any running one
-func nostrSubscribeAt(peerHex string, peerArr [32]byte, rcvPk string, fresh bool) {
+// a runner for the pair's address, in place of any running one. the main
+// identity's go by the peer's key, as before; another's say whose they are,
+// and the knocks take their address as noted
+func nostrSubscribeAt(c convPair, peerHex, rcvSk, rcvPk string, fresh bool) {
+	key := subKey(c.ident, peerHex)
+	// every identity's, the main one's too: the knocks take the address
+	// the subscription was made on, never one derived again
+	lane := receiveLane(rcvPk)
+	noteKnockTarget(key, knockTarget{rcvPk, rcvSk, lane, lane, strings.ToLower(peerHex)})
 	nostrMu.Lock()
-	if cancel, exists := nostrSubs[peerHex]; exists {
+	if cancel, exists := nostrSubs[key]; exists {
 		cancel()
-		delete(nostrSubs, peerHex)
+		delete(nostrSubs, key)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	nostrSubs[peerHex] = cancel
+	nostrSubs[key] = cancel
 	nostrMu.Unlock()
 	if fresh {
 		ctx = asFresh(ctx)
 	}
 
-	go nostrSubscribeRunner(ctx, peerHex, peerArr, rcvPk)
+	go nostrSubscribeRunner(ctx, key, c, rcvPk)
 	log.Printf("nostr: subscribed for peer %s... at addr %s...", peerHex[:12], rcvPk[:12])
 }
 
@@ -2389,21 +2629,22 @@ func nostrSubscribeAt(peerHex string, peerArr [32]byte, rcvPk string, fresh bool
 // nothing where nothing is held
 //
 //export HaloNostrLetHeld
-func HaloNostrLetHeld(cPeerXPubHex, cHow *C.char) *C.char {
-	if err := nostrLetHeld(goStr(cPeerXPubHex), goStr(cHow)); err != nil {
+func HaloNostrLetHeld(cIdent C.int, cPeerXPubHex, cHow *C.char) *C.char {
+	if err := nostrLetHeld(identArg(cIdent), goStr(cPeerXPubHex), goStr(cHow)); err != nil {
 		return C.CString("error: " + err.Error())
 	}
 	return C.CString("ok")
 }
 
-// "mark" for each peer of a json list of x keys, on a start or an unlock:
+// "mark" for each peer of a json list of {"i": identity, "x": x key}, on a
+// start or an unlock:
 // an accept that died before its fetch goes on at the peer's runner's
 // next connection or probe. its own address only, where something is
 // held, and nothing restarts
 //
 //export HaloNostrMarkHeld
 func HaloNostrMarkHeld(cPeersJSON *C.char) *C.char {
-	var peers []string
+	var peers []identPeer
 	if err := json.Unmarshal([]byte(goStr(cPeersJSON)), &peers); err != nil {
 		return C.CString("error: bad list")
 	}
@@ -2411,12 +2652,13 @@ func HaloNostrMarkHeld(cPeersJSON *C.char) *C.char {
 	return C.CString("ok")
 }
 
-// the pinned chats, which keep live sockets on the public relays first.
-// they count from the next start or mode switch on, and stay in memory
+// the pinned chats, which keep live sockets on the public relays first,
+// as a json list of {"i": identity, "x": x key}. they count from the next
+// start or mode switch on, and stay in memory
 //
 //export HaloNostrPinned
 func HaloNostrPinned(cPeersJSON *C.char) *C.char {
-	var peers []string
+	var peers []identPeer
 	if err := json.Unmarshal([]byte(goStr(cPeersJSON)), &peers); err != nil {
 		return C.CString("error: bad list")
 	}
@@ -2424,30 +2666,29 @@ func HaloNostrPinned(cPeersJSON *C.char) *C.char {
 	return C.CString("ok")
 }
 
-func nostrPinned(peers []string) {
+// each peer's receive address on the identity it is reached on
+func peerAddresses(peers []identPeer) []string {
 	var rcv []string
 	for _, h := range peers {
-		peer, err := peerArr(h)
+		c, _, err := pairArg(h.I, h.arg())
 		if err != nil {
 			continue
 		}
-		if _, rcvPk, err := nip17RcvAddress(peer); err == nil {
+		if _, rcvPk, err := c.rcvAddress(); err == nil {
 			rcv = append(rcv, rcvPk)
 		}
 	}
-	livePin(rcv)
+	return rcv
 }
 
-func nostrMarkHeld(peers []string) {
-	for _, h := range peers {
-		peer, err := peerArr(h)
-		if err != nil {
-			continue
-		}
-		if _, rcvPk, err := nip17RcvAddress(peer); err == nil {
-			if p, _ := addressFiles(rcvPk); heldOnFile(p) > 0 {
-				markHeldFile(p, seenFreeMark)
-			}
+func nostrPinned(peers []identPeer) {
+	livePin(peerAddresses(peers))
+}
+
+func nostrMarkHeld(peers []identPeer) {
+	for _, rcvPk := range peerAddresses(peers) {
+		if p, _ := addressFiles(rcvPk); heldOnFile(p) > 0 {
+			markHeldFile(p, seenFreeMark)
 		}
 	}
 }
@@ -2465,15 +2706,15 @@ func heldOnFile(path string) int {
 	return loadSeen(path).heldCount()
 }
 
-func nostrLetHeld(peerHex, how string) error {
+func nostrLetHeld(ident int, peerArg, how string) error {
 	if how != "free" && how != "drop" && how != "mark" {
 		return errors.New("bad how")
 	}
-	peer, err := peerArr(peerHex)
+	c, peerHex, err := pairArg(ident, peerArg)
 	if err != nil {
 		return err
 	}
-	_, rcvPk, err := nip17RcvAddress(peer)
+	rcvSk, rcvPk, err := c.rcvAddress()
 	if err != nil {
 		return err
 	}
@@ -2483,14 +2724,18 @@ func nostrLetHeld(peerHex, how string) error {
 		return nil
 	}
 	nostrMu.Lock()
-	_, on := nostrSubs[peerHex]
+	_, on := nostrSubs[subKey(ident, peerHex)]
 	_, fcOn := nostrSubs["firstcontact"]
 	fc := fcCounterNow
 	nostrMu.Unlock()
 	fcPath := ""
 	if fcOn && how == "free" {
-		if _, fcPk, err := nip17FirstContactKeys(fc); err == nil {
-			fcPath, _ = addressFiles(fcPk)
+		// the main identity's v3 first-contact address: what a stranger
+		// sent before an accept lands there
+		if me, err := identityOf(mainIdent); err == nil {
+			if _, fcPk, err := nip17FirstContactKeysAs(me, fc); err == nil {
+				fcPath, _ = addressFiles(fcPk)
+			}
 		}
 	}
 	// that lane is everyone's: whoever else it held is asked for again and
@@ -2511,7 +2756,7 @@ func nostrLetHeld(peerHex, how string) error {
 	// a runner reads the mark as it starts. free comes with an accept, so
 	// it asks at once as the accept's own listen would
 	if own && on {
-		nostrSubscribeAt(peerHex, peer, rcvPk, true)
+		nostrSubscribeAt(c, peerHex, rcvSk, rcvPk, true)
 	}
 	if lane {
 		// only the listener read above: a new invite address may have
@@ -2528,26 +2773,31 @@ var letHeldHook func()
 // disk with it
 //
 //export HaloNostrUnsubscribe
-func HaloNostrUnsubscribe(cPeerXPubHex *C.char) *C.char {
-	if err := nostrUnsubscribe(goStr(cPeerXPubHex)); err != nil {
+func HaloNostrUnsubscribe(cIdent C.int, cPeerXPubHex *C.char) *C.char {
+	if err := nostrUnsubscribe(identArg(cIdent), goStr(cPeerXPubHex)); err != nil {
 		return C.CString("error: " + err.Error())
 	}
 	return C.CString("ok")
 }
 
-func nostrUnsubscribe(peerHex string) error {
-	peer, err := peerArr(peerHex)
+func nostrUnsubscribe(ident int, peerArg string) error {
+	c, peerHex, err := pairArg(ident, peerArg)
 	if err != nil {
 		return err
 	}
+	key := subKey(ident, peerHex)
 	nostrMu.Lock()
-	if cancel, exists := nostrSubs[peerHex]; exists {
+	if cancel, exists := nostrSubs[key]; exists {
 		cancel()
-		delete(nostrSubs, peerHex)
+		delete(nostrSubs, key)
 	}
 	nostrMu.Unlock()
-	if _, rcvPk, err := nip17RcvAddress(peer); err == nil {
+	if _, rcvPk, err := c.rcvAddress(); err == nil {
 		dropAddressFiles(rcvPk)
+	}
+	// what waits to reach them on this identity goes with them
+	if dst, err := c.theirAddress(); err == nil {
+		topupPurgeAddr(dst)
 	}
 	return nil
 }
@@ -2555,9 +2805,12 @@ func nostrUnsubscribe(peerHex string) error {
 // the public half of our first-contact address. goes in the invite so a
 // stranger can reach us before either side knows the other's key.
 //
+// the main identity's v3 one, for the v3 links it hands out: any other
+// identity's first-contact keys are random, one per invite (HaloFcKeyPk)
+//
 //export HaloFirstContactPk
-func HaloFirstContactPk(counter C.int) *C.char {
-	_, pk, err := nip17FirstContactKeys(int(counter))
+func HaloFirstContactPk(cIdent C.int, counter C.int) *C.char {
+	_, pk, err := mainFirstContactKeys(identArg(cIdent), int(counter))
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: %v", err))
 	}
@@ -2594,20 +2847,38 @@ func firstContactRelays() int {
 // roster can still be reached.
 //
 //export HaloNostrSubscribeFirstContact
-func HaloNostrSubscribeFirstContact(counter C.int) *C.char {
-	if err := subscribeFirstContact(int(counter)); err != nil {
+func HaloNostrSubscribeFirstContact(cIdent C.int, counter C.int) *C.char {
+	if err := subscribeFirstContact(identArg(cIdent), int(counter)); err != nil {
 		return C.CString(fmt.Sprintf("error: derive: %v", err))
 	}
 	return C.CString("ok")
 }
 
-func subscribeFirstContact(counter int) error { return firstContactOn(counter, false) }
+// the v3 first-contact keys of [ident] at [counter]: the main identity's
+// only. nothing else has an address derived from its key
+func mainFirstContactKeys(ident, counter int) (sk, pk string, err error) {
+	if ident != mainIdent {
+		return "", "", errors.New("only the main identity has a v3 first-contact address")
+	}
+	me, err := identityOf(mainIdent)
+	if err != nil {
+		return "", "", err
+	}
+	return nip17FirstContactKeysAs(me, counter)
+}
+
+func subscribeFirstContact(ident, counter int) error {
+	if ident != mainIdent {
+		return errors.New("only the main identity has a v3 first-contact address")
+	}
+	return firstContactOn(counter, false)
+}
 
 // the first-contact listener on counter started again, if it still runs
 func restartFirstContact(counter int) error { return firstContactOn(counter, true) }
 
 func firstContactOn(counter int, again bool) error {
-	_, fcPk, err := nip17FirstContactKeys(counter)
+	fcSk, fcPk, err := mainFirstContactKeys(mainIdent, counter)
 	if err != nil {
 		return err
 	}
@@ -2632,8 +2903,7 @@ func firstContactOn(counter int, again bool) error {
 		dropLane(laneFirstContact)
 	}
 
-	var zero [32]byte
-	go nostrSubscribeRunnerMode(ctx, "firstcontact", zero, fcPk, true, counter)
+	go nostrSubscribeRunnerFc(ctx, "firstcontact", fcSk, fcPk)
 	log.Printf("nostr: watching first-contact addr %s...", fcPk[:12])
 	return nil
 }
@@ -2643,22 +2913,22 @@ func firstContactOn(counter int, again bool) error {
 // verification applies to everything after this.
 //
 //export HaloNostrSendFirstContact
-func HaloNostrSendFirstContact(cPeerXPubHex, cFcPk, cMsg *C.char) *C.char {
-	return C.CString(nostrSendFirstContact(goStr(cPeerXPubHex), goStr(cFcPk), goStr(cMsg)))
+func HaloNostrSendFirstContact(cIdent C.int, cPeerXPubHex, cFcPk, cMsg *C.char) *C.char {
+	return C.CString(nostrSendFirstContact(identArg(cIdent), goStr(cPeerXPubHex), goStr(cFcPk), goStr(cMsg)))
 }
 
-func nostrSendFirstContact(peerHex, fcPk, msg string) string {
-	peerBytes, err := hex.DecodeString(peerHex)
-	if err != nil || len(peerBytes) != 32 {
+func nostrSendFirstContact(ident int, peerArg, fcPk, msg string) string {
+	c, _, err := pairArg(ident, peerArg)
+	if errors.Is(err, errBadPeer) {
 		return "error: bad peer pubkey"
 	}
 	if len(fcPk) != 64 {
 		return "error: bad first-contact pubkey"
 	}
-	var peerArr [32]byte
-	copy(peerArr[:], peerBytes)
-
-	gw, err := nip17WrapFirstContact(peerArr, fcPk, msg)
+	if err != nil {
+		return fmt.Sprintf("error: wrap: %v", err)
+	}
+	gw, err := c.wrapFirstContact(fcPk, msg)
 	if err != nil {
 		return fmt.Sprintf("error: wrap: %v", err)
 	}

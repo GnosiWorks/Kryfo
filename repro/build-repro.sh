@@ -1,8 +1,8 @@
 #!/bin/bash
 # runs inside the image: builds the engine and the shim from scratch, then
-# the apks, and leaves the three apks in /out for verify.sh to diff against
-# the release. the same commands RELEASING.md gives, run where f-droid runs
-# them.
+# the apks, and leaves the four apks (three per abi, one universal) in /out
+# for verify.sh to diff against the release. the same commands RELEASING.md
+# gives, run where f-droid runs them.
 set -e
 
 # where verify.sh mounted the checkout. it builds at f-droid's path and at
@@ -56,6 +56,7 @@ if [ "$HALO_STEP" = fetch ]; then
     : > "android/app/src/main/jniLibs/$abi/libkryfo_signal.so"
   done
   HALO_UNSIGNED=1 flutter build apk --release --split-per-abi --flavor foss
+  HALO_UNSIGNED=1 flutter build apk --release --target-platform android-arm,android-arm64 --flavor foss
   exit 0
 fi
 
@@ -100,14 +101,25 @@ echo "== apk (unsigned: the keystore never comes near this container)"
 cd "$SRC/mobile"
 export HALO_UNSIGNED=1
 # foss is what f-droid and github ship. play is built and signed elsewhere
-flutter build apk --release --split-per-abi --flavor foss $NO_PUB
-
-echo
-echo "== out"
+# a release candidate says so in its version name (release.sh --rc)
+flutter build apk --release --split-per-abi --flavor foss $NO_PUB \
+  ${HALO_BUILD_NAME:+--build-name "$HALO_BUILD_NAME"}
 # the flavor goes into flutter's names. the release assets keep the names
-# f-droid's binary: line points at
+# f-droid's binary: line points at. copied now, before the next build
 for f in build/app/outputs/flutter-apk/app-*-foss-release*.apk; do
   cp "$f" "$OUT/$(basename "$f" | sed 's/-foss-release/-release/')"
 done
+
+echo
+echo "== universal apk (both arm abis, for the site and github)"
+# built second, so the per-abi apks are built exactly as f-droid builds them
+flutter build apk --release --target-platform android-arm,android-arm64 --flavor foss $NO_PUB \
+  ${HALO_BUILD_NAME:+--build-name "$HALO_BUILD_NAME"}
+for f in build/app/outputs/flutter-apk/app-foss-release*.apk; do
+  cp "$f" "$OUT/$(basename "$f" | sed 's/^app-foss-release/app-universal-release/')"
+done
+
+echo
+echo "== out"
 cd "$OUT"
 sha256sum app-*.apk

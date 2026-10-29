@@ -128,11 +128,13 @@ extension AppStateHeal on AppState {
   // the card a seal starts a session afresh from, when the one held came
   // back with a restore. with none kept they are asked for theirs: their
   // answer leaves it on the row, and the outbox sends again
-  Future<PreKeyBundle?> _afreshCard(String peer) async {
+  Future<LsBundle?> _afreshCard(String peer) async {
     final card = (await _reach(peer))?.bundle;
     if (card != null && card.isNotEmpty) {
       try {
-        final b = preKeyBundleOf(card);
+        // a 0.5.x card has no kyber prekey: it starts nothing, and theirs
+        // is asked for as if none were kept
+        final b = cardBundle(card);
         _waitingCard.remove(peer);
         return b;
       } catch (e) {
@@ -249,9 +251,9 @@ extension AppStateHeal on AppState {
     final ss = await signalFor(memberId);
     if (ss == null) return false;
     try {
-      final addr = SignalProtocolAddress(memberId, 1);
-      await ss.sessionStore.deleteSession(addr);
-      await processPeerBundle(memberId, bundle, into: ss);
+      // the session it replaces goes only once the new one is built: a
+      // card that builds none (a 0.5.x one) leaves it as it was
+      await ss.rebuild(memberId, lsBundleOf(ss.lib, bundle));
       dlog('healed session for $memberId');
       return true;
     } catch (e) {
@@ -291,14 +293,24 @@ extension AppStateHeal on AppState {
       if (to == null || await blockedAnywhere(memberId)) return false;
       final xpub = to.xpub;
       if (xpub.isEmpty) return false;
+      // outside the session, so through the door as it is: the card of
+      // the identity they know, and words only for the main one's
+      // read from the rows, as the door reads it, and checked again there
+      final ident = await identForSeal(memberId);
+      final main = ident == kMainIdent;
       final payload = jsonEncode({
         'halo_ctl': 'bundle',
-        'from': myId,
-        'bundle': await _myBundle(),
+        if (main) 'from': myId,
+        'bundle': main
+            ? await _myBundle()
+            : await makePreKeyBundleB64(await signalOfIdent(ident)),
         'want': want,
         'since': ?since,
       });
-      final r = await Future(() => _io.relaySend(xpub, payload));
+      final (on, framed) = await doorFor(memberId, payload, outside: true);
+      // the card is the identity's it was made for, or nothing goes
+      if (on != ident) return false;
+      final r = await Future(() => _io.relaySend(on, xpub, framed));
       dlog('bundle ctl (want=$want) to $memberId: $r');
       return r == 'ok';
     } catch (e) {
@@ -338,12 +350,13 @@ extension AppStateHeal on AppState {
       final bj =
           jsonDecode(utf8.decode(base64Decode(bundle))) as Map<String, dynamic>;
       final claimed = base64Decode(bj['identityKey'] as String);
-      final addr = SignalProtocolAddress(from, 1);
-      final known = await signalSession.identityStore.getIdentity(addr);
+      // the store of the identity they know
+      final ss = await signalOfIdent(identOf(from));
+      final known = await ss.identityStore.getIdentity(from);
       // with none pinned yet, the key is the one their x key makes: the
       // relay vouched for that one
       final ok = known != null
-          ? _eqBytes(known.serialize(), claimed)
+          ? _eqBytes(known, claimed)
           : _eqBytes(_xIdentity(peerXPub.toLowerCase()) ?? const [], claimed);
       if (!ok) {
         dlog('bundle ctl: identity mismatch for $from, dropped');
@@ -362,11 +375,21 @@ extension AppStateHeal on AppState {
       if (want || _healPending.remove(from) != null) {
         // the session it replaces is archived, so what they sealed on it
         // before still opens. one that does not read goes
+        final LsBundle card;
         try {
-          await processPeerBundle(from, bundle);
+          card = cardBundle(bundle);
+        } on ClassicRefused {
+          // a 0.5.x phone's card builds no session: theirs stays as it is
+          dlog('bundle ctl: a card without a kyber prekey from $from');
+          return;
+        }
+        try {
+          await ss.processBundle(from, card);
+        } on ClassicRefused {
+          rethrow;
         } catch (e) {
-          await signalSession.sessionStore.deleteSession(addr);
-          await processPeerBundle(from, bundle);
+          // one that does not read goes
+          await ss.rebuild(from, card);
         }
         rebuilt = true;
         dlog('healed session for $from (bundle exchange)');

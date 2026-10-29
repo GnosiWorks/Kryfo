@@ -65,7 +65,7 @@ func TestWrapStampedIntoAWalkedStretchArrives(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 	waitFor(t, "the walk finished", 10*time.Second, func() bool {
 		return inboxLen() == 6 && !catchupMarkOf(ck).Started()
 	})
@@ -238,7 +238,7 @@ func (h *halfWay) leave(otherFirst bool) int {
 	h.pace(otherFirst, 1500*time.Millisecond)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, h.tag, h.peer.pub, h.rcv)
+	go nostrSubscribeRunner(ctx, h.tag, mainPair(h.peer.pub), h.rcv)
 	waitFor(t, "the other relay's pass", 10*time.Second, func() bool {
 		catchupMu.Lock()
 		_, done := catchupLast[h.key(h.other)]
@@ -271,7 +271,7 @@ func (h *halfWay) restart(otherFirst bool) {
 	h.pace(otherFirst, 0)
 	ctx, cancel := context.WithCancel(context.Background())
 	h.t.Cleanup(cancel)
-	go nostrSubscribeRunner(ctx, h.tag, h.peer.pub, h.rcv)
+	go nostrSubscribeRunner(ctx, h.tag, mainPair(h.peer.pub), h.rcv)
 }
 
 var relayOrders = []struct {
@@ -481,7 +481,7 @@ func TestPublicRelaysThatNeverGetThroughHoldNothing(t *testing.T) {
 			cancel()
 			forgetCatchup(keys...)
 		}()
-		go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+		go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 		waitFor(t, "every public relay failing once", 10*time.Second, func() bool {
 			return refused.Load() > r0 && dials.Load() > d0 && stalled.Load() > s0
 		})
@@ -525,7 +525,7 @@ func TestOurRelayRefusingTheSubscriptionHoldsNothing(t *testing.T) {
 	other.store(text)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 	waitFor(t, "the anchor file at the text", 10*time.Second, func() bool {
 		b, _ := os.ReadFile(lastPath)
 		return strings.TrimSpace(string(b)) == strconv.FormatInt(int64(text.CreatedAt), 10)
@@ -568,7 +568,7 @@ func TestEitherEntryOfOurRelayLetsGo(t *testing.T) {
 			t.Cleanup(func() { forgetCatchup(ok) })
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			go nostrSubscribeRunner(ctx, h.tag, h.peer.pub, h.rcv)
+			go nostrSubscribeRunner(ctx, h.tag, mainPair(h.peer.pub), h.rcv)
 			if since := h.firstSince(0); since != h.began-12*3600 {
 				t.Fatalf("our relay's clearnet name asked from %d, not from %d", since, h.began-12*3600)
 			}

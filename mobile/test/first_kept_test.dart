@@ -39,8 +39,9 @@ import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/stranger_gate.dart' show ShelfFull;
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
 import 'arrival_fakes.dart';
 import 'mem_db.dart';
@@ -57,7 +58,7 @@ String _hash(String c) => sha256.convert(utf8.encode(c)).toString();
 typedef _Phone = ({SignalSession ss, String xPub});
 
 Future<_Phone> _phone() async {
-  final pair = Curve.generateKeyPair();
+  final pair = testKeyPair();
   final xPub = pair.publicKey.serialize().sublist(1);
   final ss = SignalSession();
   await ss.bootstrap(
@@ -82,11 +83,11 @@ class _Engine implements HaloEngine {
   @override
   String myEdPubkey() => ed;
   @override
-  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {}
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) {}
   @override
-  String firstContactPk(int counter) => 'fc$counter';
+  String firstContactPk(int ident, int counter) => 'fc$counter';
   @override
-  Future<String> subscribeFirstContact(int counter) async => 'ok';
+  Future<String> subscribeFirstContact(int ident, int counter) async => 'ok';
   var onion = 'ok';
   @override
   Future<String> sendTo(String addr, String msg) async => onion;
@@ -94,7 +95,7 @@ class _Engine implements HaloEngine {
   final firsts = <String>[];
   Completer<String>? firstGate;
   @override
-  Future<String> sendFirstContact(String x, String fc, String c) {
+  Future<String> sendFirstContact(int ident, String x, String fc, String c) {
     firsts.add(c);
     return firstGate?.future ?? Future.value('ok');
   }
@@ -102,7 +103,7 @@ class _Engine implements HaloEngine {
   // what went to a pair address
   final pairs = <String>[];
   @override
-  Future<String> nostrSend(String x, String c) async {
+  Future<String> nostrSend(int ident, String x, String c) async {
     pairs.add(c);
     return 'ok';
   }
@@ -144,11 +145,11 @@ class _Io extends AppIo {
   }
 
   @override
-  void listen(String xPub, {bool fresh = false}) {}
+  void listen(int ident, String xPub, {bool fresh = false}) {}
   @override
-  void unlisten(String xPub) {}
+  void unlisten(int ident, String xPub) {}
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     sent.add(('relay', cipher));
     return 'ok';
   }
@@ -160,7 +161,12 @@ class _Io extends AppIo {
   }
 
   @override
-  Future<String> firstContactSend(String x, String fc, String c) async {
+  Future<String> firstContactSend(
+    int ident,
+    String x,
+    String fc,
+    String c,
+  ) async {
     sent.add(('fc', c));
     return 'ok';
   }
@@ -187,16 +193,7 @@ Future<String?> _reads(SignalSession ss, String cipher) async {
   try {
     final w = base64Decode(cipher);
     final body = Uint8List.fromList(w.sublist(1));
-    final c = SessionCipher(
-      ss.sessionStore,
-      ss.preKeyStore,
-      ss.signedPreKeyStore,
-      ss.identityStore,
-      SignalProtocolAddress(_me, 1),
-    );
-    final plain = w[0] == CiphertextMessage.prekeyType
-        ? await c.decrypt(PreKeySignalMessage(body))
-        : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
+    final plain = await ss.open(_me, w[0], body);
     return utf8.decode(plain);
   } catch (_) {
     return null;
@@ -205,6 +202,14 @@ Future<String?> _reads(SignalSession ss, String cipher) async {
 
 Future<void> _settle() =>
     Future<void>.delayed(const Duration(milliseconds: 30));
+
+// the everyday rows, with the invite tables in a file of rows beside them
+class _InviteRows extends ArrivalRows {
+  _InviteRows() : super(HaloContainer.everyday);
+  final db = MemDb();
+  @override
+  Future<Database> open() async => db;
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -227,7 +232,7 @@ void main() {
           const MethodChannel('plugins.flutter.io/path_provider'),
           (call) async => docs.path,
         );
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     _engine = _Engine(_hex(me.publicKey.serialize().sublist(1)), _rndHex(32));
     useEngineForTest(_engine);
     await signalSession.bootstrap(
@@ -386,6 +391,7 @@ void main() {
           tries: 0,
           nextAt: 0,
           reached: null,
+          opened: null,
         );
         // a block that ended an hour before it was written
         live.blockSpans[s.id] = [(now - 3 * 3600000, now - 3600000)];
@@ -404,6 +410,7 @@ void main() {
         tries: 0,
         nextAt: 0,
         reached: null,
+        opened: null,
       );
       await app.retryFirsts();
       expect(live.kept, isEmpty);
@@ -750,6 +757,10 @@ void main() {
 
   test('a new invite link lets go of what was kept: nothing opens it '
       'after', () async {
+    // a reset lets go of the main v4 invite too, in the invite tables
+    live = _InviteRows();
+    useDatabasesForTest(live, Session(live));
+    app = await start();
     FlutterSecureStorage.setMockInitialValues({'fc_counter': '1'});
     await app.loadFirstContact();
     final s = await stranger('stray-old-link');
@@ -769,6 +780,7 @@ void main() {
         tries: 0,
         nextAt: 0,
         reached: null,
+        opened: null,
       );
     }
     await app.resetInviteAddress();

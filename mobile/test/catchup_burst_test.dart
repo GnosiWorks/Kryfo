@@ -21,8 +21,7 @@ import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:kryfo/signal_stores.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'arrival_fakes.dart';
@@ -38,7 +37,7 @@ class _Engine implements HaloEngine {
 }
 
 Future<SignalSession> _phone() async {
-  final pair = Curve.generateKeyPair();
+  final pair = testKeyPair();
   final ss = SignalSession();
   await ss.bootstrap(
     database: MemDb(),
@@ -50,25 +49,9 @@ Future<SignalSession> _phone() async {
 
 // the sender's session to the receiver, from the receiver's invite keys
 Future<void> _start(SignalSession from, SignalSession to) async {
-  final spk = await to.signedPreKeyStore.loadSignedPreKey(1);
-  final pk = await to.preKeyStore.loadPreKey(invitePreKeyId);
-  await SessionBuilder(
-    from.sessionStore,
-    from.preKeyStore,
-    from.signedPreKeyStore,
-    from.identityStore,
-    const SignalProtocolAddress('me', 1),
-  ).processPreKeyBundle(
-    PreKeyBundle(
-      to.registrationId,
-      1,
-      pk.id,
-      pk.getKeyPair().publicKey,
-      spk.id,
-      spk.getKeyPair().publicKey,
-      spk.signature,
-      to.identityKeyPair.getPublicKey(),
-    ),
+  await from.processBundle(
+    'me',
+    lsBundleOf(from.lib, await to.makeBundleB64()),
   );
 }
 

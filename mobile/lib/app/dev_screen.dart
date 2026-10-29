@@ -147,7 +147,7 @@ class _DevScreenState extends State<DevScreen> {
       final msgs = engine.drainInbox();
       if (msgs.isEmpty || _peerXPub.isEmpty) return;
       for (final r in msgs) {
-        final plain = engine.decryptFrom(_peerXPub, r);
+        final plain = engine.decryptFrom(kMainIdent, _peerXPub, r);
         if (!plain.startsWith('error')) {
           session.saveMessage(_peerId, 'in', plain);
         }
@@ -163,7 +163,7 @@ class _DevScreenState extends State<DevScreen> {
     }
     setState(() => _status = l10n.appEncryptingSending30s);
     final plain = _msgCtrl.text;
-    final cipher = engine.encryptFor(_peerXPub, plain);
+    final cipher = engine.encryptFor(kMainIdent, _peerXPub, plain);
     if (cipher.startsWith('error')) {
       setState(() => _status = cipher);
       return;
@@ -359,7 +359,7 @@ class _DevScreenState extends State<DevScreen> {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     l10n.appRestoredFromDisk,
-                    style: HaloType.mono(size: 9, color: HaloColors.green),
+                    style: HaloType.mono(size: 9, color: HaloColors.greenText),
                   ),
                 ),
               const SizedBox(height: 16),
@@ -410,7 +410,7 @@ class _DevScreenState extends State<DevScreen> {
                   ),
                   child: Text(
                     _peerId,
-                    style: HaloType.mono(size: 14, color: HaloColors.green),
+                    style: HaloType.mono(size: 14, color: HaloColors.greenText),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -522,7 +522,7 @@ class _DevScreenState extends State<DevScreen> {
                               l10n.appDisable,
                               style: HaloType.sans(
                                 size: 13,
-                                color: HaloColors.rose,
+                                color: HaloColors.roseText,
                               ),
                             ),
                           ),

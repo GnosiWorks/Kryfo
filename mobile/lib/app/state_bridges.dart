@@ -298,6 +298,7 @@ extension AppStateBridges on AppState {
     if (inDecoyView) return;
     final was = _bridge.choice;
     _bridge = _bridge.copyWith(choice: c, offerAuto: false);
+    _typingBridgesMoved();
     notifyListeners();
     _bridgeApply?.cancel();
     if (c != was) {
@@ -500,6 +501,7 @@ extension AppStateBridges on AppState {
     if (s == _bridgeStatus) return;
     final was = _bridgeStatus;
     _bridgeStatus = s;
+    _typingBridgesMoved();
     if (s.phase == 'connected' || s.canSend) {
       _askDue = false;
     } else if (s.askConsent && _bridge.consent == 'ask') {

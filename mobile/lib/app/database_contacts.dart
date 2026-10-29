@@ -22,16 +22,40 @@ mixin _ContactRows {
     };
   }
 
+  // the main identity's row goes with it, in one write: its key, and the
+  // registration id the store has given out so far
   Future<void> saveIdentity(String id, String edPriv, String xPriv) async {
     final db = await open();
-    await db.delete('identity');
-    await db.insert('identity', {
-      'id': id,
-      'ed_priv': edPriv,
-      'x_priv': xPriv,
-      'created_at': DateTime.now().millisecondsSinceEpoch,
+    await db.transaction((t) async {
+      await t.delete('identity');
+      await t.insert('identity', {
+        'id': id,
+        'ed_priv': edPriv,
+        'x_priv': xPriv,
+        'created_at': DateTime.now().millisecondsSinceEpoch,
+      });
+      final reg = await t.query(
+        'signal_meta',
+        columns: ['v'],
+        where: 'k = ?',
+        whereArgs: ['regId'],
+        limit: 1,
+      );
+      final had = await identityRow(t, kMainIdent);
+      await putMainIdentity(
+        t,
+        _hexBytes(xPriv),
+        regId: reg.isEmpty
+            ? had?.regId
+            : int.tryParse(reg.first['v'] as String) ?? had?.regId,
+      );
     });
   }
+
+  static Uint8List _hexBytes(String h) => Uint8List.fromList([
+    for (var i = 0; i + 1 < h.length; i += 2)
+      int.parse(h.substring(i, i + 2), radix: 16),
+  ]);
 
   Future<void> setNote(String haloId, String note) async {
     final db = await open();
@@ -120,6 +144,7 @@ mixin _ContactRows {
       // and the name is whatever the card said
       'name_check': kNameAsk | kNameSays,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    await claimContactKeys(db, only: haloId);
   }
 
   Future<bool> keyChanged(String haloId) async {
@@ -359,6 +384,7 @@ mixin _ContactRows {
       where: 'halo_id = ?',
       whereArgs: [haloId],
     );
+    await claimContactKeys(db, only: haloId);
   }
 
   Future<List<Map<String, Object?>>> contacts() async {
@@ -598,6 +624,8 @@ mixin _ContactRows {
       await t.delete('vouches', where: 'halo_id = ?', whereArgs: [haloId]);
       await t.delete('vouches', where: 'voucher_id = ?', whereArgs: [haloId]);
       await t.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
+      // the key it held is free for whoever holds it next
+      await claimContactKeys(t, only: haloId);
       return atmo;
     });
     await _dropPhotos([atmo]);
@@ -743,6 +771,33 @@ mixin _ContactRows {
 
   // someone who asked, or asked and was let go: adding them by their card
   // is the accept they were waiting for
+  /// [onion] for a contact accepted here who has none yet; a held one
+  /// stays
+  Future<void> fillOnion(String haloId, String onion) async {
+    final db = await open();
+    await db.update(
+      'contacts',
+      {'onion': onion},
+      where: "halo_id = ? AND accepted = 1 AND (onion IS NULL OR onion = '')",
+      whereArgs: [haloId],
+    );
+  }
+
+  /// a hello owed to the identity [ownerHex] (0x05 and its x key),
+  /// answering its invite [answersHex] (all zero: a v3 link) at the
+  /// first-contact key [fc]: kept until it went
+  Future<void> oweHello(String ownerHex, String answersHex, String fc) async {
+    final db = await open();
+    await db.insert('hellos', {
+      'ident': kMainIdent,
+      'way': kHelloWant,
+      'peer': ownerHex,
+      'invite_id': answersHex,
+      'fc': fc,
+      'at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
   Future<bool> askedBefore(String haloId) async {
     final db = await open();
     final r = await db.rawQuery(
@@ -909,6 +964,8 @@ mixin _ContactRows {
         whereArgs: [haloId],
       );
     }
+    // one contact per identity key (identities.dart)
+    await claimContactKeys(db, only: haloId);
   }
 
   Future<void> markBackPaired(String peerId) async {
@@ -1275,7 +1332,9 @@ const kRequestRows =
     'EXISTS (SELECT 1 FROM messages m WHERE m.peer_id = contacts.halo_id '
     'AND m.group_id IS NULL) OR '
     'EXISTS (SELECT 1 FROM held_onion h WHERE h.peer_id = contacts.halo_id) OR '
-    'EXISTS (SELECT 1 FROM vouches v WHERE v.halo_id = contacts.halo_id))';
+    'EXISTS (SELECT 1 FROM vouches v WHERE v.halo_id = contacts.halo_id) OR '
+    "EXISTS (SELECT 1 FROM hellos hl WHERE hl.way = 'in' "
+    'AND hl.peer = contacts.ikey AND hl.ident = contacts.ident))';
 
 /// a request as the inbox shows it, or one declined and parked since
 @visibleForTesting

@@ -3,6 +3,7 @@
 // signal and the engine as the app calls them, and a database kept in maps
 // that notes every call. anything else they are asked fails the test
 import 'dart:async';
+import 'dart:math' show max;
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -10,6 +11,7 @@ import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/chat_shots.dart' show ChatShots;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart' show groupOwedGap;
+import 'package:kryfo/group_shots.dart';
 import 'package:kryfo/first_contact.dart' show firstKeepFits, firstRetryGap;
 import 'package:kryfo/main.dart'
     show
@@ -21,15 +23,23 @@ import 'package:kryfo/main.dart'
         groupUnsendOf,
         groupUnsendRow,
         kAdminGone,
+        PhotoPeer,
+        photoTables,
         session;
 import 'package:kryfo/media_resend.dart';
+import 'package:kryfo/profile_photo.dart' show PhotoFrame, PhotoSendFacts;
+import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
+
+import 'sqlite_ffi.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/relay_poll.dart' show Reached;
 import 'package:kryfo/rooms.dart' show kRoomJoinWait, kRoomRecent, roomUidPart;
 import 'package:kryfo/scam_shield.dart' show shieldRowOpen;
 import 'package:kryfo/router.dart';
-import 'package:kryfo/signal_session.dart' show signalSession;
+import 'package:kryfo/signal_session.dart'
+    show KeyHeld, NotSettled, StartingAfresh, signalSession;
+import 'package:kryfo/typing.dart' show capsAfter, capsOfText;
 import 'package:kryfo/stranger_gate.dart'
     show ShelfFull, Shelved, kShelfPlaces, shelfVerdict;
 
@@ -150,7 +160,7 @@ class ArrivalSeal implements VaultSeal {
 
 class ArrivalIo implements AppIo {
   @override
-  Future<String> pinFirst(List<String> xPubs) async => 'ok';
+  Future<String> pinFirst(List<(int, String)> peers) async => 'ok';
   // what a cipher opens to, and under whom
   final opens = <String, (String, String)>{};
   final tries = <String>[];
@@ -203,7 +213,7 @@ class ArrivalIo implements AppIo {
   // called as each is asked
   void Function(String xPub, String how)? onLetHeld;
   @override
-  Future<String> letHeld(String xPub, String how) async {
+  Future<String> letHeld(int ident, String xPub, String how) async {
     letGo.add((xPub, how));
     onLetHeld?.call(xPub, how);
     return 'ok';
@@ -212,8 +222,8 @@ class ArrivalIo implements AppIo {
   // each call marking what is held for these keys, on a start or unlock
   final marked = <List<String>>[];
   @override
-  Future<String> markHeld(List<String> xPubs) async {
-    marked.add(xPubs);
+  Future<String> markHeld(List<(int, String)> peers) async {
+    marked.add([for (final (_, x) in peers) x]);
     return 'ok';
   }
 
@@ -233,23 +243,31 @@ class ArrivalIo implements AppIo {
   @override
   Future<bool> hasSession(String peer) async => true;
   @override
+  Future<({int ident, String cipher})> seal(String peer, String plain) async =>
+      (ident: 0, cipher: await encrypt(peer, plain));
+
+  @override
   Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
   @override
-  void listen(String xPub, {bool fresh = false}) => listened.add(xPub);
+  void listen(int ident, String xPub, {bool fresh = false}) =>
+      listened.add(xPub);
   final unheard = <String>[];
   @override
-  void unlisten(String xPub) => unheard.add(xPub);
+  void unlisten(int ident, String xPub) => unheard.add(xPub);
   @override
   String edPub() => 'ed-me';
   @override
   String xPub() => 'x-me';
   // no route reaches anyone: every send says so
   var down = false;
+  // called as each relay send goes
+  void Function()? onRelay;
 
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     if (down) return 'error: down';
     sent.add(('relay $xPub', cipher));
+    onRelay?.call();
     return 'ok';
   }
 
@@ -261,9 +279,41 @@ class ArrivalIo implements AppIo {
   }
 
   @override
-  Future<String> firstContactSend(String xPub, String fc, String cipher) async {
+  Future<String> firstContactSend(
+    int ident,
+    String xPub,
+    String fc,
+    String cipher,
+  ) async {
     sent.add(('fc $xPub', cipher));
     return 'ok';
+  }
+
+  // typing frames: what was sealed for whom, how a seal is turned down
+  // ('held', 'afresh' or 'opener'), and what the door answers
+  final typingSeals = <String>[];
+  String? typingRefuse;
+  String typingAnswer = 'ok';
+  void Function()? onTypingSeal;
+  @override
+  Future<String> typingSeal(String peer, String plain) async {
+    onTypingSeal?.call();
+    switch (typingRefuse) {
+      case 'held':
+        throw KeyHeld(peer);
+      case 'afresh':
+        throw StartingAfresh(peer);
+      case 'opener':
+        throw NotSettled(peer);
+    }
+    typingSeals.add('$peer $plain');
+    return 'typing to $peer';
+  }
+
+  @override
+  Future<String> typingSend(String onion, String cipher) async {
+    sent.add(('typing $onion', cipher));
+    return typingAnswer;
   }
 
   @override
@@ -1061,6 +1111,7 @@ class ArrivalRows implements HaloDb {
     String? uid,
     required int now,
     Reached? reached,
+    ({String id, String plain})? opened,
   }) async {
     _hit('keepFirst', null, null);
     if (kept.containsKey(hash)) return true;
@@ -1088,6 +1139,7 @@ class ArrivalRows implements HaloDb {
       tries: 0,
       nextAt: now + firstRetryGap(0).inMilliseconds,
       reached: reached,
+      opened: opened,
     );
     return true;
   }
@@ -1107,6 +1159,7 @@ class ArrivalRows implements HaloDb {
       tries: tries,
       nextAt: nextAt,
       reached: r.reached,
+      opened: r.opened,
     );
   }
 
@@ -2105,14 +2158,296 @@ class ArrivalRows implements HaloDb {
     wants.remove(mediaId);
   }
 
+  // what a contact's phone understands, as typing.dart keeps it
+  var capsWrites = 0;
+  void Function()? onTakeCaps;
+  @override
+  Future<bool> takeCaps(
+    String peer, {
+    required List<String>? caps,
+    required bool counts,
+    int? written,
+  }) async {
+    _hit('takeCaps', peer, null);
+    onTakeCaps?.call();
+    final r = people[peer];
+    if (r == null || r['accepted'] != 1) return false;
+    final next = capsAfter(
+      (r['caps'] as String?) ?? '',
+      (r['caps_at'] as int?) ?? 0,
+      carried: caps,
+      counts: counts,
+      written: written,
+    );
+    if (next == null) return false;
+    r['caps'] = next.caps;
+    r['caps_at'] = next.at;
+    capsWrites++;
+    return true;
+  }
+
   // a chat's screenshot block, as its row says
   @override
   Future<ChatShots> shotsOf(String peer) async =>
       ChatShots.ofRow(people[peer], quiet: container.quiet);
 
+  // a group's screenshot block and each person's bits, as their rows say,
+  // by the same rules as the real tables
+  @override
+  Future<GroupShots> groupShotsOf(String groupId) async =>
+      GroupShots.ofRow(groupRows[groupId], quiet: container.quiet);
+
+  @override
+  Future<GroupShotsWord?> turnGroupShots(
+    String groupId, {
+    required bool on,
+    required bool all,
+  }) async {
+    final r = groupRows[groupId];
+    final was = GroupShots.ofRow(r);
+    if (r == null || was.room || was.ended || was.on == on) return null;
+    final put = groupShotsTurned(
+      was,
+      on: on,
+      all: all,
+      now: DateTime.now().millisecondsSinceEpoch,
+    );
+    _hit('turnGroupShots', groupId, null);
+    r.addAll(put);
+    return GroupShotsWord(on: on, all: on && all, at: put['shots_at'] as int);
+  }
+
+  @override
+  Future<GroupShotsWord?> moveGroupShotsAll(
+    String groupId, {
+    required bool all,
+  }) async {
+    final r = groupRows[groupId];
+    final was = GroupShots.ofRow(r);
+    if (r == null || was.room || was.ended) return null;
+    final put = groupShotsAllMoved(
+      was,
+      all: all,
+      now: DateTime.now().millisecondsSinceEpoch,
+    );
+    if (put == null) return null;
+    _hit('moveGroupShotsAll', groupId, null);
+    r.addAll(put);
+    return GroupShotsWord(on: true, all: all, at: put['shots_at'] as int);
+  }
+
+  @override
+  Future<bool> takeGroupShots(String groupId, GroupShotsWord word) async {
+    final r = groupRows[groupId];
+    final was = GroupShots.ofRow(r);
+    if (r == null || was.room || was.ended) return false;
+    final put = groupShotsTaken(
+      was,
+      word,
+      now: DateTime.now().millisecondsSinceEpoch,
+    );
+    if (put == null) return false;
+    _hit('takeGroupShots', groupId, null);
+    r.addAll(put);
+    return true;
+  }
+
+  @override
+  Future<void> shotsTold(String groupId, int at) async {
+    final r = groupRows[groupId];
+    if (r != null && ((r['shots_told'] as int?) ?? 0) < at) {
+      r['shots_told'] = at;
+    }
+  }
+
+  @override
+  Future<List<({String groupId, String admin, int at})>> capsUntold() async => [
+    for (final r in groupRows.values)
+      if (r['is_admin'] != 1 &&
+          r['room_pub'] == null &&
+          r['ended_at'] == null &&
+          r['admin_id'] != null)
+        if (GroupShots.ofRow(r) case final g
+            when g.told == 0 || groupShotsOwesCaps(g))
+          (
+            groupId: r['group_id'] as String,
+            admin: r['admin_id'] as String,
+            at: g.told == 0 ? (g.on ? max(1, g.at) : 1) : g.at,
+          ),
+  ];
+
+  @override
+  Future<bool> capsToldVia(String admin) async => [
+    for (final r in groupRows.values)
+      if (r['admin_id'] == admin &&
+          ((r['shots_told'] as int?) ?? 0) > 0 &&
+          r['room_pub'] == null)
+        r,
+  ].isNotEmpty;
+
+  // the members each group's old-version words went to
+  final nudged = <String, Set<String>>{};
+  @override
+  Future<Set<String>> shotsNudged(String groupId) async => {
+    ...?nudged[groupId],
+  };
+  @override
+  Future<void> noteShotsNudged(String groupId, List<String> members) async =>
+      (nudged[groupId] ??= {}).addAll(members);
+
+  @override
+  Future<List<String>> shotsRunHere(String me, {String? member}) async => [
+    for (final r in groupRows.values)
+      if (r['shots_on'] == 1 &&
+          r['is_admin'] == 1 &&
+          r['admin_id'] == me &&
+          r['room_pub'] == null &&
+          r['ended_at'] == null &&
+          (member == null ||
+              (members[r['group_id']] ?? const []).contains(member)))
+        r['group_id'] as String,
+  ];
+
+  @override
+  Future<Map<String, Set<String>>> capsOfPeople(Iterable<String> ids) async => {
+    for (final id in ids)
+      if (people[id] != null) id: capsOfText(people[id]!['caps'] as String?),
+  };
+
+  @override
+  Future<bool> takeMemberCaps(
+    String peer, {
+    required List<String>? caps,
+    required bool counts,
+    int? written,
+  }) async {
+    final r = people[peer];
+    if (r == null) return false;
+    final next = capsAfter(
+      (r['caps'] as String?) ?? '',
+      (r['caps_at'] as int?) ?? 0,
+      carried: caps,
+      counts: counts,
+      written: written,
+    );
+    if (next == null) return false;
+    r['caps'] = next.caps;
+    r['caps_at'] = next.at;
+    return true;
+  }
+
+  // hellos owed: (owner key, invite answered, first-contact key)
+  final hellosOwed = <(String, String, String)>[];
+  @override
+  Future<void> oweHello(String ownerHex, String answersHex, String fc) async =>
+      hellosOwed.add((ownerHex, answersHex, fc));
+  // ---- profile photos: the app's own rows on the host's sqlite, with the
+  // people above copied in as each is asked ----
+  _PhotoHost? _photoHost;
+  SqliteMem? get photoMem => _photoHost?.mem;
+  Future<HaloDb> _photos() async {
+    var h = _photoHost;
+    if (h == null) {
+      final mem = SqliteMem.open()!;
+      await mem.execute('''
+        CREATE TABLE contacts (halo_id TEXT PRIMARY KEY,
+          accepted INTEGER NOT NULL DEFAULT 1,
+          back_paired INTEGER NOT NULL DEFAULT 0,
+          blocked INTEGER NOT NULL DEFAULT 0,
+          caps TEXT NOT NULL DEFAULT '',
+          shots_on INTEGER NOT NULL DEFAULT 0,
+          shots_can INTEGER NOT NULL DEFAULT 0)
+      ''');
+      await photoTables(mem);
+      h = _photoHost = _PhotoHost(mem, _container);
+    }
+    for (final r in people.values) {
+      await h.mem.execute(
+        'INSERT INTO contacts (halo_id, accepted, back_paired, blocked, caps, '
+        'shots_on, shots_can) VALUES (?, ?, ?, ?, ?, ?, ?) '
+        'ON CONFLICT(halo_id) DO UPDATE SET '
+        'accepted = excluded.accepted, back_paired = excluded.back_paired, '
+        'blocked = excluded.blocked, caps = excluded.caps, '
+        'shots_on = excluded.shots_on, shots_can = excluded.shots_can',
+        [
+          r['halo_id'],
+          r['accepted'] ?? 1,
+          r['back_paired'] ?? 0,
+          r['blocked'] ?? 0,
+          r['caps'] ?? '',
+          r['shots_on'] ?? 0,
+          r['shots_can'] ?? 0,
+        ],
+      );
+    }
+    return h;
+  }
+
+  @override
+  Future<({int ver, Uint8List? photo})?> myPhoto() async =>
+      (await _photos()).myPhoto();
+  @override
+  Future<void> putMyPhoto(int ver, Uint8List? photo) async =>
+      (await _photos()).putMyPhoto(ver, photo);
+  @override
+  Future<Map<String, Uint8List>> contactPhotos() async =>
+      (await _photos()).contactPhotos();
+  @override
+  Future<({Uint8List? mine, Uint8List? theirs, int theirVer})> photosOf(
+    String id,
+  ) async => (await _photos()).photosOf(id);
+  @override
+  Future<bool> setMinePhoto(String id, Uint8List? photo) async =>
+      (await _photos()).setMinePhoto(id, photo);
+  @override
+  Future<bool> takePhotoSlice(String from, PhotoFrame f, {int? now}) async {
+    _hit('takePhotoSlice', from, null);
+    return (await _photos()).takePhotoSlice(from, f, now: now);
+  }
+
+  @override
+  Future<bool> takePhotoDrop(String from, int ver, {int? now}) async {
+    _hit('takePhotoDrop', from, null);
+    return (await _photos()).takePhotoDrop(from, ver, now: now);
+  }
+
+  @override
+  Future<void> dropStalePhotoParts({int? now}) async =>
+      (await _photos()).dropStalePhotoParts(now: now);
+  @override
+  Future<bool> takeWaitingPhotos({int? now}) async =>
+      (await _photos()).takeWaitingPhotos(now: now);
+  @override
+  Future<List<({PhotoSendFacts facts, PhotoPeer peer})>> photoPeople() async =>
+      (await _photos()).photoPeople();
+  @override
+  Future<void> owePhoto(String id, int? want, {required int at}) async =>
+      (await _photos()).owePhoto(id, want, at: at);
+  @override
+  Future<List<PhotoPeer>> duePhotoPeers(int now) async =>
+      (await _photos()).duePhotoPeers(now);
+  @override
+  Future<int?> nextPhotoDue() async => (await _photos()).nextPhotoDue();
+  @override
+  Future<void> photoSent(String id, int want, int stamp) async =>
+      (await _photos()).photoSent(id, want, stamp);
+  @override
+  Future<void> photoLater(String id, int stamp, int at) async =>
+      (await _photos()).photoLater(id, stamp, at);
+  @override
+  Future<void> dropPhotosOf(String id) async =>
+      (await _photos()).dropPhotosOf(id);
+
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('the stand-in was asked for ${i.memberName}');
+}
+
+class _PhotoHost extends HaloDb {
+  _PhotoHost(this.mem, super.container);
+  final SqliteMem mem;
+  @override
+  Future<Database> open() async => mem;
 }
 
 SenderInfo asSender(String id) =>

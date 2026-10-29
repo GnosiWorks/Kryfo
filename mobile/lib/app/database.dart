@@ -19,7 +19,9 @@ class HaloDb
         _MediaRows,
         _GroupOwedRows,
         _NotifRows,
-        _DraftRows
+        _DraftRows,
+        _GroupShotsRows,
+        _PhotoRows
     implements GroupOwedStore {
   HaloDb([this.container = HaloContainer.everyday]);
 
@@ -43,6 +45,8 @@ class HaloDb
 
   Database? _db;
   String? _given;
+  // its files' key was handed to the desktop, once per open
+  bool _keyed = false;
 
   // 32 bytes from the platform csprng, made once, before its database
   // file. a read that fails or gives up throws, and boot shows it: a new
@@ -83,6 +87,8 @@ class HaloDb
   // before its files go
   Future<void> close() async {
     final d = _db;
+    if (_keyed) containerClosed?.call(container.id);
+    _keyed = false;
     _db = null;
     _given = null;
     _unfinished = null;
@@ -142,12 +148,15 @@ class HaloDb
     if (_db != null) return _db!;
     final path = await container.dbPath();
     final pw = await _passphrase();
+    // on desktop its files open from here on, the upgrade's own too
+    if (!_keyed) containerOpened?.call(container.id, container.suffix, pw);
+    _keyed = true;
     // photo files an upgrade took in, shredded once it is written
     var adopted = const <String>[];
     _db = await openDatabase(
       path,
       password: pw,
-      version: 87,
+      version: 94,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -191,7 +200,11 @@ class HaloDb
             shots_can INTEGER NOT NULL DEFAULT 0,
             shots_by INTEGER NOT NULL DEFAULT 0,
             shots_when INTEGER NOT NULL DEFAULT 0,
-            opus_can INTEGER NOT NULL DEFAULT 0
+            opus_can INTEGER NOT NULL DEFAULT 0,
+            caps TEXT NOT NULL DEFAULT '',
+            caps_at INTEGER NOT NULL DEFAULT 0,
+            ident INTEGER NOT NULL DEFAULT 0,
+            ikey TEXT
           )
         ''');
         await db.execute('''
@@ -272,7 +285,14 @@ class HaloDb
             door_was TEXT,
             voice_disguise INTEGER,
             ended_at INTEGER,
-            ended_by TEXT
+            ended_by TEXT,
+            shots_on INTEGER NOT NULL DEFAULT 0,
+            shots_at INTEGER NOT NULL DEFAULT 0,
+            shots_all INTEGER NOT NULL DEFAULT 0,
+            shots_by INTEGER NOT NULL DEFAULT 0,
+            shots_when INTEGER NOT NULL DEFAULT 0,
+            shots_line INTEGER NOT NULL DEFAULT 0,
+            shots_told INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -281,6 +301,7 @@ class HaloDb
             halo_id TEXT NOT NULL,
             joined_at INTEGER NOT NULL,
             opus_can INTEGER NOT NULL DEFAULT 0,
+            shots_nudged INTEGER NOT NULL DEFAULT 0,
             PRIMARY KEY (group_id, halo_id),
             FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
           )
@@ -310,8 +331,12 @@ class HaloDb
         await _pinsTable(db);
         await _framesTable(db);
         await _mediaWantsTable(db);
+        await dropFetchTable(db);
         await _heldTable(db);
         await _signalTables(db);
+        await identityTables(db);
+        await inviteTables(db);
+        await contactKeyIndex(db);
         await _pollTables(db);
         await searchTables(db, fresh: true);
         await routerTables(db);
@@ -332,10 +357,11 @@ class HaloDb
         await groupEndIndexes(db);
         await wallpaperTable(db);
         await draftsTable(db);
+        await photoTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 to 86
+        // they add. 66 runs after it: it reads what they all make. 67 to 89
         // last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
@@ -866,6 +892,37 @@ class HaloDb
           // which phones play opus voice notes (voice_format.dart)
           await opusColumns(db);
         }
+        if (oldV < 88) {
+          // what a contact's phone understands (typing.dart)
+          await capsColumns(db);
+        }
+        if (oldV < 89) {
+          // a group's screenshot block (group_shots.dart)
+          await groupShotsColumns(db);
+        }
+        if (oldV < 90) {
+          // the files on their way in from the files service, and the ids
+          // of the ones already here (file_drop.dart)
+          await dropFetchTable(db);
+        }
+        if (oldV < 91) {
+          // the post-quantum prekeys the shim keeps (signal_stores.dart),
+          // and what a kept first contact opened to
+          await upgradeTo91(db);
+        }
+        if (oldV < 92) {
+          // identities, and the signal stores per identity (identities.dart)
+          await upgradeTo92(db);
+        }
+        if (oldV < 94) {
+          // v4 invites, the hellos waiting on them, the hellos seen
+          // (invites.dart)
+          await inviteTables(db);
+        }
+        // profile photos (profile_photo.dart), first made at 93. every
+        // step is safe twice and runs on any upgrade, last, so a file that
+        // took a later number without them still gets them
+        await photoTables(db);
       },
     );
     // a backup reading the folder or a restore replacing it keeps them:
@@ -1134,6 +1191,19 @@ Future<void> opusColumns(DatabaseExecutor db) async {
       'ALTER TABLE $table ADD COLUMN $kOpusCol INTEGER NOT NULL DEFAULT 0',
     );
   }
+}
+
+// the upgrade to 88: what a contact's phone has said it understands, and
+// when by their clock (capsAfter)
+Future<void> capsColumns(DatabaseExecutor db) async {
+  await addColumn(
+    db,
+    "ALTER TABLE contacts ADD COLUMN caps TEXT NOT NULL DEFAULT ''",
+  );
+  await addColumn(
+    db,
+    'ALTER TABLE contacts ADD COLUMN caps_at INTEGER NOT NULL DEFAULT 0',
+  );
 }
 
 // the upgrade to 78. a row from before says when it came
@@ -1461,7 +1531,9 @@ Future<void> firstContactTables(DatabaseExecutor db) async {
       tries INTEGER NOT NULL DEFAULT 0,
       next_at INTEGER NOT NULL,
       reached_from INTEGER,
-      reached_until INTEGER
+      reached_until INTEGER,
+      opened_id TEXT,
+      opened_plain TEXT
     )
   ''');
   // the words an opener went as go with it, however it goes
@@ -1857,23 +1929,272 @@ Future<void> _vouchTable(Database db) async {
   );
 }
 
-// one store's tables. under a prefix, another store in the same database
-Future<void> _signalTables(Database db, {String prefix = ''}) async {
-  await db.execute(
-    'CREATE TABLE IF NOT EXISTS ${prefix}prekeys (id INTEGER PRIMARY KEY, record BLOB NOT NULL)',
+// one store's tables. under a prefix, another store in the same database.
+// every row names the identity it belongs to (identities.id, 0 the main
+// one); the prekey tables also say what each key is for: 'invite' (with
+// the invite's id, '' for the main one), 'session' or 'heal'
+Future<void> _signalTables(
+  DatabaseExecutor db, {
+  String prefix = '',
+  // each statement as it runs, or null to skip it (a rebuild, _identColumns)
+  String? Function(String sql)? as,
+}) async {
+  Future<void> x(String sql) async {
+    final run = as == null ? sql : as(sql);
+    if (run != null) await db.execute(run);
+  }
+
+  await x(
+    'CREATE TABLE IF NOT EXISTS ${prefix}prekeys (ident INTEGER NOT NULL DEFAULT 0, id INTEGER NOT NULL, record BLOB NOT NULL, PRIMARY KEY (ident, id))',
   );
-  await db.execute(
-    'CREATE TABLE IF NOT EXISTS ${prefix}signed_prekeys (id INTEGER PRIMARY KEY, record BLOB NOT NULL, created_at INTEGER NOT NULL)',
+  await x(
+    "CREATE TABLE IF NOT EXISTS ${prefix}signed_prekeys (ident INTEGER NOT NULL DEFAULT 0, id INTEGER NOT NULL, record BLOB NOT NULL, created_at INTEGER NOT NULL, use TEXT NOT NULL DEFAULT 'invite', invite_id TEXT NOT NULL DEFAULT '', retired_at INTEGER, PRIMARY KEY (ident, id))",
   );
-  await db.execute(
-    'CREATE TABLE IF NOT EXISTS ${prefix}sessions (address TEXT NOT NULL, device_id INTEGER NOT NULL, record BLOB NOT NULL, PRIMARY KEY (address, device_id))',
+  await x(
+    'CREATE TABLE IF NOT EXISTS ${prefix}sessions (ident INTEGER NOT NULL DEFAULT 0, address TEXT NOT NULL, device_id INTEGER NOT NULL, record BLOB NOT NULL, PRIMARY KEY (ident, address, device_id))',
   );
-  await db.execute(
-    'CREATE TABLE IF NOT EXISTS ${prefix}peer_identities (address TEXT PRIMARY KEY, identity_key BLOB NOT NULL)',
+  await x(
+    'CREATE TABLE IF NOT EXISTS ${prefix}peer_identities (ident INTEGER NOT NULL DEFAULT 0, address TEXT NOT NULL, identity_key BLOB NOT NULL, PRIMARY KEY (ident, address))',
   );
-  await db.execute(
+  await x(
     'CREATE TABLE IF NOT EXISTS ${prefix}signal_meta (k TEXT PRIMARY KEY, v TEXT NOT NULL)',
   );
+  await x(
+    "CREATE TABLE IF NOT EXISTS ${prefix}kyber_prekeys (ident INTEGER NOT NULL DEFAULT 0, id INTEGER NOT NULL, record BLOB NOT NULL, last_resort INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, use TEXT NOT NULL DEFAULT 'invite', invite_id TEXT NOT NULL DEFAULT '', retired_at INTEGER, PRIMARY KEY (ident, id))",
+  );
+  // a last resort kyber key outlives its use: the base keys it opened for,
+  // so a replayed opener does not build a second session on it
+  await x(
+    'CREATE TABLE IF NOT EXISTS ${prefix}kyber_used (ident INTEGER NOT NULL DEFAULT 0, kyber_id INTEGER NOT NULL, signed_id INTEGER NOT NULL, base_key BLOB NOT NULL, PRIMARY KEY (ident, kyber_id, base_key))',
+  );
+  // every opener read on a kyber key, by a fingerprint of what its mac
+  // covers: one opener opens once, whatever path it comes back on
+  await x(
+    'CREATE TABLE IF NOT EXISTS ${prefix}opener_reads (ident INTEGER NOT NULL DEFAULT 0, kyber_id INTEGER NOT NULL, opener BLOB NOT NULL, PRIMARY KEY (ident, kyber_id, opener))',
+  );
+}
+
+// the signal tables that carry an identity, with the columns each had
+// before it did
+const _identTables = {
+  'prekeys': ['id', 'record'],
+  'signed_prekeys': ['id', 'record', 'created_at'],
+  'sessions': ['address', 'device_id', 'record'],
+  'peer_identities': ['address', 'identity_key'],
+  'kyber_prekeys': ['id', 'record', 'last_resort', 'created_at'],
+  'kyber_used': ['kyber_id', 'signed_id', 'base_key'],
+  'opener_reads': ['kyber_id', 'opener'],
+};
+
+// the identities this container holds: 0 the main one (its words, onion
+// and face), the others with keys of their own and nothing else. each has
+// its own random keys: nothing is derived from another
+Future<void> identityTables(DatabaseExecutor db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS identities (
+      id INTEGER PRIMARY KEY,
+      kind TEXT NOT NULL,
+      x_priv BLOB NOT NULL,
+      reg_id INTEGER NOT NULL,
+      created_at INTEGER NOT NULL,
+      retired_at INTEGER,
+      name TEXT,
+      photo INTEGER,
+      about TEXT
+    )
+  ''');
+  // the addresses of one pair of devices: 3 from the two keys alone, as
+  // every chat before 0.6; 4 with the seed the opener carried
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS pairs (
+      ident INTEGER NOT NULL,
+      peer TEXT NOT NULL,
+      their_device INTEGER NOT NULL DEFAULT 1,
+      my_device INTEGER NOT NULL DEFAULT 1,
+      conv INTEGER NOT NULL,
+      seed BLOB,
+      PRIMARY KEY (ident, peer, their_device, my_device),
+      CHECK ((conv = 3 AND seed IS NULL) OR (conv = 4 AND length(seed) = 32))
+    )
+  ''');
+  // a random first-contact key per invite, retired with it
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS fc_keys (
+      ident INTEGER NOT NULL,
+      invite_id TEXT NOT NULL,
+      sk BLOB NOT NULL,
+      created_at INTEGER NOT NULL,
+      retired_at INTEGER,
+      PRIMARY KEY (ident, invite_id)
+    )
+  ''');
+}
+
+// v4 invites (identity v4 2.3): a row per invite with its times (unix
+// hours), its keys by id and its signed frames, with and without the
+// bundle. hellos (3.3): one in, waiting for the person's accept, or one
+// out, waiting for the opener to my one-time invite inside it. the hellos
+// seen, by hash, for 16 days
+Future<void> inviteTables(DatabaseExecutor db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS invites (
+      ident INTEGER NOT NULL,
+      id TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      issued INTEGER NOT NULL,
+      expires INTEGER NOT NULL,
+      used_at INTEGER,
+      retired_at INTEGER,
+      spk_id INTEGER,
+      kyber_id INTEGER,
+      ec_id INTEGER,
+      link BLOB NOT NULL,
+      qr BLOB,
+      never_expires INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (ident, id)
+    )
+  ''');
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS hellos (
+      ident INTEGER NOT NULL,
+      way TEXT NOT NULL,
+      peer TEXT NOT NULL,
+      invite_id TEXT NOT NULL,
+      hello BLOB,
+      fc TEXT,
+      at INTEGER NOT NULL,
+      PRIMARY KEY (ident, way, peer, invite_id)
+    )
+  ''');
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS hello_seen (
+      ident INTEGER NOT NULL,
+      hash TEXT NOT NULL,
+      at INTEGER NOT NULL,
+      PRIMARY KEY (ident, hash)
+    )
+  ''');
+}
+
+// my identity for each contact, and their identity key (0x05 and the x
+// key, hex): one contact per key
+Future<void> contactIdentColumns(DatabaseExecutor db) async {
+  await addColumn(
+    db,
+    'ALTER TABLE contacts ADD COLUMN ident INTEGER NOT NULL DEFAULT 0',
+  );
+  await addColumn(db, 'ALTER TABLE contacts ADD COLUMN ikey TEXT');
+  await contactKeyIndex(db);
+}
+
+Future<void> contactKeyIndex(DatabaseExecutor db) => db.execute(
+  'CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_ikey ON contacts(ikey)',
+);
+
+/// the upgrade to 92: identities, the signal tables per identity, pairs,
+/// first-contact keys and the contacts' identity keys. the main identity
+/// is row 0, from the key and registration id the file holds; every
+/// contact is on it, on the addresses of 0.5 (conv 3)
+@visibleForTesting
+Future<void> upgradeTo92(DatabaseExecutor db) async {
+  for (final prefix in const ['', kDevSignalPrefix]) {
+    await _identColumns(db, prefix);
+  }
+  await identityTables(db);
+  await contactIdentColumns(db);
+  final me = await db.query('identity', columns: ['x_priv'], limit: 1);
+  final x = me.isEmpty ? null : _unhex(me.first['x_priv'] as String?);
+  if (x != null && x.length == 32) {
+    final reg = await db.query(
+      'signal_meta',
+      columns: ['v'],
+      where: 'k = ?',
+      whereArgs: ['regId'],
+      limit: 1,
+    );
+    await db.insert('identities', {
+      'id': 0,
+      'kind': kIdentFace,
+      'x_priv': x,
+      'reg_id': reg.isEmpty
+          ? newRegistrationId()
+          : int.parse(reg.first['v'] as String),
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+  await claimContactKeys(db);
+}
+
+// one store's tables with the identity in their keys: sqlite changes no
+// primary key, so each table made before is renamed, made again, its rows
+// copied in as the main identity's, and dropped. a table that has it, or
+// that the store never made, is left
+Future<void> _identColumns(DatabaseExecutor db, String prefix) async {
+  for (final e in _identTables.entries) {
+    final t = '$prefix${e.key}';
+    final cols = [
+      for (final c in await db.rawQuery(
+        'SELECT name FROM pragma_table_info(?)',
+        [t],
+      ))
+        '${c['name']}',
+    ];
+    if (cols.isEmpty || cols.contains('ident')) continue;
+    // the table as a new install makes it, under a name of its own first
+    final made = 'IF NOT EXISTS $t (';
+    await _signalTables(
+      db,
+      prefix: prefix,
+      as: (sql) =>
+          sql.contains(made) ? sql.replaceFirst(made, '${t}_92 (') : null,
+    );
+    final keep = e.value.join(', ');
+    await db.execute(
+      'INSERT INTO ${t}_92 (ident, $keep) SELECT 0, $keep FROM $t',
+    );
+    await db.execute('DROP TABLE $t');
+    await db.execute('ALTER TABLE ${t}_92 RENAME TO $t');
+  }
+}
+
+Uint8List? _unhex(String? h) {
+  if (h == null || h.length.isOdd) return null;
+  final out = Uint8List(h.length ~/ 2);
+  for (var i = 0; i < out.length; i++) {
+    final b = int.tryParse(h.substring(i * 2, i * 2 + 2), radix: 16);
+    if (b == null) return null;
+    out[i] = b;
+  }
+  return out;
+}
+
+/// the upgrade to 91: the kyber tables, and a kept first contact's opened
+/// text, which signal opens once only
+@visibleForTesting
+Future<void> upgradeTo91(Database db) async {
+  await kyberTables(db);
+  // addColumn takes a column there already; anything else fails the open,
+  // and the step runs again
+  await addColumn(db, 'ALTER TABLE first_kept ADD COLUMN opened_id TEXT');
+  await addColumn(db, 'ALTER TABLE first_kept ADD COLUMN opened_plain TEXT');
+}
+
+/// one signal store's tables under [prefix], for a store kept in a file of
+/// its own, as this version keeps them: one made before has the identity
+/// put in its keys, in one write
+Future<void> signalStoreTables(Database db, {String prefix = ''}) =>
+    db.transaction((t) async {
+      await _identColumns(t, prefix);
+      await _signalTables(t, prefix: prefix);
+      // the main store's identity is a row (identities.dart)
+      if (prefix.isEmpty) await identityTables(t);
+    });
+
+/// the kyber prekey tables of the everyday store and the dev chat's, with
+/// whatever else of either store a file lacks (version 91)
+Future<void> kyberTables(Database db) async {
+  await _signalTables(db);
+  await _devSignalTables(db);
 }
 
 // wrapped like the dev chat's row: without them an anonymous start fails

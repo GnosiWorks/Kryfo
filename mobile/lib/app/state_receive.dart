@@ -207,6 +207,12 @@ extension AppStateReceive on AppState {
       signalWait,
       onTimeout: () => dlog('listen: signal not ready, contacts go on'),
     );
+    // my v4 invites kept, and each live one listened on
+    try {
+      await keepMyInvites();
+    } catch (e) {
+      dlog('invites: not kept (${e.runtimeType})');
+    }
     var heard = <String>{};
     var short = true;
     try {
@@ -251,6 +257,12 @@ extension AppStateReceive on AppState {
     bool cache = false,
     Set<String> skip = const {},
   }) async {
+    // who is on an identity of their own, and those identities in the
+    // engine before anything listens on them
+    await loadIdents();
+    // every seeded pair's seed in the engine before the first listen: a
+    // call that comes without it is refused there as well
+    await pushPairSeeds();
     // subscribe off the xpub stored on the contact row, the same key the
     // send path uses. the signal store has none until a session exists, so
     // the scanned side could never receive the first message.
@@ -291,7 +303,7 @@ extension AppStateReceive on AppState {
         if (xPub == null || xPub.isEmpty) {
           // with no signal yet the store says nothing: tried again later
           if (!signalSession.ready) short = true;
-          xPub = await signalSession.peerXPubHex(haloId);
+          xPub = await peerXPubOf(haloId);
           if (xPub != null && xPub.isNotEmpty) {
             try {
               await live.setContactXPub(haloId, xPub);
@@ -305,7 +317,7 @@ extension AppStateReceive on AppState {
         // a key someone else is heard on stays theirs
         if (r['blocked'] == 1 && _heardAsOther(xPub, haloId)) continue;
         _xPubToHaloId[xPub] = haloId;
-        if (!skip.contains(xPub)) _io.listen(xPub);
+        if (!skip.contains(xPub)) _io.listen(identOf(haloId), xPub);
         fresh[xPub] = haloId;
       } catch (e) {
         short = true;
@@ -321,7 +333,7 @@ extension AppStateReceive on AppState {
     for (final h in hidden.entries) {
       try {
         _xPubToHaloId[h.key] = h.value;
-        if (!skip.contains(h.key)) _io.listen(h.key);
+        if (!skip.contains(h.key)) _io.listen(identOf(h.value), h.key);
         heard.add(h.key);
       } catch (e) {
         short = true;
@@ -339,23 +351,24 @@ extension AppStateReceive on AppState {
   }
 
   Future<void> _pinFirst(List<Map<String, Object?>> rows) async {
-    final pins = <String>[];
+    final pins = <(int, String)>[];
     for (final r in rows) {
       if (r['pinned'] != 1) continue;
+      final ident = identOf(r['halo_id'] as String? ?? '');
       var xPub = r['xpub'] as String?;
       if (xPub == null || xPub.isEmpty) {
         final haloId = r['halo_id'] as String?;
         if (haloId == null) continue;
         try {
-          xPub = await signalSession.peerXPubHex(haloId);
+          xPub = await peerXPubOf(haloId);
         } catch (_) {
           continue;
         }
       }
-      if (xPub != null && xPub.isNotEmpty) pins.add(xPub);
+      if (xPub != null && xPub.isNotEmpty) pins.add((ident, xPub));
     }
     // the engine starts with none and keeps what it was told
-    final told = (pins..sort()).join(',');
+    final told = ([for (final (i, x) in pins) '$i:$x']..sort()).join(',');
     if (told == _pinsTold) return;
     try {
       await _io.pinFirst(pins);
@@ -392,7 +405,7 @@ extension AppStateReceive on AppState {
             : old.contains(e.value);
         if (!gone) continue;
         _xPubToHaloId.remove(e.key);
-        _io.unlisten(e.key);
+        _io.unlisten(identOf(e.value), e.key);
       }
     } catch (e) {
       dlog('old blocks: still listened on ($e)');
@@ -449,6 +462,17 @@ extension AppStateReceive on AppState {
       }
       if (known != null) {
         final env = unwrapMessage(known.plain);
+        // a typing frame shows or goes: no row, no seen hash, no ring
+        if (env.typing) {
+          // never one that opened a session: its one-time key is spent, so
+          // it is marked as seen and goes unshown
+          if (_isPreKeyWire(cipher)) {
+            await live.markSeen(h);
+          } else {
+            await _typingCame(known.id, env);
+          }
+          continue;
+        }
         try {
           shown = AppState._shown(
             await _applyIncomingPayload(
@@ -467,6 +491,8 @@ extension AppStateReceive on AppState {
       }
       if (!handled) {
         final parked = await _openParked(cipher);
+        // nobody is filed again on a typing frame
+        if (parked != null && unwrapMessage(parked.plain).typing) continue;
         if (parked != null) {
           final addr = parked.id;
           final env = unwrapMessage(parked.plain);
@@ -619,6 +645,8 @@ extension AppStateReceive on AppState {
     firstFails.clear();
     _dropEarly();
     _openedEpoch++;
+    // and who was typing, in a session that is no longer the one on screen
+    _typingClear();
   }
 
   void _keepOpened(
@@ -672,6 +700,38 @@ extension AppStateReceive on AppState {
       await live.markSeen(h);
       notifyListeners();
       arrived();
+      return;
+    }
+    // a hello on my v3 first-contact address: zero answers only (11 step 7)
+    if (m.peer == 'firstcontact' && m.cipher.startsWith('khl:')) {
+      final bar = m.cipher.indexOf('|');
+      final hw = bar == 68 ? helloOfWire(m.cipher.substring(69)) : null;
+      if (hw == null) {
+        await live.markSeenLong(h);
+        arrived();
+        return;
+      }
+      await _receiveHello(
+        kMainIdent,
+        null,
+        m.cipher.substring(4, 68),
+        hw.hello,
+        hw.nonce,
+        h,
+        arrived,
+      );
+      return;
+    }
+    // a line from one of my invites' first-contact addresses
+    if (inviteTagOf(m.peer) case (final ident, final invite)) {
+      await _receiveAtInvite(
+        ident,
+        invite,
+        m.cipher,
+        h,
+        arrived,
+        reached: reached,
+      );
       return;
     }
     if (m.cipher.startsWith('{')) {

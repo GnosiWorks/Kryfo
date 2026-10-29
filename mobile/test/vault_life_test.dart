@@ -1556,6 +1556,9 @@ void main() {
       'sessions',
       'peer_identities',
       'signal_meta',
+      'kyber_prekeys',
+      'kyber_used',
+      'opener_reads',
       'search_meta',
       'hidden_chats',
       'vault_meta',
@@ -1563,9 +1566,22 @@ void main() {
       // keys blocked as not who they said: no chat's rows
       'blocked_keys',
       'name_tombs',
+      // the identities, and what is kept beside the sessions: a pair's
+      // addresses stay with the store that holds its session, a hidden
+      // chat's too
+      'identities',
+      'pairs',
+      'fc_keys',
+      // my v4 invites, and the hellos on them: the store's, by key
+      'invites',
+      'hellos',
+      'hello_seen',
+      // the identity's own profile photo
+      'my_photo',
     };
     final src = [
       'lib/app/database.dart',
+      'lib/app/database_photos.dart',
       'lib/router.dart',
     ].map((f) => File(f).readAsStringSync()).join('\n');
     // a prefixed name is another set of the signal store's tables

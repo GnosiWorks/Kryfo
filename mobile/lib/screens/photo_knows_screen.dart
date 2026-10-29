@@ -507,7 +507,7 @@ class _Body extends StatelessWidget {
                               size: 9.5,
                               letter: 0.1,
                               weight: FontWeight.w500,
-                              color: HaloColors.green,
+                              color: HaloColors.greenText,
                             ),
                           ),
                         ],
@@ -760,7 +760,7 @@ class _Checked extends StatelessWidget {
             ),
             Text(
               l10n.photoKnowsNotInIt,
-              style: HaloType.mono(size: 10.5, color: HaloColors.green),
+              style: HaloType.mono(size: 10.5, color: HaloColors.greenText),
             ),
             const SizedBox(width: 6),
             Transform.scale(

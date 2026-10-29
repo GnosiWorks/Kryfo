@@ -642,17 +642,10 @@ class AppLocalizationsZh extends AppLocalizations {
       'Tor 已启动，但还没有中继响应。Kryfo 会继续尝试，消息会在这里等候，直到有中继响应。';
 
   @override
-  String get appRelayAndFastModes =>
-      '中继模式和快速模式不走 Tor，速度更快。它们在设置的“速度与隐私”里，每种模式都写明了代价。';
-
-  @override
-  String get appViaRelay => '经由中继';
+  String get appRelayAndFastModes => '快速模式不经过 Tor，所以更快。它在设置的“速度与隐私”里，并说明了代价。';
 
   @override
   String get appOffline => '离线';
-
-  @override
-  String get appFast => '快速';
 
   @override
   String get appTorOff => 'Tor 已关';
@@ -1194,7 +1187,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cameraCouldNotSaveA => '无法在这部手机上保存副本';
 
   @override
-  String get cameraTooLongForA => '太长，无法作为消息发送 · 最大 15 MB';
+  String get cameraTooLongForA => '太长，无法作为消息发送 · 最大 50 MB';
 
   @override
   String get cameraNeverSavedToYour => '不会保存到你的相册';
@@ -1640,9 +1633,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatSupporter => '支持者';
-
-  @override
-  String get chatEncryptedViaRelay => '已加密 · 经由中继';
 
   @override
   String get chatEncryptedDirect => '已加密 · 直连';
@@ -2189,6 +2179,38 @@ class AppLocalizationsZh extends AppLocalizations {
   String get donateBadgesStartAt20 => '徽章 \$20 起';
 
   @override
+  String get donateShowTheAddress => '显示地址';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount，以 bitcoin 支付';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => '徽章能给你什么';
+
+  @override
+  String get donateGivesMark => '名字旁边的一个标记。给谁看、给不给人看，都由你决定。';
+
+  @override
+  String get donateGivesReceipt => '一张保存在这台手机上的签名收据。无需任何账号即可证明徽章。';
+
+  @override
+  String get donateGivesFree => '无论有没有徽章，所有隐私功能都一直免费。';
+
+  @override
+  String get donateAddressOnTap => '点下方按钮时才会生成地址。它在一小时内都归你，回来时还是同一个。';
+
+  @override
+  String get donateBitcoinBusy => 'Bitcoin 现在很忙。请稍后再试，或用银行卡支付。';
+
+  @override
+  String get donateBusyPlainAddress => '你仍然可以向下方地址发送 bitcoin，但不会获得徽章。';
+
+  @override
+  String get donateSameAddressAgain => '这是你之前打开的地址。如果已经发送，请在这里等待。';
+
+  @override
   String get donateReachingThePaymentService => '正在经由 Tor 连接支付服务…';
 
   @override
@@ -2272,6 +2294,17 @@ class AppLocalizationsZh extends AppLocalizations {
       'patron': '已在链上验证——你现在是赞助人了。谁也拿不走。',
       'guardian': '已在链上验证——你现在是守护者了。谁也拿不走。',
       'other': '已在链上验证——你现在是支持者了。谁也拿不走。',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '已在链上验证。感谢你再次支持。你的支持者徽章保持不变。',
+      'patron': '已在链上验证。感谢你再次支持。你的赞助人徽章保持不变。',
+      'guardian': '已在链上验证。感谢你再次支持。你的守护者徽章保持不变。',
+      'other': '已在链上验证。感谢你再次支持。你的支持者徽章保持不变。',
     });
     return '$_temp0';
   }
@@ -2952,26 +2985,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeLeaveThemOff => '保持关闭';
 
   @override
-  String get homeOurRelayIsQuiet => '我们的中继没有响应';
-
-  @override
-  String get homeRelayModeUsesOnly =>
-      '中继模式只用我们自己的中继，而它现在没有响应。快速模式会同时加入公共中继，所以消息仍能送达。无论哪种方式，一切都仍是加密的。';
-
-  @override
-  String get homeSwitchedToFast => '已切换到快速模式';
-
-  @override
-  String get homeUseFastMode => '使用快速模式';
-
-  @override
   String get homeKeepWaiting => '继续等待';
-
-  @override
-  String get homeSwitchedToRelay => '已切换到中继';
-
-  @override
-  String get homeUseOurRelay => '使用我们的中继';
 
   @override
   String get homeOffline => '离线';
@@ -3442,40 +3456,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lockSetupFourDigitsAnythingYou => '四位或更多数字，选一个你记得住的';
 
   @override
-  String get modesOnion => 'Onion';
-
-  @override
-  String get modesFullOnionRoutingThree =>
-      '完整的 onion 路由，3 跳。一条消息需要两到五秒。没有人看得到你在和谁聊天。';
-
-  @override
-  String get modesSlower => '较慢';
-
-  @override
-  String get modesRelay => '中继';
-
-  @override
-  String get modesOneSealedConnectionTo =>
-      '一条加密连接，直通 Kryfo 自己的中继，就像一个无日志可记的 VPN。消息大约一秒送达，在 Tor 被封锁的地方也能用。';
-
-  @override
-  String get modesQuick => '快';
-
-  @override
-  String get modesRelayOnly => '仅中继';
-
-  @override
   String get modesFast => '快速';
-
-  @override
-  String get modesPlainConnectionsToEvery => '与每个中继的普通连接。几乎即时，也是三种模式中最不私密的。';
-
-  @override
-  String get modesInstant => '即时';
-
-  @override
-  String get modesEveryRelayYouUse =>
-      '你用到的每个中继都知道你连接时的地址，而不只是我们的中继。消息仍然是加密的，但你发过消息这件事并没有被加密。默认关闭，重装后也会重新关闭。';
 
   @override
   String get modesNotChanged => '模式没有更改，请重试。';
@@ -3488,52 +3469,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get modesPrivacy => '与隐私';
-
-  @override
-  String get modesChangeGloballyOrPer => '全局更改，或按聊天单独设置';
-
-  @override
-  String get modesSoon => '即将推出';
-
-  @override
-  String get modesActive => '使用中';
-
-  @override
-  String get modesSpeed2 => '速度';
-
-  @override
-  String get modesHops => '跳数';
-
-  @override
-  String get modesIp => 'IP';
-
-  @override
-  String get modesVisible => '可见';
-
-  @override
-  String get modesHidden => '已隐藏';
-
-  @override
-  String modesHeadsUp(Object warning) {
-    return '*注意：*$warning';
-  }
-
-  @override
-  String get modesOnionIsTheDefault =>
-      'Onion 是默认模式，除非你更改，否则一直如此。切换会从下一条消息开始生效。';
-
-  @override
-  String get modesFastMode => '快速模式';
-
-  @override
-  String get modesPlainConnectionsToEveryRelayQuicker =>
-      '与每个中继的普通连接。更快，但中继能看到你的 IP 地址。无论哪种方式，消息都保持端到端加密。';
-
-  @override
-  String get modesTurnOnFastMode => '开启快速模式';
-
-  @override
-  String get modesKeepItOff => '保持关闭';
 
   @override
   String get movedWipeThisPhone => '要从这部手机上抹除 Kryfo 吗？';
@@ -3588,11 +3523,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get myKryfoInviteCopiedClearsIn => '邀请已复制 · 60 秒后清除';
-
-  @override
-  String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return '在 Kryfo 上加我。我的名字是 $myId\n\n点这里加我：\n$uri\n\nKryfo 是一款私密通讯应用。不用手机号，不用邮箱。';
-  }
 
   @override
   String get myKryfoAddMeOnKryfo2 => '在 Kryfo 上加我';
@@ -3901,90 +3831,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingThreeWords => '三个词。*只属于你。*';
 
   @override
-  String get onboardingPickA => '选一个*头像*。';
-
-  @override
-  String get onboardingDrawnOnThisPhone => '在这部手机上根据一个数字画出来，从不上传。随时可以更换。';
-
-  @override
-  String get onboardingThePeopleYouMessage => '和你聊天的人也会看到它';
-
-  @override
-  String get onboardingKeepMyInitial => '保留我的首字母';
-
-  @override
-  String get onboardingThatOne => '就这个 →';
-
-  @override
   String get onboardingContinue => '继续 →';
-
-  @override
-  String get onboardingHowYourMessages => '你的消息如何*传递*。';
-
-  @override
-  String get onboardingYouCanChangeThis => '你随时可以在设置里更改，对所有人或单个聊天都行。';
-
-  @override
-  String get onboardingOnion => 'Onion';
-
-  @override
-  String get onboardingSlowerAMessageTakes => '较慢。一条消息需要两到五秒。';
-
-  @override
-  String get onboardingHidesYourAddressFrom => '对所有人隐藏你的地址，包括我们的中继。';
-
-  @override
-  String get onboardingRelay => '中继';
-
-  @override
-  String get onboardingOurRelaySeesYour => '我们的中继能看到你的地址。其他人都看不到。';
-
-  @override
-  String get onboardingAboutASecondWorks => '大约一秒。在 Tor 被封锁的地方也能用。';
-
-  @override
-  String get onboardingAutoFindsAWay => '“自动”会自己找到绕过封锁的方法。';
-
-  @override
-  String get onboardingFast => '快速';
-
-  @override
-  String get onboardingEveryRelayYouUse => '你用到的每个中继都能看到你的地址。三种模式中最不私密的。';
-
-  @override
-  String get onboardingNearInstant => '几乎即时。';
-
-  @override
-  String get onboardingKeepOnion => '保留 onion →';
-
-  @override
-  String get onboardingUseThis => '用这个 →';
-
-  @override
-  String get onboardingSkipOnionIsA => '跳过 · onion 就是不错的默认选择';
-
-  @override
-  String get onboardingThreeThingsThen => '三件事，\n然后*就可以开始了*。';
-
-  @override
-  String get onboardingEverythingElseTheApp => '其他的事，应用会在需要的时候告诉你。';
-
-  @override
-  String get onboardingYourNameIsThreeWords => '你的名字就是三个词';
-
-  @override
-  String get onboardingThatIsTheWhole =>
-      '这就是全部身份。没有号码或邮箱可以泄露或被查到。和你聊天的人看到的是这三个词和你选的头像。';
-
-  @override
-  String get onboardingNobodyCanReachYou => '在你允许之前，谁也联系不到你';
-
-  @override
-  String get onboardingAStrangerWithYour =>
-      '知道你三个词的陌生人只能敲门。对方的第一条消息会在请求里等着，直到你同意；你也可以拒绝，而对方永远不会知道。';
-
-  @override
-  String get onboardingTheFirstConnectionTakesAMinute => '首次连接需要一分钟';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -3992,9 +3839,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get onboardingYourIdentityLivesOn => '你的身份保存在这部手机上。准备好后，可以在设置里备份它。';
-
-  @override
-  String get onboardingIUnderstand => '我明白了 →';
 
   @override
   String get onboardingOneQuiet => '一条安静的*通知*。';
@@ -4013,12 +3857,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingGotIt => '知道了 →';
 
   @override
-  String get onboardingNow => '现在，*添加联系人*。';
-
-  @override
-  String get onboardingTheAppIsReady => '应用已准备好。在你添加对方或允许对方进来之前，谁也无法给你发消息。';
-
-  @override
   String get onboardingEveryWayToAdd => '所有添加方式';
 
   @override
@@ -4029,9 +3867,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get onboardingPointTheCameraAt => '把相机对准对方的二维码';
-
-  @override
-  String get onboardingTheAppIsReadyWhenYou => '你准备好了，应用就准备好了。';
 
   @override
   String get onboardingNotNowAddPeople => '暂不 · 以后再加人';
@@ -4260,9 +4095,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get profileProfile => '个人资料';
-
-  @override
-  String get profileChangeYourFace => '更换你的头像';
 
   @override
   String get profileKryfoId => '你的名字';
@@ -4869,16 +4701,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get seenYourIpAddress => '你的 IP 地址';
 
   @override
-  String get seenOurRelay => '我们的中继';
-
-  @override
-  String get seenEveryRelay => '每个中继';
-
-  @override
-  String get seenOnOnionEverythingLeaves =>
-      '在 onion 模式下，一切都经由 Tor 发出，中继看到的是一个出口节点，永远看不到你。在中继模式下，连接直达我们自己的中继：没有任何东西转发你的地址，也不做任何记录，但这一条连接我们看得到。在快速模式下，每个公共中继都会知道你连接过，但不知道你联系了谁，也不知道你说了什么。';
-
-  @override
   String get seenYourContactGraph => '你的联系人关系图';
 
   @override
@@ -4933,12 +4755,6 @@ class AppLocalizationsZh extends AppLocalizations {
       '棘轮层和存储层都是标准实现。连接它们的那一层是我们自己写的，还没有任何独立第三方审查过。这是 alpha 版本。';
 
   @override
-  String get seenOnion => 'Onion';
-
-  @override
-  String get seenRelay => '中继';
-
-  @override
   String get seenFast => '快速';
 
   @override
@@ -4972,9 +4788,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsTorRouting => 'Tor 路由';
 
   @override
-  String get settingsOffMode => '关 · 中继模式';
-
-  @override
   String get settingsOffFastMode => '关 · 快速模式';
 
   @override
@@ -4988,9 +4801,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsFast => '快速';
-
-  @override
-  String get settingsRelay1Hop => '中继 · 1 跳';
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 跳';
@@ -5031,6 +4841,23 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsScamShieldHint => '只在你的手机上检查，什么都不会离开手机';
+
+  @override
+  String get typingNow => '正在输入';
+
+  @override
+  String get settingsTypingIndicator => '输入状态提示';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      '对方在输入时，你们双方都能看到。提示经 Tor 直接发给对方，从不经过中继。';
+
+  @override
+  String get settingsTypingOnionOnly => '在 Onion 线路上可用';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      '使用网桥时关闭：监视你连接的人可能会对上输入提示的信号。关闭网桥后会自动恢复。';
 
   @override
   String get settingsLightTheme => '浅色主题';
@@ -5623,8 +5450,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get whyKryfoNothingLeaks => '什么都不泄露';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      '不会把已读回执或“正在输入”提示交给任何人，也不上传联系人列表。元数据是大多数应用泄露的东西——Kryfo 的设计就是不泄露它。';
+  String get whyKryfoNoReceiptsTyping =>
+      '没有已读回执，也不上传联系人列表。你正在输入，只有你在对话的那个人能看到，经 Tor 直接送达，从不经过服务器。大多数应用都会泄露元数据，Kryfo 的设计就是不泄露。';
 
   @override
   String get whyKryfoVerifyItIsReally => '确认真的是对方';
@@ -6935,10 +6762,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesTheTorProjectSGuess => 'Tor 项目的判断';
 
   @override
-  String get bridgesOurRelayUsuallyGets =>
-      '我们的中继只是一条普通连接，通常都能连通。也可以让 Kryfo 自己找办法。';
-
-  @override
   String get bridgesUseThisBridge => '使用这个网桥';
 
   @override
@@ -7119,6 +6942,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get languageNameAr => '阿拉伯语';
+
+  @override
+  String get languageNameHi => '印地语';
 
   @override
   String get languageLaterLine => '你随时可以在设置里更改。';
@@ -7855,6 +7681,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devWhoChoiceStays => '你的选择会一直跟着这个聊天。';
 
   @override
+  String get devUpdateToWrite => '更新 Kryfo 后即可给 Marios 发消息。';
+
+  @override
   String get devKeyCheckFailed => '无法核对 Marios 的密钥。什么都没有发送。';
 
   @override
@@ -7911,6 +7740,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appYourOwnInvite => '这是你自己的邀请。分享给别人才能互相连接。';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id 需要先更新 Kryfo，你们才能互相添加。';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -8651,15 +8485,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesNoneUntilOnion => '开启 Onion 前不使用';
 
   @override
-  String get bridgesRelayWorksWhereTor => '中继模式在 Tor 被封锁的地方也能用，随时可以切换回来。';
+  String get bridgesRelayWorksWhereTor => '在 Tor 被封锁的地方，快速模式也能用，随时可以切换回来。';
 
   @override
   String get bridgesRelayThisNetworkSees =>
-      '中继模式在 Tor 被封锁的地方也能连上，但这个网络能看到你在连接 Kryfo。';
-
-  @override
-  String get onboardingRelayThisNetworkSees =>
-      '这个网络能看到你在连接 Kryfo。我们的中继能看到你的地址。';
+      '在 Tor 被封锁的地方快速模式也能连通，但这个网络能看到你在连接 Kryfo。';
 
   @override
   String get settingsLicences => '许可证';
@@ -8722,9 +8552,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => '复制链接';
-
-  @override
-  String get appRelayNotAnswering => '中继无响应';
 
   @override
   String get motionNoRelayYet => '暂无中继';
@@ -9053,6 +8880,688 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get keyLineScreenLock => '请为手机设置屏幕锁，这样手机锁定时这层保护依然有效。';
+
+  @override
+  String get fileServerTryLater => '文件服务器暂时已满，请稍后再试。';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return '这个文件有 $size。在所有人更新 Kryfo 之前，这个聊天里的文件最大为 $max。';
+  }
+
+  @override
+  String get fileDayLimit => '你今天已经发送了很多大文件，请明天再试。';
+
+  @override
+  String get mediaProgressPreparing => '正在准备 · 请保持应用打开';
+
+  @override
+  String get groupShotsBlocksAll =>
+      '在这个群组的每部手机上禁止截屏和录屏，也禁止复制、转发或保存彼此的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
+
+  @override
+  String get groupShotsStartsWhenAll => '等这里的所有人更新 Kryfo';
+
+  @override
+  String get groupShotsOnForAll => '对这里的所有人开启';
+
+  @override
+  String get groupShotsOffAdminOnly => '已关闭。只有管理员能更改';
+
+  @override
+  String get groupShotsWaitAdminOnly => '等这里的所有人更新 Kryfo。只有管理员能更改';
+
+  @override
+  String get groupShotsOnAdminOnly => '对这里的所有人开启。只有管理员能更改';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '还在等 $countString 人',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => '还没更新的人';
+
+  @override
+  String get groupShotsWaitingHint => '这些人更新 Kryfo 后，禁止截屏就对所有人生效。点一个人可以把他移出群组。';
+
+  @override
+  String get groupShotsNeedsUpdate => '需要更新 Kryfo，或之后一直没上线';
+
+  @override
+  String get groupShotsBlockedByYou => '已被你屏蔽';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      '你开启了禁止截屏。等这里的所有人都更新 Kryfo 后，它会对所有人生效。';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name 开启了禁止截屏。等这里的所有人都更新 Kryfo 后，它会对所有人生效。';
+  }
+
+  @override
+  String get groupShotsStarted => '禁止截屏已对这里的所有人开启。复制、转发和保存彼此的消息也已关闭。';
+
+  @override
+  String get groupShotsPaused => '这里有人还不能禁止截屏。他更新 Kryfo 后，会再次对所有人生效。';
+
+  @override
+  String get groupShotsCantYet => '还不能禁止截屏';
+
+  @override
+  String get groupShotsAddTitle => '仍要添加吗？';
+
+  @override
+  String get groupShotsAddPauses => '在他更新 Kryfo 之前，禁止截屏不会对这里的所有人生效。';
+
+  @override
+  String get groupShotsLeaveStays => '禁止截屏会保持现状。';
+
+  @override
+  String get groupShotsBlockedHere => 'Kryfo 已在此群组中禁止截屏';
+
+  @override
+  String get groupShotsMenuNote => '此群组中不能复制、转发或保存别人的消息';
+
+  @override
+  String get groupShotsKeptOpen => '此群组中不能用其他应用打开别人的文件';
+
+  @override
+  String get groupShotsOldNotice => '我在这个群组开启了禁止截屏。你的 Kryfo 还做不到，请更新一下。';
+
+  @override
+  String get captureShotTaken => '已截屏。没有通知任何其他人。';
+
+  @override
+  String get captureRecording => '此屏幕正在被录制。没有通知任何其他人。';
+
+  @override
+  String get settingsDevices => '设备';
+
+  @override
+  String get devicesLinkedDevices => '已关联的设备';
+
+  @override
+  String get devicesThisPhoneOnly => '仅这部手机';
+
+  @override
+  String get devicesNameSeparator => '、';
+
+  @override
+  String get devicesThisPhone => '这部手机';
+
+  @override
+  String get devicesOnlyThisPhone => '只有这部手机能关联或移除设备';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return '$date关联';
+  }
+
+  @override
+  String get devicesUsedToday => '今天用过';
+
+  @override
+  String get devicesUsedThisWeek => '本周用过';
+
+  @override
+  String get devicesUsedThisMonth => '本月用过';
+
+  @override
+  String get devicesNotUsedYet => '还没用过';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$daysString 天内不打开就会解除关联',
+      one: '明天不打开就会解除关联',
+      zero: '今天不打开就会解除关联',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => '在电脑上用 Kryfo';
+
+  @override
+  String get devicesEmptyLine => '关联一台电脑，就能在上面读和发消息。除了这部手机，最多再关联五台设备。';
+
+  @override
+  String get devicesContactsSeeNothing => '你的联系人的应用不会显示你的设备。';
+
+  @override
+  String get devicesUnusedRule => '一台设备 30 天没打开，就会自己解除关联，并抹除上面的聊天。';
+
+  @override
+  String get devicesFull => '已关联五台设备。移除一台才能再关联。';
+
+  @override
+  String get devicesLinkADevice => '关联设备';
+
+  @override
+  String get devicesRemoveAll => '移除其他所有设备';
+
+  @override
+  String get devicesRemoveAllTitle => '移除其他所有设备？';
+
+  @override
+  String get devicesRemoveAllLine =>
+      '等你的联系人的应用收到这项更改后，它们就不会再收到新消息，也不能以你的身份发送。这部手机保留一切。';
+
+  @override
+  String get devicesRemoveAllYes => '全部移除';
+
+  @override
+  String get devicesRemovedAll => '现在只有这部手机';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return '移除“$name”？';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      '等你的联系人的应用收到这项更改后，它就不会再收到新消息，也不能以你的身份发送。下次联网时，它会抹除自己上面的聊天。被人动过手脚的设备可能会留下它已有的内容。';
+
+  @override
+  String get devicesRemove => '移除';
+
+  @override
+  String devicesRemoved(Object name) {
+    return '已移除“$name”';
+  }
+
+  @override
+  String get devicesRename => '重命名';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return '重命名“$name”';
+  }
+
+  @override
+  String get devicesRenameLine => '只有你能看到这个名字，你的联系人永远看不到。';
+
+  @override
+  String get devicesNameComputer => '电脑';
+
+  @override
+  String get devicesDeviceCode => '设备代码';
+
+  @override
+  String get devicesDeviceCodeLine => '同样的代码也会显示在那台设备的设置里。';
+
+  @override
+  String get devicesLinkStep1 => '在电脑上打开 Kryfo，它会显示一个二维码。';
+
+  @override
+  String get devicesLinkStep2 => '用这部手机扫描它。';
+
+  @override
+  String get devicesLinkStep3 => '确认两块屏幕显示的六位数字相同。';
+
+  @override
+  String get devicesHistory => '历史记录';
+
+  @override
+  String get devicesHistoryCopy => '复制我的聊天';
+
+  @override
+  String get devicesHistoryCopyHint => '所有消息，以及最近 30 天的照片和视频。';
+
+  @override
+  String get devicesHistoryNone => '不带历史记录开始';
+
+  @override
+  String get devicesHistoryNoneHint => '设备只会收到新消息。';
+
+  @override
+  String get devicesSkipMedia => '跳过照片和视频';
+
+  @override
+  String get devicesSkipMediaHint => '只复制文字。更快，设备上存的也更少。';
+
+  @override
+  String get devicesHiddenStay => '隐藏聊天和伪装都留在这部手机上。';
+
+  @override
+  String get devicesScanCode => '扫描二维码';
+
+  @override
+  String get desktopLockTitle => 'Kryfo 已锁定';
+
+  @override
+  String get desktopLockBody => '输入这台电脑的密码短语。';
+
+  @override
+  String get desktopLockNewTitle => '在这台电脑上锁定 Kryfo';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo 每次启动都会要求输入这个密码短语。它锁住你在这台电脑上的消息、照片、语音消息、文件、联系人和密钥。';
+
+  @override
+  String get desktopLockHonest =>
+      '复制了 Kryfo 文件夹的人，可以在自己的电脑上尽其所能地快速尝试密码短语。四个以上的随机单词能扛住，短的密码短语扛不住。';
+
+  @override
+  String get desktopLockForgot => '没有密码短语，这里你的任何消息、文件或密钥都打不开，连我们也不行。';
+
+  @override
+  String get desktopLockField => '密码短语';
+
+  @override
+  String get desktopLockRepeat => '再输入一次相同的密码短语';
+
+  @override
+  String get desktopLockSet => '用这个密码短语锁定';
+
+  @override
+  String get desktopLockOpen => '打开 Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '至少 $countString 个字符';
+  }
+
+  @override
+  String get desktopLockMismatch => '两次输入的密码短语不一致';
+
+  @override
+  String get desktopLockWrong => '密码短语不对';
+
+  @override
+  String get desktopLockFailed => 'Kryfo 无法在这里打开它的锁。请重新启动试试。';
+
+  @override
+  String get desktopTrayQuit => '退出 Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo 正在运行并接收消息';
+
+  @override
+  String get desktopNoCamera => 'Kryfo 暂时还不能在这台电脑上使用摄像头。请改用链接或代码。';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo 已经在这台电脑上打开了。';
+
+  @override
+  String get desktopFolderNotYours => 'Kryfo 的文件夹属于这台电脑上的另一个账户，所以 Kryfo 不会打开它。';
+
+  @override
+  String get desktopFolderNotPrivate => 'Kryfo 无法把它的文件夹设为只有你能访问，所以不会打开。';
+
+  @override
+  String get desktopLockOtherVersion => '这个锁是另一个版本的 Kryfo 创建的，当前版本无法读取。';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo 运行时需要内存中的一个私有文件夹，而这台电脑没有提供，所以 Kryfo 不会打开。';
+
+  @override
+  String get inviteNotYet => '此邀请尚未生效。请检查手机上的时间。';
+
+  @override
+  String get inviteExpired => '此邀请已过期。请索取新的邀请。';
+
+  @override
+  String get inviteDamaged => '此邀请已损坏。请索取新的邀请。';
+
+  @override
+  String get helloSent => '请求已发送。对方上线后就会看到。';
+
+  @override
+  String get inviteNeeds06 => '需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get helloSentOld => '请求已发送。如果对方使用的是旧版 Kryfo，需要先更新。';
+
+  @override
+  String get modesPickHow => '选择消息的传送方式。随时都可以更改。';
+
+  @override
+  String get modesPrivate => '私密';
+
+  @override
+  String get modesPrivateTag => 'Tor · 需要时用网桥';
+
+  @override
+  String get modesPrivateLine => '没有人能知道你的 IP 地址或你是谁，连我们的服务器也不能。遇到封锁会自己找到出路。';
+
+  @override
+  String get modesDefault => '默认';
+
+  @override
+  String get modesFastTag => '直连我们的服务器';
+
+  @override
+  String get modesFastLine =>
+      '不经过 Tor，消息到得更快，也更省电。我们的服务器只在你连接期间看到你的 IP 地址，从不记录或保存。也从不知道你说了什么。你的联系人永远看不到它。';
+
+  @override
+  String get modesFastConnected => '快速 · 已连接';
+
+  @override
+  String get modesFastConnecting => '快速 · 正在连接';
+
+  @override
+  String get modesFastDown => '快速 · 我们的服务器没有响应';
+
+  @override
+  String get modesBackupReady => '始终有一台备用服务器待命，即使其中一台出问题，你也不会断线。';
+
+  @override
+  String get modesDetails => '详情';
+
+  @override
+  String get modesBothLine => '两种方式都对每条消息端到端加密。不同的只是谁能看到你的 IP 地址。';
+
+  @override
+  String get modesConnectionBridges => '连接与网桥';
+
+  @override
+  String get modesWhatServersSee => '我们的服务器能看到什么';
+
+  @override
+  String get serversTitle => '快速模式的服务器';
+
+  @override
+  String get serversLine => '每条消息同时发往两台服务器。先响应的那台负责送达，一台停了另一台就接手。';
+
+  @override
+  String get serversOne => '服务器 1';
+
+  @override
+  String get serversTwo => '服务器 2 · 另一家服务商';
+
+  @override
+  String get serversConnected => '已连接';
+
+  @override
+  String get serversConnecting => '正在连接';
+
+  @override
+  String get serversNotAnswering => '没有响应';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms 毫秒';
+  }
+
+  @override
+  String get serversQuicker => '更快';
+
+  @override
+  String get serversBackups => '公共中继';
+
+  @override
+  String get serversBackupsLine =>
+      '在服务器 1 停摆期间使用，而且只经 Tor 连接，所以它们永远看不到你的 IP 地址。';
+
+  @override
+  String get serversStandingBy => '待命中';
+
+  @override
+  String get serversInUse => '使用中';
+
+  @override
+  String get homeMergedTitle => '中继和快速现已合二为一';
+
+  @override
+  String get homeMergedLine =>
+      '你正在使用快速模式。始终有一台备用服务器待命，即使其中一台出问题，你也不会断线。我们的服务器能看到你的 IP 地址，但永远看不到你说了什么。';
+
+  @override
+  String get homeMergedGotIt => '知道了';
+
+  @override
+  String get homeMergedUsePrivate => '改用私密';
+
+  @override
+  String get homeOursDownTitle => '我们的服务器没有响应';
+
+  @override
+  String get homeOursDownLine => '几分钟后，只要 Tor 能连通，消息也会走公共中继，我们任意一台服务器一响应就换回来。';
+
+  @override
+  String get homeUsePrivate => '使用私密';
+
+  @override
+  String get homeSwitchedToPrivate => '已切换到私密';
+
+  @override
+  String get homeUseFast => '使用快速';
+
+  @override
+  String get homeSwitchedToFastRoute => '已切换到快速';
+
+  @override
+  String get bridgesFastGetsThrough => '快速模式直连我们的服务器，通常都能连通。也可以让 Kryfo 自己找办法。';
+
+  @override
+  String get appServersNotAnswering => '服务器没有响应';
+
+  @override
+  String get settingsPrivateTor => '私密 · Tor';
+
+  @override
+  String get seenOurServers => '我们的服务器';
+
+  @override
+  String get seenIpWhy =>
+      '私密模式下一切都经 Tor 发出，我们的服务器看到的是出口节点，永远不是你。快速模式下连接直达我们的两台服务器：你连接期间它们能看到你的 IP 地址，但不留任何记录。第一台停摆期间，快速模式也会使用公共中继，而且只经 Tor 连接。';
+
+  @override
+  String get chatAlbumItDisappearsWithNo => '这个相册会从双方的手机上删除，除非已被保存。此操作无法撤销。';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      '这个相册会从所有人的手机上删除，除非已被保存。此操作无法撤销。';
+
+  @override
+  String get homeInviteSomeone => '邀请一个人';
+
+  @override
+  String get onboardingNameHeadline => '如果你愿意，起一个公开的 *@名字*。';
+
+  @override
+  String get onboardingNameLine => '公开名字能让别人找到你。跳过会更私密，你随时可以以后再加。';
+
+  @override
+  String get onboardingNameSkip => '先跳过 →';
+
+  @override
+  String onboardingNameClaim(Object handle) {
+    return '使用 @$handle →';
+  }
+
+  @override
+  String get onboardingInviteHeadline => '现在，*邀请一个人*。';
+
+  @override
+  String get onboardingInviteLead => '用任何聊天软件发一个链接。它会打开 Kryfo，或告诉对方去哪里下载。';
+
+  @override
+  String get onboardingInviteSomeone => '邀请一个人 →';
+
+  @override
+  String get onboardingInviteGettingReady => '正在准备你的链接…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return '在 Kryfo 上加我。我的名字是 $myId\n\n点这里加我：\n$link\n\n还没有 Kryfo？在这里下载：\n$download\n\nKryfo 是一款私密通讯应用。不用手机号，不用邮箱。';
+  }
+
+  @override
+  String get inviteNotReady => '你的链接快好了。稍后再试一次。';
+
+  @override
+  String get photoCropTitle => '移动和缩放';
+
+  @override
+  String get photoCropUse => '使用照片';
+
+  @override
+  String get photoCropLabel => '圆圈里是你的照片。双指缩放，拖动移动';
+
+  @override
+  String get photoCouldNotUse => '换一张照片试试。这张无法读取。';
+
+  @override
+  String get photoTake => '拍照';
+
+  @override
+  String get photoChoose => '从相册选择';
+
+  @override
+  String get photoPickFace => '选择头像';
+
+  @override
+  String get photoView => '查看照片';
+
+  @override
+  String get photoRemove => '移除照片';
+
+  @override
+  String get photoYourPhoto => '你的照片';
+
+  @override
+  String get photoYourPhotoLine => '只有你的联系人能看到，端到端加密。';
+
+  @override
+  String get photoSetTheirs => '设置照片';
+
+  @override
+  String get photoChangeTheirs => '更换照片';
+
+  @override
+  String get photoOnlyHere => '只在这部手机上';
+
+  @override
+  String photoForThem(Object name) {
+    return '给$name的照片';
+  }
+
+  @override
+  String get photoOnlyHereLine => '只有你能看到。只保存在这部手机上。';
+
+  @override
+  String photoOf(Object name) {
+    return '$name的照片';
+  }
+
+  @override
+  String get historyChatStaysShots => '此聊天禁止截屏，所以只留在你的手机上。';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 位数字',
+      zero: '没有数字',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 个字符',
+      zero: '没有字符',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => '备份进度';
+
+  @override
+  String get a11yRestoreProgress => '恢复进度';
+
+  @override
+  String get a11yExportProgress => '导出进度';
+
+  @override
+  String get a11yLockFileProgress => '锁定进度';
+
+  @override
+  String get a11yCleanProgress => '清理进度';
+
+  @override
+  String get a11yMessageActions => '消息操作';
+
+  @override
+  String get a11yRecordVoiceNote => '录制语音消息';
+
+  @override
+  String get a11yRecording => '正在录音';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return '照片，$date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return '$name 发来的照片，$date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return '视频，$date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return '$name 发来的视频，$date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 条新消息',
+      one: '新消息',
+    );
+    return '$_temp0';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -9693,17 +10202,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       'Tor 已啟動，但還沒有中繼回應。Kryfo 會繼續嘗試，訊息會在這裡等候，直到有中繼回應。';
 
   @override
-  String get appRelayAndFastModes =>
-      '中繼和快速模式會略過 Tor，速度更快。它們在設定的「速度與隱私」裡，每種模式都會說明代價。';
-
-  @override
-  String get appViaRelay => '經由中繼';
+  String get appRelayAndFastModes => '快速模式不經過 Tor，所以更快。它在設定的「速度與隱私」裡，並說明了代價。';
 
   @override
   String get appOffline => '離線';
-
-  @override
-  String get appFast => '快速';
 
   @override
   String get appTorOff => 'Tor 關閉';
@@ -10245,7 +10747,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cameraCouldNotSaveA => '無法在這支手機上儲存副本';
 
   @override
-  String get cameraTooLongForA => '太長了，無法用訊息傳送 · 上限 15 MB';
+  String get cameraTooLongForA => '太長了，無法用訊息傳送 · 上限 50 MB';
 
   @override
   String get cameraNeverSavedToYour => '不會存到你的相簿';
@@ -10690,9 +11192,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatSupporter => '支持者';
-
-  @override
-  String get chatEncryptedViaRelay => '已加密 · 經由中繼';
 
   @override
   String get chatEncryptedDirect => '已加密 · 直連';
@@ -11239,6 +11738,38 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get donateBadgesStartAt20 => '徽章從 \$20 起';
 
   @override
+  String get donateShowTheAddress => '顯示地址';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount，以 bitcoin 付款';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => '徽章能給你什麼';
+
+  @override
+  String get donateGivesMark => '名字旁的一個標記。給誰看、給不給人看，都由你決定。';
+
+  @override
+  String get donateGivesReceipt => '一張保存在這支手機上的簽名收據。不需任何帳號就能證明徽章。';
+
+  @override
+  String get donateGivesFree => '無論有沒有徽章，所有隱私功能都一直免費。';
+
+  @override
+  String get donateAddressOnTap => '點下方按鈕時才會產生地址。它在一小時內都屬於你，回來時還是同一個。';
+
+  @override
+  String get donateBitcoinBusy => 'Bitcoin 現在很忙。請稍後再試，或刷卡付款。';
+
+  @override
+  String get donateBusyPlainAddress => '你仍然可以向下方地址傳送 bitcoin，但不會獲得徽章。';
+
+  @override
+  String get donateSameAddressAgain => '這是你之前開啟的地址。如果已經傳送，請在這裡等候。';
+
+  @override
   String get donateReachingThePaymentService => '正在經由 Tor 連線到付款服務…';
 
   @override
@@ -11322,6 +11853,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       'patron': '已在鏈上驗證：你現在是贊助人了。沒有人能把這拿走。',
       'guardian': '已在鏈上驗證：你現在是守護者了。沒有人能把這拿走。',
       'other': '已在鏈上驗證：你現在是支持者了。沒有人能把這拿走。',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '已在鏈上驗證。感謝你再次支持。你的支持者徽章維持不變。',
+      'patron': '已在鏈上驗證。感謝你再次支持。你的贊助人徽章維持不變。',
+      'guardian': '已在鏈上驗證。感謝你再次支持。你的守護者徽章維持不變。',
+      'other': '已在鏈上驗證。感謝你再次支持。你的支持者徽章維持不變。',
     });
     return '$_temp0';
   }
@@ -12004,26 +12546,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeLeaveThemOff => '保持關閉';
 
   @override
-  String get homeOurRelayIsQuiet => '我們的中繼沒有回應';
-
-  @override
-  String get homeRelayModeUsesOnly =>
-      '中繼模式只使用我們自己的中繼，而它現在沒有回應。快速模式會同時加入公共中繼，讓訊息仍能送達。無論哪種模式，一切都保持密封。';
-
-  @override
-  String get homeSwitchedToFast => '已切換到快速';
-
-  @override
-  String get homeUseFastMode => '使用快速模式';
-
-  @override
   String get homeKeepWaiting => '繼續等待';
-
-  @override
-  String get homeSwitchedToRelay => '已切換到中繼';
-
-  @override
-  String get homeUseOurRelay => '使用我們的中繼';
 
   @override
   String get homeOffline => '離線';
@@ -12494,40 +13017,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get lockSetupFourDigitsAnythingYou => '四位或更多數字，選一組你記得住的';
 
   @override
-  String get modesOnion => 'Onion';
-
-  @override
-  String get modesFullOnionRoutingThree =>
-      '完整的 onion 路由，3 跳。一則訊息需要兩到五秒。沒有人看得到你在和誰聊天。';
-
-  @override
-  String get modesSlower => '較慢';
-
-  @override
-  String get modesRelay => '中繼';
-
-  @override
-  String get modesOneSealedConnectionTo =>
-      '一條密封連線，直通 Kryfo 自己的中繼，就像一個沒有東西可記錄的 VPN。訊息大約一秒送達，在 Tor 被封鎖的地方也能用。';
-
-  @override
-  String get modesQuick => '較快';
-
-  @override
-  String get modesRelayOnly => '只用中繼';
-
-  @override
   String get modesFast => '快速';
-
-  @override
-  String get modesPlainConnectionsToEvery => '以普通連線直接連到每個中繼。幾乎即時，也是三種模式中最不私密的。';
-
-  @override
-  String get modesInstant => '即時';
-
-  @override
-  String get modesEveryRelayYouUse =>
-      '你使用的每個中繼都會知道你連線的來源位址，不只是我們的中繼。訊息仍然是密封的，但「你傳了訊息」這件事不是。預設關閉，重新安裝後也會再次關閉。';
 
   @override
   String get modesNotChanged => '模式沒有變更，請再試一次。';
@@ -12540,52 +13030,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get modesPrivacy => '與隱私';
-
-  @override
-  String get modesChangeGloballyOrPer => '可全域變更，或依聊天個別設定';
-
-  @override
-  String get modesSoon => '即將推出';
-
-  @override
-  String get modesActive => '使用中';
-
-  @override
-  String get modesSpeed2 => '速度';
-
-  @override
-  String get modesHops => '跳數';
-
-  @override
-  String get modesIp => 'IP';
-
-  @override
-  String get modesVisible => '可見';
-
-  @override
-  String get modesHidden => '隱藏';
-
-  @override
-  String modesHeadsUp(Object warning) {
-    return '*注意：*$warning';
-  }
-
-  @override
-  String get modesOnionIsTheDefault =>
-      'Onion 是預設模式，除非你更改，否則會一直維持。切換會從下一則訊息開始生效。';
-
-  @override
-  String get modesFastMode => '快速模式';
-
-  @override
-  String get modesPlainConnectionsToEveryRelayQuicker =>
-      '以普通連線直接連到每個中繼。比較快，而且中繼看得到你的 IP 位址。無論如何，訊息都保持端對端加密。';
-
-  @override
-  String get modesTurnOnFastMode => '開啟快速模式';
-
-  @override
-  String get modesKeepItOff => '保持關閉';
 
   @override
   String get movedWipeThisPhone => '要從這支手機抹除 Kryfo 嗎？';
@@ -12640,11 +13084,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get myKryfoInviteCopiedClearsIn => '已複製邀請 · 60 秒後清空';
-
-  @override
-  String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return '在 Kryfo 上加我。我的名字是 $myId\n\n點這裡加我：\n$uri\n\nKryfo 是一款私密通訊軟體。不需要手機號碼，也不需要電子郵件。';
-  }
 
   @override
   String get myKryfoAddMeOnKryfo2 => '在 Kryfo 上加我';
@@ -12953,90 +13392,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingThreeWords => '三個詞。*只屬於你。*';
 
   @override
-  String get onboardingPickA => '選一個*頭像*。';
-
-  @override
-  String get onboardingDrawnOnThisPhone => '在這支手機上根據一個數字畫出來，從不上傳。隨時都可以更換。';
-
-  @override
-  String get onboardingThePeopleYouMessage => '跟你傳訊息的人也會看到這個';
-
-  @override
-  String get onboardingKeepMyInitial => '保留名字首字';
-
-  @override
-  String get onboardingThatOne => '就這張 →';
-
-  @override
   String get onboardingContinue => '繼續 →';
-
-  @override
-  String get onboardingHowYourMessages => '你的訊息如何*傳遞*。';
-
-  @override
-  String get onboardingYouCanChangeThis => '你隨時可以在設定中更改，套用到所有人或單一聊天。';
-
-  @override
-  String get onboardingOnion => 'Onion';
-
-  @override
-  String get onboardingSlowerAMessageTakes => '較慢。一則訊息需要兩到五秒。';
-
-  @override
-  String get onboardingHidesYourAddressFrom => '對所有人隱藏你的位址，包括我們的中繼。';
-
-  @override
-  String get onboardingRelay => '中繼';
-
-  @override
-  String get onboardingOurRelaySeesYour => '我們的中繼看得到你的位址。其他人都看不到。';
-
-  @override
-  String get onboardingAboutASecondWorks => '大約一秒。在 Tor 被封鎖的地方也能用。';
-
-  @override
-  String get onboardingAutoFindsAWay => '「自動」會自己找到繞過封鎖的方法。';
-
-  @override
-  String get onboardingFast => '快速';
-
-  @override
-  String get onboardingEveryRelayYouUse => '你使用的每個中繼都看得到你的位址。三種之中最不私密。';
-
-  @override
-  String get onboardingNearInstant => '幾乎即時。';
-
-  @override
-  String get onboardingKeepOnion => '保持 Onion →';
-
-  @override
-  String get onboardingUseThis => '使用這個 →';
-
-  @override
-  String get onboardingSkipOnionIsA => '略過 · Onion 是不錯的預設';
-
-  @override
-  String get onboardingThreeThingsThen => '三件事，\n之後*就可以開始了*。';
-
-  @override
-  String get onboardingEverythingElseTheApp => '其他的事，應用程式會在需要時告訴你。';
-
-  @override
-  String get onboardingYourNameIsThreeWords => '你的名字就是三個詞';
-
-  @override
-  String get onboardingThatIsTheWhole =>
-      '這就是你的全部身分。沒有號碼或電子郵件會外洩或被查到。和你聊天的人會看到這些詞和你選的頭像。';
-
-  @override
-  String get onboardingNobodyCanReachYou => '除非你讓對方進來，否則沒有人能聯絡到你';
-
-  @override
-  String get onboardingAStrangerWithYour =>
-      '知道你這三個詞的陌生人只能敲門。對方的第一則訊息會在請求中等待，直到你答應；你也可以拒絕，對方永遠不會知道。';
-
-  @override
-  String get onboardingTheFirstConnectionTakesAMinute => '第一次連線需要一分鐘';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -13044,9 +13400,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get onboardingYourIdentityLivesOn => '你的身分存在這支手機上。準備好時，可以從設定中備份。';
-
-  @override
-  String get onboardingIUnderstand => '我了解了 →';
 
   @override
   String get onboardingOneQuiet => '一則安靜的*通知*。';
@@ -13065,12 +13418,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingGotIt => '知道了 →';
 
   @override
-  String get onboardingNow => '現在，*新增聯絡人*。';
-
-  @override
-  String get onboardingTheAppIsReady => '應用程式準備好了。除非你新增對方或讓對方進來，否則沒有人能傳訊息給你。';
-
-  @override
   String get onboardingEveryWayToAdd => '所有新增聯絡人的方式';
 
   @override
@@ -13081,9 +13428,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get onboardingPointTheCameraAt => '用相機對準對方的 QR 碼';
-
-  @override
-  String get onboardingTheAppIsReadyWhenYou => '你準備好了，應用程式就準備好了。';
 
   @override
   String get onboardingNotNowAddPeople => '以後再說 · 稍後再新增聯絡人';
@@ -13312,9 +13656,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get profileProfile => '個人檔案';
-
-  @override
-  String get profileChangeYourFace => '更換你的頭像';
 
   @override
   String get profileKryfoId => '你的名字';
@@ -13921,16 +14262,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get seenYourIpAddress => '你的 IP 位址';
 
   @override
-  String get seenOurRelay => '我們的中繼';
-
-  @override
-  String get seenEveryRelay => '每個中繼';
-
-  @override
-  String get seenOnOnionEverythingLeaves =>
-      '在 Onion 模式下，一切都經由 Tor 送出，中繼看到的是出口節點，永遠不會是你。在中繼模式下，連線會直接連到我們自己的中繼：沒有任何東西會轉送你的位址，也不會留下任何紀錄，但這條連線我們看得到。在快速模式下，每個公共中繼都會知道你連線了，但不知道你和誰聯絡，也不知道你說了什麼。';
-
-  @override
   String get seenYourContactGraph => '你的聯絡人關係圖';
 
   @override
@@ -13985,12 +14316,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '棘輪和儲存層都是標準做法。連接兩者的那一層是我們自己寫的，還沒有任何獨立的第三方審查過。這是 alpha 版本。';
 
   @override
-  String get seenOnion => 'Onion';
-
-  @override
-  String get seenRelay => '中繼';
-
-  @override
   String get seenFast => '快速';
 
   @override
@@ -14024,9 +14349,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsTorRouting => 'Tor 路由';
 
   @override
-  String get settingsOffMode => '關閉 · 中繼模式';
-
-  @override
   String get settingsOffFastMode => '關閉 · 快速模式';
 
   @override
@@ -14040,9 +14362,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsFast => '快速';
-
-  @override
-  String get settingsRelay1Hop => '中繼 · 1 跳';
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 跳';
@@ -14083,6 +14402,23 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsScamShieldHint => '只在你的手機上檢查，不會有任何東西離開手機';
+
+  @override
+  String get typingNow => '正在輸入';
+
+  @override
+  String get settingsTypingIndicator => '輸入狀態提示';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      '對方在輸入時，你們雙方都看得到。提示經 Tor 直接傳給對方，從不經過中繼。';
+
+  @override
+  String get settingsTypingOnionOnly => '在 Onion 路線上可用';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      '使用橋接時關閉：監視你連線的人可能會對上輸入提示的訊號。關閉橋接後會自動恢復。';
 
   @override
   String get settingsLightTheme => '淺色主題';
@@ -14675,8 +15011,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get whyKryfoNothingLeaks => '什麼都不外洩';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      '不會把已讀回條或正在輸入的提示交給任何人，也不會上傳聯絡人清單。中繼資料是大多數應用程式會外洩的東西，而 Kryfo 的設計就是不外洩。';
+  String get whyKryfoNoReceiptsTyping =>
+      '沒有已讀回條，也不上傳聯絡人清單。你正在輸入，只有你在對話的那個人看得到，經 Tor 直接送達，從不經過伺服器。大多數應用程式都會外洩中繼資料，Kryfo 的設計就是不外洩。';
 
   @override
   String get whyKryfoVerifyItIsReally => '確認真的是對方';
@@ -15987,10 +16323,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesTheTorProjectSGuess => 'Tor 專案的判斷';
 
   @override
-  String get bridgesOurRelayUsuallyGets =>
-      '我們的中繼只是一條普通連線，通常都能連通。也可以讓 Kryfo 自己找辦法。';
-
-  @override
   String get bridgesUseThisBridge => '使用這個橋接';
 
   @override
@@ -16171,6 +16503,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get languageNameAr => '阿拉伯文';
+
+  @override
+  String get languageNameHi => '印地語';
 
   @override
   String get languageLaterLine => '你隨時可以在設定中更改。';
@@ -16788,6 +17123,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devWhoChoiceStays => '你的選擇會一直跟著這個聊天。';
 
   @override
+  String get devUpdateToWrite => '更新 Kryfo 後即可傳訊息給 Marios。';
+
+  @override
   String get devKeyCheckFailed => '無法核對 Marios 的金鑰。什麼都沒有傳送。';
 
   @override
@@ -16844,6 +17182,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get appYourOwnInvite => '這是你自己的邀請。分享給別人才能互相連線。';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id 需要先更新 Kryfo，你們才能互相新增。';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -17584,15 +17927,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesNoneUntilOnion => '開啟 Onion 前不使用';
 
   @override
-  String get bridgesRelayWorksWhereTor => '中繼模式在 Tor 被封鎖的地方也能用，隨時可以切換回來。';
+  String get bridgesRelayWorksWhereTor => '在 Tor 被封鎖的地方，快速模式也能用，隨時可以切換回來。';
 
   @override
   String get bridgesRelayThisNetworkSees =>
-      '中繼模式在 Tor 被封鎖的地方也能連上，但這個網路看得到你在連線 Kryfo。';
-
-  @override
-  String get onboardingRelayThisNetworkSees =>
-      '這個網路看得到你在連線 Kryfo。我們的中繼看得到你的位址。';
+      '在 Tor 被封鎖的地方快速模式也能連通，但這個網路能看到你在連線 Kryfo。';
 
   @override
   String get settingsLicences => '授權條款';
@@ -17655,9 +17994,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsCopyLinkHint => '複製連結';
-
-  @override
-  String get appRelayNotAnswering => '中繼無回應';
 
   @override
   String get motionNoRelayYet => '尚無中繼';
@@ -17987,4 +18323,686 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get keyLineScreenLock => '請為手機設定螢幕鎖定，這樣手機鎖定時這層保護依然有效。';
+
+  @override
+  String get fileServerTryLater => '檔案伺服器暫時已滿，請稍後再試。';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return '這個檔案有 $size。在所有人更新 Kryfo 之前，這個聊天裡的檔案最大為 $max。';
+  }
+
+  @override
+  String get fileDayLimit => '你今天已經傳送了很多大檔案，請明天再試。';
+
+  @override
+  String get mediaProgressPreparing => '正在準備 · 請保持 App 開啟';
+
+  @override
+  String get groupShotsBlocksAll =>
+      '在這個群組的每支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存彼此的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
+
+  @override
+  String get groupShotsStartsWhenAll => '等這裡的所有人更新 Kryfo';
+
+  @override
+  String get groupShotsOnForAll => '對這裡的所有人開啟';
+
+  @override
+  String get groupShotsOffAdminOnly => '已關閉。只有管理員能變更';
+
+  @override
+  String get groupShotsWaitAdminOnly => '等這裡的所有人更新 Kryfo。只有管理員能變更';
+
+  @override
+  String get groupShotsOnAdminOnly => '對這裡的所有人開啟。只有管理員能變更';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '還在等 $countString 人',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => '還沒更新的人';
+
+  @override
+  String get groupShotsWaitingHint => '這些人更新 Kryfo 後，禁止截圖就對所有人生效。點一個人可以把他移出群組。';
+
+  @override
+  String get groupShotsNeedsUpdate => '需要更新 Kryfo，或之後一直沒上線';
+
+  @override
+  String get groupShotsBlockedByYou => '已被你封鎖';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      '你開啟了禁止截圖。等這裡的所有人都更新 Kryfo 後，它會對所有人生效。';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name 開啟了禁止截圖。等這裡的所有人都更新 Kryfo 後，它會對所有人生效。';
+  }
+
+  @override
+  String get groupShotsStarted => '禁止截圖已對這裡的所有人開啟。複製、轉傳和儲存彼此的訊息也已關閉。';
+
+  @override
+  String get groupShotsPaused => '這裡有人還不能禁止截圖。他更新 Kryfo 後，會再次對所有人生效。';
+
+  @override
+  String get groupShotsCantYet => '還不能禁止截圖';
+
+  @override
+  String get groupShotsAddTitle => '仍要新增嗎？';
+
+  @override
+  String get groupShotsAddPauses => '在他更新 Kryfo 之前，禁止截圖不會對這裡的所有人生效。';
+
+  @override
+  String get groupShotsLeaveStays => '禁止截圖會維持現狀。';
+
+  @override
+  String get groupShotsBlockedHere => 'Kryfo 已在此群組中禁止截圖';
+
+  @override
+  String get groupShotsMenuNote => '此群組中不能複製、轉傳或儲存別人的訊息';
+
+  @override
+  String get groupShotsKeptOpen => '此群組中不能用其他應用程式開啟別人的檔案';
+
+  @override
+  String get groupShotsOldNotice => '我在這個群組開啟了禁止截圖。你的 Kryfo 還做不到，請更新一下。';
+
+  @override
+  String get captureShotTaken => '已截圖。沒有通知任何其他人。';
+
+  @override
+  String get captureRecording => '此螢幕正在被錄影。沒有通知任何其他人。';
+
+  @override
+  String get settingsDevices => '裝置';
+
+  @override
+  String get devicesLinkedDevices => '已連結的裝置';
+
+  @override
+  String get devicesThisPhoneOnly => '僅這支手機';
+
+  @override
+  String get devicesNameSeparator => '、';
+
+  @override
+  String get devicesThisPhone => '這支手機';
+
+  @override
+  String get devicesOnlyThisPhone => '只有這支手機能連結或移除裝置';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return '$date連結';
+  }
+
+  @override
+  String get devicesUsedToday => '今天用過';
+
+  @override
+  String get devicesUsedThisWeek => '本週用過';
+
+  @override
+  String get devicesUsedThisMonth => '本月用過';
+
+  @override
+  String get devicesNotUsedYet => '還沒用過';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$daysString 天內不開啟就會解除連結',
+      one: '明天不開啟就會解除連結',
+      zero: '今天不開啟就會解除連結',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => '在電腦上用 Kryfo';
+
+  @override
+  String get devicesEmptyLine => '連結一台電腦，就能在上面讀取和傳送訊息。除了這支手機，最多再連結五台裝置。';
+
+  @override
+  String get devicesContactsSeeNothing => '你的聯絡人的 App 不會顯示你的裝置。';
+
+  @override
+  String get devicesUnusedRule => '一台裝置 30 天沒開啟，就會自己解除連結，並抹除上面的聊天。';
+
+  @override
+  String get devicesFull => '已連結五台裝置。移除一台才能再連結。';
+
+  @override
+  String get devicesLinkADevice => '連結裝置';
+
+  @override
+  String get devicesRemoveAll => '移除其他所有裝置';
+
+  @override
+  String get devicesRemoveAllTitle => '移除其他所有裝置？';
+
+  @override
+  String get devicesRemoveAllLine =>
+      '等你的聯絡人的 App 收到這項變更後，它們就不會再收到新訊息，也不能以你的身分傳送。這支手機保留一切。';
+
+  @override
+  String get devicesRemoveAllYes => '全部移除';
+
+  @override
+  String get devicesRemovedAll => '現在只有這支手機';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return '移除「$name」？';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      '等你的聯絡人的 App 收到這項變更後，它就不會再收到新訊息，也不能以你的身分傳送。下次連上網路時，它會抹除自己上面的聊天。被人動過手腳的裝置可能會留下它已有的內容。';
+
+  @override
+  String get devicesRemove => '移除';
+
+  @override
+  String devicesRemoved(Object name) {
+    return '已移除「$name」';
+  }
+
+  @override
+  String get devicesRename => '重新命名';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return '重新命名「$name」';
+  }
+
+  @override
+  String get devicesRenameLine => '只有你能看到這個名稱，你的聯絡人永遠看不到。';
+
+  @override
+  String get devicesNameComputer => '電腦';
+
+  @override
+  String get devicesDeviceCode => '裝置代碼';
+
+  @override
+  String get devicesDeviceCodeLine => '同樣的代碼也會顯示在那台裝置的設定裡。';
+
+  @override
+  String get devicesLinkStep1 => '在電腦上開啟 Kryfo，它會顯示一個 QR 碼。';
+
+  @override
+  String get devicesLinkStep2 => '用這支手機掃描它。';
+
+  @override
+  String get devicesLinkStep3 => '確認兩個螢幕顯示的六位數字相同。';
+
+  @override
+  String get devicesHistory => '歷史記錄';
+
+  @override
+  String get devicesHistoryCopy => '複製我的聊天';
+
+  @override
+  String get devicesHistoryCopyHint => '所有訊息，以及最近 30 天的照片和影片。';
+
+  @override
+  String get devicesHistoryNone => '不帶歷史記錄開始';
+
+  @override
+  String get devicesHistoryNoneHint => '裝置只會收到新訊息。';
+
+  @override
+  String get devicesSkipMedia => '略過照片和影片';
+
+  @override
+  String get devicesSkipMediaHint => '只複製文字。更快，裝置上存的也更少。';
+
+  @override
+  String get devicesHiddenStay => '隱藏聊天和偽裝都留在這支手機上。';
+
+  @override
+  String get devicesScanCode => '掃描 QR 碼';
+
+  @override
+  String get desktopLockTitle => 'Kryfo 已鎖定';
+
+  @override
+  String get desktopLockBody => '輸入這台電腦的密碼短語。';
+
+  @override
+  String get desktopLockNewTitle => '在這台電腦上鎖定 Kryfo';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo 每次啟動都會要求輸入這組密碼短語。它鎖住你在這台電腦上的訊息、照片、語音訊息、檔案、聯絡人和金鑰。';
+
+  @override
+  String get desktopLockHonest =>
+      '複製了 Kryfo 資料夾的人，可以在自己的電腦上盡其所能地快速嘗試密碼短語。四個以上的隨機單字撐得住，短的密碼短語撐不住。';
+
+  @override
+  String get desktopLockForgot => '沒有密碼短語，這裡你的任何訊息、檔案或金鑰都打不開，連我們也不行。';
+
+  @override
+  String get desktopLockField => '密碼短語';
+
+  @override
+  String get desktopLockRepeat => '再輸入一次相同的密碼短語';
+
+  @override
+  String get desktopLockSet => '用這組密碼短語鎖定';
+
+  @override
+  String get desktopLockOpen => '打開 Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '至少 $countString 個字元';
+  }
+
+  @override
+  String get desktopLockMismatch => '兩次輸入的密碼短語不一致';
+
+  @override
+  String get desktopLockWrong => '密碼短語不對';
+
+  @override
+  String get desktopLockFailed => 'Kryfo 無法在這裡打開它的鎖。請重新啟動試試。';
+
+  @override
+  String get desktopTrayQuit => '結束 Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo 正在執行並接收訊息';
+
+  @override
+  String get desktopNoCamera => 'Kryfo 暫時還不能在這台電腦上使用相機。請改用連結或代碼。';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo 已經在這台電腦上開啟了。';
+
+  @override
+  String get desktopFolderNotYours => 'Kryfo 的資料夾屬於這台電腦上的另一個帳戶，所以 Kryfo 不會開啟它。';
+
+  @override
+  String get desktopFolderNotPrivate => 'Kryfo 無法把它的資料夾設為只有你能存取，所以不會開啟。';
+
+  @override
+  String get desktopLockOtherVersion => '這個鎖是另一個版本的 Kryfo 建立的，目前的版本無法讀取。';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo 執行時需要記憶體中的一個私有資料夾，而這台電腦沒有提供，所以 Kryfo 不會開啟。';
+
+  @override
+  String get inviteNotYet => '此邀請尚未生效。請檢查手機上的時間。';
+
+  @override
+  String get inviteExpired => '此邀請已過期。請索取新的邀請。';
+
+  @override
+  String get inviteDamaged => '此邀請已損壞。請索取新的邀請。';
+
+  @override
+  String get helloSent => '請求已送出。對方上線後就會看到。';
+
+  @override
+  String get inviteNeeds06 => '需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get helloSentOld => '請求已送出。如果對方使用的是舊版 Kryfo，需要先更新。';
+
+  @override
+  String get modesPickHow => '選擇訊息的傳送方式。隨時都可以更改。';
+
+  @override
+  String get modesPrivate => '私密';
+
+  @override
+  String get modesPrivateTag => 'Tor · 需要時用網橋';
+
+  @override
+  String get modesPrivateLine => '沒有人能知道你的 IP 位址或你是誰，連我們的伺服器也不能。遇到封鎖會自己找到出路。';
+
+  @override
+  String get modesDefault => '預設';
+
+  @override
+  String get modesFastTag => '直連我們的伺服器';
+
+  @override
+  String get modesFastLine =>
+      '不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。也從不知道你說了什麼。你的聯絡人永遠看不到它。';
+
+  @override
+  String get modesFastConnected => '快速 · 已連線';
+
+  @override
+  String get modesFastConnecting => '快速 · 連線中';
+
+  @override
+  String get modesFastDown => '快速 · 我們的伺服器沒有回應';
+
+  @override
+  String get modesBackupReady => '始終有一台備用伺服器待命，即使其中一台出問題，你也不會斷線。';
+
+  @override
+  String get modesDetails => '詳情';
+
+  @override
+  String get modesBothLine => '兩種方式都對每則訊息端對端加密。不同的只是誰能看到你的 IP 位址。';
+
+  @override
+  String get modesConnectionBridges => '連線與網橋';
+
+  @override
+  String get modesWhatServersSee => '我們的伺服器能看到什麼';
+
+  @override
+  String get serversTitle => '快速模式的伺服器';
+
+  @override
+  String get serversLine => '每則訊息同時送往兩台伺服器。先回應的那台負責送達，一台停了另一台就接手。';
+
+  @override
+  String get serversOne => '伺服器 1';
+
+  @override
+  String get serversTwo => '伺服器 2 · 另一家服務商';
+
+  @override
+  String get serversConnected => '已連線';
+
+  @override
+  String get serversConnecting => '連線中';
+
+  @override
+  String get serversNotAnswering => '沒有回應';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms 毫秒';
+  }
+
+  @override
+  String get serversQuicker => '更快';
+
+  @override
+  String get serversBackups => '公共中繼';
+
+  @override
+  String get serversBackupsLine =>
+      '在伺服器 1 停擺期間使用，而且只經 Tor 連線，所以它們永遠看不到你的 IP 位址。';
+
+  @override
+  String get serversStandingBy => '待命中';
+
+  @override
+  String get serversInUse => '使用中';
+
+  @override
+  String get homeMergedTitle => '中繼和快速現已合而為一';
+
+  @override
+  String get homeMergedLine =>
+      '你正在使用快速模式。始終有一台備用伺服器待命，即使其中一台出問題，你也不會斷線。我們的伺服器能看到你的 IP 位址，但永遠看不到你說了什麼。';
+
+  @override
+  String get homeMergedGotIt => '知道了';
+
+  @override
+  String get homeMergedUsePrivate => '改用私密';
+
+  @override
+  String get homeOursDownTitle => '我們的伺服器沒有回應';
+
+  @override
+  String get homeOursDownLine => '幾分鐘後，只要 Tor 能連通，訊息也會走公共中繼，我們任一台伺服器一回應就換回來。';
+
+  @override
+  String get homeUsePrivate => '使用私密';
+
+  @override
+  String get homeSwitchedToPrivate => '已切換到私密';
+
+  @override
+  String get homeUseFast => '使用快速';
+
+  @override
+  String get homeSwitchedToFastRoute => '已切換到快速';
+
+  @override
+  String get bridgesFastGetsThrough => '快速模式直連我們的伺服器，通常都能連通。也可以讓 Kryfo 自己找辦法。';
+
+  @override
+  String get appServersNotAnswering => '伺服器沒有回應';
+
+  @override
+  String get settingsPrivateTor => '私密 · Tor';
+
+  @override
+  String get seenOurServers => '我們的伺服器';
+
+  @override
+  String get seenIpWhy =>
+      '私密模式下一切都經 Tor 送出，我們的伺服器看到的是出口節點，永遠不是你。快速模式下連線直達我們的兩台伺服器：你連線期間它們能看到你的 IP 位址，但不留任何紀錄。第一台停擺期間，快速模式也會使用公共中繼，而且只經 Tor 連線。';
+
+  @override
+  String get chatAlbumItDisappearsWithNo => '這個相簿會從雙方的手機上刪除，除非已被儲存。這個動作無法復原。';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      '這個相簿會從所有人的手機上刪除，除非已被儲存。這個動作無法復原。';
+
+  @override
+  String get homeInviteSomeone => '邀請一個人';
+
+  @override
+  String get onboardingNameHeadline => '如果你願意，取一個公開的 *@名字*。';
+
+  @override
+  String get onboardingNameLine => '公開名字能讓別人找到你。跳過會更私密，你隨時可以之後再加。';
+
+  @override
+  String get onboardingNameSkip => '先跳過 →';
+
+  @override
+  String onboardingNameClaim(Object handle) {
+    return '使用 @$handle →';
+  }
+
+  @override
+  String get onboardingInviteHeadline => '現在，*邀請一個人*。';
+
+  @override
+  String get onboardingInviteLead => '用任何通訊軟體傳一個連結。它會開啟 Kryfo，或告訴對方去哪裡下載。';
+
+  @override
+  String get onboardingInviteSomeone => '邀請一個人 →';
+
+  @override
+  String get onboardingInviteGettingReady => '正在準備你的連結…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return '在 Kryfo 上加我。我的名字是 $myId\n\n點這裡加我：\n$link\n\n還沒有 Kryfo？在這裡下載：\n$download\n\nKryfo 是一款私密通訊軟體。不需要手機號碼，也不需要電子郵件。';
+  }
+
+  @override
+  String get inviteNotReady => '你的連結快好了。稍後再試一次。';
+
+  @override
+  String get photoCropTitle => '移動和縮放';
+
+  @override
+  String get photoCropUse => '使用照片';
+
+  @override
+  String get photoCropLabel => '圓圈裡是你的照片。雙指縮放，拖動移動';
+
+  @override
+  String get photoCouldNotUse => '換一張照片試試。這張無法讀取。';
+
+  @override
+  String get photoTake => '拍照';
+
+  @override
+  String get photoChoose => '從相簿選擇';
+
+  @override
+  String get photoPickFace => '選擇頭像';
+
+  @override
+  String get photoView => '查看照片';
+
+  @override
+  String get photoRemove => '移除照片';
+
+  @override
+  String get photoYourPhoto => '你的照片';
+
+  @override
+  String get photoYourPhotoLine => '只有你的聯絡人看得到，端對端加密。';
+
+  @override
+  String get photoSetTheirs => '設定照片';
+
+  @override
+  String get photoChangeTheirs => '更換照片';
+
+  @override
+  String get photoOnlyHere => '只在這支手機上';
+
+  @override
+  String photoForThem(Object name) {
+    return '給$name的照片';
+  }
+
+  @override
+  String get photoOnlyHereLine => '只有你看得到。只存在這支手機上。';
+
+  @override
+  String photoOf(Object name) {
+    return '$name的照片';
+  }
+
+  @override
+  String get historyChatStaysShots => '此聊天禁止截圖，所以只留在你的手機上。';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 位數字',
+      zero: '沒有數字',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 個字元',
+      zero: '沒有字元',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => '備份進度';
+
+  @override
+  String get a11yRestoreProgress => '還原進度';
+
+  @override
+  String get a11yExportProgress => '匯出進度';
+
+  @override
+  String get a11yLockFileProgress => '鎖定進度';
+
+  @override
+  String get a11yCleanProgress => '清理進度';
+
+  @override
+  String get a11yMessageActions => '訊息操作';
+
+  @override
+  String get a11yRecordVoiceNote => '錄製語音訊息';
+
+  @override
+  String get a11yRecording => '正在錄音';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return '照片，$date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return '$name 傳來的照片，$date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return '影片，$date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return '$name 傳來的影片，$date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 則新訊息',
+      one: '新訊息',
+    );
+    return '$_temp0';
+  }
 }

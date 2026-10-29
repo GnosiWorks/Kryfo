@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // what a quiet session answers in place of the network comes after a wait
-// of two to eight seconds, the same for every stand-in: the handle page,
+// of two to eight seconds, the same for every stand-in: the handle checks,
 // pair codes and gif search
 import 'dart:io';
 
@@ -27,7 +27,7 @@ void main() {
 
   test('every stand-in answers through it', () {
     final sites = {
-      'lib/screens/handle_screen.dart': 3,
+      'lib/handle_claim.dart': 3,
       'lib/screens/pair_code_screen.dart': 1,
       'lib/widgets/pair_code_panel.dart': 1,
       'lib/gifs/gif_source.dart': 2,

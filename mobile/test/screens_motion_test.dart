@@ -192,6 +192,10 @@ void main() {
       await t.pump(const Duration(milliseconds: 100));
       await t.tap(find.text(l10n.donatePayWithBitcoin));
       await t.pump(const Duration(seconds: 1));
+      await t.pump(const Duration(milliseconds: 300));
+      // the address is made on this tap, not on opening
+      await t.tap(find.text(l10n.donateShowTheAddress));
+      await t.pump(const Duration(seconds: 1));
       // the quarter hour runs out with nothing paid
       for (var i = 0; i < 16; i++) {
         await t.pump(const Duration(seconds: 59));
@@ -624,7 +628,7 @@ void main() {
     // a small phone at twice the text size: the name and face steps scroll
     // instead of spilling past the bottom or the side
     for (final lang in ['en', 'de']) {
-      testWidgets('large text, $lang: the name and face steps fit', (t) async {
+      testWidgets('large text, $lang: the name and @name steps fit', (t) async {
         t.view.physicalSize = const Size(720, 1280);
         t.view.devicePixelRatio = 2;
         addTearDown(t.view.reset);
@@ -654,13 +658,9 @@ void main() {
           await t.pump(const Duration(seconds: 4));
           expect(t.takeException(), isNull, reason: 'step $step');
         }
-        // the face step's buttons stay reachable
+        // the @name step's skip stays reachable
         expect(
-          find.text(l10n.onboardingContinue).hitTestable(),
-          findsOneWidget,
-        );
-        expect(
-          find.text(l10n.onboardingKeepMyInitial).hitTestable(),
+          find.text(l10n.onboardingNameSkip).hitTestable(),
           findsOneWidget,
         );
         await t.pumpWidget(const SizedBox());
@@ -680,7 +680,7 @@ void main() {
           still: true,
         ),
       );
-      t.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(6);
+      t.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(4);
       await t.pump();
       await t.pump(const Duration(milliseconds: 500));
       final arrows = find.text('→');

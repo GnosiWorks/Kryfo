@@ -35,6 +35,7 @@ Future<void> _loadFonts() async {
     'Noto Sans Vietnamese': ['NotoSans-Vietnamese.ttf'],
     'Noto Naskh Arabic': ['NotoNaskhArabic-Kryfo.ttf'],
     'Noto Sans Arabic': ['NotoSansArabic-Kryfo.ttf'],
+    'Noto Sans Devanagari': ['NotoSansDevanagari-Kryfo.ttf'],
   };
   for (final e in families.entries) {
     final loader = FontLoader(e.key);
@@ -51,16 +52,14 @@ Future<void> _loadFonts() async {
 
 // the words of the table's cells and column names
 Set<String> _cells() => {
-  l10n.seenOnion,
-  l10n.seenRelay,
+  l10n.modesPrivate,
   l10n.seenFast,
   l10n.seenHidden,
   l10n.seenNever,
   l10n.seenOnDevice,
   l10n.seenYours,
   l10n.seenUnaudited,
-  l10n.seenOurRelay,
-  l10n.seenEveryRelay,
+  l10n.seenOurServers,
   l10n.seenIntroducer,
   l10n.seenRoomKeys,
   l10n.seenOverTor,
@@ -87,6 +86,7 @@ void main() {
     'ar',
     'zh',
     'zh-Hant',
+    'hi',
   ]) {
     for (final scale in [1.0, _biggest]) {
       testWidgets('$code at $scale: every word of the table whole', (t) async {

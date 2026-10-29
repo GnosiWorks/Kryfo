@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.halo" "\0"
-            VALUE "FileDescription", "halo_app" "\0"
+            VALUE "CompanyName", "Kryfo" "\0"
+            VALUE "FileDescription", "Kryfo" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "halo_app" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.halo. All rights reserved." "\0"
-            VALUE "OriginalFilename", "halo_app.exe" "\0"
-            VALUE "ProductName", "halo_app" "\0"
+            VALUE "InternalName", "kryfo" "\0"
+            VALUE "LegalCopyright", "GPL-3.0-or-later" "\0"
+            VALUE "OriginalFilename", "kryfo.exe" "\0"
+            VALUE "ProductName", "Kryfo" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

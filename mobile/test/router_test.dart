@@ -149,11 +149,18 @@ class _Seal implements VaultSeal {
 }
 
 class _Io implements AppIo {
+  // nothing here types
+  @override
+  Future<String> typingSeal(String peer, String plain) =>
+      throw UnimplementedError('typingSeal');
+  @override
+  Future<String> typingSend(String onion, String cipher) =>
+      throw UnimplementedError('typingSend');
   // the pinned chats' keys the engine was told, each time
   final pins = <List<String>>[];
   @override
-  Future<String> pinFirst(List<String> xPubs) async {
-    pins.add([...xPubs]);
+  Future<String> pinFirst(List<(int, String)> peers) async {
+    pins.add([for (final (_, x) in peers) x]);
     told.add('pins');
     return 'ok';
   }
@@ -166,15 +173,15 @@ class _Io implements AppIo {
     bool flagKeyChange = false,
   }) => decrypt(peer, cipher, flagKeyChange: flagKeyChange);
   @override
-  Future<String> letHeld(String xPub, String how) async => 'ok';
+  Future<String> letHeld(int ident, String xPub, String how) async => 'ok';
   @override
-  Future<String> markHeld(List<String> xPubs) async => 'ok';
+  Future<String> markHeld(List<(int, String)> peers) async => 'ok';
   // sessions let go of, and addresses no longer listened on
   final dropped = <String>[];
   @override
   Future<void> dropSession(String peer) async => dropped.add(peer);
   @override
-  void unlisten(String xPub) => dropped.add(xPub);
+  void unlisten(int ident, String xPub) => dropped.add(xPub);
   // what a cipher opens to, and under whom
   final opens = <String, (String, String)>{};
   final tries = <String>[];
@@ -210,9 +217,13 @@ class _Io implements AppIo {
   @override
   Future<bool> hasSession(String peer) async => true;
   @override
+  Future<({int ident, String cipher})> seal(String peer, String plain) async =>
+      (ident: 0, cipher: await encrypt(peer, plain));
+
+  @override
   Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
   @override
-  void listen(String xPub, {bool fresh = false}) {
+  void listen(int ident, String xPub, {bool fresh = false}) {
     listened.add(xPub);
     told.add('listen');
   }
@@ -224,7 +235,7 @@ class _Io implements AppIo {
   @override
   String xPub() => 'x-me';
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     sent.add(('relay $xPub', cipher));
     return 'ok';
   }
@@ -236,7 +247,12 @@ class _Io implements AppIo {
   }
 
   @override
-  Future<String> firstContactSend(String xPub, String fc, String cipher) async {
+  Future<String> firstContactSend(
+    int ident,
+    String xPub,
+    String fc,
+    String cipher,
+  ) async {
     sent.add(('fc $xPub', cipher));
     return 'ok';
   }

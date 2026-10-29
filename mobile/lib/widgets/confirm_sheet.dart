@@ -190,7 +190,11 @@ Future<String?> showChangeOrRemoveSheet(
       _outline(more, () => Navigator.pop(ctx, 'more')),
     ],
     const SizedBox(height: 6),
-    _quiet(remove, () => Navigator.pop(ctx, 'remove'), color: HaloColors.rose),
+    _quiet(
+      remove,
+      () => Navigator.pop(ctx, 'remove'),
+      color: HaloColors.roseText,
+    ),
   ]),
 );
 
@@ -217,7 +221,11 @@ Future<bool> showConfirmSheet(
     context,
     builder: (ctx) {
       final body = _frame([
-        _title(title, color: rose ? HaloColors.rose : null, lines: titleLines),
+        _title(
+          title,
+          color: rose ? HaloColors.roseText : null,
+          lines: titleLines,
+        ),
         if (figure != null) ...[
           const SizedBox(height: 8),
           Text(
@@ -272,7 +280,11 @@ Future<String?> showConfirmOrMoreSheet(
   context,
   builder: (ctx) {
     final body = _frame([
-      _title(title, color: rose ? HaloColors.rose : null, lines: titleLines),
+      _title(
+        title,
+        color: rose ? HaloColors.roseText : null,
+        lines: titleLines,
+      ),
       const SizedBox(height: 8),
       _line(line),
       if (detail != null) ...[

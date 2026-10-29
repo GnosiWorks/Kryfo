@@ -38,7 +38,7 @@ class _SlowRows extends ArrivalRows {
 class _Engine implements HaloEngine {
   final listened = <int>[];
   @override
-  Future<String> subscribeFirstContact(int counter) async {
+  Future<String> subscribeFirstContact(int ident, int counter) async {
     listened.add(counter);
     return 'ok';
   }

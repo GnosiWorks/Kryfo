@@ -59,7 +59,7 @@ var liveSettleMax = 30 * time.Second
 func sweepRound() time.Duration {
 	liveMu.Lock()
 	defer liveMu.Unlock()
-	if ownDown {
+	if ownDown || firstDown {
 		return sweepEveryDown
 	}
 	return sweepEvery
@@ -107,7 +107,65 @@ var (
 	ownAnsweredAt time.Duration
 	ownFailedAt   time.Duration
 	pubAnsweredAt time.Duration
+	// on fast, the first store on its own: down as ours above, on the fast
+	// route's times. while it is, the backups are read and written through
+	// tor, as a private sender writes the public relays, so private readers
+	// and versions before the second store still get every message
+	firstDown       bool
+	firstKnown      bool
+	firstAnsweredAt time.Duration
+	firstFailedAt   time.Duration
 )
+
+// an entry of store st answered
+func storeAnswered(st string) {
+	if st != storeFirst {
+		return
+	}
+	liveMu.Lock()
+	defer liveMu.Unlock()
+	firstKnown, firstAnsweredAt, firstFailedAt = true, ownClock(), 0
+	if firstDown {
+		firstDown = false
+		log.Println("nostr: our first relay answers again, the backups stand by")
+		liveWakeLocked()
+		go backupsLetGo()
+	}
+}
+
+// an attempt on an entry of store st failed. only on fast, where the
+// backups are, and only while tor can carry them
+func storeFailed(st string) {
+	if st != storeFirst || len(backupsNow()) == 0 {
+		return
+	}
+	torWorks := torCarriesNow() && !netAway()
+	liveMu.Lock()
+	defer liveMu.Unlock()
+	now := ownClock()
+	if !firstKnown {
+		firstKnown, firstAnsweredAt = true, now
+	}
+	if !torWorks {
+		firstFailedAt = 0
+		return
+	}
+	if firstFailedAt == 0 {
+		firstFailedAt = now
+	}
+	if !firstDown && now-firstAnsweredAt >= fastDownAfter && now-firstFailedAt >= fastFailSpan {
+		firstDown = true
+		log.Println("nostr: our first relay is down, the backups are read through tor")
+		liveWakeLocked()
+	}
+}
+
+// whether the first store is down on fast
+func firstStoreDown() bool {
+	liveMu.Lock()
+	defer liveMu.Unlock()
+	return firstDown
+}
 
 // only a contact's address is ranked: first-contact, room and pair
 // addresses stay live everywhere
@@ -184,8 +242,10 @@ func liveNewRun() {
 	liveTaken = 0
 	liveJoinedAt, liveRunAt = time.Time{}, time.Now()
 	ownKnown, ownAnsweredAt, ownFailedAt = true, ownClock(), 0
-	if ownDown {
-		ownDown = false
+	// the first store down was the old route's, as ours down was
+	firstKnown, firstFailedAt = false, 0
+	if ownDown || firstDown {
+		ownDown, firstDown = false, false
 		liveWakeLocked()
 	}
 }
@@ -310,6 +370,9 @@ func ownRelayAnswered() {
 // an attempt on an entry of our relay failed
 func ownRelayFailed() {
 	wakeCheck()
+	// asked before liveMu: their own locks are never taken under it
+	fast := len(backupsNow()) > 0
+	torWorks := fast && torCarriesNow() && !netAway()
 	liveMu.Lock()
 	defer liveMu.Unlock()
 	now := ownClock()
@@ -317,15 +380,25 @@ func ownRelayFailed() {
 		ownKnown, ownAnsweredAt = true, now
 	}
 	// with no public relay answering either, it is the route or a wake, not
-	// ours: the span starts again once one does
-	if pubAnsweredAt == 0 || now-pubAnsweredAt > pubAnswerRecent {
+	// ours: the span starts again once one does. on fast the public relays
+	// are the backups, read only once ours are down, through tor: tor able
+	// to carry is the proof there
+	works := pubAnsweredAt != 0 && now-pubAnsweredAt <= pubAnswerRecent
+	if fast && !works {
+		works = torWorks
+	}
+	if !works {
 		ownFailedAt = 0
 		return
 	}
 	if ownFailedAt == 0 {
 		ownFailedAt = now
 	}
-	if !ownDown && now-ownAnsweredAt >= ownDownAfter && now-ownFailedAt >= ownFailSpan {
+	after, span := ownDownAfter, ownFailSpan
+	if fast {
+		after, span = fastDownAfter, fastFailSpan
+	}
+	if !ownDown && now-ownAnsweredAt >= after && now-ownFailedAt >= span {
 		ownDown = true
 		log.Println("nostr: our relay is down, public relays read more often")
 		liveWakeLocked()
@@ -339,6 +412,13 @@ func liveSlept() (cut bool) {
 	cut, ownFailedAt = ownFailedAt != 0, 0
 	liveMu.Unlock()
 	return cut
+}
+
+// closed when the round changes: our relay down or back
+func liveWakeChan() <-chan struct{} {
+	liveMu.Lock()
+	defer liveMu.Unlock()
+	return liveWakeC
 }
 
 // whether the round now is the one for our relay down

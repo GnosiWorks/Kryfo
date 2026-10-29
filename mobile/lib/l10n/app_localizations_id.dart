@@ -658,16 +658,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get appRelayAndFastModes =>
-      'Mode relay dan cepat tidak memakai Tor dan lebih cepat. Keduanya ada di pengaturan, di bagian kecepatan & privasi, dan masing-masing menjelaskan apa yang dikorbankan.';
-
-  @override
-  String get appViaRelay => 'Lewat relay';
+      'Cepat melewati Tor dan lebih gesit. Ada di pengaturan, di bawah kecepatan & privasi, dan menjelaskan apa harganya.';
 
   @override
   String get appOffline => 'Offline';
-
-  @override
-  String get appFast => 'Cepat';
 
   @override
   String get appTorOff => 'Tor mati';
@@ -1236,7 +1230,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get cameraCouldNotSaveA => 'Gagal menyimpan salinan di ponsel ini';
 
   @override
-  String get cameraTooLongForA => 'Terlalu panjang untuk pesan · maks 15 MB';
+  String get cameraTooLongForA => 'Terlalu panjang untuk pesan · maks 50 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Tidak pernah disimpan ke galerimu';
@@ -1367,7 +1361,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'Pesan ini dihapus dari kedua ponsel, kecuali sudah disimpan. Ini tidak bisa dibatalkan.';
+      'Pesan ini akan dihapus dari kedua ponsel, kecuali sudah disimpan. Ini tidak bisa dibatalkan.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -1698,9 +1692,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatSupporter => 'Pendukung';
-
-  @override
-  String get chatEncryptedViaRelay => 'Terenkripsi · lewat relay';
 
   @override
   String get chatEncryptedDirect => 'Terenkripsi · langsung';
@@ -2279,6 +2270,45 @@ class AppLocalizationsId extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Lencana mulai dari \$20';
 
   @override
+  String get donateShowTheAddress => 'Tampilkan alamat';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount dalam bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Yang kamu dapat dari lencana';
+
+  @override
+  String get donateGivesMark =>
+      'Tanda di samping namamu. Kamu yang memilih siapa yang melihatnya, atau tidak ada sama sekali.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Tanda terima bertanda tangan yang tersimpan di ponsel ini. Ini membuktikan lencana tanpa akun apa pun.';
+
+  @override
+  String get donateGivesFree =>
+      'Semua fitur privasi tetap gratis, dengan atau tanpa lencana.';
+
+  @override
+  String get donateAddressOnTap =>
+      'Alamat baru dibuat saat kamu mengetuk di bawah. Alamat itu milikmu selama satu jam, jadi saat kembali kamu mendapat yang sama.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin sedang sibuk. Coba lagi nanti atau bayar dengan kartu.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Kamu tetap bisa mengirim bitcoin ke alamat di bawah. Alamat ini tidak memberi lencana.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Ini alamat yang kamu buka tadi. Kalau sudah mengirim, tunggu di sini.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Menghubungi layanan pembayaran lewat Tor…';
 
@@ -2371,6 +2401,21 @@ class AppLocalizationsId extends AppLocalizations {
           'Terverifikasi on-chain. Sekarang kamu penjaga. Tidak ada yang bisa mencabutnya darimu.',
       'other':
           'Terverifikasi on-chain. Sekarang kamu pendukung. Tidak ada yang bisa mencabutnya darimu.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Terverifikasi on-chain. Terima kasih sudah memberi lagi. Lencana pendukung kamu tetap milikmu.',
+      'patron':
+          'Terverifikasi on-chain. Terima kasih sudah memberi lagi. Lencana patron kamu tetap milikmu.',
+      'guardian':
+          'Terverifikasi on-chain. Terima kasih sudah memberi lagi. Lencana penjaga kamu tetap milikmu.',
+      'other':
+          'Terverifikasi on-chain. Terima kasih sudah memberi lagi. Lencana pendukung kamu tetap milikmu.',
     });
     return '$_temp0';
   }
@@ -2563,7 +2608,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'Pesan ini dihapus dari ponsel semua orang, kecuali sudah disimpan. Ini tidak bisa dibatalkan.';
+      'Pesan ini akan dihapus dari ponsel semua orang, kecuali sudah disimpan. Ini tidak bisa dibatalkan.';
 
   @override
   String get groupChatUnsend => 'Tarik pesan';
@@ -3074,26 +3119,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get homeLeaveThemOff => 'Biarkan mati';
 
   @override
-  String get homeOurRelayIsQuiet => 'Relay kami sedang diam';
-
-  @override
-  String get homeRelayModeUsesOnly =>
-      'Mode relay hanya memakai relay milik kami, dan saat ini relay itu tidak menjawab. Mode cepat menambahkan relay publik di sampingnya, jadi pesan tetap sampai. Apa pun modenya, semuanya tetap tersegel.';
-
-  @override
-  String get homeSwitchedToFast => 'Beralih ke cepat';
-
-  @override
-  String get homeUseFastMode => 'Pakai mode cepat';
-
-  @override
   String get homeKeepWaiting => 'Tunggu lagi';
-
-  @override
-  String get homeSwitchedToRelay => 'Beralih ke relay';
-
-  @override
-  String get homeUseOurRelay => 'Pakai relay kami';
 
   @override
   String get homeOffline => 'Offline';
@@ -3588,41 +3614,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Empat angka atau lebih, apa saja yang bisa kamu ingat';
 
   @override
-  String get modesOnion => 'Onion';
-
-  @override
-  String get modesFullOnionRoutingThree =>
-      'Perutean onion penuh, tiga lompatan. Satu pesan butuh dua sampai lima detik. Tidak ada yang melihat dengan siapa kamu bicara.';
-
-  @override
-  String get modesSlower => 'Lebih lambat';
-
-  @override
-  String get modesRelay => 'Relay';
-
-  @override
-  String get modesOneSealedConnectionTo =>
-      'Satu koneksi tersegel ke relay milik Kryfo, seperti vpn yang tidak punya apa-apa untuk dicatat. Kiriman sampai dalam sekitar satu detik, dan tetap jalan di tempat Tor diblokir.';
-
-  @override
-  String get modesQuick => 'Cepat';
-
-  @override
-  String get modesRelayOnly => 'Hanya relay';
-
-  @override
   String get modesFast => 'Cepat';
-
-  @override
-  String get modesPlainConnectionsToEvery =>
-      'Koneksi biasa ke setiap relay. Hampir seketika, dan paling tidak privat di antara ketiganya.';
-
-  @override
-  String get modesInstant => 'Seketika';
-
-  @override
-  String get modesEveryRelayYouUse =>
-      'Setiap relay yang kamu pakai tahu alamat asal koneksimu, bukan hanya relay kami. Pesan tetap tersegel, tapi fakta bahwa kamu mengirimnya tidak. Mati secara bawaan, dan mati lagi setelah instal ulang.';
 
   @override
   String get modesNotChanged => 'Mode tidak berubah. Coba lagi.';
@@ -3635,52 +3627,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get modesPrivacy => '& privasi';
-
-  @override
-  String get modesChangeGloballyOrPer => 'Ubah untuk semua, atau per obrolan';
-
-  @override
-  String get modesSoon => 'Segera';
-
-  @override
-  String get modesActive => 'Aktif';
-
-  @override
-  String get modesSpeed2 => 'KECEPATAN';
-
-  @override
-  String get modesHops => 'LOMPATAN';
-
-  @override
-  String get modesIp => 'IP';
-
-  @override
-  String get modesVisible => 'Terlihat';
-
-  @override
-  String get modesHidden => 'Tersembunyi';
-
-  @override
-  String modesHeadsUp(Object warning) {
-    return '*Perhatian:* $warning';
-  }
-
-  @override
-  String get modesOnionIsTheDefault =>
-      'Onion adalah bawaan dan tetap begitu kecuali kamu mengubahnya. Perubahan berlaku mulai pesan berikutnya.';
-
-  @override
-  String get modesFastMode => 'Mode cepat';
-
-  @override
-  String get modesPlainConnectionsToEveryRelayQuicker =>
-      'Koneksi biasa ke setiap relay. Lebih cepat, dan relay-relay itu bisa melihat alamat IP-mu. Apa pun modenya, pesan tetap terenkripsi ujung ke ujung.';
-
-  @override
-  String get modesTurnOnFastMode => 'Nyalakan mode cepat';
-
-  @override
-  String get modesKeepItOff => 'Biarkan mati';
 
   @override
   String get movedWipeThisPhone => 'Hapus total Kryfo dari ponsel ini?';
@@ -3737,11 +3683,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get myKryfoInviteCopiedClearsIn =>
       'Undangan disalin · dihapus dalam 60 dtk';
-
-  @override
-  String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Tambahkan aku di Kryfo. Namaku di sana $myId\n\nKetuk untuk menambahkanku:\n$uri\n\nKryfo adalah aplikasi pesan privat. Tanpa nomor telepon, tanpa email.';
-  }
 
   @override
   String get myKryfoAddMeOnKryfo2 => 'Tambahkan aku di Kryfo';
@@ -4075,103 +4016,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get onboardingThreeWords => 'Tiga kata. *Hanya milikmu.*';
 
   @override
-  String get onboardingPickA => 'Pilih *wajah*.';
-
-  @override
-  String get onboardingDrawnOnThisPhone =>
-      'Digambar di ponsel ini dari sebuah angka, tidak pernah diunggah. Ganti kapan saja kamu mau.';
-
-  @override
-  String get onboardingThePeopleYouMessage =>
-      'Orang yang kamu kirimi pesan juga melihat ini';
-
-  @override
-  String get onboardingKeepMyInitial => 'Tetap pakai inisialku';
-
-  @override
-  String get onboardingThatOne => 'Yang itu →';
-
-  @override
   String get onboardingContinue => 'Lanjut →';
-
-  @override
-  String get onboardingHowYourMessages => 'Cara pesanmu *berjalan*.';
-
-  @override
-  String get onboardingYouCanChangeThis =>
-      'Kamu bisa mengubahnya kapan saja di pengaturan, untuk semua atau untuk satu obrolan.';
-
-  @override
-  String get onboardingOnion => 'Onion';
-
-  @override
-  String get onboardingSlowerAMessageTakes =>
-      'Lebih lambat. Satu pesan butuh dua sampai lima detik.';
-
-  @override
-  String get onboardingHidesYourAddressFrom =>
-      'Menyembunyikan alamatmu dari semua orang, termasuk relay kami.';
-
-  @override
-  String get onboardingRelay => 'Relay';
-
-  @override
-  String get onboardingOurRelaySeesYour =>
-      'Relay kami melihat alamatmu. Tidak ada pihak lain yang melihatnya.';
-
-  @override
-  String get onboardingAboutASecondWorks =>
-      'Sekitar satu detik. Tetap jalan di tempat Tor diblokir.';
-
-  @override
-  String get onboardingAutoFindsAWay =>
-      'Otomatis mencari sendiri jalan melewati blokir.';
-
-  @override
-  String get onboardingFast => 'Cepat';
-
-  @override
-  String get onboardingEveryRelayYouUse =>
-      'Setiap relay yang kamu pakai melihat alamatmu. Paling tidak privat di antara ketiganya.';
-
-  @override
-  String get onboardingNearInstant => 'Hampir seketika.';
-
-  @override
-  String get onboardingKeepOnion => 'Tetap onion →';
-
-  @override
-  String get onboardingUseThis => 'Pakai ini →';
-
-  @override
-  String get onboardingSkipOnionIsA =>
-      'Lewati · onion sudah pilihan bawaan yang baik';
-
-  @override
-  String get onboardingThreeThingsThen => 'Tiga hal,\nlalu *kamu masuk*.';
-
-  @override
-  String get onboardingEverythingElseTheApp =>
-      'Hal lain akan diberi tahu aplikasi saat dibutuhkan.';
-
-  @override
-  String get onboardingYourNameIsThreeWords => 'Namamu tiga kata';
-
-  @override
-  String get onboardingThatIsTheWhole =>
-      'Itulah seluruh identitasmu. Tidak ada nomor atau email yang bisa bocor atau dicari. Orang yang kamu ajak bicara melihat kata-kata ini dan wajah yang kamu pilih.';
-
-  @override
-  String get onboardingNobodyCanReachYou =>
-      'Tidak ada yang bisa menghubungimu sampai kamu mengizinkannya masuk';
-
-  @override
-  String get onboardingAStrangerWithYour =>
-      'Orang asing yang tahu kata-katamu hanya bisa mengetuk. Pesan pertamanya menunggu di permintaan sampai kamu bilang ya, dan kamu bisa menolak tanpa dia pernah tahu.';
-
-  @override
-  String get onboardingTheFirstConnectionTakesAMinute =>
-      'Koneksi pertama butuh satu menit';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -4180,9 +4025,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get onboardingYourIdentityLivesOn =>
       'Identitasmu tinggal di ponsel ini. Cadangkan dari pengaturan saat kamu siap.';
-
-  @override
-  String get onboardingIUnderstand => 'Aku mengerti →';
 
   @override
   String get onboardingOneQuiet => 'Satu *notifikasi* senyap.';
@@ -4203,13 +4045,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get onboardingGotIt => 'Mengerti →';
 
   @override
-  String get onboardingNow => 'Sekarang, *tambah orang*.';
-
-  @override
-  String get onboardingTheAppIsReady =>
-      'Aplikasi sudah siap. Tidak ada yang bisa mengirimimu pesan sampai kamu menambahkan atau mengizinkannya masuk.';
-
-  @override
   String get onboardingEveryWayToAdd => 'Semua cara menambah orang';
 
   @override
@@ -4221,10 +4056,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get onboardingPointTheCameraAt => 'Arahkan kamera ke kodenya';
-
-  @override
-  String get onboardingTheAppIsReadyWhenYou =>
-      'Aplikasi siap kapan pun kamu siap.';
 
   @override
   String get onboardingNotNowAddPeople =>
@@ -4465,9 +4296,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get profileProfile => 'Profil';
-
-  @override
-  String get profileChangeYourFace => 'Ganti wajahmu';
 
   @override
   String get profileKryfoId => 'Namamu';
@@ -5102,16 +4930,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get seenYourIpAddress => 'Alamat IP-mu';
 
   @override
-  String get seenOurRelay => 'Relay kami';
-
-  @override
-  String get seenEveryRelay => 'Setiap relay';
-
-  @override
-  String get seenOnOnionEverythingLeaves =>
-      'Di mode onion semuanya keluar lewat Tor dan relay hanya melihat exit node, tidak pernah kamu. Di mode relay koneksinya langsung ke relay milik kami: tidak ada yang meneruskan alamatmu dan tidak ada yang dicatat, tapi koneksi yang satu itu bisa kami lihat. Di mode cepat setiap relay publik tahu bahwa kamu terhubung, tapi tidak tahu ke siapa atau apa yang kamu katakan.';
-
-  @override
   String get seenYourContactGraph => 'Jaringan kontakmu';
 
   @override
@@ -5167,12 +4985,6 @@ class AppLocalizationsId extends AppLocalizations {
       'Lapisan ratchet dan penyimpanan memakai standar. Lapisan yang menyatukannya buatan kami dan belum ada pihak independen yang memeriksanya. Ini perangkat lunak versi alfa.';
 
   @override
-  String get seenOnion => 'Onion';
-
-  @override
-  String get seenRelay => 'Relay';
-
-  @override
   String get seenFast => 'Cepat';
 
   @override
@@ -5207,9 +5019,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsTorRouting => 'Perutean Tor';
 
   @override
-  String get settingsOffMode => 'Mati · mode relay';
-
-  @override
   String get settingsOffFastMode => 'Mati · mode cepat';
 
   @override
@@ -5223,9 +5032,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsFast => 'Cepat';
-
-  @override
-  String get settingsRelay1Hop => 'Relay · 1 lompatan';
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 lompatan';
@@ -5268,6 +5074,23 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get settingsScamShieldHint =>
       'Diperiksa hanya di ponselmu, tidak ada yang keluar darinya';
+
+  @override
+  String get typingNow => 'Mengetik';
+
+  @override
+  String get settingsTypingIndicator => 'Indikator mengetik';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'Kalian berdua melihat saat yang lain sedang mengetik. Sinyalnya langsung ke dia lewat Tor, tidak pernah melalui relay.';
+
+  @override
+  String get settingsTypingOnionOnly => 'Tersedia di rute Onion';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      'Mati selama jembatan dipakai: orang yang mengawasi koneksimu bisa mencocokkan sinyal mengetik. Menyala lagi sendiri saat jembatan dimatikan.';
 
   @override
   String get settingsLightTheme => 'Tema terang';
@@ -5875,8 +5698,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get whyKryfoNothingLeaks => 'Tidak ada yang bocor';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'Tidak ada tanda dibaca atau tanda mengetik yang diserahkan ke siapa pun, tidak ada daftar kontak yang diunggah. Metadata adalah hal yang dibocorkan kebanyakan aplikasi. Kryfo dibuat agar tidak membocorkannya.';
+  String get whyKryfoNoReceiptsTyping =>
+      'Tanpa tanda dibaca, tanpa mengunggah daftar kontak. Bahwa kamu sedang mengetik hanya terlihat oleh orang yang kamu ajak bicara, langsung lewat Tor, tidak pernah melalui server. Kebanyakan aplikasi membocorkan metadata. Kryfo dibuat agar tidak begitu.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Pastikan itu benar-benar dia';
@@ -7244,10 +7067,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesTheTorProjectSGuess => 'Tebakan Tor Project';
 
   @override
-  String get bridgesOurRelayUsuallyGets =>
-      'Relay kami cukup satu koneksi biasa dan biasanya tembus. Atau biarkan Kryfo mencari cara sendiri.';
-
-  @override
   String get bridgesUseThisBridge => 'Pakai jembatan ini';
 
   @override
@@ -7433,6 +7252,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get languageNameAr => 'Arab';
+
+  @override
+  String get languageNameHi => 'Bahasa Hindi';
 
   @override
   String get languageLaterLine =>
@@ -8211,6 +8033,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get devWhoChoiceStays => 'Pilihanmu melekat pada obrolan ini.';
 
   @override
+  String get devUpdateToWrite =>
+      'Perbarui Kryfo untuk mengirim pesan ke Marios.';
+
+  @override
   String get devKeyCheckFailed =>
       'Tidak bisa memeriksa kunci Marios. Tidak ada yang terkirim.';
 
@@ -8273,6 +8099,11 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'Ini undanganmu sendiri. Bagikan ke orang lain untuk terhubung.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id perlu memperbarui Kryfo sebelum kalian bisa saling menambahkan.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -9061,15 +8892,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bridgesRelayWorksWhereTor =>
-      'Mode relay tetap jalan saat Tor diblokir, dan kamu bisa kembali kapan saja.';
+      'Cepat bisa dipakai di tempat Tor diblokir, dan kamu bisa kembali kapan saja.';
 
   @override
   String get bridgesRelayThisNetworkSees =>
-      'Mode relay bisa tembus saat Tor diblokir, tapi jaringan ini bisa melihat kamu terhubung ke Kryfo.';
-
-  @override
-  String get onboardingRelayThisNetworkSees =>
-      'Jaringan ini bisa melihat kamu terhubung ke Kryfo. Relay kami melihat alamatmu.';
+      'Cepat bisa tembus di tempat Tor diblokir, tapi jaringan ini bisa melihat kamu terhubung ke Kryfo.';
 
   @override
   String get settingsLicences => 'Lisensi';
@@ -9132,9 +8959,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Salin tautan';
-
-  @override
-  String get appRelayNotAnswering => 'Relay diam';
 
   @override
   String get motionNoRelayYet => 'BELUM ADA RELAY';
@@ -9487,4 +9311,741 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get keyLineScreenLock =>
       'Pasang kunci layar di ponselmu supaya perlindungan ini tetap berlaku saat ponsel terkunci.';
+
+  @override
+  String get fileServerTryLater =>
+      'Server file sedang penuh. Coba lagi sebentar lagi.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'File ini berukuran $size. Di chat ini ukuran file maksimal $max sampai semua orang memperbarui Kryfo.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'Hari ini kamu sudah mengirim banyak file besar. Coba lagi besok.';
+
+  @override
+  String get mediaProgressPreparing => 'Menyiapkan · biarkan aplikasi terbuka';
+
+  @override
+  String get groupShotsBlocksAll =>
+      'Memblokir tangkapan layar dan rekaman layar di setiap ponsel dalam grup ini, juga menyalin, meneruskan, atau menyimpan pesan satu sama lain. Ini tidak bisa mencegah aplikasi yang diizinkan membaca layar, atau ponsel maupun aplikasi yang diubah untuk mengakalinya.';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'Menunggu semua orang di sini memperbarui Kryfo';
+
+  @override
+  String get groupShotsOnForAll => 'Menyala untuk semua orang di sini';
+
+  @override
+  String get groupShotsOffAdminOnly =>
+      'Mati. Hanya admin yang bisa mengubahnya';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'Menunggu semua orang di sini memperbarui Kryfo. Hanya admin yang bisa mengubahnya';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'Menyala untuk semua orang di sini. Hanya admin yang bisa mengubahnya';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Menunggu $countString orang',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'Belum memperbarui';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'Blokir tangkapan layar berlaku untuk semua orang setelah mereka memperbarui Kryfo. Ketuk seseorang untuk mengeluarkannya dari grup.';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'Perlu memperbarui Kryfo, atau belum online sejak itu';
+
+  @override
+  String get groupShotsBlockedByYou => 'Kamu blokir';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'Kamu menyalakan blokir tangkapan layar. Ini berlaku untuk semua orang setelah semua di sini memperbarui Kryfo.';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name menyalakan blokir tangkapan layar. Ini berlaku untuk semua orang setelah semua di sini memperbarui Kryfo.';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'Blokir tangkapan layar menyala untuk semua orang di sini. Menyalin, meneruskan, dan menyimpan pesan satu sama lain juga mati.';
+
+  @override
+  String get groupShotsPaused =>
+      'Seseorang di sini belum bisa memblokir tangkapan layar. Ini berlaku lagi untuk semua orang setelah dia memperbarui Kryfo.';
+
+  @override
+  String get groupShotsCantYet => 'Belum bisa memblokir tangkapan layar';
+
+  @override
+  String get groupShotsAddTitle => 'Tetap tambahkan?';
+
+  @override
+  String get groupShotsAddPauses =>
+      'Blokir tangkapan layar tidak berlaku untuk semua orang di sini sampai dia memperbarui Kryfo.';
+
+  @override
+  String get groupShotsLeaveStays =>
+      'Blokir tangkapan layar tetap seperti sekarang.';
+
+  @override
+  String get groupShotsBlockedHere =>
+      'Kryfo memblokir tangkapan layar di grup ini';
+
+  @override
+  String get groupShotsMenuNote =>
+      'Menyalin, meneruskan, dan menyimpan pesan orang lain mati di grup ini';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'Membuka file orang lain di aplikasi lain mati di grup ini';
+
+  @override
+  String get groupShotsOldNotice =>
+      'Aku menyalakan blokir tangkapan layar di grup ini. Kryfo-mu belum bisa melakukannya, jadi tolong perbarui.';
+
+  @override
+  String get captureShotTaken =>
+      'Tangkapan layar diambil. Tidak ada orang lain yang diberi tahu.';
+
+  @override
+  String get captureRecording =>
+      'Layar ini sedang direkam. Tidak ada orang lain yang diberi tahu.';
+
+  @override
+  String get settingsDevices => 'Perangkat';
+
+  @override
+  String get devicesLinkedDevices => 'Perangkat tertaut';
+
+  @override
+  String get devicesThisPhoneOnly => 'Hanya ponsel ini';
+
+  @override
+  String get devicesNameSeparator => ', ';
+
+  @override
+  String get devicesThisPhone => 'Ponsel ini';
+
+  @override
+  String get devicesOnlyThisPhone =>
+      'Hanya ponsel ini yang bisa menautkan atau menghapus perangkat';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return 'Ditautkan $date';
+  }
+
+  @override
+  String get devicesUsedToday => 'Dipakai hari ini';
+
+  @override
+  String get devicesUsedThisWeek => 'Dipakai minggu ini';
+
+  @override
+  String get devicesUsedThisMonth => 'Dipakai bulan ini';
+
+  @override
+  String get devicesNotUsedYet => 'Belum dipakai';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Terlepas dalam $daysString hari jika tidak kamu buka',
+      one: 'Terlepas besok jika tidak kamu buka',
+      zero: 'Terlepas hari ini jika tidak kamu buka',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => 'Kryfo di komputermu';
+
+  @override
+  String get devicesEmptyLine =>
+      'Tautkan komputer untuk membaca dan mengirim pesanmu dari sana. Hingga lima perangkat selain ponsel ini.';
+
+  @override
+  String get devicesContactsSeeNothing =>
+      'Aplikasi kontakmu tidak menampilkan perangkatmu.';
+
+  @override
+  String get devicesUnusedRule =>
+      'Perangkat yang tidak kamu buka selama 30 hari akan terlepas sendiri dan menghapus obrolanmu darinya.';
+
+  @override
+  String get devicesFull =>
+      'Lima perangkat sudah tertaut. Hapus satu untuk menautkan yang lain.';
+
+  @override
+  String get devicesLinkADevice => 'Tautkan perangkat';
+
+  @override
+  String get devicesRemoveAll => 'Hapus semua perangkat lain';
+
+  @override
+  String get devicesRemoveAllTitle => 'Hapus semua perangkat lain?';
+
+  @override
+  String get devicesRemoveAllLine =>
+      'Begitu aplikasi kontakmu menerima perubahannya, perangkat itu berhenti menerima pesan baru dan tidak bisa mengirim atas namamu. Ponsel ini menyimpan semuanya.';
+
+  @override
+  String get devicesRemoveAllYes => 'Hapus semua';
+
+  @override
+  String get devicesRemovedAll => 'Sekarang hanya ponsel ini';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return 'Hapus $name?';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      'Begitu aplikasi kontakmu menerima perubahannya, perangkat itu berhenti menerima pesan baru dan tidak bisa mengirim atas namamu. Obrolanmu terhapus darinya saat ia online lagi. Perangkat yang sudah diutak-atik orang bisa menyimpan apa yang sudah ada di dalamnya.';
+
+  @override
+  String get devicesRemove => 'Hapus';
+
+  @override
+  String devicesRemoved(Object name) {
+    return '$name dihapus';
+  }
+
+  @override
+  String get devicesRename => 'Ganti nama';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return 'Ganti nama $name';
+  }
+
+  @override
+  String get devicesRenameLine =>
+      'Hanya kamu yang melihat nama ini. Kontakmu tidak pernah melihatnya.';
+
+  @override
+  String get devicesNameComputer => 'Komputer';
+
+  @override
+  String get devicesDeviceCode => 'Kode perangkat';
+
+  @override
+  String get devicesDeviceCodeLine =>
+      'Kode yang sama muncul di perangkat itu sendiri, di Pengaturan.';
+
+  @override
+  String get devicesLinkStep1 =>
+      'Buka Kryfo di komputermu. Kryfo akan menampilkan kode.';
+
+  @override
+  String get devicesLinkStep2 => 'Pindai kodenya dengan ponsel ini.';
+
+  @override
+  String get devicesLinkStep3 =>
+      'Pastikan kedua layar menampilkan enam angka yang sama.';
+
+  @override
+  String get devicesHistory => 'Riwayat';
+
+  @override
+  String get devicesHistoryCopy => 'Salin obrolanku';
+
+  @override
+  String get devicesHistoryCopyHint =>
+      'Semua pesanmu, dengan foto dan video dari 30 hari terakhir.';
+
+  @override
+  String get devicesHistoryNone => 'Mulai tanpa riwayat';
+
+  @override
+  String get devicesHistoryNoneHint =>
+      'Hanya pesan baru yang sampai ke perangkat.';
+
+  @override
+  String get devicesSkipMedia => 'Lewati foto dan video';
+
+  @override
+  String get devicesSkipMediaHint =>
+      'Hanya teksnya yang disalin. Lebih cepat, dan lebih sedikit yang disimpan di perangkat.';
+
+  @override
+  String get devicesHiddenStay =>
+      'Obrolan tersembunyi dan umpan tetap di ponsel ini.';
+
+  @override
+  String get devicesScanCode => 'Pindai kode';
+
+  @override
+  String get desktopLockTitle => 'Kryfo terkunci';
+
+  @override
+  String get desktopLockBody => 'Ketik frasa sandi untuk komputer ini.';
+
+  @override
+  String get desktopLockNewTitle => 'Kunci Kryfo di komputer ini';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo akan meminta frasa sandi ini setiap kali dibuka. Frasa ini mengunci pesan, foto, pesan suara, file, kontak, dan kuncimu di komputer ini.';
+
+  @override
+  String get desktopLockHonest =>
+      'Siapa pun yang menyalin folder Kryfo bisa mencoba frasa sandi di komputernya sendiri, secepat komputer itu mampu. Empat kata acak atau lebih akan bertahan. Frasa sandi yang pendek tidak.';
+
+  @override
+  String get desktopLockForgot =>
+      'Tanpa frasa sandi, tidak ada pesan, file, atau kuncimu di sini yang bisa dibuka, bahkan oleh kami.';
+
+  @override
+  String get desktopLockField => 'Frasa sandi';
+
+  @override
+  String get desktopLockRepeat => 'Frasa sandi yang sama sekali lagi';
+
+  @override
+  String get desktopLockSet => 'Kunci dengan frasa sandi ini';
+
+  @override
+  String get desktopLockOpen => 'Buka Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Minimal $countString karakter';
+  }
+
+  @override
+  String get desktopLockMismatch => 'Kedua frasa sandi tidak sama';
+
+  @override
+  String get desktopLockWrong => 'Itu bukan frasa sandinya';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo tidak bisa membuka kuncinya di sini. Coba buka lagi.';
+
+  @override
+  String get desktopTrayQuit => 'Keluar dari Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo berjalan dan menerima pesan';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo belum bisa memakai kamera di komputer ini. Pakai tautan atau kodenya saja.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo sudah terbuka di komputer ini.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'Folder Kryfo milik akun lain di komputer ini, jadi Kryfo tidak akan membukanya.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo tidak bisa membuat foldernya hanya untukmu, jadi tidak akan dibuka.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Kunci ini dibuat oleh versi Kryfo lain yang tidak bisa dibaca versi ini.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo butuh folder pribadi di memori selama berjalan, dan komputer ini tidak menyediakannya, jadi Kryfo tidak akan dibuka.';
+
+  @override
+  String get inviteNotYet =>
+      'Undangan ini belum berlaku. Periksa jam di ponselmu.';
+
+  @override
+  String get inviteExpired =>
+      'Undangan ini sudah kedaluwarsa. Minta yang baru.';
+
+  @override
+  String get inviteDamaged => 'Undangan ini rusak. Minta yang baru.';
+
+  @override
+  String get helloSent =>
+      'Permintaan terkirim. Mereka akan melihatnya saat online.';
+
+  @override
+  String get inviteNeeds06 => 'Perlu Kryfo 0.6 atau yang lebih baru.';
+
+  @override
+  String get helloSentOld =>
+      'Permintaan terkirim. Jika mereka memakai Kryfo versi lama, mereka perlu memperbarui dulu.';
+
+  @override
+  String get modesPickHow =>
+      'Pilih cara pesanmu dikirim. Kamu bisa mengubahnya kapan saja.';
+
+  @override
+  String get modesPrivate => 'Privat';
+
+  @override
+  String get modesPrivateTag => 'Tor · bridge bila perlu';
+
+  @override
+  String get modesPrivateLine =>
+      'Tak ada yang tahu alamat IP-mu atau siapa kamu, bahkan server kami. Mencari jalan sendiri melewati blokir.';
+
+  @override
+  String get modesDefault => 'Bawaan';
+
+  @override
+  String get modesFastTag => 'Langsung ke server kami';
+
+  @override
+  String get modesFastLine =>
+      'Melewati Tor, jadi pesan sampai lebih cepat dan lebih hemat baterai. Server kami melihat alamat IP-mu hanya selama kamu terhubung, dan tidak pernah mencatat atau menyimpannya. Tidak pernah isi pesanmu. Kontakmu tidak pernah melihatnya.';
+
+  @override
+  String get modesFastConnected => 'Cepat · terhubung';
+
+  @override
+  String get modesFastConnecting => 'Cepat · menghubungkan';
+
+  @override
+  String get modesFastDown => 'Cepat · server kami tidak menjawab';
+
+  @override
+  String get modesBackupReady =>
+      'Cadangan selalu siap, jadi kamu tetap terhubung walau satu mati.';
+
+  @override
+  String get modesDetails => 'Detail';
+
+  @override
+  String get modesBothLine =>
+      'Keduanya mengenkripsi setiap pesan secara end-to-end. Yang berbeda hanya siapa yang bisa melihat alamat IP-mu.';
+
+  @override
+  String get modesConnectionBridges => 'Koneksi dan bridge';
+
+  @override
+  String get modesWhatServersSee => 'Apa yang bisa dilihat server kami';
+
+  @override
+  String get serversTitle => 'Server Cepat';
+
+  @override
+  String get serversLine =>
+      'Setiap pesan dikirim ke kedua server sekaligus. Yang menjawab duluan membawanya, dan yang lain mengambil alih jika satu berhenti.';
+
+  @override
+  String get serversOne => 'Server 1';
+
+  @override
+  String get serversTwo => 'Server 2 · penyedia kedua';
+
+  @override
+  String get serversConnected => 'Terhubung';
+
+  @override
+  String get serversConnecting => 'Menghubungkan';
+
+  @override
+  String get serversNotAnswering => 'Tidak menjawab';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms md';
+  }
+
+  @override
+  String get serversQuicker => 'Lebih cepat';
+
+  @override
+  String get serversBackups => 'Relay publik';
+
+  @override
+  String get serversBackupsLine =>
+      'Dipakai selama Server 1 mati, dan hanya lewat Tor, jadi mereka tidak pernah melihat alamat IP-mu.';
+
+  @override
+  String get serversStandingBy => 'Siaga';
+
+  @override
+  String get serversInUse => 'Dipakai';
+
+  @override
+  String get homeMergedTitle => 'Relay dan Cepat kini jadi satu';
+
+  @override
+  String get homeMergedLine =>
+      'Kamu memakai Cepat. Server cadangan selalu siap, jadi kamu tetap terhubung walau satu mati. Server kami melihat alamat IP-mu, tidak pernah isi pesanmu.';
+
+  @override
+  String get homeMergedGotIt => 'Mengerti';
+
+  @override
+  String get homeMergedUsePrivate => 'Pakai Privat saja';
+
+  @override
+  String get homeOursDownTitle => 'Server kami tidak menjawab';
+
+  @override
+  String get homeOursDownLine =>
+      'Setelah beberapa menit, saat Tor tembus, pesan juga lewat relay publik, dan kembali lewat server kami begitu salah satunya menjawab.';
+
+  @override
+  String get homeUsePrivate => 'Pakai Privat';
+
+  @override
+  String get homeSwitchedToPrivate => 'Pindah ke Privat';
+
+  @override
+  String get homeUseFast => 'Pakai Cepat';
+
+  @override
+  String get homeSwitchedToFastRoute => 'Pindah ke Cepat';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'Cepat langsung ke server kami dan biasanya tembus. Atau biarkan Kryfo mencari cara sendiri.';
+
+  @override
+  String get appServersNotAnswering => 'Server tidak menjawab';
+
+  @override
+  String get settingsPrivateTor => 'Privat · Tor';
+
+  @override
+  String get seenOurServers => 'Server kami';
+
+  @override
+  String get seenIpWhy =>
+      'Di Privat semuanya keluar lewat Tor dan server kami melihat node keluar, bukan kamu. Di Cepat koneksi langsung ke dua server kami: mereka melihat alamat IP-mu selama terhubung dan tidak menyimpan catatannya. Selama server pertama mati, Cepat juga memakai relay publik, hanya lewat Tor.';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'Album ini akan dihapus dari kedua ponsel, kecuali sudah disimpan. Ini tidak bisa dibatalkan.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'Album ini akan dihapus dari ponsel semua orang, kecuali sudah disimpan. Ini tidak bisa dibatalkan.';
+
+  @override
+  String get homeInviteSomeone => 'Undang seseorang';
+
+  @override
+  String get onboardingNameHeadline => 'Sebuah *@nama* publik, kalau mau.';
+
+  @override
+  String get onboardingNameLine =>
+      'Nama publik membuat orang bisa menemukanmu. Melewatinya membuatmu lebih privat, kamu selalu bisa menambahkannya nanti.';
+
+  @override
+  String get onboardingNameSkip => 'Lewati dulu →';
+
+  @override
+  String onboardingNameClaim(Object handle) {
+    return 'Ambil @$handle →';
+  }
+
+  @override
+  String get onboardingInviteHeadline => 'Sekarang, *undang seseorang*.';
+
+  @override
+  String get onboardingInviteLead =>
+      'Kirim tautan lewat aplikasi pesan apa pun. Tautan itu membuka Kryfo, atau menunjukkan tempat mengunduhnya.';
+
+  @override
+  String get onboardingInviteSomeone => 'Undang seseorang →';
+
+  @override
+  String get onboardingInviteGettingReady => 'Menyiapkan tautanmu…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'Tambahkan aku di Kryfo. Namaku di sana $myId\n\nKetuk untuk menambahkanku:\n$link\n\nBelum punya Kryfo? Unduh di sini:\n$download\n\nKryfo adalah aplikasi pesan privat. Tanpa nomor telepon, tanpa email.';
+  }
+
+  @override
+  String get inviteNotReady => 'Tautanmu hampir siap. Coba lagi sebentar lagi.';
+
+  @override
+  String get photoCropTitle => 'Geser dan atur ukuran';
+
+  @override
+  String get photoCropUse => 'Pakai foto';
+
+  @override
+  String get photoCropLabel =>
+      'Fotomu di dalam lingkaran. Cubit untuk memperbesar, seret untuk menggeser';
+
+  @override
+  String get photoCouldNotUse => 'Coba foto lain. Foto ini tidak bisa dibaca.';
+
+  @override
+  String get photoTake => 'Ambil foto';
+
+  @override
+  String get photoChoose => 'Pilih dari galeri';
+
+  @override
+  String get photoPickFace => 'Pilih wajah';
+
+  @override
+  String get photoView => 'Lihat foto';
+
+  @override
+  String get photoRemove => 'Hapus foto';
+
+  @override
+  String get photoYourPhoto => 'Fotomu';
+
+  @override
+  String get photoYourPhotoLine =>
+      'Hanya kontakmu yang melihatnya, terenkripsi ujung ke ujung.';
+
+  @override
+  String get photoSetTheirs => 'Pasang foto';
+
+  @override
+  String get photoChangeTheirs => 'Ganti foto';
+
+  @override
+  String get photoOnlyHere => 'Hanya di ponsel ini';
+
+  @override
+  String photoForThem(Object name) {
+    return 'Foto untuk $name';
+  }
+
+  @override
+  String get photoOnlyHereLine =>
+      'Hanya kamu yang melihatnya. Tetap di ponsel ini.';
+
+  @override
+  String photoOf(Object name) {
+    return 'Foto $name';
+  }
+
+  @override
+  String get historyChatStaysShots =>
+      'Obrolan ini tetap di ponselmu karena tangkapan layar diblokir di sini.';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString angka',
+      zero: 'Belum ada angka',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString karakter',
+      zero: 'Belum ada karakter',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'Progres cadangan';
+
+  @override
+  String get a11yRestoreProgress => 'Progres pemulihan';
+
+  @override
+  String get a11yExportProgress => 'Progres ekspor';
+
+  @override
+  String get a11yLockFileProgress => 'Progres penguncian';
+
+  @override
+  String get a11yCleanProgress => 'Progres pembersihan';
+
+  @override
+  String get a11yMessageActions => 'Tindakan pesan';
+
+  @override
+  String get a11yRecordVoiceNote => 'Rekam pesan suara';
+
+  @override
+  String get a11yRecording => 'Merekam';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'Foto, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return 'Foto dari $name, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'Video, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return 'Video dari $name, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString pesan baru',
+      one: 'Pesan baru',
+    );
+    return '$_temp0';
+  }
 }

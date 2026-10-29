@@ -13,6 +13,7 @@ import '../main.dart'
         AppStateProfile,
         AppStateDelivery,
         AppStateScreen,
+        AppStateTyping,
         AppStateBridges,
         AppStateSession,
         AppStateDevchat,
@@ -21,6 +22,7 @@ import '../link_view.dart';
 import '../lock_state.dart';
 import '../intro_prefs.dart';
 import '../scam_prefs.dart';
+import '../typing.dart' show loadTypingOn;
 import '../gifs/gif_opt_in.dart' show showGifOptInSheet;
 import '../gifs/gif_source.dart' show loadGifSearchOn, saveGifSearchOn;
 import '../widgets/press_scale.dart';
@@ -52,6 +54,8 @@ import '../widgets/halo_rows.dart';
 import '../widgets/dev_avatar.dart' show DevRing;
 import 'dev_about_sheet.dart' show devChatOffered, writeToMarios;
 import 'follow_section.dart';
+import 'linked_devices_screen.dart';
+import '../devices/own_devices.dart' show kLinkedDevicesOn;
 import '../widgets/stagger_in.dart';
 import '../widgets/unfold.dart';
 import '../widgets/confirm_sheet.dart';
@@ -348,6 +352,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool? _disguise;
   bool? _acceptIntros;
   bool? _shieldOn;
+  bool? _typingOn;
   bool? _gifOn;
   // only for copies from the site or github
   bool _updateOffered = false;
@@ -370,6 +375,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
     loadScamShieldOn(session.container).then((v) {
       if (mounted) setState(() => _shieldOn = v);
+    });
+    loadTypingOn(session.container).then((v) {
+      if (mounted) setState(() => _typingOn = v);
     });
     loadGifSearchOn(session.container).then((v) {
       if (mounted) setState(() => _gifOn = v);
@@ -441,11 +449,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 // be a promise nothing is trying to keep
                 final onTor = appState.sendMode == 'private';
                 final torOn = onTor && link.kind == LinkKind.ready;
-                // the app lock covers every screen, and so does the old
-                // switch until home's card about it is answered. without
-                // them each chat has its own switch
+                // the old switch covers every screen until home's card
+                // about it is answered, and so does a pin on android 12
+                // and older. otherwise each chat has its own switch
                 final shots =
-                    appState.screenSecureByLock || appState.shotsCardCovers;
+                    appState.shotsCardCovers || appState.pinBlocksShots;
                 // as the App lock screen reads it: a lock turned off in a
                 // decoy session is off
                 final lock = lockState.lockOn;
@@ -486,9 +494,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ? l10n.settingsConnected
                             : onTor
                             ? link.text
-                            : appState.sendMode == 'fast'
-                            ? l10n.settingsOffFastMode
-                            : l10n.settingsOffMode,
+                            // relay and fast are one route now
+                            : l10n.settingsOffFastMode,
                       ),
                       ProtectionLine(
                         l10n.settingsScreenshots,
@@ -538,11 +545,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               HaloRow(
                 icon: Icons.shield_outlined,
                 label: l10n.settingsSpeedPrivacy,
-                value: appState.sendMode == 'fast'
-                    ? l10n.settingsFast
-                    : appState.sendMode == 'balanced'
-                    ? l10n.settingsRelay1Hop
-                    : l10n.settingsOnion3Hops,
+                value: appState.sendMode == 'private'
+                    ? l10n.settingsPrivateTor
+                    : l10n.settingsFast,
                 onTap: () async {
                   await Navigator.of(
                     context,
@@ -622,6 +627,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   await saveScamShieldOn(v, session.container);
                 },
               ),
+              // on by default, and mutual: with it off nothing goes and
+              // nothing shows. it works on the onion route alone. a decoy's
+              // flips like this one and does nothing
+              // while bridges carry tor it is off and says why, and comes
+              // back by itself after. a decoy shows nothing of the bridges
+              ListenableBuilder(
+                listenable: appState,
+                builder: (_, _) {
+                  final bridged =
+                      !appState.inDecoyView && appState.typingBridged;
+                  return HaloRow(
+                    icon: Icons.more_horiz_rounded,
+                    label: l10n.settingsTypingIndicator,
+                    hint: l10n.settingsTypingIndicatorHint,
+                    note: appState.sendMode != 'private'
+                        ? l10n.settingsTypingOnionOnly
+                        : bridged
+                        ? l10n.settingsTypingBridgesOff
+                        : null,
+                    toggled: (_typingOn ?? true) && !bridged,
+                    pending: _typingOn == null,
+                    onTap: bridged
+                        ? null
+                        : () async {
+                            final v = !(_typingOn ?? true);
+                            setState(() => _typingOn = v);
+                            await appState.setTypingOn(v);
+                          },
+                  );
+                },
+              ),
               // off by default: turning it on says first what it does. each
               // identity has its own, and a quiet session's never searches
               HaloRow(
@@ -686,6 +722,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
+          if (kLinkedDevicesOn) ...[
+            HaloSection(l10n.settingsDevices),
+            HaloGroup(
+              children: [
+                HaloRow(
+                  icon: Icons.devices_rounded,
+                  label: l10n.devicesLinkedDevices,
+                  value: l10n.devicesThisPhoneOnly,
+                  onTap: () => Navigator.of(
+                    context,
+                  ).push(haloRoute(const LinkedDevicesScreen())),
+                ),
+              ],
+            ),
+          ],
           HaloSection(l10n.settingsAppearance),
           HaloGroup(
             children: [

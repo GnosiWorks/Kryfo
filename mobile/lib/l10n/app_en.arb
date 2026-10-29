@@ -816,20 +816,12 @@
   "@appTorNoRelayYet": {
     "description": "app/gates.dart"
   },
-  "appRelayAndFastModes": "Relay and fast modes skip Tor and are quicker. They are in settings, under speed & privacy, and each says what it costs.",
+  "appRelayAndFastModes": "Fast skips Tor and is quicker. It is in settings, under speed & privacy, and says what it costs.",
   "@appRelayAndFastModes": {
-    "description": "app/gates.dart"
-  },
-  "appViaRelay": "Via relay",
-  "@appViaRelay": {
     "description": "app/gates.dart"
   },
   "appOffline": "Offline",
   "@appOffline": {
-    "description": "app/gates.dart"
-  },
-  "appFast": "Fast",
-  "@appFast": {
     "description": "app/gates.dart"
   },
   "appTorOff": "Tor off",
@@ -1540,7 +1532,7 @@
   "@cameraCouldNotSaveA": {
     "description": "screens/camera_screen.dart"
   },
-  "cameraTooLongForA": "Too long for a message · 15 MB max",
+  "cameraTooLongForA": "Too long for a message · 50 MB max",
   "@cameraTooLongForA": {
     "description": "screens/camera_screen.dart"
   },
@@ -1723,7 +1715,7 @@
   "@chatUnsendMessage": {
     "description": "screens/chat_screen.dart"
   },
-  "chatItDisappearsWithNo": "It's removed from both phones, unless it was already saved. This can't be undone.",
+  "chatItDisappearsWithNo": "It will be removed from both phones, unless it has already been saved. This can't be undone.",
   "@chatItDisappearsWithNo": {
     "description": "screens/chat_screen.dart"
   },
@@ -2139,10 +2131,6 @@
   },
   "chatSupporter": "Supporter",
   "@chatSupporter": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatEncryptedViaRelay": "Encrypted · via relay",
-  "@chatEncryptedViaRelay": {
     "description": "screens/chat_screen.dart"
   },
   "chatEncryptedDirect": "Encrypted · direct",
@@ -2866,6 +2854,51 @@
   "@donateBadgesStartAt20": {
     "description": "screens/donate_screen.dart"
   },
+  "donateShowTheAddress": "Show the address",
+  "@donateShowTheAddress": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateReviewAmount": "{amount} in bitcoin",
+  "@donateReviewAmount": {
+    "description": "screens/donate_screen.dart",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "donateWhatTheBadgeGives": "What the badge gives",
+  "@donateWhatTheBadgeGives": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateGivesMark": "A mark by your name. You choose who sees it, if anyone.",
+  "@donateGivesMark": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateGivesReceipt": "A signed receipt kept on this phone. It proves the badge with no account.",
+  "@donateGivesReceipt": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateGivesFree": "Every privacy feature stays free, badge or not.",
+  "@donateGivesFree": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateAddressOnTap": "The address is made when you tap below. It stays yours for an hour, so coming back gives you the same one.",
+  "@donateAddressOnTap": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateBitcoinBusy": "Bitcoin is busy right now. Try again later or pay by card.",
+  "@donateBitcoinBusy": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateBusyPlainAddress": "You can still send bitcoin to the address below. It gives no badge.",
+  "@donateBusyPlainAddress": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateSameAddressAgain": "This is the address you opened earlier. If you already sent, wait here.",
+  "@donateSameAddressAgain": {
+    "description": "screens/donate_screen.dart"
+  },
   "donateReachingThePaymentService": "Reaching the payment service over Tor…",
   "@donateReachingThePaymentService": {
     "description": "screens/donate_screen.dart"
@@ -2972,6 +3005,15 @@
   "donateVerifiedOnChainYou": "{tier, select, supporter{Verified on-chain. You're a supporter now. No one can take that off you.} patron{Verified on-chain. You're a patron now. No one can take that off you.} guardian{Verified on-chain. You're a guardian now. No one can take that off you.} other{Verified on-chain. You're a supporter now. No one can take that off you.}}",
   "@donateVerifiedOnChainYou": {
     "description": "screens/donate_screen.dart. tier is the supporter tier",
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "donateVerifiedBadgeStays": "{tier, select, supporter{Verified on-chain. Thank you for giving again. You keep your supporter badge.} patron{Verified on-chain. Thank you for giving again. You keep your patron badge.} guardian{Verified on-chain. Thank you for giving again. You keep your guardian badge.} other{Verified on-chain. Thank you for giving again. You keep your supporter badge.}}",
+  "@donateVerifiedBadgeStays": {
+    "description": "screens/donate_screen.dart",
     "placeholders": {
       "tier": {
         "type": "String"
@@ -3200,7 +3242,7 @@
   "@groupChatUnsendMessage": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupChatItDisappearsWithNo": "It's removed from everyone's phones, unless it was already saved. This can't be undone.",
+  "groupChatItDisappearsWithNo": "It will be removed from everyone's phones, unless it has already been saved. This can't be undone.",
   "@groupChatItDisappearsWithNo": {
     "description": "screens/group_chat_screen.dart"
   },
@@ -3823,32 +3865,8 @@
   "@homeLeaveThemOff": {
     "description": "screens/home_screen.dart"
   },
-  "homeOurRelayIsQuiet": "Our relay is quiet",
-  "@homeOurRelayIsQuiet": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeRelayModeUsesOnly": "Relay mode uses only our own relay, and it is not answering right now. Fast mode adds public relays alongside it, so messages still land. Everything stays sealed either way.",
-  "@homeRelayModeUsesOnly": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeSwitchedToFast": "Switched to fast",
-  "@homeSwitchedToFast": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeUseFastMode": "Use fast mode",
-  "@homeUseFastMode": {
-    "description": "screens/home_screen.dart"
-  },
   "homeKeepWaiting": "Keep waiting",
   "@homeKeepWaiting": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeSwitchedToRelay": "Switched to relay",
-  "@homeSwitchedToRelay": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeUseOurRelay": "Use our relay",
-  "@homeUseOurRelay": {
     "description": "screens/home_screen.dart"
   },
   "homeOffline": "Offline",
@@ -4479,48 +4497,8 @@
   "@lockSetupFourDigitsAnythingYou": {
     "description": "screens/lock_setup_screen.dart"
   },
-  "modesOnion": "Onion",
-  "@modesOnion": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesFullOnionRoutingThree": "Full onion routing, three hops. A message takes two to five seconds. Nobody sees who you talk to.",
-  "@modesFullOnionRoutingThree": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesSlower": "Slower",
-  "@modesSlower": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesRelay": "Relay",
-  "@modesRelay": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesOneSealedConnectionTo": "One sealed connection to Kryfo's own relay, like a vpn with nothing to log. Sends land in about a second, and it works where Tor is blocked.",
-  "@modesOneSealedConnectionTo": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesQuick": "Quick",
-  "@modesQuick": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesRelayOnly": "Relay only",
-  "@modesRelayOnly": {
-    "description": "screens/modes_screen.dart"
-  },
   "modesFast": "Fast",
   "@modesFast": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesPlainConnectionsToEvery": "Plain connections to every relay. Near instant, and the least private of the three.",
-  "@modesPlainConnectionsToEvery": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesInstant": "Instant",
-  "@modesInstant": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesEveryRelayYouUse": "Every relay you use knows the address you connect from, not only ours. Messages are still sealed, but the fact that you sent one is not. Off by default, and off again after a reinstall.",
-  "@modesEveryRelayYouUse": {
     "description": "screens/modes_screen.dart"
   },
   "modesNotChanged": "The mode didn't change. Try again.",
@@ -4537,67 +4515,6 @@
   },
   "modesPrivacy": "& privacy",
   "@modesPrivacy": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesChangeGloballyOrPer": "Change globally, or per chat",
-  "@modesChangeGloballyOrPer": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesSoon": "Soon",
-  "@modesSoon": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesActive": "Active",
-  "@modesActive": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesSpeed2": "SPEED",
-  "@modesSpeed2": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesHops": "HOPS",
-  "@modesHops": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesIp": "IP",
-  "@modesIp": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesVisible": "Visible",
-  "@modesVisible": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesHidden": "Hidden",
-  "@modesHidden": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesHeadsUp": "*Heads up:* {warning}",
-  "@modesHeadsUp": {
-    "description": "screens/modes_screen.dart",
-    "placeholders": {
-      "warning": {
-        "type": "Object"
-      }
-    }
-  },
-  "modesOnionIsTheDefault": "Onion is the default and stays that way unless you change it. Switching takes effect on the next message.",
-  "@modesOnionIsTheDefault": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesFastMode": "Fast mode",
-  "@modesFastMode": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesPlainConnectionsToEveryRelayQuicker": "Plain connections to every relay. Quicker, and the relays can see your ip address. Messages stay end to end encrypted either way.",
-  "@modesPlainConnectionsToEveryRelayQuicker": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesTurnOnFastMode": "Turn on fast mode",
-  "@modesTurnOnFastMode": {
-    "description": "screens/modes_screen.dart"
-  },
-  "modesKeepItOff": "Keep it off",
-  "@modesKeepItOff": {
     "description": "screens/modes_screen.dart"
   },
   "movedWipeThisPhone": "Wipe Kryfo from this phone?",
@@ -4673,18 +4590,6 @@
   "myKryfoInviteCopiedClearsIn": "Invite copied · clears in 60s",
   "@myKryfoInviteCopiedClearsIn": {
     "description": "screens/my_kryfo_screen.dart"
-  },
-  "myKryfoAddMeOnKryfo": "Add me on Kryfo. My name there is {myId}\n\nTap to add me:\n{uri}\n\nKryfo is a private messenger. No phone number, no email.",
-  "@myKryfoAddMeOnKryfo": {
-    "description": "screens/my_kryfo_screen.dart",
-    "placeholders": {
-      "myId": {
-        "type": "Object"
-      },
-      "uri": {
-        "type": "Object"
-      }
-    }
   },
   "myKryfoAddMeOnKryfo2": "Add me on Kryfo",
   "@myKryfoAddMeOnKryfo2": {
@@ -5071,116 +4976,8 @@
   "@onboardingThreeWords": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingPickA": "Pick a *face*.",
-  "@onboardingPickA": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingDrawnOnThisPhone": "Drawn on this phone from a number, never uploaded. Change it whenever you like.",
-  "@onboardingDrawnOnThisPhone": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingThePeopleYouMessage": "The people you message see this too",
-  "@onboardingThePeopleYouMessage": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingKeepMyInitial": "Keep my initial",
-  "@onboardingKeepMyInitial": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingThatOne": "That one →",
-  "@onboardingThatOne": {
-    "description": "screens/onboarding_screen.dart"
-  },
   "onboardingContinue": "Continue →",
   "@onboardingContinue": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingHowYourMessages": "How your messages *travel*.",
-  "@onboardingHowYourMessages": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingYouCanChangeThis": "You can change this any time in settings, for everyone or for one chat.",
-  "@onboardingYouCanChangeThis": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingOnion": "Onion",
-  "@onboardingOnion": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingSlowerAMessageTakes": "Slower. A message takes two to five seconds.",
-  "@onboardingSlowerAMessageTakes": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingHidesYourAddressFrom": "Hides your address from everyone, our relay included.",
-  "@onboardingHidesYourAddressFrom": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingRelay": "Relay",
-  "@onboardingRelay": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingOurRelaySeesYour": "Our relay sees your address. Nobody else does.",
-  "@onboardingOurRelaySeesYour": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingAboutASecondWorks": "About a second. Works where Tor is blocked.",
-  "onboardingAutoFindsAWay": "Automatic finds a way around the block by itself.",
-  "@onboardingAutoFindsAWay": {
-    "description": "screens/onboarding_screen.dart: on the Onion card when the person said Tor is blocked at the start"
-  },
-  "@onboardingAboutASecondWorks": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingFast": "Fast",
-  "@onboardingFast": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingEveryRelayYouUse": "Every relay you use sees your address. The least private of the three.",
-  "@onboardingEveryRelayYouUse": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingNearInstant": "Near instant.",
-  "@onboardingNearInstant": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingKeepOnion": "Keep onion →",
-  "@onboardingKeepOnion": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingUseThis": "Use this →",
-  "@onboardingUseThis": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingSkipOnionIsA": "Skip · onion is a fine default",
-  "@onboardingSkipOnionIsA": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingThreeThingsThen": "Three things,\nthen *you're in*.",
-  "@onboardingThreeThingsThen": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingEverythingElseTheApp": "Everything else the app will tell you when it matters.",
-  "@onboardingEverythingElseTheApp": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingYourNameIsThreeWords": "Your name is three words",
-  "@onboardingYourNameIsThreeWords": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingThatIsTheWhole": "That is the whole identity. There is no number or email to leak or look up. People you talk to see these words and the face you picked.",
-  "@onboardingThatIsTheWhole": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingNobodyCanReachYou": "Nobody can reach you until you let them in",
-  "@onboardingNobodyCanReachYou": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingAStrangerWithYour": "A stranger with your words can only knock. Their first message waits in requests until you say yes, and you can say no without them ever knowing.",
-  "@onboardingAStrangerWithYour": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingTheFirstConnectionTakesAMinute": "The first connection takes a minute",
-  "@onboardingTheFirstConnectionTakesAMinute": {
     "description": "screens/onboarding_screen.dart"
   },
   "onboardingKryfoBuildsAPrivateRouteBefore": "Kryfo builds a private route before it sends anything. While you are offline, messages wait and arrive when you are back.",
@@ -5189,10 +4986,6 @@
   },
   "onboardingYourIdentityLivesOn": "Your identity lives on this phone. Back it up from settings when you are ready.",
   "@onboardingYourIdentityLivesOn": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingIUnderstand": "I understand →",
-  "@onboardingIUnderstand": {
     "description": "screens/onboarding_screen.dart"
   },
   "onboardingOneQuiet": "One quiet *notification*.",
@@ -5215,14 +5008,6 @@
   "@onboardingGotIt": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingNow": "Now, *add someone*.",
-  "@onboardingNow": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingTheAppIsReady": "The app is ready. Nobody can message you until you add them or let them in.",
-  "@onboardingTheAppIsReady": {
-    "description": "screens/onboarding_screen.dart"
-  },
   "onboardingEveryWayToAdd": "Every way to add someone",
   "@onboardingEveryWayToAdd": {
     "description": "screens/onboarding_screen.dart"
@@ -5237,10 +5022,6 @@
   },
   "onboardingPointTheCameraAt": "Point the camera at their code",
   "@onboardingPointTheCameraAt": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingTheAppIsReadyWhenYou": "The app is ready when you are.",
-  "@onboardingTheAppIsReadyWhenYou": {
     "description": "screens/onboarding_screen.dart"
   },
   "onboardingNotNowAddPeople": "Not now · add people later",
@@ -5557,10 +5338,6 @@
   },
   "profileProfile": "Profile",
   "@profileProfile": {
-    "description": "screens/profile_screen.dart"
-  },
-  "profileChangeYourFace": "Change your face",
-  "@profileChangeYourFace": {
     "description": "screens/profile_screen.dart"
   },
   "profileKryfoId": "Your name",
@@ -6357,18 +6134,6 @@
   "@seenYourIpAddress": {
     "description": "screens/seen_screen.dart"
   },
-  "seenOurRelay": "Our relay",
-  "@seenOurRelay": {
-    "description": "screens/seen_screen.dart"
-  },
-  "seenEveryRelay": "Every relay",
-  "@seenEveryRelay": {
-    "description": "screens/seen_screen.dart"
-  },
-  "seenOnOnionEverythingLeaves": "On onion everything leaves through Tor and the relay sees an exit node, never you. On relay mode the connection goes straight to our own relay: nothing forwards your address and nothing is written down, but that one connection is ours to see. On fast every public relay learns that you connected, though not to whom or what you said.",
-  "@seenOnOnionEverythingLeaves": {
-    "description": "screens/seen_screen.dart"
-  },
   "seenYourContactGraph": "Your contact graph",
   "@seenYourContactGraph": {
     "description": "screens/seen_screen.dart"
@@ -6433,14 +6198,6 @@
   "@seenTheRatchetAndStorage": {
     "description": "screens/seen_screen.dart"
   },
-  "seenOnion": "Onion",
-  "@seenOnion": {
-    "description": "screens/seen_screen.dart"
-  },
-  "seenRelay": "Relay",
-  "@seenRelay": {
-    "description": "screens/seen_screen.dart"
-  },
   "seenFast": "Fast",
   "@seenFast": {
     "description": "screens/seen_screen.dart"
@@ -6486,10 +6243,6 @@
   "@settingsTorRouting": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsOffMode": "Off · relay mode",
-  "@settingsOffMode": {
-    "description": "screens/settings_screen.dart"
-  },
   "settingsOffFastMode": "Off · fast mode",
   "@settingsOffFastMode": {
     "description": "screens/settings_screen.dart"
@@ -6508,10 +6261,6 @@
   },
   "settingsFast": "Fast",
   "@settingsFast": {
-    "description": "screens/settings_screen.dart"
-  },
-  "settingsRelay1Hop": "Relay · 1 hop",
-  "@settingsRelay1Hop": {
     "description": "screens/settings_screen.dart"
   },
   "settingsOnion3Hops": "Onion · 3 hops",
@@ -6571,6 +6320,26 @@
   "settingsScamShieldHint": "Checked only on your phone, nothing leaves it",
   "@settingsScamShieldHint": {
     "description": "screens/settings_screen.dart: under the scam shield switch"
+  },
+  "typingNow": "Typing",
+  "@typingNow": {
+    "description": "screens/chat_screen.dart and home_screen.dart: under a contact's name and in their chat list row while they type, three dots follow it. one word, sentence case"
+  },
+  "settingsTypingIndicator": "Typing indicator",
+  "@settingsTypingIndicator": {
+    "description": "screens/settings_screen.dart: the typing indicator switch in privacy"
+  },
+  "settingsTypingIndicatorHint": "You both see when the other is typing. It goes straight to them over Tor, never through a relay.",
+  "@settingsTypingIndicatorHint": {
+    "description": "screens/settings_screen.dart: under the typing indicator switch"
+  },
+  "settingsTypingOnionOnly": "Available on the Onion route",
+  "@settingsTypingOnionOnly": {
+    "description": "screens/settings_screen.dart: under the typing indicator switch, dimmed, while the route is relay or fast. same words as gettingMessagesHelperOnionOnly"
+  },
+  "settingsTypingBridgesOff": "Off while bridges are in use: someone watching your connection could match the typing signals. It comes back by itself when bridges are off.",
+  "@settingsTypingBridgesOff": {
+    "description": "screens/settings_screen.dart: under the typing indicator switch, dimmed, while tor goes through a bridge. the switch shows off then"
   },
   "settingsLightTheme": "Light theme",
   "@settingsLightTheme": {
@@ -7373,8 +7142,8 @@
   "@whyKryfoNothingLeaks": {
     "description": "screens/why_kryfo_screen.dart"
   },
-  "whyKryfoNoReadReceiptsOr": "No read receipts or typing tells handed to anyone, no contact list uploaded. Most apps leak metadata. Kryfo is built not to.",
-  "@whyKryfoNoReadReceiptsOr": {
+  "whyKryfoNoReceiptsTyping": "No read receipts, no contact list uploaded. Typing shows only to the person you write to, straight over Tor, never through a server. Most apps leak metadata. Kryfo is built not to.",
+  "@whyKryfoNoReceiptsTyping": {
     "description": "screens/why_kryfo_screen.dart"
   },
   "whyKryfoVerifyItIsReally": "Verify it is really them",
@@ -8903,9 +8672,6 @@
   "@bridgesThisLineIsTooLong": {
     "description": "screens/bridges_screen.dart"
   },
-  "@bridgesOurRelayUsuallyGets": {
-    "description": "screens/bridges_screen.dart"
-  },
   "transportBridgeError": "Last error",
   "bridgesDirect": "Direct",
   "bridgesAskingTheTorProject": "Asking the Tor Project what works here…",
@@ -9182,7 +8948,6 @@
   "@bridgesNothingGotThrough": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesOurRelayUsuallyGets": "Our relay is one plain connection and usually gets through. Or let Kryfo find a way by itself.",
   "@bridgesSavedLines": {
     "description": "screens/bridges_screen.dart"
   },
@@ -9405,6 +9170,10 @@
   "languageNameAr": "Arabic",
   "@languageNameAr": {
     "description": "the name of Arabic in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
+  },
+  "languageNameHi": "Hindi",
+  "@languageNameHi": {
+    "description": "the name of Hindi in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
   },
   "languageLaterLine": "You can change this any time in settings.",
   "@languageLaterLine": {
@@ -10327,6 +10096,10 @@
   "@devWhoChoiceStays": {
     "description": "widgets/dev_note.dart: the last line of the sheet Who sees what: after the first message the choice is fixed"
   },
+  "devUpdateToWrite": "Update Kryfo to message Marios.",
+  "@devUpdateToWrite": {
+    "description": "screens/chat_screen.dart, dev chat: the card of Marios this app has built in is from before Kryfo 0.6 and has no post-quantum key, so no new chat with him can start; a later app has his new card. calm, not an error"
+  },
   "devKeyCheckFailed": "Could not check Marios's key. Nothing was sent.",
   "@devKeyCheckFailed": {
     "description": "screens/chat_screen.dart: above the composer of the developer chat when his pinned key did not check out"
@@ -10398,6 +10171,15 @@
   "appYourOwnInvite": "This is your own invite. Share it with someone else to connect.",
   "@appYourOwnInvite": {
     "description": "app/links.dart: a link, card or handle that is your own was added"
+  },
+  "appLinkNeedsUpdate": "{id} needs to update Kryfo before you can add each other.",
+  "@appLinkNeedsUpdate": {
+    "description": "app/links.dart, handleHaloUriAdded: a scanned or pasted card comes from a phone on Kryfo 0.5 or older, which has no post-quantum key; no chat can start until that person updates. id is their three words",
+    "placeholders": {
+      "id": {
+        "type": "Object"
+      }
+    }
   },
   "appLinkWordsTaken": "Someone here already goes by {id}, with a different key. Compare the safety number with them to know who is who. Nothing was added.",
   "@appLinkWordsTaken": {
@@ -10792,7 +10574,7 @@
   },
   "settingsPerChat": "Per chat",
   "@settingsPerChat": {
-    "description": "screens/settings_screen.dart: the screenshots line of your protections, without an app lock"
+    "description": "screens/settings_screen.dart: the screenshots line of your protections: each chat has its own switch, with an app lock too on android 13 and newer"
   },
   "homeShotsPerChat": "Screenshot blocking is now per chat.",
   "@homeShotsPerChat": {
@@ -11444,17 +11226,13 @@
   "@bridgesNoneUntilOnion": {
     "description": "screens/bridges_screen.dart: the \"In use\" value while relay or fast mode is on, where no bridge is used"
   },
-  "bridgesRelayWorksWhereTor": "Relay mode works where Tor is blocked, and you can switch back any time.",
+  "bridgesRelayWorksWhereTor": "Fast works where Tor is blocked, and you can switch back any time.",
   "@bridgesRelayWorksWhereTor": {
     "description": "bridge_mode.dart: the one line when automatic found no way in, over the button that switches to relay mode"
   },
-  "bridgesRelayThisNetworkSees": "Relay mode gets through where Tor is blocked, but this network can see you connect to Kryfo.",
+  "bridgesRelayThisNetworkSees": "Fast gets through where Tor is blocked, but this network can see you connect to Kryfo.",
   "@bridgesRelayThisNetworkSees": {
     "description": "bridge_mode.dart: the one line when automatic found no way in, for someone who said Tor is blocked or watched: what relay mode costs on this network"
-  },
-  "onboardingRelayThisNetworkSees": "This network can see you connect to Kryfo. Our relay sees your address.",
-  "@onboardingRelayThisNetworkSees": {
-    "description": "screens/onboarding_screen.dart: the cost under relay on the send step, for someone who said Tor is blocked or watched and took relay mode"
   },
   "settingsLicences": "Licences",
   "@settingsLicences": {
@@ -11530,10 +11308,6 @@
   "settingsCopyLinkHint": "Copy link",
   "@settingsCopyLinkHint": {
     "description": "screens/settings_screen.dart, screens/licences_screen.dart: what a screen reader says a tap on a source link row does"
-  },
-  "appRelayNotAnswering": "Relay not answering",
-  "@appRelayNotAnswering": {
-    "description": "app/gates.dart: the home pill in relay mode while its relay has not answered for a while"
   },
   "motionNoRelayYet": "NO RELAY YET",
   "@motionNoRelayYet": {
@@ -11985,5 +11759,895 @@
   "keyLineScreenLock": "Set a screen lock on your phone so this protection holds when it is locked.",
   "@keyLineScreenLock": {
     "description": "screens/pins_screen.dart"
+  },
+  "fileServerTryLater": "The file server is full for now. Try again a little later.",
+  "@fileServerTryLater": {
+    "description": "chat and group: toast when the files service has no room for a big file right now. calm, says to try later"
+  },
+  "fileTooBigUntilUpdate": "This file is {size}. This chat takes files up to {max} until everyone in it updates Kryfo.",
+  "@fileTooBigUntilUpdate": {
+    "description": "chat and group: toast when a picked file is over what an older Kryfo in the chat takes. size and max are like 30.2 mb and 15.0 mb",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "fileDayLimit": "You have sent a lot of big files today. Try again tomorrow.",
+  "@fileDayLimit": {
+    "description": "chat and group: toast when this phone has sent its day of big files through the files service. calm, says when it works again"
+  },
+  "mediaProgressPreparing": "Preparing · keep the app open",
+  "@mediaProgressPreparing": {
+    "description": "the strip above the composer while a big file is made ready to go through the files service, before any of it is sent"
+  },
+  "groupShotsBlocksAll": "Blocks screenshots and screen recording on every phone in this group, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.",
+  "@groupShotsBlocksAll": {
+    "description": "screens/group_info_screen.dart: the admin's switch while it is off: what it does"
+  },
+  "groupShotsStartsWhenAll": "Waiting for everyone here to update Kryfo",
+  "@groupShotsStartsWhenAll": {
+    "description": "screens/group_info_screen.dart: the admin's switch, on while someone's app cannot block yet"
+  },
+  "groupShotsOnForAll": "On for everyone here",
+  "@groupShotsOnForAll": {
+    "description": "screens/group_info_screen.dart: the admin's switch, on for every member"
+  },
+  "groupShotsOffAdminOnly": "Off. Only the admin can change this",
+  "@groupShotsOffAdminOnly": {
+    "description": "screens/group_info_screen.dart: a member's read-only row, off"
+  },
+  "groupShotsWaitAdminOnly": "Waiting for everyone here to update Kryfo. Only the admin can change this",
+  "@groupShotsWaitAdminOnly": {
+    "description": "screens/group_info_screen.dart: a member's read-only row, on but waiting on someone"
+  },
+  "groupShotsOnAdminOnly": "On for everyone here. Only the admin can change this",
+  "@groupShotsOnAdminOnly": {
+    "description": "screens/group_info_screen.dart: a member's read-only row, on for every member"
+  },
+  "groupShotsWaitingFor": "{count, plural, one{Waiting for {count} person} other{Waiting for {count} people}}",
+  "@groupShotsWaitingFor": {
+    "description": "screens/group_info_screen.dart: the admin's row that opens the list of members whose app cannot block yet",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "groupShotsWaitingTitle": "Still to update",
+  "@groupShotsWaitingTitle": {
+    "description": "widgets/group_shots_sheet.dart: the title of that list"
+  },
+  "groupShotsWaitingHint": "Screenshot blocking covers everyone once these people update Kryfo. Tap someone to remove them from the group.",
+  "@groupShotsWaitingHint": {
+    "description": "widgets/group_shots_sheet.dart: the line under the title"
+  },
+  "groupShotsNeedsUpdate": "Needs to update Kryfo, or hasn’t been online since",
+  "@groupShotsNeedsUpdate": {
+    "description": "widgets/group_shots_sheet.dart: under a member's name"
+  },
+  "groupShotsBlockedByYou": "Blocked by you",
+  "@groupShotsBlockedByYou": {
+    "description": "widgets/group_shots_sheet.dart: under a member you blocked"
+  },
+  "groupShotsYouTurnedOnWait": "You turned on screenshot blocking. It covers everyone once all here have updated Kryfo.",
+  "@groupShotsYouTurnedOnWait": {
+    "description": "widgets/shots_line.dart: the line in the group where you turned it on and someone's app cannot block yet"
+  },
+  "groupShotsTheyTurnedOnWait": "{name} turned on screenshot blocking. It covers everyone once all here have updated Kryfo.",
+  "@groupShotsTheyTurnedOnWait": {
+    "description": "widgets/shots_line.dart: the same, turned on by the admin",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "groupShotsStarted": "Screenshot blocking is on for everyone here. Copying, forwarding and saving each other’s messages is off too.",
+  "@groupShotsStarted": {
+    "description": "widgets/shots_line.dart: every member's app can block now"
+  },
+  "groupShotsPaused": "Someone here can’t block screenshots yet. It covers everyone again once they update Kryfo.",
+  "@groupShotsPaused": {
+    "description": "widgets/shots_line.dart: someone whose app cannot block came in or went back to an older app"
+  },
+  "groupShotsCantYet": "Can’t block screenshots yet",
+  "@groupShotsCantYet": {
+    "description": "screens/group_info_screen.dart: in the add sheet, under someone whose app cannot block in groups yet"
+  },
+  "groupShotsAddTitle": "Add anyway?",
+  "@groupShotsAddTitle": {
+    "description": "screens/group_info_screen.dart: confirm title when adding such a person"
+  },
+  "groupShotsAddPauses": "Screenshot blocking won’t cover everyone here until they update Kryfo.",
+  "@groupShotsAddPauses": {
+    "description": "screens/group_info_screen.dart: confirm line when adding such a person"
+  },
+  "groupShotsLeaveStays": "Screenshot blocking stays as it is.",
+  "@groupShotsLeaveStays": {
+    "description": "screens/group_info_screen.dart: extra line in the admin's leave confirm while blocking is on"
+  },
+  "groupShotsBlockedHere": "Kryfo blocks screenshots in this group",
+  "@groupShotsBlockedHere": {
+    "description": "screens/group_chat_screen.dart: screen reader label of the lock in the header"
+  },
+  "groupShotsMenuNote": "Copying, forwarding and saving others’ messages is off in this group",
+  "@groupShotsMenuNote": {
+    "description": "screens/group_chat_screen.dart: note in the message menu"
+  },
+  "groupShotsKeptOpen": "Opening others’ files in other apps is off in this group",
+  "@groupShotsKeptOpen": {
+    "description": "widgets/video_bubble.dart: a file of someone else's in a group that blocks"
+  },
+  "groupShotsOldNotice": "I turned on screenshot blocking in this group. Your Kryfo can’t do it yet, so please update.",
+  "@groupShotsOldNotice": {
+    "description": "app/state_group_shots.dart: the message older versions show when the admin turns it on"
+  },
+  "captureShotTaken": "Screenshot taken. Nobody else was told.",
+  "@captureShotTaken": {
+    "description": "widgets/shots_line.dart: one quiet line on this phone when android says the chat was screenshotted. nothing is sent"
+  },
+  "captureRecording": "This screen is being recorded. Nobody else was told.",
+  "@captureRecording": {
+    "description": "widgets/shots_line.dart: the same when android says the screen is being recorded"
+  },
+  "settingsDevices": "Devices",
+  "@settingsDevices": {
+    "description": "screens/settings_screen.dart: the section over the linked devices row"
+  },
+  "devicesLinkedDevices": "Linked devices",
+  "@devicesLinkedDevices": {
+    "description": "screens/linked_devices_screen.dart and settings: the page of your own linked devices"
+  },
+  "devicesThisPhoneOnly": "This phone only",
+  "@devicesThisPhoneOnly": {
+    "description": "screens/linked_devices_screen.dart: the settings row value when nothing else is linked"
+  },
+  "devicesNameSeparator": ", ",
+  "@devicesNameSeparator": {
+    "description": "screens/linked_devices_screen.dart: goes between device names on the settings row"
+  },
+  "devicesThisPhone": "This phone",
+  "@devicesThisPhone": {
+    "description": "screens/linked_devices_screen.dart: the name of the phone in hand on the list"
+  },
+  "devicesOnlyThisPhone": "Only this phone can link or remove devices",
+  "@devicesOnlyThisPhone": {
+    "description": "screens/linked_devices_screen.dart: the line under this phone on the list"
+  },
+  "devicesLinkedOn": "Linked {date}",
+  "@devicesLinkedOn": {
+    "description": "screens/linked_devices_screen.dart: when a device was linked, a day",
+    "placeholders": {
+      "date": {
+        "type": "Object"
+      }
+    }
+  },
+  "devicesUsedToday": "Used today",
+  "@devicesUsedToday": {
+    "description": "screens/linked_devices_screen.dart: a device was used today, after the linked day"
+  },
+  "devicesUsedThisWeek": "Used this week",
+  "@devicesUsedThisWeek": {
+    "description": "screens/linked_devices_screen.dart: a device was used in the last seven days"
+  },
+  "devicesUsedThisMonth": "Used this month",
+  "@devicesUsedThisMonth": {
+    "description": "screens/linked_devices_screen.dart: a device was used in the last thirty days"
+  },
+  "devicesNotUsedYet": "Not used yet",
+  "@devicesNotUsedYet": {
+    "description": "screens/linked_devices_screen.dart: a linked device that was never opened since"
+  },
+  "devicesUnlinksSoon": "{days, plural, =0{Unlinks today unless you open it} =1{Unlinks tomorrow unless you open it} other{Unlinks in {days} days unless you open it}}",
+  "@devicesUnlinksSoon": {
+    "description": "screens/linked_devices_screen.dart: in amber, under a device close to the 30 days unused",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "devicesEmptyTitle": "Kryfo on your computer",
+  "@devicesEmptyTitle": {
+    "description": "screens/linked_devices_screen.dart: over the empty list, only this phone"
+  },
+  "devicesEmptyLine": "Link a computer to read and send your messages there. Up to five devices besides this phone.",
+  "@devicesEmptyLine": {
+    "description": "screens/linked_devices_screen.dart: under the empty title"
+  },
+  "devicesContactsSeeNothing": "Your contacts' apps don't show your devices.",
+  "@devicesContactsSeeNothing": {
+    "description": "screens/linked_devices_screen.dart: a note under the list, about what contacts see"
+  },
+  "devicesUnusedRule": "A device you don't open for 30 days unlinks itself and wipes your chats from it.",
+  "@devicesUnusedRule": {
+    "description": "screens/linked_devices_screen.dart: a note under the list, the 30 day rule"
+  },
+  "devicesFull": "Five devices are linked. Remove one to link another.",
+  "@devicesFull": {
+    "description": "screens/linked_devices_screen.dart: over the link button when five are linked"
+  },
+  "devicesLinkADevice": "Link a device",
+  "@devicesLinkADevice": {
+    "description": "screens/linked_devices_screen.dart: the button at the foot of the list, and the title of the page it opens"
+  },
+  "devicesRemoveAll": "Remove all other devices",
+  "@devicesRemoveAll": {
+    "description": "screens/linked_devices_screen.dart: the rose row at the foot of the list"
+  },
+  "devicesRemoveAllTitle": "Remove all other devices?",
+  "@devicesRemoveAllTitle": {
+    "description": "screens/linked_devices_screen.dart: the sheet that asks"
+  },
+  "devicesRemoveAllLine": "Once your contacts' apps get the change, they stop getting new messages and can't send as you. This phone keeps everything.",
+  "@devicesRemoveAllLine": {
+    "description": "screens/linked_devices_screen.dart: under the question"
+  },
+  "devicesRemoveAllYes": "Remove all",
+  "@devicesRemoveAllYes": {
+    "description": "screens/linked_devices_screen.dart: the rose button that removes them"
+  },
+  "devicesRemovedAll": "Only this phone now",
+  "@devicesRemovedAll": {
+    "description": "screens/linked_devices_screen.dart: the toast once they are removed"
+  },
+  "devicesRemoveTitle": "Remove {name}?",
+  "@devicesRemoveTitle": {
+    "description": "screens/linked_devices_screen.dart: the sheet that asks before one device goes",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "devicesRemoveLine": "Once your contacts' apps get the change, it stops getting new messages and can't send as you. It wipes your chats from itself the next time it's online. A device someone has tampered with may keep what it already has.",
+  "@devicesRemoveLine": {
+    "description": "screens/linked_devices_screen.dart: under the question; the last sentence is the honest part"
+  },
+  "devicesRemove": "Remove",
+  "@devicesRemove": {
+    "description": "screens/linked_devices_screen.dart: the rose row in a device sheet, and the button that removes it"
+  },
+  "devicesRemoved": "{name} removed",
+  "@devicesRemoved": {
+    "description": "screens/linked_devices_screen.dart: the toast once a device is removed",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "devicesRename": "Rename",
+  "@devicesRename": {
+    "description": "screens/linked_devices_screen.dart: a row in a device sheet"
+  },
+  "devicesRenameTitle": "Rename {name}",
+  "@devicesRenameTitle": {
+    "description": "screens/linked_devices_screen.dart: the sheet with the name field",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "devicesRenameLine": "Only you see this name. Your contacts never do.",
+  "@devicesRenameLine": {
+    "description": "screens/linked_devices_screen.dart: under the rename title"
+  },
+  "devicesNameComputer": "Computer",
+  "@devicesNameComputer": {
+    "description": "screens/linked_devices_screen.dart: the hint in an empty name field"
+  },
+  "devicesDeviceCode": "Device code",
+  "@devicesDeviceCode": {
+    "description": "screens/linked_devices_screen.dart: over the device code in a device sheet"
+  },
+  "devicesDeviceCodeLine": "The same code shows on the device itself, in Settings.",
+  "@devicesDeviceCodeLine": {
+    "description": "screens/linked_devices_screen.dart: under the device code"
+  },
+  "devicesLinkStep1": "Open Kryfo on your computer. It shows a code.",
+  "@devicesLinkStep1": {
+    "description": "screens/linked_devices_screen.dart: the first step on the link page"
+  },
+  "devicesLinkStep2": "Scan the code with this phone.",
+  "@devicesLinkStep2": {
+    "description": "screens/linked_devices_screen.dart: the second step on the link page"
+  },
+  "devicesLinkStep3": "Check that both screens show the same six numbers.",
+  "@devicesLinkStep3": {
+    "description": "screens/linked_devices_screen.dart: the third step on the link page"
+  },
+  "devicesHistory": "History",
+  "@devicesHistory": {
+    "description": "screens/linked_devices_screen.dart: the section over the history choices"
+  },
+  "devicesHistoryCopy": "Copy my chats",
+  "@devicesHistoryCopy": {
+    "description": "screens/linked_devices_screen.dart: the first history choice, picked to start"
+  },
+  "devicesHistoryCopyHint": "All your messages, with photos and videos from the last 30 days.",
+  "@devicesHistoryCopyHint": {
+    "description": "screens/linked_devices_screen.dart: under the first history choice"
+  },
+  "devicesHistoryNone": "Start with no history",
+  "@devicesHistoryNone": {
+    "description": "screens/linked_devices_screen.dart: the second history choice"
+  },
+  "devicesHistoryNoneHint": "Only new messages reach the device.",
+  "@devicesHistoryNoneHint": {
+    "description": "screens/linked_devices_screen.dart: under the second history choice"
+  },
+  "devicesSkipMedia": "Skip photos and videos",
+  "@devicesSkipMedia": {
+    "description": "screens/linked_devices_screen.dart: the switch under the first history choice"
+  },
+  "devicesSkipMediaHint": "Only the text comes over. Quicker, and less to keep on the device.",
+  "@devicesSkipMediaHint": {
+    "description": "screens/linked_devices_screen.dart: under the switch"
+  },
+  "devicesHiddenStay": "Hidden chats and the decoy stay on this phone.",
+  "@devicesHiddenStay": {
+    "description": "screens/linked_devices_screen.dart: a note on the link page"
+  },
+  "devicesScanCode": "Scan the code",
+  "@devicesScanCode": {
+    "description": "screens/linked_devices_screen.dart: the button at the foot of the link page"
+  },
+  "desktopLockTitle": "Kryfo is locked",
+  "@desktopLockTitle": {
+    "description": "desktop/desktop_lock_screen.dart: the title of the passphrase screen the desktop app opens on"
+  },
+  "desktopLockBody": "Type the passphrase for this computer.",
+  "@desktopLockBody": {
+    "description": "desktop/desktop_lock_screen.dart: under the title when a passphrase is set"
+  },
+  "desktopLockNewTitle": "Lock Kryfo on this computer",
+  "@desktopLockNewTitle": {
+    "description": "desktop/desktop_lock_screen.dart: the title on the first start, when a passphrase is chosen"
+  },
+  "desktopLockNewBody": "Kryfo asks for this passphrase every time it starts. It locks your messages, photos, voice notes, files, contacts and keys on this computer.",
+  "@desktopLockNewBody": {
+    "description": "desktop/desktop_lock_screen.dart: under the first-start title"
+  },
+  "desktopLockHonest": "Someone who copies Kryfo's folder can try passphrases on their own computer, as fast as it allows. Four or more random words hold up. A short passphrase does not.",
+  "@desktopLockHonest": {
+    "description": "desktop/desktop_lock_screen.dart: the small print on the first start: what the passphrase protects against and what it does not"
+  },
+  "desktopLockForgot": "Without the passphrase none of your messages, files or keys here can be opened, not even by us.",
+  "@desktopLockForgot": {
+    "description": "desktop/desktop_lock_screen.dart: the small print when unlocking"
+  },
+  "desktopLockField": "Passphrase",
+  "@desktopLockField": {
+    "description": "desktop/desktop_lock_screen.dart: the label of the passphrase field"
+  },
+  "desktopLockRepeat": "The same passphrase again",
+  "@desktopLockRepeat": {
+    "description": "desktop/desktop_lock_screen.dart: the label of the second field on the first start"
+  },
+  "desktopLockSet": "Lock with this passphrase",
+  "@desktopLockSet": {
+    "description": "desktop/desktop_lock_screen.dart: the button that sets the passphrase"
+  },
+  "desktopLockOpen": "Open Kryfo",
+  "@desktopLockOpen": {
+    "description": "desktop/desktop_lock_screen.dart: the button that unlocks; also the tray menu item that shows the window"
+  },
+  "desktopLockShort": "At least {count} characters",
+  "@desktopLockShort": {
+    "description": "desktop/desktop_lock_screen.dart: the passphrase chosen is too short",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "desktopLockMismatch": "The two passphrases are not the same",
+  "@desktopLockMismatch": {
+    "description": "desktop/desktop_lock_screen.dart: the two fields differ"
+  },
+  "desktopLockWrong": "That is not the passphrase",
+  "@desktopLockWrong": {
+    "description": "desktop/desktop_lock_screen.dart: a wrong passphrase was typed"
+  },
+  "desktopLockFailed": "Kryfo could not open its lock here. Try starting it again.",
+  "@desktopLockFailed": {
+    "description": "desktop/desktop_lock_screen.dart: the lock could not be read or written"
+  },
+  "desktopTrayQuit": "Quit Kryfo",
+  "@desktopTrayQuit": {
+    "description": "desktop/desktop_start.dart: the tray menu item that ends the app"
+  },
+  "desktopTrayTip": "Kryfo is running and receiving messages",
+  "@desktopTrayTip": {
+    "description": "desktop/desktop_start.dart: the tray icon tooltip"
+  },
+  "desktopNoCamera": "Kryfo cannot use a camera on this computer yet. Use the link or the code instead.",
+  "@desktopNoCamera": {
+    "description": "screens/scan_screen.dart, screens/camera_screen.dart: on desktop, where the phone would open its camera"
+  },
+  "desktopAlreadyOpen": "Kryfo is already open on this computer.",
+  "@desktopAlreadyOpen": {
+    "description": "desktop/desktop_lock_screen.dart: a second copy of the app was started on the same folder"
+  },
+  "desktopFolderNotYours": "Kryfo's folder belongs to another account on this computer, so Kryfo will not open it.",
+  "@desktopFolderNotYours": {
+    "description": "desktop/desktop_lock_screen.dart: the app's data folder is owned by another user"
+  },
+  "desktopFolderNotPrivate": "Kryfo could not make its folder private to you, so it will not open.",
+  "@desktopFolderNotPrivate": {
+    "description": "desktop/desktop_lock_screen.dart: the data folder could not be made 0700"
+  },
+  "desktopLockOtherVersion": "This lock was made by another version of Kryfo, which this one cannot read.",
+  "@desktopLockOtherVersion": {
+    "description": "desktop/desktop_lock_screen.dart: the vault file is of a version this app does not read"
+  },
+  "desktopNoMemoryFolder": "Kryfo needs a private folder in memory while it runs, and this computer offers none, so it will not open.",
+  "@desktopNoMemoryFolder": {
+    "description": "desktop/desktop_lock_screen.dart: no XDG_RUNTIME_DIR or /dev/shm folder could be had"
+  },
+  "inviteNotYet": "This invite isn't valid yet. Check the time on your phone.",
+  "@inviteNotYet": {
+    "description": "a v4 invite issued more than a day ahead of this phone clock"
+  },
+  "inviteExpired": "This invite has expired. Ask for a new one.",
+  "@inviteExpired": {
+    "description": "a v4 invite past its expiry and a day"
+  },
+  "inviteDamaged": "This invite is damaged. Ask for a new one.",
+  "@inviteDamaged": {
+    "description": "a v4 invite that does not parse or whose signature does not hold"
+  },
+  "helloSent": "Request sent. They'll see it when they're online.",
+  "@helloSent": {
+    "description": "after a qr without a bundle is read: a hello went and waits for their accept"
+  },
+  "inviteNeeds06": "Needs Kryfo 0.6 or newer.",
+  "@inviteNeeds06": {
+    "description": "under a shared v4 invite link: older versions read it as an invalid link"
+  },
+  "helloSentOld": "Request sent. If they use an older Kryfo, they'll need to update first.",
+  "@helloSentOld": {
+    "description": "after a v3 link is read: a hello went to its owner, and an owner on an older version cannot answer it"
+  },
+  "modesPickHow": "Pick how your messages travel. You can change it any time.",
+  "@modesPickHow": {
+    "description": "Speed and privacy page, the line under the title"
+  },
+  "modesPrivate": "Private",
+  "@modesPrivate": {
+    "description": "name of the Tor route, a card title"
+  },
+  "modesPrivateTag": "Tor · bridges when needed",
+  "@modesPrivateTag": {
+    "description": "small line under the Private card title"
+  },
+  "modesPrivateLine": "Nobody learns your IP address or who you are, not even our servers. Finds a way around blocks by itself.",
+  "@modesPrivateLine": {
+    "description": "Private card, what it means"
+  },
+  "modesDefault": "Default",
+  "@modesDefault": {
+    "description": "small chip on the Private card"
+  },
+  "modesFastTag": "Straight to our servers",
+  "@modesFastTag": {
+    "description": "small line under the Fast card title"
+  },
+  "modesFastLine": "Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you're connected, and never log or keep it. Never what you say. Your contacts never see it.",
+  "@modesFastLine": {
+    "description": "Fast card, what it means and who sees the IP address"
+  },
+  "modesFastConnected": "Fast · connected",
+  "@modesFastConnected": {
+    "description": "status of the Fast route, on its card and on the home pill"
+  },
+  "modesFastConnecting": "Fast · connecting",
+  "@modesFastConnecting": {
+    "description": "status of the Fast route while it connects"
+  },
+  "modesFastDown": "Fast · our servers aren't answering",
+  "@modesFastDown": {
+    "description": "status of the Fast route while neither server answers"
+  },
+  "modesBackupReady": "A backup is always ready, so you stay connected even if one goes down.",
+  "@modesBackupReady": {
+    "description": "Fast card, under its status"
+  },
+  "modesDetails": "Details",
+  "@modesDetails": {
+    "description": "small link on the Fast card to the servers page"
+  },
+  "modesBothLine": "Both keep every message end-to-end encrypted. Only who can see your IP address changes.",
+  "@modesBothLine": {
+    "description": "Speed and privacy page, under the two cards"
+  },
+  "modesConnectionBridges": "Connection and bridges",
+  "@modesConnectionBridges": {
+    "description": "link at the bottom of the page while Private is chosen"
+  },
+  "modesWhatServersSee": "What our servers can see",
+  "@modesWhatServersSee": {
+    "description": "link at the bottom of the page while Fast is chosen"
+  },
+  "serversTitle": "Fast servers",
+  "@serversTitle": {
+    "description": "title of the page behind Details"
+  },
+  "serversLine": "Every message goes to both servers at once. Whichever answers first carries it, and the other takes over if one stops.",
+  "@serversLine": {
+    "description": "servers page, the line at the top"
+  },
+  "serversOne": "Server 1",
+  "@serversOne": {
+    "description": "servers page, our first server"
+  },
+  "serversTwo": "Server 2 · second provider",
+  "@serversTwo": {
+    "description": "servers page, our second server, at another hosting company"
+  },
+  "serversConnected": "Connected",
+  "@serversConnected": {
+    "description": "a server row status"
+  },
+  "serversConnecting": "Connecting",
+  "@serversConnecting": {
+    "description": "a server row status"
+  },
+  "serversNotAnswering": "Not answering",
+  "@serversNotAnswering": {
+    "description": "a server row status"
+  },
+  "serversMs": "{ms} ms",
+  "@serversMs": {
+    "description": "a server row, its last round trip in milliseconds",
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "serversQuicker": "Quicker",
+  "@serversQuicker": {
+    "description": "chip on the server that answers quicker now"
+  },
+  "serversBackups": "Public relays",
+  "@serversBackups": {
+    "description": "servers page, the last way in, behind our two servers"
+  },
+  "serversBackupsLine": "Used while Server 1 is down, and only through Tor, so they never see your IP address.",
+  "@serversBackupsLine": {
+    "description": "servers page, under the public relays row"
+  },
+  "serversStandingBy": "Standing by",
+  "@serversStandingBy": {
+    "description": "public relays row status while ours answer"
+  },
+  "serversInUse": "In use",
+  "@serversInUse": {
+    "description": "public relays row status while ours are down"
+  },
+  "homeMergedTitle": "Relay and Fast are one now",
+  "@homeMergedTitle": {
+    "description": "home, one-time card after the update"
+  },
+  "homeMergedLine": "You're on Fast. A backup server is always ready, so you stay connected even if one goes down. Our servers see your IP address, never what you say.",
+  "@homeMergedLine": {
+    "description": "home, one-time card after the update"
+  },
+  "homeMergedGotIt": "Got it",
+  "@homeMergedGotIt": {
+    "description": "home, one-time card, the button that closes it"
+  },
+  "homeMergedUsePrivate": "Use Private instead",
+  "@homeMergedUsePrivate": {
+    "description": "home, one-time card, switches to the Tor route"
+  },
+  "homeOursDownTitle": "Our servers aren't answering",
+  "@homeOursDownTitle": {
+    "description": "home card while neither server answers on Fast"
+  },
+  "homeOursDownLine": "After a few minutes, when Tor gets through, messages also go through public relays, and back through our servers as soon as one answers.",
+  "@homeOursDownLine": {
+    "description": "home card while neither server answers on Fast"
+  },
+  "homeUsePrivate": "Use Private",
+  "@homeUsePrivate": {
+    "description": "button that switches to the Tor route"
+  },
+  "homeSwitchedToPrivate": "Switched to Private",
+  "@homeSwitchedToPrivate": {
+    "description": "toast after switching to the Tor route"
+  },
+  "homeUseFast": "Use Fast",
+  "@homeUseFast": {
+    "description": "button that switches to the Fast route where Tor gets nowhere"
+  },
+  "homeSwitchedToFastRoute": "Switched to Fast",
+  "@homeSwitchedToFastRoute": {
+    "description": "toast after switching to the Fast route"
+  },
+  "bridgesFastGetsThrough": "Fast goes straight to our servers and usually gets through. Or let Kryfo find a way by itself.",
+  "@bridgesFastGetsThrough": {
+    "description": "where Tor seems blocked, the line that offers Fast"
+  },
+  "appServersNotAnswering": "Servers not answering",
+  "@appServersNotAnswering": {
+    "description": "home pill while neither of our servers answers"
+  },
+  "settingsPrivateTor": "Private · Tor",
+  "@settingsPrivateTor": {
+    "description": "settings row value for the Tor route"
+  },
+  "seenOurServers": "Our servers",
+  "@seenOurServers": {
+    "description": "what we can see table, Fast column, IP address row"
+  },
+  "seenIpWhy": "On Private everything leaves through Tor and our servers see an exit node, never you. On Fast the connection goes straight to our two servers: they see your IP address while you're connected and keep no record of it. While the first one is down, Fast also uses public relays, only through Tor.",
+  "@seenIpWhy": {
+    "description": "what we can see table, why for the IP address row"
+  },
+  "chatAlbumItDisappearsWithNo": "This album will be removed from both phones, unless it has already been saved. This can't be undone.",
+  "@chatAlbumItDisappearsWithNo": {
+    "description": "screens/chat_screen.dart"
+  },
+  "groupChatAlbumItDisappearsWithNo": "This album will be removed from everyone's phones, unless it has already been saved. This can't be undone.",
+  "@groupChatAlbumItDisappearsWithNo": {
+    "description": "screens/group_chat_screen.dart"
+  },
+  "homeInviteSomeone": "Invite someone",
+  "@homeInviteSomeone": {
+    "description": "screens/home_screen.dart"
+  },
+  "onboardingNameHeadline": "A public *@name*, if you like.",
+  "@onboardingNameHeadline": {
+    "description": "screens/onboarding_screen.dart"
+  },
+  "onboardingNameLine": "A public name lets people find you. Skipping keeps you more private, you can always add one later.",
+  "@onboardingNameLine": {
+    "description": "screens/onboarding_screen.dart"
+  },
+  "onboardingNameSkip": "Skip for now →",
+  "@onboardingNameSkip": {
+    "description": "screens/onboarding_screen.dart"
+  },
+  "onboardingNameClaim": "Claim @{handle} →",
+  "@onboardingNameClaim": {
+    "description": "screens/onboarding_screen.dart",
+    "placeholders": {
+      "handle": {
+        "type": "Object"
+      }
+    }
+  },
+  "onboardingInviteHeadline": "Now, *invite someone*.",
+  "@onboardingInviteHeadline": {
+    "description": "screens/onboarding_screen.dart"
+  },
+  "onboardingInviteLead": "Send a link in any messenger. It opens Kryfo, or shows them where to get it.",
+  "@onboardingInviteLead": {
+    "description": "screens/onboarding_screen.dart"
+  },
+  "onboardingInviteSomeone": "Invite someone →",
+  "@onboardingInviteSomeone": {
+    "description": "screens/onboarding_screen.dart"
+  },
+  "onboardingInviteGettingReady": "Getting your link ready…",
+  "@onboardingInviteGettingReady": {
+    "description": "screens/onboarding_screen.dart"
+  },
+  "inviteShareText": "Add me on Kryfo. My name there is {myId}\n\nTap to add me:\n{link}\n\nNo Kryfo yet? Get it here:\n{download}\n\nKryfo is a private messenger. No phone number, no email.",
+  "@inviteShareText": {
+    "description": "invite_share.dart",
+    "placeholders": {
+      "myId": {
+        "type": "Object"
+      },
+      "link": {
+        "type": "Object"
+      },
+      "download": {
+        "type": "Object"
+      }
+    }
+  },
+  "inviteNotReady": "Your link is almost ready. Try again in a moment.",
+  "@inviteNotReady": {
+    "description": "invite_share.dart"
+  },
+  "photoCropTitle": "Move and scale",
+  "@photoCropTitle": {
+    "description": "screens/photo_crop_screen.dart: title over the round crop of a profile photo"
+  },
+  "photoCropUse": "Use photo",
+  "@photoCropUse": {
+    "description": "screens/photo_crop_screen.dart: button that keeps the crop"
+  },
+  "photoCropLabel": "Your photo in the circle. Pinch to zoom, drag to move",
+  "@photoCropLabel": {
+    "description": "screens/photo_crop_screen.dart: screen reader label of the picture under the crop circle"
+  },
+  "photoCouldNotUse": "Try another photo. This one could not be read.",
+  "@photoCouldNotUse": {
+    "description": "toast: a picked profile photo could not be read or made clean"
+  },
+  "photoTake": "Take a photo",
+  "@photoTake": {
+    "description": "widgets/photo_sheet.dart: row that opens the camera for a profile photo"
+  },
+  "photoChoose": "Choose from gallery",
+  "@photoChoose": {
+    "description": "widgets/photo_sheet.dart: row that opens the gallery for a profile photo"
+  },
+  "photoPickFace": "Pick a face",
+  "@photoPickFace": {
+    "description": "widgets/photo_sheet.dart: row that opens the drawn face picker"
+  },
+  "photoView": "View photo",
+  "@photoView": {
+    "description": "widgets/photo_sheet.dart: row that opens the profile photo larger"
+  },
+  "photoRemove": "Remove photo",
+  "@photoRemove": {
+    "description": "widgets/photo_sheet.dart: row that takes the profile photo off"
+  },
+  "photoYourPhoto": "Your photo",
+  "@photoYourPhoto": {
+    "description": "screens/profile_screen.dart: title of the sheet for your own profile photo"
+  },
+  "photoYourPhotoLine": "Only your contacts see it, end to end encrypted.",
+  "@photoYourPhotoLine": {
+    "description": "screens/profile_screen.dart: who sees your profile photo"
+  },
+  "photoSetTheirs": "Set a photo",
+  "@photoSetTheirs": {
+    "description": "screens/contact_screen.dart: row to set a photo for a contact, kept on this phone"
+  },
+  "photoChangeTheirs": "Change photo",
+  "@photoChangeTheirs": {
+    "description": "screens/contact_screen.dart: the same row once a photo is set"
+  },
+  "photoOnlyHere": "Only on this phone",
+  "@photoOnlyHere": {
+    "description": "screens/contact_screen.dart: hint under the row: the photo is never sent"
+  },
+  "photoForThem": "A photo for {name}",
+  "@photoForThem": {
+    "description": "screens/contact_screen.dart: title of the sheet for a contact's photo",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoOnlyHereLine": "Only you see it. It stays on this phone.",
+  "@photoOnlyHereLine": {
+    "description": "screens/contact_screen.dart: line in the sheet for a contact's photo"
+  },
+  "photoOf": "Photo of {name}",
+  "@photoOf": {
+    "description": "widgets/face_view.dart: screen reader label of a contact's photo, larger",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "historyChatStaysShots": "This chat stays on your phone because screenshots are blocked in it.",
+  "@historyChatStaysShots": {
+    "description": "devices/history_import.dart: on a newly linked device, for a chat that stayed on the phone because screenshot blocking is on in it"
+  },
+  "a11yPinDigits": "{count, plural, =0{No digits} =1{1 digit} other{{count} digits}}",
+  "@a11yPinDigits": {
+    "description": "widgets/pin_pad.dart: the pin dots to a screen reader, the count only",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "a11yPassChars": "{count, plural, =0{No characters} =1{1 character} other{{count} characters}}",
+  "@a11yPassChars": {
+    "description": "widgets/pin_pad.dart: the passphrase dots to a screen reader, the count only",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "a11yBackupProgress": "Backup progress",
+  "@a11yBackupProgress": {
+    "description": "screens/backup_screen.dart: the progress bar's name to a screen reader"
+  },
+  "a11yRestoreProgress": "Restore progress",
+  "@a11yRestoreProgress": {
+    "description": "screens/restore_screen.dart: the progress bar's name to a screen reader"
+  },
+  "a11yExportProgress": "Export progress",
+  "@a11yExportProgress": {
+    "description": "screens/notes_export_screen.dart: the progress bar's name to a screen reader"
+  },
+  "a11yLockFileProgress": "Locking progress",
+  "@a11yLockFileProgress": {
+    "description": "screens/lock_file_screen.dart: the progress bar's name to a screen reader"
+  },
+  "a11yCleanProgress": "Cleaning progress",
+  "@a11yCleanProgress": {
+    "description": "screens/clean_screen.dart: the progress bar's name to a screen reader"
+  },
+  "a11yMessageActions": "Message actions",
+  "@a11yMessageActions": {
+    "description": "widgets/menu_backdrop.dart: the long-press menu's name to a screen reader"
+  },
+  "a11yRecordVoiceNote": "Record a voice note",
+  "@a11yRecordVoiceNote": {
+    "description": "widgets/voice_mic.dart: the mic with a screen reader on, a tap records"
+  },
+  "a11yRecording": "Recording",
+  "@a11yRecording": {
+    "description": "widgets/voice_mic.dart: said once when a tap starts a recording"
+  },
+  "a11yPhotoOn": "Photo, {date}",
+  "@a11yPhotoOn": {
+    "description": "widgets/media_bubbles.dart: a photo tile to a screen reader",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yPhotoFrom": "Photo from {name}, {date}",
+  "@a11yPhotoFrom": {
+    "description": "widgets/media_bubbles.dart: a photo tile to a screen reader, with who sent it",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yVideoOn": "Video, {date}",
+  "@a11yVideoOn": {
+    "description": "widgets/media_bubbles.dart: a video tile to a screen reader",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yVideoFrom": "Video from {name}, {date}",
+  "@a11yVideoFrom": {
+    "description": "widgets/media_bubbles.dart: a video tile to a screen reader, with who sent it",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yNewMessages": "{count, plural, =1{New message} other{{count} new messages}}",
+  "@a11yNewMessages": {
+    "description": "widgets/say.dart: new messages in the open chat, said with a screen reader on",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
   }
 }

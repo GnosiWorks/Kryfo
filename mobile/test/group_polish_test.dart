@@ -55,6 +55,7 @@ import 'package:kryfo/widgets/voice_mic.dart'
     show HoldToTalkMic, HoldToTalkMicState, MicGlyph;
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:kryfo/widgets/room_countdown.dart';
+import 'package:kryfo/widgets/swipe_to_reply.dart';
 import 'package:kryfo/widgets/voice_parts.dart' show VoiceRecordBar;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -741,6 +742,51 @@ void main() {
       expect(find.text(l10n.groupChatMessageUnavailable), findsNothing);
       expect(find.byIcon(Icons.close_rounded), findsNothing);
       await _close(t);
+    });
+
+    testWidgets('a reply picked while a blocked quote is looked up drops '
+        'the kept one', (t) async {
+      final at = DateTime.now().millisecondsSinceEpoch;
+      final db = _use(
+        t,
+        _Db(
+          rows: [
+            ...long(),
+            {..._in(71, _bo, 'from bo'), 'sent_at': at},
+          ],
+          members: ['me', _anna, _bo],
+          blocked: {_anna},
+        ),
+      );
+      addTearDown(endProcessForTest);
+      final gate = Completer<void>();
+      db.quoteGate = gate;
+      db.kept['group:$_group'] = const Draft(
+        'what she said',
+        replyTo: 'uid-1',
+        at: 1,
+      );
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      expect(db.quoteReads, 1);
+      t
+          .widget<SwipeToReply>(
+            find.ancestor(
+              of: find.text('from bo'),
+              matching: find.byType(SwipeToReply),
+            ),
+          )
+          .onReply();
+      await t.pump(const Duration(milliseconds: 300));
+      gate.complete();
+      await t.pump(const Duration(seconds: 1));
+      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+      // the bar closed: no quote is left, the blocked one neither
+      await t.tap(find.byIcon(Icons.close_rounded));
+      await t.pump(kDraftWait);
+      await _close(t);
+      expect(db.kept['group:$_group']?.text, 'what she said');
+      expect(db.kept['group:$_group']?.replyTo, isNull);
     });
 
     testWidgets('a kept quote of a message gone from the group is let go', (
@@ -1985,7 +2031,7 @@ void main() {
       appState.contacts = [_contact(_anna, nick: 'Anna Maria Magdalena')];
       await t.pumpWidget(
         MediaQuery(
-          data: const MediaQueryData(textScaler: TextScaler.linear(1.6)),
+          data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
           child: app(const GroupChatScreen(groupId: _group)),
         ),
       );
@@ -2101,6 +2147,8 @@ void main() {
     ) async {
       me(t);
       _use(t, _Db()..adminId = 'me');
+      // the admin's page runs past a phone's height: all of it in view
+      t.view.physicalSize = const Size(1080, 4500);
       await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
       await t.pump(const Duration(seconds: 1));
       final row = find.text(l10n.groupInfoEndGroup);

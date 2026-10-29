@@ -228,8 +228,8 @@ void main() {
     await t.runAsync(() => appState.setSendMode('balanced'));
     // tor still says reachable underneath: relay mode does not ride it
     await poll(t, 'reachable|100|1|1|2');
-    expect(_inPill(l10n.appViaRelay), findsOneWidget);
-    expect(_inSheet(l10n.appViaRelay), findsOneWidget);
+    expect(_inPill(l10n.modesFastConnected), findsOneWidget);
+    expect(_inSheet(l10n.modesFastConnected), findsOneWidget);
     expect(appState.usableAt, isNull);
 
     // its relay failing: a short spell is not news, a long one says so
@@ -238,12 +238,12 @@ void main() {
     ];
     appState.sampleRelayHealth(now: _ago(5));
     await t.pump();
-    expect(_inPill(l10n.appViaRelay), findsOneWidget);
+    expect(_inPill(l10n.modesFastConnected), findsOneWidget);
     appState.relayDownSinceForTest = _ago(kRelayDownAfter.inSeconds + 1);
     await nudge(t);
-    expect(_inPill(l10n.appRelayNotAnswering), findsOneWidget);
-    expect(_inSheet(l10n.appRelayNotAnswering), findsOneWidget);
-    expect(_inPill(l10n.appViaRelay), findsNothing);
+    expect(_inPill(l10n.appServersNotAnswering), findsOneWidget);
+    expect(_inSheet(l10n.appServersNotAnswering), findsOneWidget);
+    expect(_inPill(l10n.modesFastConnected), findsNothing);
 
     // back
     e.relays = [
@@ -252,8 +252,8 @@ void main() {
     appState.sampleRelayHealth();
     await t.pump();
     await t.pump(const Duration(milliseconds: 300));
-    expect(_inPill(l10n.appViaRelay), findsOneWidget);
-    expect(_inSheet(l10n.appViaRelay), findsOneWidget);
+    expect(_inPill(l10n.modesFastConnected), findsOneWidget);
+    expect(_inSheet(l10n.modesFastConnected), findsOneWidget);
 
     // back to onion: what tor carried before is not held for it
     await t.runAsync(() => appState.setSendMode('private'));

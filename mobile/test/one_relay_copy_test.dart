@@ -56,7 +56,12 @@ class _Io extends ArrivalIo {
   var onionDown = false;
 
   @override
-  Future<String> firstContactSend(String xPub, String fc, String cipher) async {
+  Future<String> firstContactSend(
+    int ident,
+    String xPub,
+    String fc,
+    String cipher,
+  ) async {
     sent.add(('fc $xPub', cipher));
     return firstDown ? 'error: no relays accepted' : 'ok';
   }
@@ -74,7 +79,7 @@ class _Engine implements HaloEngine {
   @override
   void nostrFirst(String peerXPubHex) => first.add(peerXPubHex);
   @override
-  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {}
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) {}
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('engine: ${i.memberName}');

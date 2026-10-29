@@ -18,11 +18,35 @@ extension AppStateSession on AppState {
   Future<String> sessionInvite() async =>
       sessionQuiet ? (_quiet?.invite ?? '') : _everydayInvite();
 
+  /// what the own qr code shows: the main v4 invite without its bundle
+  /// (288 bytes; a reader answers it with a hello), else the link
+  Future<String> sessionInviteQr() async {
+    if (!sessionQuiet) {
+      try {
+        final qr = await myV4Invite(qr: true);
+        if (qr != null) return qr;
+      } catch (e) {
+        dlog('invite: no v4 qr (${e.runtimeType})');
+      }
+    }
+    return sessionInvite();
+  }
+
   // a counter that did not read is never taken as 0: an invite to an
   // address nobody listens on loses every first message sent to it
-  Future<String> _everydayInvite() => _fcUnread
-      ? buildHaloUriV2(myId, myOnion)
-      : buildHaloUriV3(myId, myOnion, fcCounter);
+  // the main v4 invite once it is made (identity v4 2.1)
+  Future<String> _everydayInvite() async {
+    try {
+      final v4 = await myV4Invite();
+      if (v4 != null) return v4;
+    } catch (e) {
+      dlog('invite: no v4 link (${e.runtimeType})');
+    }
+    return _fcUnread
+        ? buildHaloUriV2(myId, myOnion)
+        : buildHaloUriV3(myId, myOnion, fcCounter);
+  }
+
   Future<void> get containersReady => _containersOpen.future;
   @visibleForTesting
   void containersOpenedForTest() => _containersOpen.complete();
@@ -38,6 +62,11 @@ extension AppStateSession on AppState {
       await _groupsOf(s),
       int.tryParse(a ?? ''),
       dev,
+      await _photoBookOf(
+            s,
+            s.primary.container.quiet ? (_decoyId?.id ?? '') : myId,
+          ) ??
+          const {},
     );
   }
 
@@ -136,6 +165,12 @@ extension AppStateSession on AppState {
     try {
       final q = engine.quietIdentity();
       if (q == null) throw StateError('no quiet identity');
+      // on desktop a file with no key in storage holds its place: it goes
+      // before the decoy's own is made
+      if (onDesktop &&
+          await secureStore.read(key: HaloContainer.decoy.keyName!) == null) {
+        await HaloContainer.decoy.wipeFiles();
+      }
       final raw = await d.open();
       await d.saveIdentity(
         q['id'] as String,
@@ -240,6 +275,8 @@ extension AppStateSession on AppState {
     final want = decoy ? _decoyDb : live;
     if (want == null) return;
     lockState.inDecoy = decoy;
+    // out of the decoy the bridges are seen again at once (typing)
+    if (!decoy) _typingBridgesRead();
     if (identical(_session.primary, want)) return;
     // no reads here: what home shows of the other session was read ahead,
     // and swapping it in costs the same whichever way it goes
@@ -249,6 +286,7 @@ extension AppStateSession on AppState {
       groups,
       _quietAvatar,
       devRow,
+      photoBook.all,
     );
     final coming = _otherShown;
     _otherShown = leaving;
@@ -265,6 +303,8 @@ extension AppStateSession on AppState {
       groups = coming.groups;
       if (decoy) _quietAvatar = coming.avatar;
     }
+    // the book the other side read ahead, or none: never the one leaving
+    photoBook.put(coming?.photos ?? const {});
     if (decoy) {
       _quietSince = DateTime.now().millisecondsSinceEpoch;
       _quietJobs = _jobRuns;
@@ -310,6 +350,7 @@ extension AppStateSession on AppState {
     final Session s;
     final (List<ContactPreview>, int, DevRow?) home;
     final List<GroupPreview> gs;
+    final Map<String, Uint8List> book;
     try {
       // a move a crash cut short is put right before ownership is read
       await settleVault(v);
@@ -337,6 +378,9 @@ extension AppStateSession on AppState {
       s = await Session.withVault(primary, v);
       home = await _contactsOf(s);
       gs = await _groupsOf(s);
+      book =
+          await _photoBookOf(s, decoy ? (_decoyId?.id ?? '') : myId) ??
+          const {};
     } catch (e) {
       try {
         await v.close();
@@ -356,6 +400,7 @@ extension AppStateSession on AppState {
           groups,
           _quietAvatar,
           devRow,
+          photoBook.all,
         );
         if (ahead != null) _quietAvatar = ahead.avatar;
         _quietSince = DateTime.now().millisecondsSinceEpoch;
@@ -369,9 +414,11 @@ extension AppStateSession on AppState {
         groups,
         _quietAvatar,
         devRow,
+        photoBook.all,
       );
     }
     lockState.inDecoy = decoy;
+    if (!decoy) _typingBridgesRead();
     _dropOpened();
     _session = s;
     _quiet = decoy ? _decoyId : null;
@@ -380,6 +427,7 @@ extension AppStateSession on AppState {
     pendingCount = home.$2;
     devRow = home.$3;
     groups = gs;
+    photoBook.put(book);
     _vaultFill = (at: 0, to: 0);
     lockState.inVault = true;
     expiredRoomName = null;
@@ -428,12 +476,15 @@ extension AppStateSession on AppState {
       await refreshHiddenCards();
       // what came sealed while it was shut
       await _unseal();
+      // its groups' screenshot blocks, as what came says
+      await _groupShotsAtOpen(v);
       // and what its shelf still holds for people it accepted
       unawaited(letHeldIn(v));
       unawaited(_fillSearch(v));
       // what was typed in it and never went, and files half arrived
       unawaited(drainOutbox());
       unawaited(askForMissingSlices());
+      unawaited(fetchDrops());
     } catch (e) {
       if (identical(_openVault, v)) {
         dlog('vault: after open (${e.runtimeType})');
@@ -470,6 +521,11 @@ extension AppStateSession on AppState {
     _session = Session(was.primary);
     lockState.inVault = false;
     _forgetVaultSide();
+    // its contacts' photos off at once, before anything is drawn
+    photoBook.put({
+      for (final MapEntry(:key, :value) in photoBook.all.entries)
+        if (!was.isHidden(key)) key: value,
+    });
     // its chats off home now; the rest is read again below
     contacts = [
       for (final c in contacts)

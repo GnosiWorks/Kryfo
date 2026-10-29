@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // sessions libsignal_protocol_dart made go on through the shim: the same
-// tables and record bytes, opened by the new layer, talking to a phone
-// still on the old library, both ways, and back again
+// tables and record bytes, opened by the new layer, both ways. the same
+// against a phone that still runs 0.5.3's own library is in tool/peer053
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -9,26 +9,11 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/signal_ffi/kryfo_signal.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:kryfo/signal_stores.dart' show kSignalTables;
-import 'package:kryfo/signal_session_ls.dart' show lsBundleOf;
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show DuplicateMessageException;
+import 'package:kryfo/signal_stores.dart'
+    show kSignalTables, kUseInvite, kUseSession;
 
 import '../mem_db.dart';
 import 'shim_lib.dart';
-
-// two phones on the old library with a session between them, a message
-// each way read
-Future<(Phone, Phone)> _talking() async {
-  final a = Phone();
-  final b = Phone();
-  final alice = await a.openOld();
-  await b.openOld();
-  await alice.processBundle('bob', preKeyBundleOf(await b.oldCard()));
-  expect(await b.read('alice', await a.seal('bob', 'm1')), 'm1');
-  expect(await a.read('bob', await b.seal('alice', 'm2')), 'm2');
-  return (a, b);
-}
 
 final _fixture =
     jsonDecode(File('test/signal_stored_before.json').readAsStringSync())
@@ -62,50 +47,12 @@ String _wire(String k) => (_fixture['wire'] as Map)[k] as String;
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('the shim side reads and answers an old session', () async {
-    final (a, b) = await _talking();
-    // sealed by bob's old library, in flight while he updates
-    final early = await a.seal('bob', 'sent before the update');
-    final bob = await b.openLs();
-    final info = (await bob.sessionInfo('alice'))!;
-    expect(info.version, 3);
-    expect(info.pq, isFalse);
-    expect(await b.read('alice', early), 'sent before the update');
-    for (var i = 0; i < 4; i++) {
-      expect(await a.read('bob', await b.seal('alice', 'b$i')), 'b$i');
-      expect(await b.read('alice', await a.seal('bob', 'a$i')), 'a$i');
-    }
-    // two in a row and out of order
-    final x = await b.seal('alice', 'x');
-    final y = await b.seal('alice', 'y');
-    expect(await a.read('bob', y), 'y');
-    expect(await a.read('bob', x), 'x');
-  }, skip: needsShim);
-
-  test(
-    'the old side reads and answers a session the shim went on with',
-    () async {
-      final (a, b) = await _talking();
-      await a.openLs();
-      for (var i = 0; i < 3; i++) {
-        expect(await b.read('alice', await a.seal('bob', 'a$i')), 'a$i');
-        expect(await a.read('bob', await b.seal('alice', 'b$i')), 'b$i');
-      }
-      // and alice back on the old library: the records the shim wrote read
-      // there too, so a release that has to go back loses no session
-      await a.openOld();
-      for (var i = 0; i < 3; i++) {
-        expect(await b.read('alice', await a.seal('bob', 'c$i')), 'c$i');
-        expect(await a.read('bob', await b.seal('alice', 'd$i')), 'd$i');
-      }
-    },
-    skip: needsShim,
-  );
-
   test('both on the shim keep the classic session they had', () async {
-    final (a, b) = await _talking();
+    final a = await _stored('alice');
+    final b = await _stored('bob');
     final alice = await a.openLs();
     final bob = await b.openLs();
+    expect(await b.read('alice', _wire('a6')), 'a6 pending');
     for (var i = 0; i < 3; i++) {
       expect(await b.read('alice', await alice.encryptTo('bob', 'a$i')), 'a$i');
       expect(await a.read('bob', await bob.encryptTo('alice', 'b$i')), 'b$i');
@@ -125,8 +72,14 @@ void main() {
       final p = await _stored(who);
       await p.openLs();
       for (final t in kSignalTables) {
+        if (t.startsWith('kyber_')) continue;
         final before = _rows(who).where((r) => r['t'] == t).toList();
-        final now = await p.db.query(t);
+        // the identity's session prekeys are new, and never in a bundle
+        final now = await p.db.query(
+          t,
+          where: t == 'signed_prekeys' ? 'use != ?' : null,
+          whereArgs: t == 'signed_prekeys' ? [kUseSession] : null,
+        );
         expect(now, hasLength(before.length), reason: '$who $t');
         for (final r in before) {
           final key = t == 'sessions'
@@ -144,7 +97,14 @@ void main() {
         }
       }
       // only the kyber prekey is new
-      expect(await p.db.query('kyber_prekeys'), hasLength(1));
+      expect(
+        await p.db.query(
+          'kyber_prekeys',
+          where: 'use = ?',
+          whereArgs: [kUseInvite],
+        ),
+        hasLength(1),
+      );
     }
   }, skip: needsShim);
 
@@ -164,34 +124,9 @@ void main() {
     expect(await a.read('bob', _wire('b2')), 'b2 old session');
   }, skip: needsShim);
 
-  test('a 0.7.4 store goes on with old library peers', () async {
-    final a = await _stored('alice');
+  test('restore marks name the same sessions marked again', () async {
     final b = await _stored('bob');
-    await a.openOld();
-    final bob = await b.openLs();
-    expect(await b.read('alice', _wire('a6')), 'a6 pending');
-    for (var i = 0; i < 3; i++) {
-      expect(await a.read('bob', await bob.encryptTo('alice', 'b$i')), 'b$i');
-      expect(await b.read('alice', await a.seal('bob', 'a$i')), 'a$i');
-    }
-    // and the old side still drops a copy
-    final m = await bob.encryptTo('alice', 'once');
-    expect(await a.read('bob', m), 'once');
-    await expectLater(
-      a.read('bob', m),
-      throwsA(isA<DuplicateMessageException>()),
-    );
-    expect(
-      await bob.identityStore.getIdentity('alice'),
-      Uint8List.fromList([0x05, ...a.keys.pub]),
-    );
-  }, skip: needsShim);
-
-  test('restore marks the old layer wrote name the same sessions', () async {
-    final (_, b) = await _talking();
-    final old = b.old!;
-    await old.markRestored(from: 42);
-    expect(await old.sealsOnRestored('alice'), isTrue);
+    await (await b.openLs()).markRestored(from: 42);
     final bob = await b.openLs();
     expect(bob.hasRestored, isTrue);
     expect(bob.restoredFrom, 42);
@@ -232,7 +167,7 @@ void main() {
   }, skip: needsShim);
 
   test('an opener kept beside a held session, each once', () async {
-    final (_, b) = await _talking();
+    final b = await _stored('bob');
     final bob = await b.openLs();
     // another session from alice, as a fresh start would bring
     final c = Phone();
@@ -252,10 +187,10 @@ void main() {
     await bob.keepOpenedSession('alice', opened);
     final info = (await bob.sessionInfo('alice'))!;
     expect(info.version, 4);
-    expect(info.archived, hasLength(1));
+    final held = info.archived.length;
     expect(info.archived.first.version, 3);
     // the same one again changes nothing
     await bob.keepOpenedSession('alice', opened);
-    expect((await bob.sessionInfo('alice'))!.archived, hasLength(1));
+    expect((await bob.sessionInfo('alice'))!.archived, hasLength(held));
   }, skip: needsShim);
 }

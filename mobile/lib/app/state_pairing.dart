@@ -21,6 +21,7 @@ extension AppStatePairing on AppState {
         uid: o.env.msgUid,
         now: now,
         reached: reached,
+        opened: (id: o.haloId, plain: o.plain),
       )) {
         firstFails.note('full');
         return false;
@@ -116,6 +117,14 @@ extension AppStatePairing on AppState {
           if (soonest == null || r.nextAt < soonest) soonest = r.nextAt;
           continue;
         }
+        // opened in an earlier process: what it opened to, not signal again
+        final was = r.opened;
+        if (was != null && _firstOpened[r.hash] == null) {
+          _firstOpened.put(
+            r.hash,
+            _FirstOpen(was.id, was.plain, unwrapMessage(was.plain)),
+          );
+        }
         await _receiveRelayOne(
           (peer: 'firstcontact', cipher: r.cipher),
           () {},
@@ -209,6 +218,7 @@ extension AppStatePairing on AppState {
   Future<(String, RouteTo)?> backPairFromCipher(
     String cipher, {
     Reached? reached,
+    InviteArrival? v4,
   }) async {
     final epoch = _openedEpoch;
     final k = sha256.convert(utf8.encode(cipher)).toString();
@@ -219,7 +229,9 @@ extension AppStatePairing on AppState {
       o = _firstOpened.take(k);
       if (o == null) {
         _receiver = this;
-        final opened = await _io.openFirstContact(cipher);
+        final opened = v4 == null
+            ? await _io.openFirstContact(cipher)
+            : await _openFirst(cipher, v4: v4);
         if (opened == null) return null;
         o = _FirstOpen(opened.haloId, opened.plain, opened.env);
       }
@@ -305,7 +317,7 @@ extension AppStatePairing on AppState {
     final heardAs = opened.heardAs;
     if (to != RouteTo.dropped && x != null && x.isNotEmpty) {
       _xPubToHaloId[x] = h;
-      _io.listen(x);
+      _io.listen(identOf(h), x);
     }
     var went = to;
     try {
@@ -330,7 +342,7 @@ extension AppStatePairing on AppState {
         if (x != null && x.isNotEmpty && _xPubToHaloId[x] == h) {
           if (heardAs == null) {
             _xPubToHaloId.remove(x);
-            _io.unlisten(x);
+            _io.unlisten(identOf(h), x);
           } else {
             _xPubToHaloId[x] = heardAs;
           }

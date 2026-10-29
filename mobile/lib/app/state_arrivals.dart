@@ -190,6 +190,9 @@ extension AppStateArrivals on AppState {
     // lane says (heldBySpans)
     Reached? reached,
   }) async {
+    // typing rides the onion door alone (receiveOnion): on any other lane,
+    // or sealed for later, it is dropped unseen
+    if (env.typing) return RouteTo.dropped;
     // the dev chat takes a frame only while it runs, and only what his
     // chat may carry, said by his pinned key. the rest is dropped unseen
     if (isDevId(senderHaloId)) {
@@ -223,7 +226,7 @@ extension AppStateArrivals on AppState {
     }
     final marks = <String>{};
     try {
-      return await _fileArrival(
+      final to = await _fileArrival(
         senderHaloId,
         env,
         wire: wire,
@@ -233,6 +236,13 @@ extension AppStateArrivals on AppState {
         late: late,
         reached: reached,
       );
+      if (AppState._shown(to)) _typingAnswered(senderHaloId, env);
+      // a v4 first contact keeps no onion until they answer: their first
+      // frame on the session gives it, and a held one is never replaced
+      if (to == RouteTo.everyday && !fromBackPair && env.groupId == null) {
+        await _fillOnion(senderHaloId, env.senderOnion);
+      }
+      return to;
     } finally {
       for (final k in keys) {
         final n = (_arriving[k] ?? 1) - 1;
@@ -244,6 +254,17 @@ extension AppStateArrivals on AppState {
         _bumpChatRev(k);
       }
       if (marks.isNotEmpty) notifyListeners();
+    }
+  }
+
+  Future<void> _fillOnion(String id, String? onion) async {
+    if (onion == null || !RegExp(r'^[a-z2-7]{56}\.onion$').hasMatch(onion)) {
+      return;
+    }
+    try {
+      await live.fillOnion(id, onion);
+    } catch (e) {
+      dlog('onion: not kept (${e.runtimeType})');
     }
   }
 
@@ -391,6 +412,8 @@ extension AppStateArrivals on AppState {
       return to;
     }
     await _takeShots(senderHaloId, env, db);
+    final capsMoved = await _takeCaps(senderHaloId, env, db);
+    await _memberCaps(senderHaloId, env, db, oneToOneMoved: capsMoved);
     // delivery receipt, handled before the stranger gate and dedup so an ack
     // is never treated as a message or counted toward the cap. it leaves
     // back-paired alone: that flag lifts the sender-side cap, and a stranger
@@ -408,6 +431,8 @@ extension AppStateArrivals on AppState {
         // their first-contact address is spent, and a card must never hand
         // on one they may reset
         unawaited(forgetPeerFc(senderHaloId));
+        // added back: our photo may go to them now
+        unawaited(photoSweep());
         // the door just opened: rows parked for them go now, not when the
         // backoff runs out
         _outboxTries.clear();
@@ -460,6 +485,11 @@ extension AppStateArrivals on AppState {
       dlog('group: an end notice, dropped');
       return to;
     }
+    // and so are its words on a block this version reads for itself
+    if (env.shotsNudge) {
+      dlog('group: a shots notice, dropped');
+      return to;
+    }
     if (await _endRefuses(senderHaloId, env.groupId, env, db)) return to;
     // a group control
     if (env.groupControl != null) {
@@ -476,6 +506,11 @@ extension AppStateArrivals on AppState {
     // they are missing slices of something we sent them
     if (env.need != null) {
       await _answerNeed(senderHaloId, env.need!, db);
+      return to;
+    }
+    // a slice of their profile photo, or its take-back
+    if (env.photo != null) {
+      await _takePhoto(senderHaloId, env, db);
       return to;
     }
     // a frame for a message not here yet waits for it, from a contact or a
@@ -672,6 +707,8 @@ extension AppStateArrivals on AppState {
       if (await db.dropMediaChunks(env.unsend!, from: senderHaloId) > 0) {
         incomingMediaDone(db.container.chatKey(env.groupId ?? senderHaloId));
       }
+      // and a file still coming from the files service stops coming
+      await _dropFetchTakenBack(senderHaloId, env.unsend!, db);
       // refresh so it vanishes live if the peer's looking at the chat now,
       // not only after they leave and come back. home shows the count too
       await refreshContacts();
@@ -769,6 +806,12 @@ extension AppStateArrivals on AppState {
         }
       }
     }
+    // the admin's word on the group's screenshot block heals as the
+    // roster does, from the admin alone
+    final heard = env.groupShots;
+    if (isGroup && heard != null && !support.on) {
+      await _takeGroupShots(env.groupId!, senderHaloId, heard, db);
+    }
     // stranger lock + proof-of-work gate (1:1 only, unaccepted senders).
     // a sender a friend introduced is not a stranger: no pow, no cap. they
     // still land in requests and still need an accept to get a reply.
@@ -793,7 +836,8 @@ extension AppStateArrivals on AppState {
           : await db.countMessagesFrom(senderHaloId) +
                 await db.filesInFlightFrom(
                   senderHaloId,
-                  except: AppState._sliced(env) ? env.mediaId : null,
+                  // a file from the files service is its message's own
+                  except: AppState._sliced(env) ? env.mediaId : env.msgUid,
                 );
       if (strangerCapHolds(
         accepted: false,
@@ -998,7 +1042,8 @@ extension AppStateArrivals on AppState {
           env.preview != null &&
           env.message.isEmpty &&
           env.imageB64 == null &&
-          env.fileB64 == null;
+          env.fileB64 == null &&
+          env.drop == null;
       if (previewOnly) return to;
       if (known) {
         // already have it, but a re-send means our receipt never landed. ack
@@ -1016,6 +1061,39 @@ extension AppStateArrivals on AppState {
       }
       _inflightUids.add(uid);
       claims.add(uid);
+      if (env.drop != null) {
+        // a room's files go in slices, told by their bytes: a frame there
+        // carries none
+        if (isGroup && await _roomOf(env.groupId!, db) != null) {
+          dlog('room: a files service frame, dropped');
+          _inflightUids.remove(uid);
+          return to;
+        }
+        final got = await _dropArrived(
+          senderHaloId,
+          env,
+          db,
+          wire: wire,
+          fromBackPair: fromBackPair,
+        );
+        if (got == null) {
+          // here, its file still on the way: the sender can stop sending
+          // the frame, and the chat shows it once the file is in
+          _inflightUids.remove(uid);
+          claims.remove(uid);
+          if (!isGroup && !unsealing && senderHaloId != myId) {
+            unawaited(_sendDeliveryReceipt(senderHaloId, uid));
+          }
+          return to;
+        }
+        if (got.isEmpty) {
+          unsaved = true;
+        } else if (fileName != null) {
+          filePath = got;
+        } else {
+          mediaPath = got;
+        }
+      }
     }
     if (imgB64 != null && imgB64.isNotEmpty) {
       try {
@@ -1048,6 +1126,7 @@ extension AppStateArrivals on AppState {
     final bare =
         env.imageB64 == null &&
         env.fileB64 == null &&
+        env.drop == null &&
         env.fileName == null &&
         env.mediaId == null &&
         env.poll == null;
@@ -1117,7 +1196,10 @@ extension AppStateArrivals on AppState {
     // alone and rings for itself. one of an album that burned already
     // joins nothing and burns as it lands
     var album =
-        env.imageB64 != null || env.fileB64 != null || AppState._sliced(env)
+        env.imageB64 != null ||
+            env.fileB64 != null ||
+            env.drop != null ||
+            AppState._sliced(env)
         ? env.album
         : null;
     var albumSeen = false;
@@ -1269,10 +1351,9 @@ extension AppStateArrivals on AppState {
         await _wipeAgain(env.groupId!, db);
         return to;
       }
-      // a room always blocks: not even its name in the shade
-      notifTitle = g?['room_pub'] != null
-          ? 'Kryfo'
-          : (g?['name'] as String?) ?? l10n.appGroup2;
+      // a room always blocks, a group may: not even its name in the shade
+      final hush = GroupShots.ofRow(g).blocking;
+      notifTitle = hush ? 'Kryfo' : (g?['name'] as String?) ?? l10n.appGroup2;
       final gBody = sticker != null
           ? l10n.stickerLabel
           : env.poll != null && PollSpec.parse(env.poll) != null
@@ -1286,10 +1367,8 @@ extension AppStateArrivals on AppState {
       final who = looksLikeRoomKey(senderHaloId)
           ? l10n.notificationsSomeone
           : named;
-      // a room always blocks: none of it in the shade
-      notifBody = g?['room_pub'] != null
-          ? l10n.notificationsNewMessage
-          : '$who: $gBody';
+      // none of it in the shade either
+      notifBody = hush ? l10n.notificationsNewMessage : '$who: $gBody';
       notifPayload = 'group:${env.groupId}';
       suppress = reading;
     } else if (!senderAccepted) {

@@ -425,7 +425,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                             style: HaloType.mono(
                               size: 12,
                               color: status.live
-                                  ? HaloColors.green
+                                  ? HaloColors.greenText
                                   : HaloColors.text,
                             ),
                           ),
@@ -519,7 +519,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                     l10n.gettingMessagesShowsMessageTextIn,
                     style: HaloType.sans(
                       size: 12,
-                      color: HaloColors.rose,
+                      color: HaloColors.roseText,
                       height: 1.35,
                     ),
                   ),

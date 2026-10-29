@@ -59,11 +59,11 @@ class _Io extends ArrivalIo {
   Future<bool> hasSession(String peer) async => !noSession.contains(peer);
 
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     final to = cipher.split(' ')[1];
     if (cut.contains(to)) return 'error: down';
     onSend?.call(to, cipher.substring('to $to '.length));
-    return super.relaySend(xPub, cipher);
+    return super.relaySend(ident, xPub, cipher);
   }
 
   List<UnwrappedMessage> to(String member) => [

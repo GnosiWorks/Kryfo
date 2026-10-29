@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import '../desktop/desktop_mode.dart' show onDesktop;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -10,10 +11,13 @@ import '../l10n/l10n.dart';
 
 enum HaloTab { chats, tools, support, me }
 
-// the tabs on the bar. the play build has no support tab
+// the tabs on the bar. the play build has no support tab, the desktop no
+// tools: they pick and hand files through android
 List<HaloTab> get shownTabs => [
   for (final t in HaloTab.values)
-    if (!kPlayBuild || t != HaloTab.support) t,
+    if ((!kPlayBuild || t != HaloTab.support) &&
+        (!onDesktop || t != HaloTab.tools))
+      t,
 ];
 
 Map<HaloTab, String> get _labels => {
@@ -121,7 +125,8 @@ class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     final on = widget.on;
     final label = _labels[widget.tab]!;
-    final scale = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3);
+    // the words follow the app's scale; FittedBox keeps a long one in its tab
+    final scale = MediaQuery.textScalerOf(context);
     return Semantics(
       container: true,
       button: true,

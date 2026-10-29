@@ -94,6 +94,7 @@ extension AppStateOutbox on AppState {
     if (everydayHeld || haloWiping) return;
     unawaited(drainOutbox());
     unawaited(askForMissingSlices());
+    unawaited(fetchDrops());
     _maybeRepoint();
   }
 
@@ -156,6 +157,10 @@ extension AppStateOutbox on AppState {
     _outboxTimer = Timer.periodic(const Duration(seconds: 20), (_) {
       if (haloWiping) return;
       unawaited(drainOutbox());
+      // my invites kept once an hour, network or not
+      unawaited(keepMyInvitesDue());
+      // files on their way in from the files service, as they come due
+      unawaited(fetchDrops());
     });
     _needTimer?.cancel();
     // the catch-up that comes with the start may not have begun yet
@@ -426,6 +431,8 @@ extension AppStateOutbox on AppState {
       return;
     }
     _outboxWasReady = true;
+    // hellos owed go with the outbox, a few minutes apart at most
+    unawaited(sendHellosOwed(due: true));
     // a decoy open: all of it waits for the session that wrote it
     if (everydayHeld) return;
     unawaited(_replayHeld());
@@ -1044,6 +1051,52 @@ extension AppStateOutbox on AppState {
     avatar: _myAvatar,
   );
 
+  // the small opener a waiting frame needs: the empty envelope, with the
+  // proof of work a first contact asks for. one at a time per peer
+  Future<void> _sendStarter(String peer) async {
+    if (!_startersGoing.add(peer)) return;
+    try {
+      final to = await _reach(peer);
+      if (to == null) return;
+      final pow = to.backPaired ? null : await compute(_outboxGrind, '');
+      final wrapped = await wrapMessage(
+        '',
+        sender: _mySender(),
+        powNonce: pow,
+        powBitsUsed: pow == null ? null : powBits,
+      );
+      await _sendOneEnvelope(peer, wrapped);
+      dlog('send: a small opener went ahead of a waiting frame');
+    } catch (e) {
+      dlog('send: the small opener did not go ($e)');
+    } finally {
+      _startersGoing.remove(peer);
+    }
+  }
+
+  // an accepted contact started their session again: the empty envelope
+  // answers it, so what they hold for the answer goes
+  Future<void> _answerNewSession(String peer) async {
+    if (isDevId(peer)) return;
+    // as a receipt is: one in 30 s per contact, so one who starts sessions
+    // over and over gets no frame back for each
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final last = _answeredNewAt[peer];
+    if (last != null && now - last < 30000) return;
+    _answeredNewAt[peer] = now;
+    if (_answeredNewAt.length > 500) {
+      _answeredNewAt.removeWhere((_, t) => now - t > 300000);
+    }
+    try {
+      final to = await _reach(peer);
+      if (to == null || !to.backPaired) return;
+      if (!await (to.on ?? live).isAccepted(peer)) return;
+      await _sendOneEnvelope(peer, await wrapMessage('', sender: _mySender()));
+    } catch (e) {
+      dlog('send: a new session not answered ($e)');
+    }
+  }
+
   // [member]: a group's frame, which the group's own rules send.
   // [takeBack]: an unsend, which only withdraws and goes to anyone
   // [pairOnly]: the onion and the pair address, as an opener's last try
@@ -1087,8 +1140,10 @@ extension AppStateOutbox on AppState {
         dlog('send: $memberId unreachable (no session/bundle), skipping');
         return false;
       }
+      // the identity the door sealed it on goes with it to the relay
+      var ident = kMainIdent;
       try {
-        cipher = await _io.encrypt(memberId, wrapped);
+        (ident: ident, cipher: cipher) = await _io.seal(memberId, wrapped);
       } on StartingAfresh {
         // waits on their card, asked for as it falls due (_afreshCard)
         rethrow;
@@ -1111,7 +1166,7 @@ extension AppStateOutbox on AppState {
           unawaited(_sendBundleCtl(memberId, want: true));
           rethrow;
         }
-        cipher = await _io.encrypt(memberId, wrapped);
+        (ident: ident, cipher: cipher) = await _io.seal(memberId, wrapped);
       }
       final backPaired = to.backPaired;
       final xpub = to.xpub;
@@ -1128,7 +1183,7 @@ extension AppStateOutbox on AppState {
               () => _io.onionSend(onion, cipher),
             ).catchError((Object _) => 'err'),
           Future(
-            () => _io.relaySend(xpub, cipher),
+            () => _io.relaySend(ident, xpub, cipher),
           ).catchError((Object _) => 'err'),
         ]);
         if (!rs.contains('ok')) dlog('send: no copy went ($rs)');
@@ -1143,12 +1198,14 @@ extension AppStateOutbox on AppState {
         // two together. a failed one goes again from the outbox
         final fc = backPaired ? null : peerFcFor(memberId);
         if (fc != null && fc.isNotEmpty) {
-          final f = await Future(() => _io.firstContactSend(xpub, fc, cipher));
+          final f = await Future(
+            () => _io.firstContactSend(ident, xpub, fc, cipher),
+          );
           if (f == 'ok') return true;
           dlog('send: first-contact failed ($f)');
           return false;
         }
-        final n = await Future(() => _io.relaySend(xpub, cipher));
+        final n = await Future(() => _io.relaySend(ident, xpub, cipher));
         // the pair address is a drop box they read only once they add us
         // back, or once they took our card. stored there is parked, not
         // delivered, until one of those
@@ -1190,13 +1247,13 @@ extension AppStateOutbox on AppState {
       if (viaFirst) {
         unawaited(
           _io
-              .firstContactSend(xpub, fc, cipher)
+              .firstContactSend(ident, xpub, fc, cipher)
               .then((r) => settle('firstcontact', r))
               .catchError((_) => settle('firstcontact', 'err')),
         );
       } else {
         unawaited(
-          Future(() => _io.relaySend(xpub, cipher))
+          Future(() => _io.relaySend(ident, xpub, cipher))
               .then((r) => settle('nostr', r))
               .catchError((_) => settle('nostr', 'err')),
         );

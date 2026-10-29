@@ -53,6 +53,7 @@ func liveReset() {
 	livePicks, liveTaken, liveJoinedAt = map[string]livePick{}, 0, time.Time{}
 	liveRunAt, liveJoinRun = time.Time{}, map[string]int{}
 	ownDown, ownKnown, ownAnsweredAt, ownFailedAt, pubAnsweredAt = false, false, 0, 0, 0
+	firstDown, firstKnown, firstAnsweredAt, firstFailedAt = false, false, 0, 0
 	liveMu.Unlock()
 }
 
@@ -266,7 +267,7 @@ func TestQuietAddressReadsThePublicRelay(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	for i, p := range peers {
-		go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), p.pub, rcvs[i])
+		go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), mainPair(p.pub), rcvs[i])
 	}
 	lastHex := hex.EncodeToString(peers[last].pub[:])
 	waitFor(t, "the wrap from the public relay", 15*time.Second, func() bool {
@@ -314,7 +315,7 @@ func TestJustAddedIsLiveOnThePublicRelays(t *testing.T) {
 	})
 	p := newXid(t)
 	rcv := mustRcv(t, p)
-	go nostrSubscribeRunner(asFresh(ctx), hex.EncodeToString(p.pub[:]), p.pub, rcv)
+	go nostrSubscribeRunner(asFresh(ctx), hex.EncodeToString(p.pub[:]), mainPair(p.pub), rcv)
 	waitFor(t, "the new address live on the public relay", 10*time.Second, func() bool {
 		return openOn(pub, rcv) == 1
 	})
@@ -382,7 +383,7 @@ func TestTheListIsChosenAgainAtAModeSwitch(t *testing.T) {
 	waitFor(t, "the first live on the public relay", 15*time.Second, func() bool {
 		return openOn(own, outRcv) == 1 && openOn(pub, inRcv) == 1
 	})
-	nostrPinned([]string{hex.EncodeToString(out.pub[:])})
+	nostrPinned(mainPeers(hex.EncodeToString(out.pub[:])))
 	end := time.Now().Add(2 * time.Second)
 	for time.Now().Before(end) {
 		kickRelays()
@@ -479,7 +480,7 @@ func livePair(t *testing.T) (in, out xid, inRcv, outRcv string) {
 }
 
 func runOn(ctx context.Context, p xid, rcv string) {
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), p.pub, rcv)
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), mainPair(p.pub), rcv)
 }
 
 // the anchor file an earlier run left, at unix seconds at
@@ -899,8 +900,8 @@ func TestARestartedRunnerKeepsItsPublicPlace(t *testing.T) {
 		}
 		nostrMu.Unlock()
 	})
-	nostrSubscribe(inHex, false)
-	nostrSubscribe(outHex, false)
+	nostrSubscribe(mainIdent, inHex, false)
+	nostrSubscribe(mainIdent, outHex, false)
 	waitFor(t, "the first live on the public relay", 15*time.Second, func() bool {
 		return openOn(own, outRcv) == 1 && openOn(pub, inRcv) == 1
 	})
@@ -923,8 +924,8 @@ func TestARestartedRunnerKeepsItsPublicPlace(t *testing.T) {
 		{"an accept", true},
 	} {
 		ins := everOn(pub, inRcv)
-		nostrSubscribe(inHex, path.fresh)
-		nostrSubscribe(outHex, path.fresh)
+		nostrSubscribe(mainIdent, inHex, path.fresh)
+		nostrSubscribe(mainIdent, outHex, path.fresh)
 		waitFor(t, path.name+": the live address back on the public relay", 10*time.Second, func() bool {
 			return everOn(pub, inRcv) > ins && openOn(pub, inRcv) == 1
 		})
@@ -958,13 +959,13 @@ func TestAnAcceptedRequestIsLiveFromTheNextStart(t *testing.T) {
 		}
 		nostrMu.Unlock()
 	})
-	nostrSubscribe(inHex, false)
-	nostrSubscribe(reqHex, false)
+	nostrSubscribe(mainIdent, inHex, false)
+	nostrSubscribe(mainIdent, reqHex, false)
 	waitFor(t, "the request on our relay, the other live on the public one", 15*time.Second, func() bool {
 		return openOn(own, reqRcv) == 1 && openOn(pub, inRcv) == 1
 	})
 	// the accept
-	nostrSubscribe(reqHex, true)
+	nostrSubscribe(mainIdent, reqHex, true)
 	waitFor(t, "the accepted request back on our relay", 10*time.Second, func() bool {
 		return openOn(own, reqRcv) == 1 && len(connsOn(own.snapshot(), []string{reqRcv})) >= 2
 	})
@@ -982,8 +983,8 @@ func TestAnAcceptedRequestIsLiveFromTheNextStart(t *testing.T) {
 	// the next start: every runner again, the list chosen anew
 	liveNewRun()
 	spendFirstTurn()
-	nostrSubscribe(inHex, false)
-	nostrSubscribe(reqHex, false)
+	nostrSubscribe(mainIdent, inHex, false)
+	nostrSubscribe(mainIdent, reqHex, false)
 	waitFor(t, "the accepted request live on the public relay", 15*time.Second, func() bool {
 		return openOn(pub, reqRcv) == 1
 	})

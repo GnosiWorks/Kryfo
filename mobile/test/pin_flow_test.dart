@@ -479,6 +479,33 @@ void main() {
       expect(dots().children.length, 6);
     });
 
+    testWidgets('a refusal rises in over the hint', (t) async {
+      phone(t);
+      final lock = await makeLock(appOnly);
+      await _flow(t, lock, FakeHost(lock: lock.state));
+      await press(t, find.text(l10n.commonContinue));
+      await t.pumpAndSettle();
+      final before = _words(t);
+      await typePin(t, '9999');
+      await enter(t);
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 60));
+      // the hint going and the refusal coming, both in the tree at once
+      final crossing = [
+        for (final e in find.byType(RiseSwap).evaluate())
+          find
+              .descendant(
+                of: find.byWidget(e.widget),
+                matching: find.byType(Text),
+              )
+              .evaluate()
+              .length,
+      ];
+      expect(crossing, contains(2));
+      await t.pumpAndSettle();
+      expect(_words(t), isNot(before));
+    });
+
     testWidgets('a clash shows only Pick a different PIN, then a new one '
         'is made', (t) async {
       phone(t);

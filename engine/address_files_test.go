@@ -83,7 +83,7 @@ func TestPeerUnsubscribeTakesItsFilesAndNothingWritesThemAgain(t *testing.T) {
 	freshInbox(t)
 	peer := newXid(t)
 	tag := hex.EncodeToString(peer.pub[:])
-	_, rcv, err := nip17RcvAddress(peer.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), peer.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -96,11 +96,11 @@ func TestPeerUnsubscribeTakesItsFilesAndNothingWritesThemAgain(t *testing.T) {
 	nostrMu.Lock()
 	nostrSubs[tag] = cancel
 	nostrMu.Unlock()
-	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 	waitFor(t, "the event opened", 10*time.Second, func() bool { return inboxLen() == 1 })
 	waitFor(t, "the anchor written", 10*time.Second, func() bool { return there(lastPath) })
 
-	if err := nostrUnsubscribe(tag); err != nil {
+	if err := nostrUnsubscribe(mainIdent, tag); err != nil {
 		t.Fatal(err)
 	}
 	nostrMu.Lock()
@@ -124,7 +124,7 @@ func TestPeerUnsubscribeTakesItsFilesAndNothingWritesThemAgain(t *testing.T) {
 	// a new subscription on the address keeps its files again
 	ctx2, cancel2 := context.WithCancel(context.Background())
 	defer cancel2()
-	go nostrSubscribeRunner(ctx2, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx2, tag, mainPair(peer.pub), rcv)
 	waitFor(t, "the event came again", 10*time.Second, func() bool { return inboxLen() == 1 })
 	pollEntries(t)
 	waitFor(t, "remembered again", 10*time.Second, func() bool {

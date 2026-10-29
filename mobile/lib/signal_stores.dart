@@ -1,21 +1,28 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// four libsignal stores backed by sqlcipher. a prefix names another set of
-// the same tables in the same database: the dev chat's made name keeps its
-// own there, so nothing of it touches the everyday store
+// the signal stores over sqlcipher, for the libsignal shim. records go in
+// and out as the bytes libsignal writes, in the tables and the record form
+// libsignal_protocol_dart kept before, so a store a 0.5.x phone wrote goes
+// on here as it is. a prefix names another set of the same tables in the
+// same database: the dev chat's made name keeps its own there
 
 import 'dart:typed_data';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'devchat/dev_key.dart';
+import 'signal_ffi/kryfo_signal.dart';
 
-// the tables of one store, without their prefix
+// the tables of one store, without their prefix. the schema makes them
+// (app/database.dart); the kyber ones came with the shim
 const kSignalTables = [
   'prekeys',
   'signed_prekeys',
   'sessions',
   'peer_identities',
   'signal_meta',
+  'kyber_prekeys',
+  'kyber_used',
+  'opener_reads',
 ];
 
 // the anonymous dev chat's store
@@ -25,122 +32,115 @@ const kDevSignalPrefix = 'dev_';
 // number reads it again
 void Function()? onPeerKeyChanged;
 
-class HaloIdentityKeyStore implements IdentityKeyStore {
-  final Database _db;
-  final IdentityKeyPair _idPair;
-  final int _regId;
-  final String _t;
-  HaloIdentityKeyStore(
+// the one prekey an invite carries. an invite is shared (a handle, a link, a
+// qr), so this "one-time" key must survive use: libsignal removes a prekey
+// after the first session built on it, and everyone after would fail.
+const invitePreKeyId = 999999;
+
+/// the kyber prekey an invite carries, kept as the invite's ec prekey is
+const kInviteKyberId = 1;
+
+/// what a signed or kyber prekey is for: an invite's (its id beside it, ''
+/// for the main one), the identity's session prekeys (heals, device
+/// bundles), or one heal's one-time kyber key
+const kUseInvite = 'invite';
+const kUseSession = 'session';
+const kUseHeal = 'heal';
+
+class LsIdentityStore {
+  LsIdentityStore(
     this._db,
-    this._idPair,
-    this._regId, {
+    this.identity,
+    this.registrationId, {
     String prefix = '',
+    this.ident = 0,
   }) : _t = '${prefix}peer_identities';
 
-  @override
-  Future<IdentityKeyPair> getIdentityKeyPair() async => _idPair;
+  final DatabaseExecutor _db;
+  final LsIdentity identity;
+  final int registrationId;
+  final String _t;
+  // the identity whose rows these are
+  final int ident;
 
-  @override
-  Future<int> getLocalRegistrationId() async => _regId;
-
-  @override
-  Future<bool> saveIdentity(
-    SignalProtocolAddress address,
-    IdentityKey? identityKey,
-  ) async {
-    if (identityKey == null) return false;
-    final addr = address.getName();
-    // the dev chat keeps no key but the pinned one
-    if (isDevChat(addr) && !_pinned(addr, identityKey)) return false;
-    final existing = await _db.query(
-      _t,
-      where: 'address = ?',
-      whereArgs: [addr],
-      limit: 1,
-    );
-    final newBytes = identityKey.serialize();
-    final changed =
-        existing.isNotEmpty &&
-        !_eq(existing.first['identity_key'] as Uint8List, newBytes);
-    await _db.insert(_t, {
-      'address': addr,
-      'identity_key': newBytes,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
-    // the same key again changes nothing: one look per key, not per message
-    if (changed || existing.isEmpty) await _unverifyOtherKey(addr, newBytes);
-    // the first-contact try's stand-in name is nobody's page
-    if ((changed || existing.isEmpty) && addr != '_pending_back_pair_') {
-      onPeerKeyChanged?.call();
-    }
-    return changed;
-  }
-
-  @override
-  Future<bool> isTrustedIdentity(
-    SignalProtocolAddress address,
-    IdentityKey? identityKey,
-    Direction direction,
-  ) async {
-    if (identityKey == null) return false;
-    // the dev chat trusts the pinned key and nothing else: no first use,
-    // no warning, and nothing written
-    if (isDevChat(address.getName())) {
-      return _pinned(address.getName(), identityKey);
-    }
+  /// the key held for [peer], 33 bytes
+  Future<Uint8List?> getIdentity(String peer) async {
     final rows = await _db.query(
       _t,
-      where: 'address = ?',
-      whereArgs: [address.getName()],
-      limit: 1,
-    );
-    // unknown peer: trust on first use.
-    if (rows.isEmpty) return true;
-    final matches = _eq(
-      rows.first['identity_key'] as Uint8List,
-      identityKey.serialize(),
-    );
-    if (matches) return true;
-    // key changed. deliver-and-warn: trust the new key so the message still
-    // arrives, but flag the contact so the chat shows a banner. a reinstall
-    // and a mitm look the same here, so the user decides.
-    await _db.update(
-      'contacts',
-      {'key_changed': 1, 'verified': 0},
-      where: 'halo_id = ?',
-      whereArgs: [address.getName()],
-    );
-    return true;
-  }
-
-  @override
-  Future<IdentityKey?> getIdentity(SignalProtocolAddress address) async {
-    final rows = await _db.query(
-      _t,
-      where: 'address = ?',
-      whereArgs: [address.getName()],
+      where: 'ident = ? AND address = ?',
+      whereArgs: [ident, peer],
       limit: 1,
     );
     if (rows.isEmpty) return null;
-    final bytes = rows.first['identity_key'] as Uint8List;
-    return IdentityKey(Curve.decodePoint(bytes, 0));
+    return Uint8List.fromList(rows.first['identity_key'] as List<int>);
   }
 
-  // drop a peer's stored identity so a changed key is trusted on first use
-  // again. only called after the user accepts the new safety number.
-  Future<void> removePeerIdentity(SignalProtocolAddress address) async {
-    await _db.delete(_t, where: 'address = ?', whereArgs: [address.getName()]);
+  /// the only key the dev chat takes for [peer]; null for anyone else. a
+  /// dev chat whose key is gone trusts nothing
+  Uint8List? pinnedFor(String peer) {
+    if (!isDevChat(peer)) return null;
+    final k = devKeyById(peer.substring(4));
+    if (k == null || k.status == DevKeyStatus.retired) {
+      throw const LsError(LsError.untrusted);
+    }
+    return pinnedIdentity(k);
   }
 
-  // a verified mark names the key it was given for: another key saved for
-  // them takes it off, whichever way that key came
-  Future<void> _unverifyOtherKey(String addr, Uint8List key) async {
+  /// [key] seen for [peer] on a message that opened or a session built:
+  /// trust on first use, and deliver and warn on a new key. a reinstall
+  /// and a mitm look the same here, so the contact is flagged and the user
+  /// decides. true when another key was held before
+  Future<bool> saw(String peer, List<int> key) async {
+    // the dev chat keeps no key but the pinned one, and flags nothing
+    if (isDevChat(peer)) {
+      final k = devKeyById(peer.substring(4));
+      if (k == null || k.status == DevKeyStatus.retired) return false;
+      if (!_eq(pinnedIdentity(k), key)) return false;
+      await _db.insert(_t, {
+        'ident': ident,
+        'address': peer,
+        'identity_key': Uint8List.fromList(key),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      return false;
+    }
+    final held = await getIdentity(peer);
+    final changed = held != null && !_eq(held, key);
+    if (changed) {
+      await _db.update(
+        'contacts',
+        {'key_changed': 1, 'verified': 0},
+        where: 'halo_id = ?',
+        whereArgs: [peer],
+      );
+    }
+    if (held != null && !changed) return false;
+    await _db.insert(_t, {
+      'ident': ident,
+      'address': peer,
+      'identity_key': Uint8List.fromList(key),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    await _unverifyOtherKey(peer, key);
+    if (peer != '_pending_back_pair_') onPeerKeyChanged?.call();
+    return changed;
+  }
+
+  Future<void> removePeerIdentity(String peer) async {
+    await _db.delete(
+      _t,
+      where: 'ident = ? AND address = ?',
+      whereArgs: [ident, peer],
+    );
+  }
+
+  // a verified mark names the key it was given for
+  Future<void> _unverifyOtherKey(String peer, List<int> key) async {
     final pub = key.length == 33 ? key.sublist(1) : key;
     final hex = pub.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
     final rows = await _db.query(
       'contacts',
       columns: ['verified', 'verified_key'],
       where: 'halo_id = ?',
-      whereArgs: [addr],
+      whereArgs: [peer],
       limit: 1,
     );
     if (rows.isEmpty || (rows.first['verified'] as int? ?? 0) != 1) return;
@@ -149,244 +149,284 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
       'contacts',
       {'verified': 0},
       where: 'halo_id = ?',
-      whereArgs: [addr],
+      whereArgs: [peer],
     );
-  }
-
-  // the key an address dev:<id> is pinned to, while that key still works
-  bool _pinned(String addr, IdentityKey key) {
-    final k = devKeyById(addr.substring(4));
-    if (k == null || k.status == DevKeyStatus.retired) return false;
-    return _eq(key.serialize(), pinnedIdentity(k));
-  }
-
-  bool _eq(List<int> a, List<int> b) {
-    if (a.length != b.length) return false;
-    for (var i = 0; i < a.length; i++) {
-      if (a[i] != b[i]) return false;
-    }
-    return true;
   }
 }
 
-// the one prekey an invite carries. an invite is shared (a handle, a link, a
-// qr), so this "one-time" key must survive use: libsignal removes a prekey
-// after the first session built on it, and everyone after would fail.
-const invitePreKeyId = 999999;
-
-class HaloPreKeyStore implements PreKeyStore {
-  final Database _db;
+// one table of records by id
+class _ById {
+  _ById(this._db, this._t, this.ident);
+  final DatabaseExecutor _db;
   final String _t;
-  HaloPreKeyStore(this._db, {String prefix = ''}) : _t = '${prefix}prekeys';
+  // the identity whose keys these are
+  final int ident;
 
-  @override
-  Future<PreKeyRecord> loadPreKey(int id) async {
+  Future<Uint8List?> load(int id) async {
     final rows = await _db.query(
       _t,
-      where: 'id = ?',
-      whereArgs: [id],
+      where: 'ident = ? AND id = ?',
+      whereArgs: [ident, id],
       limit: 1,
     );
-    if (rows.isEmpty) throw InvalidKeyIdException('no prekey id $id');
-    return PreKeyRecord.fromBuffer(rows.first['record'] as Uint8List);
+    if (rows.isEmpty) return null;
+    return Uint8List.fromList(rows.first['record'] as List<int>);
   }
 
-  @override
-  Future<void> storePreKey(int id, PreKeyRecord record) async {
-    await _db.insert(_t, {
-      'id': id,
-      'record': record.serialize(),
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
-  }
+  Future<bool> contains(int id) async => (await _db.query(
+    _t,
+    columns: ['id'],
+    where: 'ident = ? AND id = ?',
+    whereArgs: [ident, id],
+    limit: 1,
+  )).isNotEmpty;
 
-  @override
-  Future<bool> containsPreKey(int id) async {
-    final rows = await _db.query(
+  Future<List<int>> ids() async => [
+    for (final r in await _db.query(
       _t,
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-    return rows.isNotEmpty;
-  }
+      columns: ['id'],
+      where: 'ident = ?',
+      whereArgs: [ident],
+    ))
+      r['id'] as int,
+  ];
 
-  @override
-  Future<void> removePreKey(int id) async {
+  Future<void> _put(Map<String, Object?> row) => _db.insert(_t, {
+    ...row,
+    'ident': ident,
+  }, conflictAlgorithm: ConflictAlgorithm.replace);
+
+  Future<void> _drop(int id) =>
+      _db.delete(_t, where: 'ident = ? AND id = ?', whereArgs: [ident, id]);
+}
+
+class LsPreKeyStore extends _ById {
+  LsPreKeyStore(DatabaseExecutor db, {String prefix = '', int ident = 0})
+    : super(db, '${prefix}prekeys', ident);
+
+  Future<void> store(int id, Uint8List record) =>
+      _put({'id': id, 'record': record});
+
+  // the invite's prekey is shared, so it survives use
+  Future<void> remove(int id) async {
     if (id == invitePreKeyId) return;
-    await _db.delete(_t, where: 'id = ?', whereArgs: [id]);
+    await _drop(id);
+  }
+
+  /// the v3 invite's key gone for good (its invite's year is over)
+  Future<void> dropInvite() => _drop(invitePreKeyId);
+
+  /// a new key in the invite's slot (reset my invite link)
+  Future<void> replaceInvite(Uint8List record) => store(invitePreKeyId, record);
+}
+
+class LsSignedPreKeyStore extends _ById {
+  LsSignedPreKeyStore(DatabaseExecutor db, {String prefix = '', int ident = 0})
+    : super(db, '${prefix}signed_prekeys', ident);
+
+  /// [use]: what the key is for (kUseInvite with its invite's id, '' the
+  /// main invite; kUseSession)
+  Future<void> store(
+    int id,
+    Uint8List record, {
+    String use = kUseInvite,
+    String inviteId = '',
+    int? createdAt,
+  }) => _put({
+    'id': id,
+    'record': record,
+    'created_at': createdAt ?? DateTime.now().millisecondsSinceEpoch,
+    'use': use,
+    'invite_id': inviteId,
+  });
+
+  Future<void> remove(int id) => _drop(id);
+}
+
+class LsKyberPreKeyStore extends _ById {
+  LsKyberPreKeyStore(DatabaseExecutor db, {String prefix = '', int ident = 0})
+    : _used = '${prefix}kyber_used',
+      _reads = '${prefix}opener_reads',
+      super(db, '${prefix}kyber_prekeys', ident);
+
+  final String _used;
+  final String _reads;
+
+  /// [opener] (an opener's fingerprint) was read on kyber key [id]
+  Future<void> markRead(int id, List<int> opener) => _db.insert(_reads, {
+    'ident': ident,
+    'kyber_id': id,
+    'opener': Uint8List.fromList(opener),
+  }, conflictAlgorithm: ConflictAlgorithm.ignore);
+
+  /// whether [opener] was read on kyber key [id] before
+  Future<bool> wasRead(int id, List<int> opener) async {
+    for (final r in await _db.query(
+      _reads,
+      columns: ['opener'],
+      where: 'ident = ? AND kyber_id = ?',
+      whereArgs: [ident, id],
+    )) {
+      if (_eq(r['opener'] as List<int>, opener)) return true;
+    }
+    return false;
+  }
+
+  Future<void> store(
+    int id,
+    Uint8List record, {
+    bool lastResort = false,
+    String use = kUseInvite,
+    String inviteId = '',
+    int? createdAt,
+  }) => _put({
+    'id': id,
+    'record': record,
+    'last_resort': lastResort ? 1 : 0,
+    'created_at': createdAt ?? DateTime.now().millisecondsSinceEpoch,
+    'use': use,
+    'invite_id': inviteId,
+  });
+
+  Future<bool> isLastResort(int id) async {
+    final rows = await _db.query(
+      _t,
+      columns: ['last_resort'],
+      where: 'ident = ? AND id = ?',
+      whereArgs: [ident, id],
+      limit: 1,
+    );
+    return rows.isNotEmpty && rows.first['last_resort'] == 1;
+  }
+
+  /// [id] opened a session for [baseKey]: a one-time key goes, a last
+  /// resort one keeps the base key so the same opener is not taken twice
+  Future<void> markUsed(int id, int signedId, List<int> baseKey) async {
+    if (!await isLastResort(id)) {
+      await _drop(id);
+      return;
+    }
+    await _db.insert(_used, {
+      'ident': ident,
+      'kyber_id': id,
+      'signed_id': signedId,
+      'base_key': Uint8List.fromList(baseKey),
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  Future<bool> wasUsed(int id, List<int> baseKey) async {
+    for (final r in await _db.query(
+      _used,
+      columns: ['base_key'],
+      where: 'ident = ? AND kyber_id = ?',
+      whereArgs: [ident, id],
+    )) {
+      if (_eq(r['base_key'] as List<int>, baseKey)) return true;
+    }
+    return false;
+  }
+
+  // the openers a key took go with it: nothing opens on it after
+  Future<void> remove(int id) async {
+    await _drop(id);
+    await _db.delete(
+      _used,
+      where: 'ident = ? AND kyber_id = ?',
+      whereArgs: [ident, id],
+    );
+    await _db.delete(
+      _reads,
+      where: 'ident = ? AND kyber_id = ?',
+      whereArgs: [ident, id],
+    );
   }
 }
 
-class HaloSessionStore implements SessionStore {
-  final Database _db;
+class LsSessionStore {
+  LsSessionStore(this._db, {String prefix = '', this.ident = 0})
+    : _t = '${prefix}sessions';
+  final DatabaseExecutor _db;
   final String _t;
-  HaloSessionStore(this._db, {String prefix = ''}) : _t = '${prefix}sessions';
+  // the identity whose sessions these are
+  final int ident;
 
-  @override
-  Future<SessionRecord> loadSession(SignalProtocolAddress address) async {
+  Future<Uint8List?> load(String peer, [int device = 1]) async {
     final rows = await _db.query(
       _t,
-      where: 'address = ? AND device_id = ?',
-      whereArgs: [address.getName(), address.getDeviceId()],
+      where: 'ident = ? AND address = ? AND device_id = ?',
+      whereArgs: [ident, peer, device],
       limit: 1,
     );
-    if (rows.isEmpty) return SessionRecord();
-    return _ownRecord(rows.first['record'] as Uint8List);
+    if (rows.isEmpty) return null;
+    return Uint8List.fromList(rows.first['record'] as List<int>);
   }
 
-  // every address we hold a session with, contact or not, so the drain loop
-  // can decrypt a deleted peer's next message and file it as a request
-  Future<List<String>> allSessionAddresses() async {
-    final rows = await _db.query(_t, columns: ['address']);
-    return rows.map((r) => r['address'] as String).toSet().toList();
-  }
+  Future<void> store(String peer, Uint8List record, [int device = 1]) =>
+      _db.insert(_t, {
+        'ident': ident,
+        'address': peer,
+        'device_id': device,
+        'record': record,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
 
-  @override
-  Future<List<int>> getSubDeviceSessions(String name) async {
-    final rows = await _db.query(
+  Future<bool> contains(String peer, [int device = 1]) async =>
+      (await _db.query(
+        _t,
+        columns: ['address'],
+        where: 'ident = ? AND address = ? AND device_id = ?',
+        whereArgs: [ident, peer, device],
+        limit: 1,
+      )).isNotEmpty;
+
+  Future<void> delete(String peer, [int device = 1]) => _db.delete(
+    _t,
+    where: 'ident = ? AND address = ? AND device_id = ?',
+    whereArgs: [ident, peer, device],
+  );
+
+  Future<void> deleteAll(String peer) => _db.delete(
+    _t,
+    where: 'ident = ? AND address = ?',
+    whereArgs: [ident, peer],
+  );
+
+  // every address a session is held with, contact or not
+  Future<List<String>> allSessionAddresses() async => {
+    for (final r in await _db.query(
+      _t,
+      columns: ['address'],
+      where: 'ident = ?',
+      whereArgs: [ident],
+    ))
+      r['address'] as String,
+  }.toList();
+
+  Future<List<int>> subDeviceSessions(String peer) async => [
+    for (final r in await _db.query(
       _t,
       columns: ['device_id'],
-      where: 'address = ?',
-      whereArgs: [name],
-    );
-    return rows.map((r) => r['device_id'] as int).toList();
-  }
-
-  @override
-  Future<void> storeSession(
-    SignalProtocolAddress address,
-    SessionRecord record,
-  ) async {
-    await _db.insert(_t, {
-      'address': address.getName(),
-      'device_id': address.getDeviceId(),
-      'record': _onceEach(record).serialize(),
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
-  }
-
-  @override
-  Future<bool> containsSession(SignalProtocolAddress address) async {
-    final rows = await _db.query(
-      _t,
-      where: 'address = ? AND device_id = ?',
-      whereArgs: [address.getName(), address.getDeviceId()],
-      limit: 1,
-    );
-    return rows.isNotEmpty;
-  }
-
-  @override
-  Future<void> deleteSession(SignalProtocolAddress address) async {
-    await _db.delete(
-      _t,
-      where: 'address = ? AND device_id = ?',
-      whereArgs: [address.getName(), address.getDeviceId()],
-    );
-  }
-
-  @override
-  Future<void> deleteAllSessions(String name) async {
-    await _db.delete(_t, where: 'address = ?', whereArgs: [name]);
-  }
-}
-
-// states are handed out as copies, so a try that does not open a message
-// leaves the stored record as it was
-base class _CopiedState extends SessionState {
-  _CopiedState(super.structure) : super.fromStructure();
-
-  // a state on the structure itself, for writing the record
-  SessionState bare() => SessionState.fromStructure(super.structure);
-
-  @override
-  get structure => SessionRecord.fromSerialized(
-    SessionRecord.fromSessionState(
-      SessionState.fromStructure(super.structure),
-    ).serialize(),
-  ).sessionState.structure;
-}
-
-SessionRecord _ownRecord(Uint8List bytes) {
-  final read = SessionRecord.fromSerialized(bytes);
-  final archived = [
-    for (final s in read.previousSessionStates) _CopiedState(s.structure),
+      where: 'ident = ? AND address = ?',
+      whereArgs: [ident, peer],
+    ))
+      r['device_id'] as int,
   ];
-  read
-    ..state = _CopiedState(read.sessionState.structure)
-    ..removePreviousSessionStates();
-  read.previousSessionStates.addAll(archived);
-  return read;
-}
 
-// [record] with each session once, the newest copy of it kept. an archived
-// state that opens a message is promoted without leaving the archive, and
-// what stays there is its state from before
-SessionRecord _onceEach(SessionRecord record) {
-  SessionState plain(SessionState s) =>
-      s is _CopiedState ? s.bare() : SessionState.fromStructure(s.structure);
-  final out = SessionRecord.fromSessionState(plain(record.sessionState));
-  final seen = {_sessionKey(record.sessionState)};
-  for (final s in record.previousSessionStates) {
-    final k = _sessionKey(s);
-    if (k.isNotEmpty && !seen.add(k)) continue;
-    out.previousSessionStates.add(plain(s));
-  }
-  return out;
-}
-
-String _sessionKey(SessionState s) {
-  final base = s.aliceBaseKey;
-  return base.isEmpty ? '' : '${s.getSessionVersion()}:${base.join(',')}';
-}
-
-class HaloSignedPreKeyStore implements SignedPreKeyStore {
-  final Database _db;
-  final String _t;
-  HaloSignedPreKeyStore(this._db, {String prefix = ''})
-    : _t = '${prefix}signed_prekeys';
-
-  @override
-  Future<SignedPreKeyRecord> loadSignedPreKey(int id) async {
-    final rows = await _db.query(
+  /// every row, for the restore marks
+  Future<List<(String, Uint8List)>> all() async => [
+    for (final r in await _db.query(
       _t,
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-    if (rows.isEmpty) throw InvalidKeyIdException('no signed prekey $id');
-    return SignedPreKeyRecord.fromSerialized(rows.first['record'] as Uint8List);
-  }
+      columns: ['address', 'record'],
+      where: 'ident = ?',
+      whereArgs: [ident],
+    ))
+      (r['address'] as String, Uint8List.fromList(r['record'] as List<int>)),
+  ];
+}
 
-  @override
-  Future<List<SignedPreKeyRecord>> loadSignedPreKeys() async {
-    final rows = await _db.query(_t);
-    return rows
-        .map((r) => SignedPreKeyRecord.fromSerialized(r['record'] as Uint8List))
-        .toList();
+bool _eq(List<int> a, List<int> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
   }
-
-  @override
-  Future<void> storeSignedPreKey(int id, SignedPreKeyRecord record) async {
-    await _db.insert(_t, {
-      'id': id,
-      'record': record.serialize(),
-      'created_at': DateTime.now().millisecondsSinceEpoch,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
-  }
-
-  @override
-  Future<bool> containsSignedPreKey(int id) async {
-    final rows = await _db.query(
-      _t,
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-    return rows.isNotEmpty;
-  }
-
-  @override
-  Future<void> removeSignedPreKey(int id) async {
-    await _db.delete(_t, where: 'id = ?', whereArgs: [id]);
-  }
+  return true;
 }

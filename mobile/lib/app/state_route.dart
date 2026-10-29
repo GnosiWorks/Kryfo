@@ -10,7 +10,9 @@ extension AppStateRoute on AppState {
   String _askEngineMode() {
     try {
       final m = engine.transportMode();
-      return const {'private', 'balanced', 'fast'}.contains(m) ? m : 'private';
+      return const {'private', 'balanced', 'fast'}.contains(m)
+          ? routeOf(m)
+          : 'private';
     } catch (_) {
       return 'private';
     }
@@ -24,50 +26,85 @@ extension AppStateRoute on AppState {
   }
 
   Future<void> loadSendMode() async {
-    final stored = await secureStore.read(key: 'send_mode') ?? 'private';
-    // fast is off after every reinstall: its marker lives in app data, which
-    // an uninstall wipes, while the preference can come back from a backup
-    final marker = await _fastMarker;
-    _sendMode = sendModeAtBoot(stored, fastMarker: await marker.exists());
-    if (_sendMode != stored) {
+    final stored = await secureStore.read(key: 'send_mode');
+    // the old fast mode's marker has nothing left to say
+    unawaited(_dropFastMarker());
+    // relay and fast are one route now, and whoever was on either is on it
+    _sendMode = routeAtBoot(stored);
+    if (_sendMode != (stored ?? 'private')) {
       await secureStore.write(key: 'send_mode', value: _sendMode);
+    }
+    // the card about the merge is due once, for those who were on relay or
+    // fast when this version first started
+    _routeMergeNote = await secureStore.read(key: kRouteMergeNote);
+    if (_routeMergeNote == null) {
+      _routeMergeNote = routeMergeNoteAt(stored);
+      await secureStore.write(key: kRouteMergeNote, value: _routeMergeNote);
     }
     notifyListeners();
   }
 
-  Future<File> get _fastMarker async {
-    final dir = await getApplicationDocumentsDirectory();
-    return File('${dir.path}/fast_ok');
+  Future<void> _dropFastMarker() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final f = File('${dir.path}/fast_ok');
+      if (await f.exists()) await f.delete();
+    } catch (e) {
+      dlog('fast marker: ${e.runtimeType}');
+    }
   }
 
-  Future<bool> fastConfirmedOnThisInstall() =>
-      _fastMarker.then((f) => f.exists());
+  /// home's one-time card: relay and fast are one now. only while the
+  /// route it speaks of is the one in use
+  bool get routeMergeCardDue =>
+      _routeMergeNote == 'due' && _sendMode == 'balanced' && !inDecoyView;
 
-  // private goes through tor to everything. balanced talks plain tls to our
-  // own relay and nothing else, so only we see an ip. fast talks plain tls to
-  // every relay, so they all do.
+  Future<void> routeMergeCardSeen() async {
+    if (_routeMergeNote == 'done') return;
+    _routeMergeNote = 'done';
+    notifyListeners();
+    await secureStore.write(key: kRouteMergeNote, value: 'done');
+  }
+
+  @visibleForTesting
+  set routeMergeNoteForTest(String? v) => _routeMergeNote = v;
+
+  // private goes through tor to everything. balanced, shown as fast, talks
+  // plain tls to our two servers and nothing else, so only we see an ip.
+  // the public relays are its backup while neither of ours answers, and
+  // only through tor, so they never do
   static const _clearnetRelay = 'wss://relay.kryfo.app';
+  static const _secondRelay = 'wss://relay2.kryfo.app';
   // one list. two copies drift, and the drift is invisible until someone
   // cannot receive on one route.
   static const _publicRelays =
       'wss://nos.lol,wss://relay.primal.net,wss://nostr.mom,'
       'wss://nostr.oxtr.dev';
 
+  // the engine takes the backups after a |
   String relaysFor(String mode) {
-    switch (mode) {
+    switch (routeOf(mode)) {
       case 'balanced':
-        return _clearnetRelay;
-      case 'fast':
-        return '$_clearnetRelay,$_publicRelays';
+        return '$_clearnetRelay,$_secondRelay|$_publicRelays';
       default:
         // our relay's clearnet name rides along, dialled over tor like the
-        // rest, since a friend in relay mode publishes only there
+        // rest, since a friend on an older relay mode publishes only there.
+        // the second server's onion comes right after the first's
         return 'ws://z4waup3c6j6gknkjba72cqjjuffhgg6gtgqfu3vetzcvgoluvr42srid'
-            '.onion,$_clearnetRelay,$_publicRelays';
+            '.onion,${_privateSecond ? '$_secondOnion,' : ''}'
+            '$_clearnetRelay,$_publicRelays';
     }
   }
 
+  // the second server's onion on the private route, its own store as on fast
+  static const _privateSecond = true;
+  static const _secondOnion =
+      'ws://cvwpee5zgbargtxd5wtbtnc6lkbgzxj5byfig3e53ic4t7su7r45n4yd.onion';
+
   Future<void> setSendMode(String m) {
+    m = routeOf(m);
+    // a route picked by hand: the card about the merge has nothing to say
+    if (_routeMergeNote == 'due') unawaited(routeMergeCardSeen());
     final run = _modeQueue.then((_) => _switchSendMode(m));
     _modeQueue = run.catchError((Object e) => dlog('mode: $e'));
     return run;
@@ -76,6 +113,8 @@ extension AppStateRoute on AppState {
   Future<void> _switchSendMode(String m) async {
     // what carried on the old route is not held for the new one
     _usableAt = null;
+    // typing goes and shows on the onion route alone
+    if (m != 'private') _typingClear();
     // the helper app and google push register over tor or not at all: off the
     // private route the phone checks in instead, and the relay forgets
     if (m != 'private' && knockMode(_deliveryMode)) {
@@ -84,13 +123,6 @@ extension AppStateRoute on AppState {
     // saved first: a mode that was not saved is gone at the next start, so
     // a failed save moves nothing and the caller hears of it
     await secureStore.write(key: 'send_mode', value: m);
-    if (m == 'fast') {
-      try {
-        await (await _fastMarker).writeAsString('1');
-      } catch (e) {
-        dlog('fast marker: $e');
-      }
-    }
     // measured against the engine, not the screen: the two only part when
     // something failed half way, and then the engine still has to move
     if (_engineMode == m) {
@@ -103,7 +135,7 @@ extension AppStateRoute on AppState {
     }
     // an outage seen on another mode is not this one's
     _relayDownSince = null;
-    _fastHintShown = false;
+    _oursDownHintShown = false;
     _newTorTry();
     // the engine caches one http client per route, so the mode has to land
     // before the relay list is rebuilt or the first connection uses the old
@@ -156,7 +188,7 @@ extension AppStateRoute on AppState {
       if (done.contains(e.key) || isDevId(e.value) || devIdClaim(e.key)) {
         continue;
       }
-      _io.listen(e.key);
+      _io.listen(identOf(e.value), e.key);
     }
     await subscribeDevLane();
   }
@@ -208,7 +240,11 @@ extension AppStateRoute on AppState {
     }
   }
 
-  void _newTorTry() => _torTryNew = true;
+  void _newTorTry() {
+    _torTryNew = true;
+    // a peer that could not be reached may be now
+    typing.pacer.freshRoute();
+  }
 
   // a route changed on purpose: a try of its own, and nothing the old one
   // carried is held for it. a network handover keeps the grace
@@ -492,10 +528,12 @@ extension AppStateRoute on AppState {
       _sendMode == 'private' &&
       (_bridgeStatus.tryingAnother || _bridgeStatus.exhausted);
 
-  bool get suggestFastFallback => suggestFastFallbackAt(DateTime.now());
+  bool get suggestPrivateFallback => suggestPrivateFallbackAt(DateTime.now());
 
+  // neither of our servers answers on fast: messages wait, and private
+  // gets through the long way meanwhile
   @visibleForTesting
-  bool suggestFastFallbackAt(DateTime now) {
+  bool suggestPrivateFallbackAt(DateTime now) {
     if (_relayHintOff || _sendMode != 'balanced' || !_online) return false;
     final t = _relayDownSince;
     if (t == null) return false;
@@ -504,8 +542,8 @@ extension AppStateRoute on AppState {
 
   // relay mode's read of its relay, on its own clock: tor sits still in that
   // mode, so a read taken only when tor changes misses an outage and keeps a
-  // stale one. the hint turns on by time alone, so a change is announced
-  @visibleForTesting
+  // stale one. the hint turns on by time alone, so a change is announced.
+  // the fast pages read it each second while they are open
   void sampleRelayHealth({DateTime? now}) {
     final at = now ?? DateTime.now();
     final wasDown = _relayDownSince != null;
@@ -514,11 +552,11 @@ extension AppStateRoute on AppState {
     } catch (_) {
       // transport not readable yet: nothing to conclude
     }
-    final v = suggestFastFallbackAt(at);
+    final v = suggestPrivateFallbackAt(at);
     // the pill counts the spell from here on its own clock
     final moved = wasDown != (_relayDownSince != null);
-    if (v != _fastHintShown || moved) {
-      _fastHintShown = v;
+    if (v != _oursDownHintShown || moved) {
+      _oursDownHintShown = v;
       notifyListeners();
     }
   }
@@ -544,8 +582,10 @@ extension AppStateRoute on AppState {
       _relayDownSince = null;
       return;
     }
+    // a backup standing by says nothing about ours
     final anyUsable = relays.any((r) {
       if (r is! Map) return true;
+      if (r['backup'] == true) return false;
       final fails = (r['fails'] as num?)?.toInt() ?? 0;
       return fails == 0 && r['benched'] != true;
     });

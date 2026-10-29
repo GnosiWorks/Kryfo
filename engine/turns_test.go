@@ -589,10 +589,10 @@ func TestAJustAddedAddressAsksAtOnce(t *testing.T) {
 		}
 		return false
 	}
-	if r := nostrSubscribe(againHex, false); r != "ok" {
+	if r := nostrSubscribe(mainIdent, againHex, false); r != "ok" {
 		t.Fatal(r)
 	}
-	if r := nostrSubscribe(addedHex, true); r != "ok" {
+	if r := nostrSubscribe(mainIdent, addedHex, true); r != "ok" {
 		t.Fatal(r)
 	}
 	start := time.Now()
@@ -626,7 +626,7 @@ func TestAnAddWhileOfflineAsksAtItsTurn(t *testing.T) {
 	// the network comes back: a wake, whose free first turn someone else took
 	kickRelays()
 	spendFirstTurn()
-	go nostrSubscribeRunner(fresh, hex.EncodeToString(added.pub[:]), added.pub, mustRcv(t, added))
+	go nostrSubscribeRunner(fresh, hex.EncodeToString(added.pub[:]), mainPair(added.pub), mustRcv(t, added))
 	time.Sleep(1500 * time.Millisecond)
 	for _, c := range relay.snapshot() {
 		if c.addrs[mustRcv(t, added)] {
@@ -661,7 +661,7 @@ func TestAnAddWhileTorStartsAsksAtItsTurn(t *testing.T) {
 	base := settledActive(t)
 	added := newXid(t)
 	rcv := mustRcv(t, added)
-	go nostrSubscribeRunner(asFresh(ctx), hex.EncodeToString(added.pub[:]), added.pub, rcv)
+	go nostrSubscribeRunner(asFresh(ctx), hex.EncodeToString(added.pub[:]), mainPair(added.pub), rcv)
 	time.Sleep(300 * time.Millisecond)
 	// tor is up, well inside the add's free window and with no kick
 	mu.Lock()

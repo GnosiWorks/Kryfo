@@ -162,6 +162,7 @@ mixin _FirstContactRows {
     String? uid,
     required int now,
     Reached? reached,
+    ({String id, String plain})? opened,
   }) async {
     final db = await open();
     final rows = await db.query(
@@ -194,6 +195,8 @@ mixin _FirstContactRows {
       'next_at': now + firstRetryGap(0).inMilliseconds,
       'reached_from': reached?.from,
       'reached_until': reached?.until,
+      'opened_id': opened?.id,
+      'opened_plain': opened?.plain,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
     return true;
   }
@@ -213,6 +216,10 @@ mixin _FirstContactRows {
           nextAt: (r['next_at'] as num).toInt(),
           reached: switch ((r['reached_from'], r['reached_until'])) {
             (final int f, final int u) => (from: f, until: u),
+            _ => null,
+          },
+          opened: switch ((r['opened_id'], r['opened_plain'])) {
+            (final String id, final String plain) => (id: id, plain: plain),
             _ => null,
           },
         ),
@@ -389,6 +396,9 @@ typedef FirstKept = ({
   // when it reached the relay or this phone, by this clock, where the lane
   // said: null for one kept before that was kept
   Reached? reached,
+  // what signal opened it to the first time, under which name: an opener
+  // opens once, so a try in a later process takes this, not signal
+  ({String id, String plain})? opened,
 });
 
 /// the people the shelf may let in without an accept: accepted already and

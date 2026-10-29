@@ -17,7 +17,9 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowBuild
 
 // the pin key's life on keystores that refuse, stall, answer oddly or lose
 // the key: it is never made over one that is there, never deleted on an
@@ -32,6 +34,11 @@ class PinKeyTest {
         var calls = 0
         var refuseStrongBox = false
         var refuseAll = false
+        var refuseTee = false
+        // a strongbox key the keystore reads as kept in software
+        var softStrong = false
+        // a tee key that answers this instead of an hmac
+        var fixedTee: ByteArray? = null
         // ms a strongbox call takes on the fake clock
         var strongMs = 60L
         var strong = false
@@ -51,6 +58,9 @@ class PinKeyTest {
         // deletes that throw, one each
         var deleteFails = 0
         var clock = 0L
+        // where the keystore says the key lives; null asks the default
+        var levelIs: Int? = null
+        var levelThrows = false
 
         override fun has(alias: String): Boolean {
             hasCalls++
@@ -64,7 +74,7 @@ class PinKeyTest {
         override fun make(alias: String, strongBox: Boolean, unlocked: Boolean) {
             if (makeMs > 0) Thread.sleep(makeMs)
             synchronized(makes) { makes.add(strongBox to unlocked) }
-            if (refuseAll || (strongBox && refuseStrongBox)) throw ProviderException("refused")
+            if (refuseAll || (strongBox && refuseStrongBox) || (!strongBox && refuseTee)) throw ProviderException("refused")
             made[alias] = ByteArray(32) { (it * 7 + makes.size).toByte() }
             strong = strongBox
         }
@@ -76,12 +86,16 @@ class PinKeyTest {
             val k = made[alias] ?: throw PinKey.Gone()
             if (strong) clock += strongMs * 1_000_000
             fixed?.let { return it.copyOf() }
+            if (!strong) fixedTee?.let { return it.copyOf() }
             if (echo) return input.copyOf()
             return Mac.getInstance("HmacSHA256").apply { init(SecretKeySpec(k, "HmacSHA256")) }.doFinal(input)
         }
 
-        override fun level(alias: String): Int? =
-            if (!made.containsKey(alias)) null else if (strong) PinKey.STRONGBOX else PinKey.TEE
+        override fun level(alias: String): Int? {
+            if (!made.containsKey(alias)) return null
+            if (levelThrows) throw ProviderException("no key info")
+            return levelIs ?: if (strong && softStrong) PinKey.SOFTWARE else if (strong) PinKey.STRONGBOX else PinKey.TEE
+        }
 
         override fun delete(alias: String) {
             deleteHang?.await(5, TimeUnit.SECONDS)
@@ -97,6 +111,7 @@ class PinKeyTest {
     private class Kept : PinKey.Notes {
         var v: Pair<Int, Int>? = null
         var m = false
+        var s = false
         override fun read() = v
         override fun write(unlocked: Int, level: Int) {
             v = unlocked to level
@@ -104,6 +119,11 @@ class PinKeyTest {
         override fun clear() {
             v = null
             m = false
+            s = false
+        }
+        override fun soft() = s
+        override fun setSoft() {
+            s = true
         }
         override fun making() = m
         override fun setMaking(on: Boolean) {
@@ -131,6 +151,7 @@ class PinKeyTest {
         PinKey.sdk = android.os.Build.VERSION.SDK_INT
         PinKey.nanos = System::nanoTime
         PinKey.pause = { Thread.sleep(it) }
+        PinKey.secure = { false }
     }
 
     private val x = ByteArray(32) { it.toByte() }
@@ -169,6 +190,95 @@ class PinKeyTest {
         keys.makes.clear()
         PinKey.make()
         assertEquals(listOf(false to false), keys.makes)
+    }
+
+    @Test
+    fun aSoftwareKeystoreGetsNoKeyAndIsNotAskedAgain() {
+        keys.refuseStrongBox = true
+        keys.levelIs = PinKey.SOFTWARE
+        assertEquals("software", PinKey.make()["e"])
+        assertFalse(keys.has(PinKey.ALIAS))
+        assertTrue(notes.s)
+        assertFalse(notes.m)
+        assertEquals(null, notes.v)
+        val i = PinKey.info()
+        assertEquals(false, i["k"])
+        assertEquals(true, i["n"])
+        keys.makes.clear()
+        assertEquals("software", PinKey.make()["e"])
+        assertTrue(keys.makes.isEmpty())
+        // the lock turned off and on asks the keystore again
+        PinKey.drop()
+        assertFalse(notes.s)
+        keys.levelIs = null
+        assertEquals(PinKey.TEE, PinKey.make()["l"])
+        assertEquals(null, PinKey.info()["n"])
+    }
+
+    @Test
+    fun aSoftwareStrongBoxThenAFailedTeeIsNoSoftwareNote() {
+        keys.softStrong = true
+        keys.refuseTee = true
+        assertEquals("refused", PinKey.make()["e"])
+        assertFalse(notes.s)
+        // a tee key that fails its test
+        keys.refuseTee = false
+        keys.fixedTee = ByteArray(32) { 1 }
+        assertEquals("refused", PinKey.make()["e"])
+        assertFalse(notes.s)
+        // the next unlock asks again and gets its key
+        keys.fixedTee = null
+        assertEquals(PinKey.TEE, PinKey.make()["l"])
+    }
+
+    @Test
+    fun aSoftwareNoteAnswersInfoWithoutTheGonePause() {
+        keys.levelIs = PinKey.SOFTWARE
+        assertEquals("software", PinKey.make()["e"])
+        paused.clear()
+        assertEquals(true, PinKey.info()["n"])
+        assertTrue(paused.isEmpty())
+    }
+
+    @Test
+    fun anotherBuildAsksTheKeystoreAgain() {
+        PinKey.attach(RuntimeEnvironment.getApplication())
+        ShadowBuild.setFingerprint("kryfo/one")
+        keys.levelIs = PinKey.SOFTWARE
+        assertEquals("software", PinKey.make()["e"])
+        keys.makes.clear()
+        assertEquals("software", PinKey.make()["e"])
+        assertTrue(keys.makes.isEmpty())
+        // an os update that brought a keystore with hardware
+        ShadowBuild.setFingerprint("kryfo/two")
+        keys.levelIs = null
+        assertEquals(null, PinKey.info()["n"])
+        assertEquals(PinKey.STRONGBOX, PinKey.make()["l"])
+        PinKey.drop()
+    }
+
+    @Test
+    fun aLevelThatWillNotReadClaimsNothing() {
+        PinKey.sdk = 33
+        keys.refuseStrongBox = true
+        keys.levelThrows = true
+        val r = PinKey.make()
+        assertEquals(true, r["k"])
+        assertEquals(PinKey.SOFTWARE, r["l"])
+        assertFalse(notes.s)
+        // a strongbox key is one whatever the read says
+        PinKey.drop()
+        keys.refuseStrongBox = false
+        assertEquals(PinKey.STRONGBOX, PinKey.make()["l"])
+    }
+
+    @Test
+    fun beforeTwelveAStrongBoxAskInSoftwareIsNoStrongBox() {
+        PinKey.sdk = 30
+        keys.levelIs = PinKey.SOFTWARE
+        assertEquals("software", PinKey.make()["e"])
+        assertEquals(listOf(true to false, false to false), keys.makes)
+        assertFalse(keys.has(PinKey.ALIAS))
     }
 
     @Test

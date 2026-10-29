@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import '../l10n/l10n.dart';
 import '../lock_state.dart';
 import '../pass_rules.dart';
+import '../pin_shield.dart';
 import '../theme.dart';
 import '../widgets/fit_column.dart';
 import '../widgets/pass_pad.dart';
@@ -26,7 +27,7 @@ class UpdatePinsScreen extends StatefulWidget {
   State<UpdatePinsScreen> createState() => _UpdatePinsScreenState();
 }
 
-class _UpdatePinsScreenState extends State<UpdatePinsScreen> {
+class _UpdatePinsScreenState extends State<UpdatePinsScreen> with PinShield {
   String _pin = '';
   bool _busy = false;
   bool _letters = false;
@@ -158,7 +159,11 @@ class _UpdatePinsScreenState extends State<UpdatePinsScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            PinDots(filled: passLength(_pin), color: HaloColors.amber),
+            PinDots(
+              filled: passLength(_pin),
+              color: HaloColors.amber,
+              letters: _letters,
+            ),
             const Spacer(flex: 3),
             PassPad(
               letters: _letters,

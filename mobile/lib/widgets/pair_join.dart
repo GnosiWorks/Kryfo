@@ -280,7 +280,7 @@ class _PairJoinState extends State<PairJoin> {
                   ? HaloType.sans(
                       size: 13,
                       weight: FontWeight.w600,
-                      color: HaloColors.rose,
+                      color: HaloColors.roseText,
                     )
                   : HaloType.mono(size: 11, color: HaloColors.text2),
             ),

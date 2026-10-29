@@ -169,7 +169,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                               style: HaloType.mono(
                                 size: 12,
                                 weight: FontWeight.w600,
-                                color: HaloColors.violet,
+                                color: HaloColors.violetText,
                               ),
                             ),
                           ),
@@ -220,7 +220,7 @@ BridgeLine shownBridgeLine() {
   return appState.bridge.skipDirect ? line.watched() : line;
 }
 
-/// relay mode in one tap, where tor found no way in
+/// fast in one tap, where tor found no way in
 Future<void> switchToRelay(BuildContext context) async {
   HapticFeedback.mediumImpact();
   try {
@@ -229,7 +229,7 @@ Future<void> switchToRelay(BuildContext context) async {
     if (context.mounted) showHaloToast(context, l10n.modesNotChanged);
     return;
   }
-  if (context.mounted) showHaloToast(context, l10n.homeSwitchedToRelay);
+  if (context.mounted) showHaloToast(context, l10n.homeSwitchedToFastRoute);
 }
 
 /// android's wi-fi page, where a network's sign-in page is offered. no
@@ -324,10 +324,10 @@ class _BridgeStatusViewState extends State<BridgeStatusView> {
     final relay = line.offerRelay ? widget.onRelay : null;
     // the first filled, the second quiet under it
     final buttons = <(String, VoidCallback)>[
-      if (relay != null && line.relayFirst) (l10n.homeUseOurRelay, relay),
+      if (relay != null && line.relayFirst) (l10n.homeUseFast, relay),
       if (action != null)
         (bridgeActionLabel(action), () => widget.onAction!(action)),
-      if (relay != null && !line.relayFirst) (l10n.homeUseOurRelay, relay),
+      if (relay != null && !line.relayFirst) (l10n.homeUseFast, relay),
     ];
     final base = _base;
     final clock = base == null ? null : bridgeClock(base + _ticks * 1000);
@@ -580,7 +580,7 @@ class _ChoiceCard extends StatelessWidget {
                                     size: 10.5,
                                     weight: FontWeight.w600,
                                     color: t == l10n.bridgesConnected
-                                        ? HaloColors.green
+                                        ? HaloColors.greenText
                                         : HaloColors.amberText,
                                   ),
                                 ),
@@ -621,7 +621,7 @@ class _FriendLinesRow extends StatelessWidget {
         Expanded(
           child: Text(
             l10n.bridges1LineSaved(count),
-            style: HaloType.mono(size: 11, color: HaloColors.violet),
+            style: HaloType.mono(size: 11, color: HaloColors.violetText),
           ),
         ),
         PressScale(
@@ -936,7 +936,7 @@ class _InfoRow extends StatelessWidget {
               value,
               key: ValueKey(value),
               textAlign: TextAlign.end,
-              style: HaloType.mono(size: 12, color: HaloColors.violet),
+              style: HaloType.mono(size: 12, color: HaloColors.violetText),
             ),
           ),
         ),
@@ -1125,7 +1125,10 @@ class _CountryRowState extends State<_CountryRow> {
                     value,
                     key: ValueKey(value),
                     textAlign: TextAlign.end,
-                    style: HaloType.mono(size: 12, color: HaloColors.violet),
+                    style: HaloType.mono(
+                      size: 12,
+                      color: HaloColors.violetText,
+                    ),
                   ),
                 ),
               ),
@@ -1190,7 +1193,7 @@ class _LineRow extends StatelessWidget {
                       : from,
                   style: HaloType.sans(
                     size: 12,
-                    color: bad ? HaloColors.rose : HaloColors.text2,
+                    color: bad ? HaloColors.roseText : HaloColors.text2,
                   ),
                 ),
               ],

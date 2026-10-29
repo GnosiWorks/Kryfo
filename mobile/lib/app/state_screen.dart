@@ -4,18 +4,27 @@
 part of '../main.dart';
 
 extension AppStateScreen on AppState {
+  // the lock read, set, up, and the vault open move the flag and the
+  // recents picture. only a pin set or not changes what settings show
+  (bool, bool, bool, bool) get _lockNow =>
+      (lockState.loaded, lockState.lockOn, lockState.locked, lockState.inVault);
+
   void _lockMoved() {
-    if (_lockWasOn == lockState.lockOn) return;
-    _lockWasOn = lockState.lockOn;
+    final now = _lockNow;
+    final was = _lockWas;
+    if (was == now) return;
+    _lockWas = now;
     unawaited(_applyScreenSecure());
-    notifyListeners();
+    if (was?.$2 != now.$2) notifyListeners();
   }
 
   Future<void> loadScreenSecure() async {
-    if (_lockWasOn == null) {
-      _lockWasOn = lockState.lockOn;
+    _noRecentsSwitch = await _oldAndroid();
+    if (_lockWas == null) {
+      _lockWas = _lockNow;
       lockState.addListener(_lockMoved);
     }
+    pinShieldHold = (on) => unawaited(forceSecure(on));
     try {
       _shotsCardWaits = (await secureStore.read(key: kOldShotsKey)) == 'true';
       if (_shotsCardWaits) await _readShotsCard();
@@ -24,6 +33,19 @@ extension AppStateScreen on AppState {
     }
     await _applyScreenSecure();
     notifyListeners();
+  }
+
+  // android 12 and older, from the process engine, which answers in a
+  // process with no screen too. one that will not say is taken for old there
+  Future<bool> _oldAndroid() async {
+    final android = AppState.androidForTest ?? Platform.isAndroid;
+    try {
+      final sdk = await AppState._phoneChannel.invokeMethod<int>('sdk') ?? 0;
+      if (sdk <= 0) return android;
+      return sdk < 33;
+    } catch (e) {
+      return android;
+    }
   }
 
   bool get shotsCardDue =>
@@ -72,10 +94,10 @@ extension AppStateScreen on AppState {
     final was = (await db.shotsOf(peer)).blocking;
     final at = await db.turnShots(peer, on: on);
     if (at == null) return;
+    final now = (await db.shotsOf(peer)).blocking;
     // blocking from now: what the shade still shows of the chat goes
-    if (!was && (await db.shotsOf(peer)).blocking) {
-      unawaited(_io.unnotify(peer));
-    }
+    if (!was && now) unawaited(_io.unnotify(peer));
+    _photoShotsMoved(peer, blocking: now);
     // queued first: a route that is down carries it later
     await db.queueFrame(shotsUid(peer), kFrameShots, peer, '$at');
     _bumpChatRev(peer);
@@ -111,13 +133,13 @@ extension AppStateScreen on AppState {
         written: env.writtenAt,
       );
       if (!changed) return;
+      final now = (await db.shotsOf(peer)).blocking;
+      _photoShotsMoved(peer, blocking: now);
       _bumpChatRev(peer);
       notifyListeners();
       // blocking from now: what the shade still shows of the chat goes,
       // once, and never what rang since
-      if (!was && (await db.shotsOf(peer)).blocking) {
-        unawaited(_io.unnotify(peer));
-      }
+      if (!was && now) unawaited(_io.unnotify(peer));
       await refreshContacts();
       if (_shotsCardWaits && identical(db, live)) await _readShotsCard();
     } catch (e) {
@@ -148,6 +170,9 @@ extension AppStateScreen on AppState {
       }
     }
     _shotsHeard(peer, word);
+    // and what this phone understands, on every 1:1 frame (typing.dart)
+    capsPut(body);
+    _toldCaps(peer);
     return shotsPut(body, word);
   }
 
@@ -167,29 +192,86 @@ extension AppStateScreen on AppState {
   bool shotsBlocksChat(String peer) =>
       contacts.any((c) => c.haloId == peer && c.shotsBlocking);
 
-  /// a room, which always blocks, as the list knows it
-  bool shotsBlocksGroup(String groupId) =>
-      groups.any((g) => g.groupId == groupId && g.expiresAt != null);
+  /// a room, which always blocks, or a group that does, as the list knows
+  /// it: read at once, before a screen opens on it
+  bool shotsBlocksGroup(String groupId) => groups.any(
+    (g) => g.groupId == groupId && (g.expiresAt != null || g.shotsBlocking),
+  );
   bool get secureForced => _secureHolds > 0;
-  // an app lock keeps screenshots and the recents picture off, whatever the
-  // switch says: the settings then never say one thing while the app does
-  // another. a lock turned off in the decoy is off here too, as anywhere
-  bool get screenSecureByLock => lockState.lockOn;
+
+  /// the window refuses screenshots now: a chat or room that blocks them,
+  /// a viewer's or a pin screen's hold, the lock screen, the hidden chats,
+  /// a pin on android 12 and older or the old switch's card
+  bool get windowSecure =>
+      secureForced ||
+      lockState.locked ||
+      lockState.inVault ||
+      pinBlocksShots ||
+      _shotsCardWaits;
+
+  /// a pin set on android 12 and older, which has no switch for the
+  /// recents picture: screenshots stay blocked the whole time, as before
+  bool get pinBlocksShots => _noRecentsSwitch && lockState.lockOn;
+
+  /// a pin is set: recents shows no picture of the app. a lock turned off
+  /// in the decoy is off here too, as anywhere
+  bool get recentsHidden => lockState.lockOn || lockState.locked;
 
   Future<void> forceSecure(bool on) async {
     _secureHolds = on ? _secureHolds + 1 : max(0, _secureHolds - 1);
     await _applyScreenSecure();
   }
 
+  /// a new screen came onto the engine: its window and surface hold
+  /// nothing of what was sent, and a step refused at its start left this
+  /// side believing it. both go again as they are. before the first load
+  /// has read the android version, that load sends them
+  Future<void> windowAttached() async {
+    _secureSent = null;
+    _recentsSent = null;
+    if (_lockWas == null) return;
+    await _applyScreenSecure();
+  }
+
   Future<void> _applyScreenSecure() async {
-    final on = secureForced || screenSecureByLock || _shotsCardWaits;
-    if (on == _secureSent) return;
-    _secureSent = on;
-    try {
-      await AppState._platformChannel.invokeMethod('setSecure', {'on': on});
-    } catch (e) {
-      _secureSent = null;
-      dlog('setSecure: $e');
+    // until the lock is read the cover hides the app, and what the last
+    // run left stays
+    if (!lockState.loaded) return;
+    // a step the window refused is asked for once more, then again at the
+    // next change: never taken as done
+    final on = windowSecure;
+    if (on != _secureSent) {
+      _secureSent = on;
+      var ok = false;
+      for (var tries = 0; tries < 2; tries++) {
+        try {
+          await AppState._platformChannel.invokeMethod('setSecure', {'on': on});
+          ok = true;
+          break;
+        } catch (e) {
+          dlog('setSecure: $e');
+          // a newer call took over
+          if (_secureSent != on) break;
+        }
+      }
+      if (!ok && _secureSent == on) _secureSent = null;
     }
+    final hide = recentsHidden;
+    if (hide == _recentsSent) return;
+    _recentsSent = hide;
+    var told = false;
+    for (var tries = 0; tries < 2; tries++) {
+      try {
+        await AppState._platformChannel.invokeMethod('setRecentsHidden', {
+          'on': hide,
+        });
+        told = true;
+        break;
+      } catch (e) {
+        dlog('setRecentsHidden: $e');
+        if (_recentsSent != hide) break;
+      }
+    }
+    if (!told && _recentsSent == hide) _recentsSent = null;
   }
 }
