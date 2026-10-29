@@ -284,11 +284,13 @@ extension AppStateContacts on AppState {
   }) async {
     try {
       if (hidden) {
+        await photoBackNow(s.primary, haloId);
         await s.primary.dropSeats(haloId, keyHex);
         return;
       }
       final v = s.vault;
       if (v != null) {
+        await photoBackNow(v, haloId);
         await v.dropSeats(haloId, keyHex);
       } else if (!sessionQuiet && _router.hasVault) {
         await _router.queueSeatGone(haloId, keyHex);
@@ -328,6 +330,7 @@ extension AppStateContacts on AppState {
     try {
       final gone = await _router.seatsGone();
       for (final (id, key) in gone) {
+        await photoBackNow(vault, id);
         await vault.dropSeats(id, key);
       }
       if (gone.isNotEmpty) await _router.clearSeatsGone();
