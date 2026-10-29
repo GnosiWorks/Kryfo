@@ -861,6 +861,8 @@ extension AppStateArrivals on AppState {
     String? mediaPath;
     String? filePath;
     var unsaved = false;
+    // a file filed before it is here, which comes on a tap or on wi-fi
+    var fileWaitsFirst = false;
     final fileName = env.fileName;
     // dedup comes before anything is written, so a uid this phone holds or
     // is filing right now never touches a file. the db check alone races
@@ -1053,13 +1055,15 @@ extension AppStateArrivals on AppState {
           _inflightUids.remove(uid);
           return to;
         }
-        final got = await _dropArrived(
+        final (got, :waits) = await _dropArrived(
           senderHaloId,
           env,
           db,
           wire: wire,
           fromBackPair: fromBackPair,
         );
+        // filed before its file: it stands alone, out of any album
+        fileWaitsFirst = waits;
         if (got == null) {
           // here, its file still on the way: the sender can stop sending
           // the frame, and the chat shows it once the file is in
@@ -1180,10 +1184,11 @@ extension AppStateArrivals on AppState {
     // alone and rings for itself. one of an album that burned already
     // joins nothing and burns as it lands
     var album =
-        env.imageB64 != null ||
-            env.fileB64 != null ||
-            env.drop != null ||
-            AppState._sliced(env)
+        !fileWaitsFirst &&
+            (env.imageB64 != null ||
+                env.fileB64 != null ||
+                env.drop != null ||
+                AppState._sliced(env))
         ? env.album
         : null;
     var albumSeen = false;

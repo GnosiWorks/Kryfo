@@ -166,8 +166,10 @@ extension AppStateFiles on AppState {
 
   /// what the chat files for a frame whose file is on the service: its
   /// path once it is in, '' when it will not come, null while it is still
-  /// coming (the frame is kept and fetched, and filed again once it is in)
-  Future<String?> _dropArrived(
+  /// coming (the frame is kept and fetched, and filed again once it is in).
+  /// [waits]: the message is filed now and its file comes later, on a tap
+  /// or on wi-fi, at the path given
+  Future<(String?, {bool waits})> _dropArrived(
     String sender,
     UnwrappedMessage env,
     HaloDb db, {
@@ -185,14 +187,17 @@ extension AppStateFiles on AppState {
       final why = await fetchRefused(d, sender: sender, fileId: frame.id);
       if (why != null) {
         dlog('files: a frame not kept ($why)');
-        return '';
+        return ('', waits: false);
       }
       final now = DateTime.now().millisecondsSinceEpoch;
       final media = await db.container.mediaDir();
       final path = await fetchPathIn(media);
       // the sealed bytes fetched while hidden chats were closed: the fetch
       // goes on from them
-      await takeHeld(media, frame.token!, path);
+      final held = await takeHeld(media, frame.token!, path);
+      // what comes on its own comes now; the rest is filed and waits
+      final kind = getKindOf(env.fileName);
+      final gets = held || await _getsNow(kind);
       await noteSeen(d, frame.id, now);
       await noteFetch(
         d,
@@ -204,27 +209,112 @@ extension AppStateFiles on AppState {
         size: frame.size,
         path: path,
         now: now,
+        state: gets ? kFetchWaiting : kFetchAsks,
       );
+      if (!gets) {
+        return (await _waitingPath(env, db, uid, kFetchAsks), waits: true);
+      }
       incomingMediaUpdate(
         db.container.chatKey(env.groupId ?? sender),
         0,
         frame.chunks,
+        uid: uid,
+        bytes: frame.size,
       );
       unawaited(fetchDrops());
-      return null;
+      return (null, waits: false);
     }
-    if (f.state == kFetchWaiting) return null;
-    if (f.state != kFetchHave) return '';
+    if (f.state == kFetchWaiting) return (null, waits: false);
+    // paused before it was filed: filed now, the rest on a tap
+    if (fetchFiledFirst(f.state)) {
+      return (await _waitingPath(env, db, uid, f.state), waits: true);
+    }
+    if (f.state != kFetchHave) return ('', waits: false);
     // the file moves into the media folder under a name of the chat's own
-    final out = env.fileName != null
-        ? await receivedFileFor(env.fileName!, db.container)
-        : await receivedImageFor(db.container);
+    final out = await _namedPath(env, db);
     try {
-      await File(f.path).rename(out.path);
-      return out.path;
+      await File(f.path).rename(out);
+      return (out, waits: false);
     } catch (e) {
       dlog('files: fetched file not moved (${e.runtimeType})');
-      return '';
+      return ('', waits: false);
+    }
+  }
+
+  // where a file from [env] lives in the chat's media, under a name of the
+  // chat's own
+  Future<String> _namedPath(UnwrappedMessage env, HaloDb db) async =>
+      (env.fileName != null
+              ? await receivedFileFor(env.fileName!, db.container)
+              : await receivedImageFor(db.container))
+          .path;
+
+  // the path a waiting file will have, its bubble told what it waits for
+  Future<String> _waitingPath(
+    UnwrappedMessage env,
+    HaloDb db,
+    String uid,
+    int state,
+  ) async {
+    final rules = await loadAutoGet(session.container);
+    final kind = getKindOf(env.fileName);
+    setFileWait(
+      uid,
+      FileWait(
+        size: env.drop!.size,
+        state: _waitStateOf(state),
+        rule: kind == null ? AutoGet.always : rules[kind]!,
+      ),
+    );
+    return _namedPath(env, db);
+  }
+
+  static WaitState _waitStateOf(int state) => switch (state) {
+    kFetchComing => WaitState.coming,
+    kFetchPaused => WaitState.paused,
+    _ => WaitState.asks,
+  };
+
+  // ---- automatic download ----
+
+  /// a file of [kind] comes on its own on the network the phone is on now
+  Future<bool> _getsNow(GetKind? kind) async {
+    if (kind == null) return true;
+    return autoGets(
+      await loadAutoGet(session.container),
+      kind,
+      await unmeteredNow(),
+    );
+  }
+
+  /// the person asked for a waiting file, or to go on with a paused one
+  Future<void> downloadNow(String uid) async {
+    for (final d in [live, ?_openVault]) {
+      final db = await d.open();
+      final f = await fetchOf(db, uid);
+      if (f == null || !fetchFiledFirst(f.state)) continue;
+      await fetchState(db, uid, kFetchComing);
+      final w = fileWaitOf(uid);
+      if (w != null) setFileWait(uid, w.copyWith(state: WaitState.coming));
+      unawaited(fetchDrops());
+      return;
+    }
+  }
+
+  /// the person paused a file on its way in. one not filed yet is filed
+  /// now, and waits for a tap to go on; its bytes so far are kept
+  Future<void> pauseDownload(String uid) async {
+    for (final d in [live, ?_openVault]) {
+      final db = await d.open();
+      final f = await fetchOf(db, uid);
+      if (f == null) continue;
+      if (f.state != kFetchWaiting && f.state != kFetchComing) return;
+      await fetchState(db, uid, kFetchPaused);
+      final w = fileWaitOf(uid);
+      if (w != null) setFileWait(uid, w.copyWith(state: WaitState.paused));
+      final frame = unwrapMessage(f.wire).drop;
+      if (frame != null) engine.fileCancel('f:${frame.id}');
+      return;
     }
   }
 
@@ -269,6 +359,8 @@ extension AppStateFiles on AppState {
 
   /// fetches what is due, the open vault's too, one file at a time
   Future<void> fetchDrops() async {
+    // the bubbles of filed files know what they wait for before any link
+    await _loadFileWaits();
     if (_dropFetchRunning) {
       _dropFetchAgain = true;
       return;
@@ -288,6 +380,29 @@ extension AppStateFiles on AppState {
       } while (_dropFetchAgain);
     } finally {
       _dropFetchRunning = false;
+    }
+  }
+
+  Future<void> _loadFileWaits() async {
+    try {
+      final rules = await loadAutoGet(session.container);
+      for (final d in [live, ?_openVault]) {
+        for (final f in await filedFetches(await d.open())) {
+          if (fileWaitOf(f.uid) != null) continue;
+          final env = unwrapMessage(f.wire);
+          final kind = getKindOf(env.fileName);
+          setFileWait(
+            f.uid,
+            FileWait(
+              size: f.size,
+              state: _waitStateOf(f.state),
+              rule: kind == null ? AutoGet.always : rules[kind]!,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      dlog('files: waits not read (${e.runtimeType})');
     }
   }
 
@@ -317,6 +432,10 @@ extension AppStateFiles on AppState {
         await _sayGot(db, f, frame);
         continue;
       }
+      if (fetchFiledFirst(f.state)) {
+        await _fetchFiled(d, db, f, env, frame, chat);
+        continue;
+      }
       if (f.state == kFetchWaiting) {
         if (await d.isBlocked(f.sender)) {
           await _letFetchGo(db, f, frame, chat);
@@ -330,8 +449,15 @@ extension AppStateFiles on AppState {
           final r = await _fetchOne(f, frame, chat);
           // the chat was cleared or put away while it came: nothing of it
           // is filed, and the service hears this phone is done with it
-          if (await fetchOf(db, f.uid) == null) {
+          final after = await fetchOf(db, f.uid);
+          if (after == null) {
             await _letFetchGo(db, f, frame, chat);
+            continue;
+          }
+          // paused part way: its message is filed now and waits for a tap
+          if (after.state == kFetchPaused) {
+            incomingMediaDone(chat);
+            await _fileNow(d, f, env);
             continue;
           }
           if (r == 'ok') {
@@ -355,30 +481,149 @@ extension AppStateFiles on AppState {
         continue;
       }
       // filed as if it had just come, the file with it
-      try {
-        await _applyIncomingPayload(
-          f.sender,
-          env,
-          wire: f.wire,
-          fromBackPair: f.backPair,
-          into: identical(d, live) ? null : d,
-        );
-      } catch (e) {
-        // a stranger past their two, a sender blocked since: not filed
-        dlog('files: fetched file not filed (${e.runtimeType})');
-      }
+      await _fileNow(d, f, env);
       if (shut()) return;
       await _letFetchGo(db, f, frame, chat);
     }
   }
 
-  // one fetch, its progress on the chat's strip
-  Future<String> _fetchOne(DropFetch f, DropFrame frame, String chat) async {
+  // the kept envelope filed as if it had just come
+  Future<void> _fileNow(HaloDb d, DropFetch f, UnwrappedMessage env) async {
+    try {
+      await _applyIncomingPayload(
+        f.sender,
+        env,
+        wire: f.wire,
+        fromBackPair: f.backPair,
+        into: identical(d, live) ? null : d,
+      );
+    } catch (e) {
+      // a stranger past their two, a sender blocked since: not filed
+      dlog('files: fetched file not filed (${e.runtimeType})');
+    }
+  }
+
+  // a file whose message is filed already: it waits for a tap or for
+  // wi-fi, or comes now and takes the place its message names
+  Future<void> _fetchFiled(
+    HaloDb d,
+    Database db,
+    DropFetch f,
+    UnwrappedMessage env,
+    DropFrame frame,
+    String chat,
+  ) async {
+    // its message is being filed this moment
+    if (_inflightUids.contains(f.uid)) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    var target = await d.incomingFilePath(f.uid);
+    if (target == null &&
+        f.state == kFetchPaused &&
+        !await d.messageExists(f.uid)) {
+      // paused before it was filed: filed now. one the gates turn away, or
+      // the person deleted, is let go below
+      await _fileNow(d, f, env);
+      target = await d.incomingFilePath(f.uid);
+    }
+    if (target == null) {
+      setFileWait(f.uid, null);
+      await _letFetchGo(db, f, frame, chat);
+      return;
+    }
+    // a week on the service and it is gone from there
+    if (now - f.at > kFetchKeptFor.inMilliseconds ||
+        await d.isBlocked(f.sender)) {
+      await _neverCame(d, db, f, frame);
+      return;
+    }
+    var state = f.state;
+    final rules = await loadAutoGet(session.container);
+    final kind = getKindOf(env.fileName);
+    // one that waits for wi-fi comes once it is on wi-fi
+    if (state == kFetchAsks && autoGets(rules, kind, await unmeteredNow())) {
+      state = kFetchComing;
+      await fetchState(db, f.uid, state);
+    }
+    final w = fileWaitOf(f.uid);
+    setFileWait(
+      f.uid,
+      FileWait(
+        size: frame.size,
+        state: _waitStateOf(state),
+        rule: kind == null ? AutoGet.always : rules[kind]!,
+        share: w?.share ?? 0,
+      ),
+    );
+    if (state != kFetchComing) return;
+    final r = await _fetchOne(f, frame, chat, waiting: true);
+    final after = await fetchOf(db, f.uid);
+    if (after == null || await d.incomingFilePath(f.uid) == null) {
+      setFileWait(f.uid, null);
+      await _letFetchGo(db, f, frame, chat);
+      return;
+    }
+    if (after.state == kFetchPaused) {
+      final w = fileWaitOf(f.uid);
+      if (w != null) setFileWait(f.uid, w.copyWith(state: WaitState.paused));
+      return;
+    }
+    if (r == 'ok') {
+      try {
+        await File(f.path).rename(target);
+      } catch (e) {
+        dlog('files: fetched file not moved (${e.runtimeType})');
+        await _neverCame(d, db, f, frame);
+        return;
+      }
+      setFileWait(f.uid, null);
+      await _letFetchGo(db, f, frame, chat);
+      chatChanged(f.groupId == null ? f.sender : 'group:${f.groupId}');
+    } else if (r == 'error: gone' ||
+        r == 'error: bad' ||
+        r == 'error: denied') {
+      dlog('files: a file did not come ($r)');
+      await _neverCame(d, db, f, frame);
+    } else {
+      dlog('files: fetch to try again ($r)');
+      await fetchTried(db, f.uid, f.tries + 1, now);
+    }
+  }
+
+  // a filed file that will not come: its message says so, the rest goes
+  Future<void> _neverCame(
+    HaloDb d,
+    Database db,
+    DropFetch f,
+    DropFrame frame,
+  ) async {
+    setFileWait(f.uid, null);
+    await d.fileNeverCame(f.uid, l10n.appAnAttachmentCouldNot);
+    await _letFetchGo(db, f, frame, d.container.chatKey(f.groupId ?? f.sender));
+    chatChanged(f.groupId == null ? f.sender : 'group:${f.groupId}');
+  }
+
+  // one fetch, its progress on the chat's strip, or on its own bubble for
+  // a file whose message is filed already
+  Future<String> _fetchOne(
+    DropFetch f,
+    DropFrame frame,
+    String chat, {
+    bool waiting = false,
+  }) async {
     final key = 'f:${frame.id}';
     final watch = Timer.periodic(const Duration(milliseconds: 500), (_) {
       final p = engine.fileProgress(key);
-      if (p != null) {
-        incomingMediaUpdate(chat, p.$1 * frame.chunks ~/ p.$2, frame.chunks);
+      if (p == null) return;
+      if (waiting) {
+        fileWaitShare(f.uid, p.$1 / p.$2);
+      } else {
+        incomingMediaUpdate(
+          chat,
+          p.$1 * frame.chunks ~/ p.$2,
+          frame.chunks,
+          uid: f.uid,
+          bytes: frame.size,
+        );
       }
     });
     try {

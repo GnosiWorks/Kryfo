@@ -70,6 +70,8 @@ import '../outbox.dart' show powFits;
 import '../theme.dart';
 import '../link_view.dart' show sendReadsBlocked;
 import '../media_progress.dart';
+import '../transfers.dart' show fileWaitOf;
+import '../widgets/file_wait.dart';
 import '../msg_order.dart';
 import '../widgets/earlier_chip.dart';
 import '../media_send.dart'
@@ -6839,6 +6841,7 @@ class _ChatScreenState extends State<ChatScreen>
             ),
             IncomingMediaBanner(
               chatKey: _memo,
+              onPause: appState.pauseDownload,
               onCancel: (uid) {
                 for (final m in _messages) {
                   if (m.msgUid == uid) {
@@ -8278,7 +8281,23 @@ class _Bubble extends StatelessWidget {
                                           ),
                                         ),
                                       ),
-                                    if (album case final run?)
+                                    // here before its file: a card that
+                                    // brings it, in place of the file
+                                    if (!isOut &&
+                                        fileWaitOf(msg.msgUid) != null)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 2,
+                                        ),
+                                        child: FileWaitOr(
+                                          uid: msg.msgUid,
+                                          fileName: msg.fileName,
+                                          onGet: appState.downloadNow,
+                                          onPause: appState.pauseDownload,
+                                          child: () => const SizedBox.shrink(),
+                                        ),
+                                      )
+                                    else if (album case final run?)
                                       _grid(
                                         context,
                                         run,
@@ -8369,7 +8388,10 @@ class _Bubble extends StatelessWidget {
                                           ),
                                         ),
                                       ),
-                                    if (album == null && msg.mediaPath != null)
+                                    if (album == null &&
+                                        msg.mediaPath != null &&
+                                        (isOut ||
+                                            fileWaitOf(msg.msgUid) == null))
                                       PressScale(
                                         scale: 0.97,
                                         haptic: false,

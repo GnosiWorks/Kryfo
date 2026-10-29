@@ -90,6 +90,8 @@ import '../widgets/reconnect_valve.dart';
 import '../theme.dart';
 import '../link_view.dart' show sendReadsBlocked;
 import '../media_progress.dart';
+import '../transfers.dart' show fileWaitOf;
+import '../widgets/file_wait.dart';
 import '../msg_order.dart';
 import '../widgets/earlier_chip.dart';
 import '../group_send_watch.dart';
@@ -4770,6 +4772,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             ),
             IncomingMediaBanner(
               chatKey: _memo,
+              onPause: appState.pauseDownload,
               onCancel: (uid) {
                 final m = _liveMsg(uid);
                 if (m != null) _stopGroupSending(m);
@@ -6086,7 +6089,26 @@ class _GroupBubble extends StatelessWidget {
                                               ),
                                             ),
                                           ],
-                                          if (album case final run?)
+                                          // here before its file: a card
+                                          // that brings it
+                                          if (!isOut &&
+                                              fileWaitOf(m.msgUid) != null)
+                                            Padding(
+                                              padding: EdgeInsets.only(
+                                                bottom: m.text.isNotEmpty
+                                                    ? 6
+                                                    : 0,
+                                              ),
+                                              child: FileWaitOr(
+                                                uid: m.msgUid,
+                                                fileName: m.fileName,
+                                                onGet: appState.downloadNow,
+                                                onPause: appState.pauseDownload,
+                                                child: () =>
+                                                    const SizedBox.shrink(),
+                                              ),
+                                            )
+                                          else if (album case final run?)
                                             Padding(
                                               padding: EdgeInsets.only(
                                                 bottom: m.text.isNotEmpty
@@ -6176,7 +6198,9 @@ class _GroupBubble extends StatelessWidget {
                                               ),
                                             ),
                                           if (album == null &&
-                                              m.mediaPath != null)
+                                              m.mediaPath != null &&
+                                              (isOut ||
+                                                  fileWaitOf(m.msgUid) == null))
                                             Padding(
                                               padding: EdgeInsets.only(
                                                 bottom: m.text.isNotEmpty

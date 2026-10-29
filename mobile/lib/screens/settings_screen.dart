@@ -53,6 +53,7 @@ import '../app_icon.dart' show AppFace, AppFaceWords, appFaceNow, readAppFace;
 import '../widgets/halo_rows.dart';
 import '../widgets/dev_avatar.dart' show DevRing;
 import 'dev_about_sheet.dart' show devChatOffered, writeToMarios;
+import 'auto_get_screen.dart';
 import 'follow_section.dart';
 import 'linked_devices_screen.dart';
 import '../devices/own_devices.dart' show kLinkedDevicesOn;
@@ -760,6 +761,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ).push(haloRoute(const AppearanceScreen()));
                   if (mounted) setState(() {});
                 },
+              ),
+            ],
+          ),
+          HaloSection(l10n.settingsFiles),
+          HaloGroup(
+            children: [
+              HaloRow(
+                icon: Icons.download_for_offline_outlined,
+                label: l10n.autoGetTitle,
+                onTap: () => Navigator.of(
+                  context,
+                ).push(haloRoute(const AutoGetScreen())),
               ),
             ],
           ),
