@@ -699,4 +699,20 @@ void main() {
     );
     expect(engine.unsubscribed, contains(once.id));
   });
+
+  test('a start and a tick keeping the invites at once make one main '
+      'invite, and a reset during an upkeep leaves only its own', () async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await Future.wait([
+      app.keepMyInvitesDue(nowMs: now),
+      app.keepMyInvites(nowMs: now),
+    ]);
+    expect(await invitesOf(db, kMainIdent, kind: kInviteMain), hasLength(1));
+    await db.delete('invites');
+    await db.delete('fc_keys');
+    await Future.wait([app.keepMyInvites(), app.resetMyInvite()]);
+    final mains = await invitesOf(db, kMainIdent, kind: kInviteMain);
+    expect(mains, hasLength(1));
+    expect((await fcKeysOf(db, kMainIdent)).keys, [mains.single.id]);
+  });
 }

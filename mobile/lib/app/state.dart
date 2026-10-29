@@ -819,6 +819,10 @@ class AppState extends ChangeNotifier {
   final _signalReady = Completer<void>();
   Future<void>? _signalBoot;
 
+  // the invite upkeep or reset under way, and when the last upkeep began
+  Future<void>? _invitesKeep;
+  var _invitesKeptAt = 0;
+
   // ids "this isn't them" is taking off this phone right now: nothing of
   // theirs is filed meanwhile
   final _removing = <String>{};

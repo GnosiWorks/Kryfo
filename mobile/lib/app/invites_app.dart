@@ -346,15 +346,22 @@ extension AppStateInvites on AppState {
         (now - _invitesKeptAt).abs() < kInviteUpkeep.inMilliseconds) {
       return Future.value();
     }
-    return _invitesKeep ??= keepMyInvites(nowMs: nowMs)
-        .catchError((Object e) => dlog('invites: not kept (${e.runtimeType})'))
-        .whenComplete(() => _invitesKeep = null);
+    return keepMyInvites(
+      nowMs: nowMs,
+    ).catchError((Object e) => dlog('invites: not kept (${e.runtimeType})'));
   }
 
   /// the main identity's invites kept (made, made again at six months,
   /// dropped a day after expiry, the developer's never) and each live one
-  /// listened on. the everyday side only: a quiet session has none
-  Future<void> keepMyInvites({int? nowMs}) async {
+  /// listened on. the everyday side only: a quiet session has none. one
+  /// upkeep or reset at a time: a call while one runs joins it, as two at
+  /// once would each make a main invite
+  Future<void> keepMyInvites({int? nowMs}) =>
+      _invitesKeep ??= _keepMyInvites(
+        nowMs: nowMs,
+      ).whenComplete(() => _invitesKeep = null);
+
+  Future<void> _keepMyInvites({int? nowMs}) async {
     if (sessionQuiet || !signalSession.ready) return;
     _invitesKeptAt = nowMs ?? DateTime.now().millisecondsSinceEpoch;
     final face = _mainInviteFace();
@@ -398,6 +405,21 @@ extension AppStateInvites on AppState {
   /// is made and listened on. a failure throws: nothing says it was reset
   Future<void> resetMyInvite({int? nowMs}) async {
     if (sessionQuiet || !signalSession.ready || devModeOf(myXPub)) return;
+    // an upkeep under way ends first, and one asked for meanwhile joins
+    // this reset
+    for (var busy = _invitesKeep; busy != null; busy = _invitesKeep) {
+      try {
+        await busy;
+      } catch (_) {}
+    }
+    final run = _resetMyInvite(nowMs: nowMs);
+    _invitesKeep = run
+        .then<void>((_) {}, onError: (_) {})
+        .whenComplete(() => _invitesKeep = null);
+    await run;
+  }
+
+  Future<void> _resetMyInvite({int? nowMs}) async {
     final db = await live.open();
     final up = await resetMainInvite(
       db,
@@ -938,10 +960,6 @@ const kHelloWantDays = 7;
 // the one pass sending hellos owed, and when the last began
 Future<void>? _helloPass;
 var _helloPassAt = 0;
-
-// the invite upkeep under way, and when the last one began
-Future<void>? _invitesKeep;
-var _invitesKeptAt = 0;
 
 /// how often a running app keeps its invites
 const kInviteUpkeep = Duration(hours: 1);
