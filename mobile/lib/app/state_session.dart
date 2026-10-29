@@ -445,6 +445,8 @@ extension AppStateSession on AppState {
   // after the reveal, off the clock
   Future<void> _vaultShown(HaloDb v) async {
     if (!identical(_openVault, v)) return;
+    // its chats draw their waiting files as such
+    unawaited(_loadFileWaits());
     try {
       // its timers that ran out while it was shut go now, and what waits
       // from someone blocked on the everyday side starts

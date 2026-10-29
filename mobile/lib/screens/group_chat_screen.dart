@@ -44,7 +44,7 @@ import '../atmosphere.dart';
 import '../notifications.dart' show clearNotificationsFor;
 import 'dev_about_sheet.dart' show devForwardTarget;
 import 'chat_screen.dart' show SearchHead, firstUrl;
-import 'package:flutter/foundation.dart' show ValueListenable;
+import 'package:flutter/foundation.dart' show ValueListenable, setEquals;
 import 'package:flutter/material.dart';
 import '../drafts.dart';
 import '../wallpaper.dart';
@@ -90,7 +90,7 @@ import '../widgets/reconnect_valve.dart';
 import '../theme.dart';
 import '../link_view.dart' show sendReadsBlocked;
 import '../media_progress.dart';
-import '../transfers.dart' show fileWaitOf;
+import '../transfers.dart' show fileWaitOf, fileWaits;
 import '../widgets/file_wait.dart';
 import '../msg_order.dart';
 import '../widgets/earlier_chip.dart';
@@ -696,6 +696,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
     appState.addListener(_onAppStateChanged);
     groupOwedTick.addListener(_reachMoved);
+    fileWaits.addListener(_waitsMoved);
     _timers.every(const Duration(seconds: 30), _autoRetryTick);
     _burn = _timers.until(_burnWait, _burnTick);
     // back in view: what shows now has been read
@@ -1261,6 +1262,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // a message some members still lacked moved on: its line follows,
   // without a reload of the whole list
   void _reachMoved() => unawaited(_loadReach());
+
+  // the files still to come: a bubble draws a card or its file by them, so
+  // one read after the chat was drawn draws again. a ring moving does not
+  Set<String> _waitUids = fileWaits.value.keys.toSet();
+  void _waitsMoved() {
+    final now = fileWaits.value.keys.toSet();
+    if (setEquals(now, _waitUids)) return;
+    _waitUids = now;
+    if (mounted) setState(() {});
+  }
 
   Future<void> _loadReach() async {
     final reach = await session.groupFileReach(widget.groupId);
@@ -4521,6 +4532,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     releaseChat('group:${widget.groupId}');
     appState.removeListener(_onAppStateChanged);
     groupOwedTick.removeListener(_reachMoved);
+    fileWaits.removeListener(_waitsMoved);
     _timers.dispose();
     _reads.dispose();
     _msgCtrl.dispose();

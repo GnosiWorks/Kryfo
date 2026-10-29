@@ -272,6 +272,8 @@ extension AppStateBoot on AppState {
     startOutboxDrain();
     // files moving show in the shade and keep the process up while they do
     if (!onDesktop) TransferNote.instance.start();
+    // a chat opened now draws its waiting files as such
+    unawaited(_loadFileWaits());
     await _loadBridges();
     // drop week-old partial transfers nobody ever completed.
     unawaited(live.sweepMediaChunks());

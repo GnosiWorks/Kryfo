@@ -70,7 +70,7 @@ import '../outbox.dart' show powFits;
 import '../theme.dart';
 import '../link_view.dart' show sendReadsBlocked;
 import '../media_progress.dart';
-import '../transfers.dart' show fileWaitOf;
+import '../transfers.dart' show fileWaitOf, fileWaits;
 import '../widgets/file_wait.dart';
 import '../msg_order.dart';
 import '../widgets/earlier_chip.dart';
@@ -1321,6 +1321,7 @@ class _ChatScreenState extends State<ChatScreen>
     _loadShots();
     appState.addListener(_onAppStateChanged);
     mediaSendsTick.addListener(_mediaSendsMoved);
+    fileWaits.addListener(_waitsMoved);
     lockState.addListener(_lockLifted);
     claimChat(widget.peerHaloId);
     (_openChats[widget.peerHaloId] ??= []).add(this);
@@ -1739,6 +1740,16 @@ class _ChatScreenState extends State<ChatScreen>
   Timer? _followTimer;
 
   // a beat after the tick, so a send that just let go has written its row
+  // the files still to come: a bubble draws a card or its file by them, so
+  // one read after the chat was drawn draws again. a ring moving does not
+  Set<String> _waitUids = fileWaits.value.keys.toSet();
+  void _waitsMoved() {
+    final now = fileWaits.value.keys.toSet();
+    if (setEquals(now, _waitUids)) return;
+    _waitUids = now;
+    if (mounted) setState(() {});
+  }
+
   void _mediaSendsMoved() {
     _followTimer?.cancel();
     _followTimer = Timer(
@@ -5523,6 +5534,7 @@ class _ChatScreenState extends State<ChatScreen>
     lockState.removeListener(_lockLifted);
     appState.removeListener(_onAppStateChanged);
     mediaSendsTick.removeListener(_mediaSendsMoved);
+    fileWaits.removeListener(_waitsMoved);
     _followTimer?.cancel();
     wallpaperRevision.removeListener(_loadWall);
     _devOpening
