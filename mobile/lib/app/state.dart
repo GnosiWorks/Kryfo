@@ -314,6 +314,12 @@ class AppState extends ChangeNotifier {
   String _pinsTold = '';
 
   static const _platformChannel = MethodChannel('halo/platform');
+  // the process engine's own, answered before a screen is there too
+  static const _phoneChannel = MethodChannel('kryfo/phone');
+
+  /// android or not, for the tests of what a failed read means
+  @visibleForTesting
+  static bool? androidForTest;
 
   // the heartbeat. listen is the last tick the relay queue was read, drain
   // the last time something came out of it. written once a minute, so after
@@ -410,8 +416,12 @@ class AppState extends ChangeNotifier {
   // the check-in's clock, which a test moves on its own
   DateTime Function() _checkClock = DateTime.now;
 
-  // the lock turned on or off: the window follows at once
-  bool? _lockWasOn;
+  // the lock read or not, set or not, up or not, the vault open or not:
+  // the window follows at once
+  (bool, bool, bool, bool)? _lockWas;
+  // android before 13 has no switch for the recents picture: a pin set
+  // keeps the flag on there. read at boot
+  bool _noRecentsSwitch = false;
 
   // the old switch for the whole app was on: the whole window stays
   // covered as it was until home's card is answered. the card asks once
@@ -524,6 +534,7 @@ class AppState extends ChangeNotifier {
   // which dart shares, so an unchanged value is not sent: a room closing
   // in a session switch would otherwise hold the decoy's reveal alone
   bool? _secureSent;
+  bool? _recentsSent;
 
   // the first fill of the search index for a history from before it: a
   // batch, a pause, the next, so the app never waits on it. each container

@@ -245,10 +245,18 @@ open class MainActivity : FlutterFragmentActivity() {
         )
     }
 
-    // flag_secure on the window is not enough on every phone: flutter draws
-    // into a surfaceview with its own secure bit, so the surface is told
-    // directly.
-    private var secureNow = false
+    // the window's flag and its recents picture, each step on its own
+    private val shield = WindowShield(
+        { secure ->
+            if (secure) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            } else {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            }
+        },
+        if (Build.VERSION.SDK_INT >= 33) { picture -> setRecentsScreenshotEnabled(picture) } else null,
+    )
+
     private fun shrinkJpeg(bytes: ByteArray, maxEdge: Int, quality: Int): ByteArray? {
         return try {
             val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
@@ -338,14 +346,18 @@ open class MainActivity : FlutterFragmentActivity() {
     // this screen was rebuilt from a saved state
     private var restored = false
 
-    // dart's last screenshot setting, kept so the next start's first frame is
-    // covered before dart runs
+    // dart's last screenshot and recents settings, kept so the next start's
+    // first frame is covered before dart runs
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         restored = savedInstanceState != null
-        if (getSharedPreferences("kryfo_window", MODE_PRIVATE).getBoolean("secure", false)) {
-            SecureWindow.apply(true, secureSteps(atStart = true))
-            secureNow = true
+        // never throws: a start that cannot read them starts covered
+        val kept = try {
+            val k = getSharedPreferences("kryfo_window", MODE_PRIVATE)
+            k.getBoolean("secure", false) to k.getBoolean("recents", false)
+        } catch (_: Throwable) {
+            true to true
         }
+        shield.start(kept.first, kept.second)
         super.onCreate(savedInstanceState)
         underBars()
         AppIcon.describeTask(this)
@@ -380,31 +392,33 @@ open class MainActivity : FlutterFragmentActivity() {
         enableEdgeToEdge(clear, nav)
     }
 
-    // at start the setting is already kept and dart has drawn nothing yet
-    private fun secureSteps(atStart: Boolean = false) = SecureWindow.Steps(
-        flag = { on ->
-            if (on) {
-                window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-            } else {
-                window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-            }
-        },
-        recents = if (Build.VERSION.SDK_INT >= 33) { on -> setRecentsScreenshotEnabled(!on) } else null,
-        keep = { on ->
-            if (!atStart) {
-                getSharedPreferences("kryfo_window", MODE_PRIVATE).edit().putBoolean("secure", on).apply()
-            }
-        },
-        // no surface recreate on the way off, it flashes the window. one ui
-        // may keep the bit until the next start, and the switch says so.
-        surface = { on -> if (!atStart) findSurface(window.decorView)?.setSecure(on) },
-    )
-
+    // flag_secure on the window is not enough on every phone: flutter draws
+    // into a surfaceview with its own secure bit, so the surface is told
+    // directly
+    // each step on its own: one refused never stops the others. true when
+    // every step went through
     private fun setSecureWindow(on: Boolean): Boolean {
-        android.util.Log.i("kryfo", "setSecure on=$on was=$secureNow")
-        val ok = SecureWindow.apply(on, secureSteps())
-        secureNow = on
-        return ok
+        val held = shield.hold(on)
+        quietly { android.util.Log.i("kryfo", "setSecure on=$on") }
+        val kept = quietly { getSharedPreferences("kryfo_window", MODE_PRIVATE).edit().putBoolean("secure", on).apply() }
+        val surface = quietly { findSurface(window.decorView)?.setSecure(on) }
+        // no surface recreate on the way off, it flashes the window. one ui
+        // may keep the bit until the next start
+        return held && kept && surface
+    }
+
+    private fun setRecentsHidden(on: Boolean): Boolean {
+        val hidden = shield.hide(on)
+        val kept = quietly { getSharedPreferences("kryfo_window", MODE_PRIVATE).edit().putBoolean("recents", on).apply() }
+        return hidden && kept
+    }
+
+    // true when the step ran
+    private inline fun quietly(step: () -> Unit): Boolean = try {
+        step()
+        true
+    } catch (_: Throwable) {
+        false
     }
 
     private fun findSurface(v: View): SurfaceView? {
@@ -583,7 +597,15 @@ open class MainActivity : FlutterFragmentActivity() {
                         val on = call.argument<Boolean>("on") ?: false
                         // the engine outlives the window, so this can be
                         // called with nothing attached
-                        if (SecureWindow.refusedOn(on) { setSecureWindow(it) }) {
+                        if (WindowShield.refusedOn(on) { setSecureWindow(it) }) {
+                            result.error("refused", null, null)
+                        } else {
+                            result.success(null)
+                        }
+                    }
+                    "setRecentsHidden" -> {
+                        val on = call.argument<Boolean>("on") ?: false
+                        if (WindowShield.refusedOn(on) { setRecentsHidden(it) }) {
                             result.error("refused", null, null)
                         } else {
                             result.success(null)

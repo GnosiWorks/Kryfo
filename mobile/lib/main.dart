@@ -102,6 +102,7 @@ import 'container.dart';
 import 'lock_state.dart';
 import 'app_shell.dart';
 import 'lock_guard.dart';
+import 'pin_shield.dart';
 import 'lock_layer.dart';
 import 'screens/lock_screen.dart';
 import 'screens/lock_setup_screen.dart';
