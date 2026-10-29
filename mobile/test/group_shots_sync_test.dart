@@ -6,6 +6,12 @@
 // again who can when someone writes, comes or goes. the app's receive and
 // send paths on its own schema, in the host's sqlite; signal and the wire
 // are stand-ins
+//
+// each test opens the schema in a file on the disk: on a loaded machine
+// that alone can pass the default 30 s
+@Timeout(Duration(minutes: 2))
+library;
+
 import 'dart:async';
 import 'dart:io';
 
