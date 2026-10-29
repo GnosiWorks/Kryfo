@@ -716,6 +716,10 @@ void main() {
       // the one set for them too
       await db.setMinePhoto(_peer, _clean);
       expect(await db.contactPhotos(), isEmpty);
+      // blocking them does not bring it back
+      await db.mem.update('contacts', {'blocked': 1});
+      expect(await db.contactPhotos(), isEmpty);
+      await db.mem.update('contacts', {'blocked': 0});
       // in a decoy the switch alone blocks
       final quiet = _Rows(db.mem, HaloContainer.decoy);
       await db.mem.update('contacts', {'shots_can': 0});

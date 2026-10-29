@@ -69,7 +69,7 @@ mixin _PhotoRows {
       ''');
       return {
         for (final r in rows)
-          if (!ChatShots.ofRow(r, quiet: container.quiet).blocking)
+          if (!ChatShots.ofRow(r, quiet: container.quiet).hidesPhoto)
             r['halo_id'] as String: ?(_blob(r['mine']) ?? _blob(r['theirs'])),
       };
     } catch (e) {
