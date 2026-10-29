@@ -96,9 +96,11 @@ func topupFile() string {
 	return dir + "/nostr_topup"
 }
 
-// the file's key, from the identity: nil while there is none
+// the file's key, from the main identity, named: the queue is the phone's,
+// one file whatever identity sealed a wrap in it (each wrap is sealed by its
+// own already). nil while there is none
 func topupKey() []byte {
-	me, err := myXid()
+	me, err := identityOf(mainIdent)
 	if err != nil {
 		return nil
 	}

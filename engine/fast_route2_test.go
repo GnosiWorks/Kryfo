@@ -133,7 +133,7 @@ func TestPublicRelaysWhileOurFirstIsDown(t *testing.T) {
 	rcv := mustRcv(t, peer)
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
-	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 	waitFor(t, "both of ours listen", 10*time.Second, func() bool {
 		return len(a.snapshot()) > 0 && len(b.snapshot()) > 0
 	})
@@ -221,7 +221,7 @@ func TestALateTopUpIsAFreshWrap(t *testing.T) {
 	standInDown(a, true)
 	sender, reader := newXid(t), newXid(t)
 	mu.Lock()
-	myXPriv, myXPub = sender.priv, sender.pub
+	setMainForTest(sender.priv, sender.pub)
 	mu.Unlock()
 	now := time.Now()
 	// sent six hours ago, stamped up to ten hours before that
@@ -273,14 +273,14 @@ func readFirstStoreAs(t *testing.T, me, from xid, a *relayStandIn, anchor time.T
 	nostrMu.Unlock()
 	setRelays([]string{a.url()})
 	mu.Lock()
-	myXPriv, myXPub = me.priv, me.pub
+	setMainForTest(me.priv, me.pub)
 	mu.Unlock()
 	rcv := mustRcv(t, from)
 	if err := os.WriteFile(anchorFile(rcv, storeFirst), []byte(strconv.FormatInt(anchor.Unix(), 10)), 0600); err != nil {
 		t.Fatal(err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(from.pub[:]), from.pub, rcv)
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(from.pub[:]), mainPair(from.pub), rcv)
 	return cancel
 }
 
@@ -338,7 +338,7 @@ func TestTheTopUpFileIsSealed(t *testing.T) {
 	peer, other := newXid(t), newXid(t)
 	var evs []nostr.Event
 	for i := 0; i < 5; i++ {
-		ev := wrapKeptAt(t, mustXid(), peer.pub, "w"+strconv.Itoa(i), time.Now())
+		ev := wrapKeptAt(t, testMain(), peer.pub, "w"+strconv.Itoa(i), time.Now())
 		evs = append(evs, ev)
 		topupAdd(storeFirst, laneEveryday, ev)
 	}
@@ -378,7 +378,7 @@ func TestTheTopUpFileIsSealed(t *testing.T) {
 	}
 	// a contact deleted takes what waits for them, a room ended its lane's
 	room := roomLane("feed")
-	topupAdd(storeFirst, room, wrapKeptAt(t, mustXid(), other.pub, "room", time.Now()))
+	topupAdd(storeFirst, room, wrapKeptAt(t, testMain(), other.pub, "room", time.Now()))
 	topupPurgeAddr(wrapAddr(evs[2]))
 	topupPurgeLane(room)
 	if n := len(topupFor(storeFirst)); n != 0 {
@@ -390,20 +390,15 @@ func TestTheTopUpFileIsSealed(t *testing.T) {
 		t.Fatalf("%d came back after a restart", n)
 	}
 	// the wrong key opens nothing
-	topupAdd(storeFirst, laneEveryday, wrapKeptAt(t, mustXid(), peer.pub, "x", time.Now()))
+	topupAdd(storeFirst, laneEveryday, wrapKeptAt(t, testMain(), peer.pub, "x", time.Now()))
 	topupSync()
 	topupForget()
 	mu.Lock()
-	myXPriv, myXPub = other.priv, other.pub
+	setMainForTest(other.priv, other.pub)
 	mu.Unlock()
 	if n := len(topupFor(storeFirst)); n != 0 {
 		t.Fatal("another identity read the queue")
 	}
-}
-
-func mustXid() xid {
-	me, _ := myXid()
-	return me
 }
 
 // a store's no ends a wrap, a slow down keeps it, and a wrap that keeps
@@ -415,7 +410,7 @@ func TestATopUpGivesUpOnANo(t *testing.T) {
 	topupRetry = 0
 	t.Cleanup(func() { topupRetry = oldRetry })
 	peer := newXid(t)
-	ev := wrapKeptAt(t, mustXid(), peer.pub, "x", time.Now())
+	ev := wrapKeptAt(t, testMain(), peer.pub, "x", time.Now())
 	for _, c := range []struct {
 		refuse string
 		kept   bool
@@ -461,7 +456,7 @@ func TestATopUpGivesUpOnANo(t *testing.T) {
 func TestAnAnswerNeverWaitsOnTheQueue(t *testing.T) {
 	a, b := newRelayStandIn(t, 0), newRelayStandIn(t, 0)
 	useTwoStores(t, a, b)
-	topupAdd(storeFirst, laneEveryday, wrapKeptAt(t, mustXid(), newXid(t).pub, "x", time.Now()))
+	topupAdd(storeFirst, laneEveryday, wrapKeptAt(t, testMain(), newXid(t).pub, "x", time.Now()))
 	topupForget()
 	topupFileMu.Lock()
 	done := make(chan struct{})
@@ -495,7 +490,7 @@ func TestAPublicRelayInTheListIsNeverDialledDirectly(t *testing.T) {
 	peer := newXid(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, mustRcv(t, peer))
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), mustRcv(t, peer))
 	if ok := nostrPublishMulti(context.Background(), laneEveryday, wrapToAt(t, peer, myXPub, "x", time.Now())); ok < 1 {
 		t.Fatal("not sent")
 	}
@@ -526,7 +521,7 @@ func TestABackupDialsWhenTorComesUp(t *testing.T) {
 	peer := newXid(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, mustRcv(t, peer))
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), mustRcv(t, peer))
 	time.Sleep(time.Second)
 	if len(p.snapshot()) != 0 {
 		t.Fatal("a backup dialled before tor carried")
@@ -599,7 +594,7 @@ func TestPrivateReadsAndWritesBothOnions(t *testing.T) {
 	rcv := mustRcv(t, peer)
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
-	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 	waitFor(t, "all three listen", 15*time.Second, func() bool {
 		return len(a.snapshot()) > 0 && len(b.snapshot()) > 0 && len(p.snapshot()) > 0
 	})
@@ -645,7 +640,7 @@ func TestKeptSealsGoWhenDoneAndStaySmall(t *testing.T) {
 	a, b := newRelayStandIn(t, 0), newRelayStandIn(t, 0)
 	useTwoStores(t, a, b)
 	peer := newXid(t)
-	both := wrapKeptAt(t, mustXid(), peer.pub, "both took it", time.Now())
+	both := wrapKeptAt(t, testMain(), peer.pub, "both took it", time.Now())
 	if _, ok := keptSealOf(both.ID.Hex()); !ok {
 		t.Fatal("no seal kept for a wrap just made")
 	}
@@ -658,7 +653,7 @@ func TestKeptSealsGoWhenDoneAndStaySmall(t *testing.T) {
 	})
 	// queued: the queue holds the seal, the memory does not
 	standInDown(a, true)
-	missed := wrapKeptAt(t, mustXid(), peer.pub, "the first missed it", time.Now())
+	missed := wrapKeptAt(t, testMain(), peer.pub, "the first missed it", time.Now())
 	if ok := nostrPublishMulti(context.Background(), laneEveryday, missed); ok < 1 {
 		t.Fatal("not sent")
 	}
@@ -702,8 +697,8 @@ func TestTheQueueCapCountsTheSeals(t *testing.T) {
 	useTwoStores(t, a, b)
 	peer := newXid(t)
 	evs := []nostr.Event{
-		wrapKeptAt(t, mustXid(), peer.pub, "one", time.Now()),
-		wrapKeptAt(t, mustXid(), peer.pub, "two", time.Now()),
+		wrapKeptAt(t, testMain(), peer.pub, "one", time.Now()),
+		wrapKeptAt(t, testMain(), peer.pub, "two", time.Now()),
 	}
 	k, _ := keptSealOf(evs[0].ID.Hex())
 	// room for both wraps alone, not with their seals
@@ -811,7 +806,7 @@ func TestAYoungSealIsNeverEvicted(t *testing.T) {
 func TestASealOutlivesARouteThatEndedFirst(t *testing.T) {
 	a, b := newRelayStandIn(t, 0), newRelayStandIn(t, 0)
 	useTwoStores(t, a, b)
-	ev := wrapKeptAt(t, mustXid(), newXid(t).pub, "x", time.Now())
+	ev := wrapKeptAt(t, testMain(), newXid(t).pub, "x", time.Now())
 	ended := make(chan struct{})
 	close(ended)
 	if n := nostrPublishOn(context.Background(), laneEveryday, ev, ended); n != 0 {
