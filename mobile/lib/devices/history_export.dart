@@ -149,24 +149,32 @@ List<HistoryChatLeft> historyLeftOf(
       ),
 ];
 
+// a copy on the open list from the moment its sender exists, so a hide
+// queued while the chats are read ends it however far it got
+class _Open {
+  _Open(this.s) {
+    off = historyCopyOpened(end);
+  }
+  final HistorySender s;
+  late final void Function() off;
+  bool ended = false;
+
+  void end() {
+    if (ended) return;
+    ended = true;
+    s.close();
+  }
+}
+
 /// the planned stream on the phone
 class HistoryOutgoing {
-  HistoryOutgoing._(this._s, this.id, this.head, this.chats) {
-    _off = historyCopyOpened(_end);
-  }
-  final HistorySender _s;
-  late final void Function() _off;
-  bool _ended = false;
+  HistoryOutgoing._(this._o, this.id, this.head, this.chats);
+  final _Open _o;
+  HistorySender get _s => _o.s;
 
   /// a chat was hidden while the copy was open: nothing more goes, and the
   /// device discards what it took
-  bool get ended => _ended;
-
-  void _end() {
-    if (_ended) return;
-    _ended = true;
-    _s.close();
-  }
+  bool get ended => _o.ended;
 
   /// the stream id the device needs with the first record, as hex
   final String id;
@@ -178,7 +186,7 @@ class HistoryOutgoing {
   int get leftChats => head.leftChats;
 
   Uint8List record(int i) {
-    if (_ended) throw const HistoryRefused('ended', forGood: true);
+    if (ended) throw const HistoryRefused('ended', forGood: true);
     return _s.record(i);
   }
 
@@ -189,10 +197,8 @@ class HistoryOutgoing {
   ];
 
   void close() {
-    _off();
-    if (_ended) return;
-    _ended = true;
-    _s.close();
+    _o.off();
+    _o.end();
   }
 }
 
@@ -297,6 +303,7 @@ Future<HistoryOutgoing> exportHistory({
   final chats = <HistoryChatRef>[];
   var hidden = <String>{};
   HistorySender? sender;
+  _Open? open;
   // the chats and their messages, read while the vault stays still
   Future<void> text() async {
     hidden = await hiddenChatIds(db);
@@ -391,9 +398,12 @@ Future<HistoryOutgoing> exportHistory({
       skipMedia: skipMedia,
       chunk: chunk,
     );
+    // on the open list while the hold still holds
+    open = _Open(s);
     final media = <String>{};
     final hasReactions = await _hasTable(db, 'reactions');
     final hasVotes = await _hasTable(db, 'poll_votes');
+    final hasOrder = await _hasTable(db, 'frame_order');
     for (final (group, id, row) in order) {
       // a linux desktop cannot keep a screenshot block: the chat shows there
       // as staying on this phone, nothing of what was said in it
@@ -456,6 +466,9 @@ Future<HistoryOutgoing> exportHistory({
           for (final m in keep)
             if (m['msg_uid'] case final String u) u,
         ];
+        // the sender's time on the last edit this phone took of each: the
+        // device keeps a later edit of its own over the copy's words
+        final edits = <String, int>{};
         final reactions = <String, List<Map<String, Object?>>>{};
         final votes = <String, List<Map<String, Object?>>>{};
         if (uids.isNotEmpty) {
@@ -471,6 +484,15 @@ Future<HistoryOutgoing> exportHistory({
                 'emoji': r['emoji'],
                 'reacted_at': r['reacted_at'],
               });
+            }
+          }
+          if (hasOrder) {
+            for (final r in await db.rawQuery(
+              "SELECT msg_uid, sender, w FROM main.frame_order WHERE kind = 'edit' "
+              'AND msg_uid IN ($marks)',
+              uids,
+            )) {
+              edits['${r['msg_uid']}|${r['sender']}'] = (r['w'] as num).toInt();
             }
           }
           if (hasVotes) {
@@ -526,6 +548,9 @@ Future<HistoryOutgoing> exportHistory({
           if (uid is String) {
             if (reactions[uid] case final r?) row['x_reactions'] = r;
             if (votes[uid] case final v?) row['x_votes'] = v;
+            if (edits['$uid|${m['peer_id']}'] case final w?) {
+              row['x_edit_w'] = w;
+            }
           }
           s.message(row);
         }
@@ -541,10 +566,19 @@ Future<HistoryOutgoing> exportHistory({
 
   try {
     await (hold ?? (w) => w())(text);
-    final s = sender!;
-    await s.plan();
-    return HistoryOutgoing._(s, s.id, s.head(), chats);
+    final o = open!;
+    try {
+      await o.s.plan();
+    } on HistoryRefused {
+      // a hide closed it while the files were read
+      if (o.ended) throw const HistoryHiddenMeanwhile();
+      rethrow;
+    }
+    if (o.ended) throw const HistoryHiddenMeanwhile();
+    return HistoryOutgoing._(o, o.s.id, o.s.head(), chats);
   } catch (_) {
+    open?.off();
+    open?.end();
     sender?.close();
     rethrow;
   }
