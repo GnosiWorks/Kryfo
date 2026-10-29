@@ -9562,6 +9562,114 @@ class AppLocalizationsZh extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done/$total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => '剩余不到一分钟';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return '剩余约 $n 分钟';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return '剩余约 $n 小时';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return '正在发送 · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return '正在接收 · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return '正在收发 · $detail';
+  }
+
+  @override
+  String get transferPause => '暂停';
+
+  @override
+  String get transferPauseDownload => '暂停下载';
+
+  @override
+  String get transferDownload => '下载';
+
+  @override
+  String get transferResume => '继续';
+
+  @override
+  String get transferOnWifi => '连接 Wi-Fi 时下载';
+
+  @override
+  String transferPausedAt(String detail) {
+    return '已暂停 · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => '点按下载';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => '文件传输';
+
+  @override
+  String get transferChannel => '文件传输';
+
+  @override
+  String get transferChannelLine => '在发送或下载文件时显示。绝不显示聊天或文件的名称。';
+
+  @override
+  String get autoGetTitle => '自动下载';
+
+  @override
+  String get autoGetLine => '文件会按这里的设置自动到达。等待中的文件会在文件服务器上为你保留，最多一周。';
+
+  @override
+  String get autoGetPhotos => '照片';
+
+  @override
+  String get autoGetVideos => '视频';
+
+  @override
+  String get autoGetFiles => '文件';
+
+  @override
+  String get autoGetAlways => 'Wi-Fi 和移动数据';
+
+  @override
+  String get autoGetWifi => '仅 Wi-Fi';
+
+  @override
+  String get autoGetNever => '从不，我点按下载';
+
+  @override
+  String get autoGetVoice => '语音消息总是会下载。';
+
+  @override
+  String get settingsFiles => '文件';
+
+  @override
+  String get fileSheetOpenWith => '用其他应用打开';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -19005,4 +19113,112 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
     );
     return '$_temp0';
   }
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done/$total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => '剩不到一分鐘';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return '剩約 $n 分鐘';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return '剩約 $n 小時';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return '傳送中 · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return '接收中 · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return '收發中 · $detail';
+  }
+
+  @override
+  String get transferPause => '暫停';
+
+  @override
+  String get transferPauseDownload => '暫停下載';
+
+  @override
+  String get transferDownload => '下載';
+
+  @override
+  String get transferResume => '繼續';
+
+  @override
+  String get transferOnWifi => '連上 Wi-Fi 時下載';
+
+  @override
+  String transferPausedAt(String detail) {
+    return '已暫停 · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => '輕觸即可下載';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => '檔案傳輸';
+
+  @override
+  String get transferChannel => '檔案傳輸';
+
+  @override
+  String get transferChannelLine => '在傳送或下載檔案時顯示。絕不顯示聊天或檔案的名稱。';
+
+  @override
+  String get autoGetTitle => '自動下載';
+
+  @override
+  String get autoGetLine => '檔案會依這裡的設定自動送達。等待中的檔案會在檔案伺服器上為你保留，最多一週。';
+
+  @override
+  String get autoGetPhotos => '照片';
+
+  @override
+  String get autoGetVideos => '影片';
+
+  @override
+  String get autoGetFiles => '檔案';
+
+  @override
+  String get autoGetAlways => 'Wi-Fi 和行動數據';
+
+  @override
+  String get autoGetWifi => '僅限 Wi-Fi';
+
+  @override
+  String get autoGetNever => '永不，我輕觸下載';
+
+  @override
+  String get autoGetVoice => '語音訊息一律會下載。';
+
+  @override
+  String get settingsFiles => '檔案';
+
+  @override
+  String get fileSheetOpenWith => '用其他 App 開啟';
 }

@@ -29,6 +29,7 @@ const androidChannels = [
   'kryfo/net',
   'kryfo/phone',
   'kryfo/video',
+  'kryfo/transfers',
 ];
 
 /// methods with a desktop answer on halo/platform. the rest say not here:

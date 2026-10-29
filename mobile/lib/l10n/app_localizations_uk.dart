@@ -10220,4 +10220,114 @@ class AppLocalizationsUk extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done з $total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'лишилося менше хвилини';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'лишилося близько $n хв';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'лишилося близько $n год';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'Надсилання · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'Отримання · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'Надсилання й отримання · $detail';
+  }
+
+  @override
+  String get transferPause => 'Пауза';
+
+  @override
+  String get transferPauseDownload => 'Призупинити завантаження';
+
+  @override
+  String get transferDownload => 'Завантажити';
+
+  @override
+  String get transferResume => 'Продовжити';
+
+  @override
+  String get transferOnWifi => 'Завантажиться через Wi-Fi';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'Пауза · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'Торкнися, щоб завантажити';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'Передавання файлів';
+
+  @override
+  String get transferChannel => 'Передавання файлів';
+
+  @override
+  String get transferChannelLine =>
+      'Видно, поки файли надсилаються чи завантажуються. Ніколи не називає чат або файл.';
+
+  @override
+  String get autoGetTitle => 'Автозавантаження';
+
+  @override
+  String get autoGetLine =>
+      'Файли приходять без дотику, як налаштовано тут. Файл, що чекає, лишається для тебе на файловому сервері, не довше тижня.';
+
+  @override
+  String get autoGetPhotos => 'Фото';
+
+  @override
+  String get autoGetVideos => 'Відео';
+
+  @override
+  String get autoGetFiles => 'Файли';
+
+  @override
+  String get autoGetAlways => 'Через Wi-Fi і мобільний інтернет';
+
+  @override
+  String get autoGetWifi => 'Лише через Wi-Fi';
+
+  @override
+  String get autoGetNever => 'Ніколи, завантажу дотиком';
+
+  @override
+  String get autoGetVoice => 'Голосові повідомлення завантажуються завжди.';
+
+  @override
+  String get settingsFiles => 'Файли';
+
+  @override
+  String get fileSheetOpenWith => 'Відкрити в іншому застосунку';
 }

@@ -16162,6 +16162,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{New message} other{{count} new messages}}'**
   String a11yNewMessages(int count);
+
+  /// transfer strip and notification: part done of a file, like 12.4 mb of 40.0 mb
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total}'**
+  String transferDoneOf(String done, String total);
+
+  /// transfer strip: the part done, then the time left (transferLeft*)
+  ///
+  /// In en, this message translates to:
+  /// **'{done} · {left}'**
+  String transferDoneLeft(String done, String left);
+
+  /// transfer strip: time left, a fragment after a dot, so lowercase
+  ///
+  /// In en, this message translates to:
+  /// **'less than a minute left'**
+  String get transferLeftSoon;
+
+  /// transfer strip: time left in minutes, a fragment after a dot, so lowercase
+  ///
+  /// In en, this message translates to:
+  /// **'about {n} min left'**
+  String transferLeftMinutes(String n);
+
+  /// transfer strip: time left in hours, a fragment after a dot, so lowercase
+  ///
+  /// In en, this message translates to:
+  /// **'about {n} h left'**
+  String transferLeftHours(String n);
+
+  /// transfer strip and notification: a file sending, detail is like 12.4 mb of 40.0 mb · about 2 min left
+  ///
+  /// In en, this message translates to:
+  /// **'Sending · {detail}'**
+  String transferSending(String detail);
+
+  /// transfer strip, file bubble and notification: a file coming in, detail as in transferSending
+  ///
+  /// In en, this message translates to:
+  /// **'Receiving · {detail}'**
+  String transferReceiving(String detail);
+
+  /// transfer notification: files going both ways, detail as in transferSending
+  ///
+  /// In en, this message translates to:
+  /// **'Sending and receiving · {detail}'**
+  String transferBoth(String detail);
+
+  /// transfer strip: button that pauses a download
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get transferPause;
+
+  /// transfer strip and file bubble: what a screen reader says the pause button does
+  ///
+  /// In en, this message translates to:
+  /// **'Pause the download'**
+  String get transferPauseDownload;
+
+  /// waiting file bubble: what a screen reader says the download button does
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get transferDownload;
+
+  /// waiting file bubble: what a screen reader says the button does for a paused download
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get transferResume;
+
+  /// waiting file bubble: the file comes by itself once the phone is on wi-fi, a tap brings it now
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads on Wi-Fi'**
+  String get transferOnWifi;
+
+  /// waiting file bubble: a download the person paused, detail like 12.4 mb of 40.0 mb
+  ///
+  /// In en, this message translates to:
+  /// **'Paused · {detail}'**
+  String transferPausedAt(String detail);
+
+  /// waiting file bubble: automatic download is off for this kind of file
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to download'**
+  String get transferTapToDownload;
+
+  /// waiting file bubble: the file size, then transferOnWifi or transferTapToDownload
+  ///
+  /// In en, this message translates to:
+  /// **'{size} · {state}'**
+  String transferSizeLine(String size, String state);
+
+  /// notification title while files send or download. never names a chat or a file
+  ///
+  /// In en, this message translates to:
+  /// **'File transfer'**
+  String get transferNoteTitle;
+
+  /// android notification channel name for the transfer notification
+  ///
+  /// In en, this message translates to:
+  /// **'File transfers'**
+  String get transferChannel;
+
+  /// android notification channel description
+  ///
+  /// In en, this message translates to:
+  /// **'Shows while files send or download. It never names a chat or a file.'**
+  String get transferChannelLine;
+
+  /// settings: row and screen title for which files download without a tap
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic download'**
+  String get autoGetTitle;
+
+  /// automatic download screen: line under the title
+  ///
+  /// In en, this message translates to:
+  /// **'Files come without a tap as set here. One that waits stays on the file server for you, a week at most.'**
+  String get autoGetLine;
+
+  /// automatic download screen: row for photos
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get autoGetPhotos;
+
+  /// automatic download screen: row for videos
+  ///
+  /// In en, this message translates to:
+  /// **'Videos'**
+  String get autoGetVideos;
+
+  /// automatic download screen: row for other files
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get autoGetFiles;
+
+  /// automatic download: download on any network
+  ///
+  /// In en, this message translates to:
+  /// **'On Wi-Fi and mobile data'**
+  String get autoGetAlways;
+
+  /// automatic download: download only on wi-fi
+  ///
+  /// In en, this message translates to:
+  /// **'On Wi-Fi only'**
+  String get autoGetWifi;
+
+  /// automatic download: never by itself, the person taps the file
+  ///
+  /// In en, this message translates to:
+  /// **'Never, I tap to download'**
+  String get autoGetNever;
+
+  /// automatic download screen: line at the bottom
+  ///
+  /// In en, this message translates to:
+  /// **'Voice notes always download.'**
+  String get autoGetVoice;
+
+  /// settings: section header for files and downloads
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get settingsFiles;
+
+  /// file sheet: hands the file to an app the person picks
+  ///
+  /// In en, this message translates to:
+  /// **'Open with another app'**
+  String get fileSheetOpenWith;
 }
 
 class _AppLocalizationsDelegate
