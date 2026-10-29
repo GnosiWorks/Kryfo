@@ -6127,7 +6127,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get motionYourIpIsHidden => '你的 IP 已隐藏。只有知道你 Kryfo 的人才能联系到你。';
 
   @override
-  String get motionAddressFinishing => '消息已经通过 Tor 发出。你的私密地址正在后台完成设置。';
+  String get motionAddressFinishing => '消息已可通过 Tor 发送。你的私密地址正在后台完成设置。';
 
   @override
   String get motionBuilding2 => '构建中';
@@ -15688,7 +15688,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get motionYourIpIsHidden => '你的 IP 已隱藏。只有拿到你 Kryfo 的人才能聯絡你。';
 
   @override
-  String get motionAddressFinishing => '訊息已經透過 Tor 送出。你的私密位址正在背景完成設定。';
+  String get motionAddressFinishing => '訊息已可透過 Tor 傳送。你的私密位址正在背景完成設定。';
 
   @override
   String get motionBuilding2 => '建立中';

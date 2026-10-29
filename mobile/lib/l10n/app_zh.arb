@@ -1784,7 +1784,7 @@
   "motionBouncingThroughRelaysSo": "在中继之间辗转，让任何人都无法追溯到你。",
   "motionTellingTheNetworkYou": "告诉网络你在线——但不透露你在哪里。",
   "motionYourIpIsHidden": "你的 IP 已隐藏。只有知道你 Kryfo 的人才能联系到你。",
-  "motionAddressFinishing": "消息已经通过 Tor 发出。你的私密地址正在后台完成设置。",
+  "motionAddressFinishing": "消息已可通过 Tor 发送。你的私密地址正在后台完成设置。",
   "motionBuilding2": "构建中",
   "motionOpen": "已打开",
   "motionLive": "在线",
