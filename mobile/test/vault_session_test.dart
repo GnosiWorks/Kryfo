@@ -15,6 +15,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/container.dart';
+import 'package:kryfo/devices/history_open.dart';
 import 'package:kryfo/drafts.dart'
     show
         Draft,
@@ -39,11 +40,14 @@ import 'package:kryfo/main.dart'
         AppStateRoute,
         AppStateVault,
         AppStateSession,
+        AppStatePhotos,
         AppStateReceive,
-        AppStateRefresh;
+        AppStateRefresh,
+        AppStateIdentity;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/notifications.dart' show kCancelRetryAfter;
 import 'package:kryfo/polls.dart';
+import 'package:kryfo/profile_photo.dart' show photoBook;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/screens/pin_flow_screen.dart' show PinsHost;
 import 'package:kryfo/search.dart' show SearchKind;
@@ -324,6 +328,8 @@ class _Rows {
   // a read of which chats it holds waits for this, and says it began
   Completer<void>? holdHeld;
   Completer<void>? heldAsked;
+  // contacts' profile photos, by id
+  final photos = <String, Uint8List>{};
 
   void person(
     String id, {
@@ -869,6 +875,25 @@ class _Db implements HaloDb {
   @override
   Future<Map<String, Set<String>>> fullShelves({String? only}) async =>
       _hit('fullShelves', only, <String, Set<String>>{});
+
+  // the photo rows: read as the book is, never counted as a call
+  @override
+  Future<Map<String, Uint8List>> contactPhotos() async {
+    if (untouchable) {
+      touched.add('contactPhotos');
+      throw StateError('${_container.dbFile} was reached');
+    }
+    return Map.of(r.photos);
+  }
+
+  @override
+  Future<({int ver, Uint8List? photo})?> myPhoto() async {
+    if (untouchable) {
+      touched.add('myPhoto');
+      throw StateError('${_container.dbFile} was reached');
+    }
+    return null;
+  }
 
   @override
   dynamic noSuchMethod(Invocation i) {
@@ -1516,6 +1541,63 @@ void main() {
         expect(ms.last - ms.first, lessThan(120), reason: '$shown');
       },
     );
+
+    test(
+      'a hidden chats PIN answers as fast while a history copy reads the chats',
+      () async {
+        final w = await _World.make();
+        const reveal = Duration(milliseconds: 300);
+        w.app.revealGap = reveal + const Duration(milliseconds: 100);
+        final (:lock, :store, :engine) = _lock(reveal: reveal);
+        await lock.load();
+        lock.onOutcome = (r, {vaultKey}) async {
+          await w.app.sessionFor(r, vaultKey: vaultKey);
+        };
+        // a copy's text phase, held open for the whole test
+        final reading = Completer<void>();
+        final copy = w.app.withVaultStill(() => reading.future);
+        final shown = <String, int>{};
+        for (final pin in [appPin, vaultPin, '0000']) {
+          final t = Stopwatch()..start();
+          await lock.verifyPin(pin);
+          shown[pin] = t.elapsedMilliseconds;
+          lock.lock();
+          w.app.lockingUp();
+          await _settle();
+        }
+        expect(session.vault, isNull);
+        final ms = shown.values.toList()..sort();
+        expect(ms.last - ms.first, lessThan(120), reason: '$shown');
+        // a hide waits for the copy, and goes once it is read
+        var hid = false;
+        await w.open();
+        final hiding = w.app.hideChats(people: [_v]).then((n) => hid = true);
+        await _settle();
+        expect(hid, isFalse);
+        reading.complete();
+        await copy;
+        await hiding;
+        expect(hid, isTrue);
+      },
+    );
+
+    test('a history copy never starts inside vault work', () async {
+      final w = await _World.make();
+      await expectLater(
+        w.app.backupStill((_) => w.app.withVaultStill(() async {})),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('a hide ends every history copy that is open', () async {
+      final w = await _World.make();
+      await w.open();
+      var ended = false;
+      historyCopyOpened(() => ended = true);
+      expect(await w.app.hideChats(people: [_v]), 1);
+      expect(ended, isTrue);
+      expect(historyCopiesOpen, 0);
+    });
 
     test('a vault unlock builds its session under the lock', () async {
       final w = await _World.make();
@@ -2478,5 +2560,40 @@ void main() {
         await expectAllGone(exited);
       });
     }
+  });
+
+  group('profile photos', () {
+    test('a swap shows the coming side\'s photos from its first frame, '
+        'never the leaving side\'s', () async {
+      final w = await _World.make();
+      w.liveRows.photos[_v] = Uint8List.fromList([1]);
+      w.vaultRows.photos[_h] = Uint8List.fromList([2]);
+      w.decoyRows.photos[_d1] = Uint8List.fromList([3]);
+      await w.withDecoy();
+      await w.app.reloadPhotos();
+      expect(photoBook.all.keys, [_v]);
+      final firsts = <Set<String>>[];
+      void look() => firsts.add(photoBook.all.keys.toSet());
+      w.app.addListener(look);
+      addTearDown(() => w.app.removeListener(look));
+      Future<Set<String>> first(Future<void> Function() swap) async {
+        firsts.clear();
+        await swap();
+        return firsts.first;
+      }
+
+      expect(await first(w.open), {_v, _h});
+      // the lock shut the vault: its contacts' photos are gone at once
+      expect(await first(w.lockUp), {_v});
+      expect(
+        await first(() async {
+          await w.app.sessionFor(PinResult.decoy);
+          await _settle();
+        }),
+        {_d1},
+      );
+      expect(await first(w.everyday), {_v});
+      photoBook.clear();
+    });
   });
 }

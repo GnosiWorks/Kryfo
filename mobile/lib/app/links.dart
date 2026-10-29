@@ -103,6 +103,8 @@ Future<(String, bool)> handleHaloUriAdded(
 }) async {
   // the one app on a phone; a test hands in the one it built
   final appState = app ?? _app;
+  // the invite page's link is the kryfo link it opens
+  raw = kryfoInviteOf(raw);
   // @wren or the handle page link: ask the registry for the invite behind it
   // and carry on as if that had been pasted
   final h = handleFromInput(raw);
@@ -605,7 +607,7 @@ String quietInviteUri(String id, String onion, String bundle, String fc) {
 // an invite's id is three words, as every version has made them: anything
 // else would be shown to the person as if it were someone's name
 Map<String, String>? parseHaloUri(String raw) {
-  raw = raw.trim();
+  raw = kryfoInviteOf(raw).trim();
   if (!raw.startsWith('kryfo://share')) return null;
   // one link, each part once: a second copy of a part would be read in one
   // place and not in another

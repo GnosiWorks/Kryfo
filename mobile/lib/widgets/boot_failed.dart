@@ -144,7 +144,10 @@ class BootFailedScreen extends StatelessWidget {
                     child: Text(
                       l10n.bootFailedStartFresh,
                       textAlign: TextAlign.center,
-                      style: HaloType.sans(size: 13, color: HaloColors.rose),
+                      style: HaloType.sans(
+                        size: 13,
+                        color: HaloColors.roseText,
+                      ),
                     ),
                   ),
                 ),

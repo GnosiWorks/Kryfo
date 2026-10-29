@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import 'dart:async';
+import 'devices/history_open.dart' show endHistoryCopies;
 import 'secure_store.dart';
 import 'desktop/desktop_mode.dart'
     show containerClosed, containerOpened, onDesktop, startEngineIn;
@@ -158,6 +159,7 @@ import 'mentions.dart';
 import 'gifs/gif_source.dart' show sweepGifParts;
 import 'notes_export.dart' show dropNotesExports, sweepNotesExports;
 import 'handle_lookup.dart';
+import 'invite_share.dart' show kryfoInviteOf;
 import 'handle_repoint.dart';
 import 'widgets/sheet_handle.dart';
 import 'widgets/halo_sheet.dart';
@@ -172,6 +174,7 @@ import 'l10n/app_locale.dart';
 import 'widgets/shift_tap_guard.dart';
 import 'wire_pad.dart';
 import 'typing.dart';
+import 'profile_photo.dart';
 
 part 'app/arrivals.dart';
 part 'app/boot.dart';
@@ -189,6 +192,7 @@ part 'app/database_media.dart';
 part 'app/database_messages.dart';
 part 'app/database_notifications.dart';
 part 'app/database_outbox.dart';
+part 'app/database_photos.dart';
 part 'app/database_polls.dart';
 part 'app/database_rooms.dart';
 part 'app/database_search.dart';
@@ -220,6 +224,7 @@ part 'app/state_identity.dart';
 part 'app/state_messages.dart';
 part 'app/state_outbox.dart';
 part 'app/state_pairing.dart';
+part 'app/state_photos.dart';
 part 'app/state_prefs.dart';
 part 'app/state_profile.dart';
 part 'app/state_receive.dart';

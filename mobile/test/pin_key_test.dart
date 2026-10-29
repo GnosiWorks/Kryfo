@@ -428,6 +428,55 @@ void main() {
     );
   });
 
+  group('a keystore without secure hardware', () {
+    test('an old table stays on the pin alone, quietly', () async {
+      keys.soft = true;
+      final before = store.m['halo.lock.table'];
+      final s = await make();
+      expect(await s.verifyPin('1234'), PinResult.normal);
+      expect(keys.calls.where((c) => c == 'make'), hasLength(1));
+      expect(store.m['halo.lock.table'], before);
+      expect(s.keyNote, isNull);
+      expect(s.keyLine, isNull);
+      expect(s.updateCard, isFalse);
+      expect(s.resetOffered, isFalse);
+      // the next start knows: no make, no line, every pin still opens
+      keys.calls.clear();
+      final again = await make();
+      expect(await again.verifyPin('246810'), PinResult.vault);
+      expect(await again.verifyPin('0000'), PinResult.invalid);
+      expect(keys.calls, isNot(contains('make')));
+      expect(keys.macs, 0);
+      expect(again.keyNote, isNull);
+      expect(store.m['halo.lock.table'], before);
+    });
+
+    test('a first pin is set and opens without a key', () async {
+      keys.soft = true;
+      store = CountStore();
+      final s = await make();
+      expect(await s.setupPin('1234'), isTrue);
+      expect(tableOf(store)['v'], 2);
+      expect(await s.verifyPin('1234'), PinResult.normal);
+      keys.calls.clear();
+      final again = await make();
+      expect(await again.verifyPin('1234'), PinResult.normal);
+      expect(keys.calls, isNot(contains('make')));
+      expect(again.keyNote, isNull);
+    });
+
+    test('a v3 table whose key went is still lost', () async {
+      await moved();
+      keys.exists = false;
+      keys.soft = true;
+      keys.softSeen = true;
+      keys.calls.clear();
+      final s = await make();
+      expect(s.keyNote, KeyNote.lost);
+      expect(keys.calls, isNot(contains('make')));
+    });
+  });
+
   group('one lane for the table', () {
     test(
       'a move worked out before a new vault never puts the old one back',

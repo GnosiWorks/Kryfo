@@ -12,6 +12,7 @@ import 'dlog.dart';
 import 'file_drop.dart' show DropFrame, kDropWire;
 import 'group_shots.dart' show GroupShotsWord, kGroupNudgeWire, kGroupShotsWire;
 import 'media_resend.dart';
+import 'profile_photo.dart' show PhotoFrame, kPhotoWire;
 import 'stickers/sticker_wire.dart' show StickerWire;
 import 'typing.dart' show capsFromWire, kCapsWire, kMyCaps, kTypingWire;
 import 'voice_format.dart' show kOpusWire;
@@ -87,6 +88,9 @@ class UnwrappedMessage {
   final int? protoGen;
   final String? addrSeed;
   final String? faceSig;
+  // 'pp': a slice of the sender's profile photo, or its take-back
+  // (profile_photo.dart). nothing else in the frame counts
+  final PhotoFrame? photo;
   final AlbumTag? album; // 'al': its place in an album, on every slice
   // 'w': when the sender wrote it, ms by their clock. set once and kept on
   // every retry, so a copy wrapped again still says when it was written.
@@ -150,6 +154,7 @@ class UnwrappedMessage {
     this.protoGen,
     this.addrSeed,
     this.faceSig,
+    this.photo,
   });
 }
 
@@ -644,6 +649,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
         final String s => s,
         _ => null,
       },
+      photo: PhotoFrame.fromWire(sent[kPhotoWire]),
     );
   } catch (e) {
     dlog(

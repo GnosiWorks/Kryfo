@@ -125,7 +125,8 @@ class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     final on = widget.on;
     final label = _labels[widget.tab]!;
-    final scale = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3);
+    // the words follow the app's scale; FittedBox keeps a long one in its tab
+    final scale = MediaQuery.textScalerOf(context);
     return Semantics(
       container: true,
       button: true,

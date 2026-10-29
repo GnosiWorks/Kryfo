@@ -295,6 +295,46 @@ open class MainActivity : FlutterFragmentActivity() {
         }
     }
 
+    // a profile photo: the square at left, top, side of an upright jpeg,
+    // drawn at edge x edge and written as a jpeg, quality stepping down
+    // until it fits in most bytes. decoded pixels carry no metadata.
+    private fun squareJpeg(
+        bytes: ByteArray, left: Int, top: Int, side: Int, edge: Int, most: Int,
+    ): ByteArray? {
+        return try {
+            val src = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: return null
+            val s = minOf(side, src.width - left, src.height - top)
+            if (left < 0 || top < 0 || s <= 0) {
+                src.recycle()
+                return null
+            }
+            val out = Bitmap.createBitmap(edge, edge, Bitmap.Config.ARGB_8888)
+            val canvas = android.graphics.Canvas(out)
+            canvas.drawColor(android.graphics.Color.BLACK)
+            val paint = android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG)
+            canvas.drawBitmap(
+                src,
+                android.graphics.Rect(left, top, left + s, top + s),
+                android.graphics.Rect(0, 0, edge, edge),
+                paint,
+            )
+            src.recycle()
+            var q = 82
+            var made: ByteArray
+            while (true) {
+                val bos = ByteArrayOutputStream()
+                out.compress(Bitmap.CompressFormat.JPEG, q, bos)
+                made = bos.toByteArray()
+                if (made.size <= most || q <= 50) break
+                q -= 8
+            }
+            out.recycle()
+            if (made.size <= most) made else null
+        } catch (e: Throwable) {
+            null
+        }
+    }
+
     // this screen was rebuilt from a saved state
     private var restored = false
 
@@ -303,8 +343,7 @@ open class MainActivity : FlutterFragmentActivity() {
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         restored = savedInstanceState != null
         if (getSharedPreferences("kryfo_window", MODE_PRIVATE).getBoolean("secure", false)) {
-            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-            if (android.os.Build.VERSION.SDK_INT >= 33) setRecentsScreenshotEnabled(false)
+            SecureWindow.apply(true, secureSteps(atStart = true))
             secureNow = true
         }
         super.onCreate(savedInstanceState)
@@ -341,21 +380,31 @@ open class MainActivity : FlutterFragmentActivity() {
         enableEdgeToEdge(clear, nav)
     }
 
-    private fun setSecureWindow(on: Boolean) {
-        android.util.Log.i("kryfo", "setSecure on=$on was=$secureNow")
-        if (on) {
-            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        } else {
-            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        }
-        // android 13 and later keep their own picture for recents
-        if (android.os.Build.VERSION.SDK_INT >= 33) setRecentsScreenshotEnabled(!on)
-        getSharedPreferences("kryfo_window", MODE_PRIVATE).edit().putBoolean("secure", on).apply()
-        val surface = findSurface(window.decorView)
-        surface?.setSecure(on)
+    // at start the setting is already kept and dart has drawn nothing yet
+    private fun secureSteps(atStart: Boolean = false) = SecureWindow.Steps(
+        flag = { on ->
+            if (on) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            } else {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            }
+        },
+        recents = if (Build.VERSION.SDK_INT >= 33) { on -> setRecentsScreenshotEnabled(!on) } else null,
+        keep = { on ->
+            if (!atStart) {
+                getSharedPreferences("kryfo_window", MODE_PRIVATE).edit().putBoolean("secure", on).apply()
+            }
+        },
         // no surface recreate on the way off, it flashes the window. one ui
         // may keep the bit until the next start, and the switch says so.
+        surface = { on -> if (!atStart) findSurface(window.decorView)?.setSecure(on) },
+    )
+
+    private fun setSecureWindow(on: Boolean): Boolean {
+        android.util.Log.i("kryfo", "setSecure on=$on was=$secureNow")
+        val ok = SecureWindow.apply(on, secureSteps())
         secureNow = on
+        return ok
     }
 
     private fun findSurface(v: View): SurfaceView? {
@@ -534,11 +583,11 @@ open class MainActivity : FlutterFragmentActivity() {
                         val on = call.argument<Boolean>("on") ?: false
                         // the engine outlives the window, so this can be
                         // called with nothing attached
-                        try {
-                            setSecureWindow(on)
-                        } catch (e: Exception) {
+                        if (SecureWindow.refusedOn(on) { setSecureWindow(it) }) {
+                            result.error("refused", null, null)
+                        } else {
+                            result.success(null)
                         }
-                        result.success(null)
                     }
                     // the wipe: what the settings "clear storage" button does,
                     // every file and preference gone in one synchronous call
@@ -605,6 +654,19 @@ open class MainActivity : FlutterFragmentActivity() {
                         // a decode of a big frame takes long enough to freeze the ui
                         Thread {
                             val out = if (bytes == null) null else shrinkJpeg(bytes, maxEdge, quality)
+                            runOnUiThread { result.success(out) }
+                        }.start()
+                    }
+                    "squareJpeg" -> {
+                        val bytes = call.argument<ByteArray>("bytes")
+                        val left = call.argument<Int>("left") ?: 0
+                        val top = call.argument<Int>("top") ?: 0
+                        val side = call.argument<Int>("side") ?: 0
+                        val edge = call.argument<Int>("edge") ?: 512
+                        val most = call.argument<Int>("most") ?: (96 * 1024)
+                        Thread {
+                            val out = if (bytes == null) null
+                                else squareJpeg(bytes, left, top, side, edge, most)
                             runOnUiThread { result.success(out) }
                         }.start()
                     }

@@ -431,6 +431,8 @@ extension AppStateArrivals on AppState {
         // their first-contact address is spent, and a card must never hand
         // on one they may reset
         unawaited(forgetPeerFc(senderHaloId));
+        // added back: our photo may go to them now
+        unawaited(photoSweep());
         // the door just opened: rows parked for them go now, not when the
         // backoff runs out
         _outboxTries.clear();
@@ -504,6 +506,11 @@ extension AppStateArrivals on AppState {
     // they are missing slices of something we sent them
     if (env.need != null) {
       await _answerNeed(senderHaloId, env.need!, db);
+      return to;
+    }
+    // a slice of their profile photo, or its take-back
+    if (env.photo != null) {
+      await _takePhoto(senderHaloId, env, db);
       return to;
     }
     // a frame for a message not here yet waits for it, from a contact or a

@@ -167,7 +167,11 @@ class _Tile extends StatelessWidget {
       child: Text(
         name.isEmpty ? '·' : name.characters.first.toUpperCase(),
         semanticsLabel: '',
-        style: HaloType.serif(size: 30, italic: true, color: HaloColors.violet),
+        style: HaloType.serif(
+          size: 30,
+          italic: true,
+          color: HaloColors.violetText,
+        ),
       ),
     );
     if (motionStill(context)) return tile;
@@ -192,7 +196,7 @@ class _BurnerChip extends StatelessWidget {
     ),
     child: Text(
       l10n.kryfoLinkTextBurnerRoom,
-      style: HaloType.mono(size: 10, color: HaloColors.violet, letter: 0.3),
+      style: HaloType.mono(size: 10, color: HaloColors.violetText, letter: 0.3),
     ),
   );
 }
@@ -227,7 +231,7 @@ class _Closed extends StatelessWidget {
   Widget build(BuildContext context) => Text(
     l10n.kryfoLinkTextThisRoomHasClosed,
     textAlign: TextAlign.center,
-    style: HaloType.sans(size: 13.5, color: HaloColors.rose),
+    style: HaloType.sans(size: 13.5, color: HaloColors.roseText),
   );
 }
 

@@ -62,6 +62,11 @@ extension AppStateSession on AppState {
       await _groupsOf(s),
       int.tryParse(a ?? ''),
       dev,
+      await _photoBookOf(
+            s,
+            s.primary.container.quiet ? (_decoyId?.id ?? '') : myId,
+          ) ??
+          const {},
     );
   }
 
@@ -281,6 +286,7 @@ extension AppStateSession on AppState {
       groups,
       _quietAvatar,
       devRow,
+      photoBook.all,
     );
     final coming = _otherShown;
     _otherShown = leaving;
@@ -297,6 +303,8 @@ extension AppStateSession on AppState {
       groups = coming.groups;
       if (decoy) _quietAvatar = coming.avatar;
     }
+    // the book the other side read ahead, or none: never the one leaving
+    photoBook.put(coming?.photos ?? const {});
     if (decoy) {
       _quietSince = DateTime.now().millisecondsSinceEpoch;
       _quietJobs = _jobRuns;
@@ -342,6 +350,7 @@ extension AppStateSession on AppState {
     final Session s;
     final (List<ContactPreview>, int, DevRow?) home;
     final List<GroupPreview> gs;
+    final Map<String, Uint8List> book;
     try {
       // a move a crash cut short is put right before ownership is read
       await settleVault(v);
@@ -369,6 +378,9 @@ extension AppStateSession on AppState {
       s = await Session.withVault(primary, v);
       home = await _contactsOf(s);
       gs = await _groupsOf(s);
+      book =
+          await _photoBookOf(s, decoy ? (_decoyId?.id ?? '') : myId) ??
+          const {};
     } catch (e) {
       try {
         await v.close();
@@ -388,6 +400,7 @@ extension AppStateSession on AppState {
           groups,
           _quietAvatar,
           devRow,
+          photoBook.all,
         );
         if (ahead != null) _quietAvatar = ahead.avatar;
         _quietSince = DateTime.now().millisecondsSinceEpoch;
@@ -401,6 +414,7 @@ extension AppStateSession on AppState {
         groups,
         _quietAvatar,
         devRow,
+        photoBook.all,
       );
     }
     lockState.inDecoy = decoy;
@@ -413,6 +427,7 @@ extension AppStateSession on AppState {
     pendingCount = home.$2;
     devRow = home.$3;
     groups = gs;
+    photoBook.put(book);
     _vaultFill = (at: 0, to: 0);
     lockState.inVault = true;
     expiredRoomName = null;
@@ -506,6 +521,11 @@ extension AppStateSession on AppState {
     _session = Session(was.primary);
     lockState.inVault = false;
     _forgetVaultSide();
+    // its contacts' photos off at once, before anything is drawn
+    photoBook.put({
+      for (final MapEntry(:key, :value) in photoBook.all.entries)
+        if (!was.isHidden(key)) key: value,
+    });
     // its chats off home now; the rest is read again below
     contacts = [
       for (final c in contacts)

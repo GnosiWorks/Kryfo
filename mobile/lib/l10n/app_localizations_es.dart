@@ -1385,7 +1385,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'Se borra de los dos teléfonos, salvo que ya se haya guardado. No se puede deshacer.';
+      'Se borrará de los dos teléfonos, salvo que ya se haya guardado. No se puede deshacer.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -2644,7 +2644,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'Se borra de los teléfonos de todos, salvo que ya se haya guardado. No se puede deshacer.';
+      'Se borrará de los teléfonos de todos, salvo que ya se haya guardado. No se puede deshacer.';
 
   @override
   String get groupChatUnsend => 'Anular envío';
@@ -3732,11 +3732,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Invitación copiada · se borra en 60s';
 
   @override
-  String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Añádeme en Kryfo. Allí me llamo $myId\n\nToca para añadirme:\n$uri\n\nKryfo es una app de mensajería privada. Sin número de teléfono, sin correo.';
-  }
-
-  @override
   String get myKryfoAddMeOnKryfo2 => 'Añádeme en Kryfo';
 
   @override
@@ -4072,72 +4067,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get onboardingThreeWords => 'Tres palabras. *Solo tuyas.*';
 
   @override
-  String get onboardingPickA => 'Elige una *cara*.';
-
-  @override
-  String get onboardingDrawnOnThisPhone =>
-      'Dibujada en este teléfono a partir de un número, nunca se sube. Cámbiala cuando quieras.';
-
-  @override
-  String get onboardingThePeopleYouMessage =>
-      'Las personas a las que escribes también la ven';
-
-  @override
-  String get onboardingKeepMyInitial => 'Mantener mi inicial';
-
-  @override
-  String get onboardingThatOne => 'Esa →';
-
-  @override
   String get onboardingContinue => 'Continuar →';
-
-  @override
-  String get onboardingHowYourMessages => 'Cómo *viajan* tus mensajes.';
-
-  @override
-  String get onboardingYouCanChangeThis =>
-      'Puedes cambiarlo cuando quieras en ajustes, para todos o para un chat.';
-
-  @override
-  String get onboardingSlowerAMessageTakes =>
-      'Más lento. Un mensaje tarda de dos a cinco segundos.';
-
-  @override
-  String get onboardingAboutASecondWorks =>
-      'Un segundo más o menos. Funciona donde Tor está bloqueado.';
-
-  @override
-  String get onboardingAutoFindsAWay =>
-      'Automático encuentra solo una forma de esquivar el bloqueo.';
-
-  @override
-  String get onboardingUseThis => 'Usar este →';
-
-  @override
-  String get onboardingThreeThingsThen => 'Tres cosas\ny *ya estás dentro*.';
-
-  @override
-  String get onboardingEverythingElseTheApp =>
-      'Todo lo demás te lo dirá la app cuando importe.';
-
-  @override
-  String get onboardingYourNameIsThreeWords => 'Tu nombre son tres palabras';
-
-  @override
-  String get onboardingThatIsTheWhole =>
-      'Esa es toda la identidad. No hay número ni correo que se pueda filtrar o buscar. Las personas con las que hablas ven estas palabras y la cara que elegiste.';
-
-  @override
-  String get onboardingNobodyCanReachYou =>
-      'Nadie puede contactarte hasta que lo dejes entrar';
-
-  @override
-  String get onboardingAStrangerWithYour =>
-      'Un desconocido con tus palabras solo puede llamar a la puerta. Su primer mensaje espera en solicitudes hasta que digas que sí, y puedes decir que no sin que se entere nunca.';
-
-  @override
-  String get onboardingTheFirstConnectionTakesAMinute =>
-      'La primera conexión tarda un minuto';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -4146,9 +4076,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get onboardingYourIdentityLivesOn =>
       'Tu identidad vive en este teléfono. Haz una copia de seguridad desde ajustes cuando quieras.';
-
-  @override
-  String get onboardingIUnderstand => 'Entendido →';
 
   @override
   String get onboardingOneQuiet => 'Una *notificación* discreta.';
@@ -4168,13 +4095,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get onboardingGotIt => 'Entendido →';
 
   @override
-  String get onboardingNow => 'Ahora, *añade a alguien*.';
-
-  @override
-  String get onboardingTheAppIsReady =>
-      'La app está lista. Nadie puede escribirte hasta que lo añadas o lo dejes entrar.';
-
-  @override
   String get onboardingEveryWayToAdd => 'Todas las formas de añadir';
 
   @override
@@ -4186,10 +4106,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get onboardingPointTheCameraAt => 'Apunta la cámara a su código';
-
-  @override
-  String get onboardingTheAppIsReadyWhenYou =>
-      'La app está lista cuando tú lo estés.';
 
   @override
   String get onboardingNotNowAddPeople =>
@@ -4432,9 +4348,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get profileProfile => 'Perfil';
-
-  @override
-  String get profileChangeYourFace => 'Cambiar tu cara';
 
   @override
   String get profileKryfoId => 'Tu nombre';
@@ -10010,20 +9923,202 @@ class AppLocalizationsEs extends AppLocalizations {
       'En Privado todo sale por Tor y nuestros servidores ven un nodo de salida, nunca a ti. En Rápido la conexión va directa a nuestros dos servidores: ven tu dirección IP mientras estás conectado y no guardan ningún registro. Mientras el primero está caído, Rápido también usa repetidores públicos, solo a través de Tor.';
 
   @override
-  String get onboardingHidesFromEveryone =>
-      'Oculta tu dirección a todos, incluidos nuestros servidores.';
+  String get chatAlbumItDisappearsWithNo =>
+      'El álbum se borrará de los dos teléfonos, salvo que ya se haya guardado. No se puede deshacer.';
 
   @override
-  String get onboardingFastSees =>
-      'Nuestros servidores ven tu dirección solo mientras estás conectado.';
+  String get groupChatAlbumItDisappearsWithNo =>
+      'El álbum se borrará de los teléfonos de todos, salvo que ya se haya guardado. No se puede deshacer.';
 
   @override
-  String get onboardingFastNetworkSees =>
-      'Esta red puede ver que te conectas a Kryfo. Nuestros servidores ven tu dirección.';
+  String get homeInviteSomeone => 'Invitar a alguien';
 
   @override
-  String get onboardingKeepPrivate => 'Seguir en Privado →';
+  String get onboardingNameHeadline => 'Un *@nombre* público, si quieres.';
 
   @override
-  String get onboardingSkipPrivate => 'Omitir · Privado es buena opción';
+  String get onboardingNameLine =>
+      'Un nombre público permite que la gente te encuentre. Si lo saltas, eres más privado y siempre puedes añadir uno más tarde.';
+
+  @override
+  String get onboardingNameSkip => 'Saltar por ahora →';
+
+  @override
+  String onboardingNameClaim(Object handle) {
+    return 'Reservar @$handle →';
+  }
+
+  @override
+  String get onboardingInviteHeadline => 'Ahora, *invita a alguien*.';
+
+  @override
+  String get onboardingInviteLead =>
+      'Envía un enlace por cualquier app de mensajería. Abre Kryfo o le muestra dónde conseguirlo.';
+
+  @override
+  String get onboardingInviteSomeone => 'Invitar a alguien →';
+
+  @override
+  String get onboardingInviteGettingReady => 'Preparando tu enlace…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'Añádeme en Kryfo. Allí me llamo $myId\n\nToca para añadirme:\n$link\n\n¿Aún no tienes Kryfo? Consíguelo aquí:\n$download\n\nKryfo es una app de mensajería privada. Sin número de teléfono, sin correo.';
+  }
+
+  @override
+  String get inviteNotReady =>
+      'Tu enlace está casi listo. Vuelve a intentarlo en un momento.';
+
+  @override
+  String get photoCropTitle => 'Mover y ajustar';
+
+  @override
+  String get photoCropUse => 'Usar foto';
+
+  @override
+  String get photoCropLabel =>
+      'Tu foto en el círculo. Pellizca para ampliar, arrastra para mover';
+
+  @override
+  String get photoCouldNotUse => 'Prueba con otra foto. Esta no se pudo leer.';
+
+  @override
+  String get photoTake => 'Hacer una foto';
+
+  @override
+  String get photoChoose => 'Elegir de la galería';
+
+  @override
+  String get photoPickFace => 'Elegir una cara';
+
+  @override
+  String get photoView => 'Ver foto';
+
+  @override
+  String get photoRemove => 'Quitar foto';
+
+  @override
+  String get photoYourPhoto => 'Tu foto';
+
+  @override
+  String get photoYourPhotoLine =>
+      'Solo tus contactos la ven, cifrada de extremo a extremo.';
+
+  @override
+  String get photoSetTheirs => 'Poner una foto';
+
+  @override
+  String get photoChangeTheirs => 'Cambiar foto';
+
+  @override
+  String get photoOnlyHere => 'Solo en este teléfono';
+
+  @override
+  String photoForThem(Object name) {
+    return 'Una foto para $name';
+  }
+
+  @override
+  String get photoOnlyHereLine => 'Solo tú la ves. Se queda en este teléfono.';
+
+  @override
+  String photoOf(Object name) {
+    return 'Foto de $name';
+  }
+
+  @override
+  String get historyChatStaysShots =>
+      'Este chat se queda en tu teléfono porque las capturas están bloqueadas en él.';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString dígitos',
+      one: '1 dígito',
+      zero: 'Ningún dígito',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString caracteres',
+      one: '1 carácter',
+      zero: 'Ningún carácter',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'Progreso de la copia de seguridad';
+
+  @override
+  String get a11yRestoreProgress => 'Progreso de la restauración';
+
+  @override
+  String get a11yExportProgress => 'Progreso de la exportación';
+
+  @override
+  String get a11yLockFileProgress => 'Progreso del bloqueo';
+
+  @override
+  String get a11yCleanProgress => 'Progreso de la limpieza';
+
+  @override
+  String get a11yMessageActions => 'Acciones del mensaje';
+
+  @override
+  String get a11yRecordVoiceNote => 'Grabar un mensaje de voz';
+
+  @override
+  String get a11yRecording => 'Grabando';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'Foto, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return 'Foto de $name, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'Video, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return 'Video de $name, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString mensajes nuevos',
+      one: 'Mensaje nuevo',
+    );
+    return '$_temp0';
+  }
 }

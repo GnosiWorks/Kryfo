@@ -64,12 +64,12 @@ void cancelMediaSend(String msgUid) {
 // 60 s, come to about 197 s, and five slices on one dying circuit fail
 // together, so the bound sits above that. past it the send ends as
 // stalled, lets go of the row, and the outbox goes on from what landed
-@visibleForTesting
+// the group sender shares it. tests shorten it
 Duration mediaStallAfter = const Duration(minutes: 4);
 const kMediaStalled = 'error: stalled';
 // the watch looks this many times inside the bound. a phone asleep runs no
 // looks, so a frozen process is not read as a stalled send
-const _stallLooks = 24;
+const kMediaStallLooks = 24;
 
 final Map<String, List<Completer<void>>> _freeWaiters = {};
 
@@ -502,11 +502,11 @@ Future<String> _sendChunkedMediaInner({
   }
 
   final stop = Completer<void>();
-  final watch = Timer.periodic(mediaStallAfter ~/ _stallLooks, (_) {
+  final watch = Timer.periodic(mediaStallAfter ~/ kMediaStallLooks, (_) {
     // a stop asked while a slice hangs ends it now, not at the next slice
     if (mediaCancelled.contains(msgUid)) {
       failure ??= 'cancelled';
-    } else if (++quiet >= _stallLooks) {
+    } else if (++quiet >= kMediaStallLooks) {
       dlog('media $msgUid: no slice taken in ${mediaStallAfter.inSeconds}s');
       failure ??= kMediaStalled;
     } else {

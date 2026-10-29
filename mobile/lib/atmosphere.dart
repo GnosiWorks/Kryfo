@@ -98,11 +98,13 @@ class AtmoMood {
   });
 }
 
+// each value is the most that keeps text, text2, text3 and the accent's
+// words at 4.5:1 on the ground and on the incoming bubble
 const _moods = <Atmo, AtmoMood>{
   Atmo.rain: AtmoMood(
     base: Color(0xFF2E3B4A),
     wash: 0.52,
-    bubble: 0.35,
+    bubble: 0.27,
     dim: 0.12,
     drift: AtmoDrift.rain,
   ),
@@ -115,7 +117,32 @@ const _moods = <Atmo, AtmoMood>{
   Atmo.warmAfternoon: AtmoMood(
     base: Color(0xFF6B4416),
     wash: 0.26,
-    bubble: 0.28,
+    bubble: 0.05,
+    drift: AtmoDrift.glow,
+  ),
+  Atmo.snow: AtmoMood(
+    base: Color(0xFF9FB3C8),
+    wash: 0.10,
+    bubble: 0,
+    drift: AtmoDrift.snow,
+  ),
+  Atmo.desert: AtmoMood(base: Color(0xFF9A7040), wash: 0.20, bubble: 0),
+  Atmo.paper: AtmoMood(base: Color(0xFFE9DEC6), wash: 0.07, bubble: 0),
+};
+
+// light grounds: the dark moods lie thin, the light ones may lean more
+const _moodsLight = <Atmo, AtmoMood>{
+  Atmo.rain: AtmoMood(
+    base: Color(0xFF2E3B4A),
+    wash: 0.12,
+    bubble: 0.04,
+    drift: AtmoDrift.rain,
+  ),
+  Atmo.lateNight: AtmoMood(base: Color(0xFF1D1B33), wash: 0.10, bubble: 0.04),
+  Atmo.warmAfternoon: AtmoMood(
+    base: Color(0xFF6B4416),
+    wash: 0.12,
+    bubble: 0.05,
     drift: AtmoDrift.glow,
   ),
   Atmo.snow: AtmoMood(
@@ -124,11 +151,11 @@ const _moods = <Atmo, AtmoMood>{
     bubble: 0.16,
     drift: AtmoDrift.snow,
   ),
-  Atmo.desert: AtmoMood(base: Color(0xFF9A7040), wash: 0.20, bubble: 0.26),
+  Atmo.desert: AtmoMood(base: Color(0xFF9A7040), wash: 0.18, bubble: 0.08),
   Atmo.paper: AtmoMood(base: Color(0xFFE9DEC6), wash: 0.07, bubble: 0.12),
 };
 
-AtmoMood? moodOf(Atmo a) => _moods[a];
+AtmoMood? moodOf(Atmo a) => (HaloColors.isLight ? _moodsLight : _moods)[a];
 
 // the incoming bubble colour under the atmosphere in force here, or the
 // palette's own when there is none

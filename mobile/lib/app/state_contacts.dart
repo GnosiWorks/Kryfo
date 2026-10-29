@@ -99,6 +99,13 @@ extension AppStateContacts on AppState {
     await dropChatDraft(haloId);
     final hellos = await hellosKeysOf(haloId);
     await session.deleteConversation(haloId);
+    // their photo and the one set for them go; ours is taken back
+    try {
+      await session.draftsOf(haloId).dropPhotosOf(haloId);
+    } catch (e) {
+      dlog('photo: not dropped with the chat (${e.runtimeType})');
+    }
+    unawaited(photoSweep());
     await _forgetPairSeen({haloId});
     // no hello goes to them after it, and none of theirs waits
     await dropHellos(hellos);
@@ -506,6 +513,8 @@ extension AppStateContacts on AppState {
       await cancelWithRetry(() => _io.unnotify(haloId), 'block shade');
     }
     await refreshContacts();
+    // our photo is taken back from them
+    unawaited(photoSweep());
   }
 
   // a support chat is taken on by its first reply, and stays in support.
@@ -593,6 +602,7 @@ extension AppStateContacts on AppState {
     _bumpChatRev(haloId);
     await refreshContacts();
     notifyListeners();
+    unawaited(photoSweep());
   }
 
   // what a full shelf left on the relay for them: let go of for the next
@@ -735,6 +745,7 @@ extension AppStateContacts on AppState {
     await _recardBlock(haloId);
     if (!sessionQuiet) await subscribePeer(haloId);
     await refreshContacts();
+    unawaited(photoSweep());
   }
 
   // everyone blocked, contacts or not: a request, a group member or a

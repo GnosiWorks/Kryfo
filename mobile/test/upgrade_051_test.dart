@@ -60,6 +60,7 @@ final _steps = <int, (Future<void> Function(Database), String)>{
   90: (dropFetchTable, 'CREATE TABLE IF NOT EXISTS file_seen'),
   91: (upgradeTo91, 'CREATE TABLE IF NOT EXISTS kyber_prekeys'),
   92: (upgradeTo92, 'CREATE TABLE IF NOT EXISTS identities'),
+  93: (photoTables, 'CREATE TABLE IF NOT EXISTS my_photo'),
   94: (inviteTables, 'CREATE TABLE IF NOT EXISTS invites'),
 };
 
@@ -128,6 +129,18 @@ const _added = {
   ],
   'hellos': ['ident', 'way', 'peer', 'invite_id', 'hello', 'fc', 'at'],
   'hello_seen': ['ident', 'hash', 'at'],
+  'my_photo': ['id', 'ver', 'photo'],
+  'contact_photos': ['halo_id', 'mine', 'theirs', 'their_ver', 'took_at'],
+  'photo_parts': ['halo_id', 'idx', 'ver', 'total', 'part', 'at'],
+  'photo_peers': [
+    'halo_id',
+    'held',
+    'want',
+    'stamp',
+    'next_at',
+    'tries',
+    'sent_at',
+  ],
 };
 const _indexes = [
   'idx_media_chunks_group',

@@ -53,6 +53,8 @@ Future<void> openPhotoImage(
   Object? tag,
   double radius = 0,
   bool secure = false,
+  // what a screen reader says the picture is
+  String? label,
 }) async {
   if (_opening) return;
   // drop the composer's focus first, else popping the viewer brings the
@@ -78,11 +80,15 @@ Future<void> openPhotoImage(
         transitionDuration: Duration(milliseconds: still ? 0 : 280),
         reverseTransitionDuration: Duration(milliseconds: still ? 0 : 240),
         pageBuilder: (_, anim, _) => TextGround(
-          child: PhotoViewer(
-            image: image,
-            tag: tag,
-            radius: radius,
-            route: anim,
+          child: Semantics(
+            label: label,
+            image: label != null,
+            child: PhotoViewer(
+              image: image,
+              tag: tag,
+              radius: radius,
+              route: anim,
+            ),
           ),
         ),
       ),

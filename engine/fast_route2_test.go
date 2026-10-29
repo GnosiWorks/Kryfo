@@ -401,6 +401,71 @@ func TestTheTopUpFileIsSealed(t *testing.T) {
 	}
 }
 
+// a contact deleted on one identity takes only that identity's waiting
+// wraps to them, on a v3 pair and on a v4 one
+func TestUnsubscribePurgesOnlyThatIdentity(t *testing.T) {
+	a, b := newRelayStandIn(t, 0), newRelayStandIn(t, 0)
+	useTwoStores(t, a, b)
+	putIdentity(5, newXid(t))
+	t.Cleanup(func() { identDrop(5) })
+	peer, peer4 := newXid(t), newXid(t)
+	var s0, s5 [32]byte
+	copy(s0[:], fixedSeed(3))
+	copy(s5[:], fixedSeed(4))
+	if err := putPairSeed(mainIdent, peer4.pub, s0); err != nil {
+		t.Fatal(err)
+	}
+	if err := putPairSeed(5, peer4.pub, s5); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		identsMu.Lock()
+		delete(pairSeeds, pairKey{mainIdent, hex.EncodeToString(peer4.pub[:])})
+		identsMu.Unlock()
+	})
+	queue := func(ident int, to [32]byte) nostr.ID {
+		t.Helper()
+		c, err := pairOf(ident, to)
+		if err != nil {
+			t.Fatal(err)
+		}
+		gw, err := c.wrap("x")
+		if err != nil {
+			t.Fatal(err)
+		}
+		var ev nostr.Event
+		if err := easyjson.Unmarshal([]byte(gw.String()), &ev); err != nil {
+			t.Fatal(err)
+		}
+		topupAdd(storeFirst, laneEveryday, ev)
+		return ev.ID
+	}
+	main3, five3 := queue(mainIdent, peer.pub), queue(5, peer.pub)
+	main4, five4 := queue(mainIdent, peer4.pub), queue(5, peer4.pub)
+	waiting := func() map[nostr.ID]bool {
+		got := map[nostr.ID]bool{}
+		for _, it := range topupFor(storeFirst) {
+			got[it.Ev.ID] = true
+		}
+		return got
+	}
+	if n := len(waiting()); n != 4 {
+		t.Fatalf("%d waiting, want 4", n)
+	}
+	if err := nostrUnsubscribe(5, hex.EncodeToString(peer.pub[:])); err != nil {
+		t.Fatal(err)
+	}
+	if got := waiting(); got[five3] || !got[main3] || !got[main4] || !got[five4] {
+		t.Fatalf("v3: %v left", got)
+	}
+	if err := nostrUnsubscribe(5, hex.EncodeToString(peer4.pub[:])); err != nil {
+		t.Fatal(err)
+	}
+	if got := waiting(); len(got) != 2 || !got[main3] || !got[main4] {
+		t.Fatalf("v4: %v left", got)
+	}
+}
+
 // a store's no ends a wrap, a slow down keeps it, and a wrap that keeps
 // failing is given up on
 func TestATopUpGivesUpOnANo(t *testing.T) {

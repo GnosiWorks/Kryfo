@@ -283,13 +283,17 @@ class _LockSetupScreenState extends State<LockSetupScreen>
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: RiseSwap(
                 alignment: Alignment.center,
-                child: Text(
-                  hint,
+                // a pin that did not match is heard as it appears
+                child: Semantics(
                   key: ValueKey('$hint$_mismatch'),
-                  textAlign: TextAlign.center,
-                  style: HaloType.sans(
-                    size: 13,
-                    color: _mismatch ? HaloColors.rose : HaloColors.text2,
+                  liveRegion: _mismatch,
+                  child: Text(
+                    hint,
+                    textAlign: TextAlign.center,
+                    style: HaloType.sans(
+                      size: 13,
+                      color: _mismatch ? HaloColors.roseText : HaloColors.text2,
+                    ),
                   ),
                 ),
               ),
@@ -300,6 +304,7 @@ class _LockSetupScreenState extends State<LockSetupScreen>
               color: HaloColors.amber,
               wrong: _mismatch,
               shake: _shake,
+              letters: _letters,
             ),
             const Spacer(flex: 3),
             if (_checking)

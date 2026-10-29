@@ -20,7 +20,8 @@ class HaloDb
         _GroupOwedRows,
         _NotifRows,
         _DraftRows,
-        _GroupShotsRows
+        _GroupShotsRows,
+        _PhotoRows
     implements GroupOwedStore {
   HaloDb([this.container = HaloContainer.everyday]);
 
@@ -356,6 +357,7 @@ class HaloDb
         await groupEndIndexes(db);
         await wallpaperTable(db);
         await draftsTable(db);
+        await photoTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
@@ -912,7 +914,10 @@ class HaloDb
           // identities, and the signal stores per identity (identities.dart)
           await upgradeTo92(db);
         }
-        // 93 is profile photos' (safe to run again, as this one is)
+        // profile photos (profile_photo.dart), first made at 93. every
+        // step is safe twice and runs on any upgrade, so a file that took
+        // a later number without them (identity v4 at 94) still gets them
+        await photoTables(db);
         if (oldV < 94) {
           // v4 invites, the hellos waiting on them, the hellos seen
           // (invites.dart)

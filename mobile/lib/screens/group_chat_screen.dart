@@ -15,6 +15,7 @@ import '../forward.dart';
 import 'forward_sheet.dart';
 import '../picked.dart';
 import '../album.dart';
+import '../widgets/say.dart' show sayArrivals;
 import '../widgets/album_grid.dart';
 import '../widgets/album_viewer.dart';
 import 'media_send_screen.dart';
@@ -87,6 +88,7 @@ import '../main.dart'
         AppStateRooms;
 import '../widgets/reconnect_valve.dart';
 import '../theme.dart';
+import '../link_view.dart' show sendReadsBlocked;
 import '../media_progress.dart';
 import '../msg_order.dart';
 import '../widgets/earlier_chip.dart';
@@ -1505,6 +1507,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       _normaliseMessages();
       if (!follow) _unseenNew += theirs;
     });
+    if (mounted) sayArrivals(context, theirs);
     _lookEarlierSoon();
     if (follow) _scrollToEnd();
   }
@@ -3494,101 +3497,106 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           valueListenable: closing,
           builder: (context, out, _) => IgnorePointer(
             ignoring: out,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: dismiss,
-                    child: fading(const MenuBackdrop()),
-                  ),
-                ),
-                // the position is from the left edge, in either direction
-                Positioned(
-                  left: rowPos.dx,
-                  top: rowPos.dy,
-                  width: rowW,
-                  child: IgnorePointer(
-                    child: TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0.0, end: still || out ? 0 : 1),
-                      duration: out
-                          ? const Duration(milliseconds: 160)
-                          : kHouseTime,
-                      curve: out ? Curves.easeOut : kHouseCurve,
-                      child: Material(
-                        type: MaterialType.transparency,
-                        child: _GroupBubble(
-                          m: target,
-                          album: album,
-                          showSender: showSender,
-                          faceOf: _faceOf,
-                          senderBadge: _badgeFor(target.sender),
-                          quotedText: quotedText,
-                          quotedAuthor: quotedAuthor,
-                          quotedSticker: quotedSticker,
-                        ),
-                      ),
-                      builder: (_, t, child) => Transform.scale(
-                        scale: 1.0 + 0.04 * t,
-                        alignment: isOut
-                            ? AlignmentDirectional.centerEnd
-                            : AlignmentDirectional.centerStart,
-                        child: child,
-                      ),
+            child: MenuScope(
+              onDismiss: dismiss,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: MenuCloser(
+                      onDismiss: dismiss,
+                      child: fading(const MenuBackdrop()),
                     ),
                   ),
-                ),
-                PositionedDirectional(
-                  key: const ValueKey('group-menu-reactions'),
-                  start: isOut ? null : 12,
-                  end: isOut ? 12 : null,
-                  top: reactTop,
-                  child: fading(
-                    MenuPop(
-                      fromRight: isOut,
-                      child: ReactionPicker(
-                        replyLabel: l10n.groupChatReply,
-                        emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
-                        selected: target.reactions[''],
-                        onPick: (e) {
-                          dismiss();
-                          final added = reactOn.reactions[''] != e;
-                          _toggleReaction(reactOn, e);
-                          if (added) _flashReaction(reactOn);
-                        },
-                        onReply: () {
-                          dismiss();
-                          _hiddenQuote = null;
-                          setState(() => _replyTo = anchor);
-                          _keepDraft();
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-                PositionedDirectional(
-                  key: const ValueKey('group-menu-actions'),
-                  start: isOut ? null : 12,
-                  end: isOut ? 12 : null,
-                  top: menuTop,
-                  bottom: menuBottom,
-                  child: fading(
-                    MenuPop(
-                      fromRight: isOut,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: _menuCard(
-                          target,
-                          isOut,
-                          dismiss,
-                          album: album,
-                          held: held,
+                  // the position is from the left edge, in either direction
+                  Positioned(
+                    left: rowPos.dx,
+                    top: rowPos.dy,
+                    width: rowW,
+                    // a copy of the bubble: heard once, on the chat
+                    child: IgnorePointer(
+                      child: ExcludeSemantics(
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0.0, end: still || out ? 0 : 1),
+                          duration: out
+                              ? const Duration(milliseconds: 160)
+                              : kHouseTime,
+                          curve: out ? Curves.easeOut : kHouseCurve,
+                          child: Material(
+                            type: MaterialType.transparency,
+                            child: _GroupBubble(
+                              m: target,
+                              album: album,
+                              showSender: showSender,
+                              faceOf: _faceOf,
+                              senderBadge: _badgeFor(target.sender),
+                              quotedText: quotedText,
+                              quotedAuthor: quotedAuthor,
+                              quotedSticker: quotedSticker,
+                            ),
+                          ),
+                          builder: (_, t, child) => Transform.scale(
+                            scale: 1.0 + 0.04 * t,
+                            alignment: isOut
+                                ? AlignmentDirectional.centerEnd
+                                : AlignmentDirectional.centerStart,
+                            child: child,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                  PositionedDirectional(
+                    key: const ValueKey('group-menu-reactions'),
+                    start: isOut ? null : 12,
+                    end: isOut ? 12 : null,
+                    top: reactTop,
+                    child: fading(
+                      MenuPop(
+                        fromRight: isOut,
+                        child: ReactionPicker(
+                          replyLabel: l10n.groupChatReply,
+                          emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
+                          selected: target.reactions[''],
+                          onPick: (e) {
+                            dismiss();
+                            final added = reactOn.reactions[''] != e;
+                            _toggleReaction(reactOn, e);
+                            if (added) _flashReaction(reactOn);
+                          },
+                          onReply: () {
+                            dismiss();
+                            _hiddenQuote = null;
+                            setState(() => _replyTo = anchor);
+                            _keepDraft();
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                  PositionedDirectional(
+                    key: const ValueKey('group-menu-actions'),
+                    start: isOut ? null : 12,
+                    end: isOut ? 12 : null,
+                    top: menuTop,
+                    bottom: menuBottom,
+                    child: fading(
+                      MenuPop(
+                        fromRight: isOut,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: _menuCard(
+                            target,
+                            isOut,
+                            dismiss,
+                            album: album,
+                            held: held,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -4213,7 +4221,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
               child: Text(
-                l10n.groupChatItDisappearsWithNo,
+                album
+                    ? l10n.groupChatAlbumItDisappearsWithNo
+                    : l10n.groupChatItDisappearsWithNo,
                 style: HaloType.sans(size: 13, color: HaloColors.text2),
               ),
             ),
@@ -4234,7 +4244,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     const SizedBox(width: 14),
                     Text(
                       l10n.groupChatUnsend,
-                      style: HaloType.sans(size: 14, color: HaloColors.rose),
+                      style: HaloType.sans(
+                        size: 14,
+                        color: HaloColors.roseText,
+                      ),
                     ),
                   ],
                 ),
@@ -4341,7 +4354,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (!mounted || (_draftReply ?? _hiddenQuote) != uid) return;
     _draftReply = null;
     final from = row?['peer_id'] as String?;
-    if (row == null || from == null) {
+    // a reply picked meanwhile wins over the kept one
+    if (row == null || from == null || _replyTo != null) {
       _hiddenQuote = null;
       return;
     }
@@ -4351,7 +4365,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       return;
     }
     _hiddenQuote = null;
-    if (_replyTo != null) return;
     final m = _GMsg(
       sender: from,
       senderName: _nameOf(from),
@@ -4874,6 +4887,13 @@ String _fmtBurn(int s) {
 // the phone cannot send at all: no network, or onion mode without a route
 bool _cannotSend() => !appState.online || !appState.torReady;
 
+// tor still coming up is not a failure: what waits for it reads as sending
+bool _readsBlocked() => sendReadsBlocked(
+  online: appState.online,
+  torReady: appState.torReady,
+  link: appState.linkView,
+);
+
 // the time on a photo or a video with no caption: a small dark pill in the
 // corner, since there is no bubble under it to carry it
 Widget _groupStamp(_GMsg m) => Container(
@@ -4930,7 +4950,7 @@ class _GMsg with WordLinks {
   // stops that after six goes
   int autoRetries = 0;
   bool gaveUp = false;
-  bool get looksFailed => failed && (gaveUp || _cannotSend());
+  bool get looksFailed => failed && (gaveUp || _readsBlocked());
   bool get pending => sending || (failed && !looksFailed);
   bool removing = false;
   bool fresh = false; // one-shot: animate entrance, then cleared on first build
@@ -5079,7 +5099,7 @@ class _Header extends StatelessWidget {
                             size: 18,
                             italic: true,
                             color: room
-                                ? HaloColors.violet
+                                ? HaloColors.violetText
                                 : HaloColors.amberText,
                           ),
                         ),
@@ -6415,9 +6435,6 @@ class _GroupBubble extends StatelessWidget {
                                                         (isOut &&
                                                             m.mediaPath == null)
                                                         ? HaloColors.onAmber
-                                                              .withValues(
-                                                                alpha: 0.6,
-                                                              )
                                                         : isOut
                                                         ? HaloColors.text2
                                                         : HaloColors.text3,
@@ -6438,9 +6455,6 @@ class _GroupBubble extends StatelessWidget {
                                                     // onAmber (dark) vanishes there
                                                     color: (isOut && !frameless)
                                                         ? HaloColors.onAmber
-                                                              .withValues(
-                                                                alpha: 0.7,
-                                                              )
                                                         : isOut
                                                         ? HaloColors.text2
                                                         : HaloColors.text3,
@@ -6524,7 +6538,7 @@ class _GroupBubble extends StatelessWidget {
                                                     size: 9,
                                                     color: isOut
                                                         ? HaloColors.onAmber
-                                                        : HaloColors.rose,
+                                                        : HaloColors.roseText,
                                                   ),
                                                 ),
                                               ],
@@ -6660,7 +6674,7 @@ class _GroupBubble extends StatelessWidget {
 
   TextStyle _quoteStyle(bool isOut) => HaloType.sans(
     size: 12.5,
-    color: isOut ? HaloColors.onAmber.withValues(alpha: 0.8) : HaloColors.text2,
+    color: isOut ? HaloColors.onAmber : HaloColors.text2,
     height: 1.3,
   );
 
@@ -6806,7 +6820,7 @@ class _GroupBubble extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               l10n.groupChatTapToRetry,
-              style: HaloType.mono(size: 9, color: HaloColors.rose),
+              style: HaloType.mono(size: 9, color: HaloColors.roseText),
             ),
           ],
         ],
@@ -6958,7 +6972,7 @@ class _AdminGoneLine extends StatelessWidget {
                   style: HaloType.sans(
                     size: 13,
                     weight: FontWeight.w600,
-                    color: HaloColors.rose,
+                    color: HaloColors.roseText,
                   ),
                 ),
               ),

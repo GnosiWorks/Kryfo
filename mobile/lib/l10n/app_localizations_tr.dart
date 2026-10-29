@@ -1377,7 +1377,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'Daha önce kaydedilmediyse iki telefondan da silinir. Bu geri alınamaz.';
+      'Daha önce kaydedilmediyse iki telefondan da silinecek. Bu geri alınamaz.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -2617,7 +2617,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'Daha önce kaydedilmediyse herkesin telefonundan silinir. Bu geri alınamaz.';
+      'Daha önce kaydedilmediyse herkesin telefonundan silinecek. Bu geri alınamaz.';
 
   @override
   String get groupChatUnsend => 'Geri çek';
@@ -3706,11 +3706,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Davet kopyalandı · 60 sn içinde silinir';
 
   @override
-  String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Beni Kryfo’da ekle. Oradaki adım: $myId\n\nBeni eklemek için dokun:\n$uri\n\nKryfo gizli bir mesajlaşma uygulaması. Telefon numarası yok, e-posta yok.';
-  }
-
-  @override
   String get myKryfoAddMeOnKryfo2 => 'Beni Kryfo’da ekle';
 
   @override
@@ -4045,72 +4040,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get onboardingThreeWords => 'Üç kelime. *Yalnızca senin.*';
 
   @override
-  String get onboardingPickA => 'Bir *yüz* seç.';
-
-  @override
-  String get onboardingDrawnOnThisPhone =>
-      'Bir sayıdan bu telefonda çizildi, hiçbir yere yüklenmez. İstediğin zaman değiştir.';
-
-  @override
-  String get onboardingThePeopleYouMessage =>
-      'Yazıştığın kişiler de bunu görür';
-
-  @override
-  String get onboardingKeepMyInitial => 'Baş harfim kalsın';
-
-  @override
-  String get onboardingThatOne => 'Bu olsun →';
-
-  @override
   String get onboardingContinue => 'Devam →';
-
-  @override
-  String get onboardingHowYourMessages => 'Mesajların nasıl *yol alır*.';
-
-  @override
-  String get onboardingYouCanChangeThis =>
-      'Bunu istediğin zaman ayarlardan değiştirebilirsin, herkes için ya da tek bir sohbet için.';
-
-  @override
-  String get onboardingSlowerAMessageTakes =>
-      'Daha yavaş. Bir mesaj iki ila beş saniye sürer.';
-
-  @override
-  String get onboardingAboutASecondWorks =>
-      'Yaklaşık bir saniye. Tor’un engellendiği yerde çalışır.';
-
-  @override
-  String get onboardingAutoFindsAWay =>
-      'Otomatik, engeli aşmanın yolunu kendisi bulur.';
-
-  @override
-  String get onboardingUseThis => 'Bunu kullan →';
-
-  @override
-  String get onboardingThreeThingsThen => 'Üç şey,\nsonra *içeridesin*.';
-
-  @override
-  String get onboardingEverythingElseTheApp =>
-      'Gerisini uygulama, gerektiğinde sana söyleyecek.';
-
-  @override
-  String get onboardingYourNameIsThreeWords => 'Adın üç kelime';
-
-  @override
-  String get onboardingThatIsTheWhole =>
-      'Kimliğin bundan ibaret. Sızacak ya da aranacak bir numara veya e-posta yok. Konuştuğun kişiler bu kelimeleri ve seçtiğin yüzü görür.';
-
-  @override
-  String get onboardingNobodyCanReachYou =>
-      'Sen içeri almadıkça kimse sana ulaşamaz';
-
-  @override
-  String get onboardingAStrangerWithYour =>
-      'Kelimelerini bilen bir yabancı yalnızca kapıyı çalabilir. İlk mesajı sen evet diyene kadar isteklerde bekler ve hayır dersen bunu hiçbir zaman öğrenmez.';
-
-  @override
-  String get onboardingTheFirstConnectionTakesAMinute =>
-      'İlk bağlantı bir dakika sürer';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -4119,9 +4049,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get onboardingYourIdentityLivesOn =>
       'Kimliğin bu telefonda yaşar. Hazır olduğunda ayarlardan yedekle.';
-
-  @override
-  String get onboardingIUnderstand => 'Anladım →';
 
   @override
   String get onboardingOneQuiet => 'Tek bir sessiz *bildirim*.';
@@ -4142,13 +4069,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get onboardingGotIt => 'Anladım →';
 
   @override
-  String get onboardingNow => 'Şimdi *birini ekle*.';
-
-  @override
-  String get onboardingTheAppIsReady =>
-      'Uygulama hazır. Sen ekleyene ya da içeri alana kadar kimse sana mesaj atamaz.';
-
-  @override
   String get onboardingEveryWayToAdd => 'Birini eklemenin her yolu';
 
   @override
@@ -4160,10 +4080,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get onboardingPointTheCameraAt => 'Kamerayı onun koduna tut';
-
-  @override
-  String get onboardingTheAppIsReadyWhenYou =>
-      'Sen hazır olduğunda uygulama da hazır.';
 
   @override
   String get onboardingNotNowAddPeople => 'Şimdi değil · kişileri sonra ekle';
@@ -4403,9 +4319,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get profileProfile => 'Profil';
-
-  @override
-  String get profileChangeYourFace => 'Yüzünü değiştir';
 
   @override
   String get profileKryfoId => 'Adın';
@@ -9961,20 +9874,200 @@ class AppLocalizationsTr extends AppLocalizations {
       'Özel’de her şey Tor üzerinden çıkar ve sunucularımız seni değil, bir çıkış düğümünü görür. Hızlı’da bağlantı doğrudan iki sunucumuza gider: bağlıyken IP adresini görürler ve hiçbir kaydını tutmazlar. İlki çalışmadığı sürece Hızlı herkese açık aktarıcıları da kullanır, yalnızca Tor üzerinden.';
 
   @override
-  String get onboardingHidesFromEveryone =>
-      'Adresini herkesten gizler, sunucularımız dahil.';
+  String get chatAlbumItDisappearsWithNo =>
+      'Daha önce kaydedilmediyse albüm iki telefondan da silinecek. Bu geri alınamaz.';
 
   @override
-  String get onboardingFastSees =>
-      'Sunucularımız adresini yalnızca bağlıyken görür.';
+  String get groupChatAlbumItDisappearsWithNo =>
+      'Daha önce kaydedilmediyse albüm herkesin telefonundan silinecek. Bu geri alınamaz.';
 
   @override
-  String get onboardingFastNetworkSees =>
-      'Bu ağ Kryfo’ya bağlandığını görebilir. Sunucularımız adresini görür.';
+  String get homeInviteSomeone => 'Birini davet et';
 
   @override
-  String get onboardingKeepPrivate => 'Özel’de kal →';
+  String get onboardingNameHeadline => 'İstersen herkese açık bir *@ad*.';
 
   @override
-  String get onboardingSkipPrivate => 'Atla · Özel iyi bir varsayılan';
+  String get onboardingNameLine =>
+      'Herkese açık bir ad, insanların seni bulmasını sağlar. Atlamak seni daha gizli tutar, istediğin zaman sonra ekleyebilirsin.';
+
+  @override
+  String get onboardingNameSkip => 'Şimdilik atla →';
+
+  @override
+  String onboardingNameClaim(Object handle) {
+    return '@$handle adını al →';
+  }
+
+  @override
+  String get onboardingInviteHeadline => 'Şimdi *birini davet et*.';
+
+  @override
+  String get onboardingInviteLead =>
+      'Herhangi bir mesajlaşma uygulamasında bir bağlantı gönder. Kryfo’yu açar ya da nereden indirileceğini gösterir.';
+
+  @override
+  String get onboardingInviteSomeone => 'Birini davet et →';
+
+  @override
+  String get onboardingInviteGettingReady => 'Bağlantın hazırlanıyor…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'Beni Kryfo’da ekle. Oradaki adım: $myId\n\nBeni eklemek için dokun:\n$link\n\nHenüz Kryfo yok mu? Buradan indir:\n$download\n\nKryfo gizli bir mesajlaşma uygulaması. Telefon numarası yok, e-posta yok.';
+  }
+
+  @override
+  String get inviteNotReady =>
+      'Bağlantın neredeyse hazır. Birazdan tekrar dene.';
+
+  @override
+  String get photoCropTitle => 'Taşı ve ölçekle';
+
+  @override
+  String get photoCropUse => 'Fotoğrafı kullan';
+
+  @override
+  String get photoCropLabel =>
+      'Daire içindeki fotoğrafın. Yakınlaştırmak için iki parmakla aç, taşımak için sürükle';
+
+  @override
+  String get photoCouldNotUse => 'Başka bir fotoğraf dene. Bu okunamadı.';
+
+  @override
+  String get photoTake => 'Fotoğraf çek';
+
+  @override
+  String get photoChoose => 'Galeriden seç';
+
+  @override
+  String get photoPickFace => 'Bir yüz seç';
+
+  @override
+  String get photoView => 'Fotoğrafı gör';
+
+  @override
+  String get photoRemove => 'Fotoğrafı kaldır';
+
+  @override
+  String get photoYourPhoto => 'Fotoğrafın';
+
+  @override
+  String get photoYourPhotoLine =>
+      'Yalnızca kişilerin görür, uçtan uca şifreli.';
+
+  @override
+  String get photoSetTheirs => 'Fotoğraf koy';
+
+  @override
+  String get photoChangeTheirs => 'Fotoğrafı değiştir';
+
+  @override
+  String get photoOnlyHere => 'Yalnızca bu telefonda';
+
+  @override
+  String photoForThem(Object name) {
+    return '$name için bir fotoğraf';
+  }
+
+  @override
+  String get photoOnlyHereLine => 'Yalnızca sen görürsün. Bu telefonda kalır.';
+
+  @override
+  String photoOf(Object name) {
+    return '$name fotoğrafı';
+  }
+
+  @override
+  String get historyChatStaysShots =>
+      'Bu sohbet telefonunda kalır, çünkü içinde ekran görüntüsü engelli.';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString rakam',
+      zero: 'Rakam yok',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString karakter',
+      zero: 'Karakter yok',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'Yedekleme ilerlemesi';
+
+  @override
+  String get a11yRestoreProgress => 'Geri yükleme ilerlemesi';
+
+  @override
+  String get a11yExportProgress => 'Dışa aktarma ilerlemesi';
+
+  @override
+  String get a11yLockFileProgress => 'Kilitleme ilerlemesi';
+
+  @override
+  String get a11yCleanProgress => 'Temizleme ilerlemesi';
+
+  @override
+  String get a11yMessageActions => 'Mesaj işlemleri';
+
+  @override
+  String get a11yRecordVoiceNote => 'Sesli mesaj kaydet';
+
+  @override
+  String get a11yRecording => 'Kaydediliyor';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'Fotoğraf, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return '$name kişisinden fotoğraf, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'Video, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return '$name kişisinden video, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString yeni mesaj',
+      one: 'Yeni mesaj',
+    );
+    return '$_temp0';
+  }
 }
