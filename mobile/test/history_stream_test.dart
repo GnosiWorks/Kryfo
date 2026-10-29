@@ -864,7 +864,7 @@ void main() {
       )).single;
       await ph.db.update(
         'messages',
-        {'plaintext': 'edited on the phone', 'edited': 1},
+        {'plaintext': 'edited on the phone', 'edited': 1, 'preview': 'phone'},
         where: 'id = ?',
         whereArgs: [real['id']],
       );
@@ -889,6 +889,7 @@ void main() {
         'direction': 'in',
         'plaintext': 'edited here',
         'edited': 1,
+        'preview': 'here',
         'sent_at': real['sent_at'],
         'msg_uid': real['msg_uid'],
       });
@@ -911,6 +912,8 @@ void main() {
         [want],
         reason: '$here $phone',
       );
+      // the page title goes with the words it was fetched for
+      expect(rows.single['preview'], want == 'edited here' ? 'here' : 'phone');
       out.close();
     }
   }, skip: skip);
@@ -949,6 +952,94 @@ void main() {
       whereArgs: [real['msg_uid']],
     );
     expect([for (final r in rows) r['media_path']], [mine]);
+    out.close();
+  }, skip: skip);
+
+  test('a file no row of the copy points at never lands', () async {
+    for (final merged in [false, true]) {
+      final ph = await _phone(ana: 2);
+      final l = _Link();
+      final out = await _export(ph, l);
+      final d = await _device();
+      final real = (await ph.db.query(
+        'messages',
+        where: "plaintext = 'a photo'",
+      )).single;
+      final mine = p.join(d.media, 'live.jpg');
+      if (merged) {
+        // it came here live, with its picture
+        File(mine).writeAsBytesSync([1, 2, 3]);
+        await d.db.insert('contacts', {
+          'halo_id': _ana,
+          'onion': 'o',
+          'xpub': 'x',
+          'first_seen': 1,
+          'last_seen': 1,
+        });
+        await d.db.insert('messages', {
+          'peer_id': _ana,
+          'direction': real['direction'],
+          'plaintext': 'a photo',
+          'sent_at': real['sent_at'],
+          'msg_uid': real['msg_uid'],
+          'media_path': mine,
+        });
+      } else {
+        // it came here live and was deleted
+        await d.db.insert('gone_in', {
+          'msg_uid': real['msg_uid'],
+          'peer_id': _ana,
+          'at': 1,
+        });
+      }
+      final imp = await _open(d, l, out);
+      await _pump(out, imp);
+      expect((await imp.finish()).gaps, isEmpty, reason: '$merged');
+      expect(File(p.join(d.media, 'p1.jpg')).existsSync(), isFalse);
+      expect(File(p.join(d.media, 'v1.mp4')).existsSync(), isTrue);
+      final rows = await d.db.query(
+        'messages',
+        where: 'msg_uid = ?',
+        whereArgs: [real['msg_uid']],
+      );
+      expect([for (final r in rows) r['media_path']], merged ? [mine] : []);
+      await imp.discard();
+      if (merged) expect(File(mine).existsSync(), isTrue);
+      out.close();
+    }
+  }, skip: skip);
+
+  test('the edit time comes with a new row', () async {
+    final ph = await _phone(ana: 6);
+    final real = (await ph.db.query(
+      'messages',
+      where: "plaintext = 'ana says 2'",
+    )).single;
+    await ph.db.update(
+      'messages',
+      {'plaintext': 'edited on the phone', 'edited': 1},
+      where: 'id = ?',
+      whereArgs: [real['id']],
+    );
+    await ph.db.insert('frame_order', {
+      'msg_uid': real['msg_uid'],
+      'sender': _ana,
+      'kind': 'edit',
+      'w': 100,
+    });
+    final l = _Link();
+    final out = await _export(ph, l);
+    final d = await _device();
+    final imp = await _open(d, l, out);
+    await _pump(out, imp);
+    expect((await imp.finish()).gaps, isEmpty);
+    // a late live copy of an older edit then stays out
+    final o = await d.db.query(
+      'frame_order',
+      where: "msg_uid = ? AND sender = ? AND kind = 'edit'",
+      whereArgs: [real['msg_uid'], _ana],
+    );
+    expect([for (final r in o) r['w']], [100]);
     out.close();
   }, skip: skip);
 

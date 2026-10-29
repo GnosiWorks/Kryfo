@@ -32,6 +32,9 @@ const _kPartDir = '.history';
 const _fileWaiting = 0;
 const _fileWhole = 1;
 const _fileLost = -1;
+// no row of the copy points at it: the device kept its own file for the
+// message, or deleted the message. never written, counted as come
+const _fileHere = 2;
 
 // one record that never opens, again and again: a spool gone bad, or a
 // link that keeps cutting it short. past this many tries at one index the
@@ -349,7 +352,7 @@ class HistoryImport {
   // after it
   Future<void> _write(HistoryEvent ev) async {
     final f = _files[ev.file];
-    if (f == null || f.ok == _fileLost) return;
+    if (f == null || f.ok == _fileLost || f.ok == _fileHere) return;
     final part = File(_part(ev.file));
     await part.parent.create(recursive: true);
     final raf = await part.open(mode: FileMode.append);
@@ -389,13 +392,23 @@ class HistoryImport {
       case 'messages':
         await _messages(t, ev.chat, ev.rows);
       case 'media':
+        // every row of the copy is in by now: the list follows the text
+        final wanted = <String>{
+          for (final r in await t.rawQuery(
+            'SELECT media_path, file_path FROM messages '
+            'WHERE id IN (SELECT msg_id FROM history_rows)',
+          ))
+            for (final v in [r['media_path'], r['file_path']])
+              if (v is String) v,
+        };
         var n = ev.first;
         for (final m in ev.media) {
+          final name = m['name'] as String;
           final f = (
             chat: (m['chat'] as num).toInt(),
-            name: m['name'] as String,
+            name: name,
             size: (m['size'] as num).toInt(),
-            ok: _fileWaiting,
+            ok: wanted.contains(_final(name)) ? _fileWaiting : _fileHere,
           );
           await t.insert('history_files', {
             'file': n,
@@ -407,9 +420,12 @@ class HistoryImport {
           _files[n++] = f;
         }
       case 'data' when ev.last:
-        final ok = ev.ok && _files[ev.file]?.ok != _fileLost;
+        final was = _files[ev.file]?.ok;
+        if (was == _fileHere) return;
+        final ok = ev.ok && was != _fileLost;
         await _fileOk(t, ev.file, ok ? _fileWhole : _fileLost);
       case 'gone':
+        if (_files[ev.file]?.ok == _fileHere) return;
         await _fileOk(t, ev.file, _fileLost);
     }
   }
@@ -560,7 +576,7 @@ class HistoryImport {
       if (uid is String) {
         for (final live in await t.rawQuery(
           'SELECT id, peer_id, group_id, direction, plaintext, edited, '
-          'media_path, file_path, file_name FROM messages '
+          'preview, media_path, file_path, file_name FROM messages '
           'WHERE msg_uid = ? AND id NOT IN (SELECT msg_id FROM history_rows)',
           [uid],
         )) {
@@ -576,15 +592,11 @@ class HistoryImport {
             final mine = await _editAt(t, uid, m['peer_id'] as String);
             final theirs = (r['x_edit_w'] as num?)?.toInt();
             if (mine != null && (theirs == null || mine > theirs)) {
-              keep['plaintext'] = live['plaintext'];
-              keep['edited'] = live['edited'];
+              for (final c in const ['plaintext', 'edited', 'preview']) {
+                keep[c] = live[c];
+              }
             } else if (theirs != null) {
-              await t.insert('frame_order', {
-                'msg_uid': uid,
-                'sender': m['peer_id'],
-                'kind': 'edit',
-                'w': theirs,
-              }, conflictAlgorithm: ConflictAlgorithm.replace);
+              await _tookEdit(t, uid, m['peer_id'] as String, theirs);
             }
             // a file the device already holds stays its own
             if (await _hasFile(live)) {
@@ -630,6 +642,10 @@ class HistoryImport {
       if (id == null) {
         made = 1;
         id = await t.insert('messages', m);
+        // a late live copy of an older edit stays out, as it would here
+        if ((r['x_edit_w'] as num?)?.toInt() case final w? when uid is String) {
+          await _tookEdit(t, uid, m['peer_id'] as String, w);
+        }
         if (fts) {
           final body = searchBody(m);
           if (body.trim().isNotEmpty) {
@@ -684,6 +700,19 @@ class HistoryImport {
     return r.isEmpty ? null : (r.first['w'] as num).toInt();
   }
 
+  // the phone's time on the sender's last edit, kept unless a later is here
+  static Future<void> _tookEdit(
+    DatabaseExecutor t,
+    String uid,
+    String sender,
+    int w,
+  ) => t.rawInsert(
+    "INSERT INTO frame_order (msg_uid, sender, kind, w) VALUES (?, ?, 'edit', ?) "
+    'ON CONFLICT (msg_uid, sender, kind) DO UPDATE SET w = excluded.w '
+    'WHERE excluded.w > frame_order.w',
+    [uid, sender, w],
+  );
+
   static Future<bool> _hasFile(Map<String, Object?> row) async {
     for (final c in const ['media_path', 'file_path']) {
       final v = row[c];
@@ -733,12 +762,15 @@ class HistoryImport {
     final files = <int, (int, int)>{};
     for (final f in await _db.query(
       'history_files',
-      where: 'ok = ?',
-      whereArgs: [_fileWhole],
+      where: 'ok IN (?, ?)',
+      whereArgs: [_fileWhole, _fileHere],
     )) {
       final file = File(_final(f['name'] as String));
       final size = f['size'] as int;
-      if (!await file.exists() || await file.length() != size) continue;
+      if (f['ok'] == _fileWhole &&
+          (!await file.exists() || await file.length() != size)) {
+        continue;
+      }
       final n = f['n'] as int;
       final was = files[n] ?? (0, 0);
       files[n] = (was.$1 + 1, was.$2 + size);
@@ -825,7 +857,8 @@ class HistoryImport {
     });
     for (final f in files) {
       final name = f['name'] as String;
-      if (!_safe(name)) continue;
+      // never written by this stream
+      if (!_safe(name) || f['ok'] == _fileHere) continue;
       try {
         await File(p.join(mediaDir, p.joinAll(name.split('/')))).delete();
       } on PathNotFoundException {
