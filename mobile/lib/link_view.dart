@@ -172,6 +172,15 @@ class LinkView {
   String toString() => 'LinkView($kind, $status, $pct%, held: $held)';
 }
 
+/// whether a send that did not go reads as failed: with no network, or with
+/// the route down and not on its way. while tor is still coming up, a
+/// message typed meanwhile waits for it and reads as sending
+bool sendReadsBlocked({
+  required bool online,
+  required bool torReady,
+  required LinkView link,
+}) => !online || (!torReady && !link.pulsing);
+
 /// the reading for one moment. [usable] is the engine's verdict that a relay
 /// answered through tor (AppState.torUsable), [usableAt] when the status
 /// poll last saw it, [tryingSince] when tor began trying, [relayDownSince]

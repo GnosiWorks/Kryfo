@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/jpeg_strip.dart';
+
+import 'photo_crafted.dart';
 
 // a tiny synthetic jpeg: SOI, APP0, APP1 (exif with a fake gps tag), COM,
 // DQT, SOS with some scan bytes, EOI
@@ -80,6 +83,45 @@ void main() {
     broken[exifAt + 3] = 0xFF;
     expect(stripJpegMetadata(broken), isNull);
     expect(jpegHasExif(broken), isTrue);
+  });
+
+  test('exif behind ff 00, where a decoder reads on, is refused', () {
+    final gps = File('test/fixtures/gallery_gps.jpg').readAsBytesSync();
+    var at = 2;
+    while (gps[at + 1] != 0xE1) {
+      at += 2 + (gps[at + 2] << 8 | gps[at + 3]);
+    }
+    expect(stripJpegMetadata(hiddenSegment(gps, at)), isNull);
+    // the same between two scans, and fill there is no marker
+    final src = _sample();
+    final eoi = src.length - 2;
+    final two = Uint8List.fromList([
+      ...src.sublist(0, eoi),
+      0xFF, 0xFE, 0, 4, 1, 2, 0xFF, 0xDA, 0, 8, 1, 1, 0, 0, 63, 0, 9, //
+      0xFF, 0xD9,
+    ]);
+    expect(stripJpegMetadata(two), isNotNull);
+    final exif = [0xFF, 0xE1, 0, 8, ...'Exif'.codeUnits, 0, 0];
+    for (final (what, gap) in [
+      ('ff 00', [0xFF, 0x00, 0, 2 + exif.length, ...exif]),
+      ('a restart', [0xFF, 0xD0, ...exif]),
+    ]) {
+      final hid = Uint8List.fromList([
+        ...src.sublist(0, eoi),
+        0xFF, 0xFE, 0, 4, 1, 2, ...gap, 0xFF, 0xDA, 0, 8, 1, 1, 0, 0, 63, 0, //
+        9, 0xFF, 0xD9,
+      ]);
+      expect(stripJpegMetadata(hid), isNull, reason: what);
+    }
+    final filled = Uint8List.fromList([
+      ...src.sublist(0, eoi),
+      0xFF, 0xFE, 0, 4, 1, 2, 0xFF, ...exif, 0xFF, 0xDA, 0, 8, 1, 1, 0, 0, //
+      63, 0, 9, 0xFF, 0xD9,
+    ]);
+    expect(
+      String.fromCharCodes(stripJpegMetadata(filled)!),
+      isNot(contains('Exif')),
+    );
   });
 
   group('where the picture ends', () {

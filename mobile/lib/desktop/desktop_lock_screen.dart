@@ -102,7 +102,7 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
                 _error!,
                 key: ValueKey(_error),
                 textAlign: TextAlign.center,
-                style: HaloType.sans(size: 13, color: HaloColors.rose),
+                style: HaloType.sans(size: 13, color: HaloColors.roseText),
               ),
             ),
           );

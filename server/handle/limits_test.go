@@ -107,7 +107,7 @@ func TestReadsAreLimited(t *testing.T) {
 	if code, _ := get("/@wren"); code != http.StatusOK {
 		t.Fatalf("first read: %d", code)
 	}
-	if code, body := get("/@wren"); code != http.StatusTooManyRequests || !strings.Contains(body, "try again") {
+	if code, body := get("/@wren"); code != http.StatusTooManyRequests || !strings.Contains(body, "Try again") {
 		t.Fatalf("page over the limit: %d", code)
 	}
 	if code, _ := get("/.well-known/kryfo.json?name=wren"); code != http.StatusTooManyRequests {

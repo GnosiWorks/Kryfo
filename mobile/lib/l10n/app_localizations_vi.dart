@@ -1364,7 +1364,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'Tin nhắn bị xóa khỏi cả hai điện thoại, trừ khi đã được lưu. Không thể hoàn tác việc này.';
+      'Tin nhắn sẽ bị xóa khỏi cả hai điện thoại, trừ khi đã được lưu. Không thể hoàn tác việc này.';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'Album sẽ bị xóa khỏi cả hai điện thoại, trừ khi đã được lưu. Không thể hoàn tác việc này.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -2608,7 +2612,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'Tin nhắn bị xóa khỏi điện thoại của mọi người, trừ khi đã được lưu. Không thể hoàn tác việc này.';
+      'Tin nhắn sẽ bị xóa khỏi điện thoại của mọi người, trừ khi đã được lưu. Không thể hoàn tác việc này.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'Album sẽ bị xóa khỏi điện thoại của mọi người, trừ khi đã được lưu. Không thể hoàn tác việc này.';
 
   @override
   String get groupChatUnsend => 'Thu hồi';
@@ -3154,6 +3162,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeAddSomeone => 'Thêm người';
 
   @override
+  String get homeInviteSomeone => 'Mời một người';
+
+  @override
   String get homeArchived => 'Đã lưu trữ';
 
   @override
@@ -3682,11 +3693,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Đã sao chép lời mời · tự xóa sau 60s';
 
   @override
-  String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Thêm tôi trên Kryfo. Tên của tôi ở đó là $myId\n\nChạm để thêm tôi:\n$uri\n\nKryfo là ứng dụng nhắn tin riêng tư. Không cần số điện thoại, không cần email.';
-  }
-
-  @override
   String get myKryfoAddMeOnKryfo2 => 'Thêm tôi trên Kryfo';
 
   @override
@@ -4017,72 +4023,44 @@ class AppLocalizationsVi extends AppLocalizations {
   String get onboardingThreeWords => 'Ba từ. *Của riêng bạn.*';
 
   @override
-  String get onboardingPickA => 'Chọn một *khuôn mặt*.';
-
-  @override
-  String get onboardingDrawnOnThisPhone =>
-      'Được vẽ trên điện thoại này từ một con số, không bao giờ tải lên. Đổi bất cứ lúc nào bạn muốn.';
-
-  @override
-  String get onboardingThePeopleYouMessage =>
-      'Những người mà bạn nhắn tin cũng thấy khuôn mặt này';
-
-  @override
-  String get onboardingKeepMyInitial => 'Giữ chữ cái đầu';
-
-  @override
-  String get onboardingThatOne => 'Cái này →';
-
-  @override
   String get onboardingContinue => 'Tiếp tục →';
 
   @override
-  String get onboardingHowYourMessages => 'Cách tin nhắn của bạn *đi*.';
+  String get onboardingNameHeadline => 'Một *@tên* công khai, nếu bạn muốn.';
 
   @override
-  String get onboardingYouCanChangeThis =>
-      'Bạn có thể đổi bất cứ lúc nào trong cài đặt, cho mọi người hoặc cho một cuộc trò chuyện.';
+  String get onboardingNameLine =>
+      'Tên công khai giúp mọi người tìm thấy bạn. Bỏ qua giúp bạn riêng tư hơn, bạn luôn có thể thêm sau.';
 
   @override
-  String get onboardingSlowerAMessageTakes =>
-      'Chậm hơn. Mỗi tin nhắn mất từ hai đến năm giây.';
+  String get onboardingNameSkip => 'Bỏ qua lúc này →';
 
   @override
-  String get onboardingAboutASecondWorks =>
-      'Khoảng một giây. Hoạt động cả ở nơi Tor bị chặn.';
+  String onboardingNameClaim(Object handle) {
+    return 'Lấy @$handle →';
+  }
 
   @override
-  String get onboardingAutoFindsAWay =>
-      'Chế độ Tự động tự tìm cách vượt qua việc chặn.';
+  String get onboardingInviteHeadline => 'Giờ thì, *mời một người*.';
 
   @override
-  String get onboardingUseThis => 'Dùng chế độ này →';
+  String get onboardingInviteLead =>
+      'Gửi một liên kết qua bất kỳ ứng dụng nhắn tin nào. Liên kết mở Kryfo, hoặc chỉ chỗ tải về.';
 
   @override
-  String get onboardingThreeThingsThen => 'Ba điều thôi,\nrồi *vào luôn*.';
+  String get onboardingInviteSomeone => 'Mời một người →';
 
   @override
-  String get onboardingEverythingElseTheApp =>
-      'Mọi thứ khác, ứng dụng sẽ cho bạn biết khi cần.';
+  String get onboardingInviteGettingReady => 'Đang chuẩn bị liên kết…';
 
   @override
-  String get onboardingYourNameIsThreeWords => 'Tên bạn là ba từ';
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'Thêm tôi trên Kryfo. Tên của tôi ở đó là $myId\n\nChạm để thêm tôi:\n$link\n\nChưa có Kryfo? Tải tại đây:\n$download\n\nKryfo là ứng dụng nhắn tin riêng tư. Không cần số điện thoại, không cần email.';
+  }
 
   @override
-  String get onboardingThatIsTheWhole =>
-      'Đó là toàn bộ danh tính. Không có số điện thoại hay email nào để bị lộ hoặc bị tra cứu. Những người trò chuyện với bạn sẽ thấy ba từ này và khuôn mặt bạn đã chọn.';
-
-  @override
-  String get onboardingNobodyCanReachYou =>
-      'Không ai liên lạc được với bạn cho đến khi bạn cho phép';
-
-  @override
-  String get onboardingAStrangerWithYour =>
-      'Người lạ biết ba từ của bạn chỉ có thể gõ cửa. Tin nhắn đầu tiên của họ chờ trong mục yêu cầu cho đến khi bạn đồng ý, và bạn có thể từ chối mà họ không bao giờ biết.';
-
-  @override
-  String get onboardingTheFirstConnectionTakesAMinute =>
-      'Lần kết nối đầu tiên mất một phút';
+  String get inviteNotReady =>
+      'Liên kết của bạn sắp xong. Thử lại sau giây lát.';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -4091,9 +4069,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get onboardingYourIdentityLivesOn =>
       'Danh tính của bạn nằm trên điện thoại này. Hãy sao lưu nó trong cài đặt khi bạn sẵn sàng.';
-
-  @override
-  String get onboardingIUnderstand => 'Tôi hiểu rồi →';
 
   @override
   String get onboardingOneQuiet => 'Một *thông báo* lặng lẽ.';
@@ -4113,13 +4088,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get onboardingGotIt => 'Đã hiểu →';
 
   @override
-  String get onboardingNow => 'Giờ thì, *thêm một người*.';
-
-  @override
-  String get onboardingTheAppIsReady =>
-      'Ứng dụng đã sẵn sàng. Không ai nhắn tin được cho bạn cho đến khi bạn thêm họ hoặc cho họ vào.';
-
-  @override
   String get onboardingEveryWayToAdd => 'Mọi cách để thêm người';
 
   @override
@@ -4131,10 +4099,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get onboardingPointTheCameraAt => 'Hướng máy ảnh vào mã của họ';
-
-  @override
-  String get onboardingTheAppIsReadyWhenYou =>
-      'Ứng dụng sẵn sàng bất cứ khi nào bạn muốn.';
 
   @override
   String get onboardingNotNowAddPeople => 'Để sau · thêm người sau';
@@ -4375,9 +4339,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get profileProfile => 'Hồ sơ';
-
-  @override
-  String get profileChangeYourFace => 'Đổi khuôn mặt';
 
   @override
   String get profileKryfoId => 'Tên của bạn';
@@ -9760,8 +9721,155 @@ class AppLocalizationsVi extends AppLocalizations {
       'Kryfo cần một thư mục riêng trong bộ nhớ khi chạy, và máy tính này không có, nên Kryfo sẽ không mở.';
 
   @override
+  String get photoCropTitle => 'Di chuyển và thu phóng';
+
+  @override
+  String get photoCropUse => 'Dùng ảnh';
+
+  @override
+  String get photoCropLabel =>
+      'Ảnh của bạn trong vòng tròn. Chụm để phóng to, kéo để di chuyển';
+
+  @override
+  String get photoCouldNotUse => 'Hãy thử ảnh khác. Không đọc được ảnh này.';
+
+  @override
+  String get photoTake => 'Chụp ảnh';
+
+  @override
+  String get photoChoose => 'Chọn từ thư viện';
+
+  @override
+  String get photoPickFace => 'Chọn khuôn mặt';
+
+  @override
+  String get photoView => 'Xem ảnh';
+
+  @override
+  String get photoRemove => 'Gỡ ảnh';
+
+  @override
+  String get photoYourPhoto => 'Ảnh của bạn';
+
+  @override
+  String get photoYourPhotoLine =>
+      'Chỉ danh bạ của bạn thấy, được mã hóa đầu cuối.';
+
+  @override
+  String get photoSetTheirs => 'Đặt ảnh';
+
+  @override
+  String get photoChangeTheirs => 'Đổi ảnh';
+
+  @override
+  String get photoOnlyHere => 'Chỉ trên điện thoại này';
+
+  @override
+  String photoForThem(Object name) {
+    return 'Ảnh cho $name';
+  }
+
+  @override
+  String get photoOnlyHereLine =>
+      'Chỉ bạn thấy. Ảnh ở lại trên điện thoại này.';
+
+  @override
+  String photoOf(Object name) {
+    return 'Ảnh của $name';
+  }
+
+  @override
   String get historyChatStaysShots =>
       'Cuộc trò chuyện này ở lại trên điện thoại của bạn vì đã chặn chụp màn hình trong đó.';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString chữ số',
+      zero: 'Chưa có chữ số',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString ký tự',
+      zero: 'Chưa có ký tự',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'Tiến độ sao lưu';
+
+  @override
+  String get a11yRestoreProgress => 'Tiến độ khôi phục';
+
+  @override
+  String get a11yExportProgress => 'Tiến độ xuất';
+
+  @override
+  String get a11yLockFileProgress => 'Tiến độ khóa';
+
+  @override
+  String get a11yCleanProgress => 'Tiến độ làm sạch';
+
+  @override
+  String get a11yMessageActions => 'Thao tác với tin nhắn';
+
+  @override
+  String get a11yRecordVoiceNote => 'Ghi tin nhắn thoại';
+
+  @override
+  String get a11yRecording => 'Đang ghi âm';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'Ảnh, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return 'Ảnh từ $name, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'Video, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return 'Video từ $name, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString tin nhắn mới',
+      one: 'Tin nhắn mới',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get modesPickHow =>
@@ -9904,22 +10012,4 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'Với Riêng tư, mọi thứ đi qua Tor và máy chủ của chúng tôi chỉ thấy một nút thoát, không bao giờ thấy bạn. Với Nhanh, kết nối đi thẳng tới hai máy chủ của chúng tôi: chúng thấy địa chỉ IP của bạn khi bạn đang kết nối và không lưu lại gì. Khi máy chủ đầu tiên ngừng, Nhanh dùng thêm relay công cộng, chỉ qua Tor.';
-
-  @override
-  String get onboardingHidesFromEveryone =>
-      'Ẩn địa chỉ của bạn với mọi người, kể cả máy chủ của chúng tôi.';
-
-  @override
-  String get onboardingFastSees =>
-      'Máy chủ của chúng tôi chỉ thấy địa chỉ của bạn khi bạn đang kết nối.';
-
-  @override
-  String get onboardingFastNetworkSees =>
-      'Mạng này có thể thấy bạn kết nối tới Kryfo. Máy chủ của chúng tôi thấy địa chỉ của bạn.';
-
-  @override
-  String get onboardingKeepPrivate => 'Giữ Riêng tư →';
-
-  @override
-  String get onboardingSkipPrivate => 'Bỏ qua · Riêng tư là mặc định tốt';
 }

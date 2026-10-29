@@ -141,8 +141,8 @@ void main() {
 
   testWidgets('on the middle at a large text size', (t) async {
     for (final p in _phones()) {
-      await _open(t, p, scale: 1.6);
-      _centred(t, p, '${p.name} x1.6');
+      await _open(t, p, scale: 2.0);
+      _centred(t, p, '${p.name} x2');
     }
     await t.pumpWidget(const SizedBox());
   });

@@ -469,7 +469,14 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                         key: ValueKey(v.kind),
                         maxLines: 2,
                         textScaler: TextScaler.linear(fit.scale),
-                        style: HaloType.mono(size: kPillPx, color: c),
+                        // offline's dot wears the fill tone, its words the
+                        // text tone
+                        style: HaloType.mono(
+                          size: kPillPx,
+                          color: v.kind == LinkKind.offline
+                              ? HaloColors.warnText
+                              : c,
+                        ),
                       ),
                     ),
                   ),

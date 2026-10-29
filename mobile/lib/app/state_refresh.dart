@@ -10,6 +10,7 @@ extension AppStateRefresh on AppState {
     final waiting = _devModeIn(s) ? await s.support.waiting() : null;
     // a session swapped while this read keeps what it was given
     if (!identical(s, _session)) return;
+    _photosFollow(s);
     contacts = list;
     pendingCount = pending;
     devRow = dev;

@@ -211,7 +211,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet> {
                       style: HaloType.sans(
                         size: 12.5,
                         weight: FontWeight.w600,
-                        color: HaloColors.violet,
+                        color: HaloColors.violetText,
                       ),
                     ),
                   ),
@@ -311,7 +311,7 @@ class _Quiet extends StatelessWidget {
         style: HaloType.sans(
           size: 13,
           weight: FontWeight.w600,
-          color: HaloColors.violet,
+          color: HaloColors.violetText,
         ),
       ),
     ),

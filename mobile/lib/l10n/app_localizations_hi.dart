@@ -1378,7 +1378,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'यह दोनों फ़ोन से हट जाता है, अगर पहले ही सेव न किया गया हो। इसे पलटा नहीं जा सकता।';
+      'यह दोनों फ़ोन से हट जाएगा, अगर पहले ही सेव न किया गया हो। इसे पलटा नहीं जा सकता।';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'यह एल्बम दोनों फ़ोन से हट जाएगा, अगर पहले ही सेव न किया गया हो। इसे पलटा नहीं जा सकता।';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -2623,7 +2627,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'यह सबके फ़ोन से हट जाता है, अगर पहले ही सेव न किया गया हो। इसे पलटा नहीं जा सकता।';
+      'यह सबके फ़ोन से हट जाएगा, अगर पहले ही सेव न किया गया हो। इसे पलटा नहीं जा सकता।';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'यह एल्बम सबके फ़ोन से हट जाएगा, अगर पहले ही सेव न किया गया हो। इसे पलटा नहीं जा सकता।';
 
   @override
   String get groupChatUnsend => 'वापस लें';
@@ -3175,6 +3183,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get homeAddSomeone => 'किसी को जोड़ें';
 
   @override
+  String get homeInviteSomeone => 'किसी को बुलाएँ';
+
+  @override
   String get homeArchived => 'आर्काइव';
 
   @override
@@ -3707,11 +3718,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'आमंत्रण कॉपी हुआ · 60 सेकंड में मिट जाएगा';
 
   @override
-  String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'मुझे Kryfo पर जोड़ें। वहाँ मेरा नाम $myId है\n\nमुझे जोड़ने के लिए टैप करें:\n$uri\n\nKryfo एक निजी मैसेंजर है। न फ़ोन नंबर, न ईमेल।';
-  }
-
-  @override
   String get myKryfoAddMeOnKryfo2 => 'मुझे Kryfo पर जोड़ें';
 
   @override
@@ -4039,72 +4045,44 @@ class AppLocalizationsHi extends AppLocalizations {
   String get onboardingThreeWords => 'तीन शब्द। *सिर्फ़ आपके।*';
 
   @override
-  String get onboardingPickA => 'एक *चेहरा* चुनें।';
-
-  @override
-  String get onboardingDrawnOnThisPhone =>
-      'एक नंबर से इसी फ़ोन पर बनाया गया, कभी अपलोड नहीं होता। जब चाहें बदल लें।';
-
-  @override
-  String get onboardingThePeopleYouMessage =>
-      'जिन्हें आप मैसेज करते हैं, वे भी इसे देखते हैं';
-
-  @override
-  String get onboardingKeepMyInitial => 'मेरे नाम का अक्षर रखें';
-
-  @override
-  String get onboardingThatOne => 'यह वाला →';
-
-  @override
   String get onboardingContinue => 'आगे बढ़ें →';
 
   @override
-  String get onboardingHowYourMessages => 'आपके मैसेज कैसे *सफ़र* करते हैं।';
+  String get onboardingNameHeadline => 'चाहें तो एक सार्वजनिक *@नाम*।';
 
   @override
-  String get onboardingYouCanChangeThis =>
-      'आप इसे कभी भी सेटिंग में बदल सकते हैं, सबके लिए या किसी एक चैट के लिए।';
+  String get onboardingNameLine =>
+      'सार्वजनिक नाम से लोग आपको ढूँढ सकते हैं। इसे छोड़ने से आप ज़्यादा निजी रहते हैं, आप इसे बाद में कभी भी जोड़ सकते हैं।';
 
   @override
-  String get onboardingSlowerAMessageTakes =>
-      'धीमा। एक मैसेज में दो से पाँच सेकंड लगते हैं।';
+  String get onboardingNameSkip => 'अभी छोड़ें →';
 
   @override
-  String get onboardingAboutASecondWorks =>
-      'लगभग एक सेकंड। वहाँ भी काम करता है जहाँ Tor बंद है।';
+  String onboardingNameClaim(Object handle) {
+    return '@$handle लें →';
+  }
 
   @override
-  String get onboardingAutoFindsAWay =>
-      'अपने-आप वाला विकल्प ख़ुद ही रोक से बचने का रास्ता ढूँढ लेता है।';
+  String get onboardingInviteHeadline => 'अब, *किसी को बुलाएँ*।';
 
   @override
-  String get onboardingUseThis => 'यही इस्तेमाल करें →';
+  String get onboardingInviteLead =>
+      'किसी भी मैसेंजर में एक लिंक भेजें। वह Kryfo खोलता है, या दिखाता है कि उसे कहाँ से पाएँ।';
 
   @override
-  String get onboardingThreeThingsThen => 'तीन बातें,\nफिर *आप अंदर*।';
+  String get onboardingInviteSomeone => 'किसी को बुलाएँ →';
 
   @override
-  String get onboardingEverythingElseTheApp =>
-      'बाक़ी सब ऐप तब बताएगा जब ज़रूरत होगी।';
+  String get onboardingInviteGettingReady => 'आपका लिंक तैयार हो रहा है…';
 
   @override
-  String get onboardingYourNameIsThreeWords => 'आपका नाम तीन शब्द है';
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'मुझे Kryfo पर जोड़ें। वहाँ मेरा नाम $myId है\n\nमुझे जोड़ने के लिए टैप करें:\n$link\n\nअभी Kryfo नहीं है? यहाँ से पाएँ:\n$download\n\nKryfo एक निजी मैसेंजर है। न फ़ोन नंबर, न ईमेल।';
+  }
 
   @override
-  String get onboardingThatIsTheWhole =>
-      'आपकी पूरी पहचान बस यही है। कोई नंबर या ईमेल नहीं जो लीक हो या जिससे आपको खोजा जाए। जिनसे आप बात करते हैं, वे ये शब्द और आपका चुना चेहरा देखते हैं।';
-
-  @override
-  String get onboardingNobodyCanReachYou =>
-      'जब तक आप अंदर न आने दें, कोई आप तक नहीं पहुँच सकता';
-
-  @override
-  String get onboardingAStrangerWithYour =>
-      'आपके शब्द जानने वाला कोई अजनबी सिर्फ़ दरवाज़ा खटखटा सकता है। उसका पहला मैसेज अनुरोधों में तब तक रुका रहता है जब तक आप हाँ न कहें, और आप मना कर सकते हैं, उसे कभी पता नहीं चलेगा।';
-
-  @override
-  String get onboardingTheFirstConnectionTakesAMinute =>
-      'पहली बार जुड़ने में एक मिनट लगता है';
+  String get inviteNotReady =>
+      'आपका लिंक लगभग तैयार है। थोड़ी देर में फिर कोशिश करें।';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -4113,9 +4091,6 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get onboardingYourIdentityLivesOn =>
       'आपकी पहचान इसी फ़ोन पर रहती है। जब तैयार हों, सेटिंग से इसका बैकअप लें।';
-
-  @override
-  String get onboardingIUnderstand => 'मुझे समझ आ गया →';
 
   @override
   String get onboardingOneQuiet => 'एक शांत *सूचना*।';
@@ -4135,13 +4110,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get onboardingGotIt => 'ठीक है →';
 
   @override
-  String get onboardingNow => 'अब, *किसी को जोड़ें*।';
-
-  @override
-  String get onboardingTheAppIsReady =>
-      'ऐप तैयार है। जब तक आप किसी को जोड़ें या अंदर आने न दें, कोई आपको मैसेज नहीं कर सकता।';
-
-  @override
   String get onboardingEveryWayToAdd => 'किसी को जोड़ने के सभी तरीक़े';
 
   @override
@@ -4153,9 +4121,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingPointTheCameraAt => 'कैमरा उनके कोड की ओर करें';
-
-  @override
-  String get onboardingTheAppIsReadyWhenYou => 'जब आप तैयार हों, ऐप तैयार है।';
 
   @override
   String get onboardingNotNowAddPeople => 'अभी नहीं · लोगों को बाद में जोड़ें';
@@ -4395,9 +4360,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get profileProfile => 'प्रोफ़ाइल';
-
-  @override
-  String get profileChangeYourFace => 'अपना चेहरा बदलें';
 
   @override
   String get profileKryfoId => 'आपका नाम';
@@ -9778,8 +9740,158 @@ class AppLocalizationsHi extends AppLocalizations {
       'चलते समय Kryfo को मेमोरी में एक निजी फ़ोल्डर चाहिए, और यह कंप्यूटर ऐसा कोई फ़ोल्डर नहीं देता, इसलिए यह नहीं खुलेगा।';
 
   @override
+  String get photoCropTitle => 'खिसकाएँ और आकार बदलें';
+
+  @override
+  String get photoCropUse => 'फ़ोटो इस्तेमाल करें';
+
+  @override
+  String get photoCropLabel =>
+      'गोले में आपकी फ़ोटो। ज़ूम के लिए उँगलियाँ फैलाएँ, खिसकाने के लिए खींचें';
+
+  @override
+  String get photoCouldNotUse =>
+      'कोई दूसरी फ़ोटो आज़माएँ। यह फ़ोटो पढ़ी नहीं जा सकी।';
+
+  @override
+  String get photoTake => 'फ़ोटो लें';
+
+  @override
+  String get photoChoose => 'गैलरी से चुनें';
+
+  @override
+  String get photoPickFace => 'चेहरा चुनें';
+
+  @override
+  String get photoView => 'फ़ोटो देखें';
+
+  @override
+  String get photoRemove => 'फ़ोटो हटाएँ';
+
+  @override
+  String get photoYourPhoto => 'आपकी फ़ोटो';
+
+  @override
+  String get photoYourPhotoLine =>
+      'इसे सिर्फ़ आपके संपर्क देखते हैं, एंड-टू-एंड एन्क्रिप्टेड।';
+
+  @override
+  String get photoSetTheirs => 'फ़ोटो लगाएँ';
+
+  @override
+  String get photoChangeTheirs => 'फ़ोटो बदलें';
+
+  @override
+  String get photoOnlyHere => 'सिर्फ़ इसी फ़ोन पर';
+
+  @override
+  String photoForThem(Object name) {
+    return '$name के लिए फ़ोटो';
+  }
+
+  @override
+  String get photoOnlyHereLine =>
+      'इसे सिर्फ़ आप देखते हैं। यह इसी फ़ोन पर रहती है।';
+
+  @override
+  String photoOf(Object name) {
+    return '$name की फ़ोटो';
+  }
+
+  @override
   String get historyChatStaysShots =>
       'यह चैट आपके फ़ोन पर ही रहती है, क्योंकि इसमें स्क्रीनशॉट रोके गए हैं।';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString अंक',
+      one: '1 अंक',
+      zero: 'कोई अंक नहीं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString अक्षर',
+      one: '1 अक्षर',
+      zero: 'कोई अक्षर नहीं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'बैकअप की प्रगति';
+
+  @override
+  String get a11yRestoreProgress => 'रीस्टोर की प्रगति';
+
+  @override
+  String get a11yExportProgress => 'एक्सपोर्ट की प्रगति';
+
+  @override
+  String get a11yLockFileProgress => 'लॉक करने की प्रगति';
+
+  @override
+  String get a11yCleanProgress => 'सफ़ाई की प्रगति';
+
+  @override
+  String get a11yMessageActions => 'मैसेज के विकल्प';
+
+  @override
+  String get a11yRecordVoiceNote => 'वॉइस नोट रिकॉर्ड करें';
+
+  @override
+  String get a11yRecording => 'रिकॉर्ड हो रहा है';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'फ़ोटो, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return '$name से आई फ़ोटो, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'वीडियो, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return '$name से आया वीडियो, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString नए मैसेज',
+      one: 'नया मैसेज',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get modesPickHow =>
@@ -9922,22 +10034,4 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'प्राइवेट पर सब कुछ Tor से निकलता है और हमारे सर्वर एक एग्ज़िट नोड देखते हैं, आपको कभी नहीं। तेज़ पर कनेक्शन सीधे हमारे दो सर्वर तक जाता है: जब तक आप जुड़े हैं वे आपका IP पता देखते हैं और उसका कोई रिकॉर्ड नहीं रखते। जब पहला बंद हो, तेज़ सार्वजनिक रिले भी इस्तेमाल करता है, सिर्फ़ Tor से।';
-
-  @override
-  String get onboardingHidesFromEveryone =>
-      'आपका पता सबसे छिपाता है, हमारे सर्वर से भी।';
-
-  @override
-  String get onboardingFastSees =>
-      'हमारे सर्वर आपका पता सिर्फ़ तब देखते हैं जब आप जुड़े हों।';
-
-  @override
-  String get onboardingFastNetworkSees =>
-      'यह नेटवर्क देख सकता है कि आप Kryfo से जुड़ रहे हैं। हमारे सर्वर आपका पता देखते हैं।';
-
-  @override
-  String get onboardingKeepPrivate => 'प्राइवेट रखें →';
-
-  @override
-  String get onboardingSkipPrivate => 'छोड़ें · प्राइवेट अच्छा डिफ़ॉल्ट है';
 }

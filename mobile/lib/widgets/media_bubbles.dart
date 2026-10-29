@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../theme.dart';
+import '../l10n/dates.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import 'motion.dart' show kHouseCurve, motionStill;
@@ -809,4 +810,14 @@ class VoiceMakingBubble extends StatelessWidget {
       ),
     );
   }
+}
+
+/// what a screen reader calls a photo or video tile: its kind, who sent it
+/// when that is known, and the day
+String mediaTileLabel(DateTime when, {String? from, bool video = false}) {
+  final day = dayMonthMaybeYear(when);
+  if (from == null || from.isEmpty) {
+    return video ? l10n.a11yVideoOn(day) : l10n.a11yPhotoOn(day);
+  }
+  return video ? l10n.a11yVideoFrom(from, day) : l10n.a11yPhotoFrom(from, day);
 }

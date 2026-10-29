@@ -275,7 +275,7 @@ class _PairCodePanelState extends State<PairCodePanel> {
                       textAlign: TextAlign.center,
                       style: HaloType.mono(
                         size: 10.5,
-                        color: _failed ? HaloColors.rose : HaloColors.text2,
+                        color: _failed ? HaloColors.roseText : HaloColors.text2,
                       ),
                     ),
                   ),

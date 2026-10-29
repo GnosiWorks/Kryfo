@@ -501,7 +501,7 @@ class _QrScreenState extends State<QrScreen> {
                                               style: HaloType.mono(
                                                 size: 9.5,
                                                 letter: 0.1,
-                                                color: HaloColors.green,
+                                                color: HaloColors.greenText,
                                               ),
                                             ),
                                           ),
@@ -569,8 +569,8 @@ class _Chip extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOutCubic,
-          height: 40,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          constraints: const BoxConstraints(minHeight: 40),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
           decoration: BoxDecoration(
             color: on
                 ? HaloColors.amber.withValues(alpha: 0.16)
@@ -620,12 +620,12 @@ class _Pill extends StatelessWidget {
         label: label,
         onTap: onTap,
         scale: 0.96,
-        child: SizedBox(
-          height: 44,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 44),
           child: Center(
             child: Container(
-              height: 32,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              constraints: const BoxConstraints(minHeight: 32),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: on ? HaloColors.amber.withValues(alpha: 0.16) : null,

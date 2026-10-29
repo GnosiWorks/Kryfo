@@ -79,6 +79,9 @@ bool _walk(
       i += 1;
       continue;
     }
+    // a decoder skips ff 00 and reads on at the next marker: what it hides
+    // from this walk would pass untouched
+    if (marker == 0x00) return false;
     // start of scan. the picture runs to its end marker and not a byte
     // further: cameras hang trailers, even a second image, after it
     if (marker == 0xDA) return _scan(src, i, out, keep);
@@ -141,6 +144,12 @@ bool _scan(
         return true;
       }
       if (m == 0xDA) break;
+      if (m == 0xFF) {
+        j += 1;
+        continue;
+      }
+      // as before the scan, and no marker that stands alone
+      if (m == 0x00 || m == 0x01 || (m >= 0xD0 && m <= 0xD8)) return false;
       if (j + 4 > src.length) return false;
       final len = (src[j + 2] << 8) | src[j + 3];
       final end = j + 2 + len;
