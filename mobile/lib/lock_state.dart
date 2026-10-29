@@ -9,7 +9,6 @@ import 'dart:async';
 import 'secure_store.dart';
 import 'dart:convert';
 import 'dart:ffi';
-import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 
@@ -26,6 +25,7 @@ import 'engine_strings.dart';
 import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
 import 'lock_guard.dart' show LockDropped, lockGuard;
+import 'native_libs.dart';
 import 'notifications.dart';
 import 'pin_key.dart';
 
@@ -297,9 +297,7 @@ void tellEngineDecoy(bool on) {
 }
 
 class FfiPinEngine implements PinEngine {
-  static DynamicLibrary _lib() => Platform.isAndroid
-      ? DynamicLibrary.open('libhalo.so')
-      : DynamicLibrary.process();
+  static DynamicLibrary _lib() => haloLibrary();
 
   // pin results can carry the vault key, so every one is zeroed on the way
   // back

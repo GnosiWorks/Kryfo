@@ -166,6 +166,7 @@ import 'relay_poll.dart';
 import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
 import 'l10n/app_locale.dart';
+import 'native_libs.dart';
 import 'widgets/shift_tap_guard.dart';
 import 'wire_pad.dart';
 import 'typing.dart';

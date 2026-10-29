@@ -14,6 +14,7 @@ import 'package:crypto/crypto.dart';
 import 'package:ffi/ffi.dart';
 
 import '../engine_strings.dart' show freeSecret;
+import '../native_libs.dart';
 
 const sealedMagic = [0x4b, 0x52, 0x59, 0x4d]; // KRYM
 const sealedVersion = 1;
@@ -56,10 +57,12 @@ String _hex(List<int> b) =>
 class EngineChunkCrypto implements ChunkCrypto {
   const EngineChunkCrypto();
 
-  static final _sealChunk = DynamicLibrary.process()
-      .lookupFunction<_ChunkC, _Chunk>('HaloSealChunk');
-  static final _openChunk = DynamicLibrary.process()
-      .lookupFunction<_ChunkC, _Chunk>('HaloOpenChunk');
+  static final _sealChunk = haloLibrary().lookupFunction<_ChunkC, _Chunk>(
+    'HaloSealChunk',
+  );
+  static final _openChunk = haloLibrary().lookupFunction<_ChunkC, _Chunk>(
+    'HaloOpenChunk',
+  );
 
   Uint8List? _run(_Chunk call, Uint8List key, Uint8List data) {
     final k = _hex(key).toNativeUtf8();

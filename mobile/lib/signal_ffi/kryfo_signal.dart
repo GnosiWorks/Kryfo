@@ -11,6 +11,8 @@ import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 
+import '../native_libs.dart';
+
 typedef _CallC =
     Int32 Function(
       Pointer<Uint8>,
@@ -537,7 +539,7 @@ class KryfoSignal {
     // kryfo.exe loaded it by full path from its own folder before dart ran
     // (runner/kryfo_win.cpp); a release takes no other
     if (Platform.isWindows && _product && path == null) {
-      return KryfoSignal._(DynamicLibrary.process());
+      return KryfoSignal._(besideExe('kryfo_signal.dll'));
     }
     final p = path ?? Platform.environment[envVar];
     if (p != null && p.isNotEmpty) return KryfoSignal._(DynamicLibrary.open(p));
@@ -545,9 +547,8 @@ class KryfoSignal {
       final host = forHostTests();
       if (host != null) return host;
     }
-    if (Platform.isIOS || Platform.isWindows) {
-      return KryfoSignal._(DynamicLibrary.process());
-    }
+    if (Platform.isWindows) return KryfoSignal._(besideExe('kryfo_signal.dll'));
+    if (Platform.isIOS) return KryfoSignal._(DynamicLibrary.process());
     if (Platform.isMacOS) {
       return KryfoSignal._(DynamicLibrary.open('libkryfo_signal.dylib'));
     }

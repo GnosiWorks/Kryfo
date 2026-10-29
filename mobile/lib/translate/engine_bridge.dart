@@ -4,12 +4,12 @@
 // cannot start
 import 'dart:convert';
 import 'dart:ffi';
-import 'dart:io';
 import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
 
 import '../engine_strings.dart';
+import '../native_libs.dart';
 import 'catalog.dart';
 
 typedef _S0 = Pointer<Utf8> Function();
@@ -18,9 +18,7 @@ typedef _S2 = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
 typedef _S3 =
     Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
 
-DynamicLibrary _halo() => Platform.isAndroid
-    ? DynamicLibrary.open('libhalo.so')
-    : DynamicLibrary.process();
+DynamicLibrary _halo() => haloLibrary();
 
 // one call with string arguments; null when the engine has no such call
 String? _call(DynamicLibrary lib, String symbol, List<String> args) {

@@ -16,14 +16,13 @@ import 'engine_strings.dart';
 import 'shred.dart' show shredFile;
 import 'voice_format.dart';
 import 'desktop/desktop_mode.dart' show withNativeFiles;
+import 'native_libs.dart';
 
 typedef _TwoC = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
 typedef _PeaksC = Pointer<Utf8> Function(Pointer<Utf8>, Int32);
 typedef _PeaksD = Pointer<Utf8> Function(Pointer<Utf8>, int);
 
-DynamicLibrary _lib() => Platform.isAndroid
-    ? DynamicLibrary.open('libhalo.so')
-    : DynamicLibrary.process();
+DynamicLibrary _lib() => haloLibrary();
 
 String _two(String symbol, String a, String b) {
   final pa = a.toNativeUtf8(), pb = b.toNativeUtf8();

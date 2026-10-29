@@ -19,6 +19,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage_platform_interface.dart';
 
 import '../engine_strings.dart' show engineTakeSecret, freeSecret;
+import '../native_libs.dart';
 import 'desktop_posix.dart' show syncFolder;
 
 /// the shortest passphrase the desktop takes, in characters: as a backup
@@ -65,9 +66,7 @@ typedef _Chunk =
     int Function(Pointer<Utf8>, int, int, Pointer<Uint8>, int, Pointer<Uint8>);
 
 String? _engineKey(String passphrase, Uint8List salt, int logN) {
-  final fn = DynamicLibrary.process().lookupFunction<_KeyC, _Key>(
-    'HaloVaultKey',
-  );
+  final fn = haloLibrary().lookupFunction<_KeyC, _Key>('HaloVaultKey');
   final pp = passphrase.toNativeUtf8();
   final ps = calloc<Uint8>(_saltLen);
   try {
@@ -89,10 +88,12 @@ class EngineVaultCrypto implements VaultCrypto {
   Future<String?> keyOf(String passphrase, Uint8List salt, int logN) =>
       Isolate.run(() => _engineKey(passphrase, salt, logN));
 
-  static final _sealChunk = DynamicLibrary.process()
-      .lookupFunction<_ChunkC, _Chunk>('HaloSealChunk');
-  static final _openChunk = DynamicLibrary.process()
-      .lookupFunction<_ChunkC, _Chunk>('HaloOpenChunk');
+  static final _sealChunk = haloLibrary().lookupFunction<_ChunkC, _Chunk>(
+    'HaloSealChunk',
+  );
+  static final _openChunk = haloLibrary().lookupFunction<_ChunkC, _Chunk>(
+    'HaloOpenChunk',
+  );
 
   Uint8List? _run(_Chunk call, String keyHex, Uint8List data) {
     final k = keyHex.toNativeUtf8();

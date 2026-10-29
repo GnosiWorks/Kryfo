@@ -46,6 +46,7 @@ import 'dart:math';
 import 'l10n/l10n.dart';
 import 'desktop/desktop_mode.dart'
     show containerClosed, containerOpened, engineDir, runIsolated;
+import 'native_libs.dart';
 
 const _kDbPassphrase = 'halo.db.passphrase';
 const _secureStorage = secureStore;
@@ -174,9 +175,7 @@ class BackupSummary {
 // screen keeps painting while it works.
 Future<String> _decryptOnIsolate(String blob, String passphrase) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloDecryptBackup');
     final p1 = blob.toNativeUtf8();
     final p2 = passphrase.toNativeUtf8();
@@ -598,9 +597,7 @@ typedef _ChunkFn =
 typedef _ChunkFnDart =
     int Function(Pointer<Utf8>, int, int, Pointer<Uint8>, int, Pointer<Uint8>);
 
-DynamicLibrary _engineLib() => Platform.isAndroid
-    ? DynamicLibrary.open('libhalo.so')
-    : DynamicLibrary.process();
+DynamicLibrary _engineLib() => haloLibrary();
 
 // derives the key. null when the engine refused, which it never should
 String? _backupKey(DynamicLibrary lib, String passphrase, Uint8List salt) {

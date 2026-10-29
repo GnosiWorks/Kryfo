@@ -4,7 +4,6 @@
 // off nothing here is built and no screen asks for it.
 
 import 'dart:ffi';
-import 'dart:io';
 import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
@@ -14,6 +13,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../engine_strings.dart';
 import '../main.dart' show sessionQuiet;
+import '../native_libs.dart';
 import 'voice_ffi.dart';
 import 'voice_models.dart';
 
@@ -66,9 +66,7 @@ typedef _S2 = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
 
 // the check reads the whole model, so every call runs off the ui isolate
 Future<String> _engineCall(String symbol, List<String> args) => Isolate.run(() {
-  final lib = Platform.isAndroid
-      ? DynamicLibrary.open('libhalo.so')
-      : DynamicLibrary.process();
+  final lib = haloLibrary();
   final a = [for (final s in args) s.toNativeUtf8()];
   try {
     return switch (a.length) {
