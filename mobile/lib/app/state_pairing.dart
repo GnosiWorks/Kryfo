@@ -334,7 +334,6 @@ extension AppStatePairing on AppState {
       // without the proof, and a row it made goes with it
       await _io.dropSession(h);
       if (fresh) {
-        if (filed != null) await photoBackNow(filed, h);
         await filed?.forgetRequest(h);
         // the address it was heard on goes too, unless someone here has it
         if (x != null && x.isNotEmpty && _xPubToHaloId[x] == h) {

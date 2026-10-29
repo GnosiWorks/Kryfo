@@ -334,27 +334,6 @@ extension AppStatePhotos on AppState {
     return true;
   }
 
-  /// [id]'s row in [d] is about to go: the take-back they are owed goes
-  /// now, while the row can still reach them. nothing when they hold none
-  /// of ours, or are still owed it
-  Future<void> photoBackNow(HaloDb d, String id) async {
-    if (_photoHeld || d.container.quiet || isDevId(id)) return;
-    try {
-      Future<PhotoPeer?> peer() async => (await d.photoPeople())
-          .where((x) => x.peer.id == id && !photoOwedTo(x.facts))
-          .firstOrNull
-          ?.peer;
-      final p = await peer();
-      if (p == null || p.held == 0) return;
-      if (p.want != 0) await d.owePhoto(id, 0, at: 0);
-      final stamp = (await peer())?.stamp;
-      if (stamp == null) return;
-      if (await _sendPhotoTo(id, 0, stamp)) await d.photoSent(id, 0, stamp);
-    } catch (e) {
-      dlog('photo: take-back not sent (${e.runtimeType})');
-    }
-  }
-
   /// the wipe began, or the app is going: nothing more goes
   void stopPhotos() {
     _photoPace.run?.cancel();

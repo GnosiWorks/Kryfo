@@ -62,6 +62,7 @@ class _World {
   final decoy = ArrivalRows(HaloContainer.decoy);
   final io = ArrivalIo();
   late AppState app;
+  late VaultRouter router;
   var _next = 0;
 
   static Future<_World> make() async {
@@ -82,6 +83,7 @@ class _World {
     w.decoy.people[_f]!['caps'] = pp;
     final router = VaultRouter(ArrivalStore(), ArrivalSeal());
     await router.load();
+    w.router = router;
     useEngineForTest(_Engine());
     w.app = AppState(io: w.io, router: router)..myId = 'me';
     w.app.sendModeForTest = 'private';
@@ -483,51 +485,24 @@ void main() {
       expect(photoBook.length, 0);
     }, skip: skip);
 
-    test('a row about to go gets its take-back at once', () async {
+    test('a key that is not them gets nothing, and a vault opening sends '
+        'nothing', () async {
       final w = await _World.make();
       await w.app.setMyPhoto(_clean);
       await w.app.photoSweep();
       await w.allDue();
       await w.app.photoSendDue();
+      expect(w.photoSends, isNotEmpty);
       w.io.sent.clear();
-      // still a contact who should hold it: nothing
-      await w.app.photoBackNow(w.live, _f);
-      expect(w.photoSends, isEmpty);
-      // the chat deleted: its row is kept unaccepted, and may go any time
+      // removed and blocked on the other side: its seats here go as the
+      // vault opens
       w.live.people[_f]!['accepted'] = 0;
-      await w.app.photoBackNow(w.live, _f);
-      expect(
-        [for (final (to, f) in w.photoSends) (to, f.drop)],
-        [('relay x-$_f', true)],
-      );
-      // nothing owed after it
-      w.io.sent.clear();
-      await w.app.photoSweep();
-      await w.allDue();
-      await w.app.photoSendDue();
+      await w.router.queueSeatGone(_f, 'k-$_f');
+      await w.app.seatsGoneIntoForTest(w.live);
       expect(w.photoSends, isEmpty);
+      expect(await w.router.seatsGone(), isEmpty);
       w.app.stopPhotos();
     }, skip: skip);
-
-    test('every path that drops a row sends the take-back first', () {
-      for (final (file, drop) in [
-        ('lib/app/state_contacts.dart', 'dropSeats('),
-        ('lib/app/state_pairing.dart', 'forgetRequest('),
-      ]) {
-        final src = sourceOf(file);
-        var at = src.indexOf(drop);
-        expect(at, greaterThan(0), reason: file);
-        while (at > 0) {
-          final line = src.lastIndexOf('\n', src.lastIndexOf('\n', at) - 1);
-          expect(
-            src.substring(line, at),
-            contains('photoBackNow('),
-            reason: '$file at $at',
-          );
-          at = src.indexOf(drop, at + 1);
-        }
-      }
-    });
 
     test('the decoy keeps its own photo and sends nothing', () async {
       final w = await _World.make();
