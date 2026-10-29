@@ -1385,7 +1385,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'Ela é removida dos dois celulares, a menos que já tenha sido salva. Isso não pode ser desfeito.';
+      'Ela será removida dos dois celulares, a menos que já tenha sido salva. Isso não pode ser desfeito.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -2638,7 +2638,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'Ela é removida dos celulares de todos, a menos que já tenha sido salva. Isso não pode ser desfeito.';
+      'Ela será removida dos celulares de todos, a menos que já tenha sido salva. Isso não pode ser desfeito.';
 
   @override
   String get groupChatUnsend => 'Desfazer envio';

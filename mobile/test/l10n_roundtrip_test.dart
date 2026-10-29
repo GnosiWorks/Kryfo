@@ -678,7 +678,7 @@ void main() {
     expect(l.chatUnsendMessage, "Unsend message");
     expect(
       l.chatItDisappearsWithNo,
-      "It's removed from both phones, unless it was already saved. This can't be undone.",
+      "It will be removed from both phones, unless it was already saved. This can't be undone.",
     );
     expect(l.chatThisChatHasPins(0), "This chat has 0 pins already");
     expect(l.chatThisChatHasPins(1), "This chat has 1 pin already");
@@ -1238,7 +1238,7 @@ void main() {
     expect(l.groupChatUnsendMessage, "Unsend message");
     expect(
       l.groupChatItDisappearsWithNo,
-      "It's removed from everyone's phones, unless it was already saved. This can't be undone.",
+      "It will be removed from everyone's phones, unless it was already saved. This can't be undone.",
     );
     expect(l.groupChatUnsend, "Unsend");
     expect(

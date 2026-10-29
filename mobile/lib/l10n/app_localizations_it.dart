@@ -1383,7 +1383,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'Viene rimosso da entrambi i telefoni, a meno che non sia già stato salvato. Non si può annullare.';
+      'Sarà rimosso da entrambi i telefoni, a meno che non sia già stato salvato. Non si può annullare.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -2642,7 +2642,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'Viene rimosso dai telefoni di tutti, a meno che non sia già stato salvato. Non si può annullare.';
+      'Sarà rimosso dai telefoni di tutti, a meno che non sia già stato salvato. Non si può annullare.';
 
   @override
   String get groupChatUnsend => 'Ritira';
