@@ -68,6 +68,7 @@ import '../message_envelope.dart'
     show wrapMessage, SenderInfo, grindPow, powBits;
 import '../outbox.dart' show powFits;
 import '../theme.dart';
+import '../link_view.dart' show sendReadsBlocked;
 import '../media_progress.dart';
 import '../msg_order.dart';
 import '../widgets/earlier_chip.dart';
@@ -646,7 +647,14 @@ bool _cannotSend() => !appState.online || !appState.torReady;
 // it has retried itself to the cap. online, the row keeps going on its own
 // and shows as pending.
 bool _sendLooksFailed(_Msg m) =>
-    m.failed && (m.gaveUp || m.notSent || _cannotSend() || _fileIdle(m));
+    m.failed && (m.gaveUp || m.notSent || _readsBlocked() || _fileIdle(m));
+
+// tor still coming up is not a failure: what waits for it reads as sending
+bool _readsBlocked() => sendReadsBlocked(
+  online: appState.online,
+  torReady: appState.torReady,
+  link: appState.linkView,
+);
 
 // a file of ours no send holds is not moving: it says not sent, and a tap
 // sends what is missing. one a send holds draws as sending

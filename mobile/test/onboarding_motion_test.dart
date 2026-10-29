@@ -14,6 +14,7 @@ import 'package:kryfo/main.dart'
     show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/screens/onboarding_screen.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/store.dart' show playBuildForTest;
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/language_sheet.dart' show LanguageRow;
 import 'package:kryfo/widgets/tor_boot_splash.dart';
@@ -88,7 +89,7 @@ List<double> fades(WidgetTester t, Finder f) => [
 ];
 
 Future<void> toShade(WidgetTester t) async {
-  pages(t).jumpToPage(5);
+  pages(t).jumpToPage(3);
   await t.pump();
 }
 
@@ -136,7 +137,7 @@ void main() {
     expect(find.byType(LanguageRow).hitTestable(), findsOneWidget);
     expect(find.byTooltip(l10n.commonBack).hitTestable(), findsNothing);
     await toName(t);
-    expect(find.text('02 / 07'), findsOneWidget);
+    expect(find.text('02 / 05'), findsOneWidget);
     expect(find.byType(LanguageRow).hitTestable(), findsNothing);
     await t.tap(find.byTooltip(l10n.commonBack));
     await t.pump();
@@ -153,6 +154,8 @@ void main() {
     await t.pumpWidget(onboarding());
     await t.pump(const Duration(seconds: 3));
     await toName(t);
+    // the reveal's shine and ring play out, then the step rests
+    await t.pump(const Duration(seconds: 9));
     expect(t.hasRunningAnimations, isFalse);
     await t.tap(find.text(l10n.onboardingTryAnother));
     await t.pump();
@@ -182,7 +185,7 @@ void main() {
     await t.pump();
     expect(pages(t).page, 1);
     expect(shown(t, l10n.onboardingYourKryfoId), 1);
-    expect(find.text('02 / 07'), findsOneWidget);
+    expect(find.text('02 / 05'), findsOneWidget);
     expect(t.hasRunningAnimations, isFalse);
     await t.tap(find.text(l10n.onboardingTryAnother));
     await t.pump();
@@ -192,9 +195,12 @@ void main() {
     await t.pumpWidget(const SizedBox());
   });
 
-  testWidgets('the picked way of sending reads as the checked one', (t) async {
+  testWidgets('play: the picked way messages arrive reads as the checked '
+      'one, and always on says its quiet notification', (t) async {
     phone(t);
     quiet(t);
+    playBuildForTest = true;
+    addTearDown(() => playBuildForTest = null);
     final sem = t.ensureSemantics();
     await t.pumpWidget(onboarding(still: true));
     pages(t).jumpToPage(3);
@@ -206,14 +212,17 @@ void main() {
       isChecked: on,
     );
     SemanticsNode card(String title) => t.getSemantics(find.text(title));
-    expect(card(l10n.modesPrivate), radio(true));
-    expect(card(l10n.modesFast), radio(false));
-    await t.tap(find.text(l10n.modesFast));
+    expect(card(l10n.gettingMessagesAlwaysOn), radio(true));
+    expect(card(l10n.gettingMessagesCheckIns), radio(false));
+    expect(find.text(l10n.onboardingSilentAndAtThe), findsOneWidget);
+    await t.tap(find.text(l10n.gettingMessagesCheckIns));
     await t.pump();
-    expect(card(l10n.modesPrivate), radio(false));
-    expect(card(l10n.modesFast), radio(true));
-    expect(find.text(l10n.onboardingUseThis), findsOneWidget);
+    expect(card(l10n.gettingMessagesAlwaysOn), radio(false));
+    expect(card(l10n.gettingMessagesCheckIns), radio(true));
+    expect(find.text(l10n.onboardingSilentAndAtThe), findsNothing);
     await t.pumpWidget(const SizedBox());
+    // the look for play services runs on past the step
+    await t.pump(const Duration(seconds: 30));
     sem.dispose();
   });
 
@@ -259,11 +268,9 @@ void main() {
         final buttons = [
           l10n.onboardingBegin,
           l10n.onboardingUseThisName,
-          l10n.onboardingContinue,
-          l10n.onboardingKeepPrivate,
-          l10n.onboardingIUnderstand,
+          l10n.onboardingNameSkip,
           l10n.onboardingGotIt,
-          l10n.onboardingNotNowAddPeople,
+          l10n.onboardingInviteSomeone,
         ];
         for (var step = 0; step < buttons.length; step++) {
           pages(t).jumpToPage(step);

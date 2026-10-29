@@ -22,6 +22,7 @@ import '../main.dart'
         AppStateRefresh;
 import '../widgets/kryfo_link_text.dart' show addScanned, takeOwnLink;
 import '../theme.dart';
+import '../invite_share.dart' show inviteShareText, webInviteOf;
 import '../widgets/copied_mark.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -129,7 +130,8 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
   void _copyLink() {
     if (_uri == null) return;
     HapticFeedback.mediumImpact();
-    copySensitive(_uri!);
+    // the page link: a kryfo link is not tappable in many messengers
+    copySensitive(webInviteOf(_uri!) ?? _uri!);
     setState(() => _linkCopies++);
     showHaloToast(context, l10n.myKryfoInviteCopiedClearsIn);
   }
@@ -140,7 +142,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
     lockState.hold(
       () => SharePlus.instance.share(
         ShareParams(
-          text: l10n.myKryfoAddMeOnKryfo(appState.sessionId, '$_uri'),
+          text: inviteShareText(appState.sessionId, _uri!),
           subject: l10n.myKryfoAddMeOnKryfo2,
         ),
       ),

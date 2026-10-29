@@ -76,6 +76,8 @@ void main() {
     final link = 'kryfo://room?id=r1&pub=$_pub&fc=$_fc&exp=5';
     expect(firstKryfoLink('join us $link tonight'), link);
     expect(firstKryfoLink('  $link\n'), link);
+    // a right-to-left text's direction marks around it are not part of it
+    expect(firstKryfoLink('\u2068$link\u2069.'), link);
     expect(
       firstKryfoLink('kryfo://share?id=a&onion=b&v=3 ok'),
       'kryfo://share?id=a&onion=b&v=3',
