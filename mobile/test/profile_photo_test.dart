@@ -284,10 +284,21 @@ void main() {
       );
       expect(create, contains('await photoTables(db);'));
       final steps = src.substring(upgrade, src.indexOf('\n    );', upgrade));
-      expect(steps, contains('if (oldV < 93) {'));
+      // on every upgrade, after the last step, under no version test: a
+      // file that reached 94 or later without them still gets them
+      final last = steps.lastIndexOf('await photoTables(db);');
+      expect(last, greaterThan(steps.indexOf('upgradeTo91(db)')));
       expect(
-        steps.indexOf('photoTables(db)'),
-        greaterThan(steps.indexOf('upgradeTo91(db)')),
+        RegExp(
+          r'^await photoTables\(db\);\s*\},\s*$',
+        ).hasMatch(steps.substring(last)),
+        isTrue,
+      );
+      final before = steps.substring(0, last);
+      expect(
+        '{'.allMatches(before).length - '}'.allMatches(before).length,
+        1,
+        reason: 'photoTables sits in the upgrade itself, not in a step',
       );
     });
 
@@ -319,6 +330,22 @@ void main() {
       await mem.insert('contacts', {'halo_id': 'other-one-here'});
       return _Rows(mem);
     }
+
+    test('made again on a later upgrade: what is held stays, the trigger '
+        'still works', () async {
+      final db = await rows();
+      await db.putMyPhoto(100, _clean);
+      for (final f in photoSlices(_clean, 200)) {
+        await db.takePhotoSlice(_peer, f, now: 300);
+      }
+      // the step run again, as an upgrade past 93 does
+      await photoTables(db.mem);
+      await photoTables(db.mem);
+      expect((await db.myPhoto())?.photo, _clean);
+      expect((await db.photosOf(_peer)).theirs, _clean);
+      await db.mem.delete('contacts', where: 'halo_id = ?', whereArgs: [_peer]);
+      expect(await db.mem.query('contact_photos'), isEmpty);
+    }, skip: skip);
 
     test(
       'slices in any order make the photo; a missing one keeps the face',

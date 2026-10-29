@@ -905,10 +905,10 @@ class HaloDb
           // and what a kept first contact opened to
           await upgradeTo91(db);
         }
-        if (oldV < 93) {
-          // profile photos (profile_photo.dart)
-          await photoTables(db);
-        }
+        // profile photos (profile_photo.dart), first made at 93. every
+        // step is safe twice and runs on any upgrade, so a file that took
+        // a later number without them (identity v4 at 94) still gets them
+        await photoTables(db);
       },
     );
     // a backup reading the folder or a restore replacing it keeps them:

@@ -196,6 +196,93 @@ void main() {
       skip: skip,
     );
 
+    // the gates one by one: none of these reaches the photo rows at all
+    List<String> photoCalls(ArrivalRows r) => [
+      for (final c in r.calls)
+        if (c.startsWith('takePhoto')) c,
+    ];
+
+    test('someone blocked: neither a photo nor a take-back reaches the '
+        'rows', () async {
+      final w = await _World.make();
+      final ver = DateTime.now().millisecondsSinceEpoch;
+      await w.photoFrom(_b, _clean, ver);
+      await w.from(
+        _b,
+        wrapPhotoFrame(PhotoFrame.drop(ver + 1), writtenAt: ver),
+      );
+      expect(photoCalls(w.live), isEmpty);
+      expect(photoBook.has(_b), isFalse);
+      expect(await w.live.contactPhotos(), isEmpty);
+      expect(w.live.msgs, isEmpty);
+      expect(w.io.rang, isEmpty);
+    }, skip: skip);
+
+    test(
+      'a request not accepted: nothing kept, and it stays a request',
+      () async {
+        final w = await _World.make();
+        await w.photoFrom(_s, _clean, DateTime.now().millisecondsSinceEpoch);
+        expect(photoCalls(w.live), isEmpty);
+        expect(photoBook.has(_s), isFalse);
+        expect(w.live.people[_s]!['accepted'], 0);
+        expect(w.live.msgs, isEmpty);
+        expect(w.io.rang, isEmpty);
+      },
+      skip: skip,
+    );
+
+    test('someone with no row at all: nothing kept, no row made', () async {
+      final w = await _World.make();
+      const nobody = 'nobody-known-here';
+      await w.photoFrom(nobody, _clean, DateTime.now().millisecondsSinceEpoch);
+      expect(photoCalls(w.live), isEmpty);
+      expect(photoBook.has(nobody), isFalse);
+      expect(w.live.people.containsKey(nobody), isFalse);
+      expect(w.live.msgs, isEmpty);
+    }, skip: skip);
+
+    test('a frame that names a group, from an accepted contact: never kept, '
+        'and its take-back leaves their own photo', () async {
+      final w = await _World.make();
+      final ver = DateTime.now().millisecondsSinceEpoch;
+      await w.photoFrom(_f, _clean, ver, group: 'grp000000001');
+      expect(photoCalls(w.live), isEmpty);
+      expect(photoBook.has(_f), isFalse);
+      // their 1:1 photo, then a take-back through a group frame
+      await w.photoFrom(_f, _clean, ver);
+      expect(photoBook.has(_f), isTrue);
+      final drop = wrapPhotoFrame(
+        PhotoFrame.drop(ver + 1),
+        writtenAt: ver,
+      ).replaceFirst('{', '{"g":"grp000000001",');
+      await w.from(_f, drop);
+      expect(photoBook.has(_f), isTrue);
+      expect(w.live.msgs, isEmpty);
+    }, skip: skip);
+
+    test(
+      'a quiet container takes none in, from an accepted contact either',
+      () async {
+        final w = await _World.make();
+        // the decoy as the container frames land in
+        useDatabasesForTest(w.decoy, Session(w.decoy));
+        expect(w.decoy.container.quiet, isTrue);
+        final ver = DateTime.now().millisecondsSinceEpoch;
+        await w.photoFrom(_f, _clean, ver);
+        await w.from(
+          _f,
+          wrapPhotoFrame(PhotoFrame.drop(ver + 1), writtenAt: ver),
+        );
+        expect(photoCalls(w.decoy), isEmpty);
+        expect(photoBook.length, 0);
+        expect(await w.decoy.contactPhotos(), isEmpty);
+        expect(w.decoy.msgs, isEmpty);
+        expect(w.io.rang, isEmpty);
+      },
+      skip: skip,
+    );
+
     test('a decoy on screen shows none of the everyday side\'s', () async {
       final w = await _World.make();
       await w.photoFrom(_f, _clean, DateTime.now().millisecondsSinceEpoch);
