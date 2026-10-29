@@ -40,6 +40,20 @@ object FileTransfers {
     var refused = false
         internal set
 
+    // the last note's mode, for the placeholder a start that ended early fronts
+    @Volatile
+    var plain = false
+        private set
+
+    // plain notifications: the home screen's glyph
+    fun glyph(context: Context, plain: Boolean): Int = if (plain) {
+        try {
+            AppIcon.current(context).glyph
+        } catch (e: Exception) {
+            AppIcon.kryfo.glyph
+        }
+    } else R.drawable.ic_halo_notification
+
     // the app on screen: the only time a foreground start is asked for
     @VisibleForTesting
     var onScreen: () -> Boolean = { QuietRestart.onScreen(QuietRestart.importance()) }
@@ -109,13 +123,8 @@ object FileTransfers {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         // plain notifications: the home screen's glyph and no colour
-        val icon = if (plain) {
-            try {
-                AppIcon.current(context).glyph
-            } catch (e: Exception) {
-                AppIcon.kryfo.glyph
-            }
-        } else R.drawable.ic_halo_notification
+        val icon = glyph(context, plain)
+        this.plain = plain
         val b = NotificationCompat.Builder(context, NOTE_CHANNEL)
             .setContentTitle(words)
             .setSmallIcon(icon)
@@ -203,7 +212,7 @@ class FileTransferService : Service() {
 
     private fun placeholder(): Notification =
         NotificationCompat.Builder(this, FileTransfers.NOTE_CHANNEL)
-            .setSmallIcon(R.drawable.ic_halo_notification)
+            .setSmallIcon(FileTransfers.glyph(this, FileTransfers.plain))
             .setSilent(true)
             .build()
 
