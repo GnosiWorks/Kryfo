@@ -1566,9 +1566,12 @@ void main() {
       // keys blocked as not who they said: no chat's rows
       'blocked_keys',
       'name_tombs',
+      // the identity's own profile photo
+      'my_photo',
     };
     final src = [
       'lib/app/database.dart',
+      'lib/app/database_photos.dart',
       'lib/router.dart',
     ].map((f) => File(f).readAsStringSync()).join('\n');
     // a prefixed name is another set of the signal store's tables

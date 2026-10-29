@@ -357,7 +357,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           camera: c == PhotoChoice.camera,
           got: (photo) async {
             // a lock or another pin meanwhile: it goes nowhere
-            if (!identical(session.primary, at.primary)) return;
+            if (!session.holdsSame(at, vault: false)) return;
             if (!await appState.setMyPhoto(photo) && mounted) {
               showHaloToast(context, l10n.photoCouldNotUse);
             }

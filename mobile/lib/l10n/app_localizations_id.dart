@@ -4524,9 +4524,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get profileProfile => 'Profil';
 
   @override
-  String get profileChangeYourFace => 'Ganti wajahmu';
-
-  @override
   String get profileKryfoId => 'Namamu';
 
   @override

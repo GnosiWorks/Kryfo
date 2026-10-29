@@ -4633,9 +4633,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get profileProfile => 'Профиль';
 
   @override
-  String get profileChangeYourFace => 'Сменить лицо';
-
-  @override
   String get profileKryfoId => 'Твоё имя';
 
   @override

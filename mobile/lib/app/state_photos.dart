@@ -92,10 +92,18 @@ extension AppStatePhotos on AppState {
     return kept;
   }
 
-  /// what is kept for [id] where their chat is
+  /// what is kept for [id] where their chat is. rows that will not read
+  /// cost only the photos: none, and the page goes on
   Future<({Uint8List? mine, Uint8List? theirs, int theirVer})> photosOfContact(
     String id,
-  ) => session.draftsOf(id).photosOf(id);
+  ) async {
+    try {
+      return await session.draftsOf(id).photosOf(id);
+    } catch (e) {
+      dlog('photo: not read (${e.runtimeType})');
+      return (mine: null, theirs: null, theirVer: 0);
+    }
+  }
 
   // ---- in ----
 

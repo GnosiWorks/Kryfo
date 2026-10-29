@@ -4540,9 +4540,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get profileProfile => 'نمایه';
 
   @override
-  String get profileChangeYourFace => 'تغییر چهره';
-
-  @override
   String get profileKryfoId => 'نام شما';
 
   @override

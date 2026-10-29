@@ -4561,9 +4561,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get profileProfile => 'Perfil';
 
   @override
-  String get profileChangeYourFace => 'Mudar seu rosto';
-
-  @override
   String get profileKryfoId => 'Seu nome';
 
   @override

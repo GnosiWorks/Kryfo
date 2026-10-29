@@ -4627,9 +4627,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profileProfile => 'الملف الشخصي';
 
   @override
-  String get profileChangeYourFace => 'تغيير وجهك';
-
-  @override
   String get profileKryfoId => 'اسمك';
 
   @override

@@ -5617,10 +5617,6 @@
   "@profileProfile": {
     "description": "screens/profile_screen.dart"
   },
-  "profileChangeYourFace": "Change your face",
-  "@profileChangeYourFace": {
-    "description": "screens/profile_screen.dart"
-  },
   "profileKryfoId": "Your name",
   "@profileKryfoId": {
     "description": "screens/profile_screen.dart"

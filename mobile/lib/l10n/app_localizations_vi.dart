@@ -4516,9 +4516,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileProfile => 'Hồ sơ';
 
   @override
-  String get profileChangeYourFace => 'Đổi khuôn mặt';
-
-  @override
   String get profileKryfoId => 'Tên của bạn';
 
   @override

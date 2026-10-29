@@ -315,10 +315,7 @@ class _ContactScreenState extends State<ContactScreen> {
           camera: c == PhotoChoice.camera,
           got: (photo) async {
             // a lock or another pin meanwhile: it goes nowhere
-            if (!identical(session.primary, at.primary) ||
-                !identical(session.vault, at.vault)) {
-              return;
-            }
+            if (!session.holdsSame(at)) return;
             final kept = await appState.setContactPhoto(id, photo);
             if (!mounted) return;
             if (kept) {

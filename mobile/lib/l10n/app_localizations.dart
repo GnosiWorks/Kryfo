@@ -7250,12 +7250,6 @@ abstract class AppLocalizations {
   /// screens/profile_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Change your face'**
-  String get profileChangeYourFace;
-
-  /// screens/profile_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Your name'**
   String get profileKryfoId;
 

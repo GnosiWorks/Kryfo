@@ -4308,9 +4308,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileProfile => '个人资料';
 
   @override
-  String get profileChangeYourFace => '更换你的头像';
-
-  @override
   String get profileKryfoId => '你的名字';
 
   @override
@@ -13819,9 +13816,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get profileProfile => '個人檔案';
-
-  @override
-  String get profileChangeYourFace => '更換你的頭像';
 
   @override
   String get profileKryfoId => '你的名字';

@@ -4573,9 +4573,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get profileProfile => 'Profilo';
 
   @override
-  String get profileChangeYourFace => 'Cambia il tuo volto';
-
-  @override
   String get profileKryfoId => 'Il tuo nome';
 
   @override

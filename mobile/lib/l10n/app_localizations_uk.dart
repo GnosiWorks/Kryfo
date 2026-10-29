@@ -4616,9 +4616,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get profileProfile => 'Профіль';
 
   @override
-  String get profileChangeYourFace => 'Змінити обличчя';
-
-  @override
   String get profileKryfoId => 'Твоє ім’я';
 
   @override

@@ -4536,9 +4536,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get profileProfile => 'प्रोफ़ाइल';
 
   @override
-  String get profileChangeYourFace => 'अपना चेहरा बदलें';
-
-  @override
   String get profileKryfoId => 'आपका नाम';
 
   @override
