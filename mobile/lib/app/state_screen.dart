@@ -195,11 +195,18 @@ extension AppStateScreen on AppState {
     final on = secureForced || screenSecureByLock || _shotsCardWaits;
     if (on == _secureSent) return;
     _secureSent = on;
-    try {
-      await AppState._platformChannel.invokeMethod('setSecure', {'on': on});
-    } catch (e) {
-      _secureSent = null;
-      dlog('setSecure: $e');
+    // a block the window refused is asked for once more, then again at the
+    // next change: never taken as on
+    for (var tries = 0; tries < 2; tries++) {
+      try {
+        await AppState._platformChannel.invokeMethod('setSecure', {'on': on});
+        return;
+      } catch (e) {
+        dlog('setSecure: $e');
+        // a newer call took over
+        if (_secureSent != on) return;
+      }
     }
+    _secureSent = null;
   }
 }

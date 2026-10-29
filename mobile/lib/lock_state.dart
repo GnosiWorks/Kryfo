@@ -1410,6 +1410,9 @@ class LockState extends ChangeNotifier {
       _lost();
       return;
     }
+    // a keystore without secure hardware: the table stays on the pin alone,
+    // and nothing here ever reads as a lost key
+    if (!k.hardware) return;
     if (_table == null && !making) return;
     // a phone that refused tries again at a later unlock, not at every one
     if (DateTime.now().difference(_makeTried) < const Duration(minutes: 10)) {
@@ -1417,6 +1420,10 @@ class LockState extends ChangeNotifier {
     }
     _makeTried = DateTime.now();
     final made = await _keyCall(_keys.make(), const Duration(seconds: 30));
+    if (made != null && !made.hardware) {
+      _key = made;
+      return;
+    }
     if (made == null || !made.exists || made.kc == null) {
       dlog('lock: pin key not made');
       return;

@@ -16,9 +16,12 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late List<bool> told;
+  // calls the window refuses, one each
+  var refuse = 0;
 
   setUp(() {
     told = [];
+    refuse = 0;
     FlutterSecureStorage.setMockInitialValues({});
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(const MethodChannel('halo/platform'), (
@@ -26,6 +29,10 @@ void main() {
         ) async {
           if (call.method == 'setSecure') {
             told.add((call.arguments as Map)['on'] as bool);
+            if (refuse > 0) {
+              refuse--;
+              throw PlatformException(code: 'refused');
+            }
           }
           return null;
         });
@@ -51,6 +58,21 @@ void main() {
     await app.forceSecure(false);
     expect(app.secureForced, isFalse);
     expect(told, [true, false]);
+  });
+
+  test('a block the window refused is asked for once more', () async {
+    final app = await make();
+    refuse = 1;
+    await app.forceSecure(true);
+    expect(told, [true, true]);
+    // refused twice: the next change asks again, never takes it as on
+    await app.forceSecure(false);
+    told.clear();
+    refuse = 2;
+    await app.forceSecure(true);
+    expect(told, [true, true]);
+    await app.forceSecure(true);
+    expect(told, [true, true, true]);
   });
 
   test('a release nobody holds takes no one else\'s', () async {
