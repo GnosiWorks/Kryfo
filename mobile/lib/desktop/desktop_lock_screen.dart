@@ -3,6 +3,7 @@
 // or a new one on a first start. nothing of the app runs before it is open
 import 'package:flutter/material.dart';
 
+import '../dlog.dart';
 import '../l10n/l10n.dart';
 import '../theme.dart';
 import '../widgets/fit_column.dart';
@@ -80,7 +81,9 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
               : l10n.desktopLockWrong,
         );
       }
-    } catch (_) {
+    } catch (e) {
+      // the type only: a message could carry a path or a key
+      dlog('desktop lock: ${e.runtimeType}');
       return _say(l10n.desktopLockFailed);
     }
     _first.clear();
