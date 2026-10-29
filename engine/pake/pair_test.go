@@ -21,16 +21,16 @@ var (
 	tInvA  = append([]byte("KIN4"), bytes.Repeat(seq(0, 256, 1), 8)...)
 	tInvB  = append([]byte("KIN4"), bytes.Repeat(seq(255, -1, -1), 7)...)
 	tCode  = mustCode("07 123 456")
-	tOffer = "4b504f3100000102030405060708090a0b0c0d0e0f10045d18cc36e1707f0326253d8672b614e2ac5e4088a1056a034952fe6d918a2301c80dba"
+	tOffer = "4b504f3100000102030405060708090a0b0c0d0e0f10045d18cc36e1707f0326253d8672b614e2ac5e4088a1056a034952fe6d918a2300000000002d9af801c80dba"
 )
 
 const (
 	tWindow     = 2988792
 	tGenerator  = "8f6cc06a5e66b3ead53c52c8b01fb9ca4ff536275cc1b3e3bad8422f9a49437b"
-	tAnswerHead = "4b50413100000102030405060708090a0b0c0d0e0f100716773c654dee5265b5ae695b445b51b687ed7fb73bb84bdb4e58cf7b57e3312d5c1b08f5b6cbf23321f358d5b9f1bf27301c727cc078d90ca3436b71b499b50714"
-	tAnswerHash = "38ac661e82062471659fc4b31e3d8f96f9ff339d3b7db3d43133435518c8e92d"
-	tFinishHead = "4b5046310102030405060708090a0b0c0d0e0f1091f3e28bbac0e0d0be523a56e13c36df0bdfa5308df85e6a3c1d3964b831e5510814"
-	tFinishHash = "17a6327a29e1354a68da9856eea7cbbf4fc068774143e27ae7bceb4026ade8ae"
+	tAnswerHead = "4b50413100000102030405060708090a0b0c0d0e0f100716773c654dee5265b5ae695b445b51b687ed7fb73bb84bdb4e58cf7b57e3313a530c45ce9110d8055be376d7365dbdaedc990f83982dd493531544cb5e21840714"
+	tAnswerHash = "1fa4eadda8c49b034c844b37a99d380f500eccc8dac89304e6886b41a3d42eec"
+	tFinishHead = "4b5046310102030405060708090a0b0c0d0e0f10d689543ab223883ed1d29877b96532043429048c8a9e7d4c6cb138d37dd2d9ba0814"
+	tFinishHash = "7c4661f01c448c1b643cab684f82bfd3998579dadde3ad859f9ca95f2d347b4b"
 )
 
 func seq(from, to, step int) []byte {
@@ -93,7 +93,7 @@ func TestPairVector(t *testing.T) {
 		t.Fatalf("offer = %x", off)
 	}
 	j := fixedJoiner(t, "07123456")
-	ans, err := j.Answer(off, tWindow, tNow.Add(time.Minute), bytes.NewReader(tYb[:]))
+	ans, err := j.Answer(off, tNow.Add(time.Minute), bytes.NewReader(tYb[:]))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -130,7 +130,7 @@ func TestPairRandom(t *testing.T) {
 			t.Fatal(err)
 		}
 		now := time.Now()
-		off, w, err := s.Offer(now, nil)
+		off, _, err := s.Offer(now, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -141,7 +141,7 @@ func TestPairRandom(t *testing.T) {
 		}
 		c.Wipe()
 		typed.Wipe()
-		ans, err := j.Answer(off, w, now, nil)
+		ans, err := j.Answer(off, now, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -158,7 +158,7 @@ func TestPairRandom(t *testing.T) {
 func TestWrongSecretFailsOnTag(t *testing.T) {
 	s, off := fixedSharer(t)
 	j := fixedJoiner(t, "07123457")
-	ans, err := j.Answer(off, tWindow, tNow, bytes.NewReader(tYb[:]))
+	ans, err := j.Answer(off, tNow, bytes.NewReader(tYb[:]))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -171,25 +171,22 @@ func TestWrongSecretFailsOnTag(t *testing.T) {
 	}
 	// a wrong box gives another ci, so a wrong tag too
 	j2 := fixedJoiner(t, "08123456")
-	ans2, err := j2.Answer(off, tWindow, tNow, nil)
+	ans2, err := j2.Answer(off, tNow, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if _, _, err := s.Answer(ans2, tNow); err != ErrWrongCode || s.Fails() != 2 {
 		t.Fatalf("other box: %v, fails %d", err, s.Fails())
 	}
-	// and so does another window
-	j3 := fixedJoiner(t, "07123456")
-	ans3, err := j3.Answer(off, tWindow-1, tNow, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	// and so does another window in ci, with the tag over the real offer
+	head, ks := runAt(t, off, tCode, tWindow-1)
+	ans3 := seal(&ks.sealB, append(head, tagB(ks, off, head)...), tInvB)
 	if _, _, err := s.Answer(ans3, tNow); err != ErrTries {
 		t.Fatalf("third: %v", err)
 	}
 	// the code is dead: the right answer is refused now
 	good := fixedJoiner(t, "07123456")
-	ans4, err := good.Answer(off, tWindow, tNow, nil)
+	ans4, err := good.Answer(off, tNow, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -207,15 +204,15 @@ func TestTagFromAnotherRunRefused(t *testing.T) {
 	c := tCode
 	s1, _ := NewSharer(&c, tInvA)
 	s2, _ := NewSharer(&c, tInvA)
-	off1, w, _ := s1.Offer(tNow, nil)
+	off1, _, _ := s1.Offer(tNow, nil)
 	off2, _, _ := s2.Offer(tNow, nil)
 	j1 := fixedJoiner(t, "07123456")
 	j2 := fixedJoiner(t, "07123456")
-	a1, err := j1.Answer(off1, w, tNow, nil)
+	a1, err := j1.Answer(off1, tNow, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	a2, err := j2.Answer(off2, w, tNow, nil)
+	a2, err := j2.Answer(off2, tNow, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -259,7 +256,7 @@ func TestTagFromAnotherRunRefused(t *testing.T) {
 func TestEveryAnswerByteFlipRefused(t *testing.T) {
 	_, off := fixedSharer(t)
 	j := fixedJoiner(t, "07123456")
-	ans, err := j.Answer(off, tWindow, tNow, bytes.NewReader(tYb[:]))
+	ans, err := j.Answer(off, tNow, bytes.NewReader(tYb[:]))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -281,7 +278,7 @@ func TestEveryAnswerByteFlipRefused(t *testing.T) {
 func TestEveryFinishByteFlipRefused(t *testing.T) {
 	s, off := fixedSharer(t)
 	j := fixedJoiner(t, "07123456")
-	ans, _ := j.Answer(off, tWindow, tNow, bytes.NewReader(tYb[:]))
+	ans, _ := j.Answer(off, tNow, bytes.NewReader(tYb[:]))
 	fin, _, err := s.Answer(ans, tNow)
 	if err != nil {
 		t.Fatal(err)
@@ -328,7 +325,7 @@ func TestParsersRefuse(t *testing.T) {
 
 	_, off2 := fixedSharer(t)
 	j := fixedJoiner(t, "07123456")
-	ans, _ := j.Answer(off2, tWindow, tNow, bytes.NewReader(tYb[:]))
+	ans, _ := j.Answer(off2, tNow, bytes.NewReader(tYb[:]))
 	if _, err := parseAnswer(ans); err != nil {
 		t.Fatal(err)
 	}
@@ -367,7 +364,7 @@ func TestParsersRefuse(t *testing.T) {
 func TestLowOrderShareNotATry(t *testing.T) {
 	s, off := fixedSharer(t)
 	j := fixedJoiner(t, "07123456")
-	ans, _ := j.Answer(off, tWindow, tNow, bytes.NewReader(tYb[:]))
+	ans, _ := j.Answer(off, tNow, bytes.NewReader(tYb[:]))
 	for _, u := range [][]byte{make([]byte, 32), append([]byte{1}, make([]byte, 31)...)} {
 		m := bytes.Clone(ans)
 		copy(m[22:54], u)
@@ -377,7 +374,7 @@ func TestLowOrderShareNotATry(t *testing.T) {
 		o := bytes.Clone(off)
 		o[6] ^= 0xff
 		copy(o[22:54], u)
-		if _, err := j.Answer(o, tWindow, tNow, nil); err != ErrLowOrder {
+		if _, err := j.Answer(o, tNow, nil); err != ErrLowOrder {
 			t.Fatalf("low order ya: %v", err)
 		}
 	}
@@ -395,8 +392,8 @@ func TestJoinerAnswersThreeOffers(t *testing.T) {
 	for i := range MaxTries {
 		c := mustCode("07 999 999")
 		s, _ := NewSharer(&c, tInvA)
-		off, w, _ := s.Offer(tNow, nil)
-		a, err := j.Answer(off, w, tNow, nil)
+		off, _, _ := s.Offer(tNow, nil)
+		a, err := j.Answer(off, tNow, nil)
 		if err != nil {
 			t.Fatalf("offer %d: %v", i, err)
 		}
@@ -405,18 +402,18 @@ func TestJoinerAnswersThreeOffers(t *testing.T) {
 		}
 	}
 	// a relay sending the first offer again gets the same answer, no try
-	again, err := j.Answer(first, tWindow, tNow, nil)
+	again, err := j.Answer(first, tNow, nil)
 	if err != nil || !bytes.Equal(again, firstAns) || j.Tries() != MaxTries {
 		t.Fatalf("again: %v, tries %d", err, j.Tries())
 	}
-	// the same sid with other bytes is refused
+	// the same sid with other bytes is another offer, past the cap
 	other := bytes.Clone(first)
-	other[len(other)-1] ^= 1
-	if _, err := j.Answer(other, tWindow, tNow, nil); err != ErrFormat {
+	other[22] ^= 1
+	if _, err := j.Answer(other, tNow, nil); err != ErrTries {
 		t.Fatalf("same sid, other offer: %v", err)
 	}
 	_, off := fixedSharer(t)
-	if _, err := j.Answer(off, tWindow, tNow, nil); err != ErrTries {
+	if _, err := j.Answer(off, tNow, nil); err != ErrTries {
 		t.Fatalf("fourth offer: %v", err)
 	}
 }
@@ -425,26 +422,33 @@ func TestOfferTimes(t *testing.T) {
 	s, off := fixedSharer(t)
 	j := fixedJoiner(t, "07123456")
 	// windows the joiner would not have read
-	for _, w := range []uint64{tWindow - 3, tWindow + 1} {
-		if _, err := j.Answer(off, w, tNow, nil); err != ErrExpired {
+	for _, w := range []uint64{tWindow - 3, tWindow + 1, tWindow + 100} {
+		if _, err := j.Answer(withWindow(off, w), tNow, nil); err != ErrExpired {
 			t.Fatalf("window %d: %v", w, err)
 		}
 	}
 	// past its expiry plus the skew
 	late := tNow.Add(OfferLife + Skew + 2*time.Minute)
-	if _, err := j.Answer(off, Window(late), late, nil); err != ErrExpired {
+	if _, err := j.Answer(off, late, nil); err != ErrExpired {
 		t.Fatalf("late: %v", err)
 	}
-	// an expiry too far ahead
+	// an expiry too far ahead, inside what its window allows
 	o, _ := parseOffer(off)
-	o.expires += 60
-	if _, err := j.Answer(o.encode(), tWindow, tNow, nil); err != ErrExpired {
+	o.expires += 6
+	if _, err := j.Answer(o.encode(), tNow, nil); err != ErrExpired {
 		t.Fatalf("far expiry: %v", err)
+	}
+	// an expiry its window does not allow is no offer at all
+	for _, e := range []uint32{o.expires - 7, o.expires + 5} {
+		o.expires = e
+		if _, err := j.Answer(o.encode(), tNow, nil); err != ErrFormat {
+			t.Fatalf("expiry %d for window %d: %v", e, o.window, err)
+		}
 	}
 	if j.Tries() != 0 {
 		t.Fatalf("refused offers cost %d tries", j.Tries())
 	}
-	ans, err := j.Answer(off, tWindow, tNow, nil)
+	ans, err := j.Answer(off, tNow, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -471,7 +475,7 @@ func TestOffersPerWindow(t *testing.T) {
 	}
 	// the joiner found the first offer in the window before
 	j := fixedJoiner(t, "07123456")
-	a1, err := j.Answer(o1, w1, t2, nil)
+	a1, err := j.Answer(o1, t2, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -484,7 +488,7 @@ func TestOffersPerWindow(t *testing.T) {
 		t.Fatalf("pushed out offer: %v", err)
 	}
 	j2 := fixedJoiner(t, "07123456")
-	a2, _ := j2.Answer(o2, w2, t3, nil)
+	a2, _ := j2.Answer(o2, t3, nil)
 	if _, _, err := s.Answer(a2, t3); err != nil {
 		t.Fatalf("previous window's offer: %v", err)
 	}
@@ -510,7 +514,7 @@ func TestWipe(t *testing.T) {
 	s, off := fixedSharer(t)
 	so := s.offers[0]
 	j := fixedJoiner(t, "07123456")
-	ans, _ := j.Answer(off, tWindow, tNow, bytes.NewReader(tYb[:]))
+	ans, _ := j.Answer(off, tNow, bytes.NewReader(tYb[:]))
 	var p *pending
 	for _, x := range j.pend {
 		p = x
@@ -566,9 +570,9 @@ func TestInviteSize(t *testing.T) {
 	// the largest invite goes through both ways
 	big := bytes.Repeat([]byte{7}, MaxInvite)
 	s, _ := NewSharer(&c, big)
-	off, w, _ := s.Offer(tNow, nil)
+	off, _, _ := s.Offer(tNow, nil)
 	j, _ := NewJoiner(&c, big)
-	a, err := j.Answer(off, w, tNow, nil)
+	a, err := j.Answer(off, tNow, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -647,7 +651,7 @@ func FuzzParse(f *testing.F) {
 func TestAnswerYbNotCanonical(t *testing.T) {
 	s, off := fixedSharer(t)
 	j := fixedJoiner(t, "07123456")
-	ans, _ := j.Answer(off, tWindow, tNow, bytes.NewReader(tYb[:]))
+	ans, _ := j.Answer(off, tNow, bytes.NewReader(tYb[:]))
 	m := bytes.Clone(ans)
 	m[22+31] |= 0x80
 	if _, _, err := s.Answer(m, tNow); err != ErrFormat || s.Fails() != 0 {
@@ -659,16 +663,7 @@ func TestAnswerYbNotCanonical(t *testing.T) {
 // checked on its own, not only through the seal
 func TestTagCheckedBeforeSeal(t *testing.T) {
 	s, off := fixedSharer(t)
-	o, _ := parseOffer(off)
-	g := generator(tCode.secret[:], channelID(tCode.box, tWindow), o.sid[:])
-	y := tYb
-	yb, _ := scalarMult(&y, g[:])
-	k, _ := scalarMult(&y, o.ya[:])
-	head := answerHeader(o.sid[:], yb[:])
-	ks, err := run(o.sid[:], k[:], o.ya[:], o.ada(), yb[:], adb(o.sid[:]), off, head)
-	if err != nil {
-		t.Fatal(err)
-	}
+	head, ks := runAt(t, off, tCode, tWindow)
 	tb := tagB(ks, off, head)
 	tb[0] ^= 1
 	m := seal(&ks.sealB, append(bytes.Clone(head), tb...), tInvB)
@@ -682,5 +677,129 @@ func TestTagCheckedBeforeSeal(t *testing.T) {
 	good := seal(&ks.sealB, append(bytes.Clone(head), tb...), tInvB)
 	if _, inv, err := s.Answer(good, tNow); err != nil || !bytes.Equal(inv, tInvB) {
 		t.Fatalf("good: %v", err)
+	}
+}
+
+// runAt is the joiner's side of a run with any code and any window in ci
+func runAt(t testing.TB, off []byte, c Code, w uint64) ([]byte, *keys) {
+	t.Helper()
+	o, err := parseOffer(off)
+	if err != nil {
+		t.Fatal(err)
+	}
+	g := generator(c.secret[:], channelID(c.box, w), o.sid[:])
+	y := tYb
+	yb, _ := scalarMult(&y, g[:])
+	k, _ := scalarMult(&y, o.ya[:])
+	head := answerHeader(o.sid[:], yb[:])
+	ks, err := run(o.sid[:], k[:], o.ya[:], o.ada(), yb[:], adb(o.sid[:]), off, head)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return head, ks
+}
+
+// withWindow is the offer moved to another window, expiry to match
+func withWindow(off []byte, w uint64) []byte {
+	o, _ := parseOffer(off)
+	o.window = w
+	o.expires = uint32((w + 1) * windowMinutes)
+	return o.encode()
+}
+
+// a copy of the honest offer read at another window's address gets the
+// same answer: ci comes from the window in the offer, not the address.
+// a copy with its window rewritten is another offer and costs one try,
+// and the real one is still answered and pairs
+func TestMovedOfferDoesNotBlock(t *testing.T) {
+	s, off := fixedSharer(t)
+	j := fixedJoiner(t, "07123456")
+	moved := withWindow(off, tWindow+1)
+	next := tNow.Add(WindowLength + time.Minute)
+	if _, err := j.Answer(moved, next, nil); err != nil {
+		t.Fatal(err)
+	}
+	a1, err := j.Answer(off, next, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	a2, err := j.Answer(off, next, nil)
+	if err != nil || !bytes.Equal(a1, a2) || j.Tries() != 2 {
+		t.Fatalf("the same offer at a second address: %v, tries %d", err, j.Tries())
+	}
+	fin, inv, err := s.Answer(a1, next)
+	if err != nil || !bytes.Equal(inv, tInvB) {
+		t.Fatalf("sharer: %v", err)
+	}
+	if got, err := j.Finish(fin); err != nil || !bytes.Equal(got, tInvA) {
+		t.Fatalf("joiner: %v", err)
+	}
+}
+
+// a fake offer that takes the honest sid first does not shadow the real
+// offer, and the finish finds the right answer among the two
+func TestSquattedSidDoesNotBlock(t *testing.T) {
+	s, off := fixedSharer(t)
+	c := mustCode("07 999 999")
+	f, _ := NewSharer(&c, tInvA)
+	fake, _, _ := f.Offer(tNow, nil)
+	copy(fake[6:6+SidSize], off[6:6+SidSize])
+	j := fixedJoiner(t, "07123456")
+	if _, err := j.Answer(fake, tNow, nil); err != nil {
+		t.Fatal(err)
+	}
+	real, err := j.Answer(off, tNow, nil)
+	if err != nil || j.Tries() != 2 {
+		t.Fatalf("real offer: %v, tries %d", err, j.Tries())
+	}
+	fin, _, err := s.Answer(real, tNow)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, err := j.Finish(fin); err != nil || !bytes.Equal(got, tInvA) {
+		t.Fatalf("finish: %v", err)
+	}
+}
+
+// the tag does not cover the sealed bytes, so a broken seal under a good
+// tag is anyone's copy: not a try, and the real answer still works
+func TestTamperedSealNotATry(t *testing.T) {
+	s, off := fixedSharer(t)
+	j := fixedJoiner(t, "07123456")
+	ans, _ := j.Answer(off, tNow, bytes.NewReader(tYb[:]))
+	for i := range MaxTries + 1 {
+		m := bytes.Clone(ans)
+		m[len(m)-1-i] ^= 1
+		if _, _, err := s.Answer(m, tNow); err != ErrFormat {
+			t.Fatalf("tampered %d: %v", i, err)
+		}
+	}
+	if s.Fails() != 0 {
+		t.Fatalf("tampered seals counted %d", s.Fails())
+	}
+	if _, inv, err := s.Answer(ans, tNow); err != nil || !bytes.Equal(inv, tInvB) {
+		t.Fatalf("real answer: %v", err)
+	}
+}
+
+// every offer the sharer makes carries its window and an expiry that fits it
+func TestOfferCarriesWindow(t *testing.T) {
+	c := tCode
+	for sec := int64(0); sec < 1200; sec += 7 {
+		now := tNow.Add(time.Duration(sec) * time.Second)
+		s, _ := NewSharer(&c, tInvA)
+		off, w, err := s.Offer(now, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		o, err := parseOffer(off)
+		if err != nil || o.window != w || w != Window(now) {
+			t.Fatalf("sec %d: %v, window %d of %d", sec, err, o.window, w)
+		}
+	}
+	for _, e := range []uint32{0, 9, 10} {
+		if expiresFits(e, 1<<63) || (e < 10 && expiresFits(e, 0)) {
+			t.Fatalf("expires %d fits", e)
+		}
 	}
 }

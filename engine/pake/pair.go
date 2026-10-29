@@ -37,8 +37,8 @@ const (
 	magicAnswer = "KPA1"
 	magicFinish = "KPF1"
 
-	// magic, flags, sid, ya, expires
-	OfferSize = 4 + 2 + SidSize + PointSize + 4
+	// magic, flags, sid, ya, window, expires
+	OfferSize = 4 + 2 + SidSize + PointSize + 8 + 4
 	// magic, flags, sid, yb
 	answerHead = 4 + 2 + SidSize + PointSize
 	// then tag_b and the sealed length
@@ -68,7 +68,24 @@ var (
 type offer struct {
 	sid     [SidSize]byte
 	ya      [PointSize]byte
+	window  uint64
 	expires uint32
+}
+
+// windowMinutes is one window in the unit of expires
+const windowMinutes = uint64(WindowLength / time.Minute)
+
+// expiresFits is the sharer's rule: expires is now + OfferLife rounded up
+// to the minute, so it falls in [w+1, w+2] windows, counted in minutes
+func expiresFits(e uint32, w uint64) bool {
+	m := uint64(e)
+	if m < windowMinutes {
+		return false
+	}
+	if m/windowMinutes-1 == w {
+		return true
+	}
+	return m%windowMinutes == 0 && m >= 2*windowMinutes && m/windowMinutes-2 == w
 }
 
 func (o *offer) encode() []byte {
@@ -77,6 +94,7 @@ func (o *offer) encode() []byte {
 	b = append(b, 0, 0)
 	b = append(b, o.sid[:]...)
 	b = append(b, o.ya[:]...)
+	b = binary.BigEndian.AppendUint64(b, o.window)
 	return binary.BigEndian.AppendUint32(b, o.expires)
 }
 
@@ -86,6 +104,7 @@ func (o *offer) ada() []byte {
 	b = append(b, magicOffer...)
 	b = append(b, 0, 0)
 	b = append(b, o.sid[:]...)
+	b = binary.BigEndian.AppendUint64(b, o.window)
 	return binary.BigEndian.AppendUint32(b, o.expires)
 }
 
@@ -96,8 +115,9 @@ func parseOffer(m []byte) (offer, error) {
 	}
 	copy(o.sid[:], m[6:22])
 	copy(o.ya[:], m[22:54])
-	o.expires = binary.BigEndian.Uint32(m[54:58])
-	if !canonical(o.ya[:]) {
+	o.window = binary.BigEndian.Uint64(m[54:62])
+	o.expires = binary.BigEndian.Uint32(m[62:66])
+	if !canonical(o.ya[:]) || !expiresFits(o.expires, o.window) {
 		return o, ErrFormat
 	}
 	return o, nil
@@ -281,10 +301,9 @@ func orRand(rnd io.Reader) io.Reader {
 
 // sharerOffer is one offer the sharer has up, with its scalar
 type sharerOffer struct {
-	window uint64
-	o      offer
-	msg    []byte
-	y      *[ScalarSize]byte
+	o   offer
+	msg []byte
+	y   *[ScalarSize]byte
 }
 
 func (so *sharerOffer) wipe() {
@@ -331,12 +350,12 @@ func (s *Sharer) Offer(now time.Time, rnd io.Reader) ([]byte, uint64, error) {
 	}
 	w := Window(now)
 	for _, so := range s.offers {
-		if so.window == w {
+		if so.o.window == w {
 			return bytes.Clone(so.msg), w, nil
 		}
 	}
 	rnd = orRand(rnd)
-	so := &sharerOffer{window: w}
+	so := &sharerOffer{o: offer{window: w}}
 	if _, err := io.ReadFull(rnd, so.o.sid[:]); err != nil {
 		return nil, 0, err
 	}
@@ -366,7 +385,8 @@ func (s *Sharer) Offer(now time.Time, rnd io.Reader) ([]byte, uint64, error) {
 
 // Answer checks a joiner's answer. on a good tag it gives the finish to
 // publish and the joiner's invite. a wrong tag counts as a try; a message
-// that does not parse, names no offer of ours or comes again does not
+// that does not parse, names no offer of ours, comes again or has a good
+// tag on a broken seal does not
 func (s *Sharer) Answer(msg []byte, now time.Time) (fin, invite []byte, err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -410,10 +430,10 @@ func (s *Sharer) Answer(msg []byte, now time.Time) (fin, invite []byte, err erro
 	}
 	invite, err = open(&ks.sealB, msg, answerAAD)
 	if err != nil || checkInvite(invite) != nil {
-		// a good tag with a broken seal still came from someone who ran
-		// the code, so it counts
+		// the tag does not cover the sealed bytes, so anyone can break the
+		// seal of an honest answer: no guess, not a try, keep waiting
 		wipe(invite)
-		return nil, nil, s.fail(h)
+		return nil, nil, ErrFormat
 	}
 	fh := make([]byte, 0, finishAAD+len(s.invite)+sealTag)
 	fh = append(fh, magicFinish...)
@@ -475,6 +495,7 @@ func (s *Sharer) wipe() {
 
 // pending is an offer the joiner answered, waiting for its finish
 type pending struct {
+	sid      [SidSize]byte
 	offerMsg []byte
 	answer   []byte
 	head     []byte
@@ -496,9 +517,11 @@ type Joiner struct {
 	prs      []byte
 	invite   []byte
 	answered int
-	pend     map[[SidSize]byte]*pending
-	done     bool
-	dead     bool
+	// by the offer's hash, so a fake offer on an honest sid cannot shadow
+	// the real one
+	pend map[[32]byte]*pending
+	done bool
+	dead bool
 }
 
 // NewJoiner copies the code and the invite to seal
@@ -510,13 +533,14 @@ func NewJoiner(c *Code, invite []byte) (*Joiner, error) {
 		box:    c.box,
 		prs:    bytes.Clone(c.secret[:]),
 		invite: bytes.Clone(invite),
-		pend:   map[[SidSize]byte]*pending{},
+		pend:   map[[32]byte]*pending{},
 	}, nil
 }
 
-// Answer answers an offer read at the box address of window. the same
-// offer again gets the same answer and costs no try
-func (j *Joiner) Answer(msg []byte, window uint64, now time.Time, rnd io.Reader) ([]byte, error) {
+// Answer answers an offer found at the box. ci takes the window the offer
+// carries, so the address it was read from does not matter. the same offer
+// again gets the same answer and costs no try
+func (j *Joiner) Answer(msg []byte, now time.Time, rnd io.Reader) ([]byte, error) {
 	j.mu.Lock()
 	defer j.mu.Unlock()
 	if err := j.closed(); err != nil {
@@ -526,18 +550,16 @@ func (j *Joiner) Answer(msg []byte, window uint64, now time.Time, rnd io.Reader)
 	if err != nil {
 		return nil, err
 	}
-	if p := j.pend[o.sid]; p != nil {
-		if bytes.Equal(p.offerMsg, msg) {
-			return bytes.Clone(p.answer), nil
-		}
-		return nil, ErrFormat
+	key := sha256.Sum256(msg)
+	if p := j.pend[key]; p != nil {
+		return bytes.Clone(p.answer), nil
 	}
 	if j.answered >= MaxTries {
 		return nil, ErrTries
 	}
 	// a window or an expiry this phone would not have read is refused
 	// before it costs a try
-	if window+1 < Window(now.Add(-Skew)) || window > Window(now.Add(Skew)) {
+	if o.window+1 < Window(now.Add(-Skew)) || o.window > Window(now.Add(Skew)) {
 		return nil, ErrExpired
 	}
 	exp := expiresAt(&o)
@@ -550,7 +572,7 @@ func (j *Joiner) Answer(msg []byte, window uint64, now time.Time, rnd io.Reader)
 		return nil, err
 	}
 	defer wipe(y[:])
-	g := generator(j.prs, channelID(j.box, window), o.sid[:])
+	g := generator(j.prs, channelID(j.box, o.window), o.sid[:])
 	yb, err := scalarMult(y, g[:])
 	wipe(g[:])
 	if err != nil {
@@ -573,10 +595,10 @@ func (j *Joiner) Answer(msg []byte, window uint64, now time.Time, rnd io.Reader)
 	ah = append(ah, head...)
 	ah = append(ah, tb...)
 	out := seal(&ks.sealB, ah, j.invite)
-	p := &pending{offerMsg: bytes.Clone(msg), answer: out, head: head, tb: tb}
+	p := &pending{sid: o.sid, offerMsg: bytes.Clone(msg), answer: out, head: head, tb: tb}
 	p.confA = ks.confA
 	p.sealA = ks.sealA
-	j.pend[o.sid] = p
+	j.pend[key] = p
 	return bytes.Clone(out), nil
 }
 
@@ -593,23 +615,36 @@ func (j *Joiner) Finish(msg []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	p := j.pend[f.sid]
-	if p == nil {
-		return nil, ErrUnknown
+	// a sid can have more than one pending answer (a fake offer on it),
+	// so each one gets the tag check
+	err = ErrUnknown
+	for _, p := range j.pend {
+		if p.sid != f.sid {
+			continue
+		}
+		err = ErrWrongCode
+		if invite := p.finish(msg, f.tag[:]); invite != nil {
+			j.done = true
+			j.wipe()
+			return invite, nil
+		}
 	}
+	return nil, err
+}
+
+// finish is the invite when the tag and the seal are both good
+func (p *pending) finish(msg, tag []byte) []byte {
 	ks := &keys{confA: p.confA}
 	defer ks.wipe()
-	if !hmac.Equal(tagA(ks, p.offerMsg, p.head, p.tb), f.tag[:]) {
-		return nil, ErrWrongCode
+	if !hmac.Equal(tagA(ks, p.offerMsg, p.head, p.tb), tag) {
+		return nil
 	}
 	invite, err := open(&p.sealA, msg, finishAAD)
 	if err != nil || checkInvite(invite) != nil {
 		wipe(invite)
-		return nil, ErrWrongCode
+		return nil
 	}
-	j.done = true
-	j.wipe()
-	return invite, nil
+	return invite
 }
 
 func (j *Joiner) closed() error {
@@ -642,8 +677,8 @@ func (j *Joiner) Close() {
 func (j *Joiner) wipe() {
 	wipe(j.prs)
 	wipe(j.invite)
-	for sid, p := range j.pend {
+	for k, p := range j.pend {
 		p.wipe()
-		delete(j.pend, sid)
+		delete(j.pend, k)
 	}
 }
