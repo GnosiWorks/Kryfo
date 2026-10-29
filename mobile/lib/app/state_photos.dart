@@ -82,11 +82,12 @@ extension AppStatePhotos on AppState {
     unawaited(photoSweep());
   }
 
-  /// [picked] as your photo: kept only when it reads clean. in a decoy it
-  /// stays in the decoy's own rows and never leaves
+  /// [picked] as your photo: kept only when it reads clean and is what a
+  /// contact's phone takes in, so none is held that they refuse. in a decoy
+  /// it stays in the decoy's own rows and never leaves
   Future<bool> setMyPhoto(Uint8List picked) async {
     if (sessionQuiet && !decoyOwnPhoto) return false;
-    final fit = await Isolate.run(() => photoFit(picked));
+    final fit = await photoTakeInOffUi(picked);
     if (fit == null) return false;
     await session.primary.putMyPhoto(
       DateTime.now().millisecondsSinceEpoch,

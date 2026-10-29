@@ -397,6 +397,20 @@ void main() {
       expect(w.photoSends, isEmpty);
     }, skip: skip);
 
+    test(
+      'your own photo is held only as a contact\'s phone takes it in',
+      () async {
+        final w = await _World.make();
+        final gps = File('test/fixtures/gallery_gps.jpg').readAsBytesSync();
+        expect(photoFit(gps), isNotNull);
+        expect(await w.app.setMyPhoto(gps), isFalse);
+        expect(await w.live.myPhoto(), isNull);
+        expect(await w.app.setMyPhoto(_square), isTrue);
+        expect((await w.live.myPhoto())!.photo, _clean);
+      },
+      skip: skip,
+    );
+
     test('a change waits a few minutes, not a burst', () async {
       final w = await _World.make();
       await w.app.setMyPhoto(_clean);
