@@ -258,7 +258,7 @@ func TestPageTextsWhole(t *testing.T) {
 			t.Errorf("%s: Kryfo is not named", lang)
 		}
 	}
-	if strings.Contains(fmt.Sprint(pageTexts["en"]), "—") {
+	if strings.Contains(fmt.Sprint(pageTexts["en"]), "\u2014") {
 		t.Error("an em dash in english")
 	}
 }
