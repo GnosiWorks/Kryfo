@@ -13619,7 +13619,7 @@ abstract class AppLocalizations {
   /// **'Always on in a room, on every phone in it'**
   String get roomShotsAlwaysOn;
 
-  /// screens/settings_screen.dart: the screenshots line of your protections, without an app lock
+  /// screens/settings_screen.dart: the screenshots line of your protections: each chat has its own switch, with an app lock too on android 13 and newer
   ///
   /// In en, this message translates to:
   /// **'Per chat'**

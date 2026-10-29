@@ -27,6 +27,7 @@ const androidChannels = [
   'halo/gpush',
   'kryfo/app_icon',
   'kryfo/net',
+  'kryfo/phone',
   'kryfo/video',
 ];
 
@@ -40,6 +41,7 @@ const platformAnswered = {
   'applyDeliveryMode',
   'photoPickerReady',
   'setSecure',
+  'setRecentsHidden',
   'appIconSet',
   'openNotificationSettings',
   'openWifiSettings',
@@ -189,6 +191,8 @@ Map<String, DesktopAnswer> desktopAnswers(
     'photoPickerReady' => false,
     // linux cannot keep a window out of screenshots
     'setSecure' => false,
+    // no app switcher picture to keep out
+    'setRecentsHidden' => false,
     'appIconSet' => false,
     'openNotificationSettings' ||
     'openWifiSettings' ||

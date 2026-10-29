@@ -7,6 +7,7 @@ import '../theme.dart';
 import '../tools/qr_payload.dart';
 import '../tools/qr_png.dart';
 import '../open_file.dart' show ShareEnd;
+import '../pin_shield.dart';
 import '../tools/tools_bridge.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/motion.dart';
@@ -817,7 +818,7 @@ class _Input extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final body = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
@@ -918,5 +919,7 @@ class _Input extends StatelessWidget {
         ),
       ],
     );
+    // a password, and the code that carries it: out of screenshots
+    return field.secret ? PinShieldBox(child: body) : body;
   }
 }

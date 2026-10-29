@@ -130,6 +130,10 @@ void main() {
     expect(await ask('halo/platform', 'isBatteryExempt'), isTrue);
     expect(await ask('halo/platform', 'notificationsEnabled'), isTrue);
     expect(await ask('halo/platform', 'setSecure', {'on': true}), isFalse);
+    expect(
+      await ask('halo/platform', 'setRecentsHidden', {'on': true}),
+      isFalse,
+    );
     expect(await ask('halo/platform', 'processUptimeMs'), isA<int>());
   });
 
