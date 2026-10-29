@@ -2,13 +2,14 @@
 package app.kryfo
 
 // the window's secure flag and its picture in recents. dart holds the flag
-// for the lock screen, pin screens and the chats that block. a pin set
-// keeps the app out of recents: android 13 and later have a switch for
-// that, older ones take the picture as the app leaves, so the flag goes on
-// first and comes off again on the way back
+// for the lock screen, pin screens, the chats that block and, below android
+// 13, the whole time a pin is set. a pin set keeps the app out of recents:
+// android 13 and later have a switch for that ([picture] is null before).
+// each step goes on its own and nothing of it reaches the caller: a step
+// refused is tried again on the next change
 internal class WindowShield(
-    private val sdk: Int,
-    private val apply: (secure: Boolean, recentsPicture: Boolean) -> Unit,
+    private val flag: (secure: Boolean) -> Unit,
+    private val picture: ((recentsPicture: Boolean) -> Unit)?,
 ) {
     // dart's flag
     var held = false
@@ -16,14 +17,13 @@ internal class WindowShield(
     // a pin is set
     var hidden = false
         private set
-    // the flag a pin put on for the way out, below android 13
-    var covered = false
-        private set
 
-    // a fresh window: no flag, recents takes its picture
-    private var sent = false to true
+    // a fresh window: no flag, recents takes its picture. null: refused,
+    // so unknown
+    private var flagSent: Boolean? = false
+    private var pictureSent: Boolean? = true
 
-    val secure get() = held || covered
+    val secure get() = held
     val recentsPicture get() = !(held || hidden)
 
     // what the last run left, before dart says anything
@@ -40,27 +40,21 @@ internal class WindowShield(
 
     fun hide(on: Boolean) {
         hidden = on
-        if (!on) covered = false
-        push()
-    }
-
-    // home, recents or anything else in front: before android takes the
-    // picture
-    fun leaving() {
-        if (sdk >= 33 || !hidden) return
-        covered = true
-        push()
-    }
-
-    fun back() {
-        covered = false
         push()
     }
 
     private fun push() {
-        val now = secure to recentsPicture
-        if (now == sent) return
-        sent = now
-        apply(now.first, now.second)
+        val s = secure
+        if (s != flagSent) flagSent = if (step { flag(s) }) s else null
+        val p = recentsPicture
+        val pic = picture ?: return
+        if (p != pictureSent) pictureSent = if (step { pic(p) }) p else null
+    }
+
+    private inline fun step(body: () -> Unit): Boolean = try {
+        body()
+        true
+    } catch (_: Throwable) {
+        false
     }
 }

@@ -142,13 +142,11 @@ open class MainActivity : FlutterFragmentActivity() {
 
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        shield.leaving()
         if (SystemClock.uptimeMillis() - openedAt > 3000) tellAway()
     }
 
     override fun onPause() {
         super.onPause()
-        shield.leaving()
         openedAt = 0L
         SharePick.wait.paused()
     }
@@ -176,7 +174,6 @@ open class MainActivity : FlutterFragmentActivity() {
 
     override fun onResume() {
         super.onResume()
-        shield.back()
         stoppedSinceResume = false
         SharePick.wait.resumed()
         // a file opened or shared with another app is a decrypted copy in
@@ -248,15 +245,17 @@ open class MainActivity : FlutterFragmentActivity() {
         )
     }
 
-    // the window's flag and its recents picture
-    private val shield = WindowShield(Build.VERSION.SDK_INT) { secure, picture ->
-        if (secure) {
-            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        } else {
-            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        }
-        if (Build.VERSION.SDK_INT >= 33) setRecentsScreenshotEnabled(picture)
-    }
+    // the window's flag and its recents picture, each step on its own
+    private val shield = WindowShield(
+        { secure ->
+            if (secure) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            } else {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            }
+        },
+        if (Build.VERSION.SDK_INT >= 33) { picture -> setRecentsScreenshotEnabled(picture) } else null,
+    )
 
     private fun shrinkJpeg(bytes: ByteArray, maxEdge: Int, quality: Int): ByteArray? {
         return try {
@@ -311,8 +310,14 @@ open class MainActivity : FlutterFragmentActivity() {
     // first frame is covered before dart runs
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         restored = savedInstanceState != null
-        val kept = getSharedPreferences("kryfo_window", MODE_PRIVATE)
-        shield.start(kept.getBoolean("secure", false), kept.getBoolean("recents", false))
+        // never throws: a start that cannot read them starts covered
+        val kept = try {
+            val k = getSharedPreferences("kryfo_window", MODE_PRIVATE)
+            k.getBoolean("secure", false) to k.getBoolean("recents", false)
+        } catch (_: Throwable) {
+            true to true
+        }
+        shield.start(kept.first, kept.second)
         super.onCreate(savedInstanceState)
         underBars()
         AppIcon.describeTask(this)
@@ -349,20 +354,27 @@ open class MainActivity : FlutterFragmentActivity() {
 
     // flag_secure on the window is not enough on every phone: flutter draws
     // into a surfaceview with its own secure bit, so the surface is told
-    // directly. the cover for recents leaves it alone
+    // directly
+    // each step on its own: one refused never stops the others
     private fun setSecureWindow(on: Boolean) {
-        android.util.Log.i("kryfo", "setSecure on=$on was=${shield.held}")
         shield.hold(on)
-        getSharedPreferences("kryfo_window", MODE_PRIVATE).edit().putBoolean("secure", on).apply()
-        val surface = findSurface(window.decorView)
-        surface?.setSecure(on)
+        quietly { android.util.Log.i("kryfo", "setSecure on=$on") }
+        quietly { getSharedPreferences("kryfo_window", MODE_PRIVATE).edit().putBoolean("secure", on).apply() }
+        quietly { findSurface(window.decorView)?.setSecure(on) }
         // no surface recreate on the way off, it flashes the window. one ui
         // may keep the bit until the next start
     }
 
     private fun setRecentsHidden(on: Boolean) {
         shield.hide(on)
-        getSharedPreferences("kryfo_window", MODE_PRIVATE).edit().putBoolean("recents", on).apply()
+        quietly { getSharedPreferences("kryfo_window", MODE_PRIVATE).edit().putBoolean("recents", on).apply() }
+    }
+
+    private inline fun quietly(step: () -> Unit) {
+        try {
+            step()
+        } catch (_: Throwable) {
+        }
     }
 
     private fun findSurface(v: View): SurfaceView? {
