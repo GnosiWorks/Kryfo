@@ -10034,4 +10034,66 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'प्राइवेट पर सब कुछ Tor से निकलता है और हमारे सर्वर एक एग्ज़िट नोड देखते हैं, आपको कभी नहीं। तेज़ पर कनेक्शन सीधे हमारे दो सर्वर तक जाता है: जब तक आप जुड़े हैं वे आपका IP पता देखते हैं और उसका कोई रिकॉर्ड नहीं रखते। जब पहला बंद हो, तेज़ सार्वजनिक रिले भी इस्तेमाल करता है, सिर्फ़ Tor से।';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Kryfo इस कंप्यूटर पर जो कुछ रखता है, सब एन्क्रिप्टेड है। यह आपके यूज़र अकाउंट से खुलता है।';
+
+  @override
+  String get desktopLockAddPassphrase => 'पासफ़्रेज़ जोड़ें';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'इसके बिना, आपके यूज़र अकाउंट का इस्तेमाल करने वाला कोई भी Kryfo खोल सकता है।';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo अपनी कुंजी इस कंप्यूटर की कीरिंग में नहीं रख पाया। इसकी जगह पासफ़्रेज़ जोड़ें।';
+
+  @override
+  String get desktopKeyMissing =>
+      'इस यूज़र अकाउंट के पास Kryfo के डेटा की कुंजी नहीं है। Kryfo सिर्फ़ उसी यूज़र अकाउंट पर खुलता है जिस पर उसे सेट किया गया था।';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo अभी इस कंप्यूटर पर अपनी कुंजी तक नहीं पहुँच पा रहा। कंप्यूटर पूछे तो अपनी कीरिंग अनलॉक करें, फिर दोबारा कोशिश करें।';
+
+  @override
+  String get desktopPassRow => 'इस कंप्यूटर पर पासफ़्रेज़';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo आपके यूज़र अकाउंट से खुलता है।';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo हर बार शुरू होने पर यह पासफ़्रेज़ पूछता है।';
+
+  @override
+  String get desktopPassChange => 'पासफ़्रेज़ बदलें';
+
+  @override
+  String get desktopPassRemove => 'पासफ़्रेज़ हटाएँ';
+
+  @override
+  String get desktopPassCurrent => 'मौजूदा पासफ़्रेज़';
+
+  @override
+  String get desktopPassNew => 'नया पासफ़्रेज़';
+
+  @override
+  String get desktopPassStays =>
+      'इस कंप्यूटर पर ऐसी कोई कीरिंग नहीं है जिसे Kryfo इस्तेमाल कर सके, इसलिए पासफ़्रेज़ बना रहेगा।';
+
+  @override
+  String get desktopPassAdded => 'पासफ़्रेज़ जोड़ा गया';
+
+  @override
+  String get desktopPassRemoved => 'पासफ़्रेज़ हटाया गया';
+
+  @override
+  String get desktopPassChanged => 'पासफ़्रेज़ बदला गया';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'हटाने के लिए अपना पासफ़्रेज़ लिखें। इसके बाद Kryfo आपके यूज़र अकाउंट से खुलेगा।';
 }

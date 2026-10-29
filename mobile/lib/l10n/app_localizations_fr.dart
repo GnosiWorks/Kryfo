@@ -10130,4 +10130,67 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'Sur Privé tout passe par Tor et nos serveurs voient un nœud de sortie, jamais vous. Sur Rapide la connexion va directement vers nos deux serveurs : ils voient votre adresse IP pendant que vous êtes connecté et n\'en gardent aucune trace. Pendant que le premier est en panne, Rapide utilise aussi des relais publics, seulement par Tor.';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Tout ce que Kryfo garde sur cet ordinateur est chiffré. Il s’ouvre avec votre compte utilisateur.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Ajouter une phrase secrète';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'Sans elle, toute personne qui utilise votre compte utilisateur peut ouvrir Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo n’a pas pu garder sa clé dans le trousseau de clés de cet ordinateur. Ajoutez plutôt une phrase secrète.';
+
+  @override
+  String get desktopKeyMissing =>
+      'Ce compte utilisateur n’a pas la clé des données de Kryfo. Kryfo s’ouvre seulement sur le compte utilisateur où il a été configuré.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo ne peut pas atteindre sa clé sur cet ordinateur pour le moment. Déverrouillez votre trousseau de clés si l’ordinateur le demande, puis réessayez.';
+
+  @override
+  String get desktopPassRow => 'Phrase secrète sur cet ordinateur';
+
+  @override
+  String get desktopPassOffBody =>
+      'Kryfo s’ouvre avec votre compte utilisateur.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo demande cette phrase secrète à chaque démarrage.';
+
+  @override
+  String get desktopPassChange => 'Changer la phrase secrète';
+
+  @override
+  String get desktopPassRemove => 'Retirer la phrase secrète';
+
+  @override
+  String get desktopPassCurrent => 'Phrase secrète actuelle';
+
+  @override
+  String get desktopPassNew => 'Nouvelle phrase secrète';
+
+  @override
+  String get desktopPassStays =>
+      'Cet ordinateur n’a pas de trousseau de clés que Kryfo peut utiliser, la phrase secrète reste donc en place.';
+
+  @override
+  String get desktopPassAdded => 'Phrase secrète ajoutée';
+
+  @override
+  String get desktopPassRemoved => 'Phrase secrète retirée';
+
+  @override
+  String get desktopPassChanged => 'Phrase secrète changée';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Saisissez votre phrase secrète pour la retirer. Kryfo s’ouvrira ensuite avec votre compte utilisateur.';
 }

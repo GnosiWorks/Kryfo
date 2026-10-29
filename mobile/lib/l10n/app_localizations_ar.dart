@@ -10171,4 +10171,66 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'في الخاص يخرج كل شيء عبر Tor وترى خوادمنا عقدة خروج، لا أنت أبدًا. في السريع يذهب الاتصال مباشرة إلى خادمينا: يريان عنوان IP الخاص بك أثناء اتصالك ولا يحتفظان بأي سجل له. أثناء توقف الأول يستخدم السريع أيضًا مُرحِّلات عامة، عبر Tor فقط.';
+
+  @override
+  String get desktopLockAccountBody =>
+      'كل ما يحفظه Kryfo على هذا الحاسوب مشفّر. يُفتح بحساب المستخدم الخاص بك.';
+
+  @override
+  String get desktopLockAddPassphrase => 'أضف عبارة مرور';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'من دونها، يستطيع أي شخص يستخدم حسابك على الحاسوب فتح Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'تعذّر على Kryfo حفظ مفتاحه في حلقة المفاتيح على هذا الحاسوب. أضف عبارة مرور بدلًا من ذلك.';
+
+  @override
+  String get desktopKeyMissing =>
+      'حساب المستخدم هذا لا يملك مفتاح بيانات Kryfo. يُفتح Kryfo فقط على حساب المستخدم الذي أُعدّ عليه.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'لا يستطيع Kryfo الوصول إلى مفتاحه على هذا الحاسوب الآن. افتح قفل حلقة المفاتيح إن طلب الحاسوب ذلك، ثم أعد المحاولة.';
+
+  @override
+  String get desktopPassRow => 'عبارة المرور على هذا الحاسوب';
+
+  @override
+  String get desktopPassOffBody => 'يُفتح Kryfo بحساب المستخدم الخاص بك.';
+
+  @override
+  String get desktopPassOnBody =>
+      'يطلب Kryfo عبارة المرور هذه في كل مرة يبدأ فيها.';
+
+  @override
+  String get desktopPassChange => 'غيّر عبارة المرور';
+
+  @override
+  String get desktopPassRemove => 'أزل عبارة المرور';
+
+  @override
+  String get desktopPassCurrent => 'عبارة المرور الحالية';
+
+  @override
+  String get desktopPassNew => 'عبارة مرور جديدة';
+
+  @override
+  String get desktopPassStays =>
+      'لا توجد على هذا الحاسوب حلقة مفاتيح يستطيع Kryfo استخدامها، لذا تبقى عبارة المرور.';
+
+  @override
+  String get desktopPassAdded => 'أُضيفت عبارة المرور';
+
+  @override
+  String get desktopPassRemoved => 'أُزيلت عبارة المرور';
+
+  @override
+  String get desktopPassChanged => 'تغيّرت عبارة المرور';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'اكتب عبارة المرور لإزالتها. بعدها يُفتح Kryfo بحساب المستخدم الخاص بك.';
 }

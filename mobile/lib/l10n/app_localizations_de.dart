@@ -10132,4 +10132,67 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'Bei Privat geht alles über Tor, und unsere Server sehen einen Exit-Knoten, nie dich. Bei Schnell geht die Verbindung direkt zu unseren zwei Servern: Sie sehen deine IP-Adresse, solange du verbunden bist, und halten nichts davon fest. Solange der erste ausfällt, nutzt Schnell zusätzlich öffentliche Relais, nur über Tor.';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Alles, was Kryfo auf diesem Computer speichert, ist verschlüsselt. Es öffnet sich mit deinem Benutzerkonto.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Passphrase hinzufügen';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'Ohne sie kann jeder, der dein Benutzerkonto nutzt, Kryfo öffnen.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo konnte seinen Schlüssel nicht im Schlüsselbund dieses Computers ablegen. Füge stattdessen eine Passphrase hinzu.';
+
+  @override
+  String get desktopKeyMissing =>
+      'Dieses Benutzerkonto hat den Schlüssel zu den Daten von Kryfo nicht. Kryfo öffnet sich nur im Benutzerkonto, in dem es eingerichtet wurde.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo erreicht seinen Schlüssel auf diesem Computer gerade nicht. Entsperre deinen Schlüsselbund, wenn dein Computer danach fragt, und versuche es dann erneut.';
+
+  @override
+  String get desktopPassRow => 'Passphrase auf diesem Computer';
+
+  @override
+  String get desktopPassOffBody =>
+      'Kryfo öffnet sich mit deinem Benutzerkonto.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo fragt bei jedem Start nach dieser Passphrase.';
+
+  @override
+  String get desktopPassChange => 'Passphrase ändern';
+
+  @override
+  String get desktopPassRemove => 'Passphrase entfernen';
+
+  @override
+  String get desktopPassCurrent => 'Aktuelle Passphrase';
+
+  @override
+  String get desktopPassNew => 'Neue Passphrase';
+
+  @override
+  String get desktopPassStays =>
+      'Dieser Computer hat keinen Schlüsselbund, den Kryfo nutzen kann, daher bleibt die Passphrase.';
+
+  @override
+  String get desktopPassAdded => 'Passphrase hinzugefügt';
+
+  @override
+  String get desktopPassRemoved => 'Passphrase entfernt';
+
+  @override
+  String get desktopPassChanged => 'Passphrase geändert';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Gib deine Passphrase ein, um sie zu entfernen. Danach öffnet sich Kryfo mit deinem Benutzerkonto.';
 }

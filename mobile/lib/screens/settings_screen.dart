@@ -47,6 +47,8 @@ import 'restore_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../notifications.dart';
 import '../delivery_mode.dart';
+import '../desktop/desktop_mode.dart'
+    show computerLockPage, computerPassphraseOn;
 import 'notifications_screen.dart';
 import 'icon_screen.dart';
 import '../app_icon.dart' show AppFace, AppFaceWords, appFaceNow, readAppFace;
@@ -701,6 +703,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Navigator.of(context).push(haloRoute(const PinsScreen())),
                 ),
               ),
+              if (computerLockPage case final page?)
+                ValueListenableBuilder<bool>(
+                  valueListenable: computerPassphraseOn,
+                  builder: (_, on, _) => HaloRow(
+                    icon: Icons.key_rounded,
+                    label: l10n.desktopPassRow,
+                    value: on ? l10n.commonOn : l10n.commonOff,
+                    onTap: () => Navigator.of(context).push(haloRoute(page())),
+                  ),
+                ),
               // the icon and the notifications read the phone's values, in
               // any session
               ValueListenableBuilder<AppFace?>(

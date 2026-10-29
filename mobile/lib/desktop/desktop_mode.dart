@@ -4,6 +4,8 @@
 import 'dart:async';
 import 'dart:isolate';
 
+import 'package:flutter/widgets.dart';
+
 /// true in the linux and windows app (main_desktop.dart sets it before
 /// anything runs). a plain flag, not Platform: the tests run on linux too
 /// and test the phone's behaviour there
@@ -87,3 +89,10 @@ engineStarter;
 /// where a backup is made: on desktop on the disk, not in memory, as it is
 /// encrypted already and can be large
 Future<String> Function()? bulkTempDir;
+
+/// the settings page for the computer's passphrase, set by the desktop
+/// start; null on the phone
+Widget Function()? computerLockPage;
+
+/// whether a passphrase opens Kryfo on this computer, for the settings row
+final computerPassphraseOn = ValueNotifier<bool>(false);

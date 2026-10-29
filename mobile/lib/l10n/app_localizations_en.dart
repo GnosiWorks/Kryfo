@@ -10019,4 +10019,66 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'On Private everything leaves through Tor and our servers see an exit node, never you. On Fast the connection goes straight to our two servers: they see your IP address while you\'re connected and keep no record of it. While the first one is down, Fast also uses public relays, only through Tor.';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Everything Kryfo keeps on this computer is encrypted. It opens with your computer account.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Add a passphrase';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'Without it, anyone using your computer account can open Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo could not keep its key in this computer\'s keyring. Add a passphrase instead.';
+
+  @override
+  String get desktopKeyMissing =>
+      'This computer account does not have the key to Kryfo\'s data. Kryfo opens only on the computer account it was set up on.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo cannot reach its key on this computer right now. Unlock your keyring if your computer asks, then try again.';
+
+  @override
+  String get desktopPassRow => 'Passphrase on this computer';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo opens with your computer account.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo asks for this passphrase every time it starts.';
+
+  @override
+  String get desktopPassChange => 'Change the passphrase';
+
+  @override
+  String get desktopPassRemove => 'Remove the passphrase';
+
+  @override
+  String get desktopPassCurrent => 'Current passphrase';
+
+  @override
+  String get desktopPassNew => 'New passphrase';
+
+  @override
+  String get desktopPassStays =>
+      'This computer has no keyring Kryfo can use, so the passphrase stays.';
+
+  @override
+  String get desktopPassAdded => 'Passphrase added';
+
+  @override
+  String get desktopPassRemoved => 'Passphrase removed';
+
+  @override
+  String get desktopPassChanged => 'Passphrase changed';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Type your passphrase to remove it. Kryfo then opens with your computer account.';
 }

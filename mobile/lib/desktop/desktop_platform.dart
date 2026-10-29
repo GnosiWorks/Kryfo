@@ -119,6 +119,9 @@ class DesktopHost {
   /// the vault overwritten before the folder goes
   void Function()? destroyKeys;
 
+  /// what the computer account kept for the vault goes after it
+  Future<void> Function()? forgetKeys;
+
   /// what is kept and cleared as the process ends or becomes a new run
   void Function()? beforeExit;
   final _since = Stopwatch()..start();
@@ -164,6 +167,9 @@ class DesktopHost {
   Future<void> wipe() async {
     try {
       destroyKeys?.call();
+    } catch (_) {}
+    try {
+      await forgetKeys?.call().timeout(const Duration(seconds: 5));
     } catch (_) {}
     try {
       Directory(dataDir).deleteSync(recursive: true);

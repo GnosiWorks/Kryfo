@@ -10050,4 +10050,66 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'Özel’de her şey Tor üzerinden çıkar ve sunucularımız seni değil, bir çıkış düğümünü görür. Hızlı’da bağlantı doğrudan iki sunucumuza gider: bağlıyken IP adresini görürler ve hiçbir kaydını tutmazlar. İlki çalışmadığı sürece Hızlı herkese açık aktarıcıları da kullanır, yalnızca Tor üzerinden.';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Kryfo\'nun bu bilgisayarda tuttuğu her şey şifreli. Kullanıcı hesabınla açılır.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Parola ifadesi ekle';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'O olmadan, kullanıcı hesabını kullanan herkes Kryfo\'yu açabilir.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo anahtarını bu bilgisayarın anahtarlığında tutamadı. Bunun yerine bir parola ifadesi ekle.';
+
+  @override
+  String get desktopKeyMissing =>
+      'Bu kullanıcı hesabında Kryfo\'nun verilerinin anahtarı yok. Kryfo yalnızca kurulduğu kullanıcı hesabında açılır.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo şu anda bu bilgisayardaki anahtarına ulaşamıyor. Bilgisayarın isterse anahtarlığının kilidini aç, sonra yeniden dene.';
+
+  @override
+  String get desktopPassRow => 'Bu bilgisayardaki parola ifadesi';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo kullanıcı hesabınla açılır.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo her açılışta bu parola ifadesini sorar.';
+
+  @override
+  String get desktopPassChange => 'Parola ifadesini değiştir';
+
+  @override
+  String get desktopPassRemove => 'Parola ifadesini kaldır';
+
+  @override
+  String get desktopPassCurrent => 'Şu anki parola ifadesi';
+
+  @override
+  String get desktopPassNew => 'Yeni parola ifadesi';
+
+  @override
+  String get desktopPassStays =>
+      'Bu bilgisayarda Kryfo\'nun kullanabileceği bir anahtarlık yok, bu yüzden parola ifadesi kalıyor.';
+
+  @override
+  String get desktopPassAdded => 'Parola ifadesi eklendi';
+
+  @override
+  String get desktopPassRemoved => 'Parola ifadesi kaldırıldı';
+
+  @override
+  String get desktopPassChanged => 'Parola ifadesi değiştirildi';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Kaldırmak için parola ifadeni yaz. Ardından Kryfo kullanıcı hesabınla açılır.';
 }

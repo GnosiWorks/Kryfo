@@ -10045,4 +10045,66 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'در خصوصی همه‌چیز از راه Tor خارج می‌شود و سرورهای ما یک گره خروجی می‌بینند، نه شما را. در سریع اتصال مستقیم به دو سرور ما می‌رود: تا وقتی وصل هستید آدرس IP شما را می‌بینند و هیچ سابقه‌ای از آن نگه نمی‌دارند. تا وقتی اولی از کار افتاده، سریع از رله‌های عمومی هم استفاده می‌کند، فقط از راه Tor.';
+
+  @override
+  String get desktopLockAccountBody =>
+      'هر چیزی که Kryfo روی این رایانه نگه می‌دارد رمزگذاری شده است. با حساب کاربری شما باز می‌شود.';
+
+  @override
+  String get desktopLockAddPassphrase => 'افزودن عبارت عبور';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'بدون آن، هر کسی که از حساب کاربری شما استفاده کند می‌تواند Kryfo را باز کند.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo نتوانست کلیدش را در جاکلیدی این رایانه نگه دارد. به جای آن یک عبارت عبور بیفزایید.';
+
+  @override
+  String get desktopKeyMissing =>
+      'این حساب کاربری کلید داده‌های Kryfo را ندارد. Kryfo فقط در حساب کاربری‌ای باز می‌شود که در آن راه‌اندازی شده است.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo الان به کلیدش روی این رایانه دسترسی ندارد. اگر رایانه خواست، قفل جاکلیدی را باز کنید و دوباره تلاش کنید.';
+
+  @override
+  String get desktopPassRow => 'عبارت عبور روی این رایانه';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo با حساب کاربری شما باز می‌شود.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo هر بار که اجرا می‌شود این عبارت عبور را می‌پرسد.';
+
+  @override
+  String get desktopPassChange => 'تغییر عبارت عبور';
+
+  @override
+  String get desktopPassRemove => 'برداشتن عبارت عبور';
+
+  @override
+  String get desktopPassCurrent => 'عبارت عبور فعلی';
+
+  @override
+  String get desktopPassNew => 'عبارت عبور جدید';
+
+  @override
+  String get desktopPassStays =>
+      'این رایانه جاکلیدی‌ای ندارد که Kryfo بتواند از آن استفاده کند، پس عبارت عبور می‌ماند.';
+
+  @override
+  String get desktopPassAdded => 'عبارت عبور افزوده شد';
+
+  @override
+  String get desktopPassRemoved => 'عبارت عبور برداشته شد';
+
+  @override
+  String get desktopPassChanged => 'عبارت عبور تغییر کرد';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'برای برداشتن عبارت عبور، آن را بنویسید. پس از آن Kryfo با حساب کاربری شما باز می‌شود.';
 }

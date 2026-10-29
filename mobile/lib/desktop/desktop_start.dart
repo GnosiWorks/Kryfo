@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the desktop app's start: the platform answers, private folders, the
-// network watch and notifications put in place, then the vault's passphrase,
-// and only then the app itself
+// network watch and notifications put in place, then the vault opened by the
+// computer's key or its passphrase, and only then the app itself
 import 'dart:async';
 import 'dart:io';
 
@@ -31,15 +31,19 @@ import 'desktop_db.dart';
 import 'desktop_lock_screen.dart';
 import 'desktop_mode.dart';
 import 'desktop_net.dart';
+import 'desktop_passphrase_screen.dart';
 import 'desktop_paths.dart';
 import 'desktop_platform.dart';
 import 'desktop_posix.dart';
 import 'desktop_prefs.dart';
 import 'desktop_vault.dart';
+import 'keyring_linux.dart';
 import 'sealed_format.dart' show EngineChunkCrypto;
 import 'sealed_io.dart';
 import 'sealed_native.dart' show nativeFilesSealed;
+import 'seal_windows.dart';
 import 'sealed_setup.dart';
+import 'system_seal.dart';
 
 /// the binding whose messenger answers the android channels
 class DesktopBinding extends WidgetsFlutterBinding {
@@ -152,6 +156,14 @@ Future<void> sayTrayWords() async {
   }
 }
 
+/// what keeps the vault's key without a passphrase: the Secret Service on
+/// linux, dpapi on windows
+SystemSeal? systemSeal() {
+  if (Platform.isLinux) return KeyringSeal(const FfiSecretApi());
+  if (Platform.isWindows) return WindowsSeal(const FfiWinCrypt());
+  return null;
+}
+
 /// why the desktop will not start, before anything of it runs
 enum DesktopStop { alreadyOpen, notYours, notPrivate, noMemory }
 
@@ -201,7 +213,10 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   final paths = DesktopPaths(root, runtime: runtime);
   PathProviderPlatform.instance = paths;
   final vault = DesktopVault(p.join(root, 'vault.kv'));
+  final seal = systemSeal();
   host.destroyKeys = vault.destroy;
+  if (seal != null) host.forgetKeys = () => vault.forgetSystem(seal);
+  computerLockPage = () => DesktopPassphraseScreen(vault: vault, seal: seal);
   FlutterSecureStoragePlatform.instance = VaultStorage(vault);
   SharedPreferencesStorePlatform.instance = VaultPrefs(vault);
   if (defaultTargetPlatform == TargetPlatform.linux) {
@@ -266,9 +281,11 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   runApp(
     DesktopLockApp(
       vault: vault,
+      seal: seal,
       onOpen: () {
         if (started) return;
         started = true;
+        computerPassphraseOn.value = vault.hasPassphrase;
         unawaited(() async {
           await openSeal(
             root: root,

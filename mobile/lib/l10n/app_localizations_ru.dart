@@ -10205,4 +10205,66 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'В режиме «Приватный» всё уходит через Tor, и наши серверы видят выходной узел, а не тебя. В режиме «Быстрый» соединение идёт напрямую к двум нашим серверам: они видят твой IP-адрес, пока ты подключён, и ничего о нём не хранят. Пока первый недоступен, «Быстрый» использует ещё и публичные ретрансляторы, только через Tor.';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Всё, что Kryfo хранит на этом компьютере, зашифровано. Он открывается с вашей учётной записью.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Добавить парольную фразу';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'Без неё любой, кто пользуется вашей учётной записью, может открыть Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo не смог сохранить свой ключ в связке ключей этого компьютера. Добавьте парольную фразу.';
+
+  @override
+  String get desktopKeyMissing =>
+      'У этой учётной записи нет ключа к данным Kryfo. Kryfo открывается только в той учётной записи, где его настроили.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo сейчас не может получить свой ключ на этом компьютере. Разблокируйте связку ключей, если компьютер попросит, и попробуйте снова.';
+
+  @override
+  String get desktopPassRow => 'Парольная фраза на этом компьютере';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo открывается с вашей учётной записью.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo спрашивает эту парольную фразу при каждом запуске.';
+
+  @override
+  String get desktopPassChange => 'Сменить парольную фразу';
+
+  @override
+  String get desktopPassRemove => 'Убрать парольную фразу';
+
+  @override
+  String get desktopPassCurrent => 'Текущая парольная фраза';
+
+  @override
+  String get desktopPassNew => 'Новая парольная фраза';
+
+  @override
+  String get desktopPassStays =>
+      'На этом компьютере нет связки ключей, которую Kryfo может использовать, поэтому парольная фраза остаётся.';
+
+  @override
+  String get desktopPassAdded => 'Парольная фраза добавлена';
+
+  @override
+  String get desktopPassRemoved => 'Парольная фраза убрана';
+
+  @override
+  String get desktopPassChanged => 'Парольная фраза изменена';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Введите парольную фразу, чтобы убрать её. После этого Kryfo будет открываться с вашей учётной записью.';
 }

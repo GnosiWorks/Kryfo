@@ -10022,4 +10022,66 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'Di Privat semuanya keluar lewat Tor dan server kami melihat node keluar, bukan kamu. Di Cepat koneksi langsung ke dua server kami: mereka melihat alamat IP-mu selama terhubung dan tidak menyimpan catatannya. Selama server pertama mati, Cepat juga memakai relay publik, hanya lewat Tor.';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Semua yang disimpan Kryfo di komputer ini terenkripsi. Kryfo terbuka dengan akun penggunamu.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Tambahkan frasa sandi';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'Tanpanya, siapa pun yang memakai akun penggunamu bisa membuka Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo tidak bisa menyimpan kuncinya di ring kunci komputer ini. Tambahkan frasa sandi sebagai gantinya.';
+
+  @override
+  String get desktopKeyMissing =>
+      'Akun pengguna ini tidak punya kunci data Kryfo. Kryfo hanya terbuka di akun pengguna tempat Kryfo disiapkan.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo belum bisa menjangkau kuncinya di komputer ini. Buka kunci ring kuncimu kalau komputer memintanya, lalu coba lagi.';
+
+  @override
+  String get desktopPassRow => 'Frasa sandi di komputer ini';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo terbuka dengan akun penggunamu.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo meminta frasa sandi ini setiap kali dibuka.';
+
+  @override
+  String get desktopPassChange => 'Ganti frasa sandi';
+
+  @override
+  String get desktopPassRemove => 'Hapus frasa sandi';
+
+  @override
+  String get desktopPassCurrent => 'Frasa sandi saat ini';
+
+  @override
+  String get desktopPassNew => 'Frasa sandi baru';
+
+  @override
+  String get desktopPassStays =>
+      'Komputer ini tidak punya ring kunci yang bisa dipakai Kryfo, jadi frasa sandinya tetap.';
+
+  @override
+  String get desktopPassAdded => 'Frasa sandi ditambahkan';
+
+  @override
+  String get desktopPassRemoved => 'Frasa sandi dihapus';
+
+  @override
+  String get desktopPassChanged => 'Frasa sandi diganti';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Ketik frasa sandimu untuk menghapusnya. Setelah itu Kryfo terbuka dengan akun penggunamu.';
 }

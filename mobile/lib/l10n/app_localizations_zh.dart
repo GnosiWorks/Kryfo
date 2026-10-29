@@ -9541,6 +9541,63 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get seenIpWhy =>
       '私密模式下一切都经 Tor 发出，我们的服务器看到的是出口节点，永远不是你。快速模式下连接直达我们的两台服务器：你连接期间它们能看到你的 IP 地址，但不留任何记录。第一台停摆期间，快速模式也会使用公共中继，而且只经 Tor 连接。';
+
+  @override
+  String get desktopLockAccountBody => 'Kryfo 在这台电脑上保存的所有内容都已加密。它会用你的用户账户打开。';
+
+  @override
+  String get desktopLockAddPassphrase => '添加密码短语';
+
+  @override
+  String get desktopLockWithoutPassphrase => '没有它，任何使用你的用户账户的人都能打开 Kryfo。';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo 无法把它的密钥保存在这台电脑的密钥环中。请改为添加密码短语。';
+
+  @override
+  String get desktopKeyMissing =>
+      '这个用户账户没有 Kryfo 数据的密钥。Kryfo 只会在设置它的那个用户账户上打开。';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo 现在无法取得这台电脑上的密钥。如果电脑提示，请解锁你的密钥环，然后重试。';
+
+  @override
+  String get desktopPassRow => '这台电脑上的密码短语';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo 会用你的用户账户打开。';
+
+  @override
+  String get desktopPassOnBody => 'Kryfo 每次启动时都会询问这个密码短语。';
+
+  @override
+  String get desktopPassChange => '更改密码短语';
+
+  @override
+  String get desktopPassRemove => '移除密码短语';
+
+  @override
+  String get desktopPassCurrent => '当前密码短语';
+
+  @override
+  String get desktopPassNew => '新的密码短语';
+
+  @override
+  String get desktopPassStays => '这台电脑上没有 Kryfo 能用的密钥环，所以密码短语会保留。';
+
+  @override
+  String get desktopPassAdded => '已添加密码短语';
+
+  @override
+  String get desktopPassRemoved => '已移除密码短语';
+
+  @override
+  String get desktopPassChanged => '已更改密码短语';
+
+  @override
+  String get desktopPassRemoveBody => '输入你的密码短语来移除它。之后 Kryfo 会用你的用户账户打开。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -18963,4 +19020,61 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get seenIpWhy =>
       '私密模式下一切都經 Tor 送出，我們的伺服器看到的是出口節點，永遠不是你。快速模式下連線直達我們的兩台伺服器：你連線期間它們能看到你的 IP 位址，但不留任何紀錄。第一台停擺期間，快速模式也會使用公共中繼，而且只經 Tor 連線。';
+
+  @override
+  String get desktopLockAccountBody => 'Kryfo 在這台電腦上保存的所有內容都已加密。它會用你的使用者帳戶開啟。';
+
+  @override
+  String get desktopLockAddPassphrase => '新增密碼短語';
+
+  @override
+  String get desktopLockWithoutPassphrase => '沒有它，任何使用你的使用者帳戶的人都能開啟 Kryfo。';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo 無法把它的金鑰保存在這台電腦的鑰匙圈中。請改為新增密碼短語。';
+
+  @override
+  String get desktopKeyMissing =>
+      '這個使用者帳戶沒有 Kryfo 資料的金鑰。Kryfo 只會在設定它的那個使用者帳戶上開啟。';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo 現在無法取得這台電腦上的金鑰。如果電腦提示，請解鎖你的鑰匙圈，然後再試一次。';
+
+  @override
+  String get desktopPassRow => '這台電腦上的密碼短語';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo 會用你的使用者帳戶開啟。';
+
+  @override
+  String get desktopPassOnBody => 'Kryfo 每次啟動時都會詢問這個密碼短語。';
+
+  @override
+  String get desktopPassChange => '變更密碼短語';
+
+  @override
+  String get desktopPassRemove => '移除密碼短語';
+
+  @override
+  String get desktopPassCurrent => '目前的密碼短語';
+
+  @override
+  String get desktopPassNew => '新的密碼短語';
+
+  @override
+  String get desktopPassStays => '這台電腦上沒有 Kryfo 能用的鑰匙圈，所以密碼短語會保留。';
+
+  @override
+  String get desktopPassAdded => '已新增密碼短語';
+
+  @override
+  String get desktopPassRemoved => '已移除密碼短語';
+
+  @override
+  String get desktopPassChanged => '已變更密碼短語';
+
+  @override
+  String get desktopPassRemoveBody => '輸入你的密碼短語來移除它。之後 Kryfo 會用你的使用者帳戶開啟。';
 }

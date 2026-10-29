@@ -10101,4 +10101,66 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'No Privado tudo sai pelo Tor e nossos servidores veem um nó de saída, nunca você. No Rápido a conexão vai direto para nossos dois servidores: eles veem seu endereço IP enquanto você está conectado e não guardam registro. Enquanto o primeiro está fora, o Rápido também usa retransmissores públicos, só pelo Tor.';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Tudo o que o Kryfo guarda neste computador é criptografado. Ele abre com a sua conta de usuário.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Adicionar uma frase-senha';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'Sem ela, qualquer pessoa que use a sua conta de usuário pode abrir o Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'O Kryfo não conseguiu guardar a chave no chaveiro deste computador. Adicione uma frase-senha no lugar.';
+
+  @override
+  String get desktopKeyMissing =>
+      'Esta conta de usuário não tem a chave dos dados do Kryfo. O Kryfo só abre na conta de usuário em que foi configurado.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'O Kryfo não consegue chegar à chave neste computador agora. Desbloqueie o seu chaveiro se o computador pedir e tente de novo.';
+
+  @override
+  String get desktopPassRow => 'Frase-senha neste computador';
+
+  @override
+  String get desktopPassOffBody => 'O Kryfo abre com a sua conta de usuário.';
+
+  @override
+  String get desktopPassOnBody =>
+      'O Kryfo pede esta frase-senha toda vez que abre.';
+
+  @override
+  String get desktopPassChange => 'Mudar a frase-senha';
+
+  @override
+  String get desktopPassRemove => 'Remover a frase-senha';
+
+  @override
+  String get desktopPassCurrent => 'Frase-senha atual';
+
+  @override
+  String get desktopPassNew => 'Nova frase-senha';
+
+  @override
+  String get desktopPassStays =>
+      'Este computador não tem um chaveiro que o Kryfo possa usar, então a frase-senha fica.';
+
+  @override
+  String get desktopPassAdded => 'Frase-senha adicionada';
+
+  @override
+  String get desktopPassRemoved => 'Frase-senha removida';
+
+  @override
+  String get desktopPassChanged => 'Frase-senha alterada';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Digite a sua frase-senha para removê-la. Depois o Kryfo abre com a sua conta de usuário.';
 }
