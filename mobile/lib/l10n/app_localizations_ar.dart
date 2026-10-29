@@ -10171,4 +10171,114 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'في الخاص يخرج كل شيء عبر Tor وترى خوادمنا عقدة خروج، لا أنت أبدًا. في السريع يذهب الاتصال مباشرة إلى خادمينا: يريان عنوان IP الخاص بك أثناء اتصالك ولا يحتفظان بأي سجل له. أثناء توقف الأول يستخدم السريع أيضًا مُرحِّلات عامة، عبر Tor فقط.';
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '⁨$done⁩ من ⁨$total⁩';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '⁨$done⁩ · ⁨$left⁩';
+  }
+
+  @override
+  String get transferLeftSoon => 'أقل من دقيقة متبقية';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'متبقٍ نحو ⁨$n⁩ د';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'متبقٍ نحو ⁨$n⁩ س';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'جارٍ الإرسال · ⁨$detail⁩';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'جارٍ الاستلام · ⁨$detail⁩';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'جارٍ الإرسال والاستلام · ⁨$detail⁩';
+  }
+
+  @override
+  String get transferPause => 'إيقاف مؤقت';
+
+  @override
+  String get transferPauseDownload => 'إيقاف التنزيل مؤقتًا';
+
+  @override
+  String get transferDownload => 'تنزيل';
+
+  @override
+  String get transferResume => 'استئناف';
+
+  @override
+  String get transferOnWifi => 'يُنزَّل عبر Wi-Fi';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'متوقف مؤقتًا · ⁨$detail⁩';
+  }
+
+  @override
+  String get transferTapToDownload => 'انقر للتنزيل';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '⁨$size⁩ · ⁨$state⁩';
+  }
+
+  @override
+  String get transferNoteTitle => 'نقل الملفات';
+
+  @override
+  String get transferChannel => 'نقل الملفات';
+
+  @override
+  String get transferChannelLine =>
+      'يظهر أثناء إرسال الملفات أو تنزيلها. لا يذكر أبدًا اسم محادثة أو ملف.';
+
+  @override
+  String get autoGetTitle => 'التنزيل التلقائي';
+
+  @override
+  String get autoGetLine =>
+      'تصل الملفات دون نقر حسب ما تختاره هنا. الملف المنتظر يبقى لك على خادم الملفات، أسبوعًا على الأكثر.';
+
+  @override
+  String get autoGetPhotos => 'الصور';
+
+  @override
+  String get autoGetVideos => 'الفيديوهات';
+
+  @override
+  String get autoGetFiles => 'الملفات';
+
+  @override
+  String get autoGetAlways => 'عبر Wi-Fi وبيانات الجوال';
+
+  @override
+  String get autoGetWifi => 'عبر Wi-Fi فقط';
+
+  @override
+  String get autoGetNever => 'أبدًا، أنقر للتنزيل';
+
+  @override
+  String get autoGetVoice => 'الرسائل الصوتية تُنزَّل دائمًا.';
+
+  @override
+  String get settingsFiles => 'الملفات';
+
+  @override
+  String get fileSheetOpenWith => 'فتح بتطبيق آخر';
 }

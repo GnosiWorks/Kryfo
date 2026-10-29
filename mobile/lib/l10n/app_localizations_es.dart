@@ -10101,4 +10101,114 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'En Privado todo sale por Tor y nuestros servidores ven un nodo de salida, nunca a ti. En Rápido la conexión va directa a nuestros dos servidores: ven tu dirección IP mientras estás conectado y no guardan ningún registro. Mientras el primero está caído, Rápido también usa repetidores públicos, solo a través de Tor.';
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done de $total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'menos de un minuto';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'quedan unos $n min';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'quedan unas $n h';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'Enviando · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'Recibiendo · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'Enviando y recibiendo · $detail';
+  }
+
+  @override
+  String get transferPause => 'Pausa';
+
+  @override
+  String get transferPauseDownload => 'Pausar la descarga';
+
+  @override
+  String get transferDownload => 'Descargar';
+
+  @override
+  String get transferResume => 'Reanudar';
+
+  @override
+  String get transferOnWifi => 'Se descarga con Wi-Fi';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'En pausa · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'Toca para descargar';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'Transferencia de archivos';
+
+  @override
+  String get transferChannel => 'Transferencias de archivos';
+
+  @override
+  String get transferChannelLine =>
+      'Aparece mientras se envían o descargan archivos. Nunca nombra un chat ni un archivo.';
+
+  @override
+  String get autoGetTitle => 'Descarga automática';
+
+  @override
+  String get autoGetLine =>
+      'Los archivos llegan sin tocar, según lo que elijas aquí. Uno que espera se queda en el servidor de archivos para ti, una semana como mucho.';
+
+  @override
+  String get autoGetPhotos => 'Fotos';
+
+  @override
+  String get autoGetVideos => 'Videos';
+
+  @override
+  String get autoGetFiles => 'Archivos';
+
+  @override
+  String get autoGetAlways => 'Con Wi-Fi y datos móviles';
+
+  @override
+  String get autoGetWifi => 'Solo con Wi-Fi';
+
+  @override
+  String get autoGetNever => 'Nunca, toco para descargar';
+
+  @override
+  String get autoGetVoice => 'Las notas de voz siempre se descargan.';
+
+  @override
+  String get settingsFiles => 'Archivos';
+
+  @override
+  String get fileSheetOpenWith => 'Abrir con otra app';
 }

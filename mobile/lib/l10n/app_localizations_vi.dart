@@ -10012,4 +10012,114 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'Với Riêng tư, mọi thứ đi qua Tor và máy chủ của chúng tôi chỉ thấy một nút thoát, không bao giờ thấy bạn. Với Nhanh, kết nối đi thẳng tới hai máy chủ của chúng tôi: chúng thấy địa chỉ IP của bạn khi bạn đang kết nối và không lưu lại gì. Khi máy chủ đầu tiên ngừng, Nhanh dùng thêm relay công cộng, chỉ qua Tor.';
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done trên $total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'còn chưa đến một phút';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'còn khoảng $n phút';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'còn khoảng $n giờ';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'Đang gửi · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'Đang nhận · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'Đang gửi và nhận · $detail';
+  }
+
+  @override
+  String get transferPause => 'Tạm dừng';
+
+  @override
+  String get transferPauseDownload => 'Tạm dừng tải xuống';
+
+  @override
+  String get transferDownload => 'Tải xuống';
+
+  @override
+  String get transferResume => 'Tiếp tục';
+
+  @override
+  String get transferOnWifi => 'Tải qua Wi-Fi';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'Đã tạm dừng · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'Chạm để tải xuống';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'Truyền tệp';
+
+  @override
+  String get transferChannel => 'Truyền tệp';
+
+  @override
+  String get transferChannelLine =>
+      'Hiện khi tệp đang gửi hoặc tải xuống. Không bao giờ nêu tên cuộc trò chuyện hay tệp.';
+
+  @override
+  String get autoGetTitle => 'Tự động tải xuống';
+
+  @override
+  String get autoGetLine =>
+      'Tệp đến mà không cần chạm, theo lựa chọn ở đây. Tệp đang chờ được giữ cho bạn trên máy chủ tệp, tối đa một tuần.';
+
+  @override
+  String get autoGetPhotos => 'Ảnh';
+
+  @override
+  String get autoGetVideos => 'Video';
+
+  @override
+  String get autoGetFiles => 'Tệp';
+
+  @override
+  String get autoGetAlways => 'Qua Wi-Fi và dữ liệu di động';
+
+  @override
+  String get autoGetWifi => 'Chỉ qua Wi-Fi';
+
+  @override
+  String get autoGetNever => 'Không bao giờ, tôi chạm để tải';
+
+  @override
+  String get autoGetVoice => 'Tin nhắn thoại luôn được tải xuống.';
+
+  @override
+  String get settingsFiles => 'Tệp';
+
+  @override
+  String get fileSheetOpenWith => 'Mở bằng ứng dụng khác';
 }

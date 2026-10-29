@@ -10045,4 +10045,114 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'در خصوصی همه‌چیز از راه Tor خارج می‌شود و سرورهای ما یک گره خروجی می‌بینند، نه شما را. در سریع اتصال مستقیم به دو سرور ما می‌رود: تا وقتی وصل هستید آدرس IP شما را می‌بینند و هیچ سابقه‌ای از آن نگه نمی‌دارند. تا وقتی اولی از کار افتاده، سریع از رله‌های عمومی هم استفاده می‌کند، فقط از راه Tor.';
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '⁨$done⁩ از ⁨$total⁩';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '⁨$done⁩ · ⁨$left⁩';
+  }
+
+  @override
+  String get transferLeftSoon => 'کمتر از یک دقیقه مانده';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'حدود ⁨$n⁩ دقیقه مانده';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'حدود ⁨$n⁩ ساعت مانده';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'در حال ارسال · ⁨$detail⁩';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'در حال دریافت · ⁨$detail⁩';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'در حال ارسال و دریافت · ⁨$detail⁩';
+  }
+
+  @override
+  String get transferPause => 'مکث';
+
+  @override
+  String get transferPauseDownload => 'مکث دانلود';
+
+  @override
+  String get transferDownload => 'دانلود';
+
+  @override
+  String get transferResume => 'ادامه';
+
+  @override
+  String get transferOnWifi => 'با Wi-Fi دانلود می‌شود';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'متوقف · ⁨$detail⁩';
+  }
+
+  @override
+  String get transferTapToDownload => 'برای دانلود بزنید';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '⁨$size⁩ · ⁨$state⁩';
+  }
+
+  @override
+  String get transferNoteTitle => 'انتقال فایل';
+
+  @override
+  String get transferChannel => 'انتقال فایل‌ها';
+
+  @override
+  String get transferChannelLine =>
+      'هنگام ارسال یا دانلود فایل‌ها نمایش داده می‌شود. هرگز نام گفتگو یا فایلی را نمی‌آورد.';
+
+  @override
+  String get autoGetTitle => 'دانلود خودکار';
+
+  @override
+  String get autoGetLine =>
+      'فایل‌ها طبق تنظیم این‌جا بدون زدن می‌رسند. فایلی که منتظر است برای شما روی سرور فایل می‌ماند، حداکثر یک هفته.';
+
+  @override
+  String get autoGetPhotos => 'عکس‌ها';
+
+  @override
+  String get autoGetVideos => 'ویدیوها';
+
+  @override
+  String get autoGetFiles => 'فایل‌ها';
+
+  @override
+  String get autoGetAlways => 'با Wi-Fi و داده همراه';
+
+  @override
+  String get autoGetWifi => 'فقط با Wi-Fi';
+
+  @override
+  String get autoGetNever => 'هرگز، خودم برای دانلود می‌زنم';
+
+  @override
+  String get autoGetVoice => 'پیام‌های صوتی همیشه دانلود می‌شوند.';
+
+  @override
+  String get settingsFiles => 'فایل‌ها';
+
+  @override
+  String get fileSheetOpenWith => 'باز کردن با برنامه دیگر';
 }

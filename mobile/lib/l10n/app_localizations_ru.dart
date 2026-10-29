@@ -10205,4 +10205,114 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get seenIpWhy =>
       'В режиме «Приватный» всё уходит через Tor, и наши серверы видят выходной узел, а не тебя. В режиме «Быстрый» соединение идёт напрямую к двум нашим серверам: они видят твой IP-адрес, пока ты подключён, и ничего о нём не хранят. Пока первый недоступен, «Быстрый» использует ещё и публичные ретрансляторы, только через Tor.';
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done из $total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'меньше минуты';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'осталось около $n мин';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'осталось около $n ч';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'Отправка · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'Получение · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'Отправка и получение · $detail';
+  }
+
+  @override
+  String get transferPause => 'Пауза';
+
+  @override
+  String get transferPauseDownload => 'Приостановить загрузку';
+
+  @override
+  String get transferDownload => 'Скачать';
+
+  @override
+  String get transferResume => 'Продолжить';
+
+  @override
+  String get transferOnWifi => 'Скачается по Wi-Fi';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'Пауза · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'Нажми, чтобы скачать';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'Передача файлов';
+
+  @override
+  String get transferChannel => 'Передача файлов';
+
+  @override
+  String get transferChannelLine =>
+      'Видно, пока файлы отправляются или скачиваются. Никогда не называет чат или файл.';
+
+  @override
+  String get autoGetTitle => 'Автозагрузка';
+
+  @override
+  String get autoGetLine =>
+      'Файлы приходят без нажатия, как настроено здесь. Ожидающий файл хранится для тебя на файловом сервере, не дольше недели.';
+
+  @override
+  String get autoGetPhotos => 'Фото';
+
+  @override
+  String get autoGetVideos => 'Видео';
+
+  @override
+  String get autoGetFiles => 'Файлы';
+
+  @override
+  String get autoGetAlways => 'По Wi-Fi и мобильной сети';
+
+  @override
+  String get autoGetWifi => 'Только по Wi-Fi';
+
+  @override
+  String get autoGetNever => 'Никогда, скачаю нажатием';
+
+  @override
+  String get autoGetVoice => 'Голосовые сообщения скачиваются всегда.';
+
+  @override
+  String get settingsFiles => 'Файлы';
+
+  @override
+  String get fileSheetOpenWith => 'Открыть в другом приложении';
 }
