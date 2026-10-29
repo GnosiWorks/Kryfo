@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
     show HaloDb, appState, useDatabasesForTest, AppStateMessages;
 import 'package:kryfo/screens/contact_screen.dart';
@@ -53,6 +54,8 @@ void main() {
 
   setUp(() {
     told = [];
+    // a lock that was read: nothing is sent before
+    lockState.openForTest();
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({});
     appState.contacts = [];

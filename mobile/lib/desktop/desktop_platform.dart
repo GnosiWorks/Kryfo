@@ -27,7 +27,9 @@ const androidChannels = [
   'halo/gpush',
   'kryfo/app_icon',
   'kryfo/net',
+  'kryfo/phone',
   'kryfo/video',
+  'kryfo/transfers',
 ];
 
 /// methods with a desktop answer on halo/platform. the rest say not here:
@@ -40,6 +42,7 @@ const platformAnswered = {
   'applyDeliveryMode',
   'photoPickerReady',
   'setSecure',
+  'setRecentsHidden',
   'appIconSet',
   'openNotificationSettings',
   'openWifiSettings',
@@ -195,6 +198,8 @@ Map<String, DesktopAnswer> desktopAnswers(
     'photoPickerReady' => false,
     // linux cannot keep a window out of screenshots
     'setSecure' => false,
+    // no app switcher picture to keep out
+    'setRecentsHidden' => false,
     'appIconSet' => false,
     'openNotificationSettings' ||
     'openWifiSettings' ||

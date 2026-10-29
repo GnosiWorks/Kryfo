@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../pin_shield.dart';
 import '../seen_timers.dart';
 import '../theme.dart';
 import '../tools/age_ffi.dart';
@@ -209,7 +210,7 @@ class LockFileScreen extends StatefulWidget {
   State<LockFileScreen> createState() => _LockFileScreenState();
 }
 
-class _LockFileScreenState extends State<LockFileScreen> {
+class _LockFileScreenState extends State<LockFileScreen> with PinShield {
   final _pw1 = TextEditingController();
   final _pw2 = TextEditingController();
   late PickedFile _file = widget.file;

@@ -1320,9 +1320,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatItDisappearsWithNo => '它会从双方的手机上删除，除非已被保存。此操作无法撤销。';
 
   @override
-  String get chatAlbumItDisappearsWithNo => '这个相册会从双方的手机上删除，除非已被保存。此操作无法撤销。';
-
-  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -2496,10 +2493,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupChatItDisappearsWithNo => '它会从所有人的手机上删除，除非已被保存。此操作无法撤销。';
 
   @override
-  String get groupChatAlbumItDisappearsWithNo =>
-      '这个相册会从所有人的手机上删除，除非已被保存。此操作无法撤销。';
-
-  @override
   String get groupChatUnsend => '撤回';
 
   @override
@@ -3028,9 +3021,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get homeAddSomeone => '添加联系人';
-
-  @override
-  String get homeInviteSomeone => '邀请一个人';
 
   @override
   String get homeArchived => '已归档';
@@ -3845,40 +3835,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get onboardingContinue => '继续 →';
-
-  @override
-  String get onboardingNameHeadline => '如果你愿意，起一个公开的 *@名字*。';
-
-  @override
-  String get onboardingNameLine => '公开名字能让别人找到你。跳过会更私密，你随时可以以后再加。';
-
-  @override
-  String get onboardingNameSkip => '先跳过 →';
-
-  @override
-  String onboardingNameClaim(Object handle) {
-    return '使用 @$handle →';
-  }
-
-  @override
-  String get onboardingInviteHeadline => '现在，*邀请一个人*。';
-
-  @override
-  String get onboardingInviteLead => '用任何聊天软件发一个链接。它会打开 Kryfo，或告诉对方去哪里下载。';
-
-  @override
-  String get onboardingInviteSomeone => '邀请一个人 →';
-
-  @override
-  String get onboardingInviteGettingReady => '正在准备你的链接…';
-
-  @override
-  String inviteShareText(Object myId, Object link, Object download) {
-    return '在 Kryfo 上加我。我的名字是 $myId\n\n点这里加我：\n$link\n\n还没有 Kryfo？在这里下载：\n$download\n\nKryfo 是一款私密通讯应用。不用手机号，不用邮箱。';
-  }
-
-  @override
-  String get inviteNotReady => '你的链接快好了。稍后再试一次。';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -9261,6 +9217,203 @@ class AppLocalizationsZh extends AppLocalizations {
       'Kryfo 运行时需要内存中的一个私有文件夹，而这台电脑没有提供，所以 Kryfo 不会打开。';
 
   @override
+  String get inviteNotYet => '此邀请尚未生效。请检查手机上的时间。';
+
+  @override
+  String get inviteExpired => '此邀请已过期。请索取新的邀请。';
+
+  @override
+  String get inviteDamaged => '此邀请已损坏。请索取新的邀请。';
+
+  @override
+  String get helloSent => '请求已发送。对方上线后就会看到。';
+
+  @override
+  String get inviteNeeds06 => '需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get helloSentOld => '请求已发送。如果对方使用的是旧版 Kryfo，需要先更新。';
+
+  @override
+  String get modesPickHow => '选择消息的传送方式。随时都可以更改。';
+
+  @override
+  String get modesPrivate => '私密';
+
+  @override
+  String get modesPrivateTag => 'Tor · 需要时用网桥';
+
+  @override
+  String get modesPrivateLine => '没有人能知道你的 IP 地址或你是谁，连我们的服务器也不能。遇到封锁会自己找到出路。';
+
+  @override
+  String get modesDefault => '默认';
+
+  @override
+  String get modesFastTag => '直连我们的服务器';
+
+  @override
+  String get modesFastLine =>
+      '不经过 Tor，消息到得更快，也更省电。我们的服务器只在你连接期间看到你的 IP 地址，从不记录或保存。也从不知道你说了什么。你的联系人永远看不到它。';
+
+  @override
+  String get modesFastConnected => '快速 · 已连接';
+
+  @override
+  String get modesFastConnecting => '快速 · 正在连接';
+
+  @override
+  String get modesFastDown => '快速 · 我们的服务器没有响应';
+
+  @override
+  String get modesBackupReady => '始终有一台备用服务器待命，即使其中一台出问题，你也不会断线。';
+
+  @override
+  String get modesDetails => '详情';
+
+  @override
+  String get modesBothLine => '两种方式都对每条消息端到端加密。不同的只是谁能看到你的 IP 地址。';
+
+  @override
+  String get modesConnectionBridges => '连接与网桥';
+
+  @override
+  String get modesWhatServersSee => '我们的服务器能看到什么';
+
+  @override
+  String get serversTitle => '快速模式的服务器';
+
+  @override
+  String get serversLine => '每条消息同时发往两台服务器。先响应的那台负责送达，一台停了另一台就接手。';
+
+  @override
+  String get serversOne => '服务器 1';
+
+  @override
+  String get serversTwo => '服务器 2 · 另一家服务商';
+
+  @override
+  String get serversConnected => '已连接';
+
+  @override
+  String get serversConnecting => '正在连接';
+
+  @override
+  String get serversNotAnswering => '没有响应';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms 毫秒';
+  }
+
+  @override
+  String get serversQuicker => '更快';
+
+  @override
+  String get serversBackups => '公共中继';
+
+  @override
+  String get serversBackupsLine =>
+      '在服务器 1 停摆期间使用，而且只经 Tor 连接，所以它们永远看不到你的 IP 地址。';
+
+  @override
+  String get serversStandingBy => '待命中';
+
+  @override
+  String get serversInUse => '使用中';
+
+  @override
+  String get homeMergedTitle => '中继和快速现已合二为一';
+
+  @override
+  String get homeMergedLine =>
+      '你正在使用快速模式。始终有一台备用服务器待命，即使其中一台出问题，你也不会断线。我们的服务器能看到你的 IP 地址，但永远看不到你说了什么。';
+
+  @override
+  String get homeMergedGotIt => '知道了';
+
+  @override
+  String get homeMergedUsePrivate => '改用私密';
+
+  @override
+  String get homeOursDownTitle => '我们的服务器没有响应';
+
+  @override
+  String get homeOursDownLine => '几分钟后，只要 Tor 能连通，消息也会走公共中继，我们任意一台服务器一响应就换回来。';
+
+  @override
+  String get homeUsePrivate => '使用私密';
+
+  @override
+  String get homeSwitchedToPrivate => '已切换到私密';
+
+  @override
+  String get homeUseFast => '使用快速';
+
+  @override
+  String get homeSwitchedToFastRoute => '已切换到快速';
+
+  @override
+  String get bridgesFastGetsThrough => '快速模式直连我们的服务器，通常都能连通。也可以让 Kryfo 自己找办法。';
+
+  @override
+  String get appServersNotAnswering => '服务器没有响应';
+
+  @override
+  String get settingsPrivateTor => '私密 · Tor';
+
+  @override
+  String get seenOurServers => '我们的服务器';
+
+  @override
+  String get seenIpWhy =>
+      '私密模式下一切都经 Tor 发出，我们的服务器看到的是出口节点，永远不是你。快速模式下连接直达我们的两台服务器：你连接期间它们能看到你的 IP 地址，但不留任何记录。第一台停摆期间，快速模式也会使用公共中继，而且只经 Tor 连接。';
+
+  @override
+  String get chatAlbumItDisappearsWithNo => '这个相册会从双方的手机上删除，除非已被保存。此操作无法撤销。';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      '这个相册会从所有人的手机上删除，除非已被保存。此操作无法撤销。';
+
+  @override
+  String get homeInviteSomeone => '邀请一个人';
+
+  @override
+  String get onboardingNameHeadline => '如果你愿意，起一个公开的 *@名字*。';
+
+  @override
+  String get onboardingNameLine => '公开名字能让别人找到你。跳过会更私密，你随时可以以后再加。';
+
+  @override
+  String get onboardingNameSkip => '先跳过 →';
+
+  @override
+  String onboardingNameClaim(Object handle) {
+    return '使用 @$handle →';
+  }
+
+  @override
+  String get onboardingInviteHeadline => '现在，*邀请一个人*。';
+
+  @override
+  String get onboardingInviteLead => '用任何聊天软件发一个链接。它会打开 Kryfo，或告诉对方去哪里下载。';
+
+  @override
+  String get onboardingInviteSomeone => '邀请一个人 →';
+
+  @override
+  String get onboardingInviteGettingReady => '正在准备你的链接…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return '在 Kryfo 上加我。我的名字是 $myId\n\n点这里加我：\n$link\n\n还没有 Kryfo？在这里下载：\n$download\n\nKryfo 是一款私密通讯应用。不用手机号，不用邮箱。';
+  }
+
+  @override
+  String get inviteNotReady => '你的链接快好了。稍后再试一次。';
+
+  @override
   String get photoCropTitle => '移动和缩放';
 
   @override
@@ -9408,139 +9561,112 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get modesPickHow => '选择消息的传送方式。随时都可以更改。';
-
-  @override
-  String get modesPrivate => '私密';
-
-  @override
-  String get modesPrivateTag => 'Tor · 需要时用网桥';
-
-  @override
-  String get modesPrivateLine => '没有人能知道你的 IP 地址或你是谁，连我们的服务器也不能。遇到封锁会自己找到出路。';
-
-  @override
-  String get modesDefault => '默认';
-
-  @override
-  String get modesFastTag => '直连我们的服务器';
-
-  @override
-  String get modesFastLine =>
-      '不经过 Tor，消息到得更快，也更省电。我们的服务器只在你连接期间看到你的 IP 地址，从不记录或保存。也从不知道你说了什么。你的联系人永远看不到它。';
-
-  @override
-  String get modesFastConnected => '快速 · 已连接';
-
-  @override
-  String get modesFastConnecting => '快速 · 正在连接';
-
-  @override
-  String get modesFastDown => '快速 · 我们的服务器没有响应';
-
-  @override
-  String get modesBackupReady => '始终有一台备用服务器待命，即使其中一台出问题，你也不会断线。';
-
-  @override
-  String get modesDetails => '详情';
-
-  @override
-  String get modesBothLine => '两种方式都对每条消息端到端加密。不同的只是谁能看到你的 IP 地址。';
-
-  @override
-  String get modesConnectionBridges => '连接与网桥';
-
-  @override
-  String get modesWhatServersSee => '我们的服务器能看到什么';
-
-  @override
-  String get serversTitle => '快速模式的服务器';
-
-  @override
-  String get serversLine => '每条消息同时发往两台服务器。先响应的那台负责送达，一台停了另一台就接手。';
-
-  @override
-  String get serversOne => '服务器 1';
-
-  @override
-  String get serversTwo => '服务器 2 · 另一家服务商';
-
-  @override
-  String get serversConnected => '已连接';
-
-  @override
-  String get serversConnecting => '正在连接';
-
-  @override
-  String get serversNotAnswering => '没有响应';
-
-  @override
-  String serversMs(int ms) {
-    return '$ms 毫秒';
+  String transferDoneOf(String done, String total) {
+    return '$done/$total';
   }
 
   @override
-  String get serversQuicker => '更快';
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
 
   @override
-  String get serversBackups => '公共中继';
+  String get transferLeftSoon => '剩余不到一分钟';
 
   @override
-  String get serversBackupsLine =>
-      '在服务器 1 停摆期间使用，而且只经 Tor 连接，所以它们永远看不到你的 IP 地址。';
+  String transferLeftMinutes(String n) {
+    return '剩余约 $n 分钟';
+  }
 
   @override
-  String get serversStandingBy => '待命中';
+  String transferLeftHours(String n) {
+    return '剩余约 $n 小时';
+  }
 
   @override
-  String get serversInUse => '使用中';
+  String transferSending(String detail) {
+    return '正在发送 · $detail';
+  }
 
   @override
-  String get homeMergedTitle => '中继和快速现已合二为一';
+  String transferReceiving(String detail) {
+    return '正在接收 · $detail';
+  }
 
   @override
-  String get homeMergedLine =>
-      '你正在使用快速模式。始终有一台备用服务器待命，即使其中一台出问题，你也不会断线。我们的服务器能看到你的 IP 地址，但永远看不到你说了什么。';
+  String transferBoth(String detail) {
+    return '正在收发 · $detail';
+  }
 
   @override
-  String get homeMergedGotIt => '知道了';
+  String get transferPause => '暂停';
 
   @override
-  String get homeMergedUsePrivate => '改用私密';
+  String get transferPauseDownload => '暂停下载';
 
   @override
-  String get homeOursDownTitle => '我们的服务器没有响应';
+  String get transferDownload => '下载';
 
   @override
-  String get homeOursDownLine => '几分钟后，只要 Tor 能连通，消息也会走公共中继，我们任意一台服务器一响应就换回来。';
+  String get transferResume => '继续';
 
   @override
-  String get homeUsePrivate => '使用私密';
+  String get transferOnWifi => '连接 Wi-Fi 时下载';
 
   @override
-  String get homeSwitchedToPrivate => '已切换到私密';
+  String transferPausedAt(String detail) {
+    return '已暂停 · $detail';
+  }
 
   @override
-  String get homeUseFast => '使用快速';
+  String get transferTapToDownload => '点按下载';
 
   @override
-  String get homeSwitchedToFastRoute => '已切换到快速';
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
 
   @override
-  String get bridgesFastGetsThrough => '快速模式直连我们的服务器，通常都能连通。也可以让 Kryfo 自己找办法。';
+  String get transferNoteTitle => '文件传输';
 
   @override
-  String get appServersNotAnswering => '服务器没有响应';
+  String get transferChannel => '文件传输';
 
   @override
-  String get settingsPrivateTor => '私密 · Tor';
+  String get transferChannelLine => '在发送或下载文件时显示。绝不显示聊天或文件的名称。';
 
   @override
-  String get seenOurServers => '我们的服务器';
+  String get autoGetTitle => '自动下载';
 
   @override
-  String get seenIpWhy =>
-      '私密模式下一切都经 Tor 发出，我们的服务器看到的是出口节点，永远不是你。快速模式下连接直达我们的两台服务器：你连接期间它们能看到你的 IP 地址，但不留任何记录。第一台停摆期间，快速模式也会使用公共中继，而且只经 Tor 连接。';
+  String get autoGetLine => '文件会按这里的设置自动到达。等待中的文件会在文件服务器上为你保留，最多一周。';
+
+  @override
+  String get autoGetPhotos => '照片';
+
+  @override
+  String get autoGetVideos => '视频';
+
+  @override
+  String get autoGetFiles => '文件';
+
+  @override
+  String get autoGetAlways => 'Wi-Fi 和移动数据';
+
+  @override
+  String get autoGetWifi => '仅 Wi-Fi';
+
+  @override
+  String get autoGetNever => '从不，我点按下载';
+
+  @override
+  String get autoGetVoice => '语音消息总是会下载。';
+
+  @override
+  String get settingsFiles => '文件';
+
+  @override
+  String get fileSheetOpenWith => '用其他应用打开';
 
   @override
   String get desktopLockAccountBody => 'Kryfo 在这台电脑上保存的所有内容都已加密。它会用你的用户账户打开。';
@@ -10937,9 +11063,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatItDisappearsWithNo => '訊息會從雙方的手機上刪除，除非已被儲存。這個動作無法復原。';
 
   @override
-  String get chatAlbumItDisappearsWithNo => '這個相簿會從雙方的手機上刪除，除非已被儲存。這個動作無法復原。';
-
-  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -12113,10 +12236,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupChatItDisappearsWithNo => '訊息會從所有人的手機上刪除，除非已被儲存。這個動作無法復原。';
 
   @override
-  String get groupChatAlbumItDisappearsWithNo =>
-      '這個相簿會從所有人的手機上刪除，除非已被儲存。這個動作無法復原。';
-
-  @override
   String get groupChatUnsend => '收回';
 
   @override
@@ -12646,9 +12765,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get homeAddSomeone => '新增聯絡人';
-
-  @override
-  String get homeInviteSomeone => '邀請一個人';
 
   @override
   String get homeArchived => '已封存';
@@ -13463,40 +13579,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get onboardingContinue => '繼續 →';
-
-  @override
-  String get onboardingNameHeadline => '如果你願意，取一個公開的 *@名字*。';
-
-  @override
-  String get onboardingNameLine => '公開名字能讓別人找到你。跳過會更私密，你隨時可以之後再加。';
-
-  @override
-  String get onboardingNameSkip => '先跳過 →';
-
-  @override
-  String onboardingNameClaim(Object handle) {
-    return '使用 @$handle →';
-  }
-
-  @override
-  String get onboardingInviteHeadline => '現在，*邀請一個人*。';
-
-  @override
-  String get onboardingInviteLead => '用任何通訊軟體傳一個連結。它會開啟 Kryfo，或告訴對方去哪裡下載。';
-
-  @override
-  String get onboardingInviteSomeone => '邀請一個人 →';
-
-  @override
-  String get onboardingInviteGettingReady => '正在準備你的連結…';
-
-  @override
-  String inviteShareText(Object myId, Object link, Object download) {
-    return '在 Kryfo 上加我。我的名字是 $myId\n\n點這裡加我：\n$link\n\n還沒有 Kryfo？在這裡下載：\n$download\n\nKryfo 是一款私密通訊軟體。不需要手機號碼，也不需要電子郵件。';
-  }
-
-  @override
-  String get inviteNotReady => '你的連結快好了。稍後再試一次。';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -18761,6 +18843,203 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       'Kryfo 執行時需要記憶體中的一個私有資料夾，而這台電腦沒有提供，所以 Kryfo 不會開啟。';
 
   @override
+  String get inviteNotYet => '此邀請尚未生效。請檢查手機上的時間。';
+
+  @override
+  String get inviteExpired => '此邀請已過期。請索取新的邀請。';
+
+  @override
+  String get inviteDamaged => '此邀請已損壞。請索取新的邀請。';
+
+  @override
+  String get helloSent => '請求已送出。對方上線後就會看到。';
+
+  @override
+  String get inviteNeeds06 => '需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get helloSentOld => '請求已送出。如果對方使用的是舊版 Kryfo，需要先更新。';
+
+  @override
+  String get modesPickHow => '選擇訊息的傳送方式。隨時都可以更改。';
+
+  @override
+  String get modesPrivate => '私密';
+
+  @override
+  String get modesPrivateTag => 'Tor · 需要時用網橋';
+
+  @override
+  String get modesPrivateLine => '沒有人能知道你的 IP 位址或你是誰，連我們的伺服器也不能。遇到封鎖會自己找到出路。';
+
+  @override
+  String get modesDefault => '預設';
+
+  @override
+  String get modesFastTag => '直連我們的伺服器';
+
+  @override
+  String get modesFastLine =>
+      '不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。也從不知道你說了什麼。你的聯絡人永遠看不到它。';
+
+  @override
+  String get modesFastConnected => '快速 · 已連線';
+
+  @override
+  String get modesFastConnecting => '快速 · 連線中';
+
+  @override
+  String get modesFastDown => '快速 · 我們的伺服器沒有回應';
+
+  @override
+  String get modesBackupReady => '始終有一台備用伺服器待命，即使其中一台出問題，你也不會斷線。';
+
+  @override
+  String get modesDetails => '詳情';
+
+  @override
+  String get modesBothLine => '兩種方式都對每則訊息端對端加密。不同的只是誰能看到你的 IP 位址。';
+
+  @override
+  String get modesConnectionBridges => '連線與網橋';
+
+  @override
+  String get modesWhatServersSee => '我們的伺服器能看到什麼';
+
+  @override
+  String get serversTitle => '快速模式的伺服器';
+
+  @override
+  String get serversLine => '每則訊息同時送往兩台伺服器。先回應的那台負責送達，一台停了另一台就接手。';
+
+  @override
+  String get serversOne => '伺服器 1';
+
+  @override
+  String get serversTwo => '伺服器 2 · 另一家服務商';
+
+  @override
+  String get serversConnected => '已連線';
+
+  @override
+  String get serversConnecting => '連線中';
+
+  @override
+  String get serversNotAnswering => '沒有回應';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms 毫秒';
+  }
+
+  @override
+  String get serversQuicker => '更快';
+
+  @override
+  String get serversBackups => '公共中繼';
+
+  @override
+  String get serversBackupsLine =>
+      '在伺服器 1 停擺期間使用，而且只經 Tor 連線，所以它們永遠看不到你的 IP 位址。';
+
+  @override
+  String get serversStandingBy => '待命中';
+
+  @override
+  String get serversInUse => '使用中';
+
+  @override
+  String get homeMergedTitle => '中繼和快速現已合而為一';
+
+  @override
+  String get homeMergedLine =>
+      '你正在使用快速模式。始終有一台備用伺服器待命，即使其中一台出問題，你也不會斷線。我們的伺服器能看到你的 IP 位址，但永遠看不到你說了什麼。';
+
+  @override
+  String get homeMergedGotIt => '知道了';
+
+  @override
+  String get homeMergedUsePrivate => '改用私密';
+
+  @override
+  String get homeOursDownTitle => '我們的伺服器沒有回應';
+
+  @override
+  String get homeOursDownLine => '幾分鐘後，只要 Tor 能連通，訊息也會走公共中繼，我們任一台伺服器一回應就換回來。';
+
+  @override
+  String get homeUsePrivate => '使用私密';
+
+  @override
+  String get homeSwitchedToPrivate => '已切換到私密';
+
+  @override
+  String get homeUseFast => '使用快速';
+
+  @override
+  String get homeSwitchedToFastRoute => '已切換到快速';
+
+  @override
+  String get bridgesFastGetsThrough => '快速模式直連我們的伺服器，通常都能連通。也可以讓 Kryfo 自己找辦法。';
+
+  @override
+  String get appServersNotAnswering => '伺服器沒有回應';
+
+  @override
+  String get settingsPrivateTor => '私密 · Tor';
+
+  @override
+  String get seenOurServers => '我們的伺服器';
+
+  @override
+  String get seenIpWhy =>
+      '私密模式下一切都經 Tor 送出，我們的伺服器看到的是出口節點，永遠不是你。快速模式下連線直達我們的兩台伺服器：你連線期間它們能看到你的 IP 位址，但不留任何紀錄。第一台停擺期間，快速模式也會使用公共中繼，而且只經 Tor 連線。';
+
+  @override
+  String get chatAlbumItDisappearsWithNo => '這個相簿會從雙方的手機上刪除，除非已被儲存。這個動作無法復原。';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      '這個相簿會從所有人的手機上刪除，除非已被儲存。這個動作無法復原。';
+
+  @override
+  String get homeInviteSomeone => '邀請一個人';
+
+  @override
+  String get onboardingNameHeadline => '如果你願意，取一個公開的 *@名字*。';
+
+  @override
+  String get onboardingNameLine => '公開名字能讓別人找到你。跳過會更私密，你隨時可以之後再加。';
+
+  @override
+  String get onboardingNameSkip => '先跳過 →';
+
+  @override
+  String onboardingNameClaim(Object handle) {
+    return '使用 @$handle →';
+  }
+
+  @override
+  String get onboardingInviteHeadline => '現在，*邀請一個人*。';
+
+  @override
+  String get onboardingInviteLead => '用任何通訊軟體傳一個連結。它會開啟 Kryfo，或告訴對方去哪裡下載。';
+
+  @override
+  String get onboardingInviteSomeone => '邀請一個人 →';
+
+  @override
+  String get onboardingInviteGettingReady => '正在準備你的連結…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return '在 Kryfo 上加我。我的名字是 $myId\n\n點這裡加我：\n$link\n\n還沒有 Kryfo？在這裡下載：\n$download\n\nKryfo 是一款私密通訊軟體。不需要手機號碼，也不需要電子郵件。';
+  }
+
+  @override
+  String get inviteNotReady => '你的連結快好了。稍後再試一次。';
+
+  @override
   String get photoCropTitle => '移動和縮放';
 
   @override
@@ -18908,139 +19187,112 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get modesPickHow => '選擇訊息的傳送方式。隨時都可以更改。';
-
-  @override
-  String get modesPrivate => '私密';
-
-  @override
-  String get modesPrivateTag => 'Tor · 需要時用網橋';
-
-  @override
-  String get modesPrivateLine => '沒有人能知道你的 IP 位址或你是誰，連我們的伺服器也不能。遇到封鎖會自己找到出路。';
-
-  @override
-  String get modesDefault => '預設';
-
-  @override
-  String get modesFastTag => '直連我們的伺服器';
-
-  @override
-  String get modesFastLine =>
-      '不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。也從不知道你說了什麼。你的聯絡人永遠看不到它。';
-
-  @override
-  String get modesFastConnected => '快速 · 已連線';
-
-  @override
-  String get modesFastConnecting => '快速 · 連線中';
-
-  @override
-  String get modesFastDown => '快速 · 我們的伺服器沒有回應';
-
-  @override
-  String get modesBackupReady => '始終有一台備用伺服器待命，即使其中一台出問題，你也不會斷線。';
-
-  @override
-  String get modesDetails => '詳情';
-
-  @override
-  String get modesBothLine => '兩種方式都對每則訊息端對端加密。不同的只是誰能看到你的 IP 位址。';
-
-  @override
-  String get modesConnectionBridges => '連線與網橋';
-
-  @override
-  String get modesWhatServersSee => '我們的伺服器能看到什麼';
-
-  @override
-  String get serversTitle => '快速模式的伺服器';
-
-  @override
-  String get serversLine => '每則訊息同時送往兩台伺服器。先回應的那台負責送達，一台停了另一台就接手。';
-
-  @override
-  String get serversOne => '伺服器 1';
-
-  @override
-  String get serversTwo => '伺服器 2 · 另一家服務商';
-
-  @override
-  String get serversConnected => '已連線';
-
-  @override
-  String get serversConnecting => '連線中';
-
-  @override
-  String get serversNotAnswering => '沒有回應';
-
-  @override
-  String serversMs(int ms) {
-    return '$ms 毫秒';
+  String transferDoneOf(String done, String total) {
+    return '$done/$total';
   }
 
   @override
-  String get serversQuicker => '更快';
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
 
   @override
-  String get serversBackups => '公共中繼';
+  String get transferLeftSoon => '剩不到一分鐘';
 
   @override
-  String get serversBackupsLine =>
-      '在伺服器 1 停擺期間使用，而且只經 Tor 連線，所以它們永遠看不到你的 IP 位址。';
+  String transferLeftMinutes(String n) {
+    return '剩約 $n 分鐘';
+  }
 
   @override
-  String get serversStandingBy => '待命中';
+  String transferLeftHours(String n) {
+    return '剩約 $n 小時';
+  }
 
   @override
-  String get serversInUse => '使用中';
+  String transferSending(String detail) {
+    return '傳送中 · $detail';
+  }
 
   @override
-  String get homeMergedTitle => '中繼和快速現已合而為一';
+  String transferReceiving(String detail) {
+    return '接收中 · $detail';
+  }
 
   @override
-  String get homeMergedLine =>
-      '你正在使用快速模式。始終有一台備用伺服器待命，即使其中一台出問題，你也不會斷線。我們的伺服器能看到你的 IP 位址，但永遠看不到你說了什麼。';
+  String transferBoth(String detail) {
+    return '收發中 · $detail';
+  }
 
   @override
-  String get homeMergedGotIt => '知道了';
+  String get transferPause => '暫停';
 
   @override
-  String get homeMergedUsePrivate => '改用私密';
+  String get transferPauseDownload => '暫停下載';
 
   @override
-  String get homeOursDownTitle => '我們的伺服器沒有回應';
+  String get transferDownload => '下載';
 
   @override
-  String get homeOursDownLine => '幾分鐘後，只要 Tor 能連通，訊息也會走公共中繼，我們任一台伺服器一回應就換回來。';
+  String get transferResume => '繼續';
 
   @override
-  String get homeUsePrivate => '使用私密';
+  String get transferOnWifi => '連上 Wi-Fi 時下載';
 
   @override
-  String get homeSwitchedToPrivate => '已切換到私密';
+  String transferPausedAt(String detail) {
+    return '已暫停 · $detail';
+  }
 
   @override
-  String get homeUseFast => '使用快速';
+  String get transferTapToDownload => '輕觸即可下載';
 
   @override
-  String get homeSwitchedToFastRoute => '已切換到快速';
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
 
   @override
-  String get bridgesFastGetsThrough => '快速模式直連我們的伺服器，通常都能連通。也可以讓 Kryfo 自己找辦法。';
+  String get transferNoteTitle => '檔案傳輸';
 
   @override
-  String get appServersNotAnswering => '伺服器沒有回應';
+  String get transferChannel => '檔案傳輸';
 
   @override
-  String get settingsPrivateTor => '私密 · Tor';
+  String get transferChannelLine => '在傳送或下載檔案時顯示。絕不顯示聊天或檔案的名稱。';
 
   @override
-  String get seenOurServers => '我們的伺服器';
+  String get autoGetTitle => '自動下載';
 
   @override
-  String get seenIpWhy =>
-      '私密模式下一切都經 Tor 送出，我們的伺服器看到的是出口節點，永遠不是你。快速模式下連線直達我們的兩台伺服器：你連線期間它們能看到你的 IP 位址，但不留任何紀錄。第一台停擺期間，快速模式也會使用公共中繼，而且只經 Tor 連線。';
+  String get autoGetLine => '檔案會依這裡的設定自動送達。等待中的檔案會在檔案伺服器上為你保留，最多一週。';
+
+  @override
+  String get autoGetPhotos => '照片';
+
+  @override
+  String get autoGetVideos => '影片';
+
+  @override
+  String get autoGetFiles => '檔案';
+
+  @override
+  String get autoGetAlways => 'Wi-Fi 和行動數據';
+
+  @override
+  String get autoGetWifi => '僅限 Wi-Fi';
+
+  @override
+  String get autoGetNever => '永不，我輕觸下載';
+
+  @override
+  String get autoGetVoice => '語音訊息一律會下載。';
+
+  @override
+  String get settingsFiles => '檔案';
+
+  @override
+  String get fileSheetOpenWith => '用其他 App 開啟';
 
   @override
   String get desktopLockAccountBody => 'Kryfo 在這台電腦上保存的所有內容都已加密。它會用你的使用者帳戶開啟。';

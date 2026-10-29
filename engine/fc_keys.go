@@ -85,10 +85,23 @@ func subscribeFcKey(ident int, invite, skHex string) error {
 	fcKeys[key] = fcKey{skHex, pk}
 	fcKeysMu.Unlock()
 	startSub(key, func(ctx context.Context) {
-		nostrSubscribeRunnerFc(ctx, key, skHex, pk)
+		nostrSubscribeRunnerInvite(ctx, key, skHex, pk)
 	})
 	log.Printf("nostr: watching an invite's first-contact addr %s...", pk[:12])
 	return nil
+}
+
+// an invite's first-contact address: each line is the key the seal was
+// signed with, a bar and what the wrap carried, so the app checks the seal
+// is the hello seal key before anything is opened (identity v4 3.1, 3.3)
+func nostrSubscribeRunnerInvite(ctx context.Context, tag, fcSk, fcPk string) {
+	nostrSubscribeRunnerAt(ctx, laneFirstContact, tag, fcPk, func(gw nostr2.Event) (string, nostr2.Timestamp, error) {
+		content, sealPk, at, err := nip17UnwrapFirstContactWithStamped(fcSk, gw)
+		if err != nil {
+			return "", 0, err
+		}
+		return sealPk + "|" + content, at, nil
+	})
 }
 
 // the invite retired: nothing listens on its key

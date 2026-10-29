@@ -243,6 +243,10 @@ class ArrivalIo implements AppIo {
   @override
   Future<bool> hasSession(String peer) async => true;
   @override
+  Future<({int ident, String cipher})> seal(String peer, String plain) async =>
+      (ident: 0, cipher: await encrypt(peer, plain));
+
+  @override
   Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
   @override
   void listen(int ident, String xPub, {bool fresh = false}) =>
@@ -1496,6 +1500,26 @@ class ArrivalRows implements HaloDb {
   Future<Map<String, Object?>?> sentMediaRow(String msgUid) async =>
       _hit('sentMediaRow', msgUid, null);
 
+  @override
+  Future<String?> incomingFilePath(String msgUid) async {
+    final m = msg(msgUid);
+    if (m == null || m['direction'] != 'in') return null;
+    return (m['file_path'] ?? m['media_path']) as String?;
+  }
+
+  @override
+  Future<bool> fileNeverCame(String msgUid, String line) async {
+    final m = msg(msgUid);
+    if (m == null || m['direction'] != 'in') return false;
+    m['plaintext'] = [
+      m['plaintext'] as String? ?? '',
+      line,
+    ].where((s) => s.trim().isNotEmpty).join('\n');
+    m['media_path'] = null;
+    m['file_path'] = null;
+    return true;
+  }
+
   // ---- groups ----
   @override
   Future<bool> groupExists(String groupId) async =>
@@ -2332,6 +2356,11 @@ class ArrivalRows implements HaloDb {
     return true;
   }
 
+  // hellos owed: (owner key, invite answered, first-contact key)
+  final hellosOwed = <(String, String, String)>[];
+  @override
+  Future<void> oweHello(String ownerHex, String answersHex, String fc) async =>
+      hellosOwed.add((ownerHex, answersHex, fc));
   // ---- profile photos: the app's own rows on the host's sqlite, with the
   // people above copied in as each is asked ----
   _PhotoHost? _photoHost;

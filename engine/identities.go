@@ -35,6 +35,9 @@ type pairKey struct {
 
 var errNoSuchIdentity = errors.New("no such identity")
 
+// a call for a seeded pair that came without its seed
+var errSeedMissing = errors.New("the pair is seeded and the call has no seed")
+
 // identity [ident], as the app put it
 func identityOf(ident int) (xid, error) {
 	identsMu.Lock()
@@ -124,7 +127,8 @@ func identDrop(ident int) {
 }
 
 // the address seed of a pair made by a v4 first contact: from now on its
-// addresses mix it in. a pair keeps its seed for life
+// addresses mix it in. a new first contact with the same peer (a re-add)
+// makes the pair again with its own seed, which replaces the one held
 //
 //export HaloPairSeed
 func HaloPairSeed(cIdent C.int, cPeer, cSeedHex *C.char) *C.char {
@@ -138,21 +142,29 @@ func HaloPairSeed(cIdent C.int, cPeer, cSeedHex *C.char) *C.char {
 	}
 	var s [32]byte
 	copy(s[:], b)
-	if err := putPairSeed(int(cIdent), peer, s); err != nil {
-		return C.CString("error: " + err.Error())
-	}
+	putPairSeedAfresh(int(cIdent), peer, s)
 	return C.CString("ok")
 }
 
+// a call naming a seed for the pair: one it has not seen it takes, another
+// than the one it holds is refused (a call on a stale pair fails closed)
 func putPairSeed(ident int, peer [32]byte, s [32]byte) error {
 	identsMu.Lock()
 	defer identsMu.Unlock()
 	k := pairKey{ident, hex.EncodeToString(peer[:])}
 	if had, ok := pairSeeds[k]; ok && had != s {
-		return errors.New("the pair has its seed already")
+		return errors.New("the pair has another seed")
 	}
 	pairSeeds[k] = s
 	return nil
+}
+
+// the pair made again by a new first contact (HaloPairSeed, which the app
+// calls only then and at start): its seed replaces the one held
+func putPairSeedAfresh(ident int, peer [32]byte, s [32]byte) {
+	identsMu.Lock()
+	defer identsMu.Unlock()
+	pairSeeds[pairKey{ident, hex.EncodeToString(peer[:])}] = s
 }
 
 // the subscription of [ident]'s pair with [peerHex]: the main identity's
@@ -193,6 +205,16 @@ func identArg(c C.int) int { return int(c) }
 type identPeer struct {
 	I int    `json:"i"`
 	X string `json:"x"`
+	// the pair's seed in hex, for a pair made by a v4 first contact
+	S string `json:"s,omitempty"`
+}
+
+// the pair as pairArg reads it
+func (p identPeer) arg() string {
+	if p.S == "" {
+		return p.X
+	}
+	return p.X + "." + p.S
 }
 
 func (p identPeer) String() string { return fmt.Sprintf("%d:%s", p.I, p.X) }

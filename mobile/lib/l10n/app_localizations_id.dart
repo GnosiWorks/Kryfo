@@ -1367,10 +1367,6 @@ class AppLocalizationsId extends AppLocalizations {
       'Pesan ini akan dihapus dari kedua ponsel, kecuali sudah disimpan. Ini tidak bisa dibatalkan.';
 
   @override
-  String get chatAlbumItDisappearsWithNo =>
-      'Album ini akan dihapus dari kedua ponsel, kecuali sudah disimpan. Ini tidak bisa dibatalkan.';
-
-  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -2618,10 +2614,6 @@ class AppLocalizationsId extends AppLocalizations {
       'Pesan ini akan dihapus dari ponsel semua orang, kecuali sudah disimpan. Ini tidak bisa dibatalkan.';
 
   @override
-  String get groupChatAlbumItDisappearsWithNo =>
-      'Album ini akan dihapus dari ponsel semua orang, kecuali sudah disimpan. Ini tidak bisa dibatalkan.';
-
-  @override
   String get groupChatUnsend => 'Tarik pesan';
 
   @override
@@ -3164,9 +3156,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get homeAddSomeone => 'Tambah orang';
-
-  @override
-  String get homeInviteSomeone => 'Undang seseorang';
 
   @override
   String get homeArchived => 'Arsip';
@@ -4031,42 +4020,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get onboardingContinue => 'Lanjut →';
-
-  @override
-  String get onboardingNameHeadline => 'Sebuah *@nama* publik, kalau mau.';
-
-  @override
-  String get onboardingNameLine =>
-      'Nama publik membuat orang bisa menemukanmu. Melewatinya membuatmu lebih privat, kamu selalu bisa menambahkannya nanti.';
-
-  @override
-  String get onboardingNameSkip => 'Lewati dulu →';
-
-  @override
-  String onboardingNameClaim(Object handle) {
-    return 'Ambil @$handle →';
-  }
-
-  @override
-  String get onboardingInviteHeadline => 'Sekarang, *undang seseorang*.';
-
-  @override
-  String get onboardingInviteLead =>
-      'Kirim tautan lewat aplikasi pesan apa pun. Tautan itu membuka Kryfo, atau menunjukkan tempat mengunduhnya.';
-
-  @override
-  String get onboardingInviteSomeone => 'Undang seseorang →';
-
-  @override
-  String get onboardingInviteGettingReady => 'Menyiapkan tautanmu…';
-
-  @override
-  String inviteShareText(Object myId, Object link, Object download) {
-    return 'Tambahkan aku di Kryfo. Namaku di sana $myId\n\nKetuk untuk menambahkanku:\n$link\n\nBelum punya Kryfo? Unduh di sini:\n$download\n\nKryfo adalah aplikasi pesan privat. Tanpa nomor telepon, tanpa email.';
-  }
-
-  @override
-  String get inviteNotReady => 'Tautanmu hampir siap. Coba lagi sebentar lagi.';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -9731,6 +9684,217 @@ class AppLocalizationsId extends AppLocalizations {
       'Kryfo butuh folder pribadi di memori selama berjalan, dan komputer ini tidak menyediakannya, jadi Kryfo tidak akan dibuka.';
 
   @override
+  String get inviteNotYet =>
+      'Undangan ini belum berlaku. Periksa jam di ponselmu.';
+
+  @override
+  String get inviteExpired =>
+      'Undangan ini sudah kedaluwarsa. Minta yang baru.';
+
+  @override
+  String get inviteDamaged => 'Undangan ini rusak. Minta yang baru.';
+
+  @override
+  String get helloSent =>
+      'Permintaan terkirim. Mereka akan melihatnya saat online.';
+
+  @override
+  String get inviteNeeds06 => 'Perlu Kryfo 0.6 atau yang lebih baru.';
+
+  @override
+  String get helloSentOld =>
+      'Permintaan terkirim. Jika mereka memakai Kryfo versi lama, mereka perlu memperbarui dulu.';
+
+  @override
+  String get modesPickHow =>
+      'Pilih cara pesanmu dikirim. Kamu bisa mengubahnya kapan saja.';
+
+  @override
+  String get modesPrivate => 'Privat';
+
+  @override
+  String get modesPrivateTag => 'Tor · bridge bila perlu';
+
+  @override
+  String get modesPrivateLine =>
+      'Tak ada yang tahu alamat IP-mu atau siapa kamu, bahkan server kami. Mencari jalan sendiri melewati blokir.';
+
+  @override
+  String get modesDefault => 'Bawaan';
+
+  @override
+  String get modesFastTag => 'Langsung ke server kami';
+
+  @override
+  String get modesFastLine =>
+      'Melewati Tor, jadi pesan sampai lebih cepat dan lebih hemat baterai. Server kami melihat alamat IP-mu hanya selama kamu terhubung, dan tidak pernah mencatat atau menyimpannya. Tidak pernah isi pesanmu. Kontakmu tidak pernah melihatnya.';
+
+  @override
+  String get modesFastConnected => 'Cepat · terhubung';
+
+  @override
+  String get modesFastConnecting => 'Cepat · menghubungkan';
+
+  @override
+  String get modesFastDown => 'Cepat · server kami tidak menjawab';
+
+  @override
+  String get modesBackupReady =>
+      'Cadangan selalu siap, jadi kamu tetap terhubung walau satu mati.';
+
+  @override
+  String get modesDetails => 'Detail';
+
+  @override
+  String get modesBothLine =>
+      'Keduanya mengenkripsi setiap pesan secara end-to-end. Yang berbeda hanya siapa yang bisa melihat alamat IP-mu.';
+
+  @override
+  String get modesConnectionBridges => 'Koneksi dan bridge';
+
+  @override
+  String get modesWhatServersSee => 'Apa yang bisa dilihat server kami';
+
+  @override
+  String get serversTitle => 'Server Cepat';
+
+  @override
+  String get serversLine =>
+      'Setiap pesan dikirim ke kedua server sekaligus. Yang menjawab duluan membawanya, dan yang lain mengambil alih jika satu berhenti.';
+
+  @override
+  String get serversOne => 'Server 1';
+
+  @override
+  String get serversTwo => 'Server 2 · penyedia kedua';
+
+  @override
+  String get serversConnected => 'Terhubung';
+
+  @override
+  String get serversConnecting => 'Menghubungkan';
+
+  @override
+  String get serversNotAnswering => 'Tidak menjawab';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms md';
+  }
+
+  @override
+  String get serversQuicker => 'Lebih cepat';
+
+  @override
+  String get serversBackups => 'Relay publik';
+
+  @override
+  String get serversBackupsLine =>
+      'Dipakai selama Server 1 mati, dan hanya lewat Tor, jadi mereka tidak pernah melihat alamat IP-mu.';
+
+  @override
+  String get serversStandingBy => 'Siaga';
+
+  @override
+  String get serversInUse => 'Dipakai';
+
+  @override
+  String get homeMergedTitle => 'Relay dan Cepat kini jadi satu';
+
+  @override
+  String get homeMergedLine =>
+      'Kamu memakai Cepat. Server cadangan selalu siap, jadi kamu tetap terhubung walau satu mati. Server kami melihat alamat IP-mu, tidak pernah isi pesanmu.';
+
+  @override
+  String get homeMergedGotIt => 'Mengerti';
+
+  @override
+  String get homeMergedUsePrivate => 'Pakai Privat saja';
+
+  @override
+  String get homeOursDownTitle => 'Server kami tidak menjawab';
+
+  @override
+  String get homeOursDownLine =>
+      'Setelah beberapa menit, saat Tor tembus, pesan juga lewat relay publik, dan kembali lewat server kami begitu salah satunya menjawab.';
+
+  @override
+  String get homeUsePrivate => 'Pakai Privat';
+
+  @override
+  String get homeSwitchedToPrivate => 'Pindah ke Privat';
+
+  @override
+  String get homeUseFast => 'Pakai Cepat';
+
+  @override
+  String get homeSwitchedToFastRoute => 'Pindah ke Cepat';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'Cepat langsung ke server kami dan biasanya tembus. Atau biarkan Kryfo mencari cara sendiri.';
+
+  @override
+  String get appServersNotAnswering => 'Server tidak menjawab';
+
+  @override
+  String get settingsPrivateTor => 'Privat · Tor';
+
+  @override
+  String get seenOurServers => 'Server kami';
+
+  @override
+  String get seenIpWhy =>
+      'Di Privat semuanya keluar lewat Tor dan server kami melihat node keluar, bukan kamu. Di Cepat koneksi langsung ke dua server kami: mereka melihat alamat IP-mu selama terhubung dan tidak menyimpan catatannya. Selama server pertama mati, Cepat juga memakai relay publik, hanya lewat Tor.';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'Album ini akan dihapus dari kedua ponsel, kecuali sudah disimpan. Ini tidak bisa dibatalkan.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'Album ini akan dihapus dari ponsel semua orang, kecuali sudah disimpan. Ini tidak bisa dibatalkan.';
+
+  @override
+  String get homeInviteSomeone => 'Undang seseorang';
+
+  @override
+  String get onboardingNameHeadline => 'Sebuah *@nama* publik, kalau mau.';
+
+  @override
+  String get onboardingNameLine =>
+      'Nama publik membuat orang bisa menemukanmu. Melewatinya membuatmu lebih privat, kamu selalu bisa menambahkannya nanti.';
+
+  @override
+  String get onboardingNameSkip => 'Lewati dulu →';
+
+  @override
+  String onboardingNameClaim(Object handle) {
+    return 'Ambil @$handle →';
+  }
+
+  @override
+  String get onboardingInviteHeadline => 'Sekarang, *undang seseorang*.';
+
+  @override
+  String get onboardingInviteLead =>
+      'Kirim tautan lewat aplikasi pesan apa pun. Tautan itu membuka Kryfo, atau menunjukkan tempat mengunduhnya.';
+
+  @override
+  String get onboardingInviteSomeone => 'Undang seseorang →';
+
+  @override
+  String get onboardingInviteGettingReady => 'Menyiapkan tautanmu…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'Tambahkan aku di Kryfo. Namaku di sana $myId\n\nKetuk untuk menambahkanku:\n$link\n\nBelum punya Kryfo? Unduh di sini:\n$download\n\nKryfo adalah aplikasi pesan privat. Tanpa nomor telepon, tanpa email.';
+  }
+
+  @override
+  String get inviteNotReady => 'Tautanmu hampir siap. Coba lagi sebentar lagi.';
+
+  @override
   String get photoCropTitle => 'Geser dan atur ukuran';
 
   @override
@@ -9882,146 +10046,114 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get modesPickHow =>
-      'Pilih cara pesanmu dikirim. Kamu bisa mengubahnya kapan saja.';
-
-  @override
-  String get modesPrivate => 'Privat';
-
-  @override
-  String get modesPrivateTag => 'Tor · bridge bila perlu';
-
-  @override
-  String get modesPrivateLine =>
-      'Tak ada yang tahu alamat IP-mu atau siapa kamu, bahkan server kami. Mencari jalan sendiri melewati blokir.';
-
-  @override
-  String get modesDefault => 'Bawaan';
-
-  @override
-  String get modesFastTag => 'Langsung ke server kami';
-
-  @override
-  String get modesFastLine =>
-      'Melewati Tor, jadi pesan sampai lebih cepat dan lebih hemat baterai. Server kami melihat alamat IP-mu hanya selama kamu terhubung, dan tidak pernah mencatat atau menyimpannya. Tidak pernah isi pesanmu. Kontakmu tidak pernah melihatnya.';
-
-  @override
-  String get modesFastConnected => 'Cepat · terhubung';
-
-  @override
-  String get modesFastConnecting => 'Cepat · menghubungkan';
-
-  @override
-  String get modesFastDown => 'Cepat · server kami tidak menjawab';
-
-  @override
-  String get modesBackupReady =>
-      'Cadangan selalu siap, jadi kamu tetap terhubung walau satu mati.';
-
-  @override
-  String get modesDetails => 'Detail';
-
-  @override
-  String get modesBothLine =>
-      'Keduanya mengenkripsi setiap pesan secara end-to-end. Yang berbeda hanya siapa yang bisa melihat alamat IP-mu.';
-
-  @override
-  String get modesConnectionBridges => 'Koneksi dan bridge';
-
-  @override
-  String get modesWhatServersSee => 'Apa yang bisa dilihat server kami';
-
-  @override
-  String get serversTitle => 'Server Cepat';
-
-  @override
-  String get serversLine =>
-      'Setiap pesan dikirim ke kedua server sekaligus. Yang menjawab duluan membawanya, dan yang lain mengambil alih jika satu berhenti.';
-
-  @override
-  String get serversOne => 'Server 1';
-
-  @override
-  String get serversTwo => 'Server 2 · penyedia kedua';
-
-  @override
-  String get serversConnected => 'Terhubung';
-
-  @override
-  String get serversConnecting => 'Menghubungkan';
-
-  @override
-  String get serversNotAnswering => 'Tidak menjawab';
-
-  @override
-  String serversMs(int ms) {
-    return '$ms md';
+  String transferDoneOf(String done, String total) {
+    return '$done dari $total';
   }
 
   @override
-  String get serversQuicker => 'Lebih cepat';
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
 
   @override
-  String get serversBackups => 'Relay publik';
+  String get transferLeftSoon => 'kurang dari semenit lagi';
 
   @override
-  String get serversBackupsLine =>
-      'Dipakai selama Server 1 mati, dan hanya lewat Tor, jadi mereka tidak pernah melihat alamat IP-mu.';
+  String transferLeftMinutes(String n) {
+    return 'sekitar $n mnt lagi';
+  }
 
   @override
-  String get serversStandingBy => 'Siaga';
+  String transferLeftHours(String n) {
+    return 'sekitar $n jam lagi';
+  }
 
   @override
-  String get serversInUse => 'Dipakai';
+  String transferSending(String detail) {
+    return 'Mengirim · $detail';
+  }
 
   @override
-  String get homeMergedTitle => 'Relay dan Cepat kini jadi satu';
+  String transferReceiving(String detail) {
+    return 'Menerima · $detail';
+  }
 
   @override
-  String get homeMergedLine =>
-      'Kamu memakai Cepat. Server cadangan selalu siap, jadi kamu tetap terhubung walau satu mati. Server kami melihat alamat IP-mu, tidak pernah isi pesanmu.';
+  String transferBoth(String detail) {
+    return 'Mengirim dan menerima · $detail';
+  }
 
   @override
-  String get homeMergedGotIt => 'Mengerti';
+  String get transferPause => 'Jeda';
 
   @override
-  String get homeMergedUsePrivate => 'Pakai Privat saja';
+  String get transferPauseDownload => 'Jeda unduhan';
 
   @override
-  String get homeOursDownTitle => 'Server kami tidak menjawab';
+  String get transferDownload => 'Unduh';
 
   @override
-  String get homeOursDownLine =>
-      'Setelah beberapa menit, saat Tor tembus, pesan juga lewat relay publik, dan kembali lewat server kami begitu salah satunya menjawab.';
+  String get transferResume => 'Lanjutkan';
 
   @override
-  String get homeUsePrivate => 'Pakai Privat';
+  String get transferOnWifi => 'Diunduh lewat Wi-Fi';
 
   @override
-  String get homeSwitchedToPrivate => 'Pindah ke Privat';
+  String transferPausedAt(String detail) {
+    return 'Dijeda · $detail';
+  }
 
   @override
-  String get homeUseFast => 'Pakai Cepat';
+  String get transferTapToDownload => 'Ketuk untuk mengunduh';
 
   @override
-  String get homeSwitchedToFastRoute => 'Pindah ke Cepat';
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
 
   @override
-  String get bridgesFastGetsThrough =>
-      'Cepat langsung ke server kami dan biasanya tembus. Atau biarkan Kryfo mencari cara sendiri.';
+  String get transferNoteTitle => 'Transfer file';
 
   @override
-  String get appServersNotAnswering => 'Server tidak menjawab';
+  String get transferChannel => 'Transfer file';
 
   @override
-  String get settingsPrivateTor => 'Privat · Tor';
+  String get transferChannelLine =>
+      'Muncul selama file dikirim atau diunduh. Tidak pernah menyebut chat atau file.';
 
   @override
-  String get seenOurServers => 'Server kami';
+  String get autoGetTitle => 'Unduh otomatis';
 
   @override
-  String get seenIpWhy =>
-      'Di Privat semuanya keluar lewat Tor dan server kami melihat node keluar, bukan kamu. Di Cepat koneksi langsung ke dua server kami: mereka melihat alamat IP-mu selama terhubung dan tidak menyimpan catatannya. Selama server pertama mati, Cepat juga memakai relay publik, hanya lewat Tor.';
+  String get autoGetLine =>
+      'File datang tanpa diketuk sesuai pilihanmu di sini. File yang menunggu tetap ada di server file untukmu, paling lama seminggu.';
+
+  @override
+  String get autoGetPhotos => 'Foto';
+
+  @override
+  String get autoGetVideos => 'Video';
+
+  @override
+  String get autoGetFiles => 'File';
+
+  @override
+  String get autoGetAlways => 'Lewat Wi-Fi dan data seluler';
+
+  @override
+  String get autoGetWifi => 'Hanya lewat Wi-Fi';
+
+  @override
+  String get autoGetNever => 'Tidak pernah, aku ketuk untuk mengunduh';
+
+  @override
+  String get autoGetVoice => 'Pesan suara selalu diunduh.';
+
+  @override
+  String get settingsFiles => 'File';
+
+  @override
+  String get fileSheetOpenWith => 'Buka dengan aplikasi lain';
 
   @override
   String get desktopLockAccountBody =>

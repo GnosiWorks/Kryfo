@@ -1,6 +1,7 @@
 package app.kryfo
 
 import android.app.Application
+import android.os.Build
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.embedding.engine.dart.DartExecutor
@@ -51,6 +52,15 @@ open class HaloApplication : Application() {
                     else -> result.notImplemented()
                 }
             }
+        // the phone's android, for the window rules: boot reads it before a
+        // screen is there, and in a process with none
+        MethodChannel(engine.dartExecutor.binaryMessenger, "kryfo/phone")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "sdk" -> result.success(Build.VERSION.SDK_INT)
+                    else -> result.notImplemented()
+                }
+            }
         // the helper app mode, here so a process with no screen answers too
         MethodChannel(engine.dartExecutor.binaryMessenger, HelperPush.CHANNEL)
             .setMethodCallHandler { call, result ->
@@ -86,6 +96,7 @@ open class HaloApplication : Application() {
             }
         // on the engine of the process, so a check-in without a screen hears it too
         NetWatch.start(this, engine)
+        FileTransfers.start(this, engine)
         Tilt.start(this, engine)
         JobSetup.schedule(this)
         // a file handed to another app to open is a copy in cache/open/,

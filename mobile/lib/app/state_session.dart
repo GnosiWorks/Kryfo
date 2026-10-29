@@ -18,11 +18,35 @@ extension AppStateSession on AppState {
   Future<String> sessionInvite() async =>
       sessionQuiet ? (_quiet?.invite ?? '') : _everydayInvite();
 
+  /// what the own qr code shows: the main v4 invite without its bundle
+  /// (288 bytes; a reader answers it with a hello), else the link
+  Future<String> sessionInviteQr() async {
+    if (!sessionQuiet) {
+      try {
+        final qr = await myV4Invite(qr: true);
+        if (qr != null) return qr;
+      } catch (e) {
+        dlog('invite: no v4 qr (${e.runtimeType})');
+      }
+    }
+    return sessionInvite();
+  }
+
   // a counter that did not read is never taken as 0: an invite to an
   // address nobody listens on loses every first message sent to it
-  Future<String> _everydayInvite() => _fcUnread
-      ? buildHaloUriV2(myId, myOnion)
-      : buildHaloUriV3(myId, myOnion, fcCounter);
+  // the main v4 invite once it is made (identity v4 2.1)
+  Future<String> _everydayInvite() async {
+    try {
+      final v4 = await myV4Invite();
+      if (v4 != null) return v4;
+    } catch (e) {
+      dlog('invite: no v4 link (${e.runtimeType})');
+    }
+    return _fcUnread
+        ? buildHaloUriV2(myId, myOnion)
+        : buildHaloUriV3(myId, myOnion, fcCounter);
+  }
+
   Future<void> get containersReady => _containersOpen.future;
   @visibleForTesting
   void containersOpenedForTest() => _containersOpen.complete();
@@ -278,6 +302,8 @@ extension AppStateSession on AppState {
     _dropOpened();
     _session = Session(want);
     _quiet = decoy ? _decoyId : null;
+    // the transfer note reads quiet again: none over a decoy
+    TransferNote.instance.refresh();
     // what opened under the session before is opened again under this one.
     // a quiet session touches nothing of the everyday side's
     if (!sessionQuiet) unawaited(retryFirsts(all: true));
@@ -407,6 +433,7 @@ extension AppStateSession on AppState {
     _dropOpened();
     _session = s;
     _quiet = decoy ? _decoyId : null;
+    TransferNote.instance.refresh();
     if (!sessionQuiet) unawaited(retryFirsts(all: true));
     contacts = home.$1;
     pendingCount = home.$2;
@@ -451,6 +478,8 @@ extension AppStateSession on AppState {
   // after the reveal, off the clock
   Future<void> _vaultShown(HaloDb v) async {
     if (!identical(_openVault, v)) return;
+    // its chats draw their waiting files as such
+    unawaited(_loadFileWaits());
     try {
       // its timers that ran out while it was shut go now, and what waits
       // from someone blocked on the everyday side starts
@@ -506,6 +535,9 @@ extension AppStateSession on AppState {
     _session = Session(was.primary);
     lockState.inVault = false;
     _forgetVaultSide();
+    // its file on the way stops, and its waits go. the decoy's fetches
+    // nothing, and the everyday side is not read from it
+    if (everyday) _vaultFetchStops(v);
     // its contacts' photos off at once, before anything is drawn
     photoBook.put({
       for (final MapEntry(:key, :value) in photoBook.all.entries)

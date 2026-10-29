@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import '../lock_state.dart';
 import '../pass_rules.dart';
+import '../pin_shield.dart';
 import '../widgets/fit_column.dart';
 import '../theme.dart';
 import '../widgets/halo_buttons.dart';
@@ -29,7 +30,7 @@ class LockSetupScreen extends StatefulWidget {
 }
 
 class _LockSetupScreenState extends State<LockSetupScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, PinShield {
   String _first = '';
   String _pin = '';
   late bool _checking = widget.check;

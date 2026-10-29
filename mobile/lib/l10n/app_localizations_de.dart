@@ -1387,10 +1387,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Sie wird von beiden Handys entfernt, außer sie wurde schon gespeichert. Das lässt sich nicht rückgängig machen.';
 
   @override
-  String get chatAlbumItDisappearsWithNo =>
-      'Das Album wird von beiden Handys entfernt, außer es wurde schon gespeichert. Das lässt sich nicht rückgängig machen.';
-
-  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -2650,10 +2646,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Sie wird von den Handys aller entfernt, außer sie wurde schon gespeichert. Das lässt sich nicht rückgängig machen.';
 
   @override
-  String get groupChatAlbumItDisappearsWithNo =>
-      'Das Album wird von den Handys aller entfernt, außer es wurde schon gespeichert. Das lässt sich nicht rückgängig machen.';
-
-  @override
   String get groupChatUnsend => 'Zurückholen';
 
   @override
@@ -3207,9 +3199,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get homeAddSomeone => 'Jemanden hinzufügen';
-
-  @override
-  String get homeInviteSomeone => 'Jemanden einladen';
 
   @override
   String get homeArchived => 'Archiv';
@@ -4085,44 +4074,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onboardingContinue => 'Weiter →';
-
-  @override
-  String get onboardingNameHeadline =>
-      'Ein öffentlicher *@Name*, wenn du willst.';
-
-  @override
-  String get onboardingNameLine =>
-      'Mit einem öffentlichen Namen können dich Leute finden. Ohne bleibst du privater, du kannst jederzeit später einen hinzufügen.';
-
-  @override
-  String get onboardingNameSkip => 'Erst mal überspringen →';
-
-  @override
-  String onboardingNameClaim(Object handle) {
-    return '@$handle sichern →';
-  }
-
-  @override
-  String get onboardingInviteHeadline => 'Jetzt *lade jemanden ein*.';
-
-  @override
-  String get onboardingInviteLead =>
-      'Schick einen Link in einem beliebigen Messenger. Er öffnet Kryfo oder zeigt, wo es Kryfo gibt.';
-
-  @override
-  String get onboardingInviteSomeone => 'Jemanden einladen →';
-
-  @override
-  String get onboardingInviteGettingReady => 'Dein Link wird vorbereitet…';
-
-  @override
-  String inviteShareText(Object myId, Object link, Object download) {
-    return 'Füg mich auf Kryfo hinzu. Dort heiße ich $myId\n\nTippe, um mich hinzuzufügen:\n$link\n\nNoch kein Kryfo? Hier gibt es Kryfo:\n$download\n\nKryfo ist ein privater Messenger. Keine Telefonnummer, keine E-Mail.';
-  }
-
-  @override
-  String get inviteNotReady =>
-      'Dein Link ist fast fertig. Versuch es gleich noch mal.';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -9838,6 +9789,220 @@ class AppLocalizationsDe extends AppLocalizations {
       'Kryfo braucht beim Laufen einen privaten Ordner im Arbeitsspeicher, und dieser Computer bietet keinen, deshalb öffnet es sich nicht.';
 
   @override
+  String get inviteNotYet =>
+      'Diese Einladung gilt noch nicht. Prüfe die Uhrzeit auf deinem Handy.';
+
+  @override
+  String get inviteExpired =>
+      'Diese Einladung ist abgelaufen. Bitte um eine neue.';
+
+  @override
+  String get inviteDamaged =>
+      'Diese Einladung ist beschädigt. Bitte um eine neue.';
+
+  @override
+  String get helloSent =>
+      'Anfrage gesendet. Sie sehen sie, sobald sie online sind.';
+
+  @override
+  String get inviteNeeds06 => 'Braucht Kryfo 0.6 oder neuer.';
+
+  @override
+  String get helloSentOld =>
+      'Anfrage gesendet. Wenn sie eine ältere Kryfo-Version nutzen, müssen sie zuerst aktualisieren.';
+
+  @override
+  String get modesPickHow =>
+      'Wähle, wie deine Nachrichten reisen. Du kannst es jederzeit ändern.';
+
+  @override
+  String get modesPrivate => 'Privat';
+
+  @override
+  String get modesPrivateTag => 'Tor · Bridges bei Bedarf';
+
+  @override
+  String get modesPrivateLine =>
+      'Niemand erfährt deine IP-Adresse oder wer du bist, nicht einmal unsere Server. Findet selbst einen Weg um Sperren herum.';
+
+  @override
+  String get modesDefault => 'Standard';
+
+  @override
+  String get modesFastTag => 'Direkt zu unseren Servern';
+
+  @override
+  String get modesFastLine =>
+      'Ohne Tor kommen Nachrichten schneller an, und der Akku hält länger. Unsere Server sehen deine IP-Adresse nur, solange du verbunden bist, und protokollieren oder speichern sie nie. Nie, was du sagst. Deine Kontakte sehen sie nie.';
+
+  @override
+  String get modesFastConnected => 'Schnell · verbunden';
+
+  @override
+  String get modesFastConnecting => 'Schnell · verbindet';
+
+  @override
+  String get modesFastDown => 'Schnell · unsere Server antworten nicht';
+
+  @override
+  String get modesBackupReady =>
+      'Ein Ersatz steht immer bereit, so bleibst du verbunden, auch wenn einer ausfällt.';
+
+  @override
+  String get modesDetails => 'Details';
+
+  @override
+  String get modesBothLine =>
+      'Beide verschlüsseln jede Nachricht Ende-zu-Ende. Es ändert sich nur, wer deine IP-Adresse sehen kann.';
+
+  @override
+  String get modesConnectionBridges => 'Verbindung und Bridges';
+
+  @override
+  String get modesWhatServersSee => 'Was unsere Server sehen können';
+
+  @override
+  String get serversTitle => 'Server für Schnell';
+
+  @override
+  String get serversLine =>
+      'Jede Nachricht geht gleichzeitig an beide Server. Wer zuerst antwortet, trägt sie, und der andere übernimmt, wenn einer ausfällt.';
+
+  @override
+  String get serversOne => 'Server 1';
+
+  @override
+  String get serversTwo => 'Server 2 · zweiter Anbieter';
+
+  @override
+  String get serversConnected => 'Verbunden';
+
+  @override
+  String get serversConnecting => 'Verbindet';
+
+  @override
+  String get serversNotAnswering => 'Antwortet nicht';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String get serversQuicker => 'Schneller';
+
+  @override
+  String get serversBackups => 'Öffentliche Relais';
+
+  @override
+  String get serversBackupsLine =>
+      'Im Einsatz, solange Server 1 ausfällt, und nur über Tor, so sehen sie deine IP-Adresse nie.';
+
+  @override
+  String get serversStandingBy => 'In Bereitschaft';
+
+  @override
+  String get serversInUse => 'In Gebrauch';
+
+  @override
+  String get homeMergedTitle => 'Relais und Schnell sind jetzt eins';
+
+  @override
+  String get homeMergedLine =>
+      'Du nutzt Schnell. Ein Ersatzserver steht immer bereit, so bleibst du verbunden, auch wenn einer ausfällt. Unsere Server sehen deine IP-Adresse, nie, was du sagst.';
+
+  @override
+  String get homeMergedGotIt => 'Verstanden';
+
+  @override
+  String get homeMergedUsePrivate => 'Lieber Privat nutzen';
+
+  @override
+  String get homeOursDownTitle => 'Unsere Server antworten nicht';
+
+  @override
+  String get homeOursDownLine =>
+      'Nach ein paar Minuten, sobald Tor durchkommt, gehen Nachrichten auch über öffentliche Relais, und wieder über unsere Server, sobald einer antwortet.';
+
+  @override
+  String get homeUsePrivate => 'Privat nutzen';
+
+  @override
+  String get homeSwitchedToPrivate => 'Zu Privat gewechselt';
+
+  @override
+  String get homeUseFast => 'Schnell nutzen';
+
+  @override
+  String get homeSwitchedToFastRoute => 'Zu Schnell gewechselt';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'Schnell geht direkt zu unseren Servern und kommt meist durch. Oder lass Kryfo selbst einen Weg finden.';
+
+  @override
+  String get appServersNotAnswering => 'Server schweigen';
+
+  @override
+  String get settingsPrivateTor => 'Privat · Tor';
+
+  @override
+  String get seenOurServers => 'Unsere Server';
+
+  @override
+  String get seenIpWhy =>
+      'Bei Privat geht alles über Tor, und unsere Server sehen einen Exit-Knoten, nie dich. Bei Schnell geht die Verbindung direkt zu unseren zwei Servern: Sie sehen deine IP-Adresse, solange du verbunden bist, und halten nichts davon fest. Solange der erste ausfällt, nutzt Schnell zusätzlich öffentliche Relais, nur über Tor.';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'Das Album wird von beiden Handys entfernt, außer es wurde schon gespeichert. Das lässt sich nicht rückgängig machen.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'Das Album wird von den Handys aller entfernt, außer es wurde schon gespeichert. Das lässt sich nicht rückgängig machen.';
+
+  @override
+  String get homeInviteSomeone => 'Jemanden einladen';
+
+  @override
+  String get onboardingNameHeadline =>
+      'Ein öffentlicher *@Name*, wenn du willst.';
+
+  @override
+  String get onboardingNameLine =>
+      'Mit einem öffentlichen Namen können dich Leute finden. Ohne bleibst du privater, du kannst jederzeit später einen hinzufügen.';
+
+  @override
+  String get onboardingNameSkip => 'Erst mal überspringen →';
+
+  @override
+  String onboardingNameClaim(Object handle) {
+    return '@$handle sichern →';
+  }
+
+  @override
+  String get onboardingInviteHeadline => 'Jetzt *lade jemanden ein*.';
+
+  @override
+  String get onboardingInviteLead =>
+      'Schick einen Link in einem beliebigen Messenger. Er öffnet Kryfo oder zeigt, wo es Kryfo gibt.';
+
+  @override
+  String get onboardingInviteSomeone => 'Jemanden einladen →';
+
+  @override
+  String get onboardingInviteGettingReady => 'Dein Link wird vorbereitet…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'Füg mich auf Kryfo hinzu. Dort heiße ich $myId\n\nTippe, um mich hinzuzufügen:\n$link\n\nNoch kein Kryfo? Hier gibt es Kryfo:\n$download\n\nKryfo ist ein privater Messenger. Keine Telefonnummer, keine E-Mail.';
+  }
+
+  @override
+  String get inviteNotReady =>
+      'Dein Link ist fast fertig. Versuch es gleich noch mal.';
+
+  @override
   String get photoCropTitle => 'Verschieben und skalieren';
 
   @override
@@ -9992,146 +10157,114 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get modesPickHow =>
-      'Wähle, wie deine Nachrichten reisen. Du kannst es jederzeit ändern.';
-
-  @override
-  String get modesPrivate => 'Privat';
-
-  @override
-  String get modesPrivateTag => 'Tor · Bridges bei Bedarf';
-
-  @override
-  String get modesPrivateLine =>
-      'Niemand erfährt deine IP-Adresse oder wer du bist, nicht einmal unsere Server. Findet selbst einen Weg um Sperren herum.';
-
-  @override
-  String get modesDefault => 'Standard';
-
-  @override
-  String get modesFastTag => 'Direkt zu unseren Servern';
-
-  @override
-  String get modesFastLine =>
-      'Ohne Tor kommen Nachrichten schneller an, und der Akku hält länger. Unsere Server sehen deine IP-Adresse nur, solange du verbunden bist, und protokollieren oder speichern sie nie. Nie, was du sagst. Deine Kontakte sehen sie nie.';
-
-  @override
-  String get modesFastConnected => 'Schnell · verbunden';
-
-  @override
-  String get modesFastConnecting => 'Schnell · verbindet';
-
-  @override
-  String get modesFastDown => 'Schnell · unsere Server antworten nicht';
-
-  @override
-  String get modesBackupReady =>
-      'Ein Ersatz steht immer bereit, so bleibst du verbunden, auch wenn einer ausfällt.';
-
-  @override
-  String get modesDetails => 'Details';
-
-  @override
-  String get modesBothLine =>
-      'Beide verschlüsseln jede Nachricht Ende-zu-Ende. Es ändert sich nur, wer deine IP-Adresse sehen kann.';
-
-  @override
-  String get modesConnectionBridges => 'Verbindung und Bridges';
-
-  @override
-  String get modesWhatServersSee => 'Was unsere Server sehen können';
-
-  @override
-  String get serversTitle => 'Server für Schnell';
-
-  @override
-  String get serversLine =>
-      'Jede Nachricht geht gleichzeitig an beide Server. Wer zuerst antwortet, trägt sie, und der andere übernimmt, wenn einer ausfällt.';
-
-  @override
-  String get serversOne => 'Server 1';
-
-  @override
-  String get serversTwo => 'Server 2 · zweiter Anbieter';
-
-  @override
-  String get serversConnected => 'Verbunden';
-
-  @override
-  String get serversConnecting => 'Verbindet';
-
-  @override
-  String get serversNotAnswering => 'Antwortet nicht';
-
-  @override
-  String serversMs(int ms) {
-    return '$ms ms';
+  String transferDoneOf(String done, String total) {
+    return '$done von $total';
   }
 
   @override
-  String get serversQuicker => 'Schneller';
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
 
   @override
-  String get serversBackups => 'Öffentliche Relais';
+  String get transferLeftSoon => 'noch weniger als eine Minute';
 
   @override
-  String get serversBackupsLine =>
-      'Im Einsatz, solange Server 1 ausfällt, und nur über Tor, so sehen sie deine IP-Adresse nie.';
+  String transferLeftMinutes(String n) {
+    return 'noch etwa $n Min.';
+  }
 
   @override
-  String get serversStandingBy => 'In Bereitschaft';
+  String transferLeftHours(String n) {
+    return 'noch etwa $n Std.';
+  }
 
   @override
-  String get serversInUse => 'In Gebrauch';
+  String transferSending(String detail) {
+    return 'Sende · $detail';
+  }
 
   @override
-  String get homeMergedTitle => 'Relais und Schnell sind jetzt eins';
+  String transferReceiving(String detail) {
+    return 'Empfange · $detail';
+  }
 
   @override
-  String get homeMergedLine =>
-      'Du nutzt Schnell. Ein Ersatzserver steht immer bereit, so bleibst du verbunden, auch wenn einer ausfällt. Unsere Server sehen deine IP-Adresse, nie, was du sagst.';
+  String transferBoth(String detail) {
+    return 'Sende und empfange · $detail';
+  }
 
   @override
-  String get homeMergedGotIt => 'Verstanden';
+  String get transferPause => 'Pause';
 
   @override
-  String get homeMergedUsePrivate => 'Lieber Privat nutzen';
+  String get transferPauseDownload => 'Download pausieren';
 
   @override
-  String get homeOursDownTitle => 'Unsere Server antworten nicht';
+  String get transferDownload => 'Herunterladen';
 
   @override
-  String get homeOursDownLine =>
-      'Nach ein paar Minuten, sobald Tor durchkommt, gehen Nachrichten auch über öffentliche Relais, und wieder über unsere Server, sobald einer antwortet.';
+  String get transferResume => 'Fortsetzen';
 
   @override
-  String get homeUsePrivate => 'Privat nutzen';
+  String get transferOnWifi => 'Lädt im WLAN';
 
   @override
-  String get homeSwitchedToPrivate => 'Zu Privat gewechselt';
+  String transferPausedAt(String detail) {
+    return 'Pausiert · $detail';
+  }
 
   @override
-  String get homeUseFast => 'Schnell nutzen';
+  String get transferTapToDownload => 'Zum Laden tippen';
 
   @override
-  String get homeSwitchedToFastRoute => 'Zu Schnell gewechselt';
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
 
   @override
-  String get bridgesFastGetsThrough =>
-      'Schnell geht direkt zu unseren Servern und kommt meist durch. Oder lass Kryfo selbst einen Weg finden.';
+  String get transferNoteTitle => 'Dateiübertragung';
 
   @override
-  String get appServersNotAnswering => 'Server schweigen';
+  String get transferChannel => 'Dateiübertragungen';
 
   @override
-  String get settingsPrivateTor => 'Privat · Tor';
+  String get transferChannelLine =>
+      'Erscheint, solange Dateien gesendet oder geladen werden. Nennt nie einen Chat oder eine Datei.';
 
   @override
-  String get seenOurServers => 'Unsere Server';
+  String get autoGetTitle => 'Automatischer Download';
 
   @override
-  String get seenIpWhy =>
-      'Bei Privat geht alles über Tor, und unsere Server sehen einen Exit-Knoten, nie dich. Bei Schnell geht die Verbindung direkt zu unseren zwei Servern: Sie sehen deine IP-Adresse, solange du verbunden bist, und halten nichts davon fest. Solange der erste ausfällt, nutzt Schnell zusätzlich öffentliche Relais, nur über Tor.';
+  String get autoGetLine =>
+      'Dateien kommen ohne Tippen, wie hier eingestellt. Eine, die wartet, bleibt für dich auf dem Dateiserver, höchstens eine Woche.';
+
+  @override
+  String get autoGetPhotos => 'Fotos';
+
+  @override
+  String get autoGetVideos => 'Videos';
+
+  @override
+  String get autoGetFiles => 'Dateien';
+
+  @override
+  String get autoGetAlways => 'Im WLAN und mobil';
+
+  @override
+  String get autoGetWifi => 'Nur im WLAN';
+
+  @override
+  String get autoGetNever => 'Nie, ich tippe zum Laden';
+
+  @override
+  String get autoGetVoice => 'Sprachnachrichten werden immer geladen.';
+
+  @override
+  String get settingsFiles => 'Dateien';
+
+  @override
+  String get fileSheetOpenWith => 'Mit anderer App öffnen';
 
   @override
   String get desktopLockAccountBody =>

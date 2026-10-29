@@ -34,10 +34,14 @@ func knockSubs(t *testing.T, contacts int) *knockWorld {
 	for i := 0; i < contacts; i++ {
 		p := newXid(t)
 		h := hex.EncodeToString(p.pub[:])
+		// as nostrSubscribeAt notes every subscription's address, the main
+		// identity's too: the knocks never derive one again
+		sk, pk, _ := nip17RcvAddressAs(testMain(), p.pub)
+		lane := receiveLane(pk)
+		noteKnockTarget(h, knockTarget{pk, sk, lane, lane, h})
 		startSub(h, idle)
 		w.keys = append(w.keys, h)
 		w.peers = append(w.peers, h)
-		_, pk, _ := nip17RcvAddressAs(testMain(), p.pub)
 		w.contacts = append(w.contacts, pk)
 	}
 	startSub("firstcontact", idle)

@@ -219,6 +219,7 @@ class LockGate extends StatefulWidget {
     this.inFront,
     this.localesChanged,
     this.revealed,
+    this.attached,
   });
 
   final Widget app;
@@ -241,6 +242,8 @@ class LockGate extends StatefulWidget {
   final VoidCallback? localesChanged;
   // the app is shown: before what waited for it happens
   final VoidCallback? revealed;
+  // a new android screen came onto the engine
+  final VoidCallback? attached;
 
   @override
   State<LockGate> createState() => _LockGateState();
@@ -267,6 +270,8 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
         widget.inFront?.call(false);
       } else if (m == 'left') {
         widget.left?.call();
+      } else if (m == 'attached') {
+        widget.attached?.call();
       }
       return '';
     });

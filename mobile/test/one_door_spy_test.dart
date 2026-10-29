@@ -20,7 +20,9 @@ import 'package:kryfo/main.dart'
         HaloDb,
         HaloEngine,
         OtherIdentity,
+        PairRefused,
         appState,
+        pairArgOf,
         newMsgUid,
         useDatabasesForTest,
         useEngineForTest,
@@ -449,8 +451,10 @@ void main() {
     }
     expect(seals..sort(), ['lib/app/signal.dart', 'lib/devchat/dev_lane.dart']);
     final signal = sourceCode('lib/app/signal.dart');
+    // signalEncrypt hands to signalSeal, which seals at the door
+    expect(signal, contains('(await signalSeal(peerId, plaintext'));
     final enc = signal.substring(
-      signal.indexOf('Future<String> signalEncrypt('),
+      signal.indexOf('Future<({int ident, String cipher})> signalSeal('),
     );
     final body = enc.substring(0, enc.indexOf('\n}\n'));
     expect(body, contains('appState.doorFor(peerId, plaintext)'));
@@ -467,5 +471,55 @@ void main() {
     final x = (await mem.query('contacts')).first['xpub'] as String;
     expect(wire.listened, contains((1, x)));
     expect(wire.listened.where((l) => l.$1 != 1 && l.$2 == x), isEmpty);
+  });
+
+  test('the door reads their identity from the rows at each seal, not from '
+      'what was loaded', () async {
+    expect(await appState.identForSeal(_ci), 1);
+    expect(await appState.identForSeal('no-such-one'), kMainIdent);
+    // the row moves and nothing is loaded again: the seal follows the row
+    await mem.update(
+      'contacts',
+      {'ident': 2},
+      where: 'halo_id = ?',
+      whereArgs: [_ci],
+    );
+    try {
+      expect(await appState.identForSeal(_ci), 2);
+    } finally {
+      await mem.update(
+        'contacts',
+        {'ident': 1},
+        where: 'halo_id = ?',
+        whereArgs: [_ci],
+      );
+      expect(await appState.identForSeal(_ci), 1);
+    }
+  });
+
+  test('a relay call names the pair as the rows hold it, and refuses the key '
+      'on another identity', () async {
+    final x = (await mem.query('contacts')).first['xpub'] as String;
+    expect(await pairArgOf(1, x), x);
+    expect(() => pairArgOf(kMainIdent, x), throwsA(isA<PairRefused>()));
+    final seed = Uint8List.fromList(List.generate(32, (i) => i + 1));
+    final key = identityKeyHex(x)!;
+    await mem.update(
+      'pairs',
+      {'conv': kConvSeeded, 'seed': seed},
+      where: 'ident = ? AND peer = ?',
+      whereArgs: [1, key],
+    );
+    try {
+      final hex = seed.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+      expect(await pairArgOf(1, x.toUpperCase()), '$x.$hex');
+    } finally {
+      await mem.update(
+        'pairs',
+        {'conv': kConvClassic, 'seed': null},
+        where: 'ident = ? AND peer = ?',
+        whereArgs: [1, key],
+      );
+    }
   });
 }

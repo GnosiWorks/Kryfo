@@ -359,17 +359,24 @@ extension AppStateProfile on AppState {
   Future<void> resetInviteAddress() async {
     // the everyday invite's key and address: never from a quiet session,
     // and never on the developer's own phone, whose card every install pins
-    // a counter that did not read is never moved past
-    if (sessionQuiet || _devIdentity || _fcUnread) return;
+    if (sessionQuiet || _devIdentity) return;
+    // nothing moves before signal is ready: the v4 link would stay as it was
+    await _signalReadyForReset();
     // what was kept goes in now if it can: nothing opens it after this
     await retryFirsts(all: true);
-    // the key first: moving only the relay address leaves every old link
-    // able to open a session and dial the onion directly
-    await signalSession.rotateInvitePreKey();
+    // the link, qr and handle people hold: the main v4 invite goes now
+    await resetMyInvite();
     await _forgetAllFirst();
-    _fcCounter++;
-    await secureStore.write(key: 'fc_counter', value: '$_fcCounter');
-    unawaited(_listenFirstContact());
+    // a counter that did not read is never moved past
+    if (!_fcUnread) {
+      // the v3 card's keys first, while they live: moving only the relay
+      // address leaves every old link able to open a session and dial the
+      // onion directly
+      await signalSession.rotateInvitePreKey();
+      _fcCounter++;
+      await secureStore.write(key: 'fc_counter', value: '$_fcCounter');
+      unawaited(_listenFirstContact());
+    }
     // the new invite goes to the registry now, after any claim already on
     // its way and a second apart from it, and again later if this one gets
     // no answer

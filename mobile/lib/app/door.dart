@@ -113,6 +113,8 @@ String doorFrame(
       j.remove('e');
       j.remove('o');
       j.remove('av');
+      // the supporter badge is the main account's
+      j.remove('bg');
       j['x'] = face.xPub;
       if (face.avatar case final a?) j['av'] = a;
     }
@@ -251,7 +253,7 @@ extension AppStateDoor on AppState {
         onion: myOnion,
         xPub: _io.xPub(),
         handle: _myHandle,
-        fc: [?(_fcLoaded ? _mainFc() : null)],
+        fc: [await _mainFcNow()],
         avatar: _myAvatar,
       );
     }
@@ -267,13 +269,37 @@ extension AppStateDoor on AppState {
     );
   }
 
-  String? _mainFc() {
-    try {
-      final s = engine.firstContactPk(kMainIdent, _fcCounter);
-      return s.startsWith('error') ? null : s;
-    } catch (_) {
-      return null;
+  // the main v3 first-contact key, read from the engine at each check: the
+  // counter from its store when the listener has not loaded it yet. one
+  // that cannot be read refuses the frame
+  Future<String> _mainFcNow() async {
+    final c = _fcLoaded
+        ? _fcCounter
+        : int.tryParse(await readFcCounter() ?? '') ?? 0;
+    final s = engine.firstContactPk(kMainIdent, c);
+    if (s.isEmpty || s.startsWith('error')) {
+      throw const OtherIdentity('first-contact key unread');
     }
+    return s;
+  }
+
+  /// my identity for [peer], read from the containers open now: the main
+  /// one with no row. rows that disagree, or that cannot be read, refuse
+  Future<int> identForSeal(String peer) async {
+    final found = <int>{};
+    for (final d in [live, ?_openVault]) {
+      final r = await d.getContact(peer);
+      if (r != null) found.add((r['ident'] as num?)?.toInt() ?? kMainIdent);
+    }
+    if (found.length > 1) throw const OtherIdentity('two identities');
+    final ident = found.isEmpty ? kMainIdent : found.single;
+    // the cache the sync paths read follows what the rows say
+    if (ident == kMainIdent) {
+      _idents.remove(peer);
+    } else {
+      _idents[peer] = ident;
+    }
+    return ident;
   }
 
   /// the one door: [frame] for [peer] filled and checked for the identity
@@ -284,7 +310,7 @@ extension AppStateDoor on AppState {
     String frame, {
     bool outside = false,
   }) async {
-    final ident = identOf(peer);
+    final ident = await identForSeal(peer);
     // no contact on any other identity and none opened: the main identity
     // alone, nothing to keep apart, and its frames go as they always did
     if (ident == kMainIdent && _idents.isEmpty && _identStores.isEmpty) {

@@ -11,7 +11,6 @@ import "C"
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -1396,10 +1395,23 @@ func nostrSubscribeRunner(ctx context.Context, tag string, c convPair, rcvPk str
 // a first-contact address: what lands on it is opened with its key alone
 func nostrSubscribeRunnerFc(ctx context.Context, tag, fcSk, fcPk string) {
 	nostrSubscribeRunnerAt(ctx, laneFirstContact, tag, fcPk, func(gw nostr2.Event) (string, nostr2.Timestamp, error) {
-		content, _, at, err := nip17UnwrapFirstContactWithStamped(fcSk, gw)
-		return content, at, err
+		content, sealPk, at, err := nip17UnwrapFirstContactWithStamped(fcSk, gw)
+		return helloLine(content, sealPk), at, err
 	})
 }
+
+// a hello (KHL1, base64) on the v3 first-contact address goes to the app
+// with the key its seal was signed with, which the app checks (identity
+// v4 3.3, 11 step 7); anything else as it came
+func helloLine(content, sealPk string) string {
+	if strings.HasPrefix(content, khl1B64) {
+		return "khl:" + sealPk + "|" + content
+	}
+	return content
+}
+
+// what base64 of "KHL1" starts with
+const khl1B64 = "S0hMMQ"
 
 // the general runner: one receive address, one way to open what lands on
 // it, one tag the inbox line carries so dart knows who it was for, and the
@@ -2509,15 +2521,14 @@ func HaloNostrSend(cIdent C.int, cPeerXPubHex, cMsg *C.char) *C.char {
 }
 
 // msg to peerHex from my identity [ident], on their pair's addresses
-func nostrSend(ident int, peerHex, msg string) string {
-	peerBytes, err := hex.DecodeString(peerHex)
-	if err != nil || len(peerBytes) != 32 {
-		return "error: bad peer pubkey"
-	}
-	var peerArr [32]byte
-	copy(peerArr[:], peerBytes)
-	c, err := pairOf(ident, peerArr)
+//
+// [peerArg] names the pair as pairArg reads it
+func nostrSend(ident int, peerArg, msg string) string {
+	c, _, err := pairArg(ident, peerArg)
 	if err != nil {
+		if errors.Is(err, errBadPeer) {
+			return "error: bad peer pubkey"
+		}
 		return fmt.Sprintf("error: wrap: %v", err)
 	}
 
@@ -2570,15 +2581,12 @@ func HaloNostrSubscribeNew(cIdent C.int, cPeerXPubHex *C.char) *C.char {
 }
 
 // listen on my identity [ident]'s receive address for peerHex
-func nostrSubscribe(ident int, peerHex string, fresh bool) string {
-	peerBytes, err := hex.DecodeString(peerHex)
-	if err != nil || len(peerBytes) != 32 {
-		return "error: bad peer pubkey"
-	}
-	var peerArr [32]byte
-	copy(peerArr[:], peerBytes)
-	c, err := pairOf(ident, peerArr)
+func nostrSubscribe(ident int, peerArg string, fresh bool) string {
+	c, peerHex, err := pairArg(ident, peerArg)
 	if err != nil {
+		if errors.Is(err, errBadPeer) {
+			return "error: bad peer pubkey"
+		}
 		return fmt.Sprintf("error: derive: %v", err)
 	}
 	rcvSk, rcvPk, err := c.rcvAddress()
@@ -2594,10 +2602,10 @@ func nostrSubscribe(ident int, peerHex string, fresh bool) string {
 // and the knocks take their address as noted
 func nostrSubscribeAt(c convPair, peerHex, rcvSk, rcvPk string, fresh bool) {
 	key := subKey(c.ident, peerHex)
-	if c.ident != mainIdent {
-		lane := receiveLane(rcvPk)
-		noteKnockTarget(key, knockTarget{rcvPk, rcvSk, lane, lane, strings.ToLower(peerHex)})
-	}
+	// every identity's, the main one's too: the knocks take the address
+	// the subscription was made on, never one derived again
+	lane := receiveLane(rcvPk)
+	noteKnockTarget(key, knockTarget{rcvPk, rcvSk, lane, lane, strings.ToLower(peerHex)})
 	nostrMu.Lock()
 	if cancel, exists := nostrSubs[key]; exists {
 		cancel()
@@ -2662,11 +2670,7 @@ func HaloNostrPinned(cPeersJSON *C.char) *C.char {
 func peerAddresses(peers []identPeer) []string {
 	var rcv []string
 	for _, h := range peers {
-		peer, err := peerArr(h.X)
-		if err != nil {
-			continue
-		}
-		c, err := pairOf(h.I, peer)
+		c, _, err := pairArg(h.I, h.arg())
 		if err != nil {
 			continue
 		}
@@ -2702,15 +2706,11 @@ func heldOnFile(path string) int {
 	return loadSeen(path).heldCount()
 }
 
-func nostrLetHeld(ident int, peerHex, how string) error {
+func nostrLetHeld(ident int, peerArg, how string) error {
 	if how != "free" && how != "drop" && how != "mark" {
 		return errors.New("bad how")
 	}
-	peer, err := peerArr(peerHex)
-	if err != nil {
-		return err
-	}
-	c, err := pairOf(ident, peer)
+	c, peerHex, err := pairArg(ident, peerArg)
 	if err != nil {
 		return err
 	}
@@ -2780,8 +2780,8 @@ func HaloNostrUnsubscribe(cIdent C.int, cPeerXPubHex *C.char) *C.char {
 	return C.CString("ok")
 }
 
-func nostrUnsubscribe(ident int, peerHex string) error {
-	peer, err := peerArr(peerHex)
+func nostrUnsubscribe(ident int, peerArg string) error {
+	c, peerHex, err := pairArg(ident, peerArg)
 	if err != nil {
 		return err
 	}
@@ -2792,10 +2792,6 @@ func nostrUnsubscribe(ident int, peerHex string) error {
 		delete(nostrSubs, key)
 	}
 	nostrMu.Unlock()
-	c, err := pairOf(ident, peer)
-	if err != nil {
-		return err
-	}
 	if _, rcvPk, err := c.rcvAddress(); err == nil {
 		dropAddressFiles(rcvPk)
 	}
@@ -2921,18 +2917,14 @@ func HaloNostrSendFirstContact(cIdent C.int, cPeerXPubHex, cFcPk, cMsg *C.char) 
 	return C.CString(nostrSendFirstContact(identArg(cIdent), goStr(cPeerXPubHex), goStr(cFcPk), goStr(cMsg)))
 }
 
-func nostrSendFirstContact(ident int, peerHex, fcPk, msg string) string {
-	peerBytes, err := hex.DecodeString(peerHex)
-	if err != nil || len(peerBytes) != 32 {
+func nostrSendFirstContact(ident int, peerArg, fcPk, msg string) string {
+	c, _, err := pairArg(ident, peerArg)
+	if errors.Is(err, errBadPeer) {
 		return "error: bad peer pubkey"
 	}
 	if len(fcPk) != 64 {
 		return "error: bad first-contact pubkey"
 	}
-	var peerArr [32]byte
-	copy(peerArr[:], peerBytes)
-
-	c, err := pairOf(ident, peerArr)
 	if err != nil {
 		return fmt.Sprintf("error: wrap: %v", err)
 	}

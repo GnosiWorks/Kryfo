@@ -423,9 +423,13 @@ func TestUnsubscribePurgesOnlyThatIdentity(t *testing.T) {
 		delete(pairSeeds, pairKey{mainIdent, hex.EncodeToString(peer4.pub[:])})
 		identsMu.Unlock()
 	})
-	queue := func(ident int, to [32]byte) nostr.ID {
+	// a seeded pair is named with its seed, as the app names it
+	queue := func(ident int, to [32]byte, seed *[32]byte) nostr.ID {
 		t.Helper()
 		c, err := pairOf(ident, to)
+		if seed != nil {
+			c, err = seededPairOf(ident, to, *seed)
+		}
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -440,8 +444,8 @@ func TestUnsubscribePurgesOnlyThatIdentity(t *testing.T) {
 		topupAdd(storeFirst, laneEveryday, ev)
 		return ev.ID
 	}
-	main3, five3 := queue(mainIdent, peer.pub), queue(5, peer.pub)
-	main4, five4 := queue(mainIdent, peer4.pub), queue(5, peer4.pub)
+	main3, five3 := queue(mainIdent, peer.pub, nil), queue(5, peer.pub, nil)
+	main4, five4 := queue(mainIdent, peer4.pub, &s0), queue(5, peer4.pub, &s5)
 	waiting := func() map[nostr.ID]bool {
 		got := map[nostr.ID]bool{}
 		for _, it := range topupFor(storeFirst) {
@@ -458,7 +462,8 @@ func TestUnsubscribePurgesOnlyThatIdentity(t *testing.T) {
 	if got := waiting(); got[five3] || !got[main3] || !got[main4] || !got[five4] {
 		t.Fatalf("v3: %v left", got)
 	}
-	if err := nostrUnsubscribe(5, hex.EncodeToString(peer4.pub[:])); err != nil {
+	seeded := hex.EncodeToString(peer4.pub[:]) + "." + hex.EncodeToString(s5[:])
+	if err := nostrUnsubscribe(5, seeded); err != nil {
 		t.Fatal(err)
 	}
 	if got := waiting(); len(got) != 2 || !got[main3] || !got[main4] {

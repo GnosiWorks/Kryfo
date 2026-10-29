@@ -17,7 +17,10 @@ import 'stickers/sticker_wire.dart' show StickerWire;
 import 'typing.dart' show capsFromWire, kCapsWire, kMyCaps, kTypingWire;
 import 'voice_format.dart' show kOpusWire;
 
-const _envelopePrefix = 'halo/1:';
+const _envelopePrefix = kEnvelopePrefix;
+
+/// what every envelope starts with
+const kEnvelopePrefix = 'halo/1:';
 
 class UnwrappedMessage {
   final String message;
@@ -80,6 +83,11 @@ class UnwrappedMessage {
   // 'cp': what the sender's phone understands, on every 1:1 and group
   // frame. null from a version without it
   final List<String>? caps;
+  // a v4 opener's (identity v4 3.1): 'pg' the protocol generation, 'as'
+  // the pair's address seed in hex, 'fs' the face signature in hex
+  final int? protoGen;
+  final String? addrSeed;
+  final String? faceSig;
   // 'pp': a slice of the sender's profile photo, or its take-back
   // (profile_photo.dart). nothing else in the frame counts
   final PhotoFrame? photo;
@@ -143,6 +151,9 @@ class UnwrappedMessage {
     this.typing = false,
     this.caps,
     this.drop,
+    this.protoGen,
+    this.addrSeed,
+    this.faceSig,
     this.photo,
   });
 }
@@ -626,6 +637,18 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       typing: json[kTypingWire] == 1,
       caps: capsFromWire(json[kCapsWire]),
       drop: DropFrame.fromWire(sent[kDropWire]),
+      protoGen: switch (json['pg']) {
+        final int n => n,
+        _ => null,
+      },
+      addrSeed: switch (json['as']) {
+        final String s => s,
+        _ => null,
+      },
+      faceSig: switch (json['fs']) {
+        final String s => s,
+        _ => null,
+      },
       photo: PhotoFrame.fromWire(sent[kPhotoWire]),
     );
   } catch (e) {

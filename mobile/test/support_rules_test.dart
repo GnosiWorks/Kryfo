@@ -28,7 +28,8 @@ import 'package:kryfo/main.dart'
         AppStateContacts,
         AppStateDevchat,
         AppStateReceive,
-        AppStateRefresh;
+        AppStateRefresh,
+        AppStateInvites;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
@@ -321,6 +322,10 @@ class _Io implements AppIo {
   openFirstContact(String cipher) async => firstContact;
   @override
   Future<bool> hasSession(String peer) async => true;
+  @override
+  Future<({int ident, String cipher})> seal(String peer, String plain) async =>
+      (ident: 0, cipher: await encrypt(peer, plain));
+
   @override
   Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
   @override
@@ -1083,7 +1088,20 @@ void main() {
       // anywhere else it goes on to the invite key, which needs a signal
       // store this test does not have
       final other = await _World.make(dev: false);
+      other.app.signalWait = const Duration(milliseconds: 50);
       await expectLater(other.app.resetInviteAddress(), throwsA(anything));
+    });
+
+    test('before signal is ready waits for it, then throws and moves '
+        'nothing, so no "reset" shows', () async {
+      final w = await _World.make(dev: false);
+      w.app.signalWait = const Duration(milliseconds: 200);
+      final was = w.app.fcCounter;
+      final sw = Stopwatch()..start();
+      await expectLater(w.app.resetInviteAddress(), throwsStateError);
+      expect(sw.elapsedMilliseconds, greaterThanOrEqualTo(200));
+      expect(w.app.fcCounter, was);
+      await expectLater(w.app.resetMyInvite(), throwsStateError);
     });
   });
 

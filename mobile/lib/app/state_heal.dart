@@ -295,7 +295,8 @@ extension AppStateHeal on AppState {
       if (xpub.isEmpty) return false;
       // outside the session, so through the door as it is: the card of
       // the identity they know, and words only for the main one's
-      final ident = identOf(memberId);
+      // read from the rows, as the door reads it, and checked again there
+      final ident = await identForSeal(memberId);
       final main = ident == kMainIdent;
       final payload = jsonEncode({
         'halo_ctl': 'bundle',
@@ -307,6 +308,8 @@ extension AppStateHeal on AppState {
         'since': ?since,
       });
       final (on, framed) = await doorFor(memberId, payload, outside: true);
+      // the card is the identity's it was made for, or nothing goes
+      if (on != ident) return false;
       final r = await Future(() => _io.relaySend(on, xpub, framed));
       dlog('bundle ctl (want=$want) to $memberId: $r');
       return r == 'ok';

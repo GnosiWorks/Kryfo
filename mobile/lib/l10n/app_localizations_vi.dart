@@ -1367,10 +1367,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tin nhắn sẽ bị xóa khỏi cả hai điện thoại, trừ khi đã được lưu. Không thể hoàn tác việc này.';
 
   @override
-  String get chatAlbumItDisappearsWithNo =>
-      'Album sẽ bị xóa khỏi cả hai điện thoại, trừ khi đã được lưu. Không thể hoàn tác việc này.';
-
-  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -2615,10 +2611,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tin nhắn sẽ bị xóa khỏi điện thoại của mọi người, trừ khi đã được lưu. Không thể hoàn tác việc này.';
 
   @override
-  String get groupChatAlbumItDisappearsWithNo =>
-      'Album sẽ bị xóa khỏi điện thoại của mọi người, trừ khi đã được lưu. Không thể hoàn tác việc này.';
-
-  @override
   String get groupChatUnsend => 'Thu hồi';
 
   @override
@@ -3160,9 +3152,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get homeAddSomeone => 'Thêm người';
-
-  @override
-  String get homeInviteSomeone => 'Mời một người';
 
   @override
   String get homeArchived => 'Đã lưu trữ';
@@ -4024,43 +4013,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get onboardingContinue => 'Tiếp tục →';
-
-  @override
-  String get onboardingNameHeadline => 'Một *@tên* công khai, nếu bạn muốn.';
-
-  @override
-  String get onboardingNameLine =>
-      'Tên công khai giúp mọi người tìm thấy bạn. Bỏ qua giúp bạn riêng tư hơn, bạn luôn có thể thêm sau.';
-
-  @override
-  String get onboardingNameSkip => 'Bỏ qua lúc này →';
-
-  @override
-  String onboardingNameClaim(Object handle) {
-    return 'Lấy @$handle →';
-  }
-
-  @override
-  String get onboardingInviteHeadline => 'Giờ thì, *mời một người*.';
-
-  @override
-  String get onboardingInviteLead =>
-      'Gửi một liên kết qua bất kỳ ứng dụng nhắn tin nào. Liên kết mở Kryfo, hoặc chỉ chỗ tải về.';
-
-  @override
-  String get onboardingInviteSomeone => 'Mời một người →';
-
-  @override
-  String get onboardingInviteGettingReady => 'Đang chuẩn bị liên kết…';
-
-  @override
-  String inviteShareText(Object myId, Object link, Object download) {
-    return 'Thêm tôi trên Kryfo. Tên của tôi ở đó là $myId\n\nChạm để thêm tôi:\n$link\n\nChưa có Kryfo? Tải tại đây:\n$download\n\nKryfo là ứng dụng nhắn tin riêng tư. Không cần số điện thoại, không cần email.';
-  }
-
-  @override
-  String get inviteNotReady =>
-      'Liên kết của bạn sắp xong. Thử lại sau giây lát.';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -9721,6 +9673,216 @@ class AppLocalizationsVi extends AppLocalizations {
       'Kryfo cần một thư mục riêng trong bộ nhớ khi chạy, và máy tính này không có, nên Kryfo sẽ không mở.';
 
   @override
+  String get inviteNotYet =>
+      'Lời mời này chưa có hiệu lực. Hãy kiểm tra giờ trên điện thoại.';
+
+  @override
+  String get inviteExpired => 'Lời mời này đã hết hạn. Hãy xin lời mời mới.';
+
+  @override
+  String get inviteDamaged => 'Lời mời này bị hỏng. Hãy xin lời mời mới.';
+
+  @override
+  String get helloSent => 'Đã gửi yêu cầu. Họ sẽ thấy khi trực tuyến.';
+
+  @override
+  String get inviteNeeds06 => 'Cần Kryfo 0.6 trở lên.';
+
+  @override
+  String get helloSentOld =>
+      'Đã gửi yêu cầu. Nếu họ dùng Kryfo phiên bản cũ, họ cần cập nhật trước.';
+
+  @override
+  String get modesPickHow =>
+      'Chọn cách tin nhắn của bạn được gửi đi. Bạn có thể đổi bất cứ lúc nào.';
+
+  @override
+  String get modesPrivate => 'Riêng tư';
+
+  @override
+  String get modesPrivateTag => 'Tor · cầu nối khi cần';
+
+  @override
+  String get modesPrivateLine =>
+      'Không ai biết địa chỉ IP hay bạn là ai, kể cả máy chủ của chúng tôi. Tự tìm đường vượt qua chặn.';
+
+  @override
+  String get modesDefault => 'Mặc định';
+
+  @override
+  String get modesFastTag => 'Đi thẳng tới máy chủ của chúng tôi';
+
+  @override
+  String get modesFastLine =>
+      'Bỏ qua Tor nên tin nhắn đến nhanh hơn và tốn ít pin hơn. Máy chủ của chúng tôi chỉ thấy địa chỉ IP của bạn khi bạn đang kết nối, và không bao giờ ghi lại hay giữ nó. Không bao giờ thấy bạn nói gì. Người liên hệ của bạn không bao giờ thấy nó.';
+
+  @override
+  String get modesFastConnected => 'Nhanh · đã kết nối';
+
+  @override
+  String get modesFastConnecting => 'Nhanh · đang kết nối';
+
+  @override
+  String get modesFastDown => 'Nhanh · máy chủ của chúng tôi chưa phản hồi';
+
+  @override
+  String get modesBackupReady =>
+      'Luôn có một máy dự phòng sẵn sàng, nên bạn vẫn kết nối dù một máy ngừng.';
+
+  @override
+  String get modesDetails => 'Chi tiết';
+
+  @override
+  String get modesBothLine =>
+      'Cả hai đều mã hóa đầu cuối mọi tin nhắn. Chỉ khác ở chỗ ai có thể thấy địa chỉ IP của bạn.';
+
+  @override
+  String get modesConnectionBridges => 'Kết nối và cầu nối';
+
+  @override
+  String get modesWhatServersSee => 'Máy chủ của chúng tôi thấy được gì';
+
+  @override
+  String get serversTitle => 'Máy chủ của Nhanh';
+
+  @override
+  String get serversLine =>
+      'Mỗi tin nhắn được gửi tới cả hai máy chủ cùng lúc. Máy nào trả lời trước sẽ chuyển nó, và máy kia thay thế nếu một máy ngừng.';
+
+  @override
+  String get serversOne => 'Máy chủ 1';
+
+  @override
+  String get serversTwo => 'Máy chủ 2 · nhà cung cấp thứ hai';
+
+  @override
+  String get serversConnected => 'Đã kết nối';
+
+  @override
+  String get serversConnecting => 'Đang kết nối';
+
+  @override
+  String get serversNotAnswering => 'Không phản hồi';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String get serversQuicker => 'Nhanh hơn';
+
+  @override
+  String get serversBackups => 'Relay công cộng';
+
+  @override
+  String get serversBackupsLine =>
+      'Được dùng khi Máy chủ 1 ngừng, và chỉ qua Tor, nên chúng không bao giờ thấy địa chỉ IP của bạn.';
+
+  @override
+  String get serversStandingBy => 'Đang chờ sẵn';
+
+  @override
+  String get serversInUse => 'Đang dùng';
+
+  @override
+  String get homeMergedTitle => 'Relay và Nhanh giờ đã là một';
+
+  @override
+  String get homeMergedLine =>
+      'Bạn đang dùng Nhanh. Luôn có một máy chủ dự phòng sẵn sàng, nên bạn vẫn kết nối dù một máy ngừng. Máy chủ của chúng tôi thấy địa chỉ IP của bạn, không bao giờ thấy bạn nói gì.';
+
+  @override
+  String get homeMergedGotIt => 'Đã hiểu';
+
+  @override
+  String get homeMergedUsePrivate => 'Dùng Riêng tư thay thế';
+
+  @override
+  String get homeOursDownTitle => 'Máy chủ của chúng tôi chưa phản hồi';
+
+  @override
+  String get homeOursDownLine =>
+      'Sau vài phút, khi Tor kết nối được, tin nhắn cũng đi qua relay công cộng, và trở lại qua máy chủ của chúng tôi ngay khi một máy phản hồi.';
+
+  @override
+  String get homeUsePrivate => 'Dùng Riêng tư';
+
+  @override
+  String get homeSwitchedToPrivate => 'Đã chuyển sang Riêng tư';
+
+  @override
+  String get homeUseFast => 'Dùng Nhanh';
+
+  @override
+  String get homeSwitchedToFastRoute => 'Đã chuyển sang Nhanh';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'Nhanh đi thẳng tới máy chủ của chúng tôi và thường vượt qua được. Hoặc để Kryfo tự tìm cách.';
+
+  @override
+  String get appServersNotAnswering => 'Máy chủ chưa phản hồi';
+
+  @override
+  String get settingsPrivateTor => 'Riêng tư · Tor';
+
+  @override
+  String get seenOurServers => 'Máy chủ Kryfo';
+
+  @override
+  String get seenIpWhy =>
+      'Với Riêng tư, mọi thứ đi qua Tor và máy chủ của chúng tôi chỉ thấy một nút thoát, không bao giờ thấy bạn. Với Nhanh, kết nối đi thẳng tới hai máy chủ của chúng tôi: chúng thấy địa chỉ IP của bạn khi bạn đang kết nối và không lưu lại gì. Khi máy chủ đầu tiên ngừng, Nhanh dùng thêm relay công cộng, chỉ qua Tor.';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'Album sẽ bị xóa khỏi cả hai điện thoại, trừ khi đã được lưu. Không thể hoàn tác việc này.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'Album sẽ bị xóa khỏi điện thoại của mọi người, trừ khi đã được lưu. Không thể hoàn tác việc này.';
+
+  @override
+  String get homeInviteSomeone => 'Mời một người';
+
+  @override
+  String get onboardingNameHeadline => 'Một *@tên* công khai, nếu bạn muốn.';
+
+  @override
+  String get onboardingNameLine =>
+      'Tên công khai giúp mọi người tìm thấy bạn. Bỏ qua giúp bạn riêng tư hơn, bạn luôn có thể thêm sau.';
+
+  @override
+  String get onboardingNameSkip => 'Bỏ qua lúc này →';
+
+  @override
+  String onboardingNameClaim(Object handle) {
+    return 'Lấy @$handle →';
+  }
+
+  @override
+  String get onboardingInviteHeadline => 'Giờ thì, *mời một người*.';
+
+  @override
+  String get onboardingInviteLead =>
+      'Gửi một liên kết qua bất kỳ ứng dụng nhắn tin nào. Liên kết mở Kryfo, hoặc chỉ chỗ tải về.';
+
+  @override
+  String get onboardingInviteSomeone => 'Mời một người →';
+
+  @override
+  String get onboardingInviteGettingReady => 'Đang chuẩn bị liên kết…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'Thêm tôi trên Kryfo. Tên của tôi ở đó là $myId\n\nChạm để thêm tôi:\n$link\n\nChưa có Kryfo? Tải tại đây:\n$download\n\nKryfo là ứng dụng nhắn tin riêng tư. Không cần số điện thoại, không cần email.';
+  }
+
+  @override
+  String get inviteNotReady =>
+      'Liên kết của bạn sắp xong. Thử lại sau giây lát.';
+
+  @override
   String get photoCropTitle => 'Di chuyển và thu phóng';
 
   @override
@@ -9872,146 +10034,114 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get modesPickHow =>
-      'Chọn cách tin nhắn của bạn được gửi đi. Bạn có thể đổi bất cứ lúc nào.';
-
-  @override
-  String get modesPrivate => 'Riêng tư';
-
-  @override
-  String get modesPrivateTag => 'Tor · cầu nối khi cần';
-
-  @override
-  String get modesPrivateLine =>
-      'Không ai biết địa chỉ IP hay bạn là ai, kể cả máy chủ của chúng tôi. Tự tìm đường vượt qua chặn.';
-
-  @override
-  String get modesDefault => 'Mặc định';
-
-  @override
-  String get modesFastTag => 'Đi thẳng tới máy chủ của chúng tôi';
-
-  @override
-  String get modesFastLine =>
-      'Bỏ qua Tor nên tin nhắn đến nhanh hơn và tốn ít pin hơn. Máy chủ của chúng tôi chỉ thấy địa chỉ IP của bạn khi bạn đang kết nối, và không bao giờ ghi lại hay giữ nó. Không bao giờ thấy bạn nói gì. Người liên hệ của bạn không bao giờ thấy nó.';
-
-  @override
-  String get modesFastConnected => 'Nhanh · đã kết nối';
-
-  @override
-  String get modesFastConnecting => 'Nhanh · đang kết nối';
-
-  @override
-  String get modesFastDown => 'Nhanh · máy chủ của chúng tôi chưa phản hồi';
-
-  @override
-  String get modesBackupReady =>
-      'Luôn có một máy dự phòng sẵn sàng, nên bạn vẫn kết nối dù một máy ngừng.';
-
-  @override
-  String get modesDetails => 'Chi tiết';
-
-  @override
-  String get modesBothLine =>
-      'Cả hai đều mã hóa đầu cuối mọi tin nhắn. Chỉ khác ở chỗ ai có thể thấy địa chỉ IP của bạn.';
-
-  @override
-  String get modesConnectionBridges => 'Kết nối và cầu nối';
-
-  @override
-  String get modesWhatServersSee => 'Máy chủ của chúng tôi thấy được gì';
-
-  @override
-  String get serversTitle => 'Máy chủ của Nhanh';
-
-  @override
-  String get serversLine =>
-      'Mỗi tin nhắn được gửi tới cả hai máy chủ cùng lúc. Máy nào trả lời trước sẽ chuyển nó, và máy kia thay thế nếu một máy ngừng.';
-
-  @override
-  String get serversOne => 'Máy chủ 1';
-
-  @override
-  String get serversTwo => 'Máy chủ 2 · nhà cung cấp thứ hai';
-
-  @override
-  String get serversConnected => 'Đã kết nối';
-
-  @override
-  String get serversConnecting => 'Đang kết nối';
-
-  @override
-  String get serversNotAnswering => 'Không phản hồi';
-
-  @override
-  String serversMs(int ms) {
-    return '$ms ms';
+  String transferDoneOf(String done, String total) {
+    return '$done trên $total';
   }
 
   @override
-  String get serversQuicker => 'Nhanh hơn';
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
 
   @override
-  String get serversBackups => 'Relay công cộng';
+  String get transferLeftSoon => 'còn chưa đến một phút';
 
   @override
-  String get serversBackupsLine =>
-      'Được dùng khi Máy chủ 1 ngừng, và chỉ qua Tor, nên chúng không bao giờ thấy địa chỉ IP của bạn.';
+  String transferLeftMinutes(String n) {
+    return 'còn khoảng $n phút';
+  }
 
   @override
-  String get serversStandingBy => 'Đang chờ sẵn';
+  String transferLeftHours(String n) {
+    return 'còn khoảng $n giờ';
+  }
 
   @override
-  String get serversInUse => 'Đang dùng';
+  String transferSending(String detail) {
+    return 'Đang gửi · $detail';
+  }
 
   @override
-  String get homeMergedTitle => 'Relay và Nhanh giờ đã là một';
+  String transferReceiving(String detail) {
+    return 'Đang nhận · $detail';
+  }
 
   @override
-  String get homeMergedLine =>
-      'Bạn đang dùng Nhanh. Luôn có một máy chủ dự phòng sẵn sàng, nên bạn vẫn kết nối dù một máy ngừng. Máy chủ của chúng tôi thấy địa chỉ IP của bạn, không bao giờ thấy bạn nói gì.';
+  String transferBoth(String detail) {
+    return 'Đang gửi và nhận · $detail';
+  }
 
   @override
-  String get homeMergedGotIt => 'Đã hiểu';
+  String get transferPause => 'Tạm dừng';
 
   @override
-  String get homeMergedUsePrivate => 'Dùng Riêng tư thay thế';
+  String get transferPauseDownload => 'Tạm dừng tải xuống';
 
   @override
-  String get homeOursDownTitle => 'Máy chủ của chúng tôi chưa phản hồi';
+  String get transferDownload => 'Tải xuống';
 
   @override
-  String get homeOursDownLine =>
-      'Sau vài phút, khi Tor kết nối được, tin nhắn cũng đi qua relay công cộng, và trở lại qua máy chủ của chúng tôi ngay khi một máy phản hồi.';
+  String get transferResume => 'Tiếp tục';
 
   @override
-  String get homeUsePrivate => 'Dùng Riêng tư';
+  String get transferOnWifi => 'Tải qua Wi-Fi';
 
   @override
-  String get homeSwitchedToPrivate => 'Đã chuyển sang Riêng tư';
+  String transferPausedAt(String detail) {
+    return 'Đã tạm dừng · $detail';
+  }
 
   @override
-  String get homeUseFast => 'Dùng Nhanh';
+  String get transferTapToDownload => 'Chạm để tải xuống';
 
   @override
-  String get homeSwitchedToFastRoute => 'Đã chuyển sang Nhanh';
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
 
   @override
-  String get bridgesFastGetsThrough =>
-      'Nhanh đi thẳng tới máy chủ của chúng tôi và thường vượt qua được. Hoặc để Kryfo tự tìm cách.';
+  String get transferNoteTitle => 'Truyền tệp';
 
   @override
-  String get appServersNotAnswering => 'Máy chủ chưa phản hồi';
+  String get transferChannel => 'Truyền tệp';
 
   @override
-  String get settingsPrivateTor => 'Riêng tư · Tor';
+  String get transferChannelLine =>
+      'Hiện khi tệp đang gửi hoặc tải xuống. Không bao giờ nêu tên cuộc trò chuyện hay tệp.';
 
   @override
-  String get seenOurServers => 'Máy chủ Kryfo';
+  String get autoGetTitle => 'Tự động tải xuống';
 
   @override
-  String get seenIpWhy =>
-      'Với Riêng tư, mọi thứ đi qua Tor và máy chủ của chúng tôi chỉ thấy một nút thoát, không bao giờ thấy bạn. Với Nhanh, kết nối đi thẳng tới hai máy chủ của chúng tôi: chúng thấy địa chỉ IP của bạn khi bạn đang kết nối và không lưu lại gì. Khi máy chủ đầu tiên ngừng, Nhanh dùng thêm relay công cộng, chỉ qua Tor.';
+  String get autoGetLine =>
+      'Tệp đến mà không cần chạm, theo lựa chọn ở đây. Tệp đang chờ được giữ cho bạn trên máy chủ tệp, tối đa một tuần.';
+
+  @override
+  String get autoGetPhotos => 'Ảnh';
+
+  @override
+  String get autoGetVideos => 'Video';
+
+  @override
+  String get autoGetFiles => 'Tệp';
+
+  @override
+  String get autoGetAlways => 'Qua Wi-Fi và dữ liệu di động';
+
+  @override
+  String get autoGetWifi => 'Chỉ qua Wi-Fi';
+
+  @override
+  String get autoGetNever => 'Không bao giờ, tôi chạm để tải';
+
+  @override
+  String get autoGetVoice => 'Tin nhắn thoại luôn được tải xuống.';
+
+  @override
+  String get settingsFiles => 'Tệp';
+
+  @override
+  String get fileSheetOpenWith => 'Mở bằng ứng dụng khác';
 
   @override
   String get desktopLockAccountBody =>

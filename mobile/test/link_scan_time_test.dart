@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // anyone can send any words, and every bubble reads its links. no text
-// makes that slow: each reader is linear in what it is given. the bound is
-// loose on purpose, a slow reader takes seconds on these
+// makes that slow: each reader is linear in what it is given. the check is
+// the growth, not the clock: eight times the text may take at most 24 times
+// as long (linear is about 8, quadratic about 64). each size keeps its
+// fastest of seven runs, so a loaded machine only adds noise it drops
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/link_preview.dart';
 import 'package:kryfo/mentions.dart';
@@ -10,35 +12,65 @@ import 'package:kryfo/rooms.dart';
 
 const _size = 40000;
 
-String _fill(String unit, {String tail = ''}) =>
-    unit * (_size ~/ unit.length) + tail;
+String _fill(String unit, {String tail = '', int size = _size}) =>
+    unit * (size ~/ unit.length) + tail;
 
-final _texts = <String, String>{
-  'open labels': _fill('geo:( '),
-  'open labels with no spaces': _fill('(geo:'),
-  'open labels and their closers': '${_fill('(geo:')}${')' * _size}',
-  'places and links in turn': _fill('geo: https://a '),
-  'a link closed many times': 'https://x${')' * _size}',
-  'a place closed many times': 'geo:1,2${')' * _size}',
-  'a link stopped many times': 'https://x${'.' * _size}',
-  'links in labels': _fill('geo:1,2(https://a '),
-  'kryfo links': _fill('kryfo://room?x '),
-  'mentions': _fill('@a-b-c '),
-  'a mention that never ends': '@${'a-' * _size}',
+// each text at a given size
+final _texts = <String, String Function(int)>{
+  'open labels': (n) => _fill('geo:( ', size: n),
+  'open labels with no spaces': (n) => _fill('(geo:', size: n),
+  'open labels and their closers': (n) =>
+      '${_fill('(geo:', size: n)}${')' * n}',
+  'places and links in turn': (n) => _fill('geo: https://a ', size: n),
+  'a link closed many times': (n) => 'https://x${')' * n}',
+  'a place closed many times': (n) => 'geo:1,2${')' * n}',
+  'a link stopped many times': (n) => 'https://x${'.' * n}',
+  'links in labels': (n) => _fill('geo:1,2(https://a ', size: n),
+  'kryfo links': (n) => _fill('kryfo://room?x ', size: n),
+  'mentions': (n) => _fill('@a-b-c ', size: n),
+  'a mention that never ends': (n) => '@${'a-' * n}',
 };
+
+void _readAll(String text) {
+  firstUrl(text);
+  firstPlace(text);
+  geoSpans(text).length;
+  firstKryfoLink(text);
+  kryfoLinksIn(text).length;
+  mentionsMe(text, 'a-b-c');
+}
+
+// the fastest of [runs] reads, in microseconds
+int _fastest(String text, {int runs = 7}) {
+  var best = -1;
+  for (var i = 0; i < runs; i++) {
+    final w = Stopwatch()..start();
+    _readAll(text);
+    final us = w.elapsedMicroseconds;
+    if (best < 0 || us < best) best = us;
+  }
+  return best;
+}
 
 void main() {
   for (final e in _texts.entries) {
     test('${e.key}: read in good time', () {
-      final text = e.value;
-      final w = Stopwatch()..start();
-      firstUrl(text);
-      firstPlace(text);
-      geoSpans(text).length;
-      firstKryfoLink(text);
-      kryfoLinksIn(text).length;
-      mentionsMe(text, 'a-b-c');
-      expect(w.elapsedMilliseconds, lessThan(400), reason: e.key);
+      final small = e.value(_size ~/ 8), big = e.value(_size);
+      // warm up first: the first runs are compiled as they go
+      for (var i = 0; i < 3; i++) {
+        _readAll(small);
+        _readAll(big);
+      }
+      // a floor of 200 us: below it the timer's own steps count
+      final a = _fastest(small).clamp(200, 1 << 40);
+      final b = _fastest(big);
+      expect(
+        b / a,
+        lessThan(24),
+        reason: '${e.key}: ${a}us at ${_size ~/ 8}, ${b}us at $_size',
+      );
+      // and never seconds: about 10 ms here unloaded
+      expect(b, lessThan(2000000), reason: e.key);
     });
   }
 
