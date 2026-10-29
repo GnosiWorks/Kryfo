@@ -62,8 +62,11 @@ bool FlutterWindow::OnCreate() {
   });
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
+  // the first frame is there: the window comes up in front with the view
+  // focused, so nothing waits for a click to be drawn or typed into
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
     this->Show();
+    ShowAndRaise();
   });
 
   // Flutter can complete the first frame before the "show window" callback is
@@ -77,8 +80,15 @@ bool FlutterWindow::OnCreate() {
 void FlutterWindow::ShowAndRaise() {
   HWND w = GetHandle();
   if (!w) return;
-  ::ShowWindow(w, ::IsIconic(w) ? SW_RESTORE : SW_SHOW);
+  if (!::IsWindowVisible(w)) ::ShowWindow(w, SW_SHOW);
+  if (::IsIconic(w)) ::ShowWindow(w, SW_RESTORE);
   ::SetForegroundWindow(w);
+  ::BringWindowToTop(w);
+  if (flutter_controller_) {
+    ::SetFocus(flutter_controller_->view()->GetNativeWindow());
+    // what was drawn while hidden may be stale: a fresh frame now
+    flutter_controller_->ForceRedraw();
+  }
 }
 
 // dart keeps its marks and lets its keys go first, then the window goes.
@@ -111,6 +121,17 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
+  // the tray's own before flutter's: with a tray, closing only hides, every
+  // time, without asking dart whether the app may end
+  if (tray_.Handle(message, wparam, lparam, [this]() { ShowAndRaise(); },
+                   [this]() { Quit(); })) {
+    return 0;
+  }
+  if (message == WM_CLOSE && tray_.shown()) {
+    ::ShowWindow(hwnd, SW_HIDE);
+    return 0;
+  }
+
   // Give Flutter, including plugins, an opportunity to handle window messages.
   if (flutter_controller_) {
     std::optional<LRESULT> result =
@@ -121,21 +142,9 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
     }
   }
 
-  if (tray_.Handle(message, wparam, lparam, [this]() { ShowAndRaise(); },
-                   [this]() { Quit(); })) {
-    return 0;
-  }
-
   switch (message) {
     case WM_FONTCHANGE:
       flutter_controller_->engine()->ReloadSystemFonts();
-      break;
-    // with a tray the window only hides, and the app keeps receiving
-    case WM_CLOSE:
-      if (tray_.shown()) {
-        ::ShowWindow(hwnd, SW_HIDE);
-        return 0;
-      }
       break;
     case WM_TIMER:
     case WM_APP + 2:
