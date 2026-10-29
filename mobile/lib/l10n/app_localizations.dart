@@ -6428,12 +6428,6 @@ abstract class AppLocalizations {
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Use this →'**
-  String get onboardingUseThis;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Kryfo builds a private route before it sends anything. While you are offline, messages wait and arrive when you are back.'**
   String get onboardingKryfoBuildsAPrivateRouteBefore;
 

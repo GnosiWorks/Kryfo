@@ -1153,7 +1153,6 @@
   "onboardingInviteGettingReady": "Đang chuẩn bị liên kết…",
   "inviteShareText": "Thêm tôi trên Kryfo. Tên của tôi ở đó là {myId}\n\nChạm để thêm tôi:\n{link}\n\nChưa có Kryfo? Tải tại đây:\n{download}\n\nKryfo là ứng dụng nhắn tin riêng tư. Không cần số điện thoại, không cần email.",
   "inviteNotReady": "Liên kết của bạn sắp xong. Thử lại sau giây lát.",
-  "onboardingUseThis": "Dùng chế độ này →",
   "onboardingKryfoBuildsAPrivateRouteBefore": "Kryfo dựng một tuyến đường riêng tư trước khi gửi bất cứ thứ gì. Khi bạn ngoại tuyến, tin nhắn sẽ chờ và đến khi bạn trực tuyến lại.",
   "onboardingYourIdentityLivesOn": "Danh tính của bạn nằm trên điện thoại này. Hãy sao lưu nó trong cài đặt khi bạn sẵn sàng.",
   "onboardingOneQuiet": "Một *thông báo* lặng lẽ.",

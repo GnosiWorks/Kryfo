@@ -1153,7 +1153,6 @@
   "onboardingInviteGettingReady": "جارٍ تجهيز رابطك…",
   "inviteShareText": "أضفني على Kryfo. اسمي هناك ⁨{myId}⁩\n\nاضغط لإضافتي:\n⁨{link}⁩\n\nليس لديك Kryfo بعد؟ احصل عليه من هنا:\n⁨{download}⁩\n\nتطبيق Kryfo للمراسلة الخاصة. بلا رقم هاتف، وبلا بريد إلكتروني.",
   "inviteNotReady": "رابطك جاهز تقريبًا. حاول مجددًا بعد لحظة.",
-  "onboardingUseThis": "استخدام هذا ←",
   "onboardingKryfoBuildsAPrivateRouteBefore": "يبني Kryfo مسارًا خاصًا قبل أن يرسل أي شيء. وحين تكون غير متصل، تنتظر الرسائل وتصل عند عودتك.",
   "onboardingYourIdentityLivesOn": "هويتك موجودة على هذا الهاتف. انسخها احتياطيًا من الإعدادات حين تكون مستعدًا.",
   "onboardingOneQuiet": "*إشعار* واحد هادئ.",

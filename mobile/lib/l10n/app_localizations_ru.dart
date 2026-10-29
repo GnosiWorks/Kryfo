@@ -4171,9 +4171,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Ссылка почти готова. Попробуй ещё раз чуть позже.';
 
   @override
-  String get onboardingUseThis => 'Выбрать →';
-
-  @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
       'Kryfo строит приватный маршрут, прежде чем что-либо отправить. Пока ты не в сети, сообщения ждут и придут, когда ты вернёшься.';
 

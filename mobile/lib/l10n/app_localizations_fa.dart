@@ -4078,9 +4078,6 @@ class AppLocalizationsFa extends AppLocalizations {
       'پیوند شما تقریباً آماده است. کمی بعد دوباره امتحان کنید.';
 
   @override
-  String get onboardingUseThis => 'استفاده از این ←';
-
-  @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
       'Kryfo پیش از ارسال هر چیزی یک مسیر خصوصی می‌سازد. وقتی آفلاین هستید، پیام‌ها منتظر می‌مانند و وقتی برگردید می‌رسند.';
 

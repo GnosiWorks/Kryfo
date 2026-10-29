@@ -1153,7 +1153,6 @@
   "onboardingInviteGettingReady": "Menyiapkan tautanmu…",
   "inviteShareText": "Tambahkan aku di Kryfo. Namaku di sana {myId}\n\nKetuk untuk menambahkanku:\n{link}\n\nBelum punya Kryfo? Unduh di sini:\n{download}\n\nKryfo adalah aplikasi pesan privat. Tanpa nomor telepon, tanpa email.",
   "inviteNotReady": "Tautanmu hampir siap. Coba lagi sebentar lagi.",
-  "onboardingUseThis": "Pakai ini →",
   "onboardingKryfoBuildsAPrivateRouteBefore": "Kryfo membangun rute privat sebelum mengirim apa pun. Saat kamu offline, pesan menunggu dan sampai saat kamu kembali.",
   "onboardingYourIdentityLivesOn": "Identitasmu tinggal di ponsel ini. Cadangkan dari pengaturan saat kamu siap.",
   "onboardingOneQuiet": "Satu *notifikasi* senyap.",

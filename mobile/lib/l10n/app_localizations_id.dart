@@ -4061,9 +4061,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get inviteNotReady => 'Tautanmu hampir siap. Coba lagi sebentar lagi.';
 
   @override
-  String get onboardingUseThis => 'Pakai ini →';
-
-  @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
       'Kryfo membangun rute privat sebelum mengirim apa pun. Saat kamu offline, pesan menunggu dan sampai saat kamu kembali.';
 

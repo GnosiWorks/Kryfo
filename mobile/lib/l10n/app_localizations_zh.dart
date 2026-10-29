@@ -3874,9 +3874,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get inviteNotReady => '你的链接快好了。稍后再试一次。';
 
   @override
-  String get onboardingUseThis => '用这个 →';
-
-  @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
       'Kryfo 在发送任何内容之前，都会先建立一条私密路线。你离线时，消息会等着，等你回来再送达。';
 
@@ -13264,9 +13261,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get inviteNotReady => '你的連結快好了。稍後再試一次。';
-
-  @override
-  String get onboardingUseThis => '使用這個 →';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>

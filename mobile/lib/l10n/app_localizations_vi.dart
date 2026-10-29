@@ -4055,9 +4055,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Liên kết của bạn sắp xong. Thử lại sau giây lát.';
 
   @override
-  String get onboardingUseThis => 'Dùng chế độ này →';
-
-  @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
       'Kryfo dựng một tuyến đường riêng tư trước khi gửi bất cứ thứ gì. Khi bạn ngoại tuyến, tin nhắn sẽ chờ và đến khi bạn trực tuyến lại.';
 

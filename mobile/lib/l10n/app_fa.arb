@@ -1153,7 +1153,6 @@
   "onboardingInviteGettingReady": "در حال آماده کردن پیوند شما…",
   "inviteShareText": "مرا در Kryfo اضافه کنید. نام من آنجا ⁨{myId}⁩ است\n\nبرای افزودن من بزنید:\n⁨{link}⁩\n\nهنوز Kryfo ندارید؟ از اینجا بگیرید:\n⁨{download}⁩\n\nبرنامه‌ی Kryfo یک پیام‌رسان خصوصی است. بدون شماره تلفن، بدون ایمیل.",
   "inviteNotReady": "پیوند شما تقریباً آماده است. کمی بعد دوباره امتحان کنید.",
-  "onboardingUseThis": "استفاده از این ←",
   "onboardingKryfoBuildsAPrivateRouteBefore": "Kryfo پیش از ارسال هر چیزی یک مسیر خصوصی می‌سازد. وقتی آفلاین هستید، پیام‌ها منتظر می‌مانند و وقتی برگردید می‌رسند.",
   "onboardingYourIdentityLivesOn": "هویت شما روی این گوشی زندگی می‌کند. هر وقت آماده بودید، از تنظیمات از آن پشتیبان بگیرید.",
   "onboardingOneQuiet": "یک *اعلان* بی‌صدا.",

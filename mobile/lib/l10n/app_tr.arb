@@ -1153,7 +1153,6 @@
   "onboardingInviteGettingReady": "Bağlantın hazırlanıyor…",
   "inviteShareText": "Beni Kryfo’da ekle. Oradaki adım: {myId}\n\nBeni eklemek için dokun:\n{link}\n\nHenüz Kryfo yok mu? Buradan indir:\n{download}\n\nKryfo gizli bir mesajlaşma uygulaması. Telefon numarası yok, e-posta yok.",
   "inviteNotReady": "Bağlantın neredeyse hazır. Birazdan tekrar dene.",
-  "onboardingUseThis": "Bunu kullan →",
   "onboardingKryfoBuildsAPrivateRouteBefore": "Kryfo bir şey göndermeden önce gizli bir rota kurar. Sen çevrimdışıyken mesajlar bekler, döndüğünde gelir.",
   "onboardingYourIdentityLivesOn": "Kimliğin bu telefonda yaşar. Hazır olduğunda ayarlardan yedekle.",
   "onboardingOneQuiet": "Tek bir sessiz *bildirim*.",

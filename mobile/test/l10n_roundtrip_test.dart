@@ -1883,7 +1883,6 @@ void main() {
       l.inviteNotReady,
       "Your link is almost ready. Try again in a moment.",
     );
-    expect(l.onboardingUseThis, "Use this →");
     expect(
       l.onboardingKryfoBuildsAPrivateRouteBefore,
       "Kryfo builds a private route before it sends anything. While you are offline, messages wait and arrive when you are back.",

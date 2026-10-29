@@ -80,6 +80,7 @@ Future<String?> readyInvite({
 @visibleForTesting
 Future<bool> Function(String text, String subject) shareInviteText =
     (text, subject) async {
+      if (!canShareOut) return false;
       final r = await lockState.hold(
         () =>
             SharePlus.instance.share(ShareParams(text: text, subject: subject)),

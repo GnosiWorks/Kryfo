@@ -1050,7 +1050,6 @@
   "onboardingInviteGettingReady": "आपका लिंक तैयार हो रहा है…",
   "inviteShareText": "मुझे Kryfo पर जोड़ें। वहाँ मेरा नाम {myId} है\n\nमुझे जोड़ने के लिए टैप करें:\n{link}\n\nअभी Kryfo नहीं है? यहाँ से पाएँ:\n{download}\n\nKryfo एक निजी मैसेंजर है। न फ़ोन नंबर, न ईमेल।",
   "inviteNotReady": "आपका लिंक लगभग तैयार है। थोड़ी देर में फिर कोशिश करें।",
-  "onboardingUseThis": "यही इस्तेमाल करें →",
   "onboardingKryfoBuildsAPrivateRouteBefore": "कुछ भी भेजने से पहले Kryfo एक निजी रास्ता बनाता है। जब आप ऑफ़लाइन हों, मैसेज इंतज़ार करते हैं और आपके लौटने पर पहुँच जाते हैं।",
   "onboardingYourIdentityLivesOn": "आपकी पहचान इसी फ़ोन पर रहती है। जब तैयार हों, सेटिंग से इसका बैकअप लें।",
   "onboardingOneQuiet": "एक शांत *सूचना*।",

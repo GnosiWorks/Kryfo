@@ -1153,7 +1153,6 @@
   "onboardingInviteGettingReady": "正在准备你的链接…",
   "inviteShareText": "在 Kryfo 上加我。我的名字是 {myId}\n\n点这里加我：\n{link}\n\n还没有 Kryfo？在这里下载：\n{download}\n\nKryfo 是一款私密通讯应用。不用手机号，不用邮箱。",
   "inviteNotReady": "你的链接快好了。稍后再试一次。",
-  "onboardingUseThis": "用这个 →",
   "onboardingKryfoBuildsAPrivateRouteBefore": "Kryfo 在发送任何内容之前，都会先建立一条私密路线。你离线时，消息会等着，等你回来再送达。",
   "onboardingYourIdentityLivesOn": "你的身份保存在这部手机上。准备好后，可以在设置里备份它。",
   "onboardingOneQuiet": "一条安静的*通知*。",

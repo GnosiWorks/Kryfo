@@ -4083,9 +4083,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bağlantın neredeyse hazır. Birazdan tekrar dene.';
 
   @override
-  String get onboardingUseThis => 'Bunu kullan →';
-
-  @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
       'Kryfo bir şey göndermeden önce gizli bir rota kurar. Sen çevrimdışıyken mesajlar bekler, döndüğünde gelir.';
 

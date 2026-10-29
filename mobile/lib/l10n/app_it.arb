@@ -1153,7 +1153,6 @@
   "onboardingInviteGettingReady": "Preparo il tuo link…",
   "inviteShareText": "Aggiungimi su Kryfo. Lì mi chiamo {myId}\n\nTocca per aggiungermi:\n{link}\n\nNon hai ancora Kryfo? Scaricalo qui:\n{download}\n\nKryfo è un messenger privato. Niente numero di telefono, niente email.",
   "inviteNotReady": "Il tuo link è quasi pronto. Riprova tra un momento.",
-  "onboardingUseThis": "Usa questo →",
   "onboardingKryfoBuildsAPrivateRouteBefore": "Kryfo costruisce un percorso privato prima di inviare qualsiasi cosa. Mentre sei offline, i messaggi aspettano e arrivano quando torni.",
   "onboardingYourIdentityLivesOn": "La tua identità vive su questo telefono. Fanne un backup dalle impostazioni quando te la senti.",
   "onboardingOneQuiet": "Una *notifica* discreta.",

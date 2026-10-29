@@ -1153,7 +1153,6 @@
   "onboardingInviteGettingReady": "Готовим ссылку…",
   "inviteShareText": "Добавь меня в Kryfo. Там меня зовут {myId}\n\nНажми, чтобы добавить:\n{link}\n\nЕщё нет Kryfo? Скачай здесь:\n{download}\n\nKryfo — приватный мессенджер. Без номера телефона и без почты.",
   "inviteNotReady": "Ссылка почти готова. Попробуй ещё раз чуть позже.",
-  "onboardingUseThis": "Выбрать →",
   "onboardingKryfoBuildsAPrivateRouteBefore": "Kryfo строит приватный маршрут, прежде чем что-либо отправить. Пока ты не в сети, сообщения ждут и придут, когда ты вернёшься.",
   "onboardingYourIdentityLivesOn": "Твой профиль живёт на этом телефоне. Сделай резервную копию в настройках, когда будет удобно.",
   "onboardingOneQuiet": "Одно тихое *уведомление*.",

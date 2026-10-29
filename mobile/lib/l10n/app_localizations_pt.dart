@@ -4099,9 +4099,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Seu link está quase pronto. Tente de novo em um instante.';
 
   @override
-  String get onboardingUseThis => 'Usar este →';
-
-  @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
       'O Kryfo monta uma rota privada antes de enviar qualquer coisa. Enquanto você estiver offline, as mensagens esperam e chegam quando você voltar.';
 

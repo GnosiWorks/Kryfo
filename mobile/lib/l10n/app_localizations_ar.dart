@@ -4171,9 +4171,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get inviteNotReady => 'رابطك جاهز تقريبًا. حاول مجددًا بعد لحظة.';
 
   @override
-  String get onboardingUseThis => 'استخدام هذا ←';
-
-  @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
       'يبني Kryfo مسارًا خاصًا قبل أن يرسل أي شيء. وحين تكون غير متصل، تنتظر الرسائل وتصل عند عودتك.';
 

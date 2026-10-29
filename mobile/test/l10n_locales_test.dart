@@ -1576,7 +1576,6 @@ final _calls = <_Call>[
     (l) => l.inviteShareText("⟨myId⟩", "⟨link⟩", "⟨download⟩"),
   ),
   ('inviteNotReady', [], (l) => l.inviteNotReady),
-  ('onboardingUseThis', [], (l) => l.onboardingUseThis),
   (
     'onboardingKryfoBuildsAPrivateRouteBefore',
     [],

@@ -4077,9 +4077,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'आपका लिंक लगभग तैयार है। थोड़ी देर में फिर कोशिश करें।';
 
   @override
-  String get onboardingUseThis => 'यही इस्तेमाल करें →';
-
-  @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
       'कुछ भी भेजने से पहले Kryfo एक निजी रास्ता बनाता है। जब आप ऑफ़लाइन हों, मैसेज इंतज़ार करते हैं और आपके लौटने पर पहुँच जाते हैं।';
 
