@@ -9962,4 +9962,93 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo هنگام اجرا به یک پوشهٔ خصوصی در حافظه نیاز دارد و این رایانه چنین پوشه‌ای ندارد، پس باز نمی‌شود.';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ رقم',
+      zero: 'هیچ رقمی',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ نویسه',
+      zero: 'هیچ نویسه‌ای',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'پیشرفت پشتیبان‌گیری';
+
+  @override
+  String get a11yRestoreProgress => 'پیشرفت بازیابی';
+
+  @override
+  String get a11yExportProgress => 'پیشرفت برون‌بری';
+
+  @override
+  String get a11yLockFileProgress => 'پیشرفت قفل کردن';
+
+  @override
+  String get a11yCleanProgress => 'پیشرفت تمیز کردن';
+
+  @override
+  String get a11yMessageActions => 'کارهای پیام';
+
+  @override
+  String get a11yRecordVoiceNote => 'ضبط پیام صوتی';
+
+  @override
+  String get a11yRecording => 'در حال ضبط';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'عکس، ⁨$date⁩';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return 'عکس از ⁨$name⁩، ⁨$date⁩';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'ویدیو، ⁨$date⁩';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return 'ویدیو از ⁨$name⁩، ⁨$date⁩';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ پیام تازه',
+      one: 'پیام تازه',
+    );
+    return '$_temp0';
+  }
 }

@@ -2626,5 +2626,20 @@
   "desktopFolderNotYours": "Kryfo 的資料夾屬於這台電腦上的另一個帳戶，所以 Kryfo 不會開啟它。",
   "desktopFolderNotPrivate": "Kryfo 無法把它的資料夾設為只有你能存取，所以不會開啟。",
   "desktopLockOtherVersion": "這個鎖是另一個版本的 Kryfo 建立的，目前的版本無法讀取。",
-  "desktopNoMemoryFolder": "Kryfo 執行時需要記憶體中的一個私有資料夾，而這台電腦沒有提供，所以 Kryfo 不會開啟。"
+  "desktopNoMemoryFolder": "Kryfo 執行時需要記憶體中的一個私有資料夾，而這台電腦沒有提供，所以 Kryfo 不會開啟。",
+  "a11yPinDigits": "{count, plural, =0{沒有數字} other{{count} 位數字}}",
+  "a11yPassChars": "{count, plural, =0{沒有字元} other{{count} 個字元}}",
+  "a11yBackupProgress": "備份進度",
+  "a11yRestoreProgress": "還原進度",
+  "a11yExportProgress": "匯出進度",
+  "a11yLockFileProgress": "鎖定進度",
+  "a11yCleanProgress": "清理進度",
+  "a11yMessageActions": "訊息操作",
+  "a11yRecordVoiceNote": "錄製語音訊息",
+  "a11yRecording": "正在錄音",
+  "a11yPhotoOn": "照片，{date}",
+  "a11yPhotoFrom": "{name} 傳來的照片，{date}",
+  "a11yVideoOn": "影片，{date}",
+  "a11yVideoFrom": "{name} 傳來的影片，{date}",
+  "a11yNewMessages": "{count, plural, =1{新訊息} other{{count} 則新訊息}}"
 }

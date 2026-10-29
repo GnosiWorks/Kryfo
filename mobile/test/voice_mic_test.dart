@@ -13,6 +13,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/gestures.dart' show kLongPressTimeout;
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart' show SemanticsAction;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
@@ -26,6 +27,7 @@ import 'package:kryfo/widgets/media_bubbles.dart' show VoiceMakingBubble;
 import 'package:kryfo/widgets/voice_mic.dart';
 import 'package:kryfo/widgets/voice_parts.dart' show VoiceRecordBar;
 
+import 'a11y_fakes.dart' show hearAnnouncements;
 import 'dev_chat_fakes.dart';
 
 void _mock(String channel, Future<Object?> Function(MethodCall c)? h) =>
@@ -243,6 +245,7 @@ void main() {
     Locale locale = const Locale('en'),
     double scale = 1,
     Size size = const Size(1000, 1800),
+    bool reader = false,
   }) => devOpen(
     t,
     Scaffold(
@@ -251,7 +254,12 @@ void main() {
           alignment: AlignmentDirectional.bottomEnd,
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: HoldToTalkMic(disguise: disguise, onSend: sent.add),
+            child: Builder(
+              builder: (ctx) => MediaQuery(
+                data: MediaQuery.of(ctx).copyWith(accessibleNavigation: reader),
+                child: HoldToTalkMic(disguise: disguise, onSend: sent.add),
+              ),
+            ),
           ),
         ),
       ),
@@ -1087,6 +1095,64 @@ void main() {
       expect(chip.height, greaterThanOrEqualTo(48));
       final bar = t.getRect(find.byType(VoiceLockedBar));
       expect(bar.width, 360);
+      await t.tap(find.bySemanticsLabel(l10n.voiceDeleteNote));
+      await settle(t);
+      await close(t);
+    });
+  });
+
+  group('without a hold', () {
+    testWidgets('with a screen reader a tap records locked, heard once', (
+      t,
+    ) async {
+      final heard = hearAnnouncements(t);
+      await open(t, reader: true);
+      expect(find.bySemanticsLabel(l10n.a11yRecordVoiceNote), findsOneWidget);
+      await t.tap(find.byType(HoldToTalkMic));
+      await settle(t);
+      expect(mic(t).stage, VoiceStage.locked);
+      expect(heard, [l10n.a11yRecording]);
+      expect(find.text(l10n.chatHoldToRecord), findsNothing);
+      await t.tap(find.bySemanticsLabel(l10n.voiceDeleteNote));
+      await settle(t);
+      await close(t);
+    });
+
+    testWidgets('without one a tap only says how it works', (t) async {
+      final heard = hearAnnouncements(t);
+      await open(t);
+      await t.tap(find.byType(HoldToTalkMic));
+      await settle(t, turns: 4);
+      expect(mic(t).stage, VoiceStage.idle);
+      expect(heard, isEmpty);
+      await close(t);
+    });
+
+    testWidgets('the record action works with no screen reader on', (t) async {
+      final h = t.ensureSemantics();
+      await open(t);
+      final node = t.getSemantics(find.byType(HoldToTalkMic));
+      final id = node.getSemanticsData().customSemanticsActionIds!.single;
+      t.binding.renderViews.first.owner!.semanticsOwner!.performAction(
+        node.id,
+        SemanticsAction.customAction,
+        id,
+      );
+      await settle(t);
+      expect(mic(t).stage, VoiceStage.locked);
+      await t.tap(find.bySemanticsLabel(l10n.voiceDeleteNote));
+      await settle(t);
+      await close(t);
+      h.dispose();
+    });
+
+    testWidgets('a keyboard records with enter', (t) async {
+      await open(t);
+      await t.sendKeyEvent(LogicalKeyboardKey.tab);
+      await t.pump();
+      await t.sendKeyEvent(LogicalKeyboardKey.enter);
+      await settle(t);
+      expect(mic(t).stage, VoiceStage.locked);
       await t.tap(find.bySemanticsLabel(l10n.voiceDeleteNote));
       await settle(t);
       await close(t);

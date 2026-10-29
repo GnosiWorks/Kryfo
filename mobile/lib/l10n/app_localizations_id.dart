@@ -9941,4 +9941,93 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo butuh folder pribadi di memori selama berjalan, dan komputer ini tidak menyediakannya, jadi Kryfo tidak akan dibuka.';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString angka',
+      zero: 'Belum ada angka',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString karakter',
+      zero: 'Belum ada karakter',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'Progres cadangan';
+
+  @override
+  String get a11yRestoreProgress => 'Progres pemulihan';
+
+  @override
+  String get a11yExportProgress => 'Progres ekspor';
+
+  @override
+  String get a11yLockFileProgress => 'Progres penguncian';
+
+  @override
+  String get a11yCleanProgress => 'Progres pembersihan';
+
+  @override
+  String get a11yMessageActions => 'Tindakan pesan';
+
+  @override
+  String get a11yRecordVoiceNote => 'Rekam pesan suara';
+
+  @override
+  String get a11yRecording => 'Merekam';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'Foto, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return 'Foto dari $name, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'Video, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return 'Video dari $name, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString pesan baru',
+      one: 'Pesan baru',
+    );
+    return '$_temp0';
+  }
 }

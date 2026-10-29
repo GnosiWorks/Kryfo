@@ -2626,5 +2626,20 @@
   "desktopFolderNotYours": "Der Kryfo-Ordner gehört einem anderen Konto auf diesem Computer, deshalb öffnet Kryfo ihn nicht.",
   "desktopFolderNotPrivate": "Kryfo konnte seinen Ordner nicht nur für dich zugänglich machen und öffnet sich deshalb nicht.",
   "desktopLockOtherVersion": "Diese Sperre stammt von einer anderen Kryfo-Version, die diese hier nicht lesen kann.",
-  "desktopNoMemoryFolder": "Kryfo braucht beim Laufen einen privaten Ordner im Arbeitsspeicher, und dieser Computer bietet keinen, deshalb öffnet es sich nicht."
+  "desktopNoMemoryFolder": "Kryfo braucht beim Laufen einen privaten Ordner im Arbeitsspeicher, und dieser Computer bietet keinen, deshalb öffnet es sich nicht.",
+  "a11yPinDigits": "{count, plural, =0{Keine Ziffern} =1{1 Ziffer} other{{count} Ziffern}}",
+  "a11yPassChars": "{count, plural, =0{Keine Zeichen} =1{1 Zeichen} other{{count} Zeichen}}",
+  "a11yBackupProgress": "Fortschritt des Backups",
+  "a11yRestoreProgress": "Fortschritt der Wiederherstellung",
+  "a11yExportProgress": "Fortschritt des Exports",
+  "a11yLockFileProgress": "Fortschritt beim Verschließen",
+  "a11yCleanProgress": "Fortschritt beim Bereinigen",
+  "a11yMessageActions": "Aktionen für die Nachricht",
+  "a11yRecordVoiceNote": "Sprachnachricht aufnehmen",
+  "a11yRecording": "Aufnahme läuft",
+  "a11yPhotoOn": "Foto, {date}",
+  "a11yPhotoFrom": "Foto von {name}, {date}",
+  "a11yVideoOn": "Video, {date}",
+  "a11yVideoFrom": "Video von {name}, {date}",
+  "a11yNewMessages": "{count, plural, =1{Neue Nachricht} other{{count} neue Nachrichten}}"
 }

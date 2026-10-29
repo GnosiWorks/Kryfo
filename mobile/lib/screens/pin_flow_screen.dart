@@ -573,19 +573,25 @@ class _PinFlowScreenState extends State<PinFlowScreen>
           // a refusal rises in over the hint, and the hint back over it
           child: RiseSwap(
             alignment: Alignment.center,
-            child: Text(
-              making ? l10n.newGroupCreating : _error ?? line,
-              key: ValueKey(
-                making
-                    ? ('making', '')
-                    : _error != null
-                    ? ('error', _error!)
-                    : ('line', line),
-              ),
-              textAlign: TextAlign.center,
-              style: HaloType.sans(
-                size: 13,
-                color: _error != null ? HaloColors.rose : HaloColors.text2,
+            // an error is heard as it appears
+            child: Semantics(
+              liveRegion: _error != null,
+              child: Text(
+                making ? l10n.newGroupCreating : _error ?? line,
+                key: ValueKey(
+                  making
+                      ? ('making', '')
+                      : _error != null
+                      ? ('error', _error!)
+                      : ('line', line),
+                ),
+                textAlign: TextAlign.center,
+                style: HaloType.sans(
+                  size: 13,
+                  color: _error != null
+                      ? HaloColors.roseText
+                      : HaloColors.text2,
+                ),
               ),
             ),
           ),
@@ -597,6 +603,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
           wrong: _error != null,
           shake: _shake,
           min: _min.clamp(kPinMin, kPinMax),
+          letters: _letters,
         ),
         // how strong the phrase being chosen is
         if (_choosingPhrase && _step == _Step.choose) ...[

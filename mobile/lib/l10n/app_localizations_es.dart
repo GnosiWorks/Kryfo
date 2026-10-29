@@ -10018,4 +10018,95 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo necesita una carpeta privada en memoria mientras funciona, y este ordenador no ofrece ninguna, así que no se abrirá.';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString dígitos',
+      one: '1 dígito',
+      zero: 'Ningún dígito',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString caracteres',
+      one: '1 carácter',
+      zero: 'Ningún carácter',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'Progreso de la copia de seguridad';
+
+  @override
+  String get a11yRestoreProgress => 'Progreso de la restauración';
+
+  @override
+  String get a11yExportProgress => 'Progreso de la exportación';
+
+  @override
+  String get a11yLockFileProgress => 'Progreso del bloqueo';
+
+  @override
+  String get a11yCleanProgress => 'Progreso de la limpieza';
+
+  @override
+  String get a11yMessageActions => 'Acciones del mensaje';
+
+  @override
+  String get a11yRecordVoiceNote => 'Grabar un mensaje de voz';
+
+  @override
+  String get a11yRecording => 'Grabando';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'Foto, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return 'Foto de $name, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'Video, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return 'Video de $name, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString mensajes nuevos',
+      one: 'Mensaje nuevo',
+    );
+    return '$_temp0';
+  }
 }

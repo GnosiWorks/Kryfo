@@ -2626,5 +2626,20 @@
   "desktopFolderNotYours": "Папка Kryfo принадлежит другой учётной записи на этом компьютере, поэтому Kryfo её не откроет.",
   "desktopFolderNotPrivate": "Kryfo не смог сделать свою папку доступной только вам, поэтому не откроется.",
   "desktopLockOtherVersion": "Эту блокировку создала другая версия Kryfo, которую эта прочитать не может.",
-  "desktopNoMemoryFolder": "Kryfo нужна личная папка в памяти, пока он работает, а этот компьютер её не даёт, поэтому Kryfo не откроется."
+  "desktopNoMemoryFolder": "Kryfo нужна личная папка в памяти, пока он работает, а этот компьютер её не даёт, поэтому Kryfo не откроется.",
+  "a11yPinDigits": "{count, plural, =0{Нет цифр} one{{count} цифра} few{{count} цифры} many{{count} цифр} other{{count} цифры}}",
+  "a11yPassChars": "{count, plural, =0{Нет символов} one{{count} символ} few{{count} символа} many{{count} символов} other{{count} символа}}",
+  "a11yBackupProgress": "Ход резервного копирования",
+  "a11yRestoreProgress": "Ход восстановления",
+  "a11yExportProgress": "Ход экспорта",
+  "a11yLockFileProgress": "Ход запирания",
+  "a11yCleanProgress": "Ход очистки",
+  "a11yMessageActions": "Действия с сообщением",
+  "a11yRecordVoiceNote": "Записать голосовое сообщение",
+  "a11yRecording": "Идёт запись",
+  "a11yPhotoOn": "Фото, {date}",
+  "a11yPhotoFrom": "Фото от {name}, {date}",
+  "a11yVideoOn": "Видео, {date}",
+  "a11yVideoFrom": "Видео от {name}, {date}",
+  "a11yNewMessages": "{count, plural, one{{count} новое сообщение} few{{count} новых сообщения} many{{count} новых сообщений} other{{count} новых сообщения}}"
 }

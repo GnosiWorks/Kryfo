@@ -9933,4 +9933,95 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo needs a private folder in memory while it runs, and this computer offers none, so it will not open.';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString digits',
+      one: '1 digit',
+      zero: 'No digits',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString characters',
+      one: '1 character',
+      zero: 'No characters',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'Backup progress';
+
+  @override
+  String get a11yRestoreProgress => 'Restore progress';
+
+  @override
+  String get a11yExportProgress => 'Export progress';
+
+  @override
+  String get a11yLockFileProgress => 'Locking progress';
+
+  @override
+  String get a11yCleanProgress => 'Cleaning progress';
+
+  @override
+  String get a11yMessageActions => 'Message actions';
+
+  @override
+  String get a11yRecordVoiceNote => 'Record a voice note';
+
+  @override
+  String get a11yRecording => 'Recording';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'Photo, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return 'Photo from $name, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'Video, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return 'Video from $name, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString new messages',
+      one: 'New message',
+    );
+    return '$_temp0';
+  }
 }

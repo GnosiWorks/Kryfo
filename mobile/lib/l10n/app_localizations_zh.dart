@@ -9459,6 +9459,95 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo 运行时需要内存中的一个私有文件夹，而这台电脑没有提供，所以 Kryfo 不会打开。';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 位数字',
+      zero: '没有数字',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 个字符',
+      zero: '没有字符',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => '备份进度';
+
+  @override
+  String get a11yRestoreProgress => '恢复进度';
+
+  @override
+  String get a11yExportProgress => '导出进度';
+
+  @override
+  String get a11yLockFileProgress => '锁定进度';
+
+  @override
+  String get a11yCleanProgress => '清理进度';
+
+  @override
+  String get a11yMessageActions => '消息操作';
+
+  @override
+  String get a11yRecordVoiceNote => '录制语音消息';
+
+  @override
+  String get a11yRecording => '正在录音';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return '照片，$date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return '$name 发来的照片，$date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return '视频，$date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return '$name 发来的视频，$date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 条新消息',
+      one: '新消息',
+    );
+    return '$_temp0';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -18799,4 +18888,93 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo 執行時需要記憶體中的一個私有資料夾，而這台電腦沒有提供，所以 Kryfo 不會開啟。';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 位數字',
+      zero: '沒有數字',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 個字元',
+      zero: '沒有字元',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => '備份進度';
+
+  @override
+  String get a11yRestoreProgress => '還原進度';
+
+  @override
+  String get a11yExportProgress => '匯出進度';
+
+  @override
+  String get a11yLockFileProgress => '鎖定進度';
+
+  @override
+  String get a11yCleanProgress => '清理進度';
+
+  @override
+  String get a11yMessageActions => '訊息操作';
+
+  @override
+  String get a11yRecordVoiceNote => '錄製語音訊息';
+
+  @override
+  String get a11yRecording => '正在錄音';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return '照片，$date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return '$name 傳來的照片，$date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return '影片，$date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return '$name 傳來的影片，$date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 則新訊息',
+      one: '新訊息',
+    );
+    return '$_temp0';
+  }
 }

@@ -2626,5 +2626,20 @@
   "desktopFolderNotYours": "پوشهٔ Kryfo مال حساب دیگری روی این رایانه است، پس Kryfo آن را باز نمی‌کند.",
   "desktopFolderNotPrivate": "Kryfo نتوانست پوشه‌اش را فقط برای شما خصوصی کند، پس باز نمی‌شود.",
   "desktopLockOtherVersion": "این قفل را نسخهٔ دیگری از Kryfo ساخته که این نسخه نمی‌تواند آن را بخواند.",
-  "desktopNoMemoryFolder": "Kryfo هنگام اجرا به یک پوشهٔ خصوصی در حافظه نیاز دارد و این رایانه چنین پوشه‌ای ندارد، پس باز نمی‌شود."
+  "desktopNoMemoryFolder": "Kryfo هنگام اجرا به یک پوشهٔ خصوصی در حافظه نیاز دارد و این رایانه چنین پوشه‌ای ندارد، پس باز نمی‌شود.",
+  "a11yPinDigits": "{count, plural, =0{هیچ رقمی} other{⁨{count}⁩ رقم}}",
+  "a11yPassChars": "{count, plural, =0{هیچ نویسه‌ای} other{⁨{count}⁩ نویسه}}",
+  "a11yBackupProgress": "پیشرفت پشتیبان‌گیری",
+  "a11yRestoreProgress": "پیشرفت بازیابی",
+  "a11yExportProgress": "پیشرفت برون‌بری",
+  "a11yLockFileProgress": "پیشرفت قفل کردن",
+  "a11yCleanProgress": "پیشرفت تمیز کردن",
+  "a11yMessageActions": "کارهای پیام",
+  "a11yRecordVoiceNote": "ضبط پیام صوتی",
+  "a11yRecording": "در حال ضبط",
+  "a11yPhotoOn": "عکس، ⁨{date}⁩",
+  "a11yPhotoFrom": "عکس از ⁨{name}⁩، ⁨{date}⁩",
+  "a11yVideoOn": "ویدیو، ⁨{date}⁩",
+  "a11yVideoFrom": "ویدیو از ⁨{name}⁩، ⁨{date}⁩",
+  "a11yNewMessages": "{count, plural, =1{پیام تازه} other{⁨{count}⁩ پیام تازه}}"
 }

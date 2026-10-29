@@ -2626,5 +2626,20 @@
   "desktopFolderNotYours": "Kryfo klasörü bu bilgisayardaki başka bir hesaba ait, bu yüzden Kryfo onu açmayacak.",
   "desktopFolderNotPrivate": "Kryfo klasörünü yalnızca sana özel yapamadı, bu yüzden açılmayacak.",
   "desktopLockOtherVersion": "Bu kilidi Kryfo'nun bu sürümün okuyamadığı başka bir sürümü oluşturdu.",
-  "desktopNoMemoryFolder": "Kryfo çalışırken bellekte özel bir klasöre ihtiyaç duyar, bu bilgisayar böyle bir klasör sunmuyor, bu yüzden açılmayacak."
+  "desktopNoMemoryFolder": "Kryfo çalışırken bellekte özel bir klasöre ihtiyaç duyar, bu bilgisayar böyle bir klasör sunmuyor, bu yüzden açılmayacak.",
+  "a11yPinDigits": "{count, plural, =0{Rakam yok} other{{count} rakam}}",
+  "a11yPassChars": "{count, plural, =0{Karakter yok} other{{count} karakter}}",
+  "a11yBackupProgress": "Yedekleme ilerlemesi",
+  "a11yRestoreProgress": "Geri yükleme ilerlemesi",
+  "a11yExportProgress": "Dışa aktarma ilerlemesi",
+  "a11yLockFileProgress": "Kilitleme ilerlemesi",
+  "a11yCleanProgress": "Temizleme ilerlemesi",
+  "a11yMessageActions": "Mesaj işlemleri",
+  "a11yRecordVoiceNote": "Sesli mesaj kaydet",
+  "a11yRecording": "Kaydediliyor",
+  "a11yPhotoOn": "Fotoğraf, {date}",
+  "a11yPhotoFrom": "{name} kişisinden fotoğraf, {date}",
+  "a11yVideoOn": "Video, {date}",
+  "a11yVideoFrom": "{name} kişisinden video, {date}",
+  "a11yNewMessages": "{count, plural, =1{Yeni mesaj} other{{count} yeni mesaj}}"
 }
