@@ -113,6 +113,8 @@ String doorFrame(
       j.remove('e');
       j.remove('o');
       j.remove('av');
+      // the supporter badge is the main account's
+      j.remove('bg');
       j['x'] = face.xPub;
       if (face.avatar case final a?) j['av'] = a;
     }
