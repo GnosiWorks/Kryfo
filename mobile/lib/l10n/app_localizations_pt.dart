@@ -10232,4 +10232,89 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get fileSheetOpenWith => 'Abrir com outro app';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Tudo o que o Kryfo guarda neste computador é criptografado. Ele abre com a sua conta de usuário.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Adicionar uma frase-senha';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'Sem ela, qualquer pessoa que use a sua conta de usuário pode abrir o Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'O Kryfo não conseguiu guardar a chave no chaveiro deste computador. Adicione uma frase-senha no lugar.';
+
+  @override
+  String get desktopKeyMissing =>
+      'Esta conta de usuário não tem a chave dos dados do Kryfo. Um backup do Kryfo traz tudo de volta. Se você moveu a pasta do Kryfo, adicione uma frase-senha na conta de usuário de onde ela veio e copie-a de novo.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'O Kryfo não consegue chegar à chave neste computador agora. Desbloqueie o seu chaveiro se o computador pedir e tente de novo.';
+
+  @override
+  String get desktopPassRow => 'Frase-senha neste computador';
+
+  @override
+  String get desktopPassOffBody => 'O Kryfo abre com a sua conta de usuário.';
+
+  @override
+  String get desktopPassOnBody =>
+      'O Kryfo pede esta frase-senha toda vez que abre.';
+
+  @override
+  String get desktopPassChange => 'Mudar a frase-senha';
+
+  @override
+  String get desktopPassRemove => 'Remover a frase-senha';
+
+  @override
+  String get desktopPassCurrent => 'Frase-senha atual';
+
+  @override
+  String get desktopPassNew => 'Nova frase-senha';
+
+  @override
+  String get desktopPassStays =>
+      'Este computador não tem um chaveiro que o Kryfo possa usar, então a frase-senha fica.';
+
+  @override
+  String get desktopPassAdded => 'Frase-senha adicionada';
+
+  @override
+  String get desktopPassRemoved => 'Frase-senha removida';
+
+  @override
+  String get desktopPassChanged => 'Frase-senha alterada';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Digite a sua frase-senha para removê-la. Depois o Kryfo abre com a sua conta de usuário.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'O Kryfo não consegue chegar à chave no chip de segurança deste computador agora. Tente de novo daqui a pouco.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'O Kryfo não conseguiu guardar a chave com a sua conta do Windows. Adicione uma frase-senha no lugar.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'O Kryfo não conseguiu guardar a chave com a sua conta do Windows, então a frase-senha fica.';
+
+  @override
+  String get desktopBackupCardTitle => 'Tenha um backup do Kryfo';
+
+  @override
+  String get desktopBackupCardLine =>
+      'A sua conta do Windows neste computador guarda a chave do Kryfo. Um backup do Kryfo traz tudo de volta se o computador ou a conta forem redefinidos.';
+
+  @override
+  String get desktopBackupHint =>
+      'Traz tudo de volta se este computador for redefinido.';
 }

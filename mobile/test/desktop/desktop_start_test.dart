@@ -20,16 +20,16 @@ import 'package:shared_preferences_platform_interface/shared_preferences_platfor
 
 class ToyVaultCrypto implements VaultCrypto {
   @override
-  Future<String?> keyOf(String passphrase, Uint8List salt, int logN) async =>
-      sha256.convert([...passphrase.codeUnits, ...salt]).toString();
+  Future<Uint8List?> keyOf(String passphrase, Uint8List salt, int logN) async =>
+      Uint8List.fromList(
+        sha256.convert([...passphrase.codeUnits, ...salt]).bytes,
+      );
   @override
-  Uint8List seal(String keyHex, Uint8List plain) => Uint8List.fromList([
-    ...sha256.convert(keyHex.codeUnits).bytes.take(16),
-    ...plain,
-  ]);
+  Uint8List seal(Uint8List key, Uint8List plain) =>
+      Uint8List.fromList([...sha256.convert(key).bytes.take(16), ...plain]);
   @override
-  Uint8List? open(String keyHex, Uint8List sealed) {
-    final tag = sha256.convert(keyHex.codeUnits).bytes.take(16).toList();
+  Uint8List? open(Uint8List key, Uint8List sealed) {
+    final tag = sha256.convert(key).bytes.take(16).toList();
     for (var i = 0; i < 16; i++) {
       if (sealed[i] != tag[i]) return null;
     }

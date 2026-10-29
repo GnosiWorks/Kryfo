@@ -16336,6 +16336,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open with another app'**
   String get fileSheetOpenWith;
+
+  /// desktop/desktop_lock_screen.dart: first start with a system keyring, under the title
+  ///
+  /// In en, this message translates to:
+  /// **'Everything Kryfo keeps on this computer is encrypted. It opens with your computer account.'**
+  String get desktopLockAccountBody;
+
+  /// desktop/desktop_lock_screen.dart and desktop_passphrase_screen.dart: button that adds an optional passphrase
+  ///
+  /// In en, this message translates to:
+  /// **'Add a passphrase'**
+  String get desktopLockAddPassphrase;
+
+  /// desktop/desktop_lock_screen.dart and desktop_passphrase_screen.dart: the honest line under Add a passphrase. it = the passphrase
+  ///
+  /// In en, this message translates to:
+  /// **'Without it, anyone using your computer account can open Kryfo.'**
+  String get desktopLockWithoutPassphrase;
+
+  /// desktop/desktop_lock_screen.dart: the system keyring refused to keep the key at first start
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo could not keep its key in this computer\'s keyring. Add a passphrase instead.'**
+  String get desktopLockKeyringRefused;
+
+  /// desktop/desktop_lock_screen.dart: the key kept by the computer account is not there (another account or computer, a reset keyring)
+  ///
+  /// In en, this message translates to:
+  /// **'This computer account does not have the key to Kryfo\'s data. A Kryfo backup brings everything back. If you moved Kryfo\'s folder, add a passphrase on the computer account it came from, then copy it again.'**
+  String get desktopKeyMissing;
+
+  /// desktop/desktop_lock_screen.dart: the keyring is locked or not answering
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo cannot reach its key on this computer right now. Unlock your keyring if your computer asks, then try again.'**
+  String get desktopKeyUnreachable;
+
+  /// screens/settings_screen.dart: settings row and page title, desktop only
+  ///
+  /// In en, this message translates to:
+  /// **'Passphrase on this computer'**
+  String get desktopPassRow;
+
+  /// desktop/desktop_passphrase_screen.dart: when no passphrase is set
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo opens with your computer account.'**
+  String get desktopPassOffBody;
+
+  /// desktop/desktop_passphrase_screen.dart: when a passphrase is set
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo asks for this passphrase every time it starts.'**
+  String get desktopPassOnBody;
+
+  /// desktop/desktop_passphrase_screen.dart: button
+  ///
+  /// In en, this message translates to:
+  /// **'Change the passphrase'**
+  String get desktopPassChange;
+
+  /// desktop/desktop_passphrase_screen.dart: button
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the passphrase'**
+  String get desktopPassRemove;
+
+  /// desktop/desktop_passphrase_screen.dart: field label
+  ///
+  /// In en, this message translates to:
+  /// **'Current passphrase'**
+  String get desktopPassCurrent;
+
+  /// desktop/desktop_passphrase_screen.dart: field label
+  ///
+  /// In en, this message translates to:
+  /// **'New passphrase'**
+  String get desktopPassNew;
+
+  /// desktop/desktop_passphrase_screen.dart: no system keyring, so the passphrase cannot be removed
+  ///
+  /// In en, this message translates to:
+  /// **'This computer has no keyring Kryfo can use, so the passphrase stays.'**
+  String get desktopPassStays;
+
+  /// desktop/desktop_passphrase_screen.dart: toast
+  ///
+  /// In en, this message translates to:
+  /// **'Passphrase added'**
+  String get desktopPassAdded;
+
+  /// desktop/desktop_passphrase_screen.dart: toast
+  ///
+  /// In en, this message translates to:
+  /// **'Passphrase removed'**
+  String get desktopPassRemoved;
+
+  /// desktop/desktop_passphrase_screen.dart: toast
+  ///
+  /// In en, this message translates to:
+  /// **'Passphrase changed'**
+  String get desktopPassChanged;
+
+  /// desktop/desktop_passphrase_screen.dart: above the field when removing the passphrase
+  ///
+  /// In en, this message translates to:
+  /// **'Type your passphrase to remove it. Kryfo then opens with your computer account.'**
+  String get desktopPassRemoveBody;
+
+  /// desktop/desktop_lock_screen.dart: windows, the tpm is busy or locked out for now
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo cannot reach its key in this computer\'s security chip right now. Try again in a moment.'**
+  String get desktopKeyUnreachableWindows;
+
+  /// desktop/desktop_lock_screen.dart: windows, dpapi refused to keep the key at first start
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo could not keep its key with your Windows account. Add a passphrase instead.'**
+  String get desktopLockAccountRefused;
+
+  /// desktop/desktop_passphrase_screen.dart: windows, dpapi refused the key when removing the passphrase
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo could not keep its key with your Windows account, so the passphrase stays.'**
+  String get desktopPassStaysWindows;
+
+  /// screens/home_screen.dart: windows without a passphrase, card title suggesting a backup
+  ///
+  /// In en, this message translates to:
+  /// **'Keep a Kryfo backup'**
+  String get desktopBackupCardTitle;
+
+  /// screens/home_screen.dart: windows without a passphrase, the card's line
+  ///
+  /// In en, this message translates to:
+  /// **'Your Windows account on this computer keeps Kryfo\'s key. A Kryfo backup brings everything back if the computer or the account is ever reset.'**
+  String get desktopBackupCardLine;
+
+  /// screens/settings_screen.dart: windows without a passphrase, under Back up identity
+  ///
+  /// In en, this message translates to:
+  /// **'Brings everything back if this computer is ever reset.'**
+  String get desktopBackupHint;
 }
 
 class _AppLocalizationsDelegate

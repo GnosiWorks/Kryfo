@@ -10301,4 +10301,88 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get fileSheetOpenWith => 'فتح بتطبيق آخر';
+
+  @override
+  String get desktopLockAccountBody =>
+      'كل ما يحفظه Kryfo على هذا الحاسوب مشفّر. يُفتح بحساب المستخدم الخاص بك.';
+
+  @override
+  String get desktopLockAddPassphrase => 'أضف عبارة مرور';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'من دونها، يستطيع أي شخص يستخدم حسابك على الحاسوب فتح Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'تعذّر على Kryfo حفظ مفتاحه في حلقة المفاتيح على هذا الحاسوب. أضف عبارة مرور بدلًا من ذلك.';
+
+  @override
+  String get desktopKeyMissing =>
+      'حساب المستخدم هذا لا يملك مفتاح بيانات Kryfo. نسخة Kryfo الاحتياطية تعيد كل شيء. إن نقلت مجلد Kryfo، فأضف عبارة مرور على حساب المستخدم الذي جاء منه، ثم انسخه من جديد.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'لا يستطيع Kryfo الوصول إلى مفتاحه على هذا الحاسوب الآن. افتح قفل حلقة المفاتيح إن طلب الحاسوب ذلك، ثم أعد المحاولة.';
+
+  @override
+  String get desktopPassRow => 'عبارة المرور على هذا الحاسوب';
+
+  @override
+  String get desktopPassOffBody => 'يُفتح Kryfo بحساب المستخدم الخاص بك.';
+
+  @override
+  String get desktopPassOnBody =>
+      'يطلب Kryfo عبارة المرور هذه في كل مرة يبدأ فيها.';
+
+  @override
+  String get desktopPassChange => 'غيّر عبارة المرور';
+
+  @override
+  String get desktopPassRemove => 'أزل عبارة المرور';
+
+  @override
+  String get desktopPassCurrent => 'عبارة المرور الحالية';
+
+  @override
+  String get desktopPassNew => 'عبارة مرور جديدة';
+
+  @override
+  String get desktopPassStays =>
+      'لا توجد على هذا الحاسوب حلقة مفاتيح يستطيع Kryfo استخدامها، لذا تبقى عبارة المرور.';
+
+  @override
+  String get desktopPassAdded => 'أُضيفت عبارة المرور';
+
+  @override
+  String get desktopPassRemoved => 'أُزيلت عبارة المرور';
+
+  @override
+  String get desktopPassChanged => 'تغيّرت عبارة المرور';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'اكتب عبارة المرور لإزالتها. بعدها يُفتح Kryfo بحساب المستخدم الخاص بك.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'لا يستطيع Kryfo الوصول إلى مفتاحه في شريحة الأمان على هذا الحاسوب الآن. أعد المحاولة بعد لحظة.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'تعذّر على Kryfo حفظ مفتاحه مع حسابك على Windows. أضف عبارة مرور بدلًا من ذلك.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'تعذّر على Kryfo حفظ مفتاحه مع حسابك على Windows، لذا تبقى عبارة المرور.';
+
+  @override
+  String get desktopBackupCardTitle => 'احتفظ بنسخة Kryfo الاحتياطية';
+
+  @override
+  String get desktopBackupCardLine =>
+      'حسابك على Windows في هذا الحاسوب يحفظ مفتاح Kryfo. نسخة Kryfo الاحتياطية تعيد كل شيء إن أُعيد ضبط الحاسوب أو الحساب يومًا.';
+
+  @override
+  String get desktopBackupHint => 'تعيد كل شيء إن أُعيد ضبط هذا الحاسوب يومًا.';
 }

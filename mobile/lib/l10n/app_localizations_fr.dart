@@ -10263,4 +10263,90 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get fileSheetOpenWith => 'Ouvrir avec une autre appli';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Tout ce que Kryfo garde sur cet ordinateur est chiffré. Il s’ouvre avec votre compte utilisateur.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Ajouter une phrase secrète';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'Sans elle, toute personne qui utilise votre compte utilisateur peut ouvrir Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo n’a pas pu garder sa clé dans le trousseau de clés de cet ordinateur. Ajoutez plutôt une phrase secrète.';
+
+  @override
+  String get desktopKeyMissing =>
+      'Ce compte utilisateur n’a pas la clé des données de Kryfo. Une sauvegarde Kryfo ramène tout. Si vous avez déplacé le dossier de Kryfo, ajoutez une phrase secrète sur le compte utilisateur d’où il vient, puis copiez-le de nouveau.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo ne peut pas atteindre sa clé sur cet ordinateur pour le moment. Déverrouillez votre trousseau de clés si l’ordinateur le demande, puis réessayez.';
+
+  @override
+  String get desktopPassRow => 'Phrase secrète sur cet ordinateur';
+
+  @override
+  String get desktopPassOffBody =>
+      'Kryfo s’ouvre avec votre compte utilisateur.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo demande cette phrase secrète à chaque démarrage.';
+
+  @override
+  String get desktopPassChange => 'Changer la phrase secrète';
+
+  @override
+  String get desktopPassRemove => 'Retirer la phrase secrète';
+
+  @override
+  String get desktopPassCurrent => 'Phrase secrète actuelle';
+
+  @override
+  String get desktopPassNew => 'Nouvelle phrase secrète';
+
+  @override
+  String get desktopPassStays =>
+      'Cet ordinateur n’a pas de trousseau de clés que Kryfo peut utiliser, la phrase secrète reste donc en place.';
+
+  @override
+  String get desktopPassAdded => 'Phrase secrète ajoutée';
+
+  @override
+  String get desktopPassRemoved => 'Phrase secrète retirée';
+
+  @override
+  String get desktopPassChanged => 'Phrase secrète changée';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Saisissez votre phrase secrète pour la retirer. Kryfo s’ouvrira ensuite avec votre compte utilisateur.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo ne peut pas atteindre sa clé dans la puce de sécurité de cet ordinateur pour le moment. Réessayez dans un instant.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo n’a pas pu garder sa clé avec votre compte Windows. Ajoutez plutôt une phrase secrète.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo n’a pas pu garder sa clé avec votre compte Windows, la phrase secrète reste donc en place.';
+
+  @override
+  String get desktopBackupCardTitle => 'Gardez une sauvegarde Kryfo';
+
+  @override
+  String get desktopBackupCardLine =>
+      'Votre compte Windows sur cet ordinateur garde la clé de Kryfo. Une sauvegarde Kryfo ramène tout si l’ordinateur ou le compte est un jour réinitialisé.';
+
+  @override
+  String get desktopBackupHint =>
+      'Ramène tout si cet ordinateur est un jour réinitialisé.';
 }

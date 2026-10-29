@@ -10176,4 +10176,89 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get fileSheetOpenWith => 'باز کردن با برنامه دیگر';
+
+  @override
+  String get desktopLockAccountBody =>
+      'هر چیزی که Kryfo روی این رایانه نگه می‌دارد رمزگذاری شده است. با حساب کاربری شما باز می‌شود.';
+
+  @override
+  String get desktopLockAddPassphrase => 'افزودن عبارت عبور';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'بدون آن، هر کسی که از حساب کاربری شما استفاده کند می‌تواند Kryfo را باز کند.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo نتوانست کلیدش را در جاکلیدی این رایانه نگه دارد. به جای آن یک عبارت عبور بیفزایید.';
+
+  @override
+  String get desktopKeyMissing =>
+      'این حساب کاربری کلید داده‌های Kryfo را ندارد. نسخه‌ی پشتیبان Kryfo همه چیز را برمی‌گرداند. اگر پوشه‌ی Kryfo را جابه‌جا کرده‌اید، در حساب کاربری‌ای که از آن آمده یک عبارت عبور بیفزایید، سپس پوشه را دوباره کپی کنید.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo الان به کلیدش روی این رایانه دسترسی ندارد. اگر رایانه خواست، قفل جاکلیدی را باز کنید و دوباره تلاش کنید.';
+
+  @override
+  String get desktopPassRow => 'عبارت عبور روی این رایانه';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo با حساب کاربری شما باز می‌شود.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo هر بار که اجرا می‌شود این عبارت عبور را می‌پرسد.';
+
+  @override
+  String get desktopPassChange => 'تغییر عبارت عبور';
+
+  @override
+  String get desktopPassRemove => 'برداشتن عبارت عبور';
+
+  @override
+  String get desktopPassCurrent => 'عبارت عبور فعلی';
+
+  @override
+  String get desktopPassNew => 'عبارت عبور جدید';
+
+  @override
+  String get desktopPassStays =>
+      'این رایانه جاکلیدی‌ای ندارد که Kryfo بتواند از آن استفاده کند، پس عبارت عبور می‌ماند.';
+
+  @override
+  String get desktopPassAdded => 'عبارت عبور افزوده شد';
+
+  @override
+  String get desktopPassRemoved => 'عبارت عبور برداشته شد';
+
+  @override
+  String get desktopPassChanged => 'عبارت عبور تغییر کرد';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'برای برداشتن عبارت عبور، آن را بنویسید. پس از آن Kryfo با حساب کاربری شما باز می‌شود.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo الان به کلیدش در تراشه‌ی امنیتی این رایانه دسترسی ندارد. کمی بعد دوباره تلاش کنید.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo نتوانست کلیدش را با حساب Windows شما نگه دارد. به جای آن یک عبارت عبور بیفزایید.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo نتوانست کلیدش را با حساب Windows شما نگه دارد، پس عبارت عبور می‌ماند.';
+
+  @override
+  String get desktopBackupCardTitle => 'یک نسخه‌ی پشتیبان Kryfo نگه دارید';
+
+  @override
+  String get desktopBackupCardLine =>
+      'حساب Windows شما روی این رایانه کلید Kryfo را نگه می‌دارد. اگر روزی رایانه یا حساب بازنشانی شود، نسخه‌ی پشتیبان Kryfo همه چیز را برمی‌گرداند.';
+
+  @override
+  String get desktopBackupHint =>
+      'اگر روزی این رایانه بازنشانی شود، همه چیز را برمی‌گرداند.';
 }

@@ -10327,4 +10327,90 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get fileSheetOpenWith => 'Відкрити в іншому застосунку';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Усе, що Kryfo зберігає на цьому комп’ютері, зашифровано. Він відкривається з вашим обліковим записом.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Додати парольну фразу';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'Без неї будь-хто, хто користується вашим обліковим записом, може відкрити Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo не зміг зберегти свій ключ у в’язці ключів цього комп’ютера. Додайте натомість парольну фразу.';
+
+  @override
+  String get desktopKeyMissing =>
+      'Цей обліковий запис не має ключа до даних Kryfo. Резервна копія Kryfo поверне все. Якщо ви перенесли папку Kryfo, додайте парольну фразу в тому обліковому записі, звідки вона прийшла, і скопіюйте папку знову.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo зараз не може дістатися свого ключа на цьому комп’ютері. Розблокуйте в’язку ключів, якщо комп’ютер попросить, і спробуйте ще раз.';
+
+  @override
+  String get desktopPassRow => 'Парольна фраза на цьому комп’ютері';
+
+  @override
+  String get desktopPassOffBody =>
+      'Kryfo відкривається з вашим обліковим записом.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo питає цю парольну фразу під час кожного запуску.';
+
+  @override
+  String get desktopPassChange => 'Змінити парольну фразу';
+
+  @override
+  String get desktopPassRemove => 'Прибрати парольну фразу';
+
+  @override
+  String get desktopPassCurrent => 'Поточна парольна фраза';
+
+  @override
+  String get desktopPassNew => 'Нова парольна фраза';
+
+  @override
+  String get desktopPassStays =>
+      'На цьому комп’ютері немає в’язки ключів, яку Kryfo може використати, тому парольна фраза лишається.';
+
+  @override
+  String get desktopPassAdded => 'Парольну фразу додано';
+
+  @override
+  String get desktopPassRemoved => 'Парольну фразу прибрано';
+
+  @override
+  String get desktopPassChanged => 'Парольну фразу змінено';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Введіть парольну фразу, щоб прибрати її. Після цього Kryfo відкриватиметься з вашим обліковим записом.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo зараз не може дістатися свого ключа в чипі безпеки цього комп’ютера. Спробуйте ще раз за хвилину.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo не зміг зберегти свій ключ у вашому обліковому записі Windows. Додайте натомість парольну фразу.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo не зміг зберегти свій ключ у вашому обліковому записі Windows, тому парольна фраза лишається.';
+
+  @override
+  String get desktopBackupCardTitle => 'Тримайте резервну копію Kryfo';
+
+  @override
+  String get desktopBackupCardLine =>
+      'Ключ Kryfo зберігає ваш обліковий запис Windows на цьому комп’ютері. Резервна копія Kryfo поверне все, якщо комп’ютер або обліковий запис колись скинуть.';
+
+  @override
+  String get desktopBackupHint =>
+      'Поверне все, якщо цей комп’ютер колись скинуть.';
 }

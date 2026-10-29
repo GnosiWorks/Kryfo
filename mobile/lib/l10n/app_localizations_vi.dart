@@ -10142,4 +10142,90 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get fileSheetOpenWith => 'Mở bằng ứng dụng khác';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Mọi thứ Kryfo lưu trên máy tính này đều được mã hóa. Kryfo mở bằng tài khoản người dùng của bạn.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Thêm cụm mật khẩu';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'Không có nó, bất kỳ ai dùng tài khoản người dùng của bạn đều mở được Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo không lưu được khóa của mình vào chùm chìa khóa của máy tính này. Hãy thêm cụm mật khẩu thay vào đó.';
+
+  @override
+  String get desktopKeyMissing =>
+      'Tài khoản người dùng này không có khóa dữ liệu của Kryfo. Bản sao lưu Kryfo mang mọi thứ trở lại. Nếu bạn đã chuyển thư mục của Kryfo, hãy thêm cụm mật khẩu trên tài khoản người dùng nơi nó đến, rồi sao chép lại.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Lúc này Kryfo không lấy được khóa của mình trên máy tính này. Hãy mở khóa chùm chìa khóa nếu máy tính hỏi, rồi thử lại.';
+
+  @override
+  String get desktopPassRow => 'Cụm mật khẩu trên máy tính này';
+
+  @override
+  String get desktopPassOffBody =>
+      'Kryfo mở bằng tài khoản người dùng của bạn.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo hỏi cụm mật khẩu này mỗi lần khởi động.';
+
+  @override
+  String get desktopPassChange => 'Đổi cụm mật khẩu';
+
+  @override
+  String get desktopPassRemove => 'Gỡ cụm mật khẩu';
+
+  @override
+  String get desktopPassCurrent => 'Cụm mật khẩu hiện tại';
+
+  @override
+  String get desktopPassNew => 'Cụm mật khẩu mới';
+
+  @override
+  String get desktopPassStays =>
+      'Máy tính này không có chùm chìa khóa nào Kryfo dùng được, nên cụm mật khẩu vẫn giữ nguyên.';
+
+  @override
+  String get desktopPassAdded => 'Đã thêm cụm mật khẩu';
+
+  @override
+  String get desktopPassRemoved => 'Đã gỡ cụm mật khẩu';
+
+  @override
+  String get desktopPassChanged => 'Đã đổi cụm mật khẩu';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Nhập cụm mật khẩu để gỡ nó. Sau đó Kryfo sẽ mở bằng tài khoản người dùng của bạn.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Lúc này Kryfo không lấy được khóa của mình trong chip bảo mật của máy tính này. Hãy thử lại sau giây lát.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo không lưu được khóa của mình bằng tài khoản Windows của bạn. Hãy thêm cụm mật khẩu thay vào đó.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo không lưu được khóa của mình bằng tài khoản Windows của bạn, nên cụm mật khẩu vẫn giữ nguyên.';
+
+  @override
+  String get desktopBackupCardTitle => 'Giữ một bản sao lưu Kryfo';
+
+  @override
+  String get desktopBackupCardLine =>
+      'Tài khoản Windows của bạn trên máy tính này giữ khóa của Kryfo. Bản sao lưu Kryfo mang mọi thứ trở lại nếu có lúc máy tính hoặc tài khoản bị đặt lại.';
+
+  @override
+  String get desktopBackupHint =>
+      'Mang mọi thứ trở lại nếu có lúc máy tính này bị đặt lại.';
 }
