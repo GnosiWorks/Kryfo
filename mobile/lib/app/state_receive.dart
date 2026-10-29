@@ -702,6 +702,30 @@ extension AppStateReceive on AppState {
       arrived();
       return;
     }
+    // a hello on my v3 first-contact address: zero answers only (11 step 7)
+    if (m.peer == 'firstcontact' && m.cipher.startsWith('khl:')) {
+      final bar = m.cipher.indexOf('|');
+      Uint8List? b;
+      try {
+        b = bar == 68 ? base64Decode(m.cipher.substring(69)) : null;
+      } catch (_) {
+        b = null;
+      }
+      if (b == null) {
+        await live.markSeenLong(h);
+        arrived();
+        return;
+      }
+      await _receiveHello(
+        kMainIdent,
+        null,
+        m.cipher.substring(4, 68),
+        b,
+        h,
+        arrived,
+      );
+      return;
+    }
     // a line from one of my invites' first-contact addresses
     if (inviteTagOf(m.peer) case (final ident, final invite)) {
       await _receiveAtInvite(

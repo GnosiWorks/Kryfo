@@ -2629,5 +2629,6 @@
   "desktopNoMemoryFolder": "Kryfo ha bisogno di una cartella privata in memoria mentre è in uso, e questo computer non ne offre, quindi non si apre.",
   "inviteNotYet": "Questo invito non è ancora valido. Controlla l'ora del telefono.",
   "inviteExpired": "Questo invito è scaduto. Chiedine uno nuovo.",
-  "inviteDamaged": "Questo invito è danneggiato. Chiedine uno nuovo."
+  "inviteDamaged": "Questo invito è danneggiato. Chiedine uno nuovo.",
+  "helloSent": "Richiesta inviata. La vedrà quando sarà online."
 }

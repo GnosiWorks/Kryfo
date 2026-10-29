@@ -16060,6 +16060,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This invite is damaged. Ask for a new one.'**
   String get inviteDamaged;
+
+  /// after a qr without a bundle is read: a hello went and waits for their accept
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent. They\'ll see it when they\'re online.'**
+  String get helloSent;
 }
 
 class _AppLocalizationsDelegate

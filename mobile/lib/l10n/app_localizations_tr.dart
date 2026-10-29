@@ -9979,4 +9979,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get inviteDamaged => 'Bu davet bozuk. Yenisini iste.';
+
+  @override
+  String get helloSent => 'İstek gönderildi. Çevrimiçi olduğunda görecek.';
 }

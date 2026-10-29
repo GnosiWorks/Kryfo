@@ -2629,5 +2629,6 @@
   "desktopNoMemoryFolder": "Kryfo braucht beim Laufen einen privaten Ordner im Arbeitsspeicher, und dieser Computer bietet keinen, deshalb öffnet es sich nicht.",
   "inviteNotYet": "Diese Einladung gilt noch nicht. Prüfe die Uhrzeit auf deinem Handy.",
   "inviteExpired": "Diese Einladung ist abgelaufen. Bitte um eine neue.",
-  "inviteDamaged": "Diese Einladung ist beschädigt. Bitte um eine neue."
+  "inviteDamaged": "Diese Einladung ist beschädigt. Bitte um eine neue.",
+  "helloSent": "Anfrage gesendet. Sie sehen sie, sobald sie online sind."
 }

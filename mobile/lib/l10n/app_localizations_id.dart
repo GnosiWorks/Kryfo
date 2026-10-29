@@ -9952,4 +9952,8 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get inviteDamaged => 'Undangan ini rusak. Minta yang baru.';
+
+  @override
+  String get helloSent =>
+      'Permintaan terkirim. Mereka akan melihatnya saat online.';
 }

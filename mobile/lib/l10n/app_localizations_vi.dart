@@ -9940,4 +9940,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get inviteDamaged => 'Lời mời này bị hỏng. Hãy xin lời mời mới.';
+
+  @override
+  String get helloSent => 'Đã gửi yêu cầu. Họ sẽ thấy khi trực tuyến.';
 }

@@ -9972,4 +9972,8 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get inviteDamaged => 'این دعوت خراب است. یک دعوت تازه بخواهید.';
+
+  @override
+  String get helloSent =>
+      'درخواست فرستاده شد. وقتی آنلاین شوند آن را می‌بینند.';
 }

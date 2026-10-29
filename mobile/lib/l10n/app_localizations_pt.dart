@@ -10027,4 +10027,8 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get inviteDamaged => 'Este convite está danificado. Peça um novo.';
+
+  @override
+  String get helloSent =>
+      'Pedido enviado. A pessoa verá quando estiver online.';
 }

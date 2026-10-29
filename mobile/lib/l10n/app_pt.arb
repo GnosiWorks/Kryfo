@@ -2629,5 +2629,6 @@
   "desktopNoMemoryFolder": "O Kryfo precisa de uma pasta privada na memória enquanto roda, e este computador não oferece nenhuma, então ele não vai abrir.",
   "inviteNotYet": "Este convite ainda não é válido. Confira a hora do seu celular.",
   "inviteExpired": "Este convite expirou. Peça um novo.",
-  "inviteDamaged": "Este convite está danificado. Peça um novo."
+  "inviteDamaged": "Este convite está danificado. Peça um novo.",
+  "helloSent": "Pedido enviado. A pessoa verá quando estiver online."
 }

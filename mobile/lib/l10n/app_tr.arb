@@ -2629,5 +2629,6 @@
   "desktopNoMemoryFolder": "Kryfo çalışırken bellekte özel bir klasöre ihtiyaç duyar, bu bilgisayar böyle bir klasör sunmuyor, bu yüzden açılmayacak.",
   "inviteNotYet": "Bu davet henüz geçerli değil. Telefonundaki saati kontrol et.",
   "inviteExpired": "Bu davetin süresi doldu. Yenisini iste.",
-  "inviteDamaged": "Bu davet bozuk. Yenisini iste."
+  "inviteDamaged": "Bu davet bozuk. Yenisini iste.",
+  "helloSent": "İstek gönderildi. Çevrimiçi olduğunda görecek."
 }

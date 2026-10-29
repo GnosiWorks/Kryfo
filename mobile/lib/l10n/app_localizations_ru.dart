@@ -10125,4 +10125,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get inviteDamaged => 'Это приглашение повреждено. Попросите новое.';
+
+  @override
+  String get helloSent => 'Запрос отправлен. Его увидят, когда будут в сети.';
 }

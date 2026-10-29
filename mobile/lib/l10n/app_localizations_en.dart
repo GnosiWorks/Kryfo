@@ -9943,4 +9943,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inviteDamaged => 'This invite is damaged. Ask for a new one.';
+
+  @override
+  String get helloSent => 'Request sent. They\'ll see it when they\'re online.';
 }

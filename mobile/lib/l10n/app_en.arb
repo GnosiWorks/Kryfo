@@ -12519,5 +12519,9 @@
   "inviteDamaged": "This invite is damaged. Ask for a new one.",
   "@inviteDamaged": {
     "description": "a v4 invite that does not parse or whose signature does not hold"
+  },
+  "helloSent": "Request sent. They'll see it when they're online.",
+  "@helloSent": {
+    "description": "after a qr without a bundle is read: a hello went and waits for their accept"
   }
 }

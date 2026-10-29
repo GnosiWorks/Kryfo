@@ -2629,5 +2629,6 @@
   "desktopNoMemoryFolder": "Kryfo butuh folder pribadi di memori selama berjalan, dan komputer ini tidak menyediakannya, jadi Kryfo tidak akan dibuka.",
   "inviteNotYet": "Undangan ini belum berlaku. Periksa jam di ponselmu.",
   "inviteExpired": "Undangan ini sudah kedaluwarsa. Minta yang baru.",
-  "inviteDamaged": "Undangan ini rusak. Minta yang baru."
+  "inviteDamaged": "Undangan ini rusak. Minta yang baru.",
+  "helloSent": "Permintaan terkirim. Mereka akan melihatnya saat online."
 }

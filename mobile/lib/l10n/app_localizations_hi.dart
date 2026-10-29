@@ -9958,4 +9958,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get inviteDamaged => 'यह न्योता खराब है। नया माँगें।';
+
+  @override
+  String get helloSent => 'अनुरोध भेजा गया। ऑनलाइन होने पर वे इसे देखेंगे।';
 }

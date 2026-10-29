@@ -10116,4 +10116,8 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get inviteDamaged => 'Це запрошення пошкоджене. Попросіть нове.';
+
+  @override
+  String get helloSent =>
+      'Запит надіслано. Його побачать, коли будуть у мережі.';
 }

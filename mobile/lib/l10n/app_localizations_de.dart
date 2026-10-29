@@ -10058,4 +10058,8 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get inviteDamaged =>
       'Diese Einladung ist beschädigt. Bitte um eine neue.';
+
+  @override
+  String get helloSent =>
+      'Anfrage gesendet. Sie sehen sie, sobald sie online sind.';
 }

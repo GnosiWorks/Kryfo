@@ -10028,4 +10028,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get inviteDamaged => 'Esta invitación está dañada. Pide una nueva.';
+
+  @override
+  String get helloSent => 'Solicitud enviada. La verá cuando esté en línea.';
 }

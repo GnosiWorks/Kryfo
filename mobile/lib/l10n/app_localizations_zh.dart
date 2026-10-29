@@ -9468,6 +9468,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get inviteDamaged => '此邀请已损坏。请索取新的邀请。';
+
+  @override
+  String get helloSent => '请求已发送。对方上线后就会看到。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -18817,4 +18820,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get inviteDamaged => '此邀請已損壞。請索取新的邀請。';
+
+  @override
+  String get helloSent => '請求已送出。對方上線後就會看到。';
 }

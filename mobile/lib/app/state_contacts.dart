@@ -565,6 +565,12 @@ extension AppStateContacts on AppState {
       await refreshContacts();
       return;
     }
+    // a hello waiting here: its session first, so the ack is its opener
+    try {
+      await answerHello(haloId);
+    } catch (e) {
+      dlog('hello: not answered (${e.runtimeType})');
+    }
     unawaited(subscribePeer(haloId, fresh: true));
     unawaited(_ackOnAccept(haloId));
     final s = session;

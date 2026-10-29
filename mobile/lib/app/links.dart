@@ -152,7 +152,10 @@ Future<(String, bool)> handleHaloUriAdded(
     if (got is InviteFault) return (inviteFaultLine(got), false);
     v4 = got as LsInvite;
     parsed = v4Parsed(v4);
-    // one without a bundle (a qr) is answered with a hello, a later step
+    // one without a bundle (a qr): a hello, answered once they accept
+    if (parsed == null && v4.block == null && !sessionQuiet) {
+      return appState._addByHello(v4, scanned: scanned);
+    }
     if (parsed == null) return (l10n.appInvalidUri, false);
   }
   if (parsed == null) return (l10n.appInvalidUri, false);
@@ -651,11 +654,11 @@ String inviteFaultLine(InviteFault f) => switch (f) {
 
 /// a v4 invite as the link parts an add reads: the words of its face, its
 /// onion, its key and its first-contact address. null for one a session
-/// cannot start from here (no face, no onion or no bundle)
-Map<String, String>? v4Parsed(LsInvite inv) {
+/// cannot start from here (no face, no onion, or no bundle when [bundle])
+Map<String, String>? v4Parsed(LsInvite inv, {bool bundle = true}) {
   final f = inv.face;
   final o = inv.onion;
-  if (f == null || o == null || inv.block == null) return null;
+  if (f == null || o == null || (bundle && inv.block == null)) return null;
   final id = engine.idFromEdPub(_hexOf(f));
   final onion = engine.onionOfKey(_hexOf(o));
   if (!_wordsShape.hasMatch(id) || !onion.endsWith('.onion')) return null;

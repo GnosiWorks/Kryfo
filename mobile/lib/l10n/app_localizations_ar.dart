@@ -10086,4 +10086,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get inviteDamaged => 'هذه الدعوة تالفة. اطلب دعوة جديدة.';
+
+  @override
+  String get helloSent => 'أُرسل الطلب. سيرونه عندما يكونون متصلين.';
 }

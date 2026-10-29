@@ -2629,5 +2629,6 @@
   "desktopNoMemoryFolder": "Kryfo 运行时需要内存中的一个私有文件夹，而这台电脑没有提供，所以 Kryfo 不会打开。",
   "inviteNotYet": "此邀请尚未生效。请检查手机上的时间。",
   "inviteExpired": "此邀请已过期。请索取新的邀请。",
-  "inviteDamaged": "此邀请已损坏。请索取新的邀请。"
+  "inviteDamaged": "此邀请已损坏。请索取新的邀请。",
+  "helloSent": "请求已发送。对方上线后就会看到。"
 }

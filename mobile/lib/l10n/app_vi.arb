@@ -2629,5 +2629,6 @@
   "desktopNoMemoryFolder": "Kryfo cần một thư mục riêng trong bộ nhớ khi chạy, và máy tính này không có, nên Kryfo sẽ không mở.",
   "inviteNotYet": "Lời mời này chưa có hiệu lực. Hãy kiểm tra giờ trên điện thoại.",
   "inviteExpired": "Lời mời này đã hết hạn. Hãy xin lời mời mới.",
-  "inviteDamaged": "Lời mời này bị hỏng. Hãy xin lời mời mới."
+  "inviteDamaged": "Lời mời này bị hỏng. Hãy xin lời mời mới.",
+  "helloSent": "Đã gửi yêu cầu. Họ sẽ thấy khi trực tuyến."
 }

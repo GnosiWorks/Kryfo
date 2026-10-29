@@ -195,11 +195,15 @@ extension AppStateInvites on AppState {
       arrived();
       return;
     }
+    // a hello: "KHL1"
+    if (row != null && w.length > 4 && w[0] == 0x4b) {
+      await _receiveHello(ident, row, sealPk, w, h, arrived);
+      return;
+    }
     if (row == null ||
         !row.openAt(unixHours()) ||
         w.isEmpty ||
         w[0] != kLsPreKey) {
-      // hellos are read in a later step; anything else is nobody's
       dlog('invite: a line dropped');
       await live.markSeenLong(h);
       arrived();
@@ -217,6 +221,26 @@ extension AppStateInvites on AppState {
       arrived();
       return;
     }
+    // my one-time invite inside a hello: only the owner it went to opens
+    // on it, anyone else is dropped before decrypt and spends nothing
+    final out = await db.query(
+      'hellos',
+      columns: ['peer'],
+      where: 'ident = ? AND way = ? AND invite_id = ?',
+      whereArgs: [ident, kHelloOut, inviteId],
+      limit: 1,
+    );
+    if (out.isNotEmpty) {
+      final info = signalSession.lib.preKeyMessageInfo(
+        Uint8List.sublistView(w, 1),
+      );
+      if (_hexOf(info.identityKey) != out.first['peer']) {
+        firstFails.note('owner');
+        await live.markSeenLong(h);
+        arrived();
+        return;
+      }
+    }
     final (String, RouteTo)? paired;
     try {
       paired = await backPairFromCipher(cipher, reached: reached, v4: arrival);
@@ -233,6 +257,11 @@ extension AppStateInvites on AppState {
     if (row.oneTime) {
       await spendOneTime(db, signalSession, row);
       await engine.unsubscribeFcKey(ident, inviteId);
+      await db.delete(
+        'hellos',
+        where: 'ident = ? AND way = ? AND invite_id = ?',
+        whereArgs: [ident, kHelloOut, inviteId],
+      );
     }
     await live.markSeen(h);
     if (AppState._shown(paired.$2)) arrived();
@@ -373,6 +402,179 @@ extension AppStateInvites on AppState {
     return '$kEnvelopePrefix${jsonEncode(j)}';
   }
 
+  /// a hello to the owner of [inv], an invite without a bundle (a qr):
+  /// a fresh one-time invite of mine in a KHL1, sealed with the hello seal
+  /// key to the invite's first-contact address, and that one-time invite
+  /// listened on for their opener (3.3)
+  Future<String> helloToInvite(LsInvite inv) async {
+    final face = _mainInviteFace();
+    if (face == null) return 'error: no face yet';
+    final db = await live.open();
+    final (hello, once) = await makeHello(
+      db,
+      signalSession,
+      answers: inv.id,
+      owner: inv.identity,
+      fcPkOf: _fcPkOfKey,
+      face: face,
+    );
+    await db.insert('hellos', {
+      'ident': kMainIdent,
+      'way': kHelloOut,
+      'peer': _hexOf(inv.identity),
+      'invite_id': once.id,
+      'fc': _hexOf(inv.firstContact),
+      'at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    final sk = (await fcKeysOf(db, kMainIdent))[once.id];
+    if (sk != null) {
+      await engine.subscribeFcKey(kMainIdent, once.id, _hexOf(sk));
+    }
+    return engine.sendHello(
+      kMainIdent,
+      _hexOf(inv.identity.sublist(1)),
+      _hexOf(inv.firstContact),
+      base64Encode(hello),
+    );
+  }
+
+  // an add from a v4 invite without a bundle (a qr): their row, and a
+  // hello that waits for their accept
+  Future<(String, bool)> _addByHello(
+    LsInvite inv, {
+    required bool scanned,
+  }) async {
+    final p = v4Parsed(inv, bundle: false);
+    if (p == null) return (l10n.appInvalidUri, false);
+    final id = p['id']!;
+    if (id == sessionId) return (l10n.appYourOwnInvite, false);
+    if (await session.keyBlocked(_keyHex(inv.identity))) {
+      return (l10n.appKeyBlocked, false);
+    }
+    // a name held here on another key is not taken by a hello
+    final row = await session.getContact(id);
+    if (row != null &&
+        (row['xpub'] as String? ?? '').toLowerCase() != p['xpub']) {
+      return (l10n.appLinkWordsTaken(id), false);
+    }
+    if (await session.isBlocked(id)) return (l10n.appTheyAreBlocked(id), false);
+    final already = await session.isAccepted(id);
+    await session.upsertContact(id, '', p['xpub']!);
+    await _noteHowAdded(id, scanned: scanned, already: already, taken: false);
+    final r = await helloToInvite(inv);
+    await refreshContacts();
+    if (r != 'ok') {
+      dlog('hello: not sent ($r)');
+      return (l10n.appBundleError(r), true);
+    }
+    openAddedChatLater(id);
+    return (l10n.helloSent, true);
+  }
+
+  /// a hello at invite [at] of mine (null: my v3 first-contact address),
+  /// sealed with [sealPk]: taken on the five rules of 3.3 and kept as a
+  /// request until the person accepts it; dropped quietly otherwise, and a
+  /// copy is taken once
+  Future<void> _receiveHello(
+    int ident,
+    InviteRow? at,
+    String sealPk,
+    Uint8List bytes,
+    String h,
+    void Function() arrived,
+  ) async {
+    final db = await live.open();
+    final hash = helloHash(bytes);
+    final r = checkHello(
+      signalSession.lib,
+      bytes,
+      at: at,
+      mine: signalSession.identity.public,
+      sealPk: sealPk,
+      sealOf: (x) => engine.helloSealPk(ident, x),
+      seen: await helloSeen(db, ident, hash),
+    );
+    final hl = r.hello;
+    final fields = hl == null ? null : v4Parsed(hl.invite);
+    var drop = hl == null || fields == null;
+    final senderKey = hl == null ? '' : _hexOf(hl.invite.identity);
+    if (!drop) {
+      // crossed hellos: theirs is answered only when their key is the
+      // smaller; mine then waits for their opener
+      final out = await db.query(
+        'hellos',
+        where: 'ident = ? AND way = ? AND peer = ?',
+        whereArgs: [ident, kHelloOut, senderKey],
+        limit: 1,
+      );
+      drop =
+          out.isNotEmpty &&
+          !answerTheirs(signalSession.identity.public, hl.invite.identity);
+    }
+    if (drop) {
+      if (r.fault != HelloFault.seen) firstFails.note('hello');
+      await live.markSeenLong(h);
+      arrived();
+      return;
+    }
+    await noteHelloSeen(db, ident, hash);
+    // the words of their face, unless someone here holds them on another
+    // key: then an id of its own, as a first contact gets
+    var id = fields!['id']!;
+    final row = await live.getContact(id);
+    if (row != null &&
+        (row['xpub'] as String? ?? '').toLowerCase() != fields['xpub']) {
+      id = unboundIdOf(hl!.invite.identity);
+    }
+    await db.insert('hellos', {
+      'ident': ident,
+      'way': kHelloIn,
+      'peer': senderKey,
+      'invite_id': at?.id ?? '0' * 32,
+      'hello': bytes,
+      'at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    if (await live.getContact(id) == null) {
+      await live.upsertContact(id, '', fields['xpub']!, accepted: 0);
+    }
+    await live.markSeen(h);
+    await refreshContacts();
+    notifyListeners();
+    arrived();
+  }
+
+  /// the person accepted [haloId]: a hello of theirs waiting here is
+  /// answered, the session started from the one-time invite inside it and
+  /// the first message sent to its first-contact address (3.3)
+  Future<void> answerHello(String haloId) async {
+    final db = await live.open();
+    final c = await db.query(
+      'contacts',
+      columns: ['ikey', 'ident'],
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+      limit: 1,
+    );
+    final key = c.isEmpty ? null : c.first['ikey'] as String?;
+    if (key == null) return;
+    final ident = c.first['ident'] as int? ?? kMainIdent;
+    final rows = await db.query(
+      'hellos',
+      where: 'ident = ? AND way = ? AND peer = ?',
+      whereArgs: [ident, kHelloIn, key],
+      limit: 1,
+    );
+    if (rows.isEmpty) return;
+    final hl = signalSession.lib.parseHello(rows.first['hello'] as List<int>);
+    await startFromInvite(haloId, hl.invite);
+    await rememberPeerFc(haloId, _hexOf(hl.invite.firstContact));
+    await db.delete(
+      'hellos',
+      where: 'ident = ? AND way = ? AND peer = ?',
+      whereArgs: [ident, kHelloIn, key],
+    );
+  }
+
   /// a contact added from a v4 invite [inv]: the session from its bundle
   /// and the pair seeded afresh, so the first message goes to the invite's
   /// first-contact address sealed with the hello seal key and carries the
@@ -401,5 +603,9 @@ extension AppStateInvites on AppState {
   }
 }
 
-/// a hellos row: a v4 first contact I sent, waiting for its answer
+/// a hellos row: a v4 first contact I sent, waiting for its answer; a
+/// hello of mine out, waiting for the opener to my one-time invite in it;
+/// a hello in, waiting for the person's accept
 const kHelloOpen = 'open';
+const kHelloOut = 'out';
+const kHelloIn = 'in';

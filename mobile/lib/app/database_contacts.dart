@@ -1305,7 +1305,9 @@ const kRequestRows =
     'EXISTS (SELECT 1 FROM messages m WHERE m.peer_id = contacts.halo_id '
     'AND m.group_id IS NULL) OR '
     'EXISTS (SELECT 1 FROM held_onion h WHERE h.peer_id = contacts.halo_id) OR '
-    'EXISTS (SELECT 1 FROM vouches v WHERE v.halo_id = contacts.halo_id))';
+    'EXISTS (SELECT 1 FROM vouches v WHERE v.halo_id = contacts.halo_id) OR '
+    "EXISTS (SELECT 1 FROM hellos hl WHERE hl.way = 'in' "
+    'AND hl.peer = contacts.ikey AND hl.ident = contacts.ident))';
 
 /// a request as the inbox shows it, or one declined and parked since
 @visibleForTesting
