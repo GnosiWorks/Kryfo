@@ -19,6 +19,7 @@ typedef PhotoPeer = ({
 mixin _PhotoRows {
   // what these rows take from the rest of HaloDb
   Future<Database> open();
+  HaloContainer get container;
 
   // ---- your own ----
 
@@ -48,17 +49,28 @@ mixin _PhotoRows {
 
   // ---- a contact's ----
 
-  /// every photo this container shows, by contact: yours over theirs
+  /// every photo this container shows, by contact: yours over theirs. a
+  /// chat that blocks screenshots shows the face, on every screen
   Future<Map<String, Uint8List>> contactPhotos() async {
     try {
       final db = await open();
-      final rows = await db.query(
-        'contact_photos',
-        where: 'mine IS NOT NULL OR theirs IS NOT NULL',
-      );
+      final cols = {
+        for (final c in await db.rawQuery('PRAGMA table_info(contacts)'))
+          c['name'],
+      };
+      final shots = [
+        for (final c in ChatShots.reads)
+          if (cols.contains(c)) 'c.$c',
+      ];
+      final rows = await db.rawQuery('''
+        SELECT p.halo_id, p.mine, p.theirs${[for (final c in shots) ', $c'].join()}
+        FROM contact_photos p LEFT JOIN contacts c ON c.halo_id = p.halo_id
+        WHERE p.mine IS NOT NULL OR p.theirs IS NOT NULL
+      ''');
       return {
         for (final r in rows)
-          r['halo_id'] as String: ?(_blob(r['mine']) ?? _blob(r['theirs'])),
+          if (!ChatShots.ofRow(r, quiet: container.quiet).blocking)
+            r['halo_id'] as String: ?(_blob(r['mine']) ?? _blob(r['theirs'])),
       };
     } catch (e) {
       dlog('photo: contacts not read (${e.runtimeType})');

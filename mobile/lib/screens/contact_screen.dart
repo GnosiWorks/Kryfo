@@ -299,6 +299,8 @@ class _ContactScreenState extends State<ContactScreen> {
       choice: widget.face ?? (_c?['avatar'] as num?)?.toInt(),
       add: photoAddOffered(desktop: onDesktop),
       has: _mine,
+      // a chat that blocks screenshots shows the face, so nothing to look at
+      look: _mine && faceOpens(id),
     );
     if (!mounted || c == null) return;
     switch (c) {

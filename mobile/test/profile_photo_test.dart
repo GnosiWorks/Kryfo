@@ -13,6 +13,7 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart' show getCrc32;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/chat_shots.dart';
+import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/support.dart' show supportTables;
 import 'package:kryfo/image_strip.dart' show pictureKind, PictureKind;
 import 'package:kryfo/jpeg_strip.dart' show jpegHasExif;
@@ -31,7 +32,7 @@ import 'source_body.dart';
 import 'sqlite_ffi.dart';
 
 class _Rows extends HaloDb {
-  _Rows(this.mem);
+  _Rows(this.mem, [super.container]);
   final SqliteMem mem;
   @override
   Future<Database> open() async => mem;
@@ -474,7 +475,9 @@ void main() {
           accepted INTEGER NOT NULL DEFAULT 1,
           back_paired INTEGER NOT NULL DEFAULT 0,
           blocked INTEGER NOT NULL DEFAULT 0,
-          caps TEXT NOT NULL DEFAULT '')
+          caps TEXT NOT NULL DEFAULT '',
+          shots_on INTEGER NOT NULL DEFAULT 0,
+          shots_can INTEGER NOT NULL DEFAULT 0)
       ''');
       await photoTables(mem);
       await mem.insert('contacts', {
@@ -674,6 +677,25 @@ void main() {
       expect(await db.duePhotoPeers(1 << 62), isEmpty);
       await db.owePhoto(_peer, 0, at: 1);
       expect((await db.duePhotoPeers(1 << 62)).single.want, 0);
+    }, skip: skip);
+
+    test('a chat that blocks screenshots shows the face', () async {
+      final db = await rows();
+      await _takeAll(db, 100, 1);
+      expect((await db.contactPhotos()).keys, [_peer]);
+      // on, but their phone does not know the block yet: nothing blocks
+      await db.mem.update('contacts', {'shots_on': 1});
+      expect((await db.contactPhotos()).keys, [_peer]);
+      await db.mem.update('contacts', {'shots_can': 5});
+      expect(await db.contactPhotos(), isEmpty);
+      // the one set for them too
+      await db.setMinePhoto(_peer, _clean);
+      expect(await db.contactPhotos(), isEmpty);
+      // in a decoy the switch alone blocks
+      final quiet = _Rows(db.mem, HaloContainer.decoy);
+      await db.mem.update('contacts', {'shots_can': 0});
+      expect(await quiet.contactPhotos(), isEmpty);
+      expect((await db.contactPhotos()).keys, [_peer]);
     }, skip: skip);
 
     test('your own photo, and its removal keeping the time', () async {

@@ -35,6 +35,7 @@ import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'arrival_fakes.dart';
+import 'source_body.dart';
 import 'sqlite_ffi.dart';
 
 const _f = 'plain-friend-here'; // accepted, added back, takes photos
@@ -315,6 +316,40 @@ void main() {
       await w.app.reloadPhotos();
       expect(photoBook.has(_f), isFalse);
     }, skip: skip);
+  });
+
+  group('a chat that blocks screenshots', () {
+    test('shows the face on every screen, theirs or the one set for '
+        'them', () async {
+      final w = await _World.make();
+      await w.photoFrom(_f, _clean, DateTime.now().millisecondsSinceEpoch);
+      expect(photoBook.has(_f), isTrue);
+      w.live.people[_f]!
+        ..['shots_on'] = 1
+        ..['shots_can'] = 5;
+      await w.app.reloadPhotos();
+      expect(photoBook.has(_f), isFalse);
+      expect(await w.app.setContactPhoto(_f, _clean), isTrue);
+      expect(photoBook.has(_f), isFalse);
+      // lifted, the photo shows again
+      w.live.people[_f]!['shots_on'] = 0;
+      await w.app.reloadPhotos();
+      expect(photoBook.has(_f), isTrue);
+    }, skip: skip);
+
+    test('the switch, either phone\'s, takes the photo off before the '
+        'next frame', () {
+      final src = sourceOf('lib/app/state_screen.dart');
+      for (final at in [
+        src.indexOf('Future<void> _turnShots('),
+        src.indexOf('Future<void> _takeShots('),
+      ]) {
+        final body = src.substring(at, src.indexOf('\n  }\n', at));
+        final moved = body.indexOf('_photoShotsMoved(peer');
+        expect(moved, greaterThan(0));
+        expect(moved, lessThan(body.indexOf('notifyListeners()')));
+      }
+    });
   });
 
   group('going out', () {

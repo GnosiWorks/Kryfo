@@ -52,6 +52,22 @@ extension AppStatePhotos on AppState {
     return book;
   }
 
+  // a chat's screenshot block moved: blocking, its photo goes before the
+  // next frame and the face shows; lifted, the book is read again
+  void _photoShotsMoved(String peer, {required bool blocking}) {
+    if (blocking && photoBook.has(peer)) {
+      photoBook.put({
+        for (final MapEntry(:key, :value) in photoBook.all.entries)
+          if (key != peer) key: value,
+      });
+    }
+    unawaited(
+      reloadPhotos().catchError((Object e) {
+        dlog('photo: book not read (${e.runtimeType})');
+      }),
+    );
+  }
+
   // the list was read for another session than the book was
   // a vault opened or a decoy left: what its contacts are owed is looked at
   void _photosFollow(Session s) {

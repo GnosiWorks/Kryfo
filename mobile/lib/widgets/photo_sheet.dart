@@ -13,7 +13,8 @@ import 'sheet_handle.dart';
 enum PhotoChoice { camera, gallery, faces, view, remove }
 
 /// null when dismissed. [add] offers the camera and the gallery, [faces]
-/// the face picker, [has] a look and the remove
+/// the face picker, [has] a look and the remove. [look] false keeps the
+/// look off where the face shows
 Future<PhotoChoice?> showPhotoSheet(
   BuildContext context, {
   required String title,
@@ -22,6 +23,7 @@ Future<PhotoChoice?> showPhotoSheet(
   int? choice,
   required bool add,
   required bool has,
+  bool? look,
   bool faces = false,
 }) => showHaloSheet<PhotoChoice>(
   context,
@@ -84,7 +86,7 @@ Future<PhotoChoice?> showPhotoSheet(
                   label: l10n.photoPickFace,
                   onTap: () => Navigator.pop(ctx, PhotoChoice.faces),
                 ),
-              if (has)
+              if (look ?? has)
                 HaloRow(
                   icon: Icons.zoom_out_map,
                   label: l10n.photoView,

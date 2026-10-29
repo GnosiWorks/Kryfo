@@ -2336,23 +2336,29 @@ class ArrivalRows implements HaloDb {
           accepted INTEGER NOT NULL DEFAULT 1,
           back_paired INTEGER NOT NULL DEFAULT 0,
           blocked INTEGER NOT NULL DEFAULT 0,
-          caps TEXT NOT NULL DEFAULT '')
+          caps TEXT NOT NULL DEFAULT '',
+          shots_on INTEGER NOT NULL DEFAULT 0,
+          shots_can INTEGER NOT NULL DEFAULT 0)
       ''');
       await photoTables(mem);
       h = _photoHost = _PhotoHost(mem, _container);
     }
     for (final r in people.values) {
       await h.mem.execute(
-        'INSERT INTO contacts (halo_id, accepted, back_paired, blocked, caps) '
-        'VALUES (?, ?, ?, ?, ?) ON CONFLICT(halo_id) DO UPDATE SET '
+        'INSERT INTO contacts (halo_id, accepted, back_paired, blocked, caps, '
+        'shots_on, shots_can) VALUES (?, ?, ?, ?, ?, ?, ?) '
+        'ON CONFLICT(halo_id) DO UPDATE SET '
         'accepted = excluded.accepted, back_paired = excluded.back_paired, '
-        'blocked = excluded.blocked, caps = excluded.caps',
+        'blocked = excluded.blocked, caps = excluded.caps, '
+        'shots_on = excluded.shots_on, shots_can = excluded.shots_can',
         [
           r['halo_id'],
           r['accepted'] ?? 1,
           r['back_paired'] ?? 0,
           r['blocked'] ?? 0,
           r['caps'] ?? '',
+          r['shots_on'] ?? 0,
+          r['shots_can'] ?? 0,
         ],
       );
     }
