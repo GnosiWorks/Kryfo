@@ -75,9 +75,11 @@ bool inviteOpenerHolds(
     return false;
   }
   final inv = arrival.invite;
+  // a one-time invite's opener is on its ec prekey too, a main one's on
+  // none
   return info.signedPreKeyId == inv.spkId &&
       info.kyberPreKeyId == inv.kyberId &&
-      (info.preKeyId == null || info.preKeyId == inv.ecId);
+      info.preKeyId == inv.ecId;
 }
 
 /// a v4 opener's envelope checked after it opened (3.1): it carries the
@@ -189,6 +191,25 @@ Future<bool> onInviteKeys(
   return (int.parse(m.group(1)!), m.group(2)!);
 }
 
+/// a one-time invite something opened on: its keys, its address and my
+/// hello row for it go, whatever becomes of the opener (2.3, 3.1). none
+/// that fails stops the opener: its filing spends it again
+Future<void> spendOpenedInvite(InviteArrival a) async {
+  if (!a.invite.oneTime) return;
+  try {
+    final db = await live.open();
+    await spendOneTime(db, signalSession, a.invite);
+    await db.delete(
+      'hellos',
+      where: 'ident = ? AND way = ? AND invite_id = ?',
+      whereArgs: [a.ident, kHelloOut, a.invite.id],
+    );
+    await engine.unsubscribeFcKey(a.ident, a.invite.id);
+  } catch (e) {
+    dlog('invite: not spent (${e.runtimeType})');
+  }
+}
+
 extension AppStateInvites on AppState {
   /// a line from one of my invites' first-contact addresses: the seal's
   /// key, a bar and what came. an opener is opened only when its seal and
@@ -228,8 +249,12 @@ extension AppStateInvites on AppState {
       arrived();
       return;
     }
+    // a copy of one opened here and not filed yet is filed, though its
+    // one-time invite went as it opened
+    final opened =
+        _firstOpened[sha256.convert(utf8.encode(cipher)).toString()] != null;
     if (row == null ||
-        !row.openAt(unixHours()) ||
+        (!row.openAt(unixHours()) && !opened) ||
         w.isEmpty ||
         w[0] != kLsPreKey) {
       dlog('invite: a line dropped');
@@ -282,15 +307,7 @@ extension AppStateInvites on AppState {
       // opened and not filed, or not opened yet: it comes again
       throw StateError('invite: an opener not filed');
     }
-    if (row.oneTime) {
-      await spendOneTime(db, signalSession, row);
-      await engine.unsubscribeFcKey(ident, inviteId);
-      await db.delete(
-        'hellos',
-        where: 'ident = ? AND way = ? AND invite_id = ?',
-        whereArgs: [ident, kHelloOut, inviteId],
-      );
-    }
+    await spendOpenedInvite(arrival);
     await live.markSeen(h);
     if (AppState._shown(paired.$2)) arrived();
   }

@@ -439,6 +439,46 @@ void main() {
     expect(await signalSession.sessionStore.load(p.words), session);
   });
 
+  test('a one-time invite goes once an opener opened on it, though the '
+      'opener is then refused', () async {
+    final once = await makeInvite(
+      db,
+      signalSession,
+      kind: kInviteOneTime,
+      fcPkOf: _fcPkOf,
+    );
+    final p = await _Phone.make('opened-refused', 81);
+    final inv = readInvite(p.ss.lib, once.link);
+    await p.ss.processBundle('me', inv.block!.bundle);
+    // no seed: refused after it opened
+    final plain = await wrapMessage(
+      'hi',
+      msgUid: 'u-once',
+      sender: SenderInfo(
+        haloId: p.words,
+        edPub: _hex(p.face.face),
+        onion: 'o-p',
+        xPub: p.x,
+      ),
+    );
+    final c = await p.ss.encryptTo('me', plain);
+    await app.receiveRelay([
+      (peer: 'f0:${once.id}', cipher: '${_sealOf(p.x)}|$c'),
+    ]);
+    await _settle();
+    expect(firstFails.codes, contains('seed'));
+    expect((await inviteOf(db, kMainIdent, once.id))?.usedAt, isNotNull);
+    expect(
+      await signalSession.signedPreKeyStore.contains(once.spkId!),
+      isFalse,
+    );
+    expect(
+      await signalSession.kyberPreKeyStore.contains(once.kyberId!),
+      isFalse,
+    );
+    expect(engine.unsubscribed, contains(once.id));
+  });
+
   test('the upkeep runs again once an hour while the app runs: an expired '
       'invite\'s keys go without a start', () async {
     final t0 = DateTime.now().millisecondsSinceEpoch;

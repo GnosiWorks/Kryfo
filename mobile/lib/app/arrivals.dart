@@ -286,6 +286,9 @@ Future<({String haloId, String plain, UnwrappedMessage env})?> _openFirst(
         firstFails.note('decrypt');
         return null;
       }
+      // a one-time invite is spent once anything opened on its keys, filed
+      // or refused below
+      if (v4 != null) await spendOpenedInvite(v4);
       final env = unwrapMessage(plain);
       final h = env.senderHaloId;
       final e = env.senderEdPub;

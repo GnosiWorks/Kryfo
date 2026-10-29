@@ -641,6 +641,33 @@ void main() {
     final toOther = await openerTo(other);
     expect(holds(a, toOther, 'ab' * 32), isFalse);
     expect(holds(other, toOther, 'ab' * 32), isTrue);
+    // a one-time invite's opener without its ec prekey: refused
+    final spk = ss.lib.preKeyPublic(
+      kLsSigned,
+      (await ss.signedPreKeyStore.load(other.spkId!))!,
+    );
+    final k = ss.lib.preKeyPublic(
+      kLsKyber,
+      (await ss.kyberPreKeyStore.load(other.kyberId!))!,
+    );
+    await b.processBundle(
+      'no-ec',
+      ss.lib.bundleBuild(
+        registrationId: ss.registrationId,
+        deviceId: 1,
+        preKeyId: null,
+        preKey: null,
+        signedPreKeyId: spk.id,
+        signedPreKey: spk.public,
+        signedPreKeySignature: spk.signature,
+        kyberPreKeyId: k.id,
+        kyberPreKey: k.public,
+        kyberPreKeySignature: k.signature,
+        identityKey: ss.identity.public,
+      ),
+    );
+    final noEc = base64Decode(await b.encryptTo('no-ec', 'hi'));
+    expect(holds(other, Uint8List.sublistView(noEc, 1), 'ab' * 32), isFalse);
     // on the v3 card's keys
     final c = await testStore();
     await c.processBundle('v3', lsBundleOf(ss.lib, await ss.makeBundleB64()));
