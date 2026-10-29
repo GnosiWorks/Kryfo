@@ -448,6 +448,77 @@ void main() {
       expect(r, 'cancelled');
       expect(mediaInflight.contains(msgUid), isFalse);
     });
+
+    // the envelope for [at]'s [nth] wrap waits on [gate]
+    Future<String> gatedSend(
+      _Members g,
+      List<String> to,
+      int at,
+      int nth,
+      Completer<void> gate,
+    ) {
+      var n = 0;
+      return sendGroupSlices(
+        path: path,
+        msgUid: msgUid,
+        members: to,
+        wrap: (slice, i, total) async {
+          if (i == at && ++n == nth) await gate.future;
+          return '$i';
+        },
+        deliver: g.deliver,
+        progressKey: 'group:g1',
+        gap: Duration.zero,
+        retryPause: Duration.zero,
+      );
+    }
+
+    test('an end while a slice is wrapped sends that slice no more', () async {
+      final gate = Completer<void>();
+      final g = _Members();
+      final r = await gatedSend(
+        g,
+        ['b', 'c'],
+        2,
+        1,
+        gate,
+      ).timeout(const Duration(seconds: 5));
+      expect(r, kMediaStalled);
+      gate.complete();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(g.offered.where((o) => o.$2 >= 2), isEmpty);
+      expect(mediaSendProgress.containsKey(msgUid), isFalse);
+    });
+
+    test('an end while a catch-up slice is wrapped sends it no more', () async {
+      final gate = Completer<void>();
+      // c misses slice 1 on the way through, b takes it
+      final g = _Members()..refuse = (m, i, n) => m == 'c' && i == 1;
+      final r = await gatedSend(
+        g,
+        ['b', 'c'],
+        1,
+        2,
+        gate,
+      ).timeout(const Duration(seconds: 5));
+      expect(r, kMediaStalled);
+      final before = g.offered.length;
+      gate.complete();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(g.offered.length, before);
+    });
+
+    test('an end while the file is read starts no strip', () async {
+      // a look every microsecond, and a stop already asked
+      mediaStallAfter = const Duration(microseconds: kMediaStallLooks);
+      cancelMediaSend(msgUid);
+      final g = _Members();
+      expect(await send(g, ['b']), 'cancelled');
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(mediaSendProgress.containsKey(msgUid), isFalse);
+      expect(groupSliceDoneAt.containsKey(msgUid), isFalse);
+      expect(g.offered, isEmpty);
+    });
   });
 
   test('nobody to send to is no send', () async {

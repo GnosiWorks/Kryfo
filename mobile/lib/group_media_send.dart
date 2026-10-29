@@ -322,6 +322,8 @@ Future<String> _send({
   } catch (e) {
     return 'error: read';
   }
+  // the watch ended it while the file was read: no strip, no stamp
+  if (run.ended) return 'cancelled';
   // an empty file has nothing to send, and is not a send that went
   if (total == 0) return 'error: empty';
   final showProgress = total > 1 && progressKey != null;
@@ -426,6 +428,7 @@ Future<String> _send({
     ];
     if (left.isEmpty) continue;
     final wrapped = await envelope(i);
+    if (cancelled()) return 'cancelled';
     if (wrapped == null) return 'error: read';
     // tried again only while nobody has it: a member it missed while
     // others got it waits for the rounds at the end, not every slice
@@ -457,7 +460,7 @@ Future<String> _send({
     for (var i = 0; i < total && misses < kGroupMemberMisses; i++) {
       if (has(m).contains(i) || cancelled() || hold()) continue;
       final wrapped = await envelope(i);
-      if (wrapped == null) return;
+      if (wrapped == null || cancelled()) return;
       final left = await push(i, wrapped, [m]);
       misses = left.isEmpty ? 0 : misses + 1;
       await Future.delayed(gap);
