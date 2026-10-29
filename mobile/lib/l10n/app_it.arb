@@ -2644,7 +2644,7 @@
   "desktopLockAddPassphrase": "Aggiungi una passphrase",
   "desktopLockWithoutPassphrase": "Senza di essa, chiunque usi il tuo account utente può aprire Kryfo.",
   "desktopLockKeyringRefused": "Kryfo non è riuscito a conservare la sua chiave nel portachiavi di questo computer. Aggiungi invece una passphrase.",
-  "desktopKeyMissing": "Questo account utente non ha la chiave dei dati di Kryfo. Kryfo si apre solo nell’account utente in cui è stato configurato.",
+  "desktopKeyMissing": "Questo account utente non ha la chiave dei dati di Kryfo. Un backup di Kryfo riporta tutto. Se hai spostato la cartella di Kryfo, aggiungi una passphrase nell’account utente da cui proviene, poi copiala di nuovo.",
   "desktopKeyUnreachable": "Kryfo al momento non riesce a raggiungere la sua chiave su questo computer. Sblocca il portachiavi se il computer lo chiede, poi riprova.",
   "desktopPassRow": "Passphrase su questo computer",
   "desktopPassOffBody": "Kryfo si apre con il tuo account utente.",
@@ -2657,5 +2657,11 @@
   "desktopPassAdded": "Passphrase aggiunta",
   "desktopPassRemoved": "Passphrase rimossa",
   "desktopPassChanged": "Passphrase cambiata",
-  "desktopPassRemoveBody": "Scrivi la tua passphrase per rimuoverla. Poi Kryfo si aprirà con il tuo account utente."
+  "desktopPassRemoveBody": "Scrivi la tua passphrase per rimuoverla. Poi Kryfo si aprirà con il tuo account utente.",
+  "desktopKeyUnreachableWindows": "Kryfo al momento non riesce a raggiungere la sua chiave nel chip di sicurezza di questo computer. Riprova tra un momento.",
+  "desktopLockAccountRefused": "Kryfo non è riuscito a conservare la sua chiave con il tuo account Windows. Aggiungi invece una passphrase.",
+  "desktopPassStaysWindows": "Kryfo non è riuscito a conservare la sua chiave con il tuo account Windows, quindi la passphrase resta.",
+  "desktopBackupCardTitle": "Tieni un backup di Kryfo",
+  "desktopBackupCardLine": "Il tuo account Windows su questo computer conserva la chiave di Kryfo. Un backup di Kryfo riporta tutto se il computer o l’account vengono ripristinati.",
+  "desktopBackupHint": "Riporta tutto se questo computer viene ripristinato."
 }

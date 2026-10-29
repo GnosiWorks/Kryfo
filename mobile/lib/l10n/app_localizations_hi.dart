@@ -10052,7 +10052,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get desktopKeyMissing =>
-      'इस यूज़र अकाउंट के पास Kryfo के डेटा की कुंजी नहीं है। Kryfo सिर्फ़ उसी यूज़र अकाउंट पर खुलता है जिस पर उसे सेट किया गया था।';
+      'इस यूज़र अकाउंट के पास Kryfo के डेटा की कुंजी नहीं है। Kryfo बैकअप सब कुछ वापस ले आता है। अगर आपने Kryfo का फ़ोल्डर कहीं और रखा है, तो जिस यूज़र अकाउंट से वह आया है उस पर पासफ़्रेज़ जोड़ें, फिर उसे दोबारा कॉपी करें।';
 
   @override
   String get desktopKeyUnreachable =>
@@ -10096,4 +10096,27 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get desktopPassRemoveBody =>
       'हटाने के लिए अपना पासफ़्रेज़ लिखें। इसके बाद Kryfo आपके यूज़र अकाउंट से खुलेगा।';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo अभी इस कंप्यूटर की सुरक्षा चिप में अपनी कुंजी तक नहीं पहुँच पा रहा। थोड़ी देर में दोबारा कोशिश करें।';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo अपनी कुंजी आपके Windows अकाउंट के साथ नहीं रख पाया। इसकी जगह पासफ़्रेज़ जोड़ें।';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo अपनी कुंजी आपके Windows अकाउंट के साथ नहीं रख पाया, इसलिए पासफ़्रेज़ बना रहेगा।';
+
+  @override
+  String get desktopBackupCardTitle => 'Kryfo बैकअप रखें';
+
+  @override
+  String get desktopBackupCardLine =>
+      'इस कंप्यूटर पर आपका Windows अकाउंट Kryfo की कुंजी रखता है। अगर कभी कंप्यूटर या अकाउंट रीसेट हो, तो Kryfo बैकअप सब कुछ वापस ले आता है।';
+
+  @override
+  String get desktopBackupHint =>
+      'अगर कभी यह कंप्यूटर रीसेट हो, तो सब कुछ वापस ले आता है।';
 }

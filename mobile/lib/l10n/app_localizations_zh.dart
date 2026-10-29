@@ -9557,7 +9557,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get desktopKeyMissing =>
-      '这个用户账户没有 Kryfo 数据的密钥。Kryfo 只会在设置它的那个用户账户上打开。';
+      '这个用户账户没有 Kryfo 数据的密钥。Kryfo 备份能找回一切。如果你移动过 Kryfo 的文件夹，请在它原来的用户账户上添加密码短语，然后再复制一次。';
 
   @override
   String get desktopKeyUnreachable =>
@@ -9598,6 +9598,27 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get desktopPassRemoveBody => '输入你的密码短语来移除它。之后 Kryfo 会用你的用户账户打开。';
+
+  @override
+  String get desktopKeyUnreachableWindows => 'Kryfo 现在无法取得这台电脑安全芯片中的密钥。请稍后重试。';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo 无法用你的 Windows 账户保存它的密钥。请改为添加密码短语。';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo 无法用你的 Windows 账户保存它的密钥，所以密码短语会保留。';
+
+  @override
+  String get desktopBackupCardTitle => '留一份 Kryfo 备份';
+
+  @override
+  String get desktopBackupCardLine =>
+      '这台电脑上的 Windows 账户保管着 Kryfo 的密钥。如果电脑或账户被重置，Kryfo 备份能找回一切。';
+
+  @override
+  String get desktopBackupHint => '如果这台电脑被重置，它能找回一切。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -19036,7 +19057,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get desktopKeyMissing =>
-      '這個使用者帳戶沒有 Kryfo 資料的金鑰。Kryfo 只會在設定它的那個使用者帳戶上開啟。';
+      '這個使用者帳戶沒有 Kryfo 資料的金鑰。Kryfo 備份能找回一切。如果你移動過 Kryfo 的資料夾，請在它原本的使用者帳戶上新增密碼短語，然後再複製一次。';
 
   @override
   String get desktopKeyUnreachable =>
@@ -19077,4 +19098,26 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get desktopPassRemoveBody => '輸入你的密碼短語來移除它。之後 Kryfo 會用你的使用者帳戶開啟。';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo 現在無法取得這台電腦安全晶片中的金鑰。請稍後再試一次。';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo 無法用你的 Windows 帳戶保存它的金鑰。請改為新增密碼短語。';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo 無法用你的 Windows 帳戶保存它的金鑰，所以密碼短語會保留。';
+
+  @override
+  String get desktopBackupCardTitle => '留一份 Kryfo 備份';
+
+  @override
+  String get desktopBackupCardLine =>
+      '這台電腦上的 Windows 帳戶保管著 Kryfo 的金鑰。如果電腦或帳戶被重設，Kryfo 備份能找回一切。';
+
+  @override
+  String get desktopBackupHint => '如果這台電腦被重設，它能找回一切。';
 }

@@ -10223,7 +10223,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get desktopKeyMissing =>
-      'У этой учётной записи нет ключа к данным Kryfo. Kryfo открывается только в той учётной записи, где его настроили.';
+      'У этой учётной записи нет ключа к данным Kryfo. Резервная копия Kryfo вернёт всё. Если вы перенесли папку Kryfo, добавьте парольную фразу в той учётной записи, откуда она пришла, и скопируйте папку снова.';
 
   @override
   String get desktopKeyUnreachable =>
@@ -10267,4 +10267,27 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get desktopPassRemoveBody =>
       'Введите парольную фразу, чтобы убрать её. После этого Kryfo будет открываться с вашей учётной записью.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo сейчас не может получить свой ключ из чипа безопасности этого компьютера. Попробуйте снова через минуту.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo не смог сохранить свой ключ в вашей учётной записи Windows. Добавьте парольную фразу.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo не смог сохранить свой ключ в вашей учётной записи Windows, поэтому парольная фраза остаётся.';
+
+  @override
+  String get desktopBackupCardTitle => 'Держите резервную копию Kryfo';
+
+  @override
+  String get desktopBackupCardLine =>
+      'Ключ Kryfo хранит ваша учётная запись Windows на этом компьютере. Резервная копия Kryfo вернёт всё, если компьютер или учётную запись когда-нибудь сбросят.';
+
+  @override
+  String get desktopBackupHint =>
+      'Вернёт всё, если этот компьютер когда-нибудь сбросят.';
 }

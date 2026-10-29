@@ -10189,7 +10189,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get desktopKeyMissing =>
-      'حساب المستخدم هذا لا يملك مفتاح بيانات Kryfo. يُفتح Kryfo فقط على حساب المستخدم الذي أُعدّ عليه.';
+      'حساب المستخدم هذا لا يملك مفتاح بيانات Kryfo. نسخة Kryfo الاحتياطية تعيد كل شيء. إن نقلت مجلد Kryfo، فأضف عبارة مرور على حساب المستخدم الذي جاء منه، ثم انسخه من جديد.';
 
   @override
   String get desktopKeyUnreachable =>
@@ -10233,4 +10233,26 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get desktopPassRemoveBody =>
       'اكتب عبارة المرور لإزالتها. بعدها يُفتح Kryfo بحساب المستخدم الخاص بك.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'لا يستطيع Kryfo الوصول إلى مفتاحه في شريحة الأمان على هذا الحاسوب الآن. أعد المحاولة بعد لحظة.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'تعذّر على Kryfo حفظ مفتاحه مع حسابك على Windows. أضف عبارة مرور بدلًا من ذلك.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'تعذّر على Kryfo حفظ مفتاحه مع حسابك على Windows، لذا تبقى عبارة المرور.';
+
+  @override
+  String get desktopBackupCardTitle => 'احتفظ بنسخة Kryfo الاحتياطية';
+
+  @override
+  String get desktopBackupCardLine =>
+      'حسابك على Windows في هذا الحاسوب يحفظ مفتاح Kryfo. نسخة Kryfo الاحتياطية تعيد كل شيء إن أُعيد ضبط الحاسوب أو الحساب يومًا.';
+
+  @override
+  String get desktopBackupHint => 'تعيد كل شيء إن أُعيد ضبط هذا الحاسوب يومًا.';
 }

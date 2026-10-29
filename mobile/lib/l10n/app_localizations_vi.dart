@@ -10030,7 +10030,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get desktopKeyMissing =>
-      'Tài khoản người dùng này không có khóa dữ liệu của Kryfo. Kryfo chỉ mở trên tài khoản người dùng đã cài đặt nó.';
+      'Tài khoản người dùng này không có khóa dữ liệu của Kryfo. Bản sao lưu Kryfo mang mọi thứ trở lại. Nếu bạn đã chuyển thư mục của Kryfo, hãy thêm cụm mật khẩu trên tài khoản người dùng nơi nó đến, rồi sao chép lại.';
 
   @override
   String get desktopKeyUnreachable =>
@@ -10075,4 +10075,27 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get desktopPassRemoveBody =>
       'Nhập cụm mật khẩu để gỡ nó. Sau đó Kryfo sẽ mở bằng tài khoản người dùng của bạn.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Lúc này Kryfo không lấy được khóa của mình trong chip bảo mật của máy tính này. Hãy thử lại sau giây lát.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo không lưu được khóa của mình bằng tài khoản Windows của bạn. Hãy thêm cụm mật khẩu thay vào đó.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo không lưu được khóa của mình bằng tài khoản Windows của bạn, nên cụm mật khẩu vẫn giữ nguyên.';
+
+  @override
+  String get desktopBackupCardTitle => 'Giữ một bản sao lưu Kryfo';
+
+  @override
+  String get desktopBackupCardLine =>
+      'Tài khoản Windows của bạn trên máy tính này giữ khóa của Kryfo. Bản sao lưu Kryfo mang mọi thứ trở lại nếu có lúc máy tính hoặc tài khoản bị đặt lại.';
+
+  @override
+  String get desktopBackupHint =>
+      'Mang mọi thứ trở lại nếu có lúc máy tính này bị đặt lại.';
 }

@@ -10063,7 +10063,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get desktopKeyMissing =>
-      'این حساب کاربری کلید داده‌های Kryfo را ندارد. Kryfo فقط در حساب کاربری‌ای باز می‌شود که در آن راه‌اندازی شده است.';
+      'این حساب کاربری کلید داده‌های Kryfo را ندارد. نسخه‌ی پشتیبان Kryfo همه چیز را برمی‌گرداند. اگر پوشه‌ی Kryfo را جابه‌جا کرده‌اید، در حساب کاربری‌ای که از آن آمده یک عبارت عبور بیفزایید، سپس پوشه را دوباره کپی کنید.';
 
   @override
   String get desktopKeyUnreachable =>
@@ -10107,4 +10107,27 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get desktopPassRemoveBody =>
       'برای برداشتن عبارت عبور، آن را بنویسید. پس از آن Kryfo با حساب کاربری شما باز می‌شود.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo الان به کلیدش در تراشه‌ی امنیتی این رایانه دسترسی ندارد. کمی بعد دوباره تلاش کنید.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo نتوانست کلیدش را با حساب Windows شما نگه دارد. به جای آن یک عبارت عبور بیفزایید.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo نتوانست کلیدش را با حساب Windows شما نگه دارد، پس عبارت عبور می‌ماند.';
+
+  @override
+  String get desktopBackupCardTitle => 'یک نسخه‌ی پشتیبان Kryfo نگه دارید';
+
+  @override
+  String get desktopBackupCardLine =>
+      'حساب Windows شما روی این رایانه کلید Kryfo را نگه می‌دارد. اگر روزی رایانه یا حساب بازنشانی شود، نسخه‌ی پشتیبان Kryfo همه چیز را برمی‌گرداند.';
+
+  @override
+  String get desktopBackupHint =>
+      'اگر روزی این رایانه بازنشانی شود، همه چیز را برمی‌گرداند.';
 }

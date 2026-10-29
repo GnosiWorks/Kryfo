@@ -12638,7 +12638,7 @@
   "@desktopLockKeyringRefused": {
     "description": "desktop/desktop_lock_screen.dart: the system keyring refused to keep the key at first start"
   },
-  "desktopKeyMissing": "This computer account does not have the key to Kryfo's data. Kryfo opens only on the computer account it was set up on.",
+  "desktopKeyMissing": "This computer account does not have the key to Kryfo's data. A Kryfo backup brings everything back. If you moved Kryfo's folder, add a passphrase on the computer account it came from, then copy it again.",
   "@desktopKeyMissing": {
     "description": "desktop/desktop_lock_screen.dart: the key kept by the computer account is not there (another account or computer, a reset keyring)"
   },
@@ -12693,5 +12693,29 @@
   "desktopPassRemoveBody": "Type your passphrase to remove it. Kryfo then opens with your computer account.",
   "@desktopPassRemoveBody": {
     "description": "desktop/desktop_passphrase_screen.dart: above the field when removing the passphrase"
+  },
+  "desktopKeyUnreachableWindows": "Kryfo cannot reach its key in this computer's security chip right now. Try again in a moment.",
+  "@desktopKeyUnreachableWindows": {
+    "description": "desktop/desktop_lock_screen.dart: windows, the tpm is busy or locked out for now"
+  },
+  "desktopLockAccountRefused": "Kryfo could not keep its key with your Windows account. Add a passphrase instead.",
+  "@desktopLockAccountRefused": {
+    "description": "desktop/desktop_lock_screen.dart: windows, dpapi refused to keep the key at first start"
+  },
+  "desktopPassStaysWindows": "Kryfo could not keep its key with your Windows account, so the passphrase stays.",
+  "@desktopPassStaysWindows": {
+    "description": "desktop/desktop_passphrase_screen.dart: windows, dpapi refused the key when removing the passphrase"
+  },
+  "desktopBackupCardTitle": "Keep a Kryfo backup",
+  "@desktopBackupCardTitle": {
+    "description": "screens/home_screen.dart: windows without a passphrase, card title suggesting a backup"
+  },
+  "desktopBackupCardLine": "Your Windows account on this computer keeps Kryfo's key. A Kryfo backup brings everything back if the computer or the account is ever reset.",
+  "@desktopBackupCardLine": {
+    "description": "screens/home_screen.dart: windows without a passphrase, the card's line"
+  },
+  "desktopBackupHint": "Brings everything back if this computer is ever reset.",
+  "@desktopBackupHint": {
+    "description": "screens/settings_screen.dart: windows without a passphrase, under Back up identity"
   }
 }

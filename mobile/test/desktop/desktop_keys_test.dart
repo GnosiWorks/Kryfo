@@ -25,6 +25,10 @@ Future<R> _here<R>(FutureOr<R> Function() f) async => f();
 
 /// a keyring in memory, as the Secret Service keeps items by attributes
 class FakeKeyring implements SystemSeal {
+  FakeKeyring({this.place = SealPlace.keyring});
+
+  @override
+  final SealPlace place;
   final items = <String, Uint8List>{};
   SealFail? failFetch;
   bool refuse = false;
@@ -754,10 +758,9 @@ void main() {
       expect(() => systemDll('', 'ncrypt.dll'), throwsStateError);
       // no dll by its bare name but kernel32, a known dll
       final src = File('lib/desktop/seal_windows.dart').readAsStringSync();
-      final bare = RegExp(r"DynamicLibrary\.open\(\s*'(\w+\.dll)'")
-          .allMatches(src)
-          .map((m) => m[1])
-          .toSet();
+      final bare = RegExp(
+        r"DynamicLibrary\.open\(\s*'(\w+\.dll)'",
+      ).allMatches(src).map((m) => m[1]).toSet();
       expect(bare, {'kernel32.dll'});
       expect(src, contains("_dll('crypt32.dll')"));
       expect(src, contains("_dll('ncrypt.dll')"));

@@ -10040,7 +10040,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get desktopKeyMissing =>
-      'Akun pengguna ini tidak punya kunci data Kryfo. Kryfo hanya terbuka di akun pengguna tempat Kryfo disiapkan.';
+      'Akun pengguna ini tidak punya kunci data Kryfo. Cadangan Kryfo mengembalikan semuanya. Kalau kamu memindahkan folder Kryfo, tambahkan frasa sandi di akun pengguna asalnya, lalu salin lagi.';
 
   @override
   String get desktopKeyUnreachable =>
@@ -10084,4 +10084,27 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get desktopPassRemoveBody =>
       'Ketik frasa sandimu untuk menghapusnya. Setelah itu Kryfo terbuka dengan akun penggunamu.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo belum bisa menjangkau kuncinya di chip keamanan komputer ini. Coba lagi sebentar lagi.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo tidak bisa menyimpan kuncinya dengan akun Windows-mu. Tambahkan frasa sandi sebagai gantinya.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo tidak bisa menyimpan kuncinya dengan akun Windows-mu, jadi frasa sandinya tetap.';
+
+  @override
+  String get desktopBackupCardTitle => 'Simpan cadangan Kryfo';
+
+  @override
+  String get desktopBackupCardLine =>
+      'Akun Windows-mu di komputer ini menyimpan kunci Kryfo. Cadangan Kryfo mengembalikan semuanya kalau suatu saat komputer atau akunnya direset.';
+
+  @override
+  String get desktopBackupHint =>
+      'Mengembalikan semuanya kalau suatu saat komputer ini direset.';
 }

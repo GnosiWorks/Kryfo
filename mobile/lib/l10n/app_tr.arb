@@ -2644,7 +2644,7 @@
   "desktopLockAddPassphrase": "Parola ifadesi ekle",
   "desktopLockWithoutPassphrase": "O olmadan, kullanıcı hesabını kullanan herkes Kryfo'yu açabilir.",
   "desktopLockKeyringRefused": "Kryfo anahtarını bu bilgisayarın anahtarlığında tutamadı. Bunun yerine bir parola ifadesi ekle.",
-  "desktopKeyMissing": "Bu kullanıcı hesabında Kryfo'nun verilerinin anahtarı yok. Kryfo yalnızca kurulduğu kullanıcı hesabında açılır.",
+  "desktopKeyMissing": "Bu kullanıcı hesabında Kryfo'nun verilerinin anahtarı yok. Bir Kryfo yedeği her şeyi geri getirir. Kryfo'nun klasörünü taşıdıysan, geldiği kullanıcı hesabında bir parola ifadesi ekle, sonra klasörü yeniden kopyala.",
   "desktopKeyUnreachable": "Kryfo şu anda bu bilgisayardaki anahtarına ulaşamıyor. Bilgisayarın isterse anahtarlığının kilidini aç, sonra yeniden dene.",
   "desktopPassRow": "Bu bilgisayardaki parola ifadesi",
   "desktopPassOffBody": "Kryfo kullanıcı hesabınla açılır.",
@@ -2657,5 +2657,11 @@
   "desktopPassAdded": "Parola ifadesi eklendi",
   "desktopPassRemoved": "Parola ifadesi kaldırıldı",
   "desktopPassChanged": "Parola ifadesi değiştirildi",
-  "desktopPassRemoveBody": "Kaldırmak için parola ifadeni yaz. Ardından Kryfo kullanıcı hesabınla açılır."
+  "desktopPassRemoveBody": "Kaldırmak için parola ifadeni yaz. Ardından Kryfo kullanıcı hesabınla açılır.",
+  "desktopKeyUnreachableWindows": "Kryfo şu anda bu bilgisayarın güvenlik çipindeki anahtarına ulaşamıyor. Biraz sonra yeniden dene.",
+  "desktopLockAccountRefused": "Kryfo anahtarını Windows hesabında tutamadı. Bunun yerine bir parola ifadesi ekle.",
+  "desktopPassStaysWindows": "Kryfo anahtarını Windows hesabında tutamadı, bu yüzden parola ifadesi kalıyor.",
+  "desktopBackupCardTitle": "Bir Kryfo yedeği tut",
+  "desktopBackupCardLine": "Bu bilgisayardaki Windows hesabın Kryfo'nun anahtarını tutuyor. Bilgisayar ya da hesap bir gün sıfırlanırsa, bir Kryfo yedeği her şeyi geri getirir.",
+  "desktopBackupHint": "Bu bilgisayar bir gün sıfırlanırsa her şeyi geri getirir."
 }

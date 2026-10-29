@@ -115,6 +115,10 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
     });
   }
 
+  // windows keeps the key with the account and its security chip: no
+  // keyring words there
+  bool get _onWindows => widget.seal?.place == SealPlace.windows;
+
   // the type only: a message could carry a path or a key
   void _failed(Object e) {
     dlog('desktop lock: ${e.runtimeType}');
@@ -139,7 +143,11 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
       case SealedOpen.missing:
         _say(l10n.desktopKeyMissing);
       case SealedOpen.unreachable:
-        _say(l10n.desktopKeyUnreachable);
+        _say(
+          _onWindows
+              ? l10n.desktopKeyUnreachableWindows
+              : l10n.desktopKeyUnreachable,
+        );
       case SealedOpen.otherVersion:
         _otherVersion = true;
         _say(l10n.desktopLockOtherVersion);
@@ -161,7 +169,11 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
         _view = _View.newPass;
         _chose = false;
       });
-      return _say(l10n.desktopLockKeyringRefused);
+      return _say(
+        _onWindows
+            ? l10n.desktopLockAccountRefused
+            : l10n.desktopLockKeyringRefused,
+      );
     } catch (e) {
       return _failed(e);
     }

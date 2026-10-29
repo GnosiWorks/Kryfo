@@ -39,7 +39,18 @@ abstract final class SealHow {
   static const tpm = 3;
 }
 
+/// what keeps the secret, for the words the screens use
+enum SealPlace {
+  /// the linux keyring
+  keyring,
+
+  /// the windows account, and its security chip when there is one
+  windows,
+}
+
 abstract class SystemSeal {
+  SealPlace get place;
+
   /// whether a secret can be kept here at all
   Future<bool> works();
 

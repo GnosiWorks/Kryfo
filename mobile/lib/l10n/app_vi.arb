@@ -2644,7 +2644,7 @@
   "desktopLockAddPassphrase": "Thêm cụm mật khẩu",
   "desktopLockWithoutPassphrase": "Không có nó, bất kỳ ai dùng tài khoản người dùng của bạn đều mở được Kryfo.",
   "desktopLockKeyringRefused": "Kryfo không lưu được khóa của mình vào chùm chìa khóa của máy tính này. Hãy thêm cụm mật khẩu thay vào đó.",
-  "desktopKeyMissing": "Tài khoản người dùng này không có khóa dữ liệu của Kryfo. Kryfo chỉ mở trên tài khoản người dùng đã cài đặt nó.",
+  "desktopKeyMissing": "Tài khoản người dùng này không có khóa dữ liệu của Kryfo. Bản sao lưu Kryfo mang mọi thứ trở lại. Nếu bạn đã chuyển thư mục của Kryfo, hãy thêm cụm mật khẩu trên tài khoản người dùng nơi nó đến, rồi sao chép lại.",
   "desktopKeyUnreachable": "Lúc này Kryfo không lấy được khóa của mình trên máy tính này. Hãy mở khóa chùm chìa khóa nếu máy tính hỏi, rồi thử lại.",
   "desktopPassRow": "Cụm mật khẩu trên máy tính này",
   "desktopPassOffBody": "Kryfo mở bằng tài khoản người dùng của bạn.",
@@ -2657,5 +2657,11 @@
   "desktopPassAdded": "Đã thêm cụm mật khẩu",
   "desktopPassRemoved": "Đã gỡ cụm mật khẩu",
   "desktopPassChanged": "Đã đổi cụm mật khẩu",
-  "desktopPassRemoveBody": "Nhập cụm mật khẩu để gỡ nó. Sau đó Kryfo sẽ mở bằng tài khoản người dùng của bạn."
+  "desktopPassRemoveBody": "Nhập cụm mật khẩu để gỡ nó. Sau đó Kryfo sẽ mở bằng tài khoản người dùng của bạn.",
+  "desktopKeyUnreachableWindows": "Lúc này Kryfo không lấy được khóa của mình trong chip bảo mật của máy tính này. Hãy thử lại sau giây lát.",
+  "desktopLockAccountRefused": "Kryfo không lưu được khóa của mình bằng tài khoản Windows của bạn. Hãy thêm cụm mật khẩu thay vào đó.",
+  "desktopPassStaysWindows": "Kryfo không lưu được khóa của mình bằng tài khoản Windows của bạn, nên cụm mật khẩu vẫn giữ nguyên.",
+  "desktopBackupCardTitle": "Giữ một bản sao lưu Kryfo",
+  "desktopBackupCardLine": "Tài khoản Windows của bạn trên máy tính này giữ khóa của Kryfo. Bản sao lưu Kryfo mang mọi thứ trở lại nếu có lúc máy tính hoặc tài khoản bị đặt lại.",
+  "desktopBackupHint": "Mang mọi thứ trở lại nếu có lúc máy tính này bị đặt lại."
 }

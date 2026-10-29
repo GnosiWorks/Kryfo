@@ -10119,7 +10119,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get desktopKeyMissing =>
-      'Esta conta de usuário não tem a chave dos dados do Kryfo. O Kryfo só abre na conta de usuário em que foi configurado.';
+      'Esta conta de usuário não tem a chave dos dados do Kryfo. Um backup do Kryfo traz tudo de volta. Se você moveu a pasta do Kryfo, adicione uma frase-senha na conta de usuário de onde ela veio e copie-a de novo.';
 
   @override
   String get desktopKeyUnreachable =>
@@ -10163,4 +10163,27 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get desktopPassRemoveBody =>
       'Digite a sua frase-senha para removê-la. Depois o Kryfo abre com a sua conta de usuário.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'O Kryfo não consegue chegar à chave no chip de segurança deste computador agora. Tente de novo daqui a pouco.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'O Kryfo não conseguiu guardar a chave com a sua conta do Windows. Adicione uma frase-senha no lugar.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'O Kryfo não conseguiu guardar a chave com a sua conta do Windows, então a frase-senha fica.';
+
+  @override
+  String get desktopBackupCardTitle => 'Tenha um backup do Kryfo';
+
+  @override
+  String get desktopBackupCardLine =>
+      'A sua conta do Windows neste computador guarda a chave do Kryfo. Um backup do Kryfo traz tudo de volta se o computador ou a conta forem redefinidos.';
+
+  @override
+  String get desktopBackupHint =>
+      'Traz tudo de volta se este computador for redefinido.';
 }

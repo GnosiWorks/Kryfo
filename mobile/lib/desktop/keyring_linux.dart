@@ -38,6 +38,9 @@ class KeyringSeal implements SystemSeal {
   final SecretApi api;
   final SealRunner _run;
 
+  @override
+  SealPlace get place => SealPlace.keyring;
+
   static Map<String, String> _attrs(Uint8List id) => {_attr: hexOf(id)};
 
   @override

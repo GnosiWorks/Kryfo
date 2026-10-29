@@ -138,6 +138,35 @@ void main() {
       expect(opened, 0);
     });
 
+    testWidgets('windows speaks of its account and chip, not a keyring', (
+      t,
+    ) async {
+      final win = FakeKeyring(place: SealPlace.windows);
+      await vault.createSealed(win);
+      vault.close();
+      win.failFetch = SealFail.unreachable;
+      await show(t, seal: win);
+      expect(find.text(l10n.desktopKeyUnreachableWindows), findsOneWidget);
+      expect(find.text(l10n.desktopKeyUnreachable), findsNothing);
+      await t.pumpWidget(const SizedBox());
+      File(p.join(dir.path, 'vault.kv')).deleteSync();
+      final refusing = FakeKeyring(place: SealPlace.windows)..refuse = true;
+      await show(t, seal: refusing);
+      await press(t, l10n.commonContinue);
+      expect(find.text(l10n.desktopLockAccountRefused), findsOneWidget);
+      expect(find.text(l10n.desktopLockKeyringRefused), findsNothing);
+    });
+
+    testWidgets('missing names the way back', (t) async {
+      await vault.createSealed(ring);
+      vault.close();
+      ring.items.clear();
+      await show(t, seal: ring);
+      expect(find.text(l10n.desktopKeyMissing), findsOneWidget);
+      expect(l10n.desktopKeyMissing, contains('A Kryfo backup brings'));
+      expect(l10n.desktopKeyMissing, contains('add a passphrase'));
+    });
+
     testWidgets('a newer or cut file says so before anything is typed', (
       t,
     ) async {
@@ -237,6 +266,26 @@ void main() {
       expect(vault.hasPassphrase, isFalse);
       expect(computerPassphraseOn.value, isFalse);
       expect(ring.items, hasLength(1));
+      await t.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('windows refusing the key keeps the passphrase, in its words', (
+      t,
+    ) async {
+      vault = DesktopVault(
+        p.join(dir.path, 'vault.kv'),
+        crypto: ToyVaultCrypto(),
+      );
+      await vault.create(_pass);
+      final win = FakeKeyring(place: SealPlace.windows)..refuse = true;
+      await page(t, seal: win);
+      await press(t, l10n.desktopPassRemove);
+      await t.enterText(find.byType(TextField), _pass);
+      await t.tap(find.text(l10n.desktopPassRemove));
+      await t.pumpAndSettle();
+      expect(find.text(l10n.desktopPassStaysWindows), findsOneWidget);
+      expect(find.text(l10n.desktopPassStays), findsNothing);
+      expect(vault.hasPassphrase, isTrue);
       await t.pump(const Duration(seconds: 5));
     });
 

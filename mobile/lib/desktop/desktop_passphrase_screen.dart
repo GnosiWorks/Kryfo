@@ -142,7 +142,11 @@ class _DesktopPassphraseScreenState extends State<DesktopPassphraseScreen> {
           return;
       }
     } on SealError {
-      return _say(l10n.desktopPassStays);
+      return _say(
+        widget.seal?.place == SealPlace.windows
+            ? l10n.desktopPassStaysWindows
+            : l10n.desktopPassStays,
+      );
     } catch (e) {
       // the type only: a message could carry a path or a key
       dlog('desktop passphrase: ${e.runtimeType}');

@@ -35,6 +35,7 @@ class WinCryptError implements Exception {
     if (s >= 0x80284000 && s <= 0x80284fff) return false;
     return true;
   }
+
   @override
   String toString() => 'WinCryptError(0x${status.toRadixString(16)})';
 }
@@ -71,6 +72,9 @@ class WindowsSeal implements SystemSeal {
 
   final WinCrypt api;
   final SealRunner _run;
+
+  @override
+  SealPlace get place => SealPlace.windows;
 
   static String _name(Uint8List id) => 'Kryfo vault ${hexOf(id)}';
   static Uint8List _entropy(Uint8List id) =>
@@ -297,8 +301,9 @@ String _systemDir() {
 class FfiWinCrypt implements WinCrypt {
   const FfiWinCrypt();
 
-  static DynamicLibrary _dll(String name) =>
-      DynamicLibrary.open(name == 'kernel32.dll' ? name : systemDll(_systemDir(), name));
+  static DynamicLibrary _dll(String name) => DynamicLibrary.open(
+    name == 'kernel32.dll' ? name : systemDll(_systemDir(), name),
+  );
 
   Uint8List? _dpapi(bool seal, Uint8List data, Uint8List entropy) {
     final crypt = _dll('crypt32.dll');

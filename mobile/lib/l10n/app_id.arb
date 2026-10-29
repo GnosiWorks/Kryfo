@@ -2644,7 +2644,7 @@
   "desktopLockAddPassphrase": "Tambahkan frasa sandi",
   "desktopLockWithoutPassphrase": "Tanpanya, siapa pun yang memakai akun penggunamu bisa membuka Kryfo.",
   "desktopLockKeyringRefused": "Kryfo tidak bisa menyimpan kuncinya di ring kunci komputer ini. Tambahkan frasa sandi sebagai gantinya.",
-  "desktopKeyMissing": "Akun pengguna ini tidak punya kunci data Kryfo. Kryfo hanya terbuka di akun pengguna tempat Kryfo disiapkan.",
+  "desktopKeyMissing": "Akun pengguna ini tidak punya kunci data Kryfo. Cadangan Kryfo mengembalikan semuanya. Kalau kamu memindahkan folder Kryfo, tambahkan frasa sandi di akun pengguna asalnya, lalu salin lagi.",
   "desktopKeyUnreachable": "Kryfo belum bisa menjangkau kuncinya di komputer ini. Buka kunci ring kuncimu kalau komputer memintanya, lalu coba lagi.",
   "desktopPassRow": "Frasa sandi di komputer ini",
   "desktopPassOffBody": "Kryfo terbuka dengan akun penggunamu.",
@@ -2657,5 +2657,11 @@
   "desktopPassAdded": "Frasa sandi ditambahkan",
   "desktopPassRemoved": "Frasa sandi dihapus",
   "desktopPassChanged": "Frasa sandi diganti",
-  "desktopPassRemoveBody": "Ketik frasa sandimu untuk menghapusnya. Setelah itu Kryfo terbuka dengan akun penggunamu."
+  "desktopPassRemoveBody": "Ketik frasa sandimu untuk menghapusnya. Setelah itu Kryfo terbuka dengan akun penggunamu.",
+  "desktopKeyUnreachableWindows": "Kryfo belum bisa menjangkau kuncinya di chip keamanan komputer ini. Coba lagi sebentar lagi.",
+  "desktopLockAccountRefused": "Kryfo tidak bisa menyimpan kuncinya dengan akun Windows-mu. Tambahkan frasa sandi sebagai gantinya.",
+  "desktopPassStaysWindows": "Kryfo tidak bisa menyimpan kuncinya dengan akun Windows-mu, jadi frasa sandinya tetap.",
+  "desktopBackupCardTitle": "Simpan cadangan Kryfo",
+  "desktopBackupCardLine": "Akun Windows-mu di komputer ini menyimpan kunci Kryfo. Cadangan Kryfo mengembalikan semuanya kalau suatu saat komputer atau akunnya direset.",
+  "desktopBackupHint": "Mengembalikan semuanya kalau suatu saat komputer ini direset."
 }

@@ -2644,7 +2644,7 @@
   "desktopLockAddPassphrase": "添加密码短语",
   "desktopLockWithoutPassphrase": "没有它，任何使用你的用户账户的人都能打开 Kryfo。",
   "desktopLockKeyringRefused": "Kryfo 无法把它的密钥保存在这台电脑的密钥环中。请改为添加密码短语。",
-  "desktopKeyMissing": "这个用户账户没有 Kryfo 数据的密钥。Kryfo 只会在设置它的那个用户账户上打开。",
+  "desktopKeyMissing": "这个用户账户没有 Kryfo 数据的密钥。Kryfo 备份能找回一切。如果你移动过 Kryfo 的文件夹，请在它原来的用户账户上添加密码短语，然后再复制一次。",
   "desktopKeyUnreachable": "Kryfo 现在无法取得这台电脑上的密钥。如果电脑提示，请解锁你的密钥环，然后重试。",
   "desktopPassRow": "这台电脑上的密码短语",
   "desktopPassOffBody": "Kryfo 会用你的用户账户打开。",
@@ -2657,5 +2657,11 @@
   "desktopPassAdded": "已添加密码短语",
   "desktopPassRemoved": "已移除密码短语",
   "desktopPassChanged": "已更改密码短语",
-  "desktopPassRemoveBody": "输入你的密码短语来移除它。之后 Kryfo 会用你的用户账户打开。"
+  "desktopPassRemoveBody": "输入你的密码短语来移除它。之后 Kryfo 会用你的用户账户打开。",
+  "desktopKeyUnreachableWindows": "Kryfo 现在无法取得这台电脑安全芯片中的密钥。请稍后重试。",
+  "desktopLockAccountRefused": "Kryfo 无法用你的 Windows 账户保存它的密钥。请改为添加密码短语。",
+  "desktopPassStaysWindows": "Kryfo 无法用你的 Windows 账户保存它的密钥，所以密码短语会保留。",
+  "desktopBackupCardTitle": "留一份 Kryfo 备份",
+  "desktopBackupCardLine": "这台电脑上的 Windows 账户保管着 Kryfo 的密钥。如果电脑或账户被重置，Kryfo 备份能找回一切。",
+  "desktopBackupHint": "如果这台电脑被重置，它能找回一切。"
 }

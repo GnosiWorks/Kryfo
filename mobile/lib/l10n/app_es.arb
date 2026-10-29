@@ -2644,7 +2644,7 @@
   "desktopLockAddPassphrase": "Añadir una frase de contraseña",
   "desktopLockWithoutPassphrase": "Sin ella, cualquiera que use tu cuenta de usuario puede abrir Kryfo.",
   "desktopLockKeyringRefused": "Kryfo no pudo guardar su clave en el llavero de este ordenador. Añade una frase de contraseña en su lugar.",
-  "desktopKeyMissing": "Esta cuenta de usuario no tiene la clave de los datos de Kryfo. Kryfo solo se abre en la cuenta de usuario donde se configuró.",
+  "desktopKeyMissing": "Esta cuenta de usuario no tiene la clave de los datos de Kryfo. Una copia de seguridad de Kryfo lo recupera todo. Si moviste la carpeta de Kryfo, añade una frase de contraseña en la cuenta de usuario de la que viene y vuelve a copiarla.",
   "desktopKeyUnreachable": "Kryfo no puede llegar a su clave en este ordenador ahora mismo. Desbloquea tu llavero si el ordenador te lo pide y vuelve a intentarlo.",
   "desktopPassRow": "Frase de contraseña en este ordenador",
   "desktopPassOffBody": "Kryfo se abre con tu cuenta de usuario.",
@@ -2657,5 +2657,11 @@
   "desktopPassAdded": "Frase de contraseña añadida",
   "desktopPassRemoved": "Frase de contraseña quitada",
   "desktopPassChanged": "Frase de contraseña cambiada",
-  "desktopPassRemoveBody": "Escribe tu frase de contraseña para quitarla. Después Kryfo se abrirá con tu cuenta de usuario."
+  "desktopPassRemoveBody": "Escribe tu frase de contraseña para quitarla. Después Kryfo se abrirá con tu cuenta de usuario.",
+  "desktopKeyUnreachableWindows": "Kryfo no puede llegar a su clave en el chip de seguridad de este ordenador ahora mismo. Vuelve a intentarlo en un momento.",
+  "desktopLockAccountRefused": "Kryfo no pudo guardar su clave con tu cuenta de Windows. Añade una frase de contraseña en su lugar.",
+  "desktopPassStaysWindows": "Kryfo no pudo guardar su clave con tu cuenta de Windows, así que la frase de contraseña se queda.",
+  "desktopBackupCardTitle": "Guarda una copia de seguridad de Kryfo",
+  "desktopBackupCardLine": "Tu cuenta de Windows en este ordenador guarda la clave de Kryfo. Una copia de seguridad de Kryfo lo recupera todo si alguna vez se restablece el ordenador o la cuenta.",
+  "desktopBackupHint": "Lo recupera todo si alguna vez se restablece este ordenador."
 }
