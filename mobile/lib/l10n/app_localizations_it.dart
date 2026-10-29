@@ -10086,7 +10086,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String a11yPhotoFrom(String name, String date) {
-    return 'Foto di $name, $date';
+    return 'Foto da $name, $date';
   }
 
   @override
@@ -10096,7 +10096,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String a11yVideoFrom(String name, String date) {
-    return 'Video di $name, $date';
+    return 'Video da $name, $date';
   }
 
   @override

@@ -2638,8 +2638,8 @@
   "a11yRecordVoiceNote": "वॉइस नोट रिकॉर्ड करें",
   "a11yRecording": "रिकॉर्ड हो रहा है",
   "a11yPhotoOn": "फ़ोटो, {date}",
-  "a11yPhotoFrom": "{name} की फ़ोटो, {date}",
+  "a11yPhotoFrom": "{name} से आई फ़ोटो, {date}",
   "a11yVideoOn": "वीडियो, {date}",
-  "a11yVideoFrom": "{name} का वीडियो, {date}",
+  "a11yVideoFrom": "{name} से आया वीडियो, {date}",
   "a11yNewMessages": "{count, plural, =1{नया मैसेज} other{{count} नए मैसेज}}"
 }

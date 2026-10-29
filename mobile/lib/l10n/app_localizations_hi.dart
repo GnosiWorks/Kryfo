@@ -10012,7 +10012,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String a11yPhotoFrom(String name, String date) {
-    return '$name की फ़ोटो, $date';
+    return '$name से आई फ़ोटो, $date';
   }
 
   @override
@@ -10022,7 +10022,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String a11yVideoFrom(String name, String date) {
-    return '$name का वीडियो, $date';
+    return '$name से आया वीडियो, $date';
   }
 
   @override

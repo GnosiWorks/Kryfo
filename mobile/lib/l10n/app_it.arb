@@ -2638,8 +2638,8 @@
   "a11yRecordVoiceNote": "Registra un messaggio vocale",
   "a11yRecording": "Registrazione in corso",
   "a11yPhotoOn": "Foto, {date}",
-  "a11yPhotoFrom": "Foto di {name}, {date}",
+  "a11yPhotoFrom": "Foto da {name}, {date}",
   "a11yVideoOn": "Video, {date}",
-  "a11yVideoFrom": "Video di {name}, {date}",
+  "a11yVideoFrom": "Video da {name}, {date}",
   "a11yNewMessages": "{count, plural, =1{Nuovo messaggio} other{{count} nuovi messaggi}}"
 }
