@@ -39,6 +39,27 @@ class SecureWindowTest {
     }
 
     @Test
+    fun aLinkageErrorIsARefusedStep() {
+        val s = SecureWindow.Steps(
+            flag = { throw NoSuchMethodError("setRecentsScreenshotEnabled") },
+            recents = { throw UnsatisfiedLinkError("odd rom") },
+            keep = { done.add("keep") },
+            surface = { done.add("surface") },
+        )
+        assertFalse(SecureWindow.apply(true, s))
+        assertEquals(listOf("keep", "surface"), done)
+    }
+
+    @Test
+    fun aBlockThatWouldNotGoOnIsRefusedToDart() {
+        assertTrue(SecureWindow.refusedOn(true) { false })
+        assertTrue(SecureWindow.refusedOn(true) { throw LinkageError("odd rom") })
+        assertFalse(SecureWindow.refusedOn(true) { true })
+        // a clear that fails leaves the window secure
+        assertFalse(SecureWindow.refusedOn(false) { false })
+    }
+
+    @Test
     fun beforeThirteenThereIsNoRecentsStep() {
         assertTrue(SecureWindow.apply(false, steps(null, recents = false)))
         assertEquals(listOf("flag", "keep", "surface"), done)

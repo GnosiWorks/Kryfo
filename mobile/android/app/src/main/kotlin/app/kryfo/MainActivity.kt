@@ -360,10 +360,11 @@ open class MainActivity : FlutterFragmentActivity() {
         surface = { on -> if (!atStart) findSurface(window.decorView)?.setSecure(on) },
     )
 
-    private fun setSecureWindow(on: Boolean) {
+    private fun setSecureWindow(on: Boolean): Boolean {
         android.util.Log.i("kryfo", "setSecure on=$on was=$secureNow")
-        SecureWindow.apply(on, secureSteps())
+        val ok = SecureWindow.apply(on, secureSteps())
         secureNow = on
+        return ok
     }
 
     private fun findSurface(v: View): SurfaceView? {
@@ -542,11 +543,11 @@ open class MainActivity : FlutterFragmentActivity() {
                         val on = call.argument<Boolean>("on") ?: false
                         // the engine outlives the window, so this can be
                         // called with nothing attached
-                        try {
-                            setSecureWindow(on)
-                        } catch (e: Exception) {
+                        if (SecureWindow.refusedOn(on) { setSecureWindow(it) }) {
+                            result.error("refused", null, null)
+                        } else {
+                            result.success(null)
                         }
-                        result.success(null)
                     }
                     // the wipe: what the settings "clear storage" button does,
                     // every file and preference gone in one synchronous call
