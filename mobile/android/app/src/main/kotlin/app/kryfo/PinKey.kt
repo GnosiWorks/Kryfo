@@ -214,13 +214,14 @@ object PinKey {
         // asks for a make, which drops it and makes a tested one
         if (untested()) return mapOf("k" to false, "u" to 0, "l" to SOFTWARE, "s" to secure(), "v" to sdk)
         var has = hasKey() ?: return mapOf("e" to "busy")
+        // the software note and a key never live together: no pause for it
+        if (!has && isSoft()) {
+            return mapOf("k" to false, "u" to 0, "l" to SOFTWARE, "s" to secure(), "v" to sdk, "n" to true)
+        }
         // no key only when it holds a second later as well
         if (!has && !goneSure()) {
             has = hasKey() ?: return mapOf("e" to "busy")
             if (!has) return mapOf("e" to "busy")
-        }
-        if (!has && isSoft()) {
-            return mapOf("k" to false, "u" to 0, "l" to SOFTWARE, "s" to secure(), "v" to sdk, "n" to true)
         }
         val noted = notes?.read()
         val level = if (!has) {

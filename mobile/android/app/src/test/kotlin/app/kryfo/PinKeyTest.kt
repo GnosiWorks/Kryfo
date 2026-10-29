@@ -229,6 +229,15 @@ class PinKeyTest {
     }
 
     @Test
+    fun aSoftwareNoteAnswersInfoWithoutTheGonePause() {
+        keys.levelIs = PinKey.SOFTWARE
+        assertEquals("software", PinKey.make()["e"])
+        paused.clear()
+        assertEquals(true, PinKey.info()["n"])
+        assertTrue(paused.isEmpty())
+    }
+
+    @Test
     fun aLevelThatWillNotReadClaimsNothing() {
         PinKey.sdk = 33
         keys.refuseStrongBox = true
