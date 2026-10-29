@@ -32,6 +32,13 @@ extension AppStateSession on AppState {
   Future<_Shown> _shownOf(Session s) async {
     final (list, pending, dev) = await _contactsOf(s);
     final a = await secureStore.read(key: s.container.key('my_avatar'));
+    // the decoy's own note of the computer lock row, with its lists: the
+    // row then shows at once whatever was set there
+    if (s.primary.container.quiet && computerLock != null) {
+      computerLock?.decoyNoteRead(
+        await SqlRouterStore(s.primary.open).meta(kComputerDecoyNote),
+      );
+    }
     return _Shown(
       list,
       pending,
@@ -47,6 +54,7 @@ extension AppStateSession on AppState {
   }
 
   Future<void> _openContainers() async {
+    keepComputerDecoyNote = _keepDecoyNote;
     try {
       final listed = await listedContainers();
       await sweepContainers(listed, pinTable: await pinTableKept());
@@ -186,6 +194,7 @@ extension AppStateSession on AppState {
     if (sessionQuiet) return;
     await lockState.clearDecoyPins();
     decoyReady = false;
+    computerLock?.decoyNoteRead(null);
     final d = _decoyDb ?? HaloDb(HaloContainer.decoy);
     _decoyDb = null;
     _decoyId = null;
@@ -578,4 +587,11 @@ extension AppStateSession on AppState {
       await cancelWithRetry(() => _io.unnotify(p), 'vault shade');
     }
   }
+}
+
+// the decoy's note goes into the decoy's own database, never the vault:
+// written only while a decoy session is open
+Future<void> _keepDecoyNote(String note) async {
+  if (!sessionQuiet) return;
+  await SqlRouterStore(_session.primary.open).putMeta(kComputerDecoyNote, note);
 }

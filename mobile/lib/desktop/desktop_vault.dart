@@ -733,6 +733,95 @@ class DesktopVault {
     return true;
   }
 
+  /// [passphrase] opens the vault now. nothing changes
+  Future<bool> isPassphrase(String passphrase) => _isPassphrase(passphrase);
+
+  /// [passphrase] opens a slot [rehearseAdd] made: the same work as
+  /// [isPassphrase], against a slot of a decoy's own
+  Future<bool> checkSlot(Uint8List slot, String passphrase) async {
+    if (slot.length != 1 + _saltLen + _slotFreshLen + _wrappedLen) {
+      return false;
+    }
+    final kek = await _kek(
+      passphrase,
+      Uint8List.sublistView(slot, 1, 1 + _saltLen),
+      slot[0],
+    );
+    if (kek == null) return false;
+    const at = 1 + _saltLen;
+    final got = _unwrap(
+      kek,
+      Uint8List.sublistView(slot, at, at + _slotFreshLen),
+      Uint8List.sublistView(slot, at + _slotFreshLen),
+    );
+    kek.fillRange(0, kek.length, 0);
+    if (got == null) return false;
+    got.fillRange(0, got.length, 0);
+    return true;
+  }
+
+  /// a decoy session's [addPassphrase]: the same scrypt, wrap, sealed file
+  /// and system lookup, in the same line as the writes, with nothing
+  /// written, kept or cleared. the slot it made comes back for the decoy
+  /// to keep in its own note
+  Future<Uint8List> rehearseAdd(String passphrase, {SystemSeal? seal}) async {
+    if (passphrase.runes.length < kVaultMinLength) {
+      throw ArgumentError('passphrase too short');
+    }
+    if (_key == null) throw const VaultLocked();
+    final salt = _bytes(_saltLen);
+    final kek = await _kek(passphrase, salt, logN);
+    if (kek == null) throw StateError('no key from the engine');
+    final dk = _bytes(_dkLen);
+    try {
+      final slot = _passSlot(kek, salt, logN, dk);
+      await _rehearseWrite(dk, [slot]);
+      final id = _id;
+      if (seal != null && id != null) {
+        await seal.rehearse(id, keep: false);
+        // the real one writes again once the clear landed
+        await _rehearseWrite(dk, [slot]);
+      }
+      return slot.data;
+    } finally {
+      kek.fillRange(0, kek.length, 0);
+      dk.fillRange(0, dk.length, 0);
+    }
+  }
+
+  /// a decoy session's [removePassphrase] once the passphrase checked out:
+  /// the seal's work and a sealed file, nothing kept or written. throws
+  /// [SealError] where the real one would
+  Future<void> rehearseRemove(SystemSeal seal) async {
+    final id = _id;
+    if (_key == null || id == null) throw const VaultLocked();
+    final sk = _bytes(_dkLen);
+    final dk = _bytes(_dkLen);
+    try {
+      final kept = await seal.rehearse(id, keep: true);
+      await _rehearseWrite(dk, [
+        _systemSlot(
+          kept ?? SealedSecret(SealHow.keyring, Uint8List(0)),
+          sk,
+          dk,
+        ),
+      ]);
+    } finally {
+      sk.fillRange(0, sk.length, 0);
+      dk.fillRange(0, dk.length, 0);
+    }
+  }
+
+  // the file a write would make, sealed and let go, in the line of writes
+  Future<void> _rehearseWrite(Uint8List dk, List<_Slot> slots) {
+    _held;
+    final done = _writes.catchError((_) {}).then((_) {
+      _fileOf(Map.of(_held), slots, dk);
+    });
+    _writes = done;
+    return done;
+  }
+
   /// what the computer kept for this vault goes, by the vault's id and
   /// whatever its file says. best effort; the panic wipe's
   Future<void> forgetSystem(SystemSeal seal) async {
@@ -840,7 +929,15 @@ class DesktopVault {
     return done;
   }
 
-  void _persist(Map<String, String> m, List<_Slot> slots, [Uint8List? key]) {
+  void _persist(Map<String, String> m, List<_Slot> slots, [Uint8List? key]) =>
+      _disk.replace(path, _fileOf(m, slots, key));
+
+  // the whole file for [m] under [slots], sealed in memory
+  Uint8List _fileOf(
+    Map<String, String> m,
+    List<_Slot> slots, [
+    Uint8List? key,
+  ]) {
     final dk = key ?? _key ?? (throw const VaultLocked());
     final head = BytesBuilder(copy: false)
       ..add(_magic)
@@ -865,7 +962,7 @@ class DesktopVault {
       bk.fillRange(0, bk.length, 0);
       plain.fillRange(0, plain.length, 0);
     }
-    _disk.replace(path, Uint8List.fromList([...h, ...sealed]));
+    return Uint8List.fromList([...h, ...sealed]);
   }
 
   /// the panic wipe: the file overwritten with random bytes and flushed

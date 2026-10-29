@@ -65,6 +65,13 @@ abstract class WinCrypt {
 
   /// the key [name] goes. true when there is none left
   bool tpmDelete(String name);
+
+  /// [secret] under a new key that is never stored: the work of [tpmWrap]
+  /// and nothing left behind. throws [WinCryptError]
+  Uint8List tpmTry(Uint8List secret);
+
+  /// a key [name] opens, asking nothing
+  bool tpmHas(String name);
 }
 
 class WindowsSeal implements SystemSeal {
@@ -153,6 +160,33 @@ class WindowsSeal implements SystemSeal {
       } finally {
         inner.fillRange(0, inner.length, 0);
       }
+    });
+  }
+
+  // an ephemeral tpm key and dpapi over its wrap stand in for the kept
+  // key, an open of the key by name for its delete
+  @override
+  Future<SealedSecret?> rehearse(Uint8List id, {required bool keep}) async {
+    final api = this.api;
+    final name = _name(id);
+    final entropy = _entropy(id);
+    return _run(() {
+      if (!keep) {
+        if (api.tpmThere()) api.tpmHas(name);
+        return null;
+      }
+      final s = Uint8List(32);
+      var how = SealHow.dpapi;
+      Uint8List inner = s;
+      if (api.tpmThere()) {
+        try {
+          inner = api.tpmTry(s);
+          how = SealHow.tpm;
+        } catch (_) {}
+      }
+      final blob = api.protect(inner, entropy);
+      if (blob == null) throw const SealError(SealFail.refused);
+      return SealedSecret(how, blob);
     });
   }
 
@@ -527,6 +561,43 @@ class FfiWinCrypt implements WinCrypt {
   @override
   Uint8List tpmUnwrap(String name, Uint8List wrapped) =>
       _withKey(name, (n, key) => _crypt(n, key, false, wrapped));
+
+  @override
+  Uint8List tpmTry(Uint8List secret) => _withProvider((n, prov) {
+    final k = calloc<IntPtr>();
+    final alg = 'RSA'.toNativeUtf16();
+    try {
+      // no name: an ephemeral key, never written to the user's store
+      var st = n.lookupFunction<_CreateKeyC, _CreateKey>(
+        'NCryptCreatePersistedKey',
+      )(prov, k, alg, nullptr, 0, 0);
+      if (st != 0) throw WinCryptError(st & 0xffffffff);
+      try {
+        _setDword(n, k.value, 'Length', 2048);
+        _setDword(n, k.value, 'Key Usage', _allowDecrypt);
+        st = n.lookupFunction<_HandleFlagsC, _HandleFlags>('NCryptFinalizeKey')(
+          k.value,
+          _silent,
+        );
+        if (st != 0) throw WinCryptError(st & 0xffffffff);
+        return _crypt(n, k.value, true, secret);
+      } finally {
+        n.lookupFunction<_FreeC, _Free>('NCryptFreeObject')(k.value);
+      }
+    } finally {
+      calloc.free(k);
+      calloc.free(alg);
+    }
+  });
+
+  @override
+  bool tpmHas(String name) {
+    try {
+      return _withKey(name, (_, _) => true);
+    } catch (_) {
+      return false;
+    }
+  }
 
   @override
   bool tpmDelete(String name) {

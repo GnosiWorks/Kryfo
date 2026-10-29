@@ -10,15 +10,15 @@ import '../widgets/fit_column.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/motion.dart';
 import '../widgets/secret_field.dart';
-import 'desktop_mode.dart' show computerPassphraseOn;
-import 'desktop_vault.dart';
+import 'computer_lock.dart';
+import 'desktop_vault.dart' show kVaultMinLength;
 import 'system_seal.dart';
 
 class DesktopPassphraseScreen extends StatefulWidget {
-  const DesktopPassphraseScreen({super.key, required this.vault, this.seal});
+  const DesktopPassphraseScreen({super.key, required this.lock});
 
-  final DesktopVault vault;
-  final SystemSeal? seal;
+  /// the real lock, or a decoy session's stand-in: the page cannot tell
+  final PassphraseLock lock;
 
   @override
   State<DesktopPassphraseScreen> createState() =>
@@ -41,7 +41,7 @@ class _DesktopPassphraseScreenState extends State<DesktopPassphraseScreen> {
   bool _sealWorks = false;
   String? _error;
 
-  bool get _on => widget.vault.hasPassphrase;
+  bool get _on => widget.lock.on;
 
   @override
   void initState() {
@@ -52,7 +52,7 @@ class _DesktopPassphraseScreenState extends State<DesktopPassphraseScreen> {
   Future<void> _probe() async {
     var works = false;
     try {
-      works = await widget.seal?.works() ?? false;
+      works = await widget.lock.sealWorks();
     } catch (_) {}
     if (mounted) setState(() => _sealWorks = works);
   }
@@ -84,7 +84,6 @@ class _DesktopPassphraseScreenState extends State<DesktopPassphraseScreen> {
   }
 
   void _done(String toast) {
-    computerPassphraseOn.value = _on;
     _current.clear();
     _next.clear();
     _again.clear();
@@ -121,19 +120,16 @@ class _DesktopPassphraseScreenState extends State<DesktopPassphraseScreen> {
     try {
       switch (form) {
         case _Form.add:
-          await widget.vault.addPassphrase(_next.text, seal: widget.seal);
+          await widget.lock.add(_next.text);
           return _done(l10n.desktopPassAdded);
         case _Form.change:
-          if (!await widget.vault.changePassphrase(_current.text, _next.text)) {
+          if (!await widget.lock.change(_current.text, _next.text)) {
             _current.clear();
             return _say(l10n.desktopLockWrong);
           }
           return _done(l10n.desktopPassChanged);
         case _Form.remove:
-          if (!await widget.vault.removePassphrase(
-            _current.text,
-            widget.seal!,
-          )) {
+          if (!await widget.lock.remove(_current.text)) {
             _current.clear();
             return _say(l10n.desktopLockWrong);
           }
@@ -143,7 +139,7 @@ class _DesktopPassphraseScreenState extends State<DesktopPassphraseScreen> {
       }
     } on SealError {
       return _say(
-        widget.seal?.place == SealPlace.windows
+        widget.lock.place == SealPlace.windows
             ? l10n.desktopPassStaysWindows
             : l10n.desktopPassStays,
       );

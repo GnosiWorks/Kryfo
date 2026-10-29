@@ -47,8 +47,7 @@ import 'restore_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../notifications.dart';
 import '../delivery_mode.dart';
-import '../desktop/desktop_mode.dart'
-    show computerLockPage, computerPassphraseOn;
+import '../desktop/desktop_mode.dart' show computerLock;
 import 'notifications_screen.dart';
 import 'icon_screen.dart';
 import '../app_icon.dart' show AppFace, AppFaceWords, appFaceNow, readAppFace;
@@ -703,15 +702,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Navigator.of(context).push(haloRoute(const PinsScreen())),
                 ),
               ),
-              if (computerLockPage case final page?)
-                ValueListenableBuilder<bool>(
-                  valueListenable: computerPassphraseOn,
-                  builder: (_, on, _) => HaloRow(
-                    icon: Icons.key_rounded,
-                    label: l10n.desktopPassRow,
-                    value: on ? l10n.commonOn : l10n.commonOff,
-                    onTap: () => Navigator.of(context).push(haloRoute(page())),
-                  ),
+              // the same row and page in a decoy session, which keeps
+              // what it changes to itself and never moves the real lock
+              if (computerLock case final lock?)
+                ListenableBuilder(
+                  listenable: Listenable.merge([lock, lockState]),
+                  builder: (_, _) {
+                    final decoy = lockState.inDecoy;
+                    return HaloRow(
+                      icon: Icons.key_rounded,
+                      label: l10n.desktopPassRow,
+                      value: lock.passphraseOn(decoy: decoy)
+                          ? l10n.commonOn
+                          : l10n.commonOff,
+                      onTap: () => Navigator.of(
+                        context,
+                      ).push(haloRoute(lock.page(decoy: decoy))),
+                    );
+                  },
                 ),
               // the icon and the notifications read the phone's values, in
               // any session

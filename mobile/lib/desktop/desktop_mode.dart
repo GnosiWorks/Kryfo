@@ -90,9 +90,34 @@ engineStarter;
 /// encrypted already and can be large
 Future<String> Function()? bulkTempDir;
 
-/// the settings page for the computer's passphrase, set by the desktop
-/// start; null on the phone
-Widget Function()? computerLockPage;
+/// the computer lock as each session sees it: the settings row and page,
+/// and the backup card where losing the computer's key loses the data.
+/// set by the desktop start; null on the phone
+ComputerLockView? computerLock;
 
-/// whether a passphrase opens Kryfo on this computer, for the settings row
-final computerPassphraseOn = ValueNotifier<bool>(false);
+abstract class ComputerLockView implements Listenable {
+  /// a passphrase opens Kryfo on this computer, as this session shows it.
+  /// a [decoy] session shows its own note and never changes the real lock
+  bool passphraseOn({required bool decoy});
+
+  /// the settings page
+  Widget page({required bool decoy});
+
+  /// without a passphrase on windows the key goes with the account and its
+  /// security chip: a backup is the way back
+  bool backupWise({required bool decoy});
+
+  /// the home card that says so, until it is put away on this side
+  bool backupCardDue({required bool decoy});
+
+  Future<void> backupCardSeen({required bool decoy});
+
+  /// the decoy's own note, read ahead with the decoy's database
+  void decoyNoteRead(String? note);
+}
+
+/// where a session database keeps the decoy's note (vault_meta)
+const kComputerDecoyNote = 'computer_lock';
+
+/// writes the decoy's note into the open decoy's database, set by the app
+Future<void> Function(String note)? keepComputerDecoyNote;

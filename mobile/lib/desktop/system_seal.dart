@@ -64,6 +64,11 @@ abstract class SystemSeal {
   /// it was kept: a search first that never unlocks or asks, then a clear
   /// of what it found. true when nothing is left
   Future<bool> forget(Uint8List id);
+
+  /// the calls [keep] (or, [keep] false, [forget]) makes, with nothing kept
+  /// or cleared: what a decoy session does in their place. with [keep], a
+  /// secret shaped as [keep] would give; throws [SealError] where it would
+  Future<SealedSecret?> rehearse(Uint8List id, {required bool keep});
 }
 
 /// blocking native calls run off the frame's thread

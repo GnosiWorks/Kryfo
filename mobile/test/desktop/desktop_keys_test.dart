@@ -40,6 +40,7 @@ class FakeKeyring implements SystemSeal {
 
   @override
   Future<SealedSecret> keep(Uint8List id, Uint8List secret) async {
+    kept++;
     if (refuse) throw const SealError(SealFail.refused);
     items[hexOf(id)] = Uint8List.fromList(secret);
     return SealedSecret(SealHow.keyring, Uint8List(0));
@@ -55,6 +56,16 @@ class FakeKeyring implements SystemSeal {
 
   // a locked keyring keeps what a clear asks for
   bool locked = false;
+  // what a decoy session asked in place of keep (true) and forget (false)
+  final rehearsed = <bool>[];
+  int kept = 0;
+
+  @override
+  Future<SealedSecret?> rehearse(Uint8List id, {required bool keep}) async {
+    rehearsed.add(keep);
+    if (keep && refuse) throw const SealError(SealFail.refused);
+    return keep ? SealedSecret(SealHow.keyring, Uint8List(0)) : null;
+  }
 
   @override
   Future<bool> forget(Uint8List id) async {
@@ -141,7 +152,7 @@ class _Api implements SecretApi {
 }
 
 // dpapi as a reversible wrap bound to its entropy, a tpm as a named table
-class _Win implements WinCrypt {
+class FakeWin implements WinCrypt {
   bool tpm = true;
   bool tpmBreaks = false;
   bool protectOk = true;
@@ -196,6 +207,18 @@ class _Win implements WinCrypt {
     keys.remove(name);
     return true;
   }
+
+  int tried = 0;
+
+  @override
+  Uint8List tpmTry(Uint8List secret) {
+    tried++;
+    if (tpmBreaks) throw const WinCryptError(0x80284001);
+    return Uint8List.fromList([for (final b in secret) b ^ 0x5a, 0xee]);
+  }
+
+  @override
+  bool tpmHas(String name) => keys.containsKey(name);
 }
 
 // the head of a version 4 file as someone with a copy reads it: its slots
@@ -651,7 +674,7 @@ void main() {
     });
 
     test('the windows worker gets a copy, zeroed after', () async {
-      final api = _Win();
+      final api = FakeWin();
       final seal = WindowsSeal(api, run: _here);
       final secret = Uint8List.fromList(List.generate(32, (i) => i + 1));
       await seal.keep(Uint8List(16), secret);
@@ -724,12 +747,12 @@ void main() {
   });
 
   group('windows', () {
-    late _Win api;
+    late FakeWin api;
     late WindowsSeal seal;
     final id = Uint8List.fromList(List.generate(16, (i) => 50 + i));
     final secret = Uint8List.fromList(List.generate(32, (i) => i * 3));
     setUp(() {
-      api = _Win();
+      api = FakeWin();
       seal = WindowsSeal(api, run: _here);
     });
 

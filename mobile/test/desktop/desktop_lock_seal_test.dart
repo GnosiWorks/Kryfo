@@ -7,8 +7,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/desktop/desktop_lock_screen.dart';
-import 'package:kryfo/desktop/desktop_mode.dart';
-import 'package:kryfo/desktop/desktop_passphrase_screen.dart';
+import 'package:kryfo/desktop/computer_lock.dart';
 import 'package:kryfo/desktop/desktop_vault.dart';
 import 'package:kryfo/desktop/system_seal.dart';
 import 'package:kryfo/l10n/l10n.dart';
@@ -208,7 +207,7 @@ void main() {
         MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: DesktopPassphraseScreen(vault: vault, seal: seal),
+          home: DesktopComputerLock(vault, seal).page(decoy: false),
         ),
       );
       await t.pumpAndSettle();
@@ -236,7 +235,6 @@ void main() {
       expect(find.text(l10n.desktopLockFailed), findsNothing);
       expect(find.text(l10n.desktopLockMismatch), findsNothing);
       expect(vault.hasPassphrase, isTrue);
-      expect(computerPassphraseOn.value, isTrue);
       expect(ring.items, isEmpty);
       expect(find.text(l10n.desktopPassOnBody), findsOneWidget);
       await t.pump(const Duration(seconds: 5));
@@ -264,7 +262,6 @@ void main() {
       expect(find.text(l10n.desktopLockFailed), findsNothing);
       expect(find.text(l10n.desktopLockWrong), findsNothing);
       expect(vault.hasPassphrase, isFalse);
-      expect(computerPassphraseOn.value, isFalse);
       expect(ring.items, hasLength(1));
       await t.pump(const Duration(seconds: 5));
     });

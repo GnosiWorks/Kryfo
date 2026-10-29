@@ -4,7 +4,14 @@ import 'dart:async';
 import 'devices/history_open.dart' show endHistoryCopies;
 import 'secure_store.dart';
 import 'desktop/desktop_mode.dart'
-    show containerClosed, containerOpened, onDesktop, startEngineIn;
+    show
+        computerLock,
+        containerClosed,
+        containerOpened,
+        keepComputerDecoyNote,
+        kComputerDecoyNote,
+        onDesktop,
+        startEngineIn;
 import 'store.dart' show playBuild;
 import 'widgets/boot_failed.dart';
 import 'widgets/fade_over.dart';

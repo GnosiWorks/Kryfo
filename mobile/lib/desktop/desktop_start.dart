@@ -31,7 +31,7 @@ import 'desktop_db.dart';
 import 'desktop_lock_screen.dart';
 import 'desktop_mode.dart';
 import 'desktop_net.dart';
-import 'desktop_passphrase_screen.dart';
+import 'computer_lock.dart';
 import 'desktop_paths.dart';
 import 'desktop_platform.dart';
 import 'desktop_posix.dart';
@@ -216,7 +216,8 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   final seal = systemSeal();
   host.destroyKeys = vault.destroy;
   if (seal != null) host.forgetKeys = () => vault.forgetSystem(seal);
-  computerLockPage = () => DesktopPassphraseScreen(vault: vault, seal: seal);
+  final lock = DesktopComputerLock(vault, seal);
+  computerLock = lock;
   FlutterSecureStoragePlatform.instance = VaultStorage(vault);
   SharedPreferencesStorePlatform.instance = VaultPrefs(vault);
   if (defaultTargetPlatform == TargetPlatform.linux) {
@@ -285,7 +286,7 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
       onOpen: () {
         if (started) return;
         started = true;
-        computerPassphraseOn.value = vault.hasPassphrase;
+        lock.opened();
         unawaited(() async {
           await openSeal(
             root: root,

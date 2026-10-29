@@ -88,6 +88,18 @@ class KeyringSeal implements SystemSeal {
     });
   }
 
+  // a lookup of a name no vault has stands in for the store, a search for
+  // the clear
+  @override
+  Future<SealedSecret?> rehearse(Uint8List id, {required bool keep}) async {
+    final api = this.api;
+    final attrs = keep ? {_attr: 'probe'} : _attrs(id);
+    final t = await _run(() => api.there(attrs));
+    if (!keep) return null;
+    if (t == null) throw const SealError(SealFail.refused);
+    return SealedSecret(SealHow.keyring, Uint8List(0));
+  }
+
   // libsecret clears unlocked items only, so a locked keyring keeps its
   // item for the next try and shows no prompt
   @override
