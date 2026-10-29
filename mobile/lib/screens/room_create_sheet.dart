@@ -267,7 +267,7 @@ class _Chip extends StatelessWidget {
             label,
             style: HaloType.mono(
               size: 12,
-              color: on ? HaloColors.violet : HaloColors.text2,
+              color: on ? HaloColors.violetText : HaloColors.text2,
             ),
           ),
         ),

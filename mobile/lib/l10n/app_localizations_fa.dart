@@ -1376,7 +1376,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'از هر دو گوشی پاک می‌شود، مگر اینکه قبلاً ذخیره شده باشد. این کار برگشت ندارد.';
+      'از هر دو گوشی پاک خواهد شد، مگر اینکه قبلاً ذخیره شده باشد. این کار برگشت ندارد.';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'این آلبوم از هر دو گوشی پاک خواهد شد، مگر اینکه قبلاً ذخیره شده باشد. این کار برگشت ندارد.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -2619,7 +2623,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'از گوشی همه پاک می‌شود، مگر اینکه قبلاً ذخیره شده باشد. این کار برگشت ندارد.';
+      'از گوشی همه پاک خواهد شد، مگر اینکه قبلاً ذخیره شده باشد. این کار برگشت ندارد.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'این آلبوم از گوشی همه پاک خواهد شد، مگر اینکه قبلاً ذخیره شده باشد. این کار برگشت ندارد.';
 
   @override
   String get groupChatUnsend => 'پس گرفتن';
@@ -4355,9 +4363,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get profileProfile => 'نمایه';
-
-  @override
-  String get profileChangeYourFace => 'تغییر چهره';
 
   @override
   String get profileKryfoId => 'نام شما';
@@ -9746,6 +9751,158 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo هنگام اجرا به یک پوشهٔ خصوصی در حافظه نیاز دارد و این رایانه چنین پوشه‌ای ندارد، پس باز نمی‌شود.';
+
+  @override
+  String get photoCropTitle => 'جابه‌جا و اندازه کنید';
+
+  @override
+  String get photoCropUse => 'استفاده از عکس';
+
+  @override
+  String get photoCropLabel =>
+      'عکس شما داخل دایره. برای بزرگ‌نمایی دو انگشت را باز کنید و برای جابه‌جایی بکشید';
+
+  @override
+  String get photoCouldNotUse =>
+      'عکس دیگری را امتحان کنید. این یکی خوانده نشد.';
+
+  @override
+  String get photoTake => 'گرفتن عکس';
+
+  @override
+  String get photoChoose => 'انتخاب از گالری';
+
+  @override
+  String get photoPickFace => 'انتخاب چهره';
+
+  @override
+  String get photoView => 'دیدن عکس';
+
+  @override
+  String get photoRemove => 'برداشتن عکس';
+
+  @override
+  String get photoYourPhoto => 'عکس شما';
+
+  @override
+  String get photoYourPhotoLine =>
+      'فقط مخاطبانتان آن را می‌بینند، با رمزگذاری سرتاسری.';
+
+  @override
+  String get photoSetTheirs => 'گذاشتن عکس';
+
+  @override
+  String get photoChangeTheirs => 'تغییر عکس';
+
+  @override
+  String get photoOnlyHere => 'فقط روی این گوشی';
+
+  @override
+  String photoForThem(Object name) {
+    return 'عکسی برای $name';
+  }
+
+  @override
+  String get photoOnlyHereLine =>
+      'فقط خودتان آن را می‌بینید. روی این گوشی می‌ماند.';
+
+  @override
+  String photoOf(Object name) {
+    return 'عکس $name';
+  }
+
+  @override
+  String get historyChatStaysShots =>
+      'این گفت‌وگو روی گوشی شما می‌ماند، چون اسکرین‌شات در آن مسدود است.';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ رقم',
+      zero: 'هیچ رقمی',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ نویسه',
+      zero: 'هیچ نویسه‌ای',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'پیشرفت پشتیبان‌گیری';
+
+  @override
+  String get a11yRestoreProgress => 'پیشرفت بازیابی';
+
+  @override
+  String get a11yExportProgress => 'پیشرفت برون‌بری';
+
+  @override
+  String get a11yLockFileProgress => 'پیشرفت قفل کردن';
+
+  @override
+  String get a11yCleanProgress => 'پیشرفت تمیز کردن';
+
+  @override
+  String get a11yMessageActions => 'کارهای پیام';
+
+  @override
+  String get a11yRecordVoiceNote => 'ضبط پیام صوتی';
+
+  @override
+  String get a11yRecording => 'در حال ضبط';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'عکس، ⁨$date⁩';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return 'عکس از ⁨$name⁩، ⁨$date⁩';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'ویدیو، ⁨$date⁩';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return 'ویدیو از ⁨$name⁩، ⁨$date⁩';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ پیام تازه',
+      one: 'پیام تازه',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get modesPickHow =>

@@ -454,7 +454,10 @@ class _ClaimedCardState extends State<_ClaimedCard> {
                           ? l10n.handleDeleting
                           : l10n.handleDeleteThisHandle,
                       key: ValueKey(widget.busy),
-                      style: HaloType.mono(size: 12, color: HaloColors.rose),
+                      style: HaloType.mono(
+                        size: 12,
+                        color: HaloColors.roseText,
+                      ),
                     ),
                   ),
                 ),

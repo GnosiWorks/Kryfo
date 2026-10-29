@@ -643,7 +643,7 @@ extension AppStateGroups on AppState {
     // base64'd + double-wrapped (envelope + signal + gift wrap ~= x2.4), and
     // public relays reject the event. 16k lands ~38-51k, safe on every relay.
     // receivers reassemble by index/total, so slice size is free to change.
-    return sendGroupSlices(
+    final r = await sendGroupSlices(
       path: path,
       msgUid: msgUid,
       members: go,
@@ -711,6 +711,9 @@ extension AppStateGroups on AppState {
             : withMemberToken(wrapped, marker, drop.tokens[m]),
       ),
     );
+    // the outbox has the row now, and goes on from what landed
+    if (r == kMediaStalled) unawaited(drainOutbox());
+    return r;
   }
 
   // worth the files service: more than one slice, not past its size

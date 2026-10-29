@@ -2161,7 +2161,10 @@ class _GroupsHead extends StatelessWidget {
                     width: double.infinity,
                     child: Text(
                       l10n.homeRoomExpired(expired),
-                      style: HaloType.mono(size: 10, color: HaloColors.violet),
+                      style: HaloType.mono(
+                        size: 10,
+                        color: HaloColors.violetText,
+                      ),
                     ),
                   ),
                 ),
@@ -2185,15 +2188,18 @@ class _SectionHead extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: HaloType.mono(
-                size: 10,
-                color: HaloColors.text2,
-                weight: FontWeight.w500,
-                letter: 0.14,
+            child: Semantics(
+              header: true,
+              child: Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: HaloType.mono(
+                  size: 10,
+                  color: HaloColors.text2,
+                  weight: FontWeight.w500,
+                  letter: 0.14,
+                ),
               ),
             ),
           ),
@@ -2394,7 +2400,7 @@ class _GroupRow extends StatelessWidget {
                         color: g.ended
                             ? HaloColors.text2
                             : g.isRoom
-                            ? HaloColors.violet
+                            ? HaloColors.violetText
                             : HaloColors.amberText,
                       ),
                     ),

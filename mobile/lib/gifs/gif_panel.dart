@@ -312,12 +312,12 @@ class GifPanelState extends State<GifPanel> {
     final (label, tint, icon) = switch (widget.route) {
       GifRoute.onion => (
         l10n.settingsOnion3Hops,
-        HaloColors.violet,
+        HaloColors.violetText,
         Icons.lock_rounded,
       ),
       GifRoute.fast => (
         l10n.settingsFast,
-        HaloColors.amber,
+        HaloColors.amberText,
         Icons.bolt_rounded,
       ),
     };

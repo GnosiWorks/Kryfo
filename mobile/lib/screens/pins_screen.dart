@@ -907,7 +907,7 @@ class _PinCard extends StatelessWidget {
                                   textAlign: TextAlign.center,
                                   style: HaloType.sans(
                                     size: 14,
-                                    color: HaloColors.rose,
+                                    color: HaloColors.roseText,
                                   ),
                                 ),
                               ),

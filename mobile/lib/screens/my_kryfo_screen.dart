@@ -173,10 +173,12 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 10),
+                  // the invite page is for people not added yet: the face
                   KryfoAvatar(
                     seed: id.isEmpty ? 'kryfo' : id,
                     size: 96,
                     choice: appState.myAvatar,
+                    photo: false,
                   ),
                   const SizedBox(height: 18),
                   Text(

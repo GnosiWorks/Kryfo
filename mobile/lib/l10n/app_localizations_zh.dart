@@ -1320,6 +1320,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatItDisappearsWithNo => '它会从双方的手机上删除，除非已被保存。此操作无法撤销。';
 
   @override
+  String get chatAlbumItDisappearsWithNo => '这个相册会从双方的手机上删除，除非已被保存。此操作无法撤销。';
+
+  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -2491,6 +2494,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo => '它会从所有人的手机上删除，除非已被保存。此操作无法撤销。';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      '这个相册会从所有人的手机上删除，除非已被保存。此操作无法撤销。';
 
   @override
   String get groupChatUnsend => '撤回';
@@ -4135,9 +4142,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get profileProfile => '个人资料';
-
-  @override
-  String get profileChangeYourFace => '更换你的头像';
 
   @override
   String get profileKryfoId => '你的名字';
@@ -9257,6 +9261,153 @@ class AppLocalizationsZh extends AppLocalizations {
       'Kryfo 运行时需要内存中的一个私有文件夹，而这台电脑没有提供，所以 Kryfo 不会打开。';
 
   @override
+  String get photoCropTitle => '移动和缩放';
+
+  @override
+  String get photoCropUse => '使用照片';
+
+  @override
+  String get photoCropLabel => '圆圈里是你的照片。双指缩放，拖动移动';
+
+  @override
+  String get photoCouldNotUse => '换一张照片试试。这张无法读取。';
+
+  @override
+  String get photoTake => '拍照';
+
+  @override
+  String get photoChoose => '从相册选择';
+
+  @override
+  String get photoPickFace => '选择头像';
+
+  @override
+  String get photoView => '查看照片';
+
+  @override
+  String get photoRemove => '移除照片';
+
+  @override
+  String get photoYourPhoto => '你的照片';
+
+  @override
+  String get photoYourPhotoLine => '只有你的联系人能看到，端到端加密。';
+
+  @override
+  String get photoSetTheirs => '设置照片';
+
+  @override
+  String get photoChangeTheirs => '更换照片';
+
+  @override
+  String get photoOnlyHere => '只在这部手机上';
+
+  @override
+  String photoForThem(Object name) {
+    return '给$name的照片';
+  }
+
+  @override
+  String get photoOnlyHereLine => '只有你能看到。只保存在这部手机上。';
+
+  @override
+  String photoOf(Object name) {
+    return '$name的照片';
+  }
+
+  @override
+  String get historyChatStaysShots => '此聊天禁止截屏，所以只留在你的手机上。';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 位数字',
+      zero: '没有数字',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 个字符',
+      zero: '没有字符',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => '备份进度';
+
+  @override
+  String get a11yRestoreProgress => '恢复进度';
+
+  @override
+  String get a11yExportProgress => '导出进度';
+
+  @override
+  String get a11yLockFileProgress => '锁定进度';
+
+  @override
+  String get a11yCleanProgress => '清理进度';
+
+  @override
+  String get a11yMessageActions => '消息操作';
+
+  @override
+  String get a11yRecordVoiceNote => '录制语音消息';
+
+  @override
+  String get a11yRecording => '正在录音';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return '照片，$date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return '$name 发来的照片，$date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return '视频，$date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return '$name 发来的视频，$date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 条新消息',
+      one: '新消息',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get modesPickHow => '选择消息的传送方式。随时都可以更改。';
 
   @override
@@ -10708,6 +10859,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatItDisappearsWithNo => '訊息會從雙方的手機上刪除，除非已被儲存。這個動作無法復原。';
 
   @override
+  String get chatAlbumItDisappearsWithNo => '這個相簿會從雙方的手機上刪除，除非已被儲存。這個動作無法復原。';
+
+  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -11879,6 +12033,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupChatItDisappearsWithNo => '訊息會從所有人的手機上刪除，除非已被儲存。這個動作無法復原。';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      '這個相簿會從所有人的手機上刪除，除非已被儲存。這個動作無法復原。';
 
   @override
   String get groupChatUnsend => '收回';
@@ -13524,9 +13682,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get profileProfile => '個人檔案';
-
-  @override
-  String get profileChangeYourFace => '更換你的頭像';
 
   @override
   String get profileKryfoId => '你的名字';
@@ -18526,6 +18681,153 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo 執行時需要記憶體中的一個私有資料夾，而這台電腦沒有提供，所以 Kryfo 不會開啟。';
+
+  @override
+  String get photoCropTitle => '移動和縮放';
+
+  @override
+  String get photoCropUse => '使用照片';
+
+  @override
+  String get photoCropLabel => '圓圈裡是你的照片。雙指縮放，拖動移動';
+
+  @override
+  String get photoCouldNotUse => '換一張照片試試。這張無法讀取。';
+
+  @override
+  String get photoTake => '拍照';
+
+  @override
+  String get photoChoose => '從相簿選擇';
+
+  @override
+  String get photoPickFace => '選擇頭像';
+
+  @override
+  String get photoView => '查看照片';
+
+  @override
+  String get photoRemove => '移除照片';
+
+  @override
+  String get photoYourPhoto => '你的照片';
+
+  @override
+  String get photoYourPhotoLine => '只有你的聯絡人看得到，端對端加密。';
+
+  @override
+  String get photoSetTheirs => '設定照片';
+
+  @override
+  String get photoChangeTheirs => '更換照片';
+
+  @override
+  String get photoOnlyHere => '只在這支手機上';
+
+  @override
+  String photoForThem(Object name) {
+    return '給$name的照片';
+  }
+
+  @override
+  String get photoOnlyHereLine => '只有你看得到。只存在這支手機上。';
+
+  @override
+  String photoOf(Object name) {
+    return '$name的照片';
+  }
+
+  @override
+  String get historyChatStaysShots => '此聊天禁止截圖，所以只留在你的手機上。';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 位數字',
+      zero: '沒有數字',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 個字元',
+      zero: '沒有字元',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => '備份進度';
+
+  @override
+  String get a11yRestoreProgress => '還原進度';
+
+  @override
+  String get a11yExportProgress => '匯出進度';
+
+  @override
+  String get a11yLockFileProgress => '鎖定進度';
+
+  @override
+  String get a11yCleanProgress => '清理進度';
+
+  @override
+  String get a11yMessageActions => '訊息操作';
+
+  @override
+  String get a11yRecordVoiceNote => '錄製語音訊息';
+
+  @override
+  String get a11yRecording => '正在錄音';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return '照片，$date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return '$name 傳來的照片，$date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return '影片，$date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return '$name 傳來的影片，$date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 則新訊息',
+      one: '新訊息',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get modesPickHow => '選擇訊息的傳送方式。隨時都可以更改。';

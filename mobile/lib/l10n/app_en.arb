@@ -1719,8 +1719,12 @@
   "@chatUnsendMessage": {
     "description": "screens/chat_screen.dart"
   },
-  "chatItDisappearsWithNo": "It's removed from both phones, unless it was already saved. This can't be undone.",
+  "chatItDisappearsWithNo": "It will be removed from both phones, unless it has already been saved. This can't be undone.",
   "@chatItDisappearsWithNo": {
+    "description": "screens/chat_screen.dart"
+  },
+  "chatAlbumItDisappearsWithNo": "This album will be removed from both phones, unless it has already been saved. This can't be undone.",
+  "@chatAlbumItDisappearsWithNo": {
     "description": "screens/chat_screen.dart"
   },
   "chatThisChatHasPins": "{count, plural, one{This chat has {count} pin already} other{This chat has {count} pins already}}",
@@ -3246,8 +3250,12 @@
   "@groupChatUnsendMessage": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupChatItDisappearsWithNo": "It's removed from everyone's phones, unless it was already saved. This can't be undone.",
+  "groupChatItDisappearsWithNo": "It will be removed from everyone's phones, unless it has already been saved. This can't be undone.",
   "@groupChatItDisappearsWithNo": {
+    "description": "screens/group_chat_screen.dart"
+  },
+  "groupChatAlbumItDisappearsWithNo": "This album will be removed from everyone's phones, unless it has already been saved. This can't be undone.",
+  "@groupChatAlbumItDisappearsWithNo": {
     "description": "screens/group_chat_screen.dart"
   },
   "groupChatUnsend": "Unsend",
@@ -5402,10 +5410,6 @@
   },
   "profileProfile": "Profile",
   "@profileProfile": {
-    "description": "screens/profile_screen.dart"
-  },
-  "profileChangeYourFace": "Change your face",
-  "@profileChangeYourFace": {
     "description": "screens/profile_screen.dart"
   },
   "profileKryfoId": "Your name",
@@ -12254,6 +12258,192 @@
   "desktopNoMemoryFolder": "Kryfo needs a private folder in memory while it runs, and this computer offers none, so it will not open.",
   "@desktopNoMemoryFolder": {
     "description": "desktop/desktop_lock_screen.dart: no XDG_RUNTIME_DIR or /dev/shm folder could be had"
+  },
+  "photoCropTitle": "Move and scale",
+  "@photoCropTitle": {
+    "description": "screens/photo_crop_screen.dart: title over the round crop of a profile photo"
+  },
+  "photoCropUse": "Use photo",
+  "@photoCropUse": {
+    "description": "screens/photo_crop_screen.dart: button that keeps the crop"
+  },
+  "photoCropLabel": "Your photo in the circle. Pinch to zoom, drag to move",
+  "@photoCropLabel": {
+    "description": "screens/photo_crop_screen.dart: screen reader label of the picture under the crop circle"
+  },
+  "photoCouldNotUse": "Try another photo. This one could not be read.",
+  "@photoCouldNotUse": {
+    "description": "toast: a picked profile photo could not be read or made clean"
+  },
+  "photoTake": "Take a photo",
+  "@photoTake": {
+    "description": "widgets/photo_sheet.dart: row that opens the camera for a profile photo"
+  },
+  "photoChoose": "Choose from gallery",
+  "@photoChoose": {
+    "description": "widgets/photo_sheet.dart: row that opens the gallery for a profile photo"
+  },
+  "photoPickFace": "Pick a face",
+  "@photoPickFace": {
+    "description": "widgets/photo_sheet.dart: row that opens the drawn face picker"
+  },
+  "photoView": "View photo",
+  "@photoView": {
+    "description": "widgets/photo_sheet.dart: row that opens the profile photo larger"
+  },
+  "photoRemove": "Remove photo",
+  "@photoRemove": {
+    "description": "widgets/photo_sheet.dart: row that takes the profile photo off"
+  },
+  "photoYourPhoto": "Your photo",
+  "@photoYourPhoto": {
+    "description": "screens/profile_screen.dart: title of the sheet for your own profile photo"
+  },
+  "photoYourPhotoLine": "Only your contacts see it, end to end encrypted.",
+  "@photoYourPhotoLine": {
+    "description": "screens/profile_screen.dart: who sees your profile photo"
+  },
+  "photoSetTheirs": "Set a photo",
+  "@photoSetTheirs": {
+    "description": "screens/contact_screen.dart: row to set a photo for a contact, kept on this phone"
+  },
+  "photoChangeTheirs": "Change photo",
+  "@photoChangeTheirs": {
+    "description": "screens/contact_screen.dart: the same row once a photo is set"
+  },
+  "photoOnlyHere": "Only on this phone",
+  "@photoOnlyHere": {
+    "description": "screens/contact_screen.dart: hint under the row: the photo is never sent"
+  },
+  "photoForThem": "A photo for {name}",
+  "@photoForThem": {
+    "description": "screens/contact_screen.dart: title of the sheet for a contact's photo",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoOnlyHereLine": "Only you see it. It stays on this phone.",
+  "@photoOnlyHereLine": {
+    "description": "screens/contact_screen.dart: line in the sheet for a contact's photo"
+  },
+  "photoOf": "Photo of {name}",
+  "@photoOf": {
+    "description": "widgets/face_view.dart: screen reader label of a contact's photo, larger",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "historyChatStaysShots": "This chat stays on your phone because screenshots are blocked in it.",
+  "@historyChatStaysShots": {
+    "description": "devices/history_import.dart: on a newly linked device, for a chat that stayed on the phone because screenshot blocking is on in it"
+  },
+  "a11yPinDigits": "{count, plural, =0{No digits} =1{1 digit} other{{count} digits}}",
+  "@a11yPinDigits": {
+    "description": "widgets/pin_pad.dart: the pin dots to a screen reader, the count only",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "a11yPassChars": "{count, plural, =0{No characters} =1{1 character} other{{count} characters}}",
+  "@a11yPassChars": {
+    "description": "widgets/pin_pad.dart: the passphrase dots to a screen reader, the count only",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "a11yBackupProgress": "Backup progress",
+  "@a11yBackupProgress": {
+    "description": "screens/backup_screen.dart: the progress bar's name to a screen reader"
+  },
+  "a11yRestoreProgress": "Restore progress",
+  "@a11yRestoreProgress": {
+    "description": "screens/restore_screen.dart: the progress bar's name to a screen reader"
+  },
+  "a11yExportProgress": "Export progress",
+  "@a11yExportProgress": {
+    "description": "screens/notes_export_screen.dart: the progress bar's name to a screen reader"
+  },
+  "a11yLockFileProgress": "Locking progress",
+  "@a11yLockFileProgress": {
+    "description": "screens/lock_file_screen.dart: the progress bar's name to a screen reader"
+  },
+  "a11yCleanProgress": "Cleaning progress",
+  "@a11yCleanProgress": {
+    "description": "screens/clean_screen.dart: the progress bar's name to a screen reader"
+  },
+  "a11yMessageActions": "Message actions",
+  "@a11yMessageActions": {
+    "description": "widgets/menu_backdrop.dart: the long-press menu's name to a screen reader"
+  },
+  "a11yRecordVoiceNote": "Record a voice note",
+  "@a11yRecordVoiceNote": {
+    "description": "widgets/voice_mic.dart: the mic with a screen reader on, a tap records"
+  },
+  "a11yRecording": "Recording",
+  "@a11yRecording": {
+    "description": "widgets/voice_mic.dart: said once when a tap starts a recording"
+  },
+  "a11yPhotoOn": "Photo, {date}",
+  "@a11yPhotoOn": {
+    "description": "widgets/media_bubbles.dart: a photo tile to a screen reader",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yPhotoFrom": "Photo from {name}, {date}",
+  "@a11yPhotoFrom": {
+    "description": "widgets/media_bubbles.dart: a photo tile to a screen reader, with who sent it",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yVideoOn": "Video, {date}",
+  "@a11yVideoOn": {
+    "description": "widgets/media_bubbles.dart: a video tile to a screen reader",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yVideoFrom": "Video from {name}, {date}",
+  "@a11yVideoFrom": {
+    "description": "widgets/media_bubbles.dart: a video tile to a screen reader, with who sent it",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yNewMessages": "{count, plural, =1{New message} other{{count} new messages}}",
+  "@a11yNewMessages": {
+    "description": "widgets/say.dart: new messages in the open chat, said with a screen reader on",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
   },
   "modesPickHow": "Pick how your messages travel. You can change it any time.",
   "@modesPickHow": {

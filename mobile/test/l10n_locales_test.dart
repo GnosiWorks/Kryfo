@@ -577,6 +577,7 @@ final _calls = <_Call>[
   ('chatYou', [], (l) => l.chatYou),
   ('chatUnsendMessage', [], (l) => l.chatUnsendMessage),
   ('chatItDisappearsWithNo', [], (l) => l.chatItDisappearsWithNo),
+  ('chatAlbumItDisappearsWithNo', [], (l) => l.chatAlbumItDisappearsWithNo),
   ('chatThisChatHasPins', [], (l) => l.chatThisChatHasPins(0)),
   ('chatThisChatHasPins', [], (l) => l.chatThisChatHasPins(1)),
   ('chatThisChatHasPins', [], (l) => l.chatThisChatHasPins(2)),
@@ -1063,6 +1064,11 @@ final _calls = <_Call>[
   ('groupChatEditMessage', [], (l) => l.groupChatEditMessage),
   ('groupChatUnsendMessage', [], (l) => l.groupChatUnsendMessage),
   ('groupChatItDisappearsWithNo', [], (l) => l.groupChatItDisappearsWithNo),
+  (
+    'groupChatAlbumItDisappearsWithNo',
+    [],
+    (l) => l.groupChatAlbumItDisappearsWithNo,
+  ),
   ('groupChatUnsend', [], (l) => l.groupChatUnsend),
   (
     'groupChatThisRoomAndEverything',
@@ -1692,7 +1698,6 @@ final _calls = <_Call>[
   ('pinsTheLockScreenKeeps', [], (l) => l.pinsTheLockScreenKeeps),
   ('profileCopied', ["⟨what⟩"], (l) => l.profileCopied("⟨what⟩")),
   ('profileProfile', [], (l) => l.profileProfile),
-  ('profileChangeYourFace', [], (l) => l.profileChangeYourFace),
   ('profileKryfoId', [], (l) => l.profileKryfoId),
   ('profileOnionAddress', [], (l) => l.profileOnionAddress),
   ('profileSupporterBadge', [], (l) => l.profileSupporterBadge),

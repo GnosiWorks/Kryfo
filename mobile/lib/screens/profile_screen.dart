@@ -6,8 +6,19 @@ import 'package:flutter/services.dart';
 import '../store.dart';
 import '../theme.dart';
 import 'avatar_picker_screen.dart';
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../main.dart'
-    show appState, session, showAddContact, AppStateProfile, AppStateSession;
+    show
+        appState,
+        session,
+        showAddContact,
+        AppStatePhotos,
+        AppStateProfile,
+        AppStateSession;
+import '../photo_pick.dart';
+import '../profile_photo.dart' show photoAddOffered, photoBook;
+import '../widgets/face_view.dart';
+import '../widgets/photo_sheet.dart';
 import '../supporter.dart';
 import '../widgets/kryfo_avatar.dart';
 import 'settings_screen.dart';
@@ -313,6 +324,57 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  // your photo or face: a photo from the camera or the gallery, a drawn
+  // face, a larger look, or the photo off again
+  Future<void> _faceTapped(String id) async {
+    final has = photoBook.has(id);
+    final add = photoAddOffered(desktop: onDesktop);
+    // nothing to choose but the faces: straight to them
+    if (!add && !has) return _openFaces();
+    final c = await showPhotoSheet(
+      context,
+      title: l10n.photoYourPhoto,
+      line: l10n.photoYourPhotoLine,
+      seed: id.isEmpty ? 'kryfo' : id,
+      choice: appState.myAvatar,
+      add: add,
+      has: has,
+      faces: true,
+    );
+    if (!mounted || c == null) return;
+    switch (c) {
+      case PhotoChoice.faces:
+        await _openFaces();
+      case PhotoChoice.view:
+        await openFace(context, id, label: l10n.photoYourPhoto);
+      case PhotoChoice.remove:
+        HapticFeedback.mediumImpact();
+        await appState.removeMyPhoto();
+      case PhotoChoice.camera || PhotoChoice.gallery:
+        final at = session;
+        final r = await pickProfilePhoto(
+          context,
+          camera: c == PhotoChoice.camera,
+          got: (photo) async {
+            // a lock or another pin meanwhile: it goes nowhere
+            if (!session.holdsSame(at, vault: false)) return;
+            if (!await appState.setMyPhoto(photo) && mounted) {
+              showHaloToast(context, l10n.photoCouldNotUse);
+            }
+          },
+        );
+        if (r == PhotoPicked.unclean && mounted) {
+          showHaloToast(context, l10n.photoCouldNotUse);
+        }
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _openFaces() async {
+    await Navigator.of(context).push(haloRoute(const AvatarPickerScreen()));
+    if (mounted) setState(() {});
+  }
+
   // the face, on a soft amber glow, and the name under it
   Widget _head(String id, bool hasBadge) {
     return Column(
@@ -323,14 +385,9 @@ class _ProfileScreenState extends State<ProfileScreen>
             curve: const Interval(0.0, 0.7, curve: Curves.easeOutBack),
           ),
           child: PressScale(
-            label: l10n.profileChangeYourFace,
+            label: l10n.photoYourPhoto,
             scale: 0.95,
-            onTap: () async {
-              await Navigator.of(
-                context,
-              ).push(haloRoute(const AvatarPickerScreen()));
-              if (mounted) setState(() {});
-            },
+            onTap: () => _faceTapped(id),
             child: SizedBox(
               width: 150,
               height: 132,
@@ -378,7 +435,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                           width: 2.5,
                         ),
                       ),
-                      child: Icon(Icons.edit, size: 13, color: HaloColors.onAmber),
+                      child: Icon(
+                        Icons.edit,
+                        size: 13,
+                        color: HaloColors.onAmber,
+                      ),
                     ),
                   ),
                 ],

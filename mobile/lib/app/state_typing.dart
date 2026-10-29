@@ -197,12 +197,15 @@ extension AppStateTyping on AppState {
   Future<bool> _takeCaps(String peer, UnwrappedMessage env, HaloDb db) async {
     if (env.groupId != null || isDevId(peer)) return false;
     try {
-      return await db.takeCaps(
+      final moved = await db.takeCaps(
         peer,
         caps: env.caps,
         counts: AppState._dataFrame(env) && env.msgUid != null,
         written: env.writtenAt,
       );
+      // their phone may take a photo now, or no longer
+      if (moved) unawaited(photoSweep());
+      return moved;
     } catch (e) {
       dlog('typing: caps not taken (${e.runtimeType})');
       return false;

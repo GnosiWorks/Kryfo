@@ -1385,7 +1385,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'Ela é removida dos dois celulares, a menos que já tenha sido salva. Isso não pode ser desfeito.';
+      'Ela será removida dos dois celulares, a menos que já tenha sido salva. Isso não pode ser desfeito.';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'O álbum será removido dos dois celulares, a menos que já tenha sido salvo. Isso não pode ser desfeito.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -2638,7 +2642,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'Ela é removida dos celulares de todos, a menos que já tenha sido salva. Isso não pode ser desfeito.';
+      'Ela será removida dos celulares de todos, a menos que já tenha sido salva. Isso não pode ser desfeito.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'O álbum será removido dos celulares de todos, a menos que já tenha sido salvo. Isso não pode ser desfeito.';
 
   @override
   String get groupChatUnsend => 'Desfazer envio';
@@ -4377,9 +4385,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get profileProfile => 'Perfil';
-
-  @override
-  String get profileChangeYourFace => 'Mudar seu rosto';
 
   @override
   String get profileKryfoId => 'Seu nome';
@@ -9802,6 +9807,158 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'O Kryfo precisa de uma pasta privada na memória enquanto roda, e este computador não oferece nenhuma, então ele não vai abrir.';
+
+  @override
+  String get photoCropTitle => 'Mover e ajustar';
+
+  @override
+  String get photoCropUse => 'Usar foto';
+
+  @override
+  String get photoCropLabel =>
+      'Sua foto no círculo. Pince para ampliar, arraste para mover';
+
+  @override
+  String get photoCouldNotUse => 'Tente outra foto. Não foi possível ler esta.';
+
+  @override
+  String get photoTake => 'Tirar uma foto';
+
+  @override
+  String get photoChoose => 'Escolher da galeria';
+
+  @override
+  String get photoPickFace => 'Escolher um rosto';
+
+  @override
+  String get photoView => 'Ver foto';
+
+  @override
+  String get photoRemove => 'Remover foto';
+
+  @override
+  String get photoYourPhoto => 'Sua foto';
+
+  @override
+  String get photoYourPhotoLine =>
+      'Só seus contatos veem, com criptografia de ponta a ponta.';
+
+  @override
+  String get photoSetTheirs => 'Definir uma foto';
+
+  @override
+  String get photoChangeTheirs => 'Trocar foto';
+
+  @override
+  String get photoOnlyHere => 'Só neste celular';
+
+  @override
+  String photoForThem(Object name) {
+    return 'Uma foto para $name';
+  }
+
+  @override
+  String get photoOnlyHereLine => 'Só você vê. Fica neste celular.';
+
+  @override
+  String photoOf(Object name) {
+    return 'Foto de $name';
+  }
+
+  @override
+  String get historyChatStaysShots =>
+      'Esta conversa fica no seu celular porque as capturas de tela estão bloqueadas nela.';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString dígitos',
+      one: '1 dígito',
+      zero: 'Nenhum dígito',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString caracteres',
+      one: '1 caractere',
+      zero: 'Nenhum caractere',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'Progresso do backup';
+
+  @override
+  String get a11yRestoreProgress => 'Progresso da restauração';
+
+  @override
+  String get a11yExportProgress => 'Progresso da exportação';
+
+  @override
+  String get a11yLockFileProgress => 'Progresso do trancamento';
+
+  @override
+  String get a11yCleanProgress => 'Progresso da limpeza';
+
+  @override
+  String get a11yMessageActions => 'Ações da mensagem';
+
+  @override
+  String get a11yRecordVoiceNote => 'Gravar um áudio';
+
+  @override
+  String get a11yRecording => 'Gravando';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'Foto, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return 'Foto de $name, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'Vídeo, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return 'Vídeo de $name, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString novas mensagens',
+      one: 'Nova mensagem',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get modesPickHow =>

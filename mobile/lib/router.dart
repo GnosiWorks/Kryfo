@@ -92,6 +92,23 @@ Future<void> routerTables(Database db) async {
   );
 }
 
+// the chats the vault holds, by id alone: what a copy to another device
+// leaves out whole. nothing else of their cards is read for it
+Future<Set<String>> hiddenChatIds(DatabaseExecutor db) async {
+  final there = await db.rawQuery(
+    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'hidden_chats'",
+  );
+  if (there.isEmpty) return {};
+  return {
+    // the key and tomb marks name people, not chats
+    for (final r in await db.rawQuery(
+      'SELECT chat_id FROM main.hidden_chats WHERE kind IN (?, ?, ?)',
+      [kHiddenPeer, kHiddenGroup, kHiddenGone],
+    ))
+      r['chat_id'] as String,
+  };
+}
+
 // how to reach one person while the vault is shut
 class RouterCard {
   const RouterCard(

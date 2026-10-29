@@ -55,6 +55,12 @@ class Session {
   final Set<String> _people;
   final Set<String> _groups;
 
+  /// the same databases open as in [at]: no lock, pin or vault change
+  /// came between. [vault] false looks at the primary alone
+  bool holdsSame(Session at, {bool vault = true}) =>
+      identical(primary, at.primary) &&
+      (!vault || identical(this.vault, at.vault));
+
   // settings are the primary's. a chat's folders are its owner's (folderOf)
   HaloContainer get container => primary.container;
 

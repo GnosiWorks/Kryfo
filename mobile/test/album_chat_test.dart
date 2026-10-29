@@ -400,6 +400,9 @@ void main() {
     await settle(t, 4);
     // the sheet asks once, for the album
     expect(find.text(l10n.albumUnsendTitle), findsOneWidget);
+    // its own line, not the one for a message
+    expect(find.text(l10n.chatAlbumItDisappearsWithNo), findsOneWidget);
+    expect(find.text(l10n.chatItDisappearsWithNo), findsNothing);
     await t.tap(find.text(l10n.chatUnsend).last);
     await settle(t, 12);
     final uids = ['out-$_id-0', 'out-$_id-1', 'out-$_id-2'];

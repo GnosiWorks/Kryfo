@@ -291,12 +291,22 @@ const _peerRows = {
   'frame_order': 'msg_uid IN {uids}',
   'wallpapers': 'chat = ?1',
   'drafts': 'chat = ?1',
+  // a photo set for them or theirs, and what they hold of ours
+  'contact_photos': 'halo_id = ?1',
+  'photo_parts': 'halo_id = ?1',
+  'photo_peers': 'halo_id = ?1',
 };
 // a person's block rows, by peer_id, which go with a group's people
 const _blockRows = ['block_spans', 'blocked_drops'];
 // made after the chat tables, the drafts' in a try of its own: one side
 // may lack them, and a move then goes on without their rows
-const _mayLack = {'wallpapers', 'drafts'};
+const _mayLack = {
+  'wallpapers',
+  'drafts',
+  'contact_photos',
+  'photo_parts',
+  'photo_peers',
+};
 const _groupRows = {
   'group_members': 'group_id = ?1',
   'reactions': 'msg_uid IN {uids}',

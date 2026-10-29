@@ -26,7 +26,7 @@ import 'pin_flow_fakes.dart' show appOnly, makeLock;
 const _hi = Locale('hi');
 
 // what a phone asks for, and what the app makes of it
-const _scales = [(1.3, 1.3), (2.0, 1.6)];
+const _scales = [(1.3, 1.3), (2.0, 2.0)];
 
 class _Db implements HaloDb {
   @override

@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
 import '../theme.dart';
+import 'key_ring.dart';
 
 /// the shortest and the longest pin
 const kPinMin = 4;
@@ -27,6 +28,10 @@ class PinDots extends StatelessWidget {
   final Animation<double>? shake;
   // the places shown before any digit: as many as the shortest pin takes
   final int min;
+  // a passphrase in letters: the count is of characters
+  final bool letters;
+  // what a screen reader calls the dots, the screen's prompt by default
+  final String? label;
   const PinDots({
     super.key,
     required this.filled,
@@ -34,7 +39,17 @@ class PinDots extends StatelessWidget {
     this.wrong = false,
     this.shake,
     this.min = kPinMin,
+    this.letters = false,
+    this.label,
   });
+
+  // the count only, never what was typed
+  Widget _named(Widget dots) => Semantics(
+    container: true,
+    label: label ?? l10n.lockYourPin,
+    value: letters ? l10n.a11yPassChars(filled) : l10n.a11yPinDigits(filled),
+    child: ExcludeSemantics(child: dots),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -95,27 +110,31 @@ class PinDots extends StatelessWidget {
     final s = shake;
     // with reduced motion the rose dots say it. the shake's clock still
     // runs, so the timing stays the same
-    if (s == null || still) return row;
-    return AnimatedBuilder(
-      animation: s,
-      child: row,
-      builder: (_, child) {
-        // three quick swings that die out
-        final t = s.value;
-        final dx = math.sin(t * math.pi * 6) * 9 * (1 - t);
-        return Transform.translate(offset: Offset(dx, 0), child: child);
-      },
+    if (s == null || still) return _named(row);
+    return _named(
+      AnimatedBuilder(
+        animation: s,
+        child: row,
+        builder: (_, child) {
+          // three quick swings that die out
+          final t = s.value;
+          final dx = math.sin(t * math.pi * 6) * 9 * (1 - t);
+          return Transform.translate(offset: Offset(dx, 0), child: child);
+        },
+      ),
     );
   }
 }
 
-class PinPad extends StatelessWidget {
+class PinPad extends StatefulWidget {
   final void Function(String) onDigit;
   final VoidCallback onBack;
   // the enter key; dimmed and silent until [canEnter]
   final VoidCallback? onEnter;
   final bool canEnter;
   final bool enabled;
+  // take focus outright on arrival, not only when nothing else has it
+  final bool grab;
   const PinPad({
     super.key,
     required this.onDigit,
@@ -123,10 +142,64 @@ class PinPad extends StatelessWidget {
     this.onEnter,
     this.canEnter = false,
     this.enabled = true,
+    this.grab = false,
   });
 
   @override
+  State<PinPad> createState() => _PinPadState();
+}
+
+class _PinPadState extends State<PinPad> {
+  final _pad = FocusNode(debugLabel: 'pin pad');
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.grab) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _pad.requestFocus();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _pad.dispose();
+    super.dispose();
+  }
+
+  // a hardware keyboard types into the pad: digits, backspace and enter,
+  // as on the phone's own pad. space presses a key that has focus
+  KeyEventResult _key(FocusNode _, KeyEvent e) {
+    if (e is! KeyDownEvent && e is! KeyRepeatEvent) {
+      return KeyEventResult.ignored;
+    }
+    final w = widget;
+    if (!w.enabled) return KeyEventResult.ignored;
+    final k = e.logicalKey;
+    final digit = _digits[k];
+    if (digit != null) {
+      w.onDigit(digit);
+      return KeyEventResult.handled;
+    }
+    if (k == LogicalKeyboardKey.backspace) {
+      w.onBack();
+      return KeyEventResult.handled;
+    }
+    final enter =
+        k == LogicalKeyboardKey.enter || k == LogicalKeyboardKey.numpadEnter;
+    if (enter) {
+      if (w.canEnter) w.onEnter?.call();
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final w = widget;
+    final onDigit = w.onDigit, onBack = w.onBack, onEnter = w.onEnter;
+    final canEnter = w.canEnter, enabled = w.enabled;
     final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     Widget row(List<Widget> keys) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -140,39 +213,51 @@ class PinPad extends StatelessWidget {
     );
     Widget d(String n) =>
         _Key(label: n, onTap: enabled ? () => onDigit(n) : null);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        row([d('1'), d('2'), d('3')]),
-        row([d('4'), d('5'), d('6')]),
-        row([d('7'), d('8'), d('9')]),
-        row([
-          if (onEnter == null)
-            const SizedBox(width: 92, height: 72)
-          else
-            AnimatedOpacity(
-              opacity: canEnter ? 1 : 0.35,
-              duration: still
-                  ? Duration.zero
-                  : const Duration(milliseconds: 160),
-              child: _Key(
-                icon: Icons.check_rounded,
-                semantic: l10n.commonDone,
-                strong: canEnter,
-                onTap: enabled && canEnter ? onEnter : null,
+    return Focus(
+      focusNode: _pad,
+      autofocus: true,
+      onKeyEvent: _key,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          row([d('1'), d('2'), d('3')]),
+          row([d('4'), d('5'), d('6')]),
+          row([d('7'), d('8'), d('9')]),
+          row([
+            if (onEnter == null)
+              const SizedBox(width: 92, height: 72)
+            else
+              AnimatedOpacity(
+                opacity: canEnter ? 1 : 0.35,
+                duration: still
+                    ? Duration.zero
+                    : const Duration(milliseconds: 160),
+                child: _Key(
+                  icon: Icons.check_rounded,
+                  semantic: l10n.commonDone,
+                  strong: canEnter,
+                  onTap: enabled && canEnter ? onEnter : null,
+                ),
               ),
+            d('0'),
+            _Key(
+              icon: Icons.backspace_outlined,
+              semantic: l10n.commonDelete,
+              onTap: enabled ? onBack : null,
             ),
-          d('0'),
-          _Key(
-            icon: Icons.backspace_outlined,
-            semantic: l10n.commonDelete,
-            onTap: enabled ? onBack : null,
-          ),
-        ]),
-      ],
+          ]),
+        ],
+      ),
     );
   }
 }
+
+final _digits = {
+  for (var i = 0; i < 10; i++) ...{
+    LogicalKeyboardKey(LogicalKeyboardKey.digit0.keyId + i): '$i',
+    LogicalKeyboardKey(LogicalKeyboardKey.numpad0.keyId + i): '$i',
+  },
+};
 
 class _Key extends StatefulWidget {
   final String? label;
@@ -204,61 +289,72 @@ class _KeyState extends State<_Key> {
       width: 92,
       height: 72,
       child: Center(
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTapDown: widget.onTap == null
-              ? null
-              : (_) => setState(() => _down = true),
-          onTapUp: (_) => setState(() => _down = false),
-          onTapCancel: () => setState(() => _down = false),
-          onTap: widget.onTap == null
+        child: KeyRing(
+          circle: true,
+          onActivate: widget.onTap == null
               ? null
               : () {
                   HapticFeedback.selectionClick();
                   widget.onTap!();
                 },
-          child: AnimatedScale(
-            scale: _down ? 0.88 : 1,
-            duration: still ? Duration.zero : const Duration(milliseconds: 110),
-            curve: Curves.easeOut,
-            child: AnimatedContainer(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTapDown: widget.onTap == null
+                ? null
+                : (_) => setState(() => _down = true),
+            onTapUp: (_) => setState(() => _down = false),
+            onTapCancel: () => setState(() => _down = false),
+            onTap: widget.onTap == null
+                ? null
+                : () {
+                    HapticFeedback.selectionClick();
+                    widget.onTap!();
+                  },
+            child: AnimatedScale(
+              scale: _down ? 0.88 : 1,
               duration: still
                   ? Duration.zero
-                  : const Duration(milliseconds: 140),
-              width: 68,
-              height: 68,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: bare
-                    ? Colors.transparent
-                    : _down
-                    ? HaloColors.amber.withValues(alpha: 0.18)
-                    : HaloColors.surface2,
-                border: bare
-                    ? null
-                    : Border.all(
-                        color: _down ? HaloColors.amber : HaloColors.line,
-                        width: 0.6,
+                  : const Duration(milliseconds: 110),
+              curve: Curves.easeOut,
+              child: AnimatedContainer(
+                duration: still
+                    ? Duration.zero
+                    : const Duration(milliseconds: 140),
+                width: 68,
+                height: 68,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: bare
+                      ? Colors.transparent
+                      : _down
+                      ? HaloColors.amber.withValues(alpha: 0.18)
+                      : HaloColors.surface2,
+                  border: bare
+                      ? null
+                      : Border.all(
+                          color: _down ? HaloColors.amber : HaloColors.line,
+                          width: 0.6,
+                        ),
+                ),
+                child: bare
+                    ? Icon(
+                        widget.icon,
+                        size: widget.strong ? 26 : 22,
+                        color: widget.strong
+                            ? HaloColors.amber
+                            : HaloColors.text2,
+                        semanticLabel: widget.semantic,
+                      )
+                    : Text(
+                        widget.label!,
+                        style: HaloType.serif(
+                          size: 27,
+                          weight: FontWeight.w300,
+                          color: HaloColors.text,
+                        ),
                       ),
               ),
-              child: bare
-                  ? Icon(
-                      widget.icon,
-                      size: widget.strong ? 26 : 22,
-                      color: widget.strong
-                          ? HaloColors.amber
-                          : HaloColors.text2,
-                      semanticLabel: widget.semantic,
-                    )
-                  : Text(
-                      widget.label!,
-                      style: HaloType.serif(
-                        size: 27,
-                        weight: FontWeight.w300,
-                        color: HaloColors.text,
-                      ),
-                    ),
             ),
           ),
         ),

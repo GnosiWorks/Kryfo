@@ -97,7 +97,7 @@ class _NoticeBannerState extends State<NoticeBanner>
                 style: HaloType.sans(
                   size: 12.5,
                   weight: FontWeight.w500,
-                  color: widget.textColor ?? widget.color,
+                  color: widget.textColor ?? HaloColors.wordsIn(widget.color),
                   height: 1.35,
                 ),
               ),
@@ -110,7 +110,7 @@ class _NoticeBannerState extends State<NoticeBanner>
               tooltip: widget.dismissLabel,
               iconSize: 16,
               padding: EdgeInsets.zero,
-              constraints: const BoxConstraints.tightFor(width: 44, height: 44),
+              constraints: const BoxConstraints.tightFor(width: 48, height: 48),
               color: HaloColors.text2,
               icon: const Icon(Icons.close_rounded),
               onPressed: widget.onDismiss,

@@ -86,7 +86,9 @@ int _previewTurns(DeviceOrientation screen) {
 }
 
 class CameraScreen extends StatefulWidget {
-  const CameraScreen({super.key});
+  // a profile photo: no video tab
+  final bool photoOnly;
+  const CameraScreen({super.key, this.photoOnly = false});
   @override
   State<CameraScreen> createState() => _CameraScreenState();
 }
@@ -838,7 +840,7 @@ class _CameraScreenState extends State<CameraScreen>
         children: [
           _pill(_size(_clipBytes), HaloColors.text),
           if (!fileFits(_clipBytes))
-            _pill(l10n.cameraTooLongForA, HaloColors.rose),
+            _pill(l10n.cameraTooLongForA, HaloColors.roseText),
         ],
       ),
     );
@@ -864,14 +866,15 @@ class _CameraScreenState extends State<CameraScreen>
     return Column(
       children: [
         // photo | video
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _modeTab(l10n.cameraPhoto, !_video, _toPhoto),
-            const SizedBox(width: 8),
-            _modeTab(l10n.cameraVideo, _video, _toVideo),
-          ],
-        ),
+        if (!widget.photoOnly)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _modeTab(l10n.cameraPhoto, !_video, _toPhoto),
+              const SizedBox(width: 8),
+              _modeTab(l10n.cameraVideo, _video, _toVideo),
+            ],
+          ),
         const SizedBox(height: 6),
         PressScale(
           label: _video

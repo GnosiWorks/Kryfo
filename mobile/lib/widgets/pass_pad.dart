@@ -53,6 +53,9 @@ class PassPad extends StatefulWidget {
 class _PassPadState extends State<PassPad> {
   final _field = TextEditingController();
   final _focus = FocusNode();
+  // back from letters: the field or the 123 key still holds focus while
+  // the pad comes in, so the pad takes it
+  bool _fromLetters = false;
 
   @override
   void didUpdateWidget(PassPad old) {
@@ -64,6 +67,7 @@ class _PassPadState extends State<PassPad> {
       });
     }
     if (!widget.letters && old.letters) {
+      _fromLetters = true;
       _field.clear();
       _focus.unfocus();
     }
@@ -101,6 +105,7 @@ class _PassPadState extends State<PassPad> {
             onEnter: widget.onEnter,
             canEnter: widget.canEnter,
             enabled: widget.enabled,
+            grab: _fromLetters,
           );
     return Column(
       mainAxisSize: MainAxisSize.min,

@@ -1377,7 +1377,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'Daha önce kaydedilmediyse iki telefondan da silinir. Bu geri alınamaz.';
+      'Daha önce kaydedilmediyse iki telefondan da silinecek. Bu geri alınamaz.';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'Daha önce kaydedilmediyse albüm iki telefondan da silinecek. Bu geri alınamaz.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -2617,7 +2621,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'Daha önce kaydedilmediyse herkesin telefonundan silinir. Bu geri alınamaz.';
+      'Daha önce kaydedilmediyse herkesin telefonundan silinecek. Bu geri alınamaz.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'Daha önce kaydedilmediyse albüm herkesin telefonundan silinecek. Bu geri alınamaz.';
 
   @override
   String get groupChatUnsend => 'Geri çek';
@@ -4359,9 +4367,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get profileProfile => 'Profil';
-
-  @override
-  String get profileChangeYourFace => 'Yüzünü değiştir';
 
   @override
   String get profileKryfoId => 'Adın';
@@ -9753,6 +9758,156 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo çalışırken bellekte özel bir klasöre ihtiyaç duyar, bu bilgisayar böyle bir klasör sunmuyor, bu yüzden açılmayacak.';
+
+  @override
+  String get photoCropTitle => 'Taşı ve ölçekle';
+
+  @override
+  String get photoCropUse => 'Fotoğrafı kullan';
+
+  @override
+  String get photoCropLabel =>
+      'Daire içindeki fotoğrafın. Yakınlaştırmak için iki parmakla aç, taşımak için sürükle';
+
+  @override
+  String get photoCouldNotUse => 'Başka bir fotoğraf dene. Bu okunamadı.';
+
+  @override
+  String get photoTake => 'Fotoğraf çek';
+
+  @override
+  String get photoChoose => 'Galeriden seç';
+
+  @override
+  String get photoPickFace => 'Bir yüz seç';
+
+  @override
+  String get photoView => 'Fotoğrafı gör';
+
+  @override
+  String get photoRemove => 'Fotoğrafı kaldır';
+
+  @override
+  String get photoYourPhoto => 'Fotoğrafın';
+
+  @override
+  String get photoYourPhotoLine =>
+      'Yalnızca kişilerin görür, uçtan uca şifreli.';
+
+  @override
+  String get photoSetTheirs => 'Fotoğraf koy';
+
+  @override
+  String get photoChangeTheirs => 'Fotoğrafı değiştir';
+
+  @override
+  String get photoOnlyHere => 'Yalnızca bu telefonda';
+
+  @override
+  String photoForThem(Object name) {
+    return '$name için bir fotoğraf';
+  }
+
+  @override
+  String get photoOnlyHereLine => 'Yalnızca sen görürsün. Bu telefonda kalır.';
+
+  @override
+  String photoOf(Object name) {
+    return '$name fotoğrafı';
+  }
+
+  @override
+  String get historyChatStaysShots =>
+      'Bu sohbet telefonunda kalır, çünkü içinde ekran görüntüsü engelli.';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString rakam',
+      zero: 'Rakam yok',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString karakter',
+      zero: 'Karakter yok',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'Yedekleme ilerlemesi';
+
+  @override
+  String get a11yRestoreProgress => 'Geri yükleme ilerlemesi';
+
+  @override
+  String get a11yExportProgress => 'Dışa aktarma ilerlemesi';
+
+  @override
+  String get a11yLockFileProgress => 'Kilitleme ilerlemesi';
+
+  @override
+  String get a11yCleanProgress => 'Temizleme ilerlemesi';
+
+  @override
+  String get a11yMessageActions => 'Mesaj işlemleri';
+
+  @override
+  String get a11yRecordVoiceNote => 'Sesli mesaj kaydet';
+
+  @override
+  String get a11yRecording => 'Kaydediliyor';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'Fotoğraf, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return '$name kişisinden fotoğraf, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'Video, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return '$name kişisinden video, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString yeni mesaj',
+      one: 'Yeni mesaj',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get modesPickHow =>
