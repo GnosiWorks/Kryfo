@@ -11,7 +11,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/devchat/dev_frame.dart' show devOutFrame;
-import 'package:kryfo/invites.dart' show helloOfWire, helloWireOf;
+import 'package:kryfo/invites.dart' show helloOfWire, helloWireOf, kHelloWireLength;
 import 'package:kryfo/main.dart' show makePreKeyBundleB64;
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
@@ -587,6 +587,20 @@ void main() {
       expect(helloOfWire('$b64.12.001'), isNull);
       expect(helloOfWire('$b64.12.'), isNull);
       expect(helloOfWire('$b64.12.0.0'), isNull);
+    });
+
+    test('a hello too long to pad is refused, never sent unpadded', () {
+      // the longest hello that still takes a filler, with the longest nonce
+      final room = (kHelloWireLength - '.999999999999999.0'.length) ~/ 4 * 3;
+      final fits = Uint8List(room);
+      expect(helloWireOf(fits, 999999999999999).length, kHelloWireLength);
+      expect(
+        () => helloWireOf(Uint8List(room + 3), 999999999999999),
+        throwsArgumentError,
+      );
+      for (final n in [kHelloWireLength ~/ 4 * 3, 4000]) {
+        expect(() => helloWireOf(Uint8List(n), 0), throwsArgumentError);
+      }
     });
 
     test('an opener filler that does not fit is refused', () {

@@ -685,11 +685,13 @@ bool helloPowHolds(List<int> hello, int nonce) =>
 final kHelloWireLength = kRumorSizes[1];
 
 /// [hello] as it goes on the wire: base64, a dot and its nonce, then a dot
-/// and zeros to [kHelloWireLength]
+/// and zeros to [kHelloWireLength]. one too long for that throws: a hello
+/// never goes unpadded
 String helloWireOf(List<int> hello, int nonce) {
   final s = '${base64Encode(hello)}.$nonce';
   final fill = kHelloWireLength - s.length - 1;
-  return fill < 1 ? s : '$s.${'0' * fill}';
+  if (fill < 1) throw ArgumentError('hello too long to pad');
+  return '$s.${'0' * fill}';
 }
 
 /// the hello and nonce of a wire line, null for anything else: base64 that

@@ -689,6 +689,16 @@ extension AppStateInvites on AppState {
       face: face,
       nowMs: nowMs,
     );
+    final String wire;
+    try {
+      wire = await helloWire(hello);
+    } on ArgumentError {
+      // too long to pad: never sent unpadded, and no later pass fits it
+      dlog('hello: too long to pad, not sent');
+      await spendOneTime(db, signalSession, once);
+      await done();
+      return true;
+    }
     await db.insert('hellos', {
       'ident': kMainIdent,
       'way': kHelloOut,
@@ -705,7 +715,7 @@ extension AppStateInvites on AppState {
       kMainIdent,
       peer.substring(2),
       fc,
-      await helloWire(hello),
+      wire,
     );
     if (res == 'ok') {
       await done();
@@ -980,6 +990,9 @@ const kHelloRetry = Duration(minutes: 5);
 int _helloGrind(String seed) => grindPow(seed, powBits);
 
 /// [hello] as it goes on the wire, with its proof of work (3.3): ground
-/// off the ui's isolate
-Future<String> helloWire(Uint8List hello) async =>
-    helloWireOf(hello, await compute(_helloGrind, helloPowSeed(hello)));
+/// off the ui's isolate. one too long to pad throws, before the grind if
+/// it can
+Future<String> helloWire(Uint8List hello) async {
+  helloWireOf(hello, 0);
+  return helloWireOf(hello, await compute(_helloGrind, helloPowSeed(hello)));
+}

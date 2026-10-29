@@ -780,9 +780,14 @@ void main() {
       face: _face,
       nowMs: _now,
     );
+    // today's hello and the room it leaves: anything added to it (a device
+    // list) must still fit kHelloWireLength, or no hello goes
+    expect(hello.length, 2187);
+    expect(kHelloWireLength - base64Encode(hello).length, 3760 - 2916);
     final nonce = grindPow(helloPowSeed(hello), powBits);
     final line = helloWireOf(hello, nonce);
     expect(line, startsWith(kHelloWireStart));
+    expect(line.length, kHelloWireLength);
     final back = helloOfWire(line)!;
     expect(_eqList(back.hello, hello), isTrue);
     expect(back.nonce, nonce);
