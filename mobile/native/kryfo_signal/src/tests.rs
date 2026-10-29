@@ -540,7 +540,7 @@ fn promote_keeps_each_session_once() {
     assert_eq!(i[9], i2[3]);
 }
 
-fn fixture() -> HashMap<String, Vec<u8>> {
+pub(crate) fn fixture() -> HashMap<String, Vec<u8>> {
     let hex = |s: &str| {
         (0..s.len())
             .step_by(2)
