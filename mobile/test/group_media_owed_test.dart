@@ -1512,7 +1512,7 @@ void main() {
       final src = sourceOf('lib/widgets/file_reach.dart');
       expect(
         src,
-        contains('color: lost ? HaloColors.rose : HaloColors.amberText,'),
+        contains('color: lost ? HaloColors.roseText : HaloColors.amberText,'),
       );
       expect(src, isNot(contains('text2')));
       expect(src, isNot(contains('text3')));
