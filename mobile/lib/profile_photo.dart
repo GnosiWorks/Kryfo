@@ -313,6 +313,11 @@ int? photoTarget({required int sent, required int mine, required bool owed}) {
   return sent == want ? null : want;
 }
 
+/// the version a change goes under: the minute it was made, so the
+/// contact never learns the moment, and always past the one before
+int photoStamp(int was, int now) =>
+    max(was + 1, now - now % Duration.millisecondsPerMinute);
+
 /// when a change first goes to a contact
 int photoFirstAt(int now, Random r) {
   final from = kPhotoSpreadFrom.inMilliseconds;

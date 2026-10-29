@@ -400,7 +400,7 @@ mixin _PhotoRows {
         'halo_id': id,
         'held': r.isEmpty ? 0 : r.first['held'] as int? ?? 0,
         'want': want,
-        'stamp': want == null ? was : max(now, was + 1),
+        'stamp': want == null ? was : photoStamp(was, now),
         // a new photo keeps the gap their phone takes them at
         'next_at': want != null && want > 0 && sent > 0
             ? max(at, sent + kPhotoSendGap.inMilliseconds)

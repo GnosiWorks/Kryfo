@@ -762,6 +762,19 @@ void main() {
       expect(await db.nextPhotoDue(), 60);
     }, skip: skip);
 
+    test('the version a change goes under says only the minute', () async {
+      const now = 1760000012345;
+      const minute = now - now % 60000;
+      expect(photoStamp(0, now), minute);
+      expect(photoStamp(minute, now), minute + 1);
+      final db = await rows();
+      await db.owePhoto(_peer, 7, at: 1);
+      final s = (await db.duePhotoPeers(1)).single.stamp;
+      expect(s % 60000, 0);
+      await db.owePhoto(_peer, 0, at: 1);
+      expect((await db.duePhotoPeers(1)).single.stamp, s + 1);
+    }, skip: skip);
+
     test('your own photo, and its removal keeping the time', () async {
       final db = await rows();
       expect(await db.myPhoto(), isNull);
