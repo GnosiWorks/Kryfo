@@ -434,11 +434,36 @@ class SignalSession {
   }
 
   /// a session with [peer] built from their card, in front of any held.
-  /// the guard: only a pqxdh session with the pq ratchet is ever stored
-  Future<void> processBundle(String peer, LsBundle bundle) =>
-      serial(peer, () => _build(peer, bundle));
+  /// the guard: only a pqxdh session with the pq ratchet is ever stored.
+  /// [also] is written in the session's own transaction (a pair's seed):
+  /// both are kept or neither
+  Future<void> processBundle(
+    String peer,
+    LsBundle bundle, {
+    Future<void> Function(Transaction t)? also,
+  }) => serial(peer, () => _build(peer, bundle, also: also));
 
-  Future<void> _build(String peer, LsBundle bundle) async {
+  // [record] kept for [peer], and [also] with it in one transaction
+  Future<void> _storeWith(
+    String peer,
+    Uint8List record,
+    Future<void> Function(Transaction t)? also,
+  ) => also == null
+      ? sessionStore.store(peer, record)
+      : _db.transaction((t) async {
+          await LsSessionStore(
+            t,
+            prefix: _prefix,
+            ident: ident,
+          ).store(peer, record);
+          await also(t);
+        });
+
+  Future<void> _build(
+    String peer,
+    LsBundle bundle, {
+    Future<void> Function(Transaction t)? also,
+  }) async {
     final (record, their) = lib.sessionFromBundle(
       identity,
       registrationId,
@@ -449,7 +474,7 @@ class SignalSession {
     );
     _requirePq(record);
     await identityStore.saw(peer, their);
-    await sessionStore.store(peer, record);
+    await _storeWith(peer, record, also);
   }
 
   void _requirePq(Uint8List record) {
@@ -852,31 +877,34 @@ class SignalSession {
   /// runs; a new one goes in front of it, the states before it kept behind
   /// a state another name holds is never filed under [peer] as well: that
   /// throws StateError, and nothing is written
-  Future<void> keepOpenedSession(String peer, Uint8List record) =>
-      serial<void>(peer, () async {
-        final cur0 = lib.sessionInfo(record).current;
-        if (cur0 != null) {
-          final h = await _holder(cur0.version, cur0.baseKey);
-          if (h != null && h.$1 != peer) {
-            throw StateError('signal: that session is held under another name');
-          }
-        }
-        final held = await sessionStore.load(peer);
-        if (held == null) {
-          await sessionStore.store(peer, record);
-          return;
-        }
-        final cur = lib.sessionInfo(record).current;
-        if (cur != null &&
-            lib.sessionInfo(held).holds(cur.version, cur.baseKey)) {
-          // a slot re-read filed where its session is: read now, for good
-          final r = _slotReads.remove(_recordKey(record));
-          if (r != null) await kyberPreKeyStore.markRead(r.$1, r.$2);
-          dlog('back-pair: an opener held already, the session kept');
-          return;
-        }
-        await sessionStore.store(peer, lib.sessionPromote(held, record));
-      });
+  Future<void> keepOpenedSession(
+    String peer,
+    Uint8List record, {
+    Future<void> Function(Transaction t)? also,
+  }) => serial<void>(peer, () async {
+    final cur0 = lib.sessionInfo(record).current;
+    if (cur0 != null) {
+      final h = await _holder(cur0.version, cur0.baseKey);
+      if (h != null && h.$1 != peer) {
+        throw StateError('signal: that session is held under another name');
+      }
+    }
+    final held = await sessionStore.load(peer);
+    if (held == null) {
+      await _storeWith(peer, record, also);
+      return;
+    }
+    final cur = lib.sessionInfo(record).current;
+    if (cur != null && lib.sessionInfo(held).holds(cur.version, cur.baseKey)) {
+      // a slot re-read filed where its session is: read now, for good
+      final r = _slotReads.remove(_recordKey(record));
+      if (r != null) await kyberPreKeyStore.markRead(r.$1, r.$2);
+      if (also != null) await _db.transaction(also);
+      dlog('back-pair: an opener held already, the session kept');
+      return;
+    }
+    await _storeWith(peer, lib.sessionPromote(held, record), also);
+  });
 
   Future<IdentityMarks> marksOf(String peer) async {
     final k = await _db.query(

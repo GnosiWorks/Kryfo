@@ -116,19 +116,21 @@ Uint8List? inviteOpenerSeed(
 }
 
 /// the pair of my [ident] with identity key [peerKeyHex] made again by a
-/// v4 first contact: its addresses mix [seed] in from the first message
-Future<void> seedPairAfresh(
-  DatabaseExecutor db,
+/// v4 first contact: its addresses mix [seed] in from the first message.
+/// in [t], the transaction its session is written in: the old row never
+/// goes without the new one, nor the seed without the session
+Future<void> seedPairIn(
+  DatabaseExecutor t,
   int ident,
   String peerKeyHex,
   Uint8List seed,
 ) async {
-  await db.delete(
+  await t.delete(
     'pairs',
     where: 'ident = ? AND peer = ? AND their_device = 1 AND my_device = 1',
     whereArgs: [ident, peerKeyHex],
   );
-  await putSeededPair(db, ident, peerKeyHex, seed);
+  await putSeededPair(t, ident, peerKeyHex, seed);
 }
 
 // whether [cipher] is an opener on any of my v4 invites' keys (signed,
@@ -759,8 +761,12 @@ extension AppStateInvites on AppState {
     final db = await live.open();
     final r = Random.secure();
     final seed = Uint8List.fromList(List.generate(32, (_) => r.nextInt(256)));
-    await signalSession.processBundle(id, bundle);
-    await seedPairAfresh(db, kMainIdent, key, seed);
+    // the session and its pair's seed in one transaction
+    await signalSession.processBundle(
+      id,
+      bundle,
+      also: (t) => seedPairIn(t, kMainIdent, key, seed),
+    );
     // a pair made again: its frames carry the seed until they answer
     await db.update(
       'contacts',

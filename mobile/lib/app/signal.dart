@@ -341,8 +341,11 @@ bool _takeOpenedBefore(String wireB64) =>
 // a second one sent before they heard back) leaves it as it runs, its text
 // still handed on for the uid checks to know. a new one goes in front of it
 // as a fresh start does, the states before it kept behind
-Future<void> keepOpenedSession(String peer, Uint8List record) =>
-    signalSession.keepOpenedSession(peer, record);
+Future<void> keepOpenedSession(
+  String peer,
+  Uint8List record, {
+  Future<void> Function(Transaction t)? also,
+}) => signalSession.keepOpenedSession(peer, record, also: also);
 
 // a first contact's session moved off a name a hidden chat binds to
 // another key, onto the sender's own id. a name with a trusted key was

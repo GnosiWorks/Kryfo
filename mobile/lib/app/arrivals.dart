@@ -374,12 +374,18 @@ Future<({String haloId, String plain, UnwrappedMessage env})?> _openFirst(
           throw const FirstRefused('seed');
         }
       }
-      // move session from temp to where it is filed
-      await keepOpenedSession(at, record);
+      // move session from temp to where it is filed, and a v4 pair's seed
+      // with it in one transaction: on its v4 addresses before anything
+      // goes to them
+      await keepOpenedSession(
+        at,
+        record,
+        also: v4 == null || seed == null
+            ? null
+            : (t) => seedPairIn(t, v4.ident, kx, seed!),
+      );
       await signalSession.sessionStore.delete(tempPeer);
       if (v4 != null && seed != null) {
-        // the pair on its v4 addresses before anything goes to them
-        await seedPairAfresh(await live.open(), v4.ident, kx, seed);
         final res = await engine.pairSeed(
           v4.ident,
           kx.substring(2),
