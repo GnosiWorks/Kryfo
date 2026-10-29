@@ -90,11 +90,10 @@ class InviteRow {
 
   /// whether a first contact naming it is still opened at [nowH]: before
   /// its expiry and a day of grace, unused when one-time, and always for
-  /// one that never expires
+  /// one that never expires. a main invite made again is no longer handed
+  /// out (retiredAt) and is still answered until then
   bool openAt(int nowH) =>
-      usedAt == null &&
-      retiredAt == null &&
-      (neverExpires || nowH <= expires + kSkewHours);
+      usedAt == null && (neverExpires || nowH <= expires + kSkewHours);
 
   static InviteRow of(Map<String, Object?> r) => InviteRow(
     ident: r['ident'] as int,

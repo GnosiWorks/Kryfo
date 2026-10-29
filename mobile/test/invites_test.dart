@@ -286,9 +286,10 @@ void main() {
     )).made!;
     expect((await currentMainInvite(db, kMainIdent))!.id, second.id);
     expect((await inviteOf(db, kMainIdent, first.id))!.retiredAt, at6);
+    // no longer handed out, still answered until it expires
     expect(
       (await inviteOf(db, kMainIdent, first.id))!.openAt(unixHours(at6)),
-      isFalse,
+      isTrue,
     );
     // a day after the first one expires: it goes with its keys, and the
     // v3 invite's with it
