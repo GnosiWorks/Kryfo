@@ -9946,4 +9946,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helloSent => 'Request sent. They\'ll see it when they\'re online.';
+
+  @override
+  String get inviteNeeds06 => 'Needs Kryfo 0.6 or newer.';
 }

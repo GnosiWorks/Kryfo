@@ -9961,4 +9961,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get helloSent => 'अनुरोध भेजा गया। ऑनलाइन होने पर वे इसे देखेंगे।';
+
+  @override
+  String get inviteNeeds06 => 'Kryfo 0.6 या नया चाहिए।';
 }

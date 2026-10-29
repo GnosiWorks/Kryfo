@@ -13,6 +13,7 @@ import '../desktop/desktop_mode.dart' show canShareOut;
 import '../contact_card.dart';
 import '../dlog.dart';
 import '../handle_lookup.dart' show handleFromInput;
+import '../invites.dart' show isV4Link;
 import '../main.dart'
     show
         appState,
@@ -148,7 +149,11 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
     lockState.hold(
       () => SharePlus.instance.share(
         ShareParams(
-          text: l10n.myKryfoAddMeOnKryfo(appState.sessionId, '$_uri'),
+          // a v4 link reads as an invalid one on 0.5: the line says why
+          text: isV4Link(_uri!)
+              ? '${l10n.myKryfoAddMeOnKryfo(appState.sessionId, '$_uri')}'
+                    '\n${l10n.inviteNeeds06}'
+              : l10n.myKryfoAddMeOnKryfo(appState.sessionId, '$_uri'),
           subject: l10n.myKryfoAddMeOnKryfo2,
         ),
       ),

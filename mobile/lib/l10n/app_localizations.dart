@@ -16066,6 +16066,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Request sent. They\'ll see it when they\'re online.'**
   String get helloSent;
+
+  /// under a shared v4 invite link: older versions read it as an invalid link
+  ///
+  /// In en, this message translates to:
+  /// **'Needs Kryfo 0.6 or newer.'**
+  String get inviteNeeds06;
 }
 
 class _AppLocalizationsDelegate

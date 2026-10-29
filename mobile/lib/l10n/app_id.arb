@@ -2630,5 +2630,6 @@
   "inviteNotYet": "Undangan ini belum berlaku. Periksa jam di ponselmu.",
   "inviteExpired": "Undangan ini sudah kedaluwarsa. Minta yang baru.",
   "inviteDamaged": "Undangan ini rusak. Minta yang baru.",
-  "helloSent": "Permintaan terkirim. Mereka akan melihatnya saat online."
+  "helloSent": "Permintaan terkirim. Mereka akan melihatnya saat online.",
+  "inviteNeeds06": "Perlu Kryfo 0.6 atau yang lebih baru."
 }

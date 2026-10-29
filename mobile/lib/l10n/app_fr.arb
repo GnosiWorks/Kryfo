@@ -2630,5 +2630,6 @@
   "inviteNotYet": "Cette invitation n'est pas encore valable. Vérifiez l'heure de votre téléphone.",
   "inviteExpired": "Cette invitation a expiré. Demandez-en une nouvelle.",
   "inviteDamaged": "Cette invitation est endommagée. Demandez-en une nouvelle.",
-  "helloSent": "Demande envoyée. Elle sera vue dès que la personne sera en ligne."
+  "helloSent": "Demande envoyée. Elle sera vue dès que la personne sera en ligne.",
+  "inviteNeeds06": "Nécessite Kryfo 0.6 ou plus récent."
 }

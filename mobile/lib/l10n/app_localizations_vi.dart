@@ -9943,4 +9943,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get helloSent => 'Đã gửi yêu cầu. Họ sẽ thấy khi trực tuyến.';
+
+  @override
+  String get inviteNeeds06 => 'Cần Kryfo 0.6 trở lên.';
 }

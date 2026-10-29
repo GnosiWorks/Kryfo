@@ -2630,5 +2630,6 @@
   "inviteNotYet": "此邀請尚未生效。請檢查手機上的時間。",
   "inviteExpired": "此邀請已過期。請索取新的邀請。",
   "inviteDamaged": "此邀請已損壞。請索取新的邀請。",
-  "helloSent": "請求已送出。對方上線後就會看到。"
+  "helloSent": "請求已送出。對方上線後就會看到。",
+  "inviteNeeds06": "需要 Kryfo 0.6 或更新版本。"
 }

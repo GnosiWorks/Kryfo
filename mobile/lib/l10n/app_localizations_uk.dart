@@ -10120,4 +10120,7 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get helloSent =>
       'Запит надіслано. Його побачать, коли будуть у мережі.';
+
+  @override
+  String get inviteNeeds06 => 'Потрібен Kryfo 0.6 або новіший.';
 }

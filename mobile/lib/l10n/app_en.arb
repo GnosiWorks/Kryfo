@@ -12523,5 +12523,9 @@
   "helloSent": "Request sent. They'll see it when they're online.",
   "@helloSent": {
     "description": "after a qr without a bundle is read: a hello went and waits for their accept"
+  },
+  "inviteNeeds06": "Needs Kryfo 0.6 or newer.",
+  "@inviteNeeds06": {
+    "description": "under a shared v4 invite link: older versions read it as an invalid link"
   }
 }

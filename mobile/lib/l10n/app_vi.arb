@@ -2630,5 +2630,6 @@
   "inviteNotYet": "Lời mời này chưa có hiệu lực. Hãy kiểm tra giờ trên điện thoại.",
   "inviteExpired": "Lời mời này đã hết hạn. Hãy xin lời mời mới.",
   "inviteDamaged": "Lời mời này bị hỏng. Hãy xin lời mời mới.",
-  "helloSent": "Đã gửi yêu cầu. Họ sẽ thấy khi trực tuyến."
+  "helloSent": "Đã gửi yêu cầu. Họ sẽ thấy khi trực tuyến.",
+  "inviteNeeds06": "Cần Kryfo 0.6 trở lên."
 }

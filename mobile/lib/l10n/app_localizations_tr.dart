@@ -9982,4 +9982,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get helloSent => 'İstek gönderildi. Çevrimiçi olduğunda görecek.';
+
+  @override
+  String get inviteNeeds06 => 'Kryfo 0.6 veya daha yenisi gerekir.';
 }

@@ -10062,4 +10062,7 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get helloSent =>
       'Demande envoyée. Elle sera vue dès que la personne sera en ligne.';
+
+  @override
+  String get inviteNeeds06 => 'Nécessite Kryfo 0.6 ou plus récent.';
 }

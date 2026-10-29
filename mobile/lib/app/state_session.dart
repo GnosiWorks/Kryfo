@@ -34,9 +34,19 @@ extension AppStateSession on AppState {
 
   // a counter that did not read is never taken as 0: an invite to an
   // address nobody listens on loses every first message sent to it
-  Future<String> _everydayInvite() => _fcUnread
-      ? buildHaloUriV2(myId, myOnion)
-      : buildHaloUriV3(myId, myOnion, fcCounter);
+  // the main v4 invite once it is made (identity v4 2.1)
+  Future<String> _everydayInvite() async {
+    try {
+      final v4 = await myV4Invite();
+      if (v4 != null) return v4;
+    } catch (e) {
+      dlog('invite: no v4 link (${e.runtimeType})');
+    }
+    return _fcUnread
+        ? buildHaloUriV2(myId, myOnion)
+        : buildHaloUriV3(myId, myOnion, fcCounter);
+  }
+
   Future<void> get containersReady => _containersOpen.future;
   @visibleForTesting
   void containersOpenedForTest() => _containersOpen.complete();

@@ -9471,6 +9471,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get helloSent => '请求已发送。对方上线后就会看到。';
+
+  @override
+  String get inviteNeeds06 => '需要 Kryfo 0.6 或更新版本。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -18823,4 +18826,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get helloSent => '請求已送出。對方上線後就會看到。';
+
+  @override
+  String get inviteNeeds06 => '需要 Kryfo 0.6 或更新版本。';
 }

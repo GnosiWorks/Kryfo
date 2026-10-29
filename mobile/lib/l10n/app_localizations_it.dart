@@ -10036,4 +10036,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get helloSent => 'Richiesta inviata. La vedrà quando sarà online.';
+
+  @override
+  String get inviteNeeds06 => 'Richiede Kryfo 0.6 o successivo.';
 }

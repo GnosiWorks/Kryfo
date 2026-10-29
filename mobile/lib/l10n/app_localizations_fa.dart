@@ -9976,4 +9976,7 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get helloSent =>
       'درخواست فرستاده شد. وقتی آنلاین شوند آن را می‌بینند.';
+
+  @override
+  String get inviteNeeds06 => 'به Kryfo 0.6 یا جدیدتر نیاز دارد.';
 }
