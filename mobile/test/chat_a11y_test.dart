@@ -139,6 +139,25 @@ void main() {
     h.dispose();
   });
 
+  testWidgets('escape closes the menu opened with the composer focused', (
+    t,
+  ) async {
+    await _open(t);
+    await t.tap(find.byType(TextField).last);
+    await t.pump();
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is EditableText && w.focusNode.hasPrimaryFocus,
+      ),
+      findsOneWidget,
+    );
+    await _menu(t);
+    await t.sendKeyEvent(LogicalKeyboardKey.escape);
+    await t.pump(const Duration(milliseconds: 500));
+    expect(find.byType(MenuBackdrop), findsNothing);
+    await devClose(t);
+  });
+
   testWidgets('escape closes the message menu', (t) async {
     await _open(t);
     await _menu(t);

@@ -11,10 +11,33 @@ import '../l10n/l10n.dart';
 /// a long-press menu to a screen reader and a keyboard: one named layer
 /// the chat behind cannot be reached through, focus inside it, and escape
 /// closes it
-class MenuScope extends StatelessWidget {
+class MenuScope extends StatefulWidget {
   final VoidCallback onDismiss;
   final Widget child;
   const MenuScope({super.key, required this.onDismiss, required this.child});
+
+  @override
+  State<MenuScope> createState() => _MenuScopeState();
+}
+
+class _MenuScopeState extends State<MenuScope> {
+  final _scope = FocusScopeNode(debugLabel: 'message menu');
+
+  @override
+  void initState() {
+    super.initState();
+    // autofocus loses to anything that had focus before, the composer
+    // first among them: the menu takes it outright once it is laid out
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _scope.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scope.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) => BlockSemantics(
@@ -24,8 +47,10 @@ class MenuScope extends StatelessWidget {
       explicitChildNodes: true,
       label: l10n.a11yMessageActions,
       child: CallbackShortcuts(
-        bindings: {const SingleActivator(LogicalKeyboardKey.escape): onDismiss},
-        child: FocusScope(autofocus: true, child: child),
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.escape): widget.onDismiss,
+        },
+        child: FocusScope(node: _scope, child: widget.child),
       ),
     ),
   );
