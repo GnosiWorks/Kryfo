@@ -12,10 +12,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart' show AppState, AppStateScreen;
 import 'package:kryfo/pin_shield.dart';
+import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/router.dart';
+import 'package:kryfo/screens/lock_file_screen.dart';
 import 'package:kryfo/screens/lock_setup_screen.dart';
+import 'package:kryfo/screens/open_locked_screen.dart';
 import 'package:kryfo/screens/pin_flow_screen.dart';
+import 'package:kryfo/screens/qr_screen.dart';
+import 'package:kryfo/screens/restore_screen.dart';
 import 'package:kryfo/screens/update_pins_screen.dart';
+import 'package:kryfo/tools/tools_bridge.dart' show PickedFile;
 
 import 'arrival_fakes.dart';
 import 'pin_flow_fakes.dart';
@@ -267,6 +273,40 @@ void main() {
     testWidgets('the security update', (t) async {
       final lock = await makeLock(appOnly);
       await holds(t, UpdatePinsScreen(lock: lock.state));
+    });
+
+    const file = PickedFile(
+      uri: 'content://test/locked.age',
+      name: 'locked.age',
+      size: 1234,
+      mime: 'application/octet-stream',
+    );
+
+    testWidgets('a locked file opened', (t) async {
+      await holds(t, const OpenLockedScreen(file: file));
+    });
+
+    testWidgets('a file locked', (t) async {
+      await holds(t, const LockFileScreen(file: file));
+    });
+
+    testWidgets('a backup restored', (t) async {
+      await holds(t, const RestoreScreen());
+    });
+
+    testWidgets('a wifi code, only while its password is there', (t) async {
+      phone(t);
+      final held = <bool>[];
+      pinShieldHold = held.add;
+      await t.pumpWidget(app(const QrScreen(), still: true));
+      await t.pump();
+      expect(held, isEmpty);
+      await t.tap(find.text(l10n.qrWiFi));
+      await t.pumpAndSettle();
+      expect(held, [true]);
+      await t.tap(find.text(l10n.qrText).first);
+      await t.pumpAndSettle();
+      expect(held, [true, false]);
     });
 
     testWidgets('the app\'s hold reaches android', (t) async {

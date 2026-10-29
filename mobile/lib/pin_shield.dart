@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a screen where a pin is typed keeps the window out of screenshots while
-// it is open. the app hands in its hold at boot
+// a screen where a pin or a passphrase is typed keeps the window out of
+// screenshots while it is open. the app hands in its hold at boot
 import 'package:flutter/widgets.dart';
 
 void Function(bool on)? pinShieldHold;
@@ -22,4 +22,18 @@ mixin PinShield<T extends StatefulWidget> on State<T> {
     _held = null;
     super.dispose();
   }
+}
+
+/// the same hold for a part of a screen: while it is shown
+class PinShieldBox extends StatefulWidget {
+  final Widget child;
+  const PinShieldBox({super.key, required this.child});
+
+  @override
+  State<PinShieldBox> createState() => _PinShieldBoxState();
+}
+
+class _PinShieldBoxState extends State<PinShieldBox> with PinShield {
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
