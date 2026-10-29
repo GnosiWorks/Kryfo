@@ -275,6 +275,9 @@ object PinKey {
         for (strong in tries) {
             // generating over an alias replaces it: asked again right before
             if (hasKey() != false) return mapOf("e" to "busy")
+            // only the last attempt's read counts: one that fails after a
+            // software read claims nothing
+            soft = false
             try {
                 keys.make(ALIAS, strong, unlocked)
             } catch (e: Exception) {

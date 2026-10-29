@@ -32,6 +32,11 @@ class PinKeyTest {
         var calls = 0
         var refuseStrongBox = false
         var refuseAll = false
+        var refuseTee = false
+        // a strongbox key the keystore reads as kept in software
+        var softStrong = false
+        // a tee key that answers this instead of an hmac
+        var fixedTee: ByteArray? = null
         // ms a strongbox call takes on the fake clock
         var strongMs = 60L
         var strong = false
@@ -67,7 +72,7 @@ class PinKeyTest {
         override fun make(alias: String, strongBox: Boolean, unlocked: Boolean) {
             if (makeMs > 0) Thread.sleep(makeMs)
             synchronized(makes) { makes.add(strongBox to unlocked) }
-            if (refuseAll || (strongBox && refuseStrongBox)) throw ProviderException("refused")
+            if (refuseAll || (strongBox && refuseStrongBox) || (!strongBox && refuseTee)) throw ProviderException("refused")
             made[alias] = ByteArray(32) { (it * 7 + makes.size).toByte() }
             strong = strongBox
         }
@@ -79,6 +84,7 @@ class PinKeyTest {
             val k = made[alias] ?: throw PinKey.Gone()
             if (strong) clock += strongMs * 1_000_000
             fixed?.let { return it.copyOf() }
+            if (!strong) fixedTee?.let { return it.copyOf() }
             if (echo) return input.copyOf()
             return Mac.getInstance("HmacSHA256").apply { init(SecretKeySpec(k, "HmacSHA256")) }.doFinal(input)
         }
@@ -86,7 +92,7 @@ class PinKeyTest {
         override fun level(alias: String): Int? {
             if (!made.containsKey(alias)) return null
             if (levelThrows) throw ProviderException("no key info")
-            return levelIs ?: if (strong) PinKey.STRONGBOX else PinKey.TEE
+            return levelIs ?: if (strong && softStrong) PinKey.SOFTWARE else if (strong) PinKey.STRONGBOX else PinKey.TEE
         }
 
         override fun delete(alias: String) {
@@ -204,6 +210,22 @@ class PinKeyTest {
         keys.levelIs = null
         assertEquals(PinKey.TEE, PinKey.make()["l"])
         assertEquals(null, PinKey.info()["n"])
+    }
+
+    @Test
+    fun aSoftwareStrongBoxThenAFailedTeeIsNoSoftwareNote() {
+        keys.softStrong = true
+        keys.refuseTee = true
+        assertEquals("refused", PinKey.make()["e"])
+        assertFalse(notes.s)
+        // a tee key that fails its test
+        keys.refuseTee = false
+        keys.fixedTee = ByteArray(32) { 1 }
+        assertEquals("refused", PinKey.make()["e"])
+        assertFalse(notes.s)
+        // the next unlock asks again and gets its key
+        keys.fixedTee = null
+        assertEquals(PinKey.TEE, PinKey.make()["l"])
     }
 
     @Test
