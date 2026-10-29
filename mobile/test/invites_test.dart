@@ -17,7 +17,7 @@ import 'package:kryfo/invites.dart';
 import 'package:kryfo/main.dart'
     show InviteArrival, inviteOpenerHolds, inviteOpenerSeed;
 import 'package:kryfo/message_envelope.dart'
-    show kEnvelopePrefix, unwrapMessage;
+    show grindPow, kEnvelopePrefix, powBits, unwrapMessage;
 import 'package:kryfo/signal_ffi/kryfo_signal.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/signal_stores.dart';
@@ -571,6 +571,46 @@ void main() {
       inviteOpenerSeed(unwrapMessage(env(faceless)), b.identity.public, a.id),
       seed,
     );
+  });
+
+  test('a hello carries its proof of work over its whole hash: the wire '
+      'line reads back, a nonce for another hello or a changed byte fails, '
+      'and a line in any other shape is nothing', () async {
+    // a sender with a store of its own, to this owner
+    final bdb = MemDb();
+    final b = await testStore(db: bdb);
+    final (hello, _) = await makeHello(
+      bdb,
+      b,
+      answers: List.filled(16, 0),
+      owner: ss.identity.public,
+      fcPkOf: _fcPkOf,
+      face: _face,
+      nowMs: _now,
+    );
+    final nonce = grindPow(helloPowSeed(hello), powBits);
+    final line = helloWireOf(hello, nonce);
+    expect(line, startsWith(kHelloWireStart));
+    final back = helloOfWire(line)!;
+    expect(_eqList(back.hello, hello), isTrue);
+    expect(back.nonce, nonce);
+    expect(helloPowHolds(hello, nonce), isTrue);
+    // one byte changed: the work was for another hello
+    final other = Uint8List.fromList(hello)..[hello.length - 1] ^= 1;
+    expect(helloPowHolds(other, nonce), isFalse);
+    // no nonce, two, letters, or base64 that is not the one form
+    final b64 = base64Encode(hello);
+    for (final bad in [
+      b64,
+      '$b64.',
+      '$b64.1.2',
+      '$b64.x1',
+      '$b64.-1',
+      '${b64}A.1',
+      'AAAA.1',
+    ]) {
+      expect(helloOfWire(bad), isNull, reason: bad);
+    }
   });
 }
 

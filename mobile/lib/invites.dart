@@ -13,6 +13,7 @@ import 'package:crypto/crypto.dart' show sha256;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'identities.dart';
+import 'message_envelope.dart' show powBits, verifyPow;
 import 'signal_ffi/kryfo_signal.dart';
 import 'signal_session.dart';
 
@@ -618,6 +619,36 @@ const kHelloSeenDays = 16;
 
 /// a hello's name in the seen store
 String helloHash(List<int> hello) => sha256.convert(hello).toString();
+
+/// what base64 of "KHL1" starts with: a hello on the wire
+const kHelloWireStart = 'S0hMMQ';
+
+/// what a hello's proof of work is ground over: its hash, so the work is
+/// the same for every hello and binds all of it (3.3, as a first contact)
+String helloPowSeed(List<int> hello) => 'khl1:${helloHash(hello)}';
+
+/// whether [nonce] is the proof of work for [hello]
+bool helloPowHolds(List<int> hello, int nonce) =>
+    verifyPow(helloPowSeed(hello), nonce, powBits);
+
+/// [hello] as it goes on the wire: base64, a dot and its nonce
+String helloWireOf(List<int> hello, int nonce) =>
+    '${base64Encode(hello)}.$nonce';
+
+/// the hello and nonce of a wire line, null for anything else: one dot,
+/// base64 that gives back the same text, a nonce of digits
+({Uint8List hello, int nonce})? helloOfWire(String line) {
+  final parts = line.split('.');
+  if (parts.length != 2 || !parts[0].startsWith(kHelloWireStart)) return null;
+  if (!RegExp(r'^[0-9]{1,15}$').hasMatch(parts[1])) return null;
+  try {
+    final b = base64Decode(parts[0]);
+    if (base64Encode(b) != parts[0]) return null;
+    return (hello: b, nonce: int.parse(parts[1]));
+  } catch (_) {
+    return null;
+  }
+}
 
 /// a hello of [ss]'s identity answering invite [answers] (all zero for a
 /// v3 link) of [owner]: a fresh one-time invite of mine with its bundle,

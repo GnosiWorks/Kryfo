@@ -705,13 +705,8 @@ extension AppStateReceive on AppState {
     // a hello on my v3 first-contact address: zero answers only (11 step 7)
     if (m.peer == 'firstcontact' && m.cipher.startsWith('khl:')) {
       final bar = m.cipher.indexOf('|');
-      Uint8List? b;
-      try {
-        b = bar == 68 ? base64Decode(m.cipher.substring(69)) : null;
-      } catch (_) {
-        b = null;
-      }
-      if (b == null) {
+      final hw = bar == 68 ? helloOfWire(m.cipher.substring(69)) : null;
+      if (hw == null) {
         await live.markSeenLong(h);
         arrived();
         return;
@@ -720,7 +715,8 @@ extension AppStateReceive on AppState {
         kMainIdent,
         null,
         m.cipher.substring(4, 68),
-        b,
+        hw.hello,
+        hw.nonce,
         h,
         arrived,
       );

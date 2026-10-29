@@ -193,17 +193,23 @@ extension AppStateInvites on AppState {
     final row = ident == signalSession.ident
         ? await inviteOf(db, ident, inviteId)
         : null;
+    // a hello: "KHL1" and its proof of work
+    if (row != null && cipher.startsWith(kHelloWireStart)) {
+      final hw = helloOfWire(cipher);
+      if (hw == null) {
+        await live.markSeenLong(h);
+        arrived();
+        return;
+      }
+      await _receiveHello(ident, row, sealPk, hw.hello, hw.nonce, h, arrived);
+      return;
+    }
     final Uint8List w;
     try {
       w = base64Decode(cipher);
     } catch (_) {
       await live.markSeenLong(h);
       arrived();
-      return;
-    }
-    // a hello: "KHL1"
-    if (row != null && w.length > 4 && w[0] == 0x4b) {
-      await _receiveHello(ident, row, sealPk, w, h, arrived);
       return;
     }
     if (row == null ||
@@ -598,7 +604,8 @@ extension AppStateInvites on AppState {
   }
 
   /// a hello at invite [at] of mine (null: my v3 first-contact address),
-  /// sealed with [sealPk]: taken on the five rules of 3.3 and kept as a
+  /// sealed with [sealPk], with [nonce] its proof of work: taken on the
+  /// five rules of 3.3 and kept as a
   /// request until the person accepts it; dropped quietly otherwise, and a
   /// copy is taken once
   Future<void> _receiveHello(
@@ -606,9 +613,17 @@ extension AppStateInvites on AppState {
     InviteRow? at,
     String sealPk,
     Uint8List bytes,
+    int nonce,
     String h,
     void Function() arrived,
   ) async {
+    // the proof of work first: one hash, before the shim reads anything
+    if (!helloPowHolds(bytes, nonce)) {
+      firstFails.note('pow');
+      await live.markSeenLong(h);
+      arrived();
+      return;
+    }
     final db = await live.open();
     final hash = helloHash(bytes);
     final r = checkHello(
@@ -774,5 +789,9 @@ var _helloPassAt = 0;
 /// how often the outbox's drain tries the hellos owed again
 const kHelloRetry = Duration(minutes: 5);
 
-/// [hello] as it goes on the wire: base64
-Future<String> helloWire(Uint8List hello) async => base64Encode(hello);
+int _helloGrind(String seed) => grindPow(seed, powBits);
+
+/// [hello] as it goes on the wire, with its proof of work (3.3): ground
+/// off the ui's isolate
+Future<String> helloWire(Uint8List hello) async =>
+    helloWireOf(hello, await compute(_helloGrind, helloPowSeed(hello)));
