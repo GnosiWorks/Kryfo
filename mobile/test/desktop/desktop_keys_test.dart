@@ -727,6 +727,28 @@ void main() {
       expect(await why(k), isNull);
     });
 
+    test('crypt32 and ncrypt open by their full system32 path', () {
+      expect(
+        systemDll(r'C:\Windows\system32', 'ncrypt.dll'),
+        r'C:\Windows\system32\ncrypt.dll',
+      );
+      expect(
+        systemDll('C:\\Windows\\system32\\', 'crypt32.dll'),
+        r'C:\Windows\system32\crypt32.dll',
+      );
+      expect(() => systemDll('', 'ncrypt.dll'), throwsStateError);
+      // no dll by its bare name but kernel32, a known dll
+      final src = File('lib/desktop/seal_windows.dart').readAsStringSync();
+      final bare = RegExp(r"DynamicLibrary\.open\(\s*'(\w+\.dll)'")
+          .allMatches(src)
+          .map((m) => m[1])
+          .toSet();
+      expect(bare, {'kernel32.dll'});
+      expect(src, contains("_dll('crypt32.dll')"));
+      expect(src, contains("_dll('ncrypt.dll')"));
+      expect(src, contains('systemDll(_systemDir(), name)'));
+    });
+
     test('a vault kept by windows opens through it', () async {
       final v = vault();
       await v.createSealed(seal);

@@ -7,6 +7,7 @@ import 'dart:ffi';
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import 'system_seal.dart';
 
@@ -262,11 +263,42 @@ const _padOaep = 0x4;
 const _allowDecrypt = 0x1;
 const _provider = 'Microsoft Platform Crypto Provider';
 
-/// dpapi and the tpm through crypt32.dll and ncrypt.dll, both from system32
+typedef _SysDirC = Uint32 Function(Pointer<Utf16>, Uint32);
+typedef _SysDir = int Function(Pointer<Utf16>, int);
+
+/// [name] in [systemDir]: a dll opened by its full path, never found in the
+/// app's folder first
+@visibleForTesting
+String systemDll(String systemDir, String name) {
+  if (systemDir.isEmpty) throw StateError('no system folder');
+  final sep = systemDir.endsWith(r'\') ? '' : r'\';
+  return '$systemDir$sep$name';
+}
+
+// windows' system32, as GetSystemDirectoryW gives it. kernel32 is a known
+// dll, always the system's own whatever the search order
+String _systemDir() {
+  final fn = DynamicLibrary.open(
+    'kernel32.dll',
+  ).lookupFunction<_SysDirC, _SysDir>('GetSystemDirectoryW');
+  const cap = 520;
+  final buf = calloc<Uint16>(cap);
+  try {
+    final n = fn(buf.cast(), cap);
+    if (n == 0 || n >= cap) return '';
+    return buf.cast<Utf16>().toDartString(length: n);
+  } finally {
+    calloc.free(buf);
+  }
+}
+
+/// dpapi and the tpm through crypt32.dll and ncrypt.dll, both opened by
+/// their full path in system32
 class FfiWinCrypt implements WinCrypt {
   const FfiWinCrypt();
 
-  static DynamicLibrary _dll(String name) => DynamicLibrary.open(name);
+  static DynamicLibrary _dll(String name) =>
+      DynamicLibrary.open(name == 'kernel32.dll' ? name : systemDll(_systemDir(), name));
 
   Uint8List? _dpapi(bool seal, Uint8List data, Uint8List entropy) {
     final crypt = _dll('crypt32.dll');
