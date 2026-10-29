@@ -169,12 +169,11 @@ void main() {
     }
   }
 
-  Future<void> until(
-    WidgetTester t,
-    bool Function() done, [
-    int n = 400,
-  ]) async {
-    for (var i = 0; i < n && !done(); i++) {
+  // the file is made by real io, off the test's clock: wait for it as long
+  // as a loaded machine needs, and no longer
+  Future<void> until(WidgetTester t, bool Function() done) async {
+    final w = Stopwatch()..start();
+    while (!done() && w.elapsed < const Duration(seconds: 20)) {
       await beats(t, 1);
     }
   }
@@ -460,7 +459,7 @@ void main() {
     await page(t);
     await typePass(t, 'four random words here');
     await press(t, find.text(l10n.notesExport));
-    await until(t, () => dialogs.isNotEmpty, 1000);
+    await until(t, () => dialogs.isNotEmpty);
     expect(dialogs, hasLength(1));
     final waiting = left();
     expect(waiting, hasLength(1));
@@ -493,7 +492,7 @@ void main() {
     expect(find.text(l10n.notesExportWorking), findsOneWidget);
     renewRootNavigator();
     await t.pump();
-    await until(t, () => left().isEmpty, 1000);
+    await until(t, () => left().isEmpty);
     await beats(t);
     expect(screen, findsNothing);
     expect(left(), isEmpty);
@@ -529,7 +528,7 @@ void main() {
     renewRootNavigator();
     await t.pump();
     await beats(t, 100);
-    await until(t, () => left().isEmpty, 1000);
+    await until(t, () => left().isEmpty);
     expect(left(), isEmpty);
     expect(asked, isNot(contains('saveDocument')));
   });
@@ -553,11 +552,11 @@ void main() {
     lockState.lock();
     expect(lockState.locked, isTrue);
     var dropped = false;
-    final watch = Stopwatch()..start();
+    // that the making stops at once, a piece and no more, is counted in
+    // notes_export_test: the clock here only waits
     unawaited(dropNotesExports(tmp).then((_) => dropped = true));
-    await until(t, () => dropped, 250);
+    await until(t, () => dropped);
     expect(dropped, isTrue);
-    expect(watch.elapsed, lessThan(const Duration(seconds: 3)));
     expect(left(), isEmpty);
     lockState.openForTest(enabled: true);
     lockGuard.lifted();
@@ -781,7 +780,7 @@ void main() {
     await page(t);
     await typePass(t, 'four random words here');
     await press(t, find.text(l10n.notesExport));
-    await until(t, () => dialogs.isNotEmpty, 1000);
+    await until(t, () => dialogs.isNotEmpty);
     final head = String.fromCharCodes(saved.single.take(200));
     dialogs.single.complete({'state': 'saved'});
     await until(t, () => screen.evaluate().isEmpty);
