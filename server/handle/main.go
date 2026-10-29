@@ -674,49 +674,51 @@ func routes(st *store, lim *limiter) http.Handler {
 		})
 	})
 
-	// the invite page. the query is checked, shown escaped, never kept
+	// the preview card's image: the same for every invite and language
+	mux.HandleFunc("/handle/card.png", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/png")
+		w.Header().Set("Cache-Control", "public, max-age=604800")
+		_, _ = w.Write(cardPNG)
+	})
+
+	// the invite page. the invite is after the '#', so it never reaches
+	// here: the page's one script reads it in the browser. a query, which
+	// older test builds sent, is not read
 	mux.HandleFunc("/i", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet && r.Method != http.MethodHead {
 			w.Header().Set("Allow", "GET, HEAD")
 			http.Error(w, "", http.StatusMethodNotAllowed)
 			return
 		}
-		body, ok := invitePage(r.URL.RawQuery)
-		writeHTMLHeaders(w)
-		w.Header().Set("Cache-Control", "no-store")
-		if !ok {
-			w.WriteHeader(http.StatusNotFound)
-		}
-		fmt.Fprint(w, body)
+		writeHTMLHeaders(w, inviteCSP)
+		fmt.Fprint(w, invitePage(pageLang(r)))
 	})
 
 	// the public page. one link for a bio, opening straight into a private
 	// chat. static, no analytics, nothing recorded about whoever reads it.
+	// a handle nobody holds gets the page that says where to get Kryfo
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		lang := pageLang(r)
+		writeHTMLHeaders(w, csp)
 		if !strings.HasPrefix(r.URL.Path, "/@") {
-			writeHTMLHeaders(w)
 			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprint(w, page("not found", "", "", ""))
+			fmt.Fprint(w, getPage(lang))
 			return
 		}
 		if !readLim.allow() {
-			writeHTMLHeaders(w)
 			w.WriteHeader(http.StatusTooManyRequests)
-			fmt.Fprint(w, busyPage)
+			fmt.Fprint(w, busyPage(lang))
 			return
 		}
 		h := strings.ToLower(strings.TrimPrefix(r.URL.Path, "/@"))
 		h = strings.Trim(h, "/")
 		e, ok := st.get(h)
 		if !ok {
-			writeHTMLHeaders(w)
 			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprint(w, page("not found", "", "", ""))
+			fmt.Fprint(w, getPage(lang))
 			return
 		}
-		writeHTMLHeaders(w)
-		w.Header().Set("Cache-Control", "no-store")
-		fmt.Fprint(w, page(h, e.Bio, e.Invite, fingerprint(e.Pubkey)))
+		fmt.Fprint(w, handlePage(lang, h, e.Bio, e.Invite, fingerprint(e.Pubkey)))
 	})
 
 	mux.HandleFunc("/handle/listing", listingHandler(st))
@@ -738,13 +740,27 @@ func fingerprint(pub string) string {
 	return p[0:4] + " " + p[4:8]
 }
 
-var busyPage = `<!doctype html><meta charset=utf-8>` + head + `
+func busyPage(lang string) string {
+	t := pageTexts[lang]
+	return pageStart(lang, "Kryfo") + `
 <div class=wrap><div class=card>
-<div class=name>Busy</div>
-<p class=bio>Too many people are looking right now. Try again in a minute.</p>
+<div class=name>` + esc(t.Busy) + `</div>
+<p class=bio>` + esc(t.BusyLine) + `</p>
 </div></div>`
+}
 
-const foot = `<div class=foot>This page learns nothing about you · No analytics, no cookies, no logs</div>`
+var esc = html.EscapeString
+
+// the doctype, the language, the title and the style block
+func pageStart(lang, title string) string {
+	return `<!doctype html><html ` + langAttrs(lang) + `><meta charset=utf-8>
+<title>` + esc(title) + `</title>
+` + head
+}
+
+func foot(t pageText) string {
+	return `<div class=foot>` + esc(t.Foot) + `</div>`
+}
 
 // play stays off until the listing is public: HANDLE_PLAY_URL empty means
 // no play link, and only an https link to play is taken
@@ -758,101 +774,114 @@ func playURL() string {
 
 // the same lines for every visitor: on an iphone or a desktop a kryfo://
 // link does nothing, so the page always says where to get the app
-func getKryfo() string {
+func getKryfo(lang string) string {
+	t := pageTexts[lang]
 	s := `<div class=get>
-  <p>New to Kryfo? It is on Android for now.</p>
-  <a class=dl href="https://kryfo.app/download">Download from kryfo.app</a>
-  <a class=dl href="https://f-droid.org/packages/app.kryfo/">Get it on F-Droid</a>`
+  <p>` + esc(t.NewTo) + `</p>
+  <a class=dl href="` + downloadPage(lang) + `">` + esc(t.Download) + `</a>
+  <a class=dl href="https://f-droid.org/packages/app.kryfo/">` + esc(t.FDroid) + `</a>`
 	if p := playURL(); p != "" {
 		s += `
-  <a class=dl href="` + html.EscapeString(p) + `">Get it on Google Play</a>`
+  <a class=dl href="` + esc(p) + `">` + esc(t.Play) + `</a>`
 	}
 	return s + `
 </div>`
 }
 
-func page(handle, bio, invite, fp string) string {
-	if invite == "" {
-		return `<!doctype html><meta charset=utf-8>` + head + `
+// the page for a handle nobody holds and for any other path: what Kryfo is
+// and where to get it
+func getPage(lang string) string {
+	t := pageTexts[lang]
+	return pageStart(lang, "Kryfo") + `
 <div class=wrap><div class=card>
-<div class=name>Not here</div>
-<p class=bio>No one has claimed this handle.</p>
-` + getKryfo() + `
-` + foot + `
-</div></div>`
-	}
-	return `<!doctype html><meta charset=utf-8>` + head + `
-<div class=wrap><div class=card>
-  <div class=seal>` + html.EscapeString(strings.ToUpper(handle[:1])) + `</div>
-  <div class=name>@` + html.EscapeString(handle) + `</div>
-  <div class=verified>Verified handle</div>
-  <p class=bio>` + html.EscapeString(bio) + `</p>
-  <a class=btn href="` + html.EscapeString(invite) + `">Open in Kryfo</a>
-  ` + getKryfo() + `
-  <div class=fp>Key fingerprint · ` + html.EscapeString(fp) + `</div>
-  ` + foot + `
+<div class=seal>K</div>
+<div class=name>Kryfo</div>
+<p class=bio>` + esc(t.Line) + `</p>
+` + getKryfo(lang) + `
+` + foot(t) + `
 </div></div>`
 }
 
-const kryfoIs = `Kryfo is an encrypted messenger that works without a phone number, an email address or an account.`
-
-// the invite page: https://relay.kryfo.app/i?<query of kryfo://share?..>,
-// so an invite can be tapped in any messenger. the query is checked with the
-// same rule as a claimed invite and is never written anywhere.
-func invitePage(raw string) (string, bool) {
-	inv := "kryfo://share?" + raw
-	id, ok := inviteID(inv)
-	if !ok {
-		return `<!doctype html><meta charset=utf-8>` + head + `
+func handlePage(lang, handle, bio, invite, fp string) string {
+	t := pageTexts[lang]
+	return pageStart(lang, "Kryfo") + `
 <div class=wrap><div class=card>
-<div class=name>Not a whole invite</div>
-<p class=bio>This link is missing a part. Ask for a new invite, or get Kryfo below.</p>
-` + getKryfo() + `
-` + foot + `
-</div></div>`, false
-	}
-	return `<!doctype html><meta charset=utf-8>` + head + `
+  <div class=seal>` + esc(strings.ToUpper(handle[:1])) + `</div>
+  <div class=name>@` + esc(handle) + `</div>
+  <div class=verified>` + esc(t.Verified) + `</div>
+  <p class=bio>` + esc(bio) + `</p>
+  <a class=btn href="` + esc(invite) + `">` + esc(t.Open) + `</a>
+  ` + getKryfo(lang) + `
+  <div class=fp>` + esc(t.Fingerprint) + ` · ` + esc(fp) + `</div>
+  ` + foot(t) + `
+</div></div>`
+}
+
+// where the page is served, for the preview card's absolute links
+const pageOrigin = "https://relay.kryfo.app"
+
+// the preview card's image, the wax seal on the page's background
+//
+//go:embed card.png
+var cardPNG []byte
+
+// the invite page: https://relay.kryfo.app/i#<query of kryfo://share?..>.
+// the card a messenger shows for the link is the same for everyone, in the
+// visitor's language: nothing of the invite is in it, and the invite after
+// the '#' is never sent to the server. the script below is the only one
+// the csp lets run
+func invitePage(lang string) string {
+	t := pageTexts[lang]
+	card := `<meta name=description content="` + esc(t.Line) + `">
+<meta property=og:type content=website>
+<meta property=og:site_name content=Kryfo>
+<meta property=og:title content="` + esc(t.Title) + `">
+<meta property=og:description content="` + esc(t.Line) + `">
+<meta property=og:image content="` + pageOrigin + `/handle/card.png">
+<meta property=og:image:type content=image/png>
+<meta property=og:image:width content=1200>
+<meta property=og:image:height content=630>
+<meta property=og:image:alt content=Kryfo>
+<meta name=twitter:card content=summary_large_image>
+<meta name=twitter:title content="` + esc(t.Title) + `">
+<meta name=twitter:description content="` + esc(t.Line) + `">
+<meta name=twitter:image content="` + pageOrigin + `/handle/card.png">`
+	return pageStart(lang, t.Title) + card + `
 <div class=wrap><div class=card>
   <div class=seal>K</div>
-  <div class=name>` + html.EscapeString(id) + `</div>
-  <div class=verified>Invites you to a private chat</div>
-  <p class=bio>` + kryfoIs + `</p>
-  <a class=btn href="` + html.EscapeString(inv) + `">Open in Kryfo</a>
-  ` + getKryfo() + `
-  ` + foot + `
-</div></div>`, true
+  <div class=name>` + esc(t.Title) + `</div>
+  <div class=words id=w hidden></div>
+  <p class=bio>` + esc(t.Line) + `</p>
+  <a class=btn id=go hidden>` + esc(t.Open) + `</a>
+  <p class=bio id=bad hidden>` + esc(t.Missing) + `</p>
+  <noscript><p class=bio>` + esc(t.NoScript) + `</p></noscript>
+  ` + getKryfo(lang) + `
+  ` + foot(t) + `
+</div></div>
+<script>` + inviteJS + `</script>`
 }
 
-// the id of an invite the app built: three words from the list, nothing else
-// gets onto the page
-func inviteID(inv string) (string, bool) {
-	if !inviteOK(inv) {
-		return "", false
-	}
-	u, err := url.Parse(inv)
-	if err != nil {
-		return "", false
-	}
-	id := u.Query().Get("id")
-	w := strings.Split(id, "-")
-	if len(w) != 3 {
-		return "", false
-	}
-	for _, x := range w {
-		if !wordSet[x] {
-			return "", false
-		}
-	}
-	return id, true
-}
+// reads the invite after the '#', checks it has the shape the app builds
+// and only then makes the button: always kryfo://share? and the invite,
+// never another scheme. v1-v3 show the three words. no network: the csp
+// has no connect-src, and nothing here asks for one
+//
+//	id=..&onion=..&xpub=..                v1
+//	id=..&onion=..&v=2&bundle=..          v2
+//	id=..&onion=..&v=3&bundle=..&fc=..    v3 (about 3,700 with the kyber key)
+//	v=4&i=<base64url of a KIN4>           v4
+const inviteJS = `(function(){var d=document,h=location.hash.slice(1),id="",ok=false;` +
+	`try{if(h.length<=` + maxInviteLink + `&&/^[A-Za-z0-9._~%+\/=&-]+$/.test(h)){` +
+	`var p=new URLSearchParams(h),v=p.get("v")||"1";id=p.get("id")||"";` +
+	`ok=v=="4"?!id&&/^[A-Za-z0-9_-]+$/.test(p.get("i")||""):` +
+	`/^[123]$/.test(v)&&/^[a-z]+-[a-z]+-[a-z]+$/.test(id)&&!!p.get("onion")&&!!p.get(v=="1"?"xpub":"bundle")}}catch(e){ok=false}` +
+	`if(ok){var a=d.getElementById("go");a.href="kryfo://share?"+h;a.hidden=false;` +
+	`if(id){var w=d.getElementById("w");w.textContent=id;w.hidden=false}}` +
+	`else d.getElementById("bad").hidden=false})()`
 
-var wordSet = func() map[string]bool {
-	m := make(map[string]bool, len(wordList))
-	for _, w := range wordList {
-		m[w] = true
-	}
-	return m
-}()
+// the longest invite the page takes after the '#': a v3 with the kyber key
+// is about 3,700, a v4 with six devices about 3,300
+const maxInviteLink = "8192"
 
 // no script-src at all, so nothing on this page can execute, not even a
 // javascript: url in an href. the fonts and the one <style> block below are
@@ -862,29 +891,40 @@ var csp = "default-src 'none'; style-src '" + styleHash(head) + "'; " +
 	"font-src 'self'; base-uri 'none'; form-action 'none'; " +
 	"frame-ancestors 'none'"
 
+// the invite page's: the same, plus its one script by hash
+var inviteCSP = csp + "; script-src '" + hashOf(inviteJS) + "'; " +
+	"require-trusted-types-for 'script'"
+
 func styleHash(h string) string {
 	i := strings.Index(h, "<style>") + len("<style>")
 	j := strings.Index(h, "</style>")
-	sum := sha256.Sum256([]byte(h[i:j]))
+	return hashOf(h[i:j])
+}
+
+func hashOf(s string) string {
+	sum := sha256.Sum256([]byte(s))
 	return "sha256-" + base64.StdEncoding.EncodeToString(sum[:])
 }
 
-func writeHTMLHeaders(w http.ResponseWriter) {
+// every page: nothing to keep, in a cache or a referrer
+func writeHTMLHeaders(w http.ResponseWriter, pol string) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Content-Security-Policy", csp)
+	w.Header().Set("Content-Security-Policy", pol)
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Referrer-Policy", "no-referrer")
 	w.Header().Set("X-Frame-Options", "DENY")
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Vary", "Accept-Language")
 }
 
 const head = `<meta name=viewport content="width=device-width,initial-scale=1">
 <meta name=referrer content=no-referrer>
-<title>Kryfo</title>
 <style>
 @font-face{font-family:Fraunces;font-weight:100 900;font-display:swap;src:url(/handle/font/Fraunces.ttf) format('truetype')}
 @font-face{font-family:'Instrument Sans';font-weight:400 700;font-display:swap;src:url(/handle/font/InstrumentSans.ttf) format('truetype')}
 @font-face{font-family:'JetBrains Mono';font-weight:100 800;font-display:swap;src:url(/handle/font/JetBrainsMono.ttf) format('truetype')}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{margin:0;min-height:100vh;background:#0D0B09;color:#F5F1EA;
      font-family:'Instrument Sans',system-ui,sans-serif;
      display:flex;align-items:center;justify-content:center;padding:24px}
@@ -900,6 +940,7 @@ body{margin:0;min-height:100vh;background:#0D0B09;color:#F5F1EA;
 .bio{color:#C8C0B5;font-size:14px;line-height:1.6;margin:20px 0 24px}
 .btn{display:block;padding:13px;border-radius:999px;background:#F59E0B;color:#0D0B09;
      text-decoration:none;font-weight:600;font-size:14.5px}
+.words{font-family:'JetBrains Mono',monospace;font-size:13px;color:#F5F1EA;margin-top:8px}
 .fp{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#A79E92;
     margin-top:22px;line-height:1.7}
 .get{margin:22px 0 0}
