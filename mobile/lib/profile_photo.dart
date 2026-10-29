@@ -209,9 +209,11 @@ Future<bool> photoDecodesAs(Uint8List b, int side) async {
   }
 }
 
-/// whether [b] is a jpeg with exactly one frame, baseline or progressive,
+/// whether [b] is a baseline jpeg with exactly one frame and one scan,
 /// [side] x [side], and nothing after its end. every marker is walked, so
-/// a size hidden in a comment or a second frame is seen
+/// a size hidden in a comment or a second frame is seen. our encoders
+/// write only baseline, and a progressive one can hold scans skia will not
+/// draw
 bool photoSquareJpeg(Uint8List b, {int side = kPhotoSide}) {
   final n = b.length;
   if (n < 4 || b[0] != 0xFF || b[1] != 0xD8) return false;
@@ -229,7 +231,7 @@ bool photoSquareJpeg(Uint8List b, {int side = kPhotoSide}) {
     // only what our encoder writes or the strip leaves. a decoder skips ff 00
     // between segments and reads on at the next marker, so anything else
     // could hide a header from this walk
-    final sof = m == 0xC0 || m == 0xC2;
+    final sof = m == 0xC0;
     if (!sof &&
         m != 0xC4 &&
         m != 0xDB &&
@@ -252,7 +254,7 @@ bool photoSquareJpeg(Uint8List b, {int side = kPhotoSide}) {
       if ((nf != 1 && nf != 3) || len != 8 + 3 * nf) return false;
       frame = true;
     }
-    if (m == 0xDA && !frame) return false;
+    if (m == 0xDA && (!frame || scan)) return false;
     i += len;
     if (m != 0xDA) continue;
     scan = true;

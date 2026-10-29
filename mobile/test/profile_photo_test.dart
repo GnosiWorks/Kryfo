@@ -131,6 +131,15 @@ int _sofAt(Uint8List b) {
   throw StateError('no frame');
 }
 
+// where the photo's one scan header starts
+int _scanAt(Uint8List b) {
+  var i = 2;
+  while (b[i + 1] != 0xDA) {
+    i += 2 + (b[i + 2] << 8 | b[i + 3]);
+  }
+  return i;
+}
+
 // [b] with its frame saying [h] x [w]
 Uint8List _sized(Uint8List b, int h, int w) {
   final out = Uint8List.fromList(b);
@@ -204,6 +213,11 @@ Map<String, Uint8List> _refused() {
       12000,
       progressive: true,
     ),
+    'a progressive 512': Uint8List.fromList(_clean)..[at + 1] = 0xC2,
+    'a second scan': Uint8List.fromList([
+      ..._clean.sublist(0, _clean.length - 2),
+      ..._clean.sublist(_scanAt(_clean)),
+    ]),
   };
 }
 
@@ -368,6 +382,17 @@ void main() {
         ), encode: (_, _) async => null),
         isNull,
       );
+    });
+
+    test('our own drawn photo is baseline and taken in as it is', () async {
+      final mine = await squarePhoto(Uint8List(4), (
+        left: 0,
+        top: 0,
+        side: 1,
+      ), encode: (_, _) async => _square);
+      expect(mine![_sofAt(mine) + 1], 0xC0);
+      expect(photoSquareJpeg(mine), isTrue);
+      expect(await photoTakeInOffUi(mine), mine);
     });
   });
 
