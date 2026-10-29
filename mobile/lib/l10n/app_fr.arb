@@ -2642,7 +2642,7 @@
   "seenIpWhy": "Sur Privé tout passe par Tor et nos serveurs voient un nœud de sortie, jamais vous. Sur Rapide la connexion va directement vers nos deux serveurs : ils voient votre adresse IP pendant que vous êtes connecté et n'en gardent aucune trace. Pendant que le premier est en panne, Rapide utilise aussi des relais publics, seulement par Tor.",
   "transferDoneOf": "{done} sur {total}",
   "transferDoneLeft": "{done} · {left}",
-  "transferLeftSoon": "moins d’une minute",
+  "transferLeftSoon": "moins d’une minute restante",
   "transferLeftMinutes": "environ {n} min restantes",
   "transferLeftHours": "environ {n} h restantes",
   "transferSending": "Envoi · {detail}",

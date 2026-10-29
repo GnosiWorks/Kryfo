@@ -2642,7 +2642,7 @@
   "seenIpWhy": "Bei Privat geht alles über Tor, und unsere Server sehen einen Exit-Knoten, nie dich. Bei Schnell geht die Verbindung direkt zu unseren zwei Servern: Sie sehen deine IP-Adresse, solange du verbunden bist, und halten nichts davon fest. Solange der erste ausfällt, nutzt Schnell zusätzlich öffentliche Relais, nur über Tor.",
   "transferDoneOf": "{done} von {total}",
   "transferDoneLeft": "{done} · {left}",
-  "transferLeftSoon": "weniger als eine Minute",
+  "transferLeftSoon": "noch weniger als eine Minute",
   "transferLeftMinutes": "noch etwa {n} Min.",
   "transferLeftHours": "noch etwa {n} Std.",
   "transferSending": "Sende · {detail}",

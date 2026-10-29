@@ -2642,7 +2642,7 @@
   "seenIpWhy": "Su Privato tutto esce tramite Tor e i nostri server vedono un nodo di uscita, mai te. Su Veloce la connessione va dritta ai nostri due server: vedono il tuo indirizzo IP mentre sei connesso e non ne tengono traccia. Mentre il primo è fermo, Veloce usa anche relay pubblici, solo tramite Tor.",
   "transferDoneOf": "{done} di {total}",
   "transferDoneLeft": "{done} · {left}",
-  "transferLeftSoon": "meno di un minuto",
+  "transferLeftSoon": "meno di un minuto rimasto",
   "transferLeftMinutes": "circa {n} min rimasti",
   "transferLeftHours": "circa {n} h rimaste",
   "transferSending": "Invio · {detail}",

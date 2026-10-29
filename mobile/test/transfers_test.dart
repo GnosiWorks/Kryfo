@@ -2,6 +2,9 @@
 // a transfer's pace and time left, the automatic download's rules and
 // defaults, what a waiting file's card says, and what the transfer
 // notification says, with previews shown and hidden
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
@@ -236,6 +239,28 @@ void main() {
       fileWaits.value = const {};
       expect(transfersNow().total, 0);
     });
+  });
+
+  test('under a minute says what is left in every language', () {
+    // its "left" word is the one the minutes line has: a shared stem, or
+    // the first sign in a language written without spaces
+    for (final f in Directory('lib/l10n').listSync()) {
+      final name = f.path.split(Platform.pathSeparator).last;
+      if (!name.startsWith('app_') || !name.endsWith('.arb')) continue;
+      final j = jsonDecode(File(f.path).readAsStringSync()) as Map;
+      final soon = j['transferLeftSoon'] as String;
+      final mins = j['transferLeftMinutes'] as String;
+      final stems = {
+        for (final w in mins.split(RegExp(r'\s+')))
+          if (w.length >= 4 && !w.contains('{')) w.substring(0, 4),
+      };
+      final shares = soon.contains(' ')
+          ? soon
+                .split(RegExp(r'\s+'))
+                .any((w) => w.length >= 4 && stems.contains(w.substring(0, 4)))
+          : soon[0] == mins[0];
+      expect(shares, isTrue, reason: '$name: "$soon" beside "$mins"');
+    }
   });
 
   test('the strip says how far and how long', () {

@@ -10142,7 +10142,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get transferLeftSoon => 'moins d’une minute';
+  String get transferLeftSoon => 'moins d’une minute restante';
 
   @override
   String transferLeftMinutes(String n) {

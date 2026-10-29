@@ -10208,7 +10208,7 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get transferLeftSoon => 'менше хвилини';
+  String get transferLeftSoon => 'лишилося менше хвилини';
 
   @override
   String transferLeftMinutes(String n) {

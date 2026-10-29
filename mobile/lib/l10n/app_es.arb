@@ -2642,7 +2642,7 @@
   "seenIpWhy": "En Privado todo sale por Tor y nuestros servidores ven un nodo de salida, nunca a ti. En Rápido la conexión va directa a nuestros dos servidores: ven tu dirección IP mientras estás conectado y no guardan ningún registro. Mientras el primero está caído, Rápido también usa repetidores públicos, solo a través de Tor.",
   "transferDoneOf": "{done} de {total}",
   "transferDoneLeft": "{done} · {left}",
-  "transferLeftSoon": "menos de un minuto",
+  "transferLeftSoon": "queda menos de un minuto",
   "transferLeftMinutes": "quedan unos {n} min",
   "transferLeftHours": "quedan unas {n} h",
   "transferSending": "Enviando · {detail}",
