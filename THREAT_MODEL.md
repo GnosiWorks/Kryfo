@@ -136,14 +136,29 @@ FORWARD_SECRECY.md says what a key taken from a phone can open later.
 
 ## on a computer
 
-the linux app is a test build and runs its own identity for now. on a
-computer there is no keystore, so a passphrase asked at every start locks
-what Kryfo keeps there: the database, photos, voice notes, files, contacts,
-keys and settings are sealed on the disk under it. what follows is not.
+the linux app is a test build and runs its own identity for now. what
+Kryfo keeps on a computer is always sealed on the disk: the database,
+photos, voice notes, files, contacts, keys and settings, under one random
+key. that key is kept one of two ways.
 
-- someone who copies Kryfo's folder can try passphrases on their own
-  computer as fast as it allows. a long passphrase holds, a short one does
-  not.
+- by default the computer account keeps it: the system keyring on linux,
+  windows' own data protection (with the tpm where there is one). Kryfo
+  then opens without a question, and so it does for anyone or anything
+  running as you: a person at your unlocked account, malware, another app
+  that may read your keyring. a copy of the folder alone does not open,
+  and neither does it on another account or computer.
+- with a passphrase, asked at every start, the key is wrapped under it
+  instead and the computer keeps nothing. someone who copies Kryfo's folder
+  can try passphrases on their own computer as fast as it allows. a long
+  passphrase holds, a short one does not. the folder opens anywhere with it.
+- without a passphrase, a reset keyring, a password reset by an admin or a
+  cleared tpm loses the key on that computer. a Kryfo backup is the way
+  back.
+- an older copy of the folder still opens with what opened it then: an old
+  passphrase, or an old keyring item.
+
+what follows is not covered by either.
+
 - tor's own state stays on the disk as tor writes it: which relays it uses
   as guards and its cached directory. it holds no key and no message.
 - the folder shows its shape: how many files there are, how big each is and
