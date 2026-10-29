@@ -269,6 +269,8 @@ extension AppStateSession on AppState {
     _dropOpened();
     _session = Session(want);
     _quiet = decoy ? _decoyId : null;
+    // the transfer note reads quiet again: none over a decoy
+    TransferNote.instance.refresh();
     // what opened under the session before is opened again under this one.
     // a quiet session touches nothing of the everyday side's
     if (!sessionQuiet) unawaited(retryFirsts(all: true));
@@ -398,6 +400,7 @@ extension AppStateSession on AppState {
     _dropOpened();
     _session = s;
     _quiet = decoy ? _decoyId : null;
+    TransferNote.instance.refresh();
     if (!sessionQuiet) unawaited(retryFirsts(all: true));
     contacts = home.$1;
     pendingCount = home.$2;
