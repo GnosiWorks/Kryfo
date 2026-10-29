@@ -115,6 +115,9 @@ Root: HKCU; Subkey: "Software\Classes\kryfo\shell\open\command"; ValueType: stri
 ; error reporting leaves both alone. kryfo.exe sets the same at each start
 Root: HKCU; Subkey: "Software\Microsoft\Windows\Windows Error Reporting\ExcludedApplications"; ValueType: dword; ValueName: "kryfo.exe"; ValueData: 1; Flags: uninsdeletevalue
 Root: HKCU; Subkey: "Software\Microsoft\Windows\Windows Error Reporting\ExcludedApplications"; ValueType: dword; ValueName: "tor.exe"; ValueData: 1; Flags: uninsdeletevalue
+; the toasts' registration, written by the app at its first start
+Root: HKCU; Subkey: "Software\Classes\AppUserModelId\app.kryfo"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\PushNotifications\Backup\app.kryfo"; Flags: uninsdeletekey
 
 [Run]
 Filename: "{app}\kryfo.exe"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent

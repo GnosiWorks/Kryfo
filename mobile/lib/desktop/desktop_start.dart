@@ -36,6 +36,7 @@ import 'desktop_paths.dart';
 import 'desktop_platform.dart';
 import 'desktop_posix.dart';
 import 'desktop_prefs.dart';
+import 'desktop_toasts.dart';
 import 'desktop_vault.dart';
 import 'sealed_format.dart' show EngineChunkCrypto;
 import 'sealed_io.dart';
@@ -232,6 +233,11 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     FlutterLocalNotificationsPlatform.instance = QuietLinuxNotifications();
     Gst.registryDir = (await paths.getApplicationCachePath())!;
     JustAudioPlatform.instance = DesktopAudio();
+  }
+  if (Platform.isWindows) {
+    FlutterLocalNotificationsPlatform.instance = QuietWindowsNotifications(
+      raise: showWindow,
+    );
   }
   CameraPlatform.instance = NoCameras();
   assertVaultOnly();

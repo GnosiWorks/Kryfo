@@ -3,6 +3,7 @@
 #include <flutter/flutter_view_controller.h>
 #include <windows.h>
 #include <shellapi.h>
+#include <shobjidl.h>
 
 #include "flutter_window.h"
 #include "kryfo_win.h"
@@ -36,6 +37,8 @@ bool SendLinkToFirst() {
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
   kryfo::Harden();
+  // the shortcut's id (kryfo.iss): the taskbar and the toasts go under it
+  ::SetCurrentProcessExplicitAppUserModelID(L"app.kryfo");
 
   // a second start brings the first window forward, with its kryfo: link
   // if it has one, and ends. a first copy still starting has no window
