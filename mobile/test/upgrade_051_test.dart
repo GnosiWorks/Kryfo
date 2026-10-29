@@ -60,13 +60,16 @@ final _steps = <int, (Future<void> Function(Database), String)>{
   90: (dropFetchTable, 'CREATE TABLE IF NOT EXISTS file_seen'),
   91: (upgradeTo91, 'CREATE TABLE IF NOT EXISTS kyber_prekeys'),
   92: (upgradeTo92, 'CREATE TABLE IF NOT EXISTS identities'),
-  93: (photoTables, 'CREATE TABLE IF NOT EXISTS my_photo'),
   94: (inviteTables, 'CREATE TABLE IF NOT EXISTS invites'),
+  // photos' runs on every upgrade, after every other step
+  93: (photoTables, 'CREATE TABLE IF NOT EXISTS my_photo'),
 };
 
 // whether the step to [step] runs on a file at [from]. test builds took 81
-// for each step alone, so a file at 81 to 84 takes them all again
-bool _runs(int step, int from) => step > from || (from > 80 && from < 85);
+// for each step alone, so a file at 81 to 84 takes them all again. 93,
+// photos', runs on any upgrade
+bool _runs(int step, int from) =>
+    step == 93 || step > from || (from > 80 && from < 85);
 
 // what the steps add, by table
 const _added = {

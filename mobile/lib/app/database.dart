@@ -914,15 +914,15 @@ class HaloDb
           // identities, and the signal stores per identity (identities.dart)
           await upgradeTo92(db);
         }
-        // profile photos (profile_photo.dart), first made at 93. every
-        // step is safe twice and runs on any upgrade, so a file that took
-        // a later number without them (identity v4 at 94) still gets them
-        await photoTables(db);
         if (oldV < 94) {
           // v4 invites, the hellos waiting on them, the hellos seen
           // (invites.dart)
           await inviteTables(db);
         }
+        // profile photos (profile_photo.dart), first made at 93. every
+        // step is safe twice and runs on any upgrade, last, so a file that
+        // took a later number without them still gets them
+        await photoTables(db);
       },
     );
     // a backup reading the folder or a restore replacing it keeps them:
