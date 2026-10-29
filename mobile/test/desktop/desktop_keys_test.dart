@@ -694,12 +694,35 @@ void main() {
       expect(api.keys, isEmpty);
     });
 
+    test('a cleared tpm is missing, a waiting one is not', () {
+      bool gone(int s) => WinCryptError(s).keyGone;
+      // TPM_20_E_INTEGRITY, TPM_20_E_HANDLE, TPM_E_INVALID_KEYHANDLE: a key
+      // file the new root no longer loads
+      expect(gone(0x8028009F), isTrue);
+      expect(gone(0x8028008B), isTrue);
+      expect(gone(0x8028000C), isTrue);
+      // TPM_20_E_AUTH_FAIL on session 1: format one, not a warning
+      expect(gone(0x8028098E), isTrue);
+      expect(gone(0x80090016), isTrue);
+      expect(gone(0x80090003), isTrue);
+      // lockout, retry, self test, the tpm service not running
+      expect(gone(0x80280921), isFalse);
+      expect(gone(0x80280922), isFalse);
+      expect(gone(0x80280800), isFalse);
+      expect(gone(0x8028400B), isFalse);
+      // anything else: not known to be gone
+      expect(gone(0x80070005), isFalse);
+    });
+
     test('a tpm key gone is missing; a busy tpm may answer later', () async {
       final k = await seal.keep(id, secret);
       api.unwrapStatus = 0x80090016;
       expect(await why(k), SealFail.missing);
       api.unwrapStatus = 0x80280921;
       expect(await why(k), SealFail.unreachable);
+      // after a Clear TPM the key file stays but no longer loads
+      api.unwrapStatus = 0x8028009F;
+      expect(await why(k), SealFail.missing);
       api.unwrapStatus = null;
       expect(await why(k), isNull);
     });

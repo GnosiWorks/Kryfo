@@ -15,16 +15,32 @@ class WinCryptError implements Exception {
   const WinCryptError(this.status);
   final int status;
 
-  /// the tpm key is not there
-  bool get keyGone =>
-      status == _nteBadKeyset || status == _nteNotFound || status == _nteNoKey;
+  /// the tpm key is not there or no longer loads: gone for good. a cleared
+  /// tpm keeps the key file but refuses to load it under its new root, with
+  /// a TPM_E or TPM_20_E status. only the tpm's own wait, retry and lockout
+  /// warnings and the tpm service (tbs) not answering may pass. unverified
+  /// until a Clear TPM test on a pc
+  bool get keyGone {
+    final s = status & 0xffffffff;
+    if (_gone.contains(s)) return true;
+    if (s >> 16 != 0x8028) return false;
+    // tpm 1.2 non-fatal (0x800) and tpm 2.0 warnings (0x900, format zero,
+    // so bit 7 clear): busy, retry, lockout, self test, memory, nv rate
+    final low = s & 0xfff;
+    if (low >= 0x800 && low <= 0x87f || low >= 0x900 && low <= 0x97f) {
+      return false;
+    }
+    // TBS_E: the tpm base service not running or not ready
+    if (s >= 0x80284000 && s <= 0x80284fff) return false;
+    return true;
+  }
   @override
   String toString() => 'WinCryptError(0x${status.toRadixString(16)})';
 }
 
-const _nteBadKeyset = 0x80090016;
-const _nteNotFound = 0x80090011;
-const _nteNoKey = 0x8009000D;
+// NTE_BAD_KEYSET, NTE_NOT_FOUND, NTE_NO_KEY, NTE_BAD_KEY, NTE_BAD_DATA:
+// the key is not there, or its blob does not match what is
+const _gone = {0x80090016, 0x80090011, 0x8009000D, 0x80090003, 0x80090005};
 
 /// crypt32 and ncrypt's few calls, behind a seam for tests. every call
 /// blocks; the tpm's key making can take seconds
