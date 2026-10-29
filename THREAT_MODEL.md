@@ -149,10 +149,11 @@ key. that key is kept one of two ways.
   your computer account's password. a copy of Kryfo's folder alone does not
   open. what does: an account or keyring with no password (a login keyring
   with an empty password, as automatic login often sets it up, lies
-  unencrypted on the disk; so does a windows account with no password on a
-  computer without a tpm), and a full copy of your home folder together
-  with your account's password, on another computer too (on windows only
-  without a tpm). disk encryption keeps a stolen disk closed.
+  unencrypted on the disk, and a windows account with no password on a
+  computer without a tpm opens from a copy of the disk), and a full copy
+  of your home folder together with your account's password, on another
+  computer too (on windows only without a tpm). disk encryption keeps a
+  stolen disk closed.
 - with a passphrase, asked at every start, the key is wrapped under it
   instead and the computer keeps nothing. someone who copies Kryfo's folder
   can try passphrases on their own computer as fast as it allows. a long
