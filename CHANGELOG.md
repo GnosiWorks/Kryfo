@@ -7,7 +7,7 @@
 - a universal apk with both arm builds in one file, on github and the site. it installs on every arm phone, so nobody has to know which one they need.
 
 ### Changed
-- with a PIN set, screenshots work again in chats that don't block them. the lock screen, PIN screens and blocking chats still block them, and Kryfo stays hidden in recent apps.
+- on Android 13 and newer, screenshots work again with a PIN set, in chats that don't block them, and Kryfo stays hidden in recent apps. the lock screen, PIN and passphrase screens, hidden chats and blocking chats still block them. on older Android a PIN keeps screenshots blocked, as before.
 - your PINs now only work on this phone: they are tied to the phone's security chip, so they can't be tried on another device. your encrypted backup is the way back in if the chip ever loses its key. thanks to Ami (SleepingAmi) for suggesting it.
 
 ## [0.5.3] - 2026-10-22
