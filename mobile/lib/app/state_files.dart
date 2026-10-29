@@ -497,8 +497,9 @@ extension AppStateFiles on AppState {
             await _letFetchGo(db, f, frame, chat);
             continue;
           }
-          // paused part way: its message is filed now and waits for a tap
-          if (after.state == kFetchPaused) {
+          // paused part way: its message is filed now and waits for a tap.
+          // one whose last byte was in before the pause is simply in
+          if (r != 'ok' && after.state == kFetchPaused) {
             incomingMediaDone(chat);
             await _fileNow(d, f, env);
             continue;
@@ -605,7 +606,8 @@ extension AppStateFiles on AppState {
       await _letFetchGo(db, f, frame, chat);
       return;
     }
-    if (after.state == kFetchPaused) {
+    // a pause that came after the last byte pauses nothing
+    if (r != 'ok' && after.state == kFetchPaused) {
       final w = fileWaitOf(f.uid);
       if (w != null) setFileWait(f.uid, w.copyWith(state: WaitState.paused));
       return;

@@ -445,6 +445,33 @@ void main() {
       expect(eng.cancels, ['f:${'ab' * 16}']);
     });
 
+    test('a pause after the last byte keeps the file', () async {
+      await rule(GetKind.file, AutoGet.never);
+      await from(_x, await drop('l1'));
+      final path = live.msg('l1')!['file_path'] as String;
+      await app.downloadNow('l1');
+      eng.during = () => app.pauseDownload('l1');
+      await app.fetchDropsInForTest(live);
+      expect(File(path).readAsBytesSync(), [7, 7, 7]);
+      expect(fileWaitOf('l1'), isNull);
+      expect(await fetchOf(live.mem, 'l1'), isNull);
+    });
+
+    test(
+      'a pause after the last byte of an automatic one files it whole',
+      () async {
+        unmeteredNow = () async => true;
+        await from(_x, await drop('l2'));
+        expect(live.msg('l2'), isNull);
+        eng.during = () => app.pauseDownload('l2');
+        await app.fetchDropsInForTest(live);
+        final row = live.msg('l2')!;
+        expect(File(row['file_path'] as String).readAsBytesSync(), [7, 7, 7]);
+        expect(fileWaitOf('l2'), isNull);
+        expect(eng.fetched, hasLength(1));
+      },
+    );
+
     test('a waiting file whose message was deleted is let go', () async {
       await rule(GetKind.file, AutoGet.never);
       await from(_x, await drop('w8'));
