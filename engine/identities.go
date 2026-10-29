@@ -127,7 +127,8 @@ func identDrop(ident int) {
 }
 
 // the address seed of a pair made by a v4 first contact: from now on its
-// addresses mix it in. a pair keeps its seed for life
+// addresses mix it in. a new first contact with the same peer (a re-add)
+// makes the pair again with its own seed; each call names the seed it is on
 //
 //export HaloPairSeed
 func HaloPairSeed(cIdent C.int, cPeer, cSeedHex *C.char) *C.char {
@@ -150,11 +151,9 @@ func HaloPairSeed(cIdent C.int, cPeer, cSeedHex *C.char) *C.char {
 func putPairSeed(ident int, peer [32]byte, s [32]byte) error {
 	identsMu.Lock()
 	defer identsMu.Unlock()
-	k := pairKey{ident, hex.EncodeToString(peer[:])}
-	if had, ok := pairSeeds[k]; ok && had != s {
-		return errors.New("the pair has its seed already")
-	}
-	pairSeeds[k] = s
+	// the map only refuses a call without a seed for a seeded pair: the
+	// seed itself always comes with the call
+	pairSeeds[pairKey{ident, hex.EncodeToString(peer[:])}] = s
 	return nil
 }
 
