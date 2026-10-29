@@ -23,22 +23,33 @@ extension AppStatePhotos on AppState {
   Future<Uint8List?> myPhotoNow() async =>
       (await session.primary.myPhoto())?.photo;
 
-  /// the book read again for the session on screen: its contacts, the
-  /// open vault's, and its own photo under its id. the dev chat keeps its
-  /// mark
+  /// the book read again for the session on screen
   Future<void> reloadPhotos() async {
     final s = session;
-    _photoPace.shown = s;
-    final book = <String, Uint8List>{};
-    for (final d in [s.primary, ?s.vault]) {
-      book.addAll(await d.contactPhotos());
-    }
-    final me = (await s.primary.myPhoto())?.photo;
-    if (!identical(s, _session)) return;
-    book.removeWhere((id, _) => isDevId(id));
     final id = sessionId;
-    if (me != null && id.isNotEmpty) book[id] = me;
+    _photoPace.shown = s;
+    final book = await _photoBookOf(s, id);
+    if (book == null || !identical(s, _session)) return;
     photoBook.put(book);
+  }
+
+  // what [s] shows: its contacts', the open vault's, and its own photo
+  // under [me]. the dev chat keeps its mark. null when its rows will not
+  // read
+  Future<Map<String, Uint8List>?> _photoBookOf(Session s, String me) async {
+    final book = <String, Uint8List>{};
+    try {
+      for (final d in [s.primary, ?s.vault]) {
+        book.addAll(await d.contactPhotos());
+      }
+      book.removeWhere((id, _) => isDevId(id));
+      final mine = (await s.primary.myPhoto())?.photo;
+      if (mine != null && me.isNotEmpty) book[me] = mine;
+    } catch (e) {
+      dlog('photo: book not read (${e.runtimeType})');
+      return null;
+    }
+    return book;
   }
 
   // the list was read for another session than the book was

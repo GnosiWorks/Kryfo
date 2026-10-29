@@ -5,6 +5,7 @@
 // over the existing session. a take-back makes their app show your face
 // again. everything lives in the container's encrypted database, never in
 // a file. the decoy sends nothing and takes nothing in
+import 'dart:collection' show UnmodifiableMapView;
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
@@ -307,6 +308,7 @@ class PhotoBook extends ChangeNotifier {
   Map<String, Uint8List> _photos = const {};
 
   Uint8List? of(String id) => _photos[id];
+  Map<String, Uint8List> get all => UnmodifiableMapView(_photos);
   bool has(String id) => _photos.containsKey(id);
   int get length => _photos.length;
 
