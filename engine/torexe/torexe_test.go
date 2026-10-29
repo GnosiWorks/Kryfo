@@ -2,8 +2,10 @@
 package torexe
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -22,7 +24,7 @@ func TestArgsOwner(t *testing.T) {
 	in := []string{"--DataDirectory", "d", "--SocksPort", "auto"}
 	got := Args(4242, in)
 	want := []string{"--DataDirectory", "d", "--SocksPort", "auto",
-		"--PidFile", PidPath("d"), "--__OwningControllerProcess", "4242"}
+		"--PidFile", PidPath("d"), "--Log", "warn stdout", "--__OwningControllerProcess", "4242"}
 	if strings.Join(got, " ") != strings.Join(want, " ") {
 		t.Fatalf("got %v", got)
 	}
@@ -135,12 +137,87 @@ func TestEnvOwnOpenssl(t *testing.T) {
 
 func TestProcessSDDL(t *testing.T) {
 	got := ProcessSDDL("S-1-5-21-1-2-3-1001")
-	want := "D:P(A;;0x101001;;;OW)(A;;0x101001;;;S-1-5-21-1-2-3-1001)"
+	want := "D:P(A;;0x101101;;;OW)(A;;0x101101;;;S-1-5-21-1-2-3-1001)"
 	if got != want {
 		t.Fatalf("got %q", got)
 	}
-	// synchronize, query limited information and terminate, nothing else
-	if 0x101001 != 0x00100000|0x1000|0x0001 {
+	// synchronize, query limited information, set quota (a job) and
+	// terminate. no vm read, no duplicate handle, no create thread
+	if 0x101101 != 0x00100000|0x1000|0x0100|0x0001 {
 		t.Fatal("rights")
+	}
+	if 0x101101&(0x0010|0x0040|0x0002|0x0020|0x0008) != 0 {
+		t.Fatal("memory or thread rights given")
+	}
+}
+
+func TestForDataDir(t *testing.T) {
+	ours := `C:\Users\a\AppData\Local\Kryfo\tmp\engine/tor`
+	for _, args := range [][]string{
+		{"--DataDirectory", ours, "--quiet"},
+		{"-f", "x", "--DataDirectory", `c:\users\A\appdata\local\kryfo\tmp\engine\tor\`},
+	} {
+		if !ForDataDir(args, ours) {
+			t.Fatalf("own tor not found: %v", args)
+		}
+	}
+	for _, args := range [][]string{
+		{"--DataDirectory", `C:\Users\a\Desktop\Tor Browser\Data\Tor`},
+		{"--DataDirectory", ours + "2"},
+		{"-f", ours},
+		{"--DataDirectory"},
+		nil,
+	} {
+		if ForDataDir(args, ours) {
+			t.Fatalf("another tor taken for ours: %v", args)
+		}
+	}
+	if ForDataDir([]string{"--DataDirectory", ours}, "") {
+		t.Fatal("matched an empty folder")
+	}
+}
+
+func TestTailKeepsTheLast(t *testing.T) {
+	var tl Tail
+	for i := 0; i < 50; i++ {
+		fmt.Fprintf(&tl, "line %d\r\n", i)
+	}
+	tl.Write([]byte("half"))
+	got := tl.Lines()
+	if len(got) != tailLines+1 || got[0] != "line 18" || got[tailLines-1] != "line 49" ||
+		got[tailLines] != "half" {
+		t.Fatalf("got %q", got)
+	}
+	var long Tail
+	long.Write(bytes.Repeat([]byte("x"), 5000))
+	if l := long.Lines(); len(l) != 2 || len(l[0]) != 5000 || l[1] != "" {
+		t.Fatalf("an endless line is not cut: %d", len(l))
+	}
+}
+
+func TestReason(t *testing.T) {
+	for want, line := range map[string]string{
+		"another tor holds the data folder":           "Oct 29 [warn] It looks like another Tor process is running with the same data directory.  Waiting 5 seconds to see if it goes away.",
+		"a port tor needs is in use":                  "[warn] Could not bind to 127.0.0.1:9150: Address already in use [WSAEADDRINUSE ]. Is Tor already running?",
+		"tor cannot open its lock in the data folder": `[warn] Couldn't open "C:\x\lock" for locking: Permission denied`,
+		"tor refused its options":                     "[err] Reading config failed--see warnings above.",
+	} {
+		if got := Reason([]string{"[notice] hello", line}, 1); got != want {
+			t.Fatalf("%q: got %q", line, got)
+		}
+	}
+	if got := Reason(nil, 3); got != "tor exited with code 3" {
+		t.Fatalf("got %q", got)
+	}
+	// tor's own text never reaches the reason
+	if got := Reason([]string{"Could not bind to 10.1.2.3:443"}, 1); strings.Contains(got, "10.1") {
+		t.Fatalf("an address got through: %q", got)
+	}
+}
+
+func TestStartReason(t *testing.T) {
+	if !strings.Contains(StartReason(5), "access denied") || StartReason(2) != "tor.exe is missing" ||
+		!strings.Contains(StartReason(1260), "policy") || !strings.Contains(StartReason(87), "87") {
+		t.Fatal("start reasons")
 	}
 }
