@@ -160,12 +160,20 @@ class _Cell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // here before its file: it follows its wait, and turns into its photo
+    // here before its file: it follows its wait, and fades into its photo
     // or video once the file is in
     if (tile?.waitUid case final uid?) {
       return ValueListenableBuilder<Map<String, FileWait>>(
         valueListenable: fileWaits,
-        builder: (context, waits, _) => _cell(context, waits[uid]),
+        builder: (context, waits, _) {
+          final w = waits[uid];
+          return FadeSwap(
+            child: KeyedSubtree(
+              key: ValueKey(w == null ? 'have' : 'waits'),
+              child: _cell(context, w),
+            ),
+          );
+        },
       );
     }
     return _cell(context, null);
