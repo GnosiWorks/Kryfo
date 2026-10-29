@@ -613,6 +613,59 @@ class HaloEngine {
   Future<String> unsubscribeFcKey(int ident, String inviteId) =>
       _identFfiOnIsolate('HaloNostrUnsubscribeFcKey', ident, [inviteId]);
 
+  // identity v4 invites (invite_v4.go): the face signature over a face
+  // text by the legacy ed key, an onion key's address, the seal key a v4
+  // first contact to my [ident] from [senderXHex] must carry
+  late final OneArgFnDart _faceSign = _lib
+      .lookupFunction<OneArgFn, OneArgFnDart>('HaloFaceSign');
+  String faceSign(String msgHex) {
+    final p = msgHex.toNativeUtf8();
+    try {
+      return engineTake(_faceSign(p));
+    } finally {
+      malloc.free(p);
+    }
+  }
+
+  late final OneArgFnDart _onionOfKey = _lib
+      .lookupFunction<OneArgFn, OneArgFnDart>('HaloOnionOfKey');
+  String onionOfKey(String keyHex) {
+    final p = keyHex.toNativeUtf8();
+    try {
+      return engineTake(_onionOfKey(p));
+    } finally {
+      malloc.free(p);
+    }
+  }
+
+  late final IdentOneFnDart _helloSealPk = _lib
+      .lookupFunction<IdentOneFn, IdentOneFnDart>('HaloHelloSealPk');
+  String helloSealPk(int ident, String senderXHex) {
+    final p = senderXHex.toNativeUtf8();
+    try {
+      return engineTake(_helloSealPk(ident, p));
+    } finally {
+      malloc.free(p);
+    }
+  }
+
+  // a hello or a v4 opener from my [ident] to [fcPk], the first-contact key
+  // of an invite answered by [ownerXHex], under the two's hello seal key
+  Future<String> sendHello(
+    int ident,
+    String ownerXHex,
+    String fcPk,
+    String msg,
+  ) =>
+      _identFfiOnIsolate('HaloNostrSendHello', ident, [
+        ownerXHex,
+        fcPk,
+        padRumor(msg),
+      ]).timeout(
+        const Duration(seconds: 60),
+        onTimeout: () => 'error: relay timeout',
+      );
+
   // an identity other than the main one, by its x25519 key, and let go
   late final IdentOneFnDart _identityPut = _lib
       .lookupFunction<IdentOneFn, IdentOneFnDart>('HaloIdentityPut');

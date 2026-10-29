@@ -261,13 +261,20 @@ func (c convPair) unwrapStamped(gw nostr2.Event) (string, nostr2.Timestamp, erro
 }
 
 // an opener or a hello for a stranger's first-contact address [fcPk]. the
-// main identity seals it as 0.5 does, so a 0.5 phone reads it; any other
-// with its hello seal key, which needs no seed
+// main identity's v3 pair seals it as 0.5 does, so a 0.5 phone reads it;
+// a seeded pair (a v4 first contact) and any other identity with the hello
+// seal key, which needs no seed
 func (c convPair) wrapFirstContact(fcPk, msg string) (nostr2.Event, error) {
-	if c.ident == mainIdent {
+	if c.ident == mainIdent && c.seed == nil {
 		return nip17WrapFirstContactAs(c.me, c.peer, fcPk, msg)
 	}
-	sk, pk, err := v4HelloSealKey(c.me, c.peer)
+	return helloWrap(c.me, c.peer, fcPk, msg)
+}
+
+// [msg] from [me] to the first-contact key [fcPk] of an invite answered by
+// [answering], sealed with the two's hello seal key
+func helloWrap(me xid, answering [32]byte, fcPk, msg string) (nostr2.Event, error) {
+	sk, pk, err := v4HelloSealKey(me, answering)
 	if err != nil {
 		return nostr2.Event{}, err
 	}
