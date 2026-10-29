@@ -322,6 +322,9 @@ Future<(String, bool)> handleHaloUriAdded(
     // nothing afresh
     final row = await session.getContact(id);
     var settled = false;
+    // their hello waits here: answering it starts the one session, and
+    // the link starts none beside it
+    final theirs = !sessionQuiet && await appState.helloWaitsFrom(v4.identity);
     if (!sessionQuiet) {
       final b = await _boundIdentity(
         id,
@@ -329,7 +332,8 @@ Future<(String, bool)> handleHaloUriAdded(
         row: session.getContact,
       );
       settled =
-          b != null && _eqBytes(b, v4.identity) && await hasSessionWith(id);
+          theirs ||
+          (b != null && _eqBytes(b, v4.identity) && await hasSessionWith(id));
       if (!settled) {
         try {
           await appState.startFromInvite(id, v4);
@@ -362,7 +366,7 @@ Future<(String, bool)> handleHaloUriAdded(
     }
     if (!settled) await appState.rememberPeerFc(id, parsed['fc']!);
     await appState.subscribePeer(id, fresh: true);
-    if (asked) await appState.afterAccept(id);
+    if (asked || theirs) await appState.afterAccept(id);
     await appState.refreshContacts();
     if (!already && await appState.inboxChatOf(id)) {
       askInboxMove(id);
@@ -512,11 +516,13 @@ Future<(String, bool)> _addV3ByHello(
   );
   final settled =
       bound != null && _eqBytes(bound, cardKey) && await hasSessionWith(id);
-  // they asked first on this key: their opener, let in now, starts the
-  // session, and a hello would only start a second one
+  // they asked first on this key: their opener or their hello, let in now,
+  // starts the session, and a hello of mine would only start a second one
+  final waits = await appState.helloWaitsFrom(cardKey);
   final theirs =
-      asked &&
-      ((row?['xpub'] as String?) ?? '').toLowerCase() == _keyHex(cardKey);
+      waits ||
+      (asked &&
+          ((row?['xpub'] as String?) ?? '').toLowerCase() == _keyHex(cardKey));
   // no onion until they answer, as a v4 add: their opener brings it
   await session.upsertContact(
     id,
@@ -547,7 +553,7 @@ Future<(String, bool)> _addV3ByHello(
   }
   // as the accept button would: they hear they are in, and what was held
   // for them opens
-  if (asked) await appState.afterAccept(id);
+  if (asked || waits) await appState.afterAccept(id);
   await appState.refreshContacts();
   if (!already && await appState.inboxChatOf(id)) {
     askInboxMove(id);

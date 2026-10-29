@@ -493,6 +493,54 @@ void main() {
     expect(await db.query('hellos'), isEmpty);
   });
 
+  test('one open row per peer, and a link add with their hello waiting '
+      'answers only the hello', () async {
+    final p = await _Phone.make('two-ways-one', 51);
+    final a = await p.mainInvite();
+    final b = await p.mainInvite();
+    for (final r in [a, b]) {
+      await app.startFromInvite(p.words, readInvite(p.ss.lib, r.link));
+    }
+    expect(
+      [for (final r in await hellosOf('open', p.keyHex)) r['invite_id']],
+      [b.id],
+    );
+    await db.delete('hellos');
+    // their hello came first, then I add their link
+    final main = await myMain();
+    final q = await _Phone.make('two-ways-two', 53);
+    final h = await q.helloTo(main.id);
+    await app.receiveRelay([(peer: 'f0:${main.id}', cipher: h.line)]);
+    await _settle();
+    expect(await hellosOf('in', q.keyHex), hasLength(1));
+    final link = inviteLink((await q.mainInvite()).link);
+    final (_, added) = await handleHaloUriAdded(link, app: app);
+    expect(added, isTrue);
+    await _settle();
+    expect(
+      [for (final r in await hellosOf('open', q.keyHex)) r['invite_id']],
+      [h.once.id],
+    );
+    expect(await hellosOf('in', q.keyHex), isEmpty);
+  });
+
+  test('a qr add with their hello waiting sends none of mine', () async {
+    final main = await myMain();
+    final q = await _Phone.make('qr-crossed-one', 55);
+    final h = await q.helloTo(main.id);
+    await app.receiveRelay([(peer: 'f0:${main.id}', cipher: h.line)]);
+    await _settle();
+    final qr = inviteLink((await q.mainInvite()).qr!);
+    await handleHaloUriAdded(qr, app: app);
+    await _settle();
+    expect(await hellosOf('want', q.keyHex), isEmpty);
+    expect(engine.hellos, isEmpty);
+    expect(
+      [for (final r in await hellosOf('open', q.keyHex)) r['invite_id']],
+      [h.once.id],
+    );
+  });
+
   Future<(String, InviteRow)> owed(_Phone p) async {
     live.person(p.words, xpub: p.x);
     await live.upsertContact(p.words, '', p.x);

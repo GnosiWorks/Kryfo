@@ -858,6 +858,24 @@ extension AppStateInvites on AppState {
     );
   }
 
+  /// whether a hello from identity key [key] waits here for an accept
+  Future<bool> helloWaitsFrom(List<int> key) async {
+    if (sessionQuiet || !signalSession.ready) return false;
+    try {
+      final db = await live.open();
+      return (await db.query(
+        'hellos',
+        columns: ['peer'],
+        where: 'ident = ? AND way = ? AND peer = ?',
+        whereArgs: [kMainIdent, kHelloIn, _hexOf(key)],
+        limit: 1,
+      )).isNotEmpty;
+    } catch (e) {
+      dlog('hello: rows not read (${e.runtimeType})');
+      return false;
+    }
+  }
+
   /// a contact added from a v4 invite [inv]: the session from its bundle
   /// and the pair seeded afresh, so the first message goes to the invite's
   /// first-contact address sealed with the hello seal key and carries the
@@ -881,6 +899,13 @@ extension AppStateInvites on AppState {
       {'back_paired': 0},
       where: 'halo_id = ?',
       whereArgs: [id],
+    );
+    // one first contact waits for their answer: a session made again
+    // replaces the one before, and its seed with it
+    await db.delete(
+      'hellos',
+      where: 'ident = ? AND way = ? AND peer = ?',
+      whereArgs: [kMainIdent, kHelloOpen, key],
     );
     await db.insert('hellos', {
       'ident': kMainIdent,
