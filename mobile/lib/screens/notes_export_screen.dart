@@ -555,7 +555,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
                           key: ValueKey(_error),
                           style: HaloType.sans(
                             size: 12,
-                            color: HaloColors.rose,
+                            color: HaloColors.roseText,
                           ),
                         ),
                       ),
@@ -640,7 +640,11 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
                     ? const SizedBox(width: double.infinity)
                     : Padding(
                         padding: const EdgeInsets.only(top: 12),
-                        child: HaloBar(value: _progress, height: 3),
+                        child: HaloBar(
+                          value: _progress,
+                          height: 3,
+                          label: l10n.a11yExportProgress,
+                        ),
                       ),
               ),
               const SizedBox(height: 8),

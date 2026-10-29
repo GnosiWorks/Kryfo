@@ -41,7 +41,7 @@ void main() {
     tellEngineDecoy(false);
     final ed = e.myEdPrivkey(), x = e.myXPrivkey();
     final edPub = e.myEdPubkey(), xPub = e.myXPubkey();
-    final sealed = e.encryptFor(xPub, 'hi');
+    final sealed = e.encryptFor(0, xPub, 'hi');
     final q = e.quietIdentity()!;
     final v = e.vaultKeys();
     final box = e.vaultSeal(v.pub, base64.encode([1, 2, 3]));
@@ -59,10 +59,10 @@ void main() {
       'myXPrivkey': e.myXPrivkey,
       'restoreIdentity': () => e.restoreIdentity(ed, x),
       'idFromEdPub': () => e.idFromEdPub(edPub),
-      'encryptFor': () => e.encryptFor(xPub, 'hi'),
-      'decryptFrom': () => e.decryptFrom(xPub, sealed),
+      'encryptFor': () => e.encryptFor(0, xPub, 'hi'),
+      'decryptFrom': () => e.decryptFrom(0, xPub, sealed),
       'decryptBackup': () => e.decryptBackup('x', 'y'),
-      'firstContactPk': () => e.firstContactPk(0),
+      'firstContactPk': () => e.firstContactPk(0, 0),
       'getStatus': e.getStatus,
       'nostrKick': e.nostrKick,
       'memStats': e.memStats,

@@ -4,7 +4,6 @@
 import 'saved_screen.dart';
 import 'transport_screen.dart';
 import '../widgets/press_scale.dart';
-import 'modes_screen.dart' show showFastGateSheet;
 import '../widgets/stagger_in.dart';
 import 'requests_screen.dart';
 import 'dart:async';
@@ -38,6 +37,7 @@ import '../main.dart' hide live;
 import '../tor_valve.dart' show ValveStage;
 import '../link_view.dart' show LinkKind;
 import '../widgets/motion.dart';
+import '../widgets/route_merged_card.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/halo_hero.dart';
 import '../widgets/shift_in_place.dart';
@@ -461,6 +461,7 @@ class _ChatsTab extends StatelessWidget {
           const _BridgeHint(),
           const _BridgeStuckHint(),
           const _RelayDownHint(),
+          const _RouteMergedCard(),
           const OfflineCard(),
           const _KeepsStoppingCard(),
           const _HelperGoneCard(),
@@ -1286,21 +1287,17 @@ class _RelayDownHint extends StatelessWidget {
     return ListenableBuilder(
       listenable: appState,
       builder: (context, _) => _HomeCard(
-        show: appState.suggestFastFallback,
+        show: appState.suggestPrivateFallback,
         id: 'relay-down',
         tint: HaloColors.amber,
-        title: l10n.homeOurRelayIsQuiet,
-        line: l10n.homeRelayModeUsesOnly,
+        title: l10n.homeOursDownTitle,
+        line: l10n.homeOursDownLine,
         actions: [
           CardAction(
-            label: l10n.homeUseFastMode,
+            label: l10n.homeUsePrivate,
             onTap: () async {
-              // same warning as the modes screen: fast mode shows your
-              // address to public relays
-              final ok = await showFastGateSheet(context);
-              if (!ok || !context.mounted) return;
               try {
-                await appState.setSendMode('fast');
+                await appState.setSendMode('private');
               } catch (_) {
                 if (context.mounted) {
                   showHaloToast(context, l10n.modesNotChanged);
@@ -1308,7 +1305,7 @@ class _RelayDownHint extends StatelessWidget {
                 return;
               }
               if (context.mounted) {
-                showHaloToast(context, l10n.homeSwitchedToFast);
+                showHaloToast(context, l10n.homeSwitchedToPrivate);
               }
             },
             fill: HaloColors.amber,
@@ -1320,6 +1317,46 @@ class _RelayDownHint extends StatelessWidget {
             ink: HaloColors.text2,
           ),
         ],
+      ),
+    );
+  }
+}
+
+// once, after the update, for whoever was on relay or fast: the two are one
+// route now, and private is a tap away
+class _RouteMergedCard extends StatelessWidget {
+  const _RouteMergedCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: appState,
+      builder: (context, _) => GrowSwap(
+        alignment: Alignment.topCenter,
+        child: !appState.routeMergeCardDue
+            ? const SizedBox(key: ValueKey('no-merged'), width: 1)
+            : RouteMergedCard(
+                key: const ValueKey('merged'),
+                onGotIt: () {
+                  HapticFeedback.selectionClick();
+                  appState.routeMergeCardSeen();
+                },
+                onPrivate: () async {
+                  HapticFeedback.mediumImpact();
+                  try {
+                    await appState.setSendMode('private');
+                  } catch (_) {
+                    if (context.mounted) {
+                      showHaloToast(context, l10n.modesNotChanged);
+                    }
+                    return;
+                  }
+                  await appState.routeMergeCardSeen();
+                  if (context.mounted) {
+                    showHaloToast(context, l10n.homeSwitchedToPrivate);
+                  }
+                },
+              ),
       ),
     );
   }
@@ -1338,7 +1375,7 @@ class _AutoStrip extends StatelessWidget {
         final line = shownBridgeLine();
         final a = line.action;
         final relay = CardAction(
-          label: l10n.homeUseOurRelay,
+          label: l10n.homeUseFast,
           onTap: () => switchToRelay(context),
           fill: line.relayFirst ? kCyan : null,
           ink: line.relayFirst ? HaloColors.amberInk : HaloColors.amberText,
@@ -1465,10 +1502,10 @@ class _BridgeHint extends StatelessWidget {
         tint: HaloColors.violet,
         wash: true,
         title: l10n.bridgesTorSeemsBlocked,
-        line: l10n.bridgesOurRelayUsuallyGets,
+        line: l10n.bridgesFastGetsThrough,
         actions: [
           CardAction(
-            label: l10n.homeUseOurRelay,
+            label: l10n.homeUseFast,
             onTap: () async {
               try {
                 await appState.setSendMode('balanced');
@@ -1479,7 +1516,7 @@ class _BridgeHint extends StatelessWidget {
                 return;
               }
               if (context.mounted) {
-                showHaloToast(context, l10n.homeSwitchedToRelay);
+                showHaloToast(context, l10n.homeSwitchedToFastRoute);
               }
             },
             fill: kCyan,
@@ -2074,7 +2111,10 @@ class _GroupsHead extends StatelessWidget {
                     width: double.infinity,
                     child: Text(
                       l10n.homeRoomExpired(expired),
-                      style: HaloType.mono(size: 10, color: HaloColors.violet),
+                      style: HaloType.mono(
+                        size: 10,
+                        color: HaloColors.violetText,
+                      ),
                     ),
                   ),
                 ),
@@ -2098,15 +2138,18 @@ class _SectionHead extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: HaloType.mono(
-                size: 10,
-                color: HaloColors.text2,
-                weight: FontWeight.w500,
-                letter: 0.14,
+            child: Semantics(
+              header: true,
+              child: Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: HaloType.mono(
+                  size: 10,
+                  color: HaloColors.text2,
+                  weight: FontWeight.w500,
+                  letter: 0.14,
+                ),
               ),
             ),
           ),
@@ -2307,7 +2350,7 @@ class _GroupRow extends StatelessWidget {
                         color: g.ended
                             ? HaloColors.text2
                             : g.isRoom
-                            ? HaloColors.violet
+                            ? HaloColors.violetText
                             : HaloColors.amberText,
                       ),
                     ),

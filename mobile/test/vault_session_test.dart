@@ -15,6 +15,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/container.dart';
+import 'package:kryfo/devices/history_open.dart';
 import 'package:kryfo/drafts.dart'
     show
         Draft,
@@ -41,7 +42,8 @@ import 'package:kryfo/main.dart'
         AppStateSession,
         AppStatePhotos,
         AppStateReceive,
-        AppStateRefresh;
+        AppStateRefresh,
+        AppStateIdentity;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/notifications.dart' show kCancelRetryAfter;
 import 'package:kryfo/polls.dart';
@@ -194,7 +196,7 @@ class _Io implements AppIo {
   Future<String> typingSend(String onion, String cipher) =>
       throw UnimplementedError('typingSend');
   @override
-  Future<String> pinFirst(List<String> xPubs) async => 'ok';
+  Future<String> pinFirst(List<(int, String)> peers) async => 'ok';
   @override
   Future<String?> decryptIf(
     String peer,
@@ -203,15 +205,15 @@ class _Io implements AppIo {
     bool flagKeyChange = false,
   }) => decrypt(peer, cipher, flagKeyChange: flagKeyChange);
   @override
-  Future<String> letHeld(String xPub, String how) async => 'ok';
+  Future<String> letHeld(int ident, String xPub, String how) async => 'ok';
   @override
-  Future<String> markHeld(List<String> xPubs) async => 'ok';
+  Future<String> markHeld(List<(int, String)> peers) async => 'ok';
   // sessions let go of, and addresses no longer listened on
   final dropped = <String>[];
   @override
   Future<void> dropSession(String peer) async => dropped.add(peer);
   @override
-  void unlisten(String xPub) => dropped.add(xPub);
+  void unlisten(int ident, String xPub) => dropped.add(xPub);
   final opens = <String, (String, String)>{};
   final sent = <(String, String)>[];
   final rang = <String>[];
@@ -241,13 +243,13 @@ class _Io implements AppIo {
   @override
   Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
   @override
-  void listen(String xPub, {bool fresh = false}) {}
+  void listen(int ident, String xPub, {bool fresh = false}) {}
   @override
   String edPub() => 'ed-me';
   @override
   String xPub() => 'x-me';
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     sent.add((xPub, cipher));
     return 'ok';
   }
@@ -259,7 +261,12 @@ class _Io implements AppIo {
   }
 
   @override
-  Future<String> firstContactSend(String xPub, String fc, String cipher) async {
+  Future<String> firstContactSend(
+    int ident,
+    String xPub,
+    String fc,
+    String cipher,
+  ) async {
     sent.add((xPub, cipher));
     return 'ok';
   }
@@ -1530,6 +1537,63 @@ void main() {
         expect(ms.last - ms.first, lessThan(120), reason: '$shown');
       },
     );
+
+    test(
+      'a hidden chats PIN answers as fast while a history copy reads the chats',
+      () async {
+        final w = await _World.make();
+        const reveal = Duration(milliseconds: 300);
+        w.app.revealGap = reveal + const Duration(milliseconds: 100);
+        final (:lock, :store, :engine) = _lock(reveal: reveal);
+        await lock.load();
+        lock.onOutcome = (r, {vaultKey}) async {
+          await w.app.sessionFor(r, vaultKey: vaultKey);
+        };
+        // a copy's text phase, held open for the whole test
+        final reading = Completer<void>();
+        final copy = w.app.withVaultStill(() => reading.future);
+        final shown = <String, int>{};
+        for (final pin in [appPin, vaultPin, '0000']) {
+          final t = Stopwatch()..start();
+          await lock.verifyPin(pin);
+          shown[pin] = t.elapsedMilliseconds;
+          lock.lock();
+          w.app.lockingUp();
+          await _settle();
+        }
+        expect(session.vault, isNull);
+        final ms = shown.values.toList()..sort();
+        expect(ms.last - ms.first, lessThan(120), reason: '$shown');
+        // a hide waits for the copy, and goes once it is read
+        var hid = false;
+        await w.open();
+        final hiding = w.app.hideChats(people: [_v]).then((n) => hid = true);
+        await _settle();
+        expect(hid, isFalse);
+        reading.complete();
+        await copy;
+        await hiding;
+        expect(hid, isTrue);
+      },
+    );
+
+    test('a history copy never starts inside vault work', () async {
+      final w = await _World.make();
+      await expectLater(
+        w.app.backupStill((_) => w.app.withVaultStill(() async {})),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('a hide ends every history copy that is open', () async {
+      final w = await _World.make();
+      await w.open();
+      var ended = false;
+      historyCopyOpened(() => ended = true);
+      expect(await w.app.hideChats(people: [_v]), 1);
+      expect(ended, isTrue);
+      expect(historyCopiesOpen, 0);
+    });
 
     test('a vault unlock builds its session under the lock', () async {
       final w = await _World.make();

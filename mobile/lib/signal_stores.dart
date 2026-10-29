@@ -40,25 +40,35 @@ const invitePreKeyId = 999999;
 /// the kyber prekey an invite carries, kept as the invite's ec prekey is
 const kInviteKyberId = 1;
 
+/// what a signed or kyber prekey is for: an invite's (its id beside it, ''
+/// for the main one), the identity's session prekeys (heals, device
+/// bundles), or one heal's one-time kyber key
+const kUseInvite = 'invite';
+const kUseSession = 'session';
+const kUseHeal = 'heal';
+
 class LsIdentityStore {
   LsIdentityStore(
     this._db,
     this.identity,
     this.registrationId, {
     String prefix = '',
+    this.ident = 0,
   }) : _t = '${prefix}peer_identities';
 
   final DatabaseExecutor _db;
   final LsIdentity identity;
   final int registrationId;
   final String _t;
+  // the identity whose rows these are
+  final int ident;
 
   /// the key held for [peer], 33 bytes
   Future<Uint8List?> getIdentity(String peer) async {
     final rows = await _db.query(
       _t,
-      where: 'address = ?',
-      whereArgs: [peer],
+      where: 'ident = ? AND address = ?',
+      whereArgs: [ident, peer],
       limit: 1,
     );
     if (rows.isEmpty) return null;
@@ -87,6 +97,7 @@ class LsIdentityStore {
       if (k == null || k.status == DevKeyStatus.retired) return false;
       if (!_eq(pinnedIdentity(k), key)) return false;
       await _db.insert(_t, {
+        'ident': ident,
         'address': peer,
         'identity_key': Uint8List.fromList(key),
       }, conflictAlgorithm: ConflictAlgorithm.replace);
@@ -104,6 +115,7 @@ class LsIdentityStore {
     }
     if (held != null && !changed) return false;
     await _db.insert(_t, {
+      'ident': ident,
       'address': peer,
       'identity_key': Uint8List.fromList(key),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
@@ -113,7 +125,11 @@ class LsIdentityStore {
   }
 
   Future<void> removePeerIdentity(String peer) async {
-    await _db.delete(_t, where: 'address = ?', whereArgs: [peer]);
+    await _db.delete(
+      _t,
+      where: 'ident = ? AND address = ?',
+      whereArgs: [ident, peer],
+    );
   }
 
   // a verified mark names the key it was given for
@@ -140,15 +156,17 @@ class LsIdentityStore {
 
 // one table of records by id
 class _ById {
-  _ById(this._db, this._t);
+  _ById(this._db, this._t, this.ident);
   final DatabaseExecutor _db;
   final String _t;
+  // the identity whose keys these are
+  final int ident;
 
   Future<Uint8List?> load(int id) async {
     final rows = await _db.query(
       _t,
-      where: 'id = ?',
-      whereArgs: [id],
+      where: 'ident = ? AND id = ?',
+      whereArgs: [ident, id],
       limit: 1,
     );
     if (rows.isEmpty) return null;
@@ -158,25 +176,33 @@ class _ById {
   Future<bool> contains(int id) async => (await _db.query(
     _t,
     columns: ['id'],
-    where: 'id = ?',
-    whereArgs: [id],
+    where: 'ident = ? AND id = ?',
+    whereArgs: [ident, id],
     limit: 1,
   )).isNotEmpty;
 
   Future<List<int>> ids() async => [
-    for (final r in await _db.query(_t, columns: ['id'])) r['id'] as int,
+    for (final r in await _db.query(
+      _t,
+      columns: ['id'],
+      where: 'ident = ?',
+      whereArgs: [ident],
+    ))
+      r['id'] as int,
   ];
 
-  Future<void> _put(Map<String, Object?> row) =>
-      _db.insert(_t, row, conflictAlgorithm: ConflictAlgorithm.replace);
+  Future<void> _put(Map<String, Object?> row) => _db.insert(_t, {
+    ...row,
+    'ident': ident,
+  }, conflictAlgorithm: ConflictAlgorithm.replace);
 
   Future<void> _drop(int id) =>
-      _db.delete(_t, where: 'id = ?', whereArgs: [id]);
+      _db.delete(_t, where: 'ident = ? AND id = ?', whereArgs: [ident, id]);
 }
 
 class LsPreKeyStore extends _ById {
-  LsPreKeyStore(DatabaseExecutor db, {String prefix = ''})
-    : super(db, '${prefix}prekeys');
+  LsPreKeyStore(DatabaseExecutor db, {String prefix = '', int ident = 0})
+    : super(db, '${prefix}prekeys', ident);
 
   Future<void> store(int id, Uint8List record) =>
       _put({'id': id, 'record': record});
@@ -192,29 +218,40 @@ class LsPreKeyStore extends _ById {
 }
 
 class LsSignedPreKeyStore extends _ById {
-  LsSignedPreKeyStore(DatabaseExecutor db, {String prefix = ''})
-    : super(db, '${prefix}signed_prekeys');
+  LsSignedPreKeyStore(DatabaseExecutor db, {String prefix = '', int ident = 0})
+    : super(db, '${prefix}signed_prekeys', ident);
 
-  Future<void> store(int id, Uint8List record) => _put({
+  /// [use]: what the key is for (kUseInvite with its invite's id, '' the
+  /// main invite; kUseSession)
+  Future<void> store(
+    int id,
+    Uint8List record, {
+    String use = kUseInvite,
+    String inviteId = '',
+    int? createdAt,
+  }) => _put({
     'id': id,
     'record': record,
-    'created_at': DateTime.now().millisecondsSinceEpoch,
+    'created_at': createdAt ?? DateTime.now().millisecondsSinceEpoch,
+    'use': use,
+    'invite_id': inviteId,
   });
 
   Future<void> remove(int id) => _drop(id);
 }
 
 class LsKyberPreKeyStore extends _ById {
-  LsKyberPreKeyStore(DatabaseExecutor db, {String prefix = ''})
+  LsKyberPreKeyStore(DatabaseExecutor db, {String prefix = '', int ident = 0})
     : _used = '${prefix}kyber_used',
       _reads = '${prefix}opener_reads',
-      super(db, '${prefix}kyber_prekeys');
+      super(db, '${prefix}kyber_prekeys', ident);
 
   final String _used;
   final String _reads;
 
   /// [opener] (an opener's fingerprint) was read on kyber key [id]
   Future<void> markRead(int id, List<int> opener) => _db.insert(_reads, {
+    'ident': ident,
     'kyber_id': id,
     'opener': Uint8List.fromList(opener),
   }, conflictAlgorithm: ConflictAlgorithm.ignore);
@@ -224,28 +261,36 @@ class LsKyberPreKeyStore extends _ById {
     for (final r in await _db.query(
       _reads,
       columns: ['opener'],
-      where: 'kyber_id = ?',
-      whereArgs: [id],
+      where: 'ident = ? AND kyber_id = ?',
+      whereArgs: [ident, id],
     )) {
       if (_eq(r['opener'] as List<int>, opener)) return true;
     }
     return false;
   }
 
-  Future<void> store(int id, Uint8List record, {bool lastResort = false}) =>
-      _put({
-        'id': id,
-        'record': record,
-        'last_resort': lastResort ? 1 : 0,
-        'created_at': DateTime.now().millisecondsSinceEpoch,
-      });
+  Future<void> store(
+    int id,
+    Uint8List record, {
+    bool lastResort = false,
+    String use = kUseInvite,
+    String inviteId = '',
+    int? createdAt,
+  }) => _put({
+    'id': id,
+    'record': record,
+    'last_resort': lastResort ? 1 : 0,
+    'created_at': createdAt ?? DateTime.now().millisecondsSinceEpoch,
+    'use': use,
+    'invite_id': inviteId,
+  });
 
   Future<bool> isLastResort(int id) async {
     final rows = await _db.query(
       _t,
       columns: ['last_resort'],
-      where: 'id = ?',
-      whereArgs: [id],
+      where: 'ident = ? AND id = ?',
+      whereArgs: [ident, id],
       limit: 1,
     );
     return rows.isNotEmpty && rows.first['last_resort'] == 1;
@@ -259,6 +304,7 @@ class LsKyberPreKeyStore extends _ById {
       return;
     }
     await _db.insert(_used, {
+      'ident': ident,
       'kyber_id': id,
       'signed_id': signedId,
       'base_key': Uint8List.fromList(baseKey),
@@ -269,8 +315,8 @@ class LsKyberPreKeyStore extends _ById {
     for (final r in await _db.query(
       _used,
       columns: ['base_key'],
-      where: 'kyber_id = ?',
-      whereArgs: [id],
+      where: 'ident = ? AND kyber_id = ?',
+      whereArgs: [ident, id],
     )) {
       if (_eq(r['base_key'] as List<int>, baseKey)) return true;
     }
@@ -280,21 +326,32 @@ class LsKyberPreKeyStore extends _ById {
   // the openers a key took go with it: nothing opens on it after
   Future<void> remove(int id) async {
     await _drop(id);
-    await _db.delete(_used, where: 'kyber_id = ?', whereArgs: [id]);
-    await _db.delete(_reads, where: 'kyber_id = ?', whereArgs: [id]);
+    await _db.delete(
+      _used,
+      where: 'ident = ? AND kyber_id = ?',
+      whereArgs: [ident, id],
+    );
+    await _db.delete(
+      _reads,
+      where: 'ident = ? AND kyber_id = ?',
+      whereArgs: [ident, id],
+    );
   }
 }
 
 class LsSessionStore {
-  LsSessionStore(this._db, {String prefix = ''}) : _t = '${prefix}sessions';
+  LsSessionStore(this._db, {String prefix = '', this.ident = 0})
+    : _t = '${prefix}sessions';
   final DatabaseExecutor _db;
   final String _t;
+  // the identity whose sessions these are
+  final int ident;
 
   Future<Uint8List?> load(String peer, [int device = 1]) async {
     final rows = await _db.query(
       _t,
-      where: 'address = ? AND device_id = ?',
-      whereArgs: [peer, device],
+      where: 'ident = ? AND address = ? AND device_id = ?',
+      whereArgs: [ident, peer, device],
       limit: 1,
     );
     if (rows.isEmpty) return null;
@@ -303,6 +360,7 @@ class LsSessionStore {
 
   Future<void> store(String peer, Uint8List record, [int device = 1]) =>
       _db.insert(_t, {
+        'ident': ident,
         'address': peer,
         'device_id': device,
         'record': record,
@@ -312,23 +370,31 @@ class LsSessionStore {
       (await _db.query(
         _t,
         columns: ['address'],
-        where: 'address = ? AND device_id = ?',
-        whereArgs: [peer, device],
+        where: 'ident = ? AND address = ? AND device_id = ?',
+        whereArgs: [ident, peer, device],
         limit: 1,
       )).isNotEmpty;
 
   Future<void> delete(String peer, [int device = 1]) => _db.delete(
     _t,
-    where: 'address = ? AND device_id = ?',
-    whereArgs: [peer, device],
+    where: 'ident = ? AND address = ? AND device_id = ?',
+    whereArgs: [ident, peer, device],
   );
 
-  Future<void> deleteAll(String peer) =>
-      _db.delete(_t, where: 'address = ?', whereArgs: [peer]);
+  Future<void> deleteAll(String peer) => _db.delete(
+    _t,
+    where: 'ident = ? AND address = ?',
+    whereArgs: [ident, peer],
+  );
 
   // every address a session is held with, contact or not
   Future<List<String>> allSessionAddresses() async => {
-    for (final r in await _db.query(_t, columns: ['address']))
+    for (final r in await _db.query(
+      _t,
+      columns: ['address'],
+      where: 'ident = ?',
+      whereArgs: [ident],
+    ))
       r['address'] as String,
   }.toList();
 
@@ -336,15 +402,20 @@ class LsSessionStore {
     for (final r in await _db.query(
       _t,
       columns: ['device_id'],
-      where: 'address = ?',
-      whereArgs: [peer],
+      where: 'ident = ? AND address = ?',
+      whereArgs: [ident, peer],
     ))
       r['device_id'] as int,
   ];
 
   /// every row, for the restore marks
   Future<List<(String, Uint8List)>> all() async => [
-    for (final r in await _db.query(_t, columns: ['address', 'record']))
+    for (final r in await _db.query(
+      _t,
+      columns: ['address', 'record'],
+      where: 'ident = ?',
+      whereArgs: [ident],
+    ))
       (r['address'] as String, Uint8List.fromList(r['record'] as List<int>)),
   ];
 }

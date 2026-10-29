@@ -31,6 +31,7 @@ import '../widgets/halo_hero.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/kryfo_avatar.dart';
+import '../widgets/media_bubbles.dart' show mediaTileLabel;
 import '../widgets/notice_banner.dart';
 import '../widgets/motion.dart' show kHouseCurve, kHouseTime, motionStill;
 import '../widgets/swap.dart' show RiseSwap;
@@ -1499,7 +1500,7 @@ class _PersonSheetState extends State<_PersonSheet>
                     l10n.peopleVerified,
                     style: HaloType.mono(
                       size: 10.5,
-                      color: HaloColors.green,
+                      color: HaloColors.greenText,
                       letter: 0.4,
                     ),
                   ),
@@ -1618,7 +1619,7 @@ class _PersonSheetState extends State<_PersonSheet>
                           style: HaloType.sans(
                             size: 13,
                             weight: FontWeight.w500,
-                            color: HaloColors.rose,
+                            color: HaloColors.roseText,
                           ),
                         ),
                       ),
@@ -1818,6 +1819,11 @@ class _ChatBlockState extends State<_ChatBlock> {
                               _Thumb(
                                 path: h.mediaPath!,
                                 size: w,
+                                label: mediaTileLabel(
+                                  h.when,
+                                  from: h.out ? null : h.sender,
+                                  video: h.video,
+                                ),
                                 onTap: () => widget.onOpen(
                                   groupId: c.groupId,
                                   peer: c.peer,
@@ -2047,12 +2053,19 @@ class _Thumb extends StatelessWidget {
   final String path;
   final double size;
   final VoidCallback onTap;
-  const _Thumb({required this.path, required this.size, required this.onTap});
+  final String label;
+  const _Thumb({
+    required this.path,
+    required this.size,
+    required this.onTap,
+    required this.label,
+  });
   @override
   Widget build(BuildContext context) {
     return PressScale(
       scale: 0.96,
       haptic: false,
+      label: label,
       onTap: onTap,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),

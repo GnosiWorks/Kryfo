@@ -14,6 +14,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../picked.dart';
 import '../album.dart';
+import '../widgets/say.dart' show sayArrivals;
 import '../widgets/album_grid.dart';
 import '../widgets/album_viewer.dart';
 import 'media_send_screen.dart';
@@ -103,6 +104,8 @@ import '../main.dart'
         session,
         sessionQuiet,
         signalEncrypt,
+        peerXPubOf,
+        AppStateDoor,
         hasSessionWith,
         appState,
         currentChatPeer,
@@ -1345,7 +1348,7 @@ class _ChatScreenState extends State<ChatScreen>
     _loadWall();
     // a new default under appearance shows here at once
     wallpaperRevision.addListener(_loadWall);
-    signalSession.peerXPubHex(widget.peerHaloId).then((v) {
+    peerXPubOf(widget.peerHaloId).then((v) {
       // only adopt the session value if we don't already have the widget key;
       // never clobber a good key with a null the store hasn't filled yet.
       if (mounted && v != null && v.isNotEmpty) {
@@ -1971,6 +1974,7 @@ class _ChatScreenState extends State<ChatScreen>
       _normaliseMessages();
       if (!follow) _unseenNew += theirs;
     });
+    if (mounted) sayArrivals(context, theirs);
     _lookEarlierSoon();
     _applySecureContent();
     // clear the home badge for what we are reading. a backed-out chat stays
@@ -2232,254 +2236,265 @@ class _ChatScreenState extends State<ChatScreen>
       builder: (_) {
         return IgnorePointer(
           ignoring: closing,
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: dismiss,
-                  child: MenuBackdrop(closing: closing),
+          child: MenuScope(
+            onDismiss: dismiss,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: MenuCloser(
+                    onDismiss: dismiss,
+                    child: MenuBackdrop(closing: closing),
+                  ),
                 ),
-              ),
-              // the offset is from the left edge, in either direction
-              Positioned(
-                left: offset.dx,
-                top: offset.dy,
-                width: bubbleSize.width,
-                child: IgnorePointer(
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0.0, end: still || closing ? 0.0 : 1.0),
-                    duration: kHouseTime,
-                    curve: kHouseCurve,
-                    child: Material(
-                      type: MaterialType.transparency,
-                      child: _Bubble(
-                        msg: target,
-                        album: album,
-                        translation: _translation,
+                // the offset is from the left edge, in either direction
+                Positioned(
+                  left: offset.dx,
+                  top: offset.dy,
+                  width: bubbleSize.width,
+                  // a copy of the bubble: heard once, on the chat
+                  child: IgnorePointer(
+                    child: ExcludeSemantics(
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween(
+                          begin: 0.0,
+                          end: still || closing ? 0.0 : 1.0,
+                        ),
+                        duration: kHouseTime,
+                        curve: kHouseCurve,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: _Bubble(
+                            msg: target,
+                            album: album,
+                            translation: _translation,
+                          ),
+                        ),
+                        builder: (_, t, child) => Transform.scale(
+                          scale: 1.0 + 0.04 * t,
+                          alignment: alignRight
+                              ? AlignmentDirectional.centerEnd
+                              : AlignmentDirectional.centerStart,
+                          child: child,
+                        ),
                       ),
-                    ),
-                    builder: (_, t, child) => Transform.scale(
-                      scale: 1.0 + 0.04 * t,
-                      alignment: alignRight
-                          ? AlignmentDirectional.centerEnd
-                          : AlignmentDirectional.centerStart,
-                      child: child,
                     ),
                   ),
                 ),
-              ),
 
-              if (!welcome && _canReact)
+                if (!welcome && _canReact)
+                  PositionedDirectional(
+                    top: reactTop,
+                    start: alignRight ? null : 12,
+                    end: alignRight ? 12 : null,
+                    child: MenuPop(
+                      fromRight: alignRight,
+                      closing: closing,
+                      child: ReactionPicker(
+                        replyLabel: l10n.chatReply,
+                        emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
+                        selected: target.reactions[''],
+                        onPick: (e) => dismiss(
+                          then: () {
+                            final added = reactOn.reactions[''] != e;
+                            _toggleReaction(reactOn, e);
+                            if (added) _flashReaction(reactOn);
+                          },
+                        ),
+                        // no reply bar or keyboard over the lock
+                        onReply: () => dismiss(
+                          then: () {
+                            if (!lockGuard.isLocked()) _replyWith(anchor);
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
                 PositionedDirectional(
-                  top: reactTop,
+                  top: menuTop,
+                  bottom: menuBottom,
                   start: alignRight ? null : 12,
                   end: alignRight ? 12 : null,
                   child: MenuPop(
                     fromRight: alignRight,
                     closing: closing,
-                    child: ReactionPicker(
-                      replyLabel: l10n.chatReply,
-                      emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
-                      selected: target.reactions[''],
-                      onPick: (e) => dismiss(
-                        then: () {
-                          final added = reactOn.reactions[''] != e;
-                          _toggleReaction(reactOn, e);
-                          if (added) _flashReaction(reactOn);
-                        },
-                      ),
-                      // no reply bar or keyboard over the lock
-                      onReply: () => dismiss(
-                        then: () {
-                          if (!lockGuard.isLocked()) _replyWith(anchor);
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-              PositionedDirectional(
-                top: menuTop,
-                bottom: menuBottom,
-                start: alignRight ? null : 12,
-                end: alignRight ? 12 : null,
-                child: MenuPop(
-                  fromRight: alignRight,
-                  closing: closing,
-                  child: MessageMenuCard(
-                    note: kept ? l10n.chatShotsMenuNote : null,
-                    actions: [
-                      // his first line: copy, and nothing else
-                      if (!welcome)
-                        MenuAction(
-                          icon: target.pinned
-                              ? Icons.push_pin
-                              : Icons.push_pin_outlined,
-                          label: target.pinned ? l10n.chatUnpin : l10n.chatPin,
-                          onTap: () {
-                            dismiss();
-                            _togglePin(anchor);
-                          },
-                        ),
-                      // in an album, the one held
-                      if (!welcome)
-                        MenuAction(
-                          icon: saveOn?.saved ?? false
-                              ? Icons.bookmark
-                              : Icons.bookmark_outline,
-                          label: saveOn?.saved ?? false
-                              ? l10n.chatUnsave
-                              : l10n.commonSave,
-                          tint: saveOn?.saved ?? false
-                              ? HaloColors.amber
-                              : null,
-                          // one saved before stays, and can be let go
-                          onTap: saveOn == null || (kept && !saveOn.saved)
-                              ? null
-                              : () => dismiss(then: () => _toggleSaved(saveOn)),
-                        ),
-                      MenuAction(
-                        icon: Icons.copy_rounded,
-                        label: l10n.commonCopy,
-                        onTap:
-                            kept ||
-                                target.text.isEmpty ||
-                                target.sticker != null
-                            ? null
-                            : () {
-                                dismiss();
-                                Clipboard.setData(
-                                  ClipboardData(text: target.text),
-                                );
-                                showHaloToast(context, l10n.commonCopied);
-                              },
-                      ),
-                      if (canTranslate)
-                        MenuAction(
-                          icon: Icons.translate_rounded,
-                          label: translation.shown(trKey, target.text)
-                              ? l10n.translateShowOriginal
-                              : l10n.translateAction,
-                          onTap: () => dismiss(
-                            then: () => askTranslate(
-                              context,
-                              translation,
-                              trKey,
-                              target.text,
-                            ),
+                    child: MessageMenuCard(
+                      note: kept ? l10n.chatShotsMenuNote : null,
+                      actions: [
+                        // his first line: copy, and nothing else
+                        if (!welcome)
+                          MenuAction(
+                            icon: target.pinned
+                                ? Icons.push_pin
+                                : Icons.push_pin_outlined,
+                            label: target.pinned
+                                ? l10n.chatUnpin
+                                : l10n.chatPin,
+                            onTap: () {
+                              dismiss();
+                              _togglePin(anchor);
+                            },
                           ),
-                        ),
-                      // a sticker is not forwarded, copied or edited, and
-                      // a photo, a file or a voice note is not forwarded
-                      if (!welcome)
+                        // in an album, the one held
+                        if (!welcome)
+                          MenuAction(
+                            icon: saveOn?.saved ?? false
+                                ? Icons.bookmark
+                                : Icons.bookmark_outline,
+                            label: saveOn?.saved ?? false
+                                ? l10n.chatUnsave
+                                : l10n.commonSave,
+                            tint: saveOn?.saved ?? false
+                                ? HaloColors.amber
+                                : null,
+                            // one saved before stays, and can be let go
+                            onTap: saveOn == null || (kept && !saveOn.saved)
+                                ? null
+                                : () =>
+                                      dismiss(then: () => _toggleSaved(saveOn)),
+                          ),
                         MenuAction(
-                          icon: Icons.forward_rounded,
-                          label: l10n.chatForward,
+                          icon: Icons.copy_rounded,
+                          label: l10n.commonCopy,
                           onTap:
                               kept ||
-                                  !canForward(
-                                    text: target.text,
-                                    mediaPath: target.mediaPath,
-                                    filePath: target.filePath,
-                                    sticker: target.sticker != null,
-                                  )
+                                  target.text.isEmpty ||
+                                  target.sticker != null
                               ? null
                               : () {
-                                  // a sheet takes its place: no copy over it
-                                  dismiss(now: true);
-                                  _forwardMessage(target);
+                                  dismiss();
+                                  Clipboard.setData(
+                                    ClipboardData(text: target.text),
+                                  );
+                                  showHaloToast(context, l10n.commonCopied);
                                 },
                         ),
-                      // a tap opens a file, so sharing it lives here. an
-                      // app installer is only ever saved
-                      if (canShareOut)
+                        if (canTranslate)
+                          MenuAction(
+                            icon: Icons.translate_rounded,
+                            label: translation.shown(trKey, target.text)
+                                ? l10n.translateShowOriginal
+                                : l10n.translateAction,
+                            onTap: () => dismiss(
+                              then: () => askTranslate(
+                                context,
+                                translation,
+                                trKey,
+                                target.text,
+                              ),
+                            ),
+                          ),
+                        // a sticker is not forwarded, copied or edited, and
+                        // a photo, a file or a voice note is not forwarded
+                        if (!welcome)
+                          MenuAction(
+                            icon: Icons.forward_rounded,
+                            label: l10n.chatForward,
+                            onTap:
+                                kept ||
+                                    !canForward(
+                                      text: target.text,
+                                      mediaPath: target.mediaPath,
+                                      filePath: target.filePath,
+                                      sticker: target.sticker != null,
+                                    )
+                                ? null
+                                : () {
+                                    // a sheet takes its place: no copy over it
+                                    dismiss(now: true);
+                                    _forwardMessage(target);
+                                  },
+                          ),
+                        // a tap opens a file, so sharing it lives here. an
+                        // app installer is only ever saved
+                        if (canShareOut)
+                          MenuAction(
+                            icon: Icons.ios_share_rounded,
+                            label: l10n.commonShare,
+                            onTap:
+                                kept ||
+                                    !canShare ||
+                                    knownInstaller(
+                                      shareOn.filePath!,
+                                      shareOn.fileName,
+                                    )
+                                ? null
+                                : () {
+                                    dismiss(now: true);
+                                    lockState.hold(
+                                      () => shareFileOut(
+                                        shareOn.filePath!,
+                                        name: shareOn.fileName,
+                                      ),
+                                    );
+                                  },
+                          ),
                         MenuAction(
-                          icon: Icons.ios_share_rounded,
-                          label: l10n.commonShare,
+                          icon: Icons.download_rounded,
+                          label: l10n.fileSaveToDevice,
+                          // in an album, the one held. nothing kept to this
+                          // chat leaves it
                           onTap:
                               kept ||
-                                  !canShare ||
-                                  knownInstaller(
-                                    shareOn.filePath!,
-                                    shareOn.fileName,
-                                  )
+                                  shareOn == null ||
+                                  _keptHere(shareOn) ||
+                                  shareOn.filePath == null ||
+                                  shareOn.fileName == null ||
+                                  isVoiceName(shareOn.fileName)
                               ? null
                               : () {
                                   dismiss(now: true);
-                                  lockState.hold(
-                                    () => shareFileOut(
-                                      shareOn.filePath!,
-                                      name: shareOn.fileName,
-                                    ),
+                                  saveReceivedFile(
+                                    context,
+                                    shareOn.filePath!,
+                                    shareOn.fileName,
                                   );
                                 },
                         ),
-                      MenuAction(
-                        icon: Icons.download_rounded,
-                        label: l10n.fileSaveToDevice,
-                        // in an album, the one held. nothing kept to this
-                        // chat leaves it
-                        onTap:
-                            kept ||
-                                shareOn == null ||
-                                _keptHere(shareOn) ||
-                                shareOn.filePath == null ||
-                                shareOn.fileName == null ||
-                                isVoiceName(shareOn.fileName)
-                            ? null
-                            : () {
-                                dismiss(now: true);
-                                saveReceivedFile(
-                                  context,
-                                  shareOn.filePath!,
-                                  shareOn.fileName,
-                                );
-                              },
-                      ),
-                      // words can be edited; a photo, a file or a voice note
-                      // is what it is
-                      MenuAction(
-                        icon: Icons.edit_outlined,
-                        label: l10n.commonEdit,
-                        tint: HaloColors.amber,
-                        onTap:
-                            target.direction != 'out' ||
-                                target.mediaPath != null ||
-                                target.filePath != null ||
-                                target.sticker != null
-                            ? null
-                            : () {
-                                dismiss(now: true);
-                                _editMessage(target);
-                              },
-                      ),
-                      MenuAction(
-                        icon: Icons.delete_outline,
-                        danger: true,
-                        label: going ? l10n.chatStopSending : l10n.chatUnsend,
-                        onTap: target.direction != 'out'
-                            ? null
-                            : () {
-                                dismiss(now: true);
-                                // a photo or file still on its way stops here
-                                // and the other side drops what it has. an
-                                // album goes back whole
-                                if (album != null) {
-                                  going
-                                      ? _stopAlbum(album)
-                                      : _unsendAlbum(album);
-                                } else if (going) {
-                                  _stopSending(target);
-                                } else {
-                                  _unsendMessage(target);
-                                }
-                              },
-                      ),
-                    ],
+                        // words can be edited; a photo, a file or a voice note
+                        // is what it is
+                        MenuAction(
+                          icon: Icons.edit_outlined,
+                          label: l10n.commonEdit,
+                          tint: HaloColors.amber,
+                          onTap:
+                              target.direction != 'out' ||
+                                  target.mediaPath != null ||
+                                  target.filePath != null ||
+                                  target.sticker != null
+                              ? null
+                              : () {
+                                  dismiss(now: true);
+                                  _editMessage(target);
+                                },
+                        ),
+                        MenuAction(
+                          icon: Icons.delete_outline,
+                          danger: true,
+                          label: going ? l10n.chatStopSending : l10n.chatUnsend,
+                          onTap: target.direction != 'out'
+                              ? null
+                              : () {
+                                  dismiss(now: true);
+                                  // a photo or file still on its way stops here
+                                  // and the other side drops what it has. an
+                                  // album goes back whole
+                                  if (album != null) {
+                                    going
+                                        ? _stopAlbum(album)
+                                        : _unsendAlbum(album);
+                                  } else if (going) {
+                                    _stopSending(target);
+                                  } else {
+                                    _unsendMessage(target);
+                                  }
+                                },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -3313,7 +3328,7 @@ class _ChatScreenState extends State<ChatScreen>
       xPub: () async {
         var xpub = _peerXPub;
         xpub ??= widget.peerXPub.isEmpty ? null : widget.peerXPub;
-        xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
+        xpub ??= await peerXPubOf(widget.peerHaloId);
         if (xpub != null) _peerXPub = xpub;
         return xpub;
       },
@@ -3326,8 +3341,15 @@ class _ChatScreenState extends State<ChatScreen>
         widget.peerHaloId,
         backPaired: _backPaired,
       ),
-      viaFirst: (x, fc) => engine.sendFirstContact(x, fc, cipher),
-      viaRelay: (x) => Future(() => engine.nostrSend(x, cipher)),
+      viaFirst: (x, fc) => engine.sendFirstContact(
+        appState.identOf(widget.peerHaloId),
+        x,
+        fc,
+        cipher,
+      ),
+      viaRelay: (x) => Future(
+        () => engine.nostrSend(appState.identOf(widget.peerHaloId), x, cipher),
+      ),
       log: (l) => dlog('chat send: $l'),
       // both its copies went: past their two it waits held, not lost
       bothWent: uid == null
@@ -7392,7 +7414,7 @@ class _ChatHead extends StatelessWidget {
     // the palette swaps in place: depending on the theme repaints the
     // header when it switches under an open chat
     Theme.of(context);
-    final relay = appState.sendMode == 'balanced';
+    final fast = appState.sendMode != 'private';
     return Container(
       padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 8, 12),
       decoration: BoxDecoration(
@@ -7509,26 +7531,26 @@ class _ChatHead extends StatelessWidget {
                           Icon(
                             Icons.lock_outline,
                             size: 10,
-                            // relay and tor told apart by their own colours,
+                            // fast and tor told apart by their own colours,
                             // never by the accent
-                            color: relay ? HaloColors.sky : HaloColors.violet,
+                            color: fast
+                                ? HaloColors.greenText
+                                : HaloColors.violet,
                           ),
                           const SizedBox(width: 4),
                           // a longer language at a big font size would run
                           // past the header's buttons, so it ends in …
                           Flexible(
                             child: Text(
-                              relay
-                                  ? l10n.chatEncryptedViaRelay
-                                  : appState.sendMode == 'fast'
+                              fast
                                   ? l10n.chatEncryptedDirect
                                   : l10n.chatEncryptedOverTor,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: HaloType.mono(
                                 size: 10,
-                                color: relay
-                                    ? HaloColors.sky
+                                color: fast
+                                    ? HaloColors.greenText
                                     : HaloColors.text2,
                               ),
                             ),
@@ -7758,7 +7780,8 @@ class _SearchHeadState extends State<SearchHead> {
               child: hasQuery
                   ? Padding(
                       key: const ValueKey('search-meta'),
-                      padding: const EdgeInsets.fromLTRB(6, 9, 6, 0),
+                      // the arrows' 48 boxes make the row's top gap
+                      padding: const EdgeInsetsDirectional.fromSTEB(6, 0, 0, 0),
                       child: Row(
                         children: [
                           Text.rich(
@@ -7798,7 +7821,6 @@ class _SearchHeadState extends State<SearchHead> {
                             enabled: widget.matchCount > 0,
                             onTap: widget.onPrev,
                           ),
-                          const SizedBox(width: 5),
                           _NavBtn(
                             icon: Icons.keyboard_arrow_down_rounded,
                             label: l10n.chatNextMatch,
@@ -7835,26 +7857,33 @@ class _NavBtn extends StatelessWidget {
       label: label,
       button: true,
       enabled: enabled,
+      // a 48 box to tap, the 24 square drawn in its middle
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: enabled ? onTap : null,
-        child: Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            color: enabled ? HaloColors.amberSoft : HaloColors.surface2,
-            borderRadius: BorderRadius.circular(7),
-            border: Border.all(
-              color: enabled
-                  ? HaloColors.amber.withValues(alpha: 0.45)
-                  : HaloColors.line2,
-              width: 0.5,
+        child: SizedBox.square(
+          dimension: 48,
+          child: Center(
+            child: Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: enabled ? HaloColors.amberSoft : HaloColors.surface2,
+                borderRadius: BorderRadius.circular(7),
+                border: Border.all(
+                  color: enabled
+                      ? HaloColors.amber.withValues(alpha: 0.45)
+                      : HaloColors.line2,
+                  width: 0.5,
+                ),
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                icon,
+                size: 16,
+                color: enabled ? HaloColors.amber : HaloColors.text3,
+              ),
             ),
-          ),
-          alignment: Alignment.center,
-          child: Icon(
-            icon,
-            size: 16,
-            color: enabled ? HaloColors.amber : HaloColors.text3,
           ),
         ),
       ),
@@ -8010,9 +8039,10 @@ class _Bubble extends StatelessWidget {
     final showPill = isOut && pending;
     final reacted = msg.reactions.isNotEmpty;
     final roomTime = motionStill(context) ? Duration.zero : kHouseTime;
-    // lighter than the message, so the words lead
+    // full ink for 4.5:1 on every accent: the small mono size keeps it
+    // behind the message
     final metaColor = (isOut && !frameless)
-        ? HaloColors.onAmber.withValues(alpha: 0.55)
+        ? HaloColors.onAmber
         : HaloColors.text3;
     // under a photo or a video there is no amber behind the words
     final onAmberText = isOut && !frameless;
@@ -9703,11 +9733,8 @@ class MediaGalleryScreen extends StatelessWidget {
 }
 
 // the saved mode string as the pill's enum. private is full tor, 3 hops.
-PrivacyMode _pmFrom(String m) => m == 'fast'
-    ? PrivacyMode.fast
-    : m == 'balanced'
-    ? PrivacyMode.normal
-    : PrivacyMode.private;
+PrivacyMode _pmFrom(String m) =>
+    m == 'private' ? PrivacyMode.private : PrivacyMode.fast;
 
 // the compare card, or once put off the quiet line in its place. one
 // grows or shrinks into the other while it fades, at once when the phone

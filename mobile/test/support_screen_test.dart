@@ -255,10 +255,10 @@ String _state(String id) =>
 class _Engine implements HaloEngine {
   final calls = <String>[];
   @override
-  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) =>
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) =>
       calls.add('listen $peerXPubHex');
   @override
-  void nostrUnsubscribeBg(String peerXPubHex) =>
+  void nostrUnsubscribeBg(int ident, String peerXPubHex) =>
       calls.add('unlisten $peerXPubHex');
   @override
   dynamic noSuchMethod(Invocation i) =>

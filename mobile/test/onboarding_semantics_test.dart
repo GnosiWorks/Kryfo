@@ -75,7 +75,7 @@ void main() {
         l10n.onboardingBegin,
         l10n.onboardingUseThisName,
         l10n.onboardingContinue,
-        l10n.onboardingKeepOnion,
+        l10n.onboardingKeepPrivate,
         l10n.onboardingIUnderstand,
         l10n.onboardingGotIt,
         l10n.onboardingNotNowAddPeople,

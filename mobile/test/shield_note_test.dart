@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the shield's line: amber, never the alarm red, words in the text
-// colour, no exclamation mark in any language. the cross is a 44 px target
+// colour, no exclamation mark in any language. the cross is a 48 px target
 // with a name, sits at the line's end in either direction, and folds the
 // line away; with reduced motion nothing grows or slides. a theme switch
 // repaints it
@@ -81,7 +81,7 @@ void main() {
     }
   });
 
-  testWidgets('the cross: 44 px, named, at the end of the line', (t) async {
+  testWidgets('the cross: 48 px, named, at the end of the line', (t) async {
     for (final (loc, rtl) in [
       (const Locale('en'), false),
       (const Locale('ar'), true),
@@ -97,7 +97,7 @@ void main() {
       await t.pumpAndSettle();
       final close = find.byTooltip(l10n.scamShieldDismiss);
       expect(close, findsOne);
-      expect(t.getSize(close), const Size(44, 44));
+      expect(t.getSize(close), const Size(48, 48));
       final text = t.getCenter(find.text(_flag.line)).dx;
       final x = t.getCenter(close).dx;
       expect(rtl ? x < text : x > text, isTrue, reason: '$loc');

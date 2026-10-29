@@ -190,7 +190,10 @@ class WorkingView extends StatelessWidget {
               style: HaloType.sans(size: 13.5, color: HaloColors.warm),
             ),
             const SizedBox(height: 22),
-            HaloBar(value: known ? (done / total).clamp(0.0, 1.0) : null),
+            HaloBar(
+              value: known ? (done / total).clamp(0.0, 1.0) : null,
+              label: l10n.a11yLockFileProgress,
+            ),
           ],
         ),
       ),
@@ -582,7 +585,10 @@ class _LockFileScreenState extends State<LockFileScreen> {
                     padding: const EdgeInsets.fromLTRB(4, 7, 4, 0),
                     child: Text(
                       l10n.lockFileTheTwoDoNot,
-                      style: HaloType.sans(size: 12, color: HaloColors.amberText),
+                      style: HaloType.sans(
+                        size: 12,
+                        color: HaloColors.amberText,
+                      ),
                     ),
                   ),
           ),

@@ -70,10 +70,10 @@ class _Io extends ArrivalIo {
   final cut = <String>{};
 
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     final to = cipher.split(' ')[1];
     if (cut.contains(to)) return 'error: down';
-    return super.relaySend(xPub, cipher);
+    return super.relaySend(ident, xPub, cipher);
   }
 
   List<UnwrappedMessage> to(String member) => [

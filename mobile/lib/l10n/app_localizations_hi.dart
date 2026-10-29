@@ -670,16 +670,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get appRelayAndFastModes =>
-      'रिले और तेज़ मोड Tor को छोड़कर चलते हैं और ज़्यादा तेज़ हैं। ये सेटिंग में, रफ़्तार और प्राइवेसी के अंदर हैं, और हर एक बताता है कि उसकी क्या क़ीमत है।';
-
-  @override
-  String get appViaRelay => 'रिले से';
+      'तेज़ Tor को छोड़ देता है और जल्दी है। यह सेटिंग्स में रफ़्तार और प्राइवेसी के नीचे है, और बताता है कि इसकी क्या क़ीमत है।';
 
   @override
   String get appOffline => 'ऑफ़लाइन';
-
-  @override
-  String get appFast => 'तेज़';
 
   @override
   String get appTorOff => 'Tor बंद';
@@ -1719,9 +1713,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get chatSupporter => 'समर्थक';
-
-  @override
-  String get chatEncryptedViaRelay => 'एन्क्रिप्टेड · रिले से';
 
   @override
   String get chatEncryptedDirect => 'एन्क्रिप्टेड · सीधे';
@@ -3148,26 +3139,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get homeLeaveThemOff => 'बंद रहने दें';
 
   @override
-  String get homeOurRelayIsQuiet => 'हमारा रिले चुप है';
-
-  @override
-  String get homeRelayModeUsesOnly =>
-      'रिले मोड सिर्फ़ हमारे अपने रिले से चलता है, और वह अभी जवाब नहीं दे रहा। तेज़ मोड उसके साथ सार्वजनिक रिले भी जोड़ता है, ताकि मैसेज फिर भी पहुँचें। दोनों तरह सब कुछ एन्क्रिप्टेड ही रहता है।';
-
-  @override
-  String get homeSwitchedToFast => 'तेज़ पर चले गए';
-
-  @override
-  String get homeUseFastMode => 'तेज़ मोड इस्तेमाल करें';
-
-  @override
   String get homeKeepWaiting => 'इंतज़ार करते रहें';
-
-  @override
-  String get homeSwitchedToRelay => 'रिले पर चले गए';
-
-  @override
-  String get homeUseOurRelay => 'हमारा रिले इस्तेमाल करें';
 
   @override
   String get homeOffline => 'ऑफ़लाइन';
@@ -3664,41 +3636,7 @@ class AppLocalizationsHi extends AppLocalizations {
       'चार या ज़्यादा अंक, जो भी आपको याद रहे';
 
   @override
-  String get modesOnion => 'Onion';
-
-  @override
-  String get modesFullOnionRoutingThree =>
-      'पूरी onion रूटिंग, तीन पड़ाव। एक मैसेज में दो से पाँच सेकंड लगते हैं। कोई नहीं देखता कि आप किससे बात करते हैं।';
-
-  @override
-  String get modesSlower => 'धीमा';
-
-  @override
-  String get modesRelay => 'रिले';
-
-  @override
-  String get modesOneSealedConnectionTo =>
-      'Kryfo के अपने रिले से एक एन्क्रिप्टेड कनेक्शन, ऐसे vpn जैसा जिसके पास लॉग करने को कुछ नहीं। मैसेज लगभग एक सेकंड में पहुँचते हैं, और यह वहाँ भी काम करता है जहाँ Tor बंद है।';
-
-  @override
-  String get modesQuick => 'तेज़';
-
-  @override
-  String get modesRelayOnly => 'सिर्फ़ रिले';
-
-  @override
   String get modesFast => 'तेज़';
-
-  @override
-  String get modesPlainConnectionsToEvery =>
-      'हर रिले से सीधे सादे कनेक्शन। लगभग तुरंत, और तीनों में सबसे कम निजी।';
-
-  @override
-  String get modesInstant => 'तुरंत';
-
-  @override
-  String get modesEveryRelayYouUse =>
-      'आपका इस्तेमाल किया हर रिले, सिर्फ़ हमारा नहीं, वह पता जानता है जहाँ से आप जुड़ते हैं। मैसेज फिर भी एन्क्रिप्टेड रहते हैं, पर यह बात छिपी नहीं रहती कि आपने एक मैसेज भेजा। पहले से बंद, और दोबारा इंस्टॉल करने पर फिर बंद।';
 
   @override
   String get modesNotChanged => 'मोड नहीं बदला। दोबारा कोशिश करें।';
@@ -3711,53 +3649,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get modesPrivacy => 'और प्राइवेसी';
-
-  @override
-  String get modesChangeGloballyOrPer =>
-      'सब जगह के लिए बदलें, या हर चैट के लिए अलग';
-
-  @override
-  String get modesSoon => 'जल्द';
-
-  @override
-  String get modesActive => 'चालू';
-
-  @override
-  String get modesSpeed2 => 'रफ़्तार';
-
-  @override
-  String get modesHops => 'पड़ाव';
-
-  @override
-  String get modesIp => 'IP';
-
-  @override
-  String get modesVisible => 'दिखता है';
-
-  @override
-  String get modesHidden => 'छिपा';
-
-  @override
-  String modesHeadsUp(Object warning) {
-    return '*ध्यान दें:* $warning';
-  }
-
-  @override
-  String get modesOnionIsTheDefault =>
-      'Onion पहले से चुना होता है और जब तक आप न बदलें, वही रहता है। बदलाव अगले मैसेज से लागू होता है।';
-
-  @override
-  String get modesFastMode => 'तेज़ मोड';
-
-  @override
-  String get modesPlainConnectionsToEveryRelayQuicker =>
-      'हर रिले से सीधे सादे कनेक्शन। ज़्यादा तेज़, और रिले आपका IP पता देख सकते हैं। मैसेज दोनों तरह एंड-टू-एंड एन्क्रिप्टेड रहते हैं।';
-
-  @override
-  String get modesTurnOnFastMode => 'तेज़ मोड चालू करें';
-
-  @override
-  String get modesKeepItOff => 'बंद रहने दें';
 
   @override
   String get movedWipeThisPhone => 'इस फ़ोन से Kryfo पूरी तरह मिटाएँ?';
@@ -4175,22 +4066,8 @@ class AppLocalizationsHi extends AppLocalizations {
       'आप इसे कभी भी सेटिंग में बदल सकते हैं, सबके लिए या किसी एक चैट के लिए।';
 
   @override
-  String get onboardingOnion => 'Onion';
-
-  @override
   String get onboardingSlowerAMessageTakes =>
       'धीमा। एक मैसेज में दो से पाँच सेकंड लगते हैं।';
-
-  @override
-  String get onboardingHidesYourAddressFrom =>
-      'आपका पता सबसे छिपाता है, हमारे रिले से भी।';
-
-  @override
-  String get onboardingRelay => 'रिले';
-
-  @override
-  String get onboardingOurRelaySeesYour =>
-      'हमारा रिले आपका पता देखता है। और कोई नहीं।';
 
   @override
   String get onboardingAboutASecondWorks =>
@@ -4201,23 +4078,7 @@ class AppLocalizationsHi extends AppLocalizations {
       'अपने-आप वाला विकल्प ख़ुद ही रोक से बचने का रास्ता ढूँढ लेता है।';
 
   @override
-  String get onboardingFast => 'तेज़';
-
-  @override
-  String get onboardingEveryRelayYouUse =>
-      'आपका इस्तेमाल किया हर रिले आपका पता देखता है। तीनों में सबसे कम निजी।';
-
-  @override
-  String get onboardingNearInstant => 'लगभग तुरंत।';
-
-  @override
-  String get onboardingKeepOnion => 'onion रखें →';
-
-  @override
   String get onboardingUseThis => 'यही इस्तेमाल करें →';
-
-  @override
-  String get onboardingSkipOnionIsA => 'छोड़ें · onion एक अच्छा डिफ़ॉल्ट है';
 
   @override
   String get onboardingThreeThingsThen => 'तीन बातें,\nफिर *आप अंदर*।';
@@ -5162,16 +5023,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get seenYourIpAddress => 'आपका IP पता';
 
   @override
-  String get seenOurRelay => 'हमारा रिले';
-
-  @override
-  String get seenEveryRelay => 'हर रिले';
-
-  @override
-  String get seenOnOnionEverythingLeaves =>
-      'Onion पर सब कुछ Tor से होकर निकलता है और रिले को एक exit node दिखता है, आप कभी नहीं। रिले मोड में कनेक्शन सीधे हमारे अपने रिले पर जाता है: कुछ भी आपका पता आगे नहीं भेजता और कुछ भी लिखा नहीं जाता, पर वह एक कनेक्शन हमें दिखता है। तेज़ मोड में हर सार्वजनिक रिले जान जाता है कि आप जुड़े, पर यह नहीं कि किससे या आपने क्या कहा।';
-
-  @override
   String get seenYourContactGraph => 'आपके संपर्कों का जाल';
 
   @override
@@ -5227,12 +5078,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'रैचेट और स्टोरेज की परतें मानक हैं। उन्हें जोड़ने वाली परत हमारी है और किसी स्वतंत्र व्यक्ति ने उसकी समीक्षा नहीं की है। यह अल्फ़ा सॉफ़्टवेयर है।';
 
   @override
-  String get seenOnion => 'Onion';
-
-  @override
-  String get seenRelay => 'रिले';
-
-  @override
   String get seenFast => 'तेज़';
 
   @override
@@ -5267,9 +5112,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get settingsTorRouting => 'Tor रूटिंग';
 
   @override
-  String get settingsOffMode => 'बंद · रिले मोड';
-
-  @override
   String get settingsOffFastMode => 'बंद · तेज़ मोड';
 
   @override
@@ -5283,9 +5125,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get settingsFast => 'तेज़';
-
-  @override
-  String get settingsRelay1Hop => 'रिले · 1 पड़ाव';
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 पड़ाव';
@@ -7318,10 +7157,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get bridgesTheTorProjectSGuess => 'Tor Project का अंदाज़ा';
 
   @override
-  String get bridgesOurRelayUsuallyGets =>
-      'हमारा रिले एक सादा कनेक्शन है और आमतौर पर पार हो जाता है। या Kryfo को ख़ुद रास्ता ढूँढने दें।';
-
-  @override
   String get bridgesUseThisBridge => 'यह ब्रिज इस्तेमाल करें';
 
   @override
@@ -9146,15 +8981,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get bridgesRelayWorksWhereTor =>
-      'रिले मोड वहाँ काम करता है जहाँ Tor पर रोक है, और आप कभी भी वापस जा सकते हैं।';
+      'जहाँ Tor रुका हो, वहाँ तेज़ काम करता है, और आप कभी भी वापस बदल सकते हैं।';
 
   @override
   String get bridgesRelayThisNetworkSees =>
-      'रिले मोड वहाँ भी पहुँच जाता है जहाँ Tor पर रोक है, पर यह नेटवर्क देख सकता है कि आप Kryfo से जुड़ते हैं।';
-
-  @override
-  String get onboardingRelayThisNetworkSees =>
-      'यह नेटवर्क देख सकता है कि आप Kryfo से जुड़ते हैं। हमारा रिले आपका पता देखता है।';
+      'जहाँ Tor रुका हो, वहाँ भी तेज़ पहुँच जाता है, पर यह नेटवर्क देख सकता है कि आप Kryfo से जुड़ रहे हैं।';
 
   @override
   String get settingsLicences => 'लाइसेंस';
@@ -9218,9 +9049,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'लिंक कॉपी करें';
-
-  @override
-  String get appRelayNotAnswering => 'रिले चुप है';
 
   @override
   String get motionNoRelayYet => 'अभी कोई रिले नहीं';
@@ -10004,4 +9832,259 @@ class AppLocalizationsHi extends AppLocalizations {
   String photoOf(Object name) {
     return '$name की फ़ोटो';
   }
+
+  @override
+  String get historyChatStaysShots =>
+      'यह चैट आपके फ़ोन पर ही रहती है, क्योंकि इसमें स्क्रीनशॉट रोके गए हैं।';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString अंक',
+      one: '1 अंक',
+      zero: 'कोई अंक नहीं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString अक्षर',
+      one: '1 अक्षर',
+      zero: 'कोई अक्षर नहीं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'बैकअप की प्रगति';
+
+  @override
+  String get a11yRestoreProgress => 'रीस्टोर की प्रगति';
+
+  @override
+  String get a11yExportProgress => 'एक्सपोर्ट की प्रगति';
+
+  @override
+  String get a11yLockFileProgress => 'लॉक करने की प्रगति';
+
+  @override
+  String get a11yCleanProgress => 'सफ़ाई की प्रगति';
+
+  @override
+  String get a11yMessageActions => 'मैसेज के विकल्प';
+
+  @override
+  String get a11yRecordVoiceNote => 'वॉइस नोट रिकॉर्ड करें';
+
+  @override
+  String get a11yRecording => 'रिकॉर्ड हो रहा है';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'फ़ोटो, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return '$name से आई फ़ोटो, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'वीडियो, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return '$name से आया वीडियो, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString नए मैसेज',
+      one: 'नया मैसेज',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get modesPickHow =>
+      'चुनें कि आपके संदेश कैसे जाएँ। आप इसे कभी भी बदल सकते हैं।';
+
+  @override
+  String get modesPrivate => 'प्राइवेट';
+
+  @override
+  String get modesPrivateTag => 'Tor · ज़रूरत पर ब्रिज';
+
+  @override
+  String get modesPrivateLine =>
+      'आपका IP पता या आप कौन हैं, यह कोई नहीं जान पाता, हमारे सर्वर भी नहीं। रोक के आसपास रास्ता खुद ढूँढ लेता है।';
+
+  @override
+  String get modesDefault => 'डिफ़ॉल्ट';
+
+  @override
+  String get modesFastTag => 'सीधे हमारे सर्वर तक';
+
+  @override
+  String get modesFastLine =>
+      'Tor को छोड़ देता है, इसलिए संदेश जल्दी पहुँचते हैं और बैटरी कम लगती है। हमारे सर्वर आपका IP पता सिर्फ़ तब देखते हैं जब आप जुड़े हों, और उसे कभी दर्ज नहीं करते, न रखते हैं। आप क्या कहते हैं, यह कभी नहीं। आपके संपर्क इसे कभी नहीं देखते।';
+
+  @override
+  String get modesFastConnected => 'तेज़ · जुड़ा है';
+
+  @override
+  String get modesFastConnecting => 'तेज़ · जुड़ रहा है';
+
+  @override
+  String get modesFastDown => 'तेज़ · हमारे सर्वर जवाब नहीं दे रहे';
+
+  @override
+  String get modesBackupReady =>
+      'एक बैकअप हमेशा तैयार रहता है, इसलिए एक बंद हो जाए तब भी आप जुड़े रहते हैं।';
+
+  @override
+  String get modesDetails => 'विवरण';
+
+  @override
+  String get modesBothLine =>
+      'दोनों हर संदेश को एंड-टू-एंड एन्क्रिप्टेड रखते हैं। बस यह बदलता है कि आपका IP पता कौन देख सकता है।';
+
+  @override
+  String get modesConnectionBridges => 'कनेक्शन और ब्रिज';
+
+  @override
+  String get modesWhatServersSee => 'हमारे सर्वर क्या देख सकते हैं';
+
+  @override
+  String get serversTitle => 'तेज़ के सर्वर';
+
+  @override
+  String get serversLine =>
+      'हर संदेश एक साथ दोनों सर्वर पर जाता है। जो पहले जवाब दे, वही उसे पहुँचाता है, और एक रुक जाए तो दूसरा संभाल लेता है।';
+
+  @override
+  String get serversOne => 'सर्वर 1';
+
+  @override
+  String get serversTwo => 'सर्वर 2 · दूसरी कंपनी';
+
+  @override
+  String get serversConnected => 'जुड़ा है';
+
+  @override
+  String get serversConnecting => 'जुड़ रहा है';
+
+  @override
+  String get serversNotAnswering => 'जवाब नहीं दे रहा';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String get serversQuicker => 'ज़्यादा तेज़';
+
+  @override
+  String get serversBackups => 'सार्वजनिक रिले';
+
+  @override
+  String get serversBackupsLine =>
+      'जब तक सर्वर 1 बंद है, तब तक इस्तेमाल होते हैं, और सिर्फ़ Tor से, इसलिए ये आपका IP पता कभी नहीं देखते।';
+
+  @override
+  String get serversStandingBy => 'तैयार खड़े';
+
+  @override
+  String get serversInUse => 'इस्तेमाल में';
+
+  @override
+  String get homeMergedTitle => 'रिले और तेज़ अब एक हैं';
+
+  @override
+  String get homeMergedLine =>
+      'आप तेज़ पर हैं। एक बैकअप सर्वर हमेशा तैयार रहता है, इसलिए एक बंद हो जाए तब भी आप जुड़े रहते हैं। हमारे सर्वर आपका IP पता देखते हैं, आप क्या कहते हैं यह कभी नहीं।';
+
+  @override
+  String get homeMergedGotIt => 'समझ गया';
+
+  @override
+  String get homeMergedUsePrivate => 'इसकी जगह प्राइवेट चुनें';
+
+  @override
+  String get homeOursDownTitle => 'हमारे सर्वर जवाब नहीं दे रहे';
+
+  @override
+  String get homeOursDownLine =>
+      'कुछ मिनट बाद, जब Tor जुड़ जाए, संदेश सार्वजनिक रिले से भी जाते हैं, और जैसे ही हमारा कोई सर्वर जवाब दे, फिर उसी से।';
+
+  @override
+  String get homeUsePrivate => 'प्राइवेट चुनें';
+
+  @override
+  String get homeSwitchedToPrivate => 'प्राइवेट पर आ गए';
+
+  @override
+  String get homeUseFast => 'तेज़ चुनें';
+
+  @override
+  String get homeSwitchedToFastRoute => 'तेज़ पर आ गए';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'तेज़ सीधे हमारे सर्वर तक जाता है और आम तौर पर पहुँच जाता है। या Kryfo को खुद रास्ता ढूँढने दें।';
+
+  @override
+  String get appServersNotAnswering => 'सर्वर चुप हैं';
+
+  @override
+  String get settingsPrivateTor => 'प्राइवेट · Tor';
+
+  @override
+  String get seenOurServers => 'हमारे सर्वर';
+
+  @override
+  String get seenIpWhy =>
+      'प्राइवेट पर सब कुछ Tor से निकलता है और हमारे सर्वर एक एग्ज़िट नोड देखते हैं, आपको कभी नहीं। तेज़ पर कनेक्शन सीधे हमारे दो सर्वर तक जाता है: जब तक आप जुड़े हैं वे आपका IP पता देखते हैं और उसका कोई रिकॉर्ड नहीं रखते। जब पहला बंद हो, तेज़ सार्वजनिक रिले भी इस्तेमाल करता है, सिर्फ़ Tor से।';
+
+  @override
+  String get onboardingHidesFromEveryone =>
+      'आपका पता सबसे छिपाता है, हमारे सर्वर से भी।';
+
+  @override
+  String get onboardingFastSees =>
+      'हमारे सर्वर आपका पता सिर्फ़ तब देखते हैं जब आप जुड़े हों।';
+
+  @override
+  String get onboardingFastNetworkSees =>
+      'यह नेटवर्क देख सकता है कि आप Kryfo से जुड़ रहे हैं। हमारे सर्वर आपका पता देखते हैं।';
+
+  @override
+  String get onboardingKeepPrivate => 'प्राइवेट रखें →';
+
+  @override
+  String get onboardingSkipPrivate => 'छोड़ें · प्राइवेट अच्छा डिफ़ॉल्ट है';
 }

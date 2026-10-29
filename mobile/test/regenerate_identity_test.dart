@@ -58,7 +58,7 @@ class _Engine implements HaloEngine {
   @override
   String myEdPrivkey() => 'ed';
   @override
-  Future<String> subscribeFirstContact(int counter) async {
+  Future<String> subscribeFirstContact(int ident, int counter) async {
     listened.add(counter);
     return 'ok';
   }

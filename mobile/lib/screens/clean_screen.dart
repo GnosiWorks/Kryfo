@@ -340,7 +340,7 @@ class _Working extends StatelessWidget {
               style: HaloType.sans(size: 13.5, color: HaloColors.warm),
             ),
             const SizedBox(height: 22),
-            HaloBar(value: frac),
+            HaloBar(value: frac, label: l10n.a11yCleanProgress),
           ],
         ),
       ),
@@ -602,7 +602,7 @@ class _RemovedRow extends StatelessWidget {
                 style: HaloType.mono(
                   size: 10.5,
                   letter: 0.08,
-                  color: HaloColors.green,
+                  color: HaloColors.greenText,
                 ),
               ),
             ),
@@ -787,7 +787,7 @@ class _SavedSheetState extends State<_SavedSheet> {
                             style: HaloType.sans(
                               size: 14.5,
                               weight: FontWeight.w600,
-                              color: HaloColors.rose,
+                              color: HaloColors.roseText,
                             ),
                           ),
                         ),

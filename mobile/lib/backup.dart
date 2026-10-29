@@ -1943,7 +1943,10 @@ Future<void> landCatchUpAnchors(String docs, Object? carried) async {
   try {
     await for (final e in Directory(docs).list()) {
       final name = p.basename(e.path);
-      if (name.startsWith('nostr_last_') || name.startsWith('nostr_seen_')) {
+      // the queue of wraps for our relays belongs to the phone it was made on
+      if (name.startsWith('nostr_last_') ||
+          name.startsWith('nostr_seen_') ||
+          name.startsWith('nostr_topup')) {
         await e.delete();
       }
     }

@@ -77,9 +77,10 @@ class LinkView {
     LinkKind.climbing => l10n.appConnecting(percent(pct / 100)),
     LinkKind.relayWait => l10n.appWaitingForARelay,
     LinkKind.ready => l10n.appTorReady,
-    LinkKind.relay => l10n.appViaRelay,
-    LinkKind.relayDown => l10n.appRelayNotAnswering,
-    LinkKind.fast => l10n.appFast,
+    // relay is the fast route now: our two servers
+    LinkKind.relay => l10n.modesFastConnected,
+    LinkKind.relayDown => l10n.appServersNotAnswering,
+    LinkKind.fast => l10n.modesFastConnected,
   };
 
   /// a shorter phrase for the same state, for a language whose words do not
@@ -197,7 +198,7 @@ LinkView linkViewOf({
     final at = since.add(kRelayDownAfter);
     return now.isBefore(at) ? v(LinkKind.relay, at: at) : v(LinkKind.relayDown);
   }
-  if (mode == 'fast') return v(LinkKind.fast);
+  if (mode == 'fast') return v(LinkKind.relay);
   if (off) return v(LinkKind.off);
   if (usable) return v(LinkKind.ready);
   final grace = pillGraceEnds(

@@ -1566,6 +1566,12 @@ void main() {
       // keys blocked as not who they said: no chat's rows
       'blocked_keys',
       'name_tombs',
+      // the identities, and what is kept beside the sessions: a pair's
+      // addresses stay with the store that holds its session, a hidden
+      // chat's too
+      'identities',
+      'pairs',
+      'fc_keys',
       // the identity's own profile photo
       'my_photo',
     };

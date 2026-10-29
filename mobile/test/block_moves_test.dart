@@ -28,7 +28,7 @@ Future<void> _tables(SqliteMem db, String s) async {
     'CREATE TABLE $s.contacts (halo_id TEXT PRIMARY KEY, onion TEXT, '
         'xpub TEXT, first_seen INTEGER, last_seen INTEGER, back_paired '
         'INTEGER DEFAULT 0, blocked INTEGER DEFAULT 0, accepted INTEGER '
-        'DEFAULT 1)',
+        'DEFAULT 1, ident INTEGER NOT NULL DEFAULT 0, ikey TEXT)',
     'CREATE TABLE $s.groups (group_id TEXT PRIMARY KEY, name TEXT)',
     'CREATE TABLE $s.group_members (group_id TEXT, halo_id TEXT, '
         'PRIMARY KEY (group_id, halo_id))',

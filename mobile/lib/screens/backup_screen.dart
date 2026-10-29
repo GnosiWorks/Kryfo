@@ -413,7 +413,10 @@ class _BackupScreenState extends State<BackupScreen> {
                       child: Text(
                         _error!,
                         key: ValueKey(_error),
-                        style: HaloType.sans(size: 12, color: HaloColors.rose),
+                        style: HaloType.sans(
+                          size: 12,
+                          color: HaloColors.roseText,
+                        ),
                       ),
                     ),
             ),
@@ -492,7 +495,11 @@ class _BackupScreenState extends State<BackupScreen> {
                   ? const SizedBox(width: double.infinity)
                   : Padding(
                       padding: const EdgeInsets.only(top: 12),
-                      child: HaloBar(value: _progress, height: 3),
+                      child: HaloBar(
+                        value: _progress,
+                        height: 3,
+                        label: l10n.a11yBackupProgress,
+                      ),
                     ),
             ),
             // the folder stays empty until the file is done and saved

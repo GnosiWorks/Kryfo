@@ -527,7 +527,7 @@ class _RequestCard extends StatelessWidget {
                 _Answer(label: l10n.requestsDecline, onTap: onDecline),
                 _Answer(
                   label: l10n.commonBlock,
-                  color: HaloColors.rose,
+                  color: HaloColors.roseText,
                   onTap: onBlock,
                 ),
               ],

@@ -40,11 +40,9 @@ func fcKeysFrom(priv [32]byte, counter int) (sk, pk string, err error) {
 	return "", "", fmt.Errorf("fc derive failed")
 }
 
-func nip17FirstContactKeys(counter int) (sk, pk string, err error) {
-	me, err := myXid()
-	if err != nil {
-		return "", "", err
-	}
+// the v3 first-contact address of identity [me] at [counter]: the main
+// identity's, for the v3 links it handed out
+func nip17FirstContactKeysAs(me xid, counter int) (sk, pk string, err error) {
 	return fcKeysFrom(me.priv, counter)
 }
 
@@ -52,14 +50,6 @@ func nip17FirstContactKeys(counter int) (sk, pk string, err error) {
 // still signed with our per-conversation sender key, so once they know who we
 // are the same verification as every other message applies. only the outer
 // wrap is addressed differently.
-func nip17WrapFirstContact(peer [32]byte, fcPk, msg string) (nostr2.Event, error) {
-	me, err := myXid()
-	if err != nil {
-		return nostr2.Event{}, err
-	}
-	return nip17WrapFirstContactAs(me, peer, fcPk, msg)
-}
-
 func nip17WrapFirstContactAs(me xid, peer [32]byte, fcPk, msg string) (nostr2.Event, error) {
 	sndSk, sndPk, err := nip17DeriveRoleAs(me, peer, nip17SndInfo, hex.EncodeToString(me.pub[:]))
 	if err != nil {
@@ -77,7 +67,7 @@ func nip17WrapFirstContactAs(me xid, peer [32]byte, fcPk, msg string) (nostr2.Ev
 		return nostr2.Event{}, err
 	}
 	exp := wrapExpiry(time.Now())
-	return nip59.GiftWrap(rumor, fcPk,
+	return giftWrapKept(rumor, fcPk,
 		func(pt string) (string, error) { return nip44.Encrypt(pt, ck) },
 		func(e *nostr2.Event) error { return e.Sign(sndSk) },
 		func(e *nostr2.Event) { e.Tags = append(e.Tags, nostr2.Tag{"expiration", exp}) },
@@ -89,28 +79,12 @@ func nip17WrapFirstContactAs(me xid, peer [32]byte, fcPk, msg string) (nostr2.Ev
 // through the same pow and request gates as any other stranger. returns the
 // payload and the seal's pubkey so the caller can tie later messages to the
 // same sender.
-func nip17UnwrapFirstContact(counter int, gw nostr2.Event) (content, sealPk string, err error) {
-	fcSk, _, err := nip17FirstContactKeys(counter)
-	if err != nil {
-		return "", "", err
-	}
-	return nip17UnwrapFirstContactWith(fcSk, gw)
-}
-
 func nip17UnwrapFirstContactWith(fcSk string, gw nostr2.Event) (content, sealPk string, err error) {
 	content, sealPk, _, err = nip17UnwrapFirstContactWithStamped(fcSk, gw)
 	return content, sealPk, err
 }
 
 // with the stamp the sender's rumor carries
-func nip17UnwrapFirstContactStamped(counter int, gw nostr2.Event) (content, sealPk string, at nostr2.Timestamp, err error) {
-	fcSk, _, err := nip17FirstContactKeys(counter)
-	if err != nil {
-		return "", "", 0, err
-	}
-	return nip17UnwrapFirstContactWithStamped(fcSk, gw)
-}
-
 func nip17UnwrapFirstContactWithStamped(fcSk string, gw nostr2.Event) (content, sealPk string, at nostr2.Timestamp, err error) {
 	rumor, err := nip59.GiftUnwrap(gw, func(otherPk, ct string) (string, error) {
 		k, kerr := nip44.GenerateConversationKey(otherPk, fcSk)

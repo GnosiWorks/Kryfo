@@ -282,12 +282,12 @@ void main() {
       appState.sendModeForTest = 'balanced';
       await show(t, const NotificationsScreen());
       await poll(t, 'off|0|0|1|0');
-      expect(_inPill(l10n.appViaRelay), findsOneWidget);
+      expect(_inPill(l10n.modesFastConnected), findsOneWidget);
       expect(line(l10n.deliveryModeConnected), findsOneWidget);
       appState.relayDownSinceForTest = _ago(kRelayDownAfter.inSeconds + 1);
       await nudge(t);
-      expect(_inPill(l10n.appRelayNotAnswering), findsOneWidget);
-      expect(line(l10n.appRelayNotAnswering), findsOneWidget);
+      expect(_inPill(l10n.appServersNotAnswering), findsOneWidget);
+      expect(line(l10n.appServersNotAnswering), findsOneWidget);
       expect(line(l10n.deliveryModeConnected), findsNothing);
       await gone(t);
     });

@@ -840,7 +840,7 @@ class _CameraScreenState extends State<CameraScreen>
         children: [
           _pill(_size(_clipBytes), HaloColors.text),
           if (!fileFits(_clipBytes))
-            _pill(l10n.cameraTooLongForA, HaloColors.rose),
+            _pill(l10n.cameraTooLongForA, HaloColors.roseText),
         ],
       ),
     );

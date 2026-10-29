@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import 'dart:async';
+import 'devices/history_open.dart' show endHistoryCopies;
 import 'secure_store.dart';
 import 'desktop/desktop_mode.dart'
     show containerClosed, containerOpened, onDesktop, startEngineIn;
@@ -17,6 +18,7 @@ import 'dart:ffi';
 import 'dart:io';
 import 'clean_media.dart' show kSaveCopies;
 import 'shred.dart';
+import 'identities.dart';
 import 'album.dart' show AlbumTag, albumGoneUid, albumInWindow, albumItemBurnAt;
 export 'shred.dart' show shredFile, shredTree;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -150,7 +152,7 @@ import 'read_burn.dart' show burnStartBy, burnWaitsRow, burnWaitsSql, kBurnSkew;
 import 'stranger_gate.dart';
 import 'first_contact.dart';
 import 'text_send.dart' show kSendBlocked;
-import 'fast_gate.dart';
+import 'route_merge.dart';
 import 'mentions.dart';
 import 'gifs/gif_source.dart' show sweepGifParts;
 import 'notes_export.dart' show dropNotesExports, sweepNotesExports;
@@ -201,6 +203,7 @@ part 'app/routing.dart';
 part 'app/sending.dart';
 part 'app/shell.dart';
 part 'app/signal.dart';
+part 'app/door.dart';
 part 'app/state.dart';
 part 'app/state_arrivals.dart';
 part 'app/state_boot.dart';

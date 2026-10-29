@@ -1165,6 +1165,8 @@ extension AppStateOutbox on AppState {
       final backPaired = to.backPaired;
       final xpub = to.xpub;
       final onion = to.onion;
+      // the identity the door sealed it on goes with it to the relay
+      final ident = identOf(memberId);
       final pairWay = await pairRead(memberId, backPaired: backPaired);
 
       // the onion and a fresh pair copy at its own time, never the
@@ -1177,7 +1179,7 @@ extension AppStateOutbox on AppState {
               () => _io.onionSend(onion, cipher),
             ).catchError((Object _) => 'err'),
           Future(
-            () => _io.relaySend(xpub, cipher),
+            () => _io.relaySend(ident, xpub, cipher),
           ).catchError((Object _) => 'err'),
         ]);
         if (!rs.contains('ok')) dlog('send: no copy went ($rs)');
@@ -1192,12 +1194,14 @@ extension AppStateOutbox on AppState {
         // two together. a failed one goes again from the outbox
         final fc = backPaired ? null : peerFcFor(memberId);
         if (fc != null && fc.isNotEmpty) {
-          final f = await Future(() => _io.firstContactSend(xpub, fc, cipher));
+          final f = await Future(
+            () => _io.firstContactSend(ident, xpub, fc, cipher),
+          );
           if (f == 'ok') return true;
           dlog('send: first-contact failed ($f)');
           return false;
         }
-        final n = await Future(() => _io.relaySend(xpub, cipher));
+        final n = await Future(() => _io.relaySend(ident, xpub, cipher));
         // the pair address is a drop box they read only once they add us
         // back, or once they took our card. stored there is parked, not
         // delivered, until one of those
@@ -1239,13 +1243,13 @@ extension AppStateOutbox on AppState {
       if (viaFirst) {
         unawaited(
           _io
-              .firstContactSend(xpub, fc, cipher)
+              .firstContactSend(ident, xpub, fc, cipher)
               .then((r) => settle('firstcontact', r))
               .catchError((_) => settle('firstcontact', 'err')),
         );
       } else {
         unawaited(
-          Future(() => _io.relaySend(xpub, cipher))
+          Future(() => _io.relaySend(ident, xpub, cipher))
               .then((r) => settle('nostr', r))
               .catchError((_) => settle('nostr', 'err')),
         );

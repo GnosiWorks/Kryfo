@@ -14,6 +14,7 @@ import 'container.dart';
 import 'delivery_mode.dart';
 import 'dlog.dart';
 import 'l10n/app_locale.dart';
+import 'route_merge.dart';
 import 'secure_store.dart';
 import 'theme.dart' show HaloAccent;
 
@@ -31,8 +32,8 @@ const _kShield = 'kryfo.scamshield.on';
 const _kTyping = 'kryfo.typing.on';
 const _kIntros = 'kryfo.intro.accept';
 
-// the routes a file may set. fast still asks again on a new install
-// (sendModeAtBoot)
+// the routes a file may set. an older file's fast is the one fast route now,
+// kept as balanced (routeAtBoot)
 const _kRoutes = {'private', 'balanced', 'fast'};
 
 // the accents a file may set
@@ -54,6 +55,7 @@ abstract final class Carried {
   static const shield = 'shield';
   static const intros = 'intros';
   static const typing = 'typing';
+  static const routeNote = 'route_note';
 }
 
 /// the settings of [c] and of the phone as they read now, every one with
@@ -76,6 +78,9 @@ Future<Map<String, Object>> readCarriedSettings(HaloContainer c) async {
   if (_kAccents.contains(accent)) out[Carried.accent] = accent;
   final route = await st.read(key: c.key(_kRoute)) ?? 'private';
   if (_kRoutes.contains(route)) out[Carried.route] = route;
+  // whether the card about relay and fast becoming one was seen
+  final note = c.quiet ? null : await st.read(key: kRouteMergeNote);
+  if (note == 'due' || note == 'done') out[Carried.routeNote] = note!;
   final delivery = prefs.getString(c.key(kDeliveryModeKey)) ?? 'always';
   if (_kDeliveries.contains(delivery)) out[Carried.delivery] = delivery;
   final language = prefs.getString(c.key(kAppLocaleKey));
@@ -127,7 +132,15 @@ Future<bool> landCarriedSettings(
   }
   final route = carried[Carried.route];
   if (route is String && _kRoutes.contains(route)) {
-    await st.write(key: c.key(_kRoute), value: route);
+    await st.write(key: c.key(_kRoute), value: routeAtBoot(route));
+    // the card goes with the phone it was seen on. a file from before the
+    // two were one, on relay or fast, has it still to see
+    final note = carried[Carried.routeNote];
+    if (note == 'due' || note == 'done') {
+      await st.write(key: kRouteMergeNote, value: note as String);
+    } else if (routeAtBoot(route) == 'balanced') {
+      await st.write(key: kRouteMergeNote, value: 'due');
+    }
   }
   final delivery = carried[Carried.delivery];
   final was = prefs.getString(c.key(kDeliveryModeKey)) ?? 'always';

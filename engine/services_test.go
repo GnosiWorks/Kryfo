@@ -72,6 +72,7 @@ func TestServicesOverTorOnEveryRoute(t *testing.T) {
 			}
 
 			gifs := newServiceStandIn(t)
+			useGifHost(t, gifs.srv.URL)
 			if r := gifAsk(http.MethodGet, gifs.srv.URL+"/search?q=cat", ""); strings.HasPrefix(r, "error") {
 				t.Fatalf("gif: %s", r)
 			}
