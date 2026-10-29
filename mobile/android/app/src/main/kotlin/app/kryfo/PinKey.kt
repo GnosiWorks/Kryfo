@@ -63,6 +63,10 @@ object PinKey {
         // a make is under way, or stopped before its key passed its test
         fun making(): Boolean
         fun setMaking(on: Boolean)
+        // the keystore here keeps keys in software only: no pin key is made,
+        // the table stays as it was
+        fun soft(): Boolean = false
+        fun setSoft() {}
     }
 
     object Store : Keys {
@@ -108,7 +112,8 @@ object PinKey {
                     KeyProperties.SECURITY_LEVEL_STRONGBOX -> STRONGBOX
                     KeyProperties.SECURITY_LEVEL_TRUSTED_ENVIRONMENT,
                     KeyProperties.SECURITY_LEVEL_UNKNOWN_SECURE -> TEE
-                    else -> SOFTWARE
+                    KeyProperties.SECURITY_LEVEL_SOFTWARE -> SOFTWARE
+                    else -> null
                 }
             }
             @Suppress("DEPRECATION")
@@ -135,6 +140,12 @@ object PinKey {
 
         override fun setMaking(on: Boolean) {
             p.edit().putBoolean("m", on).commit()
+        }
+
+        override fun soft(): Boolean = p.getBoolean("s", false)
+
+        override fun setSoft() {
+            p.edit().putBoolean("s", true).commit()
         }
     }
 
@@ -197,7 +208,7 @@ object PinKey {
 
     // {"k": a key is there, "u": it works only while the phone is unlocked,
     // "l": where it lives, "s": the phone has a screen lock, "v": android's
-    // version}, or {"e": "busy"}
+    // version, "n": no key, and none is made on this keystore}, or {"e": "busy"}
     fun info(): Map<String, Any> {
         // a key whose make has not finished its test is no key yet: dart then
         // asks for a make, which drops it and makes a tested one
@@ -207,6 +218,9 @@ object PinKey {
         if (!has && !goneSure()) {
             has = hasKey() ?: return mapOf("e" to "busy")
             if (!has) return mapOf("e" to "busy")
+        }
+        if (!has && isSoft()) {
+            return mapOf("k" to false, "u" to 0, "l" to SOFTWARE, "s" to secure(), "v" to sdk, "n" to true)
         }
         val noted = notes?.read()
         val level = if (!has) {
@@ -228,8 +242,11 @@ object PinKey {
     }
 
     // a new key, tested before it is used: strongbox when it is there, works
-    // and is quick, else the tee. never over a key that is there: that one is
-    // kept and described. {"k", "u", "l", "kc", "ms"}, or {"e": "refused"}
+    // and is quick, else the tee. a key the keystore says it keeps in
+    // software is not kept: no chip guards it, and a container's keystore
+    // can lose it, so the table stays as it was. never over a key that is
+    // there: that one is kept and described. {"k", "u", "l", "kc", "ms"},
+    // or {"e": "refused" | "software"}
     // one at a time, from any engine: a second make never runs over the key
     // a first one just made and described
     @Synchronized
@@ -242,6 +259,7 @@ object PinKey {
             has = hasKey() ?: return mapOf("e" to "busy")
             if (has) return mapOf("e" to "busy")
         }
+        if (!has && isSoft()) return mapOf("e" to "software")
         if (has) {
             val (kc, why) = sign(KCV_INPUT)
             if (kc == null) return mapOf("e" to why)
@@ -253,6 +271,7 @@ object PinKey {
         val unlocked = sdk >= 35
         val tries = if (sdk >= 28) listOf(true, false) else listOf(false)
         notes?.setMaking(true)
+        var soft = false
         for (strong in tries) {
             // generating over an alias replaces it: asked again right before
             if (hasKey() != false) return mapOf("e" to "busy")
@@ -274,18 +293,23 @@ object PinKey {
                 dropQuietly()
                 continue
             }
+            // a level that will not read claims nothing, except a strongbox
+            // key, which the keystore makes nowhere else. before 12 the key
+            // only tells secure hardware from software
+            val read = try {
+                keys.level(ALIAS)
+            } catch (_: Exception) {
+                null
+            }
+            if (read == SOFTWARE) {
+                told("in software", null)
+                dropQuietly()
+                soft = true
+                continue
+            }
             val level = when {
-                sdk >= 31 -> try {
-                    keys.level(ALIAS)
-                } catch (_: Exception) {
-                    null
-                } ?: if (strong) STRONGBOX else TEE
-                strong -> STRONGBOX
-                else -> try {
-                    keys.level(ALIAS)
-                } catch (_: Exception) {
-                    null
-                } ?: SOFTWARE
+                strong -> if (sdk >= 31) read ?: STRONGBOX else STRONGBOX
+                else -> read ?: SOFTWARE
             }
             val u = if (unlocked) 1 else 0
             notes?.write(u, level)
@@ -294,7 +318,13 @@ object PinKey {
         }
         // a failed key that would not go stays marked, so the next make
         // deletes it before anything else
-        if (hasKey() == false) notes?.setMaking(false)
+        if (hasKey() == false) {
+            notes?.setMaking(false)
+            if (soft) {
+                notes?.setSoft()
+                return mapOf("e" to "software")
+            }
+        }
         return mapOf("e" to "refused")
     }
 
@@ -334,6 +364,12 @@ object PinKey {
         if (untested()) return mapOf("e" to "busy")
         val (m, why) = sign(KCV_INPUT)
         return if (m == null) mapOf("e" to why) else mapOf("m" to hex(m))
+    }
+
+    private fun isSoft(): Boolean = try {
+        notes?.soft() == true
+    } catch (_: Exception) {
+        false
     }
 
     private fun untested(): Boolean = try {
