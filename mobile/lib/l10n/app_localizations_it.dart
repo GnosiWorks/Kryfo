@@ -10117,7 +10117,7 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get transferLeftSoon => 'meno di un minuto rimasto';
+  String get transferLeftSoon => 'manca meno di un minuto';
 
   @override
   String transferLeftMinutes(String n) {
