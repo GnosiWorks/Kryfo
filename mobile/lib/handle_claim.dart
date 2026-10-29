@@ -6,11 +6,15 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 
-import 'main.dart'
-    show appState, engine, sessionQuiet, AppStateProfile, AppStateSession;
+import 'invite_share.dart' show readyInvite;
+import 'main.dart' show appState, engine, sessionQuiet, AppStateProfile;
 import 'quiet_wait.dart';
 
 final handleShape = RegExp(r'^[a-z0-9_]{3,20}$');
+
+/// the invite a claim hands the registry. a test hands in its own
+@visibleForTesting
+Future<String?> Function() claimInvite = readyInvite;
 
 const _unreached = 'error: bad answer from the registry';
 
@@ -98,10 +102,13 @@ class HandleClaimer extends ChangeNotifier {
     asking(true);
     _changed();
     // same invite the qr code carries, so the registry only holds what is
-    // already public
-    final uri = await appState.sessionInvite();
+    // already public. on a first start it waits for the onion: the registry
+    // takes no invite without one
+    final uri = sessionQuiet ? null : await claimInvite();
     final r = sessionQuiet
         ? await unreachedLater(_unreached)
+        : uri == null
+        ? _unreached
         : await engine.handleClaim(h, uri, bio);
     // kept even when the page is gone: the registry already holds it
     if (r == 'ok') await appState.setMyHandle(h, bio: bio, invite: uri);

@@ -731,7 +731,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
   bool _busy = false;
 
   Future<void> _regenerate() async {
-    if (_busy) return;
+    if (_busy || widget.appState.myHandle != null) return;
     final still = motionStill(context);
     _reveal.value = 1;
     setState(() {
@@ -836,8 +836,17 @@ class _IdentityScreenState extends State<_IdentityScreen>
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _Cta(label: l10n.onboardingUseThisName, onTap: _continue),
-              const SizedBox(height: 10),
-              _tryAnother(),
+              // a claimed @name points at this key's invite: a new key would
+              // leave it pointing at one nobody holds, so the words stay
+              ListenableBuilder(
+                listenable: widget.appState,
+                builder: (_, _) => widget.appState.myHandle != null
+                    ? const SizedBox.shrink()
+                    : Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: _tryAnother(),
+                      ),
+              ),
             ],
           ),
         ),

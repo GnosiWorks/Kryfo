@@ -2,7 +2,8 @@
 // the invite as other messengers carry it: a kryfo:// link is not tappable in
 // many of them and does nothing without the app, so the text holds an https
 // page on our relay that opens Kryfo or says where to get it, and the
-// download page. the page carries the same query as the kryfo link.
+// download page. the page link carries the kryfo link's query after the '#',
+// which a browser never sends, so the relay never sees the invite.
 
 import 'dart:async';
 
@@ -20,7 +21,7 @@ import 'update_check.dart' show downloadPageFor;
 
 const kInviteHost = 'relay.kryfo.app';
 const _kryfoShare = 'kryfo://share?';
-const _webShare = 'https://$kInviteHost/i?';
+const _webShare = 'https://$kInviteHost/i#';
 
 /// the invite page for a kryfo invite link, or null for anything else
 String? webInviteOf(String kryfo) {
@@ -35,8 +36,12 @@ String? webInviteOf(String kryfo) {
 String kryfoInviteOf(String raw) =>
     raw.replaceAllMapped(_webInvite, (m) => '$_kryfoShare${m.group(1)}');
 
+// only a link that starts a word: not one inside another url. '#' is what
+// the app writes, '?' what earlier builds of 0.6 wrote. the bidi marks are
+// the ones a right-to-left share text puts around the link
 final _webInvite = RegExp(
-  r'https?://relay\.kryfo\.app/i/?\?([^\s#]+)',
+  r'''(?<![^\s<(\["'\u200e\u200f\u2066-\u2069])'''
+  r'https://relay\.kryfo\.app/i[#?]([A-Za-z0-9._~%+/=&-]+)',
   caseSensitive: false,
 );
 
