@@ -277,7 +277,12 @@ mixin _PhotoRows {
       );
       final held = r.isEmpty ? 0 : r.first['their_ver'] as int? ?? 0;
       if (!photoVersionTakes(ver, held, now: at)) return false;
-      await t.delete('photo_parts', where: 'halo_id = ?', whereArgs: [from]);
+      // a newer photo already waiting stays: the take-back came late
+      await t.delete(
+        'photo_parts',
+        where: 'halo_id = ? AND ver < ?',
+        whereArgs: [from, ver],
+      );
       await _putTheirs(t, from, null, ver, at);
       return r.isNotEmpty && r.first['theirs'] != null;
     });

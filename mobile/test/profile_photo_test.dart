@@ -783,6 +783,23 @@ void main() {
       expect((await db.photosOf(_peer)).theirs, isNotNull);
     }, skip: skip);
 
+    test(
+      'a take-back that comes after a newer photo leaves it waiting',
+      () async {
+        final db = await rows();
+        const t0 = 1000000;
+        final gap = kPhotoTakeGap.inMilliseconds;
+        expect(await _takeAll(db, 100, t0), isTrue);
+        expect(await _takeAll(db, 200, t0 + 1000), isFalse);
+        expect(await db.takePhotoDrop(_peer, 150, now: t0 + 2000), isTrue);
+        expect((await db.photosOf(_peer)).theirs, isNull);
+        expect(await db.takeWaitingPhotos(now: t0 + 2000 + gap), isTrue);
+        expect((await db.photosOf(_peer)).theirVer, 200);
+        expect((await db.photosOf(_peer)).theirs, _clean);
+      },
+      skip: skip,
+    );
+
     test('the picture is read off the ui isolate, outside any write', () {
       final src = sourceOf('lib/app/database_photos.dart');
       final at = src.indexOf('static Future<bool> _takeWhole(');
