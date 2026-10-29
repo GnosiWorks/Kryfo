@@ -1739,7 +1739,6 @@ class _ChatScreenState extends State<ChatScreen>
   final Set<String> _seenGoing = {};
   Timer? _followTimer;
 
-  // a beat after the tick, so a send that just let go has written its row
   // the files still to come: a bubble draws a card or its file by them, so
   // one read after the chat was drawn draws again. a ring moving does not
   Set<String> _waitUids = fileWaits.value.keys.toSet();
@@ -1750,6 +1749,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (mounted) setState(() {});
   }
 
+  // a beat after the tick, so a send that just let go has written its row
   void _mediaSendsMoved() {
     _followTimer?.cancel();
     _followTimer = Timer(
