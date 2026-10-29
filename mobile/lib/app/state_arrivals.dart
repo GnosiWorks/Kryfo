@@ -237,6 +237,11 @@ extension AppStateArrivals on AppState {
         reached: reached,
       );
       if (AppState._shown(to)) _typingAnswered(senderHaloId, env);
+      // a v4 first contact keeps no onion until they answer: their first
+      // frame on the session gives it, and a held one is never replaced
+      if (to == RouteTo.everyday && !fromBackPair && env.groupId == null) {
+        await _fillOnion(senderHaloId, env.senderOnion);
+      }
       return to;
     } finally {
       for (final k in keys) {
@@ -249,6 +254,17 @@ extension AppStateArrivals on AppState {
         _bumpChatRev(k);
       }
       if (marks.isNotEmpty) notifyListeners();
+    }
+  }
+
+  Future<void> _fillOnion(String id, String? onion) async {
+    if (onion == null || !RegExp(r'^[a-z2-7]{56}\.onion$').hasMatch(onion)) {
+      return;
+    }
+    try {
+      await live.fillOnion(id, onion);
+    } catch (e) {
+      dlog('onion: not kept (${e.runtimeType})');
     }
   }
 

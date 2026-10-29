@@ -771,6 +771,18 @@ mixin _ContactRows {
 
   // someone who asked, or asked and was let go: adding them by their card
   // is the accept they were waiting for
+  /// [onion] for a contact accepted here who has none yet; a held one
+  /// stays
+  Future<void> fillOnion(String haloId, String onion) async {
+    final db = await open();
+    await db.update(
+      'contacts',
+      {'onion': onion},
+      where: "halo_id = ? AND accepted = 1 AND (onion IS NULL OR onion = '')",
+      whereArgs: [haloId],
+    );
+  }
+
   /// a hello owed to the identity [ownerHex] (0x05 and its x key),
   /// answering its invite [answersHex] (all zero: a v3 link) at the
   /// first-contact key [fc]: kept until it went
