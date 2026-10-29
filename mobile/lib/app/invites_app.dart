@@ -424,6 +424,56 @@ extension AppStateInvites on AppState {
     }
   }
 
+  /// the hellos of [haloId]'s keys let go, as a delete, a block or "this
+  /// isn't them" lets them go: one owed to them is not sent, mine out to
+  /// them takes its one-time invite with it, a first contact waiting for
+  /// their answer and their hello waiting for an accept go. [keys]: x keys
+  /// known for them besides their row's and the one their words are bound
+  /// to. read before their row goes
+  Future<Set<String>> hellosKeysOf(
+    String haloId, {
+    Iterable<String> keys = const [],
+  }) async {
+    final row = await session.getContact(haloId);
+    return {
+      for (final x in [
+        ...keys,
+        (row?['xpub'] as String?) ?? '',
+        if (!sessionQuiet && signalSession.ready)
+          (await peerXPubOf(haloId)) ?? '',
+      ])
+        ?identityKeyHex(x.trim()),
+    };
+  }
+
+  Future<void> dropHellos(Set<String> peers) async {
+    if (peers.isEmpty || sessionQuiet || !signalSession.ready) return;
+    try {
+      final db = await live.open();
+      for (final p in peers) {
+        final out = await db.query(
+          'hellos',
+          columns: ['invite_id'],
+          where: 'ident = ? AND way = ? AND peer = ?',
+          whereArgs: [kMainIdent, kHelloOut, p],
+        );
+        for (final o in out) {
+          final r = await inviteOf(db, kMainIdent, o['invite_id'] as String);
+          if (r != null) {
+            await spendOpenedInvite(InviteArrival(kMainIdent, r, ''));
+          }
+        }
+        await db.delete(
+          'hellos',
+          where: 'ident = ? AND peer = ?',
+          whereArgs: [kMainIdent, p],
+        );
+      }
+    } catch (e) {
+      dlog('hello: rows not let go (${e.runtimeType})');
+    }
+  }
+
   /// my v4 link (with the bundle) or, with [qr], its qr form; null before
   /// the main invite is made
   Future<String?> myV4Invite({bool qr = false}) async {
@@ -577,15 +627,19 @@ extension AppStateInvites on AppState {
       where: 'ident = ? AND way = ? AND peer = ? AND invite_id = ?',
       whereArgs: [kMainIdent, kHelloWant, peer, answers],
     );
-    // answered already: a session on their key needs no hello
+    // answered already: a session on their key needs no hello. one whose
+    // row went or who is blocked since is owed none
     final c = await db.query(
       'contacts',
-      columns: ['halo_id'],
+      columns: ['halo_id', 'blocked'],
       where: 'ikey = ?',
       whereArgs: [peer],
       limit: 1,
     );
-    if (c.isNotEmpty && await hasSessionWith(c.first['halo_id'] as String)) {
+    if (c.isEmpty ||
+        (c.first['blocked'] as int? ?? 0) == 1 ||
+        await _keyBlockedHere(peer.substring(2)) ||
+        await hasSessionWith(c.first['halo_id'] as String)) {
       await done();
       return true;
     }

@@ -413,6 +413,75 @@ void main() {
     expect(await app.myV4Invite(), inviteLink(now.link));
   });
 
+  Future<(String, InviteRow)> owed(_Phone p) async {
+    live.person(p.words, xpub: p.x);
+    await live.upsertContact(p.words, '', p.x);
+    final once = await makeInvite(
+      db,
+      signalSession,
+      kind: kInviteOneTime,
+      fcPkOf: _fcPkOf,
+    );
+    final at = DateTime.now().millisecondsSinceEpoch;
+    for (final (way, inv) in [
+      ('want', '0' * 32),
+      ('out', once.id),
+      ('in', '1' * 32),
+    ]) {
+      await db.insert('hellos', {
+        'ident': kMainIdent,
+        'way': way,
+        'peer': p.keyHex,
+        'invite_id': inv,
+        'fc': 'ab' * 32,
+        'at': at,
+      });
+    }
+    return (p.words, once);
+  }
+
+  for (final how in ['delete', 'block']) {
+    test('a $how lets their hellos go: none owed goes, mine out takes its '
+        'one-time invite with it', () async {
+      final p = await _Phone.make('gone-hellos-$how', 61);
+      final (id, once) = await owed(p);
+      if (how == 'delete') {
+        await app.deleteConversation(id);
+      } else {
+        await app.block(id);
+      }
+      expect(
+        await db.query('hellos', where: 'peer = ?', whereArgs: [p.keyHex]),
+        isEmpty,
+      );
+      expect((await inviteOf(db, kMainIdent, once.id))?.usedAt, isNotNull);
+      expect(
+        await signalSession.signedPreKeyStore.contains(once.spkId!),
+        isFalse,
+      );
+      expect(engine.unsubscribed, contains(once.id));
+    });
+  }
+
+  test('a hello owed to a key with no row or a block is not sent', () async {
+    final p = await _Phone.make('no-row-owed', 63);
+    await live.oweHello(p.keyHex, '0' * 32, 'ab' * 32);
+    await app.sendHellosOwed();
+    expect(engine.hellos, isEmpty);
+    expect(await hellosOf('want', p.keyHex), isEmpty);
+    final q = await _Phone.make('blocked-owed', 65);
+    await live.upsertContact(q.words, '', q.x);
+    await db.update(
+      'contacts',
+      {'blocked': 1},
+      where: 'halo_id = ?',
+      whereArgs: [q.words],
+    );
+    await live.oweHello(q.keyHex, '0' * 32, 'ab' * 32);
+    await app.sendHellosOwed();
+    expect(engine.hellos, isEmpty);
+  });
+
   test('a session made again and its pair\'s seed are kept together: a '
       'failed write leaves the old pair as it was', () async {
     final p = await _Phone.make('seed-together', 71);
