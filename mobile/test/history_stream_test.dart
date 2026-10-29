@@ -822,6 +822,136 @@ void main() {
     skip: skip,
   );
 
+  test('what the device deleted itself stays deleted', () async {
+    final ph = await _phone(ana: 6);
+    final l = _Link();
+    final out = await _export(ph, l);
+    final d = await _device();
+    final real = (await ph.db.query(
+      'messages',
+      where: "plaintext = 'ana says 2'",
+    )).single;
+    expect(real['direction'], 'in');
+    // it came live and was deleted here before the copy landed
+    await d.db.insert('gone_in', {
+      'msg_uid': real['msg_uid'],
+      'peer_id': _ana,
+      'at': 1,
+    });
+    final imp = await _open(d, l, out);
+    await _pump(out, imp);
+    expect((await imp.finish()).gaps, isEmpty);
+    expect(
+      await d.db.query(
+        'messages',
+        where: 'msg_uid = ?',
+        whereArgs: [real['msg_uid']],
+      ),
+      isEmpty,
+    );
+    out.close();
+  }, skip: skip);
+
+  test('the later edit stays, whichever side took it', () async {
+    for (final (here, phone, want) in [
+      (200, 100, 'edited here'),
+      (50, 100, 'edited on the phone'),
+    ]) {
+      final ph = await _phone(ana: 6);
+      final real = (await ph.db.query(
+        'messages',
+        where: "plaintext = 'ana says 2'",
+      )).single;
+      await ph.db.update(
+        'messages',
+        {'plaintext': 'edited on the phone', 'edited': 1},
+        where: 'id = ?',
+        whereArgs: [real['id']],
+      );
+      await ph.db.insert('frame_order', {
+        'msg_uid': real['msg_uid'],
+        'sender': _ana,
+        'kind': 'edit',
+        'w': phone,
+      });
+      final l = _Link();
+      final out = await _export(ph, l);
+      final d = await _device();
+      await d.db.insert('contacts', {
+        'halo_id': _ana,
+        'onion': 'o',
+        'xpub': 'x',
+        'first_seen': 1,
+        'last_seen': 1,
+      });
+      await d.db.insert('messages', {
+        'peer_id': _ana,
+        'direction': 'in',
+        'plaintext': 'edited here',
+        'edited': 1,
+        'sent_at': real['sent_at'],
+        'msg_uid': real['msg_uid'],
+      });
+      await d.db.insert('frame_order', {
+        'msg_uid': real['msg_uid'],
+        'sender': _ana,
+        'kind': 'edit',
+        'w': here,
+      });
+      final imp = await _open(d, l, out);
+      await _pump(out, imp);
+      expect((await imp.finish()).gaps, isEmpty);
+      final rows = await d.db.query(
+        'messages',
+        where: 'msg_uid = ?',
+        whereArgs: [real['msg_uid']],
+      );
+      expect(
+        [for (final r in rows) r['plaintext']],
+        [want],
+        reason: '$here $phone',
+      );
+      out.close();
+    }
+  }, skip: skip);
+
+  test('a file the device already holds stays its own on a merge', () async {
+    final ph = await _phone(ana: 2);
+    final l = _Link();
+    final out = await _export(ph, l, skip: true);
+    final d = await _device();
+    final real = (await ph.db.query(
+      'messages',
+      where: "plaintext = 'a photo'",
+    )).single;
+    final mine = p.join(d.media, 'live.jpg');
+    File(mine).writeAsBytesSync([1, 2, 3]);
+    await d.db.insert('contacts', {
+      'halo_id': _ana,
+      'onion': 'o',
+      'xpub': 'x',
+      'first_seen': 1,
+      'last_seen': 1,
+    });
+    await d.db.insert('messages', {
+      'peer_id': _ana,
+      'direction': real['direction'],
+      'plaintext': 'a photo',
+      'sent_at': real['sent_at'],
+      'msg_uid': real['msg_uid'],
+      'media_path': mine,
+    });
+    final imp = await _open(d, l, out);
+    await _pump(out, imp);
+    final rows = await d.db.query(
+      'messages',
+      where: 'msg_uid = ?',
+      whereArgs: [real['msg_uid']],
+    );
+    expect([for (final r in rows) r['media_path']], [mine]);
+    out.close();
+  }, skip: skip);
+
   test('one message with other words is still one message', () async {
     final ph = await _phone(ana: 6);
     final l = _Link();
@@ -959,10 +1089,10 @@ void main() {
     );
   }, skip: skip);
 
-  test('under the vault lock a hide waits until the chats are read', () async {
+  test('a hide queued while the chats are read ends the copy', () async {
     final ph = await _phone(ana: 30);
     final l = _Link();
-    // the vault's chain: one piece of work at a time, as _serial runs them
+    // the vault's chain: one piece of work at a time, as _chatMoves runs them
     var chain = Future<void>.value();
     Future<void> serial(Future<void> Function() work) {
       final r = chain.then((_) => work());
@@ -971,35 +1101,31 @@ void main() {
     }
 
     late Future<void> hid;
-    final out = await exportHistory(
-      db: ph.db,
-      container: HaloContainer.everyday,
-      mediaDir: ph.media,
-      spoolDir: ph.dir,
-      keyHex: l.key,
-      bindHex: l.bind,
-      identityHex: _identity,
-      chunk: 1024,
-      hold: (work) {
-        final r = serial(work);
-        hid = serial(() => hide(ph.db, _ana));
-        return r;
-      },
+    await expectLater(
+      exportHistory(
+        db: ph.db,
+        container: HaloContainer.everyday,
+        mediaDir: ph.media,
+        spoolDir: ph.dir,
+        keyHex: l.key,
+        bindHex: l.bind,
+        identityHex: _identity,
+        chunk: 1024,
+        hold: (work) {
+          final r = serial(work);
+          // the hide waits for the read, then lands while the files are
+          // read, and ends every copy as hideChats does
+          hid = serial(() async {
+            await hide(ph.db, _ana);
+            endHistoryCopies();
+          });
+          return r;
+        },
+      ),
+      throwsA(isA<HistoryHiddenMeanwhile>()),
     );
     await hid;
-    // the chat went whole, as it was before the hide
-    final d = await _device();
-    final imp = await _open(d, l, out);
-    await _pump(out, imp);
-    expect((await imp.finish()).gaps, isEmpty);
-    expect(
-      await d.db.query(
-        'messages',
-        where: "peer_id = '$_ana' AND group_id IS NULL",
-      ),
-      hasLength(37),
-    );
-    out.close();
+    expect(historyCopiesOpen, 0);
   }, skip: skip);
 
   test('only the everyday container, with nothing attached, sends', () async {

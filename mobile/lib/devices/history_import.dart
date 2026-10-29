@@ -11,6 +11,7 @@ import 'dart:typed_data';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
+import '../main.dart' show goneKey, goneKept;
 import '../search.dart' show searchBody;
 import '../l10n/l10n.dart';
 import 'history_export.dart'
@@ -59,6 +60,11 @@ Future<void> historyTables(DatabaseExecutor t) async {
     'CREATE TABLE IF NOT EXISTS history_rows (msg_id INTEGER PRIMARY KEY, '
     'n INTEGER NOT NULL, made INTEGER NOT NULL)',
   );
+  // rows of the copy this device had deleted already: left out, counted
+  await t.execute(
+    'CREATE TABLE IF NOT EXISTS history_gone (n INTEGER PRIMARY KEY, '
+    'c INTEGER NOT NULL)',
+  );
   await t.execute(
     'CREATE TABLE IF NOT EXISTS history_files (file INTEGER PRIMARY KEY, '
     'n INTEGER NOT NULL, name TEXT NOT NULL, size INTEGER NOT NULL, '
@@ -70,6 +76,7 @@ const _kTables = [
   'history_in',
   'history_chats',
   'history_rows',
+  'history_gone',
   'history_files',
 ];
 
@@ -529,9 +536,31 @@ class HistoryImport {
       int? id;
       var made = 0;
       final uid = m['msg_uid'];
+      // deleted here already, live: it stays deleted, and counts as come
+      if (uid is String &&
+          m['direction'] == 'in' &&
+          goneKept(m['group_id'] as String?) &&
+          (await t.query(
+            'gone_in',
+            columns: ['msg_uid'],
+            where: 'msg_uid = ? AND peer_id = ?',
+            whereArgs: [
+              uid,
+              goneKey(m['peer_id'] as String, group: m['group_id'] as String?),
+            ],
+            limit: 1,
+          )).isNotEmpty) {
+        await t.rawInsert(
+          'INSERT INTO history_gone (n, c) VALUES (?, 1) '
+          'ON CONFLICT (n) DO UPDATE SET c = c + 1',
+          [n],
+        );
+        continue;
+      }
       if (uid is String) {
         for (final live in await t.rawQuery(
-          'SELECT id, peer_id, group_id, direction FROM messages '
+          'SELECT id, peer_id, group_id, direction, plaintext, edited, '
+          'media_path, file_path, file_name FROM messages '
           'WHERE msg_uid = ? AND id NOT IN (SELECT msg_id FROM history_rows)',
           [uid],
         )) {
@@ -542,6 +571,30 @@ class HistoryImport {
               live['direction'] == m['direction'];
           if (same) {
             id = live['id'] as int;
+            final keep = Map<String, Object?>.of(m);
+            // a newer edit than the phone's, taken here live, keeps its words
+            final mine = await _editAt(t, uid, m['peer_id'] as String);
+            final theirs = (r['x_edit_w'] as num?)?.toInt();
+            if (mine != null && (theirs == null || mine > theirs)) {
+              keep['plaintext'] = live['plaintext'];
+              keep['edited'] = live['edited'];
+            } else if (theirs != null) {
+              await t.insert('frame_order', {
+                'msg_uid': uid,
+                'sender': m['peer_id'],
+                'kind': 'edit',
+                'w': theirs,
+              }, conflictAlgorithm: ConflictAlgorithm.replace);
+            }
+            // a file the device already holds stays its own
+            if (await _hasFile(live)) {
+              for (final c in const ['media_path', 'file_path', 'file_name']) {
+                keep[c] = live[c];
+              }
+            }
+            m
+              ..clear()
+              ..addAll(keep);
             await t.update('messages', m, where: 'id = ?', whereArgs: [id]);
             if (fts) {
               await t.delete('msg_fts', where: 'rowid = ?', whereArgs: [id]);
@@ -615,6 +668,30 @@ class HistoryImport {
     }
   }
 
+  // the sender's time on the last edit of uid this device took live
+  static Future<int?> _editAt(
+    DatabaseExecutor t,
+    String uid,
+    String sender,
+  ) async {
+    final r = await t.query(
+      'frame_order',
+      columns: ['w'],
+      where: "msg_uid = ? AND sender = ? AND kind = 'edit'",
+      whereArgs: [uid, sender],
+      limit: 1,
+    );
+    return r.isEmpty ? null : (r.first['w'] as num).toInt();
+  }
+
+  static Future<bool> _hasFile(Map<String, Object?> row) async {
+    for (final c in const ['media_path', 'file_path']) {
+      final v = row[c];
+      if (v is String && v.isNotEmpty && await File(v).exists()) return true;
+    }
+    return false;
+  }
+
   static String _freshUid() {
     final r = Random.secure();
     return [
@@ -648,6 +725,10 @@ class HistoryImport {
       'AND m.peer_id = hc.chat_id AND m.group_id IS NULL) GROUP BY hr.n',
     )) {
       msgs[r['n'] as int] = r['c'] as int;
+    }
+    for (final r in await _db.query('history_gone')) {
+      final n = r['n'] as int;
+      msgs[n] = (msgs[n] ?? 0) + (r['c'] as int);
     }
     final files = <int, (int, int)>{};
     for (final f in await _db.query(
