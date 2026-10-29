@@ -549,13 +549,14 @@ class InviteRefused implements Exception {
 }
 
 /// [bytes] as a reader takes them: the shim's parse and every signature,
-/// then the times with a day of skew both ways. [timeless] reads the
-/// pinned developer card, carried as the dev chat carries it, without them
+/// then the times with a day of skew both ways. [timeless] reads one
+/// without them: the developer's, whose main invite never expires
+/// (DECIDED 2026-10-28), whatever carries it, a link, a qr or his handle
 LsInvite readInvite(
   KryfoSignal lib,
   List<int> bytes, {
   int? nowMs,
-  bool timeless = false,
+  bool Function(LsInvite inv)? timeless,
 }) {
   final LsInvite inv;
   try {
@@ -563,7 +564,7 @@ LsInvite readInvite(
   } on LsError {
     throw const InviteRefused(InviteFault.damaged);
   }
-  if (timeless) return inv;
+  if (timeless != null && timeless(inv)) return inv;
   final h = unixHours(nowMs);
   if (inv.issued > h + kSkewHours) {
     throw const InviteRefused(InviteFault.notYet);

@@ -12,6 +12,8 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart' show sha256;
 import 'package:ed25519_edwards/ed25519_edwards.dart' as ed;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/devchat/dev_key.dart'
+    show DevKey, DevKeyStatus, useDevKeysForTest;
 import 'package:kryfo/identities.dart';
 import 'package:kryfo/invites.dart';
 import 'package:kryfo/main.dart'
@@ -231,13 +233,13 @@ void main() {
         isA<InviteRefused>().having((e) => e.fault, 'f', InviteFault.expired),
       ),
     );
-    // the pinned developer card is read without the times
+    // the developer's invite is read without the times
     expect(
       readInvite(
         ss.lib,
         row.link,
         nowMs: expires + 400 * _day,
-        timeless: true,
+        timeless: (_) => true,
       ).identity,
       ss.identity.public,
     );
@@ -255,6 +257,48 @@ void main() {
       () => readInvite(ss.lib, [...row.link, 0], nowMs: _now),
       throwsA(isA<InviteRefused>()),
     );
+  });
+
+  test('the developer\'s main invite never expires for a reader, by link, '
+      'qr or handle; anyone else\'s, a retired key\'s or a one-time one '
+      'does', () async {
+    final long = _now - 3 * 365 * _day;
+    final row = await makeInvite(
+      db,
+      ss,
+      kind: kInviteMain,
+      fcPkOf: _fcPkOf,
+      face: _face,
+      neverExpires: true,
+      nowMs: long,
+    );
+    final once = await makeInvite(
+      db,
+      ss,
+      kind: kInviteOneTime,
+      fcPkOf: _fcPkOf,
+      nowMs: long,
+    );
+    DevKey pinned(DevKeyStatus status) => DevKey(
+      keyId: 'k-test',
+      threeWords: 'pinned-test-words',
+      xPub: _hex(ss.identity.public.sublist(1)),
+      bundle: '',
+      fc: '00' * 32,
+      status: status,
+    );
+    addTearDown(() => useDevKeysForTest(null));
+    useDevKeysForTest(const []);
+    expect(v4OfLink(inviteLink(row.link)), InviteFault.expired);
+    useDevKeysForTest([pinned(DevKeyStatus.current)]);
+    for (final b in [row.link, row.qr!]) {
+      final got = v4OfLink(inviteLink(b));
+      expect(got, isA<LsInvite>());
+      expect(_hex((got as LsInvite).id), row.id);
+    }
+    expect(v4OfLink(inviteLink(once.link)), InviteFault.expired);
+    useDevKeysForTest([pinned(DevKeyStatus.retired)]);
+    expect(v4OfLink(inviteLink(row.link)), InviteFault.expired);
   });
 
   test('the main invite is made once, again at six months, and each goes a '

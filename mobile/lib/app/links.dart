@@ -766,15 +766,25 @@ Future<(LinkKin, String)> _linkKin(
   return (LinkKin.stranger, id);
 }
 
-/// the invite a v4 link carries, read as a reader reads it, or why not
+/// the invite a v4 link carries, read as a reader reads it, or why not.
+/// the developer's main invite never expires, for every reader
 Object v4OfLink(String raw) {
   final b = inviteOfLink(raw);
   if (b == null) return InviteFault.damaged;
   try {
-    return readInvite(signalSession.lib, b);
+    return readInvite(signalSession.lib, b, timeless: devInviteTimeless);
   } on InviteRefused catch (e) {
     return e.fault;
   }
+}
+
+/// whether [inv] is the developer's main invite: signed by a pinned key
+/// that is not retired (the shim checked the signature), and not one-time
+bool devInviteTimeless(LsInvite inv) {
+  final k = inv.identity;
+  if (inv.oneTime || k.length != 33 || k[0] != 0x05) return false;
+  final dev = devKeyByXPub(_hexOf(k.sublist(1)));
+  return dev != null && dev.status != DevKeyStatus.retired;
 }
 
 /// what the person reads for an invite turned away
