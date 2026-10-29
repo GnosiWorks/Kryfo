@@ -16,6 +16,7 @@ import 'identities.dart';
 import 'message_envelope.dart' show powBits, verifyPow;
 import 'signal_ffi/kryfo_signal.dart';
 import 'signal_session.dart';
+import 'wire_pad.dart' show kRumorSizes;
 
 /// what an invite is for
 const kInviteMain = 'main';
@@ -631,15 +632,30 @@ String helloPowSeed(List<int> hello) => 'khl1:${helloHash(hello)}';
 bool helloPowHolds(List<int> hello, int nonce) =>
     verifyPow(helloPowSeed(hello), nonce, powBits);
 
-/// [hello] as it goes on the wire: base64, a dot and its nonce
-String helloWireOf(List<int> hello, int nonce) =>
-    '${base64Encode(hello)}.$nonce';
+/// what a hello's wire line is filled to: the second rumor size, the gift
+/// wrap a v4 opener lands on, so the relay tells neither from the other at
+/// one first-contact address (3.3)
+final kHelloWireLength = kRumorSizes[1];
 
-/// the hello and nonce of a wire line, null for anything else: one dot,
-/// base64 that gives back the same text, a nonce of digits
+/// [hello] as it goes on the wire: base64, a dot and its nonce, then a dot
+/// and zeros to [kHelloWireLength]
+String helloWireOf(List<int> hello, int nonce) {
+  final s = '${base64Encode(hello)}.$nonce';
+  final fill = kHelloWireLength - s.length - 1;
+  return fill < 1 ? s : '$s.${'0' * fill}';
+}
+
+/// the hello and nonce of a wire line, null for anything else: base64 that
+/// gives back the same text, a dot, a nonce of digits, and the filler of
+/// zeros after a second dot, if any
 ({Uint8List hello, int nonce})? helloOfWire(String line) {
   final parts = line.split('.');
-  if (parts.length != 2 || !parts[0].startsWith(kHelloWireStart)) return null;
+  if (parts.length < 2 ||
+      parts.length > 3 ||
+      !parts[0].startsWith(kHelloWireStart)) {
+    return null;
+  }
+  if (parts.length == 3 && !RegExp(r'^0+$').hasMatch(parts[2])) return null;
   if (!RegExp(r'^[0-9]{1,15}$').hasMatch(parts[1])) return null;
   try {
     final b = base64Decode(parts[0]);

@@ -11,6 +11,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/devchat/dev_frame.dart' show devOutFrame;
+import 'package:kryfo/invites.dart' show helloOfWire, helloWireOf;
 import 'package:kryfo/main.dart' show makePreKeyBundleB64;
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
@@ -562,6 +563,30 @@ void main() {
         expect(_wrapOf(n), _wraps[1]);
         expect(_cellsOf(n), _cells[1]);
       }
+    });
+
+    test('a hello lands on a v4 opener\'s gift wrap and cells, whatever '
+        'its nonce, and reads back without its filler', () {
+      // KHL1, a version, the invite answered, the owner, a one-time
+      // invite with its bundle and the signature (3.3)
+      final hello = Uint8List.fromList([
+        ...ascii.encode('KHL1'),
+        ...List.filled(1 + 16 + 33 + 2069 + 64, 7),
+      ]);
+      for (final nonce in [0, 7, 123456, 999999999999999]) {
+        final w = helloWireOf(hello, nonce);
+        expect(_wrapOf(rumorLength(w)), _wraps[1]);
+        expect(_wrapOf(rumorLength(w)), _wrapOf(_openerWire[1]));
+        expect(_cellsOf(w.length), _cells[1]);
+        final back = helloOfWire(w)!;
+        expect(back.nonce, nonce);
+        expect(back.hello, hello);
+      }
+      final b64 = base64Encode(hello);
+      expect(helloOfWire('$b64.12.000'), isNotNull);
+      expect(helloOfWire('$b64.12.001'), isNull);
+      expect(helloOfWire('$b64.12.'), isNull);
+      expect(helloOfWire('$b64.12.0.0'), isNull);
     });
 
     test('an opener filler that does not fit is refused', () {
