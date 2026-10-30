@@ -31,6 +31,7 @@ import '../widgets/halo_rows.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/unfold.dart';
 import '../l10n/l10n.dart';
+import '../wide/wide_pane.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onOpenSupport;
@@ -150,8 +151,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           IconButton(
             tooltip: l10n.commonSettings,
             icon: Icon(Icons.settings_outlined, color: HaloColors.text2),
-            onPressed: () =>
-                Navigator.of(context).push(haloRoute(SettingsScreen())),
+            onPressed: () => deskPush(context, haloRoute(SettingsScreen())),
           ),
         ],
       ),
@@ -282,9 +282,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                     HaloRow(
                       icon: Icons.qr_code_2_outlined,
                       label: l10n.profileMyKryfoCode,
-                      onTap: () => Navigator.of(
-                        context,
-                      ).push(haloRoute(const MyKryfoScreen())),
+                      onTap: () =>
+                          deskPush(context, haloRoute(const MyKryfoScreen())),
                     ),
                     HaloRow(
                       icon: Icons.person_add_outlined,
@@ -311,9 +310,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                         : l10n.profileKeepKryfoIndependent,
                     onTap:
                         widget.onOpenSupport ??
-                        () => Navigator.of(
-                          context,
-                        ).push(haloRoute(const DonateScreen())),
+                        () =>
+                            deskPush(context, haloRoute(const DonateScreen())),
                   ),
                 ),
               ],
@@ -371,7 +369,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Future<void> _openFaces() async {
-    await Navigator.of(context).push(haloRoute(const AvatarPickerScreen()));
+    await deskPush(context, haloRoute(const AvatarPickerScreen()));
     if (mounted) setState(() {});
   }
 

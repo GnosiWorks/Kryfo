@@ -10150,6 +10150,16 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get wideSelectChat => 'Escolha uma conversa';
+
+  @override
+  String get wideSelectChatLine =>
+      'Escolha uma conversa na lista para começar a escrever.';
+
+  @override
+  String get wideListWidth => 'Largura da lista de conversas';
+
+  @override
   String transferDoneOf(String done, String total) {
     return '$done de $total';
   }

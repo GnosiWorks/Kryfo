@@ -10098,6 +10098,16 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get wideSelectChat => 'Bir sohbet seçin';
+
+  @override
+  String get wideSelectChatLine =>
+      'Yazmaya başlamak için listeden bir sohbet seçin.';
+
+  @override
+  String get wideListWidth => 'Sohbet listesi genişliği';
+
+  @override
   String transferDoneOf(String done, String total) {
     return '$done / $total';
   }

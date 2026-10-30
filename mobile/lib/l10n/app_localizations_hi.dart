@@ -10083,6 +10083,16 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get wideSelectChat => 'कोई चैट चुनें';
+
+  @override
+  String get wideSelectChatLine =>
+      'लिखना शुरू करने के लिए सूची से कोई चैट चुनें।';
+
+  @override
+  String get wideListWidth => 'चैट सूची की चौड़ाई';
+
+  @override
   String transferDoneOf(String done, String total) {
     return '$total में से $done';
   }

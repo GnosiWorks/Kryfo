@@ -13,6 +13,7 @@ import 'desktop/desktop_mode.dart'
         onDesktop,
         startEngineIn;
 import 'store.dart' show playBuild;
+import 'wide/wide_pane.dart' show chatNavigator, chatPush, deskPush;
 import 'widgets/boot_failed.dart';
 import 'widgets/fade_over.dart';
 import 'widgets/tor_boot_splash.dart';
@@ -210,6 +211,7 @@ part 'app/dev_screen.dart';
 part 'app/engine.dart';
 part 'app/files.dart';
 part 'app/gates.dart';
+part 'app/group_hellos.dart';
 part 'app/groups.dart';
 part 'app/links.dart';
 part 'app/invites_app.dart';

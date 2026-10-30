@@ -209,6 +209,8 @@ import '../voice_format.dart' show isVoiceName, kVoiceWav;
 import '../voice_length.dart' show voiceFileMs;
 import '../voice_opus.dart' show voiceForWire;
 import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
+import '../wide/read_width.dart';
+import '../wide/wide_pane.dart' show PaneBack, PaneFind;
 
 // the chats open in the stack, by id: shared words land in the one on top
 // rather than in a second copy of it
@@ -969,6 +971,8 @@ class _ChatScreenState extends State<ChatScreen>
   // search in chat. _matches are indices into _messages, _matchPos the
   // current hit, _matchKeys let a hit be scrolled into view.
   bool _searching = false;
+  // ctrl+f on the desktop's pane
+  final _find = PaneFind();
   final _searchCtrl = TextEditingController();
   String _query = '';
   String? _liftedUid;
@@ -1436,6 +1440,9 @@ class _ChatScreenState extends State<ChatScreen>
     super.didChangeDependencies();
     _timers.watch(context);
     _route = ModalRoute.of(context);
+    _find.attach(context, () {
+      if (!_searching) _openSearch();
+    });
     // what covered the chat has gone: what shows now is read
     _reads.look();
   }
@@ -5553,6 +5560,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   void dispose() {
+    _find.detach();
     _unwatchCaptures?.call();
     for (final land in List.of(_flights)) {
       land();
@@ -6529,485 +6537,511 @@ class _ChatScreenState extends State<ChatScreen>
                       onPinned: _showPinnedSheet,
                     ),
             ),
-            // each line around the thread grows in and folds away, so the
-            // thread does not jump. a short room (keyboard up, big text)
-            // gets them tight, and at most a share of it: past that they
-            // scroll, never push the composer off
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: math.max(48, visible * 0.3),
-              ),
-              child: SingleChildScrollView(
-                primary: false,
-                physics: const ClampingScrollPhysics(),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // their messages in another language: the whole chat
-                    // translated with one tap. never in the decoy
-                    TranslateBarSlot(
-                      chat: _translation,
-                      theirs: _theirRecent(),
-                      allowed: !_isDev && !sessionQuiet && !_searching,
-                    ),
-                    _Fold(
-                      // his chat is no request: its lock line says the rest
-                      (_flag != null && !_accepted) || _isDev
-                          ? const SizedBox(key: ValueKey('top-none'), width: 0)
-                          : _vouched && !_accepted && _recvCount == 0
-                          ? _IntroBanner(
-                              key: const ValueKey('intro'),
-                              names: _voucherNames,
-                              seed: _voucherSeed!,
-                              avatar: _voucherAvatar,
-                              verified: _voucherVerified,
-                            )
-                          : _requestPending && _sentCount > 0
-                          ? _RequestBanner(
-                              key: const ValueKey('request'),
-                              compact: short,
-                            )
-                          : const SizedBox(key: ValueKey('top-none'), width: 0),
-                    ),
-                    // his key moved on: this chat still reads and writes
-                    _Fold(
-                      _devShown?.status == DevKeyStatus.previous
-                          ? NoticeBanner(
-                              key: const ValueKey('dev-moved'),
-                              glyph: NoticeGlyph.shield,
-                              text: l10n.devNewKey,
-                              color: HaloColors.warn,
-                              textColor: HaloColors.warnText,
-                              margin: const EdgeInsets.fromLTRB(14, 10, 14, 2),
-                            )
-                          : const SizedBox(
-                              key: ValueKey('dev-moved-none'),
-                              width: 0,
-                            ),
-                    ),
-                    _Fold(
-                      _ackLost && !_blocked && !_isDev
-                          ? _AckLostLine(
-                              key: const ValueKey('ack-lost'),
-                              onRetry: _retryAck,
-                            )
-                          : const SizedBox(
-                              key: ValueKey('ack-lost-none'),
-                              width: 0,
-                            ),
-                    ),
-                    _Fold(
-                      _keyChanged && !_keyHeld && !_isDev
-                          ? _KeyChangedBanner(
-                              key: const ValueKey('key-changed'),
-                              peerName: _nickname ?? widget.peerHaloId,
-                              onVerify: _openKeyVerification,
-                              onDismiss: _dismissKeyChanged,
-                            )
-                          : const SizedBox(key: ValueKey('key-none'), width: 0),
-                    ),
-                    // added by a code or a link, or taken in from a request:
-                    // the safety number is what says who they are
-                    _Fold(
-                      _nameAsks &&
-                              !_keyChanged &&
-                              !_keyHeld &&
-                              !_isDev &&
-                              !widget.support
-                          ? _CompareSlot(
-                              key: const ValueKey('compare'),
-                              folded: _nameFolded,
-                              peerName: _nickname ?? widget.peerHaloId,
-                              onVerify: _openKeyVerification,
-                              onLater: _compareLater,
-                              onDismiss: _compareDismiss,
-                              onNotThem: () =>
-                                  _openKeyVerification(notThem: true),
-                            )
-                          : const SizedBox(
-                              key: ValueKey('compare-none'),
-                              width: 0,
-                            ),
-                    ),
-                  ],
+            ...readLines([
+              // each line around the thread grows in and folds away, so the
+              // thread does not jump. a short room (keyboard up, big text)
+              // gets them tight, and at most a share of it: past that they
+              // scroll, never push the composer off
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: math.max(48, visible * 0.3),
+                ),
+                child: SingleChildScrollView(
+                  primary: false,
+                  physics: const ClampingScrollPhysics(),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // their messages in another language: the whole chat
+                      // translated with one tap. never in the decoy
+                      TranslateBarSlot(
+                        chat: _translation,
+                        theirs: _theirRecent(),
+                        allowed: !_isDev && !sessionQuiet && !_searching,
+                      ),
+                      _Fold(
+                        // his chat is no request: its lock line says the rest
+                        (_flag != null && !_accepted) || _isDev
+                            ? const SizedBox(
+                                key: ValueKey('top-none'),
+                                width: 0,
+                              )
+                            : _vouched && !_accepted && _recvCount == 0
+                            ? _IntroBanner(
+                                key: const ValueKey('intro'),
+                                names: _voucherNames,
+                                seed: _voucherSeed!,
+                                avatar: _voucherAvatar,
+                                verified: _voucherVerified,
+                              )
+                            : _requestPending && _sentCount > 0
+                            ? _RequestBanner(
+                                key: const ValueKey('request'),
+                                compact: short,
+                              )
+                            : const SizedBox(
+                                key: ValueKey('top-none'),
+                                width: 0,
+                              ),
+                      ),
+                      // his key moved on: this chat still reads and writes
+                      _Fold(
+                        _devShown?.status == DevKeyStatus.previous
+                            ? NoticeBanner(
+                                key: const ValueKey('dev-moved'),
+                                glyph: NoticeGlyph.shield,
+                                text: l10n.devNewKey,
+                                color: HaloColors.warn,
+                                textColor: HaloColors.warnText,
+                                margin: const EdgeInsets.fromLTRB(
+                                  14,
+                                  10,
+                                  14,
+                                  2,
+                                ),
+                              )
+                            : const SizedBox(
+                                key: ValueKey('dev-moved-none'),
+                                width: 0,
+                              ),
+                      ),
+                      _Fold(
+                        _ackLost && !_blocked && !_isDev
+                            ? _AckLostLine(
+                                key: const ValueKey('ack-lost'),
+                                onRetry: _retryAck,
+                              )
+                            : const SizedBox(
+                                key: ValueKey('ack-lost-none'),
+                                width: 0,
+                              ),
+                      ),
+                      _Fold(
+                        _keyChanged && !_keyHeld && !_isDev
+                            ? _KeyChangedBanner(
+                                key: const ValueKey('key-changed'),
+                                peerName: _nickname ?? widget.peerHaloId,
+                                onVerify: _openKeyVerification,
+                                onDismiss: _dismissKeyChanged,
+                              )
+                            : const SizedBox(
+                                key: ValueKey('key-none'),
+                                width: 0,
+                              ),
+                      ),
+                      // added by a code or a link, or taken in from a request:
+                      // the safety number is what says who they are
+                      _Fold(
+                        _nameAsks &&
+                                !_keyChanged &&
+                                !_keyHeld &&
+                                !_isDev &&
+                                !widget.support
+                            ? _CompareSlot(
+                                key: const ValueKey('compare'),
+                                folded: _nameFolded,
+                                peerName: _nickname ?? widget.peerHaloId,
+                                onVerify: _openKeyVerification,
+                                onLater: _compareLater,
+                                onDismiss: _compareDismiss,
+                                onNotThem: () =>
+                                    _openKeyVerification(notThem: true),
+                              )
+                            : const SizedBox(
+                                key: ValueKey('compare-none'),
+                                width: 0,
+                              ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            Expanded(
-              child: AtmoScope(
-                atmo: _wall.atmo,
-                child: Stack(
-                  key: _listKey,
-                  children: [
-                    Positioned.fill(child: ChatBackdrop(_wall, chat: _memo)),
-                    // a slow first read fades the thread up, not a cut
-                    FadeSwap(
-                      // an empty chat waits for what its card depends on,
-                      // so the card never follows the plain empty state
-                      child:
-                          !_loaded ||
-                              (_messages.isEmpty && !(_barKnown && _hiKnown))
-                          ? const SizedBox.shrink(key: ValueKey('wait'))
-                          : _messages.isEmpty
-                          ? _sayHi
-                                // holds the room the card sits over
-                                ? const SizedBox.expand(key: ValueKey('hi'))
-                                : const _EmptyConversation(
-                                    key: ValueKey('empty'),
-                                  )
-                          : NotificationListener<ScrollMetricsNotification>(
-                              key: const ValueKey('list'),
-                              onNotification: _threadResized,
-                              // the newest bubble's time rests above the line
-                              child: EarlierRoom(
-                                shown: _earlier.count > 0,
-                                controller: _scrollCtrl,
-                                reversed: true,
-                                builder: (_, room) => ListView.builder(
+              Expanded(
+                child: AtmoScope(
+                  atmo: _wall.atmo,
+                  child: Stack(
+                    key: _listKey,
+                    children: [
+                      Positioned.fill(child: ChatBackdrop(_wall, chat: _memo)),
+                      // a slow first read fades the thread up, not a cut
+                      FadeSwap(
+                        // an empty chat waits for what its card depends on,
+                        // so the card never follows the plain empty state
+                        child:
+                            !_loaded ||
+                                (_messages.isEmpty && !(_barKnown && _hiKnown))
+                            ? const SizedBox.shrink(key: ValueKey('wait'))
+                            : _messages.isEmpty
+                            ? _sayHi
+                                  // holds the room the card sits over
+                                  ? const SizedBox.expand(key: ValueKey('hi'))
+                                  : const _EmptyConversation(
+                                      key: ValueKey('empty'),
+                                    )
+                            : NotificationListener<ScrollMetricsNotification>(
+                                key: const ValueKey('list'),
+                                onNotification: _threadResized,
+                                // the newest bubble's time rests above the line
+                                child: EarlierRoom(
+                                  shown: _earlier.count > 0,
                                   controller: _scrollCtrl,
-                                  reverse: true,
-                                  padding: EdgeInsets.fromLTRB(
-                                    16,
-                                    12,
-                                    16,
-                                    12 + room,
+                                  reversed: true,
+                                  builder: (_, room) => ReadWidth(
+                                    builder: (_, side) => ListView.builder(
+                                      controller: _scrollCtrl,
+                                      reverse: true,
+                                      padding: EdgeInsets.fromLTRB(
+                                        16 + side,
+                                        12,
+                                        16 + side,
+                                        12 + room,
+                                      ),
+                                      itemCount: _messages.length,
+                                      findChildIndexCallback: _indexOfRow,
+                                      itemBuilder: (c, i) {
+                                        // one unbuildable message must never cost
+                                        // the whole conversation. draw a stub and
+                                        // carry on.
+                                        try {
+                                          // keyed by the message at the top, where
+                                          // the list looks: in a reversed list every
+                                          // arrival moves every index, and a voice
+                                          // note must keep its player. the same id
+                                          // is the anchor a jump lands on.
+                                          final row =
+                                              _messages[_messages.length -
+                                                  1 -
+                                                  i];
+                                          final id = _rowKey(row);
+                                          // drawn, and landed on, in its album
+                                          if (_albums.hidden(row)) {
+                                            return SizedBox.shrink(
+                                              key: ValueKey(id),
+                                            );
+                                          }
+                                          return RowAnchor(
+                                            key: ValueKey(id),
+                                            anchors: _anchors,
+                                            id: id,
+                                            child: _buildRow(
+                                              c,
+                                              i,
+                                              searchActive,
+                                            ),
+                                          );
+                                        } catch (e) {
+                                          dlog('bubble failed: $e');
+                                          return Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 6,
+                                            ),
+                                            child: Text(
+                                              l10n.chatThisMessageCanT,
+                                              style: HaloType.sans(
+                                                size: 12,
+                                                color: HaloColors.text2,
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                    ),
                                   ),
-                                  itemCount: _messages.length,
-                                  findChildIndexCallback: _indexOfRow,
-                                  itemBuilder: (c, i) {
-                                    // one unbuildable message must never cost
-                                    // the whole conversation. draw a stub and
-                                    // carry on.
-                                    try {
-                                      // keyed by the message at the top, where
-                                      // the list looks: in a reversed list every
-                                      // arrival moves every index, and a voice
-                                      // note must keep its player. the same id
-                                      // is the anchor a jump lands on.
-                                      final row =
-                                          _messages[_messages.length - 1 - i];
-                                      final id = _rowKey(row);
-                                      // drawn, and landed on, in its album
-                                      if (_albums.hidden(row)) {
-                                        return SizedBox.shrink(
-                                          key: ValueKey(id),
-                                        );
-                                      }
-                                      return RowAnchor(
-                                        key: ValueKey(id),
-                                        anchors: _anchors,
-                                        id: id,
-                                        child: _buildRow(c, i, searchActive),
-                                      );
-                                    } catch (e) {
-                                      dlog('bubble failed: $e');
-                                      return Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 6,
-                                        ),
-                                        child: Text(
-                                          l10n.chatThisMessageCanT,
-                                          style: HaloType.sans(
-                                            size: 12,
-                                            color: HaloColors.text2,
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  },
+                                ),
+                              ),
+                      ),
+                      // over the thread, so its first row comes in under it
+                      // as it goes
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          ignoring: !_sayHi,
+                          child: _SayHiSwap(
+                            child: _sayHi
+                                ? SayHiCard(
+                                    key: const ValueKey('say-hi'),
+                                    sticker: _hi?.$2,
+                                    onWave: _wave,
+                                  )
+                                : const SizedBox.shrink(key: ValueKey('no-hi')),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 12,
+                        child: Center(
+                          child: JumpDownButton(
+                            shown: _showScrollDown,
+                            count: _unseenNew,
+                            label: l10n.chatJumpToTheNewest,
+                            onTap: _scrollToBottom,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 16,
+                        right: 16,
+                        bottom: 0,
+                        child: Center(
+                          child: EarlierChip(
+                            count: _earlier.count,
+                            lifted: _showScrollDown,
+                            onTap: _toEarlier,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 6,
+                        left: 0,
+                        right: 0,
+                        child: IgnorePointer(
+                          child: Center(
+                            child: ValueListenableBuilder<bool>(
+                              valueListenable: _stickyShown,
+                              builder: (_, shown, _) => AnimatedOpacity(
+                                duration: const Duration(milliseconds: 220),
+                                opacity: shown ? 1.0 : 0.0,
+                                child: ValueListenableBuilder<String?>(
+                                  valueListenable: _stickyLabel,
+                                  builder: (_, label, _) => label == null
+                                      ? const SizedBox.shrink()
+                                      : DayChip(label),
                                 ),
                               ),
                             ),
-                    ),
-                    // over the thread, so its first row comes in under it
-                    // as it goes
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        ignoring: !_sayHi,
-                        child: _SayHiSwap(
-                          child: _sayHi
-                              ? SayHiCard(
-                                  key: const ValueKey('say-hi'),
-                                  sticker: _hi?.$2,
-                                  onWave: _wave,
-                                )
-                              : const SizedBox.shrink(key: ValueKey('no-hi')),
+                          ),
                         ),
                       ),
-                    ),
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 12,
-                      child: Center(
-                        child: JumpDownButton(
-                          shown: _showScrollDown,
-                          count: _unseenNew,
-                          label: l10n.chatJumpToTheNewest,
-                          onTap: _scrollToBottom,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      left: 16,
-                      right: 16,
-                      bottom: 0,
-                      child: Center(
-                        child: EarlierChip(
-                          count: _earlier.count,
-                          lifted: _showScrollDown,
-                          onTap: _toEarlier,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 6,
-                      left: 0,
-                      right: 0,
-                      child: IgnorePointer(
-                        child: Center(
-                          child: ValueListenableBuilder<bool>(
-                            valueListenable: _stickyShown,
-                            builder: (_, shown, _) => AnimatedOpacity(
-                              duration: const Duration(milliseconds: 220),
-                              opacity: shown ? 1.0 : 0.0,
-                              child: ValueListenableBuilder<String?>(
-                                valueListenable: _stickyLabel,
-                                builder: (_, label, _) => label == null
-                                    ? const SizedBox.shrink()
-                                    : DayChip(label),
-                              ),
+                    ],
+                  ),
+                ),
+              ),
+              _Fold(
+                _friendlyStatus(_status).isNotEmpty && !appState.movedAway
+                    ? Padding(
+                        key: const ValueKey('status'),
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                        // new words rise in over the last ones
+                        child: RiseSwap(
+                          alignment: Alignment.center,
+                          child: Text(
+                            _friendlyStatus(_status),
+                            key: ValueKey(_friendlyStatus(_status)),
+                            textAlign: TextAlign.center,
+                            style: HaloType.mono(
+                              size: 10,
+                              color: HaloColors.amberText,
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                  ],
+                      )
+                    : const SizedBox(key: ValueKey('status-none'), width: 0),
+              ),
+              // the route not up: messages typed now are queued. the pill's
+              // reading, its grace and its words; the long words only while tor
+              // is still coming up. not on a phone whose identity has moved,
+              // where tor is off on purpose.
+              LinkViewBuilder(
+                builder: (_, link) => _Fold(
+                  appState.sendMode == 'private' &&
+                          link.chatLine != null &&
+                          !appState.movedAway
+                      ? Padding(
+                          key: const ValueKey('tor-warm'),
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const TorHalo(),
+                              const SizedBox(width: 7),
+                              Flexible(
+                                child: Text(
+                                  link.chatLine!,
+                                  style: HaloType.sans(
+                                    size: 10.5,
+                                    color: HaloColors.text2,
+                                  ).copyWith(height: 1.35),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : const SizedBox(key: ValueKey('tor-none'), width: 0),
                 ),
               ),
-            ),
-            _Fold(
-              _friendlyStatus(_status).isNotEmpty && !appState.movedAway
-                  ? Padding(
-                      key: const ValueKey('status'),
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-                      // new words rise in over the last ones
-                      child: RiseSwap(
-                        alignment: Alignment.center,
-                        child: Text(
-                          _friendlyStatus(_status),
-                          key: ValueKey(_friendlyStatus(_status)),
-                          textAlign: TextAlign.center,
-                          style: HaloType.mono(
-                            size: 10,
-                            color: HaloColors.amberText,
-                          ),
-                        ),
-                      ),
-                    )
-                  : const SizedBox(key: ValueKey('status-none'), width: 0),
-            ),
-            // the route not up: messages typed now are queued. the pill's
-            // reading, its grace and its words; the long words only while tor
-            // is still coming up. not on a phone whose identity has moved,
-            // where tor is off on purpose.
-            LinkViewBuilder(
-              builder: (_, link) => _Fold(
-                appState.sendMode == 'private' &&
-                        link.chatLine != null &&
-                        !appState.movedAway
-                    ? Padding(
-                        key: const ValueKey('tor-warm'),
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Row(
+              // a send that has waited on tor a minute gets a way out
+              ReconnectValve(
+                valve: torValve,
+                waitingSince: appState.movedAway ? null : _waitingSince(),
+                private: appState.sendMode == 'private',
+                quiet: sessionQuiet,
+                online: appState.online,
+                linkUp: appState.linkUp,
+                margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+              ),
+              _Fold(
+                // a request with no red flag shows nothing at all
+                _flag != null && !_accepted && !_blocked
+                    ? ShieldNote(
+                        key: const ValueKey('shield-flag'),
+                        flag: _flag!,
+                        margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+                        onDismiss: _dismissShield,
+                      )
+                    : const SizedBox(key: ValueKey('shield-none'), width: 0),
+              ),
+              if (_isDev) ..._devAboveComposer(context),
+              AnimatedSwitcher(
+                duration: motionStill(context)
+                    ? Duration.zero
+                    : const Duration(milliseconds: 220),
+                switchInCurve: Curves.easeOut,
+                switchOutCurve: Curves.easeIn,
+                transitionBuilder: (child, anim) => SizeTransition(
+                  sizeFactor: anim,
+                  axisAlignment: -1,
+                  child: FadeTransition(opacity: anim, child: child),
+                ),
+                // the quote is part of the composer the blocked bar replaces
+                child: _replyTo != null && !_blocked
+                    ? _ReplyQuoteBar(
+                        target: _replyTo!,
+                        onCancel: () {
+                          setState(() => _replyTo = null);
+                          _keepDraft();
+                        },
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              IncomingMediaBanner(
+                chatKey: _memo,
+                onPause: appState.pauseDownload,
+                onCancel: (uid) {
+                  for (final m in _messages) {
+                    if (m.msgUid == uid) {
+                      _stopSending(m);
+                      return;
+                    }
+                  }
+                },
+              ),
+              AnimatedSwitcher(
+                duration: motionStill(context) || !_barSettled
+                    ? Duration.zero
+                    : const Duration(milliseconds: 260),
+                switchInCurve: Curves.easeOut,
+                switchOutCurve: Curves.easeIn,
+                transitionBuilder: (child, anim) => SizeTransition(
+                  sizeFactor: anim,
+                  axisAlignment: -1,
+                  child: FadeTransition(opacity: anim, child: child),
+                ),
+                child: KeyedSubtree(
+                  key: ValueKey(
+                    !_barKnown
+                        ? 'bar_wait'
+                        : _blocked
+                        ? 'bar_blocked'
+                        : _devStop != null
+                        ? 'bar_dev_stop'
+                        : _incomingRequest
+                        ? 'bar_request'
+                        : _requestLocked
+                        ? 'bar_locked'
+                        : _keyHeld && !_isDev
+                        ? 'bar_held'
+                        : 'bar_composer',
+                  ),
+                  child: !_barKnown
+                      ? const SizedBox(width: double.infinity)
+                      : _blocked
+                      ? _BlockedBar(onUnblock: _unblockContact)
+                      : _devStop != null
+                      ? _RequestLockBar(
+                          line: _devStop,
+                          icon: _devNameless && !_devRetired
+                              ? Icons.person_off_outlined
+                              : Icons.key_off_outlined,
+                          action: _devNameless && !_devRetired
+                              ? l10n.devStartNewChat
+                              : null,
+                          onAction: _startNewDevChat,
+                        )
+                      : _incomingRequest
+                      ? _AcceptRequestBar(
+                          introducer: _vouched
+                              ? vouchNames(_voucherNames)
+                              : null,
+                          onAccept: _acceptRequestPeer,
+                          onDecline: _declineRequestPeer,
+                          onBlock: _blockRequestPeer,
+                        )
+                      : _requestLocked
+                      ? _RequestLockBar(line: _isDev ? l10n.devLockLine : null)
+                      : _keyHeld && !_isDev
+                      ? KeyHeldCard(
+                          peerName: _nickname ?? widget.peerHaloId,
+                          onCheck: _openKeyVerification,
+                          onAccept: _acceptNewKey,
+                        )
+                      : Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const TorHalo(),
-                            const SizedBox(width: 7),
-                            Flexible(
-                              child: Text(
-                                link.chatLine!,
-                                style: HaloType.sans(
-                                  size: 10.5,
-                                  color: HaloColors.text2,
-                                ).copyWith(height: 1.35),
+                            ValueListenableBuilder<TextEditingValue>(
+                              valueListenable: _msgCtrl,
+                              // offered only while tor is up: the fetch goes
+                              // over tor or not at all, so without it there is
+                              // nothing to offer. never in a quiet session
+                              builder: (_, v, _) => PreviewStrip(
+                                url: _accepted && !sessionQuiet && _torUp
+                                    ? firstUrl(v.text)
+                                    : null,
+                                pending: _pendingPreview,
+                                busy: _previewBusy,
+                                onAdd: _addPreview,
+                                onDrop: () =>
+                                    setState(() => _pendingPreview = null),
                               ),
+                            ),
+                            _Composer(
+                              onAttach: _showAttachSheet,
+                              onStickers: _showStickers,
+                              onCamera: _openCamera,
+                              ghost: _ghost,
+                              secure: _secureNext,
+                              onToggleSecure: () {
+                                HapticFeedback.selectionClick();
+                                setState(() => _secureNext = !_secureNext);
+                                showHaloToast(
+                                  context,
+                                  _secureNext
+                                      ? l10n.chatTheNextPhotoYou
+                                      : l10n.chatPhotoProtectionOff,
+                                );
+                              },
+                              onToggleGhost: () {
+                                setState(() {
+                                  _ghost = !_ghost;
+                                  _lastGhost = _ghost;
+                                  appState.saveGhostPref(_ghost, _burnSeconds);
+                                });
+                                _keepDraft(clock: true);
+                              },
+                              onPickBurn: _pickBurnDuration,
+                              burnSeconds: _burnSeconds,
+                              controller: _msgCtrl,
+                              focusNode: _composerFocus,
+                              onSend: _send,
+                              disguise: _voiceDisguise,
+                              disguiseLocked: _devAnon,
+                              onVoice: _sendVoice,
                             ),
                           ],
                         ),
-                      )
-                    : const SizedBox(key: ValueKey('tor-none'), width: 0),
-              ),
-            ),
-            // a send that has waited on tor a minute gets a way out
-            ReconnectValve(
-              valve: torValve,
-              waitingSince: appState.movedAway ? null : _waitingSince(),
-              private: appState.sendMode == 'private',
-              quiet: sessionQuiet,
-              online: appState.online,
-              linkUp: appState.linkUp,
-              margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
-            ),
-            _Fold(
-              // a request with no red flag shows nothing at all
-              _flag != null && !_accepted && !_blocked
-                  ? ShieldNote(
-                      key: const ValueKey('shield-flag'),
-                      flag: _flag!,
-                      margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
-                      onDismiss: _dismissShield,
-                    )
-                  : const SizedBox(key: ValueKey('shield-none'), width: 0),
-            ),
-            if (_isDev) ..._devAboveComposer(context),
-            AnimatedSwitcher(
-              duration: motionStill(context)
-                  ? Duration.zero
-                  : const Duration(milliseconds: 220),
-              switchInCurve: Curves.easeOut,
-              switchOutCurve: Curves.easeIn,
-              transitionBuilder: (child, anim) => SizeTransition(
-                sizeFactor: anim,
-                axisAlignment: -1,
-                child: FadeTransition(opacity: anim, child: child),
-              ),
-              // the quote is part of the composer the blocked bar replaces
-              child: _replyTo != null && !_blocked
-                  ? _ReplyQuoteBar(
-                      target: _replyTo!,
-                      onCancel: () {
-                        setState(() => _replyTo = null);
-                        _keepDraft();
-                      },
-                    )
-                  : const SizedBox.shrink(),
-            ),
-            IncomingMediaBanner(
-              chatKey: _memo,
-              onPause: appState.pauseDownload,
-              onCancel: (uid) {
-                for (final m in _messages) {
-                  if (m.msgUid == uid) {
-                    _stopSending(m);
-                    return;
-                  }
-                }
-              },
-            ),
-            AnimatedSwitcher(
-              duration: motionStill(context) || !_barSettled
-                  ? Duration.zero
-                  : const Duration(milliseconds: 260),
-              switchInCurve: Curves.easeOut,
-              switchOutCurve: Curves.easeIn,
-              transitionBuilder: (child, anim) => SizeTransition(
-                sizeFactor: anim,
-                axisAlignment: -1,
-                child: FadeTransition(opacity: anim, child: child),
-              ),
-              child: KeyedSubtree(
-                key: ValueKey(
-                  !_barKnown
-                      ? 'bar_wait'
-                      : _blocked
-                      ? 'bar_blocked'
-                      : _devStop != null
-                      ? 'bar_dev_stop'
-                      : _incomingRequest
-                      ? 'bar_request'
-                      : _requestLocked
-                      ? 'bar_locked'
-                      : _keyHeld && !_isDev
-                      ? 'bar_held'
-                      : 'bar_composer',
                 ),
-                child: !_barKnown
-                    ? const SizedBox(width: double.infinity)
-                    : _blocked
-                    ? _BlockedBar(onUnblock: _unblockContact)
-                    : _devStop != null
-                    ? _RequestLockBar(
-                        line: _devStop,
-                        icon: _devNameless && !_devRetired
-                            ? Icons.person_off_outlined
-                            : Icons.key_off_outlined,
-                        action: _devNameless && !_devRetired
-                            ? l10n.devStartNewChat
-                            : null,
-                        onAction: _startNewDevChat,
-                      )
-                    : _incomingRequest
-                    ? _AcceptRequestBar(
-                        introducer: _vouched ? vouchNames(_voucherNames) : null,
-                        onAccept: _acceptRequestPeer,
-                        onDecline: _declineRequestPeer,
-                        onBlock: _blockRequestPeer,
-                      )
-                    : _requestLocked
-                    ? _RequestLockBar(line: _isDev ? l10n.devLockLine : null)
-                    : _keyHeld && !_isDev
-                    ? KeyHeldCard(
-                        peerName: _nickname ?? widget.peerHaloId,
-                        onCheck: _openKeyVerification,
-                        onAccept: _acceptNewKey,
-                      )
-                    : Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ValueListenableBuilder<TextEditingValue>(
-                            valueListenable: _msgCtrl,
-                            // offered only while tor is up: the fetch goes
-                            // over tor or not at all, so without it there is
-                            // nothing to offer. never in a quiet session
-                            builder: (_, v, _) => PreviewStrip(
-                              url: _accepted && !sessionQuiet && _torUp
-                                  ? firstUrl(v.text)
-                                  : null,
-                              pending: _pendingPreview,
-                              busy: _previewBusy,
-                              onAdd: _addPreview,
-                              onDrop: () =>
-                                  setState(() => _pendingPreview = null),
-                            ),
-                          ),
-                          _Composer(
-                            onAttach: _showAttachSheet,
-                            onStickers: _showStickers,
-                            onCamera: _openCamera,
-                            ghost: _ghost,
-                            secure: _secureNext,
-                            onToggleSecure: () {
-                              HapticFeedback.selectionClick();
-                              setState(() => _secureNext = !_secureNext);
-                              showHaloToast(
-                                context,
-                                _secureNext
-                                    ? l10n.chatTheNextPhotoYou
-                                    : l10n.chatPhotoProtectionOff,
-                              );
-                            },
-                            onToggleGhost: () {
-                              setState(() {
-                                _ghost = !_ghost;
-                                _lastGhost = _ghost;
-                                appState.saveGhostPref(_ghost, _burnSeconds);
-                              });
-                              _keepDraft(clock: true);
-                            },
-                            onPickBurn: _pickBurnDuration,
-                            burnSeconds: _burnSeconds,
-                            controller: _msgCtrl,
-                            focusNode: _composerFocus,
-                            onSend: _send,
-                            disguise: _voiceDisguise,
-                            disguiseLocked: _devAnon,
-                            onVoice: _sendVoice,
-                          ),
-                        ],
-                      ),
               ),
-            ),
+            ]),
           ],
         ),
       ),
@@ -7477,10 +7511,12 @@ class _ChatHead extends StatelessWidget {
       ),
       child: Row(
         children: [
-          IconButton(
-            tooltip: l10n.commonBack,
-            icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
-            onPressed: onBack,
+          PaneBack(
+            child: IconButton(
+              tooltip: l10n.commonBack,
+              icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
+              onPressed: onBack,
+            ),
           ),
           Semantics(
             container: true,
@@ -7729,7 +7765,14 @@ class _SearchHeadState extends State<SearchHead> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => CallbackShortcuts(
+    bindings: {
+      const SingleActivator(LogicalKeyboardKey.escape): widget.onClose,
+    },
+    child: _head(context),
+  );
+
+  Widget _head(BuildContext context) {
     final hasQuery = widget.controller.text.trim().isNotEmpty;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),

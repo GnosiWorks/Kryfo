@@ -64,6 +64,15 @@ String? padSealOpener(String plain) {
   return utf8Length(out) <= kPqOpenerSeal ? out : null;
 }
 
+/// [plain] filled to [size], a seal size [padSeal] gives some frame, when
+/// it fits there; past it, as [padSeal] fills it. every copy of one message
+/// to several devices lands on one size this way
+String padSealTo(String plain, int size) {
+  final own = padSeal(plain);
+  if (utf8Length(own) >= size) return own;
+  return _pad(plain, (need, _) => need <= size ? size : null, utf8Length);
+}
+
 /// [frame] filled to the next rumor size, for a frame no signal seal covers
 String padRumor(String frame) => _pad(frame, _rumorTarget, rumorLength);
 

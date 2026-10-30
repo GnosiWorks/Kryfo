@@ -10094,6 +10094,16 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
+  String get wideSelectChat => 'یک گفت‌وگو انتخاب کنید';
+
+  @override
+  String get wideSelectChatLine =>
+      'یک گفت‌وگو را از فهرست انتخاب کنید تا نوشتن را شروع کنید.';
+
+  @override
+  String get wideListWidth => 'پهنای فهرست گفت‌وگوها';
+
+  @override
   String transferDoneOf(String done, String total) {
     return '⁨$done⁩ از ⁨$total⁩';
   }

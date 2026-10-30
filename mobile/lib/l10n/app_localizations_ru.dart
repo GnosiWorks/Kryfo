@@ -10253,6 +10253,16 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get wideSelectChat => 'Выберите чат';
+
+  @override
+  String get wideSelectChatLine =>
+      'Выберите чат в списке, чтобы начать писать.';
+
+  @override
+  String get wideListWidth => 'Ширина списка чатов';
+
+  @override
   String transferDoneOf(String done, String total) {
     return '$done из $total';
   }
