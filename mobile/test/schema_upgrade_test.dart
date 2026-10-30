@@ -65,6 +65,7 @@ void main() {
       'lib/router.dart',
       'lib/devchat/dev_chat.dart',
       'lib/devchat/support.dart',
+      'lib/devices/device_store.dart',
     ]) {
       final src = File(f).readAsStringSync();
       final all = RegExp(

@@ -1576,6 +1576,8 @@ void main() {
       'invites',
       'hellos',
       'hello_seen',
+      // a held chat's pq restart: kept beside its session
+      'pq_restarts',
       // the identity's own profile photo
       'my_photo',
       // the heal nonces seen, per identity

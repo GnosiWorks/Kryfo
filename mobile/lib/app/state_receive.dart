@@ -213,6 +213,8 @@ extension AppStateReceive on AppState {
     } catch (e) {
       dlog('invites: not kept (${e.runtimeType})');
     }
+    // the held chats' pq restarts, once the store is ready
+    unawaited(pqUpkeepDue());
     var heard = <String>{};
     var short = true;
     try {

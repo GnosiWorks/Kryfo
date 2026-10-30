@@ -132,9 +132,9 @@ func TestFailuresOfAttemptsBegunTogetherCountOnce(t *testing.T) {
 // minutes.
 func TestOurRelayIsNeverBenchedPastItsCeiling(t *testing.T) {
 	useStandIns(t, modeBalanced, nil)
-	old := ownRelayHost
-	ownRelayHost = "own.example"
-	t.Cleanup(func() { ownRelayHost = old })
+	old := ownRelayHost.get()
+	ownRelayHost.put("own.example")
+	t.Cleanup(func() { ownRelayHost.put(old) })
 	onion := "ws://ownrelayabc.onion"
 	clear := "wss://own.example"
 	pub := "wss://public.example"
@@ -248,9 +248,9 @@ func checkSlowOnionLanded(t *testing.T, own *relayStandIn, res, want string, too
 // to five minutes.
 func TestOurRelayDroppingYoungWaitsItsCeiling(t *testing.T) {
 	useStandIns(t, modeBalanced, nil)
-	old := ownRelayHost
-	ownRelayHost = "own.example"
-	t.Cleanup(func() { ownRelayHost = old })
+	old := ownRelayHost.get()
+	ownRelayHost.put("own.example")
+	t.Cleanup(func() { ownRelayHost.put(old) })
 	onion := "ws://ownrelayabc.onion"
 	clear := "wss://own.example"
 	pub := "wss://public.example"
@@ -272,9 +272,9 @@ func TestAPublishTriesOurRelayWhileItIsBenched(t *testing.T) {
 	first := newRefuserStandIn(t)
 	clear := newRelayStandIn(t, 0)
 	useStandIns(t, modeBalanced, nil)
-	old := ownRelayHost
-	ownRelayHost = strings.TrimPrefix(clear.url(), "ws://")
-	t.Cleanup(func() { ownRelayHost = old })
+	old := ownRelayHost.get()
+	ownRelayHost.put(strings.TrimPrefix(clear.url(), "ws://"))
+	t.Cleanup(func() { ownRelayHost.put(old) })
 	setRelays([]string{first.url(), clear.url()})
 	relayHealthMu.Lock()
 	relayFails[clear.url()] = 6
@@ -299,9 +299,9 @@ func TestOurClearnetNameBacksOffWhileTheOnionAnswers(t *testing.T) {
 	onion := newRelayStandIn(t, 0)
 	clear := newRefuserStandIn(t)
 	useStandIns(t, modeBalanced, nil)
-	old := ownRelayHost
-	ownRelayHost = strings.TrimPrefix(clear.url(), "ws://")
-	t.Cleanup(func() { ownRelayHost = old })
+	old := ownRelayHost.get()
+	ownRelayHost.put(strings.TrimPrefix(clear.url(), "ws://"))
+	t.Cleanup(func() { ownRelayHost.put(old) })
 	setRelays([]string{onion.url(), clear.url()})
 
 	ctx, cancel := context.WithCancel(context.Background())

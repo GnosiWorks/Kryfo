@@ -2304,6 +2304,7 @@
   "roomShotsKeptOpen": "Dateien anderer in anderen Apps zu öffnen ist in diesem Raum aus",
   "chatShotsYouTurnedOn": "Du hast das Blockieren von Screenshots eingeschaltet. Kopieren, Weiterleiten und Speichern der Nachrichten des anderen ist ebenfalls aus.",
   "chatShotsYouTurnedOff": "Du hast das Blockieren von Screenshots ausgeschaltet",
+  "chatNowPostQuantum": "Nachrichten in diesem Chat nutzen jetzt Post-Quanten-Verschlüsselung",
   "chatShotsTheyTurnedOn": "{name} hat das Blockieren von Screenshots eingeschaltet. Kopieren, Weiterleiten und Speichern der Nachrichten des anderen ist ebenfalls aus.",
   "chatShotsTheyTurnedOff": "{name} hat das Blockieren von Screenshots ausgeschaltet",
   "roomShotsBlocked": "Kryfo blockiert Screenshots und Bildschirmaufnahmen dieses Raums auf jedem Handy darin und das Kopieren, Weiterleiten oder Speichern der Nachrichten der anderen. Gegen Apps, die den Bildschirm lesen dürfen, oder ein Handy oder eine App, die verändert wurden, um es zu umgehen, hilft es nicht.",

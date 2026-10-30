@@ -12,6 +12,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_key.dart';
+import 'package:kryfo/devices/device_store.dart' show deviceTables;
 import 'package:kryfo/file_drop.dart' show dropFetchTable;
 import 'package:kryfo/main.dart';
 import 'package:path/path.dart' as p;
@@ -21,7 +22,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'sqlite_channel.dart';
 
 const _fixtures = 'test/fixtures/upgrade_051';
-const _version = 94;
+const _version = 96;
 
 // the keys each file opens with, under the names the app keeps them by
 final _keyFile =
@@ -61,6 +62,14 @@ final _steps = <int, (Future<void> Function(Database), String)>{
   91: (upgradeTo91, 'CREATE TABLE IF NOT EXISTS kyber_prekeys'),
   92: (upgradeTo92, 'CREATE TABLE IF NOT EXISTS identities'),
   94: (inviteTables, 'CREATE TABLE IF NOT EXISTS invites'),
+  95: (
+    (db) => deviceTables(db, addColumn),
+    'CREATE TABLE IF NOT EXISTS dev_lists',
+  ),
+  96: (
+    (db) => pqRestartTables(db, upgrade: true),
+    'CREATE TABLE IF NOT EXISTS pq_restarts',
+  ),
   // photos' runs on every upgrade, after every other step
   93: (photoTables, 'CREATE TABLE IF NOT EXISTS my_photo'),
 };
@@ -98,6 +107,8 @@ const _added = {
     'shots_told',
   ],
   'messages': ['album_id', 'album_n', 'album_i'],
+  'dev_lists': ['ident', 'owner', 'version', 'wire', 'from_invite'],
+  'dev_pool': ['kyber_id', 'kdb1', 'aged_at', 'last'],
   'wallpapers': ['chat', 'atmo', 'photo'],
   'drafts': ['chat', 'body', 'reply_to', 'updated_at'],
   'file_fetches': ['msg_uid', 'sender', 'wire', 'path', 'state'],
@@ -108,7 +119,16 @@ const _added = {
   'opener_reads': ['kyber_id', 'opener'],
   'dev_opener_reads': ['kyber_id', 'opener'],
   'first_kept': ['opened_id', 'opened_plain'],
-  'identities': ['id', 'kind', 'x_priv', 'reg_id', 'created_at', 'retired_at'],
+  'identities': [
+    'id',
+    'kind',
+    'x_priv',
+    'reg_id',
+    'created_at',
+    'retired_at',
+    'dev_id',
+    'ident_pub',
+  ],
   'pairs': ['ident', 'peer', 'their_device', 'my_device', 'conv', 'seed'],
   'fc_keys': ['ident', 'invite_id', 'sk', 'created_at', 'retired_at'],
   'sessions': ['ident', 'address', 'device_id', 'record'],
@@ -130,7 +150,26 @@ const _added = {
     'qr',
     'never_expires',
   ],
-  'hellos': ['ident', 'way', 'peer', 'invite_id', 'hello', 'fc', 'at'],
+  'hellos': [
+    'ident',
+    'way',
+    'peer',
+    'invite_id',
+    'hello',
+    'fc',
+    'at',
+    'once',
+    'went_at',
+  ],
+  'pq_restarts': [
+    'ident',
+    'peer',
+    'key',
+    'asked_at',
+    'asks',
+    'pq_at',
+    'dropped_at',
+  ],
   'hello_seen': ['ident', 'hash', 'at'],
   'my_photo': ['id', 'ver', 'photo'],
   'contact_photos': ['halo_id', 'mine', 'theirs', 'their_ver', 'took_at'],

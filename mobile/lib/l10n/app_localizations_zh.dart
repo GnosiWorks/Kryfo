@@ -8355,6 +8355,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatShotsYouTurnedOff => '你关闭了禁止截屏';
 
   @override
+  String get chatNowPostQuantum => '此聊天中的消息现已使用后量子加密';
+
+  @override
   String chatShotsTheyTurnedOn(String name) {
     return '$name 开启了禁止截屏。复制、转发和保存彼此的消息也已关闭。';
   }
@@ -18488,6 +18491,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatShotsYouTurnedOff => '你關閉了禁止截圖';
+
+  @override
+  String get chatNowPostQuantum => '此聊天中的訊息現已使用後量子加密';
 
   @override
   String chatShotsTheyTurnedOn(String name) {

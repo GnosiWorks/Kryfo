@@ -2304,6 +2304,7 @@
   "roomShotsKeptOpen": "Membuka file orang lain di aplikasi lain mati di ruang ini",
   "chatShotsYouTurnedOn": "Kamu menyalakan blokir tangkapan layar. Menyalin, meneruskan, dan menyimpan pesan satu sama lain juga mati.",
   "chatShotsYouTurnedOff": "Kamu mematikan blokir tangkapan layar",
+  "chatNowPostQuantum": "Pesan di obrolan ini sekarang memakai enkripsi pascakuantum",
   "chatShotsTheyTurnedOn": "{name} menyalakan blokir tangkapan layar. Menyalin, meneruskan, dan menyimpan pesan satu sama lain juga mati.",
   "chatShotsTheyTurnedOff": "{name} mematikan blokir tangkapan layar",
   "roomShotsBlocked": "Kryfo memblokir tangkapan layar dan rekaman layar ruang ini di setiap ponsel di dalamnya, juga menyalin, meneruskan, atau menyimpan pesan orang lain. Ini tidak bisa mencegah aplikasi yang diizinkan membaca layar, atau ponsel maupun aplikasi yang diubah untuk mengakalinya.",

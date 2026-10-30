@@ -163,6 +163,8 @@ extension AppStateOutbox on AppState {
       unawaited(drainOutbox());
       // my invites kept once an hour, network or not
       unawaited(keepMyInvitesDue());
+      // and the held chats' pq restarts looked at
+      unawaited(pqUpkeepDue());
       // files on their way in from the files service, as they come due
       unawaited(fetchDrops());
     });

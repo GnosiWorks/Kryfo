@@ -10974,6 +10974,10 @@
   "@chatShotsYouTurnedOff": {
     "description": "widgets/shots_line.dart: the line in the chat where you turned the block off"
   },
+  "chatNowPostQuantum": "Messages in this chat now use post-quantum encryption",
+  "@chatNowPostQuantum": {
+    "description": "widgets/shots_line.dart, screens/chat_screen.dart: the quiet line in a chat made before Kryfo 0.6, where both phones moved its session to post-quantum encryption (identity v4 pq restart). said once, on both phones; positive, no action"
+  },
   "chatShotsTheyTurnedOn": "{name} turned on screenshot blocking. Copying, forwarding and saving each other’s messages is off too.",
   "@chatShotsTheyTurnedOn": {
     "description": "widgets/shots_line.dart: the line in the chat where the other person turned the block on",

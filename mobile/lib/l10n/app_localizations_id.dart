@@ -8779,6 +8779,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatShotsYouTurnedOff => 'Kamu mematikan blokir tangkapan layar';
 
   @override
+  String get chatNowPostQuantum =>
+      'Pesan di obrolan ini sekarang memakai enkripsi pascakuantum';
+
+  @override
   String chatShotsTheyTurnedOn(String name) {
     return '$name menyalakan blokir tangkapan layar. Menyalin, meneruskan, dan menyimpan pesan satu sama lain juga mati.';
   }

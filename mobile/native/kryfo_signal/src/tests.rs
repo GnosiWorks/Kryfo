@@ -1038,6 +1038,126 @@ fn classic_states_go_after_the_pq_restart() {
 }
 
 #[test]
+fn a_late_classic_message_does_not_undo_the_restart() {
+    let f = fixture();
+    let bob_rec = &f["bob_rec"];
+    let alice_pub = run(session_info, w().bytes(bob_rec)).unwrap()[4].clone();
+    let spk = run(
+        signed_prekey_generate,
+        w().bytes(&f["alice_id"]).u32(61).u64(NOW),
+    )
+    .unwrap();
+    let ky = run(
+        kyber_prekey_generate,
+        w().bytes(&f["alice_id"]).u32(62).u64(NOW),
+    )
+    .unwrap();
+    let bundle = run(
+        bundle_build,
+        w().u32(11)
+            .u32(1)
+            .opt(None)
+            .opt(None)
+            .u32(61)
+            .bytes(&spk[1])
+            .bytes(&spk[2])
+            .u32(62)
+            .bytes(&ky[1])
+            .bytes(&ky[2])
+            .bytes(&alice_pub),
+    )
+    .unwrap()
+    .remove(0);
+    let pq = run(
+        session_from_bundle,
+        w().bytes(&f["bob_id"])
+            .u32(22)
+            .bytes(bob_rec)
+            .bytes(&bundle)
+            .u64(NOW)
+            .opt(Some(&alice_pub)),
+    )
+    .unwrap()
+    .remove(0);
+    // alice's classic m3, still on its way, opens on the archived state:
+    // libsignal puts that state in front and archives the pq one without
+    // its unanswered opener, so the next seal would be classic
+    let m3 = run(
+        decrypt_signal,
+        w().bytes(&f["bob_id"])
+            .u32(22)
+            .bytes(&pq)
+            .bytes(&f["m3"])
+            .opt(None),
+    )
+    .unwrap();
+    assert_eq!(m3[0], b"m3 from dart");
+    let info = run(session_info, w().bytes(&m3[1])).unwrap();
+    assert_eq!(u32_of(&info[1]), 3);
+    let flat = run(
+        encrypt,
+        w().bytes(&f["bob_id"])
+            .u32(22)
+            .bytes(&m3[1])
+            .bytes(b"classic")
+            .u64(NOW)
+            .opt(None),
+    )
+    .unwrap();
+    assert_eq!(u32_of(&flat[0]), 2);
+    assert_eq!(
+        u32_of(&run(session_info, w().bytes(&flat[2])).unwrap()[1]),
+        3
+    );
+    // the app puts the pq state back as it was before the open (the held
+    // copy, opener and all), the classic one behind it once
+    let up = run(session_promote, w().bytes(&m3[1]).bytes(&pq))
+        .unwrap()
+        .remove(0);
+    let info = run(session_info, w().bytes(&up)).unwrap();
+    assert_eq!(u32_of(&info[1]), 4);
+    assert_eq!(u32_of(&info[7]), 1);
+    assert_eq!(u32_of(&info[8]), 3);
+    // the next seal is the pq opener again, and alice opens it
+    let m = run(
+        encrypt,
+        w().bytes(&f["bob_id"])
+            .u32(22)
+            .bytes(&up)
+            .bytes(b"pq again")
+            .u64(NOW)
+            .opt(None),
+    )
+    .unwrap();
+    assert_eq!(u32_of(&m[0]), 3);
+    let o = run(
+        decrypt_prekey,
+        w().bytes(&f["alice_id"])
+            .u32(11)
+            .bytes(&f["alice_rec"])
+            .bytes(&m[1])
+            .opt(None)
+            .bytes(&spk[0])
+            .bytes(&ky[0])
+            .opt(None),
+    )
+    .unwrap();
+    assert_eq!(o[0], b"pq again");
+    // the classic state behind it still knows m3 opened
+    assert_eq!(
+        run(
+            decrypt_signal,
+            w().bytes(&f["bob_id"])
+                .u32(22)
+                .bytes(&up)
+                .bytes(&f["m3"])
+                .opt(None),
+        ),
+        Err(Error::Duplicate)
+    );
+}
+
+#[test]
 fn every_call_takes_keys_in_their_one_form_only() {
     let alice = Party::new(1);
     let bob = Party::new(2);

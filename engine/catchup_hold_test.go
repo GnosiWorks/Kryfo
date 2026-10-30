@@ -557,11 +557,11 @@ func TestEitherEntryOfOurRelayLetsGo(t *testing.T) {
 			h := newHalfWay(t)
 			o := onion.url(t)
 			useRelays(o, h.ours.url(), h.other.url())
-			oldHost := ownRelayHost
-			ownRelayHost = strings.TrimPrefix(h.ours.url(), "ws://")
+			oldHost := ownRelayHost.get()
+			ownRelayHost.put(strings.TrimPrefix(h.ours.url(), "ws://"))
 			t.Cleanup(func() {
 				runnersGone(t)
-				ownRelayHost = oldHost
+				ownRelayHost.put(oldHost)
 			})
 			ok := catchupKey(o, h.rcv)
 			forgetCatchup(ok)

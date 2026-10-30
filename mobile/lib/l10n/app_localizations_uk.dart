@@ -8931,6 +8931,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Ти вимкнув(-ла) блокування знімків екрана';
 
   @override
+  String get chatNowPostQuantum =>
+      'Повідомлення в цьому чаті тепер захищені постквантовим шифруванням';
+
+  @override
   String chatShotsTheyTurnedOn(String name) {
     return '$name увімкнув(-ла) блокування знімків екрана. Копіювати, пересилати й зберігати повідомлення одне одного теж не можна.';
   }

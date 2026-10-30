@@ -8912,6 +8912,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatShotsYouTurnedOff => 'أوقفت منع لقطات الشاشة';
 
   @override
+  String get chatNowPostQuantum =>
+      'الرسائل في هذه المحادثة تستخدم الآن تشفيرًا ما بعد الكم';
+
+  @override
   String chatShotsTheyTurnedOn(String name) {
     return 'فعّل ⁨$name⁩ منع لقطات الشاشة. نسخ رسائل كل منكما وإعادة توجيهها وحفظها متوقف أيضًا.';
   }

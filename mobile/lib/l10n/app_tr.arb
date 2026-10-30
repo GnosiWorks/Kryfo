@@ -2304,6 +2304,7 @@
   "roomShotsKeptOpen": "Bu odada başkalarının dosyalarını başka uygulamalarda açmak kapalı",
   "chatShotsYouTurnedOn": "Ekran görüntüsü engelini açtın. Birbirinizin mesajlarını kopyalamak, iletmek ve kaydetmek de kapalı.",
   "chatShotsYouTurnedOff": "Ekran görüntüsü engelini kapattın",
+  "chatNowPostQuantum": "Bu sohbetteki mesajlar artık kuantum sonrası şifreleme kullanıyor",
   "chatShotsTheyTurnedOn": "{name} ekran görüntüsü engelini açtı. Birbirinizin mesajlarını kopyalamak, iletmek ve kaydetmek de kapalı.",
   "chatShotsTheyTurnedOff": "{name} ekran görüntüsü engelini kapattı",
   "roomShotsBlocked": "Kryfo bu odanın ekran görüntüsünü ve ekran kaydını içindeki her telefonda engeller; başkalarının mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi de. Ekranı okumasına izin verilen uygulamaları ya da bunu aşmak için değiştirilmiş bir telefonu veya uygulamayı durduramaz.",

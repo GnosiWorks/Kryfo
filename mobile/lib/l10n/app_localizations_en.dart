@@ -8777,6 +8777,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatShotsYouTurnedOff => 'You turned off screenshot blocking';
 
   @override
+  String get chatNowPostQuantum =>
+      'Messages in this chat now use post-quantum encryption';
+
+  @override
   String chatShotsTheyTurnedOn(String name) {
     return '$name turned on screenshot blocking. Copying, forwarding and saving each other’s messages is off too.';
   }

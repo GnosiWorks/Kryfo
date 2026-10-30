@@ -8789,6 +8789,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get chatShotsYouTurnedOff => 'आपने स्क्रीनशॉट रोकना बंद किया';
 
   @override
+  String get chatNowPostQuantum =>
+      'इस चैट के मैसेज अब पोस्ट-क्वांटम एन्क्रिप्शन से सुरक्षित हैं';
+
+  @override
   String chatShotsTheyTurnedOn(String name) {
     return '$name ने स्क्रीनशॉट रोकना चालू किया। एक-दूसरे के मैसेज कॉपी, फ़ॉरवर्ड और सेव करना भी बंद है।';
   }

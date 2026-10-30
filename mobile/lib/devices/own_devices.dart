@@ -5,9 +5,7 @@ import 'package:flutter/widgets.dart';
 
 import '../bidi_safe.dart' show unmarked;
 
-/// the settings row and its screens stay out of builds until linking is
-/// wired to the engine
-const bool kLinkedDevicesOn = false;
+export 'linked_switch.dart' show kLinkedDevicesOn;
 
 /// the phone and five more
 const int kMaxLinkedDevices = 5;

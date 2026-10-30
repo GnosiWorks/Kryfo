@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the line a chat shows where its screenshot block last changed, by either
-// phone: a quiet pill in the thread, like a day's. it eases in where it
+// phone, and where it went over to post-quantum: a quiet pill in the
+// thread, like a day's. it eases in where it
 // lands, no animation with reduced motion
 import 'package:flutter/material.dart';
 

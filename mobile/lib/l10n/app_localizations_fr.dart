@@ -8870,6 +8870,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vous avez désactivé le blocage des captures';
 
   @override
+  String get chatNowPostQuantum =>
+      'Les messages de cette discussion utilisent désormais un chiffrement post-quantique';
+
+  @override
   String chatShotsTheyTurnedOn(String name) {
     return '$name a activé le blocage des captures. Copier, transférer et enregistrer les messages de l’autre est aussi désactivé.';
   }

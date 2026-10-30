@@ -8770,6 +8770,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatShotsYouTurnedOff => 'Bạn đã tắt chặn chụp màn hình';
 
   @override
+  String get chatNowPostQuantum =>
+      'Tin nhắn trong cuộc trò chuyện này giờ dùng mã hóa hậu lượng tử';
+
+  @override
   String chatShotsTheyTurnedOn(String name) {
     return '$name đã bật chặn chụp màn hình. Việc sao chép, chuyển tiếp và lưu tin nhắn của nhau cũng bị tắt.';
   }

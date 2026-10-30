@@ -8858,6 +8858,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Hai disattivato il blocco degli screenshot';
 
   @override
+  String get chatNowPostQuantum =>
+      'I messaggi di questa chat ora usano la cifratura post-quantistica';
+
+  @override
   String chatShotsTheyTurnedOn(String name) {
     return '$name ha attivato il blocco degli screenshot. Anche copiare, inoltrare e salvare i messaggi dell\'altro è disattivato.';
   }

@@ -8943,6 +8943,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatShotsYouTurnedOff => 'Ты выключил(а) запрет скриншотов';
 
   @override
+  String get chatNowPostQuantum =>
+      'Сообщения в этом чате теперь защищены постквантовым шифрованием';
+
+  @override
   String chatShotsTheyTurnedOn(String name) {
     return '$name включил(а) запрет скриншотов. Копировать, пересылать и сохранять сообщения друг друга тоже нельзя.';
   }

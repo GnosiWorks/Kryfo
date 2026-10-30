@@ -8851,6 +8851,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Você desativou o bloqueio de capturas de tela';
 
   @override
+  String get chatNowPostQuantum =>
+      'As mensagens desta conversa agora usam criptografia pós-quântica';
+
+  @override
   String chatShotsTheyTurnedOn(String name) {
     return '$name ativou o bloqueio de capturas de tela. Copiar, encaminhar e salvar as mensagens do outro também fica desativado.';
   }

@@ -513,6 +513,8 @@ extension AppStateBoot on AppState {
       if (after != null && await afterRestore(database) && marked) {
         await prefs.remove(kRestoreAfterPref);
       }
+      // linked devices, before any message opens (switch off: nothing)
+      await bootDevices();
     } catch (e, st) {
       dlog('signal bootstrap failed: $e\n$st');
     }
