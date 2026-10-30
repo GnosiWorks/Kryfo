@@ -885,26 +885,32 @@ class SignalSession {
   /// state archived so what was sealed on it still opens. the next seal is
   /// its opener. false when nothing is held, or the held one runs on
   /// another key
-  Future<bool> restartFrom(String peer, LsBundle bundle) =>
-      serial(peer, () async {
-        final held = await sessionStore.load(peer);
-        if (held == null) return false;
-        final their = lib.sessionInfo(held).remoteIdentity;
-        if (their == null || !_eq(their, bundle.identityKey)) return false;
-        final (record, key) = lib.sessionFromBundle(
-          identity,
-          registrationId,
-          held,
-          bundle,
-          _now(),
-          pinned: their,
-        );
-        _requirePq(record);
-        if (!_eq(key, their)) throw const LsError(LsError.untrusted);
-        await sessionStore.store(peer, record);
-        dlog('signal: a classic session started again on pq');
-        return true;
-      });
+  Future<bool> restartFrom(
+    String peer,
+    LsBundle bundle, {
+    bool classicOnly = false,
+  }) => serial(peer, () async {
+    final held = await sessionStore.load(peer);
+    if (held == null) return false;
+    final had = lib.sessionInfo(held);
+    // [classicOnly]: a record whose front is pq already is left as it is
+    if (classicOnly && had.version >= 4) return false;
+    final their = had.remoteIdentity;
+    if (their == null || !_eq(their, bundle.identityKey)) return false;
+    final (record, key) = lib.sessionFromBundle(
+      identity,
+      registrationId,
+      held,
+      bundle,
+      _now(),
+      pinned: their,
+    );
+    _requirePq(record);
+    if (!_eq(key, their)) throw const LsError(LsError.untrusted);
+    await sessionStore.store(peer, record);
+    dlog('signal: a classic session started again on pq');
+    return true;
+  });
 
   /// [peer]'s record without its classic states, once their side of the pq
   /// restart is 15 days done (identity v4 11 step 6): what was sealed on
