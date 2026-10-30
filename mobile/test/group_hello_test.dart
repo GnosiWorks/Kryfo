@@ -1256,4 +1256,51 @@ void main() {
     await _settle();
     expect((await rosterInviteOf(db, _g, up.words))!.id, newer.id);
   });
+
+  test('a roster invite kept, or a roster hello taken, ahead of now (a '
+      'clock set back since) holds nothing back', () async {
+    final mine = await myRoster();
+    final admin = await _Phone.make('admin-of-rtwo', seed++);
+    final down = await phone('below-me-rtwo', above: false);
+    const h = 3600 * 1000;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final ahead = now + 30 * 24 * h;
+    await joinFrom(admin, [(down, await down.roster())]);
+    final m = await _Phone.make('member-of-rtwo', seed++);
+    final r1 = await m.roster(nowMs: now - 5 * h);
+    final r2 = await m.roster(nowMs: now);
+    Future<bool> keep(InviteRow r) => keepRosterInvite(
+      db,
+      'grp-r-two',
+      m.words,
+      r.link,
+      id: r.id,
+      issued: r.issued,
+      passOn: true,
+    );
+    expect(await keep(r1), isTrue);
+    await db.update(
+      'roster_invites',
+      {'kept': ahead},
+      where: 'member = ?',
+      whereArgs: [m.words],
+    );
+    expect(await keep(r2), isTrue);
+    expect((await rosterInviteOf(db, 'grp-r-two', m.words))!.id, r2.id);
+    // a hello of theirs taken ahead of now: theirs is taken today
+    await db.insert('hellos', {
+      'ident': kMainIdent,
+      'way': 'taken',
+      'peer': down.keyHex,
+      'invite_id': '0' * 32,
+      'at': ahead,
+    });
+    final hl = await down.helloTo(mine.id);
+    await app.receiveRelay([(peer: 'f0:${mine.id}', cipher: hl.line)]);
+    await _settle();
+    expect(firstFails.codes, isNot(contains('again')));
+    expect(await signalSession.sessionStore.load(down.words), isNotNull);
+    final taken = await hellosOf('taken', down.keyHex);
+    expect(taken.single['at'] as int, lessThan(ahead));
+  });
 }

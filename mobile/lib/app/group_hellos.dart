@@ -425,17 +425,20 @@ extension AppStateGroupHellos on AppState {
   }
 
   /// whether a roster hello from [keyHex] was taken in the last day: one a
-  /// day is, so no member makes me remake our session without end
+  /// day is, so no member makes me remake our session without end. one
+  /// taken ahead of now is from a clock set back since: stale
   Future<bool> _rosterHelloAgain(DatabaseExecutor file, String keyHex) async {
-    await file.delete(
-      'hellos',
-      where: 'way = ? AND at < ?',
-      whereArgs: [
-        kHelloTaken,
-        DateTime.now().millisecondsSinceEpoch -
-            kRosterHelloEvery.inMilliseconds,
-      ],
-    );
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final (op, at) in [
+      ('<', now - kRosterHelloEvery.inMilliseconds),
+      ('>', now),
+    ]) {
+      await file.delete(
+        'hellos',
+        where: 'way = ? AND at $op ?',
+        whereArgs: [kHelloTaken, at],
+      );
+    }
     return (await file.query(
       'hellos',
       columns: ['at'],

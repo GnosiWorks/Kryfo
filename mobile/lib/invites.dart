@@ -451,7 +451,10 @@ Future<bool> keepRosterInvite(
   if (had != null &&
       (had.id == id ||
           had.issued >= issued ||
-          (passOn && now - had.kept < kRosterKeepEvery.inMilliseconds))) {
+          // one kept ahead of now is from a clock set back since: stale
+          (passOn &&
+              had.kept <= now &&
+              now - had.kept < kRosterKeepEvery.inMilliseconds))) {
     return false;
   }
   await db.insert('roster_invites', {
