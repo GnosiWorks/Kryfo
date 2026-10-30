@@ -20,13 +20,27 @@ const kCapsWire = 'cp';
 /// every 1:1 and group frame it seals. 'gs': it blocks screenshots in
 /// groups (group_shots.dart). 'fb': it fetches from the files service, so
 /// a file may go there (file_drop.dart). 'pp': it takes a profile photo
-/// (profile_photo.dart)
+/// (profile_photo.dart). 'pq': it takes a pq restart of a held classic
+/// chat (pq_restart.dart)
 const kCapTyping = 'ty';
 const kCapGroupShots = 'gs';
 const kCapDrops = 'fb';
 const kCapPhotos = 'pp';
-const kKnownCaps = {kCapTyping, kCapGroupShots, kCapDrops, kCapPhotos};
-const kMyCaps = [kCapGroupShots, kCapTyping, kCapDrops, kCapPhotos];
+const kCapPqRestart = 'pq';
+const kKnownCaps = {
+  kCapTyping,
+  kCapGroupShots,
+  kCapDrops,
+  kCapPhotos,
+  kCapPqRestart,
+};
+const kMyCaps = [
+  kCapGroupShots,
+  kCapTyping,
+  kCapDrops,
+  kCapPhotos,
+  kCapPqRestart,
+];
 
 // a list longer than this is no phone's, and is read as none
 const kCapsMost = 16;

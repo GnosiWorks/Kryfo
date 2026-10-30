@@ -2304,6 +2304,7 @@
   "roomShotsKeptOpen": "Không thể mở tệp của người khác bằng ứng dụng khác trong phòng này",
   "chatShotsYouTurnedOn": "Bạn đã bật chặn chụp màn hình. Việc sao chép, chuyển tiếp và lưu tin nhắn của nhau cũng bị tắt.",
   "chatShotsYouTurnedOff": "Bạn đã tắt chặn chụp màn hình",
+  "chatNowPostQuantum": "Tin nhắn trong cuộc trò chuyện này giờ dùng mã hóa hậu lượng tử",
   "chatShotsTheyTurnedOn": "{name} đã bật chặn chụp màn hình. Việc sao chép, chuyển tiếp và lưu tin nhắn của nhau cũng bị tắt.",
   "chatShotsTheyTurnedOff": "{name} đã tắt chặn chụp màn hình",
   "roomShotsBlocked": "Kryfo chặn chụp màn hình và quay màn hình phòng này trên mọi điện thoại trong đó, cũng như sao chép, chuyển tiếp hoặc lưu tin nhắn của người khác. Nó không chặn được các ứng dụng được phép đọc màn hình, hay điện thoại hoặc ứng dụng đã bị sửa để lách qua.",

@@ -14105,6 +14105,12 @@ abstract class AppLocalizations {
   /// **'You turned off screenshot blocking'**
   String get chatShotsYouTurnedOff;
 
+  /// widgets/shots_line.dart, screens/chat_screen.dart: the quiet line in a chat made before Kryfo 0.6, where both phones moved its session to post-quantum encryption (identity v4 pq restart). said once, on both phones; positive, no action
+  ///
+  /// In en, this message translates to:
+  /// **'Messages in this chat now use post-quantum encryption'**
+  String get chatNowPostQuantum;
+
   /// widgets/shots_line.dart: the line in the chat where the other person turned the block on
   ///
   /// In en, this message translates to:

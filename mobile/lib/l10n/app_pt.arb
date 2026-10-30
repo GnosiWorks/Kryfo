@@ -2304,6 +2304,7 @@
   "roomShotsKeptOpen": "Abrir arquivos dos outros em outros apps está desativado nesta sala",
   "chatShotsYouTurnedOn": "Você ativou o bloqueio de capturas de tela. Copiar, encaminhar e salvar as mensagens do outro também fica desativado.",
   "chatShotsYouTurnedOff": "Você desativou o bloqueio de capturas de tela",
+  "chatNowPostQuantum": "As mensagens desta conversa agora usam criptografia pós-quântica",
   "chatShotsTheyTurnedOn": "{name} ativou o bloqueio de capturas de tela. Copiar, encaminhar e salvar as mensagens do outro também fica desativado.",
   "chatShotsTheyTurnedOff": "{name} desativou o bloqueio de capturas de tela",
   "roomShotsBlocked": "O Kryfo bloqueia capturas e gravação de tela desta sala em todos os celulares dela, e também copiar, encaminhar ou salvar as mensagens dos outros. Não impede apps com permissão para ler a tela nem um celular ou app modificado para contornar isso.",

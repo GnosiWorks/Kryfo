@@ -98,6 +98,8 @@ import '../widgets/kryfo_avatar.dart';
 import '../main.dart'
     show
         engine,
+        sendFirstContactNoted,
+        AppStatePqRestart,
         AppStateFiles,
         kNameAsk,
         kNameLater,
@@ -739,6 +741,8 @@ class _ChatScreenState extends State<ChatScreen>
   bool _disguise = false;
   // the chat's screenshot block, as both phones hold it
   ChatShots _shots = const ChatShots();
+  // when this chat went over to post-quantum (pq_restart.dart), for its line
+  int? _pqAt;
   // this screen's one hold on the window's flag while the chat blocks
   late final _shotsHold = ShotsPacer(appState.forceSecure);
   int _burnSeconds = _lastBurnSeconds; // restored from last use this session.
@@ -1324,6 +1328,7 @@ class _ChatScreenState extends State<ChatScreen>
       _shotsHold.want(true, now: true);
     }
     _loadShots();
+    unawaited(_loadPqLine());
     appState.addListener(_onAppStateChanged);
     mediaSendsTick.addListener(_mediaSendsMoved);
     fileWaits.addListener(_waitsMoved);
@@ -1572,6 +1577,7 @@ class _ChatScreenState extends State<ChatScreen>
       _tryAppendNew();
       unawaited(_refreshDelivered());
       _loadShots();
+      unawaited(_loadPqLine());
       // their badge rides their messages: one that came now may change it
       unawaited(_loadBadge());
     }
@@ -3402,7 +3408,7 @@ class _ChatScreenState extends State<ChatScreen>
         widget.peerHaloId,
         backPaired: _backPaired,
       ),
-      viaFirst: (x, fc) => engine.sendFirstContact(ident, x, fc, cipher),
+      viaFirst: (x, fc) => sendFirstContactNoted(ident, x, fc, cipher),
       viaRelay: (x) => Future(() => engine.nostrSend(ident, x, cipher)),
       log: (l) => dlog('chat send: $l'),
       // both its copies went: past their two it waits held, not lost
@@ -5148,6 +5154,29 @@ class _ChatScreenState extends State<ChatScreen>
     setState(() => _shots = s);
   }
 
+  Future<void> _loadPqLine() async {
+    if (_isDev || widget.support || _pqAt != null) return;
+    final at = await appState.pqLineAt(widget.peerHaloId);
+    if (!mounted || at == null) return;
+    setState(() => _pqAt = at);
+  }
+
+  // the line where this chat went over to post-quantum, placed as the
+  // screenshot line is
+  Widget? _pqLineAt(int ix, {required bool below}) {
+    final when = _pqAt;
+    if (when == null || when <= 0 || _messages.isEmpty) return null;
+    if (!_lineHere(ix, DateTime.fromMillisecondsSinceEpoch(when), below)) {
+      return null;
+    }
+    return ShotsLine(
+      key: const ValueKey('pq-line'),
+      on: true,
+      icon: Icons.enhanced_encryption_outlined,
+      text: l10n.chatNowPostQuantum,
+    );
+  }
+
   Future<void> _flipShots() async {
     if (!_shots.peerCan) return;
     final on = !_shots.on;
@@ -5176,18 +5205,7 @@ class _ChatScreenState extends State<ChatScreen>
     final s = _shots;
     if (s.by == kShotsByNone || s.when <= 0 || _messages.isEmpty) return null;
     final at = DateTime.fromMillisecondsSinceEpoch(s.when);
-    final row = _messages[ix];
-    final run = _albums.runOf(row);
-    final here = run == null
-        ? _shotsLineBy(ix, at, below: below)
-        : run.present.any(
-            (x) => _shotsLineBy(
-              _messages.lastIndexWhere((m) => identical(m, x)),
-              at,
-              below: below,
-            ),
-          );
-    if (!here) return null;
+    if (!_lineHere(ix, at, below)) return null;
     return ShotsLine(
       key: const ValueKey('shots-line'),
       on: s.on,
@@ -5197,6 +5215,21 @@ class _ChatScreenState extends State<ChatScreen>
         name: _nickname ?? widget.peerHaloId,
       ),
     );
+  }
+
+  // whether a line at [at] falls by row [ix]: an album's member is drawn by
+  // its lead, so the line goes with the lead's row
+  bool _lineHere(int ix, DateTime at, bool below) {
+    final run = _albums.runOf(_messages[ix]);
+    return run == null
+        ? _shotsLineBy(ix, at, below: below)
+        : run.present.any(
+            (x) => _shotsLineBy(
+              _messages.lastIndexWhere((m) => identical(m, x)),
+              at,
+              below: below,
+            ),
+          );
   }
 
   // whether the line falls over row [ix], or under it
@@ -5505,6 +5538,7 @@ class _ChatScreenState extends State<ChatScreen>
         children: [
           if (showDate) _dateDivider(m.when, row.msgUid ?? 'r${row.rowid}'),
           ?_shotsLineAt(ix, below: false),
+          ?_pqLineAt(ix, below: false),
           if (firstUnread) _newMessagesDivider(),
           // the bubble alone: what says it has been read
           RowAnchor(
@@ -5533,6 +5567,7 @@ class _ChatScreenState extends State<ChatScreen>
             ),
           ),
           ?_shotsLineAt(ix, below: true),
+          ?_pqLineAt(ix, below: true),
         ],
       ),
     );
