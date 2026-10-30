@@ -4,6 +4,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../bidi_safe.dart' show unmarked;
+import 'link_flow.dart';
 
 export 'linked_switch.dart' show kLinkedDevicesOn;
 
@@ -84,6 +85,12 @@ abstract class OwnDevices {
 
   /// whether this build can link a device now
   bool get canLink;
+
+  /// a link to the device whose code was scanned
+  LinkFlow linkFlow(String code, LinkHistory history);
+
+  /// the person opened the page: notices of new devices have done their job
+  Future<void> opened();
 }
 
 class ThisPhoneOnly implements OwnDevices {
@@ -113,6 +120,29 @@ class ThisPhoneOnly implements OwnDevices {
 
   @override
   bool get canLink => false;
+
+  @override
+  LinkFlow linkFlow(String code, LinkHistory history) =>
+      throw StateError('this phone cannot link yet');
+
+  @override
+  Future<void> opened() async {}
+}
+
+/// the decoy's devices: this phone alone, and a link that looks like any
+/// and reaches nobody. nothing of the real account is read or written
+class DecoyDevices extends ThisPhoneOnly {
+  const DecoyDevices({required super.phoneName, super.since, this.flow});
+
+  /// a stand-in for tests
+  final LinkFlow Function()? flow;
+
+  @override
+  bool get canLink => true;
+
+  @override
+  LinkFlow linkFlow(String code, LinkHistory history) =>
+      flow?.call() ?? DecoyLinkFlow();
 }
 
 /// the longest name kept for a device, in characters

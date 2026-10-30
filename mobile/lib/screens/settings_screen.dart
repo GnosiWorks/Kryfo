@@ -17,7 +17,9 @@ import '../main.dart'
         AppStateBridges,
         AppStateSession,
         AppStateDevchat,
-        LinkViewBuilder;
+        LinkViewBuilder,
+        linkedRole,
+        ownDevicesSource;
 import '../link_view.dart';
 import '../lock_state.dart';
 import '../intro_prefs.dart';
@@ -57,7 +59,7 @@ import 'dev_about_sheet.dart' show devChatOffered, writeToMarios;
 import 'auto_get_screen.dart';
 import 'follow_section.dart';
 import 'linked_devices_screen.dart';
-import '../devices/own_devices.dart' show kLinkedDevicesOn;
+import '../devices/own_devices.dart' show kLinkedDevicesOn, OwnDevices;
 import '../widgets/stagger_in.dart';
 import '../widgets/unfold.dart';
 import '../widgets/confirm_sheet.dart';
@@ -385,6 +387,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) setState(() => _gifOn = v);
     });
     _readUpdateOn();
+    if (kLinkedDevicesOn) _readDevices();
+  }
+
+  // the devices row's value, from where the devices page reads
+  OwnDevices? _devices;
+  String? _devicesValue;
+  Future<void> _readDevices() async {
+    final src = await ownDevicesSource();
+    final all = await src.load();
+    if (!mounted) return;
+    setState(() {
+      _devices = src;
+      _devicesValue = devicesRowValue(all);
+    });
+  }
+
+  Future<void> _openDevices() async {
+    final src = _devices ?? await ownDevicesSource();
+    if (!mounted) return;
+    await Navigator.of(
+      context,
+    ).push(haloRoute(LinkedDevicesScreen(source: src)));
+    if (mounted) await _readDevices();
   }
 
   Future<void> _readUpdateOn() async {
@@ -752,10 +777,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 HaloRow(
                   icon: Icons.devices_rounded,
                   label: l10n.devicesLinkedDevices,
-                  value: l10n.devicesThisPhoneOnly,
-                  onTap: () => Navigator.of(
-                    context,
-                  ).push(haloRoute(const LinkedDevicesScreen())),
+                  value: _devicesValue,
+                  hint: linkedRole ? l10n.settingsLinkedToLine : null,
+                  onTap: _openDevices,
                 ),
               ],
             ),
@@ -798,37 +822,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
-          HaloSection(l10n.settingsBackup),
-          HaloGroup(
-            children: [
-              // windows without a passphrase: a backup is the way back if
-              // the computer's key goes
-              ListenableBuilder(
-                listenable: Listenable.merge([?computerLock, lockState]),
-                builder: (_, _) => HaloRow(
-                  icon: Icons.save_alt,
-                  label: l10n.settingsBackUpIdentity,
-                  value: l10n.settingsEncryptedFile,
-                  hint:
-                      computerLock?.backupWise(decoy: lockState.inDecoy) ??
-                          false
-                      ? l10n.desktopBackupHint
-                      : null,
+          // a linked device keeps no backup of its own: its phone's
+          // backup is the account's
+          if (!linkedRole) ...[
+            HaloSection(l10n.settingsBackup),
+            HaloGroup(
+              children: [
+                // windows without a passphrase: a backup is the way back if
+                // the computer's key goes
+                ListenableBuilder(
+                  listenable: Listenable.merge([?computerLock, lockState]),
+                  builder: (_, _) => HaloRow(
+                    icon: Icons.save_alt,
+                    label: l10n.settingsBackUpIdentity,
+                    value: l10n.settingsEncryptedFile,
+                    hint:
+                        computerLock?.backupWise(decoy: lockState.inDecoy) ??
+                            false
+                        ? l10n.desktopBackupHint
+                        : null,
+                    onTap: () => Navigator.of(
+                      context,
+                    ).push(haloRoute(const BackupScreen())),
+                  ),
+                ),
+                HaloRow(
+                  icon: Icons.restore,
+                  label: l10n.settingsRestoreFromBackup,
+                  value: l10n.settingsReplaceCurrent,
                   onTap: () => Navigator.of(
                     context,
-                  ).push(haloRoute(const BackupScreen())),
+                  ).push(haloRoute(const RestoreScreen())),
                 ),
-              ),
-              HaloRow(
-                icon: Icons.restore,
-                label: l10n.settingsRestoreFromBackup,
-                value: l10n.settingsReplaceCurrent,
-                onTap: () => Navigator.of(
-                  context,
-                ).push(haloRoute(const RestoreScreen())),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
           HaloSection(l10n.settingsVoice),
           HaloGroup(
             children: [
@@ -873,7 +901,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               // the developer's own phone: every install pins its card, and
               // a new link would cut every chat with it
-              if (appState.devMode)
+              // invites are the phone's: a linked device has none
+              if (linkedRole)
+                ...const <Widget>[]
+              else if (appState.devMode)
                 HaloRow(
                   icon: Icons.lock_outline,
                   label: l10n.settingsResetMyInviteLink,
@@ -927,7 +958,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               // the chat with the developer: the way back after a delete.
               // none on his own phone, none with no key pinned
-              if (devChatOffered)
+              if (devChatOffered && !linkedRole)
                 HaloRow(
                   mark: const DevRing(size: 20),
                   label: l10n.settingsWriteToMarios,

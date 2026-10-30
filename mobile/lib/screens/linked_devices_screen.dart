@@ -2,6 +2,8 @@
 // your linked devices: this phone, the computers linked to it, linking one
 // more and removing them. only you see this page; your contacts' apps show
 // nothing about your devices
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -22,6 +24,8 @@ import '../widgets/sheet_handle.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
 import '../widgets/unfold.dart';
+import 'link_screens.dart';
+import 'scan_screen.dart';
 
 /// the settings row's value: the other devices by name, never a count
 String devicesRowValue(List<OwnDevice> all) {
@@ -30,7 +34,7 @@ String devicesRowValue(List<OwnDevice> all) {
       if (!d.thisDevice) d.name,
   ];
   return others.isEmpty
-      ? l10n.devicesThisPhoneOnly
+      ? l10n.devicesThisPhoneOnlyShown
       : others.join(l10n.devicesNameSeparator);
 }
 
@@ -43,7 +47,7 @@ String deviceUseLine(DeviceUse u) => switch (u) {
 
 /// the line under a device's name
 String deviceLine(OwnDevice d, DateTime now) {
-  if (d.thisDevice) return l10n.devicesOnlyThisPhone;
+  if (d.thisDevice) return l10n.devicesOnlyThisPhoneShown;
   final use = deviceUseLine(deviceUseOf(d.lastUsed, now));
   final at = d.linkedAt;
   return at == null
@@ -64,7 +68,7 @@ class LinkedDevicesScreen extends StatefulWidget {
 
 class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
   late final OwnDevices _source =
-      widget.source ?? ThisPhoneOnly(phoneName: l10n.devicesThisPhone);
+      widget.source ?? ThisPhoneOnly(phoneName: l10n.devicesThisPhoneShown);
   final _scroll = ScrollController();
   List<OwnDevice>? _devices;
   final Set<String> _leaving = {};
@@ -75,6 +79,8 @@ class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
   void initState() {
     super.initState();
     _load();
+    // the page is open: a new device's notice has been seen
+    unawaited(_source.opened());
   }
 
   @override
@@ -171,7 +177,39 @@ class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
 
   void _link() {
     HapticFeedback.selectionClick();
-    Navigator.of(context).push(haloRoute(const LinkDeviceScreen()));
+    Navigator.of(
+      context,
+    ).push(haloRoute(LinkDeviceScreen(onScan: _source.canLink ? _scan : null)));
+  }
+
+  // the scanner, then the link from the code it read. "try again" opens
+  // the scanner afresh; a link that took closes the link page too
+  Future<void> _scan(LinkHistory history) async {
+    final nav = Navigator.of(context);
+    final code = await nav.push<String>(
+      haloRoute(const ScanScreen(link: true)),
+    );
+    if (code == null || !mounted) return;
+    var again = false;
+    final linked = await nav.push<bool>(
+      haloRoute(
+        LinkRunScreen(
+          flow: _source.linkFlow(code, history),
+          onAgain: () {
+            again = true;
+            nav.pop(false);
+          },
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (linked == true) {
+      nav.pop();
+      await _load();
+      unawaited(_source.opened());
+    } else if (again) {
+      await _scan(history);
+    }
   }
 
   @override
@@ -647,7 +685,7 @@ class _LinkDeviceScreenState extends State<LinkDeviceScreen> {
                   const SizedBox(height: 16),
                   _Note(
                     icon: Icons.lock_outline_rounded,
-                    text: l10n.devicesHiddenStay,
+                    text: l10n.devicesHiddenStayShown,
                   ),
                   const Spacer(),
                   const SizedBox(height: 20),

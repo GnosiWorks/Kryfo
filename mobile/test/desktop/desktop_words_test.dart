@@ -703,6 +703,30 @@ final _pairs = <(String, _Get, _Get, _Get)>[
     (l) => l.bridgesThisNetworkWantsA,
     (l) => l.bridgesThisNetworkWantsADesk,
   ),
+  (
+    'devicesThisPhone',
+    (l) => l.devicesThisPhoneShown,
+    (l) => l.devicesThisPhone,
+    (l) => l.devicesThisPhoneDesk,
+  ),
+  (
+    'devicesThisPhoneOnly',
+    (l) => l.devicesThisPhoneOnlyShown,
+    (l) => l.devicesThisPhoneOnly,
+    (l) => l.devicesThisPhoneOnlyDesk,
+  ),
+  (
+    'devicesOnlyThisPhone',
+    (l) => l.devicesOnlyThisPhoneShown,
+    (l) => l.devicesOnlyThisPhone,
+    (l) => l.devicesOnlyThisPhoneDesk,
+  ),
+  (
+    'devicesHiddenStay',
+    (l) => l.devicesHiddenStayShown,
+    (l) => l.devicesHiddenStay,
+    (l) => l.devicesHiddenStayDesk,
+  ),
 ];
 
 Locale _locale(String tag) {

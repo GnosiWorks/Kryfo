@@ -39,6 +39,7 @@ Future<void> bootDevices() async {
   if (!linkedDevicesOn) return;
   try {
     final db = await live.open();
+    await readLinkedRole(db);
     final lib = signalSession.lib;
     final path = KryfoSignal.loadedFrom;
     if (path == null) throw StateError('the signal library has no path');

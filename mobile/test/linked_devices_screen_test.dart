@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui' show CheckedState;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/devices/link_flow.dart';
 import 'package:kryfo/devices/own_devices.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/screens/linked_devices_screen.dart';
@@ -49,6 +50,13 @@ class _Devices implements OwnDevices {
 
   @override
   bool get canLink => false;
+
+  @override
+  LinkFlow linkFlow(String code, LinkHistory history) =>
+      throw StateError('no link here');
+
+  @override
+  Future<void> opened() async {}
 }
 
 const _phone = OwnDevice(
