@@ -31,6 +31,7 @@ import 'package:kryfo/main.dart'
         AppStateOutbox,
         AppStateProfile,
         AppStateReceive,
+        HaloDb,
         HaloEngine,
         keyBelow,
         rosterPassWait,
@@ -307,8 +308,8 @@ class _Phone {
   String get x => _hex(key.sublist(1));
   String get keyHex => _hex(key);
 
-  Future<InviteRow> roster() =>
-      makeInvite(db, ss, kind: kInviteRoster, fcPkOf: _fcPkOf);
+  Future<InviteRow> roster({int? nowMs}) =>
+      makeInvite(db, ss, kind: kInviteRoster, fcPkOf: _fcPkOf, nowMs: nowMs);
 
   Map<String, String> part({InviteRow? ri}) => {
     'h': words,
@@ -339,6 +340,15 @@ class _Phone {
     );
     return (line: '${_sealOf(x)}|$wire', once: once);
   }
+}
+
+// the real group rows' code on the same file of rows: a removal as a
+// phone runs it
+class _Halo extends HaloDb {
+  _Halo(this.db);
+  final MemDb db;
+  @override
+  Future<Database> open() async => db;
 }
 
 Future<void> _settle() =>
@@ -1043,4 +1053,184 @@ void main() {
       expect(live.ctlTo(admin.words), isNot(contains('ri')));
     },
   );
+  test('the admin keeps a member\'s roster invite again only when it is '
+      'newer and a day on, and passes a new member every one, the others '
+      'only what is new', () async {
+    final mine = await myRoster();
+    final m1 = await _Phone.make('first-member-delta', seed++);
+    final m2 = await _Phone.make('second-member-delta', seed++);
+    for (final p in [m1, m2]) {
+      live.person(p.words, xpub: p.x, onion: p.onion);
+      await live.upsertContact(p.words, p.onion, p.x);
+    }
+    live.group(_g, [_me, m1.words, m2.words], admin: _me);
+    rosterPassWait = Duration.zero;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    const h = 3600 * 1000;
+    Future<void> ri(_Phone p, InviteRow r) async {
+      await app.groupControlForTest(
+        p.words,
+        await env(p, GroupControl(type: 'ri', invite: base64Encode(r.link))),
+        live,
+      );
+      await _settle();
+    }
+
+    Map<String?, String?> rosterTo(String member) {
+      final row = live.ctlOut.lastWhere((r) => r['member'] == member);
+      final gc = GroupControl.fromWire(jsonDecode(row['ctl'] as String))!;
+      expect(gc.type, 'roster');
+      return {for (final p in gc.participants!) p['h']: p['ri']};
+    }
+
+    final r1 = await m1.roster(nowMs: now - 5 * h);
+    await ri(m1, r1);
+    expect(rosterTo(m1.words).keys, unorderedEquals([_me, m1.words]));
+    // another of the same hour: not kept, nothing passed
+    live.ctlOut.clear();
+    final same = await m1.roster(nowMs: now - 5 * h);
+    expect(same.issued, r1.issued);
+    await ri(m1, same);
+    expect((await rosterInviteOf(db, _g, m1.words))!.id, r1.id);
+    expect(live.ctlOut, isEmpty);
+    // a newer one within the day: not kept either
+    final newer = await m1.roster(nowMs: now);
+    await ri(m1, newer);
+    expect((await rosterInviteOf(db, _g, m1.words))!.id, r1.id);
+    expect(live.ctlOut, isEmpty);
+    // a new member: every one to them, theirs alone to the one before
+    final r2 = await m2.roster();
+    await ri(m2, r2);
+    expect(rosterTo(m2.words), {
+      _me: base64Encode(mine.link),
+      m1.words: base64Encode(r1.link),
+      m2.words: base64Encode(r2.link),
+    });
+    expect(rosterTo(m1.words), {m2.words: base64Encode(r2.link)});
+    // a day on, the newer one is kept and goes to the others alone
+    await db.update(
+      'roster_invites',
+      {'kept': now - kRosterKeepEvery.inMilliseconds - 1},
+      where: 'member = ?',
+      whereArgs: [m1.words],
+    );
+    live.ctlOut.clear();
+    await ri(m1, newer);
+    expect((await rosterInviteOf(db, _g, m1.words))!.id, newer.id);
+    expect(rosterTo(m2.words), {m1.words: base64Encode(newer.link)});
+    expect(rosterTo(m1.words), {m1.words: base64Encode(newer.link)});
+    expect(await rosterInvitesToPass(db), isEmpty);
+  });
+
+  test('a second roster hello from a member who has a session with me is '
+      'dropped: no session made again, no second first frame', () async {
+    final mine = await myRoster();
+    final admin = await _Phone.make('admin-of-twice', seed++);
+    final down = await phone('below-me-twice', above: false);
+    await joinFrom(admin, [(down, await down.roster())]);
+    final h1 = await down.helloTo(mine.id);
+    await app.receiveRelay([(peer: 'f0:${mine.id}', cipher: h1.line)]);
+    await _settle();
+    await app.ctlPassForTest;
+    await _settle();
+    expect(await signalSession.sessionStore.load(down.words), isNotNull);
+    int toDown() => io.sent.where((s) => s.$1 == 'fc ${down.x}').length;
+    expect(toDown(), 1);
+    final pair = await pairOf(db, kMainIdent, down.keyHex);
+    final h2 = await down.helloTo(mine.id);
+    await app.receiveRelay([(peer: 'f0:${mine.id}', cipher: h2.line)]);
+    await _settle();
+    await app.ctlPassForTest;
+    await _settle();
+    expect(firstFails.codes, contains('again'));
+    expect(toDown(), 1);
+    expect((await pairOf(db, kMainIdent, down.keyHex)).seed, pair.seed);
+    expect(
+      app.peerFcFor(down.words),
+      _hex(readInvite(signalSession.lib, h1.once.link).firstContact),
+    );
+  });
+
+  test('a removed member: their hello at my roster invite is dropped before '
+      'it is noted, and my hello out to them takes no opener', () async {
+    final mine = await myRoster();
+    final admin = await _Phone.make('admin-removes-it', seed++);
+    final down = await phone('below-removed-one', above: false);
+    final up = await phone('above-removed-one', above: true);
+    await joinFrom(admin, [
+      (down, await down.roster()),
+      (up, await up.roster()),
+    ]);
+    await app.sendHellosOwed();
+    await _settle();
+    final once =
+        (await hellosOf('out', up.keyHex)).single['invite_id'] as String;
+    for (final p in [down, up]) {
+      await live.removeGroupMember(_g, p.words);
+      await _Halo(db).removeGroupMember(_g, p.words);
+    }
+    expect(await rosterInvitesIn(db, _g), isEmpty);
+    expect(await hellosOf('out', up.keyHex), isEmpty);
+    expect((await inviteOf(db, kMainIdent, once))!.usedAt, isNotNull);
+    expect(engine.unsubscribed, contains(once));
+    await db.delete('hello_seen');
+    final hl = await down.helloTo(mine.id);
+    await app.receiveRelay([(peer: 'f0:${mine.id}', cipher: hl.line)]);
+    await _settle();
+    expect(firstFails.codes, contains('roster'));
+    expect(await db.query('hello_seen'), isEmpty);
+    expect(await signalSession.sessionStore.load(down.words), isNull);
+  });
+
+  test('a member I know on another identity keeps the old way: their roster '
+      'invite not kept, no hello to them, theirs not answered', () async {
+    final mine = await myRoster();
+    final admin = await _Phone.make('admin-two-idents', seed++);
+    final up = await phone('above-other-ident', above: true);
+    final down = await phone('below-other-ident', above: false);
+    final ups = await up.roster();
+    final downs = await down.roster();
+    Future<void> elsewhere() async {
+      for (final p in [up, down]) {
+        await db.update(
+          'contacts',
+          {'ident': 3},
+          where: 'halo_id = ?',
+          whereArgs: [p.words],
+        );
+      }
+      await app.loadIdentsForTest();
+    }
+
+    for (final p in [up, down]) {
+      live.person(p.words, xpub: p.x, onion: p.onion, accepted: 0);
+      await live.upsertContactStub(p.words, p.onion, p.x);
+    }
+    await elsewhere();
+    expect(app.identOf(up.words), 3);
+    await joinFrom(admin, [(up, ups), (down, downs)]);
+    await elsewhere();
+    await app.groupControlForTest(
+      admin.words,
+      await env(
+        admin,
+        GroupControl(
+          type: 'roster',
+          participants: [
+            up.part(ri: ups),
+            down.part(ri: downs),
+          ],
+        ),
+      ),
+      live,
+    );
+    await _settle();
+    expect(await rosterInvitesIn(db, _g), isEmpty);
+    expect(await hellosOf('want', up.keyHex), isEmpty);
+    expect(engine.hellos, isEmpty);
+    final hl = await down.helloTo(mine.id);
+    await app.receiveRelay([(peer: 'f0:${mine.id}', cipher: hl.line)]);
+    await _settle();
+    expect(await signalSession.sessionStore.load(down.words), isNull);
+  });
 }

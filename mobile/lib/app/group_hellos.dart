@@ -15,6 +15,12 @@ Duration rosterPassWait = const Duration(seconds: 20);
 // the admin's passes waiting, per app and group
 final _rosterPasses = Expando<Map<String, Timer>>();
 
+/// a hellos row: a roster hello taken from that key, at most one a day
+const kHelloTaken = 'taken';
+
+/// how often a roster hello from one key is taken
+const kRosterHelloEvery = Duration(days: 1);
+
 /// whether [a] is below [b] as bytes: the smaller key says hello (3.4b)
 bool keyBelow(List<int> a, List<int> b) => answerTheirs(b, a);
 
@@ -99,7 +105,7 @@ extension AppStateGroupHellos on AppState {
         final admin = await live.groupAdminId(id);
         if (admin == null) continue;
         if (admin == myId) {
-          await _passRosterInvites(id);
+          await _passRosterInvites(id, mine: true);
         } else {
           await _tellRosterInvite(live, id, admin);
         }
@@ -145,19 +151,21 @@ extension AppStateGroupHellos on AppState {
     }
   }
 
-  // several members joining at once are passed on in one go
+  // several members joining at once are passed on in one go. a pass
+  // waiting already is not put off: more coming cannot starve it
   void _passRosterSoon(String groupId) {
-    _rosterTimers.remove(groupId)?.cancel();
+    if (_rosterTimers.containsKey(groupId)) return;
     _rosterTimers[groupId] = Timer(rosterPassWait, () {
       _rosterTimers.remove(groupId);
       unawaited(_passRosterInvites(groupId));
     });
   }
 
-  /// the admin's side: every member's roster invite [groupId] holds, mine
-  /// with them, to each member who sent one. a member who sent none (0.5.x)
-  /// would not use them
-  Future<void> _passRosterInvites(String groupId) async {
+  /// the admin's side, to the members who sent a roster invite: each new
+  /// since the last pass gets every one [groupId] holds, mine with them;
+  /// the others only the ones new or made again since, and mine when it was
+  /// made again ([mine]). a member who sent none (0.5.x) would not use them
+  Future<void> _passRosterInvites(String groupId, {bool mine = false}) async {
     try {
       final d = live;
       if (!await _rosterGroup(d, groupId)) return;
@@ -165,11 +173,19 @@ extension AppStateGroupHellos on AppState {
       final file = await d.open();
       final held = await rosterInvitesIn(file, groupId);
       final members = await d.getGroupMembers(groupId);
-      final to = [
-        for (final m in members)
-          if (m != myId && held.containsKey(m)) m,
-      ];
-      if (to.isNotEmpty) {
+      final fresh = <String>[];
+      final had = <String>[];
+      for (final m in members) {
+        final r = held[m];
+        if (m == myId || r == null) continue;
+        (r.pushed == kRosterNew ? fresh : had).add(m);
+      }
+      final changed = {
+        for (final r in held.values)
+          if (r.pushed != kRosterPassed) r.member,
+        if (mine) myId,
+      };
+      if (fresh.isNotEmpty || (had.isNotEmpty && changed.isNotEmpty)) {
         final parts = [
           for (final p in await _buildParticipants(
             members,
@@ -177,14 +193,31 @@ extension AppStateGroupHellos on AppState {
           ))
             if (p['ri'] != null) p,
         ];
-        await _queueControl(
-          groupId,
-          GroupControl(type: 'roster', participants: parts),
-          to: to,
-          on: d,
-        );
+        if (fresh.isNotEmpty) {
+          await _queueControl(
+            groupId,
+            GroupControl(type: 'roster', participants: parts),
+            to: fresh,
+            on: d,
+          );
+        }
+        final delta = [
+          for (final p in parts)
+            if (changed.contains(p['h'])) p,
+        ];
+        if (had.isNotEmpty && delta.isNotEmpty) {
+          await _queueControl(
+            groupId,
+            GroupControl(type: 'roster', participants: delta),
+            to: had,
+            on: d,
+          );
+        }
       }
-      await rosterInvitesPassed(file, groupId);
+      await rosterInvitesPassed(file, groupId, [
+        for (final r in held.values)
+          if (r.pushed != kRosterPassed) r,
+      ]);
     } catch (e) {
       dlog('roster invite: not passed on (${e.runtimeType})');
     }
@@ -226,7 +259,8 @@ extension AppStateGroupHellos on AppState {
           continue;
         }
         final id = seats[h] ?? h;
-        if (!members.contains(id)) continue;
+        // one I know on another identity keeps the old way
+        if (!members.contains(id) || identOf(id) != kMainIdent) continue;
         final row = await db.getContact(id);
         if ((row?['xpub'] as String?)?.toLowerCase() != x.toLowerCase()) {
           continue;
@@ -278,9 +312,11 @@ extension AppStateGroupHellos on AppState {
 
   // a hello owed to [r]'s member, true when one is: no session with them,
   // my key the smaller (3.4b), nothing between us waiting already. a
-  // roster invite past its life takes none
+  // roster invite past its life takes none, nor one I know on another
+  // identity
   Future<bool> _oweRosterHello(DatabaseExecutor file, RosterInviteRow r) async {
     if (r.member == myId || isDevId(r.member)) return false;
+    if (identOf(r.member) != kMainIdent) return false;
     final LsInvite inv;
     try {
       inv = readInvite(signalSession.lib, r.invite);
@@ -339,8 +375,10 @@ extension AppStateGroupHellos on AppState {
 
   /// the group here naming [id], on identity key [keyHex], as one of its
   /// members beside me: a hello from them at my roster invite is taken
-  /// without a request. null for anyone else
+  /// without a request. null for anyone else, and one I know on another
+  /// identity
   Future<String?> _rosterMemberOf(String id, String keyHex) async {
+    if (identOf(id) != kMainIdent) return null;
     final row = await live.getContact(id);
     if (row == null ||
         identityKeyHex(row['xpub'] as String?) != keyHex ||
@@ -356,6 +394,66 @@ extension AppStateGroupHellos on AppState {
     return null;
   }
 
+  /// whether a live group of mine names a member on identity key [keyHex]
+  /// beside me, by their row's key alone: a hello at my roster invite from
+  /// anyone else costs one parse
+  Future<bool> _rosterKeyIsMember(String keyHex) async {
+    final file = await live.open();
+    final ids = <String>{};
+    // xpub as written (lowercase), ikey for any row claimed
+    for (final (col, v) in [
+      ('xpub', keyHex.substring(2).toLowerCase()),
+      ('ikey', keyHex),
+    ]) {
+      for (final r in await file.query(
+        'contacts',
+        columns: ['halo_id'],
+        where: '$col = ? AND blocked = ?',
+        whereArgs: [v, 0],
+      )) {
+        ids.add(r['halo_id'] as String);
+      }
+    }
+    if (ids.isEmpty) return false;
+    for (final g in await live.loadGroups()) {
+      final gid = g['group_id'] as String;
+      if (!await _rosterGroup(live, gid)) continue;
+      final members = await live.getGroupMembers(gid);
+      if (members.contains(myId) && ids.any(members.contains)) return true;
+    }
+    return false;
+  }
+
+  /// whether a roster hello from [keyHex] was taken in the last day: one a
+  /// day is, so no member makes me remake our session without end
+  Future<bool> _rosterHelloAgain(DatabaseExecutor file, String keyHex) async {
+    await file.delete(
+      'hellos',
+      where: 'way = ? AND at < ?',
+      whereArgs: [
+        kHelloTaken,
+        DateTime.now().millisecondsSinceEpoch -
+            kRosterHelloEvery.inMilliseconds,
+      ],
+    );
+    return (await file.query(
+      'hellos',
+      columns: ['at'],
+      where: 'ident = ? AND way = ? AND peer = ?',
+      whereArgs: [kMainIdent, kHelloTaken, keyHex],
+      limit: 1,
+    )).isNotEmpty;
+  }
+
+  Future<void> _rosterHelloTaken(DatabaseExecutor file, String keyHex) =>
+      file.insert('hellos', {
+        'ident': kMainIdent,
+        'way': kHelloTaken,
+        'peer': keyHex,
+        'invite_id': '0' * 32,
+        'at': DateTime.now().millisecondsSinceEpoch,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+
   /// a member's hello at my roster invite, answered as an accept answers
   /// one: the session from their one-time invite, the pair seeded, and a
   /// first frame to their one-time address. they stay out of my contacts
@@ -368,7 +466,7 @@ extension AppStateGroupHellos on AppState {
       await answerHello(id);
     } catch (e) {
       dlog('roster hello: not answered (${e.runtimeType})');
-      // no request is left of it: a later hello of theirs tries again
+      // no request is left of it: a hello of theirs a day on tries again
       try {
         await (await live.open()).delete(
           'hellos',

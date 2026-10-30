@@ -939,6 +939,11 @@ class HaloDb
     } catch (e) {
       dlog('wallpaper: orphans not swept (${e.runtimeType})');
     }
+    try {
+      await rosterTableAtOpen(_db!);
+    } catch (e) {
+      dlog('roster invite: table not made (${e.runtimeType})');
+    }
     // retired while it was opening
     if (_retired) {
       await close();
@@ -2074,19 +2079,38 @@ Future<void> inviteTables(DatabaseExecutor db) async {
       PRIMARY KEY (ident, hash)
     )
   ''');
-  // each group's members' roster invites (4.3), in the container the group
-  // is in. pushed 0: an admin's, still to go to the other members
-  await db.execute('''
-    CREATE TABLE IF NOT EXISTS roster_invites (
-      group_id TEXT NOT NULL,
-      member TEXT NOT NULL,
-      id TEXT NOT NULL,
-      issued INTEGER NOT NULL,
-      invite BLOB NOT NULL,
-      pushed INTEGER NOT NULL DEFAULT 1,
-      PRIMARY KEY (group_id, member)
-    )
-  ''');
+  await rosterTable(db);
+}
+
+/// each group's members' roster invites (4.3), in the container the group
+/// is in. pushed (kRosterPassed and the rest): an admin's, still to go to
+/// the other members or not. kept: when, by this phone's clock
+Future<void> rosterTable(DatabaseExecutor db) => db.execute('''
+  CREATE TABLE IF NOT EXISTS roster_invites (
+    group_id TEXT NOT NULL,
+    member TEXT NOT NULL,
+    id TEXT NOT NULL,
+    issued INTEGER NOT NULL,
+    invite BLOB NOT NULL,
+    pushed INTEGER NOT NULL DEFAULT 1,
+    kept INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (group_id, member)
+  )
+''');
+
+/// at every open: a file that took 94 before the roster invites came gets
+/// their table, and a dev build's table its kept. one that has both is
+/// only read
+Future<void> rosterTableAtOpen(DatabaseExecutor db) async {
+  final cols = await db.rawQuery("PRAGMA table_info('roster_invites')");
+  if (cols.isEmpty) {
+    await rosterTable(db);
+  } else if (!cols.any((c) => c['name'] == 'kept')) {
+    await addColumn(
+      db,
+      'ALTER TABLE roster_invites ADD COLUMN kept INTEGER NOT NULL DEFAULT 0',
+    );
+  }
 }
 
 // my identity for each contact, and their identity key (0x05 and the x

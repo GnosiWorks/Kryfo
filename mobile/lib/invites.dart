@@ -394,23 +394,48 @@ Future<InviteRow?> currentRosterInvite(DatabaseExecutor db, int ident) async {
 /// a member's roster invite as a group holds it (4.3): the admin keeps the
 /// one each member sent, a member the ones the admin passed on
 class RosterInviteRow {
-  const RosterInviteRow(this.member, this.id, this.issued, this.invite);
+  const RosterInviteRow(
+    this.member,
+    this.id,
+    this.issued,
+    this.invite, {
+    this.kept = 0,
+    this.pushed = kRosterPassed,
+  });
   final String member;
   final String id;
   final int issued;
   final Uint8List invite;
+  // when it was kept here, by this phone's clock
+  final int kept;
+  final int pushed;
 
   static RosterInviteRow of(Map<String, Object?> r) => RosterInviteRow(
     r['member'] as String,
     r['id'] as String,
     r['issued'] as int,
     Uint8List.fromList(r['invite'] as List<int>),
+    kept: r['kept'] as int? ?? 0,
+    pushed: r['pushed'] as int? ?? kRosterPassed,
   );
 }
 
+/// a roster invite's pushed: passed on, or kept by a member's phone
+const kRosterPassed = 1;
+
+/// an admin's, still to go: a new member's, who is owed the whole set
+const kRosterNew = 0;
+
+/// an admin's, still to go: a member's made again, who has the set
+const kRosterChanged = 2;
+
+/// a member's roster invite is replaced at most once in this long
+const kRosterKeepEvery = Duration(days: 1);
+
 /// [member]'s roster invite [invite] (id [id], issued [issued]) kept for
-/// [groupId], unless one issued later is held already. true when it was
-/// kept: with [passOn] it is still to go to the other members
+/// [groupId]. one held already is replaced only by one issued later, and
+/// not again within kRosterKeepEvery. true when it was kept: with [passOn]
+/// it is still to go to the other members
 Future<bool> keepRosterInvite(
   DatabaseExecutor db,
   String groupId,
@@ -419,16 +444,28 @@ Future<bool> keepRosterInvite(
   required String id,
   required int issued,
   bool passOn = false,
+  int? nowMs,
 }) async {
+  final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
   final had = await rosterInviteOf(db, groupId, member);
-  if (had != null && (had.id == id || had.issued > issued)) return false;
+  if (had != null &&
+      (had.id == id ||
+          had.issued >= issued ||
+          now - had.kept < kRosterKeepEvery.inMilliseconds)) {
+    return false;
+  }
   await db.insert('roster_invites', {
     'group_id': groupId,
     'member': member,
     'id': id,
     'issued': issued,
     'invite': invite,
-    'pushed': passOn ? 0 : 1,
+    'kept': now,
+    'pushed': !passOn
+        ? kRosterPassed
+        : had != null && had.pushed != kRosterNew
+        ? kRosterChanged
+        : kRosterNew,
   }, conflictAlgorithm: ConflictAlgorithm.replace);
   return true;
 }
@@ -479,19 +516,27 @@ Future<Set<String>> rosterInvitesToPass(DatabaseExecutor db) async => {
   for (final r in await db.query(
     'roster_invites',
     columns: ['group_id'],
-    where: 'pushed = ?',
-    whereArgs: [0],
+    where: 'pushed IN (?, ?)',
+    whereArgs: [kRosterNew, kRosterChanged],
   ))
     r['group_id'] as String,
 };
 
-Future<void> rosterInvitesPassed(DatabaseExecutor db, String groupId) =>
-    db.update(
+/// [rows] of [groupId] passed on. one replaced since stays to go
+Future<void> rosterInvitesPassed(
+  DatabaseExecutor db,
+  String groupId,
+  Iterable<RosterInviteRow> rows,
+) async {
+  for (final r in rows) {
+    await db.update(
       'roster_invites',
-      {'pushed': 1},
-      where: 'group_id = ?',
-      whereArgs: [groupId],
+      {'pushed': kRosterPassed},
+      where: 'group_id = ? AND member = ? AND id = ?',
+      whereArgs: [groupId, r.member, r.id],
     );
+  }
+}
 
 /// a one-time invite took its first opener: its keys and its address go,
 /// so a forwarded copy reaches nothing (2.3)

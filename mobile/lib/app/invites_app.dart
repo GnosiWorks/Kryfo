@@ -802,6 +802,21 @@ extension AppStateInvites on AppState {
       arrived();
       return;
     }
+    // at a roster invite: a key no group of mine names as a member costs
+    // one parse, and one taken in the last day is taken no more
+    if (roster) {
+      final fault = !await _rosterKeyIsMember(senderKey)
+          ? 'roster'
+          : await _rosterHelloAgain(db, senderKey)
+          ? 'again'
+          : null;
+      if (fault != null) {
+        firstFails.note(fault);
+        await live.markSeenLong(h);
+        arrived();
+        return;
+      }
+    }
     await noteHelloSeen(db, ident, hash);
     final id = await _helloIdOf(hl!.invite.identity, fields!);
     if (id == null) {
@@ -816,6 +831,7 @@ extension AppStateInvites on AppState {
       arrived();
       return;
     }
+    if (roster) await _rosterHelloTaken(db, senderKey);
     await db.insert('hellos', {
       'ident': ident,
       'way': kHelloIn,
