@@ -800,3 +800,43 @@ func TestThePoolKeepsEightAfterTheLink(t *testing.T) {
 		t.Fatalf("an aged pool asks for %d", n)
 	}
 }
+
+func TestASilentDeviceIsProbedAndTakesAFreshBundle(t *testing.T) {
+	q := NewQuiet()
+	id, key := fixedKey(t, 6), fixedKey(t, 7)
+	t0 := time.Unix(1_760_000_000, 0)
+	day := 24 * time.Hour
+	at := func(d time.Duration) QuietState { return q.State(id, 5, key, 1, t0.Add(d)) }
+	q.Sent(id, 5, key, t0)
+	if at(30*day) != Silent || at(36*day) != Silent {
+		t.Fatal("not silent")
+	}
+	// a week on: one copy on a session from a fresh bundle, then silent
+	if at(37*day) != Rebuild {
+		t.Fatal("no weekly probe")
+	}
+	if at(37*day) != Silent {
+		t.Fatal("the probe is more than one copy")
+	}
+	q.Rebuilt(id, 5)
+	q.Sent(id, 5, key, t0.Add(37*day))
+	if at(43*day) != Silent || at(44*day) != Rebuild {
+		t.Fatal("no probe the week after")
+	}
+	// a bundle its owner's phone pushed ends the silence; not one of
+	// another key, and not for a device that is not silent
+	if q.Fresh(id, 5, fixedKey(t, 8)) {
+		t.Fatal("another key's bundle")
+	}
+	q.Sent(id, 5, key, t0.Add(44*day))
+	if !q.Fresh(id, 5, key) {
+		t.Fatal("a fresh bundle did not end the silence")
+	}
+	if at(45*day) != Open {
+		t.Fatal("still silent after a fresh bundle")
+	}
+	q.Sent(id, 5, key, t0.Add(45*day))
+	if q.Fresh(id, 5, key) || at(46*day) != Open {
+		t.Fatal("a fresh bundle for a device that is not silent")
+	}
+}

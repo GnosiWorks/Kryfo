@@ -13,6 +13,9 @@ const (
 	QuietRebuild = 15 * 24 * time.Hour
 	// QuietSilent is how long a device gets copies without ever answering
 	QuietSilent = 30 * 24 * time.Hour
+	// QuietProbe is how often a silent device gets one more try: a copy
+	// on a session built from a fresh bundle
+	QuietProbe = 7 * 24 * time.Hour
 )
 
 // QuietState is what a sender does with a device's copy.
@@ -23,7 +26,8 @@ const (
 	Open QuietState = iota
 	// Rebuild: the session goes, and the copy waits for a fresh bundle
 	Rebuild
-	// Silent: no copy until the device is heard from or its list moves
+	// Silent: no copy until the device is heard from, its list moves, a
+	// fresh bundle of it comes or its weekly probe (a Rebuild) is due
 	Silent
 )
 
@@ -42,6 +46,8 @@ type quietRow struct {
 	silent  bool
 	// the list version the device went silent under
 	under uint64
+	// the last probe of a silent device, or when it went silent
+	probed time.Time
 }
 
 // Quiet keeps, per (identity, device), how long copies have gone to a
@@ -68,7 +74,8 @@ func (q *Quiet) row(k slotKey, key Key) *quietRow {
 }
 
 // Sent records a copy to the device on key, on a session it has not
-// answered on.
+// answered on. now is when the copy went to the relay, not when it was
+// sealed: a copy held back counts no time.
 func (q *Quiet) Sent(identity Key, device uint8, key Key, now time.Time) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
@@ -103,6 +110,20 @@ func (q *Quiet) Rebuilt(identity Key, device uint8) {
 	}
 }
 
+// Fresh is a KDB1 of the device on key that its owner's phone pushed
+// unasked: a silent device gets another try (true: build on it in place of
+// the session held). a bundle asked for after a Rebuild is Rebuilt.
+func (q *Quiet) Fresh(identity Key, device uint8, key Key) bool {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	k := slotKey{identity, device}
+	if r := q.rows[k]; r != nil && r.key == key && r.silent {
+		delete(q.rows, k)
+		return true
+	}
+	return false
+}
+
 // Forget drops what is held for a device that left its list.
 func (q *Quiet) Forget(identity Key, device uint8) { q.Heard(identity, device) }
 
@@ -119,6 +140,10 @@ func (q *Quiet) State(identity Key, device uint8, key Key, version uint64, now t
 	}
 	if r.silent {
 		if r.under == version {
+			if now.Sub(r.probed) >= QuietProbe {
+				r.probed = now
+				return Rebuild
+			}
 			return Silent
 		}
 		// the owner signed a new list since: the device gets another try
@@ -126,7 +151,7 @@ func (q *Quiet) State(identity Key, device uint8, key Key, version uint64, now t
 		return Open
 	}
 	if now.Sub(r.first) >= QuietSilent {
-		r.silent, r.under = true, version
+		r.silent, r.under, r.probed = true, version, now
 		return Silent
 	}
 	if !r.session.IsZero() && now.Sub(r.session) >= QuietRebuild {
