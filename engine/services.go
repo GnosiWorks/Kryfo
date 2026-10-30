@@ -24,8 +24,12 @@ var servicesWait = 45 * time.Second
 // the services lane's client, through tor whatever the route. a tor not
 // started yet is waited for until ctx ends
 func servicesClient(ctx context.Context) (*http.Client, error) {
+	return servicesClientOf(ctx, servicesTorClient)
+}
+
+func servicesClientOf(ctx context.Context, of func() (*http.Client, error)) (*http.Client, error) {
 	for {
-		c, err := servicesTorClient()
+		c, err := of()
 		if err == nil {
 			return c, nil
 		}
@@ -42,9 +46,14 @@ func servicesClient(ctx context.Context) (*http.Client, error) {
 // built from tor's socks port in every mode, never from the route's client,
 // so a mode switch under the call cannot hand it a direct one
 func servicesTorClient() (*http.Client, error) {
+	return servicesTorClientAs(laneServices, laneName(laneServices))
+}
+
+// the client of [lane] whose circuits go under the socks name [name]
+func servicesTorClientAs(lane, name string) (*http.Client, error) {
 	// kept beside the route's clients, so a mode switch or a new tor drops
 	// it with them
-	key := "tor:" + laneServices
+	key := "tor:" + lane
 	cachedNostrClientMu.Lock()
 	defer cachedNostrClientMu.Unlock()
 	if c := cachedNostrClients[key]; c != nil {
@@ -56,7 +65,7 @@ func servicesTorClient() (*http.Client, error) {
 	if t == nil {
 		return nil, fmt.Errorf("tor not started")
 	}
-	d, err := torDialerAs(context.Background(), t, laneName(laneServices))
+	d, err := torDialerAs(context.Background(), t, name)
 	if err != nil {
 		return nil, fmt.Errorf("tor dialer: %v", err)
 	}

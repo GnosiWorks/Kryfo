@@ -972,8 +972,11 @@ void main() {
       expect(decoy.people[fresh], containsPair('accepted', 1));
       expect(live.people.containsKey(fresh), isFalse);
       expect(engineAsked.where(_sends.contains), isEmpty);
-      // again: never answered, so the same line, and the chat opens again
-      expect(await handleHaloUriAdded(card), (l10n.helloSentOld, true));
+      // again: the line says so, and the chat opens again
+      expect(await handleHaloUriAdded(card), (
+        l10n.appAlreadySaved(fresh),
+        true,
+      ));
       expect(opened, [fresh, fresh]);
     });
 

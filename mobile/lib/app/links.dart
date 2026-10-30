@@ -123,7 +123,7 @@ Future<(String, bool)> handleHaloUriAdded(
     // key the handle was claimed with
     final r = await resolveHandle(
       h,
-      _torGetJsonOnIsolate,
+      sessionQuiet ? engine.decoyTorGetJson : _torGetJsonOnIsolate,
       idOf: engine.idFromEdPub,
       v4FaceOf: v4FaceOfLink,
     );
@@ -515,8 +515,8 @@ Future<(String, bool)> _addV3ByHello(
   final asked = !already && await session.askedBefore(id);
   final row = await session.getContact(id);
   // a decoy keeps the contact on this phone and says what a hello sent
-  // says, as to someone who never answered: no hello goes, no key is
-  // noted, the everyday side is not asked
+  // says, or that they are saved already: no hello goes, no key is noted,
+  // the everyday side is not asked
   if (sessionQuiet) {
     await session.upsertContact(
       id,
@@ -534,7 +534,14 @@ Future<(String, bool)> _addV3ByHello(
     );
     await appState.refreshContacts();
     openAddedChatLater(id);
-    return (answers == null ? l10n.helloSentOld : l10n.helloSent, true);
+    return (
+      already
+          ? l10n.appAlreadySaved(id)
+          : answers == null
+          ? l10n.helloSentOld
+          : l10n.helloSent,
+      true,
+    );
   }
   final bound = await _boundIdentity(
     id,

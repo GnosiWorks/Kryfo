@@ -574,9 +574,11 @@ void main() {
         l10n.helloSentOld,
         true,
       ));
-      // and again: never answered, as the everyday side says until
-      // they are
-      expect(await handleHaloUriAdded(qr2, app: app), (l10n.helloSent, true));
+      // and again: saved already, as the everyday side says
+      expect(await handleHaloUriAdded(qr2, app: app), (
+        l10n.appAlreadySaved('decoy-side-qr'),
+        true,
+      ));
     } finally {
       useDatabasesForTest(live, Session(live));
     }

@@ -13,6 +13,7 @@ import 'package:kryfo/devchat/dev_chat.dart';
 import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/devchat/dev_lane.dart';
 import 'package:kryfo/signal_ffi/kryfo_signal.dart';
+import 'package:kryfo/signal_session.dart' show lsBundleOf;
 
 import 'mem_db.dart';
 import 'pq_restart_kit.dart';
@@ -132,6 +133,45 @@ void main() {
       (await mine.ls!.sessionInfo(_chat))!.archived.where((x) => x.version < 4),
       isEmpty,
     );
+  }, skip: needsShim);
+
+  test('another key on his card\'s keys opens nothing on the held chat, and '
+      'a card on another key restarts nothing here', () async {
+    final card = await pqCard();
+    // someone else builds on his pinned card and writes as if from the seat
+    final eve = Phone();
+    await eve.openLs();
+    await eve.ls!.processBundle('alice', lsBundleOf(eve.ls!.lib, card.bundle));
+    final forged = await eve.seal('alice', 'not the seat');
+    expect(base64Decode(forged)[0], kLsPreKey);
+    final before = (await his.ls!.sessionInfo('bob'))!;
+    await expectLater(his.read('bob', forged), throwsA(anything));
+    final after = (await his.ls!.sessionInfo('bob'))!;
+    expect(after.version, before.version);
+    expect(after.archived.length, before.archived.length);
+    expect(after.remoteIdentity, mine.ls!.identity.public);
+    // a card whose key is not the one the chat runs on: nothing built
+    final other = Phone();
+    await other.openLs();
+    final k = await other.ls!.makeInviteKeys('8' * 32);
+    final bundle = other.ls!.lib.bundleBuild(
+      registrationId: other.ls!.registrationId,
+      deviceId: 1,
+      preKeyId: null,
+      preKey: null,
+      signedPreKeyId: k.spk.id,
+      signedPreKey: k.spk.public,
+      signedPreKeySignature: k.spk.signature,
+      kyberPreKeyId: k.kyber.id,
+      kyberPreKey: k.kyber.public,
+      kyberPreKeySignature: k.kyber.signature,
+      identityKey: other.ls!.identity.public,
+    );
+    expect(
+      await mine.ls!.restartFrom(_chat, bundle, classicOnly: true),
+      isFalse,
+    );
+    expect((await mine.ls!.sessionInfo(_chat))!.version, 3);
   }, skip: needsShim);
 
   test('a classic card, as m1 is, starts nothing', () async {

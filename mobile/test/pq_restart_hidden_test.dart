@@ -3,8 +3,9 @@
 // app is alice, the larger key, and bob's chat is in the vault. while it is
 // open his KDB1 starts pq as an everyday one does, his answer notes the
 // time and the line, and the classic states go 16 days on with the vault
-// shut, by the restart row alone: a chat restarted and then hidden drops
-// on time too. nothing of it shows as a message on either side
+// shut, by the restart row alone and without a read of the vault: a chat
+// restarted and then hidden drops on time too. a row whose session went
+// goes. nothing of it shows as a message on either side
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -31,8 +32,14 @@ import 'pq_restart_kit.dart';
 class _VaultRows extends HaloDb {
   _VaultRows(this.mem) : super(HaloContainer.vault);
   final MemDb mem;
+  // how often anything read or wrote it
+  var opens = 0;
   @override
-  Future<Database> open() async => mem;
+  Future<Database> open() async {
+    opens++;
+    return mem;
+  }
+
   @override
   Future<Map<String, Map<String, Object?>>> lastMessages() async => {};
   @override
@@ -57,7 +64,7 @@ void main() {
   late Phone bob;
   late String bobX;
   late HaloDb everyday;
-  late HaloDb vault;
+  late _VaultRows vault;
 
   Future<void> openVault() async =>
       useDatabasesForTest(everyday, await Session.withVault(everyday, vault));
@@ -128,6 +135,7 @@ void main() {
     // the vault shuts: the upkeep reads nothing of it, and the row alone
     // lets the classic states go on time
     shutVault();
+    final opens = vault.opens;
     await app.pqUpkeep(nowMs: at! + kClassicDropAfter.inMilliseconds - 1);
     expect(
       (await signalSession.sessionInfo('bob'))!.archived.map((s) => s.version),
@@ -138,9 +146,18 @@ void main() {
     expect(after.version, 4);
     expect(after.archived.where((s) => s.version < 4), isEmpty);
     expect(db.rows('pq_restarts').single['dropped_at'], isNotNull);
+    // and the shut vault was not read for any of it
+    expect(vault.opens, opens);
     // nothing of it is a message, nor an everyday row of his
     expect(db.rows('messages'), isEmpty);
     expect(hidden.rows('messages'), isEmpty);
     expect(db.rows('contacts'), isEmpty);
+  }, skip: needsShim);
+
+  test('a row whose session went goes at the next upkeep', () async {
+    expect(db.rows('pq_restarts'), hasLength(1));
+    await signalSession.sessionStore.delete('bob');
+    await app.pqUpkeep();
+    expect(db.rows('pq_restarts'), isEmpty);
   }, skip: needsShim);
 }

@@ -230,13 +230,18 @@ extension AppStateSession on AppState {
     );
     final had = kept.isEmpty ? null : int.tryParse('${kept.first['v']}');
     if (had != null) return had;
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final oldest =
-        (await raw.rawQuery(
-              'SELECT MIN(sent_at) AS t FROM messages',
-            )).first['t']
-            as int?;
-    final hi = oldest == null ? now : min(now, oldest);
+    // no later than its own making, nor its oldest message
+    final made = await raw.query('identity', columns: ['created_at'], limit: 1);
+    var hi = made.isEmpty
+        ? DateTime.now().millisecondsSinceEpoch
+        : made.first['created_at'] as int;
+    final first = await raw.query(
+      'messages',
+      columns: ['sent_at'],
+      orderBy: 'sent_at',
+      limit: 1,
+    );
+    if (first.isNotEmpty) hi = min(hi, first.first['sent_at'] as int);
     final set = await _everydaySetUp() ?? hi;
     final lo = min(set, hi);
     final born = lo + (Random.secure().nextDouble() * (hi - lo)).floor();
@@ -248,6 +253,16 @@ extension AppStateSession on AppState {
         where: 'id = ?',
         whereArgs: [kMainIdent],
       );
+      // the prekeys its store was set up with show the same time; an
+      // invite's carry the invite's
+      for (final table in const ['signed_prekeys', 'kyber_prekeys']) {
+        await t.update(
+          table,
+          {'created_at': born},
+          where: 'invite_id = ?',
+          whereArgs: [''],
+        );
+      }
       await t.insert('signal_meta', {
         'k': kDecoyBornMeta,
         'v': '$born',
@@ -370,6 +385,18 @@ extension AppStateSession on AppState {
     await _host.wipeVault(HaloContainer.decoyVault);
   }
 
+  // the decoy's identity as a start reads it, for the tests
+  @visibleForTesting
+  Future<QuietIdentity?> quietOfForTest(HaloDb d) => _quietOf(d);
+
+  // the decoy [d] open as the session, with [id], and nothing read ahead
+  @visibleForTesting
+  void decoyOpenForTest(HaloDb d, QuietIdentity id) {
+    _decoyDb = d;
+    _decoyId = id;
+    _quiet = id;
+  }
+
   // tests stand a fake in for the decoy container and its identity
   @visibleForTesting
   Future<void> useDecoyForTest(HaloDb d, QuietIdentity id) async {
@@ -386,6 +413,14 @@ extension AppStateSession on AppState {
     _pinOpened = true;
     _markKnown = true;
     if (r != PinResult.decoy) _quietMarked = false;
+    // each decoy session looks up under a socks name of its own
+    if (r == PinResult.decoy && kDecoyLooksUp) {
+      try {
+        engine.decoyLaneNew();
+      } catch (e) {
+        dlog('decoy: no new lane (${e.runtimeType})');
+      }
+    }
     try {
       await _sessionFor(r, vaultKey: vaultKey);
     } finally {

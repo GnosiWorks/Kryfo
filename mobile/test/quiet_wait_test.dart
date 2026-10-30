@@ -47,4 +47,25 @@ void main() {
       );
     }
   });
+
+  test('the decoy\'s lookups go on its own lane, and its claim and code '
+      'share never go', () {
+    String src(String f) => File(f).readAsStringSync();
+    expect(src('lib/app/links.dart'), contains('engine.decoyTorGetJson'));
+    expect(
+      src('lib/screens/search_screen.dart'),
+      contains('engine.decoyTorPost(url, body)'),
+    );
+    final claim = src('lib/handle_claim.dart');
+    expect(claim, contains('engine.decoyHandleCheck(h)'));
+    expect(claim, contains('final uri = sessionQuiet ? null'));
+    expect(
+      src('lib/widgets/pair_code_panel.dart'),
+      contains('sessionQuiet\n      ? unreachedLater(pairUnreached)'),
+    );
+    expect(
+      src('lib/app/state_session.dart'),
+      contains('engine.decoyLaneNew()'),
+    );
+  });
 }

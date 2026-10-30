@@ -259,19 +259,16 @@ extension AppStatePqRestart on AppState {
 
   /// the classic states of every chat over to pq for kClassicDropAfter
   /// go, by the restart rows themselves: a chat hidden since, shut vault or
-  /// open, and the dev chat, whose session is its seat's, drop on time.
-  /// nothing of the vault is read for it
+  /// open, and the dev chat, whose session is its seat's, drop on time. a
+  /// row whose session went goes too. nothing of the vault is read for it
   Future<void> _pqDrops(Database db, int now) async {
     final over = await db.query(
       'pq_restarts',
-      columns: ['peer', 'key', 'pq_at'],
-      where: 'ident = ? AND pq_at IS NOT NULL AND dropped_at IS NULL',
+      columns: ['peer', 'key', 'pq_at', 'dropped_at'],
+      where: 'ident = ?',
       whereArgs: [kMainIdent],
     );
     for (final r in over) {
-      if (now - (r['pq_at'] as int) < kClassicDropAfter.inMilliseconds) {
-        continue;
-      }
       final peer = r['peer'] as String;
       try {
         final store = isDevId(peer)
@@ -279,7 +276,21 @@ extension AppStatePqRestart on AppState {
             : signalSession;
         if (store == null) continue;
         final their = (await store.sessionInfo(peer))?.remoteIdentity;
-        if (their == null || _hexOf(their) != r['key']) continue;
+        // their session went, or runs on another key now: the row names
+        // them for nothing
+        if (their == null || _hexOf(their) != r['key']) {
+          await db.delete(
+            'pq_restarts',
+            where: 'ident = ? AND peer = ?',
+            whereArgs: [kMainIdent, peer],
+          );
+          continue;
+        }
+        if (r['pq_at'] == null ||
+            r['dropped_at'] != null ||
+            now - (r['pq_at'] as int) < kClassicDropAfter.inMilliseconds) {
+          continue;
+        }
         await _dropClassic(db, store, peer, now);
       } catch (e) {
         dlog('pq restart: a drop skipped (${e.runtimeType})');
