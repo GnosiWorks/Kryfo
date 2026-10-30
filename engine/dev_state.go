@@ -561,3 +561,5 @@ type devKeySource struct{}
 func (devKeySource) deviceKey(ident int, peer [32]byte, dev uint8) ([32]byte, bool) {
 	return devNow().deviceKey(ident, peer, dev)
 }
+
+func init() { setDeviceKeys(devKeySource{}) }
