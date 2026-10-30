@@ -8,7 +8,6 @@
 // the engine through the signal library, never here
 import 'dart:convert';
 import 'dart:ffi';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
