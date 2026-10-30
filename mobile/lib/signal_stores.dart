@@ -290,6 +290,19 @@ class LsKyberPreKeyStore extends _ById {
     'invite_id': inviteId,
   });
 
+  /// what kyber key [id] is for (kUseInvite, kUseSession, ...), null when
+  /// it is not held
+  Future<String?> useOf(int id) async {
+    final rows = await _db.query(
+      _t,
+      columns: ['use'],
+      where: 'ident = ? AND id = ?',
+      whereArgs: [ident, id],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first['use'] as String?;
+  }
+
   Future<bool> isLastResort(int id) async {
     final rows = await _db.query(
       _t,

@@ -11,7 +11,8 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/devchat/dev_frame.dart' show devOutFrame;
-import 'package:kryfo/invites.dart' show helloOfWire, helloWireOf, kHelloWireLength;
+import 'package:kryfo/invites.dart'
+    show helloOfWire, helloWireOf, kHelloWireLength;
 import 'package:kryfo/main.dart' show makePreKeyBundleB64;
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
@@ -634,6 +635,51 @@ void main() {
         }
       }
     });
+
+    test(
+      'a frame filled to a burst\'s size lands on that size\'s gift wrap',
+      () async {
+        final a = await _phone('a');
+        final b = await _phone('b');
+        await _start(a, b);
+        await _open(b, 'a', await a.ss.encryptTo('b', 'hi'));
+        await _open(a, 'b', await b.ss.encryptTo('a', 'hey'));
+        for (final env in [
+          '{"m":"hi"}',
+          await wrapMessage('hi', msgUid: _uid(), sender: _me, writtenAt: _at),
+        ]) {
+          for (var k = 0; k < 5; k++) {
+            final to = padSealTo(env, kSealSizes[k]);
+            expect(utf8Length(to), kSealSizes[k], reason: '$k');
+            expect(unpad(to), unpad(env));
+            for (var i = 0; i < 4; i++) {
+              final w = await a.ss.encryptTo('b', env, size: kSealSizes[k]);
+              expect(base64Decode(w)[0], kLsWhisper);
+              expect(_wrapOf(w.length), _wraps[k], reason: '$k');
+              expect(_cellsOf(w.length), _cells[k], reason: '$k');
+              expect(unpad(await _open(b, 'a', w)), unpad(env));
+              await _open(a, 'b', await b.ss.encryptTo('a', 'ok'));
+            }
+          }
+        }
+        // a frame past the burst's size keeps its own
+        final big = '{"m":"${'w' * (kSealSizes[1] - 60)}"}';
+        expect(padSealTo(big, kSealSizes[0]), padSeal(big));
+        // an opener goes at the second size alone
+        final c = await _phone('c');
+        await _start(a, c);
+        for (final k in [0, 2, 3, 4]) {
+          await expectLater(
+            a.ss.encryptTo('c', '{"m":"hi"}', size: kSealSizes[k]),
+            throwsA(isA<WaitsForAnswer>()),
+            reason: '$k',
+          );
+        }
+        final w = await a.ss.encryptTo('c', '{"m":"hi"}', size: kSealSizes[1]);
+        expect(base64Decode(w)[0], kLsPreKey);
+        expect(_wrapOf(w.length), _wraps[1]);
+      },
+    );
 
     test('the five sizes wrap and cross the onion as one each', () {
       for (var k = 0; k < 5; k++) {

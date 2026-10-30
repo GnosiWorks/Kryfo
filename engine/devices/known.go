@@ -29,11 +29,17 @@ func (e *RollbackError) Is(target error) bool { return target == ErrRollback }
 // contact's identity key, never from a third party.
 type From struct {
 	invite bool
+	link   bool
 	remote Key
 }
 
 // FromInvite is a list read out of the contact's invite (KIN4 bit 4).
 func FromInvite() From { return From{invite: true} }
+
+// FromLink is what this device's own phone handed over while linking it,
+// on the channel the person confirmed. only an own list takes it (Own.Set);
+// a contact's list or bundle never does. only the link layer builds one.
+func FromLink() From { return From{link: true} }
 
 // FromSession is what came inside a session whose remote identity is
 // remote, as ks_decrypt_* returned it. only the session layer builds one;
@@ -119,6 +125,9 @@ func (k *known) accept(l *List, from From) (*List, Outcome, error) {
 		return nil, 0, ErrEquivocation
 	}
 	_, answering := l.Answering()
+	if from.link {
+		return nil, 0, ErrSource
+	}
 	if from.invite {
 		// an invite list names the device that answers its first
 		// contacts, and counts only until the session sends one
@@ -162,7 +171,7 @@ func (k *known) accept(l *List, from From) (*List, Outcome, error) {
 // for the phone. it comes from the identity's own session or the device's,
 // never one device handing over another's, so an old bundle is not replayed
 func (k *known) takeBundle(p []byte, from From) (*Block, error) {
-	if from.invite || !k.vouches(from.remote) {
+	if from.invite || from.link || !k.vouches(from.remote) {
 		return nil, ErrSource
 	}
 	b, err := ParseBundle(p, k.identity)

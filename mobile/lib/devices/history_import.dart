@@ -404,11 +404,14 @@ class HistoryImport {
         var n = ev.first;
         for (final m in ev.media) {
           final name = m['name'] as String;
+          final size = (m['size'] as num).toInt();
           final f = (
             chat: (m['chat'] as num).toInt(),
             name: name,
-            size: (m['size'] as num).toInt(),
-            ok: wanted.contains(_final(name)) ? _fileWaiting : _fileHere,
+            size: size,
+            ok: wanted.contains(_final(name)) && !await _held(name, size)
+                ? _fileWaiting
+                : _fileHere,
           );
           await t.insert('history_files', {
             'file': n,
@@ -427,6 +430,17 @@ class HistoryImport {
       case 'gone':
         if (_files[ev.file]?.ok == _fileHere) return;
         await _fileOk(t, ev.file, _fileLost);
+    }
+  }
+
+  // a file already here at its listed size, as an earlier copy left it: the
+  // list comes before any chunk of this stream, so this stream never wrote
+  // it, and it is neither written again nor taken back by a discard
+  Future<bool> _held(String name, int size) async {
+    try {
+      return await File(_final(name)).length() == size;
+    } on FileSystemException {
+      return false;
     }
   }
 

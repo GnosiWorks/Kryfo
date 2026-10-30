@@ -13,6 +13,7 @@ package main
 // stands in for the other.
 
 import (
+	"bytes"
 	"crypto/ed25519"
 	"crypto/sha256"
 	"embed"
@@ -32,14 +33,19 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unicode"
 )
 
 var handleOK = regexp.MustCompile(`^[a-z0-9_]{3,20}$`)
 
-// bytes an invite may take, a little over the longest the app builds
-const maxInvite = 1024
+// bytes an invite may take: a v4 link carries a whole bundle, and so does
+// a v3 link with its kyber prekey
+const maxInvite = 4096
+
+// how every v4 link starts; the rest is the KIN4 in base64url, unpadded
+const v4Prefix = "kryfo://share?v=4&i="
 
 // names that would let someone pose as us, or that collide with paths we
 // might want later.
@@ -328,8 +334,13 @@ func wordsOf(pubHex string) string {
 }
 
 // whether the invite names the key that signs for it: its id is the three
-// words that key makes
-func inviteIsKeys(invite, pubHex string) bool {
+// words that key makes, or for v4 its face (v4, as inviteCheck read it) is
+// that key and the face signs the invite's identity and id
+func inviteIsKeys(invite string, v4 *kin4, pubHex string) bool {
+	if strings.HasPrefix(invite, v4Prefix) {
+		pub, err := hex.DecodeString(pubHex)
+		return v4 != nil && err == nil && len(pub) == ed25519.PublicKeySize && bytes.Equal(v4.face, pub)
+	}
 	u, err := url.Parse(invite)
 	if err != nil {
 		return false
@@ -352,10 +363,28 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 //	kryfo://share?id=..&onion=..&xpub=..            v1
 //	kryfo://share?id=..&onion=..&v=2&bundle=..      v2
 //	kryfo://share?id=..&onion=..&v=3&bundle=..&fc=..  v3
+//	kryfo://share?v=4&i=<base64url of a KIN4>        v4
 //
-// the longest the app builds is a v3 invite of 700 bytes (the longest words,
-// a five digit registration id), so each handle stays small on disk.
+// a v3 link with the kyber prekey in its card is about 3,700 bytes, a v4
+// main invite with a face, an onion and a bundle about 2,730 (3,284 with six
+// devices), so each handle stays small on disk. a v4 invite on a handle is a
+// main one with a face, and every rule and signature of the KIN4 holds
+// (kin4.go).
 func inviteOK(s string) bool {
+	_, ok := inviteCheck(s)
+	return ok
+}
+
+// inviteOK, with a v4 invite's KIN4 read once for the claim's face check
+func inviteCheck(s string) (*kin4, bool) {
+	if strings.HasPrefix(s, v4Prefix) {
+		k := inviteV4(s)
+		return k, k != nil
+	}
+	return nil, legacyInviteOK(s)
+}
+
+func legacyInviteOK(s string) bool {
 	if s == "" || len(s) > maxInvite {
 		return false
 	}
@@ -383,6 +412,28 @@ func inviteOK(s string) bool {
 	return false
 }
 
+// v4 invites parsed, for the tests: a parse costs about 11 ms
+var v4Parses atomic.Int64
+
+// the KIN4 of a v4 main invite with a face, in its one form, or nil. a
+// one-time invite is spent by its first reader
+func inviteV4(s string) *kin4 {
+	if len(s) > maxInvite {
+		return nil
+	}
+	enc := s[len(v4Prefix):]
+	b, err := base64.RawURLEncoding.Strict().DecodeString(enc)
+	if err != nil || base64.RawURLEncoding.EncodeToString(b) != enc {
+		return nil
+	}
+	v4Parses.Add(1)
+	k, err := parseKIN4(b)
+	if err != nil || k.face == nil || k.oneTime {
+		return nil
+	}
+	return k
+}
+
 func refuseCode(w http.ResponseWriter, code int, msg string) {
 	writeJSON(w, code, map[string]any{"ok": false, "error": msg})
 }
@@ -402,7 +453,10 @@ var fontFS embed.FS
 //
 //	handle -check-invites /opt/kryfo-handles/handles.json
 //
-// exits 0 when every invite passes, 1 when any does not, naming them.
+// exits 0 when every invite passes, 1 when any does not, naming them. it
+// checks the shape alone, not whose invite it is: a v4 one is parsed with
+// every rule and signature of its KIN4, never against the clock, so an
+// invite past its time stays on its page until its owner repoints it.
 func checkInvites(path string) int {
 	b, err := os.ReadFile(path)
 	if err != nil {
@@ -533,16 +587,18 @@ func routes(st *store, lim *limiter) http.Handler {
 			refuse(w, "that handle is not available")
 			return
 		}
-		if !inviteOK(in.Invite) {
+		// before the invite: a v4 one costs a parse and its signatures
+		if !writeLim.allow() {
+			refuseCode(w, http.StatusTooManyRequests, "slow down")
+			return
+		}
+		v4, ok := inviteCheck(in.Invite)
+		if !ok {
 			refuseCode(w, http.StatusBadRequest, "bad invite")
 			return
 		}
 		if len(in.Bio) > 200 {
 			in.Bio = in.Bio[:200]
-		}
-		if !writeLim.allow() {
-			refuseCode(w, http.StatusTooManyRequests, "slow down")
-			return
 		}
 		ts, v2, why := checkSig(raw, in.Handle, func(ts int64) string {
 			return claimMsgV2(in.Handle, in.Invite, ts)
@@ -551,7 +607,13 @@ func routes(st *store, lim *limiter) http.Handler {
 			refuse(w, why)
 			return
 		}
-		if !inviteIsKeys(in.Invite, in.Pubkey) {
+		// a v1 signature names the handle alone and could be replayed; no
+		// app that makes a v4 invite signs v1
+		if v4 != nil && !v2 {
+			refuse(w, "update the app")
+			return
+		}
+		if !inviteIsKeys(in.Invite, v4, in.Pubkey) {
 			refuse(w, "the invite is not yours")
 			return
 		}
