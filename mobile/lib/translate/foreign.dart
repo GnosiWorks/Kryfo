@@ -7,8 +7,14 @@ import 'detect.dart';
 import 'hant.dart' show HantForm;
 
 // below this share of its letters, a message is mixed enough that the
-// person can likely read it as it is
+// person can likely read it as it is, or the guess is unsure
 const kForeignShare = 0.6;
+
+// fewer rough words than this (detect.dart roughWords) is a name, a
+// greeting or a word or two: nothing is offered for it
+const kOfferMinWords = 3.0;
+
+bool wordyEnough(String text) => roughWords(text) >= kOfferMinWords;
 
 // the language a tag is a form of: the models and the person's list do not
 // tell simplified from traditional chinese
