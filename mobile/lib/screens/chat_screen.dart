@@ -283,7 +283,7 @@ Future<bool> showNoteSheet(
             ),
             const SizedBox(height: 4),
             Text(
-              l10n.chatJustForYouNever,
+              l10n.chatJustForYouNeverShown,
               style: HaloType.sans(size: 12, color: HaloColors.text2),
             ),
             const SizedBox(height: 16),
@@ -1190,7 +1190,7 @@ class _ChatScreenState extends State<ChatScreen>
   String? get _devStop => _devRetired
       ? l10n.devKeyRetired
       : _devNameless
-      ? l10n.devNamelessLine
+      ? l10n.devNamelessLineShown
       : null;
 
   bool get _devRetired => _devShown?.status == DevKeyStatus.retired;
@@ -2632,7 +2632,7 @@ class _ChatScreenState extends State<ChatScreen>
     final confirm = await showConfirmSheet(
       context,
       title: l10n.chatUnsendMessage,
-      line: l10n.chatItDisappearsWithNo,
+      line: l10n.chatItDisappearsWithNoShown,
       yes: l10n.chatUnsend,
     );
     FocusManager.instance.primaryFocus?.unfocus();
@@ -2661,7 +2661,7 @@ class _ChatScreenState extends State<ChatScreen>
     final confirm = await showConfirmSheet(
       context,
       title: l10n.albumUnsendTitle,
-      line: l10n.chatAlbumItDisappearsWithNo,
+      line: l10n.chatAlbumItDisappearsWithNoShown,
       yes: l10n.chatUnsend,
     );
     FocusManager.instance.primaryFocus?.unfocus();
@@ -3769,7 +3769,7 @@ class _ChatScreenState extends State<ChatScreen>
           AttachItem(
             icon: (c) => Icon(Icons.gif_box_outlined, color: c),
             tint: HaloColors.violet,
-            label: l10n.chatGifFromPhone,
+            label: l10n.chatGifFromPhoneShown,
             onTap: _pickAndSendGif,
           ),
           AttachItem(
@@ -5995,7 +5995,7 @@ class _ChatScreenState extends State<ChatScreen>
     final confirm = await showConfirmSheet(
       context,
       title: l10n.chatClearThisConversation,
-      line: l10n.chatEveryMessageHereIs,
+      line: l10n.chatEveryMessageHereIsShown,
       yes: l10n.chatClear,
       keep: l10n.commonCancel,
     );

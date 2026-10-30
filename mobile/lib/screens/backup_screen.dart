@@ -372,14 +372,14 @@ class _BackupScreenState extends State<BackupScreen> {
               ChoiceCard(
                 on: !_move,
                 title: l10n.backupBackUp,
-                line: l10n.backupACopyToKeep,
+                line: l10n.backupACopyToKeepShown,
                 onTap: () => _choose(false),
               ),
               const SizedBox(height: 8),
               ChoiceCard(
                 on: _move,
                 title: l10n.backupMoveToAnotherDevice,
-                line: l10n.backupTheFileTakesThis,
+                line: l10n.backupTheFileTakesThisShown,
                 onTap: () => _choose(true),
               ),
               const SizedBox(height: 16),
@@ -724,7 +724,7 @@ class _About extends StatelessWidget {
               Text(
                 forMove
                     ? l10n.backupOneEncryptedFileYour
-                    : l10n.backupOneEncryptedFileYourIdentityYour,
+                    : l10n.backupOneEncryptedFileYourIdentityYourShown,
                 style: HaloType.sans(
                   size: 13.5,
                   color: HaloColors.text2,
@@ -748,7 +748,7 @@ class _About extends StatelessWidget {
                       hidden
                           ? l10n.backupHiddenIncluded
                           : forMove
-                          ? l10n.backupMoveHiddenStay
+                          ? l10n.backupMoveHiddenStayShown
                           : l10n.backupHiddenNotIn,
                       style: HaloType.sans(
                         size: 13.5,
@@ -777,7 +777,7 @@ String backupFailLine(Object e) {
   if (e is BackupError && e.message == l10n.backupHiddenGone) {
     return e.message;
   }
-  if (outOfSpace(e)) return l10n.backupNoSpace;
+  if (outOfSpace(e)) return l10n.backupNoSpaceShown;
   return l10n.backupNotMade;
 }
 
@@ -894,12 +894,12 @@ class _MoveDoneSheet extends StatelessWidget {
             const SheetHandle(),
             const SizedBox(height: 12),
             Text(
-              l10n.backupMoveReachedTitle,
+              l10n.backupMoveReachedTitleShown,
               style: HaloType.serif(size: 20, color: HaloColors.text),
             ),
             const SizedBox(height: 10),
             Text(
-              l10n.backupMoveReachedLine,
+              l10n.backupMoveReachedLineShown,
               style: HaloType.sans(
                 size: 13.5,
                 color: HaloColors.text2,

@@ -383,7 +383,7 @@ class _ClipPreviewState extends State<ClipPreview> with WidgetsBindingObserver {
           Icon(Icons.movie_outlined, size: 36, color: HaloColors.amber),
           const SizedBox(height: 12),
           Text(
-            l10n.videoViewerCannotPlay,
+            l10n.videoViewerCannotPlayShown,
             textAlign: TextAlign.center,
             style: HaloType.sans(size: 13, color: Colors.white, height: 1.4),
           ),

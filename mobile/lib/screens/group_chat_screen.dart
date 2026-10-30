@@ -2403,7 +2403,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           AttachItem(
             icon: (c) => Icon(Icons.gif_box_outlined, color: c),
             tint: HaloColors.violet,
-            label: l10n.groupChatGifFromPhone,
+            label: l10n.groupChatGifFromPhoneShown,
             onTap: _pickGroupGif,
           ),
           AttachItem(
@@ -4235,8 +4235,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
               child: Text(
                 album
-                    ? l10n.groupChatAlbumItDisappearsWithNo
-                    : l10n.groupChatItDisappearsWithNo,
+                    ? l10n.groupChatAlbumItDisappearsWithNoShown
+                    : l10n.groupChatItDisappearsWithNoShown,
                 style: HaloType.sans(size: 13, color: HaloColors.text2),
               ),
             ),
@@ -6991,7 +6991,7 @@ class _AdminGoneLine extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Text(
-                l10n.groupAdminGoneLine,
+                l10n.groupAdminGoneLineShown,
                 style: HaloType.sans(
                   size: 12.5,
                   color: HaloColors.text2,

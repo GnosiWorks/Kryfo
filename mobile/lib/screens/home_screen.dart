@@ -1880,7 +1880,7 @@ class _EmptyStateState extends State<_EmptyState>
             ),
             const SizedBox(height: 8),
             Text(
-              l10n.homeScanTheirCodeSend,
+              l10n.homeScanTheirCodeSendShown,
               textAlign: TextAlign.center,
               style: HaloType.sans(size: 13, color: HaloColors.text2),
             ),
@@ -2652,7 +2652,7 @@ void _chatMenu(BuildContext context, ContactPreview c) {
               MenuSheetRow(
                 icon: Icons.delete_outline,
                 label: l10n.homeDeleteChat,
-                sub: l10n.homeMessagesAndContactGone,
+                sub: l10n.homeMessagesAndContactGoneShown,
                 danger: true,
                 onTap: () => pick('delete'),
               ),
@@ -2759,7 +2759,7 @@ Future<void> _confirmDelete(BuildContext context, ContactPreview c) async {
   final ok = await showConfirmSheet(
     context,
     title: l10n.homeDeleteThisChat,
-    line: l10n.homeEveryMessageWithGoes(c.nickname ?? c.haloId),
+    line: l10n.homeEveryMessageWithGoesShown(c.nickname ?? c.haloId),
     yes: l10n.commonDelete,
   );
   if (!ok) return;
@@ -3207,7 +3207,7 @@ class _QuickTiles extends StatelessWidget {
               child: _QuickTile(
                 icon: Icons.edit_note_rounded,
                 title: l10n.homeNoteToSelf,
-                line: l10n.homeOnlyOnThisPhone,
+                line: l10n.homeOnlyOnThisPhoneShown,
                 onTap: onNotes,
               ),
             ),

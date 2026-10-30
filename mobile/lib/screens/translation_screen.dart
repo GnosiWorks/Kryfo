@@ -156,7 +156,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        l10n.translatePrivacyNote,
+                        l10n.translatePrivacyNoteShown,
                         style: HaloType.sans(
                           size: 12.5,
                           color: HaloColors.text2,
@@ -248,7 +248,7 @@ class _PackCard extends StatelessWidget {
         final s = hub.downloads.of(bundle.lang);
         final name = langName(bundle.lang);
         final status = switch (s.phase) {
-          DlPhase.installed => l10n.translateInstalled(packSize(s.onDisk)),
+          DlPhase.installed => l10n.translateInstalledShown(packSize(s.onDisk)),
           DlPhase.running || DlPhase.starting => l10n.translateDownloading,
           _ => l10n.translateNotDownloaded(packSize(bundle.gz)),
         };

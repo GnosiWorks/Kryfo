@@ -25,8 +25,8 @@ Duration repointDelay(Random r) => Duration(seconds: 5 + r.nextInt(56));
 /// fixed words, never the registry's own, and each has a fixed line
 String handleRefusalLine(String r, String h) => switch (r) {
   'error: taken' => l10n.handleThatHandleIsTaken,
-  'error: not yours' => l10n.handleIsNotYoursOn(h),
-  'error: clock' => l10n.handleCheckClock,
+  'error: not yours' => l10n.handleIsNotYoursOnShown(h),
+  'error: clock' => l10n.handleCheckClockShown,
   _ => l10n.handleRegistryFailed,
 };
 

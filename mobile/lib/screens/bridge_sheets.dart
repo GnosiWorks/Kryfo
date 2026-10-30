@@ -26,6 +26,7 @@ import '../widgets/sheet_handle.dart';
 import '../widgets/swap.dart';
 import 'scan_screen.dart';
 import '../widgets/shift_tap_guard.dart';
+import '../desktop/desktop_mode.dart' show onDesktop;
 
 // the onion from the fokia pack. it plays twice and rests; still when the
 // phone asks for no movement
@@ -357,7 +358,7 @@ class _FriendSheetState extends State<_FriendSheet> {
             ),
             const SizedBox(height: 6),
             Text(
-              l10n.bridgesPasteTheLineThey,
+              l10n.bridgesPasteTheLineTheyShown,
               style: HaloType.sans(
                 size: 13.5,
                 color: HaloColors.text2,
@@ -434,14 +435,16 @@ class _FriendSheetState extends State<_FriendSheet> {
                     onTap: _paste,
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _Ghost(
-                    icon: Icons.qr_code_scanner_rounded,
-                    label: l10n.bridgesScanACode,
-                    onTap: _scan,
+                if (!onDesktop) ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _Ghost(
+                      icon: Icons.qr_code_scanner_rounded,
+                      label: l10n.bridgesScanACode,
+                      onTap: _scan,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
             const SizedBox(height: 12),

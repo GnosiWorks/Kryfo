@@ -406,7 +406,7 @@ class PairConfirm extends StatelessWidget {
           PairKeyNumber(number: number, size: 22),
           const SizedBox(height: 12),
           Text(
-            l10n.pairCodeNumberMatches,
+            l10n.pairCodeNumberMatchesShown,
             textAlign: TextAlign.center,
             style: HaloType.sans(size: 13.5, color: HaloColors.text2),
           ),
@@ -536,7 +536,7 @@ class PairWordsTag extends StatelessWidget {
             PairKeyNumber(number: n),
             const SizedBox(height: 8),
             Text(
-              l10n.pairCodeNumberMatches,
+              l10n.pairCodeNumberMatchesShown,
               textAlign: TextAlign.center,
               style: HaloType.sans(size: 12, color: HaloColors.text2),
             ),
