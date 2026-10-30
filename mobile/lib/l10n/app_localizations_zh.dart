@@ -8672,13 +8672,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get translateBarMore => '翻译选项';
 
   @override
-  String translateBarAlways(Object language) {
-    return '总是翻译$language';
-  }
-
-  @override
   String translateBarNever(Object language) {
-    return '不再翻译$language';
+    return '不再为$language提供翻译';
   }
 
   @override
@@ -8860,6 +8855,35 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get translateAutoInChatHint => '其他语言的消息会显示译文。点一下即可查看原文。';
+
+  @override
+  String get translateAlwaysChat => '总是翻译此聊天';
+
+  @override
+  String translateNeverDone(Object language) {
+    return '$language消息保持原样';
+  }
+
+  @override
+  String get translateUndo => '撤销';
+
+  @override
+  String get translateNeverSection => '不提供翻译的语言';
+
+  @override
+  String get translateOfferAgain => '重新提供';
+
+  @override
+  String get translateOnHint => '在其他语言的消息下方提供';
+
+  @override
+  String get translatePrivacyKept => '译文与所属聊天一起加密保存在这部手机上，并随聊天一起删除。';
+
+  @override
+  String get translatePrivacyKeptDesk => '译文与所属聊天一起加密保存在这台电脑上，并随聊天一起删除。';
+
+  @override
+  String get translateOffDeletes => '关闭后会删除已保存的译文。';
 
   @override
   String get bridgesNoneUntilOnion => '开启 Onion 前不使用';
@@ -9587,6 +9611,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get desktopTrayTip => 'Kryfo 正在运行并接收消息';
 
   @override
+  String get desktopTrayLockedTip => '打开 Kryfo 即可开始接收消息';
+
+  @override
   String get desktopRunSection => '在这台电脑上';
 
   @override
@@ -9605,7 +9632,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get desktopStartRow => '随电脑启动';
 
   @override
-  String get desktopStartHint => '登录这台电脑时，Kryfo 就会打开。';
+  String get desktopStartHint => '登录这台电脑时，Kryfo 会在系统托盘中启动。';
 
   @override
   String get desktopStartRefused => '这台电脑不允许 Kryfo 随它启动。你自己启动时，Kryfo 照常打开。';
@@ -18739,13 +18766,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get translateBarMore => '翻譯選項';
 
   @override
-  String translateBarAlways(Object language) {
-    return '總是翻譯$language';
-  }
-
-  @override
   String translateBarNever(Object language) {
-    return '不再翻譯$language';
+    return '不再為$language提供翻譯';
   }
 
   @override
@@ -18927,6 +18949,35 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get translateAutoInChatHint => '其他語言的訊息會顯示譯文。點一下即可查看原文。';
+
+  @override
+  String get translateAlwaysChat => '總是翻譯此聊天';
+
+  @override
+  String translateNeverDone(Object language) {
+    return '$language訊息保持原樣';
+  }
+
+  @override
+  String get translateUndo => '復原';
+
+  @override
+  String get translateNeverSection => '不提供翻譯的語言';
+
+  @override
+  String get translateOfferAgain => '重新提供';
+
+  @override
+  String get translateOnHint => '在其他語言的訊息下方提供';
+
+  @override
+  String get translatePrivacyKept => '譯文與所屬聊天一起加密保存在這支手機上，並隨聊天一起刪除。';
+
+  @override
+  String get translatePrivacyKeptDesk => '譯文與所屬聊天一起加密保存在這台電腦上，並隨聊天一起刪除。';
+
+  @override
+  String get translateOffDeletes => '關閉後會刪除已儲存的譯文。';
 
   @override
   String get bridgesNoneUntilOnion => '開啟 Onion 前不使用';
@@ -19655,6 +19706,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get desktopTrayTip => 'Kryfo 正在執行並接收訊息';
 
   @override
+  String get desktopTrayLockedTip => '打開 Kryfo 即可開始接收訊息';
+
+  @override
   String get desktopRunSection => '在這台電腦上';
 
   @override
@@ -19673,7 +19727,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get desktopStartRow => '隨電腦啟動';
 
   @override
-  String get desktopStartHint => '登入這台電腦時，Kryfo 就會開啟。';
+  String get desktopStartHint => '登入這台電腦時，Kryfo 會在系統匣中啟動。';
 
   @override
   String get desktopStartRefused => '這台電腦不允許 Kryfo 隨它啟動。你自己啟動時，Kryfo 照常開啟。';

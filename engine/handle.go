@@ -96,6 +96,10 @@ var handleHTTP = func() (*http.Client, error) {
 // registryWait). a var for the tests
 var handleWait = 60 * time.Second
 
+// the most of a registry answer read. a v4 invite is about 2.7k characters
+// and an answer may come to carry one, with its json around it
+const handleReplyMax = 16 << 10
+
 // the lane's client, or the call's own deadline if that comes first. a
 // client still being built is kept for the next call
 func handleClient(ctx context.Context) (*http.Client, error) {
@@ -143,7 +147,7 @@ func handleCheck(raw string) string {
 		return "error: " + err.Error()
 	}
 	defer resp.Body.Close()
-	b, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+	b, _ := io.ReadAll(io.LimitReader(resp.Body, handleReplyMax))
 	var out struct {
 		Free bool `json:"free"`
 	}
@@ -232,7 +236,7 @@ func handlePost(path string, body []byte) string {
 		return "error: " + err.Error()
 	}
 	defer resp.Body.Close()
-	b, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+	b, _ := io.ReadAll(io.LimitReader(resp.Body, handleReplyMax))
 	var out struct {
 		OK  bool   `json:"ok"`
 		Err string `json:"error"`

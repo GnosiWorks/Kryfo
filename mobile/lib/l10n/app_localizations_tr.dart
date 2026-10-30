@@ -9146,13 +9146,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get translateBarMore => 'Çeviri seçenekleri';
 
   @override
-  String translateBarAlways(Object language) {
-    return 'Her zaman çevir · $language';
-  }
-
-  @override
   String translateBarNever(Object language) {
-    return 'Asla çevirme · $language';
+    return 'Bir daha önerme · $language';
   }
 
   @override
@@ -9344,6 +9339,37 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get translateAutoInChatHint =>
       'Başka dillerdeki mesajlar çevrilmiş görünür. Orijinali bir dokunuş uzakta.';
+
+  @override
+  String get translateAlwaysChat => 'Bu sohbeti her zaman çevir';
+
+  @override
+  String translateNeverDone(Object language) {
+    return 'Mesajlar olduğu gibi kalır · $language';
+  }
+
+  @override
+  String get translateUndo => 'Geri al';
+
+  @override
+  String get translateNeverSection => 'Hiç önerilmeyenler';
+
+  @override
+  String get translateOfferAgain => 'Yeniden öner';
+
+  @override
+  String get translateOnHint => 'Başka dillerdeki mesajların altında sunulur';
+
+  @override
+  String get translatePrivacyKept =>
+      'Çeviriler bu telefonda sohbetleriyle birlikte şifreli tutulur ve sohbetle birlikte silinir.';
+
+  @override
+  String get translatePrivacyKeptDesk =>
+      'Çeviriler bu bilgisayarda sohbetleriyle birlikte şifreli tutulur ve sohbetle birlikte silinir.';
+
+  @override
+  String get translateOffDeletes => 'Kapatınca kayıtlı çeviriler silinir.';
 
   @override
   String get bridgesNoneUntilOnion => 'Onion açılana kadar yok';
@@ -10131,6 +10157,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get desktopTrayTip => 'Kryfo açık ve mesaj alıyor';
 
   @override
+  String get desktopTrayLockedTip => 'Mesaj almaya başlamak için Kryfo\'yu aç';
+
+  @override
   String get desktopRunSection => 'Bu bilgisayarda';
 
   @override
@@ -10153,7 +10182,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get desktopStartHint =>
-      'Bu bilgisayarda oturum açtığında Kryfo açılır.';
+      'Bu bilgisayarda oturum açtığında Kryfo sistem tepsisinde başlar.';
 
   @override
   String get desktopStartRefused =>

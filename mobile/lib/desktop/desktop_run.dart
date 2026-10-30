@@ -60,8 +60,16 @@ class ChannelTray implements TrayHost {
   }
 }
 
+/// what the start with the computer passes: the app starts in the tray,
+/// with no window, unless the desktop has no tray
+const startHiddenFlag = '--hidden';
+
 /// where the computer keeps what starts with it
 abstract class StartPlace {
+  /// an entry kept from before (another file, no [startHiddenFlag]) written
+  /// again as this app writes it. nothing when it is off
+  Future<void> mend();
+
   /// on, off, or held off by the computer's own settings
   Future<StartAnswer> read();
 
@@ -123,12 +131,9 @@ class DesktopRun extends ChangeNotifier implements DesktopRunView {
 
   /// the tray as kept, once the vault is open
   Future<void> begin() async {
-    final pl = place;
-    if (pl is LinuxStart) {
-      try {
-        await pl.mend();
-      } catch (_) {}
-    }
+    try {
+      await place?.mend();
+    } catch (_) {}
     if (!trayOn) return refresh();
     await tray.show();
     await refresh();
@@ -221,10 +226,19 @@ StartPlace? startPlaceHere({
       ? null
       : p.join(home, '.config');
   if (dir == null) return null;
-  // an appimage runs from a mount that is gone at the next login
+  return LinuxStart(p.join(dir, 'autostart'), linuxStartFile(exe, env));
+}
+
+/// the file the entry starts. an appimage runs from a mount that is gone at
+/// the next login, so the image itself, but only when this binary is in
+/// that mount: $APPIMAGE is passed on to whatever an appimage starts
+@visibleForTesting
+String linuxStartFile(String exe, Map<String, String> env) {
   final image = env['APPIMAGE'];
-  final start = image != null && p.isAbsolute(image) ? image : exe;
-  return LinuxStart(p.join(dir, 'autostart'), start);
+  final mount = env['APPDIR'];
+  if (image == null || mount == null) return exe;
+  if (!p.isAbsolute(image) || !p.isAbsolute(mount)) return exe;
+  return p.isWithin(mount, exe) ? image : exe;
 }
 
 // --- linux: an xdg autostart entry
@@ -242,14 +256,16 @@ class LinuxStart implements StartPlace {
   File get _file => File(p.join(dir, autostartFile));
 
   /// an entry that is on but starts another file (the bundle moved or was
-  /// updated elsewhere) is written again for this one
+  /// updated elsewhere) or starts it without [startHiddenFlag] is written
+  /// again for this one
+  @override
   Future<void> mend() async {
     final f = _file;
     if (!f.existsSync() || await read() != StartAnswer.on) return;
     final exec = desktopExec(exe);
     if (exec == null) return;
     final lines = const LineSplitter().convert(f.readAsStringSync());
-    if (lines.contains('Exec=$exec')) return;
+    if (lines.contains('Exec=$exec $startHiddenFlag')) return;
     await set(true);
   }
 
@@ -257,13 +273,9 @@ class LinuxStart implements StartPlace {
   Future<StartAnswer> read() async {
     final f = _file;
     if (!f.existsSync()) return StartAnswer.off;
-    final lines = const LineSplitter().convert(f.readAsStringSync());
-    // turned off from the desktop's own settings
-    if (lines.any((l) => l.trim() == 'Hidden=true')) return StartAnswer.off;
-    if (lines.any((l) => l.trim() == 'X-GNOME-Autostart-enabled=false')) {
-      return StartAnswer.off;
-    }
-    return StartAnswer.on;
+    return entrySaysOff(f.readAsStringSync())
+        ? StartAnswer.off
+        : StartAnswer.on;
   }
 
   @override
@@ -288,13 +300,37 @@ class LinuxStart implements StartPlace {
   }
 }
 
+/// turned off from the desktop's own settings: Hidden=true, or any
+/// desktop's X-*-Autostart-enabled=false, keys and values trimmed, in the
+/// main group
+@visibleForTesting
+bool entrySaysOff(String text) {
+  final switchKey = RegExp(r'^X-[A-Za-z0-9-]+-Autostart-enabled$');
+  var main = true;
+  for (final raw in const LineSplitter().convert(text)) {
+    final line = raw.trim();
+    if (line.startsWith('[')) {
+      main = line == '[Desktop Entry]';
+      continue;
+    }
+    if (!main || line.startsWith('#')) continue;
+    final eq = line.indexOf('=');
+    if (eq < 0) continue;
+    final key = line.substring(0, eq).trim();
+    final value = line.substring(eq + 1).trim();
+    if (key == 'Hidden' && value == 'true') return true;
+    if (switchKey.hasMatch(key) && value == 'false') return true;
+  }
+  return false;
+}
+
 /// the entry's text
 @visibleForTesting
 String autostartEntry(String exec) =>
     '[Desktop Entry]\n'
     'Type=Application\n'
     'Name=Kryfo\n'
-    'Exec=$exec\n'
+    'Exec=$exec $startHiddenFlag\n'
     'Icon=app.kryfo.Kryfo\n'
     'Terminal=false\n'
     'X-GNOME-Autostart-enabled=true\n';
@@ -336,7 +372,8 @@ class ChannelPortal implements BackgroundPortal {
 }
 
 /// a flatpak cannot see the host's autostart folder: what the portal last
-/// granted is kept in the vault
+/// granted is kept in the vault. the runner gives the portal the command
+/// line, with [startHiddenFlag]
 class PortalStart implements StartPlace {
   PortalStart(
     this.portal, {
@@ -361,6 +398,13 @@ class PortalStart implements StartPlace {
   @override
   Future<StartAnswer> read() async =>
       _kept()['portalStart'] == true ? StartAnswer.on : StartAnswer.off;
+
+  /// nothing: the kept grant is only what was last asked, and the user may
+  /// have switched the start off outside kryfo. asking again would turn it
+  /// back on unasked. an old grant starts with the window until the switch
+  /// is flipped
+  @override
+  Future<void> mend() async {}
 
   @override
   Future<StartAnswer> set(bool on) async {
@@ -397,7 +441,16 @@ class WindowsStart implements StartPlace {
   final String exe;
 
   /// the exe path quoted, so a folder with spaces starts the right file
-  String get command => '"$exe"';
+  String get command => '"$exe" $startHiddenFlag';
+
+  /// a value from before (another file, no flag) written again. the
+  /// user's switch in windows' settings is kept by name, so it stays theirs
+  @override
+  Future<void> mend() async {
+    final now = key.value(runValueName);
+    if (now == null || now == command || exe.contains('"')) return;
+    key.setValue(runValueName, command);
+  }
 
   @override
   Future<StartAnswer> read() async {

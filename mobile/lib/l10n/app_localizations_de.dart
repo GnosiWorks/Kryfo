@@ -9220,13 +9220,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get translateBarMore => 'Übersetzungsoptionen';
 
   @override
-  String translateBarAlways(Object language) {
-    return '$language immer übersetzen';
-  }
-
-  @override
   String translateBarNever(Object language) {
-    return '$language nie übersetzen';
+    return 'Für $language nie anbieten';
   }
 
   @override
@@ -9421,6 +9416,39 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get translateAutoInChatHint =>
       'Nachrichten in anderen Sprachen erscheinen übersetzt. Das Original ist einen Tipp entfernt.';
+
+  @override
+  String get translateAlwaysChat => 'Diesen Chat immer übersetzen';
+
+  @override
+  String translateNeverDone(Object language) {
+    return 'Nachrichten auf $language bleiben, wie sie sind';
+  }
+
+  @override
+  String get translateUndo => 'Rückgängig';
+
+  @override
+  String get translateNeverSection => 'Nie angeboten';
+
+  @override
+  String get translateOfferAgain => 'Wieder anbieten';
+
+  @override
+  String get translateOnHint =>
+      'Unter Nachrichten in anderen Sprachen angeboten';
+
+  @override
+  String get translatePrivacyKept =>
+      'Übersetzungen bleiben verschlüsselt bei ihrem Chat auf diesem Handy und werden mit ihm gelöscht.';
+
+  @override
+  String get translatePrivacyKeptDesk =>
+      'Übersetzungen bleiben verschlüsselt bei ihrem Chat auf diesem Computer und werden mit ihm gelöscht.';
+
+  @override
+  String get translateOffDeletes =>
+      'Ausschalten löscht gespeicherte Übersetzungen.';
 
   @override
   String get bridgesNoneUntilOnion => 'Nichts, bis Onion an ist';
@@ -10210,6 +10238,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get desktopTrayTip => 'Kryfo läuft und empfängt Nachrichten';
 
   @override
+  String get desktopTrayLockedTip => 'Öffne Kryfo, um Nachrichten zu empfangen';
+
+  @override
   String get desktopRunSection => 'Auf diesem Computer';
 
   @override
@@ -10232,7 +10263,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get desktopStartHint =>
-      'Kryfo öffnet sich, wenn du dich an diesem Computer anmeldest.';
+      'Kryfo startet im Infobereich, wenn du dich an diesem Computer anmeldest.';
 
   @override
   String get desktopStartRefused =>

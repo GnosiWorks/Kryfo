@@ -11415,18 +11415,9 @@
   "@translateBarMore": {
     "description": "the bar's small menu button, for screen readers"
   },
-  "translateBarAlways": "Always translate {language}",
-  "@translateBarAlways": {
-    "description": "in the bar's menu: every chat translates this language on its own",
-    "placeholders": {
-      "language": {
-        "type": "Object"
-      }
-    }
-  },
-  "translateBarNever": "Never translate {language}",
+  "translateBarNever": "Never offer for {language}",
   "@translateBarNever": {
-    "description": "in the bar's menu: the language counts as one the person reads, nothing in it is offered for translation",
+    "description": "in a translate menu: nothing in this language is offered for translation until the person takes it off the list in settings",
     "placeholders": {
       "language": {
         "type": "Object"
@@ -11711,6 +11702,47 @@
   "translateAutoInChatHint": "Messages in other languages show translated. The original is one tap away.",
   "@translateAutoInChatHint": {
     "description": "under that switch"
+  },
+  "translateAlwaysChat": "Always translate this chat",
+  "@translateAlwaysChat": {
+    "description": "in a translate menu: this chat's messages in other languages show translated on their own"
+  },
+  "translateNeverDone": "Messages in {language} stay as they are",
+  "@translateNeverDone": {
+    "description": "toast after never offer, with an undo",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateUndo": "Undo",
+  "@translateUndo": {
+    "description": "toast action: takes the language off the never list again"
+  },
+  "translateNeverSection": "Never offered",
+  "@translateNeverSection": {
+    "description": "translation settings: the languages set to never offer"
+  },
+  "translateOfferAgain": "Offer again",
+  "@translateOfferAgain": {
+    "description": "translation settings: takes a language off the never list"
+  },
+  "translateOnHint": "Offered under messages in other languages",
+  "@translateOnHint": {
+    "description": "translation settings: the switch's hint"
+  },
+  "translatePrivacyKept": "Translations are kept with their chat, encrypted on this phone, and deleted with it.",
+  "@translatePrivacyKept": {
+    "description": "translation settings, privacy box: where translations are kept"
+  },
+  "translatePrivacyKeptDesk": "Translations are kept with their chat, encrypted on this computer, and deleted with it.",
+  "@translatePrivacyKeptDesk": {
+    "description": "translatePrivacyKept as a computer shows it (linux and windows)"
+  },
+  "translateOffDeletes": "Turning this off deletes saved translations.",
+  "@translateOffDeletes": {
+    "description": "translation settings: under the switch, what turning it off does"
   },
   "bridgesNoneUntilOnion": "None until onion is on",
   "@bridgesNoneUntilOnion": {
@@ -12669,6 +12701,10 @@
   "@desktopTrayTip": {
     "description": "desktop/desktop_start.dart: the tray icon tooltip"
   },
+  "desktopTrayLockedTip": "Open Kryfo to start receiving messages",
+  "@desktopTrayLockedTip": {
+    "description": "desktop/desktop_start.dart: the tray icon tooltip after a start with the computer, before kryfo is unlocked"
+  },
   "desktopRunSection": "On this computer",
   "@desktopRunSection": {
     "description": "notifications page on a computer: the section that replaces the phone's delivery modes"
@@ -12693,7 +12729,7 @@
   "@desktopStartRow": {
     "description": "switch: kryfo starts when the user signs in to the computer"
   },
-  "desktopStartHint": "Kryfo opens when you sign in to this computer.",
+  "desktopStartHint": "Kryfo starts in the tray when you sign in to this computer.",
   "@desktopStartHint": {
     "description": "under the start switch"
   },

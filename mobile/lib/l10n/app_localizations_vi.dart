@@ -9109,13 +9109,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get translateBarMore => 'Tùy chọn dịch';
 
   @override
-  String translateBarAlways(Object language) {
-    return 'Luôn dịch $language';
-  }
-
-  @override
   String translateBarNever(Object language) {
-    return 'Không bao giờ dịch $language';
+    return 'Không bao giờ đề xuất cho $language';
   }
 
   @override
@@ -9311,6 +9306,38 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get translateAutoInChatHint =>
       'Tin nhắn bằng ngôn ngữ khác sẽ hiện bản dịch. Bản gốc chỉ cách một lần chạm.';
+
+  @override
+  String get translateAlwaysChat => 'Luôn dịch cuộc trò chuyện này';
+
+  @override
+  String translateNeverDone(Object language) {
+    return 'Tin nhắn bằng $language được giữ nguyên';
+  }
+
+  @override
+  String get translateUndo => 'Hoàn tác';
+
+  @override
+  String get translateNeverSection => 'Không bao giờ đề xuất';
+
+  @override
+  String get translateOfferAgain => 'Đề xuất lại';
+
+  @override
+  String get translateOnHint =>
+      'Được đề xuất bên dưới tin nhắn bằng ngôn ngữ khác';
+
+  @override
+  String get translatePrivacyKept =>
+      'Bản dịch được lưu mã hóa cùng cuộc trò chuyện trên điện thoại này và bị xóa cùng nó.';
+
+  @override
+  String get translatePrivacyKeptDesk =>
+      'Bản dịch được lưu mã hóa cùng cuộc trò chuyện trên máy tính này và bị xóa cùng nó.';
+
+  @override
+  String get translateOffDeletes => 'Tắt mục này sẽ xóa các bản dịch đã lưu.';
 
   @override
   String get bridgesNoneUntilOnion => 'Chưa dùng cho đến khi bật Onion';
@@ -10094,6 +10121,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get desktopTrayTip => 'Kryfo đang chạy và nhận tin nhắn';
 
   @override
+  String get desktopTrayLockedTip => 'Mở Kryfo để bắt đầu nhận tin nhắn';
+
+  @override
   String get desktopRunSection => 'Trên máy tính này';
 
   @override
@@ -10116,7 +10146,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get desktopStartHint =>
-      'Kryfo mở ra khi bạn đăng nhập vào máy tính này.';
+      'Kryfo khởi động trong khay hệ thống khi bạn đăng nhập vào máy tính này.';
 
   @override
   String get desktopStartRefused =>

@@ -9134,13 +9134,8 @@ class AppLocalizationsFa extends AppLocalizations {
   String get translateBarMore => 'گزینه‌های ترجمه';
 
   @override
-  String translateBarAlways(Object language) {
-    return 'همیشه $language را ترجمه کن';
-  }
-
-  @override
   String translateBarNever(Object language) {
-    return 'هرگز $language را ترجمه نکن';
+    return 'ترجمهٔ $language را دیگر پیشنهاد نده';
   }
 
   @override
@@ -9332,6 +9327,38 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get translateAutoInChatHint =>
       'پیام‌هایی به زبان‌های دیگر ترجمه‌شده نمایش داده می‌شوند. متن اصلی با یک لمس در دسترس است.';
+
+  @override
+  String get translateAlwaysChat => 'همیشه این گفتگو را ترجمه کن';
+
+  @override
+  String translateNeverDone(Object language) {
+    return 'پیام‌های $language همان‌طور که هستند می‌مانند';
+  }
+
+  @override
+  String get translateUndo => 'واگرد';
+
+  @override
+  String get translateNeverSection => 'هرگز پیشنهاد نمی‌شود';
+
+  @override
+  String get translateOfferAgain => 'دوباره پیشنهاد بده';
+
+  @override
+  String get translateOnHint => 'زیر پیام‌هایی به زبان‌های دیگر پیشنهاد می‌شود';
+
+  @override
+  String get translatePrivacyKept =>
+      'ترجمه‌ها رمزگذاری‌شده کنار گفتگوی خود روی همین گوشی می‌مانند و همراه آن پاک می‌شوند.';
+
+  @override
+  String get translatePrivacyKeptDesk =>
+      'ترجمه‌ها رمزگذاری‌شده کنار گفتگوی خود روی همین رایانه می‌مانند و همراه آن پاک می‌شوند.';
+
+  @override
+  String get translateOffDeletes =>
+      'خاموش کردن این، ترجمه‌های ذخیره‌شده را پاک می‌کند.';
 
   @override
   String get bridgesNoneUntilOnion => 'هیچ، تا Onion روشن شود';
@@ -10120,6 +10147,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get desktopTrayTip => 'Kryfo در حال اجراست و پیام می‌گیرد';
 
   @override
+  String get desktopTrayLockedTip => 'Kryfo را باز کنید تا پیام‌ها برسند';
+
+  @override
   String get desktopRunSection => 'روی این رایانه';
 
   @override
@@ -10142,7 +10172,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get desktopStartHint =>
-      'Kryfo وقتی وارد این رایانه می‌شوید باز می‌شود.';
+      'Kryfo وقتی وارد این رایانه می‌شوید در سینی سیستم شروع به کار می‌کند.';
 
   @override
   String get desktopStartRefused =>

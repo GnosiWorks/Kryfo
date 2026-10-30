@@ -9273,13 +9273,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get translateBarMore => 'Параметри перекладу';
 
   @override
-  String translateBarAlways(Object language) {
-    return 'Завжди перекладати · $language';
-  }
-
-  @override
   String translateBarNever(Object language) {
-    return 'Ніколи не перекладати · $language';
+    return 'Не пропонувати · $language';
   }
 
   @override
@@ -9473,6 +9468,38 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get translateAutoInChatHint =>
       'Повідомлення іншими мовами показуються в перекладі. Оригінал за один дотик.';
+
+  @override
+  String get translateAlwaysChat => 'Завжди перекладати цей чат';
+
+  @override
+  String translateNeverDone(Object language) {
+    return 'Повідомлення лишаються як є · $language';
+  }
+
+  @override
+  String get translateUndo => 'Скасувати';
+
+  @override
+  String get translateNeverSection => 'Не пропонувати';
+
+  @override
+  String get translateOfferAgain => 'Пропонувати знову';
+
+  @override
+  String get translateOnHint => 'Пропонується під повідомленнями іншими мовами';
+
+  @override
+  String get translatePrivacyKept =>
+      'Переклади зберігаються зашифрованими разом із чатом на цьому телефоні й видаляються разом із ним.';
+
+  @override
+  String get translatePrivacyKeptDesk =>
+      'Переклади зберігаються зашифрованими разом із чатом на цьому комп’ютері й видаляються разом із ним.';
+
+  @override
+  String get translateOffDeletes =>
+      'Якщо вимкнути, збережені переклади видаляться.';
 
   @override
   String get bridgesNoneUntilOnion => 'Нічого, доки не ввімкнено Onion';
@@ -10266,6 +10293,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get desktopTrayTip => 'Kryfo працює й отримує повідомлення';
 
   @override
+  String get desktopTrayLockedTip =>
+      'Відкрий Kryfo, щоб почати отримувати повідомлення';
+
+  @override
   String get desktopRunSection => 'На цьому комп’ютері';
 
   @override
@@ -10288,7 +10319,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get desktopStartHint =>
-      'Kryfo відкривається, коли ти входиш у систему на цьому комп’ютері.';
+      'Kryfo запускається в області сповіщень, коли ти входиш у систему на цьому комп’ютері.';
 
   @override
   String get desktopStartRefused =>

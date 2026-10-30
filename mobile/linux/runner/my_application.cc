@@ -15,7 +15,13 @@ struct _MyApplication {
   GtkWidget* tray_menu;
   FlMethodChannel* desktop_channel;
   guint quit_timer;
+  // started with the computer (--hidden): no window until asked for
+  gboolean start_hidden;
+  guint hidden_timer;
 };
+
+// how long a hidden start waits for its tray icon before the window shows
+static const guint kHiddenWaitSeconds = 10;
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
@@ -25,6 +31,10 @@ G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 G_GNUC_BEGIN_IGNORE_DEPRECATIONS
 
 static void show_window(MyApplication* self) {
+  if (self->hidden_timer != 0) {
+    g_source_remove(self->hidden_timer);
+    self->hidden_timer = 0;
+  }
   if (self->window == nullptr) return;
   gtk_widget_show(GTK_WIDGET(self->window));
   gtk_window_present(self->window);
@@ -32,6 +42,14 @@ static void show_window(MyApplication* self) {
 
 static gboolean tray_shown(MyApplication* self) {
   return self->tray != nullptr && gtk_status_icon_is_embedded(self->tray);
+}
+
+// a hidden start on a desktop with no tray: the window after all
+static gboolean hidden_timed_out(gpointer user_data) {
+  MyApplication* self = MY_APPLICATION(user_data);
+  self->hidden_timer = 0;
+  if (!tray_shown(self)) show_window(self);
+  return G_SOURCE_REMOVE;
 }
 
 static void tray_open_cb(GtkMenuItem*, gpointer user_data) {
@@ -239,7 +257,8 @@ static void ask_portal(FlMethodCall* call, gboolean on, const gchar* reason) {
   ask->signal_id = portal_subscribe(ask, path);
   // the user may be asked: a minute and a half to answer
   ask->timer = g_timeout_add_seconds(90, portal_timed_out, ask);
-  const gchar* command[] = {"kryfo", nullptr};
+  // the start with the computer comes up in the tray
+  const gchar* command[] = {"kryfo", "--hidden", nullptr};
   GVariantBuilder options;
   g_variant_builder_init(&options, G_VARIANT_TYPE_VARDICT);
   g_variant_builder_add(&options, "{sv}", "handle_token",
@@ -270,6 +289,11 @@ static void desktop_call_cb(FlMethodChannel* channel, FlMethodCall* call,
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
   } else if (g_strcmp0(fl_method_call_get_name(call), "noTray") == 0) {
     drop_tray(self);
+    // no icon left to open a hidden window from
+    if (self->window != nullptr &&
+        !gtk_widget_get_visible(GTK_WIDGET(self->window))) {
+      show_window(self);
+    }
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
   } else if (g_strcmp0(fl_method_call_get_name(call), "trayState") == 0) {
     g_autoptr(FlValue) shown = fl_value_new_bool(tray_shown(self));
@@ -284,6 +308,9 @@ static void desktop_call_cb(FlMethodChannel* channel, FlMethodCall* call,
                    fl_value_get_bool(on),
                map_string(args, "reason"));
     return;
+  } else if (g_strcmp0(fl_method_call_get_name(call), "startHidden") == 0) {
+    g_autoptr(FlValue) hidden = fl_value_new_bool(self->start_hidden);
+    response = FL_METHOD_RESPONSE(fl_method_success_response_new(hidden));
   } else if (g_strcmp0(fl_method_call_get_name(call), "show") == 0) {
     show_window(self);
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
@@ -302,6 +329,8 @@ static gboolean delete_cb(GtkWidget* widget, GdkEvent*, gpointer user_data) {
 }
 
 static void first_frame_cb(MyApplication* self, FlView* view) {
+  // a hidden start stays in the tray; show_window brings it up
+  if (self->start_hidden) return;
   gtk_widget_show(gtk_widget_get_toplevel(GTK_WIDGET(view)));
 }
 
@@ -367,13 +396,30 @@ static void my_application_activate(GApplication* application) {
                                             desktop_call_cb, self, nullptr);
 
   gtk_widget_grab_focus(GTK_WIDGET(view));
+
+  if (self->start_hidden) {
+    self->hidden_timer =
+        g_timeout_add_seconds(kHiddenWaitSeconds, hidden_timed_out, self);
+  }
 }
 
 static gboolean my_application_local_command_line(GApplication* application,
                                                   gchar*** arguments,
                                                   int* exit_status) {
   MyApplication* self = MY_APPLICATION(application);
-  self->dart_entrypoint_arguments = g_strdupv(*arguments + 1);
+  // --hidden is the runner's, the rest go to dart. in a second start it
+  // changes nothing: the first one's window comes up
+  GPtrArray* rest = g_ptr_array_new();
+  for (gchar** a = *arguments + 1; *a != nullptr; a++) {
+    if (g_strcmp0(*a, "--hidden") == 0) {
+      self->start_hidden = TRUE;
+    } else {
+      g_ptr_array_add(rest, g_strdup(*a));
+    }
+  }
+  g_ptr_array_add(rest, nullptr);
+  self->dart_entrypoint_arguments =
+      reinterpret_cast<gchar**>(g_ptr_array_free(rest, FALSE));
 
   g_autoptr(GError) error = nullptr;
   if (!g_application_register(application, nullptr, &error)) {
@@ -398,6 +444,10 @@ static void my_application_shutdown(GApplication* application) {
 
 static void my_application_dispose(GObject* object) {
   MyApplication* self = MY_APPLICATION(object);
+  if (self->hidden_timer != 0) {
+    g_source_remove(self->hidden_timer);
+    self->hidden_timer = 0;
+  }
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
   g_clear_object(&self->desktop_channel);
   g_clear_object(&self->tray);
