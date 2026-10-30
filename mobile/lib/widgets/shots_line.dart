@@ -60,12 +60,7 @@ class ShotsLine extends StatelessWidget {
   // another line of the same kind (a chat going over to post-quantum):
   // its own icon
   final IconData? icon;
-  const ShotsLine({
-    super.key,
-    required this.text,
-    required this.on,
-    this.icon,
-  });
+  const ShotsLine({super.key, required this.text, required this.on, this.icon});
 
   @override
   Widget build(BuildContext context) {
