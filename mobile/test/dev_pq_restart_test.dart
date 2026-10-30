@@ -7,6 +7,7 @@
 // classic card, as m1 is, changes nothing. the 0.7.4 fixture's held chat
 // stands in: alice is his phone, bob the person writing to him
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/devchat/dev_chat.dart';
@@ -135,21 +136,9 @@ void main() {
     );
   }, skip: needsShim);
 
-  test('another key on his card\'s keys opens nothing on the held chat, and '
-      'a card on another key restarts nothing here', () async {
-    final card = await pqCard();
-    // someone else builds on his pinned card and writes as if from the seat
-    final eve = Phone();
-    await eve.openLs();
-    await eve.ls!.processBundle('alice', lsBundleOf(eve.ls!.lib, card.bundle));
-    final forged = await eve.seal('alice', 'not the seat');
-    expect(base64Decode(forged)[0], kLsPreKey);
-    final before = (await his.ls!.sessionInfo('bob'))!;
-    await expectLater(his.read('bob', forged), throwsA(anything));
-    final after = (await his.ls!.sessionInfo('bob'))!;
-    expect(after.version, before.version);
-    expect(after.archived.length, before.archived.length);
-    expect(after.remoteIdentity, mine.ls!.identity.public);
+  test('another key on his card\'s keys is a key change on the held chat, '
+      'never a silent restart, and a card on another key restarts nothing '
+      'here', () async {
     // a card whose key is not the one the chat runs on: nothing built
     final other = Phone();
     await other.openLs();
@@ -172,6 +161,33 @@ void main() {
       isFalse,
     );
     expect((await mine.ls!.sessionInfo(_chat))!.version, 3);
+    final card = await pqCard();
+    // a real restart from the seat reads as no change of key
+    final lane = await laneFor(card);
+    final real = base64Decode(await lane.encrypt(_chat, 'from the seat'));
+    var moved = 0;
+    await his.ls!.open(
+      'bob',
+      real[0],
+      Uint8List.fromList(real.sublist(1)),
+      moved: () => moved++,
+    );
+    expect(moved, 0);
+    // someone else builds on his pinned card and writes on the seat's name:
+    // the store says the key moved, which the app holds and shows as for
+    // any chat (this isn't them, the new number line)
+    final eve = Phone();
+    await eve.openLs();
+    await eve.ls!.processBundle('alice', lsBundleOf(eve.ls!.lib, card.bundle));
+    final forged = base64Decode(await eve.seal('alice', 'not the seat'));
+    expect(forged[0], kLsPreKey);
+    await his.ls!.open(
+      'bob',
+      forged[0],
+      Uint8List.fromList(forged.sublist(1)),
+      moved: () => moved++,
+    );
+    expect(moved, 1);
   }, skip: needsShim);
 
   test('a classic card, as m1 is, starts nothing', () async {
