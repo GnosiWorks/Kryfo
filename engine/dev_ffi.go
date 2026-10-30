@@ -152,6 +152,7 @@ type devArgs struct {
 	Once         [][]byte `json:"once"`
 	Last         []byte   `json:"last"`
 	Made         int64    `json:"made"`
+	Asked        int64    `json:"asked"`
 	Now          int64    `json:"now"`
 	Op           string   `json:"op"`
 	Devices      bool     `json:"devices"`
@@ -431,7 +432,11 @@ func (d *devState) poolCall(op string, a *devArgs, out *devOut) error {
 	}
 	switch op {
 	case "pool_put":
-		return d.pool.Put(mine, e, a.Once, a.Last, time.UnixMilli(a.Made), a.now())
+		var asked time.Time
+		if a.Asked > 0 {
+			asked = time.UnixMilli(a.Asked)
+		}
+		return d.pool.PutAsked(mine, e, a.Once, a.Last, time.UnixMilli(a.Made), asked, a.now())
 	case "pool_take":
 		b, low, err := d.pool.Take(mine, e, a.now())
 		out.KDB1, out.Low = b, low
