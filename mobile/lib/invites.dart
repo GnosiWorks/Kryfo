@@ -128,20 +128,31 @@ void _need(List<int> v, int n, String what) {
   if (v.length != n) throw ArgumentError('$what is $n bytes');
 }
 
-/// a bundle block on the frame's identity, device 1 (a phone: DECIDED
-/// 2026-10-28), with an ec prekey when [ec] is given
+/// a bundle block: on the frame's identity as device 1 (the phone of every
+/// identity), or on [key] as [deviceId] 2..127 (a linked device's KDB1),
+/// with an ec prekey when [ec] is given
 Uint8List bundleBlock({
   required int registrationId,
   required LsPreKey spk,
   required LsPreKey kyber,
   LsPreKey? ec,
+  int deviceId = 1,
+  List<int>? key,
 }) {
   _need(spk.public, 33, 'a signed prekey');
   _need(kyber.public, 1569, 'a kyber prekey');
+  if (deviceId < 1 || deviceId > 127 || (key == null) != (deviceId == 1)) {
+    throw ArgumentError('device 1 runs on the identity, 2..127 on a key');
+  }
   final o = _Out()
     ..u32(registrationId)
-    ..u8(1)
-    ..u8(ec == null ? 0 : 2)
+    ..u8(deviceId)
+    ..u8((key == null ? 0 : 1) | (ec == null ? 0 : 2));
+  if (key != null) {
+    _need(key, 33, 'a device key');
+    o.bytes(key);
+  }
+  o
     ..u32(spk.id)
     ..bytes(spk.public)
     ..bytes(spk.signature)

@@ -25,7 +25,9 @@ import '../widgets/nav_bar.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../invite_share.dart' show shareInvite;
-import '../desktop/desktop_mode.dart' show canShareOut, computerLock;
+import '../desktop/desktop_mode.dart' show canShareOut, computerLock, onDesktop;
+import '../wide/wide_home.dart';
+import '../wide/wide_pane.dart';
 import 'backup_screen.dart';
 import '../widgets/room_countdown.dart';
 import '../widgets/room_join.dart';
@@ -80,6 +82,10 @@ Future<void> Function(BuildContext context) homeBackgroundAsk =
 
 @visibleForTesting
 void askBackgroundAgainForTest() => _miuiPromptChecked = false;
+
+/// the clock the date head reads. a test hands in its own
+@visibleForTesting
+DateTime Function() homeClock = DateTime.now;
 
 class HomeScreen extends StatefulWidget {
   final String haloId; // "neon-tiger-saturn"
@@ -274,53 +280,65 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // read where it lands: the desktop's list is narrower than the window
+    final tabs = Builder(
+      builder: (context) => MediaQuery.removePadding(
+        context: context,
+        removeBottom: true,
+        child: Stack(
+          children: [
+            for (final t in HaloTab.values)
+              if (_seen.contains(t))
+                Offstage(
+                  offstage: t != _tab,
+                  child: TickerMode(
+                    enabled: t == _tab,
+                    // a theme switch rebuilds every widget in place
+                    // (ThemeRefresh): a tab keeps its scroll and state
+                    child: _Arrive(
+                      on: t == _tab,
+                      towards: _towards,
+                      fresh: t == _picked,
+                      child: _body(t),
+                    ),
+                  ),
+                ),
+          ],
+        ),
+      ),
+    );
+    final bar = SafeArea(
+      top: false,
+      child: HaloNavBar(
+        active: _tab,
+        onPick: _pick,
+        // the developer screen is for debug builds only
+        onMeLongPress: kDebugMode ? widget.onOpenDev : null,
+      ),
+    );
     return PopScope(
       canPop: _tab == HaloTab.chats,
       onPopInvokedWithResult: (done, _) {
         if (!done) _pick(HaloTab.chats);
       },
-      child: Scaffold(
-        backgroundColor: HaloColors.surface,
-        body: Column(
-          children: [
-            Expanded(
-              child: MediaQuery.removePadding(
-                context: context,
-                removeBottom: true,
-                child: Stack(
-                  children: [
-                    for (final t in HaloTab.values)
-                      if (_seen.contains(t))
-                        Offstage(
-                          offstage: t != _tab,
-                          child: TickerMode(
-                            enabled: t == _tab,
-                            // a theme switch rebuilds every widget in place
-                            // (ThemeRefresh): a tab keeps its scroll and state
-                            child: _Arrive(
-                              on: t == _tab,
-                              towards: _towards,
-                              fresh: t == _picked,
-                              child: _body(t),
-                            ),
-                          ),
-                        ),
-                  ],
-                ),
+      child: onDesktop
+          ? WideHome(
+              tab: _tab,
+              onPick: _pick,
+              onMeLongPress: kDebugMode ? widget.onOpenDev : null,
+              tabs: tabs,
+              bar: bar,
+              onSearch: () => deskPush(context, searchRoute(context)),
+            )
+          : Scaffold(
+              backgroundColor: HaloColors.surface,
+              body: Column(
+                children: [
+                  Expanded(child: tabs),
+                  bar,
+                ],
               ),
             ),
-            SafeArea(
-              top: false,
-              child: HaloNavBar(
-                active: _tab,
-                onPick: _pick,
-                // the developer screen is for debug builds only
-                onMeLongPress: kDebugMode ? widget.onOpenDev : null,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -437,7 +455,7 @@ class _ChatsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
+    final now = homeClock();
     final visible = contacts.where((c) => !c.archived).toList();
     // an archived developer chat counts with the rest in the archive
     final dev = devRow;
@@ -465,7 +483,7 @@ class _ChatsTab extends StatelessWidget {
               haloId: haloId,
               onAdd: onAddContact,
               onSettings: onOpenSettingsDirect,
-              onSearch: () => Navigator.of(context).push(searchRoute(context)),
+              onSearch: () => deskPush(context, searchRoute(context)),
             ),
           ),
           const _OfflineStrip(),
@@ -486,10 +504,8 @@ class _ChatsTab extends StatelessWidget {
           StaggerIn(
             index: 1,
             child: _QuickTiles(
-              onNotes: () =>
-                  Navigator.of(context).push(haloRoute(const NotesScreen())),
-              onSaved: () =>
-                  Navigator.of(context).push(haloRoute(const SavedScreen())),
+              onNotes: () => deskPush(context, haloRoute(const NotesScreen())),
+              onSaved: () => deskPush(context, haloRoute(const SavedScreen())),
             ),
           ),
           // the two pins open and fold with what they count, so the list
@@ -502,9 +518,8 @@ class _ChatsTab extends StatelessWidget {
                     index: 2,
                     child: _RequestsPin(
                       count: pendingCount,
-                      onTap: () => Navigator.of(
-                        context,
-                      ).push(haloRoute(const RequestsScreen())),
+                      onTap: () =>
+                          deskPush(context, haloRoute(const RequestsScreen())),
                     ),
                   )
                 : const SizedBox(key: ValueKey('no-requests'), width: 1),
@@ -514,7 +529,7 @@ class _ChatsTab extends StatelessWidget {
               index: 2,
               child: SupportPin(
                 waiting: support!,
-                onTap: () => Navigator.of(context).push(supportRoute()),
+                onTap: () => deskPush(context, supportRoute()),
               ),
             ),
           GrowSwap(
@@ -525,9 +540,7 @@ class _ChatsTab extends StatelessWidget {
                     count: archived,
                     onTap: () {
                       HapticFeedback.selectionClick();
-                      Navigator.of(
-                        context,
-                      ).push(haloRoute(const ArchivedScreen()));
+                      deskPush(context, haloRoute(const ArchivedScreen()));
                     },
                   )
                 : const SizedBox(key: ValueKey('no-archived'), width: 1),
@@ -1002,9 +1015,8 @@ class _OfflineCardState extends State<OfflineCard> {
             ),
             CardAction(
               label: l10n.homeWhatIsWrong,
-              onTap: () => Navigator.of(
-                context,
-              ).push(haloRoute(const TransportScreen())),
+              onTap: () =>
+                  deskPush(context, haloRoute(const TransportScreen())),
               ink: HaloColors.warm,
             ),
           ],
@@ -1091,9 +1103,7 @@ class _HelperGoneCard extends StatelessWidget {
             label: l10n.homeHelperGoneChoose,
             onTap: () {
               unawaited(appState.helperGoneAnswered());
-              Navigator.of(
-                context,
-              ).push(haloRoute(const NotificationsScreen()));
+              deskPush(context, haloRoute(const NotificationsScreen()));
             },
             fill: HaloColors.amber,
             ink: HaloColors.onAmber,
@@ -1471,8 +1481,7 @@ class _AutoStrip extends StatelessWidget {
             if (line.offerRelay && !line.relayFirst) relay,
             CardAction(
               label: l10n.bridgesDetails,
-              onTap: () =>
-                  Navigator.of(context).push(haloRoute(const BridgesScreen())),
+              onTap: () => deskPush(context, haloRoute(const BridgesScreen())),
               ink: HaloColors.amber,
               bold: true,
             ),
@@ -2094,6 +2103,11 @@ class _ContactListState extends State<_ContactList> {
             child: _DevSwipeRow(d: d, onTap: () => widget.onOpenDev(d.chatId)),
           )
         : _SwipeRow(c: c!, onTap: () => widget.onTap(c.haloId));
+    // the chat open in the desktop's pane is marked
+    final marked = WideMark(
+      id: g != null ? 'group:${g.groupId}' : d?.chatId ?? c!.haloId,
+      child: row,
+    );
     // keyed, so a row that moves up on a new message slides there
     return ShiftInPlace(
       key: ValueKey(i.key),
@@ -2106,7 +2120,7 @@ class _ContactListState extends State<_ContactList> {
             active: set.fresh(i),
             child: _Enter(
               index: d != null && set == _top ? 0 : 1 + index,
-              child: row,
+              child: marked,
             ),
           ),
         ),
@@ -2133,7 +2147,7 @@ class _ContactListState extends State<_ContactList> {
             n.metrics.pixels < -72) {
           _opened = true;
           HapticFeedback.lightImpact();
-          Navigator.of(context).push(searchRoute(context));
+          deskPush(context, searchRoute(context));
         }
         if (n.metrics.pixels >= 0) _opened = false;
         return false;

@@ -10635,6 +10635,15 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get wideSelectChat => 'Виберіть чат';
+
+  @override
+  String get wideSelectChatLine => 'Виберіть чат у списку, щоб почати писати.';
+
+  @override
+  String get wideListWidth => 'Ширина списку чатів';
+
+  @override
   String transferDoneOf(String done, String total) {
     return '$done з $total';
   }

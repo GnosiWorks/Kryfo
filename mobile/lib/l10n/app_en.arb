@@ -13124,6 +13124,18 @@
       }
     }
   },
+  "wideSelectChat": "Select a chat",
+  "@wideSelectChat": {
+    "description": "wide/wide_home.dart: on a wide desktop window, the chat pane with no chat open"
+  },
+  "wideSelectChatLine": "Pick a chat from the list to start writing.",
+  "@wideSelectChatLine": {
+    "description": "wide/wide_home.dart: the line under wideSelectChat"
+  },
+  "wideListWidth": "Chat list width",
+  "@wideListWidth": {
+    "description": "wide/wide_home.dart: screen reader name of the divider that resizes the chat list on a wide desktop window"
+  },
   "transferDoneOf": "{done} of {total}",
   "@transferDoneOf": {
     "description": "transfer strip and notification: part done of a file, like 12.4 mb of 40.0 mb",

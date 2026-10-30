@@ -10453,6 +10453,16 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get wideSelectChat => 'Chọn một cuộc trò chuyện';
+
+  @override
+  String get wideSelectChatLine =>
+      'Chọn một cuộc trò chuyện trong danh sách để bắt đầu viết.';
+
+  @override
+  String get wideListWidth => 'Độ rộng danh sách trò chuyện';
+
+  @override
   String transferDoneOf(String done, String total) {
     return '$done trên $total';
   }
