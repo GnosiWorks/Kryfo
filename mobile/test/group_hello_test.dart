@@ -1328,4 +1328,41 @@ void main() {
     );
     expect(await app.rosterPairWaitsForTest(down.words), isFalse);
   });
+
+  test('a member removed after their roster invite went past its life: my '
+      'hello out to them is spent all the same', () async {
+    await myRoster();
+    final admin = await _Phone.make('admin-of-rfive', seed++);
+    final up = await phone('above-me-rfive', above: true);
+    await joinFrom(admin, [(up, await up.roster())]);
+    await app.sendHellosOwed();
+    await _settle();
+    final once =
+        (await hellosOf('out', up.keyHex)).single['invite_id'] as String;
+    const h = 3600 * 1000;
+    final old = await up.roster(
+      nowMs: DateTime.now().millisecondsSinceEpoch - 400 * 24 * h,
+    );
+    expect(
+      () => readInvite(signalSession.lib, old.link),
+      throwsA(isA<InviteRefused>()),
+    );
+    await db.update(
+      'roster_invites',
+      {'id': old.id, 'issued': old.issued, 'invite': old.link},
+      where: 'member = ?',
+      whereArgs: [up.words],
+    );
+    await db.update(
+      'hellos',
+      {'fc': _hex(signalSession.lib.parseInvite(old.link).firstContact)},
+      where: 'way = ? AND peer = ?',
+      whereArgs: ['out', up.keyHex],
+    );
+    await live.removeGroupMember(_g, up.words);
+    await _Halo(db).removeGroupMember(_g, up.words);
+    expect(await hellosOf('out', up.keyHex), isEmpty);
+    expect((await inviteOf(db, kMainIdent, once))!.usedAt, isNotNull);
+    expect(engine.unsubscribed, contains(once));
+  });
 }
