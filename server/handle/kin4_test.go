@@ -172,10 +172,11 @@ func TestMainInviteBuiltHereReads(t *testing.T) {
 	if len(inv) < 2700 || len(inv) > 2760 {
 		t.Fatalf("a main invite link is %d characters", len(inv))
 	}
-	if !inviteOK(inv) || !inviteIsKeys(inv, o.hexPub()) {
+	k, ok := inviteCheck(inv)
+	if !ok || !inviteIsKeys(inv, k, o.hexPub()) {
 		t.Fatal("the owner's own main invite was refused")
 	}
-	if inviteIsKeys(inv, newOwner(t).hexPub()) {
+	if inviteIsKeys(inv, k, newOwner(t).hexPub()) {
 		t.Fatal("another key owns the invite")
 	}
 }
@@ -257,8 +258,41 @@ func BenchmarkInviteV4(b *testing.B) {
 	pub, priv, _ := ed25519.GenerateKey(nil)
 	inv := mainInvite(t, priv, false)
 	for b.Loop() {
-		if !inviteIsKeys(inv, hex.EncodeToString(pub)) {
+		k, ok := inviteCheck(inv)
+		if !ok || !inviteIsKeys(inv, k, hex.EncodeToString(pub)) {
 			b.Fatal("refused")
 		}
+	}
+}
+
+// a v4 claim reads its invite once, taken or not
+func TestClaimParsesOnce(t *testing.T) {
+	srv, _ := service(t, newLimiter(100, 100))
+	c := srv.Client()
+	o := newOwner(t)
+	now := time.Now().Unix()
+	for i, b := range []map[string]string{
+		claimWith("wren", mainInvite(t, o.priv, false), o, now),
+		claimWith("lark", mainInvite(t, newOwner(t).priv, false), o, now),
+	} {
+		before := v4Parses.Load()
+		post(t, c, srv.URL, "/handle/claim", b)
+		if n := v4Parses.Load() - before; n != 1 {
+			t.Fatalf("claim %d parsed its invite %d times", i, n)
+		}
+	}
+}
+
+// a v1 signature names the handle alone: never for a v4 invite
+func TestV1ClaimTakesNoV4Invite(t *testing.T) {
+	srv, st := service(t, newLimiter(100, 100))
+	c := srv.Client()
+	o := newOwner(t)
+	out := post(t, c, srv.URL, "/handle/claim", map[string]string{
+		"handle": "wren", "invite": mainInvite(t, o.priv, false),
+		"pubkey": o.hexPub(), "sig": o.sign("kryfo-handle-v1:wren"),
+	})
+	if out["error"] != "update the app" || held(st, "wren") {
+		t.Fatalf("a v1 claim with a v4 invite: %v", out)
 	}
 }

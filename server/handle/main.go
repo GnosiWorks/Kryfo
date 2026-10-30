@@ -33,6 +33,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unicode"
 )
@@ -333,13 +334,12 @@ func wordsOf(pubHex string) string {
 }
 
 // whether the invite names the key that signs for it: its id is the three
-// words that key makes, or for v4 its face is that key and the face signs
-// the invite's identity and id
-func inviteIsKeys(invite, pubHex string) bool {
+// words that key makes, or for v4 its face (v4, as inviteCheck read it) is
+// that key and the face signs the invite's identity and id
+func inviteIsKeys(invite string, v4 *kin4, pubHex string) bool {
 	if strings.HasPrefix(invite, v4Prefix) {
-		k := inviteV4(invite)
 		pub, err := hex.DecodeString(pubHex)
-		return k != nil && err == nil && len(pub) == ed25519.PublicKeySize && bytes.Equal(k.face, pub)
+		return v4 != nil && err == nil && len(pub) == ed25519.PublicKeySize && bytes.Equal(v4.face, pub)
 	}
 	u, err := url.Parse(invite)
 	if err != nil {
@@ -371,9 +371,20 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 // main one with a face, and every rule and signature of the KIN4 holds
 // (kin4.go).
 func inviteOK(s string) bool {
+	_, ok := inviteCheck(s)
+	return ok
+}
+
+// inviteOK, with a v4 invite's KIN4 read once for the claim's face check
+func inviteCheck(s string) (*kin4, bool) {
 	if strings.HasPrefix(s, v4Prefix) {
-		return inviteV4(s) != nil
+		k := inviteV4(s)
+		return k, k != nil
 	}
+	return nil, legacyInviteOK(s)
+}
+
+func legacyInviteOK(s string) bool {
 	if s == "" || len(s) > maxInvite {
 		return false
 	}
@@ -401,6 +412,9 @@ func inviteOK(s string) bool {
 	return false
 }
 
+// v4 invites parsed, for the tests: a parse costs about 11 ms
+var v4Parses atomic.Int64
+
 // the KIN4 of a v4 main invite with a face, in its one form, or nil. a
 // one-time invite is spent by its first reader
 func inviteV4(s string) *kin4 {
@@ -412,6 +426,7 @@ func inviteV4(s string) *kin4 {
 	if err != nil || base64.RawURLEncoding.EncodeToString(b) != enc {
 		return nil
 	}
+	v4Parses.Add(1)
 	k, err := parseKIN4(b)
 	if err != nil || k.face == nil || k.oneTime {
 		return nil
@@ -577,7 +592,8 @@ func routes(st *store, lim *limiter) http.Handler {
 			refuseCode(w, http.StatusTooManyRequests, "slow down")
 			return
 		}
-		if !inviteOK(in.Invite) {
+		v4, ok := inviteCheck(in.Invite)
+		if !ok {
 			refuseCode(w, http.StatusBadRequest, "bad invite")
 			return
 		}
@@ -591,7 +607,13 @@ func routes(st *store, lim *limiter) http.Handler {
 			refuse(w, why)
 			return
 		}
-		if !inviteIsKeys(in.Invite, in.Pubkey) {
+		// a v1 signature names the handle alone and could be replayed; no
+		// app that makes a v4 invite signs v1
+		if v4 != nil && !v2 {
+			refuse(w, "update the app")
+			return
+		}
+		if !inviteIsKeys(in.Invite, v4, in.Pubkey) {
 			refuse(w, "the invite is not yours")
 			return
 		}
