@@ -121,3 +121,43 @@ const kComputerDecoyNote = 'computer_lock';
 
 /// writes the decoy's note into the open decoy's database, set by the app
 Future<void> Function(String note)? keepComputerDecoyNote;
+
+/// keep running in the tray and start with the computer, for the
+/// notifications page. set by the desktop start; null on the phone
+DesktopRunView? desktopRun;
+
+/// what the computer says of starting kryfo with it
+enum StartAnswer {
+  on,
+  off,
+
+  /// kryfo is listed, and the user switched it off in windows' startup apps
+  heldOff,
+
+  /// the computer would not take the change
+  refused,
+}
+
+abstract class DesktopRunView implements Listenable {
+  /// closing the window hides kryfo to the tray. on unless turned off
+  bool get trayOn;
+
+  /// the desktop shows the tray icon; null when unknown
+  bool? get trayShown;
+
+  Future<void> setTray(bool on);
+
+  /// this computer has a place for things that start with it
+  bool get canStart;
+
+  /// null until read
+  StartAnswer? get start;
+
+  /// the last change was refused
+  bool get startRefused;
+
+  Future<StartAnswer> setStart(bool on);
+
+  /// what the computer says now, as the page opens
+  Future<void> refresh();
+}

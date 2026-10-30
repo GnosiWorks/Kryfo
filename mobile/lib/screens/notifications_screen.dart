@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 
 import '../battery_brand.dart' show BrandGuide;
 import '../delivery_mode.dart';
+import '../desktop/desktop_mode.dart' show desktopRun, onDesktop;
 import '../lock_state.dart';
 import '../main.dart'
     show
@@ -26,6 +27,7 @@ import '../notifications.dart';
 import '../ready_edge.dart';
 import '../seen_timers.dart';
 import '../theme.dart';
+import 'desk_run_section.dart';
 import 'helper_sheet.dart';
 import 'icon_screen.dart'
     show IconScreen, NotifShow, notifShowName, notifShowOf;
@@ -331,11 +333,17 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   ],
                 ),
               ),
-              _section(l10n.notificationsHowTheyReachYou),
+              // a computer has no delivery modes: the window's process is
+              // the app. its own section takes their place
+              _section(
+                onDesktop
+                    ? l10n.desktopRunSection
+                    : l10n.notificationsHowTheyReachYou,
+              ),
               const SizedBox(height: 8),
               // play builds on a phone with play services: google push
               // first, the one most people want
-              if (google)
+              if (google && !onDesktop)
                 _ModeCard(
                   key: const ValueKey('googleCard'),
                   title: l10n.deliveryModeGooglePush,
@@ -353,41 +361,43 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                       ? () => _pick(DeliveryMode.google)
                       : _toOnion,
                 ),
-              _ModeCard(
-                title: l10n.gettingMessagesAlwaysOn,
-                tag: l10n.gettingMessagesMostPrivate,
-                body: l10n.gettingMessagesMessagesArriveInstantlyNothing,
-                on: mode == DeliveryMode.always,
-                onTap: () => _pick(DeliveryMode.always),
-              ),
-              _ModeCard(
-                title: l10n.gettingMessagesCheckIns,
-                tag: l10n.gettingMessagesLightest,
-                body: l10n.gettingMessagesKryfoLooksForMessages,
-                on: mode == DeliveryMode.checkins,
-                onTap: () => _pick(DeliveryMode.checkins),
-              ),
-              // always there, greyed until onion and our relay allow it
-              _ModeCard(
-                title: l10n.deliveryModeThroughAHelperApp,
-                body: l10n.gettingMessagesHelperBody,
-                on: mode == DeliveryMode.helper,
-                wait: helperWait,
-                checking: checking,
-                // a pill says what the tap does: move the route, or set up
-                action: mode == DeliveryMode.helper
-                    ? null
-                    : helperWait == null
-                    ? l10n.gettingMessagesHelperSetUp
-                    : onOnion
-                    ? null
-                    : l10n.gettingMessagesHelperUseOnion,
-                onTap: helperWait == null
-                    ? () => _pick(DeliveryMode.helper)
-                    : onOnion
-                    ? null
-                    : _toOnion,
-              ),
+              if (!onDesktop) ...[
+                _ModeCard(
+                  title: l10n.gettingMessagesAlwaysOn,
+                  tag: l10n.gettingMessagesMostPrivate,
+                  body: l10n.gettingMessagesMessagesArriveInstantlyNothing,
+                  on: mode == DeliveryMode.always,
+                  onTap: () => _pick(DeliveryMode.always),
+                ),
+                _ModeCard(
+                  title: l10n.gettingMessagesCheckIns,
+                  tag: l10n.gettingMessagesLightest,
+                  body: l10n.gettingMessagesKryfoLooksForMessages,
+                  on: mode == DeliveryMode.checkins,
+                  onTap: () => _pick(DeliveryMode.checkins),
+                ),
+                // always there, greyed until onion and our relay allow it
+                _ModeCard(
+                  title: l10n.deliveryModeThroughAHelperApp,
+                  body: l10n.gettingMessagesHelperBody,
+                  on: mode == DeliveryMode.helper,
+                  wait: helperWait,
+                  checking: checking,
+                  // a pill says what the tap does: move the route, or set up
+                  action: mode == DeliveryMode.helper
+                      ? null
+                      : helperWait == null
+                      ? l10n.gettingMessagesHelperSetUp
+                      : onOnion
+                      ? null
+                      : l10n.gettingMessagesHelperUseOnion,
+                  onTap: helperWait == null
+                      ? () => _pick(DeliveryMode.helper)
+                      : onOnion
+                      ? null
+                      : _toOnion,
+                ),
+              ],
               Padding(
                 padding: const EdgeInsets.fromLTRB(22, 4, 22, 0),
                 child: Row(
@@ -450,44 +460,50 @@ class _NotificationsScreenState extends State<NotificationsScreen>
               ),
               // each mode's note grows in and folds away, so the page never
               // jumps under a finger
-              _note(
-                l10n.gettingMessagesWhenThePhoneSits,
-                open: mode == DeliveryMode.checkins,
-              ),
-              // some registration the relay keeps refusing: a plain line,
-              // the check-ins carry those chats meanwhile
-              _note(
-                l10n.gettingMessagesHelperRefused,
-                open: mode == DeliveryMode.helper && appState.helperRefused,
-              ),
-              _note(
-                l10n.notificationsGoogleRefused,
-                open: mode == DeliveryMode.google && appState.helperRefused,
-              ),
-              _note(
-                l10n.gettingMessagesHelperNote,
-                open: mode == DeliveryMode.helper,
-              ),
-              _note(
-                l10n.notificationsGoogleNote,
-                open: mode == DeliveryMode.google,
-              ),
-              const SizedBox(height: 10),
-              _section(l10n.notificationsSoundAndVibration),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                child: HaloGroup(
-                  children: [
-                    HaloRow(
-                      key: const ValueKey('soundRow'),
-                      icon: Icons.volume_up_outlined,
-                      label: l10n.notificationsChannelName,
-                      hint: l10n.notificationsSoundHint,
-                      onTap: _openSound,
-                    ),
-                  ],
+              if (onDesktop && desktopRun != null)
+                DeskRunSection(run: desktopRun!),
+              if (!onDesktop) ...[
+                _note(
+                  l10n.gettingMessagesWhenThePhoneSits,
+                  open: mode == DeliveryMode.checkins,
                 ),
-              ),
+                // some registration the relay keeps refusing: a plain line,
+                // the check-ins carry those chats meanwhile
+                _note(
+                  l10n.gettingMessagesHelperRefused,
+                  open: mode == DeliveryMode.helper && appState.helperRefused,
+                ),
+                _note(
+                  l10n.notificationsGoogleRefused,
+                  open: mode == DeliveryMode.google && appState.helperRefused,
+                ),
+                _note(
+                  l10n.gettingMessagesHelperNote,
+                  open: mode == DeliveryMode.helper,
+                ),
+                _note(
+                  l10n.notificationsGoogleNote,
+                  open: mode == DeliveryMode.google,
+                ),
+              ],
+              const SizedBox(height: 10),
+              // android's channel page: a computer's sound is its own
+              if (!onDesktop) _section(l10n.notificationsSoundAndVibration),
+              if (!onDesktop)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                  child: HaloGroup(
+                    children: [
+                      HaloRow(
+                        key: const ValueKey('soundRow'),
+                        icon: Icons.volume_up_outlined,
+                        label: l10n.notificationsChannelName,
+                        hint: l10n.notificationsSoundHint,
+                        onTap: _openSound,
+                      ),
+                    ],
+                  ),
+                ),
               _section(l10n.gettingMessagesWhatShows),
               // what they say is chosen in one place, with the icon: this
               // row goes there
@@ -525,37 +541,38 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   ),
                 ),
               ),
-              _section(l10n.notificationsBatteryTips),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                child: HaloGroup(
-                  children: [
-                    HaloRow(
-                      key: const ValueKey('batteryRow'),
-                      icon: Icons.battery_saver,
-                      label: l10n.settingsRunInBackground,
-                      hint: l10n.settingsSoMessagesArrive,
-                      value: _exempt == null
-                          ? null
-                          : _exempt!
-                          ? l10n.notificationsBatteryAllowed
-                          : l10n.notificationsBatteryNotYet,
-                      onTap: () async {
-                        await askBatteryExemption(context);
-                        _readBattery();
-                      },
-                    ),
-                    if (guide != null)
+              if (!onDesktop) _section(l10n.notificationsBatteryTips),
+              if (!onDesktop)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                  child: HaloGroup(
+                    children: [
                       HaloRow(
-                        key: const ValueKey('makerRow'),
-                        icon: Icons.phone_android_outlined,
-                        label: l10n.notificationsMakerSwitch,
-                        hint: guide.title,
-                        onTap: () => showMakerGuide(context),
+                        key: const ValueKey('batteryRow'),
+                        icon: Icons.battery_saver,
+                        label: l10n.settingsRunInBackground,
+                        hint: l10n.settingsSoMessagesArrive,
+                        value: _exempt == null
+                            ? null
+                            : _exempt!
+                            ? l10n.notificationsBatteryAllowed
+                            : l10n.notificationsBatteryNotYet,
+                        onTap: () async {
+                          await askBatteryExemption(context);
+                          _readBattery();
+                        },
                       ),
-                  ],
+                      if (guide != null)
+                        HaloRow(
+                          key: const ValueKey('makerRow'),
+                          icon: Icons.phone_android_outlined,
+                          label: l10n.notificationsMakerSwitch,
+                          hint: guide.title,
+                          onTap: () => showMakerGuide(context),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
             ]),
           ),
         ),

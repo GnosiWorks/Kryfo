@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import '../app_icon.dart';
 import '../battery_brand.dart' show PhoneBrand, brandOf;
 import '../drafts.dart' show restartKeepingDrafts;
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../l10n/l10n.dart';
 import '../lock_guard.dart' show LockGuard, lockGuard;
 import '../lock_state.dart';
@@ -255,7 +256,9 @@ class _IconScreenState extends State<IconScreen> {
         elevation: 0,
         leading: BackButton(color: HaloColors.text2),
         title: Text(
-          l10n.settingsIconAndNotifications,
+          onDesktop
+              ? l10n.settingsNotifications
+              : l10n.settingsIconAndNotifications,
           style: HaloType.pageTitle(),
         ),
       ),
@@ -273,52 +276,62 @@ class _IconScreenState extends State<IconScreen> {
           ),
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _HomePreview(face: _shown),
-            HaloSection(l10n.iconSectionTitle),
-            _FaceGrid(picked: _shown, known: _now != null, onPick: _pick),
-            Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(6, 12, 6, 0),
-              child: AnimatedSwitcher(
-                duration: still
-                    ? Duration.zero
-                    : const Duration(milliseconds: 200),
-                child: Text(
-                  _shown == AppFace.kryfo ? l10n.iconHintKryfo : l10n.iconHint,
-                  key: ValueKey(_shown == AppFace.kryfo),
-                  style: HaloType.sans(
-                    size: 12.5,
-                    color: HaloColors.text2,
-                    height: 1.4,
-                  ),
-                ),
-              ),
-            ),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: PressScale(
-                onTap: _whatChanges,
-                scale: 0.96,
-                label: l10n.iconWhatChanges,
-                child: Padding(
-                  // a full finger's height, though the words are small
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 14,
-                  ),
+            // a computer has no launcher icon or name to disguise: only
+            // what notifications show
+            if (!onDesktop) ...[
+              _HomePreview(face: _shown),
+              HaloSection(l10n.iconSectionTitle),
+              _FaceGrid(picked: _shown, known: _now != null, onPick: _pick),
+              Padding(
+                padding: const EdgeInsetsDirectional.fromSTEB(6, 12, 6, 0),
+                child: AnimatedSwitcher(
+                  duration: still
+                      ? Duration.zero
+                      : const Duration(milliseconds: 200),
                   child: Text(
-                    l10n.iconWhatChanges,
+                    _shown == AppFace.kryfo
+                        ? l10n.iconHintKryfo
+                        : l10n.iconHint,
+                    key: ValueKey(_shown == AppFace.kryfo),
                     style: HaloType.sans(
-                      size: 13,
-                      weight: FontWeight.w600,
-                      color: HaloColors.amberText,
+                      size: 12.5,
+                      color: HaloColors.text2,
+                      height: 1.4,
                     ),
                   ),
                 ),
               ),
-            ),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: PressScale(
+                  onTap: _whatChanges,
+                  scale: 0.96,
+                  label: l10n.iconWhatChanges,
+                  child: Padding(
+                    // a full finger's height, though the words are small
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 14,
+                    ),
+                    child: Text(
+                      l10n.iconWhatChanges,
+                      style: HaloType.sans(
+                        size: 13,
+                        weight: FontWeight.w600,
+                        color: HaloColors.amberText,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
             KeyedSubtree(
               key: _notifKey,
-              child: HaloSection(l10n.settingsNotifications),
+              child: HaloSection(
+                onDesktop
+                    ? l10n.gettingMessagesWhatShows
+                    : l10n.settingsNotifications,
+              ),
             ),
             _ShowChoices(
               show: show,
