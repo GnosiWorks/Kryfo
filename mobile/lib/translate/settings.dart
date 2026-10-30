@@ -105,7 +105,8 @@ abstract class TranslateStore {
   Future<void> setBarHidden(String chatId, bool hidden);
   // the chat's kept translations by message uid
   Future<Map<String, KeptTranslation>> kept(String chatId);
-  Future<void> keep(String chatId, String uid, KeptTranslation t);
+  // [words] are only checked against the message, never stored
+  Future<void> keep(String chatId, String uid, KeptTranslation t, String words);
   Future<void> unkeep(String chatId, String uid);
 }
 
@@ -135,8 +136,12 @@ class MemoryTranslateStore implements TranslateStore {
     ...?keptRows[chatId],
   };
   @override
-  Future<void> keep(String chatId, String uid, KeptTranslation t) async =>
-      (keptRows[chatId] ??= {})[uid] = t;
+  Future<void> keep(
+    String chatId,
+    String uid,
+    KeptTranslation t,
+    String words,
+  ) async => (keptRows[chatId] ??= {})[uid] = t;
   @override
   Future<void> unkeep(String chatId, String uid) async =>
       keptRows[chatId]?.remove(uid);
@@ -152,44 +157,64 @@ class DbTranslateStore implements TranslateStore {
   DbTranslateStore(this.db, {Future<Database> Function(String)? chatDb})
     : chatDb = chatDb ?? ((_) => db());
 
+  // the setup, once per open database
+  static final _made = Expando<Future<void>>();
+
   static Future<Database> _ready(Database d) async {
-    await d.execute('''
-      CREATE TABLE IF NOT EXISTS translate_prefs (
-        k TEXT PRIMARY KEY,
-        v TEXT NOT NULL
-      )
-    ''');
-    await d.execute(
-      'CREATE TRIGGER IF NOT EXISTS translate_prefs_follow AFTER DELETE ON '
-      "contacts BEGIN DELETE FROM translate_prefs WHERE k IN ('chat:' || "
-      "old.halo_id, 'bar:' || old.halo_id); END",
-    );
-    await d.execute('''
-      CREATE TABLE IF NOT EXISTS translate_kept (
-        uid TEXT PRIMARY KEY,
-        chat TEXT NOT NULL,
-        src TEXT NOT NULL,
-        way TEXT NOT NULL,
-        body TEXT NOT NULL
-      )
-    ''');
-    await d.execute(
-      'CREATE INDEX IF NOT EXISTS translate_kept_chat ON translate_kept(chat)',
-    );
-    await d.execute(
-      'CREATE TRIGGER IF NOT EXISTS translate_kept_gone AFTER DELETE ON '
-      'messages BEGIN DELETE FROM translate_kept WHERE uid = old.msg_uid; END',
-    );
-    await d.execute(
-      'CREATE TRIGGER IF NOT EXISTS translate_kept_edited AFTER UPDATE OF '
-      'plaintext ON messages WHEN old.plaintext IS NOT new.plaintext BEGIN '
-      'DELETE FROM translate_kept WHERE uid = old.msg_uid; END',
-    );
-    await d.execute(
-      'CREATE TRIGGER IF NOT EXISTS translate_kept_follow AFTER DELETE ON '
-      'contacts BEGIN DELETE FROM translate_kept WHERE chat = old.halo_id; END',
-    );
+    final f = _made[d] ??= _make(d);
+    try {
+      await f;
+    } catch (_) {
+      _made[d] = null;
+      rethrow;
+    }
     return d;
+  }
+
+  // the tables and their triggers in one go: a table without its triggers
+  // would outlive what it belongs to
+  static Future<void> _make(Database d) async {
+    final b = d.batch()
+      ..execute('''
+        CREATE TABLE IF NOT EXISTS translate_prefs (
+          k TEXT PRIMARY KEY,
+          v TEXT NOT NULL
+        )
+      ''')
+      ..execute(
+        'CREATE TRIGGER IF NOT EXISTS translate_prefs_follow AFTER DELETE ON '
+        "contacts BEGIN DELETE FROM translate_prefs WHERE k IN ('chat:' || "
+        "old.halo_id, 'bar:' || old.halo_id); END",
+      )
+      ..execute('''
+        CREATE TABLE IF NOT EXISTS translate_kept (
+          uid TEXT PRIMARY KEY,
+          chat TEXT NOT NULL,
+          src TEXT NOT NULL,
+          way TEXT NOT NULL,
+          body TEXT NOT NULL
+        )
+      ''')
+      ..execute(
+        'CREATE INDEX IF NOT EXISTS translate_kept_chat ON '
+        'translate_kept(chat)',
+      )
+      ..execute(
+        'CREATE TRIGGER IF NOT EXISTS translate_kept_gone AFTER DELETE ON '
+        'messages BEGIN DELETE FROM translate_kept WHERE uid = old.msg_uid; '
+        'END',
+      )
+      ..execute(
+        'CREATE TRIGGER IF NOT EXISTS translate_kept_edited AFTER UPDATE OF '
+        'plaintext ON messages WHEN old.plaintext IS NOT new.plaintext BEGIN '
+        'DELETE FROM translate_kept WHERE uid = old.msg_uid; END',
+      )
+      ..execute(
+        'CREATE TRIGGER IF NOT EXISTS translate_kept_follow AFTER DELETE ON '
+        'contacts BEGIN DELETE FROM translate_kept WHERE chat = old.halo_id; '
+        'END',
+      );
+    await b.commit(noResult: true);
   }
 
   static Future<String?> _get(Database d, String k) async {
@@ -265,15 +290,21 @@ class DbTranslateStore implements TranslateStore {
     };
   }
 
-  // only for a message the chat's database holds, so its trigger takes it
+  // only for a message the chat's database holds with these very words, so
+  // its triggers take it and an edit made meanwhile leaves nothing
   @override
-  Future<void> keep(String chatId, String uid, KeptTranslation t) async {
+  Future<void> keep(
+    String chatId,
+    String uid,
+    KeptTranslation t,
+    String words,
+  ) async {
     final d = await _ready(await chatDb(chatId));
     await d.rawInsert(
       'INSERT OR REPLACE INTO translate_kept (uid, chat, src, way, body) '
       'SELECT ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM messages WHERE '
-      'msg_uid = ?)',
-      [uid, chatId, t.src, t.way, t.text, uid],
+      'msg_uid = ? AND plaintext = ?)',
+      [uid, chatId, t.src, t.way, t.text, uid, words],
     );
   }
 

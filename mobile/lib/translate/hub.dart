@@ -304,9 +304,14 @@ class TranslationHub extends ChangeNotifier {
     }
   }
 
-  Future<void> keep(String chatId, String uid, KeptTranslation t) async {
+  Future<void> keep(
+    String chatId,
+    String uid,
+    KeptTranslation t,
+    String words,
+  ) async {
     try {
-      await store.keep(chatId, uid, t);
+      await store.keep(chatId, uid, t, words);
     } catch (_) {}
   }
 

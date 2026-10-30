@@ -72,13 +72,14 @@ class ChatTranslation extends ChangeNotifier {
   bool _keptRead = false;
   bool _keptReading = false;
 
+  // none while translation is off: nothing would show them
   Future<void> _readKept() async {
-    if (_keptReading || hub.locked) return;
+    if (_keptReading || hub.locked || !hub.on) return;
     _keptReading = true;
     final w = hub.wipes;
     final k = await hub.kept(chatId);
     _keptReading = false;
-    if (_gone || hub.wipes != w || hub.locked) return;
+    if (_gone || hub.wipes != w || hub.locked || !hub.on) return;
     // one made while it was read is newer
     _kept = {...k, ..._kept};
     _keptRead = true;
@@ -387,7 +388,7 @@ class ChatTranslation extends ChangeNotifier {
             out,
           );
           _kept[key] = k;
-          unawaited(hub.keep(chatId, key, k));
+          unawaited(hub.keep(chatId, key, k, text));
         }
       }
       return null;

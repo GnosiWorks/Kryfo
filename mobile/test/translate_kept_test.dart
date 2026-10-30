@@ -50,8 +50,8 @@ void main() {
   test('kept and read back by chat', () async {
     final db = await dbWith([('heron', 'u1', _zh), ('wren', 'u2', _zh)]);
     final store = DbTranslateStore(() async => db);
-    await store.keep('heron', 'u1', _k(_zh, _en));
-    await store.keep('wren', 'u2', _k(_zh, 'other'));
+    await store.keep('heron', 'u1', _k(_zh, _en), _zh);
+    await store.keep('wren', 'u2', _k(_zh, 'other'), _zh);
     final got = await store.kept('heron');
     expect(got.keys, ['u1']);
     expect(got['u1']!.text, _en);
@@ -65,15 +65,15 @@ void main() {
   test('nothing is kept for a message the database does not hold', () async {
     final db = await dbWith([('heron', 'u1', _zh)]);
     final store = DbTranslateStore(() async => db);
-    await store.keep('heron', 'nope', _k(_zh, _en));
+    await store.keep('heron', 'nope', _k(_zh, _en), _zh);
     expect(await store.kept('heron'), isEmpty);
   }, skip: skip);
 
   test('gone with its message, however it is deleted', () async {
     final db = await dbWith([('heron', 'u1', _zh), ('heron', 'u2', _zh)]);
     final store = DbTranslateStore(() async => db);
-    await store.keep('heron', 'u1', _k(_zh, _en));
-    await store.keep('heron', 'u2', _k(_zh, _en));
+    await store.keep('heron', 'u1', _k(_zh, _en), _zh);
+    await store.keep('heron', 'u2', _k(_zh, _en), _zh);
     await db.delete('messages', where: 'msg_uid = ?', whereArgs: ['u1']);
     expect((await store.kept('heron')).keys, ['u2']);
   }, skip: skip);
@@ -81,7 +81,7 @@ void main() {
   test('gone when its words are edited', () async {
     final db = await dbWith([('heron', 'u1', _zh)]);
     final store = DbTranslateStore(() async => db);
-    await store.keep('heron', 'u1', _k(_zh, _en));
+    await store.keep('heron', 'u1', _k(_zh, _en), _zh);
     // a change that leaves the words is not an edit
     await db.update('messages', {'delivered': 1});
     expect((await store.kept('heron')).keys, ['u1']);
@@ -92,8 +92,8 @@ void main() {
   test('gone with the chat and with the contact', () async {
     final db = await dbWith([('heron', 'u1', _zh), ('wren', 'u2', _zh)]);
     final store = DbTranslateStore(() async => db);
-    await store.keep('heron', 'u1', _k(_zh, _en));
-    await store.keep('wren', 'u2', _k(_zh, _en));
+    await store.keep('heron', 'u1', _k(_zh, _en), _zh);
+    await store.keep('wren', 'u2', _k(_zh, _en), _zh);
     // a chat deleted with its contact row kept
     await forgetChatTranslate(() async => db, 'heron');
     expect(await store.kept('heron'), isEmpty);
@@ -111,7 +111,7 @@ void main() {
       () async => primary,
       chatDb: (id) async => id == 'wren' && open ? vault : primary,
     );
-    await store.keep('wren', 'v1', _k(_zh, _en));
+    await store.keep('wren', 'v1', _k(_zh, _en), _zh);
     expect((await store.kept('wren')).keys, ['v1']);
     expect(await DbTranslateStore(() async => primary).kept('wren'), isEmpty);
     // the vault shut: the everyday side has nothing of it
@@ -122,13 +122,58 @@ void main() {
   test('a copy that leaves the phone carries none, and still works', () async {
     final db = await dbWith([('heron', 'u1', _zh), ('heron', 'u2', _zh)]);
     final store = DbTranslateStore(() async => db);
-    await store.keep('heron', 'u1', _k(_zh, _en));
+    await store.keep('heron', 'u1', _k(_zh, _en), _zh);
     await tidyCopy(db);
     expect(await db.query('translate_kept'), isEmpty);
     // its triggers still find their table: deletes and edits go through
     await db.delete('messages', where: 'msg_uid = ?', whereArgs: ['u1']);
     await db.update('messages', {'plaintext': 'x'});
     expect(await db.query('messages'), hasLength(1));
+  }, skip: skip);
+
+  test('an edit landing while it was made leaves nothing kept', () async {
+    final db = await dbWith([('heron', 'u1', '我们后天在车站见吧')]);
+    final store = DbTranslateStore(() async => db);
+    // made from the words before the edit, kept after it
+    await store.keep('heron', 'u1', _k(_zh, _en), _zh);
+    expect(await store.kept('heron'), isEmpty);
+    // the words are only checked, never written
+    expect(
+      (await db.query('translate_kept')).any((r) => r.values.contains(_zh)),
+      isFalse,
+    );
+  }, skip: skip);
+
+  test('the tables are set up once per open database', () async {
+    final db = await dbWith([('heron', 'u1', _zh)]);
+    final store = DbTranslateStore(() async => db);
+    await store.keep('heron', 'u1', _k(_zh, _en), _zh);
+    await db.execute('DROP INDEX translate_kept_chat');
+    await store.kept('heron');
+    await store.unkeep('heron', 'u1');
+    final idx = await db.rawQuery(
+      "SELECT 1 FROM sqlite_master WHERE name = 'translate_kept_chat'",
+    );
+    expect(idx, isEmpty);
+  }, skip: skip);
+
+  test('the table comes with its triggers or not at all', () async {
+    // a database with no messages table: a trigger cannot be made
+    final db = SqliteMem.open()!;
+    await db.execute(
+      'CREATE TABLE contacts (halo_id TEXT PRIMARY KEY, onion TEXT)',
+    );
+    final store = DbTranslateStore(() async => db);
+    await expectLater(store.kept('heron'), throwsA(anything));
+    final made = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE name LIKE 'translate_%'",
+    );
+    expect(made, isEmpty);
+    // and it is tried again, not remembered as done
+    await db.execute(
+      'CREATE TABLE messages (msg_uid TEXT, plaintext TEXT, peer_id TEXT)',
+    );
+    expect(await store.kept('heron'), isEmpty);
   }, skip: skip);
 
   group('in a chat', () {
@@ -244,5 +289,32 @@ void main() {
         expect(c.of('u1', _zh).text, _en);
       },
     );
+
+    test('translation off: kept ones are not read', () async {
+      final store = _Reads(const TranslateSettings(on: false));
+      final f = fakeHub(installed: true, words: {_zh: _en}, store: store);
+      await f.hub.ready();
+      store.keptRows['heron'] = {'u1': _k(_zh, _en)};
+      final c = ChatTranslation(f.hub, 'heron');
+      addTearDown(c.dispose);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      f.hub.lockedOut();
+      f.hub.unlocked();
+      await Future<void>.delayed(Duration.zero);
+      expect(store.reads, 0);
+      expect(c.of('u1', _zh).text, isNull);
+    });
   });
+}
+
+// counts the reads of kept translations
+class _Reads extends MemoryTranslateStore {
+  _Reads(super.settings);
+  int reads = 0;
+  @override
+  Future<Map<String, KeptTranslation>> kept(String chatId) {
+    reads++;
+    return super.kept(chatId);
+  }
 }
