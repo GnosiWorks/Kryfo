@@ -125,6 +125,7 @@ import 'screens/restore_screen.dart' show RestoreScreen;
 import 'pin_gate.dart';
 import 'widgets/pins.dart' show kMaxPins;
 import 'push_mode.dart';
+import 'quiet_wait.dart';
 import 'intro_prefs.dart';
 import 'scam_prefs.dart';
 import 'scam_shield.dart';

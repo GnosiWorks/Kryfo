@@ -135,6 +135,11 @@ _Tables _everyday() => {
   'peer_identities': [
     for (final id in [_v, _h, _m, _x]) {'address': id, 'identity_key': 'k-$id'},
   ],
+  // a pq restart row names the peer and their key
+  'pq_restarts': [
+    for (final id in [_v, _h, _m])
+      {'ident': 0, 'peer': id, 'key': 'k-$id', 'pq_at': 5},
+  ],
   ..._devAnon(),
 };
 
@@ -727,6 +732,11 @@ void main() {
       expect(carried['vault_inbox'], isEmpty);
       expect([for (final r in carried['sessions']!) r['address']], [_v]);
       expect([for (final r in carried['peer_identities']!) r['address']], [_v]);
+      expect([for (final r in carried['pq_restarts']!) r['peer']], [_v]);
+      // no key of anyone the vault holds, anywhere in the copy
+      for (final id in [_h, _m, _x]) {
+        expect(jsonEncode(carried), isNot(contains('k-$id')), reason: id);
+      }
       // everyday rows as they were, H's key for the visible group too
       expect(_uids(carried), {'v0'});
       expect(carried['contacts']!.length, 2);

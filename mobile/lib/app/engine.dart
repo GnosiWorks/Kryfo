@@ -520,6 +520,32 @@ class HaloEngine {
   Future<String> handleCheck(String h) =>
       _ffiOnIsolate('HaloHandleCheck', [h], wait: registryWait);
 
+  // the decoy's read-only lookups, on a lane of their own whose socks name
+  // is made again for every decoy session (engine/quiet.go)
+  Future<String> decoyHandleCheck(String h) =>
+      _ffiOnIsolate('HaloDecoyHandleCheck', [h], wait: registryWait);
+
+  Future<String> decoyTorGetJson(String url) => _ffiOnIsolate(
+    'HaloDecoyTorGetJSON',
+    [url],
+    wait: const Duration(seconds: 80),
+    what: 'tor',
+  );
+
+  Future<String> decoyTorPost(String url, String body) => _ffiOnIsolate(
+    'HaloDecoyTorPost',
+    [url, body],
+    wait: const Duration(seconds: 80),
+    what: 'tor',
+  );
+
+  late final CStrFnDart _decoyLaneNew = _lib.lookupFunction<CStrFn, CStrFnDart>(
+    'HaloDecoyLaneNew',
+  );
+
+  /// a decoy session opens: its lookups go under a new socks name
+  void decoyLaneNew() => engineTake(_decoyLaneNew());
+
   Future<String> handleClaim(String h, String invite, String bio) =>
       _ffiOnIsolate('HaloHandleClaim', [h, invite, bio], wait: registryWait);
 
