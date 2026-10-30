@@ -722,13 +722,15 @@ class SignalSession {
   /// prekeys unspent. nothing about the peer is written until the message
   /// has opened, so there is nothing to put back after one that does not
   /// [moved] is told when the key it opened under replaced another held
-  /// for [peer]
+  /// for [peer]. [opened] is told, once it opened and was stored, the
+  /// remote identity libsignal's decrypt returned and the record it left
   Future<Uint8List> open(
     String peer,
     int type,
     Uint8List body, {
     void Function(Uint8List plain)? check,
     void Function()? moved,
+    void Function(Uint8List remote, Uint8List record)? opened,
   }) => serial(peer, () async {
     final held = await sessionStore.load(peer);
     final pinned = identityStore.pinnedFor(peer);
@@ -745,6 +747,7 @@ class SignalSession {
       if (await identityStore.saw(peer, o.identityKey)) moved?.call();
       await sessionStore.store(peer, _pqFloor(peer, held, o.record));
       _answered(peer);
+      opened?.call(o.identityKey, o.record);
       return o.plaintext;
     }
     final info = lib.preKeyMessageInfo(body);
@@ -777,6 +780,7 @@ class SignalSession {
         check,
         holder.$2,
         keep: peer == kFirstContactSlot,
+        opened: opened,
       );
     }
     final pk = info.preKeyId;
@@ -810,6 +814,7 @@ class SignalSession {
         check,
         await identityStore.getIdentity(peer) ??
             lib.sessionInfo(held).remoteIdentity,
+        opened: opened,
       );
     }
     if (!known) _requirePq(o.record);
@@ -849,6 +854,7 @@ class SignalSession {
     if (!known && held != null && peer != kFirstContactSlot) {
       onNewSession?.call(peer);
     }
+    opened?.call(o.identityKey, o.record);
     return o.plaintext;
   });
 
@@ -959,6 +965,7 @@ class SignalSession {
     void Function(Uint8List plain)? check,
     Uint8List? owner, {
     bool keep = false,
+    void Function(Uint8List remote, Uint8List record)? opened,
   }) async {
     final pk = info.preKeyId;
     final kyberId = info.kyberPreKeyId!;
@@ -1009,6 +1016,7 @@ class SignalSession {
       }
     });
     dlog('signal: an opener of a held session read on its own');
+    opened?.call(o.identityKey, o.record);
     return o.plaintext;
   }
 

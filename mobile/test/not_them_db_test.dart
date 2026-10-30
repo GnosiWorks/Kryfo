@@ -172,7 +172,11 @@ void main() {
         r['name'] as String,
     ];
     for (final t in tables) {
-      if (_apart.contains(t) || t.startsWith('dev_') || t.contains('fts')) {
+      // my own linked devices have uids of their own, never a message's
+      if (_apart.contains(t) ||
+          t.startsWith('dev_') ||
+          t.startsWith('own_device') ||
+          t.contains('fts')) {
         continue;
       }
       final cols = await raw.rawQuery("PRAGMA table_info('$t')");

@@ -359,6 +359,7 @@ class HaloDb
         await wallpaperTable(db);
         await draftsTable(db);
         await photoTables(db);
+        await deviceTables(db, addColumn);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
@@ -920,8 +921,13 @@ class HaloDb
           // (invites.dart)
           await inviteTables(db);
         }
-        // 95 is linked step 7's. the pq restart of held chats, and the
-        // one-time invites an opener went to (pq_restart.dart, 3c)
+        if (oldV < 95) {
+          // linked devices: lists, proofs, quiet devices, the pool and
+          // what the later steps keep (devices/device_store.dart)
+          await deviceTables(db, addColumn);
+        }
+        // the pq restart of held chats, and the one-time invites an
+        // opener went to (pq_restart.dart, 3c)
         if (oldV < 96) {
           await pqRestartTables(db, upgrade: true);
         }
@@ -949,6 +955,13 @@ class HaloDb
       await rosterTableAtOpen(_db!);
     } catch (e) {
       dlog('roster invite: table not made (${e.runtimeType})');
+    }
+    // a file that took a later number without them (a build of another
+    // branch) still gets them
+    try {
+      await deviceTablesAtOpen(_db!, addColumn);
+    } catch (e) {
+      dlog('devices: tables not made (${e.runtimeType})');
     }
     // retired while it was opening
     if (_retired) {
