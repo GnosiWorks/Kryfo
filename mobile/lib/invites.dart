@@ -6,7 +6,7 @@
 // developer's main invite never expires (DECIDED 2026-10-28)
 
 import 'dart:convert';
-import 'dart:math' show Random;
+import 'dart:math' show Random, max, min;
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart' show sha256;
@@ -288,6 +288,7 @@ Future<InviteRow> makeInvite(
     ss.ident,
     idHex,
     (sk) => !fcPkOf(sk).startsWith('error'),
+    at: now,
   );
   final fc = _unhex(fcPkOf(sk));
   final keys = roster
@@ -756,7 +757,14 @@ Future<InviteUpkeep> resetMainInvite(
 // 11 step 4 ran: a main v4 invite was made once. kept in the store's
 // meta, which every later migration and the phone's own backup keep
 String _mainMadeKey(int ident) =>
-    ident == kMainIdent ? 'kin4_main_made' : 'i$ident:kin4_main_made';
+    ident == kMainIdent ? kMainMadeKey : 'i$ident:$kMainMadeKey';
+
+/// the store's meta key of when its main identity's first main invite was
+/// made (11 step 4)
+const kMainMadeKey = 'kin4_main_made';
+
+/// the decoy store's meta key of when its identity says it was made (R17)
+const kDecoyBornKey = 'decoy_born';
 
 Future<bool> _mainMade(DatabaseExecutor db, int ident) async => (await db.query(
   'signal_meta',
@@ -782,6 +790,84 @@ Future<void> _noteMainMade(DatabaseExecutor db, int ident, int at) => db.insert(
   {'k': _mainMadeKey(ident), 'v': '$at'},
   conflictAlgorithm: ConflictAlgorithm.ignore,
 );
+
+const _hourMs = 3600 * 1000;
+
+// a point in [lo, hi], uniform
+int _between(Random r, int lo, int hi) =>
+    hi <= lo ? hi : lo + (r.nextDouble() * (hi - lo)).floor();
+
+/// the decoy's main invite (identity v4 10, R17), made by the same code as
+/// the everyday one on the decoy's own store and never listened on. its
+/// times are the ones an everyday phone born at [bornMs] would show: the
+/// first one issued at a random point since then, though never before
+/// [v4SinceMs] (when this phone first ran v4) nor longer ago than a
+/// reissue; each later one at its predecessor's issue plus six months, as
+/// an always-on phone makes it, however late the app starts; one past its
+/// expiry and a day goes with its keys. [fresh] drops every main invite and
+/// makes one now, as a reset does. the current one
+Future<InviteRow> keepDecoyInvite(
+  Database db,
+  SignalSession ss, {
+  required String Function(Uint8List sk) fcPkOf,
+  required InviteFace face,
+  required int bornMs,
+  int? v4SinceMs,
+  bool fresh = false,
+  int? nowMs,
+  Random? random,
+}) async {
+  final r = random ?? Random.secure();
+  final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
+  const reissue = kMainReissueHours * _hourMs;
+  if (fresh) {
+    for (final m in await invitesOf(db, ss.ident, kind: kInviteMain)) {
+      await dropInvite(db, ss, m);
+    }
+  }
+  final live = [
+    for (final m in await invitesOf(db, ss.ident, kind: kInviteMain))
+      if (m.retiredAt == null) m,
+  ];
+  int? at;
+  if (live.isEmpty) {
+    final lo = [bornMs, v4SinceMs ?? now, now - reissue].reduce(max);
+    at = fresh ? now : _between(r, min(lo, now), now);
+  } else {
+    final last = live.last.issued * _hourMs;
+    if (now >= last + reissue) {
+      final due = last + ((now - last) ~/ reissue) * reissue;
+      at = min(now, due + r.nextInt(_hourMs));
+    }
+  }
+  if (at != null) {
+    await makeInvite(
+      db,
+      ss,
+      kind: kInviteMain,
+      fcPkOf: fcPkOf,
+      face: face,
+      nowMs: at,
+      random: r,
+    );
+    for (final m in live) {
+      await db.update(
+        'invites',
+        {'retired_at': at},
+        where: 'ident = ? AND id = ?',
+        whereArgs: [m.ident, m.id],
+      );
+    }
+    if (!await _mainMade(db, ss.ident)) await _noteMainMade(db, ss.ident, at);
+  }
+  final h = unixHours(now);
+  for (final m in await invitesOf(db, ss.ident)) {
+    if (m.usedAt != null || h > m.expires + kSkewHours) {
+      await dropInvite(db, ss, m);
+    }
+  }
+  return (await currentMainInvite(db, ss.ident))!;
+}
 
 /// why a reader turns an invite away (2.3, 3.4)
 enum InviteFault {

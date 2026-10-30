@@ -21,7 +21,10 @@ extension AppStateSession on AppState {
   /// what the own qr code shows: the main v4 invite without its bundle
   /// (288 bytes; a reader answers it with a hello), else the link
   Future<String> sessionInviteQr() async {
-    if (!sessionQuiet) {
+    if (sessionQuiet) {
+      final qr = _quiet?.qr;
+      if (qr != null) return qr;
+    } else {
       try {
         final qr = await myV4Invite(qr: true);
         if (qr != null) return qr;
@@ -106,8 +109,9 @@ extension AppStateSession on AppState {
   }
 
   // what the decoy's identity shows, from its own keys, with an invite on
-  // its own signal store. nothing here touches the engine's identity
-  Future<QuietIdentity?> _quietOf(HaloDb d) async {
+  // its own signal store. nothing here touches the engine's identity.
+  // [freshInvite]: its main invite made again now, as a reset does
+  Future<QuietIdentity?> _quietOf(HaloDb d, {bool freshInvite = false}) async {
     final raw = await d.open();
     final saved = await d.loadIdentity();
     // a restore made in the decoy leaves its onion key beside the database
@@ -151,15 +155,144 @@ extension AppStateSession on AppState {
     _zeroBytes(xb);
     final id = q['id'] as String;
     final onion = q['onion'] as String;
-    final bundle = await makePreKeyBundleB64(ss);
-    final fc = engine.quietFirstContactPk(x, 0);
+    String invite;
+    String? qr;
+    try {
+      final row = await _decoyInvite(
+        raw,
+        ss,
+        edPriv: saved['ed_priv']!,
+        edPub: q['ed_pub'] as String,
+        onion: onion,
+        fresh: freshInvite,
+      );
+      invite = inviteLink(row.link);
+      qr = inviteLink(row.qr!);
+    } catch (e) {
+      dlog('decoy: no v4 invite (${e.runtimeType})');
+      final bundle = await makePreKeyBundleB64(ss);
+      final fc = engine.quietFirstContactPk(x, 0);
+      invite = quietInviteUri(id, onion, bundle, fc);
+    }
     return QuietIdentity(
       id: id,
       edPub: q['ed_pub'] as String,
       xPub: q['x_pub'] as String,
       onion: onion,
-      invite: quietInviteUri(id, onion, bundle, fc),
+      invite: invite,
+      qr: qr,
     );
+  }
+
+  // the decoy's main v4 invite kept on its own store (identity v4 10, R17),
+  // signed with its own face key. read from the everyday side: only when
+  // this phone was set up and first ran v4, so its times fit the app's
+  Future<InviteRow> _decoyInvite(
+    Database raw,
+    SignalSession ss, {
+    required String edPriv,
+    required String edPub,
+    required String onion,
+    bool fresh = false,
+  }) async {
+    final onionKey = onionKeyOf(onion);
+    if (onionKey == null) throw StateError('no onion key');
+    final born = await _decoyBorn(raw);
+    final priv = _hexDecode(edPriv);
+    try {
+      return await keepDecoyInvite(
+        raw,
+        ss,
+        fcPkOf: _fcPkOfKey,
+        face: InviteFace(
+          onionKey: onionKey,
+          face: _hexDecode(edPub),
+          sign: (m) => Uint8List.fromList(ed.sign(ed.PrivateKey(priv), m)),
+        ),
+        bornMs: born,
+        v4SinceMs: await _everydayMeta(kMainMadeKey),
+        fresh: fresh,
+      );
+    } finally {
+      _zeroBytes(priv);
+    }
+  }
+
+  // when the decoy's identity says it was made (R17): once, a random point
+  // between when this phone was set up and the decoy's oldest message or
+  // its own making, then kept. its identity rows carry it
+  Future<int> _decoyBorn(Database raw) async {
+    final kept = await raw.query(
+      'signal_meta',
+      where: 'k = ?',
+      whereArgs: [kDecoyBornKey],
+      limit: 1,
+    );
+    final had = kept.isEmpty ? null : int.tryParse('${kept.first['v']}');
+    if (had != null) return had;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final oldest =
+        (await raw.rawQuery(
+              'SELECT MIN(sent_at) AS t FROM messages',
+            )).first['t']
+            as int?;
+    final hi = oldest == null ? now : min(now, oldest);
+    final set = await _everydaySetUp() ?? hi;
+    final lo = min(set, hi);
+    final born = lo + (Random.secure().nextDouble() * (hi - lo)).floor();
+    await raw.transaction((t) async {
+      await t.update('identity', {'created_at': born});
+      await t.update(
+        'identities',
+        {'created_at': born},
+        where: 'id = ?',
+        whereArgs: [kMainIdent],
+      );
+      await t.insert('signal_meta', {
+        'k': kDecoyBornKey,
+        'v': '$born',
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    });
+    return born;
+  }
+
+  // when the everyday identity was made on this phone, null unread
+  Future<int?> _everydaySetUp() async {
+    try {
+      final r = await (await live.open()).query(
+        'identity',
+        columns: ['created_at'],
+        limit: 1,
+      );
+      return r.isEmpty ? null : r.first['created_at'] as int?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // a value of the everyday signal store's meta as a number, null unread
+  Future<int?> _everydayMeta(String k) async {
+    try {
+      final r = await (await live.open()).query(
+        'signal_meta',
+        where: 'k = ?',
+        whereArgs: [k],
+        limit: 1,
+      );
+      return r.isEmpty ? null : int.tryParse('${r.first['v']}');
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // "reset my invite link" in the decoy: its own invite made again now
+  Future<void> _resetDecoyInvite() async {
+    final d = _decoyDb;
+    if (d == null) return;
+    final q = await _quietOf(d, freshInvite: true);
+    if (q == null) return;
+    _decoyId = q;
+    if (sessionQuiet) _quiet = q;
   }
 
   // from the everyday session: a decoy that exists gets the new pin on its

@@ -31,6 +31,8 @@ void main() {
       'lib/screens/pair_code_screen.dart': 1,
       'lib/widgets/pair_code_panel.dart': 1,
       'lib/gifs/gif_source.dart': 2,
+      'lib/app/links.dart': 1,
+      'lib/screens/search_screen.dart': 1,
     };
     for (final MapEntry(key: f, value: n) in sites.entries) {
       final src = File(f).readAsStringSync();

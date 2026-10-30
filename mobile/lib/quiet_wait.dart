@@ -7,6 +7,11 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 
 final _rand = Random.secure();
 
+/// a decoy looks up as the real app does: @names, people search and pair
+/// code joins go out read-only over the same tor. what would register the
+/// decoy anywhere (a claim, a shared code) still answers as unreachable
+const kDecoyLooksUp = true;
+
 // two to eight seconds
 @visibleForTesting
 Duration Function() quietWait = () =>
