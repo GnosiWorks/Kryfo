@@ -533,6 +533,7 @@ class TorSheet extends StatelessWidget {
                 status: v.graphStatus,
                 bootstrapPct: v.pct,
                 hold: v.graph,
+                carries: v.graphCarries,
               ),
               const SizedBox(height: 16),
               Semantics(

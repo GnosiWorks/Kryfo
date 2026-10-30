@@ -53,6 +53,8 @@ class TransportScreen extends StatelessWidget {
           final sx = shown.secsSinceSend;
           final uploads = tx['hsdir_uploads'] as int? ?? 0;
           final pubFor = tx['publishing_secs'] as int? ?? -1;
+          // a bounce zeroes the uploads, but this tor's onion stays up
+          final published = tx['published_once'] == true;
           // the engine's own words for how tor gets out: codes, never a
           // line or an address. a decoy sees automatic and the phase
           final bs = appState.bridgeStatus;
@@ -148,11 +150,13 @@ class TransportScreen extends StatelessWidget {
 
                         uploads > 0
                             ? l10n.transportYes(whole(uploads))
+                            : published
+                            ? l10n.commonYes
                             : pubFor > 0
                             ? l10n.transportTryingS(whole(pubFor))
                             : l10n.transportNotYet,
 
-                        uploads > 0
+                        uploads > 0 || published
                             ? HaloColors.greenText
                             : HaloColors.roseText,
                       ),

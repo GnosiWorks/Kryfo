@@ -643,11 +643,8 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bağlı · 3 aktarıcı üzerinden yönlendiriliyor';
 
   @override
-  String get appReadyToSendPublishing =>
-      'Göndermeye hazır · adresin yayımlanıyor';
-
-  @override
-  String get appReadyToSendFinishing => 'Göndermeye hazır · kurulum bitiyor';
+  String get appReadyToChatAddressFinishing =>
+      'Sohbete hazır · adresin hazırlanıyor';
 
   @override
   String appConnecting(Object pct) {
@@ -6407,6 +6404,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get motionYouReAnonymous => 'Anonimsin';
 
   @override
+  String get motionReadyToChat => 'Sohbete hazır';
+
+  @override
   String get motionTorIsStartingIn =>
       'Tor arka planda başlıyor. Bağlantı kuruldukça bu grafik yanar.';
 
@@ -6425,6 +6425,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get motionYourIpIsHidden =>
       'IP adresin gizli. Sana yalnızca Kryfo’nu bilenler ulaşabilir.';
+
+  @override
+  String get motionAddressFinishing =>
+      'Mesajlar zaten Tor üzerinden gidiyor. Özel adresin arka planda hazırlanıyor.';
 
   @override
   String get motionBuilding2 => 'kuruluyor';
@@ -10070,4 +10074,199 @@ class AppLocalizationsTr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done / $total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'bir dakikadan az kaldı';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'yaklaşık $n dk kaldı';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'yaklaşık $n sa kaldı';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'Gönderiliyor · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'Alınıyor · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'Gönderiliyor ve alınıyor · $detail';
+  }
+
+  @override
+  String get transferPause => 'Duraklat';
+
+  @override
+  String get transferPauseDownload => 'İndirmeyi duraklat';
+
+  @override
+  String get transferDownload => 'İndir';
+
+  @override
+  String get transferResume => 'Sürdür';
+
+  @override
+  String get transferOnWifi => 'Wi-Fi’da iner';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'Duraklatıldı · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'İndirmek için dokun';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'Dosya aktarımı';
+
+  @override
+  String get transferChannel => 'Dosya aktarımları';
+
+  @override
+  String get transferChannelLine =>
+      'Dosyalar gönderilirken veya inerken görünür. Hiçbir sohbetin ya da dosyanın adını vermez.';
+
+  @override
+  String get autoGetTitle => 'Otomatik indirme';
+
+  @override
+  String get autoGetLine =>
+      'Dosyalar burada seçtiğin gibi dokunmadan gelir. Bekleyen bir dosya senin için dosya sunucusunda kalır, en fazla bir hafta.';
+
+  @override
+  String get autoGetPhotos => 'Fotoğraflar';
+
+  @override
+  String get autoGetVideos => 'Videolar';
+
+  @override
+  String get autoGetFiles => 'Dosyalar';
+
+  @override
+  String get autoGetAlways => 'Wi-Fi ve mobil veride';
+
+  @override
+  String get autoGetWifi => 'Yalnızca Wi-Fi’da';
+
+  @override
+  String get autoGetNever => 'Asla, indirmek için dokunurum';
+
+  @override
+  String get autoGetVoice => 'Sesli mesajlar her zaman iner.';
+
+  @override
+  String get settingsFiles => 'Dosyalar';
+
+  @override
+  String get fileSheetOpenWith => 'Başka bir uygulamayla aç';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Kryfo\'nun bu bilgisayarda tuttuğu her şey şifreli. Kullanıcı hesabınla açılır.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Parola ifadesi ekle';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'O olmadan, kullanıcı hesabını kullanan herkes Kryfo\'yu açabilir.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo anahtarını bu bilgisayarın anahtarlığında tutamadı. Bunun yerine bir parola ifadesi ekle.';
+
+  @override
+  String get desktopKeyMissing =>
+      'Bu kullanıcı hesabında Kryfo\'nun verilerinin anahtarı yok. Bir Kryfo yedeği her şeyi geri getirir. Kryfo\'nun klasörünü taşıdıysan, geldiği kullanıcı hesabında bir parola ifadesi ekle, sonra klasörü yeniden kopyala.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo şu anda bu bilgisayardaki anahtarına ulaşamıyor. Bilgisayarın isterse anahtarlığının kilidini aç, sonra yeniden dene.';
+
+  @override
+  String get desktopPassRow => 'Bu bilgisayardaki parola ifadesi';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo kullanıcı hesabınla açılır.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo her açılışta bu parola ifadesini sorar.';
+
+  @override
+  String get desktopPassChange => 'Parola ifadesini değiştir';
+
+  @override
+  String get desktopPassRemove => 'Parola ifadesini kaldır';
+
+  @override
+  String get desktopPassCurrent => 'Şu anki parola ifadesi';
+
+  @override
+  String get desktopPassNew => 'Yeni parola ifadesi';
+
+  @override
+  String get desktopPassStays =>
+      'Bu bilgisayarda Kryfo\'nun kullanabileceği bir anahtarlık yok, bu yüzden parola ifadesi kalıyor.';
+
+  @override
+  String get desktopPassAdded => 'Parola ifadesi eklendi';
+
+  @override
+  String get desktopPassRemoved => 'Parola ifadesi kaldırıldı';
+
+  @override
+  String get desktopPassChanged => 'Parola ifadesi değiştirildi';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Kaldırmak için parola ifadeni yaz. Ardından Kryfo kullanıcı hesabınla açılır.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo şu anda bu bilgisayarın güvenlik çipindeki anahtarına ulaşamıyor. Biraz sonra yeniden dene.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo anahtarını Windows hesabında tutamadı. Bunun yerine bir parola ifadesi ekle.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo anahtarını Windows hesabında tutamadı, bu yüzden parola ifadesi kalıyor.';
+
+  @override
+  String get desktopBackupCardTitle => 'Bir Kryfo yedeği tut';
+
+  @override
+  String get desktopBackupCardLine =>
+      'Bu bilgisayardaki Windows hesabın Kryfo\'nun anahtarını tutuyor. Bilgisayar ya da hesap bir gün sıfırlanırsa, bir Kryfo yedeği her şeyi geri getirir.';
+
+  @override
+  String get desktopBackupHint =>
+      'Bu bilgisayar bir gün sıfırlanırsa her şeyi geri getirir.';
 }

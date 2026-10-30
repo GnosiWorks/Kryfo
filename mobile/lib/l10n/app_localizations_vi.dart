@@ -633,12 +633,8 @@ class AppLocalizationsVi extends AppLocalizations {
       'Đã kết nối · định tuyến qua 3 relay';
 
   @override
-  String get appReadyToSendPublishing =>
-      'Sẵn sàng gửi · đang công bố địa chỉ của bạn';
-
-  @override
-  String get appReadyToSendFinishing =>
-      'Sẵn sàng gửi · đang hoàn tất thiết lập';
+  String get appReadyToChatAddressFinishing =>
+      'Sẵn sàng trò chuyện · địa chỉ đang hoàn tất';
 
   @override
   String appConnecting(Object pct) {
@@ -6372,6 +6368,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get motionYouReAnonymous => 'Bạn đang ẩn danh';
 
   @override
+  String get motionReadyToChat => 'Sẵn sàng trò chuyện';
+
+  @override
   String get motionTorIsStartingIn =>
       'Tor đang khởi động ở chế độ nền. Biểu đồ này sẽ sáng lên khi kết nối hình thành.';
 
@@ -6390,6 +6389,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get motionYourIpIsHidden =>
       'IP của bạn được ẩn. Chỉ những người có Kryfo của bạn mới liên lạc được với bạn.';
+
+  @override
+  String get motionAddressFinishing =>
+      'Tin nhắn đã có thể đi qua Tor. Địa chỉ riêng của bạn đang hoàn tất ở chế độ nền.';
 
   @override
   String get motionBuilding2 => 'đang dựng';
@@ -10032,4 +10035,200 @@ class AppLocalizationsVi extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done trên $total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'còn chưa đến một phút';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'còn khoảng $n phút';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'còn khoảng $n giờ';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'Đang gửi · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'Đang nhận · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'Đang gửi và nhận · $detail';
+  }
+
+  @override
+  String get transferPause => 'Tạm dừng';
+
+  @override
+  String get transferPauseDownload => 'Tạm dừng tải xuống';
+
+  @override
+  String get transferDownload => 'Tải xuống';
+
+  @override
+  String get transferResume => 'Tiếp tục';
+
+  @override
+  String get transferOnWifi => 'Tải qua Wi-Fi';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'Đã tạm dừng · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'Chạm để tải xuống';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'Truyền tệp';
+
+  @override
+  String get transferChannel => 'Truyền tệp';
+
+  @override
+  String get transferChannelLine =>
+      'Hiện khi tệp đang gửi hoặc tải xuống. Không bao giờ nêu tên cuộc trò chuyện hay tệp.';
+
+  @override
+  String get autoGetTitle => 'Tự động tải xuống';
+
+  @override
+  String get autoGetLine =>
+      'Tệp đến mà không cần chạm, theo lựa chọn ở đây. Tệp đang chờ được giữ cho bạn trên máy chủ tệp, tối đa một tuần.';
+
+  @override
+  String get autoGetPhotos => 'Ảnh';
+
+  @override
+  String get autoGetVideos => 'Video';
+
+  @override
+  String get autoGetFiles => 'Tệp';
+
+  @override
+  String get autoGetAlways => 'Qua Wi-Fi và dữ liệu di động';
+
+  @override
+  String get autoGetWifi => 'Chỉ qua Wi-Fi';
+
+  @override
+  String get autoGetNever => 'Không bao giờ, tôi chạm để tải';
+
+  @override
+  String get autoGetVoice => 'Tin nhắn thoại luôn được tải xuống.';
+
+  @override
+  String get settingsFiles => 'Tệp';
+
+  @override
+  String get fileSheetOpenWith => 'Mở bằng ứng dụng khác';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Mọi thứ Kryfo lưu trên máy tính này đều được mã hóa. Kryfo mở bằng tài khoản người dùng của bạn.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Thêm cụm mật khẩu';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'Không có nó, bất kỳ ai dùng tài khoản người dùng của bạn đều mở được Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo không lưu được khóa của mình vào chùm chìa khóa của máy tính này. Hãy thêm cụm mật khẩu thay vào đó.';
+
+  @override
+  String get desktopKeyMissing =>
+      'Tài khoản người dùng này không có khóa dữ liệu của Kryfo. Bản sao lưu Kryfo mang mọi thứ trở lại. Nếu bạn đã chuyển thư mục của Kryfo, hãy thêm cụm mật khẩu trên tài khoản người dùng nơi nó đến, rồi sao chép lại.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Lúc này Kryfo không lấy được khóa của mình trên máy tính này. Hãy mở khóa chùm chìa khóa nếu máy tính hỏi, rồi thử lại.';
+
+  @override
+  String get desktopPassRow => 'Cụm mật khẩu trên máy tính này';
+
+  @override
+  String get desktopPassOffBody =>
+      'Kryfo mở bằng tài khoản người dùng của bạn.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo hỏi cụm mật khẩu này mỗi lần khởi động.';
+
+  @override
+  String get desktopPassChange => 'Đổi cụm mật khẩu';
+
+  @override
+  String get desktopPassRemove => 'Gỡ cụm mật khẩu';
+
+  @override
+  String get desktopPassCurrent => 'Cụm mật khẩu hiện tại';
+
+  @override
+  String get desktopPassNew => 'Cụm mật khẩu mới';
+
+  @override
+  String get desktopPassStays =>
+      'Máy tính này không có chùm chìa khóa nào Kryfo dùng được, nên cụm mật khẩu vẫn giữ nguyên.';
+
+  @override
+  String get desktopPassAdded => 'Đã thêm cụm mật khẩu';
+
+  @override
+  String get desktopPassRemoved => 'Đã gỡ cụm mật khẩu';
+
+  @override
+  String get desktopPassChanged => 'Đã đổi cụm mật khẩu';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Nhập cụm mật khẩu để gỡ nó. Sau đó Kryfo sẽ mở bằng tài khoản người dùng của bạn.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Lúc này Kryfo không lấy được khóa của mình trong chip bảo mật của máy tính này. Hãy thử lại sau giây lát.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo không lưu được khóa của mình bằng tài khoản Windows của bạn. Hãy thêm cụm mật khẩu thay vào đó.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo không lưu được khóa của mình bằng tài khoản Windows của bạn, nên cụm mật khẩu vẫn giữ nguyên.';
+
+  @override
+  String get desktopBackupCardTitle => 'Giữ một bản sao lưu Kryfo';
+
+  @override
+  String get desktopBackupCardLine =>
+      'Tài khoản Windows của bạn trên máy tính này giữ khóa của Kryfo. Bản sao lưu Kryfo mang mọi thứ trở lại nếu có lúc máy tính hoặc tài khoản bị đặt lại.';
+
+  @override
+  String get desktopBackupHint =>
+      'Mang mọi thứ trở lại nếu có lúc máy tính này bị đặt lại.';
 }

@@ -270,6 +270,10 @@ extension AppStateBoot on AppState {
     // outbox drainer: anything the wire never confirmed gets re-sent for the
     // life of the app, whatever screen you're on and across restarts.
     startOutboxDrain();
+    // files moving show in the shade and keep the process up while they do
+    if (!onDesktop) TransferNote.instance.start();
+    // a chat opened now draws its waiting files as such
+    unawaited(_loadFileWaits());
     await _loadBridges();
     // drop week-old partial transfers nobody ever completed.
     unawaited(live.sweepMediaChunks());
@@ -311,7 +315,7 @@ extension AppStateBoot on AppState {
       _docsPath = docsDir.path;
     } else {
       _docsPath = docsDir.path;
-      _startListenerOnIsolate(docsDir.path).then((addr) {
+      startEngineIn(docsDir.path, engine.startListenerBg).then((addr) {
         if (addr.isNotEmpty && !addr.startsWith('error')) {
           myOnion = addr;
           _maybeRepoint();
@@ -338,7 +342,7 @@ extension AppStateBoot on AppState {
           DateTime.now().difference(torKickedAt).inSeconds > 45) {
         torKickedAt = DateTime.now();
         dlog('tor watchdog: tor off, restarting listener');
-        _startListenerOnIsolate(docsDir.path).then((addr) {
+        startEngineIn(docsDir.path, engine.startListenerBg).then((addr) {
           if (addr.isNotEmpty && !addr.startsWith('error')) {
             myOnion = addr;
             notifyListeners();

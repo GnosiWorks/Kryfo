@@ -659,12 +659,8 @@ class AppLocalizationsUk extends AppLocalizations {
       'Підключено · маршрут через 3 ретранслятори';
 
   @override
-  String get appReadyToSendPublishing =>
-      'Готово до надсилання · публікуємо твою адресу';
-
-  @override
-  String get appReadyToSendFinishing =>
-      'Готово до надсилання · завершуємо налаштування';
+  String get appReadyToChatAddressFinishing =>
+      'Можна спілкуватися · адреса майже готова';
 
   @override
   String appConnecting(Object pct) {
@@ -6509,6 +6505,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get motionYouReAnonymous => 'Анонімно';
 
   @override
+  String get motionReadyToChat => 'Можна спілкуватися';
+
+  @override
   String get motionTorIsStartingIn =>
       'Tor запускається у фоні. Цей граф засвічується, поки формується з’єднання.';
 
@@ -6527,6 +6526,10 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get motionYourIpIsHidden =>
       'Твою IP-адресу приховано. Зв’язатися з тобою можуть лише ті, хто має твій Kryfo.';
+
+  @override
+  String get motionAddressFinishing =>
+      'Повідомлення вже йдуть через Tor. Твоя приватна адреса налаштовується у фоні.';
 
   @override
   String get motionBuilding2 => 'будується';
@@ -10217,4 +10220,200 @@ class AppLocalizationsUk extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done з $total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'лишилося менше хвилини';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'лишилося близько $n хв';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'лишилося близько $n год';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'Надсилання · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'Отримання · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'Надсилання й отримання · $detail';
+  }
+
+  @override
+  String get transferPause => 'Пауза';
+
+  @override
+  String get transferPauseDownload => 'Призупинити завантаження';
+
+  @override
+  String get transferDownload => 'Завантажити';
+
+  @override
+  String get transferResume => 'Продовжити';
+
+  @override
+  String get transferOnWifi => 'Завантажиться через Wi-Fi';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'Пауза · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'Торкнися, щоб завантажити';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'Передавання файлів';
+
+  @override
+  String get transferChannel => 'Передавання файлів';
+
+  @override
+  String get transferChannelLine =>
+      'Видно, поки файли надсилаються чи завантажуються. Ніколи не називає чат або файл.';
+
+  @override
+  String get autoGetTitle => 'Автозавантаження';
+
+  @override
+  String get autoGetLine =>
+      'Файли приходять без дотику, як налаштовано тут. Файл, що чекає, лишається для тебе на файловому сервері, не довше тижня.';
+
+  @override
+  String get autoGetPhotos => 'Фото';
+
+  @override
+  String get autoGetVideos => 'Відео';
+
+  @override
+  String get autoGetFiles => 'Файли';
+
+  @override
+  String get autoGetAlways => 'Через Wi-Fi і мобільний інтернет';
+
+  @override
+  String get autoGetWifi => 'Лише через Wi-Fi';
+
+  @override
+  String get autoGetNever => 'Ніколи, завантажу дотиком';
+
+  @override
+  String get autoGetVoice => 'Голосові повідомлення завантажуються завжди.';
+
+  @override
+  String get settingsFiles => 'Файли';
+
+  @override
+  String get fileSheetOpenWith => 'Відкрити в іншому застосунку';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Усе, що Kryfo зберігає на цьому комп’ютері, зашифровано. Він відкривається з вашим обліковим записом.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Додати парольну фразу';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'Без неї будь-хто, хто користується вашим обліковим записом, може відкрити Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo не зміг зберегти свій ключ у в’язці ключів цього комп’ютера. Додайте натомість парольну фразу.';
+
+  @override
+  String get desktopKeyMissing =>
+      'Цей обліковий запис не має ключа до даних Kryfo. Резервна копія Kryfo поверне все. Якщо ви перенесли папку Kryfo, додайте парольну фразу в тому обліковому записі, звідки вона прийшла, і скопіюйте папку знову.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo зараз не може дістатися свого ключа на цьому комп’ютері. Розблокуйте в’язку ключів, якщо комп’ютер попросить, і спробуйте ще раз.';
+
+  @override
+  String get desktopPassRow => 'Парольна фраза на цьому комп’ютері';
+
+  @override
+  String get desktopPassOffBody =>
+      'Kryfo відкривається з вашим обліковим записом.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo питає цю парольну фразу під час кожного запуску.';
+
+  @override
+  String get desktopPassChange => 'Змінити парольну фразу';
+
+  @override
+  String get desktopPassRemove => 'Прибрати парольну фразу';
+
+  @override
+  String get desktopPassCurrent => 'Поточна парольна фраза';
+
+  @override
+  String get desktopPassNew => 'Нова парольна фраза';
+
+  @override
+  String get desktopPassStays =>
+      'На цьому комп’ютері немає в’язки ключів, яку Kryfo може використати, тому парольна фраза лишається.';
+
+  @override
+  String get desktopPassAdded => 'Парольну фразу додано';
+
+  @override
+  String get desktopPassRemoved => 'Парольну фразу прибрано';
+
+  @override
+  String get desktopPassChanged => 'Парольну фразу змінено';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Введіть парольну фразу, щоб прибрати її. Після цього Kryfo відкриватиметься з вашим обліковим записом.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo зараз не може дістатися свого ключа в чипі безпеки цього комп’ютера. Спробуйте ще раз за хвилину.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo не зміг зберегти свій ключ у вашому обліковому записі Windows. Додайте натомість парольну фразу.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo не зміг зберегти свій ключ у вашому обліковому записі Windows, тому парольна фраза лишається.';
+
+  @override
+  String get desktopBackupCardTitle => 'Тримайте резервну копію Kryfo';
+
+  @override
+  String get desktopBackupCardLine =>
+      'Ключ Kryfo зберігає ваш обліковий запис Windows на цьому комп’ютері. Резервна копія Kryfo поверне все, якщо комп’ютер або обліковий запис колись скинуть.';
+
+  @override
+  String get desktopBackupHint =>
+      'Поверне все, якщо цей комп’ютер колись скинуть.';
 }

@@ -56,6 +56,13 @@ extension AppStateSession on AppState {
   Future<_Shown> _shownOf(Session s) async {
     final (list, pending, dev) = await _contactsOf(s);
     final a = await secureStore.read(key: s.container.key('my_avatar'));
+    // the decoy's own note of the computer lock row, with its lists: the
+    // row then shows at once whatever was set there
+    if (s.primary.container.quiet && computerLock != null) {
+      computerLock?.decoyNoteRead(
+        await SqlRouterStore(s.primary.open).meta(kComputerDecoyNote),
+      );
+    }
     return _Shown(
       list,
       pending,
@@ -71,6 +78,7 @@ extension AppStateSession on AppState {
   }
 
   Future<void> _openContainers() async {
+    keepComputerDecoyNote = _keepDecoyNote;
     try {
       final listed = await listedContainers();
       await sweepContainers(listed, pinTable: await pinTableKept());
@@ -210,6 +218,7 @@ extension AppStateSession on AppState {
     if (sessionQuiet) return;
     await lockState.clearDecoyPins();
     decoyReady = false;
+    computerLock?.decoyNoteRead(null);
     final d = _decoyDb ?? HaloDb(HaloContainer.decoy);
     _decoyDb = null;
     _decoyId = null;
@@ -293,6 +302,8 @@ extension AppStateSession on AppState {
     _dropOpened();
     _session = Session(want);
     _quiet = decoy ? _decoyId : null;
+    // the transfer note reads quiet again: none over a decoy
+    TransferNote.instance.refresh();
     // what opened under the session before is opened again under this one.
     // a quiet session touches nothing of the everyday side's
     if (!sessionQuiet) unawaited(retryFirsts(all: true));
@@ -422,6 +433,7 @@ extension AppStateSession on AppState {
     _dropOpened();
     _session = s;
     _quiet = decoy ? _decoyId : null;
+    TransferNote.instance.refresh();
     if (!sessionQuiet) unawaited(retryFirsts(all: true));
     contacts = home.$1;
     pendingCount = home.$2;
@@ -466,6 +478,8 @@ extension AppStateSession on AppState {
   // after the reveal, off the clock
   Future<void> _vaultShown(HaloDb v) async {
     if (!identical(_openVault, v)) return;
+    // its chats draw their waiting files as such
+    unawaited(_loadFileWaits());
     try {
       // its timers that ran out while it was shut go now, and what waits
       // from someone blocked on the everyday side starts
@@ -521,6 +535,9 @@ extension AppStateSession on AppState {
     _session = Session(was.primary);
     lockState.inVault = false;
     _forgetVaultSide();
+    // its file on the way stops, and its waits go. the decoy's fetches
+    // nothing, and the everyday side is not read from it
+    if (everyday) _vaultFetchStops(v);
     // its contacts' photos off at once, before anything is drawn
     photoBook.put({
       for (final MapEntry(:key, :value) in photoBook.all.entries)
@@ -602,4 +619,11 @@ extension AppStateSession on AppState {
       await cancelWithRetry(() => _io.unnotify(p), 'vault shade');
     }
   }
+}
+
+// the decoy's note goes into the decoy's own database, never the vault:
+// written only while a decoy session is open
+Future<void> _keepDecoyNote(String note) async {
+  if (!sessionQuiet) return;
+  await SqlRouterStore(_session.primary.open).putMeta(kComputerDecoyNote, note);
 }

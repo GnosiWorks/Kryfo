@@ -640,11 +640,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Connected · routed through 3 relays';
 
   @override
-  String get appReadyToSendPublishing =>
-      'Ready to send · publishing your address';
-
-  @override
-  String get appReadyToSendFinishing => 'Ready to send · finishing setup';
+  String get appReadyToChatAddressFinishing =>
+      'Ready to chat · address finishing';
 
   @override
   String appConnecting(Object pct) {
@@ -6384,6 +6381,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get motionYouReAnonymous => 'You\'re anonymous';
 
   @override
+  String get motionReadyToChat => 'Ready to chat';
+
+  @override
   String get motionTorIsStartingIn =>
       'Tor is starting in the background. This graph lights up as the connection forms.';
 
@@ -6402,6 +6402,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get motionYourIpIsHidden =>
       'Your ip is hidden. Only people with your Kryfo can reach you.';
+
+  @override
+  String get motionAddressFinishing =>
+      'Messages already go out through Tor. Your private address finishes in the background.';
 
   @override
   String get motionBuilding2 => 'building';
@@ -10039,4 +10043,199 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done of $total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'less than a minute left';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'about $n min left';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'about $n h left';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'Sending · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'Receiving · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'Sending and receiving · $detail';
+  }
+
+  @override
+  String get transferPause => 'Pause';
+
+  @override
+  String get transferPauseDownload => 'Pause the download';
+
+  @override
+  String get transferDownload => 'Download';
+
+  @override
+  String get transferResume => 'Resume';
+
+  @override
+  String get transferOnWifi => 'Downloads on Wi-Fi';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'Paused · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'Tap to download';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'File transfer';
+
+  @override
+  String get transferChannel => 'File transfers';
+
+  @override
+  String get transferChannelLine =>
+      'Shows while files send or download. It never names a chat or a file.';
+
+  @override
+  String get autoGetTitle => 'Automatic download';
+
+  @override
+  String get autoGetLine =>
+      'Files come without a tap as set here. One that waits stays on the file server for you, a week at most.';
+
+  @override
+  String get autoGetPhotos => 'Photos';
+
+  @override
+  String get autoGetVideos => 'Videos';
+
+  @override
+  String get autoGetFiles => 'Files';
+
+  @override
+  String get autoGetAlways => 'On Wi-Fi and mobile data';
+
+  @override
+  String get autoGetWifi => 'On Wi-Fi only';
+
+  @override
+  String get autoGetNever => 'Never, I tap to download';
+
+  @override
+  String get autoGetVoice => 'Voice notes always download.';
+
+  @override
+  String get settingsFiles => 'Files';
+
+  @override
+  String get fileSheetOpenWith => 'Open with another app';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Everything Kryfo keeps on this computer is encrypted. It opens with your computer account.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Add a passphrase';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'Without it, anyone using your computer account can open Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo could not keep its key in this computer\'s keyring. Add a passphrase instead.';
+
+  @override
+  String get desktopKeyMissing =>
+      'This computer account does not have the key to Kryfo\'s data. A Kryfo backup brings everything back. If you moved Kryfo\'s folder, add a passphrase on the computer account it came from, then copy it again.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo cannot reach its key on this computer right now. Unlock your keyring if your computer asks, then try again.';
+
+  @override
+  String get desktopPassRow => 'Passphrase on this computer';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo opens with your computer account.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo asks for this passphrase every time it starts.';
+
+  @override
+  String get desktopPassChange => 'Change the passphrase';
+
+  @override
+  String get desktopPassRemove => 'Remove the passphrase';
+
+  @override
+  String get desktopPassCurrent => 'Current passphrase';
+
+  @override
+  String get desktopPassNew => 'New passphrase';
+
+  @override
+  String get desktopPassStays =>
+      'This computer has no keyring Kryfo can use, so the passphrase stays.';
+
+  @override
+  String get desktopPassAdded => 'Passphrase added';
+
+  @override
+  String get desktopPassRemoved => 'Passphrase removed';
+
+  @override
+  String get desktopPassChanged => 'Passphrase changed';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Type your passphrase to remove it. Kryfo then opens with your computer account.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo cannot reach its key in this computer\'s security chip right now. Try again in a moment.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo could not keep its key with your Windows account. Add a passphrase instead.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo could not keep its key with your Windows account, so the passphrase stays.';
+
+  @override
+  String get desktopBackupCardTitle => 'Keep a Kryfo backup';
+
+  @override
+  String get desktopBackupCardLine =>
+      'Your Windows account on this computer keeps Kryfo\'s key. A Kryfo backup brings everything back if the computer or the account is ever reset.';
+
+  @override
+  String get desktopBackupHint =>
+      'Brings everything back if this computer is ever reset.';
 }

@@ -47,12 +47,14 @@ import 'restore_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../notifications.dart';
 import '../delivery_mode.dart';
+import '../desktop/desktop_mode.dart' show computerLock;
 import 'notifications_screen.dart';
 import 'icon_screen.dart';
 import '../app_icon.dart' show AppFace, AppFaceWords, appFaceNow, readAppFace;
 import '../widgets/halo_rows.dart';
 import '../widgets/dev_avatar.dart' show DevRing;
 import 'dev_about_sheet.dart' show devChatOffered, writeToMarios;
+import 'auto_get_screen.dart';
 import 'follow_section.dart';
 import 'linked_devices_screen.dart';
 import '../devices/own_devices.dart' show kLinkedDevicesOn;
@@ -701,6 +703,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Navigator.of(context).push(haloRoute(const PinsScreen())),
                 ),
               ),
+              // the same row and page in a decoy session, which keeps
+              // what it changes to itself and never moves the real lock
+              if (computerLock case final lock?)
+                ListenableBuilder(
+                  listenable: Listenable.merge([lock, lockState]),
+                  builder: (_, _) {
+                    final decoy = lockState.inDecoy;
+                    return HaloRow(
+                      icon: Icons.key_rounded,
+                      label: l10n.desktopPassRow,
+                      value: lock.passphraseOn(decoy: decoy)
+                          ? l10n.commonOn
+                          : l10n.commonOff,
+                      onTap: () => Navigator.of(
+                        context,
+                      ).push(haloRoute(lock.page(decoy: decoy))),
+                    );
+                  },
+                ),
               // the icon and the notifications read the phone's values, in
               // any session
               ValueListenableBuilder<AppFace?>(
@@ -763,15 +784,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
-          HaloSection(l10n.settingsBackup),
+          HaloSection(l10n.settingsFiles),
           HaloGroup(
             children: [
               HaloRow(
-                icon: Icons.save_alt,
-                label: l10n.settingsBackUpIdentity,
-                value: l10n.settingsEncryptedFile,
-                onTap: () =>
-                    Navigator.of(context).push(haloRoute(const BackupScreen())),
+                icon: Icons.download_for_offline_outlined,
+                label: l10n.autoGetTitle,
+                onTap: () => Navigator.of(
+                  context,
+                ).push(haloRoute(const AutoGetScreen())),
+              ),
+            ],
+          ),
+          HaloSection(l10n.settingsBackup),
+          HaloGroup(
+            children: [
+              // windows without a passphrase: a backup is the way back if
+              // the computer's key goes
+              ListenableBuilder(
+                listenable: Listenable.merge([?computerLock, lockState]),
+                builder: (_, _) => HaloRow(
+                  icon: Icons.save_alt,
+                  label: l10n.settingsBackUpIdentity,
+                  value: l10n.settingsEncryptedFile,
+                  hint:
+                      computerLock?.backupWise(decoy: lockState.inDecoy) ??
+                          false
+                      ? l10n.desktopBackupHint
+                      : null,
+                  onTap: () => Navigator.of(
+                    context,
+                  ).push(haloRoute(const BackupScreen())),
+                ),
               ),
               HaloRow(
                 icon: Icons.restore,

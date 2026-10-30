@@ -188,6 +188,8 @@ type transportView struct {
 	InboxDepth   int         `json:"inbox_depth"`
 	Mode         string      `json:"mode"`
 	PublishingS  int         `json:"publishing_secs"`
+	// this tor published its onion; a bounce zeroes the uploads, not this
+	PublishedOnce bool `json:"published_once"`
 	// the control port. dials climbs when a socket had to be replaced,
 	// timeouts when tor stopped answering one. both flat is a healthy tor.
 	CtrlDials    int64 `json:"ctrl_dials"`
@@ -210,6 +212,7 @@ func transportSnapshot() transportView {
 	}
 	statusMu.RUnlock()
 	v.TorReady = torReadyNow()
+	v.PublishedOnce = publishedOnce.Load()
 	v.Mode = currentMode()
 	v.CtrlDials = ctrlDialCount()
 	v.CtrlTimeouts = ctrlTimeoutCount()

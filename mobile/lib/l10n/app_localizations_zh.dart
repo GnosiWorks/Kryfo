@@ -620,10 +620,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appConnectedRoutedThrough3 => '已连接 · 经 3 个中继转发';
 
   @override
-  String get appReadyToSendPublishing => '可以发送 · 正在发布你的地址';
-
-  @override
-  String get appReadyToSendFinishing => '可以发送 · 正在完成设置';
+  String get appReadyToChatAddressFinishing => '可以聊天了 · 地址即将就绪';
 
   @override
   String appConnecting(Object pct) {
@@ -6112,6 +6109,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get motionYouReAnonymous => '你是匿名的';
 
   @override
+  String get motionReadyToChat => '可以聊天了';
+
+  @override
   String get motionTorIsStartingIn => 'Tor 正在后台启动。连接建立时，这张图会逐渐亮起来。';
 
   @override
@@ -6125,6 +6125,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get motionYourIpIsHidden => '你的 IP 已隐藏。只有知道你 Kryfo 的人才能联系到你。';
+
+  @override
+  String get motionAddressFinishing => '消息已可通过 Tor 发送。你的私密地址正在后台完成设置。';
 
   @override
   String get motionBuilding2 => '构建中';
@@ -9559,6 +9562,192 @@ class AppLocalizationsZh extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done/$total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => '剩余不到一分钟';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return '剩余约 $n 分钟';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return '剩余约 $n 小时';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return '正在发送 · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return '正在接收 · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return '正在收发 · $detail';
+  }
+
+  @override
+  String get transferPause => '暂停';
+
+  @override
+  String get transferPauseDownload => '暂停下载';
+
+  @override
+  String get transferDownload => '下载';
+
+  @override
+  String get transferResume => '继续';
+
+  @override
+  String get transferOnWifi => '连接 Wi-Fi 时下载';
+
+  @override
+  String transferPausedAt(String detail) {
+    return '已暂停 · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => '点按下载';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => '文件传输';
+
+  @override
+  String get transferChannel => '文件传输';
+
+  @override
+  String get transferChannelLine => '在发送或下载文件时显示。绝不显示聊天或文件的名称。';
+
+  @override
+  String get autoGetTitle => '自动下载';
+
+  @override
+  String get autoGetLine => '文件会按这里的设置自动到达。等待中的文件会在文件服务器上为你保留，最多一周。';
+
+  @override
+  String get autoGetPhotos => '照片';
+
+  @override
+  String get autoGetVideos => '视频';
+
+  @override
+  String get autoGetFiles => '文件';
+
+  @override
+  String get autoGetAlways => 'Wi-Fi 和移动数据';
+
+  @override
+  String get autoGetWifi => '仅 Wi-Fi';
+
+  @override
+  String get autoGetNever => '从不，我点按下载';
+
+  @override
+  String get autoGetVoice => '语音消息总是会下载。';
+
+  @override
+  String get settingsFiles => '文件';
+
+  @override
+  String get fileSheetOpenWith => '用其他应用打开';
+
+  @override
+  String get desktopLockAccountBody => 'Kryfo 在这台电脑上保存的所有内容都已加密。它会用你的用户账户打开。';
+
+  @override
+  String get desktopLockAddPassphrase => '添加密码短语';
+
+  @override
+  String get desktopLockWithoutPassphrase => '没有它，任何使用你的用户账户的人都能打开 Kryfo。';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo 无法把它的密钥保存在这台电脑的密钥环中。请改为添加密码短语。';
+
+  @override
+  String get desktopKeyMissing =>
+      '这个用户账户没有 Kryfo 数据的密钥。Kryfo 备份能找回一切。如果你移动过 Kryfo 的文件夹，请在它原来的用户账户上添加密码短语，然后再复制一次。';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo 现在无法取得这台电脑上的密钥。如果电脑提示，请解锁你的密钥环，然后重试。';
+
+  @override
+  String get desktopPassRow => '这台电脑上的密码短语';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo 会用你的用户账户打开。';
+
+  @override
+  String get desktopPassOnBody => 'Kryfo 每次启动时都会询问这个密码短语。';
+
+  @override
+  String get desktopPassChange => '更改密码短语';
+
+  @override
+  String get desktopPassRemove => '移除密码短语';
+
+  @override
+  String get desktopPassCurrent => '当前密码短语';
+
+  @override
+  String get desktopPassNew => '新的密码短语';
+
+  @override
+  String get desktopPassStays => '这台电脑上没有 Kryfo 能用的密钥环，所以密码短语会保留。';
+
+  @override
+  String get desktopPassAdded => '已添加密码短语';
+
+  @override
+  String get desktopPassRemoved => '已移除密码短语';
+
+  @override
+  String get desktopPassChanged => '已更改密码短语';
+
+  @override
+  String get desktopPassRemoveBody => '输入你的密码短语来移除它。之后 Kryfo 会用你的用户账户打开。';
+
+  @override
+  String get desktopKeyUnreachableWindows => 'Kryfo 现在无法取得这台电脑安全芯片中的密钥。请稍后重试。';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo 无法用你的 Windows 账户保存它的密钥。请改为添加密码短语。';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo 无法用你的 Windows 账户保存它的密钥，所以密码短语会保留。';
+
+  @override
+  String get desktopBackupCardTitle => '留一份 Kryfo 备份';
+
+  @override
+  String get desktopBackupCardLine =>
+      '这台电脑上的 Windows 账户保管着 Kryfo 的密钥。如果电脑或账户被重置，Kryfo 备份能找回一切。';
+
+  @override
+  String get desktopBackupHint => '如果这台电脑被重置，它能找回一切。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -10177,10 +10366,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get appConnectedRoutedThrough3 => '已連線 · 經由 3 個中繼轉送';
 
   @override
-  String get appReadyToSendPublishing => '可以傳送 · 正在發布你的位址';
-
-  @override
-  String get appReadyToSendFinishing => '可以傳送 · 正在完成設定';
+  String get appReadyToChatAddressFinishing => '可以聊天了 · 位址即將就緒';
 
   @override
   String appConnecting(Object pct) {
@@ -15670,6 +15856,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get motionYouReAnonymous => '你已匿名';
 
   @override
+  String get motionReadyToChat => '可以聊天了';
+
+  @override
   String get motionTorIsStartingIn => 'Tor 正在背景啟動。連線建立時，這張圖會逐漸亮起來。';
 
   @override
@@ -15683,6 +15872,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get motionYourIpIsHidden => '你的 IP 已隱藏。只有拿到你 Kryfo 的人才能聯絡你。';
+
+  @override
+  String get motionAddressFinishing => '訊息已可透過 Tor 傳送。你的私密位址正在背景完成設定。';
 
   @override
   String get motionBuilding2 => '建立中';
@@ -18999,4 +19191,191 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
     );
     return '$_temp0';
   }
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done/$total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => '剩不到一分鐘';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return '剩約 $n 分鐘';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return '剩約 $n 小時';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return '傳送中 · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return '接收中 · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return '收發中 · $detail';
+  }
+
+  @override
+  String get transferPause => '暫停';
+
+  @override
+  String get transferPauseDownload => '暫停下載';
+
+  @override
+  String get transferDownload => '下載';
+
+  @override
+  String get transferResume => '繼續';
+
+  @override
+  String get transferOnWifi => '連上 Wi-Fi 時下載';
+
+  @override
+  String transferPausedAt(String detail) {
+    return '已暫停 · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => '輕觸即可下載';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => '檔案傳輸';
+
+  @override
+  String get transferChannel => '檔案傳輸';
+
+  @override
+  String get transferChannelLine => '在傳送或下載檔案時顯示。絕不顯示聊天或檔案的名稱。';
+
+  @override
+  String get autoGetTitle => '自動下載';
+
+  @override
+  String get autoGetLine => '檔案會依這裡的設定自動送達。等待中的檔案會在檔案伺服器上為你保留，最多一週。';
+
+  @override
+  String get autoGetPhotos => '照片';
+
+  @override
+  String get autoGetVideos => '影片';
+
+  @override
+  String get autoGetFiles => '檔案';
+
+  @override
+  String get autoGetAlways => 'Wi-Fi 和行動數據';
+
+  @override
+  String get autoGetWifi => '僅限 Wi-Fi';
+
+  @override
+  String get autoGetNever => '永不，我輕觸下載';
+
+  @override
+  String get autoGetVoice => '語音訊息一律會下載。';
+
+  @override
+  String get settingsFiles => '檔案';
+
+  @override
+  String get fileSheetOpenWith => '用其他 App 開啟';
+
+  @override
+  String get desktopLockAccountBody => 'Kryfo 在這台電腦上保存的所有內容都已加密。它會用你的使用者帳戶開啟。';
+
+  @override
+  String get desktopLockAddPassphrase => '新增密碼短語';
+
+  @override
+  String get desktopLockWithoutPassphrase => '沒有它，任何使用你的使用者帳戶的人都能開啟 Kryfo。';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo 無法把它的金鑰保存在這台電腦的鑰匙圈中。請改為新增密碼短語。';
+
+  @override
+  String get desktopKeyMissing =>
+      '這個使用者帳戶沒有 Kryfo 資料的金鑰。Kryfo 備份能找回一切。如果你移動過 Kryfo 的資料夾，請在它原本的使用者帳戶上新增密碼短語，然後再複製一次。';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo 現在無法取得這台電腦上的金鑰。如果電腦提示，請解鎖你的鑰匙圈，然後再試一次。';
+
+  @override
+  String get desktopPassRow => '這台電腦上的密碼短語';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo 會用你的使用者帳戶開啟。';
+
+  @override
+  String get desktopPassOnBody => 'Kryfo 每次啟動時都會詢問這個密碼短語。';
+
+  @override
+  String get desktopPassChange => '變更密碼短語';
+
+  @override
+  String get desktopPassRemove => '移除密碼短語';
+
+  @override
+  String get desktopPassCurrent => '目前的密碼短語';
+
+  @override
+  String get desktopPassNew => '新的密碼短語';
+
+  @override
+  String get desktopPassStays => '這台電腦上沒有 Kryfo 能用的鑰匙圈，所以密碼短語會保留。';
+
+  @override
+  String get desktopPassAdded => '已新增密碼短語';
+
+  @override
+  String get desktopPassRemoved => '已移除密碼短語';
+
+  @override
+  String get desktopPassChanged => '已變更密碼短語';
+
+  @override
+  String get desktopPassRemoveBody => '輸入你的密碼短語來移除它。之後 Kryfo 會用你的使用者帳戶開啟。';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo 現在無法取得這台電腦安全晶片中的金鑰。請稍後再試一次。';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo 無法用你的 Windows 帳戶保存它的金鑰。請改為新增密碼短語。';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo 無法用你的 Windows 帳戶保存它的金鑰，所以密碼短語會保留。';
+
+  @override
+  String get desktopBackupCardTitle => '留一份 Kryfo 備份';
+
+  @override
+  String get desktopBackupCardLine =>
+      '這台電腦上的 Windows 帳戶保管著 Kryfo 的金鑰。如果電腦或帳戶被重設，Kryfo 備份能找回一切。';
+
+  @override
+  String get desktopBackupHint => '如果這台電腦被重設，它能找回一切。';
 }

@@ -14,6 +14,7 @@ import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/open_file.dart';
 import 'package:kryfo/widgets/photo_viewer.dart' show PhotoViewer;
+import 'package:kryfo/widgets/file_sheet.dart';
 import 'package:kryfo/widgets/video_bubble.dart' show openReceivedFile;
 
 import 'source_body.dart';
@@ -45,7 +46,11 @@ void main() {
         });
   });
 
+  // the file sheet answers open, as a tap on its first line
+  setUp(() => fileSheetPickForTest = () => FileSheetPick.open);
+
   tearDown(() {
+    fileSheetPickForTest = null;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(const MethodChannel('halo/platform'), null);
     tmp.deleteSync(recursive: true);
@@ -257,6 +262,25 @@ void main() {
     expect(methods(), contains('openFile'));
     expect(methods(), isNot(contains('shareFile')));
     expect(methods(), contains('saveDocument'));
+    await t.pump(const Duration(seconds: 10));
+  });
+
+  testWidgets('the sheet\'s save and share go where they say', (t) async {
+    final f = File('${tmp.path}/in_kl_plan.pdf')
+      ..writeAsBytesSync('%PDF-1.7\n'.codeUnits);
+    fileSheetPickForTest = () => FileSheetPick.save;
+    await tap(t, f.path, 'plan.pdf');
+    expect(methods(), contains('saveDocument'));
+    expect(methods(), isNot(contains('openFile')));
+    asked.clear();
+    fileSheetPickForTest = () => FileSheetPick.share;
+    await tap(t, f.path, 'plan.pdf');
+    expect(methods(), ['shareFile']);
+    asked.clear();
+    // closed with no pick: nothing leaves
+    fileSheetPickForTest = () => null;
+    await tap(t, f.path, 'plan.pdf');
+    expect(methods(), isEmpty);
     await t.pump(const Duration(seconds: 10));
   });
 

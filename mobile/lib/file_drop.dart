@@ -313,6 +313,14 @@ const kFetchHave = 1;
 const kFetchGone = 2;
 // filed, only the got still to say
 const kFetchFiled = 3;
+// the message is filed before its file: it waits for a tap or for wi-fi,
+// it is on its way, or the person paused it
+const kFetchAsks = 4;
+const kFetchComing = 5;
+const kFetchPaused = 6;
+
+/// its message is filed already, the file still to come
+bool fetchFiledFirst(int state) => state >= kFetchAsks;
 
 /// a file fetched for the service's week at most: past it, it is not there
 const kFetchKeptFor = Duration(days: 7);
@@ -420,6 +428,7 @@ Future<bool> noteFetch(
   required int size,
   required String path,
   required int now,
+  int state = kFetchWaiting,
 }) async {
   if (await fetchOf(db, uid) != null) return false;
   await db.insert('file_fetches', {
@@ -430,6 +439,7 @@ Future<bool> noteFetch(
     'back_pair': backPair ? 1 : 0,
     'size': size,
     'path': path,
+    'state': state,
     'at': now,
   }, conflictAlgorithm: ConflictAlgorithm.ignore);
   return true;
@@ -454,6 +464,16 @@ Future<List<DropFetch>> dueFetches(Database db, int now) async {
     where: 'next_at < ?',
     whereArgs: [now + 1],
     orderBy: 'at',
+  );
+  return [for (final x in r) DropFetch.fromRow(x)];
+}
+
+/// the fetches whose messages are filed already
+Future<List<DropFetch>> filedFetches(Database db) async {
+  final r = await db.query(
+    'file_fetches',
+    where: 'state >= ?',
+    whereArgs: [kFetchAsks],
   );
   return [for (final x in r) DropFetch.fromRow(x)];
 }

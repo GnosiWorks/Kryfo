@@ -70,6 +70,8 @@ import '../outbox.dart' show powFits;
 import '../theme.dart';
 import '../link_view.dart' show sendReadsBlocked;
 import '../media_progress.dart';
+import '../transfers.dart' show fileWaitOf, fileWaits;
+import '../widgets/file_wait.dart';
 import '../msg_order.dart';
 import '../widgets/earlier_chip.dart';
 import '../media_send.dart'
@@ -513,16 +515,16 @@ void _openFullImage(
 // an album full screen from its tile [at]: what is here of it, in its
 // order. one marked item keeps the whole viewer protected
 void _openAlbumAt(BuildContext context, List<_Msg?> shown, int at) {
+  // one still to come has nothing to show yet
+  String? here(_Msg? x) => x == null || fileWaitOf(x.msgUid) != null
+      ? null
+      : x.mediaPath ?? x.filePath;
   final items = <AlbumItem>[
     for (final x in shown)
-      if (x != null && (x.mediaPath ?? x.filePath) != null)
-        AlbumItem(
-          (x.mediaPath ?? x.filePath)!,
-          video: x.mediaPath == null,
-          fileName: x.fileName,
-        ),
+      if (here(x) case final p?)
+        AlbumItem(p, video: x!.mediaPath == null, fileName: x.fileName),
   ];
-  final paths = [for (final x in shown) x?.mediaPath ?? x?.filePath];
+  final paths = [for (final x in shown) here(x)];
   final start = albumOpenAt(paths, at);
   if (start == null) return;
   openAlbum(
@@ -1318,6 +1320,7 @@ class _ChatScreenState extends State<ChatScreen>
     _loadShots();
     appState.addListener(_onAppStateChanged);
     mediaSendsTick.addListener(_mediaSendsMoved);
+    fileWaits.addListener(_waitsMoved);
     lockState.addListener(_lockLifted);
     claimChat(widget.peerHaloId);
     (_openChats[widget.peerHaloId] ??= []).add(this);
@@ -1734,6 +1737,16 @@ class _ChatScreenState extends State<ChatScreen>
   // rows seen held by a send this screen did not start
   final Set<String> _seenGoing = {};
   Timer? _followTimer;
+
+  // the files still to come: a bubble draws a card or its file by them, so
+  // one read after the chat was drawn draws again. a ring moving does not
+  Set<String> _waitUids = fileWaits.value.keys.toSet();
+  void _waitsMoved() {
+    final now = fileWaits.value.keys.toSet();
+    if (setEquals(now, _waitUids)) return;
+    _waitUids = now;
+    if (mounted) setState(() {});
+  }
 
   // a beat after the tick, so a send that just let go has written its row
   void _mediaSendsMoved() {
@@ -5521,6 +5534,7 @@ class _ChatScreenState extends State<ChatScreen>
     lockState.removeListener(_lockLifted);
     appState.removeListener(_onAppStateChanged);
     mediaSendsTick.removeListener(_mediaSendsMoved);
+    fileWaits.removeListener(_waitsMoved);
     _followTimer?.cancel();
     wallpaperRevision.removeListener(_loadWall);
     _devOpening
@@ -6839,6 +6853,7 @@ class _ChatScreenState extends State<ChatScreen>
             ),
             IncomingMediaBanner(
               chatKey: _memo,
+              onPause: appState.pauseDownload,
               onCancel: (uid) {
                 for (final m in _messages) {
                   if (m.msgUid == uid) {
@@ -8278,7 +8293,24 @@ class _Bubble extends StatelessWidget {
                                           ),
                                         ),
                                       ),
-                                    if (album case final run?)
+                                    // here before its file: a card that
+                                    // brings it, in place of the file
+                                    if (album == null &&
+                                        !isOut &&
+                                        fileWaitOf(msg.msgUid) != null)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 2,
+                                        ),
+                                        child: FileWaitOr(
+                                          uid: msg.msgUid,
+                                          fileName: msg.fileName,
+                                          onGet: appState.downloadNow,
+                                          onPause: appState.pauseDownload,
+                                          child: () => const SizedBox.shrink(),
+                                        ),
+                                      )
+                                    else if (album case final run?)
                                       _grid(
                                         context,
                                         run,
@@ -8369,7 +8401,10 @@ class _Bubble extends StatelessWidget {
                                           ),
                                         ),
                                       ),
-                                    if (album == null && msg.mediaPath != null)
+                                    if (album == null &&
+                                        msg.mediaPath != null &&
+                                        (isOut ||
+                                            fileWaitOf(msg.msgUid) == null))
                                       PressScale(
                                         scale: 0.97,
                                         haptic: false,
@@ -8893,6 +8928,8 @@ class _Bubble extends StatelessWidget {
         onAct?.call();
         _openAlbumAt(context, shown, i);
       },
+      onGet: appState.downloadNow,
+      onPause: appState.pauseDownload,
       onLongPress: hold == null ? null : (i) => hold(context, i),
     );
   }
@@ -8902,6 +8939,9 @@ class _Bubble extends StatelessWidget {
     video: x.mediaPath == null && x.filePath != null,
     lost: !x.preparing && x.mediaPath == null && x.filePath == null,
     sendingUid: x.direction == 'out' && x.sending ? x.msgUid : null,
+    waitUid: x.direction == 'in' && fileWaitOf(x.msgUid) != null
+        ? x.msgUid
+        : null,
   );
 
   TextStyle _quoteStyle(bool isOut) => HaloType.sans(

@@ -20,7 +20,6 @@ FINISH_ARGS = {
     "--socket=fallback-x11",
     "--share=ipc",
     "--device=dri",
-    "--talk-name=org.freedesktop.secrets",
 }
 
 failed = False
