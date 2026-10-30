@@ -423,6 +423,12 @@ extension AppStateHeal on AppState {
       }
       _healBuiltAt[peer] = now;
       _healPending.remove(peer);
+      // a classic chat a heal moved to pq: the restart is done, and its 15
+      // days begin, so the upkeep sends no KDB1 for it
+      final info = await ss.sessionInfo(peer);
+      if (info != null && info.archived.any((s) => s.version < 4)) {
+        await notePqOver(peer, nowMs: now);
+      }
       dlog('heal: session rebuilt for $peer (restored=${heal.restored})');
       await _noteHealed(on, peer, restored: heal.restored, at: now);
       // the answer first: the opener their heal kyber opens

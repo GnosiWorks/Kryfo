@@ -876,10 +876,27 @@ class SignalSession {
   // the peer never heard of. the state [held] had in front goes back, as
   // it was, the classic one behind it. a record with no pq state (every
   // chat with a 0.5.x phone) is kept as it opened
+  //
+  // and a restore's floor: a late text of theirs sealed before their heal
+  // opens on the state the file brought, and libsignal would put it in
+  // front again, so the next seal would wait for another heal. the state
+  // the heal built stays in front
   Uint8List _pqFloor(String peer, Uint8List? held, Uint8List opened) {
     final now = lib.sessionInfo(opened);
     final cur = now.current;
     if (cur == null) return opened;
+    if (held != null && _restored.isNotEmpty) {
+      final back = _baseOf(cur);
+      final was = lib.sessionInfo(held).current;
+      final wasBase = was == null ? null : _baseOf(was);
+      if (back != null &&
+          _restored.contains(back) &&
+          wasBase != null &&
+          !_restored.contains(wasBase)) {
+        dlog('signal: a text on the restored state, the healed one kept');
+        return lib.sessionPromote(opened, held);
+      }
+    }
     if (cur.version >= 4) {
       if (now.archived.any((s) => s.version < 4)) onPqOver?.call(peer);
       return opened;

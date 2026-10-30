@@ -518,6 +518,32 @@ void main() {
     expect(await _atPeer(p, await _toPeer(p, 'b7 second 10')), 'b7 second 10');
   });
 
+  test(
+    'a late text of theirs from before the heal opens after its answer, '
+    'and the healed state stays in front: nothing waits, no second heal',
+    () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      await app.subscribeKnown();
+      final file = backUp(p);
+      // theirs after the file, read by the phone the file came from: a move
+      expect(await _atMe(p, await _fromPeer(p, 'gone')), 'gone');
+      await restore(p, file);
+      // sealed on their old state, still on its way when they take the heal
+      final late = await _fromPeer(p, 'late');
+      await app.askAfreshForTest();
+      await healed(p);
+      expect(await signalSession.sealsOnRestored(p.name), isFalse);
+      expect(await _atMe(p, late), 'late');
+      expect(await signalSession.sealsOnRestored(p.name), isFalse);
+      final next = await _toPeer(p, 'next');
+      expect(base64Decode(next).first, kLsWhisper);
+      expect(await _atPeer(p, next), 'next');
+      expect(healsTo(p), hasLength(1));
+    },
+  );
+
   test('a restore two exchanges behind: both sides read each other '
       'again', () async {
     final p = await _peer();
