@@ -568,9 +568,39 @@ class SignalSession {
     return r == null ? null : lib.sessionInfo(r);
   }
 
+  /// the seal size [plain] takes to [peer] now, so a burst of copies of
+  /// one message can be filled to one size: a plain message's own, the
+  /// second size for a post-quantum opener (a restored session starts one),
+  /// null when nothing is held or the frame is too big for an opener
+  Future<int?> sealSize(String peer, String plain) => serial(peer, () async {
+    final record = await sessionStore.load(peer);
+    if (record == null) return null;
+    final afresh = await sealsOnRestored(peer);
+    final opener =
+        afresh ||
+        lib
+                .encrypt(
+                  identity,
+                  registrationId,
+                  record,
+                  const [0],
+                  _now(),
+                  pinned: identityStore.pinnedFor(peer),
+                )
+                .type ==
+            kLsPreKey;
+    if (opener && (afresh || lib.sessionInfo(record).version >= 4)) {
+      return padSealOpener(plain) == null ? null : kSealSizes[1];
+    }
+    return utf8Length(padSeal(plain));
+  });
+
   /// [plain] sealed to [peer], as the wire carries it: the type byte, then
   /// the message, in base64. a session a restore brought back is not
-  /// sealed on: one is started afresh from the card [afresh] hands over
+  /// sealed on: one is started afresh from the card [afresh] hands over.
+  /// [size], a burst's (sealSize and DeviceSessions.burstSize), fills a
+  /// plain message to it; a post-quantum opener goes only when it is the
+  /// second size and waits for the answer otherwise
   Future<String> encryptTo(
     String peer,
     String plain, {
@@ -579,6 +609,7 @@ class SignalSession {
     void Function()? keyMoved,
     // only on a session that is past its opener: never one to start one
     bool onlySettled = false,
+    int? size,
   }) => serial(peer, () async {
     // asked in the lane, right before the seal: a key that came in a frame
     // opened ahead of this one is the key this one would go to
@@ -594,15 +625,16 @@ class SignalSession {
       // the card may name another key than the one checked above
       if (held != null && await held()) throw KeyHeld(peer);
     }
-    return _seal(peer, plain, onlySettled: onlySettled);
+    return _seal(peer, plain, onlySettled: onlySettled, size: size);
   });
 
   // [onlySettled]: a seal that comes out as an opener is thrown away, and
-  // nothing of it is stored
+  // nothing of it is stored. [size]: the burst's, null for the frame's own
   Future<String> _seal(
     String peer,
     String plain, {
     bool onlySettled = false,
+    int? size,
   }) async {
     final record = await sessionStore.load(peer);
     if (record == null) {
@@ -630,7 +662,10 @@ class SignalSession {
       // a post-quantum opener carries the kyber ciphertext: filled smaller,
       // so it lands where a plain message does. one too big for that waits
       // for their first answer, then goes plain
-      final o = padSealOpener(plain);
+      // in a burst only at the second size, where an opener lands
+      final o = size == null || size == kSealSizes[1]
+          ? padSealOpener(plain)
+          : null;
       final base = _baseOf(lib.sessionInfo(record).current);
       if (o == null) {
         _awaiting.add(peer);
@@ -644,7 +679,7 @@ class SignalSession {
       if (base != null) _openerOut[peer] = base;
       padded = o;
     } else {
-      padded = padSeal(plain);
+      padded = size == null ? padSeal(plain) : padSealTo(plain, size);
     }
     final body = Uint8List.fromList(utf8.encode(padded));
     final LsSealed m;

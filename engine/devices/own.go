@@ -26,7 +26,13 @@ func NewOwn() *Own { return &Own{lists: map[Key]*List{}, me: map[Key]Entry{}} }
 // longer names. a list of another identity is refused. a list that moves
 // past a held one without this device is ErrRemoved, and the identity's
 // list is dropped; a first list without it is ErrNotListed, nothing held.
-func (o *Own) Set(identity Key, wire []byte, mine Key, v Verifier) (gone []Entry, err error) {
+//
+// from is where it came from: the phone itself (FromSession(identity) on
+// the phone, which signs it), the phone's session on a linked device, or
+// the link. with no list held only those, so an old list replayed on
+// another own device's session never becomes the first one; after that a
+// listed own device on its listed key may carry one too.
+func (o *Own) Set(identity Key, wire []byte, mine Key, from From, v Verifier) (gone []Entry, err error) {
 	l, err := ReadList(wire, v)
 	if err != nil {
 		return nil, err
@@ -37,6 +43,9 @@ func (o *Own) Set(identity Key, wire []byte, mine Key, v Verifier) (gone []Entry
 	o.mu.Lock()
 	defer o.mu.Unlock()
 	held := o.lists[l.Identity]
+	if !ownSource(identity, held, from) {
+		return nil, ErrSource
+	}
 	if held != nil {
 		switch {
 		case l.Version == held.Version && SameBody(l, held):
@@ -69,6 +78,21 @@ func (o *Own) Set(identity Key, wire []byte, mine Key, v Verifier) (gone []Entry
 	}
 	o.lists[l.Identity], o.me[l.Identity] = l, me
 	return gone, nil
+}
+
+// the phone or the link always; with a list held, also a listed own device
+// on its listed key
+func ownSource(identity Key, held *List, from From) bool {
+	switch {
+	case from.invite:
+		return false
+	case from.link, from.remote == identity:
+		return true
+	case held == nil:
+		return false
+	}
+	_, ok := held.FindKey(from.remote)
+	return ok
 }
 
 // Current is the identity's own list held, nil before the first.
