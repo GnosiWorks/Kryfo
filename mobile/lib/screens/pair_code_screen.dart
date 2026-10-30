@@ -156,9 +156,9 @@ class _JoinSide extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PairJoin(
-      // a quiet session never reaches the relays: it answers as unreachable
-      // ones would
-      fetch: (code) async => sessionQuiet
+      // a quiet session looks a code up as the everyday one does
+      // (kDecoyLooksUp), or answers as unreachable relays would
+      fetch: (code) async => sessionQuiet && !kDecoyLooksUp
           ? await unreachedLater(pairUnreached)
           : await engine.pairCodeFetch(code),
       add: (invite) async {

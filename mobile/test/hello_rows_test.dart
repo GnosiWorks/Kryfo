@@ -31,6 +31,7 @@ import 'package:kryfo/main.dart'
         AppStateReceive,
         HaloEngine,
         handleHaloUriAdded,
+        haloUriV3,
         openAddedChatLater,
         openDevChatLater,
         sendFirstContactNoted,
@@ -212,7 +213,7 @@ class _Io extends AppIo {
 // contact (its key claimed) in a file of rows, as the real container
 // keeps them side by side
 class _Rows extends ArrivalRows {
-  _Rows(this.db) : super(HaloContainer.everyday);
+  _Rows(this.db, [HaloContainer c = HaloContainer.everyday]) : super(c);
   final MemDb db;
   @override
   Future<Database> open() async => db;
@@ -534,6 +535,63 @@ void main() {
       [h.once.id],
     );
     expect(await hellosOf('in', q.keyHex), isEmpty);
+  });
+
+  test('in a decoy a qr and a v3 link with its first-contact address say '
+      'what the everyday side says, and keep the person on the decoy alone: '
+      'no hello, no key, no row of the everyday side', () async {
+    Future<(String, String)> links(String words, int seed) async {
+      final p = await _Phone.make('$words-qr', seed);
+      final qr = inviteLink((await p.mainInvite()).qr!);
+      final o = await _Phone.make('$words-vee', seed + 2);
+      final v3 = haloUriV3(
+        o.words,
+        _onionOf(_onionKeyOf(seed + 3)),
+        Uri.encodeQueryComponent(await o.ss.makeBundleB64()),
+        _hex(List.filled(32, seed)),
+      );
+      return (qr, v3);
+    }
+
+    // the everyday side first
+    final (qr1, v31) = await links('real-side', 71);
+    expect(await handleHaloUriAdded(qr1, app: app), (l10n.helloSent, true));
+    expect(await handleHaloUriAdded(v31, app: app), (l10n.helloSentOld, true));
+    // the pass under way, which grinds each hello's proof of work
+    await app.sendHellosOwed();
+    await app.sendHellosOwed();
+    expect(engine.hellos, hasLength(2));
+    // the decoy, on others
+    final (qr2, v32) = await links('decoy-side', 81);
+    final decoyDb = MemDb();
+    final decoy = _Rows(decoyDb, HaloContainer.decoy);
+    final helloRows = db.rows('hellos').length;
+    final everydayPeople = live.people.keys.toSet();
+    useDatabasesForTest(live, Session(decoy));
+    try {
+      expect(await handleHaloUriAdded(qr2, app: app), (l10n.helloSent, true));
+      expect(await handleHaloUriAdded(v32, app: app), (
+        l10n.helloSentOld,
+        true,
+      ));
+      // and again: saved already, as the everyday side says
+      expect(await handleHaloUriAdded(qr2, app: app), (
+        l10n.appAlreadySaved('decoy-side-qr'),
+        true,
+      ));
+    } finally {
+      useDatabasesForTest(live, Session(live));
+    }
+    await _settle();
+    expect(decoy.people.keys, containsAll(['decoy-side-qr', 'decoy-side-vee']));
+    expect(engine.hellos, hasLength(2));
+    expect(db.rows('hellos'), hasLength(helloRows));
+    expect(live.people.keys.toSet(), everydayPeople);
+    expect(
+      await signalSession.identityStore.getIdentity('decoy-side-qr'),
+      isNull,
+    );
+    await _settle();
   });
 
   test('a qr add with their hello waiting sends none of mine', () async {

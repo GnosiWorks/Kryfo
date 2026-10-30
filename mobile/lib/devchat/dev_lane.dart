@@ -61,6 +61,9 @@ class DevLane {
   // what the seal made, for the gate
   final DevTokens tokens;
   final DevFrameRule frame;
+  // a message from him opened on the pq state of a record that still holds
+  // classic ones, on a seat of its own (the everyday store says so itself)
+  void Function(String peer)? onPqOver;
 
   static SignalSession _signal() => signalSession;
 
@@ -111,7 +114,9 @@ class DevLane {
         _anonIn = db;
         made = _anon = _boot(db, self.xPub, xPriv);
       }
-      return await made;
+      final ss = await made;
+      ss.onPqOver = (p) => onPqOver?.call(p);
+      return ss;
     } catch (e) {
       dlog('dev lane: the anonymous store did not open ($e)');
       _anon = null;
@@ -152,6 +157,7 @@ class DevLane {
     }
     final out = frame(wrapped, anon: s.anon);
     if (out == null) throw DevSealRefused(DevRefusal.frame);
+    if (kDevPqRestart) await _pqFromCard(s, peer);
     // a session a restore brought back starts afresh from his pinned card
     final cipher = await s.store.encryptTo(
       peer,
@@ -183,6 +189,25 @@ class DevLane {
     } catch (e) {
       dlog('dev lane: the key check did not read ($e)');
       return false;
+    }
+  }
+
+  // a chat started on a classic card goes over to pq on the pinned card
+  // once it carries a kyber prekey: a session on the card in front of the
+  // held one, whose next seal is the opener. his main invite never expires
+  // (DECIDED 2026-10-28), so the card's keys are there to open it, and the
+  // classic states go 16 days after his first pq message (pqUpkeep)
+  Future<void> _pqFromCard(DevSeat s, String peer) async {
+    if (!devCardStarts(s.key)) return;
+    try {
+      final info = await s.store.sessionInfo(peer);
+      if (info == null || info.version >= 4) return;
+      final card = lsBundleOf(s.store.lib, s.key.bundle);
+      if (await s.store.restartFrom(peer, card, classicOnly: true)) {
+        dlog('dev lane: the chat goes over to pq');
+      }
+    } catch (e) {
+      dlog('dev lane: no pq restart on the card (${e.runtimeType})');
     }
   }
 
@@ -260,6 +285,11 @@ Uint8List _bytes(String hex) => Uint8List.fromList([
   for (var i = 0; i + 1 < hex.length; i += 2)
     int.parse(hex.substring(i, i + 2), radix: 16),
 ]);
+
+/// whether a dev chat started on a classic card goes over to pq on the
+/// pinned card (identity v4 11 step 5 for the dev chat). nothing runs
+/// until a card with a kyber prekey is pinned (RELEASING.md)
+const kDevPqRestart = true;
 
 // the one lane. the app points it at the everyday container
 final devLane = DevLane(tokens: devTokens);

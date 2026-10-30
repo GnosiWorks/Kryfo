@@ -3,8 +3,8 @@
 // a second copy of a part, or anything after the link, would show one key's
 // number while the add built on another. the number on the card is the
 // number of the key the add then uses, read off the real invite. an old
-// card with no bundle is no code's invite. the decoy's invite carries its
-// bundle encoded, so any byte of it reads back as it was
+// card with no bundle is no code's invite. the decoy's fallback invite
+// carries its bundle encoded, so any byte of it reads back as it was
 import 'dart:convert';
 import 'dart:io';
 
@@ -189,9 +189,11 @@ void main() {
       expect(p?['bundle'], bundle, reason: fc);
       expect(p?['v'], fc.startsWith('error') ? '2' : '3');
     }
-    // and it is what the decoy hands out
+    // the decoy hands out its v4 invite, and this one only when that one
+    // could not be made
     final src = sourceOf('lib/app/state.dart');
-    expect(src, contains('invite: quietInviteUri(id, onion, bundle, fc)'));
+    expect(src, contains('invite = inviteLink(row.link);'));
+    expect(src, contains('invite = quietInviteUri(id, onion, bundle, fc);'));
   });
 
   test('one proof-of-work check for a first contact, shared', () {
