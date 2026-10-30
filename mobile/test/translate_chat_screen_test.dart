@@ -3,6 +3,7 @@
 // on ours. the translator is a stand-in
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
@@ -17,8 +18,10 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         useEngineForTest;
 import 'package:kryfo/screens/chat_screen.dart';
+import 'package:kryfo/theme.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/translate/hub.dart';
+import 'package:kryfo/translate/lang_names.dart';
 import 'package:kryfo/translate/translate_bubble.dart';
 import 'package:kryfo/widgets/menu_backdrop.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -171,6 +174,46 @@ void main() {
     // ours has no such entry
     await openMenu(t, _ours);
     expect(find.text(l10n.translateAction), findsNothing);
+    await devClose(t);
+  });
+
+  testWidgets('the long-press menu: always this chat, never this language', (
+    t,
+  ) async {
+    await open(t);
+    await openMenu(t, _zh);
+    expect(find.text(l10n.translateAlwaysChat), findsOneWidget);
+    expect(find.text(l10n.translateBarNever(langName('zh'))), findsOneWidget);
+    expect(
+      t.widget<Icon>(find.byIcon(Icons.check_rounded)).color,
+      Colors.transparent,
+    );
+    await t.tap(find.text(l10n.translateAlwaysChat));
+    await settle(t, 10);
+    expect(await f.store.chatAuto(_peer), isTrue);
+    expect(find.text(_en), findsOneWidget);
+
+    // on now: the row says so, and turns it off
+    await openMenu(t, _en);
+    expect(
+      t.widget<Icon>(find.byIcon(Icons.check_rounded)).color,
+      HaloColors.amberText,
+    );
+    await t.tap(find.text(l10n.translateAlwaysChat));
+    await settle(t, 10);
+    expect(await f.store.chatAuto(_peer), isFalse);
+    expect(find.text(_zh), findsOneWidget);
+
+    await openMenu(t, _zh);
+    await t.tap(find.text(l10n.translateBarNever(langName('zh'))));
+    await settle(t, 10);
+    expect(f.store.settings.never, ['zh']);
+    expect(rich(l10n.translateAction), findsNothing);
+    expect(find.text(l10n.translateNeverDone(langName('zh'))), findsOneWidget);
+
+    // ours has neither
+    await openMenu(t, _ours);
+    expect(find.text(l10n.translateAlwaysChat), findsNothing);
     await devClose(t);
   });
 

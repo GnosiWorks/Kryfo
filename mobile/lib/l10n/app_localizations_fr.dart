@@ -9214,13 +9214,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get translateBarMore => 'Options de traduction';
 
   @override
-  String translateBarAlways(Object language) {
-    return 'Toujours traduire · $language';
-  }
-
-  @override
   String translateBarNever(Object language) {
-    return 'Ne jamais traduire · $language';
+    return 'Ne plus proposer · $language';
   }
 
   @override
@@ -9415,6 +9410,39 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get translateAutoInChatHint =>
       'Les messages dans d’autres langues s’affichent traduits. L’original est à portée de doigt.';
+
+  @override
+  String get translateAlwaysChat => 'Toujours traduire cette discussion';
+
+  @override
+  String translateNeverDone(Object language) {
+    return 'Les messages restent tels quels · $language';
+  }
+
+  @override
+  String get translateUndo => 'Annuler';
+
+  @override
+  String get translateNeverSection => 'Jamais proposées';
+
+  @override
+  String get translateOfferAgain => 'Proposer à nouveau';
+
+  @override
+  String get translateOnHint =>
+      'Proposée sous les messages dans d’autres langues';
+
+  @override
+  String get translatePrivacyKept =>
+      'Les traductions sont gardées chiffrées avec leur discussion sur ce téléphone et supprimées avec elle.';
+
+  @override
+  String get translatePrivacyKeptDesk =>
+      'Les traductions sont gardées chiffrées avec leur discussion sur cet ordinateur et supprimées avec elle.';
+
+  @override
+  String get translateOffDeletes =>
+      'Le désactiver supprime les traductions enregistrées.';
 
   @override
   String get bridgesNoneUntilOnion => 'Rien tant qu’Onion n’est pas activé';

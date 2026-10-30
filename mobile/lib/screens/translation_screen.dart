@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// translation's settings: the language packs on the phone, the languages
-// the person reads, what to translate into, and what a download says to
-// whom. the translating itself happens on the phone.
+// translation's settings: on or off, the language packs on the phone, the
+// languages the person reads and the ones never offered, what to translate
+// into, and what a download says to whom. the translating itself happens
+// on the phone.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -15,9 +16,11 @@ import '../translate/lang_names.dart';
 import '../translate/pack_sheet.dart';
 import '../translate/settings.dart';
 import '../widgets/confirm_sheet.dart';
+import '../widgets/ease_size.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/halo_rows.dart';
 import '../widgets/halo_sheet.dart';
+import '../widgets/motion.dart' show kHouseCurve, kHouseTime, motionStill;
 import '../widgets/sheet_handle.dart';
 import '../widgets/stagger_in.dart';
 
@@ -80,61 +83,63 @@ class _TranslationScreenState extends State<TranslationScreen> {
               32 + MediaQuery.paddingOf(context).bottom,
             ),
             children: staggerAll([
+              HaloGroup(
+                children: [
+                  HaloRow(
+                    key: const ValueKey('translate-on'),
+                    icon: Icons.translate_rounded,
+                    label: l10n.translateSettingsRow,
+                    hint: l10n.translateOnHint,
+                    toggled: s.on,
+                    pending: !_read,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      hub.setOn(!s.on);
+                    },
+                  ),
+                ],
+              ),
+              Padding(
+                key: const ValueKey('translate-off-note'),
+                padding: const EdgeInsetsDirectional.fromSTEB(4, 8, 4, 0),
+                child: Text(
+                  l10n.translateOffDeletes,
+                  style: HaloType.sans(
+                    size: 12.5,
+                    color: HaloColors.text2,
+                    height: 1.4,
+                  ),
+                ),
+              ),
               HaloSection(l10n.translatePacksSection),
               for (final (i, b) in hub.catalog.langs.indexed)
                 Padding(
                   padding: EdgeInsets.only(top: i == 0 ? 0 : 10),
                   child: _PackCard(hub: hub, bundle: b),
                 ),
-              HaloSection(l10n.translateLanguagesSection),
-              HaloGroup(
-                children: [
-                  HaloRow(
-                    icon: Icons.menu_book_outlined,
-                    label: l10n.translateMyLanguages,
-                    hint: l10n.translateMyLanguagesHint,
-                    value: _mineValue(s),
-                    onTap: !_read
-                        ? null
-                        : () async {
-                            final picked = await _pickMine(context, s);
-                            if (picked != null) {
-                              await _save(s.copyWith(mine: picked));
-                            }
-                          },
+              // the rest only matters while translation is on: it folds
+              // away with the switch and back
+              EaseSize(
+                duration: kHouseTime,
+                child: AnimatedSwitcher(
+                  duration: motionStill(context) ? Duration.zero : kHouseTime,
+                  switchInCurve: kHouseCurve,
+                  switchOutCurve: kHouseCurve,
+                  layoutBuilder: (cur, prev) => Stack(
+                    alignment: Alignment.topCenter,
+                    children: [...prev, ?cur],
                   ),
-                  HaloRow(
-                    icon: Icons.translate_rounded,
-                    label: l10n.translateInto,
-                    value: _targetValue(s),
-                    onTap: !_read
-                        ? null
-                        : () async {
-                            final t = await _pickTarget(context, s);
-                            if (t != null) await _save(s.copyWith(target: t));
-                          },
-                  ),
-                ],
-              ),
-              HaloSection(l10n.translateBehaviourSection),
-              HaloGroup(
-                children: [
-                  HaloRow(
-                    icon: Icons.auto_awesome_outlined,
-                    label: l10n.translateAutoDefault,
-                    hint: l10n.translateAutoDefaultHint,
-                    toggled: s.autoDefault,
-                    pending: !_read,
-                    onTap: () => _save(s.copyWith(autoDefault: !s.autoDefault)),
-                  ),
-                  HaloRow(
-                    icon: Icons.wifi_rounded,
-                    label: l10n.translateWifiOnly,
-                    toggled: s.wifiOnly,
-                    pending: !_read,
-                    onTap: () => _save(s.copyWith(wifiOnly: !s.wifiOnly)),
-                  ),
-                ],
+                  child: s.on
+                      ? Column(
+                          key: const ValueKey('translate-on-rest'),
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: _whileOn(context, s),
+                        )
+                      : const SizedBox(
+                          key: ValueKey('translate-off-rest'),
+                          width: double.infinity,
+                        ),
+                ),
               ),
               HaloSection(l10n.translatePrivacyTitle),
               Container(
@@ -156,7 +161,8 @@ class _TranslationScreenState extends State<TranslationScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        l10n.translatePrivacyNoteShown,
+                        '${l10n.translatePrivacyNoteShown} '
+                        '${l10n.translatePrivacyKeptShown}',
                         style: HaloType.sans(
                           size: 12.5,
                           color: HaloColors.text2,
@@ -173,6 +179,89 @@ class _TranslationScreenState extends State<TranslationScreen> {
       ),
     );
   }
+
+  // the languages, the ones never offered, and how chats and downloads go
+  List<Widget> _whileOn(BuildContext context, TranslateSettings s) => [
+    HaloSection(l10n.translateLanguagesSection),
+    HaloGroup(
+      children: [
+        HaloRow(
+          icon: Icons.menu_book_outlined,
+          label: l10n.translateMyLanguages,
+          hint: l10n.translateMyLanguagesHint,
+          value: _mineValue(s),
+          onTap: !_read
+              ? null
+              : () async {
+                  final picked = await _pickMine(context, s);
+                  if (picked != null) {
+                    await _save(s.copyWith(mine: picked));
+                  }
+                },
+        ),
+        HaloRow(
+          icon: Icons.translate_rounded,
+          label: l10n.translateInto,
+          value: _targetValue(s),
+          onTap: !_read
+              ? null
+              : () async {
+                  final t = await _pickTarget(context, s);
+                  if (t != null) await _save(s.copyWith(target: t));
+                },
+        ),
+      ],
+    ),
+    // each one taken off the list here is offered again
+    EaseSize(
+      duration: kHouseTime,
+      child: s.never.isEmpty
+          ? const SizedBox(width: double.infinity)
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                HaloSection(l10n.translateNeverSection),
+                HaloGroup(
+                  key: const ValueKey('translate-never'),
+                  children: [
+                    for (final l in s.never)
+                      HaloRow(
+                        key: ValueKey('never-$l'),
+                        icon: Icons.do_not_disturb_on_outlined,
+                        label: langName(l),
+                        value: l10n.translateOfferAgain,
+                        tapHint: l10n.translateOfferAgain,
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          hub.offerAgain(l);
+                        },
+                      ),
+                  ],
+                ),
+              ],
+            ),
+    ),
+    HaloSection(l10n.translateBehaviourSection),
+    HaloGroup(
+      children: [
+        HaloRow(
+          icon: Icons.auto_awesome_outlined,
+          label: l10n.translateAutoDefault,
+          hint: l10n.translateAutoDefaultHint,
+          toggled: s.autoDefault,
+          pending: !_read,
+          onTap: () => _save(s.copyWith(autoDefault: !s.autoDefault)),
+        ),
+        HaloRow(
+          icon: Icons.wifi_rounded,
+          label: l10n.translateWifiOnly,
+          toggled: s.wifiOnly,
+          pending: !_read,
+          onTap: () => _save(s.copyWith(wifiOnly: !s.wifiOnly)),
+        ),
+      ],
+    ),
+  ];
 
   Future<List<String>?> _pickMine(BuildContext context, TranslateSettings s) {
     final app = hub.appLang();

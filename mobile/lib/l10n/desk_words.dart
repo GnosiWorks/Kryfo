@@ -106,6 +106,7 @@ const deskWordKeys = [
   'translateFailNoEngine',
   'translateSettingsHint',
   'translatePrivacyNote',
+  'translatePrivacyKept',
   'notificationsLead',
   'photoOnlyHere',
   'photoOnlyHereLine',
@@ -333,6 +334,8 @@ extension DeskWords on AppLocalizations {
       onDesktop ? translateSettingsHintDesk : translateSettingsHint;
   String get translatePrivacyNoteShown =>
       onDesktop ? translatePrivacyNoteDesk : translatePrivacyNote;
+  String get translatePrivacyKeptShown =>
+      onDesktop ? translatePrivacyKeptDesk : translatePrivacyKept;
   String get notificationsLeadShown =>
       onDesktop ? notificationsLeadDesk : notificationsLead;
   String get photoOnlyHereShown =>
