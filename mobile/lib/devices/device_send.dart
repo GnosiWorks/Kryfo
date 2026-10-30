@@ -452,7 +452,7 @@ class DeviceSend {
           await t.update(
             'dev_out',
             {'opener': 1},
-            where: _key,
+            where: _slotWhere,
             whereArgs: _keyArgs(r),
           );
         });
@@ -477,7 +477,7 @@ class DeviceSend {
           'tries': tries + 1,
           'next_at': now + gap.inMilliseconds,
         },
-        where: _key,
+        where: _slotWhere,
         whereArgs: _keyArgs(r),
       );
       return;
@@ -500,7 +500,7 @@ class DeviceSend {
       // the copy went: what quiet keeps is only a count
     }
     if (r['receipt'] != 1) {
-      await d.delete('dev_out', where: _key, whereArgs: _keyArgs(r));
+      await d.delete('dev_out', where: _slotWhere, whereArgs: _keyArgs(r));
       return;
     }
     final sent = (r['sent_at'] as int? ?? 0);
@@ -515,12 +515,12 @@ class DeviceSend {
             ? now + _unheard[round].inMilliseconds
             : 0,
       },
-      where: _key,
+      where: _slotWhere,
       whereArgs: _keyArgs(r),
     );
   }
 
-  static const _key = 'uid = ? AND ident = ? AND peer = ? AND device = ?';
+  static const _slotWhere = 'uid = ? AND ident = ? AND peer = ? AND device = ?';
   List<Object?> _keyArgs(Map<String, Object?> r) => [
     r['uid'],
     r['ident'],
@@ -591,7 +591,7 @@ class DeviceSend {
     Future<void> later() => d.update(
       'dev_out',
       {'next_at': now + _again[min(2, _again.length - 1)].inMilliseconds},
-      where: _key,
+      where: _slotWhere,
       whereArgs: _keyArgs(r),
     );
     if (plain == null || !await ds.has(addr, device)) {
@@ -599,7 +599,7 @@ class DeviceSend {
       await d.update(
         'dev_out',
         {'next_at': 0},
-        where: _key,
+        where: _slotWhere,
         whereArgs: _keyArgs(r),
       );
       return;
@@ -622,7 +622,7 @@ class DeviceSend {
     await d.update(
       'dev_out',
       {'wire': w, 'plain': null, 'state': 'go', 'next_at': now},
-      where: _key,
+      where: _slotWhere,
       whereArgs: _keyArgs(r),
     );
     await _go(d, next);

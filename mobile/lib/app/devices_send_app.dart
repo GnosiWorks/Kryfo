@@ -120,12 +120,7 @@ Future<void> pumpDeviceSends() async {
         final ss = await signalOfIdent(ident);
         return _devWhoOf(ident, r.first['halo_id'] as String, ss);
       },
-      phone: (me, c) => (
-        measure: (f) async =>
-            (await signalOfIdent(me.ident)).sealSize(c.peer, f),
-        seal: (f, size) async =>
-            (await signalOfIdent(me.ident)).encryptTo(c.peer, f, size: size),
-      ),
+      phone: (me, c) => _devicePushPhone(me.ident, c.peer),
       send: (me, c, cipher) async {
         final x = await peerXPubOf(c.peer);
         if (x == null) return false;

@@ -128,6 +128,19 @@ Future<({int ident, String cipher})> signalSeal(
   return (ident: ident, cipher: await seal(framed, null));
 }
 
+// a list push's copy for [peer]'s phone (devices_send_app.dart), sealed
+// here at the door on the store of the identity they know, filled to the
+// push's burst. a key held for a check seals nothing
+DevPhone _devicePushPhone(int ident, String peer) => (
+  measure: (f) async => (await signalOfIdent(ident)).sealSize(peer, f),
+  seal: (f, size) async => (await signalOfIdent(ident)).encryptTo(
+    peer,
+    f,
+    held: () => appState.keyHeld(peer, strict: true),
+    size: size,
+  ),
+);
+
 // where a seal finds a peer's card to start a session afresh from, after a
 // restore: the app state's rows. set as it is made
 Future<LsBundle?> Function(String peer)? _afreshFrom;
