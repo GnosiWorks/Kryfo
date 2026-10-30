@@ -52,10 +52,10 @@ class DevRefused implements Exception {
   String toString() => 'DevRefused($why)';
 }
 
-typedef _CallC = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
-typedef _Call = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
-typedef _ShimC = Pointer<Utf8> Function(Pointer<Utf8>);
-typedef _Shim = Pointer<Utf8> Function(Pointer<Utf8>);
+typedef _DevCallC = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+typedef _DevCall = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+typedef _DevShimC = Pointer<Utf8> Function(Pointer<Utf8>);
+typedef _DevShim = Pointer<Utf8> Function(Pointer<Utf8>);
 
 /// the engine's three calls
 class DeviceEngine {
@@ -65,30 +65,36 @@ class DeviceEngine {
         (Platform.isAndroid
             ? DynamicLibrary.open('libhalo.so')
             : DynamicLibrary.process());
-    _call = l.lookupFunction<_CallC, _Call>('HaloDevCall');
-    _session = l.lookupFunction<_CallC, _Call>('HaloDevSession');
-    _shim = l.lookupFunction<_ShimC, _Shim>('HaloDevShim');
+    _call = l.lookupFunction<_DevCallC, _DevCall>('HaloDevCall');
+    _session = l.lookupFunction<_DevCallC, _DevCall>('HaloDevSession');
+    _shim = l.lookupFunction<_DevShimC, _DevShim>('HaloDevShim');
   }
 
-  late final _Call _call;
-  late final _Call _session;
-  late final _Shim _shim;
+  late final _DevCall _call;
+  late final _DevCall _session;
+  late final _DevShim _shim;
 
-  String _run(_Call fn, String op, Map<String, Object?> args) {
+  // the op and the args as c strings for one call, freed after
+  String _with(
+    String op,
+    Map<String, Object?> args,
+    String Function(Pointer<Utf8> op, Pointer<Utf8> args) run,
+  ) {
     final o = op.toNativeUtf8();
     final a = jsonEncode(args).toNativeUtf8();
     try {
-      return engineTake(fn(o, a));
+      return run(o, a);
     } finally {
       calloc.free(o);
       calloc.free(a);
     }
   }
 
-  String call(String op, Map<String, Object?> args) => _run(_call, op, args);
+  String call(String op, Map<String, Object?> args) =>
+      _with(op, args, (o, a) => engineTake(_call(o, a)));
 
   String session(String op, Map<String, Object?> args) =>
-      _run(_session, op, args);
+      _with(op, args, (o, a) => engineTake(_session(o, a)));
 
   /// opens the signal library in the engine, by the name or path the app
   /// loaded it by. null when it opened, else why not
