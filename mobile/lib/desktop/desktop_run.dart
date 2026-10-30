@@ -13,6 +13,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 
+import '../l10n/l10n.dart';
 import 'desktop_mode.dart';
 
 /// where the two switches are kept, in the vault: the same in every session
@@ -75,10 +76,14 @@ class DesktopRun extends ChangeNotifier implements DesktopRunView {
     required this.place,
     required String? Function(String key) read,
     required Future<void> Function(String key, String value) write,
+    this.trayWait = const Duration(milliseconds: 500),
   }) : _read = read,
        _write = write;
 
   final TrayHost tray;
+
+  /// how long a new icon gets to find its place in the tray
+  final Duration trayWait;
   final StartPlace? place;
   final String? Function(String key) _read;
   final Future<void> Function(String key, String value) _write;
@@ -118,8 +123,28 @@ class DesktopRun extends ChangeNotifier implements DesktopRunView {
 
   /// the tray as kept, once the vault is open
   Future<void> begin() async {
-    if (trayOn) await tray.show();
+    final pl = place;
+    if (pl is LinuxStart) {
+      try {
+        await pl.mend();
+      } catch (_) {}
+    }
+    if (!trayOn) return refresh();
+    await tray.show();
     await refresh();
+    if (_trayShown == false) {
+      _trayShown = await _settled();
+      notifyListeners();
+    }
+  }
+
+  // the icon finds its place a moment after it is made: a no is asked
+  // once more before it is said
+  Future<bool?> _settled() async {
+    final first = await tray.shown();
+    if (first != false) return first;
+    await Future<void>.delayed(trayWait);
+    return trayOn ? await tray.shown() : null;
   }
 
   @override
@@ -146,8 +171,7 @@ class DesktopRun extends ChangeNotifier implements DesktopRunView {
     } else {
       await tray.hide();
     }
-    // the icon finds its place a moment after it is made
-    _trayShown = on ? await tray.shown() : null;
+    _trayShown = on ? await _settled() : null;
     notifyListeners();
   }
 
@@ -197,7 +221,10 @@ StartPlace? startPlaceHere({
       ? null
       : p.join(home, '.config');
   if (dir == null) return null;
-  return LinuxStart(p.join(dir, 'autostart'), exe);
+  // an appimage runs from a mount that is gone at the next login
+  final image = env['APPIMAGE'];
+  final start = image != null && p.isAbsolute(image) ? image : exe;
+  return LinuxStart(p.join(dir, 'autostart'), start);
 }
 
 // --- linux: an xdg autostart entry
@@ -213,6 +240,18 @@ class LinuxStart implements StartPlace {
   final String exe;
 
   File get _file => File(p.join(dir, autostartFile));
+
+  /// an entry that is on but starts another file (the bundle moved or was
+  /// updated elsewhere) is written again for this one
+  Future<void> mend() async {
+    final f = _file;
+    if (!f.existsSync() || await read() != StartAnswer.on) return;
+    final exec = desktopExec(exe);
+    if (exec == null) return;
+    final lines = const LineSplitter().convert(f.readAsStringSync());
+    if (lines.contains('Exec=$exec')) return;
+    await set(true);
+  }
 
   @override
   Future<StartAnswer> read() async {
@@ -286,7 +325,10 @@ class ChannelPortal implements BackgroundPortal {
   @override
   Future<bool?> autostart(bool on) async {
     try {
-      return await runChannel.invokeMethod<bool>('autostart', {'on': on});
+      return await runChannel.invokeMethod<bool>('autostart', {
+        'on': on,
+        'reason': l10n.desktopStartHint,
+      });
     } catch (_) {
       return null;
     }

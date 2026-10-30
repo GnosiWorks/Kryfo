@@ -44,12 +44,18 @@ import '../dev_chat_fakes.dart' show devApp, devWorld;
 class _Tray implements TrayHost {
   final calls = <String>[];
   bool? there = true;
+  // answers given before [there], one per ask
+  final early = <bool?>[];
+  int asked = 0;
   @override
   Future<void> show() async => calls.add('show');
   @override
   Future<void> hide() async => calls.add('hide');
   @override
-  Future<bool?> shown() async => there;
+  Future<bool?> shown() async {
+    asked++;
+    return early.isNotEmpty ? early.removeAt(0) : there;
+  }
 }
 
 class _Kv {
@@ -128,8 +134,13 @@ class _Shade extends AndroidFlutterLocalNotificationsPlugin {
   Future<void> createNotificationChannel(AndroidNotificationChannel c) async {}
 }
 
-DesktopRun _run(_Kv kv, _Tray tray, StartPlace? place) =>
-    DesktopRun(tray: tray, place: place, read: kv.read, write: kv.write);
+DesktopRun _run(_Kv kv, _Tray tray, StartPlace? place) => DesktopRun(
+  tray: tray,
+  place: place,
+  read: kv.read,
+  write: kv.write,
+  trayWait: Duration.zero,
+);
 
 Future<void> _world(WidgetTester t) async {
   SharedPreferences.setMockInitialValues({
@@ -234,6 +245,18 @@ void main() {
       await run.begin();
       expect(run.trayShown, isFalse);
     });
+
+    test('an icon not yet in its place is asked once more', () async {
+      final tray = _Tray()..early.add(false);
+      final run = _run(_Kv(), tray, null);
+      await run.begin();
+      expect(run.trayShown, isTrue);
+      await run.setTray(false);
+      tray.early.add(false);
+      await run.setTray(true);
+      expect(run.trayShown, isTrue);
+      expect(tray.asked, 4);
+    });
   });
 
   group('start with my computer', () {
@@ -271,6 +294,52 @@ void main() {
       expect(await place.set(false), StartAnswer.off);
       expect(f.existsSync(), isFalse);
       expect(await place.set(false), StartAnswer.off);
+    });
+
+    test('linux: an entry for another file is written for this one', () async {
+      final tmp = Directory.systemTemp.createTempSync('kryfo-autostart');
+      addTearDown(() => tmp.deleteSync(recursive: true));
+      final dir = p.join(tmp.path, 'autostart');
+      final f = File(p.join(dir, autostartFile));
+      await LinuxStart(dir, '/old/kryfo').set(true);
+      final run = DesktopRun(
+        tray: _Tray(),
+        place: LinuxStart(dir, '/new/kryfo'),
+        read: _Kv().read,
+        write: _Kv().write,
+        trayWait: Duration.zero,
+      );
+      await run.begin();
+      expect(f.readAsStringSync(), contains('Exec="/new/kryfo"\n'));
+      expect(run.start, StartAnswer.on);
+      // the same file is left as it is
+      final kept = '${f.readAsStringSync()}X-Kept=1\n';
+      f.writeAsStringSync(kept);
+      await LinuxStart(dir, '/new/kryfo').mend();
+      expect(f.readAsStringSync(), kept);
+      // switched off in the desktop's settings stays off and untouched
+      final held = '${autostartEntry('"/old/kryfo"')}Hidden=true\n';
+      f.writeAsStringSync(held);
+      await LinuxStart(dir, '/new/kryfo').mend();
+      expect(f.readAsStringSync(), held);
+      // no entry: none is made
+      f.deleteSync();
+      await LinuxStart(dir, '/new/kryfo').mend();
+      expect(f.existsSync(), isFalse);
+    });
+
+    test('the portal is told why it is asked', () async {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      Object? args;
+      final m =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      m.setMockMethodCallHandler(runChannel, (call) async {
+        args = call.arguments;
+        return true;
+      });
+      addTearDown(() => m.setMockMethodCallHandler(runChannel, null));
+      expect(await const ChannelPortal().autostart(true), isTrue);
+      expect(args, {'on': true, 'reason': l10n.desktopStartHint});
     });
 
     test('linux: a folder that cannot be made is refused', () async {
