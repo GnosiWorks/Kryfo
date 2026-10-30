@@ -10198,6 +10198,15 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get wideSelectChat => 'اختر محادثة';
+
+  @override
+  String get wideSelectChatLine => 'اختر محادثة من القائمة لتبدأ الكتابة.';
+
+  @override
+  String get wideListWidth => 'عرض قائمة المحادثات';
+
+  @override
   String transferDoneOf(String done, String total) {
     return '⁨$done⁩ من ⁨$total⁩';
   }

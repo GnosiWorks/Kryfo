@@ -9,6 +9,7 @@ import '../widgets/motion.dart' show haloRoute;
 import 'chat_screen.dart';
 import 'dev_about_sheet.dart' show devChatRoute;
 import 'group_chat_screen.dart';
+import '../wide/wide_pane.dart' show deskPusher;
 
 // a page that stands in for the chat, which needs the engine
 @visibleForTesting
@@ -21,7 +22,8 @@ Future<bool> openChatAt(
   String? peer,
   String? uid,
 }) async {
-  final nav = Navigator.of(context);
+  // from the desktop's list: into its pane, in place of what it shows
+  final push = deskPusher(context);
   final group = groupId != null && groupId.isNotEmpty ? groupId : null;
   final Route<void> route;
   if (group != null) {
@@ -49,10 +51,11 @@ Future<bool> openChatAt(
     );
   }
   final stand = chatPageForTest;
-  nav.push(
+  push(
     stand == null
         ? route
         : haloRoute(stand(groupId: group, peer: peer, uid: uid)),
+    id: group != null ? 'group:$group' : peer,
   );
   return true;
 }

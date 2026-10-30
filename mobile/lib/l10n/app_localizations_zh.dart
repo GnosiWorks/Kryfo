@@ -9564,6 +9564,15 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get wideSelectChat => '选择一个聊天';
+
+  @override
+  String get wideSelectChatLine => '从列表中选择一个聊天，开始写消息。';
+
+  @override
+  String get wideListWidth => '聊天列表宽度';
+
+  @override
   String transferDoneOf(String done, String total) {
     return '$done/$total';
   }
@@ -19191,6 +19200,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
     );
     return '$_temp0';
   }
+
+  @override
+  String get wideSelectChat => '選擇一個聊天';
+
+  @override
+  String get wideSelectChatLine => '從列表中選擇一個聊天，開始寫訊息。';
+
+  @override
+  String get wideListWidth => '聊天列表寬度';
 
   @override
   String transferDoneOf(String done, String total) {
