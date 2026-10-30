@@ -25,7 +25,9 @@ class PlaceStub extends StatelessWidget {
       label: '$name, ${place.coords}',
       onTap: () async {
         final ok = await openOutside(place.uri);
-        if (!ok && context.mounted) showHaloToast(context, l10n.linkNoAppOpens);
+        if (!ok && context.mounted) {
+          showHaloToast(context, l10n.linkNoAppOpensShown);
+        }
       },
       child: Container(
         width: double.infinity,

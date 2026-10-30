@@ -20,7 +20,7 @@ import 'translator.dart';
 String failLine(DlFail? f) => switch (f) {
   DlFail.noTor => l10n.translateFailNoTor,
   DlFail.badFile => l10n.translateFailBadFile,
-  DlFail.noEngine => l10n.translateFailNoEngine,
+  DlFail.noEngine => l10n.translateFailNoEngineShown,
   _ => l10n.translateFailNetwork,
 };
 
@@ -112,7 +112,7 @@ class PackControls extends StatelessWidget {
             ]);
           case DlPhase.wifiNeeded:
             children.addAll([
-              line(l10n.translateNeedsWifi),
+              line(l10n.translateNeedsWifiShown),
               HaloPrimaryButton(
                 label: l10n.translateDownloadAnyway,
                 onTap: () => dl.start(lang, anyNetwork: true),
@@ -137,7 +137,7 @@ class PackControls extends StatelessWidget {
             ]);
           case DlPhase.installed:
             children.addAll([
-              line(l10n.translateInstalled(packSize(s.onDisk))),
+              line(l10n.translateInstalledShown(packSize(s.onDisk))),
               if (onDone != null)
                 HaloPrimaryButton(label: l10n.commonDone, onTap: onDone),
             ]);
@@ -185,13 +185,13 @@ Future<void> showPackSheet(
             const SheetHandle(),
             const SizedBox(height: 12),
             Text(
-              l10n.translatePackTitle(language),
+              l10n.translatePackTitleShown(language),
               style: HaloType.serif(size: 20, color: HaloColors.text),
             ),
             const SizedBox(height: 8),
             for (final b in noLib ? const <LangBundle>[] : missing) ...[
               Text(
-                l10n.translatePackLine(langName(b.lang), packSize(b.gz)),
+                l10n.translatePackLineShown(langName(b.lang), packSize(b.gz)),
                 style: HaloType.sans(
                   size: 12.5,
                   color: HaloColors.text2,
@@ -208,7 +208,7 @@ Future<void> showPackSheet(
             ],
             if (noLib) ...[
               Text(
-                l10n.translatePackNoLib,
+                l10n.translatePackNoLibShown,
                 style: HaloType.sans(
                   size: 12.5,
                   color: HaloColors.text2,

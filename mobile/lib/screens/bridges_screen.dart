@@ -136,7 +136,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                       const SizedBox(height: 10),
                       _ChoiceCard(
                         title: l10n.bridgesBridgeFromAFriend,
-                        body: l10n.bridgesPasteOrScanALine,
+                        body: l10n.bridgesPasteOrScanALineShown,
                         selected: chosen == BridgeChoice.friend,
                         tag: tag(BridgeChoice.friend),
                         onTap: () => _pick(BridgeChoice.friend),

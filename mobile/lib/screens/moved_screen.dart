@@ -21,7 +21,7 @@ class MovedScreen extends StatelessWidget {
   Future<void> _wipe(BuildContext context) async {
     final ok = await showConfirmSheet(
       context,
-      title: l10n.movedWipeThisPhone,
+      title: l10n.movedWipeThisPhoneShown,
       line: l10n.movedEverythingKryfoHoldsHere,
       yes: l10n.movedWipeIt,
     );
@@ -42,7 +42,7 @@ class MovedScreen extends StatelessWidget {
     await showNoticeSheet(
       context,
       title: l10n.movedStayingHere,
-      line: l10n.movedKryfoWillCloseNow(appState.sessionId),
+      line: l10n.movedKryfoWillCloseNowShown(appState.sessionId),
       ok: l10n.movedReopenKryfo,
     );
     // exit so the next launch boots the engine again, the way a restore does
@@ -66,7 +66,7 @@ class MovedScreen extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             Text(
-              l10n.movedIsNowOnAnother(appState.sessionId),
+              l10n.movedIsNowOnAnotherShown(appState.sessionId),
               style: HaloType.sans(
                 size: 14.5,
                 color: HaloColors.text2,
@@ -84,7 +84,7 @@ class MovedScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             _Button(
-              label: l10n.movedWipeThisPhone2,
+              label: l10n.movedWipeThisPhone2Shown,
               onTap: () => _wipe(context),
             ),
             const SizedBox(height: 18),

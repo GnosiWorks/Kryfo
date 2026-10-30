@@ -333,11 +333,11 @@ class DevWhoSheet extends StatelessWidget {
               const SizedBox(height: 18),
               _WhoLine(glyph: devNameGlyph(false), line: l10n.devWhoWords),
               const SizedBox(height: 14),
-              _WhoLine(glyph: devNameGlyph(true), line: l10n.devWhoAnon),
+              _WhoLine(glyph: devNameGlyph(true), line: l10n.devWhoAnonShown),
               const SizedBox(height: 14),
               _WhoLine(
                 glyph: Icons.lock_clock_outlined,
-                line: l10n.devWhoNothingYet,
+                line: l10n.devWhoNothingYetShown,
               ),
               const SizedBox(height: 18),
               Text(

@@ -88,8 +88,12 @@ String groupShotsHint(GroupShots s, {required bool admin}) => admin
 // what leaving costs. everything here goes; a group's admin leaves it with
 // no one to change it, and a room's maker takes its link along
 String leaveLine({required bool room, required bool admin}) => room
-    ? (admin ? l10n.groupInfoLeaveRoomMaker : l10n.groupInfoEverythingInItIs)
-    : (admin ? l10n.groupInfoLeaveGroupAdmin : l10n.groupInfoLeaveGroupLine);
+    ? (admin
+          ? l10n.groupInfoLeaveRoomMakerShown
+          : l10n.groupInfoEverythingInItIsShown)
+    : (admin
+          ? l10n.groupInfoLeaveGroupAdminShown
+          : l10n.groupInfoLeaveGroupLineShown);
 
 class GroupInfoScreen extends StatefulWidget {
   final String groupId;
@@ -542,7 +546,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     final ok = await showConfirmSheet(
       context,
       title: l10n.groupInfoClearThisConversation,
-      line: l10n.groupInfoEveryMessageHereIs,
+      line: l10n.groupInfoEveryMessageHereIsShown,
       yes: l10n.groupInfoClear,
     );
     if (ok == true) {
@@ -571,8 +575,8 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     final ok = await showConfirmSheet(
       context,
       title: l10n.groupInfoEndThisGroup,
-      line: l10n.groupInfoEndGroupLine,
-      detail: l10n.groupInfoEndGroupDetail,
+      line: l10n.groupInfoEndGroupLineShown,
+      detail: l10n.groupInfoEndGroupDetailShown,
       yes: l10n.groupInfoEndGroup,
       keep: l10n.commonCancel,
     );

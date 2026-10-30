@@ -27,7 +27,7 @@ Future<bool> removeAsNotThem(
   final yes = await showConfirmSheet(
     context,
     title: l10n.notThemSheetTitle,
-    line: l10n.notThemSheetLine,
+    line: l10n.notThemSheetLineShown,
     yes: l10n.notThemRemove,
     keep: l10n.commonCancel,
     shutOnLock: lockGuard,

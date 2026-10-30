@@ -21,6 +21,7 @@ import '../l10n/dates.dart';
 import '../delivery_mode.dart';
 import '../seen_timers.dart';
 import '../l10n/numbers.dart';
+import '../desktop/desktop_mode.dart' show onDesktop;
 
 class TransportScreen extends StatelessWidget {
   const TransportScreen({super.key});
@@ -76,7 +77,7 @@ class TransportScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: staggerAll([
                       Text(
-                        l10n.transportNothingHereLeavesThe,
+                        l10n.transportNothingHereLeavesTheShown,
                         style: HaloType.mono(size: 12, color: HaloColors.text2),
                       ),
 
@@ -218,7 +219,7 @@ class TransportScreen extends StatelessWidget {
                         child: Padding(
                           padding: const EdgeInsets.only(top: 10),
                           child: Text(
-                            l10n.transportWithNoContactsThe,
+                            l10n.transportWithNoContactsTheShown,
                             style: HaloType.mono(
                               size: 11.5,
                               color: HaloColors.roseText,
@@ -530,28 +531,30 @@ class _AliveState extends State<_Alive> {
               : _ago(appState.lastDrainAt),
           HaloColors.text,
         ),
-        PressScale(
-          scale: 0.98,
-          onTap: _exempt == false
-              ? () async {
-                  await forceShowBackgroundPrompt(context);
-                  _load();
-                }
-              : null,
-          child: _Line(
-            l10n.transportBatteryExemption,
-            _exempt == null
-                ? l10n.transportUnknown
-                : _exempt!
-                ? l10n.transportExempt
-                : l10n.transportNotExemptTapTo,
-            _exempt == null
-                ? HaloColors.text2
-                : _exempt!
-                ? HaloColors.greenText
-                : HaloColors.roseText,
+        // a computer has no battery exemption to ask for
+        if (!onDesktop)
+          PressScale(
+            scale: 0.98,
+            onTap: _exempt == false
+                ? () async {
+                    await forceShowBackgroundPrompt(context);
+                    _load();
+                  }
+                : null,
+            child: _Line(
+              l10n.transportBatteryExemption,
+              _exempt == null
+                  ? l10n.transportUnknown
+                  : _exempt!
+                  ? l10n.transportExempt
+                  : l10n.transportNotExemptTapTo,
+              _exempt == null
+                  ? HaloColors.text2
+                  : _exempt!
+                  ? HaloColors.greenText
+                  : HaloColors.roseText,
+            ),
           ),
-        ),
         // in place from the start, so the rows under them do not shift
         Unfold(
           open: _uptimeMs != null,

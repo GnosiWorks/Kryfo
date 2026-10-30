@@ -85,7 +85,7 @@ Future<String?> showRenameSheet(
               ),
               const SizedBox(height: 6),
               Text(
-                l10n.contactStaysOnThisPhone,
+                l10n.contactStaysOnThisPhoneShown,
                 style: HaloType.sans(size: 12.5, color: HaloColors.text2),
               ),
               const SizedBox(height: 14),
@@ -294,7 +294,7 @@ class _ContactScreenState extends State<ContactScreen> {
     final c = await showPhotoSheet(
       context,
       title: l10n.photoForThem(_name),
-      line: l10n.photoOnlyHereLine,
+      line: l10n.photoOnlyHereLineShown,
       seed: widget.avatarSeed,
       choice: widget.face ?? (_c?['avatar'] as num?)?.toInt(),
       add: photoAddOffered(desktop: onDesktop),
@@ -690,7 +690,7 @@ class _ContactScreenState extends State<ContactScreen> {
                 HaloRow(
                   icon: Icons.add_a_photo_outlined,
                   label: _mine ? l10n.photoChangeTheirs : l10n.photoSetTheirs,
-                  hint: l10n.photoOnlyHere,
+                  hint: l10n.photoOnlyHereShown,
                   onTap: _photoTapped,
                 ),
               // both phones or neither, once theirs knows how. the developer
@@ -775,13 +775,13 @@ class _ContactScreenState extends State<ContactScreen> {
               HaloRow(
                 icon: Icons.delete_outline,
                 label: l10n.contactDeleteChat,
-                hint: l10n.contactMessagesAndContactGone,
+                hint: l10n.contactMessagesAndContactGoneShown,
                 rose: true,
                 onTap: () async {
                   final ok = await showConfirmSheet(
                     context,
                     title: l10n.contactDeleteThisChat,
-                    line: l10n.contactEveryMessageAndThe,
+                    line: l10n.contactEveryMessageAndTheShown,
                     yes: l10n.commonDelete,
                   );
                   if (!ok) return;

@@ -1126,7 +1126,7 @@ extension AppStateArrivals on AppState {
     final bodyText = unsaved
         ? [
             env.message,
-            l10n.appAnAttachmentCouldNot,
+            l10n.appAnAttachmentCouldNotShown,
           ].where((s) => s.trim().isNotEmpty).join('\n')
         : env.message;
     // a sticker is a message of its own: a frame with media, a file or a
