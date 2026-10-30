@@ -8,6 +8,7 @@
 // to say (Fanout, Admit)
 
 import 'dart:convert';
+import 'dart:math' show max;
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart' show sha256;
@@ -188,16 +189,44 @@ class DeviceSessions {
   /// [plain] sealed to [peer]'s [device], as the wire carries it: the type
   /// byte, then the message, in base64, filled as every seal is. an opener
   /// too big for its size throws WaitsForAnswer: that device skips this
-  /// frame, the others get theirs
-  Future<String> seal(String peer, int device, String plain, Uint8List pin) =>
-      _serial(peer, device, () => _seal(peer, device, plain, pin, null));
+  /// frame, the others get theirs. [size], a burst's, as sealAll fills
+  Future<String> seal(
+    String peer,
+    int device,
+    String plain,
+    Uint8List pin, {
+    int? size,
+  }) => _serial(peer, device, () => _seal(peer, device, plain, pin, size));
 
   /// every copy of one message sealed, each filled to the largest copy's
   /// size, so the relay sees one size in the burst: an opener counts as the
-  /// second seal size, where it lands. an opener in a burst past that size
-  /// waits for its device's answer, as a frame too big for an opener does.
-  /// a copy that fails keeps its error; the others go
-  Future<List<DeviceSealed>> sealAll(List<DeviceCopy> copies) async {
+  /// second seal size, where it lands. an opener in a burst at any other
+  /// size waits for its device's answer, as a frame too big for an opener
+  /// does. [size]: the least the burst takes, as the phone's copy measures
+  /// (SignalSession.sealSize). a copy that fails keeps its error; the
+  /// others go
+  Future<List<DeviceSealed>> sealAll(
+    List<DeviceCopy> copies, {
+    int size = 0,
+  }) async {
+    final most = max(size, await burstSize(copies));
+    return [
+      for (final c in copies)
+        await _serial(
+          c.peer,
+          c.device,
+          () => _seal(c.peer, c.device, c.plain, c.pin, most),
+        ).then<DeviceSealed>(
+          (w) => (wire: w, error: null),
+          onError: (Object e) => (wire: null, error: e),
+        ),
+    ];
+  }
+
+  /// the size the largest of [copies] seals to now, 0 when none can: what
+  /// sealAll fills the burst to, measured with the phone's copy
+  /// (SignalSession.sealSize) by a send that has one
+  Future<int> burstSize(List<DeviceCopy> copies) async {
     var most = 0;
     for (final c in copies) {
       try {
@@ -211,20 +240,10 @@ class DeviceSessions {
         });
         if (n != null && n > most) most = n;
       } on Object {
-        // its seal below says why
+        // its seal says why
       }
     }
-    return [
-      for (final c in copies)
-        await _serial(
-          c.peer,
-          c.device,
-          () => _seal(c.peer, c.device, c.plain, c.pin, most),
-        ).then<DeviceSealed>(
-          (w) => (wire: w, error: null),
-          onError: (Object e) => (wire: null, error: e),
-        ),
-    ];
+    return most;
   }
 
   // [size]: the burst's, null for the frame's own
@@ -239,7 +258,9 @@ class DeviceSessions {
     if (record == null) throw const LsError(LsError.noSession);
     final String padded;
     if (_trialType(record, pin) == kLsPreKey) {
-      final o = size != null && size > kSealSizes[1]
+      // in a burst only at the second size: a session rebuilt since the
+      // burst was measured must not seal an opener into a smaller one
+      final o = size != null && size != kSealSizes[1]
           ? null
           : padSealOpener(plain);
       if (o == null) throw WaitsForAnswer(peer);

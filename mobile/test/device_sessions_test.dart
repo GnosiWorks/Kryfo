@@ -8,7 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/device_sessions.dart';
 import 'package:kryfo/signal_ffi/kryfo_signal.dart' show LsBundle;
 import 'package:kryfo/signal_session.dart';
-import 'package:kryfo/wire_pad.dart' show unpad;
+import 'package:kryfo/wire_pad.dart' show kSealSizes, unpad;
 
 import 'signal_kit.dart';
 
@@ -32,6 +32,24 @@ Future<List<Dev>> devices(List<int> ids) async => [
 }
 
 String textOf(Uint8List plain) => unpad(utf8.decode(plain));
+
+// the gift wrap a relay stores for a signal wire of [n] base64 characters,
+// worked out as wire_pad_test does
+int wrapOf(int n) {
+  int b64(int n) => 4 * ((n + 2) ~/ 3);
+  int pad(int l) {
+    if (l <= 32) return 32;
+    var np = 1;
+    while (np < l) {
+      np <<= 1;
+    }
+    final chunk = np <= 256 ? 32 : np ~/ 8;
+    return chunk * ((l - 1) ~/ chunk + 1);
+  }
+
+  int nip44(int l) => b64(67 + pad(l));
+  return 445 + nip44(343 + nip44(206 + n));
+}
 
 void main() {
   late SignalSession ana;
@@ -500,5 +518,149 @@ void main() {
     final b = base64Decode(big[2].wire!).length;
     expect((a - b).abs(), lessThanOrEqualTo(32), reason: '$a $b');
     expect(a, greaterThan(10000));
+  });
+
+  // bobs[i] answered once
+  Future<void> answer(Dev d) async {
+    final (type, body) = wireOf(
+      await anaDs.seal('bob', d.id, '{"t":"a"}', d.key),
+    );
+    await d.ds.open(
+      'ana',
+      1,
+      type,
+      body,
+      ana.identity.public,
+      reg: ana.registrationId,
+    );
+    final (t2, b2) = wireOf(
+      await d.ds.seal('ana', 1, '{"t":"ok"}', ana.identity.public),
+    );
+    await anaDs.open('bob', d.id, t2, b2, d.key, reg: d.reg);
+  }
+
+  test('an opener goes in a burst only at the second size', () async {
+    await buildAll();
+    final d = bobs.first;
+    final before = await ana.sessionStore.load('bob');
+    // measured as a whisper, rebuilt since: it waits, nothing is spent
+    for (final size in [kSealSizes[0], kSealSizes[2]]) {
+      await expectLater(
+        anaDs.seal('bob', d.id, '{"t":"hi"}', d.key, size: size),
+        throwsA(isA<WaitsForAnswer>()),
+        reason: '$size',
+      );
+    }
+    expect(await ana.sessionStore.load('bob'), before);
+    final w = await anaDs.seal(
+      'bob',
+      d.id,
+      '{"t":"hi"}',
+      d.key,
+      size: kSealSizes[1],
+    );
+    expect(wireOf(w).$1, kLsPreKey);
+  });
+
+  test('the phone\'s copy lands on the burst\'s gift wrap', () async {
+    await buildAll();
+    // ana and bob's phone talk on their own session, answered
+    await ana.processBundle(
+      'bob',
+      lsBundleOf(ana.lib, await bob.makeBundleB64()),
+    );
+    await openWire(bob, 'ana', await ana.encryptTo('bob', '{"t":"a"}'));
+    await openWire(ana, 'bob', await bob.encryptTo('ana', '{"t":"ok"}'));
+    const plain = '{"t":"hi"}';
+    final copies = [
+      for (final d in bobs.take(2))
+        (peer: 'bob', device: d.id, pin: d.key, plain: plain),
+    ];
+    // one device still waits for its answer: its opener lifts the burst
+    await answer(bobs[0]);
+    final phone = await ana.sealSize('bob', plain);
+    expect(phone, kSealSizes[0]);
+    final size = [
+      await anaDs.burstSize(copies),
+      phone!,
+    ].reduce((a, b) => a > b ? a : b);
+    expect(size, kSealSizes[1]);
+    final out = await anaDs.sealAll(copies, size: size);
+    final w = await ana.encryptTo('bob', plain, size: size);
+    expect(base64Decode(w)[0], kLsWhisper);
+    final wraps = {
+      wrapOf(w.length),
+      for (final o in out) wrapOf(o.wire!.length),
+    };
+    expect(wraps, hasLength(1), reason: '$wraps');
+    expect(unpad(await openWire(bob, 'ana', w)), plain);
+    // a burst past the second size: the phone's opener would wait too
+    final carol = await testStore();
+    await ana.processBundle(
+      'carol',
+      lsBundleOf(ana.lib, await carol.makeBundleB64()),
+    );
+    expect(await ana.sealSize('carol', plain), kSealSizes[1]);
+    await expectLater(
+      ana.encryptTo('carol', plain, size: kSealSizes[2]),
+      throwsA(isA<WaitsForAnswer>()),
+    );
+  });
+
+  test('whispers in six pq ratchet states land on one gift wrap', () async {
+    final six = [
+      ...bobs,
+      ...await devices([3]),
+    ];
+    bobs = six;
+    await buildAll();
+    // each device a different number of turns into its ratchets
+    for (var i = 0; i < six.length; i++) {
+      await answer(six[i]);
+      for (var k = 0; k < i * 3; k++) {
+        final d = six[i];
+        final (t1, b1) = wireOf(
+          await anaDs.seal('bob', d.id, '{"t":"$k"}', d.key),
+        );
+        await d.ds.open(
+          'ana',
+          1,
+          t1,
+          b1,
+          ana.identity.public,
+          reg: ana.registrationId,
+        );
+        if (k.isEven) {
+          final (t2, b2) = wireOf(
+            await d.ds.seal('ana', 1, '{"t":"$k"}', ana.identity.public),
+          );
+          await anaDs.open('bob', d.id, t2, b2, d.key, reg: d.reg);
+        }
+      }
+    }
+    for (var k = 0; k < kSealSizes.length; k++) {
+      final plain = '{"t":"${'w' * (kSealSizes[k] - 60)}"}';
+      for (var round = 0; round < 3; round++) {
+        final out = await anaDs.sealAll([
+          for (final d in six)
+            (peer: 'bob', device: d.id, pin: d.key, plain: plain),
+        ]);
+        final wraps = <int>{};
+        for (var i = 0; i < six.length; i++) {
+          final (type, body) = wireOf(out[i].wire!);
+          expect(type, kLsWhisper);
+          wraps.add(wrapOf(out[i].wire!.length));
+          await six[i].ds.open(
+            'ana',
+            1,
+            type,
+            body,
+            ana.identity.public,
+            reg: ana.registrationId,
+          );
+        }
+        expect(wraps, hasLength(1), reason: 'size $k round $round: $wraps');
+      }
+    }
   });
 }
