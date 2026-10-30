@@ -321,7 +321,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      l10n.notificationsLead,
+                      l10n.notificationsLeadShown,
                       style: HaloType.sans(
                         size: 13,
                         height: 1.45,

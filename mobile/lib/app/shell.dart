@@ -210,39 +210,42 @@ class _AddSheetState extends State<_AddSheet>
             ),
             const SizedBox(height: 6),
             Text(
-              l10n.appScanTheirCodeOr,
+              l10n.appScanTheirCodeOrShown,
               style: HaloType.sans(size: 12.5, color: HaloColors.text2),
             ),
-            const SizedBox(height: 16),
-            _Pressable(
-              onTap: () => Navigator.pop(sheetCtx, 'scan'),
-              child: Container(
-                height: 48,
-                decoration: BoxDecoration(
-                  color: HaloColors.amber,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.qr_code_scanner,
-                      size: 19,
-                      color: HaloColors.onAmber,
-                    ),
-                    const SizedBox(width: 9),
-                    Text(
-                      l10n.appScanTheirCode,
-                      style: HaloType.sans(
-                        size: 14,
-                        weight: FontWeight.w600,
+            // no camera on a computer: the field below is the way in
+            if (!onDesktop) ...[
+              const SizedBox(height: 16),
+              _Pressable(
+                onTap: () => Navigator.pop(sheetCtx, 'scan'),
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: HaloColors.amber,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.qr_code_scanner,
+                        size: 19,
                         color: HaloColors.onAmber,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 9),
+                      Text(
+                        l10n.appScanTheirCode,
+                        style: HaloType.sans(
+                          size: 14,
+                          weight: FontWeight.w600,
+                          color: HaloColors.onAmber,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
+            ],
             const SizedBox(height: 14),
             AnimatedBuilder(
               animation: _shake,

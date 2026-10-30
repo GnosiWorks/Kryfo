@@ -328,7 +328,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final go = await showConfirmSheet(
       context,
       title: l10n.settingsWipeKryfo,
-      line: l10n.settingsIdentityMessagesContactsAnd,
+      line: l10n.settingsIdentityMessagesContactsAndShown,
       yes: l10n.commonContinue,
       keep: l10n.commonCancel,
     );
@@ -620,7 +620,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               HaloRow(
                 icon: Icons.shield_outlined,
                 label: l10n.settingsScamShield,
-                hint: l10n.settingsScamShieldHint,
+                hint: l10n.settingsScamShieldHintShown,
                 toggled: _shieldOn ?? true,
                 pending: _shieldOn == null,
                 onTap: () async {
@@ -851,7 +851,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 HaloRow(
                   icon: Icons.translate_rounded,
                   label: l10n.translateSettingsRow,
-                  hint: l10n.translateSettingsHint,
+                  hint: l10n.translateSettingsHintShown,
                   onTap: () => Navigator.of(
                     context,
                   ).push(haloRoute(TranslationScreen(hub: hub))),
@@ -994,7 +994,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               HaloRow(
                 icon: Icons.delete_outline,
-                label: l10n.settingsWipeKryfoFromThis,
+                label: l10n.settingsWipeKryfoFromThisShown,
                 rose: true,
                 onTap: _confirmWipe,
               ),

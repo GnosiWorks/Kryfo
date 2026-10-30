@@ -1004,7 +1004,7 @@ class _Intro extends StatelessWidget {
     return _Centre(
       glyph: searchGlyph,
       title: l10n.searchIntroTitle,
-      line: l10n.searchIntroLine,
+      line: l10n.searchIntroLineShown,
     );
   }
 }

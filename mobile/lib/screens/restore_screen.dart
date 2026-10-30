@@ -127,7 +127,7 @@ Future<void> endRestoreAway(
                 // the privacy settings came with it, never a PIN. a file
                 // that brought none says to check them
                 line:
-                    '${l10n.restoreKryfoWillCloseNow(haloId)}\n\n'
+                    '${l10n.restoreKryfoWillCloseNowShown(haloId)}\n\n'
                     '${restoredSettings ? l10n.restorePrivacyKept : l10n.restoreCheckProtections}',
                 ok: l10n.restoreReopenKryfo,
               ),
@@ -298,7 +298,7 @@ class _RestoreScreenState extends State<RestoreScreen> with PinShield {
     if (appState.onboardingComplete) {
       final ok = await showConfirmSheet(
         context,
-        title: l10n.restoreReplaceTheAccountOn,
+        title: l10n.restoreReplaceTheAccountOnShown,
         line: l10n.restoreWhatIsHereNow,
         yes: l10n.restoreReplaceIt,
       );
@@ -354,7 +354,7 @@ class _RestoreScreenState extends State<RestoreScreen> with PinShield {
         final ok = await showConfirmSheet(
           context,
           title: l10n.restoreCouldNotBeReleased(mine),
-          line: l10n.restoreTheRegistryDidNot(mine),
+          line: l10n.restoreTheRegistryDidNotShown(mine),
           yes: l10n.restoreRestoreAnyway,
           keep: l10n.restoreNotYet,
         );
@@ -418,7 +418,7 @@ class _RestoreScreenState extends State<RestoreScreen> with PinShield {
           // the privacy settings came with it, never a PIN. a file that
           // brought none says to check them
           line:
-              '${l10n.restoreKryfoWillCloseNow(s.haloId)}\n\n'
+              '${l10n.restoreKryfoWillCloseNowShown(s.haloId)}\n\n'
               '${restoredSettings ? l10n.restorePrivacyKept : l10n.restoreCheckProtections}',
           ok: l10n.restoreReopenKryfo,
         ),
@@ -512,13 +512,13 @@ class _RestoreScreenState extends State<RestoreScreen> with PinShield {
                     : l10n.restoreYourPhotosVoiceNotes,
               ),
               _item(l10n.restoreYourOnionAddressSo),
-              _item(l10n.restoreAnythingSentToYou),
+              _item(l10n.restoreAnythingSentToYouShown),
               _item(l10n.restoreYourSupporterBadgeIf),
               if (s.hiddenChats != null) _item(l10n.restoreHiddenFollow),
               HaloSection(l10n.restoreWhatDoesnT, flush: true),
-              _item(l10n.restoreTheOldPhoneStops, strong: true),
+              _item(l10n.restoreTheOldPhoneStopsShown, strong: true),
               if (s.moved != true)
-                _item(l10n.restoreIfThePhoneThis, strong: true),
+                _item(l10n.restoreIfThePhoneThisShown, strong: true),
               _item(l10n.restoreNotificationsNeedSettingUp),
               const SizedBox(height: 22),
               HaloPrimaryButton(
@@ -624,7 +624,7 @@ class _RestoreScreenState extends State<RestoreScreen> with PinShield {
               ),
               const SizedBox(height: 8),
               Text(
-                l10n.restoreABackupBringsBack,
+                l10n.restoreABackupBringsBackShown,
                 style: HaloType.sans(
                   size: 13,
                   color: HaloColors.text2,

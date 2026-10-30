@@ -935,7 +935,7 @@ class GifPhonePanel extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         Text(
-          l10n.gifPhoneLine,
+          l10n.gifPhoneLineShown,
           textAlign: TextAlign.center,
           style: HaloType.sans(size: 14, color: HaloColors.text2),
         ),

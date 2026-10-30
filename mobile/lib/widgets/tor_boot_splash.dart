@@ -176,7 +176,7 @@ class _TorBootSplashState extends State<TorBootSplash>
                         child: Text(
                           tor
                               ? l10n.torBootSplashTheNetworkThatKeeps
-                              : l10n.torBootSplashMadeOnThisPhone,
+                              : l10n.torBootSplashMadeOnThisPhoneShown,
                           textAlign: TextAlign.center,
                           style: HaloType.sans(
                             size: 12.5,
