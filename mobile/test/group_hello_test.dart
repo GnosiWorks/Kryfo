@@ -1233,4 +1233,27 @@ void main() {
     await _settle();
     expect(await signalSession.sessionStore.load(down.words), isNull);
   });
+
+  test('a member takes a newer roster invite from the admin within the '
+      'day: the day limit is the admin\'s alone', () async {
+    await myRoster();
+    final admin = await _Phone.make('admin-of-rone', seed++);
+    final up = await phone('above-me-rone', above: true);
+    const h = 3600 * 1000;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final first = await up.roster(nowMs: now - 5 * h);
+    await joinFrom(admin, [(up, first)]);
+    expect((await rosterInviteOf(db, _g, up.words))!.id, first.id);
+    final newer = await up.roster(nowMs: now);
+    await app.groupControlForTest(
+      admin.words,
+      await env(
+        admin,
+        GroupControl(type: 'roster', participants: [up.part(ri: newer)]),
+      ),
+      live,
+    );
+    await _settle();
+    expect((await rosterInviteOf(db, _g, up.words))!.id, newer.id);
+  });
 }
