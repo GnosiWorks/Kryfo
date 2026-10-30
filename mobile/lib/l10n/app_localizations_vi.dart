@@ -10094,6 +10094,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get desktopTrayTip => 'Kryfo đang chạy và nhận tin nhắn';
 
   @override
+  String get desktopTrayLockedTip => 'Mở Kryfo để bắt đầu nhận tin nhắn';
+
+  @override
   String get desktopRunSection => 'Trên máy tính này';
 
   @override
@@ -10116,7 +10119,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get desktopStartHint =>
-      'Kryfo mở ra khi bạn đăng nhập vào máy tính này.';
+      'Kryfo khởi động trong khay hệ thống khi bạn đăng nhập vào máy tính này.';
 
   @override
   String get desktopStartRefused =>

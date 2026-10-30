@@ -172,6 +172,17 @@ void main() {
       final v = judge(kills: [now + hour, now + 2 * hour]);
       expect(v.kills, [now]);
     });
+    test('a computer is quit, not killed: no card', () {
+      onDesktop = true;
+      addTearDown(() => onDesktop = false);
+      final v = judge(kills: [now - 20 * hour, now - 3 * hour]);
+      expect(v.wasKill, false);
+      expect(v.showNudge, false);
+      expect(
+        judge(kills: [1, 2, 3].map((h) => now - h * hour).toList()).showNudge,
+        false,
+      );
+    });
   });
 
   group('the fifteen-minute job in always-on', () {

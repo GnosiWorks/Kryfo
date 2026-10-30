@@ -12669,6 +12669,10 @@
   "@desktopTrayTip": {
     "description": "desktop/desktop_start.dart: the tray icon tooltip"
   },
+  "desktopTrayLockedTip": "Open Kryfo to start receiving messages",
+  "@desktopTrayLockedTip": {
+    "description": "desktop/desktop_start.dart: the tray icon tooltip after a start with the computer, before kryfo is unlocked"
+  },
   "desktopRunSection": "On this computer",
   "@desktopRunSection": {
     "description": "notifications page on a computer: the section that replaces the phone's delivery modes"
@@ -12693,7 +12697,7 @@
   "@desktopStartRow": {
     "description": "switch: kryfo starts when the user signs in to the computer"
   },
-  "desktopStartHint": "Kryfo opens when you sign in to this computer.",
+  "desktopStartHint": "Kryfo starts in the tray when you sign in to this computer.",
   "@desktopStartHint": {
     "description": "under the start switch"
   },

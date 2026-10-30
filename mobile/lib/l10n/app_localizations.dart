@@ -16217,6 +16217,12 @@ abstract class AppLocalizations {
   /// **'Kryfo is running and receiving messages'**
   String get desktopTrayTip;
 
+  /// desktop/desktop_start.dart: the tray icon tooltip after a start with the computer, before kryfo is unlocked
+  ///
+  /// In en, this message translates to:
+  /// **'Open Kryfo to start receiving messages'**
+  String get desktopTrayLockedTip;
+
   /// notifications page on a computer: the section that replaces the phone's delivery modes
   ///
   /// In en, this message translates to:
@@ -16256,7 +16262,7 @@ abstract class AppLocalizations {
   /// under the start switch
   ///
   /// In en, this message translates to:
-  /// **'Kryfo opens when you sign in to this computer.'**
+  /// **'Kryfo starts in the tray when you sign in to this computer.'**
   String get desktopStartHint;
 
   /// the computer refused to add kryfo to its startup (portal said no, file or registry not writable)

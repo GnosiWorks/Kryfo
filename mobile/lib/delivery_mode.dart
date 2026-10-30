@@ -187,7 +187,9 @@ RestartVerdict judgeRestart({
       if (k > 0 && nowMs - k < kDayMs && k <= nowMs) k,
   ];
   final gap = nowMs - lastBeatMs;
+  // a computer is quit and started again, never killed
   final wasKill =
+      !onDesktop &&
       mode == DeliveryMode.always &&
       lastBeatMs > 0 &&
       gap > kKillGapMs &&
@@ -197,7 +199,8 @@ RestartVerdict judgeRestart({
   return RestartVerdict(
     wasKill,
     recent,
-    !nudgeShown &&
+    !onDesktop &&
+        !nudgeShown &&
         mode == DeliveryMode.always &&
         recent.length >= kKillsForNudge,
   );

@@ -10236,6 +10236,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get desktopTrayTip => 'Kryfo يعمل ويستقبل الرسائل';
 
   @override
+  String get desktopTrayLockedTip => 'افتح Kryfo لتبدأ في استقبال الرسائل';
+
+  @override
   String get desktopRunSection => 'على هذا الحاسوب';
 
   @override
@@ -10257,7 +10260,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get desktopStartRow => 'التشغيل مع بدء الحاسوب';
 
   @override
-  String get desktopStartHint => 'يفتح Kryfo عند تسجيل دخولك إلى هذا الحاسوب.';
+  String get desktopStartHint =>
+      'يبدأ Kryfo في علبة النظام عند تسجيل دخولك إلى هذا الحاسوب.';
 
   @override
   String get desktopStartRefused =>

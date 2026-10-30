@@ -10210,6 +10210,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get desktopTrayTip => 'Kryfo läuft und empfängt Nachrichten';
 
   @override
+  String get desktopTrayLockedTip => 'Öffne Kryfo, um Nachrichten zu empfangen';
+
+  @override
   String get desktopRunSection => 'Auf diesem Computer';
 
   @override
@@ -10232,7 +10235,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get desktopStartHint =>
-      'Kryfo öffnet sich, wenn du dich an diesem Computer anmeldest.';
+      'Kryfo startet im Infobereich, wenn du dich an diesem Computer anmeldest.';
 
   @override
   String get desktopStartRefused =>

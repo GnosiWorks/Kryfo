@@ -10120,6 +10120,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get desktopTrayTip => 'Kryfo در حال اجراست و پیام می‌گیرد';
 
   @override
+  String get desktopTrayLockedTip => 'Kryfo را باز کنید تا پیام‌ها برسند';
+
+  @override
   String get desktopRunSection => 'روی این رایانه';
 
   @override
@@ -10142,7 +10145,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get desktopStartHint =>
-      'Kryfo وقتی وارد این رایانه می‌شوید باز می‌شود.';
+      'Kryfo وقتی وارد این رایانه می‌شوید در سینی سیستم شروع به کار می‌کند.';
 
   @override
   String get desktopStartRefused =>
