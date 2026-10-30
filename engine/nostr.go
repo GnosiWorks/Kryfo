@@ -495,9 +495,9 @@ func catchupHoldOf(key string) catchup.Hold {
 
 // our relay's clearnet name. the app puts our relay first in every list: in
 // private mode its onion, with this name right after it, and in the other
-// modes this name (relaysFor in app/state.dart). a var so tests can point
-// it at a stand-in.
-var ownRelayHost = "relay.kryfo.app"
+// modes this name (relaysFor in app/state.dart). tests point it at a
+// stand-in.
+var ownRelayHost = &hostSeam{app: "relay.kryfo.app"}
 
 // the entries of a relay list that reach our stores: the first, and any on
 // one of their clearnet names. each store holds its own anchor, see

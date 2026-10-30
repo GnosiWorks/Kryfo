@@ -84,10 +84,13 @@ func useTwoStoresAndBackup(t *testing.T) (a, b, p *relayStandIn, socks *socksSta
 	a, b, p = newRelayStandIn(t, 0), newRelayStandIn(t, 0), newRelayStandIn(t, 0)
 	socks = newSocksStandIn(t)
 	useStandIns(t, modeBalanced, socks, a, b)
-	old, oldSpread := secondRelayHost, secondFirstSpread
-	secondRelayHost = strings.TrimPrefix(b.url(), "ws://")
+	old, oldSpread := secondRelayHost.get(), secondFirstSpread
+	secondRelayHost.put(strings.TrimPrefix(b.url(), "ws://"))
 	secondFirstSpread = 0
-	t.Cleanup(func() { secondRelayHost, secondFirstSpread = old, oldSpread })
+	t.Cleanup(func() {
+		secondRelayHost.put(old)
+		secondFirstSpread = oldSpread
+	})
 	freshInbox(t)
 	setBackups([]string{p.url()})
 	p.mu.Lock()
@@ -312,9 +315,9 @@ func TestPrivateQueuesNothingForASwitchToFast(t *testing.T) {
 		t.Fatalf("private queued %d wraps", n)
 	}
 	// to fast, the first store back
-	old := secondRelayHost
-	secondRelayHost = strings.TrimPrefix(b.url(), "ws://")
-	t.Cleanup(func() { secondRelayHost = old })
+	old := secondRelayHost.get()
+	secondRelayHost.put(strings.TrimPrefix(b.url(), "ws://"))
+	t.Cleanup(func() { secondRelayHost.put(old) })
 	switchMode(modeBalanced)
 	setRelays([]string{a.url(), b.url()})
 	standInDown(a, false)
@@ -548,9 +551,9 @@ func TestAPublicRelayInTheListIsNeverDialledDirectly(t *testing.T) {
 	a, b, p := newRelayStandIn(t, 0), newRelayStandIn(t, 0), newRelayStandIn(t, 0)
 	socks := newSocksStandIn(t)
 	useStandIns(t, modeBalanced, socks, a, b, p)
-	old := secondRelayHost
-	secondRelayHost = strings.TrimPrefix(b.url(), "ws://")
-	t.Cleanup(func() { secondRelayHost = old })
+	old := secondRelayHost.get()
+	secondRelayHost.put(strings.TrimPrefix(b.url(), "ws://"))
+	t.Cleanup(func() { secondRelayHost.put(old) })
 	freshInbox(t)
 	statusMu.RLock()
 	oldStatus := torStatus
@@ -644,10 +647,13 @@ func TestPrivateReadsAndWritesBothOnions(t *testing.T) {
 	a, b, p := newRelayStandIn(t, 0), newRelayStandIn(t, 0), newRelayStandIn(t, 0)
 	socks := newSocksStandIn(t)
 	useStandIns(t, modePrivate, socks, a, b, p)
-	old, oldSpread := secondRelayHost, secondFirstSpread
-	secondRelayHost = strings.TrimPrefix(b.url(), "ws://")
+	old, oldSpread := secondRelayHost.get(), secondFirstSpread
+	secondRelayHost.put(strings.TrimPrefix(b.url(), "ws://"))
 	secondFirstSpread = 0
-	t.Cleanup(func() { secondRelayHost, secondFirstSpread = old, oldSpread })
+	t.Cleanup(func() {
+		secondRelayHost.put(old)
+		secondFirstSpread = oldSpread
+	})
 	freshInbox(t)
 	statusMu.RLock()
 	oldStatus := torStatus

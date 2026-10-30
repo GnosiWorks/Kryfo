@@ -22,10 +22,13 @@ import (
 func useTwoStores(t *testing.T, a, b *relayStandIn, more ...*relayStandIn) {
 	t.Helper()
 	useStandIns(t, modeBalanced, nil, append([]*relayStandIn{a, b}, more...)...)
-	old, oldSpread := secondRelayHost, secondFirstSpread
-	secondRelayHost = strings.TrimPrefix(b.url(), "ws://")
+	old, oldSpread := secondRelayHost.get(), secondFirstSpread
+	secondRelayHost.put(strings.TrimPrefix(b.url(), "ws://"))
 	secondFirstSpread = 0
-	t.Cleanup(func() { secondRelayHost, secondFirstSpread = old, oldSpread })
+	t.Cleanup(func() {
+		secondRelayHost.put(old)
+		secondFirstSpread = oldSpread
+	})
 	freshInbox(t)
 }
 
