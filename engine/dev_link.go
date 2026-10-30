@@ -149,17 +149,30 @@ func (r *linkRun) set(st, why string) {
 	r.mu.Unlock()
 }
 
+// the run ends without a link. its secrets go once its own goroutine has
+// stopped using them (ended), never from under it
 func (r *linkRun) failed(why string) {
 	r.mu.Lock()
-	defer r.mu.Unlock()
-	if r.st == lsDone || r.st == lsFailed {
-		return
+	if r.st != lsDone && r.st != lsFailed {
+		r.st, r.why = lsFailed, why
 	}
-	r.st, r.why = lsFailed, why
-	r.forget()
+	r.mu.Unlock()
+	r.cancel()
 }
 
-// everything secret goes; the state stays for dart to read
+// the run's goroutine is done: a failed run's secrets go now; a good one's
+// stay for take, which wipes them
+func (r *linkRun) ended() {
+	r.cancel()
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.st == lsFailed {
+		r.forget()
+	}
+}
+
+// everything secret goes; the state stays for dart to read. r.mu held, and
+// the run's goroutine no longer at work
 func (r *linkRun) forget() {
 	if r.j != nil {
 		r.j.Abort()
@@ -244,6 +257,13 @@ func joinStart(key devices.Key, reg uint32) (string, *linkRun, error) {
 	r.world()
 	id := newLinkID()
 	linkMu.Lock()
+	// one link at a time: a new code ends the one before
+	for k, o := range linkRuns {
+		if o.j != nil {
+			o.failed(lsWhyEnd)
+			delete(linkRuns, k)
+		}
+	}
 	linkRuns[id] = r
 	linkMu.Unlock()
 	go r.join(ctx)
@@ -251,7 +271,7 @@ func joinStart(key devices.Key, reg uint32) (string, *linkRun, error) {
 }
 
 func (r *linkRun) join(ctx context.Context) {
-	defer r.cancel()
+	defer r.ended()
 	if err := r.joinSteps(ctx); err != nil {
 		log.Printf("link: the joining side ended (%s)", whyOf(err))
 		r.failed(whyOf(err))
@@ -408,7 +428,6 @@ func linkStart(offer []byte, identity devices.Key) (string, *linkRun, error) {
 	// one link at a time: a new one ends the one before
 	for k, o := range linkRuns {
 		if o.p != nil {
-			o.cancel()
 			o.failed(lsWhyEnd)
 			delete(linkRuns, k)
 		}
@@ -420,7 +439,7 @@ func linkStart(offer []byte, identity devices.Key) (string, *linkRun, error) {
 }
 
 func (r *linkRun) phone(ctx context.Context, accept []byte) {
-	defer r.cancel()
+	defer r.ended()
 	if err := r.phoneSteps(ctx, accept); err != nil {
 		log.Printf("link: the phone's side ended (%s)", whyOf(err))
 		r.failed(whyOf(err))
@@ -651,10 +670,10 @@ func (r *linkRun) endBundles(klb1 []byte, why string) {
 	}
 	if why != "" {
 		r.st, r.why = lsFailed, why
-		r.forget()
 	} else {
 		r.st = lsBundles
 	}
+	// the phone's goroutine wakes and ends: on a failure it wipes
 	r.cancel()
 }
 
@@ -772,7 +791,6 @@ func linkCall(op string, a *linkArgs, out *linkOut) error {
 	case "confirm":
 		return r.confirmed()
 	case "end":
-		r.cancel()
 		r.failed(lsWhyEnd)
 		linkMu.Lock()
 		delete(linkRuns, a.Link)
