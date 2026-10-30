@@ -58,6 +58,11 @@ class SignalSession {
   bool get ready => _ready;
   late Database _db;
   String _prefix = '';
+
+  /// the database and table prefix this store writes in: DeviceSessions
+  /// keeps its rows in the same tables and transactions
+  Database get database => _db;
+  String get tablePrefix => _prefix;
   // the base keys of the sessions a restore brought back. the phone the
   // file was made on went on sealing on them after it, so the peer has
   // spent their next message keys already: none is sealed on again (see
@@ -149,6 +154,18 @@ class SignalSession {
   static const kSessionKeyLife = Duration(days: 30);
   static const kSessionKeyGrace = Duration(days: 16);
 
+  /// how long a linked device's bundle waits in its phone's pool at most
+  /// (the engine's PoolMaxAge): its one-time kyber key lives that and the
+  /// grace, so a bundle handed out on its last pool day still opens for 16
+  static const kPoolMaxAge = Duration(days: 7);
+  static const kPoolKyberLife = Duration(
+    days: 7 + 16, // kPoolMaxAge + kSessionKeyGrace
+  );
+
+  /// the session prekeys were made or replaced: a linked device sends its
+  /// phone the next last resort bundle (DeviceSessions.lastResortBundle)
+  void Function()? onSessionPreKeys;
+
   // a prekey id of this identity's that is not taken: random, never 1 (the
   // main invite's) or 0
   Future<int> _freeId(Future<bool> Function(int id) taken) async {
@@ -196,6 +213,12 @@ class SignalSession {
         await kyberPreKeyStore.remove(r['id'] as int);
       }
     }
+    final poolLife = kPoolKyberLife.inMilliseconds;
+    for (final r in await _keyRows('kyber_prekeys', kUsePool)) {
+      if (at - (r['created_at'] as int) >= poolLife) {
+        await kyberPreKeyStore.remove(r['id'] as int);
+      }
+    }
     if (!live || !liveK) await _newSessionPreKeys(at);
   }
 
@@ -225,6 +248,7 @@ class SignalSession {
       ).store(kId, k.record, lastResort: true, use: kUseSession, createdAt: at);
     });
     dlog('signal: made session prekeys');
+    onSessionPreKeys?.call();
   }
 
   /// the session prekeys a heal or a device bundle names now. a pair 30
@@ -254,13 +278,19 @@ class SignalSession {
 
   /// a one-time kyber prekey for one heal: gone when the opener built on
   /// it opens, or 16 days after it was made
-  Future<int> makeHealKyber({int? now}) async {
+  Future<int> makeHealKyber({int? now}) => _oneTimeKyber(kUseHeal, now);
+
+  /// a one-time kyber prekey for a device bundle in the phone's pool: gone
+  /// when the opener built on it opens, or kPoolKyberLife after it was made
+  Future<int> makePoolKyber({int? now}) => _oneTimeKyber(kUsePool, now);
+
+  Future<int> _oneTimeKyber(String use, int? now) async {
     final at = now ?? _now();
     final id = await _freeId(kyberPreKeyStore.contains);
     await kyberPreKeyStore.store(
       id,
       lib.kyberPreKey(identity, id, at).record,
-      use: kUseHeal,
+      use: use,
       createdAt: at,
     );
     return id;
