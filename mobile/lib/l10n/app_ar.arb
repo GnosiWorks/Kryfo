@@ -2836,5 +2836,14 @@
   "desktopPassStaysWindows": "تعذّر على Kryfo حفظ مفتاحه مع حسابك على Windows، لذا تبقى عبارة المرور.",
   "desktopBackupCardTitle": "احتفظ بنسخة Kryfo الاحتياطية",
   "desktopBackupCardLine": "حسابك على Windows في هذا الحاسوب يحفظ مفتاح Kryfo. نسخة Kryfo الاحتياطية تعيد كل شيء إن أُعيد ضبط الحاسوب أو الحساب يومًا.",
-  "desktopBackupHint": "تعيد كل شيء إن أُعيد ضبط هذا الحاسوب يومًا."
+  "desktopBackupHint": "تعيد كل شيء إن أُعيد ضبط هذا الحاسوب يومًا.",
+  "chatHealRestored": "أعاد ⁨{name}⁩ إعداد Kryfo",
+  "chatHealNewSession": "بدأ هاتف ⁨{name}⁩ جلسة آمنة جديدة",
+  "chatHealHeldLine": "سبق أن تحققت من ⁨{name}⁩. لن يُرسل شيء حتى تتحقق من الرقم أو تتابع المحادثة. رسائله ما زالت تصل.",
+  "chatKeepChatting": "متابعة المحادثة",
+  "chatNeedsUpdateToChat": "يحتاج ⁨{name}⁩ إلى تحديث Kryfo لمتابعة المحادثة.",
+  "restoreOlderTitle": "ستتوقف بعض المحادثات مؤقتًا",
+  "restoreOlderOne": "يستخدم ⁨{name}⁩ إصدارًا أقدم من Kryfo. ستتوقف محادثتكما مؤقتًا حتى يحدّثه.",
+  "restoreOlderTwo": "يستخدم ⁨{first}⁩ و⁨{second}⁩ إصدارًا أقدم من Kryfo. ستتوقف محادثاتك معهما مؤقتًا حتى يحدّثا التطبيق.",
+  "restoreOlderMany": "يستخدم ⁨{first}⁩ و⁨{second}⁩ و{count} آخرون إصدارًا أقدم من Kryfo. ستتوقف محادثاتك معهم مؤقتًا حتى يحدّثوا التطبيق."
 }

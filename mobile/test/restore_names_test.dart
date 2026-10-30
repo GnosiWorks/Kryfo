@@ -17,6 +17,7 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
     show HaloDb, HaloEngine, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/session.dart';
+import 'package:kryfo/heal.dart' show kRestoreAfterPref;
 import 'package:kryfo/signal_session.dart' show kSessionsRestoredPref;
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -105,7 +106,7 @@ void main() {
   tearDown(() => root.deleteSync(recursive: true));
 
   // a backup file holding [names], each file its own name as bytes
-  Future<String> file(List<String> names) async {
+  Future<String> file(List<String> names, {int v = kBackupVersion}) async {
     final src = p.join(root.path, 'src');
     final entries = <Map<String, dynamic>>[];
     for (final n in names) {
@@ -119,11 +120,7 @@ void main() {
       outPath: out,
       salt: Uint8List(16),
       cipher: _Cipher(),
-      manifest: {
-        'v': kBackupVersion,
-        'files': entries,
-        'dbPassphrase': "x'${'4d' * 32}'",
-      },
+      manifest: {'v': v, 'files': entries, 'dbPassphrase': "x'${'4d' * 32}'"},
       root: '',
       source: (n) => p.join(src, n.replaceAll('/', '__')),
     );
@@ -142,6 +139,37 @@ void main() {
     for (final n in [..._stray, 'vault/onion.key', '../x', 'media/../x']) {
       expect(restorableName(n), isFalse, reason: n);
     }
+  });
+
+  test('identity v4 writes 4 and 5, which a 0.5.x phone refuses (it takes '
+      'up to 3); this one takes every version up to 5', () async {
+    expect(kBackupVersion, 4);
+    expect(kBackupVersionHidden, 5);
+    expect(kBackupVersion, greaterThan(kBackupVersion05));
+    expect(kBackupVersionHidden, greaterThan(kBackupVersion05));
+    for (final v in [2, 3, 4, 5]) {
+      final out = await file(_kept, v: v);
+      final land = p.join(root.path, 'land$v');
+      Directory(land).createSync();
+      final m = await unpackBackup(out, _Cipher(), root: land);
+      expect(m['v'], v);
+      expect(under(land), [..._kept]..sort(), reason: 'v$v');
+    }
+    // a newer file than this one: refused before a byte of it lands
+    final out = await file(_kept, v: kBackupVersionMost + 1);
+    final land = p.join(root.path, 'land6');
+    Directory(land).createSync();
+    await expectLater(
+      unpackBackup(out, _Cipher(), root: land),
+      throwsA(
+        isA<RestoreError>().having(
+          (e) => e.why,
+          'why',
+          RestoreFailure.newerVersion,
+        ),
+      ),
+    );
+    expect(under(land), isEmpty);
   });
 
   test('a restore lands the known names and nothing else', () async {
@@ -211,6 +239,7 @@ void main() {
     // the everyday sessions are not the ones that came back
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.containsKey(kSessionsRestoredPref), isFalse);
+    expect(prefs.containsKey(kRestoreAfterPref), isFalse);
     // nothing staged is left behind
     expect(Directory(p.join(docs, 'restore_d')).existsSync(), isFalse);
   });
@@ -232,8 +261,10 @@ void main() {
     });
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.containsKey('moved.at'), isFalse);
-    // and the next start marks the sessions the file brought back
+    // and the next start marks the sessions the file brought back, and
+    // runs what follows a restore (a v1 file says no date: 0)
     expect(prefs.getBool(kSessionsRestoredPref), isTrue);
+    expect(prefs.getInt(kRestoreAfterPref), 0);
     expect(e.restored, ['ed']);
     expect(
       File(p.join(root.path, 'docs', 'halo.db')).readAsStringSync(),

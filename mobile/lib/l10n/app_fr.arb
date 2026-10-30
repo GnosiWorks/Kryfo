@@ -2836,5 +2836,14 @@
   "desktopPassStaysWindows": "Kryfo n’a pas pu garder sa clé avec votre compte Windows, la phrase secrète reste donc en place.",
   "desktopBackupCardTitle": "Gardez une sauvegarde Kryfo",
   "desktopBackupCardLine": "Votre compte Windows sur cet ordinateur garde la clé de Kryfo. Une sauvegarde Kryfo ramène tout si l’ordinateur ou le compte est un jour réinitialisé.",
-  "desktopBackupHint": "Ramène tout si cet ordinateur est un jour réinitialisé."
+  "desktopBackupHint": "Ramène tout si cet ordinateur est un jour réinitialisé.",
+  "chatHealRestored": "{name} a de nouveau configuré Kryfo",
+  "chatHealNewSession": "Le téléphone de {name} a ouvert une nouvelle session sécurisée",
+  "chatHealHeldLine": "Vous aviez vérifié {name}. Rien n’est envoyé tant que vous ne vérifiez pas le numéro ou ne continuez pas la discussion. Ses messages arrivent toujours.",
+  "chatKeepChatting": "Continuer la discussion",
+  "chatNeedsUpdateToChat": "{name} doit mettre à jour Kryfo pour continuer à discuter.",
+  "restoreOlderTitle": "Certaines discussions vont faire une pause",
+  "restoreOlderOne": "{name} utilise une ancienne version de Kryfo. Votre discussion fera une pause jusqu’à sa mise à jour.",
+  "restoreOlderTwo": "{first} et {second} utilisent une ancienne version de Kryfo. Vos discussions avec eux feront une pause jusqu’à leur mise à jour.",
+  "restoreOlderMany": "{first}, {second} et {count, plural, =1{1 autre personne} other{{count} autres personnes}} utilisent une ancienne version de Kryfo. Vos discussions avec eux feront une pause jusqu’à leur mise à jour."
 }

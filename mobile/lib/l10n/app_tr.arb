@@ -2836,5 +2836,14 @@
   "desktopPassStaysWindows": "Kryfo anahtarını Windows hesabında tutamadı, bu yüzden parola ifadesi kalıyor.",
   "desktopBackupCardTitle": "Bir Kryfo yedeği tut",
   "desktopBackupCardLine": "Bu bilgisayardaki Windows hesabın Kryfo'nun anahtarını tutuyor. Bilgisayar ya da hesap bir gün sıfırlanırsa, bir Kryfo yedeği her şeyi geri getirir.",
-  "desktopBackupHint": "Bu bilgisayar bir gün sıfırlanırsa her şeyi geri getirir."
+  "desktopBackupHint": "Bu bilgisayar bir gün sıfırlanırsa her şeyi geri getirir.",
+  "chatHealRestored": "{name} Kryfo’yu yeniden kurdu",
+  "chatHealNewSession": "{name} kişisinin telefonu yeni bir güvenli oturum başlattı",
+  "chatHealHeldLine": "{name} kişisini daha önce doğruladın. Numarayı kontrol edene ya da sohbete devam edene kadar hiçbir şey gönderilmez. Onun mesajları gelmeye devam eder.",
+  "chatKeepChatting": "Sohbete devam et",
+  "chatNeedsUpdateToChat": "Sohbete devam etmek için {name} kişisinin Kryfo’yu güncellemesi gerekiyor.",
+  "restoreOlderTitle": "Bazı sohbetler duraklayacak",
+  "restoreOlderOne": "{name} Kryfo’nun eski bir sürümünü kullanıyor. Güncelleyene kadar sohbetiniz duraklar.",
+  "restoreOlderTwo": "{first} ve {second} Kryfo’nun eski bir sürümünü kullanıyor. Güncelleyene kadar onlarla sohbetlerin duraklar.",
+  "restoreOlderMany": "{first}, {second} ve {count} kişi daha Kryfo’nun eski bir sürümünü kullanıyor. Güncelleyene kadar onlarla sohbetlerin duraklar."
 }

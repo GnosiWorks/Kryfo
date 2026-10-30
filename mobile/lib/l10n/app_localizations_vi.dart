@@ -10764,4 +10764,45 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get desktopBackupHint =>
       'Mang mọi thứ trở lại nếu có lúc máy tính này bị đặt lại.';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name đã cài đặt lại Kryfo';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return 'Điện thoại của $name đã bắt đầu một phiên bảo mật mới';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return 'Bạn đã xác minh $name trước đây. Không có gì được gửi cho đến khi bạn kiểm tra số hoặc tiếp tục trò chuyện. Tin nhắn của họ vẫn đến.';
+  }
+
+  @override
+  String get chatKeepChatting => 'Tiếp tục trò chuyện';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '$name cần cập nhật Kryfo để tiếp tục trò chuyện.';
+  }
+
+  @override
+  String get restoreOlderTitle => 'Một số cuộc trò chuyện sẽ tạm dừng';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '$name đang dùng phiên bản Kryfo cũ. Cuộc trò chuyện sẽ tạm dừng cho đến khi họ cập nhật.';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '$first và $second đang dùng phiên bản Kryfo cũ. Các cuộc trò chuyện với họ sẽ tạm dừng cho đến khi họ cập nhật.';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return '$first, $second và $count người khác đang dùng phiên bản Kryfo cũ. Các cuộc trò chuyện với họ sẽ tạm dừng cho đến khi họ cập nhật.';
+  }
 }

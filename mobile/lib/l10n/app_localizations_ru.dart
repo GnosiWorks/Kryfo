@@ -10955,4 +10955,45 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get desktopBackupHint =>
       'Вернёт всё, если этот компьютер когда-нибудь сбросят.';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name заново настроил(а) Kryfo';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return 'Телефон $name начал новую защищённую сессию';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return 'Ты уже проверял(а) $name. Ничего не отправляется, пока ты не сверишь код или не продолжишь чат. Сообщения от $name по-прежнему приходят.';
+  }
+
+  @override
+  String get chatKeepChatting => 'Продолжить чат';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '$name нужно обновить Kryfo, чтобы продолжить чат.';
+  }
+
+  @override
+  String get restoreOlderTitle => 'Некоторые чаты встанут на паузу';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return 'У $name старая версия Kryfo. Ваш чат встанет на паузу, пока $name не обновит приложение.';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return 'У $first и $second старая версия Kryfo. Чаты с ними встанут на паузу, пока они не обновят приложение.';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return 'У $first, $second и ещё $count старая версия Kryfo. Чаты с ними встанут на паузу, пока они не обновят приложение.';
+  }
 }

@@ -8,6 +8,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../container.dart' show HaloContainer;
 import '../drafts.dart';
+import '../heal.dart' show kHealLineRestored;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -120,6 +121,7 @@ import '../main.dart'
         TorHalo,
         LinkViewBuilder,
         AppStateOutbox,
+        AppStateHeal,
         AppStateMessages,
         AppStateRoute,
         AppStatePrefs,
@@ -995,6 +997,12 @@ class _ChatScreenState extends State<ChatScreen>
   // verified under one key, holding another now: nothing goes to them until
   // the new number is checked or the new key accepted
   bool _keyHeld = false;
+  // the heal line that holds them (heal.dart), null when no heal does
+  int? _healHold;
+  // where heals rebuilt their session, and whether this chat waits for
+  // them to update after a restore here (Q20)
+  List<({int at, int kind})> _healLines = const [];
+  bool _pausedForUpdate = false;
   bool _keyReading = false;
   // a read asked for while one runs runs again after it
   bool _keyAgain = false;
@@ -1022,6 +1030,7 @@ class _ChatScreenState extends State<ChatScreen>
       final changed = await session.keyChanged(widget.peerHaloId);
       final verified = await session.isVerified(widget.peerHaloId);
       final held = await session.keyHeld(widget.peerHaloId);
+      final heal = held ? await healHoldShown(widget.peerHaloId) : null;
       final row = await session.getContact(widget.peerHaloId);
       // no key held, no number to compare: nothing to ask for yet
       final key = nameAsks(row)
@@ -1034,12 +1043,14 @@ class _ChatScreenState extends State<ChatScreen>
       if (changed != _keyChanged ||
           verified != _verified ||
           held != _keyHeld ||
+          heal != _healHold ||
           asks != _nameAsks ||
           folded != _nameFolded) {
         setState(() {
           _keyChanged = changed;
           _verified = verified;
           _keyHeld = held;
+          _healHold = heal;
           _nameAsks = asks;
           _nameFolded = folded;
         });
@@ -1052,6 +1063,34 @@ class _ChatScreenState extends State<ChatScreen>
     if (_keyAgain && mounted) {
       _keyAgain = false;
       await _readKeyState();
+    }
+  }
+
+  // a heal's hold looked at: the verified mark stays, sending goes on
+  Future<void> _keepChatting() async {
+    HapticFeedback.mediumImpact();
+    await appState.releaseHealHold(widget.peerHaloId);
+    await _readKeyState();
+  }
+
+  // the heal lines and the wait for an update, read with the thread
+  Future<void> _loadHealLines() async {
+    if (_isDev || widget.support) return;
+    try {
+      final lines = await session.healLines(widget.peerHaloId);
+      final paused = await appState.pausedForUpdate(widget.peerHaloId);
+      if (!mounted) return;
+      if (paused == _pausedForUpdate &&
+          lines.length == _healLines.length &&
+          (lines.isEmpty || lines.last.at == _healLines.last.at)) {
+        return;
+      }
+      setState(() {
+        _healLines = lines;
+        _pausedForUpdate = paused;
+      });
+    } catch (e) {
+      dlog('heal lines: not read (${e.runtimeType})');
     }
   }
 
@@ -1324,6 +1363,7 @@ class _ChatScreenState extends State<ChatScreen>
       _shotsHold.want(true, now: true);
     }
     _loadShots();
+    unawaited(_loadHealLines());
     appState.addListener(_onAppStateChanged);
     mediaSendsTick.addListener(_mediaSendsMoved);
     fileWaits.addListener(_waitsMoved);
@@ -1572,6 +1612,7 @@ class _ChatScreenState extends State<ChatScreen>
       _tryAppendNew();
       unawaited(_refreshDelivered());
       _loadShots();
+      unawaited(_loadHealLines());
       // their badge rides their messages: one that came now may change it
       unawaited(_loadBadge());
     }
@@ -5199,6 +5240,44 @@ class _ChatScreenState extends State<ChatScreen>
     );
   }
 
+  // where a heal rebuilt their session: a quiet line where it happened, as
+  // the screenshot line falls. under the newest row, the wait for their
+  // update after a restore here
+  List<Widget> _healLinesAt(int ix, {required bool below}) {
+    if (_messages.isEmpty) return const [];
+    final name = _nickname ?? widget.peerHaloId;
+    final row = _messages[ix];
+    final run = _albums.runOf(row);
+    bool here(DateTime at) => run == null
+        ? _shotsLineBy(ix, at, below: below)
+        : run.present.any(
+            (x) => _shotsLineBy(
+              _messages.lastIndexWhere((m) => identical(m, x)),
+              at,
+              below: below,
+            ),
+          );
+    return [
+      for (final l in _healLines)
+        if (here(DateTime.fromMillisecondsSinceEpoch(l.at)))
+          ShotsLine(
+            key: ValueKey('heal-line-${l.at}'),
+            on: true,
+            icon: Icons.verified_user_outlined,
+            text: l.kind == kHealLineRestored
+                ? l10n.chatHealRestored(name)
+                : l10n.chatHealNewSession(name),
+          ),
+      if (below && _pausedForUpdate && ix == _messages.length - 1)
+        ShotsLine(
+          key: const ValueKey('heal-paused'),
+          on: true,
+          icon: Icons.system_update_outlined,
+          text: l10n.chatNeedsUpdateToChat(name),
+        ),
+    ];
+  }
+
   // whether the line falls over row [ix], or under it
   bool _shotsLineBy(int ix, DateTime at, {required bool below}) {
     if (ix < 0) return false;
@@ -5505,6 +5584,7 @@ class _ChatScreenState extends State<ChatScreen>
         children: [
           if (showDate) _dateDivider(m.when, row.msgUid ?? 'r${row.rowid}'),
           ?_shotsLineAt(ix, below: false),
+          ..._healLinesAt(ix, below: false),
           if (firstUnread) _newMessagesDivider(),
           // the bubble alone: what says it has been read
           RowAnchor(
@@ -5533,6 +5613,7 @@ class _ChatScreenState extends State<ChatScreen>
             ),
           ),
           ?_shotsLineAt(ix, below: true),
+          ..._healLinesAt(ix, below: true),
         ],
       ),
     );
@@ -6064,6 +6145,10 @@ class _ChatScreenState extends State<ChatScreen>
       ),
     );
     if (!mounted) return;
+    // a heal's hold ends once the number was looked at
+    if (_healHold != null) {
+      await appState.releaseHealHold(widget.peerHaloId);
+    }
     // checked again there: what waited for it goes now
     await _readKeyState();
     if (!_keyHeld) unawaited(appState.drainOutbox());
@@ -6982,8 +7067,11 @@ class _ChatScreenState extends State<ChatScreen>
                       : _keyHeld && !_isDev
                       ? KeyHeldCard(
                           peerName: _nickname ?? widget.peerHaloId,
+                          healKind: _healHold,
                           onCheck: _openKeyVerification,
-                          onAccept: _acceptNewKey,
+                          onAccept: _healHold != null
+                              ? _keepChatting
+                              : _acceptNewKey,
                         )
                       : Column(
                           mainAxisSize: MainAxisSize.min,

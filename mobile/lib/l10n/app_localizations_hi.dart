@@ -10782,4 +10782,45 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get desktopBackupHint =>
       'अगर कभी यह कंप्यूटर रीसेट हो, तो सब कुछ वापस ले आता है।';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name ने Kryfo फिर से सेट किया';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return '$name के फ़ोन ने एक नया सुरक्षित सेशन शुरू किया';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return 'आपने पहले $name की पुष्टि की थी। जब तक आप नंबर जाँच न लें या बातचीत जारी न रखें, कुछ भी नहीं भेजा जाएगा। उनके मैसेज फिर भी आते रहेंगे।';
+  }
+
+  @override
+  String get chatKeepChatting => 'बातचीत जारी रखें';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return 'बातचीत जारी रखने के लिए $name को Kryfo अपडेट करना होगा।';
+  }
+
+  @override
+  String get restoreOlderTitle => 'कुछ चैट रुक जाएँगी';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '$name Kryfo का पुराना संस्करण इस्तेमाल करते हैं। उनके अपडेट करने तक आपकी चैट रुकी रहेगी।';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '$first और $second Kryfo का पुराना संस्करण इस्तेमाल करते हैं। उनके अपडेट करने तक उनसे आपकी चैट रुकी रहेंगी।';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return '$first, $second और $count अन्य Kryfo का पुराना संस्करण इस्तेमाल करते हैं। उनके अपडेट करने तक उनसे आपकी चैट रुकी रहेंगी।';
+  }
 }

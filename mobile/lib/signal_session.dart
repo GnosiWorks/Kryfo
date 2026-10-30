@@ -222,6 +222,12 @@ class SignalSession {
     if (!live || !liveK) await _newSessionPreKeys(at);
   }
 
+  /// after a restore or a move: the session prekeys the file brought may
+  /// have gone out from the old phone since, so a new pair is made now.
+  /// the one it replaces still opens for its grace (identity v4 8)
+  Future<void> replaceSessionPreKeys({int? now}) =>
+      _newSessionPreKeys(now ?? _now());
+
   Future<void> _newSessionPreKeys(int at) async {
     final spkId = await _freeId(signedPreKeyStore.contains);
     final kId = await _freeId(kyberPreKeyStore.contains);

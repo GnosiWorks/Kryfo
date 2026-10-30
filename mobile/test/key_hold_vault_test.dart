@@ -963,31 +963,39 @@ void main() {
   );
 
   // last: it marks this phone's sessions as come back with a restore
-  test('a card naming another key on the sending side raises a hidden '
-      "chat's banner", () async {
-    final bob = await _phone();
-    await processPeerBundle(bob.name, bob.card);
-    final again = await _phone(name: bob.name);
-    await _identity(store, bob.name, _unhex(again.xpub));
-    final vmem = MemDb();
-    await vmem.insert('contacts', {
-      'halo_id': bob.name,
-      'onion': '',
-      'xpub': bob.xpub,
-      'first_seen': 1,
-      'last_seen': 1,
-      'back_paired': 1,
-      'accepted': 1,
-      'peer_bundle': bob.card,
-    });
-    final vault = _Rows(vmem, HaloContainer.vault);
-    await hide(bob.name, bob.xpub);
-    useDatabasesForTest(rows, await Session.withVault(rows, vault));
-    await signalSession.markRestored();
-    await signalEncrypt(bob.name, 'hi');
-    await _settle();
-    expect(vmem.rows('contacts').single['key_changed'], 1);
-  });
+  test(
+    'a restored session builds nothing from a card naming another key: '
+    "the seal waits for their heal, and a hidden chat's banner stays down",
+    () async {
+      final bob = await _phone();
+      await processPeerBundle(bob.name, bob.card);
+      final again = await _phone(name: bob.name);
+      await _identity(store, bob.name, _unhex(again.xpub));
+      final vmem = MemDb();
+      await vmem.insert('contacts', {
+        'halo_id': bob.name,
+        'onion': '',
+        'xpub': bob.xpub,
+        'first_seen': 1,
+        'last_seen': 1,
+        'back_paired': 1,
+        'accepted': 1,
+        'peer_bundle': bob.card,
+      });
+      final vault = _Rows(vmem, HaloContainer.vault);
+      await hide(bob.name, bob.xpub);
+      useDatabasesForTest(rows, await Session.withVault(rows, vault));
+      await signalSession.markRestored();
+      await expectLater(
+        signalEncrypt(bob.name, 'hi'),
+        throwsA(isA<StartingAfresh>()),
+      );
+      await _settle();
+      // one side builds, the other opens (identity v4 3.8): a heal from a
+      // key that is not the one held is refused, so no card moves it here
+      expect(vmem.rows('contacts').single['key_changed'], 0);
+    },
+  );
 }
 
 Future<int> pages(SqliteMem db) async => int.parse(

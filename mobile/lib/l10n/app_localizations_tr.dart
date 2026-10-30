@@ -10798,4 +10798,45 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get desktopBackupHint =>
       'Bu bilgisayar bir gün sıfırlanırsa her şeyi geri getirir.';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name Kryfo’yu yeniden kurdu';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return '$name kişisinin telefonu yeni bir güvenli oturum başlattı';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return '$name kişisini daha önce doğruladın. Numarayı kontrol edene ya da sohbete devam edene kadar hiçbir şey gönderilmez. Onun mesajları gelmeye devam eder.';
+  }
+
+  @override
+  String get chatKeepChatting => 'Sohbete devam et';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return 'Sohbete devam etmek için $name kişisinin Kryfo’yu güncellemesi gerekiyor.';
+  }
+
+  @override
+  String get restoreOlderTitle => 'Bazı sohbetler duraklayacak';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '$name Kryfo’nun eski bir sürümünü kullanıyor. Güncelleyene kadar sohbetiniz duraklar.';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '$first ve $second Kryfo’nun eski bir sürümünü kullanıyor. Güncelleyene kadar onlarla sohbetlerin duraklar.';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return '$first, $second ve $count kişi daha Kryfo’nun eski bir sürümünü kullanıyor. Güncelleyene kadar onlarla sohbetlerin duraklar.';
+  }
 }

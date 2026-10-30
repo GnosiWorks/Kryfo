@@ -56,7 +56,10 @@ String keptOpenLine(KeptIn where) => switch (where) {
 class ShotsLine extends StatelessWidget {
   final String text;
   final bool on;
-  const ShotsLine({super.key, required this.text, required this.on});
+  // another line of the same kind (a chat going over to post-quantum):
+  // its own icon
+  final IconData? icon;
+  const ShotsLine({super.key, required this.text, required this.on, this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +76,10 @@ class ShotsLine extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            on ? Icons.phonelink_lock_outlined : Icons.phonelink_erase_outlined,
+            icon ??
+                (on
+                    ? Icons.phonelink_lock_outlined
+                    : Icons.phonelink_erase_outlined),
             size: 12,
             color: HaloColors.text2,
           ),

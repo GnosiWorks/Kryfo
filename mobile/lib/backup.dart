@@ -36,6 +36,8 @@ import 'main.dart'
         AppStateSession,
         AppStateIdentity;
 import 'router.dart' show scrubHidden;
+import 'heal.dart' show kRestoreAfterPref, olderContacts;
+import 'devchat/dev_gate.dart' show isDevId;
 import 'signal_session.dart' show kRestoredFromPref, kSessionsRestoredPref;
 import 'devchat/dev_chat.dart' show scrubDevAnon;
 import 'dlog.dart';
@@ -158,6 +160,10 @@ class BackupSummary {
   // how many chats and groups it holds hidden, null when it holds none that
   // come back here
   final int? hiddenChats;
+  // the names of the contacts it holds who use an older Kryfo: their chats
+  // pause after the restore until they update (Q20). empty for a file from
+  // before 0.6, which cannot tell
+  final List<String> older;
   const BackupSummary({
     required this.when,
     required this.version,
@@ -168,7 +174,23 @@ class BackupSummary {
     this.files = 0,
     this.moved,
     this.hiddenChats,
+    this.older = const [],
   });
+}
+
+// the contacts in a backup's database who use an older Kryfo, by name. a
+// file whose contacts carry no capability list (before 0.6) says none
+Future<List<String>> _olderIn(Database db) async {
+  try {
+    final cols = {
+      for (final r in await db.rawQuery('PRAGMA table_info(contacts)'))
+        r['name'] as String,
+    };
+    if (!cols.contains('caps')) return const [];
+    return [for (final c in await olderContacts(db, isDev: isDevId)) c.name];
+  } catch (_) {
+    return const [];
+  }
 }
 
 // scrypt takes a good second on a phone. it runs on its own isolate so the
@@ -228,6 +250,7 @@ Future<BackupSummary> inspectBackup(String blob, String passphrase) async {
   var contacts = 0;
   var messages = 0;
   var haloId = '';
+  var older = const <String>[];
   try {
     await peek.writeAsBytes(base64Decode(payload['db'] as String), flush: true);
     final db = await openDatabase(
@@ -244,6 +267,7 @@ Future<BackupSummary> inspectBackup(String blob, String passphrase) async {
       messages = (m.first['c'] as int?) ?? 0;
       final i = await db.query('identity', columns: ['id'], limit: 1);
       if (i.isNotEmpty) haloId = (i.first['id'] as String?) ?? '';
+      older = await _olderIn(db);
     } finally {
       await db.close();
     }
@@ -259,6 +283,7 @@ Future<BackupSummary> inspectBackup(String blob, String passphrase) async {
     haloId: haloId,
     contacts: contacts,
     messages: messages,
+    older: older,
   );
 }
 
@@ -415,6 +440,9 @@ Future<void> _livesHereNow(Object? made) async {
   } else {
     await prefs.remove(kRestoredFromPref);
   }
+  // and what follows a restore runs once on the next start: invites and
+  // session prekeys made again, linked devices cut off, heals sent
+  await prefs.setInt(kRestoreAfterPref, made is int && made > 0 ? made : 0);
 }
 
 // what the shade holds came for the account just replaced. a decoy's
@@ -484,8 +512,16 @@ Future<void> _landV1InDecoy(
 
 // a file that carries hidden chats says 3, so an older Kryfo says it is from
 // a newer one instead of leaving them behind
-const kBackupVersion = 2;
-const kBackupVersionHidden = 3;
+// identity v4 (8): 4 everyday, 5 with hidden chats. a 0.5.x phone takes
+// up to 3 and says the file is from a newer version, before it touches
+// anything; it could not read v4 sessions anyway. 2 and 3 still restore
+// here: hidden chats are found by the manifest's vault key, never by the
+// number
+const kBackupVersion = 4;
+const kBackupVersionHidden = 5;
+// the newest a file may say, and the newest a 0.5.x phone takes
+const kBackupVersionMost = kBackupVersionHidden;
+const kBackupVersion05 = 3;
 
 // the hidden chats' files in a backup: their database and their folders
 const kHiddenDir = 'vault';
@@ -1366,7 +1402,7 @@ Future<Object?> _inspectJob(_Job j) async {
   try {
     final m = await readBackupManifest(j.path, cipher);
     if (m['v'] is! int) throw const BackupDamaged('no version');
-    if ((m['v'] as int) > kBackupVersionHidden) {
+    if ((m['v'] as int) > kBackupVersionMost) {
       throw const RestoreError(RestoreFailure.newerVersion);
     }
     if (m['dbPassphrase'] is! String || m['edPriv'] is! String) {
@@ -1437,7 +1473,7 @@ Future<Map<String, dynamic>> unpackBackup(
       await d.create(recursive: true);
     }
     final m = await readBackupManifest(path, cipher);
-    if ((m['v'] as int? ?? 99) > kBackupVersionHidden) {
+    if ((m['v'] as int? ?? 99) > kBackupVersionMost) {
       throw const RestoreError(RestoreFailure.newerVersion);
     }
     hiddenKeyOf(m);
@@ -1748,6 +1784,7 @@ Future<BackupSummary> inspectBackupFile(String path, String passphrase) async {
   var contacts = 0;
   var messages = 0;
   int? hiddenChats;
+  var older = const <String>[];
   var haloId = manifest['haloId'] as String? ?? '';
   try {
     final db = await openDatabase(
@@ -1764,6 +1801,7 @@ Future<BackupSummary> inspectBackupFile(String path, String passphrase) async {
       messages = (m.first['c'] as int?) ?? 0;
       final i = await db.query('identity', columns: ['id'], limit: 1);
       if (i.isNotEmpty) haloId = (i.first['id'] as String?) ?? haloId;
+      older = await _olderIn(db);
     } finally {
       await db.close();
     }
@@ -1793,6 +1831,7 @@ Future<BackupSummary> inspectBackupFile(String path, String passphrase) async {
     files: files.where((f) => f.name.contains('/')).length,
     moved: manifest['moved'] as bool?,
     hiddenChats: hiddenChats,
+    older: older,
   );
 }
 

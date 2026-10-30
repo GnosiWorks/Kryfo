@@ -358,6 +358,7 @@ class HaloDb
         await wallpaperTable(db);
         await draftsTable(db);
         await photoTables(db);
+        await healTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
@@ -943,6 +944,13 @@ class HaloDb
       await rosterTableAtOpen(_db!);
     } catch (e) {
       dlog('roster invite: table not made (${e.runtimeType})');
+    }
+    // the heal's lines and nonces (heal.dart): no version step, so a file
+    // that took 95 or 96 first gets them all the same
+    try {
+      await healTablesAtOpen(_db!);
+    } catch (e) {
+      dlog('heal: tables not made (${e.runtimeType})');
     }
     // retired while it was opening
     if (_retired) {

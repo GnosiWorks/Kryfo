@@ -703,7 +703,7 @@ void main() {
       expect(sessionBackupHasHidden, isFalse);
       final d = await draftBackup(stage, side: side);
       final m = d.manifest;
-      expect(m['v'], 2);
+      expect(m['v'], kBackupVersion);
       expect(m.containsKey('vault'), isFalse);
       expect(_names(m), ['halo.db', 'onion.key', 'media/v1.jpg']);
       // nothing is read from the hidden side's files
@@ -1247,7 +1247,7 @@ void main() {
         'chunk',
         'files',
       });
-      expect(d.manifest['v'], 2);
+      expect(d.manifest['v'], kBackupVersion);
       expect(d.manifest['moved'], isFalse);
       // set up, as boot reads it, wherever the file is restored
       expect(d.manifest['onboardingDone'], 'true');

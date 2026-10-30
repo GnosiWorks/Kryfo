@@ -670,6 +670,19 @@ mixin _ContactRows {
   Future<bool> keyHeld(String haloId) async =>
       keyHeldIn(await open(), haloId, identity: _keySource);
 
+  /// the heal line that holds [haloId] (kHealLineRestored or Repair), null
+  /// when no heal holds them
+  Future<int?> healHold(String haloId) async =>
+      kHealHold ? healHoldOf(await open(), haloId) : null;
+
+  /// the person looked: [haloId] goes on, verified as before
+  Future<void> releaseHealHold(String haloId) async =>
+      dropHealHold(await open(), haloId);
+
+  /// where heals rebuilt [haloId]'s session, oldest first
+  Future<List<({int at, int kind})>> healLines(String haloId) async =>
+      healLinesOf(await open(), haloId);
+
   Future<void> acceptNewKey(String haloId) async {
     final db = await open();
     await _inLane(haloId, () => acceptNewKeyIn(db, haloId));
@@ -1266,6 +1279,9 @@ Future<bool> keyHeldIn(
   Future<String?> Function(String haloId)? identity,
 }) async {
   if (isDevId(haloId)) return false;
+  // a heal rebuilt a verified contact's session: held until the person
+  // looks, whatever key they hold (Q22)
+  if (kHealHold && await healHoldOf(db, haloId) != null) return true;
   final rows = await db.query(
     'contacts',
     columns: ['verified_key', 'xpub'],

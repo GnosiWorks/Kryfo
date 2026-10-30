@@ -2836,5 +2836,14 @@
   "desktopPassStaysWindows": "Kryfo không lưu được khóa của mình bằng tài khoản Windows của bạn, nên cụm mật khẩu vẫn giữ nguyên.",
   "desktopBackupCardTitle": "Giữ một bản sao lưu Kryfo",
   "desktopBackupCardLine": "Tài khoản Windows của bạn trên máy tính này giữ khóa của Kryfo. Bản sao lưu Kryfo mang mọi thứ trở lại nếu có lúc máy tính hoặc tài khoản bị đặt lại.",
-  "desktopBackupHint": "Mang mọi thứ trở lại nếu có lúc máy tính này bị đặt lại."
+  "desktopBackupHint": "Mang mọi thứ trở lại nếu có lúc máy tính này bị đặt lại.",
+  "chatHealRestored": "{name} đã cài đặt lại Kryfo",
+  "chatHealNewSession": "Điện thoại của {name} đã bắt đầu một phiên bảo mật mới",
+  "chatHealHeldLine": "Bạn đã xác minh {name} trước đây. Không có gì được gửi cho đến khi bạn kiểm tra số hoặc tiếp tục trò chuyện. Tin nhắn của họ vẫn đến.",
+  "chatKeepChatting": "Tiếp tục trò chuyện",
+  "chatNeedsUpdateToChat": "{name} cần cập nhật Kryfo để tiếp tục trò chuyện.",
+  "restoreOlderTitle": "Một số cuộc trò chuyện sẽ tạm dừng",
+  "restoreOlderOne": "{name} đang dùng phiên bản Kryfo cũ. Cuộc trò chuyện sẽ tạm dừng cho đến khi họ cập nhật.",
+  "restoreOlderTwo": "{first} và {second} đang dùng phiên bản Kryfo cũ. Các cuộc trò chuyện với họ sẽ tạm dừng cho đến khi họ cập nhật.",
+  "restoreOlderMany": "{first}, {second} và {count} người khác đang dùng phiên bản Kryfo cũ. Các cuộc trò chuyện với họ sẽ tạm dừng cho đến khi họ cập nhật."
 }

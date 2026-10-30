@@ -13521,5 +13521,85 @@
   "desktopBackupHint": "Brings everything back if this computer is ever reset.",
   "@desktopBackupHint": {
     "description": "screens/settings_screen.dart: windows without a passphrase, under Back up identity"
+  },
+  "chatHealRestored": "{name} set up Kryfo again",
+  "@chatHealRestored": {
+    "description": "screens/chat_screen.dart: the quiet line where a contact's restore or move rebuilt the session (identity v4 heal, bit 0). calm, no alarm",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "chatHealNewSession": "{name}'s phone started a new secure session",
+  "@chatHealNewSession": {
+    "description": "screens/chat_screen.dart: the quiet line where a contact's phone rebuilt a session that stopped reading (identity v4 heal without bit 0)",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "chatHealHeldLine": "You verified {name} before. Nothing is sent until you check the number or keep chatting. Their messages still arrive.",
+  "@chatHealHeldLine": {
+    "description": "widgets/key_held.dart: the card on a verified contact's chat after a heal, until the person looks (Q22). same shape as chatKeyHeldLine",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "chatKeepChatting": "Keep chatting",
+  "@chatKeepChatting": {
+    "description": "widgets/key_held.dart: the button that ends a heal's hold and keeps the verified mark"
+  },
+  "chatNeedsUpdateToChat": "{name} needs to update Kryfo to keep chatting.",
+  "@chatNeedsUpdateToChat": {
+    "description": "screens/chat_screen.dart: the line under a chat with a 0.5.x contact after this phone was restored: what is written waits until they update (Q20)",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "restoreOlderTitle": "Some chats will pause",
+  "@restoreOlderTitle": {
+    "description": "screens/restore_screen.dart: the sheet before a restore when the file holds contacts on 0.5.x"
+  },
+  "restoreOlderOne": "{name} uses an older Kryfo. Your chat with them will pause until they update.",
+  "@restoreOlderOne": {
+    "description": "screens/restore_screen.dart: the sheet's line with one contact on 0.5.x",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "restoreOlderTwo": "{first} and {second} use an older Kryfo. Your chats with them will pause until they update.",
+  "@restoreOlderTwo": {
+    "description": "screens/restore_screen.dart: the sheet's line with two contacts on 0.5.x",
+    "placeholders": {
+      "first": {
+        "type": "Object"
+      },
+      "second": {
+        "type": "Object"
+      }
+    }
+  },
+  "restoreOlderMany": "{first}, {second} and {count, plural, =1{1 other} other{{count} others}} use an older Kryfo. Your chats with them will pause until they update.",
+  "@restoreOlderMany": {
+    "description": "screens/restore_screen.dart: the sheet's line with three or more contacts on 0.5.x; count is the others",
+    "placeholders": {
+      "first": {
+        "type": "Object"
+      },
+      "second": {
+        "type": "Object"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

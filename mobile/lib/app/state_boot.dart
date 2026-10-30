@@ -490,6 +490,10 @@ extension AppStateBoot on AppState {
   Future<void> _bootSignal() async {
     try {
       final database = await live.open();
+      final prefs = await SharedPreferences.getInstance();
+      final after = prefs.getInt(kRestoreAfterPref);
+      // linked devices go before anything can seal to them
+      if (after != null) await restoreCutsLinkedDevices(database);
       final xpb = _hexDecode(engine.myXPrivkey());
       await openSignalStore(
         signalSession,
@@ -498,6 +502,10 @@ extension AppStateBoot on AppState {
         xPrivBytes: xpb,
       );
       _zeroBytes(xpb); // priv bytes consumed by bootstrap, wipe from ram
+      if (after != null) {
+        await afterRestore(database, from: after > 0 ? after : null);
+        await prefs.remove(kRestoreAfterPref);
+      }
     } catch (e, st) {
       dlog('signal bootstrap failed: $e\n$st');
     }

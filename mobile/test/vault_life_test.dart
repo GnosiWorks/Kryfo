@@ -1578,11 +1578,14 @@ void main() {
       'hello_seen',
       // the identity's own profile photo
       'my_photo',
+      // the heal nonces seen, per identity
+      'heal_nonces',
     };
     final src = [
       'lib/app/database.dart',
       'lib/app/database_photos.dart',
       'lib/router.dart',
+      'lib/heal.dart',
     ].map((f) => File(f).readAsStringSync()).join('\n');
     // a prefixed name is another set of the signal store's tables
     final tables = {

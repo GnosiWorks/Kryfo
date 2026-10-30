@@ -10791,4 +10791,45 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get desktopBackupHint =>
       'اگر روزی این رایانه بازنشانی شود، همه چیز را برمی‌گرداند.';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '⁨$name⁩ دوباره Kryfo را راه‌اندازی کرد';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return 'تلفن ⁨$name⁩ یک نشست امن تازه شروع کرد';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return 'شما پیش‌تر ⁨$name⁩ را تأیید کرده بودید. تا وقتی شماره را بررسی نکنید یا گفتگو را ادامه ندهید، چیزی فرستاده نمی‌شود. پیام‌های او همچنان می‌رسد.';
+  }
+
+  @override
+  String get chatKeepChatting => 'ادامه‌ی گفتگو';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '⁨$name⁩ برای ادامه‌ی گفتگو باید Kryfo را به‌روز کند.';
+  }
+
+  @override
+  String get restoreOlderTitle => 'برخی گفتگوها متوقف می‌شوند';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '⁨$name⁩ از نسخه‌ی قدیمی‌تر Kryfo استفاده می‌کند. گفتگوی شما تا به‌روزرسانی او متوقف می‌ماند.';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '⁨$first⁩ و ⁨$second⁩ از نسخه‌ی قدیمی‌تر Kryfo استفاده می‌کنند. گفتگوهای شما با آن‌ها تا به‌روزرسانی‌شان متوقف می‌ماند.';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return '⁨$first⁩، ⁨$second⁩ و $count نفر دیگر از نسخه‌ی قدیمی‌تر Kryfo استفاده می‌کنند. گفتگوهای شما با آن‌ها تا به‌روزرسانی‌شان متوقف می‌ماند.';
+  }
 }
