@@ -6,6 +6,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/device_sessions.dart';
+import 'package:kryfo/signal_ffi/kryfo_signal.dart' show LsBundle;
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/wire_pad.dart' show unpad;
 
@@ -291,5 +292,68 @@ void main() {
       bobs.first.key,
     );
     expect(wireOf(w).$1, kLsPreKey);
+  });
+
+  const day = 24 * 3600 * 1000;
+
+  test('a pool bundle still opens when handed out on its last day', () async {
+    final t0 = DateTime.now().millisecondsSinceEpoch;
+    final late = bobs[0];
+    final gone = bobs[1];
+    final kLate = await late.ds.makeBundle(late.id, now: t0);
+    final kGone = await gone.ds.makeBundle(gone.id, now: t0);
+    // 7 days in the pool, then 13 more before the first copy opens
+    await late.store.keepSessionPreKeys(now: t0 + 20 * day);
+    await gone.store.keepSessionPreKeys(now: t0 + 23 * day);
+    for (final (d, kdb1) in [(late, kLate), (gone, kGone)]) {
+      await anaDs.build(
+        'bob',
+        d.id,
+        ana.lib.parseDeviceBundle(kdb1, bob.identity.public),
+        d.key,
+        d.reg,
+      );
+    }
+    Future<Uint8List> copyTo(Dev d) async {
+      final (type, body) = wireOf(
+        await anaDs.seal('bob', d.id, '{"t":"late"}', d.key),
+      );
+      return d.ds.open(
+        'ana',
+        1,
+        type,
+        body,
+        ana.identity.public,
+        reg: ana.registrationId,
+      );
+    }
+
+    expect(textOf(await copyTo(late)), '{"t":"late"}');
+    // past its life the key is gone
+    await expectLater(copyTo(gone), throwsA(anything));
+  });
+
+  test('the last resort bundle goes again when the session keys change', () async {
+    final d = bobs.first;
+    final t0 = DateTime.now().millisecondsSinceEpoch;
+    var told = 0;
+    d.store.onSessionPreKeys = () => told++;
+    LsBundle read(Uint8List kdb1) =>
+        ana.lib.parseDeviceBundle(kdb1, bob.identity.public).bundle;
+    final first = read(await d.ds.lastResortBundle(d.id, now: t0));
+    final before = told;
+    final again = read(await d.ds.lastResortBundle(d.id, now: t0 + day));
+    expect(again.kyberPreKeyId, first.kyberPreKeyId);
+    expect(again.signedPreKeyId, first.signedPreKeyId);
+    expect(told, before);
+    // a use 31 days on replaces them: the device is told, and its next
+    // bundles are on the new keys
+    final once = read(await d.ds.makeBundle(d.id, now: t0 + 31 * day));
+    expect(told, before + 1);
+    final next = read(await d.ds.lastResortBundle(d.id, now: t0 + 31 * day));
+    expect(next.kyberPreKeyId, isNot(first.kyberPreKeyId));
+    expect(next.signedPreKeyId, isNot(first.signedPreKeyId));
+    expect(once.signedPreKeyId, next.signedPreKeyId);
+    expect(once.kyberPreKeyId, isNot(next.kyberPreKeyId));
   });
 }

@@ -284,19 +284,37 @@ class DeviceSessions {
     );
   }
 
-  /// a KDB1 of this store as [device] of its identity: its session signed
-  /// prekey, a fresh one-time kyber prekey (gone once an opener on it opens,
-  /// or after 16 days) and this store's key, which the list names. for a
-  /// linked device's own store, whose key is its device key
-  Future<Uint8List> makeBundle(int device) async {
+  /// a KDB1 of this store as [device] of its identity, for its phone's
+  /// pool: its session signed prekey, a fresh one-time kyber prekey (gone
+  /// once an opener on it opens, or kPoolKyberLife after it was made) and
+  /// this store's key, which the list names. for a linked device's own
+  /// store, whose key is its device key
+  Future<Uint8List> makeBundle(int device, {int? now}) async {
+    _linkedOnly(device);
+    final ids = await s.sessionPreKeysForUse(now: now);
+    return _kdb1(device, ids.signedId, await s.makePoolKyber(now: now));
+  }
+
+  /// the last resort KDB1 of this store as [device]: its session signed
+  /// prekey and session kyber prekey. the phone hands it out when its pool
+  /// has no one-time bundle left; it goes to the phone each time the
+  /// session prekeys change (SignalSession.onSessionPreKeys)
+  Future<Uint8List> lastResortBundle(int device, {int? now}) async {
+    _linkedOnly(device);
+    final ids = await s.sessionPreKeysForUse(now: now);
+    return _kdb1(device, ids.signedId, ids.kyberId);
+  }
+
+  void _linkedOnly(int device) {
     if (!isLinkedDevice(device)) {
       throw DeviceRefused('device $device is not a linked device');
     }
-    final ids = await s.sessionPreKeysForUse();
-    final kyberId = await s.makeHealKyber();
+  }
+
+  Future<Uint8List> _kdb1(int device, int signedId, int kyberId) async {
     final spk = _lib.preKeyPublic(
       kLsSigned,
-      (await s.signedPreKeyStore.load(ids.signedId))!,
+      (await s.signedPreKeyStore.load(signedId))!,
     );
     final kyber = _lib.preKeyPublic(
       kLsKyber,

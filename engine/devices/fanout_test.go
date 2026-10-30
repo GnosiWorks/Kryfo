@@ -569,29 +569,22 @@ func TestThePoolHandsEachBundleOnce(t *testing.T) {
 	s := newShim()
 	me := newAccount(t, s)
 	desk := me.linkReg(t)
-	kdb1 := func(kyber uint32, e Entry) []byte {
-		b := testBlock(t, e.ID, e.Reg, &e.Key, false)
-		b.KyberID = kyber
-		w, err := EncodeBundle(b)
-		if err != nil {
-			t.Fatal(err)
-		}
-		return w
-	}
+	kdb1 := func(kyber uint32, e Entry) []byte { return poolKDB1(t, kyber, 7, e) }
+	t0 := time.Unix(1_760_000_000, 0)
 	p := NewPool()
-	if _, _, err := p.Take(me.id.pub, desk.ID); !errors.Is(err, ErrNoBundle) {
+	if _, _, err := p.Take(me.id.pub, desk.ID, t0); !errors.Is(err, ErrNoBundle) {
 		t.Fatalf("an empty pool: %v", err)
 	}
 	var once [][]byte
 	for i := range PoolLow + 2 {
 		once = append(once, kdb1(uint32(100+i), desk))
 	}
-	if err := p.Put(me.id.pub, desk, once, kdb1(1, desk)); err != nil {
+	if err := p.Put(me.id.pub, desk, once, kdb1(1, desk), t0); err != nil {
 		t.Fatal(err)
 	}
 	seen := map[string]bool{}
 	for i := range PoolLow + 2 {
-		b, low, err := p.Take(me.id.pub, desk.ID)
+		b, low, err := p.Take(me.id.pub, desk.ID, t0)
 		if err != nil || seen[string(b)] {
 			t.Fatalf("take %d: %v (again: %v)", i, err, seen[string(b)])
 		}
@@ -601,7 +594,7 @@ func TestThePoolHandsEachBundleOnce(t *testing.T) {
 		}
 	}
 	for range 3 {
-		b, low, err := p.Take(me.id.pub, desk.ID)
+		b, low, err := p.Take(me.id.pub, desk.ID, t0)
 		if err != nil || !low || seen[string(b)] {
 			t.Fatalf("the last resort: %v %v", low, err)
 		}
@@ -611,10 +604,10 @@ func TestThePoolHandsEachBundleOnce(t *testing.T) {
 		}
 	}
 	// a kyber key handed out once is never taken again
-	if err := p.Put(me.id.pub, desk, [][]byte{kdb1(100, desk)}, nil); !errors.Is(err, ErrDuplicate) {
+	if err := p.Put(me.id.pub, desk, [][]byte{kdb1(100, desk)}, nil, t0); !errors.Is(err, ErrDuplicate) {
 		t.Fatalf("a kyber key again: %v", err)
 	}
-	if err := p.Put(me.id.pub, desk, [][]byte{kdb1(1, desk)}, nil); !errors.Is(err, ErrDuplicate) {
+	if err := p.Put(me.id.pub, desk, [][]byte{kdb1(1, desk)}, nil, t0); !errors.Is(err, ErrDuplicate) {
 		t.Fatalf("the last resort kyber as one-time: %v", err)
 	}
 	other := me.linkReg(t)
@@ -628,29 +621,98 @@ func TestThePoolHandsEachBundleOnce(t *testing.T) {
 		"under another reg": kdb1(202, wrongReg),
 		"junk":              []byte("KDB1\x01"),
 	} {
-		if err := p.Put(me.id.pub, desk, [][]byte{b}, nil); err == nil {
+		if err := p.Put(me.id.pub, desk, [][]byte{b}, nil, t0); err == nil {
 			t.Errorf("%s bundle taken", name)
 		}
 	}
-	if err := p.Put(me.id.pub, me.list.Devices[0], nil, nil); !errors.Is(err, ErrPhone) {
+	if err := p.Put(me.id.pub, me.list.Devices[0], nil, nil, t0); !errors.Is(err, ErrPhone) {
 		t.Fatalf("the phone pooled: %v", err)
 	}
 	var many [][]byte
 	for i := range PoolMost + 1 {
 		many = append(many, kdb1(uint32(1000+i), other))
 	}
-	if err := p.Put(me.id.pub, other, many, nil); !errors.Is(err, ErrTooMany) {
+	if err := p.Put(me.id.pub, other, many, nil, t0); !errors.Is(err, ErrTooMany) {
 		t.Fatalf("too many: %v", err)
 	}
 	// a failed put keeps nothing
-	if err := p.Put(me.id.pub, other, [][]byte{kdb1(300, other), kdb1(300, other)}, nil); !errors.Is(err, ErrDuplicate) {
+	if err := p.Put(me.id.pub, other, [][]byte{kdb1(300, other), kdb1(300, other)}, nil, t0); !errors.Is(err, ErrDuplicate) {
 		t.Fatalf("one kyber twice in a batch: %v", err)
 	}
-	if _, _, err := p.Take(me.id.pub, other.ID); !errors.Is(err, ErrNoBundle) {
+	if _, _, err := p.Take(me.id.pub, other.ID, t0); !errors.Is(err, ErrNoBundle) {
 		t.Fatalf("a failed put kept something: %v", err)
 	}
 	p.Drop(me.id.pub, desk.ID)
-	if _, _, err := p.Take(me.id.pub, desk.ID); !errors.Is(err, ErrNoBundle) {
+	if _, _, err := p.Take(me.id.pub, desk.ID, t0); !errors.Is(err, ErrNoBundle) {
 		t.Fatalf("a removed device's bundles: %v", err)
+	}
+}
+
+func poolKDB1(t *testing.T, kyber, spk uint32, e Entry) []byte {
+	t.Helper()
+	b := testBlock(t, e.ID, e.Reg, &e.Key, false)
+	b.KyberID, b.SpkID = kyber, spk
+	w, err := EncodeBundle(b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return w
+}
+
+func TestNoDeadBundleIsHandedOut(t *testing.T) {
+	s := newShim()
+	me := newAccount(t, s)
+	desk := me.linkReg(t)
+	t0 := time.Unix(1_760_000_000, 0)
+	day := 24 * time.Hour
+	kyberOf := func(b []byte) uint32 {
+		bl, err := ParseBundle(b, me.id.pub)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return bl.KyberID
+	}
+	p := NewPool()
+	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 10, 7, desk), poolKDB1(t, 11, 7, desk)}, poolKDB1(t, 1, 7, desk), t0); err != nil {
+		t.Fatal(err)
+	}
+	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 12, 7, desk)}, nil, t0.Add(5*day)); err != nil {
+		t.Fatal(err)
+	}
+	// 10 and 11 are past the pool's age at day 7: never handed out
+	b, low, err := p.Take(me.id.pub, desk.ID, t0.Add(PoolMaxAge))
+	if err != nil || kyberOf(b) != 12 || !low {
+		t.Fatalf("an old bundle handed out: %d %v %v", kyberOf(b), low, err)
+	}
+	if b, _, err := p.Take(me.id.pub, desk.ID, t0.Add(PoolMaxAge)); err != nil || kyberOf(b) != 1 {
+		t.Fatalf("not the last resort: %v", err)
+	}
+	// the device replaced its session keys: one-time bundles on the old
+	// ones go when the new last resort comes, and none come without it
+	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 13, 7, desk)}, nil, t0.Add(8*day)); err != nil {
+		t.Fatal(err)
+	}
+	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 14, 8, desk)}, nil, t0.Add(8*day)); !errors.Is(err, ErrOldKeys) {
+		t.Fatalf("a bundle on keys the last resort is not on: %v", err)
+	}
+	last2 := poolKDB1(t, 2, 8, desk)
+	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 14, 8, desk)}, last2, t0.Add(8*day)); err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []uint32{14, 2} {
+		if b, _, err := p.Take(me.id.pub, desk.ID, t0.Add(8*day)); err != nil || kyberOf(b) != want {
+			t.Fatalf("want %d: %v", want, err)
+		}
+	}
+	// the same last resort again keeps the day it came
+	if err := p.Put(me.id.pub, desk, nil, last2, t0.Add(30*day)); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := p.Take(me.id.pub, desk.ID, t0.Add(8*day+PoolLastMaxAge)); !errors.Is(err, ErrNoBundle) {
+		t.Fatalf("a last resort past its age handed out: %v", err)
+	}
+	// a replaced last resort's kyber key is never taken again
+	if err := p.Put(me.id.pub, desk, nil, poolKDB1(t, 1, 9, desk), t0.Add(40*day)); !errors.Is(err, ErrDuplicate) {
+		t.Fatalf("an old last resort again: %v", err)
 	}
 }
