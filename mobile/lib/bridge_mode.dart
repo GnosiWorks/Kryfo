@@ -5,7 +5,6 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
-import 'desktop/desktop_mode.dart' show onDesktop;
 import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
 
@@ -485,11 +484,10 @@ BridgeLine bridgeStatusLine(
     case 'captive':
       return BridgeLine(
         head: l10n.bridgesSignInToThisWifi,
-        detail: l10n.bridgesThisNetworkWantsAShown,
+        detail: l10n.bridgesThisNetworkWantsA,
         detailKind: 'captive',
         tone: BridgeTone.amber,
-        // a computer signs in from its browser: no android page to open
-        action: onDesktop ? null : BridgeAction.openWifi,
+        action: BridgeAction.openWifi,
       );
     case 'exhausted':
       // relay mode gets through where no bridge did, offered with asking

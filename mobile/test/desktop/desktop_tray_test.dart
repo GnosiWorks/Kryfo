@@ -19,6 +19,7 @@ import 'package:kryfo/app_icon.dart';
 import 'package:kryfo/battery_brand.dart' show PhoneBrand;
 import 'package:kryfo/bridge_mode.dart';
 import 'package:kryfo/delivery_mode.dart';
+import 'package:kryfo/desk_bridge_line.dart';
 import 'package:kryfo/desktop/desktop_mode.dart';
 import 'package:kryfo/desktop/desktop_run.dart';
 import 'package:kryfo/l10n/l10n.dart';
@@ -464,16 +465,24 @@ void main() {
   group('the captive line', () {
     test('the phone opens wi-fi settings; a computer has no button', () {
       const portal = BridgeStatus(mode: 'auto', phase: 'captive');
-      final phone = bridgeStatusLine(portal);
+      final phone = deskBridgeLine(bridgeStatusLine(portal));
       expect(phone.action, BridgeAction.openWifi);
       expect(phone.detail, l10n.bridgesThisNetworkWantsA);
       onDesktop = true;
-      final desk = bridgeStatusLine(portal);
+      final desk = deskBridgeLine(bridgeStatusLine(portal));
       expect(desk.action, isNull);
       expect(desk.head, l10n.bridgesSignInToThisWifi);
       expect(desk.detail, l10n.bridgesThisNetworkWantsADesk);
       expect(desk.detail, contains('browser'));
       expect(desk.detail, isNot(contains('Wi-Fi settings')));
+      // the phone's line, untouched, for any other phase
+      const off = BridgeStatus(mode: 'auto', phase: 'offline');
+      final plain = bridgeStatusLine(off);
+      expect(identical(deskBridgeLine(plain), plain), isTrue);
+      expect(
+        File('lib/screens/bridges_screen.dart').readAsStringSync(),
+        contains('return deskBridgeLine('),
+      );
     });
   });
 
