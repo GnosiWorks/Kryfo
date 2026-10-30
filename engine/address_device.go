@@ -171,9 +171,9 @@ func devUnsubscribe(ident int, peerArg string) error {
 
 // the x keys of a contact's devices as the lists held now name them, and
 // of my own devices when [peer] is my identity. device 1 never comes here:
-// its key is the identity's. job 2 sets this from devices.Book and
-// devices.Own (Current(I).Find(dev)); while nil, a pair with another
-// device than the phone on their side is refused
+// its key is the identity's. dev_state.go sets it to the loaded state
+// (devices.Book's pin, devices.Own's list); while nil, or before a load,
+// a pair with another device than the phone on their side is refused
 type deviceKeySource interface {
 	deviceKey(ident int, peer [32]byte, dev uint8) ([32]byte, bool)
 }

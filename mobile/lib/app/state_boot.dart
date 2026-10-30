@@ -498,6 +498,8 @@ extension AppStateBoot on AppState {
         xPrivBytes: xpb,
       );
       _zeroBytes(xpb); // priv bytes consumed by bootstrap, wipe from ram
+      // linked devices, before any message opens (switch off: nothing)
+      await bootDevices();
     } catch (e, st) {
       dlog('signal bootstrap failed: $e\n$st');
     }
