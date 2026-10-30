@@ -89,6 +89,7 @@ extension AppStateOutbox on AppState {
     _markKnown = true;
     final was = _quietMarked;
     _quietMarked = q;
+    TransferNote.instance.refresh();
     if (was && !q) _resumeEveryday();
   }
 

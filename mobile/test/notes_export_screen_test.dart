@@ -169,12 +169,11 @@ void main() {
     }
   }
 
-  Future<void> until(
-    WidgetTester t,
-    bool Function() done, [
-    int n = 400,
-  ]) async {
-    for (var i = 0; i < n && !done(); i++) {
+  // the file is made by real io, off the test's clock: wait for it as long
+  // as a loaded machine needs, and no longer
+  Future<void> until(WidgetTester t, bool Function() done) async {
+    final w = Stopwatch()..start();
+    while (!done() && w.elapsed < const Duration(seconds: 20)) {
       await beats(t, 1);
     }
   }
@@ -460,7 +459,7 @@ void main() {
     await page(t);
     await typePass(t, 'four random words here');
     await press(t, find.text(l10n.notesExport));
-    await until(t, () => dialogs.isNotEmpty, 1000);
+    await until(t, () => dialogs.isNotEmpty);
     expect(dialogs, hasLength(1));
     final waiting = left();
     expect(waiting, hasLength(1));
@@ -485,6 +484,17 @@ void main() {
     expect(left(), isEmpty);
   }, skip: !engine);
 
+  // no export is still being made when the test ends: one left running
+  // lives on in this test's clock, and the next test's drop would wait on
+  // it for good. a drop answers once none is
+  Future<void> drained(WidgetTester t) async {
+    var done = false;
+    unawaited(dropNotesExports(tmp).then((_) => done = true));
+    await until(t, () => done);
+    expect(done, isTrue);
+    expect(left(), isEmpty);
+  }
+
   // a lock or a switch to another pin takes the page while the file is
   // made: nothing of it stays, and no save window opens
   Future<void> lockMidway(WidgetTester t) async {
@@ -493,12 +503,13 @@ void main() {
     expect(find.text(l10n.notesExportWorking), findsOneWidget);
     renewRootNavigator();
     await t.pump();
-    await until(t, () => left().isEmpty, 1000);
+    await until(t, () => left().isEmpty);
     await beats(t);
     expect(screen, findsNothing);
     expect(left(), isEmpty);
     expect(asked, isNot(contains('saveDocument')));
     await t.pumpAndSettle();
+    await drained(t);
   }
 
   void bigPhoto(_Db into, [int size = 256 << 20]) {
@@ -529,9 +540,10 @@ void main() {
     renewRootNavigator();
     await t.pump();
     await beats(t, 100);
-    await until(t, () => left().isEmpty, 1000);
+    await until(t, () => left().isEmpty);
     expect(left(), isEmpty);
     expect(asked, isNot(contains('saveDocument')));
+    await drained(t);
   });
 
   testWidgets('a lock while a plain zip is made leaves nothing', (t) async {
@@ -553,11 +565,11 @@ void main() {
     lockState.lock();
     expect(lockState.locked, isTrue);
     var dropped = false;
-    final watch = Stopwatch()..start();
+    // that the making stops at once, a piece and no more, is counted in
+    // notes_export_test: the clock here only waits
     unawaited(dropNotesExports(tmp).then((_) => dropped = true));
-    await until(t, () => dropped, 250);
+    await until(t, () => dropped);
     expect(dropped, isTrue);
-    expect(watch.elapsed, lessThan(const Duration(seconds: 3)));
     expect(left(), isEmpty);
     lockState.openForTest(enabled: true);
     lockGuard.lifted();
@@ -781,7 +793,7 @@ void main() {
     await page(t);
     await typePass(t, 'four random words here');
     await press(t, find.text(l10n.notesExport));
-    await until(t, () => dialogs.isNotEmpty, 1000);
+    await until(t, () => dialogs.isNotEmpty);
     final head = String.fromCharCodes(saved.single.take(200));
     dialogs.single.complete({'state': 'saved'});
     await until(t, () => screen.evaluate().isEmpty);

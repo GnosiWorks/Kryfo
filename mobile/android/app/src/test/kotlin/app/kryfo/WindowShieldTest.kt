@@ -116,4 +116,28 @@ class WindowShieldTest {
         // a clear that fails leaves the window secure
         assertFalse(WindowShield.refusedOn(false) { false })
     }
+
+    @Test
+    fun aNewScreenTellsDartToSendAgain() {
+        val sent = mutableListOf<String>()
+        assertTrue(WindowShield.tellAttached { sent.add(it) })
+        assertEquals(listOf("attached"), sent)
+        // a channel that throws never reaches onCreate
+        assertFalse(WindowShield.tellAttached { throw IllegalStateException("no engine") })
+        assertFalse(WindowShield.tellAttached { throw NoSuchMethodError("odd rom") })
+    }
+
+    @Test
+    fun aFlagRefusedAtStartGoesOnWhenDartSendsAgain() {
+        refuse = "flag"
+        val w = shield()
+        w.start(held = true, hidden = true)
+        // the flag refused in onCreate, the picture went
+        assertEquals(listOf("picture=false"), told)
+        refuse = null
+        told.clear()
+        // dart's same value after the attach: the refused flag goes on now
+        assertTrue(w.hold(true))
+        assertEquals(listOf("flag=true"), told)
+    }
 }

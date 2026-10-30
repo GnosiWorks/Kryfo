@@ -4,7 +4,14 @@ import 'dart:async';
 import 'devices/history_open.dart' show endHistoryCopies;
 import 'secure_store.dart';
 import 'desktop/desktop_mode.dart'
-    show containerClosed, containerOpened, onDesktop, startEngineIn;
+    show
+        computerLock,
+        containerClosed,
+        containerOpened,
+        keepComputerDecoyNote,
+        kComputerDecoyNote,
+        onDesktop,
+        startEngineIn;
 import 'store.dart' show playBuild;
 import 'widgets/boot_failed.dart';
 import 'widgets/fade_over.dart';
@@ -45,6 +52,8 @@ import 'group_end.dart';
 import 'group_shots.dart';
 import 'group_media_send.dart';
 import 'media_progress.dart';
+import 'transfers.dart';
+import 'transfer_note.dart';
 import 'media_send.dart';
 import 'msg_order.dart';
 import 'send_order.dart';

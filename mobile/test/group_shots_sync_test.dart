@@ -6,6 +6,13 @@
 // again who can when someone writes, comes or goes. the app's receive and
 // send paths on its own schema, in the host's sqlite; signal and the wire
 // are stand-ins
+//
+// each test opens the schema in a file on the disk: on a loaded machine
+// that alone can pass the default 30 s
+@Timeout(Duration(minutes: 2))
+library;
+
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -27,6 +34,8 @@ import 'package:kryfo/main.dart'
         AppStateGroupShots,
         groupCapsGap,
         groupShotsEvery,
+        groupShotsNow,
+        groupShotsTimer,
         AppStateGroups,
         AppStateReceive,
         AppStateRefresh,
@@ -41,6 +50,16 @@ import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
 import 'arrival_fakes.dart';
 import 'sqlite_ffi.dart';
+
+// a window's end the test runs itself
+class _Due implements Timer {
+  @override
+  void cancel() {}
+  @override
+  bool get isActive => false;
+  @override
+  int get tick => 0;
+}
 
 class _Rows extends HaloDb {
   _Rows(this.s);
@@ -543,7 +562,33 @@ void main() {
   group('what the admin sends, and how often', () {
     test('a member flipping their list moves the word once a window, as '
         'the newest state, and a move back sends nothing', () async {
-      groupShotsEvery = const Duration(seconds: 2);
+      // the window on a clock and a timer of the test's own: a loaded
+      // machine cannot end it early
+      groupShotsEvery = const Duration(minutes: 5);
+      var clock = 1000000;
+      final due = <(int, void Function())>[];
+      groupShotsNow = () => clock;
+      groupShotsTimer = (d, f) {
+        due.add((clock + d.inMilliseconds, f));
+        return _Due();
+      };
+      addTearDown(() {
+        groupShotsNow = () => DateTime.now().millisecondsSinceEpoch;
+        groupShotsTimer = Timer.new;
+      });
+      // the clock moves on and what fell due runs, to its end
+      Future<void> later(Duration d) async {
+        clock += d.inMilliseconds;
+        final now = due.where((e) => e.$1 <= clock).toList();
+        due.removeWhere(now.contains);
+        for (final e in now) {
+          e.$2();
+        }
+        // the store answers at once: a timer turn sees the run through
+        await Future<void>.delayed(Duration.zero);
+        await app.ctlPassForTest;
+      }
+
       await canBlock('bob');
       await app.setGroupShots(_mine, true);
       await app.ctlPassForTest;
@@ -561,17 +606,21 @@ void main() {
       await comes('carol', await said('c2', by: 'carol', g: _mine));
       await app.ctlPassForTest;
       expect(io.ctls('bob', 'shots'), hasLength(1));
+      expect(due, hasLength(1));
+      // not yet at the window's end
+      await later(const Duration(minutes: 4));
+      expect(io.ctls('bob', 'shots'), hasLength(1));
       // the window ends: the newest state goes, once
-      await Future<void>.delayed(const Duration(milliseconds: 2200));
-      await app.ctlPassForTest;
+      await later(const Duration(minutes: 1));
       final words = io.ctls('bob', 'shots');
       expect(words, hasLength(2));
       expect(words.last.shots!.all, isTrue);
       // back to not all and back again inside the next window: nothing
       await comes('carol', old(await said('c3', by: 'carol', g: _mine)));
       await comes('carol', await said('c4', by: 'carol', g: _mine));
-      await Future<void>.delayed(const Duration(milliseconds: 2200));
-      await app.ctlPassForTest;
+      expect(due, hasLength(1));
+      await later(const Duration(minutes: 5));
+      expect(due, isEmpty);
       expect(io.ctls('bob', 'shots'), hasLength(2));
     }, skip: skip);
 

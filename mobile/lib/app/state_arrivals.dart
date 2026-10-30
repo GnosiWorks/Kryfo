@@ -1075,7 +1075,9 @@ extension AppStateArrivals on AppState {
           _inflightUids.remove(uid);
           return to;
         }
-        final got = await _dropArrived(
+        // one filed before its file keeps its place in its album, which
+        // draws it waiting
+        final (got, waits: _) = await _dropArrived(
           senderHaloId,
           env,
           db,
@@ -1202,10 +1204,10 @@ extension AppStateArrivals on AppState {
     // alone and rings for itself. one of an album that burned already
     // joins nothing and burns as it lands
     var album =
-        env.imageB64 != null ||
+        (env.imageB64 != null ||
             env.fileB64 != null ||
             env.drop != null ||
-            AppState._sliced(env)
+            AppState._sliced(env))
         ? env.album
         : null;
     var albumSeen = false;

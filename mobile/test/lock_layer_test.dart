@@ -76,6 +76,8 @@ class _App {
   bool quiet = false;
   // android's word that the person went home or to recents
   int lefts = 0;
+  // android screens that came onto the engine
+  int attaches = 0;
   // the app's own lock-up: a vault session shuts here
   int ups = 0;
   VoidCallback? onUp;
@@ -98,6 +100,7 @@ class _App {
         leaving: () => lock.set(locked: true),
         returned: () {},
         left: () => lefts++,
+        attached: () => attaches++,
         guard: guard,
         quiet: () => quiet,
         pad: (_) => _Pad(this),
@@ -535,6 +538,36 @@ void main() {
     await a.pump();
     await _away(tester, 'left');
     expect(a.lefts, 1);
+  });
+
+  testWidgets('a new android screen reaches the app, and nothing else does', (
+    tester,
+  ) async {
+    final a = _App(tester);
+    await a.pump();
+    await _away(tester, 'attached');
+    expect(a.attaches, 1);
+    expect(a.lefts, 0);
+    expect(a.lock.locked, isFalse);
+    expect(find.text('secret home'), findsOneWidget);
+  });
+
+  test('every android screen says it came onto the engine', () {
+    final k = File(
+      'android/app/src/main/kotlin/app/kryfo/MainActivity.kt',
+    ).readAsStringSync();
+    final w = File(
+      'android/app/src/main/kotlin/app/kryfo/WindowShield.kt',
+    ).readAsStringSync();
+    expect(w, contains('const val ATTACHED = "attached"'));
+    // on the window channel, last in configureFlutterEngine, never thrown
+    final at = k.indexOf('WindowShield.tellAttached { awayChannel?.send(it) }');
+    expect(at, greaterThan(k.indexOf('override fun configureFlutterEngine')));
+    expect(at, greaterThan(k.indexOf('"setSecure" ->')));
+    expect(
+      k.indexOf('\n    }\n', at),
+      lessThan(k.indexOf('\n    // "open with" and share')),
+    );
   });
 
   test('android says when the person leaves from inside a picker', () {

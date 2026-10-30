@@ -61,6 +61,19 @@ internal class WindowShield(
     }
 
     companion object {
+        // a new screen on the engine. its window and surface hold nothing
+        // of what dart sent before, and a step refused at start left dart
+        // believing it, so dart sends both again as they are
+        const val ATTACHED = "attached"
+
+        // true when it went out. never throws: this runs inside onCreate
+        fun tellAttached(send: (String) -> Unit): Boolean = try {
+            send(ATTACHED)
+            true
+        } catch (_: Throwable) {
+            false
+        }
+
         // dart's call: true when the block was asked on and did not all go
         // on, so dart hears an error and asks again. never a quiet success
         fun refusedOn(on: Boolean, set: (Boolean) -> Boolean): Boolean {

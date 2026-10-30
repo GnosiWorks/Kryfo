@@ -83,9 +83,12 @@ extension AppStateVault on AppState {
       return;
     }
     // its file comes now and stays sealed until the hidden chats open, so
-    // the service's week runs out on nothing this phone was sent
+    // the service's week runs out on nothing this phone was sent. one the
+    // automatic download leaves waits for a tap there
     final drop = env.drop;
-    if (drop != null) unawaited(_holdDrop(drop));
+    if (drop != null && await _getsNow(getKindOf(env.fileName))) {
+      unawaited(_holdDrop(drop));
+    }
     if (ticks && await whole()) unawaited(_sendDeliveryReceipt(sender, uid));
   }
 

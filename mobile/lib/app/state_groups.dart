@@ -647,7 +647,11 @@ extension AppStateGroups on AppState {
         return 'error: not clean';
       }
       if (owed == null) {
-        mediaProgressStart(msgUid, chatKey: d.container.chatKey(groupId));
+        mediaProgressStart(
+          msgUid,
+          chatKey: d.container.chatKey(groupId),
+          bytes: await File(path).length(),
+        );
       }
       final (sent, r) = await sendDrop(
         path: path,

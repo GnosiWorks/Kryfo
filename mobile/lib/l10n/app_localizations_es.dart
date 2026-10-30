@@ -10121,4 +10121,199 @@ class AppLocalizationsEs extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done de $total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'queda menos de un minuto';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'quedan unos $n min';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'quedan unas $n h';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'Enviando · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'Recibiendo · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'Enviando y recibiendo · $detail';
+  }
+
+  @override
+  String get transferPause => 'Pausa';
+
+  @override
+  String get transferPauseDownload => 'Pausar la descarga';
+
+  @override
+  String get transferDownload => 'Descargar';
+
+  @override
+  String get transferResume => 'Reanudar';
+
+  @override
+  String get transferOnWifi => 'Se descarga con Wi-Fi';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'En pausa · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'Toca para descargar';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'Transferencia de archivos';
+
+  @override
+  String get transferChannel => 'Transferencias de archivos';
+
+  @override
+  String get transferChannelLine =>
+      'Aparece mientras se envían o descargan archivos. Nunca nombra un chat ni un archivo.';
+
+  @override
+  String get autoGetTitle => 'Descarga automática';
+
+  @override
+  String get autoGetLine =>
+      'Los archivos llegan sin tocar, según lo que elijas aquí. Uno que espera se queda en el servidor de archivos para ti, una semana como mucho.';
+
+  @override
+  String get autoGetPhotos => 'Fotos';
+
+  @override
+  String get autoGetVideos => 'Videos';
+
+  @override
+  String get autoGetFiles => 'Archivos';
+
+  @override
+  String get autoGetAlways => 'Con Wi-Fi y datos móviles';
+
+  @override
+  String get autoGetWifi => 'Solo con Wi-Fi';
+
+  @override
+  String get autoGetNever => 'Nunca, toco para descargar';
+
+  @override
+  String get autoGetVoice => 'Las notas de voz siempre se descargan.';
+
+  @override
+  String get settingsFiles => 'Archivos';
+
+  @override
+  String get fileSheetOpenWith => 'Abrir con otra app';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Todo lo que Kryfo guarda en este ordenador está cifrado. Se abre con tu cuenta de usuario.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Añadir una frase de contraseña';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'Sin ella, cualquiera que use tu cuenta de usuario puede abrir Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo no pudo guardar su clave en el llavero de este ordenador. Añade una frase de contraseña en su lugar.';
+
+  @override
+  String get desktopKeyMissing =>
+      'Esta cuenta de usuario no tiene la clave de los datos de Kryfo. Una copia de seguridad de Kryfo lo recupera todo. Si moviste la carpeta de Kryfo, añade una frase de contraseña en la cuenta de usuario de la que viene y vuelve a copiarla.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo no puede llegar a su clave en este ordenador ahora mismo. Desbloquea tu llavero si el ordenador te lo pide y vuelve a intentarlo.';
+
+  @override
+  String get desktopPassRow => 'Frase de contraseña en este ordenador';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo se abre con tu cuenta de usuario.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo pide esta frase de contraseña cada vez que se inicia.';
+
+  @override
+  String get desktopPassChange => 'Cambiar la frase de contraseña';
+
+  @override
+  String get desktopPassRemove => 'Quitar la frase de contraseña';
+
+  @override
+  String get desktopPassCurrent => 'Frase de contraseña actual';
+
+  @override
+  String get desktopPassNew => 'Nueva frase de contraseña';
+
+  @override
+  String get desktopPassStays =>
+      'Este ordenador no tiene un llavero que Kryfo pueda usar, así que la frase de contraseña se queda.';
+
+  @override
+  String get desktopPassAdded => 'Frase de contraseña añadida';
+
+  @override
+  String get desktopPassRemoved => 'Frase de contraseña quitada';
+
+  @override
+  String get desktopPassChanged => 'Frase de contraseña cambiada';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Escribe tu frase de contraseña para quitarla. Después Kryfo se abrirá con tu cuenta de usuario.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo no puede llegar a su clave en el chip de seguridad de este ordenador ahora mismo. Vuelve a intentarlo en un momento.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo no pudo guardar su clave con tu cuenta de Windows. Añade una frase de contraseña en su lugar.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo no pudo guardar su clave con tu cuenta de Windows, así que la frase de contraseña se queda.';
+
+  @override
+  String get desktopBackupCardTitle => 'Guarda una copia de seguridad de Kryfo';
+
+  @override
+  String get desktopBackupCardLine =>
+      'Tu cuenta de Windows en este ordenador guarda la clave de Kryfo. Una copia de seguridad de Kryfo lo recupera todo si alguna vez se restablece el ordenador o la cuenta.';
+
+  @override
+  String get desktopBackupHint =>
+      'Lo recupera todo si alguna vez se restablece este ordenador.';
 }

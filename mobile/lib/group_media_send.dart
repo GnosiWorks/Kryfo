@@ -17,6 +17,7 @@ import 'media_send.dart'
         kMediaStallLooks,
         kMediaStalled,
         mediaCancelled,
+        mediaChunkSize,
         mediaInflight,
         mediaSendsTick,
         mediaSlice,
@@ -327,7 +328,13 @@ Future<String> _send({
   // an empty file has nothing to send, and is not a send that went
   if (total == 0) return 'error: empty';
   final showProgress = total > 1 && progressKey != null;
-  if (showProgress) mediaProgressStart(msgUid, chatKey: progressKey);
+  if (showProgress) {
+    mediaProgressStart(
+      msgUid,
+      chatKey: progressKey,
+      bytes: total * mediaChunkSize ~/ 4 * 3,
+    );
+  }
   final Map<String, Set<int>> done;
   if (owed != null) {
     // what the owed hold is on disk, not here

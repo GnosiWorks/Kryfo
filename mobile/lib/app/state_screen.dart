@@ -222,6 +222,17 @@ extension AppStateScreen on AppState {
     await _applyScreenSecure();
   }
 
+  /// a new screen came onto the engine: its window and surface hold
+  /// nothing of what was sent, and a step refused at its start left this
+  /// side believing it. both go again as they are. before the first load
+  /// has read the android version, that load sends them
+  Future<void> windowAttached() async {
+    _secureSent = null;
+    _recentsSent = null;
+    if (_lockWas == null) return;
+    await _applyScreenSecure();
+  }
+
   Future<void> _applyScreenSecure() async {
     // until the lock is read the cover hides the app, and what the last
     // run left stays

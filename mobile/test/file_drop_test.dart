@@ -434,7 +434,12 @@ void main() {
     test('a frame sealed for hidden chats starts its file coming', () {
       final src = File('lib/app/state_vault.dart').readAsStringSync();
       final seal = src.substring(src.indexOf('Future<void> _sealArrival('));
-      expect(seal, contains('if (drop != null) unawaited(_holdDrop(drop));'));
+      expect(seal, contains('unawaited(_holdDrop(drop));'));
+      // one the automatic download leaves waits for a tap there
+      expect(
+        seal,
+        contains('drop != null && await _getsNow(getKindOf(env.fileName))'),
+      );
     });
   });
 

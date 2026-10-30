@@ -199,6 +199,7 @@ class _LockGateState extends State<_LockGate> {
       _plainSeen();
       unawaited(sayFaceChanged());
     },
+    attached: () => unawaited(appState.windowAttached()),
   );
 }
 

@@ -15,6 +15,12 @@ Duration Function() groupCapsGap = () =>
 @visibleForTesting
 Duration groupShotsEvery = const Duration(minutes: 5);
 
+/// the clock and the timer the block's pace reads, for tests
+@visibleForTesting
+int Function() groupShotsNow = () => DateTime.now().millisecondsSinceEpoch;
+@visibleForTesting
+Timer Function(Duration, void Function()) groupShotsTimer = Timer.new;
+
 // what the block's sends keep in memory, per app
 class _ShotsPace {
   // admins this phone already told what it understands, by a caps control
@@ -310,14 +316,17 @@ extension AppStateGroupShots on AppState {
   }) async {
     final p = _pace;
     final key = '${d.container.id}|$groupId';
-    final t = DateTime.now().millisecondsSinceEpoch;
+    final t = groupShotsNow();
     final last = p.sentAt[key];
     final every = groupShotsEvery.inMilliseconds;
     if (!now && last != null && t - last < every) {
-      p.waiting[key] ??= Timer(Duration(milliseconds: last + every - t), () {
-        p.waiting.remove(key);
-        unawaited(_broadcastShots(d, groupId));
-      });
+      p.waiting[key] ??= groupShotsTimer(
+        Duration(milliseconds: last + every - t),
+        () {
+          p.waiting.remove(key);
+          unawaited(_broadcastShots(d, groupId));
+        },
+      );
       return;
     }
     p.waiting.remove(key)?.cancel();

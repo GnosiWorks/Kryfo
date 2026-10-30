@@ -17,9 +17,9 @@ finish-args:
   - --share=ipc
   # gpu rendering for flutter
   - --device=dri
-  # libsecret keeps the database key. sandboxed it uses the secret portal
-  # when the desktop has one; this is for desktops whose portal has none
-  - --talk-name=org.freedesktop.secrets
+  # no org.freedesktop.secrets: sandboxed, libsecret keeps the vault's key
+  # in the app's own keyring file under the secret portal's per-app key.
+  # without that portal the app asks for a passphrase instead
   # no tray yet. when it lands it needs:
   # - --talk-name=org.kde.StatusNotifierWatcher
   # file open/save go through portals, so no --filesystem. notifications
