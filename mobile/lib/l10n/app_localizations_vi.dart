@@ -8905,6 +8905,9 @@ class AppLocalizationsVi extends AppLocalizations {
       'Bản dịch được lưu mã hóa cùng cuộc trò chuyện trên điện thoại này và bị xóa cùng nó.';
 
   @override
+  String get translateOffDeletes => 'Tắt mục này sẽ xóa các bản dịch đã lưu.';
+
+  @override
   String get bridgesNoneUntilOnion => 'Chưa dùng cho đến khi bật Onion';
 
   @override

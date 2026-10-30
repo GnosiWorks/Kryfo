@@ -8912,6 +8912,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Terjemahan disimpan terenkripsi bersama chatnya di ponsel ini dan dihapus bersamanya.';
 
   @override
+  String get translateOffDeletes =>
+      'Mematikan ini menghapus terjemahan yang tersimpan.';
+
+  @override
   String get bridgesNoneUntilOnion => 'Tidak ada sampai Onion aktif';
 
   @override

@@ -11255,6 +11255,10 @@
   "@translatePrivacyKept": {
     "description": "translation settings, privacy box: where translations are kept"
   },
+  "translateOffDeletes": "Turning this off deletes saved translations.",
+  "@translateOffDeletes": {
+    "description": "translation settings: under the switch, what turning it off does"
+  },
   "bridgesNoneUntilOnion": "None until onion is on",
   "@bridgesNoneUntilOnion": {
     "description": "screens/bridges_screen.dart: the \"In use\" value while relay or fast mode is on, where no bridge is used"

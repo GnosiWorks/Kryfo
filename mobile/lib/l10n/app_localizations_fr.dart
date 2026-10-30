@@ -9010,6 +9010,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les traductions sont gardées chiffrées avec leur discussion sur ce téléphone et supprimées avec elle.';
 
   @override
+  String get translateOffDeletes =>
+      'Le désactiver supprime les traductions enregistrées.';
+
+  @override
   String get bridgesNoneUntilOnion => 'Rien tant qu’Onion n’est pas activé';
 
   @override

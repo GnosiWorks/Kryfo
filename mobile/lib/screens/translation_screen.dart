@@ -92,9 +92,24 @@ class _TranslationScreenState extends State<TranslationScreen> {
                     hint: l10n.translateOnHint,
                     toggled: s.on,
                     pending: !_read,
-                    onTap: () => _save(s.copyWith(on: !s.on)),
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      hub.setOn(!s.on);
+                    },
                   ),
                 ],
+              ),
+              Padding(
+                key: const ValueKey('translate-off-note'),
+                padding: const EdgeInsetsDirectional.fromSTEB(4, 8, 4, 0),
+                child: Text(
+                  l10n.translateOffDeletes,
+                  style: HaloType.sans(
+                    size: 12.5,
+                    color: HaloColors.text2,
+                    height: 1.4,
+                  ),
+                ),
               ),
               HaloSection(l10n.translatePacksSection),
               for (final (i, b) in hub.catalog.langs.indexed)

@@ -176,6 +176,32 @@ void main() {
     expect(await store.kept('heron'), isEmpty);
   }, skip: skip);
 
+  test('turned off: every open container drops what it kept', () async {
+    final primary = await dbWith([('heron', 'u1', _zh)]);
+    final vault = await dbWith([('wren', 'v1', _zh)]);
+    var vaultOpen = false;
+    final store = DbTranslateStore(
+      () async => primary,
+      chatDb: (id) async => id == 'wren' ? vault : primary,
+      open: () async => [primary, if (vaultOpen) vault],
+    );
+    await store.keep('heron', 'u1', _k(_zh, _en), _zh);
+    await store.keep('wren', 'v1', _k(_zh, _en), _zh);
+    await store.dropKept(1);
+    expect(await store.kept('heron'), isEmpty);
+    // the shut vault catches up once it opens, and only once per off
+    expect((await store.kept('wren')).keys, ['v1']);
+    vaultOpen = true;
+    await store.dropKept(1);
+    expect(await store.kept('wren'), isEmpty);
+    await store.keep('wren', 'v1', _k(_zh, _en), _zh);
+    await store.dropKept(1);
+    expect((await store.kept('wren')).keys, ['v1']);
+    // the triggers still find their table
+    await vault.delete('messages');
+    expect(await store.kept('wren'), isEmpty);
+  }, skip: skip);
+
   group('in a chat', () {
     test('made once, read back the next time with no model asked', () async {
       final f = fakeHub(installed: true, words: {_zh: _en});
@@ -304,6 +330,27 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       expect(store.reads, 0);
       expect(c.of('u1', _zh).text, isNull);
+    });
+
+    test('turning it off deletes what was kept, and keeps no more', () async {
+      final f = fakeHub(installed: true, words: {_zh: _en});
+      await f.hub.ready();
+      final c = ChatTranslation(f.hub, 'heron');
+      addTearDown(c.dispose);
+      await Future<void>.delayed(Duration.zero);
+      await c.toggle('u1', _zh);
+      expect(f.store.keptRows['heron'], contains('u1'));
+      await f.hub.setOn(false);
+      expect(f.store.keptRows, isEmpty);
+      expect(f.hub.settings.offs, 1);
+      expect(c.of('u1', _zh).text, isNull);
+      // back on: nothing was kept, the model is asked again
+      await f.hub.setOn(true);
+      await Future<void>.delayed(Duration.zero);
+      expect(c.of('u1', _zh).text, isNull);
+      final asked = f.translator.asked.length;
+      await c.toggle('u1', _zh);
+      expect(f.translator.asked.length, asked + 1);
     });
   });
 }

@@ -3745,6 +3745,10 @@ void main() {
       l.translatePrivacyKept,
       "Translations are kept with their chat, encrypted on this phone, and deleted with it.",
     );
+    expect(
+      l.translateOffDeletes,
+      "Turning this off deletes saved translations.",
+    );
     expect(l.bridgesNoneUntilOnion, "None until onion is on");
     expect(
       l.bridgesRelayWorksWhereTor,

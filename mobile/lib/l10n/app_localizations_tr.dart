@@ -8940,6 +8940,9 @@ class AppLocalizationsTr extends AppLocalizations {
       'Çeviriler bu telefonda sohbetleriyle birlikte şifreli tutulur ve sohbetle birlikte silinir.';
 
   @override
+  String get translateOffDeletes => 'Kapatınca kayıtlı çeviriler silinir.';
+
+  @override
   String get bridgesNoneUntilOnion => 'Onion açılana kadar yok';
 
   @override

@@ -2346,6 +2346,7 @@
   "translateOfferAgain": "Volver a ofrecer",
   "translateOnHint": "Se ofrece bajo los mensajes en otros idiomas",
   "translatePrivacyKept": "Las traducciones se guardan cifradas con su chat en este teléfono y se borran con él.",
+  "translateOffDeletes": "Al desactivarlo se borran las traducciones guardadas.",
   "bridgesNoneUntilOnion": "Nada hasta activar Onion",
   "bridgesRelayWorksWhereTor": "Rápido funciona donde Tor está bloqueado, y puedes volver cuando quieras.",
   "bridgesRelayThisNetworkSees": "Rápido pasa donde Tor está bloqueado, pero esta red puede ver que te conectas a Kryfo.",

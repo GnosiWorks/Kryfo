@@ -2346,6 +2346,7 @@
   "translateOfferAgain": "Yeniden öner",
   "translateOnHint": "Başka dillerdeki mesajların altında sunulur",
   "translatePrivacyKept": "Çeviriler bu telefonda sohbetleriyle birlikte şifreli tutulur ve sohbetle birlikte silinir.",
+  "translateOffDeletes": "Kapatınca kayıtlı çeviriler silinir.",
   "bridgesNoneUntilOnion": "Onion açılana kadar yok",
   "bridgesRelayWorksWhereTor": "Hızlı, Tor’un engellendiği yerde çalışır ve istediğin zaman geri dönebilirsin.",
   "bridgesRelayThisNetworkSees": "Hızlı, Tor’un engellendiği yerden geçer ama bu ağ Kryfo’ya bağlandığını görebilir.",

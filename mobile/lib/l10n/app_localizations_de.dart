@@ -9014,6 +9014,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Übersetzungen bleiben verschlüsselt bei ihrem Chat auf diesem Handy und werden mit ihm gelöscht.';
 
   @override
+  String get translateOffDeletes =>
+      'Ausschalten löscht gespeicherte Übersetzungen.';
+
+  @override
   String get bridgesNoneUntilOnion => 'Nichts, bis Onion an ist';
 
   @override

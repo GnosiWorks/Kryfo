@@ -2346,6 +2346,7 @@
   "translateOfferAgain": "Tawarkan lagi",
   "translateOnHint": "Ditawarkan di bawah pesan dalam bahasa lain",
   "translatePrivacyKept": "Terjemahan disimpan terenkripsi bersama chatnya di ponsel ini dan dihapus bersamanya.",
+  "translateOffDeletes": "Mematikan ini menghapus terjemahan yang tersimpan.",
   "bridgesNoneUntilOnion": "Tidak ada sampai Onion aktif",
   "bridgesRelayWorksWhereTor": "Cepat bisa dipakai di tempat Tor diblokir, dan kamu bisa kembali kapan saja.",
   "bridgesRelayThisNetworkSees": "Cepat bisa tembus di tempat Tor diblokir, tapi jaringan ini bisa melihat kamu terhubung ke Kryfo.",

@@ -8931,6 +8931,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'ترجمه‌ها رمزگذاری‌شده کنار گفتگوی خود روی همین گوشی می‌مانند و همراه آن پاک می‌شوند.';
 
   @override
+  String get translateOffDeletes =>
+      'خاموش کردن این، ترجمه‌های ذخیره‌شده را پاک می‌کند.';
+
+  @override
   String get bridgesNoneUntilOnion => 'هیچ، تا Onion روشن شود';
 
   @override

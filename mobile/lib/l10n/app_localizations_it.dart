@@ -8991,6 +8991,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Le traduzioni restano cifrate con la loro chat su questo telefono e vengono eliminate con essa.';
 
   @override
+  String get translateOffDeletes =>
+      'Se lo disattivi, le traduzioni salvate vengono eliminate.';
+
+  @override
   String get bridgesNoneUntilOnion => 'Niente finché Onion non è attivo';
 
   @override

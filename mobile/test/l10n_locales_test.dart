@@ -3217,6 +3217,7 @@ final _calls = <_Call>[
   ('translateOfferAgain', [], (l) => l.translateOfferAgain),
   ('translateOnHint', [], (l) => l.translateOnHint),
   ('translatePrivacyKept', [], (l) => l.translatePrivacyKept),
+  ('translateOffDeletes', [], (l) => l.translateOffDeletes),
   ('bridgesNoneUntilOnion', [], (l) => l.bridgesNoneUntilOnion),
   ('bridgesRelayWorksWhereTor', [], (l) => l.bridgesRelayWorksWhereTor),
   ('bridgesRelayThisNetworkSees', [], (l) => l.bridgesRelayThisNetworkSees),

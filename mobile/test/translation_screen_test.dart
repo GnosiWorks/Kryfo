@@ -216,6 +216,28 @@ void main() {
     expect(t.takeException(), isNull);
   });
 
+  testWidgets('turning it off deletes saved translations, as it says', (
+    t,
+  ) async {
+    tall(t);
+    final f = fakeHub();
+    f.store.keptRows['heron'] = {
+      'u1': KeptTranslation(KeptTranslation.hashOf('x'), 'zh>en>none', 'y'),
+    };
+    await t.pumpWidget(framed(TranslationScreen(hub: f.hub)));
+    await t.pumpAndSettle();
+    expect(find.text(l10n.translateOffDeletes), findsOneWidget);
+    await t.tap(find.byKey(const ValueKey('translate-on')));
+    await t.pumpAndSettle();
+    expect(f.store.settings.on, isFalse);
+    expect(f.store.keptRows, isEmpty);
+    expect(f.store.settings.offs, 1);
+    // on again deletes nothing more
+    await t.tap(find.byKey(const ValueKey('translate-on')));
+    await t.pumpAndSettle();
+    expect(f.store.settings.offs, 1);
+  });
+
   testWidgets('languages I read: the app language is ticked and stays', (
     t,
   ) async {

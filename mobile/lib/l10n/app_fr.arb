@@ -2346,6 +2346,7 @@
   "translateOfferAgain": "Proposer à nouveau",
   "translateOnHint": "Proposée sous les messages dans d’autres langues",
   "translatePrivacyKept": "Les traductions sont gardées chiffrées avec leur discussion sur ce téléphone et supprimées avec elle.",
+  "translateOffDeletes": "Le désactiver supprime les traductions enregistrées.",
   "bridgesNoneUntilOnion": "Rien tant qu’Onion n’est pas activé",
   "bridgesRelayWorksWhereTor": "Rapide fonctionne là où Tor est bloqué, et vous pouvez revenir à tout moment.",
   "bridgesRelayThisNetworkSees": "Rapide passe là où Tor est bloqué, mais ce réseau peut voir que vous vous connectez à Kryfo.",

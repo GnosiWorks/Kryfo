@@ -9079,6 +9079,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Переводы хранятся зашифрованными вместе с чатом на этом телефоне и удаляются вместе с ним.';
 
   @override
+  String get translateOffDeletes =>
+      'Если выключить, сохранённые переводы удалятся.';
+
+  @override
   String get bridgesNoneUntilOnion => 'Ничего, пока не включён Onion';
 
   @override

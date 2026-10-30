@@ -8505,6 +8505,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get translatePrivacyKept => '译文与所属聊天一起加密保存在这部手机上，并随聊天一起删除。';
 
   @override
+  String get translateOffDeletes => '关闭后会删除已保存的译文。';
+
+  @override
   String get bridgesNoneUntilOnion => '开启 Onion 前不使用';
 
   @override
@@ -18154,6 +18157,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get translatePrivacyKept => '譯文與所屬聊天一起加密保存在這支手機上，並隨聊天一起刪除。';
+
+  @override
+  String get translateOffDeletes => '關閉後會刪除已儲存的譯文。';
 
   @override
   String get bridgesNoneUntilOnion => '開啟 Onion 前不使用';

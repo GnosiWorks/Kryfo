@@ -210,6 +210,8 @@ class TranslationHub extends ChangeNotifier {
       if (now == last) return;
       last = now;
       forgetChats();
+      // a vault that opens drops what it kept before an off
+      unawaited(dropKept());
     }
 
     state.addListener(heard);
@@ -292,7 +294,23 @@ class TranslationHub extends ChangeNotifier {
     ),
   );
 
-  Future<void> setOn(bool on) => saveSettings(_settings.copyWith(on: on));
+  // off deletes every kept translation
+  Future<void> setOn(bool on) async {
+    if (on == _settings.on) return;
+    await saveSettings(
+      _settings.copyWith(on: on, offs: on ? null : _settings.offs + 1),
+    );
+    if (!on) await dropKept();
+  }
+
+  // kept translations of the times it was turned off, gone from every
+  // container open now
+  Future<void> dropKept() async {
+    if (_settings.offs == 0) return;
+    try {
+      await store.dropKept(_settings.offs);
+    } catch (_) {}
+  }
 
   // a chat's kept translations, read when it opens. a store that fails
   // keeps none
@@ -310,6 +328,7 @@ class TranslationHub extends ChangeNotifier {
     KeptTranslation t,
     String words,
   ) async {
+    if (!on) return;
     try {
       await store.keep(chatId, uid, t, words);
     } catch (_) {}

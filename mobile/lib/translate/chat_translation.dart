@@ -197,6 +197,13 @@ class ChatTranslation extends ChangeNotifier {
       _seenWipes = hub.wipes;
       _wipe();
     }
+    // turned off: what was kept is deleted, so none of it stays here
+    if (!hub.on && (_keptRead || _msgs.isNotEmpty)) {
+      _kept = {};
+      _keptRead = false;
+      _msgs.clear();
+      _byAuto.clear();
+    }
     if (!_keptRead && !hub.locked) unawaited(_readKept());
     final now = hub.chatAutoNow(chatId);
     if (now == null && _auto != null) {
@@ -381,7 +388,7 @@ class ChatTranslation extends ChangeNotifier {
       final out = await hub.translate(text, o);
       if (still() && !_gone && !_burnt.contains(key)) {
         _set(key, text, MsgTranslation(MsgPhase.shown, text: out, offer: o));
-        if (_keepable(key) && _source[key] == text) {
+        if (_keepable(key) && _source[key] == text && hub.on) {
           final k = KeptTranslation(
             KeptTranslation.hashOf(text),
             _wayOf(o),

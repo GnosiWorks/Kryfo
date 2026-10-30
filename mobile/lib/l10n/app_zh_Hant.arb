@@ -2346,6 +2346,7 @@
   "translateOfferAgain": "重新提供",
   "translateOnHint": "在其他語言的訊息下方提供",
   "translatePrivacyKept": "譯文與所屬聊天一起加密保存在這支手機上，並隨聊天一起刪除。",
+  "translateOffDeletes": "關閉後會刪除已儲存的譯文。",
   "bridgesNoneUntilOnion": "開啟 Onion 前不使用",
   "bridgesRelayWorksWhereTor": "在 Tor 被封鎖的地方，快速模式也能用，隨時可以切換回來。",
   "bridgesRelayThisNetworkSees": "在 Tor 被封鎖的地方快速模式也能連通，但這個網路能看到你在連線 Kryfo。",

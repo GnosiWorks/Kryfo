@@ -14357,6 +14357,12 @@ abstract class AppLocalizations {
   /// **'Translations are kept with their chat, encrypted on this phone, and deleted with it.'**
   String get translatePrivacyKept;
 
+  /// translation settings: under the switch, what turning it off does
+  ///
+  /// In en, this message translates to:
+  /// **'Turning this off deletes saved translations.'**
+  String get translateOffDeletes;
+
   /// screens/bridges_screen.dart: the "In use" value while relay or fast mode is on, where no bridge is used
   ///
   /// In en, this message translates to:

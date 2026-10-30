@@ -2346,6 +2346,7 @@
   "translateOfferAgain": "Oferecer de novo",
   "translateOnHint": "Oferecida sob mensagens em outros idiomas",
   "translatePrivacyKept": "As traduções ficam guardadas, criptografadas, com a conversa neste celular e são apagadas com ela.",
+  "translateOffDeletes": "Ao desativar, as traduções salvas são apagadas.",
   "bridgesNoneUntilOnion": "Nada até ativar o Onion",
   "bridgesRelayWorksWhereTor": "O Rápido funciona onde o Tor é bloqueado, e você pode voltar quando quiser.",
   "bridgesRelayThisNetworkSees": "O Rápido passa onde o Tor é bloqueado, mas esta rede pode ver que você se conecta ao Kryfo.",

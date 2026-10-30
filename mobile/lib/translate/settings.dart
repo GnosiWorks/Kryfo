@@ -22,6 +22,9 @@ class TranslateSettings {
   final List<String> always;
   // languages never offered, until the person takes one off the list
   final List<String> never;
+  // times translation was turned off: each container drops its kept
+  // translations once for each
+  final int offs;
 
   const TranslateSettings({
     this.on = true,
@@ -31,6 +34,7 @@ class TranslateSettings {
     this.wifiOnly = true,
     this.always = const [],
     this.never = const [],
+    this.offs = 0,
   });
 
   TranslateSettings copyWith({
@@ -41,6 +45,7 @@ class TranslateSettings {
     bool? wifiOnly,
     List<String>? always,
     List<String>? never,
+    int? offs,
   }) => TranslateSettings(
     on: on ?? this.on,
     mine: mine ?? this.mine,
@@ -49,6 +54,7 @@ class TranslateSettings {
     wifiOnly: wifiOnly ?? this.wifiOnly,
     always: always ?? this.always,
     never: never ?? this.never,
+    offs: offs ?? this.offs,
   );
 
   Map<String, Object?> toJson() => {
@@ -59,6 +65,7 @@ class TranslateSettings {
     'wifi': wifiOnly,
     'always': always,
     'never': never,
+    'offs': offs,
   };
 
   static TranslateSettings fromJson(String? s) {
@@ -75,6 +82,7 @@ class TranslateSettings {
           for (final l in (j['always'] as List? ?? const [])) l as String,
         ],
         never: [for (final l in (j['never'] as List? ?? const [])) l as String],
+        offs: (j['offs'] as num?)?.toInt() ?? 0,
       );
     } catch (_) {
       return const TranslateSettings();
@@ -108,6 +116,8 @@ abstract class TranslateStore {
   // [words] are only checked against the message, never stored
   Future<void> keep(String chatId, String uid, KeptTranslation t, String words);
   Future<void> unkeep(String chatId, String uid);
+  // every kept translation in the open containers goes, once per [offs]
+  Future<void> dropKept(int offs);
 }
 
 class MemoryTranslateStore implements TranslateStore {
@@ -145,6 +155,13 @@ class MemoryTranslateStore implements TranslateStore {
   @override
   Future<void> unkeep(String chatId, String uid) async =>
       keptRows[chatId]?.remove(uid);
+  int dropped = 0;
+  @override
+  Future<void> dropKept(int offs) async {
+    if (offs <= dropped) return;
+    dropped = offs;
+    keptRows.clear();
+  }
 }
 
 // two small tables, made when first used. a chat's rows go with its
@@ -154,8 +171,14 @@ class DbTranslateStore implements TranslateStore {
   // is the vault's)
   final Future<Database> Function() db;
   final Future<Database> Function(String chatId) chatDb;
-  DbTranslateStore(this.db, {Future<Database> Function(String)? chatDb})
-    : chatDb = chatDb ?? ((_) => db());
+  // every container open now: the primary, and the vault while it is open
+  final Future<List<Database>> Function() open;
+  DbTranslateStore(
+    this.db, {
+    Future<Database> Function(String)? chatDb,
+    Future<List<Database>> Function()? open,
+  }) : chatDb = chatDb ?? ((_) => db()),
+       open = open ?? (() async => [await db()]);
 
   // the setup, once per open database
   static final _made = Expando<Future<void>>();
@@ -312,6 +335,30 @@ class DbTranslateStore implements TranslateStore {
   Future<void> unkeep(String chatId, String uid) async {
     final d = await _ready(await chatDb(chatId));
     await d.delete('translate_kept', where: 'uid = ?', whereArgs: [uid]);
+  }
+
+  // each container keeps the count it last dropped for, so a vault that
+  // was shut catches up when it opens
+  @override
+  Future<void> dropKept(int offs) async {
+    for (final d in await open()) {
+      await _ready(d);
+      await d.transaction((t) async {
+        final r = await t.query(
+          'translate_prefs',
+          columns: ['v'],
+          where: 'k = ?',
+          whereArgs: ['offs'],
+        );
+        final had = r.isEmpty ? 0 : int.tryParse('${r.first['v']}') ?? 0;
+        if (had >= offs) return;
+        await t.delete('translate_kept');
+        await t.insert('translate_prefs', {
+          'k': 'offs',
+          'v': '$offs',
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      });
+    }
   }
 }
 
