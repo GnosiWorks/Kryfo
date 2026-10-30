@@ -4549,6 +4549,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'PIN-код удаляется, а вместе с ним PIN для стирания и все скрытые чаты. Любой, у кого в руках твой телефон, откроет Kryfo от твоего имени.';
 
   @override
+  String get pinsThePinGoesAndDesk =>
+      'PIN-код удаляется, а вместе с ним PIN для стирания и все скрытые чаты. Любой, кто сядет за твой компьютер, откроет Kryfo от твоего имени.';
+
+  @override
   String get pinsUnlockWithFingerprint => 'Разблокировка отпечатком';
 
   @override
@@ -7327,6 +7331,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Эта сеть сначала просит войти. Как только войдёшь, Kryfo подключится.';
 
   @override
+  String get bridgesThisNetworkWantsADesk =>
+      'Эта сеть сначала просит войти. Войди через браузер или проверь сетевое подключение компьютера. Как только войдёшь, Kryfo подключится.';
+
+  @override
   String get bridgesWaitingForWifiSignIn => 'Ждём входа в Wi-Fi';
 
   @override
@@ -8011,8 +8019,16 @@ class AppLocalizationsRu extends AppLocalizations {
       'На случай, если тебя заставят разблокировать телефон.';
 
   @override
+  String get pinsAdvancedLineDesk =>
+      'На случай, если тебя заставят разблокировать компьютер.';
+
+  @override
   String get pinsWipeLine =>
       'Если ввести его на экране блокировки, он сотрёт Kryfo с этого телефона.';
+
+  @override
+  String get pinsWipeLineDesk =>
+      'Если ввести его на экране блокировки, он сотрёт Kryfo с этого компьютера.';
 
   @override
   String get pinsDecoyPin => 'PIN-приманка';
@@ -8036,6 +8052,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Все PIN-коды удаляются, а вместе с ними приманка, её Kryfo и все скрытые чаты. Любой, у кого в руках твой телефон, откроет Kryfo от твоего имени.';
 
   @override
+  String get pinsTurnOffWithDecoyDesk =>
+      'Все PIN-коды удаляются, а вместе с ними приманка, её Kryfo и все скрытые чаты. Любой, кто сядет за твой компьютер, откроет Kryfo от твоего имени.';
+
+  @override
   String get pinsHowThisWorks => 'Как это работает';
 
   @override
@@ -8050,6 +8070,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get flowWipe1 =>
       'Если ввести его на экране блокировки вместо твоего PIN-кода, он сотрёт Kryfo с этого телефона и закроет его. Для того, кто смотрит, приложение просто остановилось.';
+
+  @override
+  String get flowWipe1Desk =>
+      'Если ввести его на экране блокировки вместо твоего PIN-кода, он сотрёт Kryfo с этого компьютера и закроет его. Для того, кто смотрит, приложение просто остановилось.';
 
   @override
   String get flowWipe2 =>
@@ -8085,6 +8109,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Уведомления, которые уже в шторке, уже видели. Пока открыта приманка, новые не появляются.';
 
   @override
+  String get flowDecoyShadeDesk =>
+      'Уведомления, которые уже на экране, уже видели. Пока открыта приманка, новые не появляются.';
+
+  @override
   String get flowDecoyChoose => 'Выбери PIN-приманку';
 
   @override
@@ -8097,6 +8125,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get flowLaw =>
       'В некоторых странах отказ разблокировать телефон или сокрытие данных от властей уже само по себе правонарушение. Знай законы тех мест, куда едешь.';
+
+  @override
+  String get flowLawDesk =>
+      'В некоторых странах отказ разблокировать устройство или сокрытие данных от властей уже само по себе правонарушение. Знай законы тех мест, куда едешь.';
 
   @override
   String get howWipe =>
@@ -8161,6 +8193,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get flowVaultReplace =>
       'Это заменит все скрытые чаты, которые уже есть на этом телефоне.';
+
+  @override
+  String get flowVaultReplaceDesk =>
+      'Это заменит все скрытые чаты, которые уже есть на этом компьютере.';
 
   @override
   String get flowVaultChoose => 'Выбери PIN-код скрытых чатов';
@@ -8239,6 +8275,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get howVault =>
       'PIN-код скрытых чатов открывает Kryfo со скрытыми чатами, а твой PIN-код и отпечаток открывают его без них. Если настроить скрытые чаты заново, они заменят те, что есть на этом телефоне. Забудешь PIN-код скрытых чатов, и они пропадут навсегда.';
+
+  @override
+  String get howVaultDesk =>
+      'PIN-код скрытых чатов открывает Kryfo со скрытыми чатами, а твой PIN-код открывает его без них. Если настроить скрытые чаты заново, они заменят те, что есть на этом компьютере. Забудешь PIN-код скрытых чатов, и они пропадут навсегда.';
 
   @override
   String get chatHide => 'Скрыть чат';
@@ -9849,6 +9889,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не меньше 12 символов. Клавиатура телефона видит, что вы вводите, поэтому выберите ту, что не запоминает и не синхронизирует слова.';
 
   @override
+  String get flowVaultPassLineDesk =>
+      'Не меньше 12 символов. Выберите ту, что вы больше нигде не используете.';
+
+  @override
   String get flowVaultPassAgain => 'Та же парольная фраза ещё раз';
 
   @override
@@ -10230,6 +10274,39 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get desktopTrayTip => 'Kryfo работает и принимает сообщения';
+
+  @override
+  String get desktopRunSection => 'На этом компьютере';
+
+  @override
+  String get desktopTrayRow => 'Работать в области уведомлений';
+
+  @override
+  String get desktopTrayHint =>
+      'Если закрыть окно, Kryfo остаётся в области уведомлений, и сообщения продолжают приходить.';
+
+  @override
+  String get desktopTrayOffLine =>
+      'Если закрыть окно, Kryfo завершится. Сообщения придут, когда откроешь его снова.';
+
+  @override
+  String get desktopTrayNoneLine =>
+      'Этот рабочий стол не показывает значки в области уведомлений, поэтому закрытие окна завершает Kryfo.';
+
+  @override
+  String get desktopStartRow => 'Запускать вместе с компьютером';
+
+  @override
+  String get desktopStartHint =>
+      'Kryfo открывается, когда ты входишь в систему на этом компьютере.';
+
+  @override
+  String get desktopStartRefused =>
+      'Этот компьютер не разрешил Kryfo запускаться вместе с ним. Kryfo откроется, когда ты запустишь его сам.';
+
+  @override
+  String get desktopStartHeldOff =>
+      'Windows отключил Kryfo в приложениях автозагрузки. Включи его там: Параметры, Приложения, Автозагрузка.';
 
   @override
   String get desktopNoCamera =>

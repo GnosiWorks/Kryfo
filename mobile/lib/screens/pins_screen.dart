@@ -102,7 +102,9 @@ class _PinsScreenState extends State<PinsScreen> {
     final ok = await showConfirmSheet(
       context,
       title: l10n.pinsTurnOffTheApp,
-      line: decoy ? l10n.pinsTurnOffWithDecoy : l10n.pinsThePinGoesAnd,
+      line: decoy
+          ? l10n.pinsTurnOffWithDecoyShown
+          : l10n.pinsThePinGoesAndShown,
       yes: l10n.pinsTurnOff,
     );
     if (!ok) return;
@@ -137,7 +139,7 @@ class _PinsScreenState extends State<PinsScreen> {
     final r = await showChangeOrRemoveSheet(
       context,
       title: l10n.pinsWipePin,
-      line: l10n.pinsWipeLine,
+      line: l10n.pinsWipeLineShown,
       change: l10n.pinsChangeWipePin,
       remove: l10n.pinsRemove,
     );
@@ -309,7 +311,7 @@ class _PinsScreenState extends State<PinsScreen> {
                     icon: Icons.local_fire_department_outlined,
                     tint: HaloColors.rose,
                     name: l10n.pinsWipePin,
-                    line: l10n.pinsWipeLine,
+                    line: l10n.pinsWipeLineShown,
                     state: !on
                         ? l10n.pinsNeedsAPinFirst
                         : wipe
@@ -575,7 +577,7 @@ class _Advanced extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            l10n.pinsAdvancedLine,
+                            l10n.pinsAdvancedLineShown,
                             style: HaloType.sans(
                               size: 12.5,
                               color: HaloColors.text2,
@@ -761,11 +763,15 @@ void _showHow(BuildContext context, {required bool finger}) {
                 l10n.howWipe,
               ),
               (Icons.theater_comedy_outlined, HaloColors.amber, l10n.howDecoy),
-              (Icons.visibility_off_outlined, HaloColors.violet, l10n.howVault),
+              (
+                Icons.visibility_off_outlined,
+                HaloColors.violet,
+                l10n.howVaultShown,
+              ),
               if (finger)
                 (Icons.fingerprint, HaloColors.amber, l10n.flowDecoyFinger),
               (Icons.dialpad_outlined, HaloColors.amber, l10n.flowDecoyDigits),
-              (Icons.gavel_outlined, HaloColors.text2, l10n.flowLaw),
+              (Icons.gavel_outlined, HaloColors.text2, l10n.flowLawShown),
             ]) ...[
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,

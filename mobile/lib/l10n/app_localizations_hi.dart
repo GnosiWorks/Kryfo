@@ -4454,6 +4454,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'PIN हट जाएगा, और उसके साथ मिटाने वाला PIN और सारी छिपी चैट भी। आपका फ़ोन जिसके हाथ में होगा, वह Kryfo को आपकी तरह खोल लेगा।';
 
   @override
+  String get pinsThePinGoesAndDesk =>
+      'PIN हट जाएगा, और उसके साथ मिटाने वाला PIN और सारी छिपी चैट भी। आपके कंप्यूटर पर जो भी बैठेगा, वह Kryfo को आपकी तरह खोल लेगा।';
+
+  @override
   String get pinsUnlockWithFingerprint => 'फ़िंगरप्रिंट से अनलॉक करें';
 
   @override
@@ -7197,6 +7201,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'यह नेटवर्क पहले साइन इन माँगता है। साइन इन होते ही Kryfo जुड़ जाएगा।';
 
   @override
+  String get bridgesThisNetworkWantsADesk =>
+      'यह नेटवर्क पहले साइन इन माँगता है। अपने ब्राउज़र से साइन इन करें, या कंप्यूटर का नेटवर्क कनेक्शन जाँचें। साइन इन होते ही Kryfo जुड़ जाएगा।';
+
+  @override
   String get bridgesWaitingForWifiSignIn => 'Wi-Fi साइन इन का इंतज़ार';
 
   @override
@@ -7868,8 +7876,16 @@ class AppLocalizationsHi extends AppLocalizations {
       'जब कोई आपसे ज़बरदस्ती फ़ोन खुलवाए, उस वक़्त के लिए।';
 
   @override
+  String get pinsAdvancedLineDesk =>
+      'जब कोई आपसे ज़बरदस्ती कंप्यूटर खुलवाए, उस वक़्त के लिए।';
+
+  @override
   String get pinsWipeLine =>
       'लॉक स्क्रीन पर लिखने पर यह इस फ़ोन से Kryfo पूरी तरह मिटा देता है।';
+
+  @override
+  String get pinsWipeLineDesk =>
+      'लॉक स्क्रीन पर लिखने पर यह इस कंप्यूटर से Kryfo पूरी तरह मिटा देता है।';
 
   @override
   String get pinsDecoyPin => 'नकली PIN';
@@ -7893,6 +7909,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'हर PIN हट जाएगा, नकली PIN और उसका Kryfo, और उनके साथ सारी छिपी चैट भी। आपका फ़ोन जिसके हाथ में होगा, वह Kryfo को आपकी तरह खोल लेगा।';
 
   @override
+  String get pinsTurnOffWithDecoyDesk =>
+      'हर PIN हट जाएगा, नकली PIN और उसका Kryfo, और उनके साथ सारी छिपी चैट भी। आपके कंप्यूटर पर जो भी बैठेगा, वह Kryfo को आपकी तरह खोल लेगा।';
+
+  @override
   String get pinsHowThisWorks => 'यह कैसे काम करता है';
 
   @override
@@ -7907,6 +7927,10 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get flowWipe1 =>
       'लॉक स्क्रीन पर अपने PIN की जगह लिखने पर यह इस फ़ोन से Kryfo पूरी तरह मिटाकर उसे बंद कर देता है। जो भी देख रहा हो, उसे लगेगा कि ऐप बस रुक गया।';
+
+  @override
+  String get flowWipe1Desk =>
+      'लॉक स्क्रीन पर अपने PIN की जगह लिखने पर यह इस कंप्यूटर से Kryfo पूरी तरह मिटाकर उसे बंद कर देता है। जो भी देख रहा हो, उसे लगेगा कि ऐप बस रुक गया।';
 
   @override
   String get flowWipe2 =>
@@ -7942,6 +7966,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'जो सूचनाएँ पहले से दिख रही थीं, वे पहले ही देखी जा चुकी हैं। नकली Kryfo खुला रहने तक कोई नई सूचना नहीं दिखती।';
 
   @override
+  String get flowDecoyShadeDesk =>
+      'जो सूचनाएँ पहले से स्क्रीन पर थीं, वे पहले ही देखी जा चुकी हैं। नकली Kryfo खुला रहने तक कोई नई सूचना नहीं दिखती।';
+
+  @override
   String get flowDecoyChoose => 'नकली PIN चुनें';
 
   @override
@@ -7954,6 +7982,10 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get flowLaw =>
       'कुछ देशों में फ़ोन अनलॉक करने से मना करना या अधिकारियों से डेटा छिपाना अपने-आप में अपराध है। जहाँ आप जाते हैं, वहाँ का क़ानून जानें।';
+
+  @override
+  String get flowLawDesk =>
+      'कुछ देशों में किसी डिवाइस को अनलॉक करने से मना करना या अधिकारियों से डेटा छिपाना अपने-आप में अपराध है। जहाँ आप जाते हैं, वहाँ का क़ानून जानें।';
 
   @override
   String get howWipe =>
@@ -8018,6 +8050,10 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get flowVaultReplace =>
       'इससे वे सारी छिपी चैट बदल जाती हैं जो इस फ़ोन पर पहले से हैं।';
+
+  @override
+  String get flowVaultReplaceDesk =>
+      'इससे वे सारी छिपी चैट बदल जाती हैं जो इस कंप्यूटर पर पहले से हैं।';
 
   @override
   String get flowVaultChoose => 'छिपी चैट PIN चुनें';
@@ -8094,6 +8130,10 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get howVault =>
       'आपका छिपी चैट PIN आपकी छिपी चैट के साथ Kryfo खोलता है, आपका PIN और फ़िंगरप्रिंट उनके बिना। छिपी चैट फिर से सेट करने पर इस फ़ोन की मौजूदा छिपी चैट बदल जाती हैं। छिपी चैट PIN भूल गए, तो वे हमेशा के लिए चली जाती हैं।';
+
+  @override
+  String get howVaultDesk =>
+      'आपका छिपी चैट PIN आपकी छिपी चैट के साथ Kryfo खोलता है, आपका PIN उनके बिना। छिपी चैट फिर से सेट करने पर इस कंप्यूटर की मौजूदा छिपी चैट बदल जाती हैं। छिपी चैट PIN भूल गए, तो वे हमेशा के लिए चली जाती हैं।';
 
   @override
   String get chatHide => 'चैट छिपाएँ';
@@ -9687,6 +9727,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'कम से कम 12 अक्षर। आप जो लिखते हैं, वह फ़ोन का कीबोर्ड देखता है, इसलिए ऐसा कीबोर्ड इस्तेमाल करें जो शब्द न सीखे और न सिंक करे।';
 
   @override
+  String get flowVaultPassLineDesk =>
+      'कम से कम 12 अक्षर। ऐसा इस्तेमाल करें जो आप कहीं और इस्तेमाल नहीं करते।';
+
+  @override
   String get flowVaultPassAgain => 'वही पासफ़्रेज़ दोबारा';
 
   @override
@@ -10063,6 +10107,39 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get desktopTrayTip => 'Kryfo चल रहा है और संदेश ले रहा है';
+
+  @override
+  String get desktopRunSection => 'इस कंप्यूटर पर';
+
+  @override
+  String get desktopTrayRow => 'सिस्टम ट्रे में चलता रहे';
+
+  @override
+  String get desktopTrayHint =>
+      'विंडो बंद करने पर Kryfo सिस्टम ट्रे में रहता है, ताकि संदेश आते रहें।';
+
+  @override
+  String get desktopTrayOffLine =>
+      'विंडो बंद करने पर Kryfo बंद हो जाता है। दोबारा खोलने पर संदेश आ जाते हैं।';
+
+  @override
+  String get desktopTrayNoneLine =>
+      'यह डेस्कटॉप सिस्टम ट्रे आइकन नहीं दिखाता, इसलिए विंडो बंद करने पर Kryfo बंद हो जाता है।';
+
+  @override
+  String get desktopStartRow => 'कंप्यूटर के साथ शुरू हो';
+
+  @override
+  String get desktopStartHint =>
+      'इस कंप्यूटर में साइन इन करते ही Kryfo खुल जाता है।';
+
+  @override
+  String get desktopStartRefused =>
+      'इस कंप्यूटर ने Kryfo को अपने साथ शुरू होने नहीं दिया। जब भी आप ख़ुद शुरू करें, Kryfo खुल जाता है।';
+
+  @override
+  String get desktopStartHeldOff =>
+      'Windows ने स्टार्टअप ऐप्स में Kryfo बंद कर रखा है। उसे वहीं चालू करें: सेटिंग्स, ऐप्स, स्टार्टअप।';
 
   @override
   String get desktopNoCamera =>

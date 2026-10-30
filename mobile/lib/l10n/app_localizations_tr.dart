@@ -4462,6 +4462,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'PIN kaldırılır, silme PIN’i ve varsa gizli sohbetler de onunla birlikte. Telefonun kimin elindeyse Kryfo’yu senmiş gibi açar.';
 
   @override
+  String get pinsThePinGoesAndDesk =>
+      'PIN kaldırılır, silme PIN’i ve varsa gizli sohbetler de onunla birlikte. Bilgisayarının başına kim oturursa Kryfo’yu senmiş gibi açar.';
+
+  @override
   String get pinsUnlockWithFingerprint => 'Parmak iziyle kilidi aç';
 
   @override
@@ -7213,6 +7217,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu ağ önce giriş yapmanı istiyor. Giriş yaptığında Kryfo bağlanır.';
 
   @override
+  String get bridgesThisNetworkWantsADesk =>
+      'Bu ağ önce giriş yapmanı istiyor. Tarayıcından giriş yap ya da bilgisayarın ağ bağlantısını kontrol et. Giriş yaptığında Kryfo bağlanır.';
+
+  @override
   String get bridgesWaitingForWifiSignIn => 'Wi-Fi girişi bekleniyor';
 
   @override
@@ -7887,8 +7895,16 @@ class AppLocalizationsTr extends AppLocalizations {
       'Biri seni telefonunun kilidini açmaya zorladığında.';
 
   @override
+  String get pinsAdvancedLineDesk =>
+      'Biri seni bilgisayarının kilidini açmaya zorladığında.';
+
+  @override
   String get pinsWipeLine =>
       'Kilit ekranında girildiğinde Kryfo’yu bu telefondan siler.';
+
+  @override
+  String get pinsWipeLineDesk =>
+      'Kilit ekranında girildiğinde Kryfo’yu bu bilgisayardan siler.';
 
   @override
   String get pinsDecoyPin => 'Yem PIN’i';
@@ -7910,6 +7926,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bütün PIN’ler kaldırılır, yem, onun Kryfo’su ve varsa gizli sohbetler de onlarla birlikte. Telefonun kimin elindeyse Kryfo’yu senmiş gibi açar.';
 
   @override
+  String get pinsTurnOffWithDecoyDesk =>
+      'Bütün PIN’ler kaldırılır, yem, onun Kryfo’su ve varsa gizli sohbetler de onlarla birlikte. Bilgisayarının başına kim oturursa Kryfo’yu senmiş gibi açar.';
+
+  @override
   String get pinsHowThisWorks => 'Nasıl çalışır';
 
   @override
@@ -7924,6 +7944,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get flowWipe1 =>
       'Kilit ekranında PIN’inin yerine girildiğinde Kryfo’yu bu telefondan siler ve kapatır. İzleyen kişiye göre uygulama sadece durdu.';
+
+  @override
+  String get flowWipe1Desk =>
+      'Kilit ekranında PIN’inin yerine girildiğinde Kryfo’yu bu bilgisayardan siler ve kapatır. İzleyen kişiye göre uygulama sadece durdu.';
 
   @override
   String get flowWipe2 =>
@@ -7958,6 +7982,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bildirim panelinde zaten olan bildirimler zaten görüldü. Yem açıkken yeni bildirim gelmez.';
 
   @override
+  String get flowDecoyShadeDesk =>
+      'Ekranda zaten olan bildirimler zaten görüldü. Yem açıkken yeni bildirim gelmez.';
+
+  @override
   String get flowDecoyChoose => 'Bir yem PIN’i seç';
 
   @override
@@ -7970,6 +7998,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get flowLaw =>
       'Bazı ülkelerde bir telefonun kilidini açmayı reddetmek ya da verileri yetkililerden gizlemek başlı başına suçtur. Seyahat ettiğin yerlerin yasalarını bil.';
+
+  @override
+  String get flowLawDesk =>
+      'Bazı ülkelerde bir cihazın kilidini açmayı reddetmek ya da verileri yetkililerden gizlemek başlı başına suçtur. Seyahat ettiğin yerlerin yasalarını bil.';
 
   @override
   String get howWipe =>
@@ -8034,6 +8066,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get flowVaultReplace =>
       'Bu işlem, bu telefonda zaten olan tüm gizli sohbetlerin yerini alır.';
+
+  @override
+  String get flowVaultReplaceDesk =>
+      'Bu işlem, bu bilgisayarda zaten olan tüm gizli sohbetlerin yerini alır.';
 
   @override
   String get flowVaultChoose => 'Bir gizli sohbet PIN’i seç';
@@ -8110,6 +8146,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get howVault =>
       'Gizli sohbet PIN’in Kryfo’yu gizli sohbetlerinle açar; PIN’in ve parmak izin ise onlar olmadan. Gizli sohbetleri yeniden kurmak, bu telefondakilerin yerini alır. Gizli sohbet PIN’ini unutursan sonsuza dek giderler.';
+
+  @override
+  String get howVaultDesk =>
+      'Gizli sohbet PIN’in Kryfo’yu gizli sohbetlerinle açar; PIN’in ise onlar olmadan. Gizli sohbetleri yeniden kurmak, bu bilgisayardakilerin yerini alır. Gizli sohbet PIN’ini unutursan sonsuza dek giderler.';
 
   @override
   String get chatHide => 'Sohbeti gizle';
@@ -9707,6 +9747,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'En az 12 karakter. Telefonun klavyesi yazdığını görür, bu yüzden kelime öğrenmeyen ve eşitlemeyen bir klavye kullan.';
 
   @override
+  String get flowVaultPassLineDesk =>
+      'En az 12 karakter. Başka hiçbir yerde kullanmadığın birini seç.';
+
+  @override
   String get flowVaultPassAgain => 'Aynı parola ifadesi bir kez daha';
 
   @override
@@ -10085,6 +10129,39 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get desktopTrayTip => 'Kryfo açık ve mesaj alıyor';
+
+  @override
+  String get desktopRunSection => 'Bu bilgisayarda';
+
+  @override
+  String get desktopTrayRow => 'Sistem tepsisinde çalışmaya devam et';
+
+  @override
+  String get desktopTrayHint =>
+      'Pencereyi kapatınca Kryfo sistem tepsisinde kalır, mesajlar gelmeye devam eder.';
+
+  @override
+  String get desktopTrayOffLine =>
+      'Pencereyi kapatınca Kryfo kapanır. Mesajlar onu yeniden açtığında gelir.';
+
+  @override
+  String get desktopTrayNoneLine =>
+      'Bu masaüstü sistem tepsisinde simge göstermiyor, bu yüzden pencereyi kapatmak Kryfo’yu kapatır.';
+
+  @override
+  String get desktopStartRow => 'Bilgisayarla birlikte başlat';
+
+  @override
+  String get desktopStartHint =>
+      'Bu bilgisayarda oturum açtığında Kryfo açılır.';
+
+  @override
+  String get desktopStartRefused =>
+      'Bu bilgisayar Kryfo’nun kendisiyle başlamasına izin vermedi. Kryfo’yu kendin başlattığında açılır.';
+
+  @override
+  String get desktopStartHeldOff =>
+      'Windows, Kryfo’yu başlangıç uygulamalarında kapalı tutuyor. Oradan aç: Ayarlar, Uygulamalar, Başlangıç.';
 
   @override
   String get desktopNoCamera =>

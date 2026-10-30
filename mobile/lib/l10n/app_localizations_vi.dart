@@ -4434,6 +4434,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mã PIN sẽ bị gỡ, kéo theo cả mã PIN xóa sạch và mọi trò chuyện ẩn. Bất kỳ ai cầm điện thoại của bạn đều mở được Kryfo với tư cách là bạn.';
 
   @override
+  String get pinsThePinGoesAndDesk =>
+      'Mã PIN sẽ bị gỡ, kéo theo cả mã PIN xóa sạch và mọi trò chuyện ẩn. Bất kỳ ai ngồi vào máy tính của bạn đều mở được Kryfo với tư cách là bạn.';
+
+  @override
   String get pinsUnlockWithFingerprint => 'Mở khóa bằng vân tay';
 
   @override
@@ -7182,6 +7186,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mạng này cần đăng nhập trước. Khi bạn đã vào được, Kryfo sẽ kết nối.';
 
   @override
+  String get bridgesThisNetworkWantsADesk =>
+      'Mạng này cần đăng nhập trước. Hãy đăng nhập từ trình duyệt, hoặc kiểm tra kết nối mạng của máy tính. Khi bạn đã vào được, Kryfo sẽ kết nối.';
+
+  @override
   String get bridgesWaitingForWifiSignIn => 'Đang chờ đăng nhập Wi-Fi';
 
   @override
@@ -7848,8 +7856,16 @@ class AppLocalizationsVi extends AppLocalizations {
       'Dành cho lúc có người bắt bạn mở khóa điện thoại.';
 
   @override
+  String get pinsAdvancedLineDesk =>
+      'Dành cho lúc có người bắt bạn mở khóa máy tính.';
+
+  @override
   String get pinsWipeLine =>
       'Nhập ở màn hình khóa, mã này sẽ xóa Kryfo khỏi điện thoại này.';
+
+  @override
+  String get pinsWipeLineDesk =>
+      'Nhập ở màn hình khóa, mã này sẽ xóa Kryfo khỏi máy tính này.';
 
   @override
   String get pinsDecoyPin => 'Mã PIN ngụy trang';
@@ -7871,6 +7887,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mọi mã PIN đều bị gỡ, kể cả mã ngụy trang, Kryfo của nó và mọi trò chuyện ẩn. Bất kỳ ai cầm điện thoại của bạn đều mở được Kryfo với tư cách là bạn.';
 
   @override
+  String get pinsTurnOffWithDecoyDesk =>
+      'Mọi mã PIN đều bị gỡ, kể cả mã ngụy trang, Kryfo của nó và mọi trò chuyện ẩn. Bất kỳ ai ngồi vào máy tính của bạn đều mở được Kryfo với tư cách là bạn.';
+
+  @override
   String get pinsHowThisWorks => 'Cách hoạt động';
 
   @override
@@ -7885,6 +7905,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get flowWipe1 =>
       'Nhập ở màn hình khóa thay cho mã PIN của bạn, mã này sẽ xóa Kryfo khỏi điện thoại này rồi đóng lại. Với người đang nhìn, ứng dụng chỉ như vừa dừng.';
+
+  @override
+  String get flowWipe1Desk =>
+      'Nhập ở màn hình khóa thay cho mã PIN của bạn, mã này sẽ xóa Kryfo khỏi máy tính này rồi đóng lại. Với người đang nhìn, ứng dụng chỉ như vừa dừng.';
 
   @override
   String get flowWipe2 =>
@@ -7919,6 +7943,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Thông báo đã nằm trong bảng thông báo thì đã bị thấy rồi. Khi phần ngụy trang đang mở, không có thông báo mới nào hiện ra.';
 
   @override
+  String get flowDecoyShadeDesk =>
+      'Thông báo đã hiện trên màn hình thì đã bị thấy rồi. Khi phần ngụy trang đang mở, không có thông báo mới nào hiện ra.';
+
+  @override
   String get flowDecoyChoose => 'Chọn mã PIN ngụy trang';
 
   @override
@@ -7931,6 +7959,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get flowLaw =>
       'Ở một số nước, từ chối mở khóa điện thoại hoặc giấu dữ liệu khỏi nhà chức trách tự nó đã là vi phạm. Hãy nắm luật ở nơi bạn đến.';
+
+  @override
+  String get flowLawDesk =>
+      'Ở một số nước, từ chối mở khóa thiết bị hoặc giấu dữ liệu khỏi nhà chức trách tự nó đã là vi phạm. Hãy nắm luật ở nơi bạn đến.';
 
   @override
   String get howWipe =>
@@ -7995,6 +8027,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get flowVaultReplace =>
       'Việc này thay thế mọi trò chuyện ẩn mà điện thoại này đang có.';
+
+  @override
+  String get flowVaultReplaceDesk =>
+      'Việc này thay thế mọi trò chuyện ẩn mà máy tính này đang có.';
 
   @override
   String get flowVaultChoose => 'Chọn mã PIN trò chuyện ẩn';
@@ -8070,6 +8106,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get howVault =>
       'Mã PIN trò chuyện ẩn mở Kryfo cùng trò chuyện ẩn của bạn; mã PIN và vân tay của bạn mở mà không có chúng. Thiết lập lại trò chuyện ẩn sẽ thay thế những trò chuyện ẩn mà điện thoại này đang có. Quên mã PIN trò chuyện ẩn là chúng mất vĩnh viễn.';
+
+  @override
+  String get howVaultDesk =>
+      'Mã PIN trò chuyện ẩn mở Kryfo cùng trò chuyện ẩn của bạn; mã PIN của bạn mở mà không có chúng. Thiết lập lại trò chuyện ẩn sẽ thay thế những trò chuyện ẩn mà máy tính này đang có. Quên mã PIN trò chuyện ẩn là chúng mất vĩnh viễn.';
 
   @override
   String get chatHide => 'Ẩn trò chuyện';
@@ -9673,6 +9713,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Ít nhất 12 ký tự. Bàn phím của điện thoại thấy những gì bạn gõ, nên hãy dùng bàn phím không học hay đồng bộ từ.';
 
   @override
+  String get flowVaultPassLineDesk =>
+      'Ít nhất 12 ký tự. Hãy dùng một cụm bạn không dùng ở nơi nào khác.';
+
+  @override
   String get flowVaultPassAgain => 'Nhập lại cụm mật khẩu đó';
 
   @override
@@ -10048,6 +10092,39 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get desktopTrayTip => 'Kryfo đang chạy và nhận tin nhắn';
+
+  @override
+  String get desktopRunSection => 'Trên máy tính này';
+
+  @override
+  String get desktopTrayRow => 'Tiếp tục chạy trong khay hệ thống';
+
+  @override
+  String get desktopTrayHint =>
+      'Đóng cửa sổ thì Kryfo vẫn ở trong khay hệ thống, nên tin nhắn vẫn tiếp tục đến.';
+
+  @override
+  String get desktopTrayOffLine =>
+      'Đóng cửa sổ thì Kryfo sẽ thoát. Tin nhắn sẽ đến khi bạn mở lại.';
+
+  @override
+  String get desktopTrayNoneLine =>
+      'Màn hình nền này không hiện biểu tượng trong khay hệ thống, nên đóng cửa sổ sẽ thoát Kryfo.';
+
+  @override
+  String get desktopStartRow => 'Khởi động cùng máy tính';
+
+  @override
+  String get desktopStartHint =>
+      'Kryfo mở ra khi bạn đăng nhập vào máy tính này.';
+
+  @override
+  String get desktopStartRefused =>
+      'Máy tính này không cho Kryfo khởi động cùng. Kryfo vẫn mở mỗi khi bạn tự khởi động nó.';
+
+  @override
+  String get desktopStartHeldOff =>
+      'Windows đang tắt Kryfo trong các ứng dụng khởi động. Hãy bật lại ở đó, trong Cài đặt, Ứng dụng, Khởi động.';
 
   @override
   String get desktopNoCamera =>
