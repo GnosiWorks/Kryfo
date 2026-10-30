@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the phone's home and chat, pixel for pixel as they were before the wide
+// the phone's home, chat and group chat, pixel for pixel as they were before the wide
 // desktop layout: nothing of it reaches the phone
 import 'dart:io';
 
@@ -14,10 +14,13 @@ import 'package:kryfo/main.dart'
     show
         AppStateRefresh,
         AppStateRoute,
+        HaloDb,
         appState,
         useDatabasesForTest,
         useEngineForTest;
+import 'package:kryfo/polls.dart' show PollVote;
 import 'package:kryfo/screens/chat_screen.dart';
+import 'package:kryfo/screens/group_chat_screen.dart';
 import 'package:kryfo/screens/home_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,6 +50,93 @@ Future<void> _settle(WidgetTester t) async {
     await t.pump(const Duration(milliseconds: 200));
   }
   await t.pump(const Duration(seconds: 2));
+}
+
+class _GroupDb implements HaloDb {
+  final rows = <Map<String, Object?>>[
+    for (final (id, out, text) in [
+      (1, false, 'the trail is open again'),
+      (2, true, 'good, saturday then, the long loop by the lake'),
+    ])
+      {
+        'rowid': id,
+        'id': id,
+        'peer_id': out ? 'me' : 'amber',
+        'group_id': 'g1',
+        'direction': out ? 'out' : 'in',
+        'plaintext': text,
+        'msg_uid': 'uid$id',
+        'sent': 1,
+        'sent_at': id * 1000,
+      },
+  ];
+
+  @override
+  HaloContainer get container => HaloContainer.everyday;
+  @override
+  Future<Map<String, Object?>?> getGroup(String groupId) async => {
+    'group_id': 'g1',
+    'name': 'Hikers',
+    'is_admin': 0,
+  };
+  @override
+  Future<String?> getGroupAtmosphere(String groupId) async => null;
+  @override
+  Future<List<String>> getGroupMembers(String groupId) async => ['amber'];
+  @override
+  Future<Set<String>> blockedIds() async => {};
+  @override
+  Future<List<Map<String, Object?>>> groupMessagesPage(
+    String groupId, {
+    int? beforeRowid,
+    int? beforeAt,
+    int limit = 60,
+  }) async => beforeRowid == null ? [...rows] : [];
+  @override
+  Future<List<Map<String, Object?>>> loadGroupMessages(String groupId) async =>
+      [...rows];
+  @override
+  Future<List<Map<String, Object?>>> groupMessagesAfter(
+    String groupId,
+    int afterRowid,
+  ) async => [
+    for (final r in rows)
+      if ((r['rowid'] as int) > afterRowid) r,
+  ];
+  @override
+  Future<Map<String, List<MapEntry<String, String>>>> loadReactionsFor(
+    List<String> msgUids,
+  ) async => {};
+  @override
+  Future<Map<String, Map<String, PollVote>>> pollVotesFor(
+    List<String> uids,
+  ) async => {};
+  @override
+  Future<Map<String, ({int have, int of, int gaveUp})>> groupFileReach(
+    String groupId,
+  ) async => {};
+  @override
+  Future<List<Map<String, Object?>>> pinnedIn({
+    String? peerId,
+    String? groupId,
+  }) async => [];
+  @override
+  Future<Map<String, Object?>?> shieldFor(String haloId) async => null;
+  @override
+  Future<bool> isAccepted(String haloId) async => true;
+  @override
+  Future<void> markRoomSeen(String groupId) async {}
+  @override
+  Future<void> clearGroupUnread(String groupId) async {}
+  @override
+  Future<List<Map<String, Object?>>> loadGroups() async => [];
+  @override
+  Future<({bool sent, bool delivered})> sendState(String msgUid) async =>
+      (sent: true, delivered: true);
+
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('${i.memberName}');
 }
 
 void main() {
@@ -135,6 +225,32 @@ void main() {
     await expectLater(
       find.byType(ChatScreen),
       matchesGoldenFile('goldens/phone_chat.png'),
+    );
+    await devClose(t);
+  });
+
+  testWidgets('the phone group chat is unchanged', (t) async {
+    _prefs();
+    lockState.openForTest();
+    final docs = Directory.systemTemp.createTempSync('phone_layout');
+    addTearDown(() => docs.deleteSync(recursive: true));
+    mockChannel('plugins.flutter.io/path_provider', (_) async => docs.path);
+    addTearDown(() => mockChannel('plugins.flutter.io/path_provider', null));
+    mockChannel('com.llfbandit.record/messages', (_) async => null);
+    useLibrary();
+    final db = _GroupDb();
+    useDatabasesForTest(db, Session(db));
+    await devOpen(
+      t,
+      const GroupChatScreen(groupId: 'g1'),
+      size: _phone,
+      ratio: 3,
+      still: true,
+    );
+    await _settle(t);
+    await expectLater(
+      find.byType(GroupChatScreen),
+      matchesGoldenFile('goldens/phone_group_chat.png'),
     );
     await devClose(t);
   });
