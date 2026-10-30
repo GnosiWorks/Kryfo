@@ -85,15 +85,21 @@ func (r *pooled) prune(now time.Time) {
 	}
 }
 
-// Put keeps KDB1s of identity's own device e, come at now: every one the
-// device's own (its id, its registration id, its key), each kyber key
-// once. last, when given, is the device's last resort bundle; a new one
-// replaces the held one, and the one-time bundles on other session keys
-// go. a one-time bundle must be on the last resort's session keys. on any
-// error nothing is kept.
-func (p *Pool) Put(identity Key, e Entry, once [][]byte, last []byte, now time.Time) error {
+// Put keeps KDB1s of identity's own device e, made at made by the device's
+// clock and come at now: every one the device's own (its id, its
+// registration id, its key), each kyber key once. they age from the
+// earlier of the two, so days a batch spent on the way count; a device
+// clock ahead counts as now. last, when given, is the device's last resort
+// bundle; a new one replaces the held one, and the one-time bundles on
+// other session keys go. a one-time bundle must be on the last resort's
+// session keys. on any error nothing is kept.
+func (p *Pool) Put(identity Key, e Entry, once [][]byte, last []byte, made, now time.Time) error {
 	if e.Phone {
 		return ErrPhone
+	}
+	at := now
+	if made.Before(now) {
+		at = made
 	}
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -125,7 +131,7 @@ func (p *Pool) Put(identity Key, e Entry, once [][]byte, last []byte, now time.T
 			return ErrDuplicate
 		}
 		next.kyber[bl.KyberID] = true
-		next.last = &poolBundle{b: bytes.Clone(last), at: now, spk: bl.SpkID}
+		next.last = &poolBundle{b: bytes.Clone(last), at: at, spk: bl.SpkID}
 	}
 	next.prune(now)
 	if len(next.once)+len(once) > PoolMost {
@@ -143,7 +149,7 @@ func (p *Pool) Put(identity Key, e Entry, once [][]byte, last []byte, now time.T
 			return ErrOldKeys
 		}
 		next.kyber[bl.KyberID] = true
-		next.once = append(next.once, poolBundle{b: bytes.Clone(b), at: now, spk: bl.SpkID})
+		next.once = append(next.once, poolBundle{b: bytes.Clone(b), at: at, spk: bl.SpkID})
 	}
 	p.rows[k] = next
 	return nil

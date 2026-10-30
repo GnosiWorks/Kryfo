@@ -55,7 +55,7 @@ func newFanoutKit(t *testing.T, mine, his int) *fanoutKit {
 	}
 	k.takeBob(t)
 	k.own = NewOwn()
-	if _, err := k.own.Set(k.me.id.pub, k.me.wire, k.me.id.pub, s); err != nil {
+	if _, err := k.own.Set(k.me.id.pub, k.me.wire, k.me.id.pub, FromSession(k.me.id.pub), s); err != nil {
 		t.Fatal(err)
 	}
 	k.f = &Fanout{Book: k.book, Own: k.own, Quiet: NewQuiet(), Rand: rand.Reader}
@@ -337,47 +337,47 @@ func TestOwnListsMoveForwardOnly(t *testing.T) {
 	b := me.linkReg(t)
 	own := NewOwn()
 	first := me.wire
-	if gone, err := own.Set(me.id.pub, first, me.id.pub, s); err != nil || gone != nil {
+	if gone, err := own.Set(me.id.pub, first, me.id.pub, FromSession(me.id.pub), s); err != nil || gone != nil {
 		t.Fatalf("first: %v %v", gone, err)
 	}
-	if gone, err := own.Set(me.id.pub, first, me.id.pub, s); err != nil || gone != nil {
+	if gone, err := own.Set(me.id.pub, first, me.id.pub, FromSession(me.id.pub), s); err != nil || gone != nil {
 		t.Fatalf("the same again: %v %v", gone, err)
 	}
 	me.unlink(t, a.ID)
-	gone, err := own.Set(me.id.pub, me.wire, me.id.pub, s)
+	gone, err := own.Set(me.id.pub, me.wire, me.id.pub, FromSession(me.id.pub), s)
 	if err != nil || len(gone) != 1 || gone[0] != a {
 		t.Fatalf("a removal: %v %v", gone, err)
 	}
-	if _, err := own.Set(me.id.pub, first, me.id.pub, s); !errors.Is(err, ErrRollback) {
+	if _, err := own.Set(me.id.pub, first, me.id.pub, FromSession(me.id.pub), s); !errors.Is(err, ErrRollback) {
 		t.Fatalf("an older list: %v", err)
 	}
 	eq := clone(me.list)
 	eq.Devices = eq.Devices[:1]
 	if w, err := eq.Sign(me.id); err != nil {
 		t.Fatal(err)
-	} else if _, err := own.Set(me.id.pub, w, me.id.pub, s); !errors.Is(err, ErrEquivocation) {
+	} else if _, err := own.Set(me.id.pub, w, me.id.pub, FromSession(me.id.pub), s); !errors.Is(err, ErrEquivocation) {
 		t.Fatalf("two lists at one version: %v", err)
 	}
 	far := clone(me.list)
 	far.Version += VersionWindow + 1
 	if w, err := far.Sign(me.id); err != nil {
 		t.Fatal(err)
-	} else if _, err := own.Set(me.id.pub, w, me.id.pub, s); !errors.Is(err, ErrJump) {
+	} else if _, err := own.Set(me.id.pub, w, me.id.pub, FromSession(me.id.pub), s); !errors.Is(err, ErrJump) {
 		t.Fatalf("too far ahead: %v", err)
 	}
-	if _, err := own.Set(me.id.pub, forge(me.list), me.id.pub, s); !errors.Is(err, ErrSignature) {
+	if _, err := own.Set(me.id.pub, forge(me.list), me.id.pub, FromSession(me.id.pub), s); !errors.Is(err, ErrSignature) {
 		t.Fatalf("a forged list: %v", err)
 	}
 	// the linked device b's view: removed means wipe, and nothing is held
 	devOwn := NewOwn()
-	if _, err := devOwn.Set(me.id.pub, me.wire, b.Key, s); err != nil {
+	if _, err := devOwn.Set(me.id.pub, me.wire, b.Key, FromSession(me.id.pub), s); err != nil {
 		t.Fatal(err)
 	}
 	if o := devOwn.Others(me.id.pub); len(o) != 1 || !o[0].Phone {
 		t.Fatalf("the device's others: %+v", o)
 	}
 	me.unlink(t, b.ID)
-	if _, err := devOwn.Set(me.id.pub, me.wire, b.Key, s); !errors.Is(err, ErrRemoved) {
+	if _, err := devOwn.Set(me.id.pub, me.wire, b.Key, FromSession(me.id.pub), s); !errors.Is(err, ErrRemoved) {
 		t.Fatalf("this device removed: %v", err)
 	}
 	if devOwn.Current(me.id.pub) != nil || devOwn.Others(me.id.pub) != nil {
@@ -388,7 +388,7 @@ func TestOwnListsMoveForwardOnly(t *testing.T) {
 	}
 	// a key change at one id is a device gone
 	c := me.linkReg(t)
-	if _, err := own.Set(me.id.pub, me.wire, me.id.pub, s); err != nil {
+	if _, err := own.Set(me.id.pub, me.wire, me.id.pub, FromSession(me.id.pub), s); err != nil {
 		t.Fatal(err)
 	}
 	nk, _ := newKey(t)
@@ -403,12 +403,74 @@ func TestOwnListsMoveForwardOnly(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	gone, err = own.Set(me.id.pub, w, me.id.pub, s)
+	gone, err = own.Set(me.id.pub, w, me.id.pub, FromSession(me.id.pub), s)
 	if err != nil || len(gone) != 1 || gone[0] != c {
 		t.Fatalf("a key change: %v %v", gone, err)
 	}
 	if got := own.Stale(me.id.pub, []Held{{c.ID, c.Key}, {PhoneID, me.id.pub}}); !slices.Equal(got, []uint8{c.ID, PhoneID}) {
 		t.Fatalf("own stale: %v", got)
+	}
+}
+
+func TestAFirstOwnListComesOnlyFromThePhoneOrTheLink(t *testing.T) {
+	s := newShim()
+	me := newAccount(t, s)
+	b := me.linkReg(t)
+	c := me.linkReg(t)
+	stranger := newAccount(t, s)
+	own := NewOwn()
+	// another own device, a stranger or an invite: never the first list
+	for _, from := range []From{FromSession(c.Key), FromSession(stranger.id.pub), FromInvite()} {
+		if _, err := own.Set(me.id.pub, me.wire, b.Key, from, s); !errors.Is(err, ErrSource) {
+			t.Fatalf("a first own list from %v: %v", from, err)
+		}
+	}
+	if own.Current(me.id.pub) != nil {
+		t.Fatal("a first own list held from another device")
+	}
+	if _, err := own.Set(me.id.pub, me.wire, b.Key, FromLink(), s); err != nil {
+		t.Fatal(err)
+	}
+	// later ones: the phone, or a listed own device on its key
+	d := me.linkReg(t)
+	for _, from := range []From{FromSession(stranger.id.pub), FromInvite(), FromSession(d.Key)} {
+		if _, err := own.Set(me.id.pub, me.wire, b.Key, from, s); !errors.Is(err, ErrSource) {
+			t.Fatalf("a later own list from %v: %v", from, err)
+		}
+	}
+	if _, err := own.Set(me.id.pub, me.wire, b.Key, FromSession(c.Key), s); err != nil {
+		t.Fatal(err)
+	}
+	me.linkReg(t)
+	if _, err := own.Set(me.id.pub, me.wire, b.Key, FromSession(me.id.pub), s); err != nil {
+		t.Fatal(err)
+	}
+	// the phone itself takes its own list as from its own key
+	phone := NewOwn()
+	if _, err := phone.Set(me.id.pub, me.wire, me.id.pub, FromSession(me.id.pub), s); err != nil {
+		t.Fatal(err)
+	}
+	// a contact's list or bundle never comes over a link
+	book := NewBook(me.id.pub)
+	if _, err := book.Add(stranger.id.pub); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, _, err := book.Accept(stranger.id.pub, stranger.wire, FromLink(), s); !errors.Is(err, ErrSource) {
+		t.Fatalf("a contact's list over a link: %v", err)
+	}
+	if _, _, _, err := book.Accept(stranger.id.pub, stranger.wire, FromSession(stranger.id.pub), s); err != nil {
+		t.Fatal(err)
+	}
+	sd := stranger.linkReg(t)
+	if _, _, _, err := book.Accept(stranger.id.pub, stranger.wire, FromSession(stranger.id.pub), s); err != nil {
+		t.Fatal(err)
+	}
+	kdb1 := poolKDB1(t, 3, 7, sd)
+	if _, err := book.TakeBundle(stranger.id.pub, kdb1, FromLink()); !errors.Is(err, ErrSource) {
+		t.Fatalf("a contact's bundle over a link: %v", err)
+	}
+	if _, err := book.TakeBundle(stranger.id.pub, kdb1, FromSession(stranger.id.pub)); err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -419,24 +481,24 @@ func TestAFirstOwnListWithoutThisDeviceIsNoWipe(t *testing.T) {
 	b := me.linkReg(t)
 	own := NewOwn()
 	// the list from before this device was linked, replayed to it first
-	if _, err := own.Set(me.id.pub, genesis, b.Key, s); !errors.Is(err, ErrNotListed) {
+	if _, err := own.Set(me.id.pub, genesis, b.Key, FromSession(me.id.pub), s); !errors.Is(err, ErrNotListed) {
 		t.Fatalf("a first list without this device: %v", err)
 	}
 	if own.Current(me.id.pub) != nil {
 		t.Fatal("a list without this device held")
 	}
-	if _, err := own.Set(me.id.pub, me.wire, b.Key, s); err != nil {
+	if _, err := own.Set(me.id.pub, me.wire, b.Key, FromSession(me.id.pub), s); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := own.Set(me.id.pub, genesis, b.Key, s); !errors.Is(err, ErrRollback) {
+	if _, err := own.Set(me.id.pub, genesis, b.Key, FromSession(me.id.pub), s); !errors.Is(err, ErrRollback) {
 		t.Fatalf("the genesis list after this device's: %v", err)
 	}
 	// a contact's list, even one naming my keys, is not one of mine
 	bob := newAccount(t, s)
-	if _, err := own.Set(me.id.pub, bob.wire, b.Key, s); !errors.Is(err, ErrWrongIdentity) {
+	if _, err := own.Set(me.id.pub, bob.wire, b.Key, FromSession(me.id.pub), s); !errors.Is(err, ErrWrongIdentity) {
 		t.Fatalf("another identity's list: %v", err)
 	}
-	if _, err := own.Set(me.id.pub, bob.wire, bob.id.pub, s); !errors.Is(err, ErrWrongIdentity) {
+	if _, err := own.Set(me.id.pub, bob.wire, bob.id.pub, FromSession(me.id.pub), s); !errors.Is(err, ErrWrongIdentity) {
 		t.Fatalf("another identity's list naming the key: %v", err)
 	}
 	if own.Current(bob.id.pub) != nil {
@@ -551,7 +613,7 @@ func TestANewDeviceUnderAnOldIDStartsAfresh(t *testing.T) {
 	me := newAccount(t, s)
 	desk := me.linkReg(t)
 	p := NewPool()
-	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 10, 7, desk)}, poolKDB1(t, 1, 7, desk), t0); err != nil {
+	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 10, 7, desk)}, poolKDB1(t, 1, 7, desk), t0, t0); err != nil {
 		t.Fatal(err)
 	}
 	moved := desk
@@ -618,7 +680,7 @@ func TestALinkedDeviceNeverSilencesItsPhone(t *testing.T) {
 	}
 	// the desktop's own view: its key on my list
 	own := NewOwn()
-	if _, err := own.Set(k.me.id.pub, k.me.wire, k.me.devs[desk.ID], k.s); err != nil {
+	if _, err := own.Set(k.me.id.pub, k.me.wire, k.me.devs[desk.ID], FromSession(k.me.id.pub), k.s); err != nil {
 		t.Fatal(err)
 	}
 	k.f.Own = own
@@ -663,7 +725,7 @@ func TestThePoolHandsEachBundleOnce(t *testing.T) {
 	for i := range PoolLow + 2 {
 		once = append(once, kdb1(uint32(100+i), desk))
 	}
-	if err := p.Put(me.id.pub, desk, once, kdb1(1, desk), t0); err != nil {
+	if err := p.Put(me.id.pub, desk, once, kdb1(1, desk), t0, t0); err != nil {
 		t.Fatal(err)
 	}
 	seen := map[string]bool{}
@@ -688,10 +750,10 @@ func TestThePoolHandsEachBundleOnce(t *testing.T) {
 		}
 	}
 	// a kyber key handed out once is never taken again
-	if err := p.Put(me.id.pub, desk, [][]byte{kdb1(100, desk)}, nil, t0); !errors.Is(err, ErrDuplicate) {
+	if err := p.Put(me.id.pub, desk, [][]byte{kdb1(100, desk)}, nil, t0, t0); !errors.Is(err, ErrDuplicate) {
 		t.Fatalf("a kyber key again: %v", err)
 	}
-	if err := p.Put(me.id.pub, desk, [][]byte{kdb1(1, desk)}, nil, t0); !errors.Is(err, ErrDuplicate) {
+	if err := p.Put(me.id.pub, desk, [][]byte{kdb1(1, desk)}, nil, t0, t0); !errors.Is(err, ErrDuplicate) {
 		t.Fatalf("the last resort kyber as one-time: %v", err)
 	}
 	other := me.linkReg(t)
@@ -705,22 +767,22 @@ func TestThePoolHandsEachBundleOnce(t *testing.T) {
 		"under another reg": kdb1(202, wrongReg),
 		"junk":              []byte("KDB1\x01"),
 	} {
-		if err := p.Put(me.id.pub, desk, [][]byte{b}, nil, t0); err == nil {
+		if err := p.Put(me.id.pub, desk, [][]byte{b}, nil, t0, t0); err == nil {
 			t.Errorf("%s bundle taken", name)
 		}
 	}
-	if err := p.Put(me.id.pub, me.list.Devices[0], nil, nil, t0); !errors.Is(err, ErrPhone) {
+	if err := p.Put(me.id.pub, me.list.Devices[0], nil, nil, t0, t0); !errors.Is(err, ErrPhone) {
 		t.Fatalf("the phone pooled: %v", err)
 	}
 	var many [][]byte
 	for i := range PoolMost + 1 {
 		many = append(many, kdb1(uint32(1000+i), other))
 	}
-	if err := p.Put(me.id.pub, other, many, nil, t0); !errors.Is(err, ErrTooMany) {
+	if err := p.Put(me.id.pub, other, many, nil, t0, t0); !errors.Is(err, ErrTooMany) {
 		t.Fatalf("too many: %v", err)
 	}
 	// a failed put keeps nothing
-	if err := p.Put(me.id.pub, other, [][]byte{kdb1(300, other), kdb1(300, other)}, nil, t0); !errors.Is(err, ErrDuplicate) {
+	if err := p.Put(me.id.pub, other, [][]byte{kdb1(300, other), kdb1(300, other)}, nil, t0, t0); !errors.Is(err, ErrDuplicate) {
 		t.Fatalf("one kyber twice in a batch: %v", err)
 	}
 	if _, _, err := p.Take(me.id.pub, other, t0); !errors.Is(err, ErrNoBundle) {
@@ -757,10 +819,10 @@ func TestNoDeadBundleIsHandedOut(t *testing.T) {
 		return bl.KyberID
 	}
 	p := NewPool()
-	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 10, 7, desk), poolKDB1(t, 11, 7, desk)}, poolKDB1(t, 1, 7, desk), t0); err != nil {
+	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 10, 7, desk), poolKDB1(t, 11, 7, desk)}, poolKDB1(t, 1, 7, desk), t0, t0); err != nil {
 		t.Fatal(err)
 	}
-	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 12, 7, desk)}, nil, t0.Add(5*day)); err != nil {
+	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 12, 7, desk)}, nil, t0.Add(5*day), t0.Add(5*day)); err != nil {
 		t.Fatal(err)
 	}
 	// 10 and 11 are past the pool's age at day 7: never handed out
@@ -773,14 +835,14 @@ func TestNoDeadBundleIsHandedOut(t *testing.T) {
 	}
 	// the device replaced its session keys: one-time bundles on the old
 	// ones go when the new last resort comes, and none come without it
-	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 13, 7, desk)}, nil, t0.Add(8*day)); err != nil {
+	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 13, 7, desk)}, nil, t0.Add(8*day), t0.Add(8*day)); err != nil {
 		t.Fatal(err)
 	}
-	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 14, 8, desk)}, nil, t0.Add(8*day)); !errors.Is(err, ErrOldKeys) {
+	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 14, 8, desk)}, nil, t0.Add(8*day), t0.Add(8*day)); !errors.Is(err, ErrOldKeys) {
 		t.Fatalf("a bundle on keys the last resort is not on: %v", err)
 	}
 	last2 := poolKDB1(t, 2, 8, desk)
-	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 14, 8, desk)}, last2, t0.Add(8*day)); err != nil {
+	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 14, 8, desk)}, last2, t0.Add(8*day), t0.Add(8*day)); err != nil {
 		t.Fatal(err)
 	}
 	for _, want := range []uint32{14, 2} {
@@ -789,15 +851,58 @@ func TestNoDeadBundleIsHandedOut(t *testing.T) {
 		}
 	}
 	// the same last resort again keeps the day it came
-	if err := p.Put(me.id.pub, desk, nil, last2, t0.Add(30*day)); err != nil {
+	if err := p.Put(me.id.pub, desk, nil, last2, t0.Add(30*day), t0.Add(30*day)); err != nil {
 		t.Fatal(err)
 	}
 	if _, _, err := p.Take(me.id.pub, desk, t0.Add(8*day+PoolLastMaxAge)); !errors.Is(err, ErrNoBundle) {
 		t.Fatalf("a last resort past its age handed out: %v", err)
 	}
 	// a replaced last resort's kyber key is never taken again
-	if err := p.Put(me.id.pub, desk, nil, poolKDB1(t, 1, 9, desk), t0.Add(40*day)); !errors.Is(err, ErrDuplicate) {
+	if err := p.Put(me.id.pub, desk, nil, poolKDB1(t, 1, 9, desk), t0.Add(40*day), t0.Add(40*day)); !errors.Is(err, ErrDuplicate) {
 		t.Fatalf("an old last resort again: %v", err)
+	}
+}
+
+func TestABatchHeldOnTheWayAgesFromItsMaking(t *testing.T) {
+	s := newShim()
+	me := newAccount(t, s)
+	desk := me.linkReg(t)
+	t0 := time.Unix(1_760_000_000, 0)
+	day := 24 * time.Hour
+	kyberOf := func(b []byte) uint32 {
+		bl, err := ParseBundle(b, me.id.pub)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return bl.KyberID
+	}
+	p := NewPool()
+	// made on day 0, held by a relay or an offline phone until day 6: one
+	// day left in the pool, not seven
+	made, came := t0, t0.Add(6*day)
+	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 10, 7, desk)}, poolKDB1(t, 1, 7, desk), made, came); err != nil {
+		t.Fatal(err)
+	}
+	if b, _, err := p.Take(me.id.pub, desk, made.Add(PoolMaxAge)); err != nil || kyberOf(b) != 1 {
+		t.Fatalf("a bundle past its age from making handed out: %v", err)
+	}
+	// the last resort too: made on day 0, it goes for 30 days from then
+	if _, _, err := p.Take(me.id.pub, desk, made.Add(PoolLastMaxAge)); !errors.Is(err, ErrNoBundle) {
+		t.Fatalf("a last resort past its age from making handed out: %v", err)
+	}
+	// a device clock ahead counts as the arrival
+	q := NewPool()
+	if err := q.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 10, 7, desk)}, nil, t0.Add(40*day), t0); err != nil {
+		t.Fatal(err)
+	}
+	if b, _, err := q.Take(me.id.pub, desk, t0.Add(PoolMaxAge-time.Second)); err != nil || kyberOf(b) != 10 {
+		t.Fatalf("a fresh bundle refused: %v", err)
+	}
+	if err := q.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 11, 7, desk)}, nil, t0.Add(40*day), t0); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := q.Take(me.id.pub, desk, t0.Add(PoolMaxAge)); !errors.Is(err, ErrNoBundle) {
+		t.Fatalf("a clock ahead kept a bundle past its age: %v", err)
 	}
 }
 
@@ -815,7 +920,7 @@ func TestThePoolKeepsEightAfterTheLink(t *testing.T) {
 	for i := range 400 {
 		link = append(link, poolKDB1(t, uint32(100+i), 7, desk))
 	}
-	if err := p.Put(me.id.pub, desk, link, poolKDB1(t, 1, 7, desk), t0); err != nil {
+	if err := p.Put(me.id.pub, desk, link, poolKDB1(t, 1, 7, desk), t0, t0); err != nil {
 		t.Fatal(err)
 	}
 	for range 400 - PoolLow - 1 {
@@ -836,7 +941,7 @@ func TestThePoolKeepsEightAfterTheLink(t *testing.T) {
 	for i := range PoolKeep - PoolLow {
 		refill = append(refill, poolKDB1(t, uint32(1000+i), 7, desk))
 	}
-	if err := p.Put(me.id.pub, desk, refill, nil, t0); err != nil {
+	if err := p.Put(me.id.pub, desk, refill, nil, t0, t0); err != nil {
 		t.Fatal(err)
 	}
 	if n := p.Need(me.id.pub, desk, t0); n != 0 {
