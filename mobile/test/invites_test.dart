@@ -350,7 +350,8 @@ void main() {
       face: _face,
       nowMs: past,
     );
-    expect(up.dropped, [first.id]);
+    // the roster invite made with it goes with it, made again at six months
+    expect(up.dropped, unorderedEquals([first.id, made.roster!.id]));
     expect(up.legacyGone, isTrue);
     expect(await inviteOf(db, kMainIdent, first.id), isNull);
     expect(await ss.signedPreKeyStore.contains(first.spkId!), isFalse);
@@ -406,14 +407,14 @@ void main() {
       expect(await ss.signedPreKeyStore.contains(old.spkId!), isFalse);
       expect(await ss.kyberPreKeyStore.contains(old.kyberId!), isFalse);
     }
-    expect((await fcKeysOf(db, kMainIdent)).keys, [made.id]);
+    // the roster invites keep theirs: a reset is of the link alone
+    final keys = (await fcKeysOf(db, kMainIdent)).keys;
+    expect(keys, contains(made.id));
+    expect(keys, isNot(contains(first.id)));
+    expect(keys, isNot(contains(second.id)));
+    expect(await invitesOf(db, kMainIdent, kind: kInviteRoster), hasLength(2));
     // no face yet: the old ones go all the same, the next upkeep makes one
-    final faceless = await resetMainInvite(
-      db,
-      ss,
-      fcPkOf: _fcPkOf,
-      nowMs: at,
-    );
+    final faceless = await resetMainInvite(db, ss, fcPkOf: _fcPkOf, nowMs: at);
     expect(faceless.dropped, [made.id]);
     expect(faceless.made, isNull);
     expect(await currentMainInvite(db, kMainIdent), isNull);
@@ -464,7 +465,8 @@ void main() {
       nowMs: years,
     );
     expect(up.made, isNull);
-    expect(up.dropped, isEmpty);
+    // only its roster invite lives a year, as anyone's
+    expect(up.dropped, isNot(contains(made.id)));
     expect(up.legacyGone, isFalse);
     expect((await currentMainInvite(db, kMainIdent))!.id, made.id);
     // a reset never touches it

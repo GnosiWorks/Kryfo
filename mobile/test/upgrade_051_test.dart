@@ -476,4 +476,36 @@ void main() {
     );
     await db.close();
   });
+  test('a file at 94 without roster_invites gets it at open, and a group\'s '
+      'rows go there without it; a dev table gets its kept', () async {
+    if (skip()) return;
+    Future<List<String>> colsOf(Database raw) async => [
+      for (final c in await raw.rawQuery("PRAGMA table_info('roster_invites')"))
+        c['name'] as String,
+    ];
+    final db = HaloDb();
+    final raw = await db.open();
+    await raw.execute('DROP TABLE roster_invites');
+    // a member synced away, a removal, an end and a delete fail soft
+    await db.syncGroupMembers('g0a1b2c3d4e5f60718293a4b5c6d7e8f9', []);
+    await db.removeGroupMember('g0a1b2c3d4e5f60718293a4b5c6d7e8f9', 'x');
+    await db.wipeEnded('g0a1b2c3d4e5f60718293a4b5c6d7e8f9');
+    await db.deleteGroup('g0a1b2c3d4e5f60718293a4b5c6d7e8f9');
+    await db.close();
+    final again = HaloDb();
+    final up = await again.open();
+    expect(await up.getVersion(), _version);
+    expect(await colsOf(up), contains('kept'));
+    await up.execute('DROP TABLE roster_invites');
+    await up.execute(
+      'CREATE TABLE roster_invites (group_id TEXT NOT NULL, '
+      'member TEXT NOT NULL, id TEXT NOT NULL, issued INTEGER NOT NULL, '
+      'invite BLOB NOT NULL, pushed INTEGER NOT NULL DEFAULT 1, '
+      'PRIMARY KEY (group_id, member))',
+    );
+    await again.close();
+    final third = HaloDb();
+    expect(await colsOf(await third.open()), contains('kept'));
+    await third.close();
+  });
 }

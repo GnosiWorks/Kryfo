@@ -210,6 +210,7 @@ part 'app/dev_screen.dart';
 part 'app/engine.dart';
 part 'app/files.dart';
 part 'app/gates.dart';
+part 'app/group_hellos.dart';
 part 'app/groups.dart';
 part 'app/links.dart';
 part 'app/invites_app.dart';

@@ -42,6 +42,9 @@ extension AppStateOutbox on AppState {
   set bundleGapForTest(Duration d) => _bundleGap = d;
   @visibleForTesting
   int get receiptsOwedForTest => _receiptsOwed.length;
+  @visibleForTesting
+  Future<bool> sendEnvelopeForTest(String id, String wrapped) =>
+      _sendOneEnvelope(id, wrapped, member: true);
 
   // the stored mark of a decoy left open, read as a run starts. it holds
   // only where a decoy can be, a phone with a pin table. a read that does
@@ -1132,8 +1135,14 @@ extension AppStateOutbox on AppState {
       // (e.g. a dead identity still in the roster). don't burn a relay
       // timeout on it every send: skip fast so live members deliver now.
       if (!await _io.hasSession(memberId) && to.bundle == null) {
-        // an introduced peer whose bundle swap never landed: ask again, the
-        // user's tap-to-retry goes through once it does.
+        // a member whose roster invite a group gave: the hello makes the
+        // pair (4.3), no bundle swap. an introduced peer whose bundle swap
+        // never landed: ask again, the user's tap-to-retry goes through
+        // once it does.
+        if (await _rosterPairWaits(memberId, to.on)) {
+          dlog('send: $memberId waits for the hello, skipping');
+          return false;
+        }
         if (await to.on?.isVouched(memberId) ?? false) {
           _wantHeal(memberId);
           unawaited(_sendBundleCtl(memberId, want: true));
@@ -1171,7 +1180,11 @@ extension AppStateOutbox on AppState {
       }
       final backPaired = to.backPaired;
       final xpub = to.xpub;
-      final onion = to.onion;
+      // a v4 first contact waiting for its answer goes to their
+      // first-contact address alone: its opener opens nowhere else
+      final onion = !backPaired && await _v4OpenerWaits(memberId)
+          ? ''
+          : to.onion;
       final pairWay = await pairRead(memberId, backPaired: backPaired);
 
       // the onion and a fresh pair copy at its own time, never the

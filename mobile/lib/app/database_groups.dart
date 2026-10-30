@@ -149,6 +149,79 @@ mixin _GroupRows {
       }, conflictAlgorithm: ConflictAlgorithm.ignore);
     }
     await batch.commit(noResult: true);
+    await _dropRosterInvites(db, groupId, keep: members);
+  }
+
+  // a member's roster invite goes with them ([member], or each not in
+  // [keep], or every one), a hello owed to it, and one of mine out to it:
+  // its one-time invite goes, so no opener of theirs makes a pair after.
+  // rows that do not read leave the rest of a removal to go on, as a file
+  // at 94 from before the table has none
+  Future<void> _dropRosterInvites(
+    Database db,
+    String groupId, {
+    String? member,
+    List<String>? keep,
+  }) async {
+    try {
+      final rows = member != null
+          ? [?await rosterInviteOf(db, groupId, member)]
+          : [
+              for (final r in (await rosterInvitesIn(db, groupId)).values)
+                if (keep == null || !keep.contains(r.member)) r,
+            ];
+      for (final r in rows) {
+        await db.delete(
+          'roster_invites',
+          where: 'group_id = ? AND member = ?',
+          whereArgs: [groupId, r.member],
+        );
+        if ((await rosterInviteHolders(db, r.id)).isNotEmpty) continue;
+        await db.delete(
+          'hellos',
+          where: 'way = ? AND invite_id = ?',
+          whereArgs: [kHelloWant, r.id],
+        );
+        await _dropRosterHelloOut(db, r);
+      }
+    } catch (e) {
+      dlog('roster invite: not dropped (${e.runtimeType})');
+    }
+  }
+
+  // my hello out to [r]'s member, waiting for their opener: its one-time
+  // invite spent and its row gone. the main identity's alone, on the
+  // everyday side
+  Future<void> _dropRosterHelloOut(Database db, RosterInviteRow r) async {
+    if (container != HaloContainer.everyday || !signalSession.ready) return;
+    if (signalSession.ident != kMainIdent) return;
+    final LsInvite inv;
+    try {
+      inv = readInvite(signalSession.lib, r.invite);
+    } catch (_) {
+      return;
+    }
+    for (final o in await db.query(
+      'hellos',
+      columns: ['invite_id'],
+      where: 'ident = ? AND way = ? AND peer = ? AND fc = ?',
+      whereArgs: [
+        kMainIdent,
+        kHelloOut,
+        _hexOf(inv.identity),
+        _hexOf(inv.firstContact),
+      ],
+    )) {
+      final once = o['invite_id'] as String;
+      final row = await inviteOf(db, kMainIdent, once);
+      if (row != null) await spendOneTime(db, signalSession, row);
+      await db.delete(
+        'hellos',
+        where: 'ident = ? AND way = ? AND invite_id = ?',
+        whereArgs: [kMainIdent, kHelloOut, once],
+      );
+      unawaited(engine.unsubscribeFcKey(kMainIdent, once));
+    }
   }
 
   Future<void> removeGroupMember(String groupId, String haloId) async {
@@ -158,6 +231,7 @@ mixin _GroupRows {
       where: 'group_id = ? AND halo_id = ?',
       whereArgs: [groupId, haloId],
     );
+    await _dropRosterInvites(db, groupId, member: haloId);
     await db.transaction((t) async {
       await _owedGone(t, 'group_id = ? AND member = ?', [groupId, haloId]);
       // our edits and reactions are no longer theirs to get. take-backs
@@ -229,6 +303,7 @@ mixin _GroupRows {
     for (final table in const ['group_media_owed', 'group_resent']) {
       await db.delete(table, where: 'group_id = ?', whereArgs: [groupId]);
     }
+    await _dropRosterInvites(db, groupId);
     final gone = goneGroupPrefix(groupId);
     for (final k in {
       for (final r in await db.query('gone_in', columns: ['peer_id']))
@@ -347,6 +422,7 @@ mixin _GroupRows {
     ]) {
       await db.delete(table, where: 'group_id = ?', whereArgs: [groupId]);
     }
+    await _dropRosterInvites(db, groupId);
     // what of it came in and went is known no longer
     final gone = goneGroupPrefix(groupId);
     for (final k in {
