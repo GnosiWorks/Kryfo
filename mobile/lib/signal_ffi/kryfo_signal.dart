@@ -535,16 +535,25 @@ class KryfoSignal {
   /// for it. throws when it does not load
   static KryfoSignal open([String? path]) {
     final p = path ?? Platform.environment[envVar];
-    if (p != null && p.isNotEmpty) return KryfoSignal._(DynamicLibrary.open(p));
+    if (p != null && p.isNotEmpty) return _at(p);
     if (!_product && !Platform.isAndroid && !Platform.isIOS) {
       final host = forHostTests();
       if (host != null) return host;
     }
     if (Platform.isIOS) return KryfoSignal._(DynamicLibrary.process());
-    if (Platform.isMacOS) {
-      return KryfoSignal._(DynamicLibrary.open('libkryfo_signal.dylib'));
-    }
-    return KryfoSignal._(DynamicLibrary.open('libkryfo_signal.so'));
+    if (Platform.isMacOS) return _at('libkryfo_signal.dylib');
+    return _at('libkryfo_signal.so');
+  }
+
+  /// the name or path the library was last opened by, for the engine to
+  /// open the same one (null before, and on ios where it is linked in)
+  static String? get loadedFrom => _loadedFrom;
+  static String? _loadedFrom;
+
+  static KryfoSignal _at(String p) {
+    final l = KryfoSignal._(DynamicLibrary.open(p));
+    _loadedFrom = p;
+    return l;
   }
 
   /// the library from the env var or next to the app's sources, as the host
@@ -557,7 +566,7 @@ class KryfoSignal {
     ];
     for (final c in candidates) {
       if (c == null || c.isEmpty || !File(c).existsSync()) continue;
-      return KryfoSignal._(DynamicLibrary.open(File(c).absolute.path));
+      return _at(File(c).absolute.path);
     }
     return null;
   }

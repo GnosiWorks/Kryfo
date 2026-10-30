@@ -31,8 +31,8 @@ var engineDoors = []doorRule{
 
 var appDoors = []doorRule{
 	// the one place a decrypt's remote becomes a session remote: right
-	// where ks_decrypt_* returned it
-	{"a session remote", regexp.MustCompile(`SessionRemote\.opened\(`), map[string]bool{"app/signal.dart": true}},
+	// where ks_decrypt_* returned it (and where the type is defined)
+	{"a session remote", regexp.MustCompile(`SessionRemote\.opened\(`), map[string]bool{"app/signal.dart": true, "devices/device_state.dart": true}},
 	// the engine's session door, bound once
 	{"the session door", regexp.MustCompile(`HaloDevSession`), map[string]bool{"devices/device_state.dart": true}},
 }
