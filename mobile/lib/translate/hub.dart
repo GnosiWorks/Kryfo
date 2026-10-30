@@ -86,18 +86,27 @@ class TranslationHub extends ChangeNotifier {
 
   Set<String> get mine => readLangs(appLang(), _settings.mine);
 
-  // what a message would be translated into, or null when it is in a
-  // language the person reads, or one there is no model for
-  Offer? offer(String text) => offerOf(guess(text));
+  // translation offered at all
+  bool get on => _settings.on;
+
+  // what a message would be translated into, or null when translation is
+  // off, the message is a few words, in a language the person reads or
+  // never wants offered, or one there is no model for
+  Offer? offer(String text) => offerOf(guess(text), text);
 
   // the same for a guess a chat made before
-  Offer? offerOf(LangGuess g) => offerFor(
-    g,
-    catalog,
-    appLang: appLang(),
-    chosen: _settings.target,
-    mine: mine,
-  );
+  Offer? offerOf(LangGuess g, String text) {
+    if (!on || !wordyEnough(text)) return null;
+    final o = offerFor(
+      g,
+      catalog,
+      appLang: appLang(),
+      chosen: _settings.target,
+      mine: mine,
+    );
+    if (o == null || _settings.never.contains(o.from)) return null;
+    return o;
+  }
 
   // the packs an offer needs that are not on the phone yet
   List<LangBundle> missing(Offer o) => [
@@ -201,6 +210,8 @@ class TranslationHub extends ChangeNotifier {
       if (now == last) return;
       last = now;
       forgetChats();
+      // a vault that opens drops what it kept before an off
+      unawaited(dropKept());
     }
 
     state.addListener(heard);
@@ -223,15 +234,6 @@ class TranslationHub extends ChangeNotifier {
     return _chatAuto[chatId] = on;
   }
 
-  // what the chat itself was set to, null when nobody set it
-  Future<bool?> chatAutoSet(String chatId) async {
-    try {
-      return await store.chatAuto(chatId);
-    } catch (_) {
-      return null;
-    }
-  }
-
   // the bar a chat in another language shows at its top, put away
   Future<bool> barHidden(String chatId) async {
     try {
@@ -247,31 +249,72 @@ class TranslationHub extends ChangeNotifier {
     } catch (_) {}
   }
 
-  // every chat nobody set translates [lang] on its own, or stops
-  Future<void> alwaysFor(String lang, bool on) => saveSettings(
+  // nothing in [lang] is offered until the person takes it off the list
+  Future<void> neverFor(String lang) => saveSettings(
     _settings.copyWith(
-      always: [
-        for (final l in _settings.always)
+      never: [
+        for (final l in _settings.never)
           if (l != lang) l,
-        if (on) lang,
+        lang,
       ],
     ),
   );
 
-  // [lang] becomes one the person reads: nothing in it is offered again
-  Future<void> neverFor(String lang) => saveSettings(
+  // [lang] off the never list: offered again
+  Future<void> offerAgain(String lang) => saveSettings(
     _settings.copyWith(
-      mine: [
-        for (final l in _settings.mine)
-          if (l != lang) l,
-        lang,
-      ],
-      always: [
-        for (final l in _settings.always)
+      never: [
+        for (final l in _settings.never)
           if (l != lang) l,
       ],
     ),
   );
+
+  // off deletes every kept translation
+  Future<void> setOn(bool on) async {
+    if (on == _settings.on) return;
+    await saveSettings(
+      _settings.copyWith(on: on, offs: on ? null : _settings.offs + 1),
+    );
+    if (!on) await dropKept();
+  }
+
+  // kept translations of the times it was turned off, gone from every
+  // container open now
+  Future<void> dropKept() async {
+    if (_settings.offs == 0) return;
+    try {
+      await store.dropKept(_settings.offs);
+    } catch (_) {}
+  }
+
+  // a chat's kept translations, read when it opens. a store that fails
+  // keeps none
+  Future<Map<String, KeptTranslation>> kept(String chatId) async {
+    try {
+      return await store.kept(chatId);
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  Future<void> keep(
+    String chatId,
+    String uid,
+    KeptTranslation t,
+    String words,
+  ) async {
+    if (!on) return;
+    try {
+      await store.keep(chatId, uid, t, words);
+    } catch (_) {}
+  }
+
+  Future<void> unkeep(String chatId, String uid) async {
+    try {
+      await store.unkeep(chatId, uid);
+    } catch (_) {}
+  }
 
   Future<void> setChatAuto(String chatId, bool on) async {
     _chatAuto[chatId] = on;

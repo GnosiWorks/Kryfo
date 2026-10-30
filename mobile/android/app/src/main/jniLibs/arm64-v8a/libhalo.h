@@ -42,6 +42,8 @@ extern const char *_GoStringPtr(_GoString_ s);
 
 
 
+
+
 #line 9 "pin_export.go"
 
 #include <string.h>
@@ -203,9 +205,36 @@ extern char* HaloHandleCheck(char* cHandle);
 extern char* HaloHandleClaim(char* cHandle, char* cInvite, char* cBio);
 extern char* HaloHandleRelease(char* cHandle);
 extern char* HaloHandleListing(char* cHandle, char* cListed, char* cName);
+extern long long HaloHistSendNew(char* cKey, char* cBind, char* cIdentity, char* cSpool, char* cRoot, int skip, int chunk);
+extern int HaloHistSendChat(long long h, unsigned char* meta, int n);
+extern int HaloHistSendMessage(long long h, unsigned char* row, int n);
+extern int HaloHistSendMedia(long long h, int chat, long long at, char* cName);
+extern int HaloHistSendLeft(long long h, int chat);
+extern char* HaloHistSendID(long long h);
+extern char* HaloHistSendPlan(long long h);
+extern char* HaloHistSendHead(long long h);
+extern int HaloHistSendRecord(long long h, unsigned long long index, unsigned char* out, int cap);
+extern char* HaloHistSendTally(long long h, unsigned char* in, int n);
+extern void HaloHistSendClose(long long h);
+extern long long HaloHistRecvNew(char* cKey, char* cBind, char* cID, char* cIdentity);
+extern long long HaloHistRecvResume(char* cKey, char* cBind, char* cID, char* cIdentity, unsigned char* plan, int pn, unsigned char* state, int sn);
+extern int HaloHistRecvTake(long long h, unsigned char* rec, int n);
+extern int HaloHistRecvEvent(long long h, unsigned char* out, int cap);
+extern char* HaloHistRecvHead(long long h);
+extern int HaloHistRecvState(long long h, unsigned char* out, int cap);
+extern int HaloHistRecvPlan(long long h, unsigned char* out, int cap);
+extern long long HaloHistRecvNext(long long h);
+extern int HaloHistRecvDone(long long h);
+extern char* HaloHistRecvCheck(long long h, char* cCounts);
+extern int HaloHistRecvTally(long long h, char* cCounts, unsigned char* out, int cap);
+extern void HaloHistRecvClose(long long h);
 extern char* HaloIdentityPut(int cIdent, char* cXPrivHex);
 extern char* HaloIdentityDrop(int cIdent);
 extern char* HaloPairSeed(int cIdent, char* cPeer, char* cSeedHex);
+extern char* HaloFaceSign(char* cMsgHex);
+extern char* HaloOnionOfKey(char* cKeyHex);
+extern char* HaloHelloSealPk(int cIdent, char* cSenderHex);
+extern char* HaloNostrSendHello(int cIdent, char* cOwnerHex, char* cFcPk, char* cMsg);
 extern char* HaloKnockAddresses(char* cExclude);
 extern char* HaloKnockRegister(char* cItems);
 extern char* HaloKnockCheck(void);

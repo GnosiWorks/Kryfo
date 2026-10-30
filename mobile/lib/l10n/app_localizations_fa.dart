@@ -4456,6 +4456,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'PIN حذف می‌شود، و PIN پاک‌سازی و هر گفت‌وگوی پنهانی هم با آن. هر کس گوشی شما را در دست داشته باشد، Kryfo را به‌عنوان شما باز می‌کند.';
 
   @override
+  String get pinsThePinGoesAndDesk =>
+      'PIN حذف می‌شود، و PIN پاک‌سازی و هر گفت‌وگوی پنهانی هم با آن. هر کس پشت رایانه‌ی شما بنشیند، Kryfo را به‌عنوان شما باز می‌کند.';
+
+  @override
   String get pinsUnlockWithFingerprint => 'باز کردن قفل با اثر انگشت';
 
   @override
@@ -7199,6 +7203,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'این شبکه اول ورود می‌خواهد. وقتی وارد شدید، Kryfo وصل می‌شود.';
 
   @override
+  String get bridgesThisNetworkWantsADesk =>
+      'این شبکه اول ورود می‌خواهد. از مرورگرتان وارد شوید، یا اتصال شبکه‌ی رایانه را بررسی کنید. وقتی وارد شدید، Kryfo وصل می‌شود.';
+
+  @override
   String get bridgesWaitingForWifiSignIn => 'در انتظار ورود به Wi-Fi';
 
   @override
@@ -7871,8 +7879,16 @@ class AppLocalizationsFa extends AppLocalizations {
       'برای وقتی که کسی شما را وادار می‌کند قفل گوشی‌تان را باز کنید.';
 
   @override
+  String get pinsAdvancedLineDesk =>
+      'برای وقتی که کسی شما را وادار می‌کند قفل رایانه‌تان را باز کنید.';
+
+  @override
   String get pinsWipeLine =>
       'اگر در صفحه‌ی قفل وارد شود، Kryfo را از این گوشی پاک می‌کند.';
+
+  @override
+  String get pinsWipeLineDesk =>
+      'اگر در صفحه‌ی قفل وارد شود، Kryfo را از این رایانه پاک می‌کند.';
 
   @override
   String get pinsDecoyPin => 'PIN فریب';
@@ -7894,6 +7910,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'همه‌ی PINها حذف می‌شوند، PIN فریب و Kryfo آن و هر گفت‌وگوی پنهانی هم با آن‌ها. هر کس گوشی شما را در دست داشته باشد، Kryfo را به‌عنوان شما باز می‌کند.';
 
   @override
+  String get pinsTurnOffWithDecoyDesk =>
+      'همه‌ی PINها حذف می‌شوند، PIN فریب و Kryfo آن و هر گفت‌وگوی پنهانی هم با آن‌ها. هر کس پشت رایانه‌ی شما بنشیند، Kryfo را به‌عنوان شما باز می‌کند.';
+
+  @override
   String get pinsHowThisWorks => 'این چطور کار می‌کند';
 
   @override
@@ -7908,6 +7928,10 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get flowWipe1 =>
       'اگر در صفحه‌ی قفل به‌جای PIN شما وارد شود، Kryfo را از این گوشی پاک می‌کند و می‌بندد. از نگاه کسی که تماشا می‌کند، برنامه فقط از کار افتاد.';
+
+  @override
+  String get flowWipe1Desk =>
+      'اگر در صفحه‌ی قفل به‌جای PIN شما وارد شود، Kryfo را از این رایانه پاک می‌کند و می‌بندد. از نگاه کسی که تماشا می‌کند، برنامه فقط از کار افتاد.';
 
   @override
   String get flowWipe2 =>
@@ -7942,6 +7966,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'اعلان‌هایی که از قبل در فهرست اعلان‌ها هستند، دیده شده‌اند. تا وقتی فریب باز است، اعلان تازه‌ای نشان داده نمی‌شود.';
 
   @override
+  String get flowDecoyShadeDesk =>
+      'اعلان‌هایی که از قبل روی صفحه هستند، دیده شده‌اند. تا وقتی فریب باز است، اعلان تازه‌ای نشان داده نمی‌شود.';
+
+  @override
   String get flowDecoyChoose => 'یک PIN فریب انتخاب کنید';
 
   @override
@@ -7954,6 +7982,10 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get flowLaw =>
       'در برخی کشورها، خودداری از باز کردن قفل گوشی یا پنهان کردن داده‌ها از مأموران به‌خودی‌خود جرم است. قانون جایی را که به آن سفر می‌کنید بشناسید.';
+
+  @override
+  String get flowLawDesk =>
+      'در برخی کشورها، خودداری از باز کردن قفل یک دستگاه یا پنهان کردن داده‌ها از مأموران به‌خودی‌خود جرم است. قانون جایی را که به آن سفر می‌کنید بشناسید.';
 
   @override
   String get howWipe =>
@@ -8018,6 +8050,10 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get flowVaultReplace =>
       'این کار جای هر گفت‌وگوی پنهانی را که این گوشی از قبل دارد می‌گیرد.';
+
+  @override
+  String get flowVaultReplaceDesk =>
+      'این کار جای هر گفت‌وگوی پنهانی را که این رایانه از قبل دارد می‌گیرد.';
 
   @override
   String get flowVaultChoose => 'یک PIN گفت‌وگوهای پنهان انتخاب کنید';
@@ -8095,6 +8131,10 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get howVault =>
       'PIN گفت‌وگوهای پنهان، Kryfo را همراه گفت‌وگوهای پنهان شما باز می‌کند؛ PIN شما و اثر انگشتتان بدون آن‌ها. راه‌اندازی دوباره‌ی گفت‌وگوهای پنهان جای آن‌هایی را که این گوشی دارد می‌گیرد. اگر PIN گفت‌وگوهای پنهان را فراموش کنید، برای همیشه از دست می‌روند.';
+
+  @override
+  String get howVaultDesk =>
+      'PIN گفت‌وگوهای پنهان، Kryfo را همراه گفت‌وگوهای پنهان شما باز می‌کند؛ PIN شما بدون آن‌ها. راه‌اندازی دوباره‌ی گفت‌وگوهای پنهان جای آن‌هایی را که این رایانه دارد می‌گیرد. اگر PIN گفت‌وگوهای پنهان را فراموش کنید، برای همیشه از دست می‌روند.';
 
   @override
   String get chatHide => 'پنهان کردن گفت‌وگو';
@@ -9094,13 +9134,8 @@ class AppLocalizationsFa extends AppLocalizations {
   String get translateBarMore => 'گزینه‌های ترجمه';
 
   @override
-  String translateBarAlways(Object language) {
-    return 'همیشه $language را ترجمه کن';
-  }
-
-  @override
   String translateBarNever(Object language) {
-    return 'هرگز $language را ترجمه نکن';
+    return 'ترجمهٔ $language را دیگر پیشنهاد نده';
   }
 
   @override
@@ -9292,6 +9327,38 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get translateAutoInChatHint =>
       'پیام‌هایی به زبان‌های دیگر ترجمه‌شده نمایش داده می‌شوند. متن اصلی با یک لمس در دسترس است.';
+
+  @override
+  String get translateAlwaysChat => 'همیشه این گفتگو را ترجمه کن';
+
+  @override
+  String translateNeverDone(Object language) {
+    return 'پیام‌های $language همان‌طور که هستند می‌مانند';
+  }
+
+  @override
+  String get translateUndo => 'واگرد';
+
+  @override
+  String get translateNeverSection => 'هرگز پیشنهاد نمی‌شود';
+
+  @override
+  String get translateOfferAgain => 'دوباره پیشنهاد بده';
+
+  @override
+  String get translateOnHint => 'زیر پیام‌هایی به زبان‌های دیگر پیشنهاد می‌شود';
+
+  @override
+  String get translatePrivacyKept =>
+      'ترجمه‌ها رمزگذاری‌شده کنار گفتگوی خود روی همین گوشی می‌مانند و همراه آن پاک می‌شوند.';
+
+  @override
+  String get translatePrivacyKeptDesk =>
+      'ترجمه‌ها رمزگذاری‌شده کنار گفتگوی خود روی همین رایانه می‌مانند و همراه آن پاک می‌شوند.';
+
+  @override
+  String get translateOffDeletes =>
+      'خاموش کردن این، ترجمه‌های ذخیره‌شده را پاک می‌کند.';
 
   @override
   String get bridgesNoneUntilOnion => 'هیچ، تا Onion روشن شود';
@@ -9694,6 +9761,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'دست‌کم ۱۲ کاراکتر. صفحه‌کلید گوشی آنچه را تایپ می‌کنید می‌بیند، پس از صفحه‌کلیدی استفاده کنید که واژه‌ها را یاد نمی‌گیرد و همگام نمی‌کند.';
 
   @override
+  String get flowVaultPassLineDesk =>
+      'دست‌کم ۱۲ کاراکتر. عبارتی را به کار ببرید که هیچ جای دیگری از آن استفاده نمی‌کنید.';
+
+  @override
   String get flowVaultPassAgain => 'همان عبارت عبور را دوباره بنویسید';
 
   @override
@@ -10074,6 +10145,42 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get desktopTrayTip => 'Kryfo در حال اجراست و پیام می‌گیرد';
+
+  @override
+  String get desktopTrayLockedTip => 'Kryfo را باز کنید تا پیام‌ها برسند';
+
+  @override
+  String get desktopRunSection => 'روی این رایانه';
+
+  @override
+  String get desktopTrayRow => 'اجرا در سینی سیستم';
+
+  @override
+  String get desktopTrayHint =>
+      'با بستن پنجره، Kryfo در سینی سیستم می‌ماند و پیام‌ها همچنان می‌رسند.';
+
+  @override
+  String get desktopTrayOffLine =>
+      'با بستن پنجره، Kryfo بسته می‌شود. پیام‌ها وقتی دوباره بازش کنید می‌رسند.';
+
+  @override
+  String get desktopTrayNoneLine =>
+      'این میزکار نماد سینی سیستم نشان نمی‌دهد، پس بستن پنجره Kryfo را می‌بندد.';
+
+  @override
+  String get desktopStartRow => 'اجرا هم‌زمان با روشن شدن رایانه';
+
+  @override
+  String get desktopStartHint =>
+      'Kryfo وقتی وارد این رایانه می‌شوید در سینی سیستم شروع به کار می‌کند.';
+
+  @override
+  String get desktopStartRefused =>
+      'این رایانه اجازه نداد Kryfo همراهش اجرا شود. Kryfo هر وقت خودتان اجرایش کنید باز می‌شود.';
+
+  @override
+  String get desktopStartHeldOff =>
+      'Windows، ‏Kryfo را در برنامه‌های راه‌اندازی خاموش کرده است. آن را از همان‌جا روشن کنید: تنظیمات، برنامه‌ها، راه‌اندازی.';
 
   @override
   String get desktopNoCamera =>

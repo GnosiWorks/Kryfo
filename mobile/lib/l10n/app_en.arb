@@ -5500,6 +5500,10 @@
   "@pinsThePinGoesAnd": {
     "description": "screens/pins_screen.dart"
   },
+  "pinsThePinGoesAndDesk": "The PIN goes, and the wipe PIN and any hidden chats with it. Anyone at your computer opens Kryfo as you.",
+  "@pinsThePinGoesAndDesk": {
+    "description": "pinsThePinGoesAnd as a computer shows it (linux and windows)"
+  },
   "pinsUnlockWithFingerprint": "Unlock with fingerprint",
   "@pinsUnlockWithFingerprint": {
     "description": "screens/pins_screen.dart"
@@ -9073,6 +9077,10 @@
   "@bridgesThisNetworkWantsA": {
     "description": "screens/bridges_screen.dart"
   },
+  "bridgesThisNetworkWantsADesk": "This network wants a sign-in first. Sign in from your browser, or check the computer's network connection. Once you're in, Kryfo connects.",
+  "@bridgesThisNetworkWantsADesk": {
+    "description": "bridgesThisNetworkWantsA as a computer shows it (linux and windows)"
+  },
   "bridgesWaitingForWifiSignIn": "Waiting for Wi-Fi sign-in",
   "@bridgesWaitingForWifiSignIn": {
     "description": "screens/bridges_screen.dart"
@@ -9902,9 +9910,17 @@
   "@pinsAdvancedLine": {
     "description": "App lock: one line under Advanced protection"
   },
+  "pinsAdvancedLineDesk": "For when someone makes you unlock your computer.",
+  "@pinsAdvancedLineDesk": {
+    "description": "pinsAdvancedLine as a computer shows it (linux and windows)"
+  },
   "pinsWipeLine": "Typed on the lock screen, it wipes Kryfo from this phone.",
   "@pinsWipeLine": {
     "description": "App lock: one line on the wipe PIN row"
+  },
+  "pinsWipeLineDesk": "Typed on the lock screen, it wipes Kryfo from this computer.",
+  "@pinsWipeLineDesk": {
+    "description": "pinsWipeLine as a computer shows it (linux and windows)"
   },
   "pinsDecoyPin": "Decoy PIN",
   "@pinsDecoyPin": {
@@ -9930,6 +9946,10 @@
   "@pinsTurnOffWithDecoy": {
     "description": "confirm sheet line when turning the app lock off while a decoy PIN is set"
   },
+  "pinsTurnOffWithDecoyDesk": "Every PIN goes, the decoy and its Kryfo and any hidden chats with them. Anyone at your computer opens Kryfo as you.",
+  "@pinsTurnOffWithDecoyDesk": {
+    "description": "pinsTurnOffWithDecoy as a computer shows it (linux and windows)"
+  },
   "pinsHowThisWorks": "How this works",
   "@pinsHowThisWorks": {
     "description": "App lock: opens a sheet explaining the extra PINs"
@@ -9949,6 +9969,10 @@
   "flowWipe1": "Typed on the lock screen instead of your PIN, it wipes Kryfo from this phone and closes it. To whoever is watching, the app just stopped.",
   "@flowWipe1": {
     "description": "wipe PIN setup, first line"
+  },
+  "flowWipe1Desk": "Typed on the lock screen instead of your PIN, it wipes Kryfo from this computer and closes it. To whoever is watching, the app just stopped.",
+  "@flowWipe1Desk": {
+    "description": "flowWipe1 as a computer shows it (linux and windows)"
   },
   "flowWipe2": "It takes every chat and your identity with it, and the decoy if you have one.",
   "@flowWipe2": {
@@ -9986,6 +10010,10 @@
   "@flowDecoyShade": {
     "description": "decoy PIN setup"
   },
+  "flowDecoyShadeDesk": "Notifications already on the screen were already seen. While the decoy is open, no new ones show.",
+  "@flowDecoyShadeDesk": {
+    "description": "flowDecoyShade as a computer shows it (linux and windows)"
+  },
   "flowDecoyChoose": "Choose a decoy PIN",
   "@flowDecoyChoose": {
     "description": "decoy PIN setup, the pad"
@@ -10001,6 +10029,10 @@
   "flowLaw": "In some countries, refusing to unlock a phone or hiding data from officials is an offence in itself. Know the law where you travel.",
   "@flowLaw": {
     "description": "in every explanation of the extra PINs; decided wording"
+  },
+  "flowLawDesk": "In some countries, refusing to unlock a device or hiding data from officials is an offence in itself. Know the law where you travel.",
+  "@flowLawDesk": {
+    "description": "flowLaw as a computer shows it (linux and windows)"
   },
   "howWipe": "Typed on the lock screen, the wipe PIN wipes every chat, your identity and any decoy, then closes Kryfo. It works even while the pad is held after wrong tries.",
   "@howWipe": {
@@ -10073,6 +10105,10 @@
   "flowVaultReplace": "This replaces any hidden chats this phone already holds.",
   "@flowVaultReplace": {
     "description": "the hidden chats setup flow: shown on every setup, whether or not there are hidden chats"
+  },
+  "flowVaultReplaceDesk": "This replaces any hidden chats this computer already holds.",
+  "@flowVaultReplaceDesk": {
+    "description": "flowVaultReplace as a computer shows it (linux and windows)"
   },
   "flowVaultChoose": "Choose a hidden chats PIN",
   "@flowVaultChoose": {
@@ -10155,6 +10191,10 @@
   "howVault": "Your hidden chats PIN opens Kryfo with your hidden chats, your PIN and your fingerprint without them. Setting hidden chats up again replaces the ones this phone holds. Forget the hidden chats PIN and they are gone for good.",
   "@howVault": {
     "description": "How this works sheet"
+  },
+  "howVaultDesk": "Your hidden chats PIN opens Kryfo with your hidden chats, your PIN without them. Setting hidden chats up again replaces the ones this computer holds. Forget the hidden chats PIN and they are gone for good.",
+  "@howVaultDesk": {
+    "description": "howVault as a computer shows it (linux and windows)"
   },
   "chatHide": "Hide chat",
   "@chatHide": {
@@ -11375,18 +11415,9 @@
   "@translateBarMore": {
     "description": "the bar's small menu button, for screen readers"
   },
-  "translateBarAlways": "Always translate {language}",
-  "@translateBarAlways": {
-    "description": "in the bar's menu: every chat translates this language on its own",
-    "placeholders": {
-      "language": {
-        "type": "Object"
-      }
-    }
-  },
-  "translateBarNever": "Never translate {language}",
+  "translateBarNever": "Never offer for {language}",
   "@translateBarNever": {
-    "description": "in the bar's menu: the language counts as one the person reads, nothing in it is offered for translation",
+    "description": "in a translate menu: nothing in this language is offered for translation until the person takes it off the list in settings",
     "placeholders": {
       "language": {
         "type": "Object"
@@ -11671,6 +11702,47 @@
   "translateAutoInChatHint": "Messages in other languages show translated. The original is one tap away.",
   "@translateAutoInChatHint": {
     "description": "under that switch"
+  },
+  "translateAlwaysChat": "Always translate this chat",
+  "@translateAlwaysChat": {
+    "description": "in a translate menu: this chat's messages in other languages show translated on their own"
+  },
+  "translateNeverDone": "Messages in {language} stay as they are",
+  "@translateNeverDone": {
+    "description": "toast after never offer, with an undo",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateUndo": "Undo",
+  "@translateUndo": {
+    "description": "toast action: takes the language off the never list again"
+  },
+  "translateNeverSection": "Never offered",
+  "@translateNeverSection": {
+    "description": "translation settings: the languages set to never offer"
+  },
+  "translateOfferAgain": "Offer again",
+  "@translateOfferAgain": {
+    "description": "translation settings: takes a language off the never list"
+  },
+  "translateOnHint": "Offered under messages in other languages",
+  "@translateOnHint": {
+    "description": "translation settings: the switch's hint"
+  },
+  "translatePrivacyKept": "Translations are kept with their chat, encrypted on this phone, and deleted with it.",
+  "@translatePrivacyKept": {
+    "description": "translation settings, privacy box: where translations are kept"
+  },
+  "translatePrivacyKeptDesk": "Translations are kept with their chat, encrypted on this computer, and deleted with it.",
+  "@translatePrivacyKeptDesk": {
+    "description": "translatePrivacyKept as a computer shows it (linux and windows)"
+  },
+  "translateOffDeletes": "Turning this off deletes saved translations.",
+  "@translateOffDeletes": {
+    "description": "translation settings: under the switch, what turning it off does"
   },
   "bridgesNoneUntilOnion": "None until onion is on",
   "@bridgesNoneUntilOnion": {
@@ -12182,6 +12254,10 @@
   "@flowVaultPassLine": {
     "description": "screens/pin_flow_screen.dart"
   },
+  "flowVaultPassLineDesk": "At least 12 characters. Pick one you use nowhere else.",
+  "@flowVaultPassLineDesk": {
+    "description": "flowVaultPassLine as a computer shows it (linux and windows)"
+  },
   "flowVaultPassAgain": "The same passphrase again",
   "@flowVaultPassAgain": {
     "description": "screens/pin_flow_screen.dart"
@@ -12624,6 +12700,46 @@
   "desktopTrayTip": "Kryfo is running and receiving messages",
   "@desktopTrayTip": {
     "description": "desktop/desktop_start.dart: the tray icon tooltip"
+  },
+  "desktopTrayLockedTip": "Open Kryfo to start receiving messages",
+  "@desktopTrayLockedTip": {
+    "description": "desktop/desktop_start.dart: the tray icon tooltip after a start with the computer, before kryfo is unlocked"
+  },
+  "desktopRunSection": "On this computer",
+  "@desktopRunSection": {
+    "description": "notifications page on a computer: the section that replaces the phone's delivery modes"
+  },
+  "desktopTrayRow": "Keep running in the tray",
+  "@desktopTrayRow": {
+    "description": "switch: closing the window hides kryfo to the tray instead of quitting"
+  },
+  "desktopTrayHint": "Closing the window keeps Kryfo in the tray, so messages keep arriving.",
+  "@desktopTrayHint": {
+    "description": "under the tray switch"
+  },
+  "desktopTrayOffLine": "Closing the window quits Kryfo. Messages arrive when you open it again.",
+  "@desktopTrayOffLine": {
+    "description": "shown while the tray switch is off"
+  },
+  "desktopTrayNoneLine": "This desktop shows no tray icon, so closing the window quits Kryfo.",
+  "@desktopTrayNoneLine": {
+    "description": "the desktop shows no tray icons (many wayland desktops): closing quits even with the switch on"
+  },
+  "desktopStartRow": "Start with my computer",
+  "@desktopStartRow": {
+    "description": "switch: kryfo starts when the user signs in to the computer"
+  },
+  "desktopStartHint": "Kryfo starts in the tray when you sign in to this computer.",
+  "@desktopStartHint": {
+    "description": "under the start switch"
+  },
+  "desktopStartRefused": "This computer did not let Kryfo start with it. Kryfo opens whenever you start it yourself.",
+  "@desktopStartRefused": {
+    "description": "the computer refused to add kryfo to its startup (portal said no, file or registry not writable)"
+  },
+  "desktopStartHeldOff": "Windows has Kryfo switched off in its startup apps. Switch it on there, in Settings, Apps, Startup.",
+  "@desktopStartHeldOff": {
+    "description": "windows: kryfo is listed but switched off in the startup apps of windows settings or task manager"
   },
   "desktopNoCamera": "Kryfo cannot use a camera on this computer yet. Use the link or the code instead.",
   "@desktopNoCamera": {

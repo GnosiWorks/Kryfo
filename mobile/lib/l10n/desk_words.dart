@@ -106,10 +106,22 @@ const deskWordKeys = [
   'translateFailNoEngine',
   'translateSettingsHint',
   'translatePrivacyNote',
+  'translatePrivacyKept',
   'notificationsLead',
   'photoOnlyHere',
   'photoOnlyHereLine',
   'myKryfoPointYourPhonesAt',
+  'pinsThePinGoesAnd',
+  'pinsTurnOffWithDecoy',
+  'pinsAdvancedLine',
+  'pinsWipeLine',
+  'flowWipe1',
+  'flowLaw',
+  'flowVaultReplace',
+  'howVault',
+  'flowVaultPassLine',
+  'flowDecoyShade',
+  'bridgesThisNetworkWantsA',
 ];
 
 extension DeskWords on AppLocalizations {
@@ -322,6 +334,8 @@ extension DeskWords on AppLocalizations {
       onDesktop ? translateSettingsHintDesk : translateSettingsHint;
   String get translatePrivacyNoteShown =>
       onDesktop ? translatePrivacyNoteDesk : translatePrivacyNote;
+  String get translatePrivacyKeptShown =>
+      onDesktop ? translatePrivacyKeptDesk : translatePrivacyKept;
   String get notificationsLeadShown =>
       onDesktop ? notificationsLeadDesk : notificationsLead;
   String get photoOnlyHereShown =>
@@ -330,4 +344,23 @@ extension DeskWords on AppLocalizations {
       onDesktop ? photoOnlyHereLineDesk : photoOnlyHereLine;
   String get myKryfoPointYourPhonesAtShown =>
       onDesktop ? myKryfoPointYourPhonesAtDesk : myKryfoPointYourPhonesAt;
+  // the lock, pins, decoy and wipe: the same in the decoy as in the real app
+  String get pinsThePinGoesAndShown =>
+      onDesktop ? pinsThePinGoesAndDesk : pinsThePinGoesAnd;
+  String get pinsTurnOffWithDecoyShown =>
+      onDesktop ? pinsTurnOffWithDecoyDesk : pinsTurnOffWithDecoy;
+  String get pinsAdvancedLineShown =>
+      onDesktop ? pinsAdvancedLineDesk : pinsAdvancedLine;
+  String get pinsWipeLineShown => onDesktop ? pinsWipeLineDesk : pinsWipeLine;
+  String get flowWipe1Shown => onDesktop ? flowWipe1Desk : flowWipe1;
+  String get flowLawShown => onDesktop ? flowLawDesk : flowLaw;
+  String get flowVaultReplaceShown =>
+      onDesktop ? flowVaultReplaceDesk : flowVaultReplace;
+  String get howVaultShown => onDesktop ? howVaultDesk : howVault;
+  String get flowVaultPassLineShown =>
+      onDesktop ? flowVaultPassLineDesk : flowVaultPassLine;
+  String get flowDecoyShadeShown =>
+      onDesktop ? flowDecoyShadeDesk : flowDecoyShade;
+  String get bridgesThisNetworkWantsAShown =>
+      onDesktop ? bridgesThisNetworkWantsADesk : bridgesThisNetworkWantsA;
 }

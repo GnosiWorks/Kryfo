@@ -19,9 +19,12 @@ read_file() {
 LOCK_TEXT=$(read_file "$LOCK_PATH") || { echo "no $LOCK_PATH at ${REF:-the checkout}" >&2; exit 1; }
 DART_TEXT=$(read_file "$DART_PATH") || { echo "no $DART_PATH at ${REF:-the checkout}" >&2; exit 1; }
 
+# awk reads to the end: an early exit can kill printf with sigpipe under pipefail
 source_of() {
-  printf '%s\n' "$LOCK_TEXT" | awk -v n="$1" '$0 == "name = \"" n "\"" { f = 1; next }
-    f && /^source = / { gsub(/^source = "|"$/, ""); print; exit }'
+  printf '%s\n' "$LOCK_TEXT" | awk -v n="$1" 'd { next }
+    $0 == "name = \"" n "\"" { f = 1; next }
+    f && /^source = / { gsub(/^source = "|"$/, ""); s = $0; d = 1 }
+    END { if (d) print s }'
 }
 LIBSIGNAL=$(source_of libsignal-protocol)
 SPQR=$(source_of spqr)

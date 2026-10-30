@@ -613,6 +613,12 @@ final _pairs = <(String, _Get, _Get, _Get)>[
     (l) => l.translatePrivacyNoteDesk,
   ),
   (
+    'translatePrivacyKept',
+    (l) => l.translatePrivacyKeptShown,
+    (l) => l.translatePrivacyKept,
+    (l) => l.translatePrivacyKeptDesk,
+  ),
+  (
     'notificationsLead',
     (l) => l.notificationsLeadShown,
     (l) => l.notificationsLead,
@@ -635,6 +641,67 @@ final _pairs = <(String, _Get, _Get, _Get)>[
     (l) => l.myKryfoPointYourPhonesAtShown,
     (l) => l.myKryfoPointYourPhonesAt,
     (l) => l.myKryfoPointYourPhonesAtDesk,
+  ),
+  (
+    'pinsThePinGoesAnd',
+    (l) => l.pinsThePinGoesAndShown,
+    (l) => l.pinsThePinGoesAnd,
+    (l) => l.pinsThePinGoesAndDesk,
+  ),
+  (
+    'pinsTurnOffWithDecoy',
+    (l) => l.pinsTurnOffWithDecoyShown,
+    (l) => l.pinsTurnOffWithDecoy,
+    (l) => l.pinsTurnOffWithDecoyDesk,
+  ),
+  (
+    'pinsAdvancedLine',
+    (l) => l.pinsAdvancedLineShown,
+    (l) => l.pinsAdvancedLine,
+    (l) => l.pinsAdvancedLineDesk,
+  ),
+  (
+    'pinsWipeLine',
+    (l) => l.pinsWipeLineShown,
+    (l) => l.pinsWipeLine,
+    (l) => l.pinsWipeLineDesk,
+  ),
+  (
+    'flowWipe1',
+    (l) => l.flowWipe1Shown,
+    (l) => l.flowWipe1,
+    (l) => l.flowWipe1Desk,
+  ),
+  ('flowLaw', (l) => l.flowLawShown, (l) => l.flowLaw, (l) => l.flowLawDesk),
+  (
+    'flowVaultReplace',
+    (l) => l.flowVaultReplaceShown,
+    (l) => l.flowVaultReplace,
+    (l) => l.flowVaultReplaceDesk,
+  ),
+  (
+    'howVault',
+    (l) => l.howVaultShown,
+    (l) => l.howVault,
+    (l) => l.howVaultDesk,
+  ),
+  (
+    'flowVaultPassLine',
+    (l) => l.flowVaultPassLineShown,
+    (l) => l.flowVaultPassLine,
+    (l) => l.flowVaultPassLineDesk,
+  ),
+  (
+    'flowDecoyShade',
+    (l) => l.flowDecoyShadeShown,
+    (l) => l.flowDecoyShade,
+    (l) => l.flowDecoyShadeDesk,
+  ),
+  (
+    'bridgesThisNetworkWantsA',
+    (l) => l.bridgesThisNetworkWantsAShown,
+    (l) => l.bridgesThisNetworkWantsA,
+    (l) => l.bridgesThisNetworkWantsADesk,
   ),
 ];
 
