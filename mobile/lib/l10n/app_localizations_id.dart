@@ -9118,13 +9118,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get translateBarMore => 'Opsi terjemahan';
 
   @override
-  String translateBarAlways(Object language) {
-    return 'Selalu terjemahkan $language';
-  }
-
-  @override
   String translateBarNever(Object language) {
-    return 'Jangan terjemahkan $language';
+    return 'Jangan tawarkan untuk $language';
   }
 
   @override
@@ -9318,6 +9313,38 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get translateAutoInChatHint =>
       'Pesan dalam bahasa lain tampil terjemahannya. Aslinya tinggal satu ketukan.';
+
+  @override
+  String get translateAlwaysChat => 'Selalu terjemahkan chat ini';
+
+  @override
+  String translateNeverDone(Object language) {
+    return 'Pesan dalam $language tetap seperti aslinya';
+  }
+
+  @override
+  String get translateUndo => 'Urungkan';
+
+  @override
+  String get translateNeverSection => 'Tidak pernah ditawarkan';
+
+  @override
+  String get translateOfferAgain => 'Tawarkan lagi';
+
+  @override
+  String get translateOnHint => 'Ditawarkan di bawah pesan dalam bahasa lain';
+
+  @override
+  String get translatePrivacyKept =>
+      'Terjemahan disimpan terenkripsi bersama chatnya di ponsel ini dan dihapus bersamanya.';
+
+  @override
+  String get translatePrivacyKeptDesk =>
+      'Terjemahan disimpan terenkripsi bersama chatnya di komputer ini dan dihapus bersamanya.';
+
+  @override
+  String get translateOffDeletes =>
+      'Mematikan ini menghapus terjemahan yang tersimpan.';
 
   @override
   String get bridgesNoneUntilOnion => 'Tidak ada sampai Onion aktif';

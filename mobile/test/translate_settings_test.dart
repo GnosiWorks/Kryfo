@@ -25,14 +25,12 @@ void main() {
       target: 'en',
       autoDefault: true,
       wifiOnly: false,
-      always: ['ru'],
     );
     final back = TranslateSettings.fromJson(jsonEncode(s.toJson()));
     expect(back.mine, s.mine);
     expect(back.target, 'en');
     expect(back.autoDefault, isTrue);
     expect(back.wifiOnly, isFalse);
-    expect(back.always, ['ru']);
   });
 
   test('a host kept by an older build is not read, nor written back', () {

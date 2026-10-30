@@ -19,12 +19,15 @@ class MenuAction {
   final bool danger;
   // a colour of its own for the icon and label, like amber for edit
   final Color? tint;
+  // a row that turns something on or off: a check at its end while on
+  final bool? checked;
   const MenuAction({
     required this.icon,
     required this.label,
     required this.onTap,
     this.danger = false,
     this.tint,
+    this.checked,
   });
 }
 
@@ -181,7 +184,7 @@ class _MenuRow extends StatelessWidget {
     final a = action;
     final ink = a.danger ? HaloColors.rose : (a.tint ?? HaloColors.text);
     final icon = a.danger ? HaloColors.rose : (a.tint ?? HaloColors.text2);
-    return Material(
+    final row = Material(
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(11),
@@ -208,11 +211,21 @@ class _MenuRow extends StatelessWidget {
                   ),
                 ),
               ),
+              if (a.checked != null) ...[
+                const SizedBox(width: 10),
+                Icon(
+                  Icons.check_rounded,
+                  size: 17,
+                  color: a.checked! ? HaloColors.amberText : Colors.transparent,
+                ),
+              ],
             ],
           ),
         ),
       ),
     );
+    if (a.checked == null) return row;
+    return Semantics(toggled: a.checked, child: row);
   }
 }
 

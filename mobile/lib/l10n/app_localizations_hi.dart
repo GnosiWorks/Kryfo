@@ -9125,13 +9125,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get translateBarMore => 'अनुवाद के विकल्प';
 
   @override
-  String translateBarAlways(Object language) {
-    return '$language का हमेशा अनुवाद करें';
-  }
-
-  @override
   String translateBarNever(Object language) {
-    return '$language का कभी अनुवाद न करें';
+    return '$language के लिए कभी न सुझाएँ';
   }
 
   @override
@@ -9324,6 +9319,39 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get translateAutoInChatHint =>
       'दूसरी भाषाओं के मैसेज अनुवाद होकर दिखते हैं। मूल बस एक टैप दूर है।';
+
+  @override
+  String get translateAlwaysChat => 'इस चैट का हमेशा अनुवाद करें';
+
+  @override
+  String translateNeverDone(Object language) {
+    return '$language के संदेश जैसे हैं वैसे ही रहेंगे';
+  }
+
+  @override
+  String get translateUndo => 'वापस लें';
+
+  @override
+  String get translateNeverSection => 'कभी नहीं सुझाई जातीं';
+
+  @override
+  String get translateOfferAgain => 'फिर से सुझाएँ';
+
+  @override
+  String get translateOnHint =>
+      'दूसरी भाषाओं के संदेशों के नीचे सुझाया जाता है';
+
+  @override
+  String get translatePrivacyKept =>
+      'अनुवाद इस फ़ोन पर अपनी चैट के साथ एन्क्रिप्ट होकर रखे जाते हैं और उसी के साथ मिटते हैं।';
+
+  @override
+  String get translatePrivacyKeptDesk =>
+      'अनुवाद इस कंप्यूटर पर अपनी चैट के साथ एन्क्रिप्ट होकर रखे जाते हैं और उसी के साथ मिटते हैं।';
+
+  @override
+  String get translateOffDeletes =>
+      'इसे बंद करने पर सहेजे गए अनुवाद मिट जाते हैं।';
 
   @override
   String get bridgesNoneUntilOnion => 'onion चालू होने तक कोई नहीं';

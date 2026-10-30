@@ -62,6 +62,7 @@ TranslationHub _live() {
     store: DbTranslateStore(
       () => session.settingsDb(),
       chatDb: (id) => session.chatDb(id),
+      open: () => session.openDbs(),
     ),
     engine: engine,
     catalog: catalog,

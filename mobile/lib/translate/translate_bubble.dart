@@ -1,18 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a bubble's words with a translate line under them, and the translation
-// in their place once made. no chat handed in, no change
+// in their place once made, marked as one. the line is there only for a
+// message in a language the person does not read, guessed with confidence,
+// with a few words to it. no chat handed in, no change
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
 import '../theme.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/motion.dart' show kHouseCurve, kHouseTime, motionStill;
+import 'catalog.dart' show LangBundle;
 import 'chat_translation.dart';
 import 'lang_names.dart';
 import 'pack_sheet.dart';
+import 'translate_menu.dart';
 
 // a tap on translate, from the bubble or the menu: the translation, or the
 // sheet for what it needs, then the translation once that is there
@@ -38,7 +43,7 @@ Future<void> askTranslate(
   }
 }
 
-class TranslatedBody extends StatelessWidget {
+class TranslatedBody extends StatefulWidget {
   final ChatTranslation? chat;
   // what the chat knows the message by
   final String msgKey;
@@ -58,52 +63,86 @@ class TranslatedBody extends StatelessWidget {
   });
 
   @override
+  State<TranslatedBody> createState() => _TranslatedBodyState();
+}
+
+class _TranslatedBodyState extends State<TranslatedBody> {
+  // once a line was shown it folds away when it goes, never jumps
+  bool _hadFoot = false;
+
+  @override
   Widget build(BuildContext context) {
-    final chat = enabled ? this.chat : null;
-    if (chat == null) return original;
+    final chat = widget.enabled ? widget.chat : null;
+    if (chat == null) return widget.original;
     return ListenableBuilder(
       listenable: chat,
       builder: (context, _) {
-        final m = chat.of(msgKey, text);
-        final o = m.offer ?? chat.offer(text);
-        if (o == null) return original;
-        if (m.phase == MsgPhase.idle && chat.autoOn(o)) {
-          scheduleMicrotask(() => chat.autoFor(msgKey, text));
+        final key = widget.msgKey, text = widget.text;
+        final m = chat.of(key, text);
+        final now = chat.offer(text);
+        final o = now == null ? null : (m.offer ?? now);
+        if (o == null && !_hadFoot) return widget.original;
+        _hadFoot = true;
+        if (o != null && m.phase == MsgPhase.idle && chat.autoOn(o)) {
+          scheduleMicrotask(() => chat.autoFor(key, text));
         }
-        final shown = m.phase == MsgPhase.shown && m.text != null;
+        final shown = o != null && m.phase == MsgPhase.shown && m.text != null;
         final still = motionStill(context);
         void tap() {
           HapticFeedback.selectionClick();
-          unawaited(askTranslate(context, chat, msgKey, text));
+          unawaited(askTranslate(context, chat, key, text));
         }
 
-        final Widget foot = switch (m.phase) {
-          MsgPhase.shown => _Foot(
-            key: const ValueKey('tr-shown'),
-            lead: l10n.translateFrom(langName(o.seen)),
-            action: l10n.translateShowOriginal,
-            onTap: tap,
-          ),
-          MsgPhase.working => _Foot(
-            key: const ValueKey('tr-working'),
-            lead: l10n.translateWorking,
-          ),
-          MsgPhase.failed => _Foot(
-            key: const ValueKey('tr-failed'),
-            lead: l10n.translateFailed,
-            action: l10n.commonTryAgain,
-            onTap: tap,
-          ),
-          MsgPhase.idle => _Foot(
-            key: const ValueKey('tr-idle'),
-            icon: true,
-            action: l10n.translateAction,
-            onTap: tap,
-          ),
-        };
+        void menu() {
+          if (o != null) unawaited(showTranslateMenu(context, chat, o));
+        }
+
+        // a pack not on the phone: its size, fetched only from the sheet
+        final missing = o == null || m.text != null
+            ? const <LangBundle>[]
+            : chat.hub.missing(o);
+        final size = missing.fold<int>(0, (n, b) => n + b.gz);
+        final Widget? foot = o == null
+            ? null
+            : switch (m.phase) {
+                MsgPhase.shown => _Foot(
+                  key: const ValueKey('tr-shown'),
+                  icon: true,
+                  lead: l10n.translateFrom(langName(o.seen)),
+                  action: l10n.translateShowOriginal,
+                  onTap: tap,
+                  onMenu: menu,
+                ),
+                MsgPhase.working => _Foot(
+                  key: const ValueKey('tr-working'),
+                  lead: l10n.translateWorking,
+                ),
+                MsgPhase.failed => _Foot(
+                  key: const ValueKey('tr-failed'),
+                  lead: l10n.translateFailed,
+                  action: l10n.commonTryAgain,
+                  onTap: tap,
+                  onMenu: menu,
+                ),
+                MsgPhase.idle => _Foot(
+                  key: const ValueKey('tr-idle'),
+                  icon: true,
+                  action: l10n.translateAction,
+                  size: size > 0 ? packSize(size) : null,
+                  onTap: tap,
+                  onMenu: menu,
+                ),
+              };
+        // the translation reads as one to a screen reader too
         final words = KeyedSubtree(
           key: ValueKey(shown),
-          child: shown ? translated(m.text!) : original,
+          child: shown
+              ? Semantics(
+                  container: true,
+                  label: l10n.translateFrom(langName(o.seen)),
+                  child: widget.translated(m.text!),
+                )
+              : widget.original,
         );
         return EaseSize(
           duration: kHouseTime,
@@ -125,7 +164,19 @@ class TranslatedBody extends StatelessWidget {
                   ),
                   child: words,
                 ),
-              foot,
+              if (still)
+                ?foot
+              else
+                AnimatedSwitcher(
+                  duration: kHouseTime,
+                  switchInCurve: kHouseCurve,
+                  switchOutCurve: kHouseCurve,
+                  layoutBuilder: (cur, prev) => Stack(
+                    alignment: AlignmentDirectional.topStart,
+                    children: [...prev, ?cur],
+                  ),
+                  child: foot ?? const SizedBox(key: ValueKey('tr-none')),
+                ),
             ],
           ),
         );
@@ -134,18 +185,23 @@ class TranslatedBody extends StatelessWidget {
   }
 }
 
-// the line under the words: what happened, and what a tap does
+// the line under the words: what happened, what a tap does, and its menu
 class _Foot extends StatelessWidget {
   final String? lead;
   final String? action;
+  // a pack's size when it is not on the phone yet
+  final String? size;
   final bool icon;
   final VoidCallback? onTap;
+  final VoidCallback? onMenu;
   const _Foot({
     super.key,
     this.lead,
     this.action,
+    this.size,
     this.icon = false,
     this.onTap,
+    this.onMenu,
   });
 
   @override
@@ -180,6 +236,7 @@ class _Foot extends StatelessWidget {
           if (lead != null && action != null)
             TextSpan(text: ' · ', style: quiet),
           if (action != null) TextSpan(text: action, style: act),
+          if (size != null) TextSpan(text: ' · $size', style: quiet),
         ],
       ),
     );
@@ -188,11 +245,22 @@ class _Foot extends StatelessWidget {
       child: row,
     );
     if (onTap == null) return padded;
+    // the menu: a long press, or a screen reader's own action. no glyph of
+    // its own, so a foreign message is no taller
+    final menu = onMenu;
     return Semantics(
       button: true,
+      label: [?lead, ?action, ?size].join(', '),
+      excludeSemantics: true,
+      onTap: onTap,
+      onLongPress: menu,
+      customSemanticsActions: menu == null
+          ? null
+          : {CustomSemanticsAction(label: l10n.translateBarMore): menu},
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
+        onLongPress: menu,
         child: padded,
       ),
     );
