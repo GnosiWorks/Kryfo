@@ -80,7 +80,8 @@ func (f *Fanout) To(mine, contact Key, p Peer, now time.Time) ([]Slot, error) {
 		ol := f.Own.Current(mine)
 		for _, e := range f.Own.Others(mine) {
 			s := Slot{Identity: mine, Device: e.ID, Key: e.Key, Reg: e.Reg, Own: true}
-			if ol != nil && !f.quiet(&s, ol.Version, now) {
+			// the own phone is never silenced, as a contact's is not
+			if ol != nil && !e.Phone && !f.quiet(&s, ol.Version, now) {
 				continue
 			}
 			out = append(out, s)

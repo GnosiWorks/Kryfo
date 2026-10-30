@@ -602,6 +602,53 @@ func TestQuietDevicesInTheFanout(t *testing.T) {
 	}
 }
 
+func TestALinkedDeviceNeverSilencesItsPhone(t *testing.T) {
+	k := newFanoutKit(t, 2, 0)
+	t0 := time.Unix(1_760_000_000, 0)
+	day := 24 * time.Hour
+	var desk, other Entry
+	for _, e := range k.me.list.Devices {
+		switch {
+		case e.Phone:
+		case desk.ID == 0:
+			desk = e
+		default:
+			other = e
+		}
+	}
+	// the desktop's own view: its key on my list
+	own := NewOwn()
+	if _, err := own.Set(k.me.id.pub, k.me.wire, k.me.devs[desk.ID], k.s); err != nil {
+		t.Fatal(err)
+	}
+	k.f.Own = own
+	// nothing the desktop sent its own devices was ever answered
+	for _, s := range k.to(t, withDevices, t0) {
+		k.f.Quiet.Sent(s.Identity, s.Device, s.Key, t0)
+	}
+	_, mine := split(k.to(t, withDevices, t0.Add(15*day)))
+	for _, s := range mine {
+		if s.Rebuild != (s.Device == other.ID) {
+			t.Fatalf("rebuild on own %d: %v", s.Device, s.Rebuild)
+		}
+	}
+	for _, at := range []time.Duration{30 * day, 31 * day} {
+		_, mine := split(k.to(t, withDevices, t0.Add(at)))
+		if got := ids(mine); !slices.Equal(got, []uint8{PhoneID}) || mine[0].Rebuild {
+			t.Fatalf("day %d: own copies to %v, want the phone alone, its session kept", at/day, got)
+		}
+	}
+	// months on the other device only gets its weekly probe; the phone
+	// gets every copy on its session
+	_, mine = split(k.to(t, withDevices, t0.Add(90*day)))
+	for _, s := range mine {
+		if s.Device == PhoneID && !s.Rebuild {
+			return
+		}
+	}
+	t.Fatalf("day 90: the own phone was silenced: %v", ids(mine))
+}
+
 func TestThePoolHandsEachBundleOnce(t *testing.T) {
 	s := newShim()
 	me := newAccount(t, s)

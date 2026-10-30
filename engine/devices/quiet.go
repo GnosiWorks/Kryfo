@@ -52,8 +52,8 @@ type quietRow struct {
 
 // Quiet keeps, per (identity, device), how long copies have gone to a
 // device that never answers, so a broken or hostile list costs a sender at
-// most QuietSilent of copies. the phone of a contact is never silenced:
-// its session is the chat itself.
+// most QuietSilent of copies. a phone is never silenced, a contact's or,
+// on a linked device, its own: its session is the chat itself.
 type Quiet struct {
 	mu   sync.Mutex
 	rows map[slotKey]*quietRow
