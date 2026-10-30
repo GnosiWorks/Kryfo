@@ -16,6 +16,7 @@ import '../theme.dart';
 import '../widgets/empty_chat.dart';
 import '../widgets/motion.dart' show motionStill;
 import '../widgets/nav_bar.dart';
+import '../widgets/text_ground.dart';
 import 'wide_pane.dart';
 
 /// a window this wide turns wide, and only under [kWideLeave] turns back:
@@ -305,7 +306,7 @@ class _PaneNavigatorState extends State<_PaneNavigator> {
       onGenerateInitialRoutes: (_, _) => [
         PageRouteBuilder<void>(
           opaque: false,
-          pageBuilder: (_, _, _) => const WideEmpty(),
+          pageBuilder: (_, _, _) => const TextGround(child: WideEmpty()),
         ),
       ],
     ),
