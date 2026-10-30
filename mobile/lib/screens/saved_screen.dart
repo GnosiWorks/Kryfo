@@ -85,7 +85,7 @@ class _SavedScreenState extends State<SavedScreen> {
       peer: r['peer_id'] as String?,
       uid: r['msg_uid'] as String?,
     );
-    if (!ok && mounted) showHaloToast(context, l10n.savedChatGone);
+    if (!ok && mounted) showHaloToast(context, l10n.savedChatGoneShown);
   }
 
   String _who(String peer) {

@@ -132,7 +132,7 @@ class _NotesScreenState extends State<NotesScreen> {
     final ok = await showConfirmSheet(
       context,
       title: l10n.notesDeleteAllTitle,
-      line: l10n.notesDeleteAllLine,
+      line: l10n.notesDeleteAllLineShown,
       yes: l10n.notesDeleteAllYes,
     );
     if (!ok || !mounted) return;
@@ -333,7 +333,7 @@ class _NotesScreenState extends State<NotesScreen> {
     final ok = await showConfirmSheet(
       context,
       title: l10n.notesDeleteThisNote,
-      line: l10n.notesGoneFromThisPhone,
+      line: l10n.notesGoneFromThisPhoneShown,
       yes: l10n.commonDelete,
     );
     final key = _key(n);
@@ -398,7 +398,7 @@ class _NotesScreenState extends State<NotesScreen> {
               under: _under,
               title: l10n.notesNoteToSelf,
               sub: Text(
-                l10n.notesOnlyOnThisPhone,
+                l10n.notesOnlyOnThisPhoneShown,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: HaloType.mono(size: 10, color: HaloColors.text2),
@@ -602,7 +602,7 @@ class _NotesScreenState extends State<NotesScreen> {
               ),
               const SizedBox(height: 10),
               Text(
-                l10n.notesJotAnythingDownIt,
+                l10n.notesJotAnythingDownItShown,
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 12.5,

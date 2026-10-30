@@ -116,7 +116,7 @@ class AppIo {
     String xPub,
     String fc,
     String cipher,
-  ) => engine.sendFirstContact(ident, xPub, fc, cipher);
+  ) => sendFirstContactNoted(ident, xPub, fc, cipher);
 
   // [payload] names the chat here only: android gets the tag [on] keeps
   // for it
@@ -380,18 +380,21 @@ Future<({String haloId, String plain, UnwrappedMessage env})?> _openFirst(
       // move session from temp to where it is filed, and a v4 pair's seed
       // with it in one transaction: on its v4 addresses before anything
       // goes to them
+      // the pair is named by the whole identity key, 0x05 first, as
+      // pairOf reads it; the engine takes the x key
+      final peerKey = _hexOf(key);
       await keepOpenedSession(
         at,
         record,
         also: v4 == null || seed == null
             ? null
-            : (t) => seedPairIn(t, v4.ident, kx, seed!),
+            : (t) => seedPairIn(t, v4.ident, peerKey, seed!),
       );
       await signalSession.sessionStore.delete(tempPeer);
       if (v4 != null && seed != null) {
         final res = await engine.pairSeed(
           v4.ident,
-          kx.substring(2),
+          peerKey.substring(2),
           _hexOf(seed),
         );
         if (res != 'ok') dlog('back-pair: seed not taken ($res)');

@@ -156,7 +156,7 @@ class HaloDb
     _db = await openDatabase(
       path,
       password: pw,
-      version: 94,
+      version: 96,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -336,6 +336,7 @@ class HaloDb
         await _signalTables(db);
         await identityTables(db);
         await inviteTables(db);
+        await pqRestartTables(db);
         await contactKeyIndex(db);
         await _pollTables(db);
         await searchTables(db, fresh: true);
@@ -358,6 +359,7 @@ class HaloDb
         await wallpaperTable(db);
         await draftsTable(db);
         await photoTables(db);
+        await deviceTables(db, addColumn);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
@@ -919,6 +921,16 @@ class HaloDb
           // (invites.dart)
           await inviteTables(db);
         }
+        if (oldV < 95) {
+          // linked devices: lists, proofs, quiet devices, the pool and
+          // what the later steps keep (devices/device_store.dart)
+          await deviceTables(db, addColumn);
+        }
+        // the pq restart of held chats, and the one-time invites an
+        // opener went to (pq_restart.dart, 3c)
+        if (oldV < 96) {
+          await pqRestartTables(db, upgrade: true);
+        }
         // profile photos (profile_photo.dart), first made at 93. every
         // step is safe twice and runs on any upgrade, last, so a file that
         // took a later number without them still gets them
@@ -938,6 +950,18 @@ class HaloDb
       await dropOrphanWallpapers(_db!);
     } catch (e) {
       dlog('wallpaper: orphans not swept (${e.runtimeType})');
+    }
+    try {
+      await rosterTableAtOpen(_db!);
+    } catch (e) {
+      dlog('roster invite: table not made (${e.runtimeType})');
+    }
+    // a file that took a later number without them (a build of another
+    // branch) still gets them
+    try {
+      await deviceTablesAtOpen(_db!, addColumn);
+    } catch (e) {
+      dlog('devices: tables not made (${e.runtimeType})');
     }
     // retired while it was opening
     if (_retired) {
@@ -2063,6 +2087,8 @@ Future<void> inviteTables(DatabaseExecutor db) async {
       hello BLOB,
       fc TEXT,
       at INTEGER NOT NULL,
+      once INTEGER NOT NULL DEFAULT 0,
+      went_at INTEGER,
       PRIMARY KEY (ident, way, peer, invite_id)
     )
   ''');
@@ -2074,6 +2100,38 @@ Future<void> inviteTables(DatabaseExecutor db) async {
       PRIMARY KEY (ident, hash)
     )
   ''');
+  await rosterTable(db);
+}
+
+/// each group's members' roster invites (4.3), in the container the group
+/// is in. pushed (kRosterPassed and the rest): an admin's, still to go to
+/// the other members or not. kept: when, by this phone's clock
+Future<void> rosterTable(DatabaseExecutor db) => db.execute('''
+  CREATE TABLE IF NOT EXISTS roster_invites (
+    group_id TEXT NOT NULL,
+    member TEXT NOT NULL,
+    id TEXT NOT NULL,
+    issued INTEGER NOT NULL,
+    invite BLOB NOT NULL,
+    pushed INTEGER NOT NULL DEFAULT 1,
+    kept INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (group_id, member)
+  )
+''');
+
+/// at every open: a file that took 94 before the roster invites came gets
+/// their table, and a dev build's table its kept. one that has both is
+/// only read
+Future<void> rosterTableAtOpen(DatabaseExecutor db) async {
+  final cols = await db.rawQuery("PRAGMA table_info('roster_invites')");
+  if (cols.isEmpty) {
+    await rosterTable(db);
+  } else if (!cols.any((c) => c['name'] == 'kept')) {
+    await addColumn(
+      db,
+      'ALTER TABLE roster_invites ADD COLUMN kept INTEGER NOT NULL DEFAULT 0',
+    );
+  }
 }
 
 // my identity for each contact, and their identity key (0x05 and the x
@@ -2090,6 +2148,36 @@ Future<void> contactIdentColumns(DatabaseExecutor db) async {
 Future<void> contactKeyIndex(DatabaseExecutor db) => db.execute(
   'CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_ikey ON contacts(ikey)',
 );
+
+/// the upgrade to 96: per held chat, its pq restart (pq_restart.dart):
+/// [key] the identity its session runs on, when the last KDB1 went and
+/// how many, when their first message opened on the pq state, and when
+/// the classic states went. and on an open hello row, whether its invite
+/// was one-time and when the first frame went to it (3c)
+Future<void> pqRestartTables(
+  DatabaseExecutor db, {
+  bool upgrade = false,
+}) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS pq_restarts (
+      ident INTEGER NOT NULL,
+      peer TEXT NOT NULL,
+      key TEXT NOT NULL,
+      asked_at INTEGER,
+      asks INTEGER NOT NULL DEFAULT 0,
+      pq_at INTEGER,
+      dropped_at INTEGER,
+      PRIMARY KEY (ident, peer)
+    )
+  ''');
+  // a file made at 96 or later has them in its hellos already
+  if (!upgrade) return;
+  await addColumn(
+    db,
+    'ALTER TABLE hellos ADD COLUMN once INTEGER NOT NULL DEFAULT 0',
+  );
+  await addColumn(db, 'ALTER TABLE hellos ADD COLUMN went_at INTEGER');
+}
 
 /// the upgrade to 92: identities, the signal tables per identity, pairs,
 /// first-contact keys and the contacts' identity keys. the main identity

@@ -1118,6 +1118,38 @@ void main() {
     out2.close();
   }, skip: skip);
 
+  test('a second copy taken back leaves the first copy\'s files', () async {
+    final ph = await _phone(ana: 6);
+    final first = _Link();
+    final out1 = await _export(ph, first);
+    final d = await _device();
+    var imp = await _open(d, first, out1);
+    await _pump(out1, imp);
+    expect((await imp.finish()).gaps, isEmpty);
+    await imp.clear();
+    out1.close();
+    const names = ['p1.jpg', 'v1.mp4', 'doc.pdf', 'vn1.ogg'];
+    // a second link with history, cut off or ended by a hide
+    final second = _Link();
+    final out2 = await _export(ph, second);
+    imp = await _open(d, second, out2);
+    await _pump(out2, imp);
+    await imp.discard();
+    out2.close();
+    for (final f in names) {
+      expect(
+        File(p.join(d.media, f)).readAsBytesSync(),
+        ph.files[f],
+        reason: f,
+      );
+    }
+    final rows = await d.db.query('messages', where: "plaintext = 'a photo'");
+    expect(
+      [for (final r in rows) r['media_path']],
+      [p.join(d.media, 'p1.jpg')],
+    );
+  }, skip: skip);
+
   test('a chat row too big to go is counted and the copy goes on', () async {
     final ph = await _phone(ana: 2);
     await ph.db.update(

@@ -22,6 +22,11 @@ const _envelopePrefix = kEnvelopePrefix;
 /// what every envelope starts with
 const kEnvelopePrefix = 'halo/1:';
 
+/// the envelope's word for a pq restart's KDB1 (pq_restart.dart), and the
+/// most base64 it may hold: a KDB1 is about 2,300 bytes
+const kPqRestartWire = 'rq';
+const kPqRestartMost = 4096;
+
 class UnwrappedMessage {
   final String message;
   final String? senderHaloId; // 'h' field
@@ -88,6 +93,10 @@ class UnwrappedMessage {
   final int? protoGen;
   final String? addrSeed;
   final String? faceSig;
+  // 'rq': a KDB1 of the sender's phone in base64, inside a held classic
+  // session: the pq restart (identity v4 11 step 5). nothing else in the
+  // frame counts
+  final String? pqRestart;
   // 'pp': a slice of the sender's profile photo, or its take-back
   // (profile_photo.dart). nothing else in the frame counts
   final PhotoFrame? photo;
@@ -154,6 +163,7 @@ class UnwrappedMessage {
     this.protoGen,
     this.addrSeed,
     this.faceSig,
+    this.pqRestart,
     this.photo,
   });
 }
@@ -161,7 +171,9 @@ class UnwrappedMessage {
 /// a group state update. the 'm' body is ignored when this is present.
 class GroupControl {
   // 'create' | 'add' | 'remove' | 'rename' | 'leave' | 'end' | 'shots' |
-  // 'caps'
+  // 'caps' | 'ri' (a member's roster invite to the admin) | 'roster' (the
+  // admin's roster invites to the members) | 'pair' (a member pair's first
+  // frame, and its answer)
   final String type;
   final String? name; // present on 'create' and 'rename'
   final List<String>?
@@ -183,6 +195,9 @@ class GroupControl {
   // on 'shots' and a group's 'create': the screenshot block as the admin
   // holds it (group_shots.dart)
   final GroupShotsWord? shots;
+  // on 'ri': the sender's roster invite, a KIN4 in base64. a participant's
+  // 'ri' is the same, on 'create', 'add' and 'roster'
+  final String? invite;
   const GroupControl({
     required this.type,
     this.name,
@@ -192,6 +207,7 @@ class GroupControl {
     this.fc,
     this.lateUids,
     this.shots,
+    this.invite,
   });
 
   Map<String, dynamic> toWire() => {
@@ -203,6 +219,7 @@ class GroupControl {
     'fc': ?fc,
     'lu': ?lateUids,
     'ss': ?shots?.toWire(),
+    'ri': ?invite,
   };
 
   static GroupControl? fromWire(Object? raw) {
@@ -241,6 +258,7 @@ class GroupControl {
       fc: fc is String ? fc : null,
       lateUids: late.isEmpty ? null : late,
       shots: GroupShotsWord.fromWire(raw['ss']),
+      invite: raw['ri'] is String ? raw['ri'] as String : null,
     );
   }
 
@@ -647,6 +665,10 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       },
       faceSig: switch (json['fs']) {
         final String s => s,
+        _ => null,
+      },
+      pqRestart: switch (json[kPqRestartWire]) {
+        final String s when s.length <= kPqRestartMost => s,
         _ => null,
       },
       photo: PhotoFrame.fromWire(sent[kPhotoWire]),

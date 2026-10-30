@@ -17,7 +17,7 @@ import 'stroke_icon.dart';
 /// the language row's value: the chosen language's own name, or match
 /// phone and the language that is
 String languageValue() => appLocalePref == 'system'
-    ? l10n.languageMatchPhoneValue(kLanguageNames[systemLanguage]!)
+    ? l10n.languageMatchPhoneValueShown(kLanguageNames[systemLanguage]!)
     : kLanguageNames[currentLanguage]!;
 
 /// [tag]'s name in the language kryfo is in now
@@ -251,7 +251,7 @@ class _LanguageSheetState extends State<_LanguageSheet>
                                 : HaloColors.text2,
                             stroke: 1.5,
                           ),
-                          title: l10n.languageMatchPhone,
+                          title: l10n.languageMatchPhoneShown,
                           sub: kLanguageNames[phone]!,
                           on: _picked == 'system',
                           onTap: () => _choose('system'),

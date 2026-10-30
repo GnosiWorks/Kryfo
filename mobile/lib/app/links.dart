@@ -112,15 +112,18 @@ Future<(String, bool)> handleHaloUriAdded(
   // take says so as a lookup that failed, which any lookup can
   final viaHandle = h != null;
   if (h != null) {
-    // a quiet session never reaches the registry
-    if (sessionQuiet) return (l10n.handleRegistryFailed, false);
     // tor not up: nothing goes to the registry, nor another way
     if (!appState.servicesReady) return (l10n.handleSearchNeedsTor, false);
+    // a quiet session looks up as the everyday one does (kDecoyLooksUp),
+    // or answers as an unreachable registry would
+    if (sessionQuiet && !kDecoyLooksUp) {
+      return unreachedLater((l10n.handleRegistryFailed, false));
+    }
     // the invite has to be the claimer's own: its id is the words of the
     // key the handle was claimed with
     final r = await resolveHandle(
       h,
-      _torGetJsonOnIsolate,
+      sessionQuiet ? engine.decoyTorGetJson : _torGetJsonOnIsolate,
       idOf: engine.idFromEdPub,
       v4FaceOf: v4FaceOfLink,
     );
@@ -158,7 +161,7 @@ Future<(String, bool)> handleHaloUriAdded(
     if (got is InviteFault) return (inviteFaultLine(got), false);
     v4 = got as LsInvite;
     parsed = v4Parsed(v4);
-    if (parsed == null && v4.block == null && !sessionQuiet) {
+    if (parsed == null && v4.block == null) {
       parsed = v4Parsed(v4, bundle: false);
       qrHello = parsed != null;
     }
@@ -215,7 +218,7 @@ Future<(String, bool)> handleHaloUriAdded(
   final card = parsed['bundle'];
   // a v3 link with its first-contact address: a hello goes there, which an
   // owner on 0.6 answers whatever card the link carries (11 step 7)
-  final helloFc = parsed['v'] == '3' && !sessionQuiet ? parsed['fc'] : null;
+  final helloFc = parsed['v'] == '3' ? parsed['fc'] : null;
   if (card != null && helloFc == null && bundleFault(card) is ClassicRefused) {
     return (l10n.appLinkNeedsUpdate(parsed['id']!), false);
   }
@@ -511,6 +514,35 @@ Future<(String, bool)> _addV3ByHello(
   final already = await session.isAccepted(id);
   final asked = !already && await session.askedBefore(id);
   final row = await session.getContact(id);
+  // a decoy keeps the contact on this phone and says what a hello sent
+  // says, or that they are saved already: no hello goes, no key is noted,
+  // the everyday side is not asked
+  if (sessionQuiet) {
+    await session.upsertContact(
+      id,
+      row?['onion'] as String? ?? '',
+      _keyHex(cardKey),
+      owe: asked,
+    );
+    if (untombed) await appState._untomb(id);
+    await _noteHowAdded(
+      id,
+      scanned: scanned,
+      already: already,
+      taken: taken,
+      untombed: untombed,
+    );
+    await appState.refreshContacts();
+    openAddedChatLater(id);
+    return (
+      already
+          ? l10n.appAlreadySaved(id)
+          : answers == null
+          ? l10n.helloSentOld
+          : l10n.helloSent,
+      true,
+    );
+  }
   final bound = await _boundIdentity(
     id,
     ss: signalSession,
@@ -819,7 +851,7 @@ bool devInviteTimeless(LsInvite inv) {
 /// what the person reads for an invite turned away
 String inviteFaultLine(InviteFault f) => switch (f) {
   InviteFault.damaged => l10n.inviteDamaged,
-  InviteFault.notYet => l10n.inviteNotYet,
+  InviteFault.notYet => l10n.inviteNotYetShown,
   InviteFault.expired => l10n.inviteExpired,
 };
 

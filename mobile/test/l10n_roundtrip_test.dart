@@ -3652,8 +3652,7 @@ void main() {
     expect(l.translateShowOriginal, "Show original");
     expect(l.translateBarTo("<language>"), "Translate to <language>");
     expect(l.translateBarMore, "Translation options");
-    expect(l.translateBarAlways("<language>"), "Always translate <language>");
-    expect(l.translateBarNever("<language>"), "Never translate <language>");
+    expect(l.translateBarNever("<language>"), "Never offer for <language>");
     expect(l.translateBarHide, "Hide in this chat");
     expect(l.translateWorking, "Translating…");
     expect(l.translateFailed, "Couldn't translate");
@@ -3731,6 +3730,23 @@ void main() {
     expect(
       l.translateAutoInChatHint,
       "Messages in other languages show translated. The original is one tap away.",
+    );
+    expect(l.translateAlwaysChat, "Always translate this chat");
+    expect(
+      l.translateNeverDone("<language>"),
+      "Messages in <language> stay as they are",
+    );
+    expect(l.translateUndo, "Undo");
+    expect(l.translateNeverSection, "Never offered");
+    expect(l.translateOfferAgain, "Offer again");
+    expect(l.translateOnHint, "Offered under messages in other languages");
+    expect(
+      l.translatePrivacyKept,
+      "Translations are kept with their chat, encrypted on this phone, and deleted with it.",
+    );
+    expect(
+      l.translateOffDeletes,
+      "Turning this off deletes saved translations.",
     );
     expect(l.bridgesNoneUntilOnion, "None until onion is on");
     expect(

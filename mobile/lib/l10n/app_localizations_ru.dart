@@ -95,6 +95,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Собственные обои чата, выбранные в его меню, важнее. Фото остаются на этом телефоне, зашифрованные вместе с твоими чатами.';
 
   @override
+  String get appearanceWallpaperHintDesk =>
+      'Собственные обои чата, выбранные в его меню, важнее. Фото остаются на этом компьютере, зашифрованные вместе с твоими чатами.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'Эта парольная фраза не открывает этот файл';
 
@@ -439,6 +443,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось сохранить вложение на этом телефоне';
 
   @override
+  String get appAnAttachmentCouldNotDesk =>
+      'Не удалось сохранить вложение на этом компьютере';
+
+  @override
   String get appGroup2 => 'Группа';
 
   @override
@@ -532,6 +540,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get appScanTheirCodeOr =>
       'Отсканируй код или вставь то, что тебе дали: ссылку, @имя пользователя или ссылку на комнату.';
+
+  @override
+  String get appScanTheirCodeOrDesk =>
+      'Вставь то, что тебе дали: ссылку, @имя пользователя или ссылку на комнату.';
 
   @override
   String get appScanTheirCode => 'Сканировать код';
@@ -1097,11 +1109,19 @@ class AppLocalizationsRu extends AppLocalizations {
       'Копия на всякий случай. Этот телефон работает как прежде.';
 
   @override
+  String get backupACopyToKeepDesk =>
+      'Копия на всякий случай. Этот компьютер работает как прежде.';
+
+  @override
   String get backupMoveToAnotherDevice => 'Перенос на другое устройство';
 
   @override
   String get backupTheFileTakesThis =>
       'Файл забирает этот профиль с собой. Как только он создан, этот телефон перестаёт работать: сюда больше ничего не приходит, и ничто отправленное отсюда ни до кого не доходит.';
+
+  @override
+  String get backupTheFileTakesThisDesk =>
+      'Файл забирает этот профиль с собой. Как только он создан, этот компьютер перестаёт работать: сюда больше ничего не приходит, и ничто отправленное отсюда ни до кого не доходит.';
 
   @override
   String get backupOneEncryptedFileYour =>
@@ -1110,6 +1130,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get backupOneEncryptedFileYourIdentityYour =>
       'Один зашифрованный файл: твой профиль, контакты, все сообщения, все фото, голосовые и файлы, которые сейчас есть на этом телефоне. Всего, что будет написано после сегодняшнего дня, в нём нет, так что делай новую копию, когда это важно. Для восстановления нужны и файл, и парольная фраза.';
+
+  @override
+  String get backupOneEncryptedFileYourIdentityYourDesk =>
+      'Один зашифрованный файл: твой профиль, контакты, все сообщения, все фото, голосовые и файлы, которые сейчас есть на этом компьютере. Всего, что будет написано после сегодняшнего дня, в нём нет, так что делай новую копию, когда это важно. Для восстановления нужны и файл, и парольная фраза.';
 
   @override
   String get backupPassphrase => 'Парольная фраза';
@@ -1157,8 +1181,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get backupMoveReachedTitle => 'Файл дошёл до нового телефона?';
 
   @override
+  String get backupMoveReachedTitleDesk => 'Файл дошёл до нового устройства?';
+
+  @override
   String get backupMoveReachedLine =>
       'Не расставайся с этим телефоном, пока не откроешь файл там.';
+
+  @override
+  String get backupMoveReachedLineDesk =>
+      'Не расставайся с этим компьютером, пока не откроешь файл там.';
 
   @override
   String get backupFinishTheMove => 'Завершить перенос';
@@ -1184,6 +1215,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'На телефоне не хватает места для резервной копии. Освободи место и попробуй ещё раз.';
 
   @override
+  String get backupNoSpaceDesk =>
+      'На компьютере не хватает места для резервной копии. Освободи место и попробуй ещё раз.';
+
+  @override
   String get backupHiddenNotIn => 'Скрытых чатов в нём нет.';
 
   @override
@@ -1192,6 +1227,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get backupMoveHiddenStay =>
       'Скрытые чаты остаются на этом телефоне и стираются вместе с ним.';
+
+  @override
+  String get backupMoveHiddenStayDesk =>
+      'Скрытые чаты остаются на этом компьютере и стираются вместе с ним.';
 
   @override
   String get backupHiddenGone =>
@@ -1410,6 +1449,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Оно удалится с обоих телефонов, если его ещё не сохранили. Это нельзя отменить.';
 
   @override
+  String get chatItDisappearsWithNoDesk =>
+      'Оно удалится с обоих устройств, если его ещё не сохранили. Это нельзя отменить.';
+
+  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -1485,6 +1528,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatGifFromPhone => 'GIF с телефона';
+
+  @override
+  String get chatGifFromPhoneDesk => 'GIF с компьютера';
 
   @override
   String get chatFile2 => 'Файл';
@@ -1646,6 +1692,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Только для тебя. Никуда не отправляется и никогда не покидает этот телефон.';
 
   @override
+  String get chatJustForYouNeverDesk =>
+      'Только для тебя. Никуда не отправляется и никогда не покидает этот компьютер.';
+
+  @override
   String get chatAQuietReminder => 'Тихое напоминание…';
 
   @override
@@ -1657,6 +1707,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get chatEveryMessageHereIs =>
       'Все сообщения здесь будут стёрты с этого телефона. Очищается только твоя копия — устройство собеседника это не затрагивает.';
+
+  @override
+  String get chatEveryMessageHereIsDesk =>
+      'Все сообщения здесь будут стёрты с этого компьютера. Очищается только твоя копия — устройство собеседника это не затрагивает.';
 
   @override
   String get chatClear => 'Очистить';
@@ -2098,6 +2152,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Остаётся на этом телефоне. Собеседник его никогда не увидит.';
 
   @override
+  String get contactStaysOnThisPhoneDesk =>
+      'Остаётся на этом компьютере. Собеседник его никогда не увидит.';
+
+  @override
   String get contactClear => 'Очистить';
 
   @override
@@ -2148,11 +2206,19 @@ class AppLocalizationsRu extends AppLocalizations {
       'Сообщения и контакт удаляются с этого телефона';
 
   @override
+  String get contactMessagesAndContactGoneDesk =>
+      'Сообщения и контакт удаляются с этого компьютера';
+
+  @override
   String get contactDeleteThisChat => 'Удалить этот чат?';
 
   @override
   String get contactEveryMessageAndThe =>
       'Все сообщения и контакт удаляются с этого телефона. Собеседнику ничего не отправляется.';
+
+  @override
+  String get contactEveryMessageAndTheDesk =>
+      'Все сообщения и контакт удаляются с этого компьютера. Собеседнику ничего не отправляется.';
 
   @override
   String get commonDelete => 'Удалить';
@@ -2350,6 +2416,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get donateGivesReceipt =>
       'Подписанная квитанция на этом телефоне. Она подтверждает значок без всякого аккаунта.';
+
+  @override
+  String get donateGivesReceiptDesk =>
+      'Подписанная квитанция на этом компьютере. Она подтверждает значок без всякого аккаунта.';
 
   @override
   String get donateGivesFree =>
@@ -2565,6 +2635,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get groupChatGifFromPhone => 'GIF с телефона';
 
   @override
+  String get groupChatGifFromPhoneDesk => 'GIF с компьютера';
+
+  @override
   String get groupChatFile => 'Файл';
 
   @override
@@ -2675,6 +2748,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get groupChatItDisappearsWithNo =>
       'Оно удалится с телефонов всех участников, если его ещё не сохранили. Это нельзя отменить.';
+
+  @override
+  String get groupChatItDisappearsWithNoDesk =>
+      'Оно удалится с устройств всех участников, если его ещё не сохранили. Это нельзя отменить.';
 
   @override
   String get groupChatUnsend => 'Отозвать';
@@ -2926,6 +3003,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Все сообщения здесь будут стёрты с этого телефона. Очищается только твоя копия, у остальных участников их копии останутся.';
 
   @override
+  String get groupInfoEveryMessageHereIsDesk =>
+      'Все сообщения здесь будут стёрты с этого компьютера. Очищается только твоя копия, у остальных участников их копии останутся.';
+
+  @override
   String get groupInfoClear => 'Очистить';
 
   @override
@@ -2942,6 +3023,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Всё, что в ней есть, сейчас будет стёрто с этого телефона, а твой ключ от неё пропадёт навсегда.';
 
   @override
+  String get groupInfoEverythingInItIsDesk =>
+      'Всё, что в ней есть, сейчас будет стёрто с этого компьютера, а твой ключ от неё пропадёт навсегда.';
+
+  @override
   String groupChatYouWereRemovedFrom(Object name) {
     return 'Тебя удалили из «$name»';
   }
@@ -2951,12 +3036,24 @@ class AppLocalizationsRu extends AppLocalizations {
       'Ты перестанешь получать её сообщения, а всё, что в ней есть, будет стёрто с этого телефона.';
 
   @override
+  String get groupInfoLeaveGroupLineDesk =>
+      'Ты перестанешь получать её сообщения, а всё, что в ней есть, будет стёрто с этого компьютера.';
+
+  @override
   String get groupInfoLeaveGroupAdmin =>
       'Ты перестанешь получать её сообщения, а всё, что в ней есть, будет стёрто с этого телефона. Ты её админ, поэтому после твоего выхода никто не сможет менять состав группы или переименовать её.';
 
   @override
+  String get groupInfoLeaveGroupAdminDesk =>
+      'Ты перестанешь получать её сообщения, а всё, что в ней есть, будет стёрто с этого компьютера. Ты её админ, поэтому после твоего выхода никто не сможет менять состав группы или переименовать её.';
+
+  @override
   String get groupInfoLeaveRoomMaker =>
       'Всё, что в ней есть, сейчас будет стёрто с этого телефона, а твой ключ от неё пропадёт навсегда. Эта комната твоя, поэтому по её ссылке больше никто не войдёт.';
+
+  @override
+  String get groupInfoLeaveRoomMakerDesk =>
+      'Всё, что в ней есть, сейчас будет стёрто с этого компьютера, а твой ключ от неё пропадёт навсегда. Эта комната твоя, поэтому по её ссылке больше никто не войдёт.';
 
   @override
   String get groupInfoLeave => 'Выйти';
@@ -3100,12 +3197,25 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String handleIsNotYoursOnDesk(Object handle) {
+    return '@$handle — не твоё имя на этом компьютере';
+  }
+
+  @override
   String handleTheRegistryHoldsIt(Object handle) {
     return 'Реестр хранит его под другим ключом — скорее всего, это профиль, который был на этом телефоне до восстановления. Те, кто добавляет @$handle, попадают не к тебе. Отсюда его нельзя ни освободить, ни обновить. Выбери другое имя.';
   }
 
   @override
+  String handleTheRegistryHoldsItDesk(Object handle) {
+    return 'Реестр хранит его под другим ключом — скорее всего, это профиль, который был на этом компьютере до восстановления. Те, кто добавляет @$handle, попадают не к тебе. Отсюда его нельзя ни освободить, ни обновить. Выбери другое имя.';
+  }
+
+  @override
   String get handleForgetItOnThis => 'Забыть на этом телефоне';
+
+  @override
+  String get handleForgetItOnThisDesk => 'Забыть на этом компьютере';
 
   @override
   String get homeAddAContact => 'Добавить контакт';
@@ -3244,6 +3354,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Отсканируй код, отправь ссылку или введи @имя пользователя, которое тебе дали.';
 
   @override
+  String get homeScanTheirCodeSendDesk =>
+      'Отправь ссылку или введи @имя пользователя, которое тебе дали.';
+
+  @override
   String get homeAddSomeone => 'Добавить человека';
 
   @override
@@ -3320,11 +3434,20 @@ class AppLocalizationsRu extends AppLocalizations {
       'Сообщения и контакт удаляются с этого телефона';
 
   @override
+  String get homeMessagesAndContactGoneDesk =>
+      'Сообщения и контакт удаляются с этого компьютера';
+
+  @override
   String get homeDeleteThisChat => 'Удалить этот чат?';
 
   @override
   String homeEveryMessageWithGoes(Object c) {
     return 'Все сообщения с контактом $c удаляются, и он перестаёт быть твоим контактом. Очищается только этот телефон — у собеседника его копия остаётся. Если он напишет снова, сообщение попадёт в запросы.';
+  }
+
+  @override
+  String homeEveryMessageWithGoesDesk(Object c) {
+    return 'Все сообщения с контактом $c удаляются, и он перестаёт быть твоим контактом. Очищается только этот компьютер — у собеседника его копия остаётся. Если он напишет снова, сообщение попадёт в запросы.';
   }
 
   @override
@@ -3362,6 +3485,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get homeOnlyOnThisPhone => 'Только на этом телефоне';
+
+  @override
+  String get homeOnlyOnThisPhoneDesk => 'Только на этом компьютере';
 
   @override
   String get homeSaved => 'Сохранённые';
@@ -3581,6 +3707,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'На этом телефоне нет приложения, которое откроет эту ссылку.';
 
   @override
+  String get linkNoAppOpensDesk =>
+      'На этом компьютере нет приложения, которое откроет эту ссылку.';
+
+  @override
   String get placeStubLocation => 'Геопозиция';
 
   @override
@@ -3736,6 +3866,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get movedWipeThisPhone => 'Стереть Kryfo с этого телефона?';
 
   @override
+  String get movedWipeThisPhoneDesk => 'Стереть Kryfo с этого компьютера?';
+
+  @override
   String get movedEverythingKryfoHoldsHere =>
       'Всё, что Kryfo хранит здесь, исчезнет: сообщения, контакты, ключи. На другом устройстве всё это останется. Это нельзя отменить.';
 
@@ -3761,6 +3894,11 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String movedKryfoWillCloseNowDesk(Object myId) {
+    return 'Сейчас Kryfo закроется. Запусти его снова, чтобы открыть как $myId.';
+  }
+
+  @override
   String get movedReopenKryfo => 'Открыть Kryfo снова';
 
   @override
@@ -3772,10 +3910,18 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String movedIsNowOnAnotherDesk(Object myId) {
+    return '$myId теперь на другом устройстве. Этот компьютер ещё может показать то, что здесь было, но ничего нового сюда не придёт, а всё, что ты отправишь отсюда, ни до кого не дойдёт.';
+  }
+
+  @override
   String get movedKeepItToRead => 'Оставить для чтения';
 
   @override
   String get movedWipeThisPhone2 => 'Стереть Kryfo с этого телефона';
+
+  @override
+  String get movedWipeThisPhone2Desk => 'Стереть Kryfo с этого компьютера';
 
   @override
   String get movedIMNotMoving => 'Я всё-таки не переезжаю';
@@ -3815,6 +3961,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get myKryfoPointYourPhonesAt =>
       'Наведите телефоны друг на друга. Ничего не идёт через сервер.';
+
+  @override
+  String get myKryfoPointYourPhonesAtDesk =>
+      'Собеседник сканирует этот код своим телефоном. Ничего не идёт через сервер.';
 
   @override
   String get myKryfoScanTheirsInstead => 'Сканировать код собеседника';
@@ -3951,6 +4101,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Все заметки на этом телефоне исчезнут навсегда.';
 
   @override
+  String get notesDeleteAllLineDesk =>
+      'Все заметки на этом компьютере исчезнут навсегда.';
+
+  @override
   String get notesDeleteAllYes => 'Удалить все';
 
   @override
@@ -3967,10 +4121,17 @@ class AppLocalizationsRu extends AppLocalizations {
       'Она будет стёрта с этого телефона навсегда.';
 
   @override
+  String get notesGoneFromThisPhoneDesk =>
+      'Она будет стёрта с этого компьютера навсегда.';
+
+  @override
   String get notesNoteToSelf => 'Заметки';
 
   @override
   String get notesOnlyOnThisPhone => 'Только на этом телефоне';
+
+  @override
+  String get notesOnlyOnThisPhoneDesk => 'Только на этом компьютере';
 
   @override
   String get notesAQuietPlace => 'Тихое место';
@@ -3978,6 +4139,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get notesJotAnythingDownIt =>
       'Записывай что угодно. Всё остаётся на этом телефоне и никогда его не покидает.';
+
+  @override
+  String get notesJotAnythingDownItDesk =>
+      'Записывай что угодно. Всё остаётся на этом компьютере и никогда его не покидает.';
 
   @override
   String get notesJotSomethingDown => 'Запиши что-нибудь…';
@@ -4056,6 +4221,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'В этом экспорте есть установщик приложения, поэтому им нельзя поделиться. Сохрани его на телефон.';
 
   @override
+  String get notesExportHoldsInstallerDesk =>
+      'В этом экспорте есть установщик приложения, поэтому им нельзя поделиться. Сохрани его на этот компьютер.';
+
+  @override
   String get notesExportSaved => 'Заметки сохранены';
 
   @override
@@ -4115,6 +4284,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Создан из ключа, который есть только на этом телефоне. *Больше ни у кого нет этих слов.*';
 
   @override
+  String get onboardingGeneratedFromAKeyDesk =>
+      'Создан из ключа, который есть только на этом компьютере. *Больше ни у кого нет этих слов.*';
+
+  @override
   String get onboardingTryAnother => 'Другой вариант';
 
   @override
@@ -4133,6 +4306,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get onboardingYourIdentityLivesOn =>
       'Твой профиль живёт на этом телефоне. Сделай резервную копию в настройках, когда будет удобно.';
+
+  @override
+  String get onboardingYourIdentityLivesOnDesk =>
+      'Твой профиль живёт на этом компьютере. Сделай резервную копию в настройках, когда будет удобно.';
 
   @override
   String get onboardingOneQuiet => 'Одно тихое *уведомление*.';
@@ -4263,6 +4440,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Проверь, что все четыре группы совпадают на обоих телефонах';
 
   @override
+  String get pairCodeNumberMatchesDesk =>
+      'Проверь, что все четыре группы совпадают на обоих устройствах';
+
+  @override
   String get pairCodeNumberDiffers => 'Номер не совпадает';
 
   @override
@@ -4366,6 +4547,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get pinsThePinGoesAnd =>
       'PIN-код удаляется, а вместе с ним PIN для стирания и все скрытые чаты. Любой, у кого в руках твой телефон, откроет Kryfo от твоего имени.';
+
+  @override
+  String get pinsThePinGoesAndDesk =>
+      'PIN-код удаляется, а вместе с ним PIN для стирания и все скрытые чаты. Любой, кто сядет за твой компьютер, откроет Kryfo от твоего имени.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Разблокировка отпечатком';
@@ -4670,6 +4855,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get restoreReplaceTheAccountOn => 'Заменить аккаунт на этом телефоне?';
 
   @override
+  String get restoreReplaceTheAccountOnDesk =>
+      'Заменить аккаунт на этом компьютере?';
+
+  @override
   String get restoreWhatIsHereNow =>
       'Всё, что здесь сейчас есть — профиль, контакты и сообщения, — исчезнет. Его место займёт файл. Это нельзя отменить.';
 
@@ -4687,6 +4876,11 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String restoreTheRegistryDidNotDesk(Object mine) {
+    return 'Реестр не ответил. Если продолжишь, @$mine так и будет указывать на профиль, который этот компьютер вот-вот потеряет. Все, кто добавит это имя, будут писать в никуда, а занять его снова будет нельзя. Лучше выйти в сеть и попробовать ещё раз.';
+  }
+
+  @override
   String get restoreRestoreAnyway => 'Всё равно восстановить';
 
   @override
@@ -4698,6 +4892,11 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String restoreKryfoWillCloseNow(Object haloId) {
     return 'Сейчас Kryfo закроется. Нажми на иконку, чтобы снова открыть его как $haloId.';
+  }
+
+  @override
+  String restoreKryfoWillCloseNowDesk(Object haloId) {
+    return 'Сейчас Kryfo закроется. Запусти его снова, чтобы открыть как $haloId.';
   }
 
   @override
@@ -4776,6 +4975,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Всё, что тебе отправили, пока старый телефон был выключен, — в течение четырнадцати дней после отправки.';
 
   @override
+  String get restoreAnythingSentToYouDesk =>
+      'Всё, что тебе отправили, пока старое устройство было выключено, — в течение четырнадцати дней после отправки.';
+
+  @override
   String get restoreYourSupporterBadgeIf =>
       'Твой значок сторонника, если он есть.';
 
@@ -4787,8 +4990,16 @@ class AppLocalizationsRu extends AppLocalizations {
       'Старый телефон перестаёт получать сообщения в тот момент, когда ты что-нибудь отправишь отсюда. Первое сообщение, отправленное с этого устройства, — последнее, что старый телефон ещё может отследить, а всё, что придёт на него после этого, там не прочитать, и здесь оно тебя тоже не ждёт.';
 
   @override
+  String get restoreTheOldPhoneStopsDesk =>
+      'Старое устройство перестаёт получать сообщения в тот момент, когда ты что-нибудь отправишь отсюда. Первое сообщение, отправленное с этого компьютера, — последнее, что старое устройство ещё может отследить, а всё, что придёт на него после этого, там не прочитать, и здесь оно тебя тоже не ждёт.';
+
+  @override
   String get restoreIfThePhoneThis =>
       'Если телефон, с которого этот файл, ещё используется, перестань пользоваться на нём Kryfo, прежде чем продолжить. Два телефона на одном Kryfo теряют сообщения на обоих.';
+
+  @override
+  String get restoreIfThePhoneThisDesk =>
+      'Если устройство, с которого этот файл, ещё используется, перестань пользоваться на нём Kryfo, прежде чем продолжить. Два устройства на одном Kryfo теряют сообщения на обоих.';
 
   @override
   String get restoreNotificationsNeedSettingUp =>
@@ -4809,6 +5020,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get restoreABackupBringsBack =>
       'Резервная копия возвращает твой профиль, контакты и сообщения, которые были на телефоне, когда создавался файл. Того, что написано после, в ней нет.';
+
+  @override
+  String get restoreABackupBringsBackDesk =>
+      'Резервная копия возвращает твой профиль, контакты и сообщения, которые были на устройстве, когда создавался файл. Того, что написано после, в ней нет.';
 
   @override
   String get restoreTheFile => 'Файл';
@@ -4877,6 +5092,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get roomCreateARoomThatEnds =>
       'Комната, у которой есть конец. Все входят под ключом, созданным специально для неё, а когда она заканчивается, ни на одном телефоне ничего не остаётся.';
+
+  @override
+  String get roomCreateARoomThatEndsDesk =>
+      'Комната, у которой есть конец. Все входят под ключом, созданным специально для неё, а когда она заканчивается, ни на одном устройстве ничего не остаётся.';
 
   @override
   String get roomCreateRoomName => 'Название комнаты';
@@ -4973,6 +5192,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get savedChatGone => 'Этого чата больше нет на этом телефоне';
 
   @override
+  String get savedChatGoneDesk => 'Этого чата больше нет на этом компьютере';
+
+  @override
   String get savedLongPressAnyMessage =>
       'Зажми любое сообщение и нажми «Сохранить», чтобы оно осталось здесь.';
 
@@ -5005,6 +5227,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get seenHonestAboutTheLast =>
       'Для последних строк и нужны блокировка приложения, PIN для стирания и зашифрованное хранилище, и никакой инструмент не спасёт, если кто-то держит в руках твой разблокированный телефон. Полная модель угроз — в файле THREAT_MODEL.md в репозитории, составлена по LINDDUN. Код открыт, так что всё это можно проверить самому.';
+
+  @override
+  String get seenHonestAboutTheLastDesk =>
+      'Для последних строк и нужны блокировка приложения, PIN для стирания и зашифрованное хранилище, и никакой инструмент не спасёт, если кто-то сидит за твоим разблокированным компьютером. Полная модель угроз — в файле THREAT_MODEL.md в репозитории, составлена по LINDDUN. Код открыт, так что всё это можно проверить самому.';
 
   @override
   String get seenHidden => 'Скрыто';
@@ -5060,6 +5286,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Работает на твоём телефоне по правилам, встроенным в приложение. Без сети, без загрузки списков. Читает только запросы от незнакомцев, никогда то, что тебе присылают контакты или группы.';
 
   @override
+  String get seenScamShieldRequestsOnlyDesk =>
+      'Работает на твоём компьютере по правилам, встроенным в приложение. Без сети, без загрузки списков. Читает только запросы от незнакомцев, никогда то, что тебе присылают контакты или группы.';
+
+  @override
   String get seenBurnerRooms => 'Одноразовые комнаты';
 
   @override
@@ -5080,11 +5310,23 @@ class AppLocalizationsRu extends AppLocalizations {
       'Превью загружает отправитель, через Tor, и оно идёт внутри зашифрованного сообщения. Телефон получателя ничего не запрашивает. Сайт узнаёт лишь то, что кто-то через Tor запросил страницу, и больше ничего. Картинки никогда не загружаются, а ссылка от незнакомца остаётся простым текстом.';
 
   @override
+  String get seenAPreviewIsFetchedDesk =>
+      'Превью загружает отправитель, через Tor, и оно идёт внутри зашифрованного сообщения. Устройство получателя ничего не запрашивает. Сайт узнаёт лишь то, что кто-то через Tor запросил страницу, и больше ничего. Картинки никогда не загружаются, а ссылка от незнакомца остаётся простым текстом.';
+
+  @override
   String get seenASeizedUnlockedPhone => 'Изъятый разблокированный телефон';
+
+  @override
+  String get seenASeizedUnlockedPhoneDesk =>
+      'Изъятый разблокированный компьютер';
 
   @override
   String get seenIfSomeoneHoldsYour =>
       'Если кто-то держит в руках твой разблокированный телефон, он прочитает твои сообщения. Блокировка приложения, PIN для стирания и зашифрованное хранилище помогают до этого момента, а не после.';
+
+  @override
+  String get seenIfSomeoneHoldsYourDesk =>
+      'Если кто-то сидит за твоим разблокированным компьютером, он прочитает твои сообщения. Блокировка приложения, PIN для стирания и зашифрованное хранилище помогают до этого момента, а не после.';
 
   @override
   String get seenTheCryptoItself => 'Сама криптография';
@@ -5102,6 +5344,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settingsIdentityMessagesContactsAnd =>
       'Профиль, сообщения, контакты и настройки на этом телефоне. Исчезнут навсегда, если у тебя нет резервной копии.';
+
+  @override
+  String get settingsIdentityMessagesContactsAndDesk =>
+      'Профиль, сообщения, контакты и настройки на этом компьютере. Исчезнут навсегда, если у тебя нет резервной копии.';
 
   @override
   String get commonContinue => 'Продолжить';
@@ -5183,6 +5429,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settingsScamShieldHint =>
       'Проверка только на твоём телефоне, ничего не покидает его';
+
+  @override
+  String get settingsScamShieldHintDesk =>
+      'Проверка только на твоём компьютере, ничего не покидает его';
 
   @override
   String get typingNow => 'Печатает';
@@ -5330,6 +5580,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsWipeKryfoFromThis => 'Стереть Kryfo с этого телефона';
 
   @override
+  String get settingsWipeKryfoFromThisDesk =>
+      'Стереть Kryfo с этого компьютера';
+
+  @override
   String get toolsMoreTools => 'Ещё инструменты';
 
   @override
@@ -5389,6 +5643,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get transportNothingHereLeavesThe =>
       'Ничто отсюда не покидает телефон. Это то же состояние, по которому движок решает, что делать.';
+
+  @override
+  String get transportNothingHereLeavesTheDesk =>
+      'Ничто отсюда не покидает компьютер. Это то же состояние, по которому движок решает, что делать.';
 
   @override
   String get transportStayingAlive => 'Держит связь';
@@ -5474,6 +5732,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get transportWithNoContactsThe =>
       'Без контактов приложение не подписывается ни на один адрес ретранслятора, поэтому до тебя не дойдёт ни одно сообщение. Отсканируй кого-нибудь, чтобы это исправить.';
+
+  @override
+  String get transportWithNoContactsTheDesk =>
+      'Без контактов приложение не подписывается ни на один адрес ретранслятора, поэтому до тебя не дойдёт ни одно сообщение. Добавь кого-нибудь, чтобы это исправить.';
 
   @override
   String get transportSendAnythingWaitingNow =>
@@ -5809,6 +6071,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get whyKryfoNoAccountNoPhone =>
       'Ни аккаунта, ни номера телефона, ни центрального сервера, хранящего твои чаты. Они живут на этом телефоне, в зашифрованном виде.';
+
+  @override
+  String get whyKryfoNoAccountNoPhoneDesk =>
+      'Ни аккаунта, ни номера телефона, ни центрального сервера, хранящего твои чаты. Они живут на этом компьютере, в зашифрованном виде.';
 
   @override
   String get whyKryfoNothingLeaks => 'Ничего не утекает';
@@ -6333,6 +6599,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Хранилище ключей телефона перестало отвечать. Обычно помогает закрыть и снова открыть Kryfo.';
 
   @override
+  String get bootFailedKeysDidNotAnswerDesk =>
+      'Хранилище ключей этого компьютера перестало отвечать. Обычно помогает закрыть и снова открыть Kryfo.';
+
+  @override
   String get bootFailedCloseAndReopen => 'Закрыть и снова открыть Kryfo';
 
   @override
@@ -6352,10 +6622,17 @@ class AppLocalizationsRu extends AppLocalizations {
       'Это сотрёт всё, что Kryfo хранит на этом телефоне: чаты, контакты, медиа, скрытые чаты и твои три слова. Файл резервной копии, сохранённый в другом месте, не пострадает.';
 
   @override
+  String get bootFailedStartFreshLineDesk =>
+      'Это сотрёт всё, что Kryfo хранит на этом компьютере: чаты, контакты, медиа, скрытые чаты и твои три слова. Файл резервной копии, сохранённый в другом месте, не пострадает.';
+
+  @override
   String get bootFailedStartFreshNext => 'Продолжить';
 
   @override
   String get bootFailedStartFreshSure => 'Стереть всё на этом телефоне?';
+
+  @override
+  String get bootFailedStartFreshSureDesk => 'Стереть всё на этом компьютере?';
 
   @override
   String get bootFailedStartFreshSureLine =>
@@ -6708,6 +6985,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Создано на этом телефоне. Ничего никуда не отправляется.';
 
   @override
+  String get torBootSplashMadeOnThisPhoneDesk =>
+      'Создано на этом компьютере. Ничего никуда не отправляется.';
+
+  @override
   String get torBootSplashFirstLaunchTakesA =>
       'Первый запуск занимает немного времени · только при старте';
 
@@ -7023,6 +7304,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bridgesBuiltIn => 'встроенный';
 
   @override
+  String get bridgesPasteOrScanALineDesk =>
+      'Вставь строку, которую тебе дал тот, кому ты доверяешь.';
+
+  @override
   String get bridgesDetails => 'Подробнее';
 
   @override
@@ -7044,6 +7329,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get bridgesThisNetworkWantsA =>
       'Эта сеть сначала просит войти. Как только войдёшь, Kryfo подключится.';
+
+  @override
+  String get bridgesThisNetworkWantsADesk =>
+      'Эта сеть сначала просит войти. Войди через браузер или проверь сетевое подключение компьютера. Как только войдёшь, Kryfo подключится.';
 
   @override
   String get bridgesWaitingForWifiSignIn => 'Ждём входа в Wi-Fi';
@@ -7199,6 +7488,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bridgesSavedLines => 'Сохранённые строки';
 
   @override
+  String get bridgesPasteTheLineTheyDesk =>
+      'Вставь строку, которую тебе прислали. Бери строки мостов у тех, кого знаешь.';
+
+  @override
   String get bridgesFromAFriendLower => 'от друга';
 
   @override
@@ -7304,8 +7597,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get languageMatchPhone => 'Как на телефоне';
 
   @override
+  String get languageMatchPhoneDesk => 'Как в системе';
+
+  @override
   String languageMatchPhoneValue(Object language) {
     return 'Как на телефоне ($language)';
+  }
+
+  @override
+  String languageMatchPhoneValueDesk(Object language) {
+    return 'Как в системе ($language)';
   }
 
   @override
@@ -7343,6 +7644,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get videoViewerCannotPlay =>
       'Этот телефон не может воспроизвести это видео здесь.';
+
+  @override
+  String get videoViewerCannotPlayDesk =>
+      'Этот компьютер не может воспроизвести это видео здесь.';
 
   @override
   String get videoViewerOpenElsewhere => 'Открыть в другом приложении';
@@ -7536,6 +7841,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Имена, слова, фото, файлы и ссылки. Поиск идёт на этом телефоне и ничего никуда не отправляет.';
 
   @override
+  String get searchIntroLineDesk =>
+      'Имена, слова, фото, файлы и ссылки. Поиск идёт на этом компьютере и ничего никуда не отправляет.';
+
+  @override
   String get searchNothing => 'Ничего не найдено';
 
   @override
@@ -7625,6 +7934,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Проверь дату и время на телефоне и попробуй ещё раз.';
 
   @override
+  String get handleCheckClockDesk =>
+      'Проверь дату и время на компьютере и попробуй ещё раз.';
+
+  @override
   String get searchPeople => 'Люди';
 
   @override
@@ -7706,8 +8019,16 @@ class AppLocalizationsRu extends AppLocalizations {
       'На случай, если тебя заставят разблокировать телефон.';
 
   @override
+  String get pinsAdvancedLineDesk =>
+      'На случай, если тебя заставят разблокировать компьютер.';
+
+  @override
   String get pinsWipeLine =>
       'Если ввести его на экране блокировки, он сотрёт Kryfo с этого телефона.';
+
+  @override
+  String get pinsWipeLineDesk =>
+      'Если ввести его на экране блокировки, он сотрёт Kryfo с этого компьютера.';
 
   @override
   String get pinsDecoyPin => 'PIN-приманка';
@@ -7731,6 +8052,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Все PIN-коды удаляются, а вместе с ними приманка, её Kryfo и все скрытые чаты. Любой, у кого в руках твой телефон, откроет Kryfo от твоего имени.';
 
   @override
+  String get pinsTurnOffWithDecoyDesk =>
+      'Все PIN-коды удаляются, а вместе с ними приманка, её Kryfo и все скрытые чаты. Любой, кто сядет за твой компьютер, откроет Kryfo от твоего имени.';
+
+  @override
   String get pinsHowThisWorks => 'Как это работает';
 
   @override
@@ -7745,6 +8070,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get flowWipe1 =>
       'Если ввести его на экране блокировки вместо твоего PIN-кода, он сотрёт Kryfo с этого телефона и закроет его. Для того, кто смотрит, приложение просто остановилось.';
+
+  @override
+  String get flowWipe1Desk =>
+      'Если ввести его на экране блокировки вместо твоего PIN-кода, он сотрёт Kryfo с этого компьютера и закроет его. Для того, кто смотрит, приложение просто остановилось.';
 
   @override
   String get flowWipe2 =>
@@ -7780,6 +8109,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Уведомления, которые уже в шторке, уже видели. Пока открыта приманка, новые не появляются.';
 
   @override
+  String get flowDecoyShadeDesk =>
+      'Уведомления, которые уже на экране, уже видели. Пока открыта приманка, новые не появляются.';
+
+  @override
   String get flowDecoyChoose => 'Выбери PIN-приманку';
 
   @override
@@ -7792,6 +8125,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get flowLaw =>
       'В некоторых странах отказ разблокировать телефон или сокрытие данных от властей уже само по себе правонарушение. Знай законы тех мест, куда едешь.';
+
+  @override
+  String get flowLawDesk =>
+      'В некоторых странах отказ разблокировать устройство или сокрытие данных от властей уже само по себе правонарушение. Знай законы тех мест, куда едешь.';
 
   @override
   String get howWipe =>
@@ -7856,6 +8193,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get flowVaultReplace =>
       'Это заменит все скрытые чаты, которые уже есть на этом телефоне.';
+
+  @override
+  String get flowVaultReplaceDesk =>
+      'Это заменит все скрытые чаты, которые уже есть на этом компьютере.';
 
   @override
   String get flowVaultChoose => 'Выбери PIN-код скрытых чатов';
@@ -7934,6 +8275,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get howVault =>
       'PIN-код скрытых чатов открывает Kryfo со скрытыми чатами, а твой PIN-код и отпечаток открывают его без них. Если настроить скрытые чаты заново, они заменят те, что есть на этом телефоне. Забудешь PIN-код скрытых чатов, и они пропадут навсегда.';
+
+  @override
+  String get howVaultDesk =>
+      'PIN-код скрытых чатов открывает Kryfo со скрытыми чатами, а твой PIN-код открывает его без них. Если настроить скрытые чаты заново, они заменят те, что есть на этом компьютере. Забудешь PIN-код скрытых чатов, и они пропадут навсегда.';
 
   @override
   String get chatHide => 'Скрыть чат';
@@ -8188,8 +8533,16 @@ class AppLocalizationsRu extends AppLocalizations {
       'Если писать анонимно, Kryfo создаёт новое имя и ключи только для этого чата. Они остаются на этом телефоне и больше нигде не используются.';
 
   @override
+  String get devWhoAnonDesk =>
+      'Если писать анонимно, Kryfo создаёт новое имя и ключи только для этого чата. Они остаются на этом компьютере и больше нигде не используются.';
+
+  @override
   String get devWhoNothingYet =>
       'Ничего не уходит с твоего телефона, пока ты не отправишь первое сообщение.';
+
+  @override
+  String get devWhoNothingYetDesk =>
+      'Ничего не уходит с твоего компьютера, пока ты не отправишь первое сообщение.';
 
   @override
   String get devWhoChoiceStays => 'Твой выбор сохранится для этого чата.';
@@ -8218,6 +8571,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get devNamelessLine =>
       'Имя, созданное для этого чата, остаётся на телефоне, где его создали, поэтому здесь чат можно только читать.';
+
+  @override
+  String get devNamelessLineDesk =>
+      'Имя, созданное для этого чата, остаётся на устройстве, где его создали, поэтому здесь чат можно только читать.';
 
   @override
   String get devStartNewLine =>
@@ -8250,6 +8607,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get nameTakenTombLine =>
       'Ты удалил с этого телефона того, кто был под этими словами, потому что это был не тот человек. Если эта ссылка от человека, которого ты знаешь, используй её, а потом сверь с ним код безопасности.';
+
+  @override
+  String get nameTakenTombLineDesk =>
+      'Ты удалил с этого компьютера того, кто был под этими словами, потому что это был не тот человек. Если эта ссылка от человека, которого ты знаешь, используй её, а потом сверь с ним код безопасности.';
 
   @override
   String get nameTakenUse => 'Использовать ссылку';
@@ -8300,6 +8661,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Чат, его сообщения и файлы удалятся с этого телефона. Его три слова снова получит только ссылка или код, которые ты добавишь сам. Сверь код безопасности с тем, кого добавишь.';
 
   @override
+  String get notThemSheetLineDesk =>
+      'Чат, его сообщения и файлы удалятся с этого компьютера. Его три слова снова получит только ссылка или код, которые ты добавишь сам. Сверь код безопасности с тем, кого добавишь.';
+
+  @override
   String get notThemRemove => 'Удалить и заблокировать';
 
   @override
@@ -8308,6 +8673,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get groupAdminGoneLine =>
       'Его админ удалён с этого телефона. Изменения группы к тебе больше не приходят.';
+
+  @override
+  String get groupAdminGoneLineDesk =>
+      'Его админ удалён с этого компьютера. Изменения группы к тебе больше не приходят.';
 
   @override
   String get blockedKey => 'Заблокированный ключ';
@@ -8363,6 +8732,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Настройки, Приватность, Поиск GIF. GIF с телефона всегда работают и без него.';
 
   @override
+  String get gifOptInWhereToTurnOffDesk =>
+      'Настройки, Приватность, Поиск GIF. GIF с компьютера всегда работают и без него.';
+
+  @override
   String get gifTurnOn => 'Включить поиск GIF';
 
   @override
@@ -8389,10 +8762,17 @@ class AppLocalizationsRu extends AppLocalizations {
       'GIF, сохранённые на телефоне, лежат во вкладке *На этом телефоне*.';
 
   @override
+  String get gifSavedOnPhoneDesk =>
+      'GIF, сохранённые на компьютере, лежат во вкладке *На этом компьютере*.';
+
+  @override
   String get gifTab => 'GIF';
 
   @override
   String get gifPhoneTab => 'На этом телефоне';
+
+  @override
+  String get gifPhoneTabDesk => 'На этом компьютере';
 
   @override
   String get gifSearchHint => 'Поиск GIF';
@@ -8447,6 +8827,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get gifPhoneLine =>
       'GIF, сохранённые на этом телефоне. Ничего не уходит в сеть.';
+
+  @override
+  String get gifPhoneLineDesk =>
+      'GIF, сохранённые на этом компьютере. Ничего не уходит в сеть.';
 
   @override
   String get gifPhoneChoose => 'Выбрать GIF';
@@ -8559,6 +8943,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatShotsYouTurnedOff => 'Ты выключил(а) запрет скриншотов';
 
   @override
+  String get chatNowPostQuantum =>
+      'Сообщения в этом чате теперь защищены постквантовым шифрованием';
+
+  @override
   String chatShotsTheyTurnedOn(String name) {
     return '$name включил(а) запрет скриншотов. Копировать, пересылать и сохранять сообщения друг друга тоже нельзя.';
   }
@@ -8641,6 +9029,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get voiceNoRoom =>
       'На телефоне недостаточно свободного места. Освободи немного места и попробуй снова.';
+
+  @override
+  String get voiceNoRoomDesk =>
+      'На компьютере недостаточно свободного места. Освободи немного места и попробуй снова.';
 
   @override
   String get voiceNoRoomNotSent =>
@@ -8856,6 +9248,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Она удаляется у всех: её сообщения и медиа стираются с телефона каждого участника с обновлением.';
 
   @override
+  String get groupInfoEndGroupLineDesk =>
+      'Она удаляется у всех: её сообщения и медиа стираются с устройства каждого участника с обновлением.';
+
+  @override
   String get groupInfoDeleteGroup => 'Удалить группу';
 
   @override
@@ -8874,6 +9270,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Kryfo стирает её с телефона каждого участника, у которого есть обновление.';
 
   @override
+  String get groupInfoEndGroupDetailDesk =>
+      'Kryfo стирает её с устройства каждого участника, у которого есть обновление.';
+
+  @override
   String get translateAction => 'Перевести';
 
   @override
@@ -8888,13 +9288,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get translateBarMore => 'Параметры перевода';
 
   @override
-  String translateBarAlways(Object language) {
-    return 'Всегда переводить · $language';
-  }
-
-  @override
   String translateBarNever(Object language) {
-    return 'Никогда не переводить · $language';
+    return 'Не предлагать · $language';
   }
 
   @override
@@ -8920,12 +9315,26 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String translatePackTitleDesk(Object language) {
+    return 'Перевод на этом компьютере: $language';
+  }
+
+  @override
   String translatePackLine(Object language, Object size) {
     return 'Сообщения переводятся на этом телефоне и никуда с него не уходят. Для этого нужен языковой пакет «$language», около $size, который один раз скачивается через Tor.';
   }
 
   @override
+  String translatePackLineDesk(Object language, Object size) {
+    return 'Сообщения переводятся на этом компьютере и никуда с него не уходят. Для этого нужен языковой пакет «$language», около $size, который один раз скачивается через Tor.';
+  }
+
+  @override
   String get translatePackNoLib => 'Перевод не работает на этом телефоне.';
+
+  @override
+  String get translatePackNoLibDesk =>
+      'Перевод не работает на этом компьютере.';
 
   @override
   String translateDownload(Object size) {
@@ -8952,8 +9361,17 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String translateInstalledDesk(Object size) {
+    return 'На этом компьютере · $size';
+  }
+
+  @override
   String get translateNeedsWifi =>
       'Включено «Только по Wi-Fi», а телефон не подключён к Wi-Fi.';
+
+  @override
+  String get translateNeedsWifiDesk =>
+      'Включено «Только по Wi-Fi», а компьютер не подключён к Wi-Fi.';
 
   @override
   String get translateFailNoTor =>
@@ -8972,6 +9390,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'На этом телефоне нельзя скачать языковые пакеты.';
 
   @override
+  String get translateFailNoEngineDesk =>
+      'На этом компьютере нельзя скачать языковые пакеты.';
+
+  @override
   String translatePaused(Object size) {
     return 'Пауза · скачано $size';
   }
@@ -8984,6 +9406,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get translateSettingsHint => 'На этом телефоне, никогда на сервере';
+
+  @override
+  String get translateSettingsHintDesk =>
+      'На этом компьютере, никогда на сервере';
 
   @override
   String get translatePacksSection => 'Языковые пакеты';
@@ -9048,11 +9474,47 @@ class AppLocalizationsRu extends AppLocalizations {
       'Перевод выполняется на этом телефоне. Сообщения никуда не отправляются для перевода. При скачивании пакета сервер узнаёт, какой это пакет. Загрузка идёт через Tor, поэтому сервер не знает, кто его запросил.';
 
   @override
+  String get translatePrivacyNoteDesk =>
+      'Перевод выполняется на этом компьютере. Сообщения никуда не отправляются для перевода. При скачивании пакета сервер узнаёт, какой это пакет. Загрузка идёт через Tor, поэтому сервер не знает, кто его запросил.';
+
+  @override
   String get translateAutoInChat => 'Переводить автоматически';
 
   @override
   String get translateAutoInChatHint =>
       'Сообщения на других языках показываются в переводе. Оригинал в одном касании.';
+
+  @override
+  String get translateAlwaysChat => 'Всегда переводить этот чат';
+
+  @override
+  String translateNeverDone(Object language) {
+    return 'Сообщения остаются как есть · $language';
+  }
+
+  @override
+  String get translateUndo => 'Отменить';
+
+  @override
+  String get translateNeverSection => 'Не предлагать';
+
+  @override
+  String get translateOfferAgain => 'Предлагать снова';
+
+  @override
+  String get translateOnHint => 'Предлагается под сообщениями на других языках';
+
+  @override
+  String get translatePrivacyKept =>
+      'Переводы хранятся зашифрованными вместе с чатом на этом телефоне и удаляются вместе с ним.';
+
+  @override
+  String get translatePrivacyKeptDesk =>
+      'Переводы хранятся зашифрованными вместе с чатом на этом компьютере и удаляются вместе с ним.';
+
+  @override
+  String get translateOffDeletes =>
+      'Если выключить, сохранённые переводы удалятся.';
 
   @override
   String get bridgesNoneUntilOnion => 'Ничего, пока не включён Onion';
@@ -9315,6 +9777,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Как новые сообщения попадают на этот телефон, как звучат и что показывают. Это можно изменить когда угодно.';
 
   @override
+  String get notificationsLeadDesk =>
+      'Как новые сообщения попадают на этот компьютер, как звучат и что показывают. Это можно изменить когда угодно.';
+
+  @override
   String get notificationsHowTheyReachYou => 'Как до тебя доходят сообщения';
 
   @override
@@ -9452,6 +9918,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get flowVaultPassLine =>
       'Не меньше 12 символов. Клавиатура телефона видит, что вы вводите, поэтому выберите ту, что не запоминает и не синхронизирует слова.';
+
+  @override
+  String get flowVaultPassLineDesk =>
+      'Не меньше 12 символов. Выберите ту, что вы больше нигде не используете.';
 
   @override
   String get flowVaultPassAgain => 'Та же парольная фраза ещё раз';
@@ -9837,6 +10307,43 @@ class AppLocalizationsRu extends AppLocalizations {
   String get desktopTrayTip => 'Kryfo работает и принимает сообщения';
 
   @override
+  String get desktopTrayLockedTip =>
+      'Открой Kryfo, чтобы начать получать сообщения';
+
+  @override
+  String get desktopRunSection => 'На этом компьютере';
+
+  @override
+  String get desktopTrayRow => 'Работать в области уведомлений';
+
+  @override
+  String get desktopTrayHint =>
+      'Если закрыть окно, Kryfo остаётся в области уведомлений, и сообщения продолжают приходить.';
+
+  @override
+  String get desktopTrayOffLine =>
+      'Если закрыть окно, Kryfo завершится. Сообщения придут, когда откроешь его снова.';
+
+  @override
+  String get desktopTrayNoneLine =>
+      'Этот рабочий стол не показывает значки в области уведомлений, поэтому закрытие окна завершает Kryfo.';
+
+  @override
+  String get desktopStartRow => 'Запускать вместе с компьютером';
+
+  @override
+  String get desktopStartHint =>
+      'Kryfo запускается в области уведомлений, когда ты входишь в систему на этом компьютере.';
+
+  @override
+  String get desktopStartRefused =>
+      'Этот компьютер не разрешил Kryfo запускаться вместе с ним. Kryfo откроется, когда ты запустишь его сам.';
+
+  @override
+  String get desktopStartHeldOff =>
+      'Windows отключил Kryfo в приложениях автозагрузки. Включи его там: Параметры, Приложения, Автозагрузка.';
+
+  @override
   String get desktopNoCamera =>
       'Kryfo пока не может пользоваться камерой на этом компьютере. Используйте ссылку или код.';
 
@@ -9862,6 +10369,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get inviteNotYet =>
       'Это приглашение ещё не действует. Проверьте время на телефоне.';
+
+  @override
+  String get inviteNotYetDesk =>
+      'Это приглашение ещё не действует. Проверьте время на компьютере.';
 
   @override
   String get inviteExpired => 'Срок этого приглашения истёк. Попросите новое.';
@@ -10026,8 +10537,16 @@ class AppLocalizationsRu extends AppLocalizations {
       'Альбом удалится с обоих телефонов, если его ещё не сохранили. Это нельзя отменить.';
 
   @override
+  String get chatAlbumItDisappearsWithNoDesk =>
+      'Альбом удалится с обоих устройств, если его ещё не сохранили. Это нельзя отменить.';
+
+  @override
   String get groupChatAlbumItDisappearsWithNo =>
       'Альбом удалится с телефонов всех участников, если его ещё не сохранили. Это нельзя отменить.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNoDesk =>
+      'Альбом удалится с устройств всех участников, если его ещё не сохранили. Это нельзя отменить.';
 
   @override
   String get homeInviteSomeone => 'Пригласить';
@@ -10115,6 +10634,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get photoOnlyHere => 'Только на этом телефоне';
 
   @override
+  String get photoOnlyHereDesk => 'Только на этом компьютере';
+
+  @override
   String photoForThem(Object name) {
     return 'Фото для $name';
   }
@@ -10122,6 +10644,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get photoOnlyHereLine =>
       'Его видите только вы. Оно остаётся на этом телефоне.';
+
+  @override
+  String get photoOnlyHereLineDesk =>
+      'Его видите только вы. Оно остаётся на этом компьютере.';
 
   @override
   String photoOf(Object name) {
@@ -10228,6 +10754,16 @@ class AppLocalizationsRu extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get wideSelectChat => 'Выберите чат';
+
+  @override
+  String get wideSelectChatLine =>
+      'Выберите чат в списке, чтобы начать писать.';
+
+  @override
+  String get wideListWidth => 'Ширина списка чатов';
 
   @override
   String transferDoneOf(String done, String total) {

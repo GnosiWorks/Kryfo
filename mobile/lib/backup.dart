@@ -879,11 +879,18 @@ class BackupSide {
   }
 }
 
-/// a copy that leaves the phone: its search index merged into one, so no
-/// word of a message gone stays in it, then the file rebuilt without free
-/// pages, whose count would say how much was taken out. the rebuild's
-/// scratch stays in memory, as the library is built to keep it
+/// a copy that leaves the phone: its kept translations dropped, as they
+/// never leave it, its search index merged into one, so no word of a
+/// message gone stays in it, then the file rebuilt without free pages,
+/// whose count would say how much was taken out. the rebuild's scratch
+/// stays in memory, as the library is built to keep it
 Future<void> tidyCopy(Database db) async {
+  // emptied, not dropped: the triggers that keep it stay valid
+  final kept = await db.rawQuery(
+    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND "
+    "name = 'translate_kept'",
+  );
+  if (kept.isNotEmpty) await db.delete('translate_kept');
   final fts = await db.rawQuery(
     "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'msg_fts'",
   );

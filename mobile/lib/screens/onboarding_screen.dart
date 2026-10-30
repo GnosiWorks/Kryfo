@@ -48,6 +48,7 @@ import '../delivery_mode.dart';
 import '../store.dart' show playBuild;
 import '../desktop/desktop_mode.dart' show canShareOut;
 import 'helper_sheet.dart' show showHelperSheet;
+import '../desktop/desktop_mode.dart' show onDesktop;
 
 /// the onboarding's steps, by name: a step is never found by its place
 enum OnboardStep { welcome, identity, name, delivery, notify, invite }
@@ -538,7 +539,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
           Padding(
             padding: const EdgeInsetsDirectional.only(start: 20),
             child: Text(
-              l10n.onboardingYourIdentityLivesOn,
+              l10n.onboardingYourIdentityLivesOnShown,
               style: HaloType.sans(
                 size: 12.5,
                 color: HaloColors.warm,
@@ -887,7 +888,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
                   height: 1.55,
                 ),
                 children: markedSpans(
-                  l10n.onboardingGeneratedFromAKey,
+                  l10n.onboardingGeneratedFromAKeyShown,
                   HaloType.sans(
                     size: 12.5,
                     color: HaloColors.text,
@@ -1932,13 +1933,15 @@ class _InviteScreenState extends State<_InviteScreen> {
             desc: l10n.onboardingShowYourCodeSend,
             onTap: _everyWay,
           ),
-          const SizedBox(height: 10),
-          _Path(
-            icon: Icons.center_focus_weak,
-            title: l10n.onboardingScanTheirs,
-            desc: l10n.onboardingPointTheCameraAt,
-            onTap: _scan,
-          ),
+          if (!onDesktop) ...[
+            const SizedBox(height: 10),
+            _Path(
+              icon: Icons.center_focus_weak,
+              title: l10n.onboardingScanTheirs,
+              desc: l10n.onboardingPointTheCameraAt,
+              onTap: _scan,
+            ),
+          ],
         ], from: 1),
       ],
     );

@@ -310,6 +310,9 @@ extension AppStateInvites on AppState {
     await spendOpenedInvite(arrival);
     await live.markSeen(h);
     if (AppState._shown(paired.$2)) arrived();
+    // my hello's one-time invite: its owner holds what follows the opener
+    // until I answer (3c), so the empty answer goes now
+    if (out.isNotEmpty) unawaited(_answerNewSession(paired.$1));
   }
 
   // my face on the main invite: the onion key, F and F's signature
@@ -356,10 +359,9 @@ extension AppStateInvites on AppState {
   /// listened on. the everyday side only: a quiet session has none. one
   /// upkeep or reset at a time: a call while one runs joins it, as two at
   /// once would each make a main invite
-  Future<void> keepMyInvites({int? nowMs}) =>
-      _invitesKeep ??= _keepMyInvites(
-        nowMs: nowMs,
-      ).whenComplete(() => _invitesKeep = null);
+  Future<void> keepMyInvites({int? nowMs}) => _invitesKeep ??= _keepMyInvites(
+    nowMs: nowMs,
+  ).whenComplete(() => _invitesKeep = null);
 
   Future<void> _keepMyInvites({int? nowMs}) async {
     if (sessionQuiet || !signalSession.ready) return;
@@ -397,6 +399,11 @@ extension AppStateInvites on AppState {
       whereArgs: [kHelloIn, now - (kOneTimeHours + kSkewHours) * 3600 * 1000],
     );
     await _listenMyInvites(db, nowMs: nowMs);
+    // my groups' admins hear a roster invite made, and the pairs it makes
+    // are owed their hellos
+    if (up.roster != null) await _tellRosterInviteAll();
+    await _passRosterOwed();
+    await _rosterHellos();
     unawaited(sendHellosOwed(nowMs: nowMs));
   }
 
@@ -547,6 +554,63 @@ extension AppStateInvites on AppState {
     return '$kEnvelopePrefix${jsonEncode(j)}';
   }
 
+  // whether a seal to [peer] that would be an opener waits for their
+  // answer (SignalSession.holdOpener): a frame of this session went to
+  // their one-time invite already, and they heard only that one (3c). a
+  // frame that went a wrap's life ago may never have reached them: one
+  // more goes, and the hold starts again from it. rows that do not read
+  // say no: the frame goes, as before
+  Future<bool> _onceOpenerWent(String peer) async {
+    try {
+      final db = await live.open();
+      final c = await db.query(
+        'contacts',
+        columns: ['xpub', 'back_paired', 'ident'],
+        where: 'halo_id = ?',
+        whereArgs: [peer],
+        limit: 1,
+      );
+      if (c.isEmpty || (c.first['back_paired'] as int? ?? 0) == 1) {
+        return false;
+      }
+      final key = identityKeyHex(c.first['xpub'] as String?);
+      if (key == null) return false;
+      final ident = c.first['ident'] as int? ?? kMainIdent;
+      final o = await db.query(
+        'hellos',
+        columns: ['went_at'],
+        where: 'ident = ? AND way = ? AND peer = ? AND once = ?',
+        whereArgs: [ident, kHelloOpen, key, 1],
+        limit: 1,
+      );
+      final went = o.isEmpty ? null : o.first['went_at'] as int?;
+      if (went == null) return false;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (now - went < kOnceHoldFor.inMilliseconds && went <= now) return true;
+      await db.update(
+        'hellos',
+        {'went_at': now},
+        where: 'ident = ? AND way = ? AND peer = ? AND once = ?',
+        whereArgs: [ident, kHelloOpen, key, 1],
+      );
+      dlog('v4 opener: one more to their one-time invite');
+      return false;
+    } catch (e) {
+      dlog('v4 opener: rows not read (${e.runtimeType})');
+      return false;
+    }
+  }
+
+  // whether a v4 first contact to [peer] waits for its answer. rows that
+  // do not read say no, as the opener's fields then go without its seed
+  Future<bool> _v4OpenerWaits(String peer) async {
+    try {
+      return await _openHello(peer) != null;
+    } catch (_) {
+      return false;
+    }
+  }
+
   // the v4 first contact to [peer] that waits for its answer: my identity,
   // their key, their invite's id and the pair's seed. null with none, and
   // its row goes once they answered
@@ -691,7 +755,10 @@ extension AppStateInvites on AppState {
     );
     final String wire;
     try {
-      wire = await helloWire(hello);
+      // a group member's roster invite takes one without the work
+      wire = await _rosterHelloTo(db, answers)
+          ? helloWireOf(hello, 0)
+          : await helloWire(hello);
     } on ArgumentError {
       // too long to pad: never sent unpadded, and no later pass fits it
       dlog('hello: too long to pad, not sent');
@@ -711,12 +778,7 @@ extension AppStateInvites on AppState {
     if (sk != null) {
       await engine.subscribeFcKey(kMainIdent, once.id, _hexOf(sk));
     }
-    final res = await engine.sendHello(
-      kMainIdent,
-      peer.substring(2),
-      fc,
-      wire,
-    );
+    final res = await engine.sendHello(kMainIdent, peer.substring(2), fc, wire);
     if (res == 'ok') {
       await done();
       return true;
@@ -746,8 +808,11 @@ extension AppStateInvites on AppState {
     String h,
     void Function() arrived,
   ) async {
-    // the proof of work first: one hash, before the shim reads anything
-    if (!helloPowHolds(bytes, nonce)) {
+    // a roster invite takes hellos from the members of my groups alone,
+    // who grind no proof of work for it (4.3). anywhere else the proof of
+    // work comes first: one hash, before the shim reads anything
+    final roster = at?.kind == kInviteRoster;
+    if (!roster && !helloPowHolds(bytes, nonce)) {
       firstFails.note('pow');
       await live.markSeenLong(h);
       arrived();
@@ -787,6 +852,21 @@ extension AppStateInvites on AppState {
       arrived();
       return;
     }
+    // at a roster invite: a key no group of mine names as a member costs
+    // one parse, and one taken in the last day is taken no more
+    if (roster) {
+      final fault = !await _rosterKeyIsMember(senderKey)
+          ? 'roster'
+          : await _rosterHelloAgain(db, senderKey)
+          ? 'again'
+          : null;
+      if (fault != null) {
+        firstFails.note(fault);
+        await live.markSeenLong(h);
+        arrived();
+        return;
+      }
+    }
     await noteHelloSeen(db, ident, hash);
     final id = await _helloIdOf(hl!.invite.identity, fields!);
     if (id == null) {
@@ -794,6 +874,14 @@ extension AppStateInvites on AppState {
       arrived();
       return;
     }
+    final group = roster ? await _rosterMemberOf(id, senderKey) : null;
+    if (roster && group == null) {
+      firstFails.note('roster');
+      await live.markSeenLong(h);
+      arrived();
+      return;
+    }
+    if (roster) await _rosterHelloTaken(db, senderKey);
     await db.insert('hellos', {
       'ident': ident,
       'way': kHelloIn,
@@ -814,7 +902,13 @@ extension AppStateInvites on AppState {
         (have['accepted'] as int? ?? 0) == 1 &&
         (have['blocked'] as int? ?? 0) == 0 &&
         have['ikey'] == senderKey;
-    if (known) unawaited(afterAccept(id));
+    if (known) {
+      unawaited(afterAccept(id));
+    } else if (group != null) {
+      // a member of a group of mine: answered without a request, and they
+      // stay a member, not a contact
+      await _answerRosterHello(id, group, senderKey);
+    }
     await refreshContacts();
     notifyListeners();
     arrived();
@@ -826,10 +920,7 @@ extension AppStateInvites on AppState {
   // drops it: the developer's words or key, a key blocked here or by a shut
   // vault, someone blocked, and anyone a vault keeps, shut or open, who is
   // never filed on the everyday side
-  Future<String?> _helloIdOf(
-    List<int> key,
-    Map<String, String> fields,
-  ) async {
+  Future<String?> _helloIdOf(List<int> key, Map<String, String> fields) async {
     final said = fields['id']!;
     if (devCardClaim(id: said, xPub: fields['xpub'])) {
       firstFails.note('claim');
@@ -956,11 +1047,46 @@ extension AppStateInvites on AppState {
       'invite_id': _hexOf(inv.id),
       'fc': _hexOf(inv.firstContact),
       'at': DateTime.now().millisecondsSinceEpoch,
+      // a one-time invite hears only the first opener (3c)
+      'once': inv.oneTime ? 1 : 0,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     dlog('pair: v4 invite, seeded pair');
     // the engine takes the seed with every call from now on
     final res = await engine.pairSeed(kMainIdent, x, _hexOf(seed));
     if (res != 'ok') dlog('pair: seed not taken ($res)');
+  }
+}
+
+/// how long frames after an opener to a one-time invite wait for the answer
+/// (3c): a wrap's life. one that went longer ago may have expired unread
+const kOnceHoldFor = Duration(days: 15);
+
+/// a first contact sent to [fc]; once a relay took it, an open hello row
+/// whose one-time invite that address is says a frame went there: the next
+/// waits for their answer (3c)
+Future<String> sendFirstContactNoted(
+  int ident,
+  String xPub,
+  String fc,
+  String cipher,
+) async {
+  final r = await engine.sendFirstContact(ident, xPub, fc, cipher);
+  if (r == 'ok') await noteOnceWent(fc);
+  return r;
+}
+
+/// the open hello rows on the one-time invite at [fc], marked as reached
+Future<void> noteOnceWent(String fc, {int? nowMs}) async {
+  try {
+    final db = await live.open();
+    await db.update(
+      'hellos',
+      {'went_at': nowMs ?? DateTime.now().millisecondsSinceEpoch},
+      where: 'way = ? AND fc = ? AND once = ? AND went_at IS NULL',
+      whereArgs: [kHelloOpen, fc, 1],
+    );
+  } catch (e) {
+    dlog('v4 opener: not marked (${e.runtimeType})');
   }
 }
 

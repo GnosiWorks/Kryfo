@@ -717,7 +717,7 @@ class StickerSheetState extends State<StickerSheet>
                           switch (k) {
                             _Kind.stickers => l10n.stickerOpen,
                             _Kind.gifs => l10n.gifTab,
-                            _Kind.phone => l10n.gifPhoneTab,
+                            _Kind.phone => l10n.gifPhoneTabShown,
                           },
                           style: HaloType.sans(
                             size: 14,

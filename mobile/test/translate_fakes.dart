@@ -129,11 +129,12 @@ Fakes fakeHub({
   LangGuess Function(String text)? guess,
   Future<HantConverter> Function()? loadHant,
   bool quiet = false,
+  MemoryTranslateStore? store,
 }) {
   final backend = FakeBackend();
   if (installed) backend.finish('zh');
   backend.status = const FetchStatus('idle');
-  final store = MemoryTranslateStore(settings);
+  store ??= MemoryTranslateStore(settings);
   late final Fakes f;
   late final TranslationHub hub;
   final downloads = ModelDownloads(

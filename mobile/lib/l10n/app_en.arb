@@ -112,6 +112,10 @@
   "@appearanceWallpaperHint": {
     "description": "screens/appearance_screen.dart"
   },
+  "appearanceWallpaperHintDesk": "A chat's own wallpaper, set from its menu, comes first. Photos stay on this computer, encrypted with your chats.",
+  "@appearanceWallpaperHintDesk": {
+    "description": "appearanceWallpaperHint as a computer shows it (linux and windows)"
+  },
   "backupThatPassphraseDoesNot": "That passphrase does not open this file",
   "@backupThatPassphraseDoesNot": {
     "description": "backup.dart"
@@ -495,6 +499,10 @@
   "@appAnAttachmentCouldNot": {
     "description": "app/state.dart"
   },
+  "appAnAttachmentCouldNotDesk": "An attachment could not be saved on this computer",
+  "@appAnAttachmentCouldNotDesk": {
+    "description": "appAnAttachmentCouldNot as a computer shows it (linux and windows)"
+  },
   "appGroup2": "Group",
   "@appGroup2": {
     "description": "app/state.dart"
@@ -621,6 +629,10 @@
   "appScanTheirCodeOr": "Scan their code, or paste what they gave you: a link, an @handle, or a room link.",
   "@appScanTheirCodeOr": {
     "description": "app/shell.dart"
+  },
+  "appScanTheirCodeOrDesk": "Paste what they gave you: a link, an @handle, or a room link.",
+  "@appScanTheirCodeOrDesk": {
+    "description": "appScanTheirCodeOr as a computer shows it (linux and windows)"
   },
   "appScanTheirCode": "Scan their code",
   "@appScanTheirCode": {
@@ -1328,6 +1340,10 @@
   "@backupACopyToKeep": {
     "description": "screens/backup_screen.dart"
   },
+  "backupACopyToKeepDesk": "A copy to keep. This computer carries on as it is.",
+  "@backupACopyToKeepDesk": {
+    "description": "backupACopyToKeep as a computer shows it (linux and windows)"
+  },
   "backupMoveToAnotherDevice": "Move to another device",
   "@backupMoveToAnotherDevice": {
     "description": "screens/backup_screen.dart"
@@ -1336,6 +1352,10 @@
   "@backupTheFileTakesThis": {
     "description": "screens/backup_screen.dart"
   },
+  "backupTheFileTakesThisDesk": "The file takes this identity with it. Once it is made, this computer stops: nothing new arrives here, and nothing sent from here reaches anyone.",
+  "@backupTheFileTakesThisDesk": {
+    "description": "backupTheFileTakesThis as a computer shows it (linux and windows)"
+  },
   "backupOneEncryptedFileYour": "One encrypted file: your identity, your contacts, every message, and every photo, voice note and file. Import it on the other device with the passphrase. Until you do, you can still change your mind and stay on this phone.",
   "@backupOneEncryptedFileYour": {
     "description": "screens/backup_screen.dart"
@@ -1343,6 +1363,10 @@
   "backupOneEncryptedFileYourIdentityYour": "One encrypted file: your identity, your contacts, every message, and every photo, voice note and file on this phone right now. Anything said after today is not in it, so make another when it matters. To restore you need the file and the passphrase, both.",
   "@backupOneEncryptedFileYourIdentityYour": {
     "description": "screens/backup_screen.dart"
+  },
+  "backupOneEncryptedFileYourIdentityYourDesk": "One encrypted file: your identity, your contacts, every message, and every photo, voice note and file on this computer right now. Anything said after today is not in it, so make another when it matters. To restore you need the file and the passphrase, both.",
+  "@backupOneEncryptedFileYourIdentityYourDesk": {
+    "description": "backupOneEncryptedFileYourIdentityYour as a computer shows it (linux and windows)"
   },
   "backupPassphrase": "Passphrase",
   "@backupPassphrase": {
@@ -1402,9 +1426,17 @@
   "@backupMoveReachedTitle": {
     "description": "screens/backup_screen.dart. sheet title after a move file went out by the share sheet, or was saved without a check: this phone is only retired once the person says yes"
   },
+  "backupMoveReachedTitleDesk": "Did the file reach your new device?",
+  "@backupMoveReachedTitleDesk": {
+    "description": "backupMoveReachedTitle as a computer shows it (linux and windows)"
+  },
   "backupMoveReachedLine": "Keep this phone until you've opened it there.",
   "@backupMoveReachedLine": {
     "description": "screens/backup_screen.dart. under backupMoveReachedTitle: the old phone stays usable until the file has been opened on the new one"
+  },
+  "backupMoveReachedLineDesk": "Keep this computer until you've opened it there.",
+  "@backupMoveReachedLineDesk": {
+    "description": "backupMoveReachedLine as a computer shows it (linux and windows)"
   },
   "backupFinishTheMove": "Finish the move",
   "@backupFinishTheMove": {
@@ -1434,6 +1466,10 @@
   "@backupNoSpace": {
     "description": "backup screen, under the fields: the backup file could not be written because the phone is out of storage"
   },
+  "backupNoSpaceDesk": "There isn't enough free space on this computer to make the backup. Free up some space and try again.",
+  "@backupNoSpaceDesk": {
+    "description": "backupNoSpace as a computer shows it (linux and windows)"
+  },
   "backupHiddenNotIn": "Hidden chats are not in it.",
   "@backupHiddenNotIn": {
     "description": "screens/backup_screen.dart: under every backup made outside the hidden chats, whether or not there are any"
@@ -1445,6 +1481,10 @@
   "backupMoveHiddenStay": "Hidden chats stay on this phone and are wiped with it.",
   "@backupMoveHiddenStay": {
     "description": "screens/backup_screen.dart: under every move made outside the hidden chats, whether or not there are any"
+  },
+  "backupMoveHiddenStayDesk": "Hidden chats stay on this computer and are wiped with it.",
+  "@backupMoveHiddenStayDesk": {
+    "description": "backupMoveHiddenStay as a computer shows it (linux and windows)"
   },
   "backupHiddenGone": "Your hidden chats closed when Kryfo locked. Open them with their PIN and back up from there.",
   "@backupHiddenGone": {
@@ -1719,6 +1759,10 @@
   "@chatItDisappearsWithNo": {
     "description": "screens/chat_screen.dart"
   },
+  "chatItDisappearsWithNoDesk": "It will be removed from both devices, unless it has already been saved. This can't be undone.",
+  "@chatItDisappearsWithNoDesk": {
+    "description": "chatItDisappearsWithNo as a computer shows it (linux and windows)"
+  },
   "chatThisChatHasPins": "{count, plural, one{This chat has {count} pin already} other{This chat has {count} pins already}}",
   "@chatThisChatHasPins": {
     "description": "screens/chat_screen.dart",
@@ -1804,6 +1848,10 @@
   "chatGifFromPhone": "Gif from phone",
   "@chatGifFromPhone": {
     "description": "screens/chat_screen.dart"
+  },
+  "chatGifFromPhoneDesk": "Gif from computer",
+  "@chatGifFromPhoneDesk": {
+    "description": "chatGifFromPhone as a computer shows it (linux and windows)"
   },
   "chatFile2": "File",
   "@chatFile2": {
@@ -2003,6 +2051,10 @@
   "@chatJustForYouNever": {
     "description": "screens/chat_screen.dart"
   },
+  "chatJustForYouNeverDesk": "Just for you. Never sent, never leaves this computer.",
+  "@chatJustForYouNeverDesk": {
+    "description": "chatJustForYouNever as a computer shows it (linux and windows)"
+  },
   "chatAQuietReminder": "A quiet reminder…",
   "@chatAQuietReminder": {
     "description": "screens/chat_screen.dart"
@@ -2018,6 +2070,10 @@
   "chatEveryMessageHereIs": "Every message here is erased from this phone. This only clears your copy. It does not touch their device.",
   "@chatEveryMessageHereIs": {
     "description": "screens/chat_screen.dart"
+  },
+  "chatEveryMessageHereIsDesk": "Every message here is erased from this computer. This only clears your copy. It does not touch their device.",
+  "@chatEveryMessageHereIsDesk": {
+    "description": "chatEveryMessageHereIs as a computer shows it (linux and windows)"
   },
   "chatClear": "Clear",
   "@chatClear": {
@@ -2587,6 +2643,10 @@
   "@contactStaysOnThisPhone": {
     "description": "screens/contact_screen.dart"
   },
+  "contactStaysOnThisPhoneDesk": "Stays on this computer. They never see it.",
+  "@contactStaysOnThisPhoneDesk": {
+    "description": "contactStaysOnThisPhone as a computer shows it (linux and windows)"
+  },
   "contactClear": "Clear",
   "@contactClear": {
     "description": "screens/contact_screen.dart"
@@ -2652,6 +2712,10 @@
   "@contactMessagesAndContactGone": {
     "description": "screens/contact_screen.dart"
   },
+  "contactMessagesAndContactGoneDesk": "Messages and contact, gone from this computer",
+  "@contactMessagesAndContactGoneDesk": {
+    "description": "contactMessagesAndContactGone as a computer shows it (linux and windows)"
+  },
   "contactDeleteThisChat": "Delete this chat?",
   "@contactDeleteThisChat": {
     "description": "screens/contact_screen.dart"
@@ -2659,6 +2723,10 @@
   "contactEveryMessageAndThe": "Every message and the contact, gone from this phone. Nothing is sent to them.",
   "@contactEveryMessageAndThe": {
     "description": "screens/contact_screen.dart"
+  },
+  "contactEveryMessageAndTheDesk": "Every message and the contact, gone from this computer. Nothing is sent to them.",
+  "@contactEveryMessageAndTheDesk": {
+    "description": "contactEveryMessageAndThe as a computer shows it (linux and windows)"
   },
   "commonDelete": "Delete",
   "@commonDelete": {
@@ -2878,6 +2946,10 @@
   "donateGivesReceipt": "A signed receipt kept on this phone. It proves the badge with no account.",
   "@donateGivesReceipt": {
     "description": "screens/donate_screen.dart"
+  },
+  "donateGivesReceiptDesk": "A signed receipt kept on this computer. It proves the badge with no account.",
+  "@donateGivesReceiptDesk": {
+    "description": "donateGivesReceipt as a computer shows it (linux and windows)"
   },
   "donateGivesFree": "Every privacy feature stays free, badge or not.",
   "@donateGivesFree": {
@@ -3116,6 +3188,10 @@
   "@groupChatGifFromPhone": {
     "description": "screens/group_chat_screen.dart"
   },
+  "groupChatGifFromPhoneDesk": "Gif from computer",
+  "@groupChatGifFromPhoneDesk": {
+    "description": "groupChatGifFromPhone as a computer shows it (linux and windows)"
+  },
   "groupChatFile": "File",
   "@groupChatFile": {
     "description": "screens/group_chat_screen.dart"
@@ -3245,6 +3321,10 @@
   "groupChatItDisappearsWithNo": "It will be removed from everyone's phones, unless it has already been saved. This can't be undone.",
   "@groupChatItDisappearsWithNo": {
     "description": "screens/group_chat_screen.dart"
+  },
+  "groupChatItDisappearsWithNoDesk": "It will be removed from everyone's devices, unless it has already been saved. This can't be undone.",
+  "@groupChatItDisappearsWithNoDesk": {
+    "description": "groupChatItDisappearsWithNo as a computer shows it (linux and windows)"
   },
   "groupChatUnsend": "Unsend",
   "@groupChatUnsend": {
@@ -3523,6 +3603,10 @@
   "@groupInfoEveryMessageHereIs": {
     "description": "screens/group_info_screen.dart"
   },
+  "groupInfoEveryMessageHereIsDesk": "Every message here is erased from this computer. This only clears your copy, other members keep theirs.",
+  "@groupInfoEveryMessageHereIsDesk": {
+    "description": "groupInfoEveryMessageHereIs as a computer shows it (linux and windows)"
+  },
   "groupInfoClear": "Clear",
   "@groupInfoClear": {
     "description": "screens/group_info_screen.dart"
@@ -3543,6 +3627,10 @@
   "@groupInfoEverythingInItIs": {
     "description": "screens/group_info_screen.dart"
   },
+  "groupInfoEverythingInItIsDesk": "Everything in it is wiped from this computer now, and the key you used here is gone for good.",
+  "@groupInfoEverythingInItIsDesk": {
+    "description": "groupInfoEverythingInItIs as a computer shows it (linux and windows)"
+  },
   "groupChatYouWereRemovedFrom": "You were removed from {name}",
   "@groupChatYouWereRemovedFrom": {
     "description": "screens/group_chat_screen.dart",
@@ -3556,13 +3644,25 @@
   "@groupInfoLeaveGroupLine": {
     "description": "screens/group_info_screen.dart"
   },
+  "groupInfoLeaveGroupLineDesk": "You will stop receiving its messages, and everything in it is wiped from this computer.",
+  "@groupInfoLeaveGroupLineDesk": {
+    "description": "groupInfoLeaveGroupLine as a computer shows it (linux and windows)"
+  },
   "groupInfoLeaveGroupAdmin": "You will stop receiving its messages, and everything in it is wiped from this phone. You are its admin, so once you leave no one can change who is in it or rename it.",
   "@groupInfoLeaveGroupAdmin": {
     "description": "screens/group_info_screen.dart"
   },
+  "groupInfoLeaveGroupAdminDesk": "You will stop receiving its messages, and everything in it is wiped from this computer. You are its admin, so once you leave no one can change who is in it or rename it.",
+  "@groupInfoLeaveGroupAdminDesk": {
+    "description": "groupInfoLeaveGroupAdmin as a computer shows it (linux and windows)"
+  },
   "groupInfoLeaveRoomMaker": "Everything in it is wiped from this phone now, and the key you used here is gone for good. You made this room, so its link stops letting anyone in.",
   "@groupInfoLeaveRoomMaker": {
     "description": "screens/group_info_screen.dart"
+  },
+  "groupInfoLeaveRoomMakerDesk": "Everything in it is wiped from this computer now, and the key you used here is gone for good. You made this room, so its link stops letting anyone in.",
+  "@groupInfoLeaveRoomMakerDesk": {
+    "description": "groupInfoLeaveRoomMaker as a computer shows it (linux and windows)"
   },
   "groupInfoLeave": "Leave",
   "@groupInfoLeave": {
@@ -3742,6 +3842,15 @@
       }
     }
   },
+  "handleIsNotYoursOnDesk": "@{handle} is not yours on this computer",
+  "@handleIsNotYoursOnDesk": {
+    "description": "handleIsNotYoursOn as a computer shows it (linux and windows)",
+    "placeholders": {
+      "handle": {
+        "type": "Object"
+      }
+    }
+  },
   "handleTheRegistryHoldsIt": "The registry holds it under a different key, most likely an identity this phone had before a restore. People who add @{handle} are not reaching you. It cannot be released or updated from here. Pick another name.",
   "@handleTheRegistryHoldsIt": {
     "description": "screens/handle_screen.dart",
@@ -3751,9 +3860,22 @@
       }
     }
   },
+  "handleTheRegistryHoldsItDesk": "The registry holds it under a different key, most likely an identity this computer had before a restore. People who add @{handle} are not reaching you. It cannot be released or updated from here. Pick another name.",
+  "@handleTheRegistryHoldsItDesk": {
+    "description": "handleTheRegistryHoldsIt as a computer shows it (linux and windows)",
+    "placeholders": {
+      "handle": {
+        "type": "Object"
+      }
+    }
+  },
   "handleForgetItOnThis": "Forget it on this phone",
   "@handleForgetItOnThis": {
     "description": "screens/handle_screen.dart"
+  },
+  "handleForgetItOnThisDesk": "Forget it on this computer",
+  "@handleForgetItOnThisDesk": {
+    "description": "handleForgetItOnThis as a computer shows it (linux and windows)"
   },
   "homeAddAContact": "Add a contact",
   "@homeAddAContact": {
@@ -3899,6 +4021,10 @@
   "@homeScanTheirCodeSend": {
     "description": "screens/home_screen.dart"
   },
+  "homeScanTheirCodeSendDesk": "Send them a link, or type the @handle they gave you.",
+  "@homeScanTheirCodeSendDesk": {
+    "description": "homeScanTheirCodeSend as a computer shows it (linux and windows)"
+  },
   "homeAddSomeone": "Add someone",
   "@homeAddSomeone": {
     "description": "screens/home_screen.dart"
@@ -3976,6 +4102,10 @@
   "@homeMessagesAndContactGone": {
     "description": "screens/home_screen.dart"
   },
+  "homeMessagesAndContactGoneDesk": "Messages and contact, gone from this computer",
+  "@homeMessagesAndContactGoneDesk": {
+    "description": "homeMessagesAndContactGone as a computer shows it (linux and windows)"
+  },
   "homeDeleteThisChat": "Delete this chat?",
   "@homeDeleteThisChat": {
     "description": "screens/home_screen.dart"
@@ -3983,6 +4113,15 @@
   "homeEveryMessageWithGoes": "Every message with {c} goes, and they stop being a contact. It only clears this phone. Their copy stays with them. If they message again it lands in requests.",
   "@homeEveryMessageWithGoes": {
     "description": "screens/home_screen.dart",
+    "placeholders": {
+      "c": {
+        "type": "Object"
+      }
+    }
+  },
+  "homeEveryMessageWithGoesDesk": "Every message with {c} goes, and they stop being a contact. It only clears this computer. Their copy stays with them. If they message again it lands in requests.",
+  "@homeEveryMessageWithGoesDesk": {
+    "description": "homeEveryMessageWithGoes as a computer shows it (linux and windows)",
     "placeholders": {
       "c": {
         "type": "Object"
@@ -4043,6 +4182,10 @@
   "homeOnlyOnThisPhone": "Only on this phone",
   "@homeOnlyOnThisPhone": {
     "description": "screens/home_screen.dart"
+  },
+  "homeOnlyOnThisPhoneDesk": "Only on this computer",
+  "@homeOnlyOnThisPhoneDesk": {
+    "description": "homeOnlyOnThisPhone as a computer shows it (linux and windows)"
   },
   "homeSaved": "Saved",
   "@homeSaved": {
@@ -4310,6 +4453,10 @@
   "@linkNoAppOpens": {
     "description": "toast when tapping a link in a message and no app on the phone takes it"
   },
+  "linkNoAppOpensDesk": "No app on this computer opens this link.",
+  "@linkNoAppOpensDesk": {
+    "description": "linkNoAppOpens as a computer shows it (linux and windows)"
+  },
   "placeStubLocation": "Location",
   "@placeStubLocation": {
     "description": "widgets/place_stub.dart: title of a shared map location that carries no name"
@@ -4521,6 +4668,10 @@
   "@movedWipeThisPhone": {
     "description": "screens/moved_screen.dart"
   },
+  "movedWipeThisPhoneDesk": "Wipe Kryfo from this computer?",
+  "@movedWipeThisPhoneDesk": {
+    "description": "movedWipeThisPhone as a computer shows it (linux and windows)"
+  },
   "movedEverythingKryfoHoldsHere": "Everything Kryfo holds here goes: the messages, the contacts, the keys. The other device keeps all of it. This cannot be undone.",
   "@movedEverythingKryfoHoldsHere": {
     "description": "screens/moved_screen.dart"
@@ -4554,6 +4705,15 @@
       }
     }
   },
+  "movedKryfoWillCloseNowDesk": "Kryfo will close now. Start it again to open as {myId}.",
+  "@movedKryfoWillCloseNowDesk": {
+    "description": "movedKryfoWillCloseNow as a computer shows it (linux and windows)",
+    "placeholders": {
+      "myId": {
+        "type": "Object"
+      }
+    }
+  },
   "movedReopenKryfo": "Reopen Kryfo",
   "@movedReopenKryfo": {
     "description": "screens/moved_screen.dart"
@@ -4571,6 +4731,15 @@
       }
     }
   },
+  "movedIsNowOnAnotherDesk": "{myId} is now on another device. This computer can still show what was here, but nothing new will arrive on it, and anything you send from here won't reach anyone.",
+  "@movedIsNowOnAnotherDesk": {
+    "description": "movedIsNowOnAnother as a computer shows it (linux and windows)",
+    "placeholders": {
+      "myId": {
+        "type": "Object"
+      }
+    }
+  },
   "movedKeepItToRead": "Keep it to read",
   "@movedKeepItToRead": {
     "description": "screens/moved_screen.dart"
@@ -4578,6 +4747,10 @@
   "movedWipeThisPhone2": "Wipe Kryfo from this phone",
   "@movedWipeThisPhone2": {
     "description": "screens/moved_screen.dart"
+  },
+  "movedWipeThisPhone2Desk": "Wipe Kryfo from this computer",
+  "@movedWipeThisPhone2Desk": {
+    "description": "movedWipeThisPhone2 as a computer shows it (linux and windows)"
   },
   "movedIMNotMoving": "I'm not moving after all",
   "@movedIMNotMoving": {
@@ -4622,6 +4795,10 @@
   "myKryfoPointYourPhonesAt": "Point your phones at each other. Nothing goes through a server.",
   "@myKryfoPointYourPhonesAt": {
     "description": "screens/my_kryfo_screen.dart"
+  },
+  "myKryfoPointYourPhonesAtDesk": "They scan this code with their phone. Nothing goes through a server.",
+  "@myKryfoPointYourPhonesAtDesk": {
+    "description": "myKryfoPointYourPhonesAt as a computer shows it (linux and windows)"
   },
   "myKryfoScanTheirsInstead": "Scan theirs instead",
   "@myKryfoScanTheirsInstead": {
@@ -4777,6 +4954,10 @@
   "@notesDeleteAllLine": {
     "description": "screens/notes_screen.dart"
   },
+  "notesDeleteAllLineDesk": "Every note on this computer goes, for good.",
+  "@notesDeleteAllLineDesk": {
+    "description": "notesDeleteAllLine as a computer shows it (linux and windows)"
+  },
   "notesDeleteAllYes": "Delete all",
   "@notesDeleteAllYes": {
     "description": "screens/notes_screen.dart"
@@ -4797,6 +4978,10 @@
   "@notesGoneFromThisPhone": {
     "description": "screens/notes_screen.dart"
   },
+  "notesGoneFromThisPhoneDesk": "It is gone from this computer for good.",
+  "@notesGoneFromThisPhoneDesk": {
+    "description": "notesGoneFromThisPhone as a computer shows it (linux and windows)"
+  },
   "notesNoteToSelf": "Note to self",
   "@notesNoteToSelf": {
     "description": "screens/notes_screen.dart"
@@ -4805,6 +4990,10 @@
   "@notesOnlyOnThisPhone": {
     "description": "screens/notes_screen.dart"
   },
+  "notesOnlyOnThisPhoneDesk": "Only on this computer",
+  "@notesOnlyOnThisPhoneDesk": {
+    "description": "notesOnlyOnThisPhone as a computer shows it (linux and windows)"
+  },
   "notesAQuietPlace": "A quiet place",
   "@notesAQuietPlace": {
     "description": "screens/notes_screen.dart"
@@ -4812,6 +5001,10 @@
   "notesJotAnythingDownIt": "Jot anything down. It stays on this phone and never leaves.",
   "@notesJotAnythingDownIt": {
     "description": "screens/notes_screen.dart"
+  },
+  "notesJotAnythingDownItDesk": "Jot anything down. It stays on this computer and never leaves.",
+  "@notesJotAnythingDownItDesk": {
+    "description": "notesJotAnythingDownIt as a computer shows it (linux and windows)"
   },
   "notesJotSomethingDown": "Jot something down…",
   "@notesJotSomethingDown": {
@@ -4895,6 +5088,10 @@
   "@notesExportHoldsInstaller": {
     "description": "screens/notes_export_screen.dart. a plain export holds an app installer, which is never shared: it can only be saved"
   },
+  "notesExportHoldsInstallerDesk": "This export holds an app installer, so it can't be shared. Save it to this computer instead.",
+  "@notesExportHoldsInstallerDesk": {
+    "description": "notesExportHoldsInstaller as a computer shows it (linux and windows)"
+  },
   "notesExportSaved": "Notes saved",
   "@notesExportSaved": {
     "description": "screens/notes_export_screen.dart. toast"
@@ -4964,6 +5161,10 @@
   "@onboardingGeneratedFromAKey": {
     "description": "screens/onboarding_screen.dart"
   },
+  "onboardingGeneratedFromAKeyDesk": "Generated from a key that lives only on this computer. *No one else has these words.*",
+  "@onboardingGeneratedFromAKeyDesk": {
+    "description": "onboardingGeneratedFromAKey as a computer shows it (linux and windows)"
+  },
   "onboardingTryAnother": "Try another",
   "@onboardingTryAnother": {
     "description": "screens/onboarding_screen.dart"
@@ -4987,6 +5188,10 @@
   "onboardingYourIdentityLivesOn": "Your identity lives on this phone. Back it up from settings when you are ready.",
   "@onboardingYourIdentityLivesOn": {
     "description": "screens/onboarding_screen.dart"
+  },
+  "onboardingYourIdentityLivesOnDesk": "Your identity lives on this computer. Back it up from settings when you are ready.",
+  "@onboardingYourIdentityLivesOnDesk": {
+    "description": "onboardingYourIdentityLivesOn as a computer shows it (linux and windows)"
   },
   "onboardingOneQuiet": "One quiet *notification*.",
   "@onboardingOneQuiet": {
@@ -5149,6 +5354,10 @@
   "@pairCodeNumberMatches": {
     "description": "widgets/pair_join.dart: under the key number on both pair-code screens: all four groups must be the same on the two phones"
   },
+  "pairCodeNumberMatchesDesk": "Check all four groups match on both devices",
+  "@pairCodeNumberMatchesDesk": {
+    "description": "pairCodeNumberMatches as a computer shows it (linux and windows)"
+  },
   "pairCodeNumberDiffers": "The number is different",
   "@pairCodeNumberDiffers": {
     "description": "widgets/pair_join.dart: button under Add: the numbers on the two phones are not the same; nothing is added"
@@ -5290,6 +5499,10 @@
   "pinsThePinGoesAnd": "The PIN goes, and the wipe PIN and any hidden chats with it. Anyone holding your phone opens Kryfo as you.",
   "@pinsThePinGoesAnd": {
     "description": "screens/pins_screen.dart"
+  },
+  "pinsThePinGoesAndDesk": "The PIN goes, and the wipe PIN and any hidden chats with it. Anyone at your computer opens Kryfo as you.",
+  "@pinsThePinGoesAndDesk": {
+    "description": "pinsThePinGoesAnd as a computer shows it (linux and windows)"
   },
   "pinsUnlockWithFingerprint": "Unlock with fingerprint",
   "@pinsUnlockWithFingerprint": {
@@ -5671,6 +5884,10 @@
   "@restoreReplaceTheAccountOn": {
     "description": "screens/restore_screen.dart"
   },
+  "restoreReplaceTheAccountOnDesk": "Replace the account on this computer?",
+  "@restoreReplaceTheAccountOnDesk": {
+    "description": "restoreReplaceTheAccountOn as a computer shows it (linux and windows)"
+  },
   "restoreWhatIsHereNow": "What is here now, its identity, contacts and messages, goes. The file takes its place. This cannot be undone.",
   "@restoreWhatIsHereNow": {
     "description": "screens/restore_screen.dart"
@@ -5697,6 +5914,15 @@
       }
     }
   },
+  "restoreTheRegistryDidNotDesk": "The registry did not answer. If you go on, @{mine} stays pointed at the identity this computer is about to lose. Anyone who adds it will be writing to nobody, and the name cannot be claimed again. Better to get online and try once more.",
+  "@restoreTheRegistryDidNotDesk": {
+    "description": "restoreTheRegistryDidNot as a computer shows it (linux and windows)",
+    "placeholders": {
+      "mine": {
+        "type": "Object"
+      }
+    }
+  },
   "restoreRestoreAnyway": "Restore anyway",
   "@restoreRestoreAnyway": {
     "description": "screens/restore_screen.dart"
@@ -5712,6 +5938,15 @@
   "restoreKryfoWillCloseNow": "Kryfo will close now. Tap the icon to reopen as {haloId}.",
   "@restoreKryfoWillCloseNow": {
     "description": "screens/restore_screen.dart",
+    "placeholders": {
+      "haloId": {
+        "type": "Object"
+      }
+    }
+  },
+  "restoreKryfoWillCloseNowDesk": "Kryfo will close now. Start it again to open as {haloId}.",
+  "@restoreKryfoWillCloseNowDesk": {
+    "description": "restoreKryfoWillCloseNow as a computer shows it (linux and windows)",
     "placeholders": {
       "haloId": {
         "type": "Object"
@@ -5813,6 +6048,10 @@
   "@restoreAnythingSentToYou": {
     "description": "screens/restore_screen.dart"
   },
+  "restoreAnythingSentToYouDesk": "Anything sent to you while the old device was off, for fourteen days after it was sent.",
+  "@restoreAnythingSentToYouDesk": {
+    "description": "restoreAnythingSentToYou as a computer shows it (linux and windows)"
+  },
   "restoreYourSupporterBadgeIf": "Your supporter badge, if you have one.",
   "@restoreYourSupporterBadgeIf": {
     "description": "screens/restore_screen.dart"
@@ -5825,9 +6064,17 @@
   "@restoreTheOldPhoneStops": {
     "description": "screens/restore_screen.dart"
   },
+  "restoreTheOldPhoneStopsDesk": "The old device stops receiving the moment you send anything from here. The first message you send from this computer is the last one the old device can follow, and anything that reaches it after that is unreadable there and isn't waiting for you here either.",
+  "@restoreTheOldPhoneStopsDesk": {
+    "description": "restoreTheOldPhoneStops as a computer shows it (linux and windows)"
+  },
   "restoreIfThePhoneThis": "If the phone this file came from is still in use, stop using Kryfo on it before you carry on. Two phones on one Kryfo lose messages on both.",
   "@restoreIfThePhoneThis": {
     "description": "screens/restore_screen.dart"
+  },
+  "restoreIfThePhoneThisDesk": "If the device this file came from is still in use, stop using Kryfo on it before you carry on. Two devices on one Kryfo lose messages on both.",
+  "@restoreIfThePhoneThisDesk": {
+    "description": "restoreIfThePhoneThis as a computer shows it (linux and windows)"
   },
   "restoreNotificationsNeedSettingUp": "Notifications need setting up again on this device.",
   "@restoreNotificationsNeedSettingUp": {
@@ -5852,6 +6099,10 @@
   "restoreABackupBringsBack": "A backup brings back your identity and your contacts, and the messages that were on the phone when the file was made. Anything said since is not in it.",
   "@restoreABackupBringsBack": {
     "description": "screens/restore_screen.dart"
+  },
+  "restoreABackupBringsBackDesk": "A backup brings back your identity and your contacts, and the messages that were on the device when the file was made. Anything said since is not in it.",
+  "@restoreABackupBringsBackDesk": {
+    "description": "restoreABackupBringsBack as a computer shows it (linux and windows)"
   },
   "restoreTheFile": "The file",
   "@restoreTheFile": {
@@ -5947,6 +6198,10 @@
   "roomCreateARoomThatEnds": "A room that ends. Everyone joins under a key made for it, and when it ends nothing is left on any phone.",
   "@roomCreateARoomThatEnds": {
     "description": "screens/room_create_sheet.dart"
+  },
+  "roomCreateARoomThatEndsDesk": "A room that ends. Everyone joins under a key made for it, and when it ends nothing is left on any device.",
+  "@roomCreateARoomThatEndsDesk": {
+    "description": "roomCreateARoomThatEnds as a computer shows it (linux and windows)"
   },
   "roomCreateRoomName": "Room name",
   "@roomCreateRoomName": {
@@ -6054,6 +6309,10 @@
   "@savedChatGone": {
     "description": "screens/saved_screen.dart"
   },
+  "savedChatGoneDesk": "That chat is no longer on this computer",
+  "@savedChatGoneDesk": {
+    "description": "savedChatGone as a computer shows it (linux and windows)"
+  },
   "savedLongPressAnyMessage": "Long-press any message and tap save to keep it here.",
   "@savedLongPressAnyMessage": {
     "description": "screens/saved_screen.dart"
@@ -6093,6 +6352,10 @@
   "seenHonestAboutTheLast": "The last rows are what the app lock, the wipe PIN and encrypted storage are for, and no tool saves you from someone holding your open phone. The full threat model is in THREAT_MODEL.md in the repo, written against LINDDUN. The code is open, so you can check all of this yourself.",
   "@seenHonestAboutTheLast": {
     "description": "screens/seen_screen.dart"
+  },
+  "seenHonestAboutTheLastDesk": "The last rows are what the app lock, the wipe PIN and encrypted storage are for, and no tool saves you from someone sitting at your unlocked computer. The full threat model is in THREAT_MODEL.md in the repo, written against LINDDUN. The code is open, so you can check all of this yourself.",
+  "@seenHonestAboutTheLastDesk": {
+    "description": "seenHonestAboutTheLast as a computer shows it (linux and windows)"
   },
   "seenHidden": "Hidden",
   "@seenHidden": {
@@ -6158,6 +6421,10 @@
   "@seenScamShieldRequestsOnly": {
     "description": "screens/seen_screen.dart"
   },
+  "seenScamShieldRequestsOnlyDesk": "Runs on your computer with rules that ship in the app. No network, no list downloads. It reads only message requests from strangers, never what a contact or a group sends you.",
+  "@seenScamShieldRequestsOnlyDesk": {
+    "description": "seenScamShieldRequestsOnly as a computer shows it (linux and windows)"
+  },
   "seenBurnerRooms": "Burner rooms",
   "@seenBurnerRooms": {
     "description": "screens/seen_screen.dart"
@@ -6182,13 +6449,25 @@
   "@seenAPreviewIsFetched": {
     "description": "screens/seen_screen.dart"
   },
+  "seenAPreviewIsFetchedDesk": "A preview is fetched by the sender, over Tor, and travels inside the encrypted message. The receiving device makes no request. The website learns that someone using Tor asked for a page, and nothing else. No image is ever loaded, and a stranger's link stays plain text.",
+  "@seenAPreviewIsFetchedDesk": {
+    "description": "seenAPreviewIsFetched as a computer shows it (linux and windows)"
+  },
   "seenASeizedUnlockedPhone": "A seized unlocked phone",
   "@seenASeizedUnlockedPhone": {
     "description": "screens/seen_screen.dart"
   },
+  "seenASeizedUnlockedPhoneDesk": "A seized unlocked computer",
+  "@seenASeizedUnlockedPhoneDesk": {
+    "description": "seenASeizedUnlockedPhone as a computer shows it (linux and windows)"
+  },
   "seenIfSomeoneHoldsYour": "If someone holds your phone open, they read your messages. The app lock, wipe PIN and encrypted storage help before that point, not after it.",
   "@seenIfSomeoneHoldsYour": {
     "description": "screens/seen_screen.dart"
+  },
+  "seenIfSomeoneHoldsYourDesk": "If someone sits at your unlocked computer, they read your messages. The app lock, wipe PIN and encrypted storage help before that point, not after it.",
+  "@seenIfSomeoneHoldsYourDesk": {
+    "description": "seenIfSomeoneHoldsYour as a computer shows it (linux and windows)"
   },
   "seenTheCryptoItself": "The crypto itself",
   "@seenTheCryptoItself": {
@@ -6209,6 +6488,10 @@
   "settingsIdentityMessagesContactsAnd": "Identity, messages, contacts and settings on this phone. Gone for good unless you have a backup.",
   "@settingsIdentityMessagesContactsAnd": {
     "description": "screens/settings_screen.dart"
+  },
+  "settingsIdentityMessagesContactsAndDesk": "Identity, messages, contacts and settings on this computer. Gone for good unless you have a backup.",
+  "@settingsIdentityMessagesContactsAndDesk": {
+    "description": "settingsIdentityMessagesContactsAnd as a computer shows it (linux and windows)"
   },
   "commonContinue": "Continue",
   "@commonContinue": {
@@ -6320,6 +6603,10 @@
   "settingsScamShieldHint": "Checked only on your phone, nothing leaves it",
   "@settingsScamShieldHint": {
     "description": "screens/settings_screen.dart: under the scam shield switch"
+  },
+  "settingsScamShieldHintDesk": "Checked only on your computer, nothing leaves it",
+  "@settingsScamShieldHintDesk": {
+    "description": "settingsScamShieldHint as a computer shows it (linux and windows)"
   },
   "typingNow": "Typing",
   "@typingNow": {
@@ -6506,6 +6793,10 @@
   "@settingsWipeKryfoFromThis": {
     "description": "screens/settings_screen.dart"
   },
+  "settingsWipeKryfoFromThisDesk": "Wipe Kryfo from this computer",
+  "@settingsWipeKryfoFromThisDesk": {
+    "description": "settingsWipeKryfoFromThis as a computer shows it (linux and windows)"
+  },
   "toolsMoreTools": "More tools",
   "@toolsMoreTools": {
     "description": "screens/tools_screen.dart"
@@ -6577,6 +6868,10 @@
   "transportNothingHereLeavesThe": "Nothing here leaves the phone. It is the same state the engine uses to decide what to do.",
   "@transportNothingHereLeavesThe": {
     "description": "screens/transport_screen.dart"
+  },
+  "transportNothingHereLeavesTheDesk": "Nothing here leaves the computer. It is the same state the engine uses to decide what to do.",
+  "@transportNothingHereLeavesTheDesk": {
+    "description": "transportNothingHereLeavesThe as a computer shows it (linux and windows)"
   },
   "transportStayingAlive": "Staying alive",
   "@transportStayingAlive": {
@@ -6688,6 +6983,10 @@
   "transportWithNoContactsThe": "With no contacts the app subscribes to no relay addresses, so no message can reach you. Scan someone to fix it.",
   "@transportWithNoContactsThe": {
     "description": "screens/transport_screen.dart"
+  },
+  "transportWithNoContactsTheDesk": "With no contacts the app subscribes to no relay addresses, so no message can reach you. Add someone to fix it.",
+  "@transportWithNoContactsTheDesk": {
+    "description": "transportWithNoContactsThe as a computer shows it (linux and windows)"
   },
   "transportSendAnythingWaitingNow": "Send anything waiting, now",
   "@transportSendAnythingWaitingNow": {
@@ -7137,6 +7436,10 @@
   "whyKryfoNoAccountNoPhone": "No account, no phone number, no central server storing your chats. They live on this phone, encrypted at rest.",
   "@whyKryfoNoAccountNoPhone": {
     "description": "screens/why_kryfo_screen.dart"
+  },
+  "whyKryfoNoAccountNoPhoneDesk": "No account, no phone number, no central server storing your chats. They live on this computer, encrypted at rest.",
+  "@whyKryfoNoAccountNoPhoneDesk": {
+    "description": "whyKryfoNoAccountNoPhone as a computer shows it (linux and windows)"
   },
   "whyKryfoNothingLeaks": "Nothing leaks",
   "@whyKryfoNothingLeaks": {
@@ -7791,6 +8094,10 @@
   "@bootFailedKeysDidNotAnswer": {
     "description": "widgets/boot_failed.dart"
   },
+  "bootFailedKeysDidNotAnswerDesk": "This computer's key storage stopped answering. Closing and reopening Kryfo usually fixes this.",
+  "@bootFailedKeysDidNotAnswerDesk": {
+    "description": "bootFailedKeysDidNotAnswer as a computer shows it (linux and windows)"
+  },
   "bootFailedCloseAndReopen": "Close and reopen Kryfo",
   "@bootFailedCloseAndReopen": {
     "description": "widgets/boot_failed.dart"
@@ -7815,6 +8122,10 @@
   "@bootFailedStartFreshLine": {
     "description": "widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help"
   },
+  "bootFailedStartFreshLineDesk": "This deletes everything Kryfo keeps on this computer: chats, contacts, media, hidden chats and your three words. A backup file saved somewhere else is not touched.",
+  "@bootFailedStartFreshLineDesk": {
+    "description": "bootFailedStartFreshLine as a computer shows it (linux and windows)"
+  },
   "bootFailedStartFreshNext": "Continue",
   "@bootFailedStartFreshNext": {
     "description": "widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help"
@@ -7822,6 +8133,10 @@
   "bootFailedStartFreshSure": "Delete everything on this phone?",
   "@bootFailedStartFreshSure": {
     "description": "widgets/boot_failed.dart: the start error screen, the ways out when trying again does not help"
+  },
+  "bootFailedStartFreshSureDesk": "Delete everything on this computer?",
+  "@bootFailedStartFreshSureDesk": {
+    "description": "bootFailedStartFreshSure as a computer shows it (linux and windows)"
   },
   "bootFailedStartFreshSureLine": "This cannot be undone. Kryfo closes and opens again as a new install.",
   "@bootFailedStartFreshSureLine": {
@@ -8301,6 +8616,10 @@
   "@torBootSplashMadeOnThisPhone": {
     "description": "widgets/tor_boot_splash.dart"
   },
+  "torBootSplashMadeOnThisPhoneDesk": "Made on this computer. Nothing is sent anywhere.",
+  "@torBootSplashMadeOnThisPhoneDesk": {
+    "description": "torBootSplashMadeOnThisPhone as a computer shows it (linux and windows)"
+  },
   "torBootSplashFirstLaunchTakesA": "First launch takes a moment · only on startup",
   "@torBootSplashFirstLaunchTakesA": {
     "description": "widgets/tor_boot_splash.dart"
@@ -8720,6 +9039,10 @@
   "@bridgesPasteOrScanALine": {
     "description": "screens/bridges_screen.dart"
   },
+  "bridgesPasteOrScanALineDesk": "Paste a line someone you trust gave you.",
+  "@bridgesPasteOrScanALineDesk": {
+    "description": "bridgesPasteOrScanALine as a computer shows it (linux and windows)"
+  },
   "@bridgesTryAutomatic": {
     "description": "screens/bridges_screen.dart"
   },
@@ -8753,6 +9076,10 @@
   "bridgesThisNetworkWantsA": "This network wants a sign-in first. Once you're in, Kryfo connects.",
   "@bridgesThisNetworkWantsA": {
     "description": "screens/bridges_screen.dart"
+  },
+  "bridgesThisNetworkWantsADesk": "This network wants a sign-in first. Sign in from your browser, or check the computer's network connection. Once you're in, Kryfo connects.",
+  "@bridgesThisNetworkWantsADesk": {
+    "description": "bridgesThisNetworkWantsA as a computer shows it (linux and windows)"
   },
   "bridgesWaitingForWifiSignIn": "Waiting for Wi-Fi sign-in",
   "@bridgesWaitingForWifiSignIn": {
@@ -8942,6 +9269,10 @@
   "@bridgesPasteTheLineThey": {
     "description": "screens/bridges_screen.dart"
   },
+  "bridgesPasteTheLineTheyDesk": "Paste the line they sent you. Take bridge lines from people you know.",
+  "@bridgesPasteTheLineTheyDesk": {
+    "description": "bridgesPasteTheLineThey as a computer shows it (linux and windows)"
+  },
   "bridgesFromAFriendLower": "from a friend",
   "bridgesAlmostThere": "Almost there",
   "bridgesTheTorProjectSGuess": "The Tor Project's guess",
@@ -9045,9 +9376,22 @@
   "@languageMatchPhone": {
     "description": "widgets/language_sheet.dart: the first choice: Kryfo uses the phone's language when it has it"
   },
+  "languageMatchPhoneDesk": "Match system",
+  "@languageMatchPhoneDesk": {
+    "description": "languageMatchPhone as a computer shows it (linux and windows)"
+  },
   "languageMatchPhoneValue": "Match phone ({language})",
   "@languageMatchPhoneValue": {
     "description": "widgets/language_sheet.dart: the settings row's value; language is that language's own name, e.g. English",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
+  "languageMatchPhoneValueDesk": "Match system ({language})",
+  "@languageMatchPhoneValueDesk": {
+    "description": "languageMatchPhoneValue as a computer shows it (linux and windows)",
     "placeholders": {
       "language": {
         "type": "Object"
@@ -9098,6 +9442,10 @@
   "videoViewerCannotPlay": "This phone can't play this video here.",
   "@videoViewerCannotPlay": {
     "description": "widgets/video_viewer.dart: the phone's own player has no codec for this video"
+  },
+  "videoViewerCannotPlayDesk": "This computer can't play this video here.",
+  "@videoViewerCannotPlayDesk": {
+    "description": "videoViewerCannotPlay as a computer shows it (linux and windows)"
   },
   "videoViewerOpenElsewhere": "Open in another app",
   "@videoViewerOpenElsewhere": {
@@ -9350,6 +9698,10 @@
   "@searchIntroLine": {
     "description": "its line: what can be found, and that the search stays on the phone"
   },
+  "searchIntroLineDesk": "Names, words, photos, files and links. The search runs on this computer and sends nothing anywhere.",
+  "@searchIntroLineDesk": {
+    "description": "searchIntroLine as a computer shows it (linux and windows)"
+  },
   "searchNothing": "Nothing found",
   "@searchNothing": {
     "description": "shown when a search finds nothing"
@@ -9450,6 +9802,10 @@
   "handleCheckClock": "Check the phone's date and time, then try again.",
   "@handleCheckClock": {
     "description": "screens/handle_screen.dart: the registry refused a change because the phone's clock is too far off"
+  },
+  "handleCheckClockDesk": "Check the computer's date and time, then try again.",
+  "@handleCheckClockDesk": {
+    "description": "handleCheckClock as a computer shows it (linux and windows)"
   },
   "searchPeople": "People",
   "@searchPeople": {
@@ -9554,9 +9910,17 @@
   "@pinsAdvancedLine": {
     "description": "App lock: one line under Advanced protection"
   },
+  "pinsAdvancedLineDesk": "For when someone makes you unlock your computer.",
+  "@pinsAdvancedLineDesk": {
+    "description": "pinsAdvancedLine as a computer shows it (linux and windows)"
+  },
   "pinsWipeLine": "Typed on the lock screen, it wipes Kryfo from this phone.",
   "@pinsWipeLine": {
     "description": "App lock: one line on the wipe PIN row"
+  },
+  "pinsWipeLineDesk": "Typed on the lock screen, it wipes Kryfo from this computer.",
+  "@pinsWipeLineDesk": {
+    "description": "pinsWipeLine as a computer shows it (linux and windows)"
   },
   "pinsDecoyPin": "Decoy PIN",
   "@pinsDecoyPin": {
@@ -9582,6 +9946,10 @@
   "@pinsTurnOffWithDecoy": {
     "description": "confirm sheet line when turning the app lock off while a decoy PIN is set"
   },
+  "pinsTurnOffWithDecoyDesk": "Every PIN goes, the decoy and its Kryfo and any hidden chats with them. Anyone at your computer opens Kryfo as you.",
+  "@pinsTurnOffWithDecoyDesk": {
+    "description": "pinsTurnOffWithDecoy as a computer shows it (linux and windows)"
+  },
   "pinsHowThisWorks": "How this works",
   "@pinsHowThisWorks": {
     "description": "App lock: opens a sheet explaining the extra PINs"
@@ -9601,6 +9969,10 @@
   "flowWipe1": "Typed on the lock screen instead of your PIN, it wipes Kryfo from this phone and closes it. To whoever is watching, the app just stopped.",
   "@flowWipe1": {
     "description": "wipe PIN setup, first line"
+  },
+  "flowWipe1Desk": "Typed on the lock screen instead of your PIN, it wipes Kryfo from this computer and closes it. To whoever is watching, the app just stopped.",
+  "@flowWipe1Desk": {
+    "description": "flowWipe1 as a computer shows it (linux and windows)"
   },
   "flowWipe2": "It takes every chat and your identity with it, and the decoy if you have one.",
   "@flowWipe2": {
@@ -9638,6 +10010,10 @@
   "@flowDecoyShade": {
     "description": "decoy PIN setup"
   },
+  "flowDecoyShadeDesk": "Notifications already on the screen were already seen. While the decoy is open, no new ones show.",
+  "@flowDecoyShadeDesk": {
+    "description": "flowDecoyShade as a computer shows it (linux and windows)"
+  },
   "flowDecoyChoose": "Choose a decoy PIN",
   "@flowDecoyChoose": {
     "description": "decoy PIN setup, the pad"
@@ -9653,6 +10029,10 @@
   "flowLaw": "In some countries, refusing to unlock a phone or hiding data from officials is an offence in itself. Know the law where you travel.",
   "@flowLaw": {
     "description": "in every explanation of the extra PINs; decided wording"
+  },
+  "flowLawDesk": "In some countries, refusing to unlock a device or hiding data from officials is an offence in itself. Know the law where you travel.",
+  "@flowLawDesk": {
+    "description": "flowLaw as a computer shows it (linux and windows)"
   },
   "howWipe": "Typed on the lock screen, the wipe PIN wipes every chat, your identity and any decoy, then closes Kryfo. It works even while the pad is held after wrong tries.",
   "@howWipe": {
@@ -9725,6 +10105,10 @@
   "flowVaultReplace": "This replaces any hidden chats this phone already holds.",
   "@flowVaultReplace": {
     "description": "the hidden chats setup flow: shown on every setup, whether or not there are hidden chats"
+  },
+  "flowVaultReplaceDesk": "This replaces any hidden chats this computer already holds.",
+  "@flowVaultReplaceDesk": {
+    "description": "flowVaultReplace as a computer shows it (linux and windows)"
   },
   "flowVaultChoose": "Choose a hidden chats PIN",
   "@flowVaultChoose": {
@@ -9807,6 +10191,10 @@
   "howVault": "Your hidden chats PIN opens Kryfo with your hidden chats, your PIN and your fingerprint without them. Setting hidden chats up again replaces the ones this phone holds. Forget the hidden chats PIN and they are gone for good.",
   "@howVault": {
     "description": "How this works sheet"
+  },
+  "howVaultDesk": "Your hidden chats PIN opens Kryfo with your hidden chats, your PIN without them. Setting hidden chats up again replaces the ones this computer holds. Forget the hidden chats PIN and they are gone for good.",
+  "@howVaultDesk": {
+    "description": "howVault as a computer shows it (linux and windows)"
   },
   "chatHide": "Hide chat",
   "@chatHide": {
@@ -10088,9 +10476,17 @@
   "@devWhoAnon": {
     "description": "widgets/dev_note.dart: the sheet Who sees what, writing anonymously"
   },
+  "devWhoAnonDesk": "Anonymously, Kryfo makes a new name and keys for this chat only. They stay on this computer and are never used anywhere else.",
+  "@devWhoAnonDesk": {
+    "description": "devWhoAnon as a computer shows it (linux and windows)"
+  },
   "devWhoNothingYet": "Nothing leaves your phone until you send your first message.",
   "@devWhoNothingYet": {
     "description": "widgets/dev_note.dart: the sheet Who sees what"
+  },
+  "devWhoNothingYetDesk": "Nothing leaves your computer until you send your first message.",
+  "@devWhoNothingYetDesk": {
+    "description": "devWhoNothingYet as a computer shows it (linux and windows)"
   },
   "devWhoChoiceStays": "Your choice stays with this chat.",
   "@devWhoChoiceStays": {
@@ -10123,6 +10519,10 @@
   "devNamelessLine": "The name made for this chat stays on the phone it was made on, so here it can only be read.",
   "@devNamelessLine": {
     "description": "screens/chat_screen.dart: in place of the composer of an anonymous developer chat restored from a backup or a move. the name it was made with never leaves the phone it was made on, so the chat reads and cannot send"
+  },
+  "devNamelessLineDesk": "The name made for this chat stays on the device it was made on, so here it can only be read.",
+  "@devNamelessLineDesk": {
+    "description": "devNamelessLine as a computer shows it (linux and windows)"
   },
   "devStartNewLine": "Every message here goes, and a fresh chat opens.",
   "@devStartNewLine": {
@@ -10159,6 +10559,10 @@
   "nameTakenTombLine": "You took someone off this phone under these words because they were not who they said. If this link came from the person you know, use it, then compare the safety number with them.",
   "@nameTakenTombLine": {
     "description": "widgets/kryfo_link_text.dart: as nameTakenLine, for words whose holder was taken off this phone by notThemButton. only an add the person makes takes them again, after this"
+  },
+  "nameTakenTombLineDesk": "You took someone off this computer under these words because they were not who they said. If this link came from the person you know, use it, then compare the safety number with them.",
+  "@nameTakenTombLineDesk": {
+    "description": "nameTakenTombLine as a computer shows it (linux and windows)"
   },
   "nameTakenUse": "Use this link",
   "@nameTakenUse": {
@@ -10228,6 +10632,10 @@
   "@notThemSheetLine": {
     "description": "widgets/not_them.dart: under notThemSheetTitle. the same three words on another key are not blocked"
   },
+  "notThemSheetLineDesk": "The chat, its messages and its files go from this computer. Only a link or code you add takes their three words again. Compare the safety number with whoever you add.",
+  "@notThemSheetLineDesk": {
+    "description": "notThemSheetLine as a computer shows it (linux and windows)"
+  },
   "notThemRemove": "Remove and block",
   "@notThemRemove": {
     "description": "widgets/not_them.dart: the yes of that sheet"
@@ -10239,6 +10647,10 @@
   "groupAdminGoneLine": "Its admin was removed from this phone. Group changes no longer reach you.",
   "@groupAdminGoneLine": {
     "description": "screens/group_chat_screen.dart: a line at the top of a group whose admin was taken off this phone by notThemButton. nothing that changes the group is taken any more; Leave beside it"
+  },
+  "groupAdminGoneLineDesk": "Its admin was removed from this computer. Group changes no longer reach you.",
+  "@groupAdminGoneLineDesk": {
+    "description": "groupAdminGoneLine as a computer shows it (linux and windows)"
   },
   "blockedKey": "Blocked key",
   "@blockedKey": {
@@ -10305,6 +10717,10 @@
   "@gifOptInWhereToTurnOff": {
     "description": "gifs/gif_opt_in.dart: under the third point: where the switch is (the settings screen, its privacy section, the GIF search row: use the same words as those labels)"
   },
+  "gifOptInWhereToTurnOffDesk": "Settings, Privacy, GIF search. GIFs on your computer always work without it.",
+  "@gifOptInWhereToTurnOffDesk": {
+    "description": "gifOptInWhereToTurnOff as a computer shows it (linux and windows)"
+  },
   "gifTurnOn": "Turn on GIF search",
   "@gifTurnOn": {
     "description": "gifs/gif_opt_in.dart: the main button"
@@ -10343,6 +10759,10 @@
   "@gifSavedOnPhone": {
     "description": "gifs/gif_opt_in.dart: under \"GIF search is off\", taps to the tab of gifs saved on the phone. the words between asterisks are that tab's name, as gifPhoneTab says it"
   },
+  "gifSavedOnPhoneDesk": "GIFs saved on your computer are in *On this computer*.",
+  "@gifSavedOnPhoneDesk": {
+    "description": "gifSavedOnPhone as a computer shows it (linux and windows)"
+  },
   "gifTab": "GIFs",
   "@gifTab": {
     "description": "stickers/sticker_sheet.dart: a tab of the sticker picker"
@@ -10350,6 +10770,10 @@
   "gifPhoneTab": "On this phone",
   "@gifPhoneTab": {
     "description": "stickers/sticker_sheet.dart: a tab of the sticker picker: gifs saved on the phone"
+  },
+  "gifPhoneTabDesk": "On this computer",
+  "@gifPhoneTabDesk": {
+    "description": "gifPhoneTab as a computer shows it (linux and windows)"
   },
   "gifSearchHint": "Search GIFs",
   "@gifSearchHint": {
@@ -10425,6 +10849,10 @@
   "gifPhoneLine": "GIFs saved on this phone. Nothing goes online.",
   "@gifPhoneLine": {
     "description": "gifs/gif_panel.dart: the On this phone tab"
+  },
+  "gifPhoneLineDesk": "GIFs saved on this computer. Nothing goes online.",
+  "@gifPhoneLineDesk": {
+    "description": "gifPhoneLine as a computer shows it (linux and windows)"
   },
   "gifPhoneChoose": "Choose a GIF",
   "@gifPhoneChoose": {
@@ -10546,6 +10974,10 @@
   "@chatShotsYouTurnedOff": {
     "description": "widgets/shots_line.dart: the line in the chat where you turned the block off"
   },
+  "chatNowPostQuantum": "Messages in this chat now use post-quantum encryption",
+  "@chatNowPostQuantum": {
+    "description": "widgets/shots_line.dart, screens/chat_screen.dart: the quiet line in a chat made before Kryfo 0.6, where both phones moved its session to post-quantum encryption (identity v4 pq restart). said once, on both phones; positive, no action"
+  },
   "chatShotsTheyTurnedOn": "{name} turned on screenshot blocking. Copying, forwarding and saving each other’s messages is off too.",
   "@chatShotsTheyTurnedOn": {
     "description": "widgets/shots_line.dart: the line in the chat where the other person turned the block on",
@@ -10641,6 +11073,10 @@
   "voiceNoRoom": "Not enough free space on this phone. Free up some space and try again.",
   "@voiceNoRoom": {
     "description": "the phone is too full to record or disguise a voice note; the note waits where it is"
+  },
+  "voiceNoRoomDesk": "Not enough free space on this computer. Free up some space and try again.",
+  "@voiceNoRoomDesk": {
+    "description": "voiceNoRoom as a computer shows it (linux and windows)"
   },
   "voiceNoRoomNotSent": "There was not enough free space to disguise this note, so it was not sent",
   "@voiceNoRoomNotSent": {
@@ -10934,6 +11370,10 @@
   "@groupInfoEndGroupLine": {
     "description": "screens/group_info_screen.dart: under that title: ending deletes the group's messages and media for everyone"
   },
+  "groupInfoEndGroupLineDesk": "It's deleted for everyone: its messages and media are removed from every updated member's device.",
+  "@groupInfoEndGroupLineDesk": {
+    "description": "groupInfoEndGroupLine as a computer shows it (linux and windows)"
+  },
   "groupInfoDeleteGroup": "Delete group",
   "@groupInfoDeleteGroup": {
     "description": "group info and the chat list menu: in place of Leave group once the group has ended"
@@ -10953,6 +11393,10 @@
   "groupInfoEndGroupDetail": "Kryfo removes it from every member's phone that has the update.",
   "@groupInfoEndGroupDetail": {
     "description": "screens/group_info_screen.dart: a smaller line under that, saying where the removal reaches"
+  },
+  "groupInfoEndGroupDetailDesk": "Kryfo removes it from every member's device that has the update.",
+  "@groupInfoEndGroupDetailDesk": {
+    "description": "groupInfoEndGroupDetail as a computer shows it (linux and windows)"
   },
   "translateAction": "Translate",
   "@translateAction": {
@@ -10975,18 +11419,9 @@
   "@translateBarMore": {
     "description": "the bar's small menu button, for screen readers"
   },
-  "translateBarAlways": "Always translate {language}",
-  "@translateBarAlways": {
-    "description": "in the bar's menu: every chat translates this language on its own",
-    "placeholders": {
-      "language": {
-        "type": "Object"
-      }
-    }
-  },
-  "translateBarNever": "Never translate {language}",
+  "translateBarNever": "Never offer for {language}",
   "@translateBarNever": {
-    "description": "in the bar's menu: the language counts as one the person reads, nothing in it is offered for translation",
+    "description": "in a translate menu: nothing in this language is offered for translation until the person takes it off the list in settings",
     "placeholders": {
       "language": {
         "type": "Object"
@@ -11027,6 +11462,15 @@
       }
     }
   },
+  "translatePackTitleDesk": "Translate {language} on this computer",
+  "@translatePackTitleDesk": {
+    "description": "translatePackTitle as a computer shows it (linux and windows)",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
   "translatePackLine": "Messages are translated on this phone and never leave it. That needs the {language} language pack, about {size}, downloaded once over Tor.",
   "@translatePackLine": {
     "description": "under that title: what the pack is, its size, and how it comes",
@@ -11039,9 +11483,25 @@
       }
     }
   },
+  "translatePackLineDesk": "Messages are translated on this computer and never leave it. That needs the {language} language pack, about {size}, downloaded once over Tor.",
+  "@translatePackLineDesk": {
+    "description": "translatePackLine as a computer shows it (linux and windows)",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      },
+      "size": {
+        "type": "Object"
+      }
+    }
+  },
   "translatePackNoLib": "Translation doesn't work on this phone.",
   "@translatePackNoLib": {
     "description": "in that sheet when the translation library does not load on this phone"
+  },
+  "translatePackNoLibDesk": "Translation doesn't work on this computer.",
+  "@translatePackNoLibDesk": {
+    "description": "translatePackNoLib as a computer shows it (linux and windows)"
   },
   "translateDownload": "Download · about {size}",
   "@translateDownload": {
@@ -11085,9 +11545,22 @@
       }
     }
   },
+  "translateInstalledDesk": "On this computer · {size}",
+  "@translateInstalledDesk": {
+    "description": "translateInstalled as a computer shows it (linux and windows)",
+    "placeholders": {
+      "size": {
+        "type": "Object"
+      }
+    }
+  },
   "translateNeedsWifi": "Wi-Fi only is on, and this phone isn't on Wi-Fi.",
   "@translateNeedsWifi": {
     "description": "a download asked for while wi-fi only is on and the phone is on mobile data"
+  },
+  "translateNeedsWifiDesk": "Wi-Fi only is on, and this computer isn't on Wi-Fi.",
+  "@translateNeedsWifiDesk": {
+    "description": "translateNeedsWifi as a computer shows it (linux and windows)"
   },
   "translateFailNoTor": "Tor isn't connected yet. Packs download over Tor only, so try again once it is.",
   "@translateFailNoTor": {
@@ -11104,6 +11577,10 @@
   "translateFailNoEngine": "Language packs can't be downloaded on this phone.",
   "@translateFailNoEngine": {
     "description": "the engine on this phone cannot download language packs"
+  },
+  "translateFailNoEngineDesk": "Language packs can't be downloaded on this computer.",
+  "@translateFailNoEngineDesk": {
+    "description": "translateFailNoEngine as a computer shows it (linux and windows)"
   },
   "translatePaused": "Paused · {size} so far",
   "@translatePaused": {
@@ -11125,6 +11602,10 @@
   "translateSettingsHint": "On this phone, never on a server",
   "@translateSettingsHint": {
     "description": "under that row"
+  },
+  "translateSettingsHintDesk": "On this computer, never on a server",
+  "@translateSettingsHintDesk": {
+    "description": "translateSettingsHint as a computer shows it (linux and windows)"
   },
   "translatePacksSection": "Language packs",
   "@translatePacksSection": {
@@ -11214,6 +11695,10 @@
   "@translatePrivacyNote": {
     "description": "under that title"
   },
+  "translatePrivacyNoteDesk": "Translation happens on this computer. No message is ever sent anywhere to be translated. Downloading a pack tells the host which pack it is. It comes over Tor, so the host doesn't learn who asked.",
+  "@translatePrivacyNoteDesk": {
+    "description": "translatePrivacyNote as a computer shows it (linux and windows)"
+  },
   "translateAutoInChat": "Translate automatically",
   "@translateAutoInChat": {
     "description": "contact page: this chat translates messages in other languages on its own"
@@ -11221,6 +11706,47 @@
   "translateAutoInChatHint": "Messages in other languages show translated. The original is one tap away.",
   "@translateAutoInChatHint": {
     "description": "under that switch"
+  },
+  "translateAlwaysChat": "Always translate this chat",
+  "@translateAlwaysChat": {
+    "description": "in a translate menu: this chat's messages in other languages show translated on their own"
+  },
+  "translateNeverDone": "Messages in {language} stay as they are",
+  "@translateNeverDone": {
+    "description": "toast after never offer, with an undo",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateUndo": "Undo",
+  "@translateUndo": {
+    "description": "toast action: takes the language off the never list again"
+  },
+  "translateNeverSection": "Never offered",
+  "@translateNeverSection": {
+    "description": "translation settings: the languages set to never offer"
+  },
+  "translateOfferAgain": "Offer again",
+  "@translateOfferAgain": {
+    "description": "translation settings: takes a language off the never list"
+  },
+  "translateOnHint": "Offered under messages in other languages",
+  "@translateOnHint": {
+    "description": "translation settings: the switch's hint"
+  },
+  "translatePrivacyKept": "Translations are kept with their chat, encrypted on this phone, and deleted with it.",
+  "@translatePrivacyKept": {
+    "description": "translation settings, privacy box: where translations are kept"
+  },
+  "translatePrivacyKeptDesk": "Translations are kept with their chat, encrypted on this computer, and deleted with it.",
+  "@translatePrivacyKeptDesk": {
+    "description": "translatePrivacyKept as a computer shows it (linux and windows)"
+  },
+  "translateOffDeletes": "Turning this off deletes saved translations.",
+  "@translateOffDeletes": {
+    "description": "translation settings: under the switch, what turning it off does"
   },
   "bridgesNoneUntilOnion": "None until onion is on",
   "@bridgesNoneUntilOnion": {
@@ -11551,6 +12077,10 @@
   "@notificationsLead": {
     "description": "screens/notifications_screen.dart: under the title"
   },
+  "notificationsLeadDesk": "How new messages reach this computer, how they sound and what they show. You can change it whenever you like.",
+  "@notificationsLeadDesk": {
+    "description": "notificationsLead as a computer shows it (linux and windows)"
+  },
   "notificationsHowTheyReachYou": "How messages reach you",
   "@notificationsHowTheyReachYou": {
     "description": "screens/notifications_screen.dart: section over the ways messages arrive"
@@ -11727,6 +12257,10 @@
   "flowVaultPassLine": "At least 12 characters. The phone's keyboard sees what you type, so use one that does not learn or sync words.",
   "@flowVaultPassLine": {
     "description": "screens/pin_flow_screen.dart"
+  },
+  "flowVaultPassLineDesk": "At least 12 characters. Pick one you use nowhere else.",
+  "@flowVaultPassLineDesk": {
+    "description": "flowVaultPassLine as a computer shows it (linux and windows)"
   },
   "flowVaultPassAgain": "The same passphrase again",
   "@flowVaultPassAgain": {
@@ -12171,6 +12705,46 @@
   "@desktopTrayTip": {
     "description": "desktop/desktop_start.dart: the tray icon tooltip"
   },
+  "desktopTrayLockedTip": "Open Kryfo to start receiving messages",
+  "@desktopTrayLockedTip": {
+    "description": "desktop/desktop_start.dart: the tray icon tooltip after a start with the computer, before kryfo is unlocked"
+  },
+  "desktopRunSection": "On this computer",
+  "@desktopRunSection": {
+    "description": "notifications page on a computer: the section that replaces the phone's delivery modes"
+  },
+  "desktopTrayRow": "Keep running in the tray",
+  "@desktopTrayRow": {
+    "description": "switch: closing the window hides kryfo to the tray instead of quitting"
+  },
+  "desktopTrayHint": "Closing the window keeps Kryfo in the tray, so messages keep arriving.",
+  "@desktopTrayHint": {
+    "description": "under the tray switch"
+  },
+  "desktopTrayOffLine": "Closing the window quits Kryfo. Messages arrive when you open it again.",
+  "@desktopTrayOffLine": {
+    "description": "shown while the tray switch is off"
+  },
+  "desktopTrayNoneLine": "This desktop shows no tray icon, so closing the window quits Kryfo.",
+  "@desktopTrayNoneLine": {
+    "description": "the desktop shows no tray icons (many wayland desktops): closing quits even with the switch on"
+  },
+  "desktopStartRow": "Start with my computer",
+  "@desktopStartRow": {
+    "description": "switch: kryfo starts when the user signs in to the computer"
+  },
+  "desktopStartHint": "Kryfo starts in the tray when you sign in to this computer.",
+  "@desktopStartHint": {
+    "description": "under the start switch"
+  },
+  "desktopStartRefused": "This computer did not let Kryfo start with it. Kryfo opens whenever you start it yourself.",
+  "@desktopStartRefused": {
+    "description": "the computer refused to add kryfo to its startup (portal said no, file or registry not writable)"
+  },
+  "desktopStartHeldOff": "Windows has Kryfo switched off in its startup apps. Switch it on there, in Settings, Apps, Startup.",
+  "@desktopStartHeldOff": {
+    "description": "windows: kryfo is listed but switched off in the startup apps of windows settings or task manager"
+  },
   "desktopNoCamera": "Kryfo cannot use a camera on this computer yet. Use the link or the code instead.",
   "@desktopNoCamera": {
     "description": "screens/scan_screen.dart, screens/camera_screen.dart: on desktop, where the phone would open its camera"
@@ -12198,6 +12772,10 @@
   "inviteNotYet": "This invite isn't valid yet. Check the time on your phone.",
   "@inviteNotYet": {
     "description": "a v4 invite issued more than a day ahead of this phone clock"
+  },
+  "inviteNotYetDesk": "This invite isn't valid yet. Check the time on your computer.",
+  "@inviteNotYetDesk": {
+    "description": "inviteNotYet as a computer shows it (linux and windows)"
   },
   "inviteExpired": "This invite has expired. Ask for a new one.",
   "@inviteExpired": {
@@ -12400,9 +12978,17 @@
   "@chatAlbumItDisappearsWithNo": {
     "description": "screens/chat_screen.dart"
   },
+  "chatAlbumItDisappearsWithNoDesk": "This album will be removed from both devices, unless it has already been saved. This can't be undone.",
+  "@chatAlbumItDisappearsWithNoDesk": {
+    "description": "chatAlbumItDisappearsWithNo as a computer shows it (linux and windows)"
+  },
   "groupChatAlbumItDisappearsWithNo": "This album will be removed from everyone's phones, unless it has already been saved. This can't be undone.",
   "@groupChatAlbumItDisappearsWithNo": {
     "description": "screens/group_chat_screen.dart"
+  },
+  "groupChatAlbumItDisappearsWithNoDesk": "This album will be removed from everyone's devices, unless it has already been saved. This can't be undone.",
+  "@groupChatAlbumItDisappearsWithNoDesk": {
+    "description": "groupChatAlbumItDisappearsWithNo as a computer shows it (linux and windows)"
   },
   "homeInviteSomeone": "Invite someone",
   "@homeInviteSomeone": {
@@ -12520,6 +13106,10 @@
   "@photoOnlyHere": {
     "description": "screens/contact_screen.dart: hint under the row: the photo is never sent"
   },
+  "photoOnlyHereDesk": "Only on this computer",
+  "@photoOnlyHereDesk": {
+    "description": "photoOnlyHere as a computer shows it (linux and windows)"
+  },
   "photoForThem": "A photo for {name}",
   "@photoForThem": {
     "description": "screens/contact_screen.dart: title of the sheet for a contact's photo",
@@ -12532,6 +13122,10 @@
   "photoOnlyHereLine": "Only you see it. It stays on this phone.",
   "@photoOnlyHereLine": {
     "description": "screens/contact_screen.dart: line in the sheet for a contact's photo"
+  },
+  "photoOnlyHereLineDesk": "Only you see it. It stays on this computer.",
+  "@photoOnlyHereLineDesk": {
+    "description": "photoOnlyHereLine as a computer shows it (linux and windows)"
   },
   "photoOf": "Photo of {name}",
   "@photoOf": {
@@ -12649,6 +13243,18 @@
         "format": "decimalPattern"
       }
     }
+  },
+  "wideSelectChat": "Select a chat",
+  "@wideSelectChat": {
+    "description": "wide/wide_home.dart: on a wide desktop window, the chat pane with no chat open"
+  },
+  "wideSelectChatLine": "Pick a chat from the list to start writing.",
+  "@wideSelectChatLine": {
+    "description": "wide/wide_home.dart: the line under wideSelectChat"
+  },
+  "wideListWidth": "Chat list width",
+  "@wideListWidth": {
+    "description": "wide/wide_home.dart: screen reader name of the divider that resizes the chat list on a wide desktop window"
   },
   "transferDoneOf": "{done} of {total}",
   "@transferDoneOf": {

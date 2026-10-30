@@ -96,6 +96,7 @@ const _wire = [
   'engine.sendTo(',
   'engine.nostrSend(',
   'engine.sendFirstContact(',
+  'sendFirstContactNoted(',
   'engine.pairCodePublish(',
   'engine.pairCodeFetch(',
   'engine.handleClaim(',

@@ -75,6 +75,27 @@ LangGuess detectLanguage(String s) {
   return LangGuess.none;
 }
 
+// about how many words a message has: a chinese or japanese word is a
+// character or two, elsewhere words are what spaces split. links, handles,
+// numbers and emoji are not words
+double roughWords(String s) {
+  var cjk = 0, words = 0;
+  for (final w in s.split(_space)) {
+    if (w.isEmpty || _isLink(w)) continue;
+    var letters = 0;
+    for (final r in w.runes) {
+      final c = String.fromCharCode(r);
+      if (_han.hasMatch(c) || _kana.hasMatch(c)) {
+        cjk++;
+      } else if (_letter.hasMatch(c)) {
+        letters++;
+      }
+    }
+    if (letters > 0) words++;
+  }
+  return words + cjk / 1.5;
+}
+
 bool _isLink(String w) {
   final l = w.toLowerCase();
   return l.startsWith('http://') ||

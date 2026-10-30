@@ -769,16 +769,15 @@ mixin _ContactRows {
     return (await requestsInbox()).length;
   }
 
-  // someone who asked, or asked and was let go: adding them by their card
-  // is the accept they were waiting for
   /// [onion] for a contact accepted here who has none yet; a held one
   /// stays
   Future<void> fillOnion(String haloId, String onion) async {
     final db = await open();
+    // contacts.onion is NOT NULL: none is ''
     await db.update(
       'contacts',
       {'onion': onion},
-      where: "halo_id = ? AND accepted = 1 AND (onion IS NULL OR onion = '')",
+      where: "halo_id = ? AND accepted = 1 AND onion = ''",
       whereArgs: [haloId],
     );
   }
@@ -798,6 +797,8 @@ mixin _ContactRows {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  // someone who asked, or asked and was let go: adding them by their card
+  // is the accept they were waiting for
   Future<bool> askedBefore(String haloId) async {
     final db = await open();
     final r = await db.rawQuery(

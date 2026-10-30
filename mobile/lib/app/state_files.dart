@@ -647,7 +647,7 @@ extension AppStateFiles on AppState {
     DropFrame frame,
   ) async {
     setFileWait(f.uid, null);
-    await d.fileNeverCame(f.uid, l10n.appAnAttachmentCouldNot);
+    await d.fileNeverCame(f.uid, l10n.appAnAttachmentCouldNotShown);
     await _letFetchGo(db, f, frame, d.container.chatKey(f.groupId ?? f.sender));
     chatChanged(f.groupId == null ? f.sender : 'group:${f.groupId}');
   }

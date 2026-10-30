@@ -20,6 +20,7 @@ import 'foreign.dart';
 import 'hant.dart' show HantForm;
 import 'lang_names.dart';
 import 'pack_sheet.dart';
+import 'translate_menu.dart' show neverOffer;
 
 // the language a reader gets: traditional chinese says so
 String _into(Offer o) => o.hant != HantForm.none ? 'zh_hant' : o.to;
@@ -208,7 +209,6 @@ class TranslateBar extends StatelessWidget {
   Future<void> _menu(BuildContext context) async {
     HapticFeedback.selectionClick();
     final lang = langName(offer.seen);
-    final always = chat.hub.settings.always.contains(offer.from);
     final pick = await showHaloSheet<String>(
       context,
       builder: (ctx) => SafeArea(
@@ -216,12 +216,6 @@ class TranslateBar extends StatelessWidget {
         child: MenuSheet(
           groups: [
             [
-              MenuSheetRow(
-                icon: Icons.translate_rounded,
-                label: l10n.translateBarAlways(lang),
-                toggled: always,
-                onTap: () => Navigator.pop(ctx, 'always'),
-              ),
               MenuSheetRow(
                 icon: Icons.do_not_disturb_on_outlined,
                 label: l10n.translateBarNever(lang),
@@ -240,18 +234,10 @@ class TranslateBar extends StatelessWidget {
       ),
     );
     switch (pick) {
-      case 'always':
-        unawaited(_quietly(chat.hub.alwaysFor(offer.from, !always)));
       case 'never':
-        unawaited(_quietly(chat.hub.neverFor(offer.from)));
+        if (context.mounted) await neverOffer(context, chat.hub, offer);
       case 'hide':
         unawaited(chat.hideBar());
     }
-  }
-
-  static Future<void> _quietly(Future<void> f) async {
-    try {
-      await f;
-    } catch (_) {}
   }
 }

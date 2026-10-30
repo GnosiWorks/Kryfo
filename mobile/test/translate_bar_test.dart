@@ -19,6 +19,7 @@ import 'package:kryfo/translate/lang_names.dart';
 import 'package:kryfo/translate/settings.dart';
 import 'package:kryfo/translate/translate_bar.dart';
 import 'package:kryfo/translate/translate_bubble.dart';
+import 'package:kryfo/widgets/halo_switch.dart';
 import 'package:kryfo/widgets/motion.dart' show kHouseCurve, kHouseTime;
 
 import 'translate_fakes.dart';
@@ -229,24 +230,25 @@ void main() {
     await t.pumpAndSettle();
   });
 
-  testWidgets('always translate chinese: every chat nobody set does it', (
+  testWidgets('the menu has no language-wide always, only never and hide', (
     t,
   ) async {
     final f = fakeHub(installed: true, words: _words);
     await open(t, f, [_zh1, _zh2]);
     await t.tap(find.byKey(const ValueKey('tr-bar-more')));
     await t.pumpAndSettle();
-    await t.tap(find.text(l10n.translateBarAlways(langName('zh'))));
+    expect(find.text('Always translate ${langName('zh')}'), findsNothing);
+    expect(find.text(l10n.translateBarNever(langName('zh'))), findsOneWidget);
+    expect(find.text(l10n.translateBarHide), findsOneWidget);
+    expect(find.byType(HaloSwitch), findsNothing);
+    // another chat stays as it is
+    await t.tapAt(const Offset(10, 10));
     await t.pumpAndSettle();
-    expect(f.store.settings.always, ['zh']);
-    expect(find.text(_en1), findsOneWidget);
-    // another chat, never set, translates on its own too
     await open(t, f, [_zh1, _zh2], chat: 'wren');
-    expect(find.text(_en1), findsOneWidget);
-    expect(find.text(_en2), findsOneWidget);
+    expect(find.text(_en1), findsNothing);
   });
 
-  testWidgets('never translate chinese: it is a language they read now', (
+  testWidgets('never offer for chinese: on the never list, with an undo', (
     t,
   ) async {
     final f = fakeHub(installed: true, words: _words);
@@ -255,12 +257,20 @@ void main() {
     await t.pumpAndSettle();
     await t.tap(find.text(l10n.translateBarNever(langName('zh'))));
     await t.pumpAndSettle();
-    expect(f.store.settings.mine, ['zh']);
+    expect(f.store.settings.never, ['zh']);
+    // not counted as a language they read
+    expect(f.store.settings.mine, isEmpty);
     expect(_bar(), findsNothing);
     expect(
       find.textContaining(l10n.translateAction, findRichText: true),
       findsNothing,
     );
+    // the note offers it back
+    expect(find.text(l10n.translateNeverDone(langName('zh'))), findsOneWidget);
+    await t.tap(find.text(l10n.translateUndo));
+    await t.pumpAndSettle();
+    expect(f.store.settings.never, isEmpty);
+    expect(_bar(), findsOneWidget);
   });
 
   testWidgets('hide: the bar goes quietly and stays away in this chat', (

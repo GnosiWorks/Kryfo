@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../bridge_mode.dart';
+import '../desk_bridge_line.dart';
 import '../l10n/l10n.dart';
 import '../lock_state.dart' show lockState;
 import '../l10n/numbers.dart';
@@ -136,7 +137,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                       const SizedBox(height: 10),
                       _ChoiceCard(
                         title: l10n.bridgesBridgeFromAFriend,
-                        body: l10n.bridgesPasteOrScanALine,
+                        body: l10n.bridgesPasteOrScanALineShown,
                         selected: chosen == BridgeChoice.friend,
                         tag: tag(BridgeChoice.friend),
                         onTap: () => _pick(BridgeChoice.friend),
@@ -217,7 +218,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
 /// the status line as the bridges page and the home card show it
 BridgeLine shownBridgeLine() {
   final line = appState.bridgeLine;
-  return appState.bridge.skipDirect ? line.watched() : line;
+  return deskBridgeLine(appState.bridge.skipDirect ? line.watched() : line);
 }
 
 /// fast in one tap, where tor found no way in

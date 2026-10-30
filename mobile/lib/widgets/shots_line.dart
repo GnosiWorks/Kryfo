@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the line a chat shows where its screenshot block last changed, by either
-// phone: a quiet pill in the thread, like a day's. it eases in where it
+// phone, and where it went over to post-quantum: a quiet pill in the
+// thread, like a day's. it eases in where it
 // lands, no animation with reduced motion
 import 'package:flutter/material.dart';
 
@@ -56,7 +57,10 @@ String keptOpenLine(KeptIn where) => switch (where) {
 class ShotsLine extends StatelessWidget {
   final String text;
   final bool on;
-  const ShotsLine({super.key, required this.text, required this.on});
+  // another line of the same kind (a chat going over to post-quantum):
+  // its own icon
+  final IconData? icon;
+  const ShotsLine({super.key, required this.text, required this.on, this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +77,10 @@ class ShotsLine extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            on ? Icons.phonelink_lock_outlined : Icons.phonelink_erase_outlined,
+            icon ??
+                (on
+                    ? Icons.phonelink_lock_outlined
+                    : Icons.phonelink_erase_outlined),
             size: 12,
             color: HaloColors.text2,
           ),

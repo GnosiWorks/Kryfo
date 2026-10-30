@@ -27,12 +27,15 @@ class QuietIdentity {
     required this.xPub,
     required this.onion,
     required this.invite,
+    this.qr,
   });
   final String id;
   final String edPub;
   final String xPub;
   final String onion;
   final String invite;
+  // the qr form of its v4 invite, without the bundle
+  final String? qr;
 }
 
 // what home shows of a session: its chats, requests, groups, avatar and
@@ -117,6 +120,12 @@ class AppState extends ChangeNotifier {
     signalSession.onStarterNeeded = (peer) => unawaited(_sendStarter(peer));
     // their session started again (a heal, a restore): answered at once
     signalSession.onNewSession = (peer) => unawaited(_answerNewSession(peer));
+    // their side of a pq restart is done: the 16 days begin, the line shows.
+    // the dev chat's own seats say so too
+    signalSession.onPqOver = (peer) => unawaited(notePqOver(peer));
+    devLane.onPqOver = (peer) => unawaited(notePqOver(peer));
+    // the opener to a one-time invite went: the rest waits for the answer
+    signalSession.holdOpener = _onceOpenerWent;
   }
 
   // signal, the engine and android, as the receive side reaches them
