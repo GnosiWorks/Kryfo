@@ -5,6 +5,7 @@ import 'app_localizations.dart';
 import 'dates.dart';
 
 export 'app_localizations.dart';
+export 'desk_words.dart';
 
 // a getter rather than AppLocalizations.of(context) because much of what
 // kryfo says is said away from any widget: background notifications, toasts

@@ -49,7 +49,7 @@ class WhyKryfoScreen extends StatelessWidget {
               _principle(
                 Icons.cloud_off_outlined,
                 l10n.whyKryfoNoServersHoldingYour,
-                l10n.whyKryfoNoAccountNoPhone,
+                l10n.whyKryfoNoAccountNoPhoneShown,
               ),
               _principle(
                 Icons.visibility_off_outlined,

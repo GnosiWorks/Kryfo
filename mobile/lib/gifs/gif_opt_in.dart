@@ -78,7 +78,7 @@ class GifOptIn extends StatelessWidget {
         ),
         HaloColors.green,
         l10n.gifOptInOffWhenever,
-        l10n.gifOptInWhereToTurnOff,
+        l10n.gifOptInWhereToTurnOffShown,
       ),
     ];
     return Padding(
@@ -344,7 +344,7 @@ class GifOff extends StatelessWidget {
                     child: Text.rich(
                       TextSpan(
                         children: markedSpans(
-                          l10n.gifSavedOnPhone,
+                          l10n.gifSavedOnPhoneShown,
                           HaloType.sans(
                             size: 14,
                             weight: FontWeight.w600,

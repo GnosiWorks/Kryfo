@@ -703,12 +703,12 @@ class _ForeignCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            l10n.handleIsNotYoursOn(handle),
+            l10n.handleIsNotYoursOnShown(handle),
             style: HaloType.serif(size: 19, color: HaloColors.text),
           ),
           const SizedBox(height: 8),
           Text(
-            l10n.handleTheRegistryHoldsIt(handle),
+            l10n.handleTheRegistryHoldsItShown(handle),
             style: HaloType.sans(
               size: 13,
               color: HaloColors.text2,
@@ -728,7 +728,7 @@ class _ForeignCard extends StatelessWidget {
                 border: Border.all(color: HaloColors.line),
               ),
               child: Text(
-                l10n.handleForgetItOnThis,
+                l10n.handleForgetItOnThisShown,
                 style: HaloType.sans(
                   size: 13.5,
                   weight: FontWeight.w600,
