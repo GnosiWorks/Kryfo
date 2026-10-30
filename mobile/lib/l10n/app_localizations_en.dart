@@ -10153,4 +10153,89 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fileSheetOpenWith => 'Open with another app';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Everything Kryfo keeps on this computer is encrypted. It opens with your computer account.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Add a passphrase';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'Without it, anyone using your computer account can open Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo could not keep its key in this computer\'s keyring. Add a passphrase instead.';
+
+  @override
+  String get desktopKeyMissing =>
+      'This computer account does not have the key to Kryfo\'s data. A Kryfo backup brings everything back. If you moved Kryfo\'s folder, add a passphrase on the computer account it came from, then copy it again.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo cannot reach its key on this computer right now. Unlock your keyring if your computer asks, then try again.';
+
+  @override
+  String get desktopPassRow => 'Passphrase on this computer';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo opens with your computer account.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo asks for this passphrase every time it starts.';
+
+  @override
+  String get desktopPassChange => 'Change the passphrase';
+
+  @override
+  String get desktopPassRemove => 'Remove the passphrase';
+
+  @override
+  String get desktopPassCurrent => 'Current passphrase';
+
+  @override
+  String get desktopPassNew => 'New passphrase';
+
+  @override
+  String get desktopPassStays =>
+      'This computer has no keyring Kryfo can use, so the passphrase stays.';
+
+  @override
+  String get desktopPassAdded => 'Passphrase added';
+
+  @override
+  String get desktopPassRemoved => 'Passphrase removed';
+
+  @override
+  String get desktopPassChanged => 'Passphrase changed';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Type your passphrase to remove it. Kryfo then opens with your computer account.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo cannot reach its key in this computer\'s security chip right now. Try again in a moment.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo could not keep its key with your Windows account. Add a passphrase instead.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo could not keep its key with your Windows account, so the passphrase stays.';
+
+  @override
+  String get desktopBackupCardTitle => 'Keep a Kryfo backup';
+
+  @override
+  String get desktopBackupCardLine =>
+      'Your Windows account on this computer keeps Kryfo\'s key. A Kryfo backup brings everything back if the computer or the account is ever reset.';
+
+  @override
+  String get desktopBackupHint =>
+      'Brings everything back if this computer is ever reset.';
 }

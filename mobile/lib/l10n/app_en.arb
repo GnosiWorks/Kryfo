@@ -12823,5 +12823,101 @@
   "fileSheetOpenWith": "Open with another app",
   "@fileSheetOpenWith": {
     "description": "file sheet: hands the file to an app the person picks"
+  },
+  "desktopLockAccountBody": "Everything Kryfo keeps on this computer is encrypted. It opens with your computer account.",
+  "@desktopLockAccountBody": {
+    "description": "desktop/desktop_lock_screen.dart: first start with a system keyring, under the title"
+  },
+  "desktopLockAddPassphrase": "Add a passphrase",
+  "@desktopLockAddPassphrase": {
+    "description": "desktop/desktop_lock_screen.dart and desktop_passphrase_screen.dart: button that adds an optional passphrase"
+  },
+  "desktopLockWithoutPassphrase": "Without it, anyone using your computer account can open Kryfo.",
+  "@desktopLockWithoutPassphrase": {
+    "description": "desktop/desktop_lock_screen.dart and desktop_passphrase_screen.dart: the honest line under Add a passphrase. it = the passphrase"
+  },
+  "desktopLockKeyringRefused": "Kryfo could not keep its key in this computer's keyring. Add a passphrase instead.",
+  "@desktopLockKeyringRefused": {
+    "description": "desktop/desktop_lock_screen.dart: the system keyring refused to keep the key at first start"
+  },
+  "desktopKeyMissing": "This computer account does not have the key to Kryfo's data. A Kryfo backup brings everything back. If you moved Kryfo's folder, add a passphrase on the computer account it came from, then copy it again.",
+  "@desktopKeyMissing": {
+    "description": "desktop/desktop_lock_screen.dart: the key kept by the computer account is not there (another account or computer, a reset keyring)"
+  },
+  "desktopKeyUnreachable": "Kryfo cannot reach its key on this computer right now. Unlock your keyring if your computer asks, then try again.",
+  "@desktopKeyUnreachable": {
+    "description": "desktop/desktop_lock_screen.dart: the keyring is locked or not answering"
+  },
+  "desktopPassRow": "Passphrase on this computer",
+  "@desktopPassRow": {
+    "description": "screens/settings_screen.dart: settings row and page title, desktop only"
+  },
+  "desktopPassOffBody": "Kryfo opens with your computer account.",
+  "@desktopPassOffBody": {
+    "description": "desktop/desktop_passphrase_screen.dart: when no passphrase is set"
+  },
+  "desktopPassOnBody": "Kryfo asks for this passphrase every time it starts.",
+  "@desktopPassOnBody": {
+    "description": "desktop/desktop_passphrase_screen.dart: when a passphrase is set"
+  },
+  "desktopPassChange": "Change the passphrase",
+  "@desktopPassChange": {
+    "description": "desktop/desktop_passphrase_screen.dart: button"
+  },
+  "desktopPassRemove": "Remove the passphrase",
+  "@desktopPassRemove": {
+    "description": "desktop/desktop_passphrase_screen.dart: button"
+  },
+  "desktopPassCurrent": "Current passphrase",
+  "@desktopPassCurrent": {
+    "description": "desktop/desktop_passphrase_screen.dart: field label"
+  },
+  "desktopPassNew": "New passphrase",
+  "@desktopPassNew": {
+    "description": "desktop/desktop_passphrase_screen.dart: field label"
+  },
+  "desktopPassStays": "This computer has no keyring Kryfo can use, so the passphrase stays.",
+  "@desktopPassStays": {
+    "description": "desktop/desktop_passphrase_screen.dart: no system keyring, so the passphrase cannot be removed"
+  },
+  "desktopPassAdded": "Passphrase added",
+  "@desktopPassAdded": {
+    "description": "desktop/desktop_passphrase_screen.dart: toast"
+  },
+  "desktopPassRemoved": "Passphrase removed",
+  "@desktopPassRemoved": {
+    "description": "desktop/desktop_passphrase_screen.dart: toast"
+  },
+  "desktopPassChanged": "Passphrase changed",
+  "@desktopPassChanged": {
+    "description": "desktop/desktop_passphrase_screen.dart: toast"
+  },
+  "desktopPassRemoveBody": "Type your passphrase to remove it. Kryfo then opens with your computer account.",
+  "@desktopPassRemoveBody": {
+    "description": "desktop/desktop_passphrase_screen.dart: above the field when removing the passphrase"
+  },
+  "desktopKeyUnreachableWindows": "Kryfo cannot reach its key in this computer's security chip right now. Try again in a moment.",
+  "@desktopKeyUnreachableWindows": {
+    "description": "desktop/desktop_lock_screen.dart: windows, the tpm is busy or locked out for now"
+  },
+  "desktopLockAccountRefused": "Kryfo could not keep its key with your Windows account. Add a passphrase instead.",
+  "@desktopLockAccountRefused": {
+    "description": "desktop/desktop_lock_screen.dart: windows, dpapi refused to keep the key at first start"
+  },
+  "desktopPassStaysWindows": "Kryfo could not keep its key with your Windows account, so the passphrase stays.",
+  "@desktopPassStaysWindows": {
+    "description": "desktop/desktop_passphrase_screen.dart: windows, dpapi refused the key when removing the passphrase"
+  },
+  "desktopBackupCardTitle": "Keep a Kryfo backup",
+  "@desktopBackupCardTitle": {
+    "description": "screens/home_screen.dart: windows without a passphrase, card title suggesting a backup"
+  },
+  "desktopBackupCardLine": "Your Windows account on this computer keeps Kryfo's key. A Kryfo backup brings everything back if the computer or the account is ever reset.",
+  "@desktopBackupCardLine": {
+    "description": "screens/home_screen.dart: windows without a passphrase, the card's line"
+  },
+  "desktopBackupHint": "Brings everything back if this computer is ever reset.",
+  "@desktopBackupHint": {
+    "description": "screens/settings_screen.dart: windows without a passphrase, under Back up identity"
   }
 }

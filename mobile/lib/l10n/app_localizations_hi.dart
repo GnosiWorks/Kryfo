@@ -10167,4 +10167,89 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get fileSheetOpenWith => 'दूसरे ऐप से खोलें';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Kryfo इस कंप्यूटर पर जो कुछ रखता है, सब एन्क्रिप्टेड है। यह आपके यूज़र अकाउंट से खुलता है।';
+
+  @override
+  String get desktopLockAddPassphrase => 'पासफ़्रेज़ जोड़ें';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'इसके बिना, आपके यूज़र अकाउंट का इस्तेमाल करने वाला कोई भी Kryfo खोल सकता है।';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo अपनी कुंजी इस कंप्यूटर की कीरिंग में नहीं रख पाया। इसकी जगह पासफ़्रेज़ जोड़ें।';
+
+  @override
+  String get desktopKeyMissing =>
+      'इस यूज़र अकाउंट के पास Kryfo के डेटा की कुंजी नहीं है। Kryfo बैकअप सब कुछ वापस ले आता है। अगर आपने Kryfo का फ़ोल्डर कहीं और रखा है, तो जिस यूज़र अकाउंट से वह आया है उस पर पासफ़्रेज़ जोड़ें, फिर उसे दोबारा कॉपी करें।';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo अभी इस कंप्यूटर पर अपनी कुंजी तक नहीं पहुँच पा रहा। कंप्यूटर पूछे तो अपनी कीरिंग अनलॉक करें, फिर दोबारा कोशिश करें।';
+
+  @override
+  String get desktopPassRow => 'इस कंप्यूटर पर पासफ़्रेज़';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo आपके यूज़र अकाउंट से खुलता है।';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo हर बार शुरू होने पर यह पासफ़्रेज़ पूछता है।';
+
+  @override
+  String get desktopPassChange => 'पासफ़्रेज़ बदलें';
+
+  @override
+  String get desktopPassRemove => 'पासफ़्रेज़ हटाएँ';
+
+  @override
+  String get desktopPassCurrent => 'मौजूदा पासफ़्रेज़';
+
+  @override
+  String get desktopPassNew => 'नया पासफ़्रेज़';
+
+  @override
+  String get desktopPassStays =>
+      'इस कंप्यूटर पर ऐसी कोई कीरिंग नहीं है जिसे Kryfo इस्तेमाल कर सके, इसलिए पासफ़्रेज़ बना रहेगा।';
+
+  @override
+  String get desktopPassAdded => 'पासफ़्रेज़ जोड़ा गया';
+
+  @override
+  String get desktopPassRemoved => 'पासफ़्रेज़ हटाया गया';
+
+  @override
+  String get desktopPassChanged => 'पासफ़्रेज़ बदला गया';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'हटाने के लिए अपना पासफ़्रेज़ लिखें। इसके बाद Kryfo आपके यूज़र अकाउंट से खुलेगा।';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo अभी इस कंप्यूटर की सुरक्षा चिप में अपनी कुंजी तक नहीं पहुँच पा रहा। थोड़ी देर में दोबारा कोशिश करें।';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo अपनी कुंजी आपके Windows अकाउंट के साथ नहीं रख पाया। इसकी जगह पासफ़्रेज़ जोड़ें।';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo अपनी कुंजी आपके Windows अकाउंट के साथ नहीं रख पाया, इसलिए पासफ़्रेज़ बना रहेगा।';
+
+  @override
+  String get desktopBackupCardTitle => 'Kryfo बैकअप रखें';
+
+  @override
+  String get desktopBackupCardLine =>
+      'इस कंप्यूटर पर आपका Windows अकाउंट Kryfo की कुंजी रखता है। अगर कभी कंप्यूटर या अकाउंट रीसेट हो, तो Kryfo बैकअप सब कुछ वापस ले आता है।';
+
+  @override
+  String get desktopBackupHint =>
+      'अगर कभी यह कंप्यूटर रीसेट हो, तो सब कुछ वापस ले आता है।';
 }
