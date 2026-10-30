@@ -10,6 +10,9 @@
 namespace {
 constexpr UINT_PTR kQuitTimer = 0x4B51;
 constexpr UINT_PTR kFrameTimer = 0x4B52;
+constexpr UINT_PTR kHiddenTimer = 0x4B53;
+// how long a hidden start waits for its tray icon before the window shows
+constexpr UINT kHiddenWaitMs = 10000;
 // how long the window asks for frames itself after it comes up
 constexpr ULONGLONG kPumpMs = 3000;
 }  // namespace
@@ -56,6 +59,16 @@ bool FlutterWindow::OnCreate() {
       };
       tray_.Show(GetHandle(), word("open"), word("quit"), word("tip"));
       result->Success();
+    } else if (call.method_name() == "noTray") {
+      // the tray switch off: no icon, and closing the window quits
+      tray_.Hide();
+      // no icon left to open a hidden window from
+      if (!::IsWindowVisible(GetHandle())) ShowAndRaise();
+      result->Success();
+    } else if (call.method_name() == "startHidden") {
+      result->Success(flutter::EncodableValue(start_hidden_));
+    } else if (call.method_name() == "trayState") {
+      result->Success(flutter::EncodableValue(tray_.shown()));
     } else if (call.method_name() == "show") {
       ShowAndRaise();
       result->Success();
@@ -71,6 +84,8 @@ bool FlutterWindow::OnCreate() {
   // the first frame is there: the window comes up in front with the view
   // focused, so nothing waits for a click to be drawn or typed into
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
+    // a hidden start stays in the tray; ShowAndRaise brings it up
+    if (start_hidden_) return;
     this->Show();
     ShowAndRaise();
   });
@@ -80,12 +95,17 @@ bool FlutterWindow::OnCreate() {
   // window is shown. It is a no-op if the first frame hasn't completed yet.
   flutter_controller_->ForceRedraw();
 
+  // no tray icon in time (no shell, or dart never said its words): the
+  // window after all
+  if (start_hidden_) ::SetTimer(GetHandle(), kHiddenTimer, kHiddenWaitMs, nullptr);
+
   return true;
 }
 
 void FlutterWindow::ShowAndRaise() {
   HWND w = GetHandle();
   if (!w) return;
+  ::KillTimer(w, kHiddenTimer);
   ::ShowWindow(w, ::IsIconic(w) ? SW_RESTORE : SW_SHOWNORMAL);
   // over the other windows even when windows keeps the focus where it is
   ::SetWindowPos(w, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
@@ -191,6 +211,11 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
     case WM_TIMER:
       if (wparam == kFrameTimer) {
         PumpTick();
+        return 0;
+      }
+      if (wparam == kHiddenTimer) {
+        ::KillTimer(hwnd, kHiddenTimer);
+        if (!tray_.shown()) ShowAndRaise();
         return 0;
       }
       if (wparam == kQuitTimer) {

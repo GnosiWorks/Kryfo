@@ -18,6 +18,9 @@ class FlutterWindow : public Win32Window {
   explicit FlutterWindow(const flutter::DartProject& project);
   virtual ~FlutterWindow();
 
+  // before Create: no window until the tray or a second start asks
+  void SetStartHidden(bool hidden) { start_hidden_ = hidden; }
+
  protected:
   // Win32Window:
   bool OnCreate() override;
@@ -38,6 +41,9 @@ class FlutterWindow : public Win32Window {
 
   // ends when the window comes up, see PumpFrames
   ULONGLONG pump_until_ = 0;
+
+  // started with the computer (--hidden)
+  bool start_hidden_ = false;
 
   void ShowAndRaise();
   void PumpFrames();

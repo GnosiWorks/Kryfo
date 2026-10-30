@@ -41,6 +41,8 @@ class Tray {
 
   HWND window_ = nullptr;
   bool shown_ = false;
+  // asked for by dart and not taken down since, shown or not
+  bool wanted_ = false;
   bool v4_ = false;
   bool in_menu_ = false;
   std::wstring open_, quit_, tip_;

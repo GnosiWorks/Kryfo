@@ -48,10 +48,12 @@ void Tray::Show(HWND window, const std::wstring& open, const std::wstring& quit,
   open_ = open.empty() ? L"Open Kryfo" : open;
   quit_ = quit.empty() ? L"Quit Kryfo" : quit;
   tip_ = tip.empty() ? L"Kryfo" : tip;
+  wanted_ = true;
   shown_ = Add() || shown_;
 }
 
 void Tray::Hide() {
+  wanted_ = false;
   if (!shown_) return;
   NOTIFYICONDATAW data = {};
   data.cbSize = sizeof(data);
@@ -89,7 +91,8 @@ TrayEvent Tray::EventOf(bool v4, UINT event) {
 bool Tray::Handle(UINT message, WPARAM wparam, LPARAM lparam,
                   const std::function<void()>& on_open, const std::function<void()>& on_quit) {
   if (message == taskbar_created_ && taskbar_created_ != 0) {
-    if (shown_) {
+    // also an icon asked for before the taskbar was up (a start at sign-in)
+    if (wanted_) {
       shown_ = false;
       shown_ = Add();
     }

@@ -32,6 +32,18 @@ bool SendLinkToFirst() {
   return true;
 }
 
+// started with the computer: the window waits in the tray
+bool StartHidden() {
+  int argc = 0;
+  wchar_t** argv = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
+  bool r = false;
+  for (int i = 1; argv != nullptr && i < argc; i++) {
+    if (::wcscmp(argv[i], L"--hidden") == 0) r = true;
+  }
+  ::LocalFree(argv);
+  return r;
+}
+
 }  // namespace
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
@@ -74,6 +86,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
 
   FlutterWindow window(project);
+  window.SetStartHidden(StartHidden());
   Win32Window::Point origin(10, 10);
   Win32Window::Size size(1280, 720);
   if (!window.Create(L"Kryfo", origin, size)) {
