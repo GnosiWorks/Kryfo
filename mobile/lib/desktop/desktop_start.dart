@@ -145,15 +145,41 @@ Future<void> showWindow() async {
   } catch (_) {}
 }
 
-Future<void> sayTrayWords() async {
+/// [locked]: before the vault opens nothing arrives, and the tip says so
+Future<void> sayTrayWords({bool locked = false}) async {
   try {
-    await _desktopChannel.invokeMethod<void>('tray', {
-      'open': l10n.desktopLockOpen,
-      'quit': l10n.desktopTrayQuit,
-      'tip': l10n.desktopTrayTip,
-    });
+    await _desktopChannel.invokeMethod<void>('tray', trayWords(locked: locked));
   } catch (_) {
     // a runner without a tray: closing the window ends the app
+  }
+}
+
+/// the tray's words, in the app's language
+@visibleForTesting
+Map<String, String> trayWords({bool locked = false}) => {
+  'open': l10n.desktopLockOpen,
+  'quit': l10n.desktopTrayQuit,
+  'tip': locked ? l10n.desktopTrayLockedTip : l10n.desktopTrayTip,
+};
+
+/// started with the computer ([startHiddenFlag]): the runner keeps the
+/// window hidden, so the tray icon comes before the vault opens, as the
+/// way to the lock screen. the same icon whatever opens after
+Future<bool> trayBeforeOpen({
+  Future<bool?> Function() hidden = startedHidden,
+  Future<void> Function()? words,
+}) async {
+  if (await hidden() != true) return false;
+  await (words ?? () => sayTrayWords(locked: true))();
+  return true;
+}
+
+/// true when the runner started with no window
+Future<bool?> startedHidden() async {
+  try {
+    return await _desktopChannel.invokeMethod<bool>('startHidden');
+  } catch (_) {
+    return null;
   }
 }
 
@@ -269,6 +295,8 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     if (call.method == 'quit') ending();
     return null;
   });
+  // asked before the vault can open, so its words never come after begin's
+  await trayBeforeOpen();
   // what memory held from a run before goes now, before anything is plain
   if (runtime != null) {
     final docs = (await paths.getApplicationDocumentsPath())!;
@@ -288,7 +316,8 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
         started = true;
         lock.opened();
         // the tray, as the switch was left. nothing arrives before the
-        // vault opens, so closing the passphrase screen just quits
+        // vault opens, so closing the passphrase screen just quits, unless
+        // the start with the computer put the icon up
         final run = DesktopRun(
           tray: const ChannelTray(sayTrayWords),
           place: startPlaceHere(read: vault.read, write: vault.write),

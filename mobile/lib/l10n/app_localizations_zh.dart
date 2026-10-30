@@ -9611,6 +9611,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get desktopTrayTip => 'Kryfo 正在运行并接收消息';
 
   @override
+  String get desktopTrayLockedTip => '打开 Kryfo 即可开始接收消息';
+
+  @override
   String get desktopRunSection => '在这台电脑上';
 
   @override
@@ -9629,7 +9632,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get desktopStartRow => '随电脑启动';
 
   @override
-  String get desktopStartHint => '登录这台电脑时，Kryfo 就会打开。';
+  String get desktopStartHint => '登录这台电脑时，Kryfo 会在系统托盘中启动。';
 
   @override
   String get desktopStartRefused => '这台电脑不允许 Kryfo 随它启动。你自己启动时，Kryfo 照常打开。';
@@ -19703,6 +19706,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get desktopTrayTip => 'Kryfo 正在執行並接收訊息';
 
   @override
+  String get desktopTrayLockedTip => '打開 Kryfo 即可開始接收訊息';
+
+  @override
   String get desktopRunSection => '在這台電腦上';
 
   @override
@@ -19721,7 +19727,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get desktopStartRow => '隨電腦啟動';
 
   @override
-  String get desktopStartHint => '登入這台電腦時，Kryfo 就會開啟。';
+  String get desktopStartHint => '登入這台電腦時，Kryfo 會在系統匣中啟動。';
 
   @override
   String get desktopStartRefused => '這台電腦不允許 Kryfo 隨它啟動。你自己啟動時，Kryfo 照常開啟。';

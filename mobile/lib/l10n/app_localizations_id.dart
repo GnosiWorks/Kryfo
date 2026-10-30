@@ -10132,6 +10132,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get desktopTrayTip => 'Kryfo berjalan dan menerima pesan';
 
   @override
+  String get desktopTrayLockedTip => 'Buka Kryfo untuk mulai menerima pesan';
+
+  @override
   String get desktopRunSection => 'Di komputer ini';
 
   @override
@@ -10154,7 +10157,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get desktopStartHint =>
-      'Kryfo terbuka saat kamu masuk ke komputer ini.';
+      'Kryfo mulai di area notifikasi saat kamu masuk ke komputer ini.';
 
   @override
   String get desktopStartRefused =>

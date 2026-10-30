@@ -22,6 +22,8 @@ import 'package:kryfo/delivery_mode.dart';
 import 'package:kryfo/desk_bridge_line.dart';
 import 'package:kryfo/desktop/desktop_mode.dart';
 import 'package:kryfo/desktop/desktop_run.dart';
+import 'package:kryfo/desktop/desktop_start.dart'
+    show startedHidden, trayBeforeOpen, trayWords;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart' show LockGuard;
 import 'package:kryfo/lock_state.dart';
@@ -68,6 +70,9 @@ class _Place implements StartPlace {
   StartAnswer now = StartAnswer.off;
   bool refuse = false;
   final asked = <bool>[];
+  int mended = 0;
+  @override
+  Future<void> mend() async => mended++;
   @override
   Future<StartAnswer> read() async => now;
   @override
@@ -284,7 +289,7 @@ void main() {
       expect(await place.set(true), StartAnswer.on);
       final f = File(p.join(dir, autostartFile));
       final text = f.readAsStringSync();
-      expect(text, contains('Exec="/opt/my apps/kryfo/kryfo"\n'));
+      expect(text, contains('Exec="/opt/my apps/kryfo/kryfo" --hidden\n'));
       expect(text, startsWith('[Desktop Entry]\nType=Application\n'));
       expect(Directory(dir).listSync(), hasLength(1));
       expect(await place.read(), StartAnswer.on);
@@ -310,7 +315,7 @@ void main() {
         trayWait: Duration.zero,
       );
       await run.begin();
-      expect(f.readAsStringSync(), contains('Exec="/new/kryfo"\n'));
+      expect(f.readAsStringSync(), contains('Exec="/new/kryfo" --hidden\n'));
       expect(run.start, StartAnswer.on);
       // the same file is left as it is
       final kept = '${f.readAsStringSync()}X-Kept=1\n';
@@ -369,7 +374,9 @@ void main() {
       final place = WindowsStart(key, exe);
       expect(await place.read(), StartAnswer.off);
       expect(await place.set(true), StartAnswer.on);
-      expect(key.values, {runValueName: r'"C:\Program Files\Kryfo\kryfo.exe"'});
+      expect(key.values, {
+        runValueName: r'"C:\Program Files\Kryfo\kryfo.exe" --hidden',
+      });
       // switched off in windows' startup apps: said, and left theirs
       key.off = true;
       expect(await place.read(), StartAnswer.heldOff);
@@ -404,6 +411,158 @@ void main() {
         'portalStart': false,
         'tray': false,
       });
+    });
+
+    test('every place is mended once the vault opens', () async {
+      final place = _Place();
+      await _run(_Kv(), _Tray(), place).begin();
+      expect(place.mended, 1);
+    });
+
+    test(
+      'linux: an entry from before the hidden start gets the flag',
+      () async {
+        final tmp = Directory.systemTemp.createTempSync('kryfo-autostart');
+        addTearDown(() => tmp.deleteSync(recursive: true));
+        final dir = p.join(tmp.path, 'autostart');
+        Directory(dir).createSync();
+        final f = File(p.join(dir, autostartFile))
+          ..writeAsStringSync(
+            '[Desktop Entry]\nType=Application\nName=Kryfo\n'
+            'Exec="/opt/kryfo/kryfo"\nX-GNOME-Autostart-enabled=true\n',
+          );
+        await LinuxStart(dir, '/opt/kryfo/kryfo').mend();
+        expect(
+          f.readAsStringSync(),
+          contains('Exec="/opt/kryfo/kryfo" --hidden\n'),
+        );
+        expect(
+          f.readAsStringSync(),
+          isNot(contains('Exec="/opt/kryfo/kryfo"\n')),
+        );
+      },
+    );
+
+    test('linux: any desktop\'s off is off, spaces or not', () async {
+      bool off(String body) => entrySaysOff('[Desktop Entry]\n$body\n');
+      expect(off('X-MATE-Autostart-enabled=false'), isTrue);
+      expect(off('X-KDE-Autostart-enabled = false'), isTrue);
+      expect(off('  Hidden = true  '), isTrue);
+      expect(off('X-GNOME-Autostart-enabled=false'), isTrue);
+      expect(off('X-GNOME-Autostart-enabled=true'), isFalse);
+      expect(off('Hidden=false'), isFalse);
+      expect(off('# Hidden=true'), isFalse);
+      expect(off('X-GNOME-Autostart-Delay=false'), isFalse);
+      expect(off('Name=Hidden=true'), isFalse);
+      // another group's keys are not the entry's
+      expect(off('Exec=k\n[Desktop Action x]\nHidden=true'), isFalse);
+      // MATE's off survives a moved bundle: read off, so mend leaves it
+      final tmp = Directory.systemTemp.createTempSync('kryfo-autostart');
+      addTearDown(() => tmp.deleteSync(recursive: true));
+      final f = File(p.join(tmp.path, autostartFile));
+      final held =
+          '${autostartEntry('"/old/kryfo"')}X-MATE-Autostart-enabled = false\n';
+      f.writeAsStringSync(held);
+      final place = LinuxStart(tmp.path, '/new/kryfo');
+      expect(await place.read(), StartAnswer.off);
+      await place.mend();
+      expect(f.readAsStringSync(), held);
+    });
+
+    test('linux: the appimage only when this binary is in its mount', () {
+      const exe = '/tmp/.mount_KryfoX/usr/bin/kryfo';
+      const env = {
+        'APPIMAGE': '/home/u/Kryfo.AppImage',
+        'APPDIR': '/tmp/.mount_KryfoX',
+      };
+      expect(linuxStartFile(exe, env), '/home/u/Kryfo.AppImage');
+      // started from another appimage: its path is not ours
+      expect(linuxStartFile('/opt/kryfo/kryfo', env), '/opt/kryfo/kryfo');
+      expect(linuxStartFile(exe, {'APPIMAGE': '/home/u/Kryfo.AppImage'}), exe);
+      expect(linuxStartFile(exe, {...env, 'APPIMAGE': 'Kryfo.AppImage'}), exe);
+      expect(linuxStartFile(exe, {...env, 'APPDIR': 'rel'}), exe);
+      expect(linuxStartFile('/opt/kryfo/kryfo', const {}), '/opt/kryfo/kryfo');
+    });
+
+    test(
+      'windows: a value from before gets the flag, the switch theirs',
+      () async {
+        const exe = r'C:\Kryfo\kryfo.exe';
+        final key = _RunKey()..values[runValueName] = r'"C:\Old\kryfo.exe"';
+        key.off = true;
+        final place = WindowsStart(key, exe);
+        await place.mend();
+        expect(key.values[runValueName], r'"C:\Kryfo\kryfo.exe" --hidden');
+        expect(await place.read(), StartAnswer.heldOff);
+        // none: none is made
+        final none = _RunKey();
+        await WindowsStart(none, exe).mend();
+        expect(none.values, isEmpty);
+      },
+    );
+
+    test('flatpak: the portal is never asked without the switch', () async {
+      // a grant from before: the user may have switched it off outside
+      // kryfo, so a start or an unlock asks nothing
+      final kv = _Kv()..m[runEntry] = jsonEncode({'portalStart': true});
+      final portal = _Portal();
+      final place = PortalStart(portal, read: kv.read, write: kv.write);
+      await place.mend();
+      await _run(kv, _Tray(), place).begin();
+      expect(portal.asked, isEmpty);
+      expect(jsonDecode(kv.m[runEntry]!), {'portalStart': true});
+      // the switch asks
+      expect(await place.set(true), StartAnswer.on);
+      expect(portal.asked, [true]);
+    });
+
+    test('a hidden start puts the icon up before the vault', () async {
+      var said = 0;
+      Future<void> words() async => said++;
+      expect(
+        await trayBeforeOpen(hidden: () async => true, words: words),
+        isTrue,
+      );
+      expect(said, 1);
+      expect(
+        await trayBeforeOpen(hidden: () async => false, words: words),
+        isFalse,
+      );
+      expect(
+        await trayBeforeOpen(hidden: () async => null, words: words),
+        isFalse,
+      );
+      expect(said, 1);
+    });
+
+    test('the runner says whether it started hidden', () async {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      final m =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      final calls = <MethodCall>[];
+      m.setMockMethodCallHandler(runChannel, (call) async {
+        calls.add(call);
+        return call.method == 'startHidden' ? true : null;
+      });
+      addTearDown(() => m.setMockMethodCallHandler(runChannel, null));
+      expect(await startedHidden(), isTrue);
+      expect(await trayBeforeOpen(), isTrue);
+      expect(calls.last.method, 'tray');
+      expect(calls.last.arguments, trayWords(locked: true));
+      m.setMockMethodCallHandler(runChannel, null);
+      // a runner that does not know the call: a normal start
+      expect(await startedHidden(), isNull);
+      expect(await trayBeforeOpen(), isFalse);
+    });
+
+    test('before the vault the tip says to open, the same in a decoy', () {
+      final locked = trayWords(locked: true);
+      expect(locked['tip'], l10n.desktopTrayLockedTip);
+      expect(locked['open'], trayWords()['open']);
+      expect(trayWords()['tip'], l10n.desktopTrayTip);
+      lockState.inDecoy = true;
+      addTearDown(() => lockState.inDecoy = false);
+      expect(trayWords(locked: true), locked);
     });
 
     test('the phone build has no place and no runner', () {
@@ -621,6 +780,7 @@ void main() {
         'desktopStartHint',
         'desktopStartRefused',
         'desktopStartHeldOff',
+        'desktopTrayLockedTip',
       ];
       for (final MapEntry(key: lang, value: arb) in arbs.entries) {
         for (final k in added) {
@@ -673,6 +833,10 @@ void main() {
     expect(open, greaterThan(0));
     expect(src.indexOf('run.begin()'), greaterThan(open));
     expect(src.indexOf('unawaited(sayTrayWords())'), -1);
+    // before the vault, only a hidden start puts the icon up
+    final early = src.indexOf('await trayBeforeOpen()');
+    expect(early, greaterThan(0));
+    expect(early, lessThan(open));
     expect(debugDefaultTargetPlatformOverride, isNull);
   });
 }
