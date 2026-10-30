@@ -16,5 +16,8 @@ DynamicLibrary haloLibrary() {
 }
 
 /// a dll in kryfo.exe's own folder, already loaded by the runner
-DynamicLibrary besideExe(String name) =>
-    DynamicLibrary.open(p.join(p.dirname(Platform.resolvedExecutable), name));
+DynamicLibrary besideExe(String name) => DynamicLibrary.open(besidePath(name));
+
+/// the full path of [name] in kryfo.exe's folder
+String besidePath(String name) =>
+    p.join(p.dirname(Platform.resolvedExecutable), name);

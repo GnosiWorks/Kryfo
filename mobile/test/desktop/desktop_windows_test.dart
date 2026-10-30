@@ -336,6 +336,7 @@ void main() {
     for (final f in [
       'app/engine.dart',
       'devices/history_ffi.dart',
+      'devices/device_state.dart',
       'desktop/desktop_vault.dart',
       'engine_strings.dart',
     ]) {
@@ -345,6 +346,13 @@ void main() {
         reason: f,
       );
     }
+  });
+
+  test('the engine gets the signal library by its full path on windows', () {
+    // devices load only with a path; besideExe alone leaves none
+    final s = File('lib/signal_ffi/kryfo_signal.dart').readAsStringSync();
+    expect("besideExe('kryfo_signal.dll')".allMatches(s), isEmpty);
+    expect(s, contains('_loadedFrom = besidePath(_windowsName);'));
   });
 
   test('age reaches libc only off windows', () {
