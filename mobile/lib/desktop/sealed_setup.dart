@@ -314,23 +314,7 @@ class EngineFiles {
       final kept = vault.read(kOnionEntry);
       if (kept != null) File(_sealedKey).writeAsBytesSync(base64.decode(kept));
     } else if (type == FileSystemEntityType.file && _plain(_sealedKey)) {
-      // the plain one is held open: the sealed copy takes its name, then
-      // its own bytes are zeroed where they lie
-      final held = rawFileAccess(
-        () => File(_sealedKey).openSync(mode: FileMode.append),
-      );
-      try {
-        held.setPositionSync(0);
-        final k = held.readSync(held.lengthSync());
-        File('$_sealedKey.new').writeAsBytesSync(k, flush: true);
-        rawFileAccess(() => File('$_sealedKey.new').renameSync(_sealedKey));
-        held.setPositionSync(0);
-        held.writeFromSync(Uint8List(k.length));
-        held.flushSync();
-        k.fillRange(0, k.length, 0);
-      } finally {
-        held.closeSync();
-      }
+      _sealPlainKey();
     }
     if (vault.read(kOnionEntry) != null) await vault.delete(kOnionEntry);
     final old = rawFileAccess(
@@ -353,6 +337,30 @@ class EngineFiles {
       });
     }
     writeMarkState(_state, m);
+  }
+
+  // a plain docs/onion.key sealed where it lies: the sealed copy is written
+  // and read back whole, the plain bytes zeroed, then the copy takes the
+  // name. nothing is held open over the rename, which windows refuses. a
+  // whole copy found beside it is such a run cut short, and wins
+  void _sealPlainKey() {
+    final fresh = '$_sealedKey.new';
+    if (!rawFileAccess(() => File(fresh).existsSync()) || !_opens(fresh)) {
+      final k = rawFileAccess(() => File(_sealedKey).readAsBytesSync());
+      try {
+        File(fresh).writeAsBytesSync(k, flush: true);
+        final back = File(fresh).readAsBytesSync();
+        final same = listEquals(back, k);
+        back.fillRange(0, back.length, 0);
+        if (!same) throw FileSystemException('not sealed whole', fresh);
+      } finally {
+        k.fillRange(0, k.length, 0);
+      }
+    }
+    rawFileAccess(() {
+      _zero(_sealedKey);
+      File(fresh).renameSync(_sealedKey);
+    });
   }
 
   void _restoreMarks(DesktopVault vault) {
