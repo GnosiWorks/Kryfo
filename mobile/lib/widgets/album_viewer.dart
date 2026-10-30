@@ -710,7 +710,7 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
           Center(
             child: _failed
                 ? Text(
-                    l10n.videoViewerCannotPlay,
+                    l10n.videoViewerCannotPlayShown,
                     textAlign: TextAlign.center,
                     style: HaloType.sans(size: 14, color: Colors.white),
                   )

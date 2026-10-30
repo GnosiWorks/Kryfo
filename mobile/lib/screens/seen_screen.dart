@@ -72,7 +72,7 @@ class _SeenScreenState extends State<SeenScreen> {
               border: Border.all(color: HaloColors.line),
             ),
             child: Text(
-              l10n.seenHonestAboutTheLast,
+              l10n.seenHonestAboutTheLastShown,
               style: HaloType.mono(size: 11.5, color: HaloColors.text2),
             ),
           ),
@@ -122,7 +122,7 @@ List<_Row> get _rows => [
   _Row(l10n.seenTheScamShield, [
     _onDevice,
     _onDevice,
-  ], l10n.seenScamShieldRequestsOnly),
+  ], l10n.seenScamShieldRequestsOnlyShown),
   _Row(l10n.seenBurnerRooms, [
     _Cell(l10n.seenRoomKeys, _Tone.good),
     _Cell(l10n.seenRoomKeys, _Tone.good),
@@ -130,7 +130,7 @@ List<_Row> get _rows => [
   _Row(l10n.seenLinkPreviews, [
     _Cell(l10n.seenOverTor, _Tone.good),
     _Cell(l10n.seenOverTor, _Tone.good),
-  ], l10n.seenAPreviewIsFetched),
+  ], l10n.seenAPreviewIsFetchedShown),
   // the chat with the developer, wherever the app offers it
   if (devChatOffered)
     _Row(l10n.seenDevChat, [
@@ -138,10 +138,10 @@ List<_Row> get _rows => [
       _ifYouWrite,
       _ifYouWrite,
     ], l10n.seenDevChatLine),
-  _Row(l10n.seenASeizedUnlockedPhone, [
+  _Row(l10n.seenASeizedUnlockedPhoneShown, [
     _yours,
     _yours,
-  ], l10n.seenIfSomeoneHoldsYour),
+  ], l10n.seenIfSomeoneHoldsYourShown),
   _Row(l10n.seenTheCryptoItself, [
     _unaudited,
     _unaudited,

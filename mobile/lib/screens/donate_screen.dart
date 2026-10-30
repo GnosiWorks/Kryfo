@@ -1456,7 +1456,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
                 ),
               ),
               gives(Icons.auto_awesome_outlined, l10n.donateGivesMark),
-              gives(Icons.verified_outlined, l10n.donateGivesReceipt),
+              gives(Icons.verified_outlined, l10n.donateGivesReceiptShown),
               gives(Icons.lock_open_rounded, l10n.donateGivesFree),
             ],
           ),

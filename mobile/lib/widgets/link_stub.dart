@@ -35,7 +35,9 @@ class LinkStub extends StatelessWidget {
       onTap: () async {
         final u = Uri.tryParse(url);
         final ok = u != null && await openOutside(u);
-        if (!ok && context.mounted) showHaloToast(context, l10n.linkNoAppOpens);
+        if (!ok && context.mounted) {
+          showHaloToast(context, l10n.linkNoAppOpensShown);
+        }
       },
       child: Container(
         padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),

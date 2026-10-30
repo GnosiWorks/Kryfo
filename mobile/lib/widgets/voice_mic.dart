@@ -374,7 +374,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
       roomForVoice(60 * 1000, withTake: true).then((room) {
         if (room || _path != path) return;
         _abort();
-        if (mounted) showHaloToast(context, l10n.voiceNoRoom);
+        if (mounted) showHaloToast(context, l10n.voiceNoRoomShown);
       }).ignore();
     } catch (e) {
       dlog('voice: could not start: $e');
@@ -580,7 +580,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
       // no room for it: the take stays, and the chip or the send tries
       // again
       if (mk.noRoom && _chip && mounted) {
-        showHaloToast(context, l10n.voiceNoRoom);
+        showHaloToast(context, l10n.voiceNoRoomShown);
       }
     });
     return mk;
@@ -626,7 +626,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
         _asking = false;
         if (_held != held || _chip != chip) return;
         if (!room) {
-          if (mounted) showHaloToast(context, l10n.voiceNoRoom);
+          if (mounted) showHaloToast(context, l10n.voiceNoRoomShown);
           return;
         }
         mk = null;

@@ -34,14 +34,14 @@ class BootFailedScreen extends StatelessWidget {
     final first = await showConfirmSheet(
       context,
       title: l10n.bootFailedStartFreshTitle,
-      line: l10n.bootFailedStartFreshLine,
+      line: l10n.bootFailedStartFreshLineShown,
       yes: l10n.bootFailedStartFreshNext,
       keep: l10n.confirmSheetCancel,
     );
     if (!first || !context.mounted) return;
     final sure = await showConfirmSheet(
       context,
-      title: l10n.bootFailedStartFreshSure,
+      title: l10n.bootFailedStartFreshSureShown,
       line: l10n.bootFailedStartFreshSureLine,
       yes: l10n.bootFailedStartFreshYes,
       keep: l10n.confirmSheetCancel,
@@ -73,7 +73,7 @@ class BootFailedScreen extends StatelessWidget {
             Text(
               onReopen == null
                   ? l10n.bootFailedThisIsAFault
-                  : l10n.bootFailedKeysDidNotAnswer,
+                  : l10n.bootFailedKeysDidNotAnswerShown,
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13,

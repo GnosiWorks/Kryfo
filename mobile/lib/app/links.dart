@@ -819,7 +819,7 @@ bool devInviteTimeless(LsInvite inv) {
 /// what the person reads for an invite turned away
 String inviteFaultLine(InviteFault f) => switch (f) {
   InviteFault.damaged => l10n.inviteDamaged,
-  InviteFault.notYet => l10n.inviteNotYet,
+  InviteFault.notYet => l10n.inviteNotYetShown,
   InviteFault.expired => l10n.inviteExpired,
 };
 

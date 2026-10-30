@@ -37,6 +37,7 @@ import 'handle_screen.dart';
 import 'scan_screen.dart';
 import '../l10n/l10n.dart';
 import '../widgets/shift_tap_guard.dart';
+import '../desktop/desktop_mode.dart' show onDesktop;
 
 enum _Way { none, here, away, handle }
 
@@ -441,7 +442,7 @@ class _Way1Card extends StatelessWidget {
   Widget build(BuildContext context) {
     return _WayCard(
       title: l10n.myKryfoTheyReHereWith,
-      line: l10n.myKryfoPointYourPhonesAt,
+      line: l10n.myKryfoPointYourPhonesAtShown,
       icon: Icons.qr_code_2_outlined,
       open: open,
       onToggle: onToggle,
@@ -451,12 +452,15 @@ class _Way1Card extends StatelessWidget {
           const SizedBox(height: 16),
           const PairCodePanel(compact: true),
           const SizedBox(height: 14),
-          _Ghost(
-            icon: Icons.center_focus_strong_outlined,
-            label: l10n.myKryfoScanTheirsInstead,
-            onTap: onScan,
-          ),
-          const SizedBox(height: 8),
+          // no camera on a computer: they scan this one instead
+          if (!onDesktop) ...[
+            _Ghost(
+              icon: Icons.center_focus_strong_outlined,
+              label: l10n.myKryfoScanTheirsInstead,
+              onTap: onScan,
+            ),
+            const SizedBox(height: 8),
+          ],
           // a code that can be shown needs somewhere to be typed in
           _Ghost(
             icon: Icons.dialpad_outlined,

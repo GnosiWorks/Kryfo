@@ -83,7 +83,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
             ),
             const SizedBox(height: 4),
             Text(
-              l10n.roomCreateARoomThatEnds,
+              l10n.roomCreateARoomThatEndsShown,
               style: HaloType.sans(
                 size: 12,
                 color: HaloColors.text2,

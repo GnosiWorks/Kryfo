@@ -553,7 +553,7 @@ class _VideoViewerState extends State<_VideoViewer>
           Icon(Icons.movie_outlined, size: 40, color: HaloColors.amber),
           const SizedBox(height: 14),
           Text(
-            l10n.videoViewerCannotPlay,
+            l10n.videoViewerCannotPlayShown,
             textAlign: TextAlign.center,
             style: HaloType.sans(size: 14, color: Colors.white, height: 1.45),
           ),
