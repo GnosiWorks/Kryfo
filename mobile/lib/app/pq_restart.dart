@@ -15,8 +15,9 @@ part of '../main.dart';
 const kPqRestartLine = true;
 
 /// how long the classic states stay after the first message from the
-/// other side opened on the pq state: a wrap's life on the relays and a day
-const kClassicDropAfter = Duration(days: 15);
+/// other side opened on the pq state: a wrap's life on the relays (14 days
+/// and up to one more) and a day, as kSessionKeyGrace
+const kClassicDropAfter = Duration(days: 16);
 
 /// a KDB1 written longer ago than this by their clock is not built on: its
 /// one-time kyber is gone 16 days after it was made, and the opener built
@@ -62,6 +63,22 @@ Future<Uint8List> phoneRestartBundle(SignalSession s, {int? now}) async {
     1,
     ...bundleBlock(registrationId: s.registrationId, spk: spk, kyber: kyber),
   ]);
+}
+
+/// the frame a KDB1 goes in: the empty envelope with 'rq'. the seal adds
+/// the caps and the screenshot word, and fills it to 2767 bytes, the size
+/// a pq opener and a long text have (pq_restart_size_test)
+Future<String> pqRestartFrame(
+  SenderInfo sender,
+  Uint8List kdb1, {
+  required int writtenAt,
+}) async {
+  final wrapped = await wrapMessage('', sender: sender, writtenAt: writtenAt);
+  final j =
+      jsonDecode(wrapped.substring(kEnvelopePrefix.length))
+          as Map<String, dynamic>;
+  j[kPqRestartWire] = base64Encode(kdb1);
+  return '$kEnvelopePrefix${jsonEncode(j)}';
 }
 
 /// what a KDB1 from [peer] inside a held session is, when it arrives
@@ -202,6 +219,8 @@ extension AppStatePqRestart on AppState {
       }, conflictAlgorithm: ConflictAlgorithm.replace);
       return;
     }
+    // the row is there and nothing changes: sqlite takes no empty update
+    if (put.isEmpty) return;
     await db.update(
       'pq_restarts',
       put,
@@ -223,18 +242,9 @@ extension AppStatePqRestart on AppState {
     try {
       await _putPqRow(db, peer, key, {'asked_at': now, 'asks': asks});
       final kdb1 = await phoneRestartBundle(signalSession, now: now);
-      final wrapped = await wrapMessage(
-        '',
-        sender: _mySender(),
-        writtenAt: now,
-      );
-      final j =
-          jsonDecode(wrapped.substring(kEnvelopePrefix.length))
-              as Map<String, dynamic>;
-      j[kPqRestartWire] = base64Encode(kdb1);
       final ok = await _sendOneEnvelope(
         peer,
-        '$kEnvelopePrefix${jsonEncode(j)}',
+        await pqRestartFrame(_mySender(), kdb1, writtenAt: now),
       );
       if (ok) {
         await _putPqRow(db, peer, key, {'asks': asks + 1});
