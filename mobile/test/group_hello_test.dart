@@ -1365,4 +1365,37 @@ void main() {
     expect((await inviteOf(db, kMainIdent, once))!.usedAt, isNotNull);
     expect(engine.unsubscribed, contains(once));
   });
+
+  test('a pass waiting is not put off by more roster invites coming', () async {
+    await myRoster();
+    final ms = [
+      for (final c in 'abcdef'.split(''))
+        await _Phone.make('member-waits-$c', seed++),
+    ];
+    for (final p in ms) {
+      live.person(p.words, xpub: p.x, onion: p.onion);
+      await live.upsertContact(p.words, p.onion, p.x);
+    }
+    live.group(_g, [_me, for (final p in ms) p.words], admin: _me);
+    rosterPassWait = const Duration(milliseconds: 400);
+    final started = DateTime.now();
+    for (final p in ms) {
+      final r = await p.roster();
+      await app.groupControlForTest(
+        p.words,
+        await env(p, GroupControl(type: 'ri', invite: base64Encode(r.link))),
+        live,
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+    }
+    expect(DateTime.now().difference(started), greaterThan(rosterPassWait));
+    // the first went within the wait of its own, more coming or not
+    expect(live.ctlTo(ms.first.words), contains('roster'));
+    await Future<void>.delayed(rosterPassWait * 2);
+    await _settle();
+    for (final p in ms) {
+      expect(live.ctlTo(p.words), contains('roster'));
+    }
+    expect(await rosterInvitesToPass(db), isEmpty);
+  });
 }
