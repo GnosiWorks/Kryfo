@@ -89,6 +89,9 @@ bool backToPage(NavigatorState nav, Iterable<State> states) {
 class RouteStack extends NavigatorObserver {
   final List<Route<dynamic>> _routes = [];
 
+  /// the route [i] from the bottom, null past the top
+  Route<dynamic>? at(int i) => i < _routes.length ? _routes[i] : null;
+
   /// the routes over [r], nearest first. none when [r] is not here
   List<Route<dynamic>> above(Route<dynamic> r) {
     final i = _routes.indexOf(r);

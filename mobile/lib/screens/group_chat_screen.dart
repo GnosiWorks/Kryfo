@@ -165,6 +165,7 @@ import '../voice_opus.dart' show voiceForWire;
 import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
 import '../desktop/desktop_mode.dart' show canShareOut;
 import '../wide/read_width.dart';
+import '../wide/wide_pane.dart' show PaneBack, PaneFind;
 
 // our nickname for a member, or nothing so the id shows. a room member is a
 // key, not a person we know, so it gets the short tag instead.
@@ -566,6 +567,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   bool _suppressSticky = true;
   DateTime _lastSticky = DateTime.fromMillisecondsSinceEpoch(0);
   bool _searching = false;
+  // ctrl+f on the desktop's pane
+  final _find = PaneFind();
   final _searchCtrl = TextEditingController();
   List<int> _matches = [];
   // what was looked for, and the same hits as _matches for a row's test
@@ -753,6 +756,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     super.didChangeDependencies();
     _timers.watch(context);
     _route = ModalRoute.of(context);
+    _find.attach(context, () {
+      if (!_searching && !_waiting && _end == null) _openSearch();
+    });
     // what covered the chat has gone: what shows now is read
     _reads.look();
   }
@@ -4490,6 +4496,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   @override
   void dispose() {
+    _find.detach();
     _unwatchCaptures?.call();
     wallpaperRevision.removeListener(_loadWall);
     final open = _openGroups[widget.groupId]?..remove(this);
@@ -5065,10 +5072,12 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsetsDirectional.fromSTEB(4, 6, 8, 6),
       child: Row(
         children: [
-          IconButton(
-            tooltip: l10n.commonBack,
-            icon: Icon(Icons.chevron_left, color: HaloColors.text, size: 26),
-            onPressed: onBack,
+          PaneBack(
+            child: IconButton(
+              tooltip: l10n.commonBack,
+              icon: Icon(Icons.chevron_left, color: HaloColors.text, size: 26),
+              onPressed: onBack,
+            ),
           ),
           Expanded(
             child: InkWell(

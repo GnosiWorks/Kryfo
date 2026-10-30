@@ -226,6 +226,61 @@ void main() {
     await devClose(t);
   });
 
+  testWidgets('a divider drag rebuilds neither the list nor the pane', (
+    t,
+  ) async {
+    await _open(t);
+    await t.tap(find.text(_a).first);
+    await _settle(t);
+    Widget keyed(String label) => t.widget(
+      find.byWidgetPredicate(
+        (w) => w is KeyedSubtree && '${w.key}'.contains(label),
+      ),
+    );
+    final list = keyed('wide list');
+    final pane = keyed('wide pane');
+    final nav = t.widget(find.byKey(widePane!.key));
+    final rail = t.widget(find.byType(WideRail));
+    final g = await t.startGesture(t.getCenter(find.byType(ListDivider)));
+    for (var i = 0; i < 4; i++) {
+      await g.moveBy(const Offset(8, 0));
+      await t.pump();
+    }
+    expect(identical(keyed('wide list'), list), isTrue);
+    expect(identical(keyed('wide pane'), pane), isTrue);
+    expect(identical(t.widget(find.byKey(widePane!.key)), nav), isTrue);
+    expect(identical(t.widget(find.byType(WideRail)), rail), isTrue);
+    await g.up();
+    await _settle(t);
+    final page = find.ancestor(
+      of: find.text('chat $_a'),
+      matching: find.byType(Scaffold),
+    );
+    expect(_rect(t, page.first).left, kRailWidth + kListStart + 32 + 1);
+    await devClose(t);
+  });
+
+  testWidgets('the screen reader hears only widths the divider reaches', (
+    t,
+  ) async {
+    await _open(t, prefs: {'wide_list_width': kListMax});
+    final h = t.ensureSemantics();
+    var d = t
+        .getSemantics(find.bySemanticsLabel(l10n.wideListWidth))
+        .getSemanticsData();
+    expect(d.value, '${kListMax.round()}');
+    expect(d.increasedValue, '${kListMax.round()}');
+    expect(d.decreasedValue, '${(kListMax - 16).round()}');
+    await _drag(t, find.byType(ListDivider), -500);
+    await _settle(t);
+    d = t
+        .getSemantics(find.bySemanticsLabel(l10n.wideListWidth))
+        .getSemanticsData();
+    expect(d.decreasedValue, '${kListMin.round()}');
+    h.dispose();
+    await devClose(t);
+  });
+
   testWidgets('a remembered width comes back, fitted to the window', (t) async {
     await _open(t, prefs: {'wide_list_width': 410.0});
     expect(_rect(t, find.byType(WideEmpty)).left, kRailWidth + 410 + 1);

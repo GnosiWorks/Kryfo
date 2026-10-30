@@ -17,7 +17,11 @@ void openRoomSoon(String groupId) {
         final nav = chatNavigator(rootNavKey.currentState);
         if (nav == null || !await session.groupExists(groupId)) return;
         if (backToOpenGroup(nav, groupId)) return;
-        nav.push(haloRoute(GroupChatScreen(groupId: groupId)));
+        chatPush(
+          nav,
+          haloRoute(GroupChatScreen(groupId: groupId)),
+          'group:$groupId',
+        );
       },
     ),
   );
@@ -170,7 +174,7 @@ Future<void> _openChatFor(String? haloId, [String? uid]) async {
   if (isDevChat(haloId)) {
     if (haloId == currentChatPeer) return;
     if ((await session.devChat.load())?.chatId != haloId) return;
-    nav.push(devChatRoute(haloId, jumpToUid: uid));
+    chatPush(nav, devChatRoute(haloId, jumpToUid: uid), haloId);
     return;
   }
   final target = await notifTargetFor(haloId);
@@ -180,16 +184,23 @@ Future<void> _openChatFor(String? haloId, [String? uid]) async {
     // one already open is gone back to, never stacked twice
     case NotifGroup(:final groupId):
       if (!backToOpenGroup(nav, groupId)) {
-        nav.push(haloRoute(GroupChatScreen(groupId: groupId, jumpToUid: uid)));
+        chatPush(
+          nav,
+          haloRoute(GroupChatScreen(groupId: groupId, jumpToUid: uid)),
+          'group:$groupId',
+        );
       }
       return;
     case NotifRequests():
-      if (!backToRequests(nav)) nav.push(haloRoute(const RequestsScreen()));
+      if (!backToRequests(nav)) {
+        chatPush(nav, haloRoute(const RequestsScreen()), null);
+      }
       return;
     case NotifChat(row: final r):
       row = r;
   }
-  nav.push(
+  chatPush(
+    nav,
     haloRoute(
       ChatScreen(
         peerHaloId: haloId,
@@ -201,6 +212,7 @@ Future<void> _openChatFor(String? haloId, [String? uid]) async {
         jumpToUid: uid,
       ),
     ),
+    haloId,
   );
 }
 

@@ -66,10 +66,28 @@ class WidePane {
     return true;
   }
 
+  // the chats' own searches, by their routes
+  final _finds = <Route<dynamic>, VoidCallback>{};
+
+  /// the search of the chat in front of the pane. false when none is
+  bool find() {
+    for (final e in _finds.entries) {
+      if (e.key.isCurrent && e.key.navigator == nav) {
+        e.value();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// [r] is the page right over the empty one, the list beside it
+  bool atRoot(Route<dynamic> r) => r.navigator == nav && stack.at(1) == r;
+
   bool _gone = false;
 
   void dispose() {
     _gone = true;
+    _finds.clear();
     depth.dispose();
     heroes.dispose();
   }
@@ -136,3 +154,55 @@ Future<T?> deskPush<T>(BuildContext context, Route<T> route, {String? id}) =>
 /// the navigator a chat opened from outside the screens goes on: the pane,
 /// else the app's own
 NavigatorState? chatNavigator(NavigatorState? app) => widePane?.nav ?? app;
+
+/// [route] for chat [id] on [nav], from outside the screens: through the
+/// pane's show when [nav] is the pane's, so the list marks it and nothing
+/// stacks
+Future<void> chatPush(NavigatorState nav, Route<void> route, String? id) {
+  final pane = widePane;
+  if (pane != null && pane.nav == nav) return pane.show(route, id: id);
+  return nav.push(route);
+}
+
+/// a chat's search for ctrl+f, while its page is in the pane
+class PaneFind {
+  WidePane? _pane;
+  Route<dynamic>? _route;
+
+  void attach(BuildContext context, VoidCallback find) {
+    final pane = widePane;
+    final r = ModalRoute.of(context);
+    if (pane == null || r == null) return;
+    detach();
+    _pane = pane;
+    _route = r;
+    pane._finds[r] = find;
+  }
+
+  void detach() {
+    final r = _route;
+    if (r != null) _pane?._finds.remove(r);
+    _pane = null;
+    _route = null;
+  }
+}
+
+/// a chat head's back arrow, left out on a wide window where the chat is
+/// the pane's own page: the list is right beside it
+class PaneBack extends StatelessWidget {
+  final Widget child;
+  const PaneBack({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final pane = widePane;
+    final r = ModalRoute.of(context);
+    if (pane == null || r == null) return child;
+    return ListenableBuilder(
+      listenable: Listenable.merge([wideNow, pane.depth]),
+      builder: (_, child) =>
+          wideNow.value && pane.atRoot(r) ? const SizedBox(width: 12) : child!,
+      child: child,
+    );
+  }
+}

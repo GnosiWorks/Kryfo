@@ -6,7 +6,7 @@ import 'secure_store.dart';
 import 'desktop/desktop_mode.dart'
     show containerClosed, containerOpened, onDesktop, startEngineIn;
 import 'store.dart' show playBuild;
-import 'wide/wide_pane.dart' show chatNavigator, deskPush;
+import 'wide/wide_pane.dart' show chatNavigator, chatPush, deskPush;
 import 'widgets/boot_failed.dart';
 import 'widgets/fade_over.dart';
 import 'widgets/tor_boot_splash.dart';

@@ -73,14 +73,21 @@ class _WideHomeState extends State<WideHome> {
   // the list and the pane move between the two layouts with their state
   final _listKey = GlobalKey(debugLabel: 'wide list');
   final _paneKey = GlobalKey(debugLabel: 'wide pane');
+  late final Widget _paneView = KeyedSubtree(
+    key: _paneKey,
+    child: _PaneNavigator(pane: _pane),
+  );
   bool _wide = false;
-  double _asked = kListStart;
+  // a drag moves only the row, never rebuilds what is in it
+  final _asked = ValueNotifier<double>(kListStart);
 
   @override
   void initState() {
     super.initState();
     widePane = _pane;
     watchOf = _watch;
+    // no mark from another session's chat
+    wideOnScreen.value = null;
     _loadWidth();
   }
 
@@ -103,10 +110,11 @@ class _WideHomeState extends State<WideHome> {
     if (identical(widePane, _pane)) {
       widePane = null;
       resetWatchOf();
-      wideOnScreen.value = null;
       wideNow.value = false;
     }
+    wideOnScreen.value = null;
     _pane.dispose();
+    _asked.dispose();
     super.dispose();
   }
 
@@ -114,7 +122,7 @@ class _WideHomeState extends State<WideHome> {
     try {
       final p = await SharedPreferences.getInstance();
       final w = p.getDouble(_widthKey);
-      if (w != null && mounted) setState(() => _asked = w);
+      if (w != null && mounted) _asked.value = w;
     } catch (_) {
       // the start's width then
     }
@@ -123,7 +131,7 @@ class _WideHomeState extends State<WideHome> {
   Future<void> _saveWidth() async {
     try {
       final p = await SharedPreferences.getInstance();
-      await p.setDouble(_widthKey, _asked);
+      await p.setDouble(_widthKey, _asked.value);
     } catch (_) {}
   }
 
@@ -137,29 +145,37 @@ class _WideHomeState extends State<WideHome> {
 
   @override
   Widget build(BuildContext context) {
-    final pane = KeyedSubtree(
-      key: _paneKey,
-      child: _PaneNavigator(pane: _pane),
-    );
+    final pane = _paneView;
     final list = KeyedSubtree(key: _listKey, child: widget.tabs);
-    return CallbackShortcuts(
-      bindings: {
-        const SingleActivator(LogicalKeyboardKey.escape): _pane.back,
-        const SingleActivator(LogicalKeyboardKey.keyF, control: true):
-            widget.onSearch,
+    return Shortcuts(
+      shortcuts: const {
+        SingleActivator(LogicalKeyboardKey.escape): _BackIntent(),
+        SingleActivator(LogicalKeyboardKey.keyF, control: true): _FindIntent(),
       },
-      child: Focus(
-        autofocus: true,
-        child: Scaffold(
-          backgroundColor: HaloColors.surface,
-          body: LayoutBuilder(
-            builder: (context, box) {
-              final wide = wideAt(box.maxWidth, was: _wide);
-              _setWide(wide);
-              return wide
-                  ? _wideLayout(context, box, list, pane)
-                  : _narrowLayout(list, pane);
+      child: Actions(
+        actions: {
+          _BackIntent: _BackAction(_pane),
+          // the open chat's own search first
+          _FindIntent: CallbackAction<_FindIntent>(
+            onInvoke: (_) {
+              if (!_pane.find()) widget.onSearch();
+              return null;
             },
+          ),
+        },
+        child: Focus(
+          autofocus: true,
+          child: Scaffold(
+            backgroundColor: HaloColors.surface,
+            body: LayoutBuilder(
+              builder: (context, box) {
+                final wide = wideAt(box.maxWidth, was: _wide);
+                _setWide(wide);
+                return wide
+                    ? _wideLayout(context, box, list, pane)
+                    : _narrowLayout(list, pane);
+              },
+            ),
           ),
         ),
       ),
@@ -207,19 +223,37 @@ class _WideHomeState extends State<WideHome> {
     Widget list,
     Widget pane,
   ) {
-    final w = listWidthIn(box.maxWidth, _asked);
     final mq = MediaQuery.of(context);
+    final rail = FocusTraversalGroup(
+      child: WideRail(
+        tab: widget.tab,
+        onPick: widget.onPick,
+        onMeLongPress: widget.onMeLongPress,
+      ),
+    );
+    final side = Expanded(child: FocusTraversalGroup(child: pane));
+    return ValueListenableBuilder<double>(
+      valueListenable: _asked,
+      builder: (context, asked, _) {
+        final w = listWidthIn(box.maxWidth, asked);
+        return _wideRow(box, mq, w, rail, list, side);
+      },
+    );
+  }
+
+  Widget _wideRow(
+    BoxConstraints box,
+    MediaQueryData mq,
+    double w,
+    Widget rail,
+    Widget list,
+    Widget side,
+  ) {
     return Stack(
       children: [
         Row(
           children: [
-            FocusTraversalGroup(
-              child: WideRail(
-                tab: widget.tab,
-                onPick: widget.onPick,
-                onMeLongPress: widget.onMeLongPress,
-              ),
-            ),
+            rail,
             SizedBox(
               width: w,
               child: FocusTraversalGroup(
@@ -230,7 +264,7 @@ class _WideHomeState extends State<WideHome> {
               ),
             ),
             Container(width: 1, color: HaloColors.line),
-            Expanded(child: FocusTraversalGroup(child: pane)),
+            side,
           ],
         ),
         PositionedDirectional(
@@ -240,8 +274,8 @@ class _WideHomeState extends State<WideHome> {
           width: 11,
           child: ListDivider(
             width: w,
-            onWidth: (v) =>
-                setState(() => _asked = listWidthIn(box.maxWidth, v)),
+            fit: (v) => listWidthIn(box.maxWidth, v),
+            onWidth: (v) => _asked.value = listWidthIn(box.maxWidth, v),
             onDone: _saveWidth,
           ),
         ),
@@ -252,27 +286,40 @@ class _WideHomeState extends State<WideHome> {
 
 // the pane's navigator, the size of its own box: what it shows reads the
 // pane's width, not the window's
-class _PaneNavigator extends StatelessWidget {
+class _PaneNavigator extends StatefulWidget {
   final WidePane pane;
   const _PaneNavigator({required this.pane});
 
   @override
+  State<_PaneNavigator> createState() => _PaneNavigatorState();
+}
+
+class _PaneNavigatorState extends State<_PaneNavigator> {
+  // the same navigator widget each time: a new one makes every page in it
+  // build again, at each move of the divider
+  late final Widget _nav = HeroControllerScope(
+    controller: widget.pane.heroes,
+    child: Navigator(
+      key: widget.pane.key,
+      observers: widget.pane.observers,
+      onGenerateInitialRoutes: (_, _) => [
+        PageRouteBuilder<void>(
+          opaque: false,
+          pageBuilder: (_, _, _) => const WideEmpty(),
+        ),
+      ],
+    ),
+  );
+
+  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (context, box) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(size: box.biggest),
-        child: HeroControllerScope(
-          controller: pane.heroes,
-          child: Navigator(
-            key: pane.key,
-            observers: pane.observers,
-            onGenerateInitialRoutes: (_, _) => [
-              PageRouteBuilder<void>(
-                opaque: false,
-                pageBuilder: (_, _, _) => const WideEmpty(),
-              ),
-            ],
-          ),
+      // its own node: a page's barrier would block the list's semantics
+      builder: (context, box) => Semantics(
+        container: true,
+        child: MediaQuery(
+          data: MediaQuery.of(context).copyWith(size: box.biggest),
+          child: _nav,
         ),
       ),
     );
@@ -363,15 +410,39 @@ class _StepIntent extends Intent {
   const _StepIntent(this.by);
 }
 
+class _BackIntent extends Intent {
+  const _BackIntent();
+}
+
+class _FindIntent extends Intent {
+  const _FindIntent();
+}
+
+// esc closes the pane's page, and only while it shows one: else the key
+// is left to whoever else wants it
+class _BackAction extends Action<_BackIntent> {
+  _BackAction(this.pane);
+  final WidePane pane;
+
+  @override
+  bool isEnabled(_BackIntent intent) => pane.depth.value > 0;
+
+  @override
+  Object? invoke(_BackIntent intent) => pane.back();
+}
+
 /// the line between list and pane: dragged, or moved with the arrow keys,
 /// it sets the list's width. a double click puts it back
 class ListDivider extends StatefulWidget {
   final double width;
+  // the width the window allows for one asked for
+  final double Function(double) fit;
   final ValueChanged<double> onWidth;
   final VoidCallback onDone;
   const ListDivider({
     super.key,
     required this.width,
+    required this.fit,
     required this.onWidth,
     required this.onDone,
   });
@@ -399,11 +470,12 @@ class _ListDividerState extends State<ListDivider> {
     final lit = _hover || _ring || _drag;
     final rtl = Directionality.of(context) == TextDirection.rtl;
     return Semantics(
+      container: true,
       label: l10n.wideListWidth,
       slider: true,
       value: '${widget.width.round()}',
-      increasedValue: '${(widget.width + 16).round()}',
-      decreasedValue: '${(widget.width - 16).round()}',
+      increasedValue: '${widget.fit(widget.width + 16).round()}',
+      decreasedValue: '${widget.fit(widget.width - 16).round()}',
       onIncrease: () => _step(1),
       onDecrease: () => _step(-1),
       child: FocusableActionDetector(

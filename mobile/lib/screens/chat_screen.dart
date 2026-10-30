@@ -206,6 +206,7 @@ import '../voice_length.dart' show voiceFileMs;
 import '../voice_opus.dart' show voiceForWire;
 import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
 import '../wide/read_width.dart';
+import '../wide/wide_pane.dart' show PaneBack, PaneFind;
 
 // the chats open in the stack, by id: shared words land in the one on top
 // rather than in a second copy of it
@@ -966,6 +967,8 @@ class _ChatScreenState extends State<ChatScreen>
   // search in chat. _matches are indices into _messages, _matchPos the
   // current hit, _matchKeys let a hit be scrolled into view.
   bool _searching = false;
+  // ctrl+f on the desktop's pane
+  final _find = PaneFind();
   final _searchCtrl = TextEditingController();
   String _query = '';
   String? _liftedUid;
@@ -1432,6 +1435,9 @@ class _ChatScreenState extends State<ChatScreen>
     super.didChangeDependencies();
     _timers.watch(context);
     _route = ModalRoute.of(context);
+    _find.attach(context, () {
+      if (!_searching) _openSearch();
+    });
     // what covered the chat has gone: what shows now is read
     _reads.look();
   }
@@ -5509,6 +5515,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   void dispose() {
+    _find.detach();
     _unwatchCaptures?.call();
     for (final land in List.of(_flights)) {
       land();
@@ -7457,10 +7464,12 @@ class _ChatHead extends StatelessWidget {
       ),
       child: Row(
         children: [
-          IconButton(
-            tooltip: l10n.commonBack,
-            icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
-            onPressed: onBack,
+          PaneBack(
+            child: IconButton(
+              tooltip: l10n.commonBack,
+              icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
+              onPressed: onBack,
+            ),
           ),
           Semantics(
             container: true,
@@ -7709,7 +7718,14 @@ class _SearchHeadState extends State<SearchHead> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => CallbackShortcuts(
+    bindings: {
+      const SingleActivator(LogicalKeyboardKey.escape): widget.onClose,
+    },
+    child: _head(context),
+  );
+
+  Widget _head(BuildContext context) {
     final hasQuery = widget.controller.text.trim().isNotEmpty;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
