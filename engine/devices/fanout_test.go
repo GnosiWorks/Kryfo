@@ -482,12 +482,13 @@ func TestADeviceThatNeverAnswers(t *testing.T) {
 	id := fixedKey(t, 6)
 	t0 := time.Unix(1_760_000_000, 0)
 	day := 24 * time.Hour
-	at := func(d time.Duration, v uint64) QuietState { return q.State(id, 5, v, t0.Add(d)) }
+	key := fixedKey(t, 7)
+	at := func(d time.Duration, v uint64) QuietState { return q.State(id, 5, key, v, t0.Add(d)) }
 	if at(0, 1) != Open {
 		t.Fatal("nothing sent")
 	}
-	q.Sent(id, 5, t0)
-	q.Sent(id, 5, t0.Add(3*day))
+	q.Sent(id, 5, key, t0)
+	q.Sent(id, 5, key, t0.Add(3*day))
 	if at(15*day-time.Second, 1) != Open {
 		t.Fatal("rebuilt too early")
 	}
@@ -495,7 +496,7 @@ func TestADeviceThatNeverAnswers(t *testing.T) {
 		t.Fatal("not rebuilt at 15 days")
 	}
 	q.Rebuilt(id, 5)
-	q.Sent(id, 5, t0.Add(16*day))
+	q.Sent(id, 5, key, t0.Add(16*day))
 	if at(29*day, 1) != Open {
 		t.Fatal("a rebuilt session starts its 15 days again")
 	}
@@ -508,7 +509,7 @@ func TestADeviceThatNeverAnswers(t *testing.T) {
 	if at(32*day, 2) != Open {
 		t.Fatal("a new list does not give another try")
 	}
-	q.Sent(id, 5, t0.Add(32*day))
+	q.Sent(id, 5, key, t0.Add(32*day))
 	if at(61*day, 2) != Rebuild || at(62*day, 2) != Silent {
 		t.Fatal("the second try has its own 30 days")
 	}
@@ -517,13 +518,49 @@ func TestADeviceThatNeverAnswers(t *testing.T) {
 		t.Fatal("heard from, still silent")
 	}
 	// a clock set back counts no time
-	q.Sent(id, 5, t0.Add(100*day))
+	q.Sent(id, 5, key, t0.Add(100*day))
 	if at(10*day, 2) != Open {
 		t.Fatal("a clock set back silenced it")
 	}
 	q.Forget(id, 5)
 	if at(200*day, 2) != Open {
 		t.Fatal("forgotten")
+	}
+}
+
+func TestANewDeviceUnderAnOldIDStartsAfresh(t *testing.T) {
+	q := NewQuiet()
+	id := fixedKey(t, 6)
+	old, fresh := fixedKey(t, 7), fixedKey(t, 8)
+	t0 := time.Unix(1_760_000_000, 0)
+	day := 24 * time.Hour
+	q.Sent(id, 5, old, t0)
+	// device 5 removed after 29 days unanswered, a new device 5 listed
+	if got := q.State(id, 5, fresh, 2, t0.Add(29*day)); got != Open {
+		t.Fatalf("the new device: %v", got)
+	}
+	q.Sent(id, 5, fresh, t0.Add(29*day))
+	if got := q.State(id, 5, fresh, 2, t0.Add(31*day)); got != Open {
+		t.Fatalf("the new device inherits the old one's days: %v", got)
+	}
+	if got := q.State(id, 5, fresh, 2, t0.Add(44*day)); got != Rebuild {
+		t.Fatalf("its own 15 days: %v", got)
+	}
+
+	s := newShim()
+	me := newAccount(t, s)
+	desk := me.linkReg(t)
+	p := NewPool()
+	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 10, 7, desk)}, poolKDB1(t, 1, 7, desk), t0); err != nil {
+		t.Fatal(err)
+	}
+	moved := desk
+	moved.Key = fresh
+	if _, _, err := p.Take(me.id.pub, moved, t0); !errors.Is(err, ErrNoBundle) {
+		t.Fatalf("an old key's bundle handed out: %v", err)
+	}
+	if _, _, err := p.Take(me.id.pub, desk, t0); !errors.Is(err, ErrNoBundle) {
+		t.Fatalf("the old key's bundles kept: %v", err)
 	}
 }
 
@@ -540,7 +577,7 @@ func TestQuietDevicesInTheFanout(t *testing.T) {
 	}
 	// every copy so far went unanswered, the phones' too
 	for _, s := range k.to(t, withDevices, t0) {
-		k.f.Quiet.Sent(s.Identity, s.Device, t0)
+		k.f.Quiet.Sent(s.Identity, s.Device, s.Key, t0)
 	}
 	k.f.Quiet.Heard(k.bob.id.pub, k.bob.list.Devices[2].ID)
 	slots := k.to(t, withDevices, t0.Add(15*day))
@@ -572,7 +609,7 @@ func TestThePoolHandsEachBundleOnce(t *testing.T) {
 	kdb1 := func(kyber uint32, e Entry) []byte { return poolKDB1(t, kyber, 7, e) }
 	t0 := time.Unix(1_760_000_000, 0)
 	p := NewPool()
-	if _, _, err := p.Take(me.id.pub, desk.ID, t0); !errors.Is(err, ErrNoBundle) {
+	if _, _, err := p.Take(me.id.pub, desk, t0); !errors.Is(err, ErrNoBundle) {
 		t.Fatalf("an empty pool: %v", err)
 	}
 	var once [][]byte
@@ -584,7 +621,7 @@ func TestThePoolHandsEachBundleOnce(t *testing.T) {
 	}
 	seen := map[string]bool{}
 	for i := range PoolLow + 2 {
-		b, low, err := p.Take(me.id.pub, desk.ID, t0)
+		b, low, err := p.Take(me.id.pub, desk, t0)
 		if err != nil || seen[string(b)] {
 			t.Fatalf("take %d: %v (again: %v)", i, err, seen[string(b)])
 		}
@@ -594,7 +631,7 @@ func TestThePoolHandsEachBundleOnce(t *testing.T) {
 		}
 	}
 	for range 3 {
-		b, low, err := p.Take(me.id.pub, desk.ID, t0)
+		b, low, err := p.Take(me.id.pub, desk, t0)
 		if err != nil || !low || seen[string(b)] {
 			t.Fatalf("the last resort: %v %v", low, err)
 		}
@@ -639,11 +676,11 @@ func TestThePoolHandsEachBundleOnce(t *testing.T) {
 	if err := p.Put(me.id.pub, other, [][]byte{kdb1(300, other), kdb1(300, other)}, nil, t0); !errors.Is(err, ErrDuplicate) {
 		t.Fatalf("one kyber twice in a batch: %v", err)
 	}
-	if _, _, err := p.Take(me.id.pub, other.ID, t0); !errors.Is(err, ErrNoBundle) {
+	if _, _, err := p.Take(me.id.pub, other, t0); !errors.Is(err, ErrNoBundle) {
 		t.Fatalf("a failed put kept something: %v", err)
 	}
 	p.Drop(me.id.pub, desk.ID)
-	if _, _, err := p.Take(me.id.pub, desk.ID, t0); !errors.Is(err, ErrNoBundle) {
+	if _, _, err := p.Take(me.id.pub, desk, t0); !errors.Is(err, ErrNoBundle) {
 		t.Fatalf("a removed device's bundles: %v", err)
 	}
 }
@@ -680,11 +717,11 @@ func TestNoDeadBundleIsHandedOut(t *testing.T) {
 		t.Fatal(err)
 	}
 	// 10 and 11 are past the pool's age at day 7: never handed out
-	b, low, err := p.Take(me.id.pub, desk.ID, t0.Add(PoolMaxAge))
+	b, low, err := p.Take(me.id.pub, desk, t0.Add(PoolMaxAge))
 	if err != nil || kyberOf(b) != 12 || !low {
 		t.Fatalf("an old bundle handed out: %d %v %v", kyberOf(b), low, err)
 	}
-	if b, _, err := p.Take(me.id.pub, desk.ID, t0.Add(PoolMaxAge)); err != nil || kyberOf(b) != 1 {
+	if b, _, err := p.Take(me.id.pub, desk, t0.Add(PoolMaxAge)); err != nil || kyberOf(b) != 1 {
 		t.Fatalf("not the last resort: %v", err)
 	}
 	// the device replaced its session keys: one-time bundles on the old
@@ -700,7 +737,7 @@ func TestNoDeadBundleIsHandedOut(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, want := range []uint32{14, 2} {
-		if b, _, err := p.Take(me.id.pub, desk.ID, t0.Add(8*day)); err != nil || kyberOf(b) != want {
+		if b, _, err := p.Take(me.id.pub, desk, t0.Add(8*day)); err != nil || kyberOf(b) != want {
 			t.Fatalf("want %d: %v", want, err)
 		}
 	}
@@ -708,7 +745,7 @@ func TestNoDeadBundleIsHandedOut(t *testing.T) {
 	if err := p.Put(me.id.pub, desk, nil, last2, t0.Add(30*day)); err != nil {
 		t.Fatal(err)
 	}
-	if _, _, err := p.Take(me.id.pub, desk.ID, t0.Add(8*day+PoolLastMaxAge)); !errors.Is(err, ErrNoBundle) {
+	if _, _, err := p.Take(me.id.pub, desk, t0.Add(8*day+PoolLastMaxAge)); !errors.Is(err, ErrNoBundle) {
 		t.Fatalf("a last resort past its age handed out: %v", err)
 	}
 	// a replaced last resort's kyber key is never taken again

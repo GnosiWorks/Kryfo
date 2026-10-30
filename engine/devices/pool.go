@@ -143,13 +143,18 @@ func (p *Pool) Put(identity Key, e Entry, once [][]byte, last []byte, now time.T
 	return nil
 }
 
-// Take gives one KDB1 of identity's device at now, the oldest one-time one
-// while any is young enough, and low when the device should be asked for
-// more.
-func (p *Pool) Take(identity Key, device uint8, now time.Time) (kdb1 []byte, low bool, err error) {
+// Take gives one KDB1 of identity's device e, as its list names it now, at
+// now: the oldest one-time one while any is young enough, and low when the
+// device should be asked for more. bundles of another key under e's id go.
+func (p *Pool) Take(identity Key, e Entry, now time.Time) (kdb1 []byte, low bool, err error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	r := p.rows[slotKey{identity, device}]
+	k := slotKey{identity, e.ID}
+	r := p.rows[k]
+	if r != nil && r.entry != e {
+		delete(p.rows, k)
+		r = nil
+	}
 	if r == nil {
 		return nil, true, ErrNoBundle
 	}

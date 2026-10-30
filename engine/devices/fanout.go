@@ -102,7 +102,7 @@ func (f *Fanout) quiet(s *Slot, version uint64, now time.Time) bool {
 	if f.Quiet == nil {
 		return true
 	}
-	switch f.Quiet.State(s.Identity, s.Device, version, now) {
+	switch f.Quiet.State(s.Identity, s.Device, s.Key, version, now) {
 	case Silent:
 		return false
 	case Rebuild:

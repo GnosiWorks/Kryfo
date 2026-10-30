@@ -33,6 +33,8 @@ type slotKey struct {
 }
 
 type quietRow struct {
+	// the device's key: a new device under the same id starts afresh
+	key Key
 	// the first copy on a session the device never answered since
 	first time.Time
 	// the first copy on the session held now
@@ -54,15 +56,26 @@ type Quiet struct {
 // NewQuiet is a Quiet with nothing held.
 func NewQuiet() *Quiet { return &Quiet{rows: map[slotKey]*quietRow{}} }
 
-// Sent records a copy sealed to the device on a session it has not
+// the row for the device on key, a fresh one when the id came back on
+// another key
+func (q *Quiet) row(k slotKey, key Key) *quietRow {
+	r := q.rows[k]
+	if r != nil && r.key != key {
+		delete(q.rows, k)
+		r = nil
+	}
+	return r
+}
+
+// Sent records a copy to the device on key, on a session it has not
 // answered on.
-func (q *Quiet) Sent(identity Key, device uint8, now time.Time) {
+func (q *Quiet) Sent(identity Key, device uint8, key Key, now time.Time) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
 	k := slotKey{identity, device}
-	r := q.rows[k]
+	r := q.row(k, key)
 	if r == nil {
-		r = &quietRow{}
+		r = &quietRow{key: key}
 		q.rows[k] = r
 	}
 	if r.first.IsZero() {
@@ -93,13 +106,14 @@ func (q *Quiet) Rebuilt(identity Key, device uint8) {
 // Forget drops what is held for a device that left its list.
 func (q *Quiet) Forget(identity Key, device uint8) { q.Heard(identity, device) }
 
-// State is what to do with the device's copy now, version being the
-// version of the list that names it. a clock set back counts no time.
-func (q *Quiet) State(identity Key, device uint8, version uint64, now time.Time) QuietState {
+// State is what to do with the copy to the device on key now, version
+// being the version of the list that names it. a clock set back counts no
+// time.
+func (q *Quiet) State(identity Key, device uint8, key Key, version uint64, now time.Time) QuietState {
 	q.mu.Lock()
 	defer q.mu.Unlock()
 	k := slotKey{identity, device}
-	r := q.rows[k]
+	r := q.row(k, key)
 	if r == nil {
 		return Open
 	}
