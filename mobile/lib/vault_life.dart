@@ -306,6 +306,7 @@ const _mayLack = {
   'contact_photos',
   'photo_parts',
   'photo_peers',
+  'roster_invites',
 };
 const _groupRows = {
   'group_members': 'group_id = ?1',
@@ -327,6 +328,8 @@ const _groupRows = {
   'room_keys': 'group_id = ?1',
   // which of its texts went again to a member after their restore
   'group_resent': 'group_id = ?1',
+  // its members' roster invites: none stay on the everyday side
+  'roster_invites': 'group_id = ?1',
   // what came in from its members and went (goneKey)
   'gone_in': "substr(peer_id, 1, length(?1) + 7) = 'group:' || ?1 || ':'",
   'wallpapers': "chat = 'group:' || ?1",

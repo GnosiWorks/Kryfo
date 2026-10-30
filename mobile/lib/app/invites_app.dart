@@ -356,10 +356,9 @@ extension AppStateInvites on AppState {
   /// listened on. the everyday side only: a quiet session has none. one
   /// upkeep or reset at a time: a call while one runs joins it, as two at
   /// once would each make a main invite
-  Future<void> keepMyInvites({int? nowMs}) =>
-      _invitesKeep ??= _keepMyInvites(
-        nowMs: nowMs,
-      ).whenComplete(() => _invitesKeep = null);
+  Future<void> keepMyInvites({int? nowMs}) => _invitesKeep ??= _keepMyInvites(
+    nowMs: nowMs,
+  ).whenComplete(() => _invitesKeep = null);
 
   Future<void> _keepMyInvites({int? nowMs}) async {
     if (sessionQuiet || !signalSession.ready) return;
@@ -397,6 +396,11 @@ extension AppStateInvites on AppState {
       whereArgs: [kHelloIn, now - (kOneTimeHours + kSkewHours) * 3600 * 1000],
     );
     await _listenMyInvites(db, nowMs: nowMs);
+    // my groups' admins hear a roster invite made, and the pairs it makes
+    // are owed their hellos
+    if (up.roster != null) await _tellRosterInviteAll();
+    await _passRosterOwed();
+    await _rosterHellos();
     unawaited(sendHellosOwed(nowMs: nowMs));
   }
 
@@ -547,6 +551,16 @@ extension AppStateInvites on AppState {
     return '$kEnvelopePrefix${jsonEncode(j)}';
   }
 
+  // whether a v4 first contact to [peer] waits for its answer. rows that
+  // do not read say no, as the opener's fields then go without its seed
+  Future<bool> _v4OpenerWaits(String peer) async {
+    try {
+      return await _openHello(peer) != null;
+    } catch (_) {
+      return false;
+    }
+  }
+
   // the v4 first contact to [peer] that waits for its answer: my identity,
   // their key, their invite's id and the pair's seed. null with none, and
   // its row goes once they answered
@@ -691,7 +705,10 @@ extension AppStateInvites on AppState {
     );
     final String wire;
     try {
-      wire = await helloWire(hello);
+      // a group member's roster invite takes one without the work
+      wire = await _rosterHelloTo(db, answers)
+          ? helloWireOf(hello, 0)
+          : await helloWire(hello);
     } on ArgumentError {
       // too long to pad: never sent unpadded, and no later pass fits it
       dlog('hello: too long to pad, not sent');
@@ -711,12 +728,7 @@ extension AppStateInvites on AppState {
     if (sk != null) {
       await engine.subscribeFcKey(kMainIdent, once.id, _hexOf(sk));
     }
-    final res = await engine.sendHello(
-      kMainIdent,
-      peer.substring(2),
-      fc,
-      wire,
-    );
+    final res = await engine.sendHello(kMainIdent, peer.substring(2), fc, wire);
     if (res == 'ok') {
       await done();
       return true;
@@ -746,8 +758,11 @@ extension AppStateInvites on AppState {
     String h,
     void Function() arrived,
   ) async {
-    // the proof of work first: one hash, before the shim reads anything
-    if (!helloPowHolds(bytes, nonce)) {
+    // a roster invite takes hellos from the members of my groups alone,
+    // who grind no proof of work for it (4.3). anywhere else the proof of
+    // work comes first: one hash, before the shim reads anything
+    final roster = at?.kind == kInviteRoster;
+    if (!roster && !helloPowHolds(bytes, nonce)) {
       firstFails.note('pow');
       await live.markSeenLong(h);
       arrived();
@@ -787,6 +802,21 @@ extension AppStateInvites on AppState {
       arrived();
       return;
     }
+    // at a roster invite: a key no group of mine names as a member costs
+    // one parse, and one taken in the last day is taken no more
+    if (roster) {
+      final fault = !await _rosterKeyIsMember(senderKey)
+          ? 'roster'
+          : await _rosterHelloAgain(db, senderKey)
+          ? 'again'
+          : null;
+      if (fault != null) {
+        firstFails.note(fault);
+        await live.markSeenLong(h);
+        arrived();
+        return;
+      }
+    }
     await noteHelloSeen(db, ident, hash);
     final id = await _helloIdOf(hl!.invite.identity, fields!);
     if (id == null) {
@@ -794,6 +824,14 @@ extension AppStateInvites on AppState {
       arrived();
       return;
     }
+    final group = roster ? await _rosterMemberOf(id, senderKey) : null;
+    if (roster && group == null) {
+      firstFails.note('roster');
+      await live.markSeenLong(h);
+      arrived();
+      return;
+    }
+    if (roster) await _rosterHelloTaken(db, senderKey);
     await db.insert('hellos', {
       'ident': ident,
       'way': kHelloIn,
@@ -814,7 +852,13 @@ extension AppStateInvites on AppState {
         (have['accepted'] as int? ?? 0) == 1 &&
         (have['blocked'] as int? ?? 0) == 0 &&
         have['ikey'] == senderKey;
-    if (known) unawaited(afterAccept(id));
+    if (known) {
+      unawaited(afterAccept(id));
+    } else if (group != null) {
+      // a member of a group of mine: answered without a request, and they
+      // stay a member, not a contact
+      await _answerRosterHello(id, group, senderKey);
+    }
     await refreshContacts();
     notifyListeners();
     arrived();
@@ -826,10 +870,7 @@ extension AppStateInvites on AppState {
   // drops it: the developer's words or key, a key blocked here or by a shut
   // vault, someone blocked, and anyone a vault keeps, shut or open, who is
   // never filed on the everyday side
-  Future<String?> _helloIdOf(
-    List<int> key,
-    Map<String, String> fields,
-  ) async {
+  Future<String?> _helloIdOf(List<int> key, Map<String, String> fields) async {
     final said = fields['id']!;
     if (devCardClaim(id: said, xPub: fields['xpub'])) {
       firstFails.note('claim');
