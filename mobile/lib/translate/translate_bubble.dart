@@ -6,6 +6,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
@@ -243,46 +244,25 @@ class _Foot extends StatelessWidget {
       padding: const EdgeInsets.only(top: 5, bottom: 1),
       child: row,
     );
-    final Widget main = onTap == null
-        ? padded
-        : Semantics(
-            button: true,
-            label: [?lead, ?action, ?size].join(', '),
-            excludeSemantics: true,
-            onTap: onTap,
-            onLongPress: onMenu,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: onTap,
-              onLongPress: onMenu,
-              child: padded,
-            ),
-          );
-    if (onMenu == null) return main;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Flexible(child: main),
-        Semantics(
-          button: true,
-          label: l10n.translateBarMore,
-          excludeSemantics: true,
-          onTap: onMenu,
-          child: GestureDetector(
-            key: const ValueKey('tr-more'),
-            behavior: HitTestBehavior.opaque,
-            onTap: onMenu,
-            child: Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(8, 5, 6, 1),
-              child: Icon(
-                Icons.more_horiz_rounded,
-                size: 15,
-                color: HaloColors.text2,
-              ),
-            ),
-          ),
-        ),
-      ],
+    if (onTap == null) return padded;
+    // the menu: a long press, or a screen reader's own action. no glyph of
+    // its own, so a foreign message is no taller
+    final menu = onMenu;
+    return Semantics(
+      button: true,
+      label: [?lead, ?action, ?size].join(', '),
+      excludeSemantics: true,
+      onTap: onTap,
+      onLongPress: menu,
+      customSemanticsActions: menu == null
+          ? null
+          : {CustomSemanticsAction(label: l10n.translateBarMore): menu},
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        onLongPress: menu,
+        child: padded,
+      ),
     );
   }
 }

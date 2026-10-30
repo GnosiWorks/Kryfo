@@ -201,8 +201,10 @@ import '../text_send.dart';
 import '../lock_guard.dart' show LockDropped, lockGuard, onScreen;
 import '../translate/chat_translation.dart';
 import '../translate/hub_live.dart' show translationHubIfOn;
+import '../translate/lang_names.dart';
 import '../translate/translate_bar.dart';
 import '../translate/translate_bubble.dart';
+import '../translate/translate_menu.dart' show neverOffer;
 import '../voice_format.dart' show isVoiceName, kVoiceWav;
 import '../voice_length.dart' show voiceFileMs;
 import '../voice_opus.dart' show voiceForWire;
@@ -2154,18 +2156,20 @@ class _ChatScreenState extends State<ChatScreen>
     // theirs in a language the person does not read
     final trKey = trKeyOf(target.msgUid, target.came);
     final translation = _translation;
-    final canTranslate =
+    final trOffer =
         translation != null &&
-        !welcome &&
-        target.direction == 'in' &&
-        target.sticker == null &&
-        translation.offer(target.text) != null;
+            !welcome &&
+            target.direction == 'in' &&
+            target.sticker == null
+        ? translation.offer(target.text)
+        : null;
+    final canTranslate = translation != null && trOffer != null;
     // the card's height from its rows, so it is placed where it fits
     final out = target.direction == 'out';
     final media = target.mediaPath != null || target.filePath != null;
     final rows = welcome
         ? 1
-        : (canTranslate ? 4 : 3) +
+        : (canTranslate ? 6 : 3) +
               (target.text.isNotEmpty && target.sticker == null ? 1 : 0) +
               (target.sticker == null ? 1 : 0) +
               (target.filePath != null && !isVoiceName(target.fileName)
@@ -2401,6 +2405,34 @@ class _ChatScreenState extends State<ChatScreen>
                                 trKey,
                                 target.text,
                               ),
+                            ),
+                          ),
+                        // the translate line's own menu, in rows of their
+                        // own here
+                        if (canTranslate)
+                          MenuAction(
+                            icon: Icons.all_inclusive_rounded,
+                            label: l10n.translateAlwaysChat,
+                            checked: translation.auto == true,
+                            onTap: () => dismiss(
+                              then: () async {
+                                try {
+                                  await translation.setAuto(
+                                    translation.auto != true,
+                                  );
+                                } catch (_) {}
+                              },
+                            ),
+                          ),
+                        if (canTranslate)
+                          MenuAction(
+                            icon: Icons.do_not_disturb_on_outlined,
+                            label: l10n.translateBarNever(
+                              langName(trOffer.seen),
+                            ),
+                            onTap: () => dismiss(
+                              then: () =>
+                                  neverOffer(context, translation.hub, trOffer),
                             ),
                           ),
                         // a sticker is not forwarded, copied or edited, and
