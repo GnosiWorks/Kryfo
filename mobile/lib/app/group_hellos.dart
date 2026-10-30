@@ -161,9 +161,10 @@ extension AppStateGroupHellos on AppState {
     });
   }
 
-  /// the admin's side, to the members who sent a roster invite: each new
-  /// since the last pass gets every one [groupId] holds, mine with them;
-  /// the others only the ones new or made again since, and mine when it was
+  /// the admin's side, to the members who sent a roster invite: each whose
+  /// own is new or made again since the last pass gets every one [groupId]
+  /// holds, mine with them (one made again may have lost the set); the
+  /// others only the ones new or made again since, and mine when it was
   /// made again ([mine]). a member who sent none (0.5.x) would not use them
   Future<void> _passRosterInvites(String groupId, {bool mine = false}) async {
     try {
@@ -178,7 +179,7 @@ extension AppStateGroupHellos on AppState {
       for (final m in members) {
         final r = held[m];
         if (m == myId || r == null) continue;
-        (r.pushed == kRosterNew ? fresh : had).add(m);
+        (r.pushed != kRosterPassed ? fresh : had).add(m);
       }
       final changed = {
         for (final r in held.values)
@@ -344,7 +345,8 @@ extension AppStateGroupHellos on AppState {
   }
 
   /// [id] has no session and a group gave their roster invite: the hello
-  /// makes the pair, no bundle swap does. one owed again if it is due
+  /// makes the pair, no bundle swap does. one owed again if it is due.
+  /// the newest past its life makes none: the old way runs
   Future<bool> _rosterPairWaits(String id, HaloDb? on) async {
     if (sessionQuiet || !identical(on, live)) return false;
     try {
@@ -358,6 +360,11 @@ extension AppStateGroupHellos on AppState {
           RosterInviteRow.of(r),
       ]..sort((a, b) => b.issued.compareTo(a.issued));
       if (rows.isEmpty) return false;
+      try {
+        readInvite(signalSession.lib, rows.first.invite);
+      } catch (_) {
+        return false;
+      }
       if (signalSession.ready && await _oweRosterHello(file, rows.first)) {
         unawaited(sendHellosOwed());
       }
@@ -425,17 +432,20 @@ extension AppStateGroupHellos on AppState {
   }
 
   /// whether a roster hello from [keyHex] was taken in the last day: one a
-  /// day is, so no member makes me remake our session without end
+  /// day is, so no member makes me remake our session without end. one
+  /// taken ahead of now is from a clock set back since: stale
   Future<bool> _rosterHelloAgain(DatabaseExecutor file, String keyHex) async {
-    await file.delete(
-      'hellos',
-      where: 'way = ? AND at < ?',
-      whereArgs: [
-        kHelloTaken,
-        DateTime.now().millisecondsSinceEpoch -
-            kRosterHelloEvery.inMilliseconds,
-      ],
-    );
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final (op, at) in [
+      ('<', now - kRosterHelloEvery.inMilliseconds),
+      ('>', now),
+    ]) {
+      await file.delete(
+        'hellos',
+        where: 'way = ? AND at $op ?',
+        whereArgs: [kHelloTaken, at],
+      );
+    }
     return (await file.query(
       'hellos',
       columns: ['at'],
@@ -518,4 +528,7 @@ extension AppStateGroupHellos on AppState {
 
   @visibleForTesting
   Future<void> rosterHellosForTest() => _rosterHellos();
+
+  @visibleForTesting
+  Future<bool> rosterPairWaitsForTest(String id) => _rosterPairWaits(id, live);
 }
