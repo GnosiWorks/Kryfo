@@ -317,6 +317,7 @@ class EngineFiles {
       _sealPlainKey();
     }
     if (vault.read(kOnionEntry) != null) await vault.delete(kOnionEntry);
+    _engineLeftovers();
     final old = rawFileAccess(
       () => Directory(docs)
           .listSync()
@@ -337,6 +338,25 @@ class EngineFiles {
       });
     }
     writeMarkState(_state, m);
+  }
+
+  // what an engine started in docs left there besides the key and the
+  // marks: its wrap queue moves into its folder, the rest goes zeroed
+  void _engineLeftovers() {
+    rawFileAccess(() {
+      final queue = File(p.join(docs, 'nostr_topup'));
+      final to = p.join(dir, 'nostr_topup');
+      if (queue.existsSync() && !File(to).existsSync()) {
+        File('$to.new').writeAsBytesSync(queue.readAsBytesSync(), flush: true);
+        File('$to.new').renameSync(to);
+      }
+      for (final n in ['nostr_topup', 'nostr_topup.tmp', 'engine-debug.log']) {
+        final f = File(p.join(docs, n));
+        if (!f.existsSync()) continue;
+        _zero(f.path);
+        f.deleteSync();
+      }
+    });
   }
 
   // a plain docs/onion.key sealed where it lies: the sealed copy is written
