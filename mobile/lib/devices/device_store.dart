@@ -192,8 +192,10 @@ Future<void> deviceTables(
   for (final c in _devOutColumns) {
     await addColumn(db, 'ALTER TABLE dev_out ADD COLUMN $c');
   }
-  // the device pairs whose opener went to the opener address: every copy
-  // after it goes on the seeded pair
+  // the device pairs this device made a seed for, by the device key it
+  // was made for (a new key on the id is another pair), and when their
+  // opener went to the opener address (0: not yet): every copy after it
+  // goes on the seeded pair
   await db.execute('''
     CREATE TABLE IF NOT EXISTS dev_openers (
       ident INTEGER NOT NULL,
@@ -212,6 +214,30 @@ Future<void> deviceTables(
     db,
     'ALTER TABLE dev_pushes ADD COLUMN sent_at INTEGER NOT NULL DEFAULT 0',
   );
+  await addColumn(
+    db,
+    "ALTER TABLE dev_openers ADD COLUMN key TEXT NOT NULL DEFAULT ''",
+  );
+  // a push's bundles, taken once and kept for its retries; its next try;
+  // whether its device copies went already
+  for (final c in const [
+    "bundles TEXT NOT NULL DEFAULT ''",
+    'next_at INTEGER NOT NULL DEFAULT 0',
+    'tries INTEGER NOT NULL DEFAULT 0',
+    'dev_sent INTEGER NOT NULL DEFAULT 0',
+  ]) {
+    await addColumn(db, 'ALTER TABLE dev_pushes ADD COLUMN $c');
+  }
+  // the phone's last ask of each own device for bundles: a batch's 'da' is
+  // taken only when it is this one, once
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS dev_asks (
+      ident INTEGER NOT NULL,
+      device INTEGER NOT NULL,
+      asked_at INTEGER NOT NULL,
+      PRIMARY KEY (ident, device)
+    )
+  ''');
 }
 
 const _devOutColumns = [
@@ -242,6 +268,7 @@ const _allTables = [
   'own_device_keys',
   'dev_out',
   'dev_openers',
+  'dev_asks',
 ];
 
 /// at every open: [deviceTables] only when one is missing, so a file that
@@ -270,7 +297,8 @@ Future<void> deviceTablesAtOpen(
       (!have.contains('identities') ||
           (cols.contains('dev_id') && cols.contains('ident_pub'))) &&
       (await colsOf('dev_out')).contains('sent_at') &&
-      (await colsOf('dev_pushes')).contains('sent_at');
+      (await colsOf('dev_pushes')).contains('dev_sent') &&
+      (await colsOf('dev_openers')).contains('key');
   if (!whole) await deviceTables(db, addColumn);
 }
 

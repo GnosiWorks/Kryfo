@@ -603,7 +603,8 @@ void main() {
     );
     await settle(w.wire, 3);
     expect(w.wire.sent, hasLength(2));
-    // no receipt in six hours: each goes again, on the seeded pair now
+    // no receipt in six hours: each goes again, to the opener address
+    // still: the same wire, the pair's first copy
     w.wait(const Duration(hours: 6, minutes: 1));
     await w.send.pump();
     expect(w.wire.sent, hasLength(4));
@@ -782,7 +783,7 @@ void main() {
     // they answered before: a list with bundles is no opener's size
     await answerAll(w);
     // the desk's batch in the phone's pool
-    final once = [for (var i = 0; i < 6; i++) await w.desk.ds.makeBundle(9)];
+    final once = [for (var i = 0; i < 5; i++) await w.desk.ds.makeBundle(9)];
     await w.ds.call(w.db, 'pool_put', {
       'ident': kMainIdent,
       'device': 9,
@@ -837,6 +838,8 @@ void main() {
       random: Random(8),
     );
     crash = false;
+    // past the failed push's wait
+    w.wait(const Duration(minutes: 1));
     await send2.pushes(contact: who, phone: phone, send: sendPhone);
     await settle(w.wire, 2);
     expect(phones, hasLength(1));
@@ -853,7 +856,8 @@ void main() {
       );
       expect(bl.deviceId, 9);
       final k = bl.bundle.kyberPreKeyId;
-      expect(spent, isNot(contains(k)), reason: 'handed twice');
+      // the ones taken before the crash, kept on the push: none new
+      expect(spent, contains(k));
       expect(handed.add(k), isTrue, reason: 'one bundle to two devices');
     }
 
@@ -863,6 +867,10 @@ void main() {
       final s = w.wire.sent.singleWhere((s) => s.device == d.id);
       await takes(await _openOn(d, 'ana', w.ana, s.cipher));
     }
+    expect({
+      for (final r in await w.db.query('dev_pool', where: 'kdb1 IS NULL'))
+        r['kyber_id'] as int,
+    }, spent);
     final sent = (await w.db.query('dev_pushes')).single;
     expect(sent['sent_at'], w.now());
     // bob answers after it: the push is done
@@ -871,6 +879,7 @@ void main() {
     // the pool ran low: the desk is asked for more, once
     final ask = (await w.db.query('dev_out', where: "uid LIKE 'dn:%'")).single;
     expect(ask['device'], 9);
+    final askedAt = ask['at'];
     final n = w.wire.sent.length;
     await send2.pump();
     await settle(w.wire, n + 1);
@@ -881,7 +890,317 @@ void main() {
             as Map;
     // asked when two were left
     expect(dn['n'], 6);
-    expect(dn['a'], w.now());
+    expect(dn['a'], askedAt);
+    // and kept, for its answer's 'da'
+    expect((await w.db.query('dev_asks')).single['asked_at'], askedAt);
+  });
+
+  test(
+    'a copy that waited for its session in an 847 burst sends the pair\'s '
+    'starter once the session comes, and goes itself after the answer',
+    () async {
+      if (skip()) return;
+      linkedDevicesForTest = true;
+      final w = await world(desk: false);
+      await answerAll(w);
+      final late = _Dev(40, await testStore());
+      await w.ds.session(w.db, 'accept', {
+        'identity': w.toBob.identity,
+        'list': base64Encode(
+          _list(w.bobId, w.bob.registrationId, 7001, [
+            for (final d in [...w.bobs, late])
+              (dev: d.id, key: d.key, reg: d.reg),
+          ]),
+        ),
+      }, SessionRemote.opened(w.bob.identity.public));
+      final r = await w.send.burst(
+        w.me,
+        w.toBob,
+        frame,
+        phone: phoneOf(w.ana, 'bob-quiet-river'),
+      );
+      expect(r!.size, kSealSizes[0]);
+      await settle(w.wire, 2);
+      await w.anaDs.build(
+        'bob-quiet-river',
+        40,
+        w.ana.lib.parseDeviceBundle(
+          await late.ds.makeBundle(40),
+          w.bob.identity.public,
+        ),
+        late.key,
+        late.reg,
+      );
+      await w.send.sessionCame(kMainIdent, w.toBob.identity, 40);
+      var n = w.wire.sent.length;
+      await w.send.pump();
+      await settle(w.wire, n + 1);
+      final st = w.wire.sent.sublist(n).single;
+      expect(st.device, 40);
+      expect(st.opener, isTrue);
+      expect(isOpener(st.cipher), isTrue);
+      expect(_json(await _openOn(late, 'ana', w.ana, st.cipher)).keys.toSet(), {
+        'as',
+      });
+      final waits = (await w.db.query(
+        'dev_out',
+        where: "uid = 'u-one' AND device = 40",
+      )).single;
+      expect(waits['state'], 'wait');
+      // it answers: the copy goes, a plain message on the seeded pair
+      final a = _wireOf(
+        await late.ds.seal('ana', 1, 'halo/1:{}', w.ana.identity.public),
+      );
+      await w.anaDs.open(
+        'bob-quiet-river',
+        40,
+        a.$1,
+        a.$2,
+        late.key,
+        reg: late.reg,
+      );
+      w.wait(const Duration(minutes: 11));
+      n = w.wire.sent.length;
+      await w.send.pump();
+      await settle(w.wire, n + 1);
+      final went = w.wire.sent.sublist(n).single;
+      expect(went.device, 40);
+      expect(went.opener, isFalse);
+      expect(isOpener(went.cipher), isFalse);
+      expect(wrapOf(went.cipher.length), wrapOf(r.phone!.length));
+      expect(
+        _json(await _openOn(late, 'ana', w.ana, went.cipher))['u'],
+        'u-one',
+      );
+    },
+  );
+
+  test('a push whose phone copy fails spends no new bundle and sends its '
+      'devices nothing more; it waits longer each time', () async {
+    if (skip()) return;
+    linkedDevicesForTest = true;
+    final w = await world();
+    await answerAll(w);
+    final once = [for (var i = 0; i < 6; i++) await w.desk.ds.makeBundle(9)];
+    await w.ds.call(w.db, 'pool_put', {
+      'ident': kMainIdent,
+      'device': 9,
+      'once': [for (final b in once) base64Encode(b)],
+      'last': base64Encode(await w.desk.ds.lastResortBundle(9)),
+      'made': w.now(),
+      'now': w.now(),
+    });
+    await w.send.devicesShown(kMainIdent, w.toBob.identity);
+    w.wait(const Duration(minutes: 11));
+    var ok = false;
+    final tries = <String>[];
+    Future<void> push() => w.send.pushes(
+      contact: (i, id) async =>
+          id == w.toBob.identity ? (me: w.me, c: w.toBob) : null,
+      phone: (me, c) => phoneOf(w.ana, c.peer),
+      send: (me, c, cipher) async {
+        tries.add(cipher);
+        return ok;
+      },
+    );
+    Future<Set<int>> spent() async => {
+      for (final r in await w.db.query('dev_pool', where: 'kdb1 IS NULL'))
+        r['kyber_id'] as int,
+    };
+    await push();
+    await settle(w.wire, 2);
+    final first = await spent();
+    expect(first, hasLength(3));
+    expect({for (final s in w.wire.sent) s.device}, {5, 17});
+    final wraps = w.wire.sent.length;
+    // 20 s on: not due yet; 40 s: once more, the phone's copy alone
+    for (final step in [20, 20, 20]) {
+      w.wait(Duration(seconds: step));
+      await push();
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    expect(tries, hasLength(2));
+    expect(await spent(), first);
+    expect(w.wire.sent, hasLength(wraps));
+    final row = (await w.db.query('dev_pushes')).single;
+    expect(row['tries'], 2);
+    expect(row['next_at'] as int, greaterThan(w.now()));
+    // it goes: the bundles it took the first time, nothing more
+    ok = true;
+    w.wait(const Duration(minutes: 3));
+    await push();
+    expect(tries, hasLength(3));
+    expect(await spent(), first);
+    expect(w.wire.sent, hasLength(wraps));
+    final (t, b) = _wireOf(tries.last);
+    final j = _json(unpad(utf8.decode(await w.bob.open('ana-words', t, b))));
+    final k = w.bob.lib
+        .parseDeviceBundle(
+          base64Decode((j['db'] as List).single as String),
+          w.ana.identity.public,
+        )
+        .bundle
+        .kyberPreKeyId;
+    expect(first, contains(k));
+    final done = (await w.db.query('dev_pushes')).single;
+    expect(done['sent_at'], w.now());
+    expect(done['bundles'], '');
+  });
+
+  test('a device session held on another key misses the message alone: the '
+      'phone and the other devices still get theirs', () async {
+    if (skip()) return;
+    linkedDevicesForTest = true;
+    final w = await world(desk: false);
+    final other = _Dev(5, await testStore());
+    await w.anaDs.build(
+      'bob-quiet-river',
+      5,
+      w.ana.lib.parseDeviceBundle(
+        await other.ds.makeBundle(5),
+        w.bob.identity.public,
+      ),
+      other.key,
+      other.reg,
+    );
+    final r = await w.send.burst(
+      w.me,
+      w.toBob,
+      frame,
+      phone: phoneOf(w.ana, 'bob-quiet-river'),
+    );
+    expect(r?.phone, isNotNull);
+    await settle(w.wire, 1);
+    expect([for (final s in w.wire.sent) s.device], [17]);
+    expect(await w.db.query('dev_out', where: 'device = 5'), isEmpty);
+  });
+
+  test('a device id back on a new key gets a new seed and an opener of its '
+      'own; a dropped device takes its seed along', () async {
+    if (skip()) return;
+    linkedDevicesForTest = true;
+    final w = await world(desk: false);
+    await w.send.burst(
+      w.me,
+      w.toBob,
+      frame,
+      phone: phoneOf(w.ana, 'bob-quiet-river'),
+    );
+    await settle(w.wire, 2);
+    Future<List<int>?> seedOf(int dev) async {
+      final r = await w.db.query('pairs', where: 'their_device = $dev');
+      return r.isEmpty ? null : r.single['seed'] as List<int>;
+    }
+
+    final s1 = await seedOf(5);
+    expect(s1, isNotNull);
+    final neu = _Dev(5, await testStore());
+    await w.ds.session(w.db, 'accept', {
+      'identity': w.toBob.identity,
+      'list': base64Encode(
+        _list(w.bobId, w.bob.registrationId, 7001, [
+          (dev: 5, key: neu.key, reg: neu.reg),
+          (dev: 17, key: w.bobs[1].key, reg: w.bobs[1].reg),
+        ]),
+      ),
+    }, SessionRemote.opened(w.bob.identity.public));
+    await w.anaDs.build(
+      'bob-quiet-river',
+      5,
+      w.ana.lib.parseDeviceBundle(
+        await neu.ds.makeBundle(5),
+        w.bob.identity.public,
+      ),
+      neu.key,
+      neu.reg,
+    );
+    final n = w.wire.sent.length;
+    await w.send.burst(
+      w.me,
+      w.toBob,
+      'halo/1:{"u":"u-two","m":"again","w":2}',
+      phone: phoneOf(w.ana, 'bob-quiet-river'),
+    );
+    await settle(w.wire, n + 2);
+    final s2 = await seedOf(5);
+    expect(s2, isNot(s1));
+    final rec = (await w.db.query(
+      'dev_openers',
+      where: 'their_device = 5',
+    )).single;
+    expect(rec['key'], devHex(neu.key));
+    final to5 = w.wire.sent.sublist(n).singleWhere((s) => s.device == 5);
+    expect(to5.opener, isTrue);
+    expect(
+      _json(await _openOn(neu, 'ana', w.ana, to5.cipher))['as'],
+      devHex(s2!),
+    );
+    await w.send.dropDevice(kMainIdent, w.toBob.identity, 5);
+    expect(await seedOf(5), isNull);
+    expect(await w.db.query('dev_openers', where: 'their_device = 5'), isEmpty);
+    expect(await seedOf(17), isNotNull);
+  });
+
+  test('an offline phone\'s backlog of additions still goes a pass at a '
+      'time', () async {
+    if (skip(engine: false)) return;
+    if (shim == null) {
+      markTestSkipped('needs the shim');
+      return;
+    }
+    linkedDevicesForTest = true;
+    final db = await open();
+    for (var i = 0; i < 20; i++) {
+      await db.insert('contacts', {
+        'halo_id': 'c$i',
+        'onion': '',
+        'xpub': '',
+        'first_seen': 0,
+        'last_seen': 0,
+        'ident': kMainIdent,
+        'ikey': '05${i.toRadixString(16).padLeft(64, '0')}',
+        'caps': 'dv,pq',
+        'accepted': 1,
+      });
+    }
+    var clock = 1_780_000_000_000;
+    final store = await testStore();
+    final send = DeviceSend(
+      state: DeviceState(_PhoneOnly()),
+      db: () async => db,
+      sessions: (_) async => DeviceSessions(store),
+      wire: _Wire(),
+      clock: () => clock,
+      random: Random(5),
+    );
+    await send.listsChanged([
+      (ident: kMainIdent, version: 10, added: [9], removed: false),
+    ]);
+    final went = <String>[];
+    Future<void> push() => send.pushes(
+      contact: (i, id) async => (
+        me: (ident: i, identity: Uint8List(33), device: 1),
+        c: (peer: 'p-$id', identity: id, devices: true, phoneClassic: false),
+      ),
+      phone: (me, c) =>
+          (measure: (f) async => kSealSizes[0], seal: (f, n) async => 'sealed'),
+      send: (me, c, cipher) async {
+        went.add(c.identity);
+        return true;
+      },
+    );
+    // the phone was off through the whole spread
+    clock += const Duration(hours: 6).inMilliseconds;
+    await push();
+    expect(went, hasLength(kPushPerPass));
+    await push();
+    expect(went, hasLength(kPushPerPass));
+    clock += (kPushGapMost + const Duration(minutes: 2)).inMilliseconds;
+    await push();
+    expect(went, hasLength(2 * kPushPerPass));
+    clock += (kPushGapMost + const Duration(minutes: 2)).inMilliseconds;
+    await push();
+    expect(went.toSet(), hasLength(20));
   });
 
   test('a batch carries its make time, and one that answers the phone\'s ask '
@@ -891,16 +1210,24 @@ void main() {
     final w = await world();
     const day = 24 * 60 * 60 * 1000;
     final behind = w.now() - 20 * day;
-    Future<int> taken(int? asked) async {
+    // [kept]: the ask the phone made and kept; [da]: what the batch echoes
+    Future<int> taken({int? kept, int? da}) async {
+      if (kept != null) {
+        await w.db.insert('dev_asks', {
+          'ident': kMainIdent,
+          'device': 9,
+          'asked_at': kept,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
       final once = await w.desk.ds.makeBundle(9);
       final last = await w.desk.ds.lastResortBundle(9);
       final f = ownBatchFrame(
         once: [once],
         last: last,
         made: behind,
-        asked: asked,
+        asked: da,
       );
-      final args = ownBatchArgs(_json(f), kMainIdent, 9, w.now());
+      final args = await w.send.batchArgs(_json(f), kMainIdent, 9);
       expect(args, isNotNull);
       await w.ds.call(w.db, 'pool_put', args!);
       final j = await w.ds.call(w.db, 'pool_take', {
@@ -917,10 +1244,17 @@ void main() {
     }
 
     // unasked, a batch made 20 days ago is old: only the last resort goes
-    expect(await taken(null), 0);
+    expect(await taken(), 0);
     w.wait(const Duration(minutes: 1));
-    // asked a minute ago: young
-    expect(await taken(w.now() - 60000), 1);
+    // a batch that names an ask the phone never made: its make time alone
+    expect(await taken(da: w.now() - 60000), 0);
+    // one that names the kept ask: young
+    final ask = w.now() - 60000;
+    expect(await taken(kept: ask, da: ask), 1);
+    // the same ask a second time: taken once only
+    expect(await taken(da: ask), 0);
+    // another than the kept one
+    expect(await taken(kept: ask, da: ask + 1), 0);
     // no make time: no batch
     expect(ownBatchArgs({'db': <String>[]}, kMainIdent, 9, w.now()), isNull);
   });
@@ -1022,6 +1356,36 @@ class _SeedEngine implements HaloEngine {
     seen.add((peer, seedHex));
     return 'ok';
   }
+
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('engine: ${i.memberName}');
+}
+
+// an engine whose contacts have their phones alone, and my list too
+class _PhoneOnly implements DeviceEngine {
+  @override
+  String call(String op, Map<String, Object?> args) => switch (op) {
+    'current' => jsonEncode({
+      'rows': [],
+      'list': base64Encode([...ascii.encode('KDL2'), 5, ...List.filled(32, 7)]),
+      'devices': [
+        {'id': 1, 'phone': true},
+      ],
+    }),
+    'fanout' => jsonEncode({
+      'rows': [],
+      'slots': [
+        {
+          'identity': args['contact'],
+          'device': 1,
+          'key': args['contact'],
+          'reg': 0,
+        },
+      ],
+    }),
+    _ => jsonEncode({'rows': [], 'err': 'no_bundle'}),
+  };
 
   @override
   dynamic noSuchMethod(Invocation i) =>

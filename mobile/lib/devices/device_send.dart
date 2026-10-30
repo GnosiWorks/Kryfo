@@ -187,21 +187,30 @@ class DeviceSend {
       if (f != null && frameFor != null) f = frameFor(s, f);
       if (f == null) continue;
       final addr = s.own ? kOwnDevices : c.peer;
-      if (await _owed(d, uid, me.ident, s)) continue;
-      final pin = _bytes(s.key);
-      final has = await ds.has(addr, s.device);
-      // the pair's seed rides on every copy until the device answers
-      if (!has || !await ds.answered(addr, s.device, pin)) {
-        f = _withSeed(f, await _seed(d, me, s));
-      }
-      if (!has || s.rebuild) {
-        if (!s.own && _askDue(me.ident, c.identity, s.device, now)) {
-          ask.add(s.device);
+      // a slot that fails here (a session held on another key, a row that
+      // does not read) misses this message; the phone and the others go
+      try {
+        if (await _owed(d, uid, me.ident, s)) continue;
+        final pin = _bytes(s.key);
+        final has = await ds.has(addr, s.device);
+        final answered = has && await ds.answered(addr, s.device, pin);
+        // the pair's seed rides on every copy until the device answers
+        if (!answered) f = _withSeed(f, await _seed(d, me, s));
+        // a pair built again before its device ever answered: the new
+        // opener goes to the opener address again, the first may never
+        // have been read
+        if (s.rebuild && !answered) await _openAfresh(d, me, s);
+        if (!has || s.rebuild) {
+          if (!s.own && _askDue(me.ident, c.identity, s.device, now)) {
+            ask.add(s.device);
+          }
+          waiting.add((s, f));
+          continue;
         }
-        waiting.add((s, f));
+        ready.add((s, (peer: addr, device: s.device, pin: pin, plain: f)));
+      } on Object {
         continue;
       }
-      ready.add((s, (peer: addr, device: s.device, pin: pin, plain: f)));
     }
     if (phoneFrame != null && ask.isNotEmpty) {
       phoneFrame = _withAsk(phoneFrame, ask);
@@ -368,33 +377,72 @@ class DeviceSend {
 
   // ---- seeds and openers ----
 
-  // the device pair's seed, made and kept with the first copy to it
+  static const _pairWhere =
+      'ident = ? AND peer = ? AND their_device = ? AND my_device = ?';
+
+  // the device pair's seed, made and kept with the first copy to it, for
+  // the device key the slot names: a new key under the id is another pair,
+  // and never gets the seed the old device knows
   Future<Uint8List> _seed(Database d, DevMe me, DevSlot s) async {
+    final at = [me.ident, s.identity, s.device, me.device];
+    final rec = await d.query(
+      'dev_openers',
+      columns: ['key'],
+      where: _pairWhere,
+      whereArgs: at,
+      limit: 1,
+    );
     final r = await d.query(
       'pairs',
       columns: ['seed'],
-      where: 'ident = ? AND peer = ? AND their_device = ? AND my_device = ?',
-      whereArgs: [me.ident, s.identity, s.device, me.device],
+      where: _pairWhere,
+      whereArgs: at,
       limit: 1,
     );
     final held = r.isEmpty ? null : r.first['seed'];
-    if (held is List<int> && held.length == 32) {
+    final mine = rec.isEmpty || rec.first['key'] == s.key;
+    if (held is List<int> && held.length == 32 && mine) {
+      // a seed taken from the device's own opener has no record yet
+      if (rec.isEmpty) await _record(d, at, s.key);
       return Uint8List.fromList(held);
     }
     final seed = Uint8List.fromList([
       for (var i = 0; i < 32; i++) _rand.nextInt(256),
     ]);
-    await d.insert('pairs', {
-      'ident': me.ident,
-      'peer': s.identity,
-      'their_device': s.device,
-      'my_device': me.device,
-      'conv': 4,
-      'seed': seed,
-    }, conflictAlgorithm: ConflictAlgorithm.ignore);
-    // a row someone else wrote first wins
-    return _seed(d, me, s);
+    await d.transaction((t) async {
+      // the old key's seed and opener mark go
+      await t.delete('pairs', where: _pairWhere, whereArgs: at);
+      await t.delete('dev_openers', where: _pairWhere, whereArgs: at);
+      await t.insert('pairs', {
+        'ident': me.ident,
+        'peer': s.identity,
+        'their_device': s.device,
+        'my_device': me.device,
+        'conv': 4,
+        'seed': seed,
+      });
+      await _record(t, at, s.key);
+    });
+    return seed;
   }
+
+  Future<void> _record(DatabaseExecutor d, List<Object?> at, String key) =>
+      d.insert('dev_openers', {
+        'ident': at[0],
+        'peer': at[1],
+        'their_device': at[2],
+        'my_device': at[3],
+        'key': key,
+        'at': 0,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+
+  // the pair's next opener goes to its opener address again
+  Future<void> _openAfresh(Database d, DevMe me, DevSlot s) => d.update(
+    'dev_openers',
+    {'at': 0},
+    where: '$_pairWhere AND key = ?',
+    whereArgs: [me.ident, s.identity, s.device, me.device, s.key],
+  );
 
   String _arg(Map<String, Object?> r, int myDevice, Uint8List seed) {
     final identity = r['peer'] as String;
@@ -421,7 +469,7 @@ class DeviceSend {
     final seeds = await d.query(
       'pairs',
       columns: ['seed'],
-      where: 'ident = ? AND peer = ? AND their_device = ? AND my_device = ?',
+      where: _pairWhere,
       whereArgs: [ident, identity, device, myDevice],
       limit: 1,
     );
@@ -431,32 +479,39 @@ class DeviceSend {
     final w = r['wire'] as String;
     // the first copy on a pair goes to its opener address, and so does
     // every send of that copy again; the rest go on the seeded pair
+    final at = [ident, identity, device, myDevice];
+    final rec = await d.query(
+      'dev_openers',
+      columns: ['key', 'at'],
+      where: _pairWhere,
+      whereArgs: at,
+      limit: 1,
+    );
+    // a copy sealed for a key the pair no longer runs on is owed to no one
+    if (rec.isNotEmpty && rec.first['key'] != r['pin']) {
+      await d.delete('dev_out', where: _slotWhere, whereArgs: _keyArgs(r));
+      return;
+    }
     var opener = r['opener'] == 1;
-    if (!opener && base64Decode(w)[0] == kLsPreKey) {
-      final went = await d.query(
-        'dev_openers',
-        where: 'ident = ? AND peer = ? AND their_device = ? AND my_device = ?',
-        whereArgs: [ident, identity, device, myDevice],
-        limit: 1,
-      );
-      if (went.isEmpty) {
-        opener = true;
-        await d.transaction((t) async {
-          await t.insert('dev_openers', {
-            'ident': ident,
-            'peer': identity,
-            'their_device': device,
-            'my_device': myDevice,
-            'at': _clock(),
-          }, conflictAlgorithm: ConflictAlgorithm.ignore);
-          await t.update(
-            'dev_out',
-            {'opener': 1},
-            where: _slotWhere,
-            whereArgs: _keyArgs(r),
-          );
-        });
-      }
+    if (!opener &&
+        base64Decode(w)[0] == kLsPreKey &&
+        (rec.isEmpty || rec.first['at'] == 0)) {
+      opener = true;
+      await d.transaction((t) async {
+        await _record(t, at, r['pin'] as String);
+        await t.update(
+          'dev_openers',
+          {'at': _clock()},
+          where: _pairWhere,
+          whereArgs: at,
+        );
+        await t.update(
+          'dev_out',
+          {'opener': 1},
+          where: _slotWhere,
+          whereArgs: _keyArgs(r),
+        );
+      });
     }
     String res;
     try {
@@ -614,6 +669,37 @@ class DeviceSend {
         size: r['size'] as int? ?? 0,
       );
     } on WaitsForAnswer {
+      // a first copy too big for an opener at its size: the pair's starter
+      // goes alone, so the device answers and the copy goes after it
+      final myDevice = await _myDevice(d, ident);
+      final st = await _starter(
+        d,
+        ds,
+        (ident: ident, identity: Uint8List(0), device: myDevice),
+        (
+          identity: r['peer'] as String,
+          device: device,
+          key: r['pin'] as String,
+          reg: r['reg'] as int? ?? 0,
+          own: r['own'] == 1,
+          rebuild: false,
+        ),
+        (
+          peer: addr,
+          device: device,
+          pin: _bytes(r['pin'] as String),
+          plain: plain,
+        ),
+        now,
+      );
+      if (st != null) {
+        await d.insert(
+          'dev_out',
+          st,
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+        await _go(d, st);
+      }
       return later();
     } on Object {
       return later();
@@ -648,11 +734,17 @@ class DeviceSend {
       where: 'ident = ? AND peer = ? AND device = ?',
       whereArgs: [ident, identity, device],
     );
-    await d.delete(
-      'dev_openers',
-      where: 'ident = ? AND peer = ? AND their_device = ?',
-      whereArgs: [ident, identity, device],
-    );
+    // its seed goes too: a new device under the id never gets it
+    for (final table in const ['dev_openers', 'pairs']) {
+      await d.delete(
+        table,
+        // never the identity pair (1 to 1), the chat's own
+        where:
+            'ident = ? AND peer = ? AND their_device = ? AND '
+            '(their_device != 1 OR my_device != 1)',
+        whereArgs: [ident, identity, device],
+      );
+    }
   }
 
   /// [identity], a contact of my [ident], is gone (deleted, "not them"):
@@ -861,15 +953,36 @@ class DeviceSend {
     final now = _clock();
     final due = await d.query(
       'dev_pushes',
-      where: '(sent_at = 0 AND due_at <= ?) OR (sent_at > 0 AND sent_at <= ?)',
-      whereArgs: [now, now - kPushAgain.inMilliseconds],
+      where:
+          'next_at <= ? AND ((sent_at = 0 AND due_at <= ?) OR '
+          '(sent_at > 0 AND sent_at <= ?))',
+      whereArgs: [now, now, now - kPushAgain.inMilliseconds],
       orderBy: 'due_at',
     );
     final byContact = <String, List<Map<String, Object?>>>{};
     for (final r in due) {
       byContact.putIfAbsent('${r['ident']}/${r['peer']}', () => []).add(r);
     }
-    for (final rs in byContact.values) {
+    // a removal goes at once; the rest at most a pass a pump, so a phone
+    // that was off through the spread does not send its backlog in one go
+    bool removal(List<Map<String, Object?>> rs) =>
+        rs.any((r) => r['kind'] == 'remove' && r['sent_at'] == 0);
+    final now1 = [
+      for (final rs in byContact.values)
+        if (removal(rs)) rs,
+    ];
+    final rest = [
+      for (final rs in byContact.values)
+        if (!removal(rs)) rs,
+    ];
+    _shuffle(rest);
+    final go = [...now1, ...rest.take(kPushPerPass)];
+    var at = now;
+    for (var i = kPushPerPass; i < rest.length; i++) {
+      if ((i - kPushPerPass) % kPushPerPass == 0) at += _gap(false);
+      await _pushRows(d, rest[i], {'next_at': at + _rand.nextInt(60000)});
+    }
+    for (final rs in go) {
       final ident = rs.first['ident'] as int;
       final identity = rs.first['peer'] as String;
       final who = await contact(ident, identity);
@@ -888,13 +1001,14 @@ class DeviceSend {
             for (final s in (r['devs'] as String? ?? '').split(','))
               if (int.tryParse(s) != null) int.parse(s),
       };
-      // each device of theirs its own bundles, taken from the pool and
-      // written before anything is sealed: a crash after hands none twice
-      final per = <int, List<String>>{};
-      if (add.isNotEmpty) {
-        final List<DevSlot> slots;
+      // each device of theirs its own bundles: taken from the pool once and
+      // kept on the push in the same transaction, then the same ones on
+      // every retry. a crash after hands none twice, a failed push spends
+      // no more
+      var per = _bundlesOf(rs);
+      if (add.isNotEmpty && per == null) {
         try {
-          slots = _slots(
+          final slots = _slots(
             await state.call(d, 'fanout', {
               'ident': ident,
               'contact': identity,
@@ -903,13 +1017,26 @@ class DeviceSend {
               'now': now,
             }),
           );
-        } on DevRefused {
+          final took = <int, List<String>>{};
+          await d.transaction((t) async {
+            for (final s in slots) {
+              if (!s.own) took[s.device] = await _take(t, ident, add, now);
+            }
+            await _pushRows(t, rs, {
+              'bundles': jsonEncode({
+                for (final e in took.entries) '${e.key}': e.value,
+              }),
+            });
+          });
+          per = took;
+        } on Object {
+          await _pushFailed(d, rs, now);
           continue;
         }
-        for (final s in slots) {
-          if (!s.own) per[s.device] = await _take(d, ident, add, now);
-        }
       }
+      final bundles = per ?? const <int, List<String>>{};
+      // its device copies went on an earlier try: the phone's alone now
+      final devicesWent = rs.any((r) => r['dev_sent'] == 1);
       final DevBurst? r;
       try {
         r = await burst(
@@ -921,33 +1048,80 @@ class DeviceSend {
           frameFor: (slot, f) {
             // my own devices get my list from the phone, not as a push
             if (slot.own) return null;
-            final b = per[slot.device] ?? const [];
+            final phoneSlot = slot.device == 1 && who.me.device == 1;
+            if (devicesWent && !phoneSlot) return null;
+            final b = bundles[slot.device] ?? const [];
             return b.isEmpty ? f : _with(f, (j) => j['db'] = b);
           },
         );
       } on Object {
+        await _pushFailed(d, rs, now);
         continue;
       }
-      final pc = r?.phone;
-      if (r == null || (pc != null && !await send(who.me, who.c, pc))) {
+      if (r == null) {
+        await _pushFailed(d, rs, now);
         continue;
       }
-      await d.transaction((t) async {
-        for (final row in rs) {
-          await t.update(
-            'dev_pushes',
-            {'sent_at': now},
-            where: 'ident = ? AND peer = ? AND version = ? AND kind = ?',
-            whereArgs: [row['ident'], row['peer'], row['version'], row['kind']],
-          );
-        }
+      await _pushRows(d, rs, {'dev_sent': 1});
+      final pc = r.phone;
+      if (pc != null && !await send(who.me, who.c, pc)) {
+        await _pushFailed(d, rs, now);
+        continue;
+      }
+      await _pushRows(d, rs, {
+        'sent_at': now,
+        'bundles': '',
+        'tries': 0,
+        'next_at': 0,
+        'dev_sent': 0,
       });
     }
   }
 
+  Map<int, List<String>>? _bundlesOf(List<Map<String, Object?>> rs) {
+    for (final r in rs) {
+      final b = r['bundles'] as String? ?? '';
+      if (b.isEmpty) continue;
+      try {
+        return {
+          for (final e in (jsonDecode(b) as Map).entries)
+            int.parse(e.key as String): (e.value as List).cast<String>(),
+        };
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _pushRows(
+    DatabaseExecutor d,
+    List<Map<String, Object?>> rs,
+    Map<String, Object?> values,
+  ) async {
+    for (final row in rs) {
+      await d.update(
+        'dev_pushes',
+        values,
+        where: 'ident = ? AND peer = ? AND version = ? AND kind = ?',
+        whereArgs: [row['ident'], row['peer'], row['version'], row['kind']],
+      );
+    }
+  }
+
+  // a push that did not go waits longer each time, its bundles kept
+  Future<void> _pushFailed(Database d, List<Map<String, Object?>> rs, int now) {
+    final tries = rs.map((r) => r['tries'] as int? ?? 0).reduce(max);
+    final gap = _again[min(tries, _again.length - 1)];
+    return _pushRows(d, rs, {
+      'tries': tries + 1,
+      'next_at': now + gap.inMilliseconds,
+    });
+  }
+
   // one bundle of each of [devices] (my own, of [ident]) from the pool
   Future<List<String>> _take(
-    Database d,
+    DatabaseExecutor d,
     int ident,
     Set<int> devices,
     int now,
@@ -971,10 +1145,52 @@ class DeviceSend {
     return out;
   }
 
+  /// the pool_put args for a batch frame's json from my own [device] of
+  /// [ident] (ownBatchArgs): its 'da' counts only when it is the ask this
+  /// phone made last of that device, and only once; any other batch ages
+  /// from its make time alone
+  Future<Map<String, Object?>?> batchArgs(
+    Map<String, dynamic> body,
+    int ident,
+    int device,
+  ) async {
+    final d = await db();
+    final held = await d.query(
+      'dev_asks',
+      columns: ['asked_at'],
+      where: 'ident = ? AND device = ?',
+      whereArgs: [ident, device],
+      limit: 1,
+    );
+    final ask = held.isEmpty ? null : held.first['asked_at'] as int?;
+    final da = body['da'];
+    final take = ask != null && da is int && da == ask;
+    final args = ownBatchArgs(
+      body,
+      ident,
+      device,
+      _clock(),
+      asked: take ? ask : null,
+    );
+    if (args != null && take) {
+      await d.delete(
+        'dev_asks',
+        where: 'ident = ? AND device = ?',
+        whereArgs: [ident, device],
+      );
+    }
+    return args;
+  }
+
   // the pool of my own [device] of [ident] runs low: the device is asked
   // for more ('dn': how many, and when, which its answer echoes so the
   // batch ages from no earlier than the ask), at most once a day
-  Future<void> _askRefill(Database d, int ident, int device, int now) async {
+  Future<void> _askRefill(
+    DatabaseExecutor d,
+    int ident,
+    int device,
+    int now,
+  ) async {
     final k = 'own/$ident/$device';
     final at = _asked[k];
     if (at != null && now >= at && now - at < kAskEvery.inMilliseconds) return;
@@ -1003,6 +1219,12 @@ class DeviceSend {
     if (entry == null || identity == null) return;
     _asked[k] = now;
     final uid = 'dn:$device:$now';
+    // the ask kept: its answer's 'da' is taken only when it names it
+    await d.insert('dev_asks', {
+      'ident': ident,
+      'device': device,
+      'asked_at': now,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
     await d.insert('dev_out', {
       'uid': uid,
       'ident': ident,
@@ -1053,27 +1275,29 @@ String ownBatchFrame({
 
 /// the phone's pool_put args for a batch frame's json from its own
 /// [device] of [ident] at [now]; null when it is no batch. a batch with
-/// no make time is none: its bundles would age out on arrival
+/// no make time is none: its bundles would age out on arrival. [asked] is
+/// the phone's own ask the batch answers, checked against what it kept
+/// (DeviceSend.batchArgs), never the frame's word alone
 Map<String, Object?>? ownBatchArgs(
   Map<String, dynamic> body,
   int ident,
   int device,
-  int now,
-) {
+  int now, {
+  int? asked,
+}) {
   final made = body['dk'];
   final once = body['db'];
   if (made is! int || once is! List || once.any((b) => b is! String)) {
     return null;
   }
   final last = body['dz'];
-  final asked = body['da'];
   return {
     'ident': ident,
     'device': device,
     'once': once,
     if (last is String) 'last': last,
     'made': made,
-    if (asked is int && asked > 0) 'asked': asked,
+    if (asked != null && asked > 0) 'asked': asked,
     'now': now,
   };
 }
