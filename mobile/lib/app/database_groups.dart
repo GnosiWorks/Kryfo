@@ -197,7 +197,8 @@ mixin _GroupRows {
     if (signalSession.ident != kMainIdent) return;
     final LsInvite inv;
     try {
-      inv = readInvite(signalSession.lib, r.invite);
+      // one past its life still names the hello to spend
+      inv = readInvite(signalSession.lib, r.invite, timeless: (_) => true);
     } catch (_) {
       return;
     }

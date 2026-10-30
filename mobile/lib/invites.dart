@@ -444,9 +444,9 @@ const kRosterChanged = 2;
 const kRosterKeepEvery = Duration(days: 1);
 
 /// [member]'s roster invite [invite] (id [id], issued [issued]) kept for
-/// [groupId]. one held already is replaced only by one issued later, and
-/// not again within kRosterKeepEvery. true when it was kept: with [passOn]
-/// it is still to go to the other members
+/// [groupId]. one held already is replaced only by one issued later; with
+/// [passOn] (the admin's side) not again within kRosterKeepEvery, and it is
+/// still to go to the other members. true when it was kept
 Future<bool> keepRosterInvite(
   DatabaseExecutor db,
   String groupId,
@@ -462,7 +462,10 @@ Future<bool> keepRosterInvite(
   if (had != null &&
       (had.id == id ||
           had.issued >= issued ||
-          now - had.kept < kRosterKeepEvery.inMilliseconds)) {
+          // one kept ahead of now is from a clock set back since: stale
+          (passOn &&
+              had.kept <= now &&
+              now - had.kept < kRosterKeepEvery.inMilliseconds))) {
     return false;
   }
   await db.insert('roster_invites', {
