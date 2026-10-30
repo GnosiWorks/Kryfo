@@ -633,12 +633,8 @@ class AppLocalizationsVi extends AppLocalizations {
       'Đã kết nối · định tuyến qua 3 relay';
 
   @override
-  String get appReadyToSendPublishing =>
-      'Sẵn sàng gửi · đang công bố địa chỉ của bạn';
-
-  @override
-  String get appReadyToSendFinishing =>
-      'Sẵn sàng gửi · đang hoàn tất thiết lập';
+  String get appReadyToChatAddressFinishing =>
+      'Sẵn sàng trò chuyện · địa chỉ đang hoàn tất';
 
   @override
   String appConnecting(Object pct) {
@@ -6372,6 +6368,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get motionYouReAnonymous => 'Bạn đang ẩn danh';
 
   @override
+  String get motionReadyToChat => 'Sẵn sàng trò chuyện';
+
+  @override
   String get motionTorIsStartingIn =>
       'Tor đang khởi động ở chế độ nền. Biểu đồ này sẽ sáng lên khi kết nối hình thành.';
 
@@ -6390,6 +6389,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get motionYourIpIsHidden =>
       'IP của bạn được ẩn. Chỉ những người có Kryfo của bạn mới liên lạc được với bạn.';
+
+  @override
+  String get motionAddressFinishing =>
+      'Tin nhắn đã có thể đi qua Tor. Địa chỉ riêng của bạn đang hoàn tất ở chế độ nền.';
 
   @override
   String get motionBuilding2 => 'đang dựng';

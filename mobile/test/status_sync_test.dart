@@ -163,12 +163,12 @@ void main() {
     expect(find.text(l10n.appConnecting2), findsNothing);
     expect(find.text(l10n.motionYouReAnonymous), findsNothing);
 
-    // a relay answered: ready, and the sheet says how far it published
+    // a relay answered: ready to chat, the address finishing behind it
     await poll(t, 'publishing|100|0|1|1');
     _says(
       l10n.appTorReady,
-      line: l10n.appReadyToSendPublishing,
-      graph: l10n.motionPublishing,
+      line: l10n.appReadyToChatAddressFinishing,
+      graph: l10n.motionReady,
     );
     await poll(t, 'reachable|100|1|1|1');
     _says(
@@ -177,13 +177,10 @@ void main() {
       graph: l10n.motionReady,
     );
 
-    // the relays go quiet: inside the grace both hold ready
+    // the relays go quiet: inside the grace both hold ready, and the
+    // sheet's line claims no more than the pill while nothing sends
     await poll(t, 'reachable|100|1|0|1');
-    _says(
-      l10n.appTorReady,
-      line: l10n.appConnectedRoutedThrough3,
-      graph: l10n.motionReady,
-    );
+    _says(l10n.appTorReady, graph: l10n.motionReady);
     // past it both say the route is up with no relay through, never a
     // full green route under a pill that says otherwise
     appState.usableAtForTest = DateTime.now().subtract(
@@ -211,11 +208,7 @@ void main() {
       kPillGrace - const Duration(milliseconds: 300),
     );
     await poll(t, 'reachable|100|1|0|1');
-    _says(
-      l10n.appTorReady,
-      line: l10n.appConnectedRoutedThrough3,
-      graph: l10n.motionReady,
-    );
+    _says(l10n.appTorReady, graph: l10n.motionReady);
     // nothing polls meanwhile: the reading's own clock moves both
     await t.runAsync(() => Future.delayed(const Duration(milliseconds: 500)));
     await t.pump(const Duration(seconds: 1));
@@ -468,10 +461,133 @@ void main() {
     });
   });
 
+  group('ready while the address is published', () {
+    // what a sheet stuck on publishing said, none of it while a relay carries
+    void notStuck() {
+      for (final w in [
+        l10n.motionPublishing,
+        l10n.motionAnnouncingYourArrival,
+        l10n.motionTellingTheNetworkYou,
+        l10n.appTheFirstConnectionTakes,
+        l10n.appRelayAndFastModes,
+      ]) {
+        expect(find.text(w), findsNothing, reason: w);
+      }
+    }
+
+    testWidgets('the sheet says ready to chat, then published', (t) async {
+      await show(t);
+      appState.torTryingSinceForTest = DateTime.now();
+      await poll(t, 'starting|60|0|0|1');
+      await poll(t, 'publishing|100|0|1|1');
+      _says(
+        l10n.appTorReady,
+        line: l10n.appReadyToChatAddressFinishing,
+        graph: l10n.motionReady,
+      );
+      expect(_inGraph(l10n.motionReadyToChat), findsOneWidget);
+      expect(_inGraph(l10n.motionAddressFinishing), findsOneWidget);
+      notStuck();
+      expect(appState.torReady, isTrue);
+      expect(appState.linkUp, isTrue);
+
+      // published: anonymous, and the finishing words gone
+      await poll(t, 'reachable|100|3|1|1');
+      _says(
+        l10n.appTorReady,
+        line: l10n.appConnectedRoutedThrough3,
+        graph: l10n.motionReady,
+      );
+      expect(_inGraph(l10n.motionYouReAnonymous), findsOneWidget);
+      expect(find.text(l10n.motionReadyToChat), findsNothing);
+      expect(find.text(l10n.motionAddressFinishing), findsNothing);
+      await gone(t);
+    });
+
+    testWidgets('a ready held through a drop never says ready to chat', (
+      t,
+    ) async {
+      await show(t);
+      await poll(t, 'publishing|100|0|1|1');
+      expect(_inSheet(l10n.appReadyToChatAddressFinishing), findsOneWidget);
+      // the relays go quiet inside the grace: nothing sends meanwhile
+      await poll(t, 'publishing|100|0|0|1');
+      expect(appState.linkUp, isFalse);
+      _says(l10n.appTorReady, graph: l10n.motionPublishing);
+      expect(find.text(l10n.appReadyToChatAddressFinishing), findsNothing);
+      expect(find.text(l10n.motionReadyToChat), findsNothing);
+      await gone(t);
+    });
+
+    testWidgets('no relay through yet still says so while it publishes', (
+      t,
+    ) async {
+      await show(t);
+      await poll(t, 'publishing|100|0|0|1');
+      _says(l10n.appWaitingForARelay, graph: l10n.motionNoRelayYet);
+      expect(find.text(l10n.motionReadyToChat), findsNothing);
+      await gone(t);
+    });
+
+    testWidgets('with motion on the words cross-fade and settle', (t) async {
+      phone(t);
+      await t.pumpWidget(_both(still: false));
+      await t.pump(const Duration(milliseconds: 400));
+      await poll(t, 'publishing|100|0|1|1');
+      // the stage walks on and the words fade in; then it rests
+      for (var i = 0; i < 12; i++) {
+        await t.pump(const Duration(milliseconds: 200));
+      }
+      expect(_inGraph(l10n.motionReadyToChat), findsOneWidget);
+      appState.takeTorStatus('reachable|100|3|1|1');
+      await t.pump();
+      // half way through the fade both are drawn, then only the new
+      await t.pump(const Duration(milliseconds: 120));
+      expect(_inGraph(l10n.motionReadyToChat), findsOneWidget);
+      expect(_inGraph(l10n.motionYouReAnonymous), findsOneWidget);
+      await t.pump(const Duration(milliseconds: 400));
+      expect(_inGraph(l10n.motionReadyToChat), findsNothing);
+      expect(_inGraph(l10n.motionYouReAnonymous), findsOneWidget);
+      await gone(t);
+    });
+
+    testWidgets('right to left reads the same state', (t) async {
+      phone(t);
+      setL10nLocale(const Locale('ar'));
+      addTearDown(() => setL10nLocale(const Locale('en')));
+      await t.pumpWidget(
+        MaterialApp(
+          locale: const Locale('ar'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (ctx, child) => MediaQuery(
+            data: MediaQuery.of(ctx).copyWith(disableAnimations: true),
+            child: child!,
+          ),
+          home: Material(
+            color: HaloColors.surface2,
+            child: SingleChildScrollView(child: const TorSheet()),
+          ),
+        ),
+      );
+      await poll(t, 'publishing|100|0|1|1');
+      final ar = lookupAppLocalizations(const Locale('ar'));
+      expect(find.text(ar.motionReadyToChat), findsOneWidget);
+      expect(find.text(ar.appReadyToChatAddressFinishing), findsOneWidget);
+      expect(
+        Directionality.of(t.element(find.text(ar.motionReadyToChat))),
+        TextDirection.rtl,
+      );
+      expect(t.takeException(), isNull);
+      await gone(t);
+    });
+  });
+
   // large text, both themes: every state's words fit and nothing clips
   for (final light in [false, true]) {
     for (final step in [
       'starting|45|0|0|1',
+      'publishing|100|0|1|1',
       'reachable|100|1|0|1',
       'reachable|100|1|1|1',
     ]) {

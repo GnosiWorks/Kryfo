@@ -314,25 +314,10 @@ class EngineFiles {
       final kept = vault.read(kOnionEntry);
       if (kept != null) File(_sealedKey).writeAsBytesSync(base64.decode(kept));
     } else if (type == FileSystemEntityType.file && _plain(_sealedKey)) {
-      // the plain one is held open: the sealed copy takes its name, then
-      // its own bytes are zeroed where they lie
-      final held = rawFileAccess(
-        () => File(_sealedKey).openSync(mode: FileMode.append),
-      );
-      try {
-        held.setPositionSync(0);
-        final k = held.readSync(held.lengthSync());
-        File('$_sealedKey.new').writeAsBytesSync(k, flush: true);
-        rawFileAccess(() => File('$_sealedKey.new').renameSync(_sealedKey));
-        held.setPositionSync(0);
-        held.writeFromSync(Uint8List(k.length));
-        held.flushSync();
-        k.fillRange(0, k.length, 0);
-      } finally {
-        held.closeSync();
-      }
+      _sealPlainKey();
     }
     if (vault.read(kOnionEntry) != null) await vault.delete(kOnionEntry);
+    _engineLeftovers();
     final old = rawFileAccess(
       () => Directory(docs)
           .listSync()
@@ -353,6 +338,49 @@ class EngineFiles {
       });
     }
     writeMarkState(_state, m);
+  }
+
+  // what an engine started in docs left there besides the key and the
+  // marks: its wrap queue moves into its folder, the rest goes zeroed
+  void _engineLeftovers() {
+    rawFileAccess(() {
+      final queue = File(p.join(docs, 'nostr_topup'));
+      final to = p.join(dir, 'nostr_topup');
+      if (queue.existsSync() && !File(to).existsSync()) {
+        File('$to.new').writeAsBytesSync(queue.readAsBytesSync(), flush: true);
+        File('$to.new').renameSync(to);
+      }
+      for (final n in ['nostr_topup', 'nostr_topup.tmp', 'engine-debug.log']) {
+        final f = File(p.join(docs, n));
+        if (!f.existsSync()) continue;
+        _zero(f.path);
+        f.deleteSync();
+      }
+    });
+  }
+
+  // a plain docs/onion.key sealed where it lies: the sealed copy is written
+  // and read back whole, the plain bytes zeroed, then the copy takes the
+  // name. nothing is held open over the rename, which windows refuses. a
+  // whole copy found beside it is such a run cut short, and wins
+  void _sealPlainKey() {
+    final fresh = '$_sealedKey.new';
+    if (!rawFileAccess(() => File(fresh).existsSync()) || !_opens(fresh)) {
+      final k = rawFileAccess(() => File(_sealedKey).readAsBytesSync());
+      try {
+        File(fresh).writeAsBytesSync(k, flush: true);
+        final back = File(fresh).readAsBytesSync();
+        final same = listEquals(back, k);
+        back.fillRange(0, back.length, 0);
+        if (!same) throw FileSystemException('not sealed whole', fresh);
+      } finally {
+        k.fillRange(0, k.length, 0);
+      }
+    }
+    rawFileAccess(() {
+      _zero(_sealedKey);
+      File(fresh).renameSync(_sealedKey);
+    });
   }
 
   void _restoreMarks(DesktopVault vault) {

@@ -197,12 +197,13 @@ void main() {
       expect(find.text(l10n.appTorNoRelayYet), findsOneWidget);
       expect(find.text(l10n.appTheFirstConnectionTakes), findsNothing);
 
-      // a relay through: ready, finishing setup, and no relay line
+      // a relay through: ready to chat, the address finishing, and no
+      // relay line or first connection words
       _set('private', TorStatus.bootstrapped);
       await t.pump();
-      expect(inSheet(l10n.appReadyToSendFinishing), findsOneWidget);
+      expect(inSheet(l10n.appReadyToChatAddressFinishing), findsOneWidget);
       expect(find.text(l10n.appTorNoRelayYet), findsNothing);
-      expect(find.text(l10n.appTheFirstConnectionTakes), findsOneWidget);
+      expect(find.text(l10n.appTheFirstConnectionTakes), findsNothing);
       await closeSheet(t);
     });
 
