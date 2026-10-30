@@ -10050,6 +10050,16 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String get wideSelectChat => 'Pilih obrolan';
+
+  @override
+  String get wideSelectChatLine =>
+      'Pilih obrolan dari daftar untuk mulai menulis.';
+
+  @override
+  String get wideListWidth => 'Lebar daftar obrolan';
+
+  @override
   String transferDoneOf(String done, String total) {
     return '$done dari $total';
   }

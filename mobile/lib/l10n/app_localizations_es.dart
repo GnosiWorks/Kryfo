@@ -10126,6 +10126,16 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get wideSelectChat => 'Elige un chat';
+
+  @override
+  String get wideSelectChatLine =>
+      'Elige un chat de la lista para empezar a escribir.';
+
+  @override
+  String get wideListWidth => 'Ancho de la lista de chats';
+
+  @override
   String transferDoneOf(String done, String total) {
     return '$done de $total';
   }
