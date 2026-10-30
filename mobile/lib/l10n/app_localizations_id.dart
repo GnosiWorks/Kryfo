@@ -633,11 +633,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get appConnectedRoutedThrough3 => 'Terhubung · lewat 3 relay';
 
   @override
-  String get appReadyToSendPublishing => 'Siap mengirim · menerbitkan alamatmu';
-
-  @override
-  String get appReadyToSendFinishing =>
-      'Siap mengirim · menyelesaikan penyiapan';
+  String get appReadyToChatAddressFinishing =>
+      'Siap mengobrol · alamat sedang disiapkan';
 
   @override
   String appConnecting(Object pct) {
@@ -6382,6 +6379,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get motionYouReAnonymous => 'Kamu anonim';
 
   @override
+  String get motionReadyToChat => 'Siap mengobrol';
+
+  @override
   String get motionTorIsStartingIn =>
       'Tor sedang dimulai di latar belakang. Grafik ini menyala seiring koneksi terbentuk.';
 
@@ -6399,6 +6399,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get motionYourIpIsHidden =>
       'IP-mu tersembunyi. Hanya orang yang punya Kryfo-mu yang bisa menghubungimu.';
+
+  @override
+  String get motionAddressFinishing =>
+      'Pesan sudah bisa dikirim lewat Tor. Alamat pribadimu disiapkan di latar belakang.';
 
   @override
   String get motionBuilding2 => 'membangun';
@@ -10054,4 +10058,199 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get wideListWidth => 'Lebar daftar obrolan';
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done dari $total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'kurang dari semenit lagi';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'sekitar $n mnt lagi';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'sekitar $n jam lagi';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'Mengirim · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'Menerima · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'Mengirim dan menerima · $detail';
+  }
+
+  @override
+  String get transferPause => 'Jeda';
+
+  @override
+  String get transferPauseDownload => 'Jeda unduhan';
+
+  @override
+  String get transferDownload => 'Unduh';
+
+  @override
+  String get transferResume => 'Lanjutkan';
+
+  @override
+  String get transferOnWifi => 'Diunduh lewat Wi-Fi';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'Dijeda · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'Ketuk untuk mengunduh';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'Transfer file';
+
+  @override
+  String get transferChannel => 'Transfer file';
+
+  @override
+  String get transferChannelLine =>
+      'Muncul selama file dikirim atau diunduh. Tidak pernah menyebut chat atau file.';
+
+  @override
+  String get autoGetTitle => 'Unduh otomatis';
+
+  @override
+  String get autoGetLine =>
+      'File datang tanpa diketuk sesuai pilihanmu di sini. File yang menunggu tetap ada di server file untukmu, paling lama seminggu.';
+
+  @override
+  String get autoGetPhotos => 'Foto';
+
+  @override
+  String get autoGetVideos => 'Video';
+
+  @override
+  String get autoGetFiles => 'File';
+
+  @override
+  String get autoGetAlways => 'Lewat Wi-Fi dan data seluler';
+
+  @override
+  String get autoGetWifi => 'Hanya lewat Wi-Fi';
+
+  @override
+  String get autoGetNever => 'Tidak pernah, aku ketuk untuk mengunduh';
+
+  @override
+  String get autoGetVoice => 'Pesan suara selalu diunduh.';
+
+  @override
+  String get settingsFiles => 'File';
+
+  @override
+  String get fileSheetOpenWith => 'Buka dengan aplikasi lain';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Semua yang disimpan Kryfo di komputer ini terenkripsi. Kryfo terbuka dengan akun penggunamu.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Tambahkan frasa sandi';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'Tanpanya, siapa pun yang memakai akun penggunamu bisa membuka Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo tidak bisa menyimpan kuncinya di ring kunci komputer ini. Tambahkan frasa sandi sebagai gantinya.';
+
+  @override
+  String get desktopKeyMissing =>
+      'Akun pengguna ini tidak punya kunci data Kryfo. Cadangan Kryfo mengembalikan semuanya. Kalau kamu memindahkan folder Kryfo, tambahkan frasa sandi di akun pengguna asalnya, lalu salin lagi.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo belum bisa menjangkau kuncinya di komputer ini. Buka kunci ring kuncimu kalau komputer memintanya, lalu coba lagi.';
+
+  @override
+  String get desktopPassRow => 'Frasa sandi di komputer ini';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo terbuka dengan akun penggunamu.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo meminta frasa sandi ini setiap kali dibuka.';
+
+  @override
+  String get desktopPassChange => 'Ganti frasa sandi';
+
+  @override
+  String get desktopPassRemove => 'Hapus frasa sandi';
+
+  @override
+  String get desktopPassCurrent => 'Frasa sandi saat ini';
+
+  @override
+  String get desktopPassNew => 'Frasa sandi baru';
+
+  @override
+  String get desktopPassStays =>
+      'Komputer ini tidak punya ring kunci yang bisa dipakai Kryfo, jadi frasa sandinya tetap.';
+
+  @override
+  String get desktopPassAdded => 'Frasa sandi ditambahkan';
+
+  @override
+  String get desktopPassRemoved => 'Frasa sandi dihapus';
+
+  @override
+  String get desktopPassChanged => 'Frasa sandi diganti';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Ketik frasa sandimu untuk menghapusnya. Setelah itu Kryfo terbuka dengan akun penggunamu.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo belum bisa menjangkau kuncinya di chip keamanan komputer ini. Coba lagi sebentar lagi.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo tidak bisa menyimpan kuncinya dengan akun Windows-mu. Tambahkan frasa sandi sebagai gantinya.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo tidak bisa menyimpan kuncinya dengan akun Windows-mu, jadi frasa sandinya tetap.';
+
+  @override
+  String get desktopBackupCardTitle => 'Simpan cadangan Kryfo';
+
+  @override
+  String get desktopBackupCardLine =>
+      'Akun Windows-mu di komputer ini menyimpan kunci Kryfo. Cadangan Kryfo mengembalikan semuanya kalau suatu saat komputer atau akunnya direset.';
+
+  @override
+  String get desktopBackupHint =>
+      'Mengembalikan semuanya kalau suatu saat komputer ini direset.';
 }

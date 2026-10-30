@@ -643,11 +643,8 @@ class AppLocalizationsIt extends AppLocalizations {
       'Connesso · instradato attraverso 3 relay';
 
   @override
-  String get appReadyToSendPublishing =>
-      'Pronto a inviare · pubblicazione del tuo indirizzo';
-
-  @override
-  String get appReadyToSendFinishing => 'Pronto a inviare · ultimi preparativi';
+  String get appReadyToChatAddressFinishing =>
+      'Pronto a chattare · indirizzo quasi pronto';
 
   @override
   String appConnecting(Object pct) {
@@ -6449,6 +6446,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get motionYouReAnonymous => 'Anonimato attivo';
 
   @override
+  String get motionReadyToChat => 'Pronto a chattare';
+
+  @override
   String get motionTorIsStartingIn =>
       'Tor si sta avviando in background. Questo grafico si illumina mentre la connessione prende forma.';
 
@@ -6467,6 +6467,10 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get motionYourIpIsHidden =>
       'Il tuo ip è nascosto. Solo chi ha il tuo Kryfo può raggiungerti.';
+
+  @override
+  String get motionAddressFinishing =>
+      'I messaggi partono già tramite Tor. Il tuo indirizzo privato finisce di prepararsi in background.';
 
   @override
   String get motionBuilding2 => 'costruzione';
@@ -10136,4 +10140,199 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get wideListWidth => 'Larghezza dell\'elenco chat';
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done di $total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'manca meno di un minuto';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'mancano circa $n min';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'mancano circa $n h';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'Invio · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'Ricezione · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'Invio e ricezione · $detail';
+  }
+
+  @override
+  String get transferPause => 'Pausa';
+
+  @override
+  String get transferPauseDownload => 'Metti in pausa il download';
+
+  @override
+  String get transferDownload => 'Scarica';
+
+  @override
+  String get transferResume => 'Riprendi';
+
+  @override
+  String get transferOnWifi => 'Si scarica con Wi-Fi';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'In pausa · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'Tocca per scaricare';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'Trasferimento file';
+
+  @override
+  String get transferChannel => 'Trasferimenti di file';
+
+  @override
+  String get transferChannelLine =>
+      'Appare mentre i file si inviano o si scaricano. Non nomina mai una chat o un file.';
+
+  @override
+  String get autoGetTitle => 'Download automatico';
+
+  @override
+  String get autoGetLine =>
+      'I file arrivano senza toccare, come scegli qui. Uno in attesa resta per te sul server dei file, al massimo una settimana.';
+
+  @override
+  String get autoGetPhotos => 'Foto';
+
+  @override
+  String get autoGetVideos => 'Video';
+
+  @override
+  String get autoGetFiles => 'File';
+
+  @override
+  String get autoGetAlways => 'Con Wi-Fi e dati mobili';
+
+  @override
+  String get autoGetWifi => 'Solo con Wi-Fi';
+
+  @override
+  String get autoGetNever => 'Mai, tocco per scaricare';
+
+  @override
+  String get autoGetVoice => 'I messaggi vocali si scaricano sempre.';
+
+  @override
+  String get settingsFiles => 'File';
+
+  @override
+  String get fileSheetOpenWith => 'Apri con un’altra app';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Tutto ciò che Kryfo conserva su questo computer è cifrato. Si apre con il tuo account utente.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Aggiungi una passphrase';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'Senza di essa, chiunque usi il tuo account utente può aprire Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo non è riuscito a conservare la sua chiave nel portachiavi di questo computer. Aggiungi invece una passphrase.';
+
+  @override
+  String get desktopKeyMissing =>
+      'Questo account utente non ha la chiave dei dati di Kryfo. Un backup di Kryfo riporta tutto. Se hai spostato la cartella di Kryfo, aggiungi una passphrase nell’account utente da cui proviene, poi copiala di nuovo.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo al momento non riesce a raggiungere la sua chiave su questo computer. Sblocca il portachiavi se il computer lo chiede, poi riprova.';
+
+  @override
+  String get desktopPassRow => 'Passphrase su questo computer';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo si apre con il tuo account utente.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo chiede questa passphrase a ogni avvio.';
+
+  @override
+  String get desktopPassChange => 'Cambia la passphrase';
+
+  @override
+  String get desktopPassRemove => 'Rimuovi la passphrase';
+
+  @override
+  String get desktopPassCurrent => 'Passphrase attuale';
+
+  @override
+  String get desktopPassNew => 'Nuova passphrase';
+
+  @override
+  String get desktopPassStays =>
+      'Questo computer non ha un portachiavi che Kryfo possa usare, quindi la passphrase resta.';
+
+  @override
+  String get desktopPassAdded => 'Passphrase aggiunta';
+
+  @override
+  String get desktopPassRemoved => 'Passphrase rimossa';
+
+  @override
+  String get desktopPassChanged => 'Passphrase cambiata';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Scrivi la tua passphrase per rimuoverla. Poi Kryfo si aprirà con il tuo account utente.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo al momento non riesce a raggiungere la sua chiave nel chip di sicurezza di questo computer. Riprova tra un momento.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo non è riuscito a conservare la sua chiave con il tuo account Windows. Aggiungi invece una passphrase.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo non è riuscito a conservare la sua chiave con il tuo account Windows, quindi la passphrase resta.';
+
+  @override
+  String get desktopBackupCardTitle => 'Tieni un backup di Kryfo';
+
+  @override
+  String get desktopBackupCardLine =>
+      'Il tuo account Windows su questo computer conserva la chiave di Kryfo. Un backup di Kryfo riporta tutto se il computer o l’account vengono ripristinati.';
+
+  @override
+  String get desktopBackupHint =>
+      'Riporta tutto se questo computer viene ripristinato.';
 }

@@ -44,7 +44,7 @@ import '../atmosphere.dart';
 import '../notifications.dart' show clearNotificationsFor;
 import 'dev_about_sheet.dart' show devForwardTarget;
 import 'chat_screen.dart' show SearchHead, firstUrl;
-import 'package:flutter/foundation.dart' show ValueListenable;
+import 'package:flutter/foundation.dart' show ValueListenable, setEquals;
 import 'package:flutter/material.dart';
 import '../drafts.dart';
 import '../wallpaper.dart';
@@ -90,6 +90,8 @@ import '../widgets/reconnect_valve.dart';
 import '../theme.dart';
 import '../link_view.dart' show sendReadsBlocked;
 import '../media_progress.dart';
+import '../transfers.dart' show fileWaitOf, fileWaits;
+import '../widgets/file_wait.dart';
 import '../msg_order.dart';
 import '../widgets/earlier_chip.dart';
 import '../group_send_watch.dart';
@@ -698,6 +700,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
     appState.addListener(_onAppStateChanged);
     groupOwedTick.addListener(_reachMoved);
+    fileWaits.addListener(_waitsMoved);
     _timers.every(const Duration(seconds: 30), _autoRetryTick);
     _burn = _timers.until(_burnWait, _burnTick);
     // back in view: what shows now has been read
@@ -1266,6 +1269,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // a message some members still lacked moved on: its line follows,
   // without a reload of the whole list
   void _reachMoved() => unawaited(_loadReach());
+
+  // the files still to come: a bubble draws a card or its file by them, so
+  // one read after the chat was drawn draws again. a ring moving does not
+  Set<String> _waitUids = fileWaits.value.keys.toSet();
+  void _waitsMoved() {
+    final now = fileWaits.value.keys.toSet();
+    if (setEquals(now, _waitUids)) return;
+    _waitUids = now;
+    if (mounted) setState(() {});
+  }
 
   Future<void> _loadReach() async {
     final reach = await session.groupFileReach(widget.groupId);
@@ -4527,6 +4540,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     releaseChat('group:${widget.groupId}');
     appState.removeListener(_onAppStateChanged);
     groupOwedTick.removeListener(_reachMoved);
+    fileWaits.removeListener(_waitsMoved);
     _timers.dispose();
     _reads.dispose();
     _msgCtrl.dispose();
@@ -4782,6 +4796,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               ),
               IncomingMediaBanner(
                 chatKey: _memo,
+                onPause: appState.pauseDownload,
                 onCancel: (uid) {
                   final m = _liveMsg(uid);
                   if (m != null) _stopGroupSending(m);
@@ -6101,7 +6116,27 @@ class _GroupBubble extends StatelessWidget {
                                               ),
                                             ),
                                           ],
-                                          if (album case final run?)
+                                          // here before its file: a card
+                                          // that brings it
+                                          if (album == null &&
+                                              !isOut &&
+                                              fileWaitOf(m.msgUid) != null)
+                                            Padding(
+                                              padding: EdgeInsets.only(
+                                                bottom: m.text.isNotEmpty
+                                                    ? 6
+                                                    : 0,
+                                              ),
+                                              child: FileWaitOr(
+                                                uid: m.msgUid,
+                                                fileName: m.fileName,
+                                                onGet: appState.downloadNow,
+                                                onPause: appState.pauseDownload,
+                                                child: () =>
+                                                    const SizedBox.shrink(),
+                                              ),
+                                            )
+                                          else if (album case final run?)
                                             Padding(
                                               padding: EdgeInsets.only(
                                                 bottom: m.text.isNotEmpty
@@ -6191,7 +6226,9 @@ class _GroupBubble extends StatelessWidget {
                                               ),
                                             ),
                                           if (album == null &&
-                                              m.mediaPath != null)
+                                              m.mediaPath != null &&
+                                              (isOut ||
+                                                  fileWaitOf(m.msgUid) == null))
                                             Padding(
                                               padding: EdgeInsets.only(
                                                 bottom: m.text.isNotEmpty
@@ -6711,6 +6748,9 @@ class _GroupBubble extends StatelessWidget {
                   lost:
                       !x.preparing && x.mediaPath == null && x.filePath == null,
                   sendingUid: isOut && x.sending ? x.msgUid : null,
+                  waitUid: x.direction == 'in' && fileWaitOf(x.msgUid) != null
+                      ? x.msgUid
+                      : null,
                 ),
       ],
       width: 260,
@@ -6720,19 +6760,21 @@ class _GroupBubble extends StatelessWidget {
       stampAtStart: isOut,
       onOpen: (i) {
         onAct?.call();
+        // one still to come has nothing to show yet
+        String? here(_GMsg? x) => x == null || fileWaitOf(x.msgUid) != null
+            ? null
+            : x.mediaPath ?? x.filePath;
         final items = <AlbumItem>[
           for (final x in shown)
-            if (x != null && (x.mediaPath ?? x.filePath) != null)
-              AlbumItem(
-                (x.mediaPath ?? x.filePath)!,
-                video: x.mediaPath == null,
-                fileName: x.fileName,
-              ),
+            if (here(x) case final p?)
+              AlbumItem(p, video: x!.mediaPath == null, fileName: x.fileName),
         ];
-        final paths = [for (final x in shown) x?.mediaPath ?? x?.filePath];
+        final paths = [for (final x in shown) here(x)];
         final start = albumOpenAt(paths, i);
         if (start != null) openAlbum(context, items, start: start);
       },
+      onGet: appState.downloadNow,
+      onPause: appState.pauseDownload,
       onLongPress: hold == null ? null : (i) => hold(context, i),
     );
   }

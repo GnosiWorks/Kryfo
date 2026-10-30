@@ -25,9 +25,10 @@ import '../widgets/nav_bar.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../invite_share.dart' show shareInvite;
-import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
+import '../desktop/desktop_mode.dart' show canShareOut, computerLock, onDesktop;
 import '../wide/wide_home.dart';
 import '../wide/wide_pane.dart';
+import 'backup_screen.dart';
 import '../widgets/room_countdown.dart';
 import '../widgets/room_join.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -499,6 +500,7 @@ class _ChatsTab extends StatelessWidget {
           const _NotificationsBlockedHint(),
           const UpdateHint(),
           const _ShotsCard(),
+          const _ComputerBackupCard(),
           StaggerIn(
             index: 1,
             child: _QuickTiles(
@@ -1297,6 +1299,53 @@ class _ShotsCardState extends State<_ShotsCard> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// windows without a passphrase: the computer's key goes with the account
+// and its security chip, so a backup is the way back. shown once and put
+// away for good on this side; a decoy shows the same card and keeps its
+// answer to itself
+class _ComputerBackupCard extends StatelessWidget {
+  const _ComputerBackupCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final lock = computerLock;
+    if (lock == null) return const SizedBox.shrink();
+    return ListenableBuilder(
+      listenable: Listenable.merge([lock, lockState]),
+      builder: (context, _) {
+        final decoy = lockState.inDecoy;
+        return _HomeCard(
+          show: !lockState.inVault && lock.backupCardDue(decoy: decoy),
+          id: 'computer-backup',
+          tint: HaloColors.amber,
+          title: l10n.desktopBackupCardTitle,
+          line: l10n.desktopBackupCardLine,
+          actions: [
+            CardAction(
+              label: l10n.backupBackUpKryfo,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                unawaited(lock.backupCardSeen(decoy: decoy));
+                Navigator.of(context).push(haloRoute(const BackupScreen()));
+              },
+              fill: HaloColors.amber,
+              ink: HaloColors.onAmber,
+            ),
+            CardAction(
+              label: l10n.homeMergedGotIt,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                unawaited(lock.backupCardSeen(decoy: decoy));
+              },
+              ink: HaloColors.text2,
+            ),
+          ],
+        );
+      },
     );
   }
 }

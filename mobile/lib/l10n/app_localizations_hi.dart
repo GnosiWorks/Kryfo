@@ -641,12 +641,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get appConnectedRoutedThrough3 => 'जुड़ा हुआ · 3 रिले से होकर';
 
   @override
-  String get appReadyToSendPublishing =>
-      'भेजने के लिए तैयार · आपका पता प्रकाशित हो रहा है';
-
-  @override
-  String get appReadyToSendFinishing =>
-      'भेजने के लिए तैयार · सेटअप पूरा हो रहा है';
+  String get appReadyToChatAddressFinishing =>
+      'चैट के लिए तैयार · पता पूरा हो रहा है';
 
   @override
   String appConnecting(Object pct) {
@@ -6390,6 +6386,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get motionYouReAnonymous => 'आप गुमनाम हैं';
 
   @override
+  String get motionReadyToChat => 'चैट के लिए तैयार';
+
+  @override
   String get motionTorIsStartingIn =>
       'Tor बैकग्राउंड में शुरू हो रहा है। कनेक्शन बनते-बनते यह चित्र जगमगा उठता है।';
 
@@ -6408,6 +6407,10 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get motionYourIpIsHidden =>
       'आपका IP छिपा है। सिर्फ़ आपके Kryfo वाले लोग आप तक पहुँच सकते हैं।';
+
+  @override
+  String get motionAddressFinishing =>
+      'मैसेज अभी से Tor के ज़रिए जा रहे हैं। आपका निजी पता बैकग्राउंड में पूरा हो रहा है।';
 
   @override
   String get motionBuilding2 => 'बन रहा है';
@@ -10064,4 +10067,199 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get wideListWidth => 'चैट सूची की चौड़ाई';
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$total में से $done';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'एक मिनट से कम बाकी';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'लगभग $n मिनट बाकी';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'लगभग $n घंटे बाकी';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'भेजा जा रहा है · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'आ रहा है · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'भेजा और पाया जा रहा है · $detail';
+  }
+
+  @override
+  String get transferPause => 'रोकें';
+
+  @override
+  String get transferPauseDownload => 'डाउनलोड रोकें';
+
+  @override
+  String get transferDownload => 'डाउनलोड करें';
+
+  @override
+  String get transferResume => 'फिर शुरू करें';
+
+  @override
+  String get transferOnWifi => 'Wi-Fi पर डाउनलोड होगा';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'रुका हुआ · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'डाउनलोड करने के लिए टैप करें';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'फ़ाइल ट्रांसफ़र';
+
+  @override
+  String get transferChannel => 'फ़ाइल ट्रांसफ़र';
+
+  @override
+  String get transferChannelLine =>
+      'फ़ाइलें भेजते या डाउनलोड होते समय दिखता है। कभी किसी चैट या फ़ाइल का नाम नहीं बताता।';
+
+  @override
+  String get autoGetTitle => 'अपने आप डाउनलोड';
+
+  @override
+  String get autoGetLine =>
+      'फ़ाइलें यहाँ की सेटिंग के हिसाब से बिना टैप के आती हैं। इंतज़ार वाली फ़ाइल आपके लिए फ़ाइल सर्वर पर रहती है, ज़्यादा से ज़्यादा एक हफ़्ता।';
+
+  @override
+  String get autoGetPhotos => 'फ़ोटो';
+
+  @override
+  String get autoGetVideos => 'वीडियो';
+
+  @override
+  String get autoGetFiles => 'फ़ाइलें';
+
+  @override
+  String get autoGetAlways => 'Wi-Fi और मोबाइल डेटा पर';
+
+  @override
+  String get autoGetWifi => 'सिर्फ़ Wi-Fi पर';
+
+  @override
+  String get autoGetNever => 'कभी नहीं, मैं टैप करके डाउनलोड करूँगा';
+
+  @override
+  String get autoGetVoice => 'वॉइस मैसेज हमेशा डाउनलोड होते हैं।';
+
+  @override
+  String get settingsFiles => 'फ़ाइलें';
+
+  @override
+  String get fileSheetOpenWith => 'दूसरे ऐप से खोलें';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Kryfo इस कंप्यूटर पर जो कुछ रखता है, सब एन्क्रिप्टेड है। यह आपके यूज़र अकाउंट से खुलता है।';
+
+  @override
+  String get desktopLockAddPassphrase => 'पासफ़्रेज़ जोड़ें';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'इसके बिना, आपके यूज़र अकाउंट का इस्तेमाल करने वाला कोई भी Kryfo खोल सकता है।';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo अपनी कुंजी इस कंप्यूटर की कीरिंग में नहीं रख पाया। इसकी जगह पासफ़्रेज़ जोड़ें।';
+
+  @override
+  String get desktopKeyMissing =>
+      'इस यूज़र अकाउंट के पास Kryfo के डेटा की कुंजी नहीं है। Kryfo बैकअप सब कुछ वापस ले आता है। अगर आपने Kryfo का फ़ोल्डर कहीं और रखा है, तो जिस यूज़र अकाउंट से वह आया है उस पर पासफ़्रेज़ जोड़ें, फिर उसे दोबारा कॉपी करें।';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo अभी इस कंप्यूटर पर अपनी कुंजी तक नहीं पहुँच पा रहा। कंप्यूटर पूछे तो अपनी कीरिंग अनलॉक करें, फिर दोबारा कोशिश करें।';
+
+  @override
+  String get desktopPassRow => 'इस कंप्यूटर पर पासफ़्रेज़';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo आपके यूज़र अकाउंट से खुलता है।';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo हर बार शुरू होने पर यह पासफ़्रेज़ पूछता है।';
+
+  @override
+  String get desktopPassChange => 'पासफ़्रेज़ बदलें';
+
+  @override
+  String get desktopPassRemove => 'पासफ़्रेज़ हटाएँ';
+
+  @override
+  String get desktopPassCurrent => 'मौजूदा पासफ़्रेज़';
+
+  @override
+  String get desktopPassNew => 'नया पासफ़्रेज़';
+
+  @override
+  String get desktopPassStays =>
+      'इस कंप्यूटर पर ऐसी कोई कीरिंग नहीं है जिसे Kryfo इस्तेमाल कर सके, इसलिए पासफ़्रेज़ बना रहेगा।';
+
+  @override
+  String get desktopPassAdded => 'पासफ़्रेज़ जोड़ा गया';
+
+  @override
+  String get desktopPassRemoved => 'पासफ़्रेज़ हटाया गया';
+
+  @override
+  String get desktopPassChanged => 'पासफ़्रेज़ बदला गया';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'हटाने के लिए अपना पासफ़्रेज़ लिखें। इसके बाद Kryfo आपके यूज़र अकाउंट से खुलेगा।';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo अभी इस कंप्यूटर की सुरक्षा चिप में अपनी कुंजी तक नहीं पहुँच पा रहा। थोड़ी देर में दोबारा कोशिश करें।';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo अपनी कुंजी आपके Windows अकाउंट के साथ नहीं रख पाया। इसकी जगह पासफ़्रेज़ जोड़ें।';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo अपनी कुंजी आपके Windows अकाउंट के साथ नहीं रख पाया, इसलिए पासफ़्रेज़ बना रहेगा।';
+
+  @override
+  String get desktopBackupCardTitle => 'Kryfo बैकअप रखें';
+
+  @override
+  String get desktopBackupCardLine =>
+      'इस कंप्यूटर पर आपका Windows अकाउंट Kryfo की कुंजी रखता है। अगर कभी कंप्यूटर या अकाउंट रीसेट हो, तो Kryfo बैकअप सब कुछ वापस ले आता है।';
+
+  @override
+  String get desktopBackupHint =>
+      'अगर कभी यह कंप्यूटर रीसेट हो, तो सब कुछ वापस ले आता है।';
 }
