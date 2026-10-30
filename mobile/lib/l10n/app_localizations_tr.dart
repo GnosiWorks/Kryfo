@@ -9365,6 +9365,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Çeviriler bu telefonda sohbetleriyle birlikte şifreli tutulur ve sohbetle birlikte silinir.';
 
   @override
+  String get translatePrivacyKeptDesk =>
+      'Çeviriler bu bilgisayarda sohbetleriyle birlikte şifreli tutulur ve sohbetle birlikte silinir.';
+
+  @override
   String get translateOffDeletes => 'Kapatınca kayıtlı çeviriler silinir.';
 
   @override

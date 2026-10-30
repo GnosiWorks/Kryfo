@@ -9413,6 +9413,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Las traducciones se guardan cifradas con su chat en este teléfono y se borran con él.';
 
   @override
+  String get translatePrivacyKeptDesk =>
+      'Las traducciones se guardan cifradas con su chat en este ordenador y se borran con él.';
+
+  @override
   String get translateOffDeletes =>
       'Al desactivarlo se borran las traducciones guardadas.';
 

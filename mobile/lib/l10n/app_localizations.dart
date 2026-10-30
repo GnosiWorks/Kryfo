@@ -14999,6 +14999,12 @@ abstract class AppLocalizations {
   /// **'Translations are kept with their chat, encrypted on this phone, and deleted with it.'**
   String get translatePrivacyKept;
 
+  /// translatePrivacyKept as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Translations are kept with their chat, encrypted on this computer, and deleted with it.'**
+  String get translatePrivacyKeptDesk;
+
   /// translation settings: under the switch, what turning it off does
   ///
   /// In en, this message translates to:

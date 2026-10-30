@@ -9333,6 +9333,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Bản dịch được lưu mã hóa cùng cuộc trò chuyện trên điện thoại này và bị xóa cùng nó.';
 
   @override
+  String get translatePrivacyKeptDesk =>
+      'Bản dịch được lưu mã hóa cùng cuộc trò chuyện trên máy tính này và bị xóa cùng nó.';
+
+  @override
   String get translateOffDeletes => 'Tắt mục này sẽ xóa các bản dịch đã lưu.';
 
   @override

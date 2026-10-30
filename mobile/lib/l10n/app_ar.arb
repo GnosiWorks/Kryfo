@@ -2453,6 +2453,7 @@
   "translateOfferAgain": "الاقتراح مجددًا",
   "translateOnHint": "تُقترح أسفل الرسائل المكتوبة بلغات أخرى",
   "translatePrivacyKept": "تُحفظ الترجمات مشفّرة مع محادثتها على هذا الهاتف وتُحذف معها.",
+  "translatePrivacyKeptDesk": "تُحفظ الترجمات مشفّرة مع محادثتها على هذا الحاسوب وتُحذف معها.",
   "translateOffDeletes": "إيقاف هذا يحذف الترجمات المحفوظة.",
   "bridgesNoneUntilOnion": "لا شيء حتى تشغيل Onion",
   "bridgesRelayWorksWhereTor": "يعمل الوضع السريع حيث يُحجب Tor، ويمكنك العودة في أي وقت.",

@@ -9419,6 +9419,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Le traduzioni restano cifrate con la loro chat su questo telefono e vengono eliminate con essa.';
 
   @override
+  String get translatePrivacyKeptDesk =>
+      'Le traduzioni restano cifrate con la loro chat su questo computer e vengono eliminate con essa.';
+
+  @override
   String get translateOffDeletes =>
       'Se lo disattivi, le traduzioni salvate vengono eliminate.';
 

@@ -9334,6 +9334,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Translations are kept with their chat, encrypted on this phone, and deleted with it.';
 
   @override
+  String get translatePrivacyKeptDesk =>
+      'Translations are kept with their chat, encrypted on this computer, and deleted with it.';
+
+  @override
   String get translateOffDeletes =>
       'Turning this off deletes saved translations.';
 

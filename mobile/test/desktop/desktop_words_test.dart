@@ -613,6 +613,12 @@ final _pairs = <(String, _Get, _Get, _Get)>[
     (l) => l.translatePrivacyNoteDesk,
   ),
   (
+    'translatePrivacyKept',
+    (l) => l.translatePrivacyKeptShown,
+    (l) => l.translatePrivacyKept,
+    (l) => l.translatePrivacyKeptDesk,
+  ),
+  (
     'notificationsLead',
     (l) => l.notificationsLeadShown,
     (l) => l.notificationsLead,

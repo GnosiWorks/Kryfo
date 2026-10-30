@@ -9505,6 +9505,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Переводы хранятся зашифрованными вместе с чатом на этом телефоне и удаляются вместе с ним.';
 
   @override
+  String get translatePrivacyKeptDesk =>
+      'Переводы хранятся зашифрованными вместе с чатом на этом компьютере и удаляются вместе с ним.';
+
+  @override
   String get translateOffDeletes =>
       'Если выключить, сохранённые переводы удалятся.';
 

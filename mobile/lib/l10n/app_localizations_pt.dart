@@ -9413,6 +9413,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'As traduções ficam guardadas, criptografadas, com a conversa neste celular e são apagadas com ela.';
 
   @override
+  String get translatePrivacyKeptDesk =>
+      'As traduções ficam guardadas, criptografadas, com a conversa neste computador e são apagadas com ela.';
+
+  @override
   String get translateOffDeletes =>
       'Ao desativar, as traduções salvas são apagadas.';
 

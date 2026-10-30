@@ -9443,6 +9443,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Übersetzungen bleiben verschlüsselt bei ihrem Chat auf diesem Handy und werden mit ihm gelöscht.';
 
   @override
+  String get translatePrivacyKeptDesk =>
+      'Übersetzungen bleiben verschlüsselt bei ihrem Chat auf diesem Computer und werden mit ihm gelöscht.';
+
+  @override
   String get translateOffDeletes =>
       'Ausschalten löscht gespeicherte Übersetzungen.';
 

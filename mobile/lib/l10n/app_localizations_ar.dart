@@ -9469,6 +9469,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'تُحفظ الترجمات مشفّرة مع محادثتها على هذا الهاتف وتُحذف معها.';
 
   @override
+  String get translatePrivacyKeptDesk =>
+      'تُحفظ الترجمات مشفّرة مع محادثتها على هذا الحاسوب وتُحذف معها.';
+
+  @override
   String get translateOffDeletes => 'إيقاف هذا يحذف الترجمات المحفوظة.';
 
   @override

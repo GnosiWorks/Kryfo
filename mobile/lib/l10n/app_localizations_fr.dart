@@ -9437,6 +9437,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les traductions sont gardées chiffrées avec leur discussion sur ce téléphone et supprimées avec elle.';
 
   @override
+  String get translatePrivacyKeptDesk =>
+      'Les traductions sont gardées chiffrées avec leur discussion sur cet ordinateur et supprimées avec elle.';
+
+  @override
   String get translateOffDeletes =>
       'Le désactiver supprime les traductions enregistrées.';
 

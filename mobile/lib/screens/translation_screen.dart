@@ -162,7 +162,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
                     Expanded(
                       child: Text(
                         '${l10n.translatePrivacyNoteShown} '
-                        '${l10n.translatePrivacyKept}',
+                        '${l10n.translatePrivacyKeptShown}',
                         style: HaloType.sans(
                           size: 12.5,
                           color: HaloColors.text2,

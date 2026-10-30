@@ -2453,6 +2453,7 @@
   "translateOfferAgain": "Wieder anbieten",
   "translateOnHint": "Unter Nachrichten in anderen Sprachen angeboten",
   "translatePrivacyKept": "Übersetzungen bleiben verschlüsselt bei ihrem Chat auf diesem Handy und werden mit ihm gelöscht.",
+  "translatePrivacyKeptDesk": "Übersetzungen bleiben verschlüsselt bei ihrem Chat auf diesem Computer und werden mit ihm gelöscht.",
   "translateOffDeletes": "Ausschalten löscht gespeicherte Übersetzungen.",
   "bridgesNoneUntilOnion": "Nichts, bis Onion an ist",
   "bridgesRelayWorksWhereTor": "Schnell klappt, wo Tor gesperrt ist, und du kannst jederzeit zurückwechseln.",

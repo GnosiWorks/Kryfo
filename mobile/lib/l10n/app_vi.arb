@@ -2453,6 +2453,7 @@
   "translateOfferAgain": "Đề xuất lại",
   "translateOnHint": "Được đề xuất bên dưới tin nhắn bằng ngôn ngữ khác",
   "translatePrivacyKept": "Bản dịch được lưu mã hóa cùng cuộc trò chuyện trên điện thoại này và bị xóa cùng nó.",
+  "translatePrivacyKeptDesk": "Bản dịch được lưu mã hóa cùng cuộc trò chuyện trên máy tính này và bị xóa cùng nó.",
   "translateOffDeletes": "Tắt mục này sẽ xóa các bản dịch đã lưu.",
   "bridgesNoneUntilOnion": "Chưa dùng cho đến khi bật Onion",
   "bridgesRelayWorksWhereTor": "Nhanh hoạt động ở nơi Tor bị chặn, và bạn có thể đổi lại bất cứ lúc nào.",

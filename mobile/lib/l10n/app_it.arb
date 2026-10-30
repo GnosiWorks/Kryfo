@@ -2453,6 +2453,7 @@
   "translateOfferAgain": "Proponi di nuovo",
   "translateOnHint": "Proposta sotto i messaggi in altre lingue",
   "translatePrivacyKept": "Le traduzioni restano cifrate con la loro chat su questo telefono e vengono eliminate con essa.",
+  "translatePrivacyKeptDesk": "Le traduzioni restano cifrate con la loro chat su questo computer e vengono eliminate con essa.",
   "translateOffDeletes": "Se lo disattivi, le traduzioni salvate vengono eliminate.",
   "bridgesNoneUntilOnion": "Niente finché Onion non è attivo",
   "bridgesRelayWorksWhereTor": "Veloce funziona dove Tor è bloccato, e puoi tornare indietro quando vuoi.",

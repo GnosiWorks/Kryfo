@@ -9339,6 +9339,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Terjemahan disimpan terenkripsi bersama chatnya di ponsel ini dan dihapus bersamanya.';
 
   @override
+  String get translatePrivacyKeptDesk =>
+      'Terjemahan disimpan terenkripsi bersama chatnya di komputer ini dan dihapus bersamanya.';
+
+  @override
   String get translateOffDeletes =>
       'Mematikan ini menghapus terjemahan yang tersimpan.';
 

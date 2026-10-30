@@ -9346,6 +9346,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'अनुवाद इस फ़ोन पर अपनी चैट के साथ एन्क्रिप्ट होकर रखे जाते हैं और उसी के साथ मिटते हैं।';
 
   @override
+  String get translatePrivacyKeptDesk =>
+      'अनुवाद इस कंप्यूटर पर अपनी चैट के साथ एन्क्रिप्ट होकर रखे जाते हैं और उसी के साथ मिटते हैं।';
+
+  @override
   String get translateOffDeletes =>
       'इसे बंद करने पर सहेजे गए अनुवाद मिट जाते हैं।';
 

@@ -11736,6 +11736,10 @@
   "@translatePrivacyKept": {
     "description": "translation settings, privacy box: where translations are kept"
   },
+  "translatePrivacyKeptDesk": "Translations are kept with their chat, encrypted on this computer, and deleted with it.",
+  "@translatePrivacyKeptDesk": {
+    "description": "translatePrivacyKept as a computer shows it (linux and windows)"
+  },
   "translateOffDeletes": "Turning this off deletes saved translations.",
   "@translateOffDeletes": {
     "description": "translation settings: under the switch, what turning it off does"

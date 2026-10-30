@@ -9353,6 +9353,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'ترجمه‌ها رمزگذاری‌شده کنار گفتگوی خود روی همین گوشی می‌مانند و همراه آن پاک می‌شوند.';
 
   @override
+  String get translatePrivacyKeptDesk =>
+      'ترجمه‌ها رمزگذاری‌شده کنار گفتگوی خود روی همین رایانه می‌مانند و همراه آن پاک می‌شوند.';
+
+  @override
   String get translateOffDeletes =>
       'خاموش کردن این، ترجمه‌های ذخیره‌شده را پاک می‌کند.';
 
