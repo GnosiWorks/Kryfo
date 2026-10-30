@@ -20,15 +20,19 @@ type Own struct {
 // NewOwn is an Own with no list yet.
 func NewOwn() *Own { return &Own{lists: map[Key]*List{}, me: map[Key]Entry{}} }
 
-// Set takes a signed list of one of this container's identities, mine
+// Set takes a signed list of identity, one of this container's, mine
 // being this device's key for it (the identity itself on the phone). it
 // moves forward only, as a contact's does, and gives the own devices it no
-// longer names. a list without this device is ErrRemoved, and the identity's
-// list is dropped.
-func (o *Own) Set(wire []byte, mine Key, v Verifier) (gone []Entry, err error) {
+// longer names. a list of another identity is refused. a list that moves
+// past a held one without this device is ErrRemoved, and the identity's
+// list is dropped; a first list without it is ErrNotListed, nothing held.
+func (o *Own) Set(identity Key, wire []byte, mine Key, v Verifier) (gone []Entry, err error) {
 	l, err := ReadList(wire, v)
 	if err != nil {
 		return nil, err
+	}
+	if l.Identity != identity {
+		return nil, ErrWrongIdentity
 	}
 	o.mu.Lock()
 	defer o.mu.Unlock()
@@ -47,6 +51,11 @@ func (o *Own) Set(wire []byte, mine Key, v Verifier) (gone []Entry, err error) {
 	}
 	me, ok := l.FindKey(mine)
 	if !ok {
+		if held == nil {
+			// an old list from before this device (its genesis one) or
+			// another's: never a wipe
+			return nil, ErrNotListed
+		}
 		delete(o.lists, l.Identity)
 		delete(o.me, l.Identity)
 		return nil, ErrRemoved

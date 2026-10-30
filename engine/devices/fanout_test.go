@@ -55,7 +55,7 @@ func newFanoutKit(t *testing.T, mine, his int) *fanoutKit {
 	}
 	k.takeBob(t)
 	k.own = NewOwn()
-	if _, err := k.own.Set(k.me.wire, k.me.id.pub, s); err != nil {
+	if _, err := k.own.Set(k.me.id.pub, k.me.wire, k.me.id.pub, s); err != nil {
 		t.Fatal(err)
 	}
 	k.f = &Fanout{Book: k.book, Own: k.own, Quiet: NewQuiet(), Rand: rand.Reader}
@@ -337,47 +337,47 @@ func TestOwnListsMoveForwardOnly(t *testing.T) {
 	b := me.linkReg(t)
 	own := NewOwn()
 	first := me.wire
-	if gone, err := own.Set(first, me.id.pub, s); err != nil || gone != nil {
+	if gone, err := own.Set(me.id.pub, first, me.id.pub, s); err != nil || gone != nil {
 		t.Fatalf("first: %v %v", gone, err)
 	}
-	if gone, err := own.Set(first, me.id.pub, s); err != nil || gone != nil {
+	if gone, err := own.Set(me.id.pub, first, me.id.pub, s); err != nil || gone != nil {
 		t.Fatalf("the same again: %v %v", gone, err)
 	}
 	me.unlink(t, a.ID)
-	gone, err := own.Set(me.wire, me.id.pub, s)
+	gone, err := own.Set(me.id.pub, me.wire, me.id.pub, s)
 	if err != nil || len(gone) != 1 || gone[0] != a {
 		t.Fatalf("a removal: %v %v", gone, err)
 	}
-	if _, err := own.Set(first, me.id.pub, s); !errors.Is(err, ErrRollback) {
+	if _, err := own.Set(me.id.pub, first, me.id.pub, s); !errors.Is(err, ErrRollback) {
 		t.Fatalf("an older list: %v", err)
 	}
 	eq := clone(me.list)
 	eq.Devices = eq.Devices[:1]
 	if w, err := eq.Sign(me.id); err != nil {
 		t.Fatal(err)
-	} else if _, err := own.Set(w, me.id.pub, s); !errors.Is(err, ErrEquivocation) {
+	} else if _, err := own.Set(me.id.pub, w, me.id.pub, s); !errors.Is(err, ErrEquivocation) {
 		t.Fatalf("two lists at one version: %v", err)
 	}
 	far := clone(me.list)
 	far.Version += VersionWindow + 1
 	if w, err := far.Sign(me.id); err != nil {
 		t.Fatal(err)
-	} else if _, err := own.Set(w, me.id.pub, s); !errors.Is(err, ErrJump) {
+	} else if _, err := own.Set(me.id.pub, w, me.id.pub, s); !errors.Is(err, ErrJump) {
 		t.Fatalf("too far ahead: %v", err)
 	}
-	if _, err := own.Set(forge(me.list), me.id.pub, s); !errors.Is(err, ErrSignature) {
+	if _, err := own.Set(me.id.pub, forge(me.list), me.id.pub, s); !errors.Is(err, ErrSignature) {
 		t.Fatalf("a forged list: %v", err)
 	}
 	// the linked device b's view: removed means wipe, and nothing is held
 	devOwn := NewOwn()
-	if _, err := devOwn.Set(me.wire, b.Key, s); err != nil {
+	if _, err := devOwn.Set(me.id.pub, me.wire, b.Key, s); err != nil {
 		t.Fatal(err)
 	}
 	if o := devOwn.Others(me.id.pub); len(o) != 1 || !o[0].Phone {
 		t.Fatalf("the device's others: %+v", o)
 	}
 	me.unlink(t, b.ID)
-	if _, err := devOwn.Set(me.wire, b.Key, s); !errors.Is(err, ErrRemoved) {
+	if _, err := devOwn.Set(me.id.pub, me.wire, b.Key, s); !errors.Is(err, ErrRemoved) {
 		t.Fatalf("this device removed: %v", err)
 	}
 	if devOwn.Current(me.id.pub) != nil || devOwn.Others(me.id.pub) != nil {
@@ -388,7 +388,7 @@ func TestOwnListsMoveForwardOnly(t *testing.T) {
 	}
 	// a key change at one id is a device gone
 	c := me.linkReg(t)
-	if _, err := own.Set(me.wire, me.id.pub, s); err != nil {
+	if _, err := own.Set(me.id.pub, me.wire, me.id.pub, s); err != nil {
 		t.Fatal(err)
 	}
 	nk, _ := newKey(t)
@@ -403,12 +403,44 @@ func TestOwnListsMoveForwardOnly(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	gone, err = own.Set(w, me.id.pub, s)
+	gone, err = own.Set(me.id.pub, w, me.id.pub, s)
 	if err != nil || len(gone) != 1 || gone[0] != c {
 		t.Fatalf("a key change: %v %v", gone, err)
 	}
 	if got := own.Stale(me.id.pub, []Held{{c.ID, c.Key}, {PhoneID, me.id.pub}}); !slices.Equal(got, []uint8{c.ID, PhoneID}) {
 		t.Fatalf("own stale: %v", got)
+	}
+}
+
+func TestAFirstOwnListWithoutThisDeviceIsNoWipe(t *testing.T) {
+	s := newShim()
+	me := newAccount(t, s)
+	genesis := me.wire
+	b := me.linkReg(t)
+	own := NewOwn()
+	// the list from before this device was linked, replayed to it first
+	if _, err := own.Set(me.id.pub, genesis, b.Key, s); !errors.Is(err, ErrNotListed) {
+		t.Fatalf("a first list without this device: %v", err)
+	}
+	if own.Current(me.id.pub) != nil {
+		t.Fatal("a list without this device held")
+	}
+	if _, err := own.Set(me.id.pub, me.wire, b.Key, s); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := own.Set(me.id.pub, genesis, b.Key, s); !errors.Is(err, ErrRollback) {
+		t.Fatalf("the genesis list after this device's: %v", err)
+	}
+	// a contact's list, even one naming my keys, is not one of mine
+	bob := newAccount(t, s)
+	if _, err := own.Set(me.id.pub, bob.wire, b.Key, s); !errors.Is(err, ErrWrongIdentity) {
+		t.Fatalf("another identity's list: %v", err)
+	}
+	if _, err := own.Set(me.id.pub, bob.wire, bob.id.pub, s); !errors.Is(err, ErrWrongIdentity) {
+		t.Fatalf("another identity's list naming the key: %v", err)
+	}
+	if own.Current(bob.id.pub) != nil {
+		t.Fatal("a contact's list held as my own")
 	}
 }
 
