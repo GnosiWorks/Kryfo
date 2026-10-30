@@ -370,6 +370,19 @@ void main() {
     int n = 0,
     int? since,
   }) async {
+    // with a session held their ask is a heal (KHB1), with the day of their
+    // backup: a json card builds a first session only (an introduction)
+    if (want && bundle == null && await signalSession.hasSession(p.name)) {
+      await app.subscribeKnown();
+      final khb1 = await makeHeal(
+        p.ss,
+        peer: signalSession.identity.public,
+        since: since == null ? null : healDayOf(since),
+      );
+      await app.receiveRelay([(peer: p.xpub, cipher: healWire(khb1))]);
+      await _settle();
+      return;
+    }
     await app.receiveRelay([
       (
         peer: p.xpub,
@@ -414,6 +427,8 @@ void main() {
   // [p] takes our last heal as their phone does: a session built from its
   // block, and the empty answer sealed on it, here
   Future<void> healed(_Peer p) async {
+    // a seal only marks them: the pass sends the heal
+    if (healsTo(p).isEmpty) await app.askAfreshForTest();
     await p.ss.processBundle('me', healsTo(p).last.block.bundle);
     final w = await wrapMessage(
       '',
@@ -488,6 +503,9 @@ void main() {
       throwsA(isA<StartingAfresh>()),
     );
     await _settle();
+    // a seal only marks them: the next pass sends the heal
+    expect(healsTo(p), isEmpty);
+    await app.askAfreshForTest();
     expect(healsTo(p).single.restored, isTrue);
     await healed(p);
     expect(await signalSession.sealsOnRestored(p.name), isFalse);
@@ -560,6 +578,12 @@ void main() {
       final was = await record(p);
       await expectLater(_toPeer(p, 'waits'), throwsA(isA<StartingAfresh>()));
       await _settle();
+      // a seal only marks them: the next pass sends the heal
+      expect(healsTo(p), isEmpty);
+      // the second round is a pass past the first one's gap
+      await app.askAfreshForTest(
+        now: DateTime.now().millisecondsSinceEpoch + (kept ? 31 * 60000 : 0),
+      );
       expect(await record(p), was, reason: 'nothing sealed on it or built');
       expect(healsTo(p), hasLength(1));
       expect(io.asksTo(p.xpub), isEmpty, reason: 'no json ask');
@@ -569,8 +593,8 @@ void main() {
     }
   });
 
-  test('asked to start afresh: what they sealed before still opens, and '
-      'our texts they never got go again', () async {
+  test('their heal: what they sealed before still opens, and our texts '
+      'they never got go again', () async {
     final p = await _peer();
     await contact(p);
     await talk(p);
@@ -599,14 +623,7 @@ void main() {
     await out('in a group', group: 'grp000000001');
     await out('a photo', media: '/m/a.jpg');
 
-    final ask = jsonEncode({
-      'halo_ctl': 'bundle',
-      'from': p.name,
-      'bundle': p.card,
-      'want': true,
-    });
-    await app.receiveRelay([(peer: p.xpub, cipher: ask)]);
-    await _settle();
+    await card(p, want: true);
 
     final sent = {
       for (final r in mem.rows('messages')) r['msg_uid']: r['sent'],
@@ -618,7 +635,7 @@ void main() {
       'in a group': 1,
       'a photo': 1,
     });
-    expect(io.asksTo(p.xpub), [false], reason: 'their answer: our card');
+    expect(io.asksTo(p.xpub), isEmpty, reason: 'no card back: we build');
     expect(await _atMe(p, inFlight), 'in flight');
     expect(await _atPeer(p, await _toPeer(p, 'next')), 'next');
   });
@@ -640,6 +657,8 @@ void main() {
     final c = await _fromPeer(p, 'after the restore');
     await app.receiveRelay([(peer: p.xpub, cipher: c)]);
     await _settle();
+    // a restored session's heal goes with the next pass
+    await app.askAfreshForTest();
     expect(healsTo(p), hasLength(1));
 
     // they start a session from the heal, and put it again
@@ -995,43 +1014,12 @@ void main() {
     expect([for (final r in mem.rows('messages')) r['sent']], [0, 1, 1]);
   });
 
-  test('a hidden chat asked while its vault is shut gets what never reached '
-      'them as the vault opens', () async {
+  test('a heal for a hidden chat while its vault is shut is not taken: '
+      'nothing is built, answered or sealed, and their next try lands once '
+      'it is open', () async {
     final p = await _peer();
     await processPeerBundle(p.name, p.card);
-    await vaultList.putMeta('pub', 'pub-A');
-    await vaultList.putHidden(
-      p.name,
-      kHiddenPeer,
-      peerCard(RouterCard(p.name, '', p.xpub, backPaired: true)),
-      1,
-    );
-    await router.load();
-    await card(p, want: true);
-
-    // the vault opens: their chat and our text in it
-    final vmem = MemDb();
-    final vault = _Rows(vmem, HaloContainer.vault);
-    await vmem.insert('contacts', {
-      'halo_id': p.name,
-      'onion': '',
-      'xpub': p.xpub,
-      'first_seen': 1,
-      'last_seen': 1,
-      'back_paired': 1,
-      'accepted': 1,
-    });
-    await outTo(p, 'lost', into: vmem);
-    useDatabasesForTest(rows, await Session.withVault(rows, vault));
-    await app.drainSealed(vault, 'priv-A');
-    expect(vmem.rows('messages').single['sent'], 0);
-    expect(vaultList.inbox, isEmpty);
-  });
-
-  test('a hidden chat asked with a backup\'s date while its vault is shut '
-      'gets what never reached them since then as the vault opens', () async {
-    final p = await _peer();
-    await processPeerBundle(p.name, p.card);
+    final was = await record(p);
     await vaultList.putMeta('pub', 'pub-A');
     await vaultList.putHidden(
       p.name,
@@ -1042,24 +1030,12 @@ void main() {
     await router.load();
     final now = DateTime.now().millisecondsSinceEpoch;
     await card(p, want: true, since: now - 20 * 24 * 3600 * 1000);
-
-    // the vault opens: their chat and our text in it
-    final vmem = MemDb();
-    final vault = _Rows(vmem, HaloContainer.vault);
-    await vmem.insert('contacts', {
-      'halo_id': p.name,
-      'onion': '',
-      'xpub': p.xpub,
-      'first_seen': 1,
-      'last_seen': 1,
-      'back_paired': 1,
-      'accepted': 1,
-    });
-    await outTo(p, 'lost', into: vmem, ago: 12 * 24 * 3600 * 1000);
-    useDatabasesForTest(rows, await Session.withVault(rows, vault));
-    await app.drainSealed(vault, 'priv-A');
-    expect(vmem.rows('messages').single['sent'], 0);
+    expect(await record(p), was);
+    expect(await atThem(p), isEmpty);
     expect(vaultList.inbox, isEmpty);
+    // nothing of it in the everyday database either
+    expect(mem.rows('heal_nonces'), isEmpty);
+    expect(mem.rows('heal_lines'), isEmpty);
   });
 
   test('with no key pinned for them, a card is taken only with the key '
@@ -1288,39 +1264,6 @@ void main() {
     expect(io.asksTo(p.xpub), isEmpty);
     expect(vaultList.inbox, isEmpty);
     expect(await record(p), was, reason: 'no session from their card');
-  });
-
-  test('a resend owed to a hidden chat is not made once they are blocked '
-      'there', () async {
-    final p = await _peer();
-    await processPeerBundle(p.name, p.card);
-    await vaultList.putMeta('pub', 'pub-A');
-    await vaultList.putHidden(
-      p.name,
-      kHiddenPeer,
-      peerCard(RouterCard(p.name, '', p.xpub, backPaired: true)),
-      1,
-    );
-    await router.load();
-    await card(p, want: true);
-    expect(vaultList.inbox, isNotEmpty);
-
-    final vmem = MemDb();
-    final vault = _Rows(vmem, HaloContainer.vault);
-    await vmem.insert('contacts', {
-      'halo_id': p.name,
-      'onion': '',
-      'xpub': p.xpub,
-      'first_seen': 1,
-      'last_seen': 1,
-      'back_paired': 1,
-      'accepted': 1,
-      'blocked': 1,
-    });
-    await outTo(p, 'lost', into: vmem);
-    useDatabasesForTest(rows, await Session.withVault(rows, vault));
-    await app.drainSealed(vault, 'priv-A');
-    expect(vmem.rows('messages').single['sent'], 1);
   });
 
   test('a receipt queued for someone goes with the block, and never goes '
@@ -1655,7 +1598,7 @@ void main() {
       'created_at': t,
     });
 
-    await app.afterRestore(store, from: t - day, nowMs: t + 1);
+    expect(await app.afterRestore(store, nowMs: t + 1), isTrue);
     final ids = [for (final r in await invitesOf(store, kMainIdent)) r.id];
     expect(ids, containsAll([main.id, used.id]));
     expect(ids, isNot(contains(once.id)));
@@ -1841,10 +1784,21 @@ void main() {
       expect(mem.rows('heal_lines'), hasLength(1));
     });
 
-    test(
-      'crossed heals: the smaller identity key\'s is the one built',
-      () async {
+    // a peer whose key sorts before ours ([theirsFirst]) or after it
+    Future<_Peer> peerWhoseKey({required bool theirsFirst}) async {
+      for (;;) {
         final p = await _peer();
+        if (_before(p.ss.identity.public, signalSession.identity.public) ==
+            theirsFirst) {
+          return p;
+        }
+      }
+    }
+
+    for (final theirsFirst in [true, false]) {
+      test('crossed heals: the smaller identity key\'s is the one built '
+          '(theirs smaller: $theirsFirst)', () async {
+        final p = await peerWhoseKey(theirsFirst: theirsFirst);
         await contact(p);
         await talk(p);
         await app.subscribeKnown();
@@ -1854,15 +1808,115 @@ void main() {
         await _settle();
         expect(healsTo(p), hasLength(1));
         await comes(p, await theirHeal(p));
-        final mineFirst = _before(
-          signalSession.identity.public,
-          p.ss.identity.public,
-        );
         expect(
           mem.rows('heal_lines'),
-          mineFirst ? isEmpty : hasLength(1),
+          theirsFirst ? hasLength(1) : isEmpty,
           reason: 'ours stands when our key is the smaller',
         );
+      });
+    }
+
+    test('a json card with a session held is refused: nothing rebuilt, no '
+        'card back, nothing again, a verified chat stays as it was', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      await mem.update(
+        'contacts',
+        {'verified': 1, 'verified_key': p.xpub},
+        where: 'halo_id = ?',
+        whereArgs: [p.name],
+      );
+      await outTo(p, 'lost');
+      final was = await record(p);
+      for (final want in [true, false]) {
+        await app.receiveRelay([
+          (
+            peer: p.xpub,
+            cipher: jsonEncode({
+              'halo_ctl': 'bundle',
+              'from': p.name,
+              'bundle': p.card,
+              'want': want,
+              'since': 0,
+            }),
+          ),
+        ]);
+        await _settle();
+      }
+      expect(await record(p), was);
+      expect(io.sent, isEmpty);
+      expect(row('lost')?['sent'], 1);
+      expect(mem.rows('heal_lines'), isEmpty);
+      expect(await app.keyHeld(p.name), isFalse);
+    });
+
+    test('with no identity held for them, a heal builds nothing', () async {
+      final p = await _peer();
+      await contact(p, card: false);
+      await comes(p, await theirHeal(p));
+      expect(await signalSession.hasSession(p.name), isFalse);
+      expect(io.sent, isEmpty);
+      expect(mem.rows('heal_lines'), isEmpty);
+    });
+
+    test('an open vault\'s contact: the line and the nonce go into the '
+        'vault, none into the everyday database', () async {
+      final p = await _peer();
+      await processPeerBundle(p.name, p.card);
+      final vmem = MemDb();
+      final vault = _Rows(vmem, HaloContainer.vault);
+      await vmem.insert('contacts', {
+        'halo_id': p.name,
+        'onion': '',
+        'xpub': p.xpub,
+        'first_seen': 1,
+        'last_seen': 1,
+        'back_paired': 1,
+        'accepted': 1,
+        'caps': 'pp',
+      });
+      // the card the router keeps for them: how their key is known
+      await vaultList.putMeta('pub', 'pub-A');
+      await vaultList.putHidden(
+        p.name,
+        kHiddenPeer,
+        peerCard(RouterCard(p.name, '', p.xpub, backPaired: true)),
+        1,
+      );
+      await router.load();
+      useDatabasesForTest(rows, await Session.withVault(rows, vault));
+      await comes(p, await theirHeal(p));
+      expect(vmem.rows('heal_lines'), hasLength(1));
+      expect(vmem.rows('heal_nonces'), hasLength(1));
+      expect(mem.rows('heal_lines'), isEmpty);
+      expect(mem.rows('heal_nonces'), isEmpty);
+    });
+
+    test(
+      'held for a moved key and a heal at once: the key card speaks',
+      () async {
+        final p = await _peer();
+        await contact(p);
+        await talk(p);
+        final other = await _peer();
+        await mem.update(
+          'contacts',
+          {'verified': 1, 'verified_key': p.xpub},
+          where: 'halo_id = ?',
+          whereArgs: [p.name],
+        );
+        await comes(p, await theirHeal(p));
+        expect(await session.healHold(p.name), kHealLineRepair);
+        // the mark now names another key than the one held
+        await mem.update(
+          'contacts',
+          {'verified_key': other.xpub},
+          where: 'halo_id = ?',
+          whereArgs: [p.name],
+        );
+        expect(await app.keyHeld(p.name), isTrue);
+        expect(await session.healHold(p.name), isNull);
       },
     );
 
@@ -1888,6 +1942,9 @@ void main() {
       // is written waits
       await expectLater(_toPeer(p, 'waits'), throwsA(isA<StartingAfresh>()));
       await _settle();
+      // a seal only marks them: the next pass sends the heal
+      expect(healsTo(p), isEmpty);
+      await app.askAfreshForTest();
       expect(healsTo(p), hasLength(1));
       // once they run 0.6 and take it, the chat goes on
       await healed(p);
@@ -2140,32 +2197,6 @@ void main() {
       expect(mem.rows('group_resent'), isEmpty);
     });
 
-    test('an undated ask sealed for a shut vault owes none of its groups\' '
-        'texts as it opens', () async {
-      final p = await _peer();
-      await processPeerBundle(p.name, p.card);
-      await vaultList.putMeta('pub', 'pub-A');
-      await vaultList.putHidden(
-        p.name,
-        kHiddenPeer,
-        peerCard(RouterCard(p.name, '', p.xpub, backPaired: true)),
-        1,
-      );
-      await router.load();
-      await card(p, want: true);
-      expect(vaultList.inbox, isNotEmpty);
-      final vmem = MemDb();
-      final vault = _Rows(vmem, HaloContainer.vault);
-      await groupWith(p, g, into: vmem);
-      await said('hidden hour', into: vmem);
-      useDatabasesForTest(rows, await Session.withVault(rows, vault));
-      app.sendModeForTest = 'private';
-      await app.drainSealed(vault, 'priv-A');
-      expect(vaultList.inbox, isEmpty);
-      expect(owedTo(p.name, vmem), isEmpty);
-      expect(vmem.rows('group_resent'), isEmpty);
-    });
-
     test('a backup dated in the future is no restore', () async {
       final p = await _peer();
       await contact(p);
@@ -2204,23 +2235,20 @@ void main() {
       // past the two minutes, as a later start: two old backups clamp to
       // the same day, so the second is the first restore again
       await mem.delete('group_resent');
-      final later = AppState(io: io, router: router)
-        ..myId = 'me'
-        ..sendModeForTest = 'private';
-      for (final (i, back) in [40, 50].indexed) {
-        await later.receiveRelay([
-          (
-            peer: p.xpub,
-            cipher: jsonEncode({
-              'halo_ctl': 'bundle',
-              'from': p.name,
-              'bundle': p.card,
-              'want': true,
-              'n': 10 + i,
-              'since': now - back * day,
-            }),
+      // each heal on a start of its own, past the ten minutes' limit
+      for (final back in [40, 50]) {
+        final later = AppState(io: io, router: router)
+          ..myId = 'me'
+          ..sendModeForTest = 'private';
+        await later.subscribeKnown();
+        await later.takeHealForTest(
+          p.xpub,
+          await makeHeal(
+            p.ss,
+            peer: signalSession.identity.public,
+            since: healDayOf(now - back * day),
           ),
-        ]);
+        );
         await _settle();
       }
       final marks = mem.rows('group_resent');

@@ -139,6 +139,26 @@ void main() {
       );
     }, skip: needsShim);
 
+    test('a heal signed by a linked device (the shim\'s vector, 1,937 bytes) '
+        'reads, and this phone refuses it until device lists are held', () {
+      final line = File(
+        'native/kryfo_signal/testdata/formats_v1.txt',
+      ).readAsLinesSync().singleWhere((l) => l.startsWith('good heal_device '));
+      final hex = line.split(' ').last;
+      final b = Uint8List.fromList([
+        for (var i = 0; i < hex.length; i += 2)
+          int.parse(hex.substring(i, i + 2), radix: 16),
+      ]);
+      expect(b.length, 1937);
+      final h = KryfoSignal.shared.parseHeal(b);
+      expect(h.block.deviceId, isNot(1));
+      expect(h.signer, isNot(h.identity));
+      expect(
+        checkHeal(h, held: h.identity, mine: h.peer, nowMs: h.issued * _hour),
+        HealRefused.device,
+      );
+    }, skip: needsShim);
+
     test('on the wire it is a json frame a 0.5.x reader drops', () {
       final w = healWire([1, 2, 3]);
       expect(w, startsWith('{"halo_ctl":"heal"'));
@@ -160,8 +180,46 @@ void main() {
       expect(await noteHealNonce(db, 0, n, nowMs: t), isTrue);
       expect(await noteHealNonce(db, 0, n, nowMs: t + _day), isFalse);
       expect(await noteHealNonce(db, 1, n, nowMs: t + _day), isTrue);
-      // gone after 16 days: a heal that old is refused as stale anyway
-      expect(await noteHealNonce(db, 0, n, nowMs: t + 17 * _day), isTrue);
+      // kept to its last millisecond, gone after
+      final keep = kHealNonceKeep.inMilliseconds;
+      expect(await noteHealNonce(db, 0, n, nowMs: t + keep - 1), isFalse);
+      expect(await noteHealNonce(db, 2, n, nowMs: t), isTrue);
+      expect(await noteHealNonce(db, 2, n, nowMs: t + keep), isTrue);
+    });
+
+    test('a nonce outlives the freshest heal it could belong to', () async {
+      final ana = await testStore();
+      final ben = await testStore();
+      final t = DateTime.now().millisecondsSinceEpoch;
+      // issued a day ahead of this clock, the most that is taken
+      final b = await makeHeal(
+        ana,
+        peer: ben.identity.public,
+        nowMs: t + kHealAhead.inMilliseconds,
+      );
+      final h = ana.lib.parseHeal(b);
+      HealRefused? at(int now) => checkHeal(
+        h,
+        held: ana.identity.public,
+        mine: ben.identity.public,
+        nowMs: now,
+      );
+      final db = MemDb();
+      expect(await noteHealNonce(db, 0, h.nonce, nowMs: t), isTrue);
+      // the last hour it is fresh, the nonce is still known
+      final lastFresh = (h.issued + kHealOldest.inHours) * _hour + _hour - 1;
+      expect(at(lastFresh), isNull);
+      expect(lastFresh - t, lessThan(kHealNonceKeep.inMilliseconds));
+      expect(await noteHealNonce(db, 0, h.nonce, nowMs: lastFresh), isFalse);
+      expect(at(lastFresh + 1), HealRefused.stale);
+    }, skip: needsShim);
+
+    test('kept for the identity it came to', () async {
+      final db = MemDb();
+      final t = DateTime.now().millisecondsSinceEpoch;
+      final n = List.filled(16, 3);
+      expect(await noteHealNonce(db, 5, n, nowMs: t), isTrue);
+      expect(await noteHealNonce(db, 6, n, nowMs: t), isTrue);
     });
 
     test(

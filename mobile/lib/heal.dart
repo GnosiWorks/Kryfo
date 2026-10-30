@@ -22,8 +22,10 @@ const kHealCtl = 'heal';
 const kHealOldest = Duration(days: 15);
 const kHealAhead = Duration(hours: 24);
 
-/// how long a nonce is kept: a wrap's life and a day
-const kHealNonceKeep = Duration(days: 16);
+/// how long a nonce is kept, from when it came: a heal is taken while it
+/// is at most 15 days old and may be issued a day ahead, so 16 days and a
+/// day more, with no hour at the edge where one is fresh and forgotten
+const kHealNonceKeep = Duration(days: 17);
 
 /// at most one rebuild per contact this often
 const kHealRebuildGap = Duration(minutes: 10);
@@ -201,7 +203,7 @@ Future<void> healTablesAtOpen(DatabaseExecutor db) async {
   if (have.length < 3) await healTables(db);
 }
 
-/// [nonce] noted for [ident]: false when it was seen in the last 16 days.
+/// [nonce] noted for [ident]: false when it was seen in the last 17 days.
 /// older ones go first
 Future<bool> noteHealNonce(
   DatabaseExecutor db,
@@ -211,8 +213,9 @@ Future<bool> noteHealNonce(
 }) async {
   await db.delete(
     'heal_nonces',
+    // gone once it is the whole keep old
     where: 'at < ?',
-    whereArgs: [nowMs - kHealNonceKeep.inMilliseconds],
+    whereArgs: [nowMs - kHealNonceKeep.inMilliseconds + 1],
   );
   final n = base64Encode(nonce);
   final seen = await db.query(

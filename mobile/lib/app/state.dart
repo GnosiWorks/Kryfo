@@ -749,6 +749,9 @@ class AppState extends ChangeNotifier {
   final Map<String, int> _healPending = {};
   // when a heal last rebuilt each contact's session: one per 10 minutes
   final Map<String, int> _healBuiltAt = {};
+  // people a seal on a restored session waits on: the next pass heals them
+  // first
+  final Set<String> _healWanted = {};
   final Map<String, int> _bundleCtlSentAt = {};
   final Map<String, int> _resentAt = {};
   // the same for group texts, per container and member

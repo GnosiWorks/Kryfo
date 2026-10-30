@@ -131,16 +131,22 @@ extension AppStateHeal on AppState {
   // other opens, so no second session races the first)
   Future<LsBundle?> _afreshCard(String peer) async {
     _waitingCard.add(peer);
-    // asked as the pass asks (SignalSession.askWait): a seal
-    // tried again in between asks nothing
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final ss = await signalFor(peer);
-    if (ss != null &&
-        !_asking.containsKey(peer) &&
-        await ss.askDue(peer, now)) {
-      unawaited(_askOnce(peer, now));
-    }
+    // only marked: the next pass sends it first, inside its budget of
+    // eight, so a busy start does not put out a heal to everyone it
+    // touches at once (8, R6)
+    _healWanted.add(peer);
     return null;
+  }
+
+  /// [peer]'s messages stop reading: a session a restore brought back is
+  /// healed by the next pass, any other at once (a repair)
+  Future<void> _healSoon(String peer) async {
+    final ss = await signalFor(peer);
+    if (ss != null && await ss.sealsOnRestored(peer)) {
+      _healWanted.add(peer);
+      return;
+    }
+    await _askToStartAfresh(peer);
   }
 
   Future<bool> _askOnce(String peer, int now) =>
@@ -203,12 +209,22 @@ extension AppStateHeal on AppState {
       }
     }
     people.shuffle(rnd);
-    for (final id in people) {
+    // those a seal waits on first, then everyone else, each once
+    final wanted = [..._healWanted]..shuffle(rnd);
+    final order = {...wanted, ...people};
+    for (final id in order) {
       if (left == 0 || everydayHeld) return;
       if (isDevId(id)) continue;
       final ss = await signalFor(id);
-      if (ss == null || !await ss.askDue(id, now)) continue;
-      if (await _askOnce(id, now)) left--;
+      if (ss == null || !await ss.sealsOnRestored(id)) {
+        _healWanted.remove(id);
+        continue;
+      }
+      if (!await ss.askDue(id, now)) continue;
+      if (await _askOnce(id, now)) {
+        _healWanted.remove(id);
+        left--;
+      }
     }
   }
 
@@ -356,8 +372,12 @@ extension AppStateHeal on AppState {
         dlog('heal: refused by the parser ($e)');
         return;
       }
-      final held = await _storedIdentity(ss, peer) ?? _xIdentity(x);
-      if (held == null) return;
+      // never a first session: a heal is for an identity held here
+      final held = await _storedIdentity(ss, peer);
+      if (held == null) {
+        dlog('heal: no identity held for them, dropped');
+        return;
+      }
       final now = DateTime.now().millisecondsSinceEpoch;
       final why = checkHeal(
         heal,
@@ -381,8 +401,9 @@ extension AppStateHeal on AppState {
         dlog('heal: rebuilt lately, taken on their next try');
         return;
       }
+      // kept where they are: an open vault's contact in the vault
       if (!await noteHealNonce(
-        await live.open(),
+        await on.open(),
         ss.ident,
         heal.nonce,
         nowMs: now,
@@ -394,8 +415,10 @@ extension AppStateHeal on AppState {
         await ss.processBundle(peer, heal.block.bundle);
       } on ClassicRefused {
         return;
-      } catch (_) {
-        // one held that does not read goes
+      } on LsError {
+        // only a held record that does not read goes: one that reads keeps
+        // its archived states, so what was sealed before still opens
+        if (!await _heldUnreadable(ss, peer)) rethrow;
         await ss.rebuild(peer, heal.block.bundle);
       }
       _healBuiltAt[peer] = now;
@@ -415,6 +438,17 @@ extension AppStateHeal on AppState {
       dlog('heal: not taken (${e.runtimeType})');
     } finally {
       await live.markSeen(h);
+    }
+  }
+
+  Future<bool> _heldUnreadable(SignalSession ss, String peer) async {
+    final r = await ss.sessionStore.load(peer);
+    if (r == null) return false;
+    try {
+      ss.lib.sessionInfo(r);
+      return false;
+    } on LsError {
+      return true;
     }
   }
 
@@ -474,14 +508,34 @@ extension AppStateHeal on AppState {
     unawaited(drainOutbox());
   }
 
+  /// before the everyday store opens after a restore: every other
+  /// identity's sessions are marked as the main one's are as it opens, so
+  /// none is sealed on before a heal. true when each was
+  Future<bool> markRestoredIdentities(Database db, {int? from}) async {
+    var ok = true;
+    for (final r in await identityRows(db)) {
+      if (r.retiredAt != null || r.id == kMainIdent || r.kind == kIdentPool) {
+        continue;
+      }
+      try {
+        await (await signalOfIdent(r.id)).markRestored(from: from);
+      } catch (e) {
+        ok = false;
+        dlog('restore: identity ${r.id} not marked (${e.runtimeType})');
+      }
+    }
+    return ok;
+  }
+
   /// what follows a restore or a move, once, on the first start after it
-  /// (8): each identity's unused one-time invites go (one may have been
-  /// answered since the file was made) and its session prekeys are made
-  /// again, pool identities retire, and every identity's sessions are
-  /// marked as the main one's are, so none is sealed on before a heal.
-  /// the main invites stay: links and the handle keep working
-  Future<void> afterRestore(Database db, {int? from, int? nowMs}) async {
+  /// (8), with every store open: each identity's unused one-time invites
+  /// go (one may have been answered since the file was made) and its
+  /// session prekeys are made again, and pool identities retire. the main
+  /// invites stay: links and the handle keep working. true when every
+  /// identity was done; otherwise the next start runs it again
+  Future<bool> afterRestore(Database db, {int? nowMs}) async {
     final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
+    var ok = true;
     for (final r in await identityRows(db)) {
       if (r.retiredAt != null) continue;
       if (r.kind == kIdentPool) {
@@ -495,16 +549,17 @@ extension AppStateHeal on AppState {
       }
       try {
         final ss = await signalOfIdent(r.id);
-        if (r.id != kMainIdent) await ss.markRestored(from: from);
         for (final i in await invitesOf(db, r.id, kind: kInviteOneTime)) {
           if (i.usedAt == null) await dropInvite(db, ss, i);
         }
         await ss.replaceSessionPreKeys(now: now);
       } catch (e) {
+        ok = false;
         dlog('restore: identity ${r.id} not settled (${e.runtimeType})');
       }
     }
-    dlog('restore: invites and session prekeys made again');
+    dlog('restore: invites and session prekeys made again (ok=$ok)');
+    return ok;
   }
 
   @visibleForTesting
@@ -638,6 +693,13 @@ extension AppStateHeal on AppState {
           : _eqBytes(_xIdentity(peerXPub.toLowerCase()) ?? const [], claimed);
       if (!ok) {
         dlog('bundle ctl: identity mismatch for $from, dropped');
+        return;
+      }
+      // a card builds a first session only (an introduction). with one held
+      // the heal is a KHB1, which shows and holds: a json card would
+      // rebuild quietly whatever the sender chose (11 step 8, 3.8)
+      if (await ss.hasSession(from)) {
+        dlog('bundle ctl: a session is held with $from, refused');
         return;
       }
       // their frame came over the pair address: they read ours too

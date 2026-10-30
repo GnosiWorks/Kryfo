@@ -854,7 +854,7 @@ extension AppStateReceive on AppState {
           final copy = _takeOpenedBefore(m.cipher);
           if (!copy || now - (_copyAskedAt[haloId] ?? 0) >= _kCopyAskGap) {
             if (copy) _copyAskedAt[haloId] = now;
-            unawaited(_askToStartAfresh(haloId));
+            unawaited(_healSoon(haloId));
           }
         }
       }

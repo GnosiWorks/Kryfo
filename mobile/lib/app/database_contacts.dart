@@ -671,9 +671,16 @@ mixin _ContactRows {
       keyHeldIn(await open(), haloId, identity: _keySource);
 
   /// the heal line that holds [haloId] (kHealLineRestored or Repair), null
-  /// when no heal holds them
-  Future<int?> healHold(String haloId) async =>
-      kHealHold ? healHoldOf(await open(), haloId) : null;
+  /// when no heal holds them, or when their key moved too: the key's card
+  /// says what is true then, and its ways out come first
+  Future<int?> healHold(String haloId) async {
+    if (!kHealHold) return null;
+    final db = await open();
+    if (await keyHeldIn(db, haloId, identity: _keySource, heal: false)) {
+      return null;
+    }
+    return healHoldOf(db, haloId);
+  }
 
   /// the person looked: [haloId] goes on, verified as before
   Future<void> releaseHealHold(String haloId) async =>
@@ -1277,11 +1284,22 @@ Future<bool> keyHeldIn(
   DatabaseExecutor db,
   String haloId, {
   Future<String?> Function(String haloId)? identity,
+  // a heal's hold counts too (Q22); false asks for a moved key alone
+  bool heal = true,
 }) async {
   if (isDevId(haloId)) return false;
+  if (await _keyMovedIn(db, haloId, identity: identity)) return true;
   // a heal rebuilt a verified contact's session: held until the person
-  // looks, whatever key they hold (Q22)
-  if (kHealHold && await healHoldOf(db, haloId) != null) return true;
+  // looks, whatever key they hold
+  return heal && kHealHold && await healHoldOf(db, haloId) != null;
+}
+
+// verified under one key, holding another now
+Future<bool> _keyMovedIn(
+  DatabaseExecutor db,
+  String haloId, {
+  Future<String?> Function(String haloId)? identity,
+}) async {
   final rows = await db.query(
     'contacts',
     columns: ['verified_key', 'xpub'],
