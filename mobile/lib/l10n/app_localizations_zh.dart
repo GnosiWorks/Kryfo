@@ -620,10 +620,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appConnectedRoutedThrough3 => '已连接 · 经 3 个中继转发';
 
   @override
-  String get appReadyToSendPublishing => '可以发送 · 正在发布你的地址';
-
-  @override
-  String get appReadyToSendFinishing => '可以发送 · 正在完成设置';
+  String get appReadyToChatAddressFinishing => '可以聊天了 · 地址即将就绪';
 
   @override
   String appConnecting(Object pct) {
@@ -6112,6 +6109,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get motionYouReAnonymous => '你是匿名的';
 
   @override
+  String get motionReadyToChat => '可以聊天了';
+
+  @override
   String get motionTorIsStartingIn => 'Tor 正在后台启动。连接建立时，这张图会逐渐亮起来。';
 
   @override
@@ -6125,6 +6125,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get motionYourIpIsHidden => '你的 IP 已隐藏。只有知道你 Kryfo 的人才能联系到你。';
+
+  @override
+  String get motionAddressFinishing => '消息已可通过 Tor 发送。你的私密地址正在后台完成设置。';
 
   @override
   String get motionBuilding2 => '构建中';
@@ -10363,10 +10366,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get appConnectedRoutedThrough3 => '已連線 · 經由 3 個中繼轉送';
 
   @override
-  String get appReadyToSendPublishing => '可以傳送 · 正在發布你的位址';
-
-  @override
-  String get appReadyToSendFinishing => '可以傳送 · 正在完成設定';
+  String get appReadyToChatAddressFinishing => '可以聊天了 · 位址即將就緒';
 
   @override
   String appConnecting(Object pct) {
@@ -15856,6 +15856,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get motionYouReAnonymous => '你已匿名';
 
   @override
+  String get motionReadyToChat => '可以聊天了';
+
+  @override
   String get motionTorIsStartingIn => 'Tor 正在背景啟動。連線建立時，這張圖會逐漸亮起來。';
 
   @override
@@ -15869,6 +15872,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get motionYourIpIsHidden => '你的 IP 已隱藏。只有拿到你 Kryfo 的人才能聯絡你。';
+
+  @override
+  String get motionAddressFinishing => '訊息已可透過 Tor 傳送。你的私密位址正在背景完成設定。';
 
   @override
   String get motionBuilding2 => '建立中';

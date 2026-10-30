@@ -643,11 +643,8 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bağlı · 3 aktarıcı üzerinden yönlendiriliyor';
 
   @override
-  String get appReadyToSendPublishing =>
-      'Göndermeye hazır · adresin yayımlanıyor';
-
-  @override
-  String get appReadyToSendFinishing => 'Göndermeye hazır · kurulum bitiyor';
+  String get appReadyToChatAddressFinishing =>
+      'Sohbete hazır · adresin hazırlanıyor';
 
   @override
   String appConnecting(Object pct) {
@@ -6407,6 +6404,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get motionYouReAnonymous => 'Anonimsin';
 
   @override
+  String get motionReadyToChat => 'Sohbete hazır';
+
+  @override
   String get motionTorIsStartingIn =>
       'Tor arka planda başlıyor. Bağlantı kuruldukça bu grafik yanar.';
 
@@ -6425,6 +6425,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get motionYourIpIsHidden =>
       'IP adresin gizli. Sana yalnızca Kryfo’nu bilenler ulaşabilir.';
+
+  @override
+  String get motionAddressFinishing =>
+      'Mesajlar zaten Tor üzerinden gidiyor. Özel adresin arka planda hazırlanıyor.';
 
   @override
   String get motionBuilding2 => 'kuruluyor';

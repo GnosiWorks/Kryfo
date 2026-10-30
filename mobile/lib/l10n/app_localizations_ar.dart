@@ -669,10 +669,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appConnectedRoutedThrough3 => 'متصل · يمر عبر ٣ مُرحِّلات';
 
   @override
-  String get appReadyToSendPublishing => 'جاهز للإرسال · جارٍ نشر عنوانك';
-
-  @override
-  String get appReadyToSendFinishing => 'جاهز للإرسال · جارٍ إنهاء الإعداد';
+  String get appReadyToChatAddressFinishing =>
+      'جاهز للدردشة · العنوان على وشك الاكتمال';
 
   @override
   String appConnecting(Object pct) {
@@ -6512,6 +6510,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get motionYouReAnonymous => 'أنت مجهول الهوية';
 
   @override
+  String get motionReadyToChat => 'جاهز للدردشة';
+
+  @override
   String get motionTorIsStartingIn =>
       'يبدأ Tor في الخلفية. يضيء هذا الرسم مع تشكّل الاتصال.';
 
@@ -6530,6 +6531,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get motionYourIpIsHidden =>
       'عنوان IP الخاص بك مخفي. لا يصل إليك إلا من لديه Kryfo الخاص بك.';
+
+  @override
+  String get motionAddressFinishing =>
+      'الرسائل تُرسَل الآن عبر Tor. عنوانك الخاص يكتمل في الخلفية.';
 
   @override
   String get motionBuilding2 => 'جارٍ البناء';

@@ -787,12 +787,8 @@
   "@appConnectedRoutedThrough3": {
     "description": "app/gates.dart"
   },
-  "appReadyToSendPublishing": "Ready to send · publishing your address",
-  "@appReadyToSendPublishing": {
-    "description": "app/gates.dart"
-  },
-  "appReadyToSendFinishing": "Ready to send · finishing setup",
-  "@appReadyToSendFinishing": {
+  "appReadyToChatAddressFinishing": "Ready to chat · address finishing",
+  "@appReadyToChatAddressFinishing": {
     "description": "app/gates.dart"
   },
   "appConnecting": "Connecting · {pct}",
@@ -8042,6 +8038,10 @@
   "@motionYouReAnonymous": {
     "description": "widgets/motion.dart"
   },
+  "motionReadyToChat": "Ready to chat",
+  "@motionReadyToChat": {
+    "description": "widgets/motion.dart"
+  },
   "motionTorIsStartingIn": "Tor is starting in the background. This graph lights up as the connection forms.",
   "@motionTorIsStartingIn": {
     "description": "widgets/motion.dart"
@@ -8060,6 +8060,10 @@
   },
   "motionYourIpIsHidden": "Your ip is hidden. Only people with your Kryfo can reach you.",
   "@motionYourIpIsHidden": {
+    "description": "widgets/motion.dart"
+  },
+  "motionAddressFinishing": "Messages already go out through Tor. Your private address finishes in the background.",
+  "@motionAddressFinishing": {
     "description": "widgets/motion.dart"
   },
   "motionBuilding2": "building",

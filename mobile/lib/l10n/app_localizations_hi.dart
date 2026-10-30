@@ -641,12 +641,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get appConnectedRoutedThrough3 => 'जुड़ा हुआ · 3 रिले से होकर';
 
   @override
-  String get appReadyToSendPublishing =>
-      'भेजने के लिए तैयार · आपका पता प्रकाशित हो रहा है';
-
-  @override
-  String get appReadyToSendFinishing =>
-      'भेजने के लिए तैयार · सेटअप पूरा हो रहा है';
+  String get appReadyToChatAddressFinishing =>
+      'चैट के लिए तैयार · पता पूरा हो रहा है';
 
   @override
   String appConnecting(Object pct) {
@@ -6390,6 +6386,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get motionYouReAnonymous => 'आप गुमनाम हैं';
 
   @override
+  String get motionReadyToChat => 'चैट के लिए तैयार';
+
+  @override
   String get motionTorIsStartingIn =>
       'Tor बैकग्राउंड में शुरू हो रहा है। कनेक्शन बनते-बनते यह चित्र जगमगा उठता है।';
 
@@ -6408,6 +6407,10 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get motionYourIpIsHidden =>
       'आपका IP छिपा है। सिर्फ़ आपके Kryfo वाले लोग आप तक पहुँच सकते हैं।';
+
+  @override
+  String get motionAddressFinishing =>
+      'मैसेज अभी से Tor के ज़रिए जा रहे हैं। आपका निजी पता बैकग्राउंड में पूरा हो रहा है।';
 
   @override
   String get motionBuilding2 => 'बन रहा है';
