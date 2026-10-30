@@ -205,8 +205,9 @@ extension AppStateContacts on AppState {
     try {
       Future<List<String>?> run() async {
         if (await s.heldKey(haloId) != key) return null;
-        // linked devices: their devices get nothing more
-        await _devForget(haloId);
+        // linked devices: their devices get nothing more, and their
+        // device sessions go with the phone's
+        await _devForget(haloId, sessions: true);
         final went = await s.removeAndBlockKey(haloId, key);
         // the everyday store holds every session, a hidden chat's too
         if (!quiet && signalSession.ready) {

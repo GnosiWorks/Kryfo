@@ -59,9 +59,9 @@ Future<({DevMe me, DevContact c})?> _devWhoOf(
   );
   final ikey = r.isEmpty ? null : r.first['ikey'] as String?;
   if (ikey == null) return null;
+  // the whole row: a file from before the column has none, and is a phone
   final id = await db.query(
     'identities',
-    columns: ['dev_id'],
     where: 'id = ?',
     whereArgs: [ident],
     limit: 1,
@@ -94,10 +94,32 @@ Future<String?> _deviceSeal(
 ) async {
   final send = _deviceSend;
   if (send == null || !linkedDevicesOn || isDevId(peer)) return null;
-  final who = await _devWhoOf(ident, peer, ss);
-  if (who == null) return null;
-  final b = await send.burst(who.me, who.c, framed, phone: phone);
-  return b?.phone;
+  // anything of the devices' that fails before the phone's copy is sealed
+  // leaves that copy to today's seal: a device never stops the chat. what
+  // the phone's own seal throws (a key held, an answer awaited) is the
+  // chat's, as today
+  var sealing = false;
+  try {
+    final who = await _devWhoOf(ident, peer, ss);
+    if (who == null) return null;
+    final b = await send.burst(
+      who.me,
+      who.c,
+      framed,
+      phone: (
+        measure: phone.measure,
+        seal: (f, n) {
+          sealing = true;
+          return phone.seal(f, n);
+        },
+      ),
+    );
+    return b?.phone;
+  } catch (e) {
+    if (sealing) rethrow;
+    dlog('devices: no copies for devices (${e.runtimeType})');
+    return null;
+  }
 }
 
 /// the copies owed to devices and the list pushes due, with the outbox
@@ -157,7 +179,7 @@ Future<void> _devicesShown(String peer) async {
 // lists, quiet rows and proofs, and nothing more goes to their devices.
 // read before their row goes. a later message from their phone adds them
 // again, as a new contact's does
-Future<void> _devForget(String haloId) async {
+Future<void> _devForget(String haloId, {bool sessions = false}) async {
   final ds = _deviceState;
   if (ds == null || !linkedDevicesOn || isDevId(haloId)) return;
   try {
@@ -178,6 +200,13 @@ Future<void> _devForget(String haloId) async {
       if (e.why != 'unknown') rethrow;
     }
     await _deviceSend?.forget(ident, ikey);
+    // "not them": their devices' sessions go too, as their phone's does
+    if (sessions) {
+      final dss = DeviceSessions(await signalOfIdent(ident));
+      for (final h in await dss.held(haloId)) {
+        await dss.drop(haloId, h.device);
+      }
+    }
   } catch (e) {
     dlog('devices: a contact not forgotten (${e.runtimeType})');
   }
