@@ -30,6 +30,7 @@ import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/screens/transport_screen.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/theme.dart' show HaloColors;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'arrival_fakes.dart';
@@ -40,6 +41,8 @@ const _v = 'visible-plain-row';
 
 // the everyday identity's engine, busy with its contacts
 class _Engine implements HaloEngine {
+  _Engine([this.more = const {}]);
+  final Map<String, dynamic> more;
   @override
   Map<String, dynamic> transportState() => {
     'relays': [
@@ -50,6 +53,7 @@ class _Engine implements HaloEngine {
     'secs_since_send': 9,
     'hsdir_uploads': 3,
     'publishing_secs': 600,
+    ...more,
   };
   @override
   Map<String, dynamic> memStats() => {
@@ -63,7 +67,10 @@ class _Engine implements HaloEngine {
 
 // the value on the line that [label] names, beside it or, when long, under
 // it
-String _valueOf(WidgetTester t, String label) {
+String _valueOf(WidgetTester t, String label) =>
+    _valueText(t, label).data ?? '';
+
+Text _valueText(WidgetTester t, String label) {
   final row = find
       .ancestor(
         of: find.text(label),
@@ -72,8 +79,7 @@ String _valueOf(WidgetTester t, String label) {
       .first;
   return t
       .widgetList<Text>(find.descendant(of: row, matching: find.byType(Text)))
-      .map((x) => x.data ?? '')
-      .firstWhere((s) => s != label);
+      .firstWhere((x) => (x.data ?? '') != label);
 }
 
 // a phone with a vault: the hidden chat with H on the router's list, and a
@@ -194,6 +200,39 @@ void main() {
     );
     await devClose(t);
   });
+
+  // a bounce zeroes the uploads; once this tor published, the line says so
+  // as the sheet does, and only a tor that never did is still trying
+  for (final published in [true, false]) {
+    testWidgets('after a bounce the onion line agrees with the sheet '
+        '(published: $published)', (t) async {
+      everydayRecord();
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('halo/platform'),
+        (_) async => null,
+      );
+      useEngineForTest(
+        _Engine({
+          'hsdir_uploads': 0,
+          'publishing_secs': 40,
+          'published_once': published,
+        }),
+      );
+      await devWorld();
+      await devOpen(t, const TransportScreen(), size: const Size(1000, 12000));
+      await t.pump(const Duration(seconds: 1));
+      final line = _valueText(t, l10n.transportOnionPublished);
+      expect(
+        line.data,
+        published ? l10n.commonYes : l10n.transportTryingS('40'),
+      );
+      expect(
+        line.style?.color,
+        published ? HaloColors.greenText : HaloColors.roseText,
+      );
+      await devClose(t);
+    });
+  }
 
   testWidgets('the bootstrap reads the language\'s way, and can send needs '
       'a network', (t) async {

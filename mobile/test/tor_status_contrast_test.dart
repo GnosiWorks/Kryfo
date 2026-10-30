@@ -40,39 +40,45 @@ void main() {
   tearDown(() => HaloColors.setLight(false));
 
   for (final light in [true, false]) {
-    for (final status in TorStatus.values) {
-      testWidgets(
-        'the tor sheet reads in ${light ? 'light' : 'dark'}: $status',
-        (t) async {
-          HaloColors.setLight(light);
-          await t.pumpWidget(
-            MaterialApp(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              home: Material(
-                color: HaloColors.surface2,
-                child: SingleChildScrollView(
-                  child: TorWarmupGraph(status: status, bootstrapPct: 40),
+    for (final (status, carries) in [
+      for (final s in TorStatus.values) (s, false),
+      // ready to chat while the address is published
+      (TorStatus.publishing, true),
+    ]) {
+      testWidgets('the tor sheet reads in ${light ? 'light' : 'dark'}: $status'
+          '${carries ? ', carrying' : ''}', (t) async {
+        HaloColors.setLight(light);
+        await t.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Material(
+              color: HaloColors.surface2,
+              child: SingleChildScrollView(
+                child: TorWarmupGraph(
+                  status: status,
+                  bootstrapPct: 40,
+                  carries: carries,
                 ),
               ),
             ),
-          );
-          // standby first, then a phase further on
-          for (final step in [Duration.zero, const Duration(seconds: 3)]) {
-            await t.pump(step);
-            final inks = _inks(t);
-            expect(inks, isNotEmpty);
-            for (final c in inks) {
-              expect(
-                _ratio(c, HaloColors.surface2),
-                greaterThanOrEqualTo(4.5),
-                reason: '$c on ${HaloColors.surface2}',
-              );
-            }
+          ),
+        );
+        // standby first, then a phase further on
+        for (final step in [Duration.zero, const Duration(seconds: 3)]) {
+          await t.pump(step);
+          final inks = _inks(t);
+          expect(inks, isNotEmpty);
+          for (final c in inks) {
+            expect(
+              _ratio(c, HaloColors.surface2),
+              greaterThanOrEqualTo(4.5),
+              reason: '$c on ${HaloColors.surface2}',
+            );
           }
-          await t.pumpWidget(const SizedBox());
-        },
-      );
+        }
+        await t.pumpWidget(const SizedBox());
+      });
     }
   }
 

@@ -152,11 +152,16 @@ class TorWarmupGraph extends StatefulWidget {
   final TorStatus status;
   final int bootstrapPct;
   final GraphHold hold;
+
+  /// messages already go out through the route: a tor still publishing
+  /// shows ready, its address finishing in the background
+  final bool carries;
   const TorWarmupGraph({
     super.key,
     required this.status,
     this.bootstrapPct = 0,
     this.hold = GraphHold.none,
+    this.carries = false,
   });
   @override
   State<TorWarmupGraph> createState() => _TorWarmupGraphState();
@@ -175,7 +180,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
       vsync: this,
       duration: const Duration(milliseconds: 2400),
     );
-    _phase = _targetPhase(widget.status);
+    _phase = _targetPhase();
   }
 
   // with reduced motion the picture rests: no glow running round, and a
@@ -189,7 +194,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
     if (_rest) {
       _ctl.stop();
       _phaseTimer?.cancel();
-      _phase = _targetPhase(widget.status);
+      _phase = _targetPhase();
     } else if (!_ctl.isAnimating) {
       _ctl.repeat();
     }
@@ -198,7 +203,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   @override
   void didUpdateWidget(TorWarmupGraph old) {
     super.didUpdateWidget(old);
-    final target = _targetPhase(widget.status);
+    final target = _targetPhase();
     if (_rest) {
       _phase = target;
     } else if (target != _phase) {
@@ -213,8 +218,13 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
     super.dispose();
   }
 
-  int _targetPhase(TorStatus s) {
-    switch (s) {
+  // ready to chat while the address is still on its way to the network
+  bool get _finishing =>
+      widget.carries && !_held && widget.status != TorStatus.reachable;
+
+  int _targetPhase() {
+    if (_finishing) return 4;
+    switch (widget.status) {
       case TorStatus.off:
         return 0;
       case TorStatus.starting:
@@ -247,8 +257,10 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
     });
   }
 
+  // the whole route lit, the address node still glowing while it finishes
   int get _activeIdx {
-    if (_phase == 0 || _phase == 4) return -1;
+    if (_phase == 0) return -1;
+    if (_phase == 4) return 3;
     return _phase - 1;
   }
 
@@ -278,6 +290,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   String get _label {
     if (widget.hold == GraphHold.relay) return l10n.motionNoRelayYet;
     if (widget.hold == GraphHold.offline) return l10n.motionOffline;
+    if (_finishing) return l10n.motionReady;
     switch (widget.status) {
       case TorStatus.off:
         return l10n.motionStandby;
@@ -295,6 +308,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   String get _italic {
     if (widget.hold == GraphHold.relay) return l10n.motionTheRouteIsUp;
     if (widget.hold == GraphHold.offline) return l10n.motionNoNetwork;
+    if (_finishing) return l10n.motionReadyToChat;
     switch (widget.status) {
       case TorStatus.off:
         return l10n.motionPreparingToConnect;
@@ -312,6 +326,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   String get _help {
     if (widget.hold == GraphHold.relay) return l10n.motionMessagesGoOnceARelay;
     if (widget.hold == GraphHold.offline) return l10n.motionTorPicksUpAgain;
+    if (_finishing) return l10n.motionAddressFinishing;
     switch (widget.status) {
       case TorStatus.off:
         return l10n.motionTorIsStartingIn;
@@ -329,6 +344,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   String get _circuit {
     if (widget.hold == GraphHold.relay) return l10n.motionOpen;
     if (widget.hold == GraphHold.offline) return '\u2014';
+    if (_finishing) return l10n.motionOpen;
     switch (widget.status) {
       case TorStatus.off:
         return '\u2014';
@@ -361,13 +377,24 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   }
 
   bool get _held => widget.hold != GraphHold.none;
-  bool get _green => widget.status == TorStatus.reachable && !_held;
+  bool get _green =>
+      (widget.status == TorStatus.reachable || _finishing) && !_held;
   bool get _standby => _phase == 0 || widget.hold == GraphHold.offline;
   // dark keeps its pale grey; light needs real ink
   Color get _still =>
       HaloColors.isLight ? HaloColors.text3 : const Color(0xFFE5E5E5);
   Color get _accent =>
       _standby ? _still : (_green ? HaloColors.greenText : HaloColors.warnText);
+
+  // a stage's words fade into the next one's instead of snapping
+  Widget _crossFade(String words, Widget child) => AnimatedSwitcher(
+    duration: _rest ? Duration.zero : const Duration(milliseconds: 260),
+    switchInCurve: Curves.easeOutCubic,
+    switchOutCurve: Curves.easeIn,
+    layoutBuilder: (now, before) =>
+        Stack(alignment: Alignment.center, children: [...before, ?now]),
+    child: KeyedSubtree(key: ValueKey(words), child: child),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -377,52 +404,71 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
         children: [
           SizedBox(
             height: 110,
-            child: AnimatedBuilder(
-              animation: _ctl,
-              builder: (ctx, _) => ColorFiltered(
-                colorFilter: _standby
-                    ? ColorFilter.mode(_still, BlendMode.srcIn)
-                    : const ColorFilter.mode(Colors.transparent, BlendMode.dst),
-                child: CustomPaint(
-                  painter: _ZigZagWarmupPainter(
-                    activeIdx: _activeIdx,
-                    lit: _lit,
-                    progress: _progress,
-                    green: _green,
-                    t: _ctl.value,
+            // the address node's glow fades out as it is published, rather
+            // than stopping mid-ring
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(end: _phase < 4 || _finishing ? 1.0 : 0.0),
+              duration: _rest
+                  ? Duration.zero
+                  : const Duration(milliseconds: 900),
+              curve: Curves.easeOutCubic,
+              builder: (_, glow, _) => AnimatedBuilder(
+                animation: _ctl,
+                builder: (ctx, _) => ColorFiltered(
+                  colorFilter: _standby
+                      ? ColorFilter.mode(_still, BlendMode.srcIn)
+                      : const ColorFilter.mode(
+                          Colors.transparent,
+                          BlendMode.dst,
+                        ),
+                  child: CustomPaint(
+                    painter: _ZigZagWarmupPainter(
+                      activeIdx: _activeIdx,
+                      lit: _lit,
+                      progress: _progress,
+                      green: _green,
+                      t: _ctl.value,
+                      glow: glow,
+                    ),
+                    size: Size.infinite,
                   ),
-                  size: Size.infinite,
                 ),
               ),
             ),
           ),
           const SizedBox(height: 16),
-          Text(
+          _crossFade(
             _label,
-            style: TextStyle(
-              fontFamily: HaloType.monoFamily,
-              fontFamilyFallback: HaloType.monoFallbackNow,
-              fontSize: 11,
-              letterSpacing: track(4),
-              fontWeight: FontWeight.w500,
-              color: _accent,
+            Text(
+              _label,
+              style: TextStyle(
+                fontFamily: HaloType.monoFamily,
+                fontFamilyFallback: HaloType.monoFallbackNow,
+                fontSize: 11,
+                letterSpacing: track(4),
+                fontWeight: FontWeight.w500,
+                color: _accent,
+              ),
             ),
           ),
           const SizedBox(height: 10),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Text(
+            child: _crossFade(
               _italic,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: HaloType.serifFamily,
-                fontFamilyFallback: HaloType.serifFallbackNow,
-                fontStyle: slant(),
-                fontSize: 22,
-                fontWeight: FontWeight.w300,
-                color: HaloColors.text,
-                letterSpacing: track(-0.3),
-                height: 1.15,
+              Text(
+                _italic,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: HaloType.serifFamily,
+                  fontFamilyFallback: HaloType.serifFallbackNow,
+                  fontStyle: slant(),
+                  fontSize: 22,
+                  fontWeight: FontWeight.w300,
+                  color: HaloColors.text,
+                  letterSpacing: track(-0.3),
+                  height: 1.15,
+                ),
               ),
             ),
           ),
@@ -431,15 +477,18 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Text(
+            child: _crossFade(
               _help,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: HaloType.sansFamily,
-                fontFamilyFallback: HaloType.sansFallback,
-                fontSize: 11.5,
-                color: HaloColors.text3,
-                height: 1.55,
+              Text(
+                _help,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: HaloType.sansFamily,
+                  fontFamilyFallback: HaloType.sansFallback,
+                  fontSize: 11.5,
+                  color: HaloColors.text3,
+                  height: 1.55,
+                ),
               ),
             ),
           ),
@@ -490,12 +539,16 @@ class _ZigZagWarmupPainter extends CustomPainter {
   final double progress;
   final bool green;
   final double t;
+
+  // how much of the active node's glow shows, 0 to 1
+  final double glow;
   _ZigZagWarmupPainter({
     required this.activeIdx,
     required this.lit,
     required this.progress,
     required this.green,
     required this.t,
+    this.glow = 1,
   });
 
   // viewBox 296 x 100
@@ -588,10 +641,11 @@ class _ZigZagWarmupPainter extends CustomPainter {
     final isLit = lit.contains(i);
     final accent = green ? kGreen : kAmber;
 
-    if (isActive) {
+    final on = isActive ? glow : 0.0;
+    if (on > 0) {
       // expanding rings (2, staggered)
-      _drawPulse(canvas, c, t, accent);
-      _drawPulse(canvas, c, (t + 0.5) % 1.0, accent);
+      _drawPulse(canvas, c, t, accent, on);
+      _drawPulse(canvas, c, (t + 0.5) % 1.0, accent, on);
     }
 
     // 4 layered rings, dim by default
@@ -619,12 +673,12 @@ class _ZigZagWarmupPainter extends CustomPainter {
         final isCore = k == 3;
         if (isCore) {
           // glow behind the core
-          if (isActive) {
+          if (on > 0) {
             canvas.drawCircle(
               c,
               radius + 4,
               Paint()
-                ..color = accent.withValues(alpha: 0.5 * breathOp)
+                ..color = accent.withValues(alpha: 0.5 * breathOp * on)
                 ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
             );
           }
@@ -639,7 +693,7 @@ class _ZigZagWarmupPainter extends CustomPainter {
             radius,
             Paint()
               ..color = accent.withValues(
-                alpha: baseOp * breathOp * (isActive ? 1.0 : 0.6),
+                alpha: baseOp * breathOp * (0.6 + 0.4 * on),
               )
               ..style = PaintingStyle.stroke
               ..strokeWidth = 0.6,
@@ -659,9 +713,15 @@ class _ZigZagWarmupPainter extends CustomPainter {
     }
   }
 
-  void _drawPulse(Canvas canvas, Offset c, double phase, Color color) {
+  void _drawPulse(
+    Canvas canvas,
+    Offset c,
+    double phase,
+    Color color, [
+    double amount = 1,
+  ]) {
     final scaleP = 0.7 + 1.5 * phase;
-    final op = 0.7 * (1 - phase);
+    final op = 0.7 * (1 - phase) * amount;
     if (op <= 0) return;
     canvas.drawCircle(
       c,
@@ -699,6 +759,7 @@ class _ZigZagWarmupPainter extends CustomPainter {
       old.activeIdx != activeIdx ||
       old.progress != progress ||
       old.green != green ||
+      old.glow != glow ||
       old.t != t ||
       old.lit.length != lit.length;
 }

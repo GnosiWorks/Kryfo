@@ -399,10 +399,9 @@ void main() {
     expect(l.appTorIsOff, "Tor is off");
     expect(l.appConnectedRoutedThrough3, "Connected · routed through 3 relays");
     expect(
-      l.appReadyToSendPublishing,
-      "Ready to send · publishing your address",
+      l.appReadyToChatAddressFinishing,
+      "Ready to chat · address finishing",
     );
-    expect(l.appReadyToSendFinishing, "Ready to send · finishing setup");
     expect(l.appConnecting("<pct>"), "Connecting · <pct>");
     expect(l.appTor, "Tor");
     expect(l.appTorIsOffTurn, "Tor is off. Turn it on to connect privately.");
@@ -2917,6 +2916,11 @@ void main() {
     expect(l.motionFindingAPrivatePath, "Finding a private path");
     expect(l.motionCarvingThePath, "Carving the path");
     expect(l.motionAnnouncingYourArrival, "Announcing your arrival");
+    expect(l.motionReadyToChat, "Ready to chat");
+    expect(
+      l.motionAddressFinishing,
+      "Messages already go out through Tor. Your private address finishes in the background.",
+    );
     expect(l.motionYouReAnonymous, "You're anonymous");
     expect(
       l.motionTorIsStartingIn,

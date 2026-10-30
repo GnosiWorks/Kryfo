@@ -633,11 +633,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get appConnectedRoutedThrough3 => 'Terhubung · lewat 3 relay';
 
   @override
-  String get appReadyToSendPublishing => 'Siap mengirim · menerbitkan alamatmu';
-
-  @override
-  String get appReadyToSendFinishing =>
-      'Siap mengirim · menyelesaikan penyiapan';
+  String get appReadyToChatAddressFinishing =>
+      'Siap mengobrol · alamat sedang disiapkan';
 
   @override
   String appConnecting(Object pct) {
@@ -6382,6 +6379,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get motionYouReAnonymous => 'Kamu anonim';
 
   @override
+  String get motionReadyToChat => 'Siap mengobrol';
+
+  @override
   String get motionTorIsStartingIn =>
       'Tor sedang dimulai di latar belakang. Grafik ini menyala seiring koneksi terbentuk.';
 
@@ -6399,6 +6399,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get motionYourIpIsHidden =>
       'IP-mu tersembunyi. Hanya orang yang punya Kryfo-mu yang bisa menghubungimu.';
+
+  @override
+  String get motionAddressFinishing =>
+      'Pesan sudah bisa dikirim lewat Tor. Alamat pribadimu disiapkan di latar belakang.';
 
   @override
   String get motionBuilding2 => 'membangun';
