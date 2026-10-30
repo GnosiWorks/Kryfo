@@ -33,6 +33,7 @@ import 'package:kryfo/main.dart'
         handleHaloUriAdded,
         openAddedChatLater,
         openDevChatLater,
+        sendFirstContactNoted,
         unboundIdOf,
         useDatabasesForTest,
         useEngineForTest;
@@ -40,6 +41,7 @@ import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
+import 'package:kryfo/wire_pad.dart' show unpad;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -150,6 +152,14 @@ class _Engine implements HaloEngine {
     hellos.add(owner);
     return 'ok';
   }
+
+  @override
+  Future<String> sendFirstContact(
+    int ident,
+    String peerXPubHex,
+    String fcPk,
+    String b64Cipher,
+  ) async => 'ok';
 
   @override
   String firstContactPk(int ident, int counter) => 'fc$counter';
@@ -676,6 +686,73 @@ void main() {
       isFalse,
     );
     expect(engine.unsubscribed, contains(once.id));
+  });
+
+  test('after the opener went to their one-time invite, the next seal waits '
+      'for their answer and goes once it came; a main invite holds nothing '
+      '(3c)', () async {
+    final p = await _Phone.make('once-held', 85);
+    final once = await makeInvite(
+      p.db,
+      p.ss,
+      kind: kInviteOneTime,
+      fcPkOf: _fcPkOf,
+    );
+    final inv = readInvite(p.ss.lib, once.link);
+    await live.upsertContact(p.words, '', p.x);
+    await app.startFromInvite(p.words, inv);
+    final open = (await hellosOf('open', p.keyHex)).single;
+    expect(open['once'], 1);
+    expect(open['went_at'], isNull);
+    // the opener goes, more than once while it has not reached a relay
+    final first = await signalSession.encryptTo(p.words, 'first');
+    expect(base64Decode(first)[0], kLsPreKey);
+    expect(
+      base64Decode(await signalSession.encryptTo(p.words, 'again'))[0],
+      kLsPreKey,
+    );
+    final fc = _hex(inv.firstContact);
+    expect(await sendFirstContactNoted(0, p.x, fc, first), 'ok');
+    expect((await hellosOf('open', p.keyHex)).single['went_at'], isNotNull);
+    await expectLater(
+      signalSession.encryptTo(p.words, 'second'),
+      throwsA(isA<WaitsForAnswer>()),
+    );
+    // their answer: plain messages from here
+    expect(
+      unpad(
+        utf8.decode(
+          await p.ss.open(
+            'me',
+            kLsPreKey,
+            Uint8List.fromList(base64Decode(first).sublist(1)),
+          ),
+        ),
+      ),
+      'first',
+    );
+    final back = base64Decode(await p.ss.encryptTo('me', 'back'));
+    await signalSession.open(
+      p.words,
+      back[0],
+      Uint8List.fromList(back.sublist(1)),
+    );
+    expect(
+      base64Decode(await signalSession.encryptTo(p.words, 'second'))[0],
+      kLsWhisper,
+    );
+    // a main invite keeps listening: nothing is held for it
+    final q = await _Phone.make('main-not-held', 87);
+    final qi = readInvite(q.ss.lib, (await q.mainInvite()).link);
+    await live.upsertContact(q.words, '', q.x);
+    await app.startFromInvite(q.words, qi);
+    expect((await hellosOf('open', q.keyHex)).single['once'], 0);
+    final q1 = await signalSession.encryptTo(q.words, 'one');
+    await sendFirstContactNoted(0, q.x, _hex(qi.firstContact), q1);
+    expect(
+      base64Decode(await signalSession.encryptTo(q.words, 'two'))[0],
+      kLsPreKey,
+    );
   });
 
   test('an opener at my main invite seeds the pair under their whole '

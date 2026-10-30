@@ -90,12 +90,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appearanceEveryChat => '所有聊天';
 
   @override
-  String get appearanceWallpaperHint =>
-      '在聊天菜单里为它单独设置的壁纸优先。照片只留在这部手机上，和你的聊天一起加密。';
+  String get appearanceWallpaperHint => '在聊天菜单里为它单独设置的壁纸优先。照片只留在这部手机上，和你的聊天一起加密。';
 
   @override
-  String get appearanceWallpaperHintDesk =>
-      '在聊天菜单里为它单独设置的壁纸优先。照片只留在这台电脑上，和你的聊天一起加密。';
+  String get appearanceWallpaperHintDesk => '在聊天菜单里为它单独设置的壁纸优先。照片只留在这台电脑上，和你的聊天一起加密。';
 
   @override
   String get backupThatPassphraseDoesNot => '这个密码短语打不开此文件';
@@ -155,8 +153,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String deliveryModeMinAgo(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -169,8 +166,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String deliveryMode1HourAgo(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -186,8 +182,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String deliveryModeDaysAgo(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -254,8 +249,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String introBudgetInDays(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -271,8 +265,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String introBudgetInHours(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -309,21 +302,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String appOf(Object line, int held, int subs, Object c, int p, int e) {
-    final intl.NumberFormat heldNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat heldNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String heldString = heldNumberFormat.format(held);
-    final intl.NumberFormat subsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat subsNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String subsString = subsNumberFormat.format(subs);
-    final intl.NumberFormat pNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat pNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String pString = pNumberFormat.format(p);
-    final intl.NumberFormat eNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat eNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String eString = eNumberFormat.format(e);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -341,13 +326,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String appConnectSPagesEvents(Object line, Object c, int p, int e) {
-    final intl.NumberFormat pNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat pNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String pString = pNumberFormat.format(p);
-    final intl.NumberFormat eNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat eNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String eString = eNumberFormat.format(e);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -396,15 +377,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String appSBy(Object how, int secs, String why) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String secsString = secsNumberFormat.format(secs);
 
-    String _temp0 = intl.Intl.selectLogic(why, {
-      'push': '$how，$secsString 秒，推送唤醒',
-      'other': '$how，$secsString 秒，后台任务唤醒',
-    });
+    String _temp0 = intl.Intl.selectLogic(
+      why,
+      {
+        'push': '$how，$secsString 秒，推送唤醒',
+        'other': '$how，$secsString 秒，后台任务唤醒',
+      },
+    );
     return '$_temp0';
   }
 
@@ -644,12 +626,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appTorIsOffTurn => 'Tor 已关闭。打开它才能私密连接。';
 
   @override
-  String get appTheFirstConnectionTakes =>
-      '首次连接需要一两分钟，Tor 要先建一条私密路线。之后它会被缓存，以后打开 Kryfo 会快很多。';
+  String get appTheFirstConnectionTakes => '首次连接需要一两分钟，Tor 要先建一条私密路线。之后它会被缓存，以后打开 Kryfo 会快很多。';
 
   @override
-  String get appTorNoRelayYet =>
-      'Tor 已启动，但还没有中继响应。Kryfo 会继续尝试，消息会在这里等候，直到有中继响应。';
+  String get appTorNoRelayYet => 'Tor 已启动，但还没有中继响应。Kryfo 会继续尝试，消息会在这里等候，直到有中继响应。';
 
   @override
   String get appRelayAndFastModes => '快速模式不经过 Tor，所以更快。它在设置的“速度与隐私”里，并说明了代价。';
@@ -738,8 +718,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get miuiAutostartLetKryfoRunIn => '允许 Kryfo 在后台运行';
 
   @override
-  String get miuiAutostartYourPhonePausesApps =>
-      '你的手机会暂停应用来省电。不设为例外的话，Kryfo 关闭时就收不到消息。';
+  String get miuiAutostartYourPhonePausesApps => '你的手机会暂停应用来省电。不设为例外的话，Kryfo 关闭时就收不到消息。';
 
   @override
   String get commonAllow => '允许';
@@ -754,24 +733,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get miuiAutostartCouldnTOpenIt => '打不开。请在手机设置里找“自启动”';
 
   @override
-  String get batteryGuideHuawei =>
-      '华为和荣耀会关闭由系统自动管理的应用。在下一个页面找到 Kryfo，关闭“自动管理”，并保持“允许自启动”“允许关联启动”和“允许后台活动”开启。';
+  String get batteryGuideHuawei => '华为和荣耀会关闭由系统自动管理的应用。在下一个页面找到 Kryfo，关闭“自动管理”，并保持“允许自启动”“允许关联启动”和“允许后台活动”开启。';
 
   @override
-  String get batteryGuideOppo =>
-      'OPPO 和 realme 会停止后台应用。在下一个页面找到 Kryfo，允许“自启动”。再到“电池”里，也允许它在后台运行。';
+  String get batteryGuideOppo => 'OPPO 和 realme 会停止后台应用。在下一个页面找到 Kryfo，允许“自启动”。再到“电池”里，也允许它在后台运行。';
 
   @override
-  String get batteryGuideVivo =>
-      'vivo 会停止后台应用。在下一个页面找到 Kryfo，允许它后台启动。再到“电池”里，也允许它后台高耗电。';
+  String get batteryGuideVivo => 'vivo 会停止后台应用。在下一个页面找到 Kryfo，允许它后台启动。再到“电池”里，也允许它后台高耗电。';
 
   @override
-  String get batteryGuideSamsung =>
-      '三星会让它认为不常用的应用进入休眠。在下一个页面打开“后台使用限制”，把 Kryfo 加入“从不休眠的应用”。';
+  String get batteryGuideSamsung => '三星会让它认为不常用的应用进入休眠。在下一个页面打开“后台使用限制”，把 Kryfo 加入“从不休眠的应用”。';
 
   @override
-  String get batteryGuideOnePlus =>
-      '一加会停止后台应用。在下一个页面找到 Kryfo，允许“自启动”。再到“电池”里，把它设为“不优化”。';
+  String get batteryGuideOnePlus => '一加会停止后台应用。在下一个页面找到 Kryfo，允许“自启动”。再到“电池”里，把它设为“不优化”。';
 
   @override
   String get batteryGuideXiaomiTitle => '让 Kryfo 保持运行';
@@ -786,8 +760,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get batteryGuideXiaomiStep2 => '省电策略：把 Kryfo 设为“无限制”。';
 
   @override
-  String get batteryGuideXiaomiStep3 =>
-      '最近任务：长按 Kryfo，点一下锁，这样“全部清除”和手机的自动清理都不会关掉它。';
+  String get batteryGuideXiaomiStep3 => '最近任务：长按 Kryfo，点一下锁，这样“全部清除”和手机的自动清理都不会关掉它。';
 
   @override
   String get batteryGuideXiaomiAfter => '如果手机还是停止了 Kryfo，在你重新打开它之前，什么都收不到。';
@@ -828,8 +801,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String roomsDays(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -848,8 +820,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String roomsHours(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -862,8 +833,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String roomsAboutHours(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -876,8 +846,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String roomsMinutes(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -1024,8 +993,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupKryfoBackup => 'Kryfo 备份';
 
   @override
-  String get backupYourEncryptedKryfoBackup =>
-      '你的加密 Kryfo 备份。这个文件和你的密码短语都要保管好——恢复时两样缺一不可。';
+  String get backupYourEncryptedKryfoBackup => '你的加密 Kryfo 备份。这个文件和你的密码短语都要保管好——恢复时两样缺一不可。';
 
   @override
   String get backupBackUpKryfo => '备份 Kryfo';
@@ -1043,24 +1011,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupMoveToAnotherDevice => '迁移到另一台设备';
 
   @override
-  String get backupTheFileTakesThis =>
-      '这个文件会带走这个身份。文件一旦生成，这部手机就停用了：新的东西不会再到这里，从这里发出的任何东西也送不到任何人。';
+  String get backupTheFileTakesThis => '这个文件会带走这个身份。文件一旦生成，这部手机就停用了：新的东西不会再到这里，从这里发出的任何东西也送不到任何人。';
 
   @override
-  String get backupTheFileTakesThisDesk =>
-      '这个文件会带走这个身份。文件一旦生成，这台电脑就停用了：新的东西不会再到这里，从这里发出的任何东西也送不到任何人。';
+  String get backupTheFileTakesThisDesk => '这个文件会带走这个身份。文件一旦生成，这台电脑就停用了：新的东西不会再到这里，从这里发出的任何东西也送不到任何人。';
 
   @override
-  String get backupOneEncryptedFileYour =>
-      '一个加密文件：你的身份、你的联系人、每一条消息，以及每一张照片、每一条语音和每一个文件。在另一台设备上用密码短语导入它。在那之前，你仍然可以改变主意，继续留在这部手机上。';
+  String get backupOneEncryptedFileYour => '一个加密文件：你的身份、你的联系人、每一条消息，以及每一张照片、每一条语音和每一个文件。在另一台设备上用密码短语导入它。在那之前，你仍然可以改变主意，继续留在这部手机上。';
 
   @override
-  String get backupOneEncryptedFileYourIdentityYour =>
-      '一个加密文件：你的身份、你的联系人、每一条消息，以及这部手机上此刻的每一张照片、每一条语音和每一个文件。今天之后说的内容不在里面，所以重要的时候请再做一份。恢复时，文件和密码短语两样都要有。';
+  String get backupOneEncryptedFileYourIdentityYour => '一个加密文件：你的身份、你的联系人、每一条消息，以及这部手机上此刻的每一张照片、每一条语音和每一个文件。今天之后说的内容不在里面，所以重要的时候请再做一份。恢复时，文件和密码短语两样都要有。';
 
   @override
-  String get backupOneEncryptedFileYourIdentityYourDesk =>
-      '一个加密文件：你的身份、你的联系人、每一条消息，以及这台电脑上此刻的每一张照片、每一条语音和每一个文件。今天之后说的内容不在里面，所以重要的时候请再做一份。恢复时，文件和密码短语两样都要有。';
+  String get backupOneEncryptedFileYourIdentityYourDesk => '一个加密文件：你的身份、你的联系人、每一条消息，以及这台电脑上此刻的每一张照片、每一条语音和每一个文件。今天之后说的内容不在里面，所以重要的时候请再做一份。恢复时，文件和密码短语两样都要有。';
 
   @override
   String get backupPassphrase => '密码短语';
@@ -1170,8 +1133,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String bridges1LineSaved(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -1183,8 +1145,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get bridgesWhenYouAskFor =>
-      '你请求网桥时，Tor 项目会看到你的 IP 地址。这很正常：Tor Browser 和所有 Tor 应用都是这样获取网桥的，他们从中只能知道有人请求了网桥，对你的聊天一无所知。';
+  String get bridgesWhenYouAskFor => '你请求网桥时，Tor 项目会看到你的 IP 地址。这很正常：Tor Browser 和所有 Tor 应用都是这样获取网桥的，他们从中只能知道有人请求了网桥，对你的聊天一无所知。';
 
   @override
   String get bridgesAsking => '正在请求…';
@@ -1298,8 +1259,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String chatEarlierMessagesArrived(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -1354,8 +1314,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String chatThisChatHasPins(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -1437,8 +1396,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String chatRoughlyMin(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -1531,8 +1489,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -1589,12 +1546,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatClearThisConversation => '清空这段聊天记录？';
 
   @override
-  String get chatEveryMessageHereIs =>
-      '这里的每条消息都会从这部手机上清除。这只清除你这边的副本——不会动到对方的设备。';
+  String get chatEveryMessageHereIs => '这里的每条消息都会从这部手机上清除。这只清除你这边的副本——不会动到对方的设备。';
 
   @override
-  String get chatEveryMessageHereIsDesk =>
-      '这里的每条消息都会从这台电脑上清除。这只清除你这边的副本——不会动到对方的设备。';
+  String get chatEveryMessageHereIsDesk => '这里的每条消息都会从这台电脑上清除。这只清除你这边的副本——不会动到对方的设备。';
 
   @override
   String get chatClear => '清空';
@@ -1603,8 +1558,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatBlockThisContact => '屏蔽这位联系人？';
 
   @override
-  String get chatTheirMessagesStopArriving =>
-      '对方的消息将不再送达，对方也会从你的聊天列表中消失。对方不会被告知。你可以随时在设置里取消屏蔽。';
+  String get chatTheirMessagesStopArriving => '对方的消息将不再送达，对方也会从你的聊天列表中消失。对方不会被告知。你可以随时在设置里取消屏蔽。';
 
   @override
   String get commonBlock => '屏蔽';
@@ -1634,8 +1588,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatJumpToTheNewest => '跳到最新';
 
   @override
-  String get chatBuildingAPrivateRoute =>
-      '正在建立私密路线 · 首次连接比较慢，之后就快了。现在发送的内容会排队，稍后自动送达。';
+  String get chatBuildingAPrivateRoute => '正在建立私密路线 · 首次连接比较慢，之后就快了。现在发送的内容会排队，稍后自动送达。';
 
   @override
   String get chatTheNextPhotoYou => '你发的下一张照片会以受保护方式打开 · Kryfo 会阻止对它截屏';
@@ -1703,12 +1656,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String chatOf(int count, int pos) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
-    final intl.NumberFormat posNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat posNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String posString = posNumberFormat.format(pos);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -1881,12 +1831,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cleanKryfoCouldNotOpen => 'Kryfo 无法打开这个文件。';
 
   @override
-  String get cleanItCleansJpegPng =>
-      '它能清理 JPEG、PNG、WebP、HEIC、AVIF、GIF、MP4 和 MOV。没有做任何改动。';
+  String get cleanItCleansJpegPng => '它能清理 JPEG、PNG、WebP、HEIC、AVIF、GIF、MP4 和 MOV。没有做任何改动。';
 
   @override
-  String get cleanItHoldsAShort =>
-      '它在图片旁边还带着一段短视频，而 Kryfo 暂时还不能清理这部分。请在相机里关掉动态照片，或者发送它的截图。';
+  String get cleanItHoldsAShort => '它在图片旁边还带着一段短视频，而 Kryfo 暂时还不能清理这部分。请在相机里关掉动态照片，或者发送它的截图。';
 
   @override
   String get cleanPicturesOver64Mb => '超过 64 MB 的图片不会在手机上清理。没有做任何改动。';
@@ -2073,8 +2021,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contactEveryMessageAndThe => '每一条消息和这位联系人都会从这部手机上消失。不会向对方发送任何内容。';
 
   @override
-  String get contactEveryMessageAndTheDesk =>
-      '每一条消息和这位联系人都会从这台电脑上消失。不会向对方发送任何内容。';
+  String get contactEveryMessageAndTheDesk => '每一条消息和这位联系人都会从这台电脑上消失。不会向对方发送任何内容。';
 
   @override
   String get commonDelete => '删除';
@@ -2155,12 +2102,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String donateYourEarlierBitcoinPayment(String tier) {
-    String _temp0 = intl.Intl.selectLogic(tier, {
-      'supporter': '已检测到你之前的 bitcoin 付款 · 支持者徽章已解锁',
-      'patron': '已检测到你之前的 bitcoin 付款 · 赞助人徽章已解锁',
-      'guardian': '已检测到你之前的 bitcoin 付款 · 守护者徽章已解锁',
-      'other': '已检测到你之前的 bitcoin 付款 · 支持者徽章已解锁',
-    });
+    String _temp0 = intl.Intl.selectLogic(
+      tier,
+      {
+        'supporter': '已检测到你之前的 bitcoin 付款 · 支持者徽章已解锁',
+        'patron': '已检测到你之前的 bitcoin 付款 · 赞助人徽章已解锁',
+        'guardian': '已检测到你之前的 bitcoin 付款 · 守护者徽章已解锁',
+        'other': '已检测到你之前的 bitcoin 付款 · 支持者徽章已解锁',
+      },
+    );
     return '$_temp0';
   }
 
@@ -2215,12 +2165,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get donateCopyAddress => '复制地址';
 
   @override
-  String get donateBitcoinIsVerifiedBy =>
-      'Bitcoin 付款由我们自己的节点验证，所以付款一到账，你的徽章就会自动解锁。';
+  String get donateBitcoinIsVerifiedBy => 'Bitcoin 付款由我们自己的节点验证，所以付款一到账，你的徽章就会自动解锁。';
 
   @override
-  String get donateWeCanTVerify =>
-      '要验证这条链，我们就得向外部服务获取你的情况，所以我们不验证。你愿意的话照样可以发送。它不会解锁徽章。';
+  String get donateWeCanTVerify => '要验证这条链，我们就得向外部服务获取你的情况，所以我们不验证。你愿意的话照样可以发送。它不会解锁徽章。';
 
   @override
   String get donateBitcoinBadgesNeedOnion => 'Bitcoin 徽章需要 onion 模式';
@@ -2284,16 +2232,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get donateUseTheAddressInstead => '改用地址';
 
   @override
-  String get donateThePaymentServiceIs =>
-      '支付服务是一个 onion 服务，只有 onion 模式才能连上。现在什么都没有发送。';
+  String get donateThePaymentServiceIs => '支付服务是一个 onion 服务，只有 onion 模式才能连上。现在什么都没有发送。';
 
   @override
-  String get donateTorWasSlowTo =>
-      'Tor 连接支付服务太慢了。你可以向下面的地址捐款——只是徽章不会自动解锁。想要徽章的话，稍后再试。';
+  String get donateTorWasSlowTo => 'Tor 连接支付服务太慢了。你可以向下面的地址捐款——只是徽章不会自动解锁。想要徽章的话，稍后再试。';
 
   @override
-  String get donateThePaymentServiceIsHavingTrouble =>
-      '支付服务现在出了点问题。你仍然可以向下面的地址捐款——只是徽章不会自动解锁。想要徽章的话，稍后再试。';
+  String get donateThePaymentServiceIsHavingTrouble => '支付服务现在出了点问题。你仍然可以向下面的地址捐款——只是徽章不会自动解锁。想要徽章的话，稍后再试。';
 
   @override
   String get commonTryAgain => '重试';
@@ -2312,8 +2257,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get donateOpenWallet => '打开钱包';
 
   @override
-  String get donateThisScreenUpdatesItself =>
-      '一检测到你的付款，这个页面就会自动更新。\n请保持打开——什么都不会被保存，也没有任何信息能识别你。';
+  String get donateThisScreenUpdatesItself => '一检测到你的付款，这个页面就会自动更新。\n请保持打开——什么都不会被保存，也没有任何信息能识别你。';
 
   @override
   String get donateWatchingTheChainFor => '正在链上等待你的付款';
@@ -2322,8 +2266,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get donateThisInvoiceExpired => '这张账单已过期';
 
   @override
-  String get donateInvoicesTimeOutIf =>
-      '账单会超时。如果你已经付款，请保持这个页面打开：接下来一段时间里，我们每分钟都会再向服务查询一次，下次你打开“支持”时也会再查。你随时可以新开一张。';
+  String get donateInvoicesTimeOutIf => '账单会超时。如果你已经付款，请保持这个页面打开：接下来一段时间里，我们每分钟都会再向服务查询一次，下次你打开“支持”时也会再查。你随时可以新开一张。';
 
   @override
   String get donateNewInvoice => '新账单';
@@ -2348,23 +2291,29 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String donateVerifiedOnChainYou(String tier) {
-    String _temp0 = intl.Intl.selectLogic(tier, {
-      'supporter': '已在链上验证——你现在是支持者了。谁也拿不走。',
-      'patron': '已在链上验证——你现在是赞助人了。谁也拿不走。',
-      'guardian': '已在链上验证——你现在是守护者了。谁也拿不走。',
-      'other': '已在链上验证——你现在是支持者了。谁也拿不走。',
-    });
+    String _temp0 = intl.Intl.selectLogic(
+      tier,
+      {
+        'supporter': '已在链上验证——你现在是支持者了。谁也拿不走。',
+        'patron': '已在链上验证——你现在是赞助人了。谁也拿不走。',
+        'guardian': '已在链上验证——你现在是守护者了。谁也拿不走。',
+        'other': '已在链上验证——你现在是支持者了。谁也拿不走。',
+      },
+    );
     return '$_temp0';
   }
 
   @override
   String donateVerifiedBadgeStays(String tier) {
-    String _temp0 = intl.Intl.selectLogic(tier, {
-      'supporter': '已在链上验证。感谢你再次支持。你的支持者徽章保持不变。',
-      'patron': '已在链上验证。感谢你再次支持。你的赞助人徽章保持不变。',
-      'guardian': '已在链上验证。感谢你再次支持。你的守护者徽章保持不变。',
-      'other': '已在链上验证。感谢你再次支持。你的支持者徽章保持不变。',
-    });
+    String _temp0 = intl.Intl.selectLogic(
+      tier,
+      {
+        'supporter': '已在链上验证。感谢你再次支持。你的支持者徽章保持不变。',
+        'patron': '已在链上验证。感谢你再次支持。你的赞助人徽章保持不变。',
+        'guardian': '已在链上验证。感谢你再次支持。你的守护者徽章保持不变。',
+        'other': '已在链上验证。感谢你再次支持。你的支持者徽章保持不变。',
+      },
+    );
     return '$_temp0';
   }
 
@@ -2381,8 +2330,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gettingMessagesMostPrivate => '最私密';
 
   @override
-  String get gettingMessagesMessagesArriveInstantlyNothing =>
-      '消息即时到达。任何东西都不会离开 Tor。最耗电。';
+  String get gettingMessagesMessagesArriveInstantlyNothing => '消息即时到达。任何东西都不会离开 Tor。最耗电。';
 
   @override
   String get gettingMessagesCheckIns => '定时查收';
@@ -2391,8 +2339,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gettingMessagesLightest => '最省电';
 
   @override
-  String get gettingMessagesKryfoLooksForMessages =>
-      'Kryfo 每 15 分钟查收一次消息。省电，但消息可能会晚到。';
+  String get gettingMessagesKryfoLooksForMessages => 'Kryfo 每 15 分钟查收一次消息。省电，但消息可能会晚到。';
 
   @override
   String get gettingMessagesAGenericAlertWith => '一条通用提醒，不显示发送者和消息内容';
@@ -2401,8 +2348,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gettingMessagesShowsMessageTextIn => '在通知里显示消息内容，即使 Kryfo 已锁定。';
 
   @override
-  String get gettingMessagesWhenThePhoneSits =>
-      '手机静置不动时，Android 会拉长查收的间隔。上面那行显示的是真实的上一次查收。Kryfo 打开时会一直保持连接。';
+  String get gettingMessagesWhenThePhoneSits => '手机静置不动时，Android 会拉长查收的间隔。上面那行显示的是真实的上一次查收。Kryfo 打开时会一直保持连接。';
 
   @override
   String get groupChatJumpToTheNewest => '跳到最新';
@@ -2483,8 +2429,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupChatBurnTimer => '限时消息';
 
   @override
-  String get groupChatNewMessagesDisappearOnceRead =>
-      '新消息在被读后经过这段时间消失。你发出的从发送时开始计时。';
+  String get groupChatNewMessagesDisappearOnceRead => '新消息在被读后经过这段时间消失。你发出的从发送时开始计时。';
 
   @override
   String get groupChatToday => '今天';
@@ -2497,8 +2442,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String groupChatThisChatHasPins(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -2610,8 +2554,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String groupChatHere(int count, Object time) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -2624,8 +2567,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String groupChatMembers(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -2670,12 +2612,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String groupChatFileReach(int have, int count) {
-    final intl.NumberFormat haveNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat haveNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String haveString = haveNumberFormat.format(have);
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -2689,8 +2628,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String groupChatFileGaveUp(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -2746,8 +2684,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupInfoResetLinkLine => '旧链接将失效。聊天室里的人会留下，并收到新链接。';
 
   @override
-  String get groupInfoRemoveRoomLine =>
-      '对方仍可通过聊天室链接重新加入。重置链接即可把对方挡在外面。仍在聊天室里的人会收到新链接。';
+  String get groupInfoRemoveRoomLine => '对方仍可通过聊天室链接重新加入。重置链接即可把对方挡在外面。仍在聊天室里的人会收到新链接。';
 
   @override
   String get groupInfoRemoveAndResetLink => '移除并重置链接';
@@ -2760,8 +2697,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String appGroupHoldsUpTo(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -2779,12 +2715,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupInfoClearThisConversation => '清空这段聊天记录？';
 
   @override
-  String get groupInfoEveryMessageHereIs =>
-      '这里的每条消息都会从这部手机上清除。这只清除你的副本，其他成员的还在。';
+  String get groupInfoEveryMessageHereIs => '这里的每条消息都会从这部手机上清除。这只清除你的副本，其他成员的还在。';
 
   @override
-  String get groupInfoEveryMessageHereIsDesk =>
-      '这里的每条消息都会从这台电脑上清除。这只清除你的副本，其他成员的还在。';
+  String get groupInfoEveryMessageHereIsDesk => '这里的每条消息都会从这台电脑上清除。这只清除你的副本，其他成员的还在。';
 
   @override
   String get groupInfoClear => '清空';
@@ -2802,8 +2736,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupInfoEverythingInItIs => '里面的一切会立即从这部手机上抹除，你在这里用过的密钥也会永久消失。';
 
   @override
-  String get groupInfoEverythingInItIsDesk =>
-      '里面的一切会立即从这台电脑上抹除，你在这里用过的密钥也会永久消失。';
+  String get groupInfoEverythingInItIsDesk => '里面的一切会立即从这台电脑上抹除，你在这里用过的密钥也会永久消失。';
 
   @override
   String groupChatYouWereRemovedFrom(Object name) {
@@ -2817,20 +2750,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupInfoLeaveGroupLineDesk => '你将不再收到它的消息，里面的一切也会从这台电脑上抹除。';
 
   @override
-  String get groupInfoLeaveGroupAdmin =>
-      '你将不再收到它的消息，里面的一切也会从这部手机上抹除。你是管理员，退出后就没有人能再增减成员或重命名了。';
+  String get groupInfoLeaveGroupAdmin => '你将不再收到它的消息，里面的一切也会从这部手机上抹除。你是管理员，退出后就没有人能再增减成员或重命名了。';
 
   @override
-  String get groupInfoLeaveGroupAdminDesk =>
-      '你将不再收到它的消息，里面的一切也会从这台电脑上抹除。你是管理员，退出后就没有人能再增减成员或重命名了。';
+  String get groupInfoLeaveGroupAdminDesk => '你将不再收到它的消息，里面的一切也会从这台电脑上抹除。你是管理员，退出后就没有人能再增减成员或重命名了。';
 
   @override
-  String get groupInfoLeaveRoomMaker =>
-      '里面的一切会立即从这部手机上抹除，你在这里用过的密钥也会永久消失。这个聊天室是你创建的，你退出后它的链接就不能再让人加入了。';
+  String get groupInfoLeaveRoomMaker => '里面的一切会立即从这部手机上抹除，你在这里用过的密钥也会永久消失。这个聊天室是你创建的，你退出后它的链接就不能再让人加入了。';
 
   @override
-  String get groupInfoLeaveRoomMakerDesk =>
-      '里面的一切会立即从这台电脑上抹除，你在这里用过的密钥也会永久消失。这个聊天室是你创建的，你退出后它的链接就不能再让人加入了。';
+  String get groupInfoLeaveRoomMakerDesk => '里面的一切会立即从这台电脑上抹除，你在这里用过的密钥也会永久消失。这个聊天室是你创建的，你退出后它的链接就不能再让人加入了。';
 
   @override
   String get groupInfoLeave => '退出';
@@ -2840,8 +2769,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String groupInfo1Member(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -2958,8 +2886,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get handleWhatAHandleDoes => '用户名有什么用';
 
   @override
-  String get handleAnyoneWhoKnowsIt =>
-      '任何知道它的人都可以请求给你发消息。这个页面只保存你的邀请和你写的那句话，别无其他，也不会记录谁看过它。你随时可以删除它。';
+  String get handleAnyoneWhoKnowsIt => '任何知道它的人都可以请求给你发消息。这个页面只保存你的邀请和你写的那句话，别无其他，也不会记录谁看过它。你随时可以删除它。';
 
   @override
   String handleIsNotYoursOn(Object handle) {
@@ -3006,8 +2933,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String homeHours(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -3020,8 +2946,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String homeMinutes(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -3056,8 +2981,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeYourPhoneKeepsStopping => '你的手机一再停止 Kryfo';
 
   @override
-  String get homeItHasClosedKryfo =>
-      '今天它已经关掉 Kryfo 三次了，所以消息晚到或一直在等。定时查收不受影响：Kryfo 会每 15 分钟醒来一次，而不是一直保持连接。';
+  String get homeItHasClosedKryfo => '今天它已经关掉 Kryfo 三次了，所以消息晚到或一直在等。定时查收不受影响：Kryfo 会每 15 分钟醒来一次，而不是一直保持连接。';
 
   @override
   String get homeSwitchToCheckIns => '切换到定时查收';
@@ -3069,8 +2993,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeNotificationsAreOff => '通知已关闭';
 
   @override
-  String get homeAndroidIsBlockingThem =>
-      'Android 正在拦截通知，所以 Kryfo 关闭时，什么都到不了你这里。你打开它时，消息仍会到达。';
+  String get homeAndroidIsBlockingThem => 'Android 正在拦截通知，所以 Kryfo 关闭时，什么都到不了你这里。你打开它时，消息仍会到达。';
 
   @override
   String get homeCouldnTOpenIt => '打不开。请在手机设置里找到 Kryfo';
@@ -3095,8 +3018,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String homeWaitingSendsWhenYou(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -3124,8 +3046,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String home1Chat(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -3155,8 +3076,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String homeMembers(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -3251,8 +3171,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String home1PersonWantsTo(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -3297,13 +3216,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String introduceOfIntroductionsLeftThis(int max, int left) {
-    final intl.NumberFormat maxNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat maxNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String maxString = maxNumberFormat.format(max);
-    final intl.NumberFormat leftNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat leftNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String leftString = leftNumberFormat.format(left);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -3383,12 +3298,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lockFileItMayHaveBeen => '它可能在传输途中被截断了。请让对方重新发送。没有保存任何东西。';
 
   @override
-  String get lockFileItOpensWithThe =>
-      '它要用接收者本人的密钥文件，在电脑上的 age 工具里打开。Kryfo 能打开的是用密码锁定的那种。';
+  String get lockFileItOpensWithThe => '它要用接收者本人的密钥文件，在电脑上的 age 工具里打开。Kryfo 能打开的是用密码锁定的那种。';
 
   @override
-  String get lockFileKryfoOpensFilesLocked =>
-      'Kryfo 能打开用 age 锁定的文件。这些文件通常以 .age 结尾。';
+  String get lockFileKryfoOpensFilesLocked => 'Kryfo 能打开用 age 锁定的文件。这些文件通常以 .age 结尾。';
 
   @override
   String get lockFileCloseAFewApps => '关掉几个应用再试一次。密码校验需要短暂占用几百 MB 内存。';
@@ -3505,8 +3418,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lockFileTheNameAloneCan => '光是文件名就可能透露里面的内容。';
 
   @override
-  String get lockFileAnyoneWithThePassword =>
-      '任何知道密码的人都能打开它，在 Kryfo 里，或者在任何装了免费工具 age 的电脑上。忘了密码，这个文件就永远打不开了。没有人能重置它。';
+  String get lockFileAnyoneWithThePassword => '任何知道密码的人都能打开它，在 Kryfo 里，或者在任何装了免费工具 age 的电脑上。忘了密码，这个文件就永远打不开了。没有人能重置它。';
 
   @override
   String get lockFileLocked2 => '已锁定。';
@@ -3591,8 +3503,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get movedWipeThisPhoneDesk => '要从这台电脑上抹除 Kryfo 吗？';
 
   @override
-  String get movedEverythingKryfoHoldsHere =>
-      'Kryfo 在这里保存的一切都会被抹除：消息、联系人、密钥。另一台设备保留着全部内容。此操作无法撤销。';
+  String get movedEverythingKryfoHoldsHere => 'Kryfo 在这里保存的一切都会被抹除：消息、联系人、密钥。另一台设备保留着全部内容。此操作无法撤销。';
 
   @override
   String get movedWipeIt => '抹除';
@@ -3601,8 +3512,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get movedNotMovingAfterAll => '不迁移了？';
 
   @override
-  String get movedOnlyDoThisIf =>
-      '只有在这个备份从未在任何地方导入过时才这么做。如果导入过，现在就有两台设备持有同一个身份，两边都会开始丢失新消息。';
+  String get movedOnlyDoThisIf => '只有在这个备份从未在任何地方导入过时才这么做。如果导入过，现在就有两台设备持有同一个身份，两边都会开始丢失新消息。';
 
   @override
   String get movedIMStayingHere => '我留在这里';
@@ -3664,12 +3574,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get myKryfoKryfoDoesnTScan => 'Kryfo 不会扫描你的通讯录，这正是关键。';
 
   @override
-  String get myKryfoIfThisLinkEnds =>
-      '如果这个链接流传到了你不希望的地方，请在设置里重置它。到时候，每个拿着它的人都需要一个新链接。';
+  String get myKryfoIfThisLinkEnds => '如果这个链接流传到了你不希望的地方，请在设置里重置它。到时候，每个拿着它的人都需要一个新链接。';
 
   @override
-  String get myKryfoAlreadyShareAFriend =>
-      '你们在 Kryfo 上已经有共同的朋友？对方可以在自己的聊天里介绍你们认识，这样就不用走请求了。';
+  String get myKryfoAlreadyShareAFriend => '你们在 Kryfo 上已经有共同的朋友？对方可以在自己的聊天里介绍你们认识，这样就不用走请求了。';
 
   @override
   String get myKryfoHandleCopied => '用户名已复制';
@@ -3699,8 +3607,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get myKryfoYourLinkAppearsOnce => '连接后会显示你的链接';
 
   @override
-  String get myKryfoTheLinkCarriesYour =>
-      '链接里有你的三个词、你的地址和开始聊天所需的密钥。在你到设置里重置它之前，它一直有效。';
+  String get myKryfoTheLinkCarriesYour => '链接里有你的三个词、你的地址和开始聊天所需的密钥。在你到设置里重置它之前，它一直有效。';
 
   @override
   String get myKryfoSendTheLink => '发送链接';
@@ -3724,8 +3631,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get myKryfoTypeTheNameThey => '输入对方给你的 @名字。对方认领过用户名才有效。';
 
   @override
-  String get myKryfoTheLookupAsksFor =>
-      '查找只发送这一个名字，不带任何关于你的信息。你发给对方的第一条消息仍会作为请求送达。';
+  String get myKryfoTheLookupAsksFor => '查找只发送这一个名字，不带任何关于你的信息。你发给对方的第一条消息仍会作为请求送达。';
 
   @override
   String get myKryfoLooking => '正在查找…';
@@ -3768,8 +3674,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String newGroupSelected(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -3860,8 +3765,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String notesExportCount(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -3915,8 +3819,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notesExportHoldsInstaller => '这份导出里有一个应用安装包，所以不能分享。请改为保存到手机上。';
 
   @override
-  String get notesExportHoldsInstallerDesk =>
-      '这份导出里有一个应用安装包，所以不能分享。请改为保存到这台电脑上。';
+  String get notesExportHoldsInstallerDesk => '这份导出里有一个应用安装包，所以不能分享。请改为保存到这台电脑上。';
 
   @override
   String get notesExportSaved => '笔记已保存';
@@ -3948,12 +3851,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingYourNameIsThree => '*你的名字就是三个词。*不要手机号，不要邮箱，不要通讯录。';
 
   @override
-  String get onboardingNobodyGetsInUnless =>
-      '*除非你允许，否则谁也进不来。*只有认领了公开用户名，别人才能搜到你。人都是手动添加的，双方都要主动添加。';
+  String get onboardingNobodyGetsInUnless => '*除非你允许，否则谁也进不来。*只有认领了公开用户名，别人才能搜到你。人都是手动添加的，双方都要主动添加。';
 
   @override
-  String get onboardingTheFirstConnectionTakes =>
-      '*首次连接需要一分钟。*Kryfo 在发送前会先建立一条私密路线。之后就快了。';
+  String get onboardingTheFirstConnectionTakes => '*首次连接需要一分钟。*Kryfo 在发送前会先建立一条私密路线。之后就快了。';
 
   @override
   String get onboardingBegin => '开始';
@@ -3986,22 +3887,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingContinue => '继续 →';
 
   @override
-  String get onboardingKryfoBuildsAPrivateRouteBefore =>
-      'Kryfo 在发送任何内容之前，都会先建立一条私密路线。你离线时，消息会等着，等你回来再送达。';
+  String get onboardingKryfoBuildsAPrivateRouteBefore => 'Kryfo 在发送任何内容之前，都会先建立一条私密路线。你离线时，消息会等着，等你回来再送达。';
 
   @override
   String get onboardingYourIdentityLivesOn => '你的身份保存在这部手机上。准备好后，可以在设置里备份它。';
 
   @override
-  String get onboardingYourIdentityLivesOnDesk =>
-      '你的身份保存在这台电脑上。准备好后，可以在设置里备份它。';
+  String get onboardingYourIdentityLivesOnDesk => '你的身份保存在这台电脑上。准备好后，可以在设置里备份它。';
 
   @override
   String get onboardingOneQuiet => '一条安静的*通知*。';
 
   @override
-  String get onboardingAndroidNeedsAVisible =>
-      '应用在后台监听时，Android 要求显示一条可见的通知。Kryfo 关闭时，消息就是这样送到你这里的。';
+  String get onboardingAndroidNeedsAVisible => '应用在后台监听时，Android 要求显示一条可见的通知。Kryfo 关闭时，消息就是这样送到你这里的。';
 
   @override
   String get onboardingSilentAndAtThe => '静音，而且在通知栏最底部';
@@ -4066,8 +3964,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get openLockedPassword => '密码';
 
   @override
-  String get openLockedThePasswordIsChecked =>
-      '先校验密码。只有校验通过后，Kryfo 才会问你把打开的文件放在哪里，然后直接存到那里。';
+  String get openLockedThePasswordIsChecked => '先校验密码。只有校验通过后，Kryfo 才会问你把打开的文件放在哪里，然后直接存到那里。';
 
   @override
   String get openLockedOpened2 => '已打开。';
@@ -4217,12 +4114,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pinsTurnOffTheApp => '关闭应用锁？';
 
   @override
-  String get pinsThePinGoesAnd =>
-      'PIN 码会被移除，抹除 PIN 和所有隐藏聊天也一起移除。任何拿着你手机的人都能以你的身份打开 Kryfo。';
+  String get pinsThePinGoesAnd => 'PIN 码会被移除，抹除 PIN 和所有隐藏聊天也一起移除。任何拿着你手机的人都能以你的身份打开 Kryfo。';
 
   @override
-  String get pinsThePinGoesAndDesk =>
-      'PIN 码会被移除，抹除 PIN 和所有隐藏聊天也一起移除。任何用你电脑的人都能以你的身份打开 Kryfo。';
+  String get pinsThePinGoesAndDesk => 'PIN 码会被移除，抹除 PIN 和所有隐藏聊天也一起移除。任何用你电脑的人都能以你的身份打开 Kryfo。';
 
   @override
   String get pinsUnlockWithFingerprint => '用指纹解锁';
@@ -4270,12 +4165,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String profileYouAreAThank(String tier) {
-    String _temp0 = intl.Intl.selectLogic(tier, {
-      'supporter': '你是支持者。谢谢你。',
-      'patron': '你是赞助人。谢谢你。',
-      'guardian': '你是守护者。谢谢你。',
-      'other': '你是支持者。谢谢你。',
-    });
+    String _temp0 = intl.Intl.selectLogic(
+      tier,
+      {
+        'supporter': '你是支持者。谢谢你。',
+        'patron': '你是赞助人。谢谢你。',
+        'guardian': '你是守护者。谢谢你。',
+        'other': '你是支持者。谢谢你。',
+      },
+    );
     return '$_temp0';
   }
 
@@ -4479,8 +4377,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get requestsNothingMoreFromThem =>
-      '对方的任何东西都不会再到达你这里。对方的请求和其中的消息都会被删除。';
+  String get requestsNothingMoreFromThem => '对方的任何东西都不会再到达你这里。对方的请求和其中的消息都会被删除。';
 
   @override
   String get requestsRequests => '请求';
@@ -4513,8 +4410,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get restoreReplaceTheAccountOnDesk => '替换这台电脑上的账号？';
 
   @override
-  String get restoreWhatIsHereNow =>
-      '这里现有的一切，包括它的身份、联系人和消息，都会被清除。这个文件会取而代之。此操作无法撤销。';
+  String get restoreWhatIsHereNow => '这里现有的一切，包括它的身份、联系人和消息，都会被清除。这个文件会取而代之。此操作无法撤销。';
 
   @override
   String get restoreReplaceIt => '替换';
@@ -4566,8 +4462,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get restoreTheRestoreDidNot => '恢复没有完成。没有做任何改动';
 
   @override
-  String get restoreKryfoClosesRestoreAgain =>
-      '这里的部分数据已经被替换。Kryfo 现在会关闭。请重新打开，再恢复一次这个文件。';
+  String get restoreKryfoClosesRestoreAgain => '这里的部分数据已经被替换。Kryfo 现在会关闭。请重新打开，再恢复一次这个文件。';
 
   @override
   String get restoreThisIdentity => '这个身份';
@@ -4604,8 +4499,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String restoreYourPhotosVoiceNotesCount(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -4632,20 +4526,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get restoreWhatDoesnT => '不会跟过来的';
 
   @override
-  String get restoreTheOldPhoneStops =>
-      '从你在这里发出任何内容的那一刻起，旧手机就不再接收消息。你从这台设备发出的第一条消息，是旧手机能跟上的最后一条；在那之后到达旧手机的任何内容，在那里都无法读取，在这里也不会等着你。';
+  String get restoreTheOldPhoneStops => '从你在这里发出任何内容的那一刻起，旧手机就不再接收消息。你从这台设备发出的第一条消息，是旧手机能跟上的最后一条；在那之后到达旧手机的任何内容，在那里都无法读取，在这里也不会等着你。';
 
   @override
-  String get restoreTheOldPhoneStopsDesk =>
-      '从你在这里发出任何内容的那一刻起，旧设备就不再接收消息。你从这台电脑发出的第一条消息，是旧设备能跟上的最后一条；在那之后到达旧设备的任何内容，在那里都无法读取，在这里也不会等着你。';
+  String get restoreTheOldPhoneStopsDesk => '从你在这里发出任何内容的那一刻起，旧设备就不再接收消息。你从这台电脑发出的第一条消息，是旧设备能跟上的最后一条；在那之后到达旧设备的任何内容，在那里都无法读取，在这里也不会等着你。';
 
   @override
-  String get restoreIfThePhoneThis =>
-      '如果这个文件来自的那部手机还在使用，请先在那部手机上停用 Kryfo，再继续。两部手机共用一个 Kryfo，两边都会丢消息。';
+  String get restoreIfThePhoneThis => '如果这个文件来自的那部手机还在使用，请先在那部手机上停用 Kryfo，再继续。两部手机共用一个 Kryfo，两边都会丢消息。';
 
   @override
-  String get restoreIfThePhoneThisDesk =>
-      '如果这个文件来自的那台设备还在使用，请先在那台设备上停用 Kryfo，再继续。两台设备共用一个 Kryfo，两边都会丢消息。';
+  String get restoreIfThePhoneThisDesk => '如果这个文件来自的那台设备还在使用，请先在那台设备上停用 Kryfo，再继续。两台设备共用一个 Kryfo，两边都会丢消息。';
 
   @override
   String get restoreNotificationsNeedSettingUp => '通知需要在这台设备上重新设置。';
@@ -4663,12 +4553,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get restoreFromABackupFile => '从备份文件恢复';
 
   @override
-  String get restoreABackupBringsBack =>
-      '备份能找回你的身份和联系人，以及制作文件时手机上已有的消息。之后说的内容不在里面。';
+  String get restoreABackupBringsBack => '备份能找回你的身份和联系人，以及制作文件时手机上已有的消息。之后说的内容不在里面。';
 
   @override
-  String get restoreABackupBringsBackDesk =>
-      '备份能找回你的身份和联系人，以及制作文件时设备上已有的消息。之后说的内容不在里面。';
+  String get restoreABackupBringsBackDesk => '备份能找回你的身份和联系人，以及制作文件时设备上已有的消息。之后说的内容不在里面。';
 
   @override
   String get restoreTheFile => '文件';
@@ -4734,12 +4622,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get roomCreateBurnerRoom => '临时聊天室';
 
   @override
-  String get roomCreateARoomThatEnds =>
-      '一个会结束的聊天室。每个人都用专为它生成的密钥加入，结束时任何手机上都不会留下任何东西。';
+  String get roomCreateARoomThatEnds => '一个会结束的聊天室。每个人都用专为它生成的密钥加入，结束时任何手机上都不会留下任何东西。';
 
   @override
-  String get roomCreateARoomThatEndsDesk =>
-      '一个会结束的聊天室。每个人都用专为它生成的密钥加入，结束时任何设备上都不会留下任何东西。';
+  String get roomCreateARoomThatEndsDesk => '一个会结束的聊天室。每个人都用专为它生成的密钥加入，结束时任何设备上都不会留下任何东西。';
 
   @override
   String get roomCreateRoomName => '聊天室名称';
@@ -4752,8 +4638,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String roomCreateNoOnePastThe(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -4766,8 +4651,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String roomCreateOffUpTo(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -4793,8 +4677,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get roomLinkSendTheRoomTo => '把聊天室发给';
 
   @override
-  String get roomLinkTheyWillKnowThis =>
-      '对方会知道这个聊天室来自你。在聊天室里，对方和其他人一样，显示为一把密钥。';
+  String get roomLinkTheyWillKnowThis => '对方会知道这个聊天室来自你。在聊天室里，对方和其他人一样，显示为一把密钥。';
 
   @override
   String get roomLinkNoContactsYet => '还没有联系人';
@@ -4805,8 +4688,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get roomLinkAnyoneWithThisCan =>
-      '在聊天室结束之前，任何拿到它的人都能加入。他们用专为这个聊天室生成的密钥进来，看不到他们到来之前发的任何内容。';
+  String get roomLinkAnyoneWithThisCan => '在聊天室结束之前，任何拿到它的人都能加入。他们用专为这个聊天室生成的密钥进来，看不到他们到来之前发的任何内容。';
 
   @override
   String get roomLinkRoomLinkCopied => '聊天室链接已复制';
@@ -4863,12 +4745,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get seenEveryMessengerClaimsPrivacy => '这是按线路列出的清单，也包括薄弱之处。点一行查看原因。';
 
   @override
-  String get seenHonestAboutTheLast =>
-      '最后几行正是应用锁、抹除 PIN 和加密存储要应对的，而当有人拿着你已解锁的手机时，没有任何工具能救你。完整的威胁模型在代码仓库的 THREAT_MODEL.md 里，按 LINDDUN 编写。代码是开源的，你可以自己核实这些。';
+  String get seenHonestAboutTheLast => '最后几行正是应用锁、抹除 PIN 和加密存储要应对的，而当有人拿着你已解锁的手机时，没有任何工具能救你。完整的威胁模型在代码仓库的 THREAT_MODEL.md 里，按 LINDDUN 编写。代码是开源的，你可以自己核实这些。';
 
   @override
-  String get seenHonestAboutTheLastDesk =>
-      '最后几行正是应用锁、抹除 PIN 和加密存储要应对的，而当有人坐在你已解锁的电脑前时，没有任何工具能救你。完整的威胁模型在代码仓库的 THREAT_MODEL.md 里，按 LINDDUN 编写。代码是开源的，你可以自己核实这些。';
+  String get seenHonestAboutTheLastDesk => '最后几行正是应用锁、抹除 PIN 和加密存储要应对的，而当有人坐在你已解锁的电脑前时，没有任何工具能救你。完整的威胁模型在代码仓库的 THREAT_MODEL.md 里，按 LINDDUN 编写。代码是开源的，你可以自己核实这些。';
 
   @override
   String get seenHidden => '已隐藏';
@@ -4889,15 +4769,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get seenWhoYouTalkTo => '你在和谁聊天';
 
   @override
-  String get seenEachConversationGetsIts =>
-      '每段对话都有自己的地址，由双方的密钥推导而来。中继看到的是一个个互不相关的投递点，而不是一对人。';
+  String get seenEachConversationGetsIts => '每段对话都有自己的地址，由双方的密钥推导而来。中继看到的是一个个互不相关的投递点，而不是一对人。';
 
   @override
   String get seenWhatYouSay => '你说了什么';
 
   @override
-  String get seenEndToEndEncrypted =>
-      '用 Signal 双棘轮端到端加密，然后再用 gift wrap 封装一层。我们读不了。';
+  String get seenEndToEndEncrypted => '用 Signal 双棘轮端到端加密，然后再用 gift wrap 封装一层。我们读不了。';
 
   @override
   String get seenYourIpAddress => '你的 IP 地址';
@@ -4912,19 +4790,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get seenIntroducer => '介绍人';
 
   @override
-  String get seenWhenAContactIntroduces =>
-      '当一位联系人把你介绍给某人时，这位联系人会知道你们两个现在有联系了。其他人都不会知道。中继看到的是密文，任何服务器都永远看不到关系图。';
+  String get seenWhenAContactIntroduces => '当一位联系人把你介绍给某人时，这位联系人会知道你们两个现在有联系了。其他人都不会知道。中继看到的是密文，任何服务器都永远看不到关系图。';
 
   @override
   String get seenTheScamShield => '防骗盾';
 
   @override
-  String get seenScamShieldRequestsOnly =>
-      '在你的手机上运行，规则随应用一起提供。不联网，不下载任何名单。它只读取陌生人的消息请求，从不读取联系人或群组发给你的内容。';
+  String get seenScamShieldRequestsOnly => '在你的手机上运行，规则随应用一起提供。不联网，不下载任何名单。它只读取陌生人的消息请求，从不读取联系人或群组发给你的内容。';
 
   @override
-  String get seenScamShieldRequestsOnlyDesk =>
-      '在你的电脑上运行，规则随应用一起提供。不联网，不下载任何名单。它只读取陌生人的消息请求，从不读取联系人或群组发给你的内容。';
+  String get seenScamShieldRequestsOnlyDesk => '在你的电脑上运行，规则随应用一起提供。不联网，不下载任何名单。它只读取陌生人的消息请求，从不读取联系人或群组发给你的内容。';
 
   @override
   String get seenBurnerRooms => '临时聊天室';
@@ -4933,8 +4808,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get seenRoomKeys => '聊天室密钥';
 
   @override
-  String get seenYouJoinARoom =>
-      '你用专为这个聊天室生成的密钥加入，所以里面的人得不到任何能在别处用上的信息。后加入的人看不到历史记录。到期时，密钥、消息和媒体都会被销毁。';
+  String get seenYouJoinARoom => '你用专为这个聊天室生成的密钥加入，所以里面的人得不到任何能在别处用上的信息。后加入的人看不到历史记录。到期时，密钥、消息和媒体都会被销毁。';
 
   @override
   String get seenLinkPreviews => '链接预览';
@@ -4943,12 +4817,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get seenOverTor => '经由 Tor';
 
   @override
-  String get seenAPreviewIsFetched =>
-      '预览由发送方经由 Tor 获取，并放在加密消息里一起传送。接收方的手机不会发出任何请求。网站只知道有个用 Tor 的人请求了一个页面，别的都不知道。永远不会加载任何图片，陌生人发来的链接只显示为纯文本。';
+  String get seenAPreviewIsFetched => '预览由发送方经由 Tor 获取，并放在加密消息里一起传送。接收方的手机不会发出任何请求。网站只知道有个用 Tor 的人请求了一个页面，别的都不知道。永远不会加载任何图片，陌生人发来的链接只显示为纯文本。';
 
   @override
-  String get seenAPreviewIsFetchedDesk =>
-      '预览由发送方经由 Tor 获取，并放在加密消息里一起传送。接收方的设备不会发出任何请求。网站只知道有个用 Tor 的人请求了一个页面，别的都不知道。永远不会加载任何图片，陌生人发来的链接只显示为纯文本。';
+  String get seenAPreviewIsFetchedDesk => '预览由发送方经由 Tor 获取，并放在加密消息里一起传送。接收方的设备不会发出任何请求。网站只知道有个用 Tor 的人请求了一个页面，别的都不知道。永远不会加载任何图片，陌生人发来的链接只显示为纯文本。';
 
   @override
   String get seenASeizedUnlockedPhone => '被夺走的已解锁手机';
@@ -4957,19 +4829,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get seenASeizedUnlockedPhoneDesk => '被夺走的已解锁电脑';
 
   @override
-  String get seenIfSomeoneHoldsYour =>
-      '如果有人拿着你已解锁的手机，他们就能读你的消息。应用锁、抹除 PIN 和加密存储在那之前有用，在那之后就没用了。';
+  String get seenIfSomeoneHoldsYour => '如果有人拿着你已解锁的手机，他们就能读你的消息。应用锁、抹除 PIN 和加密存储在那之前有用，在那之后就没用了。';
 
   @override
-  String get seenIfSomeoneHoldsYourDesk =>
-      '如果有人坐在你已解锁的电脑前，他们就能读你的消息。应用锁、抹除 PIN 和加密存储在那之前有用，在那之后就没用了。';
+  String get seenIfSomeoneHoldsYourDesk => '如果有人坐在你已解锁的电脑前，他们就能读你的消息。应用锁、抹除 PIN 和加密存储在那之前有用，在那之后就没用了。';
 
   @override
   String get seenTheCryptoItself => '加密本身';
 
   @override
-  String get seenTheRatchetAndStorage =>
-      '棘轮层和存储层都是标准实现。连接它们的那一层是我们自己写的，还没有任何独立第三方审查过。这是 alpha 版本。';
+  String get seenTheRatchetAndStorage => '棘轮层和存储层都是标准实现。连接它们的那一层是我们自己写的，还没有任何独立第三方审查过。这是 alpha 版本。';
 
   @override
   String get seenFast => '快速';
@@ -4978,12 +4847,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsWipeKryfo => '抹除 Kryfo？';
 
   @override
-  String get settingsIdentityMessagesContactsAnd =>
-      '这部手机上的身份、消息、联系人和设置。除非你有备份，否则将永久消失。';
+  String get settingsIdentityMessagesContactsAnd => '这部手机上的身份、消息、联系人和设置。除非你有备份，否则将永久消失。';
 
   @override
-  String get settingsIdentityMessagesContactsAndDesk =>
-      '这台电脑上的身份、消息、联系人和设置。除非你有备份，否则将永久消失。';
+  String get settingsIdentityMessagesContactsAndDesk => '这台电脑上的身份、消息、联系人和设置。除非你有备份，否则将永久消失。';
 
   @override
   String get commonContinue => '继续';
@@ -5073,15 +4940,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsTypingIndicator => '输入状态提示';
 
   @override
-  String get settingsTypingIndicatorHint =>
-      '对方在输入时，你们双方都能看到。提示经 Tor 直接发给对方，从不经过中继。';
+  String get settingsTypingIndicatorHint => '对方在输入时，你们双方都能看到。提示经 Tor 直接发给对方，从不经过中继。';
 
   @override
   String get settingsTypingOnionOnly => '在 Onion 线路上可用';
 
   @override
-  String get settingsTypingBridgesOff =>
-      '使用网桥时关闭：监视你连接的人可能会对上输入提示的信号。关闭网桥后会自动恢复。';
+  String get settingsTypingBridgesOff => '使用网桥时关闭：监视你连接的人可能会对上输入提示的信号。关闭网桥后会自动恢复。';
 
   @override
   String get settingsLightTheme => '浅色主题';
@@ -5135,8 +5000,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsResetInviteLink => '重置邀请链接？';
 
   @override
-  String get settingsAnyoneWithAnOld =>
-      '任何拿着旧码或旧链接的人，都将无法再通过任何线路联系你。拿到了却从没用过的人，需要你给一个新码。联系人、聊天和历史记录都会保留。';
+  String get settingsAnyoneWithAnOld => '任何拿着旧码或旧链接的人，都将无法再通过任何线路联系你。拿到了却从没用过的人，需要你给一个新码。联系人、聊天和历史记录都会保留。';
 
   @override
   String get settingsReset => '重置';
@@ -5181,12 +5045,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsLinkCopied => '链接已复制';
 
   @override
-  String get settingsTheOfflineMapIn =>
-      '“工具”里的离线地图基于 Natural Earth（公有领域）绘制。城镇名称来自 GeoNames（geonames.org），采用 CC BY 4.0 许可。';
+  String get settingsTheOfflineMapIn => '“工具”里的离线地图基于 Natural Earth（公有领域）绘制。城镇名称来自 GeoNames（geonames.org），采用 CC BY 4.0 许可。';
 
   @override
-  String get settingsNotIndependentlyAuditedPre =>
-      '未经独立审计。Alpha 版——适合测试，还不适合高风险用途。';
+  String get settingsNotIndependentlyAuditedPre => '未经独立审计。Alpha 版——适合测试，还不适合高风险用途。';
 
   @override
   String get settingsFollowTitle => '关注 GnosiWorks（开发者）';
@@ -5242,8 +5104,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get toolsTheFirstMinute => '就能用上。';
 
   @override
-  String get toolsEverythingHereHappensOn =>
-      '这里的一切都在这部手机上完成。不上传任何东西，别人也不需要用 Kryfo。';
+  String get toolsEverythingHereHappensOn => '这里的一切都在这部手机上完成。不上传任何东西，别人也不需要用 Kryfo。';
 
   @override
   String get toolsPhotoCleaner => '照片清理';
@@ -5252,8 +5113,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get toolsRemovesHiddenInfo => '清除地点、时间和手机型号等隐藏信息（元数据）';
 
   @override
-  String get toolsPickAPhotoAnd =>
-      '选一张照片或一段视频，看看它会泄露什么，然后一键全部去除。也可以从相册分享到 Kryfo。';
+  String get toolsPickAPhotoAnd => '选一张照片或一段视频，看看它会泄露什么，然后一键全部去除。也可以从相册分享到 Kryfo。';
 
   @override
   String get toolsPickAPhoto => '选一张照片';
@@ -5265,12 +5125,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get transportTransport => '传输';
 
   @override
-  String get transportNothingHereLeavesThe =>
-      '这里的内容都不会离开手机。这就是引擎用来决定下一步做什么的状态。';
+  String get transportNothingHereLeavesThe => '这里的内容都不会离开手机。这就是引擎用来决定下一步做什么的状态。';
 
   @override
-  String get transportNothingHereLeavesTheDesk =>
-      '这里的内容都不会离开电脑。这就是引擎用来决定下一步做什么的状态。';
+  String get transportNothingHereLeavesTheDesk => '这里的内容都不会离开电脑。这就是引擎用来决定下一步做什么的状态。';
 
   @override
   String get transportStayingAlive => '保持运行';
@@ -5313,8 +5171,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String transportFails(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -5351,12 +5208,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get transportWithNoContactsThe =>
-      '没有联系人时，应用不会订阅任何中继地址，所以任何消息都到不了你这里。扫描一个人的二维码就能解决。';
+  String get transportWithNoContactsThe => '没有联系人时，应用不会订阅任何中继地址，所以任何消息都到不了你这里。扫描一个人的二维码就能解决。';
 
   @override
-  String get transportWithNoContactsTheDesk =>
-      '没有联系人时，应用不会订阅任何中继地址，所以任何消息都到不了你这里。添加一个人就能解决。';
+  String get transportWithNoContactsTheDesk => '没有联系人时，应用不会订阅任何中继地址，所以任何消息都到不了你这里。添加一个人就能解决。';
 
   @override
   String get transportSendAnythingWaitingNow => '立即发送所有待发内容';
@@ -5563,11 +5418,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String transportDialsTimeouts(int dials, int timeouts) {
-    final intl.NumberFormat dialsNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat dialsNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String dialsString = dialsNumberFormat.format(dials);
-    final intl.NumberFormat timeoutsNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat timeoutsNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String timeoutsString = timeoutsNumberFormat.format(timeouts);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -5620,8 +5473,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String vouchersVouchedBy(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -5658,15 +5510,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get whyKryfoWhyKryfo => '为什么选 Kryfo';
 
   @override
-  String get whyKryfoKryfoKreeFoGreek =>
-      'Kryfo · 读作 KREE-fo · 希腊语里的“隐藏”。\n一个安静的聊天之处，从设计上就没有人在看。';
+  String get whyKryfoKryfoKreeFoGreek => 'Kryfo · 读作 KREE-fo · 希腊语里的“隐藏”。\n一个安静的聊天之处，从设计上就没有人在看。';
 
   @override
   String get whyKryfoRoutedThroughTor => '经由 Tor 路由';
 
   @override
-  String get whyKryfoByDefaultEveryMessage =>
-      '默认情况下，每条消息都经由 Tor——一串中继——传送。任何人，无论是我们还是你的网络，都看不到你在和谁聊天、你在哪里。';
+  String get whyKryfoByDefaultEveryMessage => '默认情况下，每条消息都经由 Tor——一串中继——传送。任何人，无论是我们还是你的网络，都看不到你在和谁聊天、你在哪里。';
 
   @override
   String get whyKryfoEndToEndEncrypted => '端到端加密';
@@ -5678,33 +5528,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get whyKryfoNoServersHoldingYour => '没有服务器保管你的生活';
 
   @override
-  String get whyKryfoNoAccountNoPhone =>
-      '没有账号，没有手机号，没有保存你聊天记录的中央服务器。聊天记录保存在这部手机上，以加密形式存储。';
+  String get whyKryfoNoAccountNoPhone => '没有账号，没有手机号，没有保存你聊天记录的中央服务器。聊天记录保存在这部手机上，以加密形式存储。';
 
   @override
-  String get whyKryfoNoAccountNoPhoneDesk =>
-      '没有账号，没有手机号，没有保存你聊天记录的中央服务器。聊天记录保存在这台电脑上，以加密形式存储。';
+  String get whyKryfoNoAccountNoPhoneDesk => '没有账号，没有手机号，没有保存你聊天记录的中央服务器。聊天记录保存在这台电脑上，以加密形式存储。';
 
   @override
   String get whyKryfoNothingLeaks => '什么都不泄露';
 
   @override
-  String get whyKryfoNoReceiptsTyping =>
-      '没有已读回执，也不上传联系人列表。你正在输入，只有你在对话的那个人能看到，经 Tor 直接送达，从不经过服务器。大多数应用都会泄露元数据，Kryfo 的设计就是不泄露。';
+  String get whyKryfoNoReceiptsTyping => '没有已读回执，也不上传联系人列表。你正在输入，只有你在对话的那个人能看到，经 Tor 直接送达，从不经过服务器。大多数应用都会泄露元数据，Kryfo 的设计就是不泄露。';
 
   @override
   String get whyKryfoVerifyItIsReally => '确认真的是对方';
 
   @override
-  String get whyKryfoCompareASafetyNumber =>
-      '当面或通过你信任的渠道比对安全码，这样你就知道没有人在冒充你的联系人。';
+  String get whyKryfoCompareASafetyNumber => '当面或通过你信任的渠道比对安全码，这样你就知道没有人在冒充你的联系人。';
 
   @override
   String get whyKryfoTheHonestPart => '坦白说';
 
   @override
-  String get whyKryfoKryfoIsPreAlpha =>
-      'Kryfo 还处于 alpha 阶段，没有经过审计。加密是真的，但还没有外部专家检查过，所以在关系到你人身安全的场合，暂时不要依赖它。';
+  String get whyKryfoKryfoIsPreAlpha => 'Kryfo 还处于 alpha 阶段，没有经过审计。加密是真的，但还没有外部专家检查过，所以在关系到你人身安全的场合，暂时不要依赖它。';
 
   @override
   String get cleanerLocation => '位置';
@@ -5738,8 +5583,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String cleaner1OtherField(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -5755,8 +5599,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String lockWordsTooShortAtLeast(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -5783,8 +5626,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String photoStory1Metre(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -5850,12 +5692,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photoStoryLocationHiddenByAndroid => '位置已被 Android 隐藏';
 
   @override
-  String get photoStoryAndroidBlanksItWhen =>
-      '用这种方式选择照片时，Android 会把它清空。从相册分享到 Kryfo 通常能保留它。你相册里的那张可能仍然带着它。';
+  String get photoStoryAndroidBlanksItWhen => '用这种方式选择照片时，Android 会把它清空。从相册分享到 Kryfo 通常能保留它。你相册里的那张可能仍然带着它。';
 
   @override
-  String get photoStoryLocationBlankedByAndroid =>
-      '位置：在 Kryfo 看到之前已被 Android 清空';
+  String get photoStoryLocationBlankedByAndroid => '位置：在 Kryfo 看到之前已被 Android 清空';
 
   @override
   String photoStoryF(Object r) {
@@ -5978,8 +5818,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String photoStoryDataAfterTheEnd(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -6007,8 +5846,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String photoStoryCameraSettingsFlashFocus(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -6021,8 +5859,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String photoStory1MoreField(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -6136,9 +5973,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String vouchTextAndOtherYouKnow(Object names, Object names2, int rest) {
-    final intl.NumberFormat restNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat restNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String restString = restNumberFormat.format(rest);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -6174,8 +6009,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bootFailedKeysDidNotAnswer => '手机的密钥存储没有响应。关闭并重新打开 Kryfo 通常可以解决。';
 
   @override
-  String get bootFailedKeysDidNotAnswerDesk =>
-      '这台电脑的密钥存储没有响应。关闭并重新打开 Kryfo 通常可以解决。';
+  String get bootFailedKeysDidNotAnswerDesk => '这台电脑的密钥存储没有响应。关闭并重新打开 Kryfo 通常可以解决。';
 
   @override
   String get bootFailedCloseAndReopen => '关闭并重新打开 Kryfo';
@@ -6193,12 +6027,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bootFailedStartFreshTitle => '要重新开始吗？';
 
   @override
-  String get bootFailedStartFreshLine =>
-      '这会抹掉 Kryfo 在这台手机上的一切：聊天、联系人、媒体、隐藏的聊天和你的三个词。保存在别处的备份文件不受影响。';
+  String get bootFailedStartFreshLine => '这会抹掉 Kryfo 在这台手机上的一切：聊天、联系人、媒体、隐藏的聊天和你的三个词。保存在别处的备份文件不受影响。';
 
   @override
-  String get bootFailedStartFreshLineDesk =>
-      '这会抹掉 Kryfo 在这台电脑上的一切：聊天、联系人、媒体、隐藏的聊天和你的三个词。保存在别处的备份文件不受影响。';
+  String get bootFailedStartFreshLineDesk => '这会抹掉 Kryfo 在这台电脑上的一切：聊天、联系人、媒体、隐藏的聊天和你的三个词。保存在别处的备份文件不受影响。';
 
   @override
   String get bootFailedStartFreshNext => '继续';
@@ -6270,9 +6102,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String kryfoLinkTextClosesInUpTo(int cap, Object time) {
-    final intl.NumberFormat capNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat capNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String capString = capNumberFormat.format(cap);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -6406,8 +6236,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get motion3Hops => '3 跳';
 
   @override
-  String get movedStripThisKryfoHasMoved =>
-      '这个 Kryfo 已迁移到另一台设备。从这里发出的任何东西都送不到任何人。';
+  String get movedStripThisKryfoHasMoved => '这个 Kryfo 已迁移到另一台设备。从这里发出的任何东西都送不到任何人。';
 
   @override
   String get navBarChats => '聊天';
@@ -6451,8 +6280,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairCodePanelTheyTapAddChoose => '对方点“添加”，选择“配对码”，然后输入这些数字。';
 
   @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      '对方打开 Kryfo，点“添加”，选择“配对码”，输入这六位数字。下一个人需要你再生成一个新的。';
+  String get pairCodePanelTheyOpenKryfoTap => '对方打开 Kryfo，点“添加”，选择“配对码”，输入这六位数字。下一个人需要你再生成一个新的。';
 
   @override
   String get pairCodePanelYourWords => '你的三个词';
@@ -6491,8 +6319,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get pinsNothingPinnedHereYet =>
-      '这里还没有置顶内容。长按一条消息，选择“置顶”，它就会在这里等着聊天里的每个人。';
+  String get pinsNothingPinnedHereYet => '这里还没有置顶内容。长按一条消息，选择“置顶”，它就会在这里等着聊天里的每个人。';
 
   @override
   String get pinsJump => '跳转';
@@ -6661,12 +6488,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String avatarPickerOption(String what, int n, int count) {
-    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String nString = nNumberFormat.format(n);
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     return '$what，第 $nString 个，共 $countString 个';
@@ -6828,8 +6652,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesLookingForAVolunteer => '正在寻找志愿者';
 
   @override
-  String get bridgesFastestWhereTorIsnt =>
-      '在 Tor 没被封锁的地方最快。Kryfo 从不在 Tor 之外建立连接。';
+  String get bridgesFastestWhereTorIsnt => '在 Tor 没被封锁的地方最快。Kryfo 从不在 Tor 之外建立连接。';
 
   @override
   String get transportBridgePhase => '阶段';
@@ -6868,8 +6691,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesThisNetworkWantsA => '这个网络需要先登录。登录后，Kryfo 就会连接。';
 
   @override
-  String get bridgesThisNetworkWantsADesk =>
-      '这个网络需要先登录。请在浏览器里登录，或检查电脑的网络连接。登录后，Kryfo 就会连接。';
+  String get bridgesThisNetworkWantsADesk => '这个网络需要先登录。请在浏览器里登录，或检查电脑的网络连接。登录后，Kryfo 就会连接。';
 
   @override
   String get bridgesWaitingForWifiSignIn => '等待 Wi-Fi 登录';
@@ -6922,8 +6744,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesNothingYet => '暂无';
 
   @override
-  String get torBootSplashIfTorIsBlocked =>
-      '如果你那里 Tor 被封锁或监控，Kryfo 可以改为通过网桥启动。';
+  String get torBootSplashIfTorIsBlocked => '如果你那里 Tor 被封锁或监控，Kryfo 可以改为通过网桥启动。';
 
   @override
   String get bridgesScanACode => '扫码';
@@ -6941,8 +6762,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get torBootSplashStartThroughABridge => '通过网桥启动';
 
   @override
-  String get torBootSplashNeverTriesTorPlainly =>
-      '在这里，Kryfo 绝不会直接连接 Tor。它会自己找到可用的网桥，你也可以在下一步选择自己的网桥。';
+  String get torBootSplashNeverTriesTorPlainly => '在这里，Kryfo 绝不会直接连接 Tor。它会自己找到可用的网桥，你也可以在下一步选择自己的网桥。';
 
   @override
   String get bridgesTryingAnotherWay => '正在尝试其他方式…';
@@ -6964,8 +6784,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String bridgesKryfoCouldNotRead(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -7029,8 +6848,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String bridgesUseTheseBridges(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -7057,8 +6875,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesThisLineIsTooLong => '这行配置太长，Tor 用不了。';
 
   @override
-  String get bridgesAutomaticFindsAWay =>
-      'Tor 被封锁时，“自动”会自己找到办法。如果你同意，Kryfo 可能会向 Tor 项目询问网桥。';
+  String get bridgesAutomaticFindsAWay => 'Tor 被封锁时，“自动”会自己找到办法。如果你同意，Kryfo 可能会向 Tor 项目询问网桥。';
 
   @override
   String get bridgesFromTheTorProjectLower => '来自 Tor 项目';
@@ -7070,8 +6887,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesHongKong => '香港';
 
   @override
-  String get bridgesWhenTorIsBlockedAutomatic =>
-      'Tor 被封锁时，“自动”会询问 Tor 项目，在你所在的国家或地区什么方式能用。';
+  String get bridgesWhenTorIsBlockedAutomatic => 'Tor 被封锁时，“自动”会询问 Tor 项目，在你所在的国家或地区什么方式能用。';
 
   @override
   String get bridgesAskTorProject => '询问 Tor 项目';
@@ -7145,8 +6961,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get androidChannelName => '保持连接';
 
   @override
-  String get androidChannelDescription =>
-      '让 Kryfo 保持连接，这样它关闭时加密消息也能送达。关掉这个就会停止接收消息。';
+  String get androidChannelDescription => '让 Kryfo 保持连接，这样它关闭时加密消息也能送达。关掉这个就会停止接收消息。';
 
   @override
   String get videoViewerPlay => '播放';
@@ -7400,8 +7215,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get handleNameInSearch => '搜索中的名字';
 
   @override
-  String get handleNameInSearchLine =>
-      '可选。有人搜索时，它会显示在你的用户名旁边。任何人都能找到这个用户名并给你发消息。';
+  String get handleNameInSearchLine => '可选。有人搜索时，它会显示在你的用户名旁边。任何人都能找到这个用户名并给你发消息。';
 
   @override
   String get handleNameHint => '你的名字，也可以留空';
@@ -7529,12 +7343,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pinsTheDecoyGoes => '它打开的那个空 Kryfo 也会一起消失。';
 
   @override
-  String get pinsTurnOffWithDecoy =>
-      '所有 PIN 都会被移除，伪装 PIN 和它的 Kryfo 以及所有隐藏聊天也一样。任何拿着你手机的人都能以你的身份打开 Kryfo。';
+  String get pinsTurnOffWithDecoy => '所有 PIN 都会被移除，伪装 PIN 和它的 Kryfo 以及所有隐藏聊天也一样。任何拿着你手机的人都能以你的身份打开 Kryfo。';
 
   @override
-  String get pinsTurnOffWithDecoyDesk =>
-      '所有 PIN 都会被移除，伪装 PIN 和它的 Kryfo 以及所有隐藏聊天也一样。任何用你电脑的人都能以你的身份打开 Kryfo。';
+  String get pinsTurnOffWithDecoyDesk => '所有 PIN 都会被移除，伪装 PIN 和它的 Kryfo 以及所有隐藏聊天也一样。任何用你电脑的人都能以你的身份打开 Kryfo。';
 
   @override
   String get pinsHowThisWorks => '工作原理';
@@ -7549,12 +7361,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowWipeTitle => '抹除 PIN';
 
   @override
-  String get flowWipe1 =>
-      '在锁屏上代替你的 PIN 码输入，它会从这部手机上抹除 Kryfo 并关闭应用。在旁人看来，应用只是停止了。';
+  String get flowWipe1 => '在锁屏上代替你的 PIN 码输入，它会从这部手机上抹除 Kryfo 并关闭应用。在旁人看来，应用只是停止了。';
 
   @override
-  String get flowWipe1Desk =>
-      '在锁屏上代替你的 PIN 码输入，它会从这台电脑上抹除 Kryfo 并关闭应用。在旁人看来，应用只是停止了。';
+  String get flowWipe1Desk => '在锁屏上代替你的 PIN 码输入，它会从这台电脑上抹除 Kryfo 并关闭应用。在旁人看来，应用只是停止了。';
 
   @override
   String get flowWipe2 => '所有聊天和你的身份都会一起抹除，有伪装的话也一样。';
@@ -7575,8 +7385,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowDecoy1 => '打开一个空的 Kryfo，就像刚装好一样。';
 
   @override
-  String get flowDecoyFinger =>
-      '设置伪装 PIN 后，这个应用只能用 PIN 码打开。如果在伪装里开启了指纹，手指只会打开伪装，绝不会打开这个应用。';
+  String get flowDecoyFinger => '设置伪装 PIN 后，这个应用只能用 PIN 码打开。如果在伪装里开启了指纹，手指只会打开伪装，绝不会打开这个应用。';
 
   @override
   String get flowDecoyDigits => '位数要和你的 PIN 码一样，因为旁边看着的人能数出圆点。';
@@ -7594,8 +7403,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowDecoyDone => '伪装 PIN 已设置';
 
   @override
-  String get flowDecoyDoneLine =>
-      '在锁屏上输入它，就能打开那个空的 Kryfo。要离开，切到别的应用，再输入你的 PIN 码。';
+  String get flowDecoyDoneLine => '在锁屏上输入它，就能打开那个空的 Kryfo。要离开，切到别的应用，再输入你的 PIN 码。';
 
   @override
   String get flowLaw => '在有些国家，拒绝解锁手机或向官方隐藏数据本身就是违法的。出行前了解当地的法律。';
@@ -7604,12 +7412,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowLawDesk => '在有些国家，拒绝解锁设备或向官方隐藏数据本身就是违法的。出行前了解当地的法律。';
 
   @override
-  String get howWipe =>
-      '在锁屏上输入抹除 PIN，会抹除所有聊天、你的身份和任何伪装，然后关闭 Kryfo。即使输错多次后键盘被暂停，它也照样有效。';
+  String get howWipe => '在锁屏上输入抹除 PIN，会抹除所有聊天、你的身份和任何伪装，然后关闭 Kryfo。即使输错多次后键盘被暂停，它也照样有效。';
 
   @override
-  String get howDecoy =>
-      '伪装 PIN 会打开第二个空的 Kryfo，它有自己的三个词。发给你真正 Kryfo 的消息照样在底下悄悄到达。要离开伪装，切到别的应用，再输入你的 PIN 码。';
+  String get howDecoy => '伪装 PIN 会打开第二个空的 Kryfo，它有自己的三个词。发给你真正 Kryfo 的消息照样在底下悄悄到达。要离开伪装，切到别的应用，再输入你的 PIN 码。';
 
   @override
   String get flowNotSet => '没能设置成功，请再试一次。';
@@ -7645,8 +7451,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowVaultTitle => '隐藏聊天';
 
   @override
-  String get flowVault1 =>
-      '选择要隐藏的聊天和群组。你的 PIN 码打开的 Kryfo 里没有它们。隐藏聊天 PIN 会打开全部内容，包括隐藏聊天。';
+  String get flowVault1 => '选择要隐藏的聊天和群组。你的 PIN 码打开的 Kryfo 里没有它们。隐藏聊天 PIN 会打开全部内容，包括隐藏聊天。';
 
   @override
   String get flowVault2 => '藏起来的时候，它们从不发通知，也不显示角标。它们的消息照样到达，封存起来，等你输入隐藏聊天 PIN。';
@@ -7689,8 +7494,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String flowVaultPickButton(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -7709,8 +7513,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowVaultBackupTitle => '现在备份吗？';
 
   @override
-  String get flowVaultBackupLine =>
-      '现在做的备份也包含你的隐藏聊天，用它自己的密码短语保护。如果你忘了隐藏聊天 PIN，这是找回它们的唯一办法。';
+  String get flowVaultBackupLine => '现在做的备份也包含你的隐藏聊天，用它自己的密码短语保护。如果你忘了隐藏聊天 PIN，这是找回它们的唯一办法。';
 
   @override
   String get flowVaultBackupNow => '备份';
@@ -7731,12 +7534,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowVaultChangedLine => '你的隐藏聊天现在用新的打开。旧的什么也打不开了。';
 
   @override
-  String get howVault =>
-      '隐藏聊天 PIN 打开的 Kryfo 带着隐藏聊天，你的 PIN 码和指纹打开的则没有。重新设置隐藏聊天，会替换这部手机上已有的。忘了隐藏聊天 PIN，它们就永远没了。';
+  String get howVault => '隐藏聊天 PIN 打开的 Kryfo 带着隐藏聊天，你的 PIN 码和指纹打开的则没有。重新设置隐藏聊天，会替换这部手机上已有的。忘了隐藏聊天 PIN，它们就永远没了。';
 
   @override
-  String get howVaultDesk =>
-      '隐藏聊天 PIN 打开的 Kryfo 带着隐藏聊天，你的 PIN 码打开的则没有。重新设置隐藏聊天，会替换这台电脑上已有的。忘了隐藏聊天 PIN，它们就永远没了。';
+  String get howVaultDesk => '隐藏聊天 PIN 打开的 Kryfo 带着隐藏聊天，你的 PIN 码打开的则没有。重新设置隐藏聊天，会替换这台电脑上已有的。忘了隐藏聊天 PIN，它们就永远没了。';
 
   @override
   String get chatHide => '隐藏此聊天';
@@ -7789,8 +7590,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devRowTitle => 'Marios · Kryfo 的开发者';
 
   @override
-  String get devWelcome =>
-      '你好，我是 Marios，Kryfo 是我做的。什么都可以跟我说：Bug、想法、问题。每一条我都会看。';
+  String get devWelcome => '你好，我是 Marios，Kryfo 是我做的。什么都可以跟我说：Bug、想法、问题。每一条我都会看。';
 
   @override
   String get devPinned => '内置于 Kryfo';
@@ -7799,8 +7599,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devAnonymous => '匿名';
 
   @override
-  String get devAboutLine =>
-      'Marios 的密钥内置在 Kryfo 里。他发来的每一条消息都会用它核对，所以别人没法冒充他发消息。';
+  String get devAboutLine => 'Marios 的密钥内置在 Kryfo 里。他发来的每一条消息都会用它核对，所以别人没法冒充他发消息。';
 
   @override
   String get devKeyLabel => '他的密钥';
@@ -7812,12 +7611,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devDeleteLineAnon => '每一条消息和为这个聊天生成的名字都会删除，这个聊天也不会再回来。';
 
   @override
-  String get devDeleteLineBack =>
-      '每一条消息都会删除，这个聊天也不会再回来。你发出的消息也会从 Marios 的手机上撤回。';
+  String get devDeleteLineBack => '每一条消息都会删除，这个聊天也不会再回来。你发出的消息也会从 Marios 的手机上撤回。';
 
   @override
-  String get devDeleteLineAnonBack =>
-      '每一条消息和为这个聊天生成的名字都会删除，这个聊天也不会再回来。你发出的消息也会从 Marios 的手机上撤回。';
+  String get devDeleteLineAnonBack => '每一条消息和为这个聊天生成的名字都会删除，这个聊天也不会再回来。你发出的消息也会从 Marios 的手机上撤回。';
 
   @override
   String devDeleteNotTakenBack(int count) {
@@ -7837,8 +7634,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String supportWaiting(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -7864,8 +7660,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get supportEmpty => 'No one has written yet';
 
   @override
-  String get supportEmptyLine =>
-      'Chats people start from the Marios row land here, not in requests.';
+  String get supportEmptyLine => 'Chats people start from the Marios row land here, not in requests.';
 
   @override
   String get supportMarkDone => 'Done';
@@ -7880,13 +7675,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get supportMenu => 'Inbox options';
 
   @override
-  String get supportDeleteLine =>
-      'Every message in this chat goes from this phone. If they write again, it comes back here.';
+  String get supportDeleteLine => 'Every message in this chat goes from this phone. If they write again, it comes back here.';
 
   @override
   String supportNotifNewChats(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -7900,8 +7693,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String supportNotifNewMessages(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -7920,8 +7712,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get supportChannelLine => 'Chats people start from the Marios row';
 
   @override
-  String get supportResetPinned =>
-      'This identity is pinned in Kryfo. A new link would cut off every chat with it.';
+  String get supportResetPinned => 'This identity is pinned in Kryfo. A new link would cut off every chat with it.';
 
   @override
   String get supportViaDev => 'Via developer chat';
@@ -7930,8 +7721,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get supportMoveAsk => 'Move your inbox chat with them into this chat?';
 
   @override
-  String get supportMoveLine =>
-      'It leaves the inbox and shows in Chats. Keep apart leaves both as they are.';
+  String get supportMoveLine => 'It leaves the inbox and shows in Chats. Keep apart leaves both as they are.';
 
   @override
   String get supportMove => 'Move';
@@ -7982,8 +7772,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devWhoAnon => '匿名发送时，Kryfo 会专门为这个聊天生成新的名字和密钥。它们只留在这部手机上，绝不会在别处使用。';
 
   @override
-  String get devWhoAnonDesk =>
-      '匿名发送时，Kryfo 会专门为这个聊天生成新的名字和密钥。它们只留在这台电脑上，绝不会在别处使用。';
+  String get devWhoAnonDesk => '匿名发送时，Kryfo 会专门为这个聊天生成新的名字和密钥。它们只留在这台电脑上，绝不会在别处使用。';
 
   @override
   String get devWhoNothingYet => '在你发出第一条消息之前，什么都不会离开你的手机。';
@@ -8034,24 +7823,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get nameTakenTitle => '有别人在用这三个词';
 
   @override
-  String get nameTakenLine =>
-      '这里有人通过请求、介绍或群组得到了这三个词，密钥不同，也没人核对过。词是可以照抄的。如果这个链接来自你认识的人，就用它，然后和对方核对安全码。';
+  String get nameTakenLine => '这里有人通过请求、介绍或群组得到了这三个词，密钥不同，也没人核对过。词是可以照抄的。如果这个链接来自你认识的人，就用它，然后和对方核对安全码。';
 
   @override
-  String get nameTakenChatLine =>
-      '你用这三个词的聊天来自请求、介绍或群组，密钥不同，也没人核对过。词是可以照抄的。如果这个链接来自你认识的人，就用它：那个聊天会被删除，你再在新的聊天里核对安全码。不确定链接从哪来？就保留现有的。';
+  String get nameTakenChatLine => '你用这三个词的聊天来自请求、介绍或群组，密钥不同，也没人核对过。词是可以照抄的。如果这个链接来自你认识的人，就用它：那个聊天会被删除，你再在新的聊天里核对安全码。不确定链接从哪来？就保留现有的。';
 
   @override
-  String get nameTakenDeletedLine =>
-      '你删除过一个用这三个词的聊天，它用的是另一把密钥。如果这个链接来自你认识的人，就用它，然后和对方核对安全码。';
+  String get nameTakenDeletedLine => '你删除过一个用这三个词的聊天，它用的是另一把密钥。如果这个链接来自你认识的人，就用它，然后和对方核对安全码。';
 
   @override
-  String get nameTakenTombLine =>
-      '你曾因为对方不是本人，从这部手机上移除了用这三个词的人。如果这个链接来自你认识的人，就使用这个链接，然后和对方核对安全码。';
+  String get nameTakenTombLine => '你曾因为对方不是本人，从这部手机上移除了用这三个词的人。如果这个链接来自你认识的人，就使用这个链接，然后和对方核对安全码。';
 
   @override
-  String get nameTakenTombLineDesk =>
-      '你曾因为对方不是本人，从这台电脑上移除了用这三个词的人。如果这个链接来自你认识的人，就使用这个链接，然后和对方核对安全码。';
+  String get nameTakenTombLineDesk => '你曾因为对方不是本人，从这台电脑上移除了用这三个词的人。如果这个链接来自你认识的人，就使用这个链接，然后和对方核对安全码。';
 
   @override
   String get nameTakenUse => '使用这个链接';
@@ -8095,12 +7879,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notThemSheetTitle => '要删除这位联系人并屏蔽其密钥吗？';
 
   @override
-  String get notThemSheetLine =>
-      '聊天及其中的消息和文件都会从这部手机上消失。只有你自己添加的链接或码才能再用这三个词。请和你添加的人核对安全码。';
+  String get notThemSheetLine => '聊天及其中的消息和文件都会从这部手机上消失。只有你自己添加的链接或码才能再用这三个词。请和你添加的人核对安全码。';
 
   @override
-  String get notThemSheetLineDesk =>
-      '聊天及其中的消息和文件都会从这台电脑上消失。只有你自己添加的链接或码才能再用这三个词。请和你添加的人核对安全码。';
+  String get notThemSheetLineDesk => '聊天及其中的消息和文件都会从这台电脑上消失。只有你自己添加的链接或码才能再用这三个词。请和你添加的人核对安全码。';
 
   @override
   String get notThemRemove => '删除并屏蔽';
@@ -8150,8 +7932,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gifOptInThroughKryfo => '通过 Kryfo 搜索';
 
   @override
-  String get gifOptInAsksForYou =>
-      'Kryfo 的服务器替你向 GIF 服务查询。该服务永远看不到你，服务器也不会记录你搜了什么。';
+  String get gifOptInAsksForYou => 'Kryfo 的服务器替你向 GIF 服务查询。该服务永远看不到你，服务器也不会记录你搜了什么。';
 
   @override
   String get gifOptInLikeAPhoto => 'GIF 像照片一样加密传送。对方的手机不会下载任何东西。';
@@ -8263,8 +8044,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsGifSearch => 'GIF 搜索';
 
   @override
-  String get settingsGifSearchHint =>
-      '在你开启前一直关闭。Kryfo 的服务器替你搜索，所以 GIF 服务永远看不到你。';
+  String get settingsGifSearchHint => '在你开启前一直关闭。Kryfo 的服务器替你搜索，所以 GIF 服务永远看不到你。';
 
   @override
   String get shareChooseChat => '选择聊天';
@@ -8296,8 +8076,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsCheckForUpdates => '检查更新';
 
   @override
-  String get settingsCheckForUpdatesHint =>
-      '每天一次，通过 Tor。只向 kryfo.app 询问最新版本，不发送任何关于你的信息。';
+  String get settingsCheckForUpdatesHint => '每天一次，通过 Tor。只向 kryfo.app 询问最新版本，不发送任何关于你的信息。';
 
   @override
   String get voiceDisguiseHere => '在这里给我的语音变声';
@@ -8309,12 +8088,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatShotsWhenTheyUpdate => '对方更新后即可使用';
 
   @override
-  String get chatShotsBothPhones =>
-      'Kryfo 在两部手机上禁止截屏和录制此聊天，也禁止复制、转发或保存彼此的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
+  String get chatShotsBothPhones => 'Kryfo 在两部手机上禁止截屏和录制此聊天，也禁止复制、转发或保存彼此的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
 
   @override
-  String get chatShotsBlocksBoth =>
-      '在两部手机上禁止截屏和录屏，也禁止复制、转发或保存彼此的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
+  String get chatShotsBlocksBoth => '在两部手机上禁止截屏和录屏，也禁止复制、转发或保存彼此的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
 
   @override
   String get chatShotsBlockedHere => 'Kryfo 已在此聊天中禁止截屏';
@@ -8327,8 +8104,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String searchKeptMatches(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -8355,6 +8131,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatShotsYouTurnedOff => '你关闭了禁止截屏';
 
   @override
+  String get chatNowPostQuantum => '此聊天中的消息现已使用后量子加密';
+
+  @override
   String chatShotsTheyTurnedOn(String name) {
     return '$name 开启了禁止截屏。复制、转发和保存彼此的消息也已关闭。';
   }
@@ -8365,8 +8144,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get roomShotsBlocked =>
-      'Kryfo 在这个聊天室的每部手机上禁止截屏和录屏，也禁止复制、转发或保存别人的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
+  String get roomShotsBlocked => 'Kryfo 在这个聊天室的每部手机上禁止截屏和录屏，也禁止复制、转发或保存别人的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
 
   @override
   String get roomShotsAlwaysOn => '聊天室里始终开启，每部手机都一样';
@@ -8387,13 +8165,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeShotsLeaveOff => '保持关闭';
 
   @override
-  String get homeShotsTheySeeIt =>
-      'Kryfo 也会在对方手机上禁止截屏，并关闭复制、转发和保存彼此的消息。对方会看到是你开启的。';
+  String get homeShotsTheySeeIt => 'Kryfo 也会在对方手机上禁止截屏，并关闭复制、转发和保存彼此的消息。对方会看到是你开启的。';
 
   @override
   String homeShotsTurnedOn(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -8487,8 +8263,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get fileGoesAsItIs =>
-      '这个文件会原样发出。Kryfo 只清理 JPEG、PNG、WebP、HEIC、AVIF、GIF、MP4 和 MOV。';
+  String get fileGoesAsItIs => '这个文件会原样发出。Kryfo 只清理 JPEG、PNG、WebP、HEIC、AVIF、GIF、MP4 和 MOV。';
 
   @override
   String get fileRawPictureTitle => '按原样发送这张图片？';
@@ -8500,8 +8275,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get voiceStoppedAtLimit => '语音消息最长 30 分钟，已自动停止。听一遍后再发送。';
 
   @override
-  String get gettingMessagesHelperBody =>
-      '即时且省电。它的服务器能看到你的 IP 和消息到达的时间，但从不知道内容。';
+  String get gettingMessagesHelperBody => '即时且省电。它的服务器能看到你的 IP 和消息到达的时间，但从不知道内容。';
 
   @override
   String get gettingMessagesHelperUseOnion => '切换到 Onion';
@@ -8510,8 +8284,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gettingMessagesHelperSetUp => '设置';
 
   @override
-  String get gettingMessagesHelperNote =>
-      '其中混有假的唤醒，让辅助应用的服务器更难分辨真消息何时到达。自建的辅助服务器会让我们的中继知道它的地址。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。';
+  String get gettingMessagesHelperNote => '其中混有假的唤醒，让辅助应用的服务器更难分辨真消息何时到达。自建的辅助服务器会让我们的中继知道它的地址。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。';
 
   @override
   String get gettingMessagesHelperOnionOnly => '在 Onion 线路上可用';
@@ -8526,8 +8299,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get helperSheetNeedTitle => '你需要一个辅助应用';
 
   @override
-  String get helperSheetNeedLine =>
-      '辅助应用为你的所有应用保持一条轻量连接，有消息时唤醒 Kryfo。任何 UnifiedPush 辅助应用都可以，ntfy 是不错的起点。';
+  String get helperSheetNeedLine => '辅助应用为你的所有应用保持一条轻量连接，有消息时唤醒 Kryfo。任何 UnifiedPush 辅助应用都可以，ntfy 是不错的起点。';
 
   @override
   String get helperSheetGetNtfy => '获取 ntfy';
@@ -8564,8 +8336,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeHelperRelayTitle => '中继不再唤醒 Kryfo';
 
   @override
-  String get gettingMessagesHelperRefused =>
-      '我们的中继暂时不接受这部手机的部分登记。这些聊天会随每 15 分钟一次的定时查收到达，Kryfo 会继续尝试。换一个辅助应用或服务器也可能有帮助。';
+  String get gettingMessagesHelperRefused => '我们的中继暂时不接受这部手机的部分登记。这些聊天会随每 15 分钟一次的定时查收到达，Kryfo 会继续尝试。换一个辅助应用或服务器也可能有帮助。';
 
   @override
   String albumLabel(Object count) {
@@ -8843,12 +8614,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get translatePrivacyTitle => '哪些内容保持私密';
 
   @override
-  String get translatePrivacyNote =>
-      '翻译在这部手机上完成。任何消息都不会被发送到别处去翻译。下载语言包会让服务器知道是哪个语言包。下载经由 Tor，所以服务器不知道是谁请求的。';
+  String get translatePrivacyNote => '翻译在这部手机上完成。任何消息都不会被发送到别处去翻译。下载语言包会让服务器知道是哪个语言包。下载经由 Tor，所以服务器不知道是谁请求的。';
 
   @override
-  String get translatePrivacyNoteDesk =>
-      '翻译在这台电脑上完成。任何消息都不会被发送到别处去翻译。下载语言包会让服务器知道是哪个语言包。下载经由 Tor，所以服务器不知道是谁请求的。';
+  String get translatePrivacyNoteDesk => '翻译在这台电脑上完成。任何消息都不会被发送到别处去翻译。下载语言包会让服务器知道是哪个语言包。下载经由 Tor，所以服务器不知道是谁请求的。';
 
   @override
   String get translateAutoInChat => '自动翻译';
@@ -8892,8 +8661,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesRelayWorksWhereTor => '在 Tor 被封锁的地方，快速模式也能用，随时可以切换回来。';
 
   @override
-  String get bridgesRelayThisNetworkSees =>
-      '在 Tor 被封锁的地方快速模式也能连通，但这个网络能看到你在连接 Kryfo。';
+  String get bridgesRelayThisNetworkSees => '在 Tor 被封锁的地方快速模式也能连通，但这个网络能看到你在连接 Kryfo。';
 
   @override
   String get settingsLicences => '许可证';
@@ -8902,8 +8670,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsLicencesValue => 'Kryfo 由什么构成';
 
   @override
-  String get licencesKryfoLine =>
-      'Kryfo 是自由软件，采用 GNU 通用公共许可证第 3 版或更高版本。任何人都可以阅读、修改和分享它的代码。';
+  String get licencesKryfoLine => 'Kryfo 是自由软件，采用 GNU 通用公共许可证第 3 版或更高版本。任何人都可以阅读、修改和分享它的代码。';
 
   @override
   String get licencesSourceCode => '源代码';
@@ -8933,8 +8700,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String licencesPartCount(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -9111,12 +8877,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lockStateUnlockPlain => '解锁';
 
   @override
-  String get iconSheetOthers =>
-      '手机上的其他应用仍能看到已安装 Kryfo，Android 自己的对话框和提示也可能显示它的名称。';
+  String get iconSheetOthers => '手机上的其他应用仍能看到已安装 Kryfo，Android 自己的对话框和提示也可能显示它的名称。';
 
   @override
-  String get iconSheetSaves =>
-      '使用简洁图标时，新的照片、视频和文件会以普通的名称存进手机常用的文件夹。之前保存的内容留在原处。';
+  String get iconSheetSaves => '使用简洁图标时，新的照片、视频和文件会以普通的名称存进手机常用的文件夹。之前保存的内容留在原处。';
 
   @override
   String get deliveryModeGooglePush => '谷歌推送';
@@ -9137,8 +8901,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notificationsRecommended => '推荐';
 
   @override
-  String get notificationsGoogleBody =>
-      '即时且省电。Google 能看到你的手机何时被唤醒，但从不知道是谁写的或说了什么。';
+  String get notificationsGoogleBody => '即时且省电。Google 能看到你的手机何时被唤醒，但从不知道是谁写的或说了什么。';
 
   @override
   String get notificationsGoogleStarting => '正在开启…';
@@ -9147,12 +8910,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notificationsGoogleNoStart => '谷歌推送没能启动。请检查网络后再试一次。';
 
   @override
-  String get notificationsGoogleNote =>
-      '其中混有假的唤醒，让 Google 更难分辨真消息何时到达。我们的中继只保存它无法彼此关联的地址。推送服务运行在同一台服务器上，能够把它们关联起来，借助 Google 还能关联到你的 Google 账号，所以运营或查扣我们服务器的人也能做到。如果你在意这一点，请选择其他方式。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。';
+  String get notificationsGoogleNote => '其中混有假的唤醒，让 Google 更难分辨真消息何时到达。我们的中继只保存它无法彼此关联的地址。推送服务运行在同一台服务器上，能够把它们关联起来，借助 Google 还能关联到你的 Google 账号，所以运营或查扣我们服务器的人也能做到。如果你在意这一点，请选择其他方式。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。';
 
   @override
-  String get notificationsGoogleRefused =>
-      '我们的中继暂时不接受这部手机的部分登记。这些聊天会随每 15 分钟一次的定时查收到达，Kryfo 会继续尝试。';
+  String get notificationsGoogleRefused => '我们的中继暂时不接受这部手机的部分登记。这些聊天会随每 15 分钟一次的定时查收到达，Kryfo 会继续尝试。';
 
   @override
   String get notificationsSoundAndVibration => '声音和振动';
@@ -9237,8 +8998,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lockKeyWaiting => '手机的安全芯片仍在检查';
 
   @override
-  String get lockKeyLost =>
-      '这部手机丢失了用来检查你 PIN 码的密钥，所以有些 PIN 码可能打不开。可以重置 Kryfo 并恢复备份。';
+  String get lockKeyLost => '这部手机丢失了用来检查你 PIN 码的密钥，所以有些 PIN 码可能打不开。可以重置 Kryfo 并恢复备份。';
 
   @override
   String get lockKeyReset => '重置 Kryfo';
@@ -9247,8 +9007,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lockKeyResetTitle => '要重置 Kryfo 吗？';
 
   @override
-  String get lockKeyResetLine =>
-      '这部手机上 Kryfo 的所有内容都会被删除，Kryfo 会关闭。之后你可以恢复备份。隐藏聊天只能从它们打开时做的备份中恢复。';
+  String get lockKeyResetLine => '这部手机上 Kryfo 的所有内容都会被删除，Kryfo 会关闭。之后你可以恢复备份。隐藏聊天只能从它们打开时做的备份中恢复。';
 
   @override
   String get lockKeyResetSureTitle => '此操作无法撤销';
@@ -9281,12 +9040,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cardAnswer => '好了。再输入一个，或在完成后点“完成”。';
 
   @override
-  String get keyLine =>
-      '你的 PIN 码只能在这部手机上使用。如果手机丢失了用来检查它们的密钥，你需要重置 Kryfo 并恢复备份。隐藏聊天只能从它们打开时做的备份中恢复。';
+  String get keyLine => '你的 PIN 码只能在这部手机上使用。如果手机丢失了用来检查它们的密钥，你需要重置 Kryfo 并恢复备份。隐藏聊天只能从它们打开时做的备份中恢复。';
 
   @override
-  String get keyLineUnlocked =>
-      '你的 PIN 码只能在这部手机上使用，而且只在手机解锁时可用。如果手机丢失了用来检查它们的密钥，你需要重置 Kryfo 并恢复备份。隐藏聊天只能从它们打开时做的备份中恢复。';
+  String get keyLineUnlocked => '你的 PIN 码只能在这部手机上使用，而且只在手机解锁时可用。如果手机丢失了用来检查它们的密钥，你需要重置 Kryfo 并恢复备份。隐藏聊天只能从它们打开时做的备份中恢复。';
 
   @override
   String get keyLineScreenLock => '请为手机设置屏幕锁，这样手机锁定时这层保护依然有效。';
@@ -9306,8 +9063,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mediaProgressPreparing => '正在准备 · 请保持应用打开';
 
   @override
-  String get groupShotsBlocksAll =>
-      '在这个群组的每部手机上禁止截屏和录屏，也禁止复制、转发或保存彼此的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
+  String get groupShotsBlocksAll => '在这个群组的每部手机上禁止截屏和录屏，也禁止复制、转发或保存彼此的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
 
   @override
   String get groupShotsStartsWhenAll => '等这里的所有人更新 Kryfo';
@@ -9326,8 +9082,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String groupShotsWaitingFor(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -9351,8 +9106,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupShotsBlockedByYou => '已被你屏蔽';
 
   @override
-  String get groupShotsYouTurnedOnWait =>
-      '你开启了禁止截屏。等这里的所有人都更新 Kryfo 后，它会对所有人生效。';
+  String get groupShotsYouTurnedOnWait => '你开启了禁止截屏。等这里的所有人都更新 Kryfo 后，它会对所有人生效。';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
@@ -9432,9 +9186,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String devicesUnlinksSoon(int days) {
-    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String daysString = daysNumberFormat.format(days);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -9472,8 +9224,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devicesRemoveAllTitle => '移除其他所有设备？';
 
   @override
-  String get devicesRemoveAllLine =>
-      '等你的联系人的应用收到这项更改后，它们就不会再收到新消息，也不能以你的身份发送。这部手机保留一切。';
+  String get devicesRemoveAllLine => '等你的联系人的应用收到这项更改后，它们就不会再收到新消息，也不能以你的身份发送。这部手机保留一切。';
 
   @override
   String get devicesRemoveAllYes => '全部移除';
@@ -9487,8 +9238,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get devicesRemoveLine =>
-      '等你的联系人的应用收到这项更改后，它就不会再收到新消息，也不能以你的身份发送。下次联网时，它会抹除自己上面的聊天。被人动过手脚的设备可能会留下它已有的内容。';
+  String get devicesRemoveLine => '等你的联系人的应用收到这项更改后，它就不会再收到新消息，也不能以你的身份发送。下次联网时，它会抹除自己上面的聊天。被人动过手脚的设备可能会留下它已有的内容。';
 
   @override
   String get devicesRemove => '移除';
@@ -9564,12 +9314,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get desktopLockNewTitle => '在这台电脑上锁定 Kryfo';
 
   @override
-  String get desktopLockNewBody =>
-      'Kryfo 每次启动都会要求输入这个密码短语。它锁住你在这台电脑上的消息、照片、语音消息、文件、联系人和密钥。';
+  String get desktopLockNewBody => 'Kryfo 每次启动都会要求输入这个密码短语。它锁住你在这台电脑上的消息、照片、语音消息、文件、联系人和密钥。';
 
   @override
-  String get desktopLockHonest =>
-      '复制了 Kryfo 文件夹的人，可以在自己的电脑上尽其所能地快速尝试密码短语。四个以上的随机单词能扛住，短的密码短语扛不住。';
+  String get desktopLockHonest => '复制了 Kryfo 文件夹的人，可以在自己的电脑上尽其所能地快速尝试密码短语。四个以上的随机单词能扛住，短的密码短语扛不住。';
 
   @override
   String get desktopLockForgot => '没有密码短语，这里你的任何消息、文件或密钥都打不开，连我们也不行。';
@@ -9588,8 +9336,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String desktopLockShort(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     return '至少 $countString 个字符';
@@ -9656,8 +9403,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get desktopLockOtherVersion => '这个锁是另一个版本的 Kryfo 创建的，当前版本无法读取。';
 
   @override
-  String get desktopNoMemoryFolder =>
-      'Kryfo 运行时需要内存中的一个私有文件夹，而这台电脑没有提供，所以 Kryfo 不会打开。';
+  String get desktopNoMemoryFolder => 'Kryfo 运行时需要内存中的一个私有文件夹，而这台电脑没有提供，所以 Kryfo 不会打开。';
 
   @override
   String get inviteNotYet => '此邀请尚未生效。请检查手机上的时间。';
@@ -9699,8 +9445,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get modesFastTag => '直连我们的服务器';
 
   @override
-  String get modesFastLine =>
-      '不经过 Tor，消息到得更快，也更省电。我们的服务器只在你连接期间看到你的 IP 地址，从不记录或保存。也从不知道你说了什么。你的联系人永远看不到它。';
+  String get modesFastLine => '不经过 Tor，消息到得更快，也更省电。我们的服务器只在你连接期间看到你的 IP 地址，从不记录或保存。也从不知道你说了什么。你的联系人永远看不到它。';
 
   @override
   String get modesFastConnected => '快速 · 已连接';
@@ -9759,8 +9504,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serversBackups => '公共中继';
 
   @override
-  String get serversBackupsLine =>
-      '在服务器 1 停摆期间使用，而且只经 Tor 连接，所以它们永远看不到你的 IP 地址。';
+  String get serversBackupsLine => '在服务器 1 停摆期间使用，而且只经 Tor 连接，所以它们永远看不到你的 IP 地址。';
 
   @override
   String get serversStandingBy => '待命中';
@@ -9772,8 +9516,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeMergedTitle => '中继和快速现已合二为一';
 
   @override
-  String get homeMergedLine =>
-      '你正在使用快速模式。始终有一台备用服务器待命，即使其中一台出问题，你也不会断线。我们的服务器能看到你的 IP 地址，但永远看不到你说了什么。';
+  String get homeMergedLine => '你正在使用快速模式。始终有一台备用服务器待命，即使其中一台出问题，你也不会断线。我们的服务器能看到你的 IP 地址，但永远看不到你说了什么。';
 
   @override
   String get homeMergedGotIt => '知道了';
@@ -9812,23 +9555,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get seenOurServers => '我们的服务器';
 
   @override
-  String get seenIpWhy =>
-      '私密模式下一切都经 Tor 发出，我们的服务器看到的是出口节点，永远不是你。快速模式下连接直达我们的两台服务器：你连接期间它们能看到你的 IP 地址，但不留任何记录。第一台停摆期间，快速模式也会使用公共中继，而且只经 Tor 连接。';
+  String get seenIpWhy => '私密模式下一切都经 Tor 发出，我们的服务器看到的是出口节点，永远不是你。快速模式下连接直达我们的两台服务器：你连接期间它们能看到你的 IP 地址，但不留任何记录。第一台停摆期间，快速模式也会使用公共中继，而且只经 Tor 连接。';
 
   @override
   String get chatAlbumItDisappearsWithNo => '这个相册会从双方的手机上删除，除非已被保存。此操作无法撤销。';
 
   @override
-  String get chatAlbumItDisappearsWithNoDesk =>
-      '这个相册会从双方的设备上删除，除非已被保存。此操作无法撤销。';
+  String get chatAlbumItDisappearsWithNoDesk => '这个相册会从双方的设备上删除，除非已被保存。此操作无法撤销。';
 
   @override
-  String get groupChatAlbumItDisappearsWithNo =>
-      '这个相册会从所有人的手机上删除，除非已被保存。此操作无法撤销。';
+  String get groupChatAlbumItDisappearsWithNo => '这个相册会从所有人的手机上删除，除非已被保存。此操作无法撤销。';
 
   @override
-  String get groupChatAlbumItDisappearsWithNoDesk =>
-      '这个相册会从所有人的设备上删除，除非已被保存。此操作无法撤销。';
+  String get groupChatAlbumItDisappearsWithNoDesk => '这个相册会从所有人的设备上删除，除非已被保存。此操作无法撤销。';
 
   @override
   String get homeInviteSomeone => '邀请一个人';
@@ -9933,8 +9672,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String a11yPinDigits(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -9948,8 +9686,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String a11yPassChars(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -10007,8 +9744,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String a11yNewMessages(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -10147,16 +9883,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get desktopLockWithoutPassphrase => '没有它，任何使用你的用户账户的人都能打开 Kryfo。';
 
   @override
-  String get desktopLockKeyringRefused =>
-      'Kryfo 无法把它的密钥保存在这台电脑的密钥环中。请改为添加密码短语。';
+  String get desktopLockKeyringRefused => 'Kryfo 无法把它的密钥保存在这台电脑的密钥环中。请改为添加密码短语。';
 
   @override
-  String get desktopKeyMissing =>
-      '这个用户账户没有 Kryfo 数据的密钥。Kryfo 备份能找回一切。如果你移动过 Kryfo 的文件夹，请在它原来的用户账户上添加密码短语，然后再复制一次。';
+  String get desktopKeyMissing => '这个用户账户没有 Kryfo 数据的密钥。Kryfo 备份能找回一切。如果你移动过 Kryfo 的文件夹，请在它原来的用户账户上添加密码短语，然后再复制一次。';
 
   @override
-  String get desktopKeyUnreachable =>
-      'Kryfo 现在无法取得这台电脑上的密钥。如果电脑提示，请解锁你的密钥环，然后重试。';
+  String get desktopKeyUnreachable => 'Kryfo 现在无法取得这台电脑上的密钥。如果电脑提示，请解锁你的密钥环，然后重试。';
 
   @override
   String get desktopPassRow => '这台电脑上的密码短语';
@@ -10198,19 +9931,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get desktopKeyUnreachableWindows => 'Kryfo 现在无法取得这台电脑安全芯片中的密钥。请稍后重试。';
 
   @override
-  String get desktopLockAccountRefused =>
-      'Kryfo 无法用你的 Windows 账户保存它的密钥。请改为添加密码短语。';
+  String get desktopLockAccountRefused => 'Kryfo 无法用你的 Windows 账户保存它的密钥。请改为添加密码短语。';
 
   @override
-  String get desktopPassStaysWindows =>
-      'Kryfo 无法用你的 Windows 账户保存它的密钥，所以密码短语会保留。';
+  String get desktopPassStaysWindows => 'Kryfo 无法用你的 Windows 账户保存它的密钥，所以密码短语会保留。';
 
   @override
   String get desktopBackupCardTitle => '留一份 Kryfo 备份';
 
   @override
-  String get desktopBackupCardLine =>
-      '这台电脑上的 Windows 账户保管着 Kryfo 的密钥。如果电脑或账户被重置，Kryfo 备份能找回一切。';
+  String get desktopBackupCardLine => '这台电脑上的 Windows 账户保管着 Kryfo 的密钥。如果电脑或账户被重置，Kryfo 备份能找回一切。';
 
   @override
   String get desktopBackupHint => '如果这台电脑被重置，它能找回一切。';
@@ -10218,7 +9948,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
 class AppLocalizationsZhHant extends AppLocalizationsZh {
-  AppLocalizationsZhHant() : super('zh_Hant');
+  AppLocalizationsZhHant(): super('zh_Hant');
 
   @override
   String get atmosphereNone => '無';
@@ -10302,12 +10032,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get appearanceEveryChat => '所有聊天';
 
   @override
-  String get appearanceWallpaperHint =>
-      '在聊天選單裡為它單獨設定的桌布優先。照片只留在這支手機上，和你的聊天一起加密。';
+  String get appearanceWallpaperHint => '在聊天選單裡為它單獨設定的桌布優先。照片只留在這支手機上，和你的聊天一起加密。';
 
   @override
-  String get appearanceWallpaperHintDesk =>
-      '在聊天選單裡為它單獨設定的桌布優先。照片只留在這台電腦上，和你的聊天一起加密。';
+  String get appearanceWallpaperHintDesk => '在聊天選單裡為它單獨設定的桌布優先。照片只留在這台電腦上，和你的聊天一起加密。';
 
   @override
   String get backupThatPassphraseDoesNot => '這組密碼短語打不開這個檔案';
@@ -10367,8 +10095,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String deliveryModeMinAgo(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -10381,8 +10108,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String deliveryMode1HourAgo(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -10398,8 +10124,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String deliveryModeDaysAgo(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -10466,8 +10191,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String introBudgetInDays(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -10483,8 +10207,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String introBudgetInHours(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -10521,21 +10244,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String appOf(Object line, int held, int subs, Object c, int p, int e) {
-    final intl.NumberFormat heldNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat heldNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String heldString = heldNumberFormat.format(held);
-    final intl.NumberFormat subsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat subsNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String subsString = subsNumberFormat.format(subs);
-    final intl.NumberFormat pNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat pNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String pString = pNumberFormat.format(p);
-    final intl.NumberFormat eNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat eNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String eString = eNumberFormat.format(e);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -10553,13 +10268,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String appConnectSPagesEvents(Object line, Object c, int p, int e) {
-    final intl.NumberFormat pNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat pNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String pString = pNumberFormat.format(p);
-    final intl.NumberFormat eNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat eNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String eString = eNumberFormat.format(e);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -10608,15 +10319,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String appSBy(Object how, int secs, String why) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String secsString = secsNumberFormat.format(secs);
 
-    String _temp0 = intl.Intl.selectLogic(why, {
-      'push': '$how，$secsString 秒，推播觸發',
-      'other': '$how，$secsString 秒，排程觸發',
-    });
+    String _temp0 = intl.Intl.selectLogic(
+      why,
+      {
+        'push': '$how，$secsString 秒，推播觸發',
+        'other': '$how，$secsString 秒，排程觸發',
+      },
+    );
     return '$_temp0';
   }
 
@@ -10856,12 +10568,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get appTorIsOffTurn => 'Tor 已關閉。開啟它才能私密連線。';
 
   @override
-  String get appTheFirstConnectionTakes =>
-      '第一次連線需要一、兩分鐘，讓 Tor 建立一條私密路線。之後路線會被快取，下次開啟 Kryfo 就快多了。';
+  String get appTheFirstConnectionTakes => '第一次連線需要一、兩分鐘，讓 Tor 建立一條私密路線。之後路線會被快取，下次開啟 Kryfo 就快多了。';
 
   @override
-  String get appTorNoRelayYet =>
-      'Tor 已啟動，但還沒有中繼回應。Kryfo 會繼續嘗試，訊息會在這裡等候，直到有中繼回應。';
+  String get appTorNoRelayYet => 'Tor 已啟動，但還沒有中繼回應。Kryfo 會繼續嘗試，訊息會在這裡等候，直到有中繼回應。';
 
   @override
   String get appRelayAndFastModes => '快速模式不經過 Tor，所以更快。它在設定的「速度與隱私」裡，並說明了代價。';
@@ -10950,8 +10660,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get miuiAutostartLetKryfoRunIn => '讓 Kryfo 在背景執行';
 
   @override
-  String get miuiAutostartYourPhonePausesApps =>
-      '你的手機會暫停應用程式來省電。如果不設為例外，Kryfo 關閉時就無法接收訊息。';
+  String get miuiAutostartYourPhonePausesApps => '你的手機會暫停應用程式來省電。如果不設為例外，Kryfo 關閉時就無法接收訊息。';
 
   @override
   String get commonAllow => '允許';
@@ -10966,24 +10675,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get miuiAutostartCouldnTOpenIt => '無法開啟。請在手機設定中尋找「自動啟動」';
 
   @override
-  String get batteryGuideHuawei =>
-      '華為和榮耀會關閉由系統自動管理的應用程式。請在下一個畫面找到 Kryfo，關閉「自動管理」，並保持「允許自動啟動」「允許關聯啟動」和「允許背景活動」開啟。';
+  String get batteryGuideHuawei => '華為和榮耀會關閉由系統自動管理的應用程式。請在下一個畫面找到 Kryfo，關閉「自動管理」，並保持「允許自動啟動」「允許關聯啟動」和「允許背景活動」開啟。';
 
   @override
-  String get batteryGuideOppo =>
-      'OPPO 和 realme 會停止背景應用程式。請在下一個畫面找到 Kryfo，允許「自動啟動」。再到「電池」裡，也允許它在背景執行。';
+  String get batteryGuideOppo => 'OPPO 和 realme 會停止背景應用程式。請在下一個畫面找到 Kryfo，允許「自動啟動」。再到「電池」裡，也允許它在背景執行。';
 
   @override
-  String get batteryGuideVivo =>
-      'vivo 會停止背景應用程式。請在下一個畫面找到 Kryfo，允許它在背景啟動。再到「電池」裡，也允許它在背景高耗電。';
+  String get batteryGuideVivo => 'vivo 會停止背景應用程式。請在下一個畫面找到 Kryfo，允許它在背景啟動。再到「電池」裡，也允許它在背景高耗電。';
 
   @override
-  String get batteryGuideSamsung =>
-      '三星會讓它認為不常用的應用程式進入休眠。請在下一個畫面開啟「背景使用限制」，把 Kryfo 加入「永不休眠的應用程式」。';
+  String get batteryGuideSamsung => '三星會讓它認為不常用的應用程式進入休眠。請在下一個畫面開啟「背景使用限制」，把 Kryfo 加入「永不休眠的應用程式」。';
 
   @override
-  String get batteryGuideOnePlus =>
-      '一加會停止背景應用程式。請在下一個畫面找到 Kryfo，允許「自動啟動」。再到「電池」裡，把它設為「不最佳化」。';
+  String get batteryGuideOnePlus => '一加會停止背景應用程式。請在下一個畫面找到 Kryfo，允許「自動啟動」。再到「電池」裡，把它設為「不最佳化」。';
 
   @override
   String get batteryGuideXiaomiTitle => '讓 Kryfo 保持執行';
@@ -10998,8 +10702,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get batteryGuideXiaomiStep2 => '省電策略：把 Kryfo 設為「無限制」。';
 
   @override
-  String get batteryGuideXiaomiStep3 =>
-      '最近使用的應用程式：長按 Kryfo，點一下鎖頭，這樣「全部清除」和手機的自動清理都不會關掉它。';
+  String get batteryGuideXiaomiStep3 => '最近使用的應用程式：長按 Kryfo，點一下鎖頭，這樣「全部清除」和手機的自動清理都不會關掉它。';
 
   @override
   String get batteryGuideXiaomiAfter => '如果手機還是停止了 Kryfo，在你重新開啟它之前，什麼都收不到。';
@@ -11040,8 +10743,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String roomsDays(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -11060,8 +10762,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String roomsHours(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -11074,8 +10775,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String roomsAboutHours(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -11088,8 +10788,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String roomsMinutes(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -11236,8 +10935,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get backupKryfoBackup => 'Kryfo 備份';
 
   @override
-  String get backupYourEncryptedKryfoBackup =>
-      '你的 Kryfo 加密備份。這個檔案和密碼短語都要妥善保管，兩個都有才能還原。';
+  String get backupYourEncryptedKryfoBackup => '你的 Kryfo 加密備份。這個檔案和密碼短語都要妥善保管，兩個都有才能還原。';
 
   @override
   String get backupBackUpKryfo => '備份 Kryfo';
@@ -11255,24 +10953,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get backupMoveToAnotherDevice => '移到另一台裝置';
 
   @override
-  String get backupTheFileTakesThis =>
-      '這個檔案會帶走這個身分。檔案一建立，這支手機就會停止：這裡不會再收到任何新內容，從這裡傳出的東西也不會送達任何人。';
+  String get backupTheFileTakesThis => '這個檔案會帶走這個身分。檔案一建立，這支手機就會停止：這裡不會再收到任何新內容，從這裡傳出的東西也不會送達任何人。';
 
   @override
-  String get backupTheFileTakesThisDesk =>
-      '這個檔案會帶走這個身分。檔案一建立，這台電腦就會停止：這裡不會再收到任何新內容，從這裡傳出的東西也不會送達任何人。';
+  String get backupTheFileTakesThisDesk => '這個檔案會帶走這個身分。檔案一建立，這台電腦就會停止：這裡不會再收到任何新內容，從這裡傳出的東西也不會送達任何人。';
 
   @override
-  String get backupOneEncryptedFileYour =>
-      '一個加密檔案：你的身分、聯絡人、每則訊息，以及每張照片、每段語音和每個檔案。在另一台裝置上用密碼短語匯入。在那之前，你仍然可以改變主意，繼續留在這支手機上。';
+  String get backupOneEncryptedFileYour => '一個加密檔案：你的身分、聯絡人、每則訊息，以及每張照片、每段語音和每個檔案。在另一台裝置上用密碼短語匯入。在那之前，你仍然可以改變主意，繼續留在這支手機上。';
 
   @override
-  String get backupOneEncryptedFileYourIdentityYour =>
-      '一個加密檔案：你的身分、聯絡人、每則訊息，以及此刻這支手機上的每張照片、每段語音和每個檔案。今天之後說的話都不在裡面，所以重要的時候請再做一份。還原時需要檔案和密碼短語，兩者缺一不可。';
+  String get backupOneEncryptedFileYourIdentityYour => '一個加密檔案：你的身分、聯絡人、每則訊息，以及此刻這支手機上的每張照片、每段語音和每個檔案。今天之後說的話都不在裡面，所以重要的時候請再做一份。還原時需要檔案和密碼短語，兩者缺一不可。';
 
   @override
-  String get backupOneEncryptedFileYourIdentityYourDesk =>
-      '一個加密檔案：你的身分、聯絡人、每則訊息，以及此刻這台電腦上的每張照片、每段語音和每個檔案。今天之後說的話都不在裡面，所以重要的時候請再做一份。還原時需要檔案和密碼短語，兩者缺一不可。';
+  String get backupOneEncryptedFileYourIdentityYourDesk => '一個加密檔案：你的身分、聯絡人、每則訊息，以及此刻這台電腦上的每張照片、每段語音和每個檔案。今天之後說的話都不在裡面，所以重要的時候請再做一份。還原時需要檔案和密碼短語，兩者缺一不可。';
 
   @override
   String get backupPassphrase => '密碼短語';
@@ -11382,8 +11075,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String bridges1LineSaved(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -11395,8 +11087,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get bridgesWhenYouAskFor =>
-      '你請求橋接時，Tor 專案會看到你的 IP 位址。這很正常：Tor Browser 和所有 Tor 應用程式都是這樣取得橋接的，他們從中只能知道有人請求了橋接，對你的聊天一無所知。';
+  String get bridgesWhenYouAskFor => '你請求橋接時，Tor 專案會看到你的 IP 位址。這很正常：Tor Browser 和所有 Tor 應用程式都是這樣取得橋接的，他們從中只能知道有人請求了橋接，對你的聊天一無所知。';
 
   @override
   String get bridgesAsking => '索取中…';
@@ -11510,8 +11201,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String chatEarlierMessagesArrived(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -11566,8 +11256,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String chatThisChatHasPins(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -11649,8 +11338,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String chatRoughlyMin(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -11743,8 +11431,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -11804,8 +11491,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatEveryMessageHereIs => '這裡的每則訊息都會從這支手機上抹除。這只會清空你的副本，不會動到對方的裝置。';
 
   @override
-  String get chatEveryMessageHereIsDesk =>
-      '這裡的每則訊息都會從這台電腦上抹除。這只會清空你的副本，不會動到對方的裝置。';
+  String get chatEveryMessageHereIsDesk => '這裡的每則訊息都會從這台電腦上抹除。這只會清空你的副本，不會動到對方的裝置。';
 
   @override
   String get chatClear => '清空';
@@ -11814,8 +11500,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatBlockThisContact => '要封鎖這位聯絡人嗎？';
 
   @override
-  String get chatTheirMessagesStopArriving =>
-      '對方的訊息將不再送達，對方也會從你的聊天清單中消失。對方不會收到任何通知。你隨時可以在設定中解除封鎖。';
+  String get chatTheirMessagesStopArriving => '對方的訊息將不再送達，對方也會從你的聊天清單中消失。對方不會收到任何通知。你隨時可以在設定中解除封鎖。';
 
   @override
   String get commonBlock => '封鎖';
@@ -11845,8 +11530,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatJumpToTheNewest => '跳到最新';
 
   @override
-  String get chatBuildingAPrivateRoute =>
-      '正在建立私密路線 · 第一次連線比較慢，之後就快了。現在傳送的任何內容都會先排隊，之後自動送達。';
+  String get chatBuildingAPrivateRoute => '正在建立私密路線 · 第一次連線比較慢，之後就快了。現在傳送的任何內容都會先排隊，之後自動送達。';
 
   @override
   String get chatTheNextPhotoYou => '你傳送的下一張照片會以保護模式開啟 · Kryfo 會阻止對它截圖';
@@ -11914,12 +11598,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String chatOf(int count, int pos) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
-    final intl.NumberFormat posNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat posNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String posString = posNumberFormat.format(pos);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -12092,12 +11773,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cleanKryfoCouldNotOpen => 'Kryfo 無法開啟那個檔案。';
 
   @override
-  String get cleanItCleansJpegPng =>
-      '它可以清理 JPEG、PNG、WebP、HEIC、AVIF、GIF、MP4 和 MOV。沒有做任何變更。';
+  String get cleanItCleansJpegPng => '它可以清理 JPEG、PNG、WebP、HEIC、AVIF、GIF、MP4 和 MOV。沒有做任何變更。';
 
   @override
-  String get cleanItHoldsAShort =>
-      '它在圖片旁附帶一段短影片，而 Kryfo 目前還無法清理那個部分。請在相機中關閉動態照片，或改傳它的截圖。';
+  String get cleanItHoldsAShort => '它在圖片旁附帶一段短影片，而 Kryfo 目前還無法清理那個部分。請在相機中關閉動態照片，或改傳它的截圖。';
 
   @override
   String get cleanPicturesOver64Mb => '超過 64 MB 的圖片不會在手機上清理。沒有做任何變更。';
@@ -12284,8 +11963,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get contactEveryMessageAndThe => '每則訊息和這位聯絡人都會從這支手機上消失。不會傳送任何東西給對方。';
 
   @override
-  String get contactEveryMessageAndTheDesk =>
-      '每則訊息和這位聯絡人都會從這台電腦上消失。不會傳送任何東西給對方。';
+  String get contactEveryMessageAndTheDesk => '每則訊息和這位聯絡人都會從這台電腦上消失。不會傳送任何東西給對方。';
 
   @override
   String get commonDelete => '刪除';
@@ -12366,12 +12044,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String donateYourEarlierBitcoinPayment(String tier) {
-    String _temp0 = intl.Intl.selectLogic(tier, {
-      'supporter': '已偵測到你先前的 bitcoin 付款 · 支持者徽章已解鎖',
-      'patron': '已偵測到你先前的 bitcoin 付款 · 贊助人徽章已解鎖',
-      'guardian': '已偵測到你先前的 bitcoin 付款 · 守護者徽章已解鎖',
-      'other': '已偵測到你先前的 bitcoin 付款 · 支持者徽章已解鎖',
-    });
+    String _temp0 = intl.Intl.selectLogic(
+      tier,
+      {
+        'supporter': '已偵測到你先前的 bitcoin 付款 · 支持者徽章已解鎖',
+        'patron': '已偵測到你先前的 bitcoin 付款 · 贊助人徽章已解鎖',
+        'guardian': '已偵測到你先前的 bitcoin 付款 · 守護者徽章已解鎖',
+        'other': '已偵測到你先前的 bitcoin 付款 · 支持者徽章已解鎖',
+      },
+    );
     return '$_temp0';
   }
 
@@ -12426,12 +12107,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get donateCopyAddress => '複製地址';
 
   @override
-  String get donateBitcoinIsVerifiedBy =>
-      'Bitcoin 付款由我們自己的節點驗證，所以款項一到帳，你的徽章就會自動解鎖。';
+  String get donateBitcoinIsVerifiedBy => 'Bitcoin 付款由我們自己的節點驗證，所以款項一到帳，你的徽章就會自動解鎖。';
 
   @override
-  String get donateWeCanTVerify =>
-      '要驗證這條鏈，就得向外部服務查詢關於你的資訊，所以我們不這麼做。想捐還是可以捐。這不會解鎖徽章。';
+  String get donateWeCanTVerify => '要驗證這條鏈，就得向外部服務查詢關於你的資訊，所以我們不這麼做。想捐還是可以捐。這不會解鎖徽章。';
 
   @override
   String get donateBitcoinBadgesNeedOnion => 'Bitcoin 徽章需要 Onion 模式';
@@ -12495,16 +12174,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get donateUseTheAddressInstead => '改用地址';
 
   @override
-  String get donateThePaymentServiceIs =>
-      '付款服務是 onion 服務，只有 Onion 模式才能連上。現在沒有傳送任何東西。';
+  String get donateThePaymentServiceIs => '付款服務是 onion 服務，只有 Onion 模式才能連上。現在沒有傳送任何東西。';
 
   @override
-  String get donateTorWasSlowTo =>
-      'Tor 連到付款服務太慢了。你可以捐款到下方的地址，只是徽章不會自動解鎖。想要徽章的話，請稍後再試。';
+  String get donateTorWasSlowTo => 'Tor 連到付款服務太慢了。你可以捐款到下方的地址，只是徽章不會自動解鎖。想要徽章的話，請稍後再試。';
 
   @override
-  String get donateThePaymentServiceIsHavingTrouble =>
-      '付款服務目前出了點問題。你還是可以捐款到下方的地址，只是徽章不會自動解鎖。想要徽章的話，請稍後再試。';
+  String get donateThePaymentServiceIsHavingTrouble => '付款服務目前出了點問題。你還是可以捐款到下方的地址，只是徽章不會自動解鎖。想要徽章的話，請稍後再試。';
 
   @override
   String get commonTryAgain => '再試一次';
@@ -12523,8 +12199,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get donateOpenWallet => '開啟錢包';
 
   @override
-  String get donateThisScreenUpdatesItself =>
-      '一偵測到你的付款，這個畫面就會自動更新。\n請保持開啟。不會儲存任何東西，也沒有任何東西能識別你。';
+  String get donateThisScreenUpdatesItself => '一偵測到你的付款，這個畫面就會自動更新。\n請保持開啟。不會儲存任何東西，也沒有任何東西能識別你。';
 
   @override
   String get donateWatchingTheChainFor => '正在區塊鏈上等候你的付款';
@@ -12533,8 +12208,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get donateThisInvoiceExpired => '這張付款單已過期';
 
   @override
-  String get donateInvoicesTimeOutIf =>
-      '付款單會逾時。如果你已經付款，請保持這個畫面開啟：我們會在一段時間內每分鐘再向服務查詢一次，下次你開啟「支持」時也會再查。你隨時可以開一張新的。';
+  String get donateInvoicesTimeOutIf => '付款單會逾時。如果你已經付款，請保持這個畫面開啟：我們會在一段時間內每分鐘再向服務查詢一次，下次你開啟「支持」時也會再查。你隨時可以開一張新的。';
 
   @override
   String get donateNewInvoice => '新付款單';
@@ -12559,23 +12233,29 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String donateVerifiedOnChainYou(String tier) {
-    String _temp0 = intl.Intl.selectLogic(tier, {
-      'supporter': '已在鏈上驗證：你現在是支持者了。沒有人能把這拿走。',
-      'patron': '已在鏈上驗證：你現在是贊助人了。沒有人能把這拿走。',
-      'guardian': '已在鏈上驗證：你現在是守護者了。沒有人能把這拿走。',
-      'other': '已在鏈上驗證：你現在是支持者了。沒有人能把這拿走。',
-    });
+    String _temp0 = intl.Intl.selectLogic(
+      tier,
+      {
+        'supporter': '已在鏈上驗證：你現在是支持者了。沒有人能把這拿走。',
+        'patron': '已在鏈上驗證：你現在是贊助人了。沒有人能把這拿走。',
+        'guardian': '已在鏈上驗證：你現在是守護者了。沒有人能把這拿走。',
+        'other': '已在鏈上驗證：你現在是支持者了。沒有人能把這拿走。',
+      },
+    );
     return '$_temp0';
   }
 
   @override
   String donateVerifiedBadgeStays(String tier) {
-    String _temp0 = intl.Intl.selectLogic(tier, {
-      'supporter': '已在鏈上驗證。感謝你再次支持。你的支持者徽章維持不變。',
-      'patron': '已在鏈上驗證。感謝你再次支持。你的贊助人徽章維持不變。',
-      'guardian': '已在鏈上驗證。感謝你再次支持。你的守護者徽章維持不變。',
-      'other': '已在鏈上驗證。感謝你再次支持。你的支持者徽章維持不變。',
-    });
+    String _temp0 = intl.Intl.selectLogic(
+      tier,
+      {
+        'supporter': '已在鏈上驗證。感謝你再次支持。你的支持者徽章維持不變。',
+        'patron': '已在鏈上驗證。感謝你再次支持。你的贊助人徽章維持不變。',
+        'guardian': '已在鏈上驗證。感謝你再次支持。你的守護者徽章維持不變。',
+        'other': '已在鏈上驗證。感謝你再次支持。你的支持者徽章維持不變。',
+      },
+    );
     return '$_temp0';
   }
 
@@ -12592,8 +12272,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get gettingMessagesMostPrivate => '最私密';
 
   @override
-  String get gettingMessagesMessagesArriveInstantlyNothing =>
-      '訊息即時送達。任何東西都不會離開 Tor。最耗電。';
+  String get gettingMessagesMessagesArriveInstantlyNothing => '訊息即時送達。任何東西都不會離開 Tor。最耗電。';
 
   @override
   String get gettingMessagesCheckIns => '定時查收';
@@ -12602,19 +12281,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get gettingMessagesLightest => '最省電';
 
   @override
-  String get gettingMessagesKryfoLooksForMessages =>
-      'Kryfo 每 15 分鐘查收一次訊息。省電，但訊息可能會晚到。';
+  String get gettingMessagesKryfoLooksForMessages => 'Kryfo 每 15 分鐘查收一次訊息。省電，但訊息可能會晚到。';
 
   @override
   String get gettingMessagesAGenericAlertWith => '只顯示一般提醒，不顯示傳送者和訊息內容';
 
   @override
-  String get gettingMessagesShowsMessageTextIn =>
-      '在通知中顯示訊息內容，即使 Kryfo 已鎖定也會顯示。';
+  String get gettingMessagesShowsMessageTextIn => '在通知中顯示訊息內容，即使 Kryfo 已鎖定也會顯示。';
 
   @override
-  String get gettingMessagesWhenThePhoneSits =>
-      '手機靜置不動時，Android 會拉長查收的間隔。上面那一行顯示的是實際的上次查收。Kryfo 開著的時候會保持連線。';
+  String get gettingMessagesWhenThePhoneSits => '手機靜置不動時，Android 會拉長查收的間隔。上面那一行顯示的是實際的上次查收。Kryfo 開著的時候會保持連線。';
 
   @override
   String get groupChatJumpToTheNewest => '跳到最新';
@@ -12695,8 +12371,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupChatBurnTimer => '限時訊息';
 
   @override
-  String get groupChatNewMessagesDisappearOnceRead =>
-      '新訊息在被讀取後經過這段時間消失。你傳送的從傳送時開始計時。';
+  String get groupChatNewMessagesDisappearOnceRead => '新訊息在被讀取後經過這段時間消失。你傳送的從傳送時開始計時。';
 
   @override
   String get groupChatToday => '今天';
@@ -12709,8 +12384,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String groupChatThisChatHasPins(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -12764,8 +12438,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupChatItDisappearsWithNo => '訊息會從所有人的手機上刪除，除非已被儲存。這個動作無法復原。';
 
   @override
-  String get groupChatItDisappearsWithNoDesk =>
-      '訊息會從所有人的裝置上刪除，除非已被儲存。這個動作無法復原。';
+  String get groupChatItDisappearsWithNoDesk => '訊息會從所有人的裝置上刪除，除非已被儲存。這個動作無法復原。';
 
   @override
   String get groupChatUnsend => '收回';
@@ -12823,8 +12496,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String groupChatHere(int count, Object time) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -12837,8 +12509,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String groupChatMembers(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -12883,12 +12554,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String groupChatFileReach(int have, int count) {
-    final intl.NumberFormat haveNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat haveNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String haveString = haveNumberFormat.format(have);
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -12902,8 +12570,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String groupChatFileGaveUp(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -12959,8 +12626,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupInfoResetLinkLine => '舊連結將失效。聊天室裡的人會留下，並收到新連結。';
 
   @override
-  String get groupInfoRemoveRoomLine =>
-      '對方仍可透過聊天室連結重新加入。重設連結即可把對方擋在外面。仍在聊天室裡的人會收到新連結。';
+  String get groupInfoRemoveRoomLine => '對方仍可透過聊天室連結重新加入。重設連結即可把對方擋在外面。仍在聊天室裡的人會收到新連結。';
 
   @override
   String get groupInfoRemoveAndResetLink => '移除並重設連結';
@@ -12973,8 +12639,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String appGroupHoldsUpTo(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -12992,12 +12657,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupInfoClearThisConversation => '要清空這段對話嗎？';
 
   @override
-  String get groupInfoEveryMessageHereIs =>
-      '這裡的每則訊息都會從這支手機上抹除。這只會清空你的副本，其他成員的副本會保留。';
+  String get groupInfoEveryMessageHereIs => '這裡的每則訊息都會從這支手機上抹除。這只會清空你的副本，其他成員的副本會保留。';
 
   @override
-  String get groupInfoEveryMessageHereIsDesk =>
-      '這裡的每則訊息都會從這台電腦上抹除。這只會清空你的副本，其他成員的副本會保留。';
+  String get groupInfoEveryMessageHereIsDesk => '這裡的每則訊息都會從這台電腦上抹除。這只會清空你的副本，其他成員的副本會保留。';
 
   @override
   String get groupInfoClear => '清空';
@@ -13015,8 +12678,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupInfoEverythingInItIs => '裡面的一切會立即從這支手機上抹除，你在這裡使用的金鑰也會永久消失。';
 
   @override
-  String get groupInfoEverythingInItIsDesk =>
-      '裡面的一切會立即從這台電腦上抹除，你在這裡使用的金鑰也會永久消失。';
+  String get groupInfoEverythingInItIsDesk => '裡面的一切會立即從這台電腦上抹除，你在這裡使用的金鑰也會永久消失。';
 
   @override
   String groupChatYouWereRemovedFrom(Object name) {
@@ -13030,20 +12692,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupInfoLeaveGroupLineDesk => '你將不再收到它的訊息，裡面的一切也會從這台電腦上抹除。';
 
   @override
-  String get groupInfoLeaveGroupAdmin =>
-      '你將不再收到它的訊息，裡面的一切也會從這支手機上抹除。你是管理員，離開後就沒有人能再增減成員或重新命名了。';
+  String get groupInfoLeaveGroupAdmin => '你將不再收到它的訊息，裡面的一切也會從這支手機上抹除。你是管理員，離開後就沒有人能再增減成員或重新命名了。';
 
   @override
-  String get groupInfoLeaveGroupAdminDesk =>
-      '你將不再收到它的訊息，裡面的一切也會從這台電腦上抹除。你是管理員，離開後就沒有人能再增減成員或重新命名了。';
+  String get groupInfoLeaveGroupAdminDesk => '你將不再收到它的訊息，裡面的一切也會從這台電腦上抹除。你是管理員，離開後就沒有人能再增減成員或重新命名了。';
 
   @override
-  String get groupInfoLeaveRoomMaker =>
-      '裡面的一切會立即從這支手機上抹除，你在這裡使用的金鑰也會永久消失。這個聊天室是你建立的，你離開後它的連結就不能再讓人加入了。';
+  String get groupInfoLeaveRoomMaker => '裡面的一切會立即從這支手機上抹除，你在這裡使用的金鑰也會永久消失。這個聊天室是你建立的，你離開後它的連結就不能再讓人加入了。';
 
   @override
-  String get groupInfoLeaveRoomMakerDesk =>
-      '裡面的一切會立即從這台電腦上抹除，你在這裡使用的金鑰也會永久消失。這個聊天室是你建立的，你離開後它的連結就不能再讓人加入了。';
+  String get groupInfoLeaveRoomMakerDesk => '裡面的一切會立即從這台電腦上抹除，你在這裡使用的金鑰也會永久消失。這個聊天室是你建立的，你離開後它的連結就不能再讓人加入了。';
 
   @override
   String get groupInfoLeave => '離開';
@@ -13053,8 +12711,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String groupInfo1Member(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -13133,8 +12790,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get handleClaimThisHandle => '認領這個使用者名稱';
 
   @override
-  String get handleAnyoneWithThisLink =>
-      '任何拿到這個連結的人都能和你開始私密聊天。它只帶有你的邀請，沒有其他任何東西。';
+  String get handleAnyoneWithThisLink => '任何拿到這個連結的人都能和你開始私密聊天。它只帶有你的邀請，沒有其他任何東西。';
 
   @override
   String get handleLinkCopied => '已複製連結';
@@ -13172,8 +12828,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get handleWhatAHandleDoes => '使用者名稱的用途';
 
   @override
-  String get handleAnyoneWhoKnowsIt =>
-      '任何知道它的人都能要求傳訊息給你。這個頁面只存放你的邀請和你寫的那一句話，沒有其他東西，也不會記錄誰讀過它。你隨時都可以刪除它。';
+  String get handleAnyoneWhoKnowsIt => '任何知道它的人都能要求傳訊息給你。這個頁面只存放你的邀請和你寫的那一句話，沒有其他東西，也不會記錄誰讀過它。你隨時都可以刪除它。';
 
   @override
   String handleIsNotYoursOn(Object handle) {
@@ -13220,8 +12875,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String homeHours(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -13234,8 +12888,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String homeMinutes(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -13270,8 +12923,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeYourPhoneKeepsStopping => '你的手機一直在停止 Kryfo';
 
   @override
-  String get homeItHasClosedKryfo =>
-      '它今天已經關掉 Kryfo 三次，所以訊息延遲了或卡住了。定時查收不受影響：Kryfo 會每 15 分鐘醒來一次，而不是一直保持連線。';
+  String get homeItHasClosedKryfo => '它今天已經關掉 Kryfo 三次，所以訊息延遲了或卡住了。定時查收不受影響：Kryfo 會每 15 分鐘醒來一次，而不是一直保持連線。';
 
   @override
   String get homeSwitchToCheckIns => '改用定時查收';
@@ -13283,8 +12935,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeNotificationsAreOff => '通知已關閉';
 
   @override
-  String get homeAndroidIsBlockingThem =>
-      'Android 正在阻擋通知，所以 Kryfo 關閉時，你什麼都不會收到。打開 Kryfo 時訊息還是會送達。';
+  String get homeAndroidIsBlockingThem => 'Android 正在阻擋通知，所以 Kryfo 關閉時，你什麼都不會收到。打開 Kryfo 時訊息還是會送達。';
 
   @override
   String get homeCouldnTOpenIt => '無法開啟。請在手機設定中尋找 Kryfo';
@@ -13309,8 +12960,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String homeWaitingSendsWhenYou(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -13338,8 +12988,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String home1Chat(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -13369,8 +13018,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String homeMembers(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -13465,8 +13113,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String home1PersonWantsTo(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -13511,13 +13158,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String introduceOfIntroductionsLeftThis(int max, int left) {
-    final intl.NumberFormat maxNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat maxNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String maxString = maxNumberFormat.format(max);
-    final intl.NumberFormat leftNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat leftNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String leftString = leftNumberFormat.format(left);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -13597,12 +13240,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get lockFileItMayHaveBeen => '它可能在傳送途中被截斷了。請對方再傳一次。沒有儲存任何東西。';
 
   @override
-  String get lockFileItOpensWithThe =>
-      '它要用收件人的金鑰檔案，在電腦上的 age 工具中開啟。Kryfo 能開啟的是用密碼鎖定的那種。';
+  String get lockFileItOpensWithThe => '它要用收件人的金鑰檔案，在電腦上的 age 工具中開啟。Kryfo 能開啟的是用密碼鎖定的那種。';
 
   @override
-  String get lockFileKryfoOpensFilesLocked =>
-      'Kryfo 可以開啟用 age 鎖定的檔案。這類檔名通常以 .age 結尾。';
+  String get lockFileKryfoOpensFilesLocked => 'Kryfo 可以開啟用 age 鎖定的檔案。這類檔名通常以 .age 結尾。';
 
   @override
   String get lockFileCloseAFewApps => '請關閉幾個應用程式後再試一次。檢查密碼時，會短暫需要幾百 MB 的記憶體。';
@@ -13719,8 +13360,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get lockFileTheNameAloneCan => '光是檔名就可能透露裡面的內容。';
 
   @override
-  String get lockFileAnyoneWithThePassword =>
-      '任何知道密碼的人都能開啟它，無論是在 Kryfo 裡，還是在任何裝有免費工具 age 的電腦上。忘了密碼，檔案就永遠拿不回來了。沒有人能重設它。';
+  String get lockFileAnyoneWithThePassword => '任何知道密碼的人都能開啟它，無論是在 Kryfo 裡，還是在任何裝有免費工具 age 的電腦上。忘了密碼，檔案就永遠拿不回來了。沒有人能重設它。';
 
   @override
   String get lockFileLocked2 => '已鎖定。';
@@ -13805,8 +13445,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get movedWipeThisPhoneDesk => '要從這台電腦抹除 Kryfo 嗎？';
 
   @override
-  String get movedEverythingKryfoHoldsHere =>
-      'Kryfo 在這裡保存的一切都會消失：訊息、聯絡人、金鑰。另一台裝置會保有這一切。這個動作無法復原。';
+  String get movedEverythingKryfoHoldsHere => 'Kryfo 在這裡保存的一切都會消失：訊息、聯絡人、金鑰。另一台裝置會保有這一切。這個動作無法復原。';
 
   @override
   String get movedWipeIt => '抹除';
@@ -13815,8 +13454,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get movedNotMovingAfterAll => '最後決定不搬了？';
 
   @override
-  String get movedOnlyDoThisIf =>
-      '只有在備份從未匯入任何地方時才這麼做。如果已經匯入過，現在就有兩台裝置持有同一個身分，兩邊都會開始遺失新訊息。';
+  String get movedOnlyDoThisIf => '只有在備份從未匯入任何地方時才這麼做。如果已經匯入過，現在就有兩台裝置持有同一個身分，兩邊都會開始遺失新訊息。';
 
   @override
   String get movedIMStayingHere => '我要留在這裡';
@@ -13878,12 +13516,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get myKryfoKryfoDoesnTScan => 'Kryfo 不會掃描你的通訊錄，這正是重點。';
 
   @override
-  String get myKryfoIfThisLinkEnds =>
-      '如果這個連結流傳到你不希望的地方，請到設定中重設。之後所有持有它的人都需要新的連結。';
+  String get myKryfoIfThisLinkEnds => '如果這個連結流傳到你不希望的地方，請到設定中重設。之後所有持有它的人都需要新的連結。';
 
   @override
-  String get myKryfoAlreadyShareAFriend =>
-      '你們在 Kryfo 上有共同的朋友嗎？對方可以在聊天中介紹你們認識，你們就不用送出請求。';
+  String get myKryfoAlreadyShareAFriend => '你們在 Kryfo 上有共同的朋友嗎？對方可以在聊天中介紹你們認識，你們就不用送出請求。';
 
   @override
   String get myKryfoHandleCopied => '已複製使用者名稱';
@@ -13913,8 +13549,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get myKryfoYourLinkAppearsOnce => '連線後就會顯示你的連結';
 
   @override
-  String get myKryfoTheLinkCarriesYour =>
-      '這個連結帶有你的三個詞、你的位址，以及開始聊天所需的金鑰。在你到設定中重設之前，它都有效。';
+  String get myKryfoTheLinkCarriesYour => '這個連結帶有你的三個詞、你的位址，以及開始聊天所需的金鑰。在你到設定中重設之前，它都有效。';
 
   @override
   String get myKryfoSendTheLink => '傳送連結';
@@ -13938,8 +13573,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get myKryfoTypeTheNameThey => '輸入對方給你的 @名稱。對方有認領名稱才有效。';
 
   @override
-  String get myKryfoTheLookupAsksFor =>
-      '查詢只會送出那一個名稱，不含任何關於你的資訊。你傳給對方的第一則訊息仍會以請求的形式送達。';
+  String get myKryfoTheLookupAsksFor => '查詢只會送出那一個名稱，不含任何關於你的資訊。你傳給對方的第一則訊息仍會以請求的形式送達。';
 
   @override
   String get myKryfoLooking => '尋找中…';
@@ -13982,8 +13616,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String newGroupSelected(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -14074,8 +13707,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String notesExportCount(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -14129,8 +13761,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get notesExportHoldsInstaller => '這份匯出裡有一個應用程式安裝檔，所以不能分享。請改為儲存到手機上。';
 
   @override
-  String get notesExportHoldsInstallerDesk =>
-      '這份匯出裡有一個應用程式安裝檔，所以不能分享。請改為儲存到這台電腦上。';
+  String get notesExportHoldsInstallerDesk => '這份匯出裡有一個應用程式安裝檔，所以不能分享。請改為儲存到這台電腦上。';
 
   @override
   String get notesExportSaved => '筆記已儲存';
@@ -14162,12 +13793,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingYourNameIsThree => '*你的名字就是三個詞。*不用手機號碼，不用電子郵件，不用通訊錄。';
 
   @override
-  String get onboardingNobodyGetsInUnless =>
-      '*除非你允許，沒有人能進來。*只有認領了公開使用者名稱，別人才能搜尋到你。聯絡人都由雙方主動新增。';
+  String get onboardingNobodyGetsInUnless => '*除非你允許，沒有人能進來。*只有認領了公開使用者名稱，別人才能搜尋到你。聯絡人都由雙方主動新增。';
 
   @override
-  String get onboardingTheFirstConnectionTakes =>
-      '*第一次連線需要一分鐘。*Kryfo 會先建立私密路線再傳送。之後就快了。';
+  String get onboardingTheFirstConnectionTakes => '*第一次連線需要一分鐘。*Kryfo 會先建立私密路線再傳送。之後就快了。';
 
   @override
   String get onboardingBegin => '開始';
@@ -14200,8 +13829,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingContinue => '繼續 →';
 
   @override
-  String get onboardingKryfoBuildsAPrivateRouteBefore =>
-      'Kryfo 在傳送任何東西之前，會先建立一條私密路線。你離線時，訊息會先等著，等你回來再送達。';
+  String get onboardingKryfoBuildsAPrivateRouteBefore => 'Kryfo 在傳送任何東西之前，會先建立一條私密路線。你離線時，訊息會先等著，等你回來再送達。';
 
   @override
   String get onboardingYourIdentityLivesOn => '你的身分存在這支手機上。準備好時，可以從設定中備份。';
@@ -14213,8 +13841,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingOneQuiet => '一則安靜的*通知*。';
 
   @override
-  String get onboardingAndroidNeedsAVisible =>
-      '應用程式在背景監聽時，Android 需要顯示一則通知。Kryfo 關閉時，訊息就是這樣送到你手上的。';
+  String get onboardingAndroidNeedsAVisible => '應用程式在背景監聽時，Android 需要顯示一則通知。Kryfo 關閉時，訊息就是這樣送到你手上的。';
 
   @override
   String get onboardingSilentAndAtThe => '無聲，而且放在通知欄最底下';
@@ -14279,8 +13906,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get openLockedPassword => '密碼';
 
   @override
-  String get openLockedThePasswordIsChecked =>
-      '會先檢查密碼。確認之後，Kryfo 才會詢問要把開啟的檔案放在哪裡，然後直接存到那裡。';
+  String get openLockedThePasswordIsChecked => '會先檢查密碼。確認之後，Kryfo 才會詢問要把開啟的檔案放在哪裡，然後直接存到那裡。';
 
   @override
   String get openLockedOpened2 => '已開啟。';
@@ -14430,12 +14056,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pinsTurnOffTheApp => '要關閉應用程式鎖嗎？';
 
   @override
-  String get pinsThePinGoesAnd =>
-      'PIN 碼會被移除，抹除 PIN 和所有隱藏聊天也會一起移除。任何拿著你手機的人，都能以你的身分開啟 Kryfo。';
+  String get pinsThePinGoesAnd => 'PIN 碼會被移除，抹除 PIN 和所有隱藏聊天也會一起移除。任何拿著你手機的人，都能以你的身分開啟 Kryfo。';
 
   @override
-  String get pinsThePinGoesAndDesk =>
-      'PIN 碼會被移除，抹除 PIN 和所有隱藏聊天也會一起移除。任何用你電腦的人，都能以你的身分開啟 Kryfo。';
+  String get pinsThePinGoesAndDesk => 'PIN 碼會被移除，抹除 PIN 和所有隱藏聊天也會一起移除。任何用你電腦的人，都能以你的身分開啟 Kryfo。';
 
   @override
   String get pinsUnlockWithFingerprint => '用指紋解鎖';
@@ -14483,12 +14107,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String profileYouAreAThank(String tier) {
-    String _temp0 = intl.Intl.selectLogic(tier, {
-      'supporter': '你是支持者。謝謝你。',
-      'patron': '你是贊助人。謝謝你。',
-      'guardian': '你是守護者。謝謝你。',
-      'other': '你是支持者。謝謝你。',
-    });
+    String _temp0 = intl.Intl.selectLogic(
+      tier,
+      {
+        'supporter': '你是支持者。謝謝你。',
+        'patron': '你是贊助人。謝謝你。',
+        'guardian': '你是守護者。謝謝你。',
+        'other': '你是支持者。謝謝你。',
+      },
+    );
     return '$_temp0';
   }
 
@@ -14725,8 +14352,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get restoreReplaceTheAccountOnDesk => '要取代這台電腦上的帳號嗎？';
 
   @override
-  String get restoreWhatIsHereNow =>
-      '這裡現有的一切，包括身分、聯絡人和訊息，都會消失。檔案內容會取而代之。這個動作無法復原。';
+  String get restoreWhatIsHereNow => '這裡現有的一切，包括身分、聯絡人和訊息，都會消失。檔案內容會取而代之。這個動作無法復原。';
 
   @override
   String get restoreReplaceIt => '取代';
@@ -14778,8 +14404,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get restoreTheRestoreDidNot => '還原沒有完成。沒有做任何變更';
 
   @override
-  String get restoreKryfoClosesRestoreAgain =>
-      '這裡的部分資料已經被取代。Kryfo 現在會關閉。請重新開啟，再還原一次這個檔案。';
+  String get restoreKryfoClosesRestoreAgain => '這裡的部分資料已經被取代。Kryfo 現在會關閉。請重新開啟，再還原一次這個檔案。';
 
   @override
   String get restoreThisIdentity => '這個身分';
@@ -14816,8 +14441,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String restoreYourPhotosVoiceNotesCount(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -14844,20 +14468,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get restoreWhatDoesnT => '不會帶過來的';
 
   @override
-  String get restoreTheOldPhoneStops =>
-      '你一從這裡傳送任何東西，舊手機就會停止接收。你從這台裝置傳出的第一則訊息，就是舊手機最後能跟上的一則；之後送到舊手機的任何內容，在那裡都無法讀取，也不會在這裡等你。';
+  String get restoreTheOldPhoneStops => '你一從這裡傳送任何東西，舊手機就會停止接收。你從這台裝置傳出的第一則訊息，就是舊手機最後能跟上的一則；之後送到舊手機的任何內容，在那裡都無法讀取，也不會在這裡等你。';
 
   @override
-  String get restoreTheOldPhoneStopsDesk =>
-      '你一從這裡傳送任何東西，舊裝置就會停止接收。你從這台電腦傳出的第一則訊息，就是舊裝置最後能跟上的一則；之後送到舊裝置的任何內容，在那裡都無法讀取，也不會在這裡等你。';
+  String get restoreTheOldPhoneStopsDesk => '你一從這裡傳送任何東西，舊裝置就會停止接收。你從這台電腦傳出的第一則訊息，就是舊裝置最後能跟上的一則；之後送到舊裝置的任何內容，在那裡都無法讀取，也不會在這裡等你。';
 
   @override
-  String get restoreIfThePhoneThis =>
-      '如果這個檔案原本所在的手機還在使用，請先在那支手機上停止使用 Kryfo，再繼續。兩支手機共用一個 Kryfo，兩邊都會遺失訊息。';
+  String get restoreIfThePhoneThis => '如果這個檔案原本所在的手機還在使用，請先在那支手機上停止使用 Kryfo，再繼續。兩支手機共用一個 Kryfo，兩邊都會遺失訊息。';
 
   @override
-  String get restoreIfThePhoneThisDesk =>
-      '如果這個檔案原本所在的裝置還在使用，請先在那台裝置上停止使用 Kryfo，再繼續。兩台裝置共用一個 Kryfo，兩邊都會遺失訊息。';
+  String get restoreIfThePhoneThisDesk => '如果這個檔案原本所在的裝置還在使用，請先在那台裝置上停止使用 Kryfo，再繼續。兩台裝置共用一個 Kryfo，兩邊都會遺失訊息。';
 
   @override
   String get restoreNotificationsNeedSettingUp => '需要在這台裝置上重新設定通知。';
@@ -14875,12 +14495,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get restoreFromABackupFile => '從備份檔案';
 
   @override
-  String get restoreABackupBringsBack =>
-      '備份會找回你的身分和聯絡人，以及建立檔案時手機上的訊息。之後說的任何話都不在裡面。';
+  String get restoreABackupBringsBack => '備份會找回你的身分和聯絡人，以及建立檔案時手機上的訊息。之後說的任何話都不在裡面。';
 
   @override
-  String get restoreABackupBringsBackDesk =>
-      '備份會找回你的身分和聯絡人，以及建立檔案時裝置上的訊息。之後說的任何話都不在裡面。';
+  String get restoreABackupBringsBackDesk => '備份會找回你的身分和聯絡人，以及建立檔案時裝置上的訊息。之後說的任何話都不在裡面。';
 
   @override
   String get restoreTheFile => '檔案';
@@ -14946,12 +14564,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get roomCreateBurnerRoom => '臨時聊天室';
 
   @override
-  String get roomCreateARoomThatEnds =>
-      '一個會結束的聊天室。每個人都用專為它產生的金鑰加入，結束時，任何手機上都不會留下任何東西。';
+  String get roomCreateARoomThatEnds => '一個會結束的聊天室。每個人都用專為它產生的金鑰加入，結束時，任何手機上都不會留下任何東西。';
 
   @override
-  String get roomCreateARoomThatEndsDesk =>
-      '一個會結束的聊天室。每個人都用專為它產生的金鑰加入，結束時，任何裝置上都不會留下任何東西。';
+  String get roomCreateARoomThatEndsDesk => '一個會結束的聊天室。每個人都用專為它產生的金鑰加入，結束時，任何裝置上都不會留下任何東西。';
 
   @override
   String get roomCreateRoomName => '聊天室名稱';
@@ -14964,8 +14580,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String roomCreateNoOnePastThe(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -14978,8 +14593,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String roomCreateOffUpTo(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -15005,8 +14619,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get roomLinkSendTheRoomTo => '把聊天室傳給';
 
   @override
-  String get roomLinkTheyWillKnowThis =>
-      '對方會知道這個聊天室是你傳的。在聊天室裡，對方和其他人一樣，只是一把金鑰。';
+  String get roomLinkTheyWillKnowThis => '對方會知道這個聊天室是你傳的。在聊天室裡，對方和其他人一樣，只是一把金鑰。';
 
   @override
   String get roomLinkNoContactsYet => '還沒有聯絡人';
@@ -15017,8 +14630,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get roomLinkAnyoneWithThisCan =>
-      '在聊天室結束之前，任何持有這個連結的人都能加入。他們會用專為這個聊天室產生的金鑰進入，也看不到他們加入之前傳送的任何內容。';
+  String get roomLinkAnyoneWithThisCan => '在聊天室結束之前，任何持有這個連結的人都能加入。他們會用專為這個聊天室產生的金鑰進入，也看不到他們加入之前傳送的任何內容。';
 
   @override
   String get roomLinkRoomLinkCopied => '已複製聊天室連結';
@@ -15072,16 +14684,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get seenWhatWeCanSee => '我們看得到什麼';
 
   @override
-  String get seenEveryMessengerClaimsPrivacy =>
-      '這是按照傳送路線列出的清單，包括薄弱之處。點一列就能看到原因。';
+  String get seenEveryMessengerClaimsPrivacy => '這是按照傳送路線列出的清單，包括薄弱之處。點一列就能看到原因。';
 
   @override
-  String get seenHonestAboutTheLast =>
-      '最後幾列正是應用程式鎖、抹除 PIN 和加密儲存要應對的；如果有人拿著你已解鎖的手機，沒有任何工具救得了你。完整的威脅模型在程式碼庫的 THREAT_MODEL.md 裡，依據 LINDDUN 撰寫。程式碼是公開的，你可以自己查證這些。';
+  String get seenHonestAboutTheLast => '最後幾列正是應用程式鎖、抹除 PIN 和加密儲存要應對的；如果有人拿著你已解鎖的手機，沒有任何工具救得了你。完整的威脅模型在程式碼庫的 THREAT_MODEL.md 裡，依據 LINDDUN 撰寫。程式碼是公開的，你可以自己查證這些。';
 
   @override
-  String get seenHonestAboutTheLastDesk =>
-      '最後幾列正是應用程式鎖、抹除 PIN 和加密儲存要應對的；如果有人坐在你已解鎖的電腦前，沒有任何工具救得了你。完整的威脅模型在程式碼庫的 THREAT_MODEL.md 裡，依據 LINDDUN 撰寫。程式碼是公開的，你可以自己查證這些。';
+  String get seenHonestAboutTheLastDesk => '最後幾列正是應用程式鎖、抹除 PIN 和加密儲存要應對的；如果有人坐在你已解鎖的電腦前，沒有任何工具救得了你。完整的威脅模型在程式碼庫的 THREAT_MODEL.md 裡，依據 LINDDUN 撰寫。程式碼是公開的，你可以自己查證這些。';
 
   @override
   String get seenHidden => '隱藏';
@@ -15102,15 +14711,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get seenWhoYouTalkTo => '你在跟誰聊天';
 
   @override
-  String get seenEachConversationGetsIts =>
-      '每段對話都有自己的位址，由雙方的金鑰推導而來。中繼看到的是一個個互不相關的投遞點，而不是一對人。';
+  String get seenEachConversationGetsIts => '每段對話都有自己的位址，由雙方的金鑰推導而來。中繼看到的是一個個互不相關的投遞點，而不是一對人。';
 
   @override
   String get seenWhatYouSay => '你說了什麼';
 
   @override
-  String get seenEndToEndEncrypted =>
-      '使用 Signal 雙棘輪演算法端對端加密，再以 gift wrap 包裝密封一次。我們讀不到。';
+  String get seenEndToEndEncrypted => '使用 Signal 雙棘輪演算法端對端加密，再以 gift wrap 包裝密封一次。我們讀不到。';
 
   @override
   String get seenYourIpAddress => '你的 IP 位址';
@@ -15125,19 +14732,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get seenIntroducer => '介紹人';
 
   @override
-  String get seenWhenAContactIntroduces =>
-      '當聯絡人介紹你認識某人時，那位聯絡人會知道你們兩個現在有聯繫。其他人都不會知道。中繼看到的是密文，也沒有任何伺服器看得到關係圖。';
+  String get seenWhenAContactIntroduces => '當聯絡人介紹你認識某人時，那位聯絡人會知道你們兩個現在有聯繫。其他人都不會知道。中繼看到的是密文，也沒有任何伺服器看得到關係圖。';
 
   @override
   String get seenTheScamShield => '防詐盾';
 
   @override
-  String get seenScamShieldRequestsOnly =>
-      '在你的手機上執行，使用應用程式內建的規則。不連網路，也不下載任何清單。它只會讀取陌生人的訊息請求，從不讀取聯絡人或群組傳給你的內容。';
+  String get seenScamShieldRequestsOnly => '在你的手機上執行，使用應用程式內建的規則。不連網路，也不下載任何清單。它只會讀取陌生人的訊息請求，從不讀取聯絡人或群組傳給你的內容。';
 
   @override
-  String get seenScamShieldRequestsOnlyDesk =>
-      '在你的電腦上執行，使用應用程式內建的規則。不連網路，也不下載任何清單。它只會讀取陌生人的訊息請求，從不讀取聯絡人或群組傳給你的內容。';
+  String get seenScamShieldRequestsOnlyDesk => '在你的電腦上執行，使用應用程式內建的規則。不連網路，也不下載任何清單。它只會讀取陌生人的訊息請求，從不讀取聯絡人或群組傳給你的內容。';
 
   @override
   String get seenBurnerRooms => '臨時聊天室';
@@ -15146,8 +14750,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get seenRoomKeys => '聊天室金鑰';
 
   @override
-  String get seenYouJoinARoom =>
-      '你用專為聊天室產生的金鑰加入，所以裡面的人得不到任何能在別處使用的資訊。晚加入的人看不到之前的紀錄。到期時，金鑰、訊息和媒體都會被銷毀。';
+  String get seenYouJoinARoom => '你用專為聊天室產生的金鑰加入，所以裡面的人得不到任何能在別處使用的資訊。晚加入的人看不到之前的紀錄。到期時，金鑰、訊息和媒體都會被銷毀。';
 
   @override
   String get seenLinkPreviews => '連結預覽';
@@ -15156,12 +14759,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get seenOverTor => '經由 Tor';
 
   @override
-  String get seenAPreviewIsFetched =>
-      '預覽由傳送者經由 Tor 擷取，並包在加密訊息中傳送。接收的手機不會發出任何請求。網站只會知道有個使用 Tor 的人要求了一個頁面，除此之外一無所知。永遠不會載入任何圖片，陌生人傳來的連結也只會顯示為純文字。';
+  String get seenAPreviewIsFetched => '預覽由傳送者經由 Tor 擷取，並包在加密訊息中傳送。接收的手機不會發出任何請求。網站只會知道有個使用 Tor 的人要求了一個頁面，除此之外一無所知。永遠不會載入任何圖片，陌生人傳來的連結也只會顯示為純文字。';
 
   @override
-  String get seenAPreviewIsFetchedDesk =>
-      '預覽由傳送者經由 Tor 擷取，並包在加密訊息中傳送。接收的裝置不會發出任何請求。網站只會知道有個使用 Tor 的人要求了一個頁面，除此之外一無所知。永遠不會載入任何圖片，陌生人傳來的連結也只會顯示為純文字。';
+  String get seenAPreviewIsFetchedDesk => '預覽由傳送者經由 Tor 擷取，並包在加密訊息中傳送。接收的裝置不會發出任何請求。網站只會知道有個使用 Tor 的人要求了一個頁面，除此之外一無所知。永遠不會載入任何圖片，陌生人傳來的連結也只會顯示為純文字。';
 
   @override
   String get seenASeizedUnlockedPhone => '被扣押的已解鎖手機';
@@ -15170,19 +14771,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get seenASeizedUnlockedPhoneDesk => '被扣押的已解鎖電腦';
 
   @override
-  String get seenIfSomeoneHoldsYour =>
-      '如果有人拿著你已解鎖的手機，他們就能讀你的訊息。應用程式鎖、抹除 PIN 和加密儲存能在那之前幫上忙，在那之後就不行了。';
+  String get seenIfSomeoneHoldsYour => '如果有人拿著你已解鎖的手機，他們就能讀你的訊息。應用程式鎖、抹除 PIN 和加密儲存能在那之前幫上忙，在那之後就不行了。';
 
   @override
-  String get seenIfSomeoneHoldsYourDesk =>
-      '如果有人坐在你已解鎖的電腦前，他們就能讀你的訊息。應用程式鎖、抹除 PIN 和加密儲存能在那之前幫上忙，在那之後就不行了。';
+  String get seenIfSomeoneHoldsYourDesk => '如果有人坐在你已解鎖的電腦前，他們就能讀你的訊息。應用程式鎖、抹除 PIN 和加密儲存能在那之前幫上忙，在那之後就不行了。';
 
   @override
   String get seenTheCryptoItself => '加密技術本身';
 
   @override
-  String get seenTheRatchetAndStorage =>
-      '棘輪和儲存層都是標準做法。連接兩者的那一層是我們自己寫的，還沒有任何獨立的第三方審查過。這是 alpha 版本。';
+  String get seenTheRatchetAndStorage => '棘輪和儲存層都是標準做法。連接兩者的那一層是我們自己寫的，還沒有任何獨立的第三方審查過。這是 alpha 版本。';
 
   @override
   String get seenFast => '快速';
@@ -15191,12 +14789,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsWipeKryfo => '要抹除 Kryfo 嗎？';
 
   @override
-  String get settingsIdentityMessagesContactsAnd =>
-      '這支手機上的身分、訊息、聯絡人和設定。除非你有備份，否則會永久消失。';
+  String get settingsIdentityMessagesContactsAnd => '這支手機上的身分、訊息、聯絡人和設定。除非你有備份，否則會永久消失。';
 
   @override
-  String get settingsIdentityMessagesContactsAndDesk =>
-      '這台電腦上的身分、訊息、聯絡人和設定。除非你有備份，否則會永久消失。';
+  String get settingsIdentityMessagesContactsAndDesk => '這台電腦上的身分、訊息、聯絡人和設定。除非你有備份，否則會永久消失。';
 
   @override
   String get commonContinue => '繼續';
@@ -15286,15 +14882,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsTypingIndicator => '輸入狀態提示';
 
   @override
-  String get settingsTypingIndicatorHint =>
-      '對方在輸入時，你們雙方都看得到。提示經 Tor 直接傳給對方，從不經過中繼。';
+  String get settingsTypingIndicatorHint => '對方在輸入時，你們雙方都看得到。提示經 Tor 直接傳給對方，從不經過中繼。';
 
   @override
   String get settingsTypingOnionOnly => '在 Onion 路線上可用';
 
   @override
-  String get settingsTypingBridgesOff =>
-      '使用橋接時關閉：監視你連線的人可能會對上輸入提示的訊號。關閉橋接後會自動恢復。';
+  String get settingsTypingBridgesOff => '使用橋接時關閉：監視你連線的人可能會對上輸入提示的訊號。關閉橋接後會自動恢復。';
 
   @override
   String get settingsLightTheme => '淺色主題';
@@ -15348,8 +14942,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsResetInviteLink => '要重設邀請連結嗎？';
 
   @override
-  String get settingsAnyoneWithAnOld =>
-      '持有舊 QR 碼或連結的人，無論透過哪種路線，都將無法再聯絡你。拿到了但從沒用過的人，需要你再給一個新碼。聯絡人、聊天和紀錄都會保留。';
+  String get settingsAnyoneWithAnOld => '持有舊 QR 碼或連結的人，無論透過哪種路線，都將無法再聯絡你。拿到了但從沒用過的人，需要你再給一個新碼。聯絡人、聊天和紀錄都會保留。';
 
   @override
   String get settingsReset => '重設';
@@ -15394,12 +14987,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsLinkCopied => '已複製連結';
 
   @override
-  String get settingsTheOfflineMapIn =>
-      '「工具」中的離線地圖以 Natural Earth（公有領域）繪製。城鎮名稱來自 GeoNames（geonames.org），採用 CC BY 4.0 授權。';
+  String get settingsTheOfflineMapIn => '「工具」中的離線地圖以 Natural Earth（公有領域）繪製。城鎮名稱來自 GeoNames（geonames.org），採用 CC BY 4.0 授權。';
 
   @override
-  String get settingsNotIndependentlyAuditedPre =>
-      '尚未經過獨立稽核。目前是 alpha 版：適合測試，還不適合高風險用途。';
+  String get settingsNotIndependentlyAuditedPre => '尚未經過獨立稽核。目前是 alpha 版：適合測試，還不適合高風險用途。';
 
   @override
   String get settingsFollowTitle => '追蹤 GnosiWorks（開發者）';
@@ -15455,8 +15046,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get toolsTheFirstMinute => '從第一分鐘開始。';
 
   @override
-  String get toolsEverythingHereHappensOn =>
-      '這裡的一切都在這支手機上進行。不會上傳任何東西，其他人也不必使用 Kryfo。';
+  String get toolsEverythingHereHappensOn => '這裡的一切都在這支手機上進行。不會上傳任何東西，其他人也不必使用 Kryfo。';
 
   @override
   String get toolsPhotoCleaner => '照片清理';
@@ -15465,8 +15055,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get toolsRemovesHiddenInfo => '清除地點、時間和手機型號等隱藏資訊（中繼資料）';
 
   @override
-  String get toolsPickAPhotoAnd =>
-      '選一張照片或一段影片，看看它會洩露什麼，然後一鍵全部移除。也可以從相簿分享到 Kryfo。';
+  String get toolsPickAPhotoAnd => '選一張照片或一段影片，看看它會洩露什麼，然後一鍵全部移除。也可以從相簿分享到 Kryfo。';
 
   @override
   String get toolsPickAPhoto => '選擇照片';
@@ -15478,12 +15067,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get transportTransport => '傳輸';
 
   @override
-  String get transportNothingHereLeavesThe =>
-      '這裡的任何內容都不會離開手機。這就是引擎用來決定下一步的同一份狀態。';
+  String get transportNothingHereLeavesThe => '這裡的任何內容都不會離開手機。這就是引擎用來決定下一步的同一份狀態。';
 
   @override
-  String get transportNothingHereLeavesTheDesk =>
-      '這裡的任何內容都不會離開電腦。這就是引擎用來決定下一步的同一份狀態。';
+  String get transportNothingHereLeavesTheDesk => '這裡的任何內容都不會離開電腦。這就是引擎用來決定下一步的同一份狀態。';
 
   @override
   String get transportStayingAlive => '保持運作';
@@ -15526,8 +15113,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String transportFails(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -15564,12 +15150,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get transportWithNoContactsThe =>
-      '沒有聯絡人時，應用程式不會訂閱任何中繼位址，所以任何訊息都無法送達你。掃描某人的 QR 碼就能解決。';
+  String get transportWithNoContactsThe => '沒有聯絡人時，應用程式不會訂閱任何中繼位址，所以任何訊息都無法送達你。掃描某人的 QR 碼就能解決。';
 
   @override
-  String get transportWithNoContactsTheDesk =>
-      '沒有聯絡人時，應用程式不會訂閱任何中繼位址，所以任何訊息都無法送達你。新增一個人就能解決。';
+  String get transportWithNoContactsTheDesk => '沒有聯絡人時，應用程式不會訂閱任何中繼位址，所以任何訊息都無法送達你。新增一個人就能解決。';
 
   @override
   String get transportSendAnythingWaitingNow => '立即傳送所有等待中的內容';
@@ -15776,11 +15360,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String transportDialsTimeouts(int dials, int timeouts) {
-    final intl.NumberFormat dialsNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat dialsNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String dialsString = dialsNumberFormat.format(dials);
-    final intl.NumberFormat timeoutsNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat timeoutsNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String timeoutsString = timeoutsNumberFormat.format(timeouts);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -15833,8 +15415,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String vouchersVouchedBy(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -15871,15 +15452,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get whyKryfoWhyKryfo => '為什麼選 Kryfo';
 
   @override
-  String get whyKryfoKryfoKreeFoGreek =>
-      'Kryfo · KREE-fo · 希臘文「隱藏」的意思。\n一個安靜的聊天空間，打造成沒有任何人在監看。';
+  String get whyKryfoKryfoKreeFoGreek => 'Kryfo · KREE-fo · 希臘文「隱藏」的意思。\n一個安靜的聊天空間，打造成沒有任何人在監看。';
 
   @override
   String get whyKryfoRoutedThroughTor => '經由 Tor 路由';
 
   @override
-  String get whyKryfoByDefaultEveryMessage =>
-      '預設情況下，每則訊息都經由 Tor（一連串的中繼）傳送。沒有人，不論是我們還是你的網路，能看到你在跟誰聊天，或你在哪裡。';
+  String get whyKryfoByDefaultEveryMessage => '預設情況下，每則訊息都經由 Tor（一連串的中繼）傳送。沒有人，不論是我們還是你的網路，能看到你在跟誰聊天，或你在哪裡。';
 
   @override
   String get whyKryfoEndToEndEncrypted => '端對端加密';
@@ -15891,33 +15470,28 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get whyKryfoNoServersHoldingYour => '沒有伺服器掌握你的生活';
 
   @override
-  String get whyKryfoNoAccountNoPhone =>
-      '沒有帳號，沒有手機號碼，也沒有儲存你聊天內容的中央伺服器。聊天內容存在這支手機上，並以加密方式存放。';
+  String get whyKryfoNoAccountNoPhone => '沒有帳號，沒有手機號碼，也沒有儲存你聊天內容的中央伺服器。聊天內容存在這支手機上，並以加密方式存放。';
 
   @override
-  String get whyKryfoNoAccountNoPhoneDesk =>
-      '沒有帳號，沒有手機號碼，也沒有儲存你聊天內容的中央伺服器。聊天內容存在這台電腦上，並以加密方式存放。';
+  String get whyKryfoNoAccountNoPhoneDesk => '沒有帳號，沒有手機號碼，也沒有儲存你聊天內容的中央伺服器。聊天內容存在這台電腦上，並以加密方式存放。';
 
   @override
   String get whyKryfoNothingLeaks => '什麼都不外洩';
 
   @override
-  String get whyKryfoNoReceiptsTyping =>
-      '沒有已讀回條，也不上傳聯絡人清單。你正在輸入，只有你在對話的那個人看得到，經 Tor 直接送達，從不經過伺服器。大多數應用程式都會外洩中繼資料，Kryfo 的設計就是不外洩。';
+  String get whyKryfoNoReceiptsTyping => '沒有已讀回條，也不上傳聯絡人清單。你正在輸入，只有你在對話的那個人看得到，經 Tor 直接送達，從不經過伺服器。大多數應用程式都會外洩中繼資料，Kryfo 的設計就是不外洩。';
 
   @override
   String get whyKryfoVerifyItIsReally => '確認真的是對方';
 
   @override
-  String get whyKryfoCompareASafetyNumber =>
-      '當面或透過你信任的管道比對安全碼，就能確定沒有人在冒充你的聯絡人。';
+  String get whyKryfoCompareASafetyNumber => '當面或透過你信任的管道比對安全碼，就能確定沒有人在冒充你的聯絡人。';
 
   @override
   String get whyKryfoTheHonestPart => '老實說';
 
   @override
-  String get whyKryfoKryfoIsPreAlpha =>
-      'Kryfo 還在 alpha 階段，也還沒經過稽核。加密技術是真的，但還沒有外部專家檢查過，所以在攸關你人身安全的情況下，暫時不要依賴它。';
+  String get whyKryfoKryfoIsPreAlpha => 'Kryfo 還在 alpha 階段，也還沒經過稽核。加密技術是真的，但還沒有外部專家檢查過，所以在攸關你人身安全的情況下，暫時不要依賴它。';
 
   @override
   String get cleanerLocation => '位置';
@@ -15951,8 +15525,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String cleaner1OtherField(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -15968,8 +15541,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String lockWordsTooShortAtLeast(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -15996,8 +15568,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String photoStory1Metre(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -16063,12 +15634,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get photoStoryLocationHiddenByAndroid => '位置已被 Android 隱藏';
 
   @override
-  String get photoStoryAndroidBlanksItWhen =>
-      '用這種方式選照片時，Android 會把它清空。從相簿分享到 Kryfo 通常能保留它。相簿裡的那張可能還帶有位置。';
+  String get photoStoryAndroidBlanksItWhen => '用這種方式選照片時，Android 會把它清空。從相簿分享到 Kryfo 通常能保留它。相簿裡的那張可能還帶有位置。';
 
   @override
-  String get photoStoryLocationBlankedByAndroid =>
-      '位置：在 Kryfo 看到之前已被 Android 清空';
+  String get photoStoryLocationBlankedByAndroid => '位置：在 Kryfo 看到之前已被 Android 清空';
 
   @override
   String photoStoryF(Object r) {
@@ -16191,8 +15760,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String photoStoryDataAfterTheEnd(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -16220,8 +15788,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String photoStoryCameraSettingsFlashFocus(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -16234,8 +15801,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String photoStory1MoreField(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -16349,9 +15915,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String vouchTextAndOtherYouKnow(Object names, Object names2, int rest) {
-    final intl.NumberFormat restNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat restNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String restString = restNumberFormat.format(rest);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -16387,8 +15951,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bootFailedKeysDidNotAnswer => '手機的金鑰儲存區沒有回應。關閉並重新開啟 Kryfo 通常可以解決。';
 
   @override
-  String get bootFailedKeysDidNotAnswerDesk =>
-      '這台電腦的金鑰儲存區沒有回應。關閉並重新開啟 Kryfo 通常可以解決。';
+  String get bootFailedKeysDidNotAnswerDesk => '這台電腦的金鑰儲存區沒有回應。關閉並重新開啟 Kryfo 通常可以解決。';
 
   @override
   String get bootFailedCloseAndReopen => '關閉並重新開啟 Kryfo';
@@ -16406,12 +15969,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bootFailedStartFreshTitle => '要重新開始嗎？';
 
   @override
-  String get bootFailedStartFreshLine =>
-      '這會清除 Kryfo 在這支手機上的一切：聊天、聯絡人、媒體、隱藏的聊天和你的三個詞。存在別處的備份檔案不受影響。';
+  String get bootFailedStartFreshLine => '這會清除 Kryfo 在這支手機上的一切：聊天、聯絡人、媒體、隱藏的聊天和你的三個詞。存在別處的備份檔案不受影響。';
 
   @override
-  String get bootFailedStartFreshLineDesk =>
-      '這會清除 Kryfo 在這台電腦上的一切：聊天、聯絡人、媒體、隱藏的聊天和你的三個詞。存在別處的備份檔案不受影響。';
+  String get bootFailedStartFreshLineDesk => '這會清除 Kryfo 在這台電腦上的一切：聊天、聯絡人、媒體、隱藏的聊天和你的三個詞。存在別處的備份檔案不受影響。';
 
   @override
   String get bootFailedStartFreshNext => '繼續';
@@ -16483,9 +16044,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String kryfoLinkTextClosesInUpTo(int cap, Object time) {
-    final intl.NumberFormat capNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat capNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String capString = capNumberFormat.format(cap);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -16619,8 +16178,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get motion3Hops => '3 跳';
 
   @override
-  String get movedStripThisKryfoHasMoved =>
-      '這個 Kryfo 已經搬到另一台裝置。從這裡傳送的任何內容都不會送達任何人。';
+  String get movedStripThisKryfoHasMoved => '這個 Kryfo 已經搬到另一台裝置。從這裡傳送的任何內容都不會送達任何人。';
 
   @override
   String get navBarChats => '聊天';
@@ -16664,8 +16222,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pairCodePanelTheyTapAddChoose => '對方點「新增」，選擇「配對碼」，然後輸入這些數字。';
 
   @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      '對方開啟 Kryfo，點「新增」，選擇「配對碼」，再輸入這六位數字。下一個人請再產生一組新的。';
+  String get pairCodePanelTheyOpenKryfoTap => '對方開啟 Kryfo，點「新增」，選擇「配對碼」，再輸入這六位數字。下一個人請再產生一組新的。';
 
   @override
   String get pairCodePanelYourWords => '你的三個詞';
@@ -16704,8 +16261,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get pinsNothingPinnedHereYet =>
-      '這裡還沒有置頂的訊息。按住一則訊息並選擇「置頂」，它就會在這裡等著聊天中的每個人。';
+  String get pinsNothingPinnedHereYet => '這裡還沒有置頂的訊息。按住一則訊息並選擇「置頂」，它就會在這裡等著聊天中的每個人。';
 
   @override
   String get pinsJump => '跳至';
@@ -16874,12 +16430,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String avatarPickerOption(String what, int n, int count) {
-    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String nString = nNumberFormat.format(n);
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     return '$what，第 $nString 個，共 $countString 個';
@@ -17041,8 +16594,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesLookingForAVolunteer => '正在尋找志願者';
 
   @override
-  String get bridgesFastestWhereTorIsnt =>
-      '在 Tor 沒被封鎖的地方最快。Kryfo 從不在 Tor 之外建立連線。';
+  String get bridgesFastestWhereTorIsnt => '在 Tor 沒被封鎖的地方最快。Kryfo 從不在 Tor 之外建立連線。';
 
   @override
   String get transportBridgePhase => '階段';
@@ -17081,8 +16633,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesThisNetworkWantsA => '這個網路需要先登入。登入後，Kryfo 就會連線。';
 
   @override
-  String get bridgesThisNetworkWantsADesk =>
-      '這個網路需要先登入。請在瀏覽器裡登入，或檢查電腦的網路連線。登入後，Kryfo 就會連線。';
+  String get bridgesThisNetworkWantsADesk => '這個網路需要先登入。請在瀏覽器裡登入，或檢查電腦的網路連線。登入後，Kryfo 就會連線。';
 
   @override
   String get bridgesWaitingForWifiSignIn => '等待 Wi-Fi 登入';
@@ -17135,8 +16686,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesNothingYet => '還沒有';
 
   @override
-  String get torBootSplashIfTorIsBlocked =>
-      '如果你那裡 Tor 被封鎖或監控，Kryfo 可以改為透過橋接啟動。';
+  String get torBootSplashIfTorIsBlocked => '如果你那裡 Tor 被封鎖或監控，Kryfo 可以改為透過橋接啟動。';
 
   @override
   String get bridgesScanACode => '掃描 QR 碼';
@@ -17154,8 +16704,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get torBootSplashStartThroughABridge => '透過橋接啟動';
 
   @override
-  String get torBootSplashNeverTriesTorPlainly =>
-      '在這裡，Kryfo 絕不會直接連線 Tor。它會自己找到可用的橋接，你也可以在下一步選擇自己的橋接。';
+  String get torBootSplashNeverTriesTorPlainly => '在這裡，Kryfo 絕不會直接連線 Tor。它會自己找到可用的橋接，你也可以在下一步選擇自己的橋接。';
 
   @override
   String get bridgesTryingAnotherWay => '正在嘗試其他方式…';
@@ -17177,8 +16726,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String bridgesKryfoCouldNotRead(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -17242,8 +16790,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String bridgesUseTheseBridges(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -17270,8 +16817,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesThisLineIsTooLong => '這行設定太長，Tor 無法使用。';
 
   @override
-  String get bridgesAutomaticFindsAWay =>
-      'Tor 被封鎖時，「自動」會自己找到辦法。如果你同意，Kryfo 可能會向 Tor 專案詢問橋接。';
+  String get bridgesAutomaticFindsAWay => 'Tor 被封鎖時，「自動」會自己找到辦法。如果你同意，Kryfo 可能會向 Tor 專案詢問橋接。';
 
   @override
   String get bridgesFromTheTorProjectLower => '來自 Tor 專案';
@@ -17283,8 +16829,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesHongKong => '香港';
 
   @override
-  String get bridgesWhenTorIsBlockedAutomatic =>
-      'Tor 被封鎖時，「自動」會詢問 Tor 專案，在你所在的國家或地區什麼方式可用。';
+  String get bridgesWhenTorIsBlockedAutomatic => 'Tor 被封鎖時，「自動」會詢問 Tor 專案，在你所在的國家或地區什麼方式可用。';
 
   @override
   String get bridgesAskTorProject => '詢問 Tor 專案';
@@ -17358,8 +16903,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get androidChannelName => '保持連線';
 
   @override
-  String get androidChannelDescription =>
-      '讓 Kryfo 保持連線，在它關閉時也能收到加密訊息。關閉這項設定會停止接收訊息。';
+  String get androidChannelDescription => '讓 Kryfo 保持連線，在它關閉時也能收到加密訊息。關閉這項設定會停止接收訊息。';
 
   @override
   String get videoViewerPlay => '播放';
@@ -17613,8 +17157,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get handleNameInSearch => '搜尋中的名字';
 
   @override
-  String get handleNameInSearchLine =>
-      '可選。有人搜尋時，它會顯示在你的使用者名稱旁邊。任何人都能找到這個使用者名稱並傳訊息給你。';
+  String get handleNameInSearchLine => '可選。有人搜尋時，它會顯示在你的使用者名稱旁邊。任何人都能找到這個使用者名稱並傳訊息給你。';
 
   @override
   String get handleNameHint => '你的名字，也可以留空';
@@ -17700,8 +17243,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get lockFingerAfterPin => '輸入一次 PIN 碼，即可再次使用指紋。';
 
   @override
-  String get lockFingerLockedOut =>
-      '指紋嘗試次數過多。請使用 PIN 碼，或先用手機本身的螢幕鎖定解鎖一次，指紋即可恢復。';
+  String get lockFingerLockedOut => '指紋嘗試次數過多。請使用 PIN 碼，或先用手機本身的螢幕鎖定解鎖一次，指紋即可恢復。';
 
   @override
   String get lockFingerRefused => '手機未能為 Kryfo 保留指紋解鎖，因此已關閉。PIN 碼仍然可用。';
@@ -17743,12 +17285,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pinsTheDecoyGoes => '它開啟的那個空 Kryfo 也會一起消失。';
 
   @override
-  String get pinsTurnOffWithDecoy =>
-      '所有 PIN 都會被移除，偽裝 PIN 和它的 Kryfo 以及所有隱藏聊天也一樣。任何拿著你手機的人，都能以你的身分開啟 Kryfo。';
+  String get pinsTurnOffWithDecoy => '所有 PIN 都會被移除，偽裝 PIN 和它的 Kryfo 以及所有隱藏聊天也一樣。任何拿著你手機的人，都能以你的身分開啟 Kryfo。';
 
   @override
-  String get pinsTurnOffWithDecoyDesk =>
-      '所有 PIN 都會被移除，偽裝 PIN 和它的 Kryfo 以及所有隱藏聊天也一樣。任何用你電腦的人，都能以你的身分開啟 Kryfo。';
+  String get pinsTurnOffWithDecoyDesk => '所有 PIN 都會被移除，偽裝 PIN 和它的 Kryfo 以及所有隱藏聊天也一樣。任何用你電腦的人，都能以你的身分開啟 Kryfo。';
 
   @override
   String get pinsHowThisWorks => '運作方式';
@@ -17763,12 +17303,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get flowWipeTitle => '抹除 PIN';
 
   @override
-  String get flowWipe1 =>
-      '在鎖定畫面代替你的 PIN 碼輸入，它會從這支手機上抹除 Kryfo 並關閉應用程式。在旁人看來，應用程式只是停止了。';
+  String get flowWipe1 => '在鎖定畫面代替你的 PIN 碼輸入，它會從這支手機上抹除 Kryfo 並關閉應用程式。在旁人看來，應用程式只是停止了。';
 
   @override
-  String get flowWipe1Desk =>
-      '在鎖定畫面代替你的 PIN 碼輸入，它會從這台電腦上抹除 Kryfo 並關閉應用程式。在旁人看來，應用程式只是停止了。';
+  String get flowWipe1Desk => '在鎖定畫面代替你的 PIN 碼輸入，它會從這台電腦上抹除 Kryfo 並關閉應用程式。在旁人看來，應用程式只是停止了。';
 
   @override
   String get flowWipe2 => '所有聊天和你的身分都會一起抹除，有偽裝的話也一樣。';
@@ -17789,8 +17327,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get flowDecoy1 => '開啟一個空的 Kryfo，就像剛安裝好一樣。';
 
   @override
-  String get flowDecoyFinger =>
-      '設定偽裝 PIN 後，這個應用程式只能用 PIN 碼開啟。如果在偽裝裡開啟了指紋，手指只會開啟偽裝，絕不會開啟這個應用程式。';
+  String get flowDecoyFinger => '設定偽裝 PIN 後，這個應用程式只能用 PIN 碼開啟。如果在偽裝裡開啟了指紋，手指只會開啟偽裝，絕不會開啟這個應用程式。';
 
   @override
   String get flowDecoyDigits => '位數要跟你的 PIN 碼一樣，因為旁邊看著的人數得出圓點。';
@@ -17808,8 +17345,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get flowDecoyDone => '已設定偽裝 PIN';
 
   @override
-  String get flowDecoyDoneLine =>
-      '在鎖定畫面輸入它，就能開啟那個空的 Kryfo。要離開，切換到別的應用程式，再輸入你的 PIN 碼。';
+  String get flowDecoyDoneLine => '在鎖定畫面輸入它，就能開啟那個空的 Kryfo。要離開，切換到別的應用程式，再輸入你的 PIN 碼。';
 
   @override
   String get flowLaw => '在有些國家，拒絕解鎖手機或向官方隱藏資料本身就是違法的。出門前先了解當地的法律。';
@@ -17818,12 +17354,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get flowLawDesk => '在有些國家，拒絕解鎖裝置或向官方隱藏資料本身就是違法的。出門前先了解當地的法律。';
 
   @override
-  String get howWipe =>
-      '在鎖定畫面輸入抹除 PIN，會抹除所有聊天、你的身分和任何偽裝，然後關閉 Kryfo。即使多次輸錯後鍵盤暫停，它也照樣有效。';
+  String get howWipe => '在鎖定畫面輸入抹除 PIN，會抹除所有聊天、你的身分和任何偽裝，然後關閉 Kryfo。即使多次輸錯後鍵盤暫停，它也照樣有效。';
 
   @override
-  String get howDecoy =>
-      '偽裝 PIN 會開啟第二個空的 Kryfo，它有自己的三個詞。傳給你真正 Kryfo 的訊息照樣在底下悄悄送達。要離開偽裝，切換到別的應用程式，再輸入你的 PIN 碼。';
+  String get howDecoy => '偽裝 PIN 會開啟第二個空的 Kryfo，它有自己的三個詞。傳給你真正 Kryfo 的訊息照樣在底下悄悄送達。要離開偽裝，切換到別的應用程式，再輸入你的 PIN 碼。';
 
   @override
   String get flowNotSet => '沒能設定成功，請再試一次。';
@@ -17859,8 +17393,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get flowVaultTitle => '隱藏聊天';
 
   @override
-  String get flowVault1 =>
-      '選擇要隱藏的聊天和群組。你的 PIN 碼開啟的 Kryfo 裡沒有它們。隱藏聊天 PIN 會開啟全部內容，包括隱藏聊天。';
+  String get flowVault1 => '選擇要隱藏的聊天和群組。你的 PIN 碼開啟的 Kryfo 裡沒有它們。隱藏聊天 PIN 會開啟全部內容，包括隱藏聊天。';
 
   @override
   String get flowVault2 => '藏起來的時候，它們從不發通知，也不顯示徽章。它們的訊息照樣送達，封存起來，等你輸入隱藏聊天 PIN。';
@@ -17903,8 +17436,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String flowVaultPickButton(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -17923,8 +17455,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get flowVaultBackupTitle => '現在備份嗎？';
 
   @override
-  String get flowVaultBackupLine =>
-      '現在做的備份也包含你的隱藏聊天，用它自己的密碼短語保護。如果你忘了隱藏聊天 PIN，這是找回它們的唯一辦法。';
+  String get flowVaultBackupLine => '現在做的備份也包含你的隱藏聊天，用它自己的密碼短語保護。如果你忘了隱藏聊天 PIN，這是找回它們的唯一辦法。';
 
   @override
   String get flowVaultBackupNow => '備份';
@@ -17945,12 +17476,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get flowVaultChangedLine => '你的隱藏聊天現在用新的開啟。舊的什麼也打不開了。';
 
   @override
-  String get howVault =>
-      '隱藏聊天 PIN 開啟的 Kryfo 帶著隱藏聊天，你的 PIN 碼和指紋開啟的則沒有。重新設定隱藏聊天，會取代這支手機上已有的。忘了隱藏聊天 PIN，它們就永遠沒了。';
+  String get howVault => '隱藏聊天 PIN 開啟的 Kryfo 帶著隱藏聊天，你的 PIN 碼和指紋開啟的則沒有。重新設定隱藏聊天，會取代這支手機上已有的。忘了隱藏聊天 PIN，它們就永遠沒了。';
 
   @override
-  String get howVaultDesk =>
-      '隱藏聊天 PIN 開啟的 Kryfo 帶著隱藏聊天，你的 PIN 碼開啟的則沒有。重新設定隱藏聊天，會取代這台電腦上已有的。忘了隱藏聊天 PIN，它們就永遠沒了。';
+  String get howVaultDesk => '隱藏聊天 PIN 開啟的 Kryfo 帶著隱藏聊天，你的 PIN 碼開啟的則沒有。重新設定隱藏聊天，會取代這台電腦上已有的。忘了隱藏聊天 PIN，它們就永遠沒了。';
 
   @override
   String get chatHide => '隱藏此聊天';
@@ -18012,8 +17541,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devAnonymous => '匿名';
 
   @override
-  String get devAboutLine =>
-      'Marios 的金鑰內建在 Kryfo 裡。他傳來的每則訊息都會用它核對，所以別人無法冒充他傳訊息。';
+  String get devAboutLine => 'Marios 的金鑰內建在 Kryfo 裡。他傳來的每則訊息都會用它核對，所以別人無法冒充他傳訊息。';
 
   @override
   String get devKeyLabel => '他的金鑰';
@@ -18025,12 +17553,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devDeleteLineAnon => '每則訊息和為這個聊天產生的名字都會刪除，這個聊天也不會再回來。';
 
   @override
-  String get devDeleteLineBack =>
-      '每則訊息都會刪除，這個聊天也不會再回來。你傳出的訊息也會從 Marios 的手機上收回。';
+  String get devDeleteLineBack => '每則訊息都會刪除，這個聊天也不會再回來。你傳出的訊息也會從 Marios 的手機上收回。';
 
   @override
-  String get devDeleteLineAnonBack =>
-      '每則訊息和為這個聊天產生的名字都會刪除，這個聊天也不會再回來。你傳出的訊息也會從 Marios 的手機上收回。';
+  String get devDeleteLineAnonBack => '每則訊息和為這個聊天產生的名字都會刪除，這個聊天也不會再回來。你傳出的訊息也會從 Marios 的手機上收回。';
 
   @override
   String devDeleteNotTakenBack(int count) {
@@ -18076,8 +17602,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devWhoAnon => '匿名傳送時，Kryfo 會專門為這個聊天產生新的名字和金鑰。它們只留在這支手機上，絕不會在別處使用。';
 
   @override
-  String get devWhoAnonDesk =>
-      '匿名傳送時，Kryfo 會專門為這個聊天產生新的名字和金鑰。它們只留在這台電腦上，絕不會在別處使用。';
+  String get devWhoAnonDesk => '匿名傳送時，Kryfo 會專門為這個聊天產生新的名字和金鑰。它們只留在這台電腦上，絕不會在別處使用。';
 
   @override
   String get devWhoNothingYet => '在你傳出第一則訊息之前，什麼都不會離開你的手機。';
@@ -18128,24 +17653,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get nameTakenTitle => '有別人在用這三個詞';
 
   @override
-  String get nameTakenLine =>
-      '這裡有人透過請求、介紹或群組得到了這三個詞，金鑰不同，也沒人核對過。詞是可以照抄的。如果這個連結來自你認識的人，就用它，然後和對方核對安全碼。';
+  String get nameTakenLine => '這裡有人透過請求、介紹或群組得到了這三個詞，金鑰不同，也沒人核對過。詞是可以照抄的。如果這個連結來自你認識的人，就用它，然後和對方核對安全碼。';
 
   @override
-  String get nameTakenChatLine =>
-      '你用這三個詞的聊天來自請求、介紹或群組，金鑰不同，也沒人核對過。詞是可以照抄的。如果這個連結來自你認識的人，就用它：那個聊天會被刪除，你再在新的聊天裡核對安全碼。不確定連結從哪來？就保留現有的。';
+  String get nameTakenChatLine => '你用這三個詞的聊天來自請求、介紹或群組，金鑰不同，也沒人核對過。詞是可以照抄的。如果這個連結來自你認識的人，就用它：那個聊天會被刪除，你再在新的聊天裡核對安全碼。不確定連結從哪來？就保留現有的。';
 
   @override
-  String get nameTakenDeletedLine =>
-      '你刪除過一個用這三個詞的聊天，它用的是另一把金鑰。如果這個連結來自你認識的人，就用它，然後和對方核對安全碼。';
+  String get nameTakenDeletedLine => '你刪除過一個用這三個詞的聊天，它用的是另一把金鑰。如果這個連結來自你認識的人，就用它，然後和對方核對安全碼。';
 
   @override
-  String get nameTakenTombLine =>
-      '你曾因為對方不是本人，從這支手機上移除了用這三個詞的人。如果這個連結來自你認識的人，就使用這個連結，然後和對方核對安全碼。';
+  String get nameTakenTombLine => '你曾因為對方不是本人，從這支手機上移除了用這三個詞的人。如果這個連結來自你認識的人，就使用這個連結，然後和對方核對安全碼。';
 
   @override
-  String get nameTakenTombLineDesk =>
-      '你曾因為對方不是本人，從這台電腦上移除了用這三個詞的人。如果這個連結來自你認識的人，就使用這個連結，然後和對方核對安全碼。';
+  String get nameTakenTombLineDesk => '你曾因為對方不是本人，從這台電腦上移除了用這三個詞的人。如果這個連結來自你認識的人，就使用這個連結，然後和對方核對安全碼。';
 
   @override
   String get nameTakenUse => '使用這個連結';
@@ -18189,12 +17709,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get notThemSheetTitle => '要刪除這位聯絡人並封鎖其金鑰嗎？';
 
   @override
-  String get notThemSheetLine =>
-      '聊天及其中的訊息和檔案都會從這支手機上消失。只有你自己新增的連結或碼才能再用這三個詞。請和你新增的人核對安全碼。';
+  String get notThemSheetLine => '聊天及其中的訊息和檔案都會從這支手機上消失。只有你自己新增的連結或碼才能再用這三個詞。請和你新增的人核對安全碼。';
 
   @override
-  String get notThemSheetLineDesk =>
-      '聊天及其中的訊息和檔案都會從這台電腦上消失。只有你自己新增的連結或碼才能再用這三個詞。請和你新增的人核對安全碼。';
+  String get notThemSheetLineDesk => '聊天及其中的訊息和檔案都會從這台電腦上消失。只有你自己新增的連結或碼才能再用這三個詞。請和你新增的人核對安全碼。';
 
   @override
   String get notThemRemove => '刪除並封鎖';
@@ -18244,8 +17762,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get gifOptInThroughKryfo => '透過 Kryfo 搜尋';
 
   @override
-  String get gifOptInAsksForYou =>
-      'Kryfo 的伺服器替你向 GIF 服務查詢。該服務永遠看不到你，伺服器也不會記錄你搜尋了什麼。';
+  String get gifOptInAsksForYou => 'Kryfo 的伺服器替你向 GIF 服務查詢。該服務永遠看不到你，伺服器也不會記錄你搜尋了什麼。';
 
   @override
   String get gifOptInLikeAPhoto => 'GIF 像照片一樣加密傳送。對方的手機不會下載任何東西。';
@@ -18357,8 +17874,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsGifSearch => 'GIF 搜尋';
 
   @override
-  String get settingsGifSearchHint =>
-      '在你開啟前都會關閉。Kryfo 的伺服器替你搜尋，所以 GIF 服務永遠看不到你。';
+  String get settingsGifSearchHint => '在你開啟前都會關閉。Kryfo 的伺服器替你搜尋，所以 GIF 服務永遠看不到你。';
 
   @override
   String get shareChooseChat => '選擇聊天';
@@ -18390,8 +17906,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsCheckForUpdates => '檢查更新';
 
   @override
-  String get settingsCheckForUpdatesHint =>
-      '每天一次，透過 Tor。只向 kryfo.app 詢問最新版本，不傳送任何關於你的資訊。';
+  String get settingsCheckForUpdatesHint => '每天一次，透過 Tor。只向 kryfo.app 詢問最新版本，不傳送任何關於你的資訊。';
 
   @override
   String get voiceDisguiseHere => '在這裡給我的語音變聲';
@@ -18403,12 +17918,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatShotsWhenTheyUpdate => '對方更新後即可使用';
 
   @override
-  String get chatShotsBothPhones =>
-      'Kryfo 在兩支手機上禁止截圖和錄製此聊天，也禁止複製、轉傳或儲存彼此的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
+  String get chatShotsBothPhones => 'Kryfo 在兩支手機上禁止截圖和錄製此聊天，也禁止複製、轉傳或儲存彼此的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
 
   @override
-  String get chatShotsBlocksBoth =>
-      '在兩支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存彼此的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
+  String get chatShotsBlocksBoth => '在兩支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存彼此的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
 
   @override
   String get chatShotsBlockedHere => 'Kryfo 已在此聊天中禁止截圖';
@@ -18421,8 +17934,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String searchKeptMatches(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -18449,6 +17961,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatShotsYouTurnedOff => '你關閉了禁止截圖';
 
   @override
+  String get chatNowPostQuantum => '此聊天中的訊息現已使用後量子加密';
+
+  @override
   String chatShotsTheyTurnedOn(String name) {
     return '$name 開啟了禁止截圖。複製、轉傳和儲存彼此的訊息也已關閉。';
   }
@@ -18459,8 +17974,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get roomShotsBlocked =>
-      'Kryfo 在這個聊天室的每支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存別人的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
+  String get roomShotsBlocked => 'Kryfo 在這個聊天室的每支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存別人的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
 
   @override
   String get roomShotsAlwaysOn => '聊天室裡一律開啟，每支手機都一樣';
@@ -18481,13 +17995,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeShotsLeaveOff => '維持關閉';
 
   @override
-  String get homeShotsTheySeeIt =>
-      'Kryfo 也會在對方手機上禁止截圖，並關閉複製、轉傳和儲存彼此的訊息。對方會看到是你開啟的。';
+  String get homeShotsTheySeeIt => 'Kryfo 也會在對方手機上禁止截圖，並關閉複製、轉傳和儲存彼此的訊息。對方會看到是你開啟的。';
 
   @override
   String homeShotsTurnedOn(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -18581,8 +18093,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get fileGoesAsItIs =>
-      '這個檔案會原樣送出。Kryfo 只清理 JPEG、PNG、WebP、HEIC、AVIF、GIF、MP4 和 MOV。';
+  String get fileGoesAsItIs => '這個檔案會原樣送出。Kryfo 只清理 JPEG、PNG、WebP、HEIC、AVIF、GIF、MP4 和 MOV。';
 
   @override
   String get fileRawPictureTitle => '按原樣傳送這張圖片？';
@@ -18594,8 +18105,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get voiceStoppedAtLimit => '語音訊息最長 30 分鐘，已自動停止。聽一遍後再傳送。';
 
   @override
-  String get gettingMessagesHelperBody =>
-      '即時且省電。它的伺服器能看到你的 IP 和訊息送達的時間，但從不知道內容。';
+  String get gettingMessagesHelperBody => '即時且省電。它的伺服器能看到你的 IP 和訊息送達的時間，但從不知道內容。';
 
   @override
   String get gettingMessagesHelperUseOnion => '改用 Onion';
@@ -18604,8 +18114,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get gettingMessagesHelperSetUp => '設定';
 
   @override
-  String get gettingMessagesHelperNote =>
-      '其中混有假的喚醒，讓輔助應用程式的伺服器更難分辨真訊息何時送達。自架的輔助伺服器會讓我們的中繼知道它的位址。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。';
+  String get gettingMessagesHelperNote => '其中混有假的喚醒，讓輔助應用程式的伺服器更難分辨真訊息何時送達。自架的輔助伺服器會讓我們的中繼知道它的位址。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。';
 
   @override
   String get gettingMessagesHelperOnionOnly => '在 Onion 路線上可用';
@@ -18620,8 +18129,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get helperSheetNeedTitle => '你需要一個輔助應用程式';
 
   @override
-  String get helperSheetNeedLine =>
-      '輔助應用程式為你所有的應用程式保持一條輕量連線，有東西送達時喚醒 Kryfo。任何 UnifiedPush 輔助應用程式都可以，ntfy 是不錯的起點。';
+  String get helperSheetNeedLine => '輔助應用程式為你所有的應用程式保持一條輕量連線，有東西送達時喚醒 Kryfo。任何 UnifiedPush 輔助應用程式都可以，ntfy 是不錯的起點。';
 
   @override
   String get helperSheetGetNtfy => '取得 ntfy';
@@ -18658,8 +18166,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeHelperRelayTitle => '中繼不再喚醒 Kryfo';
 
   @override
-  String get gettingMessagesHelperRefused =>
-      '我們的中繼暫時不接受這支手機的部分登記。這些聊天會隨每 15 分鐘一次的定時查收送達，Kryfo 會繼續嘗試。換一個輔助應用程式或伺服器也可能有幫助。';
+  String get gettingMessagesHelperRefused => '我們的中繼暫時不接受這支手機的部分登記。這些聊天會隨每 15 分鐘一次的定時查收送達，Kryfo 會繼續嘗試。換一個輔助應用程式或伺服器也可能有幫助。';
 
   @override
   String albumLabel(Object count) {
@@ -18937,12 +18444,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get translatePrivacyTitle => '哪些內容保持私密';
 
   @override
-  String get translatePrivacyNote =>
-      '翻譯在這支手機上完成。任何訊息都不會被傳送到別處翻譯。下載語言包會讓伺服器知道是哪個語言包。下載經由 Tor，所以伺服器不知道是誰要求的。';
+  String get translatePrivacyNote => '翻譯在這支手機上完成。任何訊息都不會被傳送到別處翻譯。下載語言包會讓伺服器知道是哪個語言包。下載經由 Tor，所以伺服器不知道是誰要求的。';
 
   @override
-  String get translatePrivacyNoteDesk =>
-      '翻譯在這台電腦上完成。任何訊息都不會被傳送到別處翻譯。下載語言包會讓伺服器知道是哪個語言包。下載經由 Tor，所以伺服器不知道是誰要求的。';
+  String get translatePrivacyNoteDesk => '翻譯在這台電腦上完成。任何訊息都不會被傳送到別處翻譯。下載語言包會讓伺服器知道是哪個語言包。下載經由 Tor，所以伺服器不知道是誰要求的。';
 
   @override
   String get translateAutoInChat => '自動翻譯';
@@ -18986,8 +18491,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesRelayWorksWhereTor => '在 Tor 被封鎖的地方，快速模式也能用，隨時可以切換回來。';
 
   @override
-  String get bridgesRelayThisNetworkSees =>
-      '在 Tor 被封鎖的地方快速模式也能連通，但這個網路能看到你在連線 Kryfo。';
+  String get bridgesRelayThisNetworkSees => '在 Tor 被封鎖的地方快速模式也能連通，但這個網路能看到你在連線 Kryfo。';
 
   @override
   String get settingsLicences => '授權條款';
@@ -18996,8 +18500,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsLicencesValue => 'Kryfo 由什麼構成';
 
   @override
-  String get licencesKryfoLine =>
-      'Kryfo 是自由軟體，採用 GNU 通用公共授權條款第 3 版或更新版本。任何人都可以閱讀、修改和分享它的程式碼。';
+  String get licencesKryfoLine => 'Kryfo 是自由軟體，採用 GNU 通用公共授權條款第 3 版或更新版本。任何人都可以閱讀、修改和分享它的程式碼。';
 
   @override
   String get licencesSourceCode => '原始碼';
@@ -19027,8 +18530,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String licencesPartCount(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -19166,8 +18668,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get iconSheetChangesTitle => '會改變的';
 
   @override
-  String get iconSheetChanges =>
-      '主畫面和應用程式清單裡的圖示和名稱、分享選單和最近使用的應用程式畫面。選擇簡潔時，還有通知顯示的內容。';
+  String get iconSheetChanges => '主畫面和應用程式清單裡的圖示和名稱、分享選單和最近使用的應用程式畫面。選擇簡潔時，還有通知顯示的內容。';
 
   @override
   String get iconSheetStaysTitle => '仍是 Kryfo 的';
@@ -19206,12 +18707,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get lockStateUnlockPlain => '解鎖';
 
   @override
-  String get iconSheetOthers =>
-      '手機上的其他應用程式仍能看到已安裝 Kryfo，Android 本身的對話框和提示也可能顯示它的名稱。';
+  String get iconSheetOthers => '手機上的其他應用程式仍能看到已安裝 Kryfo，Android 本身的對話框和提示也可能顯示它的名稱。';
 
   @override
-  String get iconSheetSaves =>
-      '使用簡潔圖示時，新的照片、影片和檔案會以普通的名稱存進手機常用的資料夾。之前儲存的內容留在原處。';
+  String get iconSheetSaves => '使用簡潔圖示時，新的照片、影片和檔案會以普通的名稱存進手機常用的資料夾。之前儲存的內容留在原處。';
 
   @override
   String get deliveryModeGooglePush => 'Google 推播';
@@ -19232,8 +18731,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get notificationsRecommended => '推薦';
 
   @override
-  String get notificationsGoogleBody =>
-      '即時且省電。Google 能看到你的手機何時被喚醒，但從不知道是誰寫的或說了什麼。';
+  String get notificationsGoogleBody => '即時且省電。Google 能看到你的手機何時被喚醒，但從不知道是誰寫的或說了什麼。';
 
   @override
   String get notificationsGoogleStarting => '正在開啟…';
@@ -19242,12 +18740,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get notificationsGoogleNoStart => 'Google 推播沒能啟動。請檢查網路後再試一次。';
 
   @override
-  String get notificationsGoogleNote =>
-      '其中混有假的喚醒，讓 Google 更難分辨真訊息何時送達。我們的中繼只保存它無法彼此關聯的位址。推播服務執行在同一台伺服器上，能夠把它們關聯起來，借助 Google 還能關聯到你的 Google 帳號，所以營運或查扣我們伺服器的人也能做到。如果你在意這一點，請選擇其他方式。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。';
+  String get notificationsGoogleNote => '其中混有假的喚醒，讓 Google 更難分辨真訊息何時送達。我們的中繼只保存它無法彼此關聯的位址。推播服務執行在同一台伺服器上，能夠把它們關聯起來，借助 Google 還能關聯到你的 Google 帳號，所以營運或查扣我們伺服器的人也能做到。如果你在意這一點，請選擇其他方式。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。';
 
   @override
-  String get notificationsGoogleRefused =>
-      '我們的中繼暫時不接受這支手機的部分登記。這些聊天會隨每 15 分鐘一次的定時查收送達，Kryfo 會繼續嘗試。';
+  String get notificationsGoogleRefused => '我們的中繼暫時不接受這支手機的部分登記。這些聊天會隨每 15 分鐘一次的定時查收送達，Kryfo 會繼續嘗試。';
 
   @override
   String get notificationsSoundAndVibration => '聲音和震動';
@@ -19332,8 +18828,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get lockKeyWaiting => '手機的安全晶片仍在檢查';
 
   @override
-  String get lockKeyLost =>
-      '這支手機遺失了用來檢查你 PIN 碼的金鑰，所以有些 PIN 碼可能打不開。可以重設 Kryfo 並還原備份。';
+  String get lockKeyLost => '這支手機遺失了用來檢查你 PIN 碼的金鑰，所以有些 PIN 碼可能打不開。可以重設 Kryfo 並還原備份。';
 
   @override
   String get lockKeyReset => '重設 Kryfo';
@@ -19342,8 +18837,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get lockKeyResetTitle => '要重設 Kryfo 嗎？';
 
   @override
-  String get lockKeyResetLine =>
-      '這支手機上 Kryfo 的所有內容都會被刪除，Kryfo 會關閉。之後你可以還原備份。隱藏聊天只能從它們開啟時做的備份中還原。';
+  String get lockKeyResetLine => '這支手機上 Kryfo 的所有內容都會被刪除，Kryfo 會關閉。之後你可以還原備份。隱藏聊天只能從它們開啟時做的備份中還原。';
 
   @override
   String get lockKeyResetSureTitle => '此操作無法復原';
@@ -19376,12 +18870,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cardAnswer => '好了。再輸入一個，或在完成後點「完成」。';
 
   @override
-  String get keyLine =>
-      '你的 PIN 碼只能在這支手機上使用。如果手機遺失了用來檢查它們的金鑰，你需要重設 Kryfo 並還原備份。隱藏聊天只能從它們開啟時做的備份中還原。';
+  String get keyLine => '你的 PIN 碼只能在這支手機上使用。如果手機遺失了用來檢查它們的金鑰，你需要重設 Kryfo 並還原備份。隱藏聊天只能從它們開啟時做的備份中還原。';
 
   @override
-  String get keyLineUnlocked =>
-      '你的 PIN 碼只能在這支手機上使用，而且只在手機解鎖時可用。如果手機遺失了用來檢查它們的金鑰，你需要重設 Kryfo 並還原備份。隱藏聊天只能從它們開啟時做的備份中還原。';
+  String get keyLineUnlocked => '你的 PIN 碼只能在這支手機上使用，而且只在手機解鎖時可用。如果手機遺失了用來檢查它們的金鑰，你需要重設 Kryfo 並還原備份。隱藏聊天只能從它們開啟時做的備份中還原。';
 
   @override
   String get keyLineScreenLock => '請為手機設定螢幕鎖定，這樣手機鎖定時這層保護依然有效。';
@@ -19401,8 +18893,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get mediaProgressPreparing => '正在準備 · 請保持 App 開啟';
 
   @override
-  String get groupShotsBlocksAll =>
-      '在這個群組的每支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存彼此的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
+  String get groupShotsBlocksAll => '在這個群組的每支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存彼此的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
 
   @override
   String get groupShotsStartsWhenAll => '等這裡的所有人更新 Kryfo';
@@ -19421,8 +18912,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String groupShotsWaitingFor(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -19446,8 +18936,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupShotsBlockedByYou => '已被你封鎖';
 
   @override
-  String get groupShotsYouTurnedOnWait =>
-      '你開啟了禁止截圖。等這裡的所有人都更新 Kryfo 後，它會對所有人生效。';
+  String get groupShotsYouTurnedOnWait => '你開啟了禁止截圖。等這裡的所有人都更新 Kryfo 後，它會對所有人生效。';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
@@ -19527,9 +19016,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String devicesUnlinksSoon(int days) {
-    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String daysString = daysNumberFormat.format(days);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -19567,8 +19054,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devicesRemoveAllTitle => '移除其他所有裝置？';
 
   @override
-  String get devicesRemoveAllLine =>
-      '等你的聯絡人的 App 收到這項變更後，它們就不會再收到新訊息，也不能以你的身分傳送。這支手機保留一切。';
+  String get devicesRemoveAllLine => '等你的聯絡人的 App 收到這項變更後，它們就不會再收到新訊息，也不能以你的身分傳送。這支手機保留一切。';
 
   @override
   String get devicesRemoveAllYes => '全部移除';
@@ -19582,8 +19068,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get devicesRemoveLine =>
-      '等你的聯絡人的 App 收到這項變更後，它就不會再收到新訊息，也不能以你的身分傳送。下次連上網路時，它會抹除自己上面的聊天。被人動過手腳的裝置可能會留下它已有的內容。';
+  String get devicesRemoveLine => '等你的聯絡人的 App 收到這項變更後，它就不會再收到新訊息，也不能以你的身分傳送。下次連上網路時，它會抹除自己上面的聊天。被人動過手腳的裝置可能會留下它已有的內容。';
 
   @override
   String get devicesRemove => '移除';
@@ -19659,12 +19144,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get desktopLockNewTitle => '在這台電腦上鎖定 Kryfo';
 
   @override
-  String get desktopLockNewBody =>
-      'Kryfo 每次啟動都會要求輸入這組密碼短語。它鎖住你在這台電腦上的訊息、照片、語音訊息、檔案、聯絡人和金鑰。';
+  String get desktopLockNewBody => 'Kryfo 每次啟動都會要求輸入這組密碼短語。它鎖住你在這台電腦上的訊息、照片、語音訊息、檔案、聯絡人和金鑰。';
 
   @override
-  String get desktopLockHonest =>
-      '複製了 Kryfo 資料夾的人，可以在自己的電腦上盡其所能地快速嘗試密碼短語。四個以上的隨機單字撐得住，短的密碼短語撐不住。';
+  String get desktopLockHonest => '複製了 Kryfo 資料夾的人，可以在自己的電腦上盡其所能地快速嘗試密碼短語。四個以上的隨機單字撐得住，短的密碼短語撐不住。';
 
   @override
   String get desktopLockForgot => '沒有密碼短語，這裡你的任何訊息、檔案或金鑰都打不開，連我們也不行。';
@@ -19683,8 +19166,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String desktopLockShort(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     return '至少 $countString 個字元';
@@ -19733,8 +19215,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get desktopStartRefused => '這台電腦不允許 Kryfo 隨它啟動。你自己啟動時，Kryfo 照常開啟。';
 
   @override
-  String get desktopStartHeldOff =>
-      'Windows 在啟動應用程式中關閉了 Kryfo。請到設定、應用程式、啟動中開啟它。';
+  String get desktopStartHeldOff => 'Windows 在啟動應用程式中關閉了 Kryfo。請到設定、應用程式、啟動中開啟它。';
 
   @override
   String get desktopNoCamera => 'Kryfo 暫時還不能在這台電腦上使用相機。請改用連結或代碼。';
@@ -19752,8 +19233,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get desktopLockOtherVersion => '這個鎖是另一個版本的 Kryfo 建立的，目前的版本無法讀取。';
 
   @override
-  String get desktopNoMemoryFolder =>
-      'Kryfo 執行時需要記憶體中的一個私有資料夾，而這台電腦沒有提供，所以 Kryfo 不會開啟。';
+  String get desktopNoMemoryFolder => 'Kryfo 執行時需要記憶體中的一個私有資料夾，而這台電腦沒有提供，所以 Kryfo 不會開啟。';
 
   @override
   String get inviteNotYet => '此邀請尚未生效。請檢查手機上的時間。';
@@ -19795,8 +19275,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get modesFastTag => '直連我們的伺服器';
 
   @override
-  String get modesFastLine =>
-      '不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。也從不知道你說了什麼。你的聯絡人永遠看不到它。';
+  String get modesFastLine => '不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。也從不知道你說了什麼。你的聯絡人永遠看不到它。';
 
   @override
   String get modesFastConnected => '快速 · 已連線';
@@ -19855,8 +19334,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get serversBackups => '公共中繼';
 
   @override
-  String get serversBackupsLine =>
-      '在伺服器 1 停擺期間使用，而且只經 Tor 連線，所以它們永遠看不到你的 IP 位址。';
+  String get serversBackupsLine => '在伺服器 1 停擺期間使用，而且只經 Tor 連線，所以它們永遠看不到你的 IP 位址。';
 
   @override
   String get serversStandingBy => '待命中';
@@ -19868,8 +19346,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeMergedTitle => '中繼和快速現已合而為一';
 
   @override
-  String get homeMergedLine =>
-      '你正在使用快速模式。始終有一台備用伺服器待命，即使其中一台出問題，你也不會斷線。我們的伺服器能看到你的 IP 位址，但永遠看不到你說了什麼。';
+  String get homeMergedLine => '你正在使用快速模式。始終有一台備用伺服器待命，即使其中一台出問題，你也不會斷線。我們的伺服器能看到你的 IP 位址，但永遠看不到你說了什麼。';
 
   @override
   String get homeMergedGotIt => '知道了';
@@ -19908,23 +19385,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get seenOurServers => '我們的伺服器';
 
   @override
-  String get seenIpWhy =>
-      '私密模式下一切都經 Tor 送出，我們的伺服器看到的是出口節點，永遠不是你。快速模式下連線直達我們的兩台伺服器：你連線期間它們能看到你的 IP 位址，但不留任何紀錄。第一台停擺期間，快速模式也會使用公共中繼，而且只經 Tor 連線。';
+  String get seenIpWhy => '私密模式下一切都經 Tor 送出，我們的伺服器看到的是出口節點，永遠不是你。快速模式下連線直達我們的兩台伺服器：你連線期間它們能看到你的 IP 位址，但不留任何紀錄。第一台停擺期間，快速模式也會使用公共中繼，而且只經 Tor 連線。';
 
   @override
   String get chatAlbumItDisappearsWithNo => '這個相簿會從雙方的手機上刪除，除非已被儲存。這個動作無法復原。';
 
   @override
-  String get chatAlbumItDisappearsWithNoDesk =>
-      '這個相簿會從雙方的裝置上刪除，除非已被儲存。這個動作無法復原。';
+  String get chatAlbumItDisappearsWithNoDesk => '這個相簿會從雙方的裝置上刪除，除非已被儲存。這個動作無法復原。';
 
   @override
-  String get groupChatAlbumItDisappearsWithNo =>
-      '這個相簿會從所有人的手機上刪除，除非已被儲存。這個動作無法復原。';
+  String get groupChatAlbumItDisappearsWithNo => '這個相簿會從所有人的手機上刪除，除非已被儲存。這個動作無法復原。';
 
   @override
-  String get groupChatAlbumItDisappearsWithNoDesk =>
-      '這個相簿會從所有人的裝置上刪除，除非已被儲存。這個動作無法復原。';
+  String get groupChatAlbumItDisappearsWithNoDesk => '這個相簿會從所有人的裝置上刪除，除非已被儲存。這個動作無法復原。';
 
   @override
   String get homeInviteSomeone => '邀請一個人';
@@ -20029,8 +19502,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String a11yPinDigits(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -20044,8 +19516,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String a11yPassChars(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -20103,8 +19574,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String a11yNewMessages(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
@@ -20243,16 +19713,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get desktopLockWithoutPassphrase => '沒有它，任何使用你的使用者帳戶的人都能開啟 Kryfo。';
 
   @override
-  String get desktopLockKeyringRefused =>
-      'Kryfo 無法把它的金鑰保存在這台電腦的鑰匙圈中。請改為新增密碼短語。';
+  String get desktopLockKeyringRefused => 'Kryfo 無法把它的金鑰保存在這台電腦的鑰匙圈中。請改為新增密碼短語。';
 
   @override
-  String get desktopKeyMissing =>
-      '這個使用者帳戶沒有 Kryfo 資料的金鑰。Kryfo 備份能找回一切。如果你移動過 Kryfo 的資料夾，請在它原本的使用者帳戶上新增密碼短語，然後再複製一次。';
+  String get desktopKeyMissing => '這個使用者帳戶沒有 Kryfo 資料的金鑰。Kryfo 備份能找回一切。如果你移動過 Kryfo 的資料夾，請在它原本的使用者帳戶上新增密碼短語，然後再複製一次。';
 
   @override
-  String get desktopKeyUnreachable =>
-      'Kryfo 現在無法取得這台電腦上的金鑰。如果電腦提示，請解鎖你的鑰匙圈，然後再試一次。';
+  String get desktopKeyUnreachable => 'Kryfo 現在無法取得這台電腦上的金鑰。如果電腦提示，請解鎖你的鑰匙圈，然後再試一次。';
 
   @override
   String get desktopPassRow => '這台電腦上的密碼短語';
@@ -20291,23 +19758,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get desktopPassRemoveBody => '輸入你的密碼短語來移除它。之後 Kryfo 會用你的使用者帳戶開啟。';
 
   @override
-  String get desktopKeyUnreachableWindows =>
-      'Kryfo 現在無法取得這台電腦安全晶片中的金鑰。請稍後再試一次。';
+  String get desktopKeyUnreachableWindows => 'Kryfo 現在無法取得這台電腦安全晶片中的金鑰。請稍後再試一次。';
 
   @override
-  String get desktopLockAccountRefused =>
-      'Kryfo 無法用你的 Windows 帳戶保存它的金鑰。請改為新增密碼短語。';
+  String get desktopLockAccountRefused => 'Kryfo 無法用你的 Windows 帳戶保存它的金鑰。請改為新增密碼短語。';
 
   @override
-  String get desktopPassStaysWindows =>
-      'Kryfo 無法用你的 Windows 帳戶保存它的金鑰，所以密碼短語會保留。';
+  String get desktopPassStaysWindows => 'Kryfo 無法用你的 Windows 帳戶保存它的金鑰，所以密碼短語會保留。';
 
   @override
   String get desktopBackupCardTitle => '留一份 Kryfo 備份';
 
   @override
-  String get desktopBackupCardLine =>
-      '這台電腦上的 Windows 帳戶保管著 Kryfo 的金鑰。如果電腦或帳戶被重設，Kryfo 備份能找回一切。';
+  String get desktopBackupCardLine => '這台電腦上的 Windows 帳戶保管著 Kryfo 的金鑰。如果電腦或帳戶被重設，Kryfo 備份能找回一切。';
 
   @override
   String get desktopBackupHint => '如果這台電腦被重設，它能找回一切。';

@@ -117,6 +117,10 @@ class AppState extends ChangeNotifier {
     signalSession.onStarterNeeded = (peer) => unawaited(_sendStarter(peer));
     // their session started again (a heal, a restore): answered at once
     signalSession.onNewSession = (peer) => unawaited(_answerNewSession(peer));
+    // their side of a pq restart is done: the 15 days begin, the line shows
+    signalSession.onPqOver = (peer) => unawaited(notePqOver(peer));
+    // the opener to a one-time invite went: the rest waits for the answer
+    signalSession.holdOpener = _onceOpenerWent;
   }
 
   // signal, the engine and android, as the receive side reaches them

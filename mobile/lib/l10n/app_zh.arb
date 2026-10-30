@@ -2304,6 +2304,7 @@
   "roomShotsKeptOpen": "此聊天室中不能用其他应用打开别人的文件",
   "chatShotsYouTurnedOn": "你开启了禁止截屏。复制、转发和保存彼此的消息也已关闭。",
   "chatShotsYouTurnedOff": "你关闭了禁止截屏",
+  "chatNowPostQuantum": "此聊天中的消息现已使用后量子加密",
   "chatShotsTheyTurnedOn": "{name} 开启了禁止截屏。复制、转发和保存彼此的消息也已关闭。",
   "chatShotsTheyTurnedOff": "{name} 关闭了禁止截屏",
   "roomShotsBlocked": "Kryfo 在这个聊天室的每部手机上禁止截屏和录屏，也禁止复制、转发或保存别人的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。",

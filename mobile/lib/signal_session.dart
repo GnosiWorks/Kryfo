@@ -420,6 +420,16 @@ class SignalSession {
   /// waiting on: what waited goes now
   void Function(String peer)? onAnswered;
 
+  /// told when a message from [peer] opened on a post-quantum state of a
+  /// record that still holds classic ones: their side of a pq restart is
+  /// done (identity v4 11 step 6). told on each, until the drop
+  void Function(String peer)? onPqOver;
+
+  /// asked before a seal that would be an opener: true when one went
+  /// already to an address that hears only the first (a one-time invite),
+  /// so this one waits for their answer
+  Future<bool> Function(String peer)? holdOpener;
+
   /// [job] run after every earlier one queued for [peer] has ended
   Future<T> serial<T>(String peer, Future<T> Function() job) {
     final out = (_steps[peer] ?? Future<void>.value()).then((_) => job());
@@ -625,6 +635,12 @@ class SignalSession {
             .type ==
         kLsPreKey;
     if (onlySettled && opener) throw NotSettled(peer);
+    // the opener went to an address that is gone now: the rest waits for
+    // their answer, which opens the session for plain messages
+    if (opener && holdOpener != null && await holdOpener!(peer)) {
+      _awaiting.add(peer);
+      throw WaitsForAnswer(peer);
+    }
     final String padded;
     if (opener && lib.sessionInfo(record).version >= 4) {
       // a post-quantum opener carries the kyber ciphertext: filled smaller,
@@ -692,7 +708,7 @@ class SignalSession {
       );
       check?.call(o.plaintext);
       if (await identityStore.saw(peer, o.identityKey)) moved?.call();
-      await sessionStore.store(peer, o.record);
+      await sessionStore.store(peer, _pqFloor(peer, held, o.record));
       _answered(peer);
       return o.plaintext;
     }
@@ -763,6 +779,9 @@ class SignalSession {
     }
     if (!known) _requirePq(o.record);
     check?.call(o.plaintext);
+    final kept = peer == kFirstContactSlot
+        ? o.record
+        : _pqFloor(peer, held, o.record);
     var changed = false;
     // the record, the key it runs on and every key it spent, in one write
     await _db.transaction((txn) async {
@@ -779,7 +798,7 @@ class SignalSession {
         txn,
         prefix: _prefix,
         ident: ident,
-      ).store(peer, o.record);
+      ).store(peer, kept);
       final usedPk = o.usedPreKey;
       if (usedPk != null) {
         await LsPreKeyStore(txn, prefix: _prefix, ident: ident).remove(usedPk);
@@ -801,6 +820,74 @@ class SignalSession {
   void _answered(String peer) {
     if (_awaiting.remove(peer)) onAnswered?.call(peer);
   }
+
+  // [opened], the record a message from [peer] just opened on, kept on
+  // its post-quantum state. libsignal puts an archived state in front when
+  // a message opens on it, and archives the one it moves without its
+  // unanswered opener: a classic message still on its way after a pq
+  // restart would make every later seal classic, or plain on a pq state
+  // the peer never heard of. the state [held] had in front goes back, as
+  // it was, the classic one behind it. a record with no pq state (every
+  // chat with a 0.5.x phone) is kept as it opened
+  Uint8List _pqFloor(String peer, Uint8List? held, Uint8List opened) {
+    final now = lib.sessionInfo(opened);
+    final cur = now.current;
+    if (cur == null) return opened;
+    if (cur.version >= 4) {
+      if (now.archived.any((s) => s.version < 4)) onPqOver?.call(peer);
+      return opened;
+    }
+    if (held == null) return opened;
+    final was = lib.sessionInfo(held).current;
+    if (was == null || was.version < 4) return opened;
+    dlog('signal: a classic message after the pq restart, pq kept in front');
+    return lib.sessionPromote(opened, held);
+  }
+
+  /// [peer]'s held classic session started again on [bundle], the KDB1
+  /// their phone sent inside it (identity v4 11 step 5): a pqxdh session
+  /// on the identity the held one runs on, in front of it, the classic
+  /// state archived so what was sealed on it still opens. the next seal is
+  /// its opener. false when nothing is held, or the held one runs on
+  /// another key
+  Future<bool> restartFrom(String peer, LsBundle bundle) =>
+      serial(peer, () async {
+        final held = await sessionStore.load(peer);
+        if (held == null) return false;
+        final their = lib.sessionInfo(held).remoteIdentity;
+        if (their == null || !_eq(their, bundle.identityKey)) return false;
+        final (record, key) = lib.sessionFromBundle(
+          identity,
+          registrationId,
+          held,
+          bundle,
+          _now(),
+          pinned: their,
+        );
+        _requirePq(record);
+        if (!_eq(key, their)) throw const LsError(LsError.untrusted);
+        await sessionStore.store(peer, record);
+        dlog('signal: a classic session started again on pq');
+        return true;
+      });
+
+  /// [peer]'s record without its classic states, once their side of the pq
+  /// restart is 15 days done (identity v4 11 step 6): what was sealed on
+  /// them has left every relay. how many went, or null when the record is
+  /// kept as it is (none held, a pq state not in front, or an opener of it
+  /// not answered yet: the shim refuses those, and the next try asks again)
+  Future<int?> dropClassic(String peer) => serial(peer, () async {
+    final held = await sessionStore.load(peer);
+    if (held == null) return null;
+    try {
+      final (record, n) = lib.sessionDropBelow(held, 4);
+      if (n > 0) await sessionStore.store(peer, record);
+      return n;
+    } on LsError catch (e) {
+      dlog('signal: classic states kept for now (${e.code})');
+      return null;
+    }
+  });
 
   // what an opener is, by what its mac and its keys cover: the base key and
   // the message inside it. the fields around them (registration id, prekey

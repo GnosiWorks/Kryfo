@@ -310,6 +310,9 @@ extension AppStateInvites on AppState {
     await spendOpenedInvite(arrival);
     await live.markSeen(h);
     if (AppState._shown(paired.$2)) arrived();
+    // my hello's one-time invite: its owner holds what follows the opener
+    // until I answer (3c), so the empty answer goes now
+    if (out.isNotEmpty) unawaited(_answerNewSession(paired.$1));
   }
 
   // my face on the main invite: the onion key, F and F's signature
@@ -549,6 +552,39 @@ extension AppStateInvites on AppState {
       j['fs'] = fs;
     }
     return '$kEnvelopePrefix${jsonEncode(j)}';
+  }
+
+  // whether a seal to [peer] that would be an opener waits for their
+  // answer (SignalSession.holdOpener): a frame of this session went to
+  // their one-time invite already, and they heard only that one (3c).
+  // rows that do not read say no: the frame goes, as before
+  Future<bool> _onceOpenerWent(String peer) async {
+    try {
+      final db = await live.open();
+      final c = await db.query(
+        'contacts',
+        columns: ['xpub', 'back_paired', 'ident'],
+        where: 'halo_id = ?',
+        whereArgs: [peer],
+        limit: 1,
+      );
+      if (c.isEmpty || (c.first['back_paired'] as int? ?? 0) == 1) {
+        return false;
+      }
+      final key = identityKeyHex(c.first['xpub'] as String?);
+      if (key == null) return false;
+      final o = await db.query(
+        'hellos',
+        columns: ['went_at'],
+        where: 'ident = ? AND way = ? AND peer = ? AND once = ?',
+        whereArgs: [c.first['ident'] as int? ?? kMainIdent, kHelloOpen, key, 1],
+        limit: 1,
+      );
+      return o.isNotEmpty && o.first['went_at'] != null;
+    } catch (e) {
+      dlog('v4 opener: rows not read (${e.runtimeType})');
+      return false;
+    }
   }
 
   // whether a v4 first contact to [peer] waits for its answer. rows that
@@ -997,11 +1033,42 @@ extension AppStateInvites on AppState {
       'invite_id': _hexOf(inv.id),
       'fc': _hexOf(inv.firstContact),
       'at': DateTime.now().millisecondsSinceEpoch,
+      // a one-time invite hears only the first opener (3c)
+      'once': inv.oneTime ? 1 : 0,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     dlog('pair: v4 invite, seeded pair');
     // the engine takes the seed with every call from now on
     final res = await engine.pairSeed(kMainIdent, x, _hexOf(seed));
     if (res != 'ok') dlog('pair: seed not taken ($res)');
+  }
+}
+
+/// a first contact sent to [fc]; once a relay took it, an open hello row
+/// whose one-time invite that address is says a frame went there: the next
+/// waits for their answer (3c)
+Future<String> sendFirstContactNoted(
+  int ident,
+  String xPub,
+  String fc,
+  String cipher,
+) async {
+  final r = await engine.sendFirstContact(ident, xPub, fc, cipher);
+  if (r == 'ok') await noteOnceWent(fc);
+  return r;
+}
+
+/// the open hello rows on the one-time invite at [fc], marked as reached
+Future<void> noteOnceWent(String fc, {int? nowMs}) async {
+  try {
+    final db = await live.open();
+    await db.update(
+      'hellos',
+      {'went_at': nowMs ?? DateTime.now().millisecondsSinceEpoch},
+      where: 'way = ? AND fc = ? AND once = ? AND went_at IS NULL',
+      whereArgs: [kHelloOpen, fc, 1],
+    );
+  } catch (e) {
+    dlog('v4 opener: not marked (${e.runtimeType})');
   }
 }
 
