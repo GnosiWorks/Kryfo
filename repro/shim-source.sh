@@ -42,7 +42,7 @@ agpl=()
 for c in "${crates[@]}"; do
   grep -qE '^license = "AGPL-3\.0(-only)?"' "$VENDOR/$c/Cargo.toml" && agpl+=("$c")
 done
-printf '%s\n' "${agpl[@]}" | grep -q '^libsignal-protocol-' || { echo "libsignal-protocol is not in $VENDOR" >&2; exit 1; }
+printf '%s\n' "${agpl[@]}" | awk '/^libsignal-protocol-/ { f = 1 } END { exit !f }' || { echo "libsignal-protocol is not in $VENDOR" >&2; exit 1; }
 
 version=$(sed -n 's/^version: \([0-9.]*\).*/\1/p' "$APP/pubspec.yaml")
 [ -n "$version" ] || { echo "no version in $APP/pubspec.yaml" >&2; exit 1; }
