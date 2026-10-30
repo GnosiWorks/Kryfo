@@ -24,6 +24,9 @@ import 'wire_pad.dart';
 /// under, beside the contacts' addresses
 const kOwnDevices = '_own_devices_';
 
+// the kyber keys an opener from a device may rest on
+const _kDeviceKyberUses = {kUseSession, kUseHeal, kUsePool};
+
 /// a device on a list other than the phone
 bool isLinkedDevice(int device) => device >= 2 && device <= 127;
 
@@ -330,6 +333,11 @@ class DeviceSessions {
     }
     if (!known && await kyber.wasUsed(kyberId, info.baseKey)) {
       throw const LsError(LsError.duplicate);
+    }
+    // a device pair starts on a key made for sessions, a heal or the pool,
+    // never on an invite's
+    if (!known && !_kDeviceKyberUses.contains(await kyber.useOf(kyberId))) {
+      throw const DeviceRefused('an opener on a key not made for devices');
     }
     final pk = info.preKeyId;
     final o = _lib.decryptPreKey(

@@ -663,4 +663,47 @@ void main() {
       }
     }
   });
+
+  test('a device opener on an invite\'s key is refused', () async {
+    final d = bobs.first;
+    // the invite's kyber key, which everyone holding the card has
+    await ana.processBundle(
+      'bobdev',
+      lsBundleOf(ana.lib, await d.store.makeBundleB64()),
+    );
+    final (type, body) = wireOf(await ana.encryptTo('bobdev', '{"t":"x"}'));
+    expect(type, kLsPreKey);
+    await expectLater(
+      d.ds.open(
+        'ana',
+        1,
+        type,
+        body,
+        ana.identity.public,
+        reg: ana.registrationId,
+      ),
+      throwsA(isA<DeviceRefused>()),
+    );
+    expect(await d.ds.has('ana', 1), isFalse);
+    // the same from a bundle of its session keys opens
+    final block = ana.lib.parseDeviceBundle(
+      await d.ds.lastResortBundle(d.id),
+      bob.identity.public,
+    );
+    await anaDs.build('bob', d.id, block, d.key, d.reg);
+    final (t2, b2) = wireOf(await anaDs.seal('bob', d.id, '{"t":"y"}', d.key));
+    expect(
+      textOf(
+        await d.ds.open(
+          'ana',
+          1,
+          t2,
+          b2,
+          ana.identity.public,
+          reg: ana.registrationId,
+        ),
+      ),
+      '{"t":"y"}',
+    );
+  });
 }
