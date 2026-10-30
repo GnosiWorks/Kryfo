@@ -43,7 +43,7 @@ class _Rows extends HaloDb {
       const [];
 }
 
-Future<void> _person(MemDb mem, String id, String onion, {int accepted = 1}) =>
+Future<void> _person(MemDb mem, String id, String? onion, {int accepted = 1}) =>
     mem.insert('contacts', {
       'halo_id': id,
       'onion': onion,
@@ -95,19 +95,21 @@ void main() {
       Future<void>.delayed(const Duration(milliseconds: 50));
 
   var n = 0;
-  // a text from [id] saying its onion is [onion], as it comes off the relay
-  Future<void> from(String id, String onion) async {
+  // a text from [id] saying its onion is [onion], as it comes off the relay.
+  // [names] is who the envelope says sent it
+  Future<void> from(String id, String onion, {String? names}) async {
     final c = 'c-${++n}';
+    final who = names ?? id;
     io.opens[c] = (
       id,
       await wrapMessage(
         'hi $n',
         msgUid: 'u$n',
         sender: SenderInfo(
-          haloId: id,
-          edPub: 'ed-$id',
+          haloId: who,
+          edPub: 'ed-$who',
           onion: onion,
-          xPub: 'x-$id',
+          xPub: 'x-$who',
         ),
       ),
     );
@@ -133,5 +135,16 @@ void main() {
     await _person(mem, 'cy-asked', '', accepted: 0);
     await from('cy-asked', _onionOf('e'));
     expect(_onion(mem, 'cy-asked'), '');
+  });
+
+  test('a contact has no null onion, and a frame naming someone else '
+      'fills nobody else', () async {
+    // what fillOnion counts as none: the schema has no other
+    await expectLater(_person(mem, 'dot-null', null), throwsStateError);
+    await _person(mem, 'ana-opens', _onionOf('g'));
+    await _person(mem, 'ben-named', '');
+    await from('ana-opens', _onionOf('h'), names: 'ben-named');
+    expect(_onion(mem, 'ben-named'), '');
+    expect(_onion(mem, 'ana-opens'), _onionOf('g'));
   });
 }

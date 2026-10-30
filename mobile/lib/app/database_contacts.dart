@@ -773,15 +773,13 @@ mixin _ContactRows {
   /// stays
   Future<void> fillOnion(String haloId, String onion) async {
     final db = await open();
-    // two writes: the rows tests keep in maps have no OR
-    for (final none in const ['onion IS NULL', "onion = ''"]) {
-      await db.update(
-        'contacts',
-        {'onion': onion},
-        where: 'halo_id = ? AND accepted = 1 AND $none',
-        whereArgs: [haloId],
-      );
-    }
+    // contacts.onion is NOT NULL: none is ''
+    await db.update(
+      'contacts',
+      {'onion': onion},
+      where: "halo_id = ? AND accepted = 1 AND onion = ''",
+      whereArgs: [haloId],
+    );
   }
 
   /// a hello owed to the identity [ownerHex] (0x05 and its x key),
