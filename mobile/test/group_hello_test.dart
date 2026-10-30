@@ -1054,8 +1054,8 @@ void main() {
     },
   );
   test('the admin keeps a member\'s roster invite again only when it is '
-      'newer and a day on, and passes a new member every one, the others '
-      'only what is new', () async {
+      'newer and a day on, and passes every one to a new member or one '
+      'whose own was made again, the others only what is new', () async {
     final mine = await myRoster();
     final m1 = await _Phone.make('first-member-delta', seed++);
     final m2 = await _Phone.make('second-member-delta', seed++);
@@ -1118,7 +1118,12 @@ void main() {
     await ri(m1, newer);
     expect((await rosterInviteOf(db, _g, m1.words))!.id, newer.id);
     expect(rosterTo(m2.words), {m1.words: base64Encode(newer.link)});
-    expect(rosterTo(m1.words), {m1.words: base64Encode(newer.link)});
+    // m1 made theirs again, and may have lost the set: every one to them
+    expect(rosterTo(m1.words), {
+      _me: base64Encode(mine.link),
+      m1.words: base64Encode(newer.link),
+      m2.words: base64Encode(r2.link),
+    });
     expect(await rosterInvitesToPass(db), isEmpty);
   });
 

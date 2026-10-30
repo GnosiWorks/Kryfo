@@ -161,9 +161,10 @@ extension AppStateGroupHellos on AppState {
     });
   }
 
-  /// the admin's side, to the members who sent a roster invite: each new
-  /// since the last pass gets every one [groupId] holds, mine with them;
-  /// the others only the ones new or made again since, and mine when it was
+  /// the admin's side, to the members who sent a roster invite: each whose
+  /// own is new or made again since the last pass gets every one [groupId]
+  /// holds, mine with them (one made again may have lost the set); the
+  /// others only the ones new or made again since, and mine when it was
   /// made again ([mine]). a member who sent none (0.5.x) would not use them
   Future<void> _passRosterInvites(String groupId, {bool mine = false}) async {
     try {
@@ -178,7 +179,7 @@ extension AppStateGroupHellos on AppState {
       for (final m in members) {
         final r = held[m];
         if (m == myId || r == null) continue;
-        (r.pushed == kRosterNew ? fresh : had).add(m);
+        (r.pushed != kRosterPassed ? fresh : had).add(m);
       }
       final changed = {
         for (final r in held.values)
