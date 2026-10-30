@@ -20,6 +20,7 @@ import 'foreign.dart';
 import 'hant.dart' show HantForm;
 import 'lang_names.dart';
 import 'pack_sheet.dart';
+import 'translate_menu.dart' show neverOffer;
 
 // the language a reader gets: traditional chinese says so
 String _into(Offer o) => o.hant != HantForm.none ? 'zh_hant' : o.to;
@@ -243,7 +244,7 @@ class TranslateBar extends StatelessWidget {
       case 'always':
         unawaited(_quietly(chat.hub.alwaysFor(offer.from, !always)));
       case 'never':
-        unawaited(_quietly(chat.hub.neverFor(offer.from)));
+        if (context.mounted) await neverOffer(context, chat.hub, offer);
       case 'hide':
         unawaited(chat.hideBar());
     }

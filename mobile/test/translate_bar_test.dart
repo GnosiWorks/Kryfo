@@ -246,7 +246,7 @@ void main() {
     expect(find.text(_en2), findsOneWidget);
   });
 
-  testWidgets('never translate chinese: it is a language they read now', (
+  testWidgets('never offer for chinese: on the never list, with an undo', (
     t,
   ) async {
     final f = fakeHub(installed: true, words: _words);
@@ -255,12 +255,20 @@ void main() {
     await t.pumpAndSettle();
     await t.tap(find.text(l10n.translateBarNever(langName('zh'))));
     await t.pumpAndSettle();
-    expect(f.store.settings.mine, ['zh']);
+    expect(f.store.settings.never, ['zh']);
+    // not counted as a language they read
+    expect(f.store.settings.mine, isEmpty);
     expect(_bar(), findsNothing);
     expect(
       find.textContaining(l10n.translateAction, findRichText: true),
       findsNothing,
     );
+    // the note offers it back
+    expect(find.text(l10n.translateNeverDone(langName('zh'))), findsOneWidget);
+    await t.tap(find.text(l10n.translateUndo));
+    await t.pumpAndSettle();
+    expect(f.store.settings.never, isEmpty);
+    expect(_bar(), findsOneWidget);
   });
 
   testWidgets('hide: the bar goes quietly and stays away in this chat', (

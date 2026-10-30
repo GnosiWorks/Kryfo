@@ -680,7 +680,8 @@ class _ContactScreenState extends State<ContactScreen> {
                 toggled: pinned,
                 onTap: () => _setPinned(!pinned),
               ),
-              if (translationHubIfOn() case final hub?)
+              // the same switch as "always translate this chat" in a chat
+              if (translationHubIfOn() case final hub? when hub.on)
                 AutoTranslateRow(chatId: widget.haloId, hub: hub),
               // a photo of your own choosing for them, never sent
               if (accepted &&

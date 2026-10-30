@@ -8801,7 +8801,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String translateBarNever(Object language) {
-    return 'Nunca traduzir · $language';
+    return 'Nunca oferecer · $language';
   }
 
   @override
@@ -8960,6 +8960,30 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get translateAutoInChatHint =>
       'Mensagens em outros idiomas aparecem traduzidas. O original fica a um toque.';
+
+  @override
+  String get translateAlwaysChat => 'Sempre traduzir esta conversa';
+
+  @override
+  String translateNeverDone(Object language) {
+    return 'As mensagens ficam como estão · $language';
+  }
+
+  @override
+  String get translateUndo => 'Desfazer';
+
+  @override
+  String get translateNeverSection => 'Nunca oferecidos';
+
+  @override
+  String get translateOfferAgain => 'Oferecer de novo';
+
+  @override
+  String get translateOnHint => 'Oferecida sob mensagens em outros idiomas';
+
+  @override
+  String get translatePrivacyKept =>
+      'As traduções ficam guardadas, criptografadas, com a conversa neste celular e são apagadas com ela.';
 
   @override
   String get bridgesNoneUntilOnion => 'Nada até ativar o Onion';

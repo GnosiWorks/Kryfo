@@ -8717,7 +8717,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String translateBarNever(Object language) {
-    return 'Không bao giờ dịch $language';
+    return 'Không bao giờ đề xuất cho $language';
   }
 
   @override
@@ -8878,6 +8878,31 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get translateAutoInChatHint =>
       'Tin nhắn bằng ngôn ngữ khác sẽ hiện bản dịch. Bản gốc chỉ cách một lần chạm.';
+
+  @override
+  String get translateAlwaysChat => 'Luôn dịch cuộc trò chuyện này';
+
+  @override
+  String translateNeverDone(Object language) {
+    return 'Tin nhắn bằng $language được giữ nguyên';
+  }
+
+  @override
+  String get translateUndo => 'Hoàn tác';
+
+  @override
+  String get translateNeverSection => 'Không bao giờ đề xuất';
+
+  @override
+  String get translateOfferAgain => 'Đề xuất lại';
+
+  @override
+  String get translateOnHint =>
+      'Được đề xuất bên dưới tin nhắn bằng ngôn ngữ khác';
+
+  @override
+  String get translatePrivacyKept =>
+      'Bản dịch được lưu mã hóa cùng cuộc trò chuyện trên điện thoại này và bị xóa cùng nó.';
 
   @override
   String get bridgesNoneUntilOnion => 'Chưa dùng cho đến khi bật Onion';

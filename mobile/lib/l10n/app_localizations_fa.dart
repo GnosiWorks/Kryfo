@@ -8746,7 +8746,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String translateBarNever(Object language) {
-    return 'هرگز $language را ترجمه نکن';
+    return 'ترجمهٔ $language را دیگر پیشنهاد نده';
   }
 
   @override
@@ -8905,6 +8905,30 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get translateAutoInChatHint =>
       'پیام‌هایی به زبان‌های دیگر ترجمه‌شده نمایش داده می‌شوند. متن اصلی با یک لمس در دسترس است.';
+
+  @override
+  String get translateAlwaysChat => 'همیشه این گفتگو را ترجمه کن';
+
+  @override
+  String translateNeverDone(Object language) {
+    return 'پیام‌های $language همان‌طور که هستند می‌مانند';
+  }
+
+  @override
+  String get translateUndo => 'واگرد';
+
+  @override
+  String get translateNeverSection => 'هرگز پیشنهاد نمی‌شود';
+
+  @override
+  String get translateOfferAgain => 'دوباره پیشنهاد بده';
+
+  @override
+  String get translateOnHint => 'زیر پیام‌هایی به زبان‌های دیگر پیشنهاد می‌شود';
+
+  @override
+  String get translatePrivacyKept =>
+      'ترجمه‌ها رمزگذاری‌شده کنار گفتگوی خود روی همین گوشی می‌مانند و همراه آن پاک می‌شوند.';
 
   @override
   String get bridgesNoneUntilOnion => 'هیچ، تا Onion روشن شود';

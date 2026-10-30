@@ -144,7 +144,10 @@ void main() {
     await t.pumpWidget(framed(TranslationScreen(hub: f.hub)));
     await t.pumpAndSettle();
     expect(find.text(l10n.translatePrivacyTitle), findsOneWidget);
-    expect(find.text(l10n.translatePrivacyNote), findsOneWidget);
+    expect(
+      find.text('${l10n.translatePrivacyNote} ${l10n.translatePrivacyKept}'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('reduced motion: the page comes to rest', (t) async {
@@ -183,5 +186,111 @@ void main() {
     await t.pumpWidget(page('heron'));
     await t.pumpAndSettle();
     expect(row(t, l10n.translateAutoInChat).toggled, isTrue);
+  });
+
+  testWidgets('translation off: the rest folds away, the packs stay', (
+    t,
+  ) async {
+    tall(t);
+    final f = fakeHub();
+    await t.pumpWidget(framed(TranslationScreen(hub: f.hub)));
+    await t.pumpAndSettle();
+    final on = find.byKey(const ValueKey('translate-on'));
+    expect(t.widget<HaloRow>(on).toggled, isTrue);
+    expect(t.widget<HaloRow>(on).hint, l10n.translateOnHint);
+    expect(find.text(l10n.translateMyLanguages), findsOneWidget);
+    await t.tap(on);
+    // folding, not gone in one frame
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 60));
+    expect(find.text(l10n.translateMyLanguages), findsOneWidget);
+    await t.pumpAndSettle();
+    expect(f.store.settings.on, isFalse);
+    expect(find.text(l10n.translateMyLanguages), findsNothing);
+    expect(find.text(l10n.translateAutoDefault), findsNothing);
+    expect(find.byKey(const ValueKey('pack-zh')), findsOneWidget);
+    await t.tap(on);
+    await t.pumpAndSettle();
+    expect(f.store.settings.on, isTrue);
+    expect(find.text(l10n.translateMyLanguages), findsOneWidget);
+    expect(t.takeException(), isNull);
+  });
+
+  testWidgets('languages I read: the app language is ticked and stays', (
+    t,
+  ) async {
+    tall(t);
+    final f = fakeHub(app: 'fr');
+    await t.pumpWidget(framed(TranslationScreen(hub: f.hub)));
+    await t.pumpAndSettle();
+    expect(row(t, l10n.translateMyLanguages).value, languageNameHere('fr'));
+    await t.tap(find.text(l10n.translateMyLanguages));
+    await t.pumpAndSettle();
+    expect(find.byIcon(Icons.check_box_rounded), findsOneWidget);
+    // a tap on it changes nothing
+    await t.tap(find.text(languageNameHere('fr')).last);
+    await t.pump();
+    expect(find.byIcon(Icons.check_box_rounded), findsOneWidget);
+    await t.tap(find.text(languageNameHere('de')));
+    await t.pump();
+    expect(find.byIcon(Icons.check_box_rounded), findsNWidgets(2));
+    await t.tap(find.text(l10n.commonDone));
+    await t.pumpAndSettle();
+    expect(f.store.settings.mine, ['de']);
+  });
+
+  testWidgets('never offered: listed, offered again with a tap', (t) async {
+    tall(t);
+    final f = fakeHub(
+      settings: const TranslateSettings(wifiOnly: false, never: ['zh']),
+    );
+    await t.pumpWidget(framed(TranslationScreen(hub: f.hub)));
+    await t.pumpAndSettle();
+    expect(find.text(l10n.translateNeverSection), findsOneWidget);
+    final r = find.byKey(const ValueKey('never-zh'));
+    expect(t.widget<HaloRow>(r).label, langName('zh'));
+    expect(t.widget<HaloRow>(r).value, l10n.translateOfferAgain);
+    await t.tap(r);
+    await t.pumpAndSettle();
+    expect(f.store.settings.never, isEmpty);
+    expect(find.text(l10n.translateNeverSection), findsNothing);
+    // set again from a chat's menu: listed again
+    await f.hub.neverFor('zh');
+    await t.pumpAndSettle();
+    expect(find.byKey(const ValueKey('never-zh')), findsOneWidget);
+    expect(t.takeException(), isNull);
+  });
+
+  testWidgets('nothing set to never: no such section', (t) async {
+    tall(t);
+    final f = fakeHub();
+    await t.pumpWidget(framed(TranslationScreen(hub: f.hub)));
+    await t.pumpAndSettle();
+    expect(find.text(l10n.translateNeverSection), findsNothing);
+  });
+
+  testWidgets('right to left and large text: the page holds', (t) async {
+    tall(t);
+    final f = fakeHub(
+      settings: const TranslateSettings(wifiOnly: false, never: ['zh']),
+    );
+    await t.pumpWidget(
+      MaterialApp(
+        theme: buildHaloTheme(),
+        locale: const Locale('fa'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        builder: (ctx, child) => MediaQuery(
+          data: MediaQuery.of(
+            ctx,
+          ).copyWith(textScaler: const TextScaler.linear(2)),
+          child: child!,
+        ),
+        home: TranslationScreen(hub: f.hub),
+      ),
+    );
+    await t.pumpAndSettle();
+    expect(find.byKey(const ValueKey('never-zh')), findsOneWidget);
+    expect(t.takeException(), isNull);
   });
 }

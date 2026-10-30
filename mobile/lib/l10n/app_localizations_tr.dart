@@ -8756,7 +8756,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String translateBarNever(Object language) {
-    return 'Asla çevirme · $language';
+    return 'Bir daha önerme · $language';
   }
 
   @override
@@ -8914,6 +8914,30 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get translateAutoInChatHint =>
       'Başka dillerdeki mesajlar çevrilmiş görünür. Orijinali bir dokunuş uzakta.';
+
+  @override
+  String get translateAlwaysChat => 'Bu sohbeti her zaman çevir';
+
+  @override
+  String translateNeverDone(Object language) {
+    return 'Mesajlar olduğu gibi kalır · $language';
+  }
+
+  @override
+  String get translateUndo => 'Geri al';
+
+  @override
+  String get translateNeverSection => 'Hiç önerilmeyenler';
+
+  @override
+  String get translateOfferAgain => 'Yeniden öner';
+
+  @override
+  String get translateOnHint => 'Başka dillerdeki mesajların altında sunulur';
+
+  @override
+  String get translatePrivacyKept =>
+      'Çeviriler bu telefonda sohbetleriyle birlikte şifreli tutulur ve sohbetle birlikte silinir.';
 
   @override
   String get bridgesNoneUntilOnion => 'Onion açılana kadar yok';

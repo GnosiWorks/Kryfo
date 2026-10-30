@@ -8805,7 +8805,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String translateBarNever(Object language) {
-    return 'Non tradurre mai · $language';
+    return 'Non proporre più · $language';
   }
 
   @override
@@ -8965,6 +8965,30 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get translateAutoInChatHint =>
       'I messaggi in altre lingue appaiono tradotti. L\'originale è a un tocco.';
+
+  @override
+  String get translateAlwaysChat => 'Traduci sempre questa chat';
+
+  @override
+  String translateNeverDone(Object language) {
+    return 'I messaggi restano come sono · $language';
+  }
+
+  @override
+  String get translateUndo => 'Annulla';
+
+  @override
+  String get translateNeverSection => 'Mai proposte';
+
+  @override
+  String get translateOfferAgain => 'Proponi di nuovo';
+
+  @override
+  String get translateOnHint => 'Proposta sotto i messaggi in altre lingue';
+
+  @override
+  String get translatePrivacyKept =>
+      'Le traduzioni restano cifrate con la loro chat su questo telefono e vengono eliminate con essa.';
 
   @override
   String get bridgesNoneUntilOnion => 'Niente finché Onion non è attivo';

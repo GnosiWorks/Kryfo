@@ -8884,7 +8884,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String translateBarNever(Object language) {
-    return 'Ніколи не перекладати · $language';
+    return 'Не пропонувати · $language';
   }
 
   @override
@@ -9043,6 +9043,30 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get translateAutoInChatHint =>
       'Повідомлення іншими мовами показуються в перекладі. Оригінал за один дотик.';
+
+  @override
+  String get translateAlwaysChat => 'Завжди перекладати цей чат';
+
+  @override
+  String translateNeverDone(Object language) {
+    return 'Повідомлення лишаються як є · $language';
+  }
+
+  @override
+  String get translateUndo => 'Скасувати';
+
+  @override
+  String get translateNeverSection => 'Не пропонувати';
+
+  @override
+  String get translateOfferAgain => 'Пропонувати знову';
+
+  @override
+  String get translateOnHint => 'Пропонується під повідомленнями іншими мовами';
+
+  @override
+  String get translatePrivacyKept =>
+      'Переклади зберігаються зашифрованими разом із чатом на цьому телефоні й видаляються разом із ним.';
 
   @override
   String get bridgesNoneUntilOnion => 'Нічого, доки не ввімкнено Onion';

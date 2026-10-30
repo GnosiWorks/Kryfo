@@ -14057,10 +14057,10 @@ abstract class AppLocalizations {
   /// **'Always translate {language}'**
   String translateBarAlways(Object language);
 
-  /// in the bar's menu: the language counts as one the person reads, nothing in it is offered for translation
+  /// in a translate menu: nothing in this language is offered for translation until the person takes it off the list in settings
   ///
   /// In en, this message translates to:
-  /// **'Never translate {language}'**
+  /// **'Never offer for {language}'**
   String translateBarNever(Object language);
 
   /// in the bar's menu: the bar goes away in this chat
@@ -14314,6 +14314,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Messages in other languages show translated. The original is one tap away.'**
   String get translateAutoInChatHint;
+
+  /// in a translate menu: this chat's messages in other languages show translated on their own
+  ///
+  /// In en, this message translates to:
+  /// **'Always translate this chat'**
+  String get translateAlwaysChat;
+
+  /// toast after never offer, with an undo
+  ///
+  /// In en, this message translates to:
+  /// **'Messages in {language} stay as they are'**
+  String translateNeverDone(Object language);
+
+  /// toast action: takes the language off the never list again
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get translateUndo;
+
+  /// translation settings: the languages set to never offer
+  ///
+  /// In en, this message translates to:
+  /// **'Never offered'**
+  String get translateNeverSection;
+
+  /// translation settings: takes a language off the never list
+  ///
+  /// In en, this message translates to:
+  /// **'Offer again'**
+  String get translateOfferAgain;
+
+  /// translation settings: the switch's hint
+  ///
+  /// In en, this message translates to:
+  /// **'Offered under messages in other languages'**
+  String get translateOnHint;
+
+  /// translation settings, privacy box: where translations are kept
+  ///
+  /// In en, this message translates to:
+  /// **'Translations are kept with their chat, encrypted on this phone, and deleted with it.'**
+  String get translatePrivacyKept;
 
   /// screens/bridges_screen.dart: the "In use" value while relay or fast mode is on, where no bridge is used
   ///
