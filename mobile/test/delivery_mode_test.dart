@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/delivery_mode.dart';
+import 'package:kryfo/desktop/desktop_mode.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   const min = 60 * 1000;
@@ -11,6 +13,25 @@ void main() {
     expect(deliveryModeOf('fcm'), DeliveryMode.always);
     expect(deliveryModeOf('checkins'), DeliveryMode.checkins);
     expect(deliveryModeOf('helper'), DeliveryMode.helper);
+  });
+
+  test('a computer is always on, whatever a carried phone backup says', () {
+    for (final raw in [null, 'always', 'checkins', 'helper', 'google']) {
+      expect(deliveryModeOf(raw, desktop: true), DeliveryMode.always);
+      expect(
+        deliveryModeOf(raw, play: true, desktop: true),
+        DeliveryMode.always,
+      );
+    }
+    expect(deliveryModeOf('checkins', desktop: false), DeliveryMode.checkins);
+  });
+
+  test('a carried check-ins loads as always on a computer', () async {
+    SharedPreferences.setMockInitialValues({kDeliveryModeKey: 'checkins'});
+    expect(await loadDeliveryMode(), DeliveryMode.checkins);
+    onDesktop = true;
+    addTearDown(() => onDesktop = false);
+    expect(await loadDeliveryMode(), DeliveryMode.always);
   });
 
   test('formats time ago', () {

@@ -34,6 +34,7 @@ import 'desktop_net.dart';
 import 'computer_lock.dart';
 import 'desktop_paths.dart';
 import 'desktop_platform.dart';
+import 'desktop_run.dart';
 import 'desktop_posix.dart';
 import 'desktop_prefs.dart';
 import 'desktop_vault.dart';
@@ -240,7 +241,6 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   // the prefs are shut until the vault opens: the lock screen speaks the
   // system's language
   await loadAppLocale();
-  unawaited(sayTrayWords());
   // the key goes from memory as the engine lets the app go
   closeOnDetach = AppLifecycleListener(onDetach: vault.close);
   // ended from outside, or from the tray: the marks kept, memory cleared,
@@ -287,6 +287,16 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
         if (started) return;
         started = true;
         lock.opened();
+        // the tray, as the switch was left. nothing arrives before the
+        // vault opens, so closing the passphrase screen just quits
+        final run = DesktopRun(
+          tray: const ChannelTray(sayTrayWords),
+          place: startPlaceHere(read: vault.read, write: vault.write),
+          read: vault.read,
+          write: vault.write,
+        );
+        desktopRun = run;
+        unawaited(run.begin());
         unawaited(() async {
           await openSeal(
             root: root,

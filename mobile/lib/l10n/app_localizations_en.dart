@@ -4444,6 +4444,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The PIN goes, and the wipe PIN and any hidden chats with it. Anyone holding your phone opens Kryfo as you.';
 
   @override
+  String get pinsThePinGoesAndDesk =>
+      'The PIN goes, and the wipe PIN and any hidden chats with it. Anyone at your computer opens Kryfo as you.';
+
+  @override
   String get pinsUnlockWithFingerprint => 'Unlock with fingerprint';
 
   @override
@@ -7188,6 +7192,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'This network wants a sign-in first. Once you\'re in, Kryfo connects.';
 
   @override
+  String get bridgesThisNetworkWantsADesk =>
+      'This network wants a sign-in first. Sign in from your browser, or check the computer\'s network connection. Once you\'re in, Kryfo connects.';
+
+  @override
   String get bridgesWaitingForWifiSignIn => 'Waiting for Wi-Fi sign-in';
 
   @override
@@ -7859,8 +7867,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'For when someone makes you unlock your phone.';
 
   @override
+  String get pinsAdvancedLineDesk =>
+      'For when someone makes you unlock your computer.';
+
+  @override
   String get pinsWipeLine =>
       'Typed on the lock screen, it wipes Kryfo from this phone.';
+
+  @override
+  String get pinsWipeLineDesk =>
+      'Typed on the lock screen, it wipes Kryfo from this computer.';
 
   @override
   String get pinsDecoyPin => 'Decoy PIN';
@@ -7882,6 +7898,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Every PIN goes, the decoy and its Kryfo and any hidden chats with them. Anyone holding your phone opens Kryfo as you.';
 
   @override
+  String get pinsTurnOffWithDecoyDesk =>
+      'Every PIN goes, the decoy and its Kryfo and any hidden chats with them. Anyone at your computer opens Kryfo as you.';
+
+  @override
   String get pinsHowThisWorks => 'How this works';
 
   @override
@@ -7896,6 +7916,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get flowWipe1 =>
       'Typed on the lock screen instead of your PIN, it wipes Kryfo from this phone and closes it. To whoever is watching, the app just stopped.';
+
+  @override
+  String get flowWipe1Desk =>
+      'Typed on the lock screen instead of your PIN, it wipes Kryfo from this computer and closes it. To whoever is watching, the app just stopped.';
 
   @override
   String get flowWipe2 =>
@@ -7930,6 +7954,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Notifications already in the shade were already seen. While the decoy is open, no new ones show.';
 
   @override
+  String get flowDecoyShadeDesk =>
+      'Notifications already on the screen were already seen. While the decoy is open, no new ones show.';
+
+  @override
   String get flowDecoyChoose => 'Choose a decoy PIN';
 
   @override
@@ -7942,6 +7970,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get flowLaw =>
       'In some countries, refusing to unlock a phone or hiding data from officials is an offence in itself. Know the law where you travel.';
+
+  @override
+  String get flowLawDesk =>
+      'In some countries, refusing to unlock a device or hiding data from officials is an offence in itself. Know the law where you travel.';
 
   @override
   String get howWipe =>
@@ -8006,6 +8038,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get flowVaultReplace =>
       'This replaces any hidden chats this phone already holds.';
+
+  @override
+  String get flowVaultReplaceDesk =>
+      'This replaces any hidden chats this computer already holds.';
 
   @override
   String get flowVaultChoose => 'Choose a hidden chats PIN';
@@ -8082,6 +8118,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get howVault =>
       'Your hidden chats PIN opens Kryfo with your hidden chats, your PIN and your fingerprint without them. Setting hidden chats up again replaces the ones this phone holds. Forget the hidden chats PIN and they are gone for good.';
+
+  @override
+  String get howVaultDesk =>
+      'Your hidden chats PIN opens Kryfo with your hidden chats, your PIN without them. Setting hidden chats up again replaces the ones this computer holds. Forget the hidden chats PIN and they are gone for good.';
 
   @override
   String get chatHide => 'Hide chat';
@@ -9676,6 +9716,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'At least 12 characters. The phone\'s keyboard sees what you type, so use one that does not learn or sync words.';
 
   @override
+  String get flowVaultPassLineDesk =>
+      'At least 12 characters. Pick one you use nowhere else.';
+
+  @override
   String get flowVaultPassAgain => 'The same passphrase again';
 
   @override
@@ -10050,6 +10094,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get desktopTrayTip => 'Kryfo is running and receiving messages';
+
+  @override
+  String get desktopRunSection => 'On this computer';
+
+  @override
+  String get desktopTrayRow => 'Keep running in the tray';
+
+  @override
+  String get desktopTrayHint =>
+      'Closing the window keeps Kryfo in the tray, so messages keep arriving.';
+
+  @override
+  String get desktopTrayOffLine =>
+      'Closing the window quits Kryfo. Messages arrive when you open it again.';
+
+  @override
+  String get desktopTrayNoneLine =>
+      'This desktop shows no tray icon, so closing the window quits Kryfo.';
+
+  @override
+  String get desktopStartRow => 'Start with my computer';
+
+  @override
+  String get desktopStartHint =>
+      'Kryfo opens when you sign in to this computer.';
+
+  @override
+  String get desktopStartRefused =>
+      'This computer did not let Kryfo start with it. Kryfo opens whenever you start it yourself.';
+
+  @override
+  String get desktopStartHeldOff =>
+      'Windows has Kryfo switched off in its startup apps. Switch it on there, in Settings, Apps, Startup.';
 
   @override
   String get desktopNoCamera =>

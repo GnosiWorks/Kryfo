@@ -4221,6 +4221,10 @@ class AppLocalizationsZh extends AppLocalizations {
       'PIN 码会被移除，抹除 PIN 和所有隐藏聊天也一起移除。任何拿着你手机的人都能以你的身份打开 Kryfo。';
 
   @override
+  String get pinsThePinGoesAndDesk =>
+      'PIN 码会被移除，抹除 PIN 和所有隐藏聊天也一起移除。任何用你电脑的人都能以你的身份打开 Kryfo。';
+
+  @override
   String get pinsUnlockWithFingerprint => '用指纹解锁';
 
   @override
@@ -6864,6 +6868,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesThisNetworkWantsA => '这个网络需要先登录。登录后，Kryfo 就会连接。';
 
   @override
+  String get bridgesThisNetworkWantsADesk =>
+      '这个网络需要先登录。请在浏览器里登录，或检查电脑的网络连接。登录后，Kryfo 就会连接。';
+
+  @override
   String get bridgesWaitingForWifiSignIn => '等待 Wi-Fi 登录';
 
   @override
@@ -7497,7 +7505,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pinsAdvancedLine => '用于有人强迫你解锁手机时。';
 
   @override
+  String get pinsAdvancedLineDesk => '用于有人强迫你解锁电脑时。';
+
+  @override
   String get pinsWipeLine => '在锁屏上输入它，会从这部手机上抹除 Kryfo。';
+
+  @override
+  String get pinsWipeLineDesk => '在锁屏上输入它，会从这台电脑上抹除 Kryfo。';
 
   @override
   String get pinsDecoyPin => '伪装 PIN';
@@ -7519,6 +7533,10 @@ class AppLocalizationsZh extends AppLocalizations {
       '所有 PIN 都会被移除，伪装 PIN 和它的 Kryfo 以及所有隐藏聊天也一样。任何拿着你手机的人都能以你的身份打开 Kryfo。';
 
   @override
+  String get pinsTurnOffWithDecoyDesk =>
+      '所有 PIN 都会被移除，伪装 PIN 和它的 Kryfo 以及所有隐藏聊天也一样。任何用你电脑的人都能以你的身份打开 Kryfo。';
+
+  @override
   String get pinsHowThisWorks => '工作原理';
 
   @override
@@ -7533,6 +7551,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get flowWipe1 =>
       '在锁屏上代替你的 PIN 码输入，它会从这部手机上抹除 Kryfo 并关闭应用。在旁人看来，应用只是停止了。';
+
+  @override
+  String get flowWipe1Desk =>
+      '在锁屏上代替你的 PIN 码输入，它会从这台电脑上抹除 Kryfo 并关闭应用。在旁人看来，应用只是停止了。';
 
   @override
   String get flowWipe2 => '所有聊天和你的身份都会一起抹除，有伪装的话也一样。';
@@ -7563,6 +7585,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowDecoyShade => '已经在通知栏里的通知被看到了。但伪装打开期间，不会出现新的通知。';
 
   @override
+  String get flowDecoyShadeDesk => '已经在屏幕上的通知被看到了。但伪装打开期间，不会出现新的通知。';
+
+  @override
   String get flowDecoyChoose => '选择一个伪装 PIN';
 
   @override
@@ -7574,6 +7599,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get flowLaw => '在有些国家，拒绝解锁手机或向官方隐藏数据本身就是违法的。出行前了解当地的法律。';
+
+  @override
+  String get flowLawDesk => '在有些国家，拒绝解锁设备或向官方隐藏数据本身就是违法的。出行前了解当地的法律。';
 
   @override
   String get howWipe =>
@@ -7631,6 +7659,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get flowVaultReplace => '这会替换这部手机上已有的任何隐藏聊天。';
+
+  @override
+  String get flowVaultReplaceDesk => '这会替换这台电脑上已有的任何隐藏聊天。';
 
   @override
   String get flowVaultChoose => '选择一个隐藏聊天 PIN';
@@ -7702,6 +7733,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get howVault =>
       '隐藏聊天 PIN 打开的 Kryfo 带着隐藏聊天，你的 PIN 码和指纹打开的则没有。重新设置隐藏聊天，会替换这部手机上已有的。忘了隐藏聊天 PIN，它们就永远没了。';
+
+  @override
+  String get howVaultDesk =>
+      '隐藏聊天 PIN 打开的 Kryfo 带着隐藏聊天，你的 PIN 码打开的则没有。重新设置隐藏聊天，会替换这台电脑上已有的。忘了隐藏聊天 PIN，它们就永远没了。';
 
   @override
   String get chatHide => '隐藏此聊天';
@@ -9204,6 +9239,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowVaultPassLine => '至少 12 个字符。手机键盘能看到你输入的内容，所以请使用不会学习或同步词语的键盘。';
 
   @override
+  String get flowVaultPassLineDesk => '至少 12 个字符。请使用你在别处都没用过的。';
+
+  @override
   String get flowVaultPassAgain => '再输入一次同样的密码短语';
 
   @override
@@ -9547,6 +9585,33 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get desktopTrayTip => 'Kryfo 正在运行并接收消息';
+
+  @override
+  String get desktopRunSection => '在这台电脑上';
+
+  @override
+  String get desktopTrayRow => '在系统托盘中保持运行';
+
+  @override
+  String get desktopTrayHint => '关闭窗口后，Kryfo 留在系统托盘中，消息照常到达。';
+
+  @override
+  String get desktopTrayOffLine => '关闭窗口会退出 Kryfo。再次打开时，消息就会到达。';
+
+  @override
+  String get desktopTrayNoneLine => '这个桌面不显示托盘图标，所以关闭窗口会退出 Kryfo。';
+
+  @override
+  String get desktopStartRow => '随电脑启动';
+
+  @override
+  String get desktopStartHint => '登录这台电脑时，Kryfo 就会打开。';
+
+  @override
+  String get desktopStartRefused => '这台电脑不允许 Kryfo 随它启动。你自己启动时，Kryfo 照常打开。';
+
+  @override
+  String get desktopStartHeldOff => 'Windows 在启动应用中关闭了 Kryfo。请到设置、应用、启动中打开它。';
 
   @override
   String get desktopNoCamera => 'Kryfo 暂时还不能在这台电脑上使用摄像头。请改用链接或代码。';
@@ -14342,6 +14407,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       'PIN 碼會被移除，抹除 PIN 和所有隱藏聊天也會一起移除。任何拿著你手機的人，都能以你的身分開啟 Kryfo。';
 
   @override
+  String get pinsThePinGoesAndDesk =>
+      'PIN 碼會被移除，抹除 PIN 和所有隱藏聊天也會一起移除。任何用你電腦的人，都能以你的身分開啟 Kryfo。';
+
+  @override
   String get pinsUnlockWithFingerprint => '用指紋解鎖';
 
   @override
@@ -16985,6 +17054,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesThisNetworkWantsA => '這個網路需要先登入。登入後，Kryfo 就會連線。';
 
   @override
+  String get bridgesThisNetworkWantsADesk =>
+      '這個網路需要先登入。請在瀏覽器裡登入，或檢查電腦的網路連線。登入後，Kryfo 就會連線。';
+
+  @override
   String get bridgesWaitingForWifiSignIn => '等待 Wi-Fi 登入';
 
   @override
@@ -17619,7 +17692,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pinsAdvancedLine => '用於有人強迫你解鎖手機時。';
 
   @override
+  String get pinsAdvancedLineDesk => '用於有人強迫你解鎖電腦時。';
+
+  @override
   String get pinsWipeLine => '在鎖定畫面輸入它，會從這支手機上抹除 Kryfo。';
+
+  @override
+  String get pinsWipeLineDesk => '在鎖定畫面輸入它，會從這台電腦上抹除 Kryfo。';
 
   @override
   String get pinsDecoyPin => '偽裝 PIN';
@@ -17641,6 +17720,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '所有 PIN 都會被移除，偽裝 PIN 和它的 Kryfo 以及所有隱藏聊天也一樣。任何拿著你手機的人，都能以你的身分開啟 Kryfo。';
 
   @override
+  String get pinsTurnOffWithDecoyDesk =>
+      '所有 PIN 都會被移除，偽裝 PIN 和它的 Kryfo 以及所有隱藏聊天也一樣。任何用你電腦的人，都能以你的身分開啟 Kryfo。';
+
+  @override
   String get pinsHowThisWorks => '運作方式';
 
   @override
@@ -17655,6 +17738,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get flowWipe1 =>
       '在鎖定畫面代替你的 PIN 碼輸入，它會從這支手機上抹除 Kryfo 並關閉應用程式。在旁人看來，應用程式只是停止了。';
+
+  @override
+  String get flowWipe1Desk =>
+      '在鎖定畫面代替你的 PIN 碼輸入，它會從這台電腦上抹除 Kryfo 並關閉應用程式。在旁人看來，應用程式只是停止了。';
 
   @override
   String get flowWipe2 => '所有聊天和你的身分都會一起抹除，有偽裝的話也一樣。';
@@ -17685,6 +17772,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get flowDecoyShade => '已經在通知欄裡的通知被看到了。但偽裝開啟期間，不會出現新的通知。';
 
   @override
+  String get flowDecoyShadeDesk => '已經在螢幕上的通知被看到了。但偽裝開啟期間，不會出現新的通知。';
+
+  @override
   String get flowDecoyChoose => '選擇一組偽裝 PIN';
 
   @override
@@ -17696,6 +17786,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get flowLaw => '在有些國家，拒絕解鎖手機或向官方隱藏資料本身就是違法的。出門前先了解當地的法律。';
+
+  @override
+  String get flowLawDesk => '在有些國家，拒絕解鎖裝置或向官方隱藏資料本身就是違法的。出門前先了解當地的法律。';
 
   @override
   String get howWipe =>
@@ -17753,6 +17846,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get flowVaultReplace => '這會取代這支手機上已有的任何隱藏聊天。';
+
+  @override
+  String get flowVaultReplaceDesk => '這會取代這台電腦上已有的任何隱藏聊天。';
 
   @override
   String get flowVaultChoose => '選擇一組隱藏聊天 PIN';
@@ -17824,6 +17920,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get howVault =>
       '隱藏聊天 PIN 開啟的 Kryfo 帶著隱藏聊天，你的 PIN 碼和指紋開啟的則沒有。重新設定隱藏聊天，會取代這支手機上已有的。忘了隱藏聊天 PIN，它們就永遠沒了。';
+
+  @override
+  String get howVaultDesk =>
+      '隱藏聊天 PIN 開啟的 Kryfo 帶著隱藏聊天，你的 PIN 碼開啟的則沒有。重新設定隱藏聊天，會取代這台電腦上已有的。忘了隱藏聊天 PIN，它們就永遠沒了。';
 
   @override
   String get chatHide => '隱藏此聊天';
@@ -19207,6 +19307,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get flowVaultPassLine => '至少 12 個字元。手機鍵盤看得到你輸入的內容，所以請使用不會學習或同步字詞的鍵盤。';
 
   @override
+  String get flowVaultPassLineDesk => '至少 12 個字元。請使用你在別處都沒用過的。';
+
+  @override
   String get flowVaultPassAgain => '再輸入一次同樣的密碼短語';
 
   @override
@@ -19550,6 +19653,34 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get desktopTrayTip => 'Kryfo 正在執行並接收訊息';
+
+  @override
+  String get desktopRunSection => '在這台電腦上';
+
+  @override
+  String get desktopTrayRow => '在系統匣中保持執行';
+
+  @override
+  String get desktopTrayHint => '關閉視窗後，Kryfo 留在系統匣中，訊息照常送達。';
+
+  @override
+  String get desktopTrayOffLine => '關閉視窗會結束 Kryfo。再次開啟時，訊息就會送達。';
+
+  @override
+  String get desktopTrayNoneLine => '這個桌面不顯示系統匣圖示，所以關閉視窗會結束 Kryfo。';
+
+  @override
+  String get desktopStartRow => '隨電腦啟動';
+
+  @override
+  String get desktopStartHint => '登入這台電腦時，Kryfo 就會開啟。';
+
+  @override
+  String get desktopStartRefused => '這台電腦不允許 Kryfo 隨它啟動。你自己啟動時，Kryfo 照常開啟。';
+
+  @override
+  String get desktopStartHeldOff =>
+      'Windows 在啟動應用程式中關閉了 Kryfo。請到設定、應用程式、啟動中開啟它。';
 
   @override
   String get desktopNoCamera => 'Kryfo 暫時還不能在這台電腦上使用相機。請改用連結或代碼。';

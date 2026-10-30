@@ -4443,6 +4443,10 @@ class AppLocalizationsId extends AppLocalizations {
       'PIN dihapus, begitu juga PIN penghapus dan obrolan tersembunyi yang ada. Siapa pun yang memegang ponselmu langsung masuk ke Kryfo sebagai dirimu.';
 
   @override
+  String get pinsThePinGoesAndDesk =>
+      'PIN dihapus, begitu juga PIN penghapus dan obrolan tersembunyi yang ada. Siapa pun yang memakai komputermu langsung masuk ke Kryfo sebagai dirimu.';
+
+  @override
   String get pinsUnlockWithFingerprint => 'Buka kunci dengan sidik jari';
 
   @override
@@ -7189,6 +7193,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Jaringan ini minta kamu masuk dulu. Setelah kamu masuk, Kryfo akan terhubung.';
 
   @override
+  String get bridgesThisNetworkWantsADesk =>
+      'Jaringan ini minta kamu masuk dulu. Masuk lewat browser-mu, atau periksa koneksi jaringan komputer. Setelah kamu masuk, Kryfo akan terhubung.';
+
+  @override
   String get bridgesWaitingForWifiSignIn => 'Menunggu masuk ke Wi-Fi';
 
   @override
@@ -7858,8 +7866,16 @@ class AppLocalizationsId extends AppLocalizations {
       'Untuk saat seseorang memaksamu membuka kunci ponsel.';
 
   @override
+  String get pinsAdvancedLineDesk =>
+      'Untuk saat seseorang memaksamu membuka kunci komputer.';
+
+  @override
   String get pinsWipeLine =>
       'Jika diketik di layar kunci, PIN ini menghapus Kryfo dari ponsel ini.';
+
+  @override
+  String get pinsWipeLineDesk =>
+      'Jika diketik di layar kunci, PIN ini menghapus Kryfo dari komputer ini.';
 
   @override
   String get pinsDecoyPin => 'PIN umpan';
@@ -7881,6 +7897,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Semua PIN hilang, termasuk umpan, Kryfo-nya, dan obrolan tersembunyi yang ada. Siapa pun yang memegang ponselmu langsung masuk ke Kryfo sebagai dirimu.';
 
   @override
+  String get pinsTurnOffWithDecoyDesk =>
+      'Semua PIN hilang, termasuk umpan, Kryfo-nya, dan obrolan tersembunyi yang ada. Siapa pun yang memakai komputermu langsung masuk ke Kryfo sebagai dirimu.';
+
+  @override
   String get pinsHowThisWorks => 'Cara kerjanya';
 
   @override
@@ -7895,6 +7915,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get flowWipe1 =>
       'Jika diketik di layar kunci sebagai ganti PIN-mu, PIN ini menghapus Kryfo dari ponsel ini lalu menutupnya. Bagi yang melihat, aplikasinya seperti berhenti begitu saja.';
+
+  @override
+  String get flowWipe1Desk =>
+      'Jika diketik di layar kunci sebagai ganti PIN-mu, PIN ini menghapus Kryfo dari komputer ini lalu menutupnya. Bagi yang melihat, aplikasinya seperti berhenti begitu saja.';
 
   @override
   String get flowWipe2 =>
@@ -7929,6 +7953,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Notifikasi yang sudah ada di panel sudah terlihat. Selama umpan terbuka, tidak ada notifikasi baru yang muncul.';
 
   @override
+  String get flowDecoyShadeDesk =>
+      'Notifikasi yang sudah ada di layar sudah terlihat. Selama umpan terbuka, tidak ada notifikasi baru yang muncul.';
+
+  @override
   String get flowDecoyChoose => 'Pilih PIN umpan';
 
   @override
@@ -7941,6 +7969,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get flowLaw =>
       'Di beberapa negara, menolak membuka kunci ponsel atau menyembunyikan data dari petugas sudah merupakan pelanggaran hukum. Kenali hukum di tempat tujuanmu.';
+
+  @override
+  String get flowLawDesk =>
+      'Di beberapa negara, menolak membuka kunci perangkat atau menyembunyikan data dari petugas sudah merupakan pelanggaran hukum. Kenali hukum di tempat tujuanmu.';
 
   @override
   String get howWipe =>
@@ -8005,6 +8037,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get flowVaultReplace =>
       'Ini menggantikan obrolan tersembunyi yang sudah ada di ponsel ini.';
+
+  @override
+  String get flowVaultReplaceDesk =>
+      'Ini menggantikan obrolan tersembunyi yang sudah ada di komputer ini.';
 
   @override
   String get flowVaultChoose => 'Pilih PIN obrolan tersembunyi';
@@ -8081,6 +8117,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get howVault =>
       'PIN obrolan tersembunyi membuka Kryfo beserta obrolan tersembunyimu; PIN-mu dan sidik jarimu membukanya tanpa obrolan itu. Mengatur obrolan tersembunyi lagi menggantikan yang ada di ponsel ini. Kalau PIN obrolan tersembunyi terlupa, obrolan itu hilang untuk selamanya.';
+
+  @override
+  String get howVaultDesk =>
+      'PIN obrolan tersembunyi membuka Kryfo beserta obrolan tersembunyimu; PIN-mu membukanya tanpa obrolan itu. Mengatur obrolan tersembunyi lagi menggantikan yang ada di komputer ini. Kalau PIN obrolan tersembunyi terlupa, obrolan itu hilang untuk selamanya.';
 
   @override
   String get chatHide => 'Sembunyikan obrolan';
@@ -9680,6 +9720,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Minimal 12 karakter. Keyboard ponsel melihat apa yang kamu ketik, jadi pakai keyboard yang tidak mempelajari atau menyinkronkan kata.';
 
   @override
+  String get flowVaultPassLineDesk =>
+      'Minimal 12 karakter. Pakai yang tidak kamu pakai di tempat lain.';
+
+  @override
   String get flowVaultPassAgain => 'Frasa sandi yang sama sekali lagi';
 
   @override
@@ -10059,6 +10103,39 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get desktopTrayTip => 'Kryfo berjalan dan menerima pesan';
+
+  @override
+  String get desktopRunSection => 'Di komputer ini';
+
+  @override
+  String get desktopTrayRow => 'Tetap berjalan di area notifikasi';
+
+  @override
+  String get desktopTrayHint =>
+      'Menutup jendela membuat Kryfo tetap di area notifikasi, jadi pesan terus masuk.';
+
+  @override
+  String get desktopTrayOffLine =>
+      'Menutup jendela akan menutup Kryfo. Pesan masuk saat kamu membukanya lagi.';
+
+  @override
+  String get desktopTrayNoneLine =>
+      'Desktop ini tidak menampilkan ikon di area notifikasi, jadi menutup jendela akan menutup Kryfo.';
+
+  @override
+  String get desktopStartRow => 'Mulai bersama komputer';
+
+  @override
+  String get desktopStartHint =>
+      'Kryfo terbuka saat kamu masuk ke komputer ini.';
+
+  @override
+  String get desktopStartRefused =>
+      'Komputer ini tidak mengizinkan Kryfo ikut mulai. Kryfo terbuka setiap kali kamu sendiri membukanya.';
+
+  @override
+  String get desktopStartHeldOff =>
+      'Windows mematikan Kryfo di aplikasi startup-nya. Nyalakan di sana, di Pengaturan, Aplikasi, Startup.';
 
   @override
   String get desktopNoCamera =>

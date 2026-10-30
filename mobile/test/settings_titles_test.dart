@@ -78,7 +78,13 @@ const _settingsFiles = {
 };
 
 // opened from there, but not settings: a chat, the home and the camera
-const _notSettings = {'chat_screen', 'home_screen', 'scan_screen'};
+// desk_run_section: a section of the notifications page, not a page
+const _notSettings = {
+  'chat_screen',
+  'home_screen',
+  'scan_screen',
+  'desk_run_section',
+};
 
 // what a title looks like and the gaps around it, as on every page
 const _above = 28.0;
