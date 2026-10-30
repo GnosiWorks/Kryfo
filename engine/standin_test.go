@@ -612,9 +612,9 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 	oldMode := currentMode()
 	oldPin := atomic.LoadInt32(&pinnedSocks)
 	oldDir := savedDataDir()
-	oldHost := ownRelayHost
+	oldHost := ownRelayHost.get()
 	// every test starts from the app's names
-	ownRelayHost = "relay.kryfo.app"
+	ownRelayHost.put("relay.kryfo.app")
 	otherFirstHosts.Clear()
 	clearTestHosts.Clear()
 	nostrMu.Lock()
@@ -629,7 +629,7 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 		transportMode.Store(oldMode)
 		atomic.StoreInt32(&pinnedSocks, oldPin)
 		setSavedDataDir(oldDir)
-		ownRelayHost = oldHost
+		ownRelayHost.put(oldHost)
 		setRelays(oldRelays)
 		otherFirstHosts.Clear()
 		clearTestHosts.Clear()
@@ -661,7 +661,7 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 	setRelays(urls)
 	// the first stand-in is our relay, by its name as the app's is
 	if len(relays) > 0 {
-		ownRelayHost = strings.TrimPrefix(relays[0].url(), "ws://")
+		ownRelayHost.put(strings.TrimPrefix(relays[0].url(), "ws://"))
 	}
 	me := newXid(t)
 	mu.Lock()
@@ -695,6 +695,9 @@ func (s *logSink) Len() int {
 
 // the runners a test started are over, so what they read is the next
 // test's to change. a test cancels its own contexts first
+// points a relay name at a stand-in
+func (h *hostSeam) put(s string) { h.test.Store(&s) }
+
 func runnersGone(t *testing.T) {
 	t.Helper()
 	nostrMu.Lock()

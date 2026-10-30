@@ -8808,6 +8808,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatShotsYouTurnedOff => 'Ekran görüntüsü engelini kapattın';
 
   @override
+  String get chatNowPostQuantum =>
+      'Bu sohbetteki mesajlar artık kuantum sonrası şifreleme kullanıyor';
+
+  @override
   String chatShotsTheyTurnedOn(String name) {
     return '$name ekran görüntüsü engelini açtı. Birbirinizin mesajlarını kopyalamak, iletmek ve kaydetmek de kapalı.';
   }

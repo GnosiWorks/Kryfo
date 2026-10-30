@@ -340,7 +340,7 @@ void main() {
         );
         await raw.close();
         final db = await (f == 'halo.db' ? everyday() : decoy());
-        expect(await db.getVersion(), 95, reason: f);
+        expect(await db.getVersion(), 96, reason: f);
         final rows = await identityRows(db);
         expect(rows.map((r) => r.id), [kMainIdent], reason: f);
         final row = rows.single;

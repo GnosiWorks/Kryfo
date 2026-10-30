@@ -22,6 +22,11 @@ const _envelopePrefix = kEnvelopePrefix;
 /// what every envelope starts with
 const kEnvelopePrefix = 'halo/1:';
 
+/// the envelope's word for a pq restart's KDB1 (pq_restart.dart), and the
+/// most base64 it may hold: a KDB1 is about 2,300 bytes
+const kPqRestartWire = 'rq';
+const kPqRestartMost = 4096;
+
 class UnwrappedMessage {
   final String message;
   final String? senderHaloId; // 'h' field
@@ -88,6 +93,10 @@ class UnwrappedMessage {
   final int? protoGen;
   final String? addrSeed;
   final String? faceSig;
+  // 'rq': a KDB1 of the sender's phone in base64, inside a held classic
+  // session: the pq restart (identity v4 11 step 5). nothing else in the
+  // frame counts
+  final String? pqRestart;
   // 'pp': a slice of the sender's profile photo, or its take-back
   // (profile_photo.dart). nothing else in the frame counts
   final PhotoFrame? photo;
@@ -154,6 +163,7 @@ class UnwrappedMessage {
     this.protoGen,
     this.addrSeed,
     this.faceSig,
+    this.pqRestart,
     this.photo,
   });
 }
@@ -655,6 +665,10 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       },
       faceSig: switch (json['fs']) {
         final String s => s,
+        _ => null,
+      },
+      pqRestart: switch (json[kPqRestartWire]) {
+        final String s when s.length <= kPqRestartMost => s,
         _ => null,
       },
       photo: PhotoFrame.fromWire(sent[kPhotoWire]),

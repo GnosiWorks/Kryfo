@@ -116,7 +116,7 @@ class AppIo {
     String xPub,
     String fc,
     String cipher,
-  ) => engine.sendFirstContact(ident, xPub, fc, cipher);
+  ) => sendFirstContactNoted(ident, xPub, fc, cipher);
 
   // [payload] names the chat here only: android gets the tag [on] keeps
   // for it

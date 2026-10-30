@@ -22,7 +22,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'sqlite_channel.dart';
 
 const _fixtures = 'test/fixtures/upgrade_051';
-const _version = 95;
+const _version = 96;
 
 // the keys each file opens with, under the names the app keeps them by
 final _keyFile =
@@ -65,6 +65,10 @@ final _steps = <int, (Future<void> Function(Database), String)>{
   95: (
     (db) => deviceTables(db, addColumn),
     'CREATE TABLE IF NOT EXISTS dev_lists',
+  ),
+  96: (
+    (db) => pqRestartTables(db, upgrade: true),
+    'CREATE TABLE IF NOT EXISTS pq_restarts',
   ),
   // photos' runs on every upgrade, after every other step
   93: (photoTables, 'CREATE TABLE IF NOT EXISTS my_photo'),
@@ -146,7 +150,26 @@ const _added = {
     'qr',
     'never_expires',
   ],
-  'hellos': ['ident', 'way', 'peer', 'invite_id', 'hello', 'fc', 'at'],
+  'hellos': [
+    'ident',
+    'way',
+    'peer',
+    'invite_id',
+    'hello',
+    'fc',
+    'at',
+    'once',
+    'went_at',
+  ],
+  'pq_restarts': [
+    'ident',
+    'peer',
+    'key',
+    'asked_at',
+    'asks',
+    'pq_at',
+    'dropped_at',
+  ],
   'hello_seen': ['ident', 'hash', 'at'],
   'my_photo': ['id', 'ver', 'photo'],
   'contact_photos': ['halo_id', 'mine', 'theirs', 'their_ver', 'took_at'],

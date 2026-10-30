@@ -8796,6 +8796,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'شما جلوگیری از اسکرین‌شات را خاموش کردید';
 
   @override
+  String get chatNowPostQuantum =>
+      'پیام‌های این گفت‌وگو اکنون با رمزگذاری پساکوانتومی محافظت می‌شوند';
+
+  @override
   String chatShotsTheyTurnedOn(String name) {
     return '⁨$name⁩ جلوگیری از اسکرین‌شات را روشن کرد. کپی، بازارسال و ذخیره‌ی پیام‌های یکدیگر هم خاموش است.';
   }

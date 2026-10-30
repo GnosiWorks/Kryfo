@@ -92,6 +92,8 @@ mixin _BlockRows {
         ('support_chats', 'halo_id'),
         ('sessions', 'address'),
         ('peer_identities', 'address'),
+        // their pq restart goes with the session it was of
+        ('pq_restarts', 'peer'),
         ('messages', 'peer_id'),
         ('contacts', 'halo_id'),
       ]) {

@@ -214,7 +214,7 @@ void main() {
 
   group('the tables', () {
     test(
-      "a 0.5.3 phone's files open at 95, the tables empty, every row kept",
+      "a 0.5.3 phone's files open at 96, the tables empty, every row kept",
       () async {
         if (skip()) return;
         copyFixtures();
@@ -232,7 +232,7 @@ void main() {
           await raw.close();
           expect(was, lessThan(95), reason: f);
           final db = await open(c);
-          expect(await db.getVersion(), 95, reason: f);
+          expect(await db.getVersion(), 96, reason: f);
           await tablesThere(db, reason: f);
           final after = await _counts(db);
           for (final t in before.keys) {
@@ -260,7 +260,7 @@ void main() {
       expect(await _cols(db, 'identities'), isNot(contains('dev_id')));
       await closeAll();
       db = await open();
-      expect(await db.getVersion(), 95);
+      expect(await db.getVersion(), 96);
       await tablesThere(db, reason: 'from 94');
       expect(await _counts(db), before);
       // and once more changes nothing
@@ -270,8 +270,8 @@ void main() {
       expect(await _counts(db), before);
     });
 
-    // identity v4 phase 6 takes 96: merged first, a file at 96 skips a
-    // step below it, so the tables are made at every open as well
+    // a file that took a later number without them (another branch's
+    // build) skips the step, so the tables are made at every open as well
     for (final at in [95, 96]) {
       test('a file at $at without them gets them at open', () async {
         if (skip()) return;
@@ -312,7 +312,7 @@ void main() {
     test('a new file has them', () async {
       if (skip()) return;
       final db = await open();
-      expect(await db.getVersion(), 95);
+      expect(await db.getVersion(), 96);
       await tablesThere(db, reason: 'new');
     });
   });

@@ -522,6 +522,8 @@ class MemDb implements Database, Transaction {
     List<Object?>? whereArgs,
     ConflictAlgorithm? conflictAlgorithm,
   }) async {
+    // as sqflite's builder: an update with nothing in it is no statement
+    if (values.isEmpty) throw ArgumentError('Empty values');
     final t = _t(table);
     _known(t, table, values.keys);
     final ok = _where(t, table, where, whereArgs);

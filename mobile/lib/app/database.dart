@@ -156,7 +156,7 @@ class HaloDb
     _db = await openDatabase(
       path,
       password: pw,
-      version: 95,
+      version: 96,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -336,6 +336,7 @@ class HaloDb
         await _signalTables(db);
         await identityTables(db);
         await inviteTables(db);
+        await pqRestartTables(db);
         await contactKeyIndex(db);
         await _pollTables(db);
         await searchTables(db, fresh: true);
@@ -924,6 +925,11 @@ class HaloDb
           // linked devices: lists, proofs, quiet devices, the pool and
           // what the later steps keep (devices/device_store.dart)
           await deviceTables(db, addColumn);
+        }
+        // the pq restart of held chats, and the one-time invites an
+        // opener went to (pq_restart.dart, 3c)
+        if (oldV < 96) {
+          await pqRestartTables(db, upgrade: true);
         }
         // profile photos (profile_photo.dart), first made at 93. every
         // step is safe twice and runs on any upgrade, last, so a file that
@@ -2081,6 +2087,8 @@ Future<void> inviteTables(DatabaseExecutor db) async {
       hello BLOB,
       fc TEXT,
       at INTEGER NOT NULL,
+      once INTEGER NOT NULL DEFAULT 0,
+      went_at INTEGER,
       PRIMARY KEY (ident, way, peer, invite_id)
     )
   ''');
@@ -2140,6 +2148,36 @@ Future<void> contactIdentColumns(DatabaseExecutor db) async {
 Future<void> contactKeyIndex(DatabaseExecutor db) => db.execute(
   'CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_ikey ON contacts(ikey)',
 );
+
+/// the upgrade to 96: per held chat, its pq restart (pq_restart.dart):
+/// [key] the identity its session runs on, when the last KDB1 went and
+/// how many, when their first message opened on the pq state, and when
+/// the classic states went. and on an open hello row, whether its invite
+/// was one-time and when the first frame went to it (3c)
+Future<void> pqRestartTables(
+  DatabaseExecutor db, {
+  bool upgrade = false,
+}) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS pq_restarts (
+      ident INTEGER NOT NULL,
+      peer TEXT NOT NULL,
+      key TEXT NOT NULL,
+      asked_at INTEGER,
+      asks INTEGER NOT NULL DEFAULT 0,
+      pq_at INTEGER,
+      dropped_at INTEGER,
+      PRIMARY KEY (ident, peer)
+    )
+  ''');
+  // a file made at 96 or later has them in its hellos already
+  if (!upgrade) return;
+  await addColumn(
+    db,
+    'ALTER TABLE hellos ADD COLUMN once INTEGER NOT NULL DEFAULT 0',
+  );
+  await addColumn(db, 'ALTER TABLE hellos ADD COLUMN went_at INTEGER');
+}
 
 /// the upgrade to 92: identities, the signal tables per identity, pairs,
 /// first-contact keys and the contacts' identity keys. the main identity

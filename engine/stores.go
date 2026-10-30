@@ -16,6 +16,7 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"fiatjaf.com/nostr"
@@ -26,9 +27,22 @@ const (
 	storeSecond = "2"
 )
 
-// the second store's clearnet name. a var so tests can point it at a
-// stand-in
-var secondRelayHost = "relay2.kryfo.app"
+// the second store's clearnet name. tests point it at a stand-in
+var secondRelayHost = &hostSeam{app: "relay2.kryfo.app"}
+
+// a relay name only tests change. atomic: a publish a test left going still
+// reads it while the next test points it elsewhere
+type hostSeam struct {
+	app  string
+	test atomic.Pointer[string]
+}
+
+func (h *hostSeam) get() string {
+	if p := h.test.Load(); p != nil {
+		return *p
+	}
+	return h.app
+}
 
 // our stores' onions. a relay is ours by its name alone, never by where it
 // sits in a list: one that is not ours is never dialled in the clear
@@ -53,9 +67,9 @@ func secondFirstWalk() time.Duration {
 // through tor alone and nothing about it can go in the clear
 func storeOf(urls []string, u string) string {
 	switch {
-	case relayHostIs(u, secondRelayHost), relayHostIs(u, secondOnionHost):
+	case relayHostIs(u, secondRelayHost.get()), relayHostIs(u, secondOnionHost):
 		return storeSecond
-	case relayHostIs(u, ownRelayHost), relayHostIs(u, ownOnionHost), otherFirstHost(u):
+	case relayHostIs(u, ownRelayHost.get()), relayHostIs(u, ownOnionHost), otherFirstHost(u):
 		return storeFirst
 	case len(urls) > 0 && urls[0] == u && isOnion(u):
 		return storeFirst

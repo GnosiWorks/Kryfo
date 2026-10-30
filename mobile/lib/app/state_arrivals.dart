@@ -414,6 +414,24 @@ extension AppStateArrivals on AppState {
     await _takeShots(senderHaloId, env, db);
     final capsMoved = await _takeCaps(senderHaloId, env, db);
     await _memberCaps(senderHaloId, env, db, oneToOneMoved: capsMoved);
+    // their phone takes a pq restart now: their held chat is looked at
+    if (capsMoved &&
+        to == RouteTo.everyday &&
+        env.groupId == null &&
+        (env.caps?.contains(kCapPqRestart) ?? false)) {
+      unawaited(pqUpkeep(only: senderHaloId));
+    }
+    // a pq restart's KDB1: taken only inside a held session of the
+    // everyday side, and never shown
+    final rq = env.pqRestart;
+    if (rq != null) {
+      if (!fromBackPair && to == RouteTo.everyday && env.groupId == null) {
+        await takePqRestart(senderHaloId, rq, writtenAt: env.writtenAt);
+      } else {
+        dlog('pq restart: a bundle off a held chat, dropped');
+      }
+      return to;
+    }
     // delivery receipt, handled before the stranger gate and dedup so an ack
     // is never treated as a message or counted toward the cap. it leaves
     // back-paired alone: that flag lifts the sender-side cap, and a stranger
@@ -1266,7 +1284,7 @@ extension AppStateArrivals on AppState {
       // their chat, and the message says how it came
       viaDev:
           _devIdentity &&
-          identical(db, live) &&
+          to == RouteTo.everyday &&
           viaDevChat(
             env,
             sender: senderHaloId,

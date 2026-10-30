@@ -219,6 +219,7 @@ part 'app/groups.dart';
 part 'app/links.dart';
 part 'app/invites_app.dart';
 part 'app/pairs.dart';
+part 'app/pq_restart.dart';
 part 'app/routing.dart';
 part 'app/sending.dart';
 part 'app/shell.dart';

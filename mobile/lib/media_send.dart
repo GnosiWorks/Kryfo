@@ -23,6 +23,7 @@ import 'main.dart'
     show
         appState,
         engine,
+        sendFirstContactNoted,
         signalSeal,
         peerXPubOf,
         AppStateOutbox,
@@ -427,7 +428,7 @@ Future<String> _sendChunkedMediaInner({
             xpub ??= await peerXPubOf(peerId);
             if (fc != null && fc.isNotEmpty && xpub != null) {
               unawaited(
-                engine.sendFirstContact(sealedOn, xpub!, fc, cipher).then(
+                sendFirstContactNoted(sealedOn, xpub!, fc, cipher).then(
                   (f) {
                     if (f != 'ok') {
                       dlog('media first-contact copy did not go: $f');
@@ -450,7 +451,7 @@ Future<String> _sendChunkedMediaInner({
         // written beside it
         final fc = backPaired ? null : appState.peerFcFor(peerId);
         if (xpub != null && fc != null && fc.isNotEmpty) {
-          final fr = await engine.sendFirstContact(sealedOn, xpub!, fc, cipher);
+          final fr = await sendFirstContactNoted(sealedOn, xpub!, fc, cipher);
           if (fr == 'ok') {
             sent = true;
             route = 'first-contact';
