@@ -2,6 +2,7 @@
 package devices
 
 import (
+	"crypto/rand"
 	"errors"
 	"io"
 	"time"
@@ -37,7 +38,8 @@ type Peer struct {
 }
 
 // Fanout says where a message goes. Own may be nil on a phone with no
-// linked device, Quiet nil to send to every device always.
+// linked device, Quiet nil to send to every device always, Rand nil for
+// crypto/rand.
 type Fanout struct {
 	Book  *Book
 	Own   *Own
@@ -84,7 +86,11 @@ func (f *Fanout) To(mine, contact Key, p Peer, now time.Time) ([]Slot, error) {
 			out = append(out, s)
 		}
 	}
-	if err := shuffle(out, f.Rand); err != nil {
+	r := f.Rand
+	if r == nil {
+		r = rand.Reader
+	}
+	if err := shuffle(out, r); err != nil {
 		return nil, err
 	}
 	return out, nil

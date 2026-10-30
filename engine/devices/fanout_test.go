@@ -137,6 +137,14 @@ func TestASixDeviceAccountIsReachable(t *testing.T) {
 	}
 }
 
+func TestANilRandShufflesWithCryptoRand(t *testing.T) {
+	k := newFanoutKit(t, 1, 3)
+	k.f.Rand = nil
+	if his, mine := split(k.to(t, withDevices, time.Now())); len(his) != 4 || len(mine) != 1 {
+		t.Fatalf("%d and %d copies", len(his), len(mine))
+	}
+}
+
 func TestAPeerWithoutDevicesGetsThePhoneAlone(t *testing.T) {
 	k := newFanoutKit(t, 1, 3)
 	his, mine := split(k.to(t, Peer{}, time.Now()))
