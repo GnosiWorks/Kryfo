@@ -114,6 +114,7 @@ func identDrop(ident int) {
 	delete(linkedIdents, ident)
 	identsMu.Unlock()
 	pre := subPrefix(ident)
+	dropDevListens(pre)
 	fcPre := fcSubPrefix(ident)
 	nostrMu.Lock()
 	for k, cancel := range nostrSubs {

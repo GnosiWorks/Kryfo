@@ -34,6 +34,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 
 	nostr2 "github.com/nbd-wtf/go-nostr"
@@ -62,8 +63,110 @@ var errDevicePairsOff = errors.New("device pairs are off")
 //
 //export HaloDevicePairsOn
 func HaloDevicePairsOn(on C.int) *C.char {
-	devicePairsOn.Store(on != 0)
+	setDevicePairs(on != 0)
 	return C.CString("ok")
+}
+
+func setDevicePairs(on bool) {
+	devicePairsOn.Store(on)
+	if !on {
+		stopDeviceListens()
+	}
+}
+
+// the switch off: every device-pair listen stops. what they noted stays,
+// so an unsubscribe after still drops their files
+func stopDeviceListens() {
+	nostrMu.Lock()
+	for k, cancel := range nostrSubs {
+		if _, _, _, _, _, ok := devTagOf(k); ok {
+			cancel()
+			delete(nostrSubs, k)
+		}
+	}
+	nostrMu.Unlock()
+}
+
+// what a device-pair listen was made on, by its tag. closing it lets these
+// go, never addresses derived again: the list may have moved, the key on
+// the id changed, or the switch gone off
+type devListen struct {
+	rcv, their string
+	opener     bool
+}
+
+var (
+	devListensMu sync.Mutex
+	devListens   = map[string]devListen{}
+)
+
+// where a closed listen's files and top-up go, a var for the tests
+var (
+	devDropFiles  = dropAddressFiles
+	devPurgeTopup = topupPurgeAddr
+)
+
+// a listen noted as it starts. one it replaces on other addresses (a new
+// key on the id, a new seed) lets those go
+func noteDevListen(key string, l devListen) {
+	devListensMu.Lock()
+	old, had := devListens[key]
+	devListens[key] = l
+	devListensMu.Unlock()
+	if had && old.rcv != l.rcv {
+		closeDevListen(old)
+	}
+}
+
+func closeDevListen(l devListen) {
+	devDropFiles(l.rcv)
+	// my own opener stays in the top-up until every store has it: the
+	// other device may still need it to learn the seed
+	if !l.opener && l.their != "" {
+		devPurgeTopup(l.their)
+	}
+}
+
+// the notes of an identity let go
+func dropDevListens(prefix string) {
+	devListensMu.Lock()
+	for k := range devListens {
+		if strings.HasPrefix(k, prefix) {
+			delete(devListens, k)
+		}
+	}
+	devListensMu.Unlock()
+}
+
+// stop listening on a device pair: by its tag and what it noted, with no
+// switch and no list. "peer/1/1.seed" is the identity pair
+func devUnsubscribe(ident int, peerArg string) error {
+	base, _, seeded := strings.Cut(peerArg, ".")
+	x, their, my, _, err := splitDeviceArg(base)
+	if err != nil {
+		return err
+	}
+	if _, err := peerArr(x); err != nil {
+		return err
+	}
+	if their == phoneDevice && my == phoneDevice && seeded && !isLinked(ident) {
+		return nostrUnsubscribe(ident, x+peerArg[len(base):])
+	}
+	key := devTag(ident, strings.ToLower(x), their, my, !seeded)
+	nostrMu.Lock()
+	if cancel, ok := nostrSubs[key]; ok {
+		cancel()
+		delete(nostrSubs, key)
+	}
+	nostrMu.Unlock()
+	devListensMu.Lock()
+	l, ok := devListens[key]
+	delete(devListens, key)
+	devListensMu.Unlock()
+	if ok {
+		closeDevListen(l)
+	}
+	return nil
 }
 
 // the x keys of a contact's devices as the lists held now name them, and
@@ -328,15 +431,27 @@ func (c convPair) openerOf() (convPair, error) {
 // the subscription of a device pair: the identity pair's key, the two ids,
 // and "/opn" for the opener address. the tag every line from it carries
 func (c convPair) subKey(peerHex string) string {
-	k := subKey(c.ident, peerHex)
 	if c.dev == nil {
-		return k
+		return subKey(c.ident, peerHex)
 	}
-	k += "/" + strconv.Itoa(int(c.dev.their)) + "/" + strconv.Itoa(int(c.dev.my))
-	if c.dev.opener {
+	return devTag(c.ident, peerHex, c.dev.their, c.dev.my, c.dev.opener)
+}
+
+func devTag(ident int, peerHex string, their, my uint8, opener bool) string {
+	k := subKey(ident, peerHex) + "/" + strconv.Itoa(int(their)) + "/" + strconv.Itoa(int(my))
+	if opener {
 		k += "/" + roleOpn
 	}
 	return k
+}
+
+// the lane a pair listens on: an opener address on its identity's own, so
+// no circuit fetches it with a seeded address
+func (c convPair) listenLane(rcvPk string) string {
+	if c.dev != nil && c.dev.opener {
+		return opnLane(c.ident)
+	}
+	return receiveLane(rcvPk)
 }
 
 // what a device-pair tag names, ok false for any other tag

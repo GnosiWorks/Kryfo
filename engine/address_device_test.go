@@ -387,6 +387,21 @@ func TestDevicePairArgRules(t *testing.T) {
 	// device 7 of a: its identity key; device 3 of b: b's phone key
 	w.keys.put(w.a.pub, 7, w.a.pub)
 	w.keys.put(w.b.pub, 3, w.b.pub)
+	// b's lists naming my identity key and my own device key
+	w.keys.put(w.b.pub, 7, w.a.pub)
+	w.keys.put(w.b.pub, 6, w.da.pub)
+	bad["b's device as my identity, on my phone"] = struct {
+		ident int
+		arg   string
+	}{dvA1, w.bHex + "/7/1." + seed}
+	bad["b's device as my identity, on my device"] = struct {
+		ident int
+		arg   string
+	}{dvA5, w.bHex + "/7/5." + seed}
+	bad["b's device as my own device key"] = struct {
+		ident int
+		arg   string
+	}{dvA5, w.bHex + "/6/5." + seed}
 	for name, c := range bad {
 		if _, _, err := pairArg(c.ident, c.arg); err == nil {
 			t.Errorf("%s taken", name)
@@ -676,5 +691,126 @@ func TestDevicePairOnTheRelay(t *testing.T) {
 		if k.pk == opnRcv || k.pk == seededRcv {
 			t.Fatal("a hidden contact's device pair knocked")
 		}
+	}
+}
+
+// closing a device-pair listen goes by what it noted: with the switch off,
+// with the device off the list, after a new key on the id. an opener
+// address leaves the top-up alone, and it listens on a lane of its own
+func TestDeviceListenClosesByWhatItNoted(t *testing.T) {
+	r := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, r)
+	w := newDevWorld(t)
+	var dropped, purged []string
+	oldDrop, oldPurge := devDropFiles, devPurgeTopup
+	devDropFiles = func(pk string) { dropped = append(dropped, pk) }
+	devPurgeTopup = func(pk string) { purged = append(purged, pk) }
+	t.Cleanup(func() { devDropFiles, devPurgeTopup = oldDrop, oldPurge })
+	took := func(what string, wantDropped, wantPurged []string) {
+		t.Helper()
+		if strings.Join(dropped, ",") != strings.Join(wantDropped, ",") || strings.Join(purged, ",") != strings.Join(wantPurged, ",") {
+			t.Fatalf("%s: dropped %v purged %v, want %v %v", what, dropped, purged, wantDropped, wantPurged)
+		}
+		dropped, purged = nil, nil
+	}
+	live := func(key string) bool {
+		nostrMu.Lock()
+		defer nostrMu.Unlock()
+		_, ok := nostrSubs[key]
+		return ok
+	}
+	seed := hex.EncodeToString(fixedSeed(1))
+	seeded, opn := w.bHex+"/9/1."+seed, w.bHex+"/9/1"
+	sc, oc := mustPair(t, dvA1, seeded), mustPair(t, dvA1, opn)
+	_, sRcv, _ := sc.rcvAddress()
+	sTheirs, _ := sc.theirAddress()
+	_, oRcv, _ := oc.rcvAddress()
+	sTag, oTag := sc.subKey(w.bHex), oc.subKey(w.bHex)
+	idTag := subKey(dvA1, w.bHex)
+	sub := func(arg string) {
+		t.Helper()
+		if res := nostrSubscribe(dvA1, arg, false); res != "ok" {
+			t.Fatal(res)
+		}
+	}
+	sub(seeded)
+	sub(opn)
+	sub(w.bHex + "." + seed)
+	defer nostrUnsubscribe(dvA1, w.bHex+"."+seed)
+
+	// L2: the opener address on its identity's own lane
+	for _, k := range knockTargets() {
+		if k.pk == oRcv && k.lane != opnLane(dvA1) {
+			t.Fatalf("the opener address on %s", k.lane)
+		}
+		if k.pk == sRcv && !strings.HasPrefix(k.lane, laneEveryday+":") {
+			t.Fatalf("the seeded address on %s", k.lane)
+		}
+	}
+
+	// the switch off stops every device pair and nothing else
+	setDevicePairs(false)
+	if live(sTag) || live(oTag) || !live(idTag) {
+		t.Fatalf("switch off: seeded %v, opener %v, identity pair %v", live(sTag), live(oTag), live(idTag))
+	}
+	took("switch off", nil, nil)
+	if err := nostrUnsubscribe(dvA1, seeded); err != nil {
+		t.Fatal(err)
+	}
+	took("seeded closed, switch off", []string{sRcv}, []string{sTheirs})
+	// L1: my opener stays in the top-up
+	if err := nostrUnsubscribe(dvA1, opn); err != nil {
+		t.Fatal(err)
+	}
+	took("opener closed", []string{oRcv}, nil)
+	if err := nostrUnsubscribe(dvA1, seeded); err != nil {
+		t.Fatal(err)
+	}
+	took("closed twice", nil, nil)
+	setDevicePairs(true)
+
+	// a new key on device 9: the old key's files and top-up go, not the new
+	sub(seeded)
+	nk := newXid(t)
+	w.keys.put(w.b.pub, 9, nk.pub)
+	nc := mustPair(t, dvA1, seeded)
+	_, nRcv, _ := nc.rcvAddress()
+	if nRcv == sRcv {
+		t.Fatal("a new key kept the address")
+	}
+	if err := nostrUnsubscribe(dvA1, seeded); err != nil {
+		t.Fatal(err)
+	}
+	took("closed after a new key", []string{sRcv}, []string{sTheirs})
+	// listened again on the new key: the old one goes as it is replaced
+	w.keys.put(w.b.pub, 9, w.db.pub)
+	sub(seeded)
+	w.keys.put(w.b.pub, 9, nk.pub)
+	sub(seeded)
+	nTheirs, _ := nc.theirAddress()
+	took("replaced by a new key", []string{sRcv}, []string{sTheirs})
+	// off the list: still closed by its note
+	delete(w.keys, w.bHex+"/9")
+	if err := nostrUnsubscribe(dvA1, seeded); err != nil {
+		t.Fatal(err)
+	}
+	took("closed off the list", []string{nRcv}, []string{nTheirs})
+	if live(sTag) {
+		t.Fatal("still listening")
+	}
+	// 1/1 closes the identity pair
+	if err := nostrUnsubscribe(dvA1, w.bHex+"/1/1."+seed); err != nil || live(idTag) {
+		t.Fatalf("1/1 left the identity pair on: %v", err)
+	}
+	took("identity pair", nil, nil)
+	// an identity let go takes its notes
+	w.keys.put(w.b.pub, 9, w.db.pub)
+	sub(seeded)
+	identDrop(dvA1)
+	devListensMu.Lock()
+	_, kept := devListens[sTag]
+	devListensMu.Unlock()
+	if kept || live(sTag) {
+		t.Fatal("a dropped identity kept its device listen")
 	}
 }
