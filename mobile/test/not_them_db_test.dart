@@ -172,7 +172,11 @@ void main() {
         r['name'] as String,
     ];
     for (final t in tables) {
-      if (_apart.contains(t) || t.startsWith('dev_') || t.contains('fts')) {
+      // my own linked devices have uids of their own, never a message's
+      if (_apart.contains(t) ||
+          t.startsWith('dev_') ||
+          t.startsWith('own_device') ||
+          t.contains('fts')) {
         continue;
       }
       final cols = await raw.rawQuery("PRAGMA table_info('$t')");
@@ -581,7 +585,7 @@ void main() {
     await db.close();
     db = HaloDb();
     raw = await db.open();
-    expect(await raw.getVersion(), 94);
+    expect(await raw.getVersion(), 95);
     final cols = await raw.rawQuery("PRAGMA table_info('contacts')");
     expect(cols.any((c) => c['name'] == 'ack_owed'), isTrue);
     expect(
@@ -593,7 +597,7 @@ void main() {
   test('an upgrade from 80 makes the tables and keeps every row', () async {
     if (skip()) return;
     var raw = await db.open();
-    expect(await raw.getVersion(), 94);
+    expect(await raw.getVersion(), 95);
     await person(_q);
     await raw.execute('DROP TABLE blocked_keys');
     await raw.execute('DROP TABLE name_tombs');
@@ -601,7 +605,7 @@ void main() {
     await db.close();
     db = HaloDb();
     raw = await db.open();
-    expect(await raw.getVersion(), 94);
+    expect(await raw.getVersion(), 95);
     expect(
       await raw.rawQuery("PRAGMA table_info('blocked_keys')"),
       hasLength(2),

@@ -480,7 +480,7 @@ void main() {
     final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
 
     test('made on create, and on the upgrade to 93', () {
-      expect(src, contains('version: 94,'));
+      expect(src, contains('version: 95,'));
       final create = src.substring(
         src.indexOf('onCreate: (db, _) async {'),
         upgrade,

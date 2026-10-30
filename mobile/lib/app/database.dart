@@ -156,7 +156,7 @@ class HaloDb
     _db = await openDatabase(
       path,
       password: pw,
-      version: 94,
+      version: 95,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -358,6 +358,7 @@ class HaloDb
         await wallpaperTable(db);
         await draftsTable(db);
         await photoTables(db);
+        await deviceTables(db, addColumn);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
@@ -919,6 +920,11 @@ class HaloDb
           // (invites.dart)
           await inviteTables(db);
         }
+        if (oldV < 95) {
+          // linked devices: lists, proofs, quiet devices, the pool and
+          // what the later steps keep (devices/device_store.dart)
+          await deviceTables(db, addColumn);
+        }
         // profile photos (profile_photo.dart), first made at 93. every
         // step is safe twice and runs on any upgrade, last, so a file that
         // took a later number without them still gets them
@@ -943,6 +949,13 @@ class HaloDb
       await rosterTableAtOpen(_db!);
     } catch (e) {
       dlog('roster invite: table not made (${e.runtimeType})');
+    }
+    // a file that took a later number without them (a build of another
+    // branch) still gets them
+    try {
+      await deviceTablesAtOpen(_db!, addColumn);
+    } catch (e) {
+      dlog('devices: tables not made (${e.runtimeType})');
     }
     // retired while it was opening
     if (_retired) {
