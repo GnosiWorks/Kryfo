@@ -417,4 +417,88 @@ void main() {
     expect((await d2.ds.held('ana')).single.key, other.key);
     await expectLater(read(d2, 'ana', a3, m5), throwsA(anything));
   });
+
+  test('every copy of one message has one size', () async {
+    await buildAll();
+    final desk = (await devices([33])).single;
+    await anaDs.build(
+      kOwnDevices,
+      desk.id,
+      ana.lib.parseDeviceBundle(
+        await desk.ds.makeBundle(desk.id),
+        ana.identity.public,
+      ),
+      desk.key,
+      desk.reg,
+    );
+    // bobs[0] and the desk answered; the others have not
+    for (final (peer, d) in [('bob', bobs[0]), (kOwnDevices, desk)]) {
+      final (type, body) = wireOf(
+        await anaDs.seal(peer, d.id, '{"t":"a"}', d.key),
+      );
+      await d.ds.open(
+        peer == 'bob' ? 'ana' : kOwnDevices,
+        1,
+        type,
+        body,
+        ana.identity.public,
+        reg: ana.registrationId,
+      );
+      final (t2, b2) = wireOf(
+        await d.ds.seal(
+          peer == 'bob' ? 'ana' : kOwnDevices,
+          1,
+          '{"t":"ok"}',
+          ana.identity.public,
+        ),
+      );
+      await anaDs.open(peer, d.id, t2, b2, d.key, reg: d.reg);
+    }
+    final out = await anaDs.sealAll([
+      for (final d in bobs.take(3))
+        (peer: 'bob', device: d.id, pin: d.key, plain: '{"t":"hi"}'),
+      (
+        peer: kOwnDevices,
+        device: desk.id,
+        pin: desk.key,
+        plain: '{"t":"hi","chat":"${'b' * 64}"}',
+      ),
+    ]);
+    final types = [for (final o in out) wireOf(o.wire!).$1];
+    expect(types, [kLsWhisper, kLsPreKey, kLsPreKey, kLsWhisper]);
+    final sizes = [for (final o in out) base64Decode(o.wire!).length];
+    final lo = sizes.reduce((a, b) => a < b ? a : b);
+    final hi = sizes.reduce((a, b) => a > b ? a : b);
+    expect(hi - lo, lessThanOrEqualTo(32), reason: '$sizes');
+    expect(
+      textOf(
+        await bobs[0].ds.open(
+          'ana',
+          1,
+          types[0],
+          wireOf(out[0].wire!).$2,
+          ana.identity.public,
+          reg: ana.registrationId,
+        ),
+      ),
+      '{"t":"hi"}',
+    );
+    // a burst past the opener's size: the answered ones go on one size,
+    // the unanswered wait
+    final big = await anaDs.sealAll([
+      for (final d in bobs.take(2))
+        (peer: 'bob', device: d.id, pin: d.key, plain: '{"t":"hi"}'),
+      (
+        peer: kOwnDevices,
+        device: desk.id,
+        pin: desk.key,
+        plain: '{"t":"${'x' * 3000}"}',
+      ),
+    ]);
+    expect(big[1].error, isA<WaitsForAnswer>());
+    final a = base64Decode(big[0].wire!).length;
+    final b = base64Decode(big[2].wire!).length;
+    expect((a - b).abs(), lessThanOrEqualTo(32), reason: '$a $b');
+    expect(a, greaterThan(10000));
+  });
 }

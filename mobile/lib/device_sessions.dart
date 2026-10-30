@@ -26,6 +26,13 @@ const kOwnDevices = '_own_devices_';
 /// a device on a list other than the phone
 bool isLinkedDevice(int device) => device >= 2 && device <= 127;
 
+/// one copy of a message: its frame [plain] for [peer]'s [device] on [pin]
+typedef DeviceCopy = ({String peer, int device, Uint8List pin, String plain});
+
+/// a copy sealed ([wire], as [DeviceSessions.seal] gives it) or not
+/// ([error]: WaitsForAnswer when that device waits for its answer)
+typedef DeviceSealed = ({String? wire, Object? error});
+
 /// a KDB1 or a session that does not match the device's list entry
 class DeviceRefused implements Exception {
   const DeviceRefused(this.why);
@@ -183,34 +190,80 @@ class DeviceSessions {
   /// too big for its size throws WaitsForAnswer: that device skips this
   /// frame, the others get theirs
   Future<String> seal(String peer, int device, String plain, Uint8List pin) =>
-      _serial(peer, device, () async {
-        final record = await _sessions().load(peer, device);
-        if (record == null) throw const LsError(LsError.noSession);
-        final String padded;
-        if (_trialType(record, pin) == kLsPreKey) {
-          final o = padSealOpener(plain);
-          if (o == null) throw WaitsForAnswer(peer);
-          padded = o;
-        } else {
-          padded = padSeal(plain);
-        }
-        final body = Uint8List.fromList(utf8.encode(padded));
-        final LsSealed m;
-        try {
-          m = _lib.encrypt(
-            s.identity,
-            s.registrationId,
-            record,
-            body,
-            _now(),
-            pinned: pin,
-          );
-        } finally {
-          body.fillRange(0, body.length, 0);
-        }
-        await _sessions().store(peer, m.record, device);
-        return base64Encode([m.type, ...m.message]);
-      });
+      _serial(peer, device, () => _seal(peer, device, plain, pin, null));
+
+  /// every copy of one message sealed, each filled to the largest copy's
+  /// size, so the relay sees one size in the burst: an opener counts as the
+  /// second seal size, where it lands. an opener in a burst past that size
+  /// waits for its device's answer, as a frame too big for an opener does.
+  /// a copy that fails keeps its error; the others go
+  Future<List<DeviceSealed>> sealAll(List<DeviceCopy> copies) async {
+    var most = 0;
+    for (final c in copies) {
+      try {
+        final n = await _serial(c.peer, c.device, () async {
+          final record = await _sessions().load(c.peer, c.device);
+          if (record == null) return null;
+          if (_trialType(record, c.pin) != kLsPreKey) {
+            return utf8Length(padSeal(c.plain));
+          }
+          return padSealOpener(c.plain) == null ? null : kSealSizes[1];
+        });
+        if (n != null && n > most) most = n;
+      } on Object {
+        // its seal below says why
+      }
+    }
+    return [
+      for (final c in copies)
+        await _serial(
+          c.peer,
+          c.device,
+          () => _seal(c.peer, c.device, c.plain, c.pin, most),
+        ).then<DeviceSealed>(
+          (w) => (wire: w, error: null),
+          onError: (Object e) => (wire: null, error: e),
+        ),
+    ];
+  }
+
+  // [size]: the burst's, null for the frame's own
+  Future<String> _seal(
+    String peer,
+    int device,
+    String plain,
+    Uint8List pin,
+    int? size,
+  ) async {
+    final record = await _sessions().load(peer, device);
+    if (record == null) throw const LsError(LsError.noSession);
+    final String padded;
+    if (_trialType(record, pin) == kLsPreKey) {
+      final o = size != null && size > kSealSizes[1]
+          ? null
+          : padSealOpener(plain);
+      if (o == null) throw WaitsForAnswer(peer);
+      padded = o;
+    } else {
+      padded = size == null ? padSeal(plain) : padSealTo(plain, size);
+    }
+    final body = Uint8List.fromList(utf8.encode(padded));
+    final LsSealed m;
+    try {
+      m = _lib.encrypt(
+        s.identity,
+        s.registrationId,
+        record,
+        body,
+        _now(),
+        pinned: pin,
+      );
+    } finally {
+      body.fillRange(0, body.length, 0);
+    }
+    await _sessions().store(peer, m.record, device);
+    return base64Encode([m.type, ...m.message]);
+  }
 
   /// [body] of [type] from [peer]'s [device] opened, on the session held or
   /// on an opener built on this store's session prekeys. [pin] and [reg]
