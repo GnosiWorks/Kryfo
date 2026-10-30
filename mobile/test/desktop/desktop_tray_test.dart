@@ -409,7 +409,6 @@ void main() {
       await run.setTray(false);
       expect(jsonDecode(kv.m[runEntry]!), {
         'portalStart': false,
-        'portalHidden': true,
         'tray': false,
       });
     });
@@ -502,24 +501,19 @@ void main() {
       },
     );
 
-    test('flatpak: a grant from before is asked again once', () async {
+    test('flatpak: the portal is never asked without the switch', () async {
+      // a grant from before: the user may have switched it off outside
+      // kryfo, so a start or an unlock asks nothing
       final kv = _Kv()..m[runEntry] = jsonEncode({'portalStart': true});
-      final portal = _Portal()..answer = null;
+      final portal = _Portal();
       final place = PortalStart(portal, read: kv.read, write: kv.write);
-      // no answer: asked again next start
       await place.mend();
-      portal.answer = true;
-      await place.mend();
-      await place.mend();
-      expect(portal.asked, [true, true]);
-      expect(jsonDecode(kv.m[runEntry]!), {
-        'portalStart': true,
-        'portalHidden': true,
-      });
-      // off: nothing asked
-      final off = _Portal();
-      await PortalStart(off, read: _Kv().read, write: _Kv().write).mend();
-      expect(off.asked, isEmpty);
+      await _run(kv, _Tray(), place).begin();
+      expect(portal.asked, isEmpty);
+      expect(jsonDecode(kv.m[runEntry]!), {'portalStart': true});
+      // the switch asks
+      expect(await place.set(true), StartAnswer.on);
+      expect(portal.asked, [true]);
     });
 
     test('a hidden start puts the icon up before the vault', () async {

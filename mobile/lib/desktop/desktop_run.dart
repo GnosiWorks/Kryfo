@@ -399,29 +399,18 @@ class PortalStart implements StartPlace {
   Future<StartAnswer> read() async =>
       _kept()['portalStart'] == true ? StartAnswer.on : StartAnswer.off;
 
-  /// a grant from before the hidden start is asked once more, so the
-  /// portal writes the new command line. once, whatever the answer
+  /// nothing: the kept grant is only what was last asked, and the user may
+  /// have switched the start off outside kryfo. asking again would turn it
+  /// back on unasked. an old grant starts with the window until the switch
+  /// is flipped
   @override
-  Future<void> mend() async {
-    final kept = _kept();
-    if (kept['portalStart'] != true || kept['portalHidden'] == true) return;
-    final granted = await portal.autostart(true);
-    if (granted == null) return;
-    await _writeKv(runEntry, jsonEncode(_kept()..['portalHidden'] = true));
-  }
+  Future<void> mend() async {}
 
   @override
   Future<StartAnswer> set(bool on) async {
     final granted = await portal.autostart(on);
     if (granted != true) return StartAnswer.refused;
-    await _writeKv(
-      runEntry,
-      jsonEncode(
-        _kept()
-          ..['portalStart'] = on
-          ..['portalHidden'] = true,
-      ),
-    );
+    await _writeKv(runEntry, jsonEncode(_kept()..['portalStart'] = on));
     return on ? StartAnswer.on : StartAnswer.off;
   }
 }
