@@ -1303,4 +1303,24 @@ void main() {
     final taken = await hellosOf('taken', down.keyHex);
     expect(taken.single['at'] as int, lessThan(ahead));
   });
+
+  test('a member whose newest roster invite went past its life waits for '
+      'no hello: the old way runs', () async {
+    await myRoster();
+    final admin = await _Phone.make('admin-of-rthree', seed++);
+    final down = await phone('below-me-rthree', above: false);
+    await joinFrom(admin, [(down, await down.roster())]);
+    expect(await app.rosterPairWaitsForTest(down.words), isTrue);
+    const h = 3600 * 1000;
+    final old = await down.roster(
+      nowMs: DateTime.now().millisecondsSinceEpoch - 400 * 24 * h,
+    );
+    await db.update(
+      'roster_invites',
+      {'id': old.id, 'issued': old.issued, 'invite': old.link},
+      where: 'member = ?',
+      whereArgs: [down.words],
+    );
+    expect(await app.rosterPairWaitsForTest(down.words), isFalse);
+  });
 }

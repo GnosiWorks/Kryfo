@@ -344,7 +344,8 @@ extension AppStateGroupHellos on AppState {
   }
 
   /// [id] has no session and a group gave their roster invite: the hello
-  /// makes the pair, no bundle swap does. one owed again if it is due
+  /// makes the pair, no bundle swap does. one owed again if it is due.
+  /// the newest past its life makes none: the old way runs
   Future<bool> _rosterPairWaits(String id, HaloDb? on) async {
     if (sessionQuiet || !identical(on, live)) return false;
     try {
@@ -358,6 +359,11 @@ extension AppStateGroupHellos on AppState {
           RosterInviteRow.of(r),
       ]..sort((a, b) => b.issued.compareTo(a.issued));
       if (rows.isEmpty) return false;
+      try {
+        readInvite(signalSession.lib, rows.first.invite);
+      } catch (_) {
+        return false;
+      }
       if (signalSession.ready && await _oweRosterHello(file, rows.first)) {
         unawaited(sendHellosOwed());
       }
@@ -521,4 +527,7 @@ extension AppStateGroupHellos on AppState {
 
   @visibleForTesting
   Future<void> rosterHellosForTest() => _rosterHellos();
+
+  @visibleForTesting
+  Future<bool> rosterPairWaitsForTest(String id) => _rosterPairWaits(id, live);
 }
