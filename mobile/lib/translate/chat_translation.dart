@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // one chat's translations: which messages show translated, what each one
-// says, and whether the chat translates on its own. held in memory only:
-// a translation is made again on the phone when it is wanted, never kept.
+// says, and whether the chat translates on its own. what was made is kept
+// beside its message in the chat's encrypted database, goes with the
+// message or the chat, and is never sent or copied anywhere.
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
@@ -10,7 +11,16 @@ import 'catalog.dart';
 import 'detect.dart';
 import 'foreign.dart';
 import 'hub.dart';
+import 'settings.dart' show KeptTranslation;
 import 'translator.dart';
+
+// what the chat knows a message by: its uid, or its arrival for one that
+// has none yet, which is never kept
+String trKeyOf(String? uid, int came) => uid ?? '~$came';
+bool _keepable(String key) => !key.startsWith('~');
+
+// the direction a kept translation was made in
+String _wayOf(Offer o) => '${o.from}>${o.to}>${o.hant.name}';
 
 enum MsgPhase { idle, working, shown, failed }
 
@@ -52,6 +62,27 @@ class ChatTranslation extends ChangeNotifier {
     _keptOriginal.clear();
     _autoTried.clear();
     _burnt.clear();
+    _kept = {};
+    _keptRead = false;
+  }
+
+  // translations kept in the chat's database, by message uid: read when
+  // the chat opens, and again once the lock opens
+  Map<String, KeptTranslation> _kept = {};
+  bool _keptRead = false;
+  bool _keptReading = false;
+
+  Future<void> _readKept() async {
+    if (_keptReading || hub.locked) return;
+    _keptReading = true;
+    final w = hub.wipes;
+    final k = await hub.kept(chatId);
+    _keptReading = false;
+    if (_gone || hub.wipes != w || hub.locked) return;
+    // one made while it was read is newer
+    _kept = {...k, ..._kept};
+    _keptRead = true;
+    notifyListeners();
   }
 
   bool? _auto;
@@ -68,6 +99,7 @@ class ChatTranslation extends ChangeNotifier {
 
   Future<void> _load() async {
     await hub.ready();
+    if (!_keptRead) await _readKept();
     final on = await hub.chatAuto(chatId);
     final set = await hub.chatAutoSet(chatId);
     final hidden = await hub.barHidden(chatId);
@@ -164,6 +196,7 @@ class ChatTranslation extends ChangeNotifier {
       _seenWipes = hub.wipes;
       _wipe();
     }
+    if (!_keptRead && !hub.locked) unawaited(_readKept());
     final now = hub.chatAutoNow(chatId);
     if (now == null && _auto != null) {
       unawaited(_load());
@@ -206,8 +239,30 @@ class ChatTranslation extends ChangeNotifier {
     if (text != null) {
       final was = _source[key];
       if (was != null && was != text) _dropEdited(key, was, text);
+      if (_msgs[key] == null) _fromKept(key, text);
     }
     return _msgs[key] ?? const MsgTranslation(MsgPhase.idle);
+  }
+
+  // a kept translation of these very words, in the direction they would
+  // go now: ready for a tap, or for auto, with no model asked
+  void _fromKept(String key, String text) {
+    final k = _kept[key];
+    if (k == null) return;
+    if (k.src != KeptTranslation.hashOf(text)) {
+      _kept.remove(key);
+      unawaited(hub.unkeep(chatId, key));
+      return;
+    }
+    final o = offer(text);
+    if (o == null || _wayOf(o) != k.way) return;
+    _msgs[key] = MsgTranslation(MsgPhase.idle, text: k.text, offer: o);
+    _source[key] = text;
+  }
+
+  void _unkeep(String key) {
+    _kept.remove(key);
+    if (_keepable(key)) unawaited(hub.unkeep(chatId, key));
   }
 
   // the words each translation was made from
@@ -222,6 +277,7 @@ class ChatTranslation extends ChangeNotifier {
     _keptOriginal.remove(key);
     _autoTried.remove(key);
     _guesses.remove(was);
+    _unkeep(key);
   }
 
   // each text's guess, asked again on every build: kept here, so it goes
@@ -230,8 +286,9 @@ class ChatTranslation extends ChangeNotifier {
 
   // whether a message from them is offered a translation at all
   Offer? offer(String text) {
-    if (text.trim().isEmpty || hub.locked) return null;
-    return hub.offerOf(_guesses[text] ??= hub.guess(text));
+    if (text.trim().isEmpty || hub.locked || !hub.on) return null;
+    if (!wordyEnough(text)) return null;
+    return hub.offerOf(_guesses[text] ??= hub.guess(text), text);
   }
 
   bool shown(String key, [String? text]) =>
@@ -246,6 +303,7 @@ class ChatTranslation extends ChangeNotifier {
     _guesses.remove(text);
     _burnt.add(key);
     _source.remove(key);
+    _unkeep(key);
     if (_msgs.remove(key) != null && !_gone) notifyListeners();
   }
 
@@ -296,13 +354,13 @@ class ChatTranslation extends ChangeNotifier {
     if (now.phase != MsgPhase.idle) return;
     final o = offer(text);
     if (o == null || !autoOn(o) || !_autoTried.add(key)) return;
-    if (hub.missing(o).isNotEmpty) return;
-    // made before and turned back: shown again at once
+    // made before, here or kept: shown again at once, pack or not
     if (now.text != null && now.offer == o) {
       _set(key, text, MsgTranslation(MsgPhase.shown, text: now.text, offer: o));
       _byAuto.add(key);
       return;
     }
+    if (hub.missing(o).isNotEmpty) return;
     unawaited(
       _run(key, text, o).then((_) {
         if (shown(key)) _byAuto.add(key);
@@ -320,8 +378,17 @@ class ChatTranslation extends ChangeNotifier {
     _set(key, text, MsgTranslation(MsgPhase.working, offer: o));
     try {
       final out = await hub.translate(text, o);
-      if (still()) {
+      if (still() && !_gone && !_burnt.contains(key)) {
         _set(key, text, MsgTranslation(MsgPhase.shown, text: out, offer: o));
+        if (_keepable(key) && _source[key] == text) {
+          final k = KeptTranslation(
+            KeptTranslation.hashOf(text),
+            _wayOf(o),
+            out,
+          );
+          _kept[key] = k;
+          unawaited(hub.keep(chatId, key, k));
+        }
       }
       return null;
     } on TranslateUnavailable catch (e) {
@@ -341,6 +408,7 @@ class ChatTranslation extends ChangeNotifier {
     _msgs.clear();
     _source.clear();
     _burnt.clear();
+    _kept = {};
     hub.removeListener(_hubChanged);
     super.dispose();
   }

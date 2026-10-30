@@ -86,18 +86,27 @@ class TranslationHub extends ChangeNotifier {
 
   Set<String> get mine => readLangs(appLang(), _settings.mine);
 
-  // what a message would be translated into, or null when it is in a
-  // language the person reads, or one there is no model for
-  Offer? offer(String text) => offerOf(guess(text));
+  // translation offered at all
+  bool get on => _settings.on;
+
+  // what a message would be translated into, or null when translation is
+  // off, the message is a few words, in a language the person reads or
+  // never wants offered, or one there is no model for
+  Offer? offer(String text) => offerOf(guess(text), text);
 
   // the same for a guess a chat made before
-  Offer? offerOf(LangGuess g) => offerFor(
-    g,
-    catalog,
-    appLang: appLang(),
-    chosen: _settings.target,
-    mine: mine,
-  );
+  Offer? offerOf(LangGuess g, String text) {
+    if (!on || !wordyEnough(text)) return null;
+    final o = offerFor(
+      g,
+      catalog,
+      appLang: appLang(),
+      chosen: _settings.target,
+      mine: mine,
+    );
+    if (o == null || _settings.never.contains(o.from)) return null;
+    return o;
+  }
 
   // the packs an offer needs that are not on the phone yet
   List<LangBundle> missing(Offer o) => [
@@ -258,11 +267,11 @@ class TranslationHub extends ChangeNotifier {
     ),
   );
 
-  // [lang] becomes one the person reads: nothing in it is offered again
+  // nothing in [lang] is offered until the person takes it off the list
   Future<void> neverFor(String lang) => saveSettings(
     _settings.copyWith(
-      mine: [
-        for (final l in _settings.mine)
+      never: [
+        for (final l in _settings.never)
           if (l != lang) l,
         lang,
       ],
@@ -272,6 +281,40 @@ class TranslationHub extends ChangeNotifier {
       ],
     ),
   );
+
+  // [lang] off the never list: offered again
+  Future<void> offerAgain(String lang) => saveSettings(
+    _settings.copyWith(
+      never: [
+        for (final l in _settings.never)
+          if (l != lang) l,
+      ],
+    ),
+  );
+
+  Future<void> setOn(bool on) => saveSettings(_settings.copyWith(on: on));
+
+  // a chat's kept translations, read when it opens. a store that fails
+  // keeps none
+  Future<Map<String, KeptTranslation>> kept(String chatId) async {
+    try {
+      return await store.kept(chatId);
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  Future<void> keep(String chatId, String uid, KeptTranslation t) async {
+    try {
+      await store.keep(chatId, uid, t);
+    } catch (_) {}
+  }
+
+  Future<void> unkeep(String chatId, String uid) async {
+    try {
+      await store.unkeep(chatId, uid);
+    } catch (_) {}
+  }
 
   Future<void> setChatAuto(String chatId, bool on) async {
     _chatAuto[chatId] = on;

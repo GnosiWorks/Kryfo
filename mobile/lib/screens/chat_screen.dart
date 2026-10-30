@@ -1542,7 +1542,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   // its translation goes with it, not when the chat closes
   void _forgetTranslation(_Msg m) =>
-      _translation?.forget(m.msgUid ?? '${m.came}', m.text);
+      _translation?.forget(trKeyOf(m.msgUid, m.came), m.text);
 
   Future<void> _forgetBurnt(_Msg m) async {
     if (m.msgUid != null) await session.deleteMessage(m.msgUid!);
@@ -2152,7 +2152,7 @@ class _ChatScreenState extends State<ChatScreen>
     final bubbleSize = box.size;
     const pickerH = 54.0;
     // theirs in a language the person does not read
-    final trKey = target.msgUid ?? '${target.came}';
+    final trKey = trKeyOf(target.msgUid, target.came);
     final translation = _translation;
     final canTranslate =
         translation != null &&
@@ -8577,8 +8577,10 @@ class _Bubble extends StatelessWidget {
                                               msg.text,
                                               TranslatedBody(
                                                 chat: translation,
-                                                msgKey:
-                                                    msg.msgUid ?? '${msg.came}',
+                                                msgKey: trKeyOf(
+                                                  msg.msgUid,
+                                                  msg.came,
+                                                ),
                                                 text: msg.text,
                                                 enabled:
                                                     !isOut &&
