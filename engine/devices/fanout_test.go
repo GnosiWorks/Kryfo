@@ -753,3 +753,50 @@ func TestNoDeadBundleIsHandedOut(t *testing.T) {
 		t.Fatalf("an old last resort again: %v", err)
 	}
 }
+
+func TestThePoolKeepsEightAfterTheLink(t *testing.T) {
+	s := newShim()
+	me := newAccount(t, s)
+	desk := me.linkReg(t)
+	t0 := time.Unix(1_760_000_000, 0)
+	p := NewPool()
+	if n := p.Need(me.id.pub, desk, t0); n != PoolKeep {
+		t.Fatalf("an empty pool asks for %d", n)
+	}
+	// the link: one for each of 400 devices the first push reaches
+	var link [][]byte
+	for i := range 400 {
+		link = append(link, poolKDB1(t, uint32(100+i), 7, desk))
+	}
+	if err := p.Put(me.id.pub, desk, link, poolKDB1(t, 1, 7, desk), t0); err != nil {
+		t.Fatal(err)
+	}
+	for range 400 - PoolLow - 1 {
+		if _, _, err := p.Take(me.id.pub, desk, t0); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if n := p.Need(me.id.pub, desk, t0); n != 0 {
+		t.Fatalf("%d asked for with %d left", n, PoolLow+1)
+	}
+	if _, low, err := p.Take(me.id.pub, desk, t0); err != nil || !low {
+		t.Fatalf("not low at %d: %v", PoolLow, err)
+	}
+	if n := p.Need(me.id.pub, desk, t0); n != PoolKeep-PoolLow {
+		t.Fatalf("a refill of %d", n)
+	}
+	var refill [][]byte
+	for i := range PoolKeep - PoolLow {
+		refill = append(refill, poolKDB1(t, uint32(1000+i), 7, desk))
+	}
+	if err := p.Put(me.id.pub, desk, refill, nil, t0); err != nil {
+		t.Fatal(err)
+	}
+	if n := p.Need(me.id.pub, desk, t0); n != 0 {
+		t.Fatalf("a full pool asks for %d", n)
+	}
+	// all of them aged out: a full batch again
+	if n := p.Need(me.id.pub, desk, t0.Add(PoolMaxAge)); n != PoolKeep {
+		t.Fatalf("an aged pool asks for %d", n)
+	}
+}

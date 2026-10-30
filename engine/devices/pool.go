@@ -19,10 +19,16 @@ const (
 	// days and the device sends the next last resort then; the replaced
 	// ones still open for 16 days
 	PoolLastMaxAge = 30 * 24 * time.Hour
-	// PoolMost is the most one-time bundles held for one device
-	PoolMost = 64
-	// PoolLow is when the phone asks the device for more
-	PoolLow = 8
+	// PoolMost is the most one-time bundles held for one device: the
+	// batch it makes at the link, one for each device the phone's first
+	// push reaches
+	PoolMost = 1024
+	// PoolKeep is how many one-time bundles a device keeps at its phone
+	// per identity after the link
+	PoolKeep = 8
+	// PoolLow is when the phone asks the device for more: at this many or
+	// fewer left
+	PoolLow = 2
 )
 
 var (
@@ -169,6 +175,22 @@ func (p *Pool) Take(identity Key, e Entry, now time.Time) (kdb1 []byte, low bool
 		return nil, true, ErrNoBundle
 	}
 	return bytes.Clone(r.last.b), true, nil
+}
+
+// Need is how many one-time bundles to ask identity's device e for at
+// now: none while more than PoolLow are left, else up to PoolKeep.
+func (p *Pool) Need(identity Key, e Entry, now time.Time) int {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	r := p.rows[slotKey{identity, e.ID}]
+	if r == nil || r.entry != e {
+		return PoolKeep
+	}
+	r.prune(now)
+	if n := len(r.once); n <= PoolLow {
+		return PoolKeep - n
+	}
+	return 0
 }
 
 // Drop forgets a device's bundles, as when it is removed.
