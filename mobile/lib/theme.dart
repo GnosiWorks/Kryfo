@@ -268,7 +268,22 @@ class HaloColors {
       isLight ? const Color(0xFF096545) : const Color(0xFF34D399);
   static Color get violetText =>
       isLight ? const Color(0xFF5E3BCC) : const Color(0xFFB79CFF);
+  // error words: light rose needs darker ink for 4.5:1, dark rose passes
+  static Color get roseText =>
+      isLight ? const Color(0xFF9F2962) : const Color(0xFFF472B6);
   static Color get warnText => _y.text;
+
+  /// the tone words take when they wear [c]: a status accent's text twin,
+  /// anything else as it is
+  static Color wordsIn(Color c) {
+    if (c == rose) return roseText;
+    if (c == green) return greenText;
+    if (c == violet) return violetText;
+    if (c == warn) return warnText;
+    if (c == amber) return amberText;
+    return c;
+  }
+
   static Color get onWarn => _y.on;
 }
 

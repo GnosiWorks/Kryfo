@@ -108,26 +108,46 @@ void main() {
       Directory(base).createSync();
       final env = {'XDG_RUNTIME_DIR': base};
       final uid = getuid();
+      final mine = p.join(base, 'kryfo-${runtimeTag(root.path)}');
       // none there: made, and taken
-      expect(desktopRuntimeDir(env: env, uid: uid), p.join(base, 'kryfo'));
+      expect(desktopRuntimeDir(env: env, uid: uid, root: root.path), mine);
       // someone else's: a new one by chance beside it
       final other = desktopRuntimeDir(
         env: env,
         uid: uid,
-        owner: (d) => d.endsWith('/kryfo') ? uid + 1 : uid,
+        root: root.path,
+        owner: (d) => d == mine ? uid + 1 : uid,
       );
-      expect(other, isNot(p.join(base, 'kryfo')));
-      expect(p.basename(other!), startsWith('kryfo-'));
+      expect(other, isNot(mine));
+      expect(p.basename(other!), startsWith('kryfo-${runtimeTag(root.path)}-'));
       // a link in its place
-      Directory(p.join(base, 'kryfo')).deleteSync();
-      Link(p.join(base, 'kryfo')).createSync(root.path);
-      final linked = desktopRuntimeDir(env: env, uid: uid);
-      expect(linked, isNot(p.join(base, 'kryfo')));
+      Directory(mine).deleteSync();
+      Link(mine).createSync(root.path);
+      final linked = desktopRuntimeDir(env: env, uid: uid, root: root.path);
+      expect(linked, isNot(mine));
       expect(
         FileSystemEntity.typeSync(linked!, followLinks: false),
         FileSystemEntityType.directory,
       );
       expect(FileStat.statSync(linked).mode & 511, 448);
+    });
+
+    test('two data folders never share a memory folder', () {
+      final base = p.join(root.path, 'xdg2');
+      Directory(base).createSync();
+      final env = {'XDG_RUNTIME_DIR': base};
+      final a = desktopRuntimeDir(
+        env: env,
+        uid: getuid(),
+        root: '/home/a/.local/share/kryfo',
+      );
+      final b = desktopRuntimeDir(
+        env: env,
+        uid: getuid(),
+        root: '/home/a/other/kryfo',
+      );
+      expect(a, isNot(b));
+      expect(runtimeTag('/x/y'), runtimeTag('/x/./y'));
     });
   });
 
@@ -224,7 +244,7 @@ void main() {
       await sealed(() async {
         await ef.prepare(vault);
         rawFileAccess(
-          () => File(p.join(ef.dir, 'nostr_seen_aa')).writeAsStringSync('e1'),
+          () => File(p.join(ef.dir, 'nostr_seen_aa')).writeAsStringSync('e1\n'),
         );
         ef.detach();
         rawFileAccess(() => Directory(ef.dir).deleteSync(recursive: true));
@@ -233,7 +253,7 @@ void main() {
           rawFileAccess(
             () => File(p.join(ef.dir, 'nostr_seen_aa')).readAsStringSync(),
           ),
-          'e1',
+          'e1\n',
         );
       });
     });

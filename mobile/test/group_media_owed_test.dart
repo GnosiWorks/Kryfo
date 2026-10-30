@@ -85,16 +85,16 @@ class _Io extends ArrivalIo {
       signalSession.ready && await signalSession.sessionStore.contains(peer);
 
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     // a key frame rides outside signal
-    if (cipher.startsWith('{')) return super.relaySend(xPub, cipher);
+    if (cipher.startsWith('{')) return super.relaySend(ident, xPub, cipher);
     final to = cipher.split(' ')[1];
     onSend?.call(to, cipher.substring('to $to '.length));
     if (refuse(to, _slice(cipher, to))) return 'error: down';
     if (sliceLag > Duration.zero && _slice(cipher, to) != null) {
       await Future<void>.delayed(sliceLag);
     }
-    return super.relaySend(xPub, cipher);
+    return super.relaySend(ident, xPub, cipher);
   }
 
   // the unsends of [uid] that went to [member]
@@ -1512,7 +1512,7 @@ void main() {
       final src = sourceOf('lib/widgets/file_reach.dart');
       expect(
         src,
-        contains('color: lost ? HaloColors.rose : HaloColors.amberText,'),
+        contains('color: lost ? HaloColors.roseText : HaloColors.amberText,'),
       );
       expect(src, isNot(contains('text2')));
       expect(src, isNot(contains('text3')));

@@ -73,20 +73,6 @@ void main() {
     );
   }
 
-  bool checked(WidgetTester t, String title) => t
-      .widget<Semantics>(
-        find
-            .ancestor(
-              of: find.text(title),
-              matching: find.byWidgetPredicate(
-                (w) => w is Semantics && w.properties.checked != null,
-              ),
-            )
-            .first,
-      )
-      .properties
-      .checked!;
-
   Future<void> openSheet(WidgetTester t, {bool still = false}) async {
     phone(t);
     expect(appState.firstRunAsk, isTrue);
@@ -102,6 +88,30 @@ void main() {
     await t.pump(const Duration(seconds: 2));
   }
 
+  // the welcome and the name steps, on to the @name step
+  Future<void> throughName(WidgetTester t) async {
+    phone(t);
+    await t.pumpWidget(
+      devApp(OnboardingScreen(appState: appState, onComplete: () {})),
+    );
+    await t.pump(const Duration(seconds: 6));
+    final pages = t.widget<PageView>(find.byType(PageView)).controller!;
+    pages.jumpToPage(1);
+    await t.pump();
+    await t.pump(const Duration(seconds: 4));
+    await t.tap(find.text(l10n.onboardingUseThisName));
+    await t.pump();
+    // the face and the route are written first, then the step moves on
+    for (var i = 0; i < 30 && pages.page != 2; i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await t.pump(const Duration(milliseconds: 300));
+    }
+    expect(pages.page, 2);
+    expect(find.text(l10n.onboardingNameSkip), findsOneWidget);
+  }
+
   group('the first start', () {
     for (final still in [false, true]) {
       testWidgets('bridges only, no relay (still: $still)', (t) async {
@@ -114,8 +124,8 @@ void main() {
           find.text(l10n.torBootSplashNeverTriesTorPlainly),
           findsOneWidget,
         );
-        expect(find.text(l10n.onboardingRelay), findsNothing);
-        expect(find.text(l10n.modesRelay), findsNothing);
+        expect(find.text(l10n.modesFast), findsNothing);
+        expect(find.text(l10n.modesFast), findsNothing);
         expect(
           find.byWidgetPredicate(
             (w) => w is Semantics && w.properties.checked != null,
@@ -159,16 +169,14 @@ void main() {
     phone(t);
     await t.pumpWidget(devApp(const ModesScreen()));
     await t.pump(const Duration(seconds: 2));
-    final relay = find.text(l10n.modesRelay);
+    final relay = find.text(l10n.modesFast);
     await t.ensureVisible(relay);
     await t.pump();
     expect(relay.hitTestable(), findsOneWidget);
     await done(t);
   });
 
-  testWidgets('the sheet and the send step fit a small phone, every language', (
-    t,
-  ) async {
+  testWidgets('the sheet fits a small phone, every language', (t) async {
     await t.runAsync(loadAppFonts);
     phone(t);
     t.view.physicalSize = const Size(360, 640);
@@ -210,25 +218,6 @@ void main() {
           expect(go.hitTestable(), findsOneWidget, reason: now);
           await t.pumpWidget(const SizedBox());
           await t.pump(const Duration(seconds: 1));
-          await appState.pickFirstRun(risky: true);
-          await t.pumpWidget(
-            devApp(
-              OnboardingScreen(appState: appState, onComplete: () {}),
-              locale: locale,
-              scale: scale,
-            ),
-          );
-          await t.pump(const Duration(seconds: 6));
-          t.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(3);
-          await t.pump();
-          await t.pump(const Duration(seconds: 1));
-          expect(
-            find.text(l10n.onboardingContinue).hitTestable(),
-            findsOneWidget,
-            reason: now,
-          );
-          await t.pumpWidget(const SizedBox());
-          await t.pump(const Duration(seconds: 1));
         }
       }
     } finally {
@@ -255,12 +244,12 @@ void main() {
     expect(find.text(l10n.bridgesRelayThisNetworkSees), findsOneWidget);
     expect(
       t.getRect(find.text(l10n.bridgesGetABridge)).top,
-      lessThan(t.getRect(find.text(l10n.homeUseOurRelay)).top),
+      lessThan(t.getRect(find.text(l10n.homeUseFast)).top),
     );
-    await t.tap(find.text(l10n.homeUseOurRelay));
+    await t.tap(find.text(l10n.homeUseFast));
     for (
       var i = 0;
-      i < 50 && find.text(l10n.homeSwitchedToRelay).evaluate().isEmpty;
+      i < 50 && find.text(l10n.homeSwitchedToFastRoute).evaluate().isEmpty;
       i++
     ) {
       await t.runAsync(
@@ -270,37 +259,13 @@ void main() {
     }
     expect(appState.sendMode, 'balanced');
     await done(t);
-    // the send step offers onion and keeps relay picked
-    await t.pumpWidget(
-      devApp(OnboardingScreen(appState: appState, onComplete: () {})),
-    );
-    await t.pump(const Duration(seconds: 6));
-    final pages = t.widget<PageView>(find.byType(PageView)).controller!;
-    pages.jumpToPage(3);
-    await t.pump();
-    await t.pump(const Duration(seconds: 1));
-    expect(find.text(l10n.onboardingFast), findsNothing);
-    expect(checked(t, l10n.onboardingRelay), isTrue);
-    expect(checked(t, l10n.onboardingOnion), isFalse);
-    // this network sees the connection to our relay: said, not "nobody else"
-    expect(find.text(l10n.onboardingRelayThisNetworkSees), findsOneWidget);
-    expect(find.text(l10n.onboardingOurRelaySeesYour), findsNothing);
-    await t.tap(find.text(l10n.onboardingContinue));
-    await t.pump();
-    for (var i = 0; i < 20 && pages.page != 4; i++) {
-      await t.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 100)),
-      );
-      await t.pump(const Duration(milliseconds: 300));
-    }
-    expect(pages.page, 4);
+    // the route is not asked in setup: the name step keeps relay
+    await throughName(t);
     expect(appState.sendMode, 'balanced');
     await done(t);
   });
 
-  testWidgets('relay taken, then onion again: the send step keeps onion', (
-    t,
-  ) async {
+  testWidgets('relay taken, then onion again: setup keeps onion', (t) async {
     await openSheet(t);
     await t.tap(find.text(l10n.commonContinue));
     await t.pump();
@@ -310,7 +275,7 @@ void main() {
     );
     await t.pump();
     await t.pump(const Duration(seconds: 2));
-    await t.tap(find.text(l10n.homeUseOurRelay));
+    await t.tap(find.text(l10n.homeUseFast));
     for (var i = 0; i < 50 && appState.sendMode != 'balanced'; i++) {
       await t.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 20)),
@@ -322,15 +287,8 @@ void main() {
     // back to onion before the send step: relay is not the mode now
     await t.runAsync(() => appState.setSendMode('private'));
     expect(appState.sendMode, 'private');
-    await t.pumpWidget(
-      devApp(OnboardingScreen(appState: appState, onComplete: () {})),
-    );
-    await t.pump(const Duration(seconds: 6));
-    t.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(3);
-    await t.pump();
-    await t.pump(const Duration(seconds: 1));
-    expect(find.text(l10n.onboardingOnion), findsOneWidget);
-    expect(find.text(l10n.onboardingRelay), findsNothing);
+    await throughName(t);
+    expect(appState.sendMode, 'private');
     await done(t);
   });
 
@@ -349,105 +307,35 @@ void main() {
       CardAction card(String label) => t.widget<CardAction>(
         find.ancestor(of: find.text(label), matching: find.byType(CardAction)),
       );
-      final relay = t.getRect(find.text(l10n.homeUseOurRelay));
+      final relay = t.getRect(find.text(l10n.homeUseFast));
       final ask = t.getRect(find.text(l10n.bridgesGetABridge));
       if (watched) {
         expect(find.text(l10n.bridgesRelayThisNetworkSees), findsOneWidget);
         expect(ask.left, lessThan(relay.left));
         expect(card(l10n.bridgesGetABridge).fill, isNotNull);
-        expect(card(l10n.homeUseOurRelay).fill, isNull);
+        expect(card(l10n.homeUseFast).fill, isNull);
       } else {
         expect(find.text(l10n.bridgesRelayWorksWhereTor), findsOneWidget);
         expect(relay.left, lessThan(ask.left));
-        expect(card(l10n.homeUseOurRelay).fill, isNotNull);
+        expect(card(l10n.homeUseFast).fill, isNotNull);
         expect(card(l10n.bridgesGetABridge).fill, isNull);
       }
       await done(t);
     });
   }
 
-  group('the send step', () {
-    Future<void> toSend(WidgetTester t) async {
-      phone(t);
-      await t.pumpWidget(
-        devApp(OnboardingScreen(appState: appState, onComplete: () {})),
-      );
-      await t.pump(const Duration(seconds: 6));
-      t.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(3);
-      await t.pump();
-      await t.pump(const Duration(seconds: 1));
-    }
-
-    testWidgets('connect picked: onion, relay and fast, as before', (t) async {
-      await appState.pickFirstRun(risky: false);
-      await toSend(t);
-      expect(find.text(l10n.onboardingHidesYourAddressFrom), findsOneWidget);
-      expect(find.text(l10n.onboardingAutoFindsAWay), findsNothing);
-      expect(find.text(l10n.onboardingRelay), findsOneWidget);
-      expect(find.text(l10n.onboardingAboutASecondWorks), findsOneWidget);
-      expect(find.text(l10n.onboardingFast), findsOneWidget);
-      expect(find.text(l10n.onboardingSkipOnionIsA), findsOneWidget);
-      expect(checked(t, l10n.onboardingOnion), isTrue);
-      // relay is there to take
-      await t.tap(find.text(l10n.onboardingRelay));
-      await t.pump(const Duration(milliseconds: 300));
-      expect(checked(t, l10n.onboardingRelay), isTrue);
-      await t.tap(find.text(l10n.onboardingUseThis));
-      await t.pump();
-      await t.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 200)),
-      );
-      await t.pump(const Duration(seconds: 1));
-      expect(appState.sendMode, 'balanced');
+  // the route left setup: the name step writes private, or fast where the
+  // first start took it, and nothing in setup offers a route
+  for (final risky in [false, true]) {
+    testWidgets('setup asks no route, private kept (blocked: $risky)', (
+      t,
+    ) async {
+      await appState.pickFirstRun(risky: risky);
+      await throughName(t);
+      expect(appState.sendMode, 'private');
+      expect(find.text(l10n.modesFast), findsNothing);
+      expect(find.text(l10n.modesPrivate), findsNothing);
       await done(t);
     });
-
-    for (final still in [false, true]) {
-      testWidgets('blocked or watched: onion through a bridge only '
-          '(still: $still)', (t) async {
-        await appState.pickFirstRun(risky: true);
-        phone(t);
-        await t.pumpWidget(
-          devApp(
-            OnboardingScreen(appState: appState, onComplete: () {}),
-            still: still,
-          ),
-        );
-        await t.pump(const Duration(seconds: 6));
-        t.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(3);
-        await t.pump();
-        await t.pump(const Duration(seconds: 1));
-        expect(find.text(l10n.onboardingOnion), findsOneWidget);
-        expect(find.text(l10n.onboardingAutoFindsAWay), findsOneWidget);
-        // nothing of relay or fast, and nothing that reads as a choice
-        expect(find.text(l10n.onboardingRelay), findsNothing);
-        expect(find.text(l10n.onboardingOurRelaySeesYour), findsNothing);
-        expect(find.text(l10n.onboardingFast), findsNothing);
-        expect(find.text(l10n.onboardingEveryRelayYouUse), findsNothing);
-        expect(find.text(l10n.onboardingKeepOnion), findsNothing);
-        expect(find.text(l10n.onboardingSkipOnionIsA), findsNothing);
-        expect(
-          find.byWidgetPredicate(
-            (w) => w is Semantics && w.properties.checked != null,
-          ),
-          findsNothing,
-        );
-        if (still) expect(t.hasRunningAnimations, isFalse);
-        await t.tap(find.text(l10n.onboardingContinue));
-        await t.pump();
-        // the mode is written first, then the step moves on
-        final pages = t.widget<PageView>(find.byType(PageView)).controller!;
-        for (var i = 0; i < 20 && pages.page != 4; i++) {
-          await t.runAsync(
-            () => Future<void>.delayed(const Duration(milliseconds: 100)),
-          );
-          await t.pump(const Duration(milliseconds: 300));
-        }
-        expect(appState.sendMode, 'private');
-        // on to the next step
-        expect(pages.page, 4);
-        await done(t);
-      });
-    }
-  });
+  }
 }

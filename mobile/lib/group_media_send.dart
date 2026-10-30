@@ -14,10 +14,15 @@ import 'image_strip.dart' show cleanSavedPhoto;
 import 'media_progress.dart';
 import 'media_send.dart'
     show
+        kMediaStallLooks,
+        kMediaStalled,
         mediaCancelled,
+        mediaChunkSize,
         mediaInflight,
+        mediaSendsTick,
         mediaSlice,
         mediaSliceCount,
+        mediaStallAfter,
         releaseMedia;
 
 // msgUid -> member -> slices that member has, while the row has not gone
@@ -200,8 +205,17 @@ typedef GroupSliceWrap =
 /// true when [member] took the envelope
 typedef GroupDeliver = Future<bool> Function(String member, String wrapped);
 
+// a send's watch: looks with no member answering, and whether the send
+// has ended while a delivery still hangs
+class _Watch {
+  int quiet = 0;
+  bool ended = false;
+}
+
 /// 'ok', 'busy' when another send has the row, 'cancelled', or an error.
-/// [members] are the ones to send to, this phone left out.
+/// [members] are the ones to send to, this phone left out. one with no
+/// member answering for [mediaStallAfter] ends as [kMediaStalled]: the row
+/// is let go, and what landed stays for the next send
 Future<String> sendGroupSlices({
   required String path,
   required String msgUid,
@@ -227,23 +241,48 @@ Future<String> sendGroupSlices({
   bool single = false,
 }) async {
   if (!mediaInflight.add(msgUid)) return 'busy';
+  mediaSendsTick.value++;
+  final run = _Watch();
+  final stop = Completer<String>();
+  final watch = Timer.periodic(mediaStallAfter ~/ kMediaStallLooks, (_) {
+    // a stop asked while a delivery hangs ends it now
+    final String r;
+    if (mediaCancelled.contains(msgUid)) {
+      r = 'cancelled';
+    } else if (++run.quiet >= kMediaStallLooks) {
+      dlog('grp media $msgUid: no answer in ${mediaStallAfter.inSeconds}s');
+      r = kMediaStalled;
+    } else {
+      return;
+    }
+    if (!stop.isCompleted) stop.complete(r);
+  });
   try {
-    return await _send(
-      path: path,
-      msgUid: msgUid,
-      members: members,
-      wrap: wrap,
-      deliver: deliver,
-      progressKey: progressKey,
-      photo: photo,
-      gap: gap,
-      retryPause: retryPause,
-      onShort: onShort,
-      owed: owed,
-      hold: hold ?? () => false,
-      single: single,
-    );
+    final r = await Future.any([
+      _send(
+        run: run,
+        path: path,
+        msgUid: msgUid,
+        members: members,
+        wrap: wrap,
+        deliver: deliver,
+        progressKey: progressKey,
+        photo: photo,
+        gap: gap,
+        retryPause: retryPause,
+        onShort: onShort,
+        owed: owed,
+        hold: hold ?? () => false,
+        single: single,
+      ),
+      stop.future,
+    ]);
+    // what landed is kept, unstamped, however long until the next send
+    if (r == kMediaStalled && owed == null) groupSliceDoneAt.remove(msgUid);
+    return r;
   } finally {
+    watch.cancel();
+    run.ended = true;
     mediaCancelled.remove(msgUid);
     mediaProgressEnd(msgUid);
     releaseMedia(msgUid);
@@ -251,6 +290,7 @@ Future<String> sendGroupSlices({
 }
 
 Future<String> _send({
+  required _Watch run,
   required String path,
   required String msgUid,
   required List<String> members,
@@ -283,10 +323,18 @@ Future<String> _send({
   } catch (e) {
     return 'error: read';
   }
+  // the watch ended it while the file was read: no strip, no stamp
+  if (run.ended) return 'cancelled';
   // an empty file has nothing to send, and is not a send that went
   if (total == 0) return 'error: empty';
   final showProgress = total > 1 && progressKey != null;
-  if (showProgress) mediaProgressStart(msgUid, chatKey: progressKey);
+  if (showProgress) {
+    mediaProgressStart(
+      msgUid,
+      chatKey: progressKey,
+      bytes: total * mediaChunkSize ~/ 4 * 3,
+    );
+  }
   final Map<String, Set<int>> done;
   if (owed != null) {
     // what the owed hold is on disk, not here
@@ -318,7 +366,8 @@ Future<String> _send({
     return n;
   }
 
-  bool cancelled() => mediaCancelled.contains(msgUid);
+  // a send the watch ended goes no further and touches nothing
+  bool cancelled() => run.ended || mediaCancelled.contains(msgUid);
 
   Map<String, Set<int>> shortNow() => {
     for (final m in members)
@@ -328,6 +377,7 @@ Future<String> _send({
   // stopped by a hold: what landed is kept however long it lasts, and the
   // owed keep what they took
   Future<String> parked() async {
+    if (run.ended) return 'parked';
     if (owed == null) {
       groupSliceDoneAt.remove(msgUid);
     } else {
@@ -345,6 +395,9 @@ Future<String> _send({
           return false;
         }),
     ]);
+    // every member answered: the send is moving. what landed is kept even
+    // after the watch ended it, for the next send
+    run.quiet = 0;
     final left = <String>[];
     for (var k = 0; k < to.length; k++) {
       if (ok[k]) {
@@ -353,7 +406,7 @@ Future<String> _send({
         left.add(to[k]);
       }
     }
-    if (owed == null) {
+    if (owed == null && !run.ended) {
       groupSliceDoneAt[msgUid] = DateTime.now().millisecondsSinceEpoch;
     }
     return left;
@@ -382,6 +435,7 @@ Future<String> _send({
     ];
     if (left.isEmpty) continue;
     final wrapped = await envelope(i);
+    if (cancelled()) return 'cancelled';
     if (wrapped == null) return 'error: read';
     // tried again only while nobody has it: a member it missed while
     // others got it waits for the rounds at the end, not every slice
@@ -391,6 +445,7 @@ Future<String> _send({
         if (cancelled()) return 'cancelled';
       }
       left = await push(i, wrapped, left);
+      if (cancelled()) return 'cancelled';
       if (left.isEmpty || anyHas(i)) break;
       dlog('grp media chunk $i/$total try ${tryN + 1} failed');
     }
@@ -412,7 +467,7 @@ Future<String> _send({
     for (var i = 0; i < total && misses < kGroupMemberMisses; i++) {
       if (has(m).contains(i) || cancelled() || hold()) continue;
       final wrapped = await envelope(i);
-      if (wrapped == null) return;
+      if (wrapped == null || cancelled()) return;
       final left = await push(i, wrapped, [m]);
       misses = left.isEmpty ? 0 : misses + 1;
       await Future.delayed(gap);

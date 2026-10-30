@@ -115,6 +115,7 @@ func setStatus(s string) {
 			notePublished()
 		}
 		torStatus = s
+		torStatusMoved()
 	}
 }
 
@@ -144,6 +145,7 @@ func HaloGenerateIdentity() *C.char {
 		return C.CString(fmt.Sprintf("error: x keygen: %v", err))
 	}
 	curve25519.ScalarBaseMult(&myXPub, &myXPriv)
+	putIdentity(mainIdent, xid{priv: myXPriv, pub: myXPub})
 
 	myId = idFromPubkey(pub)
 	log.Printf("halo: identity generated: %s", myId)
@@ -175,6 +177,7 @@ func HaloRestoreIdentity(cEdPriv *C.char, cXPriv *C.char) *C.char {
 
 	copy(myXPriv[:], xPrivBytes)
 	curve25519.ScalarBaseMult(&myXPub, &myXPriv)
+	putIdentity(mainIdent, xid{priv: myXPriv, pub: myXPub})
 
 	myId = idFromPubkey(myEdPub)
 	log.Printf("halo: identity restored: %s", myId)
@@ -245,8 +248,12 @@ func idFromPubkey(pub []byte) string {
 	return fmt.Sprintf("%s-%s-%s", w1, w2, w3)
 }
 
-func deriveSharedKey(peerXPubHex string) ([32]byte, error) {
+func deriveSharedKey(ident int, peerXPubHex string) ([32]byte, error) {
 	var key [32]byte
+	me, err := identityOf(ident)
+	if err != nil {
+		return key, err
+	}
 	peerPub, err := hex.DecodeString(peerXPubHex)
 	if err != nil || len(peerPub) != 32 {
 		return key, fmt.Errorf("bad peer pubkey")
@@ -254,7 +261,7 @@ func deriveSharedKey(peerXPubHex string) ([32]byte, error) {
 	var peer [32]byte
 	copy(peer[:], peerPub)
 
-	shared, err := curve25519.X25519(myXPriv[:], peer[:])
+	shared, err := curve25519.X25519(me.priv[:], peer[:])
 	if err != nil {
 		return key, err
 	}
@@ -263,11 +270,11 @@ func deriveSharedKey(peerXPubHex string) ([32]byte, error) {
 }
 
 //export HaloEncryptFor
-func HaloEncryptFor(cPeerPub *C.char, cPlain *C.char) *C.char {
+func HaloEncryptFor(cIdent C.int, cPeerPub *C.char, cPlain *C.char) *C.char {
 	peerPub := goStr(cPeerPub)
 	plain := goStr(cPlain)
 
-	key, err := deriveSharedKey(peerPub)
+	key, err := deriveSharedKey(identArg(cIdent), peerPub)
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: derive: %v", err))
 	}
@@ -290,11 +297,11 @@ func HaloEncryptFor(cPeerPub *C.char, cPlain *C.char) *C.char {
 }
 
 //export HaloDecryptFrom
-func HaloDecryptFrom(cPeerPub *C.char, cB64 *C.char) *C.char {
+func HaloDecryptFrom(cIdent C.int, cPeerPub *C.char, cB64 *C.char) *C.char {
 	peerPub := goStr(cPeerPub)
 	b64 := goStr(cB64)
 
-	key, err := deriveSharedKey(peerPub)
+	key, err := deriveSharedKey(identArg(cIdent), peerPub)
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: derive: %v", err))
 	}
@@ -392,6 +399,8 @@ func startListener(dataDir string) string {
 	}
 	mu.Lock()
 	torNode = t
+	// a new tor publishes its onion afresh
+	publishedOnce.Store(false)
 	close(torGone)
 	torGone = make(chan struct{})
 	mu.Unlock()
@@ -580,6 +589,13 @@ var torRestarting int32
 
 var lastTorRestart int64 // unix seconds of the last one, for the cooldown
 
+// how often and how long a publish seen early waits for the status to leave
+// starting
+var (
+	publishSettle    = 200 * time.Millisecond
+	publishSettleMax = time.Minute
+)
+
 // one watcher of each kind at a time. each parks on a control event listener,
 // and one left behind per reconnect is a leak.
 var (
@@ -646,6 +662,7 @@ func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionI
 	}
 	for {
 		if watchHSDirUpload(t, hsCh, hsSubbed, onionID, gone) {
+			publishedOnce.Store(true)
 			break
 		}
 		select {
@@ -662,10 +679,24 @@ func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionI
 		// no confirmed upload yet: the same listener stays live, so wait for
 		// a late descriptor instead of claiming reachable.
 	}
+	// up before 100% was read: the flip waits for the status to catch up
+	// rather than being lost, within this route
+	gen, waited := routeGeneration(), time.Now()
+	for torStatusNow() == "starting" {
+		if routeGeneration() != gen || time.Since(waited) > publishSettleMax {
+			return
+		}
+		select {
+		case <-gone:
+			return
+		case <-time.After(publishSettle):
+		}
+	}
 	statusMu.Lock()
 	if torStatus == "publishing" {
 		log.Println("halo: status publishing -> reachable (HSDir uploaded)")
 		torStatus = "reachable"
+		torStatusMoved()
 		notePublished()
 		go func() {
 			for _, lane := range mainLanes() {
@@ -1386,20 +1417,56 @@ func HaloDrainInbox() *C.char {
 
 //export HaloSendTo
 func HaloSendTo(cAddr *C.char, cMsg *C.char) *C.char {
-	addr := goStr(cAddr)
-	msg := goStr(cMsg)
+	return C.CString(sendDirect(goStr(cAddr), goStr(cMsg)))
+}
 
+// what HaloSendTo answers before our onion is published. callers take the
+// relay at once, as for a direct route that is down
+const errNotPublished = "error: not published yet"
+
+// set once this tor has put our descriptor up, kept through bounces and
+// wakes: tor keeps its intro points through those and uploads again only
+// on its own clock, an hour or two later
+var publishedOnce atomic.Bool
+
+// how long a first publish may hold the direct route, for an upload that
+// is never heard of (no event subscription, a stuck event connection)
+var directAfter = 30 * time.Second
+
+// the direct route joins once our onion is published: until then a send
+// goes by the relays alone instead of waiting on a dial beside the publish.
+// only the first publish of this tor counts, so a bounce changes nothing
+func directOpen() bool {
+	switch torStatusNow() {
+	case "reachable":
+		return true
+	case "publishing":
+		if publishedOnce.Load() {
+			return true
+		}
+		txMu.RLock()
+		since := pubSince
+		txMu.RUnlock()
+		return !since.IsZero() && time.Since(since) > directAfter
+	}
+	return false
+}
+
+func sendDirect(addr, msg string) string {
 	mu.Lock()
 	t := torNode
 	mu.Unlock()
 	if t == nil {
-		return C.CString("error: tor not started")
+		return "error: tor not started"
+	}
+	if !directOpen() {
+		return errNotPublished
 	}
 	if err := sendTo(t, addr, msg); err != nil {
-		return C.CString("error: " + err.Error())
+		return "error: " + err.Error()
 	}
 	log.Printf("halo: sent %d bytes to %s", len(msg), addr)
-	return C.CString("ok")
+	return "ok"
 }
 
 // a typing frame straight to the peer's door (sendTyping). nothing about
@@ -1675,12 +1742,21 @@ var (
 	bootPoll     = 2 * time.Second
 	bootPollSlow = 15 * time.Second
 	bootFast     = 10 * time.Minute
+	// past bootEndPct tor is building its first circuits and 100% is
+	// close: asked this often, so tor up is read as it happens. no event
+	// subscription for it: a SETEVENTS that never answers holds the event
+	// connection's read lock, and the onion's upload events with it
+	bootPollEnd = 250 * time.Millisecond
+	bootEndPct  = 75
+	// a tor held there, behind a censor, goes back to the usual poll
+	bootEndFor = 30 * time.Second
 )
 
 func watchBootstrap(t *tor.Tor) {
 	lastPct := -1
 	gen := routeGeneration()
 	began := time.Now()
+	var endAt time.Time
 	for {
 		if t == nil || t.Control == nil || torIsPaused() {
 			return
@@ -1694,7 +1770,7 @@ func watchBootstrap(t *tor.Tor) {
 		// a bounce set the percentage to 0: whatever tor says next is news,
 		// even the number this watcher saw before it
 		if g := routeGeneration(); g != gen {
-			gen, lastPct = g, -1
+			gen, lastPct, endAt = g, -1, time.Time{}
 		}
 		var kv []*control.KeyVal
 		err := ctrlDo(t, "GETINFO bootstrap-phase", func(c *control.Conn) error {
@@ -1726,6 +1802,14 @@ func watchBootstrap(t *tor.Tor) {
 		}
 		// with no network there is nothing to climb: ask less often
 		wait := bootPoll
+		if lastPct >= bootEndPct {
+			if endAt.IsZero() {
+				endAt = time.Now()
+			}
+			if time.Since(endAt) < bootEndFor {
+				wait = bootPollEnd
+			}
+		}
 		if time.Since(began) > bootFast || netAway() {
 			wait = bootPollSlow
 		}

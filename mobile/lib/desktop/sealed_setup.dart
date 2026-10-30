@@ -264,6 +264,9 @@ class EngineFiles {
   final String runtime;
   final bool windows;
   Timer? _watch;
+  // a digest of the key start() put in the engine's folder: one still the
+  // same is no news, and never goes over a key a restore sealed since
+  Digest? _handed;
 
   String get dir => p.join(runtime, kEngineFolder);
   String get _key => p.join(dir, 'onion.key');
@@ -336,6 +339,7 @@ class EngineFiles {
       _sealPlainKey();
     }
     if (vault.read(kOnionEntry) != null) await vault.delete(kOnionEntry);
+    _engineLeftovers();
     final old = rawFileAccess(
       () => Directory(docs)
           .listSync()
@@ -356,6 +360,25 @@ class EngineFiles {
       });
     }
     writeMarkState(_state, m);
+  }
+
+  // what an engine started in docs left there besides the key and the
+  // marks: its wrap queue moves into its folder, the rest goes zeroed
+  void _engineLeftovers() {
+    rawFileAccess(() {
+      final queue = File(p.join(docs, 'nostr_topup'));
+      final to = p.join(dir, 'nostr_topup');
+      if (queue.existsSync() && !File(to).existsSync()) {
+        File('$to.new').writeAsBytesSync(queue.readAsBytesSync(), flush: true);
+        File('$to.new').renameSync(to);
+      }
+      for (final n in ['nostr_topup', 'nostr_topup.tmp', 'engine-debug.log']) {
+        final f = File(p.join(docs, n));
+        if (!f.existsSync()) continue;
+        _zero(f.path);
+        f.deleteSync();
+      }
+    });
   }
 
   // a plain docs/onion.key sealed where it lies: the sealed copy is written
@@ -401,7 +424,10 @@ class EngineFiles {
         if (!_marks.hasMatch(e.key) || e.key.contains('/')) continue;
         // whole or not at all: the engine never reads half a file
         final to = p.join(dir, e.key);
-        File('$to.new').writeAsBytesSync(base64.decode(e.value), flush: true);
+        File('$to.new').writeAsBytesSync(
+          wholeLines(e.key, base64.decode(e.value)),
+          flush: true,
+        );
         File('$to.new').renameSync(to);
       }
     });
@@ -412,7 +438,7 @@ class EngineFiles {
   /// are ever lost
   Future<void> keepMarksOff(DesktopVault vault) async {
     final d = dir, st = _state;
-    final anchors = await runSealed(() => keepMarksIn(d, st));
+    final anchors = await runSealed(() => keepMarksIn(d, st, writer: 'tick'));
     await _keepAnchors(vault, anchors);
   }
 
@@ -425,7 +451,7 @@ class EngineFiles {
   }
 
   /// the same, here and now: as the app ends
-  void keepMarks() => keepMarksIn(dir, _state);
+  void keepMarks() => keepMarksIn(dir, _state, writer: 'exit');
 
   /// every minute: the marks kept, and a key the engine wrote sealed at
   /// once, though it stays for the engine until a start succeeds
@@ -450,8 +476,11 @@ class EngineFiles {
     });
     if (k == null || k.isEmpty) return;
     try {
+      // the engine made one (it differs from what was handed it), or there
+      // is no sealed one: else what is there now stays, a restore's above all
+      final made = _handed == null || sha256.convert(k) != _handed;
       if (!File(_sealedKey).existsSync() ||
-          !listEquals(File(_sealedKey).readAsBytesSync(), k)) {
+          (made && !listEquals(File(_sealedKey).readAsBytesSync(), k))) {
         File('$_sealedKey.new').writeAsBytesSync(k, flush: true);
         rawFileAccess(() => File('$_sealedKey.new').renameSync(_sealedKey));
       }
@@ -464,9 +493,11 @@ class EngineFiles {
   /// it. a new one it made is sealed into docs/onion.key. after an error
   /// the key stays, for the engine's own retry
   Future<String> start(Future<String> Function(String dir) run) async {
+    _handed = null;
     if (File(_sealedKey).existsSync()) {
       final k = File(_sealedKey).readAsBytesSync();
       rawFileAccess(() => File(_key).writeAsBytesSync(k, flush: true));
+      _handed = sha256.convert(k);
       k.fillRange(0, k.length, 0);
     }
     final r = await run(dir);
@@ -555,8 +586,13 @@ Map<String, String>? readMarkState(String state) {
 
 /// [m] as the newest copy; the one before is kept as the previous
 @visibleForTesting
-void writeMarkState(String state, Map<String, String> m) {
-  final tmp = '$state.new';
+void writeMarkState(
+  String state,
+  Map<String, String> m, {
+  String writer = 'new',
+}) {
+  // the minute's isolate and the exit each write their own temporary file
+  final tmp = '$state.$writer';
   File(tmp).writeAsStringSync(jsonEncode(m), flush: true);
   rawFileAccess(() {
     if (File(state).existsSync()) File(state).renameSync('$state.old');
@@ -566,7 +602,11 @@ void writeMarkState(String state, Map<String, String> m) {
 
 /// the marks in [dir] sealed into [state] when they changed. answers the
 /// catch-up anchors (nostr_last_) as they are
-Map<String, String> keepMarksIn(String dir, String state) {
+Map<String, String> keepMarksIn(
+  String dir,
+  String state, {
+  String writer = 'new',
+}) {
   final marks = RegExp(r'^nostr_(seen|last|heard)_[0-9a-f]+$');
   final files = rawFileAccess(() {
     final d = Directory(dir);
@@ -583,9 +623,21 @@ Map<String, String> keepMarksIn(String dir, String state) {
         rawFileAccess(() => File(f.path).readAsBytesSync()),
       ),
   };
-  if (!mapEquals(m, readMarkState(state))) writeMarkState(state, m);
+  if (!mapEquals(m, readMarkState(state))) {
+    writeMarkState(state, m, writer: writer);
+  }
   return {
     for (final e in m.entries)
       if (e.key.startsWith('nostr_last_')) e.key: e.value,
   };
+}
+
+/// a marks file as the engine reads it: a seen or heard list up to its
+/// last whole line, so a line cut short never reads as a shorter id or an
+/// earlier time. the anchor (nostr_last_) is one number and stays as it is
+@visibleForTesting
+Uint8List wholeLines(String name, Uint8List b) {
+  if (name.startsWith('nostr_last_') || b.isEmpty || b.last == 10) return b;
+  final cut = b.lastIndexOf(10);
+  return Uint8List.sublistView(b, 0, cut + 1);
 }

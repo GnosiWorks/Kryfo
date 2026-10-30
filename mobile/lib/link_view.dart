@@ -77,9 +77,10 @@ class LinkView {
     LinkKind.climbing => l10n.appConnecting(percent(pct / 100)),
     LinkKind.relayWait => l10n.appWaitingForARelay,
     LinkKind.ready => l10n.appTorReady,
-    LinkKind.relay => l10n.appViaRelay,
-    LinkKind.relayDown => l10n.appRelayNotAnswering,
-    LinkKind.fast => l10n.appFast,
+    // relay is the fast route now: our two servers
+    LinkKind.relay => l10n.modesFastConnected,
+    LinkKind.relayDown => l10n.appServersNotAnswering,
+    LinkKind.fast => l10n.modesFastConnected,
   };
 
   /// a shorter phrase for the same state, for a language whose words do not
@@ -90,15 +91,16 @@ class LinkView {
   /// percent is not a new state
   String get spoken => kind == LinkKind.climbing ? l10n.appConnecting2 : text;
 
-  /// the sheet's line: the pill's words, and for a ready route how far tor
-  /// has published us
+  /// the sheet's line: the pill's words, and for a ready route whether our
+  /// address is still on its way. nothing waits for it. a ready held through
+  /// a drop says only the pill's words: nothing sends meanwhile
   String get line {
     if (kind == LinkKind.off) return l10n.appTorIsOff;
-    if (kind != LinkKind.ready) return text;
+    if (kind != LinkKind.ready || held) return text;
     return switch (status) {
       TorStatus.reachable => l10n.appConnectedRoutedThrough3,
-      TorStatus.publishing => l10n.appReadyToSendPublishing,
-      TorStatus.bootstrapped => l10n.appReadyToSendFinishing,
+      TorStatus.publishing ||
+      TorStatus.bootstrapped => l10n.appReadyToChatAddressFinishing,
       _ => l10n.appTorReady,
     };
   }
@@ -111,7 +113,8 @@ class LinkView {
     LinkKind.off => l10n.appTorIsOffTurn,
     LinkKind.offline => l10n.onboardingKryfoBuildsAPrivateRouteBefore,
     LinkKind.relayWait => l10n.appTorNoRelayYet,
-    LinkKind.ready when status == TorStatus.reachable => null,
+    // ready means ready: the address finishing needs no words of its own
+    LinkKind.ready when status == TorStatus.reachable || !held => null,
     _ => l10n.appTheFirstConnectionTakes,
   };
 
@@ -123,6 +126,10 @@ class LinkView {
     LinkKind.relayWait => GraphHold.relay,
     _ => GraphHold.none,
   };
+
+  /// messages go out through the route: the picture shows ready while our
+  /// address is still being published. a ready held through a drop does not
+  bool get graphCarries => kind == LinkKind.ready && !held;
 
   /// the stage the route picture shows. a ready held through a bounce
   /// keeps the route up rather than starting it over
@@ -171,6 +178,15 @@ class LinkView {
   String toString() => 'LinkView($kind, $status, $pct%, held: $held)';
 }
 
+/// whether a send that did not go reads as failed: with no network, or with
+/// the route down and not on its way. while tor is still coming up, a
+/// message typed meanwhile waits for it and reads as sending
+bool sendReadsBlocked({
+  required bool online,
+  required bool torReady,
+  required LinkView link,
+}) => !online || (!torReady && !link.pulsing);
+
 /// the reading for one moment. [usable] is the engine's verdict that a relay
 /// answered through tor (AppState.torUsable), [usableAt] when the status
 /// poll last saw it, [tryingSince] when tor began trying, [relayDownSince]
@@ -197,7 +213,7 @@ LinkView linkViewOf({
     final at = since.add(kRelayDownAfter);
     return now.isBefore(at) ? v(LinkKind.relay, at: at) : v(LinkKind.relayDown);
   }
-  if (mode == 'fast') return v(LinkKind.fast);
+  if (mode == 'fast') return v(LinkKind.relay);
   if (off) return v(LinkKind.off);
   if (usable) return v(LinkKind.ready);
   final grace = pillGraceEnds(

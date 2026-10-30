@@ -5,6 +5,7 @@
 // freed native memory.
 
 import 'dart:ffi';
+import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
@@ -54,6 +55,37 @@ String engineTakeSecret(Pointer<Utf8> p) {
     p.cast<Uint8>().asTypedList(n).fillRange(0, n, 0);
     _free(p);
   }
+}
+
+/// as [engineTakeSecret] for a key the engine gives as hex: its bytes, and
+/// no dart string made of it. null for anything but 64 hex digits (an
+/// error the engine said)
+Uint8List? engineTakeSecretKey(Pointer<Utf8> p) {
+  if (p == nullptr) return null;
+  final n = p.length;
+  final h = p.cast<Uint8>().asTypedList(n);
+  try {
+    if (n != 64) return null;
+    final out = Uint8List(32);
+    for (var i = 0; i < 32; i++) {
+      final hi = _nibble(h[2 * i]), lo = _nibble(h[2 * i + 1]);
+      if (hi < 0 || lo < 0) {
+        out.fillRange(0, 32, 0);
+        return null;
+      }
+      out[i] = hi << 4 | lo;
+    }
+    return out;
+  } finally {
+    h.fillRange(0, n, 0);
+    _free(p);
+  }
+}
+
+int _nibble(int c) {
+  if (c >= 0x30 && c <= 0x39) return c - 0x30;
+  if (c >= 0x61 && c <= 0x66) return c - 0x61 + 10;
+  return -1;
 }
 
 /// the bytes of a native string set to zero, up to its end

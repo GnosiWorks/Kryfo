@@ -14,6 +14,7 @@ import 'package:crypto/crypto.dart' show sha256;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'dlog.dart';
+import 'identities.dart';
 import 'signal_ffi/kryfo_signal.dart';
 import 'signal_stores.dart';
 import 'wire_pad.dart';
@@ -31,7 +32,17 @@ class ClassicRefused implements Exception {
 const kFirstContactSlot = '_pending_back_pair_';
 
 class SignalSession {
-  SignalSession([KryfoSignal? lib]) : _lib = lib;
+  /// the store of identity [ident] (0 the main one) in the database it is
+  /// opened on: every row it reads and writes is that identity's
+  SignalSession([KryfoSignal? lib, this.ident = kMainIdent]) : _lib = lib;
+
+  final int ident;
+
+  // a meta key of this identity's: the main one's as before
+  String _meta(String k) => ident == kMainIdent ? k : 'i$ident:$k';
+  String get _kRestored => _meta(_kRestoredMeta);
+  String get _kRestoredAsks => _meta(_kRestoredAsksMeta);
+  String get _kRestoredFrom => _meta(_kRestoredFromMeta);
 
   KryfoSignal? _lib;
   // the platform's library, opened when the store is first used
@@ -80,8 +91,11 @@ class SignalSession {
       restoredFrom: restoredFrom,
     );
 
+    // the v3 invite's keys went with the first v4 main invite's year: none
+    // is made again (identity v4 2.3, R23)
+    final legacy = !await _legacyGone();
     // a signed prekey the old library made reads here as it is
-    final spk = await signedPreKeyStore.load(1);
+    final spk = legacy ? await signedPreKeyStore.load(1) : null;
     var spkOk = false;
     if (spk != null) {
       try {
@@ -93,7 +107,7 @@ class SignalSession {
       dlog('signal: existing spk self-verify = $spkOk');
       if (!spkOk) await signedPreKeyStore.remove(1);
     }
-    if (!spkOk) {
+    if (!spkOk && legacy) {
       final fresh = lib.signedPreKey(identity, 1, _now());
       await signedPreKeyStore.store(1, fresh.record);
       dlog('signal: generated signed prekey id=1');
@@ -101,15 +115,18 @@ class SignalSession {
 
     // prekeys 0-9 topped up by the ids present, and the invite's own
     final have = (await preKeyStore.ids()).toSet();
-    for (final id in [for (var i = 0; i < 10; i++) i, invitePreKeyId]) {
+    for (final id in [
+      for (var i = 0; i < 10; i++) i,
+      if (legacy) invitePreKeyId,
+    ]) {
       if (have.contains(id)) continue;
       await preKeyStore.store(id, lib.preKey(id).record);
     }
 
     // the invite's kyber prekey: a last resort key, kept like the invite's
     // ec prekey, and made again when it no longer holds under this identity
-    final k = await kyberPreKeyStore.load(kInviteKyberId);
-    var kOk = false;
+    final k = legacy ? await kyberPreKeyStore.load(kInviteKyberId) : null;
+    var kOk = !legacy;
     if (k != null) {
       try {
         final p = lib.preKeyPublic(kLsKyber, k);
@@ -119,9 +136,134 @@ class SignalSession {
       }
     }
     if (!kOk) await _newInviteKyber();
+    // the identity's session prekeys: the dev chat's made name has none
+    if (prefix.isEmpty) await keepSessionPreKeys();
 
     _ready = true;
     dlog('signal: bootstrapped on the shim (regId=$registrationId)');
+  }
+
+  /// how long a session prekey pair is used before the next use replaces
+  /// it, and how long a replaced pair or a heal's kyber key still opens
+  /// what was sealed to it: a wrap's life and a day
+  static const kSessionKeyLife = Duration(days: 30);
+  static const kSessionKeyGrace = Duration(days: 16);
+
+  // a prekey id of this identity's that is not taken: random, never 1 (the
+  // main invite's) or 0
+  Future<int> _freeId(Future<bool> Function(int id) taken) async {
+    final r = Random.secure();
+    for (;;) {
+      final id = r.nextInt(0x7ffffffd) + 2;
+      if (!await taken(id)) return id;
+    }
+  }
+
+  Future<List<Map<String, Object?>>> _keyRows(String table, String use) =>
+      _db.query(
+        '$_prefix$table',
+        columns: ['id', 'created_at', 'retired_at'],
+        where: 'ident = ? AND use = ?',
+        whereArgs: [ident, use],
+      );
+
+  /// the session prekeys this identity keeps: one session spk and one last
+  /// resort session kyber, made with it when there are none; replaced pairs
+  /// and heal kybers past their grace go, with every opener they took
+  Future<void> keepSessionPreKeys({int? now}) async {
+    final at = now ?? _now();
+    final grace = kSessionKeyGrace.inMilliseconds;
+    var live = false;
+    for (final r in await _keyRows('signed_prekeys', kUseSession)) {
+      final gone = r['retired_at'] as int?;
+      if (gone == null) {
+        live = true;
+      } else if (at - gone >= grace) {
+        await signedPreKeyStore.remove(r['id'] as int);
+      }
+    }
+    var liveK = false;
+    for (final r in await _keyRows('kyber_prekeys', kUseSession)) {
+      final gone = r['retired_at'] as int?;
+      if (gone == null) {
+        liveK = true;
+      } else if (at - gone >= grace) {
+        await kyberPreKeyStore.remove(r['id'] as int);
+      }
+    }
+    for (final r in await _keyRows('kyber_prekeys', kUseHeal)) {
+      if (at - (r['created_at'] as int) >= grace) {
+        await kyberPreKeyStore.remove(r['id'] as int);
+      }
+    }
+    if (!live || !liveK) await _newSessionPreKeys(at);
+  }
+
+  Future<void> _newSessionPreKeys(int at) async {
+    final spkId = await _freeId(signedPreKeyStore.contains);
+    final kId = await _freeId(kyberPreKeyStore.contains);
+    final spk = lib.signedPreKey(identity, spkId, at);
+    final k = lib.kyberPreKey(identity, kId, at);
+    await _db.transaction((t) async {
+      for (final table in const ['signed_prekeys', 'kyber_prekeys']) {
+        await t.update(
+          '$_prefix$table',
+          {'retired_at': at},
+          where: 'ident = ? AND use = ? AND retired_at IS NULL',
+          whereArgs: [ident, kUseSession],
+        );
+      }
+      await LsSignedPreKeyStore(
+        t,
+        prefix: _prefix,
+        ident: ident,
+      ).store(spkId, spk.record, use: kUseSession, createdAt: at);
+      await LsKyberPreKeyStore(
+        t,
+        prefix: _prefix,
+        ident: ident,
+      ).store(kId, k.record, lastResort: true, use: kUseSession, createdAt: at);
+    });
+    dlog('signal: made session prekeys');
+  }
+
+  /// the session prekeys a heal or a device bundle names now. a pair 30
+  /// days old is replaced on this use; the one it replaces still opens
+  /// for 16 days. rotation shows nowhere on the wire
+  Future<({int signedId, int kyberId})> sessionPreKeysForUse({int? now}) async {
+    final at = now ?? _now();
+    await keepSessionPreKeys(now: at);
+    Map<String, Object?>? cur(List<Map<String, Object?>> rows) {
+      for (final r in rows) {
+        if (r['retired_at'] == null) return r;
+      }
+      return null;
+    }
+
+    var s = cur(await _keyRows('signed_prekeys', kUseSession))!;
+    var k = cur(await _keyRows('kyber_prekeys', kUseSession))!;
+    final life = kSessionKeyLife.inMilliseconds;
+    if (at - (s['created_at'] as int) >= life ||
+        at - (k['created_at'] as int) >= life) {
+      await _newSessionPreKeys(at);
+      s = cur(await _keyRows('signed_prekeys', kUseSession))!;
+      k = cur(await _keyRows('kyber_prekeys', kUseSession))!;
+    }
+    return (signedId: s['id'] as int, kyberId: k['id'] as int);
+  }
+
+  /// a one-time kyber prekey for one heal: gone when the opener built on
+  /// it opens, or 16 days after it was made
+  Future<int> makeHealKyber({int? now}) async {
+    final at = now ?? _now();
+    final id = await _freeId(kyberPreKeyStore.contains);
+    await kyberPreKeyStore.store(
+      id,
+      lib.kyberPreKey(identity, id, at).record,
+      use: kUseHeal,
+      createdAt: at,
+    );
+    return id;
   }
 
   Future<void> _newInviteKyber() async {
@@ -142,15 +284,20 @@ class SignalSession {
     String prefix = '',
   }) async {
     _ready = false;
-    await database.delete('${prefix}signed_prekeys');
+    final mine = [ident];
+    await database.delete(
+      '${prefix}signed_prekeys',
+      where: 'ident = ?',
+      whereArgs: mine,
+    );
     await database.delete(
       '${prefix}prekeys',
-      where: 'id = ?',
-      whereArgs: [invitePreKeyId],
+      where: 'ident = ? AND id = ?',
+      whereArgs: [ident, invitePreKeyId],
     );
-    await database.delete('${prefix}kyber_prekeys');
-    await database.delete('${prefix}kyber_used');
-    await database.delete('${prefix}opener_reads');
+    for (final t in const ['kyber_prekeys', 'kyber_used', 'opener_reads']) {
+      await database.delete('$prefix$t', where: 'ident = ?', whereArgs: mine);
+    }
     await bootstrap(
       database: database,
       xPubBytes: xPubBytes,
@@ -184,7 +331,9 @@ class SignalSession {
     if (!_eq(identity.public, want)) {
       throw StateError('signal: the x25519 pair does not match');
     }
-    registrationId = await _loadOrGenRegId(database, prefix);
+    registrationId = prefix.isEmpty
+        ? await _identityRegId(database, xPrivBytes)
+        : await _loadOrGenRegId(database, prefix);
     _db = database;
     _prefix = prefix;
     _restored = await _loadRestored();
@@ -197,11 +346,20 @@ class SignalSession {
       identity,
       registrationId,
       prefix: prefix,
+      ident: ident,
     );
-    preKeyStore = LsPreKeyStore(database, prefix: prefix);
-    sessionStore = LsSessionStore(database, prefix: prefix);
-    signedPreKeyStore = LsSignedPreKeyStore(database, prefix: prefix);
-    kyberPreKeyStore = LsKyberPreKeyStore(database, prefix: prefix);
+    preKeyStore = LsPreKeyStore(database, prefix: prefix, ident: ident);
+    sessionStore = LsSessionStore(database, prefix: prefix, ident: ident);
+    signedPreKeyStore = LsSignedPreKeyStore(
+      database,
+      prefix: prefix,
+      ident: ident,
+    );
+    kyberPreKeyStore = LsKyberPreKeyStore(
+      database,
+      prefix: prefix,
+      ident: ident,
+    );
   }
 
   final Map<String, Future<void>> _steps = {};
@@ -276,11 +434,36 @@ class SignalSession {
   }
 
   /// a session with [peer] built from their card, in front of any held.
-  /// the guard: only a pqxdh session with the pq ratchet is ever stored
-  Future<void> processBundle(String peer, LsBundle bundle) =>
-      serial(peer, () => _build(peer, bundle));
+  /// the guard: only a pqxdh session with the pq ratchet is ever stored.
+  /// [also] is written in the session's own transaction (a pair's seed):
+  /// both are kept or neither
+  Future<void> processBundle(
+    String peer,
+    LsBundle bundle, {
+    Future<void> Function(Transaction t)? also,
+  }) => serial(peer, () => _build(peer, bundle, also: also));
 
-  Future<void> _build(String peer, LsBundle bundle) async {
+  // [record] kept for [peer], and [also] with it in one transaction
+  Future<void> _storeWith(
+    String peer,
+    Uint8List record,
+    Future<void> Function(Transaction t)? also,
+  ) => also == null
+      ? sessionStore.store(peer, record)
+      : _db.transaction((t) async {
+          await LsSessionStore(
+            t,
+            prefix: _prefix,
+            ident: ident,
+          ).store(peer, record);
+          await also(t);
+        });
+
+  Future<void> _build(
+    String peer,
+    LsBundle bundle, {
+    Future<void> Function(Transaction t)? also,
+  }) async {
     final (record, their) = lib.sessionFromBundle(
       identity,
       registrationId,
@@ -291,7 +474,7 @@ class SignalSession {
     );
     _requirePq(record);
     await identityStore.saw(peer, their);
-    await sessionStore.store(peer, record);
+    await _storeWith(peer, record, also);
   }
 
   void _requirePq(Uint8List record) {
@@ -558,13 +741,18 @@ class SignalSession {
         identity,
         registrationId,
         prefix: _prefix,
+        ident: ident,
       );
-      final kyber = LsKyberPreKeyStore(txn, prefix: _prefix);
+      final kyber = LsKyberPreKeyStore(txn, prefix: _prefix, ident: ident);
       changed = await ids.saw(peer, o.identityKey);
-      await LsSessionStore(txn, prefix: _prefix).store(peer, o.record);
+      await LsSessionStore(
+        txn,
+        prefix: _prefix,
+        ident: ident,
+      ).store(peer, o.record);
       final usedPk = o.usedPreKey;
       if (usedPk != null) {
-        await LsPreKeyStore(txn, prefix: _prefix).remove(usedPk);
+        await LsPreKeyStore(txn, prefix: _prefix, ident: ident).remove(usedPk);
       }
       final usedK = o.usedKyberPreKey;
       if (usedK != null) {
@@ -641,8 +829,13 @@ class SignalSession {
           identity,
           registrationId,
           prefix: _prefix,
+          ident: ident,
         ).saw(peer, o.identityKey);
-        await LsSessionStore(txn, prefix: _prefix).store(peer, o.record);
+        await LsSessionStore(
+          txn,
+          prefix: _prefix,
+          ident: ident,
+        ).store(peer, o.record);
         // marked read once it is filed under the name holding it
         // (keepOpenedSession): one turned away there can come again
         _slotReads[_recordKey(o.record)] = (kyberId, print);
@@ -650,7 +843,11 @@ class SignalSession {
           _slotReads.remove(_slotReads.keys.first);
         }
       } else {
-        await LsKyberPreKeyStore(txn, prefix: _prefix).markRead(kyberId, print);
+        await LsKyberPreKeyStore(
+          txn,
+          prefix: _prefix,
+          ident: ident,
+        ).markRead(kyberId, print);
       }
     });
     dlog('signal: an opener of a held session read on its own');
@@ -680,38 +877,41 @@ class SignalSession {
   /// runs; a new one goes in front of it, the states before it kept behind
   /// a state another name holds is never filed under [peer] as well: that
   /// throws StateError, and nothing is written
-  Future<void> keepOpenedSession(String peer, Uint8List record) =>
-      serial<void>(peer, () async {
-        final cur0 = lib.sessionInfo(record).current;
-        if (cur0 != null) {
-          final h = await _holder(cur0.version, cur0.baseKey);
-          if (h != null && h.$1 != peer) {
-            throw StateError('signal: that session is held under another name');
-          }
-        }
-        final held = await sessionStore.load(peer);
-        if (held == null) {
-          await sessionStore.store(peer, record);
-          return;
-        }
-        final cur = lib.sessionInfo(record).current;
-        if (cur != null &&
-            lib.sessionInfo(held).holds(cur.version, cur.baseKey)) {
-          // a slot re-read filed where its session is: read now, for good
-          final r = _slotReads.remove(_recordKey(record));
-          if (r != null) await kyberPreKeyStore.markRead(r.$1, r.$2);
-          dlog('back-pair: an opener held already, the session kept');
-          return;
-        }
-        await sessionStore.store(peer, lib.sessionPromote(held, record));
-      });
+  Future<void> keepOpenedSession(
+    String peer,
+    Uint8List record, {
+    Future<void> Function(Transaction t)? also,
+  }) => serial<void>(peer, () async {
+    final cur0 = lib.sessionInfo(record).current;
+    if (cur0 != null) {
+      final h = await _holder(cur0.version, cur0.baseKey);
+      if (h != null && h.$1 != peer) {
+        throw StateError('signal: that session is held under another name');
+      }
+    }
+    final held = await sessionStore.load(peer);
+    if (held == null) {
+      await _storeWith(peer, record, also);
+      return;
+    }
+    final cur = lib.sessionInfo(record).current;
+    if (cur != null && lib.sessionInfo(held).holds(cur.version, cur.baseKey)) {
+      // a slot re-read filed where its session is: read now, for good
+      final r = _slotReads.remove(_recordKey(record));
+      if (r != null) await kyberPreKeyStore.markRead(r.$1, r.$2);
+      if (also != null) await _db.transaction(also);
+      dlog('back-pair: an opener held already, the session kept');
+      return;
+    }
+    await _storeWith(peer, lib.sessionPromote(held, record), also);
+  });
 
   Future<IdentityMarks> marksOf(String peer) async {
     final k = await _db.query(
       '${_prefix}peer_identities',
       columns: ['identity_key'],
-      where: 'address = ?',
-      whereArgs: [peer],
+      where: 'ident = ? AND address = ?',
+      whereArgs: [ident, peer],
       limit: 1,
     );
     final c = await _db.query(
@@ -733,11 +933,12 @@ class SignalSession {
     if (key == null) {
       await _db.delete(
         '${_prefix}peer_identities',
-        where: 'address = ?',
-        whereArgs: [peer],
+        where: 'ident = ? AND address = ?',
+        whereArgs: [ident, peer],
       );
     } else {
       await _db.insert('${_prefix}peer_identities', {
+        'ident': ident,
         'address': peer,
         'identity_key': Uint8List.fromList(key),
       }, conflictAlgorithm: ConflictAlgorithm.replace);
@@ -829,6 +1030,7 @@ class SignalSession {
     for (final (_, record) in await LsSessionStore(
       _db,
       prefix: _prefix,
+      ident: ident,
     ).all()) {
       try {
         final info = lib.sessionInfo(record);
@@ -905,12 +1107,151 @@ class SignalSession {
     }
   }
 
+  /// the keys of v4 invite [inviteId] (identity v4 2.1): a signed prekey
+  /// and a last resort kyber prekey with random ids, named by the invite,
+  /// and with [ec] a one-time ec prekey (a one-time invite's). they live
+  /// and go with the invite, never with the session prekeys
+  Future<({LsPreKey spk, LsPreKey kyber, LsPreKey? ec})> makeInviteKeys(
+    String inviteId, {
+    bool ec = false,
+    int? now,
+  }) async {
+    final at = now ?? _now();
+    final spkId = await _freeId(signedPreKeyStore.contains);
+    final kId = await _freeId(kyberPreKeyStore.contains);
+    final spk = lib.signedPreKey(identity, spkId, at);
+    final k = lib.kyberPreKey(identity, kId, at);
+    LsPreKey? e;
+    if (ec) {
+      // never one of the old ids: 0-9 and the v3 invite's
+      final id = await _freeId(
+        (id) async =>
+            id < 10 || id == invitePreKeyId || await preKeyStore.contains(id),
+      );
+      e = lib.preKey(id);
+    }
+    await _db.transaction((t) async {
+      await LsSignedPreKeyStore(
+        t,
+        prefix: _prefix,
+        ident: ident,
+      ).store(spkId, spk.record, inviteId: inviteId, createdAt: at);
+      await LsKyberPreKeyStore(t, prefix: _prefix, ident: ident).store(
+        kId,
+        k.record,
+        lastResort: true,
+        inviteId: inviteId,
+        createdAt: at,
+      );
+      if (e != null) {
+        await LsPreKeyStore(
+          t,
+          prefix: _prefix,
+          ident: ident,
+        ).store(e.id, e.record);
+      }
+    });
+    return (spk: spk, kyber: k, ec: e);
+  }
+
+  /// the keys an invite named, gone with every opener read on its kyber
+  /// key: nothing sealed to them opens here again (R23)
+  Future<void> dropInviteKeys({
+    required int? spkId,
+    required int? kyberId,
+    required int? ecId,
+  }) => _db.transaction((t) async {
+    if (spkId != null) {
+      await LsSignedPreKeyStore(t, prefix: _prefix, ident: ident).remove(spkId);
+    }
+    if (kyberId != null) {
+      await LsKyberPreKeyStore(
+        t,
+        prefix: _prefix,
+        ident: ident,
+      ).remove(kyberId);
+    }
+    if (ecId != null) {
+      await LsPreKeyStore(t, prefix: _prefix, ident: ident).remove(ecId);
+    }
+  });
+
+  static const _kLegacyGone = 'v3_invite_gone';
+
+  Future<bool> _legacyGone() async => (await _db.query(
+    '${_prefix}signal_meta',
+    where: 'k = ?',
+    whereArgs: [_meta(_kLegacyGone)],
+    limit: 1,
+  )).isNotEmpty;
+
+  /// the v3 invite's keys (signed prekey 1, kyber 1, ec 999999) gone with
+  /// every opener read on them, and never made again. true when they went
+  /// now
+  Future<bool> dropLegacyInviteKeys() async {
+    if (await _legacyGone()) return false;
+    await _db.transaction((t) async {
+      await LsSignedPreKeyStore(t, prefix: _prefix, ident: ident).remove(1);
+      await LsKyberPreKeyStore(
+        t,
+        prefix: _prefix,
+        ident: ident,
+      ).remove(kInviteKyberId);
+      await LsPreKeyStore(t, prefix: _prefix, ident: ident).dropInvite();
+      await t.insert('${_prefix}signal_meta', {
+        'k': _meta(_kLegacyGone),
+        'v': '${_now()}',
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    });
+    dlog('signal: the v3 invite keys went');
+    return true;
+  }
+
   /// a new invite prekey under the same id, and a new kyber one: every
-  /// card handed out before names keys that are gone
-  Future<void> rotateInvitePreKey() async {
+  /// card handed out before names keys that are gone. none once the v3
+  /// invite's keys went: they never come back. true when they were made
+  Future<bool> rotateInvitePreKey() async {
+    if (await _legacyGone()) return false;
     await preKeyStore.replaceInvite(lib.preKey(invitePreKeyId).record);
     await _newInviteKyber();
     dlog('signal: rotated the invite prekeys');
+    return true;
+  }
+
+  // the registration id of this store's identity row. the main one's row
+  // is made from the key and the id the store gave out so far when it has
+  // none, or another key; any other identity must have its row
+  Future<int> _identityRegId(Database d, Uint8List xPriv) async {
+    final row = await identityRow(d, ident);
+    if (ident != kMainIdent) {
+      if (row == null || !_eq(row.xPriv, xPriv)) {
+        throw StateError('signal: no row for identity $ident');
+      }
+      return row.regId;
+    }
+    if (row != null && _eq(row.xPriv, xPriv)) {
+      // the old layer's reads find the same id
+      await d.insert('signal_meta', {
+        'k': 'regId',
+        'v': '${row.regId}',
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      return row.regId;
+    }
+    final id = await _loadOrGenRegId(d, '');
+    await putMainIdentity(d, xPriv, regId: id);
+    return id;
+  }
+
+  /// opens the store of [ident] from its row: its own key and registration
+  /// id, its own prekeys
+  Future<void> bootstrapIdentity(Database database) async {
+    final row = await identityRow(database, ident);
+    if (row == null) throw StateError('signal: no row for identity $ident');
+    await bootstrap(
+      database: database,
+      xPubBytes: lib.identityFromPrivate(row.xPriv).public.sublist(1),
+      xPrivBytes: row.xPriv,
+    );
   }
 
   Future<int> _loadOrGenRegId(Database d, String prefix) async {
@@ -1047,9 +1388,9 @@ LsBundle lsBundleOf(KryfoSignal lib, String bundleB64) {
   }
 }
 
-const _kRestored = 'restored_sessions';
-const _kRestoredAsks = 'restored_asks';
-const _kRestoredFrom = 'restored_from';
+const _kRestoredMeta = 'restored_sessions';
+const _kRestoredAsksMeta = 'restored_asks';
+const _kRestoredFromMeta = 'restored_from';
 
 // the base key that names a session on both sides, as signal_session.dart
 // writes it into the restore marks

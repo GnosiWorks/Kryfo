@@ -23,7 +23,8 @@ import 'main.dart'
     show
         appState,
         engine,
-        signalEncrypt,
+        signalSeal,
+        peerXPubOf,
         AppStateOutbox,
         AppStateRoute,
         AppStateProfile,
@@ -63,12 +64,12 @@ void cancelMediaSend(String msgUid) {
 // 60 s, come to about 197 s, and five slices on one dying circuit fail
 // together, so the bound sits above that. past it the send ends as
 // stalled, lets go of the row, and the outbox goes on from what landed
-@visibleForTesting
+// the group sender shares it. tests shorten it
 Duration mediaStallAfter = const Duration(minutes: 4);
 const kMediaStalled = 'error: stalled';
 // the watch looks this many times inside the bound. a phone asleep runs no
 // looks, so a frozen process is not read as a stalled send
-const _stallLooks = 24;
+const kMediaStallLooks = 24;
 
 final Map<String, List<Completer<void>>> _freeWaiters = {};
 
@@ -237,7 +238,7 @@ Future<String> _sendChunkedMediaInner({
   if (total > 1 && only == null && await appState.dropsFor(peerId)) {
     final bytes = await File(path).length();
     if (dropFits(bytes)) {
-      mediaProgressStart(msgUid, chatKey: progressKey);
+      mediaProgressStart(msgUid, chatKey: progressKey, bytes: bytes);
       final (sent, r) = await appState.sendDrop(
         path: path,
         uid: msgUid,
@@ -263,7 +264,13 @@ Future<String> _sendChunkedMediaInner({
   }
   // a voice note as well: a long one is a megabyte and more of wav
   final showProgress = total > 1 && only == null;
-  if (showProgress) mediaProgressStart(msgUid, chatKey: progressKey);
+  if (showProgress) {
+    mediaProgressStart(
+      msgUid,
+      chatKey: progressKey,
+      bytes: drop?.size ?? total * _sliceBytes,
+    );
+  }
   int? pow;
   if (needPow) {
     pow = await compute(_mediaGrind, caption);
@@ -361,6 +368,7 @@ Future<String> _sendChunkedMediaInner({
         return;
       }
       final String cipher;
+      final int sealedOn;
       try {
         // name + voice flags ride every slice: the receiver rebuilds off
         // whichever chunk lands last, and that one decides file vs image.
@@ -388,7 +396,9 @@ Future<String> _sendChunkedMediaInner({
           canResend: total > 1,
           writtenAt: written,
         );
-        cipher = await signalEncrypt(peerId, wrapped);
+        final sealed = await signalSeal(peerId, wrapped);
+        cipher = sealed.cipher;
+        sealedOn = sealed.ident;
       } on KeyHeld {
         // waits on a check of their new number: going, not failed
         parked = true;
@@ -414,10 +424,10 @@ Future<String> _sendChunkedMediaInner({
             // their door holds it in memory only: the first-contact copy
             // goes too until they add us back, behind the slice's ok
             final fc = appState.peerFcFor(peerId);
-            xpub ??= await signalSession.peerXPubHex(peerId);
+            xpub ??= await peerXPubOf(peerId);
             if (fc != null && fc.isNotEmpty && xpub != null) {
               unawaited(
-                engine.sendFirstContact(xpub!, fc, cipher).then(
+                engine.sendFirstContact(sealedOn, xpub!, fc, cipher).then(
                   (f) {
                     if (f != 'ok') {
                       dlog('media first-contact copy did not go: $f');
@@ -434,13 +444,13 @@ Future<String> _sendChunkedMediaInner({
           onionDead = true;
           dlog('media onion gave up for this send: $tor');
         }
-        xpub ??= await signalSession.peerXPubHex(peerId);
+        xpub ??= await peerXPubOf(peerId);
         // their first-contact address is the one relay route that reaches
         // them before they add us back, and the pair address is not
         // written beside it
         final fc = backPaired ? null : appState.peerFcFor(peerId);
         if (xpub != null && fc != null && fc.isNotEmpty) {
-          final fr = await engine.sendFirstContact(xpub!, fc, cipher);
+          final fr = await engine.sendFirstContact(sealedOn, xpub!, fc, cipher);
           if (fr == 'ok') {
             sent = true;
             route = 'first-contact';
@@ -448,7 +458,7 @@ Future<String> _sendChunkedMediaInner({
           }
           lastErr = fr;
         } else if (xpub != null) {
-          final r = await engine.nostrSend(xpub!, cipher);
+          final r = await engine.nostrSend(sealedOn, xpub!, cipher);
           if (r == 'ok') {
             pairWay ??= await appState.pairRead(peerId, backPaired: backPaired);
             if (!backPaired && !pairWay!) {
@@ -498,11 +508,11 @@ Future<String> _sendChunkedMediaInner({
   }
 
   final stop = Completer<void>();
-  final watch = Timer.periodic(mediaStallAfter ~/ _stallLooks, (_) {
+  final watch = Timer.periodic(mediaStallAfter ~/ kMediaStallLooks, (_) {
     // a stop asked while a slice hangs ends it now, not at the next slice
     if (mediaCancelled.contains(msgUid)) {
       failure ??= 'cancelled';
-    } else if (++quiet >= _stallLooks) {
+    } else if (++quiet >= kMediaStallLooks) {
       dlog('media $msgUid: no slice taken in ${mediaStallAfter.inSeconds}s');
       failure ??= kMediaStalled;
     } else {

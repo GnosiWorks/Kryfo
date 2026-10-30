@@ -80,7 +80,7 @@ extension AppStateContacts on AppState {
       await subscribePeer(who);
     } else if (card.xPub.isNotEmpty) {
       _xPubToHaloId[card.xPub] = who;
-      _io.listen(card.xPub);
+      _io.listen(identOf(who), card.xPub);
     }
     _wantHeal(who);
     unawaited(_sendBundleCtl(who, want: true));
@@ -97,8 +97,18 @@ extension AppStateContacts on AppState {
     // the chat is gone (NameHold.free). any other deleted chat's words go
     // only to an add the person makes, and asks (NameHold.ask)
     await dropChatDraft(haloId);
+    final hellos = await hellosKeysOf(haloId);
     await session.deleteConversation(haloId);
+    // their photo and the one set for them go; ours is taken back
+    try {
+      await session.draftsOf(haloId).dropPhotosOf(haloId);
+    } catch (e) {
+      dlog('photo: not dropped with the chat (${e.runtimeType})');
+    }
+    unawaited(photoSweep());
     await _forgetPairSeen({haloId});
+    // no hello goes to them after it, and none of theirs waits
+    await dropHellos(hellos);
     // keep _xPubToHaloId: the row and subscription both survive so they can
     // still reach us, in requests instead of a live chat.
     await refreshContacts();
@@ -136,20 +146,22 @@ extension AppStateContacts on AppState {
     if (row == null) return;
     final xs = {
       ((row['xpub'] as String?) ?? '').trim().toLowerCase(),
-      (await signalSession.peerXPubHex(id)) ?? '',
+      (await peerXPubOf(id)) ?? '',
     }..remove('');
     if ((row['accepted'] as num?)?.toInt() == 1) {
       await deleteConversation(id);
     } else {
       await live.declineRequest(id);
     }
-    await signalSession.serial<void>(id, () async {
-      await signalSession.sessionStore.delete(id);
-      await signalSession.identityStore.removePeerIdentity(id);
+    // the store of the identity they knew
+    final ss = await signalOfIdent(identOf(id));
+    await ss.serial<void>(id, () async {
+      await ss.sessionStore.delete(id);
+      await ss.identityStore.removePeerIdentity(id);
     });
     for (final x in xs) {
       if (_xPubToHaloId[x] == id) _xPubToHaloId.remove(x);
-      _io.unlisten(x);
+      _io.unlisten(identOf(id), x);
     }
     await forgetPeerFc(id);
     await live.forgetName(id);
@@ -172,8 +184,7 @@ extension AppStateContacts on AppState {
     final row = await s.getContact(haloId);
     final xs = {
       ((row?['xpub'] as String?) ?? '').trim().toLowerCase(),
-      if (!quiet && signalSession.ready)
-        (await signalSession.peerXPubHex(haloId)) ?? '',
+      if (!quiet && signalSession.ready) (await peerXPubOf(haloId)) ?? '',
       key,
     }..remove('');
     // read while their rows still say: where the relay keeps what it held
@@ -195,22 +206,27 @@ extension AppStateContacts on AppState {
         final went = await s.removeAndBlockKey(haloId, key);
         // the everyday store holds every session, a hidden chat's too
         if (!quiet && signalSession.ready) {
-          await signalSession.sessionStore.delete(haloId);
-          await signalSession.identityStore.removePeerIdentity(haloId);
+          final ss = await signalOfIdent(identOf(haloId));
+          await ss.sessionStore.delete(haloId);
+          await ss.identityStore.removePeerIdentity(haloId);
         }
         return went;
       }
 
+      final hellos = await hellosKeysOf(haloId, keys: xs);
       final uids = quiet
           ? await run()
           : await signalSession.serial(haloId, run);
       if (uids == null) return false;
       await dropChatDraft(haloId);
+      await dropHellos(hellos);
       if (!quiet) {
         // what the relay held is not fetched again, and the shade lets go
         // of their chat and of what they said in groups
         try {
-          if (relayX != null) await _io.letHeld(relayX, 'drop');
+          if (relayX != null) {
+            await _io.letHeld(identOf(haloId), relayX, 'drop');
+          }
         } catch (e) {
           dlog('not them: the relay not told (${e.runtimeType})');
         }
@@ -223,7 +239,7 @@ extension AppStateContacts on AppState {
         }
         for (final x in xs) {
           if (_xPubToHaloId[x] == haloId) _xPubToHaloId.remove(x);
-          _io.unlisten(x);
+          _io.unlisten(identOf(haloId), x);
         }
         await _forgetPeers({haloId});
         // the router lets them go and keeps the vault's block and words
@@ -486,6 +502,7 @@ extension AppStateContacts on AppState {
   // may name someone the everyday app has in the shade
   Future<void> block(String haloId) async {
     await session.setBlocked(haloId, true);
+    await dropHellos(await hellosKeysOf(haloId));
     // what was typed for them stays, under the blocked bar, for an unblock
     await _recardBlock(haloId);
     // an open chat reads its rows again: what waited is not sent now
@@ -496,6 +513,8 @@ extension AppStateContacts on AppState {
       await cancelWithRetry(() => _io.unnotify(haloId), 'block shade');
     }
     await refreshContacts();
+    // our photo is taken back from them
+    unawaited(photoSweep());
   }
 
   // a support chat is taken on by its first reply, and stays in support.
@@ -561,6 +580,12 @@ extension AppStateContacts on AppState {
       await refreshContacts();
       return;
     }
+    // a hello waiting here: its session first, so the ack is its opener
+    try {
+      await answerHello(haloId);
+    } catch (e) {
+      dlog('hello: not answered (${e.runtimeType})');
+    }
     unawaited(subscribePeer(haloId, fresh: true));
     unawaited(_ackOnAccept(haloId));
     final s = session;
@@ -577,6 +602,7 @@ extension AppStateContacts on AppState {
     _bumpChatRev(haloId);
     await refreshContacts();
     notifyListeners();
+    unawaited(photoSweep());
   }
 
   // what a full shelf left on the relay for them: let go of for the next
@@ -586,7 +612,7 @@ extension AppStateContacts on AppState {
     if (sessionQuiet) return;
     try {
       final x = await _xPubFor(haloId, (await _reach(haloId))?.xpub);
-      if (x != null) await _io.letHeld(x, how);
+      if (x != null) await _io.letHeld(identOf(haloId), x, how);
     } catch (e) {
       dlog('held: the relay not told (${e.runtimeType})');
     }
@@ -597,7 +623,7 @@ extension AppStateContacts on AppState {
   Future<String?> _xPubFor(String haloId, String? row) async {
     if (row != null && row.isNotEmpty) return row;
     if (!signalSession.ready) return null;
-    final x = await signalSession.peerXPubHex(haloId);
+    final x = await peerXPubOf(haloId);
     return x == null || x.isEmpty ? null : x;
   }
 
@@ -607,11 +633,12 @@ extension AppStateContacts on AppState {
   // addresses that hold something and nothing else: nothing reconnects
   Future<void> _markHeldOf(HaloDb db) async {
     if (sessionQuiet) return;
-    final xs = <String>{};
+    final xs = <(int, String)>{};
     for (final r in await db.contacts()) {
       if (r['accepted'] != 1) continue;
-      final x = await _xPubFor(r['halo_id'] as String, r['xpub'] as String?);
-      if (x != null) xs.add(x);
+      final id = r['halo_id'] as String;
+      final x = await _xPubFor(id, r['xpub'] as String?);
+      if (x != null) xs.add((identOf(id), x));
     }
     if (xs.isNotEmpty) await _io.markHeld(xs.toList());
   }
@@ -718,6 +745,7 @@ extension AppStateContacts on AppState {
     await _recardBlock(haloId);
     if (!sessionQuiet) await subscribePeer(haloId);
     await refreshContacts();
+    unawaited(photoSweep());
   }
 
   // everyone blocked, contacts or not: a request, a group member or a
@@ -794,7 +822,7 @@ extension AppStateContacts on AppState {
     final c = await _ownerOf(haloId).getContact(haloId);
     if (c == null || (c['accepted'] as int? ?? 0) != 1) return null;
     var x = (c['xpub'] as String?) ?? '';
-    if (x.isEmpty) x = await signalSession.peerXPubHex(haloId) ?? '';
+    if (x.isEmpty) x = await peerXPubOf(haloId) ?? '';
     if (x.isEmpty) return null;
     return IntroFrame(
       haloId: haloId,

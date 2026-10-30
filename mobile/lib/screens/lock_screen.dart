@@ -16,6 +16,7 @@ import '../theme.dart';
 import '../widgets/pass_pad.dart';
 import '../widgets/pin_pad.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/say.dart';
 import '../l10n/l10n.dart';
 
 class LockScreen extends StatefulWidget {
@@ -164,6 +165,12 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
         _watchHold();
         setState(() => _wrong = true);
         HapticFeedback.heavyImpact();
+        // heard once: the line goes back to its prompt after the shake, and
+        // a countdown is not read out every second
+        sayOnce(
+          context,
+          _held ? tooManyTriesLine(_lock.throttleLeft) : l10n.lockNotIt,
+        );
         await _shake.forward(from: 0);
         if (mounted) {
           setState(() {
@@ -230,7 +237,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                         style: HaloType.sans(
                           size: 13,
                           weight: FontWeight.w600,
-                          color: HaloColors.rose,
+                          color: HaloColors.roseText,
                         ),
                       ),
                     ),
@@ -417,7 +424,9 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                   Container(width: 28, height: 0.5, color: HaloColors.line2),
                   const SizedBox(height: 18),
                   AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
+                    duration: MediaQuery.disableAnimationsOf(context)
+                        ? Duration.zero
+                        : const Duration(milliseconds: 200),
                     child: Text(
                       _held
                           ? tooManyTriesLine(_lock.throttleLeft)
@@ -428,7 +437,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                       style: HaloType.sans(
                         size: 13,
                         color: _wrong || _held
-                            ? HaloColors.rose
+                            ? HaloColors.roseText
                             : HaloColors.text2,
                       ),
                     ),
@@ -436,6 +445,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                   const SizedBox(height: 30),
                   PinDots(
                     filled: passLength(_pin),
+                    letters: _letters,
                     color: HaloColors.amber,
                     wrong: _wrong,
                     shake: _shake,

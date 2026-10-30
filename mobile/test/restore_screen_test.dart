@@ -98,12 +98,7 @@ Future<void> _openAndRestore(
   expect(find.byType(BackButton), findsOneWidget);
 
   await t.tap(find.text(l10n.restorePickTheBackupFile));
-  for (var i = 0; i < 40 && find.text('old.txt').evaluate().isEmpty; i++) {
-    await t.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 50)),
-    );
-    await t.pump();
-  }
+  await _until(t, find.text('old.txt'));
   await t.pumpAndSettle();
 
   expect(find.text('old.txt'), findsOneWidget);
@@ -124,6 +119,18 @@ Future<void> _openAndRestore(
   if (!move) return;
   await press(t, find.text(l10n.restoreMoveItHere));
   await t.pumpAndSettle();
+}
+
+// the picked file is read off the test's clock, by real io: wait for it as
+// long as a loaded machine needs, and no longer
+Future<void> _until(WidgetTester t, Finder f) async {
+  final w = Stopwatch()..start();
+  while (f.evaluate().isEmpty && w.elapsed < const Duration(seconds: 20)) {
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 20)),
+    );
+    await t.pump();
+  }
 }
 
 // the app's own root: each session switch builds a new navigator
@@ -207,12 +214,7 @@ void main() {
     await t.pumpAndSettle();
     await t.tap(find.text(l10n.restorePickTheBackupFile));
     final picked = find.text('backup_20261024_090507.bin');
-    for (var i = 0; i < 40 && picked.evaluate().isEmpty; i++) {
-      await t.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 50)),
-      );
-      await t.pump();
-    }
+    await _until(t, picked);
     await t.pumpAndSettle();
     // taken for a backup by what it holds
     expect(picked, findsOneWidget);
@@ -688,12 +690,7 @@ void main() {
     await t.pumpWidget(app(const RestoreScreen()));
     await t.pumpAndSettle();
     await t.tap(find.text(l10n.restorePickTheBackupFile));
-    for (var i = 0; i < 40 && find.text('old.txt').evaluate().isEmpty; i++) {
-      await t.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 50)),
-      );
-      await t.pump();
-    }
+    await _until(t, find.text('old.txt'));
     await t.pumpAndSettle();
     await t.enterText(find.byType(TextField), 'the passphrase');
     await t.tap(find.text(l10n.restoreCheckTheFile));

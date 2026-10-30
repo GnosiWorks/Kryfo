@@ -52,7 +52,7 @@ class _Registry implements HaloEngine {
 
   // no first-contact address: the invite is the plain one
   @override
-  String firstContactPk(int counter) => '';
+  String firstContactPk(int ident, int counter) => '';
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw StateError('the engine was asked for ${i.memberName}');
@@ -106,6 +106,10 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({});
     appState.sendModeForTest = 'balanced';
+    // a claim waits for the onion: the registry takes no invite without one
+    final was = appState.myOnion;
+    appState.myOnion = 'abc.onion';
+    addTearDown(() => appState.myOnion = was);
   });
 
   // made inside the test, so its answers land in the test's own clock

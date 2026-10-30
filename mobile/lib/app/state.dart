@@ -38,12 +38,21 @@ class QuietIdentity {
 // what home shows of a session: its chats, requests, groups, avatar and
 // the developer chat's row
 class _Shown {
-  const _Shown(this.contacts, this.pending, this.groups, this.avatar, this.dev);
+  const _Shown(
+    this.contacts,
+    this.pending,
+    this.groups,
+    this.avatar,
+    this.dev,
+    this.photos,
+  );
   final List<ContactPreview> contacts;
   final int pending;
   final List<GroupPreview> groups;
   final int? avatar;
   final DevRow? dev;
+  // its photo book, so a swap shows no photo of the other side
+  final Map<String, Uint8List> photos;
 }
 
 // the everyday container's database. what arrives lands here whichever
@@ -90,6 +99,7 @@ class AppState extends ChangeNotifier {
     // the wire asks the everyday container's dev chat, never a decoy's or
     // a vault's: only the everyday identity goes online. its seal and its
     // store read the same row
+    _madeApp = this;
     devGate.chat = () => live.devChat.load();
     _keyMoved = flagKeyChanged;
     devLane.chat = () => live.devChat.load();
@@ -241,8 +251,8 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // send-privacy mode: 'private' | 'balanced' | 'fast'. private is tor and
-  // is the default; 'normal' is an old name for it, migrated on load.
+  // send-privacy mode: 'private' | 'balanced', shown as fast. private is tor
+  // and is the default; 'normal' and 'fast' are old names, moved on load.
   String _sendMode = 'private';
   // the mode the engine routes by, asked of it once and then kept as it is
   // told. private when it cannot say, as the engine starts
@@ -272,7 +282,17 @@ class AppState extends ChangeNotifier {
   Timer? _repointTimer;
 
   late HandleRepoint _handleRepoint = HandleRepoint(
-    invite: () => buildHaloUriV3(myId, myOnion, _fcCounter),
+    // the main v4 invite once it is made (identity v4 7): a registry
+    // without the v=4 change refuses it, and the handle keeps the v3 one
+    invite: () async {
+      try {
+        final v4 = await myV4Invite();
+        if (v4 != null) return v4;
+      } catch (e) {
+        dlog('repoint: no v4 invite (${e.runtimeType})');
+      }
+      return buildHaloUriV3(myId, myOnion, _fcCounter);
+    },
     claim: (h, invite, bio) => engine.handleClaim(h, invite, bio),
     lookup: (url) => engine.torGetJson(url),
     myKey: () => engine.myEdPubkey(),
@@ -294,6 +314,12 @@ class AppState extends ChangeNotifier {
   String _pinsTold = '';
 
   static const _platformChannel = MethodChannel('halo/platform');
+  // the process engine's own, answered before a screen is there too
+  static const _phoneChannel = MethodChannel('kryfo/phone');
+
+  /// android or not, for the tests of what a failed read means
+  @visibleForTesting
+  static bool? androidForTest;
 
   // the heartbeat. listen is the last tick the relay queue was read, drain
   // the last time something came out of it. written once a minute, so after
@@ -390,8 +416,12 @@ class AppState extends ChangeNotifier {
   // the check-in's clock, which a test moves on its own
   DateTime Function() _checkClock = DateTime.now;
 
-  // the lock turned on or off: the window follows at once
-  bool? _lockWasOn;
+  // the lock read or not, set or not, up or not, the vault open or not:
+  // the window follows at once
+  (bool, bool, bool, bool)? _lockWas;
+  // android before 13 has no switch for the recents picture: a pin set
+  // keeps the flag on there. read at boot
+  bool _noRecentsSwitch = false;
 
   // the old switch for the whole app was on: the whole window stays
   // covered as it was until home's card is answered. the card asks once
@@ -504,6 +534,7 @@ class AppState extends ChangeNotifier {
   // which dart shares, so an unchanged value is not sent: a room closing
   // in a session switch would otherwise hold the decoy's reveal alone
   bool? _secureSent;
+  bool? _recentsSent;
 
   // the first fill of the search index for a history from before it: a
   // batch, a pause, the next, so the app never waits on it. each container
@@ -585,6 +616,9 @@ class AppState extends ChangeNotifier {
   HaloDb? _madeVault;
   // one change to the vault at a time
   Future<void> _vaultWork = Future<void>.value();
+  // what changes which chats are hidden, one at a time; a history copy
+  // reads the chats under it, and a vault opening never waits on it
+  Future<void> _chatMoves = Future<void>.value();
   // the chats being moved and the people they reach
   final Set<String> _moving = {};
   Completer<void>? _moveDone;
@@ -672,12 +706,14 @@ class AppState extends ChangeNotifier {
   int _pctBest = -1;
   DateTime? _pctMovedAt;
 
-  // our relay is not answering and it is the only one relay mode uses.
+  // neither of our servers answers, and fast uses nothing else.
   DateTime? _relayDownSince;
   bool _relayHintOff = false;
 
   // what the home screen was last told about the relay hint
-  bool _fastHintShown = false;
+  bool _oursDownHintShown = false;
+  // the one-time card about relay and fast becoming one: null until read
+  String? _routeMergeNote;
 
   bool _online = true;
   List<ContactPreview> contacts = [];
@@ -805,6 +841,10 @@ class AppState extends ChangeNotifier {
   // it too, so a waiting link fails loudly rather than hangs
   final _signalReady = Completer<void>();
   Future<void>? _signalBoot;
+
+  // the invite upkeep or reset under way, and when the last upkeep began
+  Future<void>? _invitesKeep;
+  var _invitesKeptAt = 0;
 
   // ids "this isn't them" is taking off this phone right now: nothing of
   // theirs is filed meanwhile
@@ -957,4 +997,7 @@ class AppState extends ChangeNotifier {
 }
 
 final appState = AppState();
+
+// the app state made last, read where touching appState would make one
+AppState? _madeApp;
 AppState get _app => appState;

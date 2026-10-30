@@ -199,6 +199,7 @@ class _LockGateState extends State<_LockGate> {
       _plainSeen();
       unawaited(sayFaceChanged());
     },
+    attached: () => unawaited(appState.windowAttached()),
   );
 }
 
@@ -362,7 +363,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
           // one route, one colour: onion stays violet whether tor is merely
           // usable or fully published
           final accent = switch (v.kind) {
-            LinkKind.relay => HaloColors.sky,
+            LinkKind.relay => HaloColors.greenText,
             LinkKind.off => HaloColors.text2,
             LinkKind.offline => HaloColors.warn,
             LinkKind.fast => HaloColors.greenText,
@@ -469,7 +470,14 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                         key: ValueKey(v.kind),
                         maxLines: 2,
                         textScaler: TextScaler.linear(fit.scale),
-                        style: HaloType.mono(size: kPillPx, color: c),
+                        // offline's dot wears the fill tone, its words the
+                        // text tone
+                        style: HaloType.mono(
+                          size: kPillPx,
+                          color: v.kind == LinkKind.offline
+                              ? HaloColors.warnText
+                              : c,
+                        ),
                       ),
                     ),
                   ),
@@ -525,6 +533,7 @@ class TorSheet extends StatelessWidget {
                 status: v.graphStatus,
                 bootstrapPct: v.pct,
                 hold: v.graph,
+                carries: v.graphCarries,
               ),
               const SizedBox(height: 16),
               Semantics(

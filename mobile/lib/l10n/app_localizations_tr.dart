@@ -643,11 +643,8 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bağlı · 3 aktarıcı üzerinden yönlendiriliyor';
 
   @override
-  String get appReadyToSendPublishing =>
-      'Göndermeye hazır · adresin yayımlanıyor';
-
-  @override
-  String get appReadyToSendFinishing => 'Göndermeye hazır · kurulum bitiyor';
+  String get appReadyToChatAddressFinishing =>
+      'Sohbete hazır · adresin hazırlanıyor';
 
   @override
   String appConnecting(Object pct) {
@@ -670,16 +667,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get appRelayAndFastModes =>
-      'Aktarıcı ve Hızlı modları Tor’u atlar ve daha hızlıdır. Ayarlarda, hız ve gizlilik bölümündeler; her biri bedelini söyler.';
-
-  @override
-  String get appViaRelay => 'Aktarıcı ile';
+      'Hızlı, Tor’u atlar ve daha çabuktur. Ayarlarda, hız ve gizlilik altında; neye mal olduğunu da söyler.';
 
   @override
   String get appOffline => 'Çevrimdışı';
-
-  @override
-  String get appFast => 'Hızlı';
 
   @override
   String get appTorOff => 'Tor kapalı';
@@ -1383,7 +1374,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'Daha önce kaydedilmediyse iki telefondan da silinir. Bu geri alınamaz.';
+      'Daha önce kaydedilmediyse iki telefondan da silinecek. Bu geri alınamaz.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -1716,9 +1707,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatSupporter => 'Destekçi';
-
-  @override
-  String get chatEncryptedViaRelay => 'Şifreli · aktarıcı ile';
 
   @override
   String get chatEncryptedDirect => 'Şifreli · doğrudan';
@@ -2626,7 +2614,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'Daha önce kaydedilmediyse herkesin telefonundan silinir. Bu geri alınamaz.';
+      'Daha önce kaydedilmediyse herkesin telefonundan silinecek. Bu geri alınamaz.';
 
   @override
   String get groupChatUnsend => 'Geri çek';
@@ -3142,26 +3130,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get homeLeaveThemOff => 'Kapalı kalsın';
 
   @override
-  String get homeOurRelayIsQuiet => 'Aktarıcımız sessiz';
-
-  @override
-  String get homeRelayModeUsesOnly =>
-      'Aktarıcı modu yalnızca kendi aktarıcımızı kullanır ve o şu an yanıt vermiyor. Hızlı mod yanına herkese açık aktarıcılar ekler, böylece mesajlar yine ulaşır. Her iki durumda da her şey mühürlü kalır.';
-
-  @override
-  String get homeSwitchedToFast => 'Hızlı moda geçildi';
-
-  @override
-  String get homeUseFastMode => 'Hızlı modu kullan';
-
-  @override
   String get homeKeepWaiting => 'Beklemeye devam et';
-
-  @override
-  String get homeSwitchedToRelay => 'Aktarıcıya geçildi';
-
-  @override
-  String get homeUseOurRelay => 'Aktarıcımızı kullan';
 
   @override
   String get homeOffline => 'Çevrimdışı';
@@ -3663,41 +3632,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Dört rakam veya daha fazlası, hatırlayacağın herhangi bir şey';
 
   @override
-  String get modesOnion => 'Onion';
-
-  @override
-  String get modesFullOnionRoutingThree =>
-      'Tam onion yönlendirme, üç atlama. Bir mesaj iki ila beş saniye sürer. Kiminle konuştuğunu kimse görmez.';
-
-  @override
-  String get modesSlower => 'Daha yavaş';
-
-  @override
-  String get modesRelay => 'Aktarıcı';
-
-  @override
-  String get modesOneSealedConnectionTo =>
-      'Kryfo’nun kendi aktarıcısına tek bir mühürlü bağlantı; kayıt tutacak hiçbir şeyi olmayan bir vpn gibi. Gönderilenler yaklaşık bir saniyede ulaşır ve Tor’un engellendiği yerlerde de çalışır.';
-
-  @override
-  String get modesQuick => 'Hızlı';
-
-  @override
-  String get modesRelayOnly => 'Yalnızca aktarıcı';
-
-  @override
   String get modesFast => 'Hızlı';
-
-  @override
-  String get modesPlainConnectionsToEvery =>
-      'Her aktarıcıya düz bağlantılar. Neredeyse anında ve üçü içinde en az gizli olanı.';
-
-  @override
-  String get modesInstant => 'Anında';
-
-  @override
-  String get modesEveryRelayYouUse =>
-      'Kullandığın her aktarıcı, yalnızca bizimki değil, bağlandığın adresi bilir. Mesajlar yine mühürlüdür, ama mesaj gönderdiğin gerçeği değil. Varsayılan olarak kapalı, yeniden kurulumdan sonra da yine kapalı.';
 
   @override
   String get modesNotChanged => 'Mod değişmedi. Yeniden dene.';
@@ -3710,53 +3645,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get modesPrivacy => 've gizlilik';
-
-  @override
-  String get modesChangeGloballyOrPer =>
-      'Genel olarak ya da sohbet başına değiştir';
-
-  @override
-  String get modesSoon => 'Yakında';
-
-  @override
-  String get modesActive => 'Etkin';
-
-  @override
-  String get modesSpeed2 => 'HIZ';
-
-  @override
-  String get modesHops => 'ATLAMA';
-
-  @override
-  String get modesIp => 'IP';
-
-  @override
-  String get modesVisible => 'Görünür';
-
-  @override
-  String get modesHidden => 'Gizli';
-
-  @override
-  String modesHeadsUp(Object warning) {
-    return '*Dikkat:* $warning';
-  }
-
-  @override
-  String get modesOnionIsTheDefault =>
-      'Varsayılan mod Onion; sen değiştirmedikçe öyle kalır. Geçiş bir sonraki mesajda etkili olur.';
-
-  @override
-  String get modesFastMode => 'Hızlı mod';
-
-  @override
-  String get modesPlainConnectionsToEveryRelayQuicker =>
-      'Her aktarıcıya düz bağlantılar. Daha hızlıdır ve aktarıcılar IP adresini görebilir. Mesajlar her durumda uçtan uca şifreli kalır.';
-
-  @override
-  String get modesTurnOnFastMode => 'Hızlı modu aç';
-
-  @override
-  String get modesKeepItOff => 'Kapalı kalsın';
 
   @override
   String get movedWipeThisPhone => 'Kryfo bu telefondan silinsin mi?';
@@ -3813,11 +3701,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get myKryfoInviteCopiedClearsIn =>
       'Davet kopyalandı · 60 sn içinde silinir';
-
-  @override
-  String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Beni Kryfo’da ekle. Oradaki adım: $myId\n\nBeni eklemek için dokun:\n$uri\n\nKryfo gizli bir mesajlaşma uygulaması. Telefon numarası yok, e-posta yok.';
-  }
 
   @override
   String get myKryfoAddMeOnKryfo2 => 'Beni Kryfo’da ekle';
@@ -4154,102 +4037,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get onboardingThreeWords => 'Üç kelime. *Yalnızca senin.*';
 
   @override
-  String get onboardingPickA => 'Bir *yüz* seç.';
-
-  @override
-  String get onboardingDrawnOnThisPhone =>
-      'Bir sayıdan bu telefonda çizildi, hiçbir yere yüklenmez. İstediğin zaman değiştir.';
-
-  @override
-  String get onboardingThePeopleYouMessage =>
-      'Yazıştığın kişiler de bunu görür';
-
-  @override
-  String get onboardingKeepMyInitial => 'Baş harfim kalsın';
-
-  @override
-  String get onboardingThatOne => 'Bu olsun →';
-
-  @override
   String get onboardingContinue => 'Devam →';
-
-  @override
-  String get onboardingHowYourMessages => 'Mesajların nasıl *yol alır*.';
-
-  @override
-  String get onboardingYouCanChangeThis =>
-      'Bunu istediğin zaman ayarlardan değiştirebilirsin, herkes için ya da tek bir sohbet için.';
-
-  @override
-  String get onboardingOnion => 'Onion';
-
-  @override
-  String get onboardingSlowerAMessageTakes =>
-      'Daha yavaş. Bir mesaj iki ila beş saniye sürer.';
-
-  @override
-  String get onboardingHidesYourAddressFrom =>
-      'Adresini herkesten gizler, bizim aktarıcımız dahil.';
-
-  @override
-  String get onboardingRelay => 'Aktarıcı';
-
-  @override
-  String get onboardingOurRelaySeesYour =>
-      'Aktarıcımız adresini görür. Başka kimse görmez.';
-
-  @override
-  String get onboardingAboutASecondWorks =>
-      'Yaklaşık bir saniye. Tor’un engellendiği yerde çalışır.';
-
-  @override
-  String get onboardingAutoFindsAWay =>
-      'Otomatik, engeli aşmanın yolunu kendisi bulur.';
-
-  @override
-  String get onboardingFast => 'Hızlı';
-
-  @override
-  String get onboardingEveryRelayYouUse =>
-      'Kullandığın her aktarıcı adresini görür. Üçü içinde en az gizli olanı.';
-
-  @override
-  String get onboardingNearInstant => 'Neredeyse anında.';
-
-  @override
-  String get onboardingKeepOnion => 'Onion kalsın →';
-
-  @override
-  String get onboardingUseThis => 'Bunu kullan →';
-
-  @override
-  String get onboardingSkipOnionIsA => 'Atla · Onion iyi bir varsayılan';
-
-  @override
-  String get onboardingThreeThingsThen => 'Üç şey,\nsonra *içeridesin*.';
-
-  @override
-  String get onboardingEverythingElseTheApp =>
-      'Gerisini uygulama, gerektiğinde sana söyleyecek.';
-
-  @override
-  String get onboardingYourNameIsThreeWords => 'Adın üç kelime';
-
-  @override
-  String get onboardingThatIsTheWhole =>
-      'Kimliğin bundan ibaret. Sızacak ya da aranacak bir numara veya e-posta yok. Konuştuğun kişiler bu kelimeleri ve seçtiğin yüzü görür.';
-
-  @override
-  String get onboardingNobodyCanReachYou =>
-      'Sen içeri almadıkça kimse sana ulaşamaz';
-
-  @override
-  String get onboardingAStrangerWithYour =>
-      'Kelimelerini bilen bir yabancı yalnızca kapıyı çalabilir. İlk mesajı sen evet diyene kadar isteklerde bekler ve hayır dersen bunu hiçbir zaman öğrenmez.';
-
-  @override
-  String get onboardingTheFirstConnectionTakesAMinute =>
-      'İlk bağlantı bir dakika sürer';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -4258,9 +4046,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get onboardingYourIdentityLivesOn =>
       'Kimliğin bu telefonda yaşar. Hazır olduğunda ayarlardan yedekle.';
-
-  @override
-  String get onboardingIUnderstand => 'Anladım →';
 
   @override
   String get onboardingOneQuiet => 'Tek bir sessiz *bildirim*.';
@@ -4281,13 +4066,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get onboardingGotIt => 'Anladım →';
 
   @override
-  String get onboardingNow => 'Şimdi *birini ekle*.';
-
-  @override
-  String get onboardingTheAppIsReady =>
-      'Uygulama hazır. Sen ekleyene ya da içeri alana kadar kimse sana mesaj atamaz.';
-
-  @override
   String get onboardingEveryWayToAdd => 'Birini eklemenin her yolu';
 
   @override
@@ -4299,10 +4077,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get onboardingPointTheCameraAt => 'Kamerayı onun koduna tut';
-
-  @override
-  String get onboardingTheAppIsReadyWhenYou =>
-      'Sen hazır olduğunda uygulama da hazır.';
 
   @override
   String get onboardingNotNowAddPeople => 'Şimdi değil · kişileri sonra ekle';
@@ -4542,9 +4316,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get profileProfile => 'Profil';
-
-  @override
-  String get profileChangeYourFace => 'Yüzünü değiştir';
 
   @override
   String get profileKryfoId => 'Adın';
@@ -5177,16 +4948,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get seenYourIpAddress => 'IP adresin';
 
   @override
-  String get seenOurRelay => 'Bizim aktarıcı';
-
-  @override
-  String get seenEveryRelay => 'Her aktarıcı';
-
-  @override
-  String get seenOnOnionEverythingLeaves =>
-      'Onion modunda her şey Tor üzerinden çıkar ve aktarıcı asla seni değil, bir çıkış düğümünü görür. Aktarıcı modunda bağlantı doğrudan kendi aktarıcımıza gider: adresini hiçbir şey iletmez ve hiçbir şey kaydedilmez, ama o tek bağlantıyı biz görürüz. Hızlı modda herkese açık her aktarıcı bağlandığını öğrenir, ama kime bağlandığını ya da ne söylediğini öğrenmez.';
-
-  @override
   String get seenYourContactGraph => 'Kişi ağın';
 
   @override
@@ -5242,12 +5003,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Ratchet ve depolama katmanları standarttır. Onları birleştiren katman bizim ve bağımsız hiç kimse onu incelemedi. Bu bir alfa sürüm.';
 
   @override
-  String get seenOnion => 'Onion';
-
-  @override
-  String get seenRelay => 'Aktarıcı';
-
-  @override
   String get seenFast => 'Hızlı';
 
   @override
@@ -5282,9 +5037,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsTorRouting => 'Tor yönlendirme';
 
   @override
-  String get settingsOffMode => 'Kapalı · aktarıcı modu';
-
-  @override
   String get settingsOffFastMode => 'Kapalı · hızlı mod';
 
   @override
@@ -5298,9 +5050,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsFast => 'Hızlı';
-
-  @override
-  String get settingsRelay1Hop => 'Aktarıcı · 1 atlama';
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 atlama';
@@ -6655,6 +6404,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get motionYouReAnonymous => 'Anonimsin';
 
   @override
+  String get motionReadyToChat => 'Sohbete hazır';
+
+  @override
   String get motionTorIsStartingIn =>
       'Tor arka planda başlıyor. Bağlantı kuruldukça bu grafik yanar.';
 
@@ -6673,6 +6425,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get motionYourIpIsHidden =>
       'IP adresin gizli. Sana yalnızca Kryfo’nu bilenler ulaşabilir.';
+
+  @override
+  String get motionAddressFinishing =>
+      'Mesajlar zaten Tor üzerinden gidiyor. Özel adresin arka planda hazırlanıyor.';
 
   @override
   String get motionBuilding2 => 'kuruluyor';
@@ -7334,10 +7090,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesTheTorProjectSGuess => 'Tor Projesinin tahmini';
-
-  @override
-  String get bridgesOurRelayUsuallyGets =>
-      'Aktarıcımız tek ve sıradan bir bağlantıdır, genelde geçer. Ya da yolu Kryfo kendisi bulsun.';
 
   @override
   String get bridgesUseThisBridge => 'Bu köprüyü kullan';
@@ -9168,15 +8920,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesRelayWorksWhereTor =>
-      'Aktarıcı modu Tor’un engellendiği yerde de çalışır ve istediğin zaman geri dönebilirsin.';
+      'Hızlı, Tor’un engellendiği yerde çalışır ve istediğin zaman geri dönebilirsin.';
 
   @override
   String get bridgesRelayThisNetworkSees =>
-      'Aktarıcı modu Tor’un engellendiği yerde de geçer, ama bu ağ Kryfo’ya bağlandığını görebilir.';
-
-  @override
-  String get onboardingRelayThisNetworkSees =>
-      'Bu ağ Kryfo’ya bağlandığını görebilir. Aktarıcımız adresini görür.';
+      'Hızlı, Tor’un engellendiği yerden geçer ama bu ağ Kryfo’ya bağlandığını görebilir.';
 
   @override
   String get settingsLicences => 'Lisanslar';
@@ -9239,9 +8987,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Bağlantıyı kopyala';
-
-  @override
-  String get appRelayNotAnswering => 'Aktarıcı sessiz';
 
   @override
   String get motionNoRelayYet => 'HENÜZ AKTARICI YOK';
@@ -9969,4 +9714,559 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo çalışırken bellekte özel bir klasöre ihtiyaç duyar, bu bilgisayar böyle bir klasör sunmuyor, bu yüzden açılmayacak.';
+
+  @override
+  String get inviteNotYet =>
+      'Bu davet henüz geçerli değil. Telefonundaki saati kontrol et.';
+
+  @override
+  String get inviteExpired => 'Bu davetin süresi doldu. Yenisini iste.';
+
+  @override
+  String get inviteDamaged => 'Bu davet bozuk. Yenisini iste.';
+
+  @override
+  String get helloSent => 'İstek gönderildi. Çevrimiçi olduğunda görecek.';
+
+  @override
+  String get inviteNeeds06 => 'Kryfo 0.6 veya daha yenisi gerekir.';
+
+  @override
+  String get helloSentOld =>
+      'İstek gönderildi. Kryfo\'nun eski bir sürümünü kullanıyorsa önce güncellemesi gerekecek.';
+
+  @override
+  String get modesPickHow =>
+      'Mesajlarının nasıl gideceğini seç. İstediğin zaman değiştirebilirsin.';
+
+  @override
+  String get modesPrivate => 'Özel';
+
+  @override
+  String get modesPrivateTag => 'Tor · gerekince köprüler';
+
+  @override
+  String get modesPrivateLine =>
+      'IP adresini ya da kim olduğunu kimse öğrenmez, sunucularımız bile. Engelleri aşmanın yolunu kendisi bulur.';
+
+  @override
+  String get modesDefault => 'Varsayılan';
+
+  @override
+  String get modesFastTag => 'Doğrudan sunucularımıza';
+
+  @override
+  String get modesFastLine =>
+      'Tor’u atlar, böylece mesajlar daha hızlı ulaşır ve daha az pil harcar. Sunucularımız IP adresini yalnızca bağlıyken görür, asla kaydetmez ya da saklamaz. Ne söylediğini asla görmez. Kişilerin onu asla görmez.';
+
+  @override
+  String get modesFastConnected => 'Hızlı · bağlı';
+
+  @override
+  String get modesFastConnecting => 'Hızlı · bağlanıyor';
+
+  @override
+  String get modesFastDown => 'Hızlı · sunucularımız yanıt vermiyor';
+
+  @override
+  String get modesBackupReady =>
+      'Bir yedek her zaman hazır, biri çökse bile bağlı kalırsın.';
+
+  @override
+  String get modesDetails => 'Ayrıntılar';
+
+  @override
+  String get modesBothLine =>
+      'İkisi de her mesajı uçtan uca şifreler. Değişen tek şey IP adresini kimin görebildiği.';
+
+  @override
+  String get modesConnectionBridges => 'Bağlantı ve köprüler';
+
+  @override
+  String get modesWhatServersSee => 'Sunucularımız neyi görebilir';
+
+  @override
+  String get serversTitle => 'Hızlı sunucuları';
+
+  @override
+  String get serversLine =>
+      'Her mesaj aynı anda iki sunucuya da gider. Önce yanıt veren taşır, biri durursa diğeri devralır.';
+
+  @override
+  String get serversOne => 'Sunucu 1';
+
+  @override
+  String get serversTwo => 'Sunucu 2 · ikinci sağlayıcı';
+
+  @override
+  String get serversConnected => 'Bağlı';
+
+  @override
+  String get serversConnecting => 'Bağlanıyor';
+
+  @override
+  String get serversNotAnswering => 'Yanıt vermiyor';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String get serversQuicker => 'Daha hızlı';
+
+  @override
+  String get serversBackups => 'Herkese açık aktarıcılar';
+
+  @override
+  String get serversBackupsLine =>
+      'Sunucu 1 çalışmadığı sürece ve yalnızca Tor üzerinden kullanılır, bu yüzden IP adresini asla görmezler.';
+
+  @override
+  String get serversStandingBy => 'Beklemede';
+
+  @override
+  String get serversInUse => 'Kullanımda';
+
+  @override
+  String get homeMergedTitle => 'Aktarıcı ve Hızlı artık tek';
+
+  @override
+  String get homeMergedLine =>
+      'Hızlı’dasın. Yedek bir sunucu her zaman hazır, biri çökse bile bağlı kalırsın. Sunucularımız IP adresini görür, ne söylediğini asla görmez.';
+
+  @override
+  String get homeMergedGotIt => 'Anladım';
+
+  @override
+  String get homeMergedUsePrivate => 'Bunun yerine Özel’i kullan';
+
+  @override
+  String get homeOursDownTitle => 'Sunucularımız yanıt vermiyor';
+
+  @override
+  String get homeOursDownLine =>
+      'Birkaç dakika sonra, Tor bağlanınca mesajlar herkese açık aktarıcılardan da gider, sunucularımızdan biri yanıt verir vermez yine oradan.';
+
+  @override
+  String get homeUsePrivate => 'Özel’i kullan';
+
+  @override
+  String get homeSwitchedToPrivate => 'Özel’e geçildi';
+
+  @override
+  String get homeUseFast => 'Hızlı’yı kullan';
+
+  @override
+  String get homeSwitchedToFastRoute => 'Hızlı’ya geçildi';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'Hızlı doğrudan sunucularımıza gider ve genelde geçer. Ya da Kryfo’nun kendi yolunu bulmasına izin ver.';
+
+  @override
+  String get appServersNotAnswering => 'Sunucular yanıt vermiyor';
+
+  @override
+  String get settingsPrivateTor => 'Özel · Tor';
+
+  @override
+  String get seenOurServers => 'Sunucularımız';
+
+  @override
+  String get seenIpWhy =>
+      'Özel’de her şey Tor üzerinden çıkar ve sunucularımız seni değil, bir çıkış düğümünü görür. Hızlı’da bağlantı doğrudan iki sunucumuza gider: bağlıyken IP adresini görürler ve hiçbir kaydını tutmazlar. İlki çalışmadığı sürece Hızlı herkese açık aktarıcıları da kullanır, yalnızca Tor üzerinden.';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'Daha önce kaydedilmediyse albüm iki telefondan da silinecek. Bu geri alınamaz.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'Daha önce kaydedilmediyse albüm herkesin telefonundan silinecek. Bu geri alınamaz.';
+
+  @override
+  String get homeInviteSomeone => 'Birini davet et';
+
+  @override
+  String get onboardingNameHeadline => 'İstersen herkese açık bir *@ad*.';
+
+  @override
+  String get onboardingNameLine =>
+      'Herkese açık bir ad, insanların seni bulmasını sağlar. Atlamak seni daha gizli tutar, istediğin zaman sonra ekleyebilirsin.';
+
+  @override
+  String get onboardingNameSkip => 'Şimdilik atla →';
+
+  @override
+  String onboardingNameClaim(Object handle) {
+    return '@$handle adını al →';
+  }
+
+  @override
+  String get onboardingInviteHeadline => 'Şimdi *birini davet et*.';
+
+  @override
+  String get onboardingInviteLead =>
+      'Herhangi bir mesajlaşma uygulamasında bir bağlantı gönder. Kryfo’yu açar ya da nereden indirileceğini gösterir.';
+
+  @override
+  String get onboardingInviteSomeone => 'Birini davet et →';
+
+  @override
+  String get onboardingInviteGettingReady => 'Bağlantın hazırlanıyor…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'Beni Kryfo’da ekle. Oradaki adım: $myId\n\nBeni eklemek için dokun:\n$link\n\nHenüz Kryfo yok mu? Buradan indir:\n$download\n\nKryfo gizli bir mesajlaşma uygulaması. Telefon numarası yok, e-posta yok.';
+  }
+
+  @override
+  String get inviteNotReady =>
+      'Bağlantın neredeyse hazır. Birazdan tekrar dene.';
+
+  @override
+  String get photoCropTitle => 'Taşı ve ölçekle';
+
+  @override
+  String get photoCropUse => 'Fotoğrafı kullan';
+
+  @override
+  String get photoCropLabel =>
+      'Daire içindeki fotoğrafın. Yakınlaştırmak için iki parmakla aç, taşımak için sürükle';
+
+  @override
+  String get photoCouldNotUse => 'Başka bir fotoğraf dene. Bu okunamadı.';
+
+  @override
+  String get photoTake => 'Fotoğraf çek';
+
+  @override
+  String get photoChoose => 'Galeriden seç';
+
+  @override
+  String get photoPickFace => 'Bir yüz seç';
+
+  @override
+  String get photoView => 'Fotoğrafı gör';
+
+  @override
+  String get photoRemove => 'Fotoğrafı kaldır';
+
+  @override
+  String get photoYourPhoto => 'Fotoğrafın';
+
+  @override
+  String get photoYourPhotoLine =>
+      'Yalnızca kişilerin görür, uçtan uca şifreli.';
+
+  @override
+  String get photoSetTheirs => 'Fotoğraf koy';
+
+  @override
+  String get photoChangeTheirs => 'Fotoğrafı değiştir';
+
+  @override
+  String get photoOnlyHere => 'Yalnızca bu telefonda';
+
+  @override
+  String photoForThem(Object name) {
+    return '$name için bir fotoğraf';
+  }
+
+  @override
+  String get photoOnlyHereLine => 'Yalnızca sen görürsün. Bu telefonda kalır.';
+
+  @override
+  String photoOf(Object name) {
+    return '$name fotoğrafı';
+  }
+
+  @override
+  String get historyChatStaysShots =>
+      'Bu sohbet telefonunda kalır, çünkü içinde ekran görüntüsü engelli.';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString rakam',
+      zero: 'Rakam yok',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString karakter',
+      zero: 'Karakter yok',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'Yedekleme ilerlemesi';
+
+  @override
+  String get a11yRestoreProgress => 'Geri yükleme ilerlemesi';
+
+  @override
+  String get a11yExportProgress => 'Dışa aktarma ilerlemesi';
+
+  @override
+  String get a11yLockFileProgress => 'Kilitleme ilerlemesi';
+
+  @override
+  String get a11yCleanProgress => 'Temizleme ilerlemesi';
+
+  @override
+  String get a11yMessageActions => 'Mesaj işlemleri';
+
+  @override
+  String get a11yRecordVoiceNote => 'Sesli mesaj kaydet';
+
+  @override
+  String get a11yRecording => 'Kaydediliyor';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'Fotoğraf, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return '$name kişisinden fotoğraf, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'Video, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return '$name kişisinden video, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString yeni mesaj',
+      one: 'Yeni mesaj',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done / $total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'bir dakikadan az kaldı';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'yaklaşık $n dk kaldı';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'yaklaşık $n sa kaldı';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'Gönderiliyor · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'Alınıyor · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'Gönderiliyor ve alınıyor · $detail';
+  }
+
+  @override
+  String get transferPause => 'Duraklat';
+
+  @override
+  String get transferPauseDownload => 'İndirmeyi duraklat';
+
+  @override
+  String get transferDownload => 'İndir';
+
+  @override
+  String get transferResume => 'Sürdür';
+
+  @override
+  String get transferOnWifi => 'Wi-Fi’da iner';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'Duraklatıldı · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'İndirmek için dokun';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'Dosya aktarımı';
+
+  @override
+  String get transferChannel => 'Dosya aktarımları';
+
+  @override
+  String get transferChannelLine =>
+      'Dosyalar gönderilirken veya inerken görünür. Hiçbir sohbetin ya da dosyanın adını vermez.';
+
+  @override
+  String get autoGetTitle => 'Otomatik indirme';
+
+  @override
+  String get autoGetLine =>
+      'Dosyalar burada seçtiğin gibi dokunmadan gelir. Bekleyen bir dosya senin için dosya sunucusunda kalır, en fazla bir hafta.';
+
+  @override
+  String get autoGetPhotos => 'Fotoğraflar';
+
+  @override
+  String get autoGetVideos => 'Videolar';
+
+  @override
+  String get autoGetFiles => 'Dosyalar';
+
+  @override
+  String get autoGetAlways => 'Wi-Fi ve mobil veride';
+
+  @override
+  String get autoGetWifi => 'Yalnızca Wi-Fi’da';
+
+  @override
+  String get autoGetNever => 'Asla, indirmek için dokunurum';
+
+  @override
+  String get autoGetVoice => 'Sesli mesajlar her zaman iner.';
+
+  @override
+  String get settingsFiles => 'Dosyalar';
+
+  @override
+  String get fileSheetOpenWith => 'Başka bir uygulamayla aç';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Kryfo\'nun bu bilgisayarda tuttuğu her şey şifreli. Kullanıcı hesabınla açılır.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Parola ifadesi ekle';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'O olmadan, kullanıcı hesabını kullanan herkes Kryfo\'yu açabilir.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo anahtarını bu bilgisayarın anahtarlığında tutamadı. Bunun yerine bir parola ifadesi ekle.';
+
+  @override
+  String get desktopKeyMissing =>
+      'Bu kullanıcı hesabında Kryfo\'nun verilerinin anahtarı yok. Bir Kryfo yedeği her şeyi geri getirir. Kryfo\'nun klasörünü taşıdıysan, geldiği kullanıcı hesabında bir parola ifadesi ekle, sonra klasörü yeniden kopyala.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo şu anda bu bilgisayardaki anahtarına ulaşamıyor. Bilgisayarın isterse anahtarlığının kilidini aç, sonra yeniden dene.';
+
+  @override
+  String get desktopPassRow => 'Bu bilgisayardaki parola ifadesi';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo kullanıcı hesabınla açılır.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo her açılışta bu parola ifadesini sorar.';
+
+  @override
+  String get desktopPassChange => 'Parola ifadesini değiştir';
+
+  @override
+  String get desktopPassRemove => 'Parola ifadesini kaldır';
+
+  @override
+  String get desktopPassCurrent => 'Şu anki parola ifadesi';
+
+  @override
+  String get desktopPassNew => 'Yeni parola ifadesi';
+
+  @override
+  String get desktopPassStays =>
+      'Bu bilgisayarda Kryfo\'nun kullanabileceği bir anahtarlık yok, bu yüzden parola ifadesi kalıyor.';
+
+  @override
+  String get desktopPassAdded => 'Parola ifadesi eklendi';
+
+  @override
+  String get desktopPassRemoved => 'Parola ifadesi kaldırıldı';
+
+  @override
+  String get desktopPassChanged => 'Parola ifadesi değiştirildi';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Kaldırmak için parola ifadeni yaz. Ardından Kryfo kullanıcı hesabınla açılır.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo şu anda bu bilgisayarın güvenlik çipindeki anahtarına ulaşamıyor. Biraz sonra yeniden dene.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo anahtarını Windows hesabında tutamadı. Bunun yerine bir parola ifadesi ekle.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo anahtarını Windows hesabında tutamadı, bu yüzden parola ifadesi kalıyor.';
+
+  @override
+  String get desktopBackupCardTitle => 'Bir Kryfo yedeği tut';
+
+  @override
+  String get desktopBackupCardLine =>
+      'Bu bilgisayardaki Windows hesabın Kryfo\'nun anahtarını tutuyor. Bilgisayar ya da hesap bir gün sıfırlanırsa, bir Kryfo yedeği her şeyi geri getirir.';
+
+  @override
+  String get desktopBackupHint =>
+      'Bu bilgisayar bir gün sıfırlanırsa her şeyi geri getirir.';
 }

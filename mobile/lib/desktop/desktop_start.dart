@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the desktop app's start: the platform answers, private folders, the
-// network watch and notifications put in place, then the vault's passphrase,
-// and only then the app itself
+// network watch and notifications put in place, then the vault opened by the
+// computer's key or its passphrase, and only then the app itself
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' show Random;
@@ -33,6 +33,7 @@ import 'desktop_db.dart';
 import 'desktop_lock_screen.dart';
 import 'desktop_mode.dart';
 import 'desktop_net.dart';
+import 'computer_lock.dart';
 import 'desktop_paths.dart';
 import 'desktop_trace.dart';
 import 'desktop_platform.dart';
@@ -40,10 +41,13 @@ import 'desktop_posix.dart';
 import 'desktop_prefs.dart';
 import 'desktop_toasts.dart';
 import 'desktop_vault.dart';
+import 'keyring_linux.dart';
 import 'sealed_format.dart' show EngineChunkCrypto;
 import 'sealed_io.dart';
 import 'sealed_native.dart' show nativeFilesSealed;
+import 'seal_windows.dart';
 import 'sealed_setup.dart';
+import 'system_seal.dart';
 
 /// the binding whose messenger answers the android channels
 class DesktopBinding extends WidgetsFlutterBinding {
@@ -165,6 +169,14 @@ Future<void> sayTrayWords() async {
   }
 }
 
+/// what keeps the vault's key without a passphrase: the Secret Service on
+/// linux, dpapi on windows
+SystemSeal? systemSeal() {
+  if (Platform.isLinux) return KeyringSeal(const FfiSecretApi());
+  if (Platform.isWindows) return WindowsSeal(const FfiWinCrypt());
+  return null;
+}
+
 /// why the desktop will not start, before anything of it runs
 enum DesktopStop { alreadyOpen, notYours, notPrivate, noMemory, failed }
 
@@ -217,7 +229,7 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   DesktopBinding.install(desktopAnswers(host, db));
 
   final uid = Platform.isWindows ? 0 : getuid();
-  final runtime = desktopRuntimeDir(uid: uid);
+  final runtime = desktopRuntimeDir(uid: uid, root: root);
   // without a folder in memory the engine's files and the temporary ones
   // would be plain on the disk while the app runs: linux refuses that.
   // windows has no tmpfs and keeps them in <root>/tmp (its own branch)
@@ -225,11 +237,15 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     runApp(const DesktopStopApp(stop: DesktopStop.noMemory));
     return;
   }
-  sweepOldRuntimeDirs(runtime, uid: uid);
+  sweepOldRuntimeDirs(runtime, uid: uid, root: root);
   final paths = DesktopPaths(root, runtime: runtime);
   PathProviderPlatform.instance = paths;
   final vault = DesktopVault(p.join(root, 'vault.kv'));
+  final seal = systemSeal();
   host.destroyKeys = vault.destroy;
+  if (seal != null) host.forgetKeys = () => vault.forgetSystem(seal);
+  final lock = DesktopComputerLock(vault, seal);
+  computerLock = lock;
   FlutterSecureStoragePlatform.instance = VaultStorage(vault);
   SharedPreferencesStorePlatform.instance = VaultPrefs(vault);
   if (defaultTargetPlatform == TargetPlatform.linux) {
@@ -269,11 +285,18 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     vault.close();
   }
 
+  // a logout, a terminal's ctrl-c, a closed terminal: one way out
   if (!Platform.isWindows) {
-    ProcessSignal.sigterm.watch().listen((_) {
-      ending();
-      exit(0);
-    });
+    for (final sig in [
+      ProcessSignal.sigterm,
+      ProcessSignal.sigint,
+      ProcessSignal.sighup,
+    ]) {
+      sig.watch().listen((_) {
+        ending();
+        exit(0);
+      });
+    }
   }
   _desktopChannel.setMethodCallHandler((call) async {
     if (call.method == 'quit') ending();
@@ -300,9 +323,11 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   runApp(
     DesktopLockApp(
       vault: vault,
+      seal: seal,
       onOpen: () {
         if (started) return;
         started = true;
+        lock.opened();
         unawaited(() async {
           var step = 'seal';
           try {
@@ -485,6 +510,9 @@ Future<void> openSeal({
   host.beforeExit = () {
     engineFiles?.detach();
     keys.closeAll();
+    final f = areas.filesKey;
+    f?.fillRange(0, f.length, 0);
+    areas.filesKey = null;
   };
   closeOnDetach?.dispose();
   closeOnDetach = AppLifecycleListener(

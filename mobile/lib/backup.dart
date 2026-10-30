@@ -27,6 +27,7 @@ import 'main.dart'
         TwoArgFnDart,
         appState,
         live,
+        photosUnsentInCopy,
         session,
         sessionQuiet,
         engine,
@@ -862,11 +863,15 @@ class BackupSide {
   }
 
   // every copy of a container's database that leaves the phone: what waits
-  // to be read counts from [at] in it (settleWaitingBurns)
+  // to be read counts from [at] in it (settleWaitingBurns), and no contact
+  // is taken to hold our photo (photosUnsentInCopy)
   Future<void> settleBurns(String copy, String key, int at) async {
     final db = await openDatabase(copy, password: key, singleInstance: false);
     try {
-      await db.transaction((t) => settleWaitingBurns(t, at));
+      await db.transaction((t) async {
+        await settleWaitingBurns(t, at);
+        await photosUnsentInCopy(t);
+      });
       await db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
     } finally {
       await db.close();
@@ -1935,7 +1940,10 @@ Future<void> landCatchUpAnchors(String docs, Object? carried) async {
   try {
     await for (final e in Directory(docs).list()) {
       final name = p.basename(e.path);
-      if (name.startsWith('nostr_last_') || name.startsWith('nostr_seen_')) {
+      // the queue of wraps for our relays belongs to the phone it was made on
+      if (name.startsWith('nostr_last_') ||
+          name.startsWith('nostr_seen_') ||
+          name.startsWith('nostr_topup')) {
         await e.delete();
       }
     }

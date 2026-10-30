@@ -57,6 +57,7 @@ const _settingsFiles = {
   'bridge_sheets',
   'seen_screen',
   'modes_screen',
+  'fast_servers_screen',
   'blocked_screen',
   'pins_screen',
   'lock_setup_screen',
@@ -71,6 +72,7 @@ const _settingsFiles = {
   'follow_section',
   'dev_about_sheet',
   'translation_screen',
+  'auto_get_screen',
   'licences_screen',
   'linked_devices_screen',
 };
@@ -173,6 +175,7 @@ final _pages = [
       l10n.settingsPrivacy,
       l10n.settingsSecurity,
       l10n.settingsAppearance,
+      l10n.settingsFiles,
       l10n.settingsBackup,
       l10n.settingsVoice,
       l10n.translateSettingsTitle,

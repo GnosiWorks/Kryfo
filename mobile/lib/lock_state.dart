@@ -867,6 +867,23 @@ class LockState extends ChangeNotifier {
     _paused = false;
   }
 
+  // tests stand in a lock not read yet, as at a start
+  @visibleForTesting
+  void unloadForTest() {
+    _loaded = false;
+    _locked = true;
+    _enabled = false;
+    _paused = false;
+    notifyListeners();
+  }
+
+  // tests lift the lock as a right pin would, and say so
+  @visibleForTesting
+  void liftForTest() {
+    _locked = false;
+    notifyListeners();
+  }
+
   // a keystore that would not answer. the lock stays shut and load tries
   // again rather than opening the app to whoever holds the phone
   bool _unreadable = false;
@@ -1408,6 +1425,9 @@ class LockState extends ChangeNotifier {
       _lost();
       return;
     }
+    // a keystore without secure hardware: the table stays on the pin alone,
+    // and nothing here ever reads as a lost key
+    if (!k.hardware) return;
     if (_table == null && !making) return;
     // a phone that refused tries again at a later unlock, not at every one
     if (DateTime.now().difference(_makeTried) < const Duration(minutes: 10)) {
@@ -1415,6 +1435,10 @@ class LockState extends ChangeNotifier {
     }
     _makeTried = DateTime.now();
     final made = await _keyCall(_keys.make(), const Duration(seconds: 30));
+    if (made != null && !made.hardware) {
+      _key = made;
+      return;
+    }
     if (made == null || !made.exists || made.kc == null) {
       dlog('lock: pin key not made');
       return;

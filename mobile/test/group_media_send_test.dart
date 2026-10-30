@@ -3,6 +3,7 @@
 // while the others got it goes to that member again, a stop stops it between
 // slices, and the progress strip ends with the send however it ends. the
 // members are stand-ins that take or refuse what they are given
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -32,6 +33,30 @@ class _Members {
     if (refuse(m, i, n)) return false;
     got.putIfAbsent(m, () => {}).add(i);
     return true;
+  }
+}
+
+class _HangingMembers extends _Members {
+  _HangingMembers(this.hangAt, this.hung);
+  final int hangAt;
+  final List<Completer<bool>> hung;
+  @override
+  Future<bool> deliver(String m, String wrapped) {
+    if (int.parse(wrapped) < hangAt) return super.deliver(m, wrapped);
+    offered.add((m, int.parse(wrapped)));
+    final h = Completer<bool>();
+    hung.add(h);
+    return h.future;
+  }
+}
+
+class _SlowMembers extends _Members {
+  _SlowMembers(this.wait);
+  final Duration wait;
+  @override
+  Future<bool> deliver(String m, String wrapped) async {
+    await Future<void>.delayed(wait);
+    return super.deliver(m, wrapped);
   }
 }
 
@@ -372,6 +397,128 @@ void main() {
     expect(mediaInflight.contains(msgUid), isFalse);
     // nothing in flight: at once
     await whenMediaFree(msgUid);
+  });
+
+  group('a delivery that never answers', () {
+    final was = mediaStallAfter;
+    setUp(() => mediaStallAfter = const Duration(milliseconds: 300));
+    tearDown(() => mediaStallAfter = was);
+
+    // members answer at once until [hangAt], then that slice hangs
+    _Members hangOn(int hangAt, List<Completer<bool>> hung) =>
+        _HangingMembers(hangAt, hung);
+
+    test('ends the send as stalled and lets go of the row', () async {
+      final hung = <Completer<bool>>[];
+      final g = hangOn(2, hung);
+      final r = await send(g, ['b', 'c']).timeout(const Duration(seconds: 5));
+      expect(r, kMediaStalled);
+      expect(mediaInflight.contains(msgUid), isFalse);
+      expect(mediaSendProgress.containsKey(msgUid), isFalse);
+      // what landed is kept for the next send, unstamped
+      expect(groupSliceDone[msgUid]?['b'], {0, 1});
+      expect(groupSliceDoneAt.containsKey(msgUid), isFalse);
+      // the late answer sends nothing more and draws no strip
+      for (final h in hung) {
+        h.complete(true);
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(g.offered.where((o) => o.$2 > 2), isEmpty);
+      expect(mediaSendProgress.containsKey(msgUid), isFalse);
+      // the next send goes on from where it was
+      final again = _Members();
+      expect(await send(again, ['b', 'c']), 'ok');
+      expect(again.offered.map((o) => o.$2).toSet(), {3, 4});
+    });
+
+    test('a slow send that keeps moving is not stalled', () async {
+      final g = _SlowMembers(const Duration(milliseconds: 120));
+      expect(await send(g, ['b']), 'ok');
+      expect(g.got['b'], {0, 1, 2, 3, 4});
+    });
+
+    test('a stop while it hangs ends it at once', () async {
+      mediaStallAfter = const Duration(seconds: 30);
+      final hung = <Completer<bool>>[];
+      final g = hangOn(1, hung);
+      final going = send(g, ['b']);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      cancelMediaSend(msgUid);
+      final r = await going.timeout(const Duration(seconds: 5));
+      expect(r, 'cancelled');
+      expect(mediaInflight.contains(msgUid), isFalse);
+    });
+
+    // the envelope for [at]'s [nth] wrap waits on [gate]
+    Future<String> gatedSend(
+      _Members g,
+      List<String> to,
+      int at,
+      int nth,
+      Completer<void> gate,
+    ) {
+      var n = 0;
+      return sendGroupSlices(
+        path: path,
+        msgUid: msgUid,
+        members: to,
+        wrap: (slice, i, total) async {
+          if (i == at && ++n == nth) await gate.future;
+          return '$i';
+        },
+        deliver: g.deliver,
+        progressKey: 'group:g1',
+        gap: Duration.zero,
+        retryPause: Duration.zero,
+      );
+    }
+
+    test('an end while a slice is wrapped sends that slice no more', () async {
+      final gate = Completer<void>();
+      final g = _Members();
+      final r = await gatedSend(
+        g,
+        ['b', 'c'],
+        2,
+        1,
+        gate,
+      ).timeout(const Duration(seconds: 5));
+      expect(r, kMediaStalled);
+      gate.complete();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(g.offered.where((o) => o.$2 >= 2), isEmpty);
+      expect(mediaSendProgress.containsKey(msgUid), isFalse);
+    });
+
+    test('an end while a catch-up slice is wrapped sends it no more', () async {
+      final gate = Completer<void>();
+      // c misses slice 1 on the way through, b takes it
+      final g = _Members()..refuse = (m, i, n) => m == 'c' && i == 1;
+      final r = await gatedSend(
+        g,
+        ['b', 'c'],
+        1,
+        2,
+        gate,
+      ).timeout(const Duration(seconds: 5));
+      expect(r, kMediaStalled);
+      final before = g.offered.length;
+      gate.complete();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(g.offered.length, before);
+    });
+
+    test('an end while the file is read starts no strip', () async {
+      // a look every microsecond, and a stop already asked
+      mediaStallAfter = const Duration(microseconds: kMediaStallLooks);
+      cancelMediaSend(msgUid);
+      final g = _Members();
+      expect(await send(g, ['b']), 'cancelled');
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(mediaSendProgress.containsKey(msgUid), isFalse);
+      expect(groupSliceDoneAt.containsKey(msgUid), isFalse);
+      expect(g.offered, isEmpty);
+    });
   });
 
   test('nobody to send to is no send', () async {

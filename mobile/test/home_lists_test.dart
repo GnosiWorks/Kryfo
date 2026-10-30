@@ -12,6 +12,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/bridge_mode.dart' show BridgeStatus;
 import 'package:kryfo/container.dart';
+import 'package:kryfo/delivery_mode.dart' show DeliveryMode;
+import 'package:kryfo/miui_autostart.dart' show maybeShowBackgroundPrompt;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
     show
@@ -21,7 +23,8 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         useEngineForTest,
         AppStateRoute,
-        AppStateBridges;
+        AppStateBridges,
+        AppStateDelivery;
 import 'package:kryfo/rooms.dart' show kRoomJoinWait;
 import 'package:kryfo/screens/archived_screen.dart';
 import 'package:kryfo/screens/chat_door.dart';
@@ -277,6 +280,26 @@ void main() {
     expect(find.text('wren-oak-lamp'), findsOneWidget);
     expect(find.text('slow-kite-moss'), findsOneWidget);
     expect(find.text(l10n.homeSupporter), findsOneWidget);
+    await drain(t);
+  });
+
+  testWidgets('home asks for the battery and the maker\'s switch, but not '
+      'with google push, which wakes the phone itself', (t) async {
+    phone(t);
+    final asked = <String>[];
+    homeBackgroundAsk = (_) async => asked.add('ask');
+    addTearDown(() => homeBackgroundAsk = maybeShowBackgroundPrompt);
+    final was = appState.deliveryMode;
+    addTearDown(() => appState.deliveryModeForTest = was);
+    for (final m in [DeliveryMode.google, DeliveryMode.always]) {
+      appState.deliveryModeForTest = m;
+      askBackgroundAgainForTest();
+      await t.pumpWidget(
+        framed(KeyedSubtree(key: ValueKey(m), child: _home())),
+      );
+      await t.pump(const Duration(seconds: 1));
+    }
+    expect(asked, ['ask']);
     await drain(t);
   });
 
@@ -696,21 +719,21 @@ void main() {
       phone(t);
       await t.pumpWidget(framed(_home()));
       await t.pump(const Duration(seconds: 1));
-      expect(find.text(l10n.homeOurRelayIsQuiet), findsNothing);
+      expect(find.text(l10n.homeOursDownTitle), findsNothing);
       await relay(t, down: true);
       await t.pump();
       await t.pump(const Duration(milliseconds: 80));
-      final mid = opened(t, l10n.homeOurRelayIsQuiet);
+      final mid = opened(t, l10n.homeOursDownTitle);
       expect(mid, greaterThan(0));
       expect(mid, lessThan(1));
       await t.pump(const Duration(milliseconds: 400));
-      expect(opened(t, l10n.homeOurRelayIsQuiet), 1);
+      expect(opened(t, l10n.homeOursDownTitle), 1);
       await relay(t, down: false);
       await t.pump();
       await t.pump(const Duration(milliseconds: 80));
-      expect(opened(t, l10n.homeOurRelayIsQuiet), lessThan(1));
+      expect(opened(t, l10n.homeOursDownTitle), lessThan(1));
       await t.pump(const Duration(milliseconds: 400));
-      expect(find.text(l10n.homeOurRelayIsQuiet), findsNothing);
+      expect(find.text(l10n.homeOursDownTitle), findsNothing);
       await drain(t);
     });
 
@@ -764,11 +787,11 @@ void main() {
       await relay(t, down: true);
       await t.pump();
       await t.pump();
-      expect(opened(t, l10n.homeOurRelayIsQuiet), 1);
+      expect(opened(t, l10n.homeOursDownTitle), 1);
       await relay(t, down: false);
       await t.pump();
       await t.pump();
-      expect(find.text(l10n.homeOurRelayIsQuiet), findsNothing);
+      expect(find.text(l10n.homeOursDownTitle), findsNothing);
       await drain(t);
     });
   });

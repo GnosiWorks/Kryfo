@@ -18,11 +18,35 @@ extension AppStateSession on AppState {
   Future<String> sessionInvite() async =>
       sessionQuiet ? (_quiet?.invite ?? '') : _everydayInvite();
 
+  /// what the own qr code shows: the main v4 invite without its bundle
+  /// (288 bytes; a reader answers it with a hello), else the link
+  Future<String> sessionInviteQr() async {
+    if (!sessionQuiet) {
+      try {
+        final qr = await myV4Invite(qr: true);
+        if (qr != null) return qr;
+      } catch (e) {
+        dlog('invite: no v4 qr (${e.runtimeType})');
+      }
+    }
+    return sessionInvite();
+  }
+
   // a counter that did not read is never taken as 0: an invite to an
   // address nobody listens on loses every first message sent to it
-  Future<String> _everydayInvite() => _fcUnread
-      ? buildHaloUriV2(myId, myOnion)
-      : buildHaloUriV3(myId, myOnion, fcCounter);
+  // the main v4 invite once it is made (identity v4 2.1)
+  Future<String> _everydayInvite() async {
+    try {
+      final v4 = await myV4Invite();
+      if (v4 != null) return v4;
+    } catch (e) {
+      dlog('invite: no v4 link (${e.runtimeType})');
+    }
+    return _fcUnread
+        ? buildHaloUriV2(myId, myOnion)
+        : buildHaloUriV3(myId, myOnion, fcCounter);
+  }
+
   Future<void> get containersReady => _containersOpen.future;
   @visibleForTesting
   void containersOpenedForTest() => _containersOpen.complete();
@@ -32,16 +56,29 @@ extension AppStateSession on AppState {
   Future<_Shown> _shownOf(Session s) async {
     final (list, pending, dev) = await _contactsOf(s);
     final a = await secureStore.read(key: s.container.key('my_avatar'));
+    // the decoy's own note of the computer lock row, with its lists: the
+    // row then shows at once whatever was set there
+    if (s.primary.container.quiet && computerLock != null) {
+      computerLock?.decoyNoteRead(
+        await SqlRouterStore(s.primary.open).meta(kComputerDecoyNote),
+      );
+    }
     return _Shown(
       list,
       pending,
       await _groupsOf(s),
       int.tryParse(a ?? ''),
       dev,
+      await _photoBookOf(
+            s,
+            s.primary.container.quiet ? (_decoyId?.id ?? '') : myId,
+          ) ??
+          const {},
     );
   }
 
   Future<void> _openContainers() async {
+    keepComputerDecoyNote = _keepDecoyNote;
     try {
       final listed = await listedContainers();
       await sweepContainers(listed, pinTable: await pinTableKept());
@@ -181,6 +218,7 @@ extension AppStateSession on AppState {
     if (sessionQuiet) return;
     await lockState.clearDecoyPins();
     decoyReady = false;
+    computerLock?.decoyNoteRead(null);
     final d = _decoyDb ?? HaloDb(HaloContainer.decoy);
     _decoyDb = null;
     _decoyId = null;
@@ -257,12 +295,15 @@ extension AppStateSession on AppState {
       groups,
       _quietAvatar,
       devRow,
+      photoBook.all,
     );
     final coming = _otherShown;
     _otherShown = leaving;
     _dropOpened();
     _session = Session(want);
     _quiet = decoy ? _decoyId : null;
+    // the transfer note reads quiet again: none over a decoy
+    TransferNote.instance.refresh();
     // what opened under the session before is opened again under this one.
     // a quiet session touches nothing of the everyday side's
     if (!sessionQuiet) unawaited(retryFirsts(all: true));
@@ -273,6 +314,8 @@ extension AppStateSession on AppState {
       groups = coming.groups;
       if (decoy) _quietAvatar = coming.avatar;
     }
+    // the book the other side read ahead, or none: never the one leaving
+    photoBook.put(coming?.photos ?? const {});
     if (decoy) {
       _quietSince = DateTime.now().millisecondsSinceEpoch;
       _quietJobs = _jobRuns;
@@ -318,6 +361,7 @@ extension AppStateSession on AppState {
     final Session s;
     final (List<ContactPreview>, int, DevRow?) home;
     final List<GroupPreview> gs;
+    final Map<String, Uint8List> book;
     try {
       // a move a crash cut short is put right before ownership is read
       await settleVault(v);
@@ -345,6 +389,9 @@ extension AppStateSession on AppState {
       s = await Session.withVault(primary, v);
       home = await _contactsOf(s);
       gs = await _groupsOf(s);
+      book =
+          await _photoBookOf(s, decoy ? (_decoyId?.id ?? '') : myId) ??
+          const {};
     } catch (e) {
       try {
         await v.close();
@@ -364,6 +411,7 @@ extension AppStateSession on AppState {
           groups,
           _quietAvatar,
           devRow,
+          photoBook.all,
         );
         if (ahead != null) _quietAvatar = ahead.avatar;
         _quietSince = DateTime.now().millisecondsSinceEpoch;
@@ -377,6 +425,7 @@ extension AppStateSession on AppState {
         groups,
         _quietAvatar,
         devRow,
+        photoBook.all,
       );
     }
     lockState.inDecoy = decoy;
@@ -384,11 +433,13 @@ extension AppStateSession on AppState {
     _dropOpened();
     _session = s;
     _quiet = decoy ? _decoyId : null;
+    TransferNote.instance.refresh();
     if (!sessionQuiet) unawaited(retryFirsts(all: true));
     contacts = home.$1;
     pendingCount = home.$2;
     devRow = home.$3;
     groups = gs;
+    photoBook.put(book);
     _vaultFill = (at: 0, to: 0);
     lockState.inVault = true;
     expiredRoomName = null;
@@ -427,6 +478,8 @@ extension AppStateSession on AppState {
   // after the reveal, off the clock
   Future<void> _vaultShown(HaloDb v) async {
     if (!identical(_openVault, v)) return;
+    // its chats draw their waiting files as such
+    unawaited(_loadFileWaits());
     try {
       // its timers that ran out while it was shut go now, and what waits
       // from someone blocked on the everyday side starts
@@ -482,6 +535,14 @@ extension AppStateSession on AppState {
     _session = Session(was.primary);
     lockState.inVault = false;
     _forgetVaultSide();
+    // its file on the way stops, and its waits go. the decoy's fetches
+    // nothing, and the everyday side is not read from it
+    if (everyday) _vaultFetchStops(v);
+    // its contacts' photos off at once, before anything is drawn
+    photoBook.put({
+      for (final MapEntry(:key, :value) in photoBook.all.entries)
+        if (!was.isHidden(key)) key: value,
+    });
     // its chats off home now; the rest is read again below
     contacts = [
       for (final c in contacts)
@@ -558,4 +619,11 @@ extension AppStateSession on AppState {
       await cancelWithRetry(() => _io.unnotify(p), 'vault shade');
     }
   }
+}
+
+// the decoy's note goes into the decoy's own database, never the vault:
+// written only while a decoy session is open
+Future<void> _keepDecoyNote(String note) async {
+  if (!sessionQuiet) return;
+  await SqlRouterStore(_session.primary.open).putMeta(kComputerDecoyNote, note);
 }

@@ -142,7 +142,7 @@ class _HelperSheetState extends State<HelperSheet> with WidgetsBindingObserver {
                       l10n.helperSheetNoAnswer(_failed!.name),
                       style: HaloType.sans(
                         size: 12.5,
-                        color: HaloColors.rose,
+                        color: HaloColors.roseText,
                         height: 1.4,
                       ),
                     ),

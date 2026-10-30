@@ -34,10 +34,14 @@ func knockSubs(t *testing.T, contacts int) *knockWorld {
 	for i := 0; i < contacts; i++ {
 		p := newXid(t)
 		h := hex.EncodeToString(p.pub[:])
+		// as nostrSubscribeAt notes every subscription's address, the main
+		// identity's too: the knocks never derive one again
+		sk, pk, _ := nip17RcvAddressAs(testMain(), p.pub)
+		lane := receiveLane(pk)
+		noteKnockTarget(h, knockTarget{pk, sk, lane, lane, h})
 		startSub(h, idle)
 		w.keys = append(w.keys, h)
 		w.peers = append(w.peers, h)
-		_, pk, _ := nip17RcvAddress(p.pub)
 		w.contacts = append(w.contacts, pk)
 	}
 	startSub("firstcontact", idle)
@@ -46,7 +50,7 @@ func knockSubs(t *testing.T, contacts int) *knockWorld {
 	oldFc := fcCounterNow
 	fcCounterNow = 0
 	nostrMu.Unlock()
-	_, w.fc, _ = nip17FirstContactKeys(0)
+	_, w.fc, _ = nip17FirstContactKeysAs(testMain(), 0)
 	w.room = newXid(t)
 	member := newXid(t)
 	sk, pk, err := nip17RcvAddressAs(w.room, member.pub)
@@ -304,7 +308,7 @@ func TestKnockFirstContactResetTakesANewCircuit(t *testing.T) {
 	fcCounterNow = 1
 	nostrMu.Unlock()
 	dropLane(laneFirstContact)
-	_, fresh, _ := nip17FirstContactKeys(1)
+	_, fresh, _ := nip17FirstContactKeysAs(testMain(), 1)
 	out := runRegister(t, []knockItem{{I: knockID(fresh), E: "https://push.example.org/b"}, {I: knockID(w.fc), E: ""}})
 	if len(out.Done) != 1 || out.Done[0] != knockID(fresh) {
 		t.Fatalf("after the reset: %+v", out)

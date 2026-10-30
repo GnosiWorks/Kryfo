@@ -30,6 +30,7 @@ class PinKeyInfo {
     this.sdk = 0,
     this.kc,
     this.supported = true,
+    this.hardware = true,
   });
 
   /// a phone with no keystore for this, or no android at all
@@ -40,7 +41,8 @@ class PinKeyInfo {
       screenLock = true,
       sdk = 0,
       kc = null,
-      supported = false;
+      supported = false,
+      hardware = false;
 
   final bool exists;
 
@@ -57,6 +59,10 @@ class PinKeyInfo {
   /// the check value, from a key just made
   final String? kc;
   final bool supported;
+
+  /// false when the keystore keeps keys in software only: no key is made
+  /// there and the pin table stays as it is
+  final bool hardware;
 
   static const software = 0;
 }
@@ -100,6 +106,9 @@ class PlatformPinKeystore implements PinKeystore {
   }
 
   static PinKeyInfo? _info(Map<Object?, Object?>? r) {
+    if (r != null && r['e'] == 'software') {
+      return const PinKeyInfo(exists: false, hardware: false);
+    }
     if (r == null || r['e'] != null) return null;
     int n(String k) => (r[k] as num?)?.toInt() ?? 0;
     return PinKeyInfo(
@@ -109,6 +118,7 @@ class PlatformPinKeystore implements PinKeystore {
       screenLock: r['s'] != false,
       sdk: n('v'),
       kc: r['kc'] as String?,
+      hardware: r['n'] != true,
     );
   }
 

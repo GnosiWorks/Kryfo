@@ -73,7 +73,7 @@ class _Wire implements HaloEngine {
   @override
   String myEdPubkey() => 'ed-me';
   @override
-  Future<String> nostrSend(String x, String c) {
+  Future<String> nostrSend(int ident, String x, String c) {
     calls++;
     if (calls > answer) {
       final h = Completer<String>();

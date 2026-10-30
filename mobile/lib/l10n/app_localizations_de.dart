@@ -643,12 +643,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appConnectedRoutedThrough3 => 'Verbunden · über 3 Relais geleitet';
 
   @override
-  String get appReadyToSendPublishing =>
-      'Bereit zum Senden · deine Adresse wird veröffentlicht';
-
-  @override
-  String get appReadyToSendFinishing =>
-      'Bereit zum Senden · Einrichtung wird abgeschlossen';
+  String get appReadyToChatAddressFinishing =>
+      'Bereit zum Chatten · Adresse wird eingerichtet';
 
   @override
   String appConnecting(Object pct) {
@@ -672,16 +668,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get appRelayAndFastModes =>
-      'Die Modi Relais und Schnell umgehen Tor und sind schneller. Du findest sie in den Einstellungen unter Tempo & Privatsphäre, und bei jedem steht, was er kostet.';
-
-  @override
-  String get appViaRelay => 'Über Relais';
+      'Schnell lässt Tor aus und ist flotter. Du findest es in den Einstellungen unter Tempo & Privatsphäre, mit dem, was es kostet.';
 
   @override
   String get appOffline => 'Offline';
-
-  @override
-  String get appFast => 'Schnell';
 
   @override
   String get appTorOff => 'Tor aus';
@@ -1724,9 +1714,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chatSupporter => 'Unterstützer';
-
-  @override
-  String get chatEncryptedViaRelay => 'Verschlüsselt · über Relais';
 
   @override
   String get chatEncryptedDirect => 'Verschlüsselt · direkt';
@@ -3173,26 +3160,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get homeLeaveThemOff => 'Aus lassen';
 
   @override
-  String get homeOurRelayIsQuiet => 'Unser Relais schweigt';
-
-  @override
-  String get homeRelayModeUsesOnly =>
-      'Der Relais-Modus nutzt nur unser eigenes Relais, und das antwortet gerade nicht. Der Schnell-Modus nimmt öffentliche Relais dazu, damit Nachrichten trotzdem ankommen. So oder so bleibt alles versiegelt.';
-
-  @override
-  String get homeSwitchedToFast => 'Zu Schnell gewechselt';
-
-  @override
-  String get homeUseFastMode => 'Schnell-Modus nutzen';
-
-  @override
   String get homeKeepWaiting => 'Weiter warten';
-
-  @override
-  String get homeSwitchedToRelay => 'Zu Relais gewechselt';
-
-  @override
-  String get homeUseOurRelay => 'Unser Relais nutzen';
 
   @override
   String get homeOffline => 'Offline';
@@ -3694,41 +3662,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Vier Ziffern oder mehr, die du dir merken kannst';
 
   @override
-  String get modesOnion => 'Onion';
-
-  @override
-  String get modesFullOnionRoutingThree =>
-      'Volles Onion-Routing, drei Stationen. Eine Nachricht braucht zwei bis fünf Sekunden. Niemand sieht, mit wem du sprichst.';
-
-  @override
-  String get modesSlower => 'Langsamer';
-
-  @override
-  String get modesRelay => 'Relais';
-
-  @override
-  String get modesOneSealedConnectionTo =>
-      'Eine versiegelte Verbindung zu Kryfos eigenem Relais, wie ein VPN, das nichts zu protokollieren hat. Nachrichten kommen in etwa einer Sekunde an, und es funktioniert, wo Tor blockiert ist.';
-
-  @override
-  String get modesQuick => 'Zügig';
-
-  @override
-  String get modesRelayOnly => 'Nur Relais';
-
-  @override
   String get modesFast => 'Schnell';
-
-  @override
-  String get modesPlainConnectionsToEvery =>
-      'Einfache Verbindungen zu jedem Relais. Fast sofort, und der am wenigsten private der drei Modi.';
-
-  @override
-  String get modesInstant => 'Sofort';
-
-  @override
-  String get modesEveryRelayYouUse =>
-      'Jedes Relais, das du nutzt, kennt die Adresse, von der aus du dich verbindest, nicht nur unseres. Nachrichten bleiben versiegelt, aber dass du eine gesendet hast, nicht. Standardmäßig aus, und nach einer Neuinstallation wieder aus.';
 
   @override
   String get modesNotChanged =>
@@ -3742,52 +3676,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get modesPrivacy => '& Privatsphäre';
-
-  @override
-  String get modesChangeGloballyOrPer => 'Global ändern oder pro Chat';
-
-  @override
-  String get modesSoon => 'Bald';
-
-  @override
-  String get modesActive => 'Aktiv';
-
-  @override
-  String get modesSpeed2 => 'TEMPO';
-
-  @override
-  String get modesHops => 'STATIONEN';
-
-  @override
-  String get modesIp => 'IP';
-
-  @override
-  String get modesVisible => 'Sichtbar';
-
-  @override
-  String get modesHidden => 'Verborgen';
-
-  @override
-  String modesHeadsUp(Object warning) {
-    return '*Achtung:* $warning';
-  }
-
-  @override
-  String get modesOnionIsTheDefault =>
-      'Onion ist der Standard und bleibt es, solange du es nicht änderst. Ein Wechsel gilt ab der nächsten Nachricht.';
-
-  @override
-  String get modesFastMode => 'Schnell-Modus';
-
-  @override
-  String get modesPlainConnectionsToEveryRelayQuicker =>
-      'Einfache Verbindungen zu jedem Relais. Schneller, und die Relais können deine IP-Adresse sehen. Nachrichten bleiben so oder so Ende-zu-Ende-verschlüsselt.';
-
-  @override
-  String get modesTurnOnFastMode => 'Schnell-Modus einschalten';
-
-  @override
-  String get modesKeepItOff => 'Aus lassen';
 
   @override
   String get movedWipeThisPhone => 'Kryfo von diesem Handy löschen?';
@@ -3844,11 +3732,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get myKryfoInviteCopiedClearsIn =>
       'Einladung kopiert · verschwindet in 60s';
-
-  @override
-  String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Füg mich auf Kryfo hinzu. Dort heiße ich $myId\n\nTippe, um mich hinzuzufügen:\n$uri\n\nKryfo ist ein privater Messenger. Keine Telefonnummer, keine E-Mail.';
-  }
 
   @override
   String get myKryfoAddMeOnKryfo2 => 'Füg mich auf Kryfo hinzu';
@@ -4186,103 +4069,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingThreeWords => 'Drei Wörter. *Nur deine.*';
 
   @override
-  String get onboardingPickA => 'Wähle ein *Gesicht*.';
-
-  @override
-  String get onboardingDrawnOnThisPhone =>
-      'Auf diesem Handy aus einer Zahl gezeichnet, nie hochgeladen. Ändere es, wann immer du willst.';
-
-  @override
-  String get onboardingThePeopleYouMessage =>
-      'Die Leute, denen du schreibst, sehen das auch';
-
-  @override
-  String get onboardingKeepMyInitial => 'Initiale behalten';
-
-  @override
-  String get onboardingThatOne => 'Das hier →';
-
-  @override
   String get onboardingContinue => 'Weiter →';
-
-  @override
-  String get onboardingHowYourMessages => 'Wie deine Nachrichten *reisen*.';
-
-  @override
-  String get onboardingYouCanChangeThis =>
-      'Du kannst das jederzeit in den Einstellungen ändern, für alle oder für einen Chat.';
-
-  @override
-  String get onboardingOnion => 'Onion';
-
-  @override
-  String get onboardingSlowerAMessageTakes =>
-      'Langsamer. Eine Nachricht braucht zwei bis fünf Sekunden.';
-
-  @override
-  String get onboardingHidesYourAddressFrom =>
-      'Verbirgt deine Adresse vor allen, auch vor unserem Relais.';
-
-  @override
-  String get onboardingRelay => 'Relais';
-
-  @override
-  String get onboardingOurRelaySeesYour =>
-      'Unser Relais sieht deine Adresse. Sonst niemand.';
-
-  @override
-  String get onboardingAboutASecondWorks =>
-      'Etwa eine Sekunde. Funktioniert, wo Tor blockiert ist.';
-
-  @override
-  String get onboardingAutoFindsAWay =>
-      '„Automatisch“ findet selbst einen Weg um die Sperre.';
-
-  @override
-  String get onboardingFast => 'Schnell';
-
-  @override
-  String get onboardingEveryRelayYouUse =>
-      'Jedes Relais, das du nutzt, sieht deine Adresse. Der am wenigsten private der drei.';
-
-  @override
-  String get onboardingNearInstant => 'Fast sofort.';
-
-  @override
-  String get onboardingKeepOnion => 'Onion behalten →';
-
-  @override
-  String get onboardingUseThis => 'Das nehmen →';
-
-  @override
-  String get onboardingSkipOnionIsA =>
-      'Überspringen · Onion ist ein guter Standard';
-
-  @override
-  String get onboardingThreeThingsThen => 'Drei Dinge,\ndann *bist du drin*.';
-
-  @override
-  String get onboardingEverythingElseTheApp =>
-      'Alles andere sagt dir die App, wenn es wichtig wird.';
-
-  @override
-  String get onboardingYourNameIsThreeWords => 'Dein Name sind drei Wörter';
-
-  @override
-  String get onboardingThatIsTheWhole =>
-      'Das ist die ganze Identität. Es gibt keine Nummer und keine E-Mail, die durchsickern oder nachgeschlagen werden kann. Wer mit dir schreibt, sieht diese Wörter und das Gesicht, das du gewählt hast.';
-
-  @override
-  String get onboardingNobodyCanReachYou =>
-      'Niemand kann dich erreichen, bis du es erlaubst';
-
-  @override
-  String get onboardingAStrangerWithYour =>
-      'Jemand Fremdes mit deinen Wörtern kann nur anklopfen. Die erste Nachricht wartet in den Anfragen, bis du ja sagst, und du kannst nein sagen, ohne dass die Person es je erfährt.';
-
-  @override
-  String get onboardingTheFirstConnectionTakesAMinute =>
-      'Die erste Verbindung dauert eine Minute';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -4291,9 +4078,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get onboardingYourIdentityLivesOn =>
       'Deine Identität liegt auf diesem Handy. Sichere sie in den Einstellungen, wenn du so weit bist.';
-
-  @override
-  String get onboardingIUnderstand => 'Verstanden →';
 
   @override
   String get onboardingOneQuiet => 'Eine stille *Benachrichtigung*.';
@@ -4314,13 +4098,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingGotIt => 'Alles klar →';
 
   @override
-  String get onboardingNow => 'Jetzt *füge jemanden hinzu*.';
-
-  @override
-  String get onboardingTheAppIsReady =>
-      'Die App ist bereit. Niemand kann dir schreiben, bis du die Person hinzufügst oder reinlässt.';
-
-  @override
   String get onboardingEveryWayToAdd => 'Alle Wege, jemanden hinzuzufügen';
 
   @override
@@ -4333,10 +4110,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get onboardingPointTheCameraAt =>
       'Richte die Kamera auf den Code der Person';
-
-  @override
-  String get onboardingTheAppIsReadyWhenYou =>
-      'Die App ist bereit, wenn du es bist.';
 
   @override
   String get onboardingNotNowAddPeople =>
@@ -4581,9 +4354,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get profileProfile => 'Profil';
-
-  @override
-  String get profileChangeYourFace => 'Gesicht ändern';
 
   @override
   String get profileKryfoId => 'Dein Name';
@@ -5222,16 +4992,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get seenYourIpAddress => 'Deine IP-Adresse';
 
   @override
-  String get seenOurRelay => 'Unser Relais';
-
-  @override
-  String get seenEveryRelay => 'Jedes Relais';
-
-  @override
-  String get seenOnOnionEverythingLeaves =>
-      'Mit Onion geht alles über Tor hinaus, und das Relais sieht einen Exit-Knoten, nie dich. Im Relais-Modus geht die Verbindung direkt zu unserem eigenen Relais: Nichts leitet deine Adresse weiter und nichts wird aufgeschrieben, aber diese eine Verbindung sehen wir. Mit Schnell erfährt jedes öffentliche Relais, dass du dich verbunden hast, aber nicht, mit wem, und nicht, was du gesagt hast.';
-
-  @override
   String get seenYourContactGraph => 'Dein Kontaktnetz';
 
   @override
@@ -5287,12 +5047,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die Ratchet- und Speicherschichten sind Standard. Die Schicht, die sie verbindet, ist von uns, und niemand Unabhängiges hat sie geprüft. Es ist Alpha-Software.';
 
   @override
-  String get seenOnion => 'Onion';
-
-  @override
-  String get seenRelay => 'Relais';
-
-  @override
   String get seenFast => 'Schnell';
 
   @override
@@ -5327,9 +5081,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsTorRouting => 'Tor-Routing';
 
   @override
-  String get settingsOffMode => 'Aus · Relais-Modus';
-
-  @override
   String get settingsOffFastMode => 'Aus · Schnell-Modus';
 
   @override
@@ -5343,9 +5094,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsFast => 'Schnell';
-
-  @override
-  String get settingsRelay1Hop => 'Relais · 1 Station';
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 Stationen';
@@ -6705,6 +6453,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get motionYouReAnonymous => 'Du bist anonym';
 
   @override
+  String get motionReadyToChat => 'Bereit zum Chatten';
+
+  @override
   String get motionTorIsStartingIn =>
       'Tor startet im Hintergrund. Diese Grafik leuchtet auf, während die Verbindung entsteht.';
 
@@ -6723,6 +6474,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get motionYourIpIsHidden =>
       'Deine IP ist verborgen. Nur Leute mit deinem Kryfo können dich erreichen.';
+
+  @override
+  String get motionAddressFinishing =>
+      'Nachrichten gehen schon über Tor raus. Deine private Adresse wird im Hintergrund fertig eingerichtet.';
 
   @override
   String get motionBuilding2 => 'im Aufbau';
@@ -7392,10 +7147,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get bridgesTheTorProjectSGuess => 'Schätzung des Tor-Projekts';
-
-  @override
-  String get bridgesOurRelayUsuallyGets =>
-      'Unser Relais ist eine einfache Verbindung und kommt meistens durch. Oder lass Kryfo selbst einen Weg finden.';
 
   @override
   String get bridgesUseThisBridge => 'Diese Brücke nutzen';
@@ -9242,15 +8993,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get bridgesRelayWorksWhereTor =>
-      'Der Relais-Modus geht auch dort, wo Tor blockiert ist, und du kannst jederzeit zurückwechseln.';
+      'Schnell klappt, wo Tor gesperrt ist, und du kannst jederzeit zurückwechseln.';
 
   @override
   String get bridgesRelayThisNetworkSees =>
-      'Der Relais-Modus kommt auch durch, wo Tor blockiert ist, aber dieses Netz kann sehen, dass du dich mit Kryfo verbindest.';
-
-  @override
-  String get onboardingRelayThisNetworkSees =>
-      'Dieses Netz kann sehen, dass du dich mit Kryfo verbindest. Unser Relais sieht deine Adresse.';
+      'Schnell kommt durch, wo Tor gesperrt ist, aber dieses Netz kann sehen, dass du dich mit Kryfo verbindest.';
 
   @override
   String get settingsLicences => 'Lizenzen';
@@ -9314,9 +9061,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Link kopieren';
-
-  @override
-  String get appRelayNotAnswering => 'Relais schweigt';
 
   @override
   String get motionNoRelayYet => 'NOCH KEIN RELAIS';
@@ -10046,4 +9790,568 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo braucht beim Laufen einen privaten Ordner im Arbeitsspeicher, und dieser Computer bietet keinen, deshalb öffnet es sich nicht.';
+
+  @override
+  String get inviteNotYet =>
+      'Diese Einladung gilt noch nicht. Prüfe die Uhrzeit auf deinem Handy.';
+
+  @override
+  String get inviteExpired =>
+      'Diese Einladung ist abgelaufen. Bitte um eine neue.';
+
+  @override
+  String get inviteDamaged =>
+      'Diese Einladung ist beschädigt. Bitte um eine neue.';
+
+  @override
+  String get helloSent =>
+      'Anfrage gesendet. Sie sehen sie, sobald sie online sind.';
+
+  @override
+  String get inviteNeeds06 => 'Braucht Kryfo 0.6 oder neuer.';
+
+  @override
+  String get helloSentOld =>
+      'Anfrage gesendet. Wenn sie eine ältere Kryfo-Version nutzen, müssen sie zuerst aktualisieren.';
+
+  @override
+  String get modesPickHow =>
+      'Wähle, wie deine Nachrichten reisen. Du kannst es jederzeit ändern.';
+
+  @override
+  String get modesPrivate => 'Privat';
+
+  @override
+  String get modesPrivateTag => 'Tor · Bridges bei Bedarf';
+
+  @override
+  String get modesPrivateLine =>
+      'Niemand erfährt deine IP-Adresse oder wer du bist, nicht einmal unsere Server. Findet selbst einen Weg um Sperren herum.';
+
+  @override
+  String get modesDefault => 'Standard';
+
+  @override
+  String get modesFastTag => 'Direkt zu unseren Servern';
+
+  @override
+  String get modesFastLine =>
+      'Ohne Tor kommen Nachrichten schneller an, und der Akku hält länger. Unsere Server sehen deine IP-Adresse nur, solange du verbunden bist, und protokollieren oder speichern sie nie. Nie, was du sagst. Deine Kontakte sehen sie nie.';
+
+  @override
+  String get modesFastConnected => 'Schnell · verbunden';
+
+  @override
+  String get modesFastConnecting => 'Schnell · verbindet';
+
+  @override
+  String get modesFastDown => 'Schnell · unsere Server antworten nicht';
+
+  @override
+  String get modesBackupReady =>
+      'Ein Ersatz steht immer bereit, so bleibst du verbunden, auch wenn einer ausfällt.';
+
+  @override
+  String get modesDetails => 'Details';
+
+  @override
+  String get modesBothLine =>
+      'Beide verschlüsseln jede Nachricht Ende-zu-Ende. Es ändert sich nur, wer deine IP-Adresse sehen kann.';
+
+  @override
+  String get modesConnectionBridges => 'Verbindung und Bridges';
+
+  @override
+  String get modesWhatServersSee => 'Was unsere Server sehen können';
+
+  @override
+  String get serversTitle => 'Server für Schnell';
+
+  @override
+  String get serversLine =>
+      'Jede Nachricht geht gleichzeitig an beide Server. Wer zuerst antwortet, trägt sie, und der andere übernimmt, wenn einer ausfällt.';
+
+  @override
+  String get serversOne => 'Server 1';
+
+  @override
+  String get serversTwo => 'Server 2 · zweiter Anbieter';
+
+  @override
+  String get serversConnected => 'Verbunden';
+
+  @override
+  String get serversConnecting => 'Verbindet';
+
+  @override
+  String get serversNotAnswering => 'Antwortet nicht';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String get serversQuicker => 'Schneller';
+
+  @override
+  String get serversBackups => 'Öffentliche Relais';
+
+  @override
+  String get serversBackupsLine =>
+      'Im Einsatz, solange Server 1 ausfällt, und nur über Tor, so sehen sie deine IP-Adresse nie.';
+
+  @override
+  String get serversStandingBy => 'In Bereitschaft';
+
+  @override
+  String get serversInUse => 'In Gebrauch';
+
+  @override
+  String get homeMergedTitle => 'Relais und Schnell sind jetzt eins';
+
+  @override
+  String get homeMergedLine =>
+      'Du nutzt Schnell. Ein Ersatzserver steht immer bereit, so bleibst du verbunden, auch wenn einer ausfällt. Unsere Server sehen deine IP-Adresse, nie, was du sagst.';
+
+  @override
+  String get homeMergedGotIt => 'Verstanden';
+
+  @override
+  String get homeMergedUsePrivate => 'Lieber Privat nutzen';
+
+  @override
+  String get homeOursDownTitle => 'Unsere Server antworten nicht';
+
+  @override
+  String get homeOursDownLine =>
+      'Nach ein paar Minuten, sobald Tor durchkommt, gehen Nachrichten auch über öffentliche Relais, und wieder über unsere Server, sobald einer antwortet.';
+
+  @override
+  String get homeUsePrivate => 'Privat nutzen';
+
+  @override
+  String get homeSwitchedToPrivate => 'Zu Privat gewechselt';
+
+  @override
+  String get homeUseFast => 'Schnell nutzen';
+
+  @override
+  String get homeSwitchedToFastRoute => 'Zu Schnell gewechselt';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'Schnell geht direkt zu unseren Servern und kommt meist durch. Oder lass Kryfo selbst einen Weg finden.';
+
+  @override
+  String get appServersNotAnswering => 'Server schweigen';
+
+  @override
+  String get settingsPrivateTor => 'Privat · Tor';
+
+  @override
+  String get seenOurServers => 'Unsere Server';
+
+  @override
+  String get seenIpWhy =>
+      'Bei Privat geht alles über Tor, und unsere Server sehen einen Exit-Knoten, nie dich. Bei Schnell geht die Verbindung direkt zu unseren zwei Servern: Sie sehen deine IP-Adresse, solange du verbunden bist, und halten nichts davon fest. Solange der erste ausfällt, nutzt Schnell zusätzlich öffentliche Relais, nur über Tor.';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'Das Album wird von beiden Handys entfernt, außer es wurde schon gespeichert. Das lässt sich nicht rückgängig machen.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'Das Album wird von den Handys aller entfernt, außer es wurde schon gespeichert. Das lässt sich nicht rückgängig machen.';
+
+  @override
+  String get homeInviteSomeone => 'Jemanden einladen';
+
+  @override
+  String get onboardingNameHeadline =>
+      'Ein öffentlicher *@Name*, wenn du willst.';
+
+  @override
+  String get onboardingNameLine =>
+      'Mit einem öffentlichen Namen können dich Leute finden. Ohne bleibst du privater, du kannst jederzeit später einen hinzufügen.';
+
+  @override
+  String get onboardingNameSkip => 'Erst mal überspringen →';
+
+  @override
+  String onboardingNameClaim(Object handle) {
+    return '@$handle sichern →';
+  }
+
+  @override
+  String get onboardingInviteHeadline => 'Jetzt *lade jemanden ein*.';
+
+  @override
+  String get onboardingInviteLead =>
+      'Schick einen Link in einem beliebigen Messenger. Er öffnet Kryfo oder zeigt, wo es Kryfo gibt.';
+
+  @override
+  String get onboardingInviteSomeone => 'Jemanden einladen →';
+
+  @override
+  String get onboardingInviteGettingReady => 'Dein Link wird vorbereitet…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'Füg mich auf Kryfo hinzu. Dort heiße ich $myId\n\nTippe, um mich hinzuzufügen:\n$link\n\nNoch kein Kryfo? Hier gibt es Kryfo:\n$download\n\nKryfo ist ein privater Messenger. Keine Telefonnummer, keine E-Mail.';
+  }
+
+  @override
+  String get inviteNotReady =>
+      'Dein Link ist fast fertig. Versuch es gleich noch mal.';
+
+  @override
+  String get photoCropTitle => 'Verschieben und skalieren';
+
+  @override
+  String get photoCropUse => 'Foto verwenden';
+
+  @override
+  String get photoCropLabel =>
+      'Dein Foto im Kreis. Zum Zoomen auseinanderziehen, zum Verschieben ziehen';
+
+  @override
+  String get photoCouldNotUse =>
+      'Nimm ein anderes Foto. Dieses ließ sich nicht lesen.';
+
+  @override
+  String get photoTake => 'Foto aufnehmen';
+
+  @override
+  String get photoChoose => 'Aus der Galerie wählen';
+
+  @override
+  String get photoPickFace => 'Gesicht wählen';
+
+  @override
+  String get photoView => 'Foto ansehen';
+
+  @override
+  String get photoRemove => 'Foto entfernen';
+
+  @override
+  String get photoYourPhoto => 'Dein Foto';
+
+  @override
+  String get photoYourPhotoLine =>
+      'Nur deine Kontakte sehen es, Ende-zu-Ende-verschlüsselt.';
+
+  @override
+  String get photoSetTheirs => 'Foto festlegen';
+
+  @override
+  String get photoChangeTheirs => 'Foto ändern';
+
+  @override
+  String get photoOnlyHere => 'Nur auf diesem Handy';
+
+  @override
+  String photoForThem(Object name) {
+    return 'Ein Foto für $name';
+  }
+
+  @override
+  String get photoOnlyHereLine =>
+      'Nur du siehst es. Es bleibt auf diesem Handy.';
+
+  @override
+  String photoOf(Object name) {
+    return 'Foto von $name';
+  }
+
+  @override
+  String get historyChatStaysShots =>
+      'Dieser Chat bleibt auf deinem Handy, weil Screenshots darin blockiert sind.';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Ziffern',
+      one: '1 Ziffer',
+      zero: 'Keine Ziffern',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Zeichen',
+      one: '1 Zeichen',
+      zero: 'Keine Zeichen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'Fortschritt des Backups';
+
+  @override
+  String get a11yRestoreProgress => 'Fortschritt der Wiederherstellung';
+
+  @override
+  String get a11yExportProgress => 'Fortschritt des Exports';
+
+  @override
+  String get a11yLockFileProgress => 'Fortschritt beim Verschließen';
+
+  @override
+  String get a11yCleanProgress => 'Fortschritt beim Bereinigen';
+
+  @override
+  String get a11yMessageActions => 'Aktionen für die Nachricht';
+
+  @override
+  String get a11yRecordVoiceNote => 'Sprachnachricht aufnehmen';
+
+  @override
+  String get a11yRecording => 'Aufnahme läuft';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'Foto, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return 'Foto von $name, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'Video, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return 'Video von $name, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString neue Nachrichten',
+      one: 'Neue Nachricht',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done von $total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'noch weniger als eine Minute';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'noch etwa $n Min.';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'noch etwa $n Std.';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'Sende · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'Empfange · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'Sende und empfange · $detail';
+  }
+
+  @override
+  String get transferPause => 'Pause';
+
+  @override
+  String get transferPauseDownload => 'Download pausieren';
+
+  @override
+  String get transferDownload => 'Herunterladen';
+
+  @override
+  String get transferResume => 'Fortsetzen';
+
+  @override
+  String get transferOnWifi => 'Lädt im WLAN';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'Pausiert · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'Zum Laden tippen';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'Dateiübertragung';
+
+  @override
+  String get transferChannel => 'Dateiübertragungen';
+
+  @override
+  String get transferChannelLine =>
+      'Erscheint, solange Dateien gesendet oder geladen werden. Nennt nie einen Chat oder eine Datei.';
+
+  @override
+  String get autoGetTitle => 'Automatischer Download';
+
+  @override
+  String get autoGetLine =>
+      'Dateien kommen ohne Tippen, wie hier eingestellt. Eine, die wartet, bleibt für dich auf dem Dateiserver, höchstens eine Woche.';
+
+  @override
+  String get autoGetPhotos => 'Fotos';
+
+  @override
+  String get autoGetVideos => 'Videos';
+
+  @override
+  String get autoGetFiles => 'Dateien';
+
+  @override
+  String get autoGetAlways => 'Im WLAN und mobil';
+
+  @override
+  String get autoGetWifi => 'Nur im WLAN';
+
+  @override
+  String get autoGetNever => 'Nie, ich tippe zum Laden';
+
+  @override
+  String get autoGetVoice => 'Sprachnachrichten werden immer geladen.';
+
+  @override
+  String get settingsFiles => 'Dateien';
+
+  @override
+  String get fileSheetOpenWith => 'Mit anderer App öffnen';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Alles, was Kryfo auf diesem Computer speichert, ist verschlüsselt. Es öffnet sich mit deinem Benutzerkonto.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Passphrase hinzufügen';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'Ohne sie kann jeder, der dein Benutzerkonto nutzt, Kryfo öffnen.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo konnte seinen Schlüssel nicht im Schlüsselbund dieses Computers ablegen. Füge stattdessen eine Passphrase hinzu.';
+
+  @override
+  String get desktopKeyMissing =>
+      'Dieses Benutzerkonto hat den Schlüssel zu den Daten von Kryfo nicht. Ein Kryfo-Backup bringt alles zurück. Wenn du den Ordner von Kryfo verschoben hast, füge im Benutzerkonto, aus dem er kommt, eine Passphrase hinzu und kopiere ihn dann erneut.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo erreicht seinen Schlüssel auf diesem Computer gerade nicht. Entsperre deinen Schlüsselbund, wenn dein Computer danach fragt, und versuche es dann erneut.';
+
+  @override
+  String get desktopPassRow => 'Passphrase auf diesem Computer';
+
+  @override
+  String get desktopPassOffBody =>
+      'Kryfo öffnet sich mit deinem Benutzerkonto.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo fragt bei jedem Start nach dieser Passphrase.';
+
+  @override
+  String get desktopPassChange => 'Passphrase ändern';
+
+  @override
+  String get desktopPassRemove => 'Passphrase entfernen';
+
+  @override
+  String get desktopPassCurrent => 'Aktuelle Passphrase';
+
+  @override
+  String get desktopPassNew => 'Neue Passphrase';
+
+  @override
+  String get desktopPassStays =>
+      'Dieser Computer hat keinen Schlüsselbund, den Kryfo nutzen kann, daher bleibt die Passphrase.';
+
+  @override
+  String get desktopPassAdded => 'Passphrase hinzugefügt';
+
+  @override
+  String get desktopPassRemoved => 'Passphrase entfernt';
+
+  @override
+  String get desktopPassChanged => 'Passphrase geändert';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Gib deine Passphrase ein, um sie zu entfernen. Danach öffnet sich Kryfo mit deinem Benutzerkonto.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo erreicht seinen Schlüssel im Sicherheitschip dieses Computers gerade nicht. Versuche es gleich noch einmal.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo konnte seinen Schlüssel nicht bei deinem Windows-Konto ablegen. Füge stattdessen eine Passphrase hinzu.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo konnte seinen Schlüssel nicht bei deinem Windows-Konto ablegen, daher bleibt die Passphrase.';
+
+  @override
+  String get desktopBackupCardTitle => 'Behalte ein Kryfo-Backup';
+
+  @override
+  String get desktopBackupCardLine =>
+      'Dein Windows-Konto auf diesem Computer verwahrt den Schlüssel von Kryfo. Ein Kryfo-Backup bringt alles zurück, falls der Computer oder das Konto einmal zurückgesetzt wird.';
+
+  @override
+  String get desktopBackupHint =>
+      'Bringt alles zurück, falls dieser Computer einmal zurückgesetzt wird.';
 }

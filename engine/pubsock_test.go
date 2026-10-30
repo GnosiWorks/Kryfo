@@ -75,7 +75,7 @@ func TestPublishSocketPerRecipientAndLane(t *testing.T) {
 	a := newRelayStandIn(t, 0)
 	b := newRelayStandIn(t, 0)
 	useStandIns(t, modePrivate, socks, a, b)
-	me, err := myXid()
+	me, err := identityOf(mainIdent)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -156,7 +156,7 @@ func TestPublishSocketClosesWhenIdle(t *testing.T) {
 	socks := newSocksStandIn(t)
 	r := newRelayStandIn(t, 0)
 	useStandIns(t, modePrivate, socks, r)
-	me, _ := myXid()
+	me, _ := identityOf(mainIdent)
 	evs, _ := wrapsTo(t, me, newXid(t).pub, 4)
 
 	publishAll(t, laneEveryday, evs[:3], 3)
@@ -178,7 +178,7 @@ func TestPublishSocketRedialsAfterDrop(t *testing.T) {
 	socks := newSocksStandIn(t)
 	r := newRelayStandIn(t, 0)
 	useStandIns(t, modePrivate, socks, r)
-	me, _ := myXid()
+	me, _ := identityOf(mainIdent)
 	evs, _ := wrapsTo(t, me, newXid(t).pub, 6)
 
 	publishAll(t, laneEveryday, evs[:3], 3)
@@ -210,7 +210,7 @@ func TestPublishSocketThatGoesQuietIsReplaced(t *testing.T) {
 	socks := newSocksStandIn(t)
 	r := newRelayStandIn(t, 0)
 	useStandIns(t, modePrivate, socks, r)
-	me, _ := myXid()
+	me, _ := identityOf(mainIdent)
 	evs, _ := wrapsTo(t, me, newXid(t).pub, 4)
 
 	publishAll(t, laneEveryday, evs[:2], 2)
@@ -242,7 +242,7 @@ func TestIdleSocketIsNotQuiet(t *testing.T) {
 	socks.lag = 60 * time.Millisecond
 	r := newRelayStandIn(t, 0)
 	useStandIns(t, modePrivate, socks, r)
-	me, _ := myXid()
+	me, _ := identityOf(mainIdent)
 	evs, _ := wrapsTo(t, me, newXid(t).pub, 2)
 	publishAll(t, laneEveryday, evs[:1], 1)
 	time.Sleep(500 * time.Millisecond)
@@ -259,7 +259,7 @@ func TestPublishSocketsGoWithTheirRoute(t *testing.T) {
 	socks := newSocksStandIn(t)
 	r := newRelayStandIn(t, 0)
 	useStandIns(t, modePrivate, socks, r)
-	me, _ := myXid()
+	me, _ := identityOf(mainIdent)
 	evs, addr := wrapsTo(t, me, newXid(t).pub, 2)
 	rk := newXid(t)
 	room := roomLane(hex.EncodeToString(rk.pub[:]))
@@ -301,7 +301,7 @@ func TestWrapOutOfTimeKeepsTheSocket(t *testing.T) {
 	socks.lag = 300 * time.Millisecond
 	r := newRelayStandIn(t, 0)
 	useStandIns(t, modePrivate, socks, r)
-	me, _ := myXid()
+	me, _ := identityOf(mainIdent)
 	evs, _ := wrapsTo(t, me, newXid(t).pub, 2)
 	publishAll(t, laneEveryday, evs[:1], 1)
 	client, err := torNostrClientFor(laneEveryday)

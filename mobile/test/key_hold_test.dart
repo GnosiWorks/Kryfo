@@ -52,6 +52,9 @@ Future<void> _identity(MemDb db, List<int> key) async {
 class _Held implements HaloDb {
   @override
   Future<bool> keyHeld(String haloId) async => true;
+  // the door reads their identity off their row: none, the main one
+  @override
+  Future<Map<String, Object?>?> getContact(String haloId) async => null;
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('${i.memberName}');

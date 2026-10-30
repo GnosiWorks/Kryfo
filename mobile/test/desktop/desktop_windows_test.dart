@@ -321,4 +321,38 @@ void main() {
       'signal_ffi/kryfo_signal.dart': 1,
     });
   });
+
+  test('the engine is found through haloLibrary everywhere', () {
+    // a libhalo.so or process() pair of its own would miss halo.dll
+    for (final f in Directory('lib').listSync(recursive: true)) {
+      if (f is! File || !f.path.endsWith('.dart')) continue;
+      if (p.basename(f.path) == 'native_libs.dart') continue;
+      expect(
+        f.readAsStringSync().contains("DynamicLibrary.open('libhalo.so')"),
+        isFalse,
+        reason: f.path,
+      );
+    }
+    for (final f in [
+      'app/engine.dart',
+      'devices/history_ffi.dart',
+      'desktop/desktop_vault.dart',
+      'engine_strings.dart',
+    ]) {
+      expect(
+        File(p.join('lib', f)).readAsStringSync(),
+        contains('haloLibrary()'),
+        reason: f,
+      );
+    }
+  });
+
+  test('age reaches libc only off windows', () {
+    // its one process() is libc's open and close, both behind a windows return
+    final s = File('lib/tools/age_ffi.dart').readAsStringSync();
+    final calls = '_libc()'.allMatches(s).length;
+    expect(calls, 3); // the definition and its two uses
+    expect(s, contains('if (Platform.isWindows) return -1;'));
+    expect(s, contains('if (fd < 0 || Platform.isWindows) return;'));
+  });
 }

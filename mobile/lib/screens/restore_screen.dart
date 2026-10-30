@@ -5,6 +5,7 @@
 // number into a tick.
 import 'dart:async';
 import 'dart:io';
+import '../pin_shield.dart';
 import '../lock_guard.dart';
 import '../lock_state.dart';
 
@@ -156,7 +157,7 @@ class RestoreScreen extends StatefulWidget {
   State<RestoreScreen> createState() => _RestoreScreenState();
 }
 
-class _RestoreScreenState extends State<RestoreScreen> {
+class _RestoreScreenState extends State<RestoreScreen> with PinShield {
   String? _fileName;
   // a v1 file is a text blob held in memory; a v2 file is copied to a
   // private temp path and streamed from there. one of the two is set.
@@ -711,7 +712,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                           _error!,
                           style: HaloType.sans(
                             size: 13,
-                            color: HaloColors.rose,
+                            color: HaloColors.roseText,
                           ),
                         ),
                       ),
@@ -787,7 +788,11 @@ class _RestoreScreenState extends State<RestoreScreen> {
                     ? const SizedBox(width: double.infinity)
                     : Padding(
                         padding: const EdgeInsets.only(top: 12),
-                        child: HaloBar(value: _progress, height: 3),
+                        child: HaloBar(
+                          value: _progress,
+                          height: 3,
+                          label: l10n.a11yRestoreProgress,
+                        ),
                       ),
               ),
               // eases in under the button with the summary, as the card does

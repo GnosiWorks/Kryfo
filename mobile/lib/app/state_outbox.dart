@@ -86,6 +86,7 @@ extension AppStateOutbox on AppState {
     _markKnown = true;
     final was = _quietMarked;
     _quietMarked = q;
+    TransferNote.instance.refresh();
     if (was && !q) _resumeEveryday();
   }
 
@@ -157,6 +158,8 @@ extension AppStateOutbox on AppState {
     _outboxTimer = Timer.periodic(const Duration(seconds: 20), (_) {
       if (haloWiping) return;
       unawaited(drainOutbox());
+      // my invites kept once an hour, network or not
+      unawaited(keepMyInvitesDue());
       // files on their way in from the files service, as they come due
       unawaited(fetchDrops());
     });
@@ -429,6 +432,8 @@ extension AppStateOutbox on AppState {
       return;
     }
     _outboxWasReady = true;
+    // hellos owed go with the outbox, a few minutes apart at most
+    unawaited(sendHellosOwed(due: true));
     // a decoy open: all of it waits for the session that wrote it
     if (everydayHeld) return;
     unawaited(_replayHeld());
@@ -1136,8 +1141,10 @@ extension AppStateOutbox on AppState {
         dlog('send: $memberId unreachable (no session/bundle), skipping');
         return false;
       }
+      // the identity the door sealed it on goes with it to the relay
+      var ident = kMainIdent;
       try {
-        cipher = await _io.encrypt(memberId, wrapped);
+        (ident: ident, cipher: cipher) = await _io.seal(memberId, wrapped);
       } on StartingAfresh {
         // waits on their card, asked for as it falls due (_afreshCard)
         rethrow;
@@ -1160,7 +1167,7 @@ extension AppStateOutbox on AppState {
           unawaited(_sendBundleCtl(memberId, want: true));
           rethrow;
         }
-        cipher = await _io.encrypt(memberId, wrapped);
+        (ident: ident, cipher: cipher) = await _io.seal(memberId, wrapped);
       }
       final backPaired = to.backPaired;
       final xpub = to.xpub;
@@ -1177,7 +1184,7 @@ extension AppStateOutbox on AppState {
               () => _io.onionSend(onion, cipher),
             ).catchError((Object _) => 'err'),
           Future(
-            () => _io.relaySend(xpub, cipher),
+            () => _io.relaySend(ident, xpub, cipher),
           ).catchError((Object _) => 'err'),
         ]);
         if (!rs.contains('ok')) dlog('send: no copy went ($rs)');
@@ -1192,12 +1199,14 @@ extension AppStateOutbox on AppState {
         // two together. a failed one goes again from the outbox
         final fc = backPaired ? null : peerFcFor(memberId);
         if (fc != null && fc.isNotEmpty) {
-          final f = await Future(() => _io.firstContactSend(xpub, fc, cipher));
+          final f = await Future(
+            () => _io.firstContactSend(ident, xpub, fc, cipher),
+          );
           if (f == 'ok') return true;
           dlog('send: first-contact failed ($f)');
           return false;
         }
-        final n = await Future(() => _io.relaySend(xpub, cipher));
+        final n = await Future(() => _io.relaySend(ident, xpub, cipher));
         // the pair address is a drop box they read only once they add us
         // back, or once they took our card. stored there is parked, not
         // delivered, until one of those
@@ -1239,13 +1248,13 @@ extension AppStateOutbox on AppState {
       if (viaFirst) {
         unawaited(
           _io
-              .firstContactSend(xpub, fc, cipher)
+              .firstContactSend(ident, xpub, fc, cipher)
               .then((r) => settle('firstcontact', r))
               .catchError((_) => settle('firstcontact', 'err')),
         );
       } else {
         unawaited(
-          Future(() => _io.relaySend(xpub, cipher))
+          Future(() => _io.relaySend(ident, xpub, cipher))
               .then((r) => settle('nostr', r))
               .catchError((_) => settle('nostr', 'err')),
         );

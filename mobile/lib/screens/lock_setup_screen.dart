@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import '../lock_state.dart';
 import '../pass_rules.dart';
+import '../pin_shield.dart';
 import '../widgets/fit_column.dart';
 import '../theme.dart';
 import '../widgets/halo_buttons.dart';
@@ -29,7 +30,7 @@ class LockSetupScreen extends StatefulWidget {
 }
 
 class _LockSetupScreenState extends State<LockSetupScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, PinShield {
   String _first = '';
   String _pin = '';
   late bool _checking = widget.check;
@@ -283,13 +284,17 @@ class _LockSetupScreenState extends State<LockSetupScreen>
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: RiseSwap(
                 alignment: Alignment.center,
-                child: Text(
-                  hint,
+                // a pin that did not match is heard as it appears
+                child: Semantics(
                   key: ValueKey('$hint$_mismatch'),
-                  textAlign: TextAlign.center,
-                  style: HaloType.sans(
-                    size: 13,
-                    color: _mismatch ? HaloColors.rose : HaloColors.text2,
+                  liveRegion: _mismatch,
+                  child: Text(
+                    hint,
+                    textAlign: TextAlign.center,
+                    style: HaloType.sans(
+                      size: 13,
+                      color: _mismatch ? HaloColors.roseText : HaloColors.text2,
+                    ),
                   ),
                 ),
               ),
@@ -300,6 +305,7 @@ class _LockSetupScreenState extends State<LockSetupScreen>
               color: HaloColors.amber,
               wrong: _mismatch,
               shake: _shake,
+              letters: _letters,
             ),
             const Spacer(flex: 3),
             if (_checking)

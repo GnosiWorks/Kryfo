@@ -9,7 +9,7 @@ before a release.
     ./release.sh
 
 the release build. it clones the commit clean, builds the engine, the
-shim and the three apks in the pinned container at f-droid's build path,
+shim and the four apks in the pinned container at f-droid's build path,
 signs them outside the container with apksigner, and leaves them in `out/`
 with `libkryfo_signal-<version>-source.tar.gz`, the complete source of the
 signal shim for the release page: its own crate and every crate its
@@ -18,7 +18,11 @@ with checksums and a `.cargo/config.toml`, so `cargo build --offline` builds
 it from the archive alone. the keystore
 never goes into the container. `--unsigned` stops before signing. it builds
 the foss flavor, the one f-droid builds, and names the apks
-`app-<abi>-release.apk` as before.
+`app-<abi>-release.apk` as before. the fourth, `app-universal-release.apk`,
+is built after them with `--target-platform android-arm,android-arm64` and no
+split: both arm abis in one apk, for the site and github. gradle keeps it to
+those two abis (jniLibs has x86_64 too), and release.sh refuses it unless it
+holds exactly them, each with flutter, the engine and the shim.
 
 a step that fails on the network (a fetch error, a mirror answering 404) is
 run again twice, after 60s and then 120s, from a fresh clone. any other
@@ -44,7 +48,8 @@ normal one gave the same three apks, byte for byte. f-droid builds with the
 network and never sees `cache/`.
 
     ./verify.sh --ref vX.Y.Z out/app-arm64-v8a-release.apk \
-        out/app-armeabi-v7a-release.apk out/app-x86_64-release.apk
+        out/app-armeabi-v7a-release.apk out/app-x86_64-release.apk \
+        out/app-universal-release.apk
 
 builds the ref twice in the container and compares:
 

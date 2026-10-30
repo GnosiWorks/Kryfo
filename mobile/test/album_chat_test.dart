@@ -29,7 +29,10 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
+import 'package:kryfo/transfers.dart';
 import 'package:kryfo/widgets/album_grid.dart';
+import 'package:kryfo/widgets/file_wait.dart'
+    show FileWaitMark, WaitingFileCard;
 import 'package:kryfo/widgets/shots_line.dart';
 import 'package:kryfo/widgets/video_bubble.dart' show VideoBubble;
 import 'package:kryfo/widgets/message_menu.dart' show MessageMenuCard;
@@ -177,9 +180,9 @@ class _Engine implements HaloEngine {
   @override
   String myXPubkey() => 'x-me';
   @override
-  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {}
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) {}
   @override
-  void nostrUnsubscribeBg(String peerXPubHex) {}
+  void nostrUnsubscribeBg(int ident, String peerXPubHex) {}
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('engine: ${i.memberName}');
@@ -242,6 +245,7 @@ void main() {
   });
 
   tearDown(() {
+    fileWaits.value = const {};
     _mock('plugins.flutter.io/path_provider', null);
     _mock('com.llfbandit.record/messages', null);
     _mock('halo/platform', null);
@@ -340,6 +344,67 @@ void main() {
     await devClose(t);
   });
 
+  testWidgets('a waiting photo read after the chat is drawn shows as such', (
+    t,
+  ) async {
+    await mem.insert('messages', {
+      'peer_id': _peer,
+      'direction': 'in',
+      'plaintext': '',
+      'sent_at': base,
+      'written_at': base,
+      'msg_uid': 'w-1',
+      'media_path': '${docs.path}/not_yet.jpg',
+      'sent': 1,
+    });
+    await devOpen(t, chat());
+    await settle(t);
+    expect(find.byType(WaitingFileCard), findsNothing);
+    // the waits are read after the chat was drawn
+    setFileWait(
+      'w-1',
+      const FileWait(size: 4096, state: WaitState.asks, rule: AutoGet.wifi),
+    );
+    await settle(t);
+    expect(find.byType(WaitingFileCard), findsOneWidget);
+    setFileWait('w-1', null);
+    await settle(t);
+    expect(find.byType(WaitingFileCard), findsNothing);
+    await devClose(t);
+  });
+
+  testWidgets('a waiting photo keeps its place in its album', (t) async {
+    await item(0, 2);
+    await item(1, 2);
+    final later = File('${docs.path}/p_${_id}1.png')..deleteSync();
+    setFileWait(
+      'in-$_id-1',
+      const FileWait(size: 4096, state: WaitState.asks, rule: AutoGet.wifi),
+    );
+    await devOpen(t, chat());
+    await settle(t);
+    expect(find.byType(AlbumGrid), findsOneWidget);
+    expect(find.byType(WaitingFileCard), findsNothing);
+    expect(
+      find.descendant(of: tile(1), matching: find.byType(FileWaitMark)),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: tile(0), matching: find.byType(FileWaitMark)),
+      findsNothing,
+    );
+    // in: the tile turns into its photo
+    later.writeAsBytesSync(_png);
+    setFileWait('in-$_id-1', null);
+    await settle(t);
+    expect(find.byType(FileWaitMark), findsNothing);
+    expect(
+      find.descendant(of: tile(1), matching: find.byType(Image)),
+      findsOneWidget,
+    );
+    await devClose(t);
+  });
+
   testWidgets('one still on its way holds its place', (t) async {
     await item(0, 4);
     await item(3, 4);
@@ -400,6 +465,9 @@ void main() {
     await settle(t, 4);
     // the sheet asks once, for the album
     expect(find.text(l10n.albumUnsendTitle), findsOneWidget);
+    // its own line, not the one for a message
+    expect(find.text(l10n.chatAlbumItDisappearsWithNo), findsOneWidget);
+    expect(find.text(l10n.chatItDisappearsWithNo), findsNothing);
     await t.tap(find.text(l10n.chatUnsend).last);
     await settle(t, 12);
     final uids = ['out-$_id-0', 'out-$_id-1', 'out-$_id-2'];

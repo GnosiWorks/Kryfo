@@ -107,22 +107,22 @@ func knockTargets() []knockTarget {
 		}
 	}
 	knockNotesMu.Unlock()
+	fcKeysMu.Lock()
+	invites := map[string]fcKey{}
+	for k, v := range fcKeys {
+		invites[k] = v
+	}
+	fcKeysMu.Unlock()
+	main, mainErr := identityOf(mainIdent)
 	for _, k := range keys {
-		switch {
-		case k == "firstcontact":
-			sk, pk, err := nip17FirstContactKeys(fc)
+		if inv, ok := invites[k]; ok {
+			out = append(out, knockTarget{inv.pk, inv.sk, laneFirstContact, "firstcontact:" + inv.pk, ""})
+			continue
+		}
+		if k == "firstcontact" && mainErr == nil {
+			sk, pk, err := nip17FirstContactKeysAs(main, fc)
 			if err == nil {
 				out = append(out, knockTarget{pk, sk, laneFirstContact, "firstcontact:" + pk, ""})
-			}
-		case isHexKey(k):
-			peer, err := peerArr(k)
-			if err != nil {
-				continue
-			}
-			sk, pk, err := nip17RcvAddress(peer)
-			if err == nil {
-				lane := receiveLane(pk)
-				out = append(out, knockTarget{pk, sk, lane, lane, strings.ToLower(k)})
 			}
 		}
 	}
@@ -138,10 +138,11 @@ func isHexKey(s string) bool {
 	return err == nil
 }
 
-// a keyed hash under this identity: the same every start, and it says
-// nothing of what went in to whoever reads the app's settings
+// a keyed hash under the main identity: the same every start, and it says
+// nothing of what went in to whoever reads the app's settings. it never
+// leaves the phone
 func knockID(s string) string {
-	me, err := myXid()
+	me, err := identityOf(mainIdent)
 	if err != nil {
 		return ""
 	}
@@ -295,7 +296,8 @@ func knockTorClient(lane string) (*http.Client, error) {
 
 // sends one registration to our relay on lane. a var for the tests
 var knockPublish = func(ctx context.Context, lane string, ev nostr.Event) error {
-	own := ownRelays(relaysWhenSet(ctx))
+	// the first store's entries alone: the knock table lives with it
+	own := storeEntries(relaysWhenSet(ctx), storeFirst)
 	if len(own) == 0 {
 		return fmt.Errorf("no relay")
 	}
@@ -484,7 +486,7 @@ func HaloKnockCheck() *C.char { return C.CString(knockCheck()) }
 func knockCheck() string {
 	ctx, cancel := context.WithTimeout(context.Background(), knockWait)
 	defer cancel()
-	own := ownRelays(relaysWhenSet(ctx))
+	own := storeEntries(relaysWhenSet(ctx), storeFirst)
 	if len(own) == 0 {
 		return "error: no relay"
 	}

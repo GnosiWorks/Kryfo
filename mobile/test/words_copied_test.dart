@@ -93,9 +93,9 @@ class _Engine implements HaloEngine {
   @override
   String myEdPubkey() => 'ed-me';
   @override
-  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {}
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) {}
   @override
-  void nostrUnsubscribeBg(String peerXPubHex) {}
+  void nostrUnsubscribeBg(int ident, String peerXPubHex) {}
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('engine: ${i.memberName}');
@@ -104,15 +104,20 @@ class _Engine implements HaloEngine {
 class _Io extends AppIo {
   const _Io();
   @override
-  void listen(String xPub, {bool fresh = false}) {}
+  void listen(int ident, String xPub, {bool fresh = false}) {}
   @override
-  void unlisten(String xPub) {}
+  void unlisten(int ident, String xPub) {}
   @override
-  Future<String> relaySend(String xPub, String cipher) async => 'ok';
+  Future<String> relaySend(int ident, String xPub, String cipher) async => 'ok';
   @override
   Future<String> onionSend(String onion, String cipher) async => 'ok';
   @override
-  Future<String> firstContactSend(String x, String fc, String c) async => 'ok';
+  Future<String> firstContactSend(
+    int ident,
+    String x,
+    String fc,
+    String c,
+  ) async => 'ok';
   @override
   Future<void> notify({
     required String title,

@@ -108,6 +108,8 @@ class ChatShots {
   bool get peerCan => quiet || can > 0;
   // what this phone does now. someone blocked holds nothing
   bool get blocking => on && peerCan && !blocked;
+  // the face instead of a photo. blocking them does not bring it back
+  bool get hidesPhoto => on && peerCan;
 
   ShotsWord get word => ShotsWord(on: on, at: at);
 }

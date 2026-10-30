@@ -38,8 +38,14 @@ Future<void> openSignalStore(
 // dev chat the one it was started with. null for a dev chat that has none
 // (not started, deleted, restored without its made name) and for any other
 // id shaped like one: nothing falls back to the everyday store for it
-Future<SignalSession?> signalFor(String peer) async =>
-    isDevId(peer) ? (await devLane.seat(peer))?.store : signalSession;
+// any other contact's is the store of the identity they know (door.dart)
+Future<SignalSession?> signalFor(String peer) async => isDevId(peer)
+    ? (await devLane.seat(peer))?.store
+    : await signalOfIdent(identOfPeer(peer));
+
+/// the x key [peer]'s store holds for them, on the identity they know
+Future<String?> peerXPubOf(String peer) async =>
+    (await signalFor(peer))?.peerXPubHex(peer);
 
 // a session with [haloId] built from their card, in [into] or the store
 // signalFor names
@@ -67,24 +73,41 @@ Future<bool> hasSessionWith(String peerId) async {
   return ss != null && await ss.hasSession(peerId);
 }
 
-// the one place a frame is sealed for a peer. every frame for the dev chat
-// goes through its own seal instead: the allowlist, its store, the token
-// the wire asks for. either store seals one frame at a time per peer
+// the one place a frame is sealed for a peer: through the door, on the
+// store of the identity they know. every frame for the dev chat goes
+// through its own seal instead: the allowlist, its store, the token the
+// wire asks for. either store seals one frame at a time per peer
 // [onlySettled]: a frame that must never open a session (a typing frame)
 Future<String> signalEncrypt(
+  String peerId,
+  String plaintext, {
+  bool onlySettled = false,
+}) async =>
+    (await signalSeal(peerId, plaintext, onlySettled: onlySettled)).cipher;
+
+/// as signalEncrypt, with the identity the door sealed on: every relay call
+/// that carries the cipher takes this one, never a second lookup
+Future<({int ident, String cipher})> signalSeal(
   String peerId,
   String plaintext, {
   bool onlySettled = false,
 }) async {
   if (isDevId(peerId)) {
     if (onlySettled) throw NotSettled(peerId);
-    return devLane.encrypt(peerId, plaintext);
+    return (
+      ident: kMainIdent,
+      cipher: await devLane.encrypt(peerId, plaintext),
+    );
   }
   plaintext = await appState.shotsOnWire(peerId, plaintext);
+  // a v4 first contact's frames carry the pair's seed until they answer
+  plaintext = await appState.v4OpenerFields(peerId, plaintext);
+  final (ident, framed) = await appState.doorFor(peerId, plaintext);
+  final ss = await signalOfIdent(ident);
   final from = _afreshFrom;
-  return signalSession.encryptTo(
+  final cipher = await ss.encryptTo(
     peerId,
-    plaintext,
+    framed,
     onlySettled: onlySettled,
     afresh: from == null ? null : () => from(peerId),
     // a read that fails seals nothing
@@ -92,6 +115,7 @@ Future<String> signalEncrypt(
     // a card naming another key: flagged as on an open, once out of the lane
     keyMoved: () => unawaited(_keyMoved?.call(peerId)),
   );
+  return (ident: ident, cipher: cipher);
 }
 
 // where a seal finds a peer's card to start a session afresh from, after a
@@ -317,8 +341,11 @@ bool _takeOpenedBefore(String wireB64) =>
 // a second one sent before they heard back) leaves it as it runs, its text
 // still handed on for the uid checks to know. a new one goes in front of it
 // as a fresh start does, the states before it kept behind
-Future<void> keepOpenedSession(String peer, Uint8List record) =>
-    signalSession.keepOpenedSession(peer, record);
+Future<void> keepOpenedSession(
+  String peer,
+  Uint8List record, {
+  Future<void> Function(Transaction t)? also,
+}) => signalSession.keepOpenedSession(peer, record, also: also);
 
 // a first contact's session moved off a name a hidden chat binds to
 // another key, onto the sender's own id. a name with a trusted key was

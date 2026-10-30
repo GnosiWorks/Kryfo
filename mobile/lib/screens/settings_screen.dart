@@ -47,12 +47,14 @@ import 'restore_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../notifications.dart';
 import '../delivery_mode.dart';
+import '../desktop/desktop_mode.dart' show computerLock;
 import 'notifications_screen.dart';
 import 'icon_screen.dart';
 import '../app_icon.dart' show AppFace, AppFaceWords, appFaceNow, readAppFace;
 import '../widgets/halo_rows.dart';
 import '../widgets/dev_avatar.dart' show DevRing;
 import 'dev_about_sheet.dart' show devChatOffered, writeToMarios;
+import 'auto_get_screen.dart';
 import 'follow_section.dart';
 import 'linked_devices_screen.dart';
 import '../devices/own_devices.dart' show kLinkedDevicesOn;
@@ -449,11 +451,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 // be a promise nothing is trying to keep
                 final onTor = appState.sendMode == 'private';
                 final torOn = onTor && link.kind == LinkKind.ready;
-                // the app lock covers every screen, and so does the old
-                // switch until home's card about it is answered. without
-                // them each chat has its own switch
+                // the old switch covers every screen until home's card
+                // about it is answered, and so does a pin on android 12
+                // and older. otherwise each chat has its own switch
                 final shots =
-                    appState.screenSecureByLock || appState.shotsCardCovers;
+                    appState.shotsCardCovers || appState.pinBlocksShots;
                 // as the App lock screen reads it: a lock turned off in a
                 // decoy session is off
                 final lock = lockState.lockOn;
@@ -494,9 +496,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ? l10n.settingsConnected
                             : onTor
                             ? link.text
-                            : appState.sendMode == 'fast'
-                            ? l10n.settingsOffFastMode
-                            : l10n.settingsOffMode,
+                            // relay and fast are one route now
+                            : l10n.settingsOffFastMode,
                       ),
                       ProtectionLine(
                         l10n.settingsScreenshots,
@@ -546,11 +547,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               HaloRow(
                 icon: Icons.shield_outlined,
                 label: l10n.settingsSpeedPrivacy,
-                value: appState.sendMode == 'fast'
-                    ? l10n.settingsFast
-                    : appState.sendMode == 'balanced'
-                    ? l10n.settingsRelay1Hop
-                    : l10n.settingsOnion3Hops,
+                value: appState.sendMode == 'private'
+                    ? l10n.settingsPrivateTor
+                    : l10n.settingsFast,
                 onTap: () async {
                   await Navigator.of(
                     context,
@@ -704,6 +703,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Navigator.of(context).push(haloRoute(const PinsScreen())),
                 ),
               ),
+              // the same row and page in a decoy session, which keeps
+              // what it changes to itself and never moves the real lock
+              if (computerLock case final lock?)
+                ListenableBuilder(
+                  listenable: Listenable.merge([lock, lockState]),
+                  builder: (_, _) {
+                    final decoy = lockState.inDecoy;
+                    return HaloRow(
+                      icon: Icons.key_rounded,
+                      label: l10n.desktopPassRow,
+                      value: lock.passphraseOn(decoy: decoy)
+                          ? l10n.commonOn
+                          : l10n.commonOff,
+                      onTap: () => Navigator.of(
+                        context,
+                      ).push(haloRoute(lock.page(decoy: decoy))),
+                    );
+                  },
+                ),
               // the icon and the notifications read the phone's values, in
               // any session
               ValueListenableBuilder<AppFace?>(
@@ -766,15 +784,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
-          HaloSection(l10n.settingsBackup),
+          HaloSection(l10n.settingsFiles),
           HaloGroup(
             children: [
               HaloRow(
-                icon: Icons.save_alt,
-                label: l10n.settingsBackUpIdentity,
-                value: l10n.settingsEncryptedFile,
-                onTap: () =>
-                    Navigator.of(context).push(haloRoute(const BackupScreen())),
+                icon: Icons.download_for_offline_outlined,
+                label: l10n.autoGetTitle,
+                onTap: () => Navigator.of(
+                  context,
+                ).push(haloRoute(const AutoGetScreen())),
+              ),
+            ],
+          ),
+          HaloSection(l10n.settingsBackup),
+          HaloGroup(
+            children: [
+              // windows without a passphrase: a backup is the way back if
+              // the computer's key goes
+              ListenableBuilder(
+                listenable: Listenable.merge([?computerLock, lockState]),
+                builder: (_, _) => HaloRow(
+                  icon: Icons.save_alt,
+                  label: l10n.settingsBackUpIdentity,
+                  value: l10n.settingsEncryptedFile,
+                  hint:
+                      computerLock?.backupWise(decoy: lockState.inDecoy) ??
+                          false
+                      ? l10n.desktopBackupHint
+                      : null,
+                  onTap: () => Navigator.of(
+                    context,
+                  ).push(haloRoute(const BackupScreen())),
+                ),
               ),
               HaloRow(
                 icon: Icons.restore,

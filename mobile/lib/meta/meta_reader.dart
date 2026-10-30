@@ -437,6 +437,8 @@ void _jpeg(ByteSource s, MetaReport r) {
       i += 1;
       continue;
     }
+    // a decoder skips ff 00 and reads on: what it hides goes unread here
+    if (m == 0x00) throw const _Unreadable('broken segment');
     if (m == 0xD8 || (m >= 0xD0 && m <= 0xD7) || m == 0x01) {
       i += 2;
       continue;
@@ -614,12 +616,22 @@ int _jpegEnd(ByteSource s, int sos, MetaReport r, _JpegNotes notes) {
     while (true) {
       if (marker == 0xD9) return j + 2;
       if (marker == 0xDA) break;
+      if (marker == 0xFF) {
+        j += 1;
+        marker = s.read(j, 2)[1];
+        continue;
+      }
+      if (marker == 0x00 ||
+          marker == 0x01 ||
+          (marker! >= 0xD0 && marker <= 0xD8)) {
+        throw const _Unreadable('broken segment');
+      }
       final sh = s.read(j, 4);
       final len = _be16(sh, 2);
       if (len < 2 || j + 2 + len > s.length) {
         throw const _Unreadable('segment runs past the file');
       }
-      _jpegSegment(marker!, s.read(j + 4, len - 2), r, notes);
+      _jpegSegment(marker, s.read(j + 4, len - 2), r, notes);
       j += 2 + len;
       final nx = s.read(j, 2);
       if (nx[0] != 0xFF) throw const _Unreadable('broken segment');

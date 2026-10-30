@@ -659,12 +659,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appConnectedRoutedThrough3 => 'Подключено · через 3 ретранслятора';
 
   @override
-  String get appReadyToSendPublishing =>
-      'Можно отправлять · публикуем твой адрес';
-
-  @override
-  String get appReadyToSendFinishing =>
-      'Можно отправлять · завершаем настройку';
+  String get appReadyToChatAddressFinishing =>
+      'Можно общаться · адрес почти готов';
 
   @override
   String appConnecting(Object pct) {
@@ -688,16 +684,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get appRelayAndFastModes =>
-      'Режимы «Ретранслятор» и «Быстрый» обходят Tor и работают быстрее. Они в настройках, в разделе «Скорость и приватность», и у каждого указано, чем за это платишь.';
-
-  @override
-  String get appViaRelay => 'Ретранслятор';
+      'Режим «Быстрый» обходится без Tor и работает быстрее. Он в настройках, в разделе скорости и приватности, и там сказано, чем за это платишь.';
 
   @override
   String get appOffline => 'Не в сети';
-
-  @override
-  String get appFast => 'Быстрый';
 
   @override
   String get appTorOff => 'Tor выкл.';
@@ -1756,9 +1746,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatSupporter => 'Сторонник';
-
-  @override
-  String get chatEncryptedViaRelay => 'Зашифровано · через ретранслятор';
 
   @override
   String get chatEncryptedDirect => 'Зашифровано · напрямую';
@@ -3224,26 +3211,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get homeLeaveThemOff => 'Оставить выключенными';
 
   @override
-  String get homeOurRelayIsQuiet => 'Наш ретранслятор молчит';
-
-  @override
-  String get homeRelayModeUsesOnly =>
-      'Режим «Ретранслятор» использует только наш собственный ретранслятор, а он сейчас не отвечает. Режим «Быстрый» добавляет к нему публичные ретрансляторы, так что сообщения всё равно дойдут. В любом случае всё остаётся зашифрованным.';
-
-  @override
-  String get homeSwitchedToFast => 'Включён режим «Быстрый»';
-
-  @override
-  String get homeUseFastMode => 'Включить «Быстрый»';
-
-  @override
   String get homeKeepWaiting => 'Подождать ещё';
-
-  @override
-  String get homeSwitchedToRelay => 'Теперь через ретранслятор';
-
-  @override
-  String get homeUseOurRelay => 'Наш ретранслятор';
 
   @override
   String get homeOffline => 'Не в сети';
@@ -3750,41 +3718,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Четыре цифры или больше — любые, которые запомнишь';
 
   @override
-  String get modesOnion => 'Onion';
-
-  @override
-  String get modesFullOnionRoutingThree =>
-      'Полная onion-маршрутизация, три узла. Сообщение идёт от двух до пяти секунд. Никто не видит, с кем ты общаешься.';
-
-  @override
-  String get modesSlower => 'Медленнее';
-
-  @override
-  String get modesRelay => 'Ретранслятор';
-
-  @override
-  String get modesOneSealedConnectionTo =>
-      'Одно зашифрованное подключение к собственному ретранслятору Kryfo — как VPN, которому нечего записывать в логи. Сообщения доходят примерно за секунду, и это работает там, где Tor заблокирован.';
-
-  @override
-  String get modesQuick => 'Быстро';
-
-  @override
-  String get modesRelayOnly => 'Только ретранслятору';
-
-  @override
   String get modesFast => 'Быстрый';
-
-  @override
-  String get modesPlainConnectionsToEvery =>
-      'Обычные подключения к каждому ретранслятору. Почти мгновенно, но это наименее приватный из трёх режимов.';
-
-  @override
-  String get modesInstant => 'Мгновенно';
-
-  @override
-  String get modesEveryRelayYouUse =>
-      'Каждый ретранслятор, которым ты пользуешься, знает адрес, с которого ты подключаешься, — не только наш. Сообщения по-прежнему зашифрованы, а вот сам факт отправки — нет. По умолчанию выключено и снова выключается после переустановки.';
 
   @override
   String get modesNotChanged => 'Режим не сменился. Попробуй ещё раз.';
@@ -3797,53 +3731,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get modesPrivacy => 'и приватность';
-
-  @override
-  String get modesChangeGloballyOrPer =>
-      'Можно сменить для всех чатов или для одного';
-
-  @override
-  String get modesSoon => 'Скоро';
-
-  @override
-  String get modesActive => 'Активен';
-
-  @override
-  String get modesSpeed2 => 'СКОРОСТЬ';
-
-  @override
-  String get modesHops => 'УЗЛЫ';
-
-  @override
-  String get modesIp => 'IP';
-
-  @override
-  String get modesVisible => 'Виден';
-
-  @override
-  String get modesHidden => 'Скрыт';
-
-  @override
-  String modesHeadsUp(Object warning) {
-    return '*Внимание:* $warning';
-  }
-
-  @override
-  String get modesOnionIsTheDefault =>
-      'Onion включён по умолчанию и остаётся таким, пока ты его не сменишь. Переключение срабатывает со следующего сообщения.';
-
-  @override
-  String get modesFastMode => 'Режим «Быстрый»';
-
-  @override
-  String get modesPlainConnectionsToEveryRelayQuicker =>
-      'Обычные подключения к каждому ретранслятору. Быстрее, и ретрансляторы могут видеть твой IP-адрес. Сообщения в любом случае остаются под сквозным шифрованием.';
-
-  @override
-  String get modesTurnOnFastMode => 'Включить «Быстрый»';
-
-  @override
-  String get modesKeepItOff => 'Не включать';
 
   @override
   String get movedWipeThisPhone => 'Стереть Kryfo с этого телефона?';
@@ -3900,11 +3787,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get myKryfoInviteCopiedClearsIn =>
       'Приглашение скопировано · очистится через 60 с';
-
-  @override
-  String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Добавь меня в Kryfo. Там меня зовут $myId\n\nНажми, чтобы добавить:\n$uri\n\nKryfo — приватный мессенджер. Без номера телефона и без почты.';
-  }
 
   @override
   String get myKryfoAddMeOnKryfo2 => 'Добавь меня в Kryfo';
@@ -4242,103 +4124,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get onboardingThreeWords => 'Три слова. *Только твои.*';
 
   @override
-  String get onboardingPickA => 'Выбери *лицо*.';
-
-  @override
-  String get onboardingDrawnOnThisPhone =>
-      'Нарисовано на этом телефоне из числа и никогда никуда не загружается. Меняй когда захочешь.';
-
-  @override
-  String get onboardingThePeopleYouMessage =>
-      'Те, с кем ты переписываешься, тоже это видят';
-
-  @override
-  String get onboardingKeepMyInitial => 'Оставить инициал';
-
-  @override
-  String get onboardingThatOne => 'Вот это →';
-
-  @override
   String get onboardingContinue => 'Дальше →';
-
-  @override
-  String get onboardingHowYourMessages => 'Как *путешествуют* твои сообщения.';
-
-  @override
-  String get onboardingYouCanChangeThis =>
-      'Это можно поменять в настройках в любой момент — для всех чатов или для одного.';
-
-  @override
-  String get onboardingOnion => 'Onion';
-
-  @override
-  String get onboardingSlowerAMessageTakes =>
-      'Медленнее. Сообщение идёт от двух до пяти секунд.';
-
-  @override
-  String get onboardingHidesYourAddressFrom =>
-      'Скрывает твой адрес от всех, включая наш ретранслятор.';
-
-  @override
-  String get onboardingRelay => 'Ретранслятор';
-
-  @override
-  String get onboardingOurRelaySeesYour =>
-      'Наш ретранслятор видит твой адрес. Больше никто.';
-
-  @override
-  String get onboardingAboutASecondWorks =>
-      'Около секунды. Работает там, где Tor заблокирован.';
-
-  @override
-  String get onboardingAutoFindsAWay =>
-      'Режим «Авто» сам находит способ обойти блокировку.';
-
-  @override
-  String get onboardingFast => 'Быстрый';
-
-  @override
-  String get onboardingEveryRelayYouUse =>
-      'Каждый ретранслятор, которым ты пользуешься, видит твой адрес. Наименее приватный из трёх.';
-
-  @override
-  String get onboardingNearInstant => 'Почти мгновенно.';
-
-  @override
-  String get onboardingKeepOnion => 'Оставить Onion →';
-
-  @override
-  String get onboardingUseThis => 'Выбрать →';
-
-  @override
-  String get onboardingSkipOnionIsA =>
-      'Пропустить · Onion — хороший выбор по умолчанию';
-
-  @override
-  String get onboardingThreeThingsThen => 'Три вещи —\nи *ты внутри*.';
-
-  @override
-  String get onboardingEverythingElseTheApp =>
-      'Обо всём остальном приложение расскажет, когда это будет важно.';
-
-  @override
-  String get onboardingYourNameIsThreeWords => 'Твоё имя — три слова';
-
-  @override
-  String get onboardingThatIsTheWhole =>
-      'Это и есть весь профиль. Нет ни номера, ни почты: нечему утечь и нечего искать. Собеседники видят эти слова и выбранное тобой лицо.';
-
-  @override
-  String get onboardingNobodyCanReachYou =>
-      'Никто не сможет с тобой связаться, пока ты его не впустишь';
-
-  @override
-  String get onboardingAStrangerWithYour =>
-      'Незнакомец, знающий твои слова, может только постучаться. Его первое сообщение ждёт в запросах, пока ты не скажешь «да», а сказать «нет» можно так, что он об этом никогда не узнает.';
-
-  @override
-  String get onboardingTheFirstConnectionTakesAMinute =>
-      'Первое подключение занимает минуту';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -4347,9 +4133,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get onboardingYourIdentityLivesOn =>
       'Твой профиль живёт на этом телефоне. Сделай резервную копию в настройках, когда будет удобно.';
-
-  @override
-  String get onboardingIUnderstand => 'Понятно →';
 
   @override
   String get onboardingOneQuiet => 'Одно тихое *уведомление*.';
@@ -4369,13 +4152,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get onboardingGotIt => 'Ясно →';
 
   @override
-  String get onboardingNow => 'Теперь *добавь кого-нибудь*.';
-
-  @override
-  String get onboardingTheAppIsReady =>
-      'Приложение готово. Никто не сможет тебе написать, пока ты его не добавишь или не впустишь.';
-
-  @override
   String get onboardingEveryWayToAdd => 'Все способы добавить человека';
 
   @override
@@ -4387,10 +4163,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get onboardingPointTheCameraAt => 'Наведи камеру на код собеседника';
-
-  @override
-  String get onboardingTheAppIsReadyWhenYou =>
-      'Приложение готово — начинай, когда захочешь.';
 
   @override
   String get onboardingNotNowAddPeople => 'Не сейчас · добавлю людей позже';
@@ -4631,9 +4403,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get profileProfile => 'Профиль';
-
-  @override
-  String get profileChangeYourFace => 'Сменить лицо';
 
   @override
   String get profileKryfoId => 'Твоё имя';
@@ -5270,16 +5039,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get seenYourIpAddress => 'Твой IP-адрес';
 
   @override
-  String get seenOurRelay => 'Наш ретранслятор';
-
-  @override
-  String get seenEveryRelay => 'Все ретрансляторы';
-
-  @override
-  String get seenOnOnionEverythingLeaves =>
-      'В режиме Onion всё уходит через Tor, и ретранслятор видит выходной узел, но никогда не тебя. В режиме «Ретранслятор» подключение идёт прямо к нашему собственному ретранслятору: твой адрес никуда не передаётся и нигде не записывается, но это одно подключение видим мы. В режиме «Быстрый» каждый публичный ретранслятор узнаёт о твоём подключении, но не о том, с кем ты общаешься и что говоришь.';
-
-  @override
   String get seenYourContactGraph => 'Твой граф контактов';
 
   @override
@@ -5335,12 +5094,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Храповик и слой хранения — стандартные. Слой, который их соединяет, — наш, и никто независимый его не проверял. Это альфа-версия.';
 
   @override
-  String get seenOnion => 'Onion';
-
-  @override
-  String get seenRelay => 'Ретранслятор';
-
-  @override
   String get seenFast => 'Быстрый';
 
   @override
@@ -5375,9 +5128,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsTorRouting => 'Маршрутизация Tor';
 
   @override
-  String get settingsOffMode => 'Выкл. · ретранслятор';
-
-  @override
   String get settingsOffFastMode => 'Выкл. · быстрый режим';
 
   @override
@@ -5391,9 +5141,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsFast => 'Быстрый';
-
-  @override
-  String get settingsRelay1Hop => 'Ретранслятор · 1 узел';
 
   @override
   String get settingsOnion3Hops => 'Onion · 3 узла';
@@ -6768,6 +6515,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get motionYouReAnonymous => 'Ты инкогнито';
 
   @override
+  String get motionReadyToChat => 'Можно общаться';
+
+  @override
   String get motionTorIsStartingIn =>
       'Tor запускается в фоне. Этот граф загорается по мере того, как складывается подключение.';
 
@@ -6786,6 +6536,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get motionYourIpIsHidden =>
       'Твой IP скрыт. Связаться с тобой могут только те, у кого есть твой Kryfo.';
+
+  @override
+  String get motionAddressFinishing =>
+      'Сообщения уже идут через Tor. Твой личный адрес настраивается в фоне.';
 
   @override
   String get motionBuilding2 => 'строится';
@@ -7452,10 +7206,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bridgesTheTorProjectSGuess => 'По версии проекта Tor';
-
-  @override
-  String get bridgesOurRelayUsuallyGets =>
-      'Наш ретранслятор использует одно простое подключение и обычно пробивается. Или пусть Kryfo сам найдёт путь.';
 
   @override
   String get bridgesUseThisBridge => 'Использовать этот мост';
@@ -9309,15 +9059,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bridgesRelayWorksWhereTor =>
-      'Режим ретранслятора работает там, где Tor заблокирован, а вернуться можно в любой момент.';
+      'Режим «Быстрый» работает там, где Tor заблокирован, и вернуться можно в любой момент.';
 
   @override
   String get bridgesRelayThisNetworkSees =>
-      'Режим ретранслятора проходит там, где Tor заблокирован, но эта сеть может видеть, что ты подключаешься к Kryfo.';
-
-  @override
-  String get onboardingRelayThisNetworkSees =>
-      'Эта сеть может видеть, что ты подключаешься к Kryfo. Наш ретранслятор видит твой адрес.';
+      'Режим «Быстрый» проходит там, где Tor заблокирован, но эта сеть может видеть, что ты подключаешься к Kryfo.';
 
   @override
   String get settingsLicences => 'Лицензии';
@@ -9383,9 +9129,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'Скопировать ссылку';
-
-  @override
-  String get appRelayNotAnswering => 'Ретранслятор молчит';
 
   @override
   String get motionNoRelayYet => 'РЕТРАНСЛЯТОРА ПОКА НЕТ';
@@ -10115,4 +9858,569 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'Kryfo нужна личная папка в памяти, пока он работает, а этот компьютер её не даёт, поэтому Kryfo не откроется.';
+
+  @override
+  String get inviteNotYet =>
+      'Это приглашение ещё не действует. Проверьте время на телефоне.';
+
+  @override
+  String get inviteExpired => 'Срок этого приглашения истёк. Попросите новое.';
+
+  @override
+  String get inviteDamaged => 'Это приглашение повреждено. Попросите новое.';
+
+  @override
+  String get helloSent => 'Запрос отправлен. Его увидят, когда будут в сети.';
+
+  @override
+  String get inviteNeeds06 => 'Нужен Kryfo 0.6 или новее.';
+
+  @override
+  String get helloSentOld =>
+      'Запрос отправлен. Если у них старая версия Kryfo, им сначала нужно обновиться.';
+
+  @override
+  String get modesPickHow =>
+      'Выбери, как идут твои сообщения. Это можно поменять в любой момент.';
+
+  @override
+  String get modesPrivate => 'Приватный';
+
+  @override
+  String get modesPrivateTag => 'Tor · мосты при необходимости';
+
+  @override
+  String get modesPrivateLine =>
+      'Никто не узнаёт твой IP-адрес и кто ты, даже наши серверы. Сам находит обход блокировок.';
+
+  @override
+  String get modesDefault => 'По умолчанию';
+
+  @override
+  String get modesFastTag => 'Напрямую к нашим серверам';
+
+  @override
+  String get modesFastLine =>
+      'Без Tor сообщения приходят быстрее и тратят меньше заряда. Наши серверы видят твой IP-адрес только пока ты подключён и никогда его не записывают и не хранят. И никогда не видят, что ты пишешь. Твои контакты его никогда не видят.';
+
+  @override
+  String get modesFastConnected => 'Быстрый · подключено';
+
+  @override
+  String get modesFastConnecting => 'Быстрый · подключение';
+
+  @override
+  String get modesFastDown => 'Быстрый · наши серверы не отвечают';
+
+  @override
+  String get modesBackupReady =>
+      'Запасной всегда наготове, так что связь не пропадёт, даже если один упадёт.';
+
+  @override
+  String get modesDetails => 'Подробнее';
+
+  @override
+  String get modesBothLine =>
+      'Оба шифруют каждое сообщение сквозным шифрованием. Меняется только то, кто видит твой IP-адрес.';
+
+  @override
+  String get modesConnectionBridges => 'Подключение и мосты';
+
+  @override
+  String get modesWhatServersSee => 'Что видят наши серверы';
+
+  @override
+  String get serversTitle => 'Серверы режима «Быстрый»';
+
+  @override
+  String get serversLine =>
+      'Каждое сообщение идёт сразу на оба сервера. Доставляет тот, кто ответит первым, а если один остановится, его подхватит второй.';
+
+  @override
+  String get serversOne => 'Сервер 1';
+
+  @override
+  String get serversTwo => 'Сервер 2 · другой хостинг';
+
+  @override
+  String get serversConnected => 'Подключён';
+
+  @override
+  String get serversConnecting => 'Подключение';
+
+  @override
+  String get serversNotAnswering => 'Не отвечает';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms мс';
+  }
+
+  @override
+  String get serversQuicker => 'Быстрее';
+
+  @override
+  String get serversBackups => 'Публичные ретрансляторы';
+
+  @override
+  String get serversBackupsLine =>
+      'Используются, пока Сервер 1 недоступен, и только через Tor, так что твой IP-адрес они не видят.';
+
+  @override
+  String get serversStandingBy => 'Наготове';
+
+  @override
+  String get serversInUse => 'Используются';
+
+  @override
+  String get homeMergedTitle => 'Ретранслятор и Быстрый теперь одно';
+
+  @override
+  String get homeMergedLine =>
+      'Ты на режиме «Быстрый». Запасной сервер всегда наготове, так что связь не пропадёт, даже если один упадёт. Наши серверы видят твой IP-адрес, но никогда не видят, что ты пишешь.';
+
+  @override
+  String get homeMergedGotIt => 'Понятно';
+
+  @override
+  String get homeMergedUsePrivate => 'Лучше Приватный';
+
+  @override
+  String get homeOursDownTitle => 'Наши серверы не отвечают';
+
+  @override
+  String get homeOursDownLine =>
+      'Через несколько минут, когда Tor пробьётся, сообщения пойдут ещё и через публичные ретрансляторы, а как только один из наших серверов ответит, снова через него.';
+
+  @override
+  String get homeUsePrivate => 'Приватный';
+
+  @override
+  String get homeSwitchedToPrivate => 'Включён Приватный';
+
+  @override
+  String get homeUseFast => 'Быстрый';
+
+  @override
+  String get homeSwitchedToFastRoute => 'Включён Быстрый';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'Быстрый идёт напрямую к нашим серверам и обычно проходит. Или пусть Kryfo сам найдёт путь.';
+
+  @override
+  String get appServersNotAnswering => 'Серверы не отвечают';
+
+  @override
+  String get settingsPrivateTor => 'Приватный · Tor';
+
+  @override
+  String get seenOurServers => 'Наши серверы';
+
+  @override
+  String get seenIpWhy =>
+      'В режиме «Приватный» всё уходит через Tor, и наши серверы видят выходной узел, а не тебя. В режиме «Быстрый» соединение идёт напрямую к двум нашим серверам: они видят твой IP-адрес, пока ты подключён, и ничего о нём не хранят. Пока первый недоступен, «Быстрый» использует ещё и публичные ретрансляторы, только через Tor.';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'Альбом удалится с обоих телефонов, если его ещё не сохранили. Это нельзя отменить.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'Альбом удалится с телефонов всех участников, если его ещё не сохранили. Это нельзя отменить.';
+
+  @override
+  String get homeInviteSomeone => 'Пригласить';
+
+  @override
+  String get onboardingNameHeadline => 'Публичное *@имя*, если хочешь.';
+
+  @override
+  String get onboardingNameLine =>
+      'Публичное имя помогает людям найти тебя. Без него ты приватнее, а добавить его можно в любой момент.';
+
+  @override
+  String get onboardingNameSkip => 'Пока пропустить →';
+
+  @override
+  String onboardingNameClaim(Object handle) {
+    return 'Занять @$handle →';
+  }
+
+  @override
+  String get onboardingInviteHeadline => 'Теперь *пригласи кого-нибудь*.';
+
+  @override
+  String get onboardingInviteLead =>
+      'Отправь ссылку в любом мессенджере. Она откроет Kryfo или покажет, где его скачать.';
+
+  @override
+  String get onboardingInviteSomeone => 'Пригласить →';
+
+  @override
+  String get onboardingInviteGettingReady => 'Готовим ссылку…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'Добавь меня в Kryfo. Там меня зовут $myId\n\nНажми, чтобы добавить:\n$link\n\nЕщё нет Kryfo? Скачай здесь:\n$download\n\nKryfo — приватный мессенджер. Без номера телефона и без почты.';
+  }
+
+  @override
+  String get inviteNotReady =>
+      'Ссылка почти готова. Попробуй ещё раз чуть позже.';
+
+  @override
+  String get photoCropTitle => 'Переместите и масштабируйте';
+
+  @override
+  String get photoCropUse => 'Выбрать фото';
+
+  @override
+  String get photoCropLabel =>
+      'Ваше фото в круге. Сведите пальцы, чтобы приблизить, проведите, чтобы сдвинуть';
+
+  @override
+  String get photoCouldNotUse =>
+      'Попробуйте другое фото. Это не удалось прочитать.';
+
+  @override
+  String get photoTake => 'Сделать фото';
+
+  @override
+  String get photoChoose => 'Выбрать из галереи';
+
+  @override
+  String get photoPickFace => 'Выбрать лицо';
+
+  @override
+  String get photoView => 'Посмотреть фото';
+
+  @override
+  String get photoRemove => 'Удалить фото';
+
+  @override
+  String get photoYourPhoto => 'Ваше фото';
+
+  @override
+  String get photoYourPhotoLine =>
+      'Его видят только ваши контакты, со сквозным шифрованием.';
+
+  @override
+  String get photoSetTheirs => 'Поставить фото';
+
+  @override
+  String get photoChangeTheirs => 'Сменить фото';
+
+  @override
+  String get photoOnlyHere => 'Только на этом телефоне';
+
+  @override
+  String photoForThem(Object name) {
+    return 'Фото для $name';
+  }
+
+  @override
+  String get photoOnlyHereLine =>
+      'Его видите только вы. Оно остаётся на этом телефоне.';
+
+  @override
+  String photoOf(Object name) {
+    return 'Фото $name';
+  }
+
+  @override
+  String get historyChatStaysShots =>
+      'Этот чат остаётся на твоём телефоне, потому что в нём запрещены скриншоты.';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString цифры',
+      many: '$countString цифр',
+      few: '$countString цифры',
+      one: '$countString цифра',
+      zero: 'Нет цифр',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString символа',
+      many: '$countString символов',
+      few: '$countString символа',
+      one: '$countString символ',
+      zero: 'Нет символов',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'Ход резервного копирования';
+
+  @override
+  String get a11yRestoreProgress => 'Ход восстановления';
+
+  @override
+  String get a11yExportProgress => 'Ход экспорта';
+
+  @override
+  String get a11yLockFileProgress => 'Ход запирания';
+
+  @override
+  String get a11yCleanProgress => 'Ход очистки';
+
+  @override
+  String get a11yMessageActions => 'Действия с сообщением';
+
+  @override
+  String get a11yRecordVoiceNote => 'Записать голосовое сообщение';
+
+  @override
+  String get a11yRecording => 'Идёт запись';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'Фото, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return 'Фото от $name, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'Видео, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return 'Видео от $name, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString новых сообщения',
+      many: '$countString новых сообщений',
+      few: '$countString новых сообщения',
+      one: '$countString новое сообщение',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done из $total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'осталось меньше минуты';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'осталось около $n мин';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'осталось около $n ч';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'Отправка · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'Получение · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'Отправка и получение · $detail';
+  }
+
+  @override
+  String get transferPause => 'Пауза';
+
+  @override
+  String get transferPauseDownload => 'Приостановить загрузку';
+
+  @override
+  String get transferDownload => 'Скачать';
+
+  @override
+  String get transferResume => 'Продолжить';
+
+  @override
+  String get transferOnWifi => 'Скачается по Wi-Fi';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'Пауза · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'Нажми, чтобы скачать';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'Передача файлов';
+
+  @override
+  String get transferChannel => 'Передача файлов';
+
+  @override
+  String get transferChannelLine =>
+      'Видно, пока файлы отправляются или скачиваются. Никогда не называет чат или файл.';
+
+  @override
+  String get autoGetTitle => 'Автозагрузка';
+
+  @override
+  String get autoGetLine =>
+      'Файлы приходят без нажатия, как настроено здесь. Ожидающий файл хранится для тебя на файловом сервере, не дольше недели.';
+
+  @override
+  String get autoGetPhotos => 'Фото';
+
+  @override
+  String get autoGetVideos => 'Видео';
+
+  @override
+  String get autoGetFiles => 'Файлы';
+
+  @override
+  String get autoGetAlways => 'По Wi-Fi и мобильной сети';
+
+  @override
+  String get autoGetWifi => 'Только по Wi-Fi';
+
+  @override
+  String get autoGetNever => 'Никогда, скачаю нажатием';
+
+  @override
+  String get autoGetVoice => 'Голосовые сообщения скачиваются всегда.';
+
+  @override
+  String get settingsFiles => 'Файлы';
+
+  @override
+  String get fileSheetOpenWith => 'Открыть в другом приложении';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Всё, что Kryfo хранит на этом компьютере, зашифровано. Он открывается с вашей учётной записью.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Добавить парольную фразу';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'Без неё любой, кто пользуется вашей учётной записью, может открыть Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo не смог сохранить свой ключ в связке ключей этого компьютера. Добавьте парольную фразу.';
+
+  @override
+  String get desktopKeyMissing =>
+      'У этой учётной записи нет ключа к данным Kryfo. Резервная копия Kryfo вернёт всё. Если вы перенесли папку Kryfo, добавьте парольную фразу в той учётной записи, откуда она пришла, и скопируйте папку снова.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Kryfo сейчас не может получить свой ключ на этом компьютере. Разблокируйте связку ключей, если компьютер попросит, и попробуйте снова.';
+
+  @override
+  String get desktopPassRow => 'Парольная фраза на этом компьютере';
+
+  @override
+  String get desktopPassOffBody => 'Kryfo открывается с вашей учётной записью.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo спрашивает эту парольную фразу при каждом запуске.';
+
+  @override
+  String get desktopPassChange => 'Сменить парольную фразу';
+
+  @override
+  String get desktopPassRemove => 'Убрать парольную фразу';
+
+  @override
+  String get desktopPassCurrent => 'Текущая парольная фраза';
+
+  @override
+  String get desktopPassNew => 'Новая парольная фраза';
+
+  @override
+  String get desktopPassStays =>
+      'На этом компьютере нет связки ключей, которую Kryfo может использовать, поэтому парольная фраза остаётся.';
+
+  @override
+  String get desktopPassAdded => 'Парольная фраза добавлена';
+
+  @override
+  String get desktopPassRemoved => 'Парольная фраза убрана';
+
+  @override
+  String get desktopPassChanged => 'Парольная фраза изменена';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Введите парольную фразу, чтобы убрать её. После этого Kryfo будет открываться с вашей учётной записью.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Kryfo сейчас не может получить свой ключ из чипа безопасности этого компьютера. Попробуйте снова через минуту.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo не смог сохранить свой ключ в вашей учётной записи Windows. Добавьте парольную фразу.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo не смог сохранить свой ключ в вашей учётной записи Windows, поэтому парольная фраза остаётся.';
+
+  @override
+  String get desktopBackupCardTitle => 'Держите резервную копию Kryfo';
+
+  @override
+  String get desktopBackupCardLine =>
+      'Ключ Kryfo хранит ваша учётная запись Windows на этом компьютере. Резервная копия Kryfo вернёт всё, если компьютер или учётную запись когда-нибудь сбросят.';
+
+  @override
+  String get desktopBackupHint =>
+      'Вернёт всё, если этот компьютер когда-нибудь сбросят.';
 }

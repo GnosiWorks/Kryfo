@@ -53,6 +53,8 @@ class TransportScreen extends StatelessWidget {
           final sx = shown.secsSinceSend;
           final uploads = tx['hsdir_uploads'] as int? ?? 0;
           final pubFor = tx['publishing_secs'] as int? ?? -1;
+          // a bounce zeroes the uploads, but this tor's onion stays up
+          final published = tx['published_once'] == true;
           // the engine's own words for how tor gets out: codes, never a
           // line or an address. a decoy sees automatic and the phase
           final bs = appState.bridgeStatus;
@@ -89,37 +91,39 @@ class TransportScreen extends StatelessWidget {
                         child: _Line(
                           l10n.transportBootstrap,
                           percent(pct / 100),
-                          HaloColors.amber,
+                          HaloColors.amberText,
                         ),
                       ),
                       // the test the outbox and the chats send by: a network too
                       _Line(
                         l10n.transportCanSend,
                         appState.linkUp ? l10n.commonYes : l10n.transportNotYet,
-                        appState.linkUp ? HaloColors.green : HaloColors.rose,
+                        appState.linkUp
+                            ? HaloColors.greenText
+                            : HaloColors.roseText,
                       ),
                       _Line(
                         l10n.transportBridgeMode,
                         decoy ? 'auto' : _code(bs.mode),
-                        HaloColors.violet,
+                        HaloColors.violetText,
                       ),
                       _Line(
                         l10n.transportBridgePhase,
                         _code(bs.phase),
-                        HaloColors.violet,
+                        HaloColors.violetText,
                       ),
                       if (!decoy) ...[
                         _Line(
                           l10n.transportBridgeMethod,
                           _code(bs.method),
-                          HaloColors.violet,
+                          HaloColors.violetText,
                         ),
                         _Line(
                           l10n.transportBridgeError,
                           _code(bs.errorCode),
                           bs.errorCode.isEmpty
-                              ? HaloColors.green
-                              : HaloColors.amber,
+                              ? HaloColors.greenText
+                              : HaloColors.amberText,
                         ),
                       ],
 
@@ -129,14 +133,16 @@ class TransportScreen extends StatelessWidget {
                         appState.online
                             ? l10n.transportOnline
                             : l10n.transportOffline,
-                        appState.online ? HaloColors.green : HaloColors.rose,
+                        appState.online
+                            ? HaloColors.greenText
+                            : HaloColors.roseText,
                       ),
                       _Line(
                         l10n.transportQueuedToSend,
                         '${appState.queued}',
                         appState.queued == 0
                             ? HaloColors.text2
-                            : HaloColors.amber,
+                            : HaloColors.amberText,
                       ),
 
                       _Line(
@@ -144,11 +150,15 @@ class TransportScreen extends StatelessWidget {
 
                         uploads > 0
                             ? l10n.transportYes(whole(uploads))
+                            : published
+                            ? l10n.commonYes
                             : pubFor > 0
                             ? l10n.transportTryingS(whole(pubFor))
                             : l10n.transportNotYet,
 
-                        uploads > 0 ? HaloColors.green : HaloColors.rose,
+                        uploads > 0 || published
+                            ? HaloColors.greenText
+                            : HaloColors.roseText,
                       ),
 
                       HaloSection(l10n.transportRelays, flush: true),
@@ -164,10 +174,10 @@ class TransportScreen extends StatelessWidget {
                               : l10n.transportOk,
 
                           r['benched'] == true
-                              ? HaloColors.rose
+                              ? HaloColors.roseText
                               : (r['fails'] as int? ?? 0) > 0
-                              ? HaloColors.amber
-                              : HaloColors.green,
+                              ? HaloColors.amberText
+                              : HaloColors.greenText,
                         ),
 
                       HaloSection(l10n.transportTraffic, flush: true),
@@ -177,7 +187,7 @@ class TransportScreen extends StatelessWidget {
 
                         '$subs',
 
-                        subs == 0 ? HaloColors.rose : HaloColors.text2,
+                        subs == 0 ? HaloColors.roseText : HaloColors.text2,
                       ),
 
                       _Line(
@@ -201,7 +211,7 @@ class TransportScreen extends StatelessWidget {
                       _Line(
                         l10n.transportKnown,
                         '$contacts',
-                        contacts == 0 ? HaloColors.rose : HaloColors.text2,
+                        contacts == 0 ? HaloColors.roseText : HaloColors.text2,
                       ),
                       Unfold(
                         open: contacts == 0,
@@ -211,7 +221,7 @@ class TransportScreen extends StatelessWidget {
                             l10n.transportWithNoContactsThe,
                             style: HaloType.mono(
                               size: 11.5,
-                              color: HaloColors.rose.withValues(alpha: 0.9),
+                              color: HaloColors.roseText,
                             ),
                           ),
                         ),
@@ -240,11 +250,11 @@ String _torWord(TorStatus t) => switch (t) {
 };
 
 Color _torTint(TorStatus t) => switch (t) {
-  TorStatus.off => HaloColors.rose,
-  TorStatus.starting => HaloColors.amber,
-  TorStatus.bootstrapped => HaloColors.amber,
-  TorStatus.publishing => HaloColors.amber,
-  TorStatus.reachable => HaloColors.green,
+  TorStatus.off => HaloColors.roseText,
+  TorStatus.starting => HaloColors.amberText,
+  TorStatus.bootstrapped => HaloColors.amberText,
+  TorStatus.publishing => HaloColors.amberText,
+  TorStatus.reachable => HaloColors.greenText,
 };
 
 // our own relay is a 56 character onion. nobody reads that off a
@@ -510,7 +520,7 @@ class _AliveState extends State<_Alive> {
           listening
               ? l10n.transportYesCheckedJustNow
               : l10n.transportNoLast(_ago(listen)),
-          listening ? HaloColors.green : HaloColors.rose,
+          listening ? HaloColors.greenText : HaloColors.roseText,
         ),
         _Line(
           l10n.transportLastMessageIn,
@@ -538,8 +548,8 @@ class _AliveState extends State<_Alive> {
             _exempt == null
                 ? HaloColors.text2
                 : _exempt!
-                ? HaloColors.green
-                : HaloColors.rose,
+                ? HaloColors.greenText
+                : HaloColors.roseText,
           ),
         ),
         // in place from the start, so the rows under them do not shift
@@ -559,7 +569,7 @@ class _AliveState extends State<_Alive> {
                   l10n.transportLastStop,
                   '${lastStopWord(exit['code'] as String?)} · ${exitAt == null ? '' : _ago(exitAt)}',
                   (exit['reason'] as int?) == 2
-                      ? HaloColors.rose
+                      ? HaloColors.roseText
                       : HaloColors.text2,
                 ),
         ),
@@ -580,10 +590,10 @@ class _AliveState extends State<_Alive> {
               ? l10n.transportNoneYet
               : '${checkInLine(appState.lastCheckHow)} · ${_ago(appState.lastCheckTriedAt > 0 ? appState.lastCheckTriedAt : appState.lastCheckAt)}',
           checkInOk(appState.lastCheckHow)
-              ? HaloColors.green
+              ? HaloColors.greenText
               : appState.lastCheckHow.isEmpty
               ? HaloColors.warm
-              : HaloColors.rose,
+              : HaloColors.roseText,
         ),
         _Line(
           l10n.transportLastTorReconnect,
@@ -591,10 +601,10 @@ class _AliveState extends State<_Alive> {
               ? l10n.transportNoneYet
               : engine.lastReconnect(),
           engine.lastReconnect().startsWith('ok')
-              ? HaloColors.green
+              ? HaloColors.greenText
               : engine.lastReconnect().isEmpty
               ? HaloColors.warm
-              : HaloColors.rose,
+              : HaloColors.roseText,
         ),
         // who took how long on the last catch-up. a relay marked dropped hit
         // the engine's 30s cap and its backfill was given up on; it keeps its
@@ -605,7 +615,7 @@ class _AliveState extends State<_Alive> {
               ? l10n.transportNoneYet
               : catchupLine(appState.lastCheckRelays),
           catchupDropped(appState.lastCheckRelays)
-              ? HaloColors.rose
+              ? HaloColors.roseText
               : appState.lastCheckRelays.isEmpty
               ? HaloColors.warm
               : HaloColors.text2,
@@ -620,7 +630,7 @@ class _AliveState extends State<_Alive> {
             (ctrl['ctrl_timeouts'] as int?) ?? 0,
           ),
           ((ctrl['ctrl_timeouts'] as int?) ?? 0) > 0
-              ? HaloColors.rose
+              ? HaloColors.roseText
               : HaloColors.text2,
         ),
         // every bounce and every set of new circuits this process made,
@@ -653,7 +663,7 @@ class _AliveState extends State<_Alive> {
           appState.gaps.isEmpty
               ? l10n.transportNone
               : '${appState.gaps.length}',
-          appState.gaps.isEmpty ? HaloColors.green : HaloColors.rose,
+          appState.gaps.isEmpty ? HaloColors.greenText : HaloColors.roseText,
         ),
         for (final g in appState.gaps.reversed.take(8)) _gapLine(g),
         if (appState.gaps.isNotEmpty || appState.jobRuns > 0)

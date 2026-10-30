@@ -70,11 +70,11 @@ func TestABurstOfRefusalsBenchesARelayAtMostOnce(t *testing.T) {
 	defer cancel()
 	for i := 0; i < 30; i++ {
 		p := newXid(t)
-		_, rcv, err := nip17RcvAddress(p.pub)
+		_, rcv, err := nip17RcvAddressAs(testMain(), p.pub)
 		if err != nil {
 			t.Fatal(err)
 		}
-		go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), p.pub, rcv)
+		go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), mainPair(p.pub), rcv)
 	}
 	waitFor(t, "every socket turned away", 5*time.Second, func() bool { return pub.n.Load() >= 30 })
 	time.Sleep(200 * time.Millisecond)
@@ -194,7 +194,7 @@ func TestASendWaitsForASlowOnionDial(t *testing.T) {
 	own := slowOnionOnly(t)
 	peer := newXid(t)
 	start := time.Now()
-	res := nostrSend(hex.EncodeToString(peer.pub[:]), "hi")
+	res := nostrSend(mainIdent, hex.EncodeToString(peer.pub[:]), "hi")
 	checkSlowOnionLanded(t, own, res, "ok", time.Since(start))
 }
 
@@ -281,7 +281,7 @@ func TestAPublishTriesOurRelayWhileItIsBenched(t *testing.T) {
 	relayCoolTill[clear.url()] = time.Now().Add(ownRelayCeiling)
 	relayHealthMu.Unlock()
 
-	me, err := myXid()
+	me, err := identityOf(mainIdent)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -306,11 +306,11 @@ func TestOurClearnetNameBacksOffWhileTheOnionAnswers(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	p := newXid(t)
-	_, rcv, err := nip17RcvAddress(p.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), p.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), p.pub, rcv)
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), mainPair(p.pub), rcv)
 	waitFor(t, "the onion listening", 5*time.Second, func() bool {
 		for _, c := range onion.snapshot() {
 			if len(c.reqs) > 0 {

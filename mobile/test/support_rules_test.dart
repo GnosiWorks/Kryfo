@@ -28,7 +28,8 @@ import 'package:kryfo/main.dart'
         AppStateContacts,
         AppStateDevchat,
         AppStateReceive,
-        AppStateRefresh;
+        AppStateRefresh,
+        AppStateInvites;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
@@ -280,7 +281,7 @@ class _Io implements AppIo {
   Future<String> typingSend(String onion, String cipher) =>
       throw UnimplementedError('typingSend');
   @override
-  Future<String> pinFirst(List<String> xPubs) async => 'ok';
+  Future<String> pinFirst(List<(int, String)> peers) async => 'ok';
   @override
   Future<String?> decryptIf(
     String peer,
@@ -289,15 +290,15 @@ class _Io implements AppIo {
     bool flagKeyChange = false,
   }) => decrypt(peer, cipher, flagKeyChange: flagKeyChange);
   @override
-  Future<String> letHeld(String xPub, String how) async => 'ok';
+  Future<String> letHeld(int ident, String xPub, String how) async => 'ok';
   @override
-  Future<String> markHeld(List<String> xPubs) async => 'ok';
+  Future<String> markHeld(List<(int, String)> peers) async => 'ok';
   // sessions let go of, and addresses no longer listened on
   final dropped = <String>[];
   @override
   Future<void> dropSession(String peer) async => dropped.add(peer);
   @override
-  void unlisten(String xPub) => dropped.add(xPub);
+  void unlisten(int ident, String xPub) => dropped.add(xPub);
   final opens = <String, (String, String)>{};
   ({String haloId, String plain, UnwrappedMessage env})? firstContact;
   final listened = <String>[];
@@ -322,15 +323,20 @@ class _Io implements AppIo {
   @override
   Future<bool> hasSession(String peer) async => true;
   @override
+  Future<({int ident, String cipher})> seal(String peer, String plain) async =>
+      (ident: 0, cipher: await encrypt(peer, plain));
+
+  @override
   Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
   @override
-  void listen(String xPub, {bool fresh = false}) => listened.add(xPub);
+  void listen(int ident, String xPub, {bool fresh = false}) =>
+      listened.add(xPub);
   @override
   String edPub() => 'ed-me';
   @override
   String xPub() => 'x-me';
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     sent.add(('relay $xPub', cipher));
     return 'ok';
   }
@@ -342,7 +348,12 @@ class _Io implements AppIo {
   }
 
   @override
-  Future<String> firstContactSend(String xPub, String fc, String cipher) async {
+  Future<String> firstContactSend(
+    int ident,
+    String xPub,
+    String fc,
+    String cipher,
+  ) async {
     sent.add(('fc $xPub', cipher));
     return 'ok';
   }
@@ -1077,7 +1088,20 @@ void main() {
       // anywhere else it goes on to the invite key, which needs a signal
       // store this test does not have
       final other = await _World.make(dev: false);
+      other.app.signalWait = const Duration(milliseconds: 50);
       await expectLater(other.app.resetInviteAddress(), throwsA(anything));
+    });
+
+    test('before signal is ready waits for it, then throws and moves '
+        'nothing, so no "reset" shows', () async {
+      final w = await _World.make(dev: false);
+      w.app.signalWait = const Duration(milliseconds: 200);
+      final was = w.app.fcCounter;
+      final sw = Stopwatch()..start();
+      await expectLater(w.app.resetInviteAddress(), throwsStateError);
+      expect(sw.elapsedMilliseconds, greaterThanOrEqualTo(200));
+      expect(w.app.fcCounter, was);
+      await expectLater(w.app.resetMyInvite(), throwsStateError);
     });
   });
 

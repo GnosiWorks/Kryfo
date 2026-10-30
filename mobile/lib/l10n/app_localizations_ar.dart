@@ -669,10 +669,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appConnectedRoutedThrough3 => 'متصل · يمر عبر ٣ مُرحِّلات';
 
   @override
-  String get appReadyToSendPublishing => 'جاهز للإرسال · جارٍ نشر عنوانك';
-
-  @override
-  String get appReadyToSendFinishing => 'جاهز للإرسال · جارٍ إنهاء الإعداد';
+  String get appReadyToChatAddressFinishing =>
+      'جاهز للدردشة · العنوان على وشك الاكتمال';
 
   @override
   String appConnecting(Object pct) {
@@ -695,16 +693,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get appRelayAndFastModes =>
-      'وضعا المُرحِّل والسريع يتجاوزان Tor وهما أسرع. تجدهما في الإعدادات، ضمن «السرعة والخصوصية»، وكلٌّ منهما يوضّح ما يكلّفه.';
-
-  @override
-  String get appViaRelay => 'عبر مُرحِّل';
+      'الوضع السريع يتخطى Tor وهو أسرع. تجده في الإعدادات ضمن السرعة والخصوصية، ويقول ما الذي يكلفه.';
 
   @override
   String get appOffline => 'غير متصل';
-
-  @override
-  String get appFast => 'سريع';
 
   @override
   String get appTorOff => 'Tor متوقف';
@@ -1425,7 +1417,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'تُحذف من الهاتفين، إلا إذا كانت قد حُفظت. لا يمكن التراجع عن هذا.';
+      'ستُحذف من الهاتفين، إلا إذا كانت قد حُفظت. لا يمكن التراجع عن هذا.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -1763,9 +1755,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatSupporter => 'داعم';
-
-  @override
-  String get chatEncryptedViaRelay => 'مشفّرة · عبر مُرحِّل';
 
   @override
   String get chatEncryptedDirect => 'مشفّرة · مباشرة';
@@ -2689,7 +2678,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'تُحذف من هواتف الجميع، إلا إذا كانت قد حُفظت. لا يمكن التراجع عن هذا.';
+      'ستُحذف من هواتف الجميع، إلا إذا كانت قد حُفظت. لا يمكن التراجع عن هذا.';
 
   @override
   String get groupChatUnsend => 'سحب';
@@ -3231,26 +3220,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeLeaveThemOff => 'إبقاؤها معطّلة';
 
   @override
-  String get homeOurRelayIsQuiet => 'مُرحِّلنا صامت';
-
-  @override
-  String get homeRelayModeUsesOnly =>
-      'وضع المُرحِّل يستخدم مُرحِّلنا وحده، وهو لا يستجيب الآن. الوضع السريع يضيف مُرحِّلات عامة إلى جانبه، فتصل الرسائل رغم ذلك. ويبقى كل شيء مختومًا في الحالتين.';
-
-  @override
-  String get homeSwitchedToFast => 'الوضع السريع مفعّل';
-
-  @override
-  String get homeUseFastMode => 'استخدام الوضع السريع';
-
-  @override
   String get homeKeepWaiting => 'مواصلة الانتظار';
-
-  @override
-  String get homeSwitchedToRelay => 'وضع المُرحِّل مفعّل';
-
-  @override
-  String get homeUseOurRelay => 'استخدام مُرحِّلنا';
 
   @override
   String get homeOffline => 'غير متصل';
@@ -3759,41 +3729,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'أربعة أرقام أو أكثر، أي شيء ستتذكره';
 
   @override
-  String get modesOnion => 'Onion';
-
-  @override
-  String get modesFullOnionRoutingThree =>
-      'توجيه onion كامل، ثلاث قفزات. تستغرق الرسالة من ثانيتين إلى خمس ثوانٍ. لا أحد يرى مع من تتحدث.';
-
-  @override
-  String get modesSlower => 'أبطأ';
-
-  @override
-  String get modesRelay => 'مُرحِّل';
-
-  @override
-  String get modesOneSealedConnectionTo =>
-      'اتصال واحد مختوم بمُرحِّل Kryfo الخاص، مثل VPN لا يملك ما يسجّله. تصل الرسائل في نحو ثانية، ويعمل حيث يُحجب Tor.';
-
-  @override
-  String get modesQuick => 'سريع';
-
-  @override
-  String get modesRelayOnly => 'المُرحِّل فقط';
-
-  @override
   String get modesFast => 'سريع';
-
-  @override
-  String get modesPlainConnectionsToEvery =>
-      'اتصالات عادية بكل المُرحِّلات. شبه فوري، والأقل خصوصية بين الثلاثة.';
-
-  @override
-  String get modesInstant => 'فوري';
-
-  @override
-  String get modesEveryRelayYouUse =>
-      'كل مُرحِّل تستخدمه يعرف العنوان الذي تتصل منه، لا مُرحِّلنا وحده. تبقى الرسائل مختومة، لكن حقيقة أنك أرسلت رسالة ليست كذلك. معطّل افتراضيًا، ويعود معطّلًا بعد إعادة التثبيت.';
 
   @override
   String get modesNotChanged => 'لم يتغيّر الوضع. حاول مجددًا.';
@@ -3806,52 +3742,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get modesPrivacy => 'والخصوصية';
-
-  @override
-  String get modesChangeGloballyOrPer => 'غيّره للكل، أو لكل محادثة';
-
-  @override
-  String get modesSoon => 'قريبًا';
-
-  @override
-  String get modesActive => 'مفعّل';
-
-  @override
-  String get modesSpeed2 => 'السرعة';
-
-  @override
-  String get modesHops => 'القفزات';
-
-  @override
-  String get modesIp => 'IP';
-
-  @override
-  String get modesVisible => 'ظاهر';
-
-  @override
-  String get modesHidden => 'مخفي';
-
-  @override
-  String modesHeadsUp(Object warning) {
-    return '*تنبيه:* ⁨$warning⁩';
-  }
-
-  @override
-  String get modesOnionIsTheDefault =>
-      'وضع Onion هو الافتراضي ويبقى كذلك ما لم تغيّره. يسري التبديل من الرسالة التالية.';
-
-  @override
-  String get modesFastMode => 'الوضع السريع';
-
-  @override
-  String get modesPlainConnectionsToEveryRelayQuicker =>
-      'اتصالات عادية بكل المُرحِّلات. أسرع، والمُرحِّلات تستطيع رؤية عنوان IP الخاص بك. تبقى الرسائل مشفّرة بين الطرفين في الحالتين.';
-
-  @override
-  String get modesTurnOnFastMode => 'تفعيل الوضع السريع';
-
-  @override
-  String get modesKeepItOff => 'إبقاؤه معطّلًا';
 
   @override
   String get movedWipeThisPhone => 'مسح Kryfo من هذا الهاتف؟';
@@ -3908,11 +3798,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get myKryfoInviteCopiedClearsIn =>
       'نُسخت الدعوة · تُزال من الحافظة بعد ٦٠ ث';
-
-  @override
-  String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'أضفني على Kryfo. اسمي هناك ⁨$myId⁩\n\nاضغط لإضافتي:\n⁨$uri⁩\n\nتطبيق Kryfo للمراسلة الخاصة. بلا رقم هاتف، وبلا بريد إلكتروني.';
-  }
 
   @override
   String get myKryfoAddMeOnKryfo2 => 'أضفني على Kryfo';
@@ -4242,100 +4127,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingThreeWords => 'ثلاث كلمات. *لك وحدك.*';
 
   @override
-  String get onboardingPickA => 'اختر *وجهًا*.';
-
-  @override
-  String get onboardingDrawnOnThisPhone =>
-      'يُرسم على هذا الهاتف من رقم، ولا يُرفع أبدًا. غيّره متى شئت.';
-
-  @override
-  String get onboardingThePeopleYouMessage => 'يراه أيضًا من تراسلهم';
-
-  @override
-  String get onboardingKeepMyInitial => 'الإبقاء على حرفي الأول';
-
-  @override
-  String get onboardingThatOne => 'هذا ←';
-
-  @override
   String get onboardingContinue => 'متابعة ←';
-
-  @override
-  String get onboardingHowYourMessages => 'كيف *تنتقل* رسائلك.';
-
-  @override
-  String get onboardingYouCanChangeThis =>
-      'يمكنك تغيير هذا في أي وقت من الإعدادات، للجميع أو لمحادثة واحدة.';
-
-  @override
-  String get onboardingOnion => 'Onion';
-
-  @override
-  String get onboardingSlowerAMessageTakes =>
-      'أبطأ. تستغرق الرسالة من ثانيتين إلى خمس ثوانٍ.';
-
-  @override
-  String get onboardingHidesYourAddressFrom =>
-      'يُخفي عنوانك عن الجميع، بما في ذلك مُرحِّلنا.';
-
-  @override
-  String get onboardingRelay => 'مُرحِّل';
-
-  @override
-  String get onboardingOurRelaySeesYour =>
-      'يرى مُرحِّلنا عنوانك. ولا أحد غيره.';
-
-  @override
-  String get onboardingAboutASecondWorks => 'نحو ثانية. يعمل حيث يُحجب Tor.';
-
-  @override
-  String get onboardingAutoFindsAWay =>
-      'يجد «تلقائي» طريقًا لتجاوز الحجب بنفسه.';
-
-  @override
-  String get onboardingFast => 'سريع';
-
-  @override
-  String get onboardingEveryRelayYouUse =>
-      'كل مُرحِّل تستخدمه يرى عنوانك. الأقل خصوصية بين الثلاثة.';
-
-  @override
-  String get onboardingNearInstant => 'شبه فوري.';
-
-  @override
-  String get onboardingKeepOnion => 'الإبقاء على Onion ←';
-
-  @override
-  String get onboardingUseThis => 'استخدام هذا ←';
-
-  @override
-  String get onboardingSkipOnionIsA => 'تخطي · Onion خيار افتراضي جيد';
-
-  @override
-  String get onboardingThreeThingsThen => 'ثلاثة أشياء،\nثم *تدخل*.';
-
-  @override
-  String get onboardingEverythingElseTheApp =>
-      'وكل ما عدا ذلك سيخبرك به التطبيق حين يهمّ.';
-
-  @override
-  String get onboardingYourNameIsThreeWords => 'اسمك ثلاث كلمات';
-
-  @override
-  String get onboardingThatIsTheWhole =>
-      'هذه هي الهوية كلها. لا رقم ولا بريد يمكن أن يتسرّب أو يُبحث عنه. من تتحدث معهم يرون هذه الكلمات والوجه الذي اخترته.';
-
-  @override
-  String get onboardingNobodyCanReachYou =>
-      'لا أحد يستطيع الوصول إليك حتى تسمح له بالدخول';
-
-  @override
-  String get onboardingAStrangerWithYour =>
-      'الغريب الذي يعرف كلماتك لا يستطيع إلا أن يطرق الباب. تنتظر رسالته الأولى في الطلبات حتى توافق، ويمكنك الرفض دون أن يعلم أبدًا.';
-
-  @override
-  String get onboardingTheFirstConnectionTakesAMinute =>
-      'الاتصال الأول يستغرق دقيقة';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -4344,9 +4136,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get onboardingYourIdentityLivesOn =>
       'هويتك موجودة على هذا الهاتف. انسخها احتياطيًا من الإعدادات حين تكون مستعدًا.';
-
-  @override
-  String get onboardingIUnderstand => 'فهمت ←';
 
   @override
   String get onboardingOneQuiet => '*إشعار* واحد هادئ.';
@@ -4366,13 +4155,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingGotIt => 'حسنًا ←';
 
   @override
-  String get onboardingNow => 'والآن، *أضف شخصًا*.';
-
-  @override
-  String get onboardingTheAppIsReady =>
-      'التطبيق جاهز. لا أحد يستطيع مراسلتك حتى تضيفه أو تسمح له بالدخول.';
-
-  @override
   String get onboardingEveryWayToAdd => 'كل طرق إضافة شخص';
 
   @override
@@ -4384,9 +4166,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onboardingPointTheCameraAt => 'وجّه الكاميرا نحو رمزه';
-
-  @override
-  String get onboardingTheAppIsReadyWhenYou => 'التطبيق جاهز حين تكون مستعدًا.';
 
   @override
   String get onboardingNotNowAddPeople => 'ليس الآن · أضف الناس لاحقًا';
@@ -4625,9 +4404,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get profileProfile => 'الملف الشخصي';
-
-  @override
-  String get profileChangeYourFace => 'تغيير وجهك';
 
   @override
   String get profileKryfoId => 'اسمك';
@@ -5249,16 +5025,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get seenYourIpAddress => 'عنوان IP الخاص بك';
 
   @override
-  String get seenOurRelay => 'مُرحِّلنا';
-
-  @override
-  String get seenEveryRelay => 'كل المُرحِّلات';
-
-  @override
-  String get seenOnOnionEverythingLeaves =>
-      'في وضع Onion يخرج كل شيء عبر Tor ولا يرى المُرحِّل إلا عقدة خروج، لا أنت أبدًا. في وضع المُرحِّل يذهب الاتصال مباشرة إلى مُرحِّلنا الخاص: لا شيء يمرّر عنوانك ولا شيء يُدوَّن، لكن ذلك الاتصال الواحد نراه نحن. في الوضع السريع يعرف كل مُرحِّل عام أنك اتصلت، لكن لا يعرف بمن ولا ماذا قلت.';
-
-  @override
   String get seenYourContactGraph => 'شبكة معارفك';
 
   @override
@@ -5314,12 +5080,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'طبقتا ratchet والتخزين معياريتان. أما الطبقة التي تربطهما فمن صنعنا ولم يراجعها أي طرف مستقل. إنه برنامج في مرحلة ألفا.';
 
   @override
-  String get seenOnion => 'Onion';
-
-  @override
-  String get seenRelay => 'مُرحِّل';
-
-  @override
   String get seenFast => 'سريع';
 
   @override
@@ -5353,9 +5113,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsTorRouting => 'التوجيه عبر Tor';
 
   @override
-  String get settingsOffMode => 'معطّل · وضع المُرحِّل';
-
-  @override
   String get settingsOffFastMode => 'معطّل · الوضع السريع';
 
   @override
@@ -5369,9 +5126,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsFast => 'سريع';
-
-  @override
-  String get settingsRelay1Hop => 'مُرحِّل · قفزة واحدة';
 
   @override
   String get settingsOnion3Hops => 'Onion · ثلاث قفزات';
@@ -6756,6 +6510,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get motionYouReAnonymous => 'أنت مجهول الهوية';
 
   @override
+  String get motionReadyToChat => 'جاهز للدردشة';
+
+  @override
   String get motionTorIsStartingIn =>
       'يبدأ Tor في الخلفية. يضيء هذا الرسم مع تشكّل الاتصال.';
 
@@ -6774,6 +6531,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get motionYourIpIsHidden =>
       'عنوان IP الخاص بك مخفي. لا يصل إليك إلا من لديه Kryfo الخاص بك.';
+
+  @override
+  String get motionAddressFinishing =>
+      'الرسائل تُرسَل الآن عبر Tor. عنوانك الخاص يكتمل في الخلفية.';
 
   @override
   String get motionBuilding2 => 'جارٍ البناء';
@@ -7432,10 +7193,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesTheTorProjectSGuess => 'تخمين مشروع Tor';
-
-  @override
-  String get bridgesOurRelayUsuallyGets =>
-      'مُرحِّلنا اتصال عادي واحد وغالبًا ما يعبر. أو دع Kryfo يجد طريقة بنفسه.';
 
   @override
   String get bridgesUseThisBridge => 'استخدام هذا الجسر';
@@ -9274,15 +9031,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesRelayWorksWhereTor =>
-      'وضع المُرحِّل يعمل حيث يُحجب Tor، ويمكنك العودة متى شئت.';
+      'يعمل الوضع السريع حيث يُحجب Tor، ويمكنك العودة في أي وقت.';
 
   @override
   String get bridgesRelayThisNetworkSees =>
-      'وضع المُرحِّل يتجاوز حجب Tor، لكن هذه الشبكة يمكنها أن ترى أنك تتصل بـ Kryfo.';
-
-  @override
-  String get onboardingRelayThisNetworkSees =>
-      'يمكن لهذه الشبكة أن ترى أنك تتصل بـ Kryfo. ويرى مُرحِّلنا عنوانك.';
+      'يتجاوز الوضع السريع حجب Tor، لكن هذه الشبكة يمكنها أن ترى اتصالك بـ Kryfo.';
 
   @override
   String get settingsLicences => 'التراخيص';
@@ -9350,9 +9103,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsCopyLinkHint => 'نسخ الرابط';
-
-  @override
-  String get appRelayNotAnswering => 'المُرحِّل صامت';
 
   @override
   String get motionNoRelayYet => 'لا مُرحِّل بعد';
@@ -10076,4 +9826,568 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get desktopNoMemoryFolder =>
       'يحتاج Kryfo إلى مجلد خاص في الذاكرة أثناء عمله، وهذا الحاسوب لا يوفّر واحدًا، لذا لن يفتح.';
+
+  @override
+  String get inviteNotYet =>
+      'هذه الدعوة ليست صالحة بعد. تحقّق من الوقت على هاتفك.';
+
+  @override
+  String get inviteExpired => 'انتهت صلاحية هذه الدعوة. اطلب دعوة جديدة.';
+
+  @override
+  String get inviteDamaged => 'هذه الدعوة تالفة. اطلب دعوة جديدة.';
+
+  @override
+  String get helloSent => 'أُرسل الطلب. سيرونه عندما يكونون متصلين.';
+
+  @override
+  String get inviteNeeds06 => 'يحتاج إلى Kryfo 0.6 أو أحدث.';
+
+  @override
+  String get helloSentOld =>
+      'أُرسل الطلب. إذا كانوا يستخدمون إصدارًا أقدم من Kryfo، فعليهم التحديث أولًا.';
+
+  @override
+  String get modesPickHow =>
+      'اختر كيف تنتقل رسائلك. يمكنك تغيير ذلك في أي وقت.';
+
+  @override
+  String get modesPrivate => 'خاص';
+
+  @override
+  String get modesPrivateTag => 'Tor · جسور عند الحاجة';
+
+  @override
+  String get modesPrivateLine =>
+      'لا أحد يعرف عنوان IP الخاص بك أو من أنت، ولا حتى خوادمنا. يجد طريقًا حول الحجب بنفسه.';
+
+  @override
+  String get modesDefault => 'الافتراضي';
+
+  @override
+  String get modesFastTag => 'مباشرة إلى خوادمنا';
+
+  @override
+  String get modesFastLine =>
+      'يتخطى Tor، فتصل الرسائل أسرع وتستهلك بطارية أقل. ترى خوادمنا عنوان IP الخاص بك فقط أثناء اتصالك، ولا تسجله أو تحتفظ به أبدًا. ولا ترى أبدًا ما تقوله. جهات اتصالك لا تراه أبدًا.';
+
+  @override
+  String get modesFastConnected => 'سريع · متصل';
+
+  @override
+  String get modesFastConnecting => 'سريع · جارٍ الاتصال';
+
+  @override
+  String get modesFastDown => 'سريع · خوادمنا لا ترد';
+
+  @override
+  String get modesBackupReady =>
+      'هناك احتياطي جاهز دائمًا، فتبقى متصلًا حتى لو توقف أحدها.';
+
+  @override
+  String get modesDetails => 'التفاصيل';
+
+  @override
+  String get modesBothLine =>
+      'كلاهما يُبقي كل رسالة مشفرة من طرف إلى طرف. ما يتغير فقط هو من يمكنه رؤية عنوان IP الخاص بك.';
+
+  @override
+  String get modesConnectionBridges => 'الاتصال والجسور';
+
+  @override
+  String get modesWhatServersSee => 'ما يمكن لخوادمنا رؤيته';
+
+  @override
+  String get serversTitle => 'خوادم الوضع السريع';
+
+  @override
+  String get serversLine =>
+      'تذهب كل رسالة إلى الخادمين معًا. الذي يرد أولًا يحملها، والآخر يتولى الأمر إذا توقف أحدهما.';
+
+  @override
+  String get serversOne => 'الخادم 1';
+
+  @override
+  String get serversTwo => 'الخادم 2 · مزوّد ثانٍ';
+
+  @override
+  String get serversConnected => 'متصل';
+
+  @override
+  String get serversConnecting => 'جارٍ الاتصال';
+
+  @override
+  String get serversNotAnswering => 'لا يرد';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms م.ث';
+  }
+
+  @override
+  String get serversQuicker => 'الأسرع';
+
+  @override
+  String get serversBackups => 'مُرحِّلات عامة';
+
+  @override
+  String get serversBackupsLine =>
+      'تُستخدم أثناء توقف الخادم 1، وعبر Tor فقط، فلا ترى عنوان IP الخاص بك أبدًا.';
+
+  @override
+  String get serversStandingBy => 'في وضع الاستعداد';
+
+  @override
+  String get serversInUse => 'قيد الاستخدام';
+
+  @override
+  String get homeMergedTitle => 'أصبح المُرحِّل والسريع واحدًا الآن';
+
+  @override
+  String get homeMergedLine =>
+      'أنت على الوضع السريع. هناك خادم احتياطي جاهز دائمًا، فتبقى متصلًا حتى لو توقف أحدها. ترى خوادمنا عنوان IP الخاص بك، ولا ترى أبدًا ما تقوله.';
+
+  @override
+  String get homeMergedGotIt => 'فهمت';
+
+  @override
+  String get homeMergedUsePrivate => 'استخدم الخاص بدلًا من ذلك';
+
+  @override
+  String get homeOursDownTitle => 'خوادمنا لا ترد';
+
+  @override
+  String get homeOursDownLine =>
+      'بعد دقائق قليلة، حين يتصل Tor، تمر الرسائل أيضًا عبر مُرحِّلات عامة، وتعود عبر خوادمنا حالما يرد أحدها.';
+
+  @override
+  String get homeUsePrivate => 'استخدم الخاص';
+
+  @override
+  String get homeSwitchedToPrivate => 'تم التبديل إلى الخاص';
+
+  @override
+  String get homeUseFast => 'استخدم السريع';
+
+  @override
+  String get homeSwitchedToFastRoute => 'تم التبديل إلى السريع';
+
+  @override
+  String get bridgesFastGetsThrough =>
+      'السريع يذهب مباشرة إلى خوادمنا وعادةً ما ينجح. أو دع Kryfo يجد طريقًا بنفسه.';
+
+  @override
+  String get appServersNotAnswering => 'الخوادم لا ترد';
+
+  @override
+  String get settingsPrivateTor => 'خاص · Tor';
+
+  @override
+  String get seenOurServers => 'خوادمنا';
+
+  @override
+  String get seenIpWhy =>
+      'في الخاص يخرج كل شيء عبر Tor وترى خوادمنا عقدة خروج، لا أنت أبدًا. في السريع يذهب الاتصال مباشرة إلى خادمينا: يريان عنوان IP الخاص بك أثناء اتصالك ولا يحتفظان بأي سجل له. أثناء توقف الأول يستخدم السريع أيضًا مُرحِّلات عامة، عبر Tor فقط.';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'سيُحذف الألبوم من الهاتفين، إلا إذا كان قد حُفظ. لا يمكن التراجع عن هذا.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'سيُحذف الألبوم من هواتف الجميع، إلا إذا كان قد حُفظ. لا يمكن التراجع عن هذا.';
+
+  @override
+  String get homeInviteSomeone => 'ادعُ شخصًا';
+
+  @override
+  String get onboardingNameHeadline => '*اسم عام*، إن أردت.';
+
+  @override
+  String get onboardingNameLine =>
+      'يتيح الاسم العام للناس أن يجدوك. التخطي يبقيك أكثر خصوصية، ويمكنك دائمًا إضافة اسم لاحقًا.';
+
+  @override
+  String get onboardingNameSkip => 'التخطي الآن ←';
+
+  @override
+  String onboardingNameClaim(Object handle) {
+    return 'احجز ⁦@$handle⁩ ←';
+  }
+
+  @override
+  String get onboardingInviteHeadline => 'والآن، *ادعُ شخصًا*.';
+
+  @override
+  String get onboardingInviteLead =>
+      'أرسل رابطًا عبر أي تطبيق مراسلة. يفتح Kryfo، أو يريهم من أين يحصلون عليه.';
+
+  @override
+  String get onboardingInviteSomeone => 'ادعُ شخصًا ←';
+
+  @override
+  String get onboardingInviteGettingReady => 'جارٍ تجهيز رابطك…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'أضفني على Kryfo. اسمي هناك ⁨$myId⁩\n\nاضغط لإضافتي:\n⁨$link⁩\n\nليس لديك Kryfo بعد؟ احصل عليه من هنا:\n⁨$download⁩\n\nتطبيق Kryfo للمراسلة الخاصة. بلا رقم هاتف، وبلا بريد إلكتروني.';
+  }
+
+  @override
+  String get inviteNotReady => 'رابطك جاهز تقريبًا. حاول مجددًا بعد لحظة.';
+
+  @override
+  String get photoCropTitle => 'حرّك وغيّر الحجم';
+
+  @override
+  String get photoCropUse => 'استخدم الصورة';
+
+  @override
+  String get photoCropLabel =>
+      'صورتك داخل الدائرة. باعد إصبعيك للتكبير واسحب للتحريك';
+
+  @override
+  String get photoCouldNotUse => 'جرّب صورة أخرى. تعذّرت قراءة هذه الصورة.';
+
+  @override
+  String get photoTake => 'التقط صورة';
+
+  @override
+  String get photoChoose => 'اختر من المعرض';
+
+  @override
+  String get photoPickFace => 'اختر وجهًا';
+
+  @override
+  String get photoView => 'عرض الصورة';
+
+  @override
+  String get photoRemove => 'إزالة الصورة';
+
+  @override
+  String get photoYourPhoto => 'صورتك';
+
+  @override
+  String get photoYourPhotoLine =>
+      'لا يراها إلا جهات اتصالك، مشفّرة من طرف إلى طرف.';
+
+  @override
+  String get photoSetTheirs => 'ضع صورة';
+
+  @override
+  String get photoChangeTheirs => 'غيّر الصورة';
+
+  @override
+  String get photoOnlyHere => 'على هذا الهاتف فقط';
+
+  @override
+  String photoForThem(Object name) {
+    return 'صورة لـ $name';
+  }
+
+  @override
+  String get photoOnlyHereLine => 'لا يراها أحد غيرك. تبقى على هذا الهاتف.';
+
+  @override
+  String photoOf(Object name) {
+    return 'صورة $name';
+  }
+
+  @override
+  String get historyChatStaysShots =>
+      'تبقى هذه المحادثة على هاتفك لأن لقطات الشاشة محظورة فيها.';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ رقم',
+      many: '⁨$countString⁩ رقمًا',
+      few: '⁨$countString⁩ أرقام',
+      two: 'رقمان',
+      one: 'رقم واحد',
+      zero: 'لا أرقام',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ حرف',
+      many: '⁨$countString⁩ حرفًا',
+      few: '⁨$countString⁩ أحرف',
+      two: 'حرفان',
+      one: 'حرف واحد',
+      zero: 'لا أحرف',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'تقدّم النسخ الاحتياطي';
+
+  @override
+  String get a11yRestoreProgress => 'تقدّم الاستعادة';
+
+  @override
+  String get a11yExportProgress => 'تقدّم التصدير';
+
+  @override
+  String get a11yLockFileProgress => 'تقدّم القفل';
+
+  @override
+  String get a11yCleanProgress => 'تقدّم التنظيف';
+
+  @override
+  String get a11yMessageActions => 'إجراءات الرسالة';
+
+  @override
+  String get a11yRecordVoiceNote => 'سجّل رسالة صوتية';
+
+  @override
+  String get a11yRecording => 'جارٍ التسجيل';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'صورة، ⁨$date⁩';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return 'صورة من ⁨$name⁩، ⁨$date⁩';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'فيديو، ⁨$date⁩';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return 'فيديو من ⁨$name⁩، ⁨$date⁩';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ رسالة جديدة',
+      many: '⁨$countString⁩ رسالة جديدة',
+      few: '⁨$countString⁩ رسائل جديدة',
+      two: 'رسالتان جديدتان',
+      one: 'رسالة جديدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '⁨$done⁩ من ⁨$total⁩';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '⁨$done⁩ · ⁨$left⁩';
+  }
+
+  @override
+  String get transferLeftSoon => 'أقل من دقيقة متبقية';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'متبقٍ نحو ⁨$n⁩ د';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'متبقٍ نحو ⁨$n⁩ س';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'جارٍ الإرسال · ⁨$detail⁩';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'جارٍ الاستلام · ⁨$detail⁩';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'جارٍ الإرسال والاستلام · ⁨$detail⁩';
+  }
+
+  @override
+  String get transferPause => 'إيقاف مؤقت';
+
+  @override
+  String get transferPauseDownload => 'إيقاف التنزيل مؤقتًا';
+
+  @override
+  String get transferDownload => 'تنزيل';
+
+  @override
+  String get transferResume => 'استئناف';
+
+  @override
+  String get transferOnWifi => 'يُنزَّل عبر Wi-Fi';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'متوقف مؤقتًا · ⁨$detail⁩';
+  }
+
+  @override
+  String get transferTapToDownload => 'انقر للتنزيل';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '⁨$size⁩ · ⁨$state⁩';
+  }
+
+  @override
+  String get transferNoteTitle => 'نقل الملفات';
+
+  @override
+  String get transferChannel => 'نقل الملفات';
+
+  @override
+  String get transferChannelLine =>
+      'يظهر أثناء إرسال الملفات أو تنزيلها. لا يذكر أبدًا اسم محادثة أو ملف.';
+
+  @override
+  String get autoGetTitle => 'التنزيل التلقائي';
+
+  @override
+  String get autoGetLine =>
+      'تصل الملفات دون نقر حسب ما تختاره هنا. الملف المنتظر يبقى لك على خادم الملفات، أسبوعًا على الأكثر.';
+
+  @override
+  String get autoGetPhotos => 'الصور';
+
+  @override
+  String get autoGetVideos => 'الفيديوهات';
+
+  @override
+  String get autoGetFiles => 'الملفات';
+
+  @override
+  String get autoGetAlways => 'عبر Wi-Fi وبيانات الجوال';
+
+  @override
+  String get autoGetWifi => 'عبر Wi-Fi فقط';
+
+  @override
+  String get autoGetNever => 'أبدًا، أنقر للتنزيل';
+
+  @override
+  String get autoGetVoice => 'الرسائل الصوتية تُنزَّل دائمًا.';
+
+  @override
+  String get settingsFiles => 'الملفات';
+
+  @override
+  String get fileSheetOpenWith => 'فتح بتطبيق آخر';
+
+  @override
+  String get desktopLockAccountBody =>
+      'كل ما يحفظه Kryfo على هذا الحاسوب مشفّر. يُفتح بحساب المستخدم الخاص بك.';
+
+  @override
+  String get desktopLockAddPassphrase => 'أضف عبارة مرور';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'من دونها، يستطيع أي شخص يستخدم حسابك على الحاسوب فتح Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'تعذّر على Kryfo حفظ مفتاحه في حلقة المفاتيح على هذا الحاسوب. أضف عبارة مرور بدلًا من ذلك.';
+
+  @override
+  String get desktopKeyMissing =>
+      'حساب المستخدم هذا لا يملك مفتاح بيانات Kryfo. نسخة Kryfo الاحتياطية تعيد كل شيء. إن نقلت مجلد Kryfo، فأضف عبارة مرور على حساب المستخدم الذي جاء منه، ثم انسخه من جديد.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'لا يستطيع Kryfo الوصول إلى مفتاحه على هذا الحاسوب الآن. افتح قفل حلقة المفاتيح إن طلب الحاسوب ذلك، ثم أعد المحاولة.';
+
+  @override
+  String get desktopPassRow => 'عبارة المرور على هذا الحاسوب';
+
+  @override
+  String get desktopPassOffBody => 'يُفتح Kryfo بحساب المستخدم الخاص بك.';
+
+  @override
+  String get desktopPassOnBody =>
+      'يطلب Kryfo عبارة المرور هذه في كل مرة يبدأ فيها.';
+
+  @override
+  String get desktopPassChange => 'غيّر عبارة المرور';
+
+  @override
+  String get desktopPassRemove => 'أزل عبارة المرور';
+
+  @override
+  String get desktopPassCurrent => 'عبارة المرور الحالية';
+
+  @override
+  String get desktopPassNew => 'عبارة مرور جديدة';
+
+  @override
+  String get desktopPassStays =>
+      'لا توجد على هذا الحاسوب حلقة مفاتيح يستطيع Kryfo استخدامها، لذا تبقى عبارة المرور.';
+
+  @override
+  String get desktopPassAdded => 'أُضيفت عبارة المرور';
+
+  @override
+  String get desktopPassRemoved => 'أُزيلت عبارة المرور';
+
+  @override
+  String get desktopPassChanged => 'تغيّرت عبارة المرور';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'اكتب عبارة المرور لإزالتها. بعدها يُفتح Kryfo بحساب المستخدم الخاص بك.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'لا يستطيع Kryfo الوصول إلى مفتاحه في شريحة الأمان على هذا الحاسوب الآن. أعد المحاولة بعد لحظة.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'تعذّر على Kryfo حفظ مفتاحه مع حسابك على Windows. أضف عبارة مرور بدلًا من ذلك.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'تعذّر على Kryfo حفظ مفتاحه مع حسابك على Windows، لذا تبقى عبارة المرور.';
+
+  @override
+  String get desktopBackupCardTitle => 'احتفظ بنسخة Kryfo الاحتياطية';
+
+  @override
+  String get desktopBackupCardLine =>
+      'حسابك على Windows في هذا الحاسوب يحفظ مفتاح Kryfo. نسخة Kryfo الاحتياطية تعيد كل شيء إن أُعيد ضبط الحاسوب أو الحساب يومًا.';
+
+  @override
+  String get desktopBackupHint => 'تعيد كل شيء إن أُعيد ضبط هذا الحاسوب يومًا.';
 }

@@ -27,7 +27,9 @@ const androidChannels = [
   'halo/gpush',
   'kryfo/app_icon',
   'kryfo/net',
+  'kryfo/phone',
   'kryfo/video',
+  'kryfo/transfers',
 ];
 
 /// methods with a desktop answer on halo/platform. the rest say not here:
@@ -40,6 +42,7 @@ const platformAnswered = {
   'applyDeliveryMode',
   'photoPickerReady',
   'setSecure',
+  'setRecentsHidden',
   'appIconSet',
   'openNotificationSettings',
   'openWifiSettings',
@@ -69,6 +72,8 @@ const platformNotHere = {
   'copySensitive',
   // the caller sends the photo as it is
   'shrinkJpeg',
+  // no profile photo is added on desktop (photoAddOffered)
+  'squareJpeg',
   // no share sheet, no android video reader
   'shareFile', 'videoInfo',
 };
@@ -116,6 +121,9 @@ class DesktopHost {
 
   /// the vault overwritten before the folder goes
   void Function()? destroyKeys;
+
+  /// what the computer account kept for the vault goes after it
+  Future<void> Function()? forgetKeys;
 
   /// what is kept and cleared as the process ends or becomes a new run
   void Function()? beforeExit;
@@ -165,6 +173,9 @@ class DesktopHost {
       destroyKeys?.call();
     } catch (_) {}
     try {
+      await forgetKeys?.call().timeout(const Duration(seconds: 5));
+    } catch (_) {}
+    try {
       Directory(dataDir).deleteSync(recursive: true);
     } catch (_) {}
     exit(0);
@@ -188,6 +199,8 @@ Map<String, DesktopAnswer> desktopAnswers(
     'photoPickerReady' => false,
     // linux cannot keep a window out of screenshots
     'setSecure' => false,
+    // no app switcher picture to keep out
+    'setRecentsHidden' => false,
     'appIconSet' => false,
     'openNotificationSettings' ||
     'openWifiSettings' ||

@@ -231,12 +231,12 @@ void main() {
       FlutterSecureStorage.setMockInitialValues({'send_mode': 'balanced'});
       appState.sendModeForTest = 'balanced';
       await t.pumpWidget(framed(const ModesScreen()));
-      final pill = find.ancestor(
-        of: find.text(l10n.modesActive),
-        matching: find.byType(Row),
-      );
+      // the tick is on the fast card from the first frame
       expect(
-        find.descendant(of: pill.first, matching: find.text(l10n.modesRelay)),
+        find.descendant(
+          of: find.byKey(const ValueKey('fast')),
+          matching: find.byKey(const ValueKey('on')),
+        ),
         findsOneWidget,
       );
       await rest(t);
@@ -331,6 +331,53 @@ void main() {
       expect((line.on, line.state), (true, l10n.settingsBlocked2));
       await devClose(t);
     });
+
+    for (final (sdk, blocked) in [(30, true), (33, false)]) {
+      testWidgets('a pin on android $sdk: the screenshots line says '
+          '${blocked ? 'blocked' : 'per chat'}', (t) async {
+        SharedPreferences.setMockInitialValues({
+          'battery_opt_prompt_seen': true,
+          'miui_autostart_prompt_seen': true,
+        });
+        await devWorld();
+        FlutterSecureStorage.setMockInitialValues({});
+        t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          const MethodChannel('halo/platform'),
+          (_) async => null,
+        );
+        t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          const MethodChannel('kryfo/phone'),
+          (c) async => c.method == 'sdk' ? sdk : null,
+        );
+        lockState.openForTest(enabled: true);
+        await t.runAsync(() => appState.loadScreenSecure());
+        addTearDown(() async {
+          t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+            const MethodChannel('kryfo/phone'),
+            null,
+          );
+          lockState.openForTest();
+          await appState.loadScreenSecure();
+        });
+        t.view.physicalSize = const Size(1000, 6000);
+        t.view.devicePixelRatio = 2;
+        addTearDown(t.view.reset);
+        await t.pumpWidget(devApp(const SettingsScreen()));
+        await t.pump(const Duration(seconds: 1));
+        final line = t.widget<ProtectionLine>(
+          find.byWidgetPredicate(
+            (w) => w is ProtectionLine && w.label == l10n.settingsScreenshots,
+          ),
+        );
+        expect(
+          (line.on, line.state),
+          blocked
+              ? (true, l10n.settingsBlocked2)
+              : (false, l10n.settingsPerChat),
+        );
+        await devClose(t);
+      });
+    }
   });
 
   group('gif search row', () {

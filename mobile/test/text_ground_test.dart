@@ -96,6 +96,7 @@ void main() {
       'lib/stickers/sticker_flight.dart': 1, // a sticker, no text
       'lib/theme.dart': 1, // the toast's card is a material
       'lib/screens/search_screen.dart': 1, // a scaffold
+      'lib/screens/chat_screen.dart': 1, // bubble and menu materials
       'lib/screens/group_chat_screen.dart': 1, // bubble and menu materials
       'lib/widgets/voice_parts.dart': 1, // the record bar is a material
     };

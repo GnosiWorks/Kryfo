@@ -1,9 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import 'dart:async';
+import 'devices/history_open.dart' show endHistoryCopies;
 import 'secure_store.dart';
 import 'desktop/desktop_mode.dart'
-    show containerClosed, containerOpened, onDesktop, startEngineIn;
+    show
+        computerLock,
+        containerClosed,
+        containerOpened,
+        keepComputerDecoyNote,
+        kComputerDecoyNote,
+        onDesktop,
+        startEngineIn;
 import 'store.dart' show playBuild;
 import 'widgets/boot_failed.dart';
 import 'widgets/fade_over.dart';
@@ -12,11 +20,14 @@ import 'widgets/theme_refresh.dart';
 import 'widgets/wall_images.dart';
 import 'dart:convert';
 import 'dart:math';
+import 'package:ed25519_edwards/ed25519_edwards.dart' as ed;
 import 'package:crypto/crypto.dart';
 import 'dart:ffi';
 import 'dart:io';
 import 'clean_media.dart' show kSaveCopies;
 import 'shred.dart';
+import 'identities.dart';
+import 'invites.dart';
 import 'album.dart' show AlbumTag, albumGoneUid, albumInWindow, albumItemBurnAt;
 export 'shred.dart' show shredFile, shredTree;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -41,6 +52,8 @@ import 'group_end.dart';
 import 'group_shots.dart';
 import 'group_media_send.dart';
 import 'media_progress.dart';
+import 'transfers.dart';
+import 'transfer_note.dart';
 import 'media_send.dart';
 import 'msg_order.dart';
 import 'send_order.dart';
@@ -98,6 +111,7 @@ import 'container.dart';
 import 'lock_state.dart';
 import 'app_shell.dart';
 import 'lock_guard.dart';
+import 'pin_shield.dart';
 import 'lock_layer.dart';
 import 'screens/lock_screen.dart';
 import 'screens/lock_setup_screen.dart';
@@ -150,11 +164,12 @@ import 'read_burn.dart' show burnStartBy, burnWaitsRow, burnWaitsSql, kBurnSkew;
 import 'stranger_gate.dart';
 import 'first_contact.dart';
 import 'text_send.dart' show kSendBlocked;
-import 'fast_gate.dart';
+import 'route_merge.dart';
 import 'mentions.dart';
 import 'gifs/gif_source.dart' show sweepGifParts;
 import 'notes_export.dart' show dropNotesExports, sweepNotesExports;
 import 'handle_lookup.dart';
+import 'invite_share.dart' show kryfoInviteOf;
 import 'handle_repoint.dart';
 import 'widgets/sheet_handle.dart';
 import 'widgets/halo_sheet.dart';
@@ -170,6 +185,7 @@ import 'native_libs.dart';
 import 'widgets/shift_tap_guard.dart';
 import 'wire_pad.dart';
 import 'typing.dart';
+import 'profile_photo.dart';
 
 part 'app/arrivals.dart';
 part 'app/boot.dart';
@@ -187,6 +203,7 @@ part 'app/database_media.dart';
 part 'app/database_messages.dart';
 part 'app/database_notifications.dart';
 part 'app/database_outbox.dart';
+part 'app/database_photos.dart';
 part 'app/database_polls.dart';
 part 'app/database_rooms.dart';
 part 'app/database_search.dart';
@@ -196,10 +213,13 @@ part 'app/files.dart';
 part 'app/gates.dart';
 part 'app/groups.dart';
 part 'app/links.dart';
+part 'app/invites_app.dart';
+part 'app/pairs.dart';
 part 'app/routing.dart';
 part 'app/sending.dart';
 part 'app/shell.dart';
 part 'app/signal.dart';
+part 'app/door.dart';
 part 'app/state.dart';
 part 'app/state_arrivals.dart';
 part 'app/state_boot.dart';
@@ -215,6 +235,7 @@ part 'app/state_identity.dart';
 part 'app/state_messages.dart';
 part 'app/state_outbox.dart';
 part 'app/state_pairing.dart';
+part 'app/state_photos.dart';
 part 'app/state_prefs.dart';
 part 'app/state_profile.dart';
 part 'app/state_receive.dart';

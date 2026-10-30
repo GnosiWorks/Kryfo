@@ -90,4 +90,42 @@ void main() {
       expect(r, startsWith('error:'));
     });
   });
+
+  group('a v4 invite from the registry (R11)', () {
+    final f = 'ab' * 32;
+    const link = 'kryfo://share?v=4&i=S0lONAE';
+    String body(String claimer) =>
+        '{"names":{"wren":"$claimer"},"invite":"$link"}';
+    test('taken only when its face, read with every check, claimed it', () {
+      expect(inviteFromRegistryJson(body(f), 'wren', v4FaceOf: (_) => f), link);
+      expect(
+        inviteFromRegistryJson(
+          body(f.toUpperCase()),
+          'wren',
+          v4FaceOf: (_) => f,
+        ),
+        link,
+      );
+      // another face, one that does not read, or no reader at all
+      expect(
+        inviteFromRegistryJson(body('cd' * 32), 'wren', v4FaceOf: (_) => f),
+        isNull,
+      );
+      expect(
+        inviteFromRegistryJson(body(f), 'wren', v4FaceOf: (_) => null),
+        isNull,
+      );
+      expect(inviteFromRegistryJson(body(f), 'wren'), isNull);
+      // the words check of a v3 invite does not let it through
+      expect(inviteFromRegistryJson(body(f), 'wren', idOf: (_) => 'x'), isNull);
+    });
+    test('one that fails reads as nobody holding the handle', () async {
+      final r = await resolveHandle(
+        'wren',
+        (_) async => body('cd' * 32),
+        v4FaceOf: (_) => f,
+      );
+      expect(r, 'error: nobody has claimed @wren');
+    });
+  });
 }

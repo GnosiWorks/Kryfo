@@ -151,7 +151,7 @@ type pairAnswer struct {
 func pairCodeQuery(ctx context.Context, pk string) (got []nostr.Event, full bool, heard int) {
 	for {
 		routeC := routeEnded()
-		urls := relaysWhenSet(ctx)
+		urls := relaysInUse(ctx)
 		if len(urls) == 0 {
 			return nil, false, 0
 		}
@@ -184,7 +184,7 @@ func pairCodeQueryOn(ctx context.Context, pk string, urls []string, routeC <-cha
 				case <-qctx.Done():
 				}
 			}
-			client, err := torNostrClientFor(pairLane(pk))
+			client, err := relayClientFor(pairLane(pk), u)
 			// the list is the old mode's and the client may be the new one's
 			if err != nil || routeGone(routeC) {
 				done(false)

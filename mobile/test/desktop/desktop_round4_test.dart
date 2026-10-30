@@ -21,18 +21,21 @@ import 'sealed_file_test.dart' show ToyCrypto;
 
 const _pass = 'four random words here';
 
-// a vault file as version 1 (no cost byte) or 2 (no padding) wrote it
-Future<Uint8List> _old(int version, Map<String, String> m) async {
+// a vault file as version 1 (no cost byte), 2 (no padding) or 3 wrote it
+Future<Uint8List> oldVaultFile(int version, Map<String, String> m) async {
   final c = ToyVaultCrypto();
   final salt = Uint8List.fromList(List.generate(16, (i) => i));
   final fresh = Uint8List.fromList(List.generate(32, (i) => 100 + i));
-  final k = await c.keyOf(_pass, salt, 15);
-  final key = [
-    for (var i = 0; i < k!.length; i += 2)
-      int.parse(k.substring(i, i + 2), radix: 16),
-  ];
-  final fk = Hmac(sha256, key).convert(fresh).toString();
-  final sealed = c.seal(fk, Uint8List.fromList(utf8.encode(jsonEncode(m))));
+  final key = (await c.keyOf(_pass, salt, 15))!;
+  final fk = Uint8List.fromList(Hmac(sha256, key).convert(fresh).bytes);
+  final body = utf8.encode(jsonEncode(m));
+  // version 3 padded the body so the file filled whole steps
+  final sealed = c.seal(
+    fk,
+    version >= 3
+        ? padded(body, 4 + 1 + 1 + 16 + 32 + 16)
+        : Uint8List.fromList(body),
+  );
   return Uint8List.fromList([
     0x4b,
     0x52,
@@ -55,18 +58,20 @@ void main() {
   });
 
   group('the vault', () {
-    for (final v in [1, 2]) {
+    for (final v in [1, 2, 3]) {
       test(
         'a version $v file opens and is written again as today\'s',
         () async {
           final path = p.join(root.path, 'v$v.kv');
-          File(path).writeAsBytesSync(await _old(v, {'db': 'key $v'}));
+          File(path).writeAsBytesSync(await oldVaultFile(v, {'db': 'key $v'}));
           final vault = DesktopVault(path, crypto: ToyVaultCrypto());
           expect(await vault.open(_pass), isTrue);
           expect(vault.read('db'), 'key $v');
           final now = File(path).readAsBytesSync();
-          expect(now[4], 3);
-          expect(now[5], kVaultLogN);
+          expect(now[4], 4);
+          // the passphrase slot's cost, after magic, version, id, count,
+          // kind and length
+          expect(now[25], kVaultLogN);
           expect(now.length % kVaultBucket, 0);
           final again = DesktopVault(path, crypto: ToyVaultCrypto());
           expect(await again.open(_pass), isTrue);
@@ -77,7 +82,7 @@ void main() {
 
     test('a wrong passphrase is that, another version says so', () async {
       final path = p.join(root.path, 'x.kv');
-      File(path).writeAsBytesSync(await _old(2, {'a': 'b'}));
+      File(path).writeAsBytesSync(await oldVaultFile(2, {'a': 'b'}));
       final vault = DesktopVault(path, crypto: ToyVaultCrypto());
       expect(await vault.open('not this one at all'), isFalse);
       expect(vault.madeByOtherVersion, isFalse);
@@ -223,24 +228,35 @@ void main() {
     );
   });
 
-  test('memory folders a run before made by chance go, ours only', () {
-    final base = p.join(root.path, 'xdg');
-    Directory(base).createSync();
-    final uid = getuid();
-    final stale = Directory(p.join(base, 'kryfo-ab12CD'))..createSync();
-    File(p.join(stale.path, 'take.wav')).writeAsStringSync('RIFF');
-    final keep = Directory(p.join(base, 'kryfo-zz99ZZ'))..createSync();
-    final theirs = Directory(p.join(base, 'kryfo-qq11QQ'))..createSync();
-    final fixed = Directory(p.join(base, 'kryfo'))..createSync();
-    sweepOldRuntimeDirs(
-      keep.path,
-      env: {'XDG_RUNTIME_DIR': base},
-      uid: uid,
-      owner: (d) => d == theirs.path ? uid + 1 : uid,
-    );
-    expect(stale.existsSync(), isFalse);
-    expect(keep.existsSync(), isTrue);
-    expect(theirs.existsSync(), isTrue);
-    expect(fixed.existsSync(), isTrue);
-  });
+  test(
+    'memory folders a run before made by chance go, this data folder\'s only',
+    () {
+      final base = p.join(root.path, 'xdg');
+      Directory(base).createSync();
+      final uid = getuid();
+      final tag = runtimeTag(root.path);
+      final stale = Directory(p.join(base, 'kryfo-$tag-ab12CD'))..createSync();
+      File(p.join(stale.path, 'take.wav')).writeAsStringSync('RIFF');
+      final older = Directory(p.join(base, 'kryfo-ab12CD'))..createSync();
+      final keep = Directory(p.join(base, 'kryfo-$tag-zz99ZZ'))..createSync();
+      final theirs = Directory(p.join(base, 'kryfo-$tag-qq11QQ'))..createSync();
+      final another = Directory(
+        p.join(base, 'kryfo-${runtimeTag('/elsewhere')}-ab12CD'),
+      )..createSync();
+      final fixed = Directory(p.join(base, 'kryfo-$tag'))..createSync();
+      sweepOldRuntimeDirs(
+        keep.path,
+        env: {'XDG_RUNTIME_DIR': base},
+        uid: uid,
+        root: root.path,
+        owner: (d) => d == theirs.path ? uid + 1 : uid,
+      );
+      expect(stale.existsSync(), isFalse);
+      expect(older.existsSync(), isFalse);
+      expect(keep.existsSync(), isTrue);
+      expect(theirs.existsSync(), isTrue);
+      expect(another.existsSync(), isTrue);
+      expect(fixed.existsSync(), isTrue);
+    },
+  );
 }

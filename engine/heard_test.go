@@ -58,7 +58,7 @@ func TestEachLineSaysWhenItReachedTheRelay(t *testing.T) {
 	began := time.Now().UnixMilli()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 	waitFor(t, "the stored one", 10*time.Second, func() bool { return inboxHas(tag + "|stored") })
 	// nothing was known of the relay before: any time up to the subscribe
 	if d := doneOf(t, tag, "stored"); d.from != 0 || d.until < began || d.until > time.Now().UnixMilli() {

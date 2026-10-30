@@ -22,8 +22,14 @@ import '../main.dart'
         AppStateScreen,
         AppStateContacts,
         AppStateSession,
+        AppStatePhotos,
         AppStateRefresh;
+import '../desktop/desktop_mode.dart' show onDesktop;
+import '../photo_pick.dart';
+import '../profile_photo.dart' show photoAddOffered, photoBook;
 import '../theme.dart';
+import '../widgets/face_view.dart';
+import '../widgets/photo_sheet.dart';
 import '../translate/auto_translate_row.dart';
 import '../translate/hub_live.dart' show translationHubIfOn;
 import '../widgets/halo_buttons.dart';
@@ -183,6 +189,8 @@ class _ContactScreenState extends State<ContactScreen> {
   bool? _pinnedNow;
   // verified under one key, holding another now: nothing goes to them
   bool _held = false;
+  // a photo you set for them, on this phone only
+  bool _mine = false;
   bool? _shotsNow;
   // the chat's media is here too: held while the chat blocks, from what
   // the list knows before the first read
@@ -247,12 +255,15 @@ class _ContactScreenState extends State<ContactScreen> {
       session.mediaFor(widget.haloId),
       session.firstMessageAt(widget.haloId),
       keyHeldShown(widget.haloId),
+      appState.photosOfContact(widget.haloId),
     ]);
     final c = results[0] as Map<String, Object?>?;
     final since = results[3] as int?;
     final vs = results[1] as List<Map<String, Object?>>;
     final rows = results[2] as List<Map<String, Object?>>;
     final held = results[4] as bool;
+    final photos =
+        results[5] as ({Uint8List? mine, Uint8List? theirs, int theirVer});
     // a file that went missing draws as nothing; no stat per file up front
     final paths = [for (final r in rows) r['media_path'] as String];
     final secure = {
@@ -271,9 +282,57 @@ class _ContactScreenState extends State<ContactScreen> {
       _mediaCount = paths.length;
       _since = since;
       _held = held;
+      _mine = photos.mine != null;
       _loaded = true;
     });
     _shotsHold.want(_shots.blocking);
+  }
+
+  // a photo for them from the camera or the gallery, or yours taken off
+  Future<void> _photoTapped() async {
+    final id = widget.haloId;
+    final c = await showPhotoSheet(
+      context,
+      title: l10n.photoForThem(_name),
+      line: l10n.photoOnlyHereLine,
+      seed: widget.avatarSeed,
+      choice: widget.face ?? (_c?['avatar'] as num?)?.toInt(),
+      add: photoAddOffered(desktop: onDesktop),
+      has: _mine,
+      // a chat that blocks screenshots shows the face, so nothing to look at
+      look: _mine && faceOpens(id),
+    );
+    if (!mounted || c == null) return;
+    switch (c) {
+      case PhotoChoice.view:
+        await openFace(context, id, label: l10n.photoOf(_name));
+      case PhotoChoice.remove:
+        HapticFeedback.mediumImpact();
+        await appState.setContactPhoto(id, null);
+        if (mounted) setState(() => _mine = false);
+      case PhotoChoice.camera || PhotoChoice.gallery:
+        final at = session;
+        final r = await pickProfilePhoto(
+          context,
+          camera: c == PhotoChoice.camera,
+          got: (photo) async {
+            // a lock or another pin meanwhile: it goes nowhere
+            if (!session.holdsSame(at)) return;
+            final kept = await appState.setContactPhoto(id, photo);
+            if (!mounted) return;
+            if (kept) {
+              setState(() => _mine = true);
+            } else {
+              showHaloToast(context, l10n.photoCouldNotUse);
+            }
+          },
+        );
+        if (r == PhotoPicked.unclean && mounted) {
+          showHaloToast(context, l10n.photoCouldNotUse);
+        }
+      case PhotoChoice.faces:
+        break;
+    }
   }
 
   bool _flag(String k) {
@@ -428,12 +487,31 @@ class _ContactScreenState extends State<ContactScreen> {
                     curve: kHouseCurve,
                     builder: (_, v, child) =>
                         Transform.scale(scale: v, child: child),
-                    child: HaloHero(
-                      tag: 'face-${widget.avatarSeed}',
-                      child: KryfoAvatar(
-                        seed: widget.avatarSeed,
-                        size: 96,
-                        choice: widget.face ?? (c?['avatar'] as num?)?.toInt(),
+                    // a photo opens larger, with nothing to save or share
+                    child: ListenableBuilder(
+                      listenable: photoBook,
+                      builder: (context, child) => faceOpens(widget.avatarSeed)
+                          ? PressScale(
+                              label: l10n.photoView,
+                              scale: 0.96,
+                              onTap: () => openFace(
+                                context,
+                                widget.avatarSeed,
+                                label: l10n.photoOf(_name),
+                                tag: 'face-${widget.avatarSeed}',
+                                radius: 48,
+                              ),
+                              child: child!,
+                            )
+                          : child!,
+                      child: HaloHero(
+                        tag: 'face-${widget.avatarSeed}',
+                        child: KryfoAvatar(
+                          seed: widget.avatarSeed,
+                          size: 96,
+                          choice:
+                              widget.face ?? (c?['avatar'] as num?)?.toInt(),
+                        ),
                       ),
                     ),
                   ),
@@ -604,6 +682,17 @@ class _ContactScreenState extends State<ContactScreen> {
               ),
               if (translationHubIfOn() case final hub?)
                 AutoTranslateRow(chatId: widget.haloId, hub: hub),
+              // a photo of your own choosing for them, never sent
+              if (accepted &&
+                  !widget.support &&
+                  !isDevChat(widget.haloId) &&
+                  (_mine || photoAddOffered(desktop: onDesktop)))
+                HaloRow(
+                  icon: Icons.add_a_photo_outlined,
+                  label: _mine ? l10n.photoChangeTheirs : l10n.photoSetTheirs,
+                  hint: l10n.photoOnlyHere,
+                  onTap: _photoTapped,
+                ),
               // both phones or neither, once theirs knows how. the developer
               // chat never carries the block, so it is not offered there
               if (accepted &&

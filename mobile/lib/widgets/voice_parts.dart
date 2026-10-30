@@ -676,7 +676,7 @@ class VoiceRecordBar extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: HaloType.mono(
                               size: 12,
-                              color: HaloColors.rose,
+                              color: HaloColors.roseText,
                             ),
                           ),
                         )

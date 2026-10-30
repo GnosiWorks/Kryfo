@@ -179,6 +179,22 @@ Future<void> settle(WidgetTester t) async {
   }
 }
 
+// real io (the copy, the shred) runs off the test's clock: wait for it as
+// long as a loaded machine needs, and no longer
+Future<void> until(
+  WidgetTester t,
+  bool Function() done, {
+  Duration step = Duration.zero,
+}) async {
+  final w = Stopwatch()..start();
+  while (!done() && w.elapsed < const Duration(seconds: 20)) {
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 20)),
+    );
+    await t.pump(step);
+  }
+}
+
 void main() {
   setUpAll(lockState.openForTest);
   setUp(() {
@@ -323,16 +339,7 @@ void main() {
     expect(shown(t), '00:03');
     await t.tap(find.bySemanticsLabel(l10n.cameraStopRecording));
     // the clip is copied and shredded on the disk, outside the test's clock
-    for (
-      var i = 0;
-      i < 100 && find.text(l10n.cameraRetake).evaluate().isEmpty;
-      i++
-    ) {
-      await t.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 20)),
-      );
-      await t.pump();
-    }
+    await until(t, () => find.text(l10n.cameraRetake).evaluate().isNotEmpty);
     await settle(t);
     // the clock stopped with it, and the clip waits in its preview
     final size = find.text(l10n.videoBubbleKb(whole(4)));
@@ -415,12 +422,7 @@ void main() {
     await record(t);
     await t.pump(const Duration(seconds: 2));
     await t.tap(find.bySemanticsLabel(l10n.cameraStopRecording));
-    for (var i = 0; i < 100 && played.isEmpty; i++) {
-      await t.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 20)),
-      );
-      await t.pump();
-    }
+    await until(t, () => played.any((c) => c.method == 'open'));
     await settle(t);
     final open = played.firstWhere((c) => c.method == 'open');
     final at = (open.arguments as Map)['path'] as String;
@@ -439,12 +441,11 @@ void main() {
       await t.pump();
     }
     await settle(t);
-    for (var i = 0; i < 50 && File(at).existsSync(); i++) {
-      await t.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 20)),
-      );
-      await t.pump(const Duration(milliseconds: 50));
-    }
+    await until(
+      t,
+      () => !File(at).existsSync(),
+      step: const Duration(milliseconds: 50),
+    );
     expect(played.map((c) => c.method), contains('close'));
     expect(find.byType(ClipPreview), findsNothing);
     // gone from the disk, and its frame from memory, once the preview has
