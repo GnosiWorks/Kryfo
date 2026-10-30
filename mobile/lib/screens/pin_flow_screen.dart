@@ -11,6 +11,7 @@ import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
 
 import '../backup.dart' show sealRestoredHidden;
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../l10n/l10n.dart';
 import '../lock_state.dart';
 import '../main.dart' show appState, session, AppStateVault, AppStateSession;
@@ -433,30 +434,31 @@ class _PinFlowScreenState extends State<PinFlowScreen>
   Widget _intro() {
     final lines = switch (widget.flow) {
       PinFlow.wipe => [
-        (Icons.delete_sweep_outlined, l10n.flowWipe1),
+        (Icons.delete_sweep_outlined, l10n.flowWipe1Shown),
         (Icons.layers_clear_outlined, l10n.flowWipe2),
-        (Icons.gavel_outlined, l10n.flowLaw),
+        (Icons.gavel_outlined, l10n.flowLawShown),
       ],
       PinFlow.decoy => [
         (Icons.inbox_outlined, l10n.flowDecoy1),
         if (_lock.bioSupported) (Icons.fingerprint, l10n.flowDecoyFinger),
         (Icons.dialpad_outlined, l10n.flowDecoyDigits),
-        (Icons.notifications_off_outlined, l10n.flowDecoyShade),
-        (Icons.gavel_outlined, l10n.flowLaw),
+        (Icons.notifications_off_outlined, l10n.flowDecoyShadeShown),
+        (Icons.gavel_outlined, l10n.flowLawShown),
       ],
       PinFlow.vault when _restoring => [
         (Icons.visibility_off_outlined, l10n.restoreChooseHiddenPin),
         if (_needsLock)
           (Icons.lock_outline_rounded, l10n.restoreHiddenLockFirst),
-        (Icons.gavel_outlined, l10n.flowLaw),
+        (Icons.gavel_outlined, l10n.flowLawShown),
       ],
       PinFlow.vault => [
         (Icons.visibility_off_outlined, l10n.flowVault1),
         (Icons.notifications_off_outlined, l10n.flowVault2),
-        (Icons.fingerprint, l10n.flowVaultFinger),
+        // no finger on a computer
+        if (!onDesktop) (Icons.fingerprint, l10n.flowVaultFinger),
         (Icons.dialpad_outlined, l10n.flowVaultDigits),
-        (Icons.autorenew_rounded, l10n.flowVaultReplace),
-        (Icons.gavel_outlined, l10n.flowLaw),
+        (Icons.autorenew_rounded, l10n.flowVaultReplaceShown),
+        (Icons.gavel_outlined, l10n.flowLawShown),
       ],
     };
     return FitColumn(
@@ -544,9 +546,9 @@ class _PinFlowScreenState extends State<PinFlowScreen>
       _Step.appChoose => l10n.flowVaultDigits,
       _Step.confirm when _choosingPhrase => l10n.flowVaultPassAgain,
       _Step.confirm || _Step.appConfirm => l10n.panicSetupTheSameFourDigits,
-      _ when _choosingPhrase => l10n.flowVaultPassLine,
+      _ when _choosingPhrase => l10n.flowVaultPassLineShown,
       _ => switch (widget.flow) {
-        PinFlow.wipe => l10n.pinsWipeLine,
+        PinFlow.wipe => l10n.pinsWipeLineShown,
         PinFlow.decoy => l10n.flowDecoyDigits,
         PinFlow.vault => l10n.flowVaultChooseLine,
       },

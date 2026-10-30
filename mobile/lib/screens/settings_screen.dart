@@ -47,7 +47,7 @@ import 'restore_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../notifications.dart';
 import '../delivery_mode.dart';
-import '../desktop/desktop_mode.dart' show computerLock;
+import '../desktop/desktop_mode.dart' show computerLock, onDesktop;
 import 'notifications_screen.dart';
 import 'icon_screen.dart';
 import '../app_icon.dart' show AppFace, AppFaceWords, appFaceNow, readAppFace;
@@ -723,24 +723,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
               // the icon and the notifications read the phone's values, in
-              // any session
-              ValueListenableBuilder<AppFace?>(
-                valueListenable: appFaceNow,
-                builder: (_, face, _) {
-                  return HaloRow(
-                    icon: Icons.apps_rounded,
-                    label: l10n.settingsIconAndNotifications,
-                    value: face == null
-                        ? null
-                        : _plain == true
-                        ? l10n.iconSettingsValue(face.label)
-                        : face.label,
-                    onTap: () => Navigator.of(
-                      context,
-                    ).push(haloRoute(const IconScreen())),
-                  );
-                },
-              ),
+              // any session. a computer has no launcher icon to disguise:
+              // what notifications show is under Notifications there
+              if (!onDesktop)
+                ValueListenableBuilder<AppFace?>(
+                  valueListenable: appFaceNow,
+                  builder: (_, face, _) {
+                    return HaloRow(
+                      icon: Icons.apps_rounded,
+                      label: l10n.settingsIconAndNotifications,
+                      value: face == null
+                          ? null
+                          : _plain == true
+                          ? l10n.iconSettingsValue(face.label)
+                          : face.label,
+                      onTap: () => Navigator.of(
+                        context,
+                      ).push(haloRoute(const IconScreen())),
+                    );
+                  },
+                ),
             ],
           ),
           if (kLinkedDevicesOn) ...[

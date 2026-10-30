@@ -16,6 +16,7 @@
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'desktop/desktop_mode.dart';
 import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
 import 'store.dart';
@@ -38,13 +39,19 @@ const kLastCheckHowKey = 'delivery_last_how';
 const kLastCheckTriedKey = 'delivery_last_tried';
 const kLastCheckRelaysKey = 'delivery_last_relays';
 
-// google push in a build without it (a backup carried over) checks in
-DeliveryMode deliveryModeOf(String? raw, {bool? play}) => switch (raw) {
-  'checkins' => DeliveryMode.checkins,
-  'helper' => DeliveryMode.helper,
-  'google' => (play ?? playBuild) ? DeliveryMode.google : DeliveryMode.checkins,
-  _ => DeliveryMode.always,
-};
+// google push in a build without it (a backup carried over) checks in.
+// a computer is always on: it has no other mode to pick, and a phone's
+// check-ins would let tor sleep while kryfo waits in the tray
+DeliveryMode deliveryModeOf(String? raw, {bool? play, bool? desktop}) =>
+    (desktop ?? onDesktop)
+    ? DeliveryMode.always
+    : switch (raw) {
+        'checkins' => DeliveryMode.checkins,
+        'helper' => DeliveryMode.helper,
+        'google' =>
+          (play ?? playBuild) ? DeliveryMode.google : DeliveryMode.checkins,
+        _ => DeliveryMode.always,
+      };
 
 Future<DeliveryMode> loadDeliveryMode() async {
   final prefs = await SharedPreferences.getInstance();

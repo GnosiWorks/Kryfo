@@ -4480,6 +4480,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'O PIN sai, e junto com ele o PIN de apagamento e qualquer conversa oculta. Qualquer pessoa com seu celular abre o Kryfo como se fosse você.';
 
   @override
+  String get pinsThePinGoesAndDesk =>
+      'O PIN sai, e junto com ele o PIN de apagamento e qualquer conversa oculta. Qualquer pessoa no seu computador abre o Kryfo como se fosse você.';
+
+  @override
   String get pinsUnlockWithFingerprint => 'Desbloquear com a digital';
 
   @override
@@ -7246,6 +7250,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Esta rede pede um login primeiro. Assim que você entrar, o Kryfo se conecta.';
 
   @override
+  String get bridgesThisNetworkWantsADesk =>
+      'Esta rede pede um login primeiro. Entre pelo navegador ou confira a conexão de rede do computador. Assim que você entrar, o Kryfo se conecta.';
+
+  @override
   String get bridgesWaitingForWifiSignIn => 'Aguardando login no Wi-Fi';
 
   @override
@@ -7920,8 +7928,16 @@ class AppLocalizationsPt extends AppLocalizations {
       'Para quando alguém obriga você a desbloquear o celular.';
 
   @override
+  String get pinsAdvancedLineDesk =>
+      'Para quando alguém obriga você a desbloquear o computador.';
+
+  @override
   String get pinsWipeLine =>
       'Digitado na tela de bloqueio, apaga o Kryfo deste celular.';
+
+  @override
+  String get pinsWipeLineDesk =>
+      'Digitado na tela de bloqueio, apaga o Kryfo deste computador.';
 
   @override
   String get pinsDecoyPin => 'PIN de disfarce';
@@ -7944,6 +7960,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Todos os PINs saem, e junto com eles o disfarce, o Kryfo dele e qualquer conversa oculta. Qualquer pessoa com seu celular abre o Kryfo como se fosse você.';
 
   @override
+  String get pinsTurnOffWithDecoyDesk =>
+      'Todos os PINs saem, e junto com eles o disfarce, o Kryfo dele e qualquer conversa oculta. Qualquer pessoa no seu computador abre o Kryfo como se fosse você.';
+
+  @override
   String get pinsHowThisWorks => 'Como funciona';
 
   @override
@@ -7958,6 +7978,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get flowWipe1 =>
       'Digitado na tela de bloqueio no lugar do seu PIN, ele apaga o Kryfo deste celular e o fecha. Para quem estiver olhando, o app só parou.';
+
+  @override
+  String get flowWipe1Desk =>
+      'Digitado na tela de bloqueio no lugar do seu PIN, ele apaga o Kryfo deste computador e o fecha. Para quem estiver olhando, o app só parou.';
 
   @override
   String get flowWipe2 =>
@@ -7993,6 +8017,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'As notificações que já estão na barra já foram vistas. Enquanto o disfarce estiver aberto, nenhuma nova aparece.';
 
   @override
+  String get flowDecoyShadeDesk =>
+      'As notificações que já estão na tela já foram vistas. Enquanto o disfarce estiver aberto, nenhuma nova aparece.';
+
+  @override
   String get flowDecoyChoose => 'Escolha um PIN de disfarce';
 
   @override
@@ -8005,6 +8033,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get flowLaw =>
       'Em alguns países, recusar-se a desbloquear um celular ou esconder dados das autoridades já é crime por si só. Conheça a lei dos lugares para onde você viaja.';
+
+  @override
+  String get flowLawDesk =>
+      'Em alguns países, recusar-se a desbloquear um dispositivo ou esconder dados das autoridades já é crime por si só. Conheça a lei dos lugares para onde você viaja.';
 
   @override
   String get howWipe =>
@@ -8069,6 +8101,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get flowVaultReplace =>
       'Isto substitui qualquer conversa oculta que este celular já tenha.';
+
+  @override
+  String get flowVaultReplaceDesk =>
+      'Isto substitui qualquer conversa oculta que este computador já tenha.';
 
   @override
   String get flowVaultChoose => 'Escolha um PIN das conversas ocultas';
@@ -8145,6 +8181,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get howVault =>
       'Seu PIN das conversas ocultas abre o Kryfo com as conversas ocultas; seu PIN e sua digital, sem elas. Configurar as conversas ocultas de novo substitui as que este celular tem. Esqueça o PIN das conversas ocultas e elas somem para sempre.';
+
+  @override
+  String get howVaultDesk =>
+      'Seu PIN das conversas ocultas abre o Kryfo com as conversas ocultas; seu PIN, sem elas. Configurar as conversas ocultas de novo substitui as que este computador tem. Esqueça o PIN das conversas ocultas e elas somem para sempre.';
 
   @override
   String get chatHide => 'Ocultar conversa';
@@ -9779,6 +9819,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Pelo menos 12 caracteres. O teclado do celular vê o que você digita, então use um que não aprenda nem sincronize palavras.';
 
   @override
+  String get flowVaultPassLineDesk =>
+      'Pelo menos 12 caracteres. Use uma que você não usa em nenhum outro lugar.';
+
+  @override
   String get flowVaultPassAgain => 'A mesma frase-senha de novo';
 
   @override
@@ -10158,6 +10202,39 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get desktopTrayTip => 'O Kryfo está aberto e recebendo mensagens';
+
+  @override
+  String get desktopRunSection => 'Neste computador';
+
+  @override
+  String get desktopTrayRow => 'Continuar aberto na bandeja do sistema';
+
+  @override
+  String get desktopTrayHint =>
+      'Fechar a janela mantém o Kryfo na bandeja do sistema, e as mensagens continuam chegando.';
+
+  @override
+  String get desktopTrayOffLine =>
+      'Fechar a janela encerra o Kryfo. As mensagens chegam quando você abrir de novo.';
+
+  @override
+  String get desktopTrayNoneLine =>
+      'Este desktop não mostra ícones na bandeja do sistema, então fechar a janela encerra o Kryfo.';
+
+  @override
+  String get desktopStartRow => 'Abrir ao ligar o computador';
+
+  @override
+  String get desktopStartHint =>
+      'O Kryfo abre quando você entra neste computador.';
+
+  @override
+  String get desktopStartRefused =>
+      'Este computador não deixou o Kryfo abrir junto com ele. O Kryfo abre sempre que você mesmo o iniciar.';
+
+  @override
+  String get desktopStartHeldOff =>
+      'O Windows deixou o Kryfo desativado nos aplicativos de inicialização. Ative por lá, em Configurações, Aplicativos, Inicialização.';
 
   @override
   String get desktopNoCamera =>

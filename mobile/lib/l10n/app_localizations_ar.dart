@@ -4548,6 +4548,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'يُزال رمز PIN، ومعه رمز PIN للمسح وأي محادثات مخفية. وكل من يمسك هاتفك يفتح Kryfo باسمك.';
 
   @override
+  String get pinsThePinGoesAndDesk =>
+      'يُزال رمز PIN، ومعه رمز PIN للمسح وأي محادثات مخفية. وكل من يجلس إلى حاسوبك يفتح Kryfo باسمك.';
+
+  @override
   String get pinsUnlockWithFingerprint => 'فتح القفل بالبصمة';
 
   @override
@@ -7309,6 +7313,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'تطلب هذه الشبكة تسجيل الدخول أولًا. بعد دخولك، يتصل Kryfo.';
 
   @override
+  String get bridgesThisNetworkWantsADesk =>
+      'تطلب هذه الشبكة تسجيل الدخول أولًا. سجّل الدخول من متصفحك، أو تحقق من اتصال الحاسوب بالشبكة. بعد دخولك، يتصل Kryfo.';
+
+  @override
   String get bridgesWaitingForWifiSignIn => 'بانتظار تسجيل الدخول إلى Wi-Fi';
 
   @override
@@ -7990,8 +7998,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pinsAdvancedLine => 'لحين يجبرك أحد على فتح قفل هاتفك.';
 
   @override
+  String get pinsAdvancedLineDesk => 'لحين يجبرك أحد على فتح قفل حاسوبك.';
+
+  @override
   String get pinsWipeLine =>
       'إن كُتب على شاشة القفل، يمسح Kryfo من هذا الهاتف.';
+
+  @override
+  String get pinsWipeLineDesk =>
+      'إن كُتب على شاشة القفل، يمسح Kryfo من هذا الحاسوب.';
 
   @override
   String get pinsDecoyPin => 'رمز PIN للتمويه';
@@ -8013,6 +8028,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'تُزال كل رموز PIN، ومعها رمز التمويه وما يفتحه من Kryfo وأي محادثات مخفية. وكل من يمسك هاتفك يفتح Kryfo باسمك.';
 
   @override
+  String get pinsTurnOffWithDecoyDesk =>
+      'تُزال كل رموز PIN، ومعها رمز التمويه وما يفتحه من Kryfo وأي محادثات مخفية. وكل من يجلس إلى حاسوبك يفتح Kryfo باسمك.';
+
+  @override
   String get pinsHowThisWorks => 'كيف يعمل هذا';
 
   @override
@@ -8027,6 +8046,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get flowWipe1 =>
       'إن كُتب على شاشة القفل بدل رمز PIN الخاص بك، يمسح Kryfo من هذا الهاتف ويغلقه. ولمن يراقب، يبدو أن التطبيق توقف فحسب.';
+
+  @override
+  String get flowWipe1Desk =>
+      'إن كُتب على شاشة القفل بدل رمز PIN الخاص بك، يمسح Kryfo من هذا الحاسوب ويغلقه. ولمن يراقب، يبدو أن التطبيق توقف فحسب.';
 
   @override
   String get flowWipe2 =>
@@ -8060,6 +8083,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'الإشعارات الموجودة في لوحة الإشعارات قد شوهدت بالفعل. وما دام التمويه مفتوحًا، لا يظهر أي إشعار جديد.';
 
   @override
+  String get flowDecoyShadeDesk =>
+      'الإشعارات الظاهرة على الشاشة قد شوهدت بالفعل. وما دام التمويه مفتوحًا، لا يظهر أي إشعار جديد.';
+
+  @override
   String get flowDecoyChoose => 'اختر رمز PIN للتمويه';
 
   @override
@@ -8072,6 +8099,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get flowLaw =>
       'في بعض الدول، يُعدّ رفض فتح قفل الهاتف أو إخفاء البيانات عن المسؤولين جريمة في حد ذاته. اعرف القانون حيث تسافر.';
+
+  @override
+  String get flowLawDesk =>
+      'في بعض الدول، يُعدّ رفض فتح قفل جهاز أو إخفاء البيانات عن المسؤولين جريمة في حد ذاته. اعرف القانون حيث تسافر.';
 
   @override
   String get howWipe =>
@@ -8135,6 +8166,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get flowVaultReplace =>
       'هذا يستبدل أي محادثات مخفية موجودة على هذا الهاتف.';
+
+  @override
+  String get flowVaultReplaceDesk =>
+      'هذا يستبدل أي محادثات مخفية موجودة على هذا الحاسوب.';
 
   @override
   String get flowVaultChoose => 'اختر رمز PIN للمحادثات المخفية';
@@ -8214,6 +8249,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get howVault =>
       'رمز PIN للمحادثات المخفية يفتح Kryfo مع محادثاتك المخفية، ورمز PIN الخاص بك وبصمتك يفتحانه من دونها. إعداد المحادثات المخفية من جديد يستبدل ما على هذا الهاتف منها. وإن نسيت رمز PIN للمحادثات المخفية، تضيع إلى الأبد.';
+
+  @override
+  String get howVaultDesk =>
+      'رمز PIN للمحادثات المخفية يفتح Kryfo مع محادثاتك المخفية، ورمز PIN الخاص بك يفتحه من دونها. إعداد المحادثات المخفية من جديد يستبدل ما على هذا الحاسوب منها. وإن نسيت رمز PIN للمحادثات المخفية، تضيع إلى الأبد.';
 
   @override
   String get chatHide => 'إخفاء المحادثة';
@@ -9838,6 +9877,10 @@ class AppLocalizationsAr extends AppLocalizations {
       '١٢ حرفًا على الأقل. لوحة مفاتيح الهاتف ترى ما تكتبه، لذا استخدم لوحة لا تتعلم الكلمات ولا تزامنها.';
 
   @override
+  String get flowVaultPassLineDesk =>
+      '١٢ حرفًا على الأقل. استخدم عبارة لا تستخدمها في أي مكان آخر.';
+
+  @override
   String get flowVaultPassAgain => 'عبارة المرور نفسها مرة أخرى';
 
   @override
@@ -10213,6 +10256,38 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get desktopTrayTip => 'Kryfo يعمل ويستقبل الرسائل';
+
+  @override
+  String get desktopRunSection => 'على هذا الحاسوب';
+
+  @override
+  String get desktopTrayRow => 'إبقاء التشغيل في علبة النظام';
+
+  @override
+  String get desktopTrayHint =>
+      'إغلاق النافذة يُبقي Kryfo في علبة النظام، فتظل الرسائل تصل.';
+
+  @override
+  String get desktopTrayOffLine =>
+      'إغلاق النافذة يُنهي Kryfo. تصل الرسائل عندما تفتحه من جديد.';
+
+  @override
+  String get desktopTrayNoneLine =>
+      'سطح المكتب هذا لا يعرض أيقونات علبة النظام، لذا يُنهي إغلاق النافذة Kryfo.';
+
+  @override
+  String get desktopStartRow => 'التشغيل مع بدء الحاسوب';
+
+  @override
+  String get desktopStartHint => 'يفتح Kryfo عند تسجيل دخولك إلى هذا الحاسوب.';
+
+  @override
+  String get desktopStartRefused =>
+      'لم يسمح هذا الحاسوب بتشغيل Kryfo معه. يفتح Kryfo متى شغّلته بنفسك.';
+
+  @override
+  String get desktopStartHeldOff =>
+      'يضع Windows ‏Kryfo على وضع الإيقاف في تطبيقات بدء التشغيل. شغّله من هناك: الإعدادات، التطبيقات، بدء التشغيل.';
 
   @override
   String get desktopNoCamera =>

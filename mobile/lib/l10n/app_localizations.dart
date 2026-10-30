@@ -7061,6 +7061,12 @@ abstract class AppLocalizations {
   /// **'The PIN goes, and the wipe PIN and any hidden chats with it. Anyone holding your phone opens Kryfo as you.'**
   String get pinsThePinGoesAnd;
 
+  /// pinsThePinGoesAnd as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'The PIN goes, and the wipe PIN and any hidden chats with it. Anyone at your computer opens Kryfo as you.'**
+  String get pinsThePinGoesAndDesk;
+
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
@@ -11531,6 +11537,12 @@ abstract class AppLocalizations {
   /// **'This network wants a sign-in first. Once you\'re in, Kryfo connects.'**
   String get bridgesThisNetworkWantsA;
 
+  /// bridgesThisNetworkWantsA as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'This network wants a sign-in first. Sign in from your browser, or check the computer\'s network connection. Once you\'re in, Kryfo connects.'**
+  String get bridgesThisNetworkWantsADesk;
+
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
@@ -12641,11 +12653,23 @@ abstract class AppLocalizations {
   /// **'For when someone makes you unlock your phone.'**
   String get pinsAdvancedLine;
 
+  /// pinsAdvancedLine as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'For when someone makes you unlock your computer.'**
+  String get pinsAdvancedLineDesk;
+
   /// App lock: one line on the wipe PIN row
   ///
   /// In en, this message translates to:
   /// **'Typed on the lock screen, it wipes Kryfo from this phone.'**
   String get pinsWipeLine;
+
+  /// pinsWipeLine as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Typed on the lock screen, it wipes Kryfo from this computer.'**
+  String get pinsWipeLineDesk;
 
   /// App lock: a PIN that opens an empty Kryfo
   ///
@@ -12683,6 +12707,12 @@ abstract class AppLocalizations {
   /// **'Every PIN goes, the decoy and its Kryfo and any hidden chats with them. Anyone holding your phone opens Kryfo as you.'**
   String get pinsTurnOffWithDecoy;
 
+  /// pinsTurnOffWithDecoy as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Every PIN goes, the decoy and its Kryfo and any hidden chats with them. Anyone at your computer opens Kryfo as you.'**
+  String get pinsTurnOffWithDecoyDesk;
+
   /// App lock: opens a sheet explaining the extra PINs
   ///
   /// In en, this message translates to:
@@ -12712,6 +12742,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Typed on the lock screen instead of your PIN, it wipes Kryfo from this phone and closes it. To whoever is watching, the app just stopped.'**
   String get flowWipe1;
+
+  /// flowWipe1 as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Typed on the lock screen instead of your PIN, it wipes Kryfo from this computer and closes it. To whoever is watching, the app just stopped.'**
+  String get flowWipe1Desk;
 
   /// wipe PIN setup, second line
   ///
@@ -12767,6 +12803,12 @@ abstract class AppLocalizations {
   /// **'Notifications already in the shade were already seen. While the decoy is open, no new ones show.'**
   String get flowDecoyShade;
 
+  /// flowDecoyShade as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications already on the screen were already seen. While the decoy is open, no new ones show.'**
+  String get flowDecoyShadeDesk;
+
   /// decoy PIN setup, the pad
   ///
   /// In en, this message translates to:
@@ -12790,6 +12832,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'In some countries, refusing to unlock a phone or hiding data from officials is an offence in itself. Know the law where you travel.'**
   String get flowLaw;
+
+  /// flowLaw as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'In some countries, refusing to unlock a device or hiding data from officials is an offence in itself. Know the law where you travel.'**
+  String get flowLawDesk;
 
   /// How this works sheet
   ///
@@ -12898,6 +12946,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This replaces any hidden chats this phone already holds.'**
   String get flowVaultReplace;
+
+  /// flowVaultReplace as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'This replaces any hidden chats this computer already holds.'**
+  String get flowVaultReplaceDesk;
 
   /// the hidden chats setup flow: above the pad
   ///
@@ -13012,6 +13066,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your hidden chats PIN opens Kryfo with your hidden chats, your PIN and your fingerprint without them. Setting hidden chats up again replaces the ones this phone holds. Forget the hidden chats PIN and they are gone for good.'**
   String get howVault;
+
+  /// howVault as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Your hidden chats PIN opens Kryfo with your hidden chats, your PIN without them. Setting hidden chats up again replaces the ones this computer holds. Forget the hidden chats PIN and they are gone for good.'**
+  String get howVaultDesk;
 
   /// chat menu, home long-press menu and contact page, only while hidden chats are open: moves the chat out of the everyday chat list
   ///
@@ -15605,6 +15665,12 @@ abstract class AppLocalizations {
   /// **'At least 12 characters. The phone\'s keyboard sees what you type, so use one that does not learn or sync words.'**
   String get flowVaultPassLine;
 
+  /// flowVaultPassLine as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'At least 12 characters. Pick one you use nowhere else.'**
+  String get flowVaultPassLineDesk;
+
   /// screens/pin_flow_screen.dart
   ///
   /// In en, this message translates to:
@@ -16192,6 +16258,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Kryfo is running and receiving messages'**
   String get desktopTrayTip;
+
+  /// notifications page on a computer: the section that replaces the phone's delivery modes
+  ///
+  /// In en, this message translates to:
+  /// **'On this computer'**
+  String get desktopRunSection;
+
+  /// switch: closing the window hides kryfo to the tray instead of quitting
+  ///
+  /// In en, this message translates to:
+  /// **'Keep running in the tray'**
+  String get desktopTrayRow;
+
+  /// under the tray switch
+  ///
+  /// In en, this message translates to:
+  /// **'Closing the window keeps Kryfo in the tray, so messages keep arriving.'**
+  String get desktopTrayHint;
+
+  /// shown while the tray switch is off
+  ///
+  /// In en, this message translates to:
+  /// **'Closing the window quits Kryfo. Messages arrive when you open it again.'**
+  String get desktopTrayOffLine;
+
+  /// the desktop shows no tray icons (many wayland desktops): closing quits even with the switch on
+  ///
+  /// In en, this message translates to:
+  /// **'This desktop shows no tray icon, so closing the window quits Kryfo.'**
+  String get desktopTrayNoneLine;
+
+  /// switch: kryfo starts when the user signs in to the computer
+  ///
+  /// In en, this message translates to:
+  /// **'Start with my computer'**
+  String get desktopStartRow;
+
+  /// under the start switch
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo opens when you sign in to this computer.'**
+  String get desktopStartHint;
+
+  /// the computer refused to add kryfo to its startup (portal said no, file or registry not writable)
+  ///
+  /// In en, this message translates to:
+  /// **'This computer did not let Kryfo start with it. Kryfo opens whenever you start it yourself.'**
+  String get desktopStartRefused;
+
+  /// windows: kryfo is listed but switched off in the startup apps of windows settings or task manager
+  ///
+  /// In en, this message translates to:
+  /// **'Windows has Kryfo switched off in its startup apps. Switch it on there, in Settings, Apps, Startup.'**
+  String get desktopStartHeldOff;
 
   /// screens/scan_screen.dart, screens/camera_screen.dart: on desktop, where the phone would open its camera
   ///
