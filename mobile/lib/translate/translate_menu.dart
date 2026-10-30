@@ -64,6 +64,8 @@ Future<void> neverOffer(
   Offer offer,
 ) async {
   final messenger = ScaffoldMessenger.maybeOf(context);
+  // a screen reader needs the time to reach undo
+  final stay = MediaQuery.accessibleNavigationOf(context);
   final lang = offer.from;
   try {
     await hub.neverFor(lang);
@@ -75,9 +77,10 @@ Future<void> neverOffer(
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
-        // an action makes a snack bar stay by default: this one goes
+        // an action makes a snack bar stay by default: this one goes,
+        // unless a screen reader is on
         duration: const Duration(seconds: 5),
-        persist: false,
+        persist: stay,
         backgroundColor: HaloColors.surface3,
         content: Text(
           l10n.translateNeverDone(langName(offer.seen)),
