@@ -62,10 +62,7 @@ TranslationHub _live() {
     store: DbTranslateStore(
       () => session.settingsDb(),
       chatDb: (id) => session.chatDb(id),
-      open: () async => [
-        await session.settingsDb(),
-        if (session.vault case final v? when v.isOpen) await v.open(),
-      ],
+      open: () => session.openDbs(),
     ),
     engine: engine,
     catalog: catalog,

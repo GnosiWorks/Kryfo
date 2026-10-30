@@ -150,6 +150,11 @@ class Session {
   // the primary, a chat's row beside the chat
   Future<Database> settingsDb() => primary.open();
   Future<Database> chatDb(String chatId) => _ofChat(chatId).open();
+  // every container open now: the primary, and the vault while it is open
+  Future<List<Database>> openDbs() async => [
+    await primary.open(),
+    if (vault case final v? when v.isOpen) await v.open(),
+  ];
 
   HaloDb _ofPeer(String haloId) {
     final v = vault;
