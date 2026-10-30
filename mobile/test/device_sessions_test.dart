@@ -356,4 +356,65 @@ void main() {
     expect(once.signedPreKeyId, next.signedPreKeyId);
     expect(once.kyberPreKeyId, isNot(next.kyberPreKeyId));
   });
+
+  test('an opener before the bundle keeps its session', () async {
+    // ana links a3 and bob links d2 at once: a3 heard of d2 first and
+    // built; its opener reaches d2 before ana's phone hands d2 a3's bundle
+    final a3 = (await devices([3])).single;
+    final d2 = (await devices([2])).single;
+    Future<String> send(Dev from, String to, Dev dev, String t) =>
+        from.ds.seal(to, dev.id, '{"t":"$t"}', dev.key);
+    Future<String> read(Dev at, String from, Dev dev, String wire) async {
+      final (type, body) = wireOf(wire);
+      final got = textOf(
+        await at.ds.open(from, dev.id, type, body, dev.key, reg: dev.reg),
+      );
+      return (jsonDecode(got) as Map)['t'] as String;
+    }
+
+    Future<bool> buildD2(Dev a3, {bool rebuild = false}) async =>
+        d2.ds.build(
+          'ana',
+          a3.id,
+          d2.store.lib.parseDeviceBundle(
+            await a3.ds.makeBundle(a3.id),
+            ana.identity.public,
+          ),
+          a3.key,
+          a3.reg,
+          rebuild: rebuild,
+        );
+
+    expect(
+      await a3.ds.build(
+        'bob',
+        d2.id,
+        a3.store.lib.parseDeviceBundle(
+          await d2.ds.makeBundle(d2.id),
+          bob.identity.public,
+        ),
+        d2.key,
+        d2.reg,
+      ),
+      isTrue,
+    );
+    expect(await read(d2, 'ana', a3, await send(a3, 'bob', d2, 'm1')), 'm1');
+    expect(await read(a3, 'bob', d2, await send(d2, 'ana', a3, 'ok')), 'ok');
+    final m2 = await send(a3, 'bob', d2, 'm2');
+    expect(wireOf(m2).$1, kLsWhisper);
+    // the bundle comes late: the session held stays
+    expect(await buildD2(a3), isFalse);
+    expect(await read(d2, 'ana', a3, m2), 'm2');
+    // a rebuild over it keeps the old state in the archive
+    final m3 = await send(a3, 'bob', d2, 'm3');
+    expect(await buildD2(a3, rebuild: true), isTrue);
+    expect(await read(d2, 'ana', a3, m3), 'm3');
+    expect(await read(a3, 'bob', d2, await send(d2, 'ana', a3, 'm4')), 'm4');
+    // a3's id on another key: built afresh on it, the old session gone
+    final other = Dev(3, await testStore());
+    final m5 = await send(a3, 'bob', d2, 'm5');
+    expect(await buildD2(other), isTrue);
+    expect((await d2.ds.held('ana')).single.key, other.key);
+    await expectLater(read(d2, 'ana', a3, m5), throwsA(anything));
+  });
 }

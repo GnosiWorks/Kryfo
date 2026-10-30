@@ -82,15 +82,19 @@ class DeviceSessions {
   }
 
   /// a session with [peer]'s [device] from its KDB1 [block] (read by
-  /// parseDeviceBundle under the contact's identity), in place of any
-  /// held. [pin] and [reg] are the device's list entry
-  Future<void> build(
+  /// parseDeviceBundle under the contact's identity). [pin] and [reg] are
+  /// the device's list entry. a session held on [pin] stays as it is
+  /// (false) unless [rebuild] (the slot said Rebuild); then it goes into the
+  /// new record's archive, so what was sealed on it still opens. one held on
+  /// another key is dropped, never archived under the new pin
+  Future<bool> build(
     String peer,
     int device,
     LsBlock block,
     Uint8List pin,
-    int reg,
-  ) => _serial(peer, device, () async {
+    int reg, {
+    bool rebuild = false,
+  }) => _serial(peer, device, () async {
     // the key the bundle runs on: the device's own, or the identity for a
     // phone
     if (block.deviceId != device ||
@@ -99,10 +103,16 @@ class DeviceSessions {
         !_eq(block.bundle.identityKey, pin)) {
       throw const DeviceRefused('a bundle that is not the listed device');
     }
+    final held = await _sessions().load(peer, device);
+    Uint8List? over;
+    if (held != null && _onKey(held, pin)) {
+      if (!rebuild) return false;
+      over = held;
+    }
     final (record, their) = _lib.sessionFromBundle(
       s.identity,
       s.registrationId,
-      null,
+      over,
       block.bundle,
       _now(),
       pinned: pin,
@@ -110,7 +120,17 @@ class DeviceSessions {
     _requirePq(record);
     if (!_eq(their, pin)) throw const LsError(LsError.untrusted);
     await _sessions().store(peer, record, device);
+    return true;
   });
+
+  bool _onKey(Uint8List record, Uint8List pin) {
+    try {
+      final k = _lib.sessionInfo(record).remoteIdentity;
+      return k != null && _eq(k, pin);
+    } on LsError {
+      return false;
+    }
+  }
 
   Future<bool> has(String peer, int device) =>
       _sessions().contains(peer, device);
