@@ -210,7 +210,7 @@ extension AppStateSession on AppState {
           sign: (m) => Uint8List.fromList(ed.sign(ed.PrivateKey(priv), m)),
         ),
         bornMs: born,
-        v4SinceMs: await _everydayMeta(kMainMadeKey),
+        v4SinceMs: await _everydayMeta(kMainMadeMeta),
         fresh: fresh,
       );
     } finally {
@@ -225,7 +225,7 @@ extension AppStateSession on AppState {
     final kept = await raw.query(
       'signal_meta',
       where: 'k = ?',
-      whereArgs: [kDecoyBornKey],
+      whereArgs: [kDecoyBornMeta],
       limit: 1,
     );
     final had = kept.isEmpty ? null : int.tryParse('${kept.first['v']}');
@@ -249,7 +249,7 @@ extension AppStateSession on AppState {
         whereArgs: [kMainIdent],
       );
       await t.insert('signal_meta', {
-        'k': kDecoyBornKey,
+        'k': kDecoyBornMeta,
         'v': '$born',
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     });

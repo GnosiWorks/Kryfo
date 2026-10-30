@@ -757,14 +757,14 @@ Future<InviteUpkeep> resetMainInvite(
 // 11 step 4 ran: a main v4 invite was made once. kept in the store's
 // meta, which every later migration and the phone's own backup keep
 String _mainMadeKey(int ident) =>
-    ident == kMainIdent ? kMainMadeKey : 'i$ident:$kMainMadeKey';
+    ident == kMainIdent ? kMainMadeMeta : 'i$ident:$kMainMadeMeta';
 
 /// the store's meta key of when its main identity's first main invite was
 /// made (11 step 4)
-const kMainMadeKey = 'kin4_main_made';
+const kMainMadeMeta = 'kin4_main_made';
 
 /// the decoy store's meta key of when its identity says it was made (R17)
-const kDecoyBornKey = 'decoy_born';
+const kDecoyBornMeta = 'decoy_born';
 
 Future<bool> _mainMade(DatabaseExecutor db, int ident) async => (await db.query(
   'signal_meta',
