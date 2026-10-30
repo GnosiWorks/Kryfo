@@ -449,6 +449,8 @@ extension AppStateOutbox on AppState {
     unawaited(_drainGroupOwed());
     unawaited(_drainAcks());
     unawaited(_askAfresh());
+    // linked devices: copies owed to one device, list pushes due
+    if (linkedDevicesOn) unawaited(pumpDeviceSends());
     if (rows.isEmpty && vRows.isEmpty) {
       if (_outboxTries.isNotEmpty) {
         _outboxTries.clear();
