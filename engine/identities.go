@@ -106,6 +106,12 @@ func identDrop(ident int) {
 			delete(pairSeeds, k)
 		}
 	}
+	for k := range devSeeds {
+		if k.ident == ident {
+			delete(devSeeds, k)
+		}
+	}
+	delete(linkedIdents, ident)
 	identsMu.Unlock()
 	pre := subPrefix(ident)
 	fcPre := fcSubPrefix(ident)
@@ -128,22 +134,46 @@ func identDrop(ident int) {
 
 // the address seed of a pair made by a v4 first contact: from now on its
 // addresses mix it in. a new first contact with the same peer (a re-add)
-// makes the pair again with its own seed, which replaces the one held
+// makes the pair again with its own seed, which replaces the one held.
+// [cPeer] may name a device pair as "peer/their/my": its opener's seed
 //
 //export HaloPairSeed
 func HaloPairSeed(cIdent C.int, cPeer, cSeedHex *C.char) *C.char {
-	peer, err := peerArr(goStr(cPeer))
-	if err != nil {
+	if err := pairSeedAfresh(int(cIdent), goStr(cPeer), goStr(cSeedHex)); err != nil {
 		return C.CString("error: " + err.Error())
 	}
-	b, err := hex.DecodeString(goStr(cSeedHex))
+	return C.CString("ok")
+}
+
+func pairSeedAfresh(ident int, peerArg, seedHex string) error {
+	if strings.Contains(peerArg, ".") {
+		return errors.New("the seed comes apart")
+	}
+	b, err := hex.DecodeString(seedHex)
 	if err != nil || len(b) != 32 {
-		return C.CString("error: a seed is 32 bytes")
+		return errors.New("a seed is 32 bytes")
 	}
 	var s [32]byte
 	copy(s[:], b)
-	putPairSeedAfresh(int(cIdent), peer, s)
-	return C.CString("ok")
+	if strings.Contains(peerArg, "/") {
+		// the pair as its opener address names it, so the device key is
+		// the one on the list now
+		c, _, err := pairArg(ident, peerArg)
+		if err != nil {
+			return err
+		}
+		if c.dev == nil {
+			return errors.New("device 1 to device 1 is the identity pair")
+		}
+		putDevSeedAfresh(c.devKey(), s)
+		return nil
+	}
+	peer, err := peerArr(peerArg)
+	if err != nil {
+		return err
+	}
+	putPairSeedAfresh(ident, peer, s)
+	return nil
 }
 
 // a call naming a seed for the pair: one it has not seen it takes, another
@@ -207,14 +237,21 @@ type identPeer struct {
 	X string `json:"x"`
 	// the pair's seed in hex, for a pair made by a v4 first contact
 	S string `json:"s,omitempty"`
+	// a device pair: their device and mine, both 0 on the identity pair
+	T int `json:"t,omitempty"`
+	M int `json:"m,omitempty"`
 }
 
 // the pair as pairArg reads it
 func (p identPeer) arg() string {
-	if p.S == "" {
-		return p.X
+	x := p.X
+	if p.T != 0 || p.M != 0 {
+		x += "/" + strconv.Itoa(p.T) + "/" + strconv.Itoa(p.M)
 	}
-	return p.X + "." + p.S
+	if p.S == "" {
+		return x
+	}
+	return x + "." + p.S
 }
 
 func (p identPeer) String() string { return fmt.Sprintf("%d:%s", p.I, p.X) }

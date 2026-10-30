@@ -2531,7 +2531,14 @@ func nostrSend(ident int, peerArg, msg string) string {
 		}
 		return fmt.Sprintf("error: wrap: %v", err)
 	}
+	// an opener address only listens: the opener goes with its seed
+	if c.dev != nil && c.dev.opener {
+		return "error: wrap: a device pair sends with its seed"
+	}
+	return nostrSendOn(c, msg)
+}
 
+func nostrSendOn(c convPair, msg string) string {
 	gw, err := c.wrap(msg)
 	if err != nil {
 		return fmt.Sprintf("error: wrap: %v", err)
@@ -2601,7 +2608,7 @@ func nostrSubscribe(ident int, peerArg string, fresh bool) string {
 // identity's go by the peer's key, as before; another's say whose they are,
 // and the knocks take their address as noted
 func nostrSubscribeAt(c convPair, peerHex, rcvSk, rcvPk string, fresh bool) {
-	key := subKey(c.ident, peerHex)
+	key := c.subKey(peerHex)
 	// every identity's, the main one's too: the knocks take the address
 	// the subscription was made on, never one derived again
 	lane := receiveLane(rcvPk)
@@ -2724,8 +2731,10 @@ func nostrLetHeld(ident int, peerArg, how string) error {
 		return nil
 	}
 	nostrMu.Lock()
-	_, on := nostrSubs[subKey(ident, peerHex)]
+	_, on := nostrSubs[c.subKey(peerHex)]
+	// a device pair never came through a first-contact address
 	_, fcOn := nostrSubs["firstcontact"]
+	fcOn = fcOn && c.dev == nil
 	fc := fcCounterNow
 	nostrMu.Unlock()
 	fcPath := ""
@@ -2785,7 +2794,7 @@ func nostrUnsubscribe(ident int, peerArg string) error {
 	if err != nil {
 		return err
 	}
-	key := subKey(ident, peerHex)
+	key := c.subKey(peerHex)
 	nostrMu.Lock()
 	if cancel, exists := nostrSubs[key]; exists {
 		cancel()
