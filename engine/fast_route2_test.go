@@ -88,6 +88,8 @@ func useTwoStoresAndBackup(t *testing.T) (a, b, p *relayStandIn, socks *socksSta
 	secondRelayHost.put(strings.TrimPrefix(b.url(), "ws://"))
 	secondFirstSpread = 0
 	t.Cleanup(func() {
+		// runners read the spread until they are out
+		runnersGone(t)
 		secondRelayHost.put(old)
 		secondFirstSpread = oldSpread
 	})
@@ -651,6 +653,8 @@ func TestPrivateReadsAndWritesBothOnions(t *testing.T) {
 	secondRelayHost.put(strings.TrimPrefix(b.url(), "ws://"))
 	secondFirstSpread = 0
 	t.Cleanup(func() {
+		// runners read the spread until they are out
+		runnersGone(t)
 		secondRelayHost.put(old)
 		secondFirstSpread = oldSpread
 	})

@@ -26,6 +26,8 @@ func useTwoStores(t *testing.T, a, b *relayStandIn, more ...*relayStandIn) {
 	secondRelayHost.put(strings.TrimPrefix(b.url(), "ws://"))
 	secondFirstSpread = 0
 	t.Cleanup(func() {
+		// runners read the spread until they are out
+		runnersGone(t)
 		secondRelayHost.put(old)
 		secondFirstSpread = oldSpread
 	})
