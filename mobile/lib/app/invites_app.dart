@@ -556,8 +556,10 @@ extension AppStateInvites on AppState {
 
   // whether a seal to [peer] that would be an opener waits for their
   // answer (SignalSession.holdOpener): a frame of this session went to
-  // their one-time invite already, and they heard only that one (3c).
-  // rows that do not read say no: the frame goes, as before
+  // their one-time invite already, and they heard only that one (3c). a
+  // frame that went a wrap's life ago may never have reached them: one
+  // more goes, and the hold starts again from it. rows that do not read
+  // say no: the frame goes, as before
   Future<bool> _onceOpenerWent(String peer) async {
     try {
       final db = await live.open();
@@ -573,14 +575,26 @@ extension AppStateInvites on AppState {
       }
       final key = identityKeyHex(c.first['xpub'] as String?);
       if (key == null) return false;
+      final ident = c.first['ident'] as int? ?? kMainIdent;
       final o = await db.query(
         'hellos',
         columns: ['went_at'],
         where: 'ident = ? AND way = ? AND peer = ? AND once = ?',
-        whereArgs: [c.first['ident'] as int? ?? kMainIdent, kHelloOpen, key, 1],
+        whereArgs: [ident, kHelloOpen, key, 1],
         limit: 1,
       );
-      return o.isNotEmpty && o.first['went_at'] != null;
+      final went = o.isEmpty ? null : o.first['went_at'] as int?;
+      if (went == null) return false;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (now - went < kOnceHoldFor.inMilliseconds && went <= now) return true;
+      await db.update(
+        'hellos',
+        {'went_at': now},
+        where: 'ident = ? AND way = ? AND peer = ? AND once = ?',
+        whereArgs: [ident, kHelloOpen, key, 1],
+      );
+      dlog('v4 opener: one more to their one-time invite');
+      return false;
     } catch (e) {
       dlog('v4 opener: rows not read (${e.runtimeType})');
       return false;
@@ -1042,6 +1056,10 @@ extension AppStateInvites on AppState {
     if (res != 'ok') dlog('pair: seed not taken ($res)');
   }
 }
+
+/// how long frames after an opener to a one-time invite wait for the answer
+/// (3c): a wrap's life. one that went longer ago may have expired unread
+const kOnceHoldFor = Duration(days: 15);
 
 /// a first contact sent to [fc]; once a relay took it, an open hello row
 /// whose one-time invite that address is says a frame went there: the next

@@ -718,6 +718,25 @@ void main() {
       signalSession.encryptTo(p.words, 'second'),
       throwsA(isA<WaitsForAnswer>()),
     );
+    // a wrap's life on, that opener may have expired unread: one more goes,
+    // and the hold starts again from it
+    final old = DateTime.now()
+        .subtract(const Duration(days: 16))
+        .millisecondsSinceEpoch;
+    await db.update(
+      'hellos',
+      {'went_at': old},
+      where: 'way = ? AND peer = ?',
+      whereArgs: ['open', p.keyHex],
+    );
+    final late = await signalSession.encryptTo(p.words, 'late');
+    expect(base64Decode(late)[0], kLsPreKey);
+    final stamped = (await hellosOf('open', p.keyHex)).single['went_at'] as int;
+    expect(stamped, greaterThan(old));
+    await expectLater(
+      signalSession.encryptTo(p.words, 'second'),
+      throwsA(isA<WaitsForAnswer>()),
+    );
     // their answer: plain messages from here
     expect(
       unpad(
