@@ -14051,12 +14051,6 @@ abstract class AppLocalizations {
   /// **'Translation options'**
   String get translateBarMore;
 
-  /// in the bar's menu: every chat translates this language on its own
-  ///
-  /// In en, this message translates to:
-  /// **'Always translate {language}'**
-  String translateBarAlways(Object language);
-
   /// in a translate menu: nothing in this language is offered for translation until the person takes it off the list in settings
   ///
   /// In en, this message translates to:

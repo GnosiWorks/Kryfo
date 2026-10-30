@@ -2295,7 +2295,6 @@
   "translateShowOriginal": "Xem bản gốc",
   "translateBarTo": "Dịch sang {language}",
   "translateBarMore": "Tùy chọn dịch",
-  "translateBarAlways": "Luôn dịch {language}",
   "translateBarNever": "Không bao giờ đề xuất cho {language}",
   "translateBarHide": "Ẩn trong cuộc trò chuyện này",
   "translateWorking": "Đang dịch…",

@@ -8730,11 +8730,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get translateBarMore => 'अनुवाद के विकल्प';
 
   @override
-  String translateBarAlways(Object language) {
-    return '$language का हमेशा अनुवाद करें';
-  }
-
-  @override
   String translateBarNever(Object language) {
     return '$language के लिए कभी न सुझाएँ';
   }

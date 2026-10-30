@@ -234,15 +234,6 @@ class TranslationHub extends ChangeNotifier {
     return _chatAuto[chatId] = on;
   }
 
-  // what the chat itself was set to, null when nobody set it
-  Future<bool?> chatAutoSet(String chatId) async {
-    try {
-      return await store.chatAuto(chatId);
-    } catch (_) {
-      return null;
-    }
-  }
-
   // the bar a chat in another language shows at its top, put away
   Future<bool> barHidden(String chatId) async {
     try {
@@ -258,17 +249,6 @@ class TranslationHub extends ChangeNotifier {
     } catch (_) {}
   }
 
-  // every chat nobody set translates [lang] on its own, or stops
-  Future<void> alwaysFor(String lang, bool on) => saveSettings(
-    _settings.copyWith(
-      always: [
-        for (final l in _settings.always)
-          if (l != lang) l,
-        if (on) lang,
-      ],
-    ),
-  );
-
   // nothing in [lang] is offered until the person takes it off the list
   Future<void> neverFor(String lang) => saveSettings(
     _settings.copyWith(
@@ -276,10 +256,6 @@ class TranslationHub extends ChangeNotifier {
         for (final l in _settings.never)
           if (l != lang) l,
         lang,
-      ],
-      always: [
-        for (final l in _settings.always)
-          if (l != lang) l,
       ],
     ),
   );

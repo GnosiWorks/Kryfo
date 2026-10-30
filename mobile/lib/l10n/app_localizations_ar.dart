@@ -8861,11 +8861,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get translateBarMore => 'خيارات الترجمة';
 
   @override
-  String translateBarAlways(Object language) {
-    return 'ترجمة $language دائمًا';
-  }
-
-  @override
   String translateBarNever(Object language) {
     return 'عدم اقتراح الترجمة من $language';
   }

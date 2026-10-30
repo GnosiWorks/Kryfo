@@ -8750,11 +8750,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get translateBarMore => 'Çeviri seçenekleri';
 
   @override
-  String translateBarAlways(Object language) {
-    return 'Her zaman çevir · $language';
-  }
-
-  @override
   String translateBarNever(Object language) {
     return 'Bir daha önerme · $language';
   }

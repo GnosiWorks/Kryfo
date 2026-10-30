@@ -18,8 +18,6 @@ class TranslateSettings {
   final bool autoDefault;
   // model downloads wait for wi-fi
   final bool wifiOnly;
-  // languages every chat nobody set translates on its own
-  final List<String> always;
   // languages never offered, until the person takes one off the list
   final List<String> never;
   // times translation was turned off: each container drops its kept
@@ -32,7 +30,6 @@ class TranslateSettings {
     this.target = '',
     this.autoDefault = false,
     this.wifiOnly = true,
-    this.always = const [],
     this.never = const [],
     this.offs = 0,
   });
@@ -43,7 +40,6 @@ class TranslateSettings {
     String? target,
     bool? autoDefault,
     bool? wifiOnly,
-    List<String>? always,
     List<String>? never,
     int? offs,
   }) => TranslateSettings(
@@ -52,7 +48,6 @@ class TranslateSettings {
     target: target ?? this.target,
     autoDefault: autoDefault ?? this.autoDefault,
     wifiOnly: wifiOnly ?? this.wifiOnly,
-    always: always ?? this.always,
     never: never ?? this.never,
     offs: offs ?? this.offs,
   );
@@ -63,7 +58,6 @@ class TranslateSettings {
     'target': target,
     'auto': autoDefault,
     'wifi': wifiOnly,
-    'always': always,
     'never': never,
     'offs': offs,
   };
@@ -78,9 +72,6 @@ class TranslateSettings {
         target: j['target'] as String? ?? '',
         autoDefault: j['auto'] as bool? ?? false,
         wifiOnly: j['wifi'] as bool? ?? true,
-        always: [
-          for (final l in (j['always'] as List? ?? const [])) l as String,
-        ],
         never: [for (final l in (j['never'] as List? ?? const [])) l as String],
         offs: (j['offs'] as num?)?.toInt() ?? 0,
       );

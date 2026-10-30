@@ -8795,11 +8795,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get translateBarMore => 'Opções de tradução';
 
   @override
-  String translateBarAlways(Object language) {
-    return 'Sempre traduzir · $language';
-  }
-
-  @override
   String translateBarNever(Object language) {
     return 'Nunca oferecer · $language';
   }

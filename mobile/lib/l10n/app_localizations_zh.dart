@@ -8323,11 +8323,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get translateBarMore => '翻译选项';
 
   @override
-  String translateBarAlways(Object language) {
-    return '总是翻译$language';
-  }
-
-  @override
   String translateBarNever(Object language) {
     return '不再为$language提供翻译';
   }
@@ -17975,11 +17970,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get translateBarMore => '翻譯選項';
-
-  @override
-  String translateBarAlways(Object language) {
-    return '總是翻譯$language';
-  }
 
   @override
   String translateBarNever(Object language) {

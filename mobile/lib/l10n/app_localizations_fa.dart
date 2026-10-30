@@ -8740,11 +8740,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get translateBarMore => 'گزینه‌های ترجمه';
 
   @override
-  String translateBarAlways(Object language) {
-    return 'همیشه $language را ترجمه کن';
-  }
-
-  @override
   String translateBarNever(Object language) {
     return 'ترجمهٔ $language را دیگر پیشنهاد نده';
   }

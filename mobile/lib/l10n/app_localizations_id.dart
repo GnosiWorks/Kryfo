@@ -8721,11 +8721,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get translateBarMore => 'Opsi terjemahan';
 
   @override
-  String translateBarAlways(Object language) {
-    return 'Selalu terjemahkan $language';
-  }
-
-  @override
   String translateBarNever(Object language) {
     return 'Jangan tawarkan untuk $language';
   }

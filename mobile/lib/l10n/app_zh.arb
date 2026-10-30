@@ -2295,7 +2295,6 @@
   "translateShowOriginal": "显示原文",
   "translateBarTo": "翻译成{language}",
   "translateBarMore": "翻译选项",
-  "translateBarAlways": "总是翻译{language}",
   "translateBarNever": "不再为{language}提供翻译",
   "translateBarHide": "在此聊天中隐藏",
   "translateWorking": "正在翻译…",

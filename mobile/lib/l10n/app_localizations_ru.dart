@@ -8888,11 +8888,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get translateBarMore => 'Параметры перевода';
 
   @override
-  String translateBarAlways(Object language) {
-    return 'Всегда переводить · $language';
-  }
-
-  @override
   String translateBarNever(Object language) {
     return 'Не предлагать · $language';
   }

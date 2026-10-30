@@ -2295,7 +2295,6 @@
   "translateShowOriginal": "Lihat aslinya",
   "translateBarTo": "Terjemahkan ke {language}",
   "translateBarMore": "Opsi terjemahan",
-  "translateBarAlways": "Selalu terjemahkan {language}",
   "translateBarNever": "Jangan tawarkan untuk {language}",
   "translateBarHide": "Sembunyikan di chat ini",
   "translateWorking": "Menerjemahkan…",

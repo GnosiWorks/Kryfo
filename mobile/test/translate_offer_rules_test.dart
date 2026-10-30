@@ -90,12 +90,10 @@ void main() {
   test('never offer: off the offer until taken off the list', () async {
     final f = fakeHub();
     await f.hub.ready();
-    await f.hub.alwaysFor('zh', true);
     await f.hub.neverFor('zh');
     expect(f.hub.offer(_zhLong), isNull);
     expect(f.store.settings.never, ['zh']);
-    // never wins over always, and is not taken for a language they read
-    expect(f.store.settings.always, isEmpty);
+    // not taken for a language they read
     expect(f.store.settings.mine, isEmpty);
     await f.hub.offerAgain('zh');
     expect(f.store.settings.never, isEmpty);

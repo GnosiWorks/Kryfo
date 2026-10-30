@@ -2295,7 +2295,6 @@
   "translateShowOriginal": "Orijinali göster",
   "translateBarTo": "Çevir · {language}",
   "translateBarMore": "Çeviri seçenekleri",
-  "translateBarAlways": "Her zaman çevir · {language}",
   "translateBarNever": "Bir daha önerme · {language}",
   "translateBarHide": "Bu sohbette gizle",
   "translateWorking": "Çevriliyor…",

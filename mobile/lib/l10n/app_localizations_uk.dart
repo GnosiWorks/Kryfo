@@ -8878,11 +8878,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get translateBarMore => 'Параметри перекладу';
 
   @override
-  String translateBarAlways(Object language) {
-    return 'Завжди перекладати · $language';
-  }
-
-  @override
   String translateBarNever(Object language) {
     return 'Не пропонувати · $language';
   }

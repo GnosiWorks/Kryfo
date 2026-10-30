@@ -3127,11 +3127,6 @@ final _calls = <_Call>[
   ('translateBarTo', ["⟨language⟩"], (l) => l.translateBarTo("⟨language⟩")),
   ('translateBarMore', [], (l) => l.translateBarMore),
   (
-    'translateBarAlways',
-    ["⟨language⟩"],
-    (l) => l.translateBarAlways("⟨language⟩"),
-  ),
-  (
     'translateBarNever',
     ["⟨language⟩"],
     (l) => l.translateBarNever("⟨language⟩"),

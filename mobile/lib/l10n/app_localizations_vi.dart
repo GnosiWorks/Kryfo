@@ -8711,11 +8711,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get translateBarMore => 'Tùy chọn dịch';
 
   @override
-  String translateBarAlways(Object language) {
-    return 'Luôn dịch $language';
-  }
-
-  @override
   String translateBarNever(Object language) {
     return 'Không bao giờ đề xuất cho $language';
   }

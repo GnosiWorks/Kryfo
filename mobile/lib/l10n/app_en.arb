@@ -10975,15 +10975,6 @@
   "@translateBarMore": {
     "description": "the bar's small menu button, for screen readers"
   },
-  "translateBarAlways": "Always translate {language}",
-  "@translateBarAlways": {
-    "description": "in the bar's menu: every chat translates this language on its own",
-    "placeholders": {
-      "language": {
-        "type": "Object"
-      }
-    }
-  },
   "translateBarNever": "Never offer for {language}",
   "@translateBarNever": {
     "description": "in a translate menu: nothing in this language is offered for translation until the person takes it off the list in settings",

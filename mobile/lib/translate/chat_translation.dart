@@ -102,7 +102,6 @@ class ChatTranslation extends ChangeNotifier {
     await hub.ready();
     if (!_keptRead) await _readKept();
     final on = await hub.chatAuto(chatId);
-    final set = await hub.chatAutoSet(chatId);
     final hidden = await hub.barHidden(chatId);
     var lib = false;
     try {
@@ -110,24 +109,16 @@ class ChatTranslation extends ChangeNotifier {
     } catch (_) {}
     if (_gone) return;
     _auto = on;
-    _explicit = set;
     _barHidden = hidden;
     _hasLib = lib;
     notifyListeners();
   }
 
-  // what this chat itself was set to, null when nobody set it: then a
-  // language set to always translate does
-  bool? _explicit;
   bool? _barHidden;
   bool? _hasLib;
 
-  // whether messages in [o]'s language translate on their own here
-  bool autoOn(Offer o) =>
-      _auto == true ||
-      (_auto != null &&
-          _explicit == null &&
-          hub.settings.always.contains(o.from));
+  // whether messages translate on their own here: the chat's own switch
+  bool autoOn(Offer o) => _auto == true;
 
   // the language most of their recent messages are in, when the person
   // does not read it: what the bar at the top of the chat offers. two of
@@ -160,14 +151,12 @@ class ChatTranslation extends ChangeNotifier {
     if (hub.locked) return null;
     final block = await hub.blockFor(o);
     if (block != null) return PackNeed(o, hub.missing(o), block);
-    _explicit = true;
     await setAuto(true);
     return null;
   }
 
   // and back: every message as it came, tapped ones too
   Future<void> showOriginalAll() async {
-    _explicit = false;
     await setAuto(false);
     if (_gone) return;
     for (final e in _msgs.entries.toList()) {
@@ -210,8 +199,6 @@ class ChatTranslation extends ChangeNotifier {
       unawaited(_load());
     } else if (now != null && now != _auto) {
       _auto = now;
-      // a change is someone setting it, here or on the person's page
-      _explicit = now;
       _keptOriginal.clear();
     }
     // what auto translated and no longer would goes back; what was tapped

@@ -8817,11 +8817,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get translateBarMore => 'Options de traduction';
 
   @override
-  String translateBarAlways(Object language) {
-    return 'Toujours traduire · $language';
-  }
-
-  @override
   String translateBarNever(Object language) {
     return 'Ne plus proposer · $language';
   }

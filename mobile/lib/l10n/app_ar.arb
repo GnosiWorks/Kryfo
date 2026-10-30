@@ -2295,7 +2295,6 @@
   "translateShowOriginal": "عرض الأصل",
   "translateBarTo": "ترجمة إلى {language}",
   "translateBarMore": "خيارات الترجمة",
-  "translateBarAlways": "ترجمة {language} دائمًا",
   "translateBarNever": "عدم اقتراح الترجمة من {language}",
   "translateBarHide": "إخفاء في هذه المحادثة",
   "translateWorking": "جارٍ الترجمة…",

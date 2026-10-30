@@ -3652,7 +3652,6 @@ void main() {
     expect(l.translateShowOriginal, "Show original");
     expect(l.translateBarTo("<language>"), "Translate to <language>");
     expect(l.translateBarMore, "Translation options");
-    expect(l.translateBarAlways("<language>"), "Always translate <language>");
     expect(l.translateBarNever("<language>"), "Never offer for <language>");
     expect(l.translateBarHide, "Hide in this chat");
     expect(l.translateWorking, "Translating…");

@@ -2295,7 +2295,6 @@
   "translateShowOriginal": "Показать оригинал",
   "translateBarTo": "Перевести · {language}",
   "translateBarMore": "Параметры перевода",
-  "translateBarAlways": "Всегда переводить · {language}",
   "translateBarNever": "Не предлагать · {language}",
   "translateBarHide": "Скрыть в этом чате",
   "translateWorking": "Перевод…",

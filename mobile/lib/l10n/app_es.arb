@@ -2295,7 +2295,6 @@
   "translateShowOriginal": "Ver original",
   "translateBarTo": "Traducir · {language}",
   "translateBarMore": "Opciones de traducción",
-  "translateBarAlways": "Traducir siempre · {language}",
   "translateBarNever": "No ofrecer nunca · {language}",
   "translateBarHide": "Ocultar en este chat",
   "translateWorking": "Traduciendo…",

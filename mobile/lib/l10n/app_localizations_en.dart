@@ -8719,11 +8719,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get translateBarMore => 'Translation options';
 
   @override
-  String translateBarAlways(Object language) {
-    return 'Always translate $language';
-  }
-
-  @override
   String translateBarNever(Object language) {
     return 'Never offer for $language';
   }
