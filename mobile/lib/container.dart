@@ -324,6 +324,7 @@ const deviceKeys = {
   'block_screenshots',
   'theme_light',
   'theme_accent',
+  'wide_list_width',
   'bridge_lines',
   'bridges_on',
   'bridge_hint_off',

@@ -31,7 +31,7 @@ class _RootShellState extends State<RootShell> {
   }
 
   void _open(Widget w) {
-    Navigator.push(context, haloRoute(w));
+    deskPush(context, haloRoute(w));
   }
 
   @override
@@ -85,7 +85,11 @@ class _RootShellState extends State<RootShell> {
       onOpenChat: (id) => openChatAt(context, peer: id),
       onOpenGroup: (groupId) async {
         if (!mounted) return;
-        Navigator.push(context, haloRoute(GroupChatScreen(groupId: groupId)));
+        deskPush(
+          context,
+          haloRoute(GroupChatScreen(groupId: groupId)),
+          id: 'group:$groupId',
+        );
       },
     );
   }
@@ -99,15 +103,16 @@ Future<void> showAddContact(BuildContext context) async {
   );
   if (action == null || !context.mounted) return;
   if (action == 'mine') {
-    await Navigator.of(context).push(haloRoute(const MyKryfoScreen()));
+    await deskPush(context, haloRoute(const MyKryfoScreen()));
     return;
   }
 
   String uri;
   if (action == 'scan') {
-    final result = await Navigator.of(
+    final result = await deskPush<String>(
       context,
-    ).push<String>(haloRoute<String>(const ScanScreen()));
+      haloRoute<String>(const ScanScreen()),
+    );
     if (result == null) return;
     uri = result;
   } else {

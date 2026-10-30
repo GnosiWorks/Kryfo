@@ -166,6 +166,8 @@ import '../voice_length.dart' show voiceFileMs;
 import '../voice_opus.dart' show voiceForWire;
 import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
 import '../desktop/desktop_mode.dart' show canShareOut;
+import '../wide/read_width.dart';
+import '../wide/wide_pane.dart' show PaneBack, PaneFind;
 
 // our nickname for a member, or nothing so the id shows. a room member is a
 // key, not a person we know, so it gets the short tag instead.
@@ -567,6 +569,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   bool _suppressSticky = true;
   DateTime _lastSticky = DateTime.fromMillisecondsSinceEpoch(0);
   bool _searching = false;
+  // ctrl+f on the desktop's pane
+  final _find = PaneFind();
   final _searchCtrl = TextEditingController();
   List<int> _matches = [];
   // what was looked for, and the same hits as _matches for a row's test
@@ -755,6 +759,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     super.didChangeDependencies();
     _timers.watch(context);
     _route = ModalRoute.of(context);
+    _find.attach(context, () {
+      if (!_searching && !_waiting && _end == null) _openSearch();
+    });
     // what covered the chat has gone: what shows now is read
     _reads.look();
   }
@@ -1045,7 +1052,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           nav,
           route,
           removed: removed != null,
-          above: routeStack.above(route),
+          above: watchOf(route).stack.above(route),
         );
         if (closed && removed != null) {
           showHaloToast(nav.context, l10n.groupChatYouWereRemovedFrom(removed));
@@ -4502,6 +4509,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   @override
   void dispose() {
+    _find.detach();
     _unwatchCaptures?.call();
     wallpaperRevision.removeListener(_loadWall);
     final open = _openGroups[widget.groupId]?..remove(this);
@@ -4592,251 +4600,256 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       },
                     ),
             ),
-            // the room's first open: its line eases the thread down
-            // instead of shoving it when the room is known
-            EaseSize(
-              child: _isRoom && _roomBanner && !_waiting
-                  ? Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        NoticeBanner(
-                          glyph: NoticeGlyph.clock,
-                          text: l10n.groupChatThisRoomAndEverything(
-                            expiryWords(
-                              DateTime.fromMillisecondsSinceEpoch(
-                                _roomExpiresAt!,
-                              ).difference(DateTime.now()),
-                            ),
-                          ),
-                          color: HaloColors.violet,
-                          margin: const EdgeInsets.fromLTRB(12, 6, 12, 2),
-                          delay: const Duration(milliseconds: 160),
-                        ),
-                        // every phone that opens a room holds the flag on
-                        // it, since the first version with rooms
-                        NoticeBanner(
-                          glyph: NoticeGlyph.shield,
-                          text: l10n.roomShotsBlocked,
-                          color: HaloColors.violet,
-                          margin: const EdgeInsets.fromLTRB(12, 4, 12, 2),
-                          delay: const Duration(milliseconds: 220),
-                        ),
-                      ],
-                    )
-                  : const SizedBox(width: double.infinity, height: 0),
-            ),
-            // its admin went with "this isn't them": the group is frozen here
-            EaseSize(
-              child: _adminGone && _end == null
-                  ? _AdminGoneLine(onLeave: _leaveAdminGone)
-                  : const SizedBox(width: double.infinity, height: 0),
-            ),
-            // a send that has waited on tor a minute gets a way out
-            ReconnectValve(
-              valve: torValve,
-              waitingSince: _waitingSince(),
-              private: appState.sendMode == 'private',
-              quiet: sessionQuiet,
-              online: appState.online,
-              linkUp: appState.linkUp,
-              margin: const EdgeInsets.fromLTRB(12, 6, 12, 4),
-            ),
-            Divider(height: 0.5, color: HaloColors.line, thickness: 0.5),
-            Expanded(
-              // nothing until the first load lands, so an empty state
-              // never flashes over a group that has messages. the words
-              // cross over when the first person joins, when the room lets
-              // this phone in, and into the first message
-              child: FadeSwap(
-                child: !_loaded
-                    ? const SizedBox.shrink(key: ValueKey('wait'))
-                    : _waiting || _messages.isEmpty || _end != null
-                    ? _end != null
-                          // its admin ended it: the line alone
-                          ? EmptyChat(
-                              key: const ValueKey('ended'),
-                              icon: Icons.stop_circle_outlined,
-                              tint: HaloColors.text2,
-                              title: endedLine(_end!),
-                            )
-                          : _waiting
-                          ? RoomJoinPanel(
-                              key: const ValueKey('joining'),
-                              name: _groupName,
-                              joiningAt: _joiningAt!,
-                              full: _full,
-                              onTryAgain: _knockAgain,
-                              onLeave: _leaveWaiting,
-                            )
-                          : EmptyChat(
-                              key: ValueKey(_alone),
-                              icon: Icons.groups_outlined,
-                              tint: _isRoom ? HaloColors.violet : null,
-                              // a group everyone else left is no new group
-                              title: _alone
-                                  ? _isRoom
-                                        ? l10n.groupChatNobodyHereYet
-                                        : l10n.groupChatNoMessagesYet
-                                  : _isRoom
-                                  ? l10n.chatSayHi
-                                  : _isAdmin
-                                  ? l10n.groupChatGroupCreatedSayHi
-                                  : l10n.groupChatNoMessagesYet,
-                              line: !_alone
-                                  ? l10n.groupChatEveryoneHereReads
-                                  : _isRoom
-                                  ? l10n.groupChatShareTheRoomLink
-                                  : l10n.groupChatNobodyToReadIt,
-                            )
-                    : AtmoScope(
-                        key: const ValueKey('list'),
-                        atmo: _wall.atmo,
-                        child: Stack(
-                          children: [
-                            Positioned.fill(
-                              child: ChatBackdrop(_wall, chat: _memo),
-                            ),
-                            NotificationListener<ScrollMetricsNotification>(
-                              onNotification: _threadResized,
-                              // the newest bubble's time rests above the line
-                              child: EarlierRoom(
-                                shown: _earlier.count > 0,
-                                controller: _scrollCtrl,
-                                reversed: false,
-                                builder: (_, room) => ListView.builder(
-                                  key: _listKey,
-                                  controller: _scrollCtrl,
-                                  padding: EdgeInsets.fromLTRB(
-                                    14,
-                                    12,
-                                    14,
-                                    12 + room,
-                                  ),
-                                  itemCount: _messages.length,
-                                  itemBuilder: (_, i) {
-                                    // one unbuildable message must not cost the
-                                    // whole conversation.
-                                    try {
-                                      return _buildGroupRow(i);
-                                    } catch (e) {
-                                      dlog('group bubble failed: \$e');
-                                      return Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 6,
-                                        ),
-                                        child: Text(
-                                          l10n.groupChatThisMessageCanT,
-                                          style: HaloType.sans(
-                                            size: 12,
-                                            color: HaloColors.text2,
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                ),
+            ...readLines([
+              // the room's first open: its line eases the thread down
+              // instead of shoving it when the room is known
+              EaseSize(
+                child: _isRoom && _roomBanner && !_waiting
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          NoticeBanner(
+                            glyph: NoticeGlyph.clock,
+                            text: l10n.groupChatThisRoomAndEverything(
+                              expiryWords(
+                                DateTime.fromMillisecondsSinceEpoch(
+                                  _roomExpiresAt!,
+                                ).difference(DateTime.now()),
                               ),
                             ),
-                            Positioned(
-                              top: 8,
-                              left: 0,
-                              right: 0,
-                              child: IgnorePointer(
-                                child: Center(
-                                  child: ValueListenableBuilder<bool>(
-                                    valueListenable: _stickyShown,
-                                    builder: (_, shown, _) => AnimatedOpacity(
-                                      duration: const Duration(
-                                        milliseconds: 220,
+                            color: HaloColors.violet,
+                            margin: const EdgeInsets.fromLTRB(12, 6, 12, 2),
+                            delay: const Duration(milliseconds: 160),
+                          ),
+                          // every phone that opens a room holds the flag on
+                          // it, since the first version with rooms
+                          NoticeBanner(
+                            glyph: NoticeGlyph.shield,
+                            text: l10n.roomShotsBlocked,
+                            color: HaloColors.violet,
+                            margin: const EdgeInsets.fromLTRB(12, 4, 12, 2),
+                            delay: const Duration(milliseconds: 220),
+                          ),
+                        ],
+                      )
+                    : const SizedBox(width: double.infinity, height: 0),
+              ),
+              // its admin went with "this isn't them": the group is frozen here
+              EaseSize(
+                child: _adminGone && _end == null
+                    ? _AdminGoneLine(onLeave: _leaveAdminGone)
+                    : const SizedBox(width: double.infinity, height: 0),
+              ),
+              // a send that has waited on tor a minute gets a way out
+              ReconnectValve(
+                valve: torValve,
+                waitingSince: _waitingSince(),
+                private: appState.sendMode == 'private',
+                quiet: sessionQuiet,
+                online: appState.online,
+                linkUp: appState.linkUp,
+                margin: const EdgeInsets.fromLTRB(12, 6, 12, 4),
+              ),
+              Divider(height: 0.5, color: HaloColors.line, thickness: 0.5),
+              Expanded(
+                // nothing until the first load lands, so an empty state
+                // never flashes over a group that has messages. the words
+                // cross over when the first person joins, when the room lets
+                // this phone in, and into the first message
+                child: FadeSwap(
+                  child: !_loaded
+                      ? const SizedBox.shrink(key: ValueKey('wait'))
+                      : _waiting || _messages.isEmpty || _end != null
+                      ? _end != null
+                            // its admin ended it: the line alone
+                            ? EmptyChat(
+                                key: const ValueKey('ended'),
+                                icon: Icons.stop_circle_outlined,
+                                tint: HaloColors.text2,
+                                title: endedLine(_end!),
+                              )
+                            : _waiting
+                            ? RoomJoinPanel(
+                                key: const ValueKey('joining'),
+                                name: _groupName,
+                                joiningAt: _joiningAt!,
+                                full: _full,
+                                onTryAgain: _knockAgain,
+                                onLeave: _leaveWaiting,
+                              )
+                            : EmptyChat(
+                                key: ValueKey(_alone),
+                                icon: Icons.groups_outlined,
+                                tint: _isRoom ? HaloColors.violet : null,
+                                // a group everyone else left is no new group
+                                title: _alone
+                                    ? _isRoom
+                                          ? l10n.groupChatNobodyHereYet
+                                          : l10n.groupChatNoMessagesYet
+                                    : _isRoom
+                                    ? l10n.chatSayHi
+                                    : _isAdmin
+                                    ? l10n.groupChatGroupCreatedSayHi
+                                    : l10n.groupChatNoMessagesYet,
+                                line: !_alone
+                                    ? l10n.groupChatEveryoneHereReads
+                                    : _isRoom
+                                    ? l10n.groupChatShareTheRoomLink
+                                    : l10n.groupChatNobodyToReadIt,
+                              )
+                      : AtmoScope(
+                          key: const ValueKey('list'),
+                          atmo: _wall.atmo,
+                          child: Stack(
+                            children: [
+                              Positioned.fill(
+                                child: ChatBackdrop(_wall, chat: _memo),
+                              ),
+                              NotificationListener<ScrollMetricsNotification>(
+                                onNotification: _threadResized,
+                                // the newest bubble's time rests above the line
+                                child: EarlierRoom(
+                                  shown: _earlier.count > 0,
+                                  controller: _scrollCtrl,
+                                  reversed: false,
+                                  builder: (_, room) => ReadWidth(
+                                    builder: (_, side) => ListView.builder(
+                                      key: _listKey,
+                                      controller: _scrollCtrl,
+                                      padding: EdgeInsets.fromLTRB(
+                                        14 + side,
+                                        12,
+                                        14 + side,
+                                        12 + room,
                                       ),
-                                      opacity: shown ? 1.0 : 0.0,
-                                      child: ValueListenableBuilder<String?>(
-                                        valueListenable: _stickyLabel,
-                                        builder: (_, label, _) => label == null
-                                            ? const SizedBox.shrink()
-                                            : DayChip(label),
+                                      itemCount: _messages.length,
+                                      itemBuilder: (_, i) {
+                                        // one unbuildable message must not cost the
+                                        // whole conversation.
+                                        try {
+                                          return _buildGroupRow(i);
+                                        } catch (e) {
+                                          dlog('group bubble failed: \$e');
+                                          return Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 6,
+                                            ),
+                                            child: Text(
+                                              l10n.groupChatThisMessageCanT,
+                                              style: HaloType.sans(
+                                                size: 12,
+                                                color: HaloColors.text2,
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                top: 8,
+                                left: 0,
+                                right: 0,
+                                child: IgnorePointer(
+                                  child: Center(
+                                    child: ValueListenableBuilder<bool>(
+                                      valueListenable: _stickyShown,
+                                      builder: (_, shown, _) => AnimatedOpacity(
+                                        duration: const Duration(
+                                          milliseconds: 220,
+                                        ),
+                                        opacity: shown ? 1.0 : 0.0,
+                                        child: ValueListenableBuilder<String?>(
+                                          valueListenable: _stickyLabel,
+                                          builder: (_, label, _) =>
+                                              label == null
+                                              ? const SizedBox.shrink()
+                                              : DayChip(label),
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                            // over the list, or the list takes its taps
-                            _scrollDownButton(),
-                            _earlierLine(),
-                          ],
+                              // over the list, or the list takes its taps
+                              _scrollDownButton(),
+                              _earlierLine(),
+                            ],
+                          ),
+                        ),
+                ),
+              ),
+              // grows in over the composer and folds away, as in the 1:1 chat
+              GrowSwap(
+                alignment: Alignment.topCenter,
+                child: _replyTo != null
+                    ? _ReplyQuoteBar(
+                        target: _replyTo!,
+                        onCancel: () {
+                          setState(() => _replyTo = null);
+                          _keepDraft();
+                        },
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              IncomingMediaBanner(
+                chatKey: _memo,
+                onPause: appState.pauseDownload,
+                onCancel: (uid) {
+                  final m = _liveMsg(uid);
+                  if (m != null) _stopGroupSending(m);
+                },
+              ),
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _msgCtrl,
+                builder: (_, v, _) => PreviewStrip(
+                  url: !_isRoom && !sessionQuiet && _torUp
+                      ? firstUrl(v.text)
+                      : null,
+                  pending: _pendingPreview,
+                  busy: _previewBusy,
+                  onAdd: _addPreview,
+                  onDrop: () => setState(() => _pendingPreview = null),
+                ),
+              ),
+              // no composer while the room has not let this phone in: it
+              // grows in once the room does
+              GrowSwap(
+                alignment: Alignment.topCenter,
+                child: _end != null
+                    ? const GroupEndedBar(key: ValueKey('ended'))
+                    : _waiting
+                    ? const SizedBox(
+                        key: ValueKey('no-composer'),
+                        width: double.infinity,
+                      )
+                    : KeyedSubtree(
+                        key: const ValueKey('composer'),
+                        child: _Composer(
+                          controller: _msgCtrl,
+                          members: _mentionable,
+                          sending: _sending,
+                          ghost: _ghost,
+                          burnSeconds: _burnSeconds,
+                          disguise: _disguise,
+                          onToggleGhost: () {
+                            setState(() => _ghost = !_ghost);
+                            appState.saveGhostPref(_ghost, _burnSeconds);
+                            _keepDraft(clock: true);
+                          },
+                          onLongPressGhost: _showBurnPicker,
+                          onSend: _send,
+                          onAttach: _showAttachSheet,
+                          onStickers: _showStickers,
+                          onCamera: _openGroupCamera,
+                          onVoice: _onVoice,
+                          mayRecord: () => !_nobodyToRead(),
                         ),
                       ),
               ),
-            ),
-            // grows in over the composer and folds away, as in the 1:1 chat
-            GrowSwap(
-              alignment: Alignment.topCenter,
-              child: _replyTo != null
-                  ? _ReplyQuoteBar(
-                      target: _replyTo!,
-                      onCancel: () {
-                        setState(() => _replyTo = null);
-                        _keepDraft();
-                      },
-                    )
-                  : const SizedBox.shrink(),
-            ),
-            IncomingMediaBanner(
-              chatKey: _memo,
-              onPause: appState.pauseDownload,
-              onCancel: (uid) {
-                final m = _liveMsg(uid);
-                if (m != null) _stopGroupSending(m);
-              },
-            ),
-            ValueListenableBuilder<TextEditingValue>(
-              valueListenable: _msgCtrl,
-              builder: (_, v, _) => PreviewStrip(
-                url: !_isRoom && !sessionQuiet && _torUp
-                    ? firstUrl(v.text)
-                    : null,
-                pending: _pendingPreview,
-                busy: _previewBusy,
-                onAdd: _addPreview,
-                onDrop: () => setState(() => _pendingPreview = null),
-              ),
-            ),
-            // no composer while the room has not let this phone in: it
-            // grows in once the room does
-            GrowSwap(
-              alignment: Alignment.topCenter,
-              child: _end != null
-                  ? const GroupEndedBar(key: ValueKey('ended'))
-                  : _waiting
-                  ? const SizedBox(
-                      key: ValueKey('no-composer'),
-                      width: double.infinity,
-                    )
-                  : KeyedSubtree(
-                      key: const ValueKey('composer'),
-                      child: _Composer(
-                        controller: _msgCtrl,
-                        members: _mentionable,
-                        sending: _sending,
-                        ghost: _ghost,
-                        burnSeconds: _burnSeconds,
-                        disguise: _disguise,
-                        onToggleGhost: () {
-                          setState(() => _ghost = !_ghost);
-                          appState.saveGhostPref(_ghost, _burnSeconds);
-                          _keepDraft(clock: true);
-                        },
-                        onLongPressGhost: _showBurnPicker,
-                        onSend: _send,
-                        onAttach: _showAttachSheet,
-                        onStickers: _showStickers,
-                        onCamera: _openGroupCamera,
-                        onVoice: _onVoice,
-                        mayRecord: () => !_nobodyToRead(),
-                      ),
-                    ),
-            ),
+            ]),
           ],
         ),
       ),
@@ -5074,10 +5087,12 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsetsDirectional.fromSTEB(4, 6, 8, 6),
       child: Row(
         children: [
-          IconButton(
-            tooltip: l10n.commonBack,
-            icon: Icon(Icons.chevron_left, color: HaloColors.text, size: 26),
-            onPressed: onBack,
+          PaneBack(
+            child: IconButton(
+              tooltip: l10n.commonBack,
+              icon: Icon(Icons.chevron_left, color: HaloColors.text, size: 26),
+              onPressed: onBack,
+            ),
           ),
           Expanded(
             child: InkWell(

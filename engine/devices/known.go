@@ -66,6 +66,8 @@ type known struct {
 	proven map[Key]bool
 	// listed keys someone else holds: never routed to for this contact
 	disputed map[Key]bool
+	// a session with one of its devices was post-quantum
+	pq bool
 }
 
 func newKnown(identity Key) *known {
@@ -333,6 +335,134 @@ func (b *Book) Proven(identity, remote Key) ([]Key, error) {
 	}
 	k.proven[remote] = true
 	return b.settle(), nil
+}
+
+// SawPQ records that a session with a device of the contact identity is
+// post-quantum. it never goes back: from then on a classic session with
+// any of its devices is not sealed on.
+func (b *Book) SawPQ(identity Key) error {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	k, ok := b.known[identity]
+	if !ok {
+		return ErrUnknown
+	}
+	k.pq = true
+	return nil
+}
+
+// PQ is true once a session with any device of the contact identity was
+// post-quantum.
+func (b *Book) PQ(identity Key) bool {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	k, ok := b.known[identity]
+	return ok && k.pq
+}
+
+// Held is a session the app keeps with a device: its id and the remote
+// key its record runs on (ks_session_info).
+type Held struct {
+	ID  uint8
+	Key Key
+}
+
+// Stale are the device ids in held, sessions the app keeps with the
+// contact identity's devices, that the list held no longer routes to on
+// that key: their sessions, pair seeds and addresses go. the phone is never
+// stale here; its session goes only with the contact.
+func (b *Book) Stale(identity Key, held []Held) []uint8 {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	k, ok := b.known[identity]
+	var out []uint8
+	for _, h := range held {
+		if h.ID == PhoneID {
+			continue
+		}
+		if !ok {
+			out = append(out, h.ID)
+			continue
+		}
+		if pin, routed := k.pin(h.ID); !routed || pin != h.Key {
+			out = append(out, h.ID)
+		}
+	}
+	return out
+}
+
+// Admit says whether a message that opened on a session with the contact
+// identity's device id may count as the contact's: the phone on the
+// identity, any other device only while listed, undisputed, and on its
+// listed key. remote is what ks_decrypt_* returned, never a key a message
+// names.
+func (b *Book) Admit(identity Key, id uint8, remote Key) error {
+	_, err := b.admit(identity, id, remote)
+	return err
+}
+
+// AdmitOpener is Admit for an opener, whose registration id
+// (ks_prekey_message_info) must also be the listed one. a phone with no
+// list yet is checked on its key alone.
+func (b *Book) AdmitOpener(identity Key, id uint8, remote Key, reg uint32) error {
+	e, err := b.admit(identity, id, remote)
+	if err != nil {
+		return err
+	}
+	if e != nil && e.Reg != reg {
+		return ErrNotItsKey
+	}
+	return nil
+}
+
+func (b *Book) admit(identity Key, id uint8, remote Key) (*Entry, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	k, ok := b.known[identity]
+	if !ok {
+		return nil, ErrUnknown
+	}
+	if id == PhoneID {
+		if remote != identity {
+			return nil, ErrNotItsKey
+		}
+		if k.cur == nil {
+			return nil, nil
+		}
+		e, _ := k.cur.Find(PhoneID)
+		return &e, nil
+	}
+	if k.cur == nil {
+		return nil, ErrNotListed
+	}
+	e, ok := k.cur.Find(id)
+	if !ok {
+		return nil, ErrNotListed
+	}
+	if k.disputed[e.Key] {
+		return nil, ErrTaken
+	}
+	if e.Key != remote {
+		return nil, ErrNotItsKey
+	}
+	return &e, nil
+}
+
+// the contact identity's list held and the entries a copy goes to
+func (b *Book) routes(identity Key) (*List, []Entry, bool) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	k, ok := b.known[identity]
+	if !ok || k.cur == nil {
+		return nil, nil, ok
+	}
+	var out []Entry
+	for _, e := range k.cur.Devices {
+		if _, routed := k.pin(e.ID); routed {
+			out = append(out, e)
+		}
+	}
+	return k.cur, out, true
 }
 
 // Claimants are the contacts whose lists name a key someone else holds.

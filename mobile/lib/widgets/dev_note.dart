@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
 import '../theme.dart';
+import '../wide/wide_pane.dart' show PaneBack;
 import 'dev_avatar.dart';
 import 'halo_hero.dart';
 import 'halo_sheet.dart';
@@ -467,10 +468,12 @@ class DevChatHead extends StatelessWidget {
       ),
       child: Row(
         children: [
-          IconButton(
-            tooltip: l10n.commonBack,
-            icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
-            onPressed: onBack,
+          PaneBack(
+            child: IconButton(
+              tooltip: l10n.commonBack,
+              icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
+              onPressed: onBack,
+            ),
           ),
           Expanded(
             child: Semantics(
