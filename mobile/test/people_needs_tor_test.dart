@@ -265,17 +265,25 @@ void main() {
       expect(src, isNot(contains('HttpClient(')), reason: f.path);
       expect(src, isNot(contains("import 'package:http/")), reason: f.path);
     }
-    // people search asks through the engine's tor post only
+    // people search asks through the engine's tor post only, the decoy on
+    // its own lane
     final search = File('lib/screens/search_screen.dart').readAsStringSync();
     final post = search.substring(
       search.indexOf('Future<String> _peoplePost('),
       search.indexOf('void _openPerson('),
     );
-    expect(post, contains('return engine.torPost(url, body);'));
-    expect(RegExp(r'engine\.\w+\(').allMatches(post).length, 1);
+    expect(post, contains(': engine.torPost(url, body);'));
+    expect(post, contains('? engine.decoyTorPost(url, body)'));
+    expect(RegExp(r'engine\.\w+\(').allMatches(post).length, 2);
     // a handle's lookup goes the same way
     final main = File('lib/app/links.dart').readAsStringSync();
-    expect(main, contains('_torGetJsonOnIsolate,\n      idOf:'));
+    expect(
+      main,
+      contains(
+        'sessionQuiet ? engine.decoyTorGetJson : _torGetJsonOnIsolate,\n'
+        '      idOf:',
+      ),
+    );
     // in the engine the registry, search and badge calls take the services
     // client, built from tor's socks port whatever the route
     String fn(String src, String head) {
@@ -285,9 +293,11 @@ void main() {
     }
 
     final nostr = File('../engine/nostr.go').readAsStringSync();
-    for (final head in ['func torPost(', 'func torGetJSON(']) {
+    expect(nostr, contains('return torPostOn(url, body, servicesClient) }'));
+    expect(nostr, contains('return torGetJSONOn(url, servicesClient) }'));
+    for (final head in ['func torPostOn(', 'func torGetJSONOn(']) {
       final body = fn(nostr, head);
-      expect(body, contains('servicesClient(ctx)'), reason: head);
+      expect(body, contains('clientOf(ctx)'), reason: head);
       expect(body, isNot(contains('torNostrClientFor')), reason: head);
       expect(body, isNot(contains('directNostrClient')), reason: head);
     }
@@ -298,9 +308,19 @@ void main() {
     final services = File('../engine/services.go').readAsStringSync();
     expect(
       fn(services, 'func servicesClient('),
-      contains('servicesTorClient()'),
+      contains('servicesClientOf(ctx, servicesTorClient)'),
     );
-    final client = fn(services, 'func servicesTorClient(');
+    expect(
+      fn(services, 'func servicesTorClient('),
+      contains('servicesTorClientAs(laneServices, laneName(laneServices))'),
+    );
+    // the decoy's lookups on the same tor client, under their own name
+    final quiet = File('../engine/quiet.go').readAsStringSync();
+    expect(
+      fn(quiet, 'func decoyClient('),
+      contains('servicesTorClientAs(decoyLane())'),
+    );
+    final client = fn(services, 'func servicesTorClientAs(');
     expect(client, contains('torDialerAs('));
     expect(client, contains('torLaneClient('));
     expect(client, contains('return nil, fmt.Errorf("tor not started")'));

@@ -20,6 +20,7 @@ import '../l10n/numbers.dart';
 import '../main.dart' hide live;
 import 'group_info_screen.dart' show endedLine;
 import '../polls.dart';
+import '../quiet_wait.dart';
 import '../rooms.dart';
 import '../search.dart';
 import '../text_fold.dart';
@@ -235,7 +236,7 @@ class _SearchScreenState extends State<SearchScreen> {
     _peopleSlowTimer?.cancel();
     // tor not up: nothing goes out, nor another way. the line says how to
     // add someone meanwhile
-    if (!sessionQuiet && !appState.servicesReady) {
+    if (!appState.servicesReady) {
       setState(() {
         _torUp = false;
         _peopleAsked = q;
@@ -266,10 +267,12 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   // debug builds only: a canned answer from app_flutter/people_fixture.json.
-  // a release build has only the tor request. a quiet session never reaches
-  // the registry: it answers as adding by handle does there
+  // a release build has only the tor request. a quiet session asks as the
+  // everyday one does (kDecoyLooksUp), or answers as adding by handle does
   Future<String> _peoplePost(String url, String body) async {
-    if (sessionQuiet) return kRegistryNotReached;
+    if (sessionQuiet && !kDecoyLooksUp) {
+      return unreachedLater(kRegistryNotReached);
+    }
     if (kDebugMode) {
       final dir = await getApplicationDocumentsDirectory();
       final f = File('${dir.path}/people_fixture.json');
@@ -278,7 +281,10 @@ class _SearchScreenState extends State<SearchScreen> {
         return f.readAsString();
       }
     }
-    return engine.torPost(url, body);
+    // the decoy on a lane of its own, never the everyday one's circuits
+    return sessionQuiet
+        ? engine.decoyTorPost(url, body)
+        : engine.torPost(url, body);
   }
 
   void _openPerson(PublicHandle p) {
@@ -457,7 +463,7 @@ class _SearchScreenState extends State<SearchScreen> {
             asked: _peopleAsked == pq,
             busy: _peopleBusy,
             slow: _peopleSlow,
-            torDown: !sessionQuiet && !_torUp,
+            torDown: !_torUp,
             people: _people,
             error: _peopleErr,
             onAsk: _askPeople,

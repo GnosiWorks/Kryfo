@@ -32,7 +32,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pin_flow_fakes.dart' show FakeHost, appOnly, makeLock, wipePin;
 
-// a quiet session: the handle page never reaches the registry from one
+// a quiet session: the handle page checks on the decoy's own lane
 class _QuietDb implements HaloDb {
   @override
   HaloContainer get container => HaloContainer.decoy;
@@ -50,6 +50,16 @@ class _LiveDb implements HaloDb {
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('the stand-in was asked for ${i.memberName}');
+}
+
+// the decoy's check on its own lane, answering as an unreachable registry
+class _DecoyEngine implements HaloEngine {
+  @override
+  Future<String> decoyHandleCheck(String h) =>
+      unreachedLater('error: bad answer from the registry');
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('${i.memberName}');
 }
 
 // the engine takes any mode
@@ -111,10 +121,11 @@ void main() {
       final db = _QuietDb();
       useDatabasesForTest(db, Session(db));
       quietWait = () => Duration.zero;
+      useEngineForTest(_DecoyEngine());
     });
 
-    testWidgets('a decoy answers after a wait, as a registry out of reach '
-        'does', (t) async {
+    testWidgets('a decoy\'s check that finds the registry out of reach '
+        'answers as one does', (t) async {
       quietWait = () => const Duration(seconds: 4);
       phone(t);
       await t.pumpWidget(framed(const HandleScreen()));

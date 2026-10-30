@@ -131,14 +131,20 @@ extension AppStatePqRestart on AppState {
   Future<void> _pqRound(int now, {String? only}) async {
     if (sessionQuiet || everydayHeld || !signalSession.ready) return;
     final db = await live.open();
-    final rows = await db.query(
-      'contacts',
-      columns: ['halo_id', 'caps', 'back_paired'],
-      where: only == null
-          ? 'accepted = ? AND blocked = ? AND ident = ?'
-          : 'accepted = ? AND blocked = ? AND ident = ? AND halo_id = ?',
-      whereArgs: [1, 0, kMainIdent, ?only],
-    );
+    if (only == null) await _pqDrops(db, now);
+    // the open vault's chats too: their sessions are in the everyday store.
+    // a shut vault's are never looked for, and wait for it to open
+    final rows = [
+      for (final d in [live, ?_openVault])
+        ...await (await d.open()).query(
+          'contacts',
+          columns: ['halo_id', 'caps', 'back_paired'],
+          where: only == null
+              ? 'accepted = ? AND blocked = ? AND ident = ?'
+              : 'accepted = ? AND blocked = ? AND ident = ? AND halo_id = ?',
+          whereArgs: [1, 0, kMainIdent, ?only],
+        ),
+    ];
     final mine = signalSession.identity.public;
     for (final r in rows) {
       final id = r['halo_id'] as String;
@@ -152,14 +158,8 @@ extension AppStatePqRestart on AppState {
         if (await signalSession.sealsOnRestored(id)) continue;
         final key = _hexOf(their);
         final row = await _pqRow(db, id, key);
-        final pqAt = row?['pq_at'] as int?;
-        if (pqAt != null) {
-          if (row!['dropped_at'] == null &&
-              now - pqAt >= kClassicDropAfter.inMilliseconds) {
-            await _dropClassic(db, id, now);
-          }
-          continue;
-        }
+        // over already: _pqDrops lets its classic states go
+        if (row?['pq_at'] != null) continue;
         final classic =
             info.version < 4 || info.archived.any((s) => s.version < 4);
         if (!classic) continue;
@@ -260,13 +260,56 @@ extension AppStatePqRestart on AppState {
     }
   }
 
+  /// the classic states of every chat over to pq for kClassicDropAfter
+  /// go, by the restart rows themselves: a chat hidden since, shut vault or
+  /// open, and the dev chat, whose session is its seat's, drop on time. a
+  /// row whose session went goes too. nothing of the vault is read for it
+  Future<void> _pqDrops(Database db, int now) async {
+    final over = await db.query(
+      'pq_restarts',
+      columns: ['peer', 'key', 'pq_at', 'dropped_at'],
+      where: 'ident = ?',
+      whereArgs: [kMainIdent],
+    );
+    for (final r in over) {
+      final peer = r['peer'] as String;
+      try {
+        final store = isDevId(peer)
+            ? (await devLane.seat(peer))?.store
+            : signalSession;
+        if (store == null) continue;
+        final their = (await store.sessionInfo(peer))?.remoteIdentity;
+        // their session went, or runs on another key now: the row names
+        // them for nothing
+        if (their == null || _hexOf(their) != r['key']) {
+          await db.delete(
+            'pq_restarts',
+            where: 'ident = ? AND peer = ?',
+            whereArgs: [kMainIdent, peer],
+          );
+          continue;
+        }
+        if (r['pq_at'] == null ||
+            r['dropped_at'] != null ||
+            now - (r['pq_at'] as int) < kClassicDropAfter.inMilliseconds) {
+          continue;
+        }
+        await _dropClassic(db, store, peer, now);
+      } catch (e) {
+        dlog('pq restart: a drop skipped (${e.runtimeType})');
+      }
+    }
+  }
+
   /// a KDB1 from [peer] ('rq'), as the arrival path finds it on a frame
-  /// that opened on their held session in the everyday container
+  /// that opened on their held session, filed [on] the everyday container
+  /// or the open vault
   Future<PqRestartTake> takePqRestart(
     String peer,
     String bundleB64, {
     int? writtenAt,
     int? nowMs,
+    HaloDb? on,
   }) async {
     final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
     if (sessionQuiet || isDevId(peer) || !signalSession.ready) {
@@ -280,7 +323,7 @@ extension AppStatePqRestart on AppState {
       return PqRestartTake.refused;
     }
     final db = await live.open();
-    final c = await db.query(
+    final c = await (await (on ?? live).open()).query(
       'contacts',
       columns: ['accepted', 'blocked', 'ident'],
       where: 'halo_id = ?',
@@ -344,21 +387,32 @@ extension AppStatePqRestart on AppState {
 
   /// a message from [peer] opened on the pq state of a record that still
   /// holds classic ones (SignalSession.onPqOver): their side of the
-  /// restart is done, and the 15 days begin. noted once, on an accepted
-  /// contact of the everyday side only
+  /// restart is done, and the 16 days begin. noted once: for an accepted
+  /// contact of the everyday side, someone the vault holds (as the router
+  /// says, shut or open: their session is in the everyday store), or the
+  /// dev chat on its seat's store
   Future<void> notePqOver(String peer, {int? nowMs}) async {
-    if (_pqNoted.contains(peer) || sessionQuiet || isDevId(peer)) return;
+    if (_pqNoted.contains(peer) || sessionQuiet) return;
     try {
       final db = await live.open();
-      final c = await db.query(
-        'contacts',
-        columns: ['ident'],
-        where: 'halo_id = ? AND accepted = ?',
-        whereArgs: [peer, 1],
-        limit: 1,
-      );
-      if (c.isEmpty || (c.first['ident'] as int? ?? 0) != kMainIdent) return;
-      final their = (await signalSession.sessionInfo(peer))?.remoteIdentity;
+      SignalSession store = signalSession;
+      if (isDevId(peer)) {
+        final seat = await devLane.seat(peer);
+        if (seat == null) return;
+        store = seat.store;
+      } else if (!_hiddenPeer(peer)) {
+        final c = await db.query(
+          'contacts',
+          columns: ['ident'],
+          where: 'halo_id = ? AND accepted = ?',
+          whereArgs: [peer, 1],
+          limit: 1,
+        );
+        if (c.isEmpty || (c.first['ident'] as int? ?? 0) != kMainIdent) {
+          return;
+        }
+      }
+      final their = (await store.sessionInfo(peer))?.remoteIdentity;
       if (their == null) return;
       final key = _hexOf(their);
       final row = await _pqRow(db, peer, key);
@@ -378,8 +432,23 @@ extension AppStatePqRestart on AppState {
     }
   }
 
-  Future<void> _dropClassic(DatabaseExecutor db, String peer, int now) async {
-    final n = await signalSession.dropClassic(peer);
+  // a 1:1 chat the vault holds, as the router says
+  bool _hiddenPeer(String peer) {
+    try {
+      final to = _routeOf(peer, null);
+      return to == RouteTo.vault || to == RouteTo.sealed;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _dropClassic(
+    DatabaseExecutor db,
+    SignalSession store,
+    String peer,
+    int now,
+  ) async {
+    final n = await store.dropClassic(peer);
     if (n == null) return;
     await db.update(
       'pq_restarts',
