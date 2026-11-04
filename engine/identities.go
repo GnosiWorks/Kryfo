@@ -52,6 +52,7 @@ func identityOf(ident int) (xid, error) {
 	return id, nil
 }
 
+// a key put in place of another overwrites it where it is kept
 func putIdentity(ident int, id xid) {
 	identsMu.Lock()
 	idents[ident] = id
@@ -100,14 +101,20 @@ func HaloIdentityDrop(cIdent C.int) *C.char {
 
 func identDrop(ident int) {
 	identsMu.Lock()
+	// zeros over the key and the seeds where they are kept, then gone
+	if _, ok := idents[ident]; ok {
+		idents[ident] = xid{}
+	}
 	delete(idents, ident)
 	for k := range pairSeeds {
 		if k.ident == ident {
+			pairSeeds[k] = [32]byte{}
 			delete(pairSeeds, k)
 		}
 	}
 	for k := range devSeeds {
 		if k.ident == ident {
+			devSeeds[k] = [32]byte{}
 			delete(devSeeds, k)
 		}
 	}

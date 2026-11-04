@@ -17,6 +17,7 @@ import 'kryfo_avatar.dart';
 import 'motion.dart' show BreathDot, kHouseCurve, kHouseTime, motionStill;
 import 'press_scale.dart';
 import 'swap.dart';
+import 'tor_wait_line.dart';
 
 export '../pair_flow.dart' show pairUnreached;
 
@@ -25,7 +26,7 @@ String pairLineText(PairLine l, {required bool sharer}) => switch (l) {
   PairLine.none => '',
   PairLine.making => l10n.pairCodePanelPuttingYourInviteIn,
   PairLine.inviteNotReady => l10n.pairCodePanelYourInviteIsNot,
-  PairLine.unreached => l10n.pairCodeUnreached,
+  PairLine.unreached => torWaitLine() ?? l10n.pairCodeUnreached,
   PairLine.failed => l10n.pairCodeFailed,
   PairLine.looking => l10n.pairCodeLooking,
   PairLine.nothingYet => l10n.pairCodeNothingThereYetTrying,

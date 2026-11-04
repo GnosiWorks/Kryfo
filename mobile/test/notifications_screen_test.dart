@@ -36,6 +36,7 @@ Future<void> _open(
   WidgetTester t, {
   bool play = false,
   bool google = false,
+  String route = 'private',
   double scale = 1,
   Locale? locale,
   Size size = const Size(400, 3200),
@@ -48,7 +49,7 @@ Future<void> _open(
   forgetNotifPlain();
   playBuildForTest = play;
   addTearDown(() => playBuildForTest = null);
-  appState.sendModeForTest = 'private';
+  appState.sendModeForTest = route;
   appState.googleAvailableForTest = google;
   appState.deliveryModeForTest = DeliveryMode.always;
   addTearDown(() => appState.googleAvailableForTest = false);
@@ -87,6 +88,28 @@ void main() {
     // the ways sit in the first part, battery's row in the last
     expect(_y(t, l10n.gettingMessagesAlwaysOn), lessThan(_y(t, parts[1])));
     expect(_y(t, l10n.settingsRunInBackground), greaterThan(_y(t, parts[3])));
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('always on says nothing leaves tor, and most private, only '
+      'on the private route', (t) async {
+    await _open(t);
+    expect(
+      find.text(l10n.gettingMessagesMessagesArriveInstantlyNothing),
+      findsOneWidget,
+    );
+    expect(find.text(l10n.gettingMessagesArriveInstantlyFast), findsNothing);
+    expect(find.text(l10n.gettingMessagesMostPrivate), findsOneWidget);
+    await t.pumpWidget(const SizedBox());
+    await _open(t, route: 'balanced');
+    // nor is it the most private way there
+    expect(find.text(l10n.gettingMessagesMostPrivate), findsNothing);
+    expect(
+      find.text(l10n.gettingMessagesMessagesArriveInstantlyNothing),
+      findsNothing,
+    );
+    expect(find.text(l10n.gettingMessagesArriveInstantlyFast), findsOneWidget);
+    appState.sendModeForTest = 'private';
     await t.pumpWidget(const SizedBox());
   });
 

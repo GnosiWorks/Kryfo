@@ -381,11 +381,23 @@ func backupClientFor(lane string) (*http.Client, error) {
 	return torClientFor(lane)
 }
 
+// a lane whose addresses belong to nobody: a burner room's keys and a pair
+// code's. dialled from this phone's ip, our relay would see one ip on them
+// and on its everyday addresses, so they go through tor on every route
+func laneKeepsTor(lane string) bool {
+	switch laneKind(lane) {
+	case "room", "pair":
+		return true
+	}
+	return false
+}
+
 // the client for relay u. off the private route only our own stores'
-// clearnet names are dialled in the clear: a backup, an onion, or any relay
-// that is not ours always goes through tor
+// clearnet names are dialled in the clear, and only on a lane of this
+// phone's own: a backup, an onion, any relay that is not ours, and a room or
+// pair code lane always go through tor
 func relayClientFor(lane, u string) (*http.Client, error) {
-	if isBackup(u) {
+	if isBackup(u) || (laneKeepsTor(lane) && !clearForTests(u)) {
 		return backupClientFor(lane)
 	}
 	if currentMode() != modePrivate {

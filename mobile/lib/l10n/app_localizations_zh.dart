@@ -2385,6 +2385,9 @@ class AppLocalizationsZh extends AppLocalizations {
       '消息即时到达。任何东西都不会离开 Tor。最耗电。';
 
   @override
+  String get gettingMessagesArriveInstantlyFast => '在快速模式下，消息即时到达。最耗电。';
+
+  @override
   String get gettingMessagesCheckIns => '定时查收';
 
   @override
@@ -4097,6 +4100,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairCodeUnreached => '联系不上中继。请稍后再试。';
 
   @override
+  String get fastRoomsWaitForTor => '聊天室和配对码始终通过 Tor，快速模式下也一样。Tor 一连上就能用。';
+
+  @override
   String get pairCodeFailed => '没有成功。请再试一次。';
 
   @override
@@ -4686,6 +4692,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get restoreNotificationsNeedSettingUp => '通知需要在这台设备上重新设置。';
+
+  @override
+  String get restoreDeletedComeBack =>
+      '这个备份制作之后你删除的聊天会随它回来，那些联系人可能会看到你重新设置了 Kryfo。';
 
   @override
   String get restoreMoveItHere => '迁移到这里';
@@ -8175,6 +8185,10 @@ class AppLocalizationsZh extends AppLocalizations {
       'Kryfo 的服务器替你向 GIF 服务查询。该服务永远看不到你，服务器也不会记录你搜了什么。';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Kryfo 的服务器替你向 GIF 服务查询，所以该服务永远看不到你。在快速模式下，我们的服务器在你搜索时能看到你的 IP 地址，但不会记录它，也不会记录你搜了什么。';
+
+  @override
   String get gifOptInLikeAPhoto => 'GIF 像照片一样加密传送。对方的手机不会下载任何东西。';
 
   @override
@@ -8199,7 +8213,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'GIF 搜索通过 Kryfo 的服务器进行，$brand 永远看不到你。要开启吗？';
+    return 'GIF 搜索直接发到 Kryfo 的服务器，在快速模式下它能看到你的 IP 地址。$brand 永远看不到你。要开启吗？';
   }
 
   @override
@@ -8327,7 +8341,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatBlockScreenshots => '禁止截屏';
 
   @override
-  String get chatShotsWhenTheyUpdate => '对方更新后即可使用';
+  String get chatShotsWhenTheyUpdate => '对方在手机上使用最新版 Kryfo 后即可使用';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => '可在 Android 版 Kryfo 中使用';
 
   @override
   String get chatShotsBothPhones =>
@@ -8393,7 +8410,14 @@ class AppLocalizationsZh extends AppLocalizations {
       'Kryfo 在这个聊天室的每部手机上禁止截屏和录屏，也禁止复制、转发或保存别人的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
 
   @override
+  String get roomShotsBlockedDesk =>
+      '此聊天室中不能复制、转发或保存彼此的消息。Android 版 Kryfo 还会禁止截屏和录屏。';
+
+  @override
   String get roomShotsAlwaysOn => '聊天室里始终开启，每部手机都一样';
+
+  @override
+  String get roomShotsAlwaysOnDesk => '聊天室里始终开启，在 Android 版 Kryfo 中';
 
   @override
   String get settingsPerChat => '按聊天设置';
@@ -9334,19 +9358,29 @@ class AppLocalizationsZh extends AppLocalizations {
       '在这个群组的每部手机上禁止截屏和录屏，也禁止复制、转发或保存彼此的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
 
   @override
-  String get groupShotsStartsWhenAll => '等这里的所有人更新 Kryfo';
+  String get groupShotsBlocksAllDesk =>
+      '在这里关闭复制、转发和保存彼此的消息。Android 版 Kryfo 还会禁止截屏和录屏。';
+
+  @override
+  String get groupShotsStartsWhenAll => '正在等待这里的所有人都能在自己的设备上禁止截屏';
 
   @override
   String get groupShotsOnForAll => '对这里的所有人开启';
 
   @override
+  String get groupShotsOnForAllDesk => '在 Android 版 Kryfo 中开启';
+
+  @override
   String get groupShotsOffAdminOnly => '已关闭。只有管理员能更改';
 
   @override
-  String get groupShotsWaitAdminOnly => '等这里的所有人更新 Kryfo。只有管理员能更改';
+  String get groupShotsWaitAdminOnly => '正在等待这里的所有人都能在自己的设备上禁止截屏。只有管理员能更改';
 
   @override
   String get groupShotsOnAdminOnly => '对这里的所有人开启。只有管理员能更改';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk => '在 Android 版 Kryfo 中开启。只有管理员能更改';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -9363,31 +9397,35 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => '还没更新的人';
+  String get groupShotsWaitingTitle => '尚未覆盖';
 
   @override
-  String get groupShotsWaitingHint => '这些人更新 Kryfo 后，禁止截屏就对所有人生效。点一个人可以把他移出群组。';
+  String get groupShotsWaitingHint => '这些人的设备能禁止截屏后，禁止截屏就覆盖所有人。点按某人可将其移出群组。';
 
   @override
-  String get groupShotsNeedsUpdate => '需要更新 Kryfo，或之后一直没上线';
+  String get groupShotsNeedsUpdate => '其设备暂时无法禁止截屏，或之后一直未上线';
 
   @override
   String get groupShotsBlockedByYou => '已被你屏蔽';
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      '你开启了禁止截屏。等这里的所有人都更新 Kryfo 后，它会对所有人生效。';
+      '你开启了禁止截屏。等这里的所有人都能在自己的设备上禁止截屏后，它会对所有人生效。';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name 开启了禁止截屏。等这里的所有人都更新 Kryfo 后，它会对所有人生效。';
+    return '$name 开启了禁止截屏。等这里的所有人都能在自己的设备上禁止截屏后，它会对所有人生效。';
   }
 
   @override
   String get groupShotsStarted => '禁止截屏已对这里的所有人开启。复制、转发和保存彼此的消息也已关闭。';
 
   @override
-  String get groupShotsPaused => '这里有人还不能禁止截屏。他更新 Kryfo 后，会再次对所有人生效。';
+  String get groupShotsStartedDesk =>
+      '禁止截屏已在 Android 版 Kryfo 中开启。复制、转发和保存彼此的消息也已关闭。';
+
+  @override
+  String get groupShotsPaused => '这里有人还不能在其设备上禁止截屏。等其可以后，会再次对所有人生效。';
 
   @override
   String get groupShotsCantYet => '还不能禁止截屏';
@@ -9396,13 +9434,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupShotsAddTitle => '仍要添加吗？';
 
   @override
-  String get groupShotsAddPauses => '在他更新 Kryfo 之前，禁止截屏不会对这里的所有人生效。';
+  String get groupShotsAddPauses => '在这些人能在自己的设备上禁止截屏之前，禁止截屏不会覆盖这里的所有人。';
 
   @override
   String get groupShotsLeaveStays => '禁止截屏会保持现状。';
 
   @override
   String get groupShotsBlockedHere => 'Kryfo 已在此群组中禁止截屏';
+
+  @override
+  String get groupShotsBlockedHereDesk => '此群组中不能复制、转发或保存';
 
   @override
   String get groupShotsMenuNote => '此群组中不能复制、转发或保存别人的消息';
@@ -12800,6 +12841,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '訊息即時送達。任何東西都不會離開 Tor。最耗電。';
 
   @override
+  String get gettingMessagesArriveInstantlyFast => '在快速模式下，訊息即時送達。最耗電。';
+
+  @override
   String get gettingMessagesCheckIns => '定時查收';
 
   @override
@@ -14514,6 +14558,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pairCodeUnreached => '聯絡不上中繼。請稍後再試。';
 
   @override
+  String get fastRoomsWaitForTor => '聊天室和配對碼始終透過 Tor，快速模式下也一樣。Tor 一連上就能用。';
+
+  @override
   String get pairCodeFailed => '沒有成功。請再試一次。';
 
   @override
@@ -15103,6 +15150,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get restoreNotificationsNeedSettingUp => '需要在這台裝置上重新設定通知。';
+
+  @override
+  String get restoreDeletedComeBack =>
+      '這份備份建立之後你刪除的聊天會隨它回來，那些聯絡人可能會看到你重新設定了 Kryfo。';
 
   @override
   String get restoreMoveItHere => '搬到這裡';
@@ -18474,6 +18525,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       'Kryfo 的伺服器替你向 GIF 服務查詢。該服務永遠看不到你，伺服器也不會記錄你搜尋了什麼。';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Kryfo 的伺服器替你向 GIF 服務查詢，所以該服務永遠看不到你。在快速模式下，我們的伺服器在你搜尋時能看到你的 IP 位址，但不會記錄它，也不會記錄你搜尋了什麼。';
+
+  @override
   String get gifOptInLikeAPhoto => 'GIF 像照片一樣加密傳送。對方的手機不會下載任何東西。';
 
   @override
@@ -18498,7 +18553,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'GIF 搜尋透過 Kryfo 的伺服器進行，$brand 永遠看不到你。要開啟嗎？';
+    return 'GIF 搜尋直接送到 Kryfo 的伺服器，在快速模式下它能看到你的 IP 位址。$brand 永遠看不到你。要開啟嗎？';
   }
 
   @override
@@ -18626,7 +18681,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatBlockScreenshots => '禁止截圖';
 
   @override
-  String get chatShotsWhenTheyUpdate => '對方更新後即可使用';
+  String get chatShotsWhenTheyUpdate => '對方在手機上使用最新版 Kryfo 後即可使用';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => '可在 Android 版 Kryfo 中使用';
 
   @override
   String get chatShotsBothPhones =>
@@ -18692,7 +18750,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       'Kryfo 在這個聊天室的每支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存別人的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
 
   @override
+  String get roomShotsBlockedDesk =>
+      '此聊天室中不能複製、轉傳或儲存彼此的訊息。Android 版 Kryfo 還會禁止截圖和螢幕錄影。';
+
+  @override
   String get roomShotsAlwaysOn => '聊天室裡一律開啟，每支手機都一樣';
+
+  @override
+  String get roomShotsAlwaysOnDesk => '聊天室裡一律開啟，在 Android 版 Kryfo 中';
 
   @override
   String get settingsPerChat => '依聊天設定';
@@ -19634,19 +19699,29 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '在這個群組的每支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存彼此的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
 
   @override
-  String get groupShotsStartsWhenAll => '等這裡的所有人更新 Kryfo';
+  String get groupShotsBlocksAllDesk =>
+      '在這裡關閉複製、轉傳和儲存彼此的訊息。Android 版 Kryfo 還會禁止截圖和螢幕錄影。';
+
+  @override
+  String get groupShotsStartsWhenAll => '正在等待這裡的所有人都能在自己的裝置上禁止截圖';
 
   @override
   String get groupShotsOnForAll => '對這裡的所有人開啟';
 
   @override
+  String get groupShotsOnForAllDesk => '在 Android 版 Kryfo 中開啟';
+
+  @override
   String get groupShotsOffAdminOnly => '已關閉。只有管理員能變更';
 
   @override
-  String get groupShotsWaitAdminOnly => '等這裡的所有人更新 Kryfo。只有管理員能變更';
+  String get groupShotsWaitAdminOnly => '正在等待這裡的所有人都能在自己的裝置上禁止截圖。只有管理員能變更';
 
   @override
   String get groupShotsOnAdminOnly => '對這裡的所有人開啟。只有管理員能變更';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk => '在 Android 版 Kryfo 中開啟。只有管理員能變更';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -19663,31 +19738,35 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get groupShotsWaitingTitle => '還沒更新的人';
+  String get groupShotsWaitingTitle => '尚未涵蓋';
 
   @override
-  String get groupShotsWaitingHint => '這些人更新 Kryfo 後，禁止截圖就對所有人生效。點一個人可以把他移出群組。';
+  String get groupShotsWaitingHint => '這些人的裝置能禁止截圖後，禁止截圖就涵蓋所有人。點按某人可將其移出群組。';
 
   @override
-  String get groupShotsNeedsUpdate => '需要更新 Kryfo，或之後一直沒上線';
+  String get groupShotsNeedsUpdate => '其裝置暫時無法禁止截圖，或之後一直未上線';
 
   @override
   String get groupShotsBlockedByYou => '已被你封鎖';
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      '你開啟了禁止截圖。等這裡的所有人都更新 Kryfo 後，它會對所有人生效。';
+      '你開啟了禁止截圖。等這裡的所有人都能在自己的裝置上禁止截圖後，它會對所有人生效。';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name 開啟了禁止截圖。等這裡的所有人都更新 Kryfo 後，它會對所有人生效。';
+    return '$name 開啟了禁止截圖。等這裡的所有人都能在自己的裝置上禁止截圖後，它會對所有人生效。';
   }
 
   @override
   String get groupShotsStarted => '禁止截圖已對這裡的所有人開啟。複製、轉傳和儲存彼此的訊息也已關閉。';
 
   @override
-  String get groupShotsPaused => '這裡有人還不能禁止截圖。他更新 Kryfo 後，會再次對所有人生效。';
+  String get groupShotsStartedDesk =>
+      '禁止截圖已在 Android 版 Kryfo 中開啟。複製、轉傳和儲存彼此的訊息也已關閉。';
+
+  @override
+  String get groupShotsPaused => '這裡有人還不能在其裝置上禁止截圖。等其可以後，會再次對所有人生效。';
 
   @override
   String get groupShotsCantYet => '還不能禁止截圖';
@@ -19696,13 +19775,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupShotsAddTitle => '仍要新增嗎？';
 
   @override
-  String get groupShotsAddPauses => '在他更新 Kryfo 之前，禁止截圖不會對這裡的所有人生效。';
+  String get groupShotsAddPauses => '在這些人能在自己的裝置上禁止截圖之前，禁止截圖不會涵蓋這裡的所有人。';
 
   @override
   String get groupShotsLeaveStays => '禁止截圖會維持現狀。';
 
   @override
   String get groupShotsBlockedHere => 'Kryfo 已在此群組中禁止截圖';
+
+  @override
+  String get groupShotsBlockedHereDesk => '此群組中不能複製、轉傳或儲存';
 
   @override
   String get groupShotsMenuNote => '此群組中不能複製、轉傳或儲存別人的訊息';

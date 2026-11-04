@@ -21,6 +21,7 @@ import 'desktop/desktop_mode.dart'
         keepComputerDecoyNote,
         kComputerDecoyNote,
         onDesktop,
+        shotsHonouredHere,
         startEngineIn,
         withNativeFiles;
 import 'store.dart' show playBuild;
@@ -174,7 +175,9 @@ import 'signal_session.dart';
 import 'signal_stores.dart' show kDevSignalPrefix, onPeerKeyChanged;
 import 'dart:isolate';
 import 'dlog.dart';
-import 'read_burn.dart' show burnStartBy, burnWaitsRow, burnWaitsSql, kBurnSkew;
+import 'read_burn.dart'
+    show burnCameAt, burnStartBy, burnWaitsRow, burnWaitsSql, kBurnSkew;
+import 'restore_undo.dart';
 import 'stranger_gate.dart';
 import 'first_contact.dart';
 import 'text_send.dart' show kSendBlocked;

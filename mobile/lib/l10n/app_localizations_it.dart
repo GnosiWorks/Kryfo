@@ -2538,6 +2538,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'I messaggi arrivano subito. Niente esce da Tor. Consuma più batteria di tutti.';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'Su Veloce i messaggi arrivano subito. Consuma più batteria di tutti.';
+
+  @override
   String get gettingMessagesCheckIns => 'Controlli';
 
   @override
@@ -4358,6 +4362,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'I relay non hanno risposto. Riprova tra un momento.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'Le stanze e i codici di abbinamento passano sempre da Tor, anche su Veloce. Funzionano appena Tor si connette.';
+
+  @override
   String get pairCodeFailed => 'Non ha funzionato. Riprova.';
 
   @override
@@ -4993,6 +5001,10 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'Le notifiche vanno riconfigurate su questo dispositivo.';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'Le chat che hai eliminato dopo questo backup tornano con esso, e quei contatti potrebbero vedere che hai configurato di nuovo Kryfo.';
 
   @override
   String get restoreMoveItHere => 'Trasferiscilo qui';
@@ -8664,6 +8676,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Il server di Kryfo chiede al servizio di GIF al posto tuo. Il servizio non ti vede mai, e il server non tiene traccia di ciò che hai cercato.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Il server di Kryfo chiede al servizio di GIF al posto tuo, così il servizio non ti vede mai. Su Veloce il nostro server vede il tuo indirizzo IP mentre cerchi, e non tiene traccia né di esso né di ciò che hai cercato.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'La GIF viaggia cifrata, come una foto. Il telefono del tuo amico non scarica nulla.';
 
@@ -8691,7 +8707,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'La ricerca GIF passa dal server di Kryfo. $brand non ti vede mai. La attivi?';
+    return 'La ricerca GIF va dritta al server di Kryfo, che su Veloce vede il tuo indirizzo IP. $brand non ti vede mai. La attivi?';
   }
 
   @override
@@ -8826,7 +8842,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get chatBlockScreenshots => 'Blocca screenshot';
 
   @override
-  String get chatShotsWhenTheyUpdate => 'Disponibile quando aggiorna l\'app';
+  String get chatShotsWhenTheyUpdate =>
+      'Disponibile quando usa l\'ultima versione di Kryfo su un telefono';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => 'Disponibile in Kryfo per Android';
 
   @override
   String get chatShotsBothPhones =>
@@ -8902,8 +8922,16 @@ class AppLocalizationsIt extends AppLocalizations {
       'Kryfo blocca screenshot e registrazione dello schermo di questa stanza su ogni telefono, e anche copiare, inoltrare o salvare i messaggi degli altri. Non può fermare le app autorizzate a leggere lo schermo, né un telefono o un\'app modificati per aggirarlo.';
 
   @override
+  String get roomShotsBlockedDesk =>
+      'Copiare, inoltrare e salvare i messaggi degli altri è disattivato in questa stanza. Kryfo per Android blocca anche screenshot e registrazione dello schermo.';
+
+  @override
   String get roomShotsAlwaysOn =>
       'Sempre attivo in una stanza, su ogni telefono';
+
+  @override
+  String get roomShotsAlwaysOnDesk =>
+      'Sempre attivo in una stanza, in Kryfo per Android';
 
   @override
   String get settingsPerChat => 'Per ogni chat';
@@ -9911,11 +9939,18 @@ class AppLocalizationsIt extends AppLocalizations {
       'Blocca screenshot e registrazione dello schermo su ogni telefono di questo gruppo, e anche copiare, inoltrare o salvare i messaggi degli altri. Non può fermare le app autorizzate a leggere lo schermo, né un telefono o un\'app modificati per aggirarlo.';
 
   @override
+  String get groupShotsBlocksAllDesk =>
+      'Disattiva qui copiare, inoltrare e salvare i messaggi degli altri. Kryfo per Android blocca anche screenshot e registrazione dello schermo.';
+
+  @override
   String get groupShotsStartsWhenAll =>
-      'In attesa che tutti qui aggiornino Kryfo';
+      'In attesa che tutti qui possano bloccare gli screenshot sul proprio dispositivo';
 
   @override
   String get groupShotsOnForAll => 'Attivo per tutti qui';
+
+  @override
+  String get groupShotsOnForAllDesk => 'Attivo in Kryfo per Android';
 
   @override
   String get groupShotsOffAdminOnly =>
@@ -9923,11 +9958,15 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'In attesa che tutti qui aggiornino Kryfo. Solo l\'admin può cambiarlo';
+      'In attesa che tutti qui possano bloccare gli screenshot sul proprio dispositivo. Solo l\'admin può cambiarlo';
 
   @override
   String get groupShotsOnAdminOnly =>
       'Attivo per tutti qui. Solo l\'admin può cambiarlo';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk =>
+      'Attivo in Kryfo per Android. Solo l\'admin può cambiarlo';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -9945,26 +9984,26 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'Ancora da aggiornare';
+  String get groupShotsWaitingTitle => 'Non ancora coperti';
 
   @override
   String get groupShotsWaitingHint =>
-      'Il blocco degli screenshot vale per tutti appena queste persone aggiornano Kryfo. Tocca qualcuno per rimuoverlo dal gruppo.';
+      'Il blocco degli screenshot copre tutti quando i dispositivi di queste persone potranno bloccare gli screenshot. Tocca qualcuno per toglierlo dal gruppo.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'Deve aggiornare Kryfo, o non è stato online da allora';
+      'Non può ancora bloccare gli screenshot sul suo dispositivo, o non è più stato online da allora';
 
   @override
   String get groupShotsBlockedByYou => 'Bloccato da te';
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'Hai attivato il blocco degli screenshot. Varrà per tutti appena tutti qui avranno aggiornato Kryfo.';
+      'Hai attivato il blocco degli screenshot. Copre tutti quando tutti qui potranno bloccare gli screenshot sul proprio dispositivo.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name ha attivato il blocco degli screenshot. Varrà per tutti appena tutti qui avranno aggiornato Kryfo.';
+    return '$name ha attivato il blocco degli screenshot. Copre tutti quando tutti qui potranno bloccare gli screenshot sul proprio dispositivo.';
   }
 
   @override
@@ -9972,8 +10011,12 @@ class AppLocalizationsIt extends AppLocalizations {
       'Il blocco degli screenshot è attivo per tutti qui. Anche copiare, inoltrare e salvare i messaggi degli altri è disattivato.';
 
   @override
+  String get groupShotsStartedDesk =>
+      'Il blocco degli screenshot è attivo in Kryfo per Android. Anche copiare, inoltrare e salvare i messaggi degli altri è disattivato.';
+
+  @override
   String get groupShotsPaused =>
-      'Qualcuno qui non può ancora bloccare gli screenshot. Varrà di nuovo per tutti appena aggiorna Kryfo.';
+      'Qualcuno qui non può ancora bloccare gli screenshot sul suo dispositivo. Copre di nuovo tutti quando potrà farlo.';
 
   @override
   String get groupShotsCantYet => 'Non può ancora bloccare gli screenshot';
@@ -9983,7 +10026,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'Il blocco degli screenshot non varrà per tutti qui finché non aggiorna Kryfo.';
+      'Il blocco degli screenshot non coprirà tutti qui finché non potranno bloccare gli screenshot sul proprio dispositivo.';
 
   @override
   String get groupShotsLeaveStays => 'Il blocco degli screenshot resta com\'è.';
@@ -9991,6 +10034,10 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get groupShotsBlockedHere =>
       'Kryfo blocca gli screenshot in questo gruppo';
+
+  @override
+  String get groupShotsBlockedHereDesk =>
+      'Copiare, inoltrare e salvare è disattivato in questo gruppo';
 
   @override
   String get groupShotsMenuNote =>

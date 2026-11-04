@@ -4,6 +4,10 @@
 part of '../main.dart';
 
 extension AppStateIdentity on AppState {
+  // the keys a backup carries: the ones this start holds, never the engine's
+  ({String ed, String x}) get mainKeysForBackup =>
+      _mainKeys ?? (throw StateError('no identity yet'));
+
   Future<void> regenerateIdentity() => _regenerating ??= _regenerateIdentity()
       .whenComplete(() => _regenerating = null);
 
@@ -13,7 +17,8 @@ extension AppStateIdentity on AppState {
     // is made from the key is made again from the new one
     await _signalBoot;
     myId = engine.generateIdentity();
-    await live.saveIdentity(myId, engine.myEdPrivkey(), engine.myXPrivkey());
+    _mainKeys = (ed: engine.myEdPrivkey(), x: engine.myXPrivkey());
+    await live.saveIdentity(myId, _mainKeys!.ed, _mainKeys!.x);
     myXPub = engine.myXPubkey();
     restored = false;
     if (signalSession.ready) await _rekeySignal();
@@ -27,7 +32,7 @@ extension AppStateIdentity on AppState {
   Future<void> _rekeySignal() async {
     try {
       final database = await live.open();
-      final xpb = _hexDecode(engine.myXPrivkey());
+      final xpb = _hexDecode(_mainKeys!.x);
       await signalSession.rekey(
         database: database,
         xPubBytes: _hexDecode(engine.myXPubkey()),

@@ -317,7 +317,7 @@ extension AppStateArrivals on AppState {
     if (!await db.messageExists(uid) || !await db.isTheirs(uid, sender)) {
       return false;
     }
-    await db.deleteMessage(uid);
+    await db.deleteMessage(uid, from: sender);
     return true;
   }
 
@@ -673,7 +673,11 @@ extension AppStateArrivals on AppState {
         )) {
           return to;
         }
-        await db.editMessage(env.edit!.targetUid, env.edit!.newText);
+        await db.editMessage(
+          env.edit!.targetUid,
+          env.edit!.newText,
+          from: senderHaloId,
+        );
         changed();
         // home's row shows the last line, and only a refresh rereads it
         await refreshContacts();
@@ -724,7 +728,7 @@ extension AppStateArrivals on AppState {
           env.unsend!,
         );
       }
-      await db.deleteMessage(env.unsend!);
+      await db.deleteMessage(env.unsend!, from: senderHaloId);
       changed();
       // the delete took its unread mark; its notification goes too
       unawaited(_io.unnotifyMessage(env.unsend!));
@@ -959,7 +963,7 @@ extension AppStateArrivals on AppState {
         goneKey(senderHaloId, group: env.groupId),
         mid,
       );
-      if (gone || await db.messageExists(mid)) {
+      if (gone || await db.messageFrom(mid, senderHaloId, env.groupId)) {
         if (!isGroup &&
             !unsealing &&
             (env.chunkIndex ?? 0) == 0 &&
@@ -1058,10 +1062,11 @@ extension AppStateArrivals on AppState {
       return to;
     } else if (uid != null) {
       // one that came and went here is known too, so a resend of it never
-      // shows again
+      // shows again. known is per sender and chat: a group's uid reaches
+      // every member, and one who sends it first must not hide the real one
       final known =
           _inflightUids.contains(uid) ||
-          await db.messageExists(uid) ||
+          await db.messageFrom(uid, senderHaloId, env.groupId) ||
           await db.goneFrom(goneKey(senderHaloId, group: env.groupId), uid);
       // a preview-only frame from an older client carries nothing we draw:
       // a sender never gets to put a title or an image on this screen
@@ -1194,22 +1199,6 @@ extension AppStateArrivals on AppState {
         ? chunkBurn
         : null;
     final now = DateTime.now().millisecondsSinceEpoch;
-    // its window from when it came: the most its text stays in the shade
-    final burnFromArrival = burnSecs == null
-        ? null
-        : (arrivedAt ?? now) + burnSecs * 1000;
-    // one with no uid can never be named as read: it counts from arrival
-    final waits = env.msgUid != null;
-    // opened from the seal a day or more after it came: its clock started
-    // then, unread
-    final startBy = burnStartBy(arrivedAt ?? now, now);
-    final burnAt = burnSecs == null
-        ? null
-        : !waits
-        ? burnFromArrival
-        : startBy <= now
-        ? startBy + burnSecs * 1000
-        : null;
     // placed by when they wrote it (writtenAtOf). a group's from when this
     // phone joined it
     final writtenAt = writtenAtOf(
@@ -1219,6 +1208,32 @@ extension AppStateArrivals on AppState {
       came: arrivedAt ?? now,
       since: env.groupId == null ? null : await db.groupJoinedAt(env.groupId!),
     );
+    // after a restore, a copy from before it counts from when it was first
+    // there to read, never from now: one long due lands burned
+    final came = burnSecs == null
+        ? arrivedAt ?? now
+        : burnCameAt(
+            arrivedAt ?? now,
+            reached: reached,
+            written: writtenAt,
+            restoredAt: restoreLandedAt,
+          );
+    // its window from when it came: the most its text stays in the shade
+    final burnFromArrival = burnSecs == null ? null : came + burnSecs * 1000;
+    // one with no uid can never be named as read: it counts from arrival
+    final waits = env.msgUid != null;
+    // opened from the seal a day or more after it came: its clock started
+    // then, unread
+    final startBy = burnStartBy(came, now);
+    final burnAt = burnSecs == null
+        ? null
+        : !waits
+        ? burnFromArrival
+        : startBy <= now
+        ? startBy + burnSecs * 1000
+        : null;
+    // burned before it came: kept to be swept, and it rings for no one
+    final burned = burnAt != null && burnAt <= now;
     // an album rings once, for the first of it to land. only a photo or a
     // video takes a place in one, and only a place that is free, of the
     // count the album has, written near its first row: any other stands
@@ -1281,7 +1296,9 @@ extension AppStateArrivals on AppState {
       // its creator does that
       poll: isGroup ? _arrivingPoll(env.poll) : null,
       sticker: sticker?.value,
-      sentAt: arrivedAt,
+      // a timed copy from before a restore keeps its earlier start, which
+      // its wait to be read counts from
+      sentAt: came < (arrivedAt ?? now) ? came : arrivedAt,
       writtenAt: writtenAt,
       // his phone: a contact who wrote through the developer chat keeps
       // their chat, and the message says how it came
@@ -1360,7 +1377,7 @@ extension AppStateArrivals on AppState {
     // new preview, time and unread dot without needing the chat opened.
     await refreshContacts();
     if (isGroup) await refreshGroups();
-    if (albumSeen || albumGone) return to;
+    if (albumSeen || albumGone || burned) return to;
     final String notifTitle;
     final String notifBody;
     final String notifPayload;

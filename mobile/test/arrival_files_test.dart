@@ -117,7 +117,10 @@ void main() {
     );
     expect(await f.readAsBytes(), [1, 2, 3, 4]);
     expect(w.live.msg('photo1')!['peer_id'], _a);
-    expect(await _mediaNames(), before);
+    // each is a message of its sender's own, in a file of its own
+    final now = await _mediaNames();
+    expect(now.toSet().containsAll(before), isTrue);
+    expect(now, hasLength(before.length + 2));
   });
 
   test('my own sent picture is not reached by a peer\'s uid', () async {

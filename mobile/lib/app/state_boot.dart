@@ -198,11 +198,13 @@ extension AppStateBoot on AppState {
     await _router.load();
     await tidyAtStart(bootAt);
     if (saved != null) {
-      myId = engine.restoreIdentity(saved['ed_priv']!, saved['x_priv']!);
+      _mainKeys = (ed: saved['ed_priv']!, x: saved['x_priv']!);
+      myId = engine.restoreIdentity(_mainKeys!.ed, _mainKeys!.x);
       restored = true;
     } else {
       myId = engine.generateIdentity();
-      await live.saveIdentity(myId, engine.myEdPrivkey(), engine.myXPrivkey());
+      _mainKeys = (ed: engine.myEdPrivkey(), x: engine.myXPrivkey());
+      await live.saveIdentity(myId, _mainKeys!.ed, _mainKeys!.x);
     }
     myXPub = engine.myXPubkey();
     dlog('boot identity +${bsw.elapsedMilliseconds}ms');
@@ -491,8 +493,18 @@ extension AppStateBoot on AppState {
     try {
       final database = await live.open();
       final prefs = await SharedPreferences.getInstance();
+      restoreLandedAt = restoreLandedOf(prefs);
       final after = prefs.getInt(kRestoreAfterPref);
       final from = after != null && after > 0 ? after : null;
+      // before any store or drain can send: what of ours the file still
+      // had waiting waits for a tap
+      if (after != null) {
+        await holdOutboxAfterRestore(
+          database,
+          landed: restoreLandedAt,
+          made: from,
+        );
+      }
       // linked devices go before anything can seal to them, and every other
       // identity's sessions are marked before the store is ready
       var marked = true;
@@ -500,7 +512,7 @@ extension AppStateBoot on AppState {
         await restoreCutsLinkedDevices(database);
         marked = await markRestoredIdentities(database, from: from);
       }
-      final xpb = _hexDecode(engine.myXPrivkey());
+      final xpb = _hexDecode(_mainKeys!.x);
       await openSignalStore(
         signalSession,
         database: database,

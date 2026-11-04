@@ -17,6 +17,10 @@ import 'package:kryfo/main.dart'
         HaloDb,
         heldWire,
         kFrameReaction,
+        kFrameUnsend,
+        holdOutboxAfterRestore,
+        groupEditRow,
+        groupUnsendRow,
         kNotSent,
         kFrameReceipt,
         makePreKeyBundleB64,
@@ -40,6 +44,7 @@ import 'package:kryfo/invites.dart'
     show invitesOf, kInviteMain, kInviteOneTime, makeInvite;
 import 'package:kryfo/heal.dart'
     show
+        kRestoreCutPref,
         healDayOf,
         healOfWire,
         healWire,
@@ -48,6 +53,8 @@ import 'package:kryfo/heal.dart'
         makeHeal;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
+import 'package:kryfo/restore_undo.dart' show restoreLandedAt;
+import 'package:kryfo/relay_poll.dart' show Reached;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/signal_ffi/kryfo_signal.dart' show LsHeal;
@@ -717,6 +724,50 @@ void main() {
     expect(healsTo(q), isEmpty);
   });
 
+  test('a chat deleted here before the restore gets no heal: they reach us '
+      'as a request', () async {
+    final p = await _peer();
+    await contact(p);
+    await talk(p);
+    final file = backUp(p);
+    expect(await _atMe(p, await _fromPeer(p, 'after')), 'after');
+    await restore(p, file);
+    // their chat deleted: the row parked
+    await mem.update(
+      'contacts',
+      {'accepted': 0},
+      where: 'halo_id = ?',
+      whereArgs: [p.name],
+    );
+    expect(await app.healForTest(p.name), isFalse);
+    await app.askAfreshForTest();
+    expect(healsTo(p), isEmpty);
+  });
+
+  test('a chat a shut vault holds gets no restore\'s heal until the vault is '
+      'open, where its row can be read', () async {
+    final p = await _peer();
+    await processPeerBundle(p.name, p.card);
+    for (var i = 0; i < 3; i++) {
+      expect(await _atPeer(p, await _toPeer(p, 'me $i')), 'me $i');
+      expect(await _atMe(p, await _fromPeer(p, 'them $i')), 'them $i');
+    }
+    final file = backUp(p);
+    expect(await _atMe(p, await _fromPeer(p, 'after')), 'after');
+    await vaultList.putMeta('pub', 'pub-A');
+    await vaultList.putHidden(
+      p.name,
+      kHiddenPeer,
+      peerCard(RouterCard(p.name, '', p.xpub, backPaired: true)),
+      1,
+    );
+    await router.load();
+    await restore(p, file);
+    expect(await app.healForTest(p.name), isFalse);
+    await app.askAfreshForTest();
+    expect(healsTo(p), isEmpty);
+  });
+
   test('the store marks what a restore brought back as it opens, only after '
       'a restore, and the mark holds across starts', () async {
     final db = MemDb();
@@ -852,6 +903,64 @@ void main() {
     await came(p, 'early', 'not meant');
     expect(row('shown'), isNull);
     expect(row('early'), isNull);
+  });
+
+  test('after a restore, a timed copy from before it counts from when it '
+      'was written, never from now: one long due lands burned', () async {
+    final p = await _peer();
+    await contact(p);
+    await talk(p);
+    await app.subscribeKnown();
+    const day = 24 * 3600 * 1000;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    Future<void> timed(String uid, int writtenAt, {Reached? reached}) async {
+      final w = await wrapMessage(
+        'timed',
+        msgUid: uid,
+        burnSeconds: 60,
+        writtenAt: writtenAt,
+        sender: SenderInfo(
+          haloId: p.name,
+          edPub: 'ed-${p.name}',
+          onion: '',
+          xPub: p.xpub,
+        ),
+      );
+      await app.receiveRelay(
+        [(peer: p.xpub, cipher: await _fromPeer(p, w))],
+        reached: [reached],
+      );
+      await _settle();
+    }
+
+    addTearDown(() => restoreLandedAt = null);
+    // no restore: it waits to be read, whenever it was written
+    await timed('waits', now - 2 * day);
+    expect(row('waits')?['burn_at'], isNull);
+    // a restore landed a minute ago. the catch-up after it reads from the
+    // file's anchor, days back, to the subscribe, after the landing
+    restoreLandedAt = now - 60000;
+    final caughtUp = (from: now - 5 * day, until: now);
+    // one written two days back is past its day and its minute
+    await timed('due', now - 2 * day, reached: caughtUp);
+    final due = row('due')?['burn_at'] as int?;
+    expect(due, isNotNull);
+    expect(due!, lessThanOrEqualTo(now - day + 60000));
+    // so is one with no window at all
+    await timed('due bare', now - 2 * day);
+    expect(row('due bare')?['burn_at'], isNotNull);
+    // one written an hour before waits out the rest of its day, and keeps
+    // that earlier start on its row
+    await timed('hour', now - 3600 * 1000, reached: caughtUp);
+    expect(row('hour')?['burn_at'], isNull);
+    expect(row('hour')?['sent_at'], now - 3600 * 1000);
+    // one that came live after the restore is new here, whatever it says
+    final t = DateTime.now().millisecondsSinceEpoch;
+    await timed('live', now - 2 * day, reached: (from: t, until: t));
+    expect(row('live')?['burn_at'], isNull);
+    // and so is one written since the restore
+    await timed('new', t, reached: caughtUp);
+    expect(row('new')?['burn_at'], isNull);
   });
 
   test('a receipt that cannot be sealed while the session waits on their '
@@ -1649,6 +1758,38 @@ void main() {
     expect((await identityRow(store, 9))!.retiredAt, t + 1);
   });
 
+  test('after a restore, what of ours the file still had waiting to go '
+      'waits for a tap: never sent on its own', () async {
+    final p = await _peer();
+    await contact(p);
+    final t = DateTime.now().millisecondsSinceEpoch;
+    Future<void> waiting(String uid, int at, {String dir = 'out'}) =>
+        store.insert('messages', {
+          'peer_id': p.name,
+          'direction': dir,
+          'plaintext': uid,
+          'sent_at': at,
+          'msg_uid': uid,
+          'sent': 0,
+          'delivered': 0,
+        });
+    await waiting('queued in the file', t - 3600 * 1000);
+    await waiting('theirs', t - 3600 * 1000, dir: 'in');
+    await waiting('written since', t + 5000);
+    // before the store opens, on the first start after the restore
+    expect(
+      await holdOutboxAfterRestore(store, landed: t, made: t - 1, nowMs: t),
+      1,
+    );
+    final sent = {
+      for (final r in store.rows('messages')) r['msg_uid']: r['sent'],
+    };
+    expect(sent['queued in the file'], kNotSent);
+    expect(sent['theirs'], 0);
+    expect(sent['written since'], 0);
+    await store.delete('messages');
+  });
+
   group('a heal from them', () {
     // [p]'s heal to this phone, as their phone makes it
     Future<Uint8List> theirHeal(
@@ -1798,6 +1939,48 @@ void main() {
         ..sendModeForTest = 'fast';
       await later.takeHealForTest(p.xpub, good);
       expect(mem.rows('heal_lines'), hasLength(1), reason: 'replayed');
+    });
+
+    test('after a restore, a heal issued before it is refused and one after '
+        'it is taken', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      const hour = 3600 * 1000;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await (await SharedPreferences.getInstance()).setInt(
+        kRestoreCutPref,
+        now,
+      );
+      await comes(p, await theirHeal(p, nowMs: now - 2 * hour));
+      expect(mem.rows('heal_lines'), isEmpty);
+      expect(mem.rows('heal_nonces'), isEmpty);
+      await comes(p, await theirHeal(p));
+      expect(mem.rows('heal_lines'), hasLength(1));
+    });
+
+    test('the last heal taken stays on their row: one issued before it is '
+        'refused once its nonce is gone, as after a move', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      const hour = 3600 * 1000;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final older = await theirHeal(p, nowMs: now - 3 * hour);
+      await comes(p, await theirHeal(p));
+      final row = mem
+          .rows('contacts')
+          .singleWhere((r) => r['halo_id'] == p.name);
+      expect(row['heal_last'], now ~/ hour);
+      expect(mem.rows('heal_nonces').single['peer'], p.name);
+      await mem.delete('heal_nonces');
+      // a later start: the ten minutes between rebuilds are not what stops it
+      final later = AppState(io: io, router: router)
+        ..myId = 'me'
+        ..sendModeForTest = 'fast';
+      await later.takeHealForTest(p.xpub, older);
+      expect(mem.rows('heal_lines'), hasLength(1));
+      expect(mem.rows('heal_nonces'), isEmpty);
     });
 
     test('one rebuild per contact in ten minutes', () async {
@@ -1975,6 +2158,154 @@ void main() {
       await healed(p);
       expect(await app.pausedForUpdate(p.name), isFalse);
       expect(await _atPeer(p, await _toPeer(p, 'goes')), 'goes');
+    });
+  });
+
+  group('what we undid, after their restore', () {
+    const day = 24 * 3600 * 1000;
+
+    // what of ours to [p] is queued, or reached them, by uid: unsends with
+    // the time they were made, edits with their words
+    Future<({Map<String, int?> un, Map<String, String> ed})> undoneAt(
+      _Peer p,
+    ) async {
+      final un = <String, int?>{
+        for (final r in mem.rows('frames_out'))
+          if (r['kind'] == kFrameUnsend && r['peer_id'] == p.name)
+            r['msg_uid'] as String: r['at'] as int,
+      };
+      final ed = <String, String>{
+        for (final r in mem.rows('edits_out'))
+          if (r['peer_id'] == p.name)
+            r['msg_uid'] as String: r['new_text'] as String,
+      };
+      for (final w in await atThem(p)) {
+        if (w == null) continue;
+        final m = unwrapMessage(w);
+        if (m.unsend case final u?) un.putIfAbsent(u, () => null);
+        if (m.edit case final e?) ed[e.targetUid] = e.newText;
+      }
+      return (un: un, ed: ed);
+    }
+
+    test('our unsends and last edits since their backup go to them again, '
+        'with when each was made; a repair sends none', () async {
+      final p = await _peer();
+      final q = await _peer();
+      for (final x in [p, q]) {
+        await contact(x);
+        await talk(x);
+      }
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await outTo(p, 'fixed', ago: 3 * day);
+      await outTo(p, 'old fix', ago: 30 * day);
+      await outTo(q, 'q fixed', ago: day);
+      await session.queueUnsend('gone', p.name);
+      await session.queueEdit('fixed', p.name, 'one');
+      await session.queueEdit('fixed', p.name, 'two');
+      // the row holds the words: they go from there
+      await mem.update(
+        'messages',
+        {'plaintext': 'two'},
+        where: 'msg_uid = ?',
+        whereArgs: ['fixed'],
+      );
+      await session.queueEdit('old fix', p.name, 'older words');
+      await session.queueUnsend('q gone', q.name);
+      await session.queueEdit('q fixed', q.name, 'q words');
+      // all of it reached them long since, the old fix before their backup
+      await mem.delete('frames_out');
+      await mem.delete('edits_out');
+      expect(
+        {for (final r in mem.rows('taken_out')) r['msg_uid']},
+        {'gone', 'fixed', 'old fix', 'q gone', 'q fixed'},
+      );
+      await mem.update('taken_out', {'at': now - 2 * day});
+      await mem.update(
+        'taken_out',
+        {'at': now - 20 * day},
+        where: 'msg_uid = ?',
+        whereArgs: ['old fix'],
+      );
+
+      await app.subscribeKnown();
+      final khb1 = await makeHeal(
+        p.ss,
+        peer: signalSession.identity.public,
+        since: healDayOf(now - 10 * day),
+      );
+      await app.receiveRelay([(peer: p.xpub, cipher: healWire(khb1))]);
+      await _settle();
+      final got = await undoneAt(p);
+      expect(got.un.keys, ['gone']);
+      final at = got.un['gone'];
+      if (at != null) expect(at, now - 2 * day);
+      expect(got.ed, {'fixed': 'two'});
+
+      // a heal that follows no restore puts nothing out again
+      await app.receiveRelay([
+        (
+          peer: q.xpub,
+          cipher: healWire(
+            await makeHeal(q.ss, peer: signalSession.identity.public),
+          ),
+        ),
+      ]);
+      await _settle();
+      final none = await undoneAt(q);
+      expect(none.un, isEmpty);
+      expect(none.ed, isEmpty);
+    });
+
+    test('a take-back leaves its edit nothing to send again', () async {
+      final p = await _peer();
+      await contact(p);
+      await outTo(p, 'both');
+      await session.queueEdit('both', p.name, 'edited');
+      await session.queueUnsend('both', p.name);
+      expect(
+        [for (final r in mem.rows('taken_out')) (r['msg_uid'], r['kind'])],
+        [('both', 'unsend')],
+      );
+    });
+
+    test('kept no longer once deleted for me, the chat cleared or deleted, '
+        'or our timed message burned', () async {
+      final p = await _peer();
+      final q = await _peer();
+      final r = await _peer();
+      for (final x in [p, q, r]) {
+        await contact(x);
+      }
+      for (final (x, uid) in [
+        (p, 'for me'),
+        (p, 'burns'),
+        (q, 'cleared'),
+        (r, 'chat gone'),
+      ]) {
+        await outTo(x, uid);
+        await session.queueEdit(uid, x.name, 'new words');
+      }
+      await session.queueUnsend('taken back', q.name);
+      Set<Object?> kept() => {
+        for (final row in mem.rows('taken_out')) row['msg_uid'],
+      };
+      expect(kept(), {'for me', 'burns', 'cleared', 'chat gone', 'taken back'});
+      await rows.deleteMessage('for me');
+      expect(kept(), isNot(contains('for me')));
+      await mem.update(
+        'messages',
+        {'burn_at': 1},
+        where: 'msg_uid = ?',
+        whereArgs: ['burns'],
+      );
+      await rows.purgeExpired();
+      expect(kept(), isNot(contains('burns')));
+      await rows.clearConversation(q.name);
+      expect(kept(), isNot(contains('cleared')));
+      expect(kept(), isNot(contains('taken back')));
+      await rows.deleteAllOf(r.name);
+      expect(kept(), isEmpty);
     });
   });
 
@@ -2175,6 +2506,89 @@ void main() {
       await app.owedPassForTest;
       await _settle();
       expect(await groupTextsAt(p), hasLength(2));
+    });
+
+    test('our unsends and edits since their backup, in groups they are '
+        'still in and since they joined, go to them again', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      await groupWith(p, g);
+      await groupWith(p, 'grp000000003', member: false);
+      // a group they joined two days ago
+      const g2 = 'grp000000002';
+      await groupWith(p, g2, joined: 2 * day);
+      await said('edited', ago: 2 * day);
+      await said('sent before they came', group: g2, ago: 5 * day);
+      // the row holds the words: they go from there
+      await mem.update(
+        'messages',
+        {'plaintext': 'new words'},
+        where: 'msg_uid = ?',
+        whereArgs: ['edited'],
+      );
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await rows.queueGroupFrame(
+        g2,
+        [p.name],
+        groupEditRow('sent before they came', 'x'),
+        now: now - day,
+      );
+      await rows.queueGroupUnsend(
+        g2,
+        [p.name],
+        'before they came',
+        now: now - 3 * day,
+      );
+      await rows.queueGroupUnsend(
+        g2,
+        [p.name],
+        'since they came',
+        now: now - day,
+      );
+      final both = [p.name, 'someone-else-in-it'];
+      await rows.queueGroupUnsend(g, both, 'gone', now: now - day);
+      await rows.queueGroupFrame(
+        g,
+        both,
+        groupEditRow('edited', 'new words'),
+        now: now - day,
+      );
+      await rows.queueGroupUnsend(
+        'grp000000003',
+        ['someone-else-in-it'],
+        'elsewhere',
+        now: now - day,
+      );
+      await rows.queueGroupUnsend(g, both, 'before', now: now - 20 * day);
+      // all of it reached them long since
+      await mem.delete('group_ctl_out');
+      await card(p, want: true, since: now - 10 * day);
+      await app.owedPassForTest;
+      await _settle();
+      final got = <String>{
+        for (final r in mem.rows('group_ctl_out'))
+          if (r['member'] == p.name) r['ctl'] as String,
+      };
+      for (final w in await atThem(p)) {
+        if (w == null) continue;
+        final m = unwrapMessage(w);
+        if (m.unsend case final u?) got.add(jsonEncode(groupUnsendRow(u)));
+        if (m.edit case final e?) {
+          got.add(jsonEncode(groupEditRow(e.targetUid, e.newText)));
+        }
+      }
+      expect(got, {
+        jsonEncode(groupUnsendRow('gone')),
+        jsonEncode(groupEditRow('edited', 'new words')),
+        jsonEncode(groupUnsendRow('since they came')),
+      });
+      expect(
+        mem
+            .rows('group_ctl_out')
+            .where((r) => r['member'] == 'someone-else-in-it'),
+        isEmpty,
+      );
     });
 
     test('one whose time ran out before it went again is never sent, and '

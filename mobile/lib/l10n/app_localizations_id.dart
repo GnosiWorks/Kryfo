@@ -2508,6 +2508,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Pesan masuk seketika. Tidak ada yang keluar dari Tor. Paling boros baterai.';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'Di Cepat, pesan masuk seketika. Paling boros baterai.';
+
+  @override
   String get gettingMessagesCheckIns => 'Cek berkala';
 
   @override
@@ -4312,6 +4316,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Tidak bisa menghubungi relay. Coba lagi sebentar lagi.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'Ruang dan kode penautan selalu lewat Tor, juga di Cepat. Keduanya langsung jalan begitu Tor terhubung.';
+
+  @override
   String get pairCodeFailed => 'Tidak berhasil. Coba lagi.';
 
   @override
@@ -4944,6 +4952,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'Notifikasi perlu diatur ulang di perangkat ini.';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'Obrolan yang kamu hapus setelah cadangan ini dibuat kembali bersamanya, dan kontak itu mungkin melihat bahwa kamu memasang Kryfo lagi.';
 
   @override
   String get restoreMoveItHere => 'Pindahkan ke sini';
@@ -8587,6 +8599,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Server Kryfo bertanya ke layanan GIF untukmu. Layanan itu tidak pernah melihatmu, dan server tidak menyimpan catatan apa yang kamu cari.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Server Kryfo bertanya ke layanan GIF untukmu, jadi layanan itu tidak pernah melihatmu. Di Cepat, server kami melihat alamat IP-mu selama kamu mencari, dan tidak menyimpan catatan alamat itu atau apa yang kamu cari.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'GIF dikirim terenkripsi, seperti foto. Ponsel temanmu tidak mengunduh apa pun.';
 
@@ -8614,7 +8630,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'Pencarian GIF lewat server Kryfo. $brand tidak pernah melihatmu. Nyalakan?';
+    return 'Pencarian GIF langsung ke server Kryfo, yang melihat alamat IP-mu di Cepat. $brand tidak pernah melihatmu. Nyalakan?';
   }
 
   @override
@@ -8750,7 +8766,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatShotsWhenTheyUpdate =>
-      'Tersedia setelah dia memperbarui aplikasinya';
+      'Tersedia setelah dia memakai Kryfo terbaru di ponsel';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => 'Tersedia di Kryfo untuk Android';
 
   @override
   String get chatShotsBothPhones =>
@@ -8824,8 +8843,16 @@ class AppLocalizationsId extends AppLocalizations {
       'Kryfo memblokir tangkapan layar dan rekaman layar ruang ini di setiap ponsel di dalamnya, juga menyalin, meneruskan, atau menyimpan pesan orang lain. Ini tidak bisa mencegah aplikasi yang diizinkan membaca layar, atau ponsel maupun aplikasi yang diubah untuk mengakalinya.';
 
   @override
+  String get roomShotsBlockedDesk =>
+      'Menyalin, meneruskan, dan menyimpan pesan satu sama lain mati di ruang ini. Kryfo untuk Android juga memblokir tangkapan layar dan rekaman layar.';
+
+  @override
   String get roomShotsAlwaysOn =>
       'Selalu menyala di ruang, di setiap ponsel di dalamnya';
+
+  @override
+  String get roomShotsAlwaysOnDesk =>
+      'Selalu menyala di ruang, di Kryfo untuk Android';
 
   @override
   String get settingsPerChat => 'Per obrolan';
@@ -9831,11 +9858,18 @@ class AppLocalizationsId extends AppLocalizations {
       'Memblokir tangkapan layar dan rekaman layar di setiap ponsel dalam grup ini, juga menyalin, meneruskan, atau menyimpan pesan satu sama lain. Ini tidak bisa mencegah aplikasi yang diizinkan membaca layar, atau ponsel maupun aplikasi yang diubah untuk mengakalinya.';
 
   @override
+  String get groupShotsBlocksAllDesk =>
+      'Mematikan menyalin, meneruskan, dan menyimpan pesan satu sama lain di sini. Kryfo untuk Android juga memblokir tangkapan layar dan rekaman layar.';
+
+  @override
   String get groupShotsStartsWhenAll =>
-      'Menunggu semua orang di sini memperbarui Kryfo';
+      'Menunggu semua orang di sini bisa memblokir tangkapan layar di perangkatnya';
 
   @override
   String get groupShotsOnForAll => 'Menyala untuk semua orang di sini';
+
+  @override
+  String get groupShotsOnForAllDesk => 'Menyala di Kryfo untuk Android';
 
   @override
   String get groupShotsOffAdminOnly =>
@@ -9843,11 +9877,15 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'Menunggu semua orang di sini memperbarui Kryfo. Hanya admin yang bisa mengubahnya';
+      'Menunggu semua orang di sini bisa memblokir tangkapan layar di perangkatnya. Hanya admin yang bisa mengubahnya';
 
   @override
   String get groupShotsOnAdminOnly =>
       'Menyala untuk semua orang di sini. Hanya admin yang bisa mengubahnya';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk =>
+      'Menyala di Kryfo untuk Android. Hanya admin yang bisa mengubahnya';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -9864,26 +9902,26 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'Belum memperbarui';
+  String get groupShotsWaitingTitle => 'Belum tercakup';
 
   @override
   String get groupShotsWaitingHint =>
-      'Blokir tangkapan layar berlaku untuk semua orang setelah mereka memperbarui Kryfo. Ketuk seseorang untuk mengeluarkannya dari grup.';
+      'Blokir tangkapan layar berlaku untuk semua orang setelah perangkat orang-orang ini bisa memblokir tangkapan layar. Ketuk seseorang untuk mengeluarkannya dari grup.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'Perlu memperbarui Kryfo, atau belum online sejak itu';
+      'Belum bisa memblokir tangkapan layar di perangkatnya, atau belum online sejak itu';
 
   @override
   String get groupShotsBlockedByYou => 'Kamu blokir';
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'Kamu menyalakan blokir tangkapan layar. Ini berlaku untuk semua orang setelah semua di sini memperbarui Kryfo.';
+      'Kamu menyalakan blokir tangkapan layar. Ini berlaku untuk semua orang setelah semua di sini bisa memblokir tangkapan layar di perangkatnya.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name menyalakan blokir tangkapan layar. Ini berlaku untuk semua orang setelah semua di sini memperbarui Kryfo.';
+    return '$name menyalakan blokir tangkapan layar. Ini berlaku untuk semua orang setelah semua di sini bisa memblokir tangkapan layar di perangkatnya.';
   }
 
   @override
@@ -9891,8 +9929,12 @@ class AppLocalizationsId extends AppLocalizations {
       'Blokir tangkapan layar menyala untuk semua orang di sini. Menyalin, meneruskan, dan menyimpan pesan satu sama lain juga mati.';
 
   @override
+  String get groupShotsStartedDesk =>
+      'Blokir tangkapan layar menyala di Kryfo untuk Android. Menyalin, meneruskan, dan menyimpan pesan satu sama lain juga mati.';
+
+  @override
   String get groupShotsPaused =>
-      'Seseorang di sini belum bisa memblokir tangkapan layar. Ini berlaku lagi untuk semua orang setelah dia memperbarui Kryfo.';
+      'Seseorang di sini belum bisa memblokir tangkapan layar di perangkatnya. Ini berlaku lagi untuk semua orang setelah dia bisa.';
 
   @override
   String get groupShotsCantYet => 'Belum bisa memblokir tangkapan layar';
@@ -9902,7 +9944,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'Blokir tangkapan layar tidak berlaku untuk semua orang di sini sampai dia memperbarui Kryfo.';
+      'Blokir tangkapan layar belum berlaku untuk semua orang di sini sampai mereka bisa memblokirnya di perangkatnya.';
 
   @override
   String get groupShotsLeaveStays =>
@@ -9911,6 +9953,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get groupShotsBlockedHere =>
       'Kryfo memblokir tangkapan layar di grup ini';
+
+  @override
+  String get groupShotsBlockedHereDesk =>
+      'Menyalin, meneruskan, dan menyimpan mati di grup ini';
 
   @override
   String get groupShotsMenuNote =>

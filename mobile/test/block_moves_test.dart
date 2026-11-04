@@ -339,6 +339,47 @@ void main() {
     ]);
   }, skip: skip);
 
+  test('a chat moved either way takes the nonces of its heals and the last '
+      'heal on its row; another\'s nonce stays', () async {
+    final db = await _world();
+    for (final side in ['main', 'v']) {
+      await db.execute(
+        'CREATE TABLE $side.heal_nonces (ident INTEGER NOT NULL, nonce TEXT '
+        'NOT NULL, at INTEGER NOT NULL, peer TEXT, PRIMARY KEY (ident, nonce))',
+      );
+      await db.execute(
+        'ALTER TABLE $side.contacts ADD COLUMN heal_last INTEGER',
+      );
+    }
+    await db.execute(
+      'INSERT INTO main.heal_nonces (ident, nonce, at, peer) VALUES '
+      "(0, 'n-f', 1, '$_f'), (0, 'n-other', 1, 'someone-else'), "
+      "(0, 'n-old', 1, NULL)",
+    );
+    await db.execute(
+      "UPDATE main.contacts SET heal_last = 490000 WHERE halo_id = '$_f'",
+    );
+    Future<List<Object?>> nonces(String s) async => [
+      for (final r in await db.rawQuery(
+        'SELECT nonce FROM $s.heal_nonces ORDER BY nonce',
+      ))
+        r['nonce'],
+    ];
+    Future<Object?> last(String s) async => (await db.rawQuery(
+      'SELECT heal_last FROM $s.contacts WHERE halo_id = ?',
+      [_f],
+    )).single['heal_last'];
+    final mover = SqlChatMover(_NoDb(), _NoDb());
+    await mover.moveRowsOn(db, const ChatRef(_f), intoVault: true);
+    expect(await nonces('v'), ['n-f']);
+    expect(await nonces('main'), ['n-old', 'n-other']);
+    expect(await last('v'), 490000);
+    await mover.moveRowsOn(db, const ChatRef(_f), intoVault: false);
+    expect(await nonces('v'), isEmpty);
+    expect(await nonces('main'), ['n-f', 'n-old', 'n-other']);
+    expect(await last('main'), 490000);
+  }, skip: skip);
+
   for (final side in ['main', 'v']) {
     test(
       'a move goes on when $side has no drafts or wallpapers table',

@@ -238,6 +238,8 @@ class _Io implements AppIo {
   @override
   Future<List<String>> sessionAddresses() async => sessions;
   @override
+  Future<String?> sessionXPub(String peer) async => 'x-$peer';
+  @override
   Future<({String haloId, String plain, UnwrappedMessage env})?>
   openFirstContact(String cipher) async => null;
   @override
@@ -829,6 +831,19 @@ class _Db implements HaloDb {
   @override
   Future<bool> messageExists(String msgUid) async =>
       _hit('messageExists', msgUid, r.msg(msgUid) != null);
+  @override
+  Future<bool> messageFrom(String msgUid, String sender, String? group) async =>
+      _hit(
+        'messageFrom',
+        msgUid,
+        r.msgs.any(
+          (m) =>
+              m['msg_uid'] == msgUid &&
+              (m['direction'] == 'out' ||
+                  (m['peer_id'] == sender &&
+                      (m['group_id'] ?? '') == (group ?? ''))),
+        ),
+      );
   @override
   Future<bool> goneFrom(String peer, String msgUid) async => false;
 

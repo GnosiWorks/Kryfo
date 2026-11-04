@@ -65,6 +65,7 @@ import '../main.dart'
         typeLeaf,
         appState,
         AppStateFiles,
+        kNotSent,
         session,
         sessionQuiet,
         claimChat,
@@ -1185,6 +1186,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 m.autoRetries = c.$1;
                 m.gaveUp = c.$2;
               }
+              _heldForTap(m, r);
               return m;
             }),
           );
@@ -1484,6 +1486,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       m.cameAt = (r['sent_at'] as num?)?.toInt();
       if (dir == 'in') m.fresh = true;
       _placeLoadedSend(m);
+      _heldForTap(m, r);
       fresh.add(m);
     }
     final nowHave = _messages.map((m) => m.msgUid).toSet();
@@ -3161,6 +3164,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         await _finishGroupMediaSend(m, r);
       });
 
+  // one a restore brought still waiting to go: not sent, and never tried
+  // on its own. a tap sends it
+  void _heldForTap(_GMsg m, Map<String, Object?> r) {
+    if (m.direction != 'out' || r['sent'] != kNotSent) return;
+    m
+      ..sending = false
+      ..failed = true
+      ..gaveUp = true;
+  }
+
   void _placeLoadedSend(_GMsg m) {
     final uid = m.msgUid;
     if (uid == null || m.direction != 'out') return;
@@ -4626,7 +4639,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                           // it, since the first version with rooms
                           NoticeBanner(
                             glyph: NoticeGlyph.shield,
-                            text: l10n.roomShotsBlocked,
+                            text: l10n.roomShotsBlockedShown,
                             color: HaloColors.violet,
                             margin: const EdgeInsets.fromLTRB(12, 4, 12, 2),
                             delay: const Duration(milliseconds: 220),
@@ -5206,7 +5219,8 @@ class _Header extends StatelessWidget {
                                               start: 6,
                                             ),
                                         child: Semantics(
-                                          label: l10n.groupShotsBlockedHere,
+                                          label:
+                                              l10n.groupShotsBlockedHereShown,
                                           child: Icon(
                                             Icons.phonelink_lock_outlined,
                                             size: 11,

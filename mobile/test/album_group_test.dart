@@ -153,7 +153,7 @@ class _GroupDb implements HaloDb {
     Future<Set<String>> Function()? blocked,
   }) async {}
   @override
-  Future<void> deleteMessage(String msgUid) async {}
+  Future<void> deleteMessage(String msgUid, {String? from}) async {}
 
   @override
   dynamic noSuchMethod(Invocation i) =>

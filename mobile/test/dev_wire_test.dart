@@ -222,6 +222,17 @@ class _Phone extends DevTestDb {
   Future<bool> messageExists(String msgUid) async =>
       mem.rows('messages').any((r) => r['msg_uid'] == msgUid);
   @override
+  Future<bool> messageFrom(String msgUid, String sender, String? group) async =>
+      mem
+          .rows('messages')
+          .any(
+            (m) =>
+                m['msg_uid'] == msgUid &&
+                (m['direction'] == 'out' ||
+                    (m['peer_id'] == sender &&
+                        (m['group_id'] ?? '') == (group ?? ''))),
+          );
+  @override
   Future<void> unparkIfArchived(String haloId) async {}
   @override
   Future<void> bumpUnread(String peerId) async {}

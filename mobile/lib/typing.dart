@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'container.dart';
+import 'desktop/desktop_mode.dart' show shotsHonouredHere;
 import 'devices/device_state.dart' show linkedDevicesOn;
 import 'router.dart' show RouteTo;
 
@@ -77,10 +78,19 @@ String wrapTyping({required int writtenAt}) =>
 bool _known(Object? c) =>
     kKnownCaps.contains(c) || (c == kCapDevices && linkedDevicesOn);
 
-/// this phone's list as a 1:1 frame carries it: [kMyCaps], and with the
+/// what this app puts on a group's frames: a computer, which cannot block
+/// screenshots, leaves out 'gs'
+List<String> get myGroupCaps => shotsHonouredHere
+    ? kMyCaps
+    : [
+        for (final c in kMyCaps)
+          if (c != kCapGroupShots) c,
+      ];
+
+/// this app's list as a 1:1 frame carries it: [myGroupCaps], and with the
 /// linked devices switch on [kCapDevices]
 List<String> get myCaps =>
-    linkedDevicesOn ? const [...kMyCaps, kCapDevices] : kMyCaps;
+    linkedDevicesOn ? [...myGroupCaps, kCapDevices] : myGroupCaps;
 
 /// the capability list as the wire has it: the names this build knows,
 /// null when there is none or it is no list of names

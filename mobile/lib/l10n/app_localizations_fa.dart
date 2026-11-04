@@ -2512,6 +2512,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'پیام‌ها فوراً می‌رسند. هیچ چیز از Tor بیرون نمی‌رود. بیشترین مصرف باتری.';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'پیام‌ها روی حالت سریع فوراً می‌رسند. بیشترین مصرف باتری.';
+
+  @override
   String get gettingMessagesCheckIns => 'سرکشی دوره‌ای';
 
   @override
@@ -4325,6 +4329,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'به رله‌ها دسترسی نشد. کمی بعد دوباره امتحان کنید.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'اتاق‌ها و کدهای جفت‌سازی همیشه از Tor می‌گذرند، حتی روی حالت سریع. به محض وصل شدن Tor کار می‌کنند.';
+
+  @override
   String get pairCodeFailed => 'انجام نشد. دوباره امتحان کنید.';
 
   @override
@@ -4952,6 +4960,10 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'اعلان‌ها باید روی این دستگاه دوباره تنظیم شوند.';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'گفت‌وگوهایی که بعد از ساخت این نسخه‌ی پشتیبان پاک کرده‌اید همراه آن برمی‌گردند، و آن مخاطبان ممکن است ببینند که Kryfo را دوباره راه‌اندازی کرده‌اید.';
 
   @override
   String get restoreMoveItHere => 'انتقال به این‌جا';
@@ -8601,6 +8613,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'سرور Kryfo به جای شما از سرویس گیف می‌پرسد. سرویس هرگز شما را نمی‌بیند و سرور هیچ سابقه‌ای از جست‌وجوهای شما نگه نمی‌دارد.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'سرور Kryfo به جای شما از سرویس گیف می‌پرسد، پس سرویس هرگز شما را نمی‌بیند. روی حالت سریع، سرور ما هنگام جست‌وجو آدرس IP شما را می‌بیند و هیچ سابقه‌ای از آن یا از جست‌وجوهای شما نگه نمی‌دارد.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'گیف مثل یک عکس، رمزگذاری‌شده می‌رود. گوشی دوستتان چیزی دانلود نمی‌کند.';
 
@@ -8628,7 +8644,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'جست‌وجوی گیف از طریق سرور Kryfo انجام می‌شود. ⁨$brand⁩ هرگز شما را نمی‌بیند. روشنش کنیم؟';
+    return 'جست‌وجوی گیف مستقیم به سرور Kryfo می‌رود که روی حالت سریع آدرس IP شما را می‌بیند. ⁨$brand⁩ هرگز شما را نمی‌بیند. روشنش کنیم؟';
   }
 
   @override
@@ -8764,7 +8780,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get chatShotsWhenTheyUpdate =>
-      'وقتی برنامه‌اش را به‌روز کند در دسترس است';
+      'وقتی آخرین نسخهٔ Kryfo را روی گوشی به کار ببرد در دسترس است';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk =>
+      'در Kryfo برای اندروید در دسترس است';
 
   @override
   String get chatShotsBothPhones =>
@@ -8840,8 +8860,16 @@ class AppLocalizationsFa extends AppLocalizations {
       'Kryfo اسکرین‌شات و ضبط صفحه‌ی این اتاق را در همه‌ی گوشی‌های آن مسدود می‌کند، و کپی، بازارسال یا ذخیره‌ی پیام‌های دیگران را هم. جلوی برنامه‌هایی که اجازه‌ی خواندن صفحه را دارند، یا گوشی و برنامه‌ای را که برای دور زدنش تغییر داده شده نمی‌گیرد.';
 
   @override
+  String get roomShotsBlockedDesk =>
+      'کپی، بازارسال و ذخیره‌ی پیام‌های یکدیگر در این اتاق خاموش است. Kryfo برای اندروید جلوی اسکرین‌شات و ضبط صفحه را هم می‌گیرد.';
+
+  @override
   String get roomShotsAlwaysOn =>
       'در اتاق همیشه روشن است، روی همه‌ی گوشی‌های آن';
+
+  @override
+  String get roomShotsAlwaysOnDesk =>
+      'در اتاق همیشه روشن است، در Kryfo برای اندروید';
 
   @override
   String get settingsPerChat => 'برای هر گفت‌وگو';
@@ -9845,11 +9873,18 @@ class AppLocalizationsFa extends AppLocalizations {
       'جلوی اسکرین‌شات و ضبط صفحه را در همه‌ی گوشی‌های این گروه می‌گیرد، و کپی، بازارسال یا ذخیره‌ی پیام‌های یکدیگر را هم. جلوی برنامه‌هایی که اجازه‌ی خواندن صفحه را دارند، یا گوشی و برنامه‌ای را که برای دور زدنش تغییر داده شده نمی‌گیرد.';
 
   @override
+  String get groupShotsBlocksAllDesk =>
+      'کپی، بازارسال و ذخیره‌ی پیام‌های یکدیگر را اینجا خاموش می‌کند. Kryfo برای اندروید جلوی اسکرین‌شات و ضبط صفحه را هم می‌گیرد.';
+
+  @override
   String get groupShotsStartsWhenAll =>
-      'در انتظار به‌روزرسانی Kryfo توسط همه‌ی اعضا';
+      'در انتظار اینکه همه‌ی اعضا بتوانند روی دستگاهشان جلوی اسکرین‌شات را بگیرند';
 
   @override
   String get groupShotsOnForAll => 'برای همه‌ی اعضا روشن است';
+
+  @override
+  String get groupShotsOnForAllDesk => 'در Kryfo برای اندروید روشن است';
 
   @override
   String get groupShotsOffAdminOnly =>
@@ -9857,11 +9892,15 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'در انتظار به‌روزرسانی Kryfo توسط همه‌ی اعضا. فقط مدیر می‌تواند این را تغییر دهد';
+      'در انتظار اینکه همه‌ی اعضا بتوانند روی دستگاهشان جلوی اسکرین‌شات را بگیرند. فقط مدیر می‌تواند این را تغییر دهد';
 
   @override
   String get groupShotsOnAdminOnly =>
       'برای همه‌ی اعضا روشن است. فقط مدیر می‌تواند این را تغییر دهد';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk =>
+      'در Kryfo برای اندروید روشن است. فقط مدیر می‌تواند این را تغییر دهد';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -9879,26 +9918,26 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'هنوز به‌روز نکرده‌اند';
+  String get groupShotsWaitingTitle => 'هنوز شامل نمی‌شوند';
 
   @override
   String get groupShotsWaitingHint =>
-      'وقتی این افراد Kryfo را به‌روز کنند، جلوگیری از اسکرین‌شات همه را در بر می‌گیرد. برای حذف کسی از گروه، روی او بزنید.';
+      'جلوگیری از اسکرین‌شات وقتی همه را می‌گیرد که دستگاه این افراد بتواند جلوی اسکرین‌شات را بگیرد. روی کسی بزنید تا از گروه حذفش کنید.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'باید Kryfo را به‌روز کند، یا از آن موقع آنلاین نشده';
+      'هنوز نمی‌تواند روی دستگاهش جلوی اسکرین‌شات را بگیرد، یا از آن موقع آنلاین نبوده است';
 
   @override
   String get groupShotsBlockedByYou => 'شما مسدودش کرده‌اید';
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'شما جلوگیری از اسکرین‌شات را روشن کردید. وقتی همه‌ی اعضا Kryfo را به‌روز کنند، همه را در بر می‌گیرد.';
+      'جلوگیری از اسکرین‌شات را روشن کردید. وقتی همه‌ی اعضا بتوانند روی دستگاهشان جلوی اسکرین‌شات را بگیرند، همه را در بر می‌گیرد.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '⁨$name⁩ جلوگیری از اسکرین‌شات را روشن کرد. وقتی همه‌ی اعضا Kryfo را به‌روز کنند، همه را در بر می‌گیرد.';
+    return '$name جلوگیری از اسکرین‌شات را روشن کرد. وقتی همه‌ی اعضا بتوانند روی دستگاهشان جلوی اسکرین‌شات را بگیرند، همه را در بر می‌گیرد.';
   }
 
   @override
@@ -9906,8 +9945,12 @@ class AppLocalizationsFa extends AppLocalizations {
       'جلوگیری از اسکرین‌شات برای همه‌ی اعضا روشن است. کپی، بازارسال و ذخیره‌ی پیام‌های یکدیگر هم خاموش است.';
 
   @override
+  String get groupShotsStartedDesk =>
+      'جلوگیری از اسکرین‌شات در Kryfo برای اندروید روشن است. کپی، بازارسال و ذخیره‌ی پیام‌های یکدیگر هم خاموش است.';
+
+  @override
   String get groupShotsPaused =>
-      'یکی از اعضا هنوز نمی‌تواند جلوی اسکرین‌شات را بگیرد. وقتی Kryfo را به‌روز کند، دوباره همه را در بر می‌گیرد.';
+      'یکی از اعضا هنوز نمی‌تواند روی دستگاهش جلوی اسکرین‌شات را بگیرد. وقتی بتواند، دوباره همه را در بر می‌گیرد.';
 
   @override
   String get groupShotsCantYet => 'هنوز نمی‌تواند جلوی اسکرین‌شات را بگیرد';
@@ -9917,7 +9960,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'تا وقتی Kryfo را به‌روز نکند، جلوگیری از اسکرین‌شات همه‌ی اعضا را در بر نمی‌گیرد.';
+      'جلوگیری از اسکرین‌شات همه‌ی اعضا را در بر نمی‌گیرد تا وقتی که بتوانند روی دستگاهشان جلوی آن را بگیرند.';
 
   @override
   String get groupShotsLeaveStays =>
@@ -9926,6 +9969,10 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get groupShotsBlockedHere =>
       'Kryfo در این گروه جلوی اسکرین‌شات را می‌گیرد';
+
+  @override
+  String get groupShotsBlockedHereDesk =>
+      'کپی، بازارسال و ذخیره در این گروه خاموش است';
 
   @override
   String get groupShotsMenuNote =>

@@ -3407,7 +3407,11 @@ void main() {
     expect(l.notesShowLess, "Show less");
     expect(l.voiceDisguiseHere, "Disguise my voice here");
     expect(l.chatBlockScreenshots, "Block screenshots");
-    expect(l.chatShotsWhenTheyUpdate, "Available when they update");
+    expect(
+      l.chatShotsWhenTheyUpdate,
+      "Available when they use the latest Kryfo on a phone",
+    );
+    expect(l.chatShotsWhenTheyUpdateDesk, "Available in Kryfo for Android");
     expect(
       l.chatShotsBothPhones,
       "Kryfo blocks screenshots and screen recording of this chat on both phones, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.",

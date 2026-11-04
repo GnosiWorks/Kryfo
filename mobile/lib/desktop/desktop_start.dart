@@ -41,7 +41,7 @@ import 'desktop_vault.dart';
 import 'keyring_linux.dart';
 import 'sealed_format.dart' show EngineChunkCrypto;
 import 'sealed_io.dart';
-import 'sealed_native.dart' show nativeFilesSealed;
+import 'sealed_native.dart' show nativeFilesSealed, sweepNativeCopies;
 import 'seal_windows.dart';
 import 'sealed_setup.dart';
 import 'system_seal.dart';
@@ -305,6 +305,9 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
       support: (await paths.getApplicationSupportPath())!,
       runtime: runtime,
     ).clearMemory();
+  } else {
+    // windows: the plain copies a crash left for code outside dart
+    sweepNativeCopies(p.join(root, 'tmp', 'native'));
   }
   var started = false;
   runApp(

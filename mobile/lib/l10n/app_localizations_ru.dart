@@ -2570,6 +2570,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Сообщения приходят сразу. Ничто не выходит за пределы Tor. Батарею расходует сильнее всего.';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'На режиме «Быстрый» сообщения приходят сразу. Батарею расходует сильнее всего.';
+
+  @override
   String get gettingMessagesCheckIns => 'Проверки';
 
   @override
@@ -4416,6 +4420,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Ретрансляторы не ответили. Попробуй чуть позже.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'Комнаты и коды связи всегда идут через Tor, даже на режиме «Быстрый». Они заработают, как только Tor подключится.';
+
+  @override
   String get pairCodeFailed => 'Не получилось. Попробуй ещё раз.';
 
   @override
@@ -5048,6 +5056,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'Уведомления на этом устройстве нужно будет настроить заново.';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'Чаты, удалённые после создания этой копии, вернутся вместе с ней, и эти контакты могут увидеть, что ты заново настроил(а) Kryfo.';
 
   @override
   String get restoreMoveItHere => 'Перенести сюда';
@@ -8746,6 +8758,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Сервер Kryfo запрашивает GIF-сервис за тебя. Сервис никогда тебя не видит, а сервер не хранит твои запросы.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Сервер Kryfo запрашивает GIF-сервис за тебя, поэтому сервис никогда тебя не видит. На режиме «Быстрый» наш сервер видит твой IP-адрес во время поиска и не хранит ни его, ни твои запросы.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'GIF идёт зашифрованным, как фото. Телефон собеседника ничего не скачивает.';
 
@@ -8773,7 +8789,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'Поиск GIF идёт через сервер Kryfo. $brand никогда тебя не видит. Включить?';
+    return 'Поиск GIF идёт напрямую на сервер Kryfo, который на режиме «Быстрый» видит твой IP-адрес. $brand никогда тебя не видит. Включить?';
   }
 
   @override
@@ -8910,7 +8926,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatShotsWhenTheyUpdate =>
-      'Станет доступно, когда собеседник обновит приложение';
+      'Станет доступно, когда собеседник будет пользоваться последней версией Kryfo на телефоне';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => 'Доступно в Kryfo для Android';
 
   @override
   String get chatShotsBothPhones =>
@@ -8986,8 +9005,16 @@ class AppLocalizationsRu extends AppLocalizations {
       'Kryfo запрещает скриншоты и запись экрана этой комнаты на каждом телефоне в ней, а также копировать, пересылать и сохранять чужие сообщения. Это не остановит приложения с доступом к экрану или телефон и приложение, изменённые, чтобы это обойти.';
 
   @override
+  String get roomShotsBlockedDesk =>
+      'В этой комнате нельзя копировать, пересылать и сохранять сообщения друг друга. Kryfo для Android также запрещает скриншоты и запись экрана.';
+
+  @override
   String get roomShotsAlwaysOn =>
       'В комнате включено всегда, на каждом телефоне';
+
+  @override
+  String get roomShotsAlwaysOnDesk =>
+      'В комнате включено всегда, в Kryfo для Android';
 
   @override
   String get settingsPerChat => 'Для каждого чата';
@@ -9998,10 +10025,18 @@ class AppLocalizationsRu extends AppLocalizations {
       'Запрещает скриншоты и запись экрана на каждом телефоне в этой группе, а также копировать, пересылать и сохранять сообщения друг друга. Это не остановит приложения с доступом к экрану или телефон и приложение, изменённые, чтобы это обойти.';
 
   @override
-  String get groupShotsStartsWhenAll => 'Ждёт, пока все здесь обновят Kryfo';
+  String get groupShotsBlocksAllDesk =>
+      'Запрещает здесь копировать, пересылать и сохранять сообщения друг друга. Kryfo для Android также запрещает скриншоты и запись экрана.';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'Ждём, когда все здесь смогут запрещать скриншоты на своём устройстве';
 
   @override
   String get groupShotsOnForAll => 'Включено для всех здесь';
+
+  @override
+  String get groupShotsOnForAllDesk => 'Включено в Kryfo для Android';
 
   @override
   String get groupShotsOffAdminOnly =>
@@ -10009,11 +10044,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'Ждёт, пока все здесь обновят Kryfo. Изменить это может только админ';
+      'Ждём, когда все здесь смогут запрещать скриншоты на своём устройстве. Изменить это может только админ';
 
   @override
   String get groupShotsOnAdminOnly =>
       'Включено для всех здесь. Изменить это может только админ';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk =>
+      'Включено в Kryfo для Android. Изменить это может только админ';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -10033,26 +10072,26 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'Ещё не обновили';
+  String get groupShotsWaitingTitle => 'Пока не охвачены';
 
   @override
   String get groupShotsWaitingHint =>
-      'Запрет скриншотов заработает для всех, как только эти люди обновят Kryfo. Нажми на человека, чтобы удалить его из группы.';
+      'Запрет скриншотов распространится на всех, когда устройства этих людей смогут запрещать скриншоты. Нажмите на человека, чтобы удалить его из группы.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'Нужно обновить Kryfo, или не был(а) в сети с тех пор';
+      'Пока не может запрещать скриншоты на своём устройстве или с тех пор не был в сети';
 
   @override
   String get groupShotsBlockedByYou => 'Заблокирован(а) тобой';
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'Ты включил(а) запрет скриншотов. Он заработает для всех, когда все здесь обновят Kryfo.';
+      'Вы включили запрет скриншотов. Он заработает для всех, когда все здесь смогут запрещать скриншоты на своём устройстве.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name включил(а) запрет скриншотов. Он заработает для всех, когда все здесь обновят Kryfo.';
+    return '$name включил(а) запрет скриншотов. Он заработает для всех, когда все здесь смогут запрещать скриншоты на своём устройстве.';
   }
 
   @override
@@ -10060,8 +10099,12 @@ class AppLocalizationsRu extends AppLocalizations {
       'Запрет скриншотов включён для всех здесь. Копировать, пересылать и сохранять сообщения друг друга тоже нельзя.';
 
   @override
+  String get groupShotsStartedDesk =>
+      'Запрет скриншотов включён в Kryfo для Android. Копировать, пересылать и сохранять сообщения друг друга тоже нельзя.';
+
+  @override
   String get groupShotsPaused =>
-      'Кто-то здесь пока не может запрещать скриншоты. Запрет снова будет для всех, когда этот человек обновит Kryfo.';
+      'Кто-то здесь пока не может запрещать скриншоты на своём устройстве. Запрет снова будет для всех, когда это станет возможно.';
 
   @override
   String get groupShotsCantYet => 'Пока не может запрещать скриншоты';
@@ -10071,13 +10114,17 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'Запрет скриншотов не будет действовать для всех здесь, пока этот человек не обновит Kryfo.';
+      'Запрет скриншотов не будет действовать для всех здесь, пока они не смогут запрещать скриншоты на своём устройстве.';
 
   @override
   String get groupShotsLeaveStays => 'Запрет скриншотов останется как есть.';
 
   @override
   String get groupShotsBlockedHere => 'Kryfo запрещает скриншоты в этой группе';
+
+  @override
+  String get groupShotsBlockedHereDesk =>
+      'В этой группе нельзя копировать, пересылать и сохранять';
 
   @override
   String get groupShotsMenuNote =>

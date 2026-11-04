@@ -1338,7 +1338,7 @@ class _ShotsCardState extends State<_ShotsCard> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
-                l10n.chatShotsWhenTheyUpdate,
+                l10n.chatShotsWhenTheyUpdateShown,
                 style: HaloType.sans(size: 12.5, color: HaloColors.text2),
               ),
             ),

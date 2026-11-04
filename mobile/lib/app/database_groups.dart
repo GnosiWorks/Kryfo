@@ -423,6 +423,8 @@ mixin _GroupRows {
     ]) {
       await db.delete(table, where: 'group_id = ?', whereArgs: [groupId]);
     }
+    // what we undid in it is kept no longer
+    await dropTaken(db, group: groupId);
     await _dropRosterInvites(db, groupId);
     // what of it came in and went is known no longer
     final gone = goneGroupPrefix(groupId);
