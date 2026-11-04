@@ -542,13 +542,32 @@ Future<void> _clearIfOurs(
 /// [quietOnly]: only a copy from a hidden chat or the decoy, which goes with
 /// a lock or the hidden chats' close as their shared files do; a switch of
 /// pin takes any. such a copy goes even when android hides the clipboard
-/// from the background. a [wipe] clears the clipboard whatever is on it
-Future<void> dropOurClip({bool quietOnly = false, bool wipe = false}) async {
+/// from the background. [all]: whatever is on it, as a hidden chats or
+/// decoy session ends (a field's own copy or cut is not ours to track, and
+/// the person is leaving kryfo). a [wipe] the same
+Future<void> dropOurClip({
+  bool quietOnly = false,
+  bool all = false,
+  bool wipe = false,
+}) async {
+  final any = all || wipe;
   final v = _ourClip;
-  if (!wipe && (v == null || (quietOnly && !_ourClipQuiet))) return;
+  if (!any && (v == null || (quietOnly && !_ourClipQuiet))) return;
   _clipTimer?.cancel();
-  await _clearIfOurs(v, force: wipe || _ourClipQuiet, any: wipe);
-  if (wipe) _ourClip = null;
+  await _clearIfOurs(v, force: any || _ourClipQuiet, any: any);
+  if (any) _ourClip = null;
+}
+
+/// a clip kryfo put there in an earlier run, known by its label: off as the
+/// decoy opens, when nothing of this run remembers it
+Future<void> dropLabelledClip() async {
+  try {
+    await const MethodChannel(
+      'halo/platform',
+    ).invokeMethod<bool>('clearOurClip');
+  } catch (_) {
+    // no such call here: nothing is labelled
+  }
 }
 
 @visibleForTesting

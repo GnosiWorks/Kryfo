@@ -432,6 +432,8 @@ extension AppStateSession on AppState {
     // nothing opened under one pin is left for another, not even unlinked
     final from = _lockedIn;
     _lockedIn = null;
+    // a copy of ours from before a restart is known only by its label
+    if (r == PinResult.decoy) await dropLabelledClip();
     final switched =
         from != null && from != containerFor(r, vaultKey: vaultKey);
     await dropOpenCopies(all: switched);
@@ -683,7 +685,13 @@ extension AppStateSession on AppState {
     // decoy, goes with the session that handed it
     _lockedIn = (_session.vault ?? _session.primary).container;
     unawaited(dropOpenCopies());
-    unawaited(dropOurClip(quietOnly: true));
+    // in hidden chats or the decoy whatever is on the clipboard goes, a
+    // field's own copy too; an everyday copy stays for another app
+    unawaited(
+      clipGoesWithLock()
+          ? dropOurClip(all: true)
+          : dropOurClip(quietOnly: true),
+    );
     unawaited(dropNotesExports());
     unawaited(
       vaultSetupDone().catchError((Object e) {
@@ -700,8 +708,8 @@ extension AppStateSession on AppState {
     final was = _session;
     final v = was.vault;
     if (v == null) return;
-    // what was copied in its chats goes with them
-    unawaited(dropOurClip(quietOnly: true));
+    // what was copied in its chats goes with them, a field's own copy too
+    unawaited(dropOurClip(all: true));
     final everyday = AppState._everyday(v);
     final done = Completer<void>();
     if (everyday) _closeDone = done;

@@ -56,6 +56,8 @@ open class MainActivity : FlutterFragmentActivity() {
         private const val NOTIF_PERM_REQUEST = 1001
         private const val PERM_PREFS = "halo_perm"
         private const val PERM_ASKED_KEY = "asked_post_notifications"
+        // the label our copies carry: says nothing, and a later run knows it
+        const val OUR_CLIP = "k1"
         // one ask for the life of the process, whatever the activity does
         private var notifPermAsked = false
         // the one engine we keep across activity teardown
@@ -659,7 +661,7 @@ open class MainActivity : FlutterFragmentActivity() {
                         val text = call.argument<String>("text") ?: ""
                         val cm = applicationContext
                             .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        val clip = ClipData.newPlainText("", text)
+                        val clip = ClipData.newPlainText(OUR_CLIP, text)
                         clip.description.extras = PersistableBundle().apply {
                             putBoolean("android.content.extra.IS_SENSITIVE", true)
                         }
@@ -689,6 +691,26 @@ open class MainActivity : FlutterFragmentActivity() {
                             } catch (_: Exception) {}
                         }
                         result.success(drop)
+                    }
+                    // a clip of ours from an earlier run, known by its
+                    // label: the app is in front, so it reads
+                    "clearOurClip" -> {
+                        val cm = applicationContext
+                            .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val label = try {
+                            cm.primaryClipDescription?.label?.toString()
+                        } catch (_: Exception) { null }
+                        val ours = label == OUR_CLIP
+                        if (ours) {
+                            try {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                                    cm.clearPrimaryClip()
+                                } else {
+                                    cm.setPrimaryClip(ClipData.newPlainText("", ""))
+                                }
+                            } catch (_: Exception) {}
+                        }
+                        result.success(ours)
                     }
                     // a camera shot at the sensor's own size and quality,
                     // brought to what a gallery pick gets: 1280 on the long

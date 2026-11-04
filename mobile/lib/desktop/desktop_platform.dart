@@ -69,7 +69,7 @@ const platformNotHere = {
   // phone makers and android's installer
   'isMiui', 'phoneMaker', 'installSource',
   // the plain clipboard is the caller's fallback
-  'copySensitive', 'clearClip',
+  'copySensitive', 'clearClip', 'clearOurClip',
   // the caller sends the photo as it is
   'shrinkJpeg',
   // no profile photo is added on desktop (photoAddOffered)
