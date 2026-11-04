@@ -71,6 +71,14 @@ const _banned = {
     'किसी से भी सुरक्षित',
     'ट्रेस नहीं',
   ],
+  'pl': [
+    'niewidzialn',
+    'niewykrywaln',
+    'nie do wykrycia',
+    'wiarygodnego zaprzeczenia',
+    'bezpieczne przed każdym',
+    'nie do wyśledzenia',
+  ],
 };
 
 void main() {

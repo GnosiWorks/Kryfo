@@ -75,7 +75,7 @@ class _Engine implements HaloEngine {
 
 const _langs = [
   'en', 'ar', 'de', 'es', 'fa', 'fr', 'hi', 'id', 'it', //
-  'pt', 'ru', 'tr', 'uk', 'vi', 'zh', 'zh_Hant',
+  'pl', 'pt', 'ru', 'tr', 'uk', 'vi', 'zh', 'zh_Hant',
 ];
 
 Locale _locale(String tag) {

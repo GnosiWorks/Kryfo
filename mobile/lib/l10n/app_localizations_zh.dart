@@ -7221,6 +7221,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get languageNameHi => '印地语';
 
   @override
+  String get languageNamePl => '波兰语';
+
+  @override
   String get languageLaterLine => '你随时可以在设置里更改。';
 
   @override
@@ -17435,6 +17438,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get languageNameHi => '印地語';
+
+  @override
+  String get languageNamePl => '波蘭文';
 
   @override
   String get languageLaterLine => '你隨時可以在設定中更改。';

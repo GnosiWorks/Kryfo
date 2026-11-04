@@ -87,6 +87,7 @@ void main() {
     'zh',
     'zh-Hant',
     'hi',
+    'pl',
   ]) {
     for (final scale in [1.0, _biggest]) {
       testWidgets('$code at $scale: every word of the table whole', (t) async {

@@ -14,6 +14,7 @@ import 'app_localizations_fr.dart';
 import 'app_localizations_hi.dart';
 import 'app_localizations_id.dart';
 import 'app_localizations_it.dart';
+import 'app_localizations_pl.dart';
 import 'app_localizations_pt.dart';
 import 'app_localizations_ru.dart';
 import 'app_localizations_tr.dart';
@@ -116,6 +117,7 @@ abstract class AppLocalizations {
     Locale('hi'),
     Locale('id'),
     Locale('it'),
+    Locale('pl'),
     Locale('pt'),
     Locale('ru'),
     Locale('tr'),
@@ -12167,6 +12169,12 @@ abstract class AppLocalizations {
   /// **'Hindi'**
   String get languageNameHi;
 
+  /// the name of Polish in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it
+  ///
+  /// In en, this message translates to:
+  /// **'Polish'**
+  String get languageNamePl;
+
   /// under the title of the language sheet during onboarding: the choice is not final
   ///
   /// In en, this message translates to:
@@ -17330,6 +17338,7 @@ class _AppLocalizationsDelegate
     'hi',
     'id',
     'it',
+    'pl',
     'pt',
     'ru',
     'tr',
@@ -17375,6 +17384,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsId();
     case 'it':
       return AppLocalizationsIt();
+    case 'pl':
+      return AppLocalizationsPl();
     case 'pt':
       return AppLocalizationsPt();
     case 'ru':

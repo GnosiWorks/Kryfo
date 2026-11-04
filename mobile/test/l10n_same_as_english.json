@@ -502,6 +502,25 @@
   "videoBubbleMb",
   "videoBubbleVideo"
  ],
+ "pl": [
+  "albumQuoted",
+  "appDev",
+  "appOffline",
+  "bridgesIran",
+  "bridgesOffline",
+  "bridgesTurkmenistan",
+  "handleHintName",
+  "homeOffline",
+  "languageNameHi",
+  "motionOffline",
+  "notesExportMarkdown",
+  "qrLink",
+  "serversMs",
+  "settingsTransport",
+  "transportOffline",
+  "transportOnline",
+  "transportTransport"
+ ],
  "pt": [
   "appDev",
   "appOffline",

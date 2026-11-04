@@ -7707,6 +7707,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get languageNameHi => 'Хинди';
 
   @override
+  String get languageNamePl => 'Польский';
+
+  @override
   String get languageLaterLine =>
       'Язык можно поменять в настройках в любой момент.';
 

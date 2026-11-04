@@ -1541,7 +1541,7 @@ void main() {
       final files = Directory(
         'lib/l10n',
       ).listSync().map((f) => f.path).where((f) => f.endsWith('.arb')).toList();
-      expect(files, hasLength(16));
+      expect(files, hasLength(17));
       for (final f in files) {
         final arb = jsonDecode(File(f).readAsStringSync()) as Map;
         expect(arb['devLinkMismatch'], contains('Marios'), reason: f);

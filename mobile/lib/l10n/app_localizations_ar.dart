@@ -7686,6 +7686,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get languageNameHi => 'الهندية';
 
   @override
+  String get languageNamePl => 'البولندية';
+
+  @override
   String get languageLaterLine => 'يمكنك تغيير هذا في أي وقت من الإعدادات.';
 
   @override

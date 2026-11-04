@@ -10,6 +10,7 @@ void main() {
     expect(isWipeWord(' XÓA ', 'xoa'), isTrue);
     expect(isWipeWord('löschen', 'löschen'), isTrue);
     expect(isWipeWord('SIL', 'sil'), isTrue);
+    expect(isWipeWord('wymaz', 'wymaż'), isTrue); // polish without its dot
     expect(isWipeWord('стереть', 'стереть'), isTrue);
     expect(isWipeWord('抹除', '抹除'), isTrue);
     expect(isWipeWord('wipe', 'стереть'), isTrue);
