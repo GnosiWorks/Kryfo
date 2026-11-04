@@ -1172,6 +1172,10 @@ class _ChatScreenState extends State<ChatScreen>
   bool get _incomingRequest => !_accepted && _recvCount > 0 && !widget.support;
   // a reaction says this phone read it: none in a request or a block
   bool get _canReact => !_blocked && !_incomingRequest;
+  // a link in a request is plain words on both sides: nothing to tap open,
+  // no card under it
+  bool get _plainLinks =>
+      !_isDev && (_requestPending || (!_accepted && _recvCount > 0));
   // someone added here who knows nothing of it: nothing went to them and
   // nothing came (anything that came marks them engaged), so they hear of
   // this phone only with a first message
@@ -2369,6 +2373,7 @@ class _ChatScreenState extends State<ChatScreen>
                             album: album,
                             translation: _translation,
                             transcripts: _transcripts,
+                            plainLinks: _plainLinks,
                           ),
                         ),
                         builder: (_, t, child) => Transform.scale(
@@ -4822,7 +4827,11 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _addPreview() async {
     final url = firstUrl(_msgCtrl.text);
     // a quiet session fetches nothing: what is typed there stays here
-    if (url == null || _previewBusy || sessionQuiet || appState.everydayHeld) {
+    if (url == null ||
+        _previewBusy ||
+        sessionQuiet ||
+        appState.everydayHeld ||
+        _plainLinks) {
       return;
     }
     setState(() => _previewBusy = true);
@@ -5542,6 +5551,7 @@ class _ChatScreenState extends State<ChatScreen>
           quotedSticker: quotedSticker,
           linkTitle: _linkPreview(m)?['title'],
           linkBySender: _linkPreview(m)?['by'] == 'sender',
+          plainLinks: _plainLinks,
           firstInGroup: firstInGroup,
           lastInGroup: lastInGroup,
           revealed: m.msgUid != null && m.msgUid == _revealedUid,
@@ -7148,7 +7158,11 @@ class _ChatScreenState extends State<ChatScreen>
                               // over tor or not at all, so without it there is
                               // nothing to offer. never in a quiet session
                               builder: (_, v, _) => PreviewStrip(
-                                url: _accepted && !sessionQuiet && _torUp
+                                url:
+                                    _accepted &&
+                                        !_plainLinks &&
+                                        !sessionQuiet &&
+                                        _torUp
                                     ? firstUrl(v.text)
                                     : null,
                                 pending: _pendingPreview,
@@ -8179,6 +8193,8 @@ class _Bubble extends StatelessWidget {
   // a link in the text: the title the sender shipped, if any
   final String? linkTitle;
   final bool linkBySender;
+  // a request's links: shown as the words they are, never tappable
+  final bool plainLinks;
   // a sticker row: the chat's budget, its place in it, and its flight
   final StickerBudget? stickers;
   final int stickerOrder;
@@ -8224,6 +8240,7 @@ class _Bubble extends StatelessWidget {
     this.onReveal,
     this.linkTitle,
     this.linkBySender = false,
+    this.plainLinks = false,
     this.firstInGroup = true,
     this.lastInGroup = true,
     this.unconfirmed = false,
@@ -8240,6 +8257,10 @@ class _Bubble extends StatelessWidget {
             color: (isOut && !image) ? HaloColors.onAmber : HaloColors.text,
             height: 1.4,
           );
+    if (query.isEmpty && plainLinks) {
+      final t = words ?? msg.text;
+      return Text(t, style: base, textDirection: writtenDir(t));
+    }
     if (query.isEmpty) {
       return KryfoLinkText(
         text: words ?? msg.text,
@@ -8856,7 +8877,8 @@ class _Bubble extends StatelessWidget {
                                                 ),
                                               ),
                                             ),
-                                          if (msg.url case final u?) ...[
+                                          if (msg.url case final u?
+                                              when !plainLinks) ...[
                                             const SizedBox(height: 6),
                                             LinkStub(
                                               url: u,
@@ -8865,7 +8887,8 @@ class _Bubble extends StatelessWidget {
                                               bySender: linkBySender,
                                             ),
                                           ],
-                                          if (msg.place case final p?) ...[
+                                          if (msg.place case final p?
+                                              when !plainLinks) ...[
                                             const SizedBox(height: 6),
                                             PlaceStub(place: p, isOut: isOut),
                                           ],
