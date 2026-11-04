@@ -270,10 +270,12 @@ extension AppStateReceive on AppState {
     await _listenKnown(cache: true);
   }
 
-  // listens on [xPub]. a hidden chat's address keeps a relay socket of its
-  // own; [hidden] null asks the vault's cards
+  // listens on [xPub]. a hidden chat's address keeps a relay socket and a
+  // circuit of its own; [hidden] null asks the vault's cards. a key once
+  // told hidden stays hidden until an unhide moves it out, so a chat
+  // deleted inside the vault never joins the everyday sockets
   void _listen(int ident, String xPub, {bool fresh = false, bool? hidden}) {
-    if (hidden ?? _router.hidesKey(xPub)) {
+    if (hidden ?? (_router.hidesKey(xPub) || _toldHidden.contains(xPub))) {
       _toldHidden.add(xPub);
       _io.listenHidden(ident, xPub, fresh: fresh);
     } else {
@@ -284,14 +286,15 @@ extension AppStateReceive on AppState {
 
   // after chats went into the vault or came out: each key listened on the
   // other way is listened on again, so its address leaves the everyday
-  // sockets or joins them
-  void _relistenMoved() {
+  // sockets or joins them. only the keys an unhide moved out ([out]) go
+  // back: one whose chat was deleted inside the vault stays apart
+  void _relistenMoved({Set<String> out = const {}}) {
     try {
       for (final e in _router.listenFor.entries) {
         if (!_toldHidden.contains(e.key)) _listen(identOf(e.value), e.key);
       }
       for (final x in _toldHidden.toList()) {
-        if (_router.hidesKey(x)) continue;
+        if (_router.hidesKey(x) || !out.contains(x)) continue;
         final who = _xPubToHaloId[x];
         if (who == null) {
           _toldHidden.remove(x);

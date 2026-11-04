@@ -409,6 +409,7 @@ extension AppStateVault on AppState {
       if (v == null) throw StateError('no vault at hand');
       final chats = _refs(people, groups);
       if (chats.isEmpty) return 0;
+      final before = _router.listenFor.keys.toSet();
       final n = await _move(v, chats, (m) => _unhide(m, v, chats), out: true);
       // linked devices: back on the everyday side, lists go both ways again
       if (linkedDevicesOn && AppState._everyday(v)) {
@@ -418,7 +419,7 @@ extension AppStateVault on AppState {
       }
       await refreshContacts();
       await refreshGroups();
-      _relistenMoved();
+      _relistenMoved(out: before.difference(_router.listenFor.keys.toSet()));
       return n;
     }),
   );

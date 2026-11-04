@@ -19,7 +19,8 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         AppStateMessages,
         AppStateVault,
-        AppStateReceive;
+        AppStateReceive,
+        AppStateRoute;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';
@@ -226,13 +227,23 @@ class _Io implements AppIo {
   Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
   @override
   void listen(int ident, String xPub, {bool fresh = false}) {
+    everyday.add(xPub);
+    _heard(xPub);
+  }
+
+  void _heard(String xPub) {
     listened.add(xPub);
     told.add('listen');
   }
 
+  // keys listened on the everyday way, and on a hidden chat's own lane
+  final everyday = <String>[];
+  final hiddenHeard = <String>[];
   @override
-  void listenHidden(int ident, String xPub, {bool fresh = false}) =>
-      listen(ident, xPub, fresh: fresh);
+  void listenHidden(int ident, String xPub, {bool fresh = false}) {
+    hiddenHeard.add(xPub);
+    _heard(xPub);
+  }
 
   // listens and pin tellings, in the order they came
   final told = <String>[];
@@ -1646,6 +1657,23 @@ void main() {
         expect(w.io.pins, [<String>[]]);
       },
     );
+  });
+
+  test('a hidden chat listens apart, and stays apart once deleted inside '
+      'the vault', () async {
+    final w = await _World.make();
+    await w.app.subscribeKnown();
+    expect(w.io.hiddenHeard, ['x-$_h']);
+    expect(w.io.everyday, isNot(contains('x-$_h')));
+    expect(w.io.everyday, contains('x-$_v'));
+    // its card goes, as a delete inside the vault takes it
+    await w.router.unlist([_h]);
+    expect(w.router.hidesKey('x-$_h'), isFalse);
+    w.io.everyday.clear();
+    w.io.hiddenHeard.clear();
+    await w.app.resubscribe();
+    expect(w.io.everyday, isNot(contains('x-$_h')));
+    expect(w.io.everyday, contains('x-$_v'));
   });
 
   test('the pins are told before the first listen', () async {
