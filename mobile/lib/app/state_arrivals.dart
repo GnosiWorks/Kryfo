@@ -341,17 +341,19 @@ extension AppStateArrivals on AppState {
     required bool late,
     required Reached? reached,
   }) async {
-    // linked devices: a phone's device words are taken on the everyday side
-    // only (below); on any other route, and sealed for the vault, a frame of
-    // nothing else is dropped and the words come out of what is filed
+    // linked devices: a phone's device words are taken where their device
+    // state is (below): the everyday side, or the open vault for a hidden
+    // chat. sealed for a shut vault the frame is kept whole and they are
+    // taken as it opens. on any other route a frame of nothing else is
+    // dropped and the words come out of what is filed
     final words = linkedDevicesOn && !fromDevice && hasDeviceWords(wire);
-    final takes =
-        words &&
-        into == null &&
-        env.groupId == null &&
-        !fromBackPair &&
-        _routeOf(senderHaloId, null) == RouteTo.everyday;
-    if (words && !takes) {
+    final own = words && env.groupId == null && !fromBackPair;
+    final at = own
+        ? (into != null ? RouteTo.vault : _routeOf(senderHaloId, null))
+        : null;
+    final takes = at == RouteTo.everyday || at == RouteTo.vault;
+    final sealsWhole = at == RouteTo.sealed;
+    if (words && !takes && !sealsWhole) {
       if (deviceWordsOnly(wire)) return RouteTo.dropped;
       wire = withoutDeviceWords(wire);
       env = unwrapMessage(wire);
@@ -436,8 +438,20 @@ extension AppStateArrivals on AppState {
     // linked devices: a contact's phone's lists, bundles and asks, on the
     // everyday side only. a frame of nothing else is never shown
     if (takes) {
-      if (to == RouteTo.everyday && identical(db, live)) {
-        if (await _devPhoneFrames(senderHaloId, wire)) return RouteTo.dropped;
+      final home = identical(db, live)
+          ? live
+          : identical(db, _vaultDevOf)
+          ? db
+          : null;
+      if (home != null) {
+        if (await _devPhoneFrames(
+          senderHaloId,
+          wire,
+          home: home,
+          unsealed: into != null,
+        )) {
+          return RouteTo.dropped;
+        }
       } else if (deviceWordsOnly(wire)) {
         return RouteTo.dropped;
       }

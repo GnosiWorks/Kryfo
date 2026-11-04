@@ -228,6 +228,7 @@ part 'app/dev_screen.dart';
 part 'app/devices_app.dart';
 part 'app/devices_receive_app.dart';
 part 'app/devices_send_app.dart';
+part 'app/devices_vault_app.dart';
 part 'app/link_app.dart';
 part 'app/engine.dart';
 part 'app/files.dart';

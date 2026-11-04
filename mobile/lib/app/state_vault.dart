@@ -54,7 +54,9 @@ extension AppStateVault on AppState {
         env.deliveredUid == null &&
         env.reaction == null &&
         env.edit == null &&
-        !previewOnly;
+        !previewOnly &&
+        // a phone's device words alone (linked devices) are never ticked
+        !(linkedDevicesOn && deviceWordsOnly(wire));
     // a sliced file ticks once every slice is in, as it does when shown
     Future<bool> whole() async =>
         !sliced || await _router.sealedParts(uid!) >= total;
@@ -130,6 +132,14 @@ extension AppStateVault on AppState {
             } catch (e) {
               if (!identical(_openVault, vault)) return;
               dlog('unseal: a blocked uid not kept (${e.runtimeType})');
+            }
+          } else if (u != null && u.deviceTag != null) {
+            // a line on a hidden chat's device pair, as it came
+            try {
+              stays = !await _unsealDeviceLine(vault, u);
+            } catch (e) {
+              if (!identical(_openVault, vault)) return;
+              dlog('unseal: a device line not opened (${e.runtimeType})');
             }
           } else if (u != null && u.keyChanged) {
             _keyChangeSealed.remove(u.from);
@@ -349,8 +359,13 @@ extension AppStateVault on AppState {
   // replace, or the lock turned off: the entry first, then the list (its
   // people stay as a drop list), the files last. never from inside a vault,
   // and only the identity on screen's
-  Future<void> destroyVault() =>
-      _movingChats(() => _serial(() => _destroy(_ownVault)));
+  Future<void> destroyVault() => _movingChats(
+    () => _serial(() async {
+      await _destroy(_ownVault);
+      // linked devices: what its cards named is heard on no more
+      await _listenHiddenDevices();
+    }),
+  );
 
   Future<void> _destroy(HaloContainer c) async {
     if (_session.vault != null) throw StateError('the vault is open');
@@ -381,6 +396,8 @@ extension AppStateVault on AppState {
       final went = await _move(v, chats, (m) => _hide(m, v, chats), out: false);
       // a copy open to a new device may already hold their rows: it ends
       if (went.isNotEmpty) endHistoryCopies();
+      // linked devices: their pairs heard on as the vault's cards say
+      if (AppState._everyday(v)) await _listenHiddenDevices();
       // what could still name them outside the vault, and what they showed.
       // the decoy keeps no one outside and never shows anything
       if (AppState._everyday(v)) {
@@ -409,11 +426,10 @@ extension AppStateVault on AppState {
       final chats = _refs(people, groups);
       if (chats.isEmpty) return 0;
       final n = await _move(v, chats, (m) => _unhide(m, v, chats), out: true);
-      // linked devices: back on the everyday side, lists go both ways again
+      // linked devices: back on the everyday side, heard on from there, and
+      // lists go both ways again
       if (linkedDevicesOn && AppState._everyday(v)) {
-        for (final c in chats) {
-          if (!c.group) unawaited(_devicesShown(c.id));
-        }
+        await _devShown(chats);
       }
       await refreshContacts();
       await refreshGroups();
@@ -448,6 +464,7 @@ extension AppStateVault on AppState {
         );
       }
       await _move(v, all, (m) => _unhide(m, v, all), out: true);
+      if (everyday && linkedDevicesOn) await _devShown(all);
       if (everyday) {
         // what is still listed the vault no longer holds: deleted inside it
         await _router.unlist([for (final (id, _) in _router.hiddenChats) id]);
@@ -462,6 +479,7 @@ extension AppStateVault on AppState {
         _forgetVaultSide();
         _vaultShade.clear();
       }
+      if (everyday) await _vaultDevicesOut();
       if (identical(_madeVault, v)) _madeVault = null;
       await v.close();
       await _host.wipeVault(v.container);
@@ -630,9 +648,10 @@ extension AppStateVault on AppState {
       if (isDevChat(c.id) || !await m.hideable(c)) continue;
       // its unsent words go, before its rows are copied over
       await dropDraft(primary, c.id, group: c.group);
-      // linked devices: nothing of theirs stays on the everyday side, their
-      // lists, device sessions and pairs neither (read before the row goes)
-      if (everyday && !c.group) await _devForget(c.id, sessions: true);
+      // linked devices: their device state goes with the chat's rows
+      // (vault_life.dart), and the everyday side hears on their pairs no
+      // more (read before the row goes)
+      final ikey = everyday && !c.group ? await _devHiding(c.id) : null;
       marks = marks.hiding(c);
       await m.copyIn(c, marks);
       if (everyday) {
@@ -644,6 +663,7 @@ extension AppStateVault on AppState {
         await _router.load();
         await _placeFiles(files, from, vault.container);
         await _router.settle(c.id);
+        if (ikey != null) await _devMoved(ikey, toVault: true);
       } else {
         // no list: the commit point is the chat leaving the decoy's
         // database, and the vault's next open puts right what a crash
@@ -683,6 +703,10 @@ extension AppStateVault on AppState {
       // the commit point: from here it shows without the vault again
       await m.commitOut(c);
       if (everyday) await _router.load();
+      if (everyday && !c.group) {
+        final ikey = await _devShownKey(c.id);
+        if (ikey != null) await _devMoved(ikey, toVault: false);
+      }
       marks = marks.done(c);
       await m.dropVault(c, marks);
       // its draft went out with its rows: the vault's copy in memory goes
@@ -692,6 +716,18 @@ extension AppStateVault on AppState {
     }
     if (everyday) await _recard(m);
     return n;
+  }
+
+  // linked devices: chats back on the everyday side, their pairs heard on
+  // from there and no more by the vault's cards, and lists both ways
+  Future<void> _devShown(List<ChatRef> chats) async {
+    await _listenHiddenDevices();
+    for (final c in chats) {
+      if (c.group) continue;
+      final ikey = await _devShownKey(c.id);
+      if (ikey != null) await _deviceReceive?.listenAll(only: ikey);
+      unawaited(_devicesShown(c.id));
+    }
   }
 
   // every chat the vault holds listed, with a card from its rows

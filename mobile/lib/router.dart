@@ -121,6 +121,7 @@ class RouterCard {
     this.verifiedKey,
     this.markRead = true,
     this.shots,
+    this.devices,
   });
 
   final String id;
@@ -141,6 +142,10 @@ class RouterCard {
   // while it is shut, as their row would say (chat_shots.dart)
   final ShotsWord? shots;
 
+  // linked devices: their device pairs to listen on while the vault is
+  // shut. null with none, and with the switch off
+  final HiddenDevices? devices;
+
   Map<String, Object> toJson() => {
     'h': id,
     'o': onion,
@@ -154,6 +159,7 @@ class RouterCard {
     'vk': verifiedKey ?? '',
     // one width whether set or not
     'ss': (shots ?? const ShotsWord(on: false, at: 0)).toWire(),
+    if (devices case final d? when d.pairs.isNotEmpty) 'dv': d.toJson(),
   };
 
   static RouterCard? fromJson(Object? j, {String? id}) {
@@ -174,7 +180,70 @@ class RouterCard {
       verifiedKey: vk is String && vk.isNotEmpty ? vk.toLowerCase() : null,
       markRead: vk is String,
       shots: ShotsWord.fromWire(j['ss']),
+      devices: HiddenDevices.fromJson(j['dv']),
     );
+  }
+}
+
+/// one device pair of a hidden chat's contact to listen on: their device
+/// and mine, their device's key (hex), the pair's seed (hex) when one is
+/// held, and whether its opener address is listened on too
+typedef HiddenPair = ({
+  int their,
+  int my,
+  String key,
+  String? seed,
+  bool opener,
+});
+
+/// what the everyday side listens on for a hidden chat's contact's devices
+/// while the vault is shut: their identity key (hex), the identity of mine
+/// they know, and the pairs. every line on them is sealed as it came
+class HiddenDevices {
+  const HiddenDevices(this.identity, this.ident, this.pairs);
+
+  final String identity;
+  final int ident;
+  final List<HiddenPair> pairs;
+
+  Map<String, Object> toJson() => {
+    'k': identity,
+    'i': ident,
+    'p': [
+      for (final p in pairs)
+        [p.their, p.my, p.key, p.seed ?? '', if (p.opener) 1 else 0],
+    ],
+  };
+
+  static HiddenDevices? fromJson(Object? j) {
+    if (j is! Map) return null;
+    final k = j['k'];
+    final i = j['i'];
+    final ps = j['p'];
+    if (k is! String || i is! int || ps is! List) return null;
+    final hex = RegExp(r'^[0-9a-f]+$');
+    if (k.length != 66 || !hex.hasMatch(k)) return null;
+    final pairs = <HiddenPair>[];
+    for (final p in ps) {
+      if (p is! List || p.length != 5) continue;
+      final [their, my, key, seed, opener] = p;
+      if (their is! int || my is! int || key is! String || seed is! String) {
+        continue;
+      }
+      if (their < 1 || their > 127 || my < 1 || my > 127) continue;
+      if (key.length != 66 || !hex.hasMatch(key)) continue;
+      if (seed.isNotEmpty && (seed.length != 64 || !hex.hasMatch(seed))) {
+        continue;
+      }
+      pairs.add((
+        their: their,
+        my: my,
+        key: key,
+        seed: seed.isEmpty ? null : seed,
+        opener: opener == 1,
+      ));
+    }
+    return pairs.isEmpty ? null : HiddenDevices(k, i, pairs);
   }
 }
 
@@ -223,6 +292,7 @@ class Unsealed {
     this.receipt,
     this.blockedDrop,
     this.reached,
+    this.deviceTag,
   });
 
   final String from;
@@ -251,6 +321,9 @@ class Unsealed {
   // no arrival: [from], whom the vault blocked, sent this uid while it was
   // shut. the vault notes it as it would have on arrival
   final String? blockedDrop;
+  // a line on a device pair of [from]'s, as it came: [wire] is its cipher,
+  // opened on the device's session the vault holds as it opens
+  final String? deviceTag;
 }
 
 // the tables, behind a seam so the router runs on a stand-in
@@ -979,6 +1052,20 @@ class VaultRouter {
 
   RouterCard? cardOf(String id) => _peers[id] ?? _members[id];
 
+  /// the hidden people whose devices are listened on, with their pairs
+  Map<String, HiddenDevices> get hiddenDevices => {
+    for (final c in _peers.values)
+      if (c.devices != null) c.id: c.devices!,
+  };
+
+  /// the hidden person whose card names [identity] (hex) for their devices
+  String? hiddenByIdentity(String identity) {
+    for (final c in _peers.values) {
+      if (c.devices?.identity == identity) return c.id;
+    }
+    return null;
+  }
+
   // a card written before cards kept the mark: the vault's rows are read
   // again as it opens
   bool get marksUnread =>
@@ -1024,6 +1111,7 @@ class VaultRouter {
         'rf': ?a.resendSince,
         'a': ?a.wrapped,
         'bd': ?a.blockedDrop,
+        'dt': ?a.deviceTag,
         if (a.reached case final r?) ...{'rl': r.from, 'rh': r.until},
       }),
     );
@@ -1152,6 +1240,7 @@ class VaultRouter {
         keyChanged: j['kc'] == 1,
         receipt: j['rc'] is String ? j['rc'] as String : null,
         blockedDrop: j['bd'] is String ? j['bd'] as String : null,
+        deviceTag: j['dt'] is String ? j['dt'] as String : null,
         reached: rl is int && rh is int && rl <= rh
             ? (from: rl, until: rh)
             : null,

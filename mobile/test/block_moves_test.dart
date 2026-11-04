@@ -2,10 +2,16 @@
 // a group moved into the vault, or back, takes its people's block spans
 // and the uids dropped from them along with their rows. someone the move
 // takes out of one side leaves none of it there, so a span left open never
-// holds over them if they are added again. the move's own sql, run on real
-// sqlite with the vault attached; with no sqlite the tests are skipped
+// holds over them if they are added again. a person's device state (linked
+// devices) goes with their own chat, and only with the switch on. the
+// move's own sql, run on real sqlite with the vault attached; with no
+// sqlite the tests are skipped
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/devices/device_state.dart' show linkedDevicesForTest;
 import 'package:kryfo/main.dart' show HaloDb, blockTables, goneKey;
+import 'package:kryfo/router.dart';
 import 'package:kryfo/vault_life.dart';
 
 import 'sqlite_ffi.dart';
@@ -379,6 +385,240 @@ void main() {
     expect(await nonces('main'), ['n-f', 'n-old', 'n-other']);
     expect(await last('main'), 490000);
   }, skip: skip);
+
+  // a person's devices
+  {
+    final fKey = '05${'aa' * 32}';
+    final oKey = '05${'bb' * 32}';
+    // a KDL2 as stored: the phone, then devices 5 and 9, a signature
+    List<int> list() => [
+      ...ascii.encode('KDL2'),
+      ...List.filled(33, 5),
+      ...List.filled(8, 0),
+      3,
+      for (final (id, b) in [(1, 0x05), (5, 0x55), (9, 0x99)]) ...[
+        id,
+        ...List.filled(33, b),
+        0,
+        0,
+        3,
+        9,
+        id == 1 ? 1 : 0,
+      ],
+      ...List.filled(64, 7),
+    ];
+
+    Future<SqliteMem> world() async {
+      final db = await _world();
+      for (final s in ['main', 'v']) {
+        for (final t in [
+          'CREATE TABLE $s.dev_lists (ident INTEGER, owner TEXT, version '
+              'INTEGER, wire BLOB, from_invite INTEGER DEFAULT 0, sent_ok '
+              'INTEGER DEFAULT 0, PRIMARY KEY (ident, owner))',
+          'CREATE TABLE $s.dev_proven (ident INTEGER, peer TEXT, key TEXT, '
+              'PRIMARY KEY (ident, peer, key))',
+          'CREATE TABLE $s.dev_pq (ident INTEGER, peer TEXT, '
+              'PRIMARY KEY (ident, peer))',
+          'CREATE TABLE $s.dev_quiet (ident INTEGER, peer TEXT, device '
+              'INTEGER, key TEXT, PRIMARY KEY (ident, peer, device))',
+          'CREATE TABLE $s.dev_held_openers (id INTEGER PRIMARY KEY '
+              'AUTOINCREMENT, ident INTEGER, peer TEXT, device INTEGER, '
+              'cipher BLOB, came_at INTEGER)',
+          'CREATE TABLE $s.dev_pushes (ident INTEGER, peer TEXT, version '
+              'INTEGER, kind TEXT, due_at INTEGER, '
+              'PRIMARY KEY (ident, peer, version, kind))',
+          'CREATE TABLE $s.dev_out (uid TEXT, ident INTEGER, peer TEXT, '
+              'device INTEGER, at INTEGER, '
+              'PRIMARY KEY (uid, ident, peer, device))',
+          'CREATE TABLE $s.dev_openers (ident INTEGER, peer TEXT, '
+              'their_device INTEGER, my_device INTEGER, at INTEGER, key TEXT, '
+              'PRIMARY KEY (ident, peer, their_device, my_device))',
+          'CREATE TABLE $s.dev_marks (ident INTEGER, peer TEXT, kind TEXT, '
+              'key TEXT, at INTEGER, PRIMARY KEY (ident, peer, kind, key))',
+          'CREATE TABLE $s.pairs (ident INTEGER, peer TEXT, their_device '
+              'INTEGER, my_device INTEGER, conv INTEGER, seed BLOB, '
+              'PRIMARY KEY (ident, peer, their_device, my_device))',
+          'CREATE TABLE $s.sessions (ident INTEGER, address TEXT, device_id '
+              'INTEGER, record BLOB, PRIMARY KEY (ident, address, device_id))',
+          'ALTER TABLE $s.contacts ADD COLUMN verified_key TEXT',
+          if (s == 'v')
+            'ALTER TABLE v.block_spans ADD COLUMN listen_from INTEGER',
+        ]) {
+          await db.execute(t);
+        }
+      }
+      await db.execute(
+        "UPDATE main.contacts SET ikey = '$fKey' WHERE halo_id = '$_f'",
+      );
+      await db.execute(
+        'INSERT INTO main.contacts (halo_id, onion, xpub, first_seen, '
+        "last_seen, accepted, ikey) VALUES ('other', 'o', 'x', 1, 1, 1, "
+        "'$oKey')",
+      );
+      for (final k in [fKey, oKey]) {
+        await db.execute(
+          'INSERT INTO main.dev_lists (ident, owner, version, wire) '
+          'VALUES (0, ?, 7, ?)',
+          [k, list()],
+        );
+        for (final t in ['dev_proven', 'dev_quiet']) {
+          await db.execute(
+            'INSERT INTO main.$t (ident, peer, ${t == 'dev_quiet' ? 'device, ' : ''}key) '
+            "VALUES (0, ?, ${t == 'dev_quiet' ? '9, ' : ''}'k')",
+            [k],
+          );
+        }
+        await db.execute('INSERT INTO main.dev_pq VALUES (0, ?)', [k]);
+        await db.execute(
+          'INSERT INTO main.dev_held_openers (ident, peer, device, cipher, '
+          "came_at) VALUES (0, ?, 9, x'01', 1)",
+          [k],
+        );
+        await db.execute(
+          "INSERT INTO main.dev_pushes VALUES (0, ?, 7, 'add', 1)",
+          [k],
+        );
+        await db.execute("INSERT INTO main.dev_out VALUES ('u', 0, ?, 5, 1)", [
+          k,
+        ]);
+        await db.execute(
+          "INSERT INTO main.dev_openers VALUES (0, ?, 5, 1, 0, 'k')",
+          [k],
+        );
+        await db.execute(
+          "INSERT INTO main.dev_marks VALUES (0, ?, 'dq', '5', 1)",
+          [k],
+        );
+        // the phone pair, the chat's own, and a device pair with its seed
+        await db.execute(
+          'INSERT INTO main.pairs VALUES (0, ?, 1, 1, 3, NULL), '
+          '(0, ?, 5, 1, 4, ?)',
+          [k, k, List.filled(32, 0x11)],
+        );
+      }
+      for (final who in [_f, 'other']) {
+        await db.execute(
+          "INSERT INTO main.sessions VALUES (0, ?, 1, x'01'), "
+          "(0, ?, 5, x'05')",
+          [who, who],
+        );
+      }
+      return db;
+    }
+
+    // what [s] holds of each of the two: device rows, pairs, sessions
+    Future<Map<String, int>> held(SqliteMem db, String s, String k) async {
+      final out = <String, int>{};
+      for (final t in [
+        'dev_lists',
+        'dev_proven',
+        'dev_pq',
+        'dev_quiet',
+        'dev_held_openers',
+        'dev_pushes',
+        'dev_out',
+        'dev_openers',
+        'dev_marks',
+      ]) {
+        final col = t == 'dev_lists' ? 'owner' : 'peer';
+        out[t] = (await db.rawQuery('SELECT 1 FROM $s.$t WHERE $col = ?', [
+          k,
+        ])).length;
+      }
+      out['pairs'] = (await db.rawQuery(
+        'SELECT 1 FROM $s.pairs WHERE peer = ? AND their_device != 1',
+        [k],
+      )).length;
+      out['phone pair'] = (await db.rawQuery(
+        'SELECT 1 FROM $s.pairs WHERE peer = ? AND their_device = 1',
+        [k],
+      )).length;
+      final who = k == fKey ? _f : 'other';
+      out['sessions'] = (await db.rawQuery(
+        'SELECT 1 FROM $s.sessions WHERE address = ? AND device_id >= 2',
+        [who],
+      )).length;
+      out['phone session'] = (await db.rawQuery(
+        'SELECT 1 FROM $s.sessions WHERE address = ? AND device_id = 1',
+        [who],
+      )).length;
+      return out;
+    }
+
+    Map<String, int> all(int devices, int phone) => {
+      for (final t in [
+        'dev_lists',
+        'dev_proven',
+        'dev_pq',
+        'dev_quiet',
+        'dev_held_openers',
+        'dev_pushes',
+        'dev_out',
+        'dev_openers',
+        'dev_marks',
+        'pairs',
+      ])
+        t: devices,
+      'phone pair': phone,
+      'sessions': devices,
+      'phone session': phone,
+    };
+
+    tearDown(() => linkedDevicesForTest = false);
+
+    test('go into the vault with their chat and back, none dropped; the '
+        'phone pair and its session stay with the store, another\'s stay '
+        'where they are; the card names the pairs to hear on', () async {
+      linkedDevicesForTest = true;
+      final db = await world();
+      final mover = SqlChatMover(_NoDb(), _NoDb());
+      await mover.moveRowsOn(db, const ChatRef(_f), intoVault: true);
+      expect(await held(db, 'v', fKey), all(1, 0));
+      expect(await held(db, 'main', fKey), all(0, 1));
+      expect(await held(db, 'main', oKey), all(1, 1));
+      expect(await held(db, 'v', oKey), all(0, 0));
+      // device 5 has a session and a seed: its seeded pair; 9 has neither:
+      // its opener address
+      final card = RouterCard.fromJson(
+        jsonDecode((await hiddenCard(db, const ChatRef(_f)))!),
+        id: _f,
+      )!;
+      final d = card.devices!;
+      expect(d.identity, fKey);
+      expect(d.ident, 0);
+      expect(d.pairs, [
+        (their: 5, my: 1, key: '55' * 33, seed: '11' * 32, opener: false),
+        (their: 9, my: 1, key: '99' * 33, seed: null, opener: true),
+      ]);
+      expect(
+        RouterCard.fromJson(jsonDecode(peerCard(card)))!.devices!.pairs,
+        d.pairs,
+      );
+      await mover.moveRowsOn(db, const ChatRef(_f), intoVault: false);
+      expect(await held(db, 'main', fKey), all(1, 1));
+      expect(await held(db, 'v', fKey), all(0, 0));
+    }, skip: skip);
+
+    test('with the switch off nothing of them moves and the card is as '
+        'before', () async {
+      final db = await world();
+      final mover = SqlChatMover(_NoDb(), _NoDb());
+      await mover.moveRowsOn(db, const ChatRef(_f), intoVault: true);
+      expect(await held(db, 'main', fKey), all(1, 1));
+      expect(await held(db, 'v', fKey), all(0, 0));
+      // rows a switched build left there are not read for the card either
+      await db.execute(
+        'INSERT INTO v.dev_lists (ident, owner, version, wire) '
+        'VALUES (0, ?, 7, ?)',
+        [fKey, list()],
+      );
+      final card = (await hiddenCard(db, const ChatRef(_f)))!;
+      expect(jsonDecode(card), isNot(contains('dv')));
+      final r = RouterCard.fromJson(jsonDecode(card), id: _f)!;
+      expect(r.devices, isNull);
+      expect(peerCard(r), card);
+    }, skip: skip);
+  }
 
   for (final side in ['main', 'v']) {
     test(

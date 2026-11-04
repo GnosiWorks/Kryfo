@@ -2,9 +2,9 @@
 // receiving from devices in the app (device_receive.dart): a line on a
 // device pair is opened and admitted there before anything is shown, and a
 // contact's phone's list and bundle words are taken from the frames it
-// sends. the everyday side only: a hidden chat's device pairs are never
-// heard, and nothing of a vault contact's is written here. nothing here
-// runs with the switch off
+// sends. a hidden chat's go to the open vault's side, and are sealed for
+// it while it is shut (devices_vault_app.dart). nothing here runs with the
+// switch off
 
 part of '../main.dart';
 
@@ -129,6 +129,9 @@ void _bootDeviceReceive(DeviceState ds, DeviceSend send) {
     try {
       await pushPairSeeds();
       await _deviceReceive?.listenAll();
+      // a hidden chat's device pairs, as the vault's cards name them
+      final app = _madeApp;
+      if (app != null && app._router.loaded) await app._listenHiddenDevices();
     } catch (e) {
       dlog('devices: device pairs not heard (${e.runtimeType})');
     }
@@ -147,16 +150,60 @@ extension AppStateDevices on AppState {
     int? wrappedAt,
     Reached? reached,
   }) async {
-    final r = _deviceReceive;
     // the state is not loaded yet: it comes again
-    if (r == null) throw StateError('devices: not loaded');
+    if (_deviceReceive == null) throw StateError('devices: not loaded');
+    await _afterClose();
+    // a hidden chat's contact: the open vault's side opens it, a shut one
+    // takes it sealed as it came
+    // a chat on the move: its rows land on their side first
+    if (_moveDone != null) {
+      final who =
+          await _devHiddenOfTag(m.peer) ?? await _devEverydayOfTag(m.peer);
+      if (who != null) await _afterMove(who, null);
+    }
+    final hidden = await _devHiddenOfTag(m.peer);
+    final DeviceReceive? r;
+    if (hidden != null) {
+      final to = _routeOf(hidden, null);
+      if (to == RouteTo.dropped) {
+        await live.markSeen(h);
+        arrived();
+        return;
+      }
+      if (to == RouteTo.sealed && _relayOpened[h] == null) {
+        await _sealDeviceLine(
+          hidden,
+          m.peer,
+          m.cipher,
+          wrappedAt: wrappedAt,
+          reached: reached,
+        );
+        await live.markSeen(h);
+        arrived();
+        return;
+      }
+      r = _vaultDevReceive;
+      // the vault's side is not running yet: it comes again
+      if (r == null) throw StateError('devices: the vault\'s not loaded');
+    } else {
+      r = _deviceReceive;
+    }
+    final at = hidden;
+    if (at != null) _arriving[at] = (_arriving[at] ?? 0) + 1;
     final before = _relayOpened[h];
     DevCopyIn? got;
-    if (before != null) {
-      got = (peer: before.id, frame: before.plain);
-    } else {
-      got = await r.receive(m.peer, m.cipher);
-      if (got != null) _keepOpened(h, got.peer, got.frame, epoch);
+    try {
+      if (before != null) {
+        got = (peer: before.id, frame: before.plain);
+      } else {
+        got = await r!.receive(m.peer, m.cipher);
+        if (got != null) _keepOpened(h, got.peer, got.frame, epoch);
+      }
+    } finally {
+      if (at != null) {
+        final n = (_arriving[at] ?? 1) - 1;
+        n > 0 ? _arriving[at] = n : _arriving.remove(at);
+      }
     }
     if (got == null) {
       await live.markSeen(h);
@@ -189,16 +236,62 @@ extension AppStateDevices on AppState {
     reached: reached,
   );
 
-  // the device words of a frame from a contact's phone, taken under the
-  // remote its open was admitted with. true when the frame says nothing
-  // else: it is never shown
-  Future<bool> _devPhoneFrames(String peer, String wire) async {
+  // the everyday contact a device-pair tag names, by their row
+  Future<String?> _devEverydayOfTag(String tag) async {
+    final t = deviceTagOf(tag);
+    if (t == null) return null;
+    final r = await (await live.open()).query(
+      'contacts',
+      columns: ['halo_id'],
+      where: 'ikey = ? AND accepted = 1',
+      whereArgs: ['05${t.peerX}'],
+      limit: 1,
+    );
+    return r.isEmpty ? null : r.first['halo_id'] as String;
+  }
+
+  // the hidden chat's contact a device-pair tag names: by the open vault's
+  // rows, or by the cards while it is shut. null for anyone else
+  Future<String?> _devHiddenOfTag(String tag) async {
+    final t = deviceTagOf(tag);
+    if (t == null) return null;
+    final identity = '05${t.peerX}';
+    final v = _openVault;
+    if (v != null) {
+      final r = await (await v.open()).query(
+        'contacts',
+        columns: ['halo_id'],
+        where: 'ikey = ? AND accepted = 1',
+        whereArgs: [identity],
+        limit: 1,
+      );
+      if (r.isNotEmpty) return r.first['halo_id'] as String;
+    }
+    final c = _router.hiddenByIdentity(identity);
+    return c != null && _devHidden(c) ? c : null;
+  }
+
+  // the device words of a frame from a contact's phone, taken where their
+  // device state is ([home]) under the remote its open was admitted with,
+  // or, opened from the seal, the one their phone's session runs on. true
+  // when the frame says nothing else: it is never shown
+  Future<bool> _devPhoneFrames(
+    String peer,
+    String wire, {
+    HaloDb? home,
+    bool unsealed = false,
+  }) async {
     if (!linkedDevicesOn) return false;
     final only = deviceWordsOnly(wire);
-    final r = _deviceReceive;
+    final at = home ?? live;
+    final r = identical(at, live)
+        ? _deviceReceive
+        : identical(at, _vaultDevOf)
+        ? _vaultDevReceive
+        : null;
     if (r == null || !hasDeviceWords(wire)) return only;
     try {
-      final db = await live.open();
+      final db = await at.open();
       final row = await db.query(
         'contacts',
         columns: ['ident', 'ikey'],
@@ -207,7 +300,11 @@ extension AppStateDevices on AppState {
         limit: 1,
       );
       final ikey = row.isEmpty ? null : row.first['ikey'] as String?;
-      final remote = ikey == null ? null : _phoneRemoteOf(peer, ikey);
+      final remote = ikey == null
+          ? null
+          : unsealed
+          ? await _heldPhoneRemote(peer, ikey)
+          : _phoneRemoteOf(peer, ikey);
       if (remote == null) return only;
       await r.takePhone(
         row.first['ident'] as int? ?? kMainIdent,

@@ -105,9 +105,12 @@ class DeviceSend {
     required this.sessions,
     required this.wire,
     this.listen,
+    Future<Database> Function()? mine,
+    this.noOwn = false,
     int Function()? clock,
     Random? random,
-  }) : _clock = clock ?? (() => DateTime.now().millisecondsSinceEpoch),
+  }) : mine = mine ?? db,
+       _clock = clock ?? (() => DateTime.now().millisecondsSinceEpoch),
        _rand = random ?? Random.secure();
 
   final DeviceState state;
@@ -118,6 +121,14 @@ class DeviceSend {
   /// the device sessions of my identity [ident]
   final Future<DeviceSessions> Function(int ident) sessions;
   final DeviceWire wire;
+
+  /// where my own state is (my identities, my list, the pool, my asks):
+  /// the everyday container, also when [db] is the open vault
+  final Future<Database> Function() mine;
+
+  /// the open vault's: a hidden chat's copies go to the contact's
+  /// devices and never to mine
+  final bool noOwn;
 
   /// listens on a device pair, [arg] as the engine names it
   /// ("x/their/my.seed"): a pair given a seed here is heard on from then on
@@ -165,6 +176,7 @@ class DeviceSend {
           'devices': c.devices,
           'phone_classic': c.phoneClassic,
           'now': now,
+          if (noOwn) 'no_own': true,
         }),
       );
     } on DevRefused catch (e) {
@@ -184,6 +196,7 @@ class DeviceSend {
     final ask = <int>[];
     String? phoneFrame;
     for (final s in slots) {
+      if (noOwn && s.own) continue;
       if (isPhone(s)) {
         phoneFrame = frameFor == null ? frame : frameFor(s, frame);
         continue;
@@ -593,8 +606,8 @@ class DeviceSend {
     r['device'],
   ];
 
-  Future<int> _myDevice(DatabaseExecutor d, int ident) async {
-    final r = await d.query(
+  Future<int> _myDevice(DatabaseExecutor _, int ident) async {
+    final r = await (await mine()).query(
       'identities',
       columns: ['dev_id'],
       where: 'id = ?',
@@ -946,7 +959,7 @@ class DeviceSend {
   Future<void> devicesShown(int ident, String identity) async {
     if (!linkedDevicesOn) return;
     final d = await db();
-    final held = await d.query(
+    final held = await (await mine()).query(
       'dev_lists',
       columns: ['version'],
       where: "ident = ? AND owner = 'me'",
@@ -1070,6 +1083,7 @@ class DeviceSend {
               'devices': who.c.devices,
               'phone_classic': who.c.phoneClassic,
               'now': now,
+              if (noOwn) 'no_own': true,
             }),
           );
           final kept = per;
@@ -1091,7 +1105,11 @@ class DeviceSend {
               for (final dev in theirs) {
                 final want = took.containsKey(dev) ? newMine : add;
                 if (want.isEmpty) continue;
-                (took[dev] ??= []).addAll(await _take(t, ident, want, now));
+                // the pool is mine: taken where it is, before the push
+                // row notes it, so a crash spends a bundle and never hands
+                // it twice
+                final pool = identical(mine, db) ? t : await mine();
+                (took[dev] ??= []).addAll(await _take(pool, ident, want, now));
               }
               await _pushRows(t, rs, {
                 'bundles': jsonEncode({
@@ -1256,7 +1274,7 @@ class DeviceSend {
     int ident,
     int device,
   ) async {
-    final d = await db();
+    final d = await mine();
     final held = await d.query(
       'dev_asks',
       columns: ['asked_at'],
