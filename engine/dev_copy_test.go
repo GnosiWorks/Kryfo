@@ -56,3 +56,59 @@ func TestACopiedListOnlyOnALinkedDevice(t *testing.T) {
 		t.Fatalf("another identity of mine: %s", got)
 	}
 }
+
+// a list my phone passed on: on a linked device alone, inside the session
+// whose remote is my phone, for a contact, forward only
+func TestAListFromMyPhoneOnlyOnItsSession(t *testing.T) {
+	l := devTestShim(t)
+	me, bob, cy := newDevAcct(t, l), newDevAcct(t, l), newDevAcct(t, l)
+	desk := newDevSigner(t, l)
+	me.link(t, desk.pub, false)
+	outcome := func(answer string) string {
+		var out devOut
+		if err := json.Unmarshal([]byte(answer), &out); err != nil {
+			t.Fatal(err)
+		}
+		if out.Err != "" {
+			return out.Err
+		}
+		return out.Outcome
+	}
+	phoneList := func(who *devAcct, wire []byte, remote string) string {
+		return outcome(devSessionJSON("phone_list", devJSON(t, map[string]any{
+			"ident": 0, "identity": hexKey(who.id.pub), "list": wire, "remote": remote,
+		})))
+	}
+	// the phone itself: never
+	mustOK(t, devCallJSON("load", devJSON(t, map[string]any{
+		"mine":     []map[string]any{{"ident": 0, "identity": hexKey(me.id.pub)}},
+		"contacts": []map[string]any{{"ident": 0, "identity": hexKey(bob.id.pub)}},
+	})))
+	if got := phoneList(bob, bob.wire, hexKey(me.id.pub)); got != "source" {
+		t.Fatalf("a passed list on the phone: %s", got)
+	}
+	mustOK(t, devCallJSON("load", devJSON(t, map[string]any{
+		"mine":     []map[string]any{{"ident": 0, "identity": hexKey(me.id.pub), "key": hexKey(desk.pub)}},
+		"contacts": []map[string]any{{"ident": 0, "identity": hexKey(bob.id.pub)}},
+	})))
+	first := bob.wire
+	// only inside my phone's session: not bob's, not the desk's own
+	for _, r := range []string{hexKey(bob.id.pub), hexKey(desk.pub), hexKey(cy.id.pub)} {
+		if got := phoneList(bob, first, r); got != "source" {
+			t.Fatalf("a passed list on another session: %s", got)
+		}
+	}
+	if got := phoneList(bob, first, hexKey(me.id.pub)); got != "first" {
+		t.Fatalf("bob's list from my phone: %s", got)
+	}
+	bob.link(t, newDevSigner(t, l).pub, false)
+	if got := phoneList(bob, bob.wire, hexKey(me.id.pub)); got != "changed" {
+		t.Fatalf("bob's newer list from my phone: %s", got)
+	}
+	if got := phoneList(bob, first, hexKey(me.id.pub)); got != "rollback" {
+		t.Fatalf("bob's older list from my phone: %s", got)
+	}
+	if got := phoneList(cy, cy.wire, hexKey(me.id.pub)); got != "unknown" {
+		t.Fatalf("a stranger's list from my phone: %s", got)
+	}
+}

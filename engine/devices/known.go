@@ -31,6 +31,7 @@ type From struct {
 	invite bool
 	link   bool
 	copy   bool
+	phone  bool
 	remote Key
 }
 
@@ -47,6 +48,12 @@ func FromLink() From { return From{link: true} }
 // first list only, never moves one held, and never carries a bundle or an
 // own list. only the engine's copy call builds one.
 func FromCopy() From { return From{copy: true} }
+
+// FromMyPhone is a contact's list my own phone took and passed on to this
+// linked device, inside the session whose remote is my identity key. it
+// moves a list forward only, never answers a rollback, never carries a
+// bundle or an own list. only the engine's session door builds one.
+func FromMyPhone() From { return From{phone: true} }
 
 // FromSession is what came inside a session whose remote identity is
 // remote, as ks_decrypt_* returned it. only the session layer builds one;
@@ -149,7 +156,12 @@ func (k *known) accept(l *List, from From) (*List, Outcome, error) {
 		}
 		return nil, 0, ErrSource
 	}
-	if from.invite {
+	if from.phone {
+		// my phone's word on a list the contact signed: forward only
+		if answering {
+			return nil, 0, ErrSource
+		}
+	} else if from.invite {
 		// an invite list names the device that answers its first
 		// contacts, and counts only until the session sends one
 		if !answering || (k.cur != nil && !k.fromInvite) {
@@ -166,7 +178,7 @@ func (k *known) accept(l *List, from From) (*List, Outcome, error) {
 	case l.Version < k.cur.Version:
 		// only the identity's own phone learns what is held, so it can
 		// sign above it
-		if !from.invite && from.remote == k.identity {
+		if !from.invite && !from.phone && from.remote == k.identity {
 			return nil, 0, &RollbackError{Held: k.cur.Wire()}
 		}
 		return nil, 0, ErrRollback
@@ -192,7 +204,7 @@ func (k *known) accept(l *List, from From) (*List, Outcome, error) {
 // for the phone. it comes from the identity's own session or the device's,
 // never one device handing over another's, so an old bundle is not replayed
 func (k *known) takeBundle(p []byte, from From) (*Block, error) {
-	if from.invite || from.link || from.copy || !k.vouches(from.remote) {
+	if from.invite || from.link || from.copy || from.phone || !k.vouches(from.remote) {
 		return nil, ErrSource
 	}
 	b, err := ParseBundle(p, k.identity)

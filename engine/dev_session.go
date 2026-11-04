@@ -66,6 +66,8 @@ func (d *devState) session(op string, a *devArgs, out *devOut) error {
 		return nil
 	case "own_set":
 		return d.ownSet(id, a, devices.FromSession(remote), out)
+	case "phone_list":
+		return d.phoneList(id, remote, a, out)
 	}
 	return errors.New("no such call")
 }
@@ -160,6 +162,21 @@ func (d *devState) ownSet(id devices.Key, a *devArgs, from devices.From, out *de
 		out.Gone = append(out.Gone, entryOut(e))
 	}
 	return err
+}
+
+// a contact's list my phone took and passed on to this linked device: only
+// inside the session whose remote is my identity key (my phone's), never
+// on the phone itself, only for a contact of the identity a.Ident, and
+// forward only (devices.FromMyPhone)
+func (d *devState) phoneList(id, remote devices.Key, a *devArgs, out *devOut) error {
+	mine, ok := d.idents[a.Ident]
+	if !ok || d.mine[mine].key == mine || remote != mine {
+		return devices.ErrSource
+	}
+	if i, ok := d.peers[id]; !ok || i != a.Ident {
+		return devices.ErrUnknown
+	}
+	return d.accept(id, a.List, devices.FromMyPhone(), out)
 }
 
 // the phone's own list of my identity a.Ident, as it signed it: the
