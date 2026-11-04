@@ -384,6 +384,8 @@ extension AppStateHeal on AppState {
         held: held,
         mine: ss.identity.public,
         nowMs: now,
+        restoredAt: await restoredAt(),
+        lastIssued: await lastHealOf(await on.open(), peer),
       );
       if (why != null) {
         dlog('heal: refused (${why.name})');
@@ -407,6 +409,7 @@ extension AppStateHeal on AppState {
         ss.ident,
         heal.nonce,
         nowMs: now,
+        peer: peer,
       )) {
         dlog('heal: a nonce seen already');
         return;
@@ -423,6 +426,7 @@ extension AppStateHeal on AppState {
       }
       _healBuiltAt[peer] = now;
       _healPending.remove(peer);
+      await keepLastHeal(await on.open(), peer, heal.issued);
       // a classic chat a heal moved to pq: the restart is done, and its 15
       // days begin, so the upkeep sends no KDB1 for it
       final info = await ss.sessionInfo(peer);

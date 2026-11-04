@@ -36,7 +36,7 @@ import 'main.dart'
         AppStateSession,
         AppStateIdentity;
 import 'router.dart' show scrubHidden;
-import 'heal.dart' show kRestoreAfterPref, olderContacts;
+import 'heal.dart' show kRestoreAfterPref, kRestoreCutPref, olderContacts;
 import 'devchat/dev_gate.dart' show isDevId;
 import 'signal_session.dart' show kRestoredFromPref, kSessionsRestoredPref;
 import 'devchat/dev_chat.dart' show scrubDevAnon;
@@ -443,6 +443,7 @@ Future<void> _livesHereNow(Object? made) async {
   // and what follows a restore runs once on the next start: invites and
   // session prekeys made again, linked devices cut off, heals sent
   await prefs.setInt(kRestoreAfterPref, made is int && made > 0 ? made : 0);
+  await prefs.setInt(kRestoreCutPref, DateTime.now().millisecondsSinceEpoch);
 }
 
 // what the shade holds came for the account just replaced. a decoy's
