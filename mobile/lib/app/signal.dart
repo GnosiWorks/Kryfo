@@ -373,8 +373,11 @@ Future<void> _devOpened(
 ) async {
   final ds = _deviceState;
   if (ds == null || isDevId(peer)) return;
+  // a hidden chat's go to the open vault; nothing while it is shut
+  final home = _devHomeDb(peer);
+  if (home == null) return;
   try {
-    final db = await live.open();
+    final db = await home.open();
     final row = await db.query(
       'contacts',
       columns: ['ident', 'ikey'],
@@ -398,11 +401,9 @@ Future<void> _devOpened(
     // filed (devices_receive_app.dart), and only after it was admitted
     _phoneRemotes[peer] = (identity: ikey, remote: sr);
     // they answered: a list that went to them before is taken
-    await _deviceSend?.heard(
-      ident,
-      ikey,
-      DateTime.now().millisecondsSinceEpoch,
-    );
+    await _devSendFor(
+      peer,
+    )?.heard(ident, ikey, DateTime.now().millisecondsSinceEpoch);
   } on DevRefused catch (e) {
     dlog('devices: an open not admitted (${e.why})');
   } catch (e) {
@@ -419,6 +420,18 @@ final _phoneRemotes = <String, ({String identity, SessionRemote remote})>{};
 SessionRemote? _phoneRemoteOf(String peer, String identity) {
   final r = _phoneRemotes[peer];
   return r != null && r.identity == identity ? r.remote : null;
+}
+
+/// the remote [peer]'s phone session runs on now, as libsignal holds it,
+/// when it is [identity]: a frame of theirs sealed for the hidden chats
+/// opened on that session, and its device words are taken under it as the
+/// vault opens. the phone's session is pinned to the identity, so another
+/// key there gives none
+Future<SessionRemote?> _heldPhoneRemote(String peer, String identity) async {
+  final ss = await signalFor(peer);
+  final k = ss == null ? null : await ss.sessionIdentity(peer);
+  if (k == null || devHex(k) != identity) return null;
+  return SessionRemote.opened(k);
 }
 
 /// a copy from [identity]'s [device] (a contact's, or one of mine) opened

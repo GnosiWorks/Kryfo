@@ -1554,18 +1554,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'Không làm sạch được gif đó';
 
   @override
-  String get chatTorIsNotUp => 'Tor chưa sẵn sàng · gửi không kèm xem trước';
+  String get chatTorIsNotUp => 'Tor chưa kết nối · không có xem trước liên kết';
 
   @override
   String get chatCouldnTReachIt =>
-      'Không truy cập được · gửi không kèm xem trước';
+      'Không truy cập được trang · không có xem trước liên kết';
 
   @override
   String get chatNoTitleCameBack =>
-      'Không lấy được tiêu đề · gửi không kèm xem trước';
+      'Trang này không có tiêu đề · không có xem trước liên kết';
 
   @override
-  String get chatCouldnTFetchIt => 'Không tải được · gửi không kèm xem trước';
+  String get chatCouldnTFetchIt => 'Không tải được bản xem trước';
 
   @override
   String get chatNoSignalSessionRe => 'Không có phiên Signal. Hãy ghép nối lại';
@@ -2545,19 +2545,18 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupChatTorIsNotUp =>
-      'Tor chưa sẵn sàng · gửi không kèm xem trước';
+      'Tor chưa kết nối · không có xem trước liên kết';
 
   @override
   String get groupChatCouldnTReachIt =>
-      'Không truy cập được · gửi không kèm xem trước';
+      'Không truy cập được trang · không có xem trước liên kết';
 
   @override
   String get groupChatNoTitleCameBack =>
-      'Không lấy được tiêu đề · gửi không kèm xem trước';
+      'Trang này không có tiêu đề · không có xem trước liên kết';
 
   @override
-  String get groupChatCouldnTFetchIt =>
-      'Không tải được · gửi không kèm xem trước';
+  String get groupChatCouldnTFetchIt => 'Không tải được bản xem trước';
 
   @override
   String get groupChatCamera => 'Máy ảnh';
@@ -11069,4 +11068,76 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatDropHereToSend => 'Thả vào đây để gửi';
+
+  @override
+  String get notesDropKeepsWords =>
+      'Ghi chú riêng lưu chữ. Hãy gửi tệp trong một cuộc trò chuyện.';
+
+  @override
+  String get voiceSeeTranscription => 'Xem bản chép lời';
+
+  @override
+  String get voiceTranscribing => 'Đang chép lời…';
+
+  @override
+  String get voiceHideTranscription => 'Ẩn';
+
+  @override
+  String get voiceShowOriginalOnly => 'Chỉ xem bản gốc';
+
+  @override
+  String get voiceCouldNotTranscribe => 'Không nghe rõ lời';
+
+  @override
+  String get voiceTranscriptLabel => 'Bản chép lời';
+
+  @override
+  String get voiceSettingsTitle => 'Chép lời giọng nói';
+
+  @override
+  String get voiceOnRow => 'Chép lời tin nhắn thoại';
+
+  @override
+  String get voiceOnHint => 'Được đề xuất dưới mỗi tin nhắn thoại';
+
+  @override
+  String get voiceOffDeletes => 'Tắt mục này sẽ xóa các bản chép lời đã lưu.';
+
+  @override
+  String get voiceModelTitle => 'Mô hình giọng nói';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'Một lần tải khoảng $size, cho mọi ngôn ngữ.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'Được tải qua Tor và giữ trên điện thoại này. Tin nhắn thoại của bạn không bao giờ rời khỏi máy.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'Được tải qua Tor và giữ trên máy tính này. Tin nhắn thoại của bạn không bao giờ rời khỏi máy.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'Tor chưa kết nối. Mô hình chỉ được tải qua Tor, hãy thử lại khi đã kết nối.';
+
+  @override
+  String get voiceModelRemoveTitle => 'Gỡ mô hình giọng nói?';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'Các bản chép lời đã có vẫn giữ nguyên. Bản mới cần mô hình lại.';
+
+  @override
+  String get voiceKeptNote =>
+      'Bản chép lời được lưu mã hóa cùng cuộc trò chuyện trên điện thoại này và bị xóa cùng nó.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'Bản chép lời được lưu mã hóa cùng cuộc trò chuyện trên máy tính này và bị xóa cùng nó.';
+
+  @override
+  String get voiceNotNow => 'Để sau';
 }

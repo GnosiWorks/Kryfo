@@ -27,7 +27,8 @@ const kWideLeave = 840.0;
 const kRailWidth = 76.0;
 const kListMin = 320.0;
 const kListMax = 420.0;
-const kListStart = 360.0;
+// telegram's and whatsapp's list is a little wider than the least
+const kListStart = 396.0;
 // the least the pane keeps beside the list
 const kPaneMin = 380.0;
 
@@ -567,6 +568,14 @@ class _ListDividerState extends State<ListDivider> {
   }
 }
 
+/// the open chat's row: a raised ground and a bar of the accent at its
+/// start, as telegram and whatsapp desktop mark it. the ground steps up
+/// from the list's in both themes and the words keep their contrast on
+/// it; the bar is the accent's own tone for words, 4.5:1 on every ground
+Color wideMarkGround() => HaloColors.surface3;
+
+Color wideMarkBar() => HaloColors.amberText;
+
 /// a row of the list with the mark of the chat open in the pane
 class WideMark extends StatelessWidget {
   final String id;
@@ -592,10 +601,20 @@ class WideMark extends StatelessWidget {
                       : const Duration(milliseconds: 180),
                   curve: Curves.easeOut,
                   child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    key: const ValueKey('wide-mark'),
+                    margin: const EdgeInsets.symmetric(horizontal: 6),
                     decoration: BoxDecoration(
-                      color: HaloColors.amber.withValues(alpha: 0.11),
-                      borderRadius: BorderRadius.circular(14),
+                      color: wideMarkGround(),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Container(
+                      width: 3,
+                      margin: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: wideMarkBar(),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
                   ),
                 ),

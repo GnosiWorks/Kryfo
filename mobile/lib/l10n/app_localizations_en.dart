@@ -1566,16 +1566,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'Could not clean that gif';
 
   @override
-  String get chatTorIsNotUp => 'Tor is not up yet · sending without';
+  String get chatTorIsNotUp => 'Tor isn\'t connected yet · no link preview';
 
   @override
-  String get chatCouldnTReachIt => 'Couldn\'t reach it · sending without';
+  String get chatCouldnTReachIt => 'Couldn\'t reach the page · no link preview';
 
   @override
-  String get chatNoTitleCameBack => 'No title came back · sending without';
+  String get chatNoTitleCameBack => 'That page has no title · no link preview';
 
   @override
-  String get chatCouldnTFetchIt => 'Couldn\'t fetch it · sending without';
+  String get chatCouldnTFetchIt => 'Couldn\'t load a preview';
 
   @override
   String get chatNoSignalSessionRe => 'No signal session: pair again';
@@ -2551,16 +2551,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupChatMessageUnavailable => 'Message unavailable';
 
   @override
-  String get groupChatTorIsNotUp => 'Tor is not up yet · sending without';
+  String get groupChatTorIsNotUp =>
+      'Tor isn\'t connected yet · no link preview';
 
   @override
-  String get groupChatCouldnTReachIt => 'Couldn\'t reach it · sending without';
+  String get groupChatCouldnTReachIt =>
+      'Couldn\'t reach the page · no link preview';
 
   @override
-  String get groupChatNoTitleCameBack => 'No title came back · sending without';
+  String get groupChatNoTitleCameBack =>
+      'That page has no title · no link preview';
 
   @override
-  String get groupChatCouldnTFetchIt => 'Couldn\'t fetch it · sending without';
+  String get groupChatCouldnTFetchIt => 'Couldn\'t load a preview';
 
   @override
   String get groupChatCamera => 'Camera';
@@ -11081,4 +11084,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatDropHereToSend => 'Drop here to send';
+
+  @override
+  String get notesDropKeepsWords =>
+      'Note to self keeps words. Send files in a chat.';
+
+  @override
+  String get voiceSeeTranscription => 'See transcription';
+
+  @override
+  String get voiceTranscribing => 'Transcribing…';
+
+  @override
+  String get voiceHideTranscription => 'Hide';
+
+  @override
+  String get voiceShowOriginalOnly => 'Show original only';
+
+  @override
+  String get voiceCouldNotTranscribe => 'Couldn\'t make out the words';
+
+  @override
+  String get voiceTranscriptLabel => 'Transcription';
+
+  @override
+  String get voiceSettingsTitle => 'Voice transcription';
+
+  @override
+  String get voiceOnRow => 'Transcribe voice messages';
+
+  @override
+  String get voiceOnHint => 'Offered under every voice message';
+
+  @override
+  String get voiceOffDeletes => 'Turning this off deletes saved transcripts.';
+
+  @override
+  String get voiceModelTitle => 'Speech model';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'One download of about $size, for every language.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'Downloaded over Tor and kept on this phone. Your voice messages never leave it.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'Downloaded over Tor and kept on this computer. Your voice messages never leave it.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'Tor isn\'t connected yet. The model downloads over Tor only, so try again once it is.';
+
+  @override
+  String get voiceModelRemoveTitle => 'Remove the speech model?';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'Transcripts already made stay. New ones need the model again.';
+
+  @override
+  String get voiceKeptNote =>
+      'Transcripts are kept with their chat, encrypted on this phone, and deleted with it.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'Transcripts are kept with their chat, encrypted on this computer, and deleted with it.';
+
+  @override
+  String get voiceNotNow => 'Not now';
 }

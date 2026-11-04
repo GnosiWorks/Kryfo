@@ -131,7 +131,8 @@ put you in danger, read all of it.
   data on the phone at all is better still.
 - what the everyday side keeps to reach a hidden chat while it is shut. the
   card it keeps for each one, readable with the everyday database key, holds
-  the keys and addresses needed to receive, and whether the chat blocks
+  the keys and addresses needed to receive, and those of their linked
+  devices, which shows how many they use, and whether the chat blocks
   screenshots and when that last changed.
 - someone who already knows you. a person who knows your three words or
   handle sees different ones in the decoy, and nothing that arrives for you

@@ -839,4 +839,39 @@ void main() {
     expect(early, lessThan(open));
     expect(debugDefaultTargetPlatformOverride, isNull);
   });
+
+  group('the first close to the tray, on linux too', () {
+    test('the words carry the line only when asked', () {
+      expect(trayWords().containsKey('hint'), isFalse);
+      expect(trayWords(locked: true).containsKey('hint'), isFalse);
+      expect(trayWords(hint: true)['hint'], l10n.desktopTrayStillRunning);
+    });
+
+    test('said once: kept after the runner says so', () async {
+      final kv = <String, String>{};
+      final run = DesktopRun(
+        tray: _Tray(),
+        place: null,
+        read: (k) => kv[k],
+        write: (k, v) async => kv[k] = v,
+      );
+      expect(run.trayHinted, isFalse);
+      await run.markHinted();
+      expect(run.trayHinted, isTrue);
+      expect(run.trayOn, isTrue);
+    });
+
+    test('the gtk runner says it as a notification, then tells dart', () {
+      final cc = File('linux/runner/my_application.cc').readAsStringSync();
+      expect(cc, contains('map_string(args, "hint")'));
+      final hide = cc.indexOf('gtk_widget_hide(widget);');
+      expect(cc.indexOf('say_tray_hint(self);', hide), greaterThan(hide));
+      expect(cc, contains('g_application_send_notification'));
+      expect(cc, contains('"hinted"'));
+      expect(
+        File('lib/desktop/desktop_start.dart').readAsStringSync(),
+        contains("call.method == 'hinted'"),
+      );
+    });
+  });
 }

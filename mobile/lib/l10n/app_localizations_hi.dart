@@ -1569,18 +1569,17 @@ class AppLocalizationsHi extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'उस GIF को साफ़ नहीं कर पाए';
 
   @override
-  String get chatTorIsNotUp => 'Tor अभी चालू नहीं हुआ · इसके बिना भेज रहे हैं';
+  String get chatTorIsNotUp => 'Tor अभी जुड़ा नहीं है · लिंक प्रीव्यू नहीं';
 
   @override
-  String get chatCouldnTReachIt =>
-      'वहाँ तक नहीं पहुँच पाए · इसके बिना भेज रहे हैं';
+  String get chatCouldnTReachIt => 'पेज तक नहीं पहुँच पाए · लिंक प्रीव्यू नहीं';
 
   @override
   String get chatNoTitleCameBack =>
-      'कोई शीर्षक नहीं मिला · इसके बिना भेज रहे हैं';
+      'इस पेज का कोई शीर्षक नहीं है · लिंक प्रीव्यू नहीं';
 
   @override
-  String get chatCouldnTFetchIt => 'इसे ला नहीं पाए · इसके बिना भेज रहे हैं';
+  String get chatCouldnTFetchIt => 'प्रीव्यू लोड नहीं हो पाया';
 
   @override
   String get chatNoSignalSessionRe => 'कोई Signal सत्र नहीं: दोबारा जोड़ें';
@@ -2559,19 +2558,18 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get groupChatTorIsNotUp =>
-      'Tor अभी चालू नहीं हुआ · इसके बिना भेज रहे हैं';
+      'Tor अभी जुड़ा नहीं है · लिंक प्रीव्यू नहीं';
 
   @override
   String get groupChatCouldnTReachIt =>
-      'वहाँ तक नहीं पहुँच पाए · इसके बिना भेज रहे हैं';
+      'पेज तक नहीं पहुँच पाए · लिंक प्रीव्यू नहीं';
 
   @override
   String get groupChatNoTitleCameBack =>
-      'कोई शीर्षक नहीं मिला · इसके बिना भेज रहे हैं';
+      'इस पेज का कोई शीर्षक नहीं है · लिंक प्रीव्यू नहीं';
 
   @override
-  String get groupChatCouldnTFetchIt =>
-      'इसे ला नहीं पाए · इसके बिना भेज रहे हैं';
+  String get groupChatCouldnTFetchIt => 'प्रीव्यू लोड नहीं हो पाया';
 
   @override
   String get groupChatCamera => 'कैमरा';
@@ -11091,4 +11089,77 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get chatDropHereToSend => 'भेजने के लिए यहाँ छोड़ें';
+
+  @override
+  String get notesDropKeepsWords =>
+      'अपने लिए नोट में शब्द रहते हैं। फ़ाइलें किसी चैट में भेजें।';
+
+  @override
+  String get voiceSeeTranscription => 'लिखित रूप देखें';
+
+  @override
+  String get voiceTranscribing => 'लिखा जा रहा है…';
+
+  @override
+  String get voiceHideTranscription => 'छिपाएँ';
+
+  @override
+  String get voiceShowOriginalOnly => 'सिर्फ़ मूल दिखाएँ';
+
+  @override
+  String get voiceCouldNotTranscribe => 'शब्द समझ नहीं आए';
+
+  @override
+  String get voiceTranscriptLabel => 'लिखित रूप';
+
+  @override
+  String get voiceSettingsTitle => 'आवाज़ से लिखित';
+
+  @override
+  String get voiceOnRow => 'वॉइस मैसेज को लिखित में बदलें';
+
+  @override
+  String get voiceOnHint => 'हर वॉइस मैसेज के नीचे सुझाया जाता है';
+
+  @override
+  String get voiceOffDeletes =>
+      'इसे बंद करने पर सहेजे गए लिखित रूप मिट जाते हैं।';
+
+  @override
+  String get voiceModelTitle => 'स्पीच मॉडल';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'लगभग $size का एक डाउनलोड, सभी भाषाओं के लिए।';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'Tor से डाउनलोड होकर इसी फ़ोन पर रहता है। आपके वॉइस मैसेज इससे बाहर कभी नहीं जाते।';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'Tor से डाउनलोड होकर इसी कंप्यूटर पर रहता है। आपके वॉइस मैसेज इससे बाहर कभी नहीं जाते।';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'Tor अभी नहीं जुड़ा है। मॉडल सिर्फ़ Tor से डाउनलोड होता है, इसलिए उसके जुड़ने पर फिर कोशिश करें।';
+
+  @override
+  String get voiceModelRemoveTitle => 'स्पीच मॉडल हटाएँ?';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'बन चुके लिखित रूप बने रहते हैं। नए के लिए मॉडल फिर चाहिए।';
+
+  @override
+  String get voiceKeptNote =>
+      'लिखित रूप इस फ़ोन पर अपनी चैट के साथ एन्क्रिप्ट होकर रखे जाते हैं और उसी के साथ मिटते हैं।';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'लिखित रूप इस कंप्यूटर पर अपनी चैट के साथ एन्क्रिप्ट होकर रखे जाते हैं और उसी के साथ मिटते हैं।';
+
+  @override
+  String get voiceNotNow => 'अभी नहीं';
 }

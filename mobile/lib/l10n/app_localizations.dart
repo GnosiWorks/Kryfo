@@ -2473,28 +2473,28 @@ abstract class AppLocalizations {
   /// **'Could not clean that gif'**
   String get chatCouldNotCleanThatGif;
 
-  /// screens/chat_screen.dart
+  /// Toast when the user taps add preview in the composer and Tor is not running. The page title is fetched over Tor only; on failure no link preview is added. Nothing is sent at this moment, and the message later goes on its normal route. Say only that no link preview is added, never that the message goes without Tor.
   ///
   /// In en, this message translates to:
-  /// **'Tor is not up yet · sending without'**
+  /// **'Tor isn\'t connected yet · no link preview'**
   String get chatTorIsNotUp;
 
-  /// screens/chat_screen.dart
+  /// Toast when the user taps add preview in the composer and the page cannot be reached over Tor. On failure no link preview is added. Nothing is sent at this moment, and the message later goes on its normal route. Say only that no link preview is added, never that the message goes without Tor.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t reach it · sending without'**
+  /// **'Couldn\'t reach the page · no link preview'**
   String get chatCouldnTReachIt;
 
-  /// screens/chat_screen.dart
+  /// Toast when the user taps add preview in the composer and the page loads over Tor but has no title. No link preview is added. Nothing is sent at this moment, and the message later goes on its normal route. Say only that no link preview is added.
   ///
   /// In en, this message translates to:
-  /// **'No title came back · sending without'**
+  /// **'That page has no title · no link preview'**
   String get chatNoTitleCameBack;
 
-  /// screens/chat_screen.dart
+  /// Toast when fetching a link preview in the composer fails for any other reason. No link preview is added. Nothing is sent at this moment, and the message later goes on its normal route.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t fetch it · sending without'**
+  /// **'Couldn\'t load a preview'**
   String get chatCouldnTFetchIt;
 
   /// screens/chat_screen.dart
@@ -4081,28 +4081,28 @@ abstract class AppLocalizations {
   /// **'Message unavailable'**
   String get groupChatMessageUnavailable;
 
-  /// screens/group_chat_screen.dart
+  /// Toast when the user taps add preview in the group composer and Tor is not running. The page title is fetched over Tor only; on failure no link preview is added. Nothing is sent at this moment, and the message later goes on its normal route. Say only that no link preview is added, never that the message goes without Tor.
   ///
   /// In en, this message translates to:
-  /// **'Tor is not up yet · sending without'**
+  /// **'Tor isn\'t connected yet · no link preview'**
   String get groupChatTorIsNotUp;
 
-  /// screens/group_chat_screen.dart
+  /// Toast when the user taps add preview in the group composer and the page cannot be reached over Tor. On failure no link preview is added. Nothing is sent at this moment, and the message later goes on its normal route. Say only that no link preview is added, never that the message goes without Tor.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t reach it · sending without'**
+  /// **'Couldn\'t reach the page · no link preview'**
   String get groupChatCouldnTReachIt;
 
-  /// screens/group_chat_screen.dart
+  /// Toast when the user taps add preview in the group composer and the page loads over Tor but has no title. No link preview is added. Nothing is sent at this moment, and the message later goes on its normal route. Say only that no link preview is added.
   ///
   /// In en, this message translates to:
-  /// **'No title came back · sending without'**
+  /// **'That page has no title · no link preview'**
   String get groupChatNoTitleCameBack;
 
-  /// screens/group_chat_screen.dart
+  /// Toast when fetching a link preview in the group composer fails for any other reason. No link preview is added. Nothing is sent at this moment, and the message later goes on its normal route.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t fetch it · sending without'**
+  /// **'Couldn\'t load a preview'**
   String get groupChatCouldnTFetchIt;
 
   /// screens/group_chat_screen.dart
@@ -17814,6 +17814,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Drop here to send'**
   String get chatDropHereToSend;
+
+  /// a computer: files dropped on note to self, which keeps text only
+  ///
+  /// In en, this message translates to:
+  /// **'Note to self keeps words. Send files in a chat.'**
+  String get notesDropKeepsWords;
+
+  /// the link under a voice message that shows its words
+  ///
+  /// In en, this message translates to:
+  /// **'See transcription'**
+  String get voiceSeeTranscription;
+
+  /// while the phone turns a voice message into words
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribing…'**
+  String get voiceTranscribing;
+
+  /// folds the words of a voice message away
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get voiceHideTranscription;
+
+  /// folds the translation of a transcript away, the words heard stay
+  ///
+  /// In en, this message translates to:
+  /// **'Show original only'**
+  String get voiceShowOriginalOnly;
+
+  /// a voice message with no words the phone could make out
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t make out the words'**
+  String get voiceCouldNotTranscribe;
+
+  /// what a screen reader says before the words of a voice message
+  ///
+  /// In en, this message translates to:
+  /// **'Transcription'**
+  String get voiceTranscriptLabel;
+
+  /// the settings row and page for voice message transcripts
+  ///
+  /// In en, this message translates to:
+  /// **'Voice transcription'**
+  String get voiceSettingsTitle;
+
+  /// the switch that offers transcripts under voice messages
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribe voice messages'**
+  String get voiceOnRow;
+
+  /// under the switch: where it shows
+  ///
+  /// In en, this message translates to:
+  /// **'Offered under every voice message'**
+  String get voiceOnHint;
+
+  /// under the switch: what turning it off does
+  ///
+  /// In en, this message translates to:
+  /// **'Turning this off deletes saved transcripts.'**
+  String get voiceOffDeletes;
+
+  /// the one download that turns speech into words
+  ///
+  /// In en, this message translates to:
+  /// **'Speech model'**
+  String get voiceModelTitle;
+
+  /// the download sheet: one model for every language, its size
+  ///
+  /// In en, this message translates to:
+  /// **'One download of about {size}, for every language.'**
+  String voiceModelLine(Object size);
+
+  /// the download sheet and settings: where the model comes from and stays
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded over Tor and kept on this phone. Your voice messages never leave it.'**
+  String get voiceModelPrivacy;
+
+  /// voiceModelPrivacy as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded over Tor and kept on this computer. Your voice messages never leave it.'**
+  String get voiceModelPrivacyDesk;
+
+  /// the model download could not start: tor is not up
+  ///
+  /// In en, this message translates to:
+  /// **'Tor isn\'t connected yet. The model downloads over Tor only, so try again once it is.'**
+  String get voiceModelFailNoTor;
+
+  /// asks before the speech model is taken off
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the speech model?'**
+  String get voiceModelRemoveTitle;
+
+  /// what removing the speech model keeps
+  ///
+  /// In en, this message translates to:
+  /// **'Transcripts already made stay. New ones need the model again.'**
+  String get voiceModelRemoveLine;
+
+  /// settings: where transcripts are kept and when they go
+  ///
+  /// In en, this message translates to:
+  /// **'Transcripts are kept with their chat, encrypted on this phone, and deleted with it.'**
+  String get voiceKeptNote;
+
+  /// voiceKeptNote as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Transcripts are kept with their chat, encrypted on this computer, and deleted with it.'**
+  String get voiceKeptNoteDesk;
+
+  /// closes the model download sheet without downloading
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get voiceNotNow;
 }
 
 class _AppLocalizationsDelegate

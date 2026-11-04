@@ -541,12 +541,27 @@ func (d *devState) deviceKey(ident int, peer [32]byte, dev uint8) ([32]byte, boo
 			return [32]byte{}, false
 		}
 		k = e.Key
+	} else if i, held := d.peers[id]; !held {
+		// a hidden chat's contact while its vault is shut: the keys its
+		// card names, for listening alone
+		var ok bool
+		if k, ok = devHeardKey(ident, id, dev); !ok {
+			return [32]byte{}, false
+		}
 	} else {
-		if i, ok := d.peers[id]; !ok || i != ident {
+		if i != ident {
 			return [32]byte{}, false
 		}
 		var ok bool
-		if k, ok = d.book.Pin(id, dev); !ok {
+		if d.book.Current(id) == nil {
+			// held bare (a key-only row on the everyday side) while their
+			// vault is shut: the card's keys, as for one not held. a list
+			// held always decides, so a disputed key stays refused
+			k, ok = devHeardKey(ident, id, dev)
+		} else {
+			k, ok = d.book.Pin(id, dev)
+		}
+		if !ok {
 			return [32]byte{}, false
 		}
 	}
@@ -563,3 +578,192 @@ func (devKeySource) deviceKey(ident int, peer [32]byte, dev uint8) ([32]byte, bo
 }
 
 func init() { setDeviceKeys(devKeySource{}) }
+
+// a hidden chat's contact, by my identity and theirs: their device keys as
+// the vault's card names them, while the book does not hold them. only the
+// address layer reads these; nothing is admitted on them
+type devHeardAt struct {
+	ident    int
+	identity devices.Key
+}
+
+var (
+	devHeardMu   sync.Mutex
+	devHeardKeys = map[devHeardAt]map[uint8]devices.Key{}
+)
+
+func devHeardKey(ident int, identity devices.Key, dev uint8) (devices.Key, bool) {
+	devHeardMu.Lock()
+	defer devHeardMu.Unlock()
+	k, ok := devHeardKeys[devHeardAt{ident, identity}][dev]
+	return k, ok
+}
+
+// the keys of a.Identity's devices to listen on, in place of any held;
+// none forgets them
+func (d *devState) listenKeys(a *devArgs) error {
+	id, err := a.identity()
+	if err != nil {
+		return err
+	}
+	if _, mine := d.mine[id]; mine {
+		return devices.ErrSelf
+	}
+	keys := map[uint8]devices.Key{}
+	for _, h := range a.Held {
+		k, err := parseHexKey(h.Key)
+		if err != nil || h.ID <= devices.PhoneID || h.ID > devices.MaxID || k == id {
+			return devices.ErrMalformed
+		}
+		keys[uint8(h.ID)] = k
+	}
+	devHeardMu.Lock()
+	defer devHeardMu.Unlock()
+	at := devHeardAt{a.Ident, id}
+	if len(keys) == 0 {
+		delete(devHeardKeys, at)
+	} else {
+		devHeardKeys[at] = keys
+	}
+	return nil
+}
+
+// the contacts of an open vault and their rows, into the state held: a
+// contact the state holds with a list already is left as it is. nothing is
+// written; the rows stay in the vault
+func (d *devState) loadPeers(in *devLoad) ([]devices.Key, int) {
+	skipped := 0
+	took := map[devices.Key]int{}
+	for _, c := range in.Contacts {
+		id, err := parseHexKey(c.Identity)
+		if err != nil {
+			skipped++
+			continue
+		}
+		if _, mine := d.mine[id]; mine {
+			skipped++
+			continue
+		}
+		if i, ok := d.peers[id]; ok {
+			k, _ := d.book.Kept(id)
+			if i != c.Ident || k.List != nil || len(d.quiet.Slots(id)) > 0 {
+				skipped++
+				continue
+			}
+		} else if _, err := d.book.Add(id); err != nil {
+			skipped++
+			continue
+		}
+		d.peers[id] = c.Ident
+		took[id] = c.Ident
+	}
+	ours := func(ident int, peer string) (devices.Key, bool) {
+		id, err := parseHexKey(peer)
+		if err != nil {
+			return devices.Key{}, false
+		}
+		i, ok := took[id]
+		return id, ok && i == ident
+	}
+	kept := map[devices.Key]*devices.Kept{}
+	keptOf := func(id devices.Key) *devices.Kept {
+		if k := kept[id]; k != nil {
+			return k
+		}
+		k := &devices.Kept{Identity: id}
+		kept[id] = k
+		return k
+	}
+	for _, r := range in.Lists {
+		id, ok := ours(r.Ident, r.Owner)
+		if !ok {
+			skipped++
+			continue
+		}
+		k := keptOf(id)
+		k.List, k.FromInvite = r.Wire, r.FromInvite != 0
+	}
+	for _, r := range in.Proven {
+		id, ok := ours(r.Ident, r.Peer)
+		key, err := parseHexKey(r.Key)
+		if !ok || err != nil {
+			skipped++
+			continue
+		}
+		k := keptOf(id)
+		k.Proven = append(k.Proven, key)
+	}
+	for _, r := range in.PQ {
+		id, ok := ours(r.Ident, r.Peer)
+		if !ok {
+			skipped++
+			continue
+		}
+		keptOf(id).PQ = true
+	}
+	ids := make([]devices.Key, 0, len(kept))
+	for id := range kept {
+		ids = append(ids, id)
+	}
+	slices.SortFunc(ids, func(a, b devices.Key) int { return bytes.Compare(a[:], b[:]) })
+	for _, id := range ids {
+		if _, err := d.book.Restore(*kept[id], d.v); err != nil {
+			skipped++
+			k := *kept[id]
+			k.List, k.Proven = nil, nil
+			if _, err := d.book.Restore(k, d.v); err != nil {
+				skipped++
+			}
+		}
+	}
+	for _, r := range in.Quiet {
+		id, ok := ours(r.Ident, r.Peer)
+		key, kerr := parseHexKey(r.Key)
+		if !ok || kerr != nil || r.Device < devices.PhoneID || r.Device > devices.MaxID {
+			skipped++
+			continue
+		}
+		d.quiet.Restore(devices.QuietKept{
+			Identity: id, Device: uint8(r.Device), Key: key,
+			First: fromMs(r.FirstAt), Session: fromMs(r.RebuiltAt), Probed: fromMs(r.ProbeAt),
+			Silent: r.Silent != 0, Under: r.Under,
+		})
+	}
+	return d.book.Claimants(), skipped
+}
+
+// contacts whose rows went back into a vault that shut: out of the state
+// held, with no row written. one in a.Keep is held again as a bare
+// contact, as a key-only row on the everyday side holds them
+func (d *devState) dropPeers(a *devArgs, out *devOut) error {
+	keep := map[devices.Key]bool{}
+	for _, h := range a.Keep {
+		id, err := parseHexKey(h)
+		if err != nil {
+			return err
+		}
+		keep[id] = true
+	}
+	for _, h := range a.Peers {
+		id, err := parseHexKey(h)
+		if err != nil {
+			return err
+		}
+		ident, ok := d.peers[id]
+		if !ok {
+			continue
+		}
+		d.book.Forget(id)
+		for _, dev := range d.quiet.Slots(id) {
+			d.quiet.Forget(id, dev)
+		}
+		delete(d.peers, id)
+		if keep[id] {
+			if _, err := d.book.Add(id); err == nil {
+				d.peers[id] = ident
+			}
+		}
+	}
+	out.Claimants = keysOut(d.book.Claimants())
+	return nil
+}
