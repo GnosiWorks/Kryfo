@@ -12,6 +12,10 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/container.dart';
+import 'package:kryfo/desktop/desktop_mode.dart' show containerOpened;
+import 'package:kryfo/desktop/sealed_format.dart' show isSealedHead;
+import 'package:kryfo/desktop/sealed_io.dart';
+import 'package:kryfo/phone_seal.dart';
 import 'package:kryfo/file_drop.dart';
 import 'package:kryfo/main.dart'
     show
@@ -32,6 +36,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
 import 'arrival_fakes.dart';
+import 'desktop/sealed_file_test.dart' show ToyCrypto;
 import 'mem_db.dart';
 
 const _x = 'calm-orbit-wren';
@@ -181,6 +186,60 @@ void main() {
       expect(await fetchOf(live.mem, 'f1'), isNull);
     },
   );
+
+  group('on a phone with the seal', () {
+    late SealedAreas areas;
+    setUp(() {
+      areas = SealedAreas(
+        docs: docs.path,
+        support: p.join(docs.path, 'files'),
+        runtime: p.join(docs.path, 'cache'),
+        phone: true,
+      );
+      installPhoneSeal(areas, ToyCrypto());
+    });
+    tearDown(uninstallPhoneSealForTest);
+
+    List<String> fetchFolder() {
+      final d = Directory(p.join(docs.path, 'media', 'fetch'));
+      return rawFileAccess(
+        () => d.existsSync()
+            ? [for (final e in d.listSync()) p.basename(e.path)]
+            : <String>[],
+      );
+    }
+
+    test('a fetched file is sealed at once: nothing plain stays in the '
+        'fetch folder', () async {
+      containerOpened!(HaloContainer.everyday.id, '', 'k' * 64);
+      await from(_x, await drop('s1'));
+      await app.fetchDropsInForTest(live);
+      expect(fetchFolder(), isEmpty);
+      final path = live.msg('s1')!['file_path'] as String;
+      final disk = rawFileAccess(() => File(path).readAsBytesSync());
+      expect(isSealedHead(disk), isTrue);
+      expect(File(path).readAsBytesSync(), [7, 7, 7]);
+    });
+
+    test('one that cannot be sealed (its key gone that moment) is shredded '
+        'and fetched again, never kept plain', () async {
+      await from(_x, await drop('s2'));
+      await app.fetchDropsInForTest(live);
+      expect(fetchFolder(), isEmpty);
+      expect(live.msg('s2'), isNull);
+      expect((await fetchOf(live.mem, 's2'))!.state, kFetchWaiting);
+      // its key back: the next pass brings it, sealed
+      containerOpened!(HaloContainer.everyday.id, '', 'k' * 64);
+      await app.fetchDropsInForTest(live);
+      expect(eng.fetched, hasLength(2));
+      final path = live.msg('s2')!['file_path'] as String;
+      expect(
+        isSealedHead(rawFileAccess(() => File(path).readAsBytesSync())),
+        isTrue,
+      );
+      expect(fetchFolder(), isEmpty);
+    });
+  });
 
   test('a second copy of the frame fetches nothing twice', () async {
     await from(_x, await drop('f1'));

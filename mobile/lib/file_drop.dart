@@ -10,6 +10,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:crypto/crypto.dart' show sha256;
+import 'package:path/path.dart' as p;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'typing.dart' show capsOfText, kCapDrops;
@@ -366,6 +367,19 @@ class DropFetch {
       state = (r['state'] as num).toInt(),
       tries = (r['tries'] as num).toInt(),
       at = (r['at'] as num).toInt();
+
+  DropFetch withPath(String to) => DropFetch(
+    uid: uid,
+    sender: sender,
+    groupId: groupId,
+    wire: wire,
+    backPair: backPair,
+    size: size,
+    path: to,
+    state: state,
+    tries: tries,
+    at: at,
+  );
 }
 
 /// the fetch for [uid], or null
@@ -565,19 +579,29 @@ Future<List<File>> staleHeldFiles(Directory media, DateTime now) async {
   return out;
 }
 
-/// the fetch folder's files no fetch names: a fetch dropped while the app
-/// was gone. the sealed parts and the half opened copies too
+/// where a fetched file waits sealed for its message: beside the fetch
+/// folder, which the engine reads and writes in the clear
+String gotPathFor(String fetchPath) =>
+    p.join(p.dirname(p.dirname(fetchPath)), 'got', p.basename(fetchPath));
+
+/// true when [path] is the engine's own plain output in a fetch folder
+bool inFetchFolder(String path) => p.basename(p.dirname(path)) == 'fetch';
+
+/// the fetch and got folders' files no fetch names: a fetch dropped while
+/// the app was gone. the sealed parts and the half opened copies too
 Future<List<File>> strayFetchFiles(Directory media, Set<String> named) async {
-  final dir = Directory('${media.path}/fetch');
-  if (!await dir.exists()) return const [];
   final out = <File>[];
-  await for (final e in dir.list(followLinks: false)) {
-    if (e is! File) continue;
-    var base = e.path;
-    for (final s in const ['.part', '.open']) {
-      if (base.endsWith(s)) base = base.substring(0, base.length - s.length);
+  for (final name in const ['fetch', 'got']) {
+    final dir = Directory('${media.path}/$name');
+    if (!await dir.exists()) continue;
+    await for (final e in dir.list(followLinks: false)) {
+      if (e is! File) continue;
+      var base = e.path;
+      for (final s in const ['.part', '.open']) {
+        if (base.endsWith(s)) base = base.substring(0, base.length - s.length);
+      }
+      if (!named.contains(base)) out.add(e);
     }
-    if (!named.contains(base)) out.add(e);
   }
   return out;
 }
