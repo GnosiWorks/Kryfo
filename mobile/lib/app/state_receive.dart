@@ -404,6 +404,8 @@ extension AppStateReceive on AppState {
         dlog('listen: a hidden one not listened for (${e.runtimeType})');
       }
     }
+    // linked devices: their device pairs too, by the same cards
+    if (linkedDevicesOn) unawaited(_listenHiddenDevices());
     if (cache) {
       try {
         await _saveXPubCache(fresh);

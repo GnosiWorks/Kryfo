@@ -16657,6 +16657,12 @@ abstract class AppLocalizations {
   /// **'Open Kryfo to start receiving messages'**
   String get desktopTrayLockedTip;
 
+  /// windows: shown once from the tray icon, the first time closing the window hides kryfo to the tray
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo is still running in the tray. Quit from the tray icon.'**
+  String get desktopTrayStillRunning;
+
   /// notifications page on a computer: the section that replaces the phone's delivery modes
   ///
   /// In en, this message translates to:
@@ -17808,6 +17814,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Drop here to send'**
   String get chatDropHereToSend;
+
+  /// a computer: files dropped on note to self, which keeps text only
+  ///
+  /// In en, this message translates to:
+  /// **'Note to self keeps words. Send files in a chat.'**
+  String get notesDropKeepsWords;
 
   /// the link under a voice message that shows its words
   ///

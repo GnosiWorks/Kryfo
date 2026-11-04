@@ -4,6 +4,9 @@
 // shift the keyboard let go of: no selection stretches from the end
 import 'dart:io';
 
+import 'package:desktop_drop/desktop_drop.dart';
+import 'package:kryfo/desktop/desktop_mode.dart' show onDesktop;
+
 import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -11,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
     show
         HaloDb,
@@ -51,6 +55,9 @@ class _GroupDb implements HaloDb {
   };
   @override
   Future<bool> groupExists(String groupId) async => true;
+  // a chat that sent a file before asks the list to look again
+  @override
+  Future<List<Map<String, Object?>>> loadGroups() async => [];
   @override
   Future<String?> getGroupAtmosphere(String groupId) async => null;
   @override
@@ -147,6 +154,53 @@ Future<void> _tapBack(WidgetTester t) async {
   expect(_ctrl(t).text, _words);
 }
 
+// the chat with [_peer], as the desktop's pane would hold it
+Future<void> _chat(WidgetTester t) async {
+  final mem = MemDb();
+  await devChatTables(mem, now: 1);
+  await mem.insert('contacts', {
+    'halo_id': _peer,
+    'onion': '',
+    'xpub': 'ab' * 32,
+    'first_seen': 1,
+    'last_seen': 1,
+    'accepted': 1,
+  });
+  final db = SayHiDb(mem);
+  useDatabasesForTest(db, Session(db));
+  await appState.refreshContacts();
+  phone(t);
+  final m = t.binding.defaultBinaryMessenger;
+  m.setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
+  addTearDown(() => m.setMockMethodCallHandler(SystemChannels.platform, null));
+  setL10nLocale(const Locale('en'));
+  await t.pumpWidget(
+    devApp(
+      const ChatScreen(
+        peerHaloId: _peer,
+        peerOnion: '',
+        peerXPub: '',
+        avatarSeed: _peer,
+      ),
+    ),
+  );
+  for (var i = 0; i < 6; i++) {
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 20)),
+    );
+    await t.pump(const Duration(milliseconds: 100));
+  }
+}
+
+Future<void> _settleSend(WidgetTester t) async {
+  for (var i = 0; i < 6; i++) {
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 20)),
+    );
+    await t.pump(const Duration(milliseconds: 100));
+  }
+}
+
 void main() {
   late Directory docs;
 
@@ -229,6 +283,83 @@ void main() {
     // the draft is left behind with the screen
     _ctrl(t).clear();
     await devClose(t);
+  });
+
+  group('on a computer', () {
+    setUp(() => onDesktop = true);
+    tearDown(() => onDesktop = false);
+
+    testWidgets('enter sends from a chat\'s composer, shift and enter is a '
+        'new line', (t) async {
+      await _chat(t);
+      await t.enterText(find.byType(TextField), 'first line');
+      await t.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      expect(await t.sendKeyEvent(LogicalKeyboardKey.enter), isFalse);
+      await t.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      expect(await t.sendKeyEvent(LogicalKeyboardKey.enter), isTrue);
+      await _settleSend(t);
+      expect(_ctrl(t).text, isEmpty, reason: 'sent, the composer empty');
+      expect(find.text('first line'), findsWidgets);
+      await devClose(t);
+    });
+
+    testWidgets('a file dropped on a chat reaches its send', (t) async {
+      lockState.openForTest();
+      await _chat(t);
+      DesktopDrop.scale = () => 1;
+      final f = File('${docs.path}/plan.txt')..writeAsStringSync('the plan');
+      await t.binding.defaultBinaryMessenger.handlePlatformMessage(
+        DesktopDrop.channel.name,
+        const StandardMethodCodec().encodeMethodCall(
+          MethodCall('dropped', [
+            [f.path],
+            100.0,
+            300.0,
+          ]),
+        ),
+        (_) {},
+      );
+      // the copy, its check and its cleaning run off the test's clock
+      bool there() =>
+          find.text(l10n.chatSendIt).evaluate().isNotEmpty ||
+          // the bubble writes the name and its type apart
+          (find.text('plan').evaluate().isNotEmpty &&
+              find.text('.txt').evaluate().isNotEmpty);
+      for (var i = 0; i < 40 && !there(); i++) {
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)),
+        );
+        await t.pump(const Duration(milliseconds: 100));
+      }
+      // the file is on its way the picker's way: its question, or its bubble
+      expect(there(), isTrue);
+      expect(f.readAsStringSync(), 'the plan', reason: 'only read');
+      await devClose(t);
+    });
+
+    testWidgets('enter sends from a group\'s and a room\'s composer', (
+      t,
+    ) async {
+      phone(t);
+      final db = _GroupDb();
+      useDatabasesForTest(db, Session(db));
+      final m = t.binding.defaultBinaryMessenger;
+      m.setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
+      addTearDown(
+        () => m.setMockMethodCallHandler(SystemChannels.platform, null),
+      );
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      await t.enterText(find.byType(TextField), 'to everyone');
+      await t.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      expect(await t.sendKeyEvent(LogicalKeyboardKey.enter), isFalse);
+      await t.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      expect(await t.sendKeyEvent(LogicalKeyboardKey.enter), isTrue);
+      expect(_ctrl(t).text, isNot(contains('\n')));
+      _ctrl(t).clear();
+      await t.pumpWidget(const SizedBox());
+      await t.pump(const Duration(seconds: 2));
+    });
   });
 
   testWidgets('a group composer moves the caret where it is tapped', (t) async {

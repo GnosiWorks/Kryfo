@@ -26,6 +26,8 @@ import '../widgets/written_field.dart';
 import '../widgets/ease_size.dart';
 import '../bidi_safe.dart';
 import '../widgets/shift_tap_guard.dart';
+import '../widgets/enter_sends.dart';
+import '../desktop/drag_in.dart' show DragInZone;
 import 'notes_export_screen.dart';
 
 const String kNotesPeerId = '_notes_self_';
@@ -389,99 +391,103 @@ class _NotesScreenState extends State<NotesScreen> {
     ];
     _indexOf = {for (var i = 0; i < _notes.length; i++) _key(_notes[i]): i};
     if (_notes.isNotEmpty) _queuePin();
-    return Scaffold(
-      backgroundColor: HaloColors.surface,
-      body: SafeArea(
-        child: Column(
-          children: [
-            PageBar(
-              under: _under,
-              title: l10n.notesNoteToSelf,
-              sub: Text(
-                l10n.notesOnlyOnThisPhoneShown,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: HaloType.mono(size: 10, color: HaloColors.text2),
-              ),
-              actions: [
-                if (_notes.isNotEmpty)
-                  IconButton(
-                    tooltip: l10n.notesMenu,
-                    icon: Icon(
-                      Icons.more_horiz,
-                      color: HaloColors.text2,
-                      size: 22,
+    // a file dropped here is told where it goes: notes keep words
+    return DragInZone.wordsOnly(
+      line: () => l10n.notesDropKeepsWords,
+      child: Scaffold(
+        backgroundColor: HaloColors.surface,
+        body: SafeArea(
+          child: Column(
+            children: [
+              PageBar(
+                under: _under,
+                title: l10n.notesNoteToSelf,
+                sub: Text(
+                  l10n.notesOnlyOnThisPhoneShown,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: HaloType.mono(size: 10, color: HaloColors.text2),
+                ),
+                actions: [
+                  if (_notes.isNotEmpty)
+                    IconButton(
+                      tooltip: l10n.notesMenu,
+                      icon: Icon(
+                        Icons.more_horiz,
+                        color: HaloColors.text2,
+                        size: 22,
+                      ),
+                      onPressed: _pageMenu,
                     ),
-                    onPressed: _pageMenu,
-                  ),
-              ],
-            ),
-            Expanded(
-              // the first note fades the empty page away
-              child: !_loaded
-                  ? const SizedBox.shrink()
-                  : NotificationListener<Notification>(
-                      onNotification: _track,
-                      child: FadeSwap(
-                        child: _notes.isEmpty
-                            ? KeyedSubtree(
-                                key: const ValueKey('none'),
-                                child: _empty(),
-                              )
-                            : _Seen(
-                                key: const ValueKey('notes'),
-                                onMount: (c) => _listCtx = c,
-                                onGone: (c) {
-                                  if (identical(_listCtx, c)) _listCtx = null;
-                                },
-                                child: Stack(
-                                  children: [
-                                    _list(),
-                                    Positioned(
-                                      top: 0,
-                                      left: 0,
-                                      right: 0,
-                                      child: _held(),
-                                    ),
-                                  ],
+                ],
+              ),
+              Expanded(
+                // the first note fades the empty page away
+                child: !_loaded
+                    ? const SizedBox.shrink()
+                    : NotificationListener<Notification>(
+                        onNotification: _track,
+                        child: FadeSwap(
+                          child: _notes.isEmpty
+                              ? KeyedSubtree(
+                                  key: const ValueKey('none'),
+                                  child: _empty(),
+                                )
+                              : _Seen(
+                                  key: const ValueKey('notes'),
+                                  onMount: (c) => _listCtx = c,
+                                  onGone: (c) {
+                                    if (identical(_listCtx, c)) _listCtx = null;
+                                  },
+                                  child: Stack(
+                                    children: [
+                                      _list(),
+                                      Positioned(
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        child: _held(),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                        ),
+                      ),
+              ),
+              EaseSize(
+                child: !_holdTold && _notes.isNotEmpty
+                    ? Padding(
+                        padding: const EdgeInsetsDirectional.fromSTEB(
+                          18,
+                          6,
+                          18,
+                          8,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.touch_app_outlined,
+                              size: 15,
+                              color: HaloColors.amber,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                l10n.notesHoldHint,
+                                style: HaloType.sans(
+                                  size: 12.5,
+                                  color: HaloColors.text,
                                 ),
                               ),
-                      ),
-                    ),
-            ),
-            EaseSize(
-              child: !_holdTold && _notes.isNotEmpty
-                  ? Padding(
-                      padding: const EdgeInsetsDirectional.fromSTEB(
-                        18,
-                        6,
-                        18,
-                        8,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.touch_app_outlined,
-                            size: 15,
-                            color: HaloColors.amber,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              l10n.notesHoldHint,
-                              style: HaloType.sans(
-                                size: 12.5,
-                                color: HaloColors.text,
-                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : const SizedBox(width: double.infinity),
-            ),
-            _inputBar(),
-          ],
+                          ],
+                        ),
+                      )
+                    : const SizedBox(width: double.infinity),
+              ),
+              _inputBar(),
+            ],
+          ),
         ),
       ),
     );
@@ -637,25 +643,29 @@ class _NotesScreenState extends State<NotesScreen> {
               ),
               child: WrittenDir(
                 controller: _input,
-                builder: (dir) => ShiftTapGuard(
+                builder: (dir) => EnterSends(
                   controller: _input,
-                  child: TextField(
-                    textDirection: dir,
-                    inputFormatters: const [UnmarkedInput()],
+                  onSend: _save,
+                  child: ShiftTapGuard(
                     controller: _input,
-                    enableIMEPersonalizedLearning: false,
-                    maxLines: 5,
-                    minLines: 1,
-                    style: HaloType.sans(size: 14, color: HaloColors.text),
-                    decoration: InputDecoration(
-                      hintText: l10n.notesJotSomethingDown,
-                      hintStyle: HaloType.sans(
-                        size: 13,
-                        color: HaloColors.text3,
+                    child: TextField(
+                      textDirection: dir,
+                      inputFormatters: const [UnmarkedInput()],
+                      controller: _input,
+                      enableIMEPersonalizedLearning: false,
+                      maxLines: 5,
+                      minLines: 1,
+                      style: HaloType.sans(size: 14, color: HaloColors.text),
+                      decoration: InputDecoration(
+                        hintText: l10n.notesJotSomethingDown,
+                        hintStyle: HaloType.sans(
+                          size: 13,
+                          color: HaloColors.text3,
+                        ),
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
                       ),
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
                     ),
                   ),
                 ),

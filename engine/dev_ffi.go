@@ -160,6 +160,9 @@ type devArgs struct {
 	PhoneClassic bool     `json:"phone_classic"`
 	PQ           bool     `json:"pq"`
 	Contact      string   `json:"contact"`
+	NoOwn        bool     `json:"no_own"`
+	Peers        []string `json:"peers"`
+	Keep         []string `json:"keep"`
 	Held         []struct {
 		ID  int    `json:"id"`
 		Key string `json:"key"`
@@ -225,6 +228,18 @@ func devCallJSON(op, raw string) string {
 		out.Claimants, out.Skipped = keysOut(claimants), skipped
 		return devAnswer(out, nil)
 	}
+	if op == "load_peers" {
+		var in devLoad
+		if err := json.Unmarshal([]byte(raw), &in); err != nil {
+			return devAnswer(out, devices.ErrMalformed)
+		}
+		d := devNow()
+		d.mu.Lock()
+		defer d.mu.Unlock()
+		claimants, skipped := d.loadPeers(&in)
+		out.Claimants, out.Skipped = keysOut(claimants), skipped
+		return devAnswer(out, nil)
+	}
 	var a devArgs
 	if err := json.Unmarshal([]byte(raw), &a); err != nil {
 		return devAnswer(out, devices.ErrMalformed)
@@ -279,6 +294,10 @@ func (d *devState) call(op string, a *devArgs, out *devOut) error {
 		return nil
 	case "own_above":
 		return d.ownAbove(a, out)
+	case "drop_peers":
+		return d.dropPeers(a, out)
+	case "listen_keys":
+		return d.listenKeys(a)
 	}
 	return errors.New("no such call")
 }
@@ -396,6 +415,10 @@ func (d *devState) fanout(a *devArgs, out *devOut) error {
 	}
 	sc, sm := d.snap(contact), d.snap(mine)
 	f := &devices.Fanout{Book: d.book, Own: d.own, Quiet: d.quiet}
+	// a hidden chat's copies go to the contact's devices, never mine
+	if a.NoOwn {
+		f.Own = nil
+	}
 	slots, err := f.To(mine, contact, devices.Peer{Devices: a.Devices, PhoneClassic: a.PhoneClassic}, a.now())
 	out.Rows = append(sc.rows(), sm.rows()...)
 	if err != nil {

@@ -40,18 +40,21 @@ void _bootDeviceSend(DeviceState ds) {
     },
     wire: _EngineDeviceWire(),
     listen: engine.deviceListenBg,
+    changed: (changes) => _madeApp?._hiddenListsChanged(changes),
   );
   _bootDeviceReceive(ds, _deviceSend!);
 }
 
-// my identity [ident] and the contact [peer] as the send loop takes them;
-// null for a contact with no identity key on its row
+// my identity [ident] and the contact [peer] as the send loop takes them,
+// from their row [on] (the everyday container unless the open vault holds
+// them); null for a contact with no identity key on its row
 Future<({DevMe me, DevContact c})?> _devWhoOf(
   int ident,
   String peer,
-  SignalSession ss,
-) async {
-  final db = await live.open();
+  SignalSession ss, {
+  HaloDb? on,
+}) async {
+  final db = await (on ?? live).open();
   final r = await db.query(
     'contacts',
     columns: ['ikey', 'caps'],
@@ -62,7 +65,7 @@ Future<({DevMe me, DevContact c})?> _devWhoOf(
   final ikey = r.isEmpty ? null : r.first['ikey'] as String?;
   if (ikey == null) return null;
   // the whole row: a file from before the column has none, and is a phone
-  final id = await db.query(
+  final id = await (await live.open()).query(
     'identities',
     where: 'id = ?',
     whereArgs: [ident],
@@ -94,15 +97,18 @@ Future<String?> _deviceSeal(
   String framed,
   DevPhone phone,
 ) async {
-  final send = _deviceSend;
-  if (send == null || !linkedDevicesOn || isDevId(peer)) return null;
+  if (!linkedDevicesOn || isDevId(peer)) return null;
+  // a hidden chat's go from the open vault's side, never while it is shut
+  final home = _devHomeDb(peer);
+  final send = home == null ? null : _devSendFor(peer);
+  if (send == null) return null;
   // anything of the devices' that fails before the phone's copy is sealed
   // leaves that copy to today's seal: a device never stops the chat. what
   // the phone's own seal throws (a key held, an answer awaited) is the
   // chat's, as today
   var sealing = false;
   try {
-    final who = await _devWhoOf(ident, peer, ss);
+    final who = await _devWhoOf(ident, peer, ss, on: home);
     if (who == null) return null;
     final b = await send.burst(
       who.me,
@@ -124,15 +130,23 @@ Future<String?> _deviceSeal(
   }
 }
 
-/// the copies owed to devices and the list pushes due, with the outbox
+/// the copies owed to devices and the list pushes due, with the outbox:
+/// the everyday side's, and the open vault's
 Future<void> pumpDeviceSends() async {
-  final send = _deviceSend;
-  if (send == null || !linkedDevicesOn) return;
+  if (!linkedDevicesOn) return;
+  await _pumpDevices(_deviceSend, live);
+  final v = _vaultDevOf;
+  if (v != null) await _pumpDevices(_vaultDevSend, v);
+  await _madeApp?._pushHiddenRemovals();
+}
+
+Future<void> _pumpDevices(DeviceSend? send, HaloDb home) async {
+  if (send == null) return;
   try {
     await send.pump();
     await send.pushes(
       contact: (ident, identity) async {
-        final db = await live.open();
+        final db = await home.open();
         final r = await db.query(
           'contacts',
           columns: ['halo_id'],
@@ -142,7 +156,7 @@ Future<void> pumpDeviceSends() async {
         );
         if (r.isEmpty) return null;
         final ss = await signalOfIdent(ident);
-        return _devWhoOf(ident, r.first['halo_id'] as String, ss);
+        return _devWhoOf(ident, r.first['halo_id'] as String, ss, on: home);
       },
       phone: (me, c) => _devicePushPhone(me.ident, c.peer),
       send: (me, c, cipher) async {
@@ -158,10 +172,12 @@ Future<void> pumpDeviceSends() async {
 
 // a contact's phone showed it reads lists: my list goes to them once
 Future<void> _devicesShown(String peer) async {
-  final send = _deviceSend;
-  if (send == null || !linkedDevicesOn) return;
+  if (!linkedDevicesOn) return;
+  final home = _devHomeDb(peer);
+  final send = _devSendFor(peer);
+  if (home == null || send == null) return;
   try {
-    final db = await live.open();
+    final db = await home.open();
     final r = await db.query(
       'contacts',
       columns: ['ident', 'ikey', 'caps'],
@@ -177,7 +193,7 @@ Future<void> _devicesShown(String peer) async {
     await send.devicesShown(ident, ikey);
     // and theirs is asked for when none is held (they may have kept me
     // since before I deleted them)
-    await _deviceReceive?.askList(ident, ikey);
+    await _devReceiveFor(peer)?.askList(ident, ikey);
   } catch (e) {
     dlog('devices: list push not queued (${e.runtimeType})');
   }
@@ -190,8 +206,12 @@ Future<void> _devicesShown(String peer) async {
 Future<void> _devForget(String haloId, {bool sessions = false}) async {
   final ds = _deviceState;
   if (ds == null || !linkedDevicesOn || isDevId(haloId)) return;
+  // a hidden chat's from the open vault; nothing while it is shut
+  final home = _devHomeDb(haloId);
+  if (home == null) return;
+  final vault = !identical(home, live);
   try {
-    final db = await live.open();
+    final db = await home.open();
     final r = await db.query(
       'contacts',
       columns: ['ident', 'ikey'],
@@ -203,16 +223,20 @@ Future<void> _devForget(String haloId, {bool sessions = false}) async {
     if (ikey == null) return;
     final ident = r.first['ident'] as int? ?? kMainIdent;
     // their device pairs are heard on no more (read before the list goes)
-    await _deviceReceive?.forget(ident, ikey);
+    await _devReceiveFor(haloId)?.forget(ident, ikey);
     try {
       await ds.call(db, 'forget', {'identity': ikey});
     } on DevRefused catch (e) {
       if (e.why != 'unknown') rethrow;
     }
-    await _deviceSend?.forget(ident, ikey);
+    if (vault) _vaultDevPeers.remove(ikey);
+    await _devSendFor(haloId)?.forget(ident, ikey);
     // "not them": their devices' sessions go too, as their phone's does
     if (sessions) {
-      final dss = DeviceSessions(await signalOfIdent(ident));
+      final dss = DeviceSessions(
+        await signalOfIdent(ident),
+        store: vault ? await home.open() : null,
+      );
       for (final h in await dss.held(haloId)) {
         await dss.drop(haloId, h.device);
       }

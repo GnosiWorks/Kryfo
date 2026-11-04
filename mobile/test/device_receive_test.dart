@@ -27,9 +27,16 @@ import 'package:kryfo/devices/device_state.dart';
 import 'package:kryfo/identities.dart';
 import 'package:kryfo/invites.dart' show bundleBlock;
 import 'package:kryfo/main.dart'
-    show HaloDb, deviceOpenAt, deviceStateForTest, deviceTagStepDone, devMineOf;
+    show
+        HaloDb,
+        deviceOpenAt,
+        deviceStateForTest,
+        deviceTagStepDone,
+        devMineOf,
+        devPeerLoadArgs;
 import 'package:kryfo/signal_ffi/kryfo_signal.dart';
 import 'package:kryfo/signal_session.dart';
+import 'package:kryfo/signal_stores.dart' show LsSessionStore;
 import 'package:kryfo/wire_pad.dart' show unpad;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -1076,6 +1083,213 @@ void main() {
     expect([for (final e in cur['devices'] as List) e['id']], [1, 5, 17]);
     expect(deviceTagOf('${w.bobX}/5/1/opn'), isNotNull);
     expect(deviceTagOf(w.bobX), isNull);
+  });
+
+  // what a hide or an unhide moves of a contact's devices (vault_life.dart
+  // runs it as sql on the attached vault; here row by row)
+  // [fromKeys] and [toKeys]: where the sessions are on each side (the
+  // test's signal store keeps its own file)
+  Future<void> moveDevices(
+    Database from,
+    Database to,
+    String peer,
+    String ikey, {
+    required Database fromKeys,
+    required Database toKeys,
+  }) async {
+    for (final (t, where, args) in [
+      ('contacts', 'halo_id = ?', [peer]),
+      ('dev_lists', 'owner = ?', [ikey]),
+      for (final t in const [
+        'dev_proven',
+        'dev_pq',
+        'dev_quiet',
+        'dev_held_openers',
+        'dev_pushes',
+        'dev_out',
+        'dev_openers',
+        'dev_marks',
+      ])
+        (t, 'peer = ?', [ikey]),
+      ('pairs', 'peer = ? AND (their_device != 1 OR my_device != 1)', [ikey]),
+    ]) {
+      final src = from;
+      final dst = to;
+      for (final r in await src.query(t, where: where, whereArgs: args)) {
+        await dst.insert(
+          t,
+          Map.of(r)..remove(t == 'dev_held_openers' ? 'id' : ''),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      await src.delete(t, where: where, whereArgs: args);
+    }
+    // the device sessions, by device: devices 2..127
+    final a = LsSessionStore(fromKeys);
+    final b = LsSessionStore(toKeys);
+    for (final d in await a.subDeviceSessions(peer)) {
+      if (d < 2) continue;
+      final r = await a.load(peer, d);
+      if (r != null) await b.store(peer, r, d);
+      await a.delete(peer, d);
+    }
+  }
+
+  // bob's device state on [db]: his rows and device sessions and pairs
+  Future<Map<String, List<Map<String, Object?>>>> bobsOn(
+    Database db,
+    String ikey, {
+    Database? keys,
+  }) async => {
+    'contacts': await db.query(
+      'contacts',
+      where: 'ikey = ?',
+      whereArgs: [ikey],
+    ),
+    'dev_lists': await db.query(
+      'dev_lists',
+      where: 'owner = ?',
+      whereArgs: [ikey],
+    ),
+    for (final t in const [
+      'dev_proven',
+      'dev_pq',
+      'dev_quiet',
+      'dev_openers',
+      'dev_marks',
+      'dev_out',
+    ])
+      t: await db.query(t, where: 'peer = ?', whereArgs: [ikey]),
+    'pairs': await db.query(
+      'pairs',
+      where: 'peer = ? AND their_device != 1',
+      whereArgs: [ikey],
+    ),
+    'sessions': [
+      for (final d in await LsSessionStore(
+        keys ?? db,
+      ).subDeviceSessions(_bobChat))
+        if (d >= 2) {'device_id': d},
+    ],
+  };
+
+  test('a hidden contact\'s device sessions go into the vault and back with '
+      'the chat, none dropped: what his desk wrote while the vault was shut '
+      'opens on the session the vault holds, and nothing of his is read or '
+      'written on the everyday side meanwhile', () async {
+    if (skip()) return;
+    final w = await world();
+    final ikey = w.toBob.identity;
+    Future<String> from5(String uid, String m) => w.b5.ds.seal(
+      'ana',
+      1,
+      'halo/1:${jsonEncode({'u': uid, 'm': m, if (uid == 'm-a') 'as': _hex32(0x21)})}',
+      w.ana.identity.public,
+    );
+    // on the everyday side: his desk's opener opens and its session is kept
+    final first = await w.recv.receive(
+      w.tag(w.b5, opener: true),
+      await from5('m-a', 'before'),
+    );
+    expect(_json(first!.frame)['m'], 'before');
+    expect(await w.anaDs.has(_bobChat, 5), isTrue);
+
+    // hidden: his rows go into the vault, the engine lets him go
+    final vault = HaloDb.withKey(HaloContainer.vault, 'ab' * 32);
+    opened.add(vault);
+    final vdb = await vault.open();
+    await w.recv.unlistenAll(kMainIdent, ikey);
+    final keys = w.ana.database;
+    await moveDevices(w.db, vdb, _bobChat, ikey, fromKeys: keys, toKeys: vdb);
+    await w.ds.call(w.db, 'drop_peers', {
+      'peers': [ikey],
+    });
+    expect(await w.anaDs.has(_bobChat, 5), isFalse);
+    final vds = DeviceSessions(w.ana, store: vdb);
+    expect(await vds.has(_bobChat, 5), isTrue);
+    expect((await bobsOn(vdb, ikey))['pairs'], hasLength(1));
+    final everyday = await bobsOn(w.db, ikey, keys: keys);
+    expect(everyday.values.every((rows) => rows.isEmpty), isTrue);
+    // the engine holds nothing of him while it is shut
+    expect(
+      () => w.ds.call(w.db, 'current', {'identity': ikey}),
+      throwsA(isA<DevRefused>()),
+    );
+
+    // shut: his desk writes; the line is sealed as it came (state_vault)
+    final shut = await from5('m-b', 'while shut');
+
+    // open: his rows into the engine, the vault's side opens the line
+    await w.ds.call(vdb, 'load_peers', await devPeerLoadArgs(vdb));
+    final vsend = DeviceSend(
+      state: w.ds,
+      db: () async => vdb,
+      mine: () async => w.db,
+      noOwn: true,
+      sessions: (_) async => vds,
+      wire: w.wire,
+      listen: w.listen.listen,
+      clock: () => w.clock,
+      random: Random(9),
+    );
+    final vrecv = DeviceReceive(
+      state: w.ds,
+      db: () async => vdb,
+      mine: () async => w.db,
+      ownHome: w.recv,
+      sessions: (_) async => vds,
+      send: vsend,
+      listener: w.listen,
+      open: deviceOpenAt,
+      me: (_) async => w.me,
+      contact: (ident, identity) async =>
+          identity == ikey ? (me: w.me, c: w.toBob) : null,
+      phone: (me, c, frame) async {
+        w.toPhone.add(frame);
+        return true;
+      },
+      sign: (_, body) async =>
+          shim!.sign(w.anaId, LsSigContext.deviceList, body),
+      clock: () => w.clock,
+    );
+    final got = await vrecv.receive(w.tag(w.b5, opener: true), shut);
+    expect(got?.peer, _bobChat);
+    expect(_json(got!.frame)['m'], 'while shut');
+    expect(await vds.has(_bobChat, 5), isTrue);
+    final still = await bobsOn(w.db, ikey, keys: keys);
+    expect(still.values.every((rows) => rows.isEmpty), isTrue);
+    expect((await bobsOn(vdb, ikey))['dev_lists'], hasLength(1));
+    // a hidden chat's copies go to his devices and never to mine
+    final b = await vsend.burst(w.me, w.toBob, 'halo/1:{"u":"m-r","m":"hi"}');
+    expect(b, isNotNull);
+    final out = await vdb.query(
+      'dev_out',
+      where: 'uid = ?',
+      whereArgs: ['m-r'],
+    );
+    expect(out, isNotEmpty);
+    expect(out.every((r) => r['own'] == 0 && r['peer'] == ikey), isTrue);
+    expect(
+      await w.db.query('dev_out', where: 'uid = ?', whereArgs: ['m-r']),
+      isEmpty,
+    );
+
+    // unhidden: back on the everyday side, the same session goes on there
+    await moveDevices(vdb, w.db, _bobChat, ikey, fromKeys: vdb, toKeys: keys);
+    await w.ds.call(w.db, 'drop_peers', {
+      'peers': [ikey],
+    });
+    await w.ds.call(
+      w.db,
+      'load_peers',
+      await devPeerLoadArgs(w.db, ids: {ikey}),
+    );
+    expect((await bobsOn(vdb, ikey)).values.every((r) => r.isEmpty), isTrue);
+    final back = await w.recv.receive(
+      w.tag(w.b5, opener: true),
+      await from5('m-c', 'after'),
+    );
+    expect(_json(back!.frame)['m'], 'after');
   });
 }
 

@@ -23,6 +23,7 @@ import '../widgets/decode_px.dart';
 import '../widgets/motion.dart' show kHouseCurve, kHouseTime, motionStill;
 import '../widgets/press_scale.dart';
 import '../widgets/shift_tap_guard.dart';
+import '../widgets/enter_sends.dart';
 import '../widgets/swap.dart';
 import '../widgets/written_field.dart';
 
@@ -382,30 +383,38 @@ class MediaSendScreenState extends State<MediaSendScreen> {
         Expanded(
           child: WrittenDir(
             controller: _caption,
-            builder: (dir) => ShiftTapGuard(
+            // enter sends the picks on a computer, shift and enter is a
+            // new line in the caption
+            builder: (dir) => EnterSends(
               controller: _caption,
-              child: TextField(
-                textDirection: dir,
-                inputFormatters: const [UnmarkedInput()],
+              onSend: () {
+                if (n > 0) _send();
+              },
+              child: ShiftTapGuard(
                 controller: _caption,
-                enableIMEPersonalizedLearning: false,
-                style: HaloType.sans(size: 14),
-                minLines: 1,
-                maxLines: 4,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(
-                  hintText: l10n.mediaBubblesAddACaption,
-                  hintStyle: HaloType.sans(size: 14, color: HaloColors.text2),
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  filled: true,
-                  fillColor: HaloColors.surface2,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide.none,
+                child: TextField(
+                  textDirection: dir,
+                  inputFormatters: const [UnmarkedInput()],
+                  controller: _caption,
+                  enableIMEPersonalizedLearning: false,
+                  style: HaloType.sans(size: 14),
+                  minLines: 1,
+                  maxLines: 4,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: InputDecoration(
+                    hintText: l10n.mediaBubblesAddACaption,
+                    hintStyle: HaloType.sans(size: 14, color: HaloColors.text2),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    filled: true,
+                    fillColor: HaloColors.surface2,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
               ),
