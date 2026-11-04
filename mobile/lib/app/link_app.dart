@@ -40,12 +40,14 @@ Future<OwnDevices> ownDevicesSource() async {
       thisName: l10n.devicesThisPhoneShown,
       thisKind: onDesktop ? DeviceKind.computer : DeviceKind.phone,
       phoneName: l10n.devicesYourPhone,
+      leave: _leaveHere,
     );
   }
   return StoredOwnDevices(
     db: db,
     thisName: l10n.devicesThisPhoneShown,
     thisKind: onDesktop ? DeviceKind.computer : DeviceKind.phone,
+    unlink: _ownUnlink == null ? null : _unlinkOwn,
     // phones link in 0.6: a computer that holds the account has no camera
     // to scan with
     link: deviceState == null || onDesktop
@@ -237,6 +239,9 @@ class _JoinLinkApp implements JoinLinkHooks {
     LinkStream stream,
     Map<String, dynamic> ownRows,
   ) async {
+    // its own end is kept from the start: a linked device with no lock
+    // state wipes at its next start
+    await linkedLock.start();
     await joinedRows(
       await live.open(),
       identity: _linkUnhex(p.identity),

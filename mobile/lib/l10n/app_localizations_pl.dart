@@ -11514,4 +11514,79 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Nie teraz';
+
+  @override
+  String get unlinkedTitle => 'To urządzenie jest rozłączone';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Twój telefon usunął je z konta, więc Kryfo wymazał wszystko, co tu przechowywał.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'Nie było otwierane przez 30 dni, więc Kryfo wymazał wszystko, co tu przechowywał.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Jego zegar cofnięto, więc Kryfo wymazał wszystko, co tu przechowywał, żeby chronić twoje czaty.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo nie mógł ustalić, kiedy było ostatnio otwierane, więc wymazał wszystko, co tu przechowywał, żeby chronić twoje czaty.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'Rozłączono je, więc Kryfo wymazał wszystko, co tu przechowywał.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Twój telefon zachowuje czaty. Żeby znów używać tu Kryfo, połącz to urządzenie z telefonem.';
+
+  @override
+  String get unlinkedClose => 'Zamknij Kryfo';
+
+  @override
+  String get devicesLeave => 'Rozłącz to urządzenie';
+
+  @override
+  String get devicesLeaveTitle => 'Rozłączyć to urządzenie?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo powiadomi telefon i wymaże wszystko, co tu przechowuje. Twój telefon zachowa czaty.';
+
+  @override
+  String get devicesLeaveYes => 'Rozłącz i wymaż';
+
+  @override
+  String get devicesGoneNotice => 'Urządzenie usunięte';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return 'Urządzenie $name usunięto z twojego konta $date.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return 'Urządzenie $name nie było używane przez 30 dni, więc usunięto je z twojego konta $date.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return 'Urządzenie $name samo się rozłączyło $date i wymazało to, co przechowywało.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Twoje urządzenia się zmieniły';
+
+  @override
+  String get devicesChangedLine =>
+      'Otwórz Połączone urządzenia, żeby zobaczyć, co się zmieniło.';
+
+  @override
+  String get devicesUnknownNotice => 'Urządzenie połączone gdzie indziej';
+
+  @override
+  String get devicesUnknownLine =>
+      'Inna kopia Kryfo połączyła urządzenie z twoim kontem. Ten telefon zdjął je z twojej listy.';
 }

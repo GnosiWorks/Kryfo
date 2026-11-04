@@ -169,8 +169,26 @@ class _LockGate extends StatefulWidget {
 }
 
 class _LockGateState extends State<_LockGate> {
+  // a linked device that unlinked shows only what happened, over the lock
+  // too: nothing behind it opens any more
   @override
-  Widget build(BuildContext context) => LockGate(
+  Widget build(BuildContext context) => ValueListenableBuilder<LinkedEnd?>(
+    valueListenable: deviceUnlinked,
+    builder: (context, why, _) => AnimatedSwitcher(
+      duration: motionStill(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 320),
+      child: why == null
+          ? KeyedSubtree(key: const ValueKey('app'), child: _gate(context))
+          : UnlinkedScreen(
+              key: const ValueKey('unlinked'),
+              why: why,
+              onClose: () => unawaited(wipeFinish()),
+            ),
+    ),
+  );
+
+  Widget _gate(BuildContext context) => LockGate(
     app: widget.child,
     lock: lockState,
     loaded: () => lockState.loaded,
@@ -188,6 +206,8 @@ class _LockGateState extends State<_LockGate> {
       // back in front with no lock to lift: kryfo is open, so the plain
       // line has said its piece
       if (front && !lockState.locked) _plainSeen();
+      // a person has it in front, unlocked: a linked device is in use
+      if (front && !lockState.locked) linkedUsed();
       // a read that failed is asked again: until android answers, the app
       // keeps the plain look
       if (front && appFaceNow.value == null) unawaited(readAppFace());
@@ -195,6 +215,7 @@ class _LockGateState extends State<_LockGate> {
     localesChanged: systemLocalesChanged,
     revealed: () {
       appRevealed = true;
+      linkedUsed();
       homeRevealed();
       _plainSeen();
       unawaited(sayFaceChanged());

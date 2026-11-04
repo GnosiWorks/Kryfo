@@ -46,10 +46,24 @@ Future<void> bootDevices() async {
     final ds = DeviceState(DeviceEngine());
     await ds.load(db, await devMineOf(db, lib), shimPath: path);
     _deviceState = ds;
+    // a restored phone's first lists name it alone, before anything goes
+    final restored = linkedRole
+        ? const <({int ident, int version, List<int> added, bool removed})>[]
+        : await restoredLists(db, ds, (ident, body) async {
+            final ss = await signalOfIdent(ident);
+            return ss.lib.sign(ss.identity, LsSigContext.deviceList, body);
+          });
     _bootDeviceSend(ds);
+    if (restored.isNotEmpty) await _deviceSend?.listsChanged(restored);
     if (ds.skipped > 0) dlog('devices: ${ds.skipped} rows did not load');
   } catch (e) {
     dlog('devices: not loaded (${e.runtimeType})');
+  }
+  // a linked device's own end is checked whatever else loaded
+  try {
+    await _linkedBoot();
+  } catch (e) {
+    dlog('devices: the lock state not checked (${e.runtimeType})');
   }
 }
 

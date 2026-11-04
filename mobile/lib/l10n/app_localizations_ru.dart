@@ -11476,4 +11476,79 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Не сейчас';
+
+  @override
+  String get unlinkedTitle => 'Это устройство отвязано';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Ваш телефон удалил его из аккаунта, поэтому Kryfo стёр всё, что хранил здесь.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'Его не открывали 30 дней, поэтому Kryfo стёр всё, что хранил здесь.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Его часы перевели назад, поэтому Kryfo стёр всё, что хранил здесь, чтобы защитить ваши чаты.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo не смог понять, когда его открывали в последний раз, поэтому стёр всё, что хранил здесь, чтобы защитить ваши чаты.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'Вы отвязали его, поэтому Kryfo стёр всё, что хранил здесь.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Ваши чаты остаются на телефоне. Чтобы снова пользоваться Kryfo здесь, свяжите это устройство с телефоном.';
+
+  @override
+  String get unlinkedClose => 'Закрыть Kryfo';
+
+  @override
+  String get devicesLeave => 'Отвязать это устройство';
+
+  @override
+  String get devicesLeaveTitle => 'Отвязать это устройство?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo сообщит телефону и сотрёт всё, что хранит здесь. Ваши чаты останутся на телефоне.';
+
+  @override
+  String get devicesLeaveYes => 'Отвязать и стереть';
+
+  @override
+  String get devicesGoneNotice => 'Устройство удалено';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name удалено из вашего аккаунта $date.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name не использовалось 30 дней, поэтому $date его удалили из вашего аккаунта.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name само отвязалось $date и стёрло то, что хранило.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Ваши устройства изменились';
+
+  @override
+  String get devicesChangedLine =>
+      'Откройте Связанные устройства, чтобы увидеть, что изменилось.';
+
+  @override
+  String get devicesUnknownNotice => 'Устройство связано в другом месте';
+
+  @override
+  String get devicesUnknownLine =>
+      'Другая копия Kryfo связала устройство с вашим аккаунтом. Этот телефон убрал его из вашего списка.';
 }

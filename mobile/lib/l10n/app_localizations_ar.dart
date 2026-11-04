@@ -11437,4 +11437,78 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'ليس الآن';
+
+  @override
+  String get unlinkedTitle => 'فُصل هذا الجهاز';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'أزاله هاتفك من حسابك، لذا مسح Kryfo كل ما كان يحفظه هنا.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'لم يُفتح منذ 30 يومًا، لذا مسح Kryfo كل ما كان يحفظه هنا.';
+
+  @override
+  String get unlinkedClockLine =>
+      'أُرجعت ساعته إلى الوراء، لذا مسح Kryfo كل ما كان يحفظه هنا ليحمي محادثاتك.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'لم يتمكن Kryfo من معرفة متى فُتح آخر مرة، لذا مسح كل ما كان يحفظه هنا ليحمي محادثاتك.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'فصلته بنفسك، لذا مسح Kryfo كل ما كان يحفظه هنا.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'يحتفظ هاتفك بمحادثاتك. لتستخدم Kryfo هنا من جديد، اربط هذا الجهاز بهاتفك.';
+
+  @override
+  String get unlinkedClose => 'أغلق Kryfo';
+
+  @override
+  String get devicesLeave => 'افصل هذا الجهاز';
+
+  @override
+  String get devicesLeaveTitle => 'أتفصل هذا الجهاز؟';
+
+  @override
+  String get devicesLeaveLine =>
+      'يُعلم Kryfo هاتفك ويمسح كل ما يحفظه هنا. يحتفظ هاتفك بمحادثاتك.';
+
+  @override
+  String get devicesLeaveYes => 'افصل وامسح';
+
+  @override
+  String get devicesGoneNotice => 'أُزيل جهاز';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return 'أُزيل ⁨$name⁩ من حسابك في ⁨$date⁩.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return 'لم يُستخدم ⁨$name⁩ منذ 30 يومًا، لذا أُزيل من حسابك في ⁨$date⁩.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return 'فصل ⁨$name⁩ نفسه في ⁨$date⁩ ومسح ما كان يحفظه.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'تغيّرت أجهزتك';
+
+  @override
+  String get devicesChangedLine => 'افتح الأجهزة المرتبطة لترى ما تغيّر.';
+
+  @override
+  String get devicesUnknownNotice => 'جهاز رُبط من مكان آخر';
+
+  @override
+  String get devicesUnknownLine =>
+      'ربطت نسخة أخرى من Kryfo جهازًا بحسابك. أزاله هذا الهاتف من قائمتك.';
 }

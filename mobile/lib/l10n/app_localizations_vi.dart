@@ -11279,4 +11279,79 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Để sau';
+
+  @override
+  String get unlinkedTitle => 'Thiết bị này đã hủy liên kết';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Điện thoại của bạn đã gỡ thiết bị này khỏi tài khoản, nên Kryfo đã xóa mọi thứ nó lưu ở đây.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'Thiết bị này không được mở trong 30 ngày, nên Kryfo đã xóa mọi thứ nó lưu ở đây.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Đồng hồ của thiết bị bị chỉnh lùi, nên Kryfo đã xóa mọi thứ nó lưu ở đây để giữ an toàn cho các cuộc trò chuyện của bạn.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo không biết được thiết bị này được mở lần cuối khi nào, nên đã xóa mọi thứ nó lưu ở đây để giữ an toàn cho các cuộc trò chuyện của bạn.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'Bạn đã hủy liên kết thiết bị này, nên Kryfo đã xóa mọi thứ nó lưu ở đây.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Điện thoại của bạn vẫn giữ các cuộc trò chuyện. Để dùng lại Kryfo ở đây, hãy liên kết thiết bị này với điện thoại.';
+
+  @override
+  String get unlinkedClose => 'Đóng Kryfo';
+
+  @override
+  String get devicesLeave => 'Hủy liên kết thiết bị này';
+
+  @override
+  String get devicesLeaveTitle => 'Hủy liên kết thiết bị này?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo sẽ báo cho điện thoại của bạn và xóa mọi thứ nó lưu ở đây. Điện thoại vẫn giữ các cuộc trò chuyện của bạn.';
+
+  @override
+  String get devicesLeaveYes => 'Hủy liên kết và xóa';
+
+  @override
+  String get devicesGoneNotice => 'Đã gỡ thiết bị';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name đã bị gỡ khỏi tài khoản của bạn vào $date.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name không được dùng trong 30 ngày, nên đã bị gỡ khỏi tài khoản của bạn vào $date.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name đã tự hủy liên kết vào $date và xóa những gì nó lưu.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Thiết bị của bạn đã thay đổi';
+
+  @override
+  String get devicesChangedLine =>
+      'Mở Thiết bị đã liên kết để xem những gì đã thay đổi.';
+
+  @override
+  String get devicesUnknownNotice => 'Thiết bị được liên kết ở nơi khác';
+
+  @override
+  String get devicesUnknownLine =>
+      'Một bản Kryfo khác đã liên kết một thiết bị với tài khoản của bạn. Điện thoại này đã gỡ nó khỏi danh sách của bạn.';
 }

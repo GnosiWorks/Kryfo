@@ -14183,5 +14183,109 @@
   "voiceNotNow": "Not now",
   "@voiceNotNow": {
     "description": "closes the model download sheet without downloading"
+  },
+  "unlinkedTitle": "This device is unlinked",
+  "@unlinkedTitle": {
+    "description": "screens/unlinked_screen.dart: the title once a linked device unlinked and erased itself"
+  },
+  "unlinkedRemovedLine": "Your phone removed it from your account, so Kryfo erased everything it kept here.",
+  "@unlinkedRemovedLine": {
+    "description": "screens/unlinked_screen.dart: why: the phone removed this device"
+  },
+  "unlinkedUnusedLine": "It wasn't opened for 30 days, so Kryfo erased everything it kept here.",
+  "@unlinkedUnusedLine": {
+    "description": "screens/unlinked_screen.dart: why: not opened for 30 days"
+  },
+  "unlinkedClockLine": "Its clock was set back, so Kryfo erased everything it kept here to keep your chats safe.",
+  "@unlinkedClockLine": {
+    "description": "screens/unlinked_screen.dart: why: the device clock was set back"
+  },
+  "unlinkedBrokenLine": "Kryfo couldn't tell when it was last opened, so it erased everything it kept here to keep your chats safe.",
+  "@unlinkedBrokenLine": {
+    "description": "screens/unlinked_screen.dart: why: the lock state did not read"
+  },
+  "unlinkedSelfLine": "You unlinked it, so Kryfo erased everything it kept here.",
+  "@unlinkedSelfLine": {
+    "description": "screens/unlinked_screen.dart: why: the person unlinked it on this device"
+  },
+  "unlinkedAgainLine": "Your phone keeps your chats. To use Kryfo here again, link this device to your phone.",
+  "@unlinkedAgainLine": {
+    "description": "screens/unlinked_screen.dart: the chats stay on the phone, and how to use Kryfo here again"
+  },
+  "unlinkedClose": "Close Kryfo",
+  "@unlinkedClose": {
+    "description": "screens/unlinked_screen.dart: the button that closes the app"
+  },
+  "devicesLeave": "Unlink this device",
+  "@devicesLeave": {
+    "description": "screens/linked_devices_screen.dart: the row on a linked device that unlinks it and erases it"
+  },
+  "devicesLeaveTitle": "Unlink this device?",
+  "@devicesLeaveTitle": {
+    "description": "screens/linked_devices_screen.dart: the confirm before a linked device unlinks itself"
+  },
+  "devicesLeaveLine": "Kryfo tells your phone and erases everything it keeps here. Your phone keeps your chats.",
+  "@devicesLeaveLine": {
+    "description": "screens/linked_devices_screen.dart: what unlinking this device does"
+  },
+  "devicesLeaveYes": "Unlink and erase",
+  "@devicesLeaveYes": {
+    "description": "screens/linked_devices_screen.dart: the confirm button"
+  },
+  "devicesGoneNotice": "Device removed",
+  "@devicesGoneNotice": {
+    "description": "screens/home_screen.dart: the card title when one device was removed"
+  },
+  "devicesGoneRemovedLine": "{name} was removed from your account on {date}.",
+  "@devicesGoneRemovedLine": {
+    "description": "screens/home_screen.dart: the card line: the device and the day it was removed",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      },
+      "date": {
+        "type": "Object"
+      }
+    }
+  },
+  "devicesGoneUnusedLine": "{name} wasn't used for 30 days, so it was removed from your account on {date}.",
+  "@devicesGoneUnusedLine": {
+    "description": "screens/home_screen.dart: the card line: the device was not used for 30 days and was removed on that day",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      },
+      "date": {
+        "type": "Object"
+      }
+    }
+  },
+  "devicesGoneItselfLine": "{name} unlinked itself on {date} and erased what it kept.",
+  "@devicesGoneItselfLine": {
+    "description": "screens/home_screen.dart: the card line: the device unlinked itself on that day",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      },
+      "date": {
+        "type": "Object"
+      }
+    }
+  },
+  "devicesChangedNotice": "Your devices changed",
+  "@devicesChangedNotice": {
+    "description": "screens/home_screen.dart: the card title when devices came and went"
+  },
+  "devicesChangedLine": "Open Linked devices to see what changed.",
+  "@devicesChangedLine": {
+    "description": "screens/home_screen.dart: the card line when devices came and went"
+  },
+  "devicesUnknownNotice": "Device linked elsewhere",
+  "@devicesUnknownNotice": {
+    "description": "screens/home_screen.dart: the card title: another copy of the phone linked a device"
+  },
+  "devicesUnknownLine": "Another copy of Kryfo linked a device to your account. This phone took it off your list.",
+  "@devicesUnknownLine": {
+    "description": "screens/home_screen.dart: the card line: another copy of the phone linked a device, and this phone took it off the list"
   }
 }
