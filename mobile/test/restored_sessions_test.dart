@@ -1586,7 +1586,6 @@ void main() {
   test('after a restore or a move: unused one-time invites go with their '
       'keys, the main invite and used ones stay, the session prekeys are '
       'made again, pool identities retire', () async {
-    const day = 24 * 3600 * 1000;
     final t = DateTime.now().millisecondsSinceEpoch;
     final main = await makeInvite(
       store,
