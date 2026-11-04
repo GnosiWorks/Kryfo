@@ -174,148 +174,168 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
         ),
       ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(22, 8, 22, 40),
-          children: staggerAll([
-            // ---- identity: the part people screenshot
-            Center(
-              child: Column(
-                children: [
-                  const SizedBox(height: 10),
-                  // the invite page is for people not added yet: the face
-                  KryfoAvatar(
-                    seed: id.isEmpty ? 'kryfo' : id,
-                    size: 96,
-                    choice: appState.myAvatar,
-                    photo: false,
-                  ),
-                  const SizedBox(height: 18),
-                  Text(
-                    id.isEmpty ? '...' : id,
-                    textAlign: TextAlign.center,
-                    style: HaloType.mono(
-                      size: 22,
-                      weight: FontWeight.w600,
-                      color: HaloColors.amberText,
-                      letter: 0.02,
+        child: LayoutBuilder(
+          builder: (context, box) => ListView(
+            padding: EdgeInsets.fromLTRB(
+              _side(box.maxWidth),
+              8,
+              _side(box.maxWidth),
+              40,
+            ),
+            children: staggerAll([
+              // ---- identity: the part people screenshot
+              Center(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    // the invite page is for people not added yet: the face
+                    KryfoAvatar(
+                      seed: id.isEmpty ? 'kryfo' : id,
+                      size: 96,
+                      choice: appState.myAvatar,
+                      photo: false,
                     ),
-                  ),
-                  if (handle != null) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 18),
                     Text(
-                      ltr('@$handle'),
-                      style: HaloType.sans(size: 14, color: HaloColors.text2),
+                      id.isEmpty ? '...' : id,
+                      textAlign: TextAlign.center,
+                      style: HaloType.mono(
+                        size: 22,
+                        weight: FontWeight.w600,
+                        color: HaloColors.amberText,
+                        letter: 0.02,
+                      ),
+                    ),
+                    if (handle != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        ltr('@$handle'),
+                        style: HaloType.sans(size: 14, color: HaloColors.text2),
+                      ),
+                    ],
+                    const SizedBox(height: 14),
+                    Text(
+                      l10n.myKryfoKryfoDoesnTScan,
+                      textAlign: TextAlign.center,
+                      style: HaloType.serif(
+                        size: 15,
+                        italic: true,
+                        color: HaloColors.text2,
+                      ),
                     ),
                   ],
-                  const SizedBox(height: 14),
-                  Text(
-                    l10n.myKryfoKryfoDoesnTScan,
-                    textAlign: TextAlign.center,
-                    style: HaloType.serif(
-                      size: 15,
-                      italic: true,
-                      color: HaloColors.text2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 30),
-
-            // ---- way one: next to you
-            _Way1Card(
-              open: _open == _Way.here,
-              onToggle: () => _toggle(_Way.here),
-              uri: _qr ?? _uri,
-              onScan: _scanTheirs,
-              onCode: () async {
-                await Navigator.of(
-                  context,
-                ).push(haloRoute(const PairCodeScreen(entering: true)));
-                if (mounted) await appState.refreshContacts();
-              },
-            ),
-            const SizedBox(height: 12),
-
-            // ---- way two: somewhere else
-            _Way2Card(
-              open: _open == _Way.away,
-              onToggle: () => _toggle(_Way.away),
-              uri: _uri,
-              copies: _linkCopies,
-              onCopy: _copyLink,
-              onShare: _shareLink,
-              onCard: () async {
-                if (_uri == null) return;
-                HapticFeedback.selectionClick();
-                await shareContactCard(
-                  context: context,
-                  haloId: appState.sessionId,
-                  uri: _uri!,
-                );
-              },
-              onFile: () async {
-                if (_uri == null) return;
-                HapticFeedback.selectionClick();
-                await shareContactVcf(haloId: appState.sessionId, uri: _uri!);
-              },
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(6, 8, 6, 0),
-              child: Text(
-                l10n.myKryfoIfThisLinkEnds,
-                style: HaloType.mono(size: 10, color: HaloColors.text2),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // ---- way three: they told you a handle
-            _Way3Card(
-              open: _open == _Way.handle,
-              onToggle: () => _toggle(_Way.handle),
-              ctrl: _handleCtrl,
-              busy: _finding,
-              onFind: _findHandle,
-            ),
-            const SizedBox(height: 12),
-
-            // ---- the third way in, not hidden: a friend can vouch
-            Padding(
-              padding: const EdgeInsets.fromLTRB(6, 4, 6, 6),
-              child: Text(
-                l10n.myKryfoAlreadyShareAFriend,
-                style: HaloType.sans(
-                  size: 12,
-                  color: HaloColors.text2,
-                  height: 1.45,
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
+              const SizedBox(height: 30),
 
-            // ---- the handle: a public front door, if you want one
-            _HandleRow(
-              handle: handle,
-              copies: _handleCopies,
-              onTap: () {
-                HapticFeedback.selectionClick();
-                Navigator.of(context).push(haloRoute(const HandleScreen()));
-              },
-              onCopy: handle == null
-                  ? null
-                  : () {
-                      HapticFeedback.selectionClick();
-                      copySensitive('@$handle');
-                      setState(() => _handleCopies++);
-                      showHaloToast(context, l10n.myKryfoHandleCopied);
-                    },
-            ),
-          ]),
+              // ---- way one: next to you
+              _Way1Card(
+                open: _open == _Way.here,
+                onToggle: () => _toggle(_Way.here),
+                uri: _qr ?? _uri,
+                onScan: _scanTheirs,
+                onCode: () async {
+                  await Navigator.of(
+                    context,
+                  ).push(haloRoute(const PairCodeScreen(entering: true)));
+                  if (mounted) await appState.refreshContacts();
+                },
+              ),
+              const SizedBox(height: 12),
+
+              // ---- way two: somewhere else
+              _Way2Card(
+                open: _open == _Way.away,
+                onToggle: () => _toggle(_Way.away),
+                uri: _uri,
+                copies: _linkCopies,
+                onCopy: _copyLink,
+                onShare: _shareLink,
+                onCard: () async {
+                  if (_uri == null) return;
+                  HapticFeedback.selectionClick();
+                  await shareContactCard(
+                    context: context,
+                    haloId: appState.sessionId,
+                    uri: _uri!,
+                  );
+                },
+                onFile: () async {
+                  if (_uri == null) return;
+                  HapticFeedback.selectionClick();
+                  await shareContactVcf(haloId: appState.sessionId, uri: _uri!);
+                },
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(6, 8, 6, 0),
+                child: Text(
+                  l10n.myKryfoIfThisLinkEnds,
+                  style: HaloType.mono(size: 10, color: HaloColors.text2),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // ---- way three: they told you a handle
+              _Way3Card(
+                open: _open == _Way.handle,
+                onToggle: () => _toggle(_Way.handle),
+                ctrl: _handleCtrl,
+                busy: _finding,
+                onFind: _findHandle,
+              ),
+              const SizedBox(height: 12),
+
+              // ---- the third way in, not hidden: a friend can vouch
+              Padding(
+                padding: const EdgeInsets.fromLTRB(6, 4, 6, 6),
+                child: Text(
+                  l10n.myKryfoAlreadyShareAFriend,
+                  style: HaloType.sans(
+                    size: 12,
+                    color: HaloColors.text2,
+                    height: 1.45,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // ---- the handle: a public front door, if you want one
+              _HandleRow(
+                handle: handle,
+                copies: _handleCopies,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  Navigator.of(context).push(haloRoute(const HandleScreen()));
+                },
+                onCopy: handle == null
+                    ? null
+                    : () {
+                        HapticFeedback.selectionClick();
+                        copySensitive('@$handle');
+                        setState(() => _handleCopies++);
+                        showHaloToast(context, l10n.myKryfoHandleCopied);
+                      },
+              ),
+            ]),
+          ),
         ),
       ),
     );
   }
 }
+
+/// the widest the page's cards get on a computer's window
+const kWayCardMaxWidth = 560.0;
+
+// the page's side margin: on a wide window the cards stay at a width that
+// reads well, centred, and the list still scrolls edge to edge
+double _side(double width) => onDesktop && width - 44 > kWayCardMaxWidth
+    ? (width - kWayCardMaxWidth) / 2
+    : 22;
+
+/// the qr's side on a computer: a phone held up to the screen reads it
+/// whole from a comfortable distance
+const kDeskQrSide = 264.0;
 
 // ---- the ways in ----
 
@@ -677,8 +697,10 @@ class _QrFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final side = MediaQuery.sizeOf(context).width - 22 * 2 - 18 * 2;
-    return Container(
+    final side = onDesktop
+        ? kDeskQrSide
+        : MediaQuery.sizeOf(context).width - 22 * 2 - 18 * 2;
+    final frame = Container(
       width: side,
       height: side,
       padding: const EdgeInsets.all(14),
@@ -710,6 +732,7 @@ class _QrFrame extends StatelessWidget {
               ),
             ),
     );
+    return onDesktop ? Center(child: frame) : frame;
   }
 }
 
