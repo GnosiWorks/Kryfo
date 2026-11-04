@@ -1,0 +1,29 @@
+Prywatny komunikator. Bez numeru telefonu, bez maila, bez konta. Jesteś parą
+kluczy utworzoną na twoim urządzeniu. Na domyślnej trasie nikt, także my, nie
+powiąże twoich czatów z prawdziwą tożsamością i nikt cię nie wyszuka, chyba że
+zajmiesz publiczną nazwę użytkownika.
+
+Domyślnie wszystko idzie przez Tor. Treść jest szyfrowana end-to-end
+protokołem Signal. Wiadomości idą przez przekaźniki, zapieczętowane tak, że
+żaden przekaźnik ich nie przeczyta, a na domyślnej trasie przekaźniki nigdy
+nie poznają twojego adresu IP ani tego, kim jesteś. Żadnego wysyłania książki
+adresowej, nigdy.
+
+Funkcje:
+
+* Działa tam, gdzie Tor jest zablokowany: Kryfo samo znajduje obejście
+* Dostarczanie przez przekaźniki Nostr, więc wiadomości docierają do telefonu, który był offline
+* Grupy ze zdjęciami, plikami, wiadomościami głosowymi, odpowiedziami, reakcjami, przypięciami i ankietami
+* Animowane naklejki, które podróżują jako nazwa, więc żaden obrazek nie opuszcza telefonu
+* Wyszukiwanie we wszystkich czatach, trzymane w zaszyfrowanej bazie danych
+* Wiadomości czasowe, które znikają po ustalonym czasie
+* Zaszyfrowana baza danych na telefonie i zaszyfrowane kopie zapasowe
+* Blokada aplikacji PIN-em lub biometrią, PIN przynęty, który otwiera puste Kryfo, i ukryte czaty za własnym PIN-em
+* Awaryjne wymazanie, które usuwa wszystko, także multimedia z pamięci
+* Czat z osobą, która tworzy Kryfo, anonimowo, jeśli chcesz
+* 17 języków
+* Bez analityki i telemetrii
+
+Finansowanie: bez reklam, bez inwestorów. Kryfo działa dzięki temu, co dają
+wspierający. Wsparcie jest dobrowolne i anonimowe, a każda funkcja działa tak
+samo, czy wspierasz, czy nie.

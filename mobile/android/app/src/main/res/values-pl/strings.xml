@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- written by tool/arb_android.py from lib/l10n/app_pl.arb -->
+<resources>
+    <string name="service_title">Kryfo działa</string>
+    <string name="service_text">Twoje szyfrowane połączenie jest otwarte, więc wiadomości docierają</string>
+    <string name="channel_name">Stałe połączenie</string>
+    <string name="channel_description">Utrzymuje połączenie Kryfo, żeby zaszyfrowane wiadomości docierały, gdy aplikacja jest zamknięta. Wyłączenie zatrzymuje dostarczanie.</string>
+    <string name="icon_notes">Notatki</string>
+    <string name="icon_weather">Pogoda</string>
+    <string name="icon_tasks">Zadania</string>
+    <string name="icon_news">Aktualności</string>
+    <string name="service_title_plain">Aktywne</string>
+</resources>

@@ -25,6 +25,7 @@ const kLanguageNames = <String, String>{
   'es': 'Español',
   'pt': 'Português (Brasil)',
   'it': 'Italiano',
+  'pl': 'Polski',
   'ru': 'Русский',
   'uk': 'Українська',
   'tr': 'Türkçe',
