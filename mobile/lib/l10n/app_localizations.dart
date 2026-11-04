@@ -17293,6 +17293,12 @@ abstract class AppLocalizations {
   /// **'Every message and the contact go from this computer only. Your phone keeps the chat.'**
   String get linkedDeleteHereOnly;
 
+  /// screens/chat_screen.dart, screens/contact_screen.dart: on a linked device, the block confirm: a block there stays on that device, the phone keeps its own
+  ///
+  /// In en, this message translates to:
+  /// **'Their messages stop arriving on this computer. They are not told. Block them on your phone to stop them there too.'**
+  String get linkedBlockHereOnly;
+
   /// screens/history_copy_screen.dart: the page bar of the history copy
   ///
   /// In en, this message translates to:

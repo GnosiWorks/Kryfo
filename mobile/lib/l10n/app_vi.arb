@@ -2835,6 +2835,7 @@
   "chatDeviceReplyFromPhoneForNow": "Tạm thời hãy trả lời {name} từ điện thoại của bạn.",
   "linkedClearHereOnly": "Mọi tin nhắn ở đây chỉ bị xóa khỏi máy tính này. Điện thoại của bạn vẫn giữ chúng.",
   "linkedDeleteHereOnly": "Mọi tin nhắn và liên hệ chỉ bị xóa khỏi máy tính này. Điện thoại của bạn vẫn giữ cuộc trò chuyện.",
+  "linkedBlockHereOnly": "Tin nhắn của họ sẽ không đến máy tính này nữa. Họ không được báo. Hãy chặn họ trên điện thoại để tin nhắn cũng dừng ở đó.",
   "historyCopyTitle": "Lịch sử trò chuyện",
   "historyCopyMaking": "Đang chuẩn bị các cuộc trò chuyện",
   "historyCopyMakingLine": "Điện thoại đang gom những gì sẽ được sao chép. Sắp bắt đầu.",

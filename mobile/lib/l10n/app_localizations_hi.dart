@@ -10738,6 +10738,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'हर मैसेज और संपर्क सिर्फ़ इस कंप्यूटर से हटेंगे। आपका फ़ोन चैट रखता है।';
 
   @override
+  String get linkedBlockHereOnly =>
+      'उनके मैसेज इस कंप्यूटर पर आना बंद हो जाते हैं। उन्हें बताया नहीं जाता। फ़ोन पर भी रोकने के लिए उन्हें अपने फ़ोन पर ब्लॉक करें।';
+
+  @override
   String get historyCopyTitle => 'चैट हिस्ट्री';
 
   @override

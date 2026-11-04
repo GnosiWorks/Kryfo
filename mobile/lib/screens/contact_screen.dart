@@ -15,6 +15,7 @@ import '../supporter.dart' show SupporterTier, tierGlyph, tierLabel, tierOf;
 import '../main.dart'
     show
         ownDeleteLine,
+        ownBlockLine,
         appState,
         session,
         sessionQuiet,
@@ -778,7 +779,7 @@ class _ContactScreenState extends State<ContactScreen> {
                   final ok = await showConfirmSheet(
                     context,
                     title: l10n.contactBlock(_name),
-                    line: l10n.contactTheirMessagesStopArriving,
+                    line: ownBlockLine(chat: false),
                     yes: l10n.commonBlock,
                   );
                   if (!ok) return;

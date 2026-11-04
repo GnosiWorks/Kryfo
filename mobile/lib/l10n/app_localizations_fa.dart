@@ -10746,6 +10746,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'همه‌ی پیام‌ها و مخاطب فقط از این رایانه حذف می‌شوند. گوشی شما گفت‌وگو را نگه می‌دارد.';
 
   @override
+  String get linkedBlockHereOnly =>
+      'دیگر پیامی از او به این رایانه نمی‌رسد. به او گفته نمی‌شود. در گوشی‌تان هم مسدودش کنید تا آنجا هم نرسد.';
+
+  @override
   String get historyCopyTitle => 'تاریخچهٔ گفت‌وگوها';
 
   @override

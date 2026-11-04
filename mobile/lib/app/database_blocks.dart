@@ -110,6 +110,12 @@ mixin _BlockRows {
         ['own_held'],
       )).isNotEmpty) {
         await t.delete('own_held', where: 'sender = ?', whereArgs: [haloId]);
+        // on a linked device, the block my phone last told for them
+        await t.delete(
+          'signal_meta',
+          where: 'k = ?',
+          whereArgs: ['$kOwnPhoneBlockMeta$haloId'],
+        );
       }
       // what of theirs went in groups, by group and sender (goneKey). the
       // delete marked their polls as just gone: nothing of them stays

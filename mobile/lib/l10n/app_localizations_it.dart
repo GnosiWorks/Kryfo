@@ -10814,6 +10814,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Tutti i messaggi e il contatto vanno via solo da questo computer. Il tuo telefono conserva la chat.';
 
   @override
+  String get linkedBlockHereOnly =>
+      'I suoi messaggi non arrivano più su questo computer. Non riceve nessun avviso. Bloccalo sul telefono perché smettano di arrivare anche lì.';
+
+  @override
   String get historyCopyTitle => 'Cronologia chat';
 
   @override

@@ -104,6 +104,7 @@ import '../main.dart'
         deviceReaches,
         deviceSealOutcome,
         ownClearLine,
+        ownBlockLine,
         engine,
         sendFirstContactNoted,
         AppStatePqRestart,
@@ -6269,7 +6270,7 @@ class _ChatScreenState extends State<ChatScreen>
     final confirm = await showConfirmSheet(
       context,
       title: l10n.chatBlockThisContact,
-      line: l10n.chatTheirMessagesStopArriving,
+      line: ownBlockLine(chat: true),
       yes: l10n.commonBlock,
       keep: l10n.commonCancel,
     );

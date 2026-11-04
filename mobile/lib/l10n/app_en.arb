@@ -13439,6 +13439,10 @@
   "@linkedDeleteHereOnly": {
     "description": "screens/contact_screen.dart, screens/home_screen.dart: on a linked device, the delete confirm: a deleted chat goes from that device alone"
   },
+  "linkedBlockHereOnly": "Their messages stop arriving on this computer. They are not told. Block them on your phone to stop them there too.",
+  "@linkedBlockHereOnly": {
+    "description": "screens/chat_screen.dart, screens/contact_screen.dart: on a linked device, the block confirm: a block there stays on that device, the phone keeps its own"
+  },
   "historyCopyTitle": "Chat history",
   "@historyCopyTitle": {
     "description": "screens/history_copy_screen.dart: the page bar of the history copy"

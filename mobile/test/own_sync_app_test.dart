@@ -787,7 +787,10 @@ void main() {
     expect((b['accepted'], b['nickname'], b['note']), (0, null, null));
     expect(b['ikey'], isNotNull);
     expect(await s.query('gone_in', where: "peer_id = 'bob'"), isEmpty);
-    expect(await s.query('frame_order', where: "msg_uid = 'os:p:bob'"), isEmpty);
+    expect(
+      await s.query('frame_order', where: "msg_uid = 'os:p:bob'"),
+      isEmpty,
+    );
     // one nothing names goes
     await s.update('contacts', {'shots_on': 0}, where: "halo_id = 'carol'");
     expect(await op('gone', 'p:carol', {}), isTrue);
@@ -807,6 +810,57 @@ void main() {
     expect(deviceSealOutcome(const DeviceCannotReach('bob')), kNotFromDevice);
     expect(deviceSealOutcome(StateError('x')), isNull);
   });
+
+  test('a block made on a linked device stays its own until my phone\'s '
+      'block moves; one my phone makes or lifts is taken', () async {
+    linkedRoleForTest = true;
+    await person('dan');
+    Future<int?> blocked(String id) async =>
+        (await s.query(
+              'contacts',
+              where: 'halo_id = ?',
+              whereArgs: [id],
+            )).single['blocked']
+            as int?;
+    Future<List<Map<String, Object?>>> meta(String id) =>
+        s.query('signal_meta', where: 'k = ?', whereArgs: ['own_pb:$id']);
+    Future<void> phone(String id, int b, [String? name]) async {
+      expect(
+        await op('contact', 'p:$id', {
+          'r': {'blocked': b, 'nickname': ?name},
+        }),
+        isTrue,
+      );
+    }
+
+    await phone('bob', 0, 'B');
+    await app.block('bob');
+    expect(await blocked('bob'), 1);
+    // the phone's next row, its block as it was: this one stays
+    await phone('bob', 0, 'Bobby');
+    expect(await blocked('bob'), 1);
+    final b = (await s.query('contacts', where: "halo_id = 'bob'")).single;
+    expect(b['nickname'], 'Bobby');
+    // the phone blocks and lifts it: taken
+    await phone('bob', 1);
+    expect(await blocked('bob'), 1);
+    await phone('bob', 0);
+    expect(await blocked('bob'), 0);
+    // a block here before any row of the phone's came
+    await app.block('old-friend');
+    await phone('old-friend', 0, 'Old');
+    expect(await blocked('old-friend'), 1);
+    // and one here lifted, the phone's still on: stays lifted
+    await phone('dan', 1);
+    expect(await blocked('dan'), 1);
+    expect(await s.query('block_spans', where: "peer_id = 'dan'"), isNotEmpty);
+    await app.unblock('dan');
+    await phone('dan', 1, 'H');
+    expect(await blocked('dan'), 0);
+    // the chat gone: nothing of it stays
+    expect(await op('gone', 'p:bob', {}), isTrue);
+    expect(await meta('bob'), isEmpty);
+  }, skip: skip);
 
   test('M6 a linked device keeps a whole chat\'s delete, its clear and its '
       'block to itself; my phone takes no block from it', () async {
@@ -843,13 +897,16 @@ void main() {
     expect((o['blocked'], o['nickname']), (0, 'Old'));
   }, skip: skip);
 
-  test('L4 a chat deleted on my phone is told gone at once, as a hide is',
-      () async {
-    await ownPassForTest();
-    await app.deleteConversation('old-friend');
-    await Future<void>.delayed(const Duration(milliseconds: 200));
-    expect(told.ops.map((o) => (o.$1, o.$2)), [('gone', 'p:old-friend')]);
-  }, skip: skip);
+  test(
+    'L4 a chat deleted on my phone is told gone at once, as a hide is',
+    () async {
+      await ownPassForTest();
+      await app.deleteConversation('old-friend');
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      expect(told.ops.map((o) => (o.$1, o.$2)), [('gone', 'p:old-friend')]);
+    },
+    skip: skip,
+  );
 
   test('L5 a delete here lets go of own_gone rows past their time', () async {
     await s.insert('own_gone', {'uid': 'u-very-old', 'at': 1});

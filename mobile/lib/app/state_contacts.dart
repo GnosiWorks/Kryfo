@@ -511,6 +511,8 @@ extension AppStateContacts on AppState {
   // session that showed it: a decoy shows nothing, and the same words there
   // may name someone the everyday app has in the shade
   Future<void> block(String haloId) async {
+    // a linked device's block stays its own (devices_own_app)
+    await _ownBlockHere(haloId);
     await session.setBlocked(haloId, true);
     await dropHellos(await hellosKeysOf(haloId));
     // what was typed for them stays, under the blocked bar, for an unblock
@@ -749,6 +751,7 @@ extension AppStateContacts on AppState {
 
   // an unblock listens for them, if nothing did yet
   Future<void> unblock(String haloId) async {
+    await _ownBlockHere(haloId);
     await session.setBlocked(haloId, false);
     // the card says so before the vault can shut: one still saying blocked
     // would turn them away, and note what they send as sent while it held

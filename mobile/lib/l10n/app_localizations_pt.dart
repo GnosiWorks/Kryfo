@@ -10807,6 +10807,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Todas as mensagens e o contato saem só deste computador. Seu celular mantém a conversa.';
 
   @override
+  String get linkedBlockHereOnly =>
+      'As mensagens dessa pessoa param de chegar a este computador. Ela não fica sabendo. Bloqueie no seu celular para que parem lá também.';
+
+  @override
   String get historyCopyTitle => 'Histórico de conversas';
 
   @override

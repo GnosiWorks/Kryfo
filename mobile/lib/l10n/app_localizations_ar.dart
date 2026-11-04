@@ -10864,6 +10864,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'تزول كل الرسائل وجهة الاتصال من هذا الحاسوب فقط. يحتفظ هاتفك بالمحادثة.';
 
   @override
+  String get linkedBlockHereOnly =>
+      'تتوقف رسائله عن الوصول إلى هذا الحاسوب. ولا يُبلَّغ بذلك. احظره من هاتفك ليتوقف هناك أيضًا.';
+
+  @override
   String get historyCopyTitle => 'سجل المحادثات';
 
   @override

@@ -2835,6 +2835,7 @@
   "chatDeviceReplyFromPhoneForNow": "Por enquanto, responda a {name} pelo seu celular.",
   "linkedClearHereOnly": "Todas as mensagens daqui são apagadas só deste computador. Seu celular as mantém.",
   "linkedDeleteHereOnly": "Todas as mensagens e o contato saem só deste computador. Seu celular mantém a conversa.",
+  "linkedBlockHereOnly": "As mensagens dessa pessoa param de chegar a este computador. Ela não fica sabendo. Bloqueie no seu celular para que parem lá também.",
   "historyCopyTitle": "Histórico de conversas",
   "historyCopyMaking": "Preparando suas conversas",
   "historyCopyMakingLine": "Seu celular reúne o que vai ser copiado. Começa em um instante.",

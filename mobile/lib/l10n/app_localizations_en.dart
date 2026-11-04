@@ -10727,6 +10727,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Every message and the contact go from this computer only. Your phone keeps the chat.';
 
   @override
+  String get linkedBlockHereOnly =>
+      'Their messages stop arriving on this computer. They are not told. Block them on your phone to stop them there too.';
+
+  @override
   String get historyCopyTitle => 'Chat history';
 
   @override

@@ -10760,6 +10760,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Tüm mesajlar ve kişi yalnızca bu bilgisayardan gider. Telefonun sohbeti saklar.';
 
   @override
+  String get linkedBlockHereOnly =>
+      'Mesajları artık bu bilgisayara gelmez. Ona haber verilmez. Telefonunda da gelmemesi için onu orada da engelle.';
+
+  @override
   String get historyCopyTitle => 'Sohbet geçmişi';
 
   @override

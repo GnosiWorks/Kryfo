@@ -16,6 +16,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'container.dart';
 import 'devices/device_state.dart' show linkedDevicesOn;
+import 'devices/own_sync.dart' show ownFrameNames;
 import 'lock_state.dart' show LockState, lockState;
 import 'main.dart' show HaloDb, deviceState, engine, shredFile;
 import 'notifications.dart'
@@ -701,6 +702,19 @@ class SqlChatMover implements ChatMover {
     for (final e in _ownOf(c).entries) {
       if ((await _cols(t, s, e.key)).isEmpty) continue;
       await t.execute('DELETE FROM $s.${e.key} WHERE ${e.value}', [c.id]);
+    }
+    // my own frames of it still waiting unsealed for a device of mine: the
+    // hide tells my devices it is gone, nothing of it stays here to go
+    final out = await _cols(t, s, 'dev_out');
+    if (out.contains('own') && out.contains('plain')) {
+      final chat = (id: c.id, group: c.group);
+      for (final r in await t.rawQuery(
+        'SELECT rowid AS r, plain FROM $s.dev_out '
+        'WHERE own = 1 AND plain IS NOT NULL',
+      )) {
+        if (!ownFrameNames(r['plain'] as String, chat)) continue;
+        await t.execute('DELETE FROM $s.dev_out WHERE rowid = ?', [r['r']]);
+      }
     }
     await t.execute('DELETE FROM $s.messages WHERE ${_chatMsgs(c)}', [c.id]);
     // its notification tag stays behind with nothing: the other side makes

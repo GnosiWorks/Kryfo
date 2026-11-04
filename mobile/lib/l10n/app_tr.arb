@@ -2835,6 +2835,7 @@
   "chatDeviceReplyFromPhoneForNow": "Şimdilik {name} kişisine telefonundan yanıt ver.",
   "linkedClearHereOnly": "Buradaki her mesaj yalnızca bu bilgisayardan silinir. Telefonun onları saklar.",
   "linkedDeleteHereOnly": "Tüm mesajlar ve kişi yalnızca bu bilgisayardan gider. Telefonun sohbeti saklar.",
+  "linkedBlockHereOnly": "Mesajları artık bu bilgisayara gelmez. Ona haber verilmez. Telefonunda da gelmemesi için onu orada da engelle.",
   "historyCopyTitle": "Sohbet geçmişi",
   "historyCopyMaking": "Sohbetlerin hazırlanıyor",
   "historyCopyMakingLine": "Telefonun kopyalanacakları topluyor. Birazdan başlıyor.",

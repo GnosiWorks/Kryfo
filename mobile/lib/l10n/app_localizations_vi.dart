@@ -10719,6 +10719,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mọi tin nhắn và liên hệ chỉ bị xóa khỏi máy tính này. Điện thoại của bạn vẫn giữ cuộc trò chuyện.';
 
   @override
+  String get linkedBlockHereOnly =>
+      'Tin nhắn của họ sẽ không đến máy tính này nữa. Họ không được báo. Hãy chặn họ trên điện thoại để tin nhắn cũng dừng ở đó.';
+
+  @override
   String get historyCopyTitle => 'Lịch sử trò chuyện';
 
   @override

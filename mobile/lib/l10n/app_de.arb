@@ -2835,6 +2835,7 @@
   "chatDeviceReplyFromPhoneForNow": "Antworte {name} vorerst von deinem Handy aus.",
   "linkedClearHereOnly": "Jede Nachricht hier wird nur von diesem Computer gelöscht. Dein Handy behält sie.",
   "linkedDeleteHereOnly": "Alle Nachrichten und der Kontakt verschwinden nur von diesem Computer. Dein Handy behält den Chat.",
+  "linkedBlockHereOnly": "Die Nachrichten der Person kommen auf diesem Computer nicht mehr an. Sie erfährt nichts davon. Blockiere sie auf deinem Handy, damit sie auch dort aufhören.",
   "historyCopyTitle": "Chatverlauf",
   "historyCopyMaking": "Deine Chats werden vorbereitet",
   "historyCopyMakingLine": "Dein Handy stellt zusammen, was übertragen wird. Gleich geht es los.",

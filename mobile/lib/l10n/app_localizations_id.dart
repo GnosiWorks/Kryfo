@@ -10734,6 +10734,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Semua pesan dan kontak ini hilang hanya dari komputer ini. Ponselmu tetap menyimpan chatnya.';
 
   @override
+  String get linkedBlockHereOnly =>
+      'Pesannya berhenti masuk ke komputer ini. Dia tidak diberi tahu. Blokir dia di ponselmu agar di sana juga berhenti.';
+
+  @override
   String get historyCopyTitle => 'Riwayat chat';
 
   @override

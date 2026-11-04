@@ -10849,6 +10849,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Alle Nachrichten und der Kontakt verschwinden nur von diesem Computer. Dein Handy behält den Chat.';
 
   @override
+  String get linkedBlockHereOnly =>
+      'Die Nachrichten der Person kommen auf diesem Computer nicht mehr an. Sie erfährt nichts davon. Blockiere sie auf deinem Handy, damit sie auch dort aufhören.';
+
+  @override
   String get historyCopyTitle => 'Chatverlauf';
 
   @override

@@ -10933,6 +10933,10 @@ class AppLocalizationsPl extends AppLocalizations {
       'Wszystkie wiadomości i kontakt znikną tylko z tego komputera. Twój telefon zachowa czat.';
 
   @override
+  String get linkedBlockHereOnly =>
+      'Wiadomości od tej osoby przestają docierać na ten komputer. Nie jest o tym informowana. Zablokuj ją na telefonie, aby przestały docierać także tam.';
+
+  @override
   String get historyCopyTitle => 'Historia czatów';
 
   @override

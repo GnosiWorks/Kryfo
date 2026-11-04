@@ -81,6 +81,36 @@ OwnChat? ownChatOf(Object? c) {
   return (id: c.substring(2), group: c.startsWith('g:'));
 }
 
+/// whether an own frame [plain] (oc, os or of) is about [chat]: a hide
+/// drops the ones still waiting unsealed (vault_life)
+bool ownFrameNames(String plain, OwnChat chat) {
+  if (!plain.startsWith(kEnvelopePrefix)) return false;
+  final Object? j;
+  try {
+    j = jsonDecode(plain.substring(kEnvelopePrefix.length));
+  } catch (_) {
+    return false;
+  }
+  if (j is! Map) return false;
+  final name = ownChatName(chat);
+  for (final k in const ['oc', 'os']) {
+    final b = j[k];
+    if (b is Map && b['c'] == name) return true;
+  }
+  final of = j['of'];
+  if (of is! Map || of['f'] is! String) return false;
+  final f = of['f'] as String;
+  Object? g;
+  if (f.startsWith(kEnvelopePrefix)) {
+    try {
+      final b = jsonDecode(f.substring(kEnvelopePrefix.length));
+      if (b is Map) g = b['g'];
+    } catch (_) {}
+  }
+  final inGroup = g is String && g.isNotEmpty;
+  return chat.group ? g == chat.id : !inGroup && of['h'] == chat.id;
+}
+
 /// what the person did on a chat here, told by the session (session.dart)
 /// for my other devices: set by the app once own sync runs
 void Function(String kind, OwnChat chat, Map<String, Object?> a)? ownNoted;

@@ -10157,6 +10157,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get linkedDeleteHereOnly => '所有消息和这位联系人只会从这台电脑上移除。你的手机会保留这段聊天。';
 
   @override
+  String get linkedBlockHereOnly =>
+      '对方的消息将不再送达这台电脑。对方不会被告知。在手机上屏蔽对方，手机上也不会再收到。';
+
+  @override
   String get historyCopyTitle => '聊天记录';
 
   @override
@@ -20725,6 +20729,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get linkedDeleteHereOnly => '所有訊息和這位聯絡人只會從這台電腦上移除。你的手機會保留這段聊天。';
+
+  @override
+  String get linkedBlockHereOnly =>
+      '對方的訊息將不再送達這台電腦。對方不會收到通知。在手機上封鎖對方，手機上也不會再收到。';
 
   @override
   String get historyCopyTitle => '聊天記錄';

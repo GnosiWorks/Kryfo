@@ -10902,6 +10902,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Все сообщения и контакт исчезнут только с этого компьютера. Телефон сохранит чат.';
 
   @override
+  String get linkedBlockHereOnly =>
+      'Сообщения перестанут приходить на этот компьютер. Собеседнику об этом не сообщат. Заблокируйте его на телефоне, чтобы они не приходили и там.';
+
+  @override
   String get historyCopyTitle => 'История чатов';
 
   @override

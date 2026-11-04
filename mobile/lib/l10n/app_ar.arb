@@ -2835,6 +2835,7 @@
   "chatDeviceReplyFromPhoneForNow": "ردّ على {name} من هاتفك في الوقت الحالي.",
   "linkedClearHereOnly": "تُمسح كل رسالة هنا من هذا الحاسوب فقط. يحتفظ بها هاتفك.",
   "linkedDeleteHereOnly": "تزول كل الرسائل وجهة الاتصال من هذا الحاسوب فقط. يحتفظ هاتفك بالمحادثة.",
+  "linkedBlockHereOnly": "تتوقف رسائله عن الوصول إلى هذا الحاسوب. ولا يُبلَّغ بذلك. احظره من هاتفك ليتوقف هناك أيضًا.",
   "historyCopyTitle": "سجل المحادثات",
   "historyCopyMaking": "جارٍ تجهيز محادثاتك",
   "historyCopyMakingLine": "يجمع هاتفك ما سيُنسخ. يبدأ بعد لحظة.",

@@ -10900,6 +10900,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Усі повідомлення й контакт зникнуть лише з цього комп’ютера. Телефон збереже чат.';
 
   @override
+  String get linkedBlockHereOnly =>
+      'Повідомлення від контакту перестануть надходити на цей комп’ютер. Йому про це не скажуть. Заблокуйте його на телефоні, щоб вони не надходили і там.';
+
+  @override
   String get historyCopyTitle => 'Історія чатів';
 
   @override

@@ -2835,6 +2835,7 @@
   "chatDeviceReplyFromPhoneForNow": "Untuk sekarang, balas {name} dari ponselmu.",
   "linkedClearHereOnly": "Semua pesan di sini dihapus hanya dari komputer ini. Ponselmu tetap menyimpannya.",
   "linkedDeleteHereOnly": "Semua pesan dan kontak ini hilang hanya dari komputer ini. Ponselmu tetap menyimpan chatnya.",
+  "linkedBlockHereOnly": "Pesannya berhenti masuk ke komputer ini. Dia tidak diberi tahu. Blokir dia di ponselmu agar di sana juga berhenti.",
   "historyCopyTitle": "Riwayat chat",
   "historyCopyMaking": "Menyiapkan chat kamu",
   "historyCopyMakingLine": "Ponselmu mengumpulkan yang akan disalin. Sebentar lagi dimulai.",

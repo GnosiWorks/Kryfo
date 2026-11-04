@@ -59,6 +59,27 @@ void _bootOwnSync(DeviceState ds, DeviceSend send, DeviceReceive recv) {
 /// phone ('profile'): the same person as this device in every group
 const kOwnPhoneIdMeta = 'own_phone_id';
 
+/// on a linked device, signal_meta 'own_pb:' and a contact's kryfo id: the
+/// block my phone last told for them (1 or 0)
+const kOwnPhoneBlockMeta = 'own_pb:';
+
+Future<int?> _ownPhoneBlockOf(Database d, String id) async {
+  final r = await d.query(
+    'signal_meta',
+    columns: ['v'],
+    where: 'k = ?',
+    whereArgs: ['$kOwnPhoneBlockMeta$id'],
+    limit: 1,
+  );
+  return r.isEmpty ? null : int.tryParse('${r.first['v']}');
+}
+
+Future<void> _ownPhoneBlockPut(Database d, String id, int b) => d.insert(
+  'signal_meta',
+  {'k': '$kOwnPhoneBlockMeta$id', 'v': '$b'},
+  conflictAlgorithm: ConflictAlgorithm.replace,
+);
+
 String? _ownPhoneId;
 
 // a person unlocked this device: its phone hears it is in use
@@ -190,6 +211,14 @@ String ownClearLine({required bool group}) => ownChatEndsHere
     : group
     ? l10n.groupInfoEveryMessageHereIsShown
     : l10n.chatEveryMessageHereIsShown;
+
+/// a block's confirm line in a chat or on a contact's page: on a linked
+/// device the block is this device's own, and its phone keeps theirs
+String ownBlockLine({required bool chat}) => ownChatEndsHere
+    ? l10n.linkedBlockHereOnly
+    : chat
+    ? l10n.chatTheirMessagesStopArriving
+    : l10n.contactTheirMessagesStopArriving;
 
 /// a delete's confirm line on a contact's page, the same way
 String get ownDeleteLine => ownChatEndsHere
@@ -1034,8 +1063,13 @@ extension AppStateOwn on AppState {
       put['first_seen'] ??= 0;
       put['last_seen'] ??= 0;
       await d.insert('contacts', put);
+      final b = put['blocked'];
+      if (b == 0 || b == 1) await _ownPhoneBlockPut(d, id, b as int);
     } else {
+      // a block goes as a block here goes, and only when my phone's moved
+      final b = put.remove('blocked');
       await d.update('contacts', put, where: 'halo_id = ?', whereArgs: [id]);
+      await _ownPhoneBlock(id, b);
     }
     await _ownMarkPass((id: id, group: false));
     await refreshContacts();
@@ -1052,6 +1086,35 @@ extension AppStateOwn on AppState {
       }
     }
     return true;
+  }
+
+  // my phone's block of [id] on a linked device: taken only when it moved
+  // since the phone last told it, so a block or unblock made here stays
+  Future<void> _ownPhoneBlock(String id, Object? b) async {
+    if (b != 0 && b != 1) return;
+    final d = await live.open();
+    final here = await live.isBlocked(id);
+    final prev = await _ownPhoneBlockOf(d, id) ?? (here ? 1 : 0);
+    await _ownPhoneBlockPut(d, id, b as int);
+    if (b == prev || (b == 1) == here) return;
+    if (b == 1) {
+      await block(id);
+    } else {
+      await unblock(id);
+    }
+  }
+
+  // a block or unblock made on a linked device: what my phone last told is
+  // kept first, so its next contact op leaves this one as it is
+  Future<void> _ownBlockHere(String id) async {
+    if (!linkedDevicesOn || !linkedRole) return;
+    try {
+      final d = await live.open();
+      if (await _ownPhoneBlockOf(d, id) != null) return;
+      await _ownPhoneBlockPut(d, id, await live.isBlocked(id) ? 1 : 0);
+    } catch (e) {
+      dlog('own: a block here not noted (${e.runtimeType})');
+    }
   }
 
   // a chat gone on another device of mine (deleted there, or hidden on my
@@ -1419,6 +1482,11 @@ extension AppStateOwn on AppState {
         limit: 1,
       );
       await t.delete('gone_in', where: 'peer_id = ?', whereArgs: [id]);
+      await t.delete(
+        'signal_meta',
+        where: 'k = ?',
+        whereArgs: ['$kOwnPhoneBlockMeta$id'],
+      );
       // the order of my phone's ops on the chat goes with it
       await t.delete(
         'frame_order',

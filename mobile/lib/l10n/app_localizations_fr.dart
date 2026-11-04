@@ -10843,6 +10843,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Tous les messages et le contact partent de cet ordinateur seulement. Votre téléphone garde la discussion.';
 
   @override
+  String get linkedBlockHereOnly =>
+      'Ses messages n’arrivent plus sur cet ordinateur. Ce contact n’en est pas averti. Bloquez-le sur votre téléphone pour qu’ils s’arrêtent aussi là-bas.';
+
+  @override
   String get historyCopyTitle => 'Historique des discussions';
 
   @override

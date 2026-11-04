@@ -2835,6 +2835,7 @@
   "chatDeviceReplyFromPhoneForNow": "Por ahora, responde a {name} desde tu teléfono.",
   "linkedClearHereOnly": "Todos los mensajes de aquí se borran solo de este ordenador. Tu teléfono los conserva.",
   "linkedDeleteHereOnly": "Todos los mensajes y el contacto se van solo de este ordenador. Tu teléfono conserva el chat.",
+  "linkedBlockHereOnly": "Sus mensajes dejan de llegar a este ordenador. No se le avisa. Bloquéalo en tu teléfono para que tampoco lleguen allí.",
   "historyCopyTitle": "Historial de chats",
   "historyCopyMaking": "Preparando tus chats",
   "historyCopyMakingLine": "Tu teléfono reúne lo que se va a copiar. Empieza en un momento.",

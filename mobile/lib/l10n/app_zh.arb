@@ -2835,6 +2835,7 @@
   "chatDeviceReplyFromPhoneForNow": "暂时请在手机上回复 {name}。",
   "linkedClearHereOnly": "这里的每条消息只会从这台电脑上清除。你的手机会保留它们。",
   "linkedDeleteHereOnly": "所有消息和这位联系人只会从这台电脑上移除。你的手机会保留这段聊天。",
+  "linkedBlockHereOnly": "对方的消息将不再送达这台电脑。对方不会被告知。在手机上屏蔽对方，手机上也不会再收到。",
   "historyCopyTitle": "聊天记录",
   "historyCopyMaking": "正在准备你的聊天",
   "historyCopyMakingLine": "你的手机正在整理要复制的内容，马上开始。",

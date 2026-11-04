@@ -712,6 +712,82 @@ void main() {
     }
   }, skip: skip);
 
+  test('a chat into the vault takes my own frames of it still waiting '
+      'unsealed for my devices out of the everyday side; sealed ones and '
+      'other chats\' stay', () async {
+    final db = await _world();
+    for (final s in ['main', 'v']) {
+      await db.execute(
+        'CREATE TABLE $s.dev_out (uid TEXT, ident INTEGER, peer TEXT, '
+        'device INTEGER, at INTEGER, own INTEGER NOT NULL DEFAULT 0, '
+        'plain TEXT, wire TEXT, PRIMARY KEY (uid, ident, peer, device))',
+      );
+    }
+    String env(Map<String, Object?> j) => 'halo/1:${jsonEncode(j)}';
+    final f1 = env({'u': 'a', 'm': 'hi'});
+    final fg = env({'u': 'b', 'm': 'all', 'g': _g});
+    final fo = env({'u': 'c', 'm': 'else', 'g': 'other'});
+    final rows = {
+      'oc-f': env({
+        'u': 'oc:1',
+        'oc': {'i': 0, 'c': 'p:$_f', 'f': f1},
+      }),
+      'os-f': env({
+        'u': 'os:1:1',
+        'os': {'n': 1, 'k': 'read', 'c': 'p:$_f'},
+      }),
+      'of-f': env({
+        'u': 'of:1',
+        'of': {'h': _f, 't': 1, 'f': f1},
+      }),
+      'oc-g': env({
+        'u': 'oc:2',
+        'oc': {'i': 0, 'c': 'g:$_g', 'f': fg},
+      }),
+      'of-g': env({
+        'u': 'of:2',
+        'of': {'h': 'someone', 't': 1, 'f': fg},
+      }),
+      // stays: another chat, his word in another group, a sealed one, a
+      // contact's own copy
+      'oc-x': env({
+        'u': 'oc:3',
+        'oc': {'i': 0, 'c': 'p:someone', 'f': f1},
+      }),
+      'of-fo': env({
+        'u': 'of:3',
+        'of': {'h': _f, 't': 1, 'f': fo},
+      }),
+    };
+    for (final e in rows.entries) {
+      await db.execute(
+        'INSERT INTO main.dev_out (uid, ident, peer, device, at, own, plain) '
+        "VALUES (?, 0, 'me', 2, 1, 1, ?)",
+        [e.key, e.value],
+      );
+    }
+    await db.execute(
+      'INSERT INTO main.dev_out (uid, ident, peer, device, at, own, wire) '
+      "VALUES ('sealed', 0, 'me', 2, 1, 1, 'w')",
+    );
+    await db.execute(
+      'INSERT INTO main.dev_out (uid, ident, peer, device, at, own, plain) '
+      "VALUES ('theirs', 0, 'k', 2, 1, 0, ?)",
+      [f1],
+    );
+    final mover = SqlChatMover(_NoDb(), _NoDb());
+    await mover.moveRowsOn(db, const ChatRef(_f), intoVault: true);
+    await mover.moveRowsOn(db, group, intoVault: true);
+    Future<List<String>> left(String s) async => [
+      for (final r in await db.rawQuery(
+        'SELECT uid FROM $s.dev_out ORDER BY uid',
+      ))
+        r['uid'] as String,
+    ];
+    expect(await left('main'), ['oc-x', 'of-fo', 'sealed', 'theirs']);
+    expect(await left('v'), isEmpty);
+  }, skip: skip);
+
   for (final side in ['main', 'v']) {
     test(
       'a move goes on when $side has no drafts or wallpapers table',

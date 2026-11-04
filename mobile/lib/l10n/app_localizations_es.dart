@@ -10806,6 +10806,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Todos los mensajes y el contacto se van solo de este ordenador. Tu teléfono conserva el chat.';
 
   @override
+  String get linkedBlockHereOnly =>
+      'Sus mensajes dejan de llegar a este ordenador. No se le avisa. Bloquéalo en tu teléfono para que tampoco lleguen allí.';
+
+  @override
   String get historyCopyTitle => 'Historial de chats';
 
   @override

@@ -2835,6 +2835,7 @@
   "chatDeviceReplyFromPhoneForNow": "Na razie odpowiadaj {name} z telefonu.",
   "linkedClearHereOnly": "Każda wiadomość stąd zostanie usunięta tylko z tego komputera. Twój telefon je zachowa.",
   "linkedDeleteHereOnly": "Wszystkie wiadomości i kontakt znikną tylko z tego komputera. Twój telefon zachowa czat.",
+  "linkedBlockHereOnly": "Wiadomości od tej osoby przestają docierać na ten komputer. Nie jest o tym informowana. Zablokuj ją na telefonie, aby przestały docierać także tam.",
   "historyCopyTitle": "Historia czatów",
   "historyCopyMaking": "Przygotowanie twoich czatów",
   "historyCopyMakingLine": "Telefon zbiera to, co zostanie skopiowane. Za chwilę start.",
