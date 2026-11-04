@@ -246,7 +246,7 @@ void main() {
     final rail = t.widget(find.byType(WideRail));
     final g = await t.startGesture(t.getCenter(find.byType(ListDivider)));
     for (var i = 0; i < 4; i++) {
-      await g.moveBy(const Offset(4, 0));
+      await g.moveBy(const Offset(-8, 0));
       await t.pump();
     }
     expect(identical(keyed('wide list'), list), isTrue);
@@ -259,7 +259,7 @@ void main() {
       of: find.text('chat $_a'),
       matching: find.byType(Scaffold),
     );
-    expect(_rect(t, page.first).left, kRailWidth + kListStart + 16 + 1);
+    expect(_rect(t, page.first).left, kRailWidth + kListStart - 32 + 1);
     await devClose(t);
   });
 
@@ -312,19 +312,20 @@ void main() {
     t,
   ) async {
     for (final loc in const [Locale('ar'), Locale('fa')]) {
-      await _open(t, locale: loc);
+      // from a width dragged before, with room to widen
+      await _open(t, locale: loc, prefs: {'wide_list_width': 360.0});
       final rail = _rect(t, find.byType(WideRail));
       expect(rail.right, 1280);
       final pane = _rect(t, find.byType(WideEmpty));
       expect(pane.left, 0);
-      expect(pane.right, 1280 - kRailWidth - kListStart - 1);
+      expect(pane.right, 1280 - kRailWidth - 360 - 1);
       expect(find.text(l10n.wideSelectChat), findsOneWidget);
       // dragging towards the pane, to the left here, widens the list
-      await _drag(t, find.byType(ListDivider), -16);
+      await _drag(t, find.byType(ListDivider), -30);
       await _settle(t);
       expect(
         _rect(t, find.byType(WideEmpty)).right,
-        1280 - kRailWidth - (kListStart + 16) - 1,
+        1280 - kRailWidth - (360 + 30) - 1,
       );
       await devClose(t);
       SharedPreferences.setMockInitialValues({});
