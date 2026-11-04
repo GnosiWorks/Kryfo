@@ -27,21 +27,32 @@ func useEdKey(t *testing.T) {
 }
 
 // the registry calls, people search and the badge calls as the app makes
-// them, each with what it answered
-func serviceCalls(base string) map[string]string {
-	return map[string]string{
-		"check":   handleCheck("wren"),
-		"claim":   handleClaim("wren", "kryfo://share?id=a-b-c", ""),
-		"release": handleRelease("wren"),
-		"listing": handlePost("/handle/listing", []byte(`{}`)),
-		"search":  torPost(base+"/handle/search", `{"q":"wren"}`),
-		"badge":   torGetJSON(base + "/receipt?id=1"),
+// them, in order, each with what it answered and the lane it should take
+// ("" for a search: a name of its own)
+type serviceCall struct {
+	what, lane string
+	do         func() string
+}
+
+func serviceCalls(base string) []serviceCall {
+	return []serviceCall{
+		{"check", laneOwnHandle, func() string { return handleCheck("wren") }},
+		{"claim", laneOwnHandle, func() string { return handleClaim("wren", "kryfo://share?id=a-b-c", "") }},
+		{"release", laneOwnHandle, func() string { return handleRelease("wren") }},
+		{"listing", laneOwnHandle, func() string { return handlePost("/handle/listing", []byte(`{}`)) }},
+		{"own lookup", laneOwnHandle, func() string { return ownHandleGetJSON(base + "/.well-known/kryfo.json?name=wren") }},
+		{"search", "", func() string { return searchPost(base+"/handle/search", `{"q":"wren"}`) }},
+		{"second search", "", func() string { return searchPost(base+"/handle/search", `{"q":"wren"}`) }},
+		{"lookup", laneServices, func() string { return torGetJSON(base + "/.well-known/kryfo.json?name=bob") }},
+		{"badge", laneServices, func() string { return torGetJSON(base + "/receipt?id=1") }},
 	}
 }
 
-// on every route the registry, search and badge calls go through tor under
-// the services lane's own name, so the registry's box never sees the ip.
-// gifs follow the route: direct on relay and fast
+// on every route the registry, search and badge calls go through tor, so
+// the registry's box never sees the ip. the own handle's calls go under
+// their lane's name, each search under a name nothing else has, and the
+// rest under the services lane's. gifs follow the route: direct on relay
+// and fast
 func TestServicesOverTorOnEveryRoute(t *testing.T) {
 	for _, m := range []string{modePrivate, modeBalanced, modeFast} {
 		t.Run(m, func(t *testing.T) {
@@ -52,23 +63,30 @@ func TestServicesOverTorOnEveryRoute(t *testing.T) {
 			oldBase := handleBase
 			handleBase = svc.srv.URL
 			defer func() { handleBase = oldBase }()
-			for what, r := range serviceCalls(svc.srv.URL) {
-				if strings.HasPrefix(r, "error") {
-					t.Fatalf("%s: %s", what, r)
+			searchNames := map[string]bool{}
+			for _, c := range serviceCalls(svc.srv.URL) {
+				before := len(svc.remotes())
+				if r := c.do(); strings.HasPrefix(r, "error") {
+					t.Fatalf("%s: %s", c.what, r)
 				}
-			}
-			calls := svc.remotes()
-			if len(calls) != 6 {
-				t.Fatalf("%d calls reached the service, want 6", len(calls))
-			}
-			for _, rem := range calls {
-				n, ok := socks.nameOf(rem)
+				calls := svc.remotes()
+				if len(calls) != before+1 {
+					t.Fatalf("%s: %d calls reached the service, want 1", c.what, len(calls)-before)
+				}
+				n, ok := socks.nameOf(calls[before])
 				if !ok {
-					t.Fatalf("a service call went out directly in %s mode", m)
+					t.Fatalf("%s went out directly in %s mode", c.what, m)
 				}
-				if n != laneName(laneServices) {
-					t.Fatalf("a service call went under %q, not the services lane's name", n)
+				if c.lane != "" {
+					if n != laneName(c.lane) {
+						t.Fatalf("%s went under another lane's name, not %s's", c.what, c.lane)
+					}
+					continue
 				}
+				if n == laneName(laneServices) || n == laneName(laneOwnHandle) || searchNames[n] || len(n) != 32 {
+					t.Fatalf("%s shared a socks name with another call", c.what)
+				}
+				searchNames[n] = true
 			}
 
 			gifs := newServiceStandIn(t)
@@ -120,7 +138,7 @@ func TestServicesWaitForTor(t *testing.T) {
 			var gotMu sync.Mutex
 			for what, call := range map[string]func() string{
 				"check":  func() string { return handleCheck("wren") },
-				"search": func() string { return torPost(svc.srv.URL+"/handle/search", `{"q":"wren"}`) },
+				"search": func() string { return searchPost(svc.srv.URL+"/handle/search", `{"q":"wren"}`) },
 				"badge":  func() string { return torGetJSON(svc.srv.URL + "/receipt?id=1") },
 			} {
 				wg.Add(1)
@@ -180,7 +198,8 @@ func TestServicesNeverGoDirect(t *testing.T) {
 		t.Fatalf("the check took %s past its bound", took)
 	}
 	for what, r := range map[string]string{
-		"search": torPost(svc.srv.URL+"/handle/search", `{"q":"wren"}`),
+		"search": searchPost(svc.srv.URL+"/handle/search", `{"q":"wren"}`),
+		"own":    ownHandleGetJSON(svc.srv.URL + "/.well-known/kryfo.json?name=wren"),
 		"badge":  torGetJSON(svc.srv.URL + "/receipt?id=1"),
 	} {
 		if !strings.HasPrefix(r, "error: tor client") {
@@ -241,9 +260,9 @@ func TestServicesFollowNoRedirect(t *testing.T) {
 			oldBase := handleBase
 			handleBase = reg.URL
 			defer func() { handleBase = oldBase }()
-			for what, r := range serviceCalls(reg.URL) {
-				if !strings.HasPrefix(r, "error") {
-					t.Fatalf("%s took a redirect as an answer: %s", what, r)
+			for _, c := range serviceCalls(reg.URL) {
+				if r := c.do(); !strings.HasPrefix(r, "error") {
+					t.Fatalf("%s took a redirect as an answer: %s", c.what, r)
 				}
 			}
 			if n := len(other.remotes()); n != 0 {

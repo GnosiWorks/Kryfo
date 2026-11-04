@@ -105,6 +105,7 @@ const _wire = [
   'engine.handleRelease(',
   'engine.handleListing(',
   'engine.torPost(',
+  'engine.searchPost(',
   'torStrictGetOnIsolate(',
   'appState.sendEdit(',
 ];

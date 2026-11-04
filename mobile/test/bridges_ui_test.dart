@@ -370,39 +370,21 @@ void main() {
       expect(l.detail, isNull);
     });
 
-    test('nothing got through: relay mode first, one calm line', () {
+    test('nothing got through: the bridge way, fast last with its cost', () {
       const s = BridgeStatus(mode: 'auto', phase: 'exhausted');
       expect(line(s).head, l10n.bridgesNothingGotThrough);
       expect(line(s).tone, BridgeTone.rose);
       expect(line(s).offerRelay, isTrue);
-      expect(line(s).detail, l10n.bridgesRelayWorksWhereTor);
-      // the other way stays, after relay
+      expect(line(s).detail, l10n.bridgesRelayThisNetworkSees);
+      // the bridge way first, fast after it
       expect(line(s).action, BridgeAction.getBridge);
       expect(line(s, c: 'yes').action, BridgeAction.tryAgain);
       expect(line(s, c: 'yes').offerRelay, isTrue);
-      expect(line(s, c: 'yes').detail, l10n.bridgesRelayWorksWhereTor);
+      expect(line(s, c: 'yes').detail, l10n.bridgesRelayThisNetworkSees);
       // a decoy is offered nothing
       expect(line(s, decoy: true).offerRelay, isFalse);
-      // still trying: no relay yet
+      // still trying: no fast yet
       expect(line(_another).offerRelay, isFalse);
-    });
-
-    test('blocked or watched: what relay costs, the bridge way first', () {
-      const s = BridgeStatus(mode: 'auto', phase: 'exhausted');
-      for (final c in ['no', 'yes']) {
-        final w = line(s, c: c).watched();
-        expect(w.head, l10n.bridgesNothingGotThrough);
-        expect(w.detail, l10n.bridgesRelayThisNetworkSees);
-        expect(w.offerRelay, isTrue);
-        expect(w.relayFirst, isFalse);
-        expect(w.action, line(s, c: c).action);
-        // connect as usual keeps relay first with the calm line
-        expect(line(s, c: c).relayFirst, isTrue);
-      }
-      // a line with no relay in it stays as it is
-      final t = line(_another);
-      expect(t.watched(), same(t));
-      expect(line(s, decoy: true).watched().offerRelay, isFalse);
     });
 
     test('relay or fast mode: no bridge is in use', () {
@@ -592,16 +574,16 @@ void main() {
       await _done(t);
     });
 
-    testWidgets('nothing got through: relay mode in one tap', (t) async {
+    testWidgets('nothing got through: fast in one tap, last', (t) async {
       await _open(
         t,
         status: const BridgeStatus(mode: 'auto', phase: 'exhausted'),
       );
-      expect(find.text(l10n.bridgesRelayWorksWhereTor), findsOneWidget);
-      // relay first, the tor project's way under it
+      expect(find.text(l10n.bridgesRelayThisNetworkSees), findsOneWidget);
+      // the tor project's way first, fast under it
       final relay = t.getRect(find.text(l10n.homeUseFast));
       final ask = t.getRect(find.text(l10n.bridgesGetABridge));
-      expect(relay.top, lessThan(ask.top));
+      expect(ask.top, lessThan(relay.top));
       await t.tap(find.text(l10n.homeUseFast));
       // the switch waits on the store, off the fake clock
       for (
@@ -630,35 +612,23 @@ void main() {
         .evaluate()
         .isNotEmpty;
 
-    testWidgets('connect as usual: relay filled, first, no cost line', (
-      t,
-    ) async {
-      await _open(
-        t,
-        status: const BridgeStatus(mode: 'auto', phase: 'exhausted'),
-      );
-      expect(find.text(l10n.bridgesRelayThisNetworkSees), findsNothing);
-      expect(filled(t, l10n.homeUseFast), isTrue);
-      expect(filled(t, l10n.bridgesGetABridge), isFalse);
-      await _done(t);
-    });
-
-    for (final (locale, scale) in [
-      (const Locale('en'), 1.0),
-      (const Locale('fa'), 2.0),
+    // connect as usual or blocked or watched: the same order and the cost
+    for (final (locale, scale, skip) in [
+      (const Locale('en'), 1.0, false),
+      (const Locale('en'), 1.0, true),
+      (const Locale('fa'), 2.0, true),
     ]) {
-      testWidgets('blocked or watched: the cost said, the bridge way first '
-          '(${locale.languageCode}, x$scale)', (t) async {
+      testWidgets('the cost said, the bridge way first '
+          '(${locale.languageCode}, x$scale, skip $skip)', (t) async {
         await _open(
           t,
-          setup: const BridgeSetup(skipDirect: true),
+          setup: BridgeSetup(skipDirect: skip),
           status: const BridgeStatus(mode: 'auto', phase: 'exhausted'),
           locale: locale,
           scale: scale,
         );
         expect(t.takeException(), isNull);
         expect(find.text(l10n.bridgesRelayThisNetworkSees), findsOneWidget);
-        expect(find.text(l10n.bridgesRelayWorksWhereTor), findsNothing);
         final ask = t.getRect(find.text(l10n.bridgesGetABridge));
         final relay = t.getRect(find.text(l10n.homeUseFast));
         expect(ask.top, lessThan(relay.top));

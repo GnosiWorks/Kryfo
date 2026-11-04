@@ -4330,7 +4330,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get fastRoomsWaitForTor =>
-      'اتاق‌ها و کدهای جفت‌سازی همیشه از Tor می‌گذرند، حتی روی حالت سریع. به محض وصل شدن Tor کار می‌کنند.';
+      'اتاق‌ها، کدهای جفت‌سازی و نخستین تماس‌ها همیشه از Tor می‌گذرند، حتی روی حالت سریع. به محض وصل شدن Tor کار می‌کنند.';
 
   @override
   String get pairCodeFailed => 'انجام نشد. دوباره امتحان کنید.';
@@ -5209,7 +5209,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get seenEachConversationGetsIts =>
-      'هر گفت‌وگو نشانی خودش را دارد که از هر دو کلید به دست می‌آید. رله صندوق‌های امانت بی‌ربط می‌بیند، نه یک جفت آدم.';
+      'هر گفت‌وگو نشانی خودش را دارد که از هر دو کلید به دست می‌آید. رله صندوق‌های امانت بی‌ربط می‌بیند، نه یک جفت آدم. در حالت سریع سرورهای ما آدرس IP شما را روی صندوق‌هایی که استفاده می‌کنید می‌بینند، و اگر هر دو نفرِ یک گفت‌وگو سریع را به کار ببرند، می‌بینند که دو آدرس IP یک صندوق مشترک دارند.';
 
   @override
   String get seenWhatYouSay => 'آنچه می‌گویید';
@@ -5226,7 +5226,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get seenKryfoDoesNotScan =>
-      'Kryfo مخاطبان شما را اسکن نمی‌کند. این‌جا هیچ شماره تلفنی وجود ندارد که لو برود.';
+      'Kryfo مخاطبان شما را اسکن نمی‌کند. این‌جا هیچ شماره تلفنی وجود ندارد که لو برود. در حالت سریع سرورهای ما می‌توانند بخشی از آن را از این‌که کدام آدرس‌های IP صندوق مشترک دارند کنار هم بگذارند. هیچ سابقه‌ای از آن نگه نمی‌دارند.';
 
   @override
   String get seenIntroducer => 'معرف';
@@ -9422,10 +9422,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get bridgesNoneUntilOnion => 'هیچ، تا Onion روشن شود';
 
   @override
-  String get bridgesRelayWorksWhereTor =>
-      'حالت سریع جایی که Tor مسدود است کار می‌کند و هر وقت بخواهید می‌توانید برگردید.';
-
-  @override
   String get bridgesRelayThisNetworkSees =>
       'حالت سریع جایی که Tor مسدود است رد می‌شود، اما این شبکه می‌تواند ببیند به Kryfo وصل می‌شوید.';
 
@@ -10483,7 +10479,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'از Tor عبور نمی‌کند، پس پیام‌ها زودتر می‌رسند و باتری کمتری مصرف می‌کنند. سرورهای ما آدرس IP شما را فقط تا وقتی وصل هستید می‌بینند و هرگز آن را ثبت یا نگه نمی‌دارند. هرگز چیزی را که می‌گویید نمی‌بینند. مخاطبانتان هرگز آن را نمی‌بینند.';
+      'از Tor عبور نمی‌کند، پس پیام‌ها زودتر می‌رسند و باتری کمتری مصرف می‌کنند. سرورهای ما آدرس IP شما را فقط تا وقتی وصل هستید می‌بینند و هرگز آن را ثبت یا نگه نمی‌دارند. هرگز چیزی را که می‌گویید نمی‌بینند. مخاطبانتان هرگز آن را نمی‌بینند. شبکه‌ی شما می‌تواند ببیند که به Kryfo وصل می‌شوید.';
 
   @override
   String get modesFastConnected => 'سریع · وصل';
@@ -10587,8 +10583,8 @@ class AppLocalizationsFa extends AppLocalizations {
   String get homeSwitchedToFastRoute => 'به سریع رفتید';
 
   @override
-  String get bridgesFastGetsThrough =>
-      'سریع مستقیم به سرورهای ما می‌رود و معمولاً رد می‌شود. یا بگذارید Kryfo خودش راهی پیدا کند.';
+  String get bridgesBridgeFirstFastSeen =>
+      'بگذارید Kryfo پلی پیدا کند که رد شود. سریع هم کار می‌کند، اما این شبکه می‌تواند ببیند به Kryfo وصل می‌شوید.';
 
   @override
   String get appServersNotAnswering => 'سرورها پاسخ نمی‌دهند';
@@ -10598,6 +10594,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get seenOurServers => 'سرورهای ما';
+
+  @override
+  String get seenOurServersCould => 'سرورهای ما می‌توانند';
 
   @override
   String get seenIpWhy =>

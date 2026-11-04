@@ -307,7 +307,7 @@ class AppState extends ChangeNotifier {
       return buildHaloUriV3(myId, myOnion, _fcCounter);
     },
     claim: (h, invite, bio) => engine.handleClaim(h, invite, bio),
-    lookup: (url) => engine.torGetJson(url),
+    lookup: (url) => engine.ownHandleGetJson(url),
     myKey: () => engine.myEdPubkey(),
     read: (k) => secureStore.read(key: k),
     write: (k, v) => v == null

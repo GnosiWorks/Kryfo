@@ -4317,7 +4317,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get fastRoomsWaitForTor =>
-      'Ruang dan kode penautan selalu lewat Tor, juga di Cepat. Keduanya langsung jalan begitu Tor terhubung.';
+      'Ruang, kode penautan, dan kontak pertama selalu lewat Tor, juga di Cepat. Semuanya langsung jalan begitu Tor terhubung.';
 
   @override
   String get pairCodeFailed => 'Tidak berhasil. Coba lagi.';
@@ -5201,7 +5201,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get seenEachConversationGetsIts =>
-      'Setiap obrolan punya alamatnya sendiri, diturunkan dari kedua kunci. Relay hanya melihat kotak titipan yang tidak saling terkait, bukan sepasang orang.';
+      'Setiap obrolan punya alamatnya sendiri, diturunkan dari kedua kunci. Relay hanya melihat kotak titipan yang tidak saling terkait, bukan sepasang orang. Di Cepat, server kami melihat alamat IP-mu pada kotak titipan yang kamu pakai, dan jika kedua orang dalam obrolan memakai Cepat, bahwa dua alamat IP berbagi satu kotak.';
 
   @override
   String get seenWhatYouSay => 'Isi pesanmu';
@@ -5218,7 +5218,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get seenKryfoDoesNotScan =>
-      'Kryfo tidak memindai kontakmu. Tidak ada nomor telepon di sini yang bisa bocor.';
+      'Kryfo tidak memindai kontakmu. Tidak ada nomor telepon di sini yang bisa bocor. Di Cepat, server kami bisa menyusun sebagian darinya dari alamat IP mana yang berbagi kotak titipan. Server kami tidak menyimpan catatannya.';
 
   @override
   String get seenIntroducer => 'Perantara';
@@ -9408,10 +9408,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesNoneUntilOnion => 'Tidak ada sampai Onion aktif';
 
   @override
-  String get bridgesRelayWorksWhereTor =>
-      'Cepat bisa dipakai di tempat Tor diblokir, dan kamu bisa kembali kapan saja.';
-
-  @override
   String get bridgesRelayThisNetworkSees =>
       'Cepat bisa tembus di tempat Tor diblokir, tapi jaringan ini bisa melihat kamu terhubung ke Kryfo.';
 
@@ -10469,7 +10465,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'Melewati Tor, jadi pesan sampai lebih cepat dan lebih hemat baterai. Server kami melihat alamat IP-mu hanya selama kamu terhubung, dan tidak pernah mencatat atau menyimpannya. Tidak pernah isi pesanmu. Kontakmu tidak pernah melihatnya.';
+      'Melewati Tor, jadi pesan sampai lebih cepat dan lebih hemat baterai. Server kami melihat alamat IP-mu hanya selama kamu terhubung, dan tidak pernah mencatat atau menyimpannya. Tidak pernah isi pesanmu. Kontakmu tidak pernah melihatnya. Jaringanmu bisa melihat kamu terhubung ke Kryfo.';
 
   @override
   String get modesFastConnected => 'Cepat · terhubung';
@@ -10573,8 +10569,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get homeSwitchedToFastRoute => 'Pindah ke Cepat';
 
   @override
-  String get bridgesFastGetsThrough =>
-      'Cepat langsung ke server kami dan biasanya tembus. Atau biarkan Kryfo mencari cara sendiri.';
+  String get bridgesBridgeFirstFastSeen =>
+      'Biarkan Kryfo mencari jembatan yang tembus. Cepat juga bisa, tapi jaringan ini bisa melihat kamu terhubung ke Kryfo.';
 
   @override
   String get appServersNotAnswering => 'Server tidak menjawab';
@@ -10584,6 +10580,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get seenOurServers => 'Server kami';
+
+  @override
+  String get seenOurServersCould => 'Server kami bisa';
 
   @override
   String get seenIpWhy =>

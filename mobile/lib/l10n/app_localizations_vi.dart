@@ -4306,7 +4306,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get fastRoomsWaitForTor =>
-      'Phòng và mã ghép nối luôn đi qua Tor, kể cả ở chế độ Nhanh. Chúng hoạt động ngay khi Tor kết nối.';
+      'Phòng, mã ghép nối và lần liên hệ đầu tiên luôn đi qua Tor, kể cả ở chế độ Nhanh. Chúng hoạt động ngay khi Tor kết nối.';
 
   @override
   String get pairCodeFailed => 'Không thành công. Hãy thử lại.';
@@ -5192,7 +5192,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get seenEachConversationGetsIts =>
-      'Mỗi cuộc trò chuyện có địa chỉ riêng, được suy ra từ khóa của cả hai bên. Relay chỉ thấy những điểm thả không liên quan đến nhau, không thấy một cặp người.';
+      'Mỗi cuộc trò chuyện có địa chỉ riêng, được suy ra từ khóa của cả hai bên. Relay chỉ thấy những điểm thả không liên quan đến nhau, không thấy một cặp người. Ở chế độ Nhanh, máy chủ của chúng tôi thấy địa chỉ IP của bạn trên các điểm thả bạn dùng, và khi cả hai người trong một cuộc trò chuyện dùng Nhanh, thấy hai địa chỉ IP dùng chung một điểm thả.';
 
   @override
   String get seenWhatYouSay => 'Những gì bạn nói';
@@ -5209,7 +5209,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get seenKryfoDoesNotScan =>
-      'Kryfo không quét danh bạ của bạn. Ở đây không có số điện thoại nào để bị lộ.';
+      'Kryfo không quét danh bạ của bạn. Ở đây không có số điện thoại nào để bị lộ. Ở chế độ Nhanh, máy chủ của chúng tôi có thể ghép lại một phần từ việc địa chỉ IP nào dùng chung điểm thả. Chúng không lưu lại điều đó.';
 
   @override
   String get seenIntroducer => 'Người giới thiệu';
@@ -9397,10 +9397,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesNoneUntilOnion => 'Chưa dùng cho đến khi bật Onion';
 
   @override
-  String get bridgesRelayWorksWhereTor =>
-      'Nhanh hoạt động ở nơi Tor bị chặn, và bạn có thể đổi lại bất cứ lúc nào.';
-
-  @override
   String get bridgesRelayThisNetworkSees =>
       'Nhanh vượt qua được nơi Tor bị chặn, nhưng mạng này có thể thấy bạn kết nối tới Kryfo.';
 
@@ -10452,7 +10448,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'Bỏ qua Tor nên tin nhắn đến nhanh hơn và tốn ít pin hơn. Máy chủ của chúng tôi chỉ thấy địa chỉ IP của bạn khi bạn đang kết nối, và không bao giờ ghi lại hay giữ nó. Không bao giờ thấy bạn nói gì. Người liên hệ của bạn không bao giờ thấy nó.';
+      'Bỏ qua Tor nên tin nhắn đến nhanh hơn và tốn ít pin hơn. Máy chủ của chúng tôi chỉ thấy địa chỉ IP của bạn khi bạn đang kết nối, và không bao giờ ghi lại hay giữ nó. Không bao giờ thấy bạn nói gì. Người liên hệ của bạn không bao giờ thấy nó. Mạng của bạn có thể thấy bạn kết nối tới Kryfo.';
 
   @override
   String get modesFastConnected => 'Nhanh · đã kết nối';
@@ -10556,8 +10552,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeSwitchedToFastRoute => 'Đã chuyển sang Nhanh';
 
   @override
-  String get bridgesFastGetsThrough =>
-      'Nhanh đi thẳng tới máy chủ của chúng tôi và thường vượt qua được. Hoặc để Kryfo tự tìm cách.';
+  String get bridgesBridgeFirstFastSeen =>
+      'Để Kryfo tìm một cầu nối vượt qua được. Nhanh cũng dùng được, nhưng mạng này có thể thấy bạn kết nối tới Kryfo.';
 
   @override
   String get appServersNotAnswering => 'Máy chủ chưa phản hồi';
@@ -10567,6 +10563,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get seenOurServers => 'Máy chủ Kryfo';
+
+  @override
+  String get seenOurServersCould => 'Máy chủ Kryfo có thể';
 
   @override
   String get seenIpWhy =>

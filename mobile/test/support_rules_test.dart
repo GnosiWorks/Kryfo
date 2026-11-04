@@ -868,6 +868,76 @@ void main() {
       expect(await w.phone.support.waiting(), 0);
     });
 
+    // what a delete of the dev chat sends: a take-back for each message
+    Future<String> takeBack(String uid) =>
+        wrapMessage('', unsend: uid, supportMarker: kDevSupport);
+
+    test('a chat whose words were all taken back leaves the inbox and its '
+        'count, and comes back with the next message', () async {
+      final w = await _World.make();
+      await w.stranger(_s);
+      await w.onion(_s, await w.frame('one', uid: 's-1'));
+      await w.onion(_s, await w.frame('two', uid: 's-2'));
+      await w.onion(_s, await takeBack('s-1'));
+      expect((await w.phone.support.list()).single.last?['plaintext'], 'two');
+      await w.onion(_s, await takeBack('s-2'));
+      expect(w.phone.msgs(_s), isEmpty);
+      expect(await w.phone.support.list(), isEmpty);
+      expect(await w.phone.support.waiting(), 0);
+      expect(w.app.supportWaiting, 0);
+      await w.onion(_s, await w.frame('three', uid: 's-3'));
+      expect((await w.phone.support.list()).single.last?['plaintext'], 'three');
+      expect(await w.phone.support.waiting(), 1);
+    });
+
+    test('a take-back that comes first, with nothing before it, shows no '
+        'chat', () async {
+      final w = await _World.make();
+      await w.firstContact(_s, await takeBack('never-here'));
+      expect(w.phone.msgs(_s), isEmpty);
+      expect(await w.phone.support.list(), isEmpty);
+      expect(await w.phone.support.waiting(), 0);
+      expect(w.app.supportWaiting, 0);
+    });
+
+    test('a waiting chat with a file still coming, or words the cap holds, '
+        'stays', () async {
+      final w = await _World.make();
+      await w.stranger(_s);
+      await w.stranger(_t);
+      await w.phone.support.file(_s);
+      await w.phone.support.file(_t);
+      await w.phone.mem.insert('media_wants', {
+        'media_id': 'm-1',
+        'peer_id': _s,
+        'total': 4,
+        'can_resend': 1,
+        'last_at': 1,
+      });
+      await w.phone.mem.insert('held_onion', {
+        'peer_id': _t,
+        'cipher': 'c',
+        'at': 1,
+      });
+      expect(
+        {for (final c in await w.phone.support.list()) c.haloId},
+        {_s, _t},
+      );
+      expect(await w.phone.support.waiting(), 2);
+    });
+
+    test('an answered chat stays, whatever is left in it', () async {
+      final w = await _World.make();
+      await w.stranger(_s);
+      await w.onion(_s, await w.frame('one', uid: 's-1'));
+      expect(await w.app.answerSupport(_s), isTrue);
+      await w.onion(_s, await takeBack('s-1'));
+      expect(
+        (await w.phone.support.list()).single.section,
+        SupportSection.answered,
+      );
+    });
+
     test('a table that could not be made reads as none', () async {
       final chats = SupportChats(() async => MemDb(except: {'support_chats'}));
       expect(await chats.ids(), isEmpty);
@@ -1486,6 +1556,13 @@ void main() {
             where: 'halo_id = ?',
             whereArgs: [id],
           );
+          await phone.mem.insert('messages', {
+            'peer_id': id,
+            'direction': 'in',
+            'plaintext': 'hi',
+            'sent_at': 1,
+            'msg_uid': 'u-$id',
+          });
           await phone.support.file(id);
           await ring(phone.support, bell, id);
         }
