@@ -16,6 +16,9 @@ const _owner = {
   'lib/screens/link_screens.dart',
   'lib/devices/own_device_store.dart',
   'lib/app/link_app.dart',
+  // removing them and a linked device's own end: the owner's devices alone
+  'lib/devices/own_unlink.dart',
+  'lib/devices/linked_lock.dart',
   'lib/main.dart',
   // the notice card, shown only to the owner, never on a contact's page
   'lib/screens/home_screen.dart',
