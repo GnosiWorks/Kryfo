@@ -86,6 +86,8 @@ const _notSettings = {
   'desk_run_section',
   // a link's own pages, opened from Linked devices: steps, not settings
   'link_screens',
+  // one bridge as a code, or into a chat: a sheet with no sections
+  'bridge_share_sheet',
 };
 
 // what a title looks like and the gaps around it, as on every page
