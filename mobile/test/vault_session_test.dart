@@ -25,6 +25,8 @@ import 'package:kryfo/drafts.dart'
         kDraftWait,
         typedDraft;
 import 'package:kryfo/lock_state.dart';
+import 'package:kryfo/theme.dart'
+    show clipGoesWithLock, copySensitive, dropOurClip, ourClipForTest;
 import 'package:kryfo/main.dart'
     show
         AppIo,
@@ -1678,6 +1680,85 @@ void main() {
       expect(session.vault, isNull);
       expect(w.homeIds, isNot(contains(_h)));
     });
+  });
+
+  group('the clipboard', () {
+    late List<MethodCall> clears;
+    setUp(() {
+      clears = [];
+      clipGoesWithLock = () => sessionQuiet || session.vault != null;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(const MethodChannel('halo/platform'), (
+            c,
+          ) async {
+            if (c.method == 'clearClip' || c.method == 'clearOurClip') {
+              clears.add(c);
+            }
+            return true;
+          });
+    });
+    tearDown(() async {
+      await dropOurClip(wipe: true);
+      clipGoesWithLock = () => false;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(const MethodChannel('halo/platform'), null);
+    });
+
+    test('a lock in hidden chats takes whatever is on it, a field\'s own '
+        'copy too', () async {
+      final w = await _World.make();
+      await w.open();
+      await copySensitive('meet at the bridge', kept: true);
+      await w.lockUp();
+      // the lock, and the hidden chats shutting with it
+      expect(clears, isNotEmpty);
+      for (final c in clears) {
+        expect(c.method, 'clearClip');
+        expect(c.arguments, containsPair('any', true));
+      }
+      expect(ourClipForTest.value, isNull);
+    });
+
+    test('an everyday copy stays through a lock, and goes at a switch of '
+        'pin', () async {
+      final w = await _World.make();
+      await w.everyday();
+      await copySensitive('the visible one', kept: true);
+      await w.lockUp();
+      expect(clears, isEmpty);
+      await w.open();
+      final c = clears.where((c) => c.method == 'clearClip').single;
+      expect(c.arguments, {
+        'text': 'the visible one',
+        'force': false,
+        'any': false,
+      });
+    });
+
+    test('hidden chats closing take what was copied in them', () async {
+      final w = await _World.make();
+      await w.open();
+      await copySensitive('still to go', kept: true);
+      // out of the hidden chats with the everyday pin, no lock between
+      await w.everyday();
+      expect(
+        clears.where((c) => c.method == 'clearClip').first.arguments,
+        containsPair('any', true),
+      );
+    });
+
+    test(
+      'the decoy opening takes a labelled copy from an earlier run',
+      () async {
+        final w = await _World.make();
+        await w.withDecoy();
+        // a new process: nothing of this run copied anything
+        expect(ourClipForTest.value, isNull);
+        await w.app.sessionFor(PinResult.decoy);
+        await _settle();
+        expect(clears.map((c) => c.method), contains('clearOurClip'));
+      },
+    );
   });
 
   group('the lock', () {

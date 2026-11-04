@@ -144,6 +144,7 @@ class AppIo {
       tag: await on.notifTag(payload),
       msgUid: msgUid,
       burnAt: burnAt,
+      hidden: on.container.wrapped,
     );
     if (id == null || msgUid == null) return;
     try {

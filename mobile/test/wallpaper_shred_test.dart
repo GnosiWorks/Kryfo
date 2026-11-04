@@ -90,7 +90,7 @@ void main() {
   test('a hidden chat deleted shreds its wallpaper in the vault', () async {
     final db = await rows(HaloContainer.vault);
     final f = await photo(db);
-    expect(p.basename(f.parent.path), 'wallpapers_v');
+    expect(p.basename(f.parent.path), 'wallpapers_k3');
     await db.deleteConversation(_peer);
     expect(f.existsSync(), isFalse);
   });

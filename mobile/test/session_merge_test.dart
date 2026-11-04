@@ -440,11 +440,11 @@ void main() {
       final v = _vault()..people = {'h': true};
       final s = await _open(p, v);
       final sep = Platform.pathSeparator;
-      expect((await s.mediaDirOf('h')).path, '${docs.path}${sep}media_v');
+      expect((await s.mediaDirOf('h')).path, '${docs.path}${sep}media_k3');
       expect((await s.mediaDirOf('a')).path, '${docs.path}${sep}media');
       expect(
         (await s.folderOf('h', 'wallpapers')).path,
-        '${docs.path}${sep}wallpapers_v',
+        '${docs.path}${sep}wallpapers_k3',
       );
       // settings stay the primary's
       expect(s.container, HaloContainer.everyday);

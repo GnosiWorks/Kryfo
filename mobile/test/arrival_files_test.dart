@@ -234,7 +234,11 @@ void main() {
       expect(f.uri.pathSegments.last, startsWith('in_'));
     }
     expect(pic.path, endsWith('.jpg'));
-    expect(doc.path, endsWith('_report.pdf'));
+    // its type only: the name the sender gave it lives in the row
+    expect(
+      doc.uri.pathSegments.last,
+      matches(RegExp(r'^in_[0-9a-f]{32}\.pdf$')),
+    );
     expect(await doc.readAsBytes(), [3, 4]);
     expect(await clip.readAsBytes(), [5, 5, 5, 6, 6, 6]);
     // a second round of the same slices writes nothing more

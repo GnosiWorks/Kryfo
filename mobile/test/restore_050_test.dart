@@ -353,7 +353,7 @@ void main() {
           ['only here', 'and back'],
         );
         expect(
-          File(p.join(docs.path, 'media_v', 'h-1.jpg')).existsSync(),
+          File(p.join(docs.path, 'media_k3', 'h-1.jpg')).existsSync(),
           isTrue,
         );
         await vault.close();

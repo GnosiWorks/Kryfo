@@ -98,6 +98,7 @@ import 'dev_about_sheet.dart'
 import '../widgets/kryfo_avatar.dart';
 import '../main.dart'
     show
+        typeLeaf,
         engine,
         sendFirstContactNoted,
         AppStatePqRestart,
@@ -2440,9 +2441,7 @@ class _ChatScreenState extends State<ChatScreen>
                               ? null
                               : () {
                                   dismiss();
-                                  Clipboard.setData(
-                                    ClipboardData(text: target.text),
-                                  );
+                                  copySensitive(target.text, kept: true);
                                   showHaloToast(context, l10n.commonCopied);
                                 },
                         ),
@@ -4254,8 +4253,8 @@ class _ChatScreenState extends State<ChatScreen>
     }
     final msgUid = uid ?? newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
-    final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-    final dest = File('${mediaDir.path}/f_${msgUid}_$safe');
+    // its type only: the name it was given lives in the database
+    final dest = File('${mediaDir.path}/f_$msgUid${typeLeaf(name)}');
     // a gallery video carries where, on what and when, like a photo, and a
     // picture sent as a file is cleaned like one sent as a photo. both are
     // told by their bytes and cleaned on our own copy by the one cleaner;
