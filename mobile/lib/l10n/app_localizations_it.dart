@@ -11170,6 +11170,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get chatDropHereToSend => 'Rilascia qui per inviare';
 
   @override
+  String get notesDropKeepsWords =>
+      'Note conserva parole. Invia i file in una chat.';
+
+  @override
   String get voiceSeeTranscription => 'Vedi trascrizione';
 
   @override

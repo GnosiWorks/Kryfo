@@ -2921,6 +2921,7 @@
   "chatFailedTapToRetryDesk": "Non inviato · fai clic per riprovare",
   "groupChatTapToRetryDesk": "! Fai clic per riprovare",
   "chatDropHereToSend": "Rilascia qui per inviare",
+  "notesDropKeepsWords": "Note conserva parole. Invia i file in una chat.",
   "voiceSeeTranscription": "Vedi trascrizione",
   "voiceTranscribing": "Trascrizione in corso…",
   "voiceHideTranscription": "Nascondi",

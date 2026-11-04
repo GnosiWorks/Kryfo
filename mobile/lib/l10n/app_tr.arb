@@ -2921,6 +2921,7 @@
   "chatFailedTapToRetryDesk": "Başarısız · tekrar için tıkla",
   "groupChatTapToRetryDesk": "! Tekrar için tıkla",
   "chatDropHereToSend": "Göndermek için buraya bırak",
+  "notesDropKeepsWords": "Kendime not metin saklar. Dosyaları bir sohbette gönder.",
   "voiceSeeTranscription": "Metni gör",
   "voiceTranscribing": "Metne çevriliyor…",
   "voiceHideTranscription": "Gizle",

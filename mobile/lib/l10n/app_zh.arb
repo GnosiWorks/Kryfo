@@ -2921,6 +2921,7 @@
   "chatFailedTapToRetryDesk": "失败 · 单击重试",
   "groupChatTapToRetryDesk": "! 单击重试",
   "chatDropHereToSend": "拖到这里松开即可发送",
+  "notesDropKeepsWords": "给自己的笔记只存文字。文件请在聊天中发送。",
   "voiceSeeTranscription": "查看文字",
   "voiceTranscribing": "正在转成文字…",
   "voiceHideTranscription": "收起",

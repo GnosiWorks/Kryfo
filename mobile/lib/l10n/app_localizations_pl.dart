@@ -11297,6 +11297,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get chatDropHereToSend => 'Upuść tutaj, by wysłać';
 
   @override
+  String get notesDropKeepsWords =>
+      'Notatka dla siebie przechowuje słowa. Pliki wyślij w czacie.';
+
+  @override
   String get voiceSeeTranscription => 'Pokaż transkrypcję';
 
   @override

@@ -2921,6 +2921,7 @@
   "chatFailedTapToRetryDesk": "Falló · haz clic para reintentar",
   "groupChatTapToRetryDesk": "! Haz clic para reintentar",
   "chatDropHereToSend": "Suelta aquí para enviar",
+  "notesDropKeepsWords": "Notas guarda palabras. Envía los archivos en un chat.",
   "voiceSeeTranscription": "Ver transcripción",
   "voiceTranscribing": "Transcribiendo…",
   "voiceHideTranscription": "Ocultar",

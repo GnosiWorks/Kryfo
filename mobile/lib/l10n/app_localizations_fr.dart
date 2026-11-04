@@ -11200,6 +11200,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chatDropHereToSend => 'Déposez ici pour envoyer';
 
   @override
+  String get notesDropKeepsWords =>
+      'Note pour moi garde des mots. Envoie les fichiers dans une discussion.';
+
+  @override
   String get voiceSeeTranscription => 'Voir la transcription';
 
   @override

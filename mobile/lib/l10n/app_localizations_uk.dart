@@ -11256,6 +11256,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatDropHereToSend => 'Відпусти тут, щоб надіслати';
 
   @override
+  String get notesDropKeepsWords =>
+      'Нотатки для себе зберігають текст. Файли надсилай у чаті.';
+
+  @override
   String get voiceSeeTranscription => 'Показати текст';
 
   @override

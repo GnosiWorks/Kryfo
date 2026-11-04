@@ -11258,6 +11258,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatDropHereToSend => 'Отпусти здесь, чтобы отправить';
 
   @override
+  String get notesDropKeepsWords =>
+      'Заметки хранят текст. Файлы отправляй в чате.';
+
+  @override
   String get voiceSeeTranscription => 'Показать текст';
 
   @override

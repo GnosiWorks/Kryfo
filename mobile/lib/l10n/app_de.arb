@@ -2921,6 +2921,7 @@
   "chatFailedTapToRetryDesk": "Fehler · klicke zum Wiederholen",
   "groupChatTapToRetryDesk": "! Klicken zum Wiederholen",
   "chatDropHereToSend": "Hier ablegen zum Senden",
+  "notesDropKeepsWords": "Notiz an mich behält Text. Dateien sendest du in einem Chat.",
   "voiceSeeTranscription": "Transkript anzeigen",
   "voiceTranscribing": "Wird transkribiert…",
   "voiceHideTranscription": "Ausblenden",

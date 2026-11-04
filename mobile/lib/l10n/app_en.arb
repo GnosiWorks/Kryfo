@@ -13920,6 +13920,10 @@
   "@chatDropHereToSend": {
     "description": "a computer: files dragged over a chat, the line on the wash before they are let go"
   },
+  "notesDropKeepsWords": "Note to self keeps words. Send files in a chat.",
+  "@notesDropKeepsWords": {
+    "description": "a computer: files dropped on note to self, which keeps text only"
+  },
   "voiceSeeTranscription": "See transcription",
   "@voiceSeeTranscription": {
     "description": "the link under a voice message that shows its words"

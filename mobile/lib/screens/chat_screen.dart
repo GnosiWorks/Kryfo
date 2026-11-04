@@ -7991,6 +7991,14 @@ class _SearchHeadState extends State<SearchHead> {
                                 enableIMEPersonalizedLearning: false,
                                 focusNode: _focus,
                                 onChanged: widget.onChanged,
+                                // enter goes to the next match on a
+                                // computer, as a browser's find does
+                                onSubmitted: onDesktop
+                                    ? (_) {
+                                        widget.onNext();
+                                        _focus.requestFocus();
+                                      }
+                                    : null,
                                 cursorColor: HaloColors.amber,
                                 cursorWidth: 1.5,
                                 style: HaloType.sans(

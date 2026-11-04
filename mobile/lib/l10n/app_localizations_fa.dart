@@ -11093,6 +11093,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatDropHereToSend => 'برای فرستادن اینجا رها کنید';
 
   @override
+  String get notesDropKeepsWords =>
+      'یادداشت برای خود متن نگه می‌دارد. فایل‌ها را در یک گفتگو بفرستید.';
+
+  @override
   String get voiceSeeTranscription => 'دیدن متن';
 
   @override

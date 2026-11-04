@@ -10496,6 +10496,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatDropHereToSend => '拖到这里松开即可发送';
 
   @override
+  String get notesDropKeepsWords => '给自己的笔记只存文字。文件请在聊天中发送。';
+
+  @override
   String get voiceSeeTranscription => '查看文字';
 
   @override
@@ -20934,6 +20937,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatDropHereToSend => '拖到這裡放開即可傳送';
+
+  @override
+  String get notesDropKeepsWords => '給自己的筆記只存文字。檔案請在聊天中傳送。';
 
   @override
   String get voiceSeeTranscription => '查看文字';

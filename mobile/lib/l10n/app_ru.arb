@@ -2921,6 +2921,7 @@
   "chatFailedTapToRetryDesk": "Ошибка · щёлкни, чтобы повторить",
   "groupChatTapToRetryDesk": "! Щёлкни для повтора",
   "chatDropHereToSend": "Отпусти здесь, чтобы отправить",
+  "notesDropKeepsWords": "Заметки хранят текст. Файлы отправляй в чате.",
   "voiceSeeTranscription": "Показать текст",
   "voiceTranscribing": "Распознаём…",
   "voiceHideTranscription": "Скрыть",

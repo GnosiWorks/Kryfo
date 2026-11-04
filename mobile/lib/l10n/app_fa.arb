@@ -2921,6 +2921,7 @@
   "chatFailedTapToRetryDesk": "ناموفق · برای تلاش دوباره کلیک کنید",
   "groupChatTapToRetryDesk": "! برای تکرار کلیک کنید",
   "chatDropHereToSend": "برای فرستادن اینجا رها کنید",
+  "notesDropKeepsWords": "یادداشت برای خود متن نگه می‌دارد. فایل‌ها را در یک گفتگو بفرستید.",
   "voiceSeeTranscription": "دیدن متن",
   "voiceTranscribing": "در حال تبدیل به متن…",
   "voiceHideTranscription": "پنهان کردن",

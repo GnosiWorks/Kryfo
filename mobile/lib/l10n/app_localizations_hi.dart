@@ -11087,6 +11087,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get chatDropHereToSend => 'भेजने के लिए यहाँ छोड़ें';
 
   @override
+  String get notesDropKeepsWords =>
+      'अपने लिए नोट में शब्द रहते हैं। फ़ाइलें किसी चैट में भेजें।';
+
+  @override
   String get voiceSeeTranscription => 'लिखित रूप देखें';
 
   @override

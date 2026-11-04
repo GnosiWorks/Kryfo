@@ -2921,6 +2921,7 @@
   "chatFailedTapToRetryDesk": "فشل · انقر لإعادة المحاولة",
   "groupChatTapToRetryDesk": "! انقر لإعادة المحاولة",
   "chatDropHereToSend": "أفلِت هنا للإرسال",
+  "notesDropKeepsWords": "ملاحظة لنفسي تحفظ الكلمات. أرسل الملفات في محادثة.",
   "voiceSeeTranscription": "عرض النص",
   "voiceTranscribing": "جارٍ التحويل إلى نص…",
   "voiceHideTranscription": "إخفاء",

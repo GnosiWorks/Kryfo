@@ -11163,6 +11163,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chatDropHereToSend => 'Solte aqui para enviar';
 
   @override
+  String get notesDropKeepsWords =>
+      'Notas guarda palavras. Envie os arquivos em uma conversa.';
+
+  @override
   String get voiceSeeTranscription => 'Ver transcrição';
 
   @override

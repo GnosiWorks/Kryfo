@@ -11066,6 +11066,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatDropHereToSend => 'Thả vào đây để gửi';
 
   @override
+  String get notesDropKeepsWords =>
+      'Ghi chú riêng lưu chữ. Hãy gửi tệp trong một cuộc trò chuyện.';
+
+  @override
   String get voiceSeeTranscription => 'Xem bản chép lời';
 
   @override

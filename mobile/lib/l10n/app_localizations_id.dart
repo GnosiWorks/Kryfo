@@ -11082,6 +11082,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatDropHereToSend => 'Lepaskan di sini untuk mengirim';
 
   @override
+  String get notesDropKeepsWords =>
+      'Catatan pribadi menyimpan kata. Kirim file di sebuah chat.';
+
+  @override
   String get voiceSeeTranscription => 'Lihat transkrip';
 
   @override

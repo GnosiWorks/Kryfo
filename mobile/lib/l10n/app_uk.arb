@@ -2921,6 +2921,7 @@
   "chatFailedTapToRetryDesk": "Помилка · клацни ще раз",
   "groupChatTapToRetryDesk": "! Клацни ще раз",
   "chatDropHereToSend": "Відпусти тут, щоб надіслати",
+  "notesDropKeepsWords": "Нотатки для себе зберігають текст. Файли надсилай у чаті.",
   "voiceSeeTranscription": "Показати текст",
   "voiceTranscribing": "Розпізнаємо…",
   "voiceHideTranscription": "Сховати",

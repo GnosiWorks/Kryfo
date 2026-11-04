@@ -11082,6 +11082,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatDropHereToSend => 'Drop here to send';
 
   @override
+  String get notesDropKeepsWords =>
+      'Note to self keeps words. Send files in a chat.';
+
+  @override
   String get voiceSeeTranscription => 'See transcription';
 
   @override

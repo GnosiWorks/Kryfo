@@ -11206,6 +11206,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatDropHereToSend => 'Hier ablegen zum Senden';
 
   @override
+  String get notesDropKeepsWords =>
+      'Notiz an mich behält Text. Dateien sendest du in einem Chat.';
+
+  @override
   String get voiceSeeTranscription => 'Transkript anzeigen';
 
   @override

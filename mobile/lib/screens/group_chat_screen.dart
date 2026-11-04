@@ -298,89 +298,96 @@ bool backToOpenGroup(NavigatorState nav, String groupId) =>
 
 /// a group message's words to edit. null when cancelled or dismissed
 @visibleForTesting
-Future<String?> showGroupEditSheet(BuildContext context, String text) =>
-    showHaloSheet<String>(
-      context,
-      scroll: true,
-      builder: (_) => OwnedText(
-        initial: text,
-        builder: (ctx, ctrl) => Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 20,
-            // the keyboard, or the navigation bar when it is down
-            bottom:
-                math.max(
-                  MediaQuery.paddingOf(ctx).bottom,
-                  MediaQuery.viewInsetsOf(ctx).bottom,
-                ) +
-                20,
+Future<String?> showGroupEditSheet(
+  BuildContext context,
+  String text,
+) => showHaloSheet<String>(
+  context,
+  scroll: true,
+  builder: (_) => OwnedText(
+    initial: text,
+    builder: (ctx, ctrl) => Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        // the keyboard, or the navigation bar when it is down
+        bottom:
+            math.max(
+              MediaQuery.paddingOf(ctx).bottom,
+              MediaQuery.viewInsetsOf(ctx).bottom,
+            ) +
+            20,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SheetHandle(),
+          Text(
+            l10n.groupChatEditMessage,
+            style: HaloType.serif(
+              size: 20,
+              italic: true,
+              color: HaloColors.amberText,
+            ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SheetHandle(),
-              Text(
-                l10n.groupChatEditMessage,
-                style: HaloType.serif(
-                  size: 20,
-                  italic: true,
-                  color: HaloColors.amberText,
-                ),
-              ),
-              const SizedBox(height: 14),
-              ShiftTapGuard(
+          const SizedBox(height: 14),
+          // enter saves on a computer, as it sends in the composer
+          EnterSends(
+            controller: ctrl,
+            onSend: () => Navigator.pop(ctx, ctrl.text),
+            child: ShiftTapGuard(
+              controller: ctrl,
+              child: TextField(
                 controller: ctrl,
-                child: TextField(
-                  controller: ctrl,
-                  enableIMEPersonalizedLearning: false,
-                  autofocus: true,
-                  // a long message scrolls in the field, so save stays in view
-                  minLines: 1,
-                  maxLines: 6,
-                  cursorColor: HaloColors.amber,
-                  style: HaloType.sans(size: 15),
-                  decoration: InputDecoration(
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: HaloColors.line2),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: HaloColors.amber),
-                    ),
+                enableIMEPersonalizedLearning: false,
+                autofocus: true,
+                // a long message scrolls in the field, so save stays in view
+                minLines: 1,
+                maxLines: 6,
+                cursorColor: HaloColors.amber,
+                style: HaloType.sans(size: 15),
+                decoration: InputDecoration(
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: HaloColors.line2),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: HaloColors.amber),
                   ),
                 ),
               ),
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: Text(
-                      l10n.commonCancel,
-                      style: HaloType.sans(size: 13, color: HaloColors.text2),
-                    ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(
+                  l10n.commonCancel,
+                  style: HaloType.sans(size: 13, color: HaloColors.text2),
+                ),
+              ),
+              const Spacer(),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, ctrl.text),
+                child: Text(
+                  l10n.commonSave,
+                  style: HaloType.sans(
+                    size: 14,
+                    weight: FontWeight.w500,
+                    color: HaloColors.amberText,
                   ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, ctrl.text),
-                    child: Text(
-                      l10n.commonSave,
-                      style: HaloType.sans(
-                        size: 14,
-                        weight: FontWeight.w500,
-                        color: HaloColors.amberText,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
           ),
-        ),
+        ],
       ),
-    );
+    ),
+  ),
+);
 
 // the newest row id held when a group was last left, keyed by
 // session.chatKey like the drafts

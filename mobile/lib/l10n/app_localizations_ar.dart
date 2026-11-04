@@ -11220,6 +11220,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatDropHereToSend => 'أفلِت هنا للإرسال';
 
   @override
+  String get notesDropKeepsWords =>
+      'ملاحظة لنفسي تحفظ الكلمات. أرسل الملفات في محادثة.';
+
+  @override
   String get voiceSeeTranscription => 'عرض النص';
 
   @override

@@ -17809,6 +17809,12 @@ abstract class AppLocalizations {
   /// **'Drop here to send'**
   String get chatDropHereToSend;
 
+  /// a computer: files dropped on note to self, which keeps text only
+  ///
+  /// In en, this message translates to:
+  /// **'Note to self keeps words. Send files in a chat.'**
+  String get notesDropKeepsWords;
+
   /// the link under a voice message that shows its words
   ///
   /// In en, this message translates to:
