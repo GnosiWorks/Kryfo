@@ -42,7 +42,10 @@ type linkDialer func(ctx context.Context, onion, line string) error
 var (
 	linkClock = time.Now
 	// how often each side looks at its address
-	linkPoll = 2 * time.Second
+	linkPoll = 5 * time.Second
+	// how long the door holds the last KLB1 line for the phone's app to
+	// keep the device before it acks; the joiner waits as long
+	linkKeptWait = time.Minute
 	// the bundles may come this long after the link's own ten minutes
 	linkBundlesLate            = 5 * time.Minute
 	linkWireNow     linkWire   = relayLinkWire{}
@@ -64,6 +67,7 @@ const (
 	lsPlaced   = "placed"  // joiner: knows its place, waits for its bundles
 	lsSending  = "sending" // joiner: bundles on their way to the phone
 	lsBundles  = "bundles" // phone: the device's bundles came
+	lsKeeping  = "keeping" // phone: dart took them and keeps the device
 	lsDone     = "done"    // both: nothing left to do here
 	lsFailed   = "failed"  // both: see why
 	lsWhyTime  = "expired" // the ten minutes ran out
@@ -71,7 +75,13 @@ const (
 	lsWhyBad   = "refused" // a message that did not open or fit
 	lsWhyFull  = "full"    // the phone already has every device it may
 	lsWhyEnd   = "ended"   // the person stopped it
+	lsWhyGone  = "gone"    // the other side stopped it
 )
+
+// an end message on the rendezvous: the other side stopped
+const linkEndMagic = "KLE1"
+
+var errLinkEnded = errors.New("link: the other side ended it")
 
 // KLB1 goes to the door in lines of this many bytes at most
 const linkChunk = 64 << 10
@@ -99,6 +109,10 @@ type linkRun struct {
 	entry    devices.Entry
 	ownTaken bool
 	bundles  chan []byte
+	given    bool // KLB1 sealed once, never twice under its key
+
+	// the run's goroutine has stopped
+	stopped bool
 
 	// the world as it was when the run began
 	wire  linkWire
@@ -120,6 +134,10 @@ type linkRun struct {
 	nChunks  int
 	got      devices.Bundles
 	list     []byte
+	// the door's last line waits on dart keeping the device: 0 waiting,
+	// 1 kept (ack), 2 the door gave up
+	ack      int
+	keptCh   chan struct{}
 	stream   *[devices.StreamKeySize]byte
 	after    devices.AfterKeys
 	bind     [32]byte
@@ -153,11 +171,36 @@ func (r *linkRun) set(st, why string) {
 // stopped using them (ended), never from under it
 func (r *linkRun) failed(why string) {
 	r.mu.Lock()
-	if r.st != lsDone && r.st != lsFailed {
-		r.st, r.why = lsFailed, why
-	}
+	tell := r.failLocked(why)
 	r.mu.Unlock()
 	r.cancel()
+	if tell {
+		r.tellEnd()
+	}
+}
+
+// the run fails here: r.mu held. true when the other side is to hear of
+// it, which is once it may be waiting on this side and did not end it
+// itself
+func (r *linkRun) failLocked(why string) bool {
+	if r.st == lsDone || r.st == lsFailed {
+		return false
+	}
+	tell := why != lsWhyGone && r.st != lsOffer
+	r.st, r.why = lsFailed, why
+	r.giveUpAck()
+	if r.stopped {
+		r.forget()
+	}
+	return tell
+}
+
+// a door still holding the last line is told no: r.mu held
+func (r *linkRun) giveUpAck() {
+	if r.keptCh != nil && r.ack == 0 {
+		r.ack = 2
+		close(r.keptCh)
+	}
 }
 
 // the run's goroutine is done: a failed run's secrets go now; a good one's
@@ -165,9 +208,26 @@ func (r *linkRun) failed(why string) {
 func (r *linkRun) ended() {
 	r.cancel()
 	r.mu.Lock()
-	defer r.mu.Unlock()
-	if r.st == lsFailed {
+	r.stopped = true
+	failed := r.st == lsFailed
+	undo := failed && r.ownTaken
+	var id devices.Key
+	var list []byte
+	if undo {
+		id, list = r.linked.Identity, r.place.List
+	}
+	if failed {
 		r.forget()
+	}
+	r.mu.Unlock()
+	// a failed joiner leaves its state as before the link: the next link's
+	// first list is taken afresh, never refused as a rollback
+	if undo {
+		if d := devNow(); d != nil {
+			d.mu.Lock()
+			d.own.Undo(id, list)
+			d.mu.Unlock()
+		}
 	}
 }
 
@@ -201,6 +261,8 @@ func whyOf(err error) string {
 		return lsWhyFull
 	case errors.Is(err, errLinkUnreached):
 		return lsWhyReach
+	case errors.Is(err, errLinkEnded):
+		return lsWhyGone
 	case errors.Is(err, context.Canceled):
 		return lsWhyEnd
 	}
@@ -223,11 +285,18 @@ func (r *linkRun) await(ctx context.Context, seed [32]byte, magic string, seen m
 				if seen[k] || len(m) < 4 {
 					continue
 				}
-				seen[k] = true
-				if string(m[:4]) == magic {
+				switch string(m[:4]) {
+				case linkEndMagic:
+					return nil, errLinkEnded
+				case magic:
+					seen[k] = true
 					return m, nil
 				}
+				// another kind stays unread for the step that wants it,
+				// in whatever order the relays gave them; a watcher with
+				// its own record (also) passes each over once
 				if also != nil {
+					seen[k] = true
 					also(m)
 				}
 			}
@@ -237,6 +306,23 @@ func (r *linkRun) await(ctx context.Context, seed [32]byte, magic string, seen m
 			return nil, ctx.Err()
 		case <-tick.C:
 		}
+	}
+}
+
+// while a side waits on its person or its door, an end from the other side
+// is watched for on its own address; the stop func ends the watch
+func (r *linkRun) watchEnd(ctx context.Context, seed [32]byte) func() {
+	wctx, stop := context.WithCancel(ctx)
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		if _, err := r.await(wctx, seed, "\x00\x00\x00\x00", map[string]bool{}, func([]byte) {}); errors.Is(err, errLinkEnded) {
+			r.failed(lsWhyGone)
+		}
+	}()
+	return func() {
+		stop()
+		<-done
 	}
 }
 
@@ -315,7 +401,9 @@ func (r *linkRun) joinSteps(ctx context.Context) error {
 		defer close(looked)
 		// its own record of what it saw: what comes after the welcome
 		// stays unread for the steps below
-		r.await(waitCtx, r.toJ, "\x00\x00\x00\x00", maps.Clone(seen), held)
+		if _, err := r.await(waitCtx, r.toJ, "\x00\x00\x00\x00", maps.Clone(seen), held); errors.Is(err, errLinkEnded) {
+			r.failed(lsWhyGone)
+		}
 	}()
 	select {
 	case <-r.confirm:
@@ -365,6 +453,7 @@ func (r *linkRun) joinSteps(ctx context.Context) error {
 	r.mu.Lock()
 	r.place, r.entry, r.st = place, e, lsPlaced
 	r.mu.Unlock()
+	defer r.watchEnd(ctx, r.toJ)()
 	var klb1 []byte
 	select {
 	case klb1 = <-r.bundles:
@@ -395,17 +484,27 @@ func sendLinkBundles(ctx context.Context, dial linkDialer, p devices.Place, klb1
 		end := min((i+1)*linkChunk, len(klb1))
 		line := linkLinePrefix + tok + " " + strconv.Itoa(i) + "/" + strconv.Itoa(n) + " " +
 			base64.StdEncoding.EncodeToString(klb1[i*linkChunk:end])
-		var err error
-		for try := 0; try < 3; try++ {
-			if err = dial(ctx, p.Onion, line); err == nil || ctx.Err() != nil {
+		// a fresh tor may need a while for the phone's descriptor: tried
+		// again, further apart, while the run lasts
+		for try := 0; ; try++ {
+			err := dial(ctx, p.Onion, line)
+			if err == nil {
 				break
 			}
-		}
-		if err != nil {
-			return errLinkUnreached
+			select {
+			case <-ctx.Done():
+				return errLinkUnreached
+			case <-time.After(linkBackoff(try)):
+			}
 		}
 	}
 	return nil
+}
+
+var linkBackoffs = []time.Duration{2 * time.Second, 5 * time.Second, 10 * time.Second, 20 * time.Second, 30 * time.Second}
+
+func linkBackoff(try int) time.Duration {
+	return linkBackoffs[min(try, len(linkBackoffs)-1)]
 }
 
 // ---- the phone ----
@@ -469,9 +568,13 @@ func (r *linkRun) phoneSteps(ctx context.Context, accept []byte) error {
 	r.mu.Lock()
 	r.device, r.sas, r.st = dk, sas, lsDigits
 	r.mu.Unlock()
+	unwatch := r.watchEnd(ctx, r.toP)
 	select {
 	case <-r.confirm:
 	case <-ctx.Done():
+	}
+	unwatch()
+	if ctx.Err() != nil {
 		return ctx.Err()
 	}
 	r.mu.Lock()
@@ -515,15 +618,16 @@ func (r *linkRun) phoneSteps(ctx context.Context, accept []byte) error {
 	if err := r.wire.post(ctx, r.toJ, place); err != nil {
 		return errLinkUnreached
 	}
-	// the rest comes through the door
-	<-ctx.Done()
+	// the rest comes through the door; an end from the new device is
+	// watched for meanwhile
+	_, err = r.await(ctx, r.toP, "\x00\x00\x00\x00", seen, nil)
 	r.mu.Lock()
 	st := r.st
 	r.mu.Unlock()
-	if st == lsBundles || st == lsDone {
+	if st == lsDone {
 		return nil
 	}
-	return ctx.Err()
+	return err
 }
 
 // the phone's next own list with the device on it, unsigned, from the
@@ -544,8 +648,11 @@ func (d *devState) linkList(r *linkRun, ident int, phoneReg uint32) ([]byte, err
 		return nil, devices.ErrTooMany
 	}
 	r.mu.Lock()
-	dk := r.device
+	dk, signed := r.device, r.list != nil
 	r.mu.Unlock()
+	if signed || r.p == nil {
+		return nil, devices.ErrState
+	}
 	if _, taken := l.FindKey(dk.Key); taken {
 		return nil, devices.ErrDuplicate
 	}
@@ -619,13 +726,14 @@ func linkDoorTake(line string) bool {
 		return false
 	}
 	r.mu.Lock()
-	defer r.mu.Unlock()
 	if !r.waiting || (r.nChunks != 0 && r.nChunks != n) || len(f[2]) > base64.StdEncoding.EncodedLen(linkChunk) {
+		r.mu.Unlock()
 		return false
 	}
 	r.nChunks = n
 	r.chunks[i] = f[2]
 	if len(r.chunks) < n {
+		r.mu.Unlock()
 		return true
 	}
 	var klb1 []byte
@@ -633,12 +741,37 @@ func linkDoorTake(line string) bool {
 		b, err := base64.StdEncoding.DecodeString(r.chunks[k])
 		if err != nil {
 			r.endBundles(nil, lsWhyBad)
-			return true
+			r.mu.Unlock()
+			return false
 		}
 		klb1 = append(klb1, b...)
 	}
-	r.endBundles(klb1, "")
-	return true
+	if !r.endBundles(klb1, "") {
+		r.mu.Unlock()
+		return false
+	}
+	kept := r.keptCh
+	r.mu.Unlock()
+	// the last line is acked only once the phone's app kept the device:
+	// a page closed or a keep that failed leaves the new device unlinked
+	// too, never half
+	t := time.NewTimer(linkKeptWait)
+	defer t.Stop()
+	select {
+	case <-kept:
+	case <-t.C:
+	}
+	r.mu.Lock()
+	tell := r.ack == 0 && r.failLocked(lsWhyReach)
+	acked := r.ack == 1
+	r.mu.Unlock()
+	if !acked {
+		r.cancel()
+	}
+	if tell {
+		r.tellEnd()
+	}
+	return acked
 }
 
 func chunkOf(s string) (i, n int, ok bool) {
@@ -654,12 +787,18 @@ func chunkOf(s string) (i, n int, ok bool) {
 	return i, n, true
 }
 
-// the whole KLB1, or nothing: r.mu held. the token is spent either way
-func (r *linkRun) endBundles(klb1 []byte, why string) {
+// the whole KLB1, or nothing: r.mu held. the token is spent either way.
+// true when the bundles are the device's, under the list it was given
+func (r *linkRun) endBundles(klb1 []byte, why string) bool {
 	r.waiting = false
 	r.chunks = nil
 	if why == "" {
-		e, ok := r.next.FindKey(r.device.Key)
+		l, err := devices.ParseList(r.list)
+		var e devices.Entry
+		ok := err == nil
+		if ok {
+			e, ok = l.FindKey(r.device.Key)
+		}
 		if !ok {
 			why = lsWhyBad
 		} else if b, err := devices.OpenBundles(r.after, r.bind, klb1, r.identity, e); err != nil {
@@ -669,12 +808,17 @@ func (r *linkRun) endBundles(klb1 []byte, why string) {
 		}
 	}
 	if why != "" {
-		r.st, r.why = lsFailed, why
-	} else {
-		r.st = lsBundles
+		// the phone's goroutine wakes and ends, and wipes; the new device
+		// hears of it at once
+		if r.failLocked(why) {
+			go r.tellEnd()
+		}
+		r.cancel()
+		return false
 	}
-	// the phone's goroutine wakes and ends: on a failure it wipes
-	r.cancel()
+	r.st = lsBundles
+	r.keptCh = make(chan struct{})
+	return true
 }
 
 // ---- dart's calls ----
@@ -814,6 +958,8 @@ func linkCall(op string, a *linkArgs, out *linkOut) error {
 		return r.giveBundles(a)
 	case "take":
 		return r.take(a.Link, out)
+	case "kept":
+		return r.kept(a.Link)
 	}
 	return errors.New("no such call")
 }
@@ -832,10 +978,30 @@ func (r *linkRun) state(out *linkOut) {
 		out.Device = &e
 		out.Want = r.place.Want
 	}
-	if r.p != nil && r.st == lsBundles {
+	if r.p != nil && (r.st == lsBundles || r.st == lsKeeping) {
 		e := entryOut(r.entry)
 		out.Device = &e
 	}
+}
+
+// the other side hears of an end at once, not when its own time runs out.
+// sent on its own, not by the run, which is stopping; best effort
+func (r *linkRun) tellEnd() {
+	r.mu.Lock()
+	to := r.toP
+	if r.p != nil {
+		to = r.toJ
+	}
+	w := r.wire
+	r.mu.Unlock()
+	msg := make([]byte, 4+16)
+	copy(msg, linkEndMagic)
+	rand.Read(msg[4:])
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		w.post(ctx, to, msg)
+	}()
 }
 
 // the person said the digits match. the phone's side needs its signed
@@ -914,9 +1080,10 @@ func (r *linkRun) takeOwn(ident int, out *linkOut) error {
 func (r *linkRun) giveBundles(a *linkArgs) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if r.j == nil || r.st != lsPlaced || !r.ownTaken {
+	if r.j == nil || r.st != lsPlaced || !r.ownTaken || r.given {
 		return devices.ErrState
 	}
+	r.given = true
 	klb1, err := devices.SealBundles(r.linked.After, r.linked.Bind, devices.Bundles{
 		Made: time.UnixMilli(a.Made), First: a.First, Last: a.Last, Once: a.Once,
 	})
@@ -934,7 +1101,9 @@ func (r *linkRun) giveBundles(a *linkArgs) error {
 // what the link left for dart, once: the joiner's stream key; the phone's
 // device, its list and its bundles. the run goes after
 func (r *linkRun) take(id string, out *linkOut) error {
-	if err := r.takeLocked(out); err != nil {
+	if err := r.takeLocked(out); errors.Is(err, errStay) {
+		return nil
+	} else if err != nil {
 		return err
 	}
 	linkMu.Lock()
@@ -957,10 +1126,34 @@ func (r *linkRun) takeLocked(out *linkOut) error {
 		out.First, out.Last, out.Once = r.got.First, r.got.Last, r.got.Once
 		out.Made = r.got.Made.UnixMilli()
 		out.Stream = append([]byte(nil), r.stream[:]...)
-		r.st = lsDone
+		// the run stays until dart kept the device ("kept") or not ("end")
+		r.st = lsKeeping
+		return errStay
 	default:
 		return devices.ErrState
 	}
 	r.forget()
+	return nil
+}
+
+var errStay = errors.New("link: the run stays")
+
+// the phone's app kept the device (its own list, bundles, notice): the
+// door acks the last line and the new device is linked. an error here
+// means the door gave up already, and dart keeps nothing
+func (r *linkRun) kept(id string) error {
+	r.mu.Lock()
+	if r.p == nil || r.st != lsKeeping || r.ack != 0 {
+		r.mu.Unlock()
+		return devices.ErrState
+	}
+	r.ack, r.st = 1, lsDone
+	close(r.keptCh)
+	r.forget()
+	r.mu.Unlock()
+	r.cancel()
+	linkMu.Lock()
+	delete(linkRuns, id)
+	linkMu.Unlock()
 	return nil
 }

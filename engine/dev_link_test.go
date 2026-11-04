@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -29,6 +30,10 @@ import (
 type fakeRelay struct {
 	mu  sync.Mutex
 	evs map[string][]nostr.Event
+	// answers newest first, as relays do, with every event of one second:
+	// the order a reader gets is not the order things were sent
+	newestFirst bool
+	at          time.Time
 }
 
 func (f *fakeRelay) put(ev nostr.Event) {
@@ -39,7 +44,18 @@ func (f *fakeRelay) put(ev nostr.Event) {
 }
 
 func (f *fakeRelay) post(_ context.Context, seed [32]byte, msg []byte) error {
-	ev, _, err := linkEvent(seed, msg, time.Now())
+	at := time.Now()
+	if f.newestFirst {
+		// every event in one second, signed so: a tie the reader cannot
+		// order by time
+		f.mu.Lock()
+		if f.at.IsZero() {
+			f.at = at
+		}
+		at = f.at
+		f.mu.Unlock()
+	}
+	ev, _, err := linkEvent(seed, msg, at)
 	if err != nil {
 		return err
 	}
@@ -55,6 +71,9 @@ func (f *fakeRelay) fetch(_ context.Context, seed [32]byte) ([][]byte, error) {
 	f.mu.Lock()
 	evs := append([]nostr.Event(nil), f.evs[pk]...)
 	f.mu.Unlock()
+	if f.newestFirst {
+		slices.Reverse(evs)
+	}
 	return linkMessages(seed, evs), nil
 }
 
@@ -76,7 +95,7 @@ func pipeDoor(lines *atomic.Int32) linkDialer {
 		c, s := net.Pipe()
 		go handleConn(s)
 		defer c.Close()
-		c.SetDeadline(time.Now().Add(5 * time.Second))
+		c.SetDeadline(time.Now().Add(linkKeptWait + 5*time.Second))
 		if _, err := io.WriteString(c, line+"\n"); err != nil {
 			return err
 		}
@@ -107,11 +126,11 @@ func newLinkWorld(t *testing.T) *linkWorld {
 	w := &linkWorld{l: devTestShim(t), relay: &fakeRelay{evs: map[string][]nostr.Event{}}}
 	w.phone = newDevAcct(t, w.l)
 	w.devKey = newDevSigner(t, w.l)
-	oldWire, oldDial, oldPoll, oldOnion, oldCur := linkWireNow, linkDialNow, linkPoll, linkOnionOf, devCur
-	linkWireNow, linkDialNow, linkPoll = w.relay, pipeDoor(&w.lines), 5*time.Millisecond
+	oldWire, oldDial, oldPoll, oldOnion, oldCur, oldKept := linkWireNow, linkDialNow, linkPoll, linkOnionOf, devCur, linkKeptWait
+	linkWireNow, linkDialNow, linkPoll, linkKeptWait = w.relay, pipeDoor(&w.lines), 5*time.Millisecond, 3*time.Second
 	linkOnionOf = func() string { return testPhoneOnion }
 	t.Cleanup(func() {
-		linkWireNow, linkDialNow, linkPoll, linkOnionOf = oldWire, oldDial, oldPoll, oldOnion
+		linkWireNow, linkDialNow, linkPoll, linkOnionOf, linkKeptWait = oldWire, oldDial, oldPoll, oldOnion, oldKept
 		devMu.Lock()
 		devCur = oldCur
 		devMu.Unlock()
@@ -311,21 +330,22 @@ func TestALinkEndToEndInOneProcess(t *testing.T) {
 	if o := link(t, "bundles", bundles); o.Err != "" {
 		t.Fatalf("bundles: %s", o.Err)
 	}
-	waitState(t, jid, lsDone)
+	if o := link(t, "bundles", bundles); o.Err == "" {
+		t.Fatal("bundles sealed twice under one key")
+	}
 	got := waitState(t, pid, lsBundles)
 	if got.Device == nil || got.Device.Key != dev.Key || got.Device.ID != dev.ID {
 		t.Fatalf("the phone got %+v", got.Device)
 	}
-	if w.lines.Load() < 1 {
-		t.Fatal("nothing went through the door")
+	// the last line waits on the phone keeping the device: no ack, so the
+	// new device is not linked yet
+	time.Sleep(30 * time.Millisecond)
+	if s := link(t, "state", map[string]any{"link": jid}); s.St != lsSending {
+		t.Fatalf("the joiner before the phone kept: %+v", s)
 	}
 	pt := link(t, "take", map[string]any{"link": pid})
-	jt := link(t, "take", map[string]any{"link": jid})
-	if pt.Err != "" || jt.Err != "" {
-		t.Fatalf("take: %s %s", pt.Err, jt.Err)
-	}
-	if len(pt.Stream) != devices.StreamKeySize || !bytes.Equal(pt.Stream, jt.Stream) {
-		t.Fatal("the stream keys differ")
+	if pt.Err != "" {
+		t.Fatalf("take: %s", pt.Err)
 	}
 	if !bytes.Equal(pt.First, bundles["first"].([]byte)) || len(pt.Once) != 2 || pt.Made == 0 {
 		t.Fatal("the bundles are not the device's")
@@ -335,16 +355,171 @@ func TestALinkEndToEndInOneProcess(t *testing.T) {
 	if err != nil || !devices.SameBody(l, jState.own.Current(w.phone.id.pub)) {
 		t.Fatalf("the phone's list: %v", err)
 	}
-	// what the phone keeps goes to its own state as it does today
+	// what the phone keeps goes to its own state as it does today, then
+	// "kept" lets the door ack
 	w.as(w.pState)
 	var o devOut
 	call(t, devSessionJSON("own_mine", jsonOf(t, map[string]any{"ident": 0, "list": pt.List})), &o)
 	if o.Err != "" {
 		t.Fatalf("the phone's own list: %s", o.Err)
 	}
+	if k := link(t, "kept", map[string]any{"link": pid}); k.Err != "" {
+		t.Fatalf("kept: %s", k.Err)
+	}
+	waitState(t, jid, lsDone)
+	if w.lines.Load() < 1 {
+		t.Fatal("nothing went through the door")
+	}
+	jt := link(t, "take", map[string]any{"link": jid})
+	if jt.Err != "" {
+		t.Fatalf("take: %s", jt.Err)
+	}
+	if len(pt.Stream) != devices.StreamKeySize || !bytes.Equal(pt.Stream, jt.Stream) {
+		t.Fatal("the stream keys differ")
+	}
 	// both runs are gone
 	if s := link(t, "state", map[string]any{"link": pid}); s.Err == "" {
-		t.Fatal("the phone's run outlived its take")
+		t.Fatal("the phone's run outlived its keep")
+	}
+}
+
+// the joiner's place comes as the phone sent it: the device as dart
+// loads it, its own list taken, its bundles out. the phone stops at
+// "bundles"
+func (w *linkWorld) toBundles(t *testing.T, jid, pid string) (*devState, devEntry) {
+	t.Helper()
+	w.phoneConfirms(t, pid)
+	if c := link(t, "confirm", map[string]any{"link": jid}); c.Err != "" {
+		t.Fatalf("joiner confirm: %s", c.Err)
+	}
+	placed := waitState(t, jid, lsPlaced)
+	dev := *placed.Device
+	jState := w.load(t, w.phone.id.pub, w.devKey.pub)
+	w.as(jState)
+	if own := link(t, "own", map[string]any{"link": jid, "ident": 0}); own.Err != "" {
+		t.Fatalf("own: %s", own.Err)
+	}
+	b := map[string]any{"link": jid, "first": linkKDB1(t, dev, 1), "last": linkKDB1(t, dev, 2),
+		"once": [][]byte{linkKDB1(t, dev, 10)}, "made": time.Now().UnixMilli()}
+	if o := link(t, "bundles", b); o.Err != "" {
+		t.Fatalf("bundles: %s", o.Err)
+	}
+	waitState(t, pid, lsBundles)
+	return jState, dev
+}
+
+// the joiner's person says yes first, and the relays give the place
+// before the welcome: the joiner reads each when its step comes, never
+// stalls (H1)
+func TestTheJoinerTakesItsMessagesInAnyOrder(t *testing.T) {
+	for run := 0; run < 12; run++ {
+		t.Run(fmt.Sprint(run), func(t *testing.T) {
+			w := newLinkWorld(t)
+			w.relay.newestFirst = true
+			jid, pid, _ := w.toDigits(t)
+			waitState(t, jid, lsDigits)
+			waitState(t, pid, lsDigits)
+			if c := link(t, "confirm", map[string]any{"link": jid}); c.Err != "" {
+				t.Fatalf("joiner confirm: %s", c.Err)
+			}
+			waitState(t, jid, lsLinking)
+			w.phoneConfirms(t, pid)
+			if s := waitState(t, jid, lsPlaced, lsFailed); s.St != lsPlaced {
+				t.Fatalf("the joiner: %+v", s)
+			}
+		})
+	}
+}
+
+// the phone's page closes after the bundles came and before it kept the
+// device: no ack, so the new device is not linked either, and the phone
+// keeps nothing (H2)
+func TestAPhoneThatDoesNotKeepLeavesNoLinkOnEitherSide(t *testing.T) {
+	w := newLinkWorld(t)
+	jid, pid, _ := w.toDigits(t)
+	waitState(t, jid, lsDigits)
+	waitState(t, pid, lsDigits)
+	jState, _ := w.toBundles(t, jid, pid)
+	if pt := link(t, "take", map[string]any{"link": pid}); pt.Err != "" {
+		t.Fatalf("take: %s", pt.Err)
+	}
+	link(t, "end", map[string]any{"link": pid})
+	if s := waitState(t, jid, lsFailed, lsDone); s.St != lsFailed {
+		t.Fatalf("the joiner linked with a phone that kept nothing: %+v", s)
+	}
+	// its own list from the failed link is gone: the next link takes a
+	// first list afresh
+	end := time.Now().Add(5 * time.Second)
+	for jState.own.Current(w.phone.id.pub) != nil {
+		if time.Now().After(end) {
+			t.Fatal("a failed link left its own list on the device")
+		}
+		time.Sleep(2 * time.Millisecond)
+	}
+	if k := link(t, "kept", map[string]any{"link": pid}); k.Err == "" {
+		t.Fatal("kept after the end")
+	}
+}
+
+// the door holds the last line only so long: a phone app that never says
+// kept fails both sides, and a late kept is refused, so dart keeps nothing
+func TestTheDoorGivesUpOnAPhoneThatNeverKeeps(t *testing.T) {
+	w := newLinkWorld(t)
+	linkKeptWait = 100 * time.Millisecond
+	jid, pid, _ := w.toDigits(t)
+	waitState(t, jid, lsDigits)
+	waitState(t, pid, lsDigits)
+	w.toBundles(t, jid, pid)
+	link(t, "take", map[string]any{"link": pid})
+	if s := waitState(t, pid, lsFailed); s.Why != lsWhyReach {
+		t.Fatalf("the phone: %+v", s)
+	}
+	if k := link(t, "kept", map[string]any{"link": pid}); k.Err == "" {
+		t.Fatal("a late kept taken")
+	}
+	// the new device hears of it on the rendezvous, not when its time runs
+	// out
+	if s := waitState(t, jid, lsFailed, lsDone); s.St != lsFailed || s.Why != lsWhyGone {
+		t.Fatalf("the joiner after the door gave up: %+v", s)
+	}
+}
+
+// a link that failed after the new device took its own list, then more
+// links on the same device and the same phone, which kept nothing: each new
+// list steps a random amount from the phone's genesis, often below the
+// failed one, and is taken all the same, never refused as a rollback (H2)
+func TestARetryAfterAFailedLinkIsTaken(t *testing.T) {
+	w := newLinkWorld(t)
+	jid, pid, _ := w.toDigits(t)
+	waitState(t, jid, lsDigits)
+	waitState(t, pid, lsDigits)
+	jState, _ := w.toBundles(t, jid, pid)
+	gone := func(try int) {
+		end := time.Now().Add(5 * time.Second)
+		for jState.own.Current(w.phone.id.pub) != nil {
+			if time.Now().After(end) {
+				t.Fatalf("try %d: the failed link's list stayed", try)
+			}
+			time.Sleep(2 * time.Millisecond)
+		}
+	}
+	link(t, "end", map[string]any{"link": jid})
+	link(t, "end", map[string]any{"link": pid})
+	gone(0)
+	for try := 1; try <= 6; try++ {
+		jid, pid, _ := w.toDigits(t)
+		waitState(t, jid, lsDigits)
+		waitState(t, pid, lsDigits)
+		w.phoneConfirms(t, pid)
+		link(t, "confirm", map[string]any{"link": jid})
+		waitState(t, jid, lsPlaced)
+		w.as(jState)
+		if own := link(t, "own", map[string]any{"link": jid, "ident": 0}); own.Err != "" {
+			t.Fatalf("try %d: the next link's list: %s", try, own.Err)
+		}
+		link(t, "end", map[string]any{"link": jid})
+		link(t, "end", map[string]any{"link": pid})
+		gone(try)
 	}
 }
 
@@ -406,21 +581,31 @@ func TestDigitsThatDoNotMatchEndBothSides(t *testing.T) {
 	jid, pid, offer := w.toDigits(t)
 	waitState(t, jid, lsDigits)
 	waitState(t, pid, lsDigits)
-	// the phone's person says no: nothing more goes out
+	// the phone's person says no: only the end goes out, and the joiner
+	// hears it at once
 	link(t, "end", map[string]any{"link": pid})
 	raw, _ := devices.ParseOfferText(offer)
 	toJ, _, _ := devices.Rendezvous(raw)
-	time.Sleep(30 * time.Millisecond)
-	if k := w.relay.kinds(t, toJ); k != "KLA2" {
+	if s := waitState(t, jid, lsFailed); s.Why != lsWhyGone {
+		t.Fatalf("the joiner after the phone's no: %+v", s)
+	}
+	if k := w.relay.kinds(t, toJ); k != "KLA2,KLE1" {
 		t.Fatalf("after a no the joiner's address holds %s", k)
 	}
 	// the phone cannot be confirmed past it
 	if c := link(t, "confirm", map[string]any{"link": pid}); c.Err == "" {
 		t.Fatal("a confirm after the end")
 	}
-	link(t, "end", map[string]any{"link": jid})
 	if c := link(t, "confirm", map[string]any{"link": jid}); c.Err == "" {
 		t.Fatal("the joiner confirmed after the end")
+	}
+	// and the other way: the joiner's no reaches the phone on its digits
+	jid, pid, _ = w.toDigits(t)
+	waitState(t, jid, lsDigits)
+	waitState(t, pid, lsDigits)
+	link(t, "end", map[string]any{"link": jid})
+	if s := waitState(t, pid, lsFailed); s.Why != lsWhyGone {
+		t.Fatalf("the phone after the joiner's no: %+v", s)
 	}
 }
 
@@ -491,10 +676,10 @@ func TestTheDoorTakesOnlyTheWaitingLinksLines(t *testing.T) {
 			t.Errorf("%s acked", name)
 		}
 	}
-	// a KLB1 that does not open ends the phone's side, and the token is
-	// spent
-	if err := dial(ctx, testPhoneOnion, linkLinePrefix+good+" 0/1 "+base64.StdEncoding.EncodeToString([]byte("KLB1junk"))); err != nil {
-		t.Fatalf("the last line of a whole KLB1: %v", err)
+	// a KLB1 that does not open ends the phone's side unacked, and the
+	// token is spent
+	if err := dial(ctx, testPhoneOnion, linkLinePrefix+good+" 0/1 "+base64.StdEncoding.EncodeToString([]byte("KLB1junk"))); err == nil {
+		t.Fatal("a junk KLB1 acked")
 	}
 	if s := waitState(t, pid, lsFailed); s.Why != lsWhyBad {
 		t.Fatalf("a junk KLB1: %+v", s)
