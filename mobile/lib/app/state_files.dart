@@ -550,15 +550,24 @@ extension AppStateFiles on AppState {
   }
 
   // the engine's plain file in the fetch folder moved through the seal
-  // into got/, its row after. a stop between leaves the row on a file that
-  // is gone: it is fetched again, and the stray sweep takes the copy
+  // into got/, its row after. a stop between leaves the row on the fetch
+  // path: the next pass finds the sealed copy and points the row at it.
   // one whose plain file could not be sealed (its hidden chats shut that
   // moment) is shredded and fetched again: null, and it waits
   Future<DropFetch?> _sealFetched(Database db, DropFetch f) async {
     if (!inFetchFolder(f.path)) return f;
     if (!await File(f.path).exists()) {
+      final got = gotPathFor(f.path);
+      if (await File(got).exists()) {
+        await db.update(
+          'file_fetches',
+          {'path': got},
+          where: 'msg_uid = ?',
+          whereArgs: [f.uid],
+        );
+        return f.withPath(got);
+      }
       // shredded unsealed before: in again from the service
-      if (await File(gotPathFor(f.path)).exists()) return f;
       await fetchState(db, f.uid, kFetchWaiting);
       return null;
     }
