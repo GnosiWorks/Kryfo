@@ -3781,6 +3781,47 @@ void main() {
       l.translateOffDeletes,
       "Turning this off deletes saved translations.",
     );
+    expect(l.voiceSeeTranscription, "See transcription");
+    expect(l.voiceTranscribing, "Transcribing…");
+    expect(l.voiceHideTranscription, "Hide");
+    expect(l.voiceShowOriginalOnly, "Show original only");
+    expect(l.voiceCouldNotTranscribe, "Couldn't make out the words");
+    expect(l.voiceTranscriptLabel, "Transcription");
+    expect(l.voiceSettingsTitle, "Voice transcription");
+    expect(l.voiceOnRow, "Transcribe voice messages");
+    expect(l.voiceOnHint, "Offered under every voice message");
+    expect(l.voiceOffDeletes, "Turning this off deletes saved transcripts.");
+    expect(l.voiceModelTitle, "Speech model");
+    expect(
+      l.voiceModelLine("<size>"),
+      "One download of about <size>, for every language.",
+    );
+    expect(
+      l.voiceModelPrivacy,
+      "Downloaded over Tor and kept on this phone. Your voice messages never leave it.",
+    );
+    expect(
+      l.voiceModelPrivacyDesk,
+      "Downloaded over Tor and kept on this computer. Your voice messages never leave it.",
+    );
+    expect(
+      l.voiceModelFailNoTor,
+      "Tor isn't connected yet. The model downloads over Tor only, so try again once it is.",
+    );
+    expect(l.voiceModelRemoveTitle, "Remove the speech model?");
+    expect(
+      l.voiceModelRemoveLine,
+      "Transcripts already made stay. New ones need the model again.",
+    );
+    expect(
+      l.voiceKeptNote,
+      "Transcripts are kept with their chat, encrypted on this phone, and deleted with it.",
+    );
+    expect(
+      l.voiceKeptNoteDesk,
+      "Transcripts are kept with their chat, encrypted on this computer, and deleted with it.",
+    );
+    expect(l.voiceNotNow, "Not now");
     expect(l.bridgesNoneUntilOnion, "None until onion is on");
     expect(
       l.bridgesRelayThisNetworkSees,

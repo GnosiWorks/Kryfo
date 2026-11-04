@@ -11170,4 +11170,73 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get chatDropHereToSend => 'Rilascia qui per inviare';
+
+  @override
+  String get voiceSeeTranscription => 'Vedi trascrizione';
+
+  @override
+  String get voiceTranscribing => 'Trascrizione in corso…';
+
+  @override
+  String get voiceHideTranscription => 'Nascondi';
+
+  @override
+  String get voiceShowOriginalOnly => 'Mostra solo l’originale';
+
+  @override
+  String get voiceCouldNotTranscribe => 'Parole non riconoscibili';
+
+  @override
+  String get voiceTranscriptLabel => 'Trascrizione';
+
+  @override
+  String get voiceSettingsTitle => 'Trascrizione vocale';
+
+  @override
+  String get voiceOnRow => 'Trascrivi i messaggi vocali';
+
+  @override
+  String get voiceOnHint => 'Proposta sotto ogni messaggio vocale';
+
+  @override
+  String get voiceOffDeletes =>
+      'Se lo disattivi, le trascrizioni salvate vengono eliminate.';
+
+  @override
+  String get voiceModelTitle => 'Modello vocale';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'Un solo download di circa $size, per tutte le lingue.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'Scaricato tramite Tor e tenuto su questo telefono. I tuoi messaggi vocali non lo lasciano mai.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'Scaricato tramite Tor e tenuto su questo computer. I tuoi messaggi vocali non lo lasciano mai.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'Tor non è ancora connesso. Il modello si scarica solo tramite Tor, quindi riprova quando lo è.';
+
+  @override
+  String get voiceModelRemoveTitle => 'Rimuovere il modello vocale?';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'Le trascrizioni già fatte restano. Per le nuove serve di nuovo il modello.';
+
+  @override
+  String get voiceKeptNote =>
+      'Le trascrizioni restano cifrate con la loro chat su questo telefono e vengono eliminate con essa.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'Le trascrizioni restano cifrate con la loro chat su questo computer e vengono eliminate con essa.';
+
+  @override
+  String get voiceNotNow => 'Non ora';
 }

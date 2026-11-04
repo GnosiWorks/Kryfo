@@ -11077,4 +11077,72 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatDropHereToSend => 'Drop here to send';
+
+  @override
+  String get voiceSeeTranscription => 'See transcription';
+
+  @override
+  String get voiceTranscribing => 'Transcribing…';
+
+  @override
+  String get voiceHideTranscription => 'Hide';
+
+  @override
+  String get voiceShowOriginalOnly => 'Show original only';
+
+  @override
+  String get voiceCouldNotTranscribe => 'Couldn\'t make out the words';
+
+  @override
+  String get voiceTranscriptLabel => 'Transcription';
+
+  @override
+  String get voiceSettingsTitle => 'Voice transcription';
+
+  @override
+  String get voiceOnRow => 'Transcribe voice messages';
+
+  @override
+  String get voiceOnHint => 'Offered under every voice message';
+
+  @override
+  String get voiceOffDeletes => 'Turning this off deletes saved transcripts.';
+
+  @override
+  String get voiceModelTitle => 'Speech model';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'One download of about $size, for every language.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'Downloaded over Tor and kept on this phone. Your voice messages never leave it.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'Downloaded over Tor and kept on this computer. Your voice messages never leave it.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'Tor isn\'t connected yet. The model downloads over Tor only, so try again once it is.';
+
+  @override
+  String get voiceModelRemoveTitle => 'Remove the speech model?';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'Transcripts already made stay. New ones need the model again.';
+
+  @override
+  String get voiceKeptNote =>
+      'Transcripts are kept with their chat, encrypted on this phone, and deleted with it.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'Transcripts are kept with their chat, encrypted on this computer, and deleted with it.';
+
+  @override
+  String get voiceNotNow => 'Not now';
 }

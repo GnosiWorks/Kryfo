@@ -17808,6 +17808,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Drop here to send'**
   String get chatDropHereToSend;
+
+  /// the link under a voice message that shows its words
+  ///
+  /// In en, this message translates to:
+  /// **'See transcription'**
+  String get voiceSeeTranscription;
+
+  /// while the phone turns a voice message into words
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribing…'**
+  String get voiceTranscribing;
+
+  /// folds the words of a voice message away
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get voiceHideTranscription;
+
+  /// folds the translation of a transcript away, the words heard stay
+  ///
+  /// In en, this message translates to:
+  /// **'Show original only'**
+  String get voiceShowOriginalOnly;
+
+  /// a voice message with no words the phone could make out
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t make out the words'**
+  String get voiceCouldNotTranscribe;
+
+  /// what a screen reader says before the words of a voice message
+  ///
+  /// In en, this message translates to:
+  /// **'Transcription'**
+  String get voiceTranscriptLabel;
+
+  /// the settings row and page for voice message transcripts
+  ///
+  /// In en, this message translates to:
+  /// **'Voice transcription'**
+  String get voiceSettingsTitle;
+
+  /// the switch that offers transcripts under voice messages
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribe voice messages'**
+  String get voiceOnRow;
+
+  /// under the switch: where it shows
+  ///
+  /// In en, this message translates to:
+  /// **'Offered under every voice message'**
+  String get voiceOnHint;
+
+  /// under the switch: what turning it off does
+  ///
+  /// In en, this message translates to:
+  /// **'Turning this off deletes saved transcripts.'**
+  String get voiceOffDeletes;
+
+  /// the one download that turns speech into words
+  ///
+  /// In en, this message translates to:
+  /// **'Speech model'**
+  String get voiceModelTitle;
+
+  /// the download sheet: one model for every language, its size
+  ///
+  /// In en, this message translates to:
+  /// **'One download of about {size}, for every language.'**
+  String voiceModelLine(Object size);
+
+  /// the download sheet and settings: where the model comes from and stays
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded over Tor and kept on this phone. Your voice messages never leave it.'**
+  String get voiceModelPrivacy;
+
+  /// voiceModelPrivacy as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded over Tor and kept on this computer. Your voice messages never leave it.'**
+  String get voiceModelPrivacyDesk;
+
+  /// the model download could not start: tor is not up
+  ///
+  /// In en, this message translates to:
+  /// **'Tor isn\'t connected yet. The model downloads over Tor only, so try again once it is.'**
+  String get voiceModelFailNoTor;
+
+  /// asks before the speech model is taken off
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the speech model?'**
+  String get voiceModelRemoveTitle;
+
+  /// what removing the speech model keeps
+  ///
+  /// In en, this message translates to:
+  /// **'Transcripts already made stay. New ones need the model again.'**
+  String get voiceModelRemoveLine;
+
+  /// settings: where transcripts are kept and when they go
+  ///
+  /// In en, this message translates to:
+  /// **'Transcripts are kept with their chat, encrypted on this phone, and deleted with it.'**
+  String get voiceKeptNote;
+
+  /// voiceKeptNote as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Transcripts are kept with their chat, encrypted on this computer, and deleted with it.'**
+  String get voiceKeptNoteDesk;
+
+  /// closes the model download sheet without downloading
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get voiceNotNow;
 }
 
 class _AppLocalizationsDelegate

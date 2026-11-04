@@ -11295,4 +11295,72 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get chatDropHereToSend => 'Upuść tutaj, by wysłać';
+
+  @override
+  String get voiceSeeTranscription => 'Pokaż transkrypcję';
+
+  @override
+  String get voiceTranscribing => 'Transkrybuję…';
+
+  @override
+  String get voiceHideTranscription => 'Ukryj';
+
+  @override
+  String get voiceShowOriginalOnly => 'Pokaż tylko oryginał';
+
+  @override
+  String get voiceCouldNotTranscribe => 'Nie udało się rozpoznać słów';
+
+  @override
+  String get voiceTranscriptLabel => 'Transkrypcja';
+
+  @override
+  String get voiceSettingsTitle => 'Transkrypcja głosu';
+
+  @override
+  String get voiceOnRow => 'Transkrybuj wiadomości głosowe';
+
+  @override
+  String get voiceOnHint => 'Dostępna pod każdą wiadomością głosową';
+
+  @override
+  String get voiceOffDeletes => 'Wyłączenie usuwa zapisane transkrypcje.';
+
+  @override
+  String get voiceModelTitle => 'Model mowy';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'Jedno pobranie, około $size, dla wszystkich języków.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'Pobierany przez Tor i przechowywany na tym telefonie. Twoje wiadomości głosowe nigdy go nie opuszczają.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'Pobierany przez Tor i przechowywany na tym komputerze. Twoje wiadomości głosowe nigdy go nie opuszczają.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'Tor nie jest jeszcze połączony. Model pobiera się tylko przez Tor, więc spróbuj ponownie, gdy się połączy.';
+
+  @override
+  String get voiceModelRemoveTitle => 'Usunąć model mowy?';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'Gotowe transkrypcje zostają. Nowe znów będą potrzebować modelu.';
+
+  @override
+  String get voiceKeptNote =>
+      'Transkrypcje są przechowywane przy swoim czacie, zaszyfrowane na tym telefonie, i usuwane razem z nim.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'Transkrypcje są przechowywane przy swoim czacie, zaszyfrowane na tym komputerze, i usuwane razem z nim.';
+
+  @override
+  String get voiceNotNow => 'Nie teraz';
 }

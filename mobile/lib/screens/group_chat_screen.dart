@@ -39,6 +39,9 @@ import '../file_kind.dart'
         readFileFactsFresh;
 import '../file_save.dart' show saveReceivedFile;
 import '../widgets/media_bubbles.dart';
+import '../voice/chat_transcripts.dart';
+import '../voice/ui/transcript_line.dart';
+import '../voice/voice_transcripts.dart' show voiceTranscriptsIfOn;
 import '../widgets/decode_px.dart';
 import '../atmosphere.dart';
 import '../notifications.dart' show clearNotificationsFor;
@@ -608,6 +611,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // this group in the session that opened it, for what is kept between
   // visits
   late final String _memo;
+  // the group's voice notes as words, made on the phone
+  late final ChatTranscripts? _transcripts = switch (voiceTranscriptsIfOn()) {
+    final hub? => ChatTranscripts(hub, widget.groupId),
+    null => null,
+  };
+
+  // a note that went: its words go from memory now, a run for it stops
+  void _forgetTranscript(_GMsg m) {
+    final uid = m.msgUid;
+    if (uid != null && isVoiceName(m.fileName)) _transcripts?.forget(uid);
+  }
 
   // android's word that this chat was screenshotted or is recorded: one
   // quiet line here, on this phone alone
@@ -828,6 +842,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       for (final m in expired) {
         m.removing = true;
         if (m.msgUid != null) _earlier.drop(m.msgUid!);
+        _forgetTranscript(m);
       }
       if (back) {
         // it burned while the group was out of view: gone, as it would be
@@ -1260,6 +1275,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (oldest != null && o.when.isBefore(oldest)) continue;
       if (!o.removing) {
         o.removing = true;
+        _forgetTranscript(o);
         Future.delayed(kLeaveGone, () {
           if (mounted) setState(() => _messages.remove(o));
         });
@@ -1885,6 +1901,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     opacity: lifted ? 0.0 : 1.0,
                     child: _GroupBubble(
                       m: m,
+                      transcripts: _transcripts,
                       album: run,
                       showSender: showSender,
                       kept: _keeps(m),
@@ -3562,6 +3579,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                             type: MaterialType.transparency,
                             child: _GroupBubble(
                               m: target,
+                              transcripts: _transcripts,
                               album: album,
                               showSender: showSender,
                               faceOf: _faceOf,
@@ -4526,6 +4544,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   @override
   void dispose() {
+    _transcripts?.dispose();
     _find.detach();
     _unwatchCaptures?.call();
     wallpaperRevision.removeListener(_loadWall);
@@ -5827,8 +5846,11 @@ class _GroupBubble extends StatelessWidget {
   final AlbumRun<_GMsg>? album;
   // a tile of the album held: the bubble's context and the tile
   final void Function(BuildContext, int)? onLongPressTile;
+  // the group's voice note transcripts
+  final ChatTranscripts? transcripts;
   const _GroupBubble({
     required this.m,
+    this.transcripts,
     this.album,
     this.onLongPressTile,
     required this.showSender,
@@ -6205,14 +6227,27 @@ class _GroupBubble extends StatelessWidget {
                                                   const EdgeInsets.symmetric(
                                                     vertical: 2,
                                                   ),
-                                              child: VoiceBubble(
-                                                key: ValueKey(
-                                                  'gvb_${m.msgUid ?? m.filePath}',
-                                                ),
-                                                path: m.filePath!,
-                                                isOut: isOut,
-                                                disguised: m.voiceDisguised,
-                                                onPlay: onAct,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  VoiceBubble(
+                                                    key: ValueKey(
+                                                      'gvb_${m.msgUid ?? m.filePath}',
+                                                    ),
+                                                    path: m.filePath!,
+                                                    isOut: isOut,
+                                                    disguised: m.voiceDisguised,
+                                                    onPlay: onAct,
+                                                  ),
+                                                  VoiceTranscript(
+                                                    chat: transcripts,
+                                                    uid: m.msgUid,
+                                                    path: m.filePath!,
+                                                    isOut: isOut,
+                                                  ),
+                                                ],
                                               ),
                                             )
                                           else if (m.filePath != null &&

@@ -13919,5 +13919,90 @@
   "chatDropHereToSend": "Drop here to send",
   "@chatDropHereToSend": {
     "description": "a computer: files dragged over a chat, the line on the wash before they are let go"
+  },
+  "voiceSeeTranscription": "See transcription",
+  "@voiceSeeTranscription": {
+    "description": "the link under a voice message that shows its words"
+  },
+  "voiceTranscribing": "Transcribing…",
+  "@voiceTranscribing": {
+    "description": "while the phone turns a voice message into words"
+  },
+  "voiceHideTranscription": "Hide",
+  "@voiceHideTranscription": {
+    "description": "folds the words of a voice message away"
+  },
+  "voiceShowOriginalOnly": "Show original only",
+  "@voiceShowOriginalOnly": {
+    "description": "folds the translation of a transcript away, the words heard stay"
+  },
+  "voiceCouldNotTranscribe": "Couldn't make out the words",
+  "@voiceCouldNotTranscribe": {
+    "description": "a voice message with no words the phone could make out"
+  },
+  "voiceTranscriptLabel": "Transcription",
+  "@voiceTranscriptLabel": {
+    "description": "what a screen reader says before the words of a voice message"
+  },
+  "voiceSettingsTitle": "Voice transcription",
+  "@voiceSettingsTitle": {
+    "description": "the settings row and page for voice message transcripts"
+  },
+  "voiceOnRow": "Transcribe voice messages",
+  "@voiceOnRow": {
+    "description": "the switch that offers transcripts under voice messages"
+  },
+  "voiceOnHint": "Offered under every voice message",
+  "@voiceOnHint": {
+    "description": "under the switch: where it shows"
+  },
+  "voiceOffDeletes": "Turning this off deletes saved transcripts.",
+  "@voiceOffDeletes": {
+    "description": "under the switch: what turning it off does"
+  },
+  "voiceModelTitle": "Speech model",
+  "@voiceModelTitle": {
+    "description": "the one download that turns speech into words"
+  },
+  "voiceModelLine": "One download of about {size}, for every language.",
+  "@voiceModelLine": {
+    "description": "the download sheet: one model for every language, its size",
+    "placeholders": {
+      "size": {
+        "type": "Object"
+      }
+    }
+  },
+  "voiceModelPrivacy": "Downloaded over Tor and kept on this phone. Your voice messages never leave it.",
+  "@voiceModelPrivacy": {
+    "description": "the download sheet and settings: where the model comes from and stays"
+  },
+  "voiceModelPrivacyDesk": "Downloaded over Tor and kept on this computer. Your voice messages never leave it.",
+  "@voiceModelPrivacyDesk": {
+    "description": "voiceModelPrivacy as a computer shows it (linux and windows)"
+  },
+  "voiceModelFailNoTor": "Tor isn't connected yet. The model downloads over Tor only, so try again once it is.",
+  "@voiceModelFailNoTor": {
+    "description": "the model download could not start: tor is not up"
+  },
+  "voiceModelRemoveTitle": "Remove the speech model?",
+  "@voiceModelRemoveTitle": {
+    "description": "asks before the speech model is taken off"
+  },
+  "voiceModelRemoveLine": "Transcripts already made stay. New ones need the model again.",
+  "@voiceModelRemoveLine": {
+    "description": "what removing the speech model keeps"
+  },
+  "voiceKeptNote": "Transcripts are kept with their chat, encrypted on this phone, and deleted with it.",
+  "@voiceKeptNote": {
+    "description": "settings: where transcripts are kept and when they go"
+  },
+  "voiceKeptNoteDesk": "Transcripts are kept with their chat, encrypted on this computer, and deleted with it.",
+  "@voiceKeptNoteDesk": {
+    "description": "voiceKeptNote as a computer shows it (linux and windows)"
+  },
+  "voiceNotNow": "Not now",
+  "@voiceNotNow": {
+    "description": "closes the model download sheet without downloading"
   }
 }

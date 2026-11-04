@@ -11162,4 +11162,73 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get chatDropHereToSend => 'Suelta aquí para enviar';
+
+  @override
+  String get voiceSeeTranscription => 'Ver transcripción';
+
+  @override
+  String get voiceTranscribing => 'Transcribiendo…';
+
+  @override
+  String get voiceHideTranscription => 'Ocultar';
+
+  @override
+  String get voiceShowOriginalOnly => 'Ver solo el original';
+
+  @override
+  String get voiceCouldNotTranscribe => 'No se entienden las palabras';
+
+  @override
+  String get voiceTranscriptLabel => 'Transcripción';
+
+  @override
+  String get voiceSettingsTitle => 'Transcripción de voz';
+
+  @override
+  String get voiceOnRow => 'Transcribir mensajes de voz';
+
+  @override
+  String get voiceOnHint => 'Se ofrece bajo cada mensaje de voz';
+
+  @override
+  String get voiceOffDeletes =>
+      'Al desactivarlo se borran las transcripciones guardadas.';
+
+  @override
+  String get voiceModelTitle => 'Modelo de voz';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'Una sola descarga de unos $size, para todos los idiomas.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'Se descarga por Tor y se queda en este teléfono. Tus mensajes de voz nunca salen de él.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'Se descarga por Tor y se queda en este ordenador. Tus mensajes de voz nunca salen de él.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'Tor aún no está conectado. El modelo solo se descarga por Tor, así que vuelve a intentarlo cuando lo esté.';
+
+  @override
+  String get voiceModelRemoveTitle => '¿Quitar el modelo de voz?';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'Las transcripciones ya hechas se quedan. Las nuevas necesitan el modelo otra vez.';
+
+  @override
+  String get voiceKeptNote =>
+      'Las transcripciones se guardan cifradas con su chat en este teléfono y se borran con él.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'Las transcripciones se guardan cifradas con su chat en este ordenador y se borran con él.';
+
+  @override
+  String get voiceNotNow => 'Ahora no';
 }
