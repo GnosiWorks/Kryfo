@@ -5292,7 +5292,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get seenEachConversationGetsIts =>
-      'Кожна розмова має власну адресу, виведену з обох ключів. Ретранслятор бачить не пов’язані між собою схованки, а не пару людей.';
+      'Кожна розмова має власну адресу, виведену з обох ключів. Ретранслятор бачить не пов’язані між собою схованки, а не пару людей. У режимі «Швидкий» наші сервери бачать твою IP-адресу на схованках, якими ти користуєшся, а якщо обидва співрозмовники у «Швидкому», то й що дві IP-адреси ділять одну схованку.';
 
   @override
   String get seenWhatYouSay => 'Що ти кажеш';
@@ -5309,7 +5309,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get seenKryfoDoesNotScan =>
-      'Kryfo не сканує твої контакти. Тут немає номера телефону, який міг би витекти.';
+      'Kryfo не сканує твої контакти. Тут немає номера телефону, який міг би витекти. У режимі «Швидкий» наші сервери могли б скласти його частину з того, які IP-адреси ділять схованки. Вони нічого про це не записують.';
 
   @override
   String get seenIntroducer => 'Посередник';
@@ -9561,10 +9561,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get bridgesNoneUntilOnion => 'Нічого, доки не ввімкнено Onion';
 
   @override
-  String get bridgesRelayWorksWhereTor =>
-      'Режим «Швидкий» працює там, де Tor заблоковано, і повернутися можна будь-коли.';
-
-  @override
   String get bridgesRelayThisNetworkSees =>
       'Режим «Швидкий» проходить там, де Tor заблоковано, але ця мережа може бачити, що ти підключаєшся до Kryfo.';
 
@@ -10475,7 +10471,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'Без Tor повідомлення приходять швидше й витрачають менше заряду. Наші сервери бачать твою IP-адресу лише поки ти підключений і ніколи її не записують і не зберігають. І ніколи не бачать, що ти пишеш. Твої контакти її ніколи не бачать.';
+      'Без Tor повідомлення приходять швидше й витрачають менше заряду. Наші сервери бачать твою IP-адресу лише поки ти підключений і ніколи її не записують і не зберігають. І ніколи не бачать, що ти пишеш. Твої контакти її ніколи не бачать. Твоя мережа може бачити, що ти підключаєшся до Kryfo.';
 
   @override
   String get modesFastConnected => 'Швидкий · підключено';
@@ -10579,8 +10575,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get homeSwitchedToFastRoute => 'Увімкнено Швидкий';
 
   @override
-  String get bridgesFastGetsThrough =>
-      'Швидкий іде напряму до наших серверів і зазвичай проходить. Або нехай Kryfo сам знайде шлях.';
+  String get bridgesBridgeFirstFastSeen =>
+      'Нехай Kryfo знайде міст, який пройде. «Швидкий» теж працює, але ця мережа може бачити, що ти підключаєшся до Kryfo.';
 
   @override
   String get appServersNotAnswering => 'Сервери не відповідають';
@@ -10590,6 +10586,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get seenOurServers => 'Наші сервери';
+
+  @override
+  String get seenOurServersCould => 'Наші сервери можуть';
 
   @override
   String get seenIpWhy =>

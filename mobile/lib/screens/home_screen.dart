@@ -1445,14 +1445,12 @@ class _AutoStrip extends StatelessWidget {
       builder: (context, _) {
         final line = shownBridgeLine();
         final a = line.action;
+        // fast quiet, after the bridge way: this network sees it
         final relay = CardAction(
           label: l10n.homeUseFast,
           onTap: () => switchToRelay(context),
-          fill: line.relayFirst ? kCyan : null,
-          ink: line.relayFirst ? HaloColors.amberInk : HaloColors.amberText,
+          ink: HaloColors.amberText,
         );
-        // relay quiet after the bridge way where the network may watch
-        final filled = !line.offerRelay || !line.relayFirst;
         return _HomeCard(
           show: appState.homeBridgeCard == 'auto',
           id: 'auto',
@@ -1462,8 +1460,7 @@ class _AutoStrip extends StatelessWidget {
           title: line.head,
           line: line.detail ?? '',
           actions: [
-            // nothing got through: relay mode and the other way
-            if (line.offerRelay && line.relayFirst) relay,
+            // nothing got through: the bridge way, then fast
             if (a != null)
               CardAction(
                 label: bridgeActionLabel(a),
@@ -1475,10 +1472,10 @@ class _AutoStrip extends StatelessWidget {
                   }
                   await showTorBlockedSheet(context);
                 },
-                fill: filled ? HaloColors.amber : null,
-                ink: filled ? HaloColors.onAmber : HaloColors.amberText,
+                fill: HaloColors.amber,
+                ink: HaloColors.onAmber,
               ),
-            if (line.offerRelay && !line.relayFirst) relay,
+            if (line.offerRelay) relay,
             CardAction(
               label: l10n.bridgesDetails,
               onTap: () => deskPush(context, haloRoute(const BridgesScreen())),
@@ -1558,7 +1555,8 @@ class _BridgeStuckHint extends StatelessWidget {
   }
 }
 
-// tor alone is not getting through: our relay, or let kryfo find a way
+// tor alone is not getting through: let kryfo find a bridge, or fast last,
+// with what this network sees on it
 class _BridgeHint extends StatelessWidget {
   const _BridgeHint();
 
@@ -1572,32 +1570,20 @@ class _BridgeHint extends StatelessWidget {
         tint: HaloColors.violet,
         wash: true,
         title: l10n.bridgesTorSeemsBlocked,
-        line: l10n.bridgesFastGetsThrough,
+        line: l10n.bridgesBridgeFirstFastSeen,
         actions: [
-          CardAction(
-            label: l10n.homeUseFast,
-            onTap: () async {
-              try {
-                await appState.setSendMode('balanced');
-              } catch (_) {
-                if (context.mounted) {
-                  showHaloToast(context, l10n.modesNotChanged);
-                }
-                return;
-              }
-              if (context.mounted) {
-                showHaloToast(context, l10n.homeSwitchedToFastRoute);
-              }
-            },
-            fill: kCyan,
-            ink: HaloColors.amberInk,
-          ),
           CardAction(
             label: l10n.bridgesTryAutomatic,
             onTap: () async {
               await appState.chooseBridge(BridgeChoice.auto);
               appState.applyBridgeNow();
             },
+            fill: HaloColors.violet,
+            ink: HaloColors.amberInk,
+          ),
+          CardAction(
+            label: l10n.homeUseFast,
+            onTap: () => switchToRelay(context),
             ink: HaloColors.violet,
             bold: true,
           ),

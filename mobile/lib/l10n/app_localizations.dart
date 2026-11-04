@@ -8312,7 +8312,7 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Each conversation gets its own address, derived from both keys. A relay sees unrelated drop boxes, not a pair of people.'**
+  /// **'Each conversation gets its own address, derived from both keys. A relay sees unrelated drop boxes, not a pair of people. On Fast our servers see your IP address on the drop boxes you use, and when both people in a chat use Fast, that two IP addresses share one.'**
   String get seenEachConversationGetsIts;
 
   /// screens/seen_screen.dart
@@ -8342,7 +8342,7 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Kryfo does not scan your contacts. No phone number exists here to leak.'**
+  /// **'Kryfo does not scan your contacts. No phone number exists here to leak. On Fast our servers could piece some of it together from which IP addresses share drop boxes. They keep no record of it.'**
   String get seenKryfoDoesNotScan;
 
   /// screens/seen_screen.dart
@@ -15107,13 +15107,7 @@ abstract class AppLocalizations {
   /// **'None until onion is on'**
   String get bridgesNoneUntilOnion;
 
-  /// bridge_mode.dart: the one line when automatic found no way in, over the button that switches to relay mode
-  ///
-  /// In en, this message translates to:
-  /// **'Fast works where Tor is blocked, and you can switch back any time.'**
-  String get bridgesRelayWorksWhereTor;
-
-  /// bridge_mode.dart: the one line when automatic found no way in, for someone who said Tor is blocked or watched: what relay mode costs on this network
+  /// bridge_mode.dart: the one line when automatic found no way in, over the bridge way and then the button that switches to Fast: what Fast costs on this network
   ///
   /// In en, this message translates to:
   /// **'Fast gets through where Tor is blocked, but this network can see you connect to Kryfo.'**
@@ -16562,7 +16556,7 @@ abstract class AppLocalizations {
   /// Fast card, what it means and who sees the IP address
   ///
   /// In en, this message translates to:
-  /// **'Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you\'re connected, and never log or keep it. Never what you say. Your contacts never see it.'**
+  /// **'Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you\'re connected, and never log or keep it. Never what you say. Your contacts never see it. Your network can see that you connect to Kryfo.'**
   String get modesFastLine;
 
   /// status of the Fast route, on its card and on the home pill
@@ -16751,11 +16745,11 @@ abstract class AppLocalizations {
   /// **'Switched to Fast'**
   String get homeSwitchedToFastRoute;
 
-  /// where Tor seems blocked, the line that offers Fast
+  /// where Tor seems blocked: a bridge first, then Fast and what this network sees on it
   ///
   /// In en, this message translates to:
-  /// **'Fast goes straight to our servers and usually gets through. Or let Kryfo find a way by itself.'**
-  String get bridgesFastGetsThrough;
+  /// **'Let Kryfo find a bridge that gets through. Fast works too, but this network can see you connect to Kryfo.'**
+  String get bridgesBridgeFirstFastSeen;
 
   /// home pill while neither of our servers answers
   ///
@@ -16774,6 +16768,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Our servers'**
   String get seenOurServers;
+
+  /// what we can see table, Fast column, who you talk to and contact graph rows: what our servers could put together on Fast
+  ///
+  /// In en, this message translates to:
+  /// **'Our servers could'**
+  String get seenOurServersCould;
 
   /// what we can see table, why for the IP address row
   ///

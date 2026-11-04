@@ -5291,7 +5291,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get seenEachConversationGetsIts =>
-      'لكل محادثة عنوانها الخاص، مشتق من المفتاحين. يرى المُرحِّل صناديق إيداع لا صلة بينها، لا شخصين.';
+      'لكل محادثة عنوانها الخاص، مشتق من المفتاحين. يرى المُرحِّل صناديق إيداع لا صلة بينها، لا شخصين. في السريع ترى خوادمنا عنوان IP الخاص بك على صناديق الإيداع التي تستخدمها، وإذا استخدم الطرفان في محادثة السريع، ترى أن عنوانَي IP يتشاركان صندوقًا واحدًا.';
 
   @override
   String get seenWhatYouSay => 'ما تقوله';
@@ -5308,7 +5308,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get seenKryfoDoesNotScan =>
-      'لا يفحص Kryfo جهات اتصالك. لا يوجد هنا رقم هاتف ليتسرّب.';
+      'لا يفحص Kryfo جهات اتصالك. لا يوجد هنا رقم هاتف ليتسرّب. في السريع قد تجمع خوادمنا جزءًا منها من عناوين IP التي تتشارك صناديق الإيداع. ولا تحتفظ بأي سجل لذلك.';
 
   @override
   String get seenIntroducer => 'من عرّفكما';
@@ -9536,10 +9536,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesNoneUntilOnion => 'لا شيء حتى تشغيل Onion';
 
   @override
-  String get bridgesRelayWorksWhereTor =>
-      'يعمل الوضع السريع حيث يُحجب Tor، ويمكنك العودة في أي وقت.';
-
-  @override
   String get bridgesRelayThisNetworkSees =>
       'يتجاوز الوضع السريع حجب Tor، لكن هذه الشبكة يمكنها أن ترى اتصالك بـ Kryfo.';
 
@@ -10443,7 +10439,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'يتخطى Tor، فتصل الرسائل أسرع وتستهلك بطارية أقل. ترى خوادمنا عنوان IP الخاص بك فقط أثناء اتصالك، ولا تسجله أو تحتفظ به أبدًا. ولا ترى أبدًا ما تقوله. جهات اتصالك لا تراه أبدًا.';
+      'يتخطى Tor، فتصل الرسائل أسرع وتستهلك بطارية أقل. ترى خوادمنا عنوان IP الخاص بك فقط أثناء اتصالك، ولا تسجله أو تحتفظ به أبدًا. ولا ترى أبدًا ما تقوله. جهات اتصالك لا تراه أبدًا. يمكن لشبكتك أن ترى أنك تتصل بـ Kryfo.';
 
   @override
   String get modesFastConnected => 'سريع · متصل';
@@ -10547,8 +10543,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeSwitchedToFastRoute => 'تم التبديل إلى السريع';
 
   @override
-  String get bridgesFastGetsThrough =>
-      'السريع يذهب مباشرة إلى خوادمنا وعادةً ما ينجح. أو دع Kryfo يجد طريقًا بنفسه.';
+  String get bridgesBridgeFirstFastSeen =>
+      'دع Kryfo يجد جسرًا ينجح. السريع ينجح أيضًا، لكن هذه الشبكة يمكنها أن ترى اتصالك بـ Kryfo.';
 
   @override
   String get appServersNotAnswering => 'الخوادم لا ترد';
@@ -10558,6 +10554,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get seenOurServers => 'خوادمنا';
+
+  @override
+  String get seenOurServersCould => 'خوادمنا قد ترى';
 
   @override
   String get seenIpWhy =>
