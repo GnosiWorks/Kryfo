@@ -1570,16 +1570,18 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatTorIsNotUp =>
-      'Tor henüz hazır değil · önizlemesiz gönderiliyor';
+      'Tor henüz bağlı değil · bağlantı önizlemesi yok';
 
   @override
-  String get chatCouldnTReachIt => 'Ulaşılamadı · önizlemesiz gönderiliyor';
+  String get chatCouldnTReachIt =>
+      'Sayfaya ulaşılamadı · bağlantı önizlemesi yok';
 
   @override
-  String get chatNoTitleCameBack => 'Başlık gelmedi · önizlemesiz gönderiliyor';
+  String get chatNoTitleCameBack =>
+      'Bu sayfanın başlığı yok · bağlantı önizlemesi yok';
 
   @override
-  String get chatCouldnTFetchIt => 'Alınamadı · önizlemesiz gönderiliyor';
+  String get chatCouldnTFetchIt => 'Önizleme yüklenemedi';
 
   @override
   String get chatNoSignalSessionRe => 'Signal oturumu yok. Yeniden eşleştir';
@@ -2555,18 +2557,18 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupChatTorIsNotUp =>
-      'Tor henüz hazır değil · önizlemesiz gönderiliyor';
+      'Tor henüz bağlı değil · bağlantı önizlemesi yok';
 
   @override
   String get groupChatCouldnTReachIt =>
-      'Ulaşılamadı · önizlemesiz gönderiliyor';
+      'Sayfaya ulaşılamadı · bağlantı önizlemesi yok';
 
   @override
   String get groupChatNoTitleCameBack =>
-      'Başlık gelmedi · önizlemesiz gönderiliyor';
+      'Bu sayfanın başlığı yok · bağlantı önizlemesi yok';
 
   @override
-  String get groupChatCouldnTFetchIt => 'Alınamadı · önizlemesiz gönderiliyor';
+  String get groupChatCouldnTFetchIt => 'Önizleme yüklenemedi';
 
   @override
   String get groupChatCamera => 'Kamera';
@@ -10488,7 +10490,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'Tor’u atlar, böylece mesajlar daha hızlı ulaşır ve daha az pil harcar. Sunucularımız IP adresini yalnızca bağlıyken görür, asla kaydetmez ya da saklamaz. Ne söylediğini asla görmez. Kişilerin onu asla görmez. Ağın Kryfo’ya bağlandığını görebilir.';
+      'Tor’u atlar, böylece mesajlar daha hızlı ulaşır ve daha az pil harcar. Sunucularımız IP adresini yalnızca bağlıyken görür, asla kaydetmez ya da saklamaz. Kişilerin onu asla görmez. Ağın Kryfo’ya bağlandığını görebilir.';
 
   @override
   String get modesFastConnected => 'Hızlı · bağlı';
@@ -11036,7 +11038,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String chatHealNewSession(Object name) {
-    return '$name kişisinin telefonu yeni bir güvenli oturum başlattı';
+    return '$name kişisinin cihazı yeni bir güvenli oturum başlattı';
   }
 
   @override
@@ -11102,6 +11104,73 @@ class AppLocalizationsTr extends AppLocalizations {
   String get groupChatTapToRetryDesk => '! Tekrar için tıkla';
 
   @override
-  String get modesFastLineDesk =>
-      'Tor’u atlar, böylece mesajlar daha hızlı ulaşır ve daha az pil harcar. Sunucularımız IP adresini yalnızca bağlıyken görür, asla kaydetmez ya da saklamaz. Kişilerin onu asla görmez. Ağın Kryfo’ya bağlandığını görebilir.';
+  String get chatDropHereToSend => 'Göndermek için buraya bırak';
+
+  @override
+  String get voiceSeeTranscription => 'Metni gör';
+
+  @override
+  String get voiceTranscribing => 'Metne çevriliyor…';
+
+  @override
+  String get voiceHideTranscription => 'Gizle';
+
+  @override
+  String get voiceShowOriginalOnly => 'Yalnızca orijinali göster';
+
+  @override
+  String get voiceCouldNotTranscribe => 'Sözcükler anlaşılamadı';
+
+  @override
+  String get voiceTranscriptLabel => 'Mesajın metni';
+
+  @override
+  String get voiceSettingsTitle => 'Sesten metne';
+
+  @override
+  String get voiceOnRow => 'Sesli mesajları metne çevir';
+
+  @override
+  String get voiceOnHint => 'Her sesli mesajın altında sunulur';
+
+  @override
+  String get voiceOffDeletes => 'Kapatınca kayıtlı metinler silinir.';
+
+  @override
+  String get voiceModelTitle => 'Konuşma modeli';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'Tüm diller için yaklaşık $size tek bir indirme.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'Tor üzerinden iner ve bu telefonda kalır. Sesli mesajların telefondan hiç çıkmaz.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'Tor üzerinden iner ve bu bilgisayarda kalır. Sesli mesajların bilgisayardan hiç çıkmaz.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'Tor henüz bağlanmadı. Model yalnızca Tor üzerinden iner, bağlanınca tekrar dene.';
+
+  @override
+  String get voiceModelRemoveTitle => 'Konuşma modeli kaldırılsın mı?';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'Hazır metinler kalır. Yenileri için model yeniden gerekir.';
+
+  @override
+  String get voiceKeptNote =>
+      'Metinler bu telefonda sohbetleriyle birlikte şifreli tutulur ve sohbetle birlikte silinir.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'Metinler bu bilgisayarda sohbetleriyle birlikte şifreli tutulur ve sohbetle birlikte silinir.';
+
+  @override
+  String get voiceNotNow => 'Şimdi değil';
 }

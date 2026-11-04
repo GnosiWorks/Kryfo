@@ -1565,20 +1565,17 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'تمیز کردن آن گیف ممکن نشد';
 
   @override
-  String get chatTorIsNotUp =>
-      'Tor هنوز آماده نیست · بدون پیش‌نمایش فرستاده می‌شود';
+  String get chatTorIsNotUp => 'Tor هنوز وصل نیست · بدون پیش‌نمایش پیوند';
 
   @override
-  String get chatCouldnTReachIt =>
-      'به آن دسترسی نشد · بدون پیش‌نمایش فرستاده می‌شود';
+  String get chatCouldnTReachIt => 'به صفحه دسترسی نشد · بدون پیش‌نمایش پیوند';
 
   @override
   String get chatNoTitleCameBack =>
-      'عنوانی برنگشت · بدون پیش‌نمایش فرستاده می‌شود';
+      'این صفحه عنوانی ندارد · بدون پیش‌نمایش پیوند';
 
   @override
-  String get chatCouldnTFetchIt =>
-      'دریافتش ممکن نشد · بدون پیش‌نمایش فرستاده می‌شود';
+  String get chatCouldnTFetchIt => 'پیش‌نمایش بارگیری نشد';
 
   @override
   String get chatNoSignalSessionRe => 'نشست Signal نیست. دوباره جفت کنید';
@@ -2553,20 +2550,18 @@ class AppLocalizationsFa extends AppLocalizations {
   String get groupChatMessageUnavailable => 'پیام در دسترس نیست';
 
   @override
-  String get groupChatTorIsNotUp =>
-      'Tor هنوز آماده نیست · بدون پیش‌نمایش فرستاده می‌شود';
+  String get groupChatTorIsNotUp => 'Tor هنوز وصل نیست · بدون پیش‌نمایش پیوند';
 
   @override
   String get groupChatCouldnTReachIt =>
-      'به آن دسترسی نشد · بدون پیش‌نمایش فرستاده می‌شود';
+      'به صفحه دسترسی نشد · بدون پیش‌نمایش پیوند';
 
   @override
   String get groupChatNoTitleCameBack =>
-      'عنوانی برنگشت · بدون پیش‌نمایش فرستاده می‌شود';
+      'این صفحه عنوانی ندارد · بدون پیش‌نمایش پیوند';
 
   @override
-  String get groupChatCouldnTFetchIt =>
-      'دریافتش ممکن نشد · بدون پیش‌نمایش فرستاده می‌شود';
+  String get groupChatCouldnTFetchIt => 'پیش‌نمایش بارگیری نشد';
 
   @override
   String get groupChatCamera => 'دوربین';
@@ -10479,7 +10474,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'از Tor عبور نمی‌کند، پس پیام‌ها زودتر می‌رسند و باتری کمتری مصرف می‌کنند. سرورهای ما آدرس IP شما را فقط تا وقتی وصل هستید می‌بینند و هرگز آن را ثبت یا نگه نمی‌دارند. هرگز چیزی را که می‌گویید نمی‌بینند. مخاطبانتان هرگز آن را نمی‌بینند. شبکه‌ی شما می‌تواند ببیند که به Kryfo وصل می‌شوید.';
+      'از Tor عبور نمی‌کند، پس پیام‌ها زودتر می‌رسند و باتری کمتری مصرف می‌کنند. سرورهای ما آدرس IP شما را فقط تا وقتی وصل هستید می‌بینند و هرگز آن را ثبت یا نگه نمی‌دارند. مخاطبانتان هرگز آن را نمی‌بینند. شبکه‌ی شما می‌تواند ببیند که به Kryfo وصل می‌شوید.';
 
   @override
   String get modesFastConnected => 'سریع · وصل';
@@ -11029,7 +11024,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String chatHealNewSession(Object name) {
-    return 'تلفن ⁨$name⁩ یک نشست امن تازه شروع کرد';
+    return 'دستگاه ⁨$name⁩ یک نشست امن تازه شروع کرد';
   }
 
   @override
@@ -11095,6 +11090,74 @@ class AppLocalizationsFa extends AppLocalizations {
   String get groupChatTapToRetryDesk => '! برای تکرار کلیک کنید';
 
   @override
-  String get modesFastLineDesk =>
-      'از Tor عبور نمی‌کند، پس پیام‌ها زودتر می‌رسند و باتری کمتری مصرف می‌کنند. سرورهای ما آدرس IP شما را فقط تا وقتی وصل هستید می‌بینند و هرگز آن را ثبت یا نگه نمی‌دارند. مخاطبانتان هرگز آن را نمی‌بینند. شبکه‌ی شما می‌تواند ببیند که به Kryfo وصل می‌شوید.';
+  String get chatDropHereToSend => 'برای فرستادن اینجا رها کنید';
+
+  @override
+  String get voiceSeeTranscription => 'دیدن متن';
+
+  @override
+  String get voiceTranscribing => 'در حال تبدیل به متن…';
+
+  @override
+  String get voiceHideTranscription => 'پنهان کردن';
+
+  @override
+  String get voiceShowOriginalOnly => 'فقط متن اصلی';
+
+  @override
+  String get voiceCouldNotTranscribe => 'کلمه‌ها تشخیص داده نشد';
+
+  @override
+  String get voiceTranscriptLabel => 'متن پیام';
+
+  @override
+  String get voiceSettingsTitle => 'تبدیل صدا به متن';
+
+  @override
+  String get voiceOnRow => 'تبدیل پیام‌های صوتی به متن';
+
+  @override
+  String get voiceOnHint => 'زیر هر پیام صوتی پیشنهاد می‌شود';
+
+  @override
+  String get voiceOffDeletes =>
+      'خاموش کردن این، متن‌های ذخیره‌شده را پاک می‌کند.';
+
+  @override
+  String get voiceModelTitle => 'مدل گفتار';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'یک دانلود حدود $size برای همهٔ زبان‌ها.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'از راه Tor دانلود می‌شود و روی همین گوشی می‌ماند. پیام‌های صوتی شما هرگز از آن بیرون نمی‌روند.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'از راه Tor دانلود می‌شود و روی همین رایانه می‌ماند. پیام‌های صوتی شما هرگز از آن بیرون نمی‌روند.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'Tor هنوز وصل نشده است. مدل فقط از راه Tor دانلود می‌شود، پس از وصل شدن دوباره امتحان کنید.';
+
+  @override
+  String get voiceModelRemoveTitle => 'مدل گفتار حذف شود؟';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'متن‌هایی که ساخته شده‌اند می‌مانند. برای متن‌های تازه دوباره به مدل نیاز است.';
+
+  @override
+  String get voiceKeptNote =>
+      'متن‌ها رمزگذاری‌شده کنار گفتگوی خود روی همین گوشی می‌مانند و همراه آن پاک می‌شوند.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'متن‌ها رمزگذاری‌شده کنار گفتگوی خود روی همین رایانه می‌مانند و همراه آن پاک می‌شوند.';
+
+  @override
+  String get voiceNotNow => 'فعلاً نه';
 }

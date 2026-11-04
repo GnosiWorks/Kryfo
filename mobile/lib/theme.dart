@@ -285,6 +285,15 @@ class HaloColors {
   }
 
   static Color get onWarn => _y.on;
+
+  /// words on a filled violet button: the dark ink is ~3.3:1 on the light
+  /// theme's violet, white is 5.6:1
+  static Color get onViolet => isLight ? const Color(0xFFFFFFFF) : amberInk;
+
+  /// a rose button's fill: a shade under the light rose, so white on it
+  /// reaches 4.5:1
+  static Color get roseFill => isLight ? const Color(0xFFC93D80) : rose;
+  static Color get onRose => isLight ? const Color(0xFFFFFFFF) : amberInk;
 }
 
 // persian and arabic join their letters. letter spacing pulls the joins

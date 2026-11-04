@@ -294,7 +294,8 @@
   "transportContacts",
   "transportOk",
   "transportTransport",
-  "videoViewerPause"
+  "videoViewerPause",
+  "voiceTranscriptLabel"
  ],
  "hi": [
   "appTor",

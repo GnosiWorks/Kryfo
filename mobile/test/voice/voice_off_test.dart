@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // voice transcripts ship off: the switch is off, nothing is built behind
-// it, no screen reaches lib/voice, the app carries none of its strings and
-// the android build does not package the library
+// it, the screens reach it only through the switch, the engine side draws
+// nothing, and the android build does not package the library
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -41,19 +41,34 @@ void main() {
     expect(voiceTranscriptsIfOn(), same(t));
   });
 
-  test('no file outside lib/voice reaches it', () {
-    final reach = RegExp(r'''import\s+['"](package:kryfo/|(\.\./)*)voice/''');
-    final hits = [
-      for (final f in _dart('lib'))
-        if (!f.path.startsWith('lib/voice/') &&
-            reach.hasMatch(f.readAsStringSync()))
-          f.path,
-    ];
-    expect(hits, isEmpty);
+  test('screens reach it only through the switch', () {
+    final reach = RegExp(
+      r'''import\s+['"](?:package:kryfo/|(?:\.\./)*)voice/([\w/]+\.dart)['"]([^;]*);''',
+    );
+    final hits = <String>{};
+    for (final f in _dart('lib')) {
+      if (f.path.startsWith('lib/voice/')) continue;
+      for (final m in reach.allMatches(f.readAsStringSync())) {
+        hits.add(
+          '${f.path}: ${m[1]}${m[2]!.trim().isEmpty ? '' : ' ${m[2]!.trim()}'}',
+        );
+      }
+    }
+    expect(hits, {
+      'lib/screens/chat_screen.dart: chat_transcripts.dart',
+      'lib/screens/chat_screen.dart: ui/transcript_line.dart',
+      'lib/screens/chat_screen.dart: voice_transcripts.dart show voiceTranscriptsIfOn',
+      'lib/screens/group_chat_screen.dart: chat_transcripts.dart',
+      'lib/screens/group_chat_screen.dart: ui/transcript_line.dart',
+      'lib/screens/group_chat_screen.dart: voice_transcripts.dart show voiceTranscriptsIfOn',
+      'lib/screens/settings_screen.dart: ui/voice_tx_screen.dart',
+      'lib/screens/settings_screen.dart: voice_transcripts.dart show voiceTranscriptsIfOn',
+    });
   });
 
-  test('lib/voice draws nothing', () {
+  test('the engine side draws nothing; only lib/voice/ui does', () {
     for (final f in _dart('lib/voice')) {
+      if (f.path.startsWith('lib/voice/ui/')) continue;
       final s = f.readAsStringSync();
       expect(
         s,
@@ -66,20 +81,27 @@ void main() {
         reason: f.path,
       );
       expect(s, isNot(contains('AppLocalizations')), reason: f.path);
+      expect(s, isNot(contains('l10n')), reason: f.path);
     }
   });
 
-  test('none of its strings are in the app yet', () {
-    final arb = File('lib/l10n/app_en.arb').readAsStringSync();
-    for (final key in [
-      'voiceSeeTranscription',
-      'voiceTranscribing',
-      'voiceHideTranscription',
-      'voiceTranslatedMark',
-      'voiceShowOriginalOnly',
-      'voiceCouldNotTranscribe',
+  test('its strings are in the app, in every language', () {
+    for (final l in [
+      'en', 'ar', 'de', 'es', 'fa', 'fr', 'hi', 'id', 'it', 'pt', 'ru', //
+      'tr', 'uk', 'vi', 'zh', 'zh_Hant',
     ]) {
-      expect(arb, isNot(contains('"$key"')), reason: key);
+      final arb = File('lib/l10n/app_$l.arb').readAsStringSync();
+      for (final key in [
+        'voiceSeeTranscription',
+        'voiceTranscribing',
+        'voiceHideTranscription',
+        'voiceShowOriginalOnly',
+        'voiceCouldNotTranscribe',
+        'voiceModelPrivacy',
+        'voiceModelPrivacyDesk',
+      ]) {
+        expect(arb, contains('"$key"'), reason: '$l $key');
+      }
     }
   });
 

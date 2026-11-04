@@ -673,6 +673,18 @@ final _pairs = <(String, _Get, _Get, _Get)>[
     (l) => l.translatePrivacyKeptDesk,
   ),
   (
+    'voiceModelPrivacy',
+    (l) => l.voiceModelPrivacyShown,
+    (l) => l.voiceModelPrivacy,
+    (l) => l.voiceModelPrivacyDesk,
+  ),
+  (
+    'voiceKeptNote',
+    (l) => l.voiceKeptNoteShown,
+    (l) => l.voiceKeptNote,
+    (l) => l.voiceKeptNoteDesk,
+  ),
+  (
     'notificationsLead',
     (l) => l.notificationsLeadShown,
     (l) => l.notificationsLead,
@@ -798,12 +810,6 @@ final _pairs = <(String, _Get, _Get, _Get)>[
     (l) => l.groupChatTapToRetryShown,
     (l) => l.groupChatTapToRetry,
     (l) => l.groupChatTapToRetryDesk,
-  ),
-  (
-    'modesFastLine',
-    (l) => l.modesFastLineShown,
-    (l) => l.modesFastLine,
-    (l) => l.modesFastLineDesk,
   ),
 ];
 

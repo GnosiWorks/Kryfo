@@ -23,6 +23,7 @@ import '../widgets/halo_sheet.dart';
 import '../widgets/motion.dart' show kHouseCurve, kHouseTime, motionStill;
 import '../widgets/sheet_handle.dart';
 import '../widgets/stagger_in.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 class TranslationScreen extends StatefulWidget {
   final TranslationHub hub;
@@ -71,111 +72,113 @@ class _TranslationScreenState extends State<TranslationScreen> {
         leading: BackButton(color: HaloColors.text2),
         title: Text(l10n.translateSettingsTitle, style: HaloType.pageTitle()),
       ),
-      body: ListenableBuilder(
-        listenable: hub,
-        builder: (context, _) {
-          final s = hub.settings;
-          return ListView(
-            padding: EdgeInsets.fromLTRB(
-              20,
-              8,
-              20,
-              32 + MediaQuery.paddingOf(context).bottom,
-            ),
-            children: staggerAll([
-              HaloGroup(
-                children: [
-                  HaloRow(
-                    key: const ValueKey('translate-on'),
-                    icon: Icons.translate_rounded,
-                    label: l10n.translateSettingsRow,
-                    hint: l10n.translateOnHint,
-                    toggled: s.on,
-                    pending: !_read,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      hub.setOn(!s.on);
-                    },
-                  ),
-                ],
+      body: DeskPage(
+        child: ListenableBuilder(
+          listenable: hub,
+          builder: (context, _) {
+            final s = hub.settings;
+            return ListView(
+              padding: EdgeInsets.fromLTRB(
+                20,
+                8,
+                20,
+                32 + MediaQuery.paddingOf(context).bottom,
               ),
-              Padding(
-                key: const ValueKey('translate-off-note'),
-                padding: const EdgeInsetsDirectional.fromSTEB(4, 8, 4, 0),
-                child: Text(
-                  l10n.translateOffDeletes,
-                  style: HaloType.sans(
-                    size: 12.5,
-                    color: HaloColors.text2,
-                    height: 1.4,
-                  ),
-                ),
-              ),
-              HaloSection(l10n.translatePacksSection),
-              for (final (i, b) in hub.catalog.langs.indexed)
-                Padding(
-                  padding: EdgeInsets.only(top: i == 0 ? 0 : 10),
-                  child: _PackCard(hub: hub, bundle: b),
-                ),
-              // the rest only matters while translation is on: it folds
-              // away with the switch and back
-              EaseSize(
-                duration: kHouseTime,
-                child: AnimatedSwitcher(
-                  duration: motionStill(context) ? Duration.zero : kHouseTime,
-                  switchInCurve: kHouseCurve,
-                  switchOutCurve: kHouseCurve,
-                  layoutBuilder: (cur, prev) => Stack(
-                    alignment: Alignment.topCenter,
-                    children: [...prev, ?cur],
-                  ),
-                  child: s.on
-                      ? Column(
-                          key: const ValueKey('translate-on-rest'),
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: _whileOn(context, s),
-                        )
-                      : const SizedBox(
-                          key: ValueKey('translate-off-rest'),
-                          width: double.infinity,
-                        ),
-                ),
-              ),
-              HaloSection(l10n.translatePrivacyTitle),
-              Container(
-                key: const ValueKey('translate-privacy'),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: HaloColors.surface2,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: HaloColors.line, width: 0.5),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              children: staggerAll([
+                HaloGroup(
                   children: [
-                    Icon(
-                      Icons.phone_android_rounded,
-                      size: 18,
-                      color: HaloColors.amberText,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        '${l10n.translatePrivacyNoteShown} '
-                        '${l10n.translatePrivacyKeptShown}',
-                        style: HaloType.sans(
-                          size: 12.5,
-                          color: HaloColors.text2,
-                          height: 1.45,
-                        ),
-                      ),
+                    HaloRow(
+                      key: const ValueKey('translate-on'),
+                      icon: Icons.translate_rounded,
+                      label: l10n.translateSettingsRow,
+                      hint: l10n.translateOnHint,
+                      toggled: s.on,
+                      pending: !_read,
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        hub.setOn(!s.on);
+                      },
                     ),
                   ],
                 ),
-              ),
-            ]),
-          );
-        },
+                Padding(
+                  key: const ValueKey('translate-off-note'),
+                  padding: const EdgeInsetsDirectional.fromSTEB(4, 8, 4, 0),
+                  child: Text(
+                    l10n.translateOffDeletes,
+                    style: HaloType.sans(
+                      size: 12.5,
+                      color: HaloColors.text2,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+                HaloSection(l10n.translatePacksSection),
+                for (final (i, b) in hub.catalog.langs.indexed)
+                  Padding(
+                    padding: EdgeInsets.only(top: i == 0 ? 0 : 10),
+                    child: _PackCard(hub: hub, bundle: b),
+                  ),
+                // the rest only matters while translation is on: it folds
+                // away with the switch and back
+                EaseSize(
+                  duration: kHouseTime,
+                  child: AnimatedSwitcher(
+                    duration: motionStill(context) ? Duration.zero : kHouseTime,
+                    switchInCurve: kHouseCurve,
+                    switchOutCurve: kHouseCurve,
+                    layoutBuilder: (cur, prev) => Stack(
+                      alignment: Alignment.topCenter,
+                      children: [...prev, ?cur],
+                    ),
+                    child: s.on
+                        ? Column(
+                            key: const ValueKey('translate-on-rest'),
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: _whileOn(context, s),
+                          )
+                        : const SizedBox(
+                            key: ValueKey('translate-off-rest'),
+                            width: double.infinity,
+                          ),
+                  ),
+                ),
+                HaloSection(l10n.translatePrivacyTitle),
+                Container(
+                  key: const ValueKey('translate-privacy'),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: HaloColors.surface2,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: HaloColors.line, width: 0.5),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.phone_android_rounded,
+                        size: 18,
+                        color: HaloColors.amberText,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          '${l10n.translatePrivacyNoteShown} '
+                          '${l10n.translatePrivacyKeptShown}',
+                          style: HaloType.sans(
+                            size: 12.5,
+                            color: HaloColors.text2,
+                            height: 1.45,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ]),
+            );
+          },
+        ),
       ),
     );
   }
