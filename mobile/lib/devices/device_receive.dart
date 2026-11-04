@@ -80,7 +80,7 @@ typedef DevAlarm = ({int ident, String peer, String kind, String key});
 
 /// the device frames: lists, bundles, asks, handbacks, the own frames
 const kDeviceWords = {
-  'as', 'dl', 'db', 'dq', 'dh', 'dw', 'dn', 'dz', 'dk', 'da', //
+  'as', 'dl', 'db', 'dq', 'dh', 'dw', 'dn', 'dz', 'dk', 'da', 'fl', //
   'oc', 'os', 'of', 'ob', 'hs',
 };
 
@@ -409,7 +409,74 @@ class DeviceReceive {
     if (dn is Map && m.device != 1 && t.their == 1) {
       await _batch(d, m, identity, dn);
     }
+    // a contact's list my phone took, passed on: forward only
+    final fl = j['fl'];
+    if (fl is Map && m.device != 1 && t.their == 1) {
+      await _fromMyPhone(m, fl, remote);
+    }
     // the own copy, state and forward frames are job 8's
+  }
+
+  // a contact's list my phone took and passed on, inside its session: the
+  // engine takes it only from my phone, forward only, as their own
+  Future<void> _fromMyPhone(
+    DevMe m,
+    Map<dynamic, dynamic> fl,
+    SessionRemote remote,
+  ) async {
+    final identity = fl['i'], list = fl['w'];
+    if (identity is! String || list is! String) return;
+    final who = await contact(m.ident, identity);
+    if (who == null) return;
+    final d = await db();
+    final Map<String, dynamic> j;
+    try {
+      j = await state.session(d, 'phone_list', {
+        'ident': m.ident,
+        'identity': identity,
+        'list': list,
+      }, remote);
+    } on DevRefused catch (e) {
+      if (e.why == 'equivocation') {
+        await _alarm(d, m.ident, identity, 'equivocation', '');
+      }
+      return;
+    }
+    await _claims(d, m.ident);
+    final outcome = j['outcome'];
+    if (outcome == 'first' || outcome == 'changed') {
+      await listChanged(m, identity, who.c.peer);
+    }
+  }
+
+  // a contact's list this phone took goes on to each of my own devices,
+  // sealed on its session: a linked device that took the copy holds the
+  // lists of then, and their next change may reach this phone alone
+  Future<void> _passOn(DevMe m, String identity, String list) async {
+    if (m.device != 1 || ownHome != null) return;
+    final Map<String, dynamic> own;
+    try {
+      own = await state.call(await mine(), 'current', {'ident': m.ident});
+    } on DevRefused {
+      return;
+    }
+    final frame =
+        '$kEnvelopePrefix${jsonEncode({
+          'fl': {'i': identity, 'w': list},
+        })}';
+    for (final e in _entries(own['devices'])) {
+      if (e.id == m.device) continue;
+      await send.toOne(
+        ident: m.ident,
+        identity: devHex(m.identity),
+        device: e.id,
+        addr: kOwnDevices,
+        pin: e.key,
+        reg: e.reg,
+        own: true,
+        frame: frame,
+      );
+    }
   }
 
   Future<void> _ownList(
@@ -633,6 +700,7 @@ class DeviceReceive {
     final outcome = j['outcome'];
     if (outcome == 'first' || outcome == 'changed') {
       await listChanged(m, identity, c.peer);
+      await _passOn(m, identity, list);
     }
   }
 

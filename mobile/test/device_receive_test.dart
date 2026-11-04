@@ -693,6 +693,186 @@ void main() {
     },
   );
 
+  test('a contact\'s list the phone takes goes on to its own devices, '
+      'forward only', () async {
+    if (skip()) return;
+    final w = await world(desk: true);
+    Future<void> list(
+      int v,
+      List<({int dev, Uint8List key, int reg})> d,
+    ) => w.recv.takePhone(
+      kMainIdent,
+      w.toBob.identity,
+      'halo/1:${jsonEncode({'dl': base64Encode(_list(w.bobId, w.bob.registrationId, v, d))})}',
+      w.bobRemote,
+    );
+    Future<List<Map<String, dynamic>>> passed() async => [
+      for (final r in await w.db.query(
+        'dev_out',
+        where: 'own = 1 AND device = 4',
+        orderBy: 'at',
+      ))
+        if (_json(r['plain'] as String)['fl'] case final Map fl)
+          fl.cast<String, dynamic>(),
+    ];
+    // bob takes his laptop (17) off his list: the desk hears it from here
+    await list(7100, [w.b5.entry]);
+    final fl = await passed();
+    expect(fl, hasLength(1));
+    expect(fl.single['i'], w.toBob.identity);
+    final wire = base64Decode(fl.single['w'] as String);
+    expect(ByteData.sublistView(wire, 37, 45).getUint64(0), 7100);
+    // the same list again, or an older one, goes nowhere
+    await list(7100, [w.b5.entry]);
+    await list(7050, [w.b5.entry]);
+    expect(await passed(), hasLength(1));
+  });
+
+  test('a linked device takes a contact\'s list from its phone\'s session '
+      'alone, forward only', () async {
+    if (skip()) return;
+    final lib = shim!;
+    final db = await open();
+    final anaKp = testKeyPair();
+    final ana = await testStore(keys: anaKp);
+    final anaId = lib.identityFromPrivate(anaKp.privateKey.serialize());
+    final deskKp = testKeyPair();
+    final deskStore = await testStore(keys: deskKp);
+    final bobKp = testKeyPair();
+    final bob = await testStore(keys: bobKp);
+    final bobId = lib.identityFromPrivate(bobKp.privateKey.serialize());
+    final b5 = _Dev(5, await testStore());
+    final b17 = _Dev(17, await testStore());
+    await putMainIdentity(db, deskKp.privateKey.serialize());
+    await db.update('identities', {
+      'ident_pub': ana.identity.public,
+      'dev_id': 4,
+    });
+    final toBob = (
+      peer: _bobChat,
+      identity: devHex(bob.identity.public),
+      devices: true,
+      phoneClassic: false,
+    );
+    await db.insert('contacts', {
+      'halo_id': _bobChat,
+      'onion': '',
+      'xpub': devHex(bob.identity.public.sublist(1)),
+      'first_seen': 0,
+      'last_seen': 0,
+      'ident': kMainIdent,
+      'ikey': toBob.identity,
+      'caps': 'dv,pq,ty',
+      'accepted': 1,
+    });
+    final ds = DeviceState(DeviceEngine());
+    await ds.load(
+      db,
+      await devMineOf(db, lib),
+      shimPath: KryfoSignal.loadedFrom!,
+    );
+    linkedDevicesForTest = true;
+    deviceStateForTest(ds);
+    await ds.session(db, 'own_set', {
+      'ident': kMainIdent,
+      'identity': devHex(ana.identity.public),
+      'list': base64Encode(
+        _list(anaId, ana.registrationId, 4000, [
+          (
+            dev: 4,
+            key: deskStore.identity.public,
+            reg: deskStore.registrationId,
+          ),
+        ]),
+      ),
+    }, SessionRemote.opened(ana.identity.public));
+    final deskDs = DeviceSessions(deskStore, linked: true);
+    final listen = _Listen();
+    final me = (ident: kMainIdent, identity: ana.identity.public, device: 4);
+    final recv = DeviceReceive(
+      state: ds,
+      db: () async => db,
+      sessions: (_) async => deskDs,
+      send: DeviceSend(
+        state: ds,
+        db: () async => db,
+        sessions: (_) async => deskDs,
+        wire: _Wire(),
+        clock: () => 1,
+        random: Random(3),
+      ),
+      listener: listen,
+      open: deviceOpenAt,
+      me: (_) async => me,
+      contact: (_, identity) async =>
+          identity == toBob.identity ? (me: me, c: toBob) : null,
+      phone: (_, _, _) async => false,
+      sign: (_, _) async => throw StateError('a linked device never signs'),
+      clock: () => 1,
+    );
+    String fl(int v, List<({int dev, Uint8List key, int reg})> d) =>
+        'halo/1:${jsonEncode({
+          'fl': {'i': toBob.identity, 'w': base64Encode(_list(bobId, bob.registrationId, v, d))},
+        })}';
+    Future<int?> held() async {
+      try {
+        final cur = await ds.call(db, 'current', {'identity': toBob.identity});
+        final w = base64Decode(cur['list'] as String);
+        return ByteData.sublistView(w, 37, 45).getUint64(0);
+      } on DevRefused {
+        return null;
+      }
+    }
+
+    // the phone's own session to the desk
+    final phoneDs = DeviceSessions(ana);
+    await phoneDs.build(
+      kOwnDevices,
+      4,
+      lib.parseDeviceBundle(await deskDs.makeBundle(4), ana.identity.public),
+      deskStore.identity.public,
+      deskStore.registrationId,
+    );
+    final anaX = devHex(ana.identity.public).substring(2);
+    Future<void> fromPhone(String frame) async {
+      final c = await phoneDs.seal(
+        kOwnDevices,
+        4,
+        frame,
+        deskStore.identity.public,
+      );
+      expect(await recv.receive('$anaX/1/4/opn', c), isNull);
+    }
+
+    await fromPhone(fl(7000, [b5.entry, b17.entry]));
+    expect(await held(), 7000);
+    final bobX = toBob.identity.substring(2);
+    expect(listen.heard, contains('$bobX/17/4'));
+    // bob took 17 off: the desk follows
+    await fromPhone(fl(7100, [b5.entry]));
+    expect(await held(), 7100);
+    // an older list from the phone is no way back
+    await fromPhone(fl(7050, [b5.entry, b17.entry]));
+    expect(await held(), 7100);
+    // the same words from bob's own phone are none of his to say
+    final bobDs = DeviceSessions(bob);
+    await bobDs.build(
+      'ana',
+      4,
+      lib.parseDeviceBundle(await deskDs.makeBundle(4), ana.identity.public),
+      deskStore.identity.public,
+      deskStore.registrationId,
+    );
+    final c = await bobDs.seal(
+      'ana',
+      4,
+      fl(7200, [b5.entry, b17.entry]),
+      deskStore.identity.public,
+    );
+    await recv.receive('$bobX/1/4/opn', c);
+    expect(await held(), 7100);
+  });
+
   test('a bundle ask is answered once a day per device for the contact, '
       'whichever device of theirs asks', () async {
     if (skip()) return;
