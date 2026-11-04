@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"os"
 	"sort"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -682,5 +683,51 @@ func TestAnAddWhileTorStartsAsksAtItsTurn(t *testing.T) {
 	time.Sleep(time.Second)
 	if asked() {
 		t.Fatal("an address added while tor started asked at tor-up without its turn")
+	}
+}
+
+// the addresses of one batch wait one turn, the socket's, drawn once over
+// the whole spread: the batch dials at a moment of its own, not at the
+// first of eight draws, so a phone's batches do not come up together
+func TestABatchTakesOneTurn(t *testing.T) {
+	old := subSpread
+	subSpread = 800 * time.Millisecond
+	t.Cleanup(func() { subSpread = old })
+	kickRelays()
+	spendFirstTurn()
+	never := make(chan struct{})
+	const nBatches = 30
+	at := make([][]time.Duration, nBatches)
+	start := time.Now()
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	for b := 0; b < nBatches; b++ {
+		hk := hubKey{lane: batchLane(contactSet(mainIdent), b), group: "i0", url: "wss://turns.test"}
+		for m := 0; m < batchMax; m++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				tn := subTurn{tag: "batch", ready: func() <-chan struct{} { return never }, batch: &hk}
+				tn.take(context.Background())
+				tn.done()
+				mu.Lock()
+				at[b] = append(at[b], time.Since(start))
+				mu.Unlock()
+			}()
+		}
+	}
+	wg.Wait()
+	var sum time.Duration
+	for b, ts := range at {
+		sort.Slice(ts, func(i, j int) bool { return ts[i] < ts[j] })
+		if apart := ts[len(ts)-1] - ts[0]; apart > 150*time.Millisecond {
+			t.Fatalf("batch %d's addresses took turns %s apart", b, apart)
+		}
+		sum += ts[0]
+	}
+	// one draw each: about 400 ms on average. the first of eight would be
+	// about 90 ms
+	if mean := sum / nBatches; mean < subSpread/4 {
+		t.Fatalf("the batches came up %s after the kick on average, the first of their addresses' draws", mean)
 	}
 }

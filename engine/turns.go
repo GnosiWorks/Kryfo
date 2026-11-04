@@ -143,6 +143,39 @@ type subTurn struct {
 	// closed once the socket it shares is up, nil for a socket of its own:
 	// then its turn is over, and it does not take the first one
 	ready func() <-chan struct{}
+	// the socket it shares, nil for one of its own: the socket's turn is
+	// drawn once for all of its addresses (sharedDelay)
+	batch *hubKey
+}
+
+// a shared socket's turn under a kick or a wake: drawn once, by the first
+// of its addresses to wait, over the whole spread. the others wait for the
+// same moment or for the socket to be up. drawn per address, a batch would
+// dial at the first of up to eight draws and a phone's batches would come
+// up within seconds of each other
+var batchTurns = struct {
+	sync.Mutex
+	m map[hubKey]batchTurn
+}{m: map[hubKey]batchTurn{}}
+
+type batchTurn struct {
+	kick chan struct{}
+	wake int64
+	at   time.Time
+}
+
+func (t *subTurn) sharedDelay(kc chan struct{}, wake int64, now time.Time, draw func() time.Duration) time.Duration {
+	if t.batch == nil {
+		return draw()
+	}
+	batchTurns.Lock()
+	defer batchTurns.Unlock()
+	if bt, ok := batchTurns.m[*t.batch]; ok && bt.kick == kc && bt.wake == wake {
+		return bt.at.Sub(now)
+	}
+	d := draw()
+	batchTurns.m[*t.batch] = batchTurn{kc, wake, now.Add(d)}
+	return d
 }
 
 func (t *subTurn) readyChan() <-chan struct{} {
@@ -188,10 +221,16 @@ func (t *subTurn) take(ctx context.Context) bool {
 	}
 	t.up = false
 	up := t.readyChan()
-	if isClosed(up) || takeFirstTurn(kc) {
+	if isClosed(up) {
 		return ctx.Err() == nil
 	}
-	d := turnDelay(autoNow())
+	now := autoNow()
+	d := t.sharedDelay(kc, 0, now, func() time.Duration {
+		if takeFirstTurn(kc) {
+			return 0
+		}
+		return turnDelay(now)
+	})
 	if d <= 0 {
 		return ctx.Err() == nil
 	}
@@ -223,10 +262,15 @@ func (t *subTurn) takeWake(ctx context.Context, kc chan struct{}, n int64, w wak
 	}
 	t.up = false
 	up := t.readyChan()
-	if isClosed(up) || (t.own && takeWakeFirst(n)) {
+	if isClosed(up) {
 		return ctx.Err() == nil
 	}
-	d := w.turn(t.own, now)
+	d := t.sharedDelay(kc, n, now, func() time.Duration {
+		if t.own && takeWakeFirst(n) {
+			return 0
+		}
+		return w.turn(t.own, now)
+	})
 	if d <= 0 {
 		return ctx.Err() == nil
 	}

@@ -1779,6 +1779,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			hk := hubKey{lane: lane, group: shareOf(ctx), url: u}
 			if hk.group != "" {
 				turn.ready = func() <-chan struct{} { return hubReady(hk) }
+				turn.batch = &hk
 			}
 			for {
 				// nothing is counted while it parks or waits for tor below:
@@ -2535,11 +2536,23 @@ func HaloNostrSend(cIdent C.int, cPeerXPubHex, cMsg *C.char) *C.char {
 	return C.CString(nostrSend(identArg(cIdent), goStr(cPeerXPubHex), goStr(cMsg)))
 }
 
+// as HaloNostrSend, for a hidden chat: on the chat's own lane, over tor on
+// every route, never on the everyday sends' circuit or from this phone's ip
+//
+//export HaloNostrSendHidden
+func HaloNostrSendHidden(cIdent C.int, cPeerXPubHex, cMsg *C.char) *C.char {
+	return C.CString(nostrSendAs(identArg(cIdent), goStr(cPeerXPubHex), goStr(cMsg), true))
+}
+
 // msg to peerHex from my identity [ident], on their pair's addresses
 //
 // [peerArg] names the pair as pairArg reads it
 func nostrSend(ident int, peerArg, msg string) string {
-	c, _, err := pairArg(ident, peerArg)
+	return nostrSendAs(ident, peerArg, msg, false)
+}
+
+func nostrSendAs(ident int, peerArg, msg string, hidden bool) string {
+	c, peerHex, err := pairArg(ident, peerArg)
 	if err != nil {
 		if errors.Is(err, errBadPeer) {
 			return "error: bad peer pubkey"
@@ -2550,10 +2563,31 @@ func nostrSend(ident int, peerArg, msg string) string {
 	if c.dev != nil && c.dev.opener {
 		return "error: wrap: a device pair sends with its seed"
 	}
-	return nostrSendOn(c, msg)
+	return nostrSendOn(c, msg, sendLane(c, peerHex, hidden))
 }
 
-func nostrSendOn(c convPair, msg string) string {
+// the lane a send to the pair goes on: a hidden chat's own, over tor on
+// every route, when the app says the chat is hidden or the pair is
+// listened on as one; the everyday sends' lane for the rest. "" when a
+// hidden chat's lane cannot be found: such a send does not go at all
+func sendLane(c convPair, peerHex string, hidden bool) string {
+	nostrMu.Lock()
+	hidden = hidden || nostrHiddenSubs[c.subKey(peerHex)]
+	nostrMu.Unlock()
+	if !hidden {
+		return laneEveryday
+	}
+	_, rcvPk, err := c.rcvAddress()
+	if err != nil {
+		return ""
+	}
+	return hiddenLane(rcvPk)
+}
+
+func nostrSendOn(c convPair, msg, lane string) string {
+	if lane == "" {
+		return "error: wrap: no lane for a hidden chat"
+	}
 	gw, err := c.wrap(msg)
 	if err != nil {
 		return fmt.Sprintf("error: wrap: %v", err)
@@ -2573,7 +2607,7 @@ func nostrSendOn(c convPair, msg string) string {
 
 	ctx, cancel := context.WithTimeout(context.Background(), publishWait)
 	defer cancel()
-	ok := nostrPublishMulti(ctx, laneEveryday, ev)
+	ok := nostrPublishMulti(ctx, lane, ev)
 	if ok == 0 {
 		return "error: no relays accepted"
 	}
@@ -2650,6 +2684,9 @@ func nostrSubscribeAt(c convPair, peerHex, rcvSk, rcvPk string, fresh, hidden bo
 	// a hidden chat's knocks go on its own lane too, never in a batch's
 	// registration
 	lane := c.listenLaneAs(rcvPk, hidden)
+	if hidden {
+		batchHide(rcvPk)
+	}
 	noteKnockTarget(key, knockTarget{rcvPk, rcvSk, lane, lane, strings.ToLower(peerHex)})
 	nostrMu.Lock()
 	if cancel, exists := nostrSubs[key]; exists {

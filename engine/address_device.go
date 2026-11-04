@@ -496,7 +496,7 @@ func HaloNostrSendDeviceOpener(cIdent C.int, cPeer, cMsg *C.char) *C.char {
 }
 
 func nostrSendDeviceOpener(ident int, peerArg, msg string) string {
-	c, _, err := pairArg(ident, peerArg)
+	c, peerHex, err := pairArg(ident, peerArg)
 	if err != nil {
 		if errors.Is(err, errBadPeer) {
 			return "error: bad peer pubkey"
@@ -510,5 +510,6 @@ func nostrSendDeviceOpener(ident int, peerArg, msg string) string {
 	if err != nil {
 		return fmt.Sprintf("error: wrap: %v", err)
 	}
-	return nostrSendOn(o, msg)
+	// a hidden chat's contact's device: on the seeded pair's own lane
+	return nostrSendOn(o, msg, sendLane(c, peerHex, false))
 }

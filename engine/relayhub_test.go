@@ -40,7 +40,8 @@ func freshBatches(t *testing.T) {
 	t.Helper()
 	batchMu.Lock()
 	old := batches
-	batches = &batchBook{dir: savedDataDir(), of: map[string]batchPlace{}, size: map[batchPlace]int{}, top: map[string]int{}}
+	batches = &batchBook{dir: savedDataDir(), every: map[string]batchPlace{}, top: map[string]batchTop{}, hide: map[string]bool{}}
+	batches.key, batches.idKey = bookKeys()
 	batchMu.Unlock()
 	t.Cleanup(func() {
 		batchMu.Lock()
@@ -216,7 +217,7 @@ func TestAHiddenChatKeepsASocketOfItsOwn(t *testing.T) {
 		t.Fatal("two hidden chats on one lane")
 	}
 	batchMu.Lock()
-	_, inBatch := batches.of[addrShort(hidden)]
+	_, inBatch := batches.every[batches.id(hidden)]
 	batchMu.Unlock()
 	if inBatch {
 		t.Fatal("the hidden chat's address took a place in a batch")

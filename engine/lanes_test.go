@@ -303,23 +303,25 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 	}
 }
 
-// a contact's address keeps its batch, a new one joins the newest batch
-// with room, and a place let go of stays empty until a new one takes it
+// a main identity for the book's keys, the one before after the test
+func bookIdentity(t *testing.T) {
+	t.Helper()
+	me := newXid(t)
+	oldPriv, oldPub := myXPriv, myXPub
+	setMainForTest(me.priv, me.pub)
+	t.Cleanup(func() { setMainForTest(oldPriv, oldPub) })
+}
+
+// a contact's address keeps its batch for good, one let go of comes back
+// to its place, and a new one takes a seat never given before
 func TestBatchesNeverMove(t *testing.T) {
+	bookIdentity(t)
 	dir := t.TempDir()
 	old := savedDataDir()
 	setSavedDataDir(dir)
 	t.Cleanup(func() { setSavedDataDir(old) })
-	batchMu.Lock()
-	keep := batches
-	batches = nil
-	batchMu.Unlock()
-	t.Cleanup(func() {
-		batchMu.Lock()
-		batches = keep
-		batchMu.Unlock()
-	})
-	// apart in their first 16 hex, as the files name them
+	batchBookReset()
+	t.Cleanup(batchBookReset)
 	addr := func(i int) string { return fmt.Sprintf("%016x%048x", i+1, 0) }
 	set := contactSet(mainIdent)
 	for i := 0; i < 20; i++ {
@@ -335,44 +337,147 @@ func TestBatchesNeverMove(t *testing.T) {
 	if receiveLane(mainIdent, addr(8)) == l || receiveLane(1, addr(100)) == l {
 		t.Fatal("two batches on one lane")
 	}
-	// one let go of in the first batch: nobody moves into its place
+	// one let go of in the first batch: nobody moves, and nobody takes
+	// its seat
 	dropAddressFiles(addr(3))
 	for i := 0; i < 20; i++ {
 		if i != 3 && batchOf(set, addr(i)) != i/batchMax {
 			t.Fatalf("address %d moved after another was let go of", i)
 		}
 	}
-	// the next new one goes to the newest batch with room: batch 2 has 4
 	if got := batchOf(set, addr(20)); got != 2 {
 		t.Fatalf("a new address in batch %d, want 2", got)
 	}
-	// read again from the files, as after a restart: nothing moved
-	batchMu.Lock()
-	batches = nil
-	batchMu.Unlock()
-	for i := 0; i <= 20; i++ {
-		want := i / batchMax
-		if i == 20 {
-			want = 2
-		}
-		if i != 3 && batchOf(set, addr(i)) != want {
-			t.Fatalf("address %d in another batch after a restart", i)
-		}
-	}
-	// the newest are full: a new one fills the old place left empty
 	for i := 21; i < 24; i++ {
 		batchOf(set, addr(i))
 	}
-	if got := batchOf(set, addr(24)); got != 0 {
-		t.Fatalf("with the newest batches full a new address went to %d, want the place left in 0", got)
+	if got := batchOf(set, addr(24)); got != 3 {
+		t.Fatalf("with batch 2 full a new address went to %d, want a new batch 3, never the seat let go of in 0", got)
 	}
-	if got := batchOf(set, addr(25)); got != 3 {
-		t.Fatalf("with every batch full a new address went to %d, want a new batch 3", got)
+	// read again from the file, as after a restart: nothing moved, and the
+	// one let go of comes back to its own place (a delete and a re-add, a
+	// block aged out and an unblock)
+	batchBookReset()
+	for i := 0; i <= 24; i++ {
+		want := i / batchMax
+		if i == 24 {
+			want = 3
+		}
+		if batchOf(set, addr(i)) != want {
+			t.Fatalf("address %d in another batch after a restart", i)
+		}
 	}
-	// the file names no more than the address files already do
-	raw, err := os.ReadFile(batchFile(dir, addrShort(addr(0))))
-	if err != nil || string(raw) != set+" 0" {
-		t.Fatalf("batch file %q %v", raw, err)
+	// one sealed file: no file per address, no address, no identity, no
+	// batch number in the clear
+	if olds, _ := filepath.Glob(filepath.Join(dir, "nostr_batch_*")); len(olds) > 0 {
+		t.Fatalf("files per address: %v", olds)
+	}
+	raw, err := os.ReadFile(filepath.Join(dir, bookName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, s := range []string{addr(0)[:16], "everyday"} {
+		if strings.Contains(string(raw), s) {
+			t.Fatalf("the book shows %q", s)
+		}
+	}
+	// a book under another identity's key does not open: it starts empty
+	// rather than read wrong
+	b := &batchBook{key: make([]byte, 32), every: map[string]batchPlace{}, top: map[string]batchTop{}}
+	b.read(raw)
+	if len(b.every) != 0 {
+		t.Fatal("the book opened under another key")
+	}
+}
+
+// a chat hidden after it was batched: its place goes into the vault's part
+// of the book, which only the vault's key opens, and comes back with an
+// unhide. the file looks the same with a vault and without
+func TestAHiddenChatsPlaceIsInTheVault(t *testing.T) {
+	bookIdentity(t)
+	dir := t.TempDir()
+	old := savedDataDir()
+	setSavedDataDir(dir)
+	t.Cleanup(func() { setSavedDataDir(old) })
+	batchBookReset()
+	t.Cleanup(func() {
+		batchVault(nil)
+		batchBookReset()
+	})
+	addr := func(i int) string { return fmt.Sprintf("%016x%048x", i+1, 0) }
+	set := contactSet(mainIdent)
+	for i := 0; i < 12; i++ {
+		batchOf(set, addr(i))
+	}
+	size := func() int {
+		st, err := os.Stat(filepath.Join(dir, bookName))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return int(st.Size())
+	}
+	without := size()
+	// the vault opens and a chat of batch 1 is hidden
+	vkey := []byte("AGE-SECRET-KEY-1TEST")
+	batchVault(vkey)
+	batchHide(addr(9))
+	with := size()
+	if with != without {
+		t.Fatalf("the book is %d bytes with a hidden place, %d without", with, without)
+	}
+	inEvery := func(a string) bool {
+		batchMu.Lock()
+		defer batchMu.Unlock()
+		b := batchBookNow()
+		_, ok := b.every[b.id(a)]
+		return ok
+	}
+	if inEvery(addr(9)) {
+		t.Fatal("a hidden chat's place stayed in the everyday part")
+	}
+	// the vault shuts, the app starts again: the everyday part knows
+	// nothing of it, and nobody takes its seat
+	batchVault(nil)
+	batchBookReset()
+	if inEvery(addr(9)) {
+		t.Fatal("the everyday part names the hidden chat after a restart")
+	}
+	for i := 12; i < 16; i++ {
+		if got := batchOf(set, addr(i)); got != 1 {
+			t.Fatalf("a new address in batch %d, want 1", got)
+		}
+	}
+	if got := batchOf(set, addr(16)); got != 2 {
+		t.Fatalf("batch 1 took a ninth address (%d), the hidden chat's seat was given away", got)
+	}
+	// the vault opens again and the chat comes out: its own place
+	batchBookReset()
+	batchVault(vkey)
+	if got := batchOf(set, addr(9)); got != 1 {
+		t.Fatalf("an unhidden chat came back to batch %d, want 1", got)
+	}
+	if !inEvery(addr(9)) {
+		t.Fatal("an unhidden chat's place is not back in the everyday part")
+	}
+	// heard hidden while the vault's key is not at hand: it waits in the
+	// everyday part until the key is
+	batchVault(nil)
+	batchHide(addr(2))
+	if !inEvery(addr(2)) {
+		t.Fatal("a place left with no vault key to keep it")
+	}
+	batchVault(vkey)
+	if inEvery(addr(2)) {
+		t.Fatal("the place heard hidden did not go into the vault's part once its key came")
+	}
+	// another vault's key opens nothing of it
+	batchVault(nil)
+	batchVault([]byte("AGE-SECRET-KEY-1OTHER"))
+	batchMu.Lock()
+	n := len(batches.vault)
+	batchMu.Unlock()
+	if n != 0 {
+		t.Fatalf("another vault's key read %d places", n)
 	}
 }
 
@@ -768,6 +873,67 @@ func TestNoFixedSocksName(t *testing.T) {
 		}
 		if m := re.Find(b); m != nil {
 			t.Fatalf("%s: %s", f, m)
+		}
+	}
+}
+
+// a hidden chat's sends go on its own lane, through tor on fast too: never
+// on the everyday sends' circuit, never from this phone's ip. the app says
+// so (HaloNostrSendHidden), and a pair listened on as hidden says so itself
+func TestAHiddenChatSendsOnItsOwnLane(t *testing.T) {
+	socks := newSocksStandIn(t)
+	r := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, socks, r)
+	freshBatches(t)
+	t.Cleanup(func() { runnersGone(t) })
+	sentTo := func(p xid) string {
+		_, sent, err := nip17DeriveRoleAs(testMain(), p.pub, nip17RcvInfo, hex.EncodeToString(p.pub[:]))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return sent
+	}
+	everyday, told, listened := newXid(t), newXid(t), newXid(t)
+	if res := nostrSubscribeAs(mainIdent, hex.EncodeToString(listened.pub[:]), false, true); res != "ok" {
+		t.Fatal(res)
+	}
+	if res := nostrSend(mainIdent, hex.EncodeToString(everyday.pub[:]), "hi"); res != "ok" {
+		t.Fatalf("everyday send: %s", res)
+	}
+	if res := nostrSendAs(mainIdent, hex.EncodeToString(told.pub[:]), "hi", true); res != "ok" {
+		t.Fatalf("hidden send: %s", res)
+	}
+	if res := nostrSend(mainIdent, hex.EncodeToString(listened.pub[:]), "hi"); res != "ok" {
+		t.Fatalf("send to a hidden pair: %s", res)
+	}
+	waitFor(t, "the sends on the relay", 15*time.Second, func() bool {
+		c := r.snapshot()
+		for _, p := range []xid{everyday, told, listened} {
+			if len(connsOn(c, []string{sentTo(p)})) == 0 {
+				return false
+			}
+		}
+		return true
+	})
+	conns := r.snapshot()
+	for _, c := range connsOn(conns, []string{sentTo(everyday)}) {
+		if _, ok := socks.nameOf(c.remote); ok {
+			t.Fatal("an everyday send on fast went through tor")
+		}
+	}
+	for name, p := range map[string]xid{"told": told, "listened": listened} {
+		lane := hiddenLane(mustRcv(t, p))
+		for _, c := range connsOn(conns, []string{sentTo(p)}) {
+			n, ok := socks.nameOf(c.remote)
+			if !ok {
+				t.Fatalf("a hidden chat's send (%s) went from this phone's ip on fast", name)
+			}
+			if n != laneName(lane) {
+				t.Fatalf("a hidden chat's send (%s) went under a name that is not its chat's lane", name)
+			}
+			if n == laneName(laneEveryday) {
+				t.Fatalf("a hidden chat's send (%s) went on the everyday sends' lane", name)
+			}
 		}
 	}
 }

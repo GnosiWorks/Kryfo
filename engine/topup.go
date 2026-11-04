@@ -338,7 +338,7 @@ func topupAdd(st, lane string, ev nostr.Event) {
 		return
 	}
 	topupEnsureLoaded()
-	it := topupItem{Store: st, Lane: lane, Ev: ev, At: time.Now().Unix()}
+	it := topupItem{Store: st, Lane: hiddenLaneTag(lane), Ev: ev, At: time.Now().Unix()}
 	if k, ok := keptSealOf(ev.ID.Hex()); ok {
 		it.Kept = &k
 		// the queue has its own copy now
@@ -508,13 +508,14 @@ func topupFlush(st, u string) bool {
 			}
 			ev = fresh
 		}
-		client, err := relayClientFor(it.Lane, u)
+		lane := hiddenLaneFromTag(it.Lane)
+		client, err := relayClientFor(lane, u)
 		if err != nil {
 			return false
 		}
 		ctx, cancel := onRoute(context.Background(), routeC)
 		pctx, pcancel := context.WithTimeout(ctx, publishWait)
-		err = publishTo(pctx, it.Lane, u, client, ev)
+		err = publishTo(pctx, lane, u, client, ev)
 		pcancel()
 		cancel()
 		if relayHasIt(err) {
