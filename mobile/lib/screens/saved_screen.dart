@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/breathing_ring.dart';
 import '../widgets/burn_fade.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/sealed_picture.dart';
 import '../widgets/swap.dart';
 import '../main.dart' hide live;
 import '../stickers/sticker_bubble.dart' show StickerLine;
@@ -14,7 +14,6 @@ import '../theme.dart';
 import '../devchat/dev_key.dart' show isDevChat;
 import '../rooms.dart' show looksLikeRoomKey, roomTag;
 import '../widgets/decode_px.dart';
-import '../widgets/photo_viewer.dart' show PhotoTileFade;
 import 'chat_door.dart';
 import '../widgets/motion.dart' show kHouseCurve, motionStill;
 import '../widgets/page_head.dart' show PageBar;
@@ -411,15 +410,17 @@ class _SavedScreenState extends State<SavedScreen> {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(9),
-          child: Image.file(
-            File(r['media_path'] as String),
+          child: SizedBox(
             width: 44,
             height: 44,
-            fit: BoxFit.cover,
-            cacheWidth: decodePx(context, 44),
-            frameBuilder: (_, child, frame, sync) =>
-                PhotoTileFade(shown: sync || frame != null, child: child),
-            errorBuilder: (_, _, _) => missing,
+            child: SealedPicture(
+              path: r['media_path'] as String,
+              image: mediaImage(
+                r['media_path'] as String,
+                decodePx(context, 44),
+              ),
+              errorBuilder: (_, _, _) => missing,
+            ),
           ),
         ),
         const SizedBox(width: 10),

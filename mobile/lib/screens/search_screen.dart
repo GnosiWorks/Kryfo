@@ -18,6 +18,7 @@ import '../l10n/dates.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../main.dart' hide live;
+import '../widgets/sealed_picture.dart';
 import 'group_info_screen.dart' show endedLine;
 import '../polls.dart';
 import '../quiet_wait.dart';
@@ -36,7 +37,6 @@ import '../widgets/media_bubbles.dart' show mediaTileLabel;
 import '../widgets/notice_banner.dart';
 import '../widgets/motion.dart' show kHouseCurve, kHouseTime, motionStill;
 import '../widgets/swap.dart' show RiseSwap;
-import '../widgets/photo_viewer.dart' show PhotoTileFade;
 import '../widgets/poll_card.dart' show pollGlyph;
 import '../widgets/press_scale.dart';
 import '../widgets/stroke_icon.dart';
@@ -1933,17 +1933,16 @@ class _HitRow extends StatelessWidget {
             if (hit.mediaPath != null && !hit.poll) ...[
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.file(
-                  File(hit.mediaPath!),
+                child: SizedBox(
                   width: 40,
                   height: 40,
-                  fit: BoxFit.cover,
-                  cacheWidth: decodePx(context, 40),
-                  // it fades up once decoded, not in one frame
-                  frameBuilder: (_, child, frame, sync) =>
-                      PhotoTileFade(shown: sync || frame != null, child: child),
-                  errorBuilder: (_, _, _) =>
-                      const SizedBox(width: 40, height: 40),
+                  // its blur, then the photo fading up once decoded
+                  child: SealedPicture(
+                    path: hit.mediaPath!,
+                    image: mediaImage(hit.mediaPath!, decodePx(context, 40)),
+                    errorBuilder: (_, _, _) =>
+                        const SizedBox(width: 40, height: 40),
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -2076,17 +2075,18 @@ class _Thumb extends StatelessWidget {
       onTap: onTap,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: Image.file(
-          File(path),
+        child: SizedBox(
           width: size,
           height: size,
-          fit: BoxFit.cover,
-          cacheWidth: decodePx(context, size),
-          gaplessPlayback: true,
-          frameBuilder: (_, child, frame, sync) =>
-              PhotoTileFade(shown: sync || frame != null, child: child),
-          errorBuilder: (_, _, _) =>
-              Container(width: size, height: size, color: HaloColors.surface3),
+          child: SealedPicture(
+            path: path,
+            image: mediaImage(path, decodePx(context, size)),
+            errorBuilder: (_, _, _) => Container(
+              width: size,
+              height: size,
+              color: HaloColors.surface3,
+            ),
+          ),
         ),
       ),
     );

@@ -14,6 +14,7 @@ import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import 'motion.dart' show kHouseCurve, motionStill;
 import 'ease_size.dart';
+import 'sealed_picture.dart';
 import 'swap.dart';
 import 'photo_viewer.dart';
 import 'voice_parts.dart';
@@ -76,19 +77,20 @@ Widget fileCard(
     final fallback = FileCard(path: filePath, name: fileName, isOut: isOut);
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 230),
-      child: Image.file(
-        File(filePath),
-        fit: BoxFit.cover,
-        cacheWidth: 460,
+      // its blur, the picture fading up over it, the name underneath. a
+      // card that replaced it has no name under it
+      child: SealedPicture(
+        path: filePath,
+        shaped: true,
+        decodeWidth: 460,
+        image: mediaImage(filePath, 460),
         filterQuality: FilterQuality.low,
         errorBuilder: (_, _, _) => fallback,
-        // wraps only an image that is actually loading, so the caption
-        // cannot end up under a card that replaced it
-        frameBuilder: (ctx, child, frame, wasSync) => Column(
+        framed: (picture) => Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(borderRadius: BorderRadius.circular(12), child: child),
+            ClipRRect(borderRadius: BorderRadius.circular(12), child: picture),
             const SizedBox(height: 4),
             Text(
               safeFileName(fileName),
