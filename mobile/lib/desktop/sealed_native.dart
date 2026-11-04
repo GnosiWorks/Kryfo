@@ -98,26 +98,54 @@ class DiskCopy implements NativeCopy {
   }
 
   @override
-  void close() {
-    rawFileAccess(() {
+  void close() => _zeroAndDelete(path);
+}
+
+// zeroed in place, then deleted even when the zeroing fails
+void _zeroAndDelete(String path) {
+  rawFileAccess(() {
+    final f = File(path);
+    try {
+      if (!f.existsSync()) return;
+      final n = f.lengthSync();
+      final r = f.openSync(mode: FileMode.writeOnlyAppend);
       try {
-        final f = File(path);
-        if (!f.existsSync()) return;
-        final n = f.lengthSync();
-        final r = f.openSync(mode: FileMode.writeOnlyAppend);
-        try {
-          r.setPositionSync(0);
-          final z = Uint8List(1 << 16);
-          for (var left = n; left > 0; left -= z.length) {
-            r.writeFromSync(z, 0, left < z.length ? left : z.length);
-          }
-          r.flushSync();
-        } finally {
-          r.closeSync();
+        r.setPositionSync(0);
+        final z = Uint8List(1 << 16);
+        for (var left = n; left > 0; left -= z.length) {
+          r.writeFromSync(z, 0, left < z.length ? left : z.length);
         }
-        f.deleteSync();
-      } catch (_) {}
+        r.flushSync();
+      } finally {
+        r.closeSync();
+      }
+    } catch (_) {}
+    try {
+      f.deleteSync();
+    } catch (_) {}
+  });
+}
+
+/// at start: what a crash left in the spill folder [dir], zeroed and
+/// deleted, best effort
+void sweepNativeCopies(String dir) {
+  final List<FileSystemEntity> left;
+  try {
+    left = rawFileAccess(() {
+      final d = Directory(dir);
+      return d.existsSync() ? d.listSync() : const <FileSystemEntity>[];
     });
+  } catch (_) {
+    return;
+  }
+  for (final e in left) {
+    if (e is File) {
+      _zeroAndDelete(e.path);
+    } else {
+      try {
+        rawFileAccess(() => e.deleteSync(recursive: true));
+      } catch (_) {}
+    }
   }
 }
 

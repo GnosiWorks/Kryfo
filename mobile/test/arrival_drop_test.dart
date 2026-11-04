@@ -239,6 +239,28 @@ void main() {
       );
       expect(fetchFolder(), isEmpty);
     });
+
+    test('a stop between the seal and the row update keeps the file: the '
+        'next pass finds the sealed copy and files it', () async {
+      containerOpened!(HaloContainer.everyday.id, '', 'k' * 64);
+      await from(_x, await drop('s3'));
+      final f = (await fetchOf(live.mem, 's3'))!;
+      // what a stop leaves: sealed into got/, the row still on the fetch path
+      await File(f.path).writeAsBytes([7, 7, 7]);
+      await Directory(p.dirname(gotPathFor(f.path))).create(recursive: true);
+      await File(f.path).rename(gotPathFor(f.path));
+      await fetchState(live.mem, 's3', kFetchHave);
+      await app.fetchDropsInForTest(live);
+      expect(eng.fetched, isEmpty);
+      final path = live.msg('s3')!['file_path'] as String;
+      expect(
+        isSealedHead(rawFileAccess(() => File(path).readAsBytesSync())),
+        isTrue,
+      );
+      expect(File(path).readAsBytesSync(), [7, 7, 7]);
+      expect(eng.gots, [('ab' * 16, _tok)]);
+      expect(fetchFolder(), isEmpty);
+    });
   });
 
   test('a second copy of the frame fetches nothing twice', () async {
