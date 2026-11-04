@@ -1683,6 +1683,7 @@ class ArrivalRows implements HaloDb {
     Iterable<String> who,
     String uid, {
     required int now,
+    bool note = true,
   }) async {
     _hit('queueGroupUnsend', groupId, null);
     final body = jsonEncode(groupUnsendRow(uid));

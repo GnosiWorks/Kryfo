@@ -274,6 +274,8 @@ const _peerRows = {
   'edits_out': 'msg_uid IN {uids}',
   // an unsend's message is gone, so these go by the person
   'frames_out': 'peer_id = ?1',
+  // our unsends and edits kept for their restore (restore_undo.dart)
+  'taken_out': 'peer_id = ?1',
   'media_chunks':
       'media_id IN (SELECT media_id FROM {s}.media_wants WHERE peer_id = ?1)',
   'media_wants': 'peer_id = ?1',
@@ -303,6 +305,7 @@ const _blockRows = ['block_spans', 'blocked_drops'];
 // made after the chat tables, the drafts' in a try of its own: one side
 // may lack them, and a move then goes on without their rows
 const _mayLack = {
+  'taken_out',
   'wallpapers',
   'drafts',
   'contact_photos',
@@ -323,6 +326,7 @@ const _groupRows = {
   // and so do the controls they are still to get, and its roster stamp
   'group_ctl_out': 'group_id = ?1',
   'group_roster': 'group_id = ?1',
+  'taken_out': 'group_id = ?1',
   // the files still coming in it, those kept before slices named their
   // group by the message they belong to, and a room's keys
   'media_chunks':

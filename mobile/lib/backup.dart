@@ -26,6 +26,7 @@ import 'main.dart'
         TwoArgFn,
         TwoArgFnDart,
         appState,
+        holdRestoredOutbox,
         live,
         photosUnsentInCopy,
         session,
@@ -46,6 +47,7 @@ import 'engine_strings.dart';
 import 'dart:typed_data';
 import 'backup_stream.dart';
 import 'dart:math';
+import 'restore_undo.dart' show noteRestoreLanded;
 import 'l10n/l10n.dart';
 import 'desktop/desktop_mode.dart'
     show containerClosed, containerOpened, engineDir, runIsolated;
@@ -432,6 +434,8 @@ Future<void> landV1Payload(
 // next start marks them, with when the file was made ([made]), and none is
 // sealed on again
 Future<void> _livesHereNow(Object? made) async {
+  // a timed copy from before now counts from then at the latest
+  await noteRestoreLanded();
   final prefs = await SharedPreferences.getInstance();
   await prefs.remove('moved.at');
   await prefs.setBool(kSessionsRestoredPref, true);
@@ -902,14 +906,16 @@ class BackupSide {
   }
 
   // every copy of a container's database that leaves the phone: what waits
-  // to be read counts from [at] in it (settleWaitingBurns), and no contact
-  // is taken to hold our photo (photosUnsentInCopy)
+  // to be read counts from [at] in it (settleWaitingBurns), no contact is
+  // taken to hold our photo (photosUnsentInCopy), and what of ours waits
+  // to go goes from a restore only on a tap (holdRestoredOutbox)
   Future<void> settleBurns(String copy, String key, int at) async {
     final db = await openDatabase(copy, password: key, singleInstance: false);
     try {
       await db.transaction((t) async {
         await settleWaitingBurns(t, at);
         await photosUnsentInCopy(t);
+        await holdRestoredOutbox(t);
       });
       await db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
     } finally {

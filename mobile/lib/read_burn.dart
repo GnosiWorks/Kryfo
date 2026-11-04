@@ -24,6 +24,24 @@ const kBurnWaitMost = Duration(hours: 24);
 int burnStartBy(int arrived, int now) =>
     math.min(arrived, now) + kBurnWaitMost.inMilliseconds;
 
+/// when a timed arrival that came at [came] counts from. after a restore
+/// that landed at [restoredAt], a copy from before it (on a relay by then,
+/// or written before it) may be one this phone held and burned already:
+/// it counts from the earliest of when it came, reached the relay
+/// ([reached]) and was written ([written], writtenAtOf), never from a
+/// fresh clock
+int burnCameAt(
+  int came, {
+  ({int from, int until})? reached,
+  required int written,
+  int? restoredAt,
+}) {
+  if (restoredAt == null) return came;
+  final there = reached?.until ?? written;
+  if (there >= restoredAt) return came;
+  return math.min(came, math.min(reached?.until ?? came, written));
+}
+
 /// how far ahead of this phone's clock an arrival may be and still wait as
 /// one stamped now: a row filed while a sweep runs is a few ms past its
 /// now. one further ahead came under a clock set back since

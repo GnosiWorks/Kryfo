@@ -64,6 +64,7 @@ import '../main.dart'
     show
         appState,
         AppStateFiles,
+        kNotSent,
         session,
         sessionQuiet,
         claimChat,
@@ -1184,6 +1185,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 m.autoRetries = c.$1;
                 m.gaveUp = c.$2;
               }
+              _heldForTap(m, r);
               return m;
             }),
           );
@@ -1483,6 +1485,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       m.cameAt = (r['sent_at'] as num?)?.toInt();
       if (dir == 'in') m.fresh = true;
       _placeLoadedSend(m);
+      _heldForTap(m, r);
       fresh.add(m);
     }
     final nowHave = _messages.map((m) => m.msgUid).toSet();
@@ -3159,6 +3162,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         }
         await _finishGroupMediaSend(m, r);
       });
+
+  // one a restore brought still waiting to go: not sent, and never tried
+  // on its own. a tap sends it
+  void _heldForTap(_GMsg m, Map<String, Object?> r) {
+    if (m.direction != 'out' || r['sent'] != kNotSent) return;
+    m
+      ..sending = false
+      ..failed = true
+      ..gaveUp = true;
+  }
 
   void _placeLoadedSend(_GMsg m) {
     final uid = m.msgUid;

@@ -42,11 +42,17 @@ extension AppStateHeal on AppState {
           floor ??
           resendFrom(now, since, window: _kResendWindow, most: _kResendMost),
     );
+    // after their restore: what we took back or edited since their backup
+    // goes again, or their file brings it back for good
+    final undone = since == null || since > now
+        ? 0
+        : await on.requeueTakenSince(peer, since: since);
+    if (undone > 0) dlog('resend: $undone unsends and edits go again');
     if (again > 0) {
       dlog('resend: $again undelivered to $peer go again');
       _bumpChatRev(peer);
-      unawaited(drainOutbox());
     }
+    if (again > 0 || undone > 0) unawaited(drainOutbox());
   }
 
   // asked while their vault is shut: the resend is owed, sealed to the
@@ -78,6 +84,16 @@ extension AppStateHeal on AppState {
     if (await d.isBlocked(member) || await blockedAnywhere(member)) return;
     if (await d.keyChanged(member)) return;
     _groupResentAt[gap] = now;
+    // our unsends and edits since their backup, which their file undid
+    final undone = await d.requeueGroupTakenSince(
+      member,
+      since: since,
+      now: now,
+    );
+    if (undone > 0) {
+      dlog('resend: $undone group unsends and edits go again');
+      if (!haloWiping && !everydayHeld) unawaited(_drainGroupCtl());
+    }
     // no further back than gone texts are known, by the day: an older
     // backup is the same restore all day long
     final from = max(since, now - HaloDb.kGoneFor.inMilliseconds);
@@ -245,10 +261,13 @@ extension AppStateHeal on AppState {
     if (ss == null) return false;
     final at = now ?? DateTime.now().millisecondsSinceEpoch;
     final restored = await ss.sealsOnRestored(peer);
+    final on = to.on;
+    // a chat deleted here (parked) gets no restore's heal: it would tell
+    // them, and they reach us as a request, as anyone new does
+    if (restored && on != null && !await on.isAccepted(peer)) return false;
     int? since;
     if (restored) {
       final from = ss.restoredFrom ?? at;
-      final on = to.on;
       try {
         since = on == null
             ? healDayOf(from)
@@ -534,14 +553,33 @@ extension AppStateHeal on AppState {
   }
 
   /// what follows a restore or a move, once, on the first start after it
-  /// (8), with every store open: each identity's unused one-time invites
-  /// go (one may have been answered since the file was made) and its
-  /// session prekeys are made again, and pool identities retire. the main
-  /// invites stay: links and the handle keep working. true when every
-  /// identity was done; otherwise the next start runs it again
-  Future<bool> afterRestore(Database db, {int? nowMs}) async {
+  /// (8), with every store open: what of ours the file still had waiting
+  /// to go waits for a tap, each identity's unused one-time invites go
+  /// (one may have been answered since the file was made) and its session
+  /// prekeys are made again, and pool identities retire. the main invites
+  /// stay: links and the handle keep working. true when every identity was
+  /// done; otherwise the next start runs it again. [before]: when the
+  /// restore landed, [made]: when its file was made
+  Future<bool> afterRestore(
+    Database db, {
+    int? nowMs,
+    int? before,
+    int? made,
+  }) async {
     final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
     var ok = true;
+    // never sent on its own: only rows the file brought, never one written
+    // here since
+    try {
+      final held = await holdRestoredOutbox(
+        db,
+        before: max(before ?? now, made ?? 0) + 1,
+      );
+      dlog('restore: $held waiting rows wait for a tap');
+    } catch (e) {
+      ok = false;
+      dlog('restore: waiting rows not held (${e.runtimeType})');
+    }
     for (final r in await identityRows(db)) {
       if (r.retiredAt != null) continue;
       if (r.kind == kIdentPool) {

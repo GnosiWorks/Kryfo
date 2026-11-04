@@ -1588,6 +1588,7 @@ void main() {
       'lib/app/database_photos.dart',
       'lib/router.dart',
       'lib/heal.dart',
+      'lib/restore_undo.dart',
     ].map((f) => File(f).readAsStringSync()).join('\n');
     // a prefixed name is another set of the signal store's tables
     final tables = {

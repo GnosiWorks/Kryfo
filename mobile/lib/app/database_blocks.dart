@@ -75,6 +75,7 @@ mixin _BlockRows {
         ('frames_out', 'peer_id'),
         ('pins_out', 'peer_id'),
         ('edits_out', 'peer_id'),
+        ('taken_out', 'peer_id'),
         ('held_onion', 'peer_id'),
         ('first_kept', 'peer'),
         ('gone_in', 'peer_id'),

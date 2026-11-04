@@ -119,6 +119,7 @@ Map<String, _Table> _appSchema() {
     'lib/devchat/dev_chat.dart',
     'lib/devchat/support.dart',
     'lib/heal.dart',
+    'lib/restore_undo.dart',
   ]) {
     final src = File(f).readAsStringSync();
     for (final m in _create.allMatches(src)) {

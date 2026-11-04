@@ -6,6 +6,7 @@ part of '../main.dart';
 mixin _GroupOwedRows implements GroupOwedStore {
   // what these rows take from the rest of HaloDb
   Future<Database> open();
+  Future<List<String>> getGroupMembers(String groupId);
 
   // ---- group messages and files some members still lack ----
 
@@ -370,10 +371,13 @@ mixin _GroupOwedRows implements GroupOwedStore {
     Iterable<String> members,
     String uid, {
     required int now,
+    // kept to go again after a member's restore (requeueGroupTakenSince)
+    bool note = true,
   }) async {
     final body = jsonEncode(groupUnsendRow(uid));
     final db = await open();
     await db.transaction((t) async {
+      if (note) await noteTaken(t, uid, kTakenUnsend, group: groupId, at: now);
       for (final m in members) {
         // taken back, its edit or reaction has nothing left to change
         await _dropGroupFrames(t, groupId, m, uid);
@@ -405,12 +409,25 @@ mixin _GroupOwedRows implements GroupOwedStore {
     Iterable<String> members,
     Map<String, String> row, {
     required int now,
+    // an edit is kept to go again after a member's restore
+    bool note = true,
   }) async {
     final body = jsonEncode(row);
     final f = groupFrameOf(body);
     if (f == null) return;
     final db = await open();
     await db.transaction((t) async {
+      final edit = f.edit;
+      if (note && edit != null) {
+        await noteTaken(
+          t,
+          f.uid,
+          kTakenEdit,
+          group: groupId,
+          body: edit,
+          at: now,
+        );
+      }
       for (final m in members) {
         await _dropGroupFrames(t, groupId, m, f.uid, edits: f.edit != null);
         await t.insert('group_ctl_out', {
@@ -423,6 +440,46 @@ mixin _GroupOwedRows implements GroupOwedStore {
         });
       }
     });
+  }
+
+  /// [member] restored a backup: our group unsends and last edits since
+  /// [since], in the groups they are still in, go to them again. how many
+  Future<int> requeueGroupTakenSince(
+    String member, {
+    required int since,
+    required int now,
+  }) async {
+    final db = await open();
+    final taken = await takenSince(db, since: since);
+    final ins = <String, bool>{};
+    var n = 0;
+    for (final r in taken) {
+      final g = r.group!;
+      final isIn = ins[g] ??= (await getGroupMembers(g)).contains(member);
+      if (!isIn) continue;
+      if (r.kind == kTakenUnsend) {
+        await queueGroupUnsend(g, [member], r.uid, now: now, note: false);
+      } else {
+        // only a row still ours in it
+        final mine = await db.query(
+          'messages',
+          columns: ['id'],
+          where: "msg_uid = ? AND direction = 'out' AND group_id = ?",
+          whereArgs: [r.uid, g],
+          limit: 1,
+        );
+        if (mine.isEmpty) continue;
+        await queueGroupFrame(
+          g,
+          [member],
+          groupEditRow(r.uid, r.body),
+          now: now,
+          note: false,
+        );
+      }
+      n++;
+    }
+    return n;
   }
 
   // [member]'s queued edits ([edits]) or reactions of [uid], or both when

@@ -360,6 +360,7 @@ class HaloDb
         await draftsTable(db);
         await photoTables(db);
         await healTables(db);
+        await takenTables(db);
         await deviceTables(db, addColumn);
       },
       onUpgrade: (db, oldV, newV) async {
@@ -963,6 +964,12 @@ class HaloDb
       await healTablesAtOpen(_db!);
     } catch (e) {
       dlog('heal: tables not made (${e.runtimeType})');
+    }
+    // our unsends and edits kept for a contact's restore (restore_undo.dart)
+    try {
+      await takenTablesAtOpen(_db!);
+    } catch (e) {
+      dlog('restore: taken table not made (${e.runtimeType})');
     }
     // a file that took a later number without them (a build of another
     // branch) still gets them
