@@ -10355,6 +10355,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get desktopTrayLockedTip => 'Open Kryfo to start receiving messages';
 
   @override
+  String get desktopTrayStillRunning =>
+      'Kryfo is still running in the tray. Quit from the tray icon.';
+
+  @override
   String get desktopRunSection => 'On this computer';
 
   @override

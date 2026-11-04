@@ -10560,6 +10560,10 @@ class AppLocalizationsPl extends AppLocalizations {
       'Otwórz Kryfo, żeby zacząć odbierać wiadomości';
 
   @override
+  String get desktopTrayStillRunning =>
+      'Kryfo nadal działa w zasobniku. Zamknij je ikoną w zasobniku.';
+
+  @override
   String get desktopRunSection => 'Na tym komputerze';
 
   @override

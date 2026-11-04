@@ -10437,6 +10437,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Abra o Kryfo para começar a receber mensagens';
 
   @override
+  String get desktopTrayStillRunning =>
+      'O Kryfo continua aberto na bandeja do sistema. Para sair, use o ícone dele na bandeja.';
+
+  @override
   String get desktopRunSection => 'Neste computador';
 
   @override

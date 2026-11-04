@@ -2729,6 +2729,7 @@
   "desktopTrayQuit": "Zamknij Kryfo",
   "desktopTrayTip": "Kryfo działa i odbiera wiadomości",
   "desktopTrayLockedTip": "Otwórz Kryfo, żeby zacząć odbierać wiadomości",
+  "desktopTrayStillRunning": "Kryfo nadal działa w zasobniku. Zamknij je ikoną w zasobniku.",
   "desktopRunSection": "Na tym komputerze",
   "desktopTrayRow": "Działaj dalej w zasobniku",
   "desktopTrayHint": "Zamknięcie okna zostawia Kryfo w zasobniku, więc wiadomości dalej przychodzą.",

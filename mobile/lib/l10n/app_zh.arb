@@ -2729,6 +2729,7 @@
   "desktopTrayQuit": "退出 Kryfo",
   "desktopTrayTip": "Kryfo 正在运行并接收消息",
   "desktopTrayLockedTip": "打开 Kryfo 即可开始接收消息",
+  "desktopTrayStillRunning": "Kryfo 仍在系统托盘中运行。要退出，请使用托盘图标。",
   "desktopRunSection": "在这台电脑上",
   "desktopTrayRow": "在系统托盘中保持运行",
   "desktopTrayHint": "关闭窗口后，Kryfo 留在系统托盘中，消息照常到达。",

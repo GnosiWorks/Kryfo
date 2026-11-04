@@ -9816,6 +9816,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get desktopTrayLockedTip => '打开 Kryfo 即可开始接收消息';
 
   @override
+  String get desktopTrayStillRunning => 'Kryfo 仍在系统托盘中运行。要退出，请使用托盘图标。';
+
+  @override
   String get desktopRunSection => '在这台电脑上';
 
   @override
@@ -20255,6 +20258,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get desktopTrayLockedTip => '打開 Kryfo 即可開始接收訊息';
+
+  @override
+  String get desktopTrayStillRunning => 'Kryfo 仍在系統匣中執行。要結束，請使用系統匣圖示。';
 
   @override
   String get desktopRunSection => '在這台電腦上';

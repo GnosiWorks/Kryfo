@@ -146,10 +146,17 @@ Future<void> showWindow() async {
   } catch (_) {}
 }
 
-/// [locked]: before the vault opens nothing arrives, and the tip says so
+/// [locked]: before the vault opens nothing arrives, and the tip says so.
+/// once it is open, the runner also gets the line for the first close to
+/// the tray, until it says it was shown
 Future<void> sayTrayWords({bool locked = false}) async {
+  final run = desktopRun;
+  final hint = !locked && run is DesktopRun && !run.trayHinted;
   try {
-    await _desktopChannel.invokeMethod<void>('tray', trayWords(locked: locked));
+    await _desktopChannel.invokeMethod<void>(
+      'tray',
+      trayWords(locked: locked, hint: hint),
+    );
   } catch (_) {
     // a runner without a tray: closing the window ends the app
   }
@@ -157,10 +164,11 @@ Future<void> sayTrayWords({bool locked = false}) async {
 
 /// the tray's words, in the app's language
 @visibleForTesting
-Map<String, String> trayWords({bool locked = false}) => {
+Map<String, String> trayWords({bool locked = false, bool hint = false}) => {
   'open': l10n.desktopLockOpen,
   'quit': l10n.desktopTrayQuit,
   'tip': locked ? l10n.desktopTrayLockedTip : l10n.desktopTrayTip,
+  if (hint) 'hint': l10n.desktopTrayStillRunning,
 };
 
 /// started with the computer ([startHiddenFlag]): the runner keeps the
@@ -300,6 +308,9 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   }
   _desktopChannel.setMethodCallHandler((call) async {
     if (call.method == 'quit') ending();
+    // the first close to the tray was said: never again
+    final run = desktopRun;
+    if (call.method == 'hinted' && run is DesktopRun) await run.markHinted();
     return null;
   });
   // asked before the vault can open, so its words never come after begin's

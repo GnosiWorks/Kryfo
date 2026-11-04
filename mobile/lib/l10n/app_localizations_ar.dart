@@ -10494,6 +10494,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get desktopTrayLockedTip => 'افتح Kryfo لتبدأ في استقبال الرسائل';
 
   @override
+  String get desktopTrayStillRunning =>
+      'لا يزال Kryfo يعمل في علبة النظام. للخروج استخدم أيقونته في علبة النظام.';
+
+  @override
   String get desktopRunSection => 'على هذا الحاسوب';
 
   @override

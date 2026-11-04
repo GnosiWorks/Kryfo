@@ -10527,6 +10527,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Відкрий Kryfo, щоб почати отримувати повідомлення';
 
   @override
+  String get desktopTrayStillRunning =>
+      'Kryfo і далі працює в області сповіщень. Вийти можна через його значок там.';
+
+  @override
   String get desktopRunSection => 'На цьому комп’ютері';
 
   @override

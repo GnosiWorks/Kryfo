@@ -2729,6 +2729,7 @@
   "desktopTrayQuit": "Keluar dari Kryfo",
   "desktopTrayTip": "Kryfo berjalan dan menerima pesan",
   "desktopTrayLockedTip": "Buka Kryfo untuk mulai menerima pesan",
+  "desktopTrayStillRunning": "Kryfo tetap berjalan di area notifikasi. Untuk keluar, gunakan ikonnya di area notifikasi.",
   "desktopRunSection": "Di komputer ini",
   "desktopTrayRow": "Tetap berjalan di area notifikasi",
   "desktopTrayHint": "Menutup jendela membuat Kryfo tetap di area notifikasi, jadi pesan terus masuk.",
