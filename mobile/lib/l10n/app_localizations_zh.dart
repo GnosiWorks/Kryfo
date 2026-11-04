@@ -4085,9 +4085,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairCodeEnterOne => '输入配对码';
 
   @override
-  String get pairCodeSixDigits => '六位数字';
-
-  @override
   String get pairCodeLooking => '正在查找…';
 
   @override
@@ -4103,31 +4100,71 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairCodeFailed => '没有成功。请再试一次。';
 
   @override
-  String get pairCodeTypeTheSixDigits => '输入对方念出的六位数字。';
-
-  @override
   String get pairCodeAddThem => '添加对方';
-
-  @override
-  String get pairCodeUsedTwice => '这个码被用了两次。请对方重新生成一个。';
 
   @override
   String get pairCodeKeyNumber => '密钥号码';
 
   @override
-  String get pairCodeNumberMatches => '核对两部手机上的四组数字是否全部一致';
-
-  @override
-  String get pairCodeNumberMatchesDesk => '核对两台设备上的四组数字是否全部一致';
-
-  @override
-  String get pairCodeNumberDiffers => '号码不一致';
-
-  @override
-  String get pairCodeNoNumberThere => '对方屏幕上没有号码？先添加，再在聊天里核对安全码。';
-
-  @override
   String get pairCodeNotAdded => '未添加。请对方重新生成一个码。';
+
+  @override
+  String get pairCodeEightDigits => '八位数字';
+
+  @override
+  String get pairCodeTypeTheEightDigits => '输入对方念出的八位数字。';
+
+  @override
+  String get pairCodeOldCode => '这个码来自较旧的 Kryfo。两部手机都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeOldCodeDesk => '这个码来自较旧的 Kryfo。两台设备都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeBothNeed06 => '两部手机都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeBothNeed06Desk => '两台设备都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeWaitingForThem => '正在等待对方…';
+
+  @override
+  String get pairCodeStillWaiting => '还在等待。如果对方屏幕显示输入了错误的码，请一起核对数字。';
+
+  @override
+  String get pairCodeUnanswered => '没有收到回应。请和对方核对码，然后重新输入。';
+
+  @override
+  String get pairCodeTooManyTries => '这个码已经试了三次。请对方重新生成一个。';
+
+  @override
+  String get pairCodeRanOut => '这个码已过期。请对方重新生成一个。';
+
+  @override
+  String get pairCodeMatched => '码已匹配。要互相添加吗？';
+
+  @override
+  String get pairCodeNotThem => '不是对方';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut => '把八位数字念出来，你们就能互相添加。其他什么都不需要交换。';
+
+  @override
+  String get pairCodePanelOrMakeACode => '或者生成一个码，念给对方';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      '对方打开 Kryfo，点“添加”，选择“配对码”，输入这八位数字。下一个人需要你再生成一个新的。';
+
+  @override
+  String get pairCodePanelWrongTyped => '对方输入了错误的码。请再慢慢念一遍。';
+
+  @override
+  String get pairCodePanelThreeWrong => '错误的码已输入三次，这个码已停止使用。请生成一个新的。';
+
+  @override
+  String get pairCodePanelNotAdded => '未添加。对方准备好时再生成一个新码。';
 
   @override
   String get panicSetupThoseWereDifferentFrom => '两次不一样。从头再来。';
@@ -6428,13 +6465,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairCodePanelYourInviteIsNot => '你的邀请还没准备好';
 
   @override
-  String get pairCodePanelReadSixDigitsOut => '把六位数字念出来，对方就能添加你。其他什么都不需要交换。';
-
-  @override
   String get pairCodePanelWorking => '处理中';
-
-  @override
-  String get pairCodePanelOrMakeASix => '或者生成一个六位数字的码，念给对方';
 
   @override
   String get pairCodePanelBurned => '这个码已经焚毁。对方准备好时再生成一个新的。';
@@ -6449,16 +6480,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pairCodePanelTheyTapAddChoose => '对方点“添加”，选择“配对码”，然后输入这些数字。';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      '对方打开 Kryfo，点“添加”，选择“配对码”，输入这六位数字。下一个人需要你再生成一个新的。';
-
-  @override
-  String get pairCodePanelYourWords => '你的三个词';
-
-  @override
-  String get pairCodePanelAcceptOnce => '对方添加你后，你会收到请求。等对方说四组数字都一致，再接受。';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -14369,9 +14390,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pairCodeEnterOne => '輸入配對碼';
 
   @override
-  String get pairCodeSixDigits => '六位數字';
-
-  @override
   String get pairCodeLooking => '尋找中…';
 
   @override
@@ -14387,31 +14405,72 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pairCodeFailed => '沒有成功。請再試一次。';
 
   @override
-  String get pairCodeTypeTheSixDigits => '輸入對方唸出的六位數字。';
-
-  @override
   String get pairCodeAddThem => '新增對方';
-
-  @override
-  String get pairCodeUsedTwice => '這組碼被用了兩次。請對方再產生一組新的。';
 
   @override
   String get pairCodeKeyNumber => '金鑰號碼';
 
   @override
-  String get pairCodeNumberMatches => '核對兩支手機上的四組數字是否全部一致';
-
-  @override
-  String get pairCodeNumberMatchesDesk => '核對兩台裝置上的四組數字是否全部一致';
-
-  @override
-  String get pairCodeNumberDiffers => '號碼不一致';
-
-  @override
-  String get pairCodeNoNumberThere => '對方螢幕上沒有號碼？先加入，再在聊天裡核對安全碼。';
-
-  @override
   String get pairCodeNotAdded => '未新增。請對方再產生一組新的碼。';
+
+  @override
+  String get pairCodeEightDigits => '八位數字';
+
+  @override
+  String get pairCodeTypeTheEightDigits => '輸入對方唸出的八位數字。';
+
+  @override
+  String get pairCodeOldCode => '這個碼來自較舊的 Kryfo。兩支手機都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeOldCodeDesk => '這個碼來自較舊的 Kryfo。兩台裝置都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeBothNeed06 => '兩支手機都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeBothNeed06Desk => '兩台裝置都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeWaitingForThem => '正在等待對方…';
+
+  @override
+  String get pairCodeStillWaiting => '還在等待。如果對方螢幕顯示輸入了錯誤的碼，請一起核對數字。';
+
+  @override
+  String get pairCodeUnanswered => '沒有收到回應。請和對方核對碼，然後重新輸入。';
+
+  @override
+  String get pairCodeTooManyTries => '這個碼已經試了三次。請對方重新產生一個。';
+
+  @override
+  String get pairCodeRanOut => '這個碼已過期。請對方重新產生一個。';
+
+  @override
+  String get pairCodeMatched => '碼已相符。要互相新增嗎？';
+
+  @override
+  String get pairCodeNotThem => '不是對方';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut =>
+      '大聲唸出八位數字，你們就能互相新增。不需要交換其他任何東西。';
+
+  @override
+  String get pairCodePanelOrMakeACode => '或產生一組配對碼唸給對方';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      '對方開啟 Kryfo，點「新增」，選擇「配對碼」，再輸入這八位數字。下一個人請再產生一組新的。';
+
+  @override
+  String get pairCodePanelWrongTyped => '對方輸入了錯誤的碼。請再慢慢唸一遍。';
+
+  @override
+  String get pairCodePanelThreeWrong => '錯誤的碼已輸入三次，這個碼已停止使用。請產生一個新的。';
+
+  @override
+  String get pairCodePanelNotAdded => '未新增。對方準備好時再產生一組新的碼。';
 
   @override
   String get panicSetupThoseWereDifferentFrom => '兩次不一樣。從頭再來。';
@@ -16712,13 +16771,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pairCodePanelYourInviteIsNot => '你的邀請還沒準備好';
 
   @override
-  String get pairCodePanelReadSixDigitsOut => '大聲唸出六位數字，對方就能新增你。不需要交換其他任何東西。';
-
-  @override
   String get pairCodePanelWorking => '處理中';
-
-  @override
-  String get pairCodePanelOrMakeASix => '或產生一組六位數的配對碼唸給對方';
 
   @override
   String get pairCodePanelBurned => '這個碼已經焚毀。對方準備好時再產生一個新的。';
@@ -16733,16 +16786,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pairCodePanelTheyTapAddChoose => '對方點「新增」，選擇「配對碼」，然後輸入這些數字。';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      '對方開啟 Kryfo，點「新增」，選擇「配對碼」，再輸入這六位數字。下一個人請再產生一組新的。';
-
-  @override
-  String get pairCodePanelYourWords => '你的三個詞';
-
-  @override
-  String get pairCodePanelAcceptOnce => '對方加入你之後，你會收到請求。等對方說四組數字都一致，再接受。';
 
   @override
   String pinsPinnedMessages(Object count) {

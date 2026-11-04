@@ -142,9 +142,11 @@ func (o owned) fresh(in *ast.FuncDecl, e ast.Expr) bool {
 		return v.Name == "nil" || o.assigned(in, v.Name)
 	case *ast.CallExpr:
 		// a secret is written into fresh c memory without a go string
-		if isC(v.Fun, "CString") || isC(v.Fun, "malloc") {
+		// (malloc, or C.CBytes, malloc'd as C.CString is)
+		if isC(v.Fun, "CString") || isC(v.Fun, "malloc") || isC(v.Fun, "CBytes") {
 			return true
 		}
+		// (*C.char)(x) is as fresh as x
 		if isCharConv(v.Fun) && len(v.Args) == 1 {
 			return o.fresh(in, v.Args[0])
 		}

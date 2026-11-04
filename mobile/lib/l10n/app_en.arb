@@ -5310,10 +5310,6 @@
   "@pairCodeEnterOne": {
     "description": "screens/pair_code_screen.dart"
   },
-  "pairCodeSixDigits": "Six digits",
-  "@pairCodeSixDigits": {
-    "description": "screens/pair_code_screen.dart"
-  },
   "pairCodeLooking": "Looking…",
   "@pairCodeLooking": {
     "description": "screens/pair_code_screen.dart"
@@ -5334,41 +5330,93 @@
   "@pairCodeFailed": {
     "description": "widgets/pair_join.dart, widgets/pair_code_panel.dart: sharing or looking up a pairing code failed for another reason"
   },
-  "pairCodeTypeTheSixDigits": "Type the six digits they read out.",
-  "@pairCodeTypeTheSixDigits": {
-    "description": "screens/pair_code_screen.dart"
-  },
   "pairCodeAddThem": "Add them",
   "@pairCodeAddThem": {
     "description": "screens/pair_code_screen.dart"
-  },
-  "pairCodeUsedTwice": "This code was used twice. Ask for a new one.",
-  "@pairCodeUsedTwice": {
-    "description": "widgets/pair_join.dart: the code's address holds more than one invite, so nothing is added"
   },
   "pairCodeKeyNumber": "Key number",
   "@pairCodeKeyNumber": {
     "description": "widgets/pair_join.dart: the label over the key number on both pair-code screens: 20 digits made from the key the chat will use"
   },
-  "pairCodeNumberMatches": "Check all four groups match on both phones",
-  "@pairCodeNumberMatches": {
-    "description": "widgets/pair_join.dart: under the key number on both pair-code screens: all four groups must be the same on the two phones"
-  },
-  "pairCodeNumberMatchesDesk": "Check all four groups match on both devices",
-  "@pairCodeNumberMatchesDesk": {
-    "description": "pairCodeNumberMatches as a computer shows it (linux and windows)"
-  },
-  "pairCodeNumberDiffers": "The number is different",
-  "@pairCodeNumberDiffers": {
-    "description": "widgets/pair_join.dart: button under Add: the numbers on the two phones are not the same; nothing is added"
-  },
-  "pairCodeNoNumberThere": "No number on their screen? Add them, then compare the safety number in your chat.",
-  "@pairCodeNoNumberThere": {
-    "description": "widgets/pair_join.dart: small line at the bottom of the card: an older Kryfo on the other phone shows no key number"
-  },
   "pairCodeNotAdded": "Not added. Ask them for a new code.",
   "@pairCodeNotAdded": {
     "description": "widgets/pair_join.dart: status line after Not them"
+  },
+  "pairCodeEightDigits": "Eight digits",
+  "@pairCodeEightDigits": {
+    "description": "pair code join field: what was typed is not eight digits"
+  },
+  "pairCodeTypeTheEightDigits": "Type the eight digits they read out.",
+  "@pairCodeTypeTheEightDigits": {
+    "description": "pair code join screen, above the field"
+  },
+  "pairCodeOldCode": "That code is from an older Kryfo. Both phones need Kryfo 0.6 or newer.",
+  "@pairCodeOldCode": {
+    "description": "pair code join: six digits were typed, the code of a Kryfo before 0.6, which cannot pair with this one"
+  },
+  "pairCodeOldCodeDesk": "That code is from an older Kryfo. Both devices need Kryfo 0.6 or newer.",
+  "@pairCodeOldCodeDesk": {
+    "description": "pairCodeOldCode as a computer shows it (linux and windows)"
+  },
+  "pairCodeBothNeed06": "Both phones need Kryfo 0.6 or newer.",
+  "@pairCodeBothNeed06": {
+    "description": "pair code screens, a small line under the code or the field: a pair code works only between two phones on Kryfo 0.6 or newer"
+  },
+  "pairCodeBothNeed06Desk": "Both devices need Kryfo 0.6 or newer.",
+  "@pairCodeBothNeed06Desk": {
+    "description": "pairCodeBothNeed06 as a computer shows it (linux and windows)"
+  },
+  "pairCodeWaitingForThem": "Waiting for them…",
+  "@pairCodeWaitingForThem": {
+    "description": "pair code join: the code was found and answered, waiting for the other side to confirm it"
+  },
+  "pairCodeStillWaiting": "Still waiting. If their screen says a wrong code was typed, check the digits together.",
+  "@pairCodeStillWaiting": {
+    "description": "pair code join: waited a while for the other side; a wrong code shows a warning on their screen"
+  },
+  "pairCodeUnanswered": "No answer came. Check the code with them and type it again.",
+  "@pairCodeUnanswered": {
+    "description": "pair code join: the other side never confirmed the code (a wrong code, or they left the screen)"
+  },
+  "pairCodeTooManyTries": "This code was tried three times. Ask them for a new one.",
+  "@pairCodeTooManyTries": {
+    "description": "pair code join: this code was used for three tries, the limit; the other side has to make a new one"
+  },
+  "pairCodeRanOut": "That code ran out. Ask them for a new one.",
+  "@pairCodeRanOut": {
+    "description": "pair code join: the code's ten minutes are over"
+  },
+  "pairCodeMatched": "The code matched. Add each other?",
+  "@pairCodeMatched": {
+    "description": "pair code, both sides: the code matched on both phones and the other person's name shows above; nothing is added until Add is tapped"
+  },
+  "pairCodeNotThem": "Not them",
+  "@pairCodeNotThem": {
+    "description": "pair code, both sides: under Add, the name shown is not who they expected; nothing is added"
+  },
+  "pairCodePanelReadEightDigitsOut": "Read eight digits out loud and you add each other. Nothing else needs to change hands.",
+  "@pairCodePanelReadEightDigitsOut": {
+    "description": "pair code share screen, above the button"
+  },
+  "pairCodePanelOrMakeACode": "Or make a code to read out",
+  "@pairCodePanelOrMakeACode": {
+    "description": "pair code share button, under the qr on the invite page and on the pairing screen"
+  },
+  "pairCodePanelTheyOpenKryfoEight": "They open Kryfo, tap add, choose pairing code and type these eight digits. Make a new one for the next person.",
+  "@pairCodePanelTheyOpenKryfoEight": {
+    "description": "pair code share screen, under the code"
+  },
+  "pairCodePanelWrongTyped": "A wrong code was typed. Read it out again, slowly.",
+  "@pairCodePanelWrongTyped": {
+    "description": "pair code share screen: the other phone typed a wrong code (one of three tries)"
+  },
+  "pairCodePanelThreeWrong": "A wrong code was typed three times, so this one stopped. Make a new one.",
+  "@pairCodePanelThreeWrong": {
+    "description": "pair code share screen: a wrong code was typed three times, the code no longer works"
+  },
+  "pairCodePanelNotAdded": "Not added. Make a new code when they're ready.",
+  "@pairCodePanelNotAdded": {
+    "description": "pair code share screen: the person tapped Not them; nothing was added"
   },
   "panicSetupThoseWereDifferentFrom": "Those were different. From the top.",
   "@panicSetupThoseWereDifferentFrom": {
@@ -8446,16 +8494,8 @@
   "@pairCodePanelYourInviteIsNot": {
     "description": "widgets/pair_code_panel.dart"
   },
-  "pairCodePanelReadSixDigitsOut": "Read six digits out loud and they can add you. Nothing else needs to change hands.",
-  "@pairCodePanelReadSixDigitsOut": {
-    "description": "widgets/pair_code_panel.dart"
-  },
   "pairCodePanelWorking": "Working",
   "@pairCodePanelWorking": {
-    "description": "widgets/pair_code_panel.dart"
-  },
-  "pairCodePanelOrMakeASix": "Or make a six digit code to read out",
-  "@pairCodePanelOrMakeASix": {
     "description": "widgets/pair_code_panel.dart"
   },
   "pairCodePanelBurned": "That code burned. Make a new one when they're ready.",
@@ -8481,18 +8521,6 @@
   "pairCodePanelTheyTapAddChoose": "They tap add, choose code, and type these.",
   "@pairCodePanelTheyTapAddChoose": {
     "description": "widgets/pair_code_panel.dart"
-  },
-  "pairCodePanelTheyOpenKryfoTap": "They open Kryfo, tap add, choose pairing code and type these six digits. Make a new one for the next person.",
-  "@pairCodePanelTheyOpenKryfoTap": {
-    "description": "widgets/pair_code_panel.dart"
-  },
-  "pairCodePanelYourWords": "Your three words",
-  "@pairCodePanelYourWords": {
-    "description": "widgets/pair_join.dart: label over the sharer's own three words under the six digit code"
-  },
-  "pairCodePanelAcceptOnce": "Their request comes once they add you. Accept it only once they say all four groups matched.",
-  "@pairCodePanelAcceptOnce": {
-    "description": "widgets/pair_code_panel.dart: under the sharer's key number while a code is live: the joiner's request arrives after they add"
   },
   "pinsPinnedMessages": "Pinned messages · {count}",
   "@pinsPinnedMessages": {
