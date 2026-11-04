@@ -24,6 +24,7 @@ import 'video_bubble.dart' show openReceivedFile;
 import 'video_frame.dart';
 import '../lock_guard.dart' show LockGuard, lockGuard;
 import '../dlog.dart';
+import '../phone_seal.dart' show withFileKey;
 
 const _channel = MethodChannel('kryfo/video');
 
@@ -175,9 +176,10 @@ class _VideoViewerState extends State<_VideoViewer>
   Future<void> _open() async {
     Map<String, dynamic>? m;
     try {
-      m = await _channel.invokeMapMethod<String, dynamic>('open', {
-        'path': widget.path,
-      });
+      m = await _channel.invokeMapMethod<String, dynamic>(
+        'open',
+        withFileKey(widget.path, {'path': widget.path}),
+      );
     } catch (e) {
       dlog('video: not opened (${e.runtimeType})');
     }

@@ -81,7 +81,15 @@ class _Tags implements HaloDb {
   @override
   Future<ChatShots> shotsOf(String peer) async => const ChatShots();
   @override
+  HaloContainer get container => HaloContainer.everyday;
+  @override
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
+// the same, in the hidden chats' own database
+class _VaultTags extends _Tags {
+  @override
+  HaloContainer get container => HaloContainer.vault;
 }
 
 _Shade _start({Map<String, Object> prefs = const {}, bool quiet = false}) {
@@ -147,6 +155,34 @@ void main() {
       msgUid: 'u1',
     );
     expect(shade.shown.single.d.largeIcon, isNull);
+  });
+
+  test('a hidden chat rings without its name or words, previews on', () async {
+    final shade = _start(prefs: {'notif_hide_content': false});
+    await const AppIo().notify(
+      title: 'Bob Marsh',
+      body: 'meet at the bridge at six',
+      payload: 'bob',
+      on: _VaultTags(),
+      msgUid: 'u1',
+    );
+    final n = shade.shown.single;
+    expect(n.title, 'Kryfo');
+    expect(n.body, l10n.notificationsNewMessage);
+    expect(n.d.ticker, l10n.notificationsNewMessage2);
+    final style = n.d.styleInformation as BigTextStyleInformation;
+    expect(style.bigText, l10n.notificationsNewMessage);
+    expect(style.contentTitle, 'Kryfo');
+    // an everyday one still shows what it said
+    await const AppIo().notify(
+      title: 'Bob Marsh',
+      body: 'hi',
+      payload: 'bob',
+      on: _Tags(),
+      msgUid: 'u2',
+    );
+    expect(shade.shown.last.title, 'Bob Marsh');
+    expect(shade.shown.last.body, 'hi');
   });
 
   test('a plain one says one line and nothing of anyone', () async {

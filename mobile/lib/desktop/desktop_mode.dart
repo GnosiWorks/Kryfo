@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // what shared code asks of the desktop, kept small: the phone's build
-// reaches this file and nothing else of lib/desktop
+// reaches this file and the seal (sealed_*.dart, phone_seal.dart) and
+// nothing else of lib/desktop
 import 'dart:async';
 import 'dart:isolate';
 
 import 'package:flutter/widgets.dart';
+
+import '../container.dart' show HaloContainer;
 
 /// true in the linux and windows app (main_desktop.dart sets it before
 /// anything runs). a plain flag, not Platform: the tests run on linux too
@@ -55,6 +58,14 @@ void Function(String id, String suffix, String key)? containerOpened;
 /// the database of container [id] closed
 void Function(String id)? containerClosed;
 
+/// container [c]'s database is open and its files are where its rows say:
+/// the phone seals what an older version left plain
+void Function(HaloContainer c)? containerSettled;
+
+/// true once a seal is over kryfo's files: the desktop's, or the phone's
+/// over its media folders
+bool filesSealed = false;
+
 /// the start's sweep of half-made containers is done: the desktop puts its
 /// numbered placeholders back
 void Function()? containersSwept;
@@ -64,9 +75,10 @@ void Function()? containersSwept;
 const rawFilesZoneKey = #kryfoRawFiles;
 
 /// [f] with File(path) as the disk holds it: a shred overwrites what is
-/// there, sealed or not. the same as [f] on the phone
-R rawFiles<R>(R Function() f) =>
-    onDesktop ? runZoned(f, zoneValues: {rawFilesZoneKey: true}) : f();
+/// there, sealed or not. the same as [f] where nothing is sealed
+R rawFiles<R>(R Function() f) => onDesktop || filesSealed
+    ? runZoned(f, zoneValues: {rawFilesZoneKey: true})
+    : f();
 
 /// the engine's own folder for a start in [docs]: on desktop one in memory,
 /// whose files are kept sealed between runs

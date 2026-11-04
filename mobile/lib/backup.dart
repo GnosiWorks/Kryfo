@@ -48,7 +48,14 @@ import 'backup_stream.dart';
 import 'dart:math';
 import 'l10n/l10n.dart';
 import 'desktop/desktop_mode.dart'
-    show containerClosed, containerOpened, engineDir, runIsolated;
+    show
+        containerClosed,
+        containerOpened,
+        engineDir,
+        filesSealed,
+        onDesktop,
+        rawFiles,
+        runIsolated;
 
 const _kDbPassphrase = 'halo.db.passphrase';
 const _secureStorage = secureStore;
@@ -997,7 +1004,7 @@ Future<String> _carryHidden(
     files,
     sources,
     docs,
-    vault.container.suffix,
+    vault.container.folderSuffix,
     under: '$kHiddenDir/',
   );
   return key;
@@ -1284,7 +1291,7 @@ Future<BackupDraft> _draftQuiet(
     p.join(stage, 'onion.key'),
   ).writeAsBytes(_hex(onion.first['v'] as String), flush: true);
   for (final folder in _kCarried) {
-    final from = Directory(p.join(docs.path, '$folder${c.suffix}'));
+    final from = Directory(p.join(docs.path, '$folder${c.folderSuffix}'));
     if (!await from.exists()) continue;
     await for (final e in from.list(recursive: true, followLinks: false)) {
       if (e is! File) continue;
@@ -1543,7 +1550,17 @@ Future<void> _landStaged(
     if (hiddenPart(f.name) != null || !restorableName(f.name)) continue;
     final dest = File(p.join(root, f.name));
     await dest.parent.create(recursive: true);
-    await File(p.join(stage.path, f.name)).rename(dest.path);
+    await _moveIn(File(p.join(stage.path, f.name)), dest.path);
+  }
+}
+
+// a restored file into place. on the phone it lands as staged, before its
+// database opens under the restored key, and that open seals it
+Future<void> _moveIn(File src, String dest) async {
+  if (filesSealed && !onDesktop) {
+    rawFiles(() => File(src.path).renameSync(dest));
+  } else {
+    await src.rename(dest);
   }
 }
 
@@ -1630,7 +1647,7 @@ Future<void> landHidden(
     final c = into;
     // on desktop the hidden chats' files are sealed under their own key on
     // the way in, before anything opens their database
-    containerOpened?.call(c.id, c.suffix, "x'$key'");
+    containerOpened?.call(c.id, c.folderSuffix, "x'$key'");
     keyed = c;
     for (final f in manifest['files'] as List) {
       final rest = hiddenPart((f as Map<String, dynamic>)['name'] as String);
@@ -1642,7 +1659,11 @@ Future<void> landHidden(
         final cut = rest.indexOf('/');
         final folder = cut <= 0 ? '' : rest.substring(0, cut);
         if (folder != 'media' && folder != 'wallpapers') continue;
-        dest = p.join(docs, '$folder${c.suffix}', rest.substring(cut + 1));
+        dest = p.join(
+          docs,
+          '$folder${c.folderSuffix}',
+          rest.substring(cut + 1),
+        );
       }
       await File(dest).parent.create(recursive: true);
       await File(p.join(from, rest)).rename(dest);
@@ -1681,9 +1702,8 @@ Future<void> _landInDecoy(
       // not there: nothing to drop
     }
   }
-  for (final folder in ['media', 'wallpapers']) {
-    final d = Directory(p.join(docs, '$folder${c.suffix}'));
-    await shredTree(d.path);
+  for (final name in c.folderNames) {
+    await shredTree(p.join(docs, name));
   }
   for (final f in manifest['files'] as List) {
     final name = (f as Map<String, dynamic>)['name'] as String;
@@ -1699,12 +1719,12 @@ Future<void> _landInDecoy(
       final slash = name.indexOf('/');
       dest = p.join(
         docs,
-        '${name.substring(0, slash)}${c.suffix}',
+        '${name.substring(0, slash)}${c.folderSuffix}',
         name.substring(slash + 1),
       );
     }
     await File(dest).parent.create(recursive: true);
-    await src.rename(dest);
+    await _moveIn(src, dest);
   }
   await _secureStorage.write(
     key: c.keyName!,
