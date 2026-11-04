@@ -274,6 +274,20 @@ extension AppStateInvites on AppState {
       arrived();
       return;
     }
+    // a pairing's invite before the person's add: nothing opens there and
+    // nothing is spent. not acked either, so it comes again once the add
+    // listens on the invite
+    final held = await db.query(
+      'hellos',
+      columns: ['peer'],
+      where: 'ident = ? AND way = ? AND invite_id = ?',
+      whereArgs: [ident, kHelloPair, inviteId],
+      limit: 1,
+    );
+    if (held.isNotEmpty) {
+      firstFails.note('held');
+      return;
+    }
     // my one-time invite inside a hello: only the owner it went to opens
     // on it, anyone else is dropped before decrypt and spends nothing
     final out = await db.query(
@@ -398,6 +412,7 @@ extension AppStateInvites on AppState {
       where: 'way = ? AND at < ?',
       whereArgs: [kHelloIn, now - (kOneTimeHours + kSkewHours) * 3600 * 1000],
     );
+    await _dropPairsHeld(db, nowMs: nowMs);
     await _listenMyInvites(db, nowMs: nowMs);
     // my groups' admins hear a roster invite made, and the pairs it makes
     // are owed their hellos
@@ -455,9 +470,19 @@ extension AppStateInvites on AppState {
   Future<void> _listenMyInvites(DatabaseExecutor db, {int? nowMs}) async {
     final h = unixHours(nowMs);
     final keys = await fcKeysOf(db, kMainIdent);
+    // a pairing's invite held for the person's add is not listened on yet
+    final held = {
+      for (final r in await db.query(
+        'hellos',
+        columns: ['invite_id'],
+        where: 'ident = ? AND way = ?',
+        whereArgs: [kMainIdent, kHelloPair],
+      ))
+        r['invite_id'] as String,
+    };
     for (final r in await invitesOf(db, kMainIdent)) {
       final sk = keys[r.id];
-      if (sk == null || !r.openAt(h)) continue;
+      if (sk == null || !r.openAt(h) || held.contains(r.id)) continue;
       final res = await engine.subscribeFcKey(kMainIdent, r.id, _hexOf(sk));
       if (res != 'ok') dlog('invites: not listened on ($res)');
     }

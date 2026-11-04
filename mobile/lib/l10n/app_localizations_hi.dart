@@ -4308,9 +4308,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get pairCodeEnterOne => 'कोड डालें';
 
   @override
-  String get pairCodeSixDigits => 'छह अंक';
-
-  @override
   String get pairCodeLooking => 'ढूँढ रहे हैं…';
 
   @override
@@ -4329,34 +4326,83 @@ class AppLocalizationsHi extends AppLocalizations {
   String get pairCodeFailed => 'यह नहीं हुआ। दोबारा कोशिश करें।';
 
   @override
-  String get pairCodeTypeTheSixDigits => 'वे जो छह अंक पढ़कर सुनाएँ, वे लिखें।';
-
-  @override
   String get pairCodeAddThem => 'जोड़ें';
-
-  @override
-  String get pairCodeUsedTwice => 'यह कोड दो बार इस्तेमाल हुआ। नया कोड माँगें।';
 
   @override
   String get pairCodeKeyNumber => 'कुंजी नंबर';
 
   @override
-  String get pairCodeNumberMatches =>
-      'देखें कि दोनों फ़ोन पर चारों समूह एक जैसे हैं';
-
-  @override
-  String get pairCodeNumberMatchesDesk =>
-      'देखें कि दोनों डिवाइस पर चारों समूह एक जैसे हैं';
-
-  @override
-  String get pairCodeNumberDiffers => 'नंबर अलग है';
-
-  @override
-  String get pairCodeNoNumberThere =>
-      'उनकी स्क्रीन पर कोई नंबर नहीं? उन्हें जोड़ें, फिर अपनी चैट में सुरक्षा नंबर मिलाएँ।';
-
-  @override
   String get pairCodeNotAdded => 'नहीं जोड़ा गया। उनसे नया कोड माँगें।';
+
+  @override
+  String get pairCodeEightDigits => 'आठ अंक';
+
+  @override
+  String get pairCodeTypeTheEightDigits =>
+      'वे जो आठ अंक पढ़कर सुनाएँ, वे लिखें।';
+
+  @override
+  String get pairCodeOldCode =>
+      'यह कोड पुराने Kryfo का है। दोनों फ़ोन पर Kryfo 0.6 या नया चाहिए।';
+
+  @override
+  String get pairCodeOldCodeDesk =>
+      'यह कोड पुराने Kryfo का है। दोनों डिवाइस पर Kryfo 0.6 या नया चाहिए।';
+
+  @override
+  String get pairCodeBothNeed06 => 'दोनों फ़ोन पर Kryfo 0.6 या नया चाहिए।';
+
+  @override
+  String get pairCodeBothNeed06Desk =>
+      'दोनों डिवाइस पर Kryfo 0.6 या नया चाहिए।';
+
+  @override
+  String get pairCodeWaitingForThem => 'उनका इंतज़ार है…';
+
+  @override
+  String get pairCodeStillWaiting =>
+      'अभी भी इंतज़ार है। अगर उनकी स्क्रीन पर ग़लत कोड लिखे जाने की बात दिखे, तो अंक साथ मिलकर जाँचें।';
+
+  @override
+  String get pairCodeUnanswered =>
+      'कोई जवाब नहीं आया। उनके साथ कोड जाँचें और फिर से लिखें।';
+
+  @override
+  String get pairCodeTooManyTries =>
+      'यह कोड तीन बार आज़माया गया। उनसे नया कोड माँगें।';
+
+  @override
+  String get pairCodeRanOut =>
+      'उस कोड का समय ख़त्म हो गया। उनसे नया कोड माँगें।';
+
+  @override
+  String get pairCodeMatched => 'कोड मिल गया। एक-दूसरे को जोड़ें?';
+
+  @override
+  String get pairCodeNotThem => 'ये वो नहीं हैं';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut =>
+      'आठ अंक ज़ोर से पढ़ें और आप एक-दूसरे को जोड़ लेंगे। और कुछ लेने-देने की ज़रूरत नहीं।';
+
+  @override
+  String get pairCodePanelOrMakeACode => 'या पढ़कर सुनाने के लिए एक कोड बनाएँ';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      'वे Kryfo खोलें, जोड़ें पर टैप करें, जोड़ने का कोड चुनें और ये आठ अंक लिखें। अगले व्यक्ति के लिए नया कोड बनाएँ।';
+
+  @override
+  String get pairCodePanelWrongTyped =>
+      'ग़लत कोड लिखा गया। इसे फिर से धीरे-धीरे पढ़ें।';
+
+  @override
+  String get pairCodePanelThreeWrong =>
+      'तीन बार ग़लत कोड लिखा गया, इसलिए यह कोड रुक गया। नया बनाएँ।';
+
+  @override
+  String get pairCodePanelNotAdded =>
+      'नहीं जोड़ा गया। जब वे तैयार हों, नया कोड बनाएँ।';
 
   @override
   String get panicSetupThoseWereDifferentFrom =>
@@ -6738,15 +6784,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get pairCodePanelYourInviteIsNot => 'आपका आमंत्रण अभी तैयार नहीं है';
 
   @override
-  String get pairCodePanelReadSixDigitsOut =>
-      'छह अंक ज़ोर से पढ़ें और वे आपको जोड़ सकते हैं। और कुछ लेने-देने की ज़रूरत नहीं।';
-
-  @override
   String get pairCodePanelWorking => 'काम चल रहा है';
-
-  @override
-  String get pairCodePanelOrMakeASix =>
-      'या पढ़कर सुनाने के लिए छह अंकों का कोड बनाएँ';
 
   @override
   String get pairCodePanelBurned =>
@@ -6763,17 +6801,6 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get pairCodePanelTheyTapAddChoose =>
       'वे जोड़ें पर टैप करें, कोड चुनें, और ये लिखें।';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      'वे Kryfo खोलें, जोड़ें पर टैप करें, जोड़ने का कोड चुनें और ये छह अंक लिखें। अगले व्यक्ति के लिए नया कोड बनाएँ।';
-
-  @override
-  String get pairCodePanelYourWords => 'आपके तीन शब्द';
-
-  @override
-  String get pairCodePanelAcceptOnce =>
-      'उनके आपको जोड़ते ही उनका अनुरोध आएगा। उसे तभी स्वीकार करें जब वे कहें कि चारों समूह मेल खा गए।';
 
   @override
   String pinsPinnedMessages(Object count) {
