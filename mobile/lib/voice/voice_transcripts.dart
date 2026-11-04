@@ -104,6 +104,8 @@ class VoiceTranscripts extends ChangeNotifier {
       } catch (_) {
         _settings = const VoiceTxSettings();
       }
+      // made after the vault opened, no switch heard: catch up before a read
+      await dropAll();
       try {
         for (final m in await models.models()) {
           if (m.id == kVoiceModelId) _size = m.size;

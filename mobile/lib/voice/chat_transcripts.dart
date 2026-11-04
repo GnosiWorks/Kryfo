@@ -74,8 +74,8 @@ class ChatTranscripts extends ChangeNotifier {
     final k = await hub.kept(chatId);
     _keptReading = false;
     if (_gone || hub.wipes != w || hub.locked || !hub.on) return;
-    // one made while it was read is newer
-    _kept = {...k, ..._kept};
+    // one made while it was read is newer; one that went meanwhile stays gone
+    _kept = {...k, ..._kept}..removeWhere((u, _) => _went.contains(u));
     _keptRead = true;
     notifyListeners();
   }

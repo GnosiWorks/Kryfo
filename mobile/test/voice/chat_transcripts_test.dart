@@ -280,6 +280,22 @@ void main() {
     expect(f.runner.jobs, hasLength(2));
   });
 
+  test('made after an off: what a container kept before it goes', () async {
+    // turned off while the vault was shut, then the app started again: the
+    // vault opens before any chat, so no session switch is heard
+    final store = MemoryVoiceTxStore(const VoiceTxSettings(offs: 1))
+      ..rows['heron'] = {
+        'u9': const KeptTranscript(
+          lang: 'en',
+          model: 'base',
+          pieces: [TxPiece(0, 1, ' from before the off')],
+        ),
+      };
+    await make(store: store);
+    expect(c.of('u9').text, isEmpty);
+    expect(await store.kept('heron'), isEmpty);
+  });
+
   test('a chat that closes stops its run and keeps nothing', () async {
     await make();
     final c2 = ChatTranscripts(f.hub, 'heron');
