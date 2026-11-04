@@ -229,6 +229,11 @@ class ArrivalIo implements AppIo {
 
   @override
   Future<List<String>> sessionAddresses() async => sessions;
+  // the key each session runs on, 'x-<peer>' unless set
+  final sessionKeys = <String, String>{};
+  @override
+  Future<String?> sessionXPub(String peer) async =>
+      sessionKeys[peer] ?? 'x-$peer';
   // sessions let go of
   final dropped = <String>[];
   @override

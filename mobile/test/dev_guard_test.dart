@@ -147,6 +147,8 @@ class _Io implements AppIo {
   @override
   Future<List<String>> sessionAddresses() async => sessions;
   @override
+  Future<String?> sessionXPub(String peer) async => 'x-$peer';
+  @override
   Future<({String haloId, String plain, UnwrappedMessage env})?>
   openFirstContact(String cipher) async => firstContact;
   // whether a session is held with whoever is asked about
