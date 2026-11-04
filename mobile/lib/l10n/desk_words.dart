@@ -21,6 +21,14 @@ const deskWordKeys = [
   'chatJustForYouNever',
   'chatEveryMessageHereIs',
   'chatAlbumItDisappearsWithNo',
+  'chatShotsWhenTheyUpdate',
+  'roomShotsBlocked',
+  'roomShotsAlwaysOn',
+  'groupShotsBlocksAll',
+  'groupShotsOnForAll',
+  'groupShotsOnAdminOnly',
+  'groupShotsBlockedHere',
+  'groupShotsStarted',
   'contactStaysOnThisPhone',
   'contactMessagesAndContactGone',
   'contactEveryMessageAndThe',
@@ -155,6 +163,22 @@ extension DeskWords on AppLocalizations {
       onDesktop ? chatJustForYouNeverDesk : chatJustForYouNever;
   String get chatEveryMessageHereIsShown =>
       onDesktop ? chatEveryMessageHereIsDesk : chatEveryMessageHereIs;
+  String get roomShotsBlockedShown =>
+      onDesktop ? roomShotsBlockedDesk : roomShotsBlocked;
+  String get roomShotsAlwaysOnShown =>
+      onDesktop ? roomShotsAlwaysOnDesk : roomShotsAlwaysOn;
+  String get groupShotsBlocksAllShown =>
+      onDesktop ? groupShotsBlocksAllDesk : groupShotsBlocksAll;
+  String get groupShotsOnForAllShown =>
+      onDesktop ? groupShotsOnForAllDesk : groupShotsOnForAll;
+  String get groupShotsOnAdminOnlyShown =>
+      onDesktop ? groupShotsOnAdminOnlyDesk : groupShotsOnAdminOnly;
+  String get groupShotsBlockedHereShown =>
+      onDesktop ? groupShotsBlockedHereDesk : groupShotsBlockedHere;
+  String get groupShotsStartedShown =>
+      onDesktop ? groupShotsStartedDesk : groupShotsStarted;
+  String get chatShotsWhenTheyUpdateShown =>
+      onDesktop ? chatShotsWhenTheyUpdateDesk : chatShotsWhenTheyUpdate;
   String get chatAlbumItDisappearsWithNoShown =>
       onDesktop ? chatAlbumItDisappearsWithNoDesk : chatAlbumItDisappearsWithNo;
   String get contactStaysOnThisPhoneShown =>

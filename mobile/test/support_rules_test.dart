@@ -318,6 +318,8 @@ class _Io implements AppIo {
   @override
   Future<List<String>> sessionAddresses() async => const [];
   @override
+  Future<String?> sessionXPub(String peer) async => null;
+  @override
   Future<({String haloId, String plain, UnwrappedMessage env})?>
   openFirstContact(String cipher) async => firstContact;
   @override

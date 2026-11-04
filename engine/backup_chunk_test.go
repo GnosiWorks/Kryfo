@@ -2,13 +2,15 @@ package main
 
 import (
 	"bytes"
+	"encoding/hex"
 	"testing"
 )
 
 // the record cipher underneath the streamed backup: a record opens only at
 // its own index with its own type, and a changed byte fails.
 func TestBackupChunkRoundTrip(t *testing.T) {
-	gcm, err := backupGCM("00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff")
+	key, _ := hex.DecodeString("00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff")
+	gcm, err := backupGCM(key)
 	if err != nil {
 		t.Fatal(err)
 	}

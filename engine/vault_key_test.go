@@ -11,11 +11,11 @@ import (
 func TestVaultKeyCost(t *testing.T) {
 	salt := bytes.Repeat([]byte{7}, 16)
 	a, ok := vaultKey([]byte("four random words here"), salt, 15)
-	if !ok || len(a) != 64 {
-		t.Fatalf("no key: %q", a)
+	if !ok || len(a) != 32 {
+		t.Fatalf("no key: %x", a)
 	}
 	b, _ := vaultKey([]byte("four random words here"), salt, 16)
-	if a == b {
+	if bytes.Equal(a, b) {
 		t.Fatal("the cost does not change the key")
 	}
 	for _, n := range []int{14, 21} {

@@ -1619,8 +1619,6 @@ void main() {
       'pq_restarts',
       // the identity's own profile photo
       'my_photo',
-      // the heal nonces seen, per identity
-      'heal_nonces',
     };
     final src = [
       'lib/app/database.dart',

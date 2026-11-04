@@ -8,7 +8,6 @@ package main
 import "C"
 
 import (
-	"encoding/hex"
 	"unsafe"
 
 	"golang.org/x/crypto/scrypt"
@@ -19,29 +18,30 @@ const (
 	vaultLogNMax = 20
 )
 
-func vaultKey(pass, salt []byte, logN int) (string, bool) {
+// the key's bytes, which the caller clears
+func vaultKey(pass, salt []byte, logN int) ([]byte, bool) {
 	if logN < vaultLogNMin || logN > vaultLogNMax || len(salt) != 16 {
-		return "", false
+		return nil, false
 	}
 	key, err := scrypt.Key(pass, salt, 1<<logN, 8, 1, 32)
 	if err != nil {
-		return "", false
+		return nil, false
 	}
-	out := hex.EncodeToString(key)
-	clear(key)
-	return out, true
+	return key, true
 }
 
-// salt is exactly 16 bytes. returns the key as hex, or "error".
+// salt is exactly 16 bytes. returns the key as hex, or "error". the
+// passphrase and the key are cleared here
 //
 //export HaloVaultKey
 func HaloVaultKey(cPassphrase *C.char, cSalt *C.uchar, logN C.int) *C.char {
 	salt := C.GoBytes(unsafe.Pointer(cSalt), 16)
-	pass := []byte(goStr(cPassphrase))
+	pass := goSecret(cPassphrase)
 	k, ok := vaultKey(pass, salt, int(logN))
 	clear(pass)
 	if !ok {
 		return C.CString("error")
 	}
-	return C.CString(k)
+	defer clear(k)
+	return cHexSecret(k)
 }

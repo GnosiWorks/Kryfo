@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'dart:math' show Random;
 import 'dart:typed_data';
 
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'invites.dart' show bundleBlock, unixHours;
@@ -46,6 +47,11 @@ const kHealLineRepair = 2;
 /// set as a restore lands, with when its file was made (0 when unknown),
 /// and cleared once the next start ran what follows a restore (8)
 const kRestoreAfterPref = 'restore.after';
+
+/// when this phone's last restore landed. what the relays still hold from
+/// before it is refused: the nonces and the hellos seen went back to the
+/// file's, and the restore sends its own heals
+const kRestoreCutPref = 'restore.cut';
 
 /// a restore cuts every linked device off before the first seal (linked
 /// step 7, D4 and B2): their sessions (device 2 and up), the own device
@@ -135,6 +141,9 @@ enum HealRefused {
   stale,
   // a nonce seen already
   replay,
+  // issued before this phone's restore, or before the last heal taken from
+  // them
+  older,
 }
 
 /// 3.8's checks 2 to 4 on a parsed heal (1, 3's signature and 6 are the
@@ -144,6 +153,8 @@ HealRefused? checkHeal(
   required List<int> held,
   required List<int> mine,
   required int nowMs,
+  int? restoredAt,
+  int? lastIssued,
 }) {
   if (!_eq(h.identity, held)) return HealRefused.notTheirs;
   if (!_eq(h.peer, mine)) return HealRefused.notMine;
@@ -157,6 +168,11 @@ HealRefused? checkHeal(
       h.issued > now + kHealAhead.inHours) {
     return HealRefused.stale;
   }
+  // in hours, as issued: one in the hour of the restore is taken
+  if (restoredAt != null && h.issued < unixHours(restoredAt)) {
+    return HealRefused.older;
+  }
+  if (lastIssued != null && h.issued < lastIssued) return HealRefused.older;
   return null;
 }
 
@@ -180,18 +196,41 @@ Future<void> healTables(DatabaseExecutor db) async {
   await db.execute(
     'CREATE INDEX IF NOT EXISTS heal_lines_peer ON heal_lines (peer)',
   );
+  // peer: whose heal it was, so the nonce moves with their chat
   await db.execute('''
     CREATE TABLE IF NOT EXISTS heal_nonces (
       ident INTEGER NOT NULL,
       nonce TEXT NOT NULL,
       at INTEGER NOT NULL,
+      peer TEXT,
       PRIMARY KEY (ident, nonce)
     )
   ''');
 }
 
-/// the same, at every open: only what is missing is made, so a second
-/// open writes nothing
+// what a file made before them lacks: the nonce's peer, and the last heal
+// taken on the contact's row (issued, in unix hours)
+Future<void> _healColumns(DatabaseExecutor db) async {
+  for (final (table, col, sql) in const [
+    ('heal_nonces', 'peer', 'ALTER TABLE heal_nonces ADD COLUMN peer TEXT'),
+    (
+      'contacts',
+      'heal_last',
+      'ALTER TABLE contacts ADD COLUMN heal_last INTEGER',
+    ),
+  ]) {
+    final cols = await db.rawQuery("PRAGMA table_info('$table')");
+    if (cols.isEmpty || cols.any((c) => c['name'] == col)) continue;
+    try {
+      await db.execute(sql);
+    } catch (e) {
+      if (!'$e'.contains('duplicate column name')) rethrow;
+    }
+  }
+}
+
+/// the same, at every open, with the columns a file made before them
+/// lacks: only what is missing is made, so a second open writes nothing
 Future<void> healTablesAtOpen(DatabaseExecutor db) async {
   final have = {
     for (final r in await db.rawQuery(
@@ -201,6 +240,36 @@ Future<void> healTablesAtOpen(DatabaseExecutor db) async {
       r['name'] as String,
   };
   if (have.length < 3) await healTables(db);
+  await _healColumns(db);
+}
+
+/// when this phone's last restore landed, null when it never had one
+Future<int?> restoredAt() async =>
+    (await SharedPreferences.getInstance()).getInt(kRestoreCutPref);
+
+/// the issued hour of the last heal taken from [peer], null with none
+Future<int?> lastHealOf(DatabaseExecutor db, String peer) async {
+  final r = await db.query(
+    'contacts',
+    columns: ['heal_last'],
+    where: 'halo_id = ?',
+    whereArgs: [peer],
+    limit: 1,
+  );
+  return r.isEmpty ? null : (r.first['heal_last'] as num?)?.toInt();
+}
+
+/// [issued] kept on [peer]'s row, where a move takes it too. it only
+/// moves on
+Future<void> keepLastHeal(DatabaseExecutor db, String peer, int issued) async {
+  final was = await lastHealOf(db, peer);
+  if (was != null && was >= issued) return;
+  await db.update(
+    'contacts',
+    {'heal_last': issued},
+    where: 'halo_id = ?',
+    whereArgs: [peer],
+  );
 }
 
 /// [nonce] noted for [ident]: false when it was seen in the last 17 days.
@@ -210,6 +279,7 @@ Future<bool> noteHealNonce(
   int ident,
   List<int> nonce, {
   required int nowMs,
+  String? peer,
 }) async {
   await db.delete(
     'heal_nonces',
@@ -226,7 +296,12 @@ Future<bool> noteHealNonce(
     limit: 1,
   );
   if (seen.isNotEmpty) return false;
-  await db.insert('heal_nonces', {'ident': ident, 'nonce': n, 'at': nowMs});
+  await db.insert('heal_nonces', {
+    'ident': ident,
+    'nonce': n,
+    'at': nowMs,
+    'peer': ?peer,
+  });
   return true;
 }
 

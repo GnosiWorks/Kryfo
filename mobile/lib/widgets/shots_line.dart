@@ -32,7 +32,7 @@ String? groupShotsLineText(int line, {required bool mine, String? name}) {
       mine
           ? l10n.groupShotsYouTurnedOnWait
           : l10n.groupShotsTheyTurnedOnWait(who),
-    kGroupLineStarted => l10n.groupShotsStarted,
+    kGroupLineStarted => l10n.groupShotsStartedShown,
     kGroupLinePaused => l10n.groupShotsPaused,
     kGroupLineOff => shotsLineText(on: false, mine: mine, name: who),
     _ => null,

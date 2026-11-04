@@ -4,10 +4,13 @@
 // still in it, the newest stamp first, on everyone's phone once it is on
 // and on for everyone once every member's app can block
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/chat_shots.dart';
 import 'package:kryfo/group_shots.dart';
+import 'package:kryfo/l10n/app_localizations.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/rooms.dart' show roomFrame;
 import 'package:kryfo/typing.dart'
@@ -412,5 +415,60 @@ void main() {
       );
       expect(groupShotsOwesCaps(const GroupShots(at: 9, known: true)), isFalse);
     });
+  });
+
+  // a member without 'gs' runs an older Kryfo or Kryfo on a computer:
+  // every line about them is true of both and says neither
+  test('no screenshot line asks a member without the block to update', () {
+    final arb =
+        jsonDecode(File('lib/l10n/app_en.arb').readAsStringSync())
+            as Map<String, dynamic>;
+    // the one an older app shows, which this version drops (kGroupNudgeWire)
+    const olderOnly = {'groupShotsOldNotice'};
+    final shots = [
+      for (final e in arb.entries)
+        if (!e.key.startsWith('@') &&
+            e.key.contains('Shots') &&
+            !olderOnly.contains(e.key))
+          e,
+    ];
+    expect(shots.length, greaterThan(40));
+    for (final e in shots) {
+      final v = (e.value as String).toLowerCase();
+      expect(v, isNot(contains('update')), reason: e.key);
+    }
+    // the lines about who is not covered yet name no app to update, in
+    // every language
+    const waiting = [
+      'groupShotsWaitingTitle',
+      'groupShotsWaitingHint',
+      'groupShotsNeedsUpdate',
+      'groupShotsStartsWhenAll',
+      'groupShotsWaitAdminOnly',
+      'groupShotsYouTurnedOnWait',
+      'groupShotsTheyTurnedOnWait',
+      'groupShotsPaused',
+      'groupShotsAddPauses',
+    ];
+    for (final f in Directory('lib/l10n').listSync()) {
+      if (!f.path.endsWith('.arb')) continue;
+      final m =
+          jsonDecode(File(f.path).readAsStringSync()) as Map<String, dynamic>;
+      for (final k in waiting) {
+        expect(m[k], isA<String>(), reason: '${f.path}: $k');
+        expect(m[k], isNot(contains('Kryfo')), reason: '${f.path}: $k');
+      }
+    }
+    final en = lookupAppLocalizations(const Locale('en'));
+    expect(
+      en.groupShotsNeedsUpdate,
+      'Can’t block screenshots on their device yet, or hasn’t been online '
+      'since',
+    );
+    for (final s in [en.groupShotsWaitingHint, en.groupShotsPaused]) {
+      for (final w in ['phone', 'computer', 'android', 'windows']) {
+        expect(s.toLowerCase(), isNot(contains(w)), reason: s);
+      }
+    }
   });
 }

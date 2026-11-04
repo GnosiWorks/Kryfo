@@ -18,6 +18,7 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_key.dart'
     show DevKey, currentDevKey, useDevKeysForTest;
 import 'package:kryfo/first_contact.dart' show firstFails;
+import 'package:kryfo/heal.dart' show kRestoreCutPref;
 import 'package:kryfo/identities.dart';
 import 'package:kryfo/invites.dart';
 import 'package:kryfo/l10n/l10n.dart';
@@ -312,8 +313,9 @@ class _Phone {
 
   // their hello to my invite [answers], as it comes off the relay
   Future<({String line, Uint8List hello, InviteRow once})> helloTo(
-    String answers,
-  ) async {
+    String answers, {
+    int? nowMs,
+  }) async {
     final (hello, once) = await makeHello(
       db,
       ss,
@@ -321,6 +323,7 @@ class _Phone {
       owner: signalSession.identity.public,
       fcPkOf: _fcPkOf,
       face: face,
+      nowMs: nowMs,
     );
     final wire = helloWireOf(hello, grindPow(helloPowSeed(hello), powBits));
     return (line: '${_sealOf(x)}|$wire', hello: hello, once: once);
@@ -628,6 +631,26 @@ void main() {
       isNull,
     );
     await _settle();
+  });
+
+  test('after a restore, a hello made before it from someone accepted on '
+      'that key is dropped; a new person\'s is filed', () async {
+    final main = await myMain();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    const hour = 3600 * 1000;
+    await (await SharedPreferences.getInstance()).setInt(kRestoreCutPref, now);
+    final p = await _Phone.make('known-before-one', 61);
+    await live.upsertContact(p.words, '', p.x);
+    live.people[p.words]!['ikey'] = p.keyHex;
+    final old = await p.helloTo(main.id, nowMs: now - 3 * hour);
+    await app.receiveRelay([(peer: 'f0:${main.id}', cipher: old.line)]);
+    await _settle();
+    expect(await hellosOf('in', p.keyHex), isEmpty);
+    final q = await _Phone.make('new-before-one', 63);
+    final h = await q.helloTo(main.id, nowMs: now - 3 * hour);
+    await app.receiveRelay([(peer: 'f0:${main.id}', cipher: h.line)]);
+    await _settle();
+    expect(await hellosOf('in', q.keyHex), hasLength(1));
   });
 
   test('a qr add with their hello waiting sends none of mine', () async {

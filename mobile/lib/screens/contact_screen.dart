@@ -718,7 +718,7 @@ class _ContactScreenState extends State<ContactScreen> {
                   icon: Icons.phonelink_lock_outlined,
                   label: l10n.chatBlockScreenshots,
                   hint: !_shots.peerCan
-                      ? l10n.chatShotsWhenTheyUpdate
+                      ? l10n.chatShotsWhenTheyUpdateShown
                       : (_shotsNow ?? _shots.on)
                       ? l10n.chatShotsBothPhones
                       : l10n.chatShotsBlocksBoth,

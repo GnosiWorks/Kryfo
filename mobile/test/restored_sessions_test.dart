@@ -40,6 +40,7 @@ import 'package:kryfo/invites.dart'
     show invitesOf, kInviteMain, kInviteOneTime, makeInvite;
 import 'package:kryfo/heal.dart'
     show
+        kRestoreCutPref,
         healDayOf,
         healOfWire,
         healWire,
@@ -1798,6 +1799,48 @@ void main() {
         ..sendModeForTest = 'fast';
       await later.takeHealForTest(p.xpub, good);
       expect(mem.rows('heal_lines'), hasLength(1), reason: 'replayed');
+    });
+
+    test('after a restore, a heal issued before it is refused and one after '
+        'it is taken', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      const hour = 3600 * 1000;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await (await SharedPreferences.getInstance()).setInt(
+        kRestoreCutPref,
+        now,
+      );
+      await comes(p, await theirHeal(p, nowMs: now - 2 * hour));
+      expect(mem.rows('heal_lines'), isEmpty);
+      expect(mem.rows('heal_nonces'), isEmpty);
+      await comes(p, await theirHeal(p));
+      expect(mem.rows('heal_lines'), hasLength(1));
+    });
+
+    test('the last heal taken stays on their row: one issued before it is '
+        'refused once its nonce is gone, as after a move', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      const hour = 3600 * 1000;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final older = await theirHeal(p, nowMs: now - 3 * hour);
+      await comes(p, await theirHeal(p));
+      final row = mem
+          .rows('contacts')
+          .singleWhere((r) => r['halo_id'] == p.name);
+      expect(row['heal_last'], now ~/ hour);
+      expect(mem.rows('heal_nonces').single['peer'], p.name);
+      await mem.delete('heal_nonces');
+      // a later start: the ten minutes between rebuilds are not what stops it
+      final later = AppState(io: io, router: router)
+        ..myId = 'me'
+        ..sendModeForTest = 'fast';
+      await later.takeHealForTest(p.xpub, older);
+      expect(mem.rows('heal_lines'), hasLength(1));
+      expect(mem.rows('heal_nonces'), isEmpty);
     });
 
     test('one rebuild per contact in ten minutes', () async {

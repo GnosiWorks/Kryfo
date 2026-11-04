@@ -206,7 +206,8 @@ class HaloDb
             caps TEXT NOT NULL DEFAULT '',
             caps_at INTEGER NOT NULL DEFAULT 0,
             ident INTEGER NOT NULL DEFAULT 0,
-            ikey TEXT
+            ikey TEXT,
+            heal_last INTEGER
           )
         ''');
         await db.execute('''
