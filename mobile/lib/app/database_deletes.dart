@@ -70,6 +70,8 @@ mixin _DeleteRows {
       }
       await _noteGone(t, rows);
       await t.delete('messages', where: _kOneToOne, whereArgs: [chatId]);
+      // what we undid in it is kept no longer
+      await dropTaken(t, peer: chatId);
     });
     await _scrubMedia(rows);
     return rows.length;
@@ -105,6 +107,15 @@ mixin _DeleteRows {
         whereArgs: [msgUid],
       );
     }
+    // our edit of it is kept no longer once no row of ours holds the uid
+    final ours = await db.query(
+      'messages',
+      columns: ['id'],
+      where: "msg_uid = ? AND direction = 'out'",
+      whereArgs: [msgUid],
+      limit: 1,
+    );
+    if (ours.isEmpty) await dropTaken(db, uid: msgUid);
     await _scrubMedia(media);
   }
 
@@ -315,6 +326,7 @@ mixin _DeleteRows {
           where: 'msg_uid = ?',
           whereArgs: [uid],
         );
+        await dropTaken(db, uid: uid);
       }
     }
     await db.delete('messages', where: _kBurnDue, whereArgs: [cut]);
@@ -338,6 +350,7 @@ mixin _DeleteRows {
       [peerId],
     );
     await db.delete('messages', where: _kOneToOne, whereArgs: [peerId]);
+    await dropTaken(db, peer: peerId);
     await _dropFilesComingFrom(db, peerId);
     await _scrubMedia(media);
   }
@@ -367,6 +380,7 @@ mixin _DeleteRows {
     );
     await _dropGroupFiles(db, groupId);
     await db.delete('messages', where: 'group_id = ?', whereArgs: [groupId]);
+    await dropTaken(db, group: groupId);
     await _scrubMedia(media);
   }
 
@@ -486,11 +500,12 @@ mixin _DeleteRows {
       where: 'at < ?',
       whereArgs: [now - HaloDb.kGoneFor.inMilliseconds],
     );
-    if (gone != null) {
-      for (final r in media) {
-        final uid = r['msg_uid'] as String?;
-        if (uid != null && r['direction'] == 'in') gone(uid);
-      }
+    for (final r in media) {
+      final uid = r['msg_uid'] as String?;
+      if (uid == null) continue;
+      if (r['direction'] == 'in') gone?.call(uid);
+      // our own burned: its edit is kept no longer
+      if (r['direction'] == 'out') await dropTaken(db, uid: uid);
     }
     var n = await db.delete('messages', where: _kBurnDue, whereArgs: [cut]);
     n += await _dropRows(db, waited);

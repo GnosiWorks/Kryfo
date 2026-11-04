@@ -1495,7 +1495,9 @@ class _DeliveryScreenState extends State<_DeliveryScreen> {
             ),
             DeliveryMode.always => (
               l10n.gettingMessagesAlwaysOn,
-              l10n.gettingMessagesMessagesArriveInstantlyNothing,
+              onion
+                  ? l10n.gettingMessagesMessagesArriveInstantlyNothing
+                  : l10n.gettingMessagesArriveInstantlyFast,
               null,
             ),
             DeliveryMode.checkins => (

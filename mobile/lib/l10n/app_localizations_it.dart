@@ -2538,6 +2538,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'I messaggi arrivano subito. Niente esce da Tor. Consuma più batteria di tutti.';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'Su Veloce i messaggi arrivano subito. Consuma più batteria di tutti.';
+
+  @override
   String get gettingMessagesCheckIns => 'Controlli';
 
   @override
@@ -4358,6 +4362,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'I relay non hanno risposto. Riprova tra un momento.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'Le stanze e i codici di abbinamento passano sempre da Tor, anche su Veloce. Funzionano appena Tor si connette.';
+
+  @override
   String get pairCodeFailed => 'Non ha funzionato. Riprova.';
 
   @override
@@ -4993,6 +5001,10 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'Le notifiche vanno riconfigurate su questo dispositivo.';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'Le chat che hai eliminato dopo questo backup tornano con esso, e quei contatti potrebbero vedere che hai configurato di nuovo Kryfo.';
 
   @override
   String get restoreMoveItHere => 'Trasferiscilo qui';
@@ -8664,6 +8676,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Il server di Kryfo chiede al servizio di GIF al posto tuo. Il servizio non ti vede mai, e il server non tiene traccia di ciò che hai cercato.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Il server di Kryfo chiede al servizio di GIF al posto tuo, così il servizio non ti vede mai. Su Veloce il nostro server vede il tuo indirizzo IP mentre cerchi, e non tiene traccia né di esso né di ciò che hai cercato.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'La GIF viaggia cifrata, come una foto. Il telefono del tuo amico non scarica nulla.';
 
@@ -8691,7 +8707,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'La ricerca GIF passa dal server di Kryfo. $brand non ti vede mai. La attivi?';
+    return 'La ricerca GIF va dritta al server di Kryfo, che su Veloce vede il tuo indirizzo IP. $brand non ti vede mai. La attivi?';
   }
 
   @override

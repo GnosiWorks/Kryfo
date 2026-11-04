@@ -42,11 +42,17 @@ extension AppStateHeal on AppState {
           floor ??
           resendFrom(now, since, window: _kResendWindow, most: _kResendMost),
     );
+    // after their restore: what we took back or edited since their backup
+    // goes again, or their file brings it back for good
+    final undone = since == null || since > now
+        ? 0
+        : await on.requeueTakenSince(peer, since: since);
+    if (undone > 0) dlog('resend: $undone unsends and edits go again');
     if (again > 0) {
       dlog('resend: $again undelivered to $peer go again');
       _bumpChatRev(peer);
-      unawaited(drainOutbox());
     }
+    if (again > 0 || undone > 0) unawaited(drainOutbox());
   }
 
   // asked while their vault is shut: the resend is owed, sealed to the
@@ -78,6 +84,16 @@ extension AppStateHeal on AppState {
     if (await d.isBlocked(member) || await blockedAnywhere(member)) return;
     if (await d.keyChanged(member)) return;
     _groupResentAt[gap] = now;
+    // our unsends and edits since their backup, which their file undid
+    final undone = await d.requeueGroupTakenSince(
+      member,
+      since: since,
+      now: now,
+    );
+    if (undone > 0) {
+      dlog('resend: $undone group unsends and edits go again');
+      if (!haloWiping && !everydayHeld) unawaited(_drainGroupCtl());
+    }
     // no further back than gone texts are known, by the day: an older
     // backup is the same restore all day long
     final from = max(since, now - HaloDb.kGoneFor.inMilliseconds);
@@ -245,10 +261,15 @@ extension AppStateHeal on AppState {
     if (ss == null) return false;
     final at = now ?? DateTime.now().millisecondsSinceEpoch;
     final restored = await ss.sealsOnRestored(peer);
+    final on = to.on;
+    // a chat deleted here (parked) gets no restore's heal: it would tell
+    // them, and they reach us as a request, as anyone new does. one a shut
+    // vault holds waits for it to open, where that can be read (a later
+    // pass, or their next text, which opens only then)
+    if (restored && (on == null || !await on.isAccepted(peer))) return false;
     int? since;
     if (restored) {
       final from = ss.restoredFrom ?? at;
-      final on = to.on;
       try {
         since = on == null
             ? healDayOf(from)

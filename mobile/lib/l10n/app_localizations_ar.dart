@@ -2574,6 +2574,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'تصل الرسائل فورًا. لا شيء يمر خارج Tor. يستهلك البطارية أكثر من غيره.';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'تصل الرسائل فورًا على الوضع السريع. يستهلك البطارية أكثر من غيره.';
+
+  @override
   String get gettingMessagesCheckIns => 'تفقّد دوري';
 
   @override
@@ -4418,6 +4422,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذّر الوصول إلى المُرحِّلات. حاول مجددًا بعد قليل.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'تمر الغرف ورموز الاقتران دائمًا عبر Tor، حتى على الوضع السريع. تعمل فور اتصال Tor.';
+
+  @override
   String get pairCodeFailed => 'لم ينجح ذلك. حاول مجددًا.';
 
   @override
@@ -5034,6 +5042,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'يجب إعداد الإشعارات من جديد على هذا الجهاز.';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'المحادثات التي حذفتها بعد إنشاء هذه النسخة الاحتياطية تعود معها، وقد يرى أصحابها أنك أعدت إعداد Kryfo.';
 
   @override
   String get restoreMoveItHere => 'نقله إلى هنا';
@@ -8716,6 +8728,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'خادم Kryfo يسأل خدمة GIF نيابة عنك. الخدمة لا تراك أبدًا، والخادم لا يحتفظ بأي سجل لما بحثت عنه.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'خادم Kryfo يسأل خدمة GIF نيابة عنك، فلا تراك الخدمة أبدًا. على الوضع السريع يرى خادمنا عنوان IP الخاص بك أثناء البحث، ولا يحتفظ بأي سجل له أو لما بحثت عنه.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'تنتقل صورة GIF مشفّرة، مثل الصورة. هاتف صديقك لا يجلب شيئًا.';
 
@@ -8743,7 +8759,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'يمر البحث عن GIF عبر خادم Kryfo. لا يراك ⁨$brand⁩ أبدًا. هل تريد تشغيله؟';
+    return 'يذهب البحث عن GIF مباشرة إلى خادم Kryfo، الذي يرى عنوان IP الخاص بك على الوضع السريع. لا يراك ⁨$brand⁩ أبدًا. هل تريد تشغيله؟';
   }
 
   @override

@@ -3112,6 +3112,10 @@
   "@gettingMessagesMessagesArriveInstantlyNothing": {
     "description": "screens/notifications_screen.dart"
   },
+  "gettingMessagesArriveInstantlyFast": "Messages arrive instantly on Fast. Uses the most battery.",
+  "@gettingMessagesArriveInstantlyFast": {
+    "description": "screens/notifications_screen.dart, screens/onboarding_screen.dart: the always-on card on the Fast route (settingsFast), where messages do not go through Tor"
+  },
   "gettingMessagesCheckIns": "Check-ins",
   "@gettingMessagesCheckIns": {
     "description": "screens/notifications_screen.dart"
@@ -5326,6 +5330,10 @@
   "@pairCodeUnreached": {
     "description": "widgets/pair_join.dart, widgets/pair_code_panel.dart: no relay answered the lookup or took the share, so nothing is known about the code"
   },
+  "fastRoomsWaitForTor": "Rooms and pairing codes always go through Tor, also on Fast. They work as soon as Tor connects.",
+  "@fastRoomsWaitForTor": {
+    "description": "widgets/pair_join.dart, screens/room_create_sheet.dart, screens/room_preview_sheet.dart: on the Fast route (settingsFast) while Tor is not connected: burner rooms and pair codes always go through Tor, so they wait for it"
+  },
   "pairCodeFailed": "That didn't work. Try again.",
   "@pairCodeFailed": {
     "description": "widgets/pair_join.dart, widgets/pair_code_panel.dart: sharing or looking up a pairing code failed for another reason"
@@ -6127,6 +6135,10 @@
   "restoreNotificationsNeedSettingUp": "Notifications need setting up again on this device.",
   "@restoreNotificationsNeedSettingUp": {
     "description": "screens/restore_screen.dart"
+  },
+  "restoreDeletedComeBack": "Chats you deleted after this backup was made come back with it, and those contacts may see that you set up Kryfo again.",
+  "@restoreDeletedComeBack": {
+    "description": "screens/restore_screen.dart: a point under \"What doesn't\": chats deleted after the backup was made come back, and those contacts may see the \"set up Kryfo again\" line (chatHealRestored)"
   },
   "restoreMoveItHere": "Move it here",
   "@restoreMoveItHere": {
@@ -10733,6 +10745,10 @@
   "@gifOptInAsksForYou": {
     "description": "gifs/gif_opt_in.dart: under the first point"
   },
+  "gifOptInAsksForYouFast": "Kryfo's server asks the GIF service for you, so the service never sees you. On Fast our server sees your IP address while you search, and keeps no record of it or of what you searched.",
+  "@gifOptInAsksForYouFast": {
+    "description": "gifs/gif_opt_in.dart: under the first point on the Fast route (settingsFast), where the search goes from the device to our server without Tor"
+  },
   "gifOptInLikeAPhoto": "The GIF travels encrypted, like a photo. Your friend's phone fetches nothing.",
   "@gifOptInLikeAPhoto": {
     "description": "gifs/gif_opt_in.dart: under the second point"
@@ -10766,9 +10782,9 @@
       }
     }
   },
-  "gifAskThroughKryfo": "GIF search goes through Kryfo's server. {brand} never sees you. Turn it on?",
+  "gifAskThroughKryfo": "GIF search goes straight to Kryfo's server, which sees your IP address on Fast. {brand} never sees you. Turn it on?",
   "@gifAskThroughKryfo": {
-    "description": "gifs/gif_opt_in.dart: the same question on the relay and fast routes (no tor there). brand is GIPHY or Klipy",
+    "description": "gifs/gif_opt_in.dart: the one question of the gifs tab on the Fast route (settingsFast), where the search goes from the device to our server without Tor. brand is GIPHY or Klipy",
     "placeholders": {
       "brand": {
         "type": "String"

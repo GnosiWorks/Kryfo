@@ -2570,6 +2570,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Сообщения приходят сразу. Ничто не выходит за пределы Tor. Батарею расходует сильнее всего.';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'На режиме «Быстрый» сообщения приходят сразу. Батарею расходует сильнее всего.';
+
+  @override
   String get gettingMessagesCheckIns => 'Проверки';
 
   @override
@@ -4416,6 +4420,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Ретрансляторы не ответили. Попробуй чуть позже.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'Комнаты и коды связи всегда идут через Tor, даже на режиме «Быстрый». Они заработают, как только Tor подключится.';
+
+  @override
   String get pairCodeFailed => 'Не получилось. Попробуй ещё раз.';
 
   @override
@@ -5048,6 +5056,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'Уведомления на этом устройстве нужно будет настроить заново.';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'Чаты, удалённые после создания этой копии, вернутся вместе с ней, и эти контакты могут увидеть, что ты заново настроил(а) Kryfo.';
 
   @override
   String get restoreMoveItHere => 'Перенести сюда';
@@ -8746,6 +8758,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Сервер Kryfo запрашивает GIF-сервис за тебя. Сервис никогда тебя не видит, а сервер не хранит твои запросы.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Сервер Kryfo запрашивает GIF-сервис за тебя, поэтому сервис никогда тебя не видит. На режиме «Быстрый» наш сервер видит твой IP-адрес во время поиска и не хранит ни его, ни твои запросы.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'GIF идёт зашифрованным, как фото. Телефон собеседника ничего не скачивает.';
 
@@ -8773,7 +8789,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'Поиск GIF идёт через сервер Kryfo. $brand никогда тебя не видит. Включить?';
+    return 'Поиск GIF идёт напрямую на сервер Kryfo, который на режиме «Быстрый» видит твой IP-адрес. $brand никогда тебя не видит. Включить?';
   }
 
   @override

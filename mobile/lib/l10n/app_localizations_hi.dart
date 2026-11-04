@@ -2517,6 +2517,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'मैसेज तुरंत आते हैं। कुछ भी Tor से बाहर नहीं जाता। बैटरी सबसे ज़्यादा लगती है।';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'तेज़ पर मैसेज तुरंत आते हैं। बैटरी सबसे ज़्यादा लगती है।';
+
+  @override
   String get gettingMessagesCheckIns => 'समय-समय पर जाँच';
 
   @override
@@ -4323,6 +4327,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'रिले तक नहीं पहुँच पाए। थोड़ी देर में फिर कोशिश करें।';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'रूम और जोड़ने के कोड हमेशा Tor से होकर जाते हैं, तेज़ पर भी। Tor जुड़ते ही ये काम करते हैं।';
+
+  @override
   String get pairCodeFailed => 'यह नहीं हुआ। दोबारा कोशिश करें।';
 
   @override
@@ -4949,6 +4957,10 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'इस डिवाइस पर सूचनाएँ फिर से सेट करनी होंगी।';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'इस बैकअप के बनने के बाद आपने जो चैट मिटाईं, वे इसके साथ लौट आती हैं, और उन संपर्कों को दिख सकता है कि आपने Kryfo फिर से सेट किया।';
 
   @override
   String get restoreMoveItHere => 'इसे यहाँ लाएँ';
@@ -8600,6 +8612,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'Kryfo का सर्वर आपकी तरफ़ से GIF सेवा से पूछता है। सेवा आपको कभी नहीं देखती, और सर्वर कोई रिकॉर्ड नहीं रखता कि आपने क्या खोजा।';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Kryfo का सर्वर आपकी तरफ़ से GIF सेवा से पूछता है, इसलिए सेवा आपको कभी नहीं देखती। तेज़ पर खोजते समय हमारा सर्वर आपका IP पता देखता है, और न उसका, न आपकी खोज का कोई रिकॉर्ड रखता है।';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'GIF फ़ोटो की तरह एन्क्रिप्टेड होकर जाता है। आपके दोस्त का फ़ोन कुछ भी नहीं लाता।';
 
@@ -8627,7 +8643,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'GIF खोज Kryfo के सर्वर से होकर जाती है। $brand आपको कभी नहीं देखता। चालू करें?';
+    return 'GIF खोज सीधे Kryfo के सर्वर तक जाती है, जो तेज़ पर आपका IP पता देखता है। $brand आपको कभी नहीं देखता। चालू करें?';
   }
 
   @override

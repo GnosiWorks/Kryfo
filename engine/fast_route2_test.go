@@ -843,6 +843,41 @@ func TestAnOnionGoesThroughTorOnFast(t *testing.T) {
 	}
 }
 
+// on fast a burner room's lane and a pair code's still go through tor to
+// our own stores: the relay never sees this phone's ip on them
+func TestRoomAndPairLanesKeepTorOnFast(t *testing.T) {
+	socks := newSocksStandIn(t)
+	useStandIns(t, modeBalanced, socks)
+	setRelays([]string{"wss://relay.kryfo.app", "wss://relay2.kryfo.app"})
+	direct, err := torNostrClientFor(laneEveryday)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, lane := range []string{roomLane("ab12"), pairLane("cd34")} {
+		for _, u := range []string{"wss://relay.kryfo.app", "wss://relay2.kryfo.app"} {
+			c, err := relayClientFor(lane, u)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if c == direct {
+				t.Fatalf("%s went to %s from this phone's ip", laneKind(lane), u)
+			}
+			tor, err := torClientFor(lane)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if c != tor {
+				t.Fatalf("%s to %s is not its own tor client", laneKind(lane), u)
+			}
+		}
+	}
+	for _, lane := range []string{laneEveryday, receiveLaneAt(1), laneFirstContact} {
+		if c, _ := relayClientFor(lane, "wss://relay.kryfo.app"); c != direct {
+			t.Fatalf("%s left the fast route", lane)
+		}
+	}
+}
+
 // a seal past its young span, as if made long ago
 func ageSeal(id string) {
 	keptMu.Lock()

@@ -2513,6 +2513,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Mesajlar anında gelir. Hiçbir şey Tor’un dışına çıkmaz. En çok pili bu harcar.';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'Hızlı’da mesajlar anında gelir. En çok pili bu harcar.';
+
+  @override
   String get gettingMessagesCheckIns => 'Kontroller';
 
   @override
@@ -4331,6 +4335,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Aktarıcılara ulaşılamadı. Birazdan yeniden dene.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'Odalar ve eşleştirme kodları Hızlı’da da her zaman Tor’dan geçer. Tor bağlanır bağlanmaz çalışırlar.';
+
+  @override
   String get pairCodeFailed => 'Olmadı. Yeniden dene.';
 
   @override
@@ -4960,6 +4968,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'Bildirimlerin bu cihazda yeniden ayarlanması gerekir.';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'Bu yedek oluşturulduktan sonra sildiğin sohbetler onunla geri gelir ve o kişiler Kryfo’yu yeniden kurduğunu görebilir.';
 
   @override
   String get restoreMoveItHere => 'Buraya taşı';
@@ -8615,6 +8627,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kryfo’nun sunucusu GIF servisine senin yerine sorar. Servis seni asla görmez, sunucu da ne aradığının kaydını tutmaz.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Kryfo’nun sunucusu GIF servisine senin yerine sorar, böylece servis seni asla görmez. Hızlı’da sunucumuz arama sırasında IP adresini görür, ne onun ne de aradıklarının kaydını tutar.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'GIF, bir fotoğraf gibi şifreli gider. Arkadaşının telefonu hiçbir şey indirmez.';
 
@@ -8642,7 +8658,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'GIF arama, Kryfo’nun sunucusundan geçer. $brand seni asla görmez. Açılsın mı?';
+    return 'GIF arama doğrudan Kryfo’nun sunucusuna gider, sunucu Hızlı’da IP adresini görür. $brand seni asla görmez. Açılsın mı?';
   }
 
   @override

@@ -2512,6 +2512,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'پیام‌ها فوراً می‌رسند. هیچ چیز از Tor بیرون نمی‌رود. بیشترین مصرف باتری.';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'پیام‌ها روی حالت سریع فوراً می‌رسند. بیشترین مصرف باتری.';
+
+  @override
   String get gettingMessagesCheckIns => 'سرکشی دوره‌ای';
 
   @override
@@ -4325,6 +4329,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'به رله‌ها دسترسی نشد. کمی بعد دوباره امتحان کنید.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'اتاق‌ها و کدهای جفت‌سازی همیشه از Tor می‌گذرند، حتی روی حالت سریع. به محض وصل شدن Tor کار می‌کنند.';
+
+  @override
   String get pairCodeFailed => 'انجام نشد. دوباره امتحان کنید.';
 
   @override
@@ -4952,6 +4960,10 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'اعلان‌ها باید روی این دستگاه دوباره تنظیم شوند.';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'گفت‌وگوهایی که بعد از ساخت این نسخه‌ی پشتیبان پاک کرده‌اید همراه آن برمی‌گردند، و آن مخاطبان ممکن است ببینند که Kryfo را دوباره راه‌اندازی کرده‌اید.';
 
   @override
   String get restoreMoveItHere => 'انتقال به این‌جا';
@@ -8601,6 +8613,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'سرور Kryfo به جای شما از سرویس گیف می‌پرسد. سرویس هرگز شما را نمی‌بیند و سرور هیچ سابقه‌ای از جست‌وجوهای شما نگه نمی‌دارد.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'سرور Kryfo به جای شما از سرویس گیف می‌پرسد، پس سرویس هرگز شما را نمی‌بیند. روی حالت سریع، سرور ما هنگام جست‌وجو آدرس IP شما را می‌بیند و هیچ سابقه‌ای از آن یا از جست‌وجوهای شما نگه نمی‌دارد.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'گیف مثل یک عکس، رمزگذاری‌شده می‌رود. گوشی دوستتان چیزی دانلود نمی‌کند.';
 
@@ -8628,7 +8644,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'جست‌وجوی گیف از طریق سرور Kryfo انجام می‌شود. ⁨$brand⁩ هرگز شما را نمی‌بیند. روشنش کنیم؟';
+    return 'جست‌وجوی گیف مستقیم به سرور Kryfo می‌رود که روی حالت سریع آدرس IP شما را می‌بیند. ⁨$brand⁩ هرگز شما را نمی‌بیند. روشنش کنیم؟';
   }
 
   @override

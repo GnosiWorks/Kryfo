@@ -2385,6 +2385,9 @@ class AppLocalizationsZh extends AppLocalizations {
       '消息即时到达。任何东西都不会离开 Tor。最耗电。';
 
   @override
+  String get gettingMessagesArriveInstantlyFast => '在快速模式下，消息即时到达。最耗电。';
+
+  @override
   String get gettingMessagesCheckIns => '定时查收';
 
   @override
@@ -4097,6 +4100,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairCodeUnreached => '联系不上中继。请稍后再试。';
 
   @override
+  String get fastRoomsWaitForTor => '聊天室和配对码始终通过 Tor，快速模式下也一样。Tor 一连上就能用。';
+
+  @override
   String get pairCodeFailed => '没有成功。请再试一次。';
 
   @override
@@ -4686,6 +4692,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get restoreNotificationsNeedSettingUp => '通知需要在这台设备上重新设置。';
+
+  @override
+  String get restoreDeletedComeBack =>
+      '这个备份制作之后你删除的聊天会随它回来，那些联系人可能会看到你重新设置了 Kryfo。';
 
   @override
   String get restoreMoveItHere => '迁移到这里';
@@ -8175,6 +8185,10 @@ class AppLocalizationsZh extends AppLocalizations {
       'Kryfo 的服务器替你向 GIF 服务查询。该服务永远看不到你，服务器也不会记录你搜了什么。';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Kryfo 的服务器替你向 GIF 服务查询，所以该服务永远看不到你。在快速模式下，我们的服务器在你搜索时能看到你的 IP 地址，但不会记录它，也不会记录你搜了什么。';
+
+  @override
   String get gifOptInLikeAPhoto => 'GIF 像照片一样加密传送。对方的手机不会下载任何东西。';
 
   @override
@@ -8199,7 +8213,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'GIF 搜索通过 Kryfo 的服务器进行，$brand 永远看不到你。要开启吗？';
+    return 'GIF 搜索直接发到 Kryfo 的服务器，在快速模式下它能看到你的 IP 地址。$brand 永远看不到你。要开启吗？';
   }
 
   @override
@@ -12688,6 +12702,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '訊息即時送達。任何東西都不會離開 Tor。最耗電。';
 
   @override
+  String get gettingMessagesArriveInstantlyFast => '在快速模式下，訊息即時送達。最耗電。';
+
+  @override
   String get gettingMessagesCheckIns => '定時查收';
 
   @override
@@ -14402,6 +14419,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pairCodeUnreached => '聯絡不上中繼。請稍後再試。';
 
   @override
+  String get fastRoomsWaitForTor => '聊天室和配對碼始終透過 Tor，快速模式下也一樣。Tor 一連上就能用。';
+
+  @override
   String get pairCodeFailed => '沒有成功。請再試一次。';
 
   @override
@@ -14991,6 +15011,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get restoreNotificationsNeedSettingUp => '需要在這台裝置上重新設定通知。';
+
+  @override
+  String get restoreDeletedComeBack =>
+      '這份備份建立之後你刪除的聊天會隨它回來，那些聯絡人可能會看到你重新設定了 Kryfo。';
 
   @override
   String get restoreMoveItHere => '搬到這裡';
@@ -18362,6 +18386,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       'Kryfo 的伺服器替你向 GIF 服務查詢。該服務永遠看不到你，伺服器也不會記錄你搜尋了什麼。';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Kryfo 的伺服器替你向 GIF 服務查詢，所以該服務永遠看不到你。在快速模式下，我們的伺服器在你搜尋時能看到你的 IP 位址，但不會記錄它，也不會記錄你搜尋了什麼。';
+
+  @override
   String get gifOptInLikeAPhoto => 'GIF 像照片一樣加密傳送。對方的手機不會下載任何東西。';
 
   @override
@@ -18386,7 +18414,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'GIF 搜尋透過 Kryfo 的伺服器進行，$brand 永遠看不到你。要開啟嗎？';
+    return 'GIF 搜尋直接送到 Kryfo 的伺服器，在快速模式下它能看到你的 IP 位址。$brand 永遠看不到你。要開啟嗎？';
   }
 
   @override
