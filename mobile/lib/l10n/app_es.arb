@@ -2831,6 +2831,7 @@
   "photoOnlyHereLineDesk": "Solo tú la ves. Se queda en este ordenador.",
   "photoOf": "Foto de {name}",
   "historyChatStaysShots": "Este chat se queda en tu teléfono porque las capturas están bloqueadas en él.",
+  "chatDeviceReplyFromPhone": "{name} usa un Kryfo más antiguo. Responde desde tu teléfono.",
   "historyCopyTitle": "Historial de chats",
   "historyCopyMaking": "Preparando tus chats",
   "historyCopyMakingLine": "Tu teléfono reúne lo que se va a copiar. Empieza en un momento.",

@@ -10720,6 +10720,11 @@ class AppLocalizationsHi extends AppLocalizations {
       'यह चैट आपके फ़ोन पर ही रहती है, क्योंकि इसमें स्क्रीनशॉट रोके गए हैं।';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name Kryfo का पुराना संस्करण इस्तेमाल करते हैं। अपने फ़ोन से जवाब दें।';
+  }
+
+  @override
   String get historyCopyTitle => 'चैट हिस्ट्री';
 
   @override

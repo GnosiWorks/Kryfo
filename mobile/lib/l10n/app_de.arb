@@ -2831,6 +2831,7 @@
   "photoOnlyHereLineDesk": "Nur du siehst es. Es bleibt auf diesem Computer.",
   "photoOf": "Foto von {name}",
   "historyChatStaysShots": "Dieser Chat bleibt auf deinem Handy, weil Screenshots darin blockiert sind.",
+  "chatDeviceReplyFromPhone": "{name} nutzt ein älteres Kryfo. Antworte von deinem Handy aus.",
   "historyCopyTitle": "Chatverlauf",
   "historyCopyMaking": "Deine Chats werden vorbereitet",
   "historyCopyMakingLine": "Dein Handy stellt zusammen, was übertragen wird. Gleich geht es los.",

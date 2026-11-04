@@ -119,6 +119,15 @@ Future<({int ident, String cipher})> signalSeal(
     keyMoved: () => unawaited(_keyMoved?.call(peerId)),
     size: size,
   );
+  // a linked device never seals on the identity pair: its key is its own
+  // device key, and a contact would read it as someone else. its copies go
+  // to every device of theirs and mine, from here, or nothing goes
+  if (linkedDevicesOn && linkedRole) {
+    if (onlySettled || !await _deviceSealHere(ident, ss, peerId, framed)) {
+      throw DeviceCannotReach(peerId);
+    }
+    throw const DeviceSent();
+  }
   // linked devices: a copy to every device, the phone's back here. a typing
   // frame is the phone's alone
   if (linkedDevicesOn && !onlySettled) {

@@ -15,6 +15,7 @@ import 'container.dart';
 import 'devchat/dev_chat.dart' show DevChat;
 import 'devchat/dev_key.dart' show isDevChat;
 import 'devchat/support.dart' show SupportChats;
+import 'devices/own_sync.dart' show OwnChat, ownNoted;
 import 'dlog.dart';
 import 'drafts.dart' show KeptDraft;
 import 'main.dart' show HaloDb, kFrameReaction, kFrameUnsend, wallKey;
@@ -237,6 +238,17 @@ class Session {
     return out;
   }
 
+  // what the person did on a chat of the everyday side, for my other
+  // devices (own_sync.dart): never a hidden chat's, never the decoy's
+  void _ownTell(HaloDb d, String kind, OwnChat chat, Map<String, Object?> a) {
+    if (!identical(d, primary) || primary.container != HaloContainer.everyday) {
+      return;
+    }
+    ownNoted?.call(kind, chat, a);
+  }
+
+  static int _now() => DateTime.now().millisecondsSinceEpoch;
+
   // ---- one contact's chat ----
   Future<void> acceptRequest(String haloId) =>
       _ofPeer(haloId).acceptRequest(haloId);
@@ -246,12 +258,20 @@ class Session {
   Future<bool> ackLost(String haloId) => _ofPeer(haloId).ackLost(haloId);
   Future<void> assignUidIfMissing(String peerId, int sentAtMs, String uid) =>
       _ofPeer(peerId).assignUidIfMissing(peerId, sentAtMs, uid);
-  Future<void> clearConversation(String peerId) =>
-      _ofPeer(peerId).clearConversation(peerId);
+  Future<void> clearConversation(String peerId) async {
+    final d = _ofPeer(peerId);
+    await d.clearConversation(peerId);
+    _ownTell(d, 'clear', (id: peerId, group: false), {'t': _now()});
+  }
+
   Future<void> clearKeyChanged(String haloId) =>
       _ofPeer(haloId).clearKeyChanged(haloId);
-  Future<void> clearUnread(String peerId) =>
-      _ofPeer(peerId).clearUnread(peerId);
+  Future<void> clearUnread(String peerId) async {
+    final d = _ofPeer(peerId);
+    await d.clearUnread(peerId);
+    _ownTell(d, 'read', (id: peerId, group: false), {'t': _now()});
+  }
+
   Future<int> countMessagesFrom(String peerId) =>
       _ofPeer(peerId).countMessagesFrom(peerId);
   Future<int> countMessagesTo(String peerId) =>
@@ -436,10 +456,21 @@ class Session {
   // ---- one group ----
   Future<void> addGroupMember(String groupId, String haloId) =>
       _ofGroup(groupId).addGroupMember(groupId, haloId);
-  Future<void> clearGroupConversation(String groupId, {bool noteGone = true}) =>
-      _ofGroup(groupId).clearGroupConversation(groupId, noteGone: noteGone);
-  Future<void> clearGroupUnread(String groupId) =>
-      _ofGroup(groupId).clearGroupUnread(groupId);
+  Future<void> clearGroupConversation(
+    String groupId, {
+    bool noteGone = true,
+  }) async {
+    final d = _ofGroup(groupId);
+    await d.clearGroupConversation(groupId, noteGone: noteGone);
+    _ownTell(d, 'clear', (id: groupId, group: true), {'t': _now()});
+  }
+
+  Future<void> clearGroupUnread(String groupId) async {
+    final d = _ofGroup(groupId);
+    await d.clearGroupUnread(groupId);
+    _ownTell(d, 'read', (id: groupId, group: true), {'t': _now()});
+  }
+
   Future<void> deleteGroup(String groupId) =>
       _ofGroup(groupId).deleteGroup(groupId);
   Future<Map<String, Object?>?> getGroup(String groupId) =>
@@ -679,7 +710,20 @@ class Session {
   // a send still reading its file stops before the file is scrubbed
   Future<void> deleteMessage(String msgUid) async {
     if (mediaInflight.contains(msgUid)) cancelMediaSend(msgUid);
-    await (await _ofUid(msgUid)).deleteMessage(msgUid);
+    final d = await _ofUid(msgUid);
+    final at = await d.chatOf(msgUid);
+    await d.deleteMessage(msgUid);
+    if (at != null) {
+      final g = at.$2;
+      _ownTell(
+        d,
+        'del',
+        g != null ? (id: g, group: true) : (id: at.$1, group: false),
+        {
+          'u': [msgUid],
+        },
+      );
+    }
   }
 
   Future<void> editMessage(String msgUid, String newText) async =>
@@ -744,7 +788,16 @@ class Session {
   Future<Map<String, int>> lightReadBurns(
     String chatId,
     List<String> msgUids,
-  ) => _ofChat(chatId).lightReadBurns(msgUids);
+  ) async {
+    final d = _ofChat(chatId);
+    final lit = await d.lightReadBurns(msgUids);
+    if (lit.isNotEmpty) {
+      final group = await d.groupExists(chatId);
+      _ownTell(d, 'lit', (id: chatId, group: group), {'b': lit});
+    }
+    return lit;
+  }
+
   Future<void> setPinned(String msgUid, bool pinned) async =>
       (await _ofUid(msgUid)).setPinned(msgUid, pinned);
   Future<void> setPowNonce(String msgUid, int nonce) async =>

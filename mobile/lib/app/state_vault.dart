@@ -405,6 +405,8 @@ extension AppStateVault on AppState {
       final went = await _move(v, chats, (m) => _hide(m, v, chats), out: false);
       // a copy open to a new device may already hold their rows: it ends
       if (went.isNotEmpty) endHistoryCopies();
+      // and my devices forget them now (P1): the pass tells each one gone
+      if (went.isNotEmpty && AppState._everyday(v)) unawaited(_ownPass());
       // linked devices: their pairs heard on as the vault's cards say
       if (AppState._everyday(v)) await _listenHiddenDevices();
       // what could still name them outside the vault, and what they showed.

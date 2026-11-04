@@ -423,7 +423,8 @@ extension AppStateGroupLanes on AppState {
     final room = await _roomOf(groupId, d);
     return [
       for (final m in members ?? await d.getGroupMembers(groupId))
-        if (m != myId && m != room?.pub) m,
+        // on a linked device my phone's id is me too
+        if (m != myId && m != room?.pub && m != _ownPhoneId) m,
     ];
   }
 

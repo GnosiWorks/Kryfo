@@ -1128,6 +1128,10 @@ extension AppStateOutbox on AppState {
     // failed and the user gets tap-to-retry.
     // nothing of the everyday account leaves while a decoy is open
     if (everydayHeld) return false;
+    // a linked device sends on its device sessions alone
+    if (linkedDevicesOn && linkedRole) {
+      return await _sendFromDevice(memberId, wrapped) == _DeviceSend.sent;
+    }
     try {
       final to = await _reach(memberId);
       if (to == null) {

@@ -10141,6 +10141,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get historyChatStaysShots => '此聊天禁止截屏，所以只留在你的手机上。';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name 使用的是较旧版本的 Kryfo。请在手机上回复。';
+  }
+
+  @override
   String get historyCopyTitle => '聊天记录';
 
   @override
@@ -20693,6 +20698,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get historyChatStaysShots => '此聊天禁止截圖，所以只留在你的手機上。';
+
+  @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name 使用的是較舊版本的 Kryfo。請在手機上回覆。';
+  }
 
   @override
   String get historyCopyTitle => '聊天記錄';

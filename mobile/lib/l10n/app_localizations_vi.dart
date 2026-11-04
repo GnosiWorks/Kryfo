@@ -10700,6 +10700,11 @@ class AppLocalizationsVi extends AppLocalizations {
       'Cuộc trò chuyện này ở lại trên điện thoại của bạn vì đã chặn chụp màn hình trong đó.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name dùng phiên bản Kryfo cũ hơn. Hãy trả lời từ điện thoại của bạn.';
+  }
+
+  @override
   String get historyCopyTitle => 'Lịch sử trò chuyện';
 
   @override

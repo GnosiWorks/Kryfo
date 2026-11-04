@@ -10742,6 +10742,11 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu sohbet telefonunda kalır, çünkü içinde ekran görüntüsü engelli.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name daha eski bir Kryfo kullanıyor. Telefonundan yanıtla.';
+  }
+
+  @override
   String get historyCopyTitle => 'Sohbet geçmişi';
 
   @override

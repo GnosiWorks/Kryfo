@@ -15,13 +15,20 @@ void deviceSendForTest(DeviceSend? s) => _deviceSend = s;
 
 final _devSessions = <int, DeviceSessions>{};
 
+@visibleForTesting
+DeviceWire get engineDeviceWireForTest => _EngineDeviceWire();
+
 class _EngineDeviceWire implements DeviceWire {
+  // nothing of the everyday account leaves while the decoy is open, own
+  // sync included: the copy waits in dev_out
+  static bool get _held => _madeApp?.everydayHeld ?? false;
+
   @override
-  Future<String> send(int ident, String arg, String cipher) =>
-      engine.nostrSendDevice(ident, arg, cipher);
+  Future<String> send(int ident, String arg, String cipher) async =>
+      _held ? 'held' : engine.nostrSendDevice(ident, arg, cipher);
   @override
-  Future<String> sendOpener(int ident, String arg, String cipher) =>
-      engine.nostrSendDevice(ident, arg, cipher, opener: true);
+  Future<String> sendOpener(int ident, String arg, String cipher) async =>
+      _held ? 'held' : engine.nostrSendDevice(ident, arg, cipher, opener: true);
 }
 
 // after the state loaded: the engine takes device-pair args from now on
@@ -110,10 +117,21 @@ Future<String?> _deviceSeal(
   try {
     final who = await _devWhoOf(ident, peer, ss, on: home);
     if (who == null) return null;
+    // my own devices get a copy only of a chat they share (devices_own_app)
+    var own = false;
+    try {
+      own =
+          identical(home, live) &&
+          _ownSends &&
+          await _ownChatShared((id: peer, group: false));
+    } catch (e) {
+      dlog('devices: no own copy (${e.runtimeType})');
+    }
     final b = await send.burst(
       who.me,
       who.c,
       framed,
+      ownCopy: own,
       phone: (
         measure: phone.measure,
         seal: (f, n) {
@@ -127,6 +145,35 @@ Future<String?> _deviceSeal(
     if (sealing) rethrow;
     dlog('devices: no copies for devices (${e.runtimeType})');
     return null;
+  }
+}
+
+// a linked device's seal: every copy of [framed] to [peer]'s devices and
+// my own, queued and handed out here. false when none could go: a contact
+// this device holds no list of, an older Kryfo, a hidden chat
+Future<bool> _deviceSealHere(
+  int ident,
+  SignalSession ss,
+  String peer,
+  String framed,
+) async {
+  if (!linkedDevicesOn || isDevId(peer)) return false;
+  final send = _deviceSend;
+  if (send == null || !identical(_devHomeDb(peer), live)) return false;
+  try {
+    final who = await _devWhoOf(ident, peer, ss);
+    if (who == null || !who.c.devices) return false;
+    final b = await send.burst(
+      who.me,
+      who.c,
+      framed,
+      force: true,
+      ownCopy: _ownSends && await _ownChatShared((id: peer, group: false)),
+    );
+    return b != null && b.copies > 0;
+  } catch (e) {
+    dlog('devices: no copies from this device (${e.runtimeType})');
+    return false;
   }
 }
 

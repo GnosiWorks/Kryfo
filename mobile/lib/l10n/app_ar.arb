@@ -2831,6 +2831,7 @@
   "photoOnlyHereLineDesk": "لا يراها أحد غيرك. تبقى على هذا الحاسوب.",
   "photoOf": "صورة {name}",
   "historyChatStaysShots": "تبقى هذه المحادثة على هاتفك لأن لقطات الشاشة محظورة فيها.",
+  "chatDeviceReplyFromPhone": "{name} يستخدم إصدارًا أقدم من Kryfo. ردّ من هاتفك.",
   "historyCopyTitle": "سجل المحادثات",
   "historyCopyMaking": "جارٍ تجهيز محادثاتك",
   "historyCopyMakingLine": "يجمع هاتفك ما سيُنسخ. يبدأ بعد لحظة.",

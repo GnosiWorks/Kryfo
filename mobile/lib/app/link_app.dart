@@ -260,3 +260,7 @@ class _JoinLinkApp implements JoinLinkHooks {
   @override
   Future<void> failed() => bootDevices();
 }
+
+// what a device of mine is called when another device of mine learns of it
+// from my list (devices_own_app.dart): renamed in the list
+String get _ownDeviceName => l10n.devicesNameComputer;

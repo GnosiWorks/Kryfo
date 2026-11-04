@@ -10916,6 +10916,11 @@ class AppLocalizationsPl extends AppLocalizations {
       'Ten czat zostaje na twoim telefonie, bo zrzuty ekranu są w nim zablokowane.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name używa starszej wersji Kryfo. Odpowiedz z telefonu.';
+  }
+
+  @override
   String get historyCopyTitle => 'Historia czatów';
 
   @override

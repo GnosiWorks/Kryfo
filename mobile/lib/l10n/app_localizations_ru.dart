@@ -10885,6 +10885,11 @@ class AppLocalizationsRu extends AppLocalizations {
       'Этот чат остаётся на твоём телефоне, потому что в нём запрещены скриншоты.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name пользуется более старой версией Kryfo. Ответь с телефона.';
+  }
+
+  @override
   String get historyCopyTitle => 'История чатов';
 
   @override

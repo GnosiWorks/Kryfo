@@ -67,6 +67,12 @@ Future<({DevMe me, DevContact c})?> _devContactByKey(
   return _devWhoOf(ident, peer, ss);
 }
 
+@visibleForTesting
+Future<({DevMe me, DevContact c})?> devContactByKeyForTest(
+  int ident,
+  String identity,
+) => _devContactByKey(ident, identity);
+
 // a blocked contact of my [ident] by their identity key, on the everyday
 // side: their devices' copies are opened, admitted and left to the block
 Future<({DevMe me, DevContact c})?> _devBlockedByKey(
@@ -127,6 +133,7 @@ void _bootDeviceReceive(DeviceState ds, DeviceSend send) {
       if (AppState._shown(went)) appState.notifyListeners();
     },
   );
+  _bootOwnSync(ds, send, _deviceReceive!);
   unawaited(() async {
     try {
       await pushPairSeeds();
@@ -232,14 +239,26 @@ extension AppStateDevices on AppState {
     DevCopyIn c, {
     int? wrappedAt,
     Reached? reached,
-  }) => _applyIncomingPayload(
-    c.peer,
-    unwrapMessage(c.frame),
-    wire: c.frame,
-    fromDevice: true,
-    wrappedAt: wrappedAt,
-    reached: reached,
-  );
+  }) async {
+    final env = unwrapMessage(c.frame);
+    // a linked device never takes a chat with screenshots blocked: it stays
+    // on the phone (history item 6)
+    if (linkedRole) {
+      final g = env.groupId;
+      final chat = g != null
+          ? (id: g, group: true)
+          : (id: c.peer, group: false);
+      if (!await _ownChatShared(chat)) return RouteTo.dropped;
+    }
+    return _applyIncomingPayload(
+      c.peer,
+      env,
+      wire: c.frame,
+      fromDevice: true,
+      wrappedAt: wrappedAt,
+      reached: reached,
+    );
+  }
 
   // the everyday contact a device-pair tag names, by their row
   Future<String?> _devEverydayOfTag(String tag) async {

@@ -2831,6 +2831,7 @@
   "photoOnlyHereLineDesk": "只有你看得到。只存在這台電腦上。",
   "photoOf": "{name}的照片",
   "historyChatStaysShots": "此聊天禁止截圖，所以只留在你的手機上。",
+  "chatDeviceReplyFromPhone": "{name} 使用的是較舊版本的 Kryfo。請在手機上回覆。",
   "historyCopyTitle": "聊天記錄",
   "historyCopyMaking": "正在準備你的聊天",
   "historyCopyMakingLine": "你的手機正在整理要複製的內容，馬上開始。",

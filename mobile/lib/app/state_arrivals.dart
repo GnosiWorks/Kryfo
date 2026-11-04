@@ -263,6 +263,10 @@ extension AppStateArrivals on AppState {
         reached: reached,
       );
       if (AppState._shown(to)) _typingAnswered(senderHaloId, env);
+      // linked devices: what reached this phone alone goes on to my devices
+      if (linkedDevicesOn && !fromDevice && !fromBackPair) {
+        await _ownPassOn(senderHaloId, env, wire, to);
+      }
       // a v4 first contact keeps no onion until they answer: their first
       // frame on the session gives it, and a held one is never replaced
       if (to == RouteTo.everyday && !fromBackPair && env.groupId == null) {

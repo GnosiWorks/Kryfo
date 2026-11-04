@@ -13413,6 +13413,15 @@
   "@historyChatStaysShots": {
     "description": "devices/history_import.dart: on a newly linked device, for a chat that stayed on the phone because screenshot blocking is on in it"
   },
+  "chatDeviceReplyFromPhone": "{name} uses an older Kryfo. Reply from your phone.",
+  "@chatDeviceReplyFromPhone": {
+    "description": "screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact on an older Kryfo, whose messages come through the phone",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "historyCopyTitle": "Chat history",
   "@historyCopyTitle": {
     "description": "screens/history_copy_screen.dart: the page bar of the history copy"

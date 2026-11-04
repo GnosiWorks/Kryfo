@@ -10709,6 +10709,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'This chat stays on your phone because screenshots are blocked in it.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name uses an older Kryfo. Reply from your phone.';
+  }
+
+  @override
   String get historyCopyTitle => 'Chat history';
 
   @override

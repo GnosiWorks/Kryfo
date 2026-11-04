@@ -2831,6 +2831,7 @@
   "photoOnlyHereLineDesk": "Hanya kamu yang melihatnya. Tetap di komputer ini.",
   "photoOf": "Foto {name}",
   "historyChatStaysShots": "Obrolan ini tetap di ponselmu karena tangkapan layar diblokir di sini.",
+  "chatDeviceReplyFromPhone": "{name} memakai Kryfo versi lama. Balas dari ponselmu.",
   "historyCopyTitle": "Riwayat chat",
   "historyCopyMaking": "Menyiapkan chat kamu",
   "historyCopyMakingLine": "Ponselmu mengumpulkan yang akan disalin. Sebentar lagi dimulai.",

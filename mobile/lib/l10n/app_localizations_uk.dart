@@ -10883,6 +10883,11 @@ class AppLocalizationsUk extends AppLocalizations {
       'Цей чат лишається на твоєму телефоні, бо в ньому заблоковано знімки екрана.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name користується старішою версією Kryfo. Відповідай з телефона.';
+  }
+
+  @override
   String get historyCopyTitle => 'Історія чатів';
 
   @override

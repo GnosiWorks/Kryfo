@@ -10728,6 +10728,11 @@ class AppLocalizationsFa extends AppLocalizations {
       'این گفت‌وگو روی گوشی شما می‌ماند، چون اسکرین‌شات در آن مسدود است.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name از نسخهٔ قدیمی‌تر Kryfo استفاده می‌کند. از گوشی خود پاسخ دهید.';
+  }
+
+  @override
   String get historyCopyTitle => 'تاریخچهٔ گفت‌وگوها';
 
   @override

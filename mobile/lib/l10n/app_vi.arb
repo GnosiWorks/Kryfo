@@ -2831,6 +2831,7 @@
   "photoOnlyHereLineDesk": "Chỉ bạn thấy. Ảnh ở lại trên máy tính này.",
   "photoOf": "Ảnh của {name}",
   "historyChatStaysShots": "Cuộc trò chuyện này ở lại trên điện thoại của bạn vì đã chặn chụp màn hình trong đó.",
+  "chatDeviceReplyFromPhone": "{name} dùng phiên bản Kryfo cũ hơn. Hãy trả lời từ điện thoại của bạn.",
   "historyCopyTitle": "Lịch sử trò chuyện",
   "historyCopyMaking": "Đang chuẩn bị các cuộc trò chuyện",
   "historyCopyMakingLine": "Điện thoại đang gom những gì sẽ được sao chép. Sắp bắt đầu.",

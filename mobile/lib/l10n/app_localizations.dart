@@ -17269,6 +17269,12 @@ abstract class AppLocalizations {
   /// **'This chat stays on your phone because screenshots are blocked in it.'**
   String get historyChatStaysShots;
 
+  /// screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact on an older Kryfo, whose messages come through the phone
+  ///
+  /// In en, this message translates to:
+  /// **'{name} uses an older Kryfo. Reply from your phone.'**
+  String chatDeviceReplyFromPhone(String name);
+
   /// screens/history_copy_screen.dart: the page bar of the history copy
   ///
   /// In en, this message translates to:

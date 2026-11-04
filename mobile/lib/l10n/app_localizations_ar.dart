@@ -10846,6 +10846,11 @@ class AppLocalizationsAr extends AppLocalizations {
       'تبقى هذه المحادثة على هاتفك لأن لقطات الشاشة محظورة فيها.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name يستخدم إصدارًا أقدم من Kryfo. ردّ من هاتفك.';
+  }
+
+  @override
   String get historyCopyTitle => 'سجل المحادثات';
 
   @override

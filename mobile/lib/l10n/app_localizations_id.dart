@@ -10717,6 +10717,11 @@ class AppLocalizationsId extends AppLocalizations {
       'Obrolan ini tetap di ponselmu karena tangkapan layar diblokir di sini.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name memakai Kryfo versi lama. Balas dari ponselmu.';
+  }
+
+  @override
   String get historyCopyTitle => 'Riwayat chat';
 
   @override

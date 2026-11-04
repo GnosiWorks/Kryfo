@@ -2831,6 +2831,7 @@
   "photoOnlyHereLineDesk": "इसे सिर्फ़ आप देखते हैं। यह इसी कंप्यूटर पर रहती है।",
   "photoOf": "{name} की फ़ोटो",
   "historyChatStaysShots": "यह चैट आपके फ़ोन पर ही रहती है, क्योंकि इसमें स्क्रीनशॉट रोके गए हैं।",
+  "chatDeviceReplyFromPhone": "{name} Kryfo का पुराना संस्करण इस्तेमाल करते हैं। अपने फ़ोन से जवाब दें।",
   "historyCopyTitle": "चैट हिस्ट्री",
   "historyCopyMaking": "आपकी चैट तैयार हो रही हैं",
   "historyCopyMakingLine": "आपका फ़ोन कॉपी होने वाली चीज़ें इकट्ठा कर रहा है। बस शुरू होने वाला है।",

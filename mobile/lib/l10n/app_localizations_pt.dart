@@ -10790,6 +10790,11 @@ class AppLocalizationsPt extends AppLocalizations {
       'Esta conversa fica no seu celular porque as capturas de tela estão bloqueadas nela.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name usa uma versão mais antiga do Kryfo. Responda pelo seu celular.';
+  }
+
+  @override
   String get historyCopyTitle => 'Histórico de conversas';
 
   @override

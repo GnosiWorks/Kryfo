@@ -2831,6 +2831,7 @@
   "photoOnlyHereLineDesk": "Його бачите лише ви. Воно залишається на цьому комп’ютері.",
   "photoOf": "Фото {name}",
   "historyChatStaysShots": "Цей чат лишається на твоєму телефоні, бо в ньому заблоковано знімки екрана.",
+  "chatDeviceReplyFromPhone": "{name} користується старішою версією Kryfo. Відповідай з телефона.",
   "historyCopyTitle": "Історія чатів",
   "historyCopyMaking": "Готуємо ваші чати",
   "historyCopyMakingLine": "Телефон збирає те, що буде скопійовано. Зараз почнеться.",
