@@ -1089,6 +1089,10 @@ void main() {
     expect({for (final r in owed) r['device']}, {5, 17});
     expect({for (final r in owed) r['uid']}, {'dl:4000'});
     expect({for (final r in owed) r['state']}, {'sent'});
+    String dlTo(int dev) =>
+        w.wire.sent.firstWhere((s) => s.device == dev).cipher;
+    final dl5 = dlTo(5);
+    final dl17 = dlTo(17);
     // bob links device 40 before the push goes, and it answers
     final late = _Dev(40, await testStore());
     await w.ds.session(w.db, 'accept', {
@@ -1110,13 +1114,13 @@ void main() {
       late.key,
       late.reg,
     );
-    final hello = await w.anaDs.seal(
-      'bob-quiet-river',
-      40,
-      'halo/1:{}',
-      late.key,
-    );
-    await _openOn(late, 'ana', w.ana, hello);
+    // a message to bob opens the pair to 40, which answers
+    final k0 = w.wire.sent.length;
+    await w.send.burst(w.me, w.toBob, 'halo/1:{"u":"u-late","m":"hi"}');
+    await settle(w.wire, k0 + 3);
+    final hello = w.wire.sent.sublist(k0).singleWhere((s) => s.device == 40);
+    expect(hello.opener, isTrue);
+    await _openOn(late, 'ana', w.ana, hello.cipher);
     final a = _wireOf(
       await late.ds.seal('ana', 1, 'halo/1:{}', w.ana.identity.public),
     );
@@ -1149,21 +1153,16 @@ void main() {
     expect(await spent(), {...first, k});
     // 5's receipt ends its copy; 17's goes again six hours on, the same wire
     await w.send.receipt(kMainIdent, w.toBob.identity, 5, 'dl:4000');
-    final wire17 = w.wire.sent.firstWhere((s) => s.device == 17).cipher;
     w.wait(const Duration(hours: 6, minutes: 1));
     final m = w.wire.sent.length;
     await w.send.pump();
     await settle(w.wire, m + 1);
     final again = w.wire.sent.sublist(m);
-    // (the desk's own ask for more bundles may go in the same pump)
-    expect(
-      {
-        for (final s in again)
-          if (s.device != 9) s.device,
-      },
-      {17, 40},
-    );
-    expect(again.firstWhere((s) => s.device == 17).cipher, wire17);
+    // (the other copies still owed, the message to 40 and the desk's ask
+    // for more bundles, may go in the same pump)
+    final ciphers = {for (final s in again) s.cipher};
+    expect(ciphers, contains(dl17));
+    expect(ciphers, isNot(contains(dl5)));
   });
 
   test('a device session held on another key misses the message alone: the '
