@@ -137,9 +137,11 @@ type hubConn struct {
 
 	paceMu sync.Mutex
 	tokens float64
-	// the old budget's count, below zero while past it
-	oldTokens float64
-	paceLast  time.Time
+	// the old budget's count, below zero while past it, and the old
+	// budget as it was when the socket was made
+	oldTokens         float64
+	oldPerSec, oldMax float64
+	paceLast          time.Time
 
 	mu sync.Mutex
 	// joins attached, the dial's waiters included
@@ -250,7 +252,7 @@ func hubJoin(ctx context.Context, k hubKey, addr string, client *http.Client, ro
 		}
 		c = &hubConn{hub: h, url: k.url, paced: paced, routeC: routeC, ctx: cctx, cancel: cancel,
 			dialed: make(chan struct{}), slots: make(chan struct{}, slots), flushC: make(chan struct{}, 1),
-			byAddr: map[string][]*hubMember{}, tokens: hubPaceBurst, oldTokens: hubOldBurst, paceLast: time.Now()}
+			byAddr: map[string][]*hubMember{}, tokens: hubPaceBurst, oldTokens: hubOldBurst, oldPerSec: hubOldPerSec, oldMax: hubOldBurst, paceLast: time.Now()}
 		h.cur = c
 		dialing = true
 	}
@@ -356,7 +358,7 @@ func (m *hubMember) dropSlot() {
 // the relay keeps the old budget: this socket's bucket is empty there now
 func (c *hubConn) slowDown() {
 	if _, was := hubSlow.LoadOrStore(c.url, true); !was {
-		log.Printf("nostr: an own relay keeps the old req budget, %v a second from now on", hubOldPerSec)
+		log.Printf("nostr: an own relay keeps the old req budget, %v a second from now on", c.oldPerSec)
 	}
 	c.paceMu.Lock()
 	c.oldTokens = 0
@@ -374,11 +376,11 @@ func (c *hubConn) pace(ctx context.Context) error {
 		now := time.Now()
 		dt := now.Sub(c.paceLast).Seconds()
 		c.tokens = min(hubPaceBurst, c.tokens+dt*hubPacePerSec)
-		c.oldTokens = min(hubOldBurst, c.oldTokens+dt*hubOldPerSec)
+		c.oldTokens = min(c.oldMax, c.oldTokens+dt*c.oldPerSec)
 		c.paceLast = now
 		have, rate := c.tokens, hubPacePerSec
 		if hubSlowed(c.url) {
-			have, rate = c.oldTokens, hubOldPerSec
+			have, rate = c.oldTokens, c.oldPerSec
 		}
 		if have >= 1 {
 			c.tokens--
