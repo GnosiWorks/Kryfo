@@ -365,7 +365,10 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                 _ModeCard(
                   title: l10n.gettingMessagesAlwaysOn,
                   tag: l10n.gettingMessagesMostPrivate,
-                  body: l10n.gettingMessagesMessagesArriveInstantlyNothing,
+                  // on fast it does not go through tor
+                  body: onOnion
+                      ? l10n.gettingMessagesMessagesArriveInstantlyNothing
+                      : l10n.gettingMessagesArriveInstantlyFast,
                   on: mode == DeliveryMode.always,
                   onTap: () => _pick(DeliveryMode.always),
                 ),

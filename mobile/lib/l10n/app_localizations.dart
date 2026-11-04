@@ -4007,6 +4007,12 @@ abstract class AppLocalizations {
   /// **'Messages arrive instantly. Nothing leaves Tor. Uses the most battery.'**
   String get gettingMessagesMessagesArriveInstantlyNothing;
 
+  /// screens/notifications_screen.dart, screens/onboarding_screen.dart: the always-on card on the Fast route (settingsFast), where messages do not go through Tor
+  ///
+  /// In en, this message translates to:
+  /// **'Messages arrive instantly on Fast. Uses the most battery.'**
+  String get gettingMessagesArriveInstantlyFast;
+
   /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
@@ -7822,6 +7828,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notifications need setting up again on this device.'**
   String get restoreNotificationsNeedSettingUp;
+
+  /// screens/restore_screen.dart: a point under "What doesn't": chats deleted after the backup was made come back, and those contacts may see the "set up Kryfo again" line (chatHealRestored)
+  ///
+  /// In en, this message translates to:
+  /// **'Chats you deleted after this backup was made come back with it, and those contacts may see that you set up Kryfo again.'**
+  String get restoreDeletedComeBack;
 
   /// screens/restore_screen.dart
   ///
@@ -13757,6 +13769,12 @@ abstract class AppLocalizations {
   /// **'Kryfo\'s server asks the GIF service for you. The service never sees you, and the server keeps no record of what you searched.'**
   String get gifOptInAsksForYou;
 
+  /// gifs/gif_opt_in.dart: under the first point on the Fast route (settingsFast), where the search goes from the device to our server without Tor
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo\'s server asks the GIF service for you, so the service never sees you. On Fast our server sees your IP address while you search, and keeps no record of it or of what you searched.'**
+  String get gifOptInAsksForYouFast;
+
   /// gifs/gif_opt_in.dart: under the second point
   ///
   /// In en, this message translates to:
@@ -13799,10 +13817,10 @@ abstract class AppLocalizations {
   /// **'GIF search goes through Kryfo\'s server over Tor. {brand} never sees you. Turn it on?'**
   String gifAskOverTor(String brand);
 
-  /// gifs/gif_opt_in.dart: the same question on the relay and fast routes (no tor there). brand is GIPHY or Klipy
+  /// gifs/gif_opt_in.dart: the one question of the gifs tab on the Fast route (settingsFast), where the search goes from the device to our server without Tor. brand is GIPHY or Klipy
   ///
   /// In en, this message translates to:
-  /// **'GIF search goes through Kryfo\'s server. {brand} never sees you. Turn it on?'**
+  /// **'GIF search goes straight to Kryfo\'s server, which sees your IP address on Fast. {brand} never sees you. Turn it on?'**
   String gifAskThroughKryfo(String brand);
 
   /// gifs/gif_opt_in.dart: the button under that question, and the quiet button next to "GIF search is off": turns gif search on

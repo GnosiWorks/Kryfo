@@ -2532,6 +2532,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'As mensagens chegam na hora. Tudo fica dentro do Tor. Gasta mais bateria.';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'No Rápido, as mensagens chegam na hora. Gasta mais bateria.';
+
+  @override
   String get gettingMessagesCheckIns => 'Consultas';
 
   @override
@@ -4935,6 +4939,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'As notificações precisam ser configuradas de novo neste aparelho.';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'As conversas que você apagou depois deste backup voltam com ele, e esses contatos podem ver que você configurou o Kryfo de novo.';
 
   @override
   String get restoreMoveItHere => 'Trazer para cá';
@@ -8628,6 +8636,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'O servidor do Kryfo pede ao serviço de GIFs por você. O serviço nunca vê você, e o servidor não guarda registro do que você buscou.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'O servidor do Kryfo pede ao serviço de GIFs por você, então o serviço nunca vê você. No Rápido, nosso servidor vê seu endereço IP enquanto você busca, e não guarda registro dele nem do que você buscou.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'O GIF viaja criptografado, como uma foto. O celular do seu amigo não baixa nada.';
 
@@ -8655,7 +8667,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'A busca de GIFs passa pelo servidor do Kryfo. $brand nunca vê você. Quer ligar?';
+    return 'A busca de GIFs vai direto ao servidor do Kryfo, que no Rápido vê seu endereço IP. $brand nunca vê você. Quer ligar?';
   }
 
   @override

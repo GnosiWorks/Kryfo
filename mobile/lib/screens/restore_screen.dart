@@ -543,6 +543,7 @@ class _RestoreScreenState extends State<RestoreScreen> with PinShield {
               if (s.moved != true)
                 _item(l10n.restoreIfThePhoneThisShown, strong: true),
               _item(l10n.restoreNotificationsNeedSettingUp),
+              _item(l10n.restoreDeletedComeBack),
               const SizedBox(height: 22),
               HaloPrimaryButton(
                 label: l10n.restoreMoveItHere,

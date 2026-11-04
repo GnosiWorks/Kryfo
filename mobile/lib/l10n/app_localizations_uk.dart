@@ -2565,6 +2565,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Повідомлення приходять одразу. Ніщо не виходить за межі Tor. Витрачає найбільше заряду.';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'На режимі «Швидкий» повідомлення приходять одразу. Витрачає найбільше заряду.';
+
+  @override
   String get gettingMessagesCheckIns => 'Перевірки';
 
   @override
@@ -4988,6 +4992,10 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'Сповіщення на цьому пристрої треба налаштувати заново.';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'Чати, видалені після створення цієї копії, повернуться разом із нею, і ці контакти можуть побачити, що ти знову налаштував(-ла) Kryfo.';
 
   @override
   String get restoreMoveItHere => 'Перенести сюди';
@@ -8709,6 +8717,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Сервер Kryfo запитує GIF-сервіс замість тебе. Сервіс ніколи тебе не бачить, а сервер не зберігає твої запити.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Сервер Kryfo запитує GIF-сервіс замість тебе, тож сервіс ніколи тебе не бачить. На режимі «Швидкий» наш сервер бачить твою IP-адресу під час пошуку і не зберігає ні її, ні твої запити.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'GIF іде зашифрованим, як фото. Телефон співрозмовника нічого не завантажує.';
 
@@ -8736,7 +8748,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'Пошук GIF іде через сервер Kryfo. $brand ніколи тебе не бачить. Увімкнути?';
+    return 'Пошук GIF іде напряму на сервер Kryfo, який на режимі «Швидкий» бачить твою IP-адресу. $brand ніколи тебе не бачить. Увімкнути?';
   }
 
   @override

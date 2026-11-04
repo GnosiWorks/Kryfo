@@ -2508,6 +2508,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Pesan masuk seketika. Tidak ada yang keluar dari Tor. Paling boros baterai.';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'Di Cepat, pesan masuk seketika. Paling boros baterai.';
+
+  @override
   String get gettingMessagesCheckIns => 'Cek berkala';
 
   @override
@@ -4898,6 +4902,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'Notifikasi perlu diatur ulang di perangkat ini.';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'Obrolan yang kamu hapus setelah cadangan ini dibuat kembali bersamanya, dan kontak itu mungkin melihat bahwa kamu memasang Kryfo lagi.';
 
   @override
   String get restoreMoveItHere => 'Pindahkan ke sini';
@@ -8560,6 +8568,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Server Kryfo bertanya ke layanan GIF untukmu. Layanan itu tidak pernah melihatmu, dan server tidak menyimpan catatan apa yang kamu cari.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Server Kryfo bertanya ke layanan GIF untukmu, jadi layanan itu tidak pernah melihatmu. Di Cepat, server kami melihat alamat IP-mu selama kamu mencari, dan tidak menyimpan catatan alamat itu atau apa yang kamu cari.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'GIF dikirim terenkripsi, seperti foto. Ponsel temanmu tidak mengunduh apa pun.';
 
@@ -8587,7 +8599,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'Pencarian GIF lewat server Kryfo. $brand tidak pernah melihatmu. Nyalakan?';
+    return 'Pencarian GIF langsung ke server Kryfo, yang melihat alamat IP-mu di Cepat. $brand tidak pernah melihatmu. Nyalakan?';
   }
 
   @override

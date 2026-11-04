@@ -2510,6 +2510,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Messages arrive instantly. Nothing leaves Tor. Uses the most battery.';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'Messages arrive instantly on Fast. Uses the most battery.';
+
+  @override
   String get gettingMessagesCheckIns => 'Check-ins';
 
   @override
@@ -4897,6 +4901,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'Notifications need setting up again on this device.';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'Chats you deleted after this backup was made come back with it, and those contacts may see that you set up Kryfo again.';
 
   @override
   String get restoreMoveItHere => 'Move it here';
@@ -8561,6 +8569,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Kryfo\'s server asks the GIF service for you. The service never sees you, and the server keeps no record of what you searched.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Kryfo\'s server asks the GIF service for you, so the service never sees you. On Fast our server sees your IP address while you search, and keeps no record of it or of what you searched.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'The GIF travels encrypted, like a photo. Your friend\'s phone fetches nothing.';
 
@@ -8588,7 +8600,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'GIF search goes through Kryfo\'s server. $brand never sees you. Turn it on?';
+    return 'GIF search goes straight to Kryfo\'s server, which sees your IP address on Fast. $brand never sees you. Turn it on?';
   }
 
   @override

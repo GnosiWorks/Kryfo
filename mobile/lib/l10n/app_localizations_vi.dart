@@ -2503,6 +2503,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tin nhắn đến ngay lập tức. Không có gì rời khỏi Tor. Tốn pin nhất.';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'Ở chế độ Nhanh, tin nhắn đến ngay lập tức. Tốn pin nhất.';
+
+  @override
   String get gettingMessagesCheckIns => 'Kiểm tra định kỳ';
 
   @override
@@ -4891,6 +4895,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'Cần thiết lập lại thông báo trên thiết bị này.';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'Những cuộc trò chuyện bạn xóa sau khi tạo bản sao lưu này sẽ quay lại cùng nó, và những người đó có thể thấy bạn đã cài đặt lại Kryfo.';
 
   @override
   String get restoreMoveItHere => 'Chuyển sang đây';
@@ -8550,6 +8558,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Máy chủ của Kryfo hỏi dịch vụ GIF thay cho bạn. Dịch vụ không bao giờ thấy bạn, và máy chủ không lưu lại những gì bạn đã tìm.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Máy chủ của Kryfo hỏi dịch vụ GIF thay cho bạn, nên dịch vụ không bao giờ thấy bạn. Ở chế độ Nhanh, máy chủ của chúng tôi thấy địa chỉ IP của bạn khi bạn tìm, và không lưu lại địa chỉ đó hay những gì bạn đã tìm.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'GIF được gửi đi đã mã hóa, như một bức ảnh. Điện thoại của bạn bè bạn không tải gì về.';
 
@@ -8577,7 +8589,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'Tìm GIF đi qua máy chủ của Kryfo. $brand không bao giờ thấy bạn. Bật lên nhé?';
+    return 'Tìm GIF đi thẳng tới máy chủ của Kryfo, nơi thấy địa chỉ IP của bạn ở chế độ Nhanh. $brand không bao giờ thấy bạn. Bật lên nhé?';
   }
 
   @override

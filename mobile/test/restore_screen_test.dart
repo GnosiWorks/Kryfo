@@ -325,6 +325,8 @@ void main() {
         await t.pumpAndSettle();
       }
       expect(shown(), isTrue);
+      // what was deleted after the file comes back with it, and says so
+      expect(find.text(l10n.restoreDeletedComeBack), findsOneWidget);
       await t.tap(go);
       await t.pumpAndSettle();
       expect(find.text(l10n.restoreRestoring), findsOneWidget);
