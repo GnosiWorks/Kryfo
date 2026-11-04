@@ -2,14 +2,15 @@
 package main
 
 // what n subscriptions cost the relays: sockets, reqs by kind, the most
-// addresses one req names, what relay-live's per-socket budget (2/s, burst
-// 100) would refuse, and whether every stored wrap still comes in. at the
+// addresses one req names, what relay-live's per-socket budget (10/s, burst
+// 200; 2/s, burst 100 before 0.6) would refuse, and whether every stored
+// wrap still comes in. one in ten chats is hidden, at least one. at the
 // start, after a kick, and after every socket was dropped at once. slow, so
 // only on request:
 //
 //	HALO_RELAY_MEASURE=1 go test -run TestMeasureSockets -v -timeout 30m . | grep '^FS'
 //
-// FS_N (5,40,271) and FS_SPREAD (3s, the turns' width) change it.
+// FS_N (3,15,20,50) and FS_SPREAD (3s, the turns' width) change it.
 
 import (
 	"encoding/hex"
@@ -40,7 +41,7 @@ func (b *fsBucket) take(now time.Time) bool {
 }
 
 type fsCount struct {
-	conns, reqs, stored, live, pages, ids, probes, maxPerConn, maxAddrs, refused int
+	conns, reqs, stored, live, pages, ids, probes, maxPerConn, maxAddrs, refused, refusedOld int
 }
 
 func fsTally(conns []siConn) fsCount {
@@ -50,7 +51,8 @@ func fsTally(conns []siConn) fsCount {
 		s.reqs += len(c.reqs)
 		s.maxPerConn = max(s.maxPerConn, len(c.reqs))
 		// relay-live makes a fresh budget per websocket
-		b := &fsBucket{tokens: 100, max: 100, perSec: 2, last: c.opened}
+		b := &fsBucket{tokens: 200, max: 200, perSec: 10, last: c.opened}
+		old := &fsBucket{tokens: 100, max: 100, perSec: 2, last: c.opened}
 		for _, r := range c.reqs {
 			f := r.filter
 			s.maxAddrs = max(s.maxAddrs, len(f.Tags["p"]))
@@ -68,6 +70,9 @@ func fsTally(conns []siConn) fsCount {
 			}
 			if !b.take(r.at) {
 				s.refused++
+			}
+			if !old.take(r.at) {
+				s.refusedOld++
 			}
 		}
 	}
@@ -133,7 +138,7 @@ func TestMeasureSockets(t *testing.T) {
 	if os.Getenv("HALO_RELAY_MEASURE") == "" {
 		t.Skip("HALO_RELAY_MEASURE not set")
 	}
-	ns := []int{5, 40, 271}
+	ns := []int{3, 15, 20, 50}
 	if s := os.Getenv("FS_N"); s != "" {
 		ns = nil
 		for _, v := range strings.Split(s, ",") {
@@ -153,6 +158,7 @@ func TestMeasureSockets(t *testing.T) {
 			own, pub := newRelayStandIn(t, 0), newRelayStandIn(t, 0)
 			useStandIns(t, modeFast, nil, own, pub)
 			freshInbox(t)
+			freshBatches(t)
 			type peerRow struct {
 				hex string
 				x   xid
@@ -234,9 +240,14 @@ func TestMeasureSockets(t *testing.T) {
 				t.Fatalf("n=%d: %s not after %s", n, what, time.Since(from))
 				return 0
 			}
+			// one in ten hidden, at least one: the last ones
+			hidden := map[string]bool{}
+			for i := 0; i < max(1, n/10); i++ {
+				hidden[peers[n-1-i].rcv] = true
+			}
 			start := time.Now()
 			for _, p := range peers {
-				if r := nostrSubscribe(mainIdent, p.hex, false); r != "ok" {
+				if r := nostrSubscribeAs(mainIdent, p.hex, false, hidden[p.rcv]); r != "ok" {
 					t.Fatal(r)
 				}
 			}
@@ -249,8 +260,26 @@ func TestMeasureSockets(t *testing.T) {
 			}{{"own", own}, {"pub", pub}} {
 				c := r.s.snapshot()
 				s := fsTally(c)
-				fmt.Printf("FS start n=%d pubLive=%d relay=%s open=%d dials=%d reqs=%d stored=%d live=%d pages=%d ids=%d probes=%d maxReqsPerSocket=%d maxAddrsPerReq=%d refused=%d allListening=%s allIn=%s\n",
-					n, pubLive(), r.name, fsOpen(c), s.conns, s.reqs, s.stored, s.live, s.pages, s.ids, s.probes, s.maxPerConn, s.maxAddrs, s.refused,
+				// open sockets that carry a hidden chat, and the most
+				// addresses one socket carries
+				hid, most := 0, 0
+				for _, k := range c {
+					if !k.closed.IsZero() {
+						continue
+					}
+					most = max(most, len(k.addrs))
+					for a := range k.addrs {
+						if hidden[a] {
+							hid++
+							if len(k.addrs) > 1 {
+								t.Fatalf("n=%d: a hidden chat shares a socket with %d others", n, len(k.addrs)-1)
+							}
+							break
+						}
+					}
+				}
+				fmt.Printf("FS start n=%d hidden=%d pubLive=%d relay=%s open=%d hiddenSockets=%d maxAddrsPerSocket=%d dials=%d reqs=%d stored=%d live=%d pages=%d ids=%d probes=%d maxReqsPerSocket=%d maxAddrsPerReq=%d refused=%d refusedOld=%d allListening=%s allIn=%s\n",
+					n, len(hidden), pubLive(), r.name, fsOpen(c), hid, most, s.conns, s.reqs, s.stored, s.live, s.pages, s.ids, s.probes, s.maxPerConn, s.maxAddrs, s.refused, s.refusedOld,
 					heard.Round(10*time.Millisecond), caught.Round(10*time.Millisecond))
 			}
 
@@ -303,8 +332,8 @@ func TestMeasureSockets(t *testing.T) {
 			}{{"own", own}, {"pub", pub}} {
 				fresh := fsSince(r.s.snapshot(), dropAt)
 				s := fsTally(fresh)
-				fmt.Printf("FS redial n=%d relay=%s open=%d dials=%d reqs=%d stored=%d live=%d pages=%d ids=%d probes=%d maxReqsPerSocket=%d maxAddrsPerReq=%d refused=%d allListening=%s allIn=%s\n",
-					n, r.name, fsOpen(fresh), s.conns, s.reqs, s.stored, s.live, s.pages, s.ids, s.probes, s.maxPerConn, s.maxAddrs, s.refused,
+				fmt.Printf("FS redial n=%d relay=%s open=%d dials=%d reqs=%d stored=%d live=%d pages=%d ids=%d probes=%d maxReqsPerSocket=%d maxAddrsPerReq=%d refused=%d refusedOld=%d allListening=%s allIn=%s\n",
+					n, r.name, fsOpen(fresh), s.conns, s.reqs, s.stored, s.live, s.pages, s.ids, s.probes, s.maxPerConn, s.maxAddrs, s.refused, s.refusedOld,
 					heard.Round(10*time.Millisecond), caught.Round(10*time.Millisecond))
 			}
 

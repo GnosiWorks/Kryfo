@@ -854,7 +854,7 @@ func TestRoomAndPairLanesKeepTorOnFast(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, lane := range []string{roomLane("ab12"), pairLane("cd34"), laneFirstContact, laneHello} {
+	for _, lane := range []string{roomLane("ab12"), pairLane("cd34"), laneFirstContact, laneHello, hiddenLane("ef56")} {
 		for _, u := range []string{"wss://relay.kryfo.app", "wss://relay2.kryfo.app"} {
 			c, err := relayClientFor(lane, u)
 			if err != nil {
@@ -872,7 +872,7 @@ func TestRoomAndPairLanesKeepTorOnFast(t *testing.T) {
 			}
 		}
 	}
-	for _, lane := range []string{laneEveryday, receiveLaneAt(1)} {
+	for _, lane := range []string{laneEveryday, batchLane(contactSet(mainIdent), 1)} {
 		if c, _ := relayClientFor(lane, "wss://relay.kryfo.app"); c != direct {
 			t.Fatalf("%s left the fast route", lane)
 		}

@@ -449,9 +449,18 @@ func devTag(ident int, peerHex string, their, my uint8, opener bool) string {
 // no circuit fetches it with a seeded address
 func (c convPair) listenLane(rcvPk string) string {
 	if c.dev != nil && c.dev.opener {
-		return opnLane(c.ident)
+		set := openerSet(c.ident)
+		return batchLane(set, batchOf(set, rcvPk))
 	}
-	return receiveLane(rcvPk)
+	return receiveLane(c.ident, rcvPk)
+}
+
+// the same for a hidden chat's address: a lane of its own
+func (c convPair) listenLaneAs(rcvPk string, hidden bool) string {
+	if hidden {
+		return hiddenLane(rcvPk)
+	}
+	return c.listenLane(rcvPk)
 }
 
 // what a device-pair tag names, ok false for any other tag

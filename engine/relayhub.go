@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// one socket per relay for the addresses of one lane and identity, instead
-// of one per address. a lane already rides one tor circuit, so the relay
-// already saw these addresses come from one exit or one rendezvous circuit;
-// on the clearnet routes from one ip. the shared socket makes that sure
-// rather than likely, and adds nothing else: no address of another lane or
-// identity, no hidden chat and no first-contact address is ever on it (they
-// keep a socket each, as before).
+// one socket per relay for the addresses of one batch (batches.go), instead
+// of one per address. a batch has a lane of its own, so its own tor
+// circuits: the relay learns that these few addresses are one phone's, and
+// nothing ties them to the phone's other batches but timing. no address of
+// another batch or identity, no hidden chat and no first-contact address is
+// ever on it (they keep a socket and a lane each).
 //
 // each address still asks for its own window, with its own since and limit,
 // as before. once the window is in, the address moves to a live req that
@@ -20,10 +19,12 @@ package main
 import (
 	"context"
 	"errors"
+	"log"
 	"math"
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -50,10 +51,27 @@ var hubSlots, hubSlotsOwn = 8, 32
 // a socket that carried something this lately needs no probe of its own
 var hubFresh = 15 * time.Second
 
-// relay-live's budget per socket (2 reqs a second, a burst of 100), kept on
-// this side for our relays, so a burst of addresses waits instead of being
-// turned away
-var hubPacePerSec, hubPaceBurst = 2.0, 90.0
+// relay-live's budget per socket (10 reqs a second, a burst of 200), kept
+// under on this side for our relays, so a burst of addresses waits instead
+// of being turned away
+var hubPacePerSec, hubPaceBurst = 8.0, 180.0
+
+// the budget before 0.6 (2 a second, a burst of 100). each socket keeps
+// count of it too. a relay that turns a req away as too fast still runs
+// the old one: every socket to it keeps to the old count from then on,
+// while this process lives, and the window turned away is asked again
+var hubOldPerSec, hubOldBurst = 2.0, 90.0
+
+// the relays that turned a req away as too fast
+var hubSlow sync.Map
+
+func hubSlowed(u string) bool {
+	_, ok := hubSlow.Load(u)
+	return ok
+}
+
+// relay-live's answer to a req past its budget
+func tooFast(reason string) bool { return strings.HasPrefix(reason, "rate-limited:") }
 
 // the subscriptions that share a socket: one lane, one group, one relay
 type hubKey struct{ lane, group, url string }
@@ -117,9 +135,11 @@ type hubConn struct {
 	heard  atomic.Int64
 	flushC chan struct{}
 
-	paceMu   sync.Mutex
-	tokens   float64
-	paceLast time.Time
+	paceMu sync.Mutex
+	tokens float64
+	// the old budget's count, below zero while past it
+	oldTokens float64
+	paceLast  time.Time
 
 	mu sync.Mutex
 	// joins attached, the dial's waiters included
@@ -159,7 +179,15 @@ func (c *hubConn) close() {
 
 func (c *hubConn) dial(client *http.Client) {
 	noteRelayDial(c.url)
-	r := nostr.NewRelay(c.ctx, c.url, relayOptionsFor(c.url))
+	opts := relayOptionsFor(c.url)
+	if c.paced {
+		opts.ClosedHandler = func(reason string) {
+			if tooFast(reason) {
+				c.slowDown()
+			}
+		}
+	}
+	r := nostr.NewRelay(c.ctx, c.url, opts)
 	rctx, rcancel := onRoute(c.ctx, c.routeC)
 	dctx, dcancel := relayDialCtx(rctx, c.url)
 	err := r.ConnectWithClient(dctx, client)
@@ -222,7 +250,7 @@ func hubJoin(ctx context.Context, k hubKey, addr string, client *http.Client, ro
 		}
 		c = &hubConn{hub: h, url: k.url, paced: paced, routeC: routeC, ctx: cctx, cancel: cancel,
 			dialed: make(chan struct{}), slots: make(chan struct{}, slots), flushC: make(chan struct{}, 1),
-			byAddr: map[string][]*hubMember{}, tokens: hubPaceBurst, paceLast: time.Now()}
+			byAddr: map[string][]*hubMember{}, tokens: hubPaceBurst, oldTokens: hubOldBurst, paceLast: time.Now()}
 		h.cur = c
 		dialing = true
 	}
@@ -325,7 +353,18 @@ func (m *hubMember) dropSlot() {
 	}
 }
 
-// waits for a req's place in our relay's budget
+// the relay keeps the old budget: this socket's bucket is empty there now
+func (c *hubConn) slowDown() {
+	if _, was := hubSlow.LoadOrStore(c.url, true); !was {
+		log.Printf("nostr: an own relay keeps the old req budget, %v a second from now on", hubOldPerSec)
+	}
+	c.paceMu.Lock()
+	c.oldTokens = 0
+	c.paceMu.Unlock()
+}
+
+// waits for a req's place in our relay's budget, the old one once the relay
+// showed it keeps that
 func (c *hubConn) pace(ctx context.Context) error {
 	if !c.paced {
 		return nil
@@ -333,14 +372,21 @@ func (c *hubConn) pace(ctx context.Context) error {
 	for {
 		c.paceMu.Lock()
 		now := time.Now()
-		c.tokens = min(hubPaceBurst, c.tokens+now.Sub(c.paceLast).Seconds()*hubPacePerSec)
+		dt := now.Sub(c.paceLast).Seconds()
+		c.tokens = min(hubPaceBurst, c.tokens+dt*hubPacePerSec)
+		c.oldTokens = min(hubOldBurst, c.oldTokens+dt*hubOldPerSec)
 		c.paceLast = now
-		if c.tokens >= 1 {
+		have, rate := c.tokens, hubPacePerSec
+		if hubSlowed(c.url) {
+			have, rate = c.oldTokens, hubOldPerSec
+		}
+		if have >= 1 {
 			c.tokens--
+			c.oldTokens--
 			c.paceMu.Unlock()
 			return nil
 		}
-		wait := time.Duration((1 - c.tokens) / hubPacePerSec * float64(time.Second))
+		wait := time.Duration((1 - have) / rate * float64(time.Second))
 		c.paceMu.Unlock()
 		t := time.NewTimer(wait)
 		select {
@@ -605,7 +651,7 @@ func (m *hubMember) subscribe(f nostr.Filter) (*linkSub, error) {
 	c.mu.Unlock()
 	c.kickFlush()
 	events, eose, closed := make(chan nostr.Event), make(chan struct{}), make(chan string, 1)
-	go m.feed(win, events, eose, closed)
+	go m.feed(f, win, events, eose, closed)
 	return &linkSub{Events: events, EndOfStoredEvents: eose, ClosedReason: closed}, nil
 }
 
@@ -618,12 +664,12 @@ func (m *hubMember) send(to chan nostr.Event, ev nostr.Event) bool {
 	}
 }
 
-func (m *hubMember) feed(win *nostr.Subscription, events chan nostr.Event, eose chan struct{}, closed chan string) {
+func (m *hubMember) feed(f nostr.Filter, win *nostr.Subscription, events chan nostr.Event, eose chan struct{}, closed chan string) {
 	defer close(events)
 	defer m.cancel()
 	c := m.c
 	winEv, winEose := win.Events, win.EndOfStoredEvents
-	eosed, handed := false, false
+	eosed, handed, again := false, false, false
 	for {
 		// the window is in and a live req names the address: its own req
 		// goes, and what the live one brought meanwhile is handed over
@@ -647,6 +693,18 @@ func (m *hubMember) feed(win *nostr.Subscription, events chan nostr.Event, eose 
 					// turned away, or the socket went
 					select {
 					case r := <-win.ClosedReason:
+						// too fast for a relay on the old budget: once more,
+						// paced under that one now, so the runner never
+						// sees it (a refusal lets go of the catch-up's hold)
+						if c.paced && tooFast(r) && !again && !eosed && m.ctx.Err() == nil {
+							again = true
+							if c.pace(m.ctx) == nil {
+								if w, err := c.relay.Subscribe(m.ctx, f, nostr.SubscriptionOptions{MaxWaitForEOSE: time.Duration(math.MaxInt64)}); err == nil {
+									win, winEv, winEose = w, w.Events, w.EndOfStoredEvents
+									continue
+								}
+							}
+						}
 						closed <- r
 					default:
 					}

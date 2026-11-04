@@ -143,6 +143,7 @@ func addressFiles(rcvPk string) (seenPath, lastPath string) {
 func dropAddressFiles(rcvPk string) {
 	dropHeard(rcvPk)
 	liveForget(rcvPk)
+	batchForget(rcvPk)
 	seenPath, lastPath := addressFiles(rcvPk)
 	if seenPath == "" {
 		return

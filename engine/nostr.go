@@ -1392,12 +1392,13 @@ var torRetryWait = 10 * time.Second
 // lands on pair c's receive address rcvPk, tagged [tag] (its subscription
 // key). dedupes across relays. exits when ctx is cancelled.
 func nostrSubscribeRunner(ctx context.Context, tag string, c convPair, rcvPk string) {
-	// the identity's addresses on a lane share a socket per relay, a hidden
-	// chat's keeps one of its own
-	if !hiddenOf(ctx) {
+	// the addresses of a batch share a socket per relay, a hidden chat's
+	// keeps one of its own on a lane of its own
+	hidden := hiddenOf(ctx)
+	if !hidden {
 		ctx = shareOn(ctx, identGroup(c.ident))
 	}
-	nostrSubscribeRunnerAt(ctx, c.listenLane(rcvPk), tag, rcvPk, c.unwrapStamped)
+	nostrSubscribeRunnerAt(ctx, c.listenLaneAs(rcvPk, hidden), tag, rcvPk, c.unwrapStamped)
 }
 
 // a first-contact address: what lands on it is opened with its key alone
@@ -2601,8 +2602,9 @@ func HaloNostrSubscribeNew(cIdent C.int, cPeerXPubHex *C.char) *C.char {
 	return C.CString(nostrSubscribe(identArg(cIdent), goStr(cPeerXPubHex), true))
 }
 
-// as HaloNostrSubscribe, for a hidden chat: its address keeps a socket of
-// its own on every relay, never one it shares with the everyday chats
+// as HaloNostrSubscribe, for a hidden chat: its address keeps a socket and
+// a tor circuit of its own on every relay and every route, never one it
+// shares with the everyday chats
 //
 //export HaloNostrSubscribeHidden
 func HaloNostrSubscribeHidden(cIdent C.int, cPeerXPubHex *C.char) *C.char {
@@ -2645,7 +2647,9 @@ func nostrSubscribeAt(c convPair, peerHex, rcvSk, rcvPk string, fresh, hidden bo
 	key := c.subKey(peerHex)
 	// every identity's, the main one's too: the knocks take the address
 	// the subscription was made on, never one derived again
-	lane := c.listenLane(rcvPk)
+	// a hidden chat's knocks go on its own lane too, never in a batch's
+	// registration
+	lane := c.listenLaneAs(rcvPk, hidden)
 	noteKnockTarget(key, knockTarget{rcvPk, rcvSk, lane, lane, strings.ToLower(peerHex)})
 	nostrMu.Lock()
 	if cancel, exists := nostrSubs[key]; exists {

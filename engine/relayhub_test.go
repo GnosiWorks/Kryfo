@@ -35,10 +35,25 @@ func checkLiveReqs(t *testing.T, r *relayStandIn) {
 	}
 }
 
-func TestALanesAddressesShareOneSocket(t *testing.T) {
+// an empty batch book for the test, the one before after it
+func freshBatches(t *testing.T) {
+	t.Helper()
+	batchMu.Lock()
+	old := batches
+	batches = &batchBook{dir: savedDataDir(), of: map[string]batchPlace{}, size: map[batchPlace]int{}, top: map[string]int{}}
+	batchMu.Unlock()
+	t.Cleanup(func() {
+		batchMu.Lock()
+		batches = old
+		batchMu.Unlock()
+	})
+}
+
+func TestABatchsAddressesShareOneSocket(t *testing.T) {
 	own, pub := newRelayStandIn(t, 0), newRelayStandIn(t, 0)
 	useStandIns(t, modeFast, nil, own, pub)
 	freshInbox(t)
+	freshBatches(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer func() {
 		cancel()
@@ -53,7 +68,7 @@ func TestALanesAddressesShareOneSocket(t *testing.T) {
 		rcv := mustRcv(t, p)
 		peers = append(peers, p)
 		rcvs = append(rcvs, rcv)
-		lanes[receiveLane(rcv)] = true
+		lanes[receiveLane(mainIdent, rcv)] = true
 		// one of them has a window full enough to page
 		k := 1
 		if i == 0 {
@@ -90,17 +105,24 @@ func TestALanesAddressesShareOneSocket(t *testing.T) {
 		}
 		return true
 	})
+	// 30 addresses: batches of 8, 8, 8 and 6
+	if len(lanes) != 4 {
+		t.Fatalf("%d batches for %d addresses, want 4", len(lanes), n)
+	}
 	for _, r := range []*relayStandIn{own, pub} {
 		if got := len(connAddrs(r)); got > len(lanes) {
-			t.Fatalf("%d sockets open on one relay for %d lanes", got, len(lanes))
+			t.Fatalf("%d sockets open on one relay for %d batches", got, len(lanes))
 		}
 		checkLiveReqs(t, r)
 	}
-	// no socket carries two lanes
+	// no socket carries two batches or more than one batch holds
 	for _, set := range connAddrs(own) {
+		if len(set) > batchMax {
+			t.Fatalf("one socket carries %d addresses", len(set))
+		}
 		var lane string
 		for a := range set {
-			if l := receiveLane(a); lane == "" {
+			if l := receiveLane(mainIdent, a); lane == "" {
 				lane = l
 			} else if l != lane {
 				t.Fatalf("one socket carries %s and %s", lane, l)
@@ -122,7 +144,7 @@ func TestALanesAddressesShareOneSocket(t *testing.T) {
 		return true
 	})
 
-	// the relay drops everyone: each lane comes back on one socket, and
+	// the relay drops everyone: each batch comes back on one socket, and
 	// what came meanwhile is fetched by each address's own window
 	own.dropAll()
 	for _, p := range peers[:5] {
@@ -139,7 +161,7 @@ func TestALanesAddressesShareOneSocket(t *testing.T) {
 		return true
 	})
 	if got := len(connAddrs(own)); got > len(lanes) {
-		t.Fatalf("%d sockets open after the drop for %d lanes", got, len(lanes))
+		t.Fatalf("%d sockets open after the drop for %d batches", got, len(lanes))
 	}
 	checkLiveReqs(t, own)
 }
@@ -148,10 +170,8 @@ func TestAHiddenChatKeepsASocketOfItsOwn(t *testing.T) {
 	own := newRelayStandIn(t, 0)
 	useStandIns(t, modeFast, nil, own)
 	freshInbox(t)
-	// everyone on one lane, so only the hidden mark keeps it apart
-	old := receiveLane
-	receiveLane = func(string) string { return receiveLaneAt(0) }
-	defer func() { receiveLane = old }()
+	// everyone in one batch, so only the hidden mark keeps it apart
+	freshBatches(t)
 	t.Cleanup(func() { runnersGone(t) })
 	var rcvs []string
 	var hidden, hiddenKey string
@@ -187,6 +207,20 @@ func TestAHiddenChatKeepsASocketOfItsOwn(t *testing.T) {
 	if shared != 1 {
 		t.Fatalf("the everyday addresses are on %d sockets, want one", shared)
 	}
+	// a lane of its own, over tor on every route, and in no batch
+	lane := mainPair([32]byte{}).listenLaneAs(hidden, true)
+	if laneKind(lane) != laneHidden || !laneKeepsTor(lane) {
+		t.Fatalf("the hidden chat listens on %q", lane)
+	}
+	if lane == hiddenLane(rcvs[1]) {
+		t.Fatal("two hidden chats on one lane")
+	}
+	batchMu.Lock()
+	_, inBatch := batches.of[addrShort(hidden)]
+	batchMu.Unlock()
+	if inBatch {
+		t.Fatal("the hidden chat's address took a place in a batch")
+	}
 	// started again for a held wrap, it stays apart
 	nostrMu.Lock()
 	marked := nostrHiddenSubs[hiddenKey]
@@ -200,9 +234,7 @@ func TestIdentitiesDoNotShareASocket(t *testing.T) {
 	own := newRelayStandIn(t, 0)
 	useStandIns(t, modeFast, nil, own)
 	freshInbox(t)
-	old := receiveLane
-	receiveLane = func(string) string { return receiveLaneAt(0) }
-	defer func() { receiveLane = old }()
+	freshBatches(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer func() {
 		cancel()
@@ -238,7 +270,11 @@ func TestIdentitiesDoNotShareASocket(t *testing.T) {
 		}
 	}
 	if got := len(connAddrs(own)); got != 2 {
-		t.Fatalf("%d sockets for two identities on one lane, want 2", got)
+		t.Fatalf("%d sockets for two identities, want 2", got)
+	}
+	// and their batches have lanes of their own, so circuits of their own
+	if receiveLane(0, "aa") == receiveLane(1, "bb") {
+		t.Fatal("two identities' first batches on one lane")
 	}
 }
 
@@ -247,9 +283,7 @@ func TestARefusedLiveReqIsAskedAgain(t *testing.T) {
 	own := newRelayStandIn(t, 0)
 	useStandIns(t, modeFast, nil, own)
 	freshInbox(t)
-	old := receiveLane
-	receiveLane = func(string) string { return receiveLaneAt(0) }
-	defer func() { receiveLane = old }()
+	freshBatches(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer func() {
 		cancel()
@@ -290,4 +324,67 @@ func TestARefusedLiveReqIsAskedAgain(t *testing.T) {
 		}
 		return true
 	})
+}
+
+// a relay still on the old req budget turns the batch's windows past it
+// away: the socket keeps to the old budget from then on, asks those again
+// itself, and every address listens with all its wraps in
+func TestAnOldRelaysBudgetSlowsTheSocket(t *testing.T) {
+	own := newRelayStandIn(t, 0)
+	// the old budget, small enough that one batch's windows run past it
+	own.reqPerSec, own.reqBurst = 2, 4
+	oldPer, oldBurst := hubOldPerSec, hubOldBurst
+	hubOldPerSec, hubOldBurst = 2, 3
+	t.Cleanup(func() { hubOldPerSec, hubOldBurst = oldPer, oldBurst })
+	useStandIns(t, modeFast, nil, own)
+	freshInbox(t)
+	freshBatches(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer func() {
+		cancel()
+		runnersGone(t)
+	}()
+	var peers []xid
+	var rcvs []string
+	for i := 0; i < batchMax; i++ {
+		p := newXid(t)
+		peers = append(peers, p)
+		rcvs = append(rcvs, mustRcv(t, p))
+		own.store(wrapToAt(t, p, myXPub, "stored", time.Now().Add(-time.Hour)))
+	}
+	for i, p := range peers {
+		go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), mainPair(p.pub), rcvs[i])
+	}
+	waitFor(t, "every address listening", 30*time.Second, func() bool {
+		l := own.listening()
+		for _, a := range rcvs {
+			if l[a] == 0 {
+				return false
+			}
+		}
+		return true
+	})
+	waitFor(t, "every stored wrap in", 15*time.Second, func() bool {
+		got := fsInbox()
+		for _, p := range peers {
+			if !got[hex.EncodeToString(p.pub[:])]["stored"] {
+				return false
+			}
+		}
+		return true
+	})
+	refused := 0
+	for _, c := range own.snapshot() {
+		refused += c.refused
+	}
+	if refused == 0 {
+		t.Fatal("the relay turned nothing away: the test asks too little")
+	}
+	if !hubSlowed(own.url()) {
+		t.Fatal("the socket did not take the old budget on")
+	}
+	// one socket all along: nothing went back to the runners' reconnect
+	if got := len(own.snapshot()); got != 1 {
+		t.Fatalf("%d sockets, want the batch's one", got)
+	}
 }

@@ -55,7 +55,7 @@ func TestSubscriptionIDsPerConnection(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	l := startLanes(t, ctx, 3, 1)
-	subs := l.subs()
+	subs := l.sockets()
 	listening := func(conns []siConn) int {
 		n := 0
 		for _, c := range conns {
@@ -107,9 +107,8 @@ func TestSubscriptionIDsPerConnection(t *testing.T) {
 			if len(c.subIDs) == 0 {
 				continue
 			}
-			if c.subIDs[0] != "1:" {
-				t.Errorf("relay %s connection %d opened with id %q, want 1:", name, i, c.subIDs[0])
-			}
+			// a batch's addresses ask at once on its socket, so ids may reach
+			// the wire out of order: counted from 1 with none skipped
 			got := append([]string(nil), c.subIDs...)
 			sort.Slice(got, func(x, y int) bool {
 				nx, _ := strconv.Atoi(strings.TrimSuffix(got[x], ":"))
@@ -140,16 +139,19 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	l := startLanes(t, ctx, 2, 2)
-	subs := l.subs()
+	addrs := append([]string{l.fc}, l.contacts...)
+	for _, r := range l.rooms {
+		addrs = append(addrs, r...)
+	}
 	for _, r := range []*relayStandIn{a, b} {
 		waitFor(t, "every subscription connected", 15*time.Second, func() bool {
-			n := 0
-			for _, c := range r.snapshot() {
-				if len(c.subIDs) > 0 {
-					n++
+			on := r.listening()
+			for _, a := range addrs {
+				if on[a] == 0 {
+					return false
 				}
 			}
-			return n == subs
+			return true
 		})
 	}
 
@@ -201,7 +203,7 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 		"pair":          {pairPk},
 	}
 	for _, a := range l.contacts {
-		k := "contacts on " + receiveLane(a)
+		k := "contacts on " + receiveLane(mainIdent, a)
 		lanes[k] = append(lanes[k], a)
 	}
 	nameOfLane := map[string]string{}
@@ -301,57 +303,91 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 	}
 }
 
-// a contact's address keeps its lane, and the addresses fill all of them
-func TestReceiveLanesByHash(t *testing.T) {
-	// the first four bytes of sha256, big-endian, mod 4, as measured
-	for a, want := range map[string]string{
-		fmt.Sprintf("%064x", 1): "everyday:0",
-		fmt.Sprintf("%064x", 0): "everyday:1",
-		strings.Repeat("a", 64): "everyday:2",
-		fmt.Sprintf("%064x", 3): "everyday:3",
-	} {
-		if got := receiveLane(a); got != want {
-			t.Errorf("...%s on %s, want %s", a[56:], got, want)
+// a contact's address keeps its batch, a new one joins the newest batch
+// with room, and a place let go of stays empty until a new one takes it
+func TestBatchesNeverMove(t *testing.T) {
+	dir := t.TempDir()
+	old := savedDataDir()
+	setSavedDataDir(dir)
+	t.Cleanup(func() { setSavedDataDir(old) })
+	batchMu.Lock()
+	keep := batches
+	batches = nil
+	batchMu.Unlock()
+	t.Cleanup(func() {
+		batchMu.Lock()
+		batches = keep
+		batchMu.Unlock()
+	})
+	// apart in their first 16 hex, as the files name them
+	addr := func(i int) string { return fmt.Sprintf("%016x%048x", i+1, 0) }
+	set := contactSet(mainIdent)
+	for i := 0; i < 20; i++ {
+		if got, want := batchOf(set, addr(i)), i/batchMax; got != want {
+			t.Fatalf("address %d in batch %d, want %d", i, got, want)
 		}
 	}
-	seen := map[string]int{}
-	for i := 0; i < 400; i++ {
-		a := fmt.Sprintf("%064x", i)
-		l := receiveLane(a)
-		if receiveLane(a) != l {
-			t.Fatal("an address moved lanes")
-		}
-		if l == laneEveryday || l == laneFirstContact || laneKind(l) != laneEveryday {
-			t.Fatalf("a contact's address on lane %q", l)
-		}
-		seen[l]++
+	// lanes of their own, apart from every other kind
+	l := receiveLane(mainIdent, addr(0))
+	if l == laneEveryday || laneKind(l) != laneEveryday || laneKeepsTor(l) {
+		t.Fatalf("a contact's address on lane %q", l)
 	}
-	if len(seen) != receiveLaneCount {
-		t.Fatalf("%d lanes in use, want %d: %v", len(seen), receiveLaneCount, seen)
+	if receiveLane(mainIdent, addr(8)) == l || receiveLane(1, addr(100)) == l {
+		t.Fatal("two batches on one lane")
 	}
-	for l, n := range seen {
-		if n < 50 {
-			t.Errorf("lane %s has %d of 400 addresses", l, n)
+	// one let go of in the first batch: nobody moves into its place
+	dropAddressFiles(addr(3))
+	for i := 0; i < 20; i++ {
+		if i != 3 && batchOf(set, addr(i)) != i/batchMax {
+			t.Fatalf("address %d moved after another was let go of", i)
 		}
+	}
+	// the next new one goes to the newest batch with room: batch 2 has 4
+	if got := batchOf(set, addr(20)); got != 2 {
+		t.Fatalf("a new address in batch %d, want 2", got)
+	}
+	// read again from the files, as after a restart: nothing moved
+	batchMu.Lock()
+	batches = nil
+	batchMu.Unlock()
+	for i := 0; i <= 20; i++ {
+		want := i / batchMax
+		if i == 20 {
+			want = 2
+		}
+		if i != 3 && batchOf(set, addr(i)) != want {
+			t.Fatalf("address %d in another batch after a restart", i)
+		}
+	}
+	// the newest are full: a new one fills the old place left empty
+	for i := 21; i < 24; i++ {
+		batchOf(set, addr(i))
+	}
+	if got := batchOf(set, addr(24)); got != 0 {
+		t.Fatalf("with the newest batches full a new address went to %d, want the place left in 0", got)
+	}
+	if got := batchOf(set, addr(25)); got != 3 {
+		t.Fatalf("with every batch full a new address went to %d, want a new batch 3", got)
+	}
+	// the file names no more than the address files already do
+	raw, err := os.ReadFile(batchFile(dir, addrShort(addr(0))))
+	if err != nil || string(raw) != set+" 0" {
+		t.Fatalf("batch file %q %v", raw, err)
 	}
 }
 
-// contacts until every receive lane has one and one lane has two
+// contacts until two batches are in use
 func contactsOnEveryLane(t *testing.T) map[string][]xid {
 	t.Helper()
+	freshBatches(t)
 	byLane := map[string][]xid{}
-	two := false
-	for i := 0; len(byLane) < receiveLaneCount || !two; i++ {
-		if i == 1000 {
-			t.Fatalf("a thousand contacts on %d receive lanes", len(byLane))
-		}
+	for i := 0; i < batchMax+2; i++ {
 		p := newXid(t)
-		l := receiveLane(mustRcv(t, p))
-		if n := len(byLane[l]); n == 2 || (n == 1 && two) {
-			continue
-		}
+		l := receiveLane(mainIdent, mustRcv(t, p))
 		byLane[l] = append(byLane[l], p)
-		two = two || len(byLane[l]) == 2
+	}
+	if len(byLane) != 2 {
+		t.Fatalf("%d contacts in %d batches", batchMax+2, len(byLane))
 	}
 	return byLane
 }
@@ -448,7 +484,7 @@ func TestReceiveLanesDialApart(t *testing.T) {
 			}
 		}
 	}
-	if want := receiveLaneCount + 3; len(laneOf) != want {
+	if want := 2 + 3; len(laneOf) != want {
 		t.Fatalf("%d socks names for the main identity, want %d: %v", len(laneOf), want, laneOf)
 	}
 	if len(seen) != len(conns) {
@@ -586,7 +622,7 @@ func TestDirectModesUnchanged(t *testing.T) {
 						n++
 					}
 				}
-				return n == l.subs()
+				return n == l.sockets()
 			})
 			// only the room's two addresses and the first-contact address
 			// go through tor (laneKeepsTor)

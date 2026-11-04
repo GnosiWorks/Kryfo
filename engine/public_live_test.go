@@ -445,10 +445,13 @@ func TestTheRankOutlivesARestart(t *testing.T) {
 
 // only the contacts' receive lanes are ranked
 func TestOnlyContactAddressesAreCapped(t *testing.T) {
-	for i := 0; i < receiveLaneCount; i++ {
-		if !rankedLane(receiveLaneAt(i)) {
+	for i := 0; i < 4; i++ {
+		if !rankedLane(batchLane(contactSet(i%2), i)) || !rankedLane(hiddenLane(strconv.Itoa(i))) {
 			t.Fatalf("contact lane %d is not ranked", i)
 		}
+	}
+	if rankedLane(batchLane(openerSet(0), 0)) {
+		t.Fatal("a device opener's lane is ranked")
 	}
 	for _, l := range []string{laneEveryday, laneFirstContact, roomLane("ab"), pairLane("ab"), laneServices} {
 		if rankedLane(l) {
@@ -712,7 +715,7 @@ func TestOurRelayDownReadsThePublicRelaysMoreOften(t *testing.T) {
 	slots := map[int64]bool{}
 	var firsts []time.Time
 	for _, a := range capped {
-		at := connsOn(pub.snapshot(), []string{a})[0].opened
+		at := firstReqAt(pub, a)
 		firsts = append(firsts, at)
 		slots[at.UnixMilli()/250] = true
 	}
@@ -957,7 +960,7 @@ func TestAnAcceptedRequestIsLiveFromTheNextStart(t *testing.T) {
 	// the accept
 	nostrSubscribe(mainIdent, reqHex, true)
 	waitFor(t, "the accepted request back on our relay", 10*time.Second, func() bool {
-		return openOn(own, reqRcv) == 1 && len(connsOn(own.snapshot(), []string{reqRcv})) >= 2
+		return openOn(own, reqRcv) == 1 && own.windows(reqRcv) >= 2
 	})
 	end := time.Now().Add(2 * time.Second)
 	for time.Now().Before(end) {
@@ -1155,9 +1158,15 @@ func TestAReadReachesBackToWhatItLastHandedOver(t *testing.T) {
 		return slices.Contains(nostrInbox, outHex+"|only on a public relay")
 	})
 	// to the quarter hour: the read's own end would carry this phone's clock
+	// the address's own first req: its batch's socket carries others too
 	for _, c := range connsOn(pub.snapshot(), []string{outRcv}) {
-		if len(c.reqs) > 0 && c.reqs[0].filter.Since%900 != 0 {
-			t.Fatalf("the widened since is not on the quarter hour: %d", c.reqs[0].filter.Since)
+		for _, q := range c.reqs {
+			if slices.Contains(q.filter.Tags["p"], outRcv) {
+				if q.filter.Since%900 != 0 {
+					t.Fatalf("the widened since is not on the quarter hour: %d", q.filter.Since)
+				}
+				break
+			}
 		}
 	}
 }
@@ -1403,4 +1412,17 @@ func TestTheFirstReadAfterAStartReachesBackToItsAnchor(t *testing.T) {
 			t.Fatalf("the widened since is not on the quarter hour: %d", c.reqs[0].filter.Since)
 		}
 	}
+}
+
+// when relay r first got a req naming a, on whatever socket
+func firstReqAt(r *relayStandIn, a string) time.Time {
+	var at time.Time
+	for _, c := range r.snapshot() {
+		for _, q := range c.reqs {
+			if slices.Contains(q.filter.Tags["p"], a) && (at.IsZero() || q.at.Before(at)) {
+				at = q.at
+			}
+		}
+	}
+	return at
 }

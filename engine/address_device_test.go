@@ -740,7 +740,7 @@ func TestDeviceListenClosesByWhatItNoted(t *testing.T) {
 
 	// L2: the opener address on its identity's own lane
 	for _, k := range knockTargets() {
-		if k.pk == oRcv && k.lane != opnLane(dvA1) {
+		if k.pk == oRcv && !strings.HasPrefix(k.lane, opnLane(dvA1)+":") {
 			t.Fatalf("the opener address on %s", k.lane)
 		}
 		if k.pk == sRcv && !strings.HasPrefix(k.lane, laneEveryday+":") {

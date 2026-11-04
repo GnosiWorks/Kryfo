@@ -50,6 +50,9 @@ type siConn struct {
 	kill      context.CancelFunc
 	mute      bool // takes events and never answers, like a dead circuit
 	ws        *ws.Conn
+	// the req budget, when the relay keeps one, and the reqs it turned away
+	budget  *fsBucket
+	refused int
 }
 
 // one req, when it came and what it asked for
@@ -95,6 +98,9 @@ type relayStandIn struct {
 	hangUp bool
 	// before a publish's ok goes back, as from a relay far away
 	okDelay time.Duration
+	// relay-live's req budget per connection, none when 0: a req past it
+	// is answered CLOSED rate-limited
+	reqPerSec, reqBurst float64
 }
 
 func newRelayStandIn(t *testing.T, pongDelay time.Duration) *relayStandIn {
@@ -175,6 +181,21 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 			c.reqs = append(c.reqs, siReq{at: time.Now(), id: e.SubscriptionID, filter: f})
 			for _, p := range f.Tags["p"] {
 				c.addrs[p] = true
+			}
+			if s.reqPerSec > 0 {
+				if c.budget == nil {
+					c.budget = &fsBucket{tokens: s.reqBurst, max: s.reqBurst, perSec: s.reqPerSec, last: time.Now()}
+				}
+				if !c.budget.take(time.Now()) {
+					c.refused++
+					c.closedIDs[e.SubscriptionID] = true
+					s.mu.Unlock()
+					b, _ := nostr.ClosedEnvelope{SubscriptionID: e.SubscriptionID, Reason: "rate-limited: slow down"}.MarshalJSON()
+					if conn.Write(ctx, ws.MessageText, b) != nil {
+						return
+					}
+					continue
+				}
 			}
 			var match []nostr.Event
 			for _, ev := range s.events {
@@ -848,6 +869,15 @@ func (l lanesUp) subs() int {
 		n += len(r)
 	}
 	return n
+}
+
+// sockets per relay: one per batch of contacts, one per other address
+func (l lanesUp) sockets() int {
+	batches := map[string]bool{}
+	for _, c := range l.contacts {
+		batches[receiveLane(mainIdent, c)] = true
+	}
+	return l.subs() - len(l.contacts) + len(batches)
 }
 
 func startLanes(t *testing.T, ctx context.Context, contacts, rooms int) lanesUp {
