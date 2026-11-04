@@ -6780,10 +6780,6 @@
   "@settingsVersion": {
     "description": "screens/settings_screen.dart"
   },
-  "settings030Alpha": "0.5.3 · alpha",
-  "@settings030Alpha": {
-    "description": "screens/settings_screen.dart"
-  },
   "settingsReportAnIssue": "Report an issue",
   "@settingsReportAnIssue": {
     "description": "screens/settings_screen.dart"
@@ -9562,6 +9558,10 @@
   "languageNameHi": "Hindi",
   "@languageNameHi": {
     "description": "the name of Hindi in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
+  },
+  "languageNamePl": "Polish",
+  "@languageNamePl": {
+    "description": "the name of Polish in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
   },
   "languageLaterLine": "You can change this any time in settings.",
   "@languageLaterLine": {
@@ -13874,6 +13874,51 @@
         "type": "int"
       }
     }
+  },
+  "settingsVersionAlpha": "{version} · alpha",
+  "@settingsVersionAlpha": {
+    "description": "screens/settings_screen.dart",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsShotsNotHereYet": "Not on this computer yet",
+  "@settingsShotsNotHereYet": {
+    "description": "screens/settings_screen.dart: the screenshots line on a computer"
+  },
+  "settingsDeskInTray": "Running in the tray",
+  "@settingsDeskInTray": {
+    "description": "screens/settings_screen.dart: how messages arrive on a computer, kept in the tray"
+  },
+  "settingsDeskWhileOpen": "While Kryfo is open",
+  "@settingsDeskWhileOpen": {
+    "description": "screens/settings_screen.dart: how messages arrive on a computer with the tray off"
+  },
+  "onboardingDeskRunTitle": "Kryfo keeps *running*.",
+  "@onboardingDeskRunTitle": {
+    "description": "screens/onboarding_screen.dart: the computer's step in place of the notification one"
+  },
+  "onboardingDeskRunLead": "Close the window and Kryfo waits in the tray, so messages keep arriving. You can change both later in Settings, under Notifications.",
+  "@onboardingDeskRunLead": {
+    "description": "screens/onboarding_screen.dart: the computer's step in place of the notification one"
+  },
+  "savedLongPressAnyMessageDesk": "Right-click any message and choose save to keep it here.",
+  "@savedLongPressAnyMessageDesk": {
+    "description": "screens/saved_screen.dart, on a computer"
+  },
+  "chatFailedTapToRetryDesk": "Failed · click to retry",
+  "@chatFailedTapToRetryDesk": {
+    "description": "screens/chat_screen.dart, on a computer"
+  },
+  "groupChatTapToRetryDesk": "! Click to retry",
+  "@groupChatTapToRetryDesk": {
+    "description": "screens/group_chat_screen.dart, on a computer"
+  },
+  "modesFastLineDesk": "Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you're connected, and never log or keep it. Your contacts never see it. Your network can see that you connect to Kryfo.",
+  "@modesFastLineDesk": {
+    "description": "screens/modes_screen.dart, on a computer"
   },
   "voiceSeeTranscription": "See transcription",
   "@voiceSeeTranscription": {

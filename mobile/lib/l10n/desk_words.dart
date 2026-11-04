@@ -137,6 +137,10 @@ const deskWordKeys = [
   'devicesThisPhoneOnly',
   'devicesOnlyThisPhone',
   'devicesHiddenStay',
+  'savedLongPressAnyMessage',
+  'chatFailedTapToRetry',
+  'groupChatTapToRetry',
+  'modesFastLine',
 ];
 
 extension DeskWords on AppLocalizations {
@@ -408,4 +412,12 @@ extension DeskWords on AppLocalizations {
       onDesktop ? devicesOnlyThisPhoneDesk : devicesOnlyThisPhone;
   String get devicesHiddenStayShown =>
       onDesktop ? devicesHiddenStayDesk : devicesHiddenStay;
+  String get savedLongPressAnyMessageShown =>
+      onDesktop ? savedLongPressAnyMessageDesk : savedLongPressAnyMessage;
+  String get chatFailedTapToRetryShown =>
+      onDesktop ? chatFailedTapToRetryDesk : chatFailedTapToRetry;
+  String get groupChatTapToRetryShown =>
+      onDesktop ? groupChatTapToRetryDesk : groupChatTapToRetry;
+  String get modesFastLineShown =>
+      onDesktop ? modesFastLineDesk : modesFastLine;
 }

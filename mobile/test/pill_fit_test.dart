@@ -99,7 +99,7 @@ void main() {
 
   // the pill on screen draws what the fit says: the whole phrase, in two
   // lines at most, at the fitted size
-  for (final code in ['pt', 'ru', 'es', 'uk', 'id', 'ar', 'hi']) {
+  for (final code in ['pt', 'ru', 'es', 'uk', 'id', 'ar', 'hi', 'pl']) {
     testWidgets('the pill draws its whole phrase in $code at the largest '
         'text', (t) async {
       SharedPreferences.setMockInitialValues({});

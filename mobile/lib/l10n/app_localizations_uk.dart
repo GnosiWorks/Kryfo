@@ -5564,9 +5564,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsVersion => 'Версія';
 
   @override
-  String get settings030Alpha => '0.5.3 · альфа';
-
-  @override
   String get settingsReportAnIssue => 'Повідомити про проблему';
 
   @override
@@ -7730,6 +7727,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get languageNameHi => 'Гінді';
+
+  @override
+  String get languageNamePl => 'Польська';
 
   @override
   String get languageLaterLine =>
@@ -11216,6 +11216,41 @@ class AppLocalizationsUk extends AppLocalizations {
   String restoreOlderMany(Object first, Object second, int count) {
     return 'У $first, $second і ще $count старіша версія Kryfo. Чати з ними стануть на паузу, доки вони не оновлять застосунок.';
   }
+
+  @override
+  String settingsVersionAlpha(String version) {
+    return '$version · альфа';
+  }
+
+  @override
+  String get settingsShotsNotHereYet => 'На цьому комп’ютері поки немає';
+
+  @override
+  String get settingsDeskInTray => 'Працює в області сповіщень';
+
+  @override
+  String get settingsDeskWhileOpen => 'Поки Kryfo відкритий';
+
+  @override
+  String get onboardingDeskRunTitle => 'Kryfo далі *працює*.';
+
+  @override
+  String get onboardingDeskRunLead =>
+      'Закрий вікно, і Kryfo лишиться в області сповіщень, а повідомлення далі надходитимуть. Обидва параметри можна змінити пізніше в налаштуваннях, у розділі «Сповіщення».';
+
+  @override
+  String get savedLongPressAnyMessageDesk =>
+      'Клацни правою кнопкою на будь-якому повідомленні й вибери «Зберегти», щоб воно було тут.';
+
+  @override
+  String get chatFailedTapToRetryDesk => 'Помилка · клацни ще раз';
+
+  @override
+  String get groupChatTapToRetryDesk => '! Клацни ще раз';
+
+  @override
+  String get modesFastLineDesk =>
+      'Без Tor повідомлення приходять швидше й витрачають менше заряду. Наші сервери бачать твою IP-адресу лише поки ти підключений і ніколи її не записують і не зберігають. Твої контакти її ніколи не бачать. Твоя мережа може бачити, що ти підключаєшся до Kryfo.';
 
   @override
   String get voiceSeeTranscription => 'Показати текст';

@@ -60,6 +60,7 @@ const _audited = {
   'ar': ['مُدقَّق', 'مدقق', 'خضع'],
   'fa': ['ممیزی‌شده', 'ممیزی شده'],
   'hi': ['ऑडिट हो चुका', 'ऑडिट हुआ है', 'ऑडिट किया गया', 'प्रमाणित'],
+  'pl': ['po audycie', 'przeszło audyt', 'audytowan', 'certyfikowan'],
 };
 
 void main() {

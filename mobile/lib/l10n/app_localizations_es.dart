@@ -5522,9 +5522,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsVersion => 'Versión';
 
   @override
-  String get settings030Alpha => '0.5.3 · alfa';
-
-  @override
   String get settingsReportAnIssue => 'Informar de un problema';
 
   @override
@@ -7667,6 +7664,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get languageNameHi => 'Hindi';
+
+  @override
+  String get languageNamePl => 'Polaco';
 
   @override
   String get languageLaterLine => 'Puedes cambiarlo cuando quieras en ajustes.';
@@ -11128,6 +11128,41 @@ class AppLocalizationsEs extends AppLocalizations {
     );
     return '$first, $second y $_temp0 usan una versión anterior de Kryfo. Tus chats con ellos se pausarán hasta que actualicen.';
   }
+
+  @override
+  String settingsVersionAlpha(String version) {
+    return '$version · alfa';
+  }
+
+  @override
+  String get settingsShotsNotHereYet => 'Aún no en este ordenador';
+
+  @override
+  String get settingsDeskInTray => 'Abierto en la bandeja del sistema';
+
+  @override
+  String get settingsDeskWhileOpen => 'Mientras Kryfo está abierto';
+
+  @override
+  String get onboardingDeskRunTitle => 'Kryfo sigue *abierto*.';
+
+  @override
+  String get onboardingDeskRunLead =>
+      'Cierra la ventana y Kryfo espera en la bandeja del sistema, así que los mensajes siguen llegando. Puedes cambiar las dos cosas luego en Ajustes, en Notificaciones.';
+
+  @override
+  String get savedLongPressAnyMessageDesk =>
+      'Haz clic derecho en cualquier mensaje y elige guardar para tenerlo aquí.';
+
+  @override
+  String get chatFailedTapToRetryDesk => 'Falló · haz clic para reintentar';
+
+  @override
+  String get groupChatTapToRetryDesk => '! Haz clic para reintentar';
+
+  @override
+  String get modesFastLineDesk =>
+      'Se salta Tor, así que los mensajes llegan antes y gastan menos batería. Nuestros servidores ven tu dirección IP solo mientras estás conectado, y nunca la registran ni la guardan. Tus contactos nunca la ven. Tu red puede ver que te conectas a Kryfo.';
 
   @override
   String get voiceSeeTranscription => 'Ver transcripción';

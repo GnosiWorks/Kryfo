@@ -5467,9 +5467,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsVersion => 'Version';
 
   @override
-  String get settings030Alpha => '0.5.3 · alpha';
-
-  @override
   String get settingsReportAnIssue => 'Report an issue';
 
   @override
@@ -7597,6 +7594,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get languageNameHi => 'Hindi';
+
+  @override
+  String get languageNamePl => 'Polish';
 
   @override
   String get languageLaterLine => 'You can change this any time in settings.';
@@ -11043,6 +11043,41 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$first, $second and $_temp0 use an older Kryfo. Your chats with them will pause until they update.';
   }
+
+  @override
+  String settingsVersionAlpha(String version) {
+    return '$version · alpha';
+  }
+
+  @override
+  String get settingsShotsNotHereYet => 'Not on this computer yet';
+
+  @override
+  String get settingsDeskInTray => 'Running in the tray';
+
+  @override
+  String get settingsDeskWhileOpen => 'While Kryfo is open';
+
+  @override
+  String get onboardingDeskRunTitle => 'Kryfo keeps *running*.';
+
+  @override
+  String get onboardingDeskRunLead =>
+      'Close the window and Kryfo waits in the tray, so messages keep arriving. You can change both later in Settings, under Notifications.';
+
+  @override
+  String get savedLongPressAnyMessageDesk =>
+      'Right-click any message and choose save to keep it here.';
+
+  @override
+  String get chatFailedTapToRetryDesk => 'Failed · click to retry';
+
+  @override
+  String get groupChatTapToRetryDesk => '! Click to retry';
+
+  @override
+  String get modesFastLineDesk =>
+      'Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you\'re connected, and never log or keep it. Your contacts never see it. Your network can see that you connect to Kryfo.';
 
   @override
   String get voiceSeeTranscription => 'See transcription';

@@ -13,6 +13,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../dlog.dart';
 import '../l10n/l10n.dart';
 import '../lock_guard.dart' show lockGuard;
@@ -154,6 +155,9 @@ class HoldToTalkMic extends StatefulWidget {
 
 class HoldToTalkMicState extends State<HoldToTalkMic> {
   final _rec = AudioRecorder();
+  // the mic takes send's place once a message goes: a double click on send
+  // must not start a note
+  final _shownAt = DateTime.now();
   RecordBarEntry? _overlay;
   Timer? _ticker;
   int _ms = 0;
@@ -852,7 +856,9 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
   @override
   Widget build(BuildContext context) {
     final on = widget.disguise || widget.disguiseLocked;
-    final reader = MediaQuery.maybeAccessibleNavigationOf(context) ?? false;
+    // a mouse click records at once on a computer, as on signal's desktop
+    final reader =
+        onDesktop || (MediaQuery.maybeAccessibleNavigationOf(context) ?? false);
     return Semantics(
       button: true,
       label: reader ? l10n.a11yRecordVoiceNote : l10n.chatHoldToRecord,
@@ -913,7 +919,14 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
           // a short tap says how it works instead of doing nothing, or with
           // a screen reader on records at once
           onTap: reader
-              ? _tapRecord
+              ? () {
+                  if (onDesktop &&
+                      DateTime.now().difference(_shownAt) <
+                          const Duration(milliseconds: 700)) {
+                    return;
+                  }
+                  _tapRecord();
+                }
               : () {
                   HapticFeedback.selectionClick();
                   showHaloToast(context, l10n.chatHoldToRecord);

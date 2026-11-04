@@ -793,6 +793,30 @@ final _pairs = <(String, _Get, _Get, _Get)>[
     (l) => l.devicesHiddenStay,
     (l) => l.devicesHiddenStayDesk,
   ),
+  (
+    'savedLongPressAnyMessage',
+    (l) => l.savedLongPressAnyMessageShown,
+    (l) => l.savedLongPressAnyMessage,
+    (l) => l.savedLongPressAnyMessageDesk,
+  ),
+  (
+    'chatFailedTapToRetry',
+    (l) => l.chatFailedTapToRetryShown,
+    (l) => l.chatFailedTapToRetry,
+    (l) => l.chatFailedTapToRetryDesk,
+  ),
+  (
+    'groupChatTapToRetry',
+    (l) => l.groupChatTapToRetryShown,
+    (l) => l.groupChatTapToRetry,
+    (l) => l.groupChatTapToRetryDesk,
+  ),
+  (
+    'modesFastLine',
+    (l) => l.modesFastLineShown,
+    (l) => l.modesFastLine,
+    (l) => l.modesFastLineDesk,
+  ),
 ];
 
 Locale _locale(String tag) {

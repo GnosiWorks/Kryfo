@@ -5525,9 +5525,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsVersion => 'Versione';
 
   @override
-  String get settings030Alpha => '0.5.3 · alpha';
-
-  @override
   String get settingsReportAnIssue => 'Segnala un problema';
 
   @override
@@ -7672,6 +7669,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get languageNameHi => 'Hindi';
+
+  @override
+  String get languageNamePl => 'Polacco';
 
   @override
   String get languageLaterLine =>
@@ -11136,6 +11136,41 @@ class AppLocalizationsIt extends AppLocalizations {
     );
     return '$first, $second e $_temp0 usano una versione precedente di Kryfo. Le chat con loro resteranno in pausa finché non aggiornano.';
   }
+
+  @override
+  String settingsVersionAlpha(String version) {
+    return '$version · alpha';
+  }
+
+  @override
+  String get settingsShotsNotHereYet => 'Non ancora su questo computer';
+
+  @override
+  String get settingsDeskInTray => 'Attivo nell\'area di notifica';
+
+  @override
+  String get settingsDeskWhileOpen => 'Finché Kryfo è aperto';
+
+  @override
+  String get onboardingDeskRunTitle => 'Kryfo resta *attivo*.';
+
+  @override
+  String get onboardingDeskRunLead =>
+      'Chiudi la finestra e Kryfo aspetta nell\'area di notifica, così i messaggi continuano ad arrivare. Puoi cambiare entrambe le cose più tardi in Impostazioni, sotto Notifiche.';
+
+  @override
+  String get savedLongPressAnyMessageDesk =>
+      'Fai clic destro su un messaggio e scegli salva per tenerlo qui.';
+
+  @override
+  String get chatFailedTapToRetryDesk => 'Non inviato · fai clic per riprovare';
+
+  @override
+  String get groupChatTapToRetryDesk => '! Fai clic per riprovare';
+
+  @override
+  String get modesFastLineDesk =>
+      'Salta Tor, così i messaggi arrivano prima e consumano meno batteria. I nostri server vedono il tuo indirizzo IP solo mentre sei connesso, e non lo registrano né lo conservano mai. I tuoi contatti non lo vedono mai. La tua rete può vedere che ti connetti a Kryfo.';
 
   @override
   String get voiceSeeTranscription => 'Vedi trascrizione';

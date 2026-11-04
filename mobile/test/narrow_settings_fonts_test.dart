@@ -10,7 +10,7 @@ void main() {
   narrowSettings(
     langs: [
       'en', 'ar', 'de', 'es', 'fa', 'fr', 'id', 'it', //
-      'pt', 'ru', 'tr', 'uk', 'vi', 'zh', 'zh_Hant', 'hi',
+      'pl', 'pt', 'ru', 'tr', 'uk', 'vi', 'zh', 'zh_Hant', 'hi',
     ],
     scales: [1.0, 1.3, 1.6],
     themes: [false],
