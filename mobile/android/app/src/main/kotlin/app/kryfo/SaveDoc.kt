@@ -212,8 +212,8 @@ object SaveDoc {
         open: (String) -> OutputStream?,
         sizeThere: () -> Long?,
         readBack: () -> InputStream?,
-        drop: () -> Unit,
         key: ByteArray? = null,
+        drop: () -> Unit,
     ): String {
         var opened = false
         val state = copy(

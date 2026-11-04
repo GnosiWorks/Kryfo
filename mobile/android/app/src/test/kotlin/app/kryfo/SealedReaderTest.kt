@@ -51,8 +51,9 @@ class SealedReaderTest {
             assertArrayEquals(plain, all)
             // across the edge of the chunks, and past the end
             val mid = ByteArray(20)
-            assertEquals(20, r.readAt(65530, mid, 0, 20))
-            assertArrayEquals(plain.copyOfRange(65530, 65550), mid)
+            assertEquals(20, r.readAt(65520, mid, 0, 20))
+            assertArrayEquals(plain.copyOfRange(65520, 65540), mid)
+            assertEquals(6, r.readAt(65540, mid, 0, 20))
             assertEquals(-1, r.readAt(65546, mid, 0, 20))
         }
         assertEquals(65546L, Sealed.length(file.path, key))

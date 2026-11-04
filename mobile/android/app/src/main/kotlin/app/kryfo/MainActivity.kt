@@ -907,8 +907,8 @@ open class MainActivity : FlutterFragmentActivity() {
         result: MethodChannel.Result
     ) {
         Thread {
-            val type = mimeOf(File(name ?: path))
-            if (!backup && key == null && Installer.refused(File(path), name, type)) {
+            val kind = mimeOf(File(name ?: path))
+            if (!backup && key == null && Installer.refused(File(path), name, kind)) {
                 runOnUiThread { result.success(SharePick.FAILED) }
                 return@Thread
             }
@@ -918,7 +918,7 @@ open class MainActivity : FlutterFragmentActivity() {
                 runOnUiThread { result.success(SharePick.FAILED) }
                 return@Thread
             }
-            if (!backup && key != null && Installer.refused(dst, name, type)) {
+            if (!backup && key != null && Installer.refused(dst, name, kind)) {
                 Shred.tree(dst.parentFile!!)
                 runOnUiThread { result.success(SharePick.FAILED) }
                 return@Thread
