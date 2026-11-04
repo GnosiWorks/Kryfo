@@ -146,7 +146,7 @@ func nostrSendHello(ident int, ownerHex, fcPk, msg string) string {
 	nostrMu.Unlock()
 	ctx, cancel := context.WithTimeout(context.Background(), publishWait)
 	defer cancel()
-	if nostrPublishMulti(ctx, laneEveryday, ev) == 0 {
+	if nostrPublishMulti(ctx, laneHello, ev) == 0 {
 		return "error: no relays accepted"
 	}
 	log.Printf("nostr: sent a v4 first contact to addr %s...", fcPk[:12])

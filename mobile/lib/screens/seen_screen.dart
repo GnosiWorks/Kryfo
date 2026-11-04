@@ -106,18 +106,23 @@ _Cell get _onDevice => _Cell(l10n.seenOnDevice, _Tone.good);
 _Cell get _yours => _Cell(l10n.seenYours, _Tone.bad);
 _Cell get _unaudited => _Cell(l10n.seenUnaudited, _Tone.bad);
 _Cell get _ifYouWrite => _Cell(l10n.seenDevChatCell, _Tone.warn);
+// on fast one ip reads a person's mailboxes, so our servers could tie them
+_Cell get _serversCould => _Cell(l10n.seenOurServersCould, _Tone.warn);
 
 List<_Row> get _rows => [
   _Row(l10n.seenWhoYouTalkTo, [
     _hidden,
-    _hidden,
+    _serversCould,
   ], l10n.seenEachConversationGetsIts),
   _Row(l10n.seenWhatYouSay, [_hidden, _hidden], l10n.seenEndToEndEncrypted),
   _Row(l10n.seenYourIpAddress, [
     _hidden,
     _Cell(l10n.seenOurServers, _Tone.warn),
   ], l10n.seenIpWhy),
-  _Row(l10n.seenYourContactGraph, [_never, _never], l10n.seenKryfoDoesNotScan),
+  _Row(l10n.seenYourContactGraph, [
+    _never,
+    _serversCould,
+  ], l10n.seenKryfoDoesNotScan),
   _Row(l10n.seenIntroductions, [
     _Cell(l10n.seenIntroducer, _Tone.good),
     _Cell(l10n.seenIntroducer, _Tone.good),

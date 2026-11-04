@@ -2963,7 +2963,7 @@ func nostrSendFirstContact(ident int, peerArg, fcPk, msg string) string {
 
 	ctx, cancel := context.WithTimeout(context.Background(), publishWait)
 	defer cancel()
-	ok := nostrPublishMulti(ctx, laneEveryday, ev)
+	ok := nostrPublishMulti(ctx, laneHello, ev)
 	if ok == 0 {
 		return "error: no relays accepted"
 	}
@@ -3518,8 +3518,8 @@ func HaloTorPost(cUrl *C.char, cBody *C.char) *C.char {
 	return C.CString(torPost(goStr(cUrl), goStr(cBody)))
 }
 
-// the app's only callers are people search and the badge service, so the
-// services lane carries it, over tor on every route
+// the badge service's calls: the services lane carries them, over tor on
+// every route. people search has its own (searchPost)
 func torPost(url, body string) string { return torPostOn(url, body, servicesClient) }
 
 func torPostOn(url, body string, clientOf func(context.Context) (*http.Client, error)) string {
@@ -3561,7 +3561,8 @@ func HaloTorGetJSON(cUrl *C.char) *C.char {
 	return C.CString(torGetJSON(goStr(cUrl)))
 }
 
-// handle lookups and badge receipts: the services lane, as above
+// others' handle lookups and badge receipts: the services lane, as above.
+// the own handle's lookup has its own (ownHandleGetJSON)
 func torGetJSON(url string) string { return torGetJSONOn(url, servicesClient) }
 
 func torGetJSONOn(url string, clientOf func(context.Context) (*http.Client, error)) string {

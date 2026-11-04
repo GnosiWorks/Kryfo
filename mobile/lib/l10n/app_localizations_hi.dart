@@ -4328,7 +4328,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get fastRoomsWaitForTor =>
-      'रूम और जोड़ने के कोड हमेशा Tor से होकर जाते हैं, तेज़ पर भी। Tor जुड़ते ही ये काम करते हैं।';
+      'रूम, जोड़ने के कोड और पहला संपर्क हमेशा Tor से होकर जाते हैं, तेज़ पर भी। Tor जुड़ते ही ये काम करते हैं।';
 
   @override
   String get pairCodeFailed => 'यह नहीं हुआ। दोबारा कोशिश करें।';
@@ -5206,7 +5206,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get seenEachConversationGetsIts =>
-      'हर बातचीत का अपना पता होता है, जो दोनों कुंजियों से बनता है। रिले को अलग-अलग, आपस में बेमेल डिब्बे दिखते हैं, दो लोगों की जोड़ी नहीं।';
+      'हर बातचीत का अपना पता होता है, जो दोनों कुंजियों से बनता है। रिले को अलग-अलग, आपस में बेमेल डिब्बे दिखते हैं, दो लोगों की जोड़ी नहीं। तेज़ पर हमारे सर्वर आपके इस्तेमाल वाले डिब्बों पर आपका IP पता देखते हैं, और अगर बातचीत के दोनों लोग तेज़ पर हों, तो यह भी कि दो IP पते एक डिब्बा साझा करते हैं।';
 
   @override
   String get seenWhatYouSay => 'आप क्या कहते हैं';
@@ -5223,7 +5223,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get seenKryfoDoesNotScan =>
-      'Kryfo आपके संपर्क स्कैन नहीं करता। यहाँ कोई फ़ोन नंबर है ही नहीं जो लीक हो।';
+      'Kryfo आपके संपर्क स्कैन नहीं करता। यहाँ कोई फ़ोन नंबर है ही नहीं जो लीक हो। तेज़ पर हमारे सर्वर यह देखकर इसका कुछ हिस्सा जोड़ सकते हैं कि कौन-से IP पते डिब्बे साझा करते हैं। वे इसका कोई रिकॉर्ड नहीं रखते।';
 
   @override
   String get seenIntroducer => 'मिलवाने वाला';
@@ -9413,10 +9413,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get bridgesNoneUntilOnion => 'onion चालू होने तक कोई नहीं';
 
   @override
-  String get bridgesRelayWorksWhereTor =>
-      'जहाँ Tor रुका हो, वहाँ तेज़ काम करता है, और आप कभी भी वापस बदल सकते हैं।';
-
-  @override
   String get bridgesRelayThisNetworkSees =>
       'जहाँ Tor रुका हो, वहाँ भी तेज़ पहुँच जाता है, पर यह नेटवर्क देख सकता है कि आप Kryfo से जुड़ रहे हैं।';
 
@@ -10469,7 +10465,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'Tor को छोड़ देता है, इसलिए संदेश जल्दी पहुँचते हैं और बैटरी कम लगती है। हमारे सर्वर आपका IP पता सिर्फ़ तब देखते हैं जब आप जुड़े हों, और उसे कभी दर्ज नहीं करते, न रखते हैं। आप क्या कहते हैं, यह कभी नहीं। आपके संपर्क इसे कभी नहीं देखते।';
+      'Tor को छोड़ देता है, इसलिए संदेश जल्दी पहुँचते हैं और बैटरी कम लगती है। हमारे सर्वर आपका IP पता सिर्फ़ तब देखते हैं जब आप जुड़े हों, और उसे कभी दर्ज नहीं करते, न रखते हैं। आप क्या कहते हैं, यह कभी नहीं। आपके संपर्क इसे कभी नहीं देखते। आपका नेटवर्क देख सकता है कि आप Kryfo से जुड़ रहे हैं।';
 
   @override
   String get modesFastConnected => 'तेज़ · जुड़ा है';
@@ -10573,8 +10569,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get homeSwitchedToFastRoute => 'तेज़ पर आ गए';
 
   @override
-  String get bridgesFastGetsThrough =>
-      'तेज़ सीधे हमारे सर्वर तक जाता है और आम तौर पर पहुँच जाता है। या Kryfo को खुद रास्ता ढूँढने दें।';
+  String get bridgesBridgeFirstFastSeen =>
+      'Kryfo को ऐसा ब्रिज ढूँढने दें जो पहुँच जाए। तेज़ भी चलता है, पर यह नेटवर्क देख सकता है कि आप Kryfo से जुड़ रहे हैं।';
 
   @override
   String get appServersNotAnswering => 'सर्वर चुप हैं';
@@ -10584,6 +10580,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get seenOurServers => 'हमारे सर्वर';
+
+  @override
+  String get seenOurServersCould => 'हमारे सर्वर जान सकते हैं';
 
   @override
   String get seenIpWhy =>

@@ -12,7 +12,7 @@
   }
  ],
  "go": "1.26.9",
- "libtor": "87d6da8c10ca76404c7061eb06f3d70123d8ec4c3b269f77a98b4051131787e1",
+ "libtor": "7208897eae1d96552cb000ab1eda4a4ed9de805a2a64bb0af9b4495df5974788",
  "licences": [
   {
    "id": "Unlicense",
@@ -971,7 +971,7 @@
     57,
     58
    ],
-   "version": "0.4.9.14"
+   "version": "0.4.9.15"
   },
   {
    "licence": "Zlib",
