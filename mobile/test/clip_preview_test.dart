@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart';
+import 'package:kryfo/picture_lock.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/clip_preview.dart';
 import 'package:kryfo/widgets/video_viewer.dart' show ViewerScrubber;
@@ -103,6 +104,34 @@ void main() {
     expect(playing, isTrue);
     await t.pumpWidget(const SizedBox());
     expect(asked().last, 'close');
+  });
+
+  testWidgets('the lock closes the player, and after it the clip is back '
+      'paused where it was', (t) async {
+    addTearDown(resetPicturesForTest);
+    player(t);
+    await t.pumpWidget(host());
+    await beats(t);
+    expect(find.byType(Texture), findsOneWidget);
+    calls.clear();
+    locked = true;
+    shutPictures();
+    await beats(t);
+    // no player, no texture, no frame behind the pin
+    expect(asked(), contains('close'));
+    expect(find.byType(Texture), findsNothing);
+    expect(find.byType(RawImage), findsNothing);
+    calls.clear();
+    locked = false;
+    openPictures();
+    await beats(t);
+    expect(asked(), containsAllInOrder(['open', 'seek']));
+    expect(
+      (calls.lastWhere((c) => c.method == 'seek').arguments as Map)['ms'],
+      1000,
+    );
+    expect(asked(), isNot(contains('play')));
+    await t.pumpWidget(const SizedBox());
   });
 
   testWidgets('reduced motion: it waits for a tap', (t) async {

@@ -14,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart';
 import 'package:kryfo/widgets/photo_viewer.dart';
+import 'package:kryfo/widgets/sealed_picture.dart' show PictureFade;
 import 'package:kryfo/widgets/video_viewer.dart';
 
 import 'bars_check.dart';
@@ -318,10 +319,22 @@ void main() {
   group('the photo tile', () {
     testWidgets('fades up once, and a cached one shows at once', (t) async {
       await t.pumpWidget(
-        host(const PhotoTileFade(shown: false, child: SizedBox(width: 20))),
+        host(
+          const PictureFade(
+            shown: false,
+            still: false,
+            child: SizedBox(width: 20),
+          ),
+        ),
       );
       await t.pumpWidget(
-        host(const PhotoTileFade(shown: true, child: SizedBox(width: 20))),
+        host(
+          const PictureFade(
+            shown: true,
+            still: false,
+            child: SizedBox(width: 20),
+          ),
+        ),
       );
       await t.pump(const Duration(milliseconds: 80));
       final o = t.widget<AnimatedOpacity>(find.byType(AnimatedOpacity));
