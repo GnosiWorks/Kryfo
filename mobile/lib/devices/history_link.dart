@@ -21,7 +21,6 @@ import 'history_export.dart';
 import 'history_ffi.dart';
 import 'history_import.dart';
 import 'own_device_store.dart' show historyCopyOf, keepHistoryCopy;
-import 'own_devices.dart' show LinkHistory;
 
 // ---- the engine's calls ----
 
@@ -358,23 +357,14 @@ typedef HistoryMake =
       required bool rowsOnly,
     });
 
-String _choiceName(LinkHistory h) => switch (h) {
-  LinkHistory.all => 'all',
-  LinkHistory.textOnly => 'text',
-  LinkHistory.none => 'none',
-};
-
 /// what the phone keeps of a device's copy, beside the link's stream key
-/// (own_devices.stream): written with the device, in that transaction
+/// (own_devices.stream): written with the device, in that transaction.
+/// [choice] is 'all', 'text' (files skipped) or 'none' (rows alone)
 String historyCopyHist({
   required Uint8List bind,
   required String identityHex,
-  required LinkHistory choice,
-}) => jsonEncode({
-  'b': historyHex(bind),
-  'i': identityHex,
-  'c': _choiceName(choice),
-});
+  required String choice,
+}) => jsonEncode({'b': historyHex(bind), 'i': identityHex, 'c': choice});
 
 /// how long the phone keeps a copy for a device that has not taken it
 const kHistoryCopyFor = Duration(days: 14);

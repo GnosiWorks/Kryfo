@@ -142,7 +142,11 @@ class _PhoneLinkApp implements PhoneLinkHooks {
               : historyCopyHist(
                   bind: bind,
                   identityHex: devHex(me),
-                  choice: history,
+                  choice: switch (history) {
+                    LinkHistory.all => 'all',
+                    LinkHistory.textOnly => 'text',
+                    LinkHistory.none => 'none',
+                  },
                 ),
         );
         // last, inside: the engine acks the device only now, and when it

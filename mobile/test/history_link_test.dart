@@ -20,7 +20,7 @@ import 'package:kryfo/devices/history_ffi.dart';
 import 'package:kryfo/devices/history_link.dart';
 import 'package:kryfo/devices/history_open.dart';
 import 'package:kryfo/devices/own_device_store.dart';
-import 'package:kryfo/devices/own_devices.dart';
+import 'package:kryfo/devices/own_devices.dart' show DeviceKind;
 import 'package:kryfo/main.dart'
     show
         addColumn,
@@ -74,7 +74,7 @@ class _Phone {
 
 int _n = 0;
 
-Future<_Phone> _phone({LinkHistory choice = LinkHistory.all}) async {
+Future<_Phone> _phone({String choice = 'all'}) async {
   final dir = Directory.systemTemp.createTempSync('hlink-phone').path;
   final media = p.join(dir, 'media');
   Directory(media).createSync();
@@ -666,7 +666,7 @@ void main() {
   );
 
   test('no history brings the chats and contacts alone', () async {
-    final ph = await _phone(choice: LinkHistory.none);
+    final ph = await _phone(choice: 'none');
     final d = await _device(ph);
     final w = _World(ph, d)
       ..startPhone()
@@ -689,7 +689,7 @@ void main() {
   }, skip: skip);
 
   test('photos, videos and files skipped stay on the phone', () async {
-    final ph = await _phone(choice: LinkHistory.textOnly);
+    final ph = await _phone(choice: 'text');
     final d = await _device(ph);
     final w = _World(ph, d)
       ..startPhone()
