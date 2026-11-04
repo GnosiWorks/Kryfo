@@ -309,6 +309,9 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
     } else if (state == AppLifecycleState.resumed) {
       _away = false;
       widget.returned();
+      // back with no lock up: an app without a pin, left while the lock was
+      // read, never lifted one, and its pictures open here
+      if (widget.loaded() && !widget.locked()) openPictures();
       widget.inFront?.call(true);
     }
   }

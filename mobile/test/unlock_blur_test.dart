@@ -114,15 +114,15 @@ void main() {
   }
 
   group('the blur', () {
-    test('a real photo\'s is at most 115 bytes, has its shape and reads '
+    test('a real photo\'s blur is 115 bytes at any shape and reads '
         'back the same', () async {
       for (final f in [_wide, _tall]) {
         final bytes = File(f).readAsBytesSync();
         final b = (await blurOfPicture(bytes))!;
         final shape = await _shapeOf(bytes);
         final out = b.encode();
-        expect(out.length, lessThanOrEqualTo(115));
-        expect(out.length, greaterThan(40));
+        // one size for every shape: the file says nothing of it
+        expect(out.length, 115);
         expect(b.width, shape.width.toInt());
         expect(b.height, shape.height.toInt());
         // the long side gets the most waves

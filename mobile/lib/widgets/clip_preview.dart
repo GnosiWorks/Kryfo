@@ -100,6 +100,8 @@ class _ClipPreviewState extends State<ClipPreview> with WidgetsBindingObserver {
   // the lock closes the player, so no frame of it is held behind the pin,
   // and it comes back paused where it was once the lock lifts
   bool _resting = false;
+  // each rest counts up: an open still on its way from before one is closed
+  int _rests = 0;
 
   void _lockChanged() {
     if (picturesShut.value) {
@@ -111,6 +113,7 @@ class _ClipPreviewState extends State<ClipPreview> with WidgetsBindingObserver {
 
   void _rest() {
     _stopPoll();
+    _rests++;
     final id = _id;
     _id = null;
     if (id != null) _channel.invokeMethod('close', {'id': id});
@@ -139,6 +142,7 @@ class _ClipPreviewState extends State<ClipPreview> with WidgetsBindingObserver {
   }
 
   Future<void> _open({bool play = true}) async {
+    final rests = _rests;
     Map<String, dynamic>? m;
     try {
       m = await _channel.invokeMapMethod<String, dynamic>(
@@ -148,9 +152,10 @@ class _ClipPreviewState extends State<ClipPreview> with WidgetsBindingObserver {
     } catch (e) {
       dlog('clip: not opened (${e.runtimeType})');
     }
-    // gone, or the lock went up while it opened
-    if (!mounted || picturesShut.value) {
-      if (mounted) _resting = true;
+    // gone, or the lock went up while it opened: a lock and an unlock on
+    // the way leave a newer open, so this one never holds a second player
+    if (!mounted || picturesShut.value || rests != _rests) {
+      if (mounted && picturesShut.value) _resting = true;
       final id = (m?['id'] as num?)?.toInt();
       if (id != null) _channel.invokeMethod('close', {'id': id});
       return;

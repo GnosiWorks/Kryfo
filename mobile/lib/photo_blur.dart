@@ -23,6 +23,9 @@ const _version = 1;
 const _waves = 6;
 // pixels along the long side the waves are read from
 const _readSide = 32;
+// every blur is kept at the size of the largest, so its file's length says
+// nothing of the photo's shape
+const _stored = 10 + (_waves * _waves - 1) * 3;
 
 class PhotoBlur {
   PhotoBlur._(this.width, this.height, this.nx, this.ny, this._waveRgb);
@@ -95,7 +98,7 @@ class PhotoBlur {
 
   Uint8List encode() {
     final n = nx * ny;
-    final out = Uint8List(10 + (n - 1) * 3);
+    final out = Uint8List(_stored);
     out[0] = _version;
     out[1] = width >> 8;
     out[2] = width & 0xff;
@@ -121,13 +124,13 @@ class PhotoBlur {
 
   /// null for bytes that are no blur of this version
   static PhotoBlur? decode(Uint8List b) {
-    if (b.length < 10 || b[0] != _version) return null;
+    if (b.length != _stored || b[0] != _version) return null;
     final width = (b[1] << 8) | b[2];
     final height = (b[3] << 8) | b[4];
     final nx = b[5] & 0x0f, ny = b[5] >> 4;
     if (width == 0 || height == 0 || nx == 0 || ny == 0) return null;
+    if (nx > _waves || ny > _waves) return null;
     final n = nx * ny;
-    if (b.length != 10 + (n - 1) * 3) return null;
     final waves = Float32List(n * 3);
     for (var c = 0; c < 3; c++) {
       waves[c] = _toLinear(b[6 + c].toDouble());
