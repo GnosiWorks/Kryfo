@@ -5463,9 +5463,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsVersion => 'Phiên bản';
 
   @override
-  String get settings030Alpha => '0.5.3 · alpha';
-
-  @override
   String get settingsReportAnIssue => 'Báo lỗi';
 
   @override
@@ -11031,4 +11028,39 @@ class AppLocalizationsVi extends AppLocalizations {
   String restoreOlderMany(Object first, Object second, int count) {
     return '$first, $second và $count người khác đang dùng phiên bản Kryfo cũ. Các cuộc trò chuyện với họ sẽ tạm dừng cho đến khi họ cập nhật.';
   }
+
+  @override
+  String settingsVersionAlpha(String version) {
+    return '$version · alpha';
+  }
+
+  @override
+  String get settingsShotsNotHereYet => 'Chưa có trên máy tính này';
+
+  @override
+  String get settingsDeskInTray => 'Đang chạy trong khay hệ thống';
+
+  @override
+  String get settingsDeskWhileOpen => 'Khi Kryfo đang mở';
+
+  @override
+  String get onboardingDeskRunTitle => 'Kryfo vẫn *chạy*.';
+
+  @override
+  String get onboardingDeskRunLead =>
+      'Đóng cửa sổ thì Kryfo chờ trong khay hệ thống, nên tin nhắn vẫn tiếp tục đến. Bạn có thể đổi cả hai sau trong Cài đặt, mục Thông báo.';
+
+  @override
+  String get savedLongPressAnyMessageDesk =>
+      'Nhấp chuột phải vào một tin nhắn bất kỳ rồi chọn lưu để giữ nó ở đây.';
+
+  @override
+  String get chatFailedTapToRetryDesk => 'Thất bại · nhấp để thử lại';
+
+  @override
+  String get groupChatTapToRetryDesk => '! Nhấp để thử lại';
+
+  @override
+  String get modesFastLineDesk =>
+      'Bỏ qua Tor nên tin nhắn đến nhanh hơn và tốn ít pin hơn. Máy chủ của chúng tôi chỉ thấy địa chỉ IP của bạn khi bạn đang kết nối, và không bao giờ ghi lại hay giữ nó. Người liên hệ của bạn không bao giờ thấy nó. Mạng của bạn có thể thấy bạn kết nối tới Kryfo.';
 }

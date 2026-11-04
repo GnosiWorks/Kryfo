@@ -1551,7 +1551,6 @@
   "settingsWhatWeCanSee": "Ce que nous pouvons voir",
   "settingsTheHonestList": "La liste honnête",
   "settingsVersion": "Version",
-  "settings030Alpha": "0.5.3 · alpha",
   "settingsReportAnIssue": "Signaler un problème",
   "settingsReportInKryfo": "Écrire dans Kryfo",
   "settingsReportInKryfoSub": "La discussion avec Marios. Vous pouvez écrire anonymement.",
@@ -2910,5 +2909,15 @@
   "restoreOlderTitle": "Certaines discussions vont faire une pause",
   "restoreOlderOne": "{name} utilise une ancienne version de Kryfo. Votre discussion fera une pause jusqu’à sa mise à jour.",
   "restoreOlderTwo": "{first} et {second} utilisent une ancienne version de Kryfo. Vos discussions avec eux feront une pause jusqu’à leur mise à jour.",
-  "restoreOlderMany": "{first}, {second} et {count, plural, =1{1 autre personne} other{{count} autres personnes}} utilisent une ancienne version de Kryfo. Vos discussions avec eux feront une pause jusqu’à leur mise à jour."
+  "restoreOlderMany": "{first}, {second} et {count, plural, =1{1 autre personne} other{{count} autres personnes}} utilisent une ancienne version de Kryfo. Vos discussions avec eux feront une pause jusqu’à leur mise à jour.",
+  "settingsVersionAlpha": "{version} · alpha",
+  "settingsShotsNotHereYet": "Pas encore sur cet ordinateur",
+  "settingsDeskInTray": "Actif dans la zone de notification",
+  "settingsDeskWhileOpen": "Tant que Kryfo est ouvert",
+  "onboardingDeskRunTitle": "Kryfo reste *actif*.",
+  "onboardingDeskRunLead": "Fermez la fenêtre et Kryfo attend dans la zone de notification, les messages continuent d’arriver. Vous pourrez changer les deux plus tard dans Réglages, sous Notifications.",
+  "savedLongPressAnyMessageDesk": "Faites un clic droit sur un message et choisissez enregistrer pour le garder ici.",
+  "chatFailedTapToRetryDesk": "Échec · cliquez pour réessayer",
+  "groupChatTapToRetryDesk": "! Cliquez pour réessayer",
+  "modesFastLineDesk": "Sans Tor, les messages arrivent plus vite et usent moins la batterie. Nos serveurs voient votre adresse IP seulement pendant que vous êtes connecté, sans jamais l'enregistrer ni la garder. Vos contacts ne la voient jamais. Votre réseau peut voir que vous vous connectez à Kryfo."
 }

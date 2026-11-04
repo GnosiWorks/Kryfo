@@ -5480,9 +5480,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsVersion => 'نسخه';
 
   @override
-  String get settings030Alpha => '0.5.3 · آلفا';
-
-  @override
   String get settingsReportAnIssue => 'گزارش مشکل';
 
   @override
@@ -11062,4 +11059,39 @@ class AppLocalizationsFa extends AppLocalizations {
   String restoreOlderMany(Object first, Object second, int count) {
     return '⁨$first⁩، ⁨$second⁩ و $count نفر دیگر از نسخه‌ی قدیمی‌تر Kryfo استفاده می‌کنند. گفتگوهای شما با آن‌ها تا به‌روزرسانی‌شان متوقف می‌ماند.';
   }
+
+  @override
+  String settingsVersionAlpha(String version) {
+    return '$version · آلفا';
+  }
+
+  @override
+  String get settingsShotsNotHereYet => 'هنوز روی این رایانه نیست';
+
+  @override
+  String get settingsDeskInTray => 'در سینی سیستم در حال اجرا';
+
+  @override
+  String get settingsDeskWhileOpen => 'تا وقتی Kryfo باز است';
+
+  @override
+  String get onboardingDeskRunTitle => 'Kryfo *روشن* می‌ماند.';
+
+  @override
+  String get onboardingDeskRunLead =>
+      'پنجره را ببندید و Kryfo در سینی سیستم منتظر می‌ماند، پس پیام‌ها همچنان می‌رسند. هر دو را بعدا می‌توانید در تنظیمات، بخش اعلان‌ها، تغییر دهید.';
+
+  @override
+  String get savedLongPressAnyMessageDesk =>
+      'روی هر پیامی راست‌کلیک کنید و «ذخیره» را انتخاب کنید تا این‌جا بماند.';
+
+  @override
+  String get chatFailedTapToRetryDesk => 'ناموفق · برای تلاش دوباره کلیک کنید';
+
+  @override
+  String get groupChatTapToRetryDesk => '! برای تکرار کلیک کنید';
+
+  @override
+  String get modesFastLineDesk =>
+      'از Tor عبور نمی‌کند، پس پیام‌ها زودتر می‌رسند و باتری کمتری مصرف می‌کنند. سرورهای ما آدرس IP شما را فقط تا وقتی وصل هستید می‌بینند و هرگز آن را ثبت یا نگه نمی‌دارند. مخاطبانتان هرگز آن را نمی‌بینند. شبکه‌ی شما می‌تواند ببیند که به Kryfo وصل می‌شوید.';
 }

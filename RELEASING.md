@@ -41,8 +41,7 @@ a feature goes into a release finished or not at all.
 ## version
 
 - `version: X.Y.Z+N` in mobile/pubspec.yaml, then `flutter pub get`
-- the version string, `settings030Alpha` in every mobile/lib/l10n/app_*.arb,
-  then `flutter gen-l10n`
+- `kAppVersion` in mobile/lib/app_version.dart, the same X.Y.Z
 - a section in CHANGELOG.md
 - the built-in bridges are current: `scripts/builtin-bridges.sh`, read the
   diff it shows before committing engine/builtin.json

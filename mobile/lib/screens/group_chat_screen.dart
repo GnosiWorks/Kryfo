@@ -167,7 +167,7 @@ import '../voice_format.dart' show isVoiceName, kVoiceWav;
 import '../voice_length.dart' show voiceFileMs;
 import '../voice_opus.dart' show voiceForWire;
 import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
-import '../desktop/desktop_mode.dart' show canShareOut;
+import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
 import '../wide/read_width.dart';
 import '../wide/wide_pane.dart' show PaneBack, PaneFind;
 
@@ -2387,12 +2387,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       builder: (sheetCtx) => AttachGrid(
         note: l10n.chatNoExifNeverSaved,
         items: [
-          AttachItem(
-            icon: (c) => Icon(Icons.photo_camera_outlined, color: c),
-            tint: HaloColors.amber,
-            label: l10n.groupChatCamera,
-            onTap: _openGroupCamera,
-          ),
+          // a computer has no camera to open
+          if (!onDesktop)
+            AttachItem(
+              icon: (c) => Icon(Icons.photo_camera_outlined, color: c),
+              tint: HaloColors.amber,
+              label: l10n.groupChatCamera,
+              onTap: _openGroupCamera,
+            ),
           AttachItem(
             icon: (c) => Icon(Icons.photo_library_outlined, color: c),
             tint: HaloColors.violet,
@@ -5476,19 +5478,20 @@ class _Composer extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               // the camera that keeps its photos inside kryfo
-              PressScale(
-                label: l10n.groupChatOpenTheCamera,
-                onTap: onCamera,
-                scale: 0.86,
-                child: Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 10),
-                  child: Icon(
-                    Icons.photo_camera_outlined,
-                    size: 22,
-                    color: HaloColors.text2,
+              if (!onDesktop)
+                PressScale(
+                  label: l10n.groupChatOpenTheCamera,
+                  onTap: onCamera,
+                  scale: 0.86,
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 10),
+                    child: Icon(
+                      Icons.photo_camera_outlined,
+                      size: 22,
+                      color: HaloColors.text2,
+                    ),
                   ),
                 ),
-              ),
               PressScale(
                 label: l10n.groupChatAttachAPhoto,
                 onTap: onAttach,
@@ -5984,6 +5987,10 @@ class _GroupBubble extends StatelessWidget {
                                     onLongPress: onLongPress == null
                                         ? null
                                         : () => onLongPress!(ctx),
+                                    onSecondaryTap:
+                                        !onDesktop || onLongPress == null
+                                        ? null
+                                        : () => onLongPress!(ctx),
                                     child: _sticker(st),
                                   );
                                 }
@@ -5994,12 +6001,21 @@ class _GroupBubble extends StatelessWidget {
                                     onLongPress: onLongPress == null
                                         ? null
                                         : () => onLongPress!(ctx),
+                                    onSecondaryTap:
+                                        !onDesktop || onLongPress == null
+                                        ? null
+                                        : () => onLongPress!(ctx),
                                     child: _pollCard(),
                                   );
                                 }
                                 return GestureDetector(
                                   onTap: m.failed ? onRetry : null,
                                   onLongPress: onLongPress == null
+                                      ? null
+                                      : () => onLongPress!(ctx),
+                                  // a right click on a computer: the menu
+                                  onSecondaryTap:
+                                      !onDesktop || onLongPress == null
                                       ? null
                                       : () => onLongPress!(ctx),
                                   child: Container(
@@ -6600,7 +6616,7 @@ class _GroupBubble extends StatelessWidget {
                                               if (m.looksFailed) ...[
                                                 const SizedBox(width: 6),
                                                 Text(
-                                                  l10n.groupChatTapToRetry,
+                                                  l10n.groupChatTapToRetryShown,
                                                   style: HaloType.mono(
                                                     size: 9,
                                                     color: isOut
@@ -6821,7 +6837,7 @@ class _GroupBubble extends StatelessWidget {
         sent: isOut && !m.pending && !m.looksFailed,
         burn: burn == null ? null : burnLeft(burn),
         burnWaits: m.burnWaits,
-        alert: m.looksFailed ? l10n.groupChatTapToRetry : null,
+        alert: m.looksFailed ? l10n.groupChatTapToRetryShown : null,
         alertColor: HaloColors.rose,
       ),
     );
@@ -6891,7 +6907,7 @@ class _GroupBubble extends StatelessWidget {
           if (m.looksFailed) ...[
             const SizedBox(width: 6),
             Text(
-              l10n.groupChatTapToRetry,
+              l10n.groupChatTapToRetryShown,
               style: HaloType.mono(size: 9, color: HaloColors.roseText),
             ),
           ],
