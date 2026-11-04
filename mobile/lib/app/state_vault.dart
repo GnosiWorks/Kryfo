@@ -20,6 +20,8 @@ extension AppStateVault on AppState {
     // have on arrival
     int? wrappedAt,
     Reached? reached,
+    // a contact's device's copy (linked devices), filed as one at the open
+    bool fromDevice = false,
   }) async {
     // someone the vault blocked: nothing of it waits, and nothing is
     // answered. what they wrote is noted by its uid alone, for the vault to
@@ -74,6 +76,7 @@ extension AppStateVault on AppState {
         DateTime.now().millisecondsSinceEpoch,
         wrapped: wrappedAt,
         reached: reached,
+        fromDevice: fromDevice,
       ),
       uid: uid,
       part: part,
@@ -140,6 +143,11 @@ extension AppStateVault on AppState {
             } catch (e) {
               if (!identical(_openVault, vault)) return;
               dlog('unseal: a device line not opened (${e.runtimeType})');
+              // it opens here, not before it was sealed: tried again at the
+              // next open, while the relays could still have held it
+              stays =
+                  DateTime.now().millisecondsSinceEpoch - u.at <
+                  kBlockListenFor;
             }
           } else if (u != null && u.keyChanged) {
             _keyChangeSealed.remove(u.from);
@@ -187,6 +195,7 @@ extension AppStateVault on AppState {
                 env,
                 wire: u.wire,
                 fromBackPair: u.backPair,
+                fromDevice: u.fromDevice,
                 into: vault,
                 arrivedAt: u.at,
                 wrappedAt: u.wrapped,

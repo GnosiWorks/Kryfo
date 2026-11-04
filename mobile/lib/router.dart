@@ -159,7 +159,8 @@ class RouterCard {
     'vk': verifiedKey ?? '',
     // one width whether set or not
     'ss': (shots ?? const ShotsWord(on: false, at: 0)).toWire(),
-    if (devices case final d? when d.pairs.isNotEmpty) 'dv': d.toJson(),
+    if (devices case final d? when d.pairs.isNotEmpty || d.lists)
+      'dv': d.toJson(),
   };
 
   static RouterCard? fromJson(Object? j, {String? id}) {
@@ -196,15 +197,23 @@ typedef HiddenPair = ({
   bool opener,
 });
 
-/// what the everyday side listens on for a hidden chat's contact's devices
-/// while the vault is shut: their identity key (hex), the identity of mine
-/// they know, and the pairs. every line on them is sealed as it came
+/// what the everyday side keeps of a hidden chat's contact's devices while
+/// the vault is shut: their identity key (hex), the identity of mine they
+/// know, the pairs to listen on (every line on them is sealed as it came),
+/// and whether their phone reads lists, so a removal from my list reaches
+/// it at once
 class HiddenDevices {
-  const HiddenDevices(this.identity, this.ident, this.pairs);
+  const HiddenDevices(
+    this.identity,
+    this.ident,
+    this.pairs, {
+    this.lists = false,
+  });
 
   final String identity;
   final int ident;
   final List<HiddenPair> pairs;
+  final bool lists;
 
   Map<String, Object> toJson() => {
     'k': identity,
@@ -213,6 +222,7 @@ class HiddenDevices {
       for (final p in pairs)
         [p.their, p.my, p.key, p.seed ?? '', if (p.opener) 1 else 0],
     ],
+    if (lists) 'r': 1,
   };
 
   static HiddenDevices? fromJson(Object? j) {
@@ -243,7 +253,10 @@ class HiddenDevices {
         opener: opener == 1,
       ));
     }
-    return pairs.isEmpty ? null : HiddenDevices(k, i, pairs);
+    final lists = j['r'] == 1;
+    return pairs.isEmpty && !lists
+        ? null
+        : HiddenDevices(k, i, pairs, lists: lists);
   }
 }
 
@@ -293,6 +306,7 @@ class Unsealed {
     this.blockedDrop,
     this.reached,
     this.deviceTag,
+    this.fromDevice = false,
   });
 
   final String from;
@@ -324,6 +338,9 @@ class Unsealed {
   // a line on a device pair of [from]'s, as it came: [wire] is its cipher,
   // opened on the device's session the vault holds as it opens
   final String? deviceTag;
+  // a contact's device's copy, opened before it was sealed: filed as one,
+  // so it never moves their caps
+  final bool fromDevice;
 }
 
 // the tables, behind a seam so the router runs on a stand-in
@@ -1112,6 +1129,7 @@ class VaultRouter {
         'a': ?a.wrapped,
         'bd': ?a.blockedDrop,
         'dt': ?a.deviceTag,
+        if (a.fromDevice) 'fd': 1,
         if (a.reached case final r?) ...{'rl': r.from, 'rh': r.until},
       }),
     );
@@ -1241,6 +1259,7 @@ class VaultRouter {
         receipt: j['rc'] is String ? j['rc'] as String : null,
         blockedDrop: j['bd'] is String ? j['bd'] as String : null,
         deviceTag: j['dt'] is String ? j['dt'] as String : null,
+        fromDevice: j['fd'] == 1,
         reached: rl is int && rh is int && rl <= rh
             ? (from: rl, until: rh)
             : null,

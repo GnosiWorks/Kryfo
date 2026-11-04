@@ -553,7 +553,15 @@ func (d *devState) deviceKey(ident int, peer [32]byte, dev uint8) ([32]byte, boo
 			return [32]byte{}, false
 		}
 		var ok bool
-		if k, ok = d.book.Pin(id, dev); !ok {
+		if d.book.Current(id) == nil {
+			// held bare (a key-only row on the everyday side) while their
+			// vault is shut: the card's keys, as for one not held. a list
+			// held always decides, so a disputed key stays refused
+			k, ok = devHeardKey(ident, id, dev)
+		} else {
+			k, ok = d.book.Pin(id, dev)
+		}
+		if !ok {
 			return [32]byte{}, false
 		}
 	}

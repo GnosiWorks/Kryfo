@@ -107,6 +107,7 @@ class DeviceSend {
     this.listen,
     Future<Database> Function()? mine,
     this.noOwn = false,
+    this.changed,
     int Function()? clock,
     Random? random,
   }) : mine = mine ?? db,
@@ -129,6 +130,13 @@ class DeviceSend {
   /// the open vault's: a hidden chat's copies go to the contact's
   /// devices and never to mine
   final bool noOwn;
+
+  /// told every change of my lists once its pushes are queued here: the
+  /// hidden chats' contacts are not this side's
+  final void Function(
+    List<({int ident, int version, List<int> added, bool removed})> changes,
+  )?
+  changed;
 
   /// listens on a device pair, [arg] as the engine names it
   /// ("x/their/my.seed"): a pair given a seed here is heard on from then on
@@ -924,6 +932,7 @@ class DeviceSend {
         );
       }
     });
+    changed?.call(changes);
   }
 
   int _gap(bool first) {

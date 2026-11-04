@@ -9,8 +9,10 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kryfo/devices/device_state.dart' show linkedDevicesForTest;
-import 'package:kryfo/main.dart' show HaloDb, blockTables, goneKey;
+import 'package:kryfo/devices/device_state.dart'
+    show DeviceEngine, DeviceState, linkedDevicesForTest;
+import 'package:kryfo/main.dart'
+    show HaloDb, blockTables, deviceStateForTest, goneKey;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/vault_life.dart';
 
@@ -21,6 +23,24 @@ const _g = 'g1group00001';
 const _m = 'blocked-key-only';
 // a contact with a chat of their own, who stays
 const _f = 'friend-stays-here';
+
+// the engine's pins: [listed] by device; a list is held
+class _Pins implements DeviceEngine {
+  _Pins(this.listed);
+  final Map<int, String> listed;
+  @override
+  String call(String op, Map<String, Object?> args) {
+    if (op == 'current') return '{"rows":[]}';
+    final k = listed[args['device']];
+    return jsonEncode({
+      'rows': [],
+      if (k == null) 'err': 'not_listed' else 'key': k,
+    });
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
 
 class _NoDb implements HaloDb {
   @override
@@ -441,6 +461,7 @@ void main() {
           'CREATE TABLE $s.sessions (ident INTEGER, address TEXT, device_id '
               'INTEGER, record BLOB, PRIMARY KEY (ident, address, device_id))',
           'ALTER TABLE $s.contacts ADD COLUMN verified_key TEXT',
+          'ALTER TABLE $s.contacts ADD COLUMN caps TEXT',
           if (s == 'v')
             'ALTER TABLE v.block_spans ADD COLUMN listen_from INTEGER',
         ]) {
@@ -564,7 +585,31 @@ void main() {
       'phone session': phone,
     };
 
-    tearDown(() => linkedDevicesForTest = false);
+    tearDown(() {
+      linkedDevicesForTest = false;
+      deviceStateForTest(null);
+    });
+
+    test('a device the engine holds their list without (disputed) is left '
+        'off the card', () async {
+      linkedDevicesForTest = true;
+      final db = await world();
+      final mover = SqlChatMover(_NoDb(), _NoDb());
+      await mover.moveRowsOn(db, const ChatRef(_f), intoVault: true);
+      deviceStateForTest(DeviceState(_Pins({5: '55' * 33})));
+      final card = RouterCard.fromJson(
+        jsonDecode((await hiddenCard(db, const ChatRef(_f)))!),
+        id: _f,
+      )!;
+      expect([for (final p in card.devices!.pairs) p.their], [5]);
+      // under another key than its list's, it goes too
+      deviceStateForTest(DeviceState(_Pins({5: '56' * 33, 9: '99' * 33})));
+      final again = RouterCard.fromJson(
+        jsonDecode((await hiddenCard(db, const ChatRef(_f)))!),
+        id: _f,
+      )!;
+      expect([for (final p in again.devices!.pairs) p.their], [9]);
+    }, skip: skip);
 
     test('go into the vault with their chat and back, none dropped; the '
         'phone pair and its session stay with the store, another\'s stay '

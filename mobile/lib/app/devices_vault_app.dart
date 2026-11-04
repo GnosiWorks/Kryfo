@@ -20,6 +20,40 @@ final _hiddenHeard = <String, int>{};
 // the keys told to the engine for listening, by '$ident/$identity'
 final _hiddenKeysTold = <String, String>{};
 Timer? _hiddenCardsTimer;
+// removals from my list still to reach a hidden chat's contact's phone
+// while the vault is shut, by their chat: my identity they know. memory
+// only: the vault's own push at its next open carries it anyway
+final _hiddenRemovalsOwed = <String, int>{};
+
+// a frame of mine to a hidden chat's contact's phone, on the phone pair
+// whose session the everyday side holds
+Future<bool> Function(int ident, String peer, String identity, String frame)
+_hiddenPhoneSend = _hiddenPhoneSendLive;
+
+Future<bool> _hiddenPhoneSendLive(
+  int ident,
+  String peer,
+  String identity,
+  String frame,
+) async {
+  final me = await _devMeOf(ident);
+  if (me == null) return false;
+  return _devPhoneSend(me, (
+    peer: peer,
+    identity: identity,
+    devices: true,
+    phoneClassic: false,
+  ), frame);
+}
+
+@visibleForTesting
+set hiddenPhoneSendForTest(
+  Future<bool> Function(int ident, String peer, String identity, String frame)?
+  send,
+) {
+  _hiddenPhoneSend = send ?? _hiddenPhoneSendLive;
+  _hiddenRemovalsOwed.clear();
+}
 
 /// the receiving side of the open vault's hidden chats, while it is open
 DeviceReceive? get vaultDeviceReceive => _vaultDevReceive;
@@ -167,16 +201,41 @@ extension AppStateVaultDevices on AppState {
     final everyday = _deviceReceive;
     if (!linkedDevicesOn || ds == null || everyday == null) return;
     if (!AppState._everyday(v) || !identical(_openVault, v)) return;
+    // a lock during any wait below: the close ran with nothing to let go,
+    // so what this took in goes here
+    var took = <String>[];
+    Future<bool> shut() async {
+      if (identical(_openVault, v)) return false;
+      if (identical(_vaultDevOf, v)) {
+        _vaultDevReceive = null;
+        _vaultDevSend = null;
+        _vaultDevOf = null;
+        // its listens as the cards say, now that it is shut
+        unawaited(_listenHiddenDevices());
+      }
+      _vaultDevPeers.removeAll(took);
+      if (took.isNotEmpty) {
+        await ds.call(await live.open(), 'drop_peers', {
+          'peers': took,
+          'keep': await _keptByKey(took),
+        });
+      }
+      return true;
+    }
+
     try {
       final vdb = await v.open();
       final args = await devPeerLoadArgs(vdb);
+      if (await shut()) return;
       await ds.call(vdb, 'load_peers', args);
+      took = [
+        for (final c in args['contacts'] as List)
+          (c as Map)['identity'] as String,
+      ];
+      if (await shut()) return;
       _vaultDevPeers
         ..clear()
-        ..addAll([
-          for (final c in args['contacts'] as List)
-            (c as Map)['identity'] as String,
-        ]);
+        ..addAll(took);
       final sessions = <int, DeviceSessions>{};
       Future<DeviceSessions> vs(int ident) async {
         final ss = await signalOfIdent(ident);
@@ -222,11 +281,16 @@ extension AppStateVaultDevices on AppState {
         },
       );
       await _vaultDevReceive?.listenAll();
+      if (await shut()) return;
       await _vaultListsOwed(v);
+      await shut();
     } catch (e) {
       dlog('devices: the vault\'s not loaded (${e.runtimeType})');
     }
   }
+
+  @visibleForTesting
+  Future<void> vaultDevicesInForTest(HaloDb v) => _vaultDevicesIn(v);
 
   // my list to each hidden contact who reads lists, once a version: it
   // could not go while the vault was shut
@@ -285,21 +349,25 @@ extension AppStateVaultDevices on AppState {
     final peers = [..._vaultDevPeers];
     _vaultDevPeers.clear();
     try {
-      final db = await live.open();
-      // one the everyday side knows by key alone stays known that way
-      final keep = [
-        for (final r in await db.query(
-          'contacts',
-          columns: ['ikey'],
-          where: 'ikey IS NOT NULL',
-        ))
-          if (peers.contains(r['ikey'])) r['ikey'] as String,
-      ];
-      await ds.call(db, 'drop_peers', {'peers': peers, 'keep': keep});
+      await ds.call(await live.open(), 'drop_peers', {
+        'peers': peers,
+        'keep': await _keptByKey(peers),
+      });
     } catch (e) {
       dlog('devices: the vault\'s not let go (${e.runtimeType})');
     }
   }
+
+  // of [peers] (identity hex), those the everyday side knows by key alone:
+  // they stay known that way
+  Future<List<String>> _keptByKey(List<String> peers) async => [
+    for (final r in await (await live.open()).query(
+      'contacts',
+      columns: ['ikey'],
+      where: 'ikey IS NOT NULL',
+    ))
+      if (peers.contains(r['ikey'])) r['ikey'] as String,
+  ];
 
   // a chat moved ([toVault] into the vault, else back): its contact
   // [ikey]'s device state held by the engine from where its rows are now,
@@ -386,6 +454,7 @@ extension AppStateVaultDevices on AppState {
     final want = <String, int>{};
     final keys = <String, ({int ident, String identity, String held})>{};
     for (final d in cards.values) {
+      if (d.pairs.isEmpty) continue;
       final x = d.identity.substring(2);
       keys['${d.ident}/${d.identity}'] = (
         ident: d.ident,
@@ -447,6 +516,86 @@ extension AppStateVaultDevices on AppState {
       engine.deviceListenBg(e.value, e.key);
     }
   }
+
+  // my lists changed (devices_send_app.dart): the open vault's side queues
+  // its own pushes; while it is shut a removal goes at once to each hidden
+  // contact's phone that reads lists, on the phone pair the everyday side
+  // holds, so a removed device of mine stops getting their copies now.
+  // additions wait for the vault's next open
+  void _hiddenListsChanged(
+    List<({int ident, int version, List<int> added, bool removed})> changes,
+  ) {
+    if (!linkedDevicesOn) return;
+    final v = _vaultDevSend;
+    if (v != null) {
+      unawaited(
+        v.listsChanged(changes).catchError((Object e) {
+          dlog('devices: the vault\'s pushes not queued (${e.runtimeType})');
+        }),
+      );
+      return;
+    }
+    final removed = {
+      for (final c in changes)
+        if (c.removed) c.ident,
+    };
+    if (removed.isEmpty) return;
+    for (final e in _router.hiddenDevices.entries) {
+      if (e.value.lists && removed.contains(e.value.ident)) {
+        _hiddenRemovalsOwed[e.key] = e.value.ident;
+      }
+    }
+    unawaited(_pushHiddenRemovals());
+  }
+
+  // the removals owed to hidden contacts' phones, tried now: my list as I
+  // hold it, the same bytes each time. one that does not go waits for the
+  // next pump
+  Future<void> _pushHiddenRemovals() async {
+    final ds = _deviceState;
+    if (!linkedDevicesOn || ds == null || _hiddenRemovalsOwed.isEmpty) return;
+    // the open vault's own pushes take them
+    if (_vaultDevSend != null) {
+      _hiddenRemovalsOwed.clear();
+      return;
+    }
+    for (final e in [..._hiddenRemovalsOwed.entries]) {
+      final card = _router.hiddenDevices[e.key];
+      if (card == null || !card.lists) {
+        _hiddenRemovalsOwed.remove(e.key);
+        continue;
+      }
+      try {
+        final cur =
+            jsonDecode(ds.engine.call('current', {'ident': e.value}))
+                as Map<String, dynamic>;
+        final list = cur['list'];
+        if (cur['err'] != null || list is! String) {
+          _hiddenRemovalsOwed.remove(e.key);
+          continue;
+        }
+        final w = base64Decode(list);
+        final version = w.length < 45
+            ? 0
+            : ByteData.sublistView(w, 37, 45).getUint64(0);
+        final frame =
+            '$kEnvelopePrefix${jsonEncode({'u': 'dl:$version', 'dl': list})}';
+        if (await _hiddenPhoneSend(e.value, e.key, card.identity, frame)) {
+          _hiddenRemovalsOwed.remove(e.key);
+        }
+      } catch (x) {
+        dlog('devices: a removal to a hidden chat waits (${x.runtimeType})');
+      }
+    }
+  }
+
+  @visibleForTesting
+  void hiddenListsChangedForTest(
+    List<({int ident, int version, List<int> added, bool removed})> changes,
+  ) => _hiddenListsChanged(changes);
+
+  @visibleForTesting
+  Future<void> pushHiddenRemovalsForTest() => _pushHiddenRemovals();
 
   // a line on a device pair of a hidden chat's contact while the vault is
   // shut: sealed as it came, opened as the vault opens

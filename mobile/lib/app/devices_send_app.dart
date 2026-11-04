@@ -40,6 +40,7 @@ void _bootDeviceSend(DeviceState ds) {
     },
     wire: _EngineDeviceWire(),
     listen: engine.deviceListenBg,
+    changed: (changes) => _madeApp?._hiddenListsChanged(changes),
   );
   _bootDeviceReceive(ds, _deviceSend!);
 }
@@ -136,6 +137,7 @@ Future<void> pumpDeviceSends() async {
   await _pumpDevices(_deviceSend, live);
   final v = _vaultDevOf;
   if (v != null) await _pumpDevices(_vaultDevSend, v);
+  await _madeApp?._pushHiddenRemovals();
 }
 
 Future<void> _pumpDevices(DeviceSend? send, HaloDb home) async {

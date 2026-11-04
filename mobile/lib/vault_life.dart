@@ -17,12 +17,13 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'container.dart';
 import 'devices/device_state.dart' show linkedDevicesOn;
 import 'lock_state.dart' show LockState, lockState;
-import 'main.dart' show HaloDb, engine, shredFile;
+import 'main.dart' show HaloDb, deviceState, engine, shredFile;
 import 'notifications.dart'
     show cancelWithRetry, clearNotificationsFor, notifPlugin;
 import 'chat_shots.dart' show ShotsWord;
 import 'router.dart';
 import 'search.dart' show searchBody;
+import 'typing.dart' show capsOfText, kCapDevices;
 
 // a chat as a move sees it: a person's, or a group's
 class ChatRef {
@@ -1018,23 +1019,32 @@ Future<String?> hiddenCard(DatabaseExecutor t, ChatRef c) async {
 // the vault is shut, from the vault's rows attached as v. this phone is
 // device 1 of its identity: the vault is on phones alone. each device on
 // the list held that has no session yet on its opener address, each pair
-// with a seed on its seeded one. null with none, and with the switch off
+// with a seed on its seeded one. a device the engine holds their list
+// without (disputed) is left out; one the engine does not hold yet (a hide
+// from the setup) keeps the list as stored, until the next card. null with
+// none, and with the switch off
 Future<HiddenDevices?> _hiddenDevices(DatabaseExecutor t, String id) async {
   if (!linkedDevicesOn) return null;
   try {
     final who = await t.rawQuery(
-      'SELECT ikey, ident FROM v.contacts WHERE halo_id = ?1 AND accepted = 1',
+      'SELECT ikey, ident, caps FROM v.contacts WHERE halo_id = ?1 '
+      'AND accepted = 1',
       [id],
     );
     final ikey = who.isEmpty ? null : who.first['ikey'] as String?;
     if (ikey == null) return null;
     final ident = who.first['ident'] as int? ?? 0;
+    final lists = capsOfText(
+      who.first['caps'] as String?,
+    ).contains(kCapDevices);
     final l = await t.rawQuery(
       'SELECT wire FROM v.dev_lists WHERE ident = ?1 AND owner = ?2',
       [ident, ikey],
     );
     final wire = l.isEmpty ? null : l.first['wire'];
-    if (wire is! List<int>) return null;
+    if (wire is! List<int>) {
+      return lists ? HiddenDevices(ikey, ident, const [], lists: true) : null;
+    }
     final seeds = {
       for (final r in await t.rawQuery(
         'SELECT their_device, seed FROM v.pairs WHERE ident = ?1 AND '
@@ -1054,9 +1064,12 @@ Future<HiddenDevices?> _hiddenDevices(DatabaseExecutor t, String id) async {
     };
     String hex(List<int> b) =>
         b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
+    final pinned = _pinnedBy(ikey);
     final pairs = <HiddenPair>[
       for (final (dev, key) in listEntries(wire))
-        if (dev != 1 && (seeds.containsKey(dev) || !held.contains(dev)))
+        if (dev != 1 &&
+            pinned(dev, hex(key)) &&
+            (seeds.containsKey(dev) || !held.contains(dev)))
           (
             their: dev,
             my: 1,
@@ -1065,11 +1078,33 @@ Future<HiddenDevices?> _hiddenDevices(DatabaseExecutor t, String id) async {
             opener: !held.contains(dev),
           ),
     ];
-    return pairs.isEmpty ? null : HiddenDevices(ikey, ident, pairs);
+    return pairs.isEmpty && !lists
+        ? null
+        : HiddenDevices(ikey, ident, pairs, lists: lists);
   } catch (_) {
     // a vault from before the tables: nothing to listen on yet
     return null;
   }
+}
+
+// whether the engine routes to [identity]'s device on that key: always,
+// when it holds no list of theirs
+bool Function(int dev, String key) _pinnedBy(String identity) {
+  final ds = deviceState;
+  Map<String, dynamic>? ask(String op, Map<String, Object?> args) {
+    try {
+      return jsonDecode(ds!.engine.call(op, args)) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  final cur = ds == null ? null : ask('current', {'identity': identity});
+  if (cur == null || cur['err'] != null) return (_, _) => true;
+  return (dev, key) {
+    final p = ask('pin', {'identity': identity, 'device': dev});
+    return p != null && p['err'] == null && p['key'] == key;
+  };
 }
 
 /// the devices a KDL2 list names, by id and key, as it was stored once

@@ -384,6 +384,7 @@ extension AppStateArrivals on AppState {
           fromBackPair,
           wrappedAt: wrappedAt,
           reached: reached,
+          fromDevice: fromDevice,
         );
         return to;
       }

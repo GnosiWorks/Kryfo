@@ -153,14 +153,14 @@ extension AppStateDevices on AppState {
     // the state is not loaded yet: it comes again
     if (_deviceReceive == null) throw StateError('devices: not loaded');
     await _afterClose();
-    // a hidden chat's contact: the open vault's side opens it, a shut one
-    // takes it sealed as it came
     // a chat on the move: its rows land on their side first
     if (_moveDone != null) {
       final who =
           await _devHiddenOfTag(m.peer) ?? await _devEverydayOfTag(m.peer);
       if (who != null) await _afterMove(who, null);
     }
+    // a hidden chat's contact: the open vault's side opens it, a shut one
+    // takes it sealed as it came
     final hidden = await _devHiddenOfTag(m.peer);
     final DeviceReceive? r;
     if (hidden != null) {
@@ -188,38 +188,40 @@ extension AppStateDevices on AppState {
     } else {
       r = _deviceReceive;
     }
+    // a close waits for it from the open to the filing; one that shuts
+    // the vault meanwhile seals the copy as a device's (fromDevice)
     final at = hidden;
     if (at != null) _arriving[at] = (_arriving[at] ?? 0) + 1;
-    final before = _relayOpened[h];
-    DevCopyIn? got;
     try {
+      final before = _relayOpened[h];
+      DevCopyIn? got;
       if (before != null) {
         got = (peer: before.id, frame: before.plain);
       } else {
         got = await r!.receive(m.peer, m.cipher);
         if (got != null) _keepOpened(h, got.peer, got.frame, epoch);
       }
+      if (got == null) {
+        await live.markSeen(h);
+        arrived();
+        return;
+      }
+      final went = await _applyDeviceCopy(
+        got,
+        wrappedAt: wrappedAt,
+        reached: reached,
+      );
+      await live.markSeen(h);
+      _relayOpened.take(h);
+      if (AppState._shown(went)) {
+        notifyListeners();
+        arrived();
+      }
     } finally {
       if (at != null) {
         final n = (_arriving[at] ?? 1) - 1;
         n > 0 ? _arriving[at] = n : _arriving.remove(at);
       }
-    }
-    if (got == null) {
-      await live.markSeen(h);
-      arrived();
-      return;
-    }
-    final went = await _applyDeviceCopy(
-      got,
-      wrappedAt: wrappedAt,
-      reached: reached,
-    );
-    await live.markSeen(h);
-    _relayOpened.take(h);
-    if (AppState._shown(went)) {
-      notifyListeners();
-      arrived();
     }
   }
 
@@ -256,6 +258,8 @@ extension AppStateDevices on AppState {
     final t = deviceTagOf(tag);
     if (t == null) return null;
     final identity = '05${t.peerX}';
+    final c = _router.hiddenByIdentity(identity);
+    if (c != null && _devHidden(c)) return c;
     final v = _openVault;
     if (v != null) {
       final r = await (await v.open()).query(
@@ -267,8 +271,7 @@ extension AppStateDevices on AppState {
       );
       if (r.isNotEmpty) return r.first['halo_id'] as String;
     }
-    final c = _router.hiddenByIdentity(identity);
-    return c != null && _devHidden(c) ? c : null;
+    return null;
   }
 
   // the device words of a frame from a contact's phone, taken where their

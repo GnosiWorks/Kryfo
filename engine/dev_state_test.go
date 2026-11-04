@@ -759,3 +759,36 @@ func TestHiddenPeersComeAndGoWithTheVault(t *testing.T) {
 		t.Fatal("a card's key after it went")
 	}
 }
+
+// a hidden contact the everyday side also knows by key alone (an everyday
+// group names them) is held bare: while the vault is shut their card's keys
+// are heard on all the same; once a list of theirs is held it alone decides
+func TestABareHeldHiddenContactIsHeardByItsCard(t *testing.T) {
+	l := devTestShim(t)
+	me, bob := newDevAcct(t, l), newDevAcct(t, l)
+	bobDesk := bob.link(t, newDevSigner(t, l).pub, false)
+	stranger := newDevSigner(t, l).pub
+	mustOK(t, devCallJSON("load", devJSON(t, map[string]any{
+		"mine":     []map[string]any{{"ident": 0, "identity": hexKey(me.id.pub)}},
+		"contacts": []map[string]any{{"ident": 0, "identity": hexKey(bob.id.pub)}},
+	})))
+	held := []map[string]any{{"id": int(bobDesk.ID), "key": hexKey(bobDesk.Key)}, {"id": 9, "key": hexKey(stranger)}}
+	mustOK(t, devCallJSON("listen_keys", devJSON(t, map[string]any{"ident": 0, "identity": hexKey(bob.id.pub), "held": held})))
+	defer devCallJSON("listen_keys", devJSON(t, map[string]any{"ident": 0, "identity": hexKey(bob.id.pub)}))
+	x := func(k devices.Key) (out [32]byte) { copy(out[:], k[1:]); return }
+	var src devKeySource
+	if k, ok := src.deviceKey(0, x(bob.id.pub), bobDesk.ID); !ok || k != x(bobDesk.Key) {
+		t.Fatal("a bare-held contact's card key")
+	}
+	if _, ok := src.deviceKey(1, x(bob.id.pub), bobDesk.ID); ok {
+		t.Fatal("under another identity of mine")
+	}
+	// the vault opens: his list is held, and a key it does not name is not
+	mustOK(t, devSessionJSON("accept", devJSON(t, map[string]any{"identity": hexKey(bob.id.pub), "list": bob.wire, "remote": hexKey(bob.id.pub)})))
+	if k, ok := src.deviceKey(0, x(bob.id.pub), bobDesk.ID); !ok || k != x(bobDesk.Key) {
+		t.Fatal("his listed desk")
+	}
+	if _, ok := src.deviceKey(0, x(bob.id.pub), 9); ok {
+		t.Fatal("a card key his list does not name")
+	}
+}
