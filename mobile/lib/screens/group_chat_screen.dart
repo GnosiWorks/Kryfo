@@ -132,6 +132,7 @@ import '../widgets/swipe_to_reply.dart';
 import 'room_link_sheet.dart';
 import '../dlog.dart';
 import '../widgets/sheet_handle.dart';
+import '../widgets/enter_sends.dart';
 import '../widgets/shift_tap_guard.dart';
 import '../widgets/held_menu.dart';
 import '../widgets/menu_backdrop.dart';
@@ -5558,33 +5559,37 @@ class _Composer extends StatelessWidget {
                       Expanded(
                         child: WrittenDir(
                           controller: controller,
-                          builder: (dir) => ShiftTapGuard(
+                          builder: (dir) => EnterSends(
                             controller: controller,
-                            child: TextField(
-                              textDirection: dir,
-                              inputFormatters: const [UnmarkedInput()],
+                            onSend: onSend,
+                            child: ShiftTapGuard(
                               controller: controller,
-                              enableIMEPersonalizedLearning: false,
-                              style: HaloType.sans(
-                                size: 14,
-                                color: HaloColors.text,
-                              ),
-                              cursorColor: HaloColors.amber,
-                              decoration: InputDecoration(
-                                hintText: l10n.groupChatMessage,
-                                hintStyle: HaloType.sans(
+                              child: TextField(
+                                textDirection: dir,
+                                inputFormatters: const [UnmarkedInput()],
+                                controller: controller,
+                                enableIMEPersonalizedLearning: false,
+                                style: HaloType.sans(
                                   size: 14,
-                                  color: HaloColors.text3,
+                                  color: HaloColors.text,
                                 ),
-                                border: InputBorder.none,
-                                isCollapsed: true,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 12,
+                                cursorColor: HaloColors.amber,
+                                decoration: InputDecoration(
+                                  hintText: l10n.groupChatMessage,
+                                  hintStyle: HaloType.sans(
+                                    size: 14,
+                                    color: HaloColors.text3,
+                                  ),
+                                  border: InputBorder.none,
+                                  isCollapsed: true,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
                                 ),
+                                minLines: 1,
+                                maxLines: 5,
+                                onSubmitted: (_) => onSend(),
                               ),
-                              minLines: 1,
-                              maxLines: 5,
-                              onSubmitted: (_) => onSend(),
                             ),
                           ),
                         ),

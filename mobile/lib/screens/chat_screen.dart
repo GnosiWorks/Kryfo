@@ -158,6 +158,7 @@ import '../seen_timers.dart';
 import '../read_burn.dart';
 import '../dlog.dart';
 import '../widgets/sheet_handle.dart';
+import '../widgets/enter_sends.dart';
 import '../widgets/shift_tap_guard.dart';
 import '../widgets/held_menu.dart';
 import '../widgets/menu_backdrop.dart';
@@ -9798,54 +9799,58 @@ class _Composer extends StatelessWidget {
               Expanded(
                 child: WrittenDir(
                   controller: controller,
-                  builder: (dir) => ShiftTapGuard(
+                  builder: (dir) => EnterSends(
                     controller: controller,
-                    child: TextField(
+                    onSend: onSend,
+                    child: ShiftTapGuard(
                       controller: controller,
-                      enableIMEPersonalizedLearning: false,
-                      focusNode: focusNode,
-                      textDirection: dir,
-                      inputFormatters: const [UnmarkedInput()],
-                      cursorColor: HaloColors.amber,
-                      style: HaloType.sans(size: 14),
-                      minLines: 1,
-                      maxLines: 4,
-                      decoration: InputDecoration(
-                        hintText: l10n.chatMessage,
-                        hintStyle: HaloType.sans(
-                          size: 14,
-                          color: HaloColors.text3,
-                        ),
-                        // stickers sit inside the field: no width taken from the row
-                        suffixIcon: StickerButton(onTap: onStickers),
-                        suffixIconConstraints: const BoxConstraints(
-                          minWidth: 40,
-                          minHeight: 36,
-                        ),
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 10,
-                        ),
-                        filled: true,
-                        fillColor: HaloColors.surface2,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide(
-                            color: HaloColors.amber,
-                            width: 0.5,
+                      child: TextField(
+                        controller: controller,
+                        enableIMEPersonalizedLearning: false,
+                        focusNode: focusNode,
+                        textDirection: dir,
+                        inputFormatters: const [UnmarkedInput()],
+                        cursorColor: HaloColors.amber,
+                        style: HaloType.sans(size: 14),
+                        minLines: 1,
+                        maxLines: 4,
+                        decoration: InputDecoration(
+                          hintText: l10n.chatMessage,
+                          hintStyle: HaloType.sans(
+                            size: 14,
+                            color: HaloColors.text3,
+                          ),
+                          // stickers sit inside the field: no width taken from the row
+                          suffixIcon: StickerButton(onTap: onStickers),
+                          suffixIconConstraints: const BoxConstraints(
+                            minWidth: 40,
+                            minHeight: 36,
+                          ),
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          filled: true,
+                          fillColor: HaloColors.surface2,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: BorderSide(
+                              color: HaloColors.amber,
+                              width: 0.5,
+                            ),
                           ),
                         ),
+                        onSubmitted: (_) => onSend(),
                       ),
-                      onSubmitted: (_) => onSend(),
                     ),
                   ),
                 ),
