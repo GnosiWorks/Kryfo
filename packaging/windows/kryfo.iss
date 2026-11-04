@@ -54,7 +54,7 @@
 #endif
 
 ; must equal TOR_EXE_SHA256 in tor-pin.txt and the pin in halo.dll
-#define TorExeSha256 "8c38513b3c4584154158e7c584f4144849dc679a64cd679553d72dad28230c54"
+#define TorExeSha256 "1607d98f5d13859077b1b349c55beba76b09acc788f0431fd824d11966fb1074"
 
 #if Exec("powershell.exe", '-NoProfile -ExecutionPolicy Bypass -File "' + SourcePath + 'check-tor.ps1" -Path "' + TorDir + '\tor.exe" -Sha256 ' + TorExeSha256, SourcePath, 1, SW_HIDE) != 0
   #error tor.exe does not match TorExeSha256, see tor-pin.txt
