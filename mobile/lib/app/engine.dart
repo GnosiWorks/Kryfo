@@ -850,6 +850,23 @@ class HaloEngine {
     what: 'tor',
   );
 
+  // people search over tor, on a circuit made for this search alone
+  Future<String> searchPost(String url, String body) => _ffiOnIsolate(
+    'HaloSearchPost',
+    [url, body],
+    wait: const Duration(seconds: 80),
+    what: 'tor',
+  );
+
+  // the own handle's lookup, on the lane its claim and release take, apart
+  // from people search and others' handles
+  Future<String> ownHandleGetJson(String url) => _ffiOnIsolate(
+    'HaloOwnHandleGetJSON',
+    [url],
+    wait: const Duration(seconds: 80),
+    what: 'tor',
+  );
+
   // the gif relay, on a lane of its own: search, trending, and a picture
   // into [path] whole or not at all ("ok <n>"). the route people search
   // takes. a wait that runs out says gif, not tor: off the onion route

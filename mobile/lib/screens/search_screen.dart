@@ -281,10 +281,11 @@ class _SearchScreenState extends State<SearchScreen> {
         return f.readAsString();
       }
     }
-    // the decoy on a lane of its own, never the everyday one's circuits
+    // the decoy on a lane of its own, never the everyday one's circuits;
+    // each everyday search on a circuit of its own
     return sessionQuiet
         ? engine.decoyTorPost(url, body)
-        : engine.torPost(url, body);
+        : engine.searchPost(url, body);
   }
 
   void _openPerson(PublicHandle p) {
