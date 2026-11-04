@@ -302,7 +302,8 @@ void main() {
   });
 
   test('no lookup in the process on a windows path', () {
-    // kryfo.exe's dacl refuses it there: each one is linux's, or ios's
+    // kryfo.exe's dacl refuses it there: each one is linux's, android's
+    // (phone_seal's memfd) or ios's
     final found = <String, int>{};
     for (final f in Directory('lib').listSync(recursive: true)) {
       if (f is! File || !f.path.endsWith('.dart')) continue;
@@ -319,6 +320,7 @@ void main() {
       'desktop/sealed_native.dart': 2,
       'tools/age_ffi.dart': 1,
       'signal_ffi/kryfo_signal.dart': 1,
+      'phone_seal.dart': 2,
     });
   });
 
@@ -337,7 +339,10 @@ void main() {
       'app/engine.dart',
       'devices/history_ffi.dart',
       'devices/device_state.dart',
+      'devices/link_calls.dart',
       'desktop/desktop_vault.dart',
+      'desktop/sealed_format.dart',
+      'backup.dart',
       'engine_strings.dart',
     ]) {
       expect(
