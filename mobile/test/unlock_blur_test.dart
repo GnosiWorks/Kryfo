@@ -160,6 +160,26 @@ void main() {
       expect(blurNow(at)!.encode(), plain);
     });
 
+    test('on the desktop\'s seal the same: sealed next to its photo, '
+        'under its container\'s key only', () async {
+      uninstallPhoneSealForTest();
+      installPhoneSeal(
+        SealedAreas(docs: docs, support: support, runtime: cache),
+        crypto,
+      );
+      containerOpened!(HaloContainer.everyday.id, '', _everydayKey);
+      final at = put(_tall, 'media', 'in_${'6' * 32}.jpg');
+      final plain = (await makeBlur(at))!.encode();
+      final disk = _raw(blurPathOf(at));
+      expect(isSealedHead(disk), isTrue);
+      expect(disk.length, storedLength(plain.length));
+      containerClosed!(HaloContainer.everyday.id);
+      forgetBlurs();
+      expect(blurNow(at), isNull);
+      containerOpened!(HaloContainer.everyday.id, '', _everydayKey);
+      expect(blurNow(at)!.encode(), plain);
+    });
+
     test('another container\'s key opens nothing, and none opens it once '
         'its key is gone', () async {
       final at = put(_wide, 'media', 'in_${'b' * 32}.jpg');
