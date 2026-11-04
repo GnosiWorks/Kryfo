@@ -125,6 +125,28 @@ extension AppStateArrivals on AppState {
     return edited;
   }
 
+  /// a linked device's history copy landed: what came early for the
+  /// messages it brought (an edit, a reaction, a pin) goes in now, as it
+  /// would have had each come live
+  Future<void> applyEarlyCopied() async {
+    if (_early.isEmpty) return;
+    final db = live;
+    final due = <String, String>{
+      for (final e in _early)
+        if (identical(e.db, db)) e.uid: e.sender,
+    };
+    var any = false;
+    for (final u in due.entries) {
+      if (!await db.messageExists(u.key)) continue;
+      await _applyEarly(u.key, u.value, db, null);
+      any = true;
+    }
+    if (any) {
+      await refreshContacts();
+      notifyListeners();
+    }
+  }
+
   String? _arrivingPoll(Object? raw) {
     final p = PollSpec.parse(raw);
     return p == null

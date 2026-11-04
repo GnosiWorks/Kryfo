@@ -10881,6 +10881,129 @@ class AppLocalizationsRu extends AppLocalizations {
       'Этот чат остаётся на твоём телефоне, потому что в нём запрещены скриншоты.';
 
   @override
+  String get historyCopyTitle => 'История чатов';
+
+  @override
+  String get historyCopyMaking => 'Готовим ваши чаты';
+
+  @override
+  String get historyCopyMakingLine =>
+      'Телефон собирает то, что будет скопировано. Сейчас начнётся.';
+
+  @override
+  String get historyCopyGoing => 'Копируем ваши чаты';
+
+  @override
+  String get historyCopyGoingLine =>
+      'Держите оба устройства в сети, пока копирование не закончится.';
+
+  @override
+  String historyCopySize(Object size) {
+    return 'Всего $size';
+  }
+
+  @override
+  String get historyCopyWaiting => 'Ждём другое устройство';
+
+  @override
+  String get historyCopyWaitingLine =>
+      'Копирование продолжится само, когда оба устройства будут в сети.';
+
+  @override
+  String get historyCopyPaused => 'Копирование ненадолго остановилось';
+
+  @override
+  String get historyCopyPausedLine => 'Продолжится через минуту.';
+
+  @override
+  String get historyCopyWhole => 'Все сообщения и файлы перенесены';
+
+  @override
+  String get historyCopyWholeLine => 'Ничего не пропало.';
+
+  @override
+  String get historyCopyRows => 'Контакты и группы перенесены';
+
+  @override
+  String get historyCopyRowsLine =>
+      'Теперь новые сообщения будут появляться на устройстве.';
+
+  @override
+  String get historyCopyGaps => 'Почти все чаты перенесены';
+
+  @override
+  String get historyCopyGapsLine =>
+      'В этих чатах на новом устройстве меньше, чем на телефоне.';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return 'Сообщения: $got из $want';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return 'Файлы: $got из $want';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString элемента остались на телефоне',
+      many: '$countString элементов остались на телефоне',
+      few: '$countString элемента остались на телефоне',
+      one: '$countString элемент остался на телефоне',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy =>
+      'Слишком большие или нечитаемые для копирования.';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString чата остались на телефоне',
+      many: '$countString чатов остались на телефоне',
+      few: '$countString чата остались на телефоне',
+      one: '$countString чат остался на телефоне',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => 'Копирование остановлено';
+
+  @override
+  String get historyCopyEndedLine =>
+      'Больше ничего не придёт. Свяжите устройство заново для новой копии.';
+
+  @override
+  String get historyCopyFailed => 'Копирование не удалось завершить';
+
+  @override
+  String get historyCopyFailedLine =>
+      'Свяжите устройство заново для новой копии.';
+
+  @override
+  String get historyCopyStays => 'Осталось на телефоне';
+
+  @override
+  String get historyCopySee => 'Посмотреть копию';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

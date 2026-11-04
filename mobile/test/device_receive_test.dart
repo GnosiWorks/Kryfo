@@ -895,6 +895,129 @@ void main() {
     expect(j['da'], askedAt);
   });
 
+  test('a contact\'s phone opens to a linked device before any list of '
+      'theirs is held, and the device listens for it', () async {
+    if (skip()) return;
+    final lib = shim!;
+    final db = await open();
+    final anaKp = testKeyPair();
+    final ana = await testStore(keys: anaKp);
+    final anaId = lib.identityFromPrivate(anaKp.privateKey.serialize());
+    final deskKp = testKeyPair();
+    final deskStore = await testStore(keys: deskKp);
+    final bob = await testStore();
+    await putMainIdentity(db, deskKp.privateKey.serialize());
+    await db.update('identities', {
+      'ident_pub': ana.identity.public,
+      'dev_id': 4,
+    });
+    final toBob = (
+      peer: _bobChat,
+      identity: devHex(bob.identity.public),
+      devices: true,
+      phoneClassic: false,
+    );
+    await db.insert('contacts', {
+      'halo_id': _bobChat,
+      'onion': '',
+      'xpub': devHex(bob.identity.public.sublist(1)),
+      'first_seen': 0,
+      'last_seen': 0,
+      'ident': kMainIdent,
+      'ikey': toBob.identity,
+      'caps': 'dv,pq,ty',
+      'accepted': 1,
+    });
+    final ds = DeviceState(DeviceEngine());
+    await ds.load(
+      db,
+      await devMineOf(db, lib),
+      shimPath: KryfoSignal.loadedFrom!,
+    );
+    linkedDevicesForTest = true;
+    deviceStateForTest(ds);
+    await ds.session(db, 'own_set', {
+      'ident': kMainIdent,
+      'identity': devHex(ana.identity.public),
+      'list': base64Encode(
+        _list(anaId, ana.registrationId, 4000, [
+          (
+            dev: 4,
+            key: deskStore.identity.public,
+            reg: deskStore.registrationId,
+          ),
+        ]),
+      ),
+    }, SessionRemote.opened(ana.identity.public));
+    final deskDs = DeviceSessions(deskStore, linked: true);
+    final listen = _Listen();
+    final me = (ident: kMainIdent, identity: ana.identity.public, device: 4);
+    final recv = DeviceReceive(
+      state: ds,
+      db: () async => db,
+      sessions: (_) async => deskDs,
+      send: DeviceSend(
+        state: ds,
+        db: () async => db,
+        sessions: (_) async => deskDs,
+        wire: _Wire(),
+        clock: () => 1,
+        random: Random(3),
+      ),
+      listener: listen,
+      open: deviceOpenAt,
+      me: (_) async => me,
+      contact: (_, identity) async =>
+          identity == toBob.identity ? (me: me, c: toBob) : null,
+      phone: (_, _, _) async => false,
+      sign: (_, _) async => throw StateError('a linked device never signs'),
+      clock: () => 1,
+    );
+    final bobX = toBob.identity.substring(2);
+    // no list of bob's here: his phone, his identity key, is listened for
+    await recv.listenAll();
+    expect(listen.heard, contains('$bobX/1/4'));
+    // bob's phone opens to the desk from a bundle of the desk's
+    final bobDs = DeviceSessions(bob);
+    await bobDs.build(
+      'ana',
+      4,
+      lib.parseDeviceBundle(await deskDs.makeBundle(4), ana.identity.public),
+      deskStore.identity.public,
+      deskStore.registrationId,
+    );
+    final c = await bobDs.seal(
+      'ana',
+      4,
+      'halo/1:${jsonEncode({'u': 'm-7', 'm': 'hi desk', 'as': _hex32(0x33)})}',
+      deskStore.identity.public,
+    );
+    expect(_wireOf(c).$1, kLsPreKey);
+    final got = await recv.receive('$bobX/1/4/opn', c);
+    expect(got, isNotNull);
+    expect(got!.peer, _bobChat);
+    expect(_json(got.frame)['m'], 'hi desk');
+    expect(await deskDs.has(_bobChat, 1), isTrue);
+    expect(await db.query('dev_held_openers'), isEmpty);
+    // an opener under another key than bob's identity is never taken so
+    final eve = await testStore();
+    final eveDs = DeviceSessions(eve);
+    await eveDs.build(
+      'ana',
+      4,
+      lib.parseDeviceBundle(await deskDs.makeBundle(4), ana.identity.public),
+      deskStore.identity.public,
+      deskStore.registrationId,
+    );
+    final forged = await eveDs.seal(
+      'ana',
+      4,
+      'halo/1:${jsonEncode({'u': 'm-8', 'm': 'not bob'})}',
+      deskStore.identity.public,
+    );
+    expect(await recv.receive('$bobX/1/4/opn', forged), isNull);
+  });
+
   test('a blocked contact\'s device is opened and left to the block: its words '
       'for the chat come, nothing of it is taken or answered', () async {
     if (skip()) return;

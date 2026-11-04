@@ -10138,6 +10138,115 @@ class AppLocalizationsZh extends AppLocalizations {
   String get historyChatStaysShots => '此聊天禁止截屏，所以只留在你的手机上。';
 
   @override
+  String get historyCopyTitle => '聊天记录';
+
+  @override
+  String get historyCopyMaking => '正在准备你的聊天';
+
+  @override
+  String get historyCopyMakingLine => '你的手机正在整理要复制的内容，马上开始。';
+
+  @override
+  String get historyCopyGoing => '正在复制你的聊天';
+
+  @override
+  String get historyCopyGoingLine => '复制完成前，请让两台设备保持在线。';
+
+  @override
+  String historyCopySize(Object size) {
+    return '共 $size';
+  }
+
+  @override
+  String get historyCopyWaiting => '正在等待另一台设备';
+
+  @override
+  String get historyCopyWaitingLine => '两台设备都在线时，复制会自动继续。';
+
+  @override
+  String get historyCopyPaused => '复制稍作停顿';
+
+  @override
+  String get historyCopyPausedLine => '一分钟后继续。';
+
+  @override
+  String get historyCopyWhole => '所有消息和文件都已复制';
+
+  @override
+  String get historyCopyWholeLine => '没有遗漏。';
+
+  @override
+  String get historyCopyRows => '你的联系人和群组已复制';
+
+  @override
+  String get historyCopyRowsLine => '从现在起，新消息会显示在设备上。';
+
+  @override
+  String get historyCopyGaps => '大部分聊天已复制';
+
+  @override
+  String get historyCopyGapsLine => '这些聊天在新设备上的内容比手机上少。';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return '消息：$got / $want';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return '文件：$got / $want';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 项留在你的手机上',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy => '太大或无法读取，无法复制。';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 个聊天留在你的手机上',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => '复制已停止';
+
+  @override
+  String get historyCopyEndedLine => '不会再有内容复制过来。重新关联设备即可重新复制。';
+
+  @override
+  String get historyCopyFailed => '复制未能完成';
+
+  @override
+  String get historyCopyFailedLine => '重新关联设备即可重新复制。';
+
+  @override
+  String get historyCopyStays => '留在你的手机上';
+
+  @override
+  String get historyCopySee => '查看复制情况';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -20575,6 +20684,115 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get historyChatStaysShots => '此聊天禁止截圖，所以只留在你的手機上。';
+
+  @override
+  String get historyCopyTitle => '聊天記錄';
+
+  @override
+  String get historyCopyMaking => '正在準備你的聊天';
+
+  @override
+  String get historyCopyMakingLine => '你的手機正在整理要複製的內容，馬上開始。';
+
+  @override
+  String get historyCopyGoing => '正在複製你的聊天';
+
+  @override
+  String get historyCopyGoingLine => '複製完成前，請讓兩台裝置保持在線。';
+
+  @override
+  String historyCopySize(Object size) {
+    return '共 $size';
+  }
+
+  @override
+  String get historyCopyWaiting => '正在等待另一台裝置';
+
+  @override
+  String get historyCopyWaitingLine => '兩台裝置都在線時，複製會自動繼續。';
+
+  @override
+  String get historyCopyPaused => '複製稍作停頓';
+
+  @override
+  String get historyCopyPausedLine => '一分鐘後繼續。';
+
+  @override
+  String get historyCopyWhole => '所有訊息和檔案都已複製';
+
+  @override
+  String get historyCopyWholeLine => '沒有遺漏。';
+
+  @override
+  String get historyCopyRows => '你的聯絡人和群組已複製';
+
+  @override
+  String get historyCopyRowsLine => '從現在起，新訊息會顯示在裝置上。';
+
+  @override
+  String get historyCopyGaps => '大部分聊天已複製';
+
+  @override
+  String get historyCopyGapsLine => '這些聊天在新裝置上的內容比手機上少。';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return '訊息：$got / $want';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return '檔案：$got / $want';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 項留在你的手機上',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy => '太大或無法讀取，無法複製。';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 個聊天留在你的手機上',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => '複製已停止';
+
+  @override
+  String get historyCopyEndedLine => '不會再有內容複製過來。重新連結裝置即可重新複製。';
+
+  @override
+  String get historyCopyFailed => '複製未能完成';
+
+  @override
+  String get historyCopyFailedLine => '重新連結裝置即可重新複製。';
+
+  @override
+  String get historyCopyStays => '留在你的手機上';
+
+  @override
+  String get historyCopySee => '查看複製情況';
 
   @override
   String a11yPinDigits(int count) {

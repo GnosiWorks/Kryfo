@@ -66,7 +66,8 @@ Uint8List _linkUnhex(String h) => Uint8List.fromList([
 // the phone's side
 class _PhoneLinkApp implements PhoneLinkHooks {
   _PhoneLinkApp(this.history);
-  // what the new device gets of the history: the copy is wired later
+  // what the new device gets of the history: chats and contacts always,
+  // their messages unless "no history", their files unless skipped
   final LinkHistory history;
 
   Future<IdentityRow> _main() async {
@@ -114,6 +115,8 @@ class _PhoneLinkApp implements PhoneLinkHooks {
       key,
       t.reg,
     );
+    final uid = newDeviceUid();
+    final bind = t.bind;
     try {
       await db.transaction((tx) async {
         await ds.ownMine(tx, kMainIdent, t.list);
@@ -127,13 +130,20 @@ class _PhoneLinkApp implements PhoneLinkHooks {
         });
         await addOwnDevice(
           tx,
-          uid: newDeviceUid(),
+          uid: uid,
           // phones link computers in 0.6: named by that kind
           name: l10n.devicesNameComputer,
           kind: DeviceKind.computer,
           linkedAt: now,
           keys: [(ident: kMainIdent, dev: t.device, key: t.key, reg: t.reg)],
-          stream: t.stream,
+          stream: bind == null ? null : t.stream,
+          hist: bind == null
+              ? null
+              : historyCopyHist(
+                  bind: bind,
+                  identityHex: devHex(me),
+                  choice: history,
+                ),
         );
         // last, inside: the engine acks the device only now, and when it
         // gave up already nothing here is kept
@@ -146,6 +156,8 @@ class _PhoneLinkApp implements PhoneLinkHooks {
       rethrow;
     }
     await readLinkNotices(db);
+    // the history copy for the new device, made and served from here
+    if (bind != null) startPhoneHistoryCopy(uid);
     // the contacts who read lists learn of the new device, spread out
     // over passes. the link is kept whatever happens here
     try {
@@ -218,7 +230,7 @@ class _JoinLinkApp implements JoinLinkHooks {
   @override
   Future<void> joined(
     JoinPlace p,
-    Uint8List stream,
+    LinkStream stream,
     Map<String, dynamic> ownRows,
   ) async {
     await joinedRows(
@@ -226,11 +238,15 @@ class _JoinLinkApp implements JoinLinkHooks {
       identity: _linkUnhex(p.identity),
       device: p.device,
       rows: (ownRows['rows'] as List?) ?? const [],
-      stream: stream,
+      stream: stream.key,
+      bind: stream.bind,
+      onion: stream.onion,
     );
     _linkedRole = true;
     // the state as the rows now hold it, loaded as every start loads it
     await bootDevices();
+    // the history copy comes from the phone from here
+    startDeviceHistoryCopy();
     // linked: the app opens as the linked device from here, whatever
     // happens to this page
     await appState.markOnboardingComplete();

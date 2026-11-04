@@ -10724,6 +10724,122 @@ class AppLocalizationsFa extends AppLocalizations {
       'این گفت‌وگو روی گوشی شما می‌ماند، چون اسکرین‌شات در آن مسدود است.';
 
   @override
+  String get historyCopyTitle => 'تاریخچهٔ گفت‌وگوها';
+
+  @override
+  String get historyCopyMaking => 'در حال آماده‌کردن گفت‌وگوهایتان';
+
+  @override
+  String get historyCopyMakingLine =>
+      'گوشی شما آنچه را باید کپی شود جمع می‌کند. چند لحظه دیگر شروع می‌شود.';
+
+  @override
+  String get historyCopyGoing => 'در حال کپی گفت‌وگوهایتان';
+
+  @override
+  String get historyCopyGoingLine =>
+      'تا پایان کار، هر دو دستگاه را آنلاین نگه دارید.';
+
+  @override
+  String historyCopySize(Object size) {
+    return 'روی هم ⁨$size⁩';
+  }
+
+  @override
+  String get historyCopyWaiting => 'در انتظار دستگاه دیگر';
+
+  @override
+  String get historyCopyWaitingLine =>
+      'وقتی هر دو دستگاه آنلاین باشند، کپی خودش ادامه پیدا می‌کند.';
+
+  @override
+  String get historyCopyPaused => 'کپی کمی مکث کرده است';
+
+  @override
+  String get historyCopyPausedLine => 'یک دقیقهٔ دیگر ادامه می‌دهد.';
+
+  @override
+  String get historyCopyWhole => 'همهٔ پیام‌ها و فایل‌ها رسید';
+
+  @override
+  String get historyCopyWholeLine => 'چیزی کم نیست.';
+
+  @override
+  String get historyCopyRows => 'مخاطبان و گروه‌هایتان رسید';
+
+  @override
+  String get historyCopyRowsLine =>
+      'از این به بعد پیام‌های تازه روی دستگاه نشان داده می‌شوند.';
+
+  @override
+  String get historyCopyGaps => 'بیشتر گفت‌وگوهایتان رسید';
+
+  @override
+  String get historyCopyGapsLine =>
+      'در این گفت‌وگوها روی دستگاه تازه کمتر از گوشی‌تان هست.';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return 'پیام‌ها: ⁨$got⁩ از ⁨$want⁩';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return 'فایل‌ها: ⁨$got⁩ از ⁨$want⁩';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ مورد روی گوشی شما ماند',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy => 'برای کپی خیلی بزرگ یا ناخوانا است.';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ گفت‌وگو روی گوشی شما ماند',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => 'کپی متوقف شد';
+
+  @override
+  String get historyCopyEndedLine =>
+      'چیز دیگری نمی‌رسد. برای کپی تازه، دستگاه را دوباره پیوند دهید.';
+
+  @override
+  String get historyCopyFailed => 'کپی تمام نشد';
+
+  @override
+  String get historyCopyFailedLine =>
+      'برای کپی تازه، دستگاه را دوباره پیوند دهید.';
+
+  @override
+  String get historyCopyStays => 'روی گوشی شما ماند';
+
+  @override
+  String get historyCopySee => 'دیدن کپی';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

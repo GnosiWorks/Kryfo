@@ -190,7 +190,22 @@ class DeviceReceive {
     // the phone pair of a phone is the chat's own, never one here
     if (t.their == 1 && m.device == 1) return null;
     final d = await db();
-    final entry = await _entry(d, t.ident, own ? null : identity, t.their);
+    var entry = await _entry(d, t.ident, own ? null : identity, t.their);
+    // a contact's phone, here on a linked device, before any list of theirs
+    // is held: the phone is its identity key, and its opener names its reg.
+    // the engine admits a phone with no list on that key alone
+    if (entry == null && !own && t.their == 1) {
+      var reg = 0;
+      if (type == kLsPreKey) {
+        try {
+          final lib = (await sessions(t.ident)).s.lib;
+          reg = lib.preKeyMessageInfo(body).registrationId;
+        } on Object {
+          return null;
+        }
+      }
+      entry = (key: identity, reg: reg);
+    }
     if (entry == null) {
       if (type == kLsPreKey && !blocked) {
         await _hold(d, t, identity, cipher, since: heldSince);
@@ -729,7 +744,7 @@ class DeviceReceive {
       final m = await me(p.ident);
       if (m == null) continue;
       final own = p.addr == kOwnDevices;
-      final Map<String, dynamic> cur;
+      Map<String, dynamic> cur;
       try {
         cur = await state.call(
           d,
@@ -737,7 +752,14 @@ class DeviceReceive {
           own ? {'ident': p.ident} : {'identity': p.identity},
         );
       } on DevRefused {
-        continue;
+        // a linked device holds no list of this contact yet: their phone,
+        // which is their identity key, may still open to it
+        if (own || m.device == 1) continue;
+        cur = {
+          'devices': [
+            {'id': 1, 'key': p.identity, 'reg': 0},
+          ],
+        };
       }
       final ds = await sessions(p.ident);
       for (final e in _entries(cur['devices'])) {

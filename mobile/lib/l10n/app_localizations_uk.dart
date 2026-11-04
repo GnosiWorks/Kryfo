@@ -10879,6 +10879,128 @@ class AppLocalizationsUk extends AppLocalizations {
       'Цей чат лишається на твоєму телефоні, бо в ньому заблоковано знімки екрана.';
 
   @override
+  String get historyCopyTitle => 'Історія чатів';
+
+  @override
+  String get historyCopyMaking => 'Готуємо ваші чати';
+
+  @override
+  String get historyCopyMakingLine =>
+      'Телефон збирає те, що буде скопійовано. Зараз почнеться.';
+
+  @override
+  String get historyCopyGoing => 'Копіюємо ваші чати';
+
+  @override
+  String get historyCopyGoingLine =>
+      'Тримайте обидва пристрої в мережі, доки копіювання не завершиться.';
+
+  @override
+  String historyCopySize(Object size) {
+    return 'Усього $size';
+  }
+
+  @override
+  String get historyCopyWaiting => 'Чекаємо на інший пристрій';
+
+  @override
+  String get historyCopyWaitingLine =>
+      'Копіювання продовжиться саме, коли обидва пристрої будуть у мережі.';
+
+  @override
+  String get historyCopyPaused => 'Копіювання ненадовго зупинилося';
+
+  @override
+  String get historyCopyPausedLine => 'Продовжиться за хвилину.';
+
+  @override
+  String get historyCopyWhole => 'Усі повідомлення й файли перенесено';
+
+  @override
+  String get historyCopyWholeLine => 'Нічого не бракує.';
+
+  @override
+  String get historyCopyRows => 'Контакти й групи перенесено';
+
+  @override
+  String get historyCopyRowsLine =>
+      'Відтепер нові повідомлення з’являтимуться на пристрої.';
+
+  @override
+  String get historyCopyGaps => 'Майже всі чати перенесено';
+
+  @override
+  String get historyCopyGapsLine =>
+      'У цих чатах на новому пристрої менше, ніж на телефоні.';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return 'Повідомлення: $got з $want';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return 'Файли: $got з $want';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString елемента залишилися на телефоні',
+      many: '$countString елементів залишилися на телефоні',
+      few: '$countString елементи залишилися на телефоні',
+      one: '$countString елемент залишився на телефоні',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy => 'Завеликі або нечитабельні для копіювання.';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString чату залишилися на телефоні',
+      many: '$countString чатів залишилися на телефоні',
+      few: '$countString чати залишилися на телефоні',
+      one: '$countString чат залишився на телефоні',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => 'Копіювання зупинено';
+
+  @override
+  String get historyCopyEndedLine =>
+      'Більше нічого не надійде. Зв’яжіть пристрій знову для нової копії.';
+
+  @override
+  String get historyCopyFailed => 'Копіювання не вдалося завершити';
+
+  @override
+  String get historyCopyFailedLine =>
+      'Зв’яжіть пристрій знову для нової копії.';
+
+  @override
+  String get historyCopyStays => 'Залишилося на телефоні';
+
+  @override
+  String get historyCopySee => 'Переглянути копію';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

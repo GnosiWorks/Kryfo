@@ -10738,6 +10738,123 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu sohbet telefonunda kalır, çünkü içinde ekran görüntüsü engelli.';
 
   @override
+  String get historyCopyTitle => 'Sohbet geçmişi';
+
+  @override
+  String get historyCopyMaking => 'Sohbetlerin hazırlanıyor';
+
+  @override
+  String get historyCopyMakingLine =>
+      'Telefonun kopyalanacakları topluyor. Birazdan başlıyor.';
+
+  @override
+  String get historyCopyGoing => 'Sohbetlerin kopyalanıyor';
+
+  @override
+  String get historyCopyGoingLine =>
+      'Bitene kadar iki cihazı da çevrimiçi tut.';
+
+  @override
+  String historyCopySize(Object size) {
+    return 'Toplam $size';
+  }
+
+  @override
+  String get historyCopyWaiting => 'Diğer cihaz bekleniyor';
+
+  @override
+  String get historyCopyWaitingLine =>
+      'İki cihaz da çevrimiçi olduğunda kopyalama kendiliğinden sürer.';
+
+  @override
+  String get historyCopyPaused => 'Kopyalama kısa bir mola veriyor';
+
+  @override
+  String get historyCopyPausedLine => 'Bir dakika içinde sürüyor.';
+
+  @override
+  String get historyCopyWhole => 'Tüm mesajlar ve dosyalar geldi';
+
+  @override
+  String get historyCopyWholeLine => 'Eksik bir şey yok.';
+
+  @override
+  String get historyCopyRows => 'Kişilerin ve grupların geldi';
+
+  @override
+  String get historyCopyRowsLine =>
+      'Yeni mesajlar bundan sonra cihazda görünür.';
+
+  @override
+  String get historyCopyGaps => 'Sohbetlerinin çoğu geldi';
+
+  @override
+  String get historyCopyGapsLine =>
+      'Bu sohbetlerde yeni cihazda telefonundakinden daha az şey var.';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return 'Mesajlar: $want içinden $got';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return 'Dosyalar: $want içinden $got';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString öge telefonunda kaldı',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy =>
+      'Kopyalamak için çok büyük ya da okunamıyor.';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString sohbet telefonunda kaldı',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => 'Kopyalama durdu';
+
+  @override
+  String get historyCopyEndedLine =>
+      'Başka bir şey gelmeyecek. Yeni bir kopya için cihazı yeniden bağla.';
+
+  @override
+  String get historyCopyFailed => 'Kopyalama bitirilemedi';
+
+  @override
+  String get historyCopyFailedLine =>
+      'Yeni bir kopya için cihazı yeniden bağla.';
+
+  @override
+  String get historyCopyStays => 'Telefonunda kaldı';
+
+  @override
+  String get historyCopySee => 'Kopyayı gör';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

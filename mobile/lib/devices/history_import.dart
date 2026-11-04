@@ -21,6 +21,7 @@ import 'history_export.dart'
         HistoryChatRef,
         historyLeftOf,
         kHistoryContactCols,
+        kHistoryMaterial,
         kHistoryGroupCols,
         kHistoryMessageCols;
 import 'history_ffi.dart';
@@ -68,6 +69,11 @@ Future<void> historyTables(DatabaseExecutor t) async {
     'CREATE TABLE IF NOT EXISTS history_gone (n INTEGER PRIMARY KEY, '
     'c INTEGER NOT NULL)',
   );
+  // the lists the phone held, taken at the end
+  await t.execute(
+    'CREATE TABLE IF NOT EXISTS history_lists (identity TEXT PRIMARY KEY, '
+    'wire TEXT NOT NULL)',
+  );
   await t.execute(
     'CREATE TABLE IF NOT EXISTS history_files (file INTEGER PRIMARY KEY, '
     'n INTEGER NOT NULL, name TEXT NOT NULL, size INTEGER NOT NULL, '
@@ -80,6 +86,7 @@ const _kTables = [
   'history_chats',
   'history_rows',
   'history_gone',
+  'history_lists',
   'history_files',
 ];
 
@@ -253,6 +260,9 @@ class HistoryImport {
   /// the index the phone sends next
   int get next => _r.next;
 
+  /// the stream's head, once record 0 is in
+  HistoryHead? get head => _r.head();
+
   bool get done => _done;
 
   String _part(int file) => p.join(_media, _kPartDir, '$file.part');
@@ -318,10 +328,22 @@ class HistoryImport {
     }
     if (ev.kind == 'data' && ev.last && ev.ok) await _settle(ev.file);
     if (ev.kind == 'end') _done = true;
+    await _dropGoneFiles();
     return ev;
   }
 
+  Future<void> _dropGoneFiles() async {
+    while (_goneFiles.isNotEmpty) {
+      try {
+        await File(_goneFiles.removeLast()).delete();
+      } on FileSystemException {
+        // gone already
+      }
+    }
+  }
+
   Future<void> _rewind() async {
+    _goneFiles.clear();
     _r.close();
     _cols.clear();
     _chats.clear();
@@ -467,6 +489,7 @@ class HistoryImport {
   };
 
   Future<void> _chat(Transaction t, int n, Map<String, dynamic> meta) async {
+    if (meta['kind'] == kHistoryMaterial) return _material(t, n, meta);
     final group = meta['kind'] == 'group';
     final id = meta['id'] as String;
     final row = (meta['row'] as Map).cast<String, dynamic>();
@@ -529,6 +552,80 @@ class HistoryImport {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     _chats[n] = HistoryChatRef(group, id);
   }
+
+  // what is no chat. the phone deleted these lately: noted gone here too,
+  // and a copy this device got live goes, as it went there. the lists the
+  // phone holds wait for the end, when the contacts are all here
+  Future<void> _material(
+    Transaction t,
+    int n,
+    Map<String, dynamic> meta,
+  ) async {
+    final fts = await _hasFts(t);
+    for (final g in (meta['gone'] as List? ?? const [])) {
+      if (g is! List || g.length != 3) continue;
+      final uid = g[0], key = g[1], at = g[2];
+      if (uid is! String || key is! String || at is! int) continue;
+      await t.rawInsert(
+        'INSERT INTO gone_in (msg_uid, peer_id, at) VALUES (?, ?, ?) '
+        'ON CONFLICT (msg_uid, peer_id) DO UPDATE SET at = excluded.at '
+        'WHERE excluded.at > gone_in.at',
+        [uid, key, at],
+      );
+      final grp = key.startsWith('group:')
+          ? key.substring(6, key.lastIndexOf(':'))
+          : null;
+      final sender = grp == null
+          ? key
+          : key.substring(key.lastIndexOf(':') + 1);
+      for (final r in await t.query(
+        'messages',
+        columns: ['id', 'media_path', 'file_path'],
+        where: grp == null
+            ? "msg_uid = ? AND peer_id = ? AND group_id IS NULL AND direction = 'in'"
+            : "msg_uid = ? AND peer_id = ? AND group_id = ? AND direction = 'in'",
+        whereArgs: grp == null ? [uid, sender] : [uid, sender, grp],
+      )) {
+        final id = r['id'] as int;
+        if (fts) {
+          await t.delete('msg_fts', where: 'rowid = ?', whereArgs: [id]);
+        }
+        await t.delete('messages', where: 'id = ?', whereArgs: [id]);
+        for (final c in const ['media_path', 'file_path']) {
+          final v = r[c];
+          if (v is String && v.isNotEmpty && p.isWithin(_media, v)) {
+            _goneFiles.add(v);
+          }
+        }
+      }
+      await t.delete('reactions', where: 'msg_uid = ?', whereArgs: [uid]);
+    }
+    for (final l in (meta['lists'] as List? ?? const [])) {
+      if (l is! List || l.length != 2) continue;
+      if (l[0] is! String || l[1] is! String) continue;
+      await t.insert('history_lists', {
+        'identity': l[0],
+        'wire': l[1],
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    await t.insert('history_chats', {
+      'n': n,
+      'grp': 2,
+      'chat_id': '',
+      'stays': null,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    _chats[n] = const HistoryChatRef(false, '');
+  }
+
+  // files of messages the phone deleted, gone from disk once their rows went
+  final _goneFiles = <String>[];
+
+  /// the lists of contacts the phone held, for the engine to take as a
+  /// first list (identity hex, wire base64)
+  Future<List<({String identity, String wire})>> lists() async => [
+    for (final r in await _db.query('history_lists', orderBy: 'identity'))
+      (identity: r['identity'] as String, wire: r['wire'] as String),
+  ];
 
   Future<void> _messages(
     Transaction t,

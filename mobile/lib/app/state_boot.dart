@@ -527,6 +527,8 @@ extension AppStateBoot on AppState {
       }
       // linked devices, before any message opens (switch off: nothing)
       await bootDevices();
+      // a history copy under way goes on where it was
+      resumeHistoryCopies();
     } catch (e, st) {
       dlog('signal bootstrap failed: $e\n$st');
     }

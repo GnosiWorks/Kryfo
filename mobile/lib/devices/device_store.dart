@@ -163,7 +163,8 @@ Future<void> deviceTables(
       removed_at INTEGER,
       heard_online_ms INTEGER NOT NULL DEFAULT 0,
       notice INTEGER NOT NULL DEFAULT 0,
-      stream BLOB
+      stream BLOB,
+      hist TEXT
     )
   ''');
   // 1 until the person opens the devices page after the device came: the
@@ -174,6 +175,9 @@ Future<void> deviceTables(
   );
   // the history stream's key the link made, until the copy is done
   await addColumn(db, 'ALTER TABLE own_devices ADD COLUMN stream BLOB');
+  // the history copy's place on the phone: the link's transcript, the
+  // choice, the generation and how it ended (history_link.dart)
+  await addColumn(db, 'ALTER TABLE own_devices ADD COLUMN hist TEXT');
   await db.execute('''
     CREATE TABLE IF NOT EXISTS own_device_keys (
       uid TEXT NOT NULL,

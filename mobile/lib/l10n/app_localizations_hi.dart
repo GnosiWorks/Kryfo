@@ -10716,6 +10716,122 @@ class AppLocalizationsHi extends AppLocalizations {
       'यह चैट आपके फ़ोन पर ही रहती है, क्योंकि इसमें स्क्रीनशॉट रोके गए हैं।';
 
   @override
+  String get historyCopyTitle => 'चैट हिस्ट्री';
+
+  @override
+  String get historyCopyMaking => 'आपकी चैट तैयार हो रही हैं';
+
+  @override
+  String get historyCopyMakingLine =>
+      'आपका फ़ोन कॉपी होने वाली चीज़ें इकट्ठा कर रहा है। बस शुरू होने वाला है।';
+
+  @override
+  String get historyCopyGoing => 'आपकी चैट कॉपी हो रही हैं';
+
+  @override
+  String get historyCopyGoingLine => 'पूरा होने तक दोनों डिवाइस ऑनलाइन रखें।';
+
+  @override
+  String historyCopySize(Object size) {
+    return 'कुल $size';
+  }
+
+  @override
+  String get historyCopyWaiting => 'दूसरे डिवाइस का इंतज़ार';
+
+  @override
+  String get historyCopyWaitingLine =>
+      'दोनों डिवाइस ऑनलाइन होते ही कॉपी अपने-आप आगे बढ़ती है।';
+
+  @override
+  String get historyCopyPaused => 'कॉपी थोड़ी देर रुकी है';
+
+  @override
+  String get historyCopyPausedLine => 'एक मिनट में फिर चलेगी।';
+
+  @override
+  String get historyCopyWhole => 'सभी मैसेज और फ़ाइलें आ गईं';
+
+  @override
+  String get historyCopyWholeLine => 'कुछ भी छूटा नहीं।';
+
+  @override
+  String get historyCopyRows => 'आपके संपर्क और ग्रुप आ गए';
+
+  @override
+  String get historyCopyRowsLine => 'अब से नए मैसेज डिवाइस पर दिखेंगे।';
+
+  @override
+  String get historyCopyGaps => 'आपकी ज़्यादातर चैट आ गईं';
+
+  @override
+  String get historyCopyGapsLine =>
+      'इन चैट में नए डिवाइस पर आपके फ़ोन से कम है।';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return 'मैसेज: $want में से $got';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return 'फ़ाइलें: $want में से $got';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString चीज़ें आपके फ़ोन पर रह गईं',
+      one: '1 चीज़ आपके फ़ोन पर रह गई',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy =>
+      'कॉपी करने के लिए बहुत बड़ी या पढ़ने लायक नहीं।';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString चैट आपके फ़ोन पर रह गईं',
+      one: '1 चैट आपके फ़ोन पर रह गई',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => 'कॉपी रुक गई';
+
+  @override
+  String get historyCopyEndedLine =>
+      'अब और कुछ नहीं आएगा। नई कॉपी के लिए डिवाइस दोबारा लिंक करें।';
+
+  @override
+  String get historyCopyFailed => 'कॉपी पूरी नहीं हो सकी';
+
+  @override
+  String get historyCopyFailedLine => 'नई कॉपी के लिए डिवाइस दोबारा लिंक करें।';
+
+  @override
+  String get historyCopyStays => 'आपके फ़ोन पर रह गया';
+
+  @override
+  String get historyCopySee => 'कॉपी देखें';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

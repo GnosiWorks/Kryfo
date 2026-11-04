@@ -5,6 +5,7 @@
 // holds it. hidden chats (whole, by id), the decoy, the chat with the
 // developer, burner rooms, timed messages and chats with screenshots
 // blocked stay here
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -31,6 +32,14 @@ const kHistoryVoiceMax = 10 << 20;
 
 /// why a chat came only as its row
 const kHistoryStaysShots = 'shots';
+
+/// a record of the copy that is no chat: what the device needs to go on
+/// where the phone is (lists the phone holds, messages it deleted lately),
+/// sent with every copy, "no history" too
+const kHistoryMaterial = 'material';
+
+// a material record stays well inside a chat record
+const _kMaterialMost = 48 << 10;
 
 /// the columns a chat or a message takes along. keys, sessions, wallpapers,
 /// counters and anything naming a third person stay on the phone
@@ -61,6 +70,9 @@ const kHistoryContactCols = [
   'opus_can',
   'caps',
   'caps_at',
+  // v4: my identity for the contact, and theirs
+  'ident',
+  'ikey',
 ];
 const kHistoryGroupCols = [
   'group_id',
@@ -179,6 +191,9 @@ class HistoryOutgoing {
   /// device discards what it took
   bool get ended => _o.ended;
 
+  /// the engine's handle of the sender, for the door that serves it
+  int get handle => _s.handle;
+
   /// the stream id the device needs with the first record, as hex
   final String id;
   final HistoryHead head;
@@ -203,6 +218,30 @@ class HistoryOutgoing {
     _o.off();
     _o.end();
   }
+}
+
+// the material in records that each stay inside one chat record
+List<Map<String, Object?>> _materialRecords(Map<String, List<Object?>> m) {
+  final out = <Map<String, Object?>>[];
+  var cur = <String, List<Object?>>{};
+  var size = 0;
+  void flush() {
+    if (cur.isEmpty) return;
+    out.add({'kind': kHistoryMaterial, 'id': '', ...cur});
+    cur = {};
+    size = 0;
+  }
+
+  for (final e in m.entries) {
+    for (final item in e.value) {
+      final n = jsonEncode(item).length + 1;
+      if (size + n > _kMaterialMost) flush();
+      (cur[e.key] ??= []).add(item);
+      size += n;
+    }
+  }
+  flush();
+  return out;
 }
 
 Future<bool> _hasTable(DatabaseExecutor db, String t) async =>
@@ -290,6 +329,7 @@ Future<HistoryOutgoing> exportHistory({
   required String bindHex,
   required String identityHex,
   bool skipMedia = false,
+  bool rowsOnly = false,
   DateTime? now,
   int chunk = 0,
   HistoryHold? hold,
@@ -404,6 +444,8 @@ Future<HistoryOutgoing> exportHistory({
     // on the open list while the hold still holds
     open = _Open(s);
     final media = <String>{};
+    final sentPeers = <String>{};
+    final sentGroups = <String>{};
     final hasReactions = await _hasTable(db, 'reactions');
     final hasVotes = await _hasTable(db, 'poll_votes');
     final hasOrder = await _hasTable(db, 'frame_order');
@@ -439,7 +481,9 @@ Future<HistoryOutgoing> exportHistory({
       // a row too big to go: counted in the head, the rest goes on
       if (n == null) continue;
       chats.add(HistoryChatRef(group, id));
-      if (shots) continue;
+      // "no history": the chat's row alone, and only new messages after
+      if (shots || rowsOnly) continue;
+      (group ? sentGroups : sentPeers).add(id);
       var after = 0;
       while (true) {
         final page = await db.rawQuery(
@@ -558,6 +602,43 @@ Future<HistoryOutgoing> exportHistory({
           s.message(row);
         }
       }
+    }
+    // last, what is no chat: the contacts' lists this phone holds, and the
+    // messages of the chats that went that it deleted lately, so a copy of
+    // one the device got live goes there too
+    final material = <String, List<Object?>>{'gone': [], 'lists': []};
+    final keys = <String>{
+      for (final (group, _, row) in order)
+        if (!group && row['ikey'] is String) row['ikey'] as String,
+    };
+    if (await _hasTable(db, 'gone_in')) {
+      for (final r in await db.rawQuery(
+        'SELECT msg_uid, peer_id, at FROM main.gone_in ORDER BY at',
+      )) {
+        final k = r['peer_id'] as String;
+        final g = k.startsWith('group:')
+            ? k.substring(6, k.lastIndexOf(':'))
+            : null;
+        if (g == null ? !sentPeers.contains(k) : !sentGroups.contains(g)) {
+          continue;
+        }
+        material['gone']!.add([r['msg_uid'], k, r['at']]);
+      }
+    }
+    if (await _hasTable(db, 'dev_lists')) {
+      for (final r in await db.rawQuery(
+        "SELECT owner, wire FROM main.dev_lists WHERE ident = 0 AND owner != 'me' "
+        'ORDER BY owner',
+      )) {
+        final owner = r['owner'] as String;
+        final wire = r['wire'];
+        if (!keys.contains(owner) || wire is! List<int>) continue;
+        material['lists']!.add([owner, base64Encode(wire)]);
+      }
+    }
+    for (final meta in _materialRecords(material)) {
+      if (s.chat(meta) == null) continue;
+      chats.add(const HistoryChatRef(false, ''));
     }
     // a hide that slipped past the hold: nothing of it may go. checked
     // inside the hold, so a hide waiting on it cannot slip in between

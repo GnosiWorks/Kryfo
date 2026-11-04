@@ -10696,6 +10696,121 @@ class AppLocalizationsVi extends AppLocalizations {
       'Cuộc trò chuyện này ở lại trên điện thoại của bạn vì đã chặn chụp màn hình trong đó.';
 
   @override
+  String get historyCopyTitle => 'Lịch sử trò chuyện';
+
+  @override
+  String get historyCopyMaking => 'Đang chuẩn bị các cuộc trò chuyện';
+
+  @override
+  String get historyCopyMakingLine =>
+      'Điện thoại đang gom những gì sẽ được sao chép. Sắp bắt đầu.';
+
+  @override
+  String get historyCopyGoing => 'Đang sao chép các cuộc trò chuyện';
+
+  @override
+  String get historyCopyGoingLine =>
+      'Hãy giữ cả hai thiết bị trực tuyến cho đến khi xong.';
+
+  @override
+  String historyCopySize(Object size) {
+    return 'Tổng cộng $size';
+  }
+
+  @override
+  String get historyCopyWaiting => 'Đang chờ thiết bị kia';
+
+  @override
+  String get historyCopyWaitingLine =>
+      'Việc sao chép tự tiếp tục khi cả hai thiết bị trực tuyến.';
+
+  @override
+  String get historyCopyPaused => 'Việc sao chép tạm nghỉ một chút';
+
+  @override
+  String get historyCopyPausedLine => 'Sẽ tiếp tục sau một phút.';
+
+  @override
+  String get historyCopyWhole => 'Mọi tin nhắn và tệp đã sang';
+
+  @override
+  String get historyCopyWholeLine => 'Không thiếu gì cả.';
+
+  @override
+  String get historyCopyRows => 'Danh bạ và nhóm của bạn đã sang';
+
+  @override
+  String get historyCopyRowsLine => 'Từ giờ tin nhắn mới hiện trên thiết bị.';
+
+  @override
+  String get historyCopyGaps => 'Phần lớn cuộc trò chuyện đã sang';
+
+  @override
+  String get historyCopyGapsLine =>
+      'Những cuộc trò chuyện này trên thiết bị mới có ít hơn trên điện thoại.';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return 'Tin nhắn: $got trên $want';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return 'Tệp: $got trên $want';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString mục ở lại trên điện thoại',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy => 'Quá lớn hoặc không đọc được để sao chép.';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString cuộc trò chuyện ở lại trên điện thoại',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => 'Việc sao chép đã dừng';
+
+  @override
+  String get historyCopyEndedLine =>
+      'Sẽ không có thêm gì. Hãy liên kết lại thiết bị để có bản sao mới.';
+
+  @override
+  String get historyCopyFailed => 'Việc sao chép không thể hoàn tất';
+
+  @override
+  String get historyCopyFailedLine =>
+      'Hãy liên kết lại thiết bị để có bản sao mới.';
+
+  @override
+  String get historyCopyStays => 'Ở lại trên điện thoại';
+
+  @override
+  String get historyCopySee => 'Xem bản sao';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
