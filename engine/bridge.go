@@ -138,6 +138,8 @@ func HaloGenerateIdentity() *C.char {
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: ed keygen: %v", err))
 	}
+	// the key it replaces goes from memory
+	clear(myEdPriv)
 	myEdPub = pub
 	myEdPriv = priv
 
@@ -160,18 +162,24 @@ func HaloRestoreIdentity(cEdPriv *C.char, cXPriv *C.char) *C.char {
 	mu.Lock()
 	defer mu.Unlock()
 
-	edPrivHex := goStr(cEdPriv)
-	xPrivHex := goStr(cXPriv)
+	// as bytes, cleared once decoded: a go string of a key never goes
+	edPrivHex := goSecret(cEdPriv)
+	xPrivHex := goSecret(cXPriv)
+	defer clear(edPrivHex)
+	defer clear(xPrivHex)
 
-	edPrivBytes, err := hex.DecodeString(edPrivHex)
-	if err != nil || len(edPrivBytes) != ed25519.PrivateKeySize {
+	edPrivBytes, ok := hexSecret(edPrivHex, ed25519.PrivateKeySize)
+	if !ok {
 		return C.CString("error: bad ed priv hex")
 	}
-	xPrivBytes, err := hex.DecodeString(xPrivHex)
-	if err != nil || len(xPrivBytes) != 32 {
+	xPrivBytes, ok := hexSecret(xPrivHex, 32)
+	if !ok {
+		clear(edPrivBytes)
 		return C.CString("error: bad x priv hex")
 	}
+	defer clear(xPrivBytes)
 
+	clear(myEdPriv)
 	myEdPriv = ed25519.PrivateKey(edPrivBytes)
 	myEdPub = myEdPriv.Public().(ed25519.PublicKey)
 

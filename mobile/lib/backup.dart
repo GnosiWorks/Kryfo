@@ -846,8 +846,10 @@ Future<void> _applyIdentitySecure(Object? carried) async {
 class BackupSide {
   const BackupSide();
 
-  ({String ed, String x, String id}) identity() =>
-      (ed: engine.myEdPrivkey(), x: engine.myXPrivkey(), id: appState.myId);
+  ({String ed, String x, String id}) identity() {
+    final k = appState.mainKeysForBackup;
+    return (ed: k.ed, x: k.x, id: appState.myId);
+  }
 
   Future<T> still<T>(
     Future<T> Function(HaloDb? vault) work, {

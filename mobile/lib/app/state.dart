@@ -744,6 +744,11 @@ class AppState extends ChangeNotifier {
   // support chats with no answer yet, for the home pin
   int supportWaiting = 0;
 
+  // the main identity's private keys as the database gave them, or as the
+  // engine gave them once after making them: the one copy here, never
+  // pulled from the engine again
+  ({String ed, String x})? _mainKeys;
+
   // the support inbox and its notifications
   final SupportBell _bell;
   final Map<String, String> _xPubToHaloId = {};
