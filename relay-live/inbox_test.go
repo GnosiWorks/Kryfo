@@ -2,6 +2,7 @@ package main
 
 import (
 	"testing"
+	"time"
 
 	"github.com/nbd-wtf/go-nostr"
 )
@@ -30,15 +31,17 @@ func TestABigInboxIsNotRateLimited(t *testing.T) {
 func TestOneSocketForManyAddresses(t *testing.T) {
 	url, _ := testRelay(t)
 	r := connect(t, url)
-	refused := 0
-	for i := 0; i < 271; i++ {
+	n, refused := reqBurst+171, 0
+	start := time.Now()
+	for i := 0; i < n; i++ {
 		if _, why := ask(t, r, nostr.Filter{Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {addr()}}}); why != "" {
 			refused++
 		}
 	}
-	// the refill gives back a couple a second while the test runs
-	if refused < 271-reqBurst-20 {
-		t.Fatalf("%d of 271 refused, want about %d", refused, 271-reqBurst)
+	// the refill gives some back while the test runs
+	back := int(time.Since(start).Seconds()*reqsPerSec) + 2
+	if refused < n-reqBurst-back || refused > n-reqBurst {
+		t.Fatalf("%d of %d refused, want about %d", refused, n, n-reqBurst)
 	}
 	r = connect(t, url)
 	for i := 0; i < 28; i++ {
