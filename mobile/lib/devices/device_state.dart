@@ -93,7 +93,9 @@ class DeviceEngine {
   String call(String op, Map<String, Object?> args) =>
       _with(op, args, (o, a) => engineTake(_call(o, a)));
 
-  String session(String op, Map<String, Object?> args) =>
+  // the session door: private, so only DeviceState in this file names a
+  // session's remote to the engine (session_door_test.go)
+  String _door(String op, Map<String, Object?> args) =>
       _with(op, args, (o, a) => engineTake(_session(o, a)));
 
   /// opens the signal library in the engine, by the name or path the app
@@ -160,7 +162,7 @@ class DeviceState {
     String op,
     Map<String, Object?> args,
     SessionRemote remote,
-  ) => _write(db, _answer(engine.session(op, {...args, 'remote': remote.hex})));
+  ) => _write(db, _answer(engine._door(op, {...args, 'remote': remote.hex})));
 
   /// the phone's own list of my identity [ident], as it signed it
   Future<Map<String, dynamic>> ownMine(
@@ -170,7 +172,7 @@ class DeviceState {
   ) => _write(
     db,
     _answer(
-      engine.session('own_mine', {'ident': ident, 'list': base64Encode(wire)}),
+      engine._door('own_mine', {'ident': ident, 'list': base64Encode(wire)}),
     ),
   );
 

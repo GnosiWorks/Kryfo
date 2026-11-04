@@ -19,6 +19,9 @@ import '../widgets/halo_buttons.dart';
 import '../widgets/motion.dart' show houseSpring, motionStill;
 import '../widgets/press_scale.dart';
 
+/// how a new device's link code starts (engine/devices OfferPrefix)
+const kLinkCodePrefix = 'kryfo-link:';
+
 // stands in for the camera reader in tests
 @visibleForTesting
 Widget Function(
@@ -36,7 +39,9 @@ class ScanScreen extends StatefulWidget {
   // true: bridge lines, a plain one or the tor project's list, in place of
   // a kryfo link
   final bool bridges;
-  const ScanScreen({super.key, this.bridges = false});
+  // true: a new device's link code, in place of a kryfo link
+  final bool link;
+  const ScanScreen({super.key, this.bridges = false, this.link = false});
 
   @override
   State<ScanScreen> createState() => _ScanScreenState();
@@ -162,7 +167,12 @@ class _ScanScreenState extends State<ScanScreen>
     if (_handled || !_inFront) return;
     final raw = code.text;
     if (raw == null || raw.isEmpty) return;
-    if (widget.bridges ? !looksLikeBridges(raw) : !raw.startsWith('kryfo://')) {
+    final fits = widget.bridges
+        ? looksLikeBridges(raw)
+        : widget.link
+        ? raw.startsWith(kLinkCodePrefix)
+        : raw.startsWith('kryfo://');
+    if (!fits) {
       // the warning stays while that code is in frame and goes a little
       // after it leaves
       _hintOff?.cancel();
@@ -174,6 +184,8 @@ class _ScanScreenState extends State<ScanScreen>
         setState(
           () => _hint = widget.bridges
               ? l10n.bridgesThatSNotABridge
+              : widget.link
+              ? l10n.scanLinkNotOne
               : l10n.scanThatSNotA,
         );
       }
@@ -314,6 +326,8 @@ class _ScanScreenState extends State<ScanScreen>
                         child: Text(
                           widget.bridges
                               ? l10n.bridgesScanABridgeCode
+                              : widget.link
+                              ? l10n.scanLinkTitle
                               : l10n.scanScanAKryfoQr,
                           style: HaloType.pageTitle().copyWith(
                             color: Colors.white,
@@ -381,6 +395,8 @@ class _ScanScreenState extends State<ScanScreen>
                               _hint ??
                                   (widget.bridges
                                       ? l10n.bridgesPointAtTheBridge
+                                      : widget.link
+                                      ? l10n.scanLinkPoint
                                       : l10n.scanPointAtAKryfo),
                               textAlign: TextAlign.center,
                               style: HaloType.sans(

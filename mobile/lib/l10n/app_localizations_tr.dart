@@ -10011,14 +10011,24 @@ class AppLocalizationsTr extends AppLocalizations {
   String get devicesThisPhoneOnly => 'Yalnızca bu telefon';
 
   @override
+  String get devicesThisPhoneOnlyDesk => 'Yalnızca bu bilgisayar';
+
+  @override
   String get devicesNameSeparator => ', ';
 
   @override
   String get devicesThisPhone => 'Bu telefon';
 
   @override
+  String get devicesThisPhoneDesk => 'Bu bilgisayar';
+
+  @override
   String get devicesOnlyThisPhone =>
       'Cihaz bağlayıp kaldırabilen tek yer bu telefon';
+
+  @override
+  String get devicesOnlyThisPhoneDesk =>
+      'Cihaz bağlayıp kaldırabilen tek yer bu bilgisayar';
 
   @override
   String devicesLinkedOn(Object date) {
@@ -10169,7 +10179,151 @@ class AppLocalizationsTr extends AppLocalizations {
   String get devicesHiddenStay => 'Gizli sohbetler ve yem bu telefonda kalır.';
 
   @override
+  String get devicesHiddenStayDesk =>
+      'Gizli sohbetler ve yem bu bilgisayarda kalır.';
+
+  @override
   String get devicesScanCode => 'Kodu tara';
+
+  @override
+  String get devicesLinkReaching => 'Cihaza ulaşılıyor';
+
+  @override
+  String get devicesLinkReachingLine =>
+      'Kryfo’yu ikisinde de açık tut. Tor üzerinden bu bir dakika sürebilir.';
+
+  @override
+  String get devicesLinkCompare => 'Rakamlar aynı mı?';
+
+  @override
+  String get devicesLinkCompareLine =>
+      'Yeni cihaz da altı rakam gösteriyor. Yalnızca aynıysa bağla.';
+
+  @override
+  String get devicesLinkMatch => 'Aynı';
+
+  @override
+  String get devicesLinkNoMatch => 'Aynı değil';
+
+  @override
+  String get devicesLinkLinking => 'Bağlanıyor';
+
+  @override
+  String get devicesLinkLinkingLine =>
+      'Yeni cihaz hazırlanıyor. İkisini de açık tut.';
+
+  @override
+  String get devicesLinkDone => 'Cihaz bağlandı';
+
+  @override
+  String get devicesLinkDoneLine =>
+      'Bağlı cihazlar’da görünüyor. Oradan adını değiştirebilir ya da kaldırabilirsin.';
+
+  @override
+  String get devicesLinkUnreached => 'Cihaza ulaşılamadı';
+
+  @override
+  String get devicesLinkUnreachedLine =>
+      'Kryfo’nun yeni cihazda açık olduğunu ve kodunu gösterdiğini kontrol et, sonra tekrar dene.';
+
+  @override
+  String get devicesLinkStopped => 'Hiçbir şey bağlanmadı';
+
+  @override
+  String get devicesLinkStoppedLine =>
+      'Rakamlar aynı olmalı. Yeni bir kodla baştan başla.';
+
+  @override
+  String get devicesLinkInterruptedLine =>
+      'Bağlama yarıda kesildi. Yeni bir kodla baştan başla.';
+
+  @override
+  String get scanLinkTitle => 'Cihazın kodunu tara';
+
+  @override
+  String get scanLinkPoint => 'Yeni cihazdaki koda doğrult';
+
+  @override
+  String get scanLinkNotOne => 'Bu bir bağlama kodu değil';
+
+  @override
+  String get onboardingLinkToMyPhone => 'Telefonuma bağla';
+
+  @override
+  String get joinTitle => 'Telefonuna bağla';
+
+  @override
+  String get joinStep1 => 'Telefonunda Kryfo’yu aç.';
+
+  @override
+  String get joinStep2 =>
+      'Ayarlar’a, sonra Bağlı cihazlar’a, sonra Cihaz bağla’ya git.';
+
+  @override
+  String get joinStep3 => 'Bu kodu telefonunla tara.';
+
+  @override
+  String get joinWaiting => 'Telefonun bekleniyor';
+
+  @override
+  String get joinCodeLife => 'Kod on dakika geçerli.';
+
+  @override
+  String get joinCompareLine =>
+      'Telefonun da altı rakam gösteriyor. Yalnızca aynıysa devam et.';
+
+  @override
+  String get joinLinking => 'Telefonuna bağlanıyor';
+
+  @override
+  String get joinLinkingLine =>
+      'Bu bitene kadar telefonunda Kryfo’yu açık tut.';
+
+  @override
+  String get joinDone => 'Telefonuna bağlandı';
+
+  @override
+  String get joinDoneLine =>
+      'Yeni mesajlar artık bu cihaza da geliyor. Hesabının anahtar numarası:';
+
+  @override
+  String get joinOpen => 'Kryfo’yu aç';
+
+  @override
+  String get joinUnreached => 'Telefonuna ulaşılamadı';
+
+  @override
+  String get joinUnreachedLine =>
+      'Telefonunun çevrimiçi olduğunu ve Kryfo’nun açık olduğunu kontrol et, sonra yeni bir kod dene.';
+
+  @override
+  String get joinNewCode => 'Yeni kod';
+
+  @override
+  String get devicesNewNotice => 'Yeni cihaz bağlandı';
+
+  @override
+  String devicesNewNoticeLine(Object name, Object date) {
+    return '$name $date tarihinde hesabına bağlandı. Görmek için Bağlı cihazlar’ı aç.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'Yeni cihazlar bağlandı';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names hesabına bağlandı. Görmek için Bağlı cihazlar’ı aç.';
+  }
+
+  @override
+  String get devicesNewNoticeOpen => 'Aç';
+
+  @override
+  String get settingsLinkedToLine =>
+      'Telefonuna bağlı. Yedekler ve davetler telefonda kalır.';
+
+  @override
+  String get devicesYourPhone => 'Telefonun';
 
   @override
   String get desktopLockTitle => 'Kryfo kilitli';

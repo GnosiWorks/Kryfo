@@ -84,6 +84,8 @@ const _notSettings = {
   'home_screen',
   'scan_screen',
   'desk_run_section',
+  // a link's own pages, opened from Linked devices: steps, not settings
+  'link_screens',
 };
 
 // what a title looks like and the gaps around it, as on every page

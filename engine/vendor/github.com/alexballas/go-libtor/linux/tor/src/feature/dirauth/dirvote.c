@@ -2335,7 +2335,7 @@ networkstatus_compute_consensus(smartlist_t *votes,
           tor_asprintf(&guardfraction_str,
                        " GuardFraction=%u", rs_out.guardfraction_percentage);
         }
-        smartlist_add_asprintf(chunks, "w Bandwidth=%d%s%s\n",
+        smartlist_add_asprintf(chunks, "w Bandwidth=%u%s%s\n",
                                rs_out.bandwidth_kb,
                                unmeasured?" Unmeasured=1":"",
                                guardfraction_str ? guardfraction_str : "");
@@ -3926,7 +3926,10 @@ dirvote_create_microdescriptor(const routerinfo_t *ri, int consensus_method)
   char *output = NULL;
   crypto_pk_t *rsa_pubkey = router_get_rsa_onion_pkey(ri->tap_onion_pkey,
                                                       ri->tap_onion_pkey_len);
-  if (!rsa_pubkey) {
+  bool omit_tap_and_fam_list =
+    consensus_method >= MIN_METHOD_TO_OMIT_ALL_TAP_KEYS_AND_FAMILY_LISTS;
+
+  if (!rsa_pubkey || omit_tap_and_fam_list) {
     if (consensus_method < MIN_METHOD_TO_PERMIT_ABSENT_TAP_KEYS) {
       /* This method does not support generating MDs without TAP keys. */
       goto done;
@@ -3938,7 +3941,7 @@ dirvote_create_microdescriptor(const routerinfo_t *ri, int consensus_method)
   }
 
   summary = policy_summarize(ri->exit_policy, AF_INET);
-  if (ri->declared_family)
+  if (ri->declared_family && !omit_tap_and_fam_list)
     family = smartlist_join_strings(ri->declared_family, " ", 0, NULL);
 
   smartlist_add_asprintf(chunks, "onion-key\n%s", key);
@@ -4062,7 +4065,9 @@ static const struct consensus_method_range_t {
   {MIN_METHOD_FOR_FAMILY_IDS,
    MIN_METHOD_TO_PERMIT_ABSENT_TAP_KEYS - 1},
   { MIN_METHOD_TO_PERMIT_ABSENT_TAP_KEYS,
-   MAX_SUPPORTED_CONSENSUS_METHOD},
+    MIN_METHOD_TO_OMIT_ALL_TAP_KEYS_AND_FAMILY_LISTS - 1},
+  { MIN_METHOD_TO_OMIT_ALL_TAP_KEYS_AND_FAMILY_LISTS,
+    MAX_SUPPORTED_CONSENSUS_METHOD},
   {-1, -1}
 };
 
