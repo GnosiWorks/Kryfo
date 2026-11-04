@@ -9271,9 +9271,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mediaSendVideo => 'Отправить видео';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'Пока собеседник не примет, можно отправить $count';
-  }
+  String get requestSenderMediaLater =>
+      'Фото и файлы откроются, когда собеседник примет тебя: так безопаснее для вас обоих.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'Фото и файлы откроются, когда ты примешь собеседника: так безопаснее для тебя.';
 
   @override
   String get groupEndedYou => 'Ты завершил(а) эту группу';

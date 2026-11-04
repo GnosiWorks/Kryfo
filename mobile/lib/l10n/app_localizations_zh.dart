@@ -8661,9 +8661,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mediaSendVideo => '发送视频';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return '对方接受前，可以发送 $count 个';
-  }
+  String get requestSenderMediaLater => '对方接受你之后，照片和文件才会开放，让你们都更安全。';
+
+  @override
+  String get requestReceiverMediaLater => '你接受对方之后，照片和文件才会开放，让你更安全。';
 
   @override
   String get groupEndedYou => '你结束了这个群组';
@@ -19253,9 +19254,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get mediaSendVideo => '傳送影片';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return '對方接受前，可以傳送 $count 個';
-  }
+  String get requestSenderMediaLater => '對方接受你之後，照片和檔案才會開放，讓你們都更安全。';
+
+  @override
+  String get requestReceiverMediaLater => '你接受對方之後，照片和檔案才會開放，讓你更安全。';
 
   @override
   String get groupEndedYou => '你結束了這個群組';

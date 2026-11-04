@@ -9267,9 +9267,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get mediaSendVideo => 'Надіслати відео';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'Поки співрозмовник не прийме, можна надіслати $count';
-  }
+  String get requestSenderMediaLater =>
+      'Фото й файли відкриються, коли співрозмовник прийме тебе: так безпечніше для вас обох.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'Фото й файли відкриються, коли ти приймеш співрозмовника: так безпечніше для тебе.';
 
   @override
   String get groupEndedYou => 'Ти завершив(-ла) цю групу';

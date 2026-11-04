@@ -9121,9 +9121,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get mediaSendVideo => 'ارسال ویدیو';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'تا وقتی قبول نکند، ⁨$count⁩ مورد می‌تواند برود';
-  }
+  String get requestSenderMediaLater =>
+      'عکس‌ها و فایل‌ها بعد از این‌که شما را قبول کند باز می‌شوند، تا هر دو در امان باشید.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'عکس‌ها و فایل‌ها بعد از این‌که او را قبول کنید باز می‌شوند، تا در امان بمانید.';
 
   @override
   String get groupEndedYou => 'شما این گروه را پایان دادید';

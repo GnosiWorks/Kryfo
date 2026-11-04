@@ -9110,9 +9110,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get mediaSendVideo => 'Kirim video';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'Sampai dia menerima, $count bisa terkirim';
-  }
+  String get requestSenderMediaLater =>
+      'Foto dan file terbuka setelah dia menerimamu, supaya kalian berdua aman.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'Foto dan file terbuka setelah kamu menerimanya, supaya kamu tetap aman.';
 
   @override
   String get groupEndedYou => 'Kamu mengakhiri grup ini';

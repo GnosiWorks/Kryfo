@@ -3640,8 +3640,12 @@ void main() {
     expect(l.mediaSendUpTo("<count>"), "Up to <count> at a time");
     expect(l.mediaSendVideo, "Send video");
     expect(
-      l.mediaSendUntilAccepted("<count>"),
-      "Until they accept, <count> can go",
+      l.requestSenderMediaLater,
+      "Photos and files unlock after they accept you, to keep you both safe.",
+    );
+    expect(
+      l.requestReceiverMediaLater,
+      "Photos and files unlock after you accept them, to keep you safe.",
     );
     expect(
       l.fileInstallerLine,

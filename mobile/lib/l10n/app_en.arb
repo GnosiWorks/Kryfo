@@ -11388,14 +11388,13 @@
   "@mediaSendVideo": {
     "description": "send preview: title for one video"
   },
-  "mediaSendUntilAccepted": "Until they accept, {count} can go",
-  "@mediaSendUntilAccepted": {
-    "description": "send preview: before they accept, only this many go",
-    "placeholders": {
-      "count": {
-        "type": "Object"
-      }
-    }
+  "requestSenderMediaLater": "Photos and files unlock after they accept you, to keep you both safe.",
+  "@requestSenderMediaLater": {
+    "description": "a request I sent: photos and files go once they accept"
+  },
+  "requestReceiverMediaLater": "Photos and files unlock after you accept them, to keep you safe.",
+  "@requestReceiverMediaLater": {
+    "description": "a stranger's request to me: their photos and files show once I accept"
   },
   "groupEndedYou": "You ended this group",
   "@groupEndedYou": {

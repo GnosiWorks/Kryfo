@@ -9285,9 +9285,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get mediaSendVideo => 'Wyślij film';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'Do czasu akceptacji może pójść: $count';
-  }
+  String get requestSenderMediaLater =>
+      'Zdjęcia i pliki odblokują się, gdy ta osoba cię zaakceptuje, dla bezpieczeństwa was obojga.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'Zdjęcia i pliki odblokują się, gdy zaakceptujesz tę osobę, dla twojego bezpieczeństwa.';
 
   @override
   String get groupEndedYou => 'Zakończono tę grupę';

@@ -14635,11 +14635,17 @@ abstract class AppLocalizations {
   /// **'Send video'**
   String get mediaSendVideo;
 
-  /// send preview: before they accept, only this many go
+  /// a request I sent: photos and files go once they accept
   ///
   /// In en, this message translates to:
-  /// **'Until they accept, {count} can go'**
-  String mediaSendUntilAccepted(Object count);
+  /// **'Photos and files unlock after they accept you, to keep you both safe.'**
+  String get requestSenderMediaLater;
+
+  /// a stranger's request to me: their photos and files show once I accept
+  ///
+  /// In en, this message translates to:
+  /// **'Photos and files unlock after you accept them, to keep you safe.'**
+  String get requestReceiverMediaLater;
 
   /// the line in a group this phone ended, in the chat and on its row in the chat list
   ///

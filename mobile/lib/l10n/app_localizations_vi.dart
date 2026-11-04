@@ -9096,9 +9096,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get mediaSendVideo => 'Gửi video';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'Đến khi họ chấp nhận, có thể gửi $count';
-  }
+  String get requestSenderMediaLater =>
+      'Ảnh và tệp sẽ mở sau khi họ chấp nhận bạn, để cả hai cùng an toàn.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'Ảnh và tệp sẽ mở sau khi bạn chấp nhận họ, để bạn được an toàn.';
 
   @override
   String get groupEndedYou => 'Bạn đã kết thúc nhóm này';

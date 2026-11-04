@@ -9116,9 +9116,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get mediaSendVideo => 'वीडियो भेजें';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'उनके स्वीकार करने तक $count जा सकते हैं';
-  }
+  String get requestSenderMediaLater =>
+      'उनके स्वीकार करने के बाद फ़ोटो और फ़ाइलें खुलती हैं, ताकि आप दोनों सुरक्षित रहें।';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'आपके स्वीकार करने के बाद फ़ोटो और फ़ाइलें खुलती हैं, ताकि आप सुरक्षित रहें।';
 
   @override
   String get groupEndedYou => 'आपने यह ग्रुप ख़त्म किया';

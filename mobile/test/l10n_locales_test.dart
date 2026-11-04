@@ -3120,11 +3120,8 @@ final _calls = <_Call>[
   ('mediaSendProtectedOn', [], (l) => l.mediaSendProtectedOn),
   ('mediaSendUpTo', ["⟨count⟩"], (l) => l.mediaSendUpTo("⟨count⟩")),
   ('mediaSendVideo', [], (l) => l.mediaSendVideo),
-  (
-    'mediaSendUntilAccepted',
-    ["⟨count⟩"],
-    (l) => l.mediaSendUntilAccepted("⟨count⟩"),
-  ),
+  ('requestSenderMediaLater', [], (l) => l.requestSenderMediaLater),
+  ('requestReceiverMediaLater', [], (l) => l.requestReceiverMediaLater),
   ('fileInstallerLine', [], (l) => l.fileInstallerLine),
   ('fileAppInstaller', [], (l) => l.fileAppInstaller),
   ('notesExportHoldsInstaller', [], (l) => l.notesExportHoldsInstaller),

@@ -9108,9 +9108,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaSendVideo => 'Send video';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'Until they accept, $count can go';
-  }
+  String get requestSenderMediaLater =>
+      'Photos and files unlock after they accept you, to keep you both safe.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'Photos and files unlock after you accept them, to keep you safe.';
 
   @override
   String get groupEndedYou => 'You ended this group';

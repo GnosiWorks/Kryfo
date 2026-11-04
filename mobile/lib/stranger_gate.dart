@@ -52,6 +52,28 @@ bool strangerCapHolds({
   int cap = 2,
 }) => !accepted && !vouched && have >= cap;
 
+// a stranger's request is words alone: a photo, a file, a voice note or a
+// gif from a 1:1 sender not accepted and not introduced waits on the shelf
+// and comes in on accept. groups and rooms are no requests, and neither are
+// his support chats or the dev chat
+bool strangerMediaWaits(
+  UnwrappedMessage env, {
+  required bool accepted,
+  required bool vouched,
+  bool group = false,
+  bool support = false,
+  bool dev = false,
+}) => !accepted && !vouched && !group && !support && !dev && carriesMedia(env);
+
+// anything of a file in the frame: its bytes, a slice of them, its name or
+// its place on the files service
+bool carriesMedia(UnwrappedMessage env) =>
+    env.imageB64 != null ||
+    env.fileB64 != null ||
+    env.fileName != null ||
+    env.drop != null ||
+    env.mediaId != null;
+
 // thrown when the cap holds a message back. the receiver keeps it as it
 // opened, on a small shelf, and lets it in on accept.
 class CapHeld implements Exception {
