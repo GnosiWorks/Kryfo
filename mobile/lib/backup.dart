@@ -42,6 +42,7 @@ import 'signal_session.dart' show kRestoredFromPref, kSessionsRestoredPref;
 import 'devchat/dev_chat.dart' show scrubDevAnon;
 import 'dlog.dart';
 import 'read_burn.dart' show burnStartBy;
+import 'chunk_keys.dart';
 import 'engine_strings.dart';
 import 'dart:typed_data';
 import 'backup_stream.dart';
@@ -624,57 +625,52 @@ bool get sessionBackupHasHidden => session.vault != null;
 
 typedef _KeyFn = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Uint8>);
 typedef _KeyFnDart = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Uint8>);
-typedef _ChunkFn =
-    Int32 Function(
-      Pointer<Utf8>,
-      Uint64,
-      Uint8,
-      Pointer<Uint8>,
-      Int32,
-      Pointer<Uint8>,
-    );
-typedef _ChunkFnDart =
-    int Function(Pointer<Utf8>, int, int, Pointer<Uint8>, int, Pointer<Uint8>);
 
 DynamicLibrary _engineLib() => Platform.isAndroid
     ? DynamicLibrary.open('libhalo.so')
     : DynamicLibrary.process();
 
-// derives the key. null when the engine refused, which it never should
-String? _backupKey(DynamicLibrary lib, String passphrase, Uint8List salt) {
+// derives the key, as bytes the caller zeroes. null when the engine
+// refused, which it never should
+Uint8List? _backupKey(DynamicLibrary lib, String passphrase, Uint8List salt) {
   final fn = lib.lookupFunction<_KeyFn, _KeyFnDart>('HaloBackupKey');
   final p1 = passphrase.toNativeUtf8();
   final ps = calloc<Uint8>(16);
   try {
     ps.asTypedList(16).setAll(0, salt);
-    final r = engineTakeSecret(fn(p1, ps));
-    return r.startsWith('error:') ? null : r;
+    return engineTakeSecretKey(fn(p1, ps));
   } finally {
     freeSecret(p1);
     calloc.free(ps);
   }
 }
 
+// the engine holds the key for the whole run, and every record names it by
+// its handle
 class _EngineCipher implements ChunkCipher {
-  final _ChunkFnDart _seal;
-  final _ChunkFnDart _open;
-  final Pointer<Utf8> _key;
+  final ChunkKeys _keys;
+  final int _key;
   final Pointer<Uint8> _in;
   final Pointer<Uint8> _out;
   final int _cap;
-  _EngineCipher(DynamicLibrary lib, String keyHex, int chunk)
-    : _seal = lib.lookupFunction<_ChunkFn, _ChunkFnDart>('HaloSealChunk'),
-      _open = lib.lookupFunction<_ChunkFn, _ChunkFnDart>('HaloOpenChunk'),
-      _key = keyHex.toNativeUtf8(),
-      _cap = chunk + 16 + 4096,
+  _EngineCipher._(this._keys, this._key, int chunk)
+    : _cap = chunk + 16 + 4096,
       _in = calloc<Uint8>(chunk + 16 + 4096),
       _out = calloc<Uint8>(chunk + 16 + 4096);
+
+  // null when the engine took no key. [key] is zeroed here
+  static _EngineCipher? of(DynamicLibrary lib, Uint8List key, int chunk) {
+    final keys = ChunkKeys(lib);
+    final h = keys.take(key);
+    key.fillRange(0, key.length, 0);
+    return h > 0 ? _EngineCipher._(keys, h, chunk) : null;
+  }
 
   @override
   Uint8List seal(int index, int type, Uint8List plain) {
     if (plain.length + 16 > _cap) throw ArgumentError('record too big');
     _in.asTypedList(_cap).setAll(0, plain);
-    final n = _seal(_key, index, type, _in, plain.length, _out);
+    final n = _keys.seal(_key, index, type, _in, plain.length, _out);
     if (n < 0 || n > _cap) throw const BackupDamaged('seal failed');
     return Uint8List.fromList(_out.asTypedList(n));
   }
@@ -683,19 +679,18 @@ class _EngineCipher implements ChunkCipher {
   Uint8List? open(int index, int type, Uint8List sealed) {
     if (sealed.length > _cap) return null;
     _in.asTypedList(_cap).setAll(0, sealed);
-    final n = _open(_key, index, type, _in, sealed.length, _out);
+    final n = _keys.open(_key, index, type, _in, sealed.length, _out);
     // never more than the buffer holds, whatever the engine says
     if (n < 0 || n > _cap) return null;
     return Uint8List.fromList(_out.asTypedList(n));
   }
 
-  // the key and the last records are zeroed before the memory goes back
+  // the key goes from the engine, and the last records are zeroed before
+  // the memory goes back
   void dispose() {
-    final k = _key.length;
-    _key.cast<Uint8>().asTypedList(k).fillRange(0, k, 0);
+    _keys.drop(_key);
     _in.asTypedList(_cap).fillRange(0, _cap, 0);
     _out.asTypedList(_cap).fillRange(0, _cap, 0);
-    calloc.free(_key);
     calloc.free(_in);
     calloc.free(_out);
   }
@@ -1373,8 +1368,8 @@ Future<Object?> _runJob(Future<Object?> Function(_Job) job, _Job j) =>
 Future<Object?> _exportJob(_Job j) async {
   final lib = _engineLib();
   final key = _backupKey(lib, j.passphrase, j.salt);
-  if (key == null) return l10n.backupCouldNotMakeThe;
-  final cipher = _EngineCipher(lib, key, kBackupChunk);
+  final cipher = key == null ? null : _EngineCipher.of(lib, key, kBackupChunk);
+  if (cipher == null) return l10n.backupCouldNotMakeThe;
   final sources = j.sources!;
   try {
     await writeBackup(
@@ -1398,8 +1393,8 @@ Future<Object?> _exportJob(_Job j) async {
 Future<Object?> _inspectJob(_Job j) async {
   final lib = _engineLib();
   final key = _backupKey(lib, j.passphrase, j.salt);
-  if (key == null) throw const BackupLocked();
-  final cipher = _EngineCipher(lib, key, kBackupChunk);
+  final cipher = key == null ? null : _EngineCipher.of(lib, key, kBackupChunk);
+  if (cipher == null) throw const BackupLocked();
   try {
     final m = await readBackupManifest(j.path, cipher);
     if (m['v'] is! int) throw const BackupDamaged('no version');
@@ -1428,8 +1423,8 @@ Future<Object?> _inspectJob(_Job j) async {
 Future<Object?> _restoreJob(_Job j) async {
   final lib = _engineLib();
   final key = _backupKey(lib, j.passphrase, j.salt);
-  if (key == null) throw const BackupLocked();
-  final cipher = _EngineCipher(lib, key, kBackupChunk);
+  final cipher = key == null ? null : _EngineCipher.of(lib, key, kBackupChunk);
+  if (cipher == null) throw const BackupLocked();
   try {
     return await _unpackJob(j, cipher);
   } finally {
