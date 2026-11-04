@@ -7,7 +7,9 @@ put you in danger, read all of it.
 
 - network observers. by default your messages go through tor. your isp sees
   a tor connection, or a bridge when tor is blocked, not who you talk to or
-  what you say. fast mode, which you can choose, skips tor for speed.
+  what you say. fast mode, which you can choose, skips tor for speed. on
+  fast your network can see that you connect to Kryfo's servers, not what
+  you send or to whom.
 - networks that block tor. automatic mode tries tor the usual way first.
   when tor's own signals say the network cuts it off, it tries bridges one
   at a time: what the tor project suggests (only after you say yes), the

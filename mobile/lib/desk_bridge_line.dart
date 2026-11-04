@@ -17,5 +17,4 @@ BridgeLine deskBridgeLine(BridgeLine l) =>
         progress: l.progress,
         clockMs: l.clockMs,
         offerRelay: l.offerRelay,
-        relayFirst: l.relayFirst,
       );

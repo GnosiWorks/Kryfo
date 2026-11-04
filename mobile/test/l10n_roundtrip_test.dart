@@ -21,7 +21,7 @@ void main() {
     expect(l.modesFastTag, "Straight to our servers");
     expect(
       l.modesFastLine,
-      "Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you're connected, and never log or keep it. Never what you say. Your contacts never see it.",
+      "Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you're connected, and never log or keep it. Never what you say. Your contacts never see it. Your network can see that you connect to Kryfo.",
     );
     expect(l.modesFastConnected, "Fast · connected");
     expect(l.modesFastConnecting, "Fast · connecting");
@@ -73,12 +73,13 @@ void main() {
     expect(l.homeUseFast, "Use Fast");
     expect(l.homeSwitchedToFastRoute, "Switched to Fast");
     expect(
-      l.bridgesFastGetsThrough,
-      "Fast goes straight to our servers and usually gets through. Or let Kryfo find a way by itself.",
+      l.bridgesBridgeFirstFastSeen,
+      "Let Kryfo find a bridge that gets through. Fast works too, but this network can see you connect to Kryfo.",
     );
     expect(l.appServersNotAnswering, "Servers not answering");
     expect(l.settingsPrivateTor, "Private · Tor");
     expect(l.seenOurServers, "Our servers");
+    expect(l.seenOurServersCould, "Our servers could");
     expect(
       l.seenIpWhy,
       "On Private everything leaves through Tor and our servers see an exit node, never you. On Fast the connection goes straight to our two servers: they see your IP address while you're connected and keep no record of it. While the first one is down, Fast also uses public relays, only through Tor.",
@@ -2376,7 +2377,7 @@ void main() {
     expect(l.seenWhoYouTalkTo, "Who you talk to");
     expect(
       l.seenEachConversationGetsIts,
-      "Each conversation gets its own address, derived from both keys. A relay sees unrelated drop boxes, not a pair of people.",
+      "Each conversation gets its own address, derived from both keys. A relay sees unrelated drop boxes, not a pair of people. On Fast our servers see your IP address on the drop boxes you use, and when both people in a chat use Fast, that two IP addresses share one.",
     );
     expect(l.seenWhatYouSay, "What you say");
     expect(
@@ -2387,7 +2388,7 @@ void main() {
     expect(l.seenYourContactGraph, "Your contact graph");
     expect(
       l.seenKryfoDoesNotScan,
-      "Kryfo does not scan your contacts. No phone number exists here to leak.",
+      "Kryfo does not scan your contacts. No phone number exists here to leak. On Fast our servers could piece some of it together from which IP addresses share drop boxes. They keep no record of it.",
     );
     expect(l.seenIntroducer, "Introducer");
     expect(
@@ -3781,10 +3782,6 @@ void main() {
       "Turning this off deletes saved translations.",
     );
     expect(l.bridgesNoneUntilOnion, "None until onion is on");
-    expect(
-      l.bridgesRelayWorksWhereTor,
-      "Fast works where Tor is blocked, and you can switch back any time.",
-    );
     expect(
       l.bridgesRelayThisNetworkSees,
       "Fast gets through where Tor is blocked, but this network can see you connect to Kryfo.",

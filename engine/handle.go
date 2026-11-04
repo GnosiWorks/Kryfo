@@ -81,13 +81,13 @@ func handleKey() ed25519.PrivateKey {
 	return myEdPriv
 }
 
-// the registry's own lane, apart from the circuits that carry the contacts,
-// over tor on every route. a tor still starting is waited for inside the
-// call's bound. a var so the tests can stand in for it
+// the own handle's lane, apart from people search and the circuits that
+// carry the contacts, over tor on every route. a tor still starting is
+// waited for inside the call's bound. a var so the tests can stand in for it
 var handleHTTP = func() (*http.Client, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), handleWait)
 	defer cancel()
-	return servicesClient(ctx)
+	return ownHandleClient(ctx)
 }
 
 // a cold circuit can take most of a minute to answer. one bound for the
