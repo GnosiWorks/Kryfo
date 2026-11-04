@@ -7,6 +7,7 @@ package main
 import "C"
 
 import (
+	"encoding/hex"
 	"log"
 	"sync/atomic"
 	"unsafe"
@@ -17,6 +18,37 @@ import (
 
 // every c string from dart goes through this, never C.GoString
 func goStr(p *C.char) string { return cstr.String(unsafe.Pointer(p)) }
+
+// a secret c string from dart, as bytes the caller clears once used
+func goSecret(p *C.char) []byte { return cstr.Bytes(unsafe.Pointer(p)) }
+
+// [h] as exactly [n] bytes, decoded without a go string: false for
+// anything else
+func hexSecret(h []byte, n int) ([]byte, bool) {
+	if len(h) != 2*n {
+		return nil, false
+	}
+	out := make([]byte, n)
+	if _, err := hex.Decode(out, h); err != nil {
+		clear(out)
+		return nil, false
+	}
+	return out, true
+}
+
+// a key back to dart as hex, written straight into c memory: no go string
+// holds it. dart zeroes the copy it takes and frees it with HaloFree
+func cHexSecret(b []byte) *C.char {
+	const digits = "0123456789abcdef"
+	p := C.malloc(C.size_t(2*len(b) + 1))
+	out := unsafe.Slice((*byte)(p), 2*len(b)+1)
+	for i, v := range b {
+		out[2*i] = digits[v>>4]
+		out[2*i+1] = digits[v&15]
+	}
+	out[2*len(b)] = 0
+	return (*C.char)(p)
+}
 
 // every string the engine returns is malloc'd here by C.CString. dart copies
 // it and hands it back through this, so the allocator that made it frees it.

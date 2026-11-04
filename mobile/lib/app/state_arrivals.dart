@@ -317,7 +317,7 @@ extension AppStateArrivals on AppState {
     if (!await db.messageExists(uid) || !await db.isTheirs(uid, sender)) {
       return false;
     }
-    await db.deleteMessage(uid);
+    await db.deleteMessage(uid, from: sender);
     return true;
   }
 
@@ -673,7 +673,11 @@ extension AppStateArrivals on AppState {
         )) {
           return to;
         }
-        await db.editMessage(env.edit!.targetUid, env.edit!.newText);
+        await db.editMessage(
+          env.edit!.targetUid,
+          env.edit!.newText,
+          from: senderHaloId,
+        );
         changed();
         // home's row shows the last line, and only a refresh rereads it
         await refreshContacts();
@@ -724,7 +728,7 @@ extension AppStateArrivals on AppState {
           env.unsend!,
         );
       }
-      await db.deleteMessage(env.unsend!);
+      await db.deleteMessage(env.unsend!, from: senderHaloId);
       changed();
       // the delete took its unread mark; its notification goes too
       unawaited(_io.unnotifyMessage(env.unsend!));
@@ -959,7 +963,7 @@ extension AppStateArrivals on AppState {
         goneKey(senderHaloId, group: env.groupId),
         mid,
       );
-      if (gone || await db.messageExists(mid)) {
+      if (gone || await db.messageFrom(mid, senderHaloId, env.groupId)) {
         if (!isGroup &&
             !unsealing &&
             (env.chunkIndex ?? 0) == 0 &&
@@ -1058,10 +1062,11 @@ extension AppStateArrivals on AppState {
       return to;
     } else if (uid != null) {
       // one that came and went here is known too, so a resend of it never
-      // shows again
+      // shows again. known is per sender and chat: a group's uid reaches
+      // every member, and one who sends it first must not hide the real one
       final known =
           _inflightUids.contains(uid) ||
-          await db.messageExists(uid) ||
+          await db.messageFrom(uid, senderHaloId, env.groupId) ||
           await db.goneFrom(goneKey(senderHaloId, group: env.groupId), uid);
       // a preview-only frame from an older client carries nothing we draw:
       // a sender never gets to put a title or an image on this screen

@@ -86,8 +86,9 @@ mixin _BlockRows {
         ('vouches', 'voucher_id'),
         ('block_spans', 'peer_id'),
         ('blocked_drops', 'peer_id'),
-        // where heals rebuilt their session, and a hold on it
+        // where heals rebuilt their session, a hold on it, and their nonces
         ('heal_lines', 'peer'),
+        ('heal_nonces', 'peer'),
         ('group_members', 'halo_id'),
         ('group_media_owed', 'member'),
         ('group_ctl_out', 'member'),

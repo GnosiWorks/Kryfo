@@ -54,6 +54,13 @@ func TestString(t *testing.T) {
 	convertAll(t, String)
 }
 
+func TestBytes(t *testing.T) {
+	if Bytes(nil) != nil {
+		t.Fatal("nil is not nil")
+	}
+	convertAll(t, func(p unsafe.Pointer) string { return string(Bytes(p)) })
+}
+
 // has to die with SIGSEGV, mtecheck.sh runs it alone with MTECHECK_OLD=1
 func TestOldGoString(t *testing.T) {
 	if os.Getenv("MTECHECK_OLD") == "" {

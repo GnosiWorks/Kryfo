@@ -16,8 +16,8 @@ cd /src
 CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 \
   go test -c -tags mtecheck -o /tmp/cstr.test ./cstr
 run() { qemu-aarch64 -cpu max -L /usr/aarch64-linux-gnu -E GLIBC_TUNABLES=glibc.mem.tagging=3 "$@"; }
-echo "== cstr.String"
-run /tmp/cstr.test -test.v -test.run "^(TestMTEOn|TestString)\$"
+echo "== cstr.String and cstr.Bytes"
+run /tmp/cstr.test -test.v -test.run "^(TestMTEOn|TestString|TestBytes)\$"
 echo "== old C.GoString, has to crash"
 if run -E MTECHECK_OLD=1 /tmp/cstr.test -test.v -test.run "^TestOldGoString\$" >/tmp/old.log 2>&1; then
   tail -5 /tmp/old.log
@@ -25,5 +25,5 @@ if run -E MTECHECK_OLD=1 /tmp/cstr.test -test.v -test.run "^TestOldGoString\$" >
   exit 1
 fi
 grep -m1 "SIGSEGV.*code=0x9" /tmp/old.log || { tail -20 /tmp/old.log; echo "fail: no mte fault"; exit 1; }
-echo "ok: cstr.String passes, C.GoString traps"
+echo "ok: cstr.String and cstr.Bytes pass, C.GoString traps"
 '

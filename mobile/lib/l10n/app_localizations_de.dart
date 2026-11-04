@@ -8865,7 +8865,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chatShotsWhenTheyUpdate =>
-      'Verfügbar, sobald die andere Person aktualisiert';
+      'Verfügbar, sobald die andere Person das neueste Kryfo auf einem Handy nutzt';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => 'Verfügbar in Kryfo für Android';
 
   @override
   String get chatShotsBothPhones =>
@@ -8941,8 +8944,16 @@ class AppLocalizationsDe extends AppLocalizations {
       'Kryfo blockiert Screenshots und Bildschirmaufnahmen dieses Raums auf jedem Handy darin und das Kopieren, Weiterleiten oder Speichern der Nachrichten der anderen. Gegen Apps, die den Bildschirm lesen dürfen, oder ein Handy oder eine App, die verändert wurden, um es zu umgehen, hilft es nicht.';
 
   @override
+  String get roomShotsBlockedDesk =>
+      'Kopieren, Weiterleiten und Speichern der Nachrichten der anderen ist in diesem Raum aus. Kryfo für Android blockiert dort auch Screenshots und Bildschirmaufnahmen.';
+
+  @override
   String get roomShotsAlwaysOn =>
       'In einem Raum immer an, auf jedem Handy darin';
+
+  @override
+  String get roomShotsAlwaysOnDesk =>
+      'In einem Raum immer an, in Kryfo für Android';
 
   @override
   String get settingsPerChat => 'Pro Chat';
@@ -9953,22 +9964,33 @@ class AppLocalizationsDe extends AppLocalizations {
       'Blockiert Screenshots und Bildschirmaufnahmen auf jedem Handy in dieser Gruppe und das Kopieren, Weiterleiten oder Speichern der Nachrichten der anderen. Gegen Apps, die den Bildschirm lesen dürfen, oder ein Handy oder eine App, die verändert wurden, um es zu umgehen, hilft es nicht.';
 
   @override
+  String get groupShotsBlocksAllDesk =>
+      'Schaltet hier das Kopieren, Weiterleiten und Speichern der Nachrichten der anderen aus. Kryfo für Android blockiert auch Screenshots und Bildschirmaufnahmen.';
+
+  @override
   String get groupShotsStartsWhenAll =>
-      'Wartet, bis alle hier Kryfo aktualisiert haben';
+      'Wartet, bis alle hier auf ihrem Gerät Screenshots blockieren können';
 
   @override
   String get groupShotsOnForAll => 'An für alle hier';
+
+  @override
+  String get groupShotsOnForAllDesk => 'An in Kryfo für Android';
 
   @override
   String get groupShotsOffAdminOnly => 'Aus. Nur der Admin kann das ändern';
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'Wartet, bis alle hier Kryfo aktualisiert haben. Nur der Admin kann das ändern';
+      'Wartet, bis alle hier auf ihrem Gerät Screenshots blockieren können. Nur der Admin kann das ändern';
 
   @override
   String get groupShotsOnAdminOnly =>
       'An für alle hier. Nur der Admin kann das ändern';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk =>
+      'An in Kryfo für Android. Nur der Admin kann das ändern';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -9986,26 +10008,26 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'Noch nicht aktualisiert';
+  String get groupShotsWaitingTitle => 'Noch nicht dabei';
 
   @override
   String get groupShotsWaitingHint =>
-      'Das Blockieren von Screenshots gilt für alle, sobald diese Personen Kryfo aktualisieren. Tippe auf jemanden, um die Person aus der Gruppe zu entfernen.';
+      'Das Blockieren von Screenshots gilt für alle, sobald die Geräte dieser Personen Screenshots blockieren können. Tippe auf jemanden, um die Person aus der Gruppe zu entfernen.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'Muss Kryfo aktualisieren oder war seitdem nicht online';
+      'Kann auf dem eigenen Gerät noch keine Screenshots blockieren oder war seitdem nicht online';
 
   @override
   String get groupShotsBlockedByYou => 'Von dir blockiert';
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'Du hast das Blockieren von Screenshots eingeschaltet. Es gilt für alle, sobald alle hier Kryfo aktualisiert haben.';
+      'Du hast das Blockieren von Screenshots eingeschaltet. Es gilt für alle, sobald alle hier auf ihrem Gerät Screenshots blockieren können.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name hat das Blockieren von Screenshots eingeschaltet. Es gilt für alle, sobald alle hier Kryfo aktualisiert haben.';
+    return '$name hat das Blockieren von Screenshots eingeschaltet. Es gilt für alle, sobald alle hier auf ihrem Gerät Screenshots blockieren können.';
   }
 
   @override
@@ -10013,8 +10035,12 @@ class AppLocalizationsDe extends AppLocalizations {
       'Das Blockieren von Screenshots ist für alle hier an. Kopieren, Weiterleiten und Speichern der Nachrichten der anderen ist ebenfalls aus.';
 
   @override
+  String get groupShotsStartedDesk =>
+      'Das Blockieren von Screenshots ist in Kryfo für Android an. Kopieren, Weiterleiten und Speichern der Nachrichten der anderen ist ebenfalls aus.';
+
+  @override
   String get groupShotsPaused =>
-      'Jemand hier kann Screenshots noch nicht blockieren. Es gilt wieder für alle, sobald die Person Kryfo aktualisiert.';
+      'Jemand hier kann auf dem eigenen Gerät noch keine Screenshots blockieren. Es gilt wieder für alle, sobald das geht.';
 
   @override
   String get groupShotsCantYet => 'Kann Screenshots noch nicht blockieren';
@@ -10024,7 +10050,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'Das Blockieren von Screenshots gilt erst wieder für alle hier, wenn die Person Kryfo aktualisiert.';
+      'Das Blockieren von Screenshots gilt nicht für alle hier, bis sie auf ihrem Gerät Screenshots blockieren können.';
 
   @override
   String get groupShotsLeaveStays =>
@@ -10033,6 +10059,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get groupShotsBlockedHere =>
       'Kryfo blockiert Screenshots in dieser Gruppe';
+
+  @override
+  String get groupShotsBlockedHereDesk =>
+      'Kopieren, Weiterleiten und Speichern ist in dieser Gruppe aus';
 
   @override
   String get groupShotsMenuNote =>

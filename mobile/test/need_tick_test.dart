@@ -67,6 +67,12 @@ class _Rows extends HaloDb {
   }
 
   @override
+  Future<bool> messageFrom(String msgUid, String sender, String? group) {
+    reads.add('messageExists');
+    return super.messageFrom(msgUid, sender, group);
+  }
+
+  @override
   Future<Set<int>> heldSlices(String mediaId) {
     reads.add('heldSlices');
     return super.heldSlices(mediaId);

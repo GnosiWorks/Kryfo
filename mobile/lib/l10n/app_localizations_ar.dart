@@ -8893,7 +8893,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatBlockScreenshots => 'منع لقطات الشاشة';
 
   @override
-  String get chatShotsWhenTheyUpdate => 'متاح عندما يحدّث تطبيقه';
+  String get chatShotsWhenTheyUpdate =>
+      'متاح عندما يستخدم أحدث إصدار من Kryfo على هاتف';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => 'متاح في Kryfo لأندرويد';
 
   @override
   String get chatShotsBothPhones =>
@@ -8971,7 +8975,15 @@ class AppLocalizationsAr extends AppLocalizations {
       'يمنع Kryfo لقطات الشاشة وتسجيل الشاشة لهذه الغرفة على كل هاتف فيها، ونسخ رسائل الآخرين أو إعادة توجيهها أو حفظها. لا يستطيع منع التطبيقات المسموح لها بقراءة الشاشة، ولا هاتفًا أو تطبيقًا عُدِّل للالتفاف عليه.';
 
   @override
+  String get roomShotsBlockedDesk =>
+      'نسخ رسائل بعضكم وإعادة توجيهها وحفظها متوقف في هذه الغرفة. ويمنع Kryfo لأندرويد أيضًا لقطات الشاشة وتسجيلها.';
+
+  @override
   String get roomShotsAlwaysOn => 'مفعّل دائمًا في الغرفة، على كل هاتف فيها';
+
+  @override
+  String get roomShotsAlwaysOnDesk =>
+      'مفعّل دائمًا في الغرفة، في Kryfo لأندرويد';
 
   @override
   String get settingsPerChat => 'حسب المحادثة';
@@ -9978,21 +9990,33 @@ class AppLocalizationsAr extends AppLocalizations {
       'يمنع لقطات الشاشة وتسجيل الشاشة على كل هاتف في هذه المجموعة، ونسخ رسائل بعضكم أو إعادة توجيهها أو حفظها. لا يستطيع منع التطبيقات المسموح لها بقراءة الشاشة، ولا هاتفًا أو تطبيقًا عُدِّل للالتفاف عليه.';
 
   @override
-  String get groupShotsStartsWhenAll => 'بانتظار أن يحدّث الجميع هنا Kryfo';
+  String get groupShotsBlocksAllDesk =>
+      'يوقف هنا نسخ رسائل بعضكم وإعادة توجيهها وحفظها. ويمنع Kryfo لأندرويد أيضًا لقطات الشاشة وتسجيلها.';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'بانتظار أن يستطيع الجميع هنا منع لقطات الشاشة على أجهزتهم';
 
   @override
   String get groupShotsOnForAll => 'مفعّل للجميع هنا';
+
+  @override
+  String get groupShotsOnForAllDesk => 'مفعّل في Kryfo لأندرويد';
 
   @override
   String get groupShotsOffAdminOnly => 'متوقف. المشرف وحده يستطيع تغيير هذا';
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'بانتظار أن يحدّث الجميع هنا Kryfo. المشرف وحده يستطيع تغيير هذا';
+      'بانتظار أن يستطيع الجميع هنا منع لقطات الشاشة على أجهزتهم. المشرف وحده يستطيع تغيير هذا';
 
   @override
   String get groupShotsOnAdminOnly =>
       'مفعّل للجميع هنا. المشرف وحده يستطيع تغيير هذا';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk =>
+      'مفعّل في Kryfo لأندرويد. المشرف وحده يستطيع تغيير هذا';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -10014,26 +10038,26 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'لم يحدّثوا بعد';
+  String get groupShotsWaitingTitle => 'لم يشملهم بعد';
 
   @override
   String get groupShotsWaitingHint =>
-      'يشمل منع لقطات الشاشة الجميع حين يحدّث هؤلاء Kryfo. المس أحدهم لإزالته من المجموعة.';
+      'يشمل منع لقطات الشاشة الجميع عندما تستطيع أجهزة هؤلاء الأشخاص منع لقطات الشاشة. اضغط على شخص لإزالته من المجموعة.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'عليه تحديث Kryfo، أو لم يتصل منذ ذلك الحين';
+      'لا يستطيع منع لقطات الشاشة على جهازه بعد، أو لم يتصل منذ ذلك الحين';
 
   @override
   String get groupShotsBlockedByYou => 'حظرته';
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'فعّلت منع لقطات الشاشة. سيشمل الجميع حين يحدّث كل من هنا Kryfo.';
+      'فعّلت منع لقطات الشاشة. يشمل الجميع عندما يستطيع كل من هنا منع لقطات الشاشة على جهازه.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return 'فعّل ⁨$name⁩ منع لقطات الشاشة. سيشمل الجميع حين يحدّث كل من هنا Kryfo.';
+    return 'فعّل $name منع لقطات الشاشة. يشمل الجميع عندما يستطيع كل من هنا منع لقطات الشاشة على جهازه.';
   }
 
   @override
@@ -10041,8 +10065,12 @@ class AppLocalizationsAr extends AppLocalizations {
       'منع لقطات الشاشة مفعّل للجميع هنا. نسخ رسائل بعضكم وإعادة توجيهها وحفظها متوقف أيضًا.';
 
   @override
+  String get groupShotsStartedDesk =>
+      'منع لقطات الشاشة مفعّل في Kryfo لأندرويد. نسخ رسائل بعضكم وإعادة توجيهها وحفظها متوقف أيضًا.';
+
+  @override
   String get groupShotsPaused =>
-      'أحد الموجودين هنا لا يستطيع منع لقطات الشاشة بعد. سيشمل الجميع مجددًا حين يحدّث Kryfo.';
+      'أحد الموجودين هنا لا يستطيع منع لقطات الشاشة على جهازه بعد. سيشمل الجميع مجددًا عندما يستطيع ذلك.';
 
   @override
   String get groupShotsCantYet => 'لا يستطيع منع لقطات الشاشة بعد';
@@ -10052,13 +10080,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'لن يشمل منع لقطات الشاشة الجميع هنا حتى يحدّث Kryfo.';
+      'لن يشمل منع لقطات الشاشة الجميع هنا حتى يستطيعوا منعها على أجهزتهم.';
 
   @override
   String get groupShotsLeaveStays => 'يبقى منع لقطات الشاشة كما هو.';
 
   @override
   String get groupShotsBlockedHere => 'يمنع Kryfo لقطات الشاشة في هذه المجموعة';
+
+  @override
+  String get groupShotsBlockedHereDesk =>
+      'النسخ وإعادة التوجيه والحفظ متوقف في هذه المجموعة';
 
   @override
   String get groupShotsMenuNote =>

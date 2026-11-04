@@ -214,6 +214,30 @@ void main() {
       expect(at(lastFresh + 1), HealRefused.stale);
     }, skip: needsShim);
 
+    test('one issued before the restore, or before the last heal taken from '
+        'them, is older', () async {
+      final ana = await testStore();
+      final ben = await testStore();
+      final t = DateTime.now().millisecondsSinceEpoch;
+      final h = ana.lib.parseHeal(
+        await makeHeal(ana, peer: ben.identity.public, nowMs: t - 2 * _hour),
+      );
+      HealRefused? at({int? restoredAt, int? lastIssued}) => checkHeal(
+        h,
+        held: ana.identity.public,
+        mine: ben.identity.public,
+        nowMs: t,
+        restoredAt: restoredAt,
+        lastIssued: lastIssued,
+      );
+      expect(at(), isNull);
+      expect(at(restoredAt: t), HealRefused.older);
+      // in hours, as issued: the restore's own hour takes it
+      expect(at(restoredAt: h.issued * _hour + _hour - 1), isNull);
+      expect(at(lastIssued: h.issued + 1), HealRefused.older);
+      expect(at(lastIssued: h.issued), isNull);
+    }, skip: needsShim);
+
     test('kept for the identity it came to', () async {
       final db = MemDb();
       final t = DateTime.now().millisecondsSinceEpoch;

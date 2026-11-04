@@ -14099,11 +14099,17 @@ abstract class AppLocalizations {
   /// **'Block screenshots'**
   String get chatBlockScreenshots;
 
-  /// screens/chat_screen.dart, screens/contact_screen.dart: under the switch while the other phone does not know the block yet
+  /// screens/chat_screen.dart, screens/contact_screen.dart, screens/home_screen.dart: under the switch while the other side does not block yet: an older Kryfo, or Kryfo on a computer, which cannot block
   ///
   /// In en, this message translates to:
-  /// **'Available when they update'**
+  /// **'Available when they use the latest Kryfo on a phone'**
   String get chatShotsWhenTheyUpdate;
+
+  /// chatShotsWhenTheyUpdate as a computer shows it (linux and windows): a computer cannot block screenshots, so the switch is not offered there
+  ///
+  /// In en, this message translates to:
+  /// **'Available in Kryfo for Android'**
+  String get chatShotsWhenTheyUpdateDesk;
 
   /// screens/contact_screen.dart: under the switch while it is on
   ///
@@ -14195,11 +14201,23 @@ abstract class AppLocalizations {
   /// **'Kryfo blocks screenshots and screen recording of this room on every phone in it, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.'**
   String get roomShotsBlocked;
 
+  /// roomShotsBlocked as a computer shows it (linux and windows): a computer cannot block screenshots, so only the copying, forwarding and saving limits are its own
+  ///
+  /// In en, this message translates to:
+  /// **'Copying, forwarding and saving each other’s messages is off in this room. Kryfo for Android also blocks screenshots and screen recording of it.'**
+  String get roomShotsBlockedDesk;
+
   /// screens/group_info_screen.dart: under the screenshot switch of a room, which cannot be turned off
   ///
   /// In en, this message translates to:
   /// **'Always on in a room, on every phone in it'**
   String get roomShotsAlwaysOn;
+
+  /// roomShotsAlwaysOn as a computer shows it (linux and windows): a computer cannot block screenshots, so only the copying, forwarding and saving limits are its own
+  ///
+  /// In en, this message translates to:
+  /// **'Always on in a room, in Kryfo for Android'**
+  String get roomShotsAlwaysOnDesk;
 
   /// screens/settings_screen.dart: the screenshots line of your protections: each chat has its own switch, with an app lock too on android 13 and newer
   ///
@@ -15827,10 +15845,16 @@ abstract class AppLocalizations {
   /// **'Blocks screenshots and screen recording on every phone in this group, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.'**
   String get groupShotsBlocksAll;
 
+  /// groupShotsBlocksAll as a computer shows it (linux and windows): a computer cannot block screenshots, so only the copying, forwarding and saving limits are its own
+  ///
+  /// In en, this message translates to:
+  /// **'Turns off copying, forwarding and saving each other’s messages here. Kryfo for Android also blocks screenshots and screen recording.'**
+  String get groupShotsBlocksAllDesk;
+
   /// screens/group_info_screen.dart: the admin's switch, on while someone's app cannot block yet
   ///
   /// In en, this message translates to:
-  /// **'Waiting for everyone here to update Kryfo'**
+  /// **'Waiting until everyone here can block screenshots on their device'**
   String get groupShotsStartsWhenAll;
 
   /// screens/group_info_screen.dart: the admin's switch, on for every member
@@ -15838,6 +15862,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'On for everyone here'**
   String get groupShotsOnForAll;
+
+  /// groupShotsOnForAll as a computer shows it (linux and windows): a computer cannot block screenshots, so only the copying, forwarding and saving limits are its own
+  ///
+  /// In en, this message translates to:
+  /// **'On in Kryfo for Android'**
+  String get groupShotsOnForAllDesk;
 
   /// screens/group_info_screen.dart: a member's read-only row, off
   ///
@@ -15848,7 +15878,7 @@ abstract class AppLocalizations {
   /// screens/group_info_screen.dart: a member's read-only row, on but waiting on someone
   ///
   /// In en, this message translates to:
-  /// **'Waiting for everyone here to update Kryfo. Only the admin can change this'**
+  /// **'Waiting until everyone here can block screenshots on their device. Only the admin can change this'**
   String get groupShotsWaitAdminOnly;
 
   /// screens/group_info_screen.dart: a member's read-only row, on for every member
@@ -15856,6 +15886,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'On for everyone here. Only the admin can change this'**
   String get groupShotsOnAdminOnly;
+
+  /// groupShotsOnAdminOnly as a computer shows it (linux and windows): a computer cannot block screenshots, so only the copying, forwarding and saving limits are its own
+  ///
+  /// In en, this message translates to:
+  /// **'On in Kryfo for Android. Only the admin can change this'**
+  String get groupShotsOnAdminOnlyDesk;
 
   /// screens/group_info_screen.dart: the admin's row that opens the list of members whose app cannot block yet
   ///
@@ -15866,19 +15902,19 @@ abstract class AppLocalizations {
   /// widgets/group_shots_sheet.dart: the title of that list
   ///
   /// In en, this message translates to:
-  /// **'Still to update'**
+  /// **'Not covered yet'**
   String get groupShotsWaitingTitle;
 
   /// widgets/group_shots_sheet.dart: the line under the title
   ///
   /// In en, this message translates to:
-  /// **'Screenshot blocking covers everyone once these people update Kryfo. Tap someone to remove them from the group.'**
+  /// **'Screenshot blocking covers everyone once these people’s devices can block screenshots. Tap someone to remove them from the group.'**
   String get groupShotsWaitingHint;
 
-  /// widgets/group_shots_sheet.dart: under a member's name
+  /// widgets/group_shots_sheet.dart: under a member's name whose Kryfo does not say it blocks screenshots in groups: an older Kryfo, or Kryfo on a computer. names no update and no kind of device, so it stays true for both and tells no one which it is
   ///
   /// In en, this message translates to:
-  /// **'Needs to update Kryfo, or hasn’t been online since'**
+  /// **'Can’t block screenshots on their device yet, or hasn’t been online since'**
   String get groupShotsNeedsUpdate;
 
   /// widgets/group_shots_sheet.dart: under a member you blocked
@@ -15890,13 +15926,13 @@ abstract class AppLocalizations {
   /// widgets/shots_line.dart: the line in the group where you turned it on and someone's app cannot block yet
   ///
   /// In en, this message translates to:
-  /// **'You turned on screenshot blocking. It covers everyone once all here have updated Kryfo.'**
+  /// **'You turned on screenshot blocking. It covers everyone once all here can block screenshots on their device.'**
   String get groupShotsYouTurnedOnWait;
 
   /// widgets/shots_line.dart: the same, turned on by the admin
   ///
   /// In en, this message translates to:
-  /// **'{name} turned on screenshot blocking. It covers everyone once all here have updated Kryfo.'**
+  /// **'{name} turned on screenshot blocking. It covers everyone once all here can block screenshots on their device.'**
   String groupShotsTheyTurnedOnWait(String name);
 
   /// widgets/shots_line.dart: every member's app can block now
@@ -15905,10 +15941,16 @@ abstract class AppLocalizations {
   /// **'Screenshot blocking is on for everyone here. Copying, forwarding and saving each other’s messages is off too.'**
   String get groupShotsStarted;
 
+  /// groupShotsStarted as a computer shows it (linux and windows): a computer cannot block screenshots, so only the copying, forwarding and saving limits are its own
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot blocking is on in Kryfo for Android. Copying, forwarding and saving each other’s messages is off too.'**
+  String get groupShotsStartedDesk;
+
   /// widgets/shots_line.dart: someone whose app cannot block came in or went back to an older app
   ///
   /// In en, this message translates to:
-  /// **'Someone here can’t block screenshots yet. It covers everyone again once they update Kryfo.'**
+  /// **'Someone here can’t block screenshots on their device yet. It covers everyone again once they can.'**
   String get groupShotsPaused;
 
   /// screens/group_info_screen.dart: in the add sheet, under someone whose app cannot block in groups yet
@@ -15926,7 +15968,7 @@ abstract class AppLocalizations {
   /// screens/group_info_screen.dart: confirm line when adding such a person
   ///
   /// In en, this message translates to:
-  /// **'Screenshot blocking won’t cover everyone here until they update Kryfo.'**
+  /// **'Screenshot blocking won’t cover everyone here until they can block screenshots on their device.'**
   String get groupShotsAddPauses;
 
   /// screens/group_info_screen.dart: extra line in the admin's leave confirm while blocking is on
@@ -15940,6 +15982,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Kryfo blocks screenshots in this group'**
   String get groupShotsBlockedHere;
+
+  /// groupShotsBlockedHere as a computer shows it (linux and windows): a computer cannot block screenshots, so only the copying, forwarding and saving limits are its own
+  ///
+  /// In en, this message translates to:
+  /// **'Copying, forwarding and saving is off in this group'**
+  String get groupShotsBlockedHereDesk;
 
   /// screens/group_chat_screen.dart: note in the message menu
   ///

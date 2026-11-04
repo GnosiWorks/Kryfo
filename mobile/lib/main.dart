@@ -16,6 +16,7 @@ import 'desktop/desktop_mode.dart'
         keepComputerDecoyNote,
         kComputerDecoyNote,
         onDesktop,
+        shotsHonouredHere,
         startEngineIn,
         withNativeFiles;
 import 'store.dart' show playBuild;

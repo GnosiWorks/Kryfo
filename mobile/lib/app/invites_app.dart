@@ -899,6 +899,20 @@ extension AppStateInvites on AppState {
       arrived();
       return;
     }
+    // someone accepted here on this key whose hello was made before this
+    // phone's restore: the hello seen went back with the file, and the
+    // restore's own heal reaches them. a new person's is filed as ever
+    final cut = await restoredAt();
+    if (cut != null && hl.invite.issued < unixHours(cut)) {
+      final was = await live.getContact(id);
+      if (was != null &&
+          (was['accepted'] as int? ?? 0) == 1 &&
+          was['ikey'] == senderKey) {
+        await live.markSeenLong(h);
+        arrived();
+        return;
+      }
+    }
     final group = roster ? await _rosterMemberOf(id, senderKey) : null;
     if (roster && group == null) {
       firstFails.note('roster');

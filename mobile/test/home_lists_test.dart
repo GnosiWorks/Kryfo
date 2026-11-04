@@ -90,7 +90,7 @@ class _Db implements HaloDb {
   }
 
   @override
-  Future<void> deleteMessage(String msgUid) async {
+  Future<void> deleteMessage(String msgUid, {String? from}) async {
     deleted.add(msgUid);
     notes.removeWhere((n) => n['msg_uid'] == msgUid);
   }

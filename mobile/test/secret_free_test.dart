@@ -46,7 +46,7 @@ void main() {
       'String roomFcPk(': (main, 1),
       'Future<String> _roomFfiOnIsolate(': (main, 1),
       'Future<String> _decryptOnIsolate(': (backup, 1),
-      'String? _backupKey(': (backup, 1),
+      'Uint8List? _backupKey(': (backup, 1),
       'Future<AgeError?> ageLock(': (age, 1),
       'Future<AgeError?> ageOpenBegin(': (age, 1),
     };
