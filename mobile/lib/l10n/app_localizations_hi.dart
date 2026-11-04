@@ -5477,9 +5477,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get settingsVersion => 'वर्शन';
 
   @override
-  String get settings030Alpha => '0.5.3 · अल्फ़ा';
-
-  @override
   String get settingsReportAnIssue => 'समस्या बताएँ';
 
   @override
@@ -11056,4 +11053,39 @@ class AppLocalizationsHi extends AppLocalizations {
   String restoreOlderMany(Object first, Object second, int count) {
     return '$first, $second और $count अन्य Kryfo का पुराना संस्करण इस्तेमाल करते हैं। उनके अपडेट करने तक उनसे आपकी चैट रुकी रहेंगी।';
   }
+
+  @override
+  String settingsVersionAlpha(String version) {
+    return '$version · अल्फ़ा';
+  }
+
+  @override
+  String get settingsShotsNotHereYet => 'इस कंप्यूटर पर अभी नहीं';
+
+  @override
+  String get settingsDeskInTray => 'सिस्टम ट्रे में चल रहा है';
+
+  @override
+  String get settingsDeskWhileOpen => 'जब तक Kryfo खुला है';
+
+  @override
+  String get onboardingDeskRunTitle => 'Kryfo *चलता* रहता है।';
+
+  @override
+  String get onboardingDeskRunLead =>
+      'विंडो बंद करने पर Kryfo सिस्टम ट्रे में रहता है, ताकि संदेश आते रहें। दोनों को बाद में सेटिंग्स में, सूचनाएँ के नीचे बदल सकते हैं।';
+
+  @override
+  String get savedLongPressAnyMessageDesk =>
+      'किसी भी मैसेज पर राइट-क्लिक करें और उसे यहाँ रखने के लिए सेव चुनें।';
+
+  @override
+  String get chatFailedTapToRetryDesk => 'नहीं गया · फिर भेजने को क्लिक करें';
+
+  @override
+  String get groupChatTapToRetryDesk => '! फिर भेजने को क्लिक करें';
+
+  @override
+  String get modesFastLineDesk =>
+      'Tor को छोड़ देता है, इसलिए संदेश जल्दी पहुँचते हैं और बैटरी कम लगती है। हमारे सर्वर आपका IP पता सिर्फ़ तब देखते हैं जब आप जुड़े हों, और उसे कभी दर्ज नहीं करते, न रखते हैं। आपके संपर्क इसे कभी नहीं देखते। आपका नेटवर्क देख सकता है कि आप Kryfo से जुड़ रहे हैं।';
 }

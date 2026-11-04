@@ -1551,7 +1551,6 @@
   "settingsWhatWeCanSee": "Chúng tôi thấy được gì",
   "settingsTheHonestList": "Danh sách thật thà",
   "settingsVersion": "Phiên bản",
-  "settings030Alpha": "0.5.3 · alpha",
   "settingsReportAnIssue": "Báo lỗi",
   "settingsReportInKryfo": "Viết trong Kryfo",
   "settingsReportInKryfoSub": "Cuộc trò chuyện với Marios. Bạn có thể viết ẩn danh.",
@@ -2911,5 +2910,15 @@
   "restoreOlderTitle": "Một số cuộc trò chuyện sẽ tạm dừng",
   "restoreOlderOne": "{name} đang dùng phiên bản Kryfo cũ. Cuộc trò chuyện sẽ tạm dừng cho đến khi họ cập nhật.",
   "restoreOlderTwo": "{first} và {second} đang dùng phiên bản Kryfo cũ. Các cuộc trò chuyện với họ sẽ tạm dừng cho đến khi họ cập nhật.",
-  "restoreOlderMany": "{first}, {second} và {count} người khác đang dùng phiên bản Kryfo cũ. Các cuộc trò chuyện với họ sẽ tạm dừng cho đến khi họ cập nhật."
+  "restoreOlderMany": "{first}, {second} và {count} người khác đang dùng phiên bản Kryfo cũ. Các cuộc trò chuyện với họ sẽ tạm dừng cho đến khi họ cập nhật.",
+  "settingsVersionAlpha": "{version} · alpha",
+  "settingsShotsNotHereYet": "Chưa có trên máy tính này",
+  "settingsDeskInTray": "Đang chạy trong khay hệ thống",
+  "settingsDeskWhileOpen": "Khi Kryfo đang mở",
+  "onboardingDeskRunTitle": "Kryfo vẫn *chạy*.",
+  "onboardingDeskRunLead": "Đóng cửa sổ thì Kryfo chờ trong khay hệ thống, nên tin nhắn vẫn tiếp tục đến. Bạn có thể đổi cả hai sau trong Cài đặt, mục Thông báo.",
+  "savedLongPressAnyMessageDesk": "Nhấp chuột phải vào một tin nhắn bất kỳ rồi chọn lưu để giữ nó ở đây.",
+  "chatFailedTapToRetryDesk": "Thất bại · nhấp để thử lại",
+  "groupChatTapToRetryDesk": "! Nhấp để thử lại",
+  "modesFastLineDesk": "Bỏ qua Tor nên tin nhắn đến nhanh hơn và tốn ít pin hơn. Máy chủ của chúng tôi chỉ thấy địa chỉ IP của bạn khi bạn đang kết nối, và không bao giờ ghi lại hay giữ nó. Người liên hệ của bạn không bao giờ thấy nó. Mạng của bạn có thể thấy bạn kết nối tới Kryfo."
 }

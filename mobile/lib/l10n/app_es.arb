@@ -1551,7 +1551,6 @@
   "settingsWhatWeCanSee": "Lo que podemos ver",
   "settingsTheHonestList": "La lista honesta",
   "settingsVersion": "Versión",
-  "settings030Alpha": "0.5.3 · alfa",
   "settingsReportAnIssue": "Informar de un problema",
   "settingsReportInKryfo": "Escribir en Kryfo",
   "settingsReportInKryfoSub": "El chat con Marios. Puedes escribir de forma anónima.",
@@ -2911,5 +2910,15 @@
   "restoreOlderTitle": "Algunos chats se pausarán",
   "restoreOlderOne": "{name} usa una versión anterior de Kryfo. Tu chat se pausará hasta que actualice.",
   "restoreOlderTwo": "{first} y {second} usan una versión anterior de Kryfo. Tus chats con ellos se pausarán hasta que actualicen.",
-  "restoreOlderMany": "{first}, {second} y {count, plural, =1{1 persona más} other{{count} personas más}} usan una versión anterior de Kryfo. Tus chats con ellos se pausarán hasta que actualicen."
+  "restoreOlderMany": "{first}, {second} y {count, plural, =1{1 persona más} other{{count} personas más}} usan una versión anterior de Kryfo. Tus chats con ellos se pausarán hasta que actualicen.",
+  "settingsVersionAlpha": "{version} · alfa",
+  "settingsShotsNotHereYet": "Aún no en este ordenador",
+  "settingsDeskInTray": "Abierto en la bandeja del sistema",
+  "settingsDeskWhileOpen": "Mientras Kryfo está abierto",
+  "onboardingDeskRunTitle": "Kryfo sigue *abierto*.",
+  "onboardingDeskRunLead": "Cierra la ventana y Kryfo espera en la bandeja del sistema, así que los mensajes siguen llegando. Puedes cambiar las dos cosas luego en Ajustes, en Notificaciones.",
+  "savedLongPressAnyMessageDesk": "Haz clic derecho en cualquier mensaje y elige guardar para tenerlo aquí.",
+  "chatFailedTapToRetryDesk": "Falló · haz clic para reintentar",
+  "groupChatTapToRetryDesk": "! Haz clic para reintentar",
+  "modesFastLineDesk": "Se salta Tor, así que los mensajes llegan antes y gastan menos batería. Nuestros servidores ven tu dirección IP solo mientras estás conectado, y nunca la registran ni la guardan. Tus contactos nunca la ven. Tu red puede ver que te conectas a Kryfo."
 }

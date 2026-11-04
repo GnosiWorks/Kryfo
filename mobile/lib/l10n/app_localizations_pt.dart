@@ -5511,9 +5511,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsVersion => 'Versão';
 
   @override
-  String get settings030Alpha => '0.5.3 · alfa';
-
-  @override
   String get settingsReportAnIssue => 'Relatar um problema';
 
   @override
@@ -11130,4 +11127,39 @@ class AppLocalizationsPt extends AppLocalizations {
     );
     return '$first, $second e $_temp0 usam uma versão anterior do Kryfo. Suas conversas com eles vão pausar até atualizarem.';
   }
+
+  @override
+  String settingsVersionAlpha(String version) {
+    return '$version · alfa';
+  }
+
+  @override
+  String get settingsShotsNotHereYet => 'Ainda não neste computador';
+
+  @override
+  String get settingsDeskInTray => 'Aberto na bandeja do sistema';
+
+  @override
+  String get settingsDeskWhileOpen => 'Enquanto o Kryfo está aberto';
+
+  @override
+  String get onboardingDeskRunTitle => 'O Kryfo continua *aberto*.';
+
+  @override
+  String get onboardingDeskRunLead =>
+      'Feche a janela e o Kryfo espera na bandeja do sistema, e as mensagens continuam chegando. Você pode mudar as duas coisas depois em Configurações, em Notificações.';
+
+  @override
+  String get savedLongPressAnyMessageDesk =>
+      'Clique com o botão direito em qualquer mensagem e escolha salvar para guardá-la aqui.';
+
+  @override
+  String get chatFailedTapToRetryDesk => 'Falhou · clique para repetir';
+
+  @override
+  String get groupChatTapToRetryDesk => '! Clique para repetir';
+
+  @override
+  String get modesFastLineDesk =>
+      'Pula o Tor, então as mensagens chegam mais rápido e gastam menos bateria. Nossos servidores veem seu endereço IP só enquanto você está conectado, e nunca registram nem guardam. Seus contatos nunca veem. Sua rede pode ver que você se conecta ao Kryfo.';
 }

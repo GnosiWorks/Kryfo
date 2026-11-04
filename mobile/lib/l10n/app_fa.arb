@@ -1551,7 +1551,6 @@
   "settingsWhatWeCanSee": "آنچه ما می‌بینیم",
   "settingsTheHonestList": "فهرست صادقانه",
   "settingsVersion": "نسخه",
-  "settings030Alpha": "0.5.3 · آلفا",
   "settingsReportAnIssue": "گزارش مشکل",
   "settingsReportInKryfo": "نوشتن در Kryfo",
   "settingsReportInKryfoSub": "گفت‌وگو با Marios. می‌توانید ناشناس بنویسید.",
@@ -2911,5 +2910,15 @@
   "restoreOlderTitle": "برخی گفتگوها متوقف می‌شوند",
   "restoreOlderOne": "⁨{name}⁩ از نسخه‌ی قدیمی‌تر Kryfo استفاده می‌کند. گفتگوی شما تا به‌روزرسانی او متوقف می‌ماند.",
   "restoreOlderTwo": "⁨{first}⁩ و ⁨{second}⁩ از نسخه‌ی قدیمی‌تر Kryfo استفاده می‌کنند. گفتگوهای شما با آن‌ها تا به‌روزرسانی‌شان متوقف می‌ماند.",
-  "restoreOlderMany": "⁨{first}⁩، ⁨{second}⁩ و {count} نفر دیگر از نسخه‌ی قدیمی‌تر Kryfo استفاده می‌کنند. گفتگوهای شما با آن‌ها تا به‌روزرسانی‌شان متوقف می‌ماند."
+  "restoreOlderMany": "⁨{first}⁩، ⁨{second}⁩ و {count} نفر دیگر از نسخه‌ی قدیمی‌تر Kryfo استفاده می‌کنند. گفتگوهای شما با آن‌ها تا به‌روزرسانی‌شان متوقف می‌ماند.",
+  "settingsVersionAlpha": "{version} · آلفا",
+  "settingsShotsNotHereYet": "هنوز روی این رایانه نیست",
+  "settingsDeskInTray": "در سینی سیستم در حال اجرا",
+  "settingsDeskWhileOpen": "تا وقتی Kryfo باز است",
+  "onboardingDeskRunTitle": "Kryfo *روشن* می‌ماند.",
+  "onboardingDeskRunLead": "پنجره را ببندید و Kryfo در سینی سیستم منتظر می‌ماند، پس پیام‌ها همچنان می‌رسند. هر دو را بعدا می‌توانید در تنظیمات، بخش اعلان‌ها، تغییر دهید.",
+  "savedLongPressAnyMessageDesk": "روی هر پیامی راست‌کلیک کنید و «ذخیره» را انتخاب کنید تا این‌جا بماند.",
+  "chatFailedTapToRetryDesk": "ناموفق · برای تلاش دوباره کلیک کنید",
+  "groupChatTapToRetryDesk": "! برای تکرار کلیک کنید",
+  "modesFastLineDesk": "از Tor عبور نمی‌کند، پس پیام‌ها زودتر می‌رسند و باتری کمتری مصرف می‌کنند. سرورهای ما آدرس IP شما را فقط تا وقتی وصل هستید می‌بینند و هرگز آن را ثبت یا نگه نمی‌دارند. مخاطبانتان هرگز آن را نمی‌بینند. شبکه‌ی شما می‌تواند ببیند که به Kryfo وصل می‌شوید."
 }

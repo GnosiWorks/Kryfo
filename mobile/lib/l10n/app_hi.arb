@@ -1440,7 +1440,6 @@
   "settingsWhatWeCanSee": "हम क्या देख सकते हैं",
   "settingsTheHonestList": "ईमानदार सूची",
   "settingsVersion": "वर्शन",
-  "settings030Alpha": "0.5.3 · अल्फ़ा",
   "settingsReportAnIssue": "समस्या बताएँ",
   "settingsReportInKryfo": "Kryfo में लिखें",
   "settingsReportInKryfoSub": "Marios के साथ चैट। आप गुमनाम रहकर लिख सकते हैं।",
@@ -2911,5 +2910,15 @@
   "restoreOlderTitle": "कुछ चैट रुक जाएँगी",
   "restoreOlderOne": "{name} Kryfo का पुराना संस्करण इस्तेमाल करते हैं। उनके अपडेट करने तक आपकी चैट रुकी रहेगी।",
   "restoreOlderTwo": "{first} और {second} Kryfo का पुराना संस्करण इस्तेमाल करते हैं। उनके अपडेट करने तक उनसे आपकी चैट रुकी रहेंगी।",
-  "restoreOlderMany": "{first}, {second} और {count} अन्य Kryfo का पुराना संस्करण इस्तेमाल करते हैं। उनके अपडेट करने तक उनसे आपकी चैट रुकी रहेंगी।"
+  "restoreOlderMany": "{first}, {second} और {count} अन्य Kryfo का पुराना संस्करण इस्तेमाल करते हैं। उनके अपडेट करने तक उनसे आपकी चैट रुकी रहेंगी।",
+  "settingsVersionAlpha": "{version} · अल्फ़ा",
+  "settingsShotsNotHereYet": "इस कंप्यूटर पर अभी नहीं",
+  "settingsDeskInTray": "सिस्टम ट्रे में चल रहा है",
+  "settingsDeskWhileOpen": "जब तक Kryfo खुला है",
+  "onboardingDeskRunTitle": "Kryfo *चलता* रहता है।",
+  "onboardingDeskRunLead": "विंडो बंद करने पर Kryfo सिस्टम ट्रे में रहता है, ताकि संदेश आते रहें। दोनों को बाद में सेटिंग्स में, सूचनाएँ के नीचे बदल सकते हैं।",
+  "savedLongPressAnyMessageDesk": "किसी भी मैसेज पर राइट-क्लिक करें और उसे यहाँ रखने के लिए सेव चुनें।",
+  "chatFailedTapToRetryDesk": "नहीं गया · फिर भेजने को क्लिक करें",
+  "groupChatTapToRetryDesk": "! फिर भेजने को क्लिक करें",
+  "modesFastLineDesk": "Tor को छोड़ देता है, इसलिए संदेश जल्दी पहुँचते हैं और बैटरी कम लगती है। हमारे सर्वर आपका IP पता सिर्फ़ तब देखते हैं जब आप जुड़े हों, और उसे कभी दर्ज नहीं करते, न रखते हैं। आपके संपर्क इसे कभी नहीं देखते। आपका नेटवर्क देख सकता है कि आप Kryfo से जुड़ रहे हैं।"
 }

@@ -227,7 +227,7 @@ class _SavedScreenState extends State<SavedScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              l10n.savedLongPressAnyMessage,
+              l10n.savedLongPressAnyMessageShown,
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 12.5,

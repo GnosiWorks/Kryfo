@@ -5490,9 +5490,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsVersion => 'Sürüm';
 
   @override
-  String get settings030Alpha => '0.5.3 · alfa';
-
-  @override
   String get settingsReportAnIssue => 'Sorun bildir';
 
   @override
@@ -11072,4 +11069,39 @@ class AppLocalizationsTr extends AppLocalizations {
   String restoreOlderMany(Object first, Object second, int count) {
     return '$first, $second ve $count kişi daha Kryfo’nun eski bir sürümünü kullanıyor. Güncelleyene kadar onlarla sohbetlerin duraklar.';
   }
+
+  @override
+  String settingsVersionAlpha(String version) {
+    return '$version · alfa';
+  }
+
+  @override
+  String get settingsShotsNotHereYet => 'Bu bilgisayarda henüz yok';
+
+  @override
+  String get settingsDeskInTray => 'Sistem tepsisinde çalışıyor';
+
+  @override
+  String get settingsDeskWhileOpen => 'Kryfo açıkken';
+
+  @override
+  String get onboardingDeskRunTitle => 'Kryfo *çalışmaya* devam eder.';
+
+  @override
+  String get onboardingDeskRunLead =>
+      'Pencereyi kapatınca Kryfo sistem tepsisinde bekler, mesajlar gelmeye devam eder. İkisini de sonra Ayarlar\'da, Bildirimler altında değiştirebilirsin.';
+
+  @override
+  String get savedLongPressAnyMessageDesk =>
+      'Herhangi bir mesaja sağ tıkla ve burada tutmak için kaydet\'i seç.';
+
+  @override
+  String get chatFailedTapToRetryDesk => 'Başarısız · tekrar için tıkla';
+
+  @override
+  String get groupChatTapToRetryDesk => '! Tekrar için tıkla';
+
+  @override
+  String get modesFastLineDesk =>
+      'Tor’u atlar, böylece mesajlar daha hızlı ulaşır ve daha az pil harcar. Sunucularımız IP adresini yalnızca bağlıyken görür, asla kaydetmez ya da saklamaz. Kişilerin onu asla görmez. Ağın Kryfo’ya bağlandığını görebilir.';
 }

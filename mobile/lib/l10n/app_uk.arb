@@ -1551,7 +1551,6 @@
   "settingsWhatWeCanSee": "Що ми можемо бачити",
   "settingsTheHonestList": "Чесний список",
   "settingsVersion": "Версія",
-  "settings030Alpha": "0.5.3 · альфа",
   "settingsReportAnIssue": "Повідомити про проблему",
   "settingsReportInKryfo": "Написати в Kryfo",
   "settingsReportInKryfoSub": "Чат із Marios. Можна писати анонімно.",
@@ -2911,5 +2910,15 @@
   "restoreOlderTitle": "Деякі чати стануть на паузу",
   "restoreOlderOne": "У {name} старіша версія Kryfo. Ваш чат стане на паузу, доки {name} не оновить застосунок.",
   "restoreOlderTwo": "У {first} і {second} старіша версія Kryfo. Чати з ними стануть на паузу, доки вони не оновлять застосунок.",
-  "restoreOlderMany": "У {first}, {second} і ще {count} старіша версія Kryfo. Чати з ними стануть на паузу, доки вони не оновлять застосунок."
+  "restoreOlderMany": "У {first}, {second} і ще {count} старіша версія Kryfo. Чати з ними стануть на паузу, доки вони не оновлять застосунок.",
+  "settingsVersionAlpha": "{version} · альфа",
+  "settingsShotsNotHereYet": "На цьому комп’ютері поки немає",
+  "settingsDeskInTray": "Працює в області сповіщень",
+  "settingsDeskWhileOpen": "Поки Kryfo відкритий",
+  "onboardingDeskRunTitle": "Kryfo далі *працює*.",
+  "onboardingDeskRunLead": "Закрий вікно, і Kryfo лишиться в області сповіщень, а повідомлення далі надходитимуть. Обидва параметри можна змінити пізніше в налаштуваннях, у розділі «Сповіщення».",
+  "savedLongPressAnyMessageDesk": "Клацни правою кнопкою на будь-якому повідомленні й вибери «Зберегти», щоб воно було тут.",
+  "chatFailedTapToRetryDesk": "Помилка · клацни ще раз",
+  "groupChatTapToRetryDesk": "! Клацни ще раз",
+  "modesFastLineDesk": "Без Tor повідомлення приходять швидше й витрачають менше заряду. Наші сервери бачать твою IP-адресу лише поки ти підключений і ніколи її не записують і не зберігають. Твої контакти її ніколи не бачать. Твоя мережа може бачити, що ти підключаєшся до Kryfo."
 }
