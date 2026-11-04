@@ -709,7 +709,7 @@ void main() {
       expect(identical(deskBridgeLine(plain), plain), isTrue);
       expect(
         File('lib/screens/bridges_screen.dart').readAsStringSync(),
-        contains('return deskBridgeLine('),
+        contains('deskBridgeLine(appState.bridgeLine)'),
       );
     });
   });

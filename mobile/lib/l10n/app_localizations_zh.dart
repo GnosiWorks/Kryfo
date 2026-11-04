@@ -4100,7 +4100,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairCodeUnreached => '联系不上中继。请稍后再试。';
 
   @override
-  String get fastRoomsWaitForTor => '聊天室和配对码始终通过 Tor，快速模式下也一样。Tor 一连上就能用。';
+  String get fastRoomsWaitForTor => '聊天室、配对码和首次联系始终通过 Tor，快速模式下也一样。Tor 一连上就能用。';
 
   @override
   String get pairCodeFailed => '没有成功。请再试一次。';
@@ -4937,7 +4937,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get seenEachConversationGetsIts =>
-      '每段对话都有自己的地址，由双方的密钥推导而来。中继看到的是一个个互不相关的投递点，而不是一对人。';
+      '每段对话都有自己的地址，由双方的密钥推导而来。中继看到的是一个个互不相关的投递点，而不是一对人。在快速模式下，我们的服务器能看到你所用投递点上的 IP 地址；如果对话双方都用快速模式，还能看到两个 IP 地址共用一个投递点。';
 
   @override
   String get seenWhatYouSay => '你说了什么';
@@ -4953,7 +4953,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get seenYourContactGraph => '你的联系人关系图';
 
   @override
-  String get seenKryfoDoesNotScan => 'Kryfo 不会扫描你的通讯录。这里根本没有手机号可以泄露。';
+  String get seenKryfoDoesNotScan =>
+      'Kryfo 不会扫描你的通讯录。这里根本没有手机号可以泄露。在快速模式下，我们的服务器可以根据哪些 IP 地址共用投递点拼凑出其中一部分，但不会留下任何记录。';
 
   @override
   String get seenIntroducer => '介绍人';
@@ -8940,9 +8941,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesNoneUntilOnion => '开启 Onion 前不使用';
 
   @override
-  String get bridgesRelayWorksWhereTor => '在 Tor 被封锁的地方，快速模式也能用，随时可以切换回来。';
-
-  @override
   String get bridgesRelayThisNetworkSees =>
       '在 Tor 被封锁的地方快速模式也能连通，但这个网络能看到你在连接 Kryfo。';
 
@@ -9907,7 +9905,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      '不经过 Tor，消息到得更快，也更省电。我们的服务器只在你连接期间看到你的 IP 地址，从不记录或保存。也从不知道你说了什么。你的联系人永远看不到它。';
+      '不经过 Tor，消息到得更快，也更省电。我们的服务器只在你连接期间看到你的 IP 地址，从不记录或保存。也从不知道你说了什么。你的联系人永远看不到它。你的网络能看到你在连接 Kryfo。';
 
   @override
   String get modesFastConnected => '快速 · 已连接';
@@ -10007,7 +10005,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeSwitchedToFastRoute => '已切换到快速';
 
   @override
-  String get bridgesFastGetsThrough => '快速模式直连我们的服务器，通常都能连通。也可以让 Kryfo 自己找办法。';
+  String get bridgesBridgeFirstFastSeen =>
+      '让 Kryfo 找一个能连通的网桥。快速模式也行，但这个网络能看到你在连接 Kryfo。';
 
   @override
   String get appServersNotAnswering => '服务器没有响应';
@@ -10017,6 +10016,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get seenOurServers => '我们的服务器';
+
+  @override
+  String get seenOurServersCould => '我们的服务器可能看到';
 
   @override
   String get seenIpWhy =>
@@ -14561,7 +14563,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pairCodeUnreached => '聯絡不上中繼。請稍後再試。';
 
   @override
-  String get fastRoomsWaitForTor => '聊天室和配對碼始終透過 Tor，快速模式下也一樣。Tor 一連上就能用。';
+  String get fastRoomsWaitForTor => '聊天室、配對碼和首次聯繫始終透過 Tor，快速模式下也一樣。Tor 一連上就能用。';
 
   @override
   String get pairCodeFailed => '沒有成功。請再試一次。';
@@ -15399,7 +15401,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get seenEachConversationGetsIts =>
-      '每段對話都有自己的位址，由雙方的金鑰推導而來。中繼看到的是一個個互不相關的投遞點，而不是一對人。';
+      '每段對話都有自己的位址，由雙方的金鑰推導而來。中繼看到的是一個個互不相關的投遞點，而不是一對人。在快速模式下，我們的伺服器能看到你所用投遞點上的 IP 位址；如果對話雙方都用快速模式，還能看到兩個 IP 位址共用一個投遞點。';
 
   @override
   String get seenWhatYouSay => '你說了什麼';
@@ -15415,7 +15417,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get seenYourContactGraph => '你的聯絡人關係圖';
 
   @override
-  String get seenKryfoDoesNotScan => 'Kryfo 不會掃描你的通訊錄。這裡根本沒有手機號碼可以外洩。';
+  String get seenKryfoDoesNotScan =>
+      'Kryfo 不會掃描你的通訊錄。這裡根本沒有手機號碼可以外洩。在快速模式下，我們的伺服器可以根據哪些 IP 位址共用投遞點拼湊出其中一部分，但不會留下任何記錄。';
 
   @override
   String get seenIntroducer => '介紹人';
@@ -19283,9 +19286,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesNoneUntilOnion => '開啟 Onion 前不使用';
 
   @override
-  String get bridgesRelayWorksWhereTor => '在 Tor 被封鎖的地方，快速模式也能用，隨時可以切換回來。';
-
-  @override
   String get bridgesRelayThisNetworkSees =>
       '在 Tor 被封鎖的地方快速模式也能連通，但這個網路能看到你在連線 Kryfo。';
 
@@ -20252,7 +20252,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get modesFastLine =>
-      '不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。也從不知道你說了什麼。你的聯絡人永遠看不到它。';
+      '不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。也從不知道你說了什麼。你的聯絡人永遠看不到它。你的網路能看到你在連線 Kryfo。';
 
   @override
   String get modesFastConnected => '快速 · 已連線';
@@ -20352,7 +20352,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeSwitchedToFastRoute => '已切換到快速';
 
   @override
-  String get bridgesFastGetsThrough => '快速模式直連我們的伺服器，通常都能連通。也可以讓 Kryfo 自己找辦法。';
+  String get bridgesBridgeFirstFastSeen =>
+      '讓 Kryfo 找一個能連通的橋接。快速模式也行，但這個網路能看到你在連線 Kryfo。';
 
   @override
   String get appServersNotAnswering => '伺服器沒有回應';
@@ -20362,6 +20363,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get seenOurServers => '我們的伺服器';
+
+  @override
+  String get seenOurServersCould => '我們的伺服器可能看到';
 
   @override
   String get seenIpWhy =>

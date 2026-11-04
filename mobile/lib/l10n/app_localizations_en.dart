@@ -4316,7 +4316,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fastRoomsWaitForTor =>
-      'Rooms and pairing codes always go through Tor, also on Fast. They work as soon as Tor connects.';
+      'Rooms, pairing codes and first contacts always go through Tor, also on Fast. They work as soon as Tor connects.';
 
   @override
   String get pairCodeFailed => 'That didn\'t work. Try again.';
@@ -5197,7 +5197,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seenEachConversationGetsIts =>
-      'Each conversation gets its own address, derived from both keys. A relay sees unrelated drop boxes, not a pair of people.';
+      'Each conversation gets its own address, derived from both keys. A relay sees unrelated drop boxes, not a pair of people. On Fast our servers see your IP address on the drop boxes you use, and when both people in a chat use Fast, that two IP addresses share one.';
 
   @override
   String get seenWhatYouSay => 'What you say';
@@ -5214,7 +5214,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seenKryfoDoesNotScan =>
-      'Kryfo does not scan your contacts. No phone number exists here to leak.';
+      'Kryfo does not scan your contacts. No phone number exists here to leak. On Fast our servers could piece some of it together from which IP addresses share drop boxes. They keep no record of it.';
 
   @override
   String get seenIntroducer => 'Introducer';
@@ -9405,10 +9405,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bridgesNoneUntilOnion => 'None until onion is on';
 
   @override
-  String get bridgesRelayWorksWhereTor =>
-      'Fast works where Tor is blocked, and you can switch back any time.';
-
-  @override
   String get bridgesRelayThisNetworkSees =>
       'Fast gets through where Tor is blocked, but this network can see you connect to Kryfo.';
 
@@ -10460,7 +10456,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you\'re connected, and never log or keep it. Never what you say. Your contacts never see it.';
+      'Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you\'re connected, and never log or keep it. Never what you say. Your contacts never see it. Your network can see that you connect to Kryfo.';
 
   @override
   String get modesFastConnected => 'Fast · connected';
@@ -10564,8 +10560,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeSwitchedToFastRoute => 'Switched to Fast';
 
   @override
-  String get bridgesFastGetsThrough =>
-      'Fast goes straight to our servers and usually gets through. Or let Kryfo find a way by itself.';
+  String get bridgesBridgeFirstFastSeen =>
+      'Let Kryfo find a bridge that gets through. Fast works too, but this network can see you connect to Kryfo.';
 
   @override
   String get appServersNotAnswering => 'Servers not answering';
@@ -10575,6 +10571,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seenOurServers => 'Our servers';
+
+  @override
+  String get seenOurServersCould => 'Our servers could';
 
   @override
   String get seenIpWhy =>

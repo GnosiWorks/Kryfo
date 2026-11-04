@@ -4363,7 +4363,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get fastRoomsWaitForTor =>
-      'Le stanze e i codici di abbinamento passano sempre da Tor, anche su Veloce. Funzionano appena Tor si connette.';
+      'Le stanze, i codici di abbinamento e i primi contatti passano sempre da Tor, anche su Veloce. Funzionano appena Tor si connette.';
 
   @override
   String get pairCodeFailed => 'Non ha funzionato. Riprova.';
@@ -5252,7 +5252,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get seenEachConversationGetsIts =>
-      'Ogni conversazione ha un proprio indirizzo, derivato da entrambe le chiavi. Un relay vede depositi scollegati tra loro, non una coppia di persone.';
+      'Ogni conversazione ha un proprio indirizzo, derivato da entrambe le chiavi. Un relay vede depositi scollegati tra loro, non una coppia di persone. Con Veloce i nostri server vedono il tuo indirizzo IP sui depositi che usi e, se entrambe le persone di una conversazione usano Veloce, che due indirizzi IP condividono un deposito.';
 
   @override
   String get seenWhatYouSay => 'Cosa dici';
@@ -5269,7 +5269,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get seenKryfoDoesNotScan =>
-      'Kryfo non scansiona i tuoi contatti. Qui non esiste nessun numero di telefono che possa trapelare.';
+      'Kryfo non scansiona i tuoi contatti. Qui non esiste nessun numero di telefono che possa trapelare. Con Veloce i nostri server potrebbero ricostruirne una parte da quali indirizzi IP condividono depositi. Non ne conservano traccia.';
 
   @override
   String get seenIntroducer => 'Chi presenta';
@@ -9491,10 +9491,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get bridgesNoneUntilOnion => 'Niente finché Onion non è attivo';
 
   @override
-  String get bridgesRelayWorksWhereTor =>
-      'Veloce funziona dove Tor è bloccato, e puoi tornare indietro quando vuoi.';
-
-  @override
   String get bridgesRelayThisNetworkSees =>
       'Veloce passa dove Tor è bloccato, ma questa rete può vedere che ti connetti a Kryfo.';
 
@@ -10553,7 +10549,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'Salta Tor, così i messaggi arrivano prima e consumano meno batteria. I nostri server vedono il tuo indirizzo IP solo mentre sei connesso, e non lo registrano né lo conservano mai. Mai quello che dici. I tuoi contatti non lo vedono mai.';
+      'Salta Tor, così i messaggi arrivano prima e consumano meno batteria. I nostri server vedono il tuo indirizzo IP solo mentre sei connesso, e non lo registrano né lo conservano mai. Mai quello che dici. I tuoi contatti non lo vedono mai. La tua rete può vedere che ti connetti a Kryfo.';
 
   @override
   String get modesFastConnected => 'Veloce · connesso';
@@ -10657,8 +10653,8 @@ class AppLocalizationsIt extends AppLocalizations {
   String get homeSwitchedToFastRoute => 'Passato a Veloce';
 
   @override
-  String get bridgesFastGetsThrough =>
-      'Veloce va dritto ai nostri server e di solito passa. Oppure lascia che Kryfo trovi da solo un modo.';
+  String get bridgesBridgeFirstFastSeen =>
+      'Lascia che Kryfo trovi un bridge che passa. Veloce funziona anche, ma questa rete può vedere che ti connetti a Kryfo.';
 
   @override
   String get appServersNotAnswering => 'Server non rispondono';
@@ -10668,6 +10664,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get seenOurServers => 'I nostri server';
+
+  @override
+  String get seenOurServersCould => 'I nostri server potrebbero';
 
   @override
   String get seenIpWhy =>

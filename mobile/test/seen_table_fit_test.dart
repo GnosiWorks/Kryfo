@@ -60,6 +60,7 @@ Set<String> _cells() => {
   l10n.seenYours,
   l10n.seenUnaudited,
   l10n.seenOurServers,
+  l10n.seenOurServersCould,
   l10n.seenIntroducer,
   l10n.seenRoomKeys,
   l10n.seenOverTor,
@@ -128,4 +129,18 @@ void main() {
       });
     }
   }
+
+  // fast is honest: one ip reads a person's mailboxes, so who they talk to
+  // and their contact graph are warn cells there, and the why says so
+  testWidgets('on fast our servers could tie who talks to whom', (t) async {
+    await devOpen(t, const SeenScreen(), size: _size, ratio: _ratio);
+    expect(find.text(l10n.seenOurServersCould), findsNWidgets(2));
+    await t.tap(find.text(l10n.seenWhoYouTalkTo));
+    await t.pumpAndSettle();
+    expect(find.text(l10n.seenEachConversationGetsIts), findsOneWidget);
+    expect(l10n.seenEachConversationGetsIts, contains('On Fast'));
+    expect(l10n.seenKryfoDoesNotScan, contains('On Fast'));
+    expect(l10n.modesFastLine, contains('Your network can see'));
+    await devClose(t);
+  });
 }

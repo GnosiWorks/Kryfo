@@ -4336,7 +4336,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get fastRoomsWaitForTor =>
-      'Odalar ve eşleştirme kodları Hızlı’da da her zaman Tor’dan geçer. Tor bağlanır bağlanmaz çalışırlar.';
+      'Odalar, eşleştirme kodları ve ilk temaslar Hızlı’da da her zaman Tor’dan geçer. Tor bağlanır bağlanmaz çalışırlar.';
 
   @override
   String get pairCodeFailed => 'Olmadı. Yeniden dene.';
@@ -5218,7 +5218,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get seenEachConversationGetsIts =>
-      'Her sohbet, iki anahtardan türetilen kendi adresini alır. Aktarıcı bir çift insan değil, birbiriyle ilgisiz bırakma noktaları görür.';
+      'Her sohbet, iki anahtardan türetilen kendi adresini alır. Aktarıcı bir çift insan değil, birbiriyle ilgisiz bırakma noktaları görür. Hızlı’da sunucularımız kullandığın bırakma noktalarında IP adresini görür; bir sohbetteki iki kişi de Hızlı kullanıyorsa iki IP adresinin aynı noktayı paylaştığını da görür.';
 
   @override
   String get seenWhatYouSay => 'Ne söylediğin';
@@ -5235,7 +5235,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get seenKryfoDoesNotScan =>
-      'Kryfo rehberini taramaz. Burada sızacak bir telefon numarası yok.';
+      'Kryfo rehberini taramaz. Burada sızacak bir telefon numarası yok. Hızlı’da sunucularımız hangi IP adreslerinin bırakma noktalarını paylaştığından bir kısmını çıkarabilir. Bunun kaydını tutmaz.';
 
   @override
   String get seenIntroducer => 'Tanıştıran';
@@ -9436,10 +9436,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesNoneUntilOnion => 'Onion açılana kadar yok';
 
   @override
-  String get bridgesRelayWorksWhereTor =>
-      'Hızlı, Tor’un engellendiği yerde çalışır ve istediğin zaman geri dönebilirsin.';
-
-  @override
   String get bridgesRelayThisNetworkSees =>
       'Hızlı, Tor’un engellendiği yerden geçer ama bu ağ Kryfo’ya bağlandığını görebilir.';
 
@@ -10495,7 +10491,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'Tor’u atlar, böylece mesajlar daha hızlı ulaşır ve daha az pil harcar. Sunucularımız IP adresini yalnızca bağlıyken görür, asla kaydetmez ya da saklamaz. Ne söylediğini asla görmez. Kişilerin onu asla görmez.';
+      'Tor’u atlar, böylece mesajlar daha hızlı ulaşır ve daha az pil harcar. Sunucularımız IP adresini yalnızca bağlıyken görür, asla kaydetmez ya da saklamaz. Ne söylediğini asla görmez. Kişilerin onu asla görmez. Ağın Kryfo’ya bağlandığını görebilir.';
 
   @override
   String get modesFastConnected => 'Hızlı · bağlı';
@@ -10599,8 +10595,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get homeSwitchedToFastRoute => 'Hızlı’ya geçildi';
 
   @override
-  String get bridgesFastGetsThrough =>
-      'Hızlı doğrudan sunucularımıza gider ve genelde geçer. Ya da Kryfo’nun kendi yolunu bulmasına izin ver.';
+  String get bridgesBridgeFirstFastSeen =>
+      'Kryfo geçen bir köprü bulsun. Hızlı da çalışır ama bu ağ Kryfo’ya bağlandığını görebilir.';
 
   @override
   String get appServersNotAnswering => 'Sunucular yanıt vermiyor';
@@ -10610,6 +10606,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get seenOurServers => 'Sunucularımız';
+
+  @override
+  String get seenOurServersCould => 'Sunucularımız görebilir';
 
   @override
   String get seenIpWhy =>

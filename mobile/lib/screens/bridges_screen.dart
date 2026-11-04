@@ -216,10 +216,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
 }
 
 /// the status line as the bridges page and the home card show it
-BridgeLine shownBridgeLine() {
-  final line = appState.bridgeLine;
-  return deskBridgeLine(appState.bridge.skipDirect ? line.watched() : line);
-}
+BridgeLine shownBridgeLine() => deskBridgeLine(appState.bridgeLine);
 
 /// fast in one tap, where tor found no way in
 Future<void> switchToRelay(BuildContext context) async {
@@ -323,12 +320,12 @@ class _BridgeStatusViewState extends State<BridgeStatusView> {
     final still = motionStill(context);
     final action = widget.onAction == null ? null : line.action;
     final relay = line.offerRelay ? widget.onRelay : null;
-    // the first filled, the second quiet under it
+    // the first filled, the second quiet under it: the bridge way, then
+    // fast
     final buttons = <(String, VoidCallback)>[
-      if (relay != null && line.relayFirst) (l10n.homeUseFast, relay),
       if (action != null)
         (bridgeActionLabel(action), () => widget.onAction!(action)),
-      if (relay != null && !line.relayFirst) (l10n.homeUseFast, relay),
+      if (relay != null) (l10n.homeUseFast, relay),
     ];
     final base = _base;
     final clock = base == null ? null : bridgeClock(base + _ticks * 1000);
