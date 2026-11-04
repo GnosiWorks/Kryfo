@@ -10094,14 +10094,24 @@ class AppLocalizationsDe extends AppLocalizations {
   String get devicesThisPhoneOnly => 'Nur dieses Handy';
 
   @override
+  String get devicesThisPhoneOnlyDesk => 'Nur dieser Computer';
+
+  @override
   String get devicesNameSeparator => ', ';
 
   @override
   String get devicesThisPhone => 'Dieses Handy';
 
   @override
+  String get devicesThisPhoneDesk => 'Dieser Computer';
+
+  @override
   String get devicesOnlyThisPhone =>
       'Nur dieses Handy kann Geräte verknüpfen oder entfernen';
+
+  @override
+  String get devicesOnlyThisPhoneDesk =>
+      'Nur dieser Computer kann Geräte verknüpfen oder entfernen';
 
   @override
   String devicesLinkedOn(Object date) {
@@ -10254,7 +10264,151 @@ class AppLocalizationsDe extends AppLocalizations {
       'Versteckte Chats und die Tarnung bleiben auf diesem Handy.';
 
   @override
+  String get devicesHiddenStayDesk =>
+      'Versteckte Chats und die Tarnung bleiben auf diesem Computer.';
+
+  @override
   String get devicesScanCode => 'Code scannen';
+
+  @override
+  String get devicesLinkReaching => 'Gerät wird erreicht';
+
+  @override
+  String get devicesLinkReachingLine =>
+      'Lass Kryfo auf beiden offen. Über Tor kann das eine Minute dauern.';
+
+  @override
+  String get devicesLinkCompare => 'Stimmen die Ziffern überein?';
+
+  @override
+  String get devicesLinkCompareLine =>
+      'Das neue Gerät zeigt auch sechs Ziffern. Verknüpfe es nur, wenn sie gleich sind.';
+
+  @override
+  String get devicesLinkMatch => 'Sie stimmen überein';
+
+  @override
+  String get devicesLinkNoMatch => 'Sie stimmen nicht überein';
+
+  @override
+  String get devicesLinkLinking => 'Wird verknüpft';
+
+  @override
+  String get devicesLinkLinkingLine =>
+      'Das neue Gerät wird eingerichtet. Lass beide offen.';
+
+  @override
+  String get devicesLinkDone => 'Gerät verknüpft';
+
+  @override
+  String get devicesLinkDoneLine =>
+      'Es steht unter Verknüpfte Geräte. Dort kannst du es umbenennen oder entfernen.';
+
+  @override
+  String get devicesLinkUnreached => 'Gerät nicht erreichbar';
+
+  @override
+  String get devicesLinkUnreachedLine =>
+      'Prüfe, ob Kryfo auf dem neuen Gerät offen ist und seinen Code zeigt, und versuche es dann erneut.';
+
+  @override
+  String get devicesLinkStopped => 'Nichts wurde verknüpft';
+
+  @override
+  String get devicesLinkStoppedLine =>
+      'Die Ziffern müssen übereinstimmen. Fang mit einem neuen Code noch einmal an.';
+
+  @override
+  String get devicesLinkInterruptedLine =>
+      'Etwas hat die Verknüpfung unterbrochen. Fang mit einem neuen Code noch einmal an.';
+
+  @override
+  String get scanLinkTitle => 'Code des Geräts scannen';
+
+  @override
+  String get scanLinkPoint => 'Richte die Kamera auf den Code am neuen Gerät';
+
+  @override
+  String get scanLinkNotOne => 'Das ist kein Verknüpfungscode';
+
+  @override
+  String get onboardingLinkToMyPhone => 'Mit meinem Handy verknüpfen';
+
+  @override
+  String get joinTitle => 'Mit deinem Handy verknüpfen';
+
+  @override
+  String get joinStep1 => 'Öffne Kryfo auf deinem Handy.';
+
+  @override
+  String get joinStep2 =>
+      'Geh zu Einstellungen, dann Verknüpfte Geräte, dann Gerät verknüpfen.';
+
+  @override
+  String get joinStep3 => 'Scanne diesen Code mit deinem Handy.';
+
+  @override
+  String get joinWaiting => 'Warte auf dein Handy';
+
+  @override
+  String get joinCodeLife => 'Der Code gilt zehn Minuten.';
+
+  @override
+  String get joinCompareLine =>
+      'Dein Handy zeigt auch sechs Ziffern. Mach nur weiter, wenn sie gleich sind.';
+
+  @override
+  String get joinLinking => 'Wird mit deinem Handy verknüpft';
+
+  @override
+  String get joinLinkingLine =>
+      'Lass Kryfo auf deinem Handy offen, bis das fertig ist.';
+
+  @override
+  String get joinDone => 'Mit deinem Handy verknüpft';
+
+  @override
+  String get joinDoneLine =>
+      'Neue Nachrichten kommen jetzt auch auf diesem Gerät an. Die Schlüsselnummer deines Kontos:';
+
+  @override
+  String get joinOpen => 'Kryfo öffnen';
+
+  @override
+  String get joinUnreached => 'Handy nicht erreichbar';
+
+  @override
+  String get joinUnreachedLine =>
+      'Prüfe, ob dein Handy online ist und Kryfo offen hat, und versuche es dann mit einem neuen Code.';
+
+  @override
+  String get joinNewCode => 'Neuer Code';
+
+  @override
+  String get devicesNewNotice => 'Neues Gerät verknüpft';
+
+  @override
+  String devicesNewNoticeLine(Object name, Object date) {
+    return '$name wurde am $date mit deinem Konto verknüpft. Öffne Verknüpfte Geräte, um es zu sehen.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'Neue Geräte verknüpft';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names wurden mit deinem Konto verknüpft. Öffne Verknüpfte Geräte, um sie zu sehen.';
+  }
+
+  @override
+  String get devicesNewNoticeOpen => 'Öffnen';
+
+  @override
+  String get settingsLinkedToLine =>
+      'Mit deinem Handy verknüpft. Backups und Einladungen bleiben auf dem Handy.';
+
+  @override
+  String get devicesYourPhone => 'Dein Handy';
 
   @override
   String get desktopLockTitle => 'Kryfo ist gesperrt';

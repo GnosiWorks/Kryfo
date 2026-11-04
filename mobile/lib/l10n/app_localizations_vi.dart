@@ -9974,14 +9974,24 @@ class AppLocalizationsVi extends AppLocalizations {
   String get devicesThisPhoneOnly => 'Chỉ điện thoại này';
 
   @override
+  String get devicesThisPhoneOnlyDesk => 'Chỉ máy tính này';
+
+  @override
   String get devicesNameSeparator => ', ';
 
   @override
   String get devicesThisPhone => 'Điện thoại này';
 
   @override
+  String get devicesThisPhoneDesk => 'Máy tính này';
+
+  @override
   String get devicesOnlyThisPhone =>
       'Chỉ điện thoại này mới liên kết hoặc gỡ được thiết bị';
+
+  @override
+  String get devicesOnlyThisPhoneDesk =>
+      'Chỉ máy tính này mới liên kết hoặc gỡ được thiết bị';
 
   @override
   String devicesLinkedOn(Object date) {
@@ -10133,7 +10143,151 @@ class AppLocalizationsVi extends AppLocalizations {
       'Trò chuyện ẩn và phần ngụy trang ở lại trên điện thoại này.';
 
   @override
+  String get devicesHiddenStayDesk =>
+      'Trò chuyện ẩn và phần ngụy trang ở lại trên máy tính này.';
+
+  @override
   String get devicesScanCode => 'Quét mã';
+
+  @override
+  String get devicesLinkReaching => 'Đang kết nối với thiết bị';
+
+  @override
+  String get devicesLinkReachingLine =>
+      'Giữ Kryfo mở trên cả hai. Qua Tor việc này có thể mất một phút.';
+
+  @override
+  String get devicesLinkCompare => 'Các chữ số có khớp không?';
+
+  @override
+  String get devicesLinkCompareLine =>
+      'Thiết bị mới cũng hiện sáu chữ số. Chỉ liên kết nếu chúng giống nhau.';
+
+  @override
+  String get devicesLinkMatch => 'Khớp';
+
+  @override
+  String get devicesLinkNoMatch => 'Không khớp';
+
+  @override
+  String get devicesLinkLinking => 'Đang liên kết';
+
+  @override
+  String get devicesLinkLinkingLine =>
+      'Đang thiết lập thiết bị mới. Giữ cả hai mở.';
+
+  @override
+  String get devicesLinkDone => 'Đã liên kết thiết bị';
+
+  @override
+  String get devicesLinkDoneLine =>
+      'Thiết bị hiện trong Thiết bị đã liên kết, nơi bạn có thể đổi tên hoặc gỡ nó.';
+
+  @override
+  String get devicesLinkUnreached => 'Không kết nối được với thiết bị';
+
+  @override
+  String get devicesLinkUnreachedLine =>
+      'Kiểm tra Kryfo đang mở trên thiết bị mới và hiện mã của nó, rồi thử lại.';
+
+  @override
+  String get devicesLinkStopped => 'Chưa liên kết gì';
+
+  @override
+  String get devicesLinkStoppedLine =>
+      'Các chữ số phải khớp. Bắt đầu lại với một mã mới.';
+
+  @override
+  String get devicesLinkInterruptedLine =>
+      'Việc liên kết bị gián đoạn. Bắt đầu lại với một mã mới.';
+
+  @override
+  String get scanLinkTitle => 'Quét mã của thiết bị';
+
+  @override
+  String get scanLinkPoint => 'Hướng vào mã trên thiết bị mới';
+
+  @override
+  String get scanLinkNotOne => 'Đó không phải mã liên kết';
+
+  @override
+  String get onboardingLinkToMyPhone => 'Liên kết với điện thoại của tôi';
+
+  @override
+  String get joinTitle => 'Liên kết với điện thoại của bạn';
+
+  @override
+  String get joinStep1 => 'Mở Kryfo trên điện thoại của bạn.';
+
+  @override
+  String get joinStep2 =>
+      'Vào Cài đặt, rồi Thiết bị đã liên kết, rồi Liên kết thiết bị.';
+
+  @override
+  String get joinStep3 => 'Quét mã này bằng điện thoại của bạn.';
+
+  @override
+  String get joinWaiting => 'Đang chờ điện thoại của bạn';
+
+  @override
+  String get joinCodeLife => 'Mã có hiệu lực mười phút.';
+
+  @override
+  String get joinCompareLine =>
+      'Điện thoại của bạn cũng hiện sáu chữ số. Chỉ tiếp tục nếu chúng giống nhau.';
+
+  @override
+  String get joinLinking => 'Đang liên kết với điện thoại của bạn';
+
+  @override
+  String get joinLinkingLine =>
+      'Giữ Kryfo mở trên điện thoại cho đến khi xong.';
+
+  @override
+  String get joinDone => 'Đã liên kết với điện thoại của bạn';
+
+  @override
+  String get joinDoneLine =>
+      'Tin nhắn mới giờ cũng đến thiết bị này. Số khóa của tài khoản bạn:';
+
+  @override
+  String get joinOpen => 'Mở Kryfo';
+
+  @override
+  String get joinUnreached => 'Không kết nối được với điện thoại';
+
+  @override
+  String get joinUnreachedLine =>
+      'Kiểm tra điện thoại đang trực tuyến và Kryfo đang mở, rồi thử một mã mới.';
+
+  @override
+  String get joinNewCode => 'Mã mới';
+
+  @override
+  String get devicesNewNotice => 'Đã liên kết thiết bị mới';
+
+  @override
+  String devicesNewNoticeLine(Object name, Object date) {
+    return '$name đã được liên kết với tài khoản của bạn vào $date. Mở Thiết bị đã liên kết để xem.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'Đã liên kết thiết bị mới';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names đã được liên kết với tài khoản của bạn. Mở Thiết bị đã liên kết để xem.';
+  }
+
+  @override
+  String get devicesNewNoticeOpen => 'Mở';
+
+  @override
+  String get settingsLinkedToLine =>
+      'Đã liên kết với điện thoại của bạn. Bản sao lưu và lời mời ở lại trên điện thoại.';
+
+  @override
+  String get devicesYourPhone => 'Điện thoại của bạn';
 
   @override
   String get desktopLockTitle => 'Kryfo đang khóa';

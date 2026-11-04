@@ -9979,14 +9979,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get devicesThisPhoneOnly => 'This phone only';
 
   @override
+  String get devicesThisPhoneOnlyDesk => 'This computer only';
+
+  @override
   String get devicesNameSeparator => ', ';
 
   @override
   String get devicesThisPhone => 'This phone';
 
   @override
+  String get devicesThisPhoneDesk => 'This computer';
+
+  @override
   String get devicesOnlyThisPhone =>
       'Only this phone can link or remove devices';
+
+  @override
+  String get devicesOnlyThisPhoneDesk =>
+      'Only this computer can link or remove devices';
 
   @override
   String devicesLinkedOn(Object date) {
@@ -10138,7 +10148,151 @@ class AppLocalizationsEn extends AppLocalizations {
       'Hidden chats and the decoy stay on this phone.';
 
   @override
+  String get devicesHiddenStayDesk =>
+      'Hidden chats and the decoy stay on this computer.';
+
+  @override
   String get devicesScanCode => 'Scan the code';
+
+  @override
+  String get devicesLinkReaching => 'Reaching the device';
+
+  @override
+  String get devicesLinkReachingLine =>
+      'Keep Kryfo open on both. Over Tor this can take a minute.';
+
+  @override
+  String get devicesLinkCompare => 'Do the numbers match?';
+
+  @override
+  String get devicesLinkCompareLine =>
+      'The new device shows six numbers too. Link it only if they are the same.';
+
+  @override
+  String get devicesLinkMatch => 'They match';
+
+  @override
+  String get devicesLinkNoMatch => 'They don\'t match';
+
+  @override
+  String get devicesLinkLinking => 'Linking';
+
+  @override
+  String get devicesLinkLinkingLine =>
+      'Setting up the new device. Keep both open.';
+
+  @override
+  String get devicesLinkDone => 'Device linked';
+
+  @override
+  String get devicesLinkDoneLine =>
+      'It shows in Linked devices, where you can rename or remove it.';
+
+  @override
+  String get devicesLinkUnreached => 'Couldn\'t reach the device';
+
+  @override
+  String get devicesLinkUnreachedLine =>
+      'Check that Kryfo is open on the new device and shows its code, then try again.';
+
+  @override
+  String get devicesLinkStopped => 'Nothing was linked';
+
+  @override
+  String get devicesLinkStoppedLine =>
+      'The numbers have to match. Start again with a new code.';
+
+  @override
+  String get devicesLinkInterruptedLine =>
+      'Something interrupted the link. Start again with a new code.';
+
+  @override
+  String get scanLinkTitle => 'Scan the device\'s code';
+
+  @override
+  String get scanLinkPoint => 'Point at the code on the new device';
+
+  @override
+  String get scanLinkNotOne => 'That\'s not a link code';
+
+  @override
+  String get onboardingLinkToMyPhone => 'Link to my phone';
+
+  @override
+  String get joinTitle => 'Link to your phone';
+
+  @override
+  String get joinStep1 => 'Open Kryfo on your phone.';
+
+  @override
+  String get joinStep2 =>
+      'Go to Settings, then Linked devices, then Link a device.';
+
+  @override
+  String get joinStep3 => 'Scan this code with your phone.';
+
+  @override
+  String get joinWaiting => 'Waiting for your phone';
+
+  @override
+  String get joinCodeLife => 'The code works for ten minutes.';
+
+  @override
+  String get joinCompareLine =>
+      'Your phone shows six numbers too. Go on only if they are the same.';
+
+  @override
+  String get joinLinking => 'Linking to your phone';
+
+  @override
+  String get joinLinkingLine =>
+      'Keep Kryfo open on your phone until this is done.';
+
+  @override
+  String get joinDone => 'Linked to your phone';
+
+  @override
+  String get joinDoneLine =>
+      'New messages reach this device too. Your account\'s key number:';
+
+  @override
+  String get joinOpen => 'Open Kryfo';
+
+  @override
+  String get joinUnreached => 'Couldn\'t reach your phone';
+
+  @override
+  String get joinUnreachedLine =>
+      'Check that your phone is online with Kryfo open, then try a new code.';
+
+  @override
+  String get joinNewCode => 'New code';
+
+  @override
+  String get devicesNewNotice => 'New device linked';
+
+  @override
+  String devicesNewNoticeLine(Object name, Object date) {
+    return '$name was linked to your account on $date. Open Linked devices to see it.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'New devices linked';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names were linked to your account. Open Linked devices to see them.';
+  }
+
+  @override
+  String get devicesNewNoticeOpen => 'Open';
+
+  @override
+  String get settingsLinkedToLine =>
+      'Linked to your phone. Backups and invites stay on the phone.';
+
+  @override
+  String get devicesYourPhone => 'Your phone';
 
   @override
   String get desktopLockTitle => 'Kryfo is locked';

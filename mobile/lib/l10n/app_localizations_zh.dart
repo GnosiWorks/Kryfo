@@ -9470,13 +9470,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devicesThisPhoneOnly => '仅这部手机';
 
   @override
+  String get devicesThisPhoneOnlyDesk => '仅这台电脑';
+
+  @override
   String get devicesNameSeparator => '、';
 
   @override
   String get devicesThisPhone => '这部手机';
 
   @override
+  String get devicesThisPhoneDesk => '这台电脑';
+
+  @override
   String get devicesOnlyThisPhone => '只有这部手机能关联或移除设备';
+
+  @override
+  String get devicesOnlyThisPhoneDesk => '只有这台电脑能关联或移除设备';
 
   @override
   String devicesLinkedOn(Object date) {
@@ -9617,7 +9626,137 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devicesHiddenStay => '隐藏聊天和伪装都留在这部手机上。';
 
   @override
+  String get devicesHiddenStayDesk => '隐藏聊天和伪装都留在这台电脑上。';
+
+  @override
   String get devicesScanCode => '扫描二维码';
+
+  @override
+  String get devicesLinkReaching => '正在连接设备';
+
+  @override
+  String get devicesLinkReachingLine => '两边都保持 Kryfo 打开。通过 Tor 可能需要一分钟。';
+
+  @override
+  String get devicesLinkCompare => '数字一致吗？';
+
+  @override
+  String get devicesLinkCompareLine => '新设备上也显示六位数字。只有相同时才关联。';
+
+  @override
+  String get devicesLinkMatch => '一致';
+
+  @override
+  String get devicesLinkNoMatch => '不一致';
+
+  @override
+  String get devicesLinkLinking => '正在关联';
+
+  @override
+  String get devicesLinkLinkingLine => '正在设置新设备。两边都保持打开。';
+
+  @override
+  String get devicesLinkDone => '设备已关联';
+
+  @override
+  String get devicesLinkDoneLine => '它显示在“已关联的设备”中，你可以在那里重命名或移除它。';
+
+  @override
+  String get devicesLinkUnreached => '无法连接到设备';
+
+  @override
+  String get devicesLinkUnreachedLine => '确认新设备上的 Kryfo 已打开并显示二维码，然后重试。';
+
+  @override
+  String get devicesLinkStopped => '没有关联任何设备';
+
+  @override
+  String get devicesLinkStoppedLine => '数字必须一致。用新的二维码重新开始。';
+
+  @override
+  String get devicesLinkInterruptedLine => '关联被中断了。用新的二维码重新开始。';
+
+  @override
+  String get scanLinkTitle => '扫描设备的二维码';
+
+  @override
+  String get scanLinkPoint => '对准新设备上的二维码';
+
+  @override
+  String get scanLinkNotOne => '这不是关联用的二维码';
+
+  @override
+  String get onboardingLinkToMyPhone => '关联到我的手机';
+
+  @override
+  String get joinTitle => '关联到你的手机';
+
+  @override
+  String get joinStep1 => '在手机上打开 Kryfo。';
+
+  @override
+  String get joinStep2 => '进入设置，然后“已关联的设备”，然后“关联设备”。';
+
+  @override
+  String get joinStep3 => '用手机扫描这个二维码。';
+
+  @override
+  String get joinWaiting => '正在等待你的手机';
+
+  @override
+  String get joinCodeLife => '二维码十分钟内有效。';
+
+  @override
+  String get joinCompareLine => '你的手机上也显示六位数字。只有相同时才继续。';
+
+  @override
+  String get joinLinking => '正在关联到你的手机';
+
+  @override
+  String get joinLinkingLine => '完成前请保持手机上的 Kryfo 打开。';
+
+  @override
+  String get joinDone => '已关联到你的手机';
+
+  @override
+  String get joinDoneLine => '新消息现在也会到达这台设备。你账号的密钥号码：';
+
+  @override
+  String get joinOpen => '打开 Kryfo';
+
+  @override
+  String get joinUnreached => '无法连接到你的手机';
+
+  @override
+  String get joinUnreachedLine => '确认手机已联网并打开了 Kryfo，然后换一个新的二维码再试。';
+
+  @override
+  String get joinNewCode => '新二维码';
+
+  @override
+  String get devicesNewNotice => '已关联新设备';
+
+  @override
+  String devicesNewNoticeLine(Object name, Object date) {
+    return '$name 于 $date 关联到你的账号。打开“已关联的设备”查看。';
+  }
+
+  @override
+  String get devicesNewNoticeMany => '已关联几台新设备';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names 已关联到你的账号。打开“已关联的设备”查看。';
+  }
+
+  @override
+  String get devicesNewNoticeOpen => '打开';
+
+  @override
+  String get settingsLinkedToLine => '已关联到你的手机。备份和邀请留在手机上。';
+
+  @override
+  String get devicesYourPhone => '你的手机';
 
   @override
   String get desktopLockTitle => 'Kryfo 已锁定';
@@ -19672,13 +19811,22 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devicesThisPhoneOnly => '僅這支手機';
 
   @override
+  String get devicesThisPhoneOnlyDesk => '僅這台電腦';
+
+  @override
   String get devicesNameSeparator => '、';
 
   @override
   String get devicesThisPhone => '這支手機';
 
   @override
+  String get devicesThisPhoneDesk => '這台電腦';
+
+  @override
   String get devicesOnlyThisPhone => '只有這支手機能連結或移除裝置';
+
+  @override
+  String get devicesOnlyThisPhoneDesk => '只有這台電腦能連結或移除裝置';
 
   @override
   String devicesLinkedOn(Object date) {
@@ -19819,7 +19967,137 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devicesHiddenStay => '隱藏聊天和偽裝都留在這支手機上。';
 
   @override
+  String get devicesHiddenStayDesk => '隱藏聊天和偽裝都留在這台電腦上。';
+
+  @override
   String get devicesScanCode => '掃描 QR 碼';
+
+  @override
+  String get devicesLinkReaching => '正在連線到裝置';
+
+  @override
+  String get devicesLinkReachingLine => '兩邊都保持 Kryfo 開啟。透過 Tor 可能需要一分鐘。';
+
+  @override
+  String get devicesLinkCompare => '數字一致嗎？';
+
+  @override
+  String get devicesLinkCompareLine => '新裝置上也顯示六位數字。只有相同時才連結。';
+
+  @override
+  String get devicesLinkMatch => '一致';
+
+  @override
+  String get devicesLinkNoMatch => '不一致';
+
+  @override
+  String get devicesLinkLinking => '正在連結';
+
+  @override
+  String get devicesLinkLinkingLine => '正在設定新裝置。兩邊都保持開啟。';
+
+  @override
+  String get devicesLinkDone => '裝置已連結';
+
+  @override
+  String get devicesLinkDoneLine => '它會顯示在「已連結的裝置」中，你可以在那裡重新命名或移除它。';
+
+  @override
+  String get devicesLinkUnreached => '無法連線到裝置';
+
+  @override
+  String get devicesLinkUnreachedLine => '確認新裝置上的 Kryfo 已開啟並顯示 QR 碼，然後再試一次。';
+
+  @override
+  String get devicesLinkStopped => '沒有連結任何裝置';
+
+  @override
+  String get devicesLinkStoppedLine => '數字必須一致。用新的 QR 碼重新開始。';
+
+  @override
+  String get devicesLinkInterruptedLine => '連結被中斷了。用新的 QR 碼重新開始。';
+
+  @override
+  String get scanLinkTitle => '掃描裝置的 QR 碼';
+
+  @override
+  String get scanLinkPoint => '對準新裝置上的 QR 碼';
+
+  @override
+  String get scanLinkNotOne => '這不是連結用的 QR 碼';
+
+  @override
+  String get onboardingLinkToMyPhone => '連結到我的手機';
+
+  @override
+  String get joinTitle => '連結到你的手機';
+
+  @override
+  String get joinStep1 => '在手機上開啟 Kryfo。';
+
+  @override
+  String get joinStep2 => '前往設定，然後「已連結的裝置」，然後「連結裝置」。';
+
+  @override
+  String get joinStep3 => '用手機掃描這個 QR 碼。';
+
+  @override
+  String get joinWaiting => '正在等待你的手機';
+
+  @override
+  String get joinCodeLife => 'QR 碼十分鐘內有效。';
+
+  @override
+  String get joinCompareLine => '你的手機上也顯示六位數字。只有相同時才繼續。';
+
+  @override
+  String get joinLinking => '正在連結到你的手機';
+
+  @override
+  String get joinLinkingLine => '完成前請保持手機上的 Kryfo 開啟。';
+
+  @override
+  String get joinDone => '已連結到你的手機';
+
+  @override
+  String get joinDoneLine => '新訊息現在也會送達這台裝置。你帳號的金鑰號碼：';
+
+  @override
+  String get joinOpen => '開啟 Kryfo';
+
+  @override
+  String get joinUnreached => '無法連線到你的手機';
+
+  @override
+  String get joinUnreachedLine => '確認手機已連線並開啟 Kryfo，然後換一個新的 QR 碼再試。';
+
+  @override
+  String get joinNewCode => '新 QR 碼';
+
+  @override
+  String get devicesNewNotice => '已連結新裝置';
+
+  @override
+  String devicesNewNoticeLine(Object name, Object date) {
+    return '$name 於 $date 連結到你的帳號。開啟「已連結的裝置」查看。';
+  }
+
+  @override
+  String get devicesNewNoticeMany => '已連結幾台新裝置';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names 已連結到你的帳號。開啟「已連結的裝置」查看。';
+  }
+
+  @override
+  String get devicesNewNoticeOpen => '開啟';
+
+  @override
+  String get settingsLinkedToLine => '已連結到你的手機。備份和邀請會留在手機上。';
+
+  @override
+  String get devicesYourPhone => '你的手機';
 
   @override
   String get desktopLockTitle => 'Kryfo 已鎖定';

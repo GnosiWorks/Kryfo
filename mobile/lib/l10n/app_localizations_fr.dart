@@ -10090,14 +10090,24 @@ class AppLocalizationsFr extends AppLocalizations {
   String get devicesThisPhoneOnly => 'Ce téléphone seulement';
 
   @override
+  String get devicesThisPhoneOnlyDesk => 'Cet ordinateur seulement';
+
+  @override
   String get devicesNameSeparator => ', ';
 
   @override
   String get devicesThisPhone => 'Ce téléphone';
 
   @override
+  String get devicesThisPhoneDesk => 'Cet ordinateur';
+
+  @override
   String get devicesOnlyThisPhone =>
       'Seul ce téléphone peut associer ou retirer des appareils';
+
+  @override
+  String get devicesOnlyThisPhoneDesk =>
+      'Seul cet ordinateur peut associer ou retirer des appareils';
 
   @override
   String devicesLinkedOn(Object date) {
@@ -10250,7 +10260,151 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les discussions masquées et le leurre restent sur ce téléphone.';
 
   @override
+  String get devicesHiddenStayDesk =>
+      'Les discussions masquées et le leurre restent sur cet ordinateur.';
+
+  @override
   String get devicesScanCode => 'Scanner le code';
+
+  @override
+  String get devicesLinkReaching => 'Recherche de l’appareil';
+
+  @override
+  String get devicesLinkReachingLine =>
+      'Gardez Kryfo ouvert sur les deux. Via Tor, cela peut prendre une minute.';
+
+  @override
+  String get devicesLinkCompare => 'Les chiffres correspondent ?';
+
+  @override
+  String get devicesLinkCompareLine =>
+      'Le nouvel appareil affiche aussi six chiffres. Associez-le seulement s’ils sont identiques.';
+
+  @override
+  String get devicesLinkMatch => 'Ils correspondent';
+
+  @override
+  String get devicesLinkNoMatch => 'Ils ne correspondent pas';
+
+  @override
+  String get devicesLinkLinking => 'Association en cours';
+
+  @override
+  String get devicesLinkLinkingLine =>
+      'Préparation du nouvel appareil. Gardez les deux ouverts.';
+
+  @override
+  String get devicesLinkDone => 'Appareil associé';
+
+  @override
+  String get devicesLinkDoneLine =>
+      'Il figure dans Appareils associés, où vous pouvez le renommer ou le retirer.';
+
+  @override
+  String get devicesLinkUnreached => 'Impossible de joindre l’appareil';
+
+  @override
+  String get devicesLinkUnreachedLine =>
+      'Vérifiez que Kryfo est ouvert sur le nouvel appareil et affiche son code, puis réessayez.';
+
+  @override
+  String get devicesLinkStopped => 'Rien n’a été associé';
+
+  @override
+  String get devicesLinkStoppedLine =>
+      'Les chiffres doivent correspondre. Recommencez avec un nouveau code.';
+
+  @override
+  String get devicesLinkInterruptedLine =>
+      'Quelque chose a interrompu l’association. Recommencez avec un nouveau code.';
+
+  @override
+  String get scanLinkTitle => 'Scanner le code de l’appareil';
+
+  @override
+  String get scanLinkPoint => 'Visez le code sur le nouvel appareil';
+
+  @override
+  String get scanLinkNotOne => 'Ce n’est pas un code d’association';
+
+  @override
+  String get onboardingLinkToMyPhone => 'Associer à mon téléphone';
+
+  @override
+  String get joinTitle => 'Associer à votre téléphone';
+
+  @override
+  String get joinStep1 => 'Ouvrez Kryfo sur votre téléphone.';
+
+  @override
+  String get joinStep2 =>
+      'Allez dans Réglages, puis Appareils associés, puis Associer un appareil.';
+
+  @override
+  String get joinStep3 => 'Scannez ce code avec votre téléphone.';
+
+  @override
+  String get joinWaiting => 'En attente de votre téléphone';
+
+  @override
+  String get joinCodeLife => 'Le code reste valable dix minutes.';
+
+  @override
+  String get joinCompareLine =>
+      'Votre téléphone affiche aussi six chiffres. Continuez seulement s’ils sont identiques.';
+
+  @override
+  String get joinLinking => 'Association à votre téléphone';
+
+  @override
+  String get joinLinkingLine =>
+      'Gardez Kryfo ouvert sur votre téléphone jusqu’à la fin.';
+
+  @override
+  String get joinDone => 'Associé à votre téléphone';
+
+  @override
+  String get joinDoneLine =>
+      'Les nouveaux messages arrivent aussi sur cet appareil. Le numéro de clé de votre compte :';
+
+  @override
+  String get joinOpen => 'Ouvrir Kryfo';
+
+  @override
+  String get joinUnreached => 'Impossible de joindre votre téléphone';
+
+  @override
+  String get joinUnreachedLine =>
+      'Vérifiez que votre téléphone est en ligne avec Kryfo ouvert, puis essayez un nouveau code.';
+
+  @override
+  String get joinNewCode => 'Nouveau code';
+
+  @override
+  String get devicesNewNotice => 'Nouvel appareil associé';
+
+  @override
+  String devicesNewNoticeLine(Object name, Object date) {
+    return '$name a été associé à votre compte le $date. Ouvrez Appareils associés pour le voir.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'Nouveaux appareils associés';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names ont été associés à votre compte. Ouvrez Appareils associés pour les voir.';
+  }
+
+  @override
+  String get devicesNewNoticeOpen => 'Ouvrir';
+
+  @override
+  String get settingsLinkedToLine =>
+      'Associé à votre téléphone. Les sauvegardes et les invitations restent sur le téléphone.';
+
+  @override
+  String get devicesYourPhone => 'Votre téléphone';
 
   @override
   String get desktopLockTitle => 'Kryfo est verrouillé';

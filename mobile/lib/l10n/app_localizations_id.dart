@@ -9988,14 +9988,24 @@ class AppLocalizationsId extends AppLocalizations {
   String get devicesThisPhoneOnly => 'Hanya ponsel ini';
 
   @override
+  String get devicesThisPhoneOnlyDesk => 'Hanya komputer ini';
+
+  @override
   String get devicesNameSeparator => ', ';
 
   @override
   String get devicesThisPhone => 'Ponsel ini';
 
   @override
+  String get devicesThisPhoneDesk => 'Komputer ini';
+
+  @override
   String get devicesOnlyThisPhone =>
       'Hanya ponsel ini yang bisa menautkan atau menghapus perangkat';
+
+  @override
+  String get devicesOnlyThisPhoneDesk =>
+      'Hanya komputer ini yang bisa menautkan atau menghapus perangkat';
 
   @override
   String devicesLinkedOn(Object date) {
@@ -10148,7 +10158,151 @@ class AppLocalizationsId extends AppLocalizations {
       'Obrolan tersembunyi dan umpan tetap di ponsel ini.';
 
   @override
+  String get devicesHiddenStayDesk =>
+      'Obrolan tersembunyi dan umpan tetap di komputer ini.';
+
+  @override
   String get devicesScanCode => 'Pindai kode';
+
+  @override
+  String get devicesLinkReaching => 'Menghubungi perangkat';
+
+  @override
+  String get devicesLinkReachingLine =>
+      'Biarkan Kryfo terbuka di keduanya. Lewat Tor ini bisa makan waktu semenit.';
+
+  @override
+  String get devicesLinkCompare => 'Apakah angkanya sama?';
+
+  @override
+  String get devicesLinkCompareLine =>
+      'Perangkat baru juga menampilkan enam angka. Tautkan hanya jika angkanya sama.';
+
+  @override
+  String get devicesLinkMatch => 'Sama';
+
+  @override
+  String get devicesLinkNoMatch => 'Tidak sama';
+
+  @override
+  String get devicesLinkLinking => 'Menautkan';
+
+  @override
+  String get devicesLinkLinkingLine =>
+      'Menyiapkan perangkat baru. Biarkan keduanya terbuka.';
+
+  @override
+  String get devicesLinkDone => 'Perangkat tertaut';
+
+  @override
+  String get devicesLinkDoneLine =>
+      'Perangkat ini ada di Perangkat tertaut. Di sana kamu bisa mengganti nama atau menghapusnya.';
+
+  @override
+  String get devicesLinkUnreached => 'Tidak bisa menghubungi perangkat';
+
+  @override
+  String get devicesLinkUnreachedLine =>
+      'Pastikan Kryfo terbuka di perangkat baru dan menampilkan kodenya, lalu coba lagi.';
+
+  @override
+  String get devicesLinkStopped => 'Tidak ada yang tertaut';
+
+  @override
+  String get devicesLinkStoppedLine =>
+      'Angkanya harus sama. Mulai lagi dengan kode baru.';
+
+  @override
+  String get devicesLinkInterruptedLine =>
+      'Penautan terputus. Mulai lagi dengan kode baru.';
+
+  @override
+  String get scanLinkTitle => 'Pindai kode perangkat';
+
+  @override
+  String get scanLinkPoint => 'Arahkan ke kode di perangkat baru';
+
+  @override
+  String get scanLinkNotOne => 'Itu bukan kode tautan';
+
+  @override
+  String get onboardingLinkToMyPhone => 'Tautkan ke ponselku';
+
+  @override
+  String get joinTitle => 'Tautkan ke ponselmu';
+
+  @override
+  String get joinStep1 => 'Buka Kryfo di ponselmu.';
+
+  @override
+  String get joinStep2 =>
+      'Buka Setelan, lalu Perangkat tertaut, lalu Tautkan perangkat.';
+
+  @override
+  String get joinStep3 => 'Pindai kode ini dengan ponselmu.';
+
+  @override
+  String get joinWaiting => 'Menunggu ponselmu';
+
+  @override
+  String get joinCodeLife => 'Kode berlaku sepuluh menit.';
+
+  @override
+  String get joinCompareLine =>
+      'Ponselmu juga menampilkan enam angka. Lanjutkan hanya jika angkanya sama.';
+
+  @override
+  String get joinLinking => 'Menautkan ke ponselmu';
+
+  @override
+  String get joinLinkingLine =>
+      'Biarkan Kryfo terbuka di ponselmu sampai selesai.';
+
+  @override
+  String get joinDone => 'Tertaut ke ponselmu';
+
+  @override
+  String get joinDoneLine =>
+      'Pesan baru kini juga sampai ke perangkat ini. Nomor kunci akunmu:';
+
+  @override
+  String get joinOpen => 'Buka Kryfo';
+
+  @override
+  String get joinUnreached => 'Tidak bisa menghubungi ponselmu';
+
+  @override
+  String get joinUnreachedLine =>
+      'Pastikan ponselmu online dan Kryfo terbuka, lalu coba kode baru.';
+
+  @override
+  String get joinNewCode => 'Kode baru';
+
+  @override
+  String get devicesNewNotice => 'Perangkat baru tertaut';
+
+  @override
+  String devicesNewNoticeLine(Object name, Object date) {
+    return '$name ditautkan ke akunmu pada $date. Buka Perangkat tertaut untuk melihatnya.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'Perangkat baru tertaut';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names ditautkan ke akunmu. Buka Perangkat tertaut untuk melihatnya.';
+  }
+
+  @override
+  String get devicesNewNoticeOpen => 'Buka';
+
+  @override
+  String get settingsLinkedToLine =>
+      'Tertaut ke ponselmu. Cadangan dan undangan tetap di ponsel.';
+
+  @override
+  String get devicesYourPhone => 'Ponselmu';
 
   @override
   String get desktopLockTitle => 'Kryfo terkunci';
