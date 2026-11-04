@@ -35,8 +35,9 @@ put you in danger, read all of it.
   a wipe drops the keys first, in the first second or two, so messages and
   files never open again. then the files are overwritten and deleted, a
   few seconds in all. flash storage can keep old blocks of a file after
-  that: without the keys they do not open, but a file from before 0.6 that
-  was never encrypted (below) is only as gone as the storage makes it.
+  that: without the keys they do not open, but a file from before 0.6,
+  encrypted since or not, can have left plain blocks behind, and those are
+  only as gone as the storage makes them.
 - phone number correlation. there is no number or email to tie you to a real
   identity, and no address book upload.
 - someone making you unlock the app. a decoy pin opens an empty Kryfo, as if
@@ -122,8 +123,10 @@ put you in danger, read all of it.
   under a key that only their pin opens, and their names on disk say
   nothing. files from before are encrypted when their chats first open
   after the update: until the hidden chats pin is used once, theirs stay
-  as they were. if a forensic copy is the fear, the wipe pin is the tool,
-  and not having the data on the phone at all is better still.
+  as they were, and the decoy's own until the decoy pin is used. older
+  plain copies can also linger in the phone's storage after that. if a
+  forensic copy is the fear, the wipe pin is the tool, and not having the
+  data on the phone at all is better still.
 - what the everyday side keeps to reach a hidden chat while it is shut. the
   card it keeps for each one, readable with the everyday database key, holds
   the keys and addresses needed to receive, and whether the chat blocks
