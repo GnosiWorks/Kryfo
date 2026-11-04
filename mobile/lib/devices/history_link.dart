@@ -80,12 +80,12 @@ DynamicLibrary _halo() => Platform.isAndroid
     : DynamicLibrary.process();
 
 Map<String, dynamic> _call(String fn, String op, Map<String, Object?> args) {
-  final run = _halo().lookupFunction<_JsonC, _Json>(fn);
+  final fnc = _halo().lookupFunction<_JsonC, _Json>(fn);
   final o = op.toNativeUtf8();
   final a = jsonEncode(args).toNativeUtf8();
   try {
     // answers carry keys: zeroed once read
-    return jsonDecode(engineTakeSecret(run(o, a))) as Map<String, dynamic>;
+    return jsonDecode(engineTakeSecret(fnc(o, a))) as Map<String, dynamic>;
   } finally {
     calloc.free(o);
     a.cast<Uint8>().asTypedList(a.length).fillRange(0, a.length, 0);
