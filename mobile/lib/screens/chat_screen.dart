@@ -102,6 +102,11 @@ import '../widgets/kryfo_avatar.dart';
 import '../main.dart'
     show
         typeLeaf,
+        linkedRole,
+        deviceReaches,
+        deviceSealOutcome,
+        ownClearLine,
+        ownBlockLine,
         engine,
         sendFirstContactNoted,
         AppStatePqRestart,
@@ -198,7 +203,7 @@ import '../widgets/video_viewer.dart';
 import '../widgets/photo_viewer.dart';
 import '../widgets/swap.dart';
 import '../widgets/typing_mark.dart';
-import '../typing.dart' show composerEdit;
+import '../typing.dart' show capsOfText, composerEdit, kCapDevices;
 import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
 import '../back_on_top.dart';
@@ -1001,6 +1006,9 @@ class _ChatScreenState extends State<ChatScreen>
   // the bottom bar is drawn once blocked and request state are read, the
   // first one with no transition
   bool _barKnown = false;
+  // on a linked device, a chat it cannot answer: what the bar says instead
+  // of the composer (an older Kryfo, a chat with screenshots blocked)
+  String? _phoneOnly;
   bool _barSettled = false;
   bool _muted = false;
   bool _verified = false;
@@ -1031,6 +1039,35 @@ class _ChatScreenState extends State<ChatScreen>
 
   // what this chat shows about their key, read again whenever a key changes
   // or a mark is set somewhere else
+  // a linked device answers only a contact whose app reads its copies, and
+  // never a chat with screenshots blocked: the phone does
+  Future<void> _readPhoneOnly() async {
+    if (!linkedRole) return;
+    try {
+      final row = await session.getContact(widget.peerHaloId);
+      if (row == null || !mounted) return;
+      final String? line;
+      if (row['shots_on'] == 1) {
+        line = l10n.historyChatStaysShots;
+      } else if (!capsOfText(row['caps'] as String?).contains(kCapDevices)) {
+        line = l10n.chatDeviceReplyFromPhone(
+          _nickname ?? (row['nickname'] as String?) ?? widget.peerHaloId,
+        );
+      } else if (!await deviceReaches(widget.peerHaloId)) {
+        // none of their devices wrote to this one yet: the phone answers
+        line = l10n.chatDeviceReplyFromPhoneForNow(
+          _nickname ?? (row['nickname'] as String?) ?? widget.peerHaloId,
+        );
+      } else {
+        line = null;
+      }
+      if (!mounted) return;
+      if (line != _phoneOnly) setState(() => _phoneOnly = line);
+    } catch (e) {
+      dlog('chat: phone-only not read (${e.runtimeType})');
+    }
+  }
+
   Future<void> _readKeyState() async {
     if (_isDev) return;
     if (_keyReading) {
@@ -1174,6 +1211,10 @@ class _ChatScreenState extends State<ChatScreen>
   bool get _incomingRequest => !_accepted && _recvCount > 0 && !widget.support;
   // a reaction says this phone read it: none in a request or a block
   bool get _canReact => !_blocked && !_incomingRequest;
+  // a link in a request is plain words on both sides: nothing to tap open,
+  // no card under it
+  bool get _plainLinks =>
+      !_isDev && (_requestPending || (!_accepted && _recvCount > 0));
   // someone added here who knows nothing of it: nothing went to them and
   // nothing came (anything that came marks them engaged), so they hear of
   // this phone only with a first message
@@ -1461,6 +1502,7 @@ class _ChatScreenState extends State<ChatScreen>
       }),
       // a held chat never shows the composer first
       _readKeyState(),
+      _readPhoneOnly(),
     ];
     unawaited(_readAckLost());
     // the bottom bar waits for these, so a blocked chat or a request never
@@ -2371,6 +2413,7 @@ class _ChatScreenState extends State<ChatScreen>
                             album: album,
                             translation: _translation,
                             transcripts: _transcripts,
+                            plainLinks: _plainLinks,
                           ),
                         ),
                         builder: (_, t, child) => Transform.scale(
@@ -3607,9 +3650,16 @@ class _ChatScreenState extends State<ChatScreen>
         cipher = sealed.cipher;
         sealedOn = sealed.ident;
       } catch (e) {
+        // a linked device: its copies went from here, or its phone answers
+        final out = deviceSealOutcome(e);
+        if (out == 'ok') {
+          await _finishTextSend(msg, 'ok');
+          return;
+        }
         if (!mounted) return;
         // waiting on their card: still going, as the first send has it
         if (e is StartingAfresh || e is KeyHeld) return;
+        if (out != null) unawaited(_readPhoneOnly());
         setState(() {
           msg.sending = false;
           msg.failed = true;
@@ -4826,7 +4876,11 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _addPreview() async {
     final url = firstUrl(_msgCtrl.text);
     // a quiet session fetches nothing: what is typed there stays here
-    if (url == null || _previewBusy || sessionQuiet || appState.everydayHeld) {
+    if (url == null ||
+        _previewBusy ||
+        sessionQuiet ||
+        appState.everydayHeld ||
+        _plainLinks) {
       return;
     }
     setState(() => _previewBusy = true);
@@ -5032,7 +5086,15 @@ class _ChatScreenState extends State<ChatScreen>
           gate.complete();
         }
       } catch (e) {
+        // a linked device: its copies went from here, or its phone answers
+        final out = deviceSealOutcome(e);
+        if (out == 'ok') {
+          mounted ? setState(() => sealing(false)) : sealing(false);
+          await _finishTextSend(msg, 'ok');
+          return;
+        }
         if (!mounted) return;
+        if (out != null) unawaited(_readPhoneOnly());
         setState(() {
           sealing(false);
           // one waiting on their card after a restore is no broken session
@@ -5044,7 +5106,7 @@ class _ChatScreenState extends State<ChatScreen>
           if (slot) _sentCount--;
           if (devKeyFailed(e)) {
             _devKeyFailed = true;
-          } else {
+          } else if (out == null) {
             _status = l10n.chatNoSignalSessionRe;
           }
         });
@@ -5546,6 +5608,7 @@ class _ChatScreenState extends State<ChatScreen>
           quotedSticker: quotedSticker,
           linkTitle: _linkPreview(m)?['title'],
           linkBySender: _linkPreview(m)?['by'] == 'sender',
+          plainLinks: _plainLinks,
           firstInGroup: firstInGroup,
           lastInGroup: lastInGroup,
           revealed: m.msgUid != null && m.msgUid == _revealedUid,
@@ -6170,7 +6233,7 @@ class _ChatScreenState extends State<ChatScreen>
     final confirm = await showConfirmSheet(
       context,
       title: l10n.chatClearThisConversation,
-      line: l10n.chatEveryMessageHereIsShown,
+      line: ownClearLine(group: false),
       yes: l10n.chatClear,
       keep: l10n.commonCancel,
     );
@@ -6221,7 +6284,7 @@ class _ChatScreenState extends State<ChatScreen>
     final confirm = await showConfirmSheet(
       context,
       title: l10n.chatBlockThisContact,
-      line: l10n.chatTheirMessagesStopArriving,
+      line: ownBlockLine(chat: true),
       yes: l10n.commonBlock,
       keep: l10n.commonCancel,
     );
@@ -7104,6 +7167,8 @@ class _ChatScreenState extends State<ChatScreen>
                         ? 'bar_request'
                         : _requestLocked
                         ? 'bar_locked'
+                        : _phoneOnly != null
+                        ? 'bar_phone_only'
                         : _keyHeld && !_isDev
                         ? 'bar_held'
                         : 'bar_composer',
@@ -7134,6 +7199,11 @@ class _ChatScreenState extends State<ChatScreen>
                         )
                       : _requestLocked
                       ? _RequestLockBar(line: _isDev ? l10n.devLockLine : null)
+                      : _phoneOnly != null
+                      ? _RequestLockBar(
+                          line: _phoneOnly,
+                          icon: Icons.smartphone_outlined,
+                        )
                       : _keyHeld && !_isDev
                       ? KeyHeldCard(
                           peerName: _nickname ?? widget.peerHaloId,
@@ -7152,7 +7222,11 @@ class _ChatScreenState extends State<ChatScreen>
                               // over tor or not at all, so without it there is
                               // nothing to offer. never in a quiet session
                               builder: (_, v, _) => PreviewStrip(
-                                url: _accepted && !sessionQuiet && _torUp
+                                url:
+                                    _accepted &&
+                                        !_plainLinks &&
+                                        !sessionQuiet &&
+                                        _torUp
                                     ? firstUrl(v.text)
                                     : null,
                                 pending: _pendingPreview,
@@ -8183,6 +8257,8 @@ class _Bubble extends StatelessWidget {
   // a link in the text: the title the sender shipped, if any
   final String? linkTitle;
   final bool linkBySender;
+  // a request's links: shown as the words they are, never tappable
+  final bool plainLinks;
   // a sticker row: the chat's budget, its place in it, and its flight
   final StickerBudget? stickers;
   final int stickerOrder;
@@ -8228,6 +8304,7 @@ class _Bubble extends StatelessWidget {
     this.onReveal,
     this.linkTitle,
     this.linkBySender = false,
+    this.plainLinks = false,
     this.firstInGroup = true,
     this.lastInGroup = true,
     this.unconfirmed = false,
@@ -8244,6 +8321,10 @@ class _Bubble extends StatelessWidget {
             color: (isOut && !image) ? HaloColors.onAmber : HaloColors.text,
             height: 1.4,
           );
+    if (query.isEmpty && plainLinks) {
+      final t = words ?? msg.text;
+      return Text(t, style: base, textDirection: writtenDir(t));
+    }
     if (query.isEmpty) {
       return KryfoLinkText(
         text: words ?? msg.text,
@@ -8852,7 +8933,8 @@ class _Bubble extends StatelessWidget {
                                                 ),
                                               ),
                                             ),
-                                          if (msg.url case final u?) ...[
+                                          if (msg.url case final u?
+                                              when !plainLinks) ...[
                                             const SizedBox(height: 6),
                                             LinkStub(
                                               url: u,
@@ -8861,7 +8943,8 @@ class _Bubble extends StatelessWidget {
                                               bySender: linkBySender,
                                             ),
                                           ],
-                                          if (msg.place case final p?) ...[
+                                          if (msg.place case final p?
+                                              when !plainLinks) ...[
                                             const SizedBox(height: 6),
                                             PlaceStub(place: p, isOut: isOut),
                                           ],

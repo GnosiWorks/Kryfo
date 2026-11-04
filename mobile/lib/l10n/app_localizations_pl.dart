@@ -10324,11 +10324,10 @@ class AppLocalizationsPl extends AppLocalizations {
       'Wszystkie twoje wiadomości, ze zdjęciami i filmami z ostatnich 30 dni.';
 
   @override
-  String get devicesHistoryNone => 'Zacznij bez historii';
+  String get devicesHistoryNone => 'Tylko kontakty i grupy';
 
   @override
-  String get devicesHistoryNoneHint =>
-      'Na urządzenie trafiają tylko nowe wiadomości.';
+  String get devicesHistoryNoneHint => 'Przejdą bez żadnych wiadomości.';
 
   @override
   String get devicesSkipMedia => 'Pomiń zdjęcia i filmy';
@@ -10916,6 +10915,28 @@ class AppLocalizationsPl extends AppLocalizations {
       'Ten czat zostaje na twoim telefonie, bo zrzuty ekranu są w nim zablokowane.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name używa starszej wersji Kryfo. Odpowiedz z telefonu.';
+  }
+
+  @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'Na razie odpowiadaj $name z telefonu.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'Każda wiadomość stąd zostanie usunięta tylko z tego komputera. Twój telefon je zachowa.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'Wszystkie wiadomości i kontakt znikną tylko z tego komputera. Twój telefon zachowa czat.';
+
+  @override
+  String get linkedBlockHereOnly =>
+      'Wiadomości od tej osoby przestają docierać na ten komputer. Nie jest o tym informowana. Zablokuj ją na telefonie, aby przestały docierać także tam.';
+
+  @override
   String get historyCopyTitle => 'Historia czatów';
 
   @override
@@ -10961,7 +10982,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get historyCopyRowsLine =>
-      'Od teraz nowe wiadomości pojawiają się na urządzeniu.';
+      'Dotarły bez żadnych wiadomości. Nowe wiadomości pojawiają się na urządzeniu od teraz.';
 
   @override
   String get historyCopyGaps => 'Dotarła większość twoich czatów';

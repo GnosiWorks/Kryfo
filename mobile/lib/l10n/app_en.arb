@@ -12695,11 +12695,11 @@
   "@devicesHistoryCopyHint": {
     "description": "screens/linked_devices_screen.dart: under the first history choice"
   },
-  "devicesHistoryNone": "Start with no history",
+  "devicesHistoryNone": "Contacts and groups only",
   "@devicesHistoryNone": {
     "description": "screens/linked_devices_screen.dart: the second history choice"
   },
-  "devicesHistoryNoneHint": "Only new messages reach the device.",
+  "devicesHistoryNoneHint": "They come over without any messages.",
   "@devicesHistoryNoneHint": {
     "description": "screens/linked_devices_screen.dart: under the second history choice"
   },
@@ -13413,6 +13413,36 @@
   "@historyChatStaysShots": {
     "description": "devices/history_import.dart: on a newly linked device, for a chat that stayed on the phone because screenshot blocking is on in it"
   },
+  "chatDeviceReplyFromPhone": "{name} uses an older Kryfo. Reply from your phone.",
+  "@chatDeviceReplyFromPhone": {
+    "description": "screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact on an older Kryfo, whose messages come through the phone",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatDeviceReplyFromPhoneForNow": "Reply to {name} from your phone for now.",
+  "@chatDeviceReplyFromPhoneForNow": {
+    "description": "screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact none of whose devices has written to this one yet, whose messages go from the phone for now",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "linkedClearHereOnly": "Every message here is erased from this computer only. Your phone keeps them.",
+  "@linkedClearHereOnly": {
+    "description": "screens/chat_screen.dart, screens/group_info_screen.dart: on a linked device, the clear confirm: a clear there stays on that device"
+  },
+  "linkedDeleteHereOnly": "Every message and the contact go from this computer only. Your phone keeps the chat.",
+  "@linkedDeleteHereOnly": {
+    "description": "screens/contact_screen.dart, screens/home_screen.dart: on a linked device, the delete confirm: a deleted chat goes from that device alone"
+  },
+  "linkedBlockHereOnly": "Their messages stop arriving on this computer. They are not told. Block them on your phone to stop them there too.",
+  "@linkedBlockHereOnly": {
+    "description": "screens/chat_screen.dart, screens/contact_screen.dart: on a linked device, the block confirm: a block there stays on that device, the phone keeps its own"
+  },
   "historyCopyTitle": "Chat history",
   "@historyCopyTitle": {
     "description": "screens/history_copy_screen.dart: the page bar of the history copy"
@@ -13470,7 +13500,7 @@
   "@historyCopyRows": {
     "description": "screens/history_copy_screen.dart: no history chosen: chats and contacts came, no old messages"
   },
-  "historyCopyRowsLine": "New messages show on the device from now on.",
+  "historyCopyRowsLine": "They came without any messages. New messages show on the device from now on.",
   "@historyCopyRowsLine": {
     "description": "screens/history_copy_screen.dart: under the no history title"
   },

@@ -10303,11 +10303,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Все ваши сообщения, а также фото и видео за последние 30 дней.';
 
   @override
-  String get devicesHistoryNone => 'Начать без истории';
+  String get devicesHistoryNone => 'Только контакты и группы';
 
   @override
-  String get devicesHistoryNoneHint =>
-      'На устройство придут только новые сообщения.';
+  String get devicesHistoryNoneHint => 'Они переносятся без сообщений.';
 
   @override
   String get devicesSkipMedia => 'Без фото и видео';
@@ -10885,6 +10884,28 @@ class AppLocalizationsRu extends AppLocalizations {
       'Этот чат остаётся на твоём телефоне, потому что в нём запрещены скриншоты.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name пользуется более старой версией Kryfo. Ответь с телефона.';
+  }
+
+  @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'Пока отвечай $name с телефона.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'Все сообщения здесь будут стёрты только с этого компьютера. Телефон их сохранит.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'Все сообщения и контакт исчезнут только с этого компьютера. Телефон сохранит чат.';
+
+  @override
+  String get linkedBlockHereOnly =>
+      'Сообщения перестанут приходить на этот компьютер. Собеседнику об этом не сообщат. Заблокируйте его на телефоне, чтобы они не приходили и там.';
+
+  @override
   String get historyCopyTitle => 'История чатов';
 
   @override
@@ -10930,7 +10951,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get historyCopyRowsLine =>
-      'Теперь новые сообщения будут появляться на устройстве.';
+      'Они перенесены без сообщений. Новые сообщения появляются на устройстве с этого момента.';
 
   @override
   String get historyCopyGaps => 'Почти все чаты перенесены';

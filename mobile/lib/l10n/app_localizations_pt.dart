@@ -10211,11 +10211,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Todas as suas mensagens, com fotos e vídeos dos últimos 30 dias.';
 
   @override
-  String get devicesHistoryNone => 'Começar sem histórico';
+  String get devicesHistoryNone => 'Só contatos e grupos';
 
   @override
-  String get devicesHistoryNoneHint =>
-      'Só as mensagens novas chegam ao aparelho.';
+  String get devicesHistoryNoneHint => 'Eles vêm sem nenhuma mensagem.';
 
   @override
   String get devicesSkipMedia => 'Pular fotos e vídeos';
@@ -10790,6 +10789,28 @@ class AppLocalizationsPt extends AppLocalizations {
       'Esta conversa fica no seu celular porque as capturas de tela estão bloqueadas nela.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name usa uma versão mais antiga do Kryfo. Responda pelo seu celular.';
+  }
+
+  @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'Por enquanto, responda a $name pelo seu celular.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'Todas as mensagens daqui são apagadas só deste computador. Seu celular as mantém.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'Todas as mensagens e o contato saem só deste computador. Seu celular mantém a conversa.';
+
+  @override
+  String get linkedBlockHereOnly =>
+      'As mensagens dessa pessoa param de chegar a este computador. Ela não fica sabendo. Bloqueie no seu celular para que parem lá também.';
+
+  @override
   String get historyCopyTitle => 'Histórico de conversas';
 
   @override
@@ -10835,7 +10856,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get historyCopyRowsLine =>
-      'De agora em diante, as mensagens novas aparecem no aparelho.';
+      'Eles vieram sem nenhuma mensagem. As novas mensagens aparecem no aparelho a partir de agora.';
 
   @override
   String get historyCopyGaps => 'Quase todas as suas conversas chegaram';

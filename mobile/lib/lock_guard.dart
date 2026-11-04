@@ -67,9 +67,14 @@ class LockGuard {
     _anyWaiting.clear();
   }
 
+  /// told each time a person lifted the lock (a linked device's daily
+  /// word to its phone)
+  void Function()? onLifted;
+
   // the lock lifted: what waited starts now, in the order it came
   void lifted() {
     _liftedAny();
+    onLifted?.call();
     for (final w in _waiting) {
       w.complete();
     }

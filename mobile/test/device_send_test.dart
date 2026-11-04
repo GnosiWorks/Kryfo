@@ -21,6 +21,7 @@ import 'package:kryfo/device_sessions.dart';
 import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/devices/device_send.dart';
 import 'package:kryfo/devices/device_state.dart';
+import 'package:kryfo/devices/own_sync.dart' show ownHash;
 import 'package:kryfo/identities.dart';
 import 'package:kryfo/main.dart'
     show
@@ -240,7 +241,7 @@ void main() {
       bool hasDesk,
     })
   >
-  world({bool desk = true}) async {
+  world({bool desk = true, bool bobSessions = true}) async {
     final lib = shim!;
     final db = await open();
     final anaKp = testKeyPair();
@@ -281,7 +282,7 @@ void main() {
       lsBundleOf(ana.lib, await cat.makeBundleB64()),
     );
     final anaDs = DeviceSessions(ana);
-    for (final d in bobs) {
+    for (final d in bobSessions ? bobs : const <_Dev>[]) {
       await anaDs.build(
         'bob-quiet-river',
         d.id,
@@ -499,21 +500,72 @@ void main() {
       final j = _json(text);
       expect(j['as'], devHex(seed));
       if (own) {
-        expect(j['u'], 'u-one');
+        // job 8: the own copy's uid names its frame, its chat by kryfo id
+        expect(j['u'], 'oc:${ownHash(frame)}');
         expect((j['oc'] as Map)['f'], frame);
-        expect((j['oc'] as Map)['c'], devHex(w.bob.identity.public));
+        expect((j['oc'] as Map)['c'], 'p:${w.toBob.peer}');
       } else {
         expect(j['u'], 'u-one');
         expect(j['m'], 'hello');
       }
     }
-    // owed to bob's devices until their receipts; the desk's went
+    // owed to bob's devices until their receipts, and the desk's own copy
+    // until the desk answers it (job 8)
     final out = await w.db.query('dev_out', orderBy: 'device');
-    expect([for (final o in out) o['device']], [5, 17]);
+    expect([for (final o in out) o['device']], [5, 9, 17]);
     expect({for (final o in out) o['state']}, {'sent'});
+    // L1: the desk's row is kept under the uid the desk answers, and that
+    // answer ends it
+    expect(out[1]['uid'], 'oc:${ownHash(frame)}');
+    await w.send.receipt(
+      kMainIdent,
+      devHex(w.ana.identity.public),
+      9,
+      'oc:${ownHash(frame)}',
+    );
+    expect(
+      [
+        for (final o in await w.db.query('dev_out', orderBy: 'device'))
+          o['device'],
+      ],
+      [5, 17],
+    );
     // each counts from its hand-off as unanswered
     final quiet = await w.db.query('dev_quiet');
     expect({for (final q in quiet) q['device']}, {5, 17, 9});
+  });
+
+  test('M5 a send that must reach them keeps nothing when no device of '
+      'theirs holds a session with this one, the own copy included', () async {
+    if (skip()) return;
+    linkedDevicesForTest = true;
+    final w = await world(bobSessions: false);
+    expect(await w.send.reaches(w.me, w.toBob), isFalse);
+    final r = await w.send.burst(
+      w.me,
+      w.toBob,
+      frame,
+      force: true,
+      mustReach: true,
+    );
+    expect(r?.copies ?? 0, 0);
+    expect(await w.db.query('dev_out'), isEmpty);
+  });
+
+  test('M5 with a session of one of their devices it goes', () async {
+    if (skip()) return;
+    linkedDevicesForTest = true;
+    final w2 = await world();
+    expect(await w2.send.reaches(w2.me, w2.toBob), isTrue);
+    final r2 = await w2.send.burst(
+      w2.me,
+      w2.toBob,
+      frame,
+      force: true,
+      mustReach: true,
+    );
+    expect(r2!.copies, greaterThan(0));
+    await settle(w2.wire, r2.copies);
   });
 
   test('a contact without the devices word and no device of mine get '

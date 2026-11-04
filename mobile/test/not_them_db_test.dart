@@ -172,10 +172,14 @@ void main() {
         r['name'] as String,
     ];
     for (final t in tables) {
-      // my own linked devices have uids of their own, never a message's
+      // my own linked devices have uids of their own, never a message's;
+      // own sync keeps my own deleted uids and what it told my devices (a
+      // chat gone goes from own_told on its next pass, as a 'gone')
       if (_apart.contains(t) ||
           t.startsWith('dev_') ||
           t.startsWith('own_device') ||
+          t == 'own_told' ||
+          t == 'own_gone' ||
           t.contains('fts')) {
         continue;
       }

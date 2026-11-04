@@ -10245,11 +10245,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Alle deine Nachrichten, mit Fotos und Videos der letzten 30 Tage.';
 
   @override
-  String get devicesHistoryNone => 'Ohne Verlauf beginnen';
+  String get devicesHistoryNone => 'Nur Kontakte und Gruppen';
 
   @override
-  String get devicesHistoryNoneHint =>
-      'Nur neue Nachrichten kommen auf das Gerät.';
+  String get devicesHistoryNoneHint => 'Sie kommen ohne Nachrichten mit.';
 
   @override
   String get devicesSkipMedia => 'Fotos und Videos auslassen';
@@ -10832,6 +10831,28 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dieser Chat bleibt auf deinem Handy, weil Screenshots darin blockiert sind.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name nutzt ein älteres Kryfo. Antworte von deinem Handy aus.';
+  }
+
+  @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'Antworte $name vorerst von deinem Handy aus.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'Jede Nachricht hier wird nur von diesem Computer gelöscht. Dein Handy behält sie.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'Alle Nachrichten und der Kontakt verschwinden nur von diesem Computer. Dein Handy behält den Chat.';
+
+  @override
+  String get linkedBlockHereOnly =>
+      'Die Nachrichten der Person kommen auf diesem Computer nicht mehr an. Sie erfährt nichts davon. Blockiere sie auf deinem Handy, damit sie auch dort aufhören.';
+
+  @override
   String get historyCopyTitle => 'Chatverlauf';
 
   @override
@@ -10877,7 +10898,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get historyCopyRowsLine =>
-      'Neue Nachrichten erscheinen ab jetzt auf dem Gerät.';
+      'Sie kamen ohne Nachrichten. Neue Nachrichten erscheinen ab jetzt auf dem Gerät.';
 
   @override
   String get historyCopyGaps => 'Die meisten deiner Chats sind da';
