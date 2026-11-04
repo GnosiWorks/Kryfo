@@ -14,8 +14,11 @@ import '../widgets/swap.dart' show RiseSwap;
 import '../widgets/unfold.dart';
 
 class DeskRunSection extends StatefulWidget {
-  const DeskRunSection({super.key, required this.run});
+  const DeskRunSection({super.key, required this.run, this.edge = 16});
   final DesktopRunView run;
+
+  /// the room on each side
+  final double edge;
 
   @override
   State<DeskRunSection> createState() => _DeskRunSectionState();
@@ -105,7 +108,7 @@ class _DeskRunSectionState extends State<DeskRunSection> {
         ? l10n.desktopStartHeldOff
         : null;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      padding: EdgeInsets.fromLTRB(widget.edge, 4, widget.edge, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

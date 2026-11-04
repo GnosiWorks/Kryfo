@@ -27,6 +27,7 @@ import '../widgets/sheet_handle.dart';
 import '../widgets/stagger_in.dart';
 import 'chat_screen.dart';
 import 'home_screen.dart' show ContactPreview;
+import '../wide/wide_pane.dart' show deskPush;
 
 // a key is pinned and this is not the developer's own phone. a decoy is
 // never his
@@ -63,9 +64,13 @@ Future<void> openDevChat(
   String chatId, {
   String? initialText,
   String? jumpToUid,
-}) => Navigator.of(
-  context,
-).push(devChatRoute(chatId, initialText: initialText, jumpToUid: jumpToUid));
+}) =>
+    // on a computer it opens in the pane, as any chat from the list
+    deskPush(
+      context,
+      devChatRoute(chatId, initialText: initialText, jumpToUid: jumpToUid),
+      id: chatId,
+    );
 
 // before the first send the flags are the chat's own row, after it its
 // contact row. either way home reads them back

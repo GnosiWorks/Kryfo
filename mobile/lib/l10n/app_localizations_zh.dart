@@ -5201,9 +5201,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsVersion => '版本';
 
   @override
-  String get settings030Alpha => '0.5.3 · alpha 版';
-
-  @override
   String get settingsReportAnIssue => '报告问题';
 
   @override
@@ -10459,6 +10456,40 @@ class AppLocalizationsZh extends AppLocalizations {
   String restoreOlderMany(Object first, Object second, int count) {
     return '$first、$second 和另外 $count 人使用的是旧版 Kryfo。在他们更新前，你和他们的聊天会暂停。';
   }
+
+  @override
+  String settingsVersionAlpha(String version) {
+    return '$version · alpha 版';
+  }
+
+  @override
+  String get settingsShotsNotHereYet => '这台电脑上暂不支持';
+
+  @override
+  String get settingsDeskInTray => '在系统托盘中运行';
+
+  @override
+  String get settingsDeskWhileOpen => 'Kryfo 打开期间';
+
+  @override
+  String get onboardingDeskRunTitle => 'Kryfo 一直*在线*。';
+
+  @override
+  String get onboardingDeskRunLead =>
+      '关闭窗口后，Kryfo 在系统托盘中等候，消息照常到达。之后可以在“设置”的“通知”里更改这两项。';
+
+  @override
+  String get savedLongPressAnyMessageDesk => '右键点击任意消息，选“保存”，就能把它留在这里。';
+
+  @override
+  String get chatFailedTapToRetryDesk => '失败 · 单击重试';
+
+  @override
+  String get groupChatTapToRetryDesk => '! 单击重试';
+
+  @override
+  String get modesFastLineDesk =>
+      '不经过 Tor，消息到得更快，也更省电。我们的服务器只在你连接期间看到你的 IP 地址，从不记录或保存。你的联系人永远看不到它。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -15660,9 +15691,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsVersion => '版本';
 
   @override
-  String get settings030Alpha => '0.5.3 · alpha 版';
-
-  @override
   String get settingsReportAnIssue => '回報問題';
 
   @override
@@ -20802,4 +20830,38 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String restoreOlderMany(Object first, Object second, int count) {
     return '$first、$second 和另外 $count 人使用的是舊版 Kryfo。在他們更新前，你和他們的聊天會暫停。';
   }
+
+  @override
+  String settingsVersionAlpha(String version) {
+    return '$version · alpha 版';
+  }
+
+  @override
+  String get settingsShotsNotHereYet => '這台電腦上暫不支援';
+
+  @override
+  String get settingsDeskInTray => '在系統匣中執行';
+
+  @override
+  String get settingsDeskWhileOpen => 'Kryfo 開啟期間';
+
+  @override
+  String get onboardingDeskRunTitle => 'Kryfo 一直*在線*。';
+
+  @override
+  String get onboardingDeskRunLead =>
+      '關閉視窗後，Kryfo 在系統匣中等候，訊息照常送達。之後可以在「設定」的「通知」裡變更這兩項。';
+
+  @override
+  String get savedLongPressAnyMessageDesk => '在任何訊息上按右鍵，再選「儲存」，就能收藏在這裡。';
+
+  @override
+  String get chatFailedTapToRetryDesk => '失敗 · 按一下重試';
+
+  @override
+  String get groupChatTapToRetryDesk => '! 按一下重試';
+
+  @override
+  String get modesFastLineDesk =>
+      '不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。你的聯絡人永遠看不到它。';
 }

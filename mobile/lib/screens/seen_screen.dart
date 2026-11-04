@@ -13,6 +13,7 @@ import '../widgets/ease_size.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import 'dev_about_sheet.dart' show devChatOffered;
+import '../wide/read_width.dart' show DeskPage;
 
 class SeenScreen extends StatefulWidget {
   const SeenScreen({super.key});
@@ -38,45 +39,47 @@ class _SeenScreenState extends State<SeenScreen> {
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          4,
-          20,
-          44 + MediaQuery.paddingOf(context).bottom,
+      body: DeskPage(
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            4,
+            20,
+            44 + MediaQuery.paddingOf(context).bottom,
+          ),
+          children: staggerAll([
+            Text(
+              l10n.seenEveryMessengerClaimsPrivacy,
+              style: HaloType.mono(size: 12, color: HaloColors.text2),
+            ),
+            const SizedBox(height: 22),
+            _Header(active: col, cols: cols),
+            for (final (i, row) in _rows.indexed)
+              _RowTile(
+                row: row,
+                active: col,
+                cols: cols,
+                open: _open == i,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _open = _open == i ? null : i);
+                },
+              ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: HaloColors.surface2,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: HaloColors.line),
+              ),
+              child: Text(
+                l10n.seenHonestAboutTheLastShown,
+                style: HaloType.mono(size: 11.5, color: HaloColors.text2),
+              ),
+            ),
+          ]),
         ),
-        children: staggerAll([
-          Text(
-            l10n.seenEveryMessengerClaimsPrivacy,
-            style: HaloType.mono(size: 12, color: HaloColors.text2),
-          ),
-          const SizedBox(height: 22),
-          _Header(active: col, cols: cols),
-          for (final (i, row) in _rows.indexed)
-            _RowTile(
-              row: row,
-              active: col,
-              cols: cols,
-              open: _open == i,
-              onTap: () {
-                HapticFeedback.selectionClick();
-                setState(() => _open = _open == i ? null : i);
-              },
-            ),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: HaloColors.surface2,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: HaloColors.line),
-            ),
-            child: Text(
-              l10n.seenHonestAboutTheLastShown,
-              style: HaloType.mono(size: 11.5, color: HaloColors.text2),
-            ),
-          ),
-        ]),
       ),
     );
   }

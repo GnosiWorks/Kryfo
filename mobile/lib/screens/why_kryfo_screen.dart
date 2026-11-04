@@ -4,6 +4,7 @@ import '../theme.dart';
 import '../widgets/halo_rows.dart' show HaloSection;
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 class WhyKryfoScreen extends StatelessWidget {
   const WhyKryfoScreen({super.key});
@@ -21,61 +22,63 @@ class WhyKryfoScreen extends StatelessWidget {
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: staggerAll([
-              Text(
-                l10n.whyKryfoKryfoKreeFoGreek,
-                style: HaloType.serif(
-                  size: 22,
-                  italic: true,
-                  color: HaloColors.text,
+      body: DeskPage(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: staggerAll([
+                Text(
+                  l10n.whyKryfoKryfoKreeFoGreek,
+                  style: HaloType.serif(
+                    size: 22,
+                    italic: true,
+                    color: HaloColors.text,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 28),
-              _principle(
-                Icons.route_outlined,
-                l10n.whyKryfoRoutedThroughTor,
-                l10n.whyKryfoByDefaultEveryMessage,
-              ),
-              _principle(
-                Icons.lock_outline,
-                l10n.whyKryfoEndToEndEncrypted,
-                l10n.whyKryfoMessagesAreSealedWith,
-              ),
-              _principle(
-                Icons.cloud_off_outlined,
-                l10n.whyKryfoNoServersHoldingYour,
-                l10n.whyKryfoNoAccountNoPhoneShown,
-              ),
-              _principle(
-                Icons.visibility_off_outlined,
-                l10n.whyKryfoNothingLeaks,
-                l10n.whyKryfoNoReceiptsTyping,
-              ),
-              _principle(
-                Icons.verified_user_outlined,
-                l10n.whyKryfoVerifyItIsReally,
-                l10n.whyKryfoCompareASafetyNumber,
-              ),
-              const SizedBox(height: 32),
-              Divider(
-                color: HaloColors.text3.withValues(alpha: 0.2),
-                height: 1,
-              ),
-              HaloSection(l10n.whyKryfoTheHonestPart, flush: true),
-              Text(
-                l10n.whyKryfoKryfoIsPreAlpha,
-                style: HaloType.sans(
-                  size: 13,
-                  color: HaloColors.text2,
-                  height: 1.5,
+                const SizedBox(height: 28),
+                _principle(
+                  Icons.route_outlined,
+                  l10n.whyKryfoRoutedThroughTor,
+                  l10n.whyKryfoByDefaultEveryMessage,
                 ),
-              ),
-            ]),
+                _principle(
+                  Icons.lock_outline,
+                  l10n.whyKryfoEndToEndEncrypted,
+                  l10n.whyKryfoMessagesAreSealedWith,
+                ),
+                _principle(
+                  Icons.cloud_off_outlined,
+                  l10n.whyKryfoNoServersHoldingYour,
+                  l10n.whyKryfoNoAccountNoPhoneShown,
+                ),
+                _principle(
+                  Icons.visibility_off_outlined,
+                  l10n.whyKryfoNothingLeaks,
+                  l10n.whyKryfoNoReceiptsTyping,
+                ),
+                _principle(
+                  Icons.verified_user_outlined,
+                  l10n.whyKryfoVerifyItIsReally,
+                  l10n.whyKryfoCompareASafetyNumber,
+                ),
+                const SizedBox(height: 32),
+                Divider(
+                  color: HaloColors.text3.withValues(alpha: 0.2),
+                  height: 1,
+                ),
+                HaloSection(l10n.whyKryfoTheHonestPart, flush: true),
+                Text(
+                  l10n.whyKryfoKryfoIsPreAlpha,
+                  style: HaloType.sans(
+                    size: 13,
+                    color: HaloColors.text2,
+                    height: 1.5,
+                  ),
+                ),
+              ]),
+            ),
           ),
         ),
       ),

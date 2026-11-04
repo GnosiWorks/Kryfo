@@ -332,6 +332,8 @@ class _HomeScreenState extends State<HomeScreen> {
               tabs: tabs,
               bar: bar,
               onSearch: () => deskPush(context, searchRoute(context)),
+              onAdd: widget.onAddContact,
+              onSettings: widget.onOpenSettingsDirect,
             )
           : Scaffold(
               backgroundColor: HaloColors.surface,
@@ -735,92 +737,97 @@ class _HomeHead extends StatelessWidget {
     required this.onSettings,
     required this.onSearch,
   });
+  // the three words and their label. the list beside a chat is narrower
+  // than a phone: there they take a line of their own under the buttons,
+  // at the phone's size
+  List<Widget> _name() => [
+    const SizedBox(height: 8),
+    Text(
+      l10n.homeYourKryfo,
+      style: HaloType.mono(size: 9.5, color: HaloColors.text2, letter: 0.14),
+    ),
+    const SizedBox(height: 3),
+    FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: AlignmentDirectional.centerStart,
+      child: Text(
+        haloId,
+        maxLines: 1,
+        softWrap: false,
+        style: HaloType.mono(
+          size: 20,
+          color: HaloColors.amberText,
+          weight: FontWeight.w700,
+          letter: 0.02,
+        ),
+      ),
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
+    final row = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // one line each, shrunk to fit rather than broken: a long
+              // weekday or month ("Donnerstag", "24. September") beside the
+              // buttons would split in the middle of the word
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  l10n.homeDateWeekday(weekday(now)),
+                  maxLines: 1,
+                  style: HaloType.serif(size: 26, weight: FontWeight.w400),
+                  // display type, capped: at 200% it goes one word per line
+                  // and pushes the whole list off screen
+                  textScaler: TextScaler.linear(
+                    MediaQuery.of(context).textScaler.scale(1).clamp(1.0, 1.15),
+                  ),
+                ),
+              ),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  dayMonthLong(now),
+                  maxLines: 1,
+                  style: HaloType.serif(
+                    size: 26,
+                    weight: FontWeight.w300,
+                    color: HaloColors.amberText,
+                    italic: true,
+                  ),
+                  textScaler: TextScaler.linear(
+                    MediaQuery.of(context).textScaler.scale(1).clamp(1.0, 1.15),
+                  ),
+                ),
+              ),
+              if (!onDesktop) ..._name(),
+            ],
+          ),
+        ),
+        // the rooms meet edge to edge: their margins make the gaps
+        // between the rounds
+        SearchDoor(onTap: onSearch),
+        _GearButton(onTap: onSettings),
+        _AddScanButton(onTap: onAdd),
+        const SizedBox(width: 12 - (kDoorBox - kDoorRound) / 2),
+        TorHalo(label: true),
+      ],
+    );
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // one line each, shrunk to fit rather than broken: a long
-                // weekday or month ("Donnerstag", "24. September") beside the
-                // buttons would split in the middle of the word
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Text(
-                    l10n.homeDateWeekday(weekday(now)),
-                    maxLines: 1,
-                    style: HaloType.serif(size: 26, weight: FontWeight.w400),
-                    // display type, capped: at 200% it goes one word per line
-                    // and pushes the whole list off screen
-                    textScaler: TextScaler.linear(
-                      MediaQuery.of(
-                        context,
-                      ).textScaler.scale(1).clamp(1.0, 1.15),
-                    ),
-                  ),
-                ),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Text(
-                    dayMonthLong(now),
-                    maxLines: 1,
-                    style: HaloType.serif(
-                      size: 26,
-                      weight: FontWeight.w300,
-                      color: HaloColors.amberText,
-                      italic: true,
-                    ),
-                    textScaler: TextScaler.linear(
-                      MediaQuery.of(
-                        context,
-                      ).textScaler.scale(1).clamp(1.0, 1.15),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.homeYourKryfo,
-                  style: HaloType.mono(
-                    size: 9.5,
-                    color: HaloColors.text2,
-                    letter: 0.14,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Text(
-                    haloId,
-                    maxLines: 1,
-                    softWrap: false,
-                    style: HaloType.mono(
-                      size: 20,
-                      color: HaloColors.amberText,
-                      weight: FontWeight.w700,
-                      letter: 0.02,
-                    ),
-                  ),
-                ),
-              ],
+      child: !onDesktop
+          ? row
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [row, ..._name()],
             ),
-          ),
-          // the rooms meet edge to edge: their margins make the gaps
-          // between the rounds
-          SearchDoor(onTap: onSearch),
-          _GearButton(onTap: onSettings),
-          _AddScanButton(onTap: onAdd),
-          const SizedBox(width: 12 - (kDoorBox - kDoorRound) / 2),
-          TorHalo(label: true),
-        ],
-      ),
     );
   }
 }
@@ -2458,8 +2465,9 @@ class _GroupRow extends StatelessWidget {
       type: MaterialType.transparency,
       child: InkWell(
         onTap: onTap,
-        // held: its menu, as a chat's
+        // held: its menu, as a chat's. a right click on a computer
         onLongPress: () => _groupMenu(context, g),
+        onSecondaryTap: onDesktop ? () => _groupMenu(context, g) : null,
         splashColor: HaloColors.amber.withValues(alpha: 0.10),
         highlightColor: HaloColors.amber.withValues(alpha: 0.05),
         child: Ink(
@@ -2947,6 +2955,8 @@ class _DevRowTile extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
+        // a right click on a computer opens the row's menu
+        onSecondaryTap: onDesktop ? onLongPress : null,
         splashColor: HaloColors.amber.withValues(alpha: 0.10),
         highlightColor: HaloColors.amber.withValues(alpha: 0.05),
         child: Ink(
@@ -3069,6 +3079,8 @@ class _Row extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
+        // a right click on a computer opens the row's menu
+        onSecondaryTap: onDesktop ? onLongPress : null,
         splashColor: HaloColors.amber.withValues(alpha: 0.10),
         highlightColor: HaloColors.amber.withValues(alpha: 0.05),
         // Ink, not Container: an unread row tints itself amber, and a Container

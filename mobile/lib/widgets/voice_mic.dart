@@ -13,6 +13,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../dlog.dart';
 import '../l10n/l10n.dart';
 import '../lock_guard.dart' show lockGuard;
@@ -852,7 +853,9 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
   @override
   Widget build(BuildContext context) {
     final on = widget.disguise || widget.disguiseLocked;
-    final reader = MediaQuery.maybeAccessibleNavigationOf(context) ?? false;
+    // a mouse click records at once on a computer, as on signal's desktop
+    final reader =
+        onDesktop || (MediaQuery.maybeAccessibleNavigationOf(context) ?? false);
     return Semantics(
       button: true,
       label: reader ? l10n.a11yRecordVoiceNote : l10n.chatHoldToRecord,
