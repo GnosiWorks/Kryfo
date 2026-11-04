@@ -7,6 +7,7 @@
 - you can pick a public @name while setting up, or skip it and stay unfindable.
 - typing indicator: in a 1:1 chat you see "Typing" under your contact's name and in the chat list while they write, and they see yours. it goes straight to them over tor, never through a relay, and only while you both have it on. it is on for everyone, also after the update, and off by itself while tor goes through a bridge or the chat is archived. turn it off under settings, privacy.
 - a universal apk with both arm builds in one file, on github and the site. it installs on every arm phone, so nobody has to know which one they need.
+- Kryfo in polish, the 17th language. thanks to [adrian: name as he wants it] for reviewing the translation.
 
 ### Changed
 - setup is shorter: five steps. your face is drawn from your name (change it in your profile), the route stays private (change it in settings), and the battery guide comes right after notifications.
