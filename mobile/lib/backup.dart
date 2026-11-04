@@ -48,7 +48,7 @@ import 'engine_strings.dart';
 import 'dart:typed_data';
 import 'backup_stream.dart';
 import 'dart:math';
-import 'restore_undo.dart' show noteRestoreLanded, pruneTaken;
+import 'restore_undo.dart' show pruneTaken;
 import 'l10n/l10n.dart';
 import 'desktop/desktop_mode.dart'
     show
@@ -442,8 +442,6 @@ Future<void> landV1Payload(
 // next start marks them, with when the file was made ([made]), and none is
 // sealed on again
 Future<void> _livesHereNow(Object? made) async {
-  // a timed copy from before now counts from then at the latest
-  await noteRestoreLanded();
   final prefs = await SharedPreferences.getInstance();
   await prefs.remove('moved.at');
   await prefs.setBool(kSessionsRestoredPref, true);

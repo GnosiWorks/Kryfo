@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/main.dart'
     show holdOutboxAfterRestore, holdRestoredOutbox, kNotSent;
 import 'package:kryfo/read_burn.dart' show burnCameAt;
+import 'package:kryfo/heal.dart' show kRestoreCutPref;
 import 'package:kryfo/restore_undo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -76,8 +77,9 @@ void main() {
 
     test('the landing counts sixteen days, and the pref stays', () async {
       SharedPreferences.setMockInitialValues({});
-      await noteRestoreLanded(nowMs: now);
       final prefs = await SharedPreferences.getInstance();
+      // the heal cut's pref, set as the restore lands
+      await prefs.setInt(kRestoreCutPref, now);
       expect(kRestoreLandedPref, 'restore.cut');
       expect(restoreLandedOf(prefs, nowMs: now + 15 * day), now);
       expect(restoreLandedOf(prefs, nowMs: now + 17 * day), isNull);

@@ -7,26 +7,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'dlog.dart';
+import 'heal.dart' show kRestoreCutPref;
 
 /// when the last restore landed, by this clock: a timed copy from before it
 /// counts from then at the latest, for as long as relays may hold such a
-/// copy. the key is review A's kRestoreCutPref (heal.dart), which its heal
-/// cut keeps for good: read here, never removed here
-const kRestoreLandedPref = 'restore.cut';
+/// copy. the heal cut's own pref (heal.dart), which _livesHereNow writes and
+/// keeps for good: read here, never removed here
+const kRestoreLandedPref = kRestoreCutPref;
 const kRestoreLandedKeep = Duration(days: 16);
 
 /// [kRestoreLandedPref] as this start read it, null with no restore lately
 int? restoreLandedAt;
-
-/// a restore lands now. once review A's _livesHereNow writes
-/// kRestoreCutPref itself, this goes
-Future<void> noteRestoreLanded({int? nowMs}) async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setInt(
-    kRestoreLandedPref,
-    nowMs ?? DateTime.now().millisecondsSinceEpoch,
-  );
-}
 
 /// when the last restore landed, while it is recent: null once it is
 /// older than [kRestoreLandedKeep]. the pref itself stays
