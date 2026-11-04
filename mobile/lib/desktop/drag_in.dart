@@ -96,11 +96,15 @@ class _DragInZoneState extends State<DragInZone> {
         children: [
           widget.child,
           Positioned.fill(
+            // a screen reader hears the line only while files are held
             child: IgnorePointer(
-              child: AnimatedOpacity(
-                opacity: _over && _open ? 1 : 0,
-                duration: Duration(milliseconds: still ? 0 : 150),
-                child: const _DropShade(),
+              child: ExcludeSemantics(
+                excluding: !(_over && _open),
+                child: AnimatedOpacity(
+                  opacity: _over && _open ? 1 : 0,
+                  duration: Duration(milliseconds: still ? 0 : 150),
+                  child: const _DropShade(),
+                ),
               ),
             ),
           ),
