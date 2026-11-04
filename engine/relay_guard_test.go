@@ -1050,7 +1050,7 @@ func TestAPairLookupAtTheSwitchAsksAgainTheNewWay(t *testing.T) {
 	own := newRelayStandIn(t, 0)
 	own.reqDelay = 3 * time.Second
 	useStandIns(t, modeFast, socks, own)
-	_, pk, err := pairCodeKeys("482913")
+	_, pk, err := pairBoxKeys("48", 2950000)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1058,7 +1058,7 @@ func TestAPairLookupAtTheSwitchAsksAgainTheNewWay(t *testing.T) {
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
-		_, _, heard := pairCodeQuery(ctx, pk)
+		_, _, heard := pairCodeQuery(ctx, pairLane(pk), []string{pk})
 		res <- heard
 	}()
 	waitFor(t, "the lookup asked", 5*time.Second, func() bool {

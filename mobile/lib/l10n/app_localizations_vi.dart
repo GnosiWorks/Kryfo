@@ -4287,9 +4287,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pairCodeEnterOne => 'Nhập mã';
 
   @override
-  String get pairCodeSixDigits => 'Sáu chữ số';
-
-  @override
   String get pairCodeLooking => 'Đang tìm…';
 
   @override
@@ -4307,35 +4304,79 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pairCodeFailed => 'Không thành công. Hãy thử lại.';
 
   @override
-  String get pairCodeTypeTheSixDigits => 'Nhập sáu chữ số họ đọc cho bạn.';
-
-  @override
   String get pairCodeAddThem => 'Thêm họ';
-
-  @override
-  String get pairCodeUsedTwice =>
-      'Mã này đã được dùng hai lần. Hãy xin mã mới.';
 
   @override
   String get pairCodeKeyNumber => 'Số khóa';
 
   @override
-  String get pairCodeNumberMatches =>
-      'Kiểm tra cả bốn nhóm số giống nhau trên hai điện thoại';
-
-  @override
-  String get pairCodeNumberMatchesDesk =>
-      'Kiểm tra cả bốn nhóm số giống nhau trên hai thiết bị';
-
-  @override
-  String get pairCodeNumberDiffers => 'Số không giống';
-
-  @override
-  String get pairCodeNoNumberThere =>
-      'Màn hình của họ không có số? Hãy thêm họ, rồi so sánh số an toàn trong cuộc trò chuyện.';
-
-  @override
   String get pairCodeNotAdded => 'Chưa thêm. Hãy xin họ mã mới.';
+
+  @override
+  String get pairCodeEightDigits => 'Tám chữ số';
+
+  @override
+  String get pairCodeTypeTheEightDigits => 'Nhập tám chữ số họ đọc cho bạn.';
+
+  @override
+  String get pairCodeOldCode =>
+      'Mã đó đến từ một bản Kryfo cũ hơn. Cả hai điện thoại cần Kryfo 0.6 trở lên.';
+
+  @override
+  String get pairCodeOldCodeDesk =>
+      'Mã đó đến từ một bản Kryfo cũ hơn. Cả hai thiết bị cần Kryfo 0.6 trở lên.';
+
+  @override
+  String get pairCodeBothNeed06 => 'Cả hai điện thoại cần Kryfo 0.6 trở lên.';
+
+  @override
+  String get pairCodeBothNeed06Desk => 'Cả hai thiết bị cần Kryfo 0.6 trở lên.';
+
+  @override
+  String get pairCodeWaitingForThem => 'Đang chờ họ…';
+
+  @override
+  String get pairCodeStillWaiting =>
+      'Vẫn đang chờ. Nếu màn hình của họ báo đã nhập sai mã, hãy cùng nhau kiểm tra lại các chữ số.';
+
+  @override
+  String get pairCodeUnanswered =>
+      'Chưa có phản hồi. Hãy kiểm tra lại mã với họ rồi nhập lại.';
+
+  @override
+  String get pairCodeTooManyTries =>
+      'Mã này đã được thử ba lần. Hãy xin họ mã mới.';
+
+  @override
+  String get pairCodeRanOut => 'Mã đó đã hết hạn. Hãy xin họ mã mới.';
+
+  @override
+  String get pairCodeMatched => 'Mã đã khớp. Thêm nhau nhé?';
+
+  @override
+  String get pairCodeNotThem => 'Không phải họ';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut =>
+      'Đọc to tám chữ số là hai bạn thêm được nhau. Không cần trao đổi gì khác.';
+
+  @override
+  String get pairCodePanelOrMakeACode => 'Hoặc tạo một mã để đọc to';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      'Họ mở Kryfo, chạm Thêm, chọn Mã ghép nối rồi nhập tám chữ số này. Hãy tạo mã mới cho người tiếp theo.';
+
+  @override
+  String get pairCodePanelWrongTyped =>
+      'Đã nhập sai mã. Hãy đọc lại thật chậm.';
+
+  @override
+  String get pairCodePanelThreeWrong =>
+      'Đã nhập sai mã ba lần nên mã này đã dừng. Hãy tạo mã mới.';
+
+  @override
+  String get pairCodePanelNotAdded => 'Chưa thêm. Tạo mã mới khi họ sẵn sàng.';
 
   @override
   String get panicSetupThoseWereDifferentFrom =>
@@ -6723,14 +6764,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pairCodePanelYourInviteIsNot => 'Lời mời của bạn chưa sẵn sàng';
 
   @override
-  String get pairCodePanelReadSixDigitsOut =>
-      'Đọc to sáu chữ số là họ có thể thêm bạn. Không cần trao đổi gì khác.';
-
-  @override
   String get pairCodePanelWorking => 'Đang xử lý';
-
-  @override
-  String get pairCodePanelOrMakeASix => 'Hoặc tạo mã sáu chữ số để đọc to';
 
   @override
   String get pairCodePanelBurned =>
@@ -6747,17 +6781,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get pairCodePanelTheyTapAddChoose =>
       'Họ chạm Thêm, chọn Mã, rồi nhập các số này.';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      'Họ mở Kryfo, chạm Thêm, chọn Mã ghép nối rồi nhập sáu chữ số này. Hãy tạo mã mới cho người tiếp theo.';
-
-  @override
-  String get pairCodePanelYourWords => 'Ba từ của bạn';
-
-  @override
-  String get pairCodePanelAcceptOnce =>
-      'Yêu cầu của họ sẽ đến khi họ thêm bạn. Chỉ chấp nhận khi họ nói cả bốn nhóm số đều khớp.';
 
   @override
   String pinsPinnedMessages(Object count) {
