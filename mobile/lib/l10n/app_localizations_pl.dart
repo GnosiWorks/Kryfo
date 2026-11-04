@@ -8802,7 +8802,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'Wyszukiwanie GIF idzie przez serwer Kryfo. $brand nigdy cię nie widzi. Włączyć?';
+    return 'Wyszukiwanie GIF idzie prosto do serwera Kryfo, który w trybie Szybki widzi twój adres IP. $brand nigdy cię nie widzi. Włączyć?';
   }
 
   @override
@@ -8940,7 +8940,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get chatShotsWhenTheyUpdate =>
-      'Dostępne, gdy ta osoba zaktualizuje aplikację';
+      'Dostępne, gdy ta osoba używa najnowszego Kryfo na telefonie';
 
   @override
   String get chatShotsWhenTheyUpdateDesk => 'Dostępne w Kryfo na Androida';
@@ -10050,7 +10050,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get groupShotsStartsWhenAll =>
-      'Czekam, aż wszyscy tutaj zaktualizują Kryfo';
+      'Czekam, aż wszyscy tutaj będą mogli blokować zrzuty ekranu na swoich urządzeniach';
 
   @override
   String get groupShotsOnForAll => 'Włączone dla wszystkich tutaj';
@@ -10064,7 +10064,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'Czekam, aż wszyscy tutaj zaktualizują Kryfo. Może to zmienić tylko administrator';
+      'Czekam, aż wszyscy tutaj będą mogli blokować zrzuty ekranu na swoich urządzeniach. Może to zmienić tylko administrator';
 
   @override
   String get groupShotsOnAdminOnly =>
@@ -10092,26 +10092,26 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'Jeszcze do aktualizacji';
+  String get groupShotsWaitingTitle => 'Jeszcze nieobjęci';
 
   @override
   String get groupShotsWaitingHint =>
-      'Blokada zrzutów ekranu obejmie wszystkich, gdy te osoby zaktualizują Kryfo. Stuknij kogoś, żeby usunąć tę osobę z grupy.';
+      'Blokada zrzutów ekranu obejmie wszystkich, gdy urządzenia tych osób będą mogły blokować zrzuty ekranu. Stuknij kogoś, żeby usunąć tę osobę z grupy.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'Musi zaktualizować Kryfo albo od tego czasu nie był online';
+      'Nie może jeszcze blokować zrzutów ekranu na swoim urządzeniu albo od tego czasu nie był online';
 
   @override
   String get groupShotsBlockedByYou => 'Zablokowane przez ciebie';
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'Włączono blokadę zrzutów ekranu. Obejmie wszystkich, gdy wszyscy tutaj zaktualizują Kryfo.';
+      'Włączono blokadę zrzutów ekranu. Obejmie wszystkich, gdy wszyscy tutaj będą mogli blokować zrzuty ekranu na swoich urządzeniach.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name włącza blokadę zrzutów ekranu. Obejmie wszystkich, gdy wszyscy tutaj zaktualizują Kryfo.';
+    return '$name włącza blokadę zrzutów ekranu. Obejmie wszystkich, gdy wszyscy tutaj będą mogli blokować zrzuty ekranu na swoich urządzeniach.';
   }
 
   @override
@@ -10124,7 +10124,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get groupShotsPaused =>
-      'Ktoś tutaj nie może jeszcze blokować zrzutów ekranu. Blokada obejmie znów wszystkich, gdy ta osoba zaktualizuje Kryfo.';
+      'Ktoś tutaj nie może jeszcze blokować zrzutów ekranu na swoim urządzeniu. Blokada obejmie znów wszystkich, gdy będzie to możliwe.';
 
   @override
   String get groupShotsCantYet => 'Nie może jeszcze blokować zrzutów ekranu';
@@ -10134,7 +10134,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'Blokada zrzutów ekranu nie obejmie wszystkich tutaj, dopóki ta osoba nie zaktualizuje Kryfo.';
+      'Blokada zrzutów ekranu nie obejmie wszystkich tutaj, dopóki ta osoba nie będzie mogła blokować zrzutów ekranu na swoim urządzeniu.';
 
   @override
   String get groupShotsLeaveStays =>
