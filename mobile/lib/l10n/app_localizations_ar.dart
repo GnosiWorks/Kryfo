@@ -10589,7 +10589,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'يتخطى Tor، فتصل الرسائل أسرع وتستهلك بطارية أقل. ترى خوادمنا عنوان IP الخاص بك فقط أثناء اتصالك، ولا تسجله أو تحتفظ به أبدًا. ولا ترى أبدًا ما تقوله. جهات اتصالك لا تراه أبدًا. يمكن لشبكتك أن ترى أنك تتصل بـ Kryfo.';
+      'يتخطى Tor، فتصل الرسائل أسرع وتستهلك بطارية أقل. ترى خوادمنا عنوان IP الخاص بك فقط أثناء اتصالك، ولا تسجله أو تحتفظ به أبدًا. جهات اتصالك لا تراه أبدًا. يمكن لشبكتك أن ترى أنك تتصل بـ Kryfo.';
 
   @override
   String get modesFastConnected => 'سريع · متصل';
@@ -11145,7 +11145,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String chatHealNewSession(Object name) {
-    return 'بدأ هاتف ⁨$name⁩ جلسة آمنة جديدة';
+    return 'بدأ جهاز ⁨$name⁩ جلسة آمنة جديدة';
   }
 
   @override
@@ -11209,8 +11209,4 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get groupChatTapToRetryDesk => '! انقر لإعادة المحاولة';
-
-  @override
-  String get modesFastLineDesk =>
-      'يتخطى Tor، فتصل الرسائل أسرع وتستهلك بطارية أقل. ترى خوادمنا عنوان IP الخاص بك فقط أثناء اتصالك، ولا تسجله أو تحتفظ به أبدًا. جهات اتصالك لا تراه أبدًا. يمكن لشبكتك أن ترى أنك تتصل بـ Kryfo.';
 }

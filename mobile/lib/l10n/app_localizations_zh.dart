@@ -9899,7 +9899,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      '不经过 Tor，消息到得更快，也更省电。我们的服务器只在你连接期间看到你的 IP 地址，从不记录或保存。也从不知道你说了什么。你的联系人永远看不到它。你的网络能看到你在连接 Kryfo。';
+      '不经过 Tor，消息到得更快，也更省电。我们的服务器只在你连接期间看到你的 IP 地址，从不记录或保存。你的联系人永远看不到它。你的网络能看到你在连接 Kryfo。';
 
   @override
   String get modesFastConnected => '快速 · 已连接';
@@ -10425,7 +10425,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String chatHealNewSession(Object name) {
-    return '$name 的手机开始了新的安全会话';
+    return '$name 的设备开始了新的安全会话';
   }
 
   @override
@@ -10488,10 +10488,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get groupChatTapToRetryDesk => '! 单击重试';
-
-  @override
-  String get modesFastLineDesk =>
-      '不经过 Tor，消息到得更快，也更省电。我们的服务器只在你连接期间看到你的 IP 地址，从不记录或保存。你的联系人永远看不到它。你的网络能看到你在连接 Kryfo。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -20274,7 +20270,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get modesFastLine =>
-      '不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。也從不知道你說了什麼。你的聯絡人永遠看不到它。你的網路能看到你在連線 Kryfo。';
+      '不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。你的聯絡人永遠看不到它。你的網路能看到你在連線 Kryfo。';
 
   @override
   String get modesFastConnected => '快速 · 已連線';
@@ -20801,7 +20797,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String chatHealNewSession(Object name) {
-    return '$name 的手機開始了新的安全工作階段';
+    return '$name 的裝置開始了新的安全工作階段';
   }
 
   @override
@@ -20864,8 +20860,4 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupChatTapToRetryDesk => '! 按一下重試';
-
-  @override
-  String get modesFastLineDesk =>
-      '不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。你的聯絡人永遠看不到它。你的網路能看到你在連線 Kryfo。';
 }

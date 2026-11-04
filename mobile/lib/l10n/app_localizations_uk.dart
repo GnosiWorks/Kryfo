@@ -10622,7 +10622,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'Без Tor повідомлення приходять швидше й витрачають менше заряду. Наші сервери бачать твою IP-адресу лише поки ти підключений і ніколи її не записують і не зберігають. І ніколи не бачать, що ти пишеш. Твої контакти її ніколи не бачать. Твоя мережа може бачити, що ти підключаєшся до Kryfo.';
+      'Без Tor повідомлення приходять швидше й витрачають менше заряду. Наші сервери бачать твою IP-адресу лише поки ти підключений і ніколи її не записують і не зберігають. Твої контакти її ніколи не бачать. Твоя мережа може бачити, що ти підключаєшся до Kryfo.';
 
   @override
   String get modesFastConnected => 'Швидкий · підключено';
@@ -11180,7 +11180,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String chatHealNewSession(Object name) {
-    return 'Телефон $name почав новий захищений сеанс';
+    return 'Пристрій $name почав новий захищений сеанс';
   }
 
   @override
@@ -11244,8 +11244,4 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get groupChatTapToRetryDesk => '! Клацни ще раз';
-
-  @override
-  String get modesFastLineDesk =>
-      'Без Tor повідомлення приходять швидше й витрачають менше заряду. Наші сервери бачать твою IP-адресу лише поки ти підключений і ніколи її не записують і не зберігають. Твої контакти її ніколи не бачать. Твоя мережа може бачити, що ти підключаєшся до Kryfo.';
 }

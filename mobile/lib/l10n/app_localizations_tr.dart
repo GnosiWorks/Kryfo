@@ -10485,7 +10485,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'Tor’u atlar, böylece mesajlar daha hızlı ulaşır ve daha az pil harcar. Sunucularımız IP adresini yalnızca bağlıyken görür, asla kaydetmez ya da saklamaz. Ne söylediğini asla görmez. Kişilerin onu asla görmez. Ağın Kryfo’ya bağlandığını görebilir.';
+      'Tor’u atlar, böylece mesajlar daha hızlı ulaşır ve daha az pil harcar. Sunucularımız IP adresini yalnızca bağlıyken görür, asla kaydetmez ya da saklamaz. Kişilerin onu asla görmez. Ağın Kryfo’ya bağlandığını görebilir.';
 
   @override
   String get modesFastConnected => 'Hızlı · bağlı';
@@ -11033,7 +11033,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String chatHealNewSession(Object name) {
-    return '$name kişisinin telefonu yeni bir güvenli oturum başlattı';
+    return '$name kişisinin cihazı yeni bir güvenli oturum başlattı';
   }
 
   @override
@@ -11097,8 +11097,4 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupChatTapToRetryDesk => '! Tekrar için tıkla';
-
-  @override
-  String get modesFastLineDesk =>
-      'Tor’u atlar, böylece mesajlar daha hızlı ulaşır ve daha az pil harcar. Sunucularımız IP adresini yalnızca bağlıyken görür, asla kaydetmez ya da saklamaz. Kişilerin onu asla görmez. Ağın Kryfo’ya bağlandığını görebilir.';
 }

@@ -799,12 +799,6 @@ final _pairs = <(String, _Get, _Get, _Get)>[
     (l) => l.groupChatTapToRetry,
     (l) => l.groupChatTapToRetryDesk,
   ),
-  (
-    'modesFastLine',
-    (l) => l.modesFastLineShown,
-    (l) => l.modesFastLine,
-    (l) => l.modesFastLineDesk,
-  ),
 ];
 
 Locale _locale(String tag) {

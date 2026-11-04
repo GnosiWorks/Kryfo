@@ -2756,7 +2756,7 @@
   "modesPrivateLine": "Nadie sabe tu dirección IP ni quién eres, ni siquiera nuestros servidores. Encuentra solo la forma de esquivar bloqueos.",
   "modesDefault": "Predeterminado",
   "modesFastTag": "Directo a nuestros servidores",
-  "modesFastLine": "Se salta Tor, así que los mensajes llegan antes y gastan menos batería. Nuestros servidores ven tu dirección IP solo mientras estás conectado, y nunca la registran ni la guardan. Nunca lo que dices. Tus contactos nunca la ven. Tu red puede ver que te conectas a Kryfo.",
+  "modesFastLine": "Se salta Tor, así que los mensajes llegan antes y gastan menos batería. Nuestros servidores ven tu dirección IP solo mientras estás conectado, y nunca la registran ni la guardan. Tus contactos nunca la ven. Tu red puede ver que te conectas a Kryfo.",
   "modesFastConnected": "Rápido · conectado",
   "modesFastConnecting": "Rápido · conectando",
   "modesFastDown": "Rápido · nuestros servidores no responden",
@@ -2902,7 +2902,7 @@
   "desktopBackupCardLine": "Tu cuenta de Windows en este ordenador guarda la clave de Kryfo. Una copia de seguridad de Kryfo lo recupera todo si alguna vez se restablece el ordenador o la cuenta.",
   "desktopBackupHint": "Lo recupera todo si alguna vez se restablece este ordenador.",
   "chatHealRestored": "{name} configuró Kryfo de nuevo",
-  "chatHealNewSession": "El teléfono de {name} inició una nueva sesión segura",
+  "chatHealNewSession": "El dispositivo de {name} inició una nueva sesión segura",
   "chatHealHeldLine": "Ya habías verificado a {name}. No se envía nada hasta que compruebes el número o sigas chateando. Sus mensajes siguen llegando.",
   "chatKeepChatting": "Seguir chateando",
   "chatNeedsUpdateToChat": "{name} tiene que actualizar Kryfo para seguir chateando.",
@@ -2918,6 +2918,5 @@
   "onboardingDeskRunLead": "Cierra la ventana y Kryfo espera en la bandeja del sistema, así que los mensajes siguen llegando. Puedes cambiar las dos cosas luego en Ajustes, en Notificaciones.",
   "savedLongPressAnyMessageDesk": "Haz clic derecho en cualquier mensaje y elige guardar para tenerlo aquí.",
   "chatFailedTapToRetryDesk": "Falló · haz clic para reintentar",
-  "groupChatTapToRetryDesk": "! Haz clic para reintentar",
-  "modesFastLineDesk": "Se salta Tor, así que los mensajes llegan antes y gastan menos batería. Nuestros servidores ven tu dirección IP solo mientras estás conectado, y nunca la registran ni la guardan. Tus contactos nunca la ven. Tu red puede ver que te conectas a Kryfo."
+  "groupChatTapToRetryDesk": "! Haz clic para reintentar"
 }

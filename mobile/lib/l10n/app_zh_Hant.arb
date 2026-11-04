@@ -2756,7 +2756,7 @@
   "modesPrivateLine": "沒有人能知道你的 IP 位址或你是誰，連我們的伺服器也不能。遇到封鎖會自己找到出路。",
   "modesDefault": "預設",
   "modesFastTag": "直連我們的伺服器",
-  "modesFastLine": "不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。也從不知道你說了什麼。你的聯絡人永遠看不到它。你的網路能看到你在連線 Kryfo。",
+  "modesFastLine": "不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。你的聯絡人永遠看不到它。你的網路能看到你在連線 Kryfo。",
   "modesFastConnected": "快速 · 已連線",
   "modesFastConnecting": "快速 · 連線中",
   "modesFastDown": "快速 · 我們的伺服器沒有回應",
@@ -2902,7 +2902,7 @@
   "desktopBackupCardLine": "這台電腦上的 Windows 帳戶保管著 Kryfo 的金鑰。如果電腦或帳戶被重設，Kryfo 備份能找回一切。",
   "desktopBackupHint": "如果這台電腦被重設，它能找回一切。",
   "chatHealRestored": "{name} 重新設定了 Kryfo",
-  "chatHealNewSession": "{name} 的手機開始了新的安全工作階段",
+  "chatHealNewSession": "{name} 的裝置開始了新的安全工作階段",
   "chatHealHeldLine": "你之前驗證過 {name}。在你核對安全碼或繼續聊天之前，什麼都不會送出。對方的訊息仍會收到。",
   "chatKeepChatting": "繼續聊天",
   "chatNeedsUpdateToChat": "{name} 需要更新 Kryfo 才能繼續聊天。",
@@ -2918,6 +2918,5 @@
   "onboardingDeskRunLead": "關閉視窗後，Kryfo 在系統匣中等候，訊息照常送達。之後可以在「設定」的「通知」裡變更這兩項。",
   "savedLongPressAnyMessageDesk": "在任何訊息上按右鍵，再選「儲存」，就能收藏在這裡。",
   "chatFailedTapToRetryDesk": "失敗 · 按一下重試",
-  "groupChatTapToRetryDesk": "! 按一下重試",
-  "modesFastLineDesk": "不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。你的聯絡人永遠看不到它。你的網路能看到你在連線 Kryfo。"
+  "groupChatTapToRetryDesk": "! 按一下重試"
 }

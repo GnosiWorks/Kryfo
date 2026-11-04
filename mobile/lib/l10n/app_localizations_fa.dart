@@ -10476,7 +10476,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'از Tor عبور نمی‌کند، پس پیام‌ها زودتر می‌رسند و باتری کمتری مصرف می‌کنند. سرورهای ما آدرس IP شما را فقط تا وقتی وصل هستید می‌بینند و هرگز آن را ثبت یا نگه نمی‌دارند. هرگز چیزی را که می‌گویید نمی‌بینند. مخاطبانتان هرگز آن را نمی‌بینند. شبکه‌ی شما می‌تواند ببیند که به Kryfo وصل می‌شوید.';
+      'از Tor عبور نمی‌کند، پس پیام‌ها زودتر می‌رسند و باتری کمتری مصرف می‌کنند. سرورهای ما آدرس IP شما را فقط تا وقتی وصل هستید می‌بینند و هرگز آن را ثبت یا نگه نمی‌دارند. مخاطبانتان هرگز آن را نمی‌بینند. شبکه‌ی شما می‌تواند ببیند که به Kryfo وصل می‌شوید.';
 
   @override
   String get modesFastConnected => 'سریع · وصل';
@@ -11026,7 +11026,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String chatHealNewSession(Object name) {
-    return 'تلفن ⁨$name⁩ یک نشست امن تازه شروع کرد';
+    return 'دستگاه ⁨$name⁩ یک نشست امن تازه شروع کرد';
   }
 
   @override
@@ -11090,8 +11090,4 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get groupChatTapToRetryDesk => '! برای تکرار کلیک کنید';
-
-  @override
-  String get modesFastLineDesk =>
-      'از Tor عبور نمی‌کند، پس پیام‌ها زودتر می‌رسند و باتری کمتری مصرف می‌کنند. سرورهای ما آدرس IP شما را فقط تا وقتی وصل هستید می‌بینند و هرگز آن را ثبت یا نگه نمی‌دارند. مخاطبانتان هرگز آن را نمی‌بینند. شبکه‌ی شما می‌تواند ببیند که به Kryfo وصل می‌شوید.';
 }

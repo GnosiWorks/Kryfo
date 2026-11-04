@@ -16820,7 +16820,7 @@ abstract class AppLocalizations {
   /// Fast card, what it means and who sees the IP address
   ///
   /// In en, this message translates to:
-  /// **'Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you\'re connected, and never log or keep it. Never what you say. Your contacts never see it. Your network can see that you connect to Kryfo.'**
+  /// **'Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you\'re connected, and never log or keep it. Your contacts never see it. Your network can see that you connect to Kryfo.'**
   String get modesFastLine;
 
   /// status of the Fast route, on its card and on the home pill
@@ -17696,7 +17696,7 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart: the quiet line where a contact's phone rebuilt a session that stopped reading (identity v4 heal without bit 0)
   ///
   /// In en, this message translates to:
-  /// **'{name}\'s phone started a new secure session'**
+  /// **'{name}\'s device started a new secure session'**
   String chatHealNewSession(Object name);
 
   /// widgets/key_held.dart: the card on a verified contact's chat after a heal, until the person looks (Q22). same shape as chatKeyHeldLine
@@ -17794,12 +17794,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'! Click to retry'**
   String get groupChatTapToRetryDesk;
-
-  /// screens/modes_screen.dart, on a computer
-  ///
-  /// In en, this message translates to:
-  /// **'Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you\'re connected, and never log or keep it. Your contacts never see it. Your network can see that you connect to Kryfo.'**
-  String get modesFastLineDesk;
 }
 
 class _AppLocalizationsDelegate

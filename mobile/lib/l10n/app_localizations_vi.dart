@@ -10445,7 +10445,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'Bỏ qua Tor nên tin nhắn đến nhanh hơn và tốn ít pin hơn. Máy chủ của chúng tôi chỉ thấy địa chỉ IP của bạn khi bạn đang kết nối, và không bao giờ ghi lại hay giữ nó. Không bao giờ thấy bạn nói gì. Người liên hệ của bạn không bao giờ thấy nó. Mạng của bạn có thể thấy bạn kết nối tới Kryfo.';
+      'Bỏ qua Tor nên tin nhắn đến nhanh hơn và tốn ít pin hơn. Máy chủ của chúng tôi chỉ thấy địa chỉ IP của bạn khi bạn đang kết nối, và không bao giờ ghi lại hay giữ nó. Người liên hệ của bạn không bao giờ thấy nó. Mạng của bạn có thể thấy bạn kết nối tới Kryfo.';
 
   @override
   String get modesFastConnected => 'Nhanh · đã kết nối';
@@ -10995,7 +10995,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String chatHealNewSession(Object name) {
-    return 'Điện thoại của $name đã bắt đầu một phiên bảo mật mới';
+    return 'Thiết bị của $name đã bắt đầu một phiên bảo mật mới';
   }
 
   @override
@@ -11059,8 +11059,4 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupChatTapToRetryDesk => '! Nhấp để thử lại';
-
-  @override
-  String get modesFastLineDesk =>
-      'Bỏ qua Tor nên tin nhắn đến nhanh hơn và tốn ít pin hơn. Máy chủ của chúng tôi chỉ thấy địa chỉ IP của bạn khi bạn đang kết nối, và không bao giờ ghi lại hay giữ nó. Người liên hệ của bạn không bao giờ thấy nó. Mạng của bạn có thể thấy bạn kết nối tới Kryfo.';
 }

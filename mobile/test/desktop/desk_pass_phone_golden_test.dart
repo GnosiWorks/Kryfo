@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the phone's settings, speed and privacy and first onboarding step, pixel
-// for pixel as they were before the desktop pass: nothing of it reaches the
-// phone
+// for pixel: nothing of the desktop pass reaches the phone but the onion on
+// the private card and the fast card's line, which it now shares
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -76,7 +76,7 @@ void main() {
       () => OnboardingScreen(appState: appState, onComplete: () {}),
     ),
   ]) {
-    testWidgets('the phone $name page is unchanged', (t) async {
+    testWidgets('the phone $name page stays as it is', (t) async {
       await _world(t, size);
       await t.pumpWidget(devApp(page(), still: true));
       await _settle(t);

@@ -2756,7 +2756,7 @@
   "modesPrivateLine": "Tak ada yang tahu alamat IP-mu atau siapa kamu, bahkan server kami. Mencari jalan sendiri melewati blokir.",
   "modesDefault": "Bawaan",
   "modesFastTag": "Langsung ke server kami",
-  "modesFastLine": "Melewati Tor, jadi pesan sampai lebih cepat dan lebih hemat baterai. Server kami melihat alamat IP-mu hanya selama kamu terhubung, dan tidak pernah mencatat atau menyimpannya. Tidak pernah isi pesanmu. Kontakmu tidak pernah melihatnya. Jaringanmu bisa melihat kamu terhubung ke Kryfo.",
+  "modesFastLine": "Melewati Tor, jadi pesan sampai lebih cepat dan lebih hemat baterai. Server kami melihat alamat IP-mu hanya selama kamu terhubung, dan tidak pernah mencatat atau menyimpannya. Kontakmu tidak pernah melihatnya. Jaringanmu bisa melihat kamu terhubung ke Kryfo.",
   "modesFastConnected": "Cepat · terhubung",
   "modesFastConnecting": "Cepat · menghubungkan",
   "modesFastDown": "Cepat · server kami tidak menjawab",
@@ -2902,7 +2902,7 @@
   "desktopBackupCardLine": "Akun Windows-mu di komputer ini menyimpan kunci Kryfo. Cadangan Kryfo mengembalikan semuanya kalau suatu saat komputer atau akunnya direset.",
   "desktopBackupHint": "Mengembalikan semuanya kalau suatu saat komputer ini direset.",
   "chatHealRestored": "{name} memasang Kryfo lagi",
-  "chatHealNewSession": "Ponsel {name} memulai sesi aman yang baru",
+  "chatHealNewSession": "Perangkat {name} memulai sesi aman yang baru",
   "chatHealHeldLine": "Kamu sudah memverifikasi {name} sebelumnya. Tidak ada yang terkirim sampai kamu memeriksa nomornya atau lanjut mengobrol. Pesan darinya tetap masuk.",
   "chatKeepChatting": "Lanjut mengobrol",
   "chatNeedsUpdateToChat": "{name} perlu memperbarui Kryfo agar bisa lanjut mengobrol.",
@@ -2918,6 +2918,5 @@
   "onboardingDeskRunLead": "Tutup jendela dan Kryfo menunggu di area notifikasi, jadi pesan terus masuk. Keduanya bisa kamu ubah nanti di Pengaturan, bagian Notifikasi.",
   "savedLongPressAnyMessageDesk": "Klik kanan pesan mana pun lalu pilih simpan untuk menyimpannya di sini.",
   "chatFailedTapToRetryDesk": "Gagal · klik untuk coba lagi",
-  "groupChatTapToRetryDesk": "! Klik untuk ulangi",
-  "modesFastLineDesk": "Melewati Tor, jadi pesan sampai lebih cepat dan lebih hemat baterai. Server kami melihat alamat IP-mu hanya selama kamu terhubung, dan tidak pernah mencatat atau menyimpannya. Kontakmu tidak pernah melihatnya. Jaringanmu bisa melihat kamu terhubung ke Kryfo."
+  "groupChatTapToRetryDesk": "! Klik untuk ulangi"
 }

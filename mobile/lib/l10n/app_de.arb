@@ -2756,7 +2756,7 @@
   "modesPrivateLine": "Niemand erfährt deine IP-Adresse oder wer du bist, nicht einmal unsere Server. Findet selbst einen Weg um Sperren herum.",
   "modesDefault": "Standard",
   "modesFastTag": "Direkt zu unseren Servern",
-  "modesFastLine": "Ohne Tor kommen Nachrichten schneller an, und der Akku hält länger. Unsere Server sehen deine IP-Adresse nur, solange du verbunden bist, und protokollieren oder speichern sie nie. Nie, was du sagst. Deine Kontakte sehen sie nie. Dein Netz kann sehen, dass du dich mit Kryfo verbindest.",
+  "modesFastLine": "Ohne Tor kommen Nachrichten schneller an, und der Akku hält länger. Unsere Server sehen deine IP-Adresse nur, solange du verbunden bist, und protokollieren oder speichern sie nie. Deine Kontakte sehen sie nie. Dein Netz kann sehen, dass du dich mit Kryfo verbindest.",
   "modesFastConnected": "Schnell · verbunden",
   "modesFastConnecting": "Schnell · verbindet",
   "modesFastDown": "Schnell · unsere Server antworten nicht",
@@ -2902,7 +2902,7 @@
   "desktopBackupCardLine": "Dein Windows-Konto auf diesem Computer verwahrt den Schlüssel von Kryfo. Ein Kryfo-Backup bringt alles zurück, falls der Computer oder das Konto einmal zurückgesetzt wird.",
   "desktopBackupHint": "Bringt alles zurück, falls dieser Computer einmal zurückgesetzt wird.",
   "chatHealRestored": "{name} hat Kryfo neu eingerichtet",
-  "chatHealNewSession": "Das Telefon von {name} hat eine neue sichere Sitzung gestartet",
+  "chatHealNewSession": "Das Gerät von {name} hat eine neue sichere Sitzung gestartet",
   "chatHealHeldLine": "Du hast {name} schon verifiziert. Nichts wird gesendet, bis du die Nummer prüfst oder weiterchattest. Nachrichten von {name} kommen weiter an.",
   "chatKeepChatting": "Weiterchatten",
   "chatNeedsUpdateToChat": "{name} muss Kryfo aktualisieren, damit ihr weiterchatten könnt.",
@@ -2918,6 +2918,5 @@
   "onboardingDeskRunLead": "Schließt du das Fenster, wartet Kryfo im Infobereich, und Nachrichten kommen weiter an. Beides kannst du später in den Einstellungen unter Benachrichtigungen ändern.",
   "savedLongPressAnyMessageDesk": "Klicke mit der rechten Maustaste auf eine Nachricht und wähle Speichern, um sie hier aufzubewahren.",
   "chatFailedTapToRetryDesk": "Fehler · klicke zum Wiederholen",
-  "groupChatTapToRetryDesk": "! Klicken zum Wiederholen",
-  "modesFastLineDesk": "Ohne Tor kommen Nachrichten schneller an, und der Akku hält länger. Unsere Server sehen deine IP-Adresse nur, solange du verbunden bist, und protokollieren oder speichern sie nie. Deine Kontakte sehen sie nie. Dein Netz kann sehen, dass du dich mit Kryfo verbindest."
+  "groupChatTapToRetryDesk": "! Klicken zum Wiederholen"
 }
