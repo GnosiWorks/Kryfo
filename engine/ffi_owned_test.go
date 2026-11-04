@@ -134,6 +134,15 @@ func (o owned) fresh(in *ast.FuncDecl, e ast.Expr) bool {
 		if isC(v.Fun, "CString") {
 			return true
 		}
+		// (*C.char)(C.CBytes(b)): malloc'd as C.CString is, for a secret
+		// that never becomes a go string
+		if p, ok := v.Fun.(*ast.ParenExpr); ok && len(v.Args) == 1 {
+			if s, ok := p.X.(*ast.StarExpr); ok && isC(s.X, "char") {
+				if c, ok := v.Args[0].(*ast.CallExpr); ok && isC(c.Fun, "CBytes") {
+					return true
+				}
+			}
+		}
 		if id, ok := v.Fun.(*ast.Ident); ok {
 			return o.helper(id.Name, 0)
 		}

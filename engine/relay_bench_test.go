@@ -202,7 +202,14 @@ func TestASendWaitsForASlowOnionDial(t *testing.T) {
 func TestAPairCodeShareWaitsForASlowOnionDial(t *testing.T) {
 	own := slowOnionOnly(t)
 	start := time.Now()
-	res := pairCodePublish("482913", "kryfo://share?id=the-sharer")
+	a, err := pairAddrOf("48", 2950000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res := "unreached"
+	if pairBoxPublish(pairLane(a.pk), a, []byte("KPO1")) {
+		res = "ok"
+	}
 	checkSlowOnionLanded(t, own, res, "ok", time.Since(start))
 }
 
