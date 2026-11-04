@@ -108,18 +108,41 @@ Future<({int ident, String cipher})> signalSeal(
   final (ident, framed) = await appState.doorFor(peerId, plaintext);
   final ss = await signalOfIdent(ident);
   final from = _afreshFrom;
-  final cipher = await ss.encryptTo(
+  Future<String> seal(String frame, int? size) => ss.encryptTo(
     peerId,
-    framed,
+    frame,
     onlySettled: onlySettled,
     afresh: from == null ? null : () => from(peerId),
     // a read that fails seals nothing
     held: unheld ? null : () => appState.keyHeld(peerId, strict: true),
     // a card naming another key: flagged as on an open, once out of the lane
     keyMoved: () => unawaited(_keyMoved?.call(peerId)),
+    size: size,
   );
-  return (ident: ident, cipher: cipher);
+  // linked devices: a copy to every device, the phone's back here. a typing
+  // frame is the phone's alone
+  if (linkedDevicesOn && !onlySettled) {
+    final phone = await _deviceSeal(ident, ss, peerId, framed, (
+      measure: (f) => ss.sealSize(peerId, f),
+      seal: seal,
+    ));
+    if (phone != null) return (ident: ident, cipher: phone);
+  }
+  return (ident: ident, cipher: await seal(framed, null));
 }
+
+// a list push's copy for [peer]'s phone (devices_send_app.dart), sealed
+// here at the door on the store of the identity they know, filled to the
+// push's burst. a key held for a check seals nothing
+DevPhone _devicePushPhone(int ident, String peer) => (
+  measure: (f) async => (await signalOfIdent(ident)).sealSize(peer, f),
+  seal: (f, size) async => (await signalOfIdent(ident)).encryptTo(
+    peer,
+    f,
+    held: () => appState.keyHeld(peer, strict: true),
+    size: size,
+  ),
+);
 
 // where a seal finds a peer's card to start a session afresh from, after a
 // restore: the app state's rows. set as it is made
@@ -362,12 +385,19 @@ Future<void> _devOpened(
     final ikey = row.isEmpty ? null : row.first['ikey'] as String?;
     if (ikey == null) return;
     final info = ss.lib.sessionInfo(record);
+    final ident = row.first['ident'] as int? ?? kMainIdent;
     await ds.session(db, 'opened', {
-      'ident': row.first['ident'] as int? ?? kMainIdent,
+      'ident': ident,
       'identity': ikey,
       'device': 1,
       'pq': info.version >= 4 && info.pq,
     }, SessionRemote.opened(remote));
+    // they answered: a list that went to them before is taken
+    await _deviceSend?.heard(
+      ident,
+      ikey,
+      DateTime.now().millisecondsSinceEpoch,
+    );
   } on DevRefused catch (e) {
     dlog('devices: an open not admitted (${e.why})');
   } catch (e) {
