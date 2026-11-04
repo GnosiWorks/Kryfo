@@ -70,6 +70,15 @@ void Function(HaloContainer c)? containerSettled;
 /// over its media folders
 bool filesSealed = false;
 
+/// a wipe's first step on desktop: the vault overwritten and what the
+/// computer's account kept for it cleared, so nothing on the disk opens
+/// again before a file is touched. set by the desktop start
+Future<void> Function()? desktopWipeKeys;
+
+/// a wipe's next one: the databases let go of their files, which windows
+/// does not delete while they are open. set by the desktop start
+Future<void> Function()? desktopLetGo;
+
 /// the start's sweep of half-made containers is done: the desktop puts its
 /// numbered placeholders back
 void Function()? containersSwept;

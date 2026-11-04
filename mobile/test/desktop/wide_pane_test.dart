@@ -4,6 +4,7 @@
 // back arrow beside the list, typed words survive a narrow window, the lock
 // covers list and pane, and a new session starts with nothing marked
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
@@ -179,9 +180,99 @@ Future<void> _openRow(WidgetTester t, String id) async {
   expect(_chat(id), findsOneWidget);
 }
 
+double _contrast(Color x, Color y) {
+  final a = x.computeLuminance(), b = y.computeLuminance();
+  return (math.max(a, b) + 0.05) / (math.min(a, b) + 0.05);
+}
+
+// the mark's ground on row [id], and how far it shows
+(BoxDecoration, double) _mark(WidgetTester t, String id) {
+  final mark = find.ancestor(
+    of: find.text(id).first,
+    matching: find.byType(WideMark),
+  );
+  final ground = find.descendant(
+    of: mark,
+    matching: find.byKey(const ValueKey('wide-mark')),
+  );
+  final fade = t.widget<AnimatedOpacity>(
+    find.ancestor(of: ground, matching: find.byType(AnimatedOpacity)).first,
+  );
+  final box = t.widget<Container>(ground).decoration! as BoxDecoration;
+  return (box, fade.opacity);
+}
+
 void main() {
   setUp(() => onDesktop = true);
   tearDown(() => onDesktop = false);
+
+  testWidgets('the open chat\'s row is tinted, with the accent at its start, '
+      'and the tint follows the chat', (t) async {
+    final h = t.ensureSemantics();
+    await _open(t);
+    expect(_mark(t, _a).$2, 0);
+    await _openRow(t, _a);
+    final (box, shown) = _mark(t, _a);
+    expect(shown, 1);
+    expect(box.color, HaloColors.surface3);
+    expect(_mark(t, _b).$2, 0);
+    expect(_marked(t, _a), isTrue);
+    await _openRow(t, _b);
+    expect(_mark(t, _b).$2, 1);
+    expect(_mark(t, _a).$2, 0);
+    expect(_marked(t, _a), isFalse);
+    expect(_marked(t, _b), isTrue);
+    // closed with esc: nothing marked
+    await t.sendKeyEvent(LogicalKeyboardKey.escape);
+    await _settle(t);
+    expect(_mark(t, _b).$2, 0);
+    expect(_marked(t, _b), isFalse);
+    h.dispose();
+    await _close(t);
+  });
+
+  testWidgets('by keyboard: a row reached and opened with enter is marked', (
+    t,
+  ) async {
+    final h = t.ensureSemantics();
+    await _open(t);
+    Focus.of(t.element(find.text(_b).first)).requestFocus();
+    await t.pump();
+    await t.sendKeyEvent(LogicalKeyboardKey.enter);
+    await _settle(t);
+    expect(_chat(_b), findsOneWidget);
+    expect(_marked(t, _b), isTrue);
+    expect(_mark(t, _b).$2, 1);
+    h.dispose();
+    await _close(t);
+  });
+
+  test('the mark reads in both themes, whatever the accent', () {
+    addTearDown(() {
+      HaloColors.setLight(false);
+      HaloColors.setAccent(HaloAccent.yellow);
+    });
+    for (final light in [false, true]) {
+      HaloColors.setLight(light);
+      for (final a in HaloAccent.values) {
+        HaloColors.setAccent(a);
+        final g = wideMarkGround();
+        final why = '${light ? 'light' : 'dark'} ${a.name}';
+        // the row's words on the raised ground
+        for (final c in [HaloColors.text, HaloColors.text2, HaloColors.text3]) {
+          expect(_contrast(c, g), greaterThanOrEqualTo(4.5), reason: why);
+        }
+        // the bar is what tells the row apart: 3:1 for a mark
+        expect(
+          _contrast(wideMarkBar(), g),
+          greaterThanOrEqualTo(3),
+          reason: why,
+        );
+        // and the ground is not the list's own
+        expect(g, isNot(HaloColors.surface), reason: why);
+      }
+    }
+  });
 
   testWidgets('a notification opens its chat in the pane, marked, unstacked', (
     t,

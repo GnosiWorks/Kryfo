@@ -18,6 +18,8 @@ struct _MyApplication {
   // started with the computer (--hidden): no window until asked for
   gboolean start_hidden;
   guint hidden_timer;
+  // said once, the first time closing the window hides kryfo to the tray
+  gchar* tray_hint;
 };
 
 // how long a hidden start waits for its tray icon before the window shows
@@ -286,6 +288,9 @@ static void desktop_call_cb(FlMethodChannel* channel, FlMethodCall* call,
     FlValue* args = fl_method_call_get_args(call);
     make_tray(self, map_string(args, "open"), map_string(args, "quit"),
               map_string(args, "tip"));
+    g_clear_pointer(&self->tray_hint, g_free);
+    const gchar* hint = map_string(args, "hint");
+    if (hint[0] != '\0') self->tray_hint = g_strdup(hint);
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
   } else if (g_strcmp0(fl_method_call_get_name(call), "noTray") == 0) {
     drop_tray(self);
@@ -320,11 +325,26 @@ static void desktop_call_cb(FlMethodChannel* channel, FlMethodCall* call,
   fl_method_call_respond(call, response, nullptr);
 }
 
+// the first close to the tray says kryfo keeps running there, as a
+// notification, and dart hears it was said: never again
+static void say_tray_hint(MyApplication* self) {
+  if (self->tray_hint == nullptr) return;
+  g_autoptr(GNotification) n = g_notification_new("Kryfo");
+  g_notification_set_body(n, self->tray_hint);
+  g_application_send_notification(G_APPLICATION(self), "tray-hint", n);
+  g_clear_pointer(&self->tray_hint, g_free);
+  if (self->desktop_channel != nullptr) {
+    fl_method_channel_invoke_method(self->desktop_channel, "hinted", nullptr,
+                                    nullptr, nullptr, nullptr);
+  }
+}
+
 // with a tray the window only hides, and the app goes on receiving
 static gboolean delete_cb(GtkWidget* widget, GdkEvent*, gpointer user_data) {
   MyApplication* self = MY_APPLICATION(user_data);
   if (!tray_shown(self)) return FALSE;
   gtk_widget_hide(widget);
+  say_tray_hint(self);
   return TRUE;
 }
 
@@ -449,6 +469,7 @@ static void my_application_dispose(GObject* object) {
     self->hidden_timer = 0;
   }
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
+  g_clear_pointer(&self->tray_hint, g_free);
   g_clear_object(&self->desktop_channel);
   g_clear_object(&self->tray);
   G_OBJECT_CLASS(my_application_parent_class)->dispose(object);

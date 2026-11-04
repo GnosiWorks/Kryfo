@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // pick a name and members, then create and announce the group
 
+import '../desktop/desktop_mode.dart' show onDesktop;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../main.dart' show appState, GroupFull, AppStateGroups;
@@ -196,6 +197,12 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                   controller: _nameCtrl,
                   enableIMEPersonalizedLearning: false,
                   onChanged: (_) => setState(() {}),
+                  // enter makes the group on a computer, once it can be
+                  onSubmitted: onDesktop
+                      ? (_) {
+                          if (_canCreate) _create();
+                        }
+                      : null,
                   style: HaloType.sans(size: 16, color: HaloColors.text),
                   cursorColor: HaloColors.amber,
                   decoration: InputDecoration(

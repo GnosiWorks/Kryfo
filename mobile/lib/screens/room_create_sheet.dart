@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // make a burner room: a name, how long it lives, whether it has a cap. one
 // sheet, one button. the link comes right after.
+import '../desktop/desktop_mode.dart' show onDesktop;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../main.dart' show appState, AppState, AppStateRooms;
@@ -110,6 +111,8 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
                 controller: _nameCtrl,
                 enableIMEPersonalizedLearning: false,
                 autofocus: true,
+                // enter makes the room on a computer
+                onSubmitted: onDesktop ? (_) => _create() : null,
                 maxLength: 32,
                 style: HaloType.sans(size: 16, color: HaloColors.text),
                 cursorColor: HaloColors.violet,

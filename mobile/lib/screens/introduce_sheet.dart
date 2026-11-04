@@ -2,6 +2,7 @@
 // "introduce <B> to...": pick an accepted contact, add a line if you like,
 // and both get the other's card. a sheet, not a screen: one decision made
 // from inside a conversation.
+import '../desktop/desktop_mode.dart' show onDesktop;
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -210,6 +211,8 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
                   enableIMEPersonalizedLearning: false,
                   maxLength: _noteMax,
                   onChanged: (_) => setState(() {}),
+                  // enter sends the introduction on a computer
+                  onSubmitted: onDesktop ? (_) => _go() : null,
                   textCapitalization: TextCapitalization.none,
                   style: HaloType.sans(size: 14, color: HaloColors.text),
                   cursorColor: HaloColors.amber,

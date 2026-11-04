@@ -184,20 +184,42 @@ class DesktopDb {
   /// the factory itself, for a test that opens through sqflite's api
   DatabaseFactory get factory => _factory;
 
+  // the connections open now, by sqflite's id
+  final _open = <int>{};
+
   // an error goes back as the phone's plugin sends one, so sqflite makes the
   // same DatabaseException of it
   Future<Object?> call(String method, Object? arguments) async {
     try {
-      return await (_factory as SqfliteInvokeHandler).invokeMethod<Object?>(
+      final r = await (_factory as SqfliteInvokeHandler).invokeMethod<Object?>(
         method,
         arguments,
       );
+      if (method == 'openDatabase') {
+        final id = r is Map ? r['id'] : r;
+        if (id is int) _open.add(id);
+      } else if (method == 'closeDatabase') {
+        _open.remove((arguments as Map?)?['id']);
+      }
+      return r;
     } on SqfliteDatabaseException catch (e) {
       throw PlatformException(
         code: 'sqlite_error',
         message: e.message,
         details: e.result,
       );
+    }
+  }
+
+  /// every connection closed, for the wipe: windows deletes no file that
+  /// is still open. a query after this fails, and nothing waits on one
+  Future<void> closeAll() async {
+    for (final id in List.of(_open)) {
+      try {
+        await call('closeDatabase', {'id': id});
+      } catch (_) {
+        _open.remove(id);
+      }
     }
   }
 }
