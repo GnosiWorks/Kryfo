@@ -50,10 +50,10 @@ on a 32-bit phone, settings > transport: tor leaves "starting" and reaches
 
 reported upstream to alexballas/go-libtor.
 
-## go-libtor: tor 0.4.9.14
+## go-libtor: tor 0.4.9.15
 
 go-libtor v1.0.8 ships tor 0.4.9.12. `vendor-patches/tor.patch` moves its
-tor to tor-0.4.9.14 (8fe2745aee2c35116ff1081f19b2952418b43069, the signed
+tor to tor-0.4.9.15 (4d8efff53a86670bcda1847b5ab28d2701e6034f, the signed
 tag's commit), and vendor.sh applies it after go-libtor.patch. it changes
 `linux/tor/src/**`, the version strings in `tor_config/orconfig.*.h`,
 `tor_config/micro-revision.i`, the tor line of `lock.json` and the readme's
@@ -64,8 +64,8 @@ tags, so the wrappers are the same.
 the tor sources are the tag's own, as go-libtor's `build/wrap.go
 --nobuild` produces them from that `lock.json`, with one difference:
 `src/ext/byteorder.h` keeps go-libtor's `#ifndef _le64toh` guard. go-libtor's
-`SYS_SECCOMP` guard in `src/lib/sandbox/sandbox.h` is dropped, 0.4.9.14
-fixes the same thing upstream. `APPROX_RELEASE_DATE` stays at go-libtor's
+`SYS_SECCOMP` guard in `src/lib/sandbox/sandbox.h` is dropped, 0.4.9.14 and
+later fix the same thing upstream. `APPROX_RELEASE_DATE` stays at go-libtor's
 2021-10-28.
 
 to redo it for a newer tor, or drop it once go-libtor ships one:
