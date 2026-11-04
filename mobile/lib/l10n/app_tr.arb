@@ -2757,7 +2757,7 @@
   "modesPrivateLine": "IP adresini ya da kim olduğunu kimse öğrenmez, sunucularımız bile. Engelleri aşmanın yolunu kendisi bulur.",
   "modesDefault": "Varsayılan",
   "modesFastTag": "Doğrudan sunucularımıza",
-  "modesFastLine": "Tor’u atlar, böylece mesajlar daha hızlı ulaşır ve daha az pil harcar. Sunucularımız IP adresini yalnızca bağlıyken görür, asla kaydetmez ya da saklamaz. Ne söylediğini asla görmez. Kişilerin onu asla görmez. Ağın Kryfo’ya bağlandığını görebilir.",
+  "modesFastLine": "Tor’u atlar, böylece mesajlar daha hızlı ulaşır ve daha az pil harcar. Sunucularımız IP adresini yalnızca bağlıyken görür, asla kaydetmez ya da saklamaz. Kişilerin onu asla görmez. Ağın Kryfo’ya bağlandığını görebilir.",
   "modesFastConnected": "Hızlı · bağlı",
   "modesFastConnecting": "Hızlı · bağlanıyor",
   "modesFastDown": "Hızlı · sunucularımız yanıt vermiyor",
@@ -2903,7 +2903,7 @@
   "desktopBackupCardLine": "Bu bilgisayardaki Windows hesabın Kryfo'nun anahtarını tutuyor. Bilgisayar ya da hesap bir gün sıfırlanırsa, bir Kryfo yedeği her şeyi geri getirir.",
   "desktopBackupHint": "Bu bilgisayar bir gün sıfırlanırsa her şeyi geri getirir.",
   "chatHealRestored": "{name} Kryfo’yu yeniden kurdu",
-  "chatHealNewSession": "{name} kişisinin telefonu yeni bir güvenli oturum başlattı",
+  "chatHealNewSession": "{name} kişisinin cihazı yeni bir güvenli oturum başlattı",
   "chatHealHeldLine": "{name} kişisini daha önce doğruladın. Numarayı kontrol edene ya da sohbete devam edene kadar hiçbir şey gönderilmez. Onun mesajları gelmeye devam eder.",
   "chatKeepChatting": "Sohbete devam et",
   "chatNeedsUpdateToChat": "Sohbete devam etmek için {name} kişisinin Kryfo’yu güncellemesi gerekiyor.",
@@ -2920,5 +2920,5 @@
   "savedLongPressAnyMessageDesk": "Herhangi bir mesaja sağ tıkla ve burada tutmak için kaydet'i seç.",
   "chatFailedTapToRetryDesk": "Başarısız · tekrar için tıkla",
   "groupChatTapToRetryDesk": "! Tekrar için tıkla",
-  "modesFastLineDesk": "Tor’u atlar, böylece mesajlar daha hızlı ulaşır ve daha az pil harcar. Sunucularımız IP adresini yalnızca bağlıyken görür, asla kaydetmez ya da saklamaz. Kişilerin onu asla görmez. Ağın Kryfo’ya bağlandığını görebilir."
+  "chatDropHereToSend": "Göndermek için buraya bırak"
 }

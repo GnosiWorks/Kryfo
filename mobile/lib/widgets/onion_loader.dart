@@ -3,8 +3,6 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../desktop/desktop_mode.dart' show onDesktop;
-
 // self-drawing onion for the tor boot screen. realistic bulb with fanned
 // shoots and a root tuft; the outline sketches itself first, then the inner
 // layers fill in, over a faint guide. our own mark, not the tor logo.
@@ -83,16 +81,13 @@ class OnionMark extends StatelessWidget {
   );
 }
 
-/// the private route's mark: on a computer the onion the first start
-/// draws, on the phone its icon as it was
+/// the private route's mark: the onion the first start draws
 class PrivateRouteMark extends StatelessWidget {
   final Color color;
   const PrivateRouteMark({super.key, required this.color});
 
   @override
-  Widget build(BuildContext context) => onDesktop
-      ? OnionMark(size: 28, color: color)
-      : Icon(Icons.track_changes_rounded, size: 22, color: color);
+  Widget build(BuildContext context) => OnionMark(size: 28, color: color);
 }
 
 Path _onionStructure() {

@@ -10465,7 +10465,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'Melewati Tor, jadi pesan sampai lebih cepat dan lebih hemat baterai. Server kami melihat alamat IP-mu hanya selama kamu terhubung, dan tidak pernah mencatat atau menyimpannya. Tidak pernah isi pesanmu. Kontakmu tidak pernah melihatnya. Jaringanmu bisa melihat kamu terhubung ke Kryfo.';
+      'Melewati Tor, jadi pesan sampai lebih cepat dan lebih hemat baterai. Server kami melihat alamat IP-mu hanya selama kamu terhubung, dan tidak pernah mencatat atau menyimpannya. Kontakmu tidak pernah melihatnya. Jaringanmu bisa melihat kamu terhubung ke Kryfo.';
 
   @override
   String get modesFastConnected => 'Cepat · terhubung';
@@ -11013,7 +11013,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String chatHealNewSession(Object name) {
-    return 'Ponsel $name memulai sesi aman yang baru';
+    return 'Perangkat $name memulai sesi aman yang baru';
   }
 
   @override
@@ -11079,6 +11079,5 @@ class AppLocalizationsId extends AppLocalizations {
   String get groupChatTapToRetryDesk => '! Klik untuk ulangi';
 
   @override
-  String get modesFastLineDesk =>
-      'Melewati Tor, jadi pesan sampai lebih cepat dan lebih hemat baterai. Server kami melihat alamat IP-mu hanya selama kamu terhubung, dan tidak pernah mencatat atau menyimpannya. Kontakmu tidak pernah melihatnya. Jaringanmu bisa melihat kamu terhubung ke Kryfo.';
+  String get chatDropHereToSend => 'Lepaskan di sini untuk mengirim';
 }

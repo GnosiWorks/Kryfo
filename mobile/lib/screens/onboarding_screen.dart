@@ -1709,7 +1709,9 @@ class _DeskRunScreen extends StatelessWidget {
         const SizedBox(height: 12),
         _lead(l10n.onboardingDeskRunLead),
         const SizedBox(height: 20),
-        ...staggerAll([DeskRunSection(run: desktopRun!, edge: 0)], from: 1),
+        ...staggerAll([
+          DeskRunSection(run: desktopRun!, edge: 0, lineInset: 0),
+        ], from: 1),
       ],
     );
   }

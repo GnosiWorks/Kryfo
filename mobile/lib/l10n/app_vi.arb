@@ -2757,7 +2757,7 @@
   "modesPrivateLine": "Không ai biết địa chỉ IP hay bạn là ai, kể cả máy chủ của chúng tôi. Tự tìm đường vượt qua chặn.",
   "modesDefault": "Mặc định",
   "modesFastTag": "Đi thẳng tới máy chủ của chúng tôi",
-  "modesFastLine": "Bỏ qua Tor nên tin nhắn đến nhanh hơn và tốn ít pin hơn. Máy chủ của chúng tôi chỉ thấy địa chỉ IP của bạn khi bạn đang kết nối, và không bao giờ ghi lại hay giữ nó. Không bao giờ thấy bạn nói gì. Người liên hệ của bạn không bao giờ thấy nó. Mạng của bạn có thể thấy bạn kết nối tới Kryfo.",
+  "modesFastLine": "Bỏ qua Tor nên tin nhắn đến nhanh hơn và tốn ít pin hơn. Máy chủ của chúng tôi chỉ thấy địa chỉ IP của bạn khi bạn đang kết nối, và không bao giờ ghi lại hay giữ nó. Người liên hệ của bạn không bao giờ thấy nó. Mạng của bạn có thể thấy bạn kết nối tới Kryfo.",
   "modesFastConnected": "Nhanh · đã kết nối",
   "modesFastConnecting": "Nhanh · đang kết nối",
   "modesFastDown": "Nhanh · máy chủ của chúng tôi chưa phản hồi",
@@ -2903,7 +2903,7 @@
   "desktopBackupCardLine": "Tài khoản Windows của bạn trên máy tính này giữ khóa của Kryfo. Bản sao lưu Kryfo mang mọi thứ trở lại nếu có lúc máy tính hoặc tài khoản bị đặt lại.",
   "desktopBackupHint": "Mang mọi thứ trở lại nếu có lúc máy tính này bị đặt lại.",
   "chatHealRestored": "{name} đã cài đặt lại Kryfo",
-  "chatHealNewSession": "Điện thoại của {name} đã bắt đầu một phiên bảo mật mới",
+  "chatHealNewSession": "Thiết bị của {name} đã bắt đầu một phiên bảo mật mới",
   "chatHealHeldLine": "Bạn đã xác minh {name} trước đây. Không có gì được gửi cho đến khi bạn kiểm tra số hoặc tiếp tục trò chuyện. Tin nhắn của họ vẫn đến.",
   "chatKeepChatting": "Tiếp tục trò chuyện",
   "chatNeedsUpdateToChat": "{name} cần cập nhật Kryfo để tiếp tục trò chuyện.",
@@ -2920,5 +2920,5 @@
   "savedLongPressAnyMessageDesk": "Nhấp chuột phải vào một tin nhắn bất kỳ rồi chọn lưu để giữ nó ở đây.",
   "chatFailedTapToRetryDesk": "Thất bại · nhấp để thử lại",
   "groupChatTapToRetryDesk": "! Nhấp để thử lại",
-  "modesFastLineDesk": "Bỏ qua Tor nên tin nhắn đến nhanh hơn và tốn ít pin hơn. Máy chủ của chúng tôi chỉ thấy địa chỉ IP của bạn khi bạn đang kết nối, và không bao giờ ghi lại hay giữ nó. Người liên hệ của bạn không bao giờ thấy nó. Mạng của bạn có thể thấy bạn kết nối tới Kryfo."
+  "chatDropHereToSend": "Thả vào đây để gửi"
 }

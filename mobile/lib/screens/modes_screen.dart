@@ -148,7 +148,7 @@ class _ModesScreenState extends State<ModesScreen> {
                   icon: Icons.bolt_rounded,
                   name: l10n.modesFast,
                   tag: l10n.modesFastTag,
-                  line: l10n.modesFastLineShown,
+                  line: l10n.modesFastLine,
                   active: fast,
                   switching: _going > 0 && fast,
                   status: fast

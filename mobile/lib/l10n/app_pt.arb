@@ -2757,7 +2757,7 @@
   "modesPrivateLine": "Ninguém fica sabendo seu endereço IP nem quem você é, nem nossos servidores. Encontra sozinho um jeito de contornar bloqueios.",
   "modesDefault": "Padrão",
   "modesFastTag": "Direto para nossos servidores",
-  "modesFastLine": "Pula o Tor, então as mensagens chegam mais rápido e gastam menos bateria. Nossos servidores veem seu endereço IP só enquanto você está conectado, e nunca registram nem guardam. Nunca o que você diz. Seus contatos nunca veem. Sua rede pode ver que você se conecta ao Kryfo.",
+  "modesFastLine": "Pula o Tor, então as mensagens chegam mais rápido e gastam menos bateria. Nossos servidores veem seu endereço IP só enquanto você está conectado, e nunca registram nem guardam. Seus contatos nunca veem. Sua rede pode ver que você se conecta ao Kryfo.",
   "modesFastConnected": "Rápido · conectado",
   "modesFastConnecting": "Rápido · conectando",
   "modesFastDown": "Rápido · nossos servidores não respondem",
@@ -2903,7 +2903,7 @@
   "desktopBackupCardLine": "A sua conta do Windows neste computador guarda a chave do Kryfo. Um backup do Kryfo traz tudo de volta se o computador ou a conta forem redefinidos.",
   "desktopBackupHint": "Traz tudo de volta se este computador for redefinido.",
   "chatHealRestored": "{name} configurou o Kryfo de novo",
-  "chatHealNewSession": "O telefone de {name} iniciou uma nova sessão segura",
+  "chatHealNewSession": "O aparelho de {name} iniciou uma nova sessão segura",
   "chatHealHeldLine": "Você já tinha verificado {name}. Nada é enviado até você conferir o número ou continuar a conversa. As mensagens dessa pessoa continuam chegando.",
   "chatKeepChatting": "Continuar a conversa",
   "chatNeedsUpdateToChat": "{name} precisa atualizar o Kryfo para continuar a conversa.",
@@ -2920,5 +2920,5 @@
   "savedLongPressAnyMessageDesk": "Clique com o botão direito em qualquer mensagem e escolha salvar para guardá-la aqui.",
   "chatFailedTapToRetryDesk": "Falhou · clique para repetir",
   "groupChatTapToRetryDesk": "! Clique para repetir",
-  "modesFastLineDesk": "Pula o Tor, então as mensagens chegam mais rápido e gastam menos bateria. Nossos servidores veem seu endereço IP só enquanto você está conectado, e nunca registram nem guardam. Seus contatos nunca veem. Sua rede pode ver que você se conecta ao Kryfo."
+  "chatDropHereToSend": "Solte aqui para enviar"
 }
