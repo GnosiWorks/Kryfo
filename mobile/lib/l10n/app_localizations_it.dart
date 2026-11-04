@@ -1576,19 +1576,18 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get chatTorIsNotUp =>
-      'Tor non è ancora pronto · invio senza anteprima';
+      'Tor non è ancora connesso · nessuna anteprima del link';
 
   @override
   String get chatCouldnTReachIt =>
-      'Sito irraggiungibile · invio senza anteprima';
+      'Pagina irraggiungibile · nessuna anteprima del link';
 
   @override
   String get chatNoTitleCameBack =>
-      'Nessun titolo ricevuto · invio senza anteprima';
+      'Questa pagina non ha un titolo · nessuna anteprima del link';
 
   @override
-  String get chatCouldnTFetchIt =>
-      'Impossibile scaricarla · invio senza anteprima';
+  String get chatCouldnTFetchIt => 'Impossibile caricare l’anteprima';
 
   @override
   String get chatNoSignalSessionRe =>
@@ -2580,19 +2579,18 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get groupChatTorIsNotUp =>
-      'Tor non è ancora pronto · invio senza anteprima';
+      'Tor non è ancora connesso · nessuna anteprima del link';
 
   @override
   String get groupChatCouldnTReachIt =>
-      'Sito irraggiungibile · invio senza anteprima';
+      'Pagina irraggiungibile · nessuna anteprima del link';
 
   @override
   String get groupChatNoTitleCameBack =>
-      'Nessun titolo ricevuto · invio senza anteprima';
+      'Questa pagina non ha un titolo · nessuna anteprima del link';
 
   @override
-  String get groupChatCouldnTFetchIt =>
-      'Impossibile scaricarla · invio senza anteprima';
+  String get groupChatCouldnTFetchIt => 'Impossibile caricare l’anteprima';
 
   @override
   String get groupChatCamera => 'Fotocamera';

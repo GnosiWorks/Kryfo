@@ -1577,19 +1577,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get chatTorIsNotUp =>
-      'Tor aún no está listo · se envía sin vista previa';
+      'Tor aún no está conectado · sin vista previa del enlace';
 
   @override
   String get chatCouldnTReachIt =>
-      'No se pudo acceder · se envía sin vista previa';
+      'No se pudo acceder a la página · sin vista previa del enlace';
 
   @override
   String get chatNoTitleCameBack =>
-      'No llegó ningún título · se envía sin vista previa';
+      'Esa página no tiene título · sin vista previa del enlace';
 
   @override
-  String get chatCouldnTFetchIt =>
-      'No se pudo obtener · se envía sin vista previa';
+  String get chatCouldnTFetchIt => 'No se pudo cargar la vista previa';
 
   @override
   String get chatNoSignalSessionRe =>
@@ -2580,19 +2579,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get groupChatTorIsNotUp =>
-      'Tor aún no está listo · se envía sin vista previa';
+      'Tor aún no está conectado · sin vista previa del enlace';
 
   @override
   String get groupChatCouldnTReachIt =>
-      'No se pudo acceder · se envía sin vista previa';
+      'No se pudo acceder a la página · sin vista previa del enlace';
 
   @override
   String get groupChatNoTitleCameBack =>
-      'No llegó ningún título · se envía sin vista previa';
+      'Esa página no tiene título · sin vista previa del enlace';
 
   @override
-  String get groupChatCouldnTFetchIt =>
-      'No se pudo obtener · se envía sin vista previa';
+  String get groupChatCouldnTFetchIt => 'No se pudo cargar la vista previa';
 
   @override
   String get groupChatCamera => 'Cámara';

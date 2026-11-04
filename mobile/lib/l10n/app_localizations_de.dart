@@ -1575,16 +1575,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'Konnte das GIF nicht bereinigen';
 
   @override
-  String get chatTorIsNotUp => 'Tor läuft noch nicht · sende ohne Vorschau';
+  String get chatTorIsNotUp =>
+      'Tor ist noch nicht verbunden · keine Link-Vorschau';
 
   @override
-  String get chatCouldnTReachIt => 'Nicht erreichbar · sende ohne Vorschau';
+  String get chatCouldnTReachIt =>
+      'Seite nicht erreichbar · keine Link-Vorschau';
 
   @override
-  String get chatNoTitleCameBack => 'Kein Titel erhalten · sende ohne Vorschau';
+  String get chatNoTitleCameBack =>
+      'Die Seite hat keinen Titel · keine Link-Vorschau';
 
   @override
-  String get chatCouldnTFetchIt => 'Nicht abrufbar · sende ohne Vorschau';
+  String get chatCouldnTFetchIt => 'Vorschau konnte nicht geladen werden';
 
   @override
   String get chatNoSignalSessionRe => 'Keine Signal-Sitzung. Neu koppeln';
@@ -2580,18 +2583,18 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get groupChatTorIsNotUp =>
-      'Tor läuft noch nicht · sende ohne Vorschau';
+      'Tor ist noch nicht verbunden · keine Link-Vorschau';
 
   @override
   String get groupChatCouldnTReachIt =>
-      'Nicht erreichbar · sende ohne Vorschau';
+      'Seite nicht erreichbar · keine Link-Vorschau';
 
   @override
   String get groupChatNoTitleCameBack =>
-      'Kein Titel erhalten · sende ohne Vorschau';
+      'Die Seite hat keinen Titel · keine Link-Vorschau';
 
   @override
-  String get groupChatCouldnTFetchIt => 'Nicht abrufbar · sende ohne Vorschau';
+  String get groupChatCouldnTFetchIt => 'Vorschau konnte nicht geladen werden';
 
   @override
   String get groupChatCamera => 'Kamera';

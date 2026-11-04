@@ -1613,16 +1613,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'تعذّر تنظيف ملف GIF هذا';
 
   @override
-  String get chatTorIsNotUp => 'لم يعمل Tor بعد · سيُرسل دون معاينة';
+  String get chatTorIsNotUp => 'Tor غير متصل بعد · بلا معاينة للرابط';
 
   @override
-  String get chatCouldnTReachIt => 'تعذّر الوصول إليه · سيُرسل دون معاينة';
+  String get chatCouldnTReachIt =>
+      'تعذّر الوصول إلى الصفحة · بلا معاينة للرابط';
 
   @override
-  String get chatNoTitleCameBack => 'لم يُرجع عنوانًا · سيُرسل دون معاينة';
+  String get chatNoTitleCameBack => 'هذه الصفحة بلا عنوان · بلا معاينة للرابط';
 
   @override
-  String get chatCouldnTFetchIt => 'تعذّر جلبه · سيُرسل دون معاينة';
+  String get chatCouldnTFetchIt => 'تعذّر تحميل المعاينة';
 
   @override
   String get chatNoSignalSessionRe => 'لا توجد جلسة Signal. أعد الاقتران';
@@ -2615,16 +2616,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupChatMessageUnavailable => 'الرسالة غير متاحة';
 
   @override
-  String get groupChatTorIsNotUp => 'لم يعمل Tor بعد · سيُرسل دون معاينة';
+  String get groupChatTorIsNotUp => 'Tor غير متصل بعد · بلا معاينة للرابط';
 
   @override
-  String get groupChatCouldnTReachIt => 'تعذّر الوصول إليه · سيُرسل دون معاينة';
+  String get groupChatCouldnTReachIt =>
+      'تعذّر الوصول إلى الصفحة · بلا معاينة للرابط';
 
   @override
-  String get groupChatNoTitleCameBack => 'لم يُرجع عنوانًا · سيُرسل دون معاينة';
+  String get groupChatNoTitleCameBack =>
+      'هذه الصفحة بلا عنوان · بلا معاينة للرابط';
 
   @override
-  String get groupChatCouldnTFetchIt => 'تعذّر جلبه · سيُرسل دون معاينة';
+  String get groupChatCouldnTFetchIt => 'تعذّر تحميل المعاينة';
 
   @override
   String get groupChatCamera => 'الكاميرا';

@@ -1946,21 +1946,21 @@
   "@chatCouldNotCleanThatGif": {
     "description": "screens/chat_screen.dart"
   },
-  "chatTorIsNotUp": "Tor is not up yet · sending without",
+  "chatTorIsNotUp": "Tor isn't connected yet · no link preview",
   "@chatTorIsNotUp": {
-    "description": "screens/chat_screen.dart"
+    "description": "Toast when the user taps add preview in the composer and Tor is not running. The page title is fetched over Tor only; on failure no link preview is added. Nothing is sent at this moment, and the message later goes on its normal route. Say only that no link preview is added, never that the message goes without Tor."
   },
-  "chatCouldnTReachIt": "Couldn't reach it · sending without",
+  "chatCouldnTReachIt": "Couldn't reach the page · no link preview",
   "@chatCouldnTReachIt": {
-    "description": "screens/chat_screen.dart"
+    "description": "Toast when the user taps add preview in the composer and the page cannot be reached over Tor. On failure no link preview is added. Nothing is sent at this moment, and the message later goes on its normal route. Say only that no link preview is added, never that the message goes without Tor."
   },
-  "chatNoTitleCameBack": "No title came back · sending without",
+  "chatNoTitleCameBack": "That page has no title · no link preview",
   "@chatNoTitleCameBack": {
-    "description": "screens/chat_screen.dart"
+    "description": "Toast when the user taps add preview in the composer and the page loads over Tor but has no title. No link preview is added. Nothing is sent at this moment, and the message later goes on its normal route. Say only that no link preview is added."
   },
-  "chatCouldnTFetchIt": "Couldn't fetch it · sending without",
+  "chatCouldnTFetchIt": "Couldn't load a preview",
   "@chatCouldnTFetchIt": {
-    "description": "screens/chat_screen.dart"
+    "description": "Toast when fetching a link preview in the composer fails for any other reason. No link preview is added. Nothing is sent at this moment, and the message later goes on its normal route."
   },
   "chatNoSignalSessionRe": "No signal session: pair again",
   "@chatNoSignalSessionRe": {
@@ -3160,21 +3160,21 @@
   "@groupChatMessageUnavailable": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupChatTorIsNotUp": "Tor is not up yet · sending without",
+  "groupChatTorIsNotUp": "Tor isn't connected yet · no link preview",
   "@groupChatTorIsNotUp": {
-    "description": "screens/group_chat_screen.dart"
+    "description": "Toast when the user taps add preview in the group composer and Tor is not running. The page title is fetched over Tor only; on failure no link preview is added. Nothing is sent at this moment, and the message later goes on its normal route. Say only that no link preview is added, never that the message goes without Tor."
   },
-  "groupChatCouldnTReachIt": "Couldn't reach it · sending without",
+  "groupChatCouldnTReachIt": "Couldn't reach the page · no link preview",
   "@groupChatCouldnTReachIt": {
-    "description": "screens/group_chat_screen.dart"
+    "description": "Toast when the user taps add preview in the group composer and the page cannot be reached over Tor. On failure no link preview is added. Nothing is sent at this moment, and the message later goes on its normal route. Say only that no link preview is added, never that the message goes without Tor."
   },
-  "groupChatNoTitleCameBack": "No title came back · sending without",
+  "groupChatNoTitleCameBack": "That page has no title · no link preview",
   "@groupChatNoTitleCameBack": {
-    "description": "screens/group_chat_screen.dart"
+    "description": "Toast when the user taps add preview in the group composer and the page loads over Tor but has no title. No link preview is added. Nothing is sent at this moment, and the message later goes on its normal route. Say only that no link preview is added."
   },
-  "groupChatCouldnTFetchIt": "Couldn't fetch it · sending without",
+  "groupChatCouldnTFetchIt": "Couldn't load a preview",
   "@groupChatCouldnTFetchIt": {
-    "description": "screens/group_chat_screen.dart"
+    "description": "Toast when fetching a link preview in the group composer fails for any other reason. No link preview is added. Nothing is sent at this moment, and the message later goes on its normal route."
   },
   "groupChatCamera": "Camera",
   "@groupChatCamera": {

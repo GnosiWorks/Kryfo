@@ -1576,17 +1576,18 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chatTorIsNotUp =>
-      'O Tor ainda não está pronto · enviando sem prévia';
+      'O Tor ainda não está conectado · sem prévia do link';
 
   @override
-  String get chatCouldnTReachIt => 'Não deu para acessar · enviando sem prévia';
+  String get chatCouldnTReachIt =>
+      'Não deu para acessar a página · sem prévia do link';
 
   @override
   String get chatNoTitleCameBack =>
-      'Nenhum título voltou · enviando sem prévia';
+      'Essa página não tem título · sem prévia do link';
 
   @override
-  String get chatCouldnTFetchIt => 'Não deu para buscar · enviando sem prévia';
+  String get chatCouldnTFetchIt => 'Não deu para carregar a prévia';
 
   @override
   String get chatNoSignalSessionRe => 'Sem sessão Signal. Pareie de novo';
@@ -2574,19 +2575,18 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get groupChatTorIsNotUp =>
-      'O Tor ainda não está pronto · enviando sem prévia';
+      'O Tor ainda não está conectado · sem prévia do link';
 
   @override
   String get groupChatCouldnTReachIt =>
-      'Não deu para acessar · enviando sem prévia';
+      'Não deu para acessar a página · sem prévia do link';
 
   @override
   String get groupChatNoTitleCameBack =>
-      'Nenhum título voltou · enviando sem prévia';
+      'Essa página não tem título · sem prévia do link';
 
   @override
-  String get groupChatCouldnTFetchIt =>
-      'Não deu para buscar · enviando sem prévia';
+  String get groupChatCouldnTFetchIt => 'Não deu para carregar a prévia';
 
   @override
   String get groupChatCamera => 'Câmera';

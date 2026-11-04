@@ -1554,18 +1554,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'Không làm sạch được gif đó';
 
   @override
-  String get chatTorIsNotUp => 'Tor chưa sẵn sàng · gửi không kèm xem trước';
+  String get chatTorIsNotUp => 'Tor chưa kết nối · không có xem trước liên kết';
 
   @override
   String get chatCouldnTReachIt =>
-      'Không truy cập được · gửi không kèm xem trước';
+      'Không truy cập được trang · không có xem trước liên kết';
 
   @override
   String get chatNoTitleCameBack =>
-      'Không lấy được tiêu đề · gửi không kèm xem trước';
+      'Trang này không có tiêu đề · không có xem trước liên kết';
 
   @override
-  String get chatCouldnTFetchIt => 'Không tải được · gửi không kèm xem trước';
+  String get chatCouldnTFetchIt => 'Không tải được bản xem trước';
 
   @override
   String get chatNoSignalSessionRe => 'Không có phiên Signal. Hãy ghép nối lại';
@@ -2545,19 +2545,18 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupChatTorIsNotUp =>
-      'Tor chưa sẵn sàng · gửi không kèm xem trước';
+      'Tor chưa kết nối · không có xem trước liên kết';
 
   @override
   String get groupChatCouldnTReachIt =>
-      'Không truy cập được · gửi không kèm xem trước';
+      'Không truy cập được trang · không có xem trước liên kết';
 
   @override
   String get groupChatNoTitleCameBack =>
-      'Không lấy được tiêu đề · gửi không kèm xem trước';
+      'Trang này không có tiêu đề · không có xem trước liên kết';
 
   @override
-  String get groupChatCouldnTFetchIt =>
-      'Không tải được · gửi không kèm xem trước';
+  String get groupChatCouldnTFetchIt => 'Không tải được bản xem trước';
 
   @override
   String get groupChatCamera => 'Máy ảnh';
