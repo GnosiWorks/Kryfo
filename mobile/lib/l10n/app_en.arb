@@ -13911,5 +13911,9 @@
   "groupChatTapToRetryDesk": "! Click to retry",
   "@groupChatTapToRetryDesk": {
     "description": "screens/group_chat_screen.dart, on a computer"
+  },
+  "chatDropHereToSend": "Drop here to send",
+  "@chatDropHereToSend": {
+    "description": "a computer: files dragged over a chat, the line on the wash before they are let go"
   }
 }

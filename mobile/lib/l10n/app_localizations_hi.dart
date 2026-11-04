@@ -11081,4 +11081,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get groupChatTapToRetryDesk => '! फिर भेजने को क्लिक करें';
+
+  @override
+  String get chatDropHereToSend => 'भेजने के लिए यहाँ छोड़ें';
 }

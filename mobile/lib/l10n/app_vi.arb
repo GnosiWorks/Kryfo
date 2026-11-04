@@ -2918,5 +2918,6 @@
   "onboardingDeskRunLead": "Đóng cửa sổ thì Kryfo chờ trong khay hệ thống, nên tin nhắn vẫn tiếp tục đến. Bạn có thể đổi cả hai sau trong Cài đặt, mục Thông báo.",
   "savedLongPressAnyMessageDesk": "Nhấp chuột phải vào một tin nhắn bất kỳ rồi chọn lưu để giữ nó ở đây.",
   "chatFailedTapToRetryDesk": "Thất bại · nhấp để thử lại",
-  "groupChatTapToRetryDesk": "! Nhấp để thử lại"
+  "groupChatTapToRetryDesk": "! Nhấp để thử lại",
+  "chatDropHereToSend": "Thả vào đây để gửi"
 }

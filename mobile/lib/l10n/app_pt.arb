@@ -2918,5 +2918,6 @@
   "onboardingDeskRunLead": "Feche a janela e o Kryfo espera na bandeja do sistema, e as mensagens continuam chegando. Você pode mudar as duas coisas depois em Configurações, em Notificações.",
   "savedLongPressAnyMessageDesk": "Clique com o botão direito em qualquer mensagem e escolha salvar para guardá-la aqui.",
   "chatFailedTapToRetryDesk": "Falhou · clique para repetir",
-  "groupChatTapToRetryDesk": "! Clique para repetir"
+  "groupChatTapToRetryDesk": "! Clique para repetir",
+  "chatDropHereToSend": "Solte aqui para enviar"
 }

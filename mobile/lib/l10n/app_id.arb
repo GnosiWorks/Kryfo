@@ -2918,5 +2918,6 @@
   "onboardingDeskRunLead": "Tutup jendela dan Kryfo menunggu di area notifikasi, jadi pesan terus masuk. Keduanya bisa kamu ubah nanti di Pengaturan, bagian Notifikasi.",
   "savedLongPressAnyMessageDesk": "Klik kanan pesan mana pun lalu pilih simpan untuk menyimpannya di sini.",
   "chatFailedTapToRetryDesk": "Gagal · klik untuk coba lagi",
-  "groupChatTapToRetryDesk": "! Klik untuk ulangi"
+  "groupChatTapToRetryDesk": "! Klik untuk ulangi",
+  "chatDropHereToSend": "Lepaskan di sini untuk mengirim"
 }

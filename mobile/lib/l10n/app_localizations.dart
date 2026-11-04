@@ -17794,6 +17794,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'! Click to retry'**
   String get groupChatTapToRetryDesk;
+
+  /// a computer: files dragged over a chat, the line on the wash before they are let go
+  ///
+  /// In en, this message translates to:
+  /// **'Drop here to send'**
+  String get chatDropHereToSend;
 }
 
 class _AppLocalizationsDelegate

@@ -2918,5 +2918,6 @@
   "onboardingDeskRunLead": "Schließt du das Fenster, wartet Kryfo im Infobereich, und Nachrichten kommen weiter an. Beides kannst du später in den Einstellungen unter Benachrichtigungen ändern.",
   "savedLongPressAnyMessageDesk": "Klicke mit der rechten Maustaste auf eine Nachricht und wähle Speichern, um sie hier aufzubewahren.",
   "chatFailedTapToRetryDesk": "Fehler · klicke zum Wiederholen",
-  "groupChatTapToRetryDesk": "! Klicken zum Wiederholen"
+  "groupChatTapToRetryDesk": "! Klicken zum Wiederholen",
+  "chatDropHereToSend": "Hier ablegen zum Senden"
 }

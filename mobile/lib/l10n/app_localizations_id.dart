@@ -11074,4 +11074,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get groupChatTapToRetryDesk => '! Klik untuk ulangi';
+
+  @override
+  String get chatDropHereToSend => 'Lepaskan di sini untuk mengirim';
 }

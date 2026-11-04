@@ -168,6 +168,7 @@ import '../voice_length.dart' show voiceFileMs;
 import '../voice_opus.dart' show voiceForWire;
 import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
 import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
+import '../desktop/drag_in.dart' show DragInZone;
 import '../wide/read_width.dart';
 import '../wide/wide_pane.dart' show PaneBack, PaneFind;
 
@@ -4565,7 +4566,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   @override
-  Widget build(BuildContext context) => menuBack(child: _page(context));
+  Widget build(BuildContext context) => menuBack(
+    child: DragInZone(
+      enabled: _end == null && !_waiting,
+      send: (path, name) async {
+        if (_nobodyToRead()) return;
+        await _sendGroupFileFrom(path, name);
+      },
+      couldNotRead: () => l10n.groupChatCouldNotReadThat,
+      child: _page(context),
+    ),
+  );
 
   Widget _page(BuildContext context) {
     // the albums as the thread stands now: a row of one is drawn by its lead

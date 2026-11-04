@@ -2918,5 +2918,6 @@
   "onboardingDeskRunLead": "Fermez la fenêtre et Kryfo attend dans la zone de notification, les messages continuent d’arriver. Vous pourrez changer les deux plus tard dans Réglages, sous Notifications.",
   "savedLongPressAnyMessageDesk": "Faites un clic droit sur un message et choisissez enregistrer pour le garder ici.",
   "chatFailedTapToRetryDesk": "Échec · cliquez pour réessayer",
-  "groupChatTapToRetryDesk": "! Cliquez pour réessayer"
+  "groupChatTapToRetryDesk": "! Cliquez pour réessayer",
+  "chatDropHereToSend": "Déposez ici pour envoyer"
 }

@@ -11195,4 +11195,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get groupChatTapToRetryDesk => '! Klicken zum Wiederholen';
+
+  @override
+  String get chatDropHereToSend => 'Hier ablegen zum Senden';
 }

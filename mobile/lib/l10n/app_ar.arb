@@ -2918,5 +2918,6 @@
   "onboardingDeskRunLead": "أغلق النافذة وسيبقى Kryfo في علبة النظام، فتظل الرسائل تصل. يمكنك تغيير الخيارين لاحقًا من الإعدادات، ضمن الإشعارات.",
   "savedLongPressAnyMessageDesk": "انقر بزر الفأرة الأيمن على أي رسالة ثم اختر «حفظ» لتبقى هنا.",
   "chatFailedTapToRetryDesk": "فشل · انقر لإعادة المحاولة",
-  "groupChatTapToRetryDesk": "! انقر لإعادة المحاولة"
+  "groupChatTapToRetryDesk": "! انقر لإعادة المحاولة",
+  "chatDropHereToSend": "أفلِت هنا للإرسال"
 }

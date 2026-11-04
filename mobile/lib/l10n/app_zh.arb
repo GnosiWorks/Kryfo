@@ -2918,5 +2918,6 @@
   "onboardingDeskRunLead": "关闭窗口后，Kryfo 在系统托盘中等候，消息照常到达。之后可以在“设置”的“通知”里更改这两项。",
   "savedLongPressAnyMessageDesk": "右键点击任意消息，选“保存”，就能把它留在这里。",
   "chatFailedTapToRetryDesk": "失败 · 单击重试",
-  "groupChatTapToRetryDesk": "! 单击重试"
+  "groupChatTapToRetryDesk": "! 单击重试",
+  "chatDropHereToSend": "拖到这里松开即可发送"
 }

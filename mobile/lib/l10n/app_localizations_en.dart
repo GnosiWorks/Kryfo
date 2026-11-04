@@ -11071,4 +11071,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupChatTapToRetryDesk => '! Click to retry';
+
+  @override
+  String get chatDropHereToSend => 'Drop here to send';
 }

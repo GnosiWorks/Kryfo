@@ -11059,4 +11059,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupChatTapToRetryDesk => '! Nhấp để thử lại';
+
+  @override
+  String get chatDropHereToSend => 'Thả vào đây để gửi';
 }

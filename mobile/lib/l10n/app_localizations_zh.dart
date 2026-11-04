@@ -10488,6 +10488,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get groupChatTapToRetryDesk => '! 单击重试';
+
+  @override
+  String get chatDropHereToSend => '拖到这里松开即可发送';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -20860,4 +20863,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupChatTapToRetryDesk => '! 按一下重試';
+
+  @override
+  String get chatDropHereToSend => '拖到這裡放開即可傳送';
 }

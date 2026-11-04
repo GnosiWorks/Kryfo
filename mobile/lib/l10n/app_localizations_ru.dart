@@ -11253,4 +11253,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get groupChatTapToRetryDesk => '! Щёлкни для повтора';
+
+  @override
+  String get chatDropHereToSend => 'Отпусти здесь, чтобы отправить';
 }

@@ -11209,4 +11209,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get groupChatTapToRetryDesk => '! انقر لإعادة المحاولة';
+
+  @override
+  String get chatDropHereToSend => 'أفلِت هنا للإرسال';
 }

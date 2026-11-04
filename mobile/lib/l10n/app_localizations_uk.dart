@@ -11244,4 +11244,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get groupChatTapToRetryDesk => '! Клацни ще раз';
+
+  @override
+  String get chatDropHereToSend => 'Відпусти тут, щоб надіслати';
 }

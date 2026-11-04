@@ -2918,5 +2918,6 @@
   "onboardingDeskRunLead": "پنجره را ببندید و Kryfo در سینی سیستم منتظر می‌ماند، پس پیام‌ها همچنان می‌رسند. هر دو را بعدا می‌توانید در تنظیمات، بخش اعلان‌ها، تغییر دهید.",
   "savedLongPressAnyMessageDesk": "روی هر پیامی راست‌کلیک کنید و «ذخیره» را انتخاب کنید تا این‌جا بماند.",
   "chatFailedTapToRetryDesk": "ناموفق · برای تلاش دوباره کلیک کنید",
-  "groupChatTapToRetryDesk": "! برای تکرار کلیک کنید"
+  "groupChatTapToRetryDesk": "! برای تکرار کلیک کنید",
+  "chatDropHereToSend": "برای فرستادن اینجا رها کنید"
 }

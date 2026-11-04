@@ -2918,5 +2918,6 @@
   "onboardingDeskRunLead": "Pencereyi kapatınca Kryfo sistem tepsisinde bekler, mesajlar gelmeye devam eder. İkisini de sonra Ayarlar'da, Bildirimler altında değiştirebilirsin.",
   "savedLongPressAnyMessageDesk": "Herhangi bir mesaja sağ tıkla ve burada tutmak için kaydet'i seç.",
   "chatFailedTapToRetryDesk": "Başarısız · tekrar için tıkla",
-  "groupChatTapToRetryDesk": "! Tekrar için tıkla"
+  "groupChatTapToRetryDesk": "! Tekrar için tıkla",
+  "chatDropHereToSend": "Göndermek için buraya bırak"
 }

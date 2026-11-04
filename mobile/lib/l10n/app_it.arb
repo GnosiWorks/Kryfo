@@ -2918,5 +2918,6 @@
   "onboardingDeskRunLead": "Chiudi la finestra e Kryfo aspetta nell'area di notifica, così i messaggi continuano ad arrivare. Puoi cambiare entrambe le cose più tardi in Impostazioni, sotto Notifiche.",
   "savedLongPressAnyMessageDesk": "Fai clic destro su un messaggio e scegli salva per tenerlo qui.",
   "chatFailedTapToRetryDesk": "Non inviato · fai clic per riprovare",
-  "groupChatTapToRetryDesk": "! Fai clic per riprovare"
+  "groupChatTapToRetryDesk": "! Fai clic per riprovare",
+  "chatDropHereToSend": "Rilascia qui per inviare"
 }

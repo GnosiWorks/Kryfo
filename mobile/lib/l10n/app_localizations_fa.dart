@@ -11090,4 +11090,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get groupChatTapToRetryDesk => '! برای تکرار کلیک کنید';
+
+  @override
+  String get chatDropHereToSend => 'برای فرستادن اینجا رها کنید';
 }
