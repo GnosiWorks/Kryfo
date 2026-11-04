@@ -1193,6 +1193,16 @@ Future<Set<String>> scrubHidden(Database db) async {
       for (final table in const ['sessions', 'peer_identities']) {
         await t.delete(table, where: 'address IN ($marks)', whereArgs: part);
       }
+      // their pq restart rows name them and their key
+      try {
+        await t.delete(
+          'pq_restarts',
+          where: 'peer IN ($marks)',
+          whereArgs: part,
+        );
+      } catch (e) {
+        dlog('scrub: no pq restarts (${e.runtimeType})');
+      }
     }
     // a hidden chat's unsent words, were any ever left on this side
     final chats = [

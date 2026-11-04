@@ -261,7 +261,7 @@ Future<String?> chatFilePath(String name, HaloContainer c) async {
     return null;
   }
   final docs = (await getApplicationDocumentsDirectory()).path;
-  return p.join(docs, '$folder${c.suffix}', rest);
+  return p.join(docs, '$folder${c.folderSuffix}', rest);
 }
 
 // where a chat's rows are beyond its person or group and its messages,
@@ -295,6 +295,8 @@ const _peerRows = {
   'contact_photos': 'halo_id = ?1',
   'photo_parts': 'halo_id = ?1',
   'photo_peers': 'halo_id = ?1',
+  // where heals rebuilt their session, and a hold on it
+  'heal_lines': 'peer = ?1',
 };
 // a person's block rows, by peer_id, which go with a group's people
 const _blockRows = ['block_spans', 'blocked_drops'];
@@ -307,6 +309,7 @@ const _mayLack = {
   'photo_parts',
   'photo_peers',
   'roster_invites',
+  'heal_lines',
 };
 const _groupRows = {
   'group_members': 'group_id = ?1',
@@ -380,9 +383,12 @@ class SqlChatMover implements ChatMover {
   Future<void> attach() async {
     _db = await _live.open();
     final docs = (await getApplicationDocumentsDirectory()).path;
-    _liveAt = _Folders(docs, _live.container.suffix);
+    _liveAt = _Folders(docs, _live.container.folderSuffix);
     final v = _vault;
-    _vaultAt = _Folders(docs, (v?.container ?? HaloContainer.vault).suffix);
+    _vaultAt = _Folders(
+      docs,
+      (v?.container ?? HaloContainer.vault).folderSuffix,
+    );
     // freed pages are zeroed: a moved chat does not linger in the file it
     // left
     final was = await _db.rawQuery('PRAGMA main.secure_delete');

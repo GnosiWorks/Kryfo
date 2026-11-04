@@ -1,235 +1,176 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the joining side of a pairing code. six digits in, the invite they point
-// at out, and nothing added until the person has matched its key number
-// against the other phone's screen. the three words only name them: anyone
-// can put them in an invite. a code that points at more than one invite is
-// refused outright.
+// the joining side of a pair code: eight digits in, a cpace run over the
+// relays, and once the code matched on both phones the person sees who it
+// is and adds them. a six digit code is an older Kryfo's and says so. the
+// card both sides show when the code matched lives here too
 import 'dart:async';
-import 'dart:convert';
+import 'dart:math' as math;
 
-import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
-import '../main.dart' show inviteKeyNumber, parseHaloUri;
-import '../rooms.dart' show firstKryfoLink;
+import '../pair_flow.dart';
 import '../theme.dart';
-import 'kryfo_avatar.dart';
-import 'motion.dart' show kHouseCurve, kHouseTime, motionStill;
-import 'pair_code_panel.dart' show kPairCodeLife;
 import 'halo_buttons.dart';
+import 'kryfo_avatar.dart';
+import 'motion.dart' show BreathDot, kHouseCurve, kHouseTime, motionStill;
 import 'press_scale.dart';
+import 'swap.dart';
 
-/// the engine's answer when no relay took a share or answered a lookup
-const pairUnreached = 'error: unreached';
+export '../pair_flow.dart' show pairUnreached;
 
-/// an engine error, worded for the person
-String pairErrorText(String res) =>
-    res == pairUnreached ? l10n.pairCodeUnreached : l10n.pairCodeFailed;
+/// what a run's line says, on the sharer's side or the joiner's
+String pairLineText(PairLine l, {required bool sharer}) => switch (l) {
+  PairLine.none => '',
+  PairLine.making => l10n.pairCodePanelPuttingYourInviteIn,
+  PairLine.inviteNotReady => l10n.pairCodePanelYourInviteIsNot,
+  PairLine.unreached => l10n.pairCodeUnreached,
+  PairLine.failed => l10n.pairCodeFailed,
+  PairLine.looking => l10n.pairCodeLooking,
+  PairLine.nothingYet => l10n.pairCodeNothingThereYetTrying,
+  PairLine.nothingAtCode => l10n.pairCodeNothingAtThatCode,
+  PairLine.waiting => sharer ? '' : l10n.pairCodeWaitingForThem,
+  PairLine.stillWaiting => l10n.pairCodeStillWaiting,
+  PairLine.wrongTyped => l10n.pairCodePanelWrongTyped,
+  PairLine.threeWrong => l10n.pairCodePanelThreeWrong,
+  PairLine.burned => l10n.pairCodePanelBurned,
+  PairLine.ranOut => l10n.pairCodeRanOut,
+  PairLine.tooManyTries => l10n.pairCodeTooManyTries,
+  PairLine.unanswered => l10n.pairCodeUnanswered,
+  PairLine.oldCode => l10n.pairCodeOldCodeShown,
+  PairLine.eightDigits => l10n.pairCodeEightDigits,
+  PairLine.notAdded =>
+    sharer ? l10n.pairCodePanelNotAdded : l10n.pairCodeNotAdded,
+};
 
-/// what a code's address held, if it is one invite and nothing else: the
-/// number shown and the add both read this one string, so nothing after it
-/// can name another key. an old card with no bundle is no code's invite
-String? pairInviteExact(String payload) {
-  if (payload.contains(RegExp(r'\s'))) return null;
-  if (firstKryfoLink(payload) != payload) return null;
-  final parsed = parseHaloUri(payload);
-  if (parsed == null || parsed['bundle'] == null) return null;
-  return payload;
-}
-
-/// the three words a fetched invite names, or null when it names none
-String? pairInviteWords(String invite) {
-  final exact = pairInviteExact(invite);
-  return exact == null ? null : parseHaloUri(exact)?['id'];
-}
-
-/// the clock codes are counted on. tests set it to the fake one
-DateTime Function() pairNow = DateTime.now;
-
-/// typed digits as 0-9: persian and arabic-indic ones count, the rest goes
-String pairDigits(String typed) {
-  final b = StringBuffer();
-  for (final r in typed.runes) {
-    if (r >= 0x30 && r <= 0x39) {
-      b.writeCharCode(r);
-    } else if (r >= 0x6F0 && r <= 0x6F9) {
-      b.writeCharCode(0x30 + r - 0x6F0);
-    } else if (r >= 0x660 && r <= 0x669) {
-      b.writeCharCode(0x30 + r - 0x660);
+/// digits typed in any of the app's scripts, shown as NN NNN NNN while
+/// typed. anything that is not a digit is left out
+class PairCodeFormatter extends TextInputFormatter {
+  const PairCodeFormatter();
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final b = StringBuffer();
+    for (final r in newValue.text.runes) {
+      final d = pairDigits(String.fromCharCode(r));
+      if (d != null && d.length == 1) b.write(d);
     }
+    var digits = b.toString();
+    if (digits.length > 8) digits = digits.substring(0, 8);
+    final shown = pairCodeShown(digits);
+    return TextEditingValue(
+      text: shown,
+      selection: TextSelection.collapsed(offset: shown.length),
+    );
   }
-  return b.toString();
 }
-
-// an invite turned away with not them, until its code burns: the joiner
-// cannot burn the code, so the same code is not offered again here. kept
-// as a hash of code and invite, never in the clear
-final _refused = <String, DateTime>{};
-
-String _refusal(String code, String invite) =>
-    sha256.convert(utf8.encode('$code\n$invite')).toString();
-
-bool _wasRefused(String code, String invite) {
-  final now = pairNow();
-  _refused.removeWhere((_, until) => !until.isAfter(now));
-  return _refused.containsKey(_refusal(code, invite));
-}
-
-@visibleForTesting
-void forgetPairRefusals() => _refused.clear();
 
 class PairJoin extends StatefulWidget {
-  // the engine's answer for a code: an invite, "empty", "twice",
-  // [pairUnreached] or another error
-  final Future<String> Function(String code) fetch;
-  // the app's own add path; its answer is the line to show afterwards
-  final Future<String> Function(String invite) add;
+  // makes the run; tests hand in one on stand-in hooks
+  final PairRun Function() run;
+  // the add went through: its line (empty when a chat opening is the
+  // answer)
   final void Function(String status) onAdded;
-  // between looks while the other side has not shared yet
-  final Duration retryGap;
-  // the key number of a fetched invite, from the key its session runs on
-  final String? Function(String invite) numberOf;
-  const PairJoin({
-    super.key,
-    required this.fetch,
-    required this.add,
-    required this.onAdded,
-    this.retryGap = const Duration(seconds: 4),
-    this.numberOf = inviteKeyNumber,
-  });
+  const PairJoin({super.key, required this.run, required this.onAdded});
 
   @override
   State<PairJoin> createState() => _PairJoinState();
 }
 
-class _PairJoinState extends State<PairJoin> {
+class _PairJoinState extends State<PairJoin>
+    with SingleTickerProviderStateMixin {
   final _ctrl = TextEditingController();
-  String _status = '';
-  // refused or failed: said in the warning colour
+  late final _shake = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 420),
+  );
+  PairRun? _run;
+  // a line said before any run, or after one ended, and an add's own
+  PairLine _line = PairLine.none;
+  String _said = '';
   bool _warn = false;
-  bool _busy = false;
-  bool _adding = false;
-  String? _invite;
-  String? _words;
-  String? _number;
-  String? _code;
 
   @override
   void dispose() {
+    _run?.removeListener(_changed);
+    _run?.dispose();
     _ctrl.dispose();
+    _shake.dispose();
     super.dispose();
   }
 
-  void _say(String s, {bool warn = false}) => setState(() {
-    _busy = false;
-    _status = s;
-    _warn = warn;
-  });
-
-  Future<void> _join() async {
-    final code = pairDigits(_ctrl.text);
-    if (code.length != 6) {
-      _say(l10n.pairCodeSixDigits);
+  void _changed() {
+    final r = _run;
+    if (!mounted || r == null) return;
+    if (r.phase == PairPhase.added) {
+      HapticFeedback.lightImpact();
+      widget.onAdded(r.added ?? '');
       return;
     }
+    if (r.phase == PairPhase.matched) HapticFeedback.lightImpact();
+    if (r.phase == PairPhase.ended) {
+      if (r.warn) _nudge();
+      _said = r.added ?? '';
+      _line = r.line;
+      _warn = r.warn;
+    }
+    setState(() {});
+  }
+
+  // a code that did not take: a buzz, and the field shakes once
+  void _nudge() {
+    HapticFeedback.heavyImpact();
+    if (!motionStill(context)) _shake.forward(from: 0);
+  }
+
+  Future<void> _join() async {
+    final live = _run;
+    if (live != null &&
+        (live.busy ||
+            live.phase == PairPhase.live ||
+            live.phase == PairPhase.matched)) {
+      return;
+    }
+    // a six digit code or a short one is said at once, with no run
+    if (pairOldCode(_ctrl.text) || pairDigits(_ctrl.text)?.length != 8) {
+      setState(() {
+        _line = pairOldCode(_ctrl.text)
+            ? PairLine.oldCode
+            : PairLine.eightDigits;
+        _said = '';
+        _warn = true;
+      });
+      _nudge();
+      return;
+    }
+    live?.removeListener(_changed);
+    live?.dispose();
+    final r = widget.run();
+    _run = r..addListener(_changed);
     setState(() {
-      _busy = true;
-      _status = l10n.pairCodeLooking;
+      _line = PairLine.none;
+      _said = '';
       _warn = false;
     });
-
-    // the other side may not have pressed share yet, so give it a few goes.
-    // a look no relay answered says nothing about the code, so it is tried
-    // again too, and only a look that was answered can call the code empty
-    var answered = false;
-    for (var attempt = 0; attempt < 3; attempt++) {
-      final res = await widget.fetch(code);
-      if (!mounted) return;
-      if (res == 'twice') {
-        HapticFeedback.heavyImpact();
-        _ctrl.clear();
-        _say(l10n.pairCodeUsedTwice, warn: true);
-        return;
-      }
-      if (res.startsWith('kryfo://')) {
-        // words, number and add all from this one exact string
-        final exact = pairInviteExact(res);
-        final words = exact == null ? null : pairInviteWords(exact);
-        // no key that reads is no number to match, and nothing to add
-        final number = words == null ? null : widget.numberOf(exact!);
-        if (exact == null || words == null || number == null) {
-          _say(l10n.pairCodeNothingAtThatCode);
-          return;
-        }
-        if (_wasRefused(code, exact)) {
-          HapticFeedback.heavyImpact();
-          _ctrl.clear();
-          _say(l10n.pairCodeNotAdded, warn: true);
-          return;
-        }
-        HapticFeedback.lightImpact();
-        setState(() {
-          _busy = false;
-          _status = '';
-          _invite = exact;
-          _words = words;
-          _number = number;
-          _code = code;
-        });
-        return;
-      }
-      if (res != pairUnreached && res.startsWith('error')) {
-        _say(pairErrorText(res), warn: true);
-        return;
-      }
-      if (res != pairUnreached) answered = true;
-      if (attempt < 2) {
-        setState(
-          () => _status = answered
-              ? l10n.pairCodeNothingThereYetTrying
-              : l10n.pairCodeLooking,
-        );
-        await Future<void>.delayed(widget.retryGap);
-        if (!mounted) return;
-      }
-    }
-    answered
-        ? _say(l10n.pairCodeNothingAtThatCode)
-        : _say(l10n.pairCodeUnreached, warn: true);
+    await r.begin(_ctrl.text);
   }
 
-  Future<void> _add() async {
-    final invite = _invite;
-    if (invite == null || _adding) return;
-    setState(() => _adding = true);
-    final status = await widget.add(invite);
-    if (!mounted) return;
-    setState(() => _adding = false);
-    widget.onAdded(status);
-  }
-
-  void _notThem() {
-    final code = _code, invite = _invite;
-    if (code != null && invite != null) {
-      _refused[_refusal(code, invite)] = pairNow().add(kPairCodeLife);
-    }
+  Future<void> _notThem() async {
+    await _run?.notThem();
     _ctrl.clear();
-    setState(() {
-      _invite = null;
-      _words = null;
-      _number = null;
-      _code = null;
-      _status = l10n.pairCodeNotAdded;
-      _warn = false;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     final still = motionStill(context);
-    final confirm = _words != null;
+    final r = _run;
+    final matched =
+        r != null &&
+        r.peer != null &&
+        (r.phase == PairPhase.matched || r.phase == PairPhase.adding);
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
       children: [
@@ -252,13 +193,12 @@ class _PairJoinState extends State<PairJoin> {
           ),
           layoutBuilder: (top, gone) =>
               Stack(alignment: Alignment.topCenter, children: [...gone, ?top]),
-          child: confirm
-              ? PairConfirm(
-                  key: const ValueKey('confirm'),
-                  words: _words!,
-                  number: _number!,
-                  busy: _adding,
-                  onAdd: _add,
+          child: matched
+              ? PairMatched(
+                  key: const ValueKey('matched'),
+                  words: r.peer!.id,
+                  busy: r.phase == PairPhase.adding,
+                  onAdd: r.confirm,
                   onNotThem: _notThem,
                 )
               : KeyedSubtree(key: const ValueKey('entry'), child: _entry()),
@@ -269,73 +209,122 @@ class _PairJoinState extends State<PairJoin> {
 
   Widget _entry() {
     final still = motionStill(context);
-    final status = _status.isEmpty
+    final r = _run;
+    final running =
+        r != null && (r.phase == PairPhase.making || r.phase == PairPhase.live);
+    final line = running ? r.line : _line;
+    final warn = running ? r.warn : _warn;
+    final text = !running && _said.isNotEmpty
+        ? _said
+        : pairLineText(line, sharer: false);
+    final waits = running && r.phase == PairPhase.live;
+    final status = text.isEmpty
         ? const SizedBox(width: double.infinity)
         : Padding(
             padding: const EdgeInsets.only(top: 16),
-            child: Text(
-              _status,
-              key: ValueKey(_status),
-              style: _warn
-                  ? HaloType.sans(
-                      size: 13,
-                      weight: FontWeight.w600,
-                      color: HaloColors.roseText,
-                    )
-                  : HaloType.mono(size: 11, color: HaloColors.text2),
+            child: RiseSwap(
+              alignment: AlignmentDirectional.centerStart,
+              child: Row(
+                key: ValueKey(text),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (waits && !warn) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(top: 5),
+                      child: BreathDot(color: HaloColors.amber, size: 6),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Expanded(
+                    child: Text(
+                      text,
+                      style: warn
+                          ? HaloType.sans(
+                              size: 13,
+                              weight: FontWeight.w600,
+                              color: HaloColors.roseText,
+                            )
+                          : HaloType.sans(size: 13, color: HaloColors.text2),
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          l10n.pairCodeTypeTheSixDigits,
+          l10n.pairCodeTypeTheEightDigits,
           style: HaloType.sans(size: 13.5, color: HaloColors.text2),
         ),
         const SizedBox(height: 20),
-        TextField(
-          textDirection: TextDirection.ltr,
-          controller: _ctrl,
-          enableIMEPersonalizedLearning: false,
-          keyboardType: TextInputType.number,
-          maxLength: 7,
-          textAlign: TextAlign.center,
-          onSubmitted: (_) {
-            if (!_busy) _join();
+        AnimatedBuilder(
+          animation: _shake,
+          builder: (_, child) {
+            // three swings, smaller each time
+            final t = _shake.value;
+            final dx = math.sin(t * math.pi * 6) * 10 * (1 - t);
+            return Transform.translate(offset: Offset(dx, 0), child: child);
           },
-          style: HaloType.mono(
-            size: 28,
-            weight: FontWeight.w600,
-            color: HaloColors.text,
-            letter: 0.14,
-          ),
-          decoration: InputDecoration(
-            counterText: '',
-            hintText: '000000',
-            hintStyle: HaloType.mono(size: 28, color: HaloColors.text3),
-            filled: true,
-            fillColor: HaloColors.surface2,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: HaloColors.line),
+          child: TextField(
+            textDirection: TextDirection.ltr,
+            controller: _ctrl,
+            enabled: !running,
+            enableIMEPersonalizedLearning: false,
+            autocorrect: false,
+            enableSuggestions: false,
+            keyboardType: TextInputType.number,
+            inputFormatters: const [PairCodeFormatter()],
+            textAlign: TextAlign.center,
+            onChanged: (_) {
+              if (_line != PairLine.none || _said.isNotEmpty) {
+                setState(() {
+                  _line = PairLine.none;
+                  _said = '';
+                  _warn = false;
+                });
+              }
+            },
+            onSubmitted: (_) => _join(),
+            style: HaloType.mono(
+              size: 28,
+              weight: FontWeight.w600,
+              color: HaloColors.text,
+              letter: 0.14,
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: HaloColors.line),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: HaloColors.amber.withValues(alpha: 0.7),
+            decoration: InputDecoration(
+              counterText: '',
+              hintText: '00 000 000',
+              hintStyle: HaloType.mono(size: 28, color: HaloColors.text2),
+              filled: true,
+              fillColor: HaloColors.surface2,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: HaloColors.line),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: warn
+                      ? HaloColors.roseText.withValues(alpha: 0.6)
+                      : HaloColors.line,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: HaloColors.amber.withValues(alpha: 0.7),
+                ),
               ),
             ),
           ),
         ),
         const SizedBox(height: 16),
         HaloPrimaryButton(
-          label: _busy ? l10n.pairCodeLooking : l10n.pairCodeAddThem,
-          busy: _busy,
-          onTap: _join,
+          label: running ? l10n.pairCodeLooking : l10n.pairCodeAddThem,
+          busy: running,
+          onTap: running ? null : _join,
         ),
         // reduced motion: the line without animation
         if (still)
@@ -347,23 +336,27 @@ class _PairJoinState extends State<PairJoin> {
             alignment: AlignmentDirectional.topStart,
             child: status,
           ),
+        const SizedBox(height: 18),
+        Text(
+          l10n.pairCodeBothNeed06Shown,
+          textAlign: TextAlign.center,
+          style: HaloType.sans(size: 12, color: HaloColors.text2),
+        ),
       ],
     );
   }
 }
 
-/// the invite a code led to, before anything is added: who it names, and
-/// its key number to be matched against the other phone
-class PairConfirm extends StatelessWidget {
+/// the other side, once the code matched on both phones: who they are,
+/// and the add. nothing is added before the person says so
+class PairMatched extends StatelessWidget {
   final String words;
-  final String number;
   final bool busy;
   final VoidCallback onAdd;
   final VoidCallback onNotThem;
-  const PairConfirm({
+  const PairMatched({
     super.key,
     required this.words,
-    required this.number,
     required this.onAdd,
     required this.onNotThem,
     this.busy = false,
@@ -402,13 +395,20 @@ class PairConfirm extends StatelessWidget {
               letter: 0.02,
             ),
           ),
-          const SizedBox(height: 20),
-          PairKeyNumber(number: number, size: 22),
-          const SizedBox(height: 12),
-          Text(
-            l10n.pairCodeNumberMatchesShown,
-            textAlign: TextAlign.center,
-            style: HaloType.sans(size: 13.5, color: HaloColors.text2),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.check_circle, size: 16, color: HaloColors.green),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  l10n.pairCodeMatched,
+                  textAlign: TextAlign.center,
+                  style: HaloType.sans(size: 13.5, color: HaloColors.text2),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 22),
           HaloPrimaryButton(label: l10n.commonAdd, busy: busy, onTap: onAdd),
@@ -420,127 +420,13 @@ class PairConfirm extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Center(
                 child: Text(
-                  l10n.pairCodeNumberDiffers,
+                  l10n.pairCodeNotThem,
                   textAlign: TextAlign.center,
                   style: HaloType.sans(size: 13.5, color: HaloColors.text2),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 4),
-          // an older Kryfo on the other side shows no number
-          Text(
-            l10n.pairCodeNoNumberThere,
-            textAlign: TextAlign.center,
-            style: HaloType.sans(
-              size: 12,
-              color: HaloColors.text2,
-              height: 1.45,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// a key number, four groups of five. digits in the same order on every
-/// phone whatever its language, so two people can read them side by side
-class PairKeyNumber extends StatelessWidget {
-  final String number;
-  final double size;
-  const PairKeyNumber({super.key, required this.number, this.size = 18});
-
-  @override
-  Widget build(BuildContext context) {
-    final groups = number.split(' ');
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          l10n.pairCodeKeyNumber,
-          textAlign: TextAlign.center,
-          style: HaloType.sans(size: 11.5, color: HaloColors.text2),
-        ),
-        const SizedBox(height: 6),
-        Semantics(
-          label: number,
-          textDirection: TextDirection.ltr,
-          excludeSemantics: true,
-          child: Directionality(
-            textDirection: TextDirection.ltr,
-            child: Wrap(
-              alignment: WrapAlignment.center,
-              spacing: size * 0.6,
-              runSpacing: 6,
-              children: [
-                for (final g in groups)
-                  Text(
-                    g,
-                    style: HaloType.mono(
-                      size: size,
-                      weight: FontWeight.w600,
-                      color: HaloColors.amberText,
-                      letter: 0.06,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// the sharer's own three words under the code, and the key number the
-/// other side matches what it fetched against. no number when it did not
-/// read: then there is nothing to match
-class PairWordsTag extends StatelessWidget {
-  final String words;
-  final String? number;
-  const PairWordsTag({super.key, required this.words, this.number});
-
-  @override
-  Widget build(BuildContext context) {
-    final n = number;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 9, 16, 11),
-      decoration: BoxDecoration(
-        color: HaloColors.surface2,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: HaloColors.line),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            l10n.pairCodePanelYourWords,
-            textAlign: TextAlign.center,
-            style: HaloType.sans(size: 11.5, color: HaloColors.text2),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            words,
-            textAlign: TextAlign.center,
-            textDirection: TextDirection.ltr,
-            style: HaloType.mono(
-              size: 15,
-              weight: FontWeight.w600,
-              color: HaloColors.text,
-              letter: 0.02,
-            ),
-          ),
-          if (n != null) ...[
-            const SizedBox(height: 10),
-            PairKeyNumber(number: n),
-            const SizedBox(height: 8),
-            Text(
-              l10n.pairCodeNumberMatchesShown,
-              textAlign: TextAlign.center,
-              style: HaloType.sans(size: 12, color: HaloColors.text2),
-            ),
-          ],
         ],
       ),
     );

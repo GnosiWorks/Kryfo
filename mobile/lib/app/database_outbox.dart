@@ -337,7 +337,8 @@ mixin _OutboxRows {
       ? ''
       : ' AND peer_id NOT IN (${List.filled(s.length, '?').join(', ')})';
 
-  // every contact held here: verified under one key, holding another now
+  // every contact held here: verified under one key, holding another now,
+  // or verified and their session rebuilt by a heal
   Future<Set<String>> heldPeers() async {
     final db = await open();
     final rows = await db.query(
@@ -349,6 +350,8 @@ mixin _OutboxRows {
       for (final r in rows)
         if (await keyHeldIn(db, r['halo_id'] as String, identity: _keySource))
           r['halo_id'] as String,
+      // and those a heal holds until the person looks
+      if (kHealHold) ...await healHeldPeers(db),
     };
   }
 

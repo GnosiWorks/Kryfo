@@ -46,6 +46,7 @@ Future<void> bootDevices() async {
     final ds = DeviceState(DeviceEngine());
     await ds.load(db, await devMineOf(db, lib), shimPath: path);
     _deviceState = ds;
+    _bootDeviceSend(ds);
     if (ds.skipped > 0) dlog('devices: ${ds.skipped} rows did not load');
   } catch (e) {
     dlog('devices: not loaded (${e.runtimeType})');

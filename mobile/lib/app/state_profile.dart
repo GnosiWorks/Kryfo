@@ -357,9 +357,15 @@ extension AppStateProfile on AppState {
   }
 
   Future<void> resetInviteAddress() async {
-    // the everyday invite's key and address: never from a quiet session,
-    // and never on the developer's own phone, whose card every install pins
-    if (sessionQuiet || _devIdentity) return;
+    // a quiet session makes its own invite again, as the everyday one
+    // does, and touches nothing of the everyday side's
+    if (sessionQuiet) {
+      await _resetDecoyInvite();
+      notifyListeners();
+      return;
+    }
+    // never on the developer's own phone, whose card every install pins
+    if (_devIdentity) return;
     // nothing moves before signal is ready: the v4 link would stay as it was
     await _signalReadyForReset();
     // what was kept goes in now if it can: nothing opens it after this

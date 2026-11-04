@@ -1,10 +1,11 @@
-// six digits read out loud, for when holding two phones together is awkward.
-// both sides derive the same address from the digits alone and the invite
-// passes through it sealed. the code burns after a few minutes.
+// eight digits read out loud, for when holding two phones together is
+// awkward. the code matching on both phones is what lets each take the
+// other's invite; the last six digits never leave either phone. the code
+// burns after ten minutes.
 import 'package:flutter/material.dart';
 
 import '../main.dart' hide live;
-import '../quiet_wait.dart';
+import '../pair_flow.dart' show PairRun;
 import '../theme.dart';
 import '../widgets/motion.dart' show motionStill;
 import '../widgets/press_scale.dart';
@@ -143,7 +144,7 @@ class _ShareSide extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-      children: const [PairCodePanel()],
+      children: [PairCodePanel(onAdded: (_) => Navigator.of(context).pop())],
     );
   }
 }
@@ -156,18 +157,10 @@ class _JoinSide extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PairJoin(
-      // a quiet session never reaches the relays: it answers as unreachable
-      // ones would
-      fetch: (code) async => sessionQuiet
-          ? await unreachedLater(pairUnreached)
-          : await engine.pairCodeFetch(code),
-      add: (invite) async {
-        final status = await handleHaloUri(invite);
-        await appState.refreshContacts();
-        return status;
-      },
+      // a quiet session answers as unreachable relays would (pairHooks)
+      run: () => PairRun.join(pairHooks()),
       onAdded: (status) {
-        showHaloToast(context, status);
+        if (status.isNotEmpty) showHaloToast(context, status);
         Navigator.of(context).pop();
       },
     );

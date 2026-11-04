@@ -123,6 +123,28 @@ func parseOffer(m []byte) (offer, error) {
 	return o, nil
 }
 
+// OfferExpires is when an offer stops being answerable, read from its
+// public bytes, for a caller that waits on the answers it sent
+func OfferExpires(m []byte) (time.Time, error) {
+	o, err := parseOffer(m)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return expiresAt(&o).Add(Skew), nil
+}
+
+// Kind is a message's magic: "KPO1", "KPA1", "KPF1", or "" for anything else
+func Kind(m []byte) string {
+	if len(m) < 4 {
+		return ""
+	}
+	switch k := string(m[:4]); k {
+	case magicOffer, magicAnswer, magicFinish:
+		return k
+	}
+	return ""
+}
+
 type answer struct {
 	sid    [SidSize]byte
 	yb     [PointSize]byte
@@ -526,14 +548,25 @@ type Joiner struct {
 
 // NewJoiner copies the code and the invite to seal
 func NewJoiner(c *Code, invite []byte) (*Joiner, error) {
+	return NewJoinerAfter(c, invite, 0)
+}
+
+// NewJoinerAfter is a joiner for a code that already answered used offers
+// under an earlier joiner: the code is typed again, and its tries go on
+// from there, so a fake sharer never gets more than MaxTries guesses at it
+func NewJoinerAfter(c *Code, invite []byte, used int) (*Joiner, error) {
 	if err := checkInvite(invite); err != nil {
 		return nil, err
 	}
+	if used >= MaxTries {
+		return nil, ErrTries
+	}
 	return &Joiner{
-		box:    c.box,
-		prs:    bytes.Clone(c.secret[:]),
-		invite: bytes.Clone(invite),
-		pend:   map[[32]byte]*pending{},
+		box:      c.box,
+		prs:      bytes.Clone(c.secret[:]),
+		invite:   bytes.Clone(invite),
+		answered: max(used, 0),
+		pend:     map[[32]byte]*pending{},
 	}, nil
 }
 

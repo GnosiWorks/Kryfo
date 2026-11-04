@@ -416,17 +416,20 @@ extension AppStateArrivals on AppState {
     await _memberCaps(senderHaloId, env, db, oneToOneMoved: capsMoved);
     // their phone takes a pq restart now: their held chat is looked at
     if (capsMoved &&
-        to == RouteTo.everyday &&
+        (to == RouteTo.everyday || to == RouteTo.vault) &&
         env.groupId == null &&
         (env.caps?.contains(kCapPqRestart) ?? false)) {
       unawaited(pqUpkeep(only: senderHaloId));
     }
-    // a pq restart's KDB1: taken only inside a held session of the
-    // everyday side, and never shown
+    // a pq restart's KDB1: taken only inside a held 1:1 session, of the
+    // everyday side or the open vault (as a sealed one opens too), and
+    // never shown
     final rq = env.pqRestart;
     if (rq != null) {
-      if (!fromBackPair && to == RouteTo.everyday && env.groupId == null) {
-        await takePqRestart(senderHaloId, rq, writtenAt: env.writtenAt);
+      if (!fromBackPair &&
+          (to == RouteTo.everyday || to == RouteTo.vault) &&
+          env.groupId == null) {
+        await takePqRestart(senderHaloId, rq, writtenAt: env.writtenAt, on: db);
       } else {
         dlog('pq restart: a bundle off a held chat, dropped');
       }

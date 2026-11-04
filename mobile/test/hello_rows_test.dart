@@ -27,12 +27,15 @@ import 'package:kryfo/main.dart'
         AppState,
         AppStateContacts,
         AppStateInvites,
+        AppStatePairCodes,
         AppStateProfile,
         AppStateReceive,
         HaloEngine,
         handleHaloUriAdded,
+        haloUriV3,
         openAddedChatLater,
         openDevChatLater,
+        pairPeerOf,
         sendFirstContactNoted,
         unboundIdOf,
         useDatabasesForTest,
@@ -111,6 +114,7 @@ class _Engine implements HaloEngine {
   _Engine(this.x);
   final String x;
   final unsubscribed = <String>[];
+  final subscribed = <String>[];
   final hellos = <String>[];
   // the x keys whose pair's seed the engine was handed
   final seeded = <String>[];
@@ -133,8 +137,11 @@ class _Engine implements HaloEngine {
   @override
   String fcKeyPk(String skHex) => _fcPkOf(_unhex(skHex));
   @override
-  Future<String> subscribeFcKey(int ident, String inviteId, String sk) async =>
-      'ok';
+  Future<String> subscribeFcKey(int ident, String inviteId, String sk) async {
+    subscribed.add(inviteId);
+    return 'ok';
+  }
+
   @override
   Future<String> unsubscribeFcKey(int ident, String inviteId) async {
     unsubscribed.add(inviteId);
@@ -212,7 +219,7 @@ class _Io extends AppIo {
 // contact (its key claimed) in a file of rows, as the real container
 // keeps them side by side
 class _Rows extends ArrivalRows {
-  _Rows(this.db) : super(HaloContainer.everyday);
+  _Rows(this.db, [HaloContainer c = HaloContainer.everyday]) : super(c);
   final MemDb db;
   @override
   Future<Database> open() async => db;
@@ -321,6 +328,35 @@ class _Phone {
 
   Future<InviteRow> mainInvite() =>
       makeInvite(db, ss, kind: kInviteMain, fcPkOf: _fcPkOf, face: face);
+
+  // the one-time invite a pairing seals to the other side
+  Future<InviteRow> pairInvite() =>
+      makeInvite(db, ss, kind: kInviteOneTime, fcPkOf: _fcPkOf, face: face);
+
+  // the opener of a session built from my invite [at], with the pair's seed
+  // and a face signature, as a v4 first contact sends it
+  Future<String> openerTo(InviteRow at, String uid) async {
+    final inv = readInvite(ss.lib, at.link);
+    await ss.processBundle('me', inv.block!.bundle);
+    final frame = await wrapMessage(
+      'hi',
+      msgUid: uid,
+      sender: SenderInfo(
+        haloId: words,
+        edPub: _hex(face.face),
+        onion: 'o-$words',
+        xPub: x,
+      ),
+    );
+    final j =
+        jsonDecode(frame.substring(kEnvelopePrefix.length))
+            as Map<String, dynamic>;
+    j['pg'] = 4;
+    j['as'] = _hex(List<int>.generate(32, (i) => i + 7));
+    j['fs'] = _hex(face.sign(faceText(key, _unhex(at.id))));
+    final c = await ss.encryptTo('me', '$kEnvelopePrefix${jsonEncode(j)}');
+    return '${_sealOf(x)}|$c';
+  }
 }
 
 Future<void> _settle() =>
@@ -386,6 +422,7 @@ void main() {
       whereArgs: ['kin4_main_made'],
     );
     engine.unsubscribed.clear();
+    engine.subscribed.clear();
     engine.hellos.clear();
     engine.seeded.clear();
     live = _Rows(db);
@@ -534,6 +571,63 @@ void main() {
       [h.once.id],
     );
     expect(await hellosOf('in', q.keyHex), isEmpty);
+  });
+
+  test('in a decoy a qr and a v3 link with its first-contact address say '
+      'what the everyday side says, and keep the person on the decoy alone: '
+      'no hello, no key, no row of the everyday side', () async {
+    Future<(String, String)> links(String words, int seed) async {
+      final p = await _Phone.make('$words-qr', seed);
+      final qr = inviteLink((await p.mainInvite()).qr!);
+      final o = await _Phone.make('$words-vee', seed + 2);
+      final v3 = haloUriV3(
+        o.words,
+        _onionOf(_onionKeyOf(seed + 3)),
+        Uri.encodeQueryComponent(await o.ss.makeBundleB64()),
+        _hex(List.filled(32, seed)),
+      );
+      return (qr, v3);
+    }
+
+    // the everyday side first
+    final (qr1, v31) = await links('real-side', 71);
+    expect(await handleHaloUriAdded(qr1, app: app), (l10n.helloSent, true));
+    expect(await handleHaloUriAdded(v31, app: app), (l10n.helloSentOld, true));
+    // the pass under way, which grinds each hello's proof of work
+    await app.sendHellosOwed();
+    await app.sendHellosOwed();
+    expect(engine.hellos, hasLength(2));
+    // the decoy, on others
+    final (qr2, v32) = await links('decoy-side', 81);
+    final decoyDb = MemDb();
+    final decoy = _Rows(decoyDb, HaloContainer.decoy);
+    final helloRows = db.rows('hellos').length;
+    final everydayPeople = live.people.keys.toSet();
+    useDatabasesForTest(live, Session(decoy));
+    try {
+      expect(await handleHaloUriAdded(qr2, app: app), (l10n.helloSent, true));
+      expect(await handleHaloUriAdded(v32, app: app), (
+        l10n.helloSentOld,
+        true,
+      ));
+      // and again: saved already, as the everyday side says
+      expect(await handleHaloUriAdded(qr2, app: app), (
+        l10n.appAlreadySaved('decoy-side-qr'),
+        true,
+      ));
+    } finally {
+      useDatabasesForTest(live, Session(live));
+    }
+    await _settle();
+    expect(decoy.people.keys, containsAll(['decoy-side-qr', 'decoy-side-vee']));
+    expect(engine.hellos, hasLength(2));
+    expect(db.rows('hellos'), hasLength(helloRows));
+    expect(live.people.keys.toSet(), everydayPeople);
+    expect(
+      await signalSession.identityStore.getIdentity('decoy-side-qr'),
+      isNull,
+    );
+    await _settle();
   });
 
   test('a qr add with their hello waiting sends none of mine', () async {
@@ -851,5 +945,174 @@ void main() {
       (await fcKeysOf(db, kMainIdent)).keys,
       unorderedEquals([mains.single.id, rosters.single.id]),
     );
+  });
+
+  test(
+    'a pair code\'s sharer holds the invite it sealed, unheard, until '
+    'the add; then only the joiner\'s opener opens there and files them',
+    () async {
+      await myMain();
+      final mine = (await app.pairInvite())!;
+      final row = mine.row as InviteRow;
+      expect(row.oneTime, isTrue);
+      final p = await _Phone.make('pair-code-joiner', 91);
+      final peer = pairPeerOf((await p.pairInvite()).link)!;
+      expect(peer.id, p.words);
+      await app.pairHold(mine, peer);
+      // the upkeep listens on every live invite but a held one
+      engine.subscribed.clear();
+      await app.keepMyInvites();
+      expect(engine.subscribed, isNot(contains(row.id)));
+      final (line, added) = await handleHaloUriAdded(
+        peer.link,
+        pairOut: row,
+        app: app,
+      );
+      await _settle();
+      expect((line, added), ('', true));
+      expect(live.people[p.words]?['accepted'], 1);
+      expect(opened, [p.words]);
+      expect(engine.subscribed, contains(row.id));
+      expect(
+        [for (final r in await hellosOf('out', p.keyHex)) r['invite_id']],
+        [row.id],
+      );
+      expect(await hellosOf('pair', p.keyHex), isEmpty);
+      // the sharer starts nothing: the joiner does (3.4b)
+      expect(engine.seeded, isEmpty);
+      // anyone else at that invite is dropped before decrypt, unspent
+      final q = await _Phone.make('pair-code-stranger', 93);
+      await app.receiveRelay([
+        (peer: 'f0:${row.id}', cipher: await q.openerTo(row, 'u-q')),
+      ]);
+      await _settle();
+      expect(firstFails.codes, contains('owner'));
+      expect((await inviteOf(db, kMainIdent, row.id))?.usedAt, isNull);
+      // the joiner's opener opens, seeds the pair and spends the invite
+      await app.receiveRelay([
+        (peer: 'f0:${row.id}', cipher: await p.openerTo(row, 'u-p')),
+      ]);
+      await _settle();
+      expect(engine.seeded, [p.x]);
+      expect((await pairOf(db, kMainIdent, p.keyHex)).conv, kConvSeeded);
+      expect((await inviteOf(db, kMainIdent, row.id))?.usedAt, isNotNull);
+      expect(await hellosOf('out', p.keyHex), isEmpty);
+    },
+  );
+
+  test('a pair code\'s joiner adds the sharer as from a v4 link: the session '
+      'from its one-time invite, the opener to its address', () async {
+    final p = await _Phone.make('pair-code-sharer', 95);
+    final theirs = await p.pairInvite();
+    final peer = pairPeerOf(theirs.link)!;
+    final (line, added) = await handleHaloUriAdded(peer.link, app: app);
+    await _settle();
+    expect((line, added), ('', true));
+    expect(live.people[p.words]?['accepted'], 1);
+    expect(engine.seeded, [p.x]);
+    final open = await hellosOf('open', p.keyHex);
+    expect([for (final r in open) r['invite_id']], [theirs.id]);
+    expect(open.single['once'], 1);
+    // the joiner's own invite went to the sharer only to name them: it goes
+    final mine = (await app.pairInvite())!;
+    await app.pairDrop(mine);
+    final row = mine.row as InviteRow;
+    expect((await inviteOf(db, kMainIdent, row.id))?.usedAt, isNotNull);
+    expect(await signalSession.signedPreKeyStore.contains(row.spkId!), isFalse);
+  });
+
+  test('a matched pairing nobody added goes after half an hour, and only '
+      'one-time invites with a bundle and a face pair at all', () async {
+    final main = await myMain();
+    final mine = (await app.pairInvite())!;
+    final row = mine.row as InviteRow;
+    final p = await _Phone.make('pair-code-left', 97);
+    await app.pairHold(mine, pairPeerOf((await p.pairInvite()).link)!);
+    await app.keepMyInvites();
+    expect((await inviteOf(db, kMainIdent, row.id))?.usedAt, isNull);
+    await db.update(
+      'hellos',
+      {'at': DateTime.now().millisecondsSinceEpoch - 31 * 60 * 1000},
+      where: 'way = ?',
+      whereArgs: ['pair'],
+    );
+    await app.keepMyInvites();
+    expect(await hellosOf('pair', p.keyHex), isEmpty);
+    final gone = await inviteOf(db, kMainIdent, row.id);
+    expect(gone == null || gone.usedAt != null, isTrue);
+    expect(engine.subscribed, isNot(contains(row.id)));
+    // a main invite, its qr form or bytes that are no invite pair with no one
+    expect(pairPeerOf((await p.mainInvite()).link), isNull);
+    expect(pairPeerOf((await p.mainInvite()).qr!), isNull);
+    expect(pairPeerOf(Uint8List.fromList(List.filled(40, 7))), isNull);
+    expect(pairPeerOf(main.link), isNull);
+  });
+
+  test(
+    'a pairing\'s invites are held from their making: no upkeep listens on '
+    'them, and the joiner\'s opener arriving before the sharer\'s Add opens '
+    'nothing and spends nothing, then opens once the Add came (review F2)',
+    () async {
+      await myMain();
+      final mine = (await app.pairInvite())!;
+      final row = mine.row as InviteRow;
+      final p = await _Phone.make('pair-code-early', 99);
+      // the joiner's own invite on this phone is held the same way
+      final joinerSide = (await app.pairInvite())!.row as InviteRow;
+      engine.subscribed.clear();
+      await app.keepMyInvites();
+      expect(engine.subscribed, isNot(contains(row.id)));
+      expect(engine.subscribed, isNot(contains(joinerSide.id)));
+      final peer = pairPeerOf((await p.pairInvite()).link)!;
+      await app.pairHold(mine, peer);
+      expect(engine.unsubscribed, contains(row.id));
+      // their Add came first: the opener is here before mine
+      final early = await p.openerTo(row, 'u-early');
+      // not acked: the engine fetches it again once the add listens
+      expect(await app.receiveRelay([(peer: 'f0:${row.id}', cipher: early)]), {
+        0,
+      });
+      await _settle();
+      expect(firstFails.codes, contains('held'));
+      expect(live.people[p.words], isNull);
+      expect((await inviteOf(db, kMainIdent, row.id))?.usedAt, isNull);
+      expect(engine.seeded, isEmpty);
+      // the Add: the same opener, fetched again, opens and files them
+      await handleHaloUriAdded(peer.link, pairOut: row, app: app);
+      await _settle();
+      await app.receiveRelay([(peer: 'f0:${row.id}', cipher: early)]);
+      await _settle();
+      expect(live.people[p.words]?['accepted'], 1);
+      expect(engine.seeded, [p.x]);
+      expect((await inviteOf(db, kMainIdent, row.id))?.usedAt, isNotNull);
+    },
+  );
+
+  test('a pairing held at a late match keeps its half hour from the match, '
+      'not from the invite\'s making (review L2)', () async {
+    await myMain();
+    final mine = (await app.pairInvite())!;
+    final row = mine.row as InviteRow;
+    // made 25 minutes ago, matched now
+    await db.update(
+      'hellos',
+      {'at': DateTime.now().millisecondsSinceEpoch - 25 * 60 * 1000},
+      where: 'way = ? AND invite_id = ?',
+      whereArgs: ['pair', row.id],
+    );
+    final p = await _Phone.make('pair-code-late', 101);
+    await app.pairHold(mine, pairPeerOf((await p.pairInvite()).link)!);
+    // an upkeep ten minutes on, past the invite's half hour but not the
+    // match's: the invite stays held
+    await app.keepMyInvites(
+      nowMs: DateTime.now().millisecondsSinceEpoch + 10 * 60 * 1000,
+    );
+    expect(await hellosOf('pair', p.keyHex), hasLength(1));
+    expect((await inviteOf(db, kMainIdent, row.id))?.usedAt, isNull);
+    // and goes once the match's half hour is over
+    await app.keepMyInvites(
+      nowMs: DateTime.now().millisecondsSinceEpoch + 31 * 60 * 1000,
+    );
+    expect(await hellosOf('pair', p.keyHex), isEmpty);
   });
 }

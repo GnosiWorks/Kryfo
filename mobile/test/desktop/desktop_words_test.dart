@@ -313,10 +313,16 @@ final _pairs = <(String, _Get, _Get, _Get)>[
     (l) => l.onboardingYourIdentityLivesOnDesk,
   ),
   (
-    'pairCodeNumberMatches',
-    (l) => l.pairCodeNumberMatchesShown,
-    (l) => l.pairCodeNumberMatches,
-    (l) => l.pairCodeNumberMatchesDesk,
+    'pairCodeOldCode',
+    (l) => l.pairCodeOldCodeShown,
+    (l) => l.pairCodeOldCode,
+    (l) => l.pairCodeOldCodeDesk,
+  ),
+  (
+    'pairCodeBothNeed06',
+    (l) => l.pairCodeBothNeed06Shown,
+    (l) => l.pairCodeBothNeed06,
+    (l) => l.pairCodeBothNeed06Desk,
   ),
   (
     'restoreReplaceTheAccountOn',

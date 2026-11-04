@@ -288,8 +288,9 @@ Future<Uint8List> makeFcKey(
   DatabaseExecutor db,
   int ident,
   String inviteId,
-  bool Function(Uint8List sk) lifts,
-) async {
+  bool Function(Uint8List sk) lifts, {
+  int? at,
+}) async {
   final r = Random.secure();
   for (;;) {
     final sk = Uint8List.fromList(List.generate(32, (_) => r.nextInt(256)));
@@ -298,7 +299,7 @@ Future<Uint8List> makeFcKey(
       'ident': ident,
       'invite_id': inviteId,
       'sk': sk,
-      'created_at': DateTime.now().millisecondsSinceEpoch,
+      'created_at': at ?? DateTime.now().millisecondsSinceEpoch,
     });
     return sk;
   }

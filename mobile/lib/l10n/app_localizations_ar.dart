@@ -4403,9 +4403,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pairCodeEnterOne => 'إدخال رمز';
 
   @override
-  String get pairCodeSixDigits => 'ستة أرقام';
-
-  @override
   String get pairCodeLooking => 'جارٍ البحث…';
 
   @override
@@ -4424,34 +4421,80 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pairCodeFailed => 'لم ينجح ذلك. حاول مجددًا.';
 
   @override
-  String get pairCodeTypeTheSixDigits => 'اكتب الأرقام الستة التي قرأها عليك.';
-
-  @override
   String get pairCodeAddThem => 'أضِفه';
-
-  @override
-  String get pairCodeUsedTwice => 'استُخدم هذا الرمز مرتين. اطلب رمزًا جديدًا.';
 
   @override
   String get pairCodeKeyNumber => 'رقم المفتاح';
 
   @override
-  String get pairCodeNumberMatches =>
-      'تحقّق من تطابق المجموعات الأربع على الهاتفين';
-
-  @override
-  String get pairCodeNumberMatchesDesk =>
-      'تحقّق من تطابق المجموعات الأربع على الجهازين';
-
-  @override
-  String get pairCodeNumberDiffers => 'الرقم مختلف';
-
-  @override
-  String get pairCodeNoNumberThere =>
-      'لا يظهر رقم على شاشته؟ أضِفه، ثم قارن رقم الأمان في المحادثة.';
-
-  @override
   String get pairCodeNotAdded => 'لم تتم الإضافة. اطلب رمزًا جديدًا.';
+
+  @override
+  String get pairCodeEightDigits => 'ثمانية أرقام';
+
+  @override
+  String get pairCodeTypeTheEightDigits =>
+      'اكتب الأرقام الثمانية التي قرأها عليك.';
+
+  @override
+  String get pairCodeOldCode =>
+      'هذا الرمز من إصدار أقدم من Kryfo. يحتاج الهاتفان إلى Kryfo 0.6 أو أحدث.';
+
+  @override
+  String get pairCodeOldCodeDesk =>
+      'هذا الرمز من إصدار أقدم من Kryfo. يحتاج الجهازان إلى Kryfo 0.6 أو أحدث.';
+
+  @override
+  String get pairCodeBothNeed06 => 'يحتاج الهاتفان إلى Kryfo 0.6 أو أحدث.';
+
+  @override
+  String get pairCodeBothNeed06Desk => 'يحتاج الجهازان إلى Kryfo 0.6 أو أحدث.';
+
+  @override
+  String get pairCodeWaitingForThem => 'بانتظار الطرف الآخر…';
+
+  @override
+  String get pairCodeStillWaiting =>
+      'ما زلنا ننتظر. إذا ظهر على شاشته أن رمزًا خاطئًا كُتب، فراجعا الأرقام معًا.';
+
+  @override
+  String get pairCodeUnanswered =>
+      'لم يصل أي رد. راجع الرمز معه واكتبه مرة أخرى.';
+
+  @override
+  String get pairCodeTooManyTries =>
+      'جُرّب هذا الرمز ثلاث مرات. اطلب رمزًا جديدًا.';
+
+  @override
+  String get pairCodeRanOut => 'انتهت مدة هذا الرمز. اطلب رمزًا جديدًا.';
+
+  @override
+  String get pairCodeMatched => 'تطابق الرمز. هل تضيفان بعضكما؟';
+
+  @override
+  String get pairCodeNotThem => 'ليس هو';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut =>
+      'اقرأ ثمانية أرقام بصوت عالٍ فيضيف كلٌّ منكما الآخر. لا حاجة إلى تبادل أي شيء آخر.';
+
+  @override
+  String get pairCodePanelOrMakeACode => 'أو أنشئ رمزًا لتقرأه';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      'يفتح Kryfo، ويضغط «إضافة»، ويختار «رمز الاقتران» ثم يكتب هذه الأرقام الثمانية. أنشئ رمزًا جديدًا للشخص التالي.';
+
+  @override
+  String get pairCodePanelWrongTyped => 'كُتب رمز خاطئ. اقرأه مرة أخرى ببطء.';
+
+  @override
+  String get pairCodePanelThreeWrong =>
+      'كُتب رمز خاطئ ثلاث مرات، فتوقف هذا الرمز. أنشئ رمزًا جديدًا.';
+
+  @override
+  String get pairCodePanelNotAdded =>
+      'لم تتم الإضافة. أنشئ رمزًا جديدًا عندما يكون الطرف الآخر جاهزًا.';
 
   @override
   String get panicSetupThoseWereDifferentFrom => 'لم يتطابقا. من البداية.';
@@ -6858,14 +6901,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pairCodePanelYourInviteIsNot => 'دعوتك ليست جاهزة بعد';
 
   @override
-  String get pairCodePanelReadSixDigitsOut =>
-      'اقرأ ستة أرقام بصوت عالٍ فيستطيع إضافتك. لا حاجة إلى تبادل أي شيء آخر.';
-
-  @override
   String get pairCodePanelWorking => 'جارٍ العمل';
-
-  @override
-  String get pairCodePanelOrMakeASix => 'أو أنشئ رمزًا من ستة أرقام لتقرأه';
 
   @override
   String get pairCodePanelBurned =>
@@ -6882,17 +6918,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get pairCodePanelTheyTapAddChoose =>
       'يضغط «إضافة»، ويختار «رمز»، ثم يكتب هذه الأرقام.';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      'يفتح Kryfo، ويضغط «إضافة»، ويختار «رمز الاقتران» ثم يكتب هذه الأرقام الستة. أنشئ رمزًا جديدًا للشخص التالي.';
-
-  @override
-  String get pairCodePanelYourWords => 'كلماتك الثلاث';
-
-  @override
-  String get pairCodePanelAcceptOnce =>
-      'يصلك طلبه بعد أن يضيفك. اقبله فقط بعد أن يقول إن المجموعات الأربع تطابقت.';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -11068,4 +11093,45 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get desktopBackupHint => 'تعيد كل شيء إن أُعيد ضبط هذا الحاسوب يومًا.';
+
+  @override
+  String chatHealRestored(Object name) {
+    return 'أعاد ⁨$name⁩ إعداد Kryfo';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return 'بدأ هاتف ⁨$name⁩ جلسة آمنة جديدة';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return 'سبق أن تحققت من ⁨$name⁩. لن يُرسل شيء حتى تتحقق من الرقم أو تتابع المحادثة. رسائله ما زالت تصل.';
+  }
+
+  @override
+  String get chatKeepChatting => 'متابعة المحادثة';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return 'يحتاج ⁨$name⁩ إلى تحديث Kryfo لمتابعة المحادثة.';
+  }
+
+  @override
+  String get restoreOlderTitle => 'ستتوقف بعض المحادثات مؤقتًا';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return 'يستخدم ⁨$name⁩ إصدارًا أقدم من Kryfo. ستتوقف محادثتكما مؤقتًا حتى يحدّثه.';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return 'يستخدم ⁨$first⁩ و⁨$second⁩ إصدارًا أقدم من Kryfo. ستتوقف محادثاتك معهما مؤقتًا حتى يحدّثا التطبيق.';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return 'يستخدم ⁨$first⁩ و⁨$second⁩ و$count آخرون إصدارًا أقدم من Kryfo. ستتوقف محادثاتك معهم مؤقتًا حتى يحدّثوا التطبيق.';
+  }
 }

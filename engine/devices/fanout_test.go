@@ -2,6 +2,7 @@
 package devices
 
 import (
+	"bytes"
 	"crypto/rand"
 	"errors"
 	"slices"
@@ -990,5 +991,137 @@ func TestASilentDeviceIsProbedAndTakesAFreshBundle(t *testing.T) {
 	q.Sent(id, 5, key, t0.Add(45*day))
 	if q.Fresh(id, 5, key) || at(46*day) != Open {
 		t.Fatal("a fresh bundle for a device that is not silent")
+	}
+}
+
+func TestABatchForTheAskAgesFromTheAsk(t *testing.T) {
+	s := newShim()
+	me := newAccount(t, s)
+	desk := me.linkReg(t)
+	t0 := time.Unix(1_760_000_000, 0)
+	day := 24 * time.Hour
+	kyberOf := func(b []byte) uint32 {
+		bl, err := ParseBundle(b, me.id.pub)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return bl.KyberID
+	}
+	// the device's clock runs 20 days behind: its make time says day -20
+	asked, came := t0, t0.Add(time.Hour)
+	made := t0.Add(-20 * day)
+	unasked := NewPool()
+	if err := unasked.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 10, 7, desk)}, poolKDB1(t, 1, 7, desk), made, came); err != nil {
+		t.Fatal(err)
+	}
+	if b, _, err := unasked.Take(me.id.pub, desk, came); err != nil || kyberOf(b) != 1 {
+		t.Fatalf("an unasked batch from a clock behind kept its one-time bundle: %v", err)
+	}
+	p := NewPool()
+	if err := p.PutAsked(me.id.pub, desk, [][]byte{poolKDB1(t, 10, 7, desk)}, poolKDB1(t, 1, 7, desk), made, asked, came); err != nil {
+		t.Fatal(err)
+	}
+	if b, _, err := p.Take(me.id.pub, desk, asked.Add(PoolMaxAge-time.Second)); err != nil || kyberOf(b) != 10 {
+		t.Fatalf("a batch for the ask died on arrival: %v", err)
+	}
+	if b, _, err := p.Take(me.id.pub, desk, asked.Add(PoolLastMaxAge-time.Second)); err != nil || kyberOf(b) != 1 {
+		t.Fatalf("the last resort for the ask died early: %v", err)
+	}
+	// an ask never makes a batch younger than its making, nor than now
+	q := NewPool()
+	if err := q.PutAsked(me.id.pub, desk, [][]byte{poolKDB1(t, 10, 7, desk)}, nil, t0, t0.Add(-3*day), t0.Add(2*day)); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := q.Take(me.id.pub, desk, t0.Add(PoolMaxAge)); !errors.Is(err, ErrNoBundle) {
+		t.Fatalf("an old ask kept a bundle past its making: %v", err)
+	}
+	r := NewPool()
+	if err := r.PutAsked(me.id.pub, desk, [][]byte{poolKDB1(t, 10, 7, desk)}, nil, t0, t0.Add(9*day), t0.Add(day)); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := r.Take(me.id.pub, desk, t0.Add(day+PoolMaxAge)); !errors.Is(err, ErrNoBundle) {
+		t.Fatalf("an ask ahead of now kept a bundle past now: %v", err)
+	}
+}
+
+func TestTheOldestBundleGoesFirstAndAnOldBatchLeavesYoungOnes(t *testing.T) {
+	s := newShim()
+	me := newAccount(t, s)
+	desk := me.linkReg(t)
+	t0 := time.Unix(1_760_000_000, 0)
+	day := 24 * time.Hour
+	kyberOf := func(b []byte) uint32 {
+		bl, err := ParseBundle(b, me.id.pub)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return bl.KyberID
+	}
+	p := NewPool()
+	// young ones made today, then a batch held on the way, made 5 days ago
+	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 20, 7, desk), poolKDB1(t, 21, 7, desk)}, poolKDB1(t, 1, 7, desk), t0, t0); err != nil {
+		t.Fatal(err)
+	}
+	if err := p.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 10, 7, desk), poolKDB1(t, 11, 7, desk)}, nil, t0.Add(-5*day), t0); err != nil {
+		t.Fatal(err)
+	}
+	var got []uint32
+	for range 4 {
+		b, _, err := p.Take(me.id.pub, desk, t0.Add(time.Hour))
+		if err != nil {
+			t.Fatal(err)
+		}
+		got = append(got, kyberOf(b))
+	}
+	if want := []uint32{10, 11, 20, 21}; !slices.Equal(got, want) {
+		t.Fatalf("handed out %v, want the oldest first %v", got, want)
+	}
+	// the old batch ages out on its own days; the young ones stay
+	q := NewPool()
+	if err := q.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 20, 7, desk), poolKDB1(t, 21, 7, desk)}, poolKDB1(t, 1, 7, desk), t0, t0); err != nil {
+		t.Fatal(err)
+	}
+	if err := q.Put(me.id.pub, desk, [][]byte{poolKDB1(t, 10, 7, desk)}, nil, t0.Add(-6*day), t0); err != nil {
+		t.Fatal(err)
+	}
+	after := t0.Add(day + time.Hour)
+	if n := q.Need(me.id.pub, desk, after); n != PoolKeep-2 {
+		t.Fatalf("after the old batch aged out %d asked, want the two young left", n)
+	}
+	for _, want := range []uint32{20, 21, 1} {
+		b, _, err := q.Take(me.id.pub, desk, after)
+		if err != nil || kyberOf(b) != want {
+			t.Fatalf("took %v (%v), want %d", b != nil, err, want)
+		}
+	}
+}
+
+func TestARemovedOwnDeviceCannotCarryAList(t *testing.T) {
+	s := newShim()
+	me := newAccount(t, s)
+	b := me.linkReg(t)
+	c := me.linkReg(t)
+	own := NewOwn()
+	if _, err := own.Set(me.id.pub, me.wire, b.Key, FromLink(), s); err != nil {
+		t.Fatal(err)
+	}
+	// c is removed: its removal list reaches b from the phone
+	me.unlink(t, c.ID)
+	removal := me.wire
+	if _, err := own.Set(me.id.pub, removal, b.Key, FromSession(me.id.pub), s); err != nil {
+		t.Fatal(err)
+	}
+	// a later genuine list, carried by the removed device: refused, and the
+	// one held stays
+	me.linkReg(t)
+	if _, err := own.Set(me.id.pub, me.wire, b.Key, FromSession(c.Key), s); !errors.Is(err, ErrSource) {
+		t.Fatalf("a removed device carried a list: %v", err)
+	}
+	if l := own.Current(me.id.pub); l == nil || !bytes.Equal(l.Wire(), removal) {
+		t.Fatal("the held list moved on a removed device's word")
+	}
+	// the phone still can
+	if _, err := own.Set(me.id.pub, me.wire, b.Key, FromSession(me.id.pub), s); err != nil {
+		t.Fatal(err)
 	}
 }

@@ -4351,9 +4351,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pairCodeEnterOne => 'Code eingeben';
 
   @override
-  String get pairCodeSixDigits => 'Sechs Ziffern';
-
-  @override
   String get pairCodeLooking => 'Suche…';
 
   @override
@@ -4372,37 +4369,87 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pairCodeFailed => 'Das hat nicht geklappt. Versuch es noch mal.';
 
   @override
-  String get pairCodeTypeTheSixDigits =>
-      'Gib die sechs Ziffern ein, die dir vorgelesen wurden.';
-
-  @override
   String get pairCodeAddThem => 'Hinzufügen';
-
-  @override
-  String get pairCodeUsedTwice =>
-      'Dieser Code wurde zweimal verwendet. Bitte um einen neuen.';
 
   @override
   String get pairCodeKeyNumber => 'Schlüsselnummer';
 
   @override
-  String get pairCodeNumberMatches =>
-      'Prüf, ob alle vier Gruppen auf beiden Handys gleich sind';
-
-  @override
-  String get pairCodeNumberMatchesDesk =>
-      'Prüf, ob alle vier Gruppen auf beiden Geräten gleich sind';
-
-  @override
-  String get pairCodeNumberDiffers => 'Die Nummer ist anders';
-
-  @override
-  String get pairCodeNoNumberThere =>
-      'Keine Nummer auf dem anderen Bildschirm? Füg die Person hinzu und vergleich dann die Sicherheitsnummer im Chat.';
-
-  @override
   String get pairCodeNotAdded =>
       'Nicht hinzugefügt. Bitte um einen neuen Code.';
+
+  @override
+  String get pairCodeEightDigits => 'Acht Ziffern';
+
+  @override
+  String get pairCodeTypeTheEightDigits =>
+      'Gib die acht Ziffern ein, die dir vorgelesen wurden.';
+
+  @override
+  String get pairCodeOldCode =>
+      'Dieser Code stammt aus einem älteren Kryfo. Beide Handys brauchen Kryfo 0.6 oder neuer.';
+
+  @override
+  String get pairCodeOldCodeDesk =>
+      'Dieser Code stammt aus einem älteren Kryfo. Beide Geräte brauchen Kryfo 0.6 oder neuer.';
+
+  @override
+  String get pairCodeBothNeed06 =>
+      'Beide Handys brauchen Kryfo 0.6 oder neuer.';
+
+  @override
+  String get pairCodeBothNeed06Desk =>
+      'Beide Geräte brauchen Kryfo 0.6 oder neuer.';
+
+  @override
+  String get pairCodeWaitingForThem => 'Warte auf die andere Person…';
+
+  @override
+  String get pairCodeStillWaiting =>
+      'Wir warten noch. Wenn auf dem anderen Bildschirm steht, dass ein falscher Code eingegeben wurde, prüft die Ziffern gemeinsam.';
+
+  @override
+  String get pairCodeUnanswered =>
+      'Es kam keine Antwort. Prüft den Code gemeinsam und gib ihn noch einmal ein.';
+
+  @override
+  String get pairCodeTooManyTries =>
+      'Dieser Code wurde dreimal versucht. Bitte um einen neuen.';
+
+  @override
+  String get pairCodeRanOut =>
+      'Die Zeit für diesen Code ist um. Bitte um einen neuen.';
+
+  @override
+  String get pairCodeMatched =>
+      'Der Code passt. Fügt ihr euch gegenseitig hinzu?';
+
+  @override
+  String get pairCodeNotThem => 'Nicht die Person';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut =>
+      'Lies acht Ziffern laut vor, und ihr fügt euch gegenseitig hinzu. Sonst muss nichts ausgetauscht werden.';
+
+  @override
+  String get pairCodePanelOrMakeACode =>
+      'Oder erstelle einen Code zum Vorlesen';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      'Die Person öffnet Kryfo, tippt auf Hinzufügen, wählt Kopplungscode und gibt diese acht Ziffern ein. Erstelle für die nächste Person einen neuen.';
+
+  @override
+  String get pairCodePanelWrongTyped =>
+      'Es wurde ein falscher Code eingegeben. Lies ihn noch einmal langsam vor.';
+
+  @override
+  String get pairCodePanelThreeWrong =>
+      'Dreimal wurde ein falscher Code eingegeben, deshalb gilt dieser nicht mehr. Erstelle einen neuen.';
+
+  @override
+  String get pairCodePanelNotAdded =>
+      'Nicht hinzugefügt. Erstelle einen neuen Code, wenn die Person bereit ist.';
 
   @override
   String get panicSetupThoseWereDifferentFrom =>
@@ -6810,15 +6857,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Deine Einladung ist noch nicht bereit';
 
   @override
-  String get pairCodePanelReadSixDigitsOut =>
-      'Lies sechs Ziffern laut vor, und die Person kann dich hinzufügen. Sonst muss nichts ausgetauscht werden.';
-
-  @override
   String get pairCodePanelWorking => 'Einen Moment';
-
-  @override
-  String get pairCodePanelOrMakeASix =>
-      'Oder erstelle einen sechsstelligen Code zum Vorlesen';
 
   @override
   String get pairCodePanelBurned =>
@@ -6835,17 +6874,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get pairCodePanelTheyTapAddChoose =>
       'Die Person tippt auf Hinzufügen, wählt Code und gibt diese ein.';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      'Die Person öffnet Kryfo, tippt auf Hinzufügen, wählt Kopplungscode und gibt diese sechs Ziffern ein. Erstelle für die nächste Person einen neuen.';
-
-  @override
-  String get pairCodePanelYourWords => 'Deine drei Wörter';
-
-  @override
-  String get pairCodePanelAcceptOnce =>
-      'Die Anfrage kommt, sobald die Person dich hinzufügt. Nimm sie erst an, wenn sie sagt, dass alle vier Gruppen gleich waren.';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -11047,4 +11075,51 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get desktopBackupHint =>
       'Bringt alles zurück, falls dieser Computer einmal zurückgesetzt wird.';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name hat Kryfo neu eingerichtet';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return 'Das Telefon von $name hat eine neue sichere Sitzung gestartet';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return 'Du hast $name schon verifiziert. Nichts wird gesendet, bis du die Nummer prüfst oder weiterchattest. Nachrichten von $name kommen weiter an.';
+  }
+
+  @override
+  String get chatKeepChatting => 'Weiterchatten';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '$name muss Kryfo aktualisieren, damit ihr weiterchatten könnt.';
+  }
+
+  @override
+  String get restoreOlderTitle => 'Einige Chats pausieren';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '$name nutzt eine ältere Version von Kryfo. Euer Chat pausiert, bis $name aktualisiert.';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '$first und $second nutzen eine ältere Version von Kryfo. Eure Chats pausieren, bis sie aktualisieren.';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count weitere',
+      one: '1 weitere Person',
+    );
+    return '$first, $second und $_temp0 nutzen eine ältere Version von Kryfo. Eure Chats pausieren, bis sie aktualisieren.';
+  }
 }

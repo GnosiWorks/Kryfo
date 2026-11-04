@@ -399,6 +399,11 @@ class Session {
   Future<String?> heldKey(String haloId) => _ofPeer(haloId).heldKey(haloId);
 
   Future<bool> keyHeld(String haloId) => _ofPeer(haloId).keyHeld(haloId);
+  Future<int?> healHold(String haloId) => _ofPeer(haloId).healHold(haloId);
+  Future<void> releaseHealHold(String haloId) =>
+      _ofPeer(haloId).releaseHealHold(haloId);
+  Future<List<({int at, int kind})>> healLines(String haloId) =>
+      _ofPeer(haloId).healLines(haloId);
 
   // everyone held in either container, for a list
   Future<Set<String>> heldPeers() async => {

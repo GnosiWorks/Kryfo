@@ -222,6 +222,12 @@ class SignalSession {
     if (!live || !liveK) await _newSessionPreKeys(at);
   }
 
+  /// after a restore or a move: the session prekeys the file brought may
+  /// have gone out from the old phone since, so a new pair is made now.
+  /// the one it replaces still opens for its grace (identity v4 8)
+  Future<void> replaceSessionPreKeys({int? now}) =>
+      _newSessionPreKeys(now ?? _now());
+
   Future<void> _newSessionPreKeys(int at) async {
     final spkId = await _freeId(signedPreKeyStore.contains);
     final kId = await _freeId(kyberPreKeyStore.contains);
@@ -870,10 +876,27 @@ class SignalSession {
   // the peer never heard of. the state [held] had in front goes back, as
   // it was, the classic one behind it. a record with no pq state (every
   // chat with a 0.5.x phone) is kept as it opened
+  //
+  // and a restore's floor: a late text of theirs sealed before their heal
+  // opens on the state the file brought, and libsignal would put it in
+  // front again, so the next seal would wait for another heal. the state
+  // the heal built stays in front
   Uint8List _pqFloor(String peer, Uint8List? held, Uint8List opened) {
     final now = lib.sessionInfo(opened);
     final cur = now.current;
     if (cur == null) return opened;
+    if (held != null && _restored.isNotEmpty) {
+      final back = _baseOf(cur);
+      final was = lib.sessionInfo(held).current;
+      final wasBase = was == null ? null : _baseOf(was);
+      if (back != null &&
+          _restored.contains(back) &&
+          wasBase != null &&
+          !_restored.contains(wasBase)) {
+        dlog('signal: a text on the restored state, the healed one kept');
+        return lib.sessionPromote(opened, held);
+      }
+    }
     if (cur.version >= 4) {
       if (now.archived.any((s) => s.version < 4)) onPqOver?.call(peer);
       return opened;
@@ -891,26 +914,32 @@ class SignalSession {
   /// state archived so what was sealed on it still opens. the next seal is
   /// its opener. false when nothing is held, or the held one runs on
   /// another key
-  Future<bool> restartFrom(String peer, LsBundle bundle) =>
-      serial(peer, () async {
-        final held = await sessionStore.load(peer);
-        if (held == null) return false;
-        final their = lib.sessionInfo(held).remoteIdentity;
-        if (their == null || !_eq(their, bundle.identityKey)) return false;
-        final (record, key) = lib.sessionFromBundle(
-          identity,
-          registrationId,
-          held,
-          bundle,
-          _now(),
-          pinned: their,
-        );
-        _requirePq(record);
-        if (!_eq(key, their)) throw const LsError(LsError.untrusted);
-        await sessionStore.store(peer, record);
-        dlog('signal: a classic session started again on pq');
-        return true;
-      });
+  Future<bool> restartFrom(
+    String peer,
+    LsBundle bundle, {
+    bool classicOnly = false,
+  }) => serial(peer, () async {
+    final held = await sessionStore.load(peer);
+    if (held == null) return false;
+    final had = lib.sessionInfo(held);
+    // [classicOnly]: a record whose front is pq already is left as it is
+    if (classicOnly && had.version >= 4) return false;
+    final their = had.remoteIdentity;
+    if (their == null || !_eq(their, bundle.identityKey)) return false;
+    final (record, key) = lib.sessionFromBundle(
+      identity,
+      registrationId,
+      held,
+      bundle,
+      _now(),
+      pinned: their,
+    );
+    _requirePq(record);
+    if (!_eq(key, their)) throw const LsError(LsError.untrusted);
+    await sessionStore.store(peer, record);
+    dlog('signal: a classic session started again on pq');
+    return true;
+  });
 
   /// [peer]'s record without its classic states, once their side of the pq
   /// restart is 15 days done (identity v4 11 step 6): what was sealed on

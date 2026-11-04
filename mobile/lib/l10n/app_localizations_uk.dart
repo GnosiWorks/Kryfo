@@ -4386,9 +4386,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get pairCodeEnterOne => 'Ввести код';
 
   @override
-  String get pairCodeSixDigits => 'Шість цифр';
-
-  @override
   String get pairCodeLooking => 'Шукаємо…';
 
   @override
@@ -4406,35 +4403,82 @@ class AppLocalizationsUk extends AppLocalizations {
   String get pairCodeFailed => 'Не вийшло. Спробуй ще раз.';
 
   @override
-  String get pairCodeTypeTheSixDigits =>
-      'Введи шість цифр, які тобі продиктували.';
-
-  @override
   String get pairCodeAddThem => 'Додати';
-
-  @override
-  String get pairCodeUsedTwice => 'Цей код використали двічі. Попроси новий.';
 
   @override
   String get pairCodeKeyNumber => 'Номер ключа';
 
   @override
-  String get pairCodeNumberMatches =>
-      'Перевір, що всі чотири групи збігаються на обох телефонах';
-
-  @override
-  String get pairCodeNumberMatchesDesk =>
-      'Перевір, що всі чотири групи збігаються на обох пристроях';
-
-  @override
-  String get pairCodeNumberDiffers => 'Номер не збігається';
-
-  @override
-  String get pairCodeNoNumberThere =>
-      'На екрані співрозмовника немає номера? Додай його, а потім звір номер безпеки в чаті.';
-
-  @override
   String get pairCodeNotAdded => 'Не додано. Попроси новий код.';
+
+  @override
+  String get pairCodeEightDigits => 'Вісім цифр';
+
+  @override
+  String get pairCodeTypeTheEightDigits =>
+      'Введи вісім цифр, які тобі продиктували.';
+
+  @override
+  String get pairCodeOldCode =>
+      'Цей код зі старішого Kryfo. На обох телефонах потрібен Kryfo 0.6 або новіший.';
+
+  @override
+  String get pairCodeOldCodeDesk =>
+      'Цей код зі старішого Kryfo. На обох пристроях потрібен Kryfo 0.6 або новіший.';
+
+  @override
+  String get pairCodeBothNeed06 =>
+      'На обох телефонах потрібен Kryfo 0.6 або новіший.';
+
+  @override
+  String get pairCodeBothNeed06Desk =>
+      'На обох пристроях потрібен Kryfo 0.6 або новіший.';
+
+  @override
+  String get pairCodeWaitingForThem => 'Чекаємо на співрозмовника…';
+
+  @override
+  String get pairCodeStillWaiting =>
+      'Досі чекаємо. Якщо на його екрані написано, що введено неправильний код, звірте цифри разом.';
+
+  @override
+  String get pairCodeUnanswered =>
+      'Відповідь не надійшла. Звір код зі співрозмовником і введи його ще раз.';
+
+  @override
+  String get pairCodeTooManyTries => 'Цей код пробували тричі. Попроси новий.';
+
+  @override
+  String get pairCodeRanOut => 'Час цього коду минув. Попроси новий.';
+
+  @override
+  String get pairCodeMatched => 'Код збігся. Додати одне одного?';
+
+  @override
+  String get pairCodeNotThem => 'Це не та людина';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut =>
+      'Продиктуй вісім цифр, і ви додасте одне одного. Більше нічим обмінюватися не треба.';
+
+  @override
+  String get pairCodePanelOrMakeACode => 'Або створи код, щоб продиктувати';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      'Хай відкриють Kryfo, натиснуть «Додати», оберуть «Код з’єднання» і введуть ці вісім цифр. Для наступної людини створи новий.';
+
+  @override
+  String get pairCodePanelWrongTyped =>
+      'Введено неправильний код. Продиктуй його ще раз, повільно.';
+
+  @override
+  String get pairCodePanelThreeWrong =>
+      'Неправильний код ввели тричі, тож цей код більше не діє. Створи новий.';
+
+  @override
+  String get pairCodePanelNotAdded =>
+      'Не додано. Створи новий код, коли людина буде готова.';
 
   @override
   String get panicSetupThoseWereDifferentFrom => 'Коди не збіглися. Спочатку.';
@@ -6856,15 +6900,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get pairCodePanelYourInviteIsNot => 'Твоє запрошення ще не готове';
 
   @override
-  String get pairCodePanelReadSixDigitsOut =>
-      'Продиктуй шість цифр - і тебе зможуть додати. Більше нічим обмінюватися не треба.';
-
-  @override
   String get pairCodePanelWorking => 'Працюємо';
-
-  @override
-  String get pairCodePanelOrMakeASix =>
-      'Або створи шестизначний код, щоб продиктувати';
 
   @override
   String get pairCodePanelBurned =>
@@ -6881,17 +6917,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get pairCodePanelTheyTapAddChoose =>
       'Хай натиснуть «Додати», оберуть код і введуть ці цифри.';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      'Хай відкриють Kryfo, натиснуть «Додати», оберуть «Код з’єднання» і введуть ці шість цифр. Для наступної людини створи новий.';
-
-  @override
-  String get pairCodePanelYourWords => 'Твої три слова';
-
-  @override
-  String get pairCodePanelAcceptOnce =>
-      'Запит прийде, коли співрозмовник тебе додасть. Приймай його, лише коли він скаже, що всі чотири групи збіглися.';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -11104,4 +11129,45 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get desktopBackupHint =>
       'Поверне все, якщо цей комп’ютер колись скинуть.';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name знову налаштував(-ла) Kryfo';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return 'Телефон $name почав новий захищений сеанс';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return 'Ти вже перевіряв(-ла) $name. Нічого не надсилається, доки ти не звіриш номер або не продовжиш чат. Повідомлення від $name і далі надходять.';
+  }
+
+  @override
+  String get chatKeepChatting => 'Продовжити чат';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '$name треба оновити Kryfo, щоб продовжити чат.';
+  }
+
+  @override
+  String get restoreOlderTitle => 'Деякі чати стануть на паузу';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return 'У $name старіша версія Kryfo. Ваш чат стане на паузу, доки $name не оновить застосунок.';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return 'У $first і $second старіша версія Kryfo. Чати з ними стануть на паузу, доки вони не оновлять застосунок.';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return 'У $first, $second і ще $count старіша версія Kryfo. Чати з ними стануть на паузу, доки вони не оновлять застосунок.';
+  }
 }

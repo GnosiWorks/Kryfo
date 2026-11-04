@@ -449,6 +449,8 @@ extension AppStateOutbox on AppState {
     unawaited(_drainGroupOwed());
     unawaited(_drainAcks());
     unawaited(_askAfresh());
+    // linked devices: copies owed to one device, list pushes due
+    if (linkedDevicesOn) unawaited(pumpDeviceSends());
     if (rows.isEmpty && vRows.isEmpty) {
       if (_outboxTries.isNotEmpty) {
         _outboxTries.clear();
@@ -1166,18 +1168,17 @@ extension AppStateOutbox on AppState {
         // too big for any route: their session is fine
         rethrow;
       } catch (e) {
-        // a corrupt session (InvalidKeyException or bad state) can't encrypt.
-        // if we kept the peer's bundle at pairing, wipe the broken session and
-        // rebuild it, then try once more.
-        final healed = await _healSession(memberId);
-        if (!healed) {
-          // no stored bundle (paired before v30 kept them). ask the peer
-          // for a fresh one over the gift-wrap transport: the reply heals
-          // the session and the user's tap-to-retry then goes through.
-          _wantHeal(memberId);
-          unawaited(_sendBundleCtl(memberId, want: true));
+        // a corrupt session (a bad state) can't encrypt. the dev chat's is
+        // rebuilt from its pinned card and tried once more. anyone else is
+        // sent a heal (3.8): they build a session to us from it, and this
+        // waits for their answer to open, as a restored session's does
+        if (!isDevId(memberId)) {
+          if (await _askToStartAfresh(memberId)) {
+            throw StartingAfresh(memberId);
+          }
           rethrow;
         }
+        if (!await _healSession(memberId)) rethrow;
         (ident: ident, cipher: cipher) = await _io.seal(memberId, wrapped);
       }
       final backPaired = to.backPaired;

@@ -4297,9 +4297,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get pairCodeEnterOne => 'Masukkan kode';
 
   @override
-  String get pairCodeSixDigits => 'Enam angka';
-
-  @override
   String get pairCodeLooking => 'Mencari…';
 
   @override
@@ -4318,34 +4315,83 @@ class AppLocalizationsId extends AppLocalizations {
   String get pairCodeFailed => 'Tidak berhasil. Coba lagi.';
 
   @override
-  String get pairCodeTypeTheSixDigits => 'Ketik enam angka yang dia bacakan.';
-
-  @override
   String get pairCodeAddThem => 'Tambahkan';
-
-  @override
-  String get pairCodeUsedTwice => 'Kode ini dipakai dua kali. Minta kode baru.';
 
   @override
   String get pairCodeKeyNumber => 'Nomor kunci';
 
   @override
-  String get pairCodeNumberMatches =>
-      'Pastikan keempat kelompok sama di kedua ponsel';
-
-  @override
-  String get pairCodeNumberMatchesDesk =>
-      'Pastikan keempat kelompok sama di kedua perangkat';
-
-  @override
-  String get pairCodeNumberDiffers => 'Nomornya berbeda';
-
-  @override
-  String get pairCodeNoNumberThere =>
-      'Tidak ada nomor di layarnya? Tambahkan dia, lalu bandingkan nomor keamanan di obrolan.';
-
-  @override
   String get pairCodeNotAdded => 'Tidak ditambahkan. Minta kode baru.';
+
+  @override
+  String get pairCodeEightDigits => 'Delapan angka';
+
+  @override
+  String get pairCodeTypeTheEightDigits =>
+      'Ketik delapan angka yang dia bacakan.';
+
+  @override
+  String get pairCodeOldCode =>
+      'Kode itu dari Kryfo versi lama. Kedua ponsel perlu Kryfo 0.6 atau yang lebih baru.';
+
+  @override
+  String get pairCodeOldCodeDesk =>
+      'Kode itu dari Kryfo versi lama. Kedua perangkat perlu Kryfo 0.6 atau yang lebih baru.';
+
+  @override
+  String get pairCodeBothNeed06 =>
+      'Kedua ponsel perlu Kryfo 0.6 atau yang lebih baru.';
+
+  @override
+  String get pairCodeBothNeed06Desk =>
+      'Kedua perangkat perlu Kryfo 0.6 atau yang lebih baru.';
+
+  @override
+  String get pairCodeWaitingForThem => 'Menunggu dia…';
+
+  @override
+  String get pairCodeStillWaiting =>
+      'Masih menunggu. Jika layarnya bilang kode yang salah diketik, periksa angkanya bersama.';
+
+  @override
+  String get pairCodeUnanswered =>
+      'Tidak ada jawaban. Periksa kodenya bersama dia, lalu ketik lagi.';
+
+  @override
+  String get pairCodeTooManyTries =>
+      'Kode ini sudah dicoba tiga kali. Minta kode baru.';
+
+  @override
+  String get pairCodeRanOut => 'Waktu kode itu sudah habis. Minta kode baru.';
+
+  @override
+  String get pairCodeMatched => 'Kodenya cocok. Saling menambahkan?';
+
+  @override
+  String get pairCodeNotThem => 'Bukan dia';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut =>
+      'Bacakan delapan angka dengan keras dan kalian saling menambahkan. Tidak ada hal lain yang perlu dipertukarkan.';
+
+  @override
+  String get pairCodePanelOrMakeACode => 'Atau buat kode untuk dibacakan';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      'Dia membuka Kryfo, mengetuk tambah, memilih kode penautan, lalu mengetik delapan angka ini. Buat yang baru untuk orang berikutnya.';
+
+  @override
+  String get pairCodePanelWrongTyped =>
+      'Kode yang salah diketik. Bacakan lagi pelan-pelan.';
+
+  @override
+  String get pairCodePanelThreeWrong =>
+      'Kode yang salah diketik tiga kali, jadi kode ini berhenti. Buat yang baru.';
+
+  @override
+  String get pairCodePanelNotAdded =>
+      'Tidak ditambahkan. Buat kode baru saat mereka siap.';
 
   @override
   String get panicSetupThoseWereDifferentFrom =>
@@ -6731,15 +6777,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get pairCodePanelYourInviteIsNot => 'Undanganmu belum siap';
 
   @override
-  String get pairCodePanelReadSixDigitsOut =>
-      'Bacakan enam angka dengan keras dan dia bisa menambahkanmu. Tidak ada hal lain yang perlu dipertukarkan.';
-
-  @override
   String get pairCodePanelWorking => 'Memproses';
-
-  @override
-  String get pairCodePanelOrMakeASix =>
-      'Atau buat kode enam angka untuk dibacakan';
 
   @override
   String get pairCodePanelBurned =>
@@ -6756,17 +6794,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get pairCodePanelTheyTapAddChoose =>
       'Dia mengetuk tambah, memilih kode, lalu mengetik angka ini.';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      'Dia membuka Kryfo, mengetuk tambah, memilih kode penautan, lalu mengetik enam angka ini. Buat yang baru untuk orang berikutnya.';
-
-  @override
-  String get pairCodePanelYourWords => 'Tiga katamu';
-
-  @override
-  String get pairCodePanelAcceptOnce =>
-      'Permintaannya datang setelah dia menambahkanmu. Terima hanya setelah dia bilang keempat kelompok sama.';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -10933,4 +10960,45 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get desktopBackupHint =>
       'Mengembalikan semuanya kalau suatu saat komputer ini direset.';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name memasang Kryfo lagi';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return 'Ponsel $name memulai sesi aman yang baru';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return 'Kamu sudah memverifikasi $name sebelumnya. Tidak ada yang terkirim sampai kamu memeriksa nomornya atau lanjut mengobrol. Pesan darinya tetap masuk.';
+  }
+
+  @override
+  String get chatKeepChatting => 'Lanjut mengobrol';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '$name perlu memperbarui Kryfo agar bisa lanjut mengobrol.';
+  }
+
+  @override
+  String get restoreOlderTitle => 'Beberapa obrolan akan dijeda';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '$name memakai Kryfo versi lama. Obrolan kalian dijeda sampai dia memperbaruinya.';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '$first dan $second memakai Kryfo versi lama. Obrolanmu dengan mereka dijeda sampai mereka memperbaruinya.';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return '$first, $second, dan $count orang lainnya memakai Kryfo versi lama. Obrolanmu dengan mereka dijeda sampai mereka memperbaruinya.';
+  }
 }

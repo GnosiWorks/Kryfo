@@ -61,6 +61,13 @@ class HaloContainer {
     '00000000000000000000000000000004' => ('k4.db', '_k4'),
     _ => (_dbFile, _suffix),
   };
+
+  /// after the media and wallpapers folder names: by number on every
+  /// install, so a folder's name never says whose it is
+  String get folderSuffix => _desk.$2;
+
+  /// the folder suffix a phone used before the numbers, '' when the same
+  String get oldFolderSuffix => _suffix == folderSuffix ? '' : _suffix;
   // settings prefix, '' for the everyday one
   final String prefix;
   // a raw 32-byte key, so sqlcipher skips its key derivation
@@ -149,7 +156,10 @@ class HaloContainer {
 
   Future<Directory> folder(String name) async {
     final d = Directory(
-      p.join((await getApplicationDocumentsDirectory()).path, '$name$suffix'),
+      p.join(
+        (await getApplicationDocumentsDirectory()).path,
+        '$name$folderSuffix',
+      ),
     );
     if (!await d.exists()) await d.create(recursive: true);
     return d;
@@ -165,8 +175,29 @@ class HaloContainer {
       if (await File(f).exists()) return true;
     }
     final docs = (await getApplicationDocumentsDirectory()).path;
-    for (final name in ['media', 'wallpapers']) {
-      if (await Directory(p.join(docs, '$name$suffix')).exists()) return true;
+    for (final name in folderNames) {
+      if (await _holdsFiles(Directory(p.join(docs, name)))) return true;
+    }
+    return false;
+  }
+
+  /// its media and wallpapers folders, under the names of before too
+  List<String> get folderNames => [
+    for (final name in ['media', 'wallpapers']) ...[
+      '$name$folderSuffix',
+      if (oldFolderSuffix.isNotEmpty) '$name$oldFolderSuffix',
+    ],
+  ];
+
+  // every install has the numbered folders: an empty one says nothing
+  static Future<bool> _holdsFiles(Directory d) async {
+    if (!await d.exists()) return false;
+    try {
+      await for (final e in d.list(recursive: true, followLinks: false)) {
+        if (e is File) return true;
+      }
+    } catch (_) {
+      return true;
     }
     return false;
   }
@@ -198,12 +229,12 @@ class HaloContainer {
         dlog('container: a file stayed (${e.runtimeType})');
       }
     }
-    for (final name in ['media', 'wallpapers']) {
+    for (final name in folderNames) {
       final d = Directory(
-        p.join((await getApplicationDocumentsDirectory()).path, '$name$suffix'),
+        p.join((await getApplicationDocumentsDirectory()).path, name),
       );
       try {
-        // its pictures and voice notes, in the clear: zeroed first
+        // its pictures and voice notes: zeroed first
         await shredTree(d.path);
       } catch (e) {
         // the boot sweep takes it once nothing could open it
