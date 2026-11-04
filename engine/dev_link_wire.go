@@ -132,7 +132,7 @@ func (relayLinkWire) fetch(ctx context.Context, seed [32]byte) ([][]byte, error)
 	if err != nil {
 		return nil, err
 	}
-	got, _, heard := pairCodeQuery(ctx, pk)
+	got, _, heard := pairCodeQuery(ctx, pairLane(pk), []string{pk})
 	if heard == 0 {
 		return nil, errLinkUnreached
 	}
