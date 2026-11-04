@@ -2487,7 +2487,7 @@ void main() {
     expect(l.settingsWhatWeCanSee, "What we can see");
     expect(l.settingsTheHonestList, "The honest list");
     expect(l.settingsVersion, "Version");
-    expect(l.settings030Alpha, "0.5.3 · alpha");
+    expect(l.settingsVersionAlpha("0.6.0"), "0.6.0 · alpha");
     expect(l.settingsReportAnIssue, "Report an issue");
     expect(l.settingsBugOrSecurityFlaw, "Bug or security flaw");
     expect(l.settingsOpenSource, "Open source");
