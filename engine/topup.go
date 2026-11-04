@@ -245,7 +245,7 @@ func topupPruneLocked(now time.Time) {
 		if now.Before(topupEnd(it)) {
 			kept = append(kept, it)
 		} else {
-			topupPend = append(topupPend, topupRec{Done: it.Store + " " + it.Ev.ID.Hex()})
+			topupNote(it, topupRec{Done: it.Store + " " + it.Ev.ID.Hex()})
 		}
 	}
 	clear(topupQueue[len(kept):])
@@ -256,9 +256,21 @@ func topupPruneLocked(now time.Time) {
 	}
 	for len(topupQueue) > 0 && (len(topupQueue) > topupMaxItems || bytes > topupMaxBytes) {
 		bytes -= topupSize(topupQueue[0])
-		topupPend = append(topupPend, topupRec{Done: topupQueue[0].Store + " " + topupQueue[0].Ev.ID.Hex()})
+		topupNote(topupQueue[0], topupRec{Done: topupQueue[0].Store + " " + topupQueue[0].Ev.ID.Hex()})
 		topupQueue[0] = topupItem{}
 		topupQueue = topupQueue[1:]
+	}
+}
+
+// a hidden chat's waits stay in memory, never in the file: the file opens
+// with a key from the main identity, and a record of one, added or done,
+// would say to whoever holds it that a hidden chat sent something
+func topupOnDisk(it topupItem) bool { return laneKind(it.Lane) != laneHidden }
+
+// a record for the file, of an item that goes there. topupMu
+func topupNote(it topupItem, r topupRec) {
+	if topupOnDisk(it) {
+		topupPend = append(topupPend, r)
 	}
 }
 
@@ -282,7 +294,11 @@ func topupWrite() {
 	compact := topupLines > 2*len(topupQueue)+200
 	var live []topupItem
 	if compact {
-		live = append(live, topupQueue...)
+		for _, it := range topupQueue {
+			if topupOnDisk(it) {
+				live = append(live, it)
+			}
+		}
 	}
 	topupMu.Unlock()
 	line := func(r topupRec) string {
@@ -338,7 +354,7 @@ func topupAdd(st, lane string, ev nostr.Event) {
 		return
 	}
 	topupEnsureLoaded()
-	it := topupItem{Store: st, Lane: hiddenLaneTag(lane), Ev: ev, At: time.Now().Unix()}
+	it := topupItem{Store: st, Lane: lane, Ev: ev, At: time.Now().Unix()}
 	if k, ok := keptSealOf(ev.ID.Hex()); ok {
 		it.Kept = &k
 		// the queue has its own copy now
@@ -355,7 +371,7 @@ func topupAdd(st, lane string, ev nostr.Event) {
 		}
 	}
 	topupQueue = append(topupQueue, it)
-	topupPend = append(topupPend, topupRec{Add: &it})
+	topupNote(it, topupRec{Add: &it})
 	topupPruneLocked(time.Now())
 	n := len(topupQueue)
 	topupMu.Unlock()
@@ -382,14 +398,19 @@ func topupFor(st string) []topupItem {
 func topupDone(st string, id nostr.ID) {
 	topupMu.Lock()
 	kept := topupQueue[:0]
+	disk := false
 	for _, it := range topupQueue {
-		if !(it.Store == st && it.Ev.ID == id) {
-			kept = append(kept, it)
+		if it.Store == st && it.Ev.ID == id {
+			disk = disk || topupOnDisk(it)
+			continue
 		}
+		kept = append(kept, it)
 	}
 	clear(topupQueue[len(kept):])
 	topupQueue = kept
-	topupPend = append(topupPend, topupRec{Done: st + " " + id.Hex()})
+	if disk {
+		topupPend = append(topupPend, topupRec{Done: st + " " + id.Hex()})
+	}
 	topupMu.Unlock()
 	topupWriteSoon()
 }
@@ -419,7 +440,7 @@ func topupPurge(drop func(topupItem) bool) {
 	gone := 0
 	for _, it := range topupQueue {
 		if drop(it) {
-			topupPend = append(topupPend, topupRec{Done: it.Store + " " + it.Ev.ID.Hex()})
+			topupNote(it, topupRec{Done: it.Store + " " + it.Ev.ID.Hex()})
 			gone++
 			continue
 		}
@@ -508,14 +529,13 @@ func topupFlush(st, u string) bool {
 			}
 			ev = fresh
 		}
-		lane := hiddenLaneFromTag(it.Lane)
-		client, err := relayClientFor(lane, u)
+		client, err := relayClientFor(it.Lane, u)
 		if err != nil {
 			return false
 		}
 		ctx, cancel := onRoute(context.Background(), routeC)
 		pctx, pcancel := context.WithTimeout(ctx, publishWait)
-		err = publishTo(pctx, lane, u, client, ev)
+		err = publishTo(pctx, it.Lane, u, client, ev)
 		pcancel()
 		cancel()
 		if relayHasIt(err) {

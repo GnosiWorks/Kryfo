@@ -53,39 +53,6 @@ func hiddenLane(rcvPk string) string {
 	return l
 }
 
-// a hidden chat's lane as the top-up's file keeps it: by a keyed hash of
-// its address, since a lane's number holds for this process alone
-func hiddenLaneTag(lane string) string {
-	if laneKind(lane) != laneHidden {
-		return lane
-	}
-	hiddenLaneMu.Lock()
-	defer hiddenLaneMu.Unlock()
-	for pk, l := range hiddenLanes {
-		if l == lane {
-			return laneHidden + ":#" + knockID(pk)
-		}
-	}
-	return lane
-}
-
-// and back: the address's lane in this process, or a lane of its own for
-// one not listened on now. never the everyday sends' lane
-func hiddenLaneFromTag(tag string) string {
-	id, ok := strings.CutPrefix(tag, laneHidden+":#")
-	if !ok {
-		return tag
-	}
-	hiddenLaneMu.Lock()
-	defer hiddenLaneMu.Unlock()
-	for pk, l := range hiddenLanes {
-		if knockID(pk) == id {
-			return l
-		}
-	}
-	return laneHidden + ":t" + id
-}
-
 // the first-contact address is in the invite, so it never shares a circuit
 // with a contact's address or a send
 const laneFirstContact = "firstcontact"

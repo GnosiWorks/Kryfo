@@ -10,6 +10,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"os"
 	"strconv"
 	"strings"
@@ -473,6 +474,61 @@ func TestUnsubscribePurgesOnlyThatIdentity(t *testing.T) {
 	}
 	if got := waiting(); len(got) != 2 || !got[main3] || !got[main4] {
 		t.Fatalf("v4: %v left", got)
+	}
+}
+
+// a hidden chat's send that waits for a store waits in memory alone: the
+// file opens with the everyday side's key, and no record there, added or
+// done, says a hidden chat sent anything
+func TestAHiddenChatsWaitStaysOutOfTheFile(t *testing.T) {
+	a, b := newRelayStandIn(t, 0), newRelayStandIn(t, 0)
+	useTwoStores(t, a, b)
+	peer, hiddenPeer := newXid(t), newXid(t)
+	every := wrapKeptAt(t, testMain(), peer.pub, "every", time.Now())
+	hid := wrapKeptAt(t, testMain(), hiddenPeer.pub, "hidden", time.Now())
+	lane := hiddenLane(hex.EncodeToString(hiddenPeer.pub[:]))
+	topupAdd(storeFirst, laneEveryday, every)
+	topupAdd(storeFirst, lane, hid)
+	if got := topupFor(storeFirst); len(got) != 2 || got[1].Lane != lane {
+		t.Fatalf("%d waiting, want both, the hidden one on its own lane", len(got))
+	}
+	inFile := func() (adds, dones int) {
+		t.Helper()
+		topupSync()
+		raw, err := os.ReadFile(topupFile())
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, line := range strings.Split(strings.TrimSpace(string(raw)), "\n") {
+			plain, ok := topupOpen(topupKey(), line)
+			if !ok {
+				continue
+			}
+			if strings.Contains(string(plain), hid.ID.Hex()) || strings.Contains(string(plain), laneHidden) {
+				t.Fatal("the file names the hidden chat's wait")
+			}
+			var r topupRec
+			if json.Unmarshal(plain, &r) == nil {
+				if r.Add != nil {
+					adds++
+				} else if r.Done != "" {
+					dones++
+				}
+			}
+		}
+		return
+	}
+	if adds, _ := inFile(); adds != 1 {
+		t.Fatalf("%d added in the file, want the everyday one", adds)
+	}
+	topupDone(storeFirst, hid.ID)
+	if _, dones := inFile(); dones != 0 {
+		t.Fatal("a done for the hidden wait in the file")
+	}
+	topupAdd(storeFirst, lane, hid)
+	topupForget()
+	if got := topupFor(storeFirst); len(got) != 1 || got[0].Ev.ID != every.ID {
+		t.Fatalf("after a restart %d waiting, want the everyday one alone", len(got))
 	}
 }
 
