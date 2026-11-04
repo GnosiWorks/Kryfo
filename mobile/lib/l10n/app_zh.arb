@@ -2837,5 +2837,14 @@
   "desktopPassStaysWindows": "Kryfo 无法用你的 Windows 账户保存它的密钥，所以密码短语会保留。",
   "desktopBackupCardTitle": "留一份 Kryfo 备份",
   "desktopBackupCardLine": "这台电脑上的 Windows 账户保管着 Kryfo 的密钥。如果电脑或账户被重置，Kryfo 备份能找回一切。",
-  "desktopBackupHint": "如果这台电脑被重置，它能找回一切。"
+  "desktopBackupHint": "如果这台电脑被重置，它能找回一切。",
+  "chatHealRestored": "{name} 重新设置了 Kryfo",
+  "chatHealNewSession": "{name} 的手机开始了新的安全会话",
+  "chatHealHeldLine": "你之前验证过 {name}。在你核对安全码或继续聊天之前，什么都不会发出。对方的消息仍会收到。",
+  "chatKeepChatting": "继续聊天",
+  "chatNeedsUpdateToChat": "{name} 需要更新 Kryfo 才能继续聊天。",
+  "restoreOlderTitle": "部分聊天将暂停",
+  "restoreOlderOne": "{name} 使用的是旧版 Kryfo。在对方更新前，你们的聊天会暂停。",
+  "restoreOlderTwo": "{first} 和 {second} 使用的是旧版 Kryfo。在他们更新前，你和他们的聊天会暂停。",
+  "restoreOlderMany": "{first}、{second} 和另外 {count} 人使用的是旧版 Kryfo。在他们更新前，你和他们的聊天会暂停。"
 }

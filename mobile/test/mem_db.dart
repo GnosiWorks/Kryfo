@@ -118,6 +118,7 @@ Map<String, _Table> _appSchema() {
     'lib/router.dart',
     'lib/devchat/dev_chat.dart',
     'lib/devchat/support.dart',
+    'lib/heal.dart',
   ]) {
     final src = File(f).readAsStringSync();
     for (final m in _create.allMatches(src)) {

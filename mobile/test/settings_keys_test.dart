@@ -33,6 +33,8 @@ const _apart = {
   'first_kept_cut',
   'signal.restored',
   'signal.restored_from',
+  // what follows a restore, run once on the next start (heal.dart)
+  'restore.after',
 };
 
 void main() {

@@ -17308,6 +17308,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Brings everything back if this computer is ever reset.'**
   String get desktopBackupHint;
+
+  /// screens/chat_screen.dart: the quiet line where a contact's restore or move rebuilt the session (identity v4 heal, bit 0). calm, no alarm
+  ///
+  /// In en, this message translates to:
+  /// **'{name} set up Kryfo again'**
+  String chatHealRestored(Object name);
+
+  /// screens/chat_screen.dart: the quiet line where a contact's phone rebuilt a session that stopped reading (identity v4 heal without bit 0)
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s phone started a new secure session'**
+  String chatHealNewSession(Object name);
+
+  /// widgets/key_held.dart: the card on a verified contact's chat after a heal, until the person looks (Q22). same shape as chatKeyHeldLine
+  ///
+  /// In en, this message translates to:
+  /// **'You verified {name} before. Nothing is sent until you check the number or keep chatting. Their messages still arrive.'**
+  String chatHealHeldLine(Object name);
+
+  /// widgets/key_held.dart: the button that ends a heal's hold and keeps the verified mark
+  ///
+  /// In en, this message translates to:
+  /// **'Keep chatting'**
+  String get chatKeepChatting;
+
+  /// screens/chat_screen.dart: the line under a chat with a 0.5.x contact after this phone was restored: what is written waits until they update (Q20)
+  ///
+  /// In en, this message translates to:
+  /// **'{name} needs to update Kryfo to keep chatting.'**
+  String chatNeedsUpdateToChat(Object name);
+
+  /// screens/restore_screen.dart: the sheet before a restore when the file holds contacts on 0.5.x
+  ///
+  /// In en, this message translates to:
+  /// **'Some chats will pause'**
+  String get restoreOlderTitle;
+
+  /// screens/restore_screen.dart: the sheet's line with one contact on 0.5.x
+  ///
+  /// In en, this message translates to:
+  /// **'{name} uses an older Kryfo. Your chat with them will pause until they update.'**
+  String restoreOlderOne(Object name);
+
+  /// screens/restore_screen.dart: the sheet's line with two contacts on 0.5.x
+  ///
+  /// In en, this message translates to:
+  /// **'{first} and {second} use an older Kryfo. Your chats with them will pause until they update.'**
+  String restoreOlderTwo(Object first, Object second);
+
+  /// screens/restore_screen.dart: the sheet's line with three or more contacts on 0.5.x; count is the others
+  ///
+  /// In en, this message translates to:
+  /// **'{first}, {second} and {count, plural, =1{1 other} other{{count} others}} use an older Kryfo. Your chats with them will pause until they update.'**
+  String restoreOlderMany(Object first, Object second, int count);
 }
 
 class _AppLocalizationsDelegate

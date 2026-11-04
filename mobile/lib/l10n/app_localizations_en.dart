@@ -10771,4 +10771,51 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get desktopBackupHint =>
       'Brings everything back if this computer is ever reset.';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name set up Kryfo again';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return '$name\'s phone started a new secure session';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return 'You verified $name before. Nothing is sent until you check the number or keep chatting. Their messages still arrive.';
+  }
+
+  @override
+  String get chatKeepChatting => 'Keep chatting';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '$name needs to update Kryfo to keep chatting.';
+  }
+
+  @override
+  String get restoreOlderTitle => 'Some chats will pause';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '$name uses an older Kryfo. Your chat with them will pause until they update.';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '$first and $second use an older Kryfo. Your chats with them will pause until they update.';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count others',
+      one: '1 other',
+    );
+    return '$first, $second and $_temp0 use an older Kryfo. Your chats with them will pause until they update.';
+  }
 }

@@ -10950,4 +10950,45 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get desktopBackupHint =>
       'Поверне все, якщо цей комп’ютер колись скинуть.';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name знову налаштував(-ла) Kryfo';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return 'Телефон $name почав новий захищений сеанс';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return 'Ти вже перевіряв(-ла) $name. Нічого не надсилається, доки ти не звіриш номер або не продовжиш чат. Повідомлення від $name і далі надходять.';
+  }
+
+  @override
+  String get chatKeepChatting => 'Продовжити чат';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '$name треба оновити Kryfo, щоб продовжити чат.';
+  }
+
+  @override
+  String get restoreOlderTitle => 'Деякі чати стануть на паузу';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return 'У $name старіша версія Kryfo. Ваш чат стане на паузу, доки $name не оновить застосунок.';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return 'У $first і $second старіша версія Kryfo. Чати з ними стануть на паузу, доки вони не оновлять застосунок.';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return 'У $first, $second і ще $count старіша версія Kryfo. Чати з ними стануть на паузу, доки вони не оновлять застосунок.';
+  }
 }

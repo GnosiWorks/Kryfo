@@ -10217,6 +10217,47 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get desktopBackupHint => '如果这台电脑被重置，它能找回一切。';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name 重新设置了 Kryfo';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return '$name 的手机开始了新的安全会话';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return '你之前验证过 $name。在你核对安全码或继续聊天之前，什么都不会发出。对方的消息仍会收到。';
+  }
+
+  @override
+  String get chatKeepChatting => '继续聊天';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '$name 需要更新 Kryfo 才能继续聊天。';
+  }
+
+  @override
+  String get restoreOlderTitle => '部分聊天将暂停';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '$name 使用的是旧版 Kryfo。在对方更新前，你们的聊天会暂停。';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '$first 和 $second 使用的是旧版 Kryfo。在他们更新前，你和他们的聊天会暂停。';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return '$first、$second 和另外 $count 人使用的是旧版 Kryfo。在他们更新前，你和他们的聊天会暂停。';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -20317,4 +20358,45 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get desktopBackupHint => '如果這台電腦被重設，它能找回一切。';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name 重新設定了 Kryfo';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return '$name 的手機開始了新的安全工作階段';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return '你之前驗證過 $name。在你核對安全碼或繼續聊天之前，什麼都不會送出。對方的訊息仍會收到。';
+  }
+
+  @override
+  String get chatKeepChatting => '繼續聊天';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '$name 需要更新 Kryfo 才能繼續聊天。';
+  }
+
+  @override
+  String get restoreOlderTitle => '部分聊天將暫停';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '$name 使用的是舊版 Kryfo。在對方更新前，你們的聊天會暫停。';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '$first 和 $second 使用的是舊版 Kryfo。在他們更新前，你和他們的聊天會暫停。';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return '$first、$second 和另外 $count 人使用的是舊版 Kryfo。在他們更新前，你和他們的聊天會暫停。';
+  }
 }
