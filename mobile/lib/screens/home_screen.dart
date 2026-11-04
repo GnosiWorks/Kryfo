@@ -1066,8 +1066,8 @@ class _OfflineCardState extends State<OfflineCard> {
                   : restart
                   ? torValve.tryRestart
                   : torValve.tryReconnect,
-              fill: HaloColors.rose,
-              ink: HaloColors.amberInk,
+              fill: HaloColors.roseFill,
+              ink: HaloColors.onRose,
               swap: true,
             ),
             CardAction(
@@ -1569,7 +1569,7 @@ class _AutoOffer extends StatelessWidget {
               await appState.chooseBridge(BridgeChoice.auto);
             },
             fill: HaloColors.violet,
-            ink: HaloColors.amberInk,
+            ink: HaloColors.onViolet,
           ),
           CardAction(
             label: l10n.bridgesNotNow,
@@ -1603,8 +1603,8 @@ class _BridgeStuckHint extends StatelessWidget {
               await appState.chooseBridge(BridgeChoice.auto);
               appState.applyBridgeNow();
             },
-            fill: HaloColors.rose,
-            ink: HaloColors.amberInk,
+            fill: HaloColors.roseFill,
+            ink: HaloColors.onRose,
           ),
         ],
       ),
@@ -1636,7 +1636,7 @@ class _BridgeHint extends StatelessWidget {
               appState.applyBridgeNow();
             },
             fill: HaloColors.violet,
-            ink: HaloColors.amberInk,
+            ink: HaloColors.onViolet,
           ),
           CardAction(
             label: l10n.homeUseFast,

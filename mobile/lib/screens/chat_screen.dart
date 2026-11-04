@@ -21,6 +21,7 @@ import '../widgets/album_viewer.dart';
 import 'media_send_screen.dart';
 import '../sent_name.dart';
 import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
+import '../desktop/drag_in.dart' show DragInZone;
 import 'dart:io';
 import 'dart:convert';
 import 'key_verification_screen.dart';
@@ -6607,7 +6608,23 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   @override
-  Widget build(BuildContext context) => menuBack(child: _page(context));
+  Widget build(BuildContext context) => menuBack(
+    child: DragInZone(
+      enabled: _composerShown,
+      send: _sendFileFrom,
+      couldNotRead: () => l10n.chatCouldNotReadThat,
+      child: _page(context),
+    ),
+  );
+
+  // the bar under the thread is the composer: a drop goes as a pick would
+  bool get _composerShown =>
+      _barKnown &&
+      !_blocked &&
+      _devStop == null &&
+      !_incomingRequest &&
+      !_requestLocked &&
+      !(_keyHeld && !_isDev);
 
   Widget _page(BuildContext context) {
     // the albums as the thread stands now: a row of one is drawn by its lead

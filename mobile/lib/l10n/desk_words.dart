@@ -140,7 +140,6 @@ const deskWordKeys = [
   'savedLongPressAnyMessage',
   'chatFailedTapToRetry',
   'groupChatTapToRetry',
-  'modesFastLine',
 ];
 
 extension DeskWords on AppLocalizations {
@@ -418,6 +417,4 @@ extension DeskWords on AppLocalizations {
       onDesktop ? chatFailedTapToRetryDesk : chatFailedTapToRetry;
   String get groupChatTapToRetryShown =>
       onDesktop ? groupChatTapToRetryDesk : groupChatTapToRetry;
-  String get modesFastLineShown =>
-      onDesktop ? modesFastLineDesk : modesFastLine;
 }

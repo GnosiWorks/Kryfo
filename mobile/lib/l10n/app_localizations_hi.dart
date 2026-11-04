@@ -10468,7 +10468,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'Tor को छोड़ देता है, इसलिए संदेश जल्दी पहुँचते हैं और बैटरी कम लगती है। हमारे सर्वर आपका IP पता सिर्फ़ तब देखते हैं जब आप जुड़े हों, और उसे कभी दर्ज नहीं करते, न रखते हैं। आप क्या कहते हैं, यह कभी नहीं। आपके संपर्क इसे कभी नहीं देखते। आपका नेटवर्क देख सकता है कि आप Kryfo से जुड़ रहे हैं।';
+      'Tor को छोड़ देता है, इसलिए संदेश जल्दी पहुँचते हैं और बैटरी कम लगती है। हमारे सर्वर आपका IP पता सिर्फ़ तब देखते हैं जब आप जुड़े हों, और उसे कभी दर्ज नहीं करते, न रखते हैं। आपके संपर्क इसे कभी नहीं देखते। आपका नेटवर्क देख सकता है कि आप Kryfo से जुड़ रहे हैं।';
 
   @override
   String get modesFastConnected => 'तेज़ · जुड़ा है';
@@ -11020,7 +11020,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String chatHealNewSession(Object name) {
-    return '$name के फ़ोन ने एक नया सुरक्षित सेशन शुरू किया';
+    return '$name के डिवाइस ने एक नया सुरक्षित सेशन शुरू किया';
   }
 
   @override
@@ -11086,8 +11086,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get groupChatTapToRetryDesk => '! फिर भेजने को क्लिक करें';
 
   @override
-  String get modesFastLineDesk =>
-      'Tor को छोड़ देता है, इसलिए संदेश जल्दी पहुँचते हैं और बैटरी कम लगती है। हमारे सर्वर आपका IP पता सिर्फ़ तब देखते हैं जब आप जुड़े हों, और उसे कभी दर्ज नहीं करते, न रखते हैं। आपके संपर्क इसे कभी नहीं देखते। आपका नेटवर्क देख सकता है कि आप Kryfo से जुड़ रहे हैं।';
+  String get chatDropHereToSend => 'भेजने के लिए यहाँ छोड़ें';
 
   @override
   String get voiceSeeTranscription => 'लिखित रूप देखें';

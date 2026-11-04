@@ -13086,7 +13086,7 @@
   "@modesFastTag": {
     "description": "small line under the Fast card title"
   },
-  "modesFastLine": "Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you're connected, and never log or keep it. Never what you say. Your contacts never see it. Your network can see that you connect to Kryfo.",
+  "modesFastLine": "Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you're connected, and never log or keep it. Your contacts never see it. Your network can see that you connect to Kryfo.",
   "@modesFastLine": {
     "description": "Fast card, what it means and who sees the IP address"
   },
@@ -13804,7 +13804,7 @@
       }
     }
   },
-  "chatHealNewSession": "{name}'s phone started a new secure session",
+  "chatHealNewSession": "{name}'s device started a new secure session",
   "@chatHealNewSession": {
     "description": "screens/chat_screen.dart: the quiet line where a contact's phone rebuilt a session that stopped reading (identity v4 heal without bit 0)",
     "placeholders": {
@@ -13916,9 +13916,9 @@
   "@groupChatTapToRetryDesk": {
     "description": "screens/group_chat_screen.dart, on a computer"
   },
-  "modesFastLineDesk": "Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you're connected, and never log or keep it. Your contacts never see it. Your network can see that you connect to Kryfo.",
-  "@modesFastLineDesk": {
-    "description": "screens/modes_screen.dart, on a computer"
+  "chatDropHereToSend": "Drop here to send",
+  "@chatDropHereToSend": {
+    "description": "a computer: files dragged over a chat, the line on the wash before they are let go"
   },
   "voiceSeeTranscription": "See transcription",
   "@voiceSeeTranscription": {

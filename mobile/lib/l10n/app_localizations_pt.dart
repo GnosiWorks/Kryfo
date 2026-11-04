@@ -10539,7 +10539,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'Pula o Tor, então as mensagens chegam mais rápido e gastam menos bateria. Nossos servidores veem seu endereço IP só enquanto você está conectado, e nunca registram nem guardam. Nunca o que você diz. Seus contatos nunca veem. Sua rede pode ver que você se conecta ao Kryfo.';
+      'Pula o Tor, então as mensagens chegam mais rápido e gastam menos bateria. Nossos servidores veem seu endereço IP só enquanto você está conectado, e nunca registram nem guardam. Seus contatos nunca veem. Sua rede pode ver que você se conecta ao Kryfo.';
 
   @override
   String get modesFastConnected => 'Rápido · conectado';
@@ -11088,7 +11088,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String chatHealNewSession(Object name) {
-    return 'O telefone de $name iniciou uma nova sessão segura';
+    return 'O aparelho de $name iniciou uma nova sessão segura';
   }
 
   @override
@@ -11160,8 +11160,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get groupChatTapToRetryDesk => '! Clique para repetir';
 
   @override
-  String get modesFastLineDesk =>
-      'Pula o Tor, então as mensagens chegam mais rápido e gastam menos bateria. Nossos servidores veem seu endereço IP só enquanto você está conectado, e nunca registram nem guardam. Seus contatos nunca veem. Sua rede pode ver que você se conecta ao Kryfo.';
+  String get chatDropHereToSend => 'Solte aqui para enviar';
 
   @override
   String get voiceSeeTranscription => 'Ver transcrição';

@@ -26,6 +26,7 @@ import '../widgets/swap.dart';
 import '../widgets/unfold.dart';
 import 'link_screens.dart';
 import 'scan_screen.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 /// the settings row's value: the other devices by name, never a count
 String devicesRowValue(List<OwnDevice> all) {
@@ -246,117 +247,119 @@ class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
     final others = _others;
     return Scaffold(
       backgroundColor: HaloColors.surface,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            PageBar(title: l10n.devicesLinkedDevices, controller: _scroll),
-            Expanded(
-              child: devices == null
-                  ? const SizedBox()
-                  : ListView(
-                      controller: _scroll,
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                      children: [
-                        HaloGroup(
-                          children: [
-                            for (final (i, d) in devices.indexed)
-                              StaggerIn(
-                                key: ValueKey(d.id),
-                                index: i,
-                                child: IgnorePointer(
-                                  ignoring: _leaving.contains(d.id),
-                                  child: FadeFold(
-                                    leaving: _leaving.contains(d.id),
-                                    child: _DeviceRow(
-                                      device: d,
-                                      now: now,
-                                      linked: _source.linkedDevice,
-                                      onTap:
-                                          d.thisDevice || _source.linkedDevice
-                                          ? null
-                                          : () => _open(d),
+      body: DeskPage(
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              PageBar(title: l10n.devicesLinkedDevices, controller: _scroll),
+              Expanded(
+                child: devices == null
+                    ? const SizedBox()
+                    : ListView(
+                        controller: _scroll,
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                        children: [
+                          HaloGroup(
+                            children: [
+                              for (final (i, d) in devices.indexed)
+                                StaggerIn(
+                                  key: ValueKey(d.id),
+                                  index: i,
+                                  child: IgnorePointer(
+                                    ignoring: _leaving.contains(d.id),
+                                    child: FadeFold(
+                                      leaving: _leaving.contains(d.id),
+                                      child: _DeviceRow(
+                                        device: d,
+                                        now: now,
+                                        linked: _source.linkedDevice,
+                                        onTap:
+                                            d.thisDevice || _source.linkedDevice
+                                            ? null
+                                            : () => _open(d),
+                                      ),
                                     ),
                                   ),
                                 ),
+                            ],
+                          ),
+                          FadeSwap(
+                            child: others.isEmpty && _source.linksHere
+                                ? const _Empty(key: ValueKey('empty'))
+                                : const SizedBox(
+                                    key: ValueKey('some'),
+                                    width: double.infinity,
+                                  ),
+                          ),
+                          const SizedBox(height: 18),
+                          _Note(
+                            icon: Icons.visibility_off_outlined,
+                            text: l10n.devicesContactsSeeNothing,
+                          ),
+                          const SizedBox(height: 10),
+                          _Note(
+                            icon: Icons.timer_outlined,
+                            text: l10n.devicesUnusedRule,
+                          ),
+                          Unfold(
+                            open: others.isNotEmpty && !_source.linkedDevice,
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 24),
+                              child: HaloGroup(
+                                rose: true,
+                                children: [
+                                  HaloRow(
+                                    icon: Icons.link_off_rounded,
+                                    label: l10n.devicesRemoveAll,
+                                    rose: true,
+                                    onTap: _removeOthers,
+                                  ),
+                                ],
                               ),
-                          ],
-                        ),
-                        FadeSwap(
-                          child: others.isEmpty && _source.linksHere
-                              ? const _Empty(key: ValueKey('empty'))
-                              : const SizedBox(
-                                  key: ValueKey('some'),
-                                  width: double.infinity,
-                                ),
-                        ),
-                        const SizedBox(height: 18),
-                        _Note(
-                          icon: Icons.visibility_off_outlined,
-                          text: l10n.devicesContactsSeeNothing,
-                        ),
-                        const SizedBox(height: 10),
-                        _Note(
-                          icon: Icons.timer_outlined,
-                          text: l10n.devicesUnusedRule,
-                        ),
-                        Unfold(
-                          open: others.isNotEmpty && !_source.linkedDevice,
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 24),
-                            child: HaloGroup(
-                              rose: true,
-                              children: [
-                                HaloRow(
-                                  icon: Icons.link_off_rounded,
-                                  label: l10n.devicesRemoveAll,
-                                  rose: true,
-                                  onTap: _removeOthers,
-                                ),
-                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+              // linking is the phone's: a linked device and a computer that
+              // holds the account offer none
+              if (_source.linksHere)
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    8,
+                    20,
+                    16 + MediaQuery.paddingOf(context).bottom,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Unfold(
+                        open: _full,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Text(
+                            l10n.devicesFull,
+                            textAlign: TextAlign.center,
+                            style: HaloType.sans(
+                              size: 12.5,
+                              color: HaloColors.text2,
+                              height: 1.4,
                             ),
                           ),
                         ),
-                      ],
-                    ),
-            ),
-            // linking is the phone's: a linked device and a computer that
-            // holds the account offer none
-            if (_source.linksHere)
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  20,
-                  8,
-                  20,
-                  16 + MediaQuery.paddingOf(context).bottom,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Unfold(
-                      open: _full,
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: Text(
-                          l10n.devicesFull,
-                          textAlign: TextAlign.center,
-                          style: HaloType.sans(
-                            size: 12.5,
-                            color: HaloColors.text2,
-                            height: 1.4,
-                          ),
-                        ),
                       ),
-                    ),
-                    HaloPrimaryButton(
-                      label: l10n.devicesLinkADevice,
-                      onTap: devices == null || _full ? null : _link,
-                    ),
-                  ],
+                      HaloPrimaryButton(
+                        label: l10n.devicesLinkADevice,
+                        onTap: devices == null || _full ? null : _link,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -659,82 +662,84 @@ class _LinkDeviceScreenState extends State<LinkDeviceScreen> {
     final scan = widget.onScan;
     return Scaffold(
       backgroundColor: HaloColors.surface,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            PageBar(title: l10n.devicesLinkADevice),
-            Expanded(
-              child: FitColumn(
-                padding: EdgeInsets.fromLTRB(
-                  20,
-                  4,
-                  20,
-                  16 + MediaQuery.paddingOf(context).bottom,
+      body: DeskPage(
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              PageBar(title: l10n.devicesLinkADevice),
+              Expanded(
+                child: FitColumn(
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    4,
+                    20,
+                    16 + MediaQuery.paddingOf(context).bottom,
+                  ),
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final (i, s) in [
+                      l10n.devicesLinkStep1,
+                      l10n.devicesLinkStep2,
+                      l10n.devicesLinkStep3,
+                    ].indexed)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _Step(n: i + 1, text: s),
+                      ),
+                    HaloSection(l10n.devicesHistory),
+                    HaloGroup(
+                      children: [
+                        _Choice(
+                          label: l10n.devicesHistoryCopy,
+                          hint: l10n.devicesHistoryCopyHint,
+                          on: _copy,
+                          onTap: () => _pick(true),
+                        ),
+                        _Choice(
+                          label: l10n.devicesHistoryNone,
+                          hint: l10n.devicesHistoryNoneHint,
+                          on: !_copy,
+                          onTap: () => _pick(false),
+                        ),
+                      ],
+                    ),
+                    Unfold(
+                      open: _copy,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: HaloGroup(
+                          children: [
+                            HaloRow(
+                              icon: Icons.photo_library_outlined,
+                              label: l10n.devicesSkipMedia,
+                              hint: l10n.devicesSkipMediaHint,
+                              toggled: _skipMedia,
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                setState(() => _skipMedia = !_skipMedia);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _Note(
+                      icon: Icons.lock_outline_rounded,
+                      text: l10n.devicesHiddenStayShown,
+                    ),
+                    const Spacer(),
+                    const SizedBox(height: 20),
+                    HaloPrimaryButton(
+                      label: l10n.devicesScanCode,
+                      onTap: scan == null ? null : () => scan(history),
+                    ),
+                  ],
                 ),
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final (i, s) in [
-                    l10n.devicesLinkStep1,
-                    l10n.devicesLinkStep2,
-                    l10n.devicesLinkStep3,
-                  ].indexed)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: _Step(n: i + 1, text: s),
-                    ),
-                  HaloSection(l10n.devicesHistory),
-                  HaloGroup(
-                    children: [
-                      _Choice(
-                        label: l10n.devicesHistoryCopy,
-                        hint: l10n.devicesHistoryCopyHint,
-                        on: _copy,
-                        onTap: () => _pick(true),
-                      ),
-                      _Choice(
-                        label: l10n.devicesHistoryNone,
-                        hint: l10n.devicesHistoryNoneHint,
-                        on: !_copy,
-                        onTap: () => _pick(false),
-                      ),
-                    ],
-                  ),
-                  Unfold(
-                    open: _copy,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: HaloGroup(
-                        children: [
-                          HaloRow(
-                            icon: Icons.photo_library_outlined,
-                            label: l10n.devicesSkipMedia,
-                            hint: l10n.devicesSkipMediaHint,
-                            toggled: _skipMedia,
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              setState(() => _skipMedia = !_skipMedia);
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _Note(
-                    icon: Icons.lock_outline_rounded,
-                    text: l10n.devicesHiddenStayShown,
-                  ),
-                  const Spacer(),
-                  const SizedBox(height: 20),
-                  HaloPrimaryButton(
-                    label: l10n.devicesScanCode,
-                    onTap: scan == null ? null : () => scan(history),
-                  ),
-                ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

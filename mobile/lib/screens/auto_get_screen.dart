@@ -13,6 +13,7 @@ import '../widgets/halo_rows.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/stagger_in.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 String autoGetName(AutoGet v) => switch (v) {
   AutoGet.always => l10n.autoGetAlways,
@@ -78,41 +79,43 @@ class _AutoGetScreenState extends State<AutoGetScreen> {
         leading: BackButton(color: HaloColors.text2),
         title: Text(l10n.autoGetTitle, style: HaloType.pageTitle()),
       ),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          8,
-          20,
-          32 + MediaQuery.paddingOf(context).bottom,
+      body: DeskPage(
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            8,
+            20,
+            32 + MediaQuery.paddingOf(context).bottom,
+          ),
+          children: staggerAllIn(context, [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 4, 4, 14),
+              child: Text(
+                l10n.autoGetLine,
+                style: HaloType.sans(size: 13, color: HaloColors.text2),
+              ),
+            ),
+            HaloGroup(
+              children: [
+                for (final k in GetKind.values)
+                  HaloRow(
+                    icon: _glyph(k),
+                    label: getKindName(k),
+                    value: set == null ? null : autoGetName(set[k]!),
+                    pending: set == null,
+                    onTap: set == null ? null : () => _pick(k),
+                  ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 12, 4, 0),
+              child: Text(
+                l10n.autoGetVoice,
+                style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+              ),
+            ),
+          ]),
         ),
-        children: staggerAllIn(context, [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(4, 4, 4, 14),
-            child: Text(
-              l10n.autoGetLine,
-              style: HaloType.sans(size: 13, color: HaloColors.text2),
-            ),
-          ),
-          HaloGroup(
-            children: [
-              for (final k in GetKind.values)
-                HaloRow(
-                  icon: _glyph(k),
-                  label: getKindName(k),
-                  value: set == null ? null : autoGetName(set[k]!),
-                  pending: set == null,
-                  onTap: set == null ? null : () => _pick(k),
-                ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(4, 12, 4, 0),
-            child: Text(
-              l10n.autoGetVoice,
-              style: HaloType.sans(size: 12.5, color: HaloColors.text2),
-            ),
-          ),
-        ]),
       ),
     );
   }
