@@ -4,6 +4,8 @@
 // code on the new device; the decoy's link through the same pages ending
 // in "couldn't reach the device"; big text, right to left, reduced motion,
 // and the pages pixel for pixel on a phone and a computer
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -36,6 +38,15 @@ class _Flow extends LinkFlow {
 
 const _offer =
     'kryfo-link:S0xPMqrNC2ZkOMhCPv0ZUpH8L9Qe8vXhlbJ0e3wJ3Bm7Gf0aQYk2e2TcyX5r3pMSU4xmVvN1jQ7xWJdNk0mQqZvLx0AAAAAZy1y8A';
+
+// a code the engine would take: KLO2, two keys, an expiry minutes away
+String _liveOffer() {
+  final b = Uint8List(76);
+  b.setAll(0, ascii.encode('KLO2'));
+  final exp = DateTime.now().add(const Duration(minutes: 9));
+  ByteData.sublistView(b, 68).setUint64(0, exp.millisecondsSinceEpoch ~/ 1000);
+  return 'kryfo-link:${base64Url.encode(b).replaceAll('=', '')}';
+}
 
 Widget _app(
   Widget home, {
@@ -121,6 +132,12 @@ void main() {
           l10n.devicesLinkUnreachedLine,
         ),
         (LinkEnd.stopped, l10n.devicesLinkStopped, l10n.devicesLinkStoppedLine),
+        // an end that was not a no never blames the numbers
+        (
+          LinkEnd.interrupted,
+          l10n.devicesLinkStopped,
+          l10n.devicesLinkInterruptedLine,
+        ),
         (LinkEnd.full, l10n.devicesLinkStopped, l10n.devicesFull),
       ]) {
         f.value = LinkStage(LinkStep.failed, end: end);
@@ -168,8 +185,28 @@ void main() {
       await t.pump();
       expect(find.text(l10n.joinDone), findsOneWidget);
       expect(find.text('12345 67890 13579 24680'), findsOneWidget);
+      // read out a digit at a time
+      expect(
+        find.bySemanticsLabel('1 2 3 4 5, 6 7 8 9 0, 1 3 5 7 9, 2 4 6 8 0'),
+        findsOneWidget,
+      );
       await t.tap(find.text(l10n.joinOpen));
       expect(linked, 1);
+    });
+
+    testWidgets('a no and an interruption end with their own words', (t) async {
+      final f = _Flow(const LinkStage(LinkStep.showing, offer: _offer));
+      await _show(t, JoinScreen(newFlow: () => f, onLinked: () {}));
+      for (final (end, line) in [
+        (LinkEnd.stopped, l10n.devicesLinkStoppedLine),
+        (LinkEnd.interrupted, l10n.devicesLinkInterruptedLine),
+        (LinkEnd.unreached, l10n.joinUnreachedLine),
+      ]) {
+        f.value = LinkStage(LinkStep.failed, end: end);
+        await t.pump();
+        await t.pump(const Duration(milliseconds: 400));
+        expect(find.text(line), findsOneWidget, reason: '$end');
+      }
     });
 
     testWidgets('a code that ran out gives way to a new one', (t) async {
@@ -203,8 +240,9 @@ void main() {
   testWidgets(
     "the decoy's link: this phone alone, the same pages, and no device reached",
     (t) async {
+      final code = _liveOffer();
       scanReaderForTest = (onCreated, onScan) {
-        Future.microtask(() => onScan(Code(text: _offer, isValid: true)));
+        Future.microtask(() => onScan(Code(text: code, isValid: true)));
         return const ColoredBox(color: Colors.black);
       };
       addTearDown(() => scanReaderForTest = null);
@@ -250,22 +288,33 @@ void main() {
     ]) {
       await _show(
         t,
-        LinkRunScreen(flow: _Flow(v)),
+        LinkRunScreen(key: ValueKey(v), flow: _Flow(v)),
         scale: 1.6,
         size: const Size(320, 640),
       );
       expect(t.takeException(), isNull, reason: '${v.step}');
     }
-    await _show(
-      t,
-      JoinScreen(
-        newFlow: () => _Flow(const LinkStage(LinkStep.showing, offer: _offer)),
-        onLinked: () {},
-      ),
-      scale: 1.6,
-      size: const Size(320, 640),
-    );
-    expect(t.takeException(), isNull);
+    for (final v in const [
+      LinkStage(LinkStep.showing, offer: _offer),
+      LinkStage(LinkStep.digits, digits: '123456'),
+      LinkStage(LinkStep.done, keyNumber: '12345 67890 13579 24680'),
+      LinkStage(LinkStep.failed, end: LinkEnd.interrupted),
+    ]) {
+      await _show(
+        t,
+        // a fresh page each time, never the one before kept by type
+        JoinScreen(key: ValueKey(v), newFlow: () => _Flow(v), onLinked: () {}),
+        scale: 1.6,
+        size: const Size(320, 640),
+      );
+      expect(t.takeException(), isNull, reason: 'join ${v.step}');
+      // the way on stays in reach: the page scrolls to it
+      if (v.step == LinkStep.done) {
+        await t.ensureVisible(find.text(l10n.joinOpen));
+        await t.pump();
+        expect(find.text(l10n.joinOpen).hitTestable(), findsOneWidget);
+      }
+    }
   });
 
   for (final code in ['ar', 'fa']) {

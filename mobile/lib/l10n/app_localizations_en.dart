@@ -10131,6 +10131,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The numbers have to match. Start again with a new code.';
 
   @override
+  String get devicesLinkInterruptedLine =>
+      'Something interrupted the link. Start again with a new code.';
+
+  @override
   String get scanLinkTitle => 'Scan the device\'s code';
 
   @override
@@ -10198,6 +10202,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String devicesNewNoticeLine(Object name, Object date) {
     return '$name was linked to your account on $date. Open Linked devices to see it.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'New devices linked';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names were linked to your account. Open Linked devices to see them.';
   }
 
   @override

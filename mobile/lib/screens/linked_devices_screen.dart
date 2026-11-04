@@ -38,6 +38,30 @@ String devicesRowValue(List<OwnDevice> all) {
       : others.join(l10n.devicesNameSeparator);
 }
 
+/// the home card's title and line for the notices not opened yet: one
+/// device by its name and day, more by their names, oldest first
+({String title, String line}) linkNoticeWords(
+  List<({String name, DateTime at})> all,
+  DateTime now,
+) {
+  if (all.length == 1) {
+    final n = all.single;
+    return (
+      title: l10n.devicesNewNotice,
+      line: l10n.devicesNewNoticeLine(
+        n.name,
+        dayMonthMaybeYear(n.at, now: now),
+      ),
+    );
+  }
+  return (
+    title: l10n.devicesNewNoticeMany,
+    line: l10n.devicesNewNoticeManyLine(
+      [for (final n in all) n.name].join(l10n.devicesNameSeparator),
+    ),
+  );
+}
+
 String deviceUseLine(DeviceUse u) => switch (u) {
   DeviceUse.today => l10n.devicesUsedToday,
   DeviceUse.week => l10n.devicesUsedThisWeek,
@@ -45,9 +69,12 @@ String deviceUseLine(DeviceUse u) => switch (u) {
   DeviceUse.notYet => l10n.devicesNotUsedYet,
 };
 
-/// the line under a device's name
-String deviceLine(OwnDevice d, DateTime now) {
-  if (d.thisDevice) return l10n.devicesOnlyThisPhoneShown;
+/// the line under a device's name. on a linked device its own row says
+/// whose it is: its phone links and removes
+String deviceLine(OwnDevice d, DateTime now, {bool linked = false}) {
+  if (d.thisDevice) {
+    return linked ? l10n.joinDone : l10n.devicesOnlyThisPhoneShown;
+  }
   final use = deviceUseLine(deviceUseOf(d.lastUsed, now));
   final at = d.linkedAt;
   return at == null
@@ -244,7 +271,9 @@ class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
                                     child: _DeviceRow(
                                       device: d,
                                       now: now,
-                                      onTap: d.thisDevice
+                                      linked: _source.linkedDevice,
+                                      onTap:
+                                          d.thisDevice || _source.linkedDevice
                                           ? null
                                           : () => _open(d),
                                     ),
@@ -254,7 +283,7 @@ class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
                           ],
                         ),
                         FadeSwap(
-                          child: others.isEmpty
+                          child: others.isEmpty && _source.linksHere
                               ? const _Empty(key: ValueKey('empty'))
                               : const SizedBox(
                                   key: ValueKey('some'),
@@ -272,7 +301,7 @@ class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
                           text: l10n.devicesUnusedRule,
                         ),
                         Unfold(
-                          open: others.isNotEmpty,
+                          open: others.isNotEmpty && !_source.linkedDevice,
                           child: Padding(
                             padding: const EdgeInsets.only(top: 24),
                             child: HaloGroup(
@@ -291,39 +320,42 @@ class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
                       ],
                     ),
             ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                20,
-                8,
-                20,
-                16 + MediaQuery.paddingOf(context).bottom,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Unfold(
-                    open: _full,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: Text(
-                        l10n.devicesFull,
-                        textAlign: TextAlign.center,
-                        style: HaloType.sans(
-                          size: 12.5,
-                          color: HaloColors.text2,
-                          height: 1.4,
+            // linking is the phone's: a linked device and a computer that
+            // holds the account offer none
+            if (_source.linksHere)
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  8,
+                  20,
+                  16 + MediaQuery.paddingOf(context).bottom,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Unfold(
+                      open: _full,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Text(
+                          l10n.devicesFull,
+                          textAlign: TextAlign.center,
+                          style: HaloType.sans(
+                            size: 12.5,
+                            color: HaloColors.text2,
+                            height: 1.4,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  HaloPrimaryButton(
-                    label: l10n.devicesLinkADevice,
-                    onTap: devices == null || _full ? null : _link,
-                  ),
-                ],
+                    HaloPrimaryButton(
+                      label: l10n.devicesLinkADevice,
+                      onTap: devices == null || _full ? null : _link,
+                    ),
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -336,8 +368,14 @@ enum _Act { rename, remove }
 class _DeviceRow extends StatelessWidget {
   final OwnDevice device;
   final DateTime now;
+  final bool linked;
   final VoidCallback? onTap;
-  const _DeviceRow({required this.device, required this.now, this.onTap});
+  const _DeviceRow({
+    required this.device,
+    required this.now,
+    this.linked = false,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -383,7 +421,7 @@ class _DeviceRow extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      deviceLine(d, now),
+                      deviceLine(d, now, linked: linked),
                       style: HaloType.sans(
                         size: 12.5,
                         color: HaloColors.text2,

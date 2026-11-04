@@ -33,16 +33,26 @@ enum LinkEnd {
   /// the other side never answered, or the code ran out
   unreached,
 
-  /// a no, or a message that did not fit: nothing was linked
+  /// the person here said the numbers differ
   stopped,
+
+  /// anything else that cut it short: the other side stopped, a message
+  /// that did not fit, a step that failed
+  interrupted,
 
   /// the phone has every device it may have
   full,
 }
 
 /// how long the phone waits for the new device's first answer before it
-/// says it could not reach it. the decoy's link ends after as long
+/// says it could not reach it
 const kLinkReachWait = Duration(seconds: 90);
+
+/// the wait with its spread: the real phone's and the decoy's are drawn
+/// alike, so a stopwatch cannot tell them apart
+Duration linkReachWait([Random? r]) =>
+    kLinkReachWait +
+    Duration(milliseconds: (r ?? Random.secure()).nextInt(2000));
 
 @immutable
 class LinkStage {
@@ -67,6 +77,14 @@ class LinkStage {
 abstract class LinkFlow extends ValueNotifier<LinkStage> {
   LinkFlow(super.value);
 
+  bool _gone = false;
+
+  /// a new stage, unless the page that showed this flow is gone
+  @protected
+  void show(LinkStage v) {
+    if (!_gone) value = v;
+  }
+
   Future<void> start();
 
   /// the person says the numbers match
@@ -81,19 +99,49 @@ abstract class LinkFlow extends ValueNotifier<LinkStage> {
   @override
   void dispose() {
     cancel();
+    _gone = true;
     super.dispose();
   }
 }
 
+/// the engine's reason as the person's
 LinkEnd linkEndOf(String? why) => switch (why) {
   'full' || 'too_many' => LinkEnd.full,
-  'refused' ||
-  'ended' ||
-  'malformed' ||
-  'signature' ||
-  'duplicate' => LinkEnd.stopped,
-  _ => LinkEnd.unreached,
+  'expired' || 'unreached' => LinkEnd.unreached,
+  _ => LinkEnd.interrupted,
 };
+
+const _kLinkPrefix = 'kryfo-link:';
+
+/// what the engine would say of a scanned code before anything is sent:
+/// null for one that runs, else 'malformed' or 'expired', as ParseOfferText
+/// and AcceptOffer decide them (engine/devices/link.go). the decoy checks
+/// this way, so a bad code ends there as fast as on a real phone
+String? linkCodeProblem(String code, DateTime now) {
+  final t = code.trim();
+  if (!t.startsWith(_kLinkPrefix)) return 'malformed';
+  final b64 = t.substring(_kLinkPrefix.length);
+  if (b64.length > 2 * 76 ||
+      b64.contains('=') ||
+      b64.contains(RegExp(r'[+/]'))) {
+    return 'malformed';
+  }
+  final Uint8List b;
+  try {
+    b = base64Url.decode(base64Url.normalize(b64));
+  } catch (_) {
+    return 'malformed';
+  }
+  if (b.length != 76 ||
+      ascii.decode(b.sublist(0, 4), allowInvalid: true) != 'KLO2') {
+    return 'malformed';
+  }
+  final exp = ByteData.sublistView(b, 68).getUint64(0);
+  final secs = now.millisecondsSinceEpoch ~/ 1000;
+  if (exp > secs + 3600) return 'malformed';
+  if (exp <= secs) return 'expired';
+  return null;
+}
 
 // the engine's state, read every [poll]
 abstract class _EngineFlow extends LinkFlow {
@@ -120,7 +168,7 @@ abstract class _EngineFlow extends LinkFlow {
     try {
       await onState(calls.call('state', {'link': id}));
     } catch (_) {
-      fail(LinkEnd.stopped);
+      fail(LinkEnd.interrupted);
     } finally {
       _busy = false;
     }
@@ -128,6 +176,7 @@ abstract class _EngineFlow extends LinkFlow {
 
   Future<void> onState(Map<String, dynamic> s);
 
+  // the engine ends the run and tells the other side at once
   void _end() {
     _over = true;
     _timer?.cancel();
@@ -139,14 +188,18 @@ abstract class _EngineFlow extends LinkFlow {
   void fail(LinkEnd why) {
     if (_over) return;
     _end();
-    value = LinkStage(LinkStep.failed, end: why);
+    show(LinkStage(LinkStep.failed, end: why));
+    unawaited(failed());
   }
+
+  /// after a failure, what the app undoes
+  Future<void> failed() async {}
 
   void finish(LinkStage v) {
     _over = true;
     _timer?.cancel();
     _link = null;
-    value = v;
+    show(v);
   }
 
   @override
@@ -210,8 +263,10 @@ abstract class PhoneLinkHooks {
   /// ks_sign by the identity over the next list's body
   Future<Uint8List> sign(Uint8List body);
 
-  /// everything the link left, written before the link is called done
-  Future<void> keep(LinkTaken t);
+  /// everything the link left, written in one go. [kept] tells the engine,
+  /// which acks the new device's last line; it throws when the engine gave
+  /// up first, and then nothing is kept
+  Future<void> keep(LinkTaken t, Future<void> Function() kept);
 }
 
 class PhoneLinkFlow extends _EngineFlow {
@@ -220,8 +275,9 @@ class PhoneLinkFlow extends _EngineFlow {
     required this.code,
     required this.hooks,
     Duration? poll,
-    this.reachWait = kLinkReachWait,
-  }) : super(calls, const LinkStage(LinkStep.reaching), poll: poll);
+    Duration? reachWait,
+  }) : reachWait = reachWait ?? linkReachWait(),
+       super(calls, const LinkStage(LinkStep.reaching), poll: poll);
 
   final String code;
   final PhoneLinkHooks hooks;
@@ -231,20 +287,21 @@ class PhoneLinkFlow extends _EngineFlow {
 
   @override
   Future<void> start() async {
+    // the wait runs from the scan, as the decoy's does
+    _reach = Timer(reachWait, () {
+      if (value.step == LinkStep.reaching) fail(LinkEnd.unreached);
+    });
     final String id;
     try {
       id = await hooks.identity();
     } catch (_) {
-      return fail(LinkEnd.stopped);
+      return fail(LinkEnd.interrupted);
     }
     if (over) return;
     final r = calls.call('link_start', {'offer': code, 'key': id});
     final err = r['err'] as String?;
     if (err != null) return fail(linkEndOf(err));
     _link = r['link'] as String;
-    _reach = Timer(reachWait, () {
-      if (value.step == LinkStep.reaching) fail(LinkEnd.unreached);
-    });
     _watch();
   }
 
@@ -254,17 +311,25 @@ class PhoneLinkFlow extends _EngineFlow {
       case 'digits':
         _reach?.cancel();
         if (value.step == LinkStep.reaching) {
-          value = LinkStage(LinkStep.digits, digits: s['sas'] as String?);
+          show(LinkStage(LinkStep.digits, digits: s['sas'] as String?));
         }
       case 'bundles':
         if (_keeping) return;
         _keeping = true;
-        final t = calls.call('take', {'link': _link});
-        if (t['err'] != null) return fail(LinkEnd.stopped);
+        final id = _link;
+        final t = calls.call('take', {'link': id});
+        if (t['err'] != null) return fail(LinkEnd.interrupted);
+        final taken = LinkTaken.of(t);
         try {
-          await hooks.keep(LinkTaken.of(t));
+          await hooks.keep(taken, () async {
+            final k = calls.call('kept', {'link': id});
+            if (k['err'] != null) throw StateError('the link gave up');
+          });
         } catch (_) {
-          return fail(LinkEnd.stopped);
+          _keeping = false;
+          return fail(LinkEnd.interrupted);
+        } finally {
+          taken.stream.fillRange(0, taken.stream.length, 0);
         }
         finish(const LinkStage(LinkStep.done));
       case 'failed':
@@ -276,7 +341,7 @@ class PhoneLinkFlow extends _EngineFlow {
   Future<void> match() async {
     final id = _link;
     if (value.step != LinkStep.digits || id == null) return;
-    value = const LinkStage(LinkStep.linking);
+    show(const LinkStage(LinkStep.linking));
     final l = calls.call('list', {
       'link': id,
       'ident': 0,
@@ -287,11 +352,11 @@ class PhoneLinkFlow extends _EngineFlow {
     try {
       sig = await hooks.sign(base64Decode(l['body'] as String));
     } catch (_) {
-      return fail(LinkEnd.stopped);
+      return fail(LinkEnd.interrupted);
     }
     if (over) return;
     final s = calls.call('sign', {'link': id, 'sig': base64Encode(sig)});
-    if (s['err'] != null) return fail(LinkEnd.stopped);
+    if (s['err'] != null) return fail(LinkEnd.interrupted);
     final c = calls.call('confirm', {'link': id});
     if (c['err'] != null) return fail(linkEndOf(c['err'] as String));
   }
@@ -299,6 +364,12 @@ class PhoneLinkFlow extends _EngineFlow {
   @override
   void cancel() {
     _reach?.cancel();
+    // a keep under way finishes: it tells the engine itself, so the page
+    // closing never leaves the device kept here and unlinked there
+    if (_keeping) {
+      _timer?.cancel();
+      return;
+    }
     super.cancel();
   }
 }
@@ -329,18 +400,24 @@ abstract class JoinLinkHooks {
   /// this device's key (hex, its signal identity) and registration id
   Future<({String key, int reg})> myKey();
 
-  /// the container takes its place: the identity, its device id
+  /// the place, held in memory only: the device state as it would be,
+  /// nothing written until the link is done
   Future<void> placed(JoinPlace p);
-
-  /// the rows the engine gave for the own list the link brought
-  Future<void> writeRows(Map<String, dynamic> answer);
 
   /// its first own bundles, as device [device]: [want] one-time ones,
   /// as many as the phone asked for
   Future<JoinBundles> bundles(int device, int want);
 
-  /// linked: the history stream's key, kept for the history copy
-  Future<void> joined(JoinPlace p, Uint8List stream);
+  /// linked, the phone kept it: everything written at once (the place, the
+  /// own list's rows, the history stream's key) and onboarding done
+  Future<void> joined(
+    JoinPlace p,
+    Uint8List stream,
+    Map<String, dynamic> ownRows,
+  );
+
+  /// a link that failed after its place: the state as before it
+  Future<void> failed();
 }
 
 class JoinLinkFlow extends _EngineFlow {
@@ -349,6 +426,7 @@ class JoinLinkFlow extends _EngineFlow {
 
   final JoinLinkHooks hooks;
   JoinPlace? _place;
+  Map<String, dynamic>? _own;
   bool _placing = false;
   bool _taking = false;
 
@@ -358,13 +436,27 @@ class JoinLinkFlow extends _EngineFlow {
     try {
       me = await hooks.myKey();
     } catch (_) {
-      return fail(LinkEnd.stopped);
+      return fail(LinkEnd.interrupted);
     }
     final r = calls.call('join_start', {'key': me.key, 'reg': me.reg});
     if (r['err'] != null) return fail(linkEndOf(r['err'] as String));
     _link = r['link'] as String;
-    value = LinkStage(LinkStep.showing, offer: r['offer'] as String);
+    show(LinkStage(LinkStep.showing, offer: r['offer'] as String));
     _watch();
+  }
+
+  @override
+  Future<void> failed() async {
+    if (_place != null) await hooks.failed();
+  }
+
+  // the page closing after the place lets it go as a failure does; once
+  // linked (taking) there is nothing to undo
+  @override
+  void cancel() {
+    final undo = !over && _place != null && !_taking;
+    super.cancel();
+    if (undo) unawaited(hooks.failed());
   }
 
   @override
@@ -372,7 +464,7 @@ class JoinLinkFlow extends _EngineFlow {
     switch (s['st']) {
       case 'digits':
         if (value.step == LinkStep.showing) {
-          value = LinkStage(LinkStep.digits, digits: s['sas'] as String?);
+          show(LinkStage(LinkStep.digits, digits: s['sas'] as String?));
         }
       case 'placed':
         if (_placing) return;
@@ -386,9 +478,11 @@ class JoinLinkFlow extends _EngineFlow {
         _place = p;
         try {
           await hooks.placed(p);
+          // the page closed meanwhile: what placed loaded goes again
+          if (over) return hooks.failed();
           final own = calls.call('own', {'link': _link, 'ident': 0});
-          await hooks.writeRows(own);
-          if (own['err'] != null) return fail(LinkEnd.stopped);
+          if (own['err'] != null) return fail(LinkEnd.interrupted);
+          _own = own;
           final b = await hooks.bundles(
             p.device,
             (s['want'] as num?)?.toInt() ?? 0,
@@ -400,20 +494,24 @@ class JoinLinkFlow extends _EngineFlow {
             'once': [for (final x in b.once) base64Encode(x)],
             'made': b.made,
           });
-          if (r['err'] != null) return fail(LinkEnd.stopped);
+          if (r['err'] != null) return fail(LinkEnd.interrupted);
         } catch (_) {
-          return fail(LinkEnd.stopped);
+          return fail(LinkEnd.interrupted);
         }
       case 'done':
         final p = _place;
-        if (_taking || p == null) return;
+        final own = _own;
+        if (_taking || p == null || own == null) return;
         _taking = true;
         final t = calls.call('take', {'link': _link});
-        if (t['err'] != null) return fail(LinkEnd.stopped);
+        if (t['err'] != null) return fail(LinkEnd.interrupted);
+        final stream = base64Decode(t['stream'] as String);
         try {
-          await hooks.joined(p, base64Decode(t['stream'] as String));
+          await hooks.joined(p, stream, own);
         } catch (_) {
-          return fail(LinkEnd.stopped);
+          return fail(LinkEnd.interrupted);
+        } finally {
+          stream.fillRange(0, stream.length, 0);
         }
         finish(LinkStage(LinkStep.done, keyNumber: p.keyNumber));
       case 'failed':
@@ -425,30 +523,39 @@ class JoinLinkFlow extends _EngineFlow {
   Future<void> match() async {
     final id = _link;
     if (value.step != LinkStep.digits || id == null) return;
-    value = const LinkStage(LinkStep.linking);
+    show(const LinkStage(LinkStep.linking));
     final c = calls.call('confirm', {'link': id});
     if (c['err'] != null) fail(linkEndOf(c['err'] as String));
   }
 }
 
-/// the decoy's link: the same pages, a wait as long as a real one that
-/// reaches nobody, then "couldn't reach the device". nothing is sent and
-/// nothing of the real account is read
+/// the decoy's link: the same pages, a code checked as the engine checks
+/// it, then a wait drawn as the real phone's is, and "couldn't reach the
+/// device". nothing is sent and nothing of the real account is read
 class DecoyLinkFlow extends LinkFlow {
-  DecoyLinkFlow({Duration? wait, Random? random})
-    : _wait =
-          wait ??
-          kLinkReachWait +
-              Duration(seconds: (random ?? Random.secure()).nextInt(8)),
-      super(const LinkStage(LinkStep.reaching));
+  DecoyLinkFlow({
+    required this.code,
+    Duration? wait,
+    Random? random,
+    DateTime Function()? now,
+  }) : _wait = wait ?? linkReachWait(random),
+       _now = now ?? DateTime.now,
+       super(const LinkStage(LinkStep.reaching));
 
+  final String code;
   final Duration _wait;
+  final DateTime Function() _now;
   Timer? _t;
 
   @override
   Future<void> start() async {
+    final bad = linkCodeProblem(code, _now());
+    if (bad != null) {
+      show(LinkStage(LinkStep.failed, end: linkEndOf(bad)));
+      return;
+    }
     _t = Timer(_wait, () {
-      value = const LinkStage(LinkStep.failed, end: LinkEnd.unreached);
+      show(const LinkStage(LinkStep.failed, end: LinkEnd.unreached));
     });
   }
 

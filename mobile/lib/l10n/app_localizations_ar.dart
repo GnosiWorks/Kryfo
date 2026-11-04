@@ -10270,6 +10270,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'يجب أن تتطابق الأرقام. ابدأ من جديد برمز جديد.';
 
   @override
+  String get devicesLinkInterruptedLine =>
+      'انقطع الربط. ابدأ من جديد برمز جديد.';
+
+  @override
   String get scanLinkTitle => 'قراءة رمز الجهاز';
 
   @override
@@ -10336,6 +10340,14 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String devicesNewNoticeLine(Object name, Object date) {
     return 'رُبط ⁨$name⁩ بحسابك في ⁨$date⁩. افتح الأجهزة المرتبطة لتراه.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'أجهزة جديدة مرتبطة';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return 'رُبطت ⁨$names⁩ بحسابك. افتح الأجهزة المرتبطة لتراها.';
   }
 
   @override

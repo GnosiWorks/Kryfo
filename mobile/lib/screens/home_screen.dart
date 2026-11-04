@@ -73,8 +73,8 @@ import 'group_info_screen.dart' show endedLine, leaveLine;
 import 'support_screen.dart' show SupportPin, supportRoute;
 import '../widgets/update_card.dart' show UpdateHint;
 import '../devices/linked_switch.dart' show kLinkedDevicesOn;
-import '../devices/own_device_store.dart' show LinkNotice, linkNotices;
-import 'linked_devices_screen.dart' show LinkedDevicesScreen;
+import '../devices/own_device_store.dart' show linkNotices;
+import 'linked_devices_screen.dart' show LinkedDevicesScreen, linkNoticeWords;
 
 bool _miuiPromptChecked = false;
 
@@ -931,19 +931,18 @@ class _LinkNoticeCard extends StatelessWidget {
       builder: (context, _) {
         final all = linkNotices.value;
         final show = all.isNotEmpty && !lockState.inDecoy && !sessionQuiet;
-        final LinkNotice? last = all.isEmpty ? null : all.last;
+        final words = all.isEmpty
+            ? (title: l10n.devicesNewNotice, line: '')
+            : linkNoticeWords([
+                for (final n in all) (name: n.name, at: n.at),
+              ], homeClock());
         return _HomeCard(
           show: show,
           id: 'link-notice',
           tint: HaloColors.amber,
           wash: true,
-          title: l10n.devicesNewNotice,
-          line: last == null
-              ? ''
-              : l10n.devicesNewNoticeLine(
-                  last.name,
-                  dayMonthMaybeYear(last.at, now: homeClock()),
-                ),
+          title: words.title,
+          line: words.line,
           lineColor: HaloColors.text,
           actions: [
             CardAction(

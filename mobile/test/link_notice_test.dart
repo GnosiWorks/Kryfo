@@ -2,6 +2,7 @@
 // no device of mine is ever added without its notice: one function writes
 // the row and the notice together, nothing else in the app writes the
 // table, and the notice stays until the devices page is opened
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -61,16 +62,19 @@ void main() {
     SqliteChannel? sql;
     late Directory dir;
     late Database db;
+    late String path;
 
     setUp(() async {
       TestWidgetsFlutterBinding.ensureInitialized();
       sql = SqliteChannel.install();
       dir = Directory.systemTemp.createTempSync('link_notice');
       if (sql == null) return;
-      db = await openDatabase(p.join(dir.path, 'n.db'));
+      path = p.join(dir.path, 'n.db');
+      db = await openDatabase(path);
       await db.execute(
         'CREATE TABLE identities (id INTEGER PRIMARY KEY, x_priv BLOB)',
       );
+      await db.insert('identities', {'id': 0, 'x_priv': Uint8List(32)});
       await deviceTables(db, (d, s) async {
         try {
           await d.execute(s);
@@ -102,7 +106,11 @@ void main() {
       expect(n.single.name, 'Desk');
       expect(linkNotices.value.single.uid, 'u1');
       // still there after a restart: it lives in the row
+      await db.close();
+      linkNotices.value = const [];
+      db = await openDatabase(path);
       expect((await readLinkNotices(db)).length, 1);
+      expect(linkNotices.value.single.name, 'Desk');
       final src = StoredOwnDevices(db: db, thisName: 'This phone');
       final all = await src.load();
       expect(all.first.thisDevice, isTrue);
@@ -134,7 +142,77 @@ void main() {
       await add();
       await expectLater(add(), throwsA(anything));
       expect((await readLinkNotices(db)).length, 1);
+      // the same device key under a fresh uid is the same device
+      final key = '05${'cd' * 32}';
+      Future<void> addKey(String uid) => db.transaction(
+        (tx) => addOwnDevice(
+          tx,
+          uid: uid,
+          name: 'Lap',
+          kind: DeviceKind.computer,
+          linkedAt: DateTime(2026, 10, 30),
+          keys: [(ident: 0, dev: 4, key: key, reg: 7)],
+        ),
+      );
+      await addKey('u2');
+      await expectLater(addKey('u3'), throwsA(isA<StateError>()));
+      expect((await readLinkNotices(db)).length, 2);
+      expect(
+        await db.query('own_devices', where: 'uid = ?', whereArgs: ['u3']),
+        isEmpty,
+      );
     });
+
+    test(
+      'a new device is linked only once it is written, all at once',
+      () async {
+        if (sql == null) return;
+        await db.execute(
+          'CREATE TABLE IF NOT EXISTS signal_meta (k TEXT PRIMARY KEY, v TEXT)',
+        );
+        // a link that failed wrote nothing: after a restart it boots fresh
+        await db.close();
+        db = await openDatabase(path);
+        expect(await linkedRoleOf(db), isFalse);
+        final ident = Uint8List.fromList([5, ...List.filled(32, 0xab)]);
+        // a row that does not fit rolls all of it back
+        await expectLater(
+          joinedRows(
+            db,
+            identity: ident,
+            device: 3,
+            rows: [
+              {'t': 'no_such_table', 'put': {}},
+            ],
+            stream: Uint8List(32),
+          ),
+          throwsA(isA<StateError>()),
+        );
+        expect(await linkedRoleOf(db), isFalse);
+        expect(await db.query('signal_meta'), isEmpty);
+        await joinedRows(
+          db,
+          identity: ident,
+          device: 3,
+          rows: const [],
+          stream: Uint8List.fromList(List.filled(32, 7)),
+        );
+        await db.close();
+        db = await openDatabase(path);
+        expect(await linkedRoleOf(db), isTrue);
+        final row = (await db.query('identities')).single;
+        expect(row['ident_pub'], ident);
+        expect(row['dev_id'], 3);
+        expect(
+          (await db.query(
+            'signal_meta',
+            where: 'k = ?',
+            whereArgs: [kLinkStreamMeta],
+          )).single['v'],
+          base64Encode(List.filled(32, 7)),
+        );
+      },
+    );
 
     test(
       'a linked device lists itself and its phone, and links nothing',

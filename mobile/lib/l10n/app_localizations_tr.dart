@@ -10165,6 +10165,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Rakamlar aynı olmalı. Yeni bir kodla baştan başla.';
 
   @override
+  String get devicesLinkInterruptedLine =>
+      'Bağlama yarıda kesildi. Yeni bir kodla baştan başla.';
+
+  @override
   String get scanLinkTitle => 'Cihazın kodunu tara';
 
   @override
@@ -10232,6 +10236,14 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String devicesNewNoticeLine(Object name, Object date) {
     return '$name $date tarihinde hesabına bağlandı. Görmek için Bağlı cihazlar’ı aç.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'Yeni cihazlar bağlandı';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names hesabına bağlandı. Görmek için Bağlı cihazlar’ı aç.';
   }
 
   @override

@@ -129,10 +129,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       haloRoute(
         JoinScreen(
           newFlow: newJoinFlow,
-          onLinked: () {
-            nav.pop();
-            widget.onComplete();
-          },
+          // onboarding is done already, when the link was: this only
+          // leaves the page
+          onLinked: () => nav.pop(),
         ),
       ),
     );
@@ -168,7 +167,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       OnboardStep.welcome => _WelcomeScreen(
         onContinue: _next,
         enter: enter,
-        onLink: kLinkedDevicesOn ? _link : null,
+        // a computer joins a phone in 0.6; a phone makes its own account
+        onLink: kLinkedDevicesOn && onDesktop ? _link : null,
       ),
       OnboardStep.identity => _IdentityScreen(
         appState: widget.appState,

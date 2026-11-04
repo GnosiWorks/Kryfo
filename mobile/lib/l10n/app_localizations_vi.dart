@@ -10129,6 +10129,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Các chữ số phải khớp. Bắt đầu lại với một mã mới.';
 
   @override
+  String get devicesLinkInterruptedLine =>
+      'Việc liên kết bị gián đoạn. Bắt đầu lại với một mã mới.';
+
+  @override
   String get scanLinkTitle => 'Quét mã của thiết bị';
 
   @override
@@ -10196,6 +10200,14 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String devicesNewNoticeLine(Object name, Object date) {
     return '$name đã được liên kết với tài khoản của bạn vào $date. Mở Thiết bị đã liên kết để xem.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'Đã liên kết thiết bị mới';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names đã được liên kết với tài khoản của bạn. Mở Thiết bị đã liên kết để xem.';
   }
 
   @override

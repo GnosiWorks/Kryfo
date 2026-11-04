@@ -10140,6 +10140,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Angkanya harus sama. Mulai lagi dengan kode baru.';
 
   @override
+  String get devicesLinkInterruptedLine =>
+      'Penautan terputus. Mulai lagi dengan kode baru.';
+
+  @override
   String get scanLinkTitle => 'Pindai kode perangkat';
 
   @override
@@ -10207,6 +10211,14 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String devicesNewNoticeLine(Object name, Object date) {
     return '$name ditautkan ke akunmu pada $date. Buka Perangkat tertaut untuk melihatnya.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'Perangkat baru tertaut';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names ditautkan ke akunmu. Buka Perangkat tertaut untuk melihatnya.';
   }
 
   @override

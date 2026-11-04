@@ -125,6 +125,7 @@ class _LinkRunScreenState extends State<LinkRunScreen> {
         line: switch (v.end) {
           LinkEnd.full => l10n.devicesFull,
           LinkEnd.stopped => l10n.devicesLinkStoppedLine,
+          LinkEnd.interrupted => l10n.devicesLinkInterruptedLine,
           _ => l10n.devicesLinkUnreachedLine,
         },
         primary: v.end == LinkEnd.full ? l10n.commonClose : l10n.commonTryAgain,
@@ -256,9 +257,11 @@ class _JoinScreenState extends State<JoinScreen> {
         title: v.end == LinkEnd.unreached
             ? l10n.joinUnreached
             : l10n.devicesLinkStopped,
-        line: v.end == LinkEnd.unreached
-            ? l10n.joinUnreachedLine
-            : l10n.devicesLinkStoppedLine,
+        line: switch (v.end) {
+          LinkEnd.unreached => l10n.joinUnreachedLine,
+          LinkEnd.stopped => l10n.devicesLinkStoppedLine,
+          _ => l10n.devicesLinkInterruptedLine,
+        },
         primary: l10n.joinNewCode,
         onPrimary: _again,
       ),
@@ -564,7 +567,10 @@ class _OutcomeState extends State<_Outcome>
         if (n != null) ...[
           const SizedBox(height: 18),
           Semantics(
-            label: n,
+            // read out a digit at a time, a group after a group
+            label: [
+              for (final g in n.split(' ')) g.split('').join(' '),
+            ].join(', '),
             excludeSemantics: true,
             child: Text(
               n,

@@ -10311,6 +10311,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Цифры должны совпадать. Начните заново с новым кодом.';
 
   @override
+  String get devicesLinkInterruptedLine =>
+      'Связь прервалась. Начните заново с новым кодом.';
+
+  @override
   String get scanLinkTitle => 'Сканировать код устройства';
 
   @override
@@ -10378,6 +10382,14 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String devicesNewNoticeLine(Object name, Object date) {
     return '$name связано с вашим аккаунтом $date. Откройте Связанные устройства, чтобы его увидеть.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'Новые устройства связаны';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names связаны с вашим аккаунтом. Откройте Связанные устройства, чтобы их увидеть.';
   }
 
   @override

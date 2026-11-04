@@ -20,14 +20,7 @@ set linkedRoleForTest(bool on) => _linkedRole = on;
 /// read once the everyday container is open
 Future<void> readLinkedRole(DatabaseExecutor db) async {
   if (!linkedDevicesOn) return;
-  final r = await db.query(
-    'identities',
-    columns: ['ident_pub'],
-    where: 'id = ?',
-    whereArgs: [kMainIdent],
-    limit: 1,
-  );
-  _linkedRole = r.isNotEmpty && r.first['ident_pub'] is List<int>;
+  _linkedRole = await linkedRoleOf(db);
   await readLinkNotices(db);
 }
 
@@ -35,7 +28,10 @@ Future<void> readLinkedRole(DatabaseExecutor db) async {
 /// decoy's is this phone alone, linking to nobody: it reads nothing real
 Future<OwnDevices> ownDevicesSource() async {
   if (sessionQuiet || lockState.inDecoy) {
-    return DecoyDevices(phoneName: l10n.devicesThisPhoneShown);
+    return DecoyDevices(
+      phoneName: l10n.devicesThisPhoneShown,
+      here: !onDesktop,
+    );
   }
   final db = await live.open();
   if (linkedRole) {
@@ -50,7 +46,9 @@ Future<OwnDevices> ownDevicesSource() async {
     db: db,
     thisName: l10n.devicesThisPhoneShown,
     thisKind: onDesktop ? DeviceKind.computer : DeviceKind.phone,
-    link: deviceState == null
+    // phones link in 0.6: a computer that holds the account has no camera
+    // to scan with
+    link: deviceState == null || onDesktop
         ? null
         : (code, history) => PhoneLinkFlow(
             EngineLinkCalls(),
@@ -97,43 +95,56 @@ class _PhoneLinkApp implements PhoneLinkHooks {
   }
 
   @override
-  Future<void> keep(LinkTaken t) async {
+  Future<void> keep(LinkTaken t, Future<void> Function() kept) async {
     final ds = deviceState;
     if (ds == null) throw StateError('devices not loaded');
     final db = await live.open();
     final now = DateTime.now();
-    await db.transaction((tx) async {
-      await ds.ownMine(tx, kMainIdent, t.list);
-      await ds.call(tx, 'pool_put', {
-        'ident': kMainIdent,
-        'device': t.device,
-        'once': [for (final b in t.once) base64Encode(b)],
-        'last': base64Encode(t.last),
-        'made': t.made,
-        'now': now.millisecondsSinceEpoch,
-      });
-      await addOwnDevice(
-        tx,
-        uid: newDeviceUid(),
-        name: l10n.devicesNameComputer,
-        kind: DeviceKind.computer,
-        linkedAt: now,
-        keys: [(ident: kMainIdent, dev: t.device, key: t.key, reg: t.reg)],
-        stream: t.stream,
-      );
-    });
-    // the own session from the device's first bundle: the first frame on
-    // it is the opener that carries the list and the history stream
+    // the own session from the device's first bundle comes first: its
+    // prekey signatures are checked here, and a bad bundle keeps nothing.
+    // the first frame on it is the opener with the list and the history
     final key = _linkUnhex(t.key);
     final lib = signalSession.lib;
     final me = lib.identityFromPrivate((await _main()).xPriv).public;
-    await DeviceSessions(signalSession).build(
+    final sessions = DeviceSessions(signalSession);
+    await sessions.build(
       kOwnDevices,
       t.device,
       lib.parseDeviceBundle(t.first, me),
       key,
       t.reg,
     );
+    try {
+      await db.transaction((tx) async {
+        await ds.ownMine(tx, kMainIdent, t.list);
+        await ds.call(tx, 'pool_put', {
+          'ident': kMainIdent,
+          'device': t.device,
+          'once': [for (final b in t.once) base64Encode(b)],
+          'last': base64Encode(t.last),
+          'made': t.made,
+          'now': now.millisecondsSinceEpoch,
+        });
+        await addOwnDevice(
+          tx,
+          uid: newDeviceUid(),
+          // phones link computers in 0.6: named by that kind
+          name: l10n.devicesNameComputer,
+          kind: DeviceKind.computer,
+          linkedAt: now,
+          keys: [(ident: kMainIdent, dev: t.device, key: t.key, reg: t.reg)],
+          stream: t.stream,
+        );
+        // last, inside: the engine acks the device only now, and when it
+        // gave up already nothing here is kept
+        await kept();
+      });
+    } catch (_) {
+      // the engine's state as the rows are, and no session left behind
+      await sessions.drop(kOwnDevices, t.device);
+      await bootDevices();
+      rethrow;
+    }
     await readLinkNotices(db);
   }
 }
@@ -153,28 +164,19 @@ class _JoinLinkApp implements JoinLinkHooks {
     );
   }
 
+  // the place, in memory: the engine's state as the device would hold it,
+  // nothing in the container until joined
   @override
   Future<void> placed(JoinPlace p) async {
     final db = await live.open();
-    await db.update(
-      'identities',
-      {'ident_pub': _linkUnhex(p.identity), 'dev_id': p.device},
-      where: 'id = ?',
-      whereArgs: [kMainIdent],
-    );
     final path = KryfoSignal.loadedFrom;
     if (path == null) throw StateError('the signal library has no path');
+    final key = signalSession.identity.public;
     final ds = DeviceState(DeviceEngine());
-    await ds.load(db, await devMineOf(db, signalSession.lib), shimPath: path);
+    await ds.load(db, [
+      (ident: kMainIdent, identity: _linkUnhex(p.identity), key: key),
+    ], shimPath: path);
     _deviceState = ds;
-  }
-
-  @override
-  Future<void> writeRows(Map<String, dynamic> answer) async {
-    final rows = (answer['rows'] as List?) ?? const [];
-    if (rows.isEmpty) return;
-    final db = await live.open();
-    await db.transaction((tx) => applyDevRows(tx, rows));
   }
 
   @override
@@ -191,16 +193,27 @@ class _JoinLinkApp implements JoinLinkHooks {
   }
 
   @override
-  Future<void> joined(JoinPlace p, Uint8List stream) async {
-    final db = await live.open();
-    await db.insert('signal_meta', {
-      'k': kLinkStreamMeta,
-      'v': base64Encode(stream),
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
-    stream.fillRange(0, stream.length, 0);
+  Future<void> joined(
+    JoinPlace p,
+    Uint8List stream,
+    Map<String, dynamic> ownRows,
+  ) async {
+    await joinedRows(
+      await live.open(),
+      identity: _linkUnhex(p.identity),
+      device: p.device,
+      rows: (ownRows['rows'] as List?) ?? const [],
+      stream: stream,
+    );
     _linkedRole = true;
+    // the state as the rows now hold it, loaded as every start loads it
+    await bootDevices();
+    // linked: the app opens as the linked device from here, whatever
+    // happens to this page
+    await appState.markOnboardingComplete();
   }
-}
 
-/// where a linked device keeps its history stream's key until the copy
-const kLinkStreamMeta = 'link_stream';
+  // the container as it was: the state loaded again from its rows
+  @override
+  Future<void> failed() => bootDevices();
+}

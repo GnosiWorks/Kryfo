@@ -16283,6 +16283,12 @@ abstract class AppLocalizations {
   /// **'The numbers have to match. Start again with a new code.'**
   String get devicesLinkStoppedLine;
 
+  /// screens/link_screens.dart: under devicesLinkStopped when the link ended for another reason than a no: the other side stopped, a step failed
+  ///
+  /// In en, this message translates to:
+  /// **'Something interrupted the link. Start again with a new code.'**
+  String get devicesLinkInterruptedLine;
+
   /// screens/scan_screen.dart: the scanner title when the phone links a device
   ///
   /// In en, this message translates to:
@@ -16408,6 +16414,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} was linked to your account on {date}. Open Linked devices to see it.'**
   String devicesNewNoticeLine(Object name, Object date);
+
+  /// screens/home_screen.dart: the card's title when more than one device was linked since the page was last opened
+  ///
+  /// In en, this message translates to:
+  /// **'New devices linked'**
+  String get devicesNewNoticeMany;
+
+  /// screens/home_screen.dart: the card's line when more than one device was linked: their names, joined by devicesNameSeparator
+  ///
+  /// In en, this message translates to:
+  /// **'{names} were linked to your account. Open Linked devices to see them.'**
+  String devicesNewNoticeManyLine(Object names);
 
   /// screens/home_screen.dart: the card's button: opens Linked devices
   ///

@@ -10301,6 +10301,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Цифри мають збігатися. Почніть знову з новим кодом.';
 
   @override
+  String get devicesLinkInterruptedLine =>
+      'Пов’язування перервалося. Почніть знову з новим кодом.';
+
+  @override
   String get scanLinkTitle => 'Сканувати код пристрою';
 
   @override
@@ -10368,6 +10372,14 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String devicesNewNoticeLine(Object name, Object date) {
     return '$name пов’язано з вашим обліковим записом $date. Відкрийте Пов’язані пристрої, щоб його побачити.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'Нові пристрої пов’язано';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names пов’язано з вашим обліковим записом. Відкрийте Пов’язані пристрої, щоб їх побачити.';
   }
 
   @override

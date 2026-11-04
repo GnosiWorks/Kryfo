@@ -22,7 +22,11 @@ class _Devices implements OwnDevices {
   final removed = <String>[];
   final renamed = <String, String>{};
   var others = 0;
-  _Devices(this.all);
+  @override
+  final bool linksHere;
+  @override
+  final bool linkedDevice;
+  _Devices(this.all, {this.linksHere = true, this.linkedDevice = false});
 
   @override
   Future<List<OwnDevice>> load() async => all;
@@ -137,6 +141,21 @@ void main() {
       devicesRowValue([_phone, _computer('a', 'Desk'), _computer('b', 'Lap')]),
       'Desk, Lap',
     );
+  });
+
+  test('the home card names every new device, not only the newest', () {
+    setL10nLocale(const Locale('en'));
+    final one = linkNoticeWords([
+      (name: 'Desk', at: DateTime(2026, 10, 27)),
+    ], _now);
+    expect(one.title, l10n.devicesNewNotice);
+    expect(one.line, contains('Desk'));
+    final two = linkNoticeWords([
+      (name: 'Desk', at: DateTime(2026, 10, 27)),
+      (name: 'Lap', at: DateTime(2026, 10, 28)),
+    ], _now);
+    expect(two.title, l10n.devicesNewNoticeMany);
+    expect(two.line, l10n.devicesNewNoticeManyLine('Desk, Lap'));
   });
 
   test('use comes in four steps, never a time', () {
@@ -270,6 +289,46 @@ void main() {
     expect(find.text('Desk'), findsNothing);
     expect(find.text('Lap'), findsNothing);
     expect(find.text(l10n.devicesRemovedAll), findsOneWidget);
+  });
+
+  testWidgets('a linked computer says whose it is and links nothing', (
+    t,
+  ) async {
+    final src = _Devices(
+      [
+        const OwnDevice(
+          id: 'me',
+          name: 'This computer',
+          kind: DeviceKind.computer,
+          thisDevice: true,
+        ),
+        const OwnDevice(
+          id: 'phone',
+          name: 'Your phone',
+          kind: DeviceKind.phone,
+        ),
+      ],
+      linksHere: false,
+      linkedDevice: true,
+    );
+    await _open(t, src);
+    expect(find.text(l10n.joinDone), findsOneWidget);
+    expect(find.text(l10n.devicesOnlyThisPhoneShown), findsNothing);
+    expect(find.text(l10n.devicesLinkADevice), findsNothing);
+    expect(find.text(l10n.devicesRemoveAll), findsNothing);
+    expect(find.text(l10n.devicesEmptyTitle), findsNothing);
+    // its phone's row opens nothing: the phone renames and removes
+    await t.tap(find.text('Your phone'));
+    await t.pumpAndSettle();
+    expect(find.text(l10n.devicesRename), findsNothing);
+  });
+
+  testWidgets('a computer that holds the account offers no link in 0.6', (
+    t,
+  ) async {
+    await _open(t, _Devices([_phone], linksHere: false));
+    expect(find.text(l10n.devicesLinkADevice), findsNothing);
+    expect(find.text(l10n.devicesUnusedRule), findsOneWidget);
   });
 
   testWidgets('five linked: the button rests and says why', (t) async {

@@ -9612,6 +9612,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devicesLinkStoppedLine => '数字必须一致。用新的二维码重新开始。';
 
   @override
+  String get devicesLinkInterruptedLine => '关联被中断了。用新的二维码重新开始。';
+
+  @override
   String get scanLinkTitle => '扫描设备的二维码';
 
   @override
@@ -9674,6 +9677,14 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String devicesNewNoticeLine(Object name, Object date) {
     return '$name 于 $date 关联到你的账号。打开“已关联的设备”查看。';
+  }
+
+  @override
+  String get devicesNewNoticeMany => '已关联几台新设备';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names 已关联到你的账号。打开“已关联的设备”查看。';
   }
 
   @override
@@ -19838,6 +19849,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devicesLinkStoppedLine => '數字必須一致。用新的 QR 碼重新開始。';
 
   @override
+  String get devicesLinkInterruptedLine => '連結被中斷了。用新的 QR 碼重新開始。';
+
+  @override
   String get scanLinkTitle => '掃描裝置的 QR 碼';
 
   @override
@@ -19900,6 +19914,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String devicesNewNoticeLine(Object name, Object date) {
     return '$name 於 $date 連結到你的帳號。開啟「已連結的裝置」查看。';
+  }
+
+  @override
+  String get devicesNewNoticeMany => '已連結幾台新裝置';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names 已連結到你的帳號。開啟「已連結的裝置」查看。';
   }
 
   @override

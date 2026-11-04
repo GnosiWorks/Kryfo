@@ -10245,6 +10245,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die Ziffern müssen übereinstimmen. Fang mit einem neuen Code noch einmal an.';
 
   @override
+  String get devicesLinkInterruptedLine =>
+      'Etwas hat die Verknüpfung unterbrochen. Fang mit einem neuen Code noch einmal an.';
+
+  @override
   String get scanLinkTitle => 'Code des Geräts scannen';
 
   @override
@@ -10312,6 +10316,14 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String devicesNewNoticeLine(Object name, Object date) {
     return '$name wurde am $date mit deinem Konto verknüpft. Öffne Verknüpfte Geräte, um es zu sehen.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'Neue Geräte verknüpft';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names wurden mit deinem Konto verknüpft. Öffne Verknüpfte Geräte, um sie zu sehen.';
   }
 
   @override

@@ -10155,6 +10155,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'ارقام باید یکی باشند. با یک کد تازه دوباره شروع کنید.';
 
   @override
+  String get devicesLinkInterruptedLine =>
+      'پیوند نیمه‌کاره ماند. با یک کد تازه دوباره شروع کنید.';
+
+  @override
   String get scanLinkTitle => 'اسکن کد دستگاه';
 
   @override
@@ -10222,6 +10226,14 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String devicesNewNoticeLine(Object name, Object date) {
     return '⁨$name⁩ در ⁨$date⁩ به حساب‌تان پیوند خورد. برای دیدنش دستگاه‌های پیوندخورده را باز کنید.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'دستگاه‌های تازه پیوند خوردند';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '⁨$names⁩ به حساب‌تان پیوند خوردند. برای دیدنشان دستگاه‌های پیوندخورده را باز کنید.';
   }
 
   @override

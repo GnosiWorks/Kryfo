@@ -86,6 +86,13 @@ abstract class OwnDevices {
   /// whether this build can link a device now
   bool get canLink;
 
+  /// whether the page offers linking at all: never on a linked device,
+  /// nor on a computer that is the account's own (phones link in 0.6)
+  bool get linksHere;
+
+  /// this is a linked device: its phone links and removes
+  bool get linkedDevice;
+
   /// a link to the device whose code was scanned
   LinkFlow linkFlow(String code, LinkHistory history);
 
@@ -122,6 +129,12 @@ class ThisPhoneOnly implements OwnDevices {
   bool get canLink => false;
 
   @override
+  bool get linksHere => true;
+
+  @override
+  bool get linkedDevice => false;
+
+  @override
   LinkFlow linkFlow(String code, LinkHistory history) =>
       throw StateError('this phone cannot link yet');
 
@@ -132,17 +145,29 @@ class ThisPhoneOnly implements OwnDevices {
 /// the decoy's devices: this phone alone, and a link that looks like any
 /// and reaches nobody. nothing of the real account is read or written
 class DecoyDevices extends ThisPhoneOnly {
-  const DecoyDevices({required super.phoneName, super.since, this.flow});
+  const DecoyDevices({
+    required super.phoneName,
+    super.since,
+    this.flow,
+    this.here = true,
+  });
 
   /// a stand-in for tests
   final LinkFlow Function()? flow;
 
+  /// whether the real app links here: a phone does, a computer that holds
+  /// the account does not, and the decoy looks the same
+  final bool here;
+
   @override
-  bool get canLink => true;
+  bool get canLink => here;
+
+  @override
+  bool get linksHere => here;
 
   @override
   LinkFlow linkFlow(String code, LinkHistory history) =>
-      flow?.call() ?? DecoyLinkFlow();
+      flow?.call() ?? DecoyLinkFlow(code: code);
 }
 
 /// the longest name kept for a device, in characters

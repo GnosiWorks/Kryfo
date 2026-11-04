@@ -3,12 +3,14 @@
 // notice that stays on every own device until the person opens it. the
 // device lists contacts get carry neither names nor dates; these rows are
 // only the owner's
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import '../key_number.dart' show keyNumberGroups;
+import 'device_store.dart' show applyDevRows;
 import 'link_flow.dart';
 import 'own_devices.dart';
 
@@ -46,6 +48,16 @@ Future<void> addOwnDevice(
   required List<OwnDeviceKey> keys,
   Uint8List? stream,
 }) async {
+  // a device key already on a device of mine is that device again: refused
+  // with its notice, whatever uid it came under
+  for (final k in keys) {
+    final had = await db.rawQuery(
+      'SELECT 1 FROM own_device_keys k JOIN own_devices d ON d.uid = k.uid '
+      'WHERE k.ident = ? AND k.key = ? AND d.removed_at IS NULL LIMIT 1',
+      [k.ident, k.key],
+    );
+    if (had.isNotEmpty) throw StateError('this device is linked already');
+  }
   await db.insert('own_devices', {
     'uid': uid,
     'name': name,
@@ -63,6 +75,43 @@ Future<void> addOwnDevice(
       'reg': k.reg,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
+}
+
+/// where a linked device keeps its history stream's key until the copy
+const kLinkStreamMeta = 'link_stream';
+
+/// a new device linked, written at once: identities row 0 names the
+/// account it serves ([identity]) and its id there, the own list's rows the
+/// engine gave, and the history stream's key. nothing of it before the
+/// phone kept the device, so a link that fails leaves a fresh install
+Future<void> joinedRows(
+  Database db, {
+  required Uint8List identity,
+  required int device,
+  required List<dynamic> rows,
+  required Uint8List stream,
+}) => db.transaction((tx) async {
+  final n = await tx.update('identities', {
+    'ident_pub': identity,
+    'dev_id': device,
+  }, where: 'id = 0');
+  if (n != 1) throw StateError('no identity to link');
+  await applyDevRows(tx, rows);
+  await tx.insert('signal_meta', {
+    'k': kLinkStreamMeta,
+    'v': base64Encode(stream),
+  }, conflictAlgorithm: ConflictAlgorithm.replace);
+});
+
+/// whether this container is a linked device's
+Future<bool> linkedRoleOf(DatabaseExecutor db) async {
+  final r = await db.query(
+    'identities',
+    columns: ['ident_pub'],
+    where: 'id = 0',
+    limit: 1,
+  );
+  return r.isNotEmpty && r.first['ident_pub'] is List<int>;
 }
 
 /// the notices not opened yet, oldest first, read into [linkNotices]
@@ -174,6 +223,12 @@ class StoredOwnDevices implements OwnDevices {
 
   @override
   bool get canLink => link != null && phoneName == null;
+
+  @override
+  bool get linksHere => canLink;
+
+  @override
+  bool get linkedDevice => phoneName != null;
 
   @override
   LinkFlow linkFlow(String code, LinkHistory history) {

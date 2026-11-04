@@ -10216,6 +10216,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Os números precisam ser iguais. Comece de novo com um código novo.';
 
   @override
+  String get devicesLinkInterruptedLine =>
+      'Algo interrompeu a conexão. Comece de novo com um código novo.';
+
+  @override
   String get scanLinkTitle => 'Escanear o código do aparelho';
 
   @override
@@ -10282,6 +10286,14 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String devicesNewNoticeLine(Object name, Object date) {
     return '$name foi conectado à sua conta em $date. Abra Aparelhos conectados para ver.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'Novos aparelhos conectados';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names foram conectados à sua conta. Abra Aparelhos conectados para ver.';
   }
 
   @override

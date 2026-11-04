@@ -10145,6 +10145,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'अंक मिलने चाहिए। नए कोड के साथ फिर से शुरू करें।';
 
   @override
+  String get devicesLinkInterruptedLine =>
+      'जोड़ना बीच में रुक गया। नए कोड के साथ फिर से शुरू करें।';
+
+  @override
   String get scanLinkTitle => 'डिवाइस का कोड स्कैन करें';
 
   @override
@@ -10211,6 +10215,14 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String devicesNewNoticeLine(Object name, Object date) {
     return '$name $date को आपके खाते से जुड़ा। देखने के लिए जुड़े हुए डिवाइस खोलें।';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'नए डिवाइस जुड़े';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names आपके खाते से जुड़े। देखने के लिए जुड़े हुए डिवाइस खोलें।';
   }
 
   @override

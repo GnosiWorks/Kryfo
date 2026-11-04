@@ -12707,6 +12707,10 @@
   "@devicesLinkStoppedLine": {
     "description": "screens/link_screens.dart: under devicesLinkStopped"
   },
+  "devicesLinkInterruptedLine": "Something interrupted the link. Start again with a new code.",
+  "@devicesLinkInterruptedLine": {
+    "description": "screens/link_screens.dart: under devicesLinkStopped when the link ended for another reason than a no: the other side stopped, a step failed"
+  },
   "scanLinkTitle": "Scan the device's code",
   "@scanLinkTitle": {
     "description": "screens/scan_screen.dart: the scanner title when the phone links a device"
@@ -12795,6 +12799,19 @@
         "type": "Object"
       },
       "date": {
+        "type": "Object"
+      }
+    }
+  },
+  "devicesNewNoticeMany": "New devices linked",
+  "@devicesNewNoticeMany": {
+    "description": "screens/home_screen.dart: the card's title when more than one device was linked since the page was last opened"
+  },
+  "devicesNewNoticeManyLine": "{names} were linked to your account. Open Linked devices to see them.",
+  "@devicesNewNoticeManyLine": {
+    "description": "screens/home_screen.dart: the card's line when more than one device was linked: their names, joined by devicesNameSeparator",
+    "placeholders": {
+      "names": {
         "type": "Object"
       }
     }

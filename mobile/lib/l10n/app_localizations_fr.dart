@@ -10242,6 +10242,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les chiffres doivent correspondre. Recommencez avec un nouveau code.';
 
   @override
+  String get devicesLinkInterruptedLine =>
+      'Quelque chose a interrompu l’association. Recommencez avec un nouveau code.';
+
+  @override
   String get scanLinkTitle => 'Scanner le code de l’appareil';
 
   @override
@@ -10309,6 +10313,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String devicesNewNoticeLine(Object name, Object date) {
     return '$name a été associé à votre compte le $date. Ouvrez Appareils associés pour le voir.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'Nouveaux appareils associés';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names ont été associés à votre compte. Ouvrez Appareils associés pour les voir.';
   }
 
   @override

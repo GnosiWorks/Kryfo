@@ -394,13 +394,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   OwnDevices? _devices;
   String? _devicesValue;
   Future<void> _readDevices() async {
-    final src = await ownDevicesSource();
-    final all = await src.load();
-    if (!mounted) return;
-    setState(() {
-      _devices = src;
-      _devicesValue = devicesRowValue(all);
-    });
+    try {
+      final src = await ownDevicesSource();
+      final all = await src.load();
+      if (!mounted) return;
+      setState(() {
+        _devices = src;
+        _devicesValue = devicesRowValue(all);
+      });
+    } catch (_) {
+      // no value then, and the row still opens the page
+      if (mounted) setState(() => _devicesValue = '');
+    }
   }
 
   Future<void> _openDevices() async {
@@ -777,7 +782,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 HaloRow(
                   icon: Icons.devices_rounded,
                   label: l10n.devicesLinkedDevices,
-                  value: _devicesValue,
+                  // held in place unseen until the load, then faded in
+                  value: _devicesValue ?? devicesRowValue(const []),
+                  pending: _devicesValue == null,
                   hint: linkedRole ? l10n.settingsLinkedToLine : null,
                   onTap: _openDevices,
                 ),
