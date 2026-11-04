@@ -34,7 +34,8 @@ const kHistoryVoiceMax = 10 << 20;
 const kHistoryStaysShots = 'shots';
 
 /// a record of the copy that is no chat: what the device needs to go on
-/// where the phone is (lists the phone holds, messages it deleted lately),
+/// where the phone is (lists the phone holds and what its engine learnt of
+/// those contacts, messages it deleted lately),
 /// sent with every copy, "no history" too
 const kHistoryMaterial = 'material';
 
@@ -183,8 +184,9 @@ class _Open {
 
 /// the planned stream on the phone
 class HistoryOutgoing {
-  HistoryOutgoing._(this._o, this.id, this.head, this.chats);
+  HistoryOutgoing._(this._o, this.id, this.head, this.chats, this._gone);
   final _Open _o;
+  final _GoneSince _gone;
   HistorySender get _s => _o.s;
 
   /// a chat was hidden while the copy was open: nothing more goes, and the
@@ -214,10 +216,43 @@ class HistoryOutgoing {
       HistoryChatGap(chats[g.chat], g.want, g.got),
   ];
 
+  /// what this phone deleted since it made the copy, in the chats whose
+  /// row went, as the copy's own gone rows: [uid, key, at]
+  Future<List<List<Object?>>> goneSince() => _gone.rows();
+
   void close() {
     _o.off();
     _o.end();
   }
+}
+
+// the gone rows the copy carried, and the chats they are for: whatever
+// gone_in holds beyond them later went since the export
+class _GoneSince {
+  _GoneSince(this.db, this.peers, this.groups, this.sent);
+  final Database db;
+  final Set<String> peers;
+  final Set<String> groups;
+  final Set<String> sent;
+
+  static String keyOf(Object? uid, Object? peer, Object? at) =>
+      '$uid|$peer|$at';
+
+  Future<List<List<Object?>>> rows() async => [
+    if (await _hasTable(db, 'gone_in'))
+      for (final r in await db.rawQuery(
+        'SELECT msg_uid, peer_id, at FROM main.gone_in ORDER BY at',
+      ))
+        if (_goneFor(r['peer_id'] as String, peers, groups) &&
+            !sent.contains(keyOf(r['msg_uid'], r['peer_id'], r['at'])))
+          [r['msg_uid'], r['peer_id'], r['at']],
+  ];
+}
+
+// whether a gone row's key names a chat of these
+bool _goneFor(String k, Set<String> peers, Set<String> groups) {
+  final g = k.startsWith('group:') ? k.substring(6, k.lastIndexOf(':')) : null;
+  return g == null ? peers.contains(k) : groups.contains(g);
 }
 
 // the material in records that each stay inside one chat record
@@ -344,6 +379,9 @@ Future<HistoryOutgoing> exportHistory({
     }
   }
   final chats = <HistoryChatRef>[];
+  final sentPeers = <String>{};
+  final sentGroups = <String>{};
+  final goneSent = <String>{};
   var hidden = <String>{};
   HistorySender? sender;
   _Open? open;
@@ -444,8 +482,6 @@ Future<HistoryOutgoing> exportHistory({
     // on the open list while the hold still holds
     open = _Open(s);
     final media = <String>{};
-    final sentPeers = <String>{};
-    final sentGroups = <String>{};
     final hasReactions = await _hasTable(db, 'reactions');
     final hasVotes = await _hasTable(db, 'poll_votes');
     final hasOrder = await _hasTable(db, 'frame_order');
@@ -481,9 +517,12 @@ Future<HistoryOutgoing> exportHistory({
       // a row too big to go: counted in the head, the rest goes on
       if (n == null) continue;
       chats.add(HistoryChatRef(group, id));
-      // "no history": the chat's row alone, and only new messages after
-      if (shots || rowsOnly) continue;
+      if (shots) continue;
+      // what was deleted of it goes too, "no history" included, so a copy
+      // of it the device got live goes there as it went here
       (group ? sentGroups : sentPeers).add(id);
+      // "no history": the chat's row alone, and only new messages after
+      if (rowsOnly) continue;
       var after = 0;
       while (true) {
         final page = await db.rawQuery(
@@ -606,7 +645,12 @@ Future<HistoryOutgoing> exportHistory({
     // last, what is no chat: the contacts' lists this phone holds, and the
     // messages of the chats that went that it deleted lately, so a copy of
     // one the device got live goes there too
-    final material = <String, List<Object?>>{'gone': [], 'lists': []};
+    final material = <String, List<Object?>>{
+      'gone': [],
+      'lists': [],
+      'proven': [],
+      'pq': [],
+    };
     final keys = <String>{
       for (final (group, _, row) in order)
         if (!group && row['ikey'] is String) row['ikey'] as String,
@@ -616,13 +660,27 @@ Future<HistoryOutgoing> exportHistory({
         'SELECT msg_uid, peer_id, at FROM main.gone_in ORDER BY at',
       )) {
         final k = r['peer_id'] as String;
-        final g = k.startsWith('group:')
-            ? k.substring(6, k.lastIndexOf(':'))
-            : null;
-        if (g == null ? !sentPeers.contains(k) : !sentGroups.contains(g)) {
-          continue;
-        }
+        if (!_goneFor(k, sentPeers, sentGroups)) continue;
         material['gone']!.add([r['msg_uid'], k, r['at']]);
+        goneSent.add(_GoneSince.keyOf(r['msg_uid'], k, r['at']));
+      }
+    }
+    // the keys each contact's messages came under, and whether a session
+    // with them was post-quantum: the device starts where this phone is
+    if (await _hasTable(db, 'dev_proven')) {
+      for (final r in await db.rawQuery(
+        'SELECT peer, key FROM main.dev_proven WHERE ident = 0 '
+        'ORDER BY peer, key',
+      )) {
+        if (!keys.contains(r['peer'])) continue;
+        material['proven']!.add([r['peer'], r['key']]);
+      }
+    }
+    if (await _hasTable(db, 'dev_pq')) {
+      for (final r in await db.rawQuery(
+        'SELECT peer FROM main.dev_pq WHERE ident = 0 ORDER BY peer',
+      )) {
+        if (keys.contains(r['peer'])) material['pq']!.add(r['peer']);
       }
     }
     if (await _hasTable(db, 'dev_lists')) {
@@ -658,7 +716,13 @@ Future<HistoryOutgoing> exportHistory({
       o.planning = false;
     }
     if (o.ended) throw const HistoryHiddenMeanwhile();
-    return HistoryOutgoing._(o, o.s.id, o.s.head(), chats);
+    return HistoryOutgoing._(
+      o,
+      o.s.id,
+      o.s.head(),
+      chats,
+      _GoneSince(db, sentPeers, sentGroups, goneSent),
+    );
   } catch (e) {
     final ended = open?.ended ?? false;
     open?.off();

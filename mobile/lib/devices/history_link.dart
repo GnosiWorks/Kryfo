@@ -20,7 +20,8 @@ import '../engine_strings.dart' show engineTakeSecret;
 import 'history_export.dart';
 import 'history_ffi.dart';
 import 'history_import.dart';
-import 'own_device_store.dart' show historyCopyOf, keepHistoryCopy;
+import 'own_device_store.dart'
+    show historyCopiesKept, historyCopyOf, keepHistoryCopy;
 
 // ---- the engine's calls ----
 
@@ -33,11 +34,22 @@ abstract class HistoryDoor {
   /// the copy's sender is made: its records go to whoever holds the link
   void serve(String tag, int handle, int gen);
 
+  /// the ask key of the link stream [keyHex]: kept once the copy is over
+  ({String tag, String askHex}) ask(String keyHex, String bindHex);
+
   /// ended by a hide ('ended'), or done ('done')
   void end(String tag, String why);
 
-  /// how far the device asked, and its tally once it came
-  ({String why, int asked, Uint8List? tally}) state(String tag);
+  /// a copy over before this start answers its end word ('ended' or
+  /// 'done') from its kept ask key alone; its tag
+  String rest(String askHex, String why);
+
+  /// what the phone deleted since the export, sealed once for the device
+  void gone(String tag, Uint8List rows);
+
+  /// how far the device asked, its tally once it came, and whether it
+  /// asked for what was deleted since the export
+  ({String why, int asked, Uint8List? tally, bool gone}) state(String tag);
 
   void drop(String tag);
 }
@@ -65,6 +77,10 @@ abstract class HistoryWire {
   /// record [i] of the copy of generation [gen], or why the phone has none
   /// (null record): 'other' when it made the copy again since
   Future<({Uint8List? rec, String? why})> record(int gen, int i);
+
+  /// what the phone deleted since it made the copy of generation [gen]
+  /// from the sender [id]: the rows, or why there are none yet
+  Future<({Uint8List? rows, String? why})> gone(int gen, String id);
 
   /// the tally back: null once the phone holds it, else its why
   Future<String?> tally(Uint8List tally);
@@ -112,16 +128,31 @@ class EngineHistoryDoor implements HistoryDoor {
       _do('serve', {'tag': tag, 'send': handle, 'gen': gen});
 
   @override
+  ({String tag, String askHex}) ask(String keyHex, String bindHex) {
+    final j = _do('ask', {'key': keyHex, 'bind': bindHex});
+    return (tag: j['tag'] as String, askHex: j['ask'] as String);
+  }
+
+  @override
   void end(String tag, String why) => _do('end', {'tag': tag, 'why': why});
 
   @override
-  ({String why, int asked, Uint8List? tally}) state(String tag) {
+  String rest(String askHex, String why) =>
+      _do('rest', {'ask': askHex, 'why': why})['tag'] as String;
+
+  @override
+  void gone(String tag, Uint8List rows) =>
+      _do('gone', {'tag': tag, 'gone': base64Encode(rows)});
+
+  @override
+  ({String why, int asked, Uint8List? tally, bool gone}) state(String tag) {
     final j = _do('state', {'tag': tag});
     final t = j['tally'];
     return (
       why: j['why'] as String? ?? '',
       asked: (j['asked'] as num?)?.toInt() ?? 0,
       tally: t is String ? base64Decode(t) : null,
+      gone: j['gone_asked'] == true,
     );
   }
 
@@ -174,6 +205,17 @@ class EngineHistoryWire implements HistoryWire {
       rec: r is String ? base64Decode(r) : null,
       why: j['why'] as String?,
     );
+  }
+
+  @override
+  Future<({Uint8List? rows, String? why})> gone(int gen, String id) async {
+    final j = await _ask('gone', {'gen': gen, 'id': id});
+    _check(j);
+    final g = j['gone'];
+    if (j['ok'] == true) {
+      return (rows: g is String ? base64Decode(g) : Uint8List(0), why: null);
+    }
+    return (rows: null, why: j['why'] as String? ?? 'none');
   }
 
   @override
@@ -369,8 +411,36 @@ String historyCopyHist({
 /// how long the phone keeps a copy for a device that has not taken it
 const kHistoryCopyFor = Duration(days: 14);
 
+/// how long a copy over still answers its end word to a device that was
+/// away when it ended
+const kHistoryRestFor = Duration(days: 30);
+
+// what the door answers once a copy is over: the device keeps a whole
+// copy on "done" and discards on "ended"
+String _endWord(HistoryCopyStep s) =>
+    s == HistoryCopyStep.whole || s == HistoryCopyStep.gaps ? 'done' : 'ended';
+
+/// the phone's copies, one run per device at a time: a start is taken
+/// before its first await, so two starts for one device never both run
+class HistoryCopyRuns {
+  final _on = <String>{};
+
+  bool running(String uid) => _on.contains(uid);
+
+  /// [run] for [uid], unless one runs already
+  Future<void> start(String uid, Future<void> Function() run) async {
+    if (!_on.add(uid)) return;
+    try {
+      await run();
+    } finally {
+      _on.remove(uid);
+    }
+  }
+}
+
 /// one device's copy on the phone: made, served, and checked against the
-/// device's tally. the stream key goes once the copy is over
+/// device's tally. the stream key goes once the copy is over; its ask key
+/// stays a while, so the door still answers how it ended
 class PhoneHistoryCopy {
   PhoneHistoryCopy({
     required this.db,
@@ -396,6 +466,7 @@ class PhoneHistoryCopy {
   bool _stopped = false;
   HistoryOutgoing? _out;
   String? _tag;
+  String? _ask;
 
   /// the stream the door serves now, for tests
   @visibleForTesting
@@ -404,14 +475,55 @@ class PhoneHistoryCopy {
   Future<void> _keep(Map<String, Object?> hist, {bool forget = false}) =>
       keepHistoryCopy(db, uid, hist, forget: forget);
 
+  /// at a start: every copy over answers its end word again from its kept
+  /// ask key, until kHistoryRestFor after it ended
+  static Future<void> restAll(
+    Database db,
+    HistoryDoor door, {
+    DateTime Function()? clock,
+  }) async {
+    final now = (clock ?? DateTime.now)().millisecondsSinceEpoch;
+    for (final uid in await historyCopiesKept(db)) {
+      final row = await historyCopyOf(db, uid);
+      if (row != null) await _rest(db, uid, Map.of(row.hist), door, now);
+    }
+  }
+
+  static Future<void> _rest(
+    Database db,
+    String uid,
+    Map<String, Object?> hist,
+    HistoryDoor door,
+    int now,
+  ) async {
+    final done = HistoryCopyStage.fromJson(hist['r']);
+    final ask = hist['q'];
+    if (done == null || !historyCopyOver(done.step) || ask is! String) return;
+    final at = (hist['e'] as num?)?.toInt() ?? now;
+    if (now - at > kHistoryRestFor.inMilliseconds) {
+      hist
+        ..remove('q')
+        ..remove('e');
+      await keepHistoryCopy(db, uid, hist);
+      return;
+    }
+    try {
+      door.rest(ask, _endWord(done.step));
+    } on HistoryRefused {
+      // a kept key that does not read: nothing to answer with
+    }
+  }
+
   /// the copy from where the rows say it is. a copy over shows how it
   /// ended; one under way is made again, under the next generation's key
   Future<void> run() async {
     final row = await historyCopyOf(db, uid);
     if (row == null) return;
     final hist = Map.of(row.hist);
+    final now = clock().millisecondsSinceEpoch;
     final done = HistoryCopyStage.fromJson(hist['r']);
     if (done != null && historyCopyOver(done.step)) {
+      await _rest(db, uid, hist, door, now);
       stage.value = done;
       return;
     }
@@ -419,9 +531,10 @@ class PhoneHistoryCopy {
     if (stream == null || stream.length != 32) return;
     final bind = hist['b'] as String, identity = hist['i'] as String;
     final choice = hist['c'] as String? ?? 'all';
+    final key = historyHex(stream);
+    _ask = door.ask(key, bind).askHex;
     // a device that never comes back for its copy: the phone stops making
     // it again at every start
-    final now = clock().millisecondsSinceEpoch;
     final since = (hist['at'] as num?)?.toInt() ?? now;
     hist['at'] = since;
     if (now - since > kHistoryCopyFor.inMilliseconds) {
@@ -433,7 +546,6 @@ class PhoneHistoryCopy {
     final gen = was == null ? 0 : was + 1;
     hist['g'] = gen;
     await _keep(hist);
-    final key = historyHex(stream);
     final o = door.open(key, bind, gen);
     _tag = o.tag;
     if (_stopped) return;
@@ -463,11 +575,25 @@ class PhoneHistoryCopy {
       records: out.head.records,
       rowsOnly: choice == 'none',
     );
+    var goneSent = false;
     while (!_stopped) {
       if (out.ended) {
         return _over(hist, const HistoryCopyStage(HistoryCopyStep.ended));
       }
       final s = door.state(o.tag);
+      // every record is in on the device: what this phone deleted since it
+      // made the copy goes, so a delete taken meanwhile goes there too
+      if (s.gone && !goneSent) {
+        goneSent = true;
+        final rows = await out.goneSince();
+        if (_stopped) return;
+        if (out.ended) continue;
+        try {
+          door.gone(o.tag, Uint8List.fromList(utf8.encode(jsonEncode(rows))));
+        } on HistoryRefused {
+          return _over(hist, const HistoryCopyStage(HistoryCopyStep.failed));
+        }
+      }
       final t = s.tally;
       if (t != null) {
         final List<HistoryChatGap> gaps;
@@ -499,7 +625,6 @@ class PhoneHistoryCopy {
             ],
             leftChats: out.leftChats,
           ),
-          why: 'done',
         );
       }
       if (s.asked != stage.value.at) {
@@ -509,21 +634,32 @@ class PhoneHistoryCopy {
     }
   }
 
-  // the copy is over: said, kept, and the stream key forgotten
-  Future<void> _over(
-    Map<String, Object?> hist,
-    HistoryCopyStage end, {
-    String why = 'ended',
-  }) async {
+  // the copy is over: kept first, with the ask key, the stream key
+  // forgotten; then the door says it, and the sender goes
+  Future<void> _over(Map<String, Object?> hist, HistoryCopyStage end) async {
     // a stop is a kill: nothing written, the next run makes it again
     if (_stopped) return;
-    final tag = _tag;
-    if (tag != null) door.end(tag, why);
-    _out?.close();
-    _out = null;
     hist['r'] = end.toJson();
+    final ask = _ask;
+    if (ask != null) {
+      hist['q'] = ask;
+      hist['e'] = clock().millisecondsSinceEpoch;
+    }
     await _keep(hist, forget: true);
     stage.value = end;
+    final why = _endWord(end.step);
+    final tag = _tag;
+    try {
+      if (tag != null) {
+        door.end(tag, why);
+      } else if (ask != null) {
+        // over before any door was open (two weeks gone): opened at rest
+        door.rest(ask, why);
+      }
+    } finally {
+      _out?.close();
+      _out = null;
+    }
   }
 
   /// the app goes (or a test kills it): nothing more is served, nothing is
@@ -543,9 +679,15 @@ class PhoneHistoryCopy {
 /// where a linked device keeps how its copy ended, for its screens
 const kHistoryCopyMeta = 'history_copy';
 
+/// how long a linked device goes on asking a phone that never answers:
+/// then it lets the copy go, as the phone does
+const kHistoryDeviceFor = Duration(days: 14);
+
 /// the device's copy: asked for record by record over the phone's onion,
 /// taken in, counted, and the tally sent back. [landed] runs once every
-/// record is in, with the lists the phone held, before the tally goes
+/// record is in, with the lists the phone held, before the tally goes;
+/// [unlanded] once a copy is taken back, with the contacts it made, before
+/// their rows go
 class DeviceHistoryCopy {
   DeviceHistoryCopy({
     required this.db,
@@ -555,10 +697,13 @@ class DeviceHistoryCopy {
     required this.bindHex,
     required this.landed,
     required this.forgetKey,
+    this.unlanded,
     Duration? retry,
     Duration? pause,
+    DateTime Function()? clock,
   }) : retry = retry ?? const Duration(seconds: 5),
-       pause = pause ?? const Duration(minutes: 1);
+       pause = pause ?? const Duration(minutes: 1),
+       clock = clock ?? DateTime.now;
 
   final Database db;
   final String mediaDir;
@@ -567,25 +712,81 @@ class DeviceHistoryCopy {
   final String bindHex;
   final Future<void> Function(List<({String identity, String wire})> lists)
   landed;
+  final Future<void> Function(List<String> haloIds)? unlanded;
 
   /// the link's stream key goes: the copy is over
   final Future<void> Function() forgetKey;
   final Duration retry;
   final Duration pause;
+  final DateTime Function() clock;
 
   final stage = ValueNotifier(const HistoryCopyStage(HistoryCopyStep.making));
   final _sleep = _Sleep();
   bool _stopped = false;
   HistoryImport? _imp;
 
-  // tries in a row the phone could not be reached: further apart, to a minute
+  int get _now => clock().millisecondsSinceEpoch;
+
+  // when the phone last answered, kept so a restart counts on
+  static const _kHeard = 'history_heard';
+  int _heard = 0;
+  int _heardKept = 0;
+
+  Future<void> _loadHeard() async {
+    final r = await db.query(
+      'signal_meta',
+      columns: ['v'],
+      where: 'k = ?',
+      whereArgs: [_kHeard],
+    );
+    final v = r.isEmpty ? null : int.tryParse(r.first['v'] as String? ?? '');
+    if (v != null) {
+      _heard = _heardKept = v;
+      return;
+    }
+    await _keepHeard(_now);
+  }
+
+  Future<void> _keepHeard(int at) async {
+    _heard = _heardKept = at;
+    await db.insert('signal_meta', {
+      'k': _kHeard,
+      'v': '$at',
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  // the phone answered: the wait starts again, kept a minute apart at most
+  Future<void> _answered() async {
+    _misses = 0;
+    final now = _now;
+    _heard = now;
+    if (now - _heardKept >= const Duration(minutes: 1).inMilliseconds) {
+      await _keepHeard(now);
+    }
+  }
+
+  // tries in a row the phone could not be reached: further apart, to a
+  // minute. true once it has not answered for kHistoryDeviceFor
   int _misses = 0;
-  Future<void> _waitPhone({bool show = true}) {
+  Future<bool> _waitPhone({bool show = true}) async {
+    if (_now - _heard > kHistoryDeviceFor.inMilliseconds) return true;
     _misses++;
     if (show) stage.value = stage.value.moved(HistoryCopyStep.waiting);
     final s = retry * (1 << (_misses - 1).clamp(0, 4));
     const most = Duration(minutes: 1);
-    return _sleep.wait(s > most ? most : s);
+    await _sleep.wait(s > most ? most : s);
+    return false;
+  }
+
+  // the phone has no answer for an ask (it could not read its spool):
+  // asked again in a while, and after kHistoryTries in a row a pause
+  int _refusals = 0;
+  Future<void> _refused() async {
+    _refusals++;
+    if (_refusals < kHistoryTries) return _sleep.wait(retry);
+    _refusals = 0;
+    stage.value = stage.value.moved(HistoryCopyStep.paused);
+    await _sleep.wait(pause);
   }
 
   Future<void> _keep(HistoryCopyStage s) async {
@@ -607,16 +808,35 @@ class DeviceHistoryCopy {
     return r.isEmpty ? null : HistoryCopyStage.fromJson(r.first['v']);
   }
 
+  // the copy goes, all of it: the contacts it made are forgotten first,
+  // then every row it made, then the key. nothing more is asked
   Future<void> _end(HistoryCopyStage s) async {
     final imp = _imp;
     _imp = null;
+    final made = await HistoryImport.madeContacts(db);
+    if (made.isNotEmpty) {
+      try {
+        await unlanded?.call(made);
+      } catch (_) {
+        // their rows go all the same
+      }
+    }
     if (imp != null) {
       await imp.discard();
     } else {
       // a copy a kill left: what it put here goes too
       final held = await HistoryImport.reopen(db: db, mediaDir: mediaDir);
-      await held?.discard();
+      if (held != null) {
+        await held.discard();
+      } else {
+        await HistoryImport.discardHeld(db, mediaDir);
+      }
     }
+    await db.delete(
+      'signal_meta',
+      where: 'k IN (?, ?)',
+      whereArgs: [_kOwed, _kHeard],
+    );
     await _keep(s);
     await forgetKey();
   }
@@ -640,6 +860,7 @@ class DeviceHistoryCopy {
   }
 
   Future<void> run() async {
+    await _loadHeard();
     while (!_stopped) {
       final was = await kept(db);
       final owed = await _owed();
@@ -655,14 +876,14 @@ class DeviceHistoryCopy {
       try {
         h = await wire.hello();
       } on HistoryUnreached {
-        await _waitPhone();
+        if (await _waitPhone()) return _end(_late);
         continue;
       } on HistoryRefused {
-        await _waitPhone();
+        if (await _waitPhone()) return _end(_late);
         continue;
       }
       if (_stopped) return;
-      _misses = 0;
+      await _answered();
       switch (h.why) {
         case 'making':
           stage.value = stage.value.moved(HistoryCopyStep.making);
@@ -676,6 +897,8 @@ class DeviceHistoryCopy {
     }
   }
 
+  static const _late = HistoryCopyStage(HistoryCopyStep.failed);
+
   // the tally to the phone. false when the copy is over here (held, or
   // ended), true when the phone made the copy again and it is taken again
   Future<bool> _deliver(Uint8List tally) async {
@@ -684,23 +907,26 @@ class DeviceHistoryCopy {
       try {
         why = await wire.tally(tally);
       } on HistoryUnreached {
-        await _waitPhone(show: false);
+        if (await _waitPhone(show: false)) return _lateEnd();
         continue;
       } on HistoryRefused {
-        await _waitPhone(show: false);
+        if (await _waitPhone(show: false)) return _lateEnd();
         continue;
       }
-      _misses = 0;
+      await _answered();
       final imp = await HistoryImport.reopen(db: db, mediaDir: mediaDir);
       switch (why) {
         case null || 'done':
           await imp?.clear();
-          await db.delete('signal_meta', where: 'k = ?', whereArgs: [_kOwed]);
+          await db.delete(
+            'signal_meta',
+            where: 'k IN (?, ?)',
+            whereArgs: [_kOwed, _kHeard],
+          );
           await forgetKey();
           return false;
         case 'ended':
           imp?.close();
-          await db.delete('signal_meta', where: 'k = ?', whereArgs: [_kOwed]);
           await _end(const HistoryCopyStage(HistoryCopyStep.ended));
           return false;
       }
@@ -715,6 +941,11 @@ class DeviceHistoryCopy {
       stage.value = const HistoryCopyStage(HistoryCopyStep.making);
       return true;
     }
+    return false;
+  }
+
+  Future<bool> _lateEnd() async {
+    await _end(_late);
     return false;
   }
 
@@ -745,6 +976,13 @@ class DeviceHistoryCopy {
       );
     }
 
+    // the phone's app went and came back: a new copy, a new hello
+    bool again() {
+      imp.close();
+      _imp = null;
+      return false;
+    }
+
     show(HistoryCopyStep.copying);
     while (!imp.done) {
       if (_stopped) return true;
@@ -752,25 +990,28 @@ class DeviceHistoryCopy {
       try {
         a = await wire.record(h.gen, imp.next);
       } on HistoryUnreached {
-        await _waitPhone();
+        if (await _waitPhone()) return _lateTake();
         continue;
       } on HistoryRefused {
-        await _waitPhone();
+        if (await _waitPhone()) return _lateTake();
         continue;
       }
       if (_stopped) return true;
-      _misses = 0;
+      await _answered();
       final rec = a.rec;
       if (rec == null) {
-        if (a.why == 'ended') {
-          await _end(const HistoryCopyStage(HistoryCopyStep.ended));
-          return true;
+        switch (a.why) {
+          case 'ended':
+            await _end(const HistoryCopyStage(HistoryCopyStep.ended));
+            return true;
+          case 'other' || 'making' || 'done':
+            return again();
         }
-        // the phone's app went and came back: a new copy, a new hello
-        imp.close();
-        _imp = null;
-        return false;
+        // the phone could not give this record now: asked again later
+        await _refused();
+        continue;
       }
+      _refusals = 0;
       try {
         await imp.take(rec);
       } on HistoryRefused catch (e) {
@@ -787,6 +1028,48 @@ class DeviceHistoryCopy {
       }
       show(HistoryCopyStep.copying);
     }
+    // every record is in: what the phone deleted since it made the copy
+    // goes here too, before anything is counted
+    while (true) {
+      if (_stopped) return true;
+      final ({Uint8List? rows, String? why}) g;
+      try {
+        g = await wire.gone(h.gen, h.id);
+      } on HistoryUnreached {
+        if (await _waitPhone()) return _lateTake();
+        continue;
+      } on HistoryRefused {
+        if (await _waitPhone()) return _lateTake();
+        continue;
+      }
+      if (_stopped) return true;
+      await _answered();
+      final rows = g.rows;
+      if (rows != null) {
+        List<Object?>? list;
+        try {
+          list = jsonDecode(utf8.decode(rows)) as List<Object?>;
+        } catch (_) {
+          list = null;
+        }
+        if (list != null) {
+          await imp.goneSince(list);
+          break;
+        }
+      }
+      switch (g.why) {
+        case 'making':
+          await _sleep.wait(retry);
+          continue;
+        case 'ended':
+          await _end(const HistoryCopyStage(HistoryCopyStep.ended));
+          return true;
+        case 'other' || 'done':
+          return again();
+      }
+      await _refused();
+    }
+    _refusals = 0;
     final res = await imp.finish();
     await landed(await imp.lists());
     final head = imp.head;
@@ -822,6 +1105,11 @@ class DeviceHistoryCopy {
       ),
     );
     return false;
+  }
+
+  Future<bool> _lateTake() async {
+    await _end(_late);
+    return true;
   }
 
   /// the app goes (or a test kills it): the place stays as stored

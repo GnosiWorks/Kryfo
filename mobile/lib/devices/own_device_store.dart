@@ -114,6 +114,16 @@ Future<List<String>> historyCopiesOwed(DatabaseExecutor db) async => [
     r['uid'] as String,
 ];
 
+/// every device with a copy kept, under way or over, for the start
+Future<List<String>> historyCopiesKept(DatabaseExecutor db) async => [
+  for (final r in await db.query(
+    'own_devices',
+    columns: ['uid'],
+    where: 'removed_at IS NULL AND hist IS NOT NULL',
+  ))
+    r['uid'] as String,
+];
+
 /// the copy's place kept; [forget] lets the stream key go, the copy over
 Future<void> keepHistoryCopy(
   DatabaseExecutor db,

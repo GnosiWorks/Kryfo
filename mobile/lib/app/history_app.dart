@@ -9,6 +9,7 @@
 part of '../main.dart';
 
 final _phoneCopies = <String, PhoneHistoryCopy>{};
+final _phoneRuns = HistoryCopyRuns();
 DeviceHistoryCopy? _deviceCopy;
 
 /// the copy the home card and the copy page show: the device's own on a
@@ -101,31 +102,34 @@ Future<void> historyCopyOpened() async {
 /// the phone's copy for the device [uid] it just kept, or that a start
 /// finds under way
 void startPhoneHistoryCopy(String uid) {
-  if (!_copiesHere || _phoneCopies.containsKey(uid)) return;
-  unawaited(() async {
-    final db = await live.open();
-    final c = PhoneHistoryCopy(
-      db: db,
-      uid: uid,
-      door: EngineHistoryDoor(),
-      make: _makeHistory,
-    );
-    _phoneCopies[uid] = c;
-    _showCopy(c.stage);
-    try {
-      // a new copy, not yet seen
-      await db.delete(
-        'signal_meta',
-        where: 'k = ?',
-        whereArgs: [_kHistoryCopySeenMeta],
+  if (!_copiesHere) return;
+  // taken before any await: a second start for the device waits for none
+  unawaited(
+    _phoneRuns.start(uid, () async {
+      final db = await live.open();
+      final c = PhoneHistoryCopy(
+        db: db,
+        uid: uid,
+        door: EngineHistoryDoor(),
+        make: _makeHistory,
       );
-      await c.run();
-    } catch (e) {
-      dlog('history: the phone\'s copy stopped (${e.runtimeType})');
-    } finally {
-      if (_phoneCopies[uid] == c) _phoneCopies.remove(uid);
-    }
-  }());
+      _phoneCopies[uid] = c;
+      _showCopy(c.stage);
+      try {
+        // a new copy, not yet seen
+        await db.delete(
+          'signal_meta',
+          where: 'k = ?',
+          whereArgs: [_kHistoryCopySeenMeta],
+        );
+        await c.run();
+      } catch (e) {
+        dlog('history: the phone\'s copy stopped (${e.runtimeType})');
+      } finally {
+        if (_phoneCopies[uid] == c) _phoneCopies.remove(uid);
+      }
+    }),
+  );
 }
 
 /// a linked device takes its copy in, from where it was
@@ -149,6 +153,7 @@ void startDeviceHistoryCopy() {
       identityHex: place.identity,
       bindHex: place.bind,
       landed: (lists) => _copyLanded(db, lists),
+      unlanded: _copyTakenBack,
       forgetKey: () => forgetLinkStream(db),
     );
     _showCopy(c.stage);
@@ -185,12 +190,26 @@ Future<void> _copyLanded(
       }
     }
   }
+  // the proofs the copy brought count once their contact's list is held
+  if (ds != null && lists.isNotEmpty) await bootDevices();
   try {
     await deviceReceive?.listenAll();
   } catch (e) {
     dlog('history: listens wait (${e.runtimeType})');
   }
   await appState.applyEarlyCopied();
+}
+
+// a copy taken back: the contacts it made are forgotten by the device
+// state (their lists, proofs, listens) before their rows go
+Future<void> _copyTakenBack(List<String> haloIds) async {
+  for (final id in haloIds) {
+    try {
+      await _devForget(id);
+    } catch (e) {
+      dlog('history: a contact not forgotten (${e.runtimeType})');
+    }
+  }
 }
 
 /// at every start: the copies still under way go on
@@ -202,7 +221,10 @@ void resumeHistoryCopies() {
   }
   unawaited(() async {
     try {
-      for (final uid in await historyCopiesOwed(await live.open())) {
+      final db = await live.open();
+      // the copies over answer how they ended to a device away meanwhile
+      await PhoneHistoryCopy.restAll(db, EngineHistoryDoor());
+      for (final uid in await historyCopiesOwed(db)) {
         startPhoneHistoryCopy(uid);
       }
     } catch (e) {

@@ -4,6 +4,7 @@
 // place, so a cut at any record resumes without losing or doubling a row.
 // at the end every chat is counted again and compared with what the phone
 // signed; a difference is shown, never passed over
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -79,6 +80,14 @@ Future<void> historyTables(DatabaseExecutor t) async {
     'n INTEGER NOT NULL, name TEXT NOT NULL, size INTEGER NOT NULL, '
     'ok INTEGER NOT NULL DEFAULT 0)',
   );
+  // every row the copy made beside the messages (a contact, a group, a
+  // member, a gone row, a proof), and a key-only contact it filled with
+  // the row it had before: a discard takes them back
+  await t.execute(
+    'CREATE TABLE IF NOT EXISTS history_made (t TEXT NOT NULL, '
+    "a TEXT NOT NULL, b TEXT NOT NULL DEFAULT '', was TEXT, "
+    'PRIMARY KEY (t, a, b))',
+  );
 }
 
 const _kTables = [
@@ -88,7 +97,58 @@ const _kTables = [
   'history_gone',
   'history_lists',
   'history_files',
+  'history_made',
 ];
+
+// what history_made names
+const _madeContact = 'contact';
+const _madeFilled = 'filled';
+const _madeGroup = 'group';
+const _madeMember = 'member';
+const _madeGone = 'gone';
+const _madeProven = 'proven';
+const _madePq = 'pq';
+
+Future<void> _made(
+  DatabaseExecutor t,
+  String kind,
+  String a, [
+  String b = '',
+  String? was,
+]) => t.insert('history_made', {
+  't': kind,
+  'a': a,
+  'b': b,
+  'was': was,
+}, conflictAlgorithm: ConflictAlgorithm.ignore);
+
+Future<bool> _exists(
+  DatabaseExecutor t,
+  String table,
+  String where,
+  List<Object?> args,
+) async => (await t.query(
+  table,
+  columns: ['1'],
+  where: where,
+  whereArgs: args,
+  limit: 1,
+)).isNotEmpty;
+
+// a row's values as json, bytes as base64, and back
+String _rowJson(Map<String, Object?> r) => jsonEncode({
+  for (final e in r.entries)
+    e.key: e.value is List<int>
+        ? {'b': base64Encode(e.value! as List<int>)}
+        : e.value,
+});
+
+Map<String, Object?> _rowOf(String j) => {
+  for (final e in (jsonDecode(j) as Map).entries)
+    e.key as String: e.value is Map
+        ? base64Decode((e.value as Map)['b'] as String)
+        : e.value,
+};
 
 /// a chat that came as its row alone, and why
 class HistoryStay {
@@ -499,11 +559,18 @@ class HistoryImport {
       // a group that stays on the phone comes with its name alone
       g['name'] ??= '';
       g['created_at'] ??= 0;
-      await t.insert('groups', g, conflictAlgorithm: ConflictAlgorithm.ignore);
+      if (!await _exists(t, 'groups', 'group_id = ?', [id])) {
+        await t.insert('groups', g);
+        await _made(t, _madeGroup, id);
+      }
       // members and senders as keys only, never over a contact already here
       for (final c in (meta['people'] as List? ?? const [])) {
         final m = (c as Map).cast<String, dynamic>();
         final now = (m['first_seen'] as num?)?.toInt() ?? 0;
+        final who = m['halo_id'];
+        if (who is! String) continue;
+        if (await _exists(t, 'contacts', 'halo_id = ?', [who])) continue;
+        await _made(t, _madeContact, who);
         await t.insert('contacts', {
           'halo_id': m['halo_id'],
           'onion': m['onion'] ?? '',
@@ -513,15 +580,24 @@ class HistoryImport {
           'back_paired': m['back_paired'] ?? 0,
           'blocked': m['blocked'] ?? 0,
           'accepted': 0,
-        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+        });
       }
       for (final m in (meta['members'] as List? ?? const [])) {
         final x = (m as Map).cast<String, dynamic>();
+        final who = x['halo_id'];
+        if (who is! String) continue;
+        if (await _exists(t, 'group_members', 'group_id = ? AND halo_id = ?', [
+          id,
+          who,
+        ])) {
+          continue;
+        }
         await t.insert('group_members', {
           'group_id': id,
-          'halo_id': x['halo_id'],
+          'halo_id': who,
           'joined_at': x['joined_at'] ?? 0,
-        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+        });
+        await _made(t, _madeMember, id, who);
       }
     } else {
       final c = _pick(row, kHistoryContactCols, await _colsOf(t, 'contacts'))
@@ -539,7 +615,16 @@ class HistoryImport {
       );
       if (was.isEmpty) {
         await t.insert('contacts', c);
+        await _made(t, _madeContact, id);
       } else if (was.first['accepted'] == 0 && c['accepted'] == 1) {
+        // the key-only row as it was, for a discard
+        final old = await t.query(
+          'contacts',
+          columns: c.keys.toList(),
+          where: 'halo_id = ?',
+          whereArgs: [id],
+        );
+        await _made(t, _madeFilled, id, '', _rowJson(old.first));
         await t.update('contacts', c, where: 'halo_id = ?', whereArgs: [id]);
       }
     }
@@ -561,44 +646,32 @@ class HistoryImport {
     int n,
     Map<String, dynamic> meta,
   ) async {
-    final fts = await _hasFts(t);
     for (final g in (meta['gone'] as List? ?? const [])) {
-      if (g is! List || g.length != 3) continue;
-      final uid = g[0], key = g[1], at = g[2];
-      if (uid is! String || key is! String || at is! int) continue;
-      await t.rawInsert(
-        'INSERT INTO gone_in (msg_uid, peer_id, at) VALUES (?, ?, ?) '
-        'ON CONFLICT (msg_uid, peer_id) DO UPDATE SET at = excluded.at '
-        'WHERE excluded.at > gone_in.at',
-        [uid, key, at],
-      );
-      final grp = key.startsWith('group:')
-          ? key.substring(6, key.lastIndexOf(':'))
-          : null;
-      final sender = grp == null
-          ? key
-          : key.substring(key.lastIndexOf(':') + 1);
-      for (final r in await t.query(
-        'messages',
-        columns: ['id', 'media_path', 'file_path'],
-        where: grp == null
-            ? "msg_uid = ? AND peer_id = ? AND group_id IS NULL AND direction = 'in'"
-            : "msg_uid = ? AND peer_id = ? AND group_id = ? AND direction = 'in'",
-        whereArgs: grp == null ? [uid, sender] : [uid, sender, grp],
-      )) {
-        final id = r['id'] as int;
-        if (fts) {
-          await t.delete('msg_fts', where: 'rowid = ?', whereArgs: [id]);
-        }
-        await t.delete('messages', where: 'id = ?', whereArgs: [id]);
-        for (final c in const ['media_path', 'file_path']) {
-          final v = r[c];
-          if (v is String && v.isNotEmpty && p.isWithin(_media, v)) {
-            _goneFiles.add(v);
-          }
-        }
+      await _goneRow(t, g);
+    }
+    // what the phone's engine learnt of a contact: the keys their messages
+    // came under, and a post-quantum session seen (never classic again)
+    final dev = await _hasDev(t);
+    for (final x in (meta['proven'] as List? ?? const [])) {
+      if (!dev || x is! List || x.length != 2) continue;
+      final peer = x[0], key = x[1];
+      if (peer is! String || key is! String) continue;
+      if (await _exists(t, 'dev_proven', 'ident = 0 AND peer = ? AND key = ?', [
+        peer,
+        key,
+      ])) {
+        continue;
       }
-      await t.delete('reactions', where: 'msg_uid = ?', whereArgs: [uid]);
+      await t.insert('dev_proven', {'ident': 0, 'peer': peer, 'key': key});
+      await _made(t, _madeProven, peer, key);
+    }
+    for (final peer in (meta['pq'] as List? ?? const [])) {
+      if (!dev || peer is! String) continue;
+      if (await _exists(t, 'dev_pq', 'ident = 0 AND peer = ?', [peer])) {
+        continue;
+      }
+      await t.insert('dev_pq', {'ident': 0, 'peer': peer});
+      await _made(t, _madePq, peer);
     }
     for (final l in (meta['lists'] as List? ?? const [])) {
       if (l is! List || l.length != 2) continue;
@@ -619,6 +692,105 @@ class HistoryImport {
 
   // files of messages the phone deleted, gone from disk once their rows went
   final _goneFiles = <String>[];
+
+  bool? _dev;
+  Future<bool> _hasDev(DatabaseExecutor t) async => _dev ??= (await t.rawQuery(
+    "SELECT 1 FROM sqlite_master WHERE name = 'dev_proven'",
+  )).isNotEmpty;
+
+  // one gone row of the phone's [uid, key, at]: noted gone here, and every
+  // incoming row of it in its chat goes, the copy's own too. a copy row
+  // that goes counts as come, as one deleted here before does, and a file
+  // of the copy it had counts as come too
+  Future<void> _goneRow(Transaction t, Object? g) async {
+    if (g is! List || g.length != 3) return;
+    final uid = g[0], key = g[1], at = g[2];
+    if (uid is! String || key is! String || at is! int) return;
+    if (!await _exists(t, 'gone_in', 'msg_uid = ? AND peer_id = ?', [
+      uid,
+      key,
+    ])) {
+      await _made(t, _madeGone, uid, key);
+    }
+    await t.rawInsert(
+      'INSERT INTO gone_in (msg_uid, peer_id, at) VALUES (?, ?, ?) '
+      'ON CONFLICT (msg_uid, peer_id) DO UPDATE SET at = excluded.at '
+      'WHERE excluded.at > gone_in.at',
+      [uid, key, at],
+    );
+    final grp = key.startsWith('group:')
+        ? key.substring(6, key.lastIndexOf(':'))
+        : null;
+    final sender = grp == null ? key : key.substring(key.lastIndexOf(':') + 1);
+    final fts = await _hasFts(t);
+    for (final r in await t.query(
+      'messages',
+      columns: ['id', 'media_path', 'file_path'],
+      where: grp == null
+          ? "msg_uid = ? AND peer_id = ? AND group_id IS NULL AND direction = 'in'"
+          : "msg_uid = ? AND peer_id = ? AND group_id = ? AND direction = 'in'",
+      whereArgs: grp == null ? [uid, sender] : [uid, sender, grp],
+    )) {
+      final id = r['id'] as int;
+      final hr = await t.query(
+        'history_rows',
+        columns: ['n'],
+        where: 'msg_id = ?',
+        whereArgs: [id],
+      );
+      if (hr.isNotEmpty) {
+        await t.delete('history_rows', where: 'msg_id = ?', whereArgs: [id]);
+        await t.rawInsert(
+          'INSERT INTO history_gone (n, c) VALUES (?, 1) '
+          'ON CONFLICT (n) DO UPDATE SET c = c + 1',
+          [hr.first['n']],
+        );
+      }
+      if (fts) {
+        await t.delete('msg_fts', where: 'rowid = ?', whereArgs: [id]);
+      }
+      await t.delete('messages', where: 'id = ?', whereArgs: [id]);
+      for (final c in const ['media_path', 'file_path']) {
+        final v = r[c];
+        if (v is! String || v.isEmpty || !p.isWithin(_media, v)) continue;
+        _goneFiles.add(v);
+        for (final f in _files.entries) {
+          if (_final(f.value.name) == v && f.value.ok != _fileHere) {
+            await _fileOk(t, f.key, _fileHere);
+          }
+        }
+      }
+    }
+    await t.delete('reactions', where: 'msg_uid = ?', whereArgs: [uid]);
+  }
+
+  /// what the phone deleted since it made the copy, once every record is
+  /// in: taken as the copy's own gone rows are, for the copy's chats alone
+  Future<void> goneSince(List<Object?> rows) async {
+    if (_stopped) throw const HistoryRefused('open it again');
+    final peers = {
+      for (final c in _chats.values)
+        if (!c.group && c.id.isNotEmpty) c.id,
+    };
+    final groups = {
+      for (final c in _chats.values)
+        if (c.group) c.id,
+    };
+    await _db.transaction((t) async {
+      for (final g in rows) {
+        if (g is! List || g.length != 3 || g[1] is! String) continue;
+        final key = g[1] as String;
+        final grp = key.startsWith('group:') && key.lastIndexOf(':') > 6
+            ? key.substring(6, key.lastIndexOf(':'))
+            : null;
+        if (grp == null ? !peers.contains(key) : !groups.contains(grp)) {
+          continue;
+        }
+        await _goneRow(t, g);
+      }
+    });
+    await _dropGoneFiles();
+  }
 
   /// the lists of contacts the phone held, for the engine to take as a
   /// first list (identity hex, wire base64)
@@ -942,6 +1114,26 @@ class HistoryImport {
 
   void close() => _r.close();
 
+  /// the contacts the copy made or filled, for their lists and listens to
+  /// go before a discard takes their rows
+  static Future<List<String>> madeContacts(Database db) async {
+    await historyTables(db);
+    return [
+      for (final r in await db.query(
+        'history_made',
+        columns: ['a'],
+        where: 't IN (?, ?)',
+        whereArgs: [_madeContact, _madeFilled],
+        orderBy: 'a',
+      ))
+        r['a'] as String,
+    ];
+  }
+
+  /// what a copy left with no place held takes back too
+  static Future<void> discardHeld(Database db, String mediaDir) =>
+      _discard(db, mediaDir);
+
   static Future<void> _discard(Database db, String mediaDir) async {
     await historyTables(db);
     final files = await db.query('history_files');
@@ -962,6 +1154,76 @@ class HistoryImport {
         );
       }
       await t.execute('DELETE FROM messages WHERE id IN $made');
+      // the rest it made, a contact's lists and proofs with it
+      final dev = (await t.rawQuery(
+        "SELECT 1 FROM sqlite_master WHERE name = 'dev_lists'",
+      )).isNotEmpty;
+      for (final r in await t.query('history_made')) {
+        final a = r['a'] as String, b = r['b'] as String;
+        switch (r['t']) {
+          case _madeContact:
+            final c = await t.query(
+              'contacts',
+              columns: ['ikey'],
+              where: 'halo_id = ?',
+              whereArgs: [a],
+            );
+            final ikey = c.isEmpty ? null : c.first['ikey'];
+            if (dev && ikey is String) {
+              for (final table in const ['dev_lists', 'dev_proven']) {
+                await t.delete(
+                  table,
+                  where: table == 'dev_lists'
+                      ? 'ident = 0 AND owner = ?'
+                      : 'ident = 0 AND peer = ?',
+                  whereArgs: [ikey],
+                );
+              }
+              await t.delete(
+                'dev_pq',
+                where: 'ident = 0 AND peer = ?',
+                whereArgs: [ikey],
+              );
+            }
+            await t.delete('contacts', where: 'halo_id = ?', whereArgs: [a]);
+          case _madeFilled:
+            final was = r['was'];
+            if (was is String) {
+              await t.update(
+                'contacts',
+                _rowOf(was),
+                where: 'halo_id = ?',
+                whereArgs: [a],
+              );
+            }
+          case _madeGroup:
+            await t.delete('groups', where: 'group_id = ?', whereArgs: [a]);
+          case _madeMember:
+            await t.delete(
+              'group_members',
+              where: 'group_id = ? AND halo_id = ?',
+              whereArgs: [a, b],
+            );
+          case _madeGone:
+            await t.delete(
+              'gone_in',
+              where: 'msg_uid = ? AND peer_id = ?',
+              whereArgs: [a, b],
+            );
+          case _madeProven when dev:
+            await t.delete(
+              'dev_proven',
+              where: 'ident = 0 AND peer = ? AND key = ?',
+              whereArgs: [a, b],
+            );
+          case _madePq when dev:
+            await t.delete(
+              'dev_pq',
+              where: 'ident = 0 AND peer = ?',
+              whereArgs: [a],
+            );
+        }
+      }
       for (final table in _kTables) {
         await t.execute('DROP TABLE IF EXISTS $table');
       }

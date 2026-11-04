@@ -18,6 +18,7 @@ import 'package:kryfo/devices/device_store.dart';
 import 'package:kryfo/devices/history_export.dart';
 import 'package:kryfo/devices/history_ffi.dart';
 import 'package:kryfo/devices/history_link.dart';
+import 'package:kryfo/devices/history_import.dart' show kHistoryTries;
 import 'package:kryfo/devices/history_open.dart';
 import 'package:kryfo/devices/own_device_store.dart';
 import 'package:kryfo/devices/own_devices.dart' show DeviceKind;
@@ -159,6 +160,15 @@ Future<_Phone> _phone({String choice = 'all'}) async {
     'version': 3,
     'wire': Uint8List.fromList(utf8.encode('ana list v3')),
   });
+  // what its engine learnt of ana: a key her messages came under, and a
+  // post-quantum session. a contact not in the copy keeps theirs here
+  await db.insert('dev_proven', {
+    'ident': 0,
+    'peer': _anaKey,
+    'key': '05${'ab' * 32}',
+  });
+  await db.insert('dev_pq', {'ident': 0, 'peer': _anaKey});
+  await db.insert('dev_pq', {'ident': 0, 'peer': '05${'ee' * 32}'});
   ph.sent = 44;
   await addOwnDevice(
     db,
@@ -205,12 +215,36 @@ class _Serve {
   String why = 'making';
   int asked = 0;
   Uint8List? tally;
+  bool goneAsked = false;
+  Uint8List? gone;
 }
 
 class _Door implements HistoryDoor {
   final serves = <String, _Serve>{};
   PhoneHistoryCopy? phone;
   final gens = <int>[];
+  final rests = <String>[];
+  // a kill between the result kept and the door told
+  bool endThrows = false;
+
+  @override
+  ({String tag, String askHex}) ask(String keyHex, String bindHex) =>
+      (tag: 't', askHex: 'ask:$keyHex');
+
+  @override
+  String rest(String askHex, String why) {
+    expect(askHex, startsWith('ask:'));
+    rests.add(why);
+    serves['t'] = _Serve(-1, '')..why = why;
+    return 't';
+  }
+
+  @override
+  void gone(String tag, Uint8List rows) {
+    final s = serves[tag]!;
+    if (s.gone != null) throw const HistoryRefused('sealed once');
+    s.gone = rows;
+  }
 
   @override
   ({String tag, String keyHex}) open(String keyHex, String bindHex, int gen) {
@@ -227,12 +261,18 @@ class _Door implements HistoryDoor {
   void serve(String tag, int handle, int gen) => serves[tag]!.why = '';
 
   @override
-  void end(String tag, String why) => serves[tag]?.why = why;
+  void end(String tag, String why) {
+    if (endThrows) {
+      endThrows = false;
+      throw StateError('killed');
+    }
+    serves[tag]?.why = why;
+  }
 
   @override
-  ({String why, int asked, Uint8List? tally}) state(String tag) {
+  ({String why, int asked, Uint8List? tally, bool gone}) state(String tag) {
     final s = serves[tag]!;
-    return (why: s.why, asked: s.asked, tally: s.tally);
+    return (why: s.why, asked: s.asked, tally: s.tally, gone: s.goneAsked);
   }
 
   @override
@@ -245,7 +285,12 @@ class _Wire implements HistoryWire {
   bool up = true;
   // runs before record i goes: a kill, a change on the device
   FutureOr<void> Function(int i)? before;
+  // an answer of its own for record i instead of the record
+  String? Function(int i)? instead;
+  // runs before the gone rows are asked for
+  FutureOr<void> Function()? beforeGone;
   final asked = <int>[];
+  int hellos = 0;
 
   _Serve _s() {
     final s = door.serves['t'];
@@ -256,6 +301,7 @@ class _Wire implements HistoryWire {
 
   @override
   Future<HistoryHello> hello() async {
+    hellos++;
     final s = _s();
     if (s.why != '') return HistoryHello(why: s.why);
     return HistoryHello(
@@ -274,6 +320,7 @@ class _Wire implements HistoryWire {
     s = _s();
     if (s.why != '') return (rec: null, why: s.why);
     if (gen != s.gen) return (rec: null, why: 'other');
+    if (instead?.call(i) case final why?) return (rec: null, why: why);
     final out = door.phone?.outgoing;
     if (out == null) return (rec: null, why: 'ended');
     if (i + 1 > s.asked) s.asked = i + 1;
@@ -283,6 +330,20 @@ class _Wire implements HistoryWire {
     } on HistoryRefused {
       return (rec: null, why: 'ended');
     }
+  }
+
+  @override
+  Future<({Uint8List? rows, String? why})> gone(int gen, String id) async {
+    await beforeGone?.call();
+    final s = _s();
+    if (s.why != '') return (rows: null, why: s.why);
+    if (gen != s.gen) return (rows: null, why: 'other');
+    final g = s.gone;
+    if (g == null) {
+      s.goneAsked = true;
+      return (rows: null, why: 'making');
+    }
+    return (rows: g, why: null);
   }
 
   @override
@@ -313,12 +374,16 @@ class _World {
   Future<void>? phoneRun;
   Future<void>? deviceRun;
   HaloContainer container = HaloContainer.everyday;
+  DateTime Function()? clock;
+  final takenBack = <String>[];
+  HistoryWire? wireOver;
 
   void startPhone() {
     final c = phone = PhoneHistoryCopy(
       db: ph.db,
       uid: _uid,
       door: door,
+      clock: clock,
       poll: const Duration(milliseconds: 5),
       make:
           ({
@@ -349,7 +414,7 @@ class _World {
     final c = device = DeviceHistoryCopy(
       db: d.db,
       mediaDir: d.media,
-      wire: wire,
+      wire: wireOver ?? wire,
       identityHex: _identity,
       bindHex: _hex(ph.bind),
       retry: const Duration(milliseconds: 5),
@@ -360,7 +425,9 @@ class _World {
           ..addAll(lists);
         d.landed++;
       },
+      unlanded: (ids) async => takenBack.addAll(ids),
       forgetKey: () => forgetLinkStream(d.db),
+      clock: clock,
     );
     deviceRun = c.run();
   }
@@ -458,6 +525,12 @@ void main() {
     expect(d.lists, [
       (identity: _anaKey, wire: base64Encode(utf8.encode('ana list v3'))),
     ]);
+    expect(await d.db.query('dev_proven', columns: ['peer', 'key']), [
+      {'peer': _anaKey, 'key': '05${'ab' * 32}'},
+    ]);
+    expect(await d.db.query('dev_pq', columns: ['peer']), [
+      {'peer': _anaKey},
+    ]);
     expect(
       await _count(
         d.db,
@@ -495,6 +568,9 @@ void main() {
     await again.phoneRun;
     expect(again.phone!.stage.value.step, HistoryCopyStep.whole);
     expect(again.door.gens, isEmpty);
+    // its door answers "done" from the kept ask key alone
+    expect(again.door.rests, ['done']);
+    expect(row.hist['q'], startsWith('ask:'));
   }, skip: skip);
 
   test('the device killed at every few records goes on where it was', () async {
@@ -651,6 +727,12 @@ void main() {
       expect(w.phone!.stage.value.step, HistoryCopyStep.ended);
       expect(w.device!.stage.value.step, HistoryCopyStep.ended);
       expect(await _count(d.db, 'SELECT COUNT(*) FROM messages'), 0);
+      // every row the copy made went with it: the contacts and the group
+      // that had come, their members, none of it is left
+      expect(w.takenBack, isNotEmpty);
+      for (final t in ['contacts', 'groups', 'group_members', 'gone_in']) {
+        expect(await _count(d.db, 'SELECT COUNT(*) FROM $t'), 0, reason: t);
+      }
       expect(
         (await d.db.query(
           'signal_meta',
@@ -668,10 +750,25 @@ void main() {
   test('no history brings the chats and contacts alone', () async {
     final ph = await _phone(choice: 'none');
     final d = await _device(ph);
+    // ana's message the phone deleted came here live: it goes here too
+    await d.db.insert('messages', {
+      'peer_id': _ana,
+      'direction': 'in',
+      'plaintext': 'deleted on the phone',
+      'sent_at': ph.now,
+      'msg_uid': 'gone-1',
+    });
     final w = _World(ph, d)
       ..startPhone()
       ..startDevice();
     await w.settle();
+    expect(
+      await _count(
+        d.db,
+        "SELECT COUNT(*) FROM gone_in WHERE msg_uid = 'gone-1'",
+      ),
+      1,
+    );
     expect(w.device!.stage.value.step, HistoryCopyStep.whole);
     expect(w.device!.stage.value.rowsOnly, isTrue);
     expect(await _count(d.db, 'SELECT COUNT(*) FROM messages'), 0);
@@ -773,9 +870,241 @@ void main() {
       expect(made, 1);
       expect(late.stage.value.step, HistoryCopyStep.failed);
       expect((await historyCopyOf(ph.db, _uid))!.stream, isNull);
+      // no door was open: the device hears "ended" from the kept ask key
+      expect(door.rests, ['ended']);
+      expect(door.serves['t']!.why, 'ended');
     },
     skip: skip,
   );
+
+  test('a copy the phone ended while the device was away ends there too, '
+      'after the phone app came back', () async {
+    final ph = await _phone();
+    final d = await _device(ph);
+    var now = DateTime.fromMillisecondsSinceEpoch(ph.now);
+    final w = _World(ph, d)..clock = (() => now);
+    w.startPhone();
+    var away = false;
+    w.wire.before = (i) {
+      if (i == 10 && !away) {
+        away = true;
+        // the laptop shuts, then a chat is hidden on the phone
+        w.wire.up = false;
+        endHistoryCopies();
+      }
+    };
+    w.startDevice();
+    while (w.phone!.stage.value.step != HistoryCopyStep.ended) {
+      await Future<void>.delayed(const Duration(milliseconds: 2));
+    }
+    await w.phoneRun;
+    // the phone's app goes and comes back: its door held nothing then
+    w.phone!.stop();
+    w.door.serves.clear();
+    await PhoneHistoryCopy.restAll(ph.db, w.door, clock: () => now);
+    expect(w.door.rests, ['ended']);
+    w.wire.up = true;
+    await w.deviceRun;
+    expect(w.device!.stage.value.step, HistoryCopyStep.ended);
+    expect(await _count(d.db, 'SELECT COUNT(*) FROM messages'), 0);
+    expect(await _count(d.db, 'SELECT COUNT(*) FROM contacts'), 0);
+    expect(await linkStreamOf(d.db), isNull);
+    // a month on, the phone lets the ask key go
+    now = now.add(const Duration(days: 31));
+    await PhoneHistoryCopy.restAll(ph.db, w.door, clock: () => now);
+    expect(w.door.rests, ['ended']);
+    expect((await historyCopyOf(ph.db, _uid))!.hist.containsKey('q'), isFalse);
+  }, skip: skip);
+
+  test('a device whose phone never answers again lets its copy go after '
+      'two weeks', () async {
+    final ph = await _phone();
+    final d = await _device(ph);
+    var now = DateTime.fromMillisecondsSinceEpoch(ph.now);
+    final w = _World(ph, d)..clock = (() => now);
+    w.startPhone();
+    w.wire.before = (i) {
+      if (i == 8) {
+        // the phone is gone for good
+        w.wire.up = false;
+        now = now.add(const Duration(days: 15));
+      }
+    };
+    w.startDevice();
+    await w.deviceRun!.timeout(const Duration(seconds: 20));
+    expect(w.device!.stage.value.step, HistoryCopyStep.failed);
+    expect(await _count(d.db, 'SELECT COUNT(*) FROM messages'), 0);
+    expect(await _count(d.db, 'SELECT COUNT(*) FROM contacts'), 0);
+    expect(await linkStreamOf(d.db), isNull);
+    expect(
+      await d.db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE name LIKE 'history_%'",
+      ),
+      isEmpty,
+    );
+    w.phone!.stop();
+    await w.phoneRun;
+  }, skip: skip);
+
+  test('a copy ended after it landed takes back every row it made', () async {
+    final ph = await _phone();
+    final d = await _device(ph);
+    final w = _World(ph, d)..startPhone();
+    // a chat is hidden on the phone while the tally is on its way
+    w.wireOver = _CutTally(w.wire, endHistoryCopies);
+    w.startDevice();
+    await w.settle();
+    expect(d.landed, 1);
+    expect(w.phone!.stage.value.step, HistoryCopyStep.ended);
+    expect(w.device!.stage.value.step, HistoryCopyStep.ended);
+    expect(w.takenBack, containsAll([_ana, _ben]));
+    for (final t in [
+      'messages',
+      'contacts',
+      'groups',
+      'group_members',
+      'gone_in',
+      'dev_proven',
+      'dev_pq',
+    ]) {
+      expect(await _count(d.db, 'SELECT COUNT(*) FROM $t'), 0, reason: t);
+    }
+    expect(
+      Directory(d.media).listSync(recursive: true).whereType<File>(),
+      isEmpty,
+    );
+  }, skip: skip);
+
+  test('what the phone deleted while the copy ran goes on the device too, '
+      'and the copy stays whole', () async {
+    final ph = await _phone();
+    final d = await _device(ph);
+    final w = _World(ph, d)..startPhone();
+    Future<String> uidOf(String text) async =>
+        (await ph.db.query(
+              'messages',
+              columns: ['msg_uid'],
+              where: 'plaintext = ?',
+              whereArgs: [text],
+            )).first['msg_uid']
+            as String;
+    final gone = {
+      await uidOf('ana says 4'): _ana,
+      await uidOf('a photo'): _ana,
+      await uidOf('group hello'): 'group:$_group:$_ana',
+      await uidOf('hidden one to one'): _hid,
+    };
+    var deleted = false;
+    w.wire.before = (i) async {
+      if (i != 5 || deleted) return;
+      deleted = true;
+      // the copy is made: ana unsends on the phone alone
+      for (final e in gone.entries) {
+        await ph.db.insert('gone_in', {
+          'msg_uid': e.key,
+          'peer_id': e.value,
+          'at': ph.now + 1,
+        });
+        await ph.db.delete(
+          'messages',
+          where: 'msg_uid = ?',
+          whereArgs: [e.key],
+        );
+      }
+    };
+    w.startDevice();
+    await w.settle();
+    expect(w.phone!.stage.value.step, HistoryCopyStep.whole);
+    expect(w.device!.stage.value.step, HistoryCopyStep.whole);
+    expect(await _count(d.db, 'SELECT COUNT(*) FROM messages'), ph.sent - 3);
+    for (final u in gone.keys) {
+      expect(
+        await _count(d.db, 'SELECT COUNT(*) FROM messages WHERE msg_uid = ?', [
+          u,
+        ]),
+        0,
+      );
+    }
+    // noted gone for the chats that came, never for the hidden one
+    expect(
+      await _count(
+        d.db,
+        'SELECT COUNT(*) FROM gone_in WHERE msg_uid IN (?, ?, ?, ?)',
+        gone.keys.toList(),
+      ),
+      3,
+    );
+    expect(File(p.join(d.media, 'p1.jpg')).existsSync(), isFalse);
+    expect(File(p.join(d.media, 'v1.mp4')).existsSync(), isTrue);
+  }, skip: skip);
+
+  test('a record the phone cannot give now is asked again later, with no '
+      'new hello, and pauses after many', () async {
+    final ph = await _phone();
+    final d = await _device(ph);
+    final w = _World(ph, d)..startPhone();
+    var nones = 0;
+    w.wire.instead = (i) =>
+        i == 6 && nones++ < kHistoryTries + 2 ? 'none' : null;
+    final steps = <HistoryCopyStep>[];
+    while (w.phone!.stage.value.step == HistoryCopyStep.making) {
+      await Future<void>.delayed(const Duration(milliseconds: 2));
+    }
+    w.startDevice();
+    w.device!.stage.addListener(() => steps.add(w.device!.stage.value.step));
+    await w.settle();
+    expect(w.device!.stage.value.step, HistoryCopyStep.whole);
+    expect(w.wire.hellos, 1);
+    expect(steps, contains(HistoryCopyStep.paused));
+    expect(await _count(d.db, 'SELECT COUNT(*) FROM messages'), ph.sent);
+  }, skip: skip);
+
+  test('the phone keeps how a copy ended before its door says it', () async {
+    final ph = await _phone();
+    final d = await _device(ph);
+    final w = _World(ph, d)..startPhone();
+    // killed between the two: the door never heard
+    w.door.endThrows = true;
+    final ran = w.phoneRun!.then<Object?>(
+      (_) => null,
+      onError: (Object e) => e,
+    );
+    w.startDevice();
+    final err = await ran;
+    expect(err, isA<StateError>());
+    final row = await historyCopyOf(ph.db, _uid);
+    expect(
+      HistoryCopyStage.fromJson(row!.hist['r'])!.step,
+      HistoryCopyStep.whole,
+    );
+    expect(row.stream, isNull);
+    // the next start makes nothing and answers "done"
+    final again = _World(ph, d)..startPhone();
+    await again.phoneRun;
+    expect(again.door.gens, isEmpty);
+    expect(again.door.rests, ['done']);
+    await w.deviceRun;
+  }, skip: skip);
+
+  test('two starts for one device run one copy', () async {
+    final runs = HistoryCopyRuns();
+    var n = 0;
+    final go = Completer<void>();
+    Future<void> run() async {
+      n++;
+      await go.future;
+    }
+
+    final a = runs.start(_uid, run);
+    final b = runs.start(_uid, run);
+    expect(runs.running(_uid), isTrue);
+    go.complete();
+    await Future.wait([a, b]);
+    expect(n, 1);
+    expect(runs.running(_uid), isFalse);
+    await runs.start(_uid, run);
+    expect(n, 2);
+  });
 
   test('a stage keeps what it showed across a restart', () {
     final s = HistoryCopyStage(
@@ -852,6 +1181,9 @@ class _CutTally implements HistoryWire {
   @override
   Future<({Uint8List? rec, String? why})> record(int gen, int i) =>
       w.record(gen, i);
+  @override
+  Future<({Uint8List? rows, String? why})> gone(int gen, String id) =>
+      w.gone(gen, id);
   @override
   Future<String?> tally(Uint8List t) async {
     if (!once) {
