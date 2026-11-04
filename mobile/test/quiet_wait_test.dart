@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // what a quiet session answers in place of the network comes after a wait
 // of two to eight seconds, the same for every stand-in: the handle checks,
-// pair codes and gif search
+// and gif search; the decoy's pair codes are in pair_decoy_test
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -28,7 +28,6 @@ void main() {
   test('every stand-in answers through it', () {
     final sites = {
       'lib/handle_claim.dart': 3,
-      'lib/app/pair_codes_app.dart': 2,
       'lib/gifs/gif_source.dart': 2,
       'lib/app/links.dart': 1,
       'lib/screens/search_screen.dart': 1,
@@ -47,8 +46,8 @@ void main() {
     }
   });
 
-  test('the decoy\'s lookups go on its own lane, and its claim and code '
-      'share never go', () {
+  test('the decoy\'s lookups go on its own lane, and its claim '
+      'never goes', () {
     String src(String f) => File(f).readAsStringSync();
     expect(src('lib/app/links.dart'), contains('engine.decoyTorGetJson'));
     expect(
@@ -58,19 +57,6 @@ void main() {
     final claim = src('lib/handle_claim.dart');
     expect(claim, contains('engine.decoyHandleCheck(h)'));
     expect(claim, contains('final uri = sessionQuiet ? null'));
-    // a quiet pairing makes no invite and reaches no relay, on either side
-    final pair = src('lib/app/pair_codes_app.dart');
-    expect(
-      pair,
-      contains('PairHooks pairHooks() => sessionQuiet\n    ? PairHooks('),
-    );
-    expect(pair, contains('share: (_) => unreachedLater(pairUnreached),'));
-    expect(pair, contains('join: (_, _) => unreachedLater(pairUnreached),'));
-    expect(pair, contains('invite: () async => PairMine(Uint8List(0)),'));
-    expect(
-      pair,
-      contains('if (sessionQuiet || !signalSession.ready) return null;'),
-    );
     expect(
       src('lib/app/state_session.dart'),
       contains('engine.decoyLaneNew()'),

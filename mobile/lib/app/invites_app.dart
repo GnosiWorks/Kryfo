@@ -274,6 +274,20 @@ extension AppStateInvites on AppState {
       arrived();
       return;
     }
+    // a pairing's invite before the person's add: nothing opens there and
+    // nothing is spent. not acked either, so it comes again once the add
+    // listens on the invite
+    final held = await db.query(
+      'hellos',
+      columns: ['peer'],
+      where: 'ident = ? AND way = ? AND invite_id = ?',
+      whereArgs: [ident, kHelloPair, inviteId],
+      limit: 1,
+    );
+    if (held.isNotEmpty) {
+      firstFails.note('held');
+      return;
+    }
     // my one-time invite inside a hello: only the owner it went to opens
     // on it, anyone else is dropped before decrypt and spends nothing
     final out = await db.query(

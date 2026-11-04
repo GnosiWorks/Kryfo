@@ -270,6 +270,7 @@ extern char* HaloPairJoin(char* cCode, char* cInvite);
 extern char* HaloPairStep(long long h);
 extern char* HaloPairFinish(long long h);
 extern char* HaloPairCancel(long long h);
+extern char* HaloDecoyPairLook(char* cBox);
 extern char* HaloPinCalibrate(void);
 extern char* HaloPinNewTable(int logN);
 extern char* HaloPinBegin(char* cPin, char* cTable, char* cLegacy);

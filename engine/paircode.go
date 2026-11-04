@@ -188,7 +188,12 @@ type pairRun struct {
 	fin    []byte
 	finAt  []pairAddr
 	ended  string
-	last   time.Time
+	// the match, said on every step until finish or cancel: a step dart
+	// gave up on must not lose it
+	matched string
+	last    time.Time
+	// the context of the step under way: the run's, under its deadline
+	sctx context.Context
 }
 
 var (
@@ -209,6 +214,13 @@ const (
 
 // the least time between two rounds of one run, whatever dart asks
 var pairStepGap = 2 * time.Second
+
+// the most one round or one share takes, network and all: below what dart
+// waits (100 s a step, 150 s a share), so dart always hears how it went
+var (
+	pairStepBudget  = 80 * time.Second
+	pairShareBudget = 120 * time.Second
+)
 
 // the clock the runs count windows and lives on. tests move it
 var pairClock = time.Now
@@ -387,7 +399,7 @@ func pairShare(inviteB64 string) (int64, []byte, string) {
 	if err != nil || len(inv) == 0 || len(inv) > pake.MaxInvite {
 		return 0, nil, "error: invite"
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 2*publishWait)
+	ctx, cancel := context.WithTimeout(context.Background(), pairShareBudget)
 	defer cancel()
 	now := pairClock()
 	var code pake.Code
@@ -404,7 +416,9 @@ func pairShare(inviteB64 string) (int64, []byte, string) {
 		}
 		// a busy box is left for another; a look no relay answered says
 		// nothing, and the offer going up tells next
-		busy, _ := pairBoxBusy(ctx, pairLane(a.pk), a)
+		lctx, lcancel := context.WithTimeout(ctx, pairShareBudget/5)
+		busy, _ := pairBoxBusy(lctx, pairLane(a.pk), a)
+		lcancel()
 		if !busy || i == 2 {
 			break
 		}
@@ -422,9 +436,10 @@ func pairShare(inviteB64 string) (int64, []byte, string) {
 		until: now.Add(pairCodeLife), seen: map[nostr.ID]bool{}, offered: map[uint64]bool{},
 	}
 	r.mu.Lock()
+	r.sctx = ctx
 	ok := r.offer(now)
 	r.mu.Unlock()
-	if !ok {
+	if !ok || ctx.Err() != nil {
 		rcancel()
 		s.Close()
 		return 0, nil, pairUnreached
@@ -450,7 +465,7 @@ func (r *pairRun) offer(now time.Time) bool {
 		return true
 	}
 	a, err := pairAddrOf(r.box, w)
-	if err != nil || !pairBoxPublish(r.ctx, r.lane, a, msg) {
+	if err != nil || !pairBoxPublish(r.sctx, r.lane, a, msg) {
 		return false
 	}
 	r.offered[w] = true
@@ -537,6 +552,8 @@ func pairJoin(typed []byte, inviteB64 string) string {
 //	"look"           the joiner has no offer yet
 //	"wait <n>"       waiting; n is the wrong codes the sharer has seen
 //	"unreached"      no relay answered this round; the next may
+//	"finishing"      the sharer's code matched, its finish not yet on a
+//	                 relay: dart keeps stepping past the code's life
 //	"done <base64>"  both tags held: the other side's invite
 //	"error: tries"   the code is dead: three wrong tries, or three offers
 //	                 the joiner answered went unfinished
@@ -557,6 +574,9 @@ func pairStep(h int64) string {
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	if r.matched != "" {
+		return r.matched
+	}
 	if r.ended != "" {
 		return r.ended
 	}
@@ -568,6 +588,9 @@ func pairStep(h int64) string {
 		}
 	}
 	defer func() { r.last = time.Now() }()
+	sctx, cancel := context.WithTimeout(r.ctx, pairStepBudget)
+	defer cancel()
+	r.sctx = sctx
 	if r.sharer != nil {
 		return r.end(r.shareStep(pairClock()))
 	}
@@ -584,11 +607,14 @@ func (r *pairRun) end(s string) string {
 }
 
 func (r *pairRun) done() string {
-	return "done " + base64.StdEncoding.EncodeToString(r.invite)
+	r.matched = "done " + base64.StdEncoding.EncodeToString(r.invite)
+	clear(r.invite)
+	r.invite = nil
+	return r.matched
 }
 
 func (r *pairRun) query(addrs []pairAddr) ([]nostr.Event, bool) {
-	ctx, cancel := context.WithTimeout(r.ctx, 30*time.Second)
+	ctx, cancel := context.WithTimeout(r.sctx, 30*time.Second)
 	defer cancel()
 	evs, _, heard := pairCodeQuery(ctx, r.lane, pairPks(addrs))
 	return evs, heard > 0
@@ -649,15 +675,18 @@ func (r *pairRun) shareStep(now time.Time) string {
 func (r *pairRun) sendFinish() string {
 	sent := false
 	for _, a := range r.finAt {
-		if pairBoxPublish(r.ctx, r.lane, a, r.fin) {
+		if pairBoxPublish(r.sctx, r.lane, a, r.fin) {
 			sent = true
 		}
 	}
+	// the code matched here and the joiner may have the finish already
+	// (a relay took it and its ok came late): it goes again, past the
+	// code's life, until a relay says so, and dart keeps the run
 	if !sent {
-		if pairClock().After(r.until.Add(pake.Skew)) {
+		if pairClock().After(r.until.Add(pairJoinLife)) {
 			return "error: expired"
 		}
-		return "unreached"
+		return "finishing"
 	}
 	r.fin, r.finAt = nil, nil
 	return r.done()
@@ -727,7 +756,7 @@ func (r *pairRun) joinStep(now time.Time) string {
 		if err != nil {
 			// out of its time or past the cap: never answered
 			r.seen[best.id] = true
-		} else if pairBoxPublish(r.ctx, r.lane, best.at, ans) {
+		} else if pairBoxPublish(r.sctx, r.lane, best.at, ans) {
 			// an answer no relay took goes again next round: the same offer
 			// gets the same answer and costs no try
 			r.seen[best.id] = true
@@ -751,6 +780,33 @@ func (r *pairRun) joinStep(now time.Time) string {
 		return "look"
 	}
 	return "wait 0"
+}
+
+// what a decoy's pairing reads: the box's addresses for now, on the decoy's
+// own lane, read only. it never puts an offer up and never answers one, so
+// a decoy registers nowhere; "look" when a relay answered, "unreached" when
+// none did, as a real round says
+//
+//export HaloDecoyPairLook
+func HaloDecoyPairLook(cBox *C.char) *C.char {
+	return C.CString(decoyPairLook(goStr(cBox)))
+}
+
+func decoyPairLook(box string) string {
+	if len(box) != pake.BoxDigits || box[0] < '0' || box[0] > '9' || box[1] < '0' || box[1] > '9' {
+		return "error: code"
+	}
+	addrs, err := pairAddrs(box, pairJoinWindows(pairClock()))
+	if err != nil {
+		return "error: " + err.Error()
+	}
+	lane, _ := decoyLane()
+	ctx, cancel := context.WithTimeout(context.Background(), pairStepBudget)
+	defer cancel()
+	if _, _, heard := pairCodeQuery(ctx, lane, pairPks(addrs)); heard == 0 {
+		return "unreached"
+	}
+	return "look"
 }
 
 // the pairing [h] is over and what it gave was taken: wiped and gone

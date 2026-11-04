@@ -501,3 +501,96 @@ func TestPairQueryUnreachedAndSlow(t *testing.T) {
 		t.Fatal("the slow relay was not waited for")
 	}
 }
+
+// the match is said on every step until finish or cancel: a step dart gave
+// up on never loses it (review F1)
+func TestPairDoneKeptUntilFinish(t *testing.T) {
+	pairFast(t)
+	pairRelays(t, 1)
+	s, code := shareOrFail(t, pairTestInvite(1))
+	j := joinOrFail(t, code, pairTestInvite(2))
+	sr, jr := stepBoth(t, s, j, 10)
+	if !strings.HasPrefix(sr, "done") || !strings.HasPrefix(jr, "done") {
+		t.Fatalf("%q %q", sr, jr)
+	}
+	for range 3 {
+		if pairStep(s) != sr || pairStep(j) != jr {
+			t.Fatal("a later step lost the match")
+		}
+	}
+	pairDrop(s)
+	if pairStep(s) != "error: gone" {
+		t.Fatal("finished, still there")
+	}
+}
+
+// the sharer's finish lands on the relay but its ok comes after the step's
+// deadline: the joiner matches, the sharer says finishing, goes on past the
+// code's life, and matches on the next step. never one-sided (review F1)
+func TestPairLateFinishStillMatchesBoth(t *testing.T) {
+	pairFast(t)
+	rs := pairRelays(t, 1)
+	oldBudget := pairStepBudget
+	t.Cleanup(func() { pairStepBudget = oldBudget })
+	s, code := shareOrFail(t, pairTestInvite(1))
+	j := joinOrFail(t, code, pairTestInvite(2))
+	if r := pairStep(j); r != "wait 0" {
+		t.Fatalf("joiner: %q", r)
+	}
+	rs[0].mu.Lock()
+	rs[0].okDelay = 3 * time.Second
+	rs[0].mu.Unlock()
+	pairStepBudget = 1500 * time.Millisecond
+	if r := pairStep(s); r != "finishing" {
+		t.Fatalf("sharer with a late ok: %q", r)
+	}
+	if r := pairStep(j); !strings.HasPrefix(r, "done") {
+		t.Fatalf("joiner after the finish landed: %q", r)
+	}
+	rs[0].mu.Lock()
+	rs[0].okDelay = 0
+	rs[0].mu.Unlock()
+	pairStepBudget = oldBudget
+	// past the code's life it still finishes
+	pairClock = func() time.Time { return time.Now().Add(pairCodeLife + pake.Skew + time.Minute) }
+	if r := pairStep(s); r != "done "+pairB64(pairTestInvite(2)) {
+		t.Fatalf("sharer next: %q", r)
+	}
+}
+
+// a step never runs past its deadline, whatever the relays do
+func TestPairStepKeepsItsDeadline(t *testing.T) {
+	pairFast(t)
+	rs := pairRelays(t, 1)
+	oldBudget := pairStepBudget
+	t.Cleanup(func() { pairStepBudget = oldBudget })
+	s, _ := shareOrFail(t, pairTestInvite(1))
+	rs[0].mu.Lock()
+	rs[0].reqDelay = 10 * time.Second
+	rs[0].mu.Unlock()
+	pairStepBudget = time.Second
+	start := time.Now()
+	pairStep(s)
+	if took := time.Since(start); took > 3*time.Second {
+		t.Fatalf("a step took %v", took)
+	}
+}
+
+// a decoy reads the box on its own lane and puts nothing up
+func TestDecoyPairLookPutsNothingUp(t *testing.T) {
+	pairFast(t)
+	rs := pairRelays(t, 1)
+	if r := decoyPairLook("07"); r != "look" {
+		t.Fatalf("look: %q", r)
+	}
+	if keptEvents(rs[0]) != 0 {
+		t.Fatal("the decoy published")
+	}
+	if decoyPairLook("7") != "error: code" || decoyPairLook("0a") != "error: code" {
+		t.Fatal("a box that is not two digits")
+	}
+	rs[0].srv.Close()
+	if r := decoyPairLook("07"); r != "unreached" {
+		t.Fatalf("no relay: %q", r)
+	}
+}

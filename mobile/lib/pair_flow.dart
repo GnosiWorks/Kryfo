@@ -141,7 +141,7 @@ class PairHooks {
   /// "ok" and the handle, or "error: old", "error: code", "error: tries"
   final Future<String> Function(String code, Uint8List invite) join;
 
-  /// one round: look, wait n, unreached, done b64, error: ...
+  /// one round: look, wait n, unreached, finishing, done b64, error: ...
   final Future<String> Function(int handle) step;
 
   /// the engine's run wiped
@@ -199,6 +199,9 @@ class PairRun extends ChangeNotifier {
   PairMine? _mine;
   bool _gone = false;
   Timer? _burn;
+  // the code matched in the engine and its finish is still going out: it
+  // does not burn now
+  bool _finishing = false;
   DateTime? _since;
   DateTime? _waitSince;
 
@@ -305,7 +308,7 @@ class PairRun extends ChangeNotifier {
 
   Future<void> _loop() async {
     while (!_gone && phase == PairPhase.live && _h != null) {
-      if (sharer && !pairNow().isBefore(burns!)) {
+      if (sharer && !_finishing && !pairNow().isBefore(burns!)) {
         await _end(PairLine.burned);
         return;
       }
@@ -338,6 +341,11 @@ class PairRun extends ChangeNotifier {
       peer = p;
       phase = PairPhase.matched;
       return _set(PairLine.none);
+    }
+    if (res == 'finishing' && sharer) {
+      _finishing = true;
+      _burn?.cancel();
+      return _set(PairLine.waiting);
     }
     if (res.startsWith('wait ')) {
       final n = int.tryParse(res.substring(5)) ?? 0;

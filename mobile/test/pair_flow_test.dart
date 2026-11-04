@@ -402,4 +402,23 @@ void main() {
     expect(q.line, PairLine.unreached);
     expect(q.warn, isTrue);
   });
+
+  testWidgets('a sharer whose code matched while its finish is still going '
+      'out does not burn, and matches once it went (review F1)', (t) async {
+    final f = _Fake()
+      ..steps.addAll(['wait 0', 'finishing', 'finishing', _done('late')]);
+    final r = PairRun.share(f.hooks(), gap: const Duration(minutes: 4));
+    r.start();
+    await t.pump();
+    await t.pump(const Duration(minutes: 4));
+    expect(r.line, PairLine.waiting);
+    now = now.add(kPairCodeLife + const Duration(minutes: 1));
+    await t.pump(const Duration(minutes: 7));
+    expect(r.phase, PairPhase.live);
+    await t.pump(const Duration(minutes: 4));
+    expect(r.phase, PairPhase.matched);
+    expect(f.calls, isNot(contains('drop')));
+    r.dispose();
+    await t.pump(const Duration(minutes: 5));
+  });
 }

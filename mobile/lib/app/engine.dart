@@ -742,6 +742,18 @@ class HaloEngine {
   Future<void> pairClose(int handle) =>
       _pairHandleOnIsolate('HaloPairCancel', handle);
 
+  // a decoy's pairing round: box [box]'s addresses read on the decoy's own
+  // lane, nothing put up, nothing answered. "look" or "unreached"
+  Future<String> decoyPairLook(String box) async {
+    final r = await _ffiOnIsolate(
+      'HaloDecoyPairLook',
+      [box],
+      wait: const Duration(seconds: 100),
+      what: 'relay',
+    );
+    return r == 'look' ? 'look' : 'unreached';
+  }
+
   // unlike every other subscription this needs no contacts
   void subscribeFirstContactBg(int ident, int counter) {
     _background(_fcSubscribeOnIsolate(ident, counter), 'first contact listen');

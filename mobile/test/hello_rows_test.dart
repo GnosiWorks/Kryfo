@@ -1047,4 +1047,41 @@ void main() {
     expect(pairPeerOf(Uint8List.fromList(List.filled(40, 7))), isNull);
     expect(pairPeerOf(main.link), isNull);
   });
+
+  test(
+    'a pairing\'s invites are held from their making: no upkeep listens on '
+    'them, and the joiner\'s opener arriving before the sharer\'s Add opens '
+    'nothing and spends nothing, then opens once the Add came (review F2)',
+    () async {
+      await myMain();
+      final mine = (await app.pairInvite())!;
+      final row = mine.row as InviteRow;
+      final p = await _Phone.make('pair-code-early', 99);
+      // the joiner's own invite on this phone is held the same way
+      final joinerSide = (await app.pairInvite())!.row as InviteRow;
+      engine.subscribed.clear();
+      await app.keepMyInvites();
+      expect(engine.subscribed, isNot(contains(row.id)));
+      expect(engine.subscribed, isNot(contains(joinerSide.id)));
+      final peer = pairPeerOf((await p.pairInvite()).link)!;
+      await app.pairHold(mine, peer);
+      expect(engine.unsubscribed, contains(row.id));
+      // their Add came first: the opener is here before mine
+      final early = await p.openerTo(row, 'u-early');
+      await app.receiveRelay([(peer: 'f0:${row.id}', cipher: early)]);
+      await _settle();
+      expect(firstFails.codes, contains('held'));
+      expect(live.people[p.words], isNull);
+      expect((await inviteOf(db, kMainIdent, row.id))?.usedAt, isNull);
+      expect(engine.seeded, isEmpty);
+      // the Add: the same opener, fetched again, opens and files them
+      await handleHaloUriAdded(peer.link, pairOut: row, app: app);
+      await _settle();
+      await app.receiveRelay([(peer: 'f0:${row.id}', cipher: early)]);
+      await _settle();
+      expect(live.people[p.words]?['accepted'], 1);
+      expect(engine.seeded, [p.x]);
+      expect((await inviteOf(db, kMainIdent, row.id))?.usedAt, isNotNull);
+    },
+  );
 }
