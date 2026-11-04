@@ -1602,7 +1602,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'Nie udało się wyczyścić tego GIF-a';
 
   @override
-  String get chatTorIsNotUp => 'Tor jeszcze nie działa · bez podglądu linku';
+  String get chatTorIsNotUp => 'Tor jeszcze nie połączony · bez podglądu linku';
 
   @override
   String get chatCouldnTReachIt =>
@@ -2613,7 +2613,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get groupChatTorIsNotUp =>
-      'Tor jeszcze nie działa · bez podglądu linku';
+      'Tor jeszcze nie połączony · bez podglądu linku';
 
   @override
   String get groupChatCouldnTReachIt =>
