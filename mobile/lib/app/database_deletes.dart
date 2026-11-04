@@ -75,23 +75,36 @@ mixin _DeleteRows {
     return rows.length;
   }
 
-  Future<void> deleteMessage(String msgUid) async {
+  // [from] takes only that sender's rows of the uid, never a twin's
+  Future<void> deleteMessage(String msgUid, {String? from}) async {
     final db = await open();
+    final only = from == null ? '' : " AND direction = 'in' AND peer_id = ?";
+    final args = [msgUid, if (from != null) from];
     final media = await db.query(
       'messages',
       columns: [..._kFileCols, ..._kUnreadCols, ..._kGoneCols],
-      where: 'msg_uid = ?',
-      whereArgs: [msgUid],
+      where: 'msg_uid = ?$only',
+      whereArgs: args,
     );
     await _unreadGo(db, media);
     await _noteGone(db, media);
-    await db.delete('reactions', where: 'msg_uid = ?', whereArgs: [msgUid]);
-    await db.delete(
-      'group_media_owed',
+    await db.delete('messages', where: 'msg_uid = ?$only', whereArgs: args);
+    // what hangs off the uid goes with its last row
+    final left = await db.query(
+      'messages',
+      columns: ['id'],
       where: 'msg_uid = ?',
       whereArgs: [msgUid],
+      limit: 1,
     );
-    await db.delete('messages', where: 'msg_uid = ?', whereArgs: [msgUid]);
+    if (left.isEmpty) {
+      await db.delete('reactions', where: 'msg_uid = ?', whereArgs: [msgUid]);
+      await db.delete(
+        'group_media_owed',
+        where: 'msg_uid = ?',
+        whereArgs: [msgUid],
+      );
+    }
     await _scrubMedia(media);
   }
 

@@ -45,7 +45,7 @@ Finder rich(String s) => find.textContaining(s, findRichText: true);
 class _Db extends SayHiDb {
   _Db(super.mem, [super.container]);
   @override
-  Future<void> deleteMessage(String msgUid) async =>
+  Future<void> deleteMessage(String msgUid, {String? from}) async =>
       mem.delete('messages', where: 'msg_uid = ?', whereArgs: [msgUid]);
 }
 

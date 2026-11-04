@@ -474,14 +474,21 @@ mixin _MessageRows {
     return r.isNotEmpty;
   }
 
-  Future<void> editMessage(String msgUid, String newText) async {
+  // [from] keeps a sender's edit on their own row of that uid
+  Future<void> editMessage(
+    String msgUid,
+    String newText, {
+    String? from,
+  }) async {
     final db = await open();
+    final only = from == null ? '' : " AND direction = 'in' AND peer_id = ?";
+    final args = [msgUid, if (from != null) from];
     // a page title belongs to the link it was fetched for
     final was = await db.query(
       'messages',
       columns: ['plaintext'],
-      where: 'msg_uid = ?',
-      whereArgs: [msgUid],
+      where: 'msg_uid = ?$only',
+      whereArgs: args,
       limit: 1,
     );
     final linkMoved =
@@ -496,8 +503,8 @@ mixin _MessageRows {
         if (linkMoved) 'preview': null,
       },
       // a sticker has no words to edit: its text stays its emoji
-      where: 'msg_uid = ? AND sticker IS NULL',
-      whereArgs: [msgUid],
+      where: 'msg_uid = ? AND sticker IS NULL$only',
+      whereArgs: args,
     );
     // an opener that goes again goes as it reads now
     await db.update(
@@ -510,8 +517,8 @@ mixin _MessageRows {
     final rows = await db.query(
       'messages',
       columns: ['id', 'plaintext', 'poll', 'file_name', 'preview', 'sticker'],
-      where: 'msg_uid = ?',
-      whereArgs: [msgUid],
+      where: 'msg_uid = ?$only',
+      whereArgs: args,
     );
     for (final r in rows) {
       await indexSearchRow(db, r['id'] as int, r);
@@ -557,6 +564,22 @@ mixin _MessageRows {
       columns: ['rowid AS rowid'],
       where: 'msg_uid = ?',
       whereArgs: [msgUid],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
+  }
+
+  // [sender]'s own copy of [msgUid] in that chat, or one of mine: a uid
+  // another member's frame took first never hides theirs
+  Future<bool> messageFrom(String msgUid, String sender, String? group) async {
+    final db = await open();
+    final rows = await db.query(
+      'messages',
+      columns: ['rowid AS rowid'],
+      where:
+          "msg_uid = ? AND (direction = 'out' OR (peer_id = ? "
+          "AND IFNULL(group_id, '') = ?))",
+      whereArgs: [msgUid, sender, group ?? ''],
       limit: 1,
     );
     return rows.isNotEmpty;

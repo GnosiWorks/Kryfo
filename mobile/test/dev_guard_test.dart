@@ -630,6 +630,19 @@ class _Mem implements HaloDb {
   Future<bool> messageExists(String msgUid) async =>
       _hit('messageExists', msgUid, msg(msgUid) != null);
   @override
+  Future<bool> messageFrom(String msgUid, String sender, String? group) async =>
+      _hit(
+        'messageFrom',
+        msgUid,
+        msgs.any(
+          (m) =>
+              m['msg_uid'] == msgUid &&
+              (m['direction'] == 'out' ||
+                  (m['peer_id'] == sender &&
+                      (m['group_id'] ?? '') == (group ?? ''))),
+        ),
+      );
+  @override
   Future<bool> goneFrom(String peer, String msgUid) async => false;
   @override
   Future<(String, String?)?> chatOf(String msgUid) async {
