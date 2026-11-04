@@ -1445,7 +1445,6 @@
   "settingsWhatWeCanSee": "Co możemy zobaczyć",
   "settingsTheHonestList": "Szczera lista",
   "settingsVersion": "Wersja",
-  "settings030Alpha": "0.5.3 · alfa",
   "settingsReportAnIssue": "Zgłoś problem",
   "settingsReportInKryfo": "Napisz w Kryfo",
   "settingsReportInKryfoSub": "Czat z Marios. Możesz pisać anonimowo.",
@@ -2911,5 +2910,15 @@
   "restoreOlderTitle": "Niektóre czaty się wstrzymają",
   "restoreOlderOne": "{name} używa starszego Kryfo. Twój czat z tą osobą wstrzyma się, dopóki nie zaktualizuje aplikacji.",
   "restoreOlderTwo": "{first} i {second} używają starszego Kryfo. Twoje czaty z nimi wstrzymają się, dopóki nie zaktualizują aplikacji.",
-  "restoreOlderMany": "{first}, {second} i {count, plural, =1{jeszcze 1 osoba} few{jeszcze {count} osoby} many{jeszcze {count} osób} other{jeszcze {count} osoby}} używają starszego Kryfo. Twoje czaty z nimi wstrzymają się, dopóki nie zaktualizują aplikacji."
+  "restoreOlderMany": "{first}, {second} i {count, plural, =1{jeszcze 1 osoba} few{jeszcze {count} osoby} many{jeszcze {count} osób} other{jeszcze {count} osoby}} używają starszego Kryfo. Twoje czaty z nimi wstrzymają się, dopóki nie zaktualizują aplikacji.",
+  "settingsVersionAlpha": "{version} · alfa",
+  "settingsShotsNotHereYet": "Jeszcze nie na tym komputerze",
+  "settingsDeskInTray": "Działa w zasobniku",
+  "settingsDeskWhileOpen": "Gdy Kryfo jest otwarte",
+  "onboardingDeskRunTitle": "Kryfo *działa dalej*.",
+  "onboardingDeskRunLead": "Gdy zamkniesz okno, Kryfo czeka w zasobniku, więc wiadomości dalej docierają. Oba ustawienia zmienisz później w Ustawieniach, w sekcji Powiadomienia.",
+  "savedLongPressAnyMessageDesk": "Kliknij prawym przyciskiem dowolną wiadomość i wybierz Zapisz, żeby ją tu zachować.",
+  "chatFailedTapToRetryDesk": "Nie wysłano · kliknij, by ponowić",
+  "groupChatTapToRetryDesk": "! Kliknij, by ponowić",
+  "modesFastLineDesk": "Pomija Tor, więc wiadomości docierają szybciej i zużywają mniej baterii. Nasze serwery widzą twój adres IP tylko podczas połączenia i nigdy go nie zapisują ani nie przechowują. Twoje kontakty nigdy go nie widzą. Twoja sieć widzi, że łączysz się z Kryfo."
 }

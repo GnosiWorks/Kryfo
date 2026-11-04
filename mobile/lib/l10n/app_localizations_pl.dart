@@ -5589,9 +5589,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settingsVersion => 'Wersja';
 
   @override
-  String get settings030Alpha => '0.5.3 · alfa';
-
-  @override
   String get settingsReportAnIssue => 'Zgłoś problem';
 
   @override
@@ -11264,4 +11261,39 @@ class AppLocalizationsPl extends AppLocalizations {
     );
     return '$first, $second i $_temp0 używają starszego Kryfo. Twoje czaty z nimi wstrzymają się, dopóki nie zaktualizują aplikacji.';
   }
+
+  @override
+  String settingsVersionAlpha(String version) {
+    return '$version · alfa';
+  }
+
+  @override
+  String get settingsShotsNotHereYet => 'Jeszcze nie na tym komputerze';
+
+  @override
+  String get settingsDeskInTray => 'Działa w zasobniku';
+
+  @override
+  String get settingsDeskWhileOpen => 'Gdy Kryfo jest otwarte';
+
+  @override
+  String get onboardingDeskRunTitle => 'Kryfo *działa dalej*.';
+
+  @override
+  String get onboardingDeskRunLead =>
+      'Gdy zamkniesz okno, Kryfo czeka w zasobniku, więc wiadomości dalej docierają. Oba ustawienia zmienisz później w Ustawieniach, w sekcji Powiadomienia.';
+
+  @override
+  String get savedLongPressAnyMessageDesk =>
+      'Kliknij prawym przyciskiem dowolną wiadomość i wybierz Zapisz, żeby ją tu zachować.';
+
+  @override
+  String get chatFailedTapToRetryDesk => 'Nie wysłano · kliknij, by ponowić';
+
+  @override
+  String get groupChatTapToRetryDesk => '! Kliknij, by ponowić';
+
+  @override
+  String get modesFastLineDesk =>
+      'Pomija Tor, więc wiadomości docierają szybciej i zużywają mniej baterii. Nasze serwery widzą twój adres IP tylko podczas połączenia i nigdy go nie zapisują ani nie przechowują. Twoje kontakty nigdy go nie widzą. Twoja sieć widzi, że łączysz się z Kryfo.';
 }
