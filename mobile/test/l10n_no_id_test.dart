@@ -26,6 +26,7 @@ const _localId = {
   'ar': ['معرّف'],
   'tr': ['kimli', 'KİMLİ'],
   'hi': ['आईडी', 'आइडी'],
+  'pl': ['identyfikator'],
 };
 
 String _words(String s) => s.replaceAll(RegExp(r'\{\w+\}'), '');

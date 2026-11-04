@@ -9559,6 +9559,10 @@
   "@languageNameHi": {
     "description": "the name of Hindi in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
   },
+  "languageNamePl": "Polish",
+  "@languageNamePl": {
+    "description": "the name of Polish in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
+  },
   "languageLaterLine": "You can change this any time in settings.",
   "@languageLaterLine": {
     "description": "under the title of the language sheet during onboarding: the choice is not final"

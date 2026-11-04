@@ -7608,6 +7608,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get languageNameHi => 'هندی';
 
   @override
+  String get languageNamePl => 'لهستانی';
+
+  @override
   String get languageLaterLine =>
       'هر وقت خواستید می‌توانید این را در تنظیمات تغییر دهید.';
 

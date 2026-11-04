@@ -4,6 +4,7 @@ package main
 import "C"
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"time"
@@ -276,8 +277,49 @@ func (d *devState) call(op string, a *devArgs, out *devOut) error {
 	case "claimants":
 		out.Claimants = keysOut(d.book.Claimants())
 		return nil
+	case "own_above":
+		return d.ownAbove(a, out)
 	}
 	return errors.New("no such call")
+}
+
+// a contact sent back the list of my identity a.Ident it holds (dh), which
+// refused mine as older: another copy of this phone signed it. the body of
+// my list at a version above it, for the phone to sign and take with
+// own_mine, and every device it names that mine does not. a held list that
+// is not above mine leaves nothing to do ("same"). only the phone signs
+func (d *devState) ownAbove(a *devArgs, out *devOut) error {
+	id, ok := d.idents[a.Ident]
+	if !ok {
+		return devices.ErrUnknown
+	}
+	if d.mine[id].key != id {
+		return devices.ErrSource
+	}
+	l := d.own.Current(id)
+	if l == nil {
+		return devices.ErrNotListed
+	}
+	held, err := devices.ReadList(a.List, d.v)
+	if err != nil {
+		return err
+	}
+	if held.Identity != id {
+		return devices.ErrWrongIdentity
+	}
+	if held.Version < l.Version || (held.Version == l.Version && devices.SameBody(held, l)) {
+		out.Outcome = "same"
+		return nil
+	}
+	next, unknown, err := l.Above(a.List, d.v, rand.Reader)
+	if err != nil {
+		return err
+	}
+	out.Outcome, out.List = "above", next.Body()
+	for _, e := range unknown {
+		out.Devices = append(out.Devices, entryOut(e))
+	}
+	return nil
 }
 
 // a contact of my identity a.Ident, proven by its invite or a session

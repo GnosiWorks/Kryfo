@@ -37,6 +37,18 @@ typedef DeviceCopy = ({String peer, int device, Uint8List pin, String plain});
 /// ([error]: WaitsForAnswer when that device waits for its answer)
 typedef DeviceSealed = ({String? wire, Object? error});
 
+/// what a device copy opened to, seen before anything of it is kept: the
+/// remote identity and record libsignal answered, whether it was an opener
+/// and the registration id it came under (the opener's own, else the
+/// listed one). a throw refuses the copy
+typedef DeviceAdmit =
+    Future<void> Function(
+      Uint8List remote,
+      Uint8List record, {
+      required bool opener,
+      required int reg,
+    });
+
 /// a KDB1 or a session that does not match the device's list entry
 class DeviceRefused implements Exception {
   const DeviceRefused(this.why);
@@ -292,7 +304,11 @@ class DeviceSessions {
   /// [body] of [type] from [peer]'s [device] opened, on the session held or
   /// on an opener built on this store's session prekeys. [pin] and [reg]
   /// are the device's list entry; an opener under another reg is refused.
-  /// nothing is stored before it opens, and an opener opens once
+  /// nothing is stored before it opens, and an opener opens once. [admit]
+  /// sees what libsignal answered (the remote, the record, whether it was
+  /// an opener and its reg) after it opened and before anything is stored:
+  /// when it throws, the plaintext is wiped and nothing is kept, so a
+  /// refused copy is never shown and an opener's keys stay unspent
   Future<Uint8List> open(
     String peer,
     int device,
@@ -300,7 +316,24 @@ class DeviceSessions {
     Uint8List body,
     Uint8List pin, {
     required int reg,
+    DeviceAdmit? admit,
   }) => _serial(peer, device, () async {
+    Future<void> admitted(
+      Uint8List remote,
+      Uint8List record,
+      Uint8List plain, {
+      required bool opener,
+      required int reg,
+    }) async {
+      if (admit == null) return;
+      try {
+        await admit(remote, record, opener: opener, reg: reg);
+      } catch (_) {
+        plain.fillRange(0, plain.length, 0);
+        rethrow;
+      }
+    }
+
     final held = await _sessions().load(peer, device);
     if (type != kLsPreKey) {
       if (held == null) throw const LsError(LsError.noSession);
@@ -312,6 +345,13 @@ class DeviceSessions {
         pinned: pin,
       );
       if (!_eq(o.identityKey, pin)) throw const LsError(LsError.untrusted);
+      await admitted(
+        o.identityKey,
+        o.record,
+        o.plaintext,
+        opener: false,
+        reg: reg,
+      );
       await _sessions().store(peer, o.record, device);
       return o.plaintext;
     }
@@ -354,6 +394,13 @@ class DeviceSessions {
     );
     _requirePq(o.record);
     if (!_eq(o.identityKey, pin)) throw const LsError(LsError.untrusted);
+    await admitted(
+      o.identityKey,
+      o.record,
+      o.plaintext,
+      opener: true,
+      reg: info.registrationId,
+    );
     await s.database.transaction((t) async {
       await _sessions(t).store(peer, o.record, device);
       final k = LsKyberPreKeyStore(t, prefix: s.tablePrefix, ident: s.ident);

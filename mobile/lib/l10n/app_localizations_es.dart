@@ -7666,6 +7666,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get languageNameHi => 'Hindi';
 
   @override
+  String get languageNamePl => 'Polaco';
+
+  @override
   String get languageLaterLine => 'Puedes cambiarlo cuando quieras en ajustes.';
 
   @override

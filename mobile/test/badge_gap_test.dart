@@ -336,7 +336,7 @@ void main() {
           expect(l.donateGivesMark, isNot(en.donateGivesMark), reason: tag);
         }
       }
-      expect(AppLocalizations.supportedLocales, hasLength(16));
+      expect(AppLocalizations.supportedLocales, hasLength(17));
     });
   });
 

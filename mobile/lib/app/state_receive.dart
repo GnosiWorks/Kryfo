@@ -717,6 +717,19 @@ extension AppStateReceive on AppState {
       arrived();
       return;
     }
+    // a device pair's line (linked devices): opened on that device's
+    // session and admitted before anything shows, never tried as a phone's
+    if (linkedDevicesOn && deviceTagOf(m.peer) != null) {
+      await _receiveDeviceCopy(
+        m,
+        h,
+        epoch,
+        arrived,
+        wrappedAt: wrappedAt,
+        reached: reached,
+      );
+      return;
+    }
     // a room frame: opened by the room key already, never signal. one that
     // throws is not kept and comes again
     if (m.peer.startsWith('room:') || m.peer.startsWith('roomfc:')) {
