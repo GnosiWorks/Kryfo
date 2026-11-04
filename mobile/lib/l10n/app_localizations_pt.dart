@@ -4353,7 +4353,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get fastRoomsWaitForTor =>
-      'Salas e códigos de pareamento sempre passam pelo Tor, também no Rápido. Funcionam assim que o Tor conecta.';
+      'Salas, códigos de pareamento e primeiros contatos sempre passam pelo Tor, também no Rápido. Funcionam assim que o Tor conecta.';
 
   @override
   String get pairCodeFailed => 'Não deu certo. Tente de novo.';

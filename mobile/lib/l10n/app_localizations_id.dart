@@ -4317,7 +4317,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get fastRoomsWaitForTor =>
-      'Ruang dan kode penautan selalu lewat Tor, juga di Cepat. Keduanya langsung jalan begitu Tor terhubung.';
+      'Ruang, kode penautan, dan kontak pertama selalu lewat Tor, juga di Cepat. Semuanya langsung jalan begitu Tor terhubung.';
 
   @override
   String get pairCodeFailed => 'Tidak berhasil. Coba lagi.';

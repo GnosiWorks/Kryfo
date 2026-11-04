@@ -1224,7 +1224,7 @@
   "pairCodeNothingThereYetTrying": "لا شيء بعد · جارٍ إعادة المحاولة",
   "pairCodeNothingAtThatCode": "لا شيء عند هذا الرمز. ربما اختفى، أو لم يشاركه بعد.",
   "pairCodeUnreached": "تعذّر الوصول إلى المُرحِّلات. حاول مجددًا بعد قليل.",
-  "fastRoomsWaitForTor": "تمر الغرف ورموز الاقتران دائمًا عبر Tor، حتى على الوضع السريع. تعمل فور اتصال Tor.",
+  "fastRoomsWaitForTor": "تمر الغرف ورموز الاقتران وأول تواصل مع شخص جديد دائمًا عبر Tor، حتى على الوضع السريع. تعمل فور اتصال Tor.",
   "pairCodeFailed": "لم ينجح ذلك. حاول مجددًا.",
   "pairCodeAddThem": "أضِفه",
   "pairCodeKeyNumber": "رقم المفتاح",

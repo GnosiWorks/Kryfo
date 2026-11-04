@@ -4306,7 +4306,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get fastRoomsWaitForTor =>
-      'Phòng và mã ghép nối luôn đi qua Tor, kể cả ở chế độ Nhanh. Chúng hoạt động ngay khi Tor kết nối.';
+      'Phòng, mã ghép nối và lần liên hệ đầu tiên luôn đi qua Tor, kể cả ở chế độ Nhanh. Chúng hoạt động ngay khi Tor kết nối.';
 
   @override
   String get pairCodeFailed => 'Không thành công. Hãy thử lại.';

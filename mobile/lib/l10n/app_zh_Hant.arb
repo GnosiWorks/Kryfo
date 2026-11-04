@@ -1224,7 +1224,7 @@
   "pairCodeNothingThereYetTrying": "那裡還沒有東西 · 正在重試",
   "pairCodeNothingAtThatCode": "這組碼沒有對應任何東西。它可能已經焚毀，或對方還沒分享。",
   "pairCodeUnreached": "聯絡不上中繼。請稍後再試。",
-  "fastRoomsWaitForTor": "聊天室和配對碼始終透過 Tor，快速模式下也一樣。Tor 一連上就能用。",
+  "fastRoomsWaitForTor": "聊天室、配對碼和首次聯繫始終透過 Tor，快速模式下也一樣。Tor 一連上就能用。",
   "pairCodeFailed": "沒有成功。請再試一次。",
   "pairCodeAddThem": "新增對方",
   "pairCodeKeyNumber": "金鑰號碼",

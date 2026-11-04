@@ -4336,7 +4336,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get fastRoomsWaitForTor =>
-      'Odalar ve eşleştirme kodları Hızlı’da da her zaman Tor’dan geçer. Tor bağlanır bağlanmaz çalışırlar.';
+      'Odalar, eşleştirme kodları ve ilk temaslar Hızlı’da da her zaman Tor’dan geçer. Tor bağlanır bağlanmaz çalışırlar.';
 
   @override
   String get pairCodeFailed => 'Olmadı. Yeniden dene.';

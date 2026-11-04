@@ -4100,7 +4100,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairCodeUnreached => '联系不上中继。请稍后再试。';
 
   @override
-  String get fastRoomsWaitForTor => '聊天室和配对码始终通过 Tor，快速模式下也一样。Tor 一连上就能用。';
+  String get fastRoomsWaitForTor => '聊天室、配对码和首次联系始终通过 Tor，快速模式下也一样。Tor 一连上就能用。';
 
   @override
   String get pairCodeFailed => '没有成功。请再试一次。';
@@ -14421,7 +14421,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pairCodeUnreached => '聯絡不上中繼。請稍後再試。';
 
   @override
-  String get fastRoomsWaitForTor => '聊天室和配對碼始終透過 Tor，快速模式下也一樣。Tor 一連上就能用。';
+  String get fastRoomsWaitForTor => '聊天室、配對碼和首次聯繫始終透過 Tor，快速模式下也一樣。Tor 一連上就能用。';
 
   @override
   String get pairCodeFailed => '沒有成功。請再試一次。';

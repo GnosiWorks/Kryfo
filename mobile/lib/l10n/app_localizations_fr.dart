@@ -4366,7 +4366,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get fastRoomsWaitForTor =>
-      'Les salons et les codes d’appairage passent toujours par Tor, même sur Rapide. Ils marchent dès que Tor est connecté.';
+      'Les salons, les codes d’appairage et les premiers contacts passent toujours par Tor, même sur Rapide. Ils marchent dès que Tor est connecté.';
 
   @override
   String get pairCodeFailed => 'Ça n’a pas marché. Réessayez.';

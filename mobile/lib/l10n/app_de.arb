@@ -1224,7 +1224,7 @@
   "pairCodeNothingThereYetTrying": "Noch nichts da · versuche es erneut",
   "pairCodeNothingAtThatCode": "Unter diesem Code ist nichts. Er ist vielleicht schon verschwunden, oder die Person hat ihn noch nicht geteilt.",
   "pairCodeUnreached": "Die Relais waren nicht erreichbar. Versuch es gleich noch mal.",
-  "fastRoomsWaitForTor": "Räume und Kopplungscodes laufen immer über Tor, auch auf Schnell. Sie gehen, sobald Tor verbunden ist.",
+  "fastRoomsWaitForTor": "Räume, Kopplungscodes und erste Kontakte laufen immer über Tor, auch auf Schnell. Sie gehen, sobald Tor verbunden ist.",
   "pairCodeFailed": "Das hat nicht geklappt. Versuch es noch mal.",
   "pairCodeAddThem": "Hinzufügen",
   "pairCodeKeyNumber": "Schlüsselnummer",

@@ -4330,7 +4330,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get fastRoomsWaitForTor =>
-      'اتاق‌ها و کدهای جفت‌سازی همیشه از Tor می‌گذرند، حتی روی حالت سریع. به محض وصل شدن Tor کار می‌کنند.';
+      'اتاق‌ها، کدهای جفت‌سازی و نخستین تماس‌ها همیشه از Tor می‌گذرند، حتی روی حالت سریع. به محض وصل شدن Tor کار می‌کنند.';
 
   @override
   String get pairCodeFailed => 'انجام نشد. دوباره امتحان کنید.';

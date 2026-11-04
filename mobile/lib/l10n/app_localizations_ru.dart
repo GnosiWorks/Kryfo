@@ -4421,7 +4421,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get fastRoomsWaitForTor =>
-      'Комнаты и коды связи всегда идут через Tor, даже на режиме «Быстрый». Они заработают, как только Tor подключится.';
+      'Комнаты, коды связи и первые контакты всегда идут через Tor, даже на режиме «Быстрый». Они заработают, как только Tor подключится.';
 
   @override
   String get pairCodeFailed => 'Не получилось. Попробуй ещё раз.';

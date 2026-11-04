@@ -4371,7 +4371,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get fastRoomsWaitForTor =>
-      'Räume und Kopplungscodes laufen immer über Tor, auch auf Schnell. Sie gehen, sobald Tor verbunden ist.';
+      'Räume, Kopplungscodes und erste Kontakte laufen immer über Tor, auch auf Schnell. Sie gehen, sobald Tor verbunden ist.';
 
   @override
   String get pairCodeFailed => 'Das hat nicht geklappt. Versuch es noch mal.';

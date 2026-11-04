@@ -4328,7 +4328,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get fastRoomsWaitForTor =>
-      'रूम और जोड़ने के कोड हमेशा Tor से होकर जाते हैं, तेज़ पर भी। Tor जुड़ते ही ये काम करते हैं।';
+      'रूम, जोड़ने के कोड और पहला संपर्क हमेशा Tor से होकर जाते हैं, तेज़ पर भी। Tor जुड़ते ही ये काम करते हैं।';
 
   @override
   String get pairCodeFailed => 'यह नहीं हुआ। दोबारा कोशिश करें।';

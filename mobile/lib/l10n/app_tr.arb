@@ -1224,7 +1224,7 @@
   "pairCodeNothingThereYetTrying": "Henüz bir şey yok · tekrar deneniyor",
   "pairCodeNothingAtThatCode": "Bu kodda bir şey yok. Silinmiş olabilir ya da henüz paylaşmamış olabilir.",
   "pairCodeUnreached": "Aktarıcılara ulaşılamadı. Birazdan yeniden dene.",
-  "fastRoomsWaitForTor": "Odalar ve eşleştirme kodları Hızlı’da da her zaman Tor’dan geçer. Tor bağlanır bağlanmaz çalışırlar.",
+  "fastRoomsWaitForTor": "Odalar, eşleştirme kodları ve ilk temaslar Hızlı’da da her zaman Tor’dan geçer. Tor bağlanır bağlanmaz çalışırlar.",
   "pairCodeFailed": "Olmadı. Yeniden dene.",
   "pairCodeAddThem": "Ekle",
   "pairCodeKeyNumber": "Anahtar numarası",

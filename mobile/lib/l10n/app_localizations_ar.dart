@@ -4423,7 +4423,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get fastRoomsWaitForTor =>
-      'تمر الغرف ورموز الاقتران دائمًا عبر Tor، حتى على الوضع السريع. تعمل فور اتصال Tor.';
+      'تمر الغرف ورموز الاقتران وأول تواصل مع شخص جديد دائمًا عبر Tor، حتى على الوضع السريع. تعمل فور اتصال Tor.';
 
   @override
   String get pairCodeFailed => 'لم ينجح ذلك. حاول مجددًا.';
