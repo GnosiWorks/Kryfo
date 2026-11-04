@@ -207,7 +207,7 @@ func TestAPairCodeShareWaitsForASlowOnionDial(t *testing.T) {
 		t.Fatal(err)
 	}
 	res := "unreached"
-	if pairBoxPublish(pairLane(a.pk), a, []byte("KPO1")) {
+	if pairBoxPublish(t.Context(), pairLane(a.pk), a, []byte("KPO1")) {
 		res = "ok"
 	}
 	checkSlowOnionLanded(t, own, res, "ok", time.Since(start))

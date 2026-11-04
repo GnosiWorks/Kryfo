@@ -151,13 +151,13 @@ func pairBoxOpen(ev nostr.Event, addrs []pairAddr) ([]byte, pairAddr, bool) {
 	return nil, pairAddr{}, false
 }
 
-func pairBoxPublish(lane string, a pairAddr, msg []byte) bool {
+func pairBoxPublish(parent context.Context, lane string, a pairAddr, msg []byte) bool {
 	ev, err := pairBoxEvent(a, msg, time.Now())
 	if err != nil {
 		log.Printf("paircode: no event (%v)", err)
 		return false
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), publishWait)
+	ctx, cancel := context.WithTimeout(parent, publishWait)
 	defer cancel()
 	return nostrPublishMulti(ctx, lane, ev) > 0
 }
@@ -214,6 +214,18 @@ var pairStepGap = 2 * time.Second
 var pairClock = time.Now
 
 func pairPut(r *pairRun) (int64, error) {
+	// a run dart lost (an isolate given up on) goes once past any use
+	pairRunsMu.Lock()
+	var stale []int64
+	for h, x := range pairRuns {
+		if pairClock().After(x.until.Add(pairJoinLife)) {
+			stale = append(stale, h)
+		}
+	}
+	pairRunsMu.Unlock()
+	for _, h := range stale {
+		pairDrop(h)
+	}
 	pairRunsMu.Lock()
 	defer pairRunsMu.Unlock()
 	if len(pairRuns) >= pairRunsMax {
@@ -438,7 +450,7 @@ func (r *pairRun) offer(now time.Time) bool {
 		return true
 	}
 	a, err := pairAddrOf(r.box, w)
-	if err != nil || !pairBoxPublish(r.lane, a, msg) {
+	if err != nil || !pairBoxPublish(r.ctx, r.lane, a, msg) {
 		return false
 	}
 	r.offered[w] = true
@@ -638,7 +650,7 @@ func (r *pairRun) shareStep(now time.Time) string {
 func (r *pairRun) sendFinish() string {
 	sent := false
 	for _, a := range r.finAt {
-		if pairBoxPublish(r.lane, a, r.fin) {
+		if pairBoxPublish(r.ctx, r.lane, a, r.fin) {
 			sent = true
 		}
 	}
@@ -716,7 +728,7 @@ func (r *pairRun) joinStep(now time.Time) string {
 		if err != nil {
 			// out of its time or past the cap: never answered
 			r.seen[best.id] = true
-		} else if pairBoxPublish(r.lane, best.at, ans) {
+		} else if pairBoxPublish(r.ctx, r.lane, best.at, ans) {
 			// an answer no relay took goes again next round: the same offer
 			// gets the same answer and costs no try
 			r.seen[best.id] = true

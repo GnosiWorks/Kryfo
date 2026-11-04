@@ -305,7 +305,7 @@ func pairShareAt(t *testing.T, box string, inv []byte) {
 		t.Fatal(err)
 	}
 	a, err := pairAddrOf(box, w)
-	if err != nil || !pairBoxPublish(pairLane(a.pk), a, off) {
+	if err != nil || !pairBoxPublish(t.Context(), pairLane(a.pk), a, off) {
 		t.Fatal("no offer up")
 	}
 }
