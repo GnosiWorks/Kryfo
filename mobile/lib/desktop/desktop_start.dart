@@ -38,6 +38,7 @@ import 'desktop_run.dart';
 import 'desktop_posix.dart';
 import 'desktop_prefs.dart';
 import 'desktop_vault.dart';
+import 'desktop_wipe.dart';
 import 'keyring_linux.dart';
 import 'sealed_format.dart' show EngineChunkCrypto;
 import 'sealed_io.dart';
@@ -224,6 +225,9 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     runApp(DesktopStopApp(stop: stop));
     return;
   }
+  // what a wipe could not take while its process ran (a file windows held)
+  // goes before anything reads the folder: with no vault nothing opens
+  await clearWithoutVault(root);
   final db = DesktopDb();
   final host = DesktopHost(dataDir: root);
   DesktopBinding.install(desktopAnswers(host, db));
@@ -243,6 +247,9 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   final seal = systemSeal();
   host.destroyKeys = vault.destroy;
   if (seal != null) host.forgetKeys = () => vault.forgetSystem(seal);
+  host.letGo = db.closeAll;
+  host.startOff = startOffHere;
+  wipeThrough(host);
   final lock = DesktopComputerLock(vault, seal);
   computerLock = lock;
   FlutterSecureStoragePlatform.instance = VaultStorage(vault);
@@ -443,10 +450,14 @@ Future<void> openSeal({
     engineStarter = (_, start) => ef.start(start);
   }
   host.destroyKeys = () {
-    engineFiles?.destroy();
     keys.closeAll();
+    final f = areas.filesKey;
+    f?.fillRange(0, f.length, 0);
+    areas.filesKey = null;
     vaultGone?.call();
   };
+  // after the engine has let go: its folder holds plain things while it runs
+  host.engineGone = () => engineFiles?.destroy();
   host.beforeExit = () {
     engineFiles?.detach();
     keys.closeAll();
@@ -461,6 +472,34 @@ Future<void> openSeal({
       vault.close();
     },
   );
+}
+
+/// the shared wipe's desktop steps, through [host]: the keys first,
+/// before a file is touched, then the databases let go of theirs
+void wipeThrough(DesktopHost host) {
+  desktopWipeKeys = () async {
+    try {
+      host.destroyKeys?.call();
+    } catch (_) {}
+    try {
+      await host.forgetKeys?.call().timeout(const Duration(seconds: 5));
+    } catch (_) {}
+  };
+  desktopLetGo = () async {
+    try {
+      await host.letGo?.call().timeout(const Duration(seconds: 3));
+    } catch (_) {}
+  };
+}
+
+/// kryfo no longer starts with the computer, for the wipe. the portal is
+/// asked only when its grant was not known to be off: a request can show
+/// the desktop's own question
+Future<void> startOffHere() async {
+  final place = startPlaceHere(read: (_) => null, write: (_, _) async {});
+  if (place == null) return;
+  if (place is PortalStart && desktopRun?.start == StartAnswer.off) return;
+  await place.set(false);
 }
 
 /// held so the listener lives as long as the app
