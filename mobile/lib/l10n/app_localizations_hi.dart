@@ -4330,6 +4330,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'रिले तक नहीं पहुँच पाए। थोड़ी देर में फिर कोशिश करें।';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'रूम और जोड़ने के कोड हमेशा Tor से होकर जाते हैं, तेज़ पर भी। Tor जुड़ते ही ये काम करते हैं।';
+
+  @override
   String get pairCodeFailed => 'यह नहीं हुआ। दोबारा कोशिश करें।';
 
   @override

@@ -1225,6 +1225,7 @@
   "pairCodeNothingThereYetTrying": "那里还没有 · 正在重试",
   "pairCodeNothingAtThatCode": "这个码下面什么都没有。它可能已经焚毁，或者对方还没有分享。",
   "pairCodeUnreached": "联系不上中继。请稍后再试。",
+  "fastRoomsWaitForTor": "聊天室和配对码始终通过 Tor，快速模式下也一样。Tor 一连上就能用。",
   "pairCodeFailed": "没有成功。请再试一次。",
   "pairCodeTypeTheSixDigits": "输入对方念出的六位数字。",
   "pairCodeAddThem": "添加对方",

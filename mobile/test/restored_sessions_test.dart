@@ -18,6 +18,7 @@ import 'package:kryfo/main.dart'
         heldWire,
         kFrameReaction,
         kFrameUnsend,
+        holdOutboxAfterRestore,
         groupEditRow,
         groupUnsendRow,
         kNotSent,
@@ -52,6 +53,7 @@ import 'package:kryfo/heal.dart'
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/restore_undo.dart' show restoreLandedAt;
+import 'package:kryfo/relay_poll.dart' show Reached;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/signal_ffi/kryfo_signal.dart' show LsHeal;
@@ -741,6 +743,30 @@ void main() {
     expect(healsTo(p), isEmpty);
   });
 
+  test('a chat a shut vault holds gets no restore\'s heal until the vault is '
+      'open, where its row can be read', () async {
+    final p = await _peer();
+    await processPeerBundle(p.name, p.card);
+    for (var i = 0; i < 3; i++) {
+      expect(await _atPeer(p, await _toPeer(p, 'me $i')), 'me $i');
+      expect(await _atMe(p, await _fromPeer(p, 'them $i')), 'them $i');
+    }
+    final file = backUp(p);
+    expect(await _atMe(p, await _fromPeer(p, 'after')), 'after');
+    await vaultList.putMeta('pub', 'pub-A');
+    await vaultList.putHidden(
+      p.name,
+      kHiddenPeer,
+      peerCard(RouterCard(p.name, '', p.xpub, backPaired: true)),
+      1,
+    );
+    await router.load();
+    await restore(p, file);
+    expect(await app.healForTest(p.name), isFalse);
+    await app.askAfreshForTest();
+    expect(healsTo(p), isEmpty);
+  });
+
   test('the store marks what a restore brought back as it opens, only after '
       'a restore, and the mark holds across starts', () async {
     final db = MemDb();
@@ -886,7 +912,7 @@ void main() {
     await app.subscribeKnown();
     const day = 24 * 3600 * 1000;
     final now = DateTime.now().millisecondsSinceEpoch;
-    Future<void> timed(String uid, int writtenAt) async {
+    Future<void> timed(String uid, int writtenAt, {Reached? reached}) async {
       final w = await wrapMessage(
         'timed',
         msgUid: uid,
@@ -899,7 +925,10 @@ void main() {
           xPub: p.xpub,
         ),
       );
-      await app.receiveRelay([(peer: p.xpub, cipher: await _fromPeer(p, w))]);
+      await app.receiveRelay(
+        [(peer: p.xpub, cipher: await _fromPeer(p, w))],
+        reached: [reached],
+      );
       await _settle();
     }
 
@@ -907,18 +936,29 @@ void main() {
     // no restore: it waits to be read, whenever it was written
     await timed('waits', now - 2 * day);
     expect(row('waits')?['burn_at'], isNull);
-    // a restore landed a minute ago: one written two days back is past
-    // its day and its minute
+    // a restore landed a minute ago. the catch-up after it reads from the
+    // file's anchor, days back, to the subscribe, after the landing
     restoreLandedAt = now - 60000;
-    await timed('due', now - 2 * day);
+    final caughtUp = (from: now - 5 * day, until: now);
+    // one written two days back is past its day and its minute
+    await timed('due', now - 2 * day, reached: caughtUp);
     final due = row('due')?['burn_at'] as int?;
     expect(due, isNotNull);
     expect(due!, lessThanOrEqualTo(now - day + 60000));
-    // one written an hour before it waits out the rest of its day
-    await timed('hour', now - 3600 * 1000);
+    // so is one with no window at all
+    await timed('due bare', now - 2 * day);
+    expect(row('due bare')?['burn_at'], isNotNull);
+    // one written an hour before waits out the rest of its day, and keeps
+    // that earlier start on its row
+    await timed('hour', now - 3600 * 1000, reached: caughtUp);
     expect(row('hour')?['burn_at'], isNull);
-    // one written since the restore is new here: its clock waits too
-    await timed('new', DateTime.now().millisecondsSinceEpoch);
+    expect(row('hour')?['sent_at'], now - 3600 * 1000);
+    // one that came live after the restore is new here, whatever it says
+    final t = DateTime.now().millisecondsSinceEpoch;
+    await timed('live', now - 2 * day, reached: (from: t, until: t));
+    expect(row('live')?['burn_at'], isNull);
+    // and so is one written since the restore
+    await timed('new', t, reached: caughtUp);
     expect(row('new')?['burn_at'], isNull);
   });
 
@@ -1735,9 +1775,10 @@ void main() {
     await waiting('queued in the file', t - 3600 * 1000);
     await waiting('theirs', t - 3600 * 1000, dir: 'in');
     await waiting('written since', t + 5000);
+    // before the store opens, on the first start after the restore
     expect(
-      await app.afterRestore(store, nowMs: t, before: t, made: t - 1),
-      isTrue,
+      await holdOutboxAfterRestore(store, landed: t, made: t - 1, nowMs: t),
+      1,
     );
     final sent = {
       for (final r in store.rows('messages')) r['msg_uid']: r['sent'],
@@ -2119,6 +2160,13 @@ void main() {
       await session.queueUnsend('gone', p.name);
       await session.queueEdit('fixed', p.name, 'one');
       await session.queueEdit('fixed', p.name, 'two');
+      // the row holds the words: they go from there
+      await mem.update(
+        'messages',
+        {'plaintext': 'two'},
+        where: 'msg_uid = ?',
+        whereArgs: ['fixed'],
+      );
       await session.queueEdit('old fix', p.name, 'older words');
       await session.queueUnsend('q gone', q.name);
       await session.queueEdit('q fixed', q.name, 'q words');
@@ -2176,6 +2224,45 @@ void main() {
         [for (final r in mem.rows('taken_out')) (r['msg_uid'], r['kind'])],
         [('both', 'unsend')],
       );
+    });
+
+    test('kept no longer once deleted for me, the chat cleared or deleted, '
+        'or our timed message burned', () async {
+      final p = await _peer();
+      final q = await _peer();
+      final r = await _peer();
+      for (final x in [p, q, r]) {
+        await contact(x);
+      }
+      for (final (x, uid) in [
+        (p, 'for me'),
+        (p, 'burns'),
+        (q, 'cleared'),
+        (r, 'chat gone'),
+      ]) {
+        await outTo(x, uid);
+        await session.queueEdit(uid, x.name, 'new words');
+      }
+      await session.queueUnsend('taken back', q.name);
+      Set<Object?> kept() => {
+        for (final row in mem.rows('taken_out')) row['msg_uid'],
+      };
+      expect(kept(), {'for me', 'burns', 'cleared', 'chat gone', 'taken back'});
+      await rows.deleteMessage('for me');
+      expect(kept(), isNot(contains('for me')));
+      await mem.update(
+        'messages',
+        {'burn_at': 1},
+        where: 'msg_uid = ?',
+        whereArgs: ['burns'],
+      );
+      await rows.purgeExpired();
+      expect(kept(), isNot(contains('burns')));
+      await rows.clearConversation(q.name);
+      expect(kept(), isNot(contains('cleared')));
+      expect(kept(), isNot(contains('taken back')));
+      await rows.deleteAllOf(r.name);
+      expect(kept(), isEmpty);
     });
   });
 
@@ -2379,14 +2466,43 @@ void main() {
     });
 
     test('our unsends and edits since their backup, in groups they are '
-        'still in, go to them again', () async {
+        'still in and since they joined, go to them again', () async {
       final p = await _peer();
       await contact(p);
       await talk(p);
       await groupWith(p, g);
       await groupWith(p, 'grp000000003', member: false);
+      // a group they joined two days ago
+      const g2 = 'grp000000002';
+      await groupWith(p, g2, joined: 2 * day);
       await said('edited', ago: 2 * day);
+      await said('sent before they came', group: g2, ago: 5 * day);
+      // the row holds the words: they go from there
+      await mem.update(
+        'messages',
+        {'plaintext': 'new words'},
+        where: 'msg_uid = ?',
+        whereArgs: ['edited'],
+      );
       final now = DateTime.now().millisecondsSinceEpoch;
+      await rows.queueGroupFrame(
+        g2,
+        [p.name],
+        groupEditRow('sent before they came', 'x'),
+        now: now - day,
+      );
+      await rows.queueGroupUnsend(
+        g2,
+        [p.name],
+        'before they came',
+        now: now - 3 * day,
+      );
+      await rows.queueGroupUnsend(
+        g2,
+        [p.name],
+        'since they came',
+        now: now - day,
+      );
       final both = [p.name, 'someone-else-in-it'];
       await rows.queueGroupUnsend(g, both, 'gone', now: now - day);
       await rows.queueGroupFrame(
@@ -2422,6 +2538,7 @@ void main() {
       expect(got, {
         jsonEncode(groupUnsendRow('gone')),
         jsonEncode(groupEditRow('edited', 'new words')),
+        jsonEncode(groupUnsendRow('since they came')),
       });
       expect(
         mem

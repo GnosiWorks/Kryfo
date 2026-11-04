@@ -143,10 +143,10 @@ mixin _OutboxRows {
           continue;
         }
         if (await held('edits_out', 'msg_uid = ?', [r.uid])) continue;
-        // only a row still ours to them
+        // only a row still ours to them, with the words it holds now
         final mine = await t.query(
           'messages',
-          columns: ['id'],
+          columns: ['plaintext'],
           where: "msg_uid = ? AND direction = 'out' AND peer_id = ?",
           whereArgs: [r.uid, peer],
           limit: 1,
@@ -155,7 +155,7 @@ mixin _OutboxRows {
         await t.insert('edits_out', {
           'msg_uid': r.uid,
           'peer_id': peer,
-          'new_text': r.body,
+          'new_text': mine.first['plaintext'] as String? ?? '',
           'at': r.at,
         });
         n++;
@@ -310,14 +310,7 @@ mixin _OutboxRows {
         'new_text': newText,
         'at': at,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
-      await noteTaken(
-        t,
-        msgUid,
-        kTakenEdit,
-        peer: peerId,
-        body: newText,
-        at: at,
-      );
+      await noteTaken(t, msgUid, kTakenEdit, peer: peerId, at: at);
     });
   }
 
@@ -562,6 +555,29 @@ Future<int> holdRestoredOutbox(DatabaseExecutor db, {int? before}) => db.update(
       : "direction = 'out' AND sent = 0 AND sent_at < ?",
   whereArgs: before == null ? null : [before],
 );
+
+/// on the first start after a restore that landed at [landed], from a file
+/// made at [made]: the rows the file brought wait for a tap, never one
+/// written here since. a failure is said, and the next start runs it again
+Future<int> holdOutboxAfterRestore(
+  DatabaseExecutor db, {
+  int? landed,
+  int? made,
+  int? nowMs,
+}) async {
+  final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
+  try {
+    final n = await holdRestoredOutbox(
+      db,
+      before: max(landed ?? now, made ?? 0) + 1,
+    );
+    dlog('restore: $n waiting rows wait for a tap');
+    return n;
+  } catch (e) {
+    dlog('restore: waiting rows not held (${e.runtimeType})');
+    return 0;
+  }
+}
 
 /// a queue's rows for no one blocked here: one list in the database, so
 /// however many there are none is a variable of its own

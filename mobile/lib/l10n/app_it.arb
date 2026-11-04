@@ -1225,6 +1225,7 @@
   "pairCodeNothingThereYetTrying": "Ancora niente · riprovo",
   "pairCodeNothingAtThatCode": "Niente con quel codice. Potrebbe essere sparito, o non l'hanno ancora condiviso.",
   "pairCodeUnreached": "I relay non hanno risposto. Riprova tra un momento.",
+  "fastRoomsWaitForTor": "Le stanze e i codici di abbinamento passano sempre da Tor, anche su Veloce. Funzionano appena Tor si connette.",
   "pairCodeFailed": "Non ha funzionato. Riprova.",
   "pairCodeTypeTheSixDigits": "Scrivi le sei cifre che ti hanno letto.",
   "pairCodeAddThem": "Aggiungi",

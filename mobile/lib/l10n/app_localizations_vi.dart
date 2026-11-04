@@ -4308,6 +4308,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không liên lạc được với các relay. Hãy thử lại sau giây lát.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'Phòng và mã ghép nối luôn đi qua Tor, kể cả ở chế độ Nhanh. Chúng hoạt động ngay khi Tor kết nối.';
+
+  @override
   String get pairCodeFailed => 'Không thành công. Hãy thử lại.';
 
   @override

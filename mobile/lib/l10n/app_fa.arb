@@ -1225,6 +1225,7 @@
   "pairCodeNothingThereYetTrying": "هنوز چیزی نیست · دوباره تلاش می‌کنیم",
   "pairCodeNothingAtThatCode": "زیر این کد چیزی نیست. شاید محو شده باشد، یا او هنوز آن را هم‌رسانی نکرده.",
   "pairCodeUnreached": "به رله‌ها دسترسی نشد. کمی بعد دوباره امتحان کنید.",
+  "fastRoomsWaitForTor": "اتاق‌ها و کدهای جفت‌سازی همیشه از Tor می‌گذرند، حتی روی حالت سریع. به محض وصل شدن Tor کار می‌کنند.",
   "pairCodeFailed": "انجام نشد. دوباره امتحان کنید.",
   "pairCodeTypeTheSixDigits": "شش رقمی را که او می‌خواند تایپ کنید.",
   "pairCodeAddThem": "افزودن",

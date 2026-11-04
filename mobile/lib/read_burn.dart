@@ -25,11 +25,11 @@ int burnStartBy(int arrived, int now) =>
     math.min(arrived, now) + kBurnWaitMost.inMilliseconds;
 
 /// when a timed arrival that came at [came] counts from. after a restore
-/// that landed at [restoredAt], a copy from before it (on a relay by then,
-/// or written before it) may be one this phone held and burned already:
-/// it counts from the earliest of when it came, reached the relay
-/// ([reached]) and was written ([written], writtenAtOf), never from a
-/// fresh clock
+/// that landed at [restoredAt], a copy that may have been on a relay before
+/// it (its window opens before the landing, [reached].from, as a catch-up's
+/// does) and was written before it may be one this phone held and burned
+/// already: it counts from when it was written ([written], writtenAtOf,
+/// never later than the window's end), never from a fresh clock
 int burnCameAt(
   int came, {
   ({int from, int until})? reached,
@@ -37,9 +37,10 @@ int burnCameAt(
   int? restoredAt,
 }) {
   if (restoredAt == null) return came;
-  final there = reached?.until ?? written;
-  if (there >= restoredAt) return came;
-  return math.min(came, math.min(reached?.until ?? came, written));
+  if ((reached?.from ?? 0) >= restoredAt || written >= restoredAt) {
+    return came;
+  }
+  return math.min(came, written);
 }
 
 /// how far ahead of this phone's clock an arrival may be and still wait as

@@ -1225,6 +1225,7 @@
   "pairCodeNothingThereYetTrying": "Chưa có gì · đang thử lại",
   "pairCodeNothingAtThatCode": "Không có gì ở mã đó. Có thể mã đã tự hủy, hoặc họ chưa chia sẻ.",
   "pairCodeUnreached": "Không liên lạc được với các relay. Hãy thử lại sau giây lát.",
+  "fastRoomsWaitForTor": "Phòng và mã ghép nối luôn đi qua Tor, kể cả ở chế độ Nhanh. Chúng hoạt động ngay khi Tor kết nối.",
   "pairCodeFailed": "Không thành công. Hãy thử lại.",
   "pairCodeTypeTheSixDigits": "Nhập sáu chữ số họ đọc cho bạn.",
   "pairCodeAddThem": "Thêm họ",

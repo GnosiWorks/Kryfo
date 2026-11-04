@@ -491,9 +491,18 @@ extension AppStateBoot on AppState {
     try {
       final database = await live.open();
       final prefs = await SharedPreferences.getInstance();
-      restoreLandedAt = await restoreLandedOf(prefs);
+      restoreLandedAt = restoreLandedOf(prefs);
       final after = prefs.getInt(kRestoreAfterPref);
       final from = after != null && after > 0 ? after : null;
+      // before any store or drain can send: what of ours the file still
+      // had waiting waits for a tap
+      if (after != null) {
+        await holdOutboxAfterRestore(
+          database,
+          landed: restoreLandedAt,
+          made: from,
+        );
+      }
       // linked devices go before anything can seal to them, and every other
       // identity's sessions are marked before the store is ready
       var marked = true;
@@ -511,9 +520,7 @@ extension AppStateBoot on AppState {
       _zeroBytes(xpb); // priv bytes consumed by bootstrap, wipe from ram
       // cleared only once every identity was done: a failure runs it all
       // again on the next start
-      if (after != null &&
-          await afterRestore(database, before: restoreLandedAt, made: from) &&
-          marked) {
+      if (after != null && await afterRestore(database) && marked) {
         await prefs.remove(kRestoreAfterPref);
       }
       // linked devices, before any message opens (switch off: nothing)

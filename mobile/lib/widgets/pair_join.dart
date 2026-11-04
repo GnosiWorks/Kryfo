@@ -20,13 +20,15 @@ import 'motion.dart' show kHouseCurve, kHouseTime, motionStill;
 import 'pair_code_panel.dart' show kPairCodeLife;
 import 'halo_buttons.dart';
 import 'press_scale.dart';
+import 'tor_wait_line.dart';
 
 /// the engine's answer when no relay took a share or answered a lookup
 const pairUnreached = 'error: unreached';
 
 /// an engine error, worded for the person
-String pairErrorText(String res) =>
-    res == pairUnreached ? l10n.pairCodeUnreached : l10n.pairCodeFailed;
+String pairErrorText(String res) => res == pairUnreached
+    ? torWaitLine() ?? l10n.pairCodeUnreached
+    : l10n.pairCodeFailed;
 
 /// what a code's address held, if it is one invite and nothing else: the
 /// number shown and the add both read this one string, so nothing after it

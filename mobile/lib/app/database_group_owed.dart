@@ -6,7 +6,6 @@ part of '../main.dart';
 mixin _GroupOwedRows implements GroupOwedStore {
   // what these rows take from the rest of HaloDb
   Future<Database> open();
-  Future<List<String>> getGroupMembers(String groupId);
 
   // ---- group messages and files some members still lack ----
 
@@ -417,16 +416,8 @@ mixin _GroupOwedRows implements GroupOwedStore {
     if (f == null) return;
     final db = await open();
     await db.transaction((t) async {
-      final edit = f.edit;
-      if (note && edit != null) {
-        await noteTaken(
-          t,
-          f.uid,
-          kTakenEdit,
-          group: groupId,
-          body: edit,
-          at: now,
-        );
+      if (note && f.edit != null) {
+        await noteTaken(t, f.uid, kTakenEdit, group: groupId, at: now);
       }
       for (final m in members) {
         await _dropGroupFrames(t, groupId, m, f.uid, edits: f.edit != null);
@@ -443,7 +434,9 @@ mixin _GroupOwedRows implements GroupOwedStore {
   }
 
   /// [member] restored a backup: our group unsends and last edits since
-  /// [since], in the groups they are still in, go to them again. how many
+  /// [since], in the groups they are still in and made since they joined,
+  /// go to them again. an edit only of a row still ours, sent since they
+  /// joined, with the words it holds now. how many
   Future<int> requeueGroupTakenSince(
     String member, {
     required int since,
@@ -451,28 +444,43 @@ mixin _GroupOwedRows implements GroupOwedStore {
   }) async {
     final db = await open();
     final taken = await takenSince(db, since: since);
-    final ins = <String, bool>{};
+    // when they joined each group, null where they are not in it
+    final joined = <String, int?>{};
+    Future<int?> joinedAt(String g) async {
+      if (joined.containsKey(g)) return joined[g];
+      final r = await db.query(
+        'group_members',
+        columns: ['joined_at'],
+        where: 'group_id = ? AND halo_id = ?',
+        whereArgs: [g, member],
+        limit: 1,
+      );
+      return joined[g] = r.isEmpty
+          ? null
+          : (r.first['joined_at'] as num?)?.toInt() ?? 0;
+    }
+
     var n = 0;
     for (final r in taken) {
       final g = r.group!;
-      final isIn = ins[g] ??= (await getGroupMembers(g)).contains(member);
-      if (!isIn) continue;
+      final from = await joinedAt(g);
+      if (from == null || r.at < from) continue;
       if (r.kind == kTakenUnsend) {
         await queueGroupUnsend(g, [member], r.uid, now: now, note: false);
       } else {
-        // only a row still ours in it
         final mine = await db.query(
           'messages',
-          columns: ['id'],
+          columns: ['plaintext', 'sent_at'],
           where: "msg_uid = ? AND direction = 'out' AND group_id = ?",
           whereArgs: [r.uid, g],
           limit: 1,
         );
         if (mine.isEmpty) continue;
+        if (((mine.first['sent_at'] as num?)?.toInt() ?? 0) < from) continue;
         await queueGroupFrame(
           g,
           [member],
-          groupEditRow(r.uid, r.body),
+          groupEditRow(r.uid, mine.first['plaintext'] as String? ?? ''),
           now: now,
           note: false,
         );

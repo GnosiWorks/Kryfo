@@ -1225,6 +1225,7 @@
   "pairCodeNothingThereYetTrying": "Nada ainda · tentando de novo",
   "pairCodeNothingAtThatCode": "Nada nesse código. Ele pode ter sumido, ou a pessoa ainda não compartilhou.",
   "pairCodeUnreached": "Não foi possível falar com os retransmissores. Tente de novo em instantes.",
+  "fastRoomsWaitForTor": "Salas e códigos de pareamento sempre passam pelo Tor, também no Rápido. Funcionam assim que o Tor conecta.",
   "pairCodeFailed": "Não deu certo. Tente de novo.",
   "pairCodeTypeTheSixDigits": "Digite os seis dígitos que a pessoa leu.",
   "pairCodeAddThem": "Adicionar",

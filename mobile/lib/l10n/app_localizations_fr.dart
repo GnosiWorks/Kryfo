@@ -4368,6 +4368,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les relais n’ont pas répondu. Réessayez dans un instant.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'Les salons et les codes d’appairage passent toujours par Tor, même sur Rapide. Ils marchent dès que Tor est connecté.';
+
+  @override
   String get pairCodeFailed => 'Ça n’a pas marché. Réessayez.';
 
   @override

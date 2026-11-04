@@ -263,8 +263,10 @@ extension AppStateHeal on AppState {
     final restored = await ss.sealsOnRestored(peer);
     final on = to.on;
     // a chat deleted here (parked) gets no restore's heal: it would tell
-    // them, and they reach us as a request, as anyone new does
-    if (restored && on != null && !await on.isAccepted(peer)) return false;
+    // them, and they reach us as a request, as anyone new does. one a shut
+    // vault holds waits for it to open, where that can be read (a later
+    // pass, or their next text, which opens only then)
+    if (restored && (on == null || !await on.isAccepted(peer))) return false;
     int? since;
     if (restored) {
       final from = ss.restoredFrom ?? at;
@@ -553,33 +555,14 @@ extension AppStateHeal on AppState {
   }
 
   /// what follows a restore or a move, once, on the first start after it
-  /// (8), with every store open: what of ours the file still had waiting
-  /// to go waits for a tap, each identity's unused one-time invites go
-  /// (one may have been answered since the file was made) and its session
-  /// prekeys are made again, and pool identities retire. the main invites
-  /// stay: links and the handle keep working. true when every identity was
-  /// done; otherwise the next start runs it again. [before]: when the
-  /// restore landed, [made]: when its file was made
-  Future<bool> afterRestore(
-    Database db, {
-    int? nowMs,
-    int? before,
-    int? made,
-  }) async {
+  /// (8), with every store open: each identity's unused one-time invites
+  /// go (one may have been answered since the file was made) and its
+  /// session prekeys are made again, and pool identities retire. the main
+  /// invites stay: links and the handle keep working. true when every
+  /// identity was done; otherwise the next start runs it again
+  Future<bool> afterRestore(Database db, {int? nowMs}) async {
     final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
     var ok = true;
-    // never sent on its own: only rows the file brought, never one written
-    // here since
-    try {
-      final held = await holdRestoredOutbox(
-        db,
-        before: max(before ?? now, made ?? 0) + 1,
-      );
-      dlog('restore: $held waiting rows wait for a tap');
-    } catch (e) {
-      ok = false;
-      dlog('restore: waiting rows not held (${e.runtimeType})');
-    }
     for (final r in await identityRows(db)) {
       if (r.retiredAt != null) continue;
       if (r.kind == kIdentPool) {

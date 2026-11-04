@@ -420,6 +420,7 @@ mixin _GroupRows {
       'group_roster',
       'room_keys',
       'group_resent',
+      'taken_out',
     ]) {
       await db.delete(table, where: 'group_id = ?', whereArgs: [groupId]);
     }

@@ -5334,6 +5334,10 @@
   "@pairCodeUnreached": {
     "description": "widgets/pair_join.dart, widgets/pair_code_panel.dart: no relay answered the lookup or took the share, so nothing is known about the code"
   },
+  "fastRoomsWaitForTor": "Rooms and pairing codes always go through Tor, also on Fast. They work as soon as Tor connects.",
+  "@fastRoomsWaitForTor": {
+    "description": "widgets/pair_join.dart, screens/room_create_sheet.dart, screens/room_preview_sheet.dart: on the Fast route (settingsFast) while Tor is not connected: burner rooms and pair codes always go through Tor, so they wait for it"
+  },
   "pairCodeFailed": "That didn't work. Try again.",
   "@pairCodeFailed": {
     "description": "widgets/pair_join.dart, widgets/pair_code_panel.dart: sharing or looking up a pairing code failed for another reason"

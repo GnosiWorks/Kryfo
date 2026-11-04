@@ -4318,6 +4318,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t reach the relays. Try again in a moment.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'Rooms and pairing codes always go through Tor, also on Fast. They work as soon as Tor connects.';
+
+  @override
   String get pairCodeFailed => 'That didn\'t work. Try again.';
 
   @override

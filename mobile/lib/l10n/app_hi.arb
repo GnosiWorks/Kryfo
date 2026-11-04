@@ -1119,6 +1119,7 @@
   "pairCodeNothingThereYetTrying": "अभी वहाँ कुछ नहीं · फिर कोशिश कर रहे हैं",
   "pairCodeNothingAtThatCode": "उस कोड पर कुछ नहीं है। शायद उसका समय ख़त्म हो गया, या उन्होंने अभी शेयर नहीं किया।",
   "pairCodeUnreached": "रिले तक नहीं पहुँच पाए। थोड़ी देर में फिर कोशिश करें।",
+  "fastRoomsWaitForTor": "रूम और जोड़ने के कोड हमेशा Tor से होकर जाते हैं, तेज़ पर भी। Tor जुड़ते ही ये काम करते हैं।",
   "pairCodeFailed": "यह नहीं हुआ। दोबारा कोशिश करें।",
   "pairCodeTypeTheSixDigits": "वे जो छह अंक पढ़कर सुनाएँ, वे लिखें।",
   "pairCodeAddThem": "जोड़ें",

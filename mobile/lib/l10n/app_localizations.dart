@@ -6839,6 +6839,12 @@ abstract class AppLocalizations {
   /// **'Couldn\'t reach the relays. Try again in a moment.'**
   String get pairCodeUnreached;
 
+  /// widgets/pair_join.dart, screens/room_create_sheet.dart, screens/room_preview_sheet.dart: on the Fast route (settingsFast) while Tor is not connected: burner rooms and pair codes always go through Tor, so they wait for it
+  ///
+  /// In en, this message translates to:
+  /// **'Rooms and pairing codes always go through Tor, also on Fast. They work as soon as Tor connects.'**
+  String get fastRoomsWaitForTor;
+
   /// widgets/pair_join.dart, widgets/pair_code_panel.dart: sharing or looking up a pairing code failed for another reason
   ///
   /// In en, this message translates to:

@@ -4338,6 +4338,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Aktarıcılara ulaşılamadı. Birazdan yeniden dene.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'Odalar ve eşleştirme kodları Hızlı’da da her zaman Tor’dan geçer. Tor bağlanır bağlanmaz çalışırlar.';
+
+  @override
   String get pairCodeFailed => 'Olmadı. Yeniden dene.';
 
   @override

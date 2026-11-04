@@ -4407,6 +4407,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Ретранслятори не відповіли. Спробуй трохи згодом.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'Кімнати й коди з’єднання завжди йдуть через Tor, навіть на режимі «Швидкий». Вони запрацюють, щойно Tor підключиться.';
+
+  @override
   String get pairCodeFailed => 'Не вийшло. Спробуй ще раз.';
 
   @override

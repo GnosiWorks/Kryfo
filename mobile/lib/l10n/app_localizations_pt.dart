@@ -4355,6 +4355,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Não foi possível falar com os retransmissores. Tente de novo em instantes.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'Salas e códigos de pareamento sempre passam pelo Tor, também no Rápido. Funcionam assim que o Tor conecta.';
+
+  @override
   String get pairCodeFailed => 'Não deu certo. Tente de novo.';
 
   @override

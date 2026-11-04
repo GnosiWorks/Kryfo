@@ -1225,6 +1225,7 @@
   "pairCodeNothingThereYetTrying": "Belum ada apa-apa · mencoba lagi",
   "pairCodeNothingAtThatCode": "Tidak ada apa pun di kode itu. Mungkin sudah hilang, atau dia belum membagikannya.",
   "pairCodeUnreached": "Tidak bisa menghubungi relay. Coba lagi sebentar lagi.",
+  "fastRoomsWaitForTor": "Ruang dan kode penautan selalu lewat Tor, juga di Cepat. Keduanya langsung jalan begitu Tor terhubung.",
   "pairCodeFailed": "Tidak berhasil. Coba lagi.",
   "pairCodeTypeTheSixDigits": "Ketik enam angka yang dia bacakan.",
   "pairCodeAddThem": "Tambahkan",

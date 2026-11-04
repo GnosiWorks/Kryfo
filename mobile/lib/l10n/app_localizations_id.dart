@@ -4319,6 +4319,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Tidak bisa menghubungi relay. Coba lagi sebentar lagi.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'Ruang dan kode penautan selalu lewat Tor, juga di Cepat. Keduanya langsung jalan begitu Tor terhubung.';
+
+  @override
   String get pairCodeFailed => 'Tidak berhasil. Coba lagi.';
 
   @override

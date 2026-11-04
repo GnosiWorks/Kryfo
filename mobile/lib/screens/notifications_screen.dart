@@ -364,8 +364,9 @@ class _NotificationsScreenState extends State<NotificationsScreen>
               if (!onDesktop) ...[
                 _ModeCard(
                   title: l10n.gettingMessagesAlwaysOn,
-                  tag: l10n.gettingMessagesMostPrivate,
-                  // on fast it does not go through tor
+                  // on fast it does not go through tor, and is not the most
+                  // private way
+                  tag: onOnion ? l10n.gettingMessagesMostPrivate : null,
                   body: onOnion
                       ? l10n.gettingMessagesMessagesArriveInstantlyNothing
                       : l10n.gettingMessagesArriveInstantlyFast,

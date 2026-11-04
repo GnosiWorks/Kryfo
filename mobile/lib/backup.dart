@@ -47,7 +47,7 @@ import 'engine_strings.dart';
 import 'dart:typed_data';
 import 'backup_stream.dart';
 import 'dart:math';
-import 'restore_undo.dart' show noteRestoreLanded;
+import 'restore_undo.dart' show noteRestoreLanded, pruneTaken;
 import 'l10n/l10n.dart';
 import 'desktop/desktop_mode.dart'
     show containerClosed, containerOpened, engineDir, runIsolated;
@@ -916,6 +916,7 @@ class BackupSide {
         await settleWaitingBurns(t, at);
         await photosUnsentInCopy(t);
         await holdRestoredOutbox(t);
+        await pruneTaken(t, nowMs: at);
       });
       await db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
     } finally {

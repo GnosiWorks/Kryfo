@@ -91,16 +91,19 @@ void main() {
     await t.pumpWidget(const SizedBox());
   });
 
-  testWidgets('always on says nothing leaves tor only on the private '
-      'route', (t) async {
+  testWidgets('always on says nothing leaves tor, and most private, only '
+      'on the private route', (t) async {
     await _open(t);
     expect(
       find.text(l10n.gettingMessagesMessagesArriveInstantlyNothing),
       findsOneWidget,
     );
     expect(find.text(l10n.gettingMessagesArriveInstantlyFast), findsNothing);
+    expect(find.text(l10n.gettingMessagesMostPrivate), findsOneWidget);
     await t.pumpWidget(const SizedBox());
     await _open(t, route: 'balanced');
+    // nor is it the most private way there
+    expect(find.text(l10n.gettingMessagesMostPrivate), findsNothing);
     expect(
       find.text(l10n.gettingMessagesMessagesArriveInstantlyNothing),
       findsNothing,

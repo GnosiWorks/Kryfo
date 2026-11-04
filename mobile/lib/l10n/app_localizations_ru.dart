@@ -4423,6 +4423,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Ретрансляторы не ответили. Попробуй чуть позже.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'Комнаты и коды связи всегда идут через Tor, даже на режиме «Быстрый». Они заработают, как только Tor подключится.';
+
+  @override
   String get pairCodeFailed => 'Не получилось. Попробуй ещё раз.';
 
   @override

@@ -1225,6 +1225,7 @@
   "pairCodeNothingThereYetTrying": "Rien pour l’instant · nouvel essai",
   "pairCodeNothingAtThatCode": "Rien à ce code. Il a peut-être disparu, ou la personne ne l’a pas encore partagé.",
   "pairCodeUnreached": "Les relais n’ont pas répondu. Réessayez dans un instant.",
+  "fastRoomsWaitForTor": "Les salons et les codes d’appairage passent toujours par Tor, même sur Rapide. Ils marchent dès que Tor est connecté.",
   "pairCodeFailed": "Ça n’a pas marché. Réessayez.",
   "pairCodeTypeTheSixDigits": "Tapez les six chiffres qu’on vous a lus.",
   "pairCodeAddThem": "Ajouter",

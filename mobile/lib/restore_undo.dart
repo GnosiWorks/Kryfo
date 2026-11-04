@@ -7,15 +7,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 /// when the last restore landed, by this clock: a timed copy from before it
-/// counts from then at the latest. kept while relays may hold such a copy,
-/// then dropped
-const kRestoreLandedPref = 'restore.landed';
+/// counts from then at the latest, for as long as relays may hold such a
+/// copy. the key is review A's kRestoreCutPref (heal.dart), which its heal
+/// cut keeps for good: read here, never removed here
+const kRestoreLandedPref = 'restore.cut';
 const kRestoreLandedKeep = Duration(days: 16);
 
 /// [kRestoreLandedPref] as this start read it, null with no restore lately
 int? restoreLandedAt;
 
-/// a restore lands now
+/// a restore lands now. once review A's _livesHereNow writes
+/// kRestoreCutPref itself, this goes
 Future<void> noteRestoreLanded({int? nowMs}) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setInt(
@@ -24,21 +26,18 @@ Future<void> noteRestoreLanded({int? nowMs}) async {
   );
 }
 
-/// when the last restore landed, while it is recent. an older one is
-/// dropped
-Future<int?> restoreLandedOf(SharedPreferences prefs, {int? nowMs}) async {
+/// when the last restore landed, while it is recent: null once it is
+/// older than [kRestoreLandedKeep]. the pref itself stays
+int? restoreLandedOf(SharedPreferences prefs, {int? nowMs}) {
   final at = prefs.getInt(kRestoreLandedPref);
   if (at == null) return null;
   final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
-  if (now - at > kRestoreLandedKeep.inMilliseconds) {
-    await prefs.remove(kRestoreLandedPref);
-    return null;
-  }
-  return at;
+  return now - at > kRestoreLandedKeep.inMilliseconds ? null : at;
 }
 
 /// our unsends and last edits are kept this long: a heal's since reaches
-/// back 15 days, and a day more
+/// back 15 days, and a day more. no words are kept: an edit goes again with
+/// the words our row holds then, and only while it is there
 const kTakenKeep = Duration(days: 16);
 const kTakenUnsend = 'unsend';
 const kTakenEdit = 'edit';
@@ -51,7 +50,6 @@ Future<void> takenTables(DatabaseExecutor db) => db.execute('''
     kind TEXT NOT NULL,
     peer_id TEXT,
     group_id TEXT,
-    body TEXT NOT NULL DEFAULT '',
     at INTEGER NOT NULL,
     PRIMARY KEY (msg_uid, kind)
   )
@@ -64,26 +62,59 @@ Future<void> takenTablesAtOpen(DatabaseExecutor db) async {
     "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
     ['taken_out'],
   );
-  if (have.isEmpty) await takenTables(db);
+  if (have.isEmpty) {
+    await takenTables(db);
+  } else {
+    await pruneTaken(db);
+  }
 }
 
-/// one of ours taken back ([kTakenUnsend]) or edited ([kTakenEdit], [body]
-/// its words) at [at], in [peer]'s chat or in [group]. a take-back leaves
-/// its edit nothing to change. older ones go first
+/// those past the keep go: at every open and in every copy that leaves the
+/// phone
+Future<int> pruneTaken(DatabaseExecutor db, {int? nowMs}) => db.delete(
+  'taken_out',
+  where: 'at < ?',
+  whereArgs: [
+    (nowMs ?? DateTime.now().millisecondsSinceEpoch) -
+        kTakenKeep.inMilliseconds,
+  ],
+);
+
+/// gone with what they were of: an edit with its message ([uid]), all of a
+/// chat with it ([peer] or [group])
+Future<void> dropTaken(
+  DatabaseExecutor db, {
+  String? uid,
+  String? peer,
+  String? group,
+}) async {
+  if (uid != null) {
+    await db.delete(
+      'taken_out',
+      where: 'msg_uid = ? AND kind = ?',
+      whereArgs: [uid, kTakenEdit],
+    );
+  }
+  if (peer != null) {
+    await db.delete('taken_out', where: 'peer_id = ?', whereArgs: [peer]);
+  }
+  if (group != null) {
+    await db.delete('taken_out', where: 'group_id = ?', whereArgs: [group]);
+  }
+}
+
+/// one of ours taken back ([kTakenUnsend]) or edited ([kTakenEdit]) at
+/// [at], in [peer]'s chat or in [group]. a take-back leaves its edit
+/// nothing to change. older ones go first
 Future<void> noteTaken(
   DatabaseExecutor db,
   String uid,
   String kind, {
   String? peer,
   String? group,
-  String body = '',
   required int at,
 }) async {
-  await db.delete(
-    'taken_out',
-    where: 'at < ?',
-    whereArgs: [at - kTakenKeep.inMilliseconds],
-  );
+  await pruneTaken(db, nowMs: at);
   if (kind == kTakenUnsend) {
     await db.delete(
       'taken_out',
@@ -96,12 +127,11 @@ Future<void> noteTaken(
     'kind': kind,
     'peer_id': peer,
     'group_id': group,
-    'body': body,
     'at': at,
   }, conflictAlgorithm: ConflictAlgorithm.replace);
 }
 
-typedef Taken = ({String uid, String kind, String? group, String body, int at});
+typedef Taken = ({String uid, String kind, String? group, int at});
 
 /// what [noteTaken] kept from [since] on: [peer]'s, or every group's when
 /// null
@@ -124,7 +154,6 @@ Future<List<Taken>> takenSince(
         uid: r['msg_uid'] as String,
         kind: r['kind'] as String,
         group: r['group_id'] as String?,
-        body: r['body'] as String? ?? '',
         at: r['at'] as int,
       ),
   ];

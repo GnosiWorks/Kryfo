@@ -4425,6 +4425,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذّر الوصول إلى المُرحِّلات. حاول مجددًا بعد قليل.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'تمر الغرف ورموز الاقتران دائمًا عبر Tor، حتى على الوضع السريع. تعمل فور اتصال Tor.';
+
+  @override
   String get pairCodeFailed => 'لم ينجح ذلك. حاول مجددًا.';
 
   @override

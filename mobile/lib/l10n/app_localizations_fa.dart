@@ -4332,6 +4332,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'به رله‌ها دسترسی نشد. کمی بعد دوباره امتحان کنید.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'اتاق‌ها و کدهای جفت‌سازی همیشه از Tor می‌گذرند، حتی روی حالت سریع. به محض وصل شدن Tor کار می‌کنند.';
+
+  @override
   String get pairCodeFailed => 'انجام نشد. دوباره امتحان کنید.';
 
   @override

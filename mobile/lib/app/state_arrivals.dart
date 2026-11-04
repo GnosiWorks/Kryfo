@@ -1291,7 +1291,9 @@ extension AppStateArrivals on AppState {
       // its creator does that
       poll: isGroup ? _arrivingPoll(env.poll) : null,
       sticker: sticker?.value,
-      sentAt: arrivedAt,
+      // a timed copy from before a restore keeps its earlier start, which
+      // its wait to be read counts from
+      sentAt: came < (arrivedAt ?? now) ? came : arrivedAt,
       writtenAt: writtenAt,
       // his phone: a contact who wrote through the developer chat keeps
       // their chat, and the message says how it came
