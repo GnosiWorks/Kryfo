@@ -476,9 +476,20 @@ ThemeData buildHaloTheme() {
 // if they are still what we put there: the user may have copied since.
 Timer? _clipTimer;
 
-Future<void> copySensitive(String value) async {
-  // marked sensitive for the keyboard's history and the android 13
-  // preview; the plain clipboard is the fallback
+// what kryfo put on the clipboard last, and whether a hidden chat or the
+// decoy was open then
+String? _ourClip;
+bool _ourClipQuiet = false;
+
+/// true while what is copied comes from a hidden chat or the decoy: the app
+/// sets it
+bool Function() clipGoesWithLock = () => false;
+
+/// [value] on the clipboard, marked sensitive for the keyboard's history and
+/// the android 13 preview. [kept]: a message's words, which stay until the
+/// next lock or a switch of pin, not a minute
+Future<void> copySensitive(String value, {bool kept = false}) async {
+  // the plain clipboard is the fallback
   var done = false;
   try {
     done =
@@ -490,18 +501,59 @@ Future<void> copySensitive(String value) async {
     // no such call here: the plain clipboard below
   }
   if (!done) await Clipboard.setData(ClipboardData(text: value));
+  _ourClip = value;
+  _ourClipQuiet = clipGoesWithLock();
   _clipTimer?.cancel();
-  _clipTimer = Timer(const Duration(seconds: 60), () async {
-    try {
-      final now = await Clipboard.getData(Clipboard.kTextPlain);
-      if (now?.text == value) {
-        await Clipboard.setData(const ClipboardData(text: ''));
-      }
-    } catch (e) {
-      dlog('clipboard: not cleared (${e.runtimeType})');
-    }
-  });
+  if (kept) return;
+  _clipTimer = Timer(const Duration(seconds: 60), () => _clearIfOurs(value));
 }
+
+Future<void> _clearIfOurs(
+  String? value, {
+  bool force = false,
+  bool any = false,
+}) async {
+  try {
+    final cleared = await const MethodChannel('halo/platform')
+        .invokeMethod<bool>('clearClip', {
+          'text': value ?? '',
+          'force': force,
+          'any': any,
+        });
+    if (cleared != null) {
+      if (_ourClip == value) _ourClip = null;
+      return;
+    }
+  } catch (_) {
+    // no such call here: the plain clipboard below
+  }
+  try {
+    final now = await Clipboard.getData(Clipboard.kTextPlain);
+    if (any || now?.text == value || (force && now == null)) {
+      await Clipboard.setData(const ClipboardData(text: ''));
+    }
+    if (_ourClip == value) _ourClip = null;
+  } catch (e) {
+    dlog('clipboard: not cleared (${e.runtimeType})');
+  }
+}
+
+/// what kryfo copied comes off the clipboard if it is still there.
+/// [quietOnly]: only a copy from a hidden chat or the decoy, which goes with
+/// a lock or the hidden chats' close as their shared files do; a switch of
+/// pin takes any. such a copy goes even when android hides the clipboard
+/// from the background. a [wipe] clears the clipboard whatever is on it
+Future<void> dropOurClip({bool quietOnly = false, bool wipe = false}) async {
+  final v = _ourClip;
+  if (!wipe && (v == null || (quietOnly && !_ourClipQuiet))) return;
+  _clipTimer?.cancel();
+  await _clearIfOurs(v, force: wipe || _ourClipQuiet, any: wipe);
+  if (wipe) _ourClip = null;
+}
+
+@visibleForTesting
+({String? value, bool quiet}) get ourClipForTest =>
+    (value: _ourClip, quiet: _ourClipQuiet);
 
 // the app's scaffold messenger, set on the MaterialApp. toasts use the root
 // overlay below

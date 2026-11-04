@@ -6,6 +6,7 @@
 // the listener service cannot bring the process back. the deletes below are
 // the fallback where that call refuses.
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'secure_store.dart';
@@ -27,6 +28,7 @@ import 'desktop/desktop_mode.dart' show rawFiles;
 import 'dlog.dart';
 import 'drafts.dart' show forgetAllDrafts;
 import 'shred.dart' show shredFile;
+import 'theme.dart' show dropOurClip;
 
 // everything still running checks this before touching the database. the
 // timers outlive the widget tree and cannot all be cancelled from here.
@@ -103,6 +105,8 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
   final cap = Future<void>.delayed(const Duration(seconds: 4));
   // keys, prefs and folders first. tor's own folder stays while tor runs
   await _erase(keep: const {'tor'});
+  // what was copied leaves the clipboard, whatever session copied it
+  unawaited(dropOurClip(wipe: true));
   final shredFrom = Stopwatch()..start();
   if (released != null) await Future.any([released, cap]);
   // the engine stops its relay listeners and takes tor off the network, and

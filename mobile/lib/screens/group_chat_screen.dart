@@ -3728,7 +3728,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               ? null
               : () {
                   dismiss();
-                  Clipboard.setData(ClipboardData(text: target.text));
+                  copySensitive(target.text, kept: true);
                   showHaloToast(context, l10n.commonCopied);
                 },
         ),

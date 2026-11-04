@@ -276,6 +276,7 @@ void main() async {
   lockState.picksDropped = dropPickerCopies;
   // what a hidden chat or the decoy shares goes with the next lock
   shareGoesWithLock = () => sessionQuiet || session.vault != null;
+  clipGoesWithLock = () => sessionQuiet || session.vault != null;
   unawaited(_sweepNotesAtLaunch());
   unawaited(_sweepPlaintextLeftovers());
   // what a backup or a restore cut short left, before either can run again

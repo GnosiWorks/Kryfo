@@ -666,6 +666,30 @@ open class MainActivity : FlutterFragmentActivity() {
                         cm.setPrimaryClip(clip)
                         result.success(true)
                     }
+                    // our copy taken off the clipboard while it is still
+                    // ours. from the background android hides the clipboard:
+                    // [force] takes it off then too, [any] whatever it holds
+                    "clearClip" -> {
+                        val text = call.argument<String>("text") ?: ""
+                        val force = call.argument<Boolean>("force") == true
+                        val any = call.argument<Boolean>("any") == true
+                        val cm = applicationContext
+                            .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val now = try { cm.primaryClip } catch (_: Exception) { null }
+                        val mine = now != null && now.itemCount > 0 &&
+                            now.getItemAt(0).text?.toString() == text
+                        val drop = any || mine || (now == null && force)
+                        if (drop) {
+                            try {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                                    cm.clearPrimaryClip()
+                                } else {
+                                    cm.setPrimaryClip(ClipData.newPlainText("", ""))
+                                }
+                            } catch (_: Exception) {}
+                        }
+                        result.success(drop)
+                    }
                     // a camera shot at the sensor's own size and quality,
                     // brought to what a gallery pick gets: 1280 on the long
                     // edge, jpeg 70. decoded pixels carry no metadata.
