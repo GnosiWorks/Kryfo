@@ -146,6 +146,29 @@ class _PhoneLinkApp implements PhoneLinkHooks {
       rethrow;
     }
     await readLinkNotices(db);
+    // the contacts who read lists learn of the new device, spread out
+    // over passes. the link is kept whatever happens here
+    try {
+      final held = await db.query(
+        'dev_lists',
+        columns: ['version'],
+        where: "ident = ? AND owner = 'me'",
+        whereArgs: [kMainIdent],
+        limit: 1,
+      );
+      if (held.isNotEmpty) {
+        await deviceSend?.listsChanged([
+          (
+            ident: kMainIdent,
+            version: held.first['version'] as int,
+            added: [t.device],
+            removed: false,
+          ),
+        ]);
+      }
+    } catch (e) {
+      dlog('devices: the new list waits for its pushes (${e.runtimeType})');
+    }
   }
 }
 
