@@ -206,6 +206,9 @@ import '../text_send.dart';
 import '../lock_guard.dart' show LockDropped, lockGuard, onScreen;
 import '../translate/chat_translation.dart';
 import '../translate/hub_live.dart' show translationHubIfOn;
+import '../voice/chat_transcripts.dart';
+import '../voice/ui/transcript_line.dart';
+import '../voice/voice_transcripts.dart' show voiceTranscriptsIfOn;
 import '../translate/lang_names.dart';
 import '../translate/translate_bar.dart';
 import '../translate/translate_bubble.dart';
@@ -1212,6 +1215,11 @@ class _ChatScreenState extends State<ChatScreen>
     final hub? => ChatTranslation(hub, widget.peerHaloId),
     null => null,
   };
+  // their voice notes and ours as words, made on the phone
+  late final ChatTranscripts? _transcripts = switch (voiceTranscriptsIfOn()) {
+    final hub? => ChatTranscripts(hub, widget.peerHaloId),
+    null => null,
+  };
   // its row in this session's database, for when the chat was made
   DevChatRow? _devChat;
   // the pinned key did not check out: nothing was sent
@@ -1595,9 +1603,16 @@ class _ChatScreenState extends State<ChatScreen>
     return out;
   }
 
-  // its translation goes with it, not when the chat closes
-  void _forgetTranslation(_Msg m) =>
-      _translation?.forget(trKeyOf(m.msgUid, m.came), m.text);
+  // its translation and its transcript go with it, not when the chat
+  // closes
+  void _forgetTranslation(_Msg m) {
+    _translation?.forget(trKeyOf(m.msgUid, m.came), m.text);
+    final uid = m.msgUid;
+    if (uid == null || !isVoiceName(m.fileName)) return;
+    final words = _transcripts?.of(uid).text ?? '';
+    _transcripts?.forget(uid);
+    if (words.isNotEmpty) _translation?.forget(txTranslateKey(uid), words);
+  }
 
   Future<void> _forgetBurnt(_Msg m) async {
     if (m.msgUid != null) await session.deleteMessage(m.msgUid!);
@@ -2219,6 +2234,11 @@ class _ChatScreenState extends State<ChatScreen>
         ? translation.offer(target.text)
         : null;
     final canTranslate = translation != null && trOffer != null;
+    // a voice note copies its words while they show, as a text would
+    final heard = target.msgUid != null && isVoiceName(target.fileName)
+        ? _transcripts?.shownText(target.msgUid!)
+        : null;
+    final copyWords = target.text.isEmpty ? heard ?? '' : target.text;
     // the card's height from its rows, so it is placed where it fits
     final out = target.direction == 'out';
     final media = target.mediaPath != null || target.filePath != null;
@@ -2346,6 +2366,7 @@ class _ChatScreenState extends State<ChatScreen>
                             msg: target,
                             album: album,
                             translation: _translation,
+                            transcripts: _transcripts,
                           ),
                         ),
                         builder: (_, t, child) => Transform.scale(
@@ -2436,12 +2457,12 @@ class _ChatScreenState extends State<ChatScreen>
                           label: l10n.commonCopy,
                           onTap:
                               kept ||
-                                  target.text.isEmpty ||
+                                  copyWords.isEmpty ||
                                   target.sticker != null
                               ? null
                               : () {
                                   dismiss();
-                                  copySensitive(target.text, kept: true);
+                                  copySensitive(copyWords, kept: true);
                                   showHaloToast(context, l10n.commonCopied);
                                 },
                         ),
@@ -5509,6 +5530,7 @@ class _ChatScreenState extends State<ChatScreen>
           key: isMatch ? _matchKeys[hitAt] : null,
           msg: m,
           translation: _translation,
+          transcripts: _transcripts,
           album: run,
           stickers: _stickers,
           stickerOrder: i,
@@ -5685,6 +5707,7 @@ class _ChatScreenState extends State<ChatScreen>
       ?..removeListener(_onDevOpening)
       ..dispose();
     _translation?.dispose();
+    _transcripts?.dispose();
     _lastReadPerPeer[_memo] = _messages.fold(
       0,
       (a, m) => m.rowid > a ? m.rowid : a,
@@ -8144,10 +8167,13 @@ class _Bubble extends StatelessWidget {
   final void Function(BuildContext, int)? onLongPressTile;
   // the chat's translations: theirs in another language offer one
   final ChatTranslation? translation;
+  // the chat's voice note transcripts
+  final ChatTranscripts? transcripts;
   const _Bubble({
     super.key,
     required this.msg,
     this.translation,
+    this.transcripts,
     this.album,
     this.onLongPressTile,
     this.stickers,
@@ -8524,14 +8550,28 @@ class _Bubble extends StatelessWidget {
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 2,
                                         ),
-                                        child: VoiceBubble(
-                                          key: ValueKey(
-                                            'vb_${msg.msgUid ?? msg.filePath}',
-                                          ),
-                                          path: msg.filePath!,
-                                          isOut: isOut,
-                                          disguised: msg.voiceDisguised,
-                                          onPlay: onAct,
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            VoiceBubble(
+                                              key: ValueKey(
+                                                'vb_${msg.msgUid ?? msg.filePath}',
+                                              ),
+                                              path: msg.filePath!,
+                                              isOut: isOut,
+                                              disguised: msg.voiceDisguised,
+                                              onPlay: onAct,
+                                            ),
+                                            VoiceTranscript(
+                                              chat: transcripts,
+                                              uid: msg.msgUid,
+                                              path: msg.filePath!,
+                                              isOut: isOut,
+                                              translation: translation,
+                                            ),
+                                          ],
                                         ),
                                       )
                                     else if (msg.filePath != null &&

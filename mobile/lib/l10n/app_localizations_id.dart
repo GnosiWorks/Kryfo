@@ -11046,4 +11046,73 @@ class AppLocalizationsId extends AppLocalizations {
   String restoreOlderMany(Object first, Object second, int count) {
     return '$first, $second, dan $count orang lainnya memakai Kryfo versi lama. Obrolanmu dengan mereka dijeda sampai mereka memperbaruinya.';
   }
+
+  @override
+  String get voiceSeeTranscription => 'Lihat transkrip';
+
+  @override
+  String get voiceTranscribing => 'Mentranskrip…';
+
+  @override
+  String get voiceHideTranscription => 'Sembunyikan';
+
+  @override
+  String get voiceShowOriginalOnly => 'Lihat aslinya saja';
+
+  @override
+  String get voiceCouldNotTranscribe => 'Kata-katanya tidak terdengar jelas';
+
+  @override
+  String get voiceTranscriptLabel => 'Transkrip';
+
+  @override
+  String get voiceSettingsTitle => 'Transkrip suara';
+
+  @override
+  String get voiceOnRow => 'Transkrip pesan suara';
+
+  @override
+  String get voiceOnHint => 'Ditawarkan di bawah setiap pesan suara';
+
+  @override
+  String get voiceOffDeletes =>
+      'Mematikan ini menghapus transkrip yang tersimpan.';
+
+  @override
+  String get voiceModelTitle => 'Model suara';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'Satu unduhan sekitar $size, untuk semua bahasa.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'Diunduh lewat Tor dan disimpan di ponsel ini. Pesan suaramu tidak pernah keluar darinya.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'Diunduh lewat Tor dan disimpan di komputer ini. Pesan suaramu tidak pernah keluar darinya.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'Tor belum tersambung. Model hanya diunduh lewat Tor, jadi coba lagi setelah tersambung.';
+
+  @override
+  String get voiceModelRemoveTitle => 'Hapus model suara?';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'Transkrip yang sudah dibuat tetap ada. Yang baru perlu modelnya lagi.';
+
+  @override
+  String get voiceKeptNote =>
+      'Transkrip disimpan terenkripsi bersama chatnya di ponsel ini dan dihapus bersamanya.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'Transkrip disimpan terenkripsi bersama chatnya di komputer ini dan dihapus bersamanya.';
+
+  @override
+  String get voiceNotNow => 'Nanti saja';
 }

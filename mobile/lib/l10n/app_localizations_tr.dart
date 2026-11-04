@@ -11069,4 +11069,72 @@ class AppLocalizationsTr extends AppLocalizations {
   String restoreOlderMany(Object first, Object second, int count) {
     return '$first, $second ve $count kişi daha Kryfo’nun eski bir sürümünü kullanıyor. Güncelleyene kadar onlarla sohbetlerin duraklar.';
   }
+
+  @override
+  String get voiceSeeTranscription => 'Metni gör';
+
+  @override
+  String get voiceTranscribing => 'Metne çevriliyor…';
+
+  @override
+  String get voiceHideTranscription => 'Gizle';
+
+  @override
+  String get voiceShowOriginalOnly => 'Yalnızca orijinali göster';
+
+  @override
+  String get voiceCouldNotTranscribe => 'Sözcükler anlaşılamadı';
+
+  @override
+  String get voiceTranscriptLabel => 'Mesajın metni';
+
+  @override
+  String get voiceSettingsTitle => 'Sesten metne';
+
+  @override
+  String get voiceOnRow => 'Sesli mesajları metne çevir';
+
+  @override
+  String get voiceOnHint => 'Her sesli mesajın altında sunulur';
+
+  @override
+  String get voiceOffDeletes => 'Kapatınca kayıtlı metinler silinir.';
+
+  @override
+  String get voiceModelTitle => 'Konuşma modeli';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'Tüm diller için yaklaşık $size tek bir indirme.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'Tor üzerinden iner ve bu telefonda kalır. Sesli mesajların telefondan hiç çıkmaz.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'Tor üzerinden iner ve bu bilgisayarda kalır. Sesli mesajların bilgisayardan hiç çıkmaz.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'Tor henüz bağlanmadı. Model yalnızca Tor üzerinden iner, bağlanınca tekrar dene.';
+
+  @override
+  String get voiceModelRemoveTitle => 'Konuşma modeli kaldırılsın mı?';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'Hazır metinler kalır. Yenileri için model yeniden gerekir.';
+
+  @override
+  String get voiceKeptNote =>
+      'Metinler bu telefonda sohbetleriyle birlikte şifreli tutulur ve sohbetle birlikte silinir.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'Metinler bu bilgisayarda sohbetleriyle birlikte şifreli tutulur ve sohbetle birlikte silinir.';
+
+  @override
+  String get voiceNotNow => 'Şimdi değil';
 }

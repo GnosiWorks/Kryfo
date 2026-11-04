@@ -11062,4 +11062,73 @@ class AppLocalizationsFa extends AppLocalizations {
   String restoreOlderMany(Object first, Object second, int count) {
     return '⁨$first⁩، ⁨$second⁩ و $count نفر دیگر از نسخه‌ی قدیمی‌تر Kryfo استفاده می‌کنند. گفتگوهای شما با آن‌ها تا به‌روزرسانی‌شان متوقف می‌ماند.';
   }
+
+  @override
+  String get voiceSeeTranscription => 'دیدن متن';
+
+  @override
+  String get voiceTranscribing => 'در حال تبدیل به متن…';
+
+  @override
+  String get voiceHideTranscription => 'پنهان کردن';
+
+  @override
+  String get voiceShowOriginalOnly => 'فقط متن اصلی';
+
+  @override
+  String get voiceCouldNotTranscribe => 'کلمه‌ها تشخیص داده نشد';
+
+  @override
+  String get voiceTranscriptLabel => 'متن پیام';
+
+  @override
+  String get voiceSettingsTitle => 'تبدیل صدا به متن';
+
+  @override
+  String get voiceOnRow => 'تبدیل پیام‌های صوتی به متن';
+
+  @override
+  String get voiceOnHint => 'زیر هر پیام صوتی پیشنهاد می‌شود';
+
+  @override
+  String get voiceOffDeletes =>
+      'خاموش کردن این، متن‌های ذخیره‌شده را پاک می‌کند.';
+
+  @override
+  String get voiceModelTitle => 'مدل گفتار';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'یک دانلود حدود $size برای همهٔ زبان‌ها.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'از راه Tor دانلود می‌شود و روی همین گوشی می‌ماند. پیام‌های صوتی شما هرگز از آن بیرون نمی‌روند.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'از راه Tor دانلود می‌شود و روی همین رایانه می‌ماند. پیام‌های صوتی شما هرگز از آن بیرون نمی‌روند.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'Tor هنوز وصل نشده است. مدل فقط از راه Tor دانلود می‌شود، پس از وصل شدن دوباره امتحان کنید.';
+
+  @override
+  String get voiceModelRemoveTitle => 'مدل گفتار حذف شود؟';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'متن‌هایی که ساخته شده‌اند می‌مانند. برای متن‌های تازه دوباره به مدل نیاز است.';
+
+  @override
+  String get voiceKeptNote =>
+      'متن‌ها رمزگذاری‌شده کنار گفتگوی خود روی همین گوشی می‌مانند و همراه آن پاک می‌شوند.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'متن‌ها رمزگذاری‌شده کنار گفتگوی خود روی همین رایانه می‌مانند و همراه آن پاک می‌شوند.';
+
+  @override
+  String get voiceNotNow => 'فعلاً نه';
 }

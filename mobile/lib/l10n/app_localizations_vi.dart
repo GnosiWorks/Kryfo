@@ -11031,4 +11031,72 @@ class AppLocalizationsVi extends AppLocalizations {
   String restoreOlderMany(Object first, Object second, int count) {
     return '$first, $second và $count người khác đang dùng phiên bản Kryfo cũ. Các cuộc trò chuyện với họ sẽ tạm dừng cho đến khi họ cập nhật.';
   }
+
+  @override
+  String get voiceSeeTranscription => 'Xem bản chép lời';
+
+  @override
+  String get voiceTranscribing => 'Đang chép lời…';
+
+  @override
+  String get voiceHideTranscription => 'Ẩn';
+
+  @override
+  String get voiceShowOriginalOnly => 'Chỉ xem bản gốc';
+
+  @override
+  String get voiceCouldNotTranscribe => 'Không nghe rõ lời';
+
+  @override
+  String get voiceTranscriptLabel => 'Bản chép lời';
+
+  @override
+  String get voiceSettingsTitle => 'Chép lời giọng nói';
+
+  @override
+  String get voiceOnRow => 'Chép lời tin nhắn thoại';
+
+  @override
+  String get voiceOnHint => 'Được đề xuất dưới mỗi tin nhắn thoại';
+
+  @override
+  String get voiceOffDeletes => 'Tắt mục này sẽ xóa các bản chép lời đã lưu.';
+
+  @override
+  String get voiceModelTitle => 'Mô hình giọng nói';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'Một lần tải khoảng $size, cho mọi ngôn ngữ.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'Được tải qua Tor và giữ trên điện thoại này. Tin nhắn thoại của bạn không bao giờ rời khỏi máy.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'Được tải qua Tor và giữ trên máy tính này. Tin nhắn thoại của bạn không bao giờ rời khỏi máy.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'Tor chưa kết nối. Mô hình chỉ được tải qua Tor, hãy thử lại khi đã kết nối.';
+
+  @override
+  String get voiceModelRemoveTitle => 'Gỡ mô hình giọng nói?';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'Các bản chép lời đã có vẫn giữ nguyên. Bản mới cần mô hình lại.';
+
+  @override
+  String get voiceKeptNote =>
+      'Bản chép lời được lưu mã hóa cùng cuộc trò chuyện trên điện thoại này và bị xóa cùng nó.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'Bản chép lời được lưu mã hóa cùng cuộc trò chuyện trên máy tính này và bị xóa cùng nó.';
+
+  @override
+  String get voiceNotNow => 'Để sau';
 }

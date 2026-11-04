@@ -66,14 +66,42 @@ class PackControls extends StatelessWidget {
   });
 
   @override
+  Widget build(BuildContext context) => DownloadControls(
+    downloads: hub.downloads,
+    id: bundle.lang,
+    size: bundle.gz,
+    failText: failLine,
+    onDone: onDone,
+  );
+}
+
+// one download's controls, a pack's or the speech model's: its size
+// first, then how far it got, with a way to stop it and to try again
+class DownloadControls extends StatelessWidget {
+  final ModelDownloads downloads;
+  final String id;
+  // what it takes once fetched
+  final int size;
+  final String Function(DlFail? f) failText;
+  final VoidCallback? onDone;
+  const DownloadControls({
+    super.key,
+    required this.downloads,
+    required this.id,
+    required this.size,
+    required this.failText,
+    this.onDone,
+  });
+
+  @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: hub.downloads,
+      listenable: downloads,
       builder: (context, _) {
-        final dl = hub.downloads;
-        final lang = bundle.lang;
+        final dl = downloads;
+        final lang = id;
         final s = dl.of(lang);
-        final size = packSize(bundle.gz);
+        final size = packSize(this.size);
         Widget line(String t, {Color? color}) => Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Text(
@@ -98,7 +126,7 @@ class PackControls extends StatelessWidget {
                     ? l10n.translateFinishing
                     : l10n.translateProgress(
                         packSize(s.done),
-                        packSize(s.total > 0 ? s.total : bundle.gz),
+                        packSize(s.total > 0 ? s.total : this.size),
                       ),
                 key: const ValueKey('pack-progress'),
                 style: HaloType.mono(size: 11, color: HaloColors.text2),
@@ -128,7 +156,7 @@ class PackControls extends StatelessWidget {
             ]);
           case DlPhase.failed:
             children.addAll([
-              line(failLine(s.fail), color: HaloColors.rose),
+              line(failText(s.fail), color: HaloColors.rose),
               if (s.fail != DlFail.noEngine)
                 HaloPrimaryButton(
                   label: l10n.commonTryAgain,

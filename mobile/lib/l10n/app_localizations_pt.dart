@@ -11127,4 +11127,73 @@ class AppLocalizationsPt extends AppLocalizations {
     );
     return '$first, $second e $_temp0 usam uma versão anterior do Kryfo. Suas conversas com eles vão pausar até atualizarem.';
   }
+
+  @override
+  String get voiceSeeTranscription => 'Ver transcrição';
+
+  @override
+  String get voiceTranscribing => 'Transcrevendo…';
+
+  @override
+  String get voiceHideTranscription => 'Ocultar';
+
+  @override
+  String get voiceShowOriginalOnly => 'Ver só o original';
+
+  @override
+  String get voiceCouldNotTranscribe => 'Não deu para entender as palavras';
+
+  @override
+  String get voiceTranscriptLabel => 'Transcrição';
+
+  @override
+  String get voiceSettingsTitle => 'Transcrição de voz';
+
+  @override
+  String get voiceOnRow => 'Transcrever mensagens de voz';
+
+  @override
+  String get voiceOnHint => 'Oferecida sob cada mensagem de voz';
+
+  @override
+  String get voiceOffDeletes =>
+      'Ao desativar, as transcrições salvas são apagadas.';
+
+  @override
+  String get voiceModelTitle => 'Modelo de voz';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'Um só download de cerca de $size, para todos os idiomas.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'Baixado pelo Tor e guardado neste celular. Suas mensagens de voz nunca saem dele.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'Baixado pelo Tor e guardado neste computador. Suas mensagens de voz nunca saem dele.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'O Tor ainda não está conectado. O modelo só é baixado pelo Tor, então tente de novo quando ele conectar.';
+
+  @override
+  String get voiceModelRemoveTitle => 'Remover o modelo de voz?';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'As transcrições já feitas ficam. As novas precisam do modelo de novo.';
+
+  @override
+  String get voiceKeptNote =>
+      'As transcrições ficam guardadas, criptografadas, com a conversa neste celular e são apagadas com ela.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'As transcrições ficam guardadas, criptografadas, com a conversa neste computador e são apagadas com ela.';
+
+  @override
+  String get voiceNotNow => 'Agora não';
 }

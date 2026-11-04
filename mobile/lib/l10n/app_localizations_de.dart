@@ -11167,4 +11167,72 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     return '$first, $second und $_temp0 nutzen eine ältere Version von Kryfo. Eure Chats pausieren, bis sie aktualisieren.';
   }
+
+  @override
+  String get voiceSeeTranscription => 'Transkript anzeigen';
+
+  @override
+  String get voiceTranscribing => 'Wird transkribiert…';
+
+  @override
+  String get voiceHideTranscription => 'Ausblenden';
+
+  @override
+  String get voiceShowOriginalOnly => 'Nur Original zeigen';
+
+  @override
+  String get voiceCouldNotTranscribe => 'Keine Worte erkannt';
+
+  @override
+  String get voiceTranscriptLabel => 'Transkript';
+
+  @override
+  String get voiceSettingsTitle => 'Sprache zu Text';
+
+  @override
+  String get voiceOnRow => 'Sprachnachrichten transkribieren';
+
+  @override
+  String get voiceOnHint => 'Unter jeder Sprachnachricht angeboten';
+
+  @override
+  String get voiceOffDeletes => 'Ausschalten löscht gespeicherte Transkripte.';
+
+  @override
+  String get voiceModelTitle => 'Sprachmodell';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'Ein Download von etwa $size für alle Sprachen.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'Über Tor geladen und auf diesem Handy behalten. Deine Sprachnachrichten verlassen es nie.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'Über Tor geladen und auf diesem Computer behalten. Deine Sprachnachrichten verlassen ihn nie.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'Tor ist noch nicht verbunden. Das Modell wird nur über Tor geladen, versuch es also noch mal, sobald es verbunden ist.';
+
+  @override
+  String get voiceModelRemoveTitle => 'Sprachmodell entfernen?';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'Fertige Transkripte bleiben. Für neue braucht es das Modell wieder.';
+
+  @override
+  String get voiceKeptNote =>
+      'Transkripte bleiben verschlüsselt bei ihrem Chat auf diesem Handy und werden mit ihm gelöscht.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'Transkripte bleiben verschlüsselt bei ihrem Chat auf diesem Computer und werden mit ihm gelöscht.';
+
+  @override
+  String get voiceNotNow => 'Nicht jetzt';
 }

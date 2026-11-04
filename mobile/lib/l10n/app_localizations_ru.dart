@@ -11225,4 +11225,72 @@ class AppLocalizationsRu extends AppLocalizations {
   String restoreOlderMany(Object first, Object second, int count) {
     return 'У $first, $second и ещё $count старая версия Kryfo. Чаты с ними встанут на паузу, пока они не обновят приложение.';
   }
+
+  @override
+  String get voiceSeeTranscription => 'Показать текст';
+
+  @override
+  String get voiceTranscribing => 'Распознаём…';
+
+  @override
+  String get voiceHideTranscription => 'Скрыть';
+
+  @override
+  String get voiceShowOriginalOnly => 'Только оригинал';
+
+  @override
+  String get voiceCouldNotTranscribe => 'Не удалось разобрать слова';
+
+  @override
+  String get voiceTranscriptLabel => 'Текст сообщения';
+
+  @override
+  String get voiceSettingsTitle => 'Голос в текст';
+
+  @override
+  String get voiceOnRow => 'Распознавать голосовые';
+
+  @override
+  String get voiceOnHint => 'Предлагается под каждым голосовым';
+
+  @override
+  String get voiceOffDeletes => 'Если выключить, сохранённые тексты удалятся.';
+
+  @override
+  String get voiceModelTitle => 'Модель речи';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'Одна загрузка около $size для всех языков.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'Скачивается через Tor и хранится на этом телефоне. Ваши голосовые никогда его не покидают.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'Скачивается через Tor и хранится на этом компьютере. Ваши голосовые никогда его не покидают.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'Tor ещё не подключён. Модель скачивается только через Tor, попробуйте снова, когда он подключится.';
+
+  @override
+  String get voiceModelRemoveTitle => 'Удалить модель речи?';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'Готовые тексты останутся. Для новых снова понадобится модель.';
+
+  @override
+  String get voiceKeptNote =>
+      'Тексты хранятся зашифрованными вместе с чатом на этом телефоне и удаляются вместе с ним.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'Тексты хранятся зашифрованными вместе с чатом на этом компьютере и удаляются вместе с ним.';
+
+  @override
+  String get voiceNotNow => 'Не сейчас';
 }
