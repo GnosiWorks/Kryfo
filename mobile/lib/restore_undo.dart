@@ -6,6 +6,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
+import 'dlog.dart';
+
 /// when the last restore landed, by this clock: a timed copy from before it
 /// counts from then at the latest, for as long as relays may hold such a
 /// copy. the key is review A's kRestoreCutPref (heal.dart), which its heal
@@ -64,8 +66,19 @@ Future<void> takenTablesAtOpen(DatabaseExecutor db) async {
   );
   if (have.isEmpty) {
     await takenTables(db);
-  } else {
-    await pruneTaken(db);
+    return;
+  }
+  // written only when there is one to go
+  final cut = DateTime.now().millisecondsSinceEpoch - kTakenKeep.inMilliseconds;
+  final old = await db.query(
+    'taken_out',
+    columns: ['msg_uid'],
+    where: 'at < ?',
+    whereArgs: [cut],
+    limit: 1,
+  );
+  if (old.isNotEmpty) {
+    await pruneTaken(db, nowMs: cut + kTakenKeep.inMilliseconds);
   }
 }
 
@@ -83,6 +96,20 @@ Future<int> pruneTaken(DatabaseExecutor db, {int? nowMs}) => db.delete(
 /// gone with what they were of: an edit with its message ([uid]), all of a
 /// chat with it ([peer] or [group])
 Future<void> dropTaken(
+  DatabaseExecutor db, {
+  String? uid,
+  String? peer,
+  String? group,
+}) async {
+  try {
+    await _dropTaken(db, uid: uid, peer: peer, group: group);
+  } catch (e) {
+    // a store with no such table (the developer chat's) keeps none
+    dlog('restore: taken rows not dropped (${e.runtimeType})');
+  }
+}
+
+Future<void> _dropTaken(
   DatabaseExecutor db, {
   String? uid,
   String? peer,
