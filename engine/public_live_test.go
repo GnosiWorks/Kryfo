@@ -86,21 +86,11 @@ func shortTurns(t *testing.T) {
 	spendFirstTurn()
 }
 
-// open sockets that listen on addr
-func openOn(r *relayStandIn, addr string) int {
-	n := 0
-	for _, c := range connsOn(r.snapshot(), []string{addr}) {
-		if c.closed.IsZero() && len(c.reqs) > 0 {
-			n++
-		}
-	}
-	return n
-}
+// open sockets where a subscription listens on addr
+func openOn(r *relayStandIn, addr string) int { return r.listening()[addr] }
 
-// sockets that ever listened on addr
-func everOn(r *relayStandIn, addr string) int {
-	return len(connsOn(r.snapshot(), []string{addr}))
-}
+// reads of addr on r, each its own window
+func everOn(r *relayStandIn, addr string) int { return r.windows(addr) }
 
 func TestLiveRankKeepsTheLatestHeard(t *testing.T) {
 	setLiveCap(t, 2, time.Hour)

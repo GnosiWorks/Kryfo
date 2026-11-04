@@ -48,7 +48,7 @@ func measureStart(t *testing.T, spread time.Duration) (first, all time.Duration)
 	// a start as a fresh process has it: no socket has asked since the kick
 	kickRelays()
 	start := time.Now()
-	l := startLanes(t, ctx, 11, 0)
+	l := startLanes(t, alone(ctx), 11, 0)
 	waitFor(t, "every address asked", spread+15*time.Second, func() bool {
 		return len(firstAsks(relay, start)) >= l.subs()
 	})
@@ -388,7 +388,7 @@ func TestRealTurnsAndKicks(t *testing.T) {
 	base := settledActive(t)
 	kickRelays()
 	start := time.Now()
-	l := startLanes(t, ctx, 7, 0)
+	l := startLanes(t, alone(ctx), 7, 0)
 	waitFor(t, "the turns counted", time.Second, func() bool {
 		return atomic.LoadInt32(&catchupActive) > base
 	})
@@ -445,7 +445,7 @@ func TestAParkedSocketCountsNothing(t *testing.T) {
 		cancel()
 		kickRelays()
 	}()
-	l := startLanes(t, ctx, 1, 0)
+	l := startLanes(t, alone(ctx), 1, 0)
 	waitFor(t, "every address asked", 10*time.Second, func() bool {
 		n := 0
 		for _, c := range relay.snapshot() {
@@ -589,10 +589,10 @@ func TestAJustAddedAddressAsksAtOnce(t *testing.T) {
 		}
 		return false
 	}
-	if r := nostrSubscribe(mainIdent, againHex, false); r != "ok" {
+	if r := nostrSubscribeAs(mainIdent, againHex, false, true); r != "ok" {
 		t.Fatal(r)
 	}
-	if r := nostrSubscribe(mainIdent, addedHex, true); r != "ok" {
+	if r := nostrSubscribeAs(mainIdent, addedHex, true, true); r != "ok" {
 		t.Fatal(r)
 	}
 	start := time.Now()

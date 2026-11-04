@@ -643,7 +643,7 @@ func TestProbeLooksLikeTheSocketsOwnRequest(t *testing.T) {
 	defer cancel()
 	// fifteen sockets: their own delays all falling inside the bound below
 	// is about one run in five billion, six made it one in fifteen hundred
-	l := startLanes(t, ctx, 10, 2)
+	l := startLanes(t, alone(ctx), 10, 2)
 	addrs := append([]string{l.fc}, l.contacts...)
 	for _, r := range l.rooms {
 		addrs = append(addrs, r...)

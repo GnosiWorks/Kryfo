@@ -386,13 +386,15 @@ func TestReceiveLanesDialApart(t *testing.T) {
 		subs += len(addrs)
 	}
 	waitFor(t, "every subscription connected", 15*time.Second, func() bool {
-		n := 0
-		for _, c := range r.snapshot() {
-			if len(c.subIDs) > 0 {
-				n++
+		l := r.listening()
+		for _, addrs := range groups {
+			for _, a := range addrs {
+				if l[a] == 0 {
+					return false
+				}
 			}
 		}
-		return n == subs
+		return len(l) == subs
 	})
 
 	// through the app's own send paths, so their lane choice is what is checked
@@ -422,7 +424,8 @@ func TestReceiveLanesDialApart(t *testing.T) {
 
 	conns := r.snapshot()
 	laneOf := map[string]string{}
-	seen := 0
+	// connections, by their far end: two addresses of a lane share one
+	seen := map[string]bool{}
 	for lane, addrs := range groups {
 		for _, a := range addrs {
 			on := connsOn(conns, []string{a})
@@ -430,7 +433,7 @@ func TestReceiveLanesDialApart(t *testing.T) {
 				t.Fatalf("an address of %s never reached the relay", lane)
 			}
 			for _, c := range on {
-				seen++
+				seen[c.remote] = true
 				n, ok := socks.nameOf(c.remote)
 				if !ok || n == "" {
 					t.Fatalf("%s reached the relay without a socks name", lane)
@@ -448,8 +451,8 @@ func TestReceiveLanesDialApart(t *testing.T) {
 	if want := receiveLaneCount + 3; len(laneOf) != want {
 		t.Fatalf("%d socks names for the main identity, want %d: %v", len(laneOf), want, laneOf)
 	}
-	if seen != len(conns) {
-		t.Fatalf("%d of %d connections belong to the main identity's lanes", seen, len(conns))
+	if len(seen) != len(conns) {
+		t.Fatalf("%d of %d connections belong to the main identity's lanes", len(seen), len(conns))
 	}
 }
 
@@ -489,7 +492,7 @@ func slowPongRun(t *testing.T, interval, pongWait time.Duration, until func(conn
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), rcv)
+	go nostrSubscribeRunner(alone(ctx), hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), rcv)
 	waitFor(t, "pings at the set interval", 30*time.Second, func() bool { return until(r.snapshot()) })
 	r.mu.Lock()
 	resent = r.resent

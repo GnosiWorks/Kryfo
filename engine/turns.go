@@ -140,6 +140,28 @@ type subTurn struct {
 	own bool
 	// the wake it last had a turn in, see takeWake
 	wake int64
+	// closed once the socket it shares is up, nil for a socket of its own:
+	// then its turn is over, and it does not take the first one
+	ready func() <-chan struct{}
+}
+
+func (t *subTurn) readyChan() <-chan struct{} {
+	if t.ready == nil {
+		return nil
+	}
+	return t.ready()
+}
+
+func isClosed(c <-chan struct{}) bool {
+	if c == nil {
+		return false
+	}
+	select {
+	case <-c:
+		return true
+	default:
+		return false
+	}
 }
 
 // waits the socket's turn, unless it has had one since the last kick or has
@@ -165,7 +187,8 @@ func (t *subTurn) take(ctx context.Context) bool {
 		return ctx.Err() == nil
 	}
 	t.up = false
-	if takeFirstTurn(kc) {
+	up := t.readyChan()
+	if isClosed(up) || takeFirstTurn(kc) {
 		return ctx.Err() == nil
 	}
 	d := turnDelay(autoNow())
@@ -177,6 +200,8 @@ func (t *subTurn) take(ctx context.Context) bool {
 	select {
 	case <-tm.C:
 		return true
+	case <-up:
+		return ctx.Err() == nil
 	case <-ctx.Done():
 		return false
 	}
@@ -197,7 +222,8 @@ func (t *subTurn) takeWake(ctx context.Context, kc chan struct{}, n int64, w wak
 		return ctx.Err() == nil
 	}
 	t.up = false
-	if t.own && takeWakeFirst(n) {
+	up := t.readyChan()
+	if isClosed(up) || (t.own && takeWakeFirst(n)) {
 		return ctx.Err() == nil
 	}
 	d := w.turn(t.own, now)
@@ -209,6 +235,8 @@ func (t *subTurn) takeWake(ctx context.Context, kc chan struct{}, n int64, w wak
 	select {
 	case <-tm.C:
 		return true
+	case <-up:
+		return ctx.Err() == nil
 	case <-ctx.Done():
 		return false
 	}

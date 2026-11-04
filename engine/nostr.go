@@ -44,6 +44,9 @@ var (
 	// still names the old mode's, and the new route must not dial them
 	nostrRelaysStale bool
 	nostrSubs        = map[string]context.CancelFunc{}
+	// the subscriptions of hidden chats, by key: a runner started again for
+	// one stays on a socket of its own
+	nostrHiddenSubs = map[string]bool{}
 	// "tag|content" per event, and what each one still owes once the poll
 	// has handed it over
 	nostrInbox     []string
@@ -1389,6 +1392,11 @@ var torRetryWait = 10 * time.Second
 // lands on pair c's receive address rcvPk, tagged [tag] (its subscription
 // key). dedupes across relays. exits when ctx is cancelled.
 func nostrSubscribeRunner(ctx context.Context, tag string, c convPair, rcvPk string) {
+	// the identity's addresses on a lane share a socket per relay, a hidden
+	// chat's keeps one of its own
+	if !hiddenOf(ctx) {
+		ctx = shareOn(ctx, identGroup(c.ident))
+	}
 	nostrSubscribeRunnerAt(ctx, c.listenLane(rcvPk), tag, rcvPk, c.unwrapStamped)
 }
 
@@ -1765,6 +1773,12 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			}
 			turn := subTurn{tag: tag, fresh: freshOf(ctx), own: ownEntry}
 			defer turn.done()
+			// the socket this address shares, if it shares one: its turn ends
+			// once another address got it up
+			hk := hubKey{lane: lane, group: shareOf(ctx), url: u}
+			if hk.group != "" {
+				turn.ready = func() <-chan struct{} { return hubReady(hk) }
+			}
 			for {
 				// nothing is counted while it parks or waits for tor below:
 				// the turn counts again from take
@@ -1904,16 +1918,9 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// everything the library starts for it end with the connection
 				// and not with the subscription. ending it closes the relay.
 				conn, connDone := context.WithCancel(ctx)
-				r := nostr.NewRelay(conn, u, relayOptionsFor(u))
 				dialAt := time.Now()
 				dialGen := routeGeneration()
-				noteRelayDial(u)
-				// a dial still under way when the mode changes ends there
-				rctx, rcancel := onRoute(conn, routeC)
-				dctx, dcancel := relayDialCtx(rctx, u)
-				err = r.ConnectWithClient(dctx, client)
-				dcancel()
-				rcancel()
+				r, fresh, err := relayJoin(conn, hk, rcvPk, client, routeC, ownEntry)
 				turn.dialed(err == nil)
 				if err != nil && routeGone(routeC) {
 					connDone()
@@ -1944,7 +1951,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// the mode changed while it dialled. nothing is asked on it
 				select {
 				case <-routeC:
-					r.Close()
+					r.close()
 					connDone()
 					nap(rejoin)
 					continue
@@ -1954,10 +1961,13 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// night asleep lived
 				connected := time.Now().Round(0)
 				noteRelayConnect(u, ck, int(time.Since(dialAt).Milliseconds()))
-				// a relay answered. this is the one fact the watchdog trusts.
-				noteRelayConnected()
 				connGen = routeGeneration()
-				routeAnswered(u, connGen)
+				// a relay answered. this is the one fact the watchdog trusts.
+				// a shared socket says so once it carried something lately
+				if fresh {
+					noteRelayConnected()
+					routeAnswered(u, connGen)
+				}
 				// the anchor is what was saved, by this runner or another. it
 				// is only saved once a catch-up has run to its end, so a
 				// connection that dropped half way asks for the same window
@@ -2009,13 +2019,15 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						f.Since = since
 					}
 				}
-				// what comes before the eose reached the relay before this
-				// moment, and after what it is known to have handed over
-				subAt := time.Now().UnixMilli()
 				// the library fakes an eose after 7s of silence. a hundred
 				// slices over tor take longer than that, and a fake one would
-				// end the count below before the relay was done.
-				sub, err := r.Subscribe(conn, f, nostr.SubscriptionOptions{MaxWaitForEOSE: time.Duration(math.MaxInt64)})
+				// end the count below before the relay was done. so no
+				// subscription here takes a fake one
+				sub, err := r.subscribe(f)
+				// what comes before the eose reached the relay before this
+				// moment, and after what it is known to have handed over. a
+				// shared socket may have held the req back until now
+				subAt := time.Now().UnixMilli()
 				if err != nil {
 					log.Printf("nostr: subscribe %s: %v", u, err)
 					connDone()
@@ -2049,9 +2061,11 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// an answer speaks for the route the probe was asked on,
 				// whenever the socket was dialled: a bump that tore nothing
 				// down leaves it carrying
+				// when the last probe was asked
+				var asked time.Time
 				probe := func() bool {
-					asked := time.Now()
-					if !probeProves(u, func() bool { return relayResponds(conn, r, rcvPk) }) {
+					asked = time.Now()
+					if !probeProves(u, func() bool { return r.probe(conn, rcvPk) }) {
 						return false
 					}
 					noteRelayMs(u, time.Since(asked))
@@ -2109,7 +2123,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						defer close(done)
 						defer asking.Store(false)
 						defer walkEnds(tag)
-						if missing, answered := relayByIDs(cctx, r, rcvPk, ids, byIDsOn(sweeper)); answered {
+						if missing, answered := r.byIDs(cctx, rcvPk, ids, byIDsOn(sweeper)); answered {
 							seen.notOnRelay(u, urls, missing)
 						}
 					}()
@@ -2211,7 +2225,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						if !alive {
 							idle.Stop()
 							stopKick()
-							r.Close()
+							r.close()
 							dropped = true
 							if !spoke {
 								ownMiss()
@@ -2307,7 +2321,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							// never finished.
 							m := catchupMarkOf(ck)
 							res, mark := catchup.Continue(cctx, func(pc context.Context, s, t nostr.Timestamp, n int) ([]nostr.Event, error) {
-								return relayPage(pc, r, rcvPk, s, t, n)
+								return r.page(pc, rcvPk, s, t, n)
 							}, since, from, catchupPage, catchupMaxPages, func(ev nostr.Event) bool {
 								brought()
 								return walked(ev)
@@ -2332,7 +2346,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 									start = m.Cursor
 								}
 								if cctx.Err() == nil && res.Until < start {
-									r.Close()
+									r.close()
 								}
 								return
 							}
@@ -2348,14 +2362,14 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						log.Printf("nostr: our first relay answers again, %s closed", u)
 						idle.Stop()
 						stopKick()
-						r.Close()
+						r.close()
 						goto reconnect
 					case <-sweptC:
 						sweptC = nil
 						log.Printf("nostr: %s read for addr %s..., closed until the next round", u, rcvPk[:12])
 						idle.Stop()
 						stopKick()
-						r.Close()
+						r.close()
 						swept = true
 						goto reconnect
 					case <-idle.C:
@@ -2373,7 +2387,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						log.Printf("nostr: %s did not answer a probe, cycling the sub", u)
 						ownMiss()
 						stopKick()
-						r.Close()
+						r.drop(asked)
 						goto reconnect
 					case <-kickChan():
 						// the job knocks every fifteen minutes so sockets that
@@ -2416,7 +2430,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						turn.probed(false)
 						ownMiss()
 						idle.Stop()
-						r.Close()
+						r.drop(asked)
 						kicked = true
 						goto reconnect
 					case <-routeC:
@@ -2426,14 +2440,14 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						log.Printf("nostr: the route changed, %s closed", u)
 						idle.Stop()
 						stopKick()
-						r.Close()
+						r.close()
 						goto reconnect
 					case <-ctx.Done():
 						idle.Stop()
 						stopKick()
 						ccancel()
 						settled()
-						r.Close()
+						r.close()
 						connDone()
 						return
 					}
@@ -2587,8 +2601,28 @@ func HaloNostrSubscribeNew(cIdent C.int, cPeerXPubHex *C.char) *C.char {
 	return C.CString(nostrSubscribe(identArg(cIdent), goStr(cPeerXPubHex), true))
 }
 
+// as HaloNostrSubscribe, for a hidden chat: its address keeps a socket of
+// its own on every relay, never one it shares with the everyday chats
+//
+//export HaloNostrSubscribeHidden
+func HaloNostrSubscribeHidden(cIdent C.int, cPeerXPubHex *C.char) *C.char {
+	return C.CString(nostrSubscribeAs(identArg(cIdent), goStr(cPeerXPubHex), false, true))
+}
+
+// both: a hidden chat just added or accepted
+//
+//export HaloNostrSubscribeHiddenNew
+func HaloNostrSubscribeHiddenNew(cIdent C.int, cPeerXPubHex *C.char) *C.char {
+	return C.CString(nostrSubscribeAs(identArg(cIdent), goStr(cPeerXPubHex), true, true))
+}
+
 // listen on my identity [ident]'s receive address for peerHex
 func nostrSubscribe(ident int, peerArg string, fresh bool) string {
+	return nostrSubscribeAs(ident, peerArg, fresh, false)
+}
+
+// hidden: a hidden chat's, see HaloNostrSubscribeHidden
+func nostrSubscribeAs(ident int, peerArg string, fresh, hidden bool) string {
 	c, peerHex, err := pairArg(ident, peerArg)
 	if err != nil {
 		if errors.Is(err, errBadPeer) {
@@ -2600,14 +2634,14 @@ func nostrSubscribe(ident int, peerArg string, fresh bool) string {
 	if err != nil {
 		return fmt.Sprintf("error: derive: %v", err)
 	}
-	nostrSubscribeAt(c, peerHex, rcvSk, rcvPk, fresh)
+	nostrSubscribeAt(c, peerHex, rcvSk, rcvPk, fresh, hidden)
 	return "ok"
 }
 
 // a runner for the pair's address, in place of any running one. the main
 // identity's go by the peer's key, as before; another's say whose they are,
 // and the knocks take their address as noted
-func nostrSubscribeAt(c convPair, peerHex, rcvSk, rcvPk string, fresh bool) {
+func nostrSubscribeAt(c convPair, peerHex, rcvSk, rcvPk string, fresh, hidden bool) {
 	key := c.subKey(peerHex)
 	// every identity's, the main one's too: the knocks take the address
 	// the subscription was made on, never one derived again
@@ -2620,9 +2654,17 @@ func nostrSubscribeAt(c convPair, peerHex, rcvSk, rcvPk string, fresh bool) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	nostrSubs[key] = cancel
+	if hidden {
+		nostrHiddenSubs[key] = true
+	} else {
+		delete(nostrHiddenSubs, key)
+	}
 	nostrMu.Unlock()
 	if fresh {
 		ctx = asFresh(ctx)
+	}
+	if hidden {
+		ctx = asHidden(ctx)
 	}
 	if c.dev != nil {
 		their, _ := c.theirAddress()
@@ -2769,7 +2811,10 @@ func nostrLetHeld(ident int, peerArg, how string) error {
 	// a runner reads the mark as it starts. free comes with an accept, so
 	// it asks at once as the accept's own listen would
 	if own && on {
-		nostrSubscribeAt(c, peerHex, rcvSk, rcvPk, true)
+		nostrMu.Lock()
+		hidden := nostrHiddenSubs[c.subKey(peerHex)]
+		nostrMu.Unlock()
+		nostrSubscribeAt(c, peerHex, rcvSk, rcvPk, true, hidden)
 	}
 	if lane {
 		// only the listener read above: a new invite address may have
@@ -2807,6 +2852,7 @@ func nostrUnsubscribe(ident int, peerArg string) error {
 		cancel()
 		delete(nostrSubs, key)
 	}
+	delete(nostrHiddenSubs, key)
 	nostrMu.Unlock()
 	if _, rcvPk, err := c.rcvAddress(); err == nil {
 		dropAddressFiles(rcvPk)

@@ -253,7 +253,7 @@ func (h *halfWay) leave(otherFirst bool) int {
 	}
 	waitFor(t, "a page of the walk", 10*time.Second, func() bool {
 		c := h.ours.snapshot()
-		return len(c) > 0 && len(c[0].reqs) >= 2
+		return len(c) > 0 && pagesOf(c[0]) >= 1
 	})
 	cancel()
 	waitFor(t, "the walk stopped", 5*time.Second, func() bool { return catchupMarkOf(h.key(h.ours)).Started() })
@@ -336,7 +336,7 @@ func TestTheAnchorComesBackAfterARestart(t *testing.T) {
 				// a first answer of twenty is full here, so ours walks
 				waitFor(t, "the pass after the reconnect", 10*time.Second, func() bool {
 					c := h.ours.snapshot()
-					return len(c[len(c)-1].reqs) >= 2 && !catchupHoldOf(h.key(h.ours)).Held()
+					return pagesOf(c[len(c)-1]) >= 1 && !catchupHoldOf(h.key(h.ours)).Held()
 				})
 			}
 			if a := h.anchor(); a != text {
