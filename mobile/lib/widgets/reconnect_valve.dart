@@ -137,13 +137,13 @@ class _ReconnectValveState extends State<ReconnectValve> {
           ),
           const SizedBox(width: 10),
           _Pill(
-            ink: restart ? HaloColors.amberInk : HaloColors.onWarn,
+            ink: restart ? HaloColors.onRose : HaloColors.onWarn,
             label: busy
                 ? l10n.homeReconnecting
                 : restart
                 ? l10n.valveRestartKryfo
                 : l10n.homeReconnect,
-            fill: tint,
+            fill: restart ? HaloColors.roseFill : tint,
             onTap: busy
                 ? null
                 : restart
