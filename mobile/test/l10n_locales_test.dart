@@ -3301,6 +3301,12 @@ final _calls = <_Call>[
   ('lockStateUnlockPlain', [], (l) => l.lockStateUnlockPlain),
   ('iconSheetOthers', [], (l) => l.iconSheetOthers),
   ('iconSheetSaves', [], (l) => l.iconSheetSaves),
+  ('bridgesShareBridgeN', ["⟨n⟩"], (l) => l.bridgesShareBridgeN("⟨n⟩")),
+  ('bridgesShareThisBridge', [], (l) => l.bridgesShareThisBridge),
+  ('bridgesShareItPrivately', [], (l) => l.bridgesShareItPrivately),
+  ('bridgesCopyBridge', [], (l) => l.bridgesCopyBridge),
+  ('bridgesBridgeCopied', [], (l) => l.bridgesBridgeCopied),
+  ('bridgesSendBridgeTo', [], (l) => l.bridgesSendBridgeTo),
 ];
 
 void main() {

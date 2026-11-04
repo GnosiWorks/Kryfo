@@ -11320,4 +11320,25 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Şimdi değil';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return '$n. köprüyü paylaş';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'Bu köprüyü paylaş';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'Güvendiğin kişilerle özel olarak paylaş. Herkese açık sayfalarda yer almayan bir köprü daha uzun süre çalışır.';
+
+  @override
+  String get bridgesCopyBridge => 'Köprüyü kopyala';
+
+  @override
+  String get bridgesBridgeCopied => 'Köprü kopyalandı';
+
+  @override
+  String get bridgesSendBridgeTo => 'Köprüyü gönder';
 }

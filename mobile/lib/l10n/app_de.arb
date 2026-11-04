@@ -2974,5 +2974,11 @@
   "voiceModelRemoveLine": "Fertige Transkripte bleiben. Für neue braucht es das Modell wieder.",
   "voiceKeptNote": "Transkripte bleiben verschlüsselt bei ihrem Chat auf diesem Handy und werden mit ihm gelöscht.",
   "voiceKeptNoteDesk": "Transkripte bleiben verschlüsselt bei ihrem Chat auf diesem Computer und werden mit ihm gelöscht.",
-  "voiceNotNow": "Nicht jetzt"
+  "voiceNotNow": "Nicht jetzt",
+  "bridgesShareBridgeN": "Brücke {n} teilen",
+  "bridgesShareThisBridge": "Diese Brücke teilen",
+  "bridgesShareItPrivately": "Teile sie privat, mit Menschen, denen du vertraust. Eine Brücke, die nicht öffentlich steht, funktioniert länger.",
+  "bridgesCopyBridge": "Brücke kopieren",
+  "bridgesBridgeCopied": "Brücke kopiert",
+  "bridgesSendBridgeTo": "Brücke senden an"
 }

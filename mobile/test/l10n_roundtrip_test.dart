@@ -1174,8 +1174,14 @@ void main() {
     expect(l.groupChatQuotedPhoto, "Photo");
     expect(l.groupChatMessageUnavailable, "Message unavailable");
     expect(l.groupChatTorIsNotUp, "Tor isn't connected yet · no link preview");
-    expect(l.groupChatCouldnTReachIt, "Couldn't reach the page · no link preview");
-    expect(l.groupChatNoTitleCameBack, "That page has no title · no link preview");
+    expect(
+      l.groupChatCouldnTReachIt,
+      "Couldn't reach the page · no link preview",
+    );
+    expect(
+      l.groupChatNoTitleCameBack,
+      "That page has no title · no link preview",
+    );
     expect(l.groupChatCouldnTFetchIt, "Couldn't load a preview");
     expect(l.groupChatCamera, "Camera");
     expect(l.groupChatGallery, "Gallery");
@@ -3980,5 +3986,14 @@ void main() {
     expect(l.homeGoogleGoneTitle, "Google push is not available");
     expect(l.appNotificationsLink, "Notifications →");
     expect(l.devGooglePushes(3, 1), "Google pushes 3 · lowered 1");
+    expect(l.bridgesShareBridgeN("2"), "Share bridge 2");
+    expect(l.bridgesShareThisBridge, "Share this bridge");
+    expect(
+      l.bridgesShareItPrivately,
+      "Share it privately, with people you trust. A bridge kept off public pages keeps working for longer.",
+    );
+    expect(l.bridgesCopyBridge, "Copy bridge");
+    expect(l.bridgesBridgeCopied, "Bridge copied");
+    expect(l.bridgesSendBridgeTo, "Send the bridge to");
   });
 }

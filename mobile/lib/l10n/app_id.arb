@@ -2974,5 +2974,11 @@
   "voiceModelRemoveLine": "Transkrip yang sudah dibuat tetap ada. Yang baru perlu modelnya lagi.",
   "voiceKeptNote": "Transkrip disimpan terenkripsi bersama chatnya di ponsel ini dan dihapus bersamanya.",
   "voiceKeptNoteDesk": "Transkrip disimpan terenkripsi bersama chatnya di komputer ini dan dihapus bersamanya.",
-  "voiceNotNow": "Nanti saja"
+  "voiceNotNow": "Nanti saja",
+  "bridgesShareBridgeN": "Bagikan jembatan {n}",
+  "bridgesShareThisBridge": "Bagikan jembatan ini",
+  "bridgesShareItPrivately": "Bagikan secara pribadi, kepada orang yang kamu percaya. Jembatan yang tidak dipasang di halaman publik bekerja lebih lama.",
+  "bridgesCopyBridge": "Salin jembatan",
+  "bridgesBridgeCopied": "Jembatan disalin",
+  "bridgesSendBridgeTo": "Kirim jembatan ke"
 }

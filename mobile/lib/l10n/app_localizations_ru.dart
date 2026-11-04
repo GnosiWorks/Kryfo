@@ -11476,4 +11476,25 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Не сейчас';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return 'Поделиться мостом $n';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'Поделиться этим мостом';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'Делитесь им лично, с теми, кому доверяете. Мост, которого нет на открытых страницах, работает дольше.';
+
+  @override
+  String get bridgesCopyBridge => 'Копировать мост';
+
+  @override
+  String get bridgesBridgeCopied => 'Мост скопирован';
+
+  @override
+  String get bridgesSendBridgeTo => 'Отправить мост';
 }

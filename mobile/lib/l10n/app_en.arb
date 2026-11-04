@@ -14183,5 +14183,34 @@
   "voiceNotNow": "Not now",
   "@voiceNotNow": {
     "description": "closes the model download sheet without downloading"
+  },
+  "bridgesShareBridgeN": "Share bridge {n}",
+  "@bridgesShareBridgeN": {
+    "description": "screens/bridges_screen.dart: the share button on a saved bridge line, for screen readers",
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "bridgesShareThisBridge": "Share this bridge",
+  "@bridgesShareThisBridge": {
+    "description": "screens/bridge_share_sheet.dart: the title of the sheet with one bridge as a qr code"
+  },
+  "bridgesShareItPrivately": "Share it privately, with people you trust. A bridge kept off public pages keeps working for longer.",
+  "@bridgesShareItPrivately": {
+    "description": "screens/bridge_share_sheet.dart: the line under the code: share in private, since public bridges get blocked"
+  },
+  "bridgesCopyBridge": "Copy bridge",
+  "@bridgesCopyBridge": {
+    "description": "screens/bridge_share_sheet.dart: the button that copies the bridge line"
+  },
+  "bridgesBridgeCopied": "Bridge copied",
+  "@bridgesBridgeCopied": {
+    "description": "screens/bridge_share_sheet.dart: the toast after the copy"
+  },
+  "bridgesSendBridgeTo": "Send the bridge to",
+  "@bridgesSendBridgeTo": {
+    "description": "screens/bridge_share_sheet.dart: the title of the chat picker the bridge goes to"
   }
 }
