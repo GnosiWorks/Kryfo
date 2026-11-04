@@ -188,7 +188,7 @@ extension AppStateRoute on AppState {
       if (done.contains(e.key) || isDevId(e.value) || devIdClaim(e.key)) {
         continue;
       }
-      _io.listen(identOf(e.value), e.key);
+      _listen(identOf(e.value), e.key);
     }
     await subscribeDevLane();
   }

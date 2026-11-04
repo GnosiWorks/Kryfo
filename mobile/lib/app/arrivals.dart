@@ -98,6 +98,10 @@ class AppIo {
   void listen(int ident, String xPub, {bool fresh = false}) =>
       engine.nostrSubscribeBg(ident, xPub, fresh: fresh);
 
+  // a hidden chat's key: its address keeps a relay socket of its own
+  void listenHidden(int ident, String xPub, {bool fresh = false}) =>
+      engine.nostrSubscribeHiddenBg(ident, xPub, fresh: fresh);
+
   void unlisten(int ident, String xPub) =>
       engine.nostrUnsubscribeBg(ident, xPub);
 

@@ -36,11 +36,13 @@ import (
 
 // one websocket as the relay saw it
 type siConn struct {
-	remote    string
-	opened    time.Time
-	closed    time.Time
-	subIDs    []string
-	reqs      []siReq
+	remote string
+	opened time.Time
+	closed time.Time
+	subIDs []string
+	reqs   []siReq
+	// sub ids the client closed
+	closedIDs map[string]bool
 	addrs     map[string]bool // p tags asked for
 	published map[string]bool // p tags of events it published
 	got       []nostr.Event   // every event it published
@@ -48,11 +50,15 @@ type siConn struct {
 	kill      context.CancelFunc
 	mute      bool // takes events and never answers, like a dead circuit
 	ws        *ws.Conn
+	// the req budget, when the relay keeps one, and the reqs it turned away
+	budget  *fsBucket
+	refused int
 }
 
 // one req, when it came and what it asked for
 type siReq struct {
 	at     time.Time
+	id     string
 	filter nostr.Filter
 }
 
@@ -92,6 +98,9 @@ type relayStandIn struct {
 	hangUp bool
 	// before a publish's ok goes back, as from a relay far away
 	okDelay time.Duration
+	// relay-live's req budget per connection, none when 0: a req past it
+	// is answered CLOSED rate-limited
+	reqPerSec, reqBurst float64
 }
 
 func newRelayStandIn(t *testing.T, pongDelay time.Duration) *relayStandIn {
@@ -113,7 +122,7 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 	c := &siConn{remote: r.RemoteAddr, opened: time.Now(), addrs: map[string]bool{},
-		published: map[string]bool{}, kill: cancel}
+		published: map[string]bool{}, closedIDs: map[string]bool{}, kill: cancel}
 	s.mu.Lock()
 	if s.down {
 		s.mu.Unlock()
@@ -169,9 +178,24 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 			f := e.Filters[0]
 			s.mu.Lock()
 			c.subIDs = append(c.subIDs, e.SubscriptionID)
-			c.reqs = append(c.reqs, siReq{at: time.Now(), filter: f})
+			c.reqs = append(c.reqs, siReq{at: time.Now(), id: e.SubscriptionID, filter: f})
 			for _, p := range f.Tags["p"] {
 				c.addrs[p] = true
+			}
+			if s.reqPerSec > 0 {
+				if c.budget == nil {
+					c.budget = &fsBucket{tokens: s.reqBurst, max: s.reqBurst, perSec: s.reqPerSec, last: time.Now()}
+				}
+				if !c.budget.take(time.Now()) {
+					c.refused++
+					c.closedIDs[e.SubscriptionID] = true
+					s.mu.Unlock()
+					b, _ := nostr.ClosedEnvelope{SubscriptionID: e.SubscriptionID, Reason: "rate-limited: slow down"}.MarshalJSON()
+					if conn.Write(ctx, ws.MessageText, b) != nil {
+						return
+					}
+					continue
+				}
 			}
 			var match []nostr.Event
 			for _, ev := range s.events {
@@ -225,6 +249,10 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 			if conn.Write(ctx, ws.MessageText, b) != nil {
 				return
 			}
+		case *nostr.CloseEnvelope:
+			s.mu.Lock()
+			c.closedIDs[string(*e)] = true
+			s.mu.Unlock()
 		case *nostr.EventEnvelope:
 			s.mu.Lock()
 			if c.mute {
@@ -255,8 +283,8 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ev goes out live on every open connection's first subscription it
-// matches, as a relay passes on what is published to it
+// ev goes out live on every subscription still open that it matches, as a
+// relay passes on what is published to it
 func (s *relayStandIn) pushLive(ev nostr.Event) {
 	s.mu.Lock()
 	s.events = append(s.events, ev)
@@ -266,13 +294,18 @@ func (s *relayStandIn) pushLive(ev nostr.Event) {
 	}
 	var to []target
 	for _, c := range s.conns {
-		if c.ws == nil || !c.closed.IsZero() || len(c.reqs) == 0 {
+		if c.ws == nil || !c.closed.IsZero() {
 			continue
 		}
-		f := c.reqs[0].filter
-		f.Limit = 0
-		if f.Matches(ev) {
-			to = append(to, target{c.ws, c.subIDs[0]})
+		for _, q := range c.reqs {
+			if c.closedIDs[q.id] {
+				continue
+			}
+			f := q.filter
+			f.Limit, f.LimitZero = 0, false
+			if f.Matches(ev) {
+				to = append(to, target{c.ws, q.id})
+			}
 		}
 	}
 	s.mu.Unlock()
@@ -281,6 +314,83 @@ func (s *relayStandIn) pushLive(ev nostr.Event) {
 		b, _ := nostr.EventEnvelope{SubscriptionID: &sid, Event: ev}.MarshalJSON()
 		t.conn.Write(context.Background(), ws.MessageText, b)
 	}
+}
+
+// for each address, the open connections where a subscription still open
+// listens on it live: none that asks by id or up to a stamp, and no probe
+func (s *relayStandIn) listening() map[string]int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := map[string]int{}
+	for _, c := range s.conns {
+		if !c.closed.IsZero() {
+			continue
+		}
+		on := map[string]bool{}
+		for _, q := range c.reqs {
+			f := q.filter
+			if c.closedIDs[q.id] || len(f.IDs) > 0 || f.Until != 0 || (f.LimitZero && f.Since != 0) {
+				continue
+			}
+			for _, p := range f.Tags["p"] {
+				on[p] = true
+			}
+		}
+		for p := range on {
+			out[p]++
+		}
+	}
+	return out
+}
+
+// the reqs for an address's own window it ever sent r, one per read
+func (s *relayStandIn) windows(addr string) int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	n := 0
+	for _, c := range s.conns {
+		for _, q := range c.reqs {
+			f := q.filter
+			if f.LimitZero || len(f.IDs) > 0 || f.Until != 0 {
+				continue
+			}
+			for _, p := range f.Tags["p"] {
+				if p == addr {
+					n++
+				}
+			}
+		}
+	}
+	return n
+}
+
+// the relay closes the first live req it finds open, with reason, as one
+// over its budget would. false for none
+func (s *relayStandIn) closeLive(reason string) bool {
+	s.mu.Lock()
+	var conn *ws.Conn
+	var sid string
+	for _, c := range s.conns {
+		if c.ws == nil || !c.closed.IsZero() {
+			continue
+		}
+		for _, q := range c.reqs {
+			if !c.closedIDs[q.id] && q.filter.LimitZero && q.filter.Since == 0 && len(q.filter.Tags["p"]) > 0 {
+				c.closedIDs[q.id] = true
+				conn, sid = c.ws, q.id
+				break
+			}
+		}
+		if conn != nil {
+			break
+		}
+	}
+	s.mu.Unlock()
+	if conn == nil {
+		return false
+	}
+	b, _ := nostr.ClosedEnvelope{SubscriptionID: sid, Reason: reason}.MarshalJSON()
+	return conn.Write(context.Background(), ws.MessageText, b) == nil
 }
 
 // every connection the relay has seen so far, copied
@@ -292,6 +402,7 @@ func (s *relayStandIn) snapshot() []siConn {
 		cp := *c
 		cp.subIDs = append([]string(nil), c.subIDs...)
 		cp.reqs = append([]siReq(nil), c.reqs...)
+		cp.closedIDs = maps.Clone(c.closedIDs)
 		cp.pings = append([]time.Time(nil), c.pings...)
 		cp.got = append([]nostr.Event(nil), c.got...)
 		// the handler keeps writing to the live maps
@@ -669,6 +780,21 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 	mu.Unlock()
 }
 
+// the pages of a walk a connection asked: reqs up to a stamp
+func pagesOf(c siConn) int {
+	n := 0
+	for _, q := range c.reqs {
+		if q.filter.Until != 0 {
+			n++
+		}
+	}
+	return n
+}
+
+// a socket of each address's own, as a hidden chat's: for the tests of what
+// one socket does on its own
+func alone(ctx context.Context) context.Context { return asHidden(ctx) }
+
 // a log sink a test reads while goroutines it did not start may still log
 type logSink struct {
 	mu sync.Mutex
@@ -743,6 +869,15 @@ func (l lanesUp) subs() int {
 		n += len(r)
 	}
 	return n
+}
+
+// sockets per relay: one per batch of contacts, one per other address
+func (l lanesUp) sockets() int {
+	batches := map[string]bool{}
+	for _, c := range l.contacts {
+		batches[receiveLane(mainIdent, c)] = true
+	}
+	return l.subs() - len(l.contacts) + len(batches)
 }
 
 func startLanes(t *testing.T, ctx context.Context, contacts, rooms int) lanesUp {

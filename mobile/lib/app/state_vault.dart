@@ -421,6 +421,7 @@ extension AppStateVault on AppState {
       }
       await refreshContacts();
       await refreshGroups();
+      _relistenMoved();
       return went.length;
     }),
   );
@@ -436,6 +437,7 @@ extension AppStateVault on AppState {
       if (v == null) throw StateError('no vault at hand');
       final chats = _refs(people, groups);
       if (chats.isEmpty) return 0;
+      final before = _router.listenFor.keys.toSet();
       final n = await _move(v, chats, (m) => _unhide(m, v, chats), out: true);
       // linked devices: back on the everyday side, heard on from there, and
       // lists go both ways again
@@ -444,6 +446,7 @@ extension AppStateVault on AppState {
       }
       await refreshContacts();
       await refreshGroups();
+      _relistenMoved(out: before.difference(_router.listenFor.keys.toSet()));
       return n;
     }),
   );
@@ -456,6 +459,7 @@ extension AppStateVault on AppState {
       final v = _session.vault ?? _madeVault;
       if (v == null) throw StateError('no vault at hand');
       final everyday = AppState._everyday(v);
+      final before = _router.listenFor.keys.toSet();
       // every chat it holds, so each comes back alike: as the list names them
       // on the everyday side, as its own rows do on the decoy's
       final List<ChatRef> all;
@@ -475,10 +479,15 @@ extension AppStateVault on AppState {
         );
       }
       await _move(v, all, (m) => _unhide(m, v, all), out: true);
+      // what came out, read before the unlist below: a chat deleted inside
+      // the vault is no one's on the everyday side and never listened on
+      // there. its hidden runner goes at the next start
+      final out = before.difference(_router.listenFor.keys.toSet());
       if (everyday && linkedDevicesOn) await _devShown(all);
       if (everyday) {
         // what is still listed the vault no longer holds: deleted inside it
         await _router.unlist([for (final (id, _) in _router.hiddenChats) id]);
+        _relistenMoved(out: out);
       }
       // its blocked keys and let-go words stay, on the side its chats went to
       await _primaryOf(v).takeBlocks(await v.blockedKeys(), await v.tombs());

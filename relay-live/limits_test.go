@@ -285,7 +285,7 @@ func TestReqsArePacedPerConnection(t *testing.T) {
 	r := connect(t, url)
 	f := nostr.Filter{Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {addr()}}}
 	refused := 0
-	for i := 0; i < reqBurst+10; i++ {
+	for i := 0; i < reqBurst+50; i++ {
 		if _, why := ask(t, r, f); why != "" {
 			refused++
 		}
@@ -301,7 +301,7 @@ func TestReqsArePacedPerConnection(t *testing.T) {
 	now := nostr.Now()
 	probe := nostr.Filter{Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {addr()}}, Since: &now, LimitZero: true}
 	refused = 0
-	for i := 0; i < reqBurst+10; i++ {
+	for i := 0; i < reqBurst+50; i++ {
 		if _, why := ask(t, r, probe); why != "" {
 			refused++
 		}

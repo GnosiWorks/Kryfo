@@ -139,7 +139,7 @@ func TestAWakeSpreadsTheRedials(t *testing.T) {
 	setWakeGap(t, 100*time.Millisecond, wakeGraceExtra)
 	sleep := fakeSleep(t)
 	ctx := lanesCtx(t)
-	l := startLanes(t, ctx, 20, 0)
+	l := startLanes(t, alone(ctx), 20, 0)
 	addrs := append(append([]string(nil), l.contacts...), l.fc)
 	waitFor(t, "every address on both relays", 15*time.Second, func() bool {
 		for _, a := range addrs {
@@ -351,7 +351,7 @@ func TestReadsDueInASleepAreSpreadOverTheWake(t *testing.T) {
 	sleep := fakeSleep(t)
 	freshInbox(t)
 	ctx := lanesCtx(t)
-	l := startLanes(t, ctx, 20, 0)
+	l := startLanes(t, alone(ctx), 20, 0)
 	waitFor(t, "every address on our relay", 15*time.Second, func() bool {
 		for _, a := range l.contacts {
 			if openOn(own, a) != 1 {

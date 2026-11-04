@@ -2,17 +2,15 @@
 package main
 
 // relay traffic comes in lanes that must never be linked to each other: the
-// main identity's sends, its contacts' addresses in a few lanes, its
-// first-contact address, each burner room, each pair code, and the calls to
-// our own services. tor keeps streams with different socks credentials on
+// main identity's sends, its contacts' addresses in batches of up to eight
+// (batches.go), each hidden chat, its first-contact address, each burner
+// room, each pair code, and the calls to our own services. tor keeps streams with different socks credentials on
 // different circuits, so every lane dials under its own name and gets its own
 // exit and its own way to an onion. outside private mode there is no circuit
 // to keep apart and nothing changes.
 
 import (
 	"crypto/rand"
-	"crypto/sha256"
-	"encoding/binary"
 	"encoding/hex"
 	"strconv"
 	"strings"
@@ -25,24 +23,35 @@ import (
 // the main identity's sends, on a circuit none of its receive addresses use
 const laneEveryday = "everyday"
 
-// the contacts' receive addresses, hidden chats included, are spread over
-// this many lanes by a hash of the address. one circuit carrying them all
-// gets rate limited by relays that count sockets per exit, and when it dies
-// every address goes deaf and reconnects in the same second.
-const receiveLaneCount = 4
-
-func receiveLaneAt(i int) string { return laneEveryday + ":" + strconv.Itoa(i) }
-
-// one of n lanes by the first four bytes of the address's sha256, so an
-// address lands on the same lane every time
-func hashLane(rcvPk string, n int) string {
-	h := sha256.Sum256([]byte(rcvPk))
-	return receiveLaneAt(int(binary.BigEndian.Uint32(h[:4]) % uint32(n)))
+// the contacts' receive addresses go in batches of their identity, each on
+// lanes of its own (batches.go). receiveLane is a var so the measurement
+// tests can map them another way.
+var receiveLane = func(ident int, rcvPk string) string {
+	set := contactSet(ident)
+	return batchLane(set, batchOf(set, rcvPk))
 }
 
-// the lane a contact's receive address listens on. a var so the measurement
-// test can map them another way.
-var receiveLane = func(rcvPk string) string { return hashLane(rcvPk, receiveLaneCount) }
+// a hidden chat's address: a lane of its own, over tor on every route
+// (laneKeepsTor), so it shares no socket and no circuit with an everyday
+// or a decoy address, nor with another hidden chat. the lane is named by a
+// number, never by the address
+const laneHidden = "hidden"
+
+var (
+	hiddenLaneMu sync.Mutex
+	hiddenLanes  = map[string]string{}
+)
+
+func hiddenLane(rcvPk string) string {
+	hiddenLaneMu.Lock()
+	defer hiddenLaneMu.Unlock()
+	if l, ok := hiddenLanes[rcvPk]; ok {
+		return l
+	}
+	l := laneHidden + ":" + strconv.Itoa(len(hiddenLanes))
+	hiddenLanes[rcvPk] = l
+	return l
+}
 
 // the first-contact address is in the invite, so it never shares a circuit
 // with a contact's address or a send
@@ -52,14 +61,11 @@ const laneFirstContact = "firstcontact"
 // everyday sends, since that address may carry a public handle
 const laneHello = "hello"
 
-// the main identity's lanes: its sends, its first contacts, its
-// first-contact address and the contacts'
+// the main identity's lanes that are there from the start: its sends, its
+// first contacts and its first-contact address. the contacts' batches get
+// theirs as they are listened on
 func mainLanes() []string {
-	l := []string{laneEveryday, laneHello, laneFirstContact}
-	for i := 0; i < receiveLaneCount; i++ {
-		l = append(l, receiveLaneAt(i))
-	}
-	return l
+	return []string{laneEveryday, laneHello, laneFirstContact}
 }
 
 // the handle registry, people search and the badge service: a circuit of

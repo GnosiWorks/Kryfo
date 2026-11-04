@@ -250,8 +250,15 @@ class _Io implements AppIo {
 
   @override
   Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
+  // the keys listened on with the everyday sockets, and apart
+  final heard = <String>[];
+  final heardHidden = <String>[];
   @override
-  void listen(int ident, String xPub, {bool fresh = false}) {}
+  void listen(int ident, String xPub, {bool fresh = false}) => heard.add(xPub);
+
+  @override
+  void listenHidden(int ident, String xPub, {bool fresh = false}) =>
+      heardHidden.add(xPub);
   @override
   String edPub() => 'ed-me';
   @override
@@ -2147,6 +2154,27 @@ void main() {
       expect(w.vaultRows.drafts[_h]?.text, 'mid');
       expect(heldDraft(HaloContainer.vault, _h, group: false), isNull);
       expect(w.liveRows.drafts, isEmpty);
+    });
+
+    test('remove hidden chats never puts one deleted inside on the '
+        'everyday sockets', () async {
+      final w = await _World.make();
+      await w.open();
+      // heard on as the vault's, then deleted inside it: the list still
+      // names it
+      await w.app.subscribePeer(_h);
+      await w.app.subscribePeer(_m);
+      expect(w.io.heardHidden, containsAll(['x-$_h', 'x-$_m']));
+      w.vaultRows.people.remove(_h);
+      w.vaultRows.msgs.removeWhere(
+        (m) => m['peer_id'] == _h && m['group_id'] == null,
+      );
+      w.io.heard.clear();
+      await w.app.removeVault();
+      expect(w.router.hides(_h), isFalse);
+      expect(w.io.heard, isNot(contains('x-$_h')));
+      // what did come out is heard on as an everyday chat's
+      expect(w.io.heard, contains('x-$_m'));
     });
 
     test('Show in chat list brings a chat back', () async {

@@ -309,6 +309,10 @@ class _Io extends AppIo {
   @override
   void listen(int ident, String xPub, {bool fresh = false}) =>
       listened.add(xPub);
+
+  @override
+  void listenHidden(int ident, String xPub, {bool fresh = false}) =>
+      listen(ident, xPub, fresh: fresh);
   @override
   String edPub() => _myEd;
   @override
