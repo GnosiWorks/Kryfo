@@ -91,6 +91,9 @@ Future<({int ident, String cipher})> signalSeal(
   String peerId,
   String plaintext, {
   bool onlySettled = false,
+  // the empty answer to a heal: it carries nothing, and the session it
+  // opens is what a held contact's sends wait on
+  bool unheld = false,
 }) async {
   if (isDevId(peerId)) {
     if (onlySettled) throw NotSettled(peerId);
@@ -105,18 +108,41 @@ Future<({int ident, String cipher})> signalSeal(
   final (ident, framed) = await appState.doorFor(peerId, plaintext);
   final ss = await signalOfIdent(ident);
   final from = _afreshFrom;
-  final cipher = await ss.encryptTo(
+  Future<String> seal(String frame, int? size) => ss.encryptTo(
     peerId,
-    framed,
+    frame,
     onlySettled: onlySettled,
     afresh: from == null ? null : () => from(peerId),
     // a read that fails seals nothing
-    held: () => appState.keyHeld(peerId, strict: true),
+    held: unheld ? null : () => appState.keyHeld(peerId, strict: true),
     // a card naming another key: flagged as on an open, once out of the lane
     keyMoved: () => unawaited(_keyMoved?.call(peerId)),
+    size: size,
   );
-  return (ident: ident, cipher: cipher);
+  // linked devices: a copy to every device, the phone's back here. a typing
+  // frame is the phone's alone
+  if (linkedDevicesOn && !onlySettled) {
+    final phone = await _deviceSeal(ident, ss, peerId, framed, (
+      measure: (f) => ss.sealSize(peerId, f),
+      seal: seal,
+    ));
+    if (phone != null) return (ident: ident, cipher: phone);
+  }
+  return (ident: ident, cipher: await seal(framed, null));
 }
+
+// a list push's copy for [peer]'s phone (devices_send_app.dart), sealed
+// here at the door on the store of the identity they know, filled to the
+// push's burst. a key held for a check seals nothing
+DevPhone _devicePushPhone(int ident, String peer) => (
+  measure: (f) async => (await signalOfIdent(ident)).sealSize(peer, f),
+  seal: (f, size) async => (await signalOfIdent(ident)).encryptTo(
+    peer,
+    f,
+    held: () => appState.keyHeld(peer, strict: true),
+    size: size,
+  ),
+);
 
 // where a seal finds a peer's card to start a session afresh from, after a
 // restore: the app state's rows. set as it is made
@@ -359,17 +385,86 @@ Future<void> _devOpened(
     final ikey = row.isEmpty ? null : row.first['ikey'] as String?;
     if (ikey == null) return;
     final info = ss.lib.sessionInfo(record);
+    final ident = row.first['ident'] as int? ?? kMainIdent;
+    final sr = SessionRemote.opened(remote);
+    _phoneRemotes.remove(peer);
     await ds.session(db, 'opened', {
-      'ident': row.first['ident'] as int? ?? kMainIdent,
+      'ident': ident,
       'identity': ikey,
       'device': 1,
       'pq': info.version >= 4 && info.pq,
-    }, SessionRemote.opened(remote));
+    }, sr);
+    // the frame's device words are taken under this remote once it is
+    // filed (devices_receive_app.dart), and only after it was admitted
+    _phoneRemotes[peer] = (identity: ikey, remote: sr);
+    // they answered: a list that went to them before is taken
+    await _deviceSend?.heard(
+      ident,
+      ikey,
+      DateTime.now().millisecondsSinceEpoch,
+    );
   } on DevRefused catch (e) {
     dlog('devices: an open not admitted (${e.why})');
   } catch (e) {
     dlog('devices: an open not noted (${e.runtimeType})');
   }
+}
+
+// the remote the last admitted frame from each contact's phone opened under,
+// for its device words (_devPhoneFrames). a frame not admitted takes it out
+final _phoneRemotes = <String, ({String identity, SessionRemote remote})>{};
+
+/// the remote [peer]'s phone's last frame opened under, when it was
+/// admitted and is still [identity]'s
+SessionRemote? _phoneRemoteOf(String peer, String identity) {
+  final r = _phoneRemotes[peer];
+  return r != null && r.identity == identity ? r.remote : null;
+}
+
+/// a copy from [identity]'s [device] (a contact's, or one of mine) opened
+/// on its device session at [addr] and admitted by the engine before it is
+/// kept: Admit, or AdmitOpener on the opener's registration id, under the
+/// remote libsignal answered. a refused copy throws DevRefused, its
+/// plaintext wiped and nothing of it stored
+Future<({Uint8List plain, SessionRemote remote})> deviceOpenAt(
+  DatabaseExecutor db,
+  DeviceSessions ds, {
+  required int ident,
+  required String identity,
+  required String addr,
+  required int device,
+  required int type,
+  required Uint8List body,
+  required Uint8List pin,
+  required int reg,
+}) async {
+  final state = _deviceState;
+  if (state == null || !linkedDevicesOn) {
+    throw const DevRefused('off', {});
+  }
+  SessionRemote? remote;
+  final plain = await ds.open(
+    addr,
+    device,
+    type,
+    body,
+    pin,
+    reg: reg,
+    admit: (r, record, {required opener, required reg}) async {
+      final sr = SessionRemote.opened(r);
+      final info = ds.s.lib.sessionInfo(record);
+      await state.session(db, 'opened', {
+        'ident': ident,
+        'identity': identity,
+        'device': device,
+        'opener': opener,
+        'reg': reg,
+        'pq': info.version >= 4 && info.pq,
+      }, sr);
+      remote = sr;
+    },
+  );
+  return (plain: plain, remote: remote!);
 }
 
 // wires a decrypt found opened before: a copy is no sign the sessions went

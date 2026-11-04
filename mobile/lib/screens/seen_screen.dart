@@ -13,6 +13,7 @@ import '../widgets/ease_size.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import 'dev_about_sheet.dart' show devChatOffered;
+import '../wide/read_width.dart' show DeskPage;
 
 class SeenScreen extends StatefulWidget {
   const SeenScreen({super.key});
@@ -38,45 +39,47 @@ class _SeenScreenState extends State<SeenScreen> {
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          4,
-          20,
-          44 + MediaQuery.paddingOf(context).bottom,
+      body: DeskPage(
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            4,
+            20,
+            44 + MediaQuery.paddingOf(context).bottom,
+          ),
+          children: staggerAll([
+            Text(
+              l10n.seenEveryMessengerClaimsPrivacy,
+              style: HaloType.mono(size: 12, color: HaloColors.text2),
+            ),
+            const SizedBox(height: 22),
+            _Header(active: col, cols: cols),
+            for (final (i, row) in _rows.indexed)
+              _RowTile(
+                row: row,
+                active: col,
+                cols: cols,
+                open: _open == i,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _open = _open == i ? null : i);
+                },
+              ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: HaloColors.surface2,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: HaloColors.line),
+              ),
+              child: Text(
+                l10n.seenHonestAboutTheLastShown,
+                style: HaloType.mono(size: 11.5, color: HaloColors.text2),
+              ),
+            ),
+          ]),
         ),
-        children: staggerAll([
-          Text(
-            l10n.seenEveryMessengerClaimsPrivacy,
-            style: HaloType.mono(size: 12, color: HaloColors.text2),
-          ),
-          const SizedBox(height: 22),
-          _Header(active: col, cols: cols),
-          for (final (i, row) in _rows.indexed)
-            _RowTile(
-              row: row,
-              active: col,
-              cols: cols,
-              open: _open == i,
-              onTap: () {
-                HapticFeedback.selectionClick();
-                setState(() => _open = _open == i ? null : i);
-              },
-            ),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: HaloColors.surface2,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: HaloColors.line),
-            ),
-            child: Text(
-              l10n.seenHonestAboutTheLastShown,
-              style: HaloType.mono(size: 11.5, color: HaloColors.text2),
-            ),
-          ),
-        ]),
       ),
     );
   }
@@ -103,18 +106,23 @@ _Cell get _onDevice => _Cell(l10n.seenOnDevice, _Tone.good);
 _Cell get _yours => _Cell(l10n.seenYours, _Tone.bad);
 _Cell get _unaudited => _Cell(l10n.seenUnaudited, _Tone.bad);
 _Cell get _ifYouWrite => _Cell(l10n.seenDevChatCell, _Tone.warn);
+// on fast one ip reads a person's mailboxes, so our servers could tie them
+_Cell get _serversCould => _Cell(l10n.seenOurServersCould, _Tone.warn);
 
 List<_Row> get _rows => [
   _Row(l10n.seenWhoYouTalkTo, [
     _hidden,
-    _hidden,
+    _serversCould,
   ], l10n.seenEachConversationGetsIts),
   _Row(l10n.seenWhatYouSay, [_hidden, _hidden], l10n.seenEndToEndEncrypted),
   _Row(l10n.seenYourIpAddress, [
     _hidden,
     _Cell(l10n.seenOurServers, _Tone.warn),
   ], l10n.seenIpWhy),
-  _Row(l10n.seenYourContactGraph, [_never, _never], l10n.seenKryfoDoesNotScan),
+  _Row(l10n.seenYourContactGraph, [
+    _never,
+    _serversCould,
+  ], l10n.seenKryfoDoesNotScan),
   _Row(l10n.seenIntroductions, [
     _Cell(l10n.seenIntroducer, _Tone.good),
     _Cell(l10n.seenIntroducer, _Tone.good),

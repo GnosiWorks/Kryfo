@@ -62,8 +62,10 @@ import '../stickers/sticker_view.dart' show StickerBudget;
 import '../stickers/sticker_wire.dart' show StickerWire;
 import '../main.dart'
     show
+        typeLeaf,
         appState,
         AppStateFiles,
+        kNotSent,
         session,
         sessionQuiet,
         claimChat,
@@ -166,7 +168,8 @@ import '../voice_format.dart' show isVoiceName, kVoiceWav;
 import '../voice_length.dart' show voiceFileMs;
 import '../voice_opus.dart' show voiceForWire;
 import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
-import '../desktop/desktop_mode.dart' show canShareOut;
+import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
+import '../desktop/drag_in.dart' show DragInZone;
 import '../wide/read_width.dart';
 import '../wide/wide_pane.dart' show PaneBack, PaneFind;
 
@@ -1185,6 +1188,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 m.autoRetries = c.$1;
                 m.gaveUp = c.$2;
               }
+              _heldForTap(m, r);
               return m;
             }),
           );
@@ -1484,6 +1488,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       m.cameAt = (r['sent_at'] as num?)?.toInt();
       if (dir == 'in') m.fresh = true;
       _placeLoadedSend(m);
+      _heldForTap(m, r);
       fresh.add(m);
     }
     final nowHave = _messages.map((m) => m.msgUid).toSet();
@@ -2384,12 +2389,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       builder: (sheetCtx) => AttachGrid(
         note: l10n.chatNoExifNeverSaved,
         items: [
-          AttachItem(
-            icon: (c) => Icon(Icons.photo_camera_outlined, color: c),
-            tint: HaloColors.amber,
-            label: l10n.groupChatCamera,
-            onTap: _openGroupCamera,
-          ),
+          // a computer has no camera to open
+          if (!onDesktop)
+            AttachItem(
+              icon: (c) => Icon(Icons.photo_camera_outlined, color: c),
+              tint: HaloColors.amber,
+              label: l10n.groupChatCamera,
+              onTap: _openGroupCamera,
+            ),
           AttachItem(
             icon: (c) => Icon(Icons.photo_library_outlined, color: c),
             tint: HaloColors.violet,
@@ -3058,8 +3065,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (!await _stillHere()) return null;
     final made = uid ?? newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.groupId);
-    final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-    final dest = File('${mediaDir.path}/f_${made}_$safe');
+    // its type only: the name it was given lives in the database
+    final dest = File('${mediaDir.path}/f_$made${typeLeaf(name)}');
     // a gallery video carries where, on what and when, like a photo, and a
     // picture sent as a file is cleaned like one sent as a photo. both are
     // told by their bytes and cleaned on our own copy by the one cleaner;
@@ -3160,6 +3167,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         }
         await _finishGroupMediaSend(m, r);
       });
+
+  // one a restore brought still waiting to go: not sent, and never tried
+  // on its own. a tap sends it
+  void _heldForTap(_GMsg m, Map<String, Object?> r) {
+    if (m.direction != 'out' || r['sent'] != kNotSent) return;
+    m
+      ..sending = false
+      ..failed = true
+      ..gaveUp = true;
+  }
 
   void _placeLoadedSend(_GMsg m) {
     final uid = m.msgUid;
@@ -3729,7 +3746,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               ? null
               : () {
                   dismiss();
-                  Clipboard.setData(ClipboardData(text: target.text));
+                  copySensitive(target.text, kept: true);
                   showHaloToast(context, l10n.commonCopied);
                 },
         ),
@@ -4550,7 +4567,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   @override
-  Widget build(BuildContext context) => menuBack(child: _page(context));
+  Widget build(BuildContext context) => menuBack(
+    child: DragInZone(
+      enabled: _end == null && !_waiting,
+      send: (path, name) async {
+        if (_nobodyToRead()) return;
+        await _sendGroupFileFrom(path, name);
+      },
+      couldNotRead: () => l10n.groupChatCouldNotReadThat,
+      child: _page(context),
+    ),
+  );
 
   Widget _page(BuildContext context) {
     // the albums as the thread stands now: a row of one is drawn by its lead
@@ -4626,7 +4653,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                           // it, since the first version with rooms
                           NoticeBanner(
                             glyph: NoticeGlyph.shield,
-                            text: l10n.roomShotsBlocked,
+                            text: l10n.roomShotsBlockedShown,
                             color: HaloColors.violet,
                             margin: const EdgeInsets.fromLTRB(12, 4, 12, 2),
                             delay: const Duration(milliseconds: 220),
@@ -5206,7 +5233,8 @@ class _Header extends StatelessWidget {
                                               start: 6,
                                             ),
                                         child: Semantics(
-                                          label: l10n.groupShotsBlockedHere,
+                                          label:
+                                              l10n.groupShotsBlockedHereShown,
                                           child: Icon(
                                             Icons.phonelink_lock_outlined,
                                             size: 11,
@@ -5462,19 +5490,20 @@ class _Composer extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               // the camera that keeps its photos inside kryfo
-              PressScale(
-                label: l10n.groupChatOpenTheCamera,
-                onTap: onCamera,
-                scale: 0.86,
-                child: Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 10),
-                  child: Icon(
-                    Icons.photo_camera_outlined,
-                    size: 22,
-                    color: HaloColors.text2,
+              if (!onDesktop)
+                PressScale(
+                  label: l10n.groupChatOpenTheCamera,
+                  onTap: onCamera,
+                  scale: 0.86,
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 10),
+                    child: Icon(
+                      Icons.photo_camera_outlined,
+                      size: 22,
+                      color: HaloColors.text2,
+                    ),
                   ),
                 ),
-              ),
               PressScale(
                 label: l10n.groupChatAttachAPhoto,
                 onTap: onAttach,
@@ -5974,6 +6003,10 @@ class _GroupBubble extends StatelessWidget {
                                     onLongPress: onLongPress == null
                                         ? null
                                         : () => onLongPress!(ctx),
+                                    onSecondaryTap:
+                                        !onDesktop || onLongPress == null
+                                        ? null
+                                        : () => onLongPress!(ctx),
                                     child: _sticker(st),
                                   );
                                 }
@@ -5984,12 +6017,21 @@ class _GroupBubble extends StatelessWidget {
                                     onLongPress: onLongPress == null
                                         ? null
                                         : () => onLongPress!(ctx),
+                                    onSecondaryTap:
+                                        !onDesktop || onLongPress == null
+                                        ? null
+                                        : () => onLongPress!(ctx),
                                     child: _pollCard(),
                                   );
                                 }
                                 return GestureDetector(
                                   onTap: m.failed ? onRetry : null,
                                   onLongPress: onLongPress == null
+                                      ? null
+                                      : () => onLongPress!(ctx),
+                                  // a right click on a computer: the menu
+                                  onSecondaryTap:
+                                      !onDesktop || onLongPress == null
                                       ? null
                                       : () => onLongPress!(ctx),
                                   child: Container(
@@ -6590,7 +6632,7 @@ class _GroupBubble extends StatelessWidget {
                                               if (m.looksFailed) ...[
                                                 const SizedBox(width: 6),
                                                 Text(
-                                                  l10n.groupChatTapToRetry,
+                                                  l10n.groupChatTapToRetryShown,
                                                   style: HaloType.mono(
                                                     size: 9,
                                                     color: isOut
@@ -6811,7 +6853,7 @@ class _GroupBubble extends StatelessWidget {
         sent: isOut && !m.pending && !m.looksFailed,
         burn: burn == null ? null : burnLeft(burn),
         burnWaits: m.burnWaits,
-        alert: m.looksFailed ? l10n.groupChatTapToRetry : null,
+        alert: m.looksFailed ? l10n.groupChatTapToRetryShown : null,
         alertColor: HaloColors.rose,
       ),
     );
@@ -6881,7 +6923,7 @@ class _GroupBubble extends StatelessWidget {
           if (m.looksFailed) ...[
             const SizedBox(width: 6),
             Text(
-              l10n.groupChatTapToRetry,
+              l10n.groupChatTapToRetryShown,
               style: HaloType.mono(size: 9, color: HaloColors.roseText),
             ),
           ],

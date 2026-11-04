@@ -843,6 +843,42 @@ func TestAnOnionGoesThroughTorOnFast(t *testing.T) {
 	}
 }
 
+// on fast a burner room's lane, a pair code's and the first-contact lanes
+// still go through tor to our own stores: the relay never sees this phone's
+// ip on them, nor on the address a handle points to
+func TestRoomAndPairLanesKeepTorOnFast(t *testing.T) {
+	socks := newSocksStandIn(t)
+	useStandIns(t, modeBalanced, socks)
+	setRelays([]string{"wss://relay.kryfo.app", "wss://relay2.kryfo.app"})
+	direct, err := torNostrClientFor(laneEveryday)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, lane := range []string{roomLane("ab12"), pairLane("cd34"), laneFirstContact, laneHello} {
+		for _, u := range []string{"wss://relay.kryfo.app", "wss://relay2.kryfo.app"} {
+			c, err := relayClientFor(lane, u)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if c == direct {
+				t.Fatalf("%s went to %s from this phone's ip", laneKind(lane), u)
+			}
+			tor, err := torClientFor(lane)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if c != tor {
+				t.Fatalf("%s to %s is not its own tor client", laneKind(lane), u)
+			}
+		}
+	}
+	for _, lane := range []string{laneEveryday, receiveLaneAt(1)} {
+		if c, _ := relayClientFor(lane, "wss://relay.kryfo.app"); c != direct {
+			t.Fatalf("%s left the fast route", lane)
+		}
+	}
+}
+
 // a seal past its young span, as if made long ago
 func ageSeal(id string) {
 	keptMu.Lock()
@@ -904,4 +940,58 @@ func TestASealOutlivesARouteThatEndedFirst(t *testing.T) {
 		_, ok := keptSealOf(ev.ID.Hex())
 		return !ok
 	})
+}
+
+// on fast the first-contact address is read, and a first contact sent,
+// through tor under their own names, while an everyday send goes straight:
+// our relay never sees this phone's ip on the address a handle points to
+func TestFirstContactKeepsTorOnFast(t *testing.T) {
+	socks := newSocksStandIn(t)
+	r := newRelayStandIn(t, 0)
+	useStandIns(t, modeBalanced, socks, r)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	fcSk, fcPk, err := nip17FirstContactKeysAs(testMain(), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	go nostrSubscribeRunnerFc(ctx, "firstcontact", fcSk, fcPk)
+	waitFor(t, "the first-contact address on the relay", 15*time.Second, func() bool {
+		return len(connsOn(r.snapshot(), []string{fcPk})) > 0
+	})
+
+	peer := newXid(t)
+	peerHex := hex.EncodeToString(peer.pub[:])
+	if res := nostrSend(mainIdent, peerHex, "hi"); res != "ok" {
+		t.Fatalf("send: %s", res)
+	}
+	_, sent, err := nip17DeriveRoleAs(testMain(), peer.pub, nip17RcvInfo, peerHex)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stranger := newXid(t)
+	_, strangerFc, err := fcKeysFrom(stranger.priv, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res := nostrSendFirstContact(mainIdent, hex.EncodeToString(stranger.pub[:]), strangerFc, "hi"); res != "ok" {
+		t.Fatalf("first-contact send: %s", res)
+	}
+	waitFor(t, "the sends on the relay", 15*time.Second, func() bool {
+		c := r.snapshot()
+		return len(connsOn(c, []string{sent})) > 0 && len(connsOn(c, []string{strangerFc})) > 0
+	})
+	conns := r.snapshot()
+	for addr, lane := range map[string]string{fcPk: laneFirstContact, strangerFc: laneHello} {
+		for _, c := range connsOn(conns, []string{addr}) {
+			if n, ok := socks.nameOf(c.remote); !ok || n != laneName(lane) {
+				t.Fatalf("%s reached our relay from this phone's ip", lane)
+			}
+		}
+	}
+	for _, c := range connsOn(conns, []string{sent}) {
+		if _, ok := socks.nameOf(c.remote); ok {
+			t.Fatal("an everyday send left the fast route")
+		}
+	}
 }

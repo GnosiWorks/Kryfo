@@ -4,6 +4,7 @@ package main
 import "C"
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"time"
@@ -152,6 +153,7 @@ type devArgs struct {
 	Once         [][]byte `json:"once"`
 	Last         []byte   `json:"last"`
 	Made         int64    `json:"made"`
+	Asked        int64    `json:"asked"`
 	Now          int64    `json:"now"`
 	Op           string   `json:"op"`
 	Devices      bool     `json:"devices"`
@@ -275,8 +277,49 @@ func (d *devState) call(op string, a *devArgs, out *devOut) error {
 	case "claimants":
 		out.Claimants = keysOut(d.book.Claimants())
 		return nil
+	case "own_above":
+		return d.ownAbove(a, out)
 	}
 	return errors.New("no such call")
+}
+
+// a contact sent back the list of my identity a.Ident it holds (dh), which
+// refused mine as older: another copy of this phone signed it. the body of
+// my list at a version above it, for the phone to sign and take with
+// own_mine, and every device it names that mine does not. a held list that
+// is not above mine leaves nothing to do ("same"). only the phone signs
+func (d *devState) ownAbove(a *devArgs, out *devOut) error {
+	id, ok := d.idents[a.Ident]
+	if !ok {
+		return devices.ErrUnknown
+	}
+	if d.mine[id].key != id {
+		return devices.ErrSource
+	}
+	l := d.own.Current(id)
+	if l == nil {
+		return devices.ErrNotListed
+	}
+	held, err := devices.ReadList(a.List, d.v)
+	if err != nil {
+		return err
+	}
+	if held.Identity != id {
+		return devices.ErrWrongIdentity
+	}
+	if held.Version < l.Version || (held.Version == l.Version && devices.SameBody(held, l)) {
+		out.Outcome = "same"
+		return nil
+	}
+	next, unknown, err := l.Above(a.List, d.v, rand.Reader)
+	if err != nil {
+		return err
+	}
+	out.Outcome, out.List = "above", next.Body()
+	for _, e := range unknown {
+		out.Devices = append(out.Devices, entryOut(e))
+	}
+	return nil
 }
 
 // a contact of my identity a.Ident, proven by its invite or a session
@@ -431,7 +474,11 @@ func (d *devState) poolCall(op string, a *devArgs, out *devOut) error {
 	}
 	switch op {
 	case "pool_put":
-		return d.pool.Put(mine, e, a.Once, a.Last, time.UnixMilli(a.Made), a.now())
+		var asked time.Time
+		if a.Asked > 0 {
+			asked = time.UnixMilli(a.Asked)
+		}
+		return d.pool.PutAsked(mine, e, a.Once, a.Last, time.UnixMilli(a.Made), asked, a.now())
 	case "pool_take":
 		b, low, err := d.pool.Take(mine, e, a.now())
 		out.KDB1, out.Low = b, low

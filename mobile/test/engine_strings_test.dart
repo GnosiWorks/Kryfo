@@ -162,7 +162,7 @@ String b() {
       'lib/lock_state.dart': ['_take(Pointer<Utf8> p) => engineTakeSecret(p)'],
       'lib/backup.dart': [
         'return engineTakeSecret(fn(p1, p2));',
-        'final r = engineTakeSecret(fn(p1, ps));',
+        'return engineTakeSecretKey(fn(p1, ps));',
       ],
       'lib/tools/age_ffi.dart': ["engineTakeSecret(\n  _lib().lookupFunction"],
     };

@@ -151,6 +151,23 @@ extension AppStateReceive on AppState {
     return null;
   }
 
+  // the key a deleted peer who writes again is filed under: the one their
+  // session runs on, never one the frame names. null when the frame claims
+  // another, or when someone accepted holds that key
+  Future<String?> _parkedKey(String addr, String? claimed) async {
+    final x = (await _io.sessionXPub(addr)) ?? '';
+    if (x.isEmpty) return null;
+    final c = (claimed ?? '').trim();
+    if (c.isNotEmpty && c.toLowerCase() != x.toLowerCase()) return null;
+    final holder = _xPubToHaloId[x];
+    if (holder != null &&
+        holder != addr &&
+        (_router.keeps(holder) || await live.isAccepted(holder))) {
+      return null;
+    }
+    return x;
+  }
+
   @visibleForTesting
   Future<void> get listenedAtStart => _listened.future;
   @visibleForTesting
@@ -291,6 +308,7 @@ extension AppStateReceive on AppState {
     // other whether the vault is open or shut
     await _pinFirst(rows);
     final fresh = <String, String>{};
+    final ours = <String, String>{};
     var short = false;
     // each on its own: one that throws leaves the rest listened on
     for (final r in rows) {
@@ -318,6 +336,10 @@ extension AppStateReceive on AppState {
         if (xPub == null || xPub.isEmpty) continue;
         // a key someone else is heard on stays theirs
         if (r['blocked'] == 1 && _heardAsOther(xPub, haloId)) continue;
+        // and a request never takes the key of a chat accepted here
+        final holder = ours[xPub];
+        if (holder != null && holder != haloId) continue;
+        if (r['accepted'] == 1) ours[xPub] = haloId;
         _xPubToHaloId[xPub] = haloId;
         if (!skip.contains(xPub)) _io.listen(identOf(haloId), xPub);
         fresh[xPub] = haloId;
@@ -495,18 +517,26 @@ extension AppStateReceive on AppState {
         final parked = await _openParked(cipher);
         // nobody is filed again on a typing frame
         if (parked != null && unwrapMessage(parked.plain).typing) continue;
-        if (parked != null) {
+        final parkedX = parked == null
+            ? null
+            : await _parkedKey(
+                parked.id,
+                unwrapMessage(parked.plain).senderXPub,
+              );
+        if (parked != null && parkedX == null) {
+          // its key was spent opening it: buried, never filed
+          dlog('drain: a deleted peer\'s frame on another key, dropped');
+          handled = true;
+        } else if (parked != null) {
           final addr = parked.id;
           final env = unwrapMessage(parked.plain);
           await live.upsertContact(
             addr,
             env.senderOnion ?? '',
-            env.senderXPub ?? '',
+            parkedX!,
             accepted: 0,
           );
-          if (env.senderXPub != null && env.senderXPub!.isNotEmpty) {
-            _xPubToHaloId[env.senderXPub!] = addr;
-          }
+          _xPubToHaloId[parkedX] = addr;
           try {
             // someone we let go who writes on in the old chat: their session
             // proves them, and their client grinds nothing for it. a request
@@ -687,6 +717,19 @@ extension AppStateReceive on AppState {
       arrived();
       return;
     }
+    // a device pair's line (linked devices): opened on that device's
+    // session and admitted before anything shows, never tried as a phone's
+    if (linkedDevicesOn && deviceTagOf(m.peer) != null) {
+      await _receiveDeviceCopy(
+        m,
+        h,
+        epoch,
+        arrived,
+        wrappedAt: wrappedAt,
+        reached: reached,
+      );
+      return;
+    }
     // a room frame: opened by the room key already, never signal. one that
     // throws is not kept and comes again
     if (m.peer.startsWith('room:') || m.peer.startsWith('roomfc:')) {
@@ -791,12 +834,27 @@ extension AppStateReceive on AppState {
       }
     }
     if (parkedAt != null) {
-      if (!fcLane) _xPubToHaloId[m.peer] = parkedAt;
       final env0 = unwrapMessage(wrapped!);
+      final x = await _parkedKey(parkedAt, env0.senderXPub);
+      if (x == null) {
+        dlog('relay: a deleted peer\'s frame on another key, dropped');
+        await live.markSeen(h);
+        _relayOpened.take(h);
+        arrived();
+        return;
+      }
+      // a lane someone accepted is heard on stays theirs
+      final lane = fcLane ? null : _xPubToHaloId[m.peer];
+      if (!fcLane &&
+          (lane == null ||
+              lane == parkedAt ||
+              !(_router.keeps(lane) || await live.isAccepted(lane)))) {
+        _xPubToHaloId[m.peer] = parkedAt;
+      }
       await live.upsertContact(
         parkedAt,
         env0.senderOnion ?? '',
-        env0.senderXPub ?? '',
+        x,
         accepted: 0,
       );
       await refreshContacts();
@@ -856,7 +914,7 @@ extension AppStateReceive on AppState {
           final copy = _takeOpenedBefore(m.cipher);
           if (!copy || now - (_copyAskedAt[haloId] ?? 0) >= _kCopyAskGap) {
             if (copy) _copyAskedAt[haloId] = now;
-            unawaited(_askToStartAfresh(haloId));
+            unawaited(_healSoon(haloId));
           }
         }
       }

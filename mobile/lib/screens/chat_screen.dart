@@ -8,6 +8,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../container.dart' show HaloContainer;
 import '../drafts.dart';
+import '../heal.dart' show kHealLineRestored;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -19,7 +20,8 @@ import '../widgets/album_grid.dart';
 import '../widgets/album_viewer.dart';
 import 'media_send_screen.dart';
 import '../sent_name.dart';
-import '../desktop/desktop_mode.dart' show canShareOut;
+import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
+import '../desktop/drag_in.dart' show DragInZone;
 import 'dart:io';
 import 'dart:convert';
 import 'key_verification_screen.dart';
@@ -97,6 +99,7 @@ import 'dev_about_sheet.dart'
 import '../widgets/kryfo_avatar.dart';
 import '../main.dart'
     show
+        typeLeaf,
         engine,
         sendFirstContactNoted,
         AppStatePqRestart,
@@ -122,6 +125,7 @@ import '../main.dart'
         TorHalo,
         LinkViewBuilder,
         AppStateOutbox,
+        AppStateHeal,
         AppStateMessages,
         AppStateRoute,
         AppStatePrefs,
@@ -1000,6 +1004,12 @@ class _ChatScreenState extends State<ChatScreen>
   // verified under one key, holding another now: nothing goes to them until
   // the new number is checked or the new key accepted
   bool _keyHeld = false;
+  // the heal line that holds them (heal.dart), null when no heal does
+  int? _healHold;
+  // where heals rebuilt their session, and whether this chat waits for
+  // them to update after a restore here (Q20)
+  List<({int at, int kind})> _healLines = const [];
+  bool _pausedForUpdate = false;
   bool _keyReading = false;
   // a read asked for while one runs runs again after it
   bool _keyAgain = false;
@@ -1027,6 +1037,7 @@ class _ChatScreenState extends State<ChatScreen>
       final changed = await session.keyChanged(widget.peerHaloId);
       final verified = await session.isVerified(widget.peerHaloId);
       final held = await session.keyHeld(widget.peerHaloId);
+      final heal = held ? await healHoldShown(widget.peerHaloId) : null;
       final row = await session.getContact(widget.peerHaloId);
       // no key held, no number to compare: nothing to ask for yet
       final key = nameAsks(row)
@@ -1039,12 +1050,14 @@ class _ChatScreenState extends State<ChatScreen>
       if (changed != _keyChanged ||
           verified != _verified ||
           held != _keyHeld ||
+          heal != _healHold ||
           asks != _nameAsks ||
           folded != _nameFolded) {
         setState(() {
           _keyChanged = changed;
           _verified = verified;
           _keyHeld = held;
+          _healHold = heal;
           _nameAsks = asks;
           _nameFolded = folded;
         });
@@ -1057,6 +1070,34 @@ class _ChatScreenState extends State<ChatScreen>
     if (_keyAgain && mounted) {
       _keyAgain = false;
       await _readKeyState();
+    }
+  }
+
+  // a heal's hold looked at: the verified mark stays, sending goes on
+  Future<void> _keepChatting() async {
+    HapticFeedback.mediumImpact();
+    await appState.releaseHealHold(widget.peerHaloId);
+    await _readKeyState();
+  }
+
+  // the heal lines and the wait for an update, read with the thread
+  Future<void> _loadHealLines() async {
+    if (_isDev || widget.support) return;
+    try {
+      final lines = await session.healLines(widget.peerHaloId);
+      final paused = await appState.pausedForUpdate(widget.peerHaloId);
+      if (!mounted) return;
+      if (paused == _pausedForUpdate &&
+          lines.length == _healLines.length &&
+          (lines.isEmpty || lines.last.at == _healLines.last.at)) {
+        return;
+      }
+      setState(() {
+        _healLines = lines;
+        _pausedForUpdate = paused;
+      });
+    } catch (e) {
+      dlog('heal lines: not read (${e.runtimeType})');
     }
   }
 
@@ -1329,6 +1370,7 @@ class _ChatScreenState extends State<ChatScreen>
       _shotsHold.want(true, now: true);
     }
     _loadShots();
+    unawaited(_loadHealLines());
     unawaited(_loadPqLine());
     appState.addListener(_onAppStateChanged);
     mediaSendsTick.addListener(_mediaSendsMoved);
@@ -1578,6 +1620,7 @@ class _ChatScreenState extends State<ChatScreen>
       _tryAppendNew();
       unawaited(_refreshDelivered());
       _loadShots();
+      unawaited(_loadHealLines());
       unawaited(_loadPqLine());
       // their badge rides their messages: one that came now may change it
       unawaited(_loadBadge());
@@ -2400,9 +2443,7 @@ class _ChatScreenState extends State<ChatScreen>
                               ? null
                               : () {
                                   dismiss();
-                                  Clipboard.setData(
-                                    ClipboardData(text: target.text),
-                                  );
+                                  copySensitive(target.text, kept: true);
                                   showHaloToast(context, l10n.commonCopied);
                                 },
                         ),
@@ -3794,12 +3835,14 @@ class _ChatScreenState extends State<ChatScreen>
       builder: (sheetCtx) => AttachGrid(
         note: l10n.chatNoExifNeverSaved,
         items: [
-          AttachItem(
-            icon: (c) => Icon(Icons.photo_camera_outlined, color: c),
-            tint: HaloColors.amber,
-            label: l10n.chatCamera,
-            onTap: _openCamera,
-          ),
+          // a computer has no camera to open
+          if (!onDesktop)
+            AttachItem(
+              icon: (c) => Icon(Icons.photo_camera_outlined, color: c),
+              tint: HaloColors.amber,
+              label: l10n.chatCamera,
+              onTap: _openCamera,
+            ),
           AttachItem(
             icon: (c) => Icon(Icons.photo_library_outlined, color: c),
             tint: HaloColors.violet,
@@ -4214,8 +4257,8 @@ class _ChatScreenState extends State<ChatScreen>
     }
     final msgUid = uid ?? newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
-    final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-    final dest = File('${mediaDir.path}/f_${msgUid}_$safe');
+    // its type only: the name it was given lives in the database
+    final dest = File('${mediaDir.path}/f_$msgUid${typeLeaf(name)}');
     // a gallery video carries where, on what and when, like a photo, and a
     // picture sent as a file is cleaned like one sent as a photo. both are
     // told by their bytes and cleaned on our own copy by the one cleaner;
@@ -5233,6 +5276,33 @@ class _ChatScreenState extends State<ChatScreen>
           );
   }
 
+  // where a heal rebuilt their session: a quiet line where it happened, as
+  // the screenshot line falls. under the newest row, the wait for their
+  // update after a restore here
+  List<Widget> _healLinesAt(int ix, {required bool below}) {
+    if (_messages.isEmpty) return const [];
+    final name = _nickname ?? widget.peerHaloId;
+    return [
+      for (final l in _healLines)
+        if (_lineHere(ix, DateTime.fromMillisecondsSinceEpoch(l.at), below))
+          ShotsLine(
+            key: ValueKey('heal-line-${l.at}'),
+            on: true,
+            icon: Icons.verified_user_outlined,
+            text: l.kind == kHealLineRestored
+                ? l10n.chatHealRestored(name)
+                : l10n.chatHealNewSession(name),
+          ),
+      if (below && _pausedForUpdate && ix == _messages.length - 1)
+        ShotsLine(
+          key: const ValueKey('heal-paused'),
+          on: true,
+          icon: Icons.system_update_outlined,
+          text: l10n.chatNeedsUpdateToChat(name),
+        ),
+    ];
+  }
+
   // whether the line falls over row [ix], or under it
   bool _shotsLineBy(int ix, DateTime at, {required bool below}) {
     if (ix < 0) return false;
@@ -5540,6 +5610,7 @@ class _ChatScreenState extends State<ChatScreen>
           if (showDate) _dateDivider(m.when, row.msgUid ?? 'r${row.rowid}'),
           ?_shotsLineAt(ix, below: false),
           ?_pqLineAt(ix, below: false),
+          ..._healLinesAt(ix, below: false),
           if (firstUnread) _newMessagesDivider(),
           // the bubble alone: what says it has been read
           RowAnchor(
@@ -5569,6 +5640,7 @@ class _ChatScreenState extends State<ChatScreen>
           ),
           ?_shotsLineAt(ix, below: true),
           ?_pqLineAt(ix, below: true),
+          ..._healLinesAt(ix, below: true),
         ],
       ),
     );
@@ -5880,7 +5952,7 @@ class _ChatScreenState extends State<ChatScreen>
                 sub: !_accepted
                     ? l10n.chatAcceptThemFirst
                     : !_shots.peerCan
-                    ? l10n.chatShotsWhenTheyUpdate
+                    ? l10n.chatShotsWhenTheyUpdateShown
                     : l10n.chatShotsBlocksBoth,
                 toggled: _shots.blocking,
                 onTap: _accepted && _shots.peerCan ? onShots : null,
@@ -6100,6 +6172,10 @@ class _ChatScreenState extends State<ChatScreen>
       ),
     );
     if (!mounted) return;
+    // a heal's hold ends once the number was looked at
+    if (_healHold != null) {
+      await appState.releaseHealHold(widget.peerHaloId);
+    }
     // checked again there: what waited for it goes now
     await _readKeyState();
     if (!_keyHeld) unawaited(appState.drainOutbox());
@@ -6510,7 +6586,23 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   @override
-  Widget build(BuildContext context) => menuBack(child: _page(context));
+  Widget build(BuildContext context) => menuBack(
+    child: DragInZone(
+      enabled: _composerShown,
+      send: _sendFileFrom,
+      couldNotRead: () => l10n.chatCouldNotReadThat,
+      child: _page(context),
+    ),
+  );
+
+  // the bar under the thread is the composer: a drop goes as a pick would
+  bool get _composerShown =>
+      _barKnown &&
+      !_blocked &&
+      _devStop == null &&
+      !_incomingRequest &&
+      !_requestLocked &&
+      !(_keyHeld && !_isDev);
 
   Widget _page(BuildContext context) {
     // the albums as the thread stands now: a row of one is drawn by its lead
@@ -7018,8 +7110,11 @@ class _ChatScreenState extends State<ChatScreen>
                       : _keyHeld && !_isDev
                       ? KeyHeldCard(
                           peerName: _nickname ?? widget.peerHaloId,
+                          healKind: _healHold,
                           onCheck: _openKeyVerification,
-                          onAccept: _acceptNewKey,
+                          onAccept: _healHold != null
+                              ? _keepChatting
+                              : _acceptNewKey,
                         )
                       : Column(
                           mainAxisSize: MainAxisSize.min,
@@ -8233,6 +8328,10 @@ class _Bubble extends StatelessWidget {
             ? () => onRetry!(msg)
             : onReveal,
         onLongPress: onLongPress == null ? null : () => onLongPress!(context),
+        // a right click on a computer opens the same menu
+        onSecondaryTap: !onDesktop || onLongPress == null
+            ? null
+            : () => onLongPress!(context),
         child: AnimatedPadding(
           duration: roomTime,
           curve: kHouseCurve,
@@ -8878,7 +8977,7 @@ class _Bubble extends StatelessWidget {
                                           if (failedShown) ...[
                                             const SizedBox(height: 4),
                                             Text(
-                                              l10n.chatFailedTapToRetry,
+                                              l10n.chatFailedTapToRetryShown,
                                               style: TextStyle(
                                                 fontFamily: HaloType.monoFamily,
                                                 fontFamilyFallback:
@@ -9090,6 +9189,10 @@ class _Bubble extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onLongPress: onLongPress == null ? null : () => onLongPress!(context),
+        // a right click on a computer opens the same menu
+        onSecondaryTap: !onDesktop || onLongPress == null
+            ? null
+            : () => onLongPress!(context),
         child: AnimatedPadding(
           duration: roomTime,
           curve: kHouseCurve,
@@ -9145,7 +9248,7 @@ class _Bubble extends StatelessWidget {
                                     burn: burn,
                                     burnWaits: msg.burnWaits,
                                     alert: failedShown
-                                        ? l10n.chatFailedTapToRetry
+                                        ? l10n.chatFailedTapToRetryShown
                                         : null,
                                     alertColor: failedShown
                                         ? HaloColors.rose
@@ -9623,20 +9726,21 @@ class _Composer extends StatelessWidget {
               const SizedBox(width: 1),
               // the camera that keeps its photos inside kryfo. each icon
               // sits in a finger-sized box, so a tap between them lands
-              PressScale(
-                label: l10n.chatOpenTheCamera,
-                onTap: onCamera,
-                scale: 0.86,
-                child: SizedBox(
-                  width: 38,
-                  height: 40,
-                  child: Icon(
-                    Icons.photo_camera_outlined,
-                    size: 22,
-                    color: HaloColors.text2,
+              if (!onDesktop)
+                PressScale(
+                  label: l10n.chatOpenTheCamera,
+                  onTap: onCamera,
+                  scale: 0.86,
+                  child: SizedBox(
+                    width: 38,
+                    height: 40,
+                    child: Icon(
+                      Icons.photo_camera_outlined,
+                      size: 22,
+                      color: HaloColors.text2,
+                    ),
                   ),
                 ),
-              ),
               PressScale(
                 label: l10n.chatAttachAPhoto,
                 onTap: onAttach,

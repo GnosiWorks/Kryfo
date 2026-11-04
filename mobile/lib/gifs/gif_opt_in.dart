@@ -62,7 +62,8 @@ class GifOptIn extends StatelessWidget {
         StrokeIcon(_onionGlyph, size: 18, color: HaloColors.violet),
         HaloColors.violet,
         overTor ? l10n.gifOptInOverTor : l10n.gifOptInThroughKryfo,
-        l10n.gifOptInAsksForYou,
+        // on fast our server sees where the search comes from
+        overTor ? l10n.gifOptInAsksForYou : l10n.gifOptInAsksForYouFast,
       ),
       _point(
         Icon(Icons.lock_outline_rounded, size: 18, color: HaloColors.amber),

@@ -133,12 +133,13 @@ func decoyLane() (lane, name string) {
 	decoyLaneMu.Lock()
 	defer decoyLaneMu.Unlock()
 	if decoyLaneID == "" {
-		decoyLaneID = decoyName()
+		decoyLaneID = freshSocksName()
 	}
 	return "decoy:" + decoyLaneID, decoyLaneID
 }
 
-func decoyName() string {
+// a random socks name nothing else has: a decoy session's, a search's
+func freshSocksName() string {
 	b := make([]byte, 16)
 	rand.Read(b)
 	return hex.EncodeToString(b)
@@ -148,7 +149,7 @@ func decoyName() string {
 func decoyLaneNew() {
 	decoyLaneMu.Lock()
 	old := "decoy:" + decoyLaneID
-	decoyLaneID = decoyName()
+	decoyLaneID = freshSocksName()
 	decoyLaneMu.Unlock()
 	cachedNostrClientMu.Lock()
 	if c := cachedNostrClients["tor:"+old]; c != nil {

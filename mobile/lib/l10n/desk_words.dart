@@ -21,6 +21,14 @@ const deskWordKeys = [
   'chatJustForYouNever',
   'chatEveryMessageHereIs',
   'chatAlbumItDisappearsWithNo',
+  'chatShotsWhenTheyUpdate',
+  'roomShotsBlocked',
+  'roomShotsAlwaysOn',
+  'groupShotsBlocksAll',
+  'groupShotsOnForAll',
+  'groupShotsOnAdminOnly',
+  'groupShotsBlockedHere',
+  'groupShotsStarted',
   'contactStaysOnThisPhone',
   'contactMessagesAndContactGone',
   'contactEveryMessageAndThe',
@@ -56,7 +64,8 @@ const deskWordKeys = [
   'notesExportHoldsInstaller',
   'onboardingGeneratedFromAKey',
   'onboardingYourIdentityLivesOn',
-  'pairCodeNumberMatches',
+  'pairCodeOldCode',
+  'pairCodeBothNeed06',
   'restoreReplaceTheAccountOn',
   'restoreTheRegistryDidNot',
   'restoreKryfoWillCloseNow',
@@ -122,6 +131,13 @@ const deskWordKeys = [
   'flowVaultPassLine',
   'flowDecoyShade',
   'bridgesThisNetworkWantsA',
+  'devicesThisPhone',
+  'devicesThisPhoneOnly',
+  'devicesOnlyThisPhone',
+  'devicesHiddenStay',
+  'savedLongPressAnyMessage',
+  'chatFailedTapToRetry',
+  'groupChatTapToRetry',
 ];
 
 extension DeskWords on AppLocalizations {
@@ -154,6 +170,22 @@ extension DeskWords on AppLocalizations {
       onDesktop ? chatJustForYouNeverDesk : chatJustForYouNever;
   String get chatEveryMessageHereIsShown =>
       onDesktop ? chatEveryMessageHereIsDesk : chatEveryMessageHereIs;
+  String get roomShotsBlockedShown =>
+      onDesktop ? roomShotsBlockedDesk : roomShotsBlocked;
+  String get roomShotsAlwaysOnShown =>
+      onDesktop ? roomShotsAlwaysOnDesk : roomShotsAlwaysOn;
+  String get groupShotsBlocksAllShown =>
+      onDesktop ? groupShotsBlocksAllDesk : groupShotsBlocksAll;
+  String get groupShotsOnForAllShown =>
+      onDesktop ? groupShotsOnForAllDesk : groupShotsOnForAll;
+  String get groupShotsOnAdminOnlyShown =>
+      onDesktop ? groupShotsOnAdminOnlyDesk : groupShotsOnAdminOnly;
+  String get groupShotsBlockedHereShown =>
+      onDesktop ? groupShotsBlockedHereDesk : groupShotsBlockedHere;
+  String get groupShotsStartedShown =>
+      onDesktop ? groupShotsStartedDesk : groupShotsStarted;
+  String get chatShotsWhenTheyUpdateShown =>
+      onDesktop ? chatShotsWhenTheyUpdateDesk : chatShotsWhenTheyUpdate;
   String get chatAlbumItDisappearsWithNoShown =>
       onDesktop ? chatAlbumItDisappearsWithNoDesk : chatAlbumItDisappearsWithNo;
   String get contactStaysOnThisPhoneShown =>
@@ -231,8 +263,10 @@ extension DeskWords on AppLocalizations {
   String get onboardingYourIdentityLivesOnShown => onDesktop
       ? onboardingYourIdentityLivesOnDesk
       : onboardingYourIdentityLivesOn;
-  String get pairCodeNumberMatchesShown =>
-      onDesktop ? pairCodeNumberMatchesDesk : pairCodeNumberMatches;
+  String get pairCodeOldCodeShown =>
+      onDesktop ? pairCodeOldCodeDesk : pairCodeOldCode;
+  String get pairCodeBothNeed06Shown =>
+      onDesktop ? pairCodeBothNeed06Desk : pairCodeBothNeed06;
   String get restoreReplaceTheAccountOnShown =>
       onDesktop ? restoreReplaceTheAccountOnDesk : restoreReplaceTheAccountOn;
   String restoreTheRegistryDidNotShown(Object mine) => onDesktop
@@ -363,4 +397,18 @@ extension DeskWords on AppLocalizations {
       onDesktop ? flowDecoyShadeDesk : flowDecoyShade;
   String get bridgesThisNetworkWantsAShown =>
       onDesktop ? bridgesThisNetworkWantsADesk : bridgesThisNetworkWantsA;
+  String get devicesThisPhoneShown =>
+      onDesktop ? devicesThisPhoneDesk : devicesThisPhone;
+  String get devicesThisPhoneOnlyShown =>
+      onDesktop ? devicesThisPhoneOnlyDesk : devicesThisPhoneOnly;
+  String get devicesOnlyThisPhoneShown =>
+      onDesktop ? devicesOnlyThisPhoneDesk : devicesOnlyThisPhone;
+  String get devicesHiddenStayShown =>
+      onDesktop ? devicesHiddenStayDesk : devicesHiddenStay;
+  String get savedLongPressAnyMessageShown =>
+      onDesktop ? savedLongPressAnyMessageDesk : savedLongPressAnyMessage;
+  String get chatFailedTapToRetryShown =>
+      onDesktop ? chatFailedTapToRetryDesk : chatFailedTapToRetry;
+  String get groupChatTapToRetryShown =>
+      onDesktop ? groupChatTapToRetryDesk : groupChatTapToRetry;
 }

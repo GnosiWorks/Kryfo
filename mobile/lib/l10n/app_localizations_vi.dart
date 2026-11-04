@@ -2503,6 +2503,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tin nhắn đến ngay lập tức. Không có gì rời khỏi Tor. Tốn pin nhất.';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'Ở chế độ Nhanh, tin nhắn đến ngay lập tức. Tốn pin nhất.';
+
+  @override
   String get gettingMessagesCheckIns => 'Kiểm tra định kỳ';
 
   @override
@@ -4287,9 +4291,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pairCodeEnterOne => 'Nhập mã';
 
   @override
-  String get pairCodeSixDigits => 'Sáu chữ số';
-
-  @override
   String get pairCodeLooking => 'Đang tìm…';
 
   @override
@@ -4304,38 +4305,86 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không liên lạc được với các relay. Hãy thử lại sau giây lát.';
 
   @override
-  String get pairCodeFailed => 'Không thành công. Hãy thử lại.';
+  String get fastRoomsWaitForTor =>
+      'Phòng, mã ghép nối và lần liên hệ đầu tiên luôn đi qua Tor, kể cả ở chế độ Nhanh. Chúng hoạt động ngay khi Tor kết nối.';
 
   @override
-  String get pairCodeTypeTheSixDigits => 'Nhập sáu chữ số họ đọc cho bạn.';
+  String get pairCodeFailed => 'Không thành công. Hãy thử lại.';
 
   @override
   String get pairCodeAddThem => 'Thêm họ';
 
   @override
-  String get pairCodeUsedTwice =>
-      'Mã này đã được dùng hai lần. Hãy xin mã mới.';
-
-  @override
   String get pairCodeKeyNumber => 'Số khóa';
 
   @override
-  String get pairCodeNumberMatches =>
-      'Kiểm tra cả bốn nhóm số giống nhau trên hai điện thoại';
-
-  @override
-  String get pairCodeNumberMatchesDesk =>
-      'Kiểm tra cả bốn nhóm số giống nhau trên hai thiết bị';
-
-  @override
-  String get pairCodeNumberDiffers => 'Số không giống';
-
-  @override
-  String get pairCodeNoNumberThere =>
-      'Màn hình của họ không có số? Hãy thêm họ, rồi so sánh số an toàn trong cuộc trò chuyện.';
-
-  @override
   String get pairCodeNotAdded => 'Chưa thêm. Hãy xin họ mã mới.';
+
+  @override
+  String get pairCodeEightDigits => 'Tám chữ số';
+
+  @override
+  String get pairCodeTypeTheEightDigits => 'Nhập tám chữ số họ đọc cho bạn.';
+
+  @override
+  String get pairCodeOldCode =>
+      'Mã đó đến từ một bản Kryfo cũ hơn. Cả hai điện thoại cần Kryfo 0.6 trở lên.';
+
+  @override
+  String get pairCodeOldCodeDesk =>
+      'Mã đó đến từ một bản Kryfo cũ hơn. Cả hai thiết bị cần Kryfo 0.6 trở lên.';
+
+  @override
+  String get pairCodeBothNeed06 => 'Cả hai điện thoại cần Kryfo 0.6 trở lên.';
+
+  @override
+  String get pairCodeBothNeed06Desk => 'Cả hai thiết bị cần Kryfo 0.6 trở lên.';
+
+  @override
+  String get pairCodeWaitingForThem => 'Đang chờ họ…';
+
+  @override
+  String get pairCodeStillWaiting =>
+      'Vẫn đang chờ. Nếu màn hình của họ báo đã nhập sai mã, hãy cùng nhau kiểm tra lại các chữ số.';
+
+  @override
+  String get pairCodeUnanswered =>
+      'Chưa có phản hồi. Hãy kiểm tra lại mã với họ rồi nhập lại.';
+
+  @override
+  String get pairCodeTooManyTries =>
+      'Mã này đã được thử ba lần. Hãy xin họ mã mới.';
+
+  @override
+  String get pairCodeRanOut => 'Mã đó đã hết hạn. Hãy xin họ mã mới.';
+
+  @override
+  String get pairCodeMatched => 'Mã đã khớp. Thêm nhau nhé?';
+
+  @override
+  String get pairCodeNotThem => 'Không phải họ';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut =>
+      'Đọc to tám chữ số là hai bạn thêm được nhau. Không cần trao đổi gì khác.';
+
+  @override
+  String get pairCodePanelOrMakeACode => 'Hoặc tạo một mã để đọc to';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      'Họ mở Kryfo, chạm Thêm, chọn Mã ghép nối rồi nhập tám chữ số này. Hãy tạo mã mới cho người tiếp theo.';
+
+  @override
+  String get pairCodePanelWrongTyped =>
+      'Đã nhập sai mã. Hãy đọc lại thật chậm.';
+
+  @override
+  String get pairCodePanelThreeWrong =>
+      'Đã nhập sai mã ba lần nên mã này đã dừng. Hãy tạo mã mới.';
+
+  @override
+  String get pairCodePanelNotAdded => 'Chưa thêm. Tạo mã mới khi họ sẵn sàng.';
 
   @override
   String get panicSetupThoseWereDifferentFrom =>
@@ -4893,6 +4942,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Cần thiết lập lại thông báo trên thiết bị này.';
 
   @override
+  String get restoreDeletedComeBack =>
+      'Những cuộc trò chuyện bạn xóa sau khi tạo bản sao lưu này sẽ quay lại cùng nó, và những người đó có thể thấy bạn đã cài đặt lại Kryfo.';
+
+  @override
   String get restoreMoveItHere => 'Chuyển sang đây';
 
   @override
@@ -5139,7 +5192,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get seenEachConversationGetsIts =>
-      'Mỗi cuộc trò chuyện có địa chỉ riêng, được suy ra từ khóa của cả hai bên. Relay chỉ thấy những điểm thả không liên quan đến nhau, không thấy một cặp người.';
+      'Mỗi cuộc trò chuyện có địa chỉ riêng, được suy ra từ khóa của cả hai bên. Relay chỉ thấy những điểm thả không liên quan đến nhau, không thấy một cặp người. Ở chế độ Nhanh, máy chủ của chúng tôi thấy địa chỉ IP của bạn trên các điểm thả bạn dùng, và khi cả hai người trong một cuộc trò chuyện dùng Nhanh, thấy hai địa chỉ IP dùng chung một điểm thả.';
 
   @override
   String get seenWhatYouSay => 'Những gì bạn nói';
@@ -5156,7 +5209,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get seenKryfoDoesNotScan =>
-      'Kryfo không quét danh bạ của bạn. Ở đây không có số điện thoại nào để bị lộ.';
+      'Kryfo không quét danh bạ của bạn. Ở đây không có số điện thoại nào để bị lộ. Ở chế độ Nhanh, máy chủ của chúng tôi có thể ghép lại một phần từ việc địa chỉ IP nào dùng chung điểm thả. Chúng không lưu lại điều đó.';
 
   @override
   String get seenIntroducer => 'Người giới thiệu';
@@ -5408,9 +5461,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsVersion => 'Phiên bản';
-
-  @override
-  String get settings030Alpha => '0.5.3 · alpha';
 
   @override
   String get settingsReportAnIssue => 'Báo lỗi';
@@ -6723,14 +6773,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pairCodePanelYourInviteIsNot => 'Lời mời của bạn chưa sẵn sàng';
 
   @override
-  String get pairCodePanelReadSixDigitsOut =>
-      'Đọc to sáu chữ số là họ có thể thêm bạn. Không cần trao đổi gì khác.';
-
-  @override
   String get pairCodePanelWorking => 'Đang xử lý';
-
-  @override
-  String get pairCodePanelOrMakeASix => 'Hoặc tạo mã sáu chữ số để đọc to';
 
   @override
   String get pairCodePanelBurned =>
@@ -6747,17 +6790,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get pairCodePanelTheyTapAddChoose =>
       'Họ chạm Thêm, chọn Mã, rồi nhập các số này.';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      'Họ mở Kryfo, chạm Thêm, chọn Mã ghép nối rồi nhập sáu chữ số này. Hãy tạo mã mới cho người tiếp theo.';
-
-  @override
-  String get pairCodePanelYourWords => 'Ba từ của bạn';
-
-  @override
-  String get pairCodePanelAcceptOnce =>
-      'Yêu cầu của họ sẽ đến khi họ thêm bạn. Chỉ chấp nhận khi họ nói cả bốn nhóm số đều khớp.';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -7553,6 +7585,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get languageNameHi => 'Tiếng Hindi';
+
+  @override
+  String get languageNamePl => 'Tiếng Ba Lan';
 
   @override
   String get languageLaterLine =>
@@ -8550,6 +8585,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Máy chủ của Kryfo hỏi dịch vụ GIF thay cho bạn. Dịch vụ không bao giờ thấy bạn, và máy chủ không lưu lại những gì bạn đã tìm.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Máy chủ của Kryfo hỏi dịch vụ GIF thay cho bạn, nên dịch vụ không bao giờ thấy bạn. Ở chế độ Nhanh, máy chủ của chúng tôi thấy địa chỉ IP của bạn khi bạn tìm, và không lưu lại địa chỉ đó hay những gì bạn đã tìm.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'GIF được gửi đi đã mã hóa, như một bức ảnh. Điện thoại của bạn bè bạn không tải gì về.';
 
@@ -8577,7 +8616,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'Tìm GIF đi qua máy chủ của Kryfo. $brand không bao giờ thấy bạn. Bật lên nhé?';
+    return 'Tìm GIF đi thẳng tới máy chủ của Kryfo, nơi thấy địa chỉ IP của bạn ở chế độ Nhanh. $brand không bao giờ thấy bạn. Bật lên nhé?';
   }
 
   @override
@@ -8714,7 +8753,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatShotsWhenTheyUpdate =>
-      'Dùng được khi người kia cập nhật ứng dụng';
+      'Dùng được khi người kia dùng Kryfo bản mới nhất trên điện thoại';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => 'Dùng được trong Kryfo cho Android';
 
   @override
   String get chatShotsBothPhones =>
@@ -8788,8 +8830,16 @@ class AppLocalizationsVi extends AppLocalizations {
       'Kryfo chặn chụp màn hình và quay màn hình phòng này trên mọi điện thoại trong đó, cũng như sao chép, chuyển tiếp hoặc lưu tin nhắn của người khác. Nó không chặn được các ứng dụng được phép đọc màn hình, hay điện thoại hoặc ứng dụng đã bị sửa để lách qua.';
 
   @override
+  String get roomShotsBlockedDesk =>
+      'Không thể sao chép, chuyển tiếp hoặc lưu tin nhắn của nhau trong phòng này. Kryfo cho Android còn chặn chụp màn hình và quay màn hình.';
+
+  @override
   String get roomShotsAlwaysOn =>
       'Luôn bật trong phòng, trên mọi điện thoại trong đó';
+
+  @override
+  String get roomShotsAlwaysOnDesk =>
+      'Luôn bật trong phòng, trong Kryfo cho Android';
 
   @override
   String get settingsPerChat => 'Theo từng cuộc trò chuyện';
@@ -9347,10 +9397,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesNoneUntilOnion => 'Chưa dùng cho đến khi bật Onion';
 
   @override
-  String get bridgesRelayWorksWhereTor =>
-      'Nhanh hoạt động ở nơi Tor bị chặn, và bạn có thể đổi lại bất cứ lúc nào.';
-
-  @override
   String get bridgesRelayThisNetworkSees =>
       'Nhanh vượt qua được nơi Tor bị chặn, nhưng mạng này có thể thấy bạn kết nối tới Kryfo.';
 
@@ -9797,11 +9843,18 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chặn chụp màn hình và quay màn hình trên mọi điện thoại trong nhóm này, cũng như sao chép, chuyển tiếp hoặc lưu tin nhắn của nhau. Nó không chặn được các ứng dụng được phép đọc màn hình, hay điện thoại hoặc ứng dụng đã bị sửa để lách qua.';
 
   @override
+  String get groupShotsBlocksAllDesk =>
+      'Tắt việc sao chép, chuyển tiếp và lưu tin nhắn của nhau ở đây. Kryfo cho Android còn chặn chụp màn hình và quay màn hình.';
+
+  @override
   String get groupShotsStartsWhenAll =>
-      'Đang chờ mọi người ở đây cập nhật Kryfo';
+      'Đang chờ mọi người ở đây chặn được chụp màn hình trên thiết bị của họ';
 
   @override
   String get groupShotsOnForAll => 'Đã bật cho mọi người ở đây';
+
+  @override
+  String get groupShotsOnForAllDesk => 'Đã bật trong Kryfo cho Android';
 
   @override
   String get groupShotsOffAdminOnly =>
@@ -9809,11 +9862,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'Đang chờ mọi người ở đây cập nhật Kryfo. Chỉ quản trị viên mới đổi được';
+      'Đang chờ mọi người ở đây chặn được chụp màn hình trên thiết bị của họ. Chỉ quản trị viên mới đổi được';
 
   @override
   String get groupShotsOnAdminOnly =>
       'Đã bật cho mọi người ở đây. Chỉ quản trị viên mới đổi được';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk =>
+      'Đã bật trong Kryfo cho Android. Chỉ quản trị viên mới đổi được';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -9830,26 +9887,26 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'Chưa cập nhật';
+  String get groupShotsWaitingTitle => 'Chưa được áp dụng';
 
   @override
   String get groupShotsWaitingHint =>
-      'Chặn chụp màn hình sẽ áp dụng cho mọi người khi những người này cập nhật Kryfo. Chạm vào một người để gỡ họ khỏi nhóm.';
+      'Chặn chụp màn hình áp dụng cho mọi người khi thiết bị của những người này chặn được chụp màn hình. Chạm vào một người để xoá họ khỏi nhóm.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'Cần cập nhật Kryfo, hoặc chưa trực tuyến từ lúc đó';
+      'Chưa chặn được chụp màn hình trên thiết bị của họ, hoặc chưa trực tuyến từ lúc đó';
 
   @override
   String get groupShotsBlockedByYou => 'Bạn đã chặn';
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'Bạn đã bật chặn chụp màn hình. Nó sẽ áp dụng cho mọi người khi tất cả ở đây đã cập nhật Kryfo.';
+      'Bạn đã bật chặn chụp màn hình. Nó áp dụng cho mọi người khi tất cả ở đây chặn được chụp màn hình trên thiết bị của họ.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name đã bật chặn chụp màn hình. Nó sẽ áp dụng cho mọi người khi tất cả ở đây đã cập nhật Kryfo.';
+    return '$name đã bật chặn chụp màn hình. Nó áp dụng cho mọi người khi tất cả ở đây chặn được chụp màn hình trên thiết bị của họ.';
   }
 
   @override
@@ -9857,8 +9914,12 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chặn chụp màn hình đã bật cho mọi người ở đây. Việc sao chép, chuyển tiếp và lưu tin nhắn của nhau cũng bị tắt.';
 
   @override
+  String get groupShotsStartedDesk =>
+      'Chặn chụp màn hình đã bật trong Kryfo cho Android. Việc sao chép, chuyển tiếp và lưu tin nhắn của nhau cũng bị tắt.';
+
+  @override
   String get groupShotsPaused =>
-      'Có người ở đây chưa chặn chụp màn hình được. Nó sẽ lại áp dụng cho mọi người khi họ cập nhật Kryfo.';
+      'Có người ở đây chưa chặn được chụp màn hình trên thiết bị của họ. Nó sẽ áp dụng lại cho mọi người khi họ chặn được.';
 
   @override
   String get groupShotsCantYet => 'Chưa chặn chụp màn hình được';
@@ -9868,13 +9929,17 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'Chặn chụp màn hình sẽ không áp dụng cho mọi người ở đây cho đến khi họ cập nhật Kryfo.';
+      'Chặn chụp màn hình sẽ chưa áp dụng cho mọi người ở đây cho đến khi họ chặn được trên thiết bị của mình.';
 
   @override
   String get groupShotsLeaveStays => 'Chặn chụp màn hình vẫn giữ nguyên.';
 
   @override
   String get groupShotsBlockedHere => 'Kryfo chặn chụp màn hình trong nhóm này';
+
+  @override
+  String get groupShotsBlockedHereDesk =>
+      'Không thể sao chép, chuyển tiếp hoặc lưu trong nhóm này';
 
   @override
   String get groupShotsMenuNote =>
@@ -9905,14 +9970,24 @@ class AppLocalizationsVi extends AppLocalizations {
   String get devicesThisPhoneOnly => 'Chỉ điện thoại này';
 
   @override
+  String get devicesThisPhoneOnlyDesk => 'Chỉ máy tính này';
+
+  @override
   String get devicesNameSeparator => ', ';
 
   @override
   String get devicesThisPhone => 'Điện thoại này';
 
   @override
+  String get devicesThisPhoneDesk => 'Máy tính này';
+
+  @override
   String get devicesOnlyThisPhone =>
       'Chỉ điện thoại này mới liên kết hoặc gỡ được thiết bị';
+
+  @override
+  String get devicesOnlyThisPhoneDesk =>
+      'Chỉ máy tính này mới liên kết hoặc gỡ được thiết bị';
 
   @override
   String devicesLinkedOn(Object date) {
@@ -10064,7 +10139,151 @@ class AppLocalizationsVi extends AppLocalizations {
       'Trò chuyện ẩn và phần ngụy trang ở lại trên điện thoại này.';
 
   @override
+  String get devicesHiddenStayDesk =>
+      'Trò chuyện ẩn và phần ngụy trang ở lại trên máy tính này.';
+
+  @override
   String get devicesScanCode => 'Quét mã';
+
+  @override
+  String get devicesLinkReaching => 'Đang kết nối với thiết bị';
+
+  @override
+  String get devicesLinkReachingLine =>
+      'Giữ Kryfo mở trên cả hai. Qua Tor việc này có thể mất một phút.';
+
+  @override
+  String get devicesLinkCompare => 'Các chữ số có khớp không?';
+
+  @override
+  String get devicesLinkCompareLine =>
+      'Thiết bị mới cũng hiện sáu chữ số. Chỉ liên kết nếu chúng giống nhau.';
+
+  @override
+  String get devicesLinkMatch => 'Khớp';
+
+  @override
+  String get devicesLinkNoMatch => 'Không khớp';
+
+  @override
+  String get devicesLinkLinking => 'Đang liên kết';
+
+  @override
+  String get devicesLinkLinkingLine =>
+      'Đang thiết lập thiết bị mới. Giữ cả hai mở.';
+
+  @override
+  String get devicesLinkDone => 'Đã liên kết thiết bị';
+
+  @override
+  String get devicesLinkDoneLine =>
+      'Thiết bị hiện trong Thiết bị đã liên kết, nơi bạn có thể đổi tên hoặc gỡ nó.';
+
+  @override
+  String get devicesLinkUnreached => 'Không kết nối được với thiết bị';
+
+  @override
+  String get devicesLinkUnreachedLine =>
+      'Kiểm tra Kryfo đang mở trên thiết bị mới và hiện mã của nó, rồi thử lại.';
+
+  @override
+  String get devicesLinkStopped => 'Chưa liên kết gì';
+
+  @override
+  String get devicesLinkStoppedLine =>
+      'Các chữ số phải khớp. Bắt đầu lại với một mã mới.';
+
+  @override
+  String get devicesLinkInterruptedLine =>
+      'Việc liên kết bị gián đoạn. Bắt đầu lại với một mã mới.';
+
+  @override
+  String get scanLinkTitle => 'Quét mã của thiết bị';
+
+  @override
+  String get scanLinkPoint => 'Hướng vào mã trên thiết bị mới';
+
+  @override
+  String get scanLinkNotOne => 'Đó không phải mã liên kết';
+
+  @override
+  String get onboardingLinkToMyPhone => 'Liên kết với điện thoại của tôi';
+
+  @override
+  String get joinTitle => 'Liên kết với điện thoại của bạn';
+
+  @override
+  String get joinStep1 => 'Mở Kryfo trên điện thoại của bạn.';
+
+  @override
+  String get joinStep2 =>
+      'Vào Cài đặt, rồi Thiết bị đã liên kết, rồi Liên kết thiết bị.';
+
+  @override
+  String get joinStep3 => 'Quét mã này bằng điện thoại của bạn.';
+
+  @override
+  String get joinWaiting => 'Đang chờ điện thoại của bạn';
+
+  @override
+  String get joinCodeLife => 'Mã có hiệu lực mười phút.';
+
+  @override
+  String get joinCompareLine =>
+      'Điện thoại của bạn cũng hiện sáu chữ số. Chỉ tiếp tục nếu chúng giống nhau.';
+
+  @override
+  String get joinLinking => 'Đang liên kết với điện thoại của bạn';
+
+  @override
+  String get joinLinkingLine =>
+      'Giữ Kryfo mở trên điện thoại cho đến khi xong.';
+
+  @override
+  String get joinDone => 'Đã liên kết với điện thoại của bạn';
+
+  @override
+  String get joinDoneLine =>
+      'Tin nhắn mới giờ cũng đến thiết bị này. Số khóa của tài khoản bạn:';
+
+  @override
+  String get joinOpen => 'Mở Kryfo';
+
+  @override
+  String get joinUnreached => 'Không kết nối được với điện thoại';
+
+  @override
+  String get joinUnreachedLine =>
+      'Kiểm tra điện thoại đang trực tuyến và Kryfo đang mở, rồi thử một mã mới.';
+
+  @override
+  String get joinNewCode => 'Mã mới';
+
+  @override
+  String get devicesNewNotice => 'Đã liên kết thiết bị mới';
+
+  @override
+  String devicesNewNoticeLine(Object name, Object date) {
+    return '$name đã được liên kết với tài khoản của bạn vào $date. Mở Thiết bị đã liên kết để xem.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'Đã liên kết thiết bị mới';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names đã được liên kết với tài khoản của bạn. Mở Thiết bị đã liên kết để xem.';
+  }
+
+  @override
+  String get devicesNewNoticeOpen => 'Mở';
+
+  @override
+  String get settingsLinkedToLine =>
+      'Đã liên kết với điện thoại của bạn. Bản sao lưu và lời mời ở lại trên điện thoại.';
+
+  @override
+  String get devicesYourPhone => 'Điện thoại của bạn';
 
   @override
   String get desktopLockTitle => 'Kryfo đang khóa';
@@ -10233,7 +10452,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'Bỏ qua Tor nên tin nhắn đến nhanh hơn và tốn ít pin hơn. Máy chủ của chúng tôi chỉ thấy địa chỉ IP của bạn khi bạn đang kết nối, và không bao giờ ghi lại hay giữ nó. Không bao giờ thấy bạn nói gì. Người liên hệ của bạn không bao giờ thấy nó.';
+      'Bỏ qua Tor nên tin nhắn đến nhanh hơn và tốn ít pin hơn. Máy chủ của chúng tôi chỉ thấy địa chỉ IP của bạn khi bạn đang kết nối, và không bao giờ ghi lại hay giữ nó. Người liên hệ của bạn không bao giờ thấy nó. Mạng của bạn có thể thấy bạn kết nối tới Kryfo.';
 
   @override
   String get modesFastConnected => 'Nhanh · đã kết nối';
@@ -10337,8 +10556,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeSwitchedToFastRoute => 'Đã chuyển sang Nhanh';
 
   @override
-  String get bridgesFastGetsThrough =>
-      'Nhanh đi thẳng tới máy chủ của chúng tôi và thường vượt qua được. Hoặc để Kryfo tự tìm cách.';
+  String get bridgesBridgeFirstFastSeen =>
+      'Để Kryfo tìm một cầu nối vượt qua được. Nhanh cũng dùng được, nhưng mạng này có thể thấy bạn kết nối tới Kryfo.';
 
   @override
   String get appServersNotAnswering => 'Máy chủ chưa phản hồi';
@@ -10348,6 +10567,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get seenOurServers => 'Máy chủ Kryfo';
+
+  @override
+  String get seenOurServersCould => 'Máy chủ Kryfo có thể';
 
   @override
   String get seenIpWhy =>
@@ -10772,4 +10994,79 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get desktopBackupHint =>
       'Mang mọi thứ trở lại nếu có lúc máy tính này bị đặt lại.';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name đã cài đặt lại Kryfo';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return 'Thiết bị của $name đã bắt đầu một phiên bảo mật mới';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return 'Bạn đã xác minh $name trước đây. Không có gì được gửi cho đến khi bạn kiểm tra số hoặc tiếp tục trò chuyện. Tin nhắn của họ vẫn đến.';
+  }
+
+  @override
+  String get chatKeepChatting => 'Tiếp tục trò chuyện';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '$name cần cập nhật Kryfo để tiếp tục trò chuyện.';
+  }
+
+  @override
+  String get restoreOlderTitle => 'Một số cuộc trò chuyện sẽ tạm dừng';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '$name đang dùng phiên bản Kryfo cũ. Cuộc trò chuyện sẽ tạm dừng cho đến khi họ cập nhật.';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '$first và $second đang dùng phiên bản Kryfo cũ. Các cuộc trò chuyện với họ sẽ tạm dừng cho đến khi họ cập nhật.';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return '$first, $second và $count người khác đang dùng phiên bản Kryfo cũ. Các cuộc trò chuyện với họ sẽ tạm dừng cho đến khi họ cập nhật.';
+  }
+
+  @override
+  String settingsVersionAlpha(String version) {
+    return '$version · alpha';
+  }
+
+  @override
+  String get settingsShotsNotHereYet => 'Chưa có trên máy tính này';
+
+  @override
+  String get settingsDeskInTray => 'Đang chạy trong khay hệ thống';
+
+  @override
+  String get settingsDeskWhileOpen => 'Khi Kryfo đang mở';
+
+  @override
+  String get onboardingDeskRunTitle => 'Kryfo vẫn *chạy*.';
+
+  @override
+  String get onboardingDeskRunLead =>
+      'Đóng cửa sổ thì Kryfo chờ trong khay hệ thống, nên tin nhắn vẫn tiếp tục đến. Bạn có thể đổi cả hai sau trong Cài đặt, mục Thông báo.';
+
+  @override
+  String get savedLongPressAnyMessageDesk =>
+      'Nhấp chuột phải vào một tin nhắn bất kỳ rồi chọn lưu để giữ nó ở đây.';
+
+  @override
+  String get chatFailedTapToRetryDesk => 'Thất bại · nhấp để thử lại';
+
+  @override
+  String get groupChatTapToRetryDesk => '! Nhấp để thử lại';
+
+  @override
+  String get chatDropHereToSend => 'Thả vào đây để gửi';
 }

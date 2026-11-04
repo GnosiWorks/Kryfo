@@ -14,6 +14,7 @@ import 'app_localizations_fr.dart';
 import 'app_localizations_hi.dart';
 import 'app_localizations_id.dart';
 import 'app_localizations_it.dart';
+import 'app_localizations_pl.dart';
 import 'app_localizations_pt.dart';
 import 'app_localizations_ru.dart';
 import 'app_localizations_tr.dart';
@@ -116,6 +117,7 @@ abstract class AppLocalizations {
     Locale('hi'),
     Locale('id'),
     Locale('it'),
+    Locale('pl'),
     Locale('pt'),
     Locale('ru'),
     Locale('tr'),
@@ -4007,6 +4009,12 @@ abstract class AppLocalizations {
   /// **'Messages arrive instantly. Nothing leaves Tor. Uses the most battery.'**
   String get gettingMessagesMessagesArriveInstantlyNothing;
 
+  /// screens/notifications_screen.dart, screens/onboarding_screen.dart: the always-on card on the Fast route (settingsFast), where messages do not go through Tor
+  ///
+  /// In en, this message translates to:
+  /// **'Messages arrive instantly on Fast. Uses the most battery.'**
+  String get gettingMessagesArriveInstantlyFast;
+
   /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
@@ -6806,12 +6814,6 @@ abstract class AppLocalizations {
   /// screens/pair_code_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Six digits'**
-  String get pairCodeSixDigits;
-
-  /// screens/pair_code_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Looking…'**
   String get pairCodeLooking;
 
@@ -6833,6 +6835,12 @@ abstract class AppLocalizations {
   /// **'Couldn\'t reach the relays. Try again in a moment.'**
   String get pairCodeUnreached;
 
+  /// widgets/pair_join.dart, screens/room_create_sheet.dart, screens/room_preview_sheet.dart: on the Fast route (settingsFast) while Tor is not connected: burner rooms, pair codes and first contacts always go through Tor, so they wait for it
+  ///
+  /// In en, this message translates to:
+  /// **'Rooms, pairing codes and first contacts always go through Tor, also on Fast. They work as soon as Tor connects.'**
+  String get fastRoomsWaitForTor;
+
   /// widgets/pair_join.dart, widgets/pair_code_panel.dart: sharing or looking up a pairing code failed for another reason
   ///
   /// In en, this message translates to:
@@ -6842,20 +6850,8 @@ abstract class AppLocalizations {
   /// screens/pair_code_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Type the six digits they read out.'**
-  String get pairCodeTypeTheSixDigits;
-
-  /// screens/pair_code_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Add them'**
   String get pairCodeAddThem;
-
-  /// widgets/pair_join.dart: the code's address holds more than one invite, so nothing is added
-  ///
-  /// In en, this message translates to:
-  /// **'This code was used twice. Ask for a new one.'**
-  String get pairCodeUsedTwice;
 
   /// widgets/pair_join.dart: the label over the key number on both pair-code screens: 20 digits made from the key the chat will use
   ///
@@ -6863,35 +6859,125 @@ abstract class AppLocalizations {
   /// **'Key number'**
   String get pairCodeKeyNumber;
 
-  /// widgets/pair_join.dart: under the key number on both pair-code screens: all four groups must be the same on the two phones
-  ///
-  /// In en, this message translates to:
-  /// **'Check all four groups match on both phones'**
-  String get pairCodeNumberMatches;
-
-  /// pairCodeNumberMatches as a computer shows it (linux and windows)
-  ///
-  /// In en, this message translates to:
-  /// **'Check all four groups match on both devices'**
-  String get pairCodeNumberMatchesDesk;
-
-  /// widgets/pair_join.dart: button under Add: the numbers on the two phones are not the same; nothing is added
-  ///
-  /// In en, this message translates to:
-  /// **'The number is different'**
-  String get pairCodeNumberDiffers;
-
-  /// widgets/pair_join.dart: small line at the bottom of the card: an older Kryfo on the other phone shows no key number
-  ///
-  /// In en, this message translates to:
-  /// **'No number on their screen? Add them, then compare the safety number in your chat.'**
-  String get pairCodeNoNumberThere;
-
   /// widgets/pair_join.dart: status line after Not them
   ///
   /// In en, this message translates to:
   /// **'Not added. Ask them for a new code.'**
   String get pairCodeNotAdded;
+
+  /// pair code join field: what was typed is not eight digits
+  ///
+  /// In en, this message translates to:
+  /// **'Eight digits'**
+  String get pairCodeEightDigits;
+
+  /// pair code join screen, above the field
+  ///
+  /// In en, this message translates to:
+  /// **'Type the eight digits they read out.'**
+  String get pairCodeTypeTheEightDigits;
+
+  /// pair code join: six digits were typed, the code of a Kryfo before 0.6, which cannot pair with this one
+  ///
+  /// In en, this message translates to:
+  /// **'That code is from an older Kryfo. Both phones need Kryfo 0.6 or newer.'**
+  String get pairCodeOldCode;
+
+  /// pairCodeOldCode as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'That code is from an older Kryfo. Both devices need Kryfo 0.6 or newer.'**
+  String get pairCodeOldCodeDesk;
+
+  /// pair code screens, a small line under the code or the field: a pair code works only between two phones on Kryfo 0.6 or newer
+  ///
+  /// In en, this message translates to:
+  /// **'Both phones need Kryfo 0.6 or newer.'**
+  String get pairCodeBothNeed06;
+
+  /// pairCodeBothNeed06 as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Both devices need Kryfo 0.6 or newer.'**
+  String get pairCodeBothNeed06Desk;
+
+  /// pair code join: the code was found and answered, waiting for the other side to confirm it
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for them…'**
+  String get pairCodeWaitingForThem;
+
+  /// pair code join: waited a while for the other side; a wrong code shows a warning on their screen
+  ///
+  /// In en, this message translates to:
+  /// **'Still waiting. If their screen says a wrong code was typed, check the digits together.'**
+  String get pairCodeStillWaiting;
+
+  /// pair code join: the other side never confirmed the code (a wrong code, or they left the screen)
+  ///
+  /// In en, this message translates to:
+  /// **'No answer came. Check the code with them and type it again.'**
+  String get pairCodeUnanswered;
+
+  /// pair code join: this code was used for three tries, the limit; the other side has to make a new one
+  ///
+  /// In en, this message translates to:
+  /// **'This code was tried three times. Ask them for a new one.'**
+  String get pairCodeTooManyTries;
+
+  /// pair code join: the code's ten minutes are over
+  ///
+  /// In en, this message translates to:
+  /// **'That code ran out. Ask them for a new one.'**
+  String get pairCodeRanOut;
+
+  /// pair code, both sides: the code matched on both phones and the other person's name shows above; nothing is added until Add is tapped
+  ///
+  /// In en, this message translates to:
+  /// **'The code matched. Add each other?'**
+  String get pairCodeMatched;
+
+  /// pair code, both sides: under Add, the name shown is not who they expected; nothing is added
+  ///
+  /// In en, this message translates to:
+  /// **'Not them'**
+  String get pairCodeNotThem;
+
+  /// pair code share screen, above the button
+  ///
+  /// In en, this message translates to:
+  /// **'Read eight digits out loud and you add each other. Nothing else needs to change hands.'**
+  String get pairCodePanelReadEightDigitsOut;
+
+  /// pair code share button, under the qr on the invite page and on the pairing screen
+  ///
+  /// In en, this message translates to:
+  /// **'Or make a code to read out'**
+  String get pairCodePanelOrMakeACode;
+
+  /// pair code share screen, under the code
+  ///
+  /// In en, this message translates to:
+  /// **'They open Kryfo, tap add, choose pairing code and type these eight digits. Make a new one for the next person.'**
+  String get pairCodePanelTheyOpenKryfoEight;
+
+  /// pair code share screen: the other phone typed a wrong code (one of three tries)
+  ///
+  /// In en, this message translates to:
+  /// **'A wrong code was typed. Read it out again, slowly.'**
+  String get pairCodePanelWrongTyped;
+
+  /// pair code share screen: a wrong code was typed three times, the code no longer works
+  ///
+  /// In en, this message translates to:
+  /// **'A wrong code was typed three times, so this one stopped. Make a new one.'**
+  String get pairCodePanelThreeWrong;
+
+  /// pair code share screen: the person tapped Not them; nothing was added
+  ///
+  /// In en, this message translates to:
+  /// **'Not added. Make a new code when they\'re ready.'**
+  String get pairCodePanelNotAdded;
 
   /// screens/panic_setup_screen.dart
   ///
@@ -7823,6 +7909,12 @@ abstract class AppLocalizations {
   /// **'Notifications need setting up again on this device.'**
   String get restoreNotificationsNeedSettingUp;
 
+  /// screens/restore_screen.dart: a point under "What doesn't": chats deleted after the backup was made come back, and those contacts may see the "set up Kryfo again" line (chatHealRestored)
+  ///
+  /// In en, this message translates to:
+  /// **'Chats you deleted after this backup was made come back with it, and those contacts may see that you set up Kryfo again.'**
+  String get restoreDeletedComeBack;
+
   /// screens/restore_screen.dart
   ///
   /// In en, this message translates to:
@@ -8222,7 +8314,7 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Each conversation gets its own address, derived from both keys. A relay sees unrelated drop boxes, not a pair of people.'**
+  /// **'Each conversation gets its own address, derived from both keys. A relay sees unrelated drop boxes, not a pair of people. On Fast our servers see your IP address on the drop boxes you use, and when both people in a chat use Fast, that two IP addresses share one.'**
   String get seenEachConversationGetsIts;
 
   /// screens/seen_screen.dart
@@ -8252,7 +8344,7 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Kryfo does not scan your contacts. No phone number exists here to leak.'**
+  /// **'Kryfo does not scan your contacts. No phone number exists here to leak. On Fast our servers could piece some of it together from which IP addresses share drop boxes. They keep no record of it.'**
   String get seenKryfoDoesNotScan;
 
   /// screens/seen_screen.dart
@@ -8704,12 +8796,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Version'**
   String get settingsVersion;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'0.5.3 · alpha'**
-  String get settings030Alpha;
 
   /// screens/settings_screen.dart
   ///
@@ -10730,20 +10816,8 @@ abstract class AppLocalizations {
   /// widgets/pair_code_panel.dart
   ///
   /// In en, this message translates to:
-  /// **'Read six digits out loud and they can add you. Nothing else needs to change hands.'**
-  String get pairCodePanelReadSixDigitsOut;
-
-  /// widgets/pair_code_panel.dart
-  ///
-  /// In en, this message translates to:
   /// **'Working'**
   String get pairCodePanelWorking;
-
-  /// widgets/pair_code_panel.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Or make a six digit code to read out'**
-  String get pairCodePanelOrMakeASix;
 
   /// widgets/pair_code_panel.dart: where the six digits were, once their ten minutes are over
   ///
@@ -10768,24 +10842,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'They tap add, choose code, and type these.'**
   String get pairCodePanelTheyTapAddChoose;
-
-  /// widgets/pair_code_panel.dart
-  ///
-  /// In en, this message translates to:
-  /// **'They open Kryfo, tap add, choose pairing code and type these six digits. Make a new one for the next person.'**
-  String get pairCodePanelTheyOpenKryfoTap;
-
-  /// widgets/pair_join.dart: label over the sharer's own three words under the six digit code
-  ///
-  /// In en, this message translates to:
-  /// **'Your three words'**
-  String get pairCodePanelYourWords;
-
-  /// widgets/pair_code_panel.dart: under the sharer's key number while a code is live: the joiner's request arrives after they add
-  ///
-  /// In en, this message translates to:
-  /// **'Their request comes once they add you. Accept it only once they say all four groups matched.'**
-  String get pairCodePanelAcceptOnce;
 
   /// widgets/pins.dart
   ///
@@ -12166,6 +12222,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hindi'**
   String get languageNameHi;
+
+  /// the name of Polish in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it
+  ///
+  /// In en, this message translates to:
+  /// **'Polish'**
+  String get languageNamePl;
 
   /// under the title of the language sheet during onboarding: the choice is not final
   ///
@@ -13757,6 +13819,12 @@ abstract class AppLocalizations {
   /// **'Kryfo\'s server asks the GIF service for you. The service never sees you, and the server keeps no record of what you searched.'**
   String get gifOptInAsksForYou;
 
+  /// gifs/gif_opt_in.dart: under the first point on the Fast route (settingsFast), where the search goes from the device to our server without Tor
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo\'s server asks the GIF service for you, so the service never sees you. On Fast our server sees your IP address while you search, and keeps no record of it or of what you searched.'**
+  String get gifOptInAsksForYouFast;
+
   /// gifs/gif_opt_in.dart: under the second point
   ///
   /// In en, this message translates to:
@@ -13799,10 +13867,10 @@ abstract class AppLocalizations {
   /// **'GIF search goes through Kryfo\'s server over Tor. {brand} never sees you. Turn it on?'**
   String gifAskOverTor(String brand);
 
-  /// gifs/gif_opt_in.dart: the same question on the relay and fast routes (no tor there). brand is GIPHY or Klipy
+  /// gifs/gif_opt_in.dart: the one question of the gifs tab on the Fast route (settingsFast), where the search goes from the device to our server without Tor. brand is GIPHY or Klipy
   ///
   /// In en, this message translates to:
-  /// **'GIF search goes through Kryfo\'s server. {brand} never sees you. Turn it on?'**
+  /// **'GIF search goes straight to Kryfo\'s server, which sees your IP address on Fast. {brand} never sees you. Turn it on?'**
   String gifAskThroughKryfo(String brand);
 
   /// gifs/gif_opt_in.dart: the button under that question, and the quiet button next to "GIF search is off": turns gif search on
@@ -14033,11 +14101,17 @@ abstract class AppLocalizations {
   /// **'Block screenshots'**
   String get chatBlockScreenshots;
 
-  /// screens/chat_screen.dart, screens/contact_screen.dart: under the switch while the other phone does not know the block yet
+  /// screens/chat_screen.dart, screens/contact_screen.dart, screens/home_screen.dart: under the switch while the other side does not block yet: an older Kryfo, or Kryfo on a computer, which cannot block
   ///
   /// In en, this message translates to:
-  /// **'Available when they update'**
+  /// **'Available when they use the latest Kryfo on a phone'**
   String get chatShotsWhenTheyUpdate;
+
+  /// chatShotsWhenTheyUpdate as a computer shows it (linux and windows): a computer cannot block screenshots, so the switch is not offered there
+  ///
+  /// In en, this message translates to:
+  /// **'Available in Kryfo for Android'**
+  String get chatShotsWhenTheyUpdateDesk;
 
   /// screens/contact_screen.dart: under the switch while it is on
   ///
@@ -14129,11 +14203,23 @@ abstract class AppLocalizations {
   /// **'Kryfo blocks screenshots and screen recording of this room on every phone in it, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.'**
   String get roomShotsBlocked;
 
+  /// roomShotsBlocked as a computer shows it (linux and windows): a computer cannot block screenshots, so only the copying, forwarding and saving limits are its own
+  ///
+  /// In en, this message translates to:
+  /// **'Copying, forwarding and saving each other’s messages is off in this room. Kryfo for Android also blocks screenshots and screen recording of it.'**
+  String get roomShotsBlockedDesk;
+
   /// screens/group_info_screen.dart: under the screenshot switch of a room, which cannot be turned off
   ///
   /// In en, this message translates to:
   /// **'Always on in a room, on every phone in it'**
   String get roomShotsAlwaysOn;
+
+  /// roomShotsAlwaysOn as a computer shows it (linux and windows): a computer cannot block screenshots, so only the copying, forwarding and saving limits are its own
+  ///
+  /// In en, this message translates to:
+  /// **'Always on in a room, in Kryfo for Android'**
+  String get roomShotsAlwaysOnDesk;
 
   /// screens/settings_screen.dart: the screenshots line of your protections: each chat has its own switch, with an app lock too on android 13 and newer
   ///
@@ -15023,13 +15109,7 @@ abstract class AppLocalizations {
   /// **'None until onion is on'**
   String get bridgesNoneUntilOnion;
 
-  /// bridge_mode.dart: the one line when automatic found no way in, over the button that switches to relay mode
-  ///
-  /// In en, this message translates to:
-  /// **'Fast works where Tor is blocked, and you can switch back any time.'**
-  String get bridgesRelayWorksWhereTor;
-
-  /// bridge_mode.dart: the one line when automatic found no way in, for someone who said Tor is blocked or watched: what relay mode costs on this network
+  /// bridge_mode.dart: the one line when automatic found no way in, over the bridge way and then the button that switches to Fast: what Fast costs on this network
   ///
   /// In en, this message translates to:
   /// **'Fast gets through where Tor is blocked, but this network can see you connect to Kryfo.'**
@@ -15761,10 +15841,16 @@ abstract class AppLocalizations {
   /// **'Blocks screenshots and screen recording on every phone in this group, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.'**
   String get groupShotsBlocksAll;
 
+  /// groupShotsBlocksAll as a computer shows it (linux and windows): a computer cannot block screenshots, so only the copying, forwarding and saving limits are its own
+  ///
+  /// In en, this message translates to:
+  /// **'Turns off copying, forwarding and saving each other’s messages here. Kryfo for Android also blocks screenshots and screen recording.'**
+  String get groupShotsBlocksAllDesk;
+
   /// screens/group_info_screen.dart: the admin's switch, on while someone's app cannot block yet
   ///
   /// In en, this message translates to:
-  /// **'Waiting for everyone here to update Kryfo'**
+  /// **'Waiting until everyone here can block screenshots on their device'**
   String get groupShotsStartsWhenAll;
 
   /// screens/group_info_screen.dart: the admin's switch, on for every member
@@ -15772,6 +15858,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'On for everyone here'**
   String get groupShotsOnForAll;
+
+  /// groupShotsOnForAll as a computer shows it (linux and windows): a computer cannot block screenshots, so only the copying, forwarding and saving limits are its own
+  ///
+  /// In en, this message translates to:
+  /// **'On in Kryfo for Android'**
+  String get groupShotsOnForAllDesk;
 
   /// screens/group_info_screen.dart: a member's read-only row, off
   ///
@@ -15782,7 +15874,7 @@ abstract class AppLocalizations {
   /// screens/group_info_screen.dart: a member's read-only row, on but waiting on someone
   ///
   /// In en, this message translates to:
-  /// **'Waiting for everyone here to update Kryfo. Only the admin can change this'**
+  /// **'Waiting until everyone here can block screenshots on their device. Only the admin can change this'**
   String get groupShotsWaitAdminOnly;
 
   /// screens/group_info_screen.dart: a member's read-only row, on for every member
@@ -15790,6 +15882,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'On for everyone here. Only the admin can change this'**
   String get groupShotsOnAdminOnly;
+
+  /// groupShotsOnAdminOnly as a computer shows it (linux and windows): a computer cannot block screenshots, so only the copying, forwarding and saving limits are its own
+  ///
+  /// In en, this message translates to:
+  /// **'On in Kryfo for Android. Only the admin can change this'**
+  String get groupShotsOnAdminOnlyDesk;
 
   /// screens/group_info_screen.dart: the admin's row that opens the list of members whose app cannot block yet
   ///
@@ -15800,19 +15898,19 @@ abstract class AppLocalizations {
   /// widgets/group_shots_sheet.dart: the title of that list
   ///
   /// In en, this message translates to:
-  /// **'Still to update'**
+  /// **'Not covered yet'**
   String get groupShotsWaitingTitle;
 
   /// widgets/group_shots_sheet.dart: the line under the title
   ///
   /// In en, this message translates to:
-  /// **'Screenshot blocking covers everyone once these people update Kryfo. Tap someone to remove them from the group.'**
+  /// **'Screenshot blocking covers everyone once these people’s devices can block screenshots. Tap someone to remove them from the group.'**
   String get groupShotsWaitingHint;
 
-  /// widgets/group_shots_sheet.dart: under a member's name
+  /// widgets/group_shots_sheet.dart: under a member's name whose Kryfo does not say it blocks screenshots in groups: an older Kryfo, or Kryfo on a computer. names no update and no kind of device, so it stays true for both and tells no one which it is
   ///
   /// In en, this message translates to:
-  /// **'Needs to update Kryfo, or hasn’t been online since'**
+  /// **'Can’t block screenshots on their device yet, or hasn’t been online since'**
   String get groupShotsNeedsUpdate;
 
   /// widgets/group_shots_sheet.dart: under a member you blocked
@@ -15824,13 +15922,13 @@ abstract class AppLocalizations {
   /// widgets/shots_line.dart: the line in the group where you turned it on and someone's app cannot block yet
   ///
   /// In en, this message translates to:
-  /// **'You turned on screenshot blocking. It covers everyone once all here have updated Kryfo.'**
+  /// **'You turned on screenshot blocking. It covers everyone once all here can block screenshots on their device.'**
   String get groupShotsYouTurnedOnWait;
 
   /// widgets/shots_line.dart: the same, turned on by the admin
   ///
   /// In en, this message translates to:
-  /// **'{name} turned on screenshot blocking. It covers everyone once all here have updated Kryfo.'**
+  /// **'{name} turned on screenshot blocking. It covers everyone once all here can block screenshots on their device.'**
   String groupShotsTheyTurnedOnWait(String name);
 
   /// widgets/shots_line.dart: every member's app can block now
@@ -15839,10 +15937,16 @@ abstract class AppLocalizations {
   /// **'Screenshot blocking is on for everyone here. Copying, forwarding and saving each other’s messages is off too.'**
   String get groupShotsStarted;
 
+  /// groupShotsStarted as a computer shows it (linux and windows): a computer cannot block screenshots, so only the copying, forwarding and saving limits are its own
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot blocking is on in Kryfo for Android. Copying, forwarding and saving each other’s messages is off too.'**
+  String get groupShotsStartedDesk;
+
   /// widgets/shots_line.dart: someone whose app cannot block came in or went back to an older app
   ///
   /// In en, this message translates to:
-  /// **'Someone here can’t block screenshots yet. It covers everyone again once they update Kryfo.'**
+  /// **'Someone here can’t block screenshots on their device yet. It covers everyone again once they can.'**
   String get groupShotsPaused;
 
   /// screens/group_info_screen.dart: in the add sheet, under someone whose app cannot block in groups yet
@@ -15860,7 +15964,7 @@ abstract class AppLocalizations {
   /// screens/group_info_screen.dart: confirm line when adding such a person
   ///
   /// In en, this message translates to:
-  /// **'Screenshot blocking won’t cover everyone here until they update Kryfo.'**
+  /// **'Screenshot blocking won’t cover everyone here until they can block screenshots on their device.'**
   String get groupShotsAddPauses;
 
   /// screens/group_info_screen.dart: extra line in the admin's leave confirm while blocking is on
@@ -15874,6 +15978,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Kryfo blocks screenshots in this group'**
   String get groupShotsBlockedHere;
+
+  /// groupShotsBlockedHere as a computer shows it (linux and windows): a computer cannot block screenshots, so only the copying, forwarding and saving limits are its own
+  ///
+  /// In en, this message translates to:
+  /// **'Copying, forwarding and saving is off in this group'**
+  String get groupShotsBlockedHereDesk;
 
   /// screens/group_chat_screen.dart: note in the message menu
   ///
@@ -15923,6 +16033,12 @@ abstract class AppLocalizations {
   /// **'This phone only'**
   String get devicesThisPhoneOnly;
 
+  /// screens/settings_screen.dart: on a computer, the devices row when nothing else is linked
+  ///
+  /// In en, this message translates to:
+  /// **'This computer only'**
+  String get devicesThisPhoneOnlyDesk;
+
   /// screens/linked_devices_screen.dart: goes between device names on the settings row
   ///
   /// In en, this message translates to:
@@ -15935,11 +16051,23 @@ abstract class AppLocalizations {
   /// **'This phone'**
   String get devicesThisPhone;
 
+  /// screens/linked_devices_screen.dart: on a computer, the computer itself, first in the devices list
+  ///
+  /// In en, this message translates to:
+  /// **'This computer'**
+  String get devicesThisPhoneDesk;
+
   /// screens/linked_devices_screen.dart: the line under this phone on the list
   ///
   /// In en, this message translates to:
   /// **'Only this phone can link or remove devices'**
   String get devicesOnlyThisPhone;
+
+  /// screens/linked_devices_screen.dart: on a computer, the line under the computer itself
+  ///
+  /// In en, this message translates to:
+  /// **'Only this computer can link or remove devices'**
+  String get devicesOnlyThisPhoneDesk;
 
   /// screens/linked_devices_screen.dart: when a device was linked, a day
   ///
@@ -16169,11 +16297,263 @@ abstract class AppLocalizations {
   /// **'Hidden chats and the decoy stay on this phone.'**
   String get devicesHiddenStay;
 
+  /// screens/linked_devices_screen.dart: on a computer, a note on the link page
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden chats and the decoy stay on this computer.'**
+  String get devicesHiddenStayDesk;
+
   /// screens/linked_devices_screen.dart: the button at the foot of the link page
   ///
   /// In en, this message translates to:
   /// **'Scan the code'**
   String get devicesScanCode;
+
+  /// screens/link_screens.dart: the phone waits for the new device to answer its scan
+  ///
+  /// In en, this message translates to:
+  /// **'Reaching the device'**
+  String get devicesLinkReaching;
+
+  /// screens/link_screens.dart: under devicesLinkReaching
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Kryfo open on both. Over Tor this can take a minute.'**
+  String get devicesLinkReachingLine;
+
+  /// screens/link_screens.dart: title over the six numbers, on the phone and the new device
+  ///
+  /// In en, this message translates to:
+  /// **'Do the numbers match?'**
+  String get devicesLinkCompare;
+
+  /// screens/link_screens.dart: on the phone, under the title over the six numbers
+  ///
+  /// In en, this message translates to:
+  /// **'The new device shows six numbers too. Link it only if they are the same.'**
+  String get devicesLinkCompareLine;
+
+  /// screens/link_screens.dart: button: the six numbers are the same on both screens
+  ///
+  /// In en, this message translates to:
+  /// **'They match'**
+  String get devicesLinkMatch;
+
+  /// screens/link_screens.dart: button: the six numbers differ, nothing is linked
+  ///
+  /// In en, this message translates to:
+  /// **'They don\'t match'**
+  String get devicesLinkNoMatch;
+
+  /// screens/link_screens.dart: the phone, after the numbers matched
+  ///
+  /// In en, this message translates to:
+  /// **'Linking'**
+  String get devicesLinkLinking;
+
+  /// screens/link_screens.dart: under devicesLinkLinking
+  ///
+  /// In en, this message translates to:
+  /// **'Setting up the new device. Keep both open.'**
+  String get devicesLinkLinkingLine;
+
+  /// screens/link_screens.dart: the phone: the link worked
+  ///
+  /// In en, this message translates to:
+  /// **'Device linked'**
+  String get devicesLinkDone;
+
+  /// screens/link_screens.dart: under devicesLinkDone
+  ///
+  /// In en, this message translates to:
+  /// **'It shows in Linked devices, where you can rename or remove it.'**
+  String get devicesLinkDoneLine;
+
+  /// screens/link_screens.dart: the phone got no answer from the new device. the decoy ends here too
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach the device'**
+  String get devicesLinkUnreached;
+
+  /// screens/link_screens.dart: under devicesLinkUnreached
+  ///
+  /// In en, this message translates to:
+  /// **'Check that Kryfo is open on the new device and shows its code, then try again.'**
+  String get devicesLinkUnreachedLine;
+
+  /// screens/link_screens.dart: the link ended without a device: numbers did not match, or the phone has no room
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing was linked'**
+  String get devicesLinkStopped;
+
+  /// screens/link_screens.dart: under devicesLinkStopped
+  ///
+  /// In en, this message translates to:
+  /// **'The numbers have to match. Start again with a new code.'**
+  String get devicesLinkStoppedLine;
+
+  /// screens/link_screens.dart: under devicesLinkStopped when the link ended for another reason than a no: the other side stopped, a step failed
+  ///
+  /// In en, this message translates to:
+  /// **'Something interrupted the link. Start again with a new code.'**
+  String get devicesLinkInterruptedLine;
+
+  /// screens/scan_screen.dart: the scanner title when the phone links a device
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the device\'s code'**
+  String get scanLinkTitle;
+
+  /// screens/scan_screen.dart: the scanner hint when the phone links a device
+  ///
+  /// In en, this message translates to:
+  /// **'Point at the code on the new device'**
+  String get scanLinkPoint;
+
+  /// screens/scan_screen.dart: a code in frame that is not a new device's link code
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s not a link code'**
+  String get scanLinkNotOne;
+
+  /// screens/onboarding_screen.dart: text link on the first page: this device joins the account on a phone
+  ///
+  /// In en, this message translates to:
+  /// **'Link to my phone'**
+  String get onboardingLinkToMyPhone;
+
+  /// screens/link_screens.dart: page title on the new device
+  ///
+  /// In en, this message translates to:
+  /// **'Link to your phone'**
+  String get joinTitle;
+
+  /// screens/link_screens.dart: first step under the code on the new device
+  ///
+  /// In en, this message translates to:
+  /// **'Open Kryfo on your phone.'**
+  String get joinStep1;
+
+  /// screens/link_screens.dart: second step under the code on the new device. names the settings rows as they read
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Settings, then Linked devices, then Link a device.'**
+  String get joinStep2;
+
+  /// screens/link_screens.dart: third step under the code on the new device
+  ///
+  /// In en, this message translates to:
+  /// **'Scan this code with your phone.'**
+  String get joinStep3;
+
+  /// screens/link_screens.dart: the new device waits for the phone to scan
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for your phone'**
+  String get joinWaiting;
+
+  /// screens/link_screens.dart: under joinWaiting
+  ///
+  /// In en, this message translates to:
+  /// **'The code works for ten minutes.'**
+  String get joinCodeLife;
+
+  /// screens/link_screens.dart: on the new device, under the title over the six numbers
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone shows six numbers too. Go on only if they are the same.'**
+  String get joinCompareLine;
+
+  /// screens/link_screens.dart: the new device, after the numbers matched
+  ///
+  /// In en, this message translates to:
+  /// **'Linking to your phone'**
+  String get joinLinking;
+
+  /// screens/link_screens.dart: under joinLinking
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Kryfo open on your phone until this is done.'**
+  String get joinLinkingLine;
+
+  /// screens/link_screens.dart: the new device is linked
+  ///
+  /// In en, this message translates to:
+  /// **'Linked to your phone'**
+  String get joinDone;
+
+  /// screens/link_screens.dart: under joinDone, right above the account's key number (20 digits)
+  ///
+  /// In en, this message translates to:
+  /// **'New messages reach this device too. Your account\'s key number:'**
+  String get joinDoneLine;
+
+  /// screens/link_screens.dart: button on the new device once linked
+  ///
+  /// In en, this message translates to:
+  /// **'Open Kryfo'**
+  String get joinOpen;
+
+  /// screens/link_screens.dart: the new device got no answer from the phone, or the code ran out
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach your phone'**
+  String get joinUnreached;
+
+  /// screens/link_screens.dart: under joinUnreached
+  ///
+  /// In en, this message translates to:
+  /// **'Check that your phone is online with Kryfo open, then try a new code.'**
+  String get joinUnreachedLine;
+
+  /// screens/link_screens.dart: button: show a fresh code
+  ///
+  /// In en, this message translates to:
+  /// **'New code'**
+  String get joinNewCode;
+
+  /// screens/home_screen.dart: card title on every own device after a device was linked. stays until opened
+  ///
+  /// In en, this message translates to:
+  /// **'New device linked'**
+  String get devicesNewNotice;
+
+  /// screens/home_screen.dart: the card's line: the device's name and the day it was linked
+  ///
+  /// In en, this message translates to:
+  /// **'{name} was linked to your account on {date}. Open Linked devices to see it.'**
+  String devicesNewNoticeLine(Object name, Object date);
+
+  /// screens/home_screen.dart: the card's title when more than one device was linked since the page was last opened
+  ///
+  /// In en, this message translates to:
+  /// **'New devices linked'**
+  String get devicesNewNoticeMany;
+
+  /// screens/home_screen.dart: the card's line when more than one device was linked: their names, joined by devicesNameSeparator
+  ///
+  /// In en, this message translates to:
+  /// **'{names} were linked to your account. Open Linked devices to see them.'**
+  String devicesNewNoticeManyLine(Object names);
+
+  /// screens/home_screen.dart: the card's button: opens Linked devices
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get devicesNewNoticeOpen;
+
+  /// screens/settings_screen.dart: under Linked devices on a linked device
+  ///
+  /// In en, this message translates to:
+  /// **'Linked to your phone. Backups and invites stay on the phone.'**
+  String get settingsLinkedToLine;
+
+  /// screens/linked_devices_screen.dart: on a linked device, its phone in the devices list
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone'**
+  String get devicesYourPhone;
 
   /// desktop/desktop_lock_screen.dart: the title of the passphrase screen the desktop app opens on
   ///
@@ -16454,7 +16834,7 @@ abstract class AppLocalizations {
   /// Fast card, what it means and who sees the IP address
   ///
   /// In en, this message translates to:
-  /// **'Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you\'re connected, and never log or keep it. Never what you say. Your contacts never see it.'**
+  /// **'Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you\'re connected, and never log or keep it. Your contacts never see it. Your network can see that you connect to Kryfo.'**
   String get modesFastLine;
 
   /// status of the Fast route, on its card and on the home pill
@@ -16643,11 +17023,11 @@ abstract class AppLocalizations {
   /// **'Switched to Fast'**
   String get homeSwitchedToFastRoute;
 
-  /// where Tor seems blocked, the line that offers Fast
+  /// where Tor seems blocked: a bridge first, then Fast and what this network sees on it
   ///
   /// In en, this message translates to:
-  /// **'Fast goes straight to our servers and usually gets through. Or let Kryfo find a way by itself.'**
-  String get bridgesFastGetsThrough;
+  /// **'Let Kryfo find a bridge that gets through. Fast works too, but this network can see you connect to Kryfo.'**
+  String get bridgesBridgeFirstFastSeen;
 
   /// home pill while neither of our servers answers
   ///
@@ -16666,6 +17046,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Our servers'**
   String get seenOurServers;
+
+  /// what we can see table, Fast column, who you talk to and contact graph rows: what our servers could put together on Fast
+  ///
+  /// In en, this message translates to:
+  /// **'Our servers could'**
+  String get seenOurServersCould;
 
   /// what we can see table, why for the IP address row
   ///
@@ -17314,6 +17700,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Brings everything back if this computer is ever reset.'**
   String get desktopBackupHint;
+
+  /// screens/chat_screen.dart: the quiet line where a contact's restore or move rebuilt the session (identity v4 heal, bit 0). calm, no alarm
+  ///
+  /// In en, this message translates to:
+  /// **'{name} set up Kryfo again'**
+  String chatHealRestored(Object name);
+
+  /// screens/chat_screen.dart: the quiet line where a contact's phone rebuilt a session that stopped reading (identity v4 heal without bit 0)
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s device started a new secure session'**
+  String chatHealNewSession(Object name);
+
+  /// widgets/key_held.dart: the card on a verified contact's chat after a heal, until the person looks (Q22). same shape as chatKeyHeldLine
+  ///
+  /// In en, this message translates to:
+  /// **'You verified {name} before. Nothing is sent until you check the number or keep chatting. Their messages still arrive.'**
+  String chatHealHeldLine(Object name);
+
+  /// widgets/key_held.dart: the button that ends a heal's hold and keeps the verified mark
+  ///
+  /// In en, this message translates to:
+  /// **'Keep chatting'**
+  String get chatKeepChatting;
+
+  /// screens/chat_screen.dart: the line under a chat with a 0.5.x contact after this phone was restored: what is written waits until they update (Q20)
+  ///
+  /// In en, this message translates to:
+  /// **'{name} needs to update Kryfo to keep chatting.'**
+  String chatNeedsUpdateToChat(Object name);
+
+  /// screens/restore_screen.dart: the sheet before a restore when the file holds contacts on 0.5.x
+  ///
+  /// In en, this message translates to:
+  /// **'Some chats will pause'**
+  String get restoreOlderTitle;
+
+  /// screens/restore_screen.dart: the sheet's line with one contact on 0.5.x
+  ///
+  /// In en, this message translates to:
+  /// **'{name} uses an older Kryfo. Your chat with them will pause until they update.'**
+  String restoreOlderOne(Object name);
+
+  /// screens/restore_screen.dart: the sheet's line with two contacts on 0.5.x
+  ///
+  /// In en, this message translates to:
+  /// **'{first} and {second} use an older Kryfo. Your chats with them will pause until they update.'**
+  String restoreOlderTwo(Object first, Object second);
+
+  /// screens/restore_screen.dart: the sheet's line with three or more contacts on 0.5.x; count is the others
+  ///
+  /// In en, this message translates to:
+  /// **'{first}, {second} and {count, plural, =1{1 other} other{{count} others}} use an older Kryfo. Your chats with them will pause until they update.'**
+  String restoreOlderMany(Object first, Object second, int count);
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'{version} · alpha'**
+  String settingsVersionAlpha(String version);
+
+  /// screens/settings_screen.dart: the screenshots line on a computer
+  ///
+  /// In en, this message translates to:
+  /// **'Not on this computer yet'**
+  String get settingsShotsNotHereYet;
+
+  /// screens/settings_screen.dart: how messages arrive on a computer, kept in the tray
+  ///
+  /// In en, this message translates to:
+  /// **'Running in the tray'**
+  String get settingsDeskInTray;
+
+  /// screens/settings_screen.dart: how messages arrive on a computer with the tray off
+  ///
+  /// In en, this message translates to:
+  /// **'While Kryfo is open'**
+  String get settingsDeskWhileOpen;
+
+  /// screens/onboarding_screen.dart: the computer's step in place of the notification one
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo keeps *running*.'**
+  String get onboardingDeskRunTitle;
+
+  /// screens/onboarding_screen.dart: the computer's step in place of the notification one
+  ///
+  /// In en, this message translates to:
+  /// **'Close the window and Kryfo waits in the tray, so messages keep arriving. You can change both later in Settings, under Notifications.'**
+  String get onboardingDeskRunLead;
+
+  /// screens/saved_screen.dart, on a computer
+  ///
+  /// In en, this message translates to:
+  /// **'Right-click any message and choose save to keep it here.'**
+  String get savedLongPressAnyMessageDesk;
+
+  /// screens/chat_screen.dart, on a computer
+  ///
+  /// In en, this message translates to:
+  /// **'Failed · click to retry'**
+  String get chatFailedTapToRetryDesk;
+
+  /// screens/group_chat_screen.dart, on a computer
+  ///
+  /// In en, this message translates to:
+  /// **'! Click to retry'**
+  String get groupChatTapToRetryDesk;
+
+  /// a computer: files dragged over a chat, the line on the wash before they are let go
+  ///
+  /// In en, this message translates to:
+  /// **'Drop here to send'**
+  String get chatDropHereToSend;
 }
 
 class _AppLocalizationsDelegate
@@ -17336,6 +17836,7 @@ class _AppLocalizationsDelegate
     'hi',
     'id',
     'it',
+    'pl',
     'pt',
     'ru',
     'tr',
@@ -17381,6 +17882,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsId();
     case 'it':
       return AppLocalizationsIt();
+    case 'pl':
+      return AppLocalizationsPl();
     case 'pt':
       return AppLocalizationsPt();
     case 'ru':

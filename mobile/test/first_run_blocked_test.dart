@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a new install that says tor is blocked or watched: bridges only, no relay
 // or fast on the way in, while relay stays in settings and in the offer when
-// nothing got through. closing the sheet leaves the question
+// nothing got through, after the bridge way. closing the sheet leaves the
+// question
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -309,20 +310,46 @@ void main() {
       );
       final relay = t.getRect(find.text(l10n.homeUseFast));
       final ask = t.getRect(find.text(l10n.bridgesGetABridge));
-      if (watched) {
-        expect(find.text(l10n.bridgesRelayThisNetworkSees), findsOneWidget);
-        expect(ask.left, lessThan(relay.left));
-        expect(card(l10n.bridgesGetABridge).fill, isNotNull);
-        expect(card(l10n.homeUseFast).fill, isNull);
-      } else {
-        expect(find.text(l10n.bridgesRelayWorksWhereTor), findsOneWidget);
-        expect(relay.left, lessThan(ask.left));
-        expect(card(l10n.homeUseFast).fill, isNotNull);
-        expect(card(l10n.bridgesGetABridge).fill, isNull);
-      }
+      // either way: the bridge way first and filled, fast last with its
+      // cost
+      expect(find.text(l10n.bridgesRelayThisNetworkSees), findsOneWidget);
+      expect(ask.left, lessThan(relay.left));
+      expect(card(l10n.bridgesGetABridge).fill, isNotNull);
+      expect(card(l10n.homeUseFast).fill, isNull);
       await done(t);
     });
   }
+
+  // tor alone not getting through: let kryfo find a bridge first, filled,
+  // and fast after it, quiet, with what this network sees on it
+  testWidgets('tor seems blocked: the bridge way first, fast last', (t) async {
+    phone(t);
+    appState.bridgeSetupForTest = const BridgeSetup(
+      choice: BridgeChoice.direct,
+    );
+    appState.torTryingSinceForTest = DateTime.now().subtract(
+      const Duration(minutes: 5),
+    );
+    addTearDown(() => appState.torTryingSinceForTest = null);
+    expect(appState.homeBridgeCard, 'hint');
+    await t.pumpWidget(devApp(devHome()));
+    await t.pump(const Duration(seconds: 2));
+    CardAction card(String label) => t.widget<CardAction>(
+      find.ancestor(of: find.text(label), matching: find.byType(CardAction)),
+    );
+    expect(find.text(l10n.bridgesBridgeFirstFastSeen), findsOneWidget);
+    final auto = t.getRect(find.text(l10n.bridgesTryAutomatic));
+    final fast = t.getRect(find.text(l10n.homeUseFast));
+    // in reading order, on one line or wrapped
+    expect(
+      auto.top < fast.top - 1 ||
+          ((auto.top - fast.top).abs() <= 1 && auto.left < fast.left),
+      isTrue,
+    );
+    expect(card(l10n.bridgesTryAutomatic).fill, isNotNull);
+    expect(card(l10n.homeUseFast).fill, isNull);
+    await done(t);
+  });
 
   // the route left setup: the name step writes private, or fast where the
   // first start took it, and nothing in setup offers a route

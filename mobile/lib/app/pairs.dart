@@ -79,16 +79,22 @@ Future<void> pushPairSeeds() async {
       final db = await d.open();
       for (final r in await db.query(
         'pairs',
-        columns: ['ident', 'peer', 'seed'],
+        columns: ['ident', 'peer', 'seed', 'their_device', 'my_device'],
         where: 'conv = ?',
         whereArgs: [kConvSeeded],
       )) {
         final peer = r['peer'] as String;
         final s = r['seed'];
         if (s is! List<int> || peer.length != 66) continue;
+        final their = r['their_device'] as int? ?? 1;
+        final mine = r['my_device'] as int? ?? 1;
+        // a device pair's seed (linked devices) is the engine's only with
+        // the switch on, under its own name: never the identity pair's
+        final device = their != 1 || mine != 1;
+        if (device && !linkedDevicesOn) continue;
         final res = await engine.pairSeed(
           r['ident'] as int,
-          peer.substring(2),
+          device ? '${peer.substring(2)}/$their/$mine' : peer.substring(2),
           _hexOfBytes(s),
         );
         if (res != 'ok') dlog('pairs: a seed not taken ($res)');

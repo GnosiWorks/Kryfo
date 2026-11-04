@@ -92,13 +92,75 @@ mixin _OutboxRows {
           );
         }
       }
+      final at = DateTime.now().millisecondsSinceEpoch;
       await t.insert('frames_out', {
         'msg_uid': msgUid,
         'kind': kind,
         'peer_id': peerId,
         'body': body,
-        'at': DateTime.now().millisecondsSinceEpoch,
+        'at': at,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
+      // kept to go again if their restore brings it back
+      if (kind == kFrameUnsend) {
+        await noteTaken(t, msgUid, kTakenUnsend, peer: peerId, at: at);
+      }
+    });
+  }
+
+  /// [peer] restored a backup: our unsends and last edits to them since
+  /// [since] go again, each with the time it was made, so what we undid
+  /// after their backup is undone there again. one already queued keeps
+  /// its place. how many
+  Future<int> requeueTakenSince(String peer, {required int since}) async {
+    final db = await open();
+    return db.transaction((t) async {
+      var n = 0;
+      Future<bool> held(String table, String where, List<Object?> args) async =>
+          (await t.query(
+            table,
+            columns: ['msg_uid'],
+            where: where,
+            whereArgs: args,
+            limit: 1,
+          )).isNotEmpty;
+      for (final r in await takenSince(t, peer: peer, since: since)) {
+        if (r.kind == kTakenUnsend) {
+          if (await held(
+            'frames_out',
+            'msg_uid = ? AND kind = ? AND peer_id = ?',
+            [r.uid, kFrameUnsend, peer],
+          )) {
+            continue;
+          }
+          await t.insert('frames_out', {
+            'msg_uid': r.uid,
+            'kind': kFrameUnsend,
+            'peer_id': peer,
+            'body': '',
+            'at': r.at,
+          });
+          n++;
+          continue;
+        }
+        if (await held('edits_out', 'msg_uid = ?', [r.uid])) continue;
+        // only a row still ours to them, with the words it holds now
+        final mine = await t.query(
+          'messages',
+          columns: ['plaintext'],
+          where: "msg_uid = ? AND direction = 'out' AND peer_id = ?",
+          whereArgs: [r.uid, peer],
+          limit: 1,
+        );
+        if (mine.isEmpty) continue;
+        await t.insert('edits_out', {
+          'msg_uid': r.uid,
+          'peer_id': peer,
+          'new_text': mine.first['plaintext'] as String? ?? '',
+          'at': r.at,
+        });
+        n++;
+      }
+      return n;
     });
   }
 
@@ -240,12 +302,16 @@ mixin _OutboxRows {
 
   Future<void> queueEdit(String msgUid, String peerId, String newText) async {
     final db = await open();
-    await db.insert('edits_out', {
-      'msg_uid': msgUid,
-      'peer_id': peerId,
-      'new_text': newText,
-      'at': DateTime.now().millisecondsSinceEpoch,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    final at = DateTime.now().millisecondsSinceEpoch;
+    await db.transaction((t) async {
+      await t.insert('edits_out', {
+        'msg_uid': msgUid,
+        'peer_id': peerId,
+        'new_text': newText,
+        'at': at,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      await noteTaken(t, msgUid, kTakenEdit, peer: peerId, at: at);
+    });
   }
 
   Future<List<Map<String, Object?>>> unsentEdits({
@@ -337,7 +403,8 @@ mixin _OutboxRows {
       ? ''
       : ' AND peer_id NOT IN (${List.filled(s.length, '?').join(', ')})';
 
-  // every contact held here: verified under one key, holding another now
+  // every contact held here: verified under one key, holding another now,
+  // or verified and their session rebuilt by a heal
   Future<Set<String>> heldPeers() async {
     final db = await open();
     final rows = await db.query(
@@ -349,6 +416,8 @@ mixin _OutboxRows {
       for (final r in rows)
         if (await keyHeldIn(db, r['halo_id'] as String, identity: _keySource))
           r['halo_id'] as String,
+      // and those a heal holds until the person looks
+      if (kHealHold) ...await healHeldPeers(db),
     };
   }
 
@@ -473,6 +542,42 @@ Future<void> _dropQueuedTo(DatabaseExecutor db, String peerId) async {
 /// [sent] on a row of ours a block kept from going: not sent, and only a
 /// tap sends it, an unblock never does
 const kNotSent = -1;
+
+/// every row of ours in [db] still waiting to go, in a copy that leaves
+/// the phone or what a restore brought (before [before] when given): not
+/// sent, and only a tap sends it. it may be one deleted, or sent long
+/// since, on the phone the file came from. how many
+Future<int> holdRestoredOutbox(DatabaseExecutor db, {int? before}) => db.update(
+  'messages',
+  {'sent': kNotSent},
+  where: before == null
+      ? "direction = 'out' AND sent = 0"
+      : "direction = 'out' AND sent = 0 AND sent_at < ?",
+  whereArgs: before == null ? null : [before],
+);
+
+/// on the first start after a restore that landed at [landed], from a file
+/// made at [made]: the rows the file brought wait for a tap, never one
+/// written here since. a failure is said, and the next start runs it again
+Future<int> holdOutboxAfterRestore(
+  DatabaseExecutor db, {
+  int? landed,
+  int? made,
+  int? nowMs,
+}) async {
+  final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
+  try {
+    final n = await holdRestoredOutbox(
+      db,
+      before: max(landed ?? now, made ?? 0) + 1,
+    );
+    dlog('restore: $n waiting rows wait for a tap');
+    return n;
+  } catch (e) {
+    dlog('restore: waiting rows not held (${e.runtimeType})');
+    return 0;
+  }
+}
 
 /// a queue's rows for no one blocked here: one list in the database, so
 /// however many there are none is a variable of its own

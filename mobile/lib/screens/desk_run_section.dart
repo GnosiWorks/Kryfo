@@ -14,8 +14,20 @@ import '../widgets/swap.dart' show RiseSwap;
 import '../widgets/unfold.dart';
 
 class DeskRunSection extends StatefulWidget {
-  const DeskRunSection({super.key, required this.run});
+  const DeskRunSection({
+    super.key,
+    required this.run,
+    this.edge = 16,
+    this.lineInset = 12,
+  });
   final DesktopRunView run;
+
+  /// the room on each side
+  final double edge;
+
+  /// how far the lines under the card sit in from its edge: the
+  /// onboarding's sit flush with its words above
+  final double lineInset;
 
   @override
   State<DeskRunSection> createState() => _DeskRunSectionState();
@@ -71,7 +83,12 @@ class _DeskRunSectionState extends State<DeskRunSection> {
   Widget _line(String? text, {Color? color}) => Unfold(
     open: text != null,
     child: Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(12, 8, 12, 0),
+      padding: EdgeInsetsDirectional.fromSTEB(
+        widget.lineInset,
+        8,
+        widget.lineInset,
+        0,
+      ),
       child: RiseSwap(
         child: Text(
           text ?? '',
@@ -105,7 +122,7 @@ class _DeskRunSectionState extends State<DeskRunSection> {
         ? l10n.desktopStartHeldOff
         : null;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      padding: EdgeInsets.fromLTRB(widget.edge, 4, widget.edge, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

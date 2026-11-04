@@ -261,7 +261,7 @@ Future<String?> chatFilePath(String name, HaloContainer c) async {
     return null;
   }
   final docs = (await getApplicationDocumentsDirectory()).path;
-  return p.join(docs, '$folder${c.suffix}', rest);
+  return p.join(docs, '$folder${c.folderSuffix}', rest);
 }
 
 // where a chat's rows are beyond its person or group and its messages,
@@ -274,6 +274,8 @@ const _peerRows = {
   'edits_out': 'msg_uid IN {uids}',
   // an unsend's message is gone, so these go by the person
   'frames_out': 'peer_id = ?1',
+  // our unsends and edits kept for their restore (restore_undo.dart)
+  'taken_out': 'peer_id = ?1',
   'media_chunks':
       'media_id IN (SELECT media_id FROM {s}.media_wants WHERE peer_id = ?1)',
   'media_wants': 'peer_id = ?1',
@@ -295,18 +297,25 @@ const _peerRows = {
   'contact_photos': 'halo_id = ?1',
   'photo_parts': 'halo_id = ?1',
   'photo_peers': 'halo_id = ?1',
+  // where heals rebuilt their session, and a hold on it, and the nonces of
+  // their heals, so a relay's copy is not taken again on the other side
+  'heal_lines': 'peer = ?1',
+  'heal_nonces': 'peer = ?1',
 };
 // a person's block rows, by peer_id, which go with a group's people
 const _blockRows = ['block_spans', 'blocked_drops'];
 // made after the chat tables, the drafts' in a try of its own: one side
 // may lack them, and a move then goes on without their rows
 const _mayLack = {
+  'taken_out',
   'wallpapers',
   'drafts',
   'contact_photos',
   'photo_parts',
   'photo_peers',
   'roster_invites',
+  'heal_lines',
+  'heal_nonces',
 };
 const _groupRows = {
   'group_members': 'group_id = ?1',
@@ -320,6 +329,7 @@ const _groupRows = {
   // and so do the controls they are still to get, and its roster stamp
   'group_ctl_out': 'group_id = ?1',
   'group_roster': 'group_id = ?1',
+  'taken_out': 'group_id = ?1',
   // the files still coming in it, those kept before slices named their
   // group by the message they belong to, and a room's keys
   'media_chunks':
@@ -380,9 +390,12 @@ class SqlChatMover implements ChatMover {
   Future<void> attach() async {
     _db = await _live.open();
     final docs = (await getApplicationDocumentsDirectory()).path;
-    _liveAt = _Folders(docs, _live.container.suffix);
+    _liveAt = _Folders(docs, _live.container.folderSuffix);
     final v = _vault;
-    _vaultAt = _Folders(docs, (v?.container ?? HaloContainer.vault).suffix);
+    _vaultAt = _Folders(
+      docs,
+      (v?.container ?? HaloContainer.vault).folderSuffix,
+    );
     // freed pages are zeroed: a moved chat does not linger in the file it
     // left
     final was = await _db.rawQuery('PRAGMA main.secure_delete');

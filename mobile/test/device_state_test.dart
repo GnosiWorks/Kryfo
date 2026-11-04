@@ -53,6 +53,7 @@ const _devTables = [
   'own_devices',
   'own_device_keys',
   'dev_out',
+  'dev_marks',
 ];
 // what a 0.5.3 phone and every step since hold, counted before and after
 const _kept = [

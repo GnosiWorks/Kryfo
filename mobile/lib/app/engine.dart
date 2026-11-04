@@ -710,20 +710,90 @@ class HaloEngine {
   Future<String> pairSeed(int ident, String peerXPubHex, String seedHex) =>
       _identFfiOnIsolate('HaloPairSeed', ident, [peerXPubHex, seedHex]);
 
-  // put an invite where a six digit code points, and look for one there. a
-  // look that never came back heard from no relay, so it says nothing about
-  // the code. a share waits past the engine's publishWait, so a slow onion
-  // dial that lands is not reported as unreached
-  Future<String> pairCodePublish(String code, String payload) =>
-      _pairCodeOnIsolate(
-        code,
-        payload,
-      ).timeout(const Duration(seconds: 60), onTimeout: () => pairUnreached);
+  // linked devices: device-pair args ("x/their/my") on or off in the
+  // engine. off refuses every one, as today
+  late final IdentFnDart _devicePairsOn = _lib
+      .lookupFunction<IdentFn, IdentFnDart>('HaloDevicePairsOn');
+  String devicePairsOn(bool on) => engineTake(_devicePairsOn(on ? 1 : 0));
 
-  Future<String> pairCodeFetch(String code) => _pairCodeOnIsolate(
-    code,
-    null,
-  ).timeout(const Duration(seconds: 40), onTimeout: () => pairUnreached);
+  // listening on a device pair (device_receive.dart): [arg] "x/their/my"
+  // for its opener address, "x/their/my.seed" for the seeded pair
+  // a device pair is never the dev chat's: a pinned key is not listened on
+  void deviceListenBg(int ident, String arg) {
+    if (devGate.names(xPub: arg.split('/').first)) return;
+    deviceTagStep(ident, arg, () => _subscribeOnIsolate(ident, arg));
+  }
+
+  // no more listening on a device pair, by its tag; its files go
+  void deviceUnlistenBg(int ident, String arg) => deviceTagStep(
+    ident,
+    arg,
+    () => _identFfiOnIsolate('HaloNostrUnsubscribe', ident, [arg]),
+  );
+
+  // a copy to a device pair, [arg] "x/their/my.seed" (device_send.dart):
+  // on the seeded pair, or with [opener] to the receiver's opener address.
+  // a device pair is never the dev chat's, so a pinned key is refused
+  Future<String> nostrSendDevice(
+    int ident,
+    String arg,
+    String b64Cipher, {
+    bool opener = false,
+  }) {
+    if (devGate.names(xPub: arg.split('/').first)) {
+      return Future.value(kDevRefused);
+    }
+    return _identFfiOnIsolate(
+      opener ? 'HaloNostrSendDeviceOpener' : 'HaloNostrSend',
+      ident,
+      [arg, padRumor(b64Cipher)],
+    ).timeout(
+      const Duration(seconds: 60),
+      onTimeout: () => 'error: relay timeout',
+    );
+  }
+
+  // an eight digit pair code (pair_flow.dart): a run in the engine named by
+  // its handle. share puts the offer up and gives the code to show; join
+  // takes the typed code as bytes, zeroed once the engine read them; step
+  // is one round over the relays. the keys never come out
+  Future<String> pairShare(Uint8List invite) => _pairOnIsolate(
+    'HaloPairShare',
+    base64Encode(invite),
+  ).timeout(const Duration(seconds: 150), onTimeout: () => pairUnreached);
+
+  late final TwoArgFnDart _pairJoin = _lib
+      .lookupFunction<TwoArgFn, TwoArgFnDart>('HaloPairJoin');
+  String pairJoin(String code, Uint8List invite) {
+    final c = code.toNativeUtf8();
+    final i = base64Encode(invite).toNativeUtf8();
+    try {
+      return engineTake(_pairJoin(c, i));
+    } finally {
+      freeSecret(c);
+      malloc.free(i);
+    }
+  }
+
+  Future<String> pairStep(int handle) => _pairHandleOnIsolate(
+    'HaloPairStep',
+    handle,
+  ).timeout(const Duration(seconds: 100), onTimeout: () => 'unreached');
+
+  Future<void> pairClose(int handle) =>
+      _pairHandleOnIsolate('HaloPairCancel', handle);
+
+  // a decoy's pairing round: box [box]'s addresses read on the decoy's own
+  // lane, nothing put up, nothing answered. "look" or "unreached"
+  Future<String> decoyPairLook(String box) async {
+    final r = await _ffiOnIsolate(
+      'HaloDecoyPairLook',
+      [box],
+      wait: const Duration(seconds: 100),
+      what: 'relay',
+    );
+    return r == 'look' ? 'look' : 'unreached';
+  }
 
   // unlike every other subscription this needs no contacts
   void subscribeFirstContactBg(int ident, int counter) {
@@ -788,6 +858,23 @@ class HaloEngine {
   // a donation is still unconfirmed. off the ui thread, as above.
   Future<String> torGetJson(String url) => _ffiOnIsolate(
     'HaloTorGetJSON',
+    [url],
+    wait: const Duration(seconds: 80),
+    what: 'tor',
+  );
+
+  // people search over tor, on a circuit made for this search alone
+  Future<String> searchPost(String url, String body) => _ffiOnIsolate(
+    'HaloSearchPost',
+    [url, body],
+    wait: const Duration(seconds: 80),
+    what: 'tor',
+  );
+
+  // the own handle's lookup, on the lane its claim and release take, apart
+  // from people search and others' handles
+  Future<String> ownHandleGetJson(String url) => _ffiOnIsolate(
+    'HaloOwnHandleGetJSON',
     [url],
     wait: const Duration(seconds: 80),
     what: 'tor',
@@ -1249,6 +1336,34 @@ class _FirstWaits implements Exception {
   const _FirstWaits();
 }
 
+// the listens and unlistens of one engine tag (a device pair's opener
+// address, or its seeded pair whatever the seed) run in the order asked, so
+// an unlisten never lands after a listen asked behind it
+final _deviceTagSteps = <String, Future<void>>{};
+
+void deviceTagStep(int ident, String arg, Future<String> Function() run) =>
+    unawaited(deviceTagStepDone(ident, arg, run));
+
+/// as deviceTagStep, done when [run] is
+Future<void> deviceTagStepDone(
+  int ident,
+  String arg,
+  Future<String> Function() run,
+) {
+  final base = arg.split('.').first;
+  final k = '$ident $base ${arg.contains('.') ? 'seeded' : 'opener'}';
+  final next = (_deviceTagSteps[k] ?? Future<void>.value())
+      .then((_) => run())
+      .then<void>((r) {
+        if (r != 'ok') dlog('device pair listen: $r');
+      }, onError: (Object e) => dlog('device pair listen: $e'));
+  _deviceTagSteps[k] = next;
+  next.whenComplete(() {
+    if (identical(_deviceTagSteps[k], next)) _deviceTagSteps.remove(k);
+  });
+  return next;
+}
+
 // a call nobody waits on: what it threw still shows in a debug log
 void _background(Future<Object?> call, String where) =>
     unawaited(call.then((_) {}, onError: (Object e) => dlog('$where: $e')));
@@ -1375,29 +1490,29 @@ Future<String> _torGetJsonOnIsolate(String url) {
   });
 }
 
-Future<String> _pairCodeOnIsolate(String code, String? payload) {
+// a pair share off the ui thread: the answer holds the code, so its native
+// copy is zeroed
+Future<String> _pairOnIsolate(String symbol, String arg) {
   return Isolate.run(() {
     final lib = haloLibrary();
-    final c = code.toNativeUtf8();
+    final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>(symbol);
+    final a = arg.toNativeUtf8();
     try {
-      if (payload == null) {
-        final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>(
-          'HaloPairCodeFetch',
-        );
-        return engineTake(fn(c));
-      }
-      final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>(
-        'HaloPairCodePublish',
-      );
-      final pl = payload.toNativeUtf8();
-      try {
-        return engineTake(fn(c, pl));
-      } finally {
-        malloc.free(pl);
-      }
+      return engineTakeSecret(fn(a));
     } finally {
-      malloc.free(c);
+      malloc.free(a);
     }
+  });
+}
+
+typedef PairHandleFn = Pointer<Utf8> Function(Int64);
+typedef PairHandleFnDart = Pointer<Utf8> Function(int);
+
+Future<String> _pairHandleOnIsolate(String symbol, int handle) {
+  return Isolate.run(() {
+    final lib = haloLibrary();
+    final fn = lib.lookupFunction<PairHandleFn, PairHandleFnDart>(symbol);
+    return engineTakeSecret(fn(handle));
   });
 }
 

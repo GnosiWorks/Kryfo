@@ -202,9 +202,9 @@ Future<void> _phone(String docs, {bool hidden = true}) async {
   await _put(p.join(docs, 'wallpapers', 'w.jpg'), 'visible wallpaper');
   if (!hidden) return;
   await _put(p.join(docs, 'halo_v.db'), jsonEncode(_vault()));
-  await _put(p.join(docs, 'media_v', 'h1.jpg'), 'hidden photo');
-  await _put(p.join(docs, 'media_v', 'docs', 'h2.pdf'), 'hidden file');
-  await _put(p.join(docs, 'wallpapers_v', 'hw.jpg'), 'hidden wallpaper');
+  await _put(p.join(docs, 'media_k3', 'h1.jpg'), 'hidden photo');
+  await _put(p.join(docs, 'media_k3', 'docs', 'h2.pdf'), 'hidden file');
+  await _put(p.join(docs, 'wallpapers_k3', 'hw.jpg'), 'hidden wallpaper');
 }
 
 // a database kept as json in its file, as much of one as a scrub and a
@@ -708,7 +708,7 @@ void main() {
       expect(sessionBackupHasHidden, isFalse);
       final d = await draftBackup(stage, side: side);
       final m = d.manifest;
-      expect(m['v'], 2);
+      expect(m['v'], kBackupVersion);
       expect(m.containsKey('vault'), isFalse);
       expect(_names(m), ['halo.db', 'onion.key', 'media/v1.jpg']);
       // nothing is read from the hidden side's files
@@ -717,8 +717,11 @@ void main() {
           (s) => p
               .split(s)
               .any(
-                (x) =>
-                    const {'halo_v.db', 'media_v', 'wallpapers_v'}.contains(x),
+                (x) => const {
+                  'halo_v.db',
+                  'media_k3',
+                  'wallpapers_k3',
+                }.contains(x),
               ),
         ),
         isEmpty,
@@ -843,7 +846,7 @@ void main() {
       final docs2 = p.join(root.path, 'docs2');
       await _phone(docs2, hidden: false);
       await _put(p.join(docs2, 'halo_v.db'), 'an older vault');
-      await _put(p.join(docs2, 'media_v', 'old.jpg'), 'old hidden photo');
+      await _put(p.join(docs2, 'media_k3', 'old.jpg'), 'old hidden photo');
       docsAt(docs2);
       final hiddenAt = p.join(docs2, 'restore_hidden');
       final back = await unpackBackup(
@@ -871,8 +874,8 @@ void main() {
       expect(_uids(hidden), {'h0', 'h1', 'h2', 'g2m'});
       expect(hidden['groups']!.single['group_id'], _g2);
       for (final (from, to) in [
-        ('media_v/h1.jpg', 'media_v/h1.jpg'),
-        ('media_v/docs/h2.pdf', 'media_v/docs/h2.pdf'),
+        ('media_k3/h1.jpg', 'media_k3/h1.jpg'),
+        ('media_k3/docs/h2.pdf', 'media_k3/docs/h2.pdf'),
         ('media/v1.jpg', 'media/v1.jpg'),
       ]) {
         expect(
@@ -881,9 +884,9 @@ void main() {
           reason: to,
         );
       }
-      expect(File(p.join(docs2, 'media_v', 'old.jpg')).existsSync(), isFalse);
+      expect(File(p.join(docs2, 'media_k3', 'old.jpg')).existsSync(), isFalse);
       expect(
-        File(p.join(docs2, 'wallpapers_v', 'hw.jpg')).existsSync(),
+        File(p.join(docs2, 'wallpapers_k3', 'hw.jpg')).existsSync(),
         isFalse,
       );
       expect(Directory(hiddenAt).existsSync(), isFalse);
@@ -927,8 +930,8 @@ void main() {
       );
       expect(cleared, isTrue);
       expect(File(p.join(docs2, 'halo_v.db')).existsSync(), isFalse);
-      expect(Directory(p.join(docs2, 'media_v')).existsSync(), isFalse);
-      expect(Directory(p.join(docs2, 'wallpapers_v')).existsSync(), isFalse);
+      expect(Directory(p.join(docs2, 'media_k3')).existsSync(), isFalse);
+      expect(Directory(p.join(docs2, 'wallpapers_k3')).existsSync(), isFalse);
       expect(restoredHidden, isFalse);
     });
 
@@ -1216,9 +1219,9 @@ void main() {
     Future<_Db> decoyPhone() async {
       await _phone(docs);
       await _put(p.join(docs, 'halo_d.db'), jsonEncode(_decoy()));
-      await _put(p.join(docs, 'media_d', 'd1.jpg'), 'decoy photo');
+      await _put(p.join(docs, 'media_k2', 'd1.jpg'), 'decoy photo');
       await _put(p.join(docs, 'halo_dv.db'), 'the decoy vault');
-      await _put(p.join(docs, 'media_dv', 'dv.jpg'), 'decoy hidden photo');
+      await _put(p.join(docs, 'media_k4', 'dv.jpg'), 'decoy hidden photo');
       FlutterSecureStorage.setMockInitialValues({
         'halo.d.key': "x'${'2e' * 32}'",
       });
@@ -1257,7 +1260,7 @@ void main() {
         'chunk',
         'files',
       });
-      expect(d.manifest['v'], 2);
+      expect(d.manifest['v'], kBackupVersion);
       expect(d.manifest['moved'], isFalse);
       // set up, as boot reads it, wherever the file is restored
       expect(d.manifest['onboardingDone'], 'true');
@@ -1330,7 +1333,7 @@ void main() {
         'the decoy vault',
       );
       expect(
-        await File(p.join(docs, 'media_dv', 'dv.jpg')).readAsString(),
+        await File(p.join(docs, 'media_k4', 'dv.jpg')).readAsString(),
         'decoy hidden photo',
       );
       // the everyday vault is not touched

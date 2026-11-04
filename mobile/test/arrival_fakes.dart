@@ -229,6 +229,11 @@ class ArrivalIo implements AppIo {
 
   @override
   Future<List<String>> sessionAddresses() async => sessions;
+  // the key each session runs on, 'x-<peer>' unless set
+  final sessionKeys = <String, String>{};
+  @override
+  Future<String?> sessionXPub(String peer) async =>
+      sessionKeys[peer] ?? 'x-$peer';
   // sessions let go of
   final dropped = <String>[];
   @override
@@ -1348,6 +1353,20 @@ class ArrivalRows implements HaloDb {
   @override
   Future<bool> messageExists(String msgUid) async =>
       _hit('messageExists', msgUid, msg(msgUid) != null);
+
+  @override
+  Future<bool> messageFrom(String msgUid, String sender, String? group) async =>
+      _hit(
+        'messageFrom',
+        msgUid,
+        msgs.any(
+          (m) =>
+              m['msg_uid'] == msgUid &&
+              (m['direction'] == 'out' ||
+                  (m['peer_id'] == sender &&
+                      (m['group_id'] ?? '') == (group ?? ''))),
+        ),
+      );
   // what came in and went, by sender
   final gone = <(String, String)>{};
   @override
@@ -1374,19 +1393,36 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
-  Future<void> editMessage(String msgUid, String newText) async {
+  Future<void> editMessage(
+    String msgUid,
+    String newText, {
+    String? from,
+  }) async {
     _hit('editMessage', msgUid, null);
-    final m = msg(msgUid);
+    final m = from == null
+        ? msg(msgUid)
+        : msgs
+              .where(
+                (m) =>
+                    m['msg_uid'] == msgUid &&
+                    m['direction'] == 'in' &&
+                    m['peer_id'] == from,
+              )
+              .firstOrNull;
     if (m == null) return;
     m['plaintext'] = newText;
     m['edited'] = 1;
   }
 
   @override
-  Future<void> deleteMessage(String msgUid) async {
+  Future<void> deleteMessage(String msgUid, {String? from}) async {
     _hit('deleteMessage', msgUid, null);
-    msgs.removeWhere((m) => m['msg_uid'] == msgUid);
-    reactions.remove(msgUid);
+    msgs.removeWhere(
+      (m) =>
+          m['msg_uid'] == msgUid &&
+          (from == null || (m['direction'] == 'in' && m['peer_id'] == from)),
+    );
+    if (msg(msgUid) == null) reactions.remove(msgUid);
   }
 
   @override
@@ -1683,6 +1719,7 @@ class ArrivalRows implements HaloDb {
     Iterable<String> who,
     String uid, {
     required int now,
+    bool note = true,
   }) async {
     _hit('queueGroupUnsend', groupId, null);
     final body = jsonEncode(groupUnsendRow(uid));

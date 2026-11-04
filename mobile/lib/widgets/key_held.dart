@@ -9,8 +9,15 @@ import 'package:flutter/services.dart';
 
 import '../dlog.dart';
 import '../l10n/l10n.dart';
+import '../heal.dart' show kHealLineRestored;
 import '../main.dart'
-    show appState, session, AppStateOutbox, AppStateSession, AppStateRefresh;
+    show
+        appState,
+        session,
+        AppStateHeal,
+        AppStateOutbox,
+        AppStateSession,
+        AppStateRefresh;
 import '../screens/key_verification_screen.dart';
 import '../theme.dart';
 import 'confirm_sheet.dart';
@@ -27,6 +34,17 @@ Future<bool> keyHeldShown(String peer) async {
   } catch (e) {
     dlog('key hold: not shown (${e.runtimeType})');
     return false;
+  }
+}
+
+// the heal line that holds them (heal.dart), for the card's words. a read
+// that fails shows the key card's
+Future<int?> healHoldShown(String peer) async {
+  try {
+    return await session.healHold(peer);
+  } catch (e) {
+    dlog('key hold: heal not shown (${e.runtimeType})');
+    return null;
   }
 }
 
@@ -80,7 +98,8 @@ Future<void> checkTheNumber(
       ),
     ),
   );
-  // checked there: what waited for it goes now
+  // looked at there: a heal's hold ends, and what waited goes now
+  await appState.releaseHealHold(peer);
   unawaited(appState.drainOutbox());
 }
 
@@ -93,6 +112,8 @@ Future<bool> showKeyHeldSheet(
   String peer,
   String name,
 ) async {
+  final heal = await healHoldShown(peer);
+  if (!context.mounted) return false;
   final way = await showHaloSheet<_Way>(
     context,
     builder: (ctx) => SafeArea(
@@ -102,6 +123,7 @@ Future<bool> showKeyHeldSheet(
           const SheetHandle(),
           KeyHeldCard(
             peerName: name,
+            healKind: heal,
             margin: const EdgeInsets.fromLTRB(16, 14, 16, 16),
             onCheck: () => Navigator.pop(ctx, _Way.check),
             onAccept: () => Navigator.pop(ctx, _Way.accept),
@@ -111,7 +133,10 @@ Future<bool> showKeyHeldSheet(
     ),
   );
   if (way == null || !context.mounted) return false;
-  if (way == _Way.accept) {
+  if (way == _Way.accept && heal != null) {
+    HapticFeedback.mediumImpact();
+    await appState.releaseHealHold(peer);
+  } else if (way == _Way.accept) {
     if (!await acceptNewKeyAsked(context, peer, name)) return false;
   } else {
     await checkTheNumber(context, peer, name);
@@ -123,18 +148,24 @@ Future<bool> showKeyHeldSheet(
 class KeyHeldCard extends StatelessWidget {
   final String peerName;
   final VoidCallback onCheck;
+  // the new key taken, or for a heal's hold, chatting on
   final VoidCallback onAccept;
   final EdgeInsetsGeometry margin;
+  // a heal holds them (heal.dart's line kind), not a new key: their key is
+  // the one verified, and the way out keeps the mark
+  final int? healKind;
   const KeyHeldCard({
     super.key,
     required this.peerName,
     required this.onCheck,
     required this.onAccept,
+    this.healKind,
     this.margin = const EdgeInsets.fromLTRB(14, 8, 14, 12),
   });
 
   @override
   Widget build(BuildContext context) {
+    final heal = healKind;
     return Container(
       margin: margin,
       padding: const EdgeInsets.fromLTRB(14, 13, 14, 14),
@@ -149,19 +180,28 @@ class KeyHeldCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.gpp_maybe_outlined, size: 16, color: HaloColors.warn),
+              Icon(
+                heal == null
+                    ? Icons.gpp_maybe_outlined
+                    : Icons.verified_user_outlined,
+                size: 16,
+                color: HaloColors.warn,
+              ),
               const SizedBox(width: 8),
               Flexible(
-                child: Text(
-                  l10n.chatSecurityCodeChanged,
-                  style: HaloType.serif(size: 14.5, color: HaloColors.text),
-                ),
+                child: Text(switch (heal) {
+                  null => l10n.chatSecurityCodeChanged,
+                  kHealLineRestored => l10n.chatHealRestored(peerName),
+                  _ => l10n.chatHealNewSession(peerName),
+                }, style: HaloType.serif(size: 14.5, color: HaloColors.text)),
               ),
             ],
           ),
           const SizedBox(height: 6),
           Text(
-            l10n.chatKeyHeldLine(peerName),
+            heal == null
+                ? l10n.chatKeyHeldLine(peerName)
+                : l10n.chatHealHeldLine(peerName),
             style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.5),
           ),
           const SizedBox(height: 12),
@@ -170,7 +210,9 @@ class KeyHeldCard extends StatelessWidget {
               Expanded(
                 flex: 2,
                 child: _Btn(
-                  label: l10n.chatAcceptNewKey,
+                  label: heal == null
+                      ? l10n.chatAcceptNewKey
+                      : l10n.chatKeepChatting,
                   fg: HaloColors.text,
                   bg: HaloColors.surface2,
                   onTap: onAccept,

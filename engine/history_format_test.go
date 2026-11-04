@@ -5,7 +5,6 @@ import (
 	"crypto/ecdh"
 	"crypto/rand"
 	"encoding/binary"
-	"encoding/hex"
 	"os"
 	"path/filepath"
 	"testing"
@@ -37,7 +36,7 @@ func TestHistoryRecordsOpenAsBackupRecords(t *testing.T) {
 		t.Fatal(err)
 	}
 	rk, _ := devices.RecordKey(key, bind, s.ID())
-	gcm, err := backupGCM(hex.EncodeToString(rk))
+	gcm, err := backupGCM(rk)
 	if err != nil {
 		t.Fatal(err)
 	}

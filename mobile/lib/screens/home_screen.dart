@@ -72,6 +72,9 @@ import 'search_screen.dart';
 import 'group_info_screen.dart' show endedLine, leaveLine;
 import 'support_screen.dart' show SupportPin, supportRoute;
 import '../widgets/update_card.dart' show UpdateHint;
+import '../devices/linked_switch.dart' show kLinkedDevicesOn;
+import '../devices/own_device_store.dart' show linkNotices;
+import 'linked_devices_screen.dart' show LinkedDevicesScreen, linkNoticeWords;
 
 bool _miuiPromptChecked = false;
 
@@ -329,6 +332,8 @@ class _HomeScreenState extends State<HomeScreen> {
               tabs: tabs,
               bar: bar,
               onSearch: () => deskPush(context, searchRoute(context)),
+              onAdd: widget.onAddContact,
+              onSettings: widget.onOpenSettingsDirect,
             )
           : Scaffold(
               backgroundColor: HaloColors.surface,
@@ -501,6 +506,7 @@ class _ChatsTab extends StatelessWidget {
           const UpdateHint(),
           const _ShotsCard(),
           const _ComputerBackupCard(),
+          if (kLinkedDevicesOn) const _LinkNoticeCard(),
           StaggerIn(
             index: 1,
             child: _QuickTiles(
@@ -731,92 +737,97 @@ class _HomeHead extends StatelessWidget {
     required this.onSettings,
     required this.onSearch,
   });
+  // the three words and their label. the list beside a chat is narrower
+  // than a phone: there they take a line of their own under the buttons,
+  // at the phone's size
+  List<Widget> _name() => [
+    const SizedBox(height: 8),
+    Text(
+      l10n.homeYourKryfo,
+      style: HaloType.mono(size: 9.5, color: HaloColors.text2, letter: 0.14),
+    ),
+    const SizedBox(height: 3),
+    FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: AlignmentDirectional.centerStart,
+      child: Text(
+        haloId,
+        maxLines: 1,
+        softWrap: false,
+        style: HaloType.mono(
+          size: 20,
+          color: HaloColors.amberText,
+          weight: FontWeight.w700,
+          letter: 0.02,
+        ),
+      ),
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
+    final row = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // one line each, shrunk to fit rather than broken: a long
+              // weekday or month ("Donnerstag", "24. September") beside the
+              // buttons would split in the middle of the word
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  l10n.homeDateWeekday(weekday(now)),
+                  maxLines: 1,
+                  style: HaloType.serif(size: 26, weight: FontWeight.w400),
+                  // display type, capped: at 200% it goes one word per line
+                  // and pushes the whole list off screen
+                  textScaler: TextScaler.linear(
+                    MediaQuery.of(context).textScaler.scale(1).clamp(1.0, 1.15),
+                  ),
+                ),
+              ),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  dayMonthLong(now),
+                  maxLines: 1,
+                  style: HaloType.serif(
+                    size: 26,
+                    weight: FontWeight.w300,
+                    color: HaloColors.amberText,
+                    italic: true,
+                  ),
+                  textScaler: TextScaler.linear(
+                    MediaQuery.of(context).textScaler.scale(1).clamp(1.0, 1.15),
+                  ),
+                ),
+              ),
+              if (!onDesktop) ..._name(),
+            ],
+          ),
+        ),
+        // the rooms meet edge to edge: their margins make the gaps
+        // between the rounds
+        SearchDoor(onTap: onSearch),
+        _GearButton(onTap: onSettings),
+        _AddScanButton(onTap: onAdd),
+        const SizedBox(width: 12 - (kDoorBox - kDoorRound) / 2),
+        TorHalo(label: true),
+      ],
+    );
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // one line each, shrunk to fit rather than broken: a long
-                // weekday or month ("Donnerstag", "24. September") beside the
-                // buttons would split in the middle of the word
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Text(
-                    l10n.homeDateWeekday(weekday(now)),
-                    maxLines: 1,
-                    style: HaloType.serif(size: 26, weight: FontWeight.w400),
-                    // display type, capped: at 200% it goes one word per line
-                    // and pushes the whole list off screen
-                    textScaler: TextScaler.linear(
-                      MediaQuery.of(
-                        context,
-                      ).textScaler.scale(1).clamp(1.0, 1.15),
-                    ),
-                  ),
-                ),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Text(
-                    dayMonthLong(now),
-                    maxLines: 1,
-                    style: HaloType.serif(
-                      size: 26,
-                      weight: FontWeight.w300,
-                      color: HaloColors.amberText,
-                      italic: true,
-                    ),
-                    textScaler: TextScaler.linear(
-                      MediaQuery.of(
-                        context,
-                      ).textScaler.scale(1).clamp(1.0, 1.15),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.homeYourKryfo,
-                  style: HaloType.mono(
-                    size: 9.5,
-                    color: HaloColors.text2,
-                    letter: 0.14,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Text(
-                    haloId,
-                    maxLines: 1,
-                    softWrap: false,
-                    style: HaloType.mono(
-                      size: 20,
-                      color: HaloColors.amberText,
-                      weight: FontWeight.w700,
-                      letter: 0.02,
-                    ),
-                  ),
-                ),
-              ],
+      child: !onDesktop
+          ? row
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [row, ..._name()],
             ),
-          ),
-          // the rooms meet edge to edge: their margins make the gaps
-          // between the rounds
-          SearchDoor(onTap: onSearch),
-          _GearButton(onTap: onSettings),
-          _AddScanButton(onTap: onAdd),
-          const SizedBox(width: 12 - (kDoorBox - kDoorRound) / 2),
-          TorHalo(label: true),
-        ],
-      ),
     );
   }
 }
@@ -915,6 +926,52 @@ class _HomeCard extends StatelessWidget {
   }
 }
 
+// a device was linked to the account: said on every own device, and it
+// stays until the person opens the devices page. never in the decoy
+class _LinkNoticeCard extends StatelessWidget {
+  const _LinkNoticeCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: Listenable.merge([linkNotices, lockState]),
+      builder: (context, _) {
+        final all = linkNotices.value;
+        final show = all.isNotEmpty && !lockState.inDecoy && !sessionQuiet;
+        final words = all.isEmpty
+            ? (title: l10n.devicesNewNotice, line: '')
+            : linkNoticeWords([
+                for (final n in all) (name: n.name, at: n.at),
+              ], homeClock());
+        return _HomeCard(
+          show: show,
+          id: 'link-notice',
+          tint: HaloColors.amber,
+          wash: true,
+          title: words.title,
+          line: words.line,
+          lineColor: HaloColors.text,
+          actions: [
+            CardAction(
+              label: l10n.devicesNewNoticeOpen,
+              onTap: () async {
+                HapticFeedback.selectionClick();
+                final src = await ownDevicesSource();
+                if (!context.mounted) return;
+                await Navigator.of(
+                  context,
+                ).push(haloRoute(LinkedDevicesScreen(source: src)));
+              },
+              fill: HaloColors.amber,
+              ink: HaloColors.onAmber,
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 // android is not letting kryfo put a notification up, so nothing arrives
 // while the app is closed. the android 13 permission dialog does not come
 // back once the answer is final, so the only way out is the page this opens.
@@ -1009,8 +1066,8 @@ class _OfflineCardState extends State<OfflineCard> {
                   : restart
                   ? torValve.tryRestart
                   : torValve.tryReconnect,
-              fill: HaloColors.rose,
-              ink: HaloColors.amberInk,
+              fill: HaloColors.roseFill,
+              ink: HaloColors.onRose,
               swap: true,
             ),
             CardAction(
@@ -1288,7 +1345,7 @@ class _ShotsCardState extends State<_ShotsCard> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
-                l10n.chatShotsWhenTheyUpdate,
+                l10n.chatShotsWhenTheyUpdateShown,
                 style: HaloType.sans(size: 12.5, color: HaloColors.text2),
               ),
             ),
@@ -1445,14 +1502,12 @@ class _AutoStrip extends StatelessWidget {
       builder: (context, _) {
         final line = shownBridgeLine();
         final a = line.action;
+        // fast quiet, after the bridge way: this network sees it
         final relay = CardAction(
           label: l10n.homeUseFast,
           onTap: () => switchToRelay(context),
-          fill: line.relayFirst ? kCyan : null,
-          ink: line.relayFirst ? HaloColors.amberInk : HaloColors.amberText,
+          ink: HaloColors.amberText,
         );
-        // relay quiet after the bridge way where the network may watch
-        final filled = !line.offerRelay || !line.relayFirst;
         return _HomeCard(
           show: appState.homeBridgeCard == 'auto',
           id: 'auto',
@@ -1462,8 +1517,7 @@ class _AutoStrip extends StatelessWidget {
           title: line.head,
           line: line.detail ?? '',
           actions: [
-            // nothing got through: relay mode and the other way
-            if (line.offerRelay && line.relayFirst) relay,
+            // nothing got through: the bridge way, then fast
             if (a != null)
               CardAction(
                 label: bridgeActionLabel(a),
@@ -1475,10 +1529,10 @@ class _AutoStrip extends StatelessWidget {
                   }
                   await showTorBlockedSheet(context);
                 },
-                fill: filled ? HaloColors.amber : null,
-                ink: filled ? HaloColors.onAmber : HaloColors.amberText,
+                fill: HaloColors.amber,
+                ink: HaloColors.onAmber,
               ),
-            if (line.offerRelay && !line.relayFirst) relay,
+            if (line.offerRelay) relay,
             CardAction(
               label: l10n.bridgesDetails,
               onTap: () => deskPush(context, haloRoute(const BridgesScreen())),
@@ -1515,7 +1569,7 @@ class _AutoOffer extends StatelessWidget {
               await appState.chooseBridge(BridgeChoice.auto);
             },
             fill: HaloColors.violet,
-            ink: HaloColors.amberInk,
+            ink: HaloColors.onViolet,
           ),
           CardAction(
             label: l10n.bridgesNotNow,
@@ -1549,8 +1603,8 @@ class _BridgeStuckHint extends StatelessWidget {
               await appState.chooseBridge(BridgeChoice.auto);
               appState.applyBridgeNow();
             },
-            fill: HaloColors.rose,
-            ink: HaloColors.amberInk,
+            fill: HaloColors.roseFill,
+            ink: HaloColors.onRose,
           ),
         ],
       ),
@@ -1558,7 +1612,8 @@ class _BridgeStuckHint extends StatelessWidget {
   }
 }
 
-// tor alone is not getting through: our relay, or let kryfo find a way
+// tor alone is not getting through: let kryfo find a bridge, or fast last,
+// with what this network sees on it
 class _BridgeHint extends StatelessWidget {
   const _BridgeHint();
 
@@ -1572,32 +1627,20 @@ class _BridgeHint extends StatelessWidget {
         tint: HaloColors.violet,
         wash: true,
         title: l10n.bridgesTorSeemsBlocked,
-        line: l10n.bridgesFastGetsThrough,
+        line: l10n.bridgesBridgeFirstFastSeen,
         actions: [
-          CardAction(
-            label: l10n.homeUseFast,
-            onTap: () async {
-              try {
-                await appState.setSendMode('balanced');
-              } catch (_) {
-                if (context.mounted) {
-                  showHaloToast(context, l10n.modesNotChanged);
-                }
-                return;
-              }
-              if (context.mounted) {
-                showHaloToast(context, l10n.homeSwitchedToFastRoute);
-              }
-            },
-            fill: kCyan,
-            ink: HaloColors.amberInk,
-          ),
           CardAction(
             label: l10n.bridgesTryAutomatic,
             onTap: () async {
               await appState.chooseBridge(BridgeChoice.auto);
               appState.applyBridgeNow();
             },
+            fill: HaloColors.violet,
+            ink: HaloColors.onViolet,
+          ),
+          CardAction(
+            label: l10n.homeUseFast,
+            onTap: () => switchToRelay(context),
             ink: HaloColors.violet,
             bold: true,
           ),
@@ -2408,8 +2451,9 @@ class _GroupRow extends StatelessWidget {
       type: MaterialType.transparency,
       child: InkWell(
         onTap: onTap,
-        // held: its menu, as a chat's
+        // held: its menu, as a chat's. a right click on a computer
         onLongPress: () => _groupMenu(context, g),
+        onSecondaryTap: onDesktop ? () => _groupMenu(context, g) : null,
         splashColor: HaloColors.amber.withValues(alpha: 0.10),
         highlightColor: HaloColors.amber.withValues(alpha: 0.05),
         child: Ink(
@@ -2897,6 +2941,8 @@ class _DevRowTile extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
+        // a right click on a computer opens the row's menu
+        onSecondaryTap: onDesktop ? onLongPress : null,
         splashColor: HaloColors.amber.withValues(alpha: 0.10),
         highlightColor: HaloColors.amber.withValues(alpha: 0.05),
         child: Ink(
@@ -3019,6 +3065,8 @@ class _Row extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
+        // a right click on a computer opens the row's menu
+        onSecondaryTap: onDesktop ? onLongPress : null,
         splashColor: HaloColors.amber.withValues(alpha: 0.10),
         highlightColor: HaloColors.amber.withValues(alpha: 0.05),
         // Ink, not Container: an unread row tints itself amber, and a Container

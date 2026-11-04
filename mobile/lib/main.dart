@@ -1,19 +1,30 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import 'dart:async';
+import 'device_sessions.dart' show DeviceSessions, kOwnDevices;
+import 'devices/device_receive.dart';
+import 'devices/device_send.dart';
 import 'devices/device_state.dart';
 import 'devices/device_store.dart';
 import 'devices/history_open.dart' show endHistoryCopies;
+import 'devices/link_calls.dart' show EngineLinkCalls;
+import 'devices/link_flow.dart';
+import 'devices/own_device_store.dart';
+import 'devices/own_devices.dart'
+    show DecoyDevices, DeviceKind, LinkHistory, OwnDevices;
 import 'secure_store.dart';
 import 'desktop/desktop_mode.dart'
     show
         computerLock,
         containerClosed,
         containerOpened,
+        containerSettled,
         keepComputerDecoyNote,
         kComputerDecoyNote,
         onDesktop,
-        startEngineIn;
+        shotsHonouredHere,
+        startEngineIn,
+        withNativeFiles;
 import 'store.dart' show playBuild;
 import 'wide/wide_pane.dart' show chatNavigator, chatPush, deskPush;
 import 'widgets/boot_failed.dart';
@@ -29,6 +40,7 @@ import 'dart:ffi';
 import 'dart:io';
 import 'clean_media.dart' show kSaveCopies;
 import 'shred.dart';
+import 'heal.dart';
 import 'identities.dart';
 import 'invites.dart';
 import 'album.dart' show AlbumTag, albumGoneUid, albumInWindow, albumItemBurnAt;
@@ -49,11 +61,13 @@ import 'picked.dart'
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
+import 'phone_seal.dart' show openPhoneSeal;
 import 'theme.dart';
 import 'wipe.dart';
 import 'group_end.dart';
 import 'group_shots.dart';
 import 'group_media_send.dart';
+import 'media_names.dart' show mediaNamesAtOpen;
 import 'media_progress.dart';
 import 'transfers.dart';
 import 'transfer_note.dart';
@@ -153,18 +167,18 @@ import 'screens/support_screen.dart' show askMoveIntoChats, openSupportTap;
 import 'stickers/sticker_pack.dart' show StickerLibrary;
 import 'stickers/sticker_wire.dart' show StickerWire, stickerText;
 import 'widgets/motion.dart';
-import 'widgets/pair_join.dart' show pairUnreached;
-import 'widgets/pair_code_panel.dart' show PairCodes;
+import 'pair_flow.dart';
 import 'widgets/kryfo_link_text.dart'
     show addScanned, askTakeNameSheet, takeOutsideLink, takeOwnLink;
 import 'signal_ffi/kryfo_signal.dart';
 import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
-import 'key_number.dart';
 import 'signal_stores.dart' show kDevSignalPrefix, onPeerKeyChanged;
 import 'dart:isolate';
 import 'dlog.dart';
-import 'read_burn.dart' show burnStartBy, burnWaitsRow, burnWaitsSql, kBurnSkew;
+import 'read_burn.dart'
+    show burnCameAt, burnStartBy, burnWaitsRow, burnWaitsSql, kBurnSkew;
+import 'restore_undo.dart';
 import 'stranger_gate.dart';
 import 'first_contact.dart';
 import 'text_send.dart' show kSendBlocked;
@@ -213,6 +227,9 @@ part 'app/database_rooms.dart';
 part 'app/database_search.dart';
 part 'app/dev_screen.dart';
 part 'app/devices_app.dart';
+part 'app/devices_receive_app.dart';
+part 'app/devices_send_app.dart';
+part 'app/link_app.dart';
 part 'app/engine.dart';
 part 'app/files.dart';
 part 'app/gates.dart';
@@ -220,6 +237,7 @@ part 'app/group_hellos.dart';
 part 'app/groups.dart';
 part 'app/links.dart';
 part 'app/invites_app.dart';
+part 'app/pair_codes_app.dart';
 part 'app/pairs.dart';
 part 'app/pq_restart.dart';
 part 'app/routing.dart';
@@ -260,6 +278,8 @@ part 'app/state_files.dart';
 void main() async {
   dlog('launch main');
   WidgetsFlutterBinding.ensureInitialized();
+  // the media folders sealed before anything reads or writes them
+  await openPhoneSeal();
   // a key saved for someone that is not the one held before: open pages that
   // show it read again
   onPeerKeyChanged = appState.keyChanged;
@@ -273,6 +293,7 @@ void main() async {
   lockState.picksDropped = dropPickerCopies;
   // what a hidden chat or the decoy shares goes with the next lock
   shareGoesWithLock = () => sessionQuiet || session.vault != null;
+  clipGoesWithLock = () => sessionQuiet || session.vault != null;
   unawaited(_sweepNotesAtLaunch());
   unawaited(_sweepPlaintextLeftovers());
   // what a backup or a restore cut short left, before either can run again

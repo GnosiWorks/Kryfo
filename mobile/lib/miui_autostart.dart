@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'battery_brand.dart';
+import 'desktop/desktop_mode.dart' show onDesktop;
 import 'widgets/confirm_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -43,6 +44,8 @@ Future<bool> openAutostartSettings([PhoneBrand? brand]) async {
 // battery optimization kills background apps, so ask android to exempt us
 // and messages still land while kryfo is closed
 Future<void> maybeShowBackgroundPrompt(BuildContext context) async {
+  // a computer keeps running in its tray: no battery to ask about
+  if (onDesktop) return;
   // these makers need both: their own switch so the system may bring kryfo
   // back, and the battery exemption so it may stay awake once it is back
   final brand = await phoneBrand();

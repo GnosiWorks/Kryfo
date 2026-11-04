@@ -44,6 +44,10 @@ dependencies:
     path: third_party/flutter_zxing
   camera:
     path: third_party/camera/camera
+  # files dropped on a chat on a computer: desktop_drop 0.8.4, pinned and cut
+  # to linux and windows (see its pubspec)
+  desktop_drop:
+    path: third_party/desktop_drop
   # the database on linux and windows: sqlcipher shipped with the app, loaded
   # over ffi. sqlite3 stays on 2.x, which has no build hook to fetch or
   # compile a sqlite of its own

@@ -26,7 +26,10 @@ import '../main.dart'
         AppStateSession,
         AppStateRefresh,
         AppStateIdentity,
-        AppStateDelivery;
+        AppStateDelivery,
+        newJoinFlow;
+import '../devices/linked_switch.dart' show kLinkedDevicesOn;
+import 'link_screens.dart' show JoinScreen;
 import '../widgets/kryfo_link_text.dart' show addScanned, takeOwnLink;
 import 'scan_screen.dart';
 import 'handle_screen.dart'
@@ -48,20 +51,29 @@ import '../delivery_mode.dart';
 import '../store.dart' show playBuild;
 import '../desktop/desktop_mode.dart' show canShareOut;
 import 'helper_sheet.dart' show showHelperSheet;
-import '../desktop/desktop_mode.dart' show onDesktop;
+import '../desktop/desktop_mode.dart' show desktopRun, onDesktop;
+import 'desk_run_section.dart';
 
 /// the onboarding's steps, by name: a step is never found by its place
-enum OnboardStep { welcome, identity, name, delivery, notify, invite }
+enum OnboardStep { welcome, identity, name, delivery, notify, desk, invite }
 
 /// the steps in order. play asks how messages reach the phone; the others
-/// say what the one quiet notification is
-List<OnboardStep> onboardingSteps({required bool play}) => [
+/// say what the one quiet notification is. a computer has no notification
+/// to explain: it says it keeps running in the tray
+List<OnboardStep> onboardingSteps({required bool play, bool desk = false}) => [
   OnboardStep.welcome,
   OnboardStep.identity,
   OnboardStep.name,
-  play ? OnboardStep.delivery : OnboardStep.notify,
+  desk
+      ? OnboardStep.desk
+      : play
+      ? OnboardStep.delivery
+      : OnboardStep.notify,
   OnboardStep.invite,
 ];
+
+/// the onboarding's column on a computer: a phone's width, centred
+const kDeskOnboardWidth = 520.0;
 
 /// the battery and phone maker asks, after the notification step. a test
 /// hands in its own
@@ -93,7 +105,10 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  final List<OnboardStep> _steps = onboardingSteps(play: playBuild);
+  final List<OnboardStep> _steps = onboardingSteps(
+    play: playBuild,
+    desk: onDesktop && desktopRun != null,
+  );
   final _ctrl = PageController();
   int _page = 0;
   // the step being moved to: it settles in while the one left fades out
@@ -117,6 +132,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   int get _at => (_ctrl.page ?? _page.toDouble()).round();
+
+  // this device joins an account on a phone in place of making its own
+  void _link() {
+    HapticFeedback.selectionClick();
+    final nav = Navigator.of(context);
+    nav.push(
+      haloRoute(
+        JoinScreen(
+          newFlow: newJoinFlow,
+          // onboarding is done already, when the link was: this only
+          // leaves the page
+          onLinked: () => nav.pop(),
+        ),
+      ),
+    );
+  }
 
   void _next() => _go(_at + 1);
 
@@ -145,7 +176,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _step(OnboardStep s) {
     final enter = !_seen.contains(s);
     return switch (s) {
-      OnboardStep.welcome => _WelcomeScreen(onContinue: _next, enter: enter),
+      OnboardStep.welcome => _WelcomeScreen(
+        onContinue: _next,
+        enter: enter,
+        // a computer joins a phone in 0.6; a phone makes its own account
+        onLink: kLinkedDevicesOn && onDesktop ? _link : null,
+      ),
       OnboardStep.identity => _IdentityScreen(
         appState: widget.appState,
         onContinue: _next,
@@ -157,6 +193,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         onContinue: _next,
         enter: enter,
       ),
+      OnboardStep.desk => _DeskRunScreen(onContinue: _next),
       OnboardStep.invite => _InviteScreen(onComplete: widget.onComplete),
     };
   }
@@ -172,38 +209,51 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Scaffold(
         backgroundColor: HaloColors.ink,
         body: SafeArea(
-          child: Column(
-            children: [
-              _StepBar(pages: _ctrl, step: _to, count: count, onBack: _back),
-              Expanded(
-                child: PageView(
-                  controller: _ctrl,
-                  physics: const NeverScrollableScrollPhysics(),
-                  onPageChanged: (i) => setState(() {
-                    // the step left is seen: back on it, nothing replays
-                    _seen.add(_steps[_page]);
-                    _page = i;
-                    _to = i;
-                  }),
-                  children: [
-                    for (var i = 0; i < count; i++)
-                      _StepFrame(
-                        key: ValueKey(_steps[i]),
-                        pages: _ctrl,
-                        index: i,
-                        coming: i == _to,
-                        child: _step(_steps[i]),
-                      ),
-                  ],
+          child: _deskColumn(
+            Column(
+              children: [
+                _StepBar(pages: _ctrl, step: _to, count: count, onBack: _back),
+                Expanded(
+                  child: PageView(
+                    controller: _ctrl,
+                    physics: const NeverScrollableScrollPhysics(),
+                    onPageChanged: (i) => setState(() {
+                      // the step left is seen: back on it, nothing replays
+                      _seen.add(_steps[_page]);
+                      _page = i;
+                      _to = i;
+                    }),
+                    children: [
+                      for (var i = 0; i < count; i++)
+                        _StepFrame(
+                          key: ValueKey(_steps[i]),
+                          pages: _ctrl,
+                          index: i,
+                          coming: i == _to,
+                          child: _step(_steps[i]),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 }
+
+// a computer's window is wide: the steps keep a phone's column, centred,
+// so no line or button runs edge to edge
+Widget _deskColumn(Widget child) => !onDesktop
+    ? child
+    : Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: kDeskOnboardWidth),
+          child: child,
+        ),
+      );
 
 // the pager moves a whole width; each step is pulled back so it only
 // shifts a little: the one left fades out first, then the next settles in
@@ -382,7 +432,13 @@ class _StepBar extends StatelessWidget {
 class _WelcomeScreen extends StatefulWidget {
   final VoidCallback onContinue;
   final bool enter;
-  const _WelcomeScreen({required this.onContinue, required this.enter});
+  // joins an account on a phone; null where linking is off
+  final VoidCallback? onLink;
+  const _WelcomeScreen({
+    required this.onContinue,
+    required this.enter,
+    this.onLink,
+  });
   @override
   State<_WelcomeScreen> createState() => _WelcomeScreenState();
 }
@@ -479,6 +535,13 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
                   ).push(haloRoute(const RestoreScreen())),
                 ),
               ),
+              if (widget.onLink != null)
+                Center(
+                  child: _TextLink(
+                    label: l10n.onboardingLinkToMyPhone,
+                    onTap: widget.onLink!,
+                  ),
+                ),
             ],
           ),
           by: 10,
@@ -1495,7 +1558,9 @@ class _DeliveryScreenState extends State<_DeliveryScreen> {
             ),
             DeliveryMode.always => (
               l10n.gettingMessagesAlwaysOn,
-              l10n.gettingMessagesMessagesArriveInstantlyNothing,
+              onion
+                  ? l10n.gettingMessagesMessagesArriveInstantlyNothing
+                  : l10n.gettingMessagesArriveInstantlyFast,
               null,
             ),
             DeliveryMode.checkins => (
@@ -1620,6 +1685,32 @@ class _NotificationScreenState extends State<_NotificationScreen> {
             title: l10n.onboardingSilentAndAtThe,
             desc: l10n.onboardingItNeverBuzzesTurn,
           ),
+        ], from: 1),
+      ],
+    );
+  }
+}
+
+// ---- 06 on a computer: keep running ----
+//
+// where the phone explains its one notification, a computer says it stays
+// in the tray, and offers the two switches the notifications page keeps
+
+class _DeskRunScreen extends StatelessWidget {
+  final VoidCallback onContinue;
+  const _DeskRunScreen({required this.onContinue});
+
+  @override
+  Widget build(BuildContext context) {
+    return _StepPage(
+      footer: [_Cta(label: l10n.onboardingGotIt, onTap: onContinue)],
+      children: [
+        _Headline(l10n.onboardingDeskRunTitle),
+        const SizedBox(height: 12),
+        _lead(l10n.onboardingDeskRunLead),
+        const SizedBox(height: 20),
+        ...staggerAll([
+          DeskRunSection(run: desktopRun!, edge: 0, lineInset: 0),
         ], from: 1),
       ],
     );

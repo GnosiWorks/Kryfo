@@ -16,11 +16,13 @@ import '../theme.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/fit_column.dart';
 import '../widgets/motion.dart' show haloRoute;
+import '../widgets/onion_loader.dart' show PrivateRouteMark;
 import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import 'bridges_screen.dart';
 import 'fast_servers_screen.dart';
 import 'seen_screen.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 class ModesScreen extends StatefulWidget {
   const ModesScreen({super.key});
@@ -106,67 +108,72 @@ class _ModesScreenState extends State<ModesScreen> {
       body: SafeArea(
         // fits or scrolls: a plain column runs past the body on a short
         // phone and whatever sits below the fold cannot be tapped
-        child: FitColumn(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // the spacer stays a direct child of the column: wrapped by the
-            // stagger it throws a parent-data error, which release paints as
-            // a light box
-            ...staggerAll([
-              _TopBar(onBack: () => Navigator.pop(context)),
-              Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(24, 4, 24, 20),
-                child: Text(
-                  l10n.modesPickHow,
-                  style: HaloType.sans(
-                    size: 15,
-                    color: HaloColors.text2,
-                    height: 1.5,
+        child: DeskPage(
+          child: FitColumn(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // the spacer stays a direct child of the column: wrapped by the
+              // stagger it throws a parent-data error, which release paints as
+              // a light box
+              ...staggerAll([
+                _TopBar(onBack: () => Navigator.pop(context)),
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(24, 4, 24, 20),
+                  child: Text(
+                    l10n.modesPickHow,
+                    style: HaloType.sans(
+                      size: 15,
+                      color: HaloColors.text2,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+                _RouteCard(
+                  key: const ValueKey('private'),
+                  icon: Icons.track_changes_rounded,
+                  mark: (c) => PrivateRouteMark(color: c),
+                  name: l10n.modesPrivate,
+                  tag: l10n.modesPrivateTag,
+                  line: l10n.modesPrivateLine,
+                  active: !fast,
+                  switching: _going > 0 && !fast,
+                  chip: l10n.modesDefault,
+                  // both our servers back the private route as well
+                  status: fast ? null : const _PrivateBackup(),
+                  onTap: () => _pick('private'),
+                ),
+                const SizedBox(height: 14),
+                _RouteCard(
+                  key: const ValueKey('fast'),
+                  icon: Icons.bolt_rounded,
+                  name: l10n.modesFast,
+                  tag: l10n.modesFastTag,
+                  line: l10n.modesFastLine,
+                  active: fast,
+                  switching: _going > 0 && fast,
+                  status: fast
+                      ? _FastStatus(rows: _rows, going: _going > 0)
+                      : null,
+                  onTap: () => _pick('balanced'),
+                ),
+                const _BothLine(),
+              ]),
+              const Spacer(),
+              StaggerIn(
+                index: 6,
+                child: _BottomLink(
+                  label: fast
+                      ? l10n.modesWhatServersSee
+                      : l10n.modesConnectionBridges,
+                  onTap: () => Navigator.of(context).push(
+                    haloRoute(
+                      fast ? const SeenScreen() : const BridgesScreen(),
+                    ),
                   ),
                 ),
               ),
-              _RouteCard(
-                key: const ValueKey('private'),
-                icon: Icons.track_changes_rounded,
-                name: l10n.modesPrivate,
-                tag: l10n.modesPrivateTag,
-                line: l10n.modesPrivateLine,
-                active: !fast,
-                switching: _going > 0 && !fast,
-                chip: l10n.modesDefault,
-                // both our servers back the private route as well
-                status: fast ? null : const _PrivateBackup(),
-                onTap: () => _pick('private'),
-              ),
-              const SizedBox(height: 14),
-              _RouteCard(
-                key: const ValueKey('fast'),
-                icon: Icons.bolt_rounded,
-                name: l10n.modesFast,
-                tag: l10n.modesFastTag,
-                line: l10n.modesFastLine,
-                active: fast,
-                switching: _going > 0 && fast,
-                status: fast
-                    ? _FastStatus(rows: _rows, going: _going > 0)
-                    : null,
-                onTap: () => _pick('balanced'),
-              ),
-              const _BothLine(),
-            ]),
-            const Spacer(),
-            StaggerIn(
-              index: 6,
-              child: _BottomLink(
-                label: fast
-                    ? l10n.modesWhatServersSee
-                    : l10n.modesConnectionBridges,
-                onTap: () => Navigator.of(context).push(
-                  haloRoute(fast ? const SeenScreen() : const BridgesScreen()),
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -209,6 +216,8 @@ class _TopBar extends StatelessWidget {
 
 class _RouteCard extends StatelessWidget {
   final IconData icon;
+  // drawn in place of the icon
+  final Widget Function(Color color)? mark;
   final String name;
   final String tag;
   final String line;
@@ -227,6 +236,7 @@ class _RouteCard extends StatelessWidget {
     required this.line,
     required this.active,
     required this.onTap,
+    this.mark,
     this.switching = false,
     this.chip,
     this.status,
@@ -275,11 +285,18 @@ class _RouteCard extends StatelessWidget {
                             : HaloColors.surface3,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(
-                        icon,
-                        size: 22,
-                        color: active ? HaloColors.amberText : HaloColors.text,
-                      ),
+                      alignment: mark != null ? Alignment.center : null,
+                      child: mark != null
+                          ? mark!(
+                              active ? HaloColors.amberText : HaloColors.text,
+                            )
+                          : Icon(
+                              icon,
+                              size: 22,
+                              color: active
+                                  ? HaloColors.amberText
+                                  : HaloColors.text,
+                            ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(

@@ -100,69 +100,112 @@ void Function(String dir) folderSync = syncFolder;
 class SealSweep {
   int sealed = 0;
   int resumed = 0;
+  int stayed = 0;
 }
 
 /// every plain file under [dir] sealed in place, the plain bytes zeroed
 /// before the sealed copy takes the name. a sweep cut short is picked up:
-/// a whole sealed copy beside its file wins, a broken one goes
+/// a whole sealed copy beside its file wins, a broken one goes. a file the
+/// seal leaves plain (the engine's own) is passed over, and one that will
+/// not seal now stays as it is for the next sweep
 SealSweep sealPlainUnder(String dir) {
   final out = SealSweep();
   final d = rawFileAccess(() => Directory(dir));
   if (!d.existsSync()) return out;
+  final io = IOOverrides.current;
+  final areas = io is SealedIO ? io.areas : null;
   final files = rawFileAccess(
     () => d
         .listSync(recursive: true, followLinks: false)
         .whereType<File>()
         .toList(),
   );
-  final names = {for (final f in files) f.path};
+  // the copies a sweep cut short left first: what stands in is settled
+  // before its file is looked at
+  files.sort(
+    (a, b) =>
+        (b.path.endsWith('.sealing') ? 1 : 0) -
+        (a.path.endsWith('.sealing') ? 1 : 0),
+  );
   for (final f in files) {
     final path = f.path;
-    if (path.endsWith('.sealing')) {
-      final orig = path.substring(0, path.length - '.sealing'.length);
-      if (_opens(path)) {
-        folderSync(p.dirname(path));
-        rawFileAccess(() {
-          _zero(orig);
-          File(path).renameSync(orig);
-        });
-        out.resumed++;
-      } else {
-        rawFileAccess(() => File(path).deleteSync());
-      }
-      continue;
-    }
-    if (names.contains('$path.sealing')) continue;
-    if (!_plain(path)) continue;
-    final tmp = '$path.sealing';
-    // the copy through the seam is sealed: same folder, same key
-    final src = rawFileAccess(() => File(path).openSync());
-    final dst = File(tmp).openSync(mode: FileMode.write);
+    if (areas != null && !areas.sealedPlace(path)) continue;
     try {
-      while (true) {
-        final b = src.readSync(chunkPlain);
-        if (b.isEmpty) break;
-        dst.writeFromSync(b);
-        b.fillRange(0, b.length, 0);
+      if (path.endsWith('.sealing')) {
+        final orig = path.substring(0, path.length - '.sealing'.length);
+        if (_opens(path)) {
+          folderSync(p.dirname(path));
+          rawFileAccess(() {
+            _zero(orig);
+            File(path).renameSync(orig);
+          });
+          out.resumed++;
+        } else {
+          rawFileAccess(() => File(path).deleteSync());
+        }
+        continue;
       }
-      dst.flushSync();
-    } finally {
-      src.closeSync();
-      dst.closeSync();
+      if (!rawFileAccess(() => File(path).existsSync())) continue;
+      if (!_plain(path)) continue;
+      _sealOne(path);
+      out.sealed++;
+    } on FileSystemException {
+      // gone meanwhile, or no room for the copy: the rest go on
+      out.stayed++;
     }
-    // the copy is read back whole before the plain one is touched
-    if (!_opens(tmp)) {
-      rawFileAccess(() => File(tmp).deleteSync());
-      continue;
-    }
-    folderSync(p.dirname(path));
-    rawFileAccess(() {
-      _zero(path);
-      File(tmp).renameSync(path);
-    });
-    out.sealed++;
+  }
+  // the sweep is not done until all are: the next one tries again
+  if (out.stayed > 0) {
+    throw FileSystemException('${out.stayed} stayed plain', dir);
   }
   return out;
+}
+
+// [path] sealed beside itself, read back whole, the plain bytes zeroed and
+// the copy put in its place
+void _sealOne(String path) {
+  final tmp = '$path.sealing';
+  // the copy through the seam is sealed: same folder, same key
+  try {
+    final src = rawFileAccess(() => File(path).openSync());
+    try {
+      final dst = File(tmp).openSync(mode: FileMode.write);
+      try {
+        while (true) {
+          final b = src.readSync(chunkPlain);
+          if (b.isEmpty) break;
+          dst.writeFromSync(b);
+          b.fillRange(0, b.length, 0);
+        }
+        dst.flushSync();
+      } finally {
+        dst.closeSync();
+      }
+    } finally {
+      src.closeSync();
+    }
+  } catch (_) {
+    _dropTmp(tmp);
+    rethrow;
+  }
+  // the copy is read back whole before the plain one is touched
+  if (!_opens(tmp)) {
+    _dropTmp(tmp);
+    throw FileSystemException('not sealed whole', tmp);
+  }
+  folderSync(p.dirname(path));
+  rawFileAccess(() {
+    _zero(path);
+    File(tmp).renameSync(path);
+  });
+}
+
+void _dropTmp(String tmp) {
+  try {
+    rawFileAccess(() {
+      if (File(tmp).existsSync()) File(tmp).deleteSync();
+    });
+  } catch (_) {}
 }
 
 bool _plain(String path) => rawFileAccess(() {

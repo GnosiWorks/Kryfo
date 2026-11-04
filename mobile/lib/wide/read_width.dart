@@ -58,3 +58,22 @@ class ReadColumn extends StatelessWidget {
 List<Widget> readLines(List<Widget> lines) => !onDesktop
     ? lines
     : [for (final w in lines) w is Flexible ? w : ReadColumn(child: w)];
+
+/// a settings page's body on a computer: a centred column at
+/// [kReadWidth]. the phone gets [child] as it is
+class DeskPage extends StatelessWidget {
+  final Widget child;
+  const DeskPage({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    if (!onDesktop) return child;
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: kReadWidth),
+        child: child,
+      ),
+    );
+  }
+}

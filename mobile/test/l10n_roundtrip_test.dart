@@ -21,7 +21,7 @@ void main() {
     expect(l.modesFastTag, "Straight to our servers");
     expect(
       l.modesFastLine,
-      "Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you're connected, and never log or keep it. Never what you say. Your contacts never see it.",
+      "Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you're connected, and never log or keep it. Your contacts never see it. Your network can see that you connect to Kryfo.",
     );
     expect(l.modesFastConnected, "Fast · connected");
     expect(l.modesFastConnecting, "Fast · connecting");
@@ -73,12 +73,13 @@ void main() {
     expect(l.homeUseFast, "Use Fast");
     expect(l.homeSwitchedToFastRoute, "Switched to Fast");
     expect(
-      l.bridgesFastGetsThrough,
-      "Fast goes straight to our servers and usually gets through. Or let Kryfo find a way by itself.",
+      l.bridgesBridgeFirstFastSeen,
+      "Let Kryfo find a bridge that gets through. Fast works too, but this network can see you connect to Kryfo.",
     );
     expect(l.appServersNotAnswering, "Servers not answering");
     expect(l.settingsPrivateTor, "Private · Tor");
     expect(l.seenOurServers, "Our servers");
+    expect(l.seenOurServersCould, "Our servers could");
     expect(
       l.seenIpWhy,
       "On Private everything leaves through Tor and our servers see an exit node, never you. On Fast the connection goes straight to our two servers: they see your IP address while you're connected and keep no record of it. While the first one is down, Fast also uses public relays, only through Tor.",
@@ -1941,15 +1942,65 @@ void main() {
     expect(l.pairCodePairingCode, "Pairing code");
     expect(l.pairCodeShowACode, "Show a code");
     expect(l.pairCodeEnterOne, "Enter one");
-    expect(l.pairCodeSixDigits, "Six digits");
     expect(l.pairCodeLooking, "Looking…");
     expect(l.pairCodeNothingThereYetTrying, "Nothing there yet · trying again");
     expect(
       l.pairCodeNothingAtThatCode,
       "Nothing at that code. It may have burned, or they have not shared it yet.",
     );
-    expect(l.pairCodeTypeTheSixDigits, "Type the six digits they read out.");
     expect(l.pairCodeAddThem, "Add them");
+    expect(l.pairCodeEightDigits, "Eight digits");
+    expect(
+      l.pairCodeTypeTheEightDigits,
+      "Type the eight digits they read out.",
+    );
+    expect(
+      l.pairCodeOldCode,
+      "That code is from an older Kryfo. Both phones need Kryfo 0.6 or newer.",
+    );
+    expect(
+      l.pairCodeOldCodeDesk,
+      "That code is from an older Kryfo. Both devices need Kryfo 0.6 or newer.",
+    );
+    expect(l.pairCodeBothNeed06, "Both phones need Kryfo 0.6 or newer.");
+    expect(l.pairCodeBothNeed06Desk, "Both devices need Kryfo 0.6 or newer.");
+    expect(l.pairCodeWaitingForThem, "Waiting for them…");
+    expect(
+      l.pairCodeStillWaiting,
+      "Still waiting. If their screen says a wrong code was typed, check the digits together.",
+    );
+    expect(
+      l.pairCodeUnanswered,
+      "No answer came. Check the code with them and type it again.",
+    );
+    expect(
+      l.pairCodeTooManyTries,
+      "This code was tried three times. Ask them for a new one.",
+    );
+    expect(l.pairCodeRanOut, "That code ran out. Ask them for a new one.");
+    expect(l.pairCodeMatched, "The code matched. Add each other?");
+    expect(l.pairCodeNotThem, "Not them");
+    expect(
+      l.pairCodePanelReadEightDigitsOut,
+      "Read eight digits out loud and you add each other. Nothing else needs to change hands.",
+    );
+    expect(l.pairCodePanelOrMakeACode, "Or make a code to read out");
+    expect(
+      l.pairCodePanelTheyOpenKryfoEight,
+      "They open Kryfo, tap add, choose pairing code and type these eight digits. Make a new one for the next person.",
+    );
+    expect(
+      l.pairCodePanelWrongTyped,
+      "A wrong code was typed. Read it out again, slowly.",
+    );
+    expect(
+      l.pairCodePanelThreeWrong,
+      "A wrong code was typed three times, so this one stopped. Make a new one.",
+    );
+    expect(
+      l.pairCodePanelNotAdded,
+      "Not added. Make a new code when they're ready.",
+    );
     expect(
       l.panicSetupThoseWereDifferentFrom,
       "Those were different. From the top.",
@@ -2326,7 +2377,7 @@ void main() {
     expect(l.seenWhoYouTalkTo, "Who you talk to");
     expect(
       l.seenEachConversationGetsIts,
-      "Each conversation gets its own address, derived from both keys. A relay sees unrelated drop boxes, not a pair of people.",
+      "Each conversation gets its own address, derived from both keys. A relay sees unrelated drop boxes, not a pair of people. On Fast our servers see your IP address on the drop boxes you use, and when both people in a chat use Fast, that two IP addresses share one.",
     );
     expect(l.seenWhatYouSay, "What you say");
     expect(
@@ -2337,7 +2388,7 @@ void main() {
     expect(l.seenYourContactGraph, "Your contact graph");
     expect(
       l.seenKryfoDoesNotScan,
-      "Kryfo does not scan your contacts. No phone number exists here to leak.",
+      "Kryfo does not scan your contacts. No phone number exists here to leak. On Fast our servers could piece some of it together from which IP addresses share drop boxes. They keep no record of it.",
     );
     expect(l.seenIntroducer, "Introducer");
     expect(
@@ -2437,7 +2488,7 @@ void main() {
     expect(l.settingsWhatWeCanSee, "What we can see");
     expect(l.settingsTheHonestList, "The honest list");
     expect(l.settingsVersion, "Version");
-    expect(l.settings030Alpha, "0.5.3 · alpha");
+    expect(l.settingsVersionAlpha("0.6.0"), "0.6.0 · alpha");
     expect(l.settingsReportAnIssue, "Report an issue");
     expect(l.settingsBugOrSecurityFlaw, "Bug or security flaw");
     expect(l.settingsOpenSource, "Open source");
@@ -2960,21 +3011,12 @@ void main() {
     expect(l.navBarMe, "Me");
     expect(l.pairCodePanelPuttingYourInviteIn, "Putting your invite in place");
     expect(l.pairCodePanelYourInviteIsNot, "Your invite is not ready yet");
-    expect(
-      l.pairCodePanelReadSixDigitsOut,
-      "Read six digits out loud and they can add you. Nothing else needs to change hands.",
-    );
     expect(l.pairCodePanelWorking, "Working");
-    expect(l.pairCodePanelOrMakeASix, "Or make a six digit code to read out");
     expect(l.pairCodePanelCodeCopied, "Code copied");
     expect(l.pairCodePanelBurnsIn("<mm>", "<ss>"), "Burns in <mm>:<ss>");
     expect(
       l.pairCodePanelTheyTapAddChoose,
       "They tap add, choose code, and type these.",
-    );
-    expect(
-      l.pairCodePanelTheyOpenKryfoTap,
-      "They open Kryfo, tap add, choose pairing code and type these six digits. Make a new one for the next person.",
     );
     expect(l.pinsPinnedMessages("<count>"), "Pinned messages · <count>");
     expect(l.pinsPinnedMessages2, "Pinned messages");
@@ -3366,7 +3408,11 @@ void main() {
     expect(l.notesShowLess, "Show less");
     expect(l.voiceDisguiseHere, "Disguise my voice here");
     expect(l.chatBlockScreenshots, "Block screenshots");
-    expect(l.chatShotsWhenTheyUpdate, "Available when they update");
+    expect(
+      l.chatShotsWhenTheyUpdate,
+      "Available when they use the latest Kryfo on a phone",
+    );
+    expect(l.chatShotsWhenTheyUpdateDesk, "Available in Kryfo for Android");
     expect(
       l.chatShotsBothPhones,
       "Kryfo blocks screenshots and screen recording of this chat on both phones, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.",
@@ -3518,11 +3564,6 @@ void main() {
       "Kryfo never tries Tor plainly here. It finds a bridge that works, or you can pick your own next.",
     );
     expect(l.pairCodeKeyNumber, "Key number");
-    expect(l.pairCodeNumberDiffers, "The number is different");
-    expect(
-      l.pairCodeNoNumberThere,
-      "No number on their screen? Add them, then compare the safety number in your chat.",
-    );
     expect(
       l.contactCardScanToAdd,
       "Scan it with Kryfo to add me.\nThis card knows nothing about you beyond that.",
@@ -3579,14 +3620,6 @@ void main() {
     expect(
       l.nameTakenChatLine,
       "Your chat under these words came from a request, an introduction or a group, with a different key, and nobody checked it. Words can be copied. If this link came from the person you know, use it: that chat is deleted, and you compare the safety number in the new one. Not sure where the link came from? Keep the one you have.",
-    );
-    expect(
-      l.pairCodeNumberMatches,
-      "Check all four groups match on both phones",
-    );
-    expect(
-      l.pairCodePanelAcceptOnce,
-      "Their request comes once they add you. Accept it only once they say all four groups matched.",
     );
     expect(l.albumLabel("<count>"), "Album, <count> items");
     expect(l.albumCounter("<at>", "<total>"), "<at> of <total>");
@@ -3749,10 +3782,6 @@ void main() {
       "Turning this off deletes saved translations.",
     );
     expect(l.bridgesNoneUntilOnion, "None until onion is on");
-    expect(
-      l.bridgesRelayWorksWhereTor,
-      "Fast works where Tor is blocked, and you can switch back any time.",
-    );
     expect(
       l.bridgesRelayThisNetworkSees,
       "Fast gets through where Tor is blocked, but this network can see you connect to Kryfo.",

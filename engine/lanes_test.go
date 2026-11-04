@@ -174,12 +174,12 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 		t.Fatal(err)
 	}
 	roomSent := gw.Tags.Find("p")[1]
-	_, pairPk, err := pairCodeKeys("482913")
+	_, pairPk, err := pairBoxKeys("48", 2950000)
 	if err != nil {
 		t.Fatal(err)
 	}
 	qctx, qcancel := context.WithTimeout(ctx, 2*time.Second)
-	pairCodeQuery(qctx, pairPk)
+	pairCodeQuery(qctx, pairLane(pairPk), []string{pairPk})
 	qcancel()
 	waitFor(t, "both sends on both relays", 15*time.Second, func() bool {
 		for _, r := range []*relayStandIn{a, b} {
@@ -268,7 +268,7 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 		"check":   handleCheck("wren"),
 		"claim":   handleClaim("wren", "kryfo://share?id=a-b-c", ""),
 		"release": handleRelease("wren"),
-		"search":  torPost(svc.srv.URL+"/handle/search", `{"q":"wren"}`),
+		"search":  searchPost(svc.srv.URL+"/handle/search", `{"q":"wren"}`),
 		"badge":   torGetJSON(svc.srv.URL + "/receipt?id=1"),
 	} {
 		if strings.HasPrefix(r, "error") {
@@ -279,7 +279,6 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 	if len(remotes) == 0 {
 		t.Fatal("no call reached the service")
 	}
-	var svcName string
 	for _, rem := range remotes {
 		n, ok := socks.nameOf(rem)
 		if !ok {
@@ -288,13 +287,9 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 		if n == "" {
 			t.Fatal("a service call went through socks without a name")
 		}
-		if svcName != "" && n != svcName {
-			t.Error("the service calls dialled under more than one name")
+		if lane, ok := laneOfName[n]; ok {
+			t.Fatalf("a service call shares a socks name with %s", lane)
 		}
-		svcName = n
-	}
-	if lane, ok := laneOfName[svcName]; ok {
-		t.Fatalf("the service calls share a socks name with %s", lane)
 	}
 
 	// a room that is gone takes its name with it
@@ -363,8 +358,8 @@ func contactsOnEveryLane(t *testing.T) map[string][]xid {
 
 // the main identity on all its lanes at once: the addresses of one receive
 // lane share its socks name, and no other receive lane, the first-contact
-// address or a send dials under it. the first-contact address and the sends
-// each have a name nothing else uses.
+// address or a send dials under it. the first-contact address, the first
+// contacts and the sends each have a name nothing else uses.
 func TestReceiveLanesDialApart(t *testing.T) {
 	socks := newSocksStandIn(t)
 	r := newRelayStandIn(t, 0)
@@ -422,7 +417,8 @@ func TestReceiveLanesDialApart(t *testing.T) {
 		c := r.snapshot()
 		return len(connsOn(c, []string{sent})) > 0 && len(connsOn(c, []string{strangerFc})) > 0
 	})
-	groups[laneEveryday] = []string{sent, strangerFc}
+	groups[laneEveryday] = []string{sent}
+	groups[laneHello] = []string{strangerFc}
 
 	conns := r.snapshot()
 	laneOf := map[string]string{}
@@ -449,7 +445,7 @@ func TestReceiveLanesDialApart(t *testing.T) {
 			}
 		}
 	}
-	if want := receiveLaneCount + 2; len(laneOf) != want {
+	if want := receiveLaneCount + 3; len(laneOf) != want {
 		t.Fatalf("%d socks names for the main identity, want %d: %v", len(laneOf), want, laneOf)
 	}
 	if seen != len(conns) {
@@ -553,8 +549,9 @@ func TestShortPongWaitClosesTheSocket(t *testing.T) {
 	}
 }
 
-// balanced and fast have no tor: one client for every lane, as before, and
-// nothing goes near the socks port even when one is there.
+// balanced and fast skip tor: one client for every lane, as before, and
+// nothing but a burner room's addresses and the first-contact address goes
+// near the socks port
 func TestDirectModesUnchanged(t *testing.T) {
 	for _, m := range []string{modeBalanced, modeFast} {
 		t.Run(m, func(t *testing.T) {
@@ -588,8 +585,14 @@ func TestDirectModesUnchanged(t *testing.T) {
 				}
 				return n == l.subs()
 			})
-			if n := socks.count(); n != 0 {
-				t.Fatalf("%d streams went through socks in %s mode", n, m)
+			// only the room's two addresses and the first-contact address
+			// go through tor (laneKeepsTor)
+			want := 1
+			for _, r := range l.rooms {
+				want += len(r)
+			}
+			if n := socks.count(); n != want {
+				t.Fatalf("%d streams went through socks in %s mode, want the room's and the first-contact address's %d", n, m, want)
 			}
 		})
 	}

@@ -66,6 +66,30 @@ class _OnionLoaderState extends State<OnionLoader>
   );
 }
 
+/// the boot screen's onion drawn whole and still, as an icon. its lines are
+/// thicker than the big drawing's, so they hold at icon size
+class OnionMark extends StatelessWidget {
+  final double size;
+  final Color color;
+  const OnionMark({super.key, this.size = 22, required this.color});
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+    // the drawing is taller than wide: it keeps the icon's height
+    size: Size(size * 120 / 162, size),
+    painter: _OnionPainter(1, color, color, weight: 120 / size * 0.9),
+  );
+}
+
+/// the private route's mark: the onion the first start draws
+class PrivateRouteMark extends StatelessWidget {
+  final Color color;
+  const PrivateRouteMark({super.key, required this.color});
+
+  @override
+  Widget build(BuildContext context) => OnionMark(size: 28, color: color);
+}
+
 Path _onionStructure() {
   final p = Path();
   p.moveTo(60, 50);
@@ -116,7 +140,9 @@ class _OnionPainter extends CustomPainter {
   final double t;
   final Color color;
   final Color? ink;
-  _OnionPainter(this.t, this.color, this.ink);
+  // the lines' width against the drawing's own
+  final double weight;
+  _OnionPainter(this.t, this.color, this.ink, {this.weight = 1});
 
   // the art never changes, so the arc metrics are computed once, not every
   // frame
@@ -151,7 +177,7 @@ class _OnionPainter extends CustomPainter {
 
   Paint _p(double w, Color col) => Paint()
     ..style = PaintingStyle.stroke
-    ..strokeWidth = w
+    ..strokeWidth = w * weight
     ..strokeCap = StrokeCap.round
     ..strokeJoin = StrokeJoin.round
     ..color = col;
@@ -160,9 +186,12 @@ class _OnionPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     canvas.scale(size.width / 120, size.height / 162);
 
-    final guide = color.withValues(alpha: 0.18);
-    canvas.drawPath(_st, _p(1.5, guide));
-    canvas.drawPath(_ly, _p(1.3, guide));
+    // the icon has no guide under it
+    if (weight == 1) {
+      final guide = color.withValues(alpha: 0.18);
+      canvas.drawPath(_st, _p(1.5, guide));
+      canvas.drawPath(_ly, _p(1.3, guide));
+    }
 
     final fStruct = (t / 0.55).clamp(0.0, 1.0);
     final fLayer = ((t - 0.45) / 0.55).clamp(0.0, 1.0);
@@ -186,5 +215,8 @@ class _OnionPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _OnionPainter old) =>
-      old.t != t || old.color != color || old.ink != ink;
+      old.t != t ||
+      old.color != color ||
+      old.ink != ink ||
+      old.weight != weight;
 }

@@ -709,7 +709,7 @@ void main() {
       expect(identical(deskBridgeLine(plain), plain), isTrue);
       expect(
         File('lib/screens/bridges_screen.dart').readAsStringSync(),
-        contains('return deskBridgeLine('),
+        contains('deskBridgeLine(appState.bridgeLine)'),
       );
     });
   });
@@ -766,8 +766,8 @@ void main() {
       expect(shown(), real);
     });
 
-    test('in all 16 languages, each its own and in sentence case', () {
-      expect(arbs, hasLength(16));
+    test('in all 17 languages, each its own and in sentence case', () {
+      expect(arbs, hasLength(17));
       final added = [
         for (final k in keys) '${k}Desk',
         'bridgesThisNetworkWantsADesk',

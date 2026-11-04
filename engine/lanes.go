@@ -48,10 +48,14 @@ var receiveLane = func(rcvPk string) string { return hashLane(rcvPk, receiveLane
 // with a contact's address or a send
 const laneFirstContact = "firstcontact"
 
-// the main identity's lanes: its sends, its first-contact address and the
-// contacts'
+// a first contact to someone else's first-contact address: apart from the
+// everyday sends, since that address may carry a public handle
+const laneHello = "hello"
+
+// the main identity's lanes: its sends, its first contacts, its
+// first-contact address and the contacts'
 func mainLanes() []string {
-	l := []string{laneEveryday, laneFirstContact}
+	l := []string{laneEveryday, laneHello, laneFirstContact}
 	for i := 0; i < receiveLaneCount; i++ {
 		l = append(l, receiveLaneAt(i))
 	}
@@ -61,6 +65,12 @@ func mainLanes() []string {
 // the handle registry, people search and the badge service: a circuit of
 // their own, apart from the ones that carry the contacts' addresses.
 const laneServices = "services"
+
+// this phone's own handle: its check, claim, release, listing and lookup,
+// signed by the identity key or naming it. apart from people search and
+// others' handles, so the registry cannot tie a search to the handle
+// that made it
+const laneOwnHandle = "ownhandle"
 
 // gif search and its pictures: apart from the services lane too, so the gif
 // relay cannot tie a search to a handle lookup or a badge receipt

@@ -90,7 +90,7 @@ class _Db implements HaloDb {
   }
 
   @override
-  Future<void> deleteMessage(String msgUid) async {
+  Future<void> deleteMessage(String msgUid, {String? from}) async {
     deleted.add(msgUid);
     notes.removeWhere((n) => n['msg_uid'] == msgUid);
   }
@@ -486,8 +486,21 @@ void main() {
       await drain(t);
     });
 
-    testWidgets('held, a note can be copied', (t) async {
+    testWidgets('held, a note can be copied, marked sensitive', (t) async {
       phone(t);
+      const platform = MethodChannel('halo/platform');
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(platform, (
+        c,
+      ) async {
+        _asked.add(c);
+        return true;
+      });
+      addTearDown(
+        () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          platform,
+          null,
+        ),
+      );
       db.notes = [note('buy lemons', uid: 'n1')];
       await t.pumpWidget(framed(const NotesScreen()));
       await t.pump(const Duration(seconds: 1));
@@ -496,7 +509,7 @@ void main() {
       expect(find.byType(MenuSheet), findsOneWidget);
       await t.tap(find.text(l10n.commonCopy));
       await t.pump(const Duration(milliseconds: 600));
-      final copied = _asked.where((c) => c.method == 'Clipboard.setData');
+      final copied = _asked.where((c) => c.method == 'copySensitive');
       expect(copied.single.arguments, {'text': 'buy lemons'});
       expect(find.text(l10n.commonCopied), findsOneWidget);
       await drain(t);

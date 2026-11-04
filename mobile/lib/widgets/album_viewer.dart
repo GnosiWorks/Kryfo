@@ -25,6 +25,7 @@ import 'text_ground.dart';
 import 'video_frame.dart';
 import 'video_viewer.dart' show ViewerRound, ViewerScrubber, ViewerTime;
 import '../lock_guard.dart' show lockGuard;
+import '../phone_seal.dart' show withFileKey;
 
 class AlbumItem {
   final String path;
@@ -573,9 +574,10 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
     _opening = true;
     Map<String, dynamic>? m;
     try {
-      m = await _channel.invokeMapMethod<String, dynamic>('open', {
-        'path': widget.item.path,
-      });
+      m = await _channel.invokeMapMethod<String, dynamic>(
+        'open',
+        withFileKey(widget.item.path, {'path': widget.item.path}),
+      );
     } catch (e) {
       dlog('album video: not opened (${e.runtimeType})');
     }

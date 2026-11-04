@@ -75,7 +75,7 @@ class _Engine implements HaloEngine {
 
 const _langs = [
   'en', 'ar', 'de', 'es', 'fa', 'fr', 'hi', 'id', 'it', //
-  'pt', 'ru', 'tr', 'uk', 'vi', 'zh', 'zh_Hant',
+  'pl', 'pt', 'ru', 'tr', 'uk', 'vi', 'zh', 'zh_Hant',
 ];
 
 Locale _locale(String tag) {
@@ -216,7 +216,8 @@ void main() {
       find.text(
         'Skips Tor, so messages arrive quicker and use less battery. Our '
         "servers see your IP address only while you're connected, and never "
-        'log or keep it. Never what you say. Your contacts never see it.',
+        'log or keep it. Your contacts never see it. '
+        'Your network can see that you connect to Kryfo.',
       ),
       findsOneWidget,
     );

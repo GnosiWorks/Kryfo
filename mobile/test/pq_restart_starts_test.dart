@@ -105,6 +105,23 @@ void main() {
     expect(db.rows('pq_restarts'), isEmpty);
   }, skip: needsShim);
 
+  test('a session a restore brought back sends no KDB1: its heal builds a '
+      'pq one', () async {
+    io.sent.clear();
+    await setCaps('gs,pq,ty');
+    await signalSession.markRestored();
+    expect(await signalSession.sealsOnRestored('alice'), isTrue);
+    await app.pqUpkeep();
+    expect(io.sent, isEmpty);
+    expect(db.rows('pq_restarts'), isEmpty);
+    // the marks go again for the tests after this one
+    expect(
+      await signalSession.dropRestoredWhenDone(leaveOut: (_) => true),
+      isTrue,
+    );
+    await setCaps('');
+  }, skip: needsShim);
+
   test('her caps say pq: the KDB1 goes, again a day on, and her opener puts '
       'bob on pq; the answer goes, the time and the line are kept, and 15 '
       'days on the classic states go', () async {

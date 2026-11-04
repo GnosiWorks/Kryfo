@@ -93,12 +93,15 @@ Future<void> _noteHowAdded(
 // empty when a chat opening is the answer.
 // [hidden] says who a shut vault holds, the app's state when not given.
 // [scanned]: read with the camera, as people add each other side by side.
-// it clears the marks, and proves only as much as the screen it was read off
+// it clears the marks, and proves only as much as the screen it was read off.
+// [pairOut]: a pair code's sharer adding the joiner whose invite the code
+// gave; their opener is waited for on this one-time invite of mine
 Future<(String, bool)> handleHaloUriAdded(
   String raw, {
   bool Function(String id)? hidden,
   bool Function(String keyHex)? shutKeys,
   bool scanned = false,
+  InviteRow? pairOut,
   @visibleForTesting AppState? app,
 }) async {
   // the one app on a phone; a test hands in the one it built
@@ -307,6 +310,17 @@ Future<(String, bool)> handleHaloUriAdded(
   if (await session.isBlocked(parsed['id']!)) {
     return (l10n.appTheyAreBlocked(parsed['id']!), false);
   }
+  if (v4 != null && pairOut != null) {
+    return _addByPairCode(
+      appState,
+      parsed['id']!,
+      v4,
+      parsed['xpub']!,
+      pairOut,
+      taken: taken,
+      untombed: untombed,
+    );
+  }
   if (v4 != null && qrHello) {
     return _addV3ByHello(
       appState,
@@ -494,6 +508,65 @@ Future<(String, bool)> handleHaloUriAdded(
   }
 }
 
+// a pair code's sharer adding the joiner (identity v4 6, 3.4b): the joiner
+// starts the one session, so their row is written and their opener waited
+// for on [mine], the one-time invite the code sealed to them, from their
+// key alone. one with a session on their key already goes on as it is
+Future<(String, bool)> _addByPairCode(
+  AppState appState,
+  String id,
+  LsInvite v4,
+  String xPub,
+  InviteRow mine, {
+  required bool taken,
+  required bool untombed,
+}) async {
+  final already = await session.isAccepted(id);
+  final asked = !already && await session.askedBefore(id);
+  final row = await session.getContact(id);
+  final key = v4.identity;
+  final bound = await _boundIdentity(
+    id,
+    ss: signalSession,
+    row: session.getContact,
+  );
+  final settled =
+      bound != null && _eqBytes(bound, key) && await hasSessionWith(id);
+  // no onion until they answer, as a v4 add: their opener brings it
+  await session.upsertContact(
+    id,
+    row?['onion'] as String? ?? '',
+    xPub,
+    owe: asked,
+  );
+  if (untombed) await appState._untomb(id);
+  await appState._untombShut(id);
+  await _noteHowAdded(
+    id,
+    scanned: false,
+    already: already,
+    taken: taken,
+    untombed: untombed,
+  );
+  if (settled) {
+    // nothing will open on my invite: the session they would start runs
+    await appState.pairDrop(PairMine(mine.link, mine));
+    await appState.subscribePeer(id, fresh: true);
+  } else {
+    // the key the code gave is the one their opener has to come on
+    await signalSession.identityStore.saw(id, key);
+    await appState.pairOpen(mine, key);
+  }
+  if (asked) await appState.afterAccept(id);
+  await appState.refreshContacts();
+  if (!already && await appState.inboxChatOf(id)) {
+    askInboxMove(id);
+  } else {
+    openAddedChatLater(id);
+  }
+  return (already ? l10n.appAlreadySaved(id) : '', true);
+}
+
 // an add from a v3 link (11 step 7), or a v4 qr answering its invite
 // [answers]: their row, and a hello to the first-contact address that waits
 // for their accept. one with a session on their key already is taken in as
@@ -673,23 +746,6 @@ Map<String, String>? parseHaloUri(String raw) {
   } catch (_) {
     return null;
   }
-}
-
-/// the identity key a session built from [invite] runs on: the one its
-/// bundle carries, as processPeerBundle reads it, or an old card's x key.
-/// null when the invite does not read
-List<int>? inviteSessionKey(String invite) {
-  final parsed = parseHaloUri(invite);
-  if (parsed == null) return null;
-  final bundle = parsed['bundle'];
-  if (bundle == null) return _xIdentity((parsed['xpub'] ?? '').toLowerCase());
-  return _bundleIdentity(bundle);
-}
-
-/// the key number of [invite]: what the phone that shared it shows
-String? inviteKeyNumber(String invite) {
-  final k = inviteSessionKey(invite);
-  return k == null ? null : keyNumber(k);
 }
 
 // an opener the proof-of-work gate and the stranger cap will take, read

@@ -2385,6 +2385,9 @@ class AppLocalizationsZh extends AppLocalizations {
       '消息即时到达。任何东西都不会离开 Tor。最耗电。';
 
   @override
+  String get gettingMessagesArriveInstantlyFast => '在快速模式下，消息即时到达。最耗电。';
+
+  @override
   String get gettingMessagesCheckIns => '定时查收';
 
   @override
@@ -4085,9 +4088,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairCodeEnterOne => '输入配对码';
 
   @override
-  String get pairCodeSixDigits => '六位数字';
-
-  @override
   String get pairCodeLooking => '正在查找…';
 
   @override
@@ -4100,34 +4100,77 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairCodeUnreached => '联系不上中继。请稍后再试。';
 
   @override
-  String get pairCodeFailed => '没有成功。请再试一次。';
+  String get fastRoomsWaitForTor => '聊天室、配对码和首次联系始终通过 Tor，快速模式下也一样。Tor 一连上就能用。';
 
   @override
-  String get pairCodeTypeTheSixDigits => '输入对方念出的六位数字。';
+  String get pairCodeFailed => '没有成功。请再试一次。';
 
   @override
   String get pairCodeAddThem => '添加对方';
 
   @override
-  String get pairCodeUsedTwice => '这个码被用了两次。请对方重新生成一个。';
-
-  @override
   String get pairCodeKeyNumber => '密钥号码';
 
   @override
-  String get pairCodeNumberMatches => '核对两部手机上的四组数字是否全部一致';
-
-  @override
-  String get pairCodeNumberMatchesDesk => '核对两台设备上的四组数字是否全部一致';
-
-  @override
-  String get pairCodeNumberDiffers => '号码不一致';
-
-  @override
-  String get pairCodeNoNumberThere => '对方屏幕上没有号码？先添加，再在聊天里核对安全码。';
-
-  @override
   String get pairCodeNotAdded => '未添加。请对方重新生成一个码。';
+
+  @override
+  String get pairCodeEightDigits => '八位数字';
+
+  @override
+  String get pairCodeTypeTheEightDigits => '输入对方念出的八位数字。';
+
+  @override
+  String get pairCodeOldCode => '这个码来自较旧的 Kryfo。两部手机都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeOldCodeDesk => '这个码来自较旧的 Kryfo。两台设备都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeBothNeed06 => '两部手机都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeBothNeed06Desk => '两台设备都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeWaitingForThem => '正在等待对方…';
+
+  @override
+  String get pairCodeStillWaiting => '还在等待。如果对方屏幕显示输入了错误的码，请一起核对数字。';
+
+  @override
+  String get pairCodeUnanswered => '没有收到回应。请和对方核对码，然后重新输入。';
+
+  @override
+  String get pairCodeTooManyTries => '这个码已经试了三次。请对方重新生成一个。';
+
+  @override
+  String get pairCodeRanOut => '这个码已过期。请对方重新生成一个。';
+
+  @override
+  String get pairCodeMatched => '码已匹配。要互相添加吗？';
+
+  @override
+  String get pairCodeNotThem => '不是对方';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut => '把八位数字念出来，你们就能互相添加。其他什么都不需要交换。';
+
+  @override
+  String get pairCodePanelOrMakeACode => '或者生成一个码，念给对方';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      '对方打开 Kryfo，点“添加”，选择“配对码”，输入这八位数字。下一个人需要你再生成一个新的。';
+
+  @override
+  String get pairCodePanelWrongTyped => '对方输入了错误的码。请再慢慢念一遍。';
+
+  @override
+  String get pairCodePanelThreeWrong => '错误的码已输入三次，这个码已停止使用。请生成一个新的。';
+
+  @override
+  String get pairCodePanelNotAdded => '未添加。对方准备好时再生成一个新码。';
 
   @override
   String get panicSetupThoseWereDifferentFrom => '两次不一样。从头再来。';
@@ -4651,6 +4694,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get restoreNotificationsNeedSettingUp => '通知需要在这台设备上重新设置。';
 
   @override
+  String get restoreDeletedComeBack =>
+      '这个备份制作之后你删除的聊天会随它回来，那些联系人可能会看到你重新设置了 Kryfo。';
+
+  @override
   String get restoreMoveItHere => '迁移到这里';
 
   @override
@@ -4890,7 +4937,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get seenEachConversationGetsIts =>
-      '每段对话都有自己的地址，由双方的密钥推导而来。中继看到的是一个个互不相关的投递点，而不是一对人。';
+      '每段对话都有自己的地址，由双方的密钥推导而来。中继看到的是一个个互不相关的投递点，而不是一对人。在快速模式下，我们的服务器能看到你所用投递点上的 IP 地址；如果对话双方都用快速模式，还能看到两个 IP 地址共用一个投递点。';
 
   @override
   String get seenWhatYouSay => '你说了什么';
@@ -4906,7 +4953,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get seenYourContactGraph => '你的联系人关系图';
 
   @override
-  String get seenKryfoDoesNotScan => 'Kryfo 不会扫描你的通讯录。这里根本没有手机号可以泄露。';
+  String get seenKryfoDoesNotScan =>
+      'Kryfo 不会扫描你的通讯录。这里根本没有手机号可以泄露。在快速模式下，我们的服务器可以根据哪些 IP 地址共用投递点拼凑出其中一部分，但不会留下任何记录。';
 
   @override
   String get seenIntroducer => '介绍人';
@@ -5152,9 +5200,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsVersion => '版本';
-
-  @override
-  String get settings030Alpha => '0.5.3 · alpha 版';
 
   @override
   String get settingsReportAnIssue => '报告问题';
@@ -6428,13 +6473,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairCodePanelYourInviteIsNot => '你的邀请还没准备好';
 
   @override
-  String get pairCodePanelReadSixDigitsOut => '把六位数字念出来，对方就能添加你。其他什么都不需要交换。';
-
-  @override
   String get pairCodePanelWorking => '处理中';
-
-  @override
-  String get pairCodePanelOrMakeASix => '或者生成一个六位数字的码，念给对方';
 
   @override
   String get pairCodePanelBurned => '这个码已经焚毁。对方准备好时再生成一个新的。';
@@ -6449,16 +6488,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pairCodePanelTheyTapAddChoose => '对方点“添加”，选择“配对码”，然后输入这些数字。';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      '对方打开 Kryfo，点“添加”，选择“配对码”，输入这六位数字。下一个人需要你再生成一个新的。';
-
-  @override
-  String get pairCodePanelYourWords => '你的三个词';
-
-  @override
-  String get pairCodePanelAcceptOnce => '对方添加你后，你会收到请求。等对方说四组数字都一致，再接受。';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -7219,6 +7248,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get languageNameHi => '印地语';
+
+  @override
+  String get languageNamePl => '波兰语';
 
   @override
   String get languageLaterLine => '你随时可以在设置里更改。';
@@ -8154,6 +8186,10 @@ class AppLocalizationsZh extends AppLocalizations {
       'Kryfo 的服务器替你向 GIF 服务查询。该服务永远看不到你，服务器也不会记录你搜了什么。';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Kryfo 的服务器替你向 GIF 服务查询，所以该服务永远看不到你。在快速模式下，我们的服务器在你搜索时能看到你的 IP 地址，但不会记录它，也不会记录你搜了什么。';
+
+  @override
   String get gifOptInLikeAPhoto => 'GIF 像照片一样加密传送。对方的手机不会下载任何东西。';
 
   @override
@@ -8178,7 +8214,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'GIF 搜索通过 Kryfo 的服务器进行，$brand 永远看不到你。要开启吗？';
+    return 'GIF 搜索直接发到 Kryfo 的服务器，在快速模式下它能看到你的 IP 地址。$brand 永远看不到你。要开启吗？';
   }
 
   @override
@@ -8306,7 +8342,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatBlockScreenshots => '禁止截屏';
 
   @override
-  String get chatShotsWhenTheyUpdate => '对方更新后即可使用';
+  String get chatShotsWhenTheyUpdate => '对方在手机上使用最新版 Kryfo 后即可使用';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => '可在 Android 版 Kryfo 中使用';
 
   @override
   String get chatShotsBothPhones =>
@@ -8372,7 +8411,14 @@ class AppLocalizationsZh extends AppLocalizations {
       'Kryfo 在这个聊天室的每部手机上禁止截屏和录屏，也禁止复制、转发或保存别人的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
 
   @override
+  String get roomShotsBlockedDesk =>
+      '此聊天室中不能复制、转发或保存彼此的消息。Android 版 Kryfo 还会禁止截屏和录屏。';
+
+  @override
   String get roomShotsAlwaysOn => '聊天室里始终开启，每部手机都一样';
+
+  @override
+  String get roomShotsAlwaysOnDesk => '聊天室里始终开启，在 Android 版 Kryfo 中';
 
   @override
   String get settingsPerChat => '按聊天设置';
@@ -8892,9 +8938,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesNoneUntilOnion => '开启 Onion 前不使用';
 
   @override
-  String get bridgesRelayWorksWhereTor => '在 Tor 被封锁的地方，快速模式也能用，随时可以切换回来。';
-
-  @override
   String get bridgesRelayThisNetworkSees =>
       '在 Tor 被封锁的地方快速模式也能连通，但这个网络能看到你在连接 Kryfo。';
 
@@ -9313,19 +9356,29 @@ class AppLocalizationsZh extends AppLocalizations {
       '在这个群组的每部手机上禁止截屏和录屏，也禁止复制、转发或保存彼此的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
 
   @override
-  String get groupShotsStartsWhenAll => '等这里的所有人更新 Kryfo';
+  String get groupShotsBlocksAllDesk =>
+      '在这里关闭复制、转发和保存彼此的消息。Android 版 Kryfo 还会禁止截屏和录屏。';
+
+  @override
+  String get groupShotsStartsWhenAll => '正在等待这里的所有人都能在自己的设备上禁止截屏';
 
   @override
   String get groupShotsOnForAll => '对这里的所有人开启';
 
   @override
+  String get groupShotsOnForAllDesk => '在 Android 版 Kryfo 中开启';
+
+  @override
   String get groupShotsOffAdminOnly => '已关闭。只有管理员能更改';
 
   @override
-  String get groupShotsWaitAdminOnly => '等这里的所有人更新 Kryfo。只有管理员能更改';
+  String get groupShotsWaitAdminOnly => '正在等待这里的所有人都能在自己的设备上禁止截屏。只有管理员能更改';
 
   @override
   String get groupShotsOnAdminOnly => '对这里的所有人开启。只有管理员能更改';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk => '在 Android 版 Kryfo 中开启。只有管理员能更改';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -9342,31 +9395,35 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => '还没更新的人';
+  String get groupShotsWaitingTitle => '尚未覆盖';
 
   @override
-  String get groupShotsWaitingHint => '这些人更新 Kryfo 后，禁止截屏就对所有人生效。点一个人可以把他移出群组。';
+  String get groupShotsWaitingHint => '这些人的设备能禁止截屏后，禁止截屏就覆盖所有人。点按某人可将其移出群组。';
 
   @override
-  String get groupShotsNeedsUpdate => '需要更新 Kryfo，或之后一直没上线';
+  String get groupShotsNeedsUpdate => '其设备暂时无法禁止截屏，或之后一直未上线';
 
   @override
   String get groupShotsBlockedByYou => '已被你屏蔽';
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      '你开启了禁止截屏。等这里的所有人都更新 Kryfo 后，它会对所有人生效。';
+      '你开启了禁止截屏。等这里的所有人都能在自己的设备上禁止截屏后，它会对所有人生效。';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name 开启了禁止截屏。等这里的所有人都更新 Kryfo 后，它会对所有人生效。';
+    return '$name 开启了禁止截屏。等这里的所有人都能在自己的设备上禁止截屏后，它会对所有人生效。';
   }
 
   @override
   String get groupShotsStarted => '禁止截屏已对这里的所有人开启。复制、转发和保存彼此的消息也已关闭。';
 
   @override
-  String get groupShotsPaused => '这里有人还不能禁止截屏。他更新 Kryfo 后，会再次对所有人生效。';
+  String get groupShotsStartedDesk =>
+      '禁止截屏已在 Android 版 Kryfo 中开启。复制、转发和保存彼此的消息也已关闭。';
+
+  @override
+  String get groupShotsPaused => '这里有人还不能在其设备上禁止截屏。等其可以后，会再次对所有人生效。';
 
   @override
   String get groupShotsCantYet => '还不能禁止截屏';
@@ -9375,13 +9432,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupShotsAddTitle => '仍要添加吗？';
 
   @override
-  String get groupShotsAddPauses => '在他更新 Kryfo 之前，禁止截屏不会对这里的所有人生效。';
+  String get groupShotsAddPauses => '在这些人能在自己的设备上禁止截屏之前，禁止截屏不会覆盖这里的所有人。';
 
   @override
   String get groupShotsLeaveStays => '禁止截屏会保持现状。';
 
   @override
   String get groupShotsBlockedHere => 'Kryfo 已在此群组中禁止截屏';
+
+  @override
+  String get groupShotsBlockedHereDesk => '此群组中不能复制、转发或保存';
 
   @override
   String get groupShotsMenuNote => '此群组中不能复制、转发或保存别人的消息';
@@ -9408,13 +9468,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devicesThisPhoneOnly => '仅这部手机';
 
   @override
+  String get devicesThisPhoneOnlyDesk => '仅这台电脑';
+
+  @override
   String get devicesNameSeparator => '、';
 
   @override
   String get devicesThisPhone => '这部手机';
 
   @override
+  String get devicesThisPhoneDesk => '这台电脑';
+
+  @override
   String get devicesOnlyThisPhone => '只有这部手机能关联或移除设备';
+
+  @override
+  String get devicesOnlyThisPhoneDesk => '只有这台电脑能关联或移除设备';
 
   @override
   String devicesLinkedOn(Object date) {
@@ -9555,7 +9624,137 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devicesHiddenStay => '隐藏聊天和伪装都留在这部手机上。';
 
   @override
+  String get devicesHiddenStayDesk => '隐藏聊天和伪装都留在这台电脑上。';
+
+  @override
   String get devicesScanCode => '扫描二维码';
+
+  @override
+  String get devicesLinkReaching => '正在连接设备';
+
+  @override
+  String get devicesLinkReachingLine => '两边都保持 Kryfo 打开。通过 Tor 可能需要一分钟。';
+
+  @override
+  String get devicesLinkCompare => '数字一致吗？';
+
+  @override
+  String get devicesLinkCompareLine => '新设备上也显示六位数字。只有相同时才关联。';
+
+  @override
+  String get devicesLinkMatch => '一致';
+
+  @override
+  String get devicesLinkNoMatch => '不一致';
+
+  @override
+  String get devicesLinkLinking => '正在关联';
+
+  @override
+  String get devicesLinkLinkingLine => '正在设置新设备。两边都保持打开。';
+
+  @override
+  String get devicesLinkDone => '设备已关联';
+
+  @override
+  String get devicesLinkDoneLine => '它显示在“已关联的设备”中，你可以在那里重命名或移除它。';
+
+  @override
+  String get devicesLinkUnreached => '无法连接到设备';
+
+  @override
+  String get devicesLinkUnreachedLine => '确认新设备上的 Kryfo 已打开并显示二维码，然后重试。';
+
+  @override
+  String get devicesLinkStopped => '没有关联任何设备';
+
+  @override
+  String get devicesLinkStoppedLine => '数字必须一致。用新的二维码重新开始。';
+
+  @override
+  String get devicesLinkInterruptedLine => '关联被中断了。用新的二维码重新开始。';
+
+  @override
+  String get scanLinkTitle => '扫描设备的二维码';
+
+  @override
+  String get scanLinkPoint => '对准新设备上的二维码';
+
+  @override
+  String get scanLinkNotOne => '这不是关联用的二维码';
+
+  @override
+  String get onboardingLinkToMyPhone => '关联到我的手机';
+
+  @override
+  String get joinTitle => '关联到你的手机';
+
+  @override
+  String get joinStep1 => '在手机上打开 Kryfo。';
+
+  @override
+  String get joinStep2 => '进入设置，然后“已关联的设备”，然后“关联设备”。';
+
+  @override
+  String get joinStep3 => '用手机扫描这个二维码。';
+
+  @override
+  String get joinWaiting => '正在等待你的手机';
+
+  @override
+  String get joinCodeLife => '二维码十分钟内有效。';
+
+  @override
+  String get joinCompareLine => '你的手机上也显示六位数字。只有相同时才继续。';
+
+  @override
+  String get joinLinking => '正在关联到你的手机';
+
+  @override
+  String get joinLinkingLine => '完成前请保持手机上的 Kryfo 打开。';
+
+  @override
+  String get joinDone => '已关联到你的手机';
+
+  @override
+  String get joinDoneLine => '新消息现在也会到达这台设备。你账号的密钥号码：';
+
+  @override
+  String get joinOpen => '打开 Kryfo';
+
+  @override
+  String get joinUnreached => '无法连接到你的手机';
+
+  @override
+  String get joinUnreachedLine => '确认手机已联网并打开了 Kryfo，然后换一个新的二维码再试。';
+
+  @override
+  String get joinNewCode => '新二维码';
+
+  @override
+  String get devicesNewNotice => '已关联新设备';
+
+  @override
+  String devicesNewNoticeLine(Object name, Object date) {
+    return '$name 于 $date 关联到你的账号。打开“已关联的设备”查看。';
+  }
+
+  @override
+  String get devicesNewNoticeMany => '已关联几台新设备';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names 已关联到你的账号。打开“已关联的设备”查看。';
+  }
+
+  @override
+  String get devicesNewNoticeOpen => '打开';
+
+  @override
+  String get settingsLinkedToLine => '已关联到你的手机。备份和邀请留在手机上。';
+
+  @override
+  String get devicesYourPhone => '你的手机';
 
   @override
   String get desktopLockTitle => 'Kryfo 已锁定';
@@ -9706,7 +9905,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      '不经过 Tor，消息到得更快，也更省电。我们的服务器只在你连接期间看到你的 IP 地址，从不记录或保存。也从不知道你说了什么。你的联系人永远看不到它。';
+      '不经过 Tor，消息到得更快，也更省电。我们的服务器只在你连接期间看到你的 IP 地址，从不记录或保存。你的联系人永远看不到它。你的网络能看到你在连接 Kryfo。';
 
   @override
   String get modesFastConnected => '快速 · 已连接';
@@ -9806,7 +10005,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeSwitchedToFastRoute => '已切换到快速';
 
   @override
-  String get bridgesFastGetsThrough => '快速模式直连我们的服务器，通常都能连通。也可以让 Kryfo 自己找办法。';
+  String get bridgesBridgeFirstFastSeen =>
+      '让 Kryfo 找一个能连通的网桥。快速模式也行，但这个网络能看到你在连接 Kryfo。';
 
   @override
   String get appServersNotAnswering => '服务器没有响应';
@@ -9816,6 +10016,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get seenOurServers => '我们的服务器';
+
+  @override
+  String get seenOurServersCould => '我们的服务器可能看到';
 
   @override
   String get seenIpWhy =>
@@ -10220,6 +10423,80 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get desktopBackupHint => '如果这台电脑被重置，它能找回一切。';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name 重新设置了 Kryfo';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return '$name 的设备开始了新的安全会话';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return '你之前验证过 $name。在你核对安全码或继续聊天之前，什么都不会发出。对方的消息仍会收到。';
+  }
+
+  @override
+  String get chatKeepChatting => '继续聊天';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '$name 需要更新 Kryfo 才能继续聊天。';
+  }
+
+  @override
+  String get restoreOlderTitle => '部分聊天将暂停';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '$name 使用的是旧版 Kryfo。在对方更新前，你们的聊天会暂停。';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '$first 和 $second 使用的是旧版 Kryfo。在他们更新前，你和他们的聊天会暂停。';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return '$first、$second 和另外 $count 人使用的是旧版 Kryfo。在他们更新前，你和他们的聊天会暂停。';
+  }
+
+  @override
+  String settingsVersionAlpha(String version) {
+    return '$version · alpha 版';
+  }
+
+  @override
+  String get settingsShotsNotHereYet => '这台电脑上暂不支持';
+
+  @override
+  String get settingsDeskInTray => '在系统托盘中运行';
+
+  @override
+  String get settingsDeskWhileOpen => 'Kryfo 打开期间';
+
+  @override
+  String get onboardingDeskRunTitle => 'Kryfo 一直*在线*。';
+
+  @override
+  String get onboardingDeskRunLead =>
+      '关闭窗口后，Kryfo 在系统托盘中等候，消息照常到达。之后可以在“设置”的“通知”里更改这两项。';
+
+  @override
+  String get savedLongPressAnyMessageDesk => '右键点击任意消息，选“保存”，就能把它留在这里。';
+
+  @override
+  String get chatFailedTapToRetryDesk => '失败 · 单击重试';
+
+  @override
+  String get groupChatTapToRetryDesk => '! 单击重试';
+
+  @override
+  String get chatDropHereToSend => '拖到这里松开即可发送';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -12602,6 +12879,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '訊息即時送達。任何東西都不會離開 Tor。最耗電。';
 
   @override
+  String get gettingMessagesArriveInstantlyFast => '在快速模式下，訊息即時送達。最耗電。';
+
+  @override
   String get gettingMessagesCheckIns => '定時查收';
 
   @override
@@ -14304,9 +14584,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pairCodeEnterOne => '輸入配對碼';
 
   @override
-  String get pairCodeSixDigits => '六位數字';
-
-  @override
   String get pairCodeLooking => '尋找中…';
 
   @override
@@ -14319,34 +14596,78 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pairCodeUnreached => '聯絡不上中繼。請稍後再試。';
 
   @override
-  String get pairCodeFailed => '沒有成功。請再試一次。';
+  String get fastRoomsWaitForTor => '聊天室、配對碼和首次聯繫始終透過 Tor，快速模式下也一樣。Tor 一連上就能用。';
 
   @override
-  String get pairCodeTypeTheSixDigits => '輸入對方唸出的六位數字。';
+  String get pairCodeFailed => '沒有成功。請再試一次。';
 
   @override
   String get pairCodeAddThem => '新增對方';
 
   @override
-  String get pairCodeUsedTwice => '這組碼被用了兩次。請對方再產生一組新的。';
-
-  @override
   String get pairCodeKeyNumber => '金鑰號碼';
 
   @override
-  String get pairCodeNumberMatches => '核對兩支手機上的四組數字是否全部一致';
-
-  @override
-  String get pairCodeNumberMatchesDesk => '核對兩台裝置上的四組數字是否全部一致';
-
-  @override
-  String get pairCodeNumberDiffers => '號碼不一致';
-
-  @override
-  String get pairCodeNoNumberThere => '對方螢幕上沒有號碼？先加入，再在聊天裡核對安全碼。';
-
-  @override
   String get pairCodeNotAdded => '未新增。請對方再產生一組新的碼。';
+
+  @override
+  String get pairCodeEightDigits => '八位數字';
+
+  @override
+  String get pairCodeTypeTheEightDigits => '輸入對方唸出的八位數字。';
+
+  @override
+  String get pairCodeOldCode => '這個碼來自較舊的 Kryfo。兩支手機都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeOldCodeDesk => '這個碼來自較舊的 Kryfo。兩台裝置都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeBothNeed06 => '兩支手機都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeBothNeed06Desk => '兩台裝置都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeWaitingForThem => '正在等待對方…';
+
+  @override
+  String get pairCodeStillWaiting => '還在等待。如果對方螢幕顯示輸入了錯誤的碼，請一起核對數字。';
+
+  @override
+  String get pairCodeUnanswered => '沒有收到回應。請和對方核對碼，然後重新輸入。';
+
+  @override
+  String get pairCodeTooManyTries => '這個碼已經試了三次。請對方重新產生一個。';
+
+  @override
+  String get pairCodeRanOut => '這個碼已過期。請對方重新產生一個。';
+
+  @override
+  String get pairCodeMatched => '碼已相符。要互相新增嗎？';
+
+  @override
+  String get pairCodeNotThem => '不是對方';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut =>
+      '大聲唸出八位數字，你們就能互相新增。不需要交換其他任何東西。';
+
+  @override
+  String get pairCodePanelOrMakeACode => '或產生一組配對碼唸給對方';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      '對方開啟 Kryfo，點「新增」，選擇「配對碼」，再輸入這八位數字。下一個人請再產生一組新的。';
+
+  @override
+  String get pairCodePanelWrongTyped => '對方輸入了錯誤的碼。請再慢慢唸一遍。';
+
+  @override
+  String get pairCodePanelThreeWrong => '錯誤的碼已輸入三次，這個碼已停止使用。請產生一個新的。';
+
+  @override
+  String get pairCodePanelNotAdded => '未新增。對方準備好時再產生一組新的碼。';
 
   @override
   String get panicSetupThoseWereDifferentFrom => '兩次不一樣。從頭再來。';
@@ -14869,6 +15190,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get restoreNotificationsNeedSettingUp => '需要在這台裝置上重新設定通知。';
 
   @override
+  String get restoreDeletedComeBack =>
+      '這份備份建立之後你刪除的聊天會隨它回來，那些聯絡人可能會看到你重新設定了 Kryfo。';
+
+  @override
   String get restoreMoveItHere => '搬到這裡';
 
   @override
@@ -15109,7 +15434,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get seenEachConversationGetsIts =>
-      '每段對話都有自己的位址，由雙方的金鑰推導而來。中繼看到的是一個個互不相關的投遞點，而不是一對人。';
+      '每段對話都有自己的位址，由雙方的金鑰推導而來。中繼看到的是一個個互不相關的投遞點，而不是一對人。在快速模式下，我們的伺服器能看到你所用投遞點上的 IP 位址；如果對話雙方都用快速模式，還能看到兩個 IP 位址共用一個投遞點。';
 
   @override
   String get seenWhatYouSay => '你說了什麼';
@@ -15125,7 +15450,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get seenYourContactGraph => '你的聯絡人關係圖';
 
   @override
-  String get seenKryfoDoesNotScan => 'Kryfo 不會掃描你的通訊錄。這裡根本沒有手機號碼可以外洩。';
+  String get seenKryfoDoesNotScan =>
+      'Kryfo 不會掃描你的通訊錄。這裡根本沒有手機號碼可以外洩。在快速模式下，我們的伺服器可以根據哪些 IP 位址共用投遞點拼湊出其中一部分，但不會留下任何記錄。';
 
   @override
   String get seenIntroducer => '介紹人';
@@ -15371,9 +15697,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsVersion => '版本';
-
-  @override
-  String get settings030Alpha => '0.5.3 · alpha 版';
 
   @override
   String get settingsReportAnIssue => '回報問題';
@@ -16647,13 +16970,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pairCodePanelYourInviteIsNot => '你的邀請還沒準備好';
 
   @override
-  String get pairCodePanelReadSixDigitsOut => '大聲唸出六位數字，對方就能新增你。不需要交換其他任何東西。';
-
-  @override
   String get pairCodePanelWorking => '處理中';
-
-  @override
-  String get pairCodePanelOrMakeASix => '或產生一組六位數的配對碼唸給對方';
 
   @override
   String get pairCodePanelBurned => '這個碼已經焚毀。對方準備好時再產生一個新的。';
@@ -16668,16 +16985,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pairCodePanelTheyTapAddChoose => '對方點「新增」，選擇「配對碼」，然後輸入這些數字。';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      '對方開啟 Kryfo，點「新增」，選擇「配對碼」，再輸入這六位數字。下一個人請再產生一組新的。';
-
-  @override
-  String get pairCodePanelYourWords => '你的三個詞';
-
-  @override
-  String get pairCodePanelAcceptOnce => '對方加入你之後，你會收到請求。等對方說四組數字都一致，再接受。';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -17438,6 +17745,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get languageNameHi => '印地語';
+
+  @override
+  String get languageNamePl => '波蘭文';
 
   @override
   String get languageLaterLine => '你隨時可以在設定中更改。';
@@ -18254,6 +18564,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       'Kryfo 的伺服器替你向 GIF 服務查詢。該服務永遠看不到你，伺服器也不會記錄你搜尋了什麼。';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Kryfo 的伺服器替你向 GIF 服務查詢，所以該服務永遠看不到你。在快速模式下，我們的伺服器在你搜尋時能看到你的 IP 位址，但不會記錄它，也不會記錄你搜尋了什麼。';
+
+  @override
   String get gifOptInLikeAPhoto => 'GIF 像照片一樣加密傳送。對方的手機不會下載任何東西。';
 
   @override
@@ -18278,7 +18592,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'GIF 搜尋透過 Kryfo 的伺服器進行，$brand 永遠看不到你。要開啟嗎？';
+    return 'GIF 搜尋直接送到 Kryfo 的伺服器，在快速模式下它能看到你的 IP 位址。$brand 永遠看不到你。要開啟嗎？';
   }
 
   @override
@@ -18406,7 +18720,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatBlockScreenshots => '禁止截圖';
 
   @override
-  String get chatShotsWhenTheyUpdate => '對方更新後即可使用';
+  String get chatShotsWhenTheyUpdate => '對方在手機上使用最新版 Kryfo 後即可使用';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => '可在 Android 版 Kryfo 中使用';
 
   @override
   String get chatShotsBothPhones =>
@@ -18472,7 +18789,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       'Kryfo 在這個聊天室的每支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存別人的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
 
   @override
+  String get roomShotsBlockedDesk =>
+      '此聊天室中不能複製、轉傳或儲存彼此的訊息。Android 版 Kryfo 還會禁止截圖和螢幕錄影。';
+
+  @override
   String get roomShotsAlwaysOn => '聊天室裡一律開啟，每支手機都一樣';
+
+  @override
+  String get roomShotsAlwaysOnDesk => '聊天室裡一律開啟，在 Android 版 Kryfo 中';
 
   @override
   String get settingsPerChat => '依聊天設定';
@@ -18992,9 +19316,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesNoneUntilOnion => '開啟 Onion 前不使用';
 
   @override
-  String get bridgesRelayWorksWhereTor => '在 Tor 被封鎖的地方，快速模式也能用，隨時可以切換回來。';
-
-  @override
   String get bridgesRelayThisNetworkSees =>
       '在 Tor 被封鎖的地方快速模式也能連通，但這個網路能看到你在連線 Kryfo。';
 
@@ -19414,19 +19735,29 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '在這個群組的每支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存彼此的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
 
   @override
-  String get groupShotsStartsWhenAll => '等這裡的所有人更新 Kryfo';
+  String get groupShotsBlocksAllDesk =>
+      '在這裡關閉複製、轉傳和儲存彼此的訊息。Android 版 Kryfo 還會禁止截圖和螢幕錄影。';
+
+  @override
+  String get groupShotsStartsWhenAll => '正在等待這裡的所有人都能在自己的裝置上禁止截圖';
 
   @override
   String get groupShotsOnForAll => '對這裡的所有人開啟';
 
   @override
+  String get groupShotsOnForAllDesk => '在 Android 版 Kryfo 中開啟';
+
+  @override
   String get groupShotsOffAdminOnly => '已關閉。只有管理員能變更';
 
   @override
-  String get groupShotsWaitAdminOnly => '等這裡的所有人更新 Kryfo。只有管理員能變更';
+  String get groupShotsWaitAdminOnly => '正在等待這裡的所有人都能在自己的裝置上禁止截圖。只有管理員能變更';
 
   @override
   String get groupShotsOnAdminOnly => '對這裡的所有人開啟。只有管理員能變更';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk => '在 Android 版 Kryfo 中開啟。只有管理員能變更';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -19443,31 +19774,35 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get groupShotsWaitingTitle => '還沒更新的人';
+  String get groupShotsWaitingTitle => '尚未涵蓋';
 
   @override
-  String get groupShotsWaitingHint => '這些人更新 Kryfo 後，禁止截圖就對所有人生效。點一個人可以把他移出群組。';
+  String get groupShotsWaitingHint => '這些人的裝置能禁止截圖後，禁止截圖就涵蓋所有人。點按某人可將其移出群組。';
 
   @override
-  String get groupShotsNeedsUpdate => '需要更新 Kryfo，或之後一直沒上線';
+  String get groupShotsNeedsUpdate => '其裝置暫時無法禁止截圖，或之後一直未上線';
 
   @override
   String get groupShotsBlockedByYou => '已被你封鎖';
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      '你開啟了禁止截圖。等這裡的所有人都更新 Kryfo 後，它會對所有人生效。';
+      '你開啟了禁止截圖。等這裡的所有人都能在自己的裝置上禁止截圖後，它會對所有人生效。';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name 開啟了禁止截圖。等這裡的所有人都更新 Kryfo 後，它會對所有人生效。';
+    return '$name 開啟了禁止截圖。等這裡的所有人都能在自己的裝置上禁止截圖後，它會對所有人生效。';
   }
 
   @override
   String get groupShotsStarted => '禁止截圖已對這裡的所有人開啟。複製、轉傳和儲存彼此的訊息也已關閉。';
 
   @override
-  String get groupShotsPaused => '這裡有人還不能禁止截圖。他更新 Kryfo 後，會再次對所有人生效。';
+  String get groupShotsStartedDesk =>
+      '禁止截圖已在 Android 版 Kryfo 中開啟。複製、轉傳和儲存彼此的訊息也已關閉。';
+
+  @override
+  String get groupShotsPaused => '這裡有人還不能在其裝置上禁止截圖。等其可以後，會再次對所有人生效。';
 
   @override
   String get groupShotsCantYet => '還不能禁止截圖';
@@ -19476,13 +19811,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupShotsAddTitle => '仍要新增嗎？';
 
   @override
-  String get groupShotsAddPauses => '在他更新 Kryfo 之前，禁止截圖不會對這裡的所有人生效。';
+  String get groupShotsAddPauses => '在這些人能在自己的裝置上禁止截圖之前，禁止截圖不會涵蓋這裡的所有人。';
 
   @override
   String get groupShotsLeaveStays => '禁止截圖會維持現狀。';
 
   @override
   String get groupShotsBlockedHere => 'Kryfo 已在此群組中禁止截圖';
+
+  @override
+  String get groupShotsBlockedHereDesk => '此群組中不能複製、轉傳或儲存';
 
   @override
   String get groupShotsMenuNote => '此群組中不能複製、轉傳或儲存別人的訊息';
@@ -19509,13 +19847,22 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devicesThisPhoneOnly => '僅這支手機';
 
   @override
+  String get devicesThisPhoneOnlyDesk => '僅這台電腦';
+
+  @override
   String get devicesNameSeparator => '、';
 
   @override
   String get devicesThisPhone => '這支手機';
 
   @override
+  String get devicesThisPhoneDesk => '這台電腦';
+
+  @override
   String get devicesOnlyThisPhone => '只有這支手機能連結或移除裝置';
+
+  @override
+  String get devicesOnlyThisPhoneDesk => '只有這台電腦能連結或移除裝置';
 
   @override
   String devicesLinkedOn(Object date) {
@@ -19656,7 +20003,137 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devicesHiddenStay => '隱藏聊天和偽裝都留在這支手機上。';
 
   @override
+  String get devicesHiddenStayDesk => '隱藏聊天和偽裝都留在這台電腦上。';
+
+  @override
   String get devicesScanCode => '掃描 QR 碼';
+
+  @override
+  String get devicesLinkReaching => '正在連線到裝置';
+
+  @override
+  String get devicesLinkReachingLine => '兩邊都保持 Kryfo 開啟。透過 Tor 可能需要一分鐘。';
+
+  @override
+  String get devicesLinkCompare => '數字一致嗎？';
+
+  @override
+  String get devicesLinkCompareLine => '新裝置上也顯示六位數字。只有相同時才連結。';
+
+  @override
+  String get devicesLinkMatch => '一致';
+
+  @override
+  String get devicesLinkNoMatch => '不一致';
+
+  @override
+  String get devicesLinkLinking => '正在連結';
+
+  @override
+  String get devicesLinkLinkingLine => '正在設定新裝置。兩邊都保持開啟。';
+
+  @override
+  String get devicesLinkDone => '裝置已連結';
+
+  @override
+  String get devicesLinkDoneLine => '它會顯示在「已連結的裝置」中，你可以在那裡重新命名或移除它。';
+
+  @override
+  String get devicesLinkUnreached => '無法連線到裝置';
+
+  @override
+  String get devicesLinkUnreachedLine => '確認新裝置上的 Kryfo 已開啟並顯示 QR 碼，然後再試一次。';
+
+  @override
+  String get devicesLinkStopped => '沒有連結任何裝置';
+
+  @override
+  String get devicesLinkStoppedLine => '數字必須一致。用新的 QR 碼重新開始。';
+
+  @override
+  String get devicesLinkInterruptedLine => '連結被中斷了。用新的 QR 碼重新開始。';
+
+  @override
+  String get scanLinkTitle => '掃描裝置的 QR 碼';
+
+  @override
+  String get scanLinkPoint => '對準新裝置上的 QR 碼';
+
+  @override
+  String get scanLinkNotOne => '這不是連結用的 QR 碼';
+
+  @override
+  String get onboardingLinkToMyPhone => '連結到我的手機';
+
+  @override
+  String get joinTitle => '連結到你的手機';
+
+  @override
+  String get joinStep1 => '在手機上開啟 Kryfo。';
+
+  @override
+  String get joinStep2 => '前往設定，然後「已連結的裝置」，然後「連結裝置」。';
+
+  @override
+  String get joinStep3 => '用手機掃描這個 QR 碼。';
+
+  @override
+  String get joinWaiting => '正在等待你的手機';
+
+  @override
+  String get joinCodeLife => 'QR 碼十分鐘內有效。';
+
+  @override
+  String get joinCompareLine => '你的手機上也顯示六位數字。只有相同時才繼續。';
+
+  @override
+  String get joinLinking => '正在連結到你的手機';
+
+  @override
+  String get joinLinkingLine => '完成前請保持手機上的 Kryfo 開啟。';
+
+  @override
+  String get joinDone => '已連結到你的手機';
+
+  @override
+  String get joinDoneLine => '新訊息現在也會送達這台裝置。你帳號的金鑰號碼：';
+
+  @override
+  String get joinOpen => '開啟 Kryfo';
+
+  @override
+  String get joinUnreached => '無法連線到你的手機';
+
+  @override
+  String get joinUnreachedLine => '確認手機已連線並開啟 Kryfo，然後換一個新的 QR 碼再試。';
+
+  @override
+  String get joinNewCode => '新 QR 碼';
+
+  @override
+  String get devicesNewNotice => '已連結新裝置';
+
+  @override
+  String devicesNewNoticeLine(Object name, Object date) {
+    return '$name 於 $date 連結到你的帳號。開啟「已連結的裝置」查看。';
+  }
+
+  @override
+  String get devicesNewNoticeMany => '已連結幾台新裝置';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names 已連結到你的帳號。開啟「已連結的裝置」查看。';
+  }
+
+  @override
+  String get devicesNewNoticeOpen => '開啟';
+
+  @override
+  String get settingsLinkedToLine => '已連結到你的手機。備份和邀請會留在手機上。';
+
+  @override
+  String get devicesYourPhone => '你的手機';
 
   @override
   String get desktopLockTitle => 'Kryfo 已鎖定';
@@ -19808,7 +20285,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get modesFastLine =>
-      '不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。也從不知道你說了什麼。你的聯絡人永遠看不到它。';
+      '不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。你的聯絡人永遠看不到它。你的網路能看到你在連線 Kryfo。';
 
   @override
   String get modesFastConnected => '快速 · 已連線';
@@ -19908,7 +20385,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeSwitchedToFastRoute => '已切換到快速';
 
   @override
-  String get bridgesFastGetsThrough => '快速模式直連我們的伺服器，通常都能連通。也可以讓 Kryfo 自己找辦法。';
+  String get bridgesBridgeFirstFastSeen =>
+      '讓 Kryfo 找一個能連通的橋接。快速模式也行，但這個網路能看到你在連線 Kryfo。';
 
   @override
   String get appServersNotAnswering => '伺服器沒有回應';
@@ -19918,6 +20396,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get seenOurServers => '我們的伺服器';
+
+  @override
+  String get seenOurServersCould => '我們的伺服器可能看到';
 
   @override
   String get seenIpWhy =>
@@ -20323,4 +20804,78 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get desktopBackupHint => '如果這台電腦被重設，它能找回一切。';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name 重新設定了 Kryfo';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return '$name 的裝置開始了新的安全工作階段';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return '你之前驗證過 $name。在你核對安全碼或繼續聊天之前，什麼都不會送出。對方的訊息仍會收到。';
+  }
+
+  @override
+  String get chatKeepChatting => '繼續聊天';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '$name 需要更新 Kryfo 才能繼續聊天。';
+  }
+
+  @override
+  String get restoreOlderTitle => '部分聊天將暫停';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '$name 使用的是舊版 Kryfo。在對方更新前，你們的聊天會暫停。';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '$first 和 $second 使用的是舊版 Kryfo。在他們更新前，你和他們的聊天會暫停。';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return '$first、$second 和另外 $count 人使用的是舊版 Kryfo。在他們更新前，你和他們的聊天會暫停。';
+  }
+
+  @override
+  String settingsVersionAlpha(String version) {
+    return '$version · alpha 版';
+  }
+
+  @override
+  String get settingsShotsNotHereYet => '這台電腦上暫不支援';
+
+  @override
+  String get settingsDeskInTray => '在系統匣中執行';
+
+  @override
+  String get settingsDeskWhileOpen => 'Kryfo 開啟期間';
+
+  @override
+  String get onboardingDeskRunTitle => 'Kryfo 一直*在線*。';
+
+  @override
+  String get onboardingDeskRunLead =>
+      '關閉視窗後，Kryfo 在系統匣中等候，訊息照常送達。之後可以在「設定」的「通知」裡變更這兩項。';
+
+  @override
+  String get savedLongPressAnyMessageDesk => '在任何訊息上按右鍵，再選「儲存」，就能收藏在這裡。';
+
+  @override
+  String get chatFailedTapToRetryDesk => '失敗 · 按一下重試';
+
+  @override
+  String get groupChatTapToRetryDesk => '! 按一下重試';
+
+  @override
+  String get chatDropHereToSend => '拖到這裡放開即可傳送';
 }

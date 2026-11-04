@@ -153,6 +153,9 @@ extension AppStatePqRestart on AppState {
         final info = await signalSession.sessionInfo(id);
         final their = info?.remoteIdentity;
         if (info == null || their == null || info.current == null) continue;
+        // a session a restore brought back waits for its heal, which
+        // builds a pq one (identity v4 8, 3.8): no KDB1 for it
+        if (await signalSession.sealsOnRestored(id)) continue;
         final key = _hexOf(their);
         final row = await _pqRow(db, id, key);
         // over already: _pqDrops lets its classic states go
