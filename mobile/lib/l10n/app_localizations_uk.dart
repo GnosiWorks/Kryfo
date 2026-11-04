@@ -1599,16 +1599,18 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'Не вдалося очистити цей GIF';
 
   @override
-  String get chatTorIsNotUp => 'Tor ще не запущено · піде без прев’ю';
+  String get chatTorIsNotUp => 'Tor ще не під’єднано · без прев’ю посилання';
 
   @override
-  String get chatCouldnTReachIt => 'Сайт не відповідає · піде без прев’ю';
+  String get chatCouldnTReachIt =>
+      'Не вдалося відкрити сторінку · без прев’ю посилання';
 
   @override
-  String get chatNoTitleCameBack => 'Заголовка немає · піде без прев’ю';
+  String get chatNoTitleCameBack =>
+      'Сторінка не має заголовка · без прев’ю посилання';
 
   @override
-  String get chatCouldnTFetchIt => 'Не вдалося завантажити · піде без прев’ю';
+  String get chatCouldnTFetchIt => 'Не вдалося завантажити прев’ю';
 
   @override
   String get chatNoSignalSessionRe => 'Немає сесії Signal. З’єднайся заново';
@@ -2606,17 +2608,19 @@ class AppLocalizationsUk extends AppLocalizations {
   String get groupChatMessageUnavailable => 'Повідомлення недоступне';
 
   @override
-  String get groupChatTorIsNotUp => 'Tor ще не запущено · піде без прев’ю';
+  String get groupChatTorIsNotUp =>
+      'Tor ще не під’єднано · без прев’ю посилання';
 
   @override
-  String get groupChatCouldnTReachIt => 'Сайт не відповідає · піде без прев’ю';
+  String get groupChatCouldnTReachIt =>
+      'Не вдалося відкрити сторінку · без прев’ю посилання';
 
   @override
-  String get groupChatNoTitleCameBack => 'Заголовка немає · піде без прев’ю';
+  String get groupChatNoTitleCameBack =>
+      'Сторінка не має заголовка · без прев’ю посилання';
 
   @override
-  String get groupChatCouldnTFetchIt =>
-      'Не вдалося завантажити · піде без прев’ю';
+  String get groupChatCouldnTFetchIt => 'Не вдалося завантажити прев’ю';
 
   @override
   String get groupChatCamera => 'Камера';
@@ -10625,7 +10629,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'Без Tor повідомлення приходять швидше й витрачають менше заряду. Наші сервери бачать твою IP-адресу лише поки ти підключений і ніколи її не записують і не зберігають. І ніколи не бачать, що ти пишеш. Твої контакти її ніколи не бачать. Твоя мережа може бачити, що ти підключаєшся до Kryfo.';
+      'Без Tor повідомлення приходять швидше й витрачають менше заряду. Наші сервери бачать твою IP-адресу лише поки ти підключений і ніколи її не записують і не зберігають. Твої контакти її ніколи не бачать. Твоя мережа може бачити, що ти підключаєшся до Kryfo.';
 
   @override
   String get modesFastConnected => 'Швидкий · підключено';
@@ -11183,7 +11187,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String chatHealNewSession(Object name) {
-    return 'Телефон $name почав новий захищений сеанс';
+    return 'Пристрій $name почав новий захищений сеанс';
   }
 
   @override
@@ -11249,6 +11253,73 @@ class AppLocalizationsUk extends AppLocalizations {
   String get groupChatTapToRetryDesk => '! Клацни ще раз';
 
   @override
-  String get modesFastLineDesk =>
-      'Без Tor повідомлення приходять швидше й витрачають менше заряду. Наші сервери бачать твою IP-адресу лише поки ти підключений і ніколи її не записують і не зберігають. Твої контакти її ніколи не бачать. Твоя мережа може бачити, що ти підключаєшся до Kryfo.';
+  String get chatDropHereToSend => 'Відпусти тут, щоб надіслати';
+
+  @override
+  String get voiceSeeTranscription => 'Показати текст';
+
+  @override
+  String get voiceTranscribing => 'Розпізнаємо…';
+
+  @override
+  String get voiceHideTranscription => 'Сховати';
+
+  @override
+  String get voiceShowOriginalOnly => 'Лише оригінал';
+
+  @override
+  String get voiceCouldNotTranscribe => 'Не вдалося розібрати слова';
+
+  @override
+  String get voiceTranscriptLabel => 'Текст повідомлення';
+
+  @override
+  String get voiceSettingsTitle => 'Голос у текст';
+
+  @override
+  String get voiceOnRow => 'Розпізнавати голосові';
+
+  @override
+  String get voiceOnHint => 'Пропонується під кожним голосовим';
+
+  @override
+  String get voiceOffDeletes => 'Якщо вимкнути, збережені тексти видаляться.';
+
+  @override
+  String get voiceModelTitle => 'Модель мовлення';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'Одне завантаження близько $size для всіх мов.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'Завантажується через Tor і зберігається на цьому телефоні. Ваші голосові ніколи його не залишають.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'Завантажується через Tor і зберігається на цьому комп’ютері. Ваші голосові ніколи його не залишають.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'Tor ще не підключений. Модель завантажується лише через Tor, тож спробуйте знову, коли він підключиться.';
+
+  @override
+  String get voiceModelRemoveTitle => 'Видалити модель мовлення?';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'Готові тексти залишаться. Для нових знову знадобиться модель.';
+
+  @override
+  String get voiceKeptNote =>
+      'Тексти зберігаються зашифрованими разом із чатом на цьому телефоні й видаляються разом із ним.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'Тексти зберігаються зашифрованими разом із чатом на цьому комп’ютері й видаляються разом із ним.';
+
+  @override
+  String get voiceNotNow => 'Не зараз';
 }

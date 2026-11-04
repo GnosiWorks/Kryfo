@@ -1047,6 +1047,124 @@ void main() {
     expect(done['bundles'], '');
   });
 
+  test('a list\'s copy to each device goes again until that device\'s '
+      'receipt, and a device of theirs listed after the bundles were taken '
+      'gets one of its own on the retry', () async {
+    if (skip()) return;
+    linkedDevicesForTest = true;
+    final w = await world();
+    await answerAll(w);
+    await w.ds.call(w.db, 'pool_put', {
+      'ident': kMainIdent,
+      'device': 9,
+      'once': [
+        for (var i = 0; i < 6; i++) base64Encode(await w.desk.ds.makeBundle(9)),
+      ],
+      'last': base64Encode(await w.desk.ds.lastResortBundle(9)),
+      'made': w.now(),
+      'now': w.now(),
+    });
+    await w.send.devicesShown(kMainIdent, w.toBob.identity);
+    w.wait(const Duration(minutes: 11));
+    var ok = false;
+    final phones = <String>[];
+    Future<void> push() => w.send.pushes(
+      contact: (i, id) async =>
+          id == w.toBob.identity ? (me: w.me, c: w.toBob) : null,
+      phone: (me, c) => phoneOf(w.ana, c.peer),
+      send: (me, c, cipher) async {
+        phones.add(cipher);
+        return ok;
+      },
+    );
+    Future<Set<int>> spent() async => {
+      for (final r in await w.db.query('dev_pool', where: 'kdb1 IS NULL'))
+        r['kyber_id'] as int,
+    };
+    await push();
+    await settle(w.wire, 2);
+    final first = await spent();
+    expect({for (final s in w.wire.sent) s.device}, {5, 17});
+    final owed = await w.db.query('dev_out', where: "uid LIKE 'dl:%'");
+    expect({for (final r in owed) r['device']}, {5, 17});
+    expect({for (final r in owed) r['uid']}, {'dl:4000'});
+    expect({for (final r in owed) r['state']}, {'sent'});
+    String dlTo(int dev) =>
+        w.wire.sent.firstWhere((s) => s.device == dev).cipher;
+    final dl5 = dlTo(5);
+    final dl17 = dlTo(17);
+    // bob links device 40 before the push goes, and it answers
+    final late = _Dev(40, await testStore());
+    await w.ds.session(w.db, 'accept', {
+      'identity': w.toBob.identity,
+      'list': base64Encode(
+        _list(w.bobId, w.bob.registrationId, 7001, [
+          for (final d in [...w.bobs, late])
+            (dev: d.id, key: d.key, reg: d.reg),
+        ]),
+      ),
+    }, SessionRemote.opened(w.bob.identity.public));
+    await w.anaDs.build(
+      'bob-quiet-river',
+      40,
+      w.ana.lib.parseDeviceBundle(
+        await late.ds.makeBundle(40),
+        w.bob.identity.public,
+      ),
+      late.key,
+      late.reg,
+    );
+    // a message to bob opens the pair to 40, which answers
+    final k0 = w.wire.sent.length;
+    await w.send.burst(w.me, w.toBob, 'halo/1:{"u":"u-late","m":"hi"}');
+    await settle(w.wire, k0 + 3);
+    final hello = w.wire.sent.sublist(k0).singleWhere((s) => s.device == 40);
+    expect(hello.opener, isTrue);
+    await _openOn(late, 'ana', w.ana, hello.cipher);
+    final a = _wireOf(
+      await late.ds.seal('ana', 1, 'halo/1:{}', w.ana.identity.public),
+    );
+    await w.anaDs.open(
+      'bob-quiet-river',
+      40,
+      a.$1,
+      a.$2,
+      late.key,
+      reg: late.reg,
+    );
+    ok = true;
+    w.wait(const Duration(minutes: 3));
+    final n = w.wire.sent.length;
+    await push();
+    await settle(w.wire, n + 1);
+    // 5 and 17 are owed already: only 40, with a bundle of its own
+    final went = w.wire.sent.sublist(n);
+    expect([for (final s in went) s.device], [40]);
+    final j = _json(await _openOn(late, 'ana', w.ana, went.single.cipher));
+    expect(j['u'], 'dl:4000');
+    final k = w.bob.lib
+        .parseDeviceBundle(
+          base64Decode((j['db'] as List).single as String),
+          w.ana.identity.public,
+        )
+        .bundle
+        .kyberPreKeyId;
+    expect(first, isNot(contains(k)));
+    expect(await spent(), {...first, k});
+    // 5's receipt ends its copy; 17's goes again six hours on, the same wire
+    await w.send.receipt(kMainIdent, w.toBob.identity, 5, 'dl:4000');
+    w.wait(const Duration(hours: 6, minutes: 1));
+    final m = w.wire.sent.length;
+    await w.send.pump();
+    await settle(w.wire, m + 1);
+    final again = w.wire.sent.sublist(m);
+    // (the other copies still owed, the message to 40 and the desk's ask
+    // for more bundles, may go in the same pump)
+    final ciphers = {for (final s in again) s.cipher};
+    expect(ciphers, contains(dl17));
+    expect(ciphers, isNot(contains(dl5)));
+  });
+
   test('a device session held on another key misses the message alone: the '
       'phone and the other devices still get theirs', () async {
     if (skip()) return;

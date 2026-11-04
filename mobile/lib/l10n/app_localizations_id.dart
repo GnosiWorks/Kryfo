@@ -1555,18 +1555,18 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'Gagal membersihkan gif itu';
 
   @override
-  String get chatTorIsNotUp => 'Tor belum aktif · dikirim tanpa pratinjau';
+  String get chatTorIsNotUp => 'Tor belum terhubung · tanpa pratinjau tautan';
 
   @override
   String get chatCouldnTReachIt =>
-      'Situsnya tak terjangkau · dikirim tanpa pratinjau';
+      'Halamannya tak terjangkau · tanpa pratinjau tautan';
 
   @override
-  String get chatNoTitleCameBack => 'Tidak ada judul · dikirim tanpa pratinjau';
+  String get chatNoTitleCameBack =>
+      'Halaman itu tidak punya judul · tanpa pratinjau tautan';
 
   @override
-  String get chatCouldnTFetchIt =>
-      'Gagal mengambilnya · dikirim tanpa pratinjau';
+  String get chatCouldnTFetchIt => 'Gagal memuat pratinjau';
 
   @override
   String get chatNoSignalSessionRe => 'Tidak ada sesi Signal. Tautkan ulang';
@@ -2549,19 +2549,19 @@ class AppLocalizationsId extends AppLocalizations {
   String get groupChatMessageUnavailable => 'Pesan tidak tersedia';
 
   @override
-  String get groupChatTorIsNotUp => 'Tor belum aktif · dikirim tanpa pratinjau';
+  String get groupChatTorIsNotUp =>
+      'Tor belum terhubung · tanpa pratinjau tautan';
 
   @override
   String get groupChatCouldnTReachIt =>
-      'Situsnya tak terjangkau · dikirim tanpa pratinjau';
+      'Halamannya tak terjangkau · tanpa pratinjau tautan';
 
   @override
   String get groupChatNoTitleCameBack =>
-      'Tidak ada judul · dikirim tanpa pratinjau';
+      'Halaman itu tidak punya judul · tanpa pratinjau tautan';
 
   @override
-  String get groupChatCouldnTFetchIt =>
-      'Gagal mengambilnya · dikirim tanpa pratinjau';
+  String get groupChatCouldnTFetchIt => 'Gagal memuat pratinjau';
 
   @override
   String get groupChatCamera => 'Kamera';
@@ -10465,7 +10465,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'Melewati Tor, jadi pesan sampai lebih cepat dan lebih hemat baterai. Server kami melihat alamat IP-mu hanya selama kamu terhubung, dan tidak pernah mencatat atau menyimpannya. Tidak pernah isi pesanmu. Kontakmu tidak pernah melihatnya. Jaringanmu bisa melihat kamu terhubung ke Kryfo.';
+      'Melewati Tor, jadi pesan sampai lebih cepat dan lebih hemat baterai. Server kami melihat alamat IP-mu hanya selama kamu terhubung, dan tidak pernah mencatat atau menyimpannya. Kontakmu tidak pernah melihatnya. Jaringanmu bisa melihat kamu terhubung ke Kryfo.';
 
   @override
   String get modesFastConnected => 'Cepat · terhubung';
@@ -11013,7 +11013,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String chatHealNewSession(Object name) {
-    return 'Ponsel $name memulai sesi aman yang baru';
+    return 'Perangkat $name memulai sesi aman yang baru';
   }
 
   @override
@@ -11079,6 +11079,74 @@ class AppLocalizationsId extends AppLocalizations {
   String get groupChatTapToRetryDesk => '! Klik untuk ulangi';
 
   @override
-  String get modesFastLineDesk =>
-      'Melewati Tor, jadi pesan sampai lebih cepat dan lebih hemat baterai. Server kami melihat alamat IP-mu hanya selama kamu terhubung, dan tidak pernah mencatat atau menyimpannya. Kontakmu tidak pernah melihatnya. Jaringanmu bisa melihat kamu terhubung ke Kryfo.';
+  String get chatDropHereToSend => 'Lepaskan di sini untuk mengirim';
+
+  @override
+  String get voiceSeeTranscription => 'Lihat transkrip';
+
+  @override
+  String get voiceTranscribing => 'Mentranskrip…';
+
+  @override
+  String get voiceHideTranscription => 'Sembunyikan';
+
+  @override
+  String get voiceShowOriginalOnly => 'Lihat aslinya saja';
+
+  @override
+  String get voiceCouldNotTranscribe => 'Kata-katanya tidak terdengar jelas';
+
+  @override
+  String get voiceTranscriptLabel => 'Transkrip';
+
+  @override
+  String get voiceSettingsTitle => 'Transkrip suara';
+
+  @override
+  String get voiceOnRow => 'Transkrip pesan suara';
+
+  @override
+  String get voiceOnHint => 'Ditawarkan di bawah setiap pesan suara';
+
+  @override
+  String get voiceOffDeletes =>
+      'Mematikan ini menghapus transkrip yang tersimpan.';
+
+  @override
+  String get voiceModelTitle => 'Model suara';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'Satu unduhan sekitar $size, untuk semua bahasa.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'Diunduh lewat Tor dan disimpan di ponsel ini. Pesan suaramu tidak pernah keluar darinya.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'Diunduh lewat Tor dan disimpan di komputer ini. Pesan suaramu tidak pernah keluar darinya.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'Tor belum tersambung. Model hanya diunduh lewat Tor, jadi coba lagi setelah tersambung.';
+
+  @override
+  String get voiceModelRemoveTitle => 'Hapus model suara?';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'Transkrip yang sudah dibuat tetap ada. Yang baru perlu modelnya lagi.';
+
+  @override
+  String get voiceKeptNote =>
+      'Transkrip disimpan terenkripsi bersama chatnya di ponsel ini dan dihapus bersamanya.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'Transkrip disimpan terenkripsi bersama chatnya di komputer ini dan dihapus bersamanya.';
+
+  @override
+  String get voiceNotNow => 'Nanti saja';
 }

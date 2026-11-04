@@ -1613,16 +1613,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'تعذّر تنظيف ملف GIF هذا';
 
   @override
-  String get chatTorIsNotUp => 'لم يعمل Tor بعد · سيُرسل دون معاينة';
+  String get chatTorIsNotUp => 'Tor غير متصل بعد · بلا معاينة للرابط';
 
   @override
-  String get chatCouldnTReachIt => 'تعذّر الوصول إليه · سيُرسل دون معاينة';
+  String get chatCouldnTReachIt =>
+      'تعذّر الوصول إلى الصفحة · بلا معاينة للرابط';
 
   @override
-  String get chatNoTitleCameBack => 'لم يُرجع عنوانًا · سيُرسل دون معاينة';
+  String get chatNoTitleCameBack => 'هذه الصفحة بلا عنوان · بلا معاينة للرابط';
 
   @override
-  String get chatCouldnTFetchIt => 'تعذّر جلبه · سيُرسل دون معاينة';
+  String get chatCouldnTFetchIt => 'تعذّر تحميل المعاينة';
 
   @override
   String get chatNoSignalSessionRe => 'لا توجد جلسة Signal. أعد الاقتران';
@@ -2615,16 +2616,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupChatMessageUnavailable => 'الرسالة غير متاحة';
 
   @override
-  String get groupChatTorIsNotUp => 'لم يعمل Tor بعد · سيُرسل دون معاينة';
+  String get groupChatTorIsNotUp => 'Tor غير متصل بعد · بلا معاينة للرابط';
 
   @override
-  String get groupChatCouldnTReachIt => 'تعذّر الوصول إليه · سيُرسل دون معاينة';
+  String get groupChatCouldnTReachIt =>
+      'تعذّر الوصول إلى الصفحة · بلا معاينة للرابط';
 
   @override
-  String get groupChatNoTitleCameBack => 'لم يُرجع عنوانًا · سيُرسل دون معاينة';
+  String get groupChatNoTitleCameBack =>
+      'هذه الصفحة بلا عنوان · بلا معاينة للرابط';
 
   @override
-  String get groupChatCouldnTFetchIt => 'تعذّر جلبه · سيُرسل دون معاينة';
+  String get groupChatCouldnTFetchIt => 'تعذّر تحميل المعاينة';
 
   @override
   String get groupChatCamera => 'الكاميرا';
@@ -10592,7 +10595,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'يتخطى Tor، فتصل الرسائل أسرع وتستهلك بطارية أقل. ترى خوادمنا عنوان IP الخاص بك فقط أثناء اتصالك، ولا تسجله أو تحتفظ به أبدًا. ولا ترى أبدًا ما تقوله. جهات اتصالك لا تراه أبدًا. يمكن لشبكتك أن ترى أنك تتصل بـ Kryfo.';
+      'يتخطى Tor، فتصل الرسائل أسرع وتستهلك بطارية أقل. ترى خوادمنا عنوان IP الخاص بك فقط أثناء اتصالك، ولا تسجله أو تحتفظ به أبدًا. جهات اتصالك لا تراه أبدًا. يمكن لشبكتك أن ترى أنك تتصل بـ Kryfo.';
 
   @override
   String get modesFastConnected => 'سريع · متصل';
@@ -11148,7 +11151,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String chatHealNewSession(Object name) {
-    return 'بدأ هاتف ⁨$name⁩ جلسة آمنة جديدة';
+    return 'بدأ جهاز ⁨$name⁩ جلسة آمنة جديدة';
   }
 
   @override
@@ -11214,6 +11217,73 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupChatTapToRetryDesk => '! انقر لإعادة المحاولة';
 
   @override
-  String get modesFastLineDesk =>
-      'يتخطى Tor، فتصل الرسائل أسرع وتستهلك بطارية أقل. ترى خوادمنا عنوان IP الخاص بك فقط أثناء اتصالك، ولا تسجله أو تحتفظ به أبدًا. جهات اتصالك لا تراه أبدًا. يمكن لشبكتك أن ترى أنك تتصل بـ Kryfo.';
+  String get chatDropHereToSend => 'أفلِت هنا للإرسال';
+
+  @override
+  String get voiceSeeTranscription => 'عرض النص';
+
+  @override
+  String get voiceTranscribing => 'جارٍ التحويل إلى نص…';
+
+  @override
+  String get voiceHideTranscription => 'إخفاء';
+
+  @override
+  String get voiceShowOriginalOnly => 'عرض الأصل فقط';
+
+  @override
+  String get voiceCouldNotTranscribe => 'تعذّر تمييز الكلمات';
+
+  @override
+  String get voiceTranscriptLabel => 'النص المكتوب';
+
+  @override
+  String get voiceSettingsTitle => 'تحويل الصوت إلى نص';
+
+  @override
+  String get voiceOnRow => 'تحويل الرسائل الصوتية إلى نص';
+
+  @override
+  String get voiceOnHint => 'يُقترح أسفل كل رسالة صوتية';
+
+  @override
+  String get voiceOffDeletes => 'إيقاف هذا يحذف النصوص المحفوظة.';
+
+  @override
+  String get voiceModelTitle => 'نموذج الكلام';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'تنزيل واحد بحجم $size تقريبًا، لكل اللغات.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'يُنزَّل عبر Tor ويبقى على هذا الهاتف. رسائلك الصوتية لا تغادره أبدًا.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'يُنزَّل عبر Tor ويبقى على هذا الحاسوب. رسائلك الصوتية لا تغادره أبدًا.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'لم يتصل Tor بعد. يُنزَّل النموذج عبر Tor فقط، فحاول مجددًا بعد اتصاله.';
+
+  @override
+  String get voiceModelRemoveTitle => 'إزالة نموذج الكلام؟';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'تبقى النصوص التي أُنشئت. النصوص الجديدة تحتاج إلى النموذج مجددًا.';
+
+  @override
+  String get voiceKeptNote =>
+      'تُحفظ النصوص مشفّرة مع محادثتها على هذا الهاتف وتُحذف معها.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'تُحفظ النصوص مشفّرة مع محادثتها على هذا الحاسوب وتُحذف معها.';
+
+  @override
+  String get voiceNotNow => 'ليس الآن';
 }

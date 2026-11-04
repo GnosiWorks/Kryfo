@@ -47,6 +47,7 @@ import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../l10n/numbers.dart';
 import '../dlog.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 // a test's look inside and restore, in place of the engine's
 @visibleForTesting
@@ -638,217 +639,223 @@ class _RestoreScreenState extends State<RestoreScreen> with PinShield {
             ),
           ),
         ),
-        body: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(22, 4, 22, 32),
-            children: staggerAllIn(context, [
-              Text(
-                l10n.restoreFromABackupFile,
-                style: HaloType.serif(size: 26, color: HaloColors.text),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.restoreABackupBringsBackShown,
-                style: HaloType.sans(
-                  size: 13,
-                  color: HaloColors.text2,
-                  height: 1.5,
+        body: DeskPage(
+          child: SafeArea(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(22, 4, 22, 32),
+              children: staggerAllIn(context, [
+                Text(
+                  l10n.restoreFromABackupFile,
+                  style: HaloType.serif(size: 26, color: HaloColors.text),
                 ),
-              ),
-              const SizedBox(height: 22),
-              _Step(
-                n: '1',
-                label: l10n.restoreTheFile,
-                done: _hasFile,
-                child: PressScale(
-                  onTap: _busy ? null : _pick,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 13,
-                    ),
-                    decoration: BoxDecoration(
-                      color: HaloColors.surface2,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: _hasFile ? HaloColors.amber : HaloColors.line,
-                        width: 0.6,
+                const SizedBox(height: 8),
+                Text(
+                  l10n.restoreABackupBringsBackShown,
+                  style: HaloType.sans(
+                    size: 13,
+                    color: HaloColors.text2,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                _Step(
+                  n: '1',
+                  label: l10n.restoreTheFile,
+                  done: _hasFile,
+                  child: PressScale(
+                    onTap: _busy ? null : _pick,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 13,
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.description_outlined,
-                          size: 18,
-                          color: HaloColors.amber,
+                      decoration: BoxDecoration(
+                        color: HaloColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _hasFile ? HaloColors.amber : HaloColors.line,
+                          width: 0.6,
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: RiseSwap(
-                            child: Text(
-                              _fileName ?? l10n.restorePickTheBackupFile,
-                              key: ValueKey(_fileName),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: HaloType.sans(
-                                size: 13.5,
-                                color: _fileName == null
-                                    ? HaloColors.text2
-                                    : HaloColors.text,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.description_outlined,
+                            size: 18,
+                            color: HaloColors.amber,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: RiseSwap(
+                              child: Text(
+                                _fileName ?? l10n.restorePickTheBackupFile,
+                                key: ValueKey(_fileName),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: HaloType.sans(
+                                  size: 13.5,
+                                  color: _fileName == null
+                                      ? HaloColors.text2
+                                      : HaloColors.text,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 14),
-              EaseSize(
-                duration: const Duration(milliseconds: 220),
-                child: !_hasFile
-                    ? const SizedBox(width: double.infinity)
-                    : _Step(
-                        n: '2',
-                        label: l10n.restoreThePassphrase,
-                        done: s != null,
-                        child: SecretField(
+                const SizedBox(height: 14),
+                EaseSize(
+                  duration: const Duration(milliseconds: 220),
+                  child: !_hasFile
+                      ? const SizedBox(width: double.infinity)
+                      : _Step(
+                          n: '2',
                           label: l10n.restoreThePassphrase,
-                          labelAbove: false,
-                          hint: l10n.restoreTheOneTheFile,
-                          controller: _passCtrl,
-                          shown: _shown,
-                          onToggle: () => setState(() => _shown = !_shown),
-                          enabled: !_busy && s == null,
-                          action: TextInputAction.done,
-                          onSubmit: _check,
-                        ),
-                      ),
-              ),
-              EaseSize(
-                duration: const Duration(milliseconds: 220),
-                child: _error == null
-                    ? const SizedBox(width: double.infinity)
-                    : Padding(
-                        padding: const EdgeInsets.only(top: 10),
-                        child: Text(
-                          _error!,
-                          style: HaloType.sans(
-                            size: 13,
-                            color: HaloColors.roseText,
+                          done: s != null,
+                          child: SecretField(
+                            label: l10n.restoreThePassphrase,
+                            labelAbove: false,
+                            hint: l10n.restoreTheOneTheFile,
+                            controller: _passCtrl,
+                            shown: _shown,
+                            onToggle: () => setState(() => _shown = !_shown),
+                            enabled: !_busy && s == null,
+                            action: TextInputAction.done,
+                            onSubmit: _check,
                           ),
                         ),
-                      ),
-              ),
-              EaseSize(
-                duration: const Duration(milliseconds: 240),
-                child: s == null
-                    ? const SizedBox(width: double.infinity)
-                    : Padding(
-                        padding: const EdgeInsets.only(top: 14),
-                        child: _Step(
-                          n: '3',
-                          label: l10n.restoreWhatComesBack,
-                          child: _SummaryCard(summary: s),
-                        ),
-                      ),
-              ),
-              const SizedBox(height: 22),
-              if (s == null)
-                HaloPrimaryButton(
-                  label: _busy
-                      ? l10n.restoreChecking
-                      : l10n.restoreCheckTheFile,
-                  busy: _busy,
-                  onTap: _hasFile ? _check : null,
-                )
-              else
-                HaloPrimaryButton(
-                  label: _releasing
-                      ? l10n.restoreReleasingYourHandle
-                      : _busy
-                      ? (_path != null && _progress > 0
-                            ? l10n.restoreMoving(percent(_progress))
-                            : l10n.restoreRestoring)
-                      : l10n.restoreRestore,
-                  // the percent changes in place, not rising each time
-                  phase: _releasing
-                      ? 'release'
-                      : _busy
-                      ? (_path != null && _progress > 0 ? 'moving' : 'busy')
-                      : 'restore',
-                  busy: _busy,
-                  onTap: _restore,
                 ),
-              EaseSize(
-                child: !_releasing
-                    ? const SizedBox(width: double.infinity)
-                    : Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Center(
-                          child: PressScale(
-                            scale: 0.97,
-                            label: l10n.restoreStopRestore,
-                            onTap: () => Navigator.of(context).maybePop(),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              child: Text(
-                                l10n.restoreStopRestore,
-                                semanticsLabel: '',
-                                style: HaloType.sans(
-                                  size: 13.5,
-                                  color: HaloColors.text,
+                EaseSize(
+                  duration: const Duration(milliseconds: 220),
+                  child: _error == null
+                      ? const SizedBox(width: double.infinity)
+                      : Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: Text(
+                            _error!,
+                            style: HaloType.sans(
+                              size: 13,
+                              color: HaloColors.roseText,
+                            ),
+                          ),
+                        ),
+                ),
+                EaseSize(
+                  duration: const Duration(milliseconds: 240),
+                  child: s == null
+                      ? const SizedBox(width: double.infinity)
+                      : Padding(
+                          padding: const EdgeInsets.only(top: 14),
+                          child: _Step(
+                            n: '3',
+                            label: l10n.restoreWhatComesBack,
+                            child: _SummaryCard(summary: s),
+                          ),
+                        ),
+                ),
+                const SizedBox(height: 22),
+                if (s == null)
+                  HaloPrimaryButton(
+                    label: _busy
+                        ? l10n.restoreChecking
+                        : l10n.restoreCheckTheFile,
+                    busy: _busy,
+                    onTap: _hasFile ? _check : null,
+                  )
+                else
+                  HaloPrimaryButton(
+                    label: _releasing
+                        ? l10n.restoreReleasingYourHandle
+                        : _busy
+                        ? (_path != null && _progress > 0
+                              ? l10n.restoreMoving(percent(_progress))
+                              : l10n.restoreRestoring)
+                        : l10n.restoreRestore,
+                    // the percent changes in place, not rising each time
+                    phase: _releasing
+                        ? 'release'
+                        : _busy
+                        ? (_path != null && _progress > 0 ? 'moving' : 'busy')
+                        : 'restore',
+                    busy: _busy,
+                    onTap: _restore,
+                  ),
+                EaseSize(
+                  child: !_releasing
+                      ? const SizedBox(width: double.infinity)
+                      : Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Center(
+                            child: PressScale(
+                              scale: 0.97,
+                              label: l10n.restoreStopRestore,
+                              onTap: () => Navigator.of(context).maybePop(),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                child: Text(
+                                  l10n.restoreStopRestore,
+                                  semanticsLabel: '',
+                                  style: HaloType.sans(
+                                    size: 13.5,
+                                    color: HaloColors.text,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-              ),
-              // the move, as far as it has got
-              EaseSize(
-                child: !moving || _path == null
-                    ? const SizedBox(width: double.infinity)
-                    : Padding(
-                        padding: const EdgeInsets.only(top: 12),
-                        child: HaloBar(
-                          value: _progress,
-                          height: 3,
-                          label: l10n.a11yRestoreProgress,
+                ),
+                // the move, as far as it has got
+                EaseSize(
+                  child: !moving || _path == null
+                      ? const SizedBox(width: double.infinity)
+                      : Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: HaloBar(
+                            value: _progress,
+                            height: 3,
+                            label: l10n.a11yRestoreProgress,
+                          ),
                         ),
-                      ),
-              ),
-              // eases in under the button with the summary, as the card does
-              EaseSize(
-                child: s == null
-                    ? const SizedBox(width: double.infinity)
-                    : Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Center(
-                          child: PressScale(
-                            scale: 0.97,
-                            onTap: _busy
-                                ? null
-                                : () => setState(() {
-                                    _summary = null;
-                                    _passCtrl.clear();
-                                  }),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              child: Text(
-                                l10n.restoreNotThisOne,
-                                style: HaloType.sans(
-                                  size: 13,
-                                  color: HaloColors.text2,
+                ),
+                // eases in under the button with the summary, as the card does
+                EaseSize(
+                  child: s == null
+                      ? const SizedBox(width: double.infinity)
+                      : Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Center(
+                            child: PressScale(
+                              scale: 0.97,
+                              onTap: _busy
+                                  ? null
+                                  : () => setState(() {
+                                      _summary = null;
+                                      _passCtrl.clear();
+                                    }),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                child: Text(
+                                  l10n.restoreNotThisOne,
+                                  style: HaloType.sans(
+                                    size: 13,
+                                    color: HaloColors.text2,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-              ),
-            ]),
+                ),
+              ]),
+            ),
           ),
         ),
       ),

@@ -557,6 +557,7 @@ void main() {
         "'HaloRoomSendFirstContact'",
       ],
       'void roomSubscribeBg(': ['.roomListen(', "'HaloRoomSubscribe'"],
+      'void deviceListenBg(': ['devGate.names(xPub:', '_subscribeOnIsolate('],
     };
     for (final e in doors.entries) {
       final b = body(e.key);

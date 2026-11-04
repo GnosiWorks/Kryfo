@@ -1494,16 +1494,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatCouldNotCleanThatGif => '无法清理这个 GIF';
 
   @override
-  String get chatTorIsNotUp => 'Tor 还没启动 · 不带预览发送';
+  String get chatTorIsNotUp => 'Tor 还没连上 · 不添加链接预览';
 
   @override
-  String get chatCouldnTReachIt => '无法访问 · 不带预览发送';
+  String get chatCouldnTReachIt => '无法访问该页面 · 不添加链接预览';
 
   @override
-  String get chatNoTitleCameBack => '没有取到标题 · 不带预览发送';
+  String get chatNoTitleCameBack => '该页面没有标题 · 不添加链接预览';
 
   @override
-  String get chatCouldnTFetchIt => '无法获取 · 不带预览发送';
+  String get chatCouldnTFetchIt => '无法加载预览';
 
   @override
   String get chatNoSignalSessionRe => '没有 Signal 会话——请重新配对';
@@ -2423,16 +2423,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupChatMessageUnavailable => '消息不可用';
 
   @override
-  String get groupChatTorIsNotUp => 'Tor 还没启动 · 不带预览发送';
+  String get groupChatTorIsNotUp => 'Tor 还没连上 · 不添加链接预览';
 
   @override
-  String get groupChatCouldnTReachIt => '无法访问 · 不带预览发送';
+  String get groupChatCouldnTReachIt => '无法访问该页面 · 不添加链接预览';
 
   @override
-  String get groupChatNoTitleCameBack => '没有取到标题 · 不带预览发送';
+  String get groupChatNoTitleCameBack => '该页面没有标题 · 不添加链接预览';
 
   @override
-  String get groupChatCouldnTFetchIt => '无法获取 · 不带预览发送';
+  String get groupChatCouldnTFetchIt => '无法加载预览';
 
   @override
   String get groupChatCamera => '相机';
@@ -9902,7 +9902,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      '不经过 Tor，消息到得更快，也更省电。我们的服务器只在你连接期间看到你的 IP 地址，从不记录或保存。也从不知道你说了什么。你的联系人永远看不到它。你的网络能看到你在连接 Kryfo。';
+      '不经过 Tor，消息到得更快，也更省电。我们的服务器只在你连接期间看到你的 IP 地址，从不记录或保存。你的联系人永远看不到它。你的网络能看到你在连接 Kryfo。';
 
   @override
   String get modesFastConnected => '快速 · 已连接';
@@ -10428,7 +10428,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String chatHealNewSession(Object name) {
-    return '$name 的手机开始了新的安全会话';
+    return '$name 的设备开始了新的安全会话';
   }
 
   @override
@@ -10493,8 +10493,69 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupChatTapToRetryDesk => '! 单击重试';
 
   @override
-  String get modesFastLineDesk =>
-      '不经过 Tor，消息到得更快，也更省电。我们的服务器只在你连接期间看到你的 IP 地址，从不记录或保存。你的联系人永远看不到它。你的网络能看到你在连接 Kryfo。';
+  String get chatDropHereToSend => '拖到这里松开即可发送';
+
+  @override
+  String get voiceSeeTranscription => '查看文字';
+
+  @override
+  String get voiceTranscribing => '正在转成文字…';
+
+  @override
+  String get voiceHideTranscription => '收起';
+
+  @override
+  String get voiceShowOriginalOnly => '只看原文';
+
+  @override
+  String get voiceCouldNotTranscribe => '没能听出内容';
+
+  @override
+  String get voiceTranscriptLabel => '文字内容';
+
+  @override
+  String get voiceSettingsTitle => '语音转文字';
+
+  @override
+  String get voiceOnRow => '把语音消息转成文字';
+
+  @override
+  String get voiceOnHint => '在每条语音消息下方提供';
+
+  @override
+  String get voiceOffDeletes => '关闭后会删除已保存的文字内容。';
+
+  @override
+  String get voiceModelTitle => '语音模型';
+
+  @override
+  String voiceModelLine(Object size) {
+    return '只需下载一次，约 $size，支持所有语言。';
+  }
+
+  @override
+  String get voiceModelPrivacy => '通过 Tor 下载并保存在这部手机上。你的语音消息从不离开它。';
+
+  @override
+  String get voiceModelPrivacyDesk => '通过 Tor 下载并保存在这台电脑上。你的语音消息从不离开它。';
+
+  @override
+  String get voiceModelFailNoTor => 'Tor 还没有连接。模型只通过 Tor 下载，请在连接后重试。';
+
+  @override
+  String get voiceModelRemoveTitle => '移除语音模型？';
+
+  @override
+  String get voiceModelRemoveLine => '已生成的文字会保留。新的需要再次下载模型。';
+
+  @override
+  String get voiceKeptNote => '文字内容与所属聊天一起加密保存在这部手机上，并随聊天一起删除。';
+
+  @override
+  String get voiceKeptNoteDesk => '文字内容与所属聊天一起加密保存在这台电脑上，并随聊天一起删除。';
+
+  @override
+  String get voiceNotNow => '暂不';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -11987,16 +12048,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatCouldNotCleanThatGif => '無法清理那個 GIF';
 
   @override
-  String get chatTorIsNotUp => 'Tor 尚未啟動 · 不附預覽直接傳送';
+  String get chatTorIsNotUp => 'Tor 尚未連上 · 不加入連結預覽';
 
   @override
-  String get chatCouldnTReachIt => '連不上 · 不附預覽直接傳送';
+  String get chatCouldnTReachIt => '無法連上該頁面 · 不加入連結預覽';
 
   @override
-  String get chatNoTitleCameBack => '沒有取得標題 · 不附預覽直接傳送';
+  String get chatNoTitleCameBack => '該頁面沒有標題 · 不加入連結預覽';
 
   @override
-  String get chatCouldnTFetchIt => '無法擷取 · 不附預覽直接傳送';
+  String get chatCouldnTFetchIt => '無法載入預覽';
 
   @override
   String get chatNoSignalSessionRe => '沒有 Signal 工作階段，請重新配對';
@@ -12916,16 +12977,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupChatMessageUnavailable => '訊息無法顯示';
 
   @override
-  String get groupChatTorIsNotUp => 'Tor 尚未啟動 · 不附預覽直接傳送';
+  String get groupChatTorIsNotUp => 'Tor 尚未連上 · 不加入連結預覽';
 
   @override
-  String get groupChatCouldnTReachIt => '連不上 · 不附預覽直接傳送';
+  String get groupChatCouldnTReachIt => '無法連上該頁面 · 不加入連結預覽';
 
   @override
-  String get groupChatNoTitleCameBack => '沒有取得標題 · 不附預覽直接傳送';
+  String get groupChatNoTitleCameBack => '該頁面沒有標題 · 不加入連結預覽';
 
   @override
-  String get groupChatCouldnTFetchIt => '無法擷取 · 不附預覽直接傳送';
+  String get groupChatCouldnTFetchIt => '無法載入預覽';
 
   @override
   String get groupChatCamera => '相機';
@@ -20280,7 +20341,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get modesFastLine =>
-      '不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。也從不知道你說了什麼。你的聯絡人永遠看不到它。你的網路能看到你在連線 Kryfo。';
+      '不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。你的聯絡人永遠看不到它。你的網路能看到你在連線 Kryfo。';
 
   @override
   String get modesFastConnected => '快速 · 已連線';
@@ -20807,7 +20868,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String chatHealNewSession(Object name) {
-    return '$name 的手機開始了新的安全工作階段';
+    return '$name 的裝置開始了新的安全工作階段';
   }
 
   @override
@@ -20872,6 +20933,67 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupChatTapToRetryDesk => '! 按一下重試';
 
   @override
-  String get modesFastLineDesk =>
-      '不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。你的聯絡人永遠看不到它。你的網路能看到你在連線 Kryfo。';
+  String get chatDropHereToSend => '拖到這裡放開即可傳送';
+
+  @override
+  String get voiceSeeTranscription => '查看文字';
+
+  @override
+  String get voiceTranscribing => '正在轉成文字…';
+
+  @override
+  String get voiceHideTranscription => '收起';
+
+  @override
+  String get voiceShowOriginalOnly => '只看原文';
+
+  @override
+  String get voiceCouldNotTranscribe => '沒能聽出內容';
+
+  @override
+  String get voiceTranscriptLabel => '文字內容';
+
+  @override
+  String get voiceSettingsTitle => '語音轉文字';
+
+  @override
+  String get voiceOnRow => '把語音訊息轉成文字';
+
+  @override
+  String get voiceOnHint => '在每則語音訊息下方提供';
+
+  @override
+  String get voiceOffDeletes => '關閉後會刪除已儲存的文字內容。';
+
+  @override
+  String get voiceModelTitle => '語音模型';
+
+  @override
+  String voiceModelLine(Object size) {
+    return '只需下載一次，約 $size，支援所有語言。';
+  }
+
+  @override
+  String get voiceModelPrivacy => '透過 Tor 下載並保存在這支手機上。你的語音訊息從不離開它。';
+
+  @override
+  String get voiceModelPrivacyDesk => '透過 Tor 下載並保存在這台電腦上。你的語音訊息從不離開它。';
+
+  @override
+  String get voiceModelFailNoTor => 'Tor 還沒有連線。模型只透過 Tor 下載，請在連線後再試一次。';
+
+  @override
+  String get voiceModelRemoveTitle => '移除語音模型？';
+
+  @override
+  String get voiceModelRemoveLine => '已產生的文字會保留。新的需要再次下載模型。';
+
+  @override
+  String get voiceKeptNote => '文字內容與所屬聊天一起加密保存在這支手機上，並隨聊天一起刪除。';
+
+  @override
+  String get voiceKeptNoteDesk => '文字內容與所屬聊天一起加密保存在這台電腦上，並隨聊天一起刪除。';
+
+  @override
+  String get voiceNotNow => '以後再說';
 }

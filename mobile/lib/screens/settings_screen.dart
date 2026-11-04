@@ -39,6 +39,8 @@ import 'bridges_screen.dart';
 import '../bridge_mode.dart' show BridgeChoice, bridgeChoiceName;
 import 'seen_screen.dart';
 import 'translation_screen.dart';
+import '../voice/ui/voice_tx_screen.dart';
+import '../voice/voice_transcripts.dart' show voiceTranscriptsIfOn;
 import '../translate/hub_live.dart' show translationHubIfOn;
 import '../theme.dart';
 import '../notif_permission.dart';
@@ -815,6 +817,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ],
               ),
+              if (voiceTranscriptsIfOn() case final hub?)
+                HaloRow(
+                  icon: Icons.notes_rounded,
+                  label: l10n.voiceSettingsTitle,
+                  hint: l10n.translateSettingsHintShown,
+                  onTap: () => Navigator.of(
+                    context,
+                  ).push(haloRoute(VoiceTxScreen(hub: hub))),
+                ),
             ],
             HaloSection(l10n.settingsAppearance),
             HaloGroup(

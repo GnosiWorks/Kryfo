@@ -116,6 +116,8 @@ const deskWordKeys = [
   'translateSettingsHint',
   'translatePrivacyNote',
   'translatePrivacyKept',
+  'voiceModelPrivacy',
+  'voiceKeptNote',
   'notificationsLead',
   'photoOnlyHere',
   'photoOnlyHereLine',
@@ -138,7 +140,6 @@ const deskWordKeys = [
   'savedLongPressAnyMessage',
   'chatFailedTapToRetry',
   'groupChatTapToRetry',
-  'modesFastLine',
 ];
 
 extension DeskWords on AppLocalizations {
@@ -371,6 +372,10 @@ extension DeskWords on AppLocalizations {
       onDesktop ? translatePrivacyNoteDesk : translatePrivacyNote;
   String get translatePrivacyKeptShown =>
       onDesktop ? translatePrivacyKeptDesk : translatePrivacyKept;
+  String get voiceModelPrivacyShown =>
+      onDesktop ? voiceModelPrivacyDesk : voiceModelPrivacy;
+  String get voiceKeptNoteShown =>
+      onDesktop ? voiceKeptNoteDesk : voiceKeptNote;
   String get notificationsLeadShown =>
       onDesktop ? notificationsLeadDesk : notificationsLead;
   String get photoOnlyHereShown =>
@@ -412,6 +417,4 @@ extension DeskWords on AppLocalizations {
       onDesktop ? chatFailedTapToRetryDesk : chatFailedTapToRetry;
   String get groupChatTapToRetryShown =>
       onDesktop ? groupChatTapToRetryDesk : groupChatTapToRetry;
-  String get modesFastLineShown =>
-      onDesktop ? modesFastLineDesk : modesFastLine;
 }

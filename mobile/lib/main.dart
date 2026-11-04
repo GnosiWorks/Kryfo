@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'device_sessions.dart' show DeviceSessions, kOwnDevices;
+import 'devices/device_receive.dart';
 import 'devices/device_send.dart';
 import 'devices/device_state.dart';
 import 'devices/device_store.dart';
@@ -225,6 +226,7 @@ part 'app/database_rooms.dart';
 part 'app/database_search.dart';
 part 'app/dev_screen.dart';
 part 'app/devices_app.dart';
+part 'app/devices_receive_app.dart';
 part 'app/devices_send_app.dart';
 part 'app/link_app.dart';
 part 'app/engine.dart';

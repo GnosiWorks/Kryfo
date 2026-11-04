@@ -1,0 +1,30 @@
+# desktop_drop 0.8.4 from pub.dev (MixinNetwork/flutter-plugins, apache 2.0),
+# archive sha256 47ded09c85909edfed644fd4cbb5051b040d0aed5c79e7e062ea4b3b7156dbe4.
+# cut to linux and windows: no android, macos or web side, so the phone build
+# has none of it. no dbus, cross_file or universal_platform. changed:
+# - linux: only file uris, read through gtk (which resolves a sandbox portal
+#   key itself), sent as paths; no plain text or STRING target; no highlight
+# - windows: copy only, never move (a move lets explorer delete the source);
+#   long paths read whole; no console logging of paths; revoked at shutdown
+# - dart: one "dropped" event with paths and the point; a target takes a drop
+#   only where a hit test at the point reaches it
+name: desktop_drop
+description: Files dropped on a linux or windows window, as paths.
+version: 0.8.4+kryfo.1
+publish_to: none
+
+environment:
+  sdk: ^3.5.0
+  flutter: ">=3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      linux:
+        pluginClass: DesktopDropPlugin
+      windows:
+        pluginClass: DesktopDropPlugin

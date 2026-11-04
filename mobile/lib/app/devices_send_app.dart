@@ -39,7 +39,9 @@ void _bootDeviceSend(DeviceState ds) {
       return _devSessions[ident] = DeviceSessions(ss);
     },
     wire: _EngineDeviceWire(),
+    listen: engine.deviceListenBg,
   );
+  _bootDeviceReceive(ds, _deviceSend!);
 }
 
 // my identity [ident] and the contact [peer] as the send loop takes them;
@@ -162,14 +164,20 @@ Future<void> _devicesShown(String peer) async {
     final db = await live.open();
     final r = await db.query(
       'contacts',
-      columns: ['ident', 'ikey'],
+      columns: ['ident', 'ikey', 'caps'],
       where: 'halo_id = ?',
       whereArgs: [peer],
       limit: 1,
     );
     final ikey = r.isEmpty ? null : r.first['ikey'] as String?;
     if (ikey == null) return;
-    await send.devicesShown(r.first['ident'] as int? ?? kMainIdent, ikey);
+    // only to a phone that reads lists
+    if (!capsOfText(r.first['caps'] as String?).contains(kCapDevices)) return;
+    final ident = r.first['ident'] as int? ?? kMainIdent;
+    await send.devicesShown(ident, ikey);
+    // and theirs is asked for when none is held (they may have kept me
+    // since before I deleted them)
+    await _deviceReceive?.askList(ident, ikey);
   } catch (e) {
     dlog('devices: list push not queued (${e.runtimeType})');
   }
@@ -194,6 +202,8 @@ Future<void> _devForget(String haloId, {bool sessions = false}) async {
     final ikey = r.isEmpty ? null : r.first['ikey'] as String?;
     if (ikey == null) return;
     final ident = r.first['ident'] as int? ?? kMainIdent;
+    // their device pairs are heard on no more (read before the list goes)
+    await _deviceReceive?.forget(ident, ikey);
     try {
       await ds.call(db, 'forget', {'identity': ikey});
     } on DevRefused catch (e) {

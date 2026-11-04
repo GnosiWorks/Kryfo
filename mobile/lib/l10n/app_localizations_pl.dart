@@ -255,7 +255,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String deliveryModeWokenByNoWake(Object who) {
-    return 'Budzi: $who · jeszcze nie obudzony';
+    return 'Budzi: $who · jeszcze nieobudzony';
   }
 
   @override
@@ -462,7 +462,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get appSomeoneYouHaveNot =>
-      'Napisał do ciebie ktoś spoza twoich kontaktów';
+      'Nowa wiadomość od kogoś spoza twoich kontaktów';
 
   @override
   String get appSettingUpYourKeys => 'Przygotowuję twoje klucze';
@@ -540,7 +540,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get appScanTheirCodeOr =>
-      'Zeskanuj jego kod albo wklej to, co ci dał: link, @nazwę lub link do pokoju.';
+      'Zeskanuj kod tej osoby albo wklej to, co od niej masz: link, @nazwę lub link do pokoju.';
 
   @override
   String get appScanTheirCodeOrDesk =>
@@ -1271,7 +1271,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get bridgesWhenYouAskFor =>
-      'Gdy prosisz o mostki, Tor Project widzi twój adres. To normalne: tak Tor Browser i każda aplikacja Tor dostają mostki, a jedyne, czego się dowiadują, to że ktoś poprosił o mostki. Nic o twoich czatach.';
+      'Gdy prosisz o mostki, Tor Project widzi twój adres. To normalne: tak Tor Browser i każda aplikacja Tor dostają mostki, a jedyne, czego się dowiadują, to że poproszono o mostki. Nic o twoich czatach.';
 
   @override
   String get bridgesAsking => 'Pytam…';
@@ -1443,11 +1443,11 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'Zostanie usunięta z obu telefonów, chyba że ktoś już ją zapisał. Tego nie da się cofnąć.';
+      'Zostanie usunięta z obu telefonów, chyba że już ją zapisano. Tego nie da się cofnąć.';
 
   @override
   String get chatItDisappearsWithNoDesk =>
-      'Zostanie usunięta z obu urządzeń, chyba że ktoś już ją zapisał. Tego nie da się cofnąć.';
+      'Zostanie usunięta z obu urządzeń, chyba że już ją zapisano. Tego nie da się cofnąć.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -1508,7 +1508,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get chatHowLongAfterReading =>
-      'Po jakim czasie od przeczytania, wiadomości mają znikać? Czas Twoich wiadomości liczony jest od momentu ich wysłania.';
+      'Po jakim czasie od przeczytania, wiadomości mają znikać? Czas twoich wiadomości liczony jest od momentu ich wysłania.';
 
   @override
   String get chatCamera => 'Aparat';
@@ -1602,19 +1602,18 @@ class AppLocalizationsPl extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'Nie udało się wyczyścić tego GIF-a';
 
   @override
-  String get chatTorIsNotUp =>
-      'Sieć Tor nie jest jeszcze aktywna · wysyłanie bezpośrednie';
+  String get chatTorIsNotUp => 'Tor jeszcze nie działa · bez podglądu linku';
 
   @override
   String get chatCouldnTReachIt =>
-      'Nie udało się połączyć · wysyłanie bezpośrednie';
+      'Nie udało się połączyć ze stroną · bez podglądu linku';
 
   @override
   String get chatNoTitleCameBack =>
-      'Nie pobrano tytułu · wysyłanie bez podglądu';
+      'Ta strona nie ma tytułu · bez podglądu linku';
 
   @override
-  String get chatCouldnTFetchIt => 'Nie udało się pobrać · wysyłanie bez tego';
+  String get chatCouldnTFetchIt => 'Nie udało się wczytać podglądu';
 
   @override
   String get chatNoSignalSessionRe => 'Brak sesji Signal: sparuj ponownie';
@@ -1797,7 +1796,7 @@ class AppLocalizationsPl extends AppLocalizations {
       'Ta osoba może nie wiedzieć, że ją zaakceptowano';
 
   @override
-  String get chatYouBlockedThisContact => 'Zablokowałeś ten kontakt';
+  String get chatYouBlockedThisContact => 'Zablokowano ten kontakt';
 
   @override
   String get chatSupporter => 'Wspierający';
@@ -1975,7 +1974,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String chatMayHaveReinstalledOr(Object peerName) {
-    return '$peerName mógł przeinstalować aplikację albo ktoś może się pod niego podszywać. Porównajcie numery bezpieczeństwa, żeby mieć pewność.';
+    return 'Możliwe, że aplikację zainstalowano ponownie albo ktoś podszywa się pod $peerName. Porównajcie numery bezpieczeństwa, żeby mieć pewność.';
   }
 
   @override
@@ -2531,9 +2530,9 @@ class AppLocalizationsPl extends AppLocalizations {
       'supporter':
           'Potwierdzone w łańcuchu. Teraz wspierasz Kryfo. Nikt ci tego nie odbierze.',
       'patron':
-          'Potwierdzone w łańcuchu. Teraz jesteś mecenasem. Nikt ci tego nie odbierze.',
+          'Potwierdzone w łańcuchu. Teraz masz odznakę mecenasa. Nikt ci tego nie odbierze.',
       'guardian':
-          'Potwierdzone w łańcuchu. Teraz jesteś strażnikiem. Nikt ci tego nie odbierze.',
+          'Potwierdzone w łańcuchu. Teraz masz odznakę strażnika. Nikt ci tego nie odbierze.',
       'other':
           'Potwierdzone w łańcuchu. Teraz wspierasz Kryfo. Nikt ci tego nie odbierze.',
     });
@@ -2613,17 +2612,19 @@ class AppLocalizationsPl extends AppLocalizations {
   String get groupChatMessageUnavailable => 'Wiadomość niedostępna';
 
   @override
-  String get groupChatTorIsNotUp => 'Tor nie działa · wysyłanie bez niego';
+  String get groupChatTorIsNotUp =>
+      'Tor jeszcze nie działa · bez podglądu linku';
 
   @override
   String get groupChatCouldnTReachIt =>
-      'Brak połączenia · wysyłanie bezpośrednie';
+      'Nie udało się połączyć ze stroną · bez podglądu linku';
 
   @override
-  String get groupChatNoTitleCameBack => 'Brak tytułu · wysyłanie bez niego';
+  String get groupChatNoTitleCameBack =>
+      'Ta strona nie ma tytułu · bez podglądu linku';
 
   @override
-  String get groupChatCouldnTFetchIt => 'Brak pobrania · wysyłanie bez tego';
+  String get groupChatCouldnTFetchIt => 'Nie udało się wczytać podglądu';
 
   @override
   String get groupChatCamera => 'Aparat';
@@ -2752,11 +2753,11 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'Zostanie usunięta z telefonów wszystkich osób, chyba że ktoś już ją zapisał. Tego nie da się cofnąć.';
+      'Zostanie usunięta z telefonów wszystkich osób, chyba że już ją zapisano. Tego nie da się cofnąć.';
 
   @override
   String get groupChatItDisappearsWithNoDesk =>
-      'Zostanie usunięta z urządzeń wszystkich osób, chyba że ktoś już ją zapisał. Tego nie da się cofnąć.';
+      'Zostanie usunięta z urządzeń wszystkich osób, chyba że już ją zapisano. Tego nie da się cofnąć.';
 
   @override
   String get groupChatUnsend => 'Cofnij wysłanie';
@@ -3044,19 +3045,19 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get groupInfoLeaveGroupAdmin =>
-      'Przestaniesz otrzymywać wiadomości z tej grupy, a wszystkie dane zostaną wyczyszczone z tego telefonu. Jesteś jej administratorem, więc po Twoim odejściu nikt nie będzie mógł zarządzać członkami ani zmienić nazwy.';
+      'Przestaniesz otrzymywać wiadomości z tej grupy, a wszystkie dane zostaną wyczyszczone z tego telefonu. Zarządzasz tą grupą, więc po twoim odejściu nikt nie zarządzi członkami ani nie zmieni nazwy.';
 
   @override
   String get groupInfoLeaveGroupAdminDesk =>
-      'Przestaniesz otrzymywać wiadomości z tej grupy, a wszystkie dane zostaną wyczyszczone z tego komputera. Jesteś jej administratorem, więc po Twoim odejściu nikt nie będzie mógł zarządzać członkami ani zmienić nazwy.';
+      'Przestaniesz otrzymywać wiadomości z tej grupy, a wszystkie dane zostaną wyczyszczone z tego komputera. Zarządzasz tą grupą, więc po twoim odejściu nikt nie zarządzi członkami ani nie zmieni nazwy.';
 
   @override
   String get groupInfoLeaveRoomMaker =>
-      'Zawartość zostanie usunięta z telefonu, a klucz przepadnie na zawsze. Link do stworzonego przez Ciebie pokoju przestanie działać dla wszystkich.';
+      'Zawartość zostanie usunięta z telefonu, a klucz przepadnie na zawsze. Link do stworzonego przez ciebie pokoju przestanie działać dla wszystkich.';
 
   @override
   String get groupInfoLeaveRoomMakerDesk =>
-      'Zawartość zostanie usunięta z komputera, a klucz przepadnie na zawsze. Link do stworzonego przez Ciebie pokoju przestanie działać dla wszystkich.';
+      'Zawartość zostanie usunięta z komputera, a klucz przepadnie na zawsze. Link do stworzonego przez ciebie pokoju przestanie działać dla wszystkich.';
 
   @override
   String get groupInfoLeave => 'Opuść';
@@ -3167,7 +3168,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get handleDeleteLine =>
-      'Twoja publiczna strona zniknie, a nazwę będzie mógł zająć każdy. Czaty, które już masz, zostają bez zmian.';
+      'Twoja publiczna strona zniknie, a nazwa będzie wolna dla każdego. Czaty, które już masz, zostają bez zmian.';
 
   @override
   String get handleDeleteYes => 'Usuń nazwę';
@@ -3522,12 +3523,12 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String introduceGotItButCould(Object b, Object c) {
-    return '$b dostał(a), ale nie udało się dotrzeć do $c';
+    return 'Dotarło do $b, ale nie udało się dotrzeć do $c';
   }
 
   @override
   String introduceGotItButCouldNotBe(Object c, Object b) {
-    return '$c dostał(a), ale nie udało się dotrzeć do $b';
+    return 'Dotarło do $c, ale nie udało się dotrzeć do $b';
   }
 
   @override
@@ -3608,7 +3609,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String keyVerificationCompareAll(Object peerName) {
-    return 'Porównaj wszystkie 12 grup z $peerName osobiście lub podczas zaufanej rozmowy. Jeśli każda grupa się zgadza, nikt nie znajduje się pośrodku, a Twoje wiadomości są przeznaczone tylko dla was dwojga.';
+    return 'Porównaj wszystkie 12 grup z $peerName osobiście lub podczas zaufanej rozmowy. Jeśli każda grupa się zgadza, nikt nie znajduje się pośrodku, a twoje wiadomości są przeznaczone tylko dla was dwojga.';
   }
 
   @override
@@ -3951,7 +3952,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get myKryfoIfThisLinkEnds =>
-      'Jeśli ten link trafi gdzieś, gdzie nie chcesz, zresetuj go w ustawieniach. Każdy, kto go ma, będzie wtedy potrzebował nowego.';
+      'Jeśli ten link trafi gdzieś, gdzie nie chcesz, zresetuj go w ustawieniach. Każdy, kto go ma, będzie wtedy potrzebować nowego.';
 
   @override
   String get myKryfoAlreadyShareAFriend =>
@@ -4657,8 +4658,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String profileYouAreAThank(String tier) {
     String _temp0 = intl.Intl.selectLogic(tier, {
       'supporter': 'Wspierasz Kryfo. Dziękuję.',
-      'patron': 'Jesteś mecenasem. Dziękuję.',
-      'guardian': 'Jesteś strażnikiem. Dziękuję.',
+      'patron': 'Masz odznakę mecenasa. Dziękuję.',
+      'guardian': 'Masz odznakę strażnika. Dziękuję.',
       'other': 'Wspierasz Kryfo. Dziękuję.',
     });
     return '$_temp0';
@@ -4960,7 +4961,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get restoreCheckProtections =>
-      'Ustawienia nie są zapisywane w kopii. Gdy Kryfo się otworzy, sprawdź Twoje zabezpieczenia w Ustawieniach.';
+      'Ustawienia nie są zapisywane w kopii. Gdy Kryfo się otworzy, sprawdź twoje zabezpieczenia w Ustawieniach.';
 
   @override
   String get restoreReopenKryfo => 'Otwórz Kryfo ponownie';
@@ -5219,7 +5220,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get roomLinkTheyWillKnowThis =>
-      'Będą wiedzieć, że ten pokój pochodzi od Ciebie. W środku każdy ma taki sam klucz jak inni.';
+      'Będą wiedzieć, że ten pokój pochodzi od ciebie. W środku każdy ma taki sam klucz jak inni.';
 
   @override
   String get roomLinkNoContactsYet => 'Jeszcze brak kontaktów';
@@ -5342,7 +5343,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get seenWhenAContactIntroduces =>
-      'Gdy kontakt przedstawia cię komuś, ten kontakt wie, że jesteście teraz połączeni. Nikt inny. Przekaźnik widzi zaszyfrowane dane, a żaden serwer nigdy nie widzi sieci kontaktów.';
+      'Gdy kontakt przedstawia cię komuś, ten kontakt wie o waszym nowym połączeniu. Nikt inny. Przekaźnik widzi zaszyfrowane dane, a żaden serwer nigdy nie widzi sieci kontaktów.';
 
   @override
   String get seenTheScamShield => 'Ochrona przed oszustwami';
@@ -5373,11 +5374,11 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get seenAPreviewIsFetched =>
-      'Podgląd pobiera nadawca, przez Tor, i trafia on do zaszyfrowanej wiadomości. Telefon odbiorcy nie wysyła żadnego zapytania. Strona dowiaduje się tylko, że ktoś przez Tor poprosił o stronę. Żaden obrazek nie jest ładowany, a link od obcego zostaje zwykłym tekstem.';
+      'Podgląd pobiera nadawca, przez Tor, i trafia on do zaszyfrowanej wiadomości. Telefon odbiorcy nie wysyła żadnego zapytania. Strona dowiaduje się tylko, że przez Tor poproszono o stronę. Żaden obrazek nie jest ładowany, a link od obcego zostaje zwykłym tekstem.';
 
   @override
   String get seenAPreviewIsFetchedDesk =>
-      'Podgląd pobiera nadawca, przez Tor, i trafia on do zaszyfrowanej wiadomości. Urządzenie odbiorcy nie wysyła żadnego zapytania. Strona dowiaduje się tylko, że ktoś przez Tor poprosił o stronę. Żaden obrazek nie jest ładowany, a link od obcego zostaje zwykłym tekstem.';
+      'Podgląd pobiera nadawca, przez Tor, i trafia on do zaszyfrowanej wiadomości. Urządzenie odbiorcy nie wysyła żadnego zapytania. Strona dowiaduje się tylko, że przez Tor poproszono o stronę. Żaden obrazek nie jest ładowany, a link od obcego zostaje zwykłym tekstem.';
 
   @override
   String get seenASeizedUnlockedPhone => 'Zabrany odblokowany telefon';
@@ -5398,7 +5399,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get seenTheRatchetAndStorage =>
-      'Warstwy ratchet i przechowywania są standardowe. Warstwa, która je łączy, jest nasza i nikt niezależny jej nie sprawdził. To oprogramowanie w wersji alfa.';
+      'Warstwy ratchet i przechowywania są standardowe. Warstwa, która je łączy, jest nasza i nie przeszła jeszcze niezależnej kontroli. To oprogramowanie w wersji alfa.';
 
   @override
   String get seenFast => 'Szybki';
@@ -5514,7 +5515,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settingsTypingBridgesOff =>
-      'Wyłączone, gdy używasz mostków: ktoś, kto obserwuje twoje połączenie, mógłby dopasować sygnały pisania. Wraca samo, gdy mostki są wyłączone.';
+      'Wyłączone, gdy używasz mostków: osoba obserwująca twoje połączenie mogłaby dopasować sygnały pisania. Wraca samo, gdy mostki są wyłączone.';
 
   @override
   String get settingsLightTheme => 'Jasny motyw';
@@ -5667,8 +5668,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get toolsOpenALockedFile => 'Otwórz zablokowany plik';
 
   @override
-  String get toolsAnyAgeFileSomeone =>
-      'Dowolny plik .age, który ktoś ci wysłał';
+  String get toolsAnyAgeFileSomeone => 'Dowolny otrzymany plik .age';
 
   @override
   String get toolsWorksOfflineNoContacts =>
@@ -6114,7 +6114,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoKreeFoGreek =>
-      'Kryfo · KRI-fo · po grecku ukryte.\nSpokojne miejsce do rozmowy, zbudowane tak, żeby nikt nie patrzył.';
+      'Kryfo · KRI-fo · po grecku ukryte.\nSpokojne miejsce do rozmowy, zbudowane z dala od cudzych oczu.';
 
   @override
   String get whyKryfoRoutedThroughTor => 'Przez Tor';
@@ -6160,7 +6160,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoIsPreAlpha =>
-      'Kryfo jest w wersji alfa i nie przeszło audytu. Kryptografia jest prawdziwa, ale żaden zewnętrzny ekspert jeszcze jej nie sprawdził, więc nie polegaj na nim jeszcze tam, gdzie zależy od tego twoje bezpieczeństwo.';
+      'Kryfo jest w wersji alfa i nie przeszło audytu. Kryptografia jest prawdziwa, ale nie przeszła jeszcze zewnętrznej kontroli, więc nie polegaj na nim jeszcze tam, gdzie zależy od tego twoje bezpieczeństwo.';
 
   @override
   String get cleanerLocation => 'Lokalizacja';
@@ -6537,7 +6537,7 @@ class AppLocalizationsPl extends AppLocalizations {
       'Wystarczy, żeby znaleźć okolicę.';
 
   @override
-  String get photoStoryItKnowsWhereYou => 'Wie, gdzie byłeś.';
+  String get photoStoryItKnowsWhereYou => 'Wie, gdzie zrobiono zdjęcie.';
 
   @override
   String get photoStoryDownToTheBuilding => 'Z dokładnością do budynku.';
@@ -6858,7 +6858,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get motionAnnouncingYourArrival => 'Ogłaszam twoje przybycie';
 
   @override
-  String get motionYouReAnonymous => 'Jesteś anonimowy';
+  String get motionYouReAnonymous => 'Zachowujesz anonimowość';
 
   @override
   String get motionReadyToChat => 'Gotowe do czatu';
@@ -6873,7 +6873,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get motionBouncingThroughRelaysSo =>
-      'Przeskakiwanie między przekaźnikami, aby nikt nie mógł powiązać tego z Tobą.';
+      'Przeskakiwanie między przekaźnikami, aby nie dało się powiązać tego z tobą.';
 
   @override
   String get motionTellingTheNetworkYou =>
@@ -8032,7 +8032,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String handleNobodyHasClaimed(Object handle) {
-    return 'Nikt nie zajął $handle';
+    return 'Nazwa $handle jest wolna';
   }
 
   @override
@@ -8642,11 +8642,11 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get nameTakenLine =>
-      'Ktoś tutaj dostał te słowa z prośby, przedstawienia albo grupy, z innym kluczem, i nikt ich nie sprawdził. Słowa można skopiować. Jeśli ten link jest od osoby, którą znasz, użyj go, a potem porównajcie numer bezpieczeństwa.';
+      'Ktoś tutaj dostał te słowa z prośby, przedstawienia albo grupy, z innym kluczem, i nie zostały sprawdzone. Słowa można skopiować. Jeśli ten link jest od osoby, którą znasz, użyj go, a potem porównajcie numer bezpieczeństwa.';
 
   @override
   String get nameTakenChatLine =>
-      'Twój czat pod tymi słowami pochodzi z prośby, przedstawienia albo grupy, z innym kluczem, i nikt go nie sprawdził. Słowa można skopiować. Jeśli ten link jest od osoby, którą znasz, użyj go: tamten czat zostanie usunięty, a numer bezpieczeństwa porównacie w nowym. Nie wiesz, skąd jest link? Zostaw ten, który masz.';
+      'Twój czat pod tymi słowami pochodzi z prośby, przedstawienia albo grupy, z innym kluczem, i nie został sprawdzony. Słowa można skopiować. Jeśli ten link jest od osoby, którą znasz, użyj go: tamten czat zostanie usunięty, a numer bezpieczeństwa porównacie w nowym. Nie wiesz, skąd jest link? Zostaw ten, który masz.';
 
   @override
   String get nameTakenDeletedLine =>
@@ -8654,11 +8654,11 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get nameTakenTombLine =>
-      'Usunięto z tego telefonu kogoś pod tymi słowami, bo nie był tym, za kogo się podawał. Jeśli ten link jest od osoby, którą znasz, użyj go, a potem porównajcie numer bezpieczeństwa.';
+      'Usunięto z tego telefonu kogoś pod tymi słowami, bo ta osoba podszywała się pod kogoś innego. Jeśli ten link jest od osoby, którą znasz, użyj go, a potem porównajcie numer bezpieczeństwa.';
 
   @override
   String get nameTakenTombLineDesk =>
-      'Usunięto z tego komputera kogoś pod tymi słowami, bo nie był tym, za kogo się podawał. Jeśli ten link jest od osoby, którą znasz, użyj go, a potem porównajcie numer bezpieczeństwa.';
+      'Usunięto z tego komputera kogoś pod tymi słowami, bo ta osoba podszywała się pod kogoś innego. Jeśli ten link jest od osoby, którą znasz, użyj go, a potem porównajcie numer bezpieczeństwa.';
 
   @override
   String get nameTakenUse => 'Użyj tego linku';
@@ -8672,7 +8672,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String appLinkNeedsUpdate(Object id) {
-    return '$id musi zaktualizować Kryfo, zanim będziecie mogli się dodać.';
+    return '$id musi zaktualizować Kryfo, zanim dodacie się nawzajem.';
   }
 
   @override
@@ -8705,11 +8705,11 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get notThemSheetLine =>
-      'Czat, jego wiadomości i pliki znikną z tego telefonu. Te trzy słowa wrócą tylko z linku lub kodu, który sam dodasz. Porównaj numer bezpieczeństwa z każdym, kogo dodajesz.';
+      'Czat, jego wiadomości i pliki znikną z tego telefonu. Te trzy słowa wrócą tylko z linku lub kodu, który dodasz samodzielnie. Porównaj numer bezpieczeństwa z każdym, kogo dodajesz.';
 
   @override
   String get notThemSheetLineDesk =>
-      'Czat, jego wiadomości i pliki znikną z tego komputera. Te trzy słowa wrócą tylko z linku lub kodu, który sam dodasz. Porównaj numer bezpieczeństwa z każdym, kogo dodajesz.';
+      'Czat, jego wiadomości i pliki znikną z tego komputera. Te trzy słowa wrócą tylko z linku lub kodu, który dodasz samodzielnie. Porównaj numer bezpieczeństwa z każdym, kogo dodajesz.';
 
   @override
   String get notThemRemove => 'Usuń i zablokuj';
@@ -9326,7 +9326,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get groupEndedOldNotice =>
-      'Zakończyłem tę grupę, więc nikt nie może już w niej pisać. Zaktualizuj Kryfo, żeby widzieć ją jako zakończoną.';
+      'Zakończono tę grupę, więc nikt nie może już w niej pisać. Zaktualizuj Kryfo, żeby widzieć ją jako zakończoną.';
 
   @override
   String get groupInfoEndGroupDetail =>
@@ -9727,7 +9727,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get iconNoPinLine =>
-      'Każdy, kto ją stuknie, zobaczy Kryfo. Ustaw PIN aplikacji, żeby zamiast tego widział klawiaturę PIN.';
+      'Każdy, kto ją stuknie, zobaczy Kryfo. Ustaw PIN aplikacji, żeby zamiast tego pokazywała się klawiatura PIN.';
 
   @override
   String get iconSetPin => 'Ustaw PIN';
@@ -9852,7 +9852,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get notificationsGoogleBody =>
-      'Natychmiastowe i lekkie. Google widzi, kiedy telefon jest budzony, nigdy kto pisał ani co napisał.';
+      'Natychmiastowe i lekkie. Google widzi, kiedy telefon jest budzony, nigdy, od kogo jest wiadomość ani co w niej jest.';
 
   @override
   String get notificationsGoogleStarting => 'Włączam…';
@@ -9863,7 +9863,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Dorzucane są fałszywe pobudki, przez co Google trudniej ustalić, kiedy przychodzą prawdziwe wiadomości. Nasz przekaźnik przechowuje tylko adresy, których nie może ze sobą powiązać. Usługa powiadomień działa na tym samym serwerze i mogłaby je powiązać, a z pomocą Google także z twoim kontem Google, więc mógłby to zrobić każdy, kto prowadzi albo przejmie nasz serwer. Jeśli to dla ciebie ważne, wybierz inny sposób. Ukryte czaty, pokoje poza kilkoma pierwszymi, a czasem też zwykły kontakt, mniej więcej przez jeden miesiąc na pięć, czekają na sprawdzenie, które Kryfo nadal robi co 15 minut.';
+      'Dorzucane są fałszywe pobudki, przez co Google trudniej ustalić, kiedy przychodzą prawdziwe wiadomości. Nasz przekaźnik przechowuje tylko adresy, których nie może ze sobą powiązać. Usługa powiadomień działa na tym samym serwerze i mogłaby je powiązać, a z pomocą Google także z twoim kontem Google, więc mogłaby to zrobić każda osoba, która prowadzi albo przejmie nasz serwer. Jeśli to dla ciebie ważne, wybierz inny sposób. Ukryte czaty, pokoje poza kilkoma pierwszymi, a czasem też zwykły kontakt, mniej więcej przez jeden miesiąc na pięć, czekają na sprawdzenie, które Kryfo nadal robi co 15 minut.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -9903,7 +9903,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get homeGoogleLine =>
-      'Natychmiastowe i oszczędne dla baterii. Google widzi, kiedy telefon jest budzony, nigdy kto pisał ani co napisał.';
+      'Natychmiastowe i oszczędne dla baterii. Google widzi, kiedy telefon jest budzony, nigdy, od kogo jest wiadomość ani co w niej jest.';
 
   @override
   String get homeGoogleUse => 'Użyj';
@@ -10043,7 +10043,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get groupShotsStartsWhenAll =>
-      'Czekam, aż wszyscy tutaj będą mogli blokować zrzuty ekranu na swoich urządzeniach';
+      'Czekam, aż wszystkie urządzenia tutaj będą mogły blokować zrzuty ekranu';
 
   @override
   String get groupShotsOnForAll => 'Włączone dla wszystkich tutaj';
@@ -10057,7 +10057,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'Czekam, aż wszyscy tutaj będą mogli blokować zrzuty ekranu na swoich urządzeniach. Może to zmienić tylko administrator';
+      'Czekam, aż wszystkie urządzenia tutaj będą mogły blokować zrzuty ekranu. Może to zmienić tylko administrator';
 
   @override
   String get groupShotsOnAdminOnly =>
@@ -10093,18 +10093,18 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get groupShotsNeedsUpdate =>
-      'Nie może jeszcze blokować zrzutów ekranu na swoim urządzeniu albo od tego czasu nie był online';
+      'Nie może jeszcze blokować zrzutów ekranu na swoim urządzeniu albo od tamtej pory nie pojawia się online';
 
   @override
   String get groupShotsBlockedByYou => 'Zablokowane przez ciebie';
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'Włączono blokadę zrzutów ekranu. Obejmie wszystkich, gdy wszyscy tutaj będą mogli blokować zrzuty ekranu na swoich urządzeniach.';
+      'Włączono blokadę zrzutów ekranu. Obejmie wszystkich, gdy wszystkie urządzenia tutaj będą mogły blokować zrzuty ekranu.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name włącza blokadę zrzutów ekranu. Obejmie wszystkich, gdy wszyscy tutaj będą mogli blokować zrzuty ekranu na swoich urządzeniach.';
+    return '$name włącza blokadę zrzutów ekranu. Obejmie wszystkich, gdy wszystkie urządzenia tutaj będą mogły blokować zrzuty ekranu.';
   }
 
   @override
@@ -10151,7 +10151,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get groupShotsOldNotice =>
-      'Włączyłem blokadę zrzutów ekranu w tej grupie. Twoje Kryfo jeszcze tego nie potrafi, więc zaktualizuj je.';
+      'W tej grupie włączono blokadę zrzutów ekranu. Twoje Kryfo jeszcze tego nie potrafi, więc zaktualizuj je.';
 
   @override
   String get captureShotTaken =>
@@ -10586,7 +10586,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get desktopStartRefused =>
-      'Ten komputer nie pozwolił Kryfo uruchamiać się razem z nim. Kryfo otworzy się, gdy uruchomisz je sam.';
+      'Ten komputer nie pozwolił Kryfo uruchamiać się razem z nim. Kryfo otworzy się, gdy je uruchomisz.';
 
   @override
   String get desktopStartHeldOff =>
@@ -10662,7 +10662,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'Pomija Tor, więc wiadomości docierają szybciej i zużywają mniej baterii. Nasze serwery widzą twój adres IP tylko podczas połączenia i nigdy go nie zapisują ani nie przechowują. Nigdy tego, co piszesz. Twoje kontakty nigdy go nie widzą. Twoja sieć widzi, że łączysz się z Kryfo.';
+      'Pomija Tor, więc wiadomości docierają szybciej i zużywają mniej baterii. Nasze serwery widzą twój adres IP tylko podczas połączenia i nigdy go nie zapisują ani nie przechowują. Twoje kontakty nigdy go nie widzą. Twoja sieć widzi, że łączysz się z Kryfo.';
 
   @override
   String get modesFastConnected => 'Szybki · połączono';
@@ -10787,19 +10787,19 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get chatAlbumItDisappearsWithNo =>
-      'Ten album zostanie usunięty z obu telefonów, chyba że ktoś już go zapisał. Tego nie da się cofnąć.';
+      'Ten album zostanie usunięty z obu telefonów, chyba że już go zapisano. Tego nie da się cofnąć.';
 
   @override
   String get chatAlbumItDisappearsWithNoDesk =>
-      'Ten album zostanie usunięty z obu urządzeń, chyba że ktoś już go zapisał. Tego nie da się cofnąć.';
+      'Ten album zostanie usunięty z obu urządzeń, chyba że już go zapisano. Tego nie da się cofnąć.';
 
   @override
   String get groupChatAlbumItDisappearsWithNo =>
-      'Ten album zostanie usunięty z telefonów wszystkich osób, chyba że ktoś już go zapisał. Tego nie da się cofnąć.';
+      'Ten album zostanie usunięty z telefonów wszystkich osób, chyba że już go zapisano. Tego nie da się cofnąć.';
 
   @override
   String get groupChatAlbumItDisappearsWithNoDesk =>
-      'Ten album zostanie usunięty z urządzeń wszystkich osób, chyba że ktoś już go zapisał. Tego nie da się cofnąć.';
+      'Ten album zostanie usunięty z urządzeń wszystkich osób, chyba że już go zapisano. Tego nie da się cofnąć.';
 
   @override
   String get homeInviteSomeone => 'Zaproś kogoś';
@@ -11220,7 +11220,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String chatHealNewSession(Object name) {
-    return 'Telefon kontaktu $name zaczyna nową bezpieczną sesję';
+    return 'Urządzenie kontaktu $name zaczyna nową bezpieczną sesję';
   }
 
   @override
@@ -11294,6 +11294,73 @@ class AppLocalizationsPl extends AppLocalizations {
   String get groupChatTapToRetryDesk => '! Kliknij, by ponowić';
 
   @override
-  String get modesFastLineDesk =>
-      'Pomija Tor, więc wiadomości docierają szybciej i zużywają mniej baterii. Nasze serwery widzą twój adres IP tylko podczas połączenia i nigdy go nie zapisują ani nie przechowują. Twoje kontakty nigdy go nie widzą. Twoja sieć widzi, że łączysz się z Kryfo.';
+  String get chatDropHereToSend => 'Upuść tutaj, by wysłać';
+
+  @override
+  String get voiceSeeTranscription => 'Pokaż transkrypcję';
+
+  @override
+  String get voiceTranscribing => 'Transkrybuję…';
+
+  @override
+  String get voiceHideTranscription => 'Ukryj';
+
+  @override
+  String get voiceShowOriginalOnly => 'Pokaż tylko oryginał';
+
+  @override
+  String get voiceCouldNotTranscribe => 'Nie udało się rozpoznać słów';
+
+  @override
+  String get voiceTranscriptLabel => 'Transkrypcja';
+
+  @override
+  String get voiceSettingsTitle => 'Transkrypcja głosu';
+
+  @override
+  String get voiceOnRow => 'Transkrybuj wiadomości głosowe';
+
+  @override
+  String get voiceOnHint => 'Dostępna pod każdą wiadomością głosową';
+
+  @override
+  String get voiceOffDeletes => 'Wyłączenie usuwa zapisane transkrypcje.';
+
+  @override
+  String get voiceModelTitle => 'Model mowy';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'Jedno pobranie, około $size, dla wszystkich języków.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'Pobierany przez Tor i przechowywany na tym telefonie. Twoje wiadomości głosowe nigdy go nie opuszczają.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'Pobierany przez Tor i przechowywany na tym komputerze. Twoje wiadomości głosowe nigdy go nie opuszczają.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'Tor nie jest jeszcze połączony. Model pobiera się tylko przez Tor, więc spróbuj ponownie, gdy się połączy.';
+
+  @override
+  String get voiceModelRemoveTitle => 'Usunąć model mowy?';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'Gotowe transkrypcje zostają. Nowe znów będą potrzebować modelu.';
+
+  @override
+  String get voiceKeptNote =>
+      'Transkrypcje są przechowywane przy swoim czacie, zaszyfrowane na tym telefonie, i usuwane razem z nim.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'Transkrypcje są przechowywane przy swoim czacie, zaszyfrowane na tym komputerze, i usuwane razem z nim.';
+
+  @override
+  String get voiceNotNow => 'Nie teraz';
 }

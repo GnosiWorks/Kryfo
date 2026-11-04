@@ -1575,16 +1575,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'Konnte das GIF nicht bereinigen';
 
   @override
-  String get chatTorIsNotUp => 'Tor läuft noch nicht · sende ohne Vorschau';
+  String get chatTorIsNotUp =>
+      'Tor ist noch nicht verbunden · keine Link-Vorschau';
 
   @override
-  String get chatCouldnTReachIt => 'Nicht erreichbar · sende ohne Vorschau';
+  String get chatCouldnTReachIt =>
+      'Seite nicht erreichbar · keine Link-Vorschau';
 
   @override
-  String get chatNoTitleCameBack => 'Kein Titel erhalten · sende ohne Vorschau';
+  String get chatNoTitleCameBack =>
+      'Die Seite hat keinen Titel · keine Link-Vorschau';
 
   @override
-  String get chatCouldnTFetchIt => 'Nicht abrufbar · sende ohne Vorschau';
+  String get chatCouldnTFetchIt => 'Vorschau konnte nicht geladen werden';
 
   @override
   String get chatNoSignalSessionRe => 'Keine Signal-Sitzung. Neu koppeln';
@@ -2580,18 +2583,18 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get groupChatTorIsNotUp =>
-      'Tor läuft noch nicht · sende ohne Vorschau';
+      'Tor ist noch nicht verbunden · keine Link-Vorschau';
 
   @override
   String get groupChatCouldnTReachIt =>
-      'Nicht erreichbar · sende ohne Vorschau';
+      'Seite nicht erreichbar · keine Link-Vorschau';
 
   @override
   String get groupChatNoTitleCameBack =>
-      'Kein Titel erhalten · sende ohne Vorschau';
+      'Die Seite hat keinen Titel · keine Link-Vorschau';
 
   @override
-  String get groupChatCouldnTFetchIt => 'Nicht abrufbar · sende ohne Vorschau';
+  String get groupChatCouldnTFetchIt => 'Vorschau konnte nicht geladen werden';
 
   @override
   String get groupChatCamera => 'Kamera';
@@ -10574,7 +10577,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get modesFastLine =>
-      'Ohne Tor kommen Nachrichten schneller an, und der Akku hält länger. Unsere Server sehen deine IP-Adresse nur, solange du verbunden bist, und protokollieren oder speichern sie nie. Nie, was du sagst. Deine Kontakte sehen sie nie. Dein Netz kann sehen, dass du dich mit Kryfo verbindest.';
+      'Ohne Tor kommen Nachrichten schneller an, und der Akku hält länger. Unsere Server sehen deine IP-Adresse nur, solange du verbunden bist, und protokollieren oder speichern sie nie. Deine Kontakte sehen sie nie. Dein Netz kann sehen, dass du dich mit Kryfo verbindest.';
 
   @override
   String get modesFastConnected => 'Schnell · verbunden';
@@ -11128,7 +11131,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String chatHealNewSession(Object name) {
-    return 'Das Telefon von $name hat eine neue sichere Sitzung gestartet';
+    return 'Das Gerät von $name hat eine neue sichere Sitzung gestartet';
   }
 
   @override
@@ -11200,6 +11203,73 @@ class AppLocalizationsDe extends AppLocalizations {
   String get groupChatTapToRetryDesk => '! Klicken zum Wiederholen';
 
   @override
-  String get modesFastLineDesk =>
-      'Ohne Tor kommen Nachrichten schneller an, und der Akku hält länger. Unsere Server sehen deine IP-Adresse nur, solange du verbunden bist, und protokollieren oder speichern sie nie. Deine Kontakte sehen sie nie. Dein Netz kann sehen, dass du dich mit Kryfo verbindest.';
+  String get chatDropHereToSend => 'Hier ablegen zum Senden';
+
+  @override
+  String get voiceSeeTranscription => 'Transkript anzeigen';
+
+  @override
+  String get voiceTranscribing => 'Wird transkribiert…';
+
+  @override
+  String get voiceHideTranscription => 'Ausblenden';
+
+  @override
+  String get voiceShowOriginalOnly => 'Nur Original zeigen';
+
+  @override
+  String get voiceCouldNotTranscribe => 'Keine Worte erkannt';
+
+  @override
+  String get voiceTranscriptLabel => 'Transkript';
+
+  @override
+  String get voiceSettingsTitle => 'Sprache zu Text';
+
+  @override
+  String get voiceOnRow => 'Sprachnachrichten transkribieren';
+
+  @override
+  String get voiceOnHint => 'Unter jeder Sprachnachricht angeboten';
+
+  @override
+  String get voiceOffDeletes => 'Ausschalten löscht gespeicherte Transkripte.';
+
+  @override
+  String get voiceModelTitle => 'Sprachmodell';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'Ein Download von etwa $size für alle Sprachen.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'Über Tor geladen und auf diesem Handy behalten. Deine Sprachnachrichten verlassen es nie.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'Über Tor geladen und auf diesem Computer behalten. Deine Sprachnachrichten verlassen ihn nie.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'Tor ist noch nicht verbunden. Das Modell wird nur über Tor geladen, versuch es also noch mal, sobald es verbunden ist.';
+
+  @override
+  String get voiceModelRemoveTitle => 'Sprachmodell entfernen?';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'Fertige Transkripte bleiben. Für neue braucht es das Modell wieder.';
+
+  @override
+  String get voiceKeptNote =>
+      'Transkripte bleiben verschlüsselt bei ihrem Chat auf diesem Handy und werden mit ihm gelöscht.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'Transkripte bleiben verschlüsselt bei ihrem Chat auf diesem Computer und werden mit ihm gelöscht.';
+
+  @override
+  String get voiceNotNow => 'Nicht jetzt';
 }

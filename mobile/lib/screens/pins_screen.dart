@@ -27,6 +27,7 @@ import 'pin_flow_screen.dart';
 import 'update_pins_screen.dart';
 import '../widgets/confirm_sheet.dart';
 import '../l10n/l10n.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 class PinsScreen extends StatefulWidget {
   const PinsScreen({super.key, this.lock, this.host = const PinsHost()});
@@ -232,132 +233,137 @@ class _PinsScreenState extends State<PinsScreen> {
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
-      body: AnimatedBuilder(
-        animation: Listenable.merge([_lock, _host.changes]),
-        builder: (context, _) {
-          final on = _lock.lockOn;
-          final wipe = _lock.panicEnabled;
-          final decoy = _decoyOn;
-          final vault = _lock.inVault;
-          final keyLine = _lock.keyLine;
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
-            children: staggerAll([
-              // the same card on every phone that had pins before the
-              // update, the decoy's side alike, whatever pins are set
-              Unfold(
-                open: _lock.updateCard,
-                child: _lock.updateCard
-                    ? Padding(
-                        key: const ValueKey('card'),
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _UpdateCard(
-                          onType: _typePins,
-                          onDone: _cardDone,
+      body: DeskPage(
+        child: AnimatedBuilder(
+          animation: Listenable.merge([_lock, _host.changes]),
+          builder: (context, _) {
+            final on = _lock.lockOn;
+            final wipe = _lock.panicEnabled;
+            final decoy = _decoyOn;
+            final vault = _lock.inVault;
+            final keyLine = _lock.keyLine;
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
+              children: staggerAll([
+                // the same card on every phone that had pins before the
+                // update, the decoy's side alike, whatever pins are set
+                Unfold(
+                  open: _lock.updateCard,
+                  child: _lock.updateCard
+                      ? Padding(
+                          key: const ValueKey('card'),
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: _UpdateCard(
+                            onType: _typePins,
+                            onDone: _cardDone,
+                          ),
+                        )
+                      : const SizedBox(
+                          key: ValueKey('no card'),
+                          width: double.infinity,
                         ),
-                      )
-                    : const SizedBox(
-                        key: ValueKey('no card'),
-                        width: double.infinity,
-                      ),
-              ),
-              _PinCard(
-                name: l10n.pinsYourPin,
-                state: on ? l10n.commonOn : l10n.commonOff,
-                stateColor: on ? HaloColors.green : HaloColors.text3,
-                outcome: l10n.pinsOpensKryfoFourDigits,
-                primary: on ? l10n.pinsChangePin : l10n.pinsSetAPin,
-                onPrimary: () async {
-                  // a change asks for the pin there is first, as the
-                  // advanced flows do
-                  await Navigator.of(
-                    context,
-                  ).push(haloRoute(LockSetupScreen(lock: _lock, check: on)));
-                },
-                secondary: on ? l10n.pinsTurnOff : null,
-                onSecondary: on ? _turnOff : null,
-                extra: on && _lock.fingerOffered
-                    ? _Toggle(
-                        label: l10n.pinsUnlockWithFingerprint,
-                        on: _fingerTo ?? _lock.biometric,
-                        onTap: _flipFinger,
-                      )
-                    : on && _lock.fingerToDecoy
-                    ? _Toggle(
-                        label: l10n.pinsUnlockWithFingerprint,
-                        on: false,
-                        line: l10n.pinsFingerOpensDecoy,
-                      )
-                    : null,
-              ),
-              Unfold(
-                open: on && keyLine != null,
-                child: on && keyLine != null
-                    ? _KeyLine(key: const ValueKey('key'), line: keyLine)
-                    : const SizedBox(
-                        key: ValueKey('no key'),
-                        width: double.infinity,
-                      ),
-              ),
-              const SizedBox(height: 22),
-              _Advanced(
-                open: _open,
-                onToggle: () {
-                  HapticFeedback.selectionClick();
-                  setState(() => _open = !_open);
-                },
-                children: [
-                  _ExtraRow(
-                    icon: Icons.local_fire_department_outlined,
-                    tint: HaloColors.rose,
-                    name: l10n.pinsWipePin,
-                    line: l10n.pinsWipeLineShown,
-                    state: !on
-                        ? l10n.pinsNeedsAPinFirst
-                        : wipe
-                        ? l10n.pinsSet
-                        : l10n.commonOff,
-                    stateColor: on && wipe ? HaloColors.rose : HaloColors.text3,
-                    onTap: on ? _wipeRow : null,
-                  ),
-                  _ExtraRow(
-                    icon: Icons.theater_comedy_outlined,
-                    tint: HaloColors.amber,
-                    name: l10n.pinsDecoyPin,
-                    line: l10n.pinsDecoyLine,
-                    state: !on
-                        ? l10n.pinsNeedsAPinFirst
-                        : decoy
-                        ? l10n.pinsSet
-                        : l10n.commonOff,
-                    stateColor: on && decoy
-                        ? HaloColors.amber
-                        : HaloColors.text3,
-                    onTap: on ? _decoyRow : null,
-                  ),
-                  _ExtraRow(
-                    icon: Icons.visibility_off_outlined,
-                    tint: HaloColors.violet,
-                    name: l10n.pinsHiddenChats,
-                    line: l10n.pinsHiddenLine,
-                    state: !on
-                        ? l10n.pinsNeedsAPinFirst
-                        : vault
-                        ? l10n.pinsSet
-                        : l10n.pinsSetUp,
-                    stateColor: on && vault
-                        ? HaloColors.violet
-                        : HaloColors.text3,
-                    onTap: on ? _hiddenRow : null,
-                  ),
-                  _HowRow(
-                    onTap: () => _showHow(context, finger: _lock.bioSupported),
-                  ),
-                ],
-              ),
-            ]),
-          );
-        },
+                ),
+                _PinCard(
+                  name: l10n.pinsYourPin,
+                  state: on ? l10n.commonOn : l10n.commonOff,
+                  stateColor: on ? HaloColors.green : HaloColors.text3,
+                  outcome: l10n.pinsOpensKryfoFourDigits,
+                  primary: on ? l10n.pinsChangePin : l10n.pinsSetAPin,
+                  onPrimary: () async {
+                    // a change asks for the pin there is first, as the
+                    // advanced flows do
+                    await Navigator.of(
+                      context,
+                    ).push(haloRoute(LockSetupScreen(lock: _lock, check: on)));
+                  },
+                  secondary: on ? l10n.pinsTurnOff : null,
+                  onSecondary: on ? _turnOff : null,
+                  extra: on && _lock.fingerOffered
+                      ? _Toggle(
+                          label: l10n.pinsUnlockWithFingerprint,
+                          on: _fingerTo ?? _lock.biometric,
+                          onTap: _flipFinger,
+                        )
+                      : on && _lock.fingerToDecoy
+                      ? _Toggle(
+                          label: l10n.pinsUnlockWithFingerprint,
+                          on: false,
+                          line: l10n.pinsFingerOpensDecoy,
+                        )
+                      : null,
+                ),
+                Unfold(
+                  open: on && keyLine != null,
+                  child: on && keyLine != null
+                      ? _KeyLine(key: const ValueKey('key'), line: keyLine)
+                      : const SizedBox(
+                          key: ValueKey('no key'),
+                          width: double.infinity,
+                        ),
+                ),
+                const SizedBox(height: 22),
+                _Advanced(
+                  open: _open,
+                  onToggle: () {
+                    HapticFeedback.selectionClick();
+                    setState(() => _open = !_open);
+                  },
+                  children: [
+                    _ExtraRow(
+                      icon: Icons.local_fire_department_outlined,
+                      tint: HaloColors.rose,
+                      name: l10n.pinsWipePin,
+                      line: l10n.pinsWipeLineShown,
+                      state: !on
+                          ? l10n.pinsNeedsAPinFirst
+                          : wipe
+                          ? l10n.pinsSet
+                          : l10n.commonOff,
+                      stateColor: on && wipe
+                          ? HaloColors.rose
+                          : HaloColors.text3,
+                      onTap: on ? _wipeRow : null,
+                    ),
+                    _ExtraRow(
+                      icon: Icons.theater_comedy_outlined,
+                      tint: HaloColors.amber,
+                      name: l10n.pinsDecoyPin,
+                      line: l10n.pinsDecoyLine,
+                      state: !on
+                          ? l10n.pinsNeedsAPinFirst
+                          : decoy
+                          ? l10n.pinsSet
+                          : l10n.commonOff,
+                      stateColor: on && decoy
+                          ? HaloColors.amber
+                          : HaloColors.text3,
+                      onTap: on ? _decoyRow : null,
+                    ),
+                    _ExtraRow(
+                      icon: Icons.visibility_off_outlined,
+                      tint: HaloColors.violet,
+                      name: l10n.pinsHiddenChats,
+                      line: l10n.pinsHiddenLine,
+                      state: !on
+                          ? l10n.pinsNeedsAPinFirst
+                          : vault
+                          ? l10n.pinsSet
+                          : l10n.pinsSetUp,
+                      stateColor: on && vault
+                          ? HaloColors.violet
+                          : HaloColors.text3,
+                      onTap: on ? _hiddenRow : null,
+                    ),
+                    _HowRow(
+                      onTap: () =>
+                          _showHow(context, finger: _lock.bioSupported),
+                    ),
+                  ],
+                ),
+              ]),
+            );
+          },
+        ),
       ),
     );
   }
