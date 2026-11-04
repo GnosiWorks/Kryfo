@@ -482,7 +482,7 @@ mixin _MessageRows {
   }) async {
     final db = await open();
     final only = from == null ? '' : " AND direction = 'in' AND peer_id = ?";
-    final args = [msgUid, if (from != null) from];
+    final args = [msgUid, ?from];
     // a page title belongs to the link it was fetched for
     final was = await db.query(
       'messages',
@@ -573,16 +573,28 @@ mixin _MessageRows {
   // another member's frame took first never hides theirs
   Future<bool> messageFrom(String msgUid, String sender, String? group) async {
     final db = await open();
-    final rows = await db.query(
-      'messages',
-      columns: ['rowid AS rowid'],
-      where:
-          "msg_uid = ? AND (direction = 'out' OR (peer_id = ? "
-          "AND IFNULL(group_id, '') = ?))",
-      whereArgs: [msgUid, sender, group ?? ''],
-      limit: 1,
-    );
-    return rows.isNotEmpty;
+    for (final (where, args) in [
+      ("msg_uid = ? AND direction = 'out'", [msgUid]),
+      group == null
+          ? (
+              'msg_uid = ? AND peer_id = ? AND group_id IS NULL',
+              [msgUid, sender],
+            )
+          : (
+              'msg_uid = ? AND peer_id = ? AND group_id = ?',
+              [msgUid, sender, group],
+            ),
+    ]) {
+      final rows = await db.query(
+        'messages',
+        columns: ['rowid AS rowid'],
+        where: where,
+        whereArgs: args,
+        limit: 1,
+      );
+      if (rows.isNotEmpty) return true;
+    }
+    return false;
   }
 
   // add or replace a reaction. reactor is '' for self, peer's kryfo id

@@ -79,7 +79,7 @@ mixin _DeleteRows {
   Future<void> deleteMessage(String msgUid, {String? from}) async {
     final db = await open();
     final only = from == null ? '' : " AND direction = 'in' AND peer_id = ?";
-    final args = [msgUid, if (from != null) from];
+    final args = [msgUid, ?from];
     final media = await db.query(
       'messages',
       columns: [..._kFileCols, ..._kUnreadCols, ..._kGoneCols],
