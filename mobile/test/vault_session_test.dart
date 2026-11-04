@@ -431,9 +431,8 @@ class _Rows {
 // the vault's sealing key as its rows hold it, for the batch book
 void _sealKeyFromRows() {
   vaultSealKeyOf = (v) async => v is _Db ? v.r.meta['priv'] : null;
-  addTearDown(
-    () => vaultSealKeyOf = (v) => VaultRouter.sealKeyIn(SqlRouterStore(v.open)),
-  );
+  final was = vaultSealKeyOf;
+  addTearDown(() => vaultSealKeyOf = was);
 }
 
 class _Db implements HaloDb {

@@ -6,10 +6,13 @@ part of '../main.dart';
 // marks the zone of a vault job, so one never waits on its own chain
 const _kVaultJob = #kryfoVaultJob;
 
-// the vault's own sealing key, read from its rows. tests stand one in
+// the vault's own sealing key, read from its rows while it is open: never
+// a database opened for it alone. tests stand one in
 @visibleForTesting
-Future<String?> Function(HaloDb v) vaultSealKeyOf = (v) =>
-    VaultRouter.sealKeyIn(SqlRouterStore(v.open));
+Future<String?> Function(HaloDb v) vaultSealKeyOf = _sealKeyOfOpen;
+
+Future<String?> _sealKeyOfOpen(HaloDb v) async =>
+    v.isOpen ? VaultRouter.sealKeyIn(SqlRouterStore(v.open)) : null;
 
 extension AppStateVault on AppState {
   // an arrival for a hidden chat while the vault is shut: sealed to the
