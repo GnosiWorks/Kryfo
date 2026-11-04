@@ -6,10 +6,12 @@ import (
 	"context"
 	"crypto/ecdh"
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/hex"
 	"net"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -198,18 +200,61 @@ func TestAHistoryCopyOverThePhonesDoor(t *testing.T) {
 	}
 }
 
-// a big tally goes in lines and is whole only once every line came
-func TestABigTallyComesInLines(t *testing.T) {
+// a big tally goes in lines and is whole only once every line came; one
+// that is not this copy's is turned down, and the device takes it again
+func TestATallyComesInLinesAndOnlyThisCopys(t *testing.T) {
 	histDoorHere(t)
+	was := histTallyChunk
+	histTallyChunk = 16
+	defer func() { histTallyChunk = was }()
 	p := newHistPhone(t)
 	p.serve(t, 0)
-	big := make([]byte, 3*histTallyChunk+5)
-	rand.Read(big)
-	if !p.fetch(t, "tally", func(a *histServeArgs) { a.Tally = big }).Ok {
+	sid := p.send.ID()
+	r, _ := devices.NewReceiver(p.key, p.bind, sid, p.id)
+	head, _ := p.send.Head()
+	for i := uint64(0); i < head.Records; i++ {
+		rec, _ := p.send.Record(i)
+		if _, err := r.Take(rec); err != nil {
+			t.Fatal(err)
+		}
+	}
+	tally, _ := r.Tally([]devices.Count{{Messages: 1}})
+	if len(tally) < 3*histTallyChunk {
+		t.Fatal("the tally fits one line")
+	}
+	// not whole yet after a first line alone
+	ask, _ := devices.AskFor(p.key, p.bind)
+	n := (len(tally) + histTallyChunk - 1) / histTallyChunk
+	first := "0/" + strconv.Itoa(n) + ":" + base64.StdEncoding.EncodeToString(tally[:histTallyChunk])
+	if ans, ok := histDoorTake(histAskLine(ask, "tally", first)); !ok || ans != histAnswerYes+" more" {
+		t.Fatalf("a first line: %q", ans)
+	}
+	if p.state(t).Tally != nil {
+		t.Fatal("a tally held from one line")
+	}
+	if !p.fetch(t, "tally", func(a *histServeArgs) { a.Tally = tally }).Ok {
 		t.Fatal("not taken")
 	}
-	if string(p.state(t).Tally) != string(big) {
+	st := p.state(t)
+	if string(st.Tally) != string(tally) {
 		t.Fatal("the tally came otherwise")
+	}
+	if mm, _ := p.send.CheckTally(st.Tally); len(mm) != 1 {
+		t.Fatalf("the gap: %v", mm)
+	}
+	// the phone made the copy again: the old copy's tally is no use there
+	histSendClose(p.handle)
+	p.serve(t, 1)
+	if got := p.fetch(t, "tally", func(a *histServeArgs) { a.Tally = tally }); got.Ok || got.Why != histWhyOther {
+		t.Fatalf("an old copy's tally: %+v", got)
+	}
+	junk := make([]byte, 40)
+	rand.Read(junk)
+	if got := p.fetch(t, "tally", func(a *histServeArgs) { a.Tally = junk }); got.Ok || got.Why != histWhyOther {
+		t.Fatalf("junk as a tally: %+v", got)
+	}
+	if p.state(t).Tally != nil {
+		t.Fatal("a tally of no use held")
 	}
 }
 
@@ -228,8 +273,12 @@ func TestACopyMadeAgainHasItsOwnGeneration(t *testing.T) {
 	if h.Gen != 3 || h.ID != hex.EncodeToString(sid[:]) || h.Key != hex.EncodeToString(g3[:]) || sid == first {
 		t.Fatalf("hello again: %+v", h)
 	}
+	// a device still on generation 0 hears the copy is another now
+	if got := p.fetch(t, "rec", nil); got.Why != histWhyOther || got.Rec != nil {
+		t.Fatalf("an ask of generation 0: %+v", got)
+	}
 	// the new generation's records open only under its key
-	rec := p.fetch(t, "rec", nil).Rec
+	rec := p.fetch(t, "rec", func(a *histServeArgs) { a.Gen = 3 }).Rec
 	if r, _ := devices.NewReceiver(p.key, p.bind, sid, p.id); r != nil {
 		if _, err := r.Take(rec); err == nil {
 			t.Fatal("generation 3's head opened under the link's key")
@@ -247,7 +296,7 @@ func TestAStrangersAskGetsNothing(t *testing.T) {
 	p := newHistPhone(t)
 	p.serve(t, 0)
 	ask, _ := devices.AskFor(p.key, p.bind)
-	good := histAskLine(ask, "rec", "1")
+	good := histAskLine(ask, "rec", "0.1")
 	if ans, ok := histDoorTake(good); !ok || !strings.HasPrefix(ans, histAnswerYes+" ") {
 		t.Fatalf("the device's own ask: %q %v", ans, ok)
 	}
@@ -255,13 +304,13 @@ func TestAStrangersAskGetsNothing(t *testing.T) {
 	stranger, _ := devices.AskFor(otherKey, p.bind)
 	f := strings.Fields(good)
 	for _, line := range []string{
-		histAskLine(stranger, "rec", "1"),
+		histAskLine(stranger, "rec", "0.1"),
 		// the right tag, another key's mac
-		histAskPrefix + f[1] + " rec 1 " + strings.Fields(histAskLine(stranger, "rec", "1"))[4],
+		histAskPrefix + f[1] + " rec 0.1 " + strings.Fields(histAskLine(stranger, "rec", "0.1"))[4],
 		// the mac of rec 1 on rec 2
-		histAskPrefix + f[1] + " rec 2 " + f[4],
-		histAskPrefix + f[1] + " rec 1",
-		histAskPrefix + f[1] + " rec 1 " + f[4][:62],
+		histAskPrefix + f[1] + " rec 0.2 " + f[4],
+		histAskPrefix + f[1] + " rec 0.1",
+		histAskPrefix + f[1] + " rec 0.1 " + f[4][:62],
 		"KHQ2 " + strings.Join(f[1:], " "),
 	} {
 		if ans, ok := histDoorTake(line); ok {
@@ -273,7 +322,7 @@ func TestAStrangersAskGetsNothing(t *testing.T) {
 	go handleConn(b)
 	defer a.Close()
 	a.SetDeadline(time.Now().Add(5 * time.Second))
-	go a.Write([]byte(histAskLine(stranger, "rec", "1") + "\n"))
+	go a.Write([]byte(histAskLine(stranger, "rec", "0.1") + "\n"))
 	if line, err := bufio.NewReader(a).ReadString('\n'); err == nil {
 		t.Fatalf("the door answered a stranger: %q", line)
 	}

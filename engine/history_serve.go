@@ -38,10 +38,11 @@ const (
 	histWhyEnded  = "ended"
 	histWhyDone   = "done"
 	histWhyNone   = "none"
-
-	// a tally goes in lines of this many bytes at most
-	histTallyChunk = 48 << 10
+	histWhyOther  = "other"
 )
+
+// a tally goes in lines of this many bytes at most
+var histTallyChunk = 48 << 10
 
 // one copy the phone serves
 type histServe struct {
@@ -239,14 +240,26 @@ func histDoorTake(line string) (string, bool) {
 		}
 		return histAnswerYes + " " + strconv.FormatUint(uint64(gen), 10) + " " + id, true
 	case "tally":
+		if why != "" {
+			histServes.Unlock()
+			return histAnswerNo + " " + why, true
+		}
 		ans := s.takeTally(arg)
 		histServes.Unlock()
 		return ans, true
 	case "rec":
-		i, err := strconv.ParseUint(arg, 10, 64)
-		if err != nil || arg != strconv.FormatUint(i, 10) {
+		// "<generation>.<index>": a device still on a copy the phone made
+		// again since hears so, and says hello again
+		g, n, _ := strings.Cut(arg, ".")
+		ag, err1 := strconv.ParseUint(g, 10, 32)
+		i, err := strconv.ParseUint(n, 10, 64)
+		if err != nil || err1 != nil || arg != strconv.FormatUint(ag, 10)+"."+strconv.FormatUint(i, 10) {
 			histServes.Unlock()
 			return histAnswerNo + " " + histWhyNone, true
+		}
+		if why == "" && uint32(ag) != gen {
+			histServes.Unlock()
+			return histAnswerNo + " " + histWhyOther, true
 		}
 		if why == "" && i+1 > s.asked {
 			s.asked = i + 1
@@ -303,6 +316,15 @@ func (s *histServe) takeTally(arg string) string {
 	s.parts = nil
 	if len(all) > devices.TallyMax {
 		return no
+	}
+	// a tally of another copy (the phone made this one again since) is of
+	// no use: the device hears so and takes the copy again
+	snd := histSender(C.longlong(s.send))
+	if snd == nil {
+		return histAnswerNo + " " + histWhyEnded
+	}
+	if _, err := snd.CheckTally(all); err != nil {
+		return histAnswerNo + " " + histWhyOther
 	}
 	s.tally = all
 	return histAnswerYes + " ok"
@@ -473,7 +495,8 @@ func histFetchCall(op string, a *histServeArgs, out *histServeOut) error {
 		clear(g[:])
 		return nil
 	case "rec":
-		ans, err := histAsk(a.Onion, histAskLine(ask, "rec", strconv.FormatUint(a.I, 10)))
+		arg := strconv.FormatUint(uint64(a.Gen), 10) + "." + strconv.FormatUint(a.I, 10)
+		ans, err := histAsk(a.Onion, histAskLine(ask, "rec", arg))
 		if err != nil {
 			return err
 		}
