@@ -816,7 +816,10 @@ extension AppStateVault on AppState {
     HaloContainer from,
     HaloContainer to,
   ) async {
-    for (final n in names) {
+    // each file with its blur, if it has one
+    for (final n in [
+      for (final x in names) ...[x, '$x$kBlurLeaf'],
+    ]) {
       final src = await chatFilePath(n, from);
       final dst = await chatFilePath(n, to);
       if (src == null || dst == null || !await File(src).exists()) continue;

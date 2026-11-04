@@ -106,11 +106,14 @@ bool nameSaysVideo(String? name) {
 }
 
 class VideoInfo {
-  final Uint8List? jpeg; // one frame, null when the phone could not read one
+  // one frame, null when the phone could not read one or the lock took it
+  Uint8List? jpeg;
+  // the lock took the frame: asked for again
+  bool _taken = false;
   final Duration length;
   final int width;
   final int height;
-  const VideoInfo(this.jpeg, this.length, this.width, this.height);
+  VideoInfo(this.jpeg, this.length, this.width, this.height);
   double get aspect => height <= 0 ? 16 / 9 : width / height;
 }
 
@@ -119,7 +122,28 @@ class VideoInfo {
 final Map<String, VideoInfo?> _infos = {};
 final Map<String, Future<VideoInfo?>> _asking = {};
 
+// every info handed out with a frame, so the lock reaches the copies the
+// screens hold as well as this one
+final List<WeakReference<VideoInfo>> _given = [];
+int _frameGen = 0;
+
 VideoInfo? videoInfoNow(String path) => _infos[path];
+
+/// the lock is going up: every first frame goes, zeroed. the length and
+/// shape stay, and the frame is asked for again after the unlock
+void forgetVideoFrames() {
+  _frameGen++;
+  for (final w in _given) {
+    final i = w.target;
+    final j = i?.jpeg;
+    if (j == null) continue;
+    j.fillRange(0, j.length, 0);
+    i!
+      ..jpeg = null
+      .._taken = true;
+  }
+  _given.clear();
+}
 
 // asked for, then shredded before the answer: the answer is not kept
 final Set<String> _gone = {};
@@ -131,8 +155,13 @@ void forgetVideoInfo(String path) {
 }
 
 Future<VideoInfo?> videoInfoFor(String path) {
-  if (_infos.containsKey(path)) return Future.value(_infos[path]);
+  final had = _infos[path];
+  // a frame the lock took is asked for again
+  if (_infos.containsKey(path) && !(had?._taken ?? false)) {
+    return Future.value(had);
+  }
   return _asking[path] ??= () async {
+    final gen = _frameGen;
     VideoInfo? out;
     try {
       final m = await _channel.invokeMapMethod<String, dynamic>(
@@ -149,6 +178,15 @@ Future<VideoInfo?> videoInfoFor(String path) {
       }
     } catch (e) {
       dlog('video info: ${e.runtimeType}');
+    }
+    // the lock went up while it was asked: no frame is kept behind it
+    if (gen != _frameGen) {
+      out?.jpeg?.fillRange(0, out.jpeg!.length, 0);
+      out?.jpeg = null;
+    }
+    if (out?.jpeg != null) {
+      _given.removeWhere((w) => w.target?.jpeg == null);
+      _given.add(WeakReference(out!));
     }
     if (!_gone.remove(path)) {
       if (_infos.length >= 40) _infos.remove(_infos.keys.first);

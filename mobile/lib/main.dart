@@ -16,6 +16,7 @@ import 'devices/link_flow.dart';
 import 'devices/own_device_store.dart';
 import 'devices/own_devices.dart'
     show DecoyDevices, DeviceKind, LinkHistory, OwnDevices;
+import 'photo_blur.dart' show makeBlurSoon;
 import 'secure_store.dart';
 import 'desktop/desktop_mode.dart'
     show

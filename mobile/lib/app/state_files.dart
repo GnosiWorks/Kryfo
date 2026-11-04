@@ -251,6 +251,7 @@ extension AppStateFiles on AppState {
     final out = await _namedPath(env, db);
     try {
       await File(f.path).rename(out);
+      makeBlurSoon(out);
       return (out, waits: false);
     } catch (e) {
       dlog('files: fetched file not moved (${e.runtimeType})');
@@ -687,6 +688,7 @@ extension AppStateFiles on AppState {
         await _neverCame(d, db, f, frame);
         return;
       }
+      makeBlurSoon(target);
       setFileWait(f.uid, null);
       await _letFetchGo(db, f, frame, chat);
       chatChanged(f.groupId == null ? f.sender : 'group:${f.groupId}');

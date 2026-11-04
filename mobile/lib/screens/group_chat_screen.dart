@@ -12,6 +12,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../back_on_top.dart';
 import '../forward.dart';
+import '../photo_blur.dart' show makeBlurSoon;
+import '../widgets/sealed_picture.dart';
 import 'forward_sheet.dart';
 import '../picked.dart';
 import '../album.dart';
@@ -2697,6 +2699,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // a png, gif, webp or heic keeps its own kind, and its name says so
     final f = File('${mediaDir.path}/$made.${pictureExt(bytes)}');
     await f.writeAsBytes(bytes);
+    makeBlurSoon(f.path);
     return _GReady(made, f.path);
   }
 
@@ -3109,6 +3112,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       }
       return null;
     }
+    makeBlurSoon(dest.path);
     return _GReady(made, dest.path, fileName: name);
   }
 
@@ -6362,24 +6366,29 @@ class _GroupBubble extends StatelessWidget {
                                                             child: ChatPicture(
                                                               path:
                                                                   m.mediaPath!,
-                                                              child: Image.file(
-                                                                File(
-                                                                  m.mediaPath!,
-                                                                ),
-                                                                semanticLabel:
-                                                                    l10n.appPhoto,
-                                                                cacheWidth:
+                                                              child: SealedPicture(
+                                                                path: m
+                                                                    .mediaPath!,
+                                                                shaped: true,
+                                                                decodeWidth:
                                                                     decodePx(
                                                                       context,
                                                                       240,
                                                                     ),
-                                                                gaplessPlayback:
-                                                                    true,
-                                                                filterQuality:
-                                                                    FilterQuality
-                                                                        .medium,
-                                                                fit: BoxFit
-                                                                    .cover,
+                                                                image: ResizeImage.resizeIfNeeded(
+                                                                  decodePx(
+                                                                    context,
+                                                                    240,
+                                                                  ),
+                                                                  null,
+                                                                  FileImage(
+                                                                    File(
+                                                                      m.mediaPath!,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                semanticLabel:
+                                                                    l10n.appPhoto,
                                                                 // the file is gone:
                                                                 // say so, not a gap
                                                                 errorBuilder:

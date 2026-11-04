@@ -15,12 +15,13 @@ import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../main.dart' show appState, AppStateScreen;
 import '../open_file.dart';
+import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
 import 'album_grid.dart' show albumFlight, albumHeroTag;
 import 'decode_px.dart';
 import 'halo_hero.dart';
 import 'motion.dart' show houseSpring, kHouseCurve, kText2, motionStill;
-import 'photo_viewer.dart' show PhotoTileFade;
+import 'sealed_picture.dart';
 import 'text_ground.dart';
 import 'video_frame.dart';
 import 'video_viewer.dart' show ViewerRound, ViewerScrubber, ViewerTime;
@@ -429,8 +430,9 @@ class _PhotoPageState extends State<_PhotoPage>
 
   @override
   Widget build(BuildContext context) {
+    final px = screenPx(context, times: 2);
     final image = ResizeImage.resizeIfNeeded(
-      screenPx(context, times: 2),
+      px,
       null,
       FileImage(File(widget.path)),
     );
@@ -454,11 +456,13 @@ class _PhotoPageState extends State<_PhotoPage>
             child: Semantics(
               image: true,
               label: l10n.appPhoto,
-              child: Image(
+              // its blur, the photo fading up over it once decoded
+              child: SealedPicture(
+                path: widget.path,
                 image: image,
-                gaplessPlayback: true,
-                frameBuilder: (_, child, frame, sync) =>
-                    PhotoTileFade(shown: sync || frame != null, child: child),
+                shaped: true,
+                decodeWidth: px,
+                fit: BoxFit.contain,
                 errorBuilder: (_, _, _) => Icon(
                   Icons.image_not_supported_outlined,
                   size: 28,
@@ -529,7 +533,53 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
         });
       });
     }
+    picturesShut.addListener(_lockChanged);
     if (widget.active) _open();
+  }
+
+  // the lock closes the player, so no frame of it is held behind the pin,
+  // and it comes back paused where it was once the lock lifts
+  bool _resting = false;
+
+  void _lockChanged() {
+    if (picturesShut.value) {
+      _rest();
+    } else {
+      unawaited(_wake());
+    }
+  }
+
+  void _rest() {
+    _poll?.cancel();
+    _poll = null;
+    _hide?.cancel();
+    final id = _id;
+    _id = null;
+    if (id != null) _channel.invokeMethod('close', {'id': id});
+    _resting = true;
+    if (!mounted) return;
+    setState(() {
+      _started = false;
+      _playing = false;
+      _controls = true;
+    });
+  }
+
+  Future<void> _wake() async {
+    if (!_resting || !mounted) return;
+    _resting = false;
+    videoInfoFor(widget.item.path).then((i) {
+      if (mounted && i != null) setState(() => _info = i);
+    });
+    if (!widget.active) return;
+    await _open(play: false);
+    final id = _id;
+    if (id != null && _pos > Duration.zero && !_done) {
+      await _channel.invokeMethod('seek', {
+        'id': id,
+        'ms': _pos.inMilliseconds,
+      });
+    }
   }
 
   @override
@@ -545,6 +595,7 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
   @override
   void dispose() {
     _unguard?.call();
+    picturesShut.removeListener(_lockChanged);
     WidgetsBinding.instance.removeObserver(this);
     widget.route.removeStatusListener(_routeStatus);
     _poll?.cancel();
@@ -565,9 +616,9 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _open() async {
+  Future<void> _open({bool play = true}) async {
     if (_id != null) {
-      if (widget.route.status == AnimationStatus.completed) _play();
+      if (play && widget.route.status == AnimationStatus.completed) _play();
       return;
     }
     if (_opening || _failed) return;
@@ -582,7 +633,9 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
       dlog('album video: not opened (${e.runtimeType})');
     }
     _opening = false;
-    if (!mounted) {
+    // gone, or the lock went up while it opened
+    if (!mounted || picturesShut.value) {
+      if (mounted) _resting = true;
       final id = (m?['id'] as num?)?.toInt();
       if (id != null) _channel.invokeMethod('close', {'id': id});
       return;
@@ -599,7 +652,9 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
       final ms = (m['ms'] as num?)?.toInt() ?? 0;
       if (ms > 0) _length = Duration(milliseconds: ms);
     });
-    if (widget.active && widget.route.status == AnimationStatus.completed) {
+    if (play &&
+        widget.active &&
+        widget.route.status == AnimationStatus.completed) {
       _play();
     }
   }
@@ -719,13 +774,12 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
                 : VideoFrame(
                     aspect: _aspect,
                     turns: _turns,
-                    under: jpeg != null
-                        ? Image.memory(
-                            jpeg,
-                            fit: BoxFit.cover,
-                            gaplessPlayback: true,
-                          )
-                        : const ColoredBox(color: Colors.black),
+                    // its blur, the first frame fading up over it
+                    under: SealedPicture(
+                      path: widget.item.path,
+                      image: jpeg == null ? null : MemoryImage(jpeg),
+                      ground: Colors.black,
+                    ),
                     texture: id != null && _started
                         ? Texture(textureId: id)
                         : null,

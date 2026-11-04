@@ -1222,6 +1222,10 @@ extension AppStateArrivals on AppState {
         unsaved = true;
       }
     }
+    // the blur its bubble shows first, made now while unlocked
+    for (final made in [mediaPath, filePath]) {
+      if (made != null && made.isNotEmpty) makeBlurSoon(made);
+    }
     final bodyText = unsaved
         ? [
             env.message,
