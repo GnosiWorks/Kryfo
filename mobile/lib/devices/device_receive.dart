@@ -21,6 +21,7 @@ import '../signal_ffi/kryfo_signal.dart' show kLsPreKey, kLsWhisper;
 import '../wire_pad.dart' show unpad;
 import 'device_send.dart';
 import 'device_state.dart';
+import 'own_sync.dart';
 
 /// how long an opener from a device not on the list held waits for it
 const kHeldOpenerKept = Duration(days: 7);
@@ -153,6 +154,15 @@ class DeviceReceive {
   blockedChat;
   final int Function() _clock;
 
+  /// what my own devices send beyond lists and bundles (job 8): set once
+  /// the app can file them
+  OwnSync? ownSync;
+
+  /// my own devices a list of mine names that this device holds no row
+  /// of: added with their notice (own_device_store.dart's one writer)
+  Future<void> Function(int ident, List<({int id, String key, int reg})> added)?
+  ownAdded;
+
   final _alarms = StreamController<DevAlarm>.broadcast();
 
   /// the alarms as they come; dev_marks keeps them for step 8
@@ -271,7 +281,7 @@ class DeviceReceive {
     }
     if (own) {
       try {
-        await _ownWords(d, t, m, identity, j, o.remote);
+        await _ownWords(d, t, m, identity, j, o.remote, entry);
       } catch (e) {
         _note('own words not taken (${e.runtimeType})');
       }
@@ -384,7 +394,18 @@ class DeviceReceive {
     String identity,
     Map<String, dynamic> j,
     SessionRemote remote,
+    ({String key, int reg}) entry,
   ) async {
+    // what another device of mine did: its copies, state, forwards and
+    // heartbeat (own_sync.dart), on this session alone
+    final own = ownSync;
+    if (own != null && (kOwnWords.any(j.containsKey) || j['dr'] is String)) {
+      try {
+        await own.take(m, (id: t.their, key: entry.key, reg: entry.reg), j);
+      } catch (e) {
+        _note('own frame not taken (${e.runtimeType})');
+      }
+    }
     final list = j['dl'];
     // a linked device takes its own list from its phone, or a device the
     // list it holds names; the phone signs its own
@@ -414,7 +435,6 @@ class DeviceReceive {
     if (fl is Map && m.device != 1 && t.their == 1) {
       await _fromMyPhone(m, fl, remote);
     }
-    // the own copy, state and forward frames are job 8's
   }
 
   // a contact's list my phone took and passed on, inside its session: the
@@ -503,6 +523,20 @@ class DeviceReceive {
       return;
     }
     await ownGone(m, identity, _entries(j['gone']));
+    // a device of mine this one has no row of: its notice shows here too,
+    // as on the phone that linked it
+    final add = ownAdded;
+    if (add != null) {
+      try {
+        final cur = await state.call(d, 'current', {'ident': m.ident});
+        await add(m.ident, [
+          for (final e in _entries(cur['devices']))
+            if (e.id != m.device && e.id != 1) e,
+        ]);
+      } on DevRefused {
+        // no list held
+      }
+    }
     await listenAll(only: identity);
   }
 

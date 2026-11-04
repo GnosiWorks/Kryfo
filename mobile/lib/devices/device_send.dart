@@ -23,6 +23,7 @@ import '../signal_session.dart' show WaitsForAnswer;
 import '../typing.dart' show kCapDevices;
 import '../wire_pad.dart' show kSealSizes;
 import 'device_state.dart';
+import 'own_sync.dart' show kOwnFrameMost, ownChatName, ownHash;
 
 /// how long a copy waits for its device before it is let go
 const kDeviceCopyKept = Duration(days: 7);
@@ -169,6 +170,9 @@ class DeviceSend {
     DevPhone? phone,
     String? Function(DevSlot slot, String frame)? frameFor,
     bool force = false,
+    // false: no own copy in this burst (a chat with screenshots blocked;
+    // a group's goes once after its members', OwnSync.copy)
+    bool ownCopy = true,
   }) async {
     if (!linkedDevicesOn || !frame.startsWith(kEnvelopePrefix)) return null;
     final body = _bodyOf(frame);
@@ -209,7 +213,9 @@ class DeviceSend {
         phoneFrame = frameFor == null ? frame : frameFor(s, frame);
         continue;
       }
-      var f = s.own ? ownCopyOf(me.ident, c.identity, frame) : frame;
+      var f = s.own
+          ? (ownCopy ? ownCopyOf(me.ident, c.peer, frame) : null)
+          : frame;
       if (f != null && frameFor != null) f = frameFor(s, f);
       if (f == null) continue;
       final addr = s.own ? kOwnDevices : c.peer;
@@ -271,8 +277,8 @@ class DeviceSend {
       'pin': s.key,
       'reg': s.reg,
       'size': size,
-      // my own devices answer no receipt for an own copy (job 8 may)
-      'receipt': receipt && !s.own ? 1 : 0,
+      // my own devices answer every own copy (OwnSync.take)
+      'receipt': (receipt && !s.own) || s.own ? 1 : 0,
       // the hand-off below runs first; the pump takes it after a failure
       'next_at': now + _again.first.inMilliseconds,
     };
@@ -599,12 +605,18 @@ class DeviceSend {
         'tries': sent == 0 ? 0 : round,
         'next_at': round < _unheard.length
             ? now + _unheard[round].inMilliseconds
+            : _keptOwn(r)
+            ? now + _unheard.last.inMilliseconds
             : 0,
       },
       where: _slotWhere,
       whereArgs: _keyArgs(r),
     );
   }
+
+  // a state op to my own device goes again until its receipt
+  static bool _keptOwn(Map<String, Object?> r) =>
+      r['own'] == 1 && (r['uid'] as String? ?? '').startsWith('os:');
 
   static const _slotWhere = 'uid = ? AND ident = ? AND peer = ? AND device = ?';
   List<Object?> _keyArgs(Map<String, Object?> r) => [
@@ -643,9 +655,11 @@ class DeviceSend {
   Future<void> _pump() async {
     final d = await db();
     final now = _clock();
+    // a state op to my own device is kept until it answers: a hide that
+    // never reached a laptop would leave the chat there
     await d.delete(
       'dev_out',
-      where: 'at < ?',
+      where: "at < ? AND NOT (own = 1 AND uid LIKE 'os:%')",
       whereArgs: [now - kDeviceCopyKept.inMilliseconds],
     );
     final due = await d.query(
@@ -780,6 +794,8 @@ class DeviceSend {
     required int reg,
     required String frame,
     bool own = false,
+    // kept and sent again until that device's receipt (an own frame)
+    bool receipt = false,
   }) async {
     final body = _bodyOf(frame);
     if (body == null) return;
@@ -794,6 +810,7 @@ class DeviceSend {
       'addr': addr,
       'pin': pin,
       'reg': reg,
+      'receipt': receipt ? 1 : 0,
       'plain': frame,
       'state': 'wait',
       'next_at': now,
@@ -1475,22 +1492,39 @@ String _withSeed(String frame, Uint8List seed) =>
 String _withAsk(String frame, List<int> devices) =>
     _with(frame, (b) => b['dq'] = devices);
 
-/// the own copy of [frame], sent in my chat with [identity] (a contact's
-/// key, hex), for my other devices: a message with a uid only, never a
-/// chat with shots on, a receipt or a list frame. null when none goes
-String? ownCopyOf(int ident, String identity, String frame) {
+/// the own copy of [frame], sent in my chat with [peer] (their kryfo id),
+/// for my other devices: a message (one with a uid) or my edit, reaction,
+/// pin, take-back, vote or poll close, as it went. never a group's (that
+/// goes once, after its members'), a chat with screenshots blocked, a
+/// receipt, typing, a list frame or anything else of the session's own.
+/// null when none goes
+String? ownCopyOf(int ident, String peer, String frame) {
+  if (frame.length > kOwnFrameMost) return null;
   final b = _bodyOf(frame);
-  if (b == null || b['u'] is! String) return null;
-  for (final k in const ['dr', 'dl', 'db', 'dq', 'dh', 'dn', 'dk']) {
+  if (b == null || b.containsKey('g')) return null;
+  for (final k in _notCopied) {
     if (b.containsKey(k)) return null;
   }
   final ss = b['ss'];
   if (ss is Map && ss['o'] == 1) return null;
+  final says = b['u'] is String || _copiedControls.any(b.containsKey);
+  if (!says) return null;
+  final chat = ownChatName((id: peer, group: false));
   return '$kEnvelopePrefix${jsonEncode({
-    'u': b['u'],
-    'oc': {'i': ident, 'c': identity, 'f': frame},
+    'u': 'oc:${ownHash(frame)}',
+    'oc': {'i': ident, 'c': chat, 'f': frame},
   })}';
 }
+
+// what an own copy never carries: receipts, typing, the session's and the
+// devices' own words, a profile photo's slices, a slice ask, a card
+const _notCopied = {
+  'dr', 'dl', 'db', 'dq', 'dh', 'dn', 'dk', 'dz', 'da', 'dw', 'fl', //
+  'oc', 'os', 'of', 'ob', 'hs', 'ty', 'pp', 'rq', 'nd', 'in', 'gc',
+};
+
+// my words on a message that carry its uid inside
+const _copiedControls = {'ed', 'r', 'pn', 'un', 'vt', 'pc'};
 
 Uint8List _bytes(String hex) => Uint8List.fromList([
   for (var i = 0; i + 1 < hex.length; i += 2)

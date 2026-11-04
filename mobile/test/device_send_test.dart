@@ -21,6 +21,7 @@ import 'package:kryfo/device_sessions.dart';
 import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/devices/device_send.dart';
 import 'package:kryfo/devices/device_state.dart';
+import 'package:kryfo/devices/own_sync.dart' show ownHash;
 import 'package:kryfo/identities.dart';
 import 'package:kryfo/main.dart'
     show
@@ -499,17 +500,19 @@ void main() {
       final j = _json(text);
       expect(j['as'], devHex(seed));
       if (own) {
-        expect(j['u'], 'u-one');
+        // job 8: the own copy's uid names its frame, its chat by kryfo id
+        expect(j['u'], 'oc:${ownHash(frame)}');
         expect((j['oc'] as Map)['f'], frame);
-        expect((j['oc'] as Map)['c'], devHex(w.bob.identity.public));
+        expect((j['oc'] as Map)['c'], 'p:${w.toBob.peer}');
       } else {
         expect(j['u'], 'u-one');
         expect(j['m'], 'hello');
       }
     }
-    // owed to bob's devices until their receipts; the desk's went
+    // owed to bob's devices until their receipts, and the desk's own copy
+    // until the desk answers it (job 8)
     final out = await w.db.query('dev_out', orderBy: 'device');
-    expect([for (final o in out) o['device']], [5, 17]);
+    expect([for (final o in out) o['device']], [5, 9, 17]);
     expect({for (final o in out) o['state']}, {'sent'});
     // each counts from its hand-off as unanswered
     final quiet = await w.db.query('dev_quiet');
