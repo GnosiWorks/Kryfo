@@ -25,12 +25,14 @@ import 'package:kryfo/main.dart'
         useEngineForTest,
         AppStateRoute,
         AppStateBridges;
+import 'package:kryfo/screens/bridge_share_sheet.dart';
 import 'package:kryfo/screens/bridge_sheets.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/widgets/halo_buttons.dart';
 import 'package:kryfo/widgets/motion.dart'
     show BreathDot, TorStatus, kHouseCurve;
 import 'package:kryfo/widgets/press_scale.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart' show devApp;
@@ -1304,6 +1306,78 @@ void main() {
       }
       await t.pumpAndSettle();
       expect(find.text(l10n.bridgesUndo), findsNothing);
+      await _done(t);
+    });
+
+    testWidgets('a saved line shares as a code, said to keep private', (
+      t,
+    ) async {
+      final copied = <String>[];
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('halo/platform'),
+        (c) async {
+          if (c.method == 'copySensitive') {
+            copied.add((c.arguments as Map)['text'] as String);
+          }
+          return true;
+        },
+      );
+      addTearDown(
+        () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          const MethodChannel('halo/platform'),
+          null,
+        ),
+      );
+      const line = 'obfs4 192.0.2.2:443 B cert=y';
+      await _open(
+        t,
+        setup: const BridgeSetup(
+          choice: BridgeChoice.friend,
+          friendLines: 'obfs4 192.0.2.1:443 A cert=x\n$line',
+        ),
+        size: const Size(400, 1600),
+      );
+      await t.tap(find.text(l10n.bridgesMore));
+      await _in(t);
+      final share = find.byTooltip(l10n.bridgesShareBridgeN('2'));
+      await t.ensureVisible(share);
+      await t.tap(share);
+      await _in(t);
+      expect(find.text(l10n.bridgesShareThisBridge), findsOneWidget);
+      expect(find.text(l10n.bridgesShareItPrivately), findsOneWidget);
+      expect(find.byType(QrImageView), findsOneWidget);
+      // the code carries the one line picked, not the others
+      expect(
+        t.widget<BridgeShareSheet>(find.byType(BridgeShareSheet)).line,
+        line,
+      );
+      await t.tap(find.text(l10n.bridgesCopyBridge));
+      await _in(t);
+      expect(copied, [line]);
+      expect(find.text(l10n.bridgesBridgeCopied), findsOneWidget);
+      // the toast and the tick go by themselves, the copy after a minute
+      for (var i = 0; i < 62; i++) {
+        await t.pump(const Duration(seconds: 1));
+      }
+      await _done(t);
+    });
+
+    testWidgets('a decoy never opens the share sheet', (t) async {
+      lockState.inDecoy = true;
+      addTearDown(() => lockState.inDecoy = false);
+      await t.pumpWidget(
+        devApp(
+          Builder(
+            builder: (c) => TextButton(
+              onPressed: () => showBridgeShareSheet(c, 'obfs4 192.0.2.1:443'),
+              child: const Text('go'),
+            ),
+          ),
+        ),
+      );
+      await t.tap(find.text('go'));
+      await _in(t);
+      expect(find.byType(BridgeShareSheet), findsNothing);
       await _done(t);
     });
 

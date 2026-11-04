@@ -11301,4 +11301,25 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'अभी नहीं';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return 'ब्रिज $n शेयर करें';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'यह ब्रिज शेयर करें';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'इसे निजी तौर पर, भरोसे के लोगों के साथ शेयर करें। जो ब्रिज सार्वजनिक पन्नों से दूर रहता है, वह ज़्यादा समय तक चलता है।';
+
+  @override
+  String get bridgesCopyBridge => 'ब्रिज कॉपी करें';
+
+  @override
+  String get bridgesBridgeCopied => 'ब्रिज कॉपी हुआ';
+
+  @override
+  String get bridgesSendBridgeTo => 'ब्रिज भेजें';
 }

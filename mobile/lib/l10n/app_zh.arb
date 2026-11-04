@@ -2974,5 +2974,11 @@
   "voiceModelRemoveLine": "已生成的文字会保留。新的需要再次下载模型。",
   "voiceKeptNote": "文字内容与所属聊天一起加密保存在这部手机上，并随聊天一起删除。",
   "voiceKeptNoteDesk": "文字内容与所属聊天一起加密保存在这台电脑上，并随聊天一起删除。",
-  "voiceNotNow": "暂不"
+  "voiceNotNow": "暂不",
+  "bridgesShareBridgeN": "分享网桥 {n}",
+  "bridgesShareThisBridge": "分享这个网桥",
+  "bridgesShareItPrivately": "请私下分享给你信任的人。不出现在公开页面上的网桥能用得更久。",
+  "bridgesCopyBridge": "复制网桥",
+  "bridgesBridgeCopied": "网桥已复制",
+  "bridgesSendBridgeTo": "把网桥发给"
 }

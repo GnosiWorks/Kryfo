@@ -2974,5 +2974,11 @@
   "voiceModelRemoveLine": "Gotowe transkrypcje zostają. Nowe znów będą potrzebować modelu.",
   "voiceKeptNote": "Transkrypcje są przechowywane przy swoim czacie, zaszyfrowane na tym telefonie, i usuwane razem z nim.",
   "voiceKeptNoteDesk": "Transkrypcje są przechowywane przy swoim czacie, zaszyfrowane na tym komputerze, i usuwane razem z nim.",
-  "voiceNotNow": "Nie teraz"
+  "voiceNotNow": "Nie teraz",
+  "bridgesShareBridgeN": "Udostępnij mostek {n}",
+  "bridgesShareThisBridge": "Udostępnij ten mostek",
+  "bridgesShareItPrivately": "Udostępnij go prywatnie, osobom, którym ufasz. Mostek, którego nie ma na publicznych stronach, działa dłużej.",
+  "bridgesCopyBridge": "Kopiuj mostek",
+  "bridgesBridgeCopied": "Mostek skopiowany",
+  "bridgesSendBridgeTo": "Wyślij mostek do"
 }

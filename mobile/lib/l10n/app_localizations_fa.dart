@@ -11306,4 +11306,25 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'فعلاً نه';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return 'اشتراک پل ⁨$n⁩';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'این پل را به اشتراک بگذار';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'آن را خصوصی و با کسانی که به آن‌ها اعتماد داری به اشتراک بگذار. پلی که در صفحه‌های عمومی نیاید، مدت بیشتری کار می‌کند.';
+
+  @override
+  String get bridgesCopyBridge => 'کپی پل';
+
+  @override
+  String get bridgesBridgeCopied => 'پل کپی شد';
+
+  @override
+  String get bridgesSendBridgeTo => 'فرستادن پل به';
 }

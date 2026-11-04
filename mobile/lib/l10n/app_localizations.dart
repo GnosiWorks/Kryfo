@@ -18132,6 +18132,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not now'**
   String get voiceNotNow;
+
+  /// screens/bridges_screen.dart: the share button on a saved bridge line, for screen readers
+  ///
+  /// In en, this message translates to:
+  /// **'Share bridge {n}'**
+  String bridgesShareBridgeN(String n);
+
+  /// screens/bridge_share_sheet.dart: the title of the sheet with one bridge as a qr code
+  ///
+  /// In en, this message translates to:
+  /// **'Share this bridge'**
+  String get bridgesShareThisBridge;
+
+  /// screens/bridge_share_sheet.dart: the line under the code: share in private, since public bridges get blocked
+  ///
+  /// In en, this message translates to:
+  /// **'Share it privately, with people you trust. A bridge kept off public pages keeps working for longer.'**
+  String get bridgesShareItPrivately;
+
+  /// screens/bridge_share_sheet.dart: the button that copies the bridge line
+  ///
+  /// In en, this message translates to:
+  /// **'Copy bridge'**
+  String get bridgesCopyBridge;
+
+  /// screens/bridge_share_sheet.dart: the toast after the copy
+  ///
+  /// In en, this message translates to:
+  /// **'Bridge copied'**
+  String get bridgesBridgeCopied;
+
+  /// screens/bridge_share_sheet.dart: the title of the chat picker the bridge goes to
+  ///
+  /// In en, this message translates to:
+  /// **'Send the bridge to'**
+  String get bridgesSendBridgeTo;
 }
 
 class _AppLocalizationsDelegate

@@ -11514,4 +11514,25 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Nie teraz';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return 'Udostępnij mostek $n';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'Udostępnij ten mostek';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'Udostępnij go prywatnie, osobom, którym ufasz. Mostek, którego nie ma na publicznych stronach, działa dłużej.';
+
+  @override
+  String get bridgesCopyBridge => 'Kopiuj mostek';
+
+  @override
+  String get bridgesBridgeCopied => 'Mostek skopiowany';
+
+  @override
+  String get bridgesSendBridgeTo => 'Wyślij mostek do';
 }

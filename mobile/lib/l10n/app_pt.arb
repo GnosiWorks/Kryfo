@@ -2974,5 +2974,11 @@
   "voiceModelRemoveLine": "As transcrições já feitas ficam. As novas precisam do modelo de novo.",
   "voiceKeptNote": "As transcrições ficam guardadas, criptografadas, com a conversa neste celular e são apagadas com ela.",
   "voiceKeptNoteDesk": "As transcrições ficam guardadas, criptografadas, com a conversa neste computador e são apagadas com ela.",
-  "voiceNotNow": "Agora não"
+  "voiceNotNow": "Agora não",
+  "bridgesShareBridgeN": "Compartilhar ponte {n}",
+  "bridgesShareThisBridge": "Compartilhar esta ponte",
+  "bridgesShareItPrivately": "Compartilhe em particular, com pessoas de confiança. Uma ponte fora de páginas públicas continua funcionando por mais tempo.",
+  "bridgesCopyBridge": "Copiar ponte",
+  "bridgesBridgeCopied": "Ponte copiada",
+  "bridgesSendBridgeTo": "Enviar a ponte para"
 }
