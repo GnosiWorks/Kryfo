@@ -85,7 +85,7 @@ func (o *Own) Set(identity Key, wire []byte, mine Key, from From, v Verifier) (g
 // on its listed key
 func ownSource(identity Key, held *List, from From) bool {
 	switch {
-	case from.invite:
+	case from.invite, from.copy, from.phone:
 		return false
 	case from.link, from.remote == identity:
 		return true

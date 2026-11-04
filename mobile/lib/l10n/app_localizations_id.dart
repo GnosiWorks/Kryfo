@@ -10717,6 +10717,123 @@ class AppLocalizationsId extends AppLocalizations {
       'Obrolan ini tetap di ponselmu karena tangkapan layar diblokir di sini.';
 
   @override
+  String get historyCopyTitle => 'Riwayat chat';
+
+  @override
+  String get historyCopyMaking => 'Menyiapkan chat kamu';
+
+  @override
+  String get historyCopyMakingLine =>
+      'Ponselmu mengumpulkan yang akan disalin. Sebentar lagi dimulai.';
+
+  @override
+  String get historyCopyGoing => 'Menyalin chat kamu';
+
+  @override
+  String get historyCopyGoingLine =>
+      'Biarkan kedua perangkat tetap online sampai selesai.';
+
+  @override
+  String historyCopySize(Object size) {
+    return 'Total $size';
+  }
+
+  @override
+  String get historyCopyWaiting => 'Menunggu perangkat lain';
+
+  @override
+  String get historyCopyWaitingLine =>
+      'Penyalinan berlanjut sendiri saat kedua perangkat online.';
+
+  @override
+  String get historyCopyPaused => 'Penyalinan rehat sebentar';
+
+  @override
+  String get historyCopyPausedLine => 'Berlanjut dalam semenit.';
+
+  @override
+  String get historyCopyWhole => 'Semua pesan dan file sudah sampai';
+
+  @override
+  String get historyCopyWholeLine => 'Tidak ada yang hilang.';
+
+  @override
+  String get historyCopyRows => 'Kontak dan grupmu sudah sampai';
+
+  @override
+  String get historyCopyRowsLine =>
+      'Mulai sekarang pesan baru muncul di perangkat.';
+
+  @override
+  String get historyCopyGaps => 'Sebagian besar chatmu sudah sampai';
+
+  @override
+  String get historyCopyGapsLine =>
+      'Chat ini berisi lebih sedikit di perangkat baru daripada di ponselmu.';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return 'Pesan: $got dari $want';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return 'File: $got dari $want';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString item tetap di ponselmu',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy =>
+      'Terlalu besar atau tidak terbaca untuk disalin.';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString chat tetap di ponselmu',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => 'Penyalinan berhenti';
+
+  @override
+  String get historyCopyEndedLine =>
+      'Tidak ada lagi yang datang. Tautkan perangkat lagi untuk salinan baru.';
+
+  @override
+  String get historyCopyFailed => 'Penyalinan tidak bisa selesai';
+
+  @override
+  String get historyCopyFailedLine =>
+      'Tautkan perangkat lagi untuk salinan baru.';
+
+  @override
+  String get historyCopyStays => 'Tetap di ponselmu';
+
+  @override
+  String get historyCopySee => 'Lihat salinan';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
