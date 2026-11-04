@@ -1248,9 +1248,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'जब आप ब्रिज माँगते हैं, तो Tor Project आपका पता देखता है। यह सामान्य है: Tor Browser और हर Tor ऐप ब्रिज ऐसे ही पाते हैं, और इससे उन्हें बस इतना पता चलता है कि किसी ने ब्रिज माँगे। आपकी चैट के बारे में कुछ नहीं।';
 
   @override
-  String get bridgesAsking => 'माँग रहे हैं…';
-
-  @override
   String get cameraNoCameraOnThis => 'इस फ़ोन में कैमरा नहीं है';
 
   @override
@@ -7218,9 +7215,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get transportBridgeMode => 'ब्रिज';
 
   @override
-  String get bridgesEgypt => 'मिस्र';
-
-  @override
   String get bridgesYourBridgeCouldNot => 'आपका ब्रिज शुरू नहीं हो पाया';
 
   @override
@@ -7266,9 +7260,6 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get bridgesIran => 'ईरान';
-
-  @override
   String get bridgesTurnOnAutomatic => 'अपने-आप चालू करें';
 
   @override
@@ -7300,9 +7291,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get bridgesScanACode => 'कोड स्कैन करें';
 
   @override
-  String get bridgesMyanmar => 'म्यांमार';
-
-  @override
   String get bridgesSwitchToAutomatic => 'अपने-आप पर जाएँ';
 
   @override
@@ -7324,9 +7312,6 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get bridgesGoesThroughAVolunteer =>
       'किसी स्वयंसेवक के कंप्यूटर से होकर जाता है। रोकना मुश्किल, शुरू होने में धीमा।';
-
-  @override
-  String get bridgesLetTheTorProject => 'Tor Project को अंदाज़ा लगाने दें';
 
   @override
   String get bridgesTorSeemsBlocked => 'लगता है इस नेटवर्क पर Tor रुका हुआ है';
@@ -7357,10 +7342,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'Kryfo ऐसा तरीक़ा ढूँढता है जो आपकी जगह पर काम करे।';
 
   @override
-  String get bridgesTheTorProjectKnows =>
-      'इन देशों के लिए Tor Project की अपनी सलाह है।';
-
-  @override
   String get bridgesThisBridgeIsnTGetting => 'यह ब्रिज पार नहीं हो पा रहा';
 
   @override
@@ -7372,9 +7353,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get bridgesNotNow => 'अभी नहीं';
-
-  @override
-  String get bridgesRussia => 'रूस';
 
   @override
   String get bridgesObfs4BridgesThatCome =>
@@ -7400,9 +7378,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get bridgesAlmostThere => 'बस पहुँचने वाले हैं';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'Tor Project का अंदाज़ा';
-
-  @override
   String get bridgesUseThisBridge => 'यह ब्रिज इस्तेमाल करें';
 
   @override
@@ -7418,9 +7393,6 @@ class AppLocalizationsHi extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => 'तुर्कमेनिस्तान';
 
   @override
   String get transportBridgeMethod => 'तरीक़ा';
@@ -7448,11 +7420,12 @@ class AppLocalizationsHi extends AppLocalizations {
       'ब्रिज बिना बताए काम करना बंद कर सकते हैं। “अपने-आप” कोई दूसरा रास्ता ढूँढ सकता है।';
 
   @override
-  String get bridgesHongKong => 'हांगकांग';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'जब Tor पर रोक हो, “अपने-आप” Tor Project से पूछता है कि आपके देश में क्या काम करता है।';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'Kryfo अपने आप ब्रिज चुनता है। Snowflake और WebTunnel ज़्यादातर जगहों पर काम करते हैं। अगर कोई कनेक्ट न हो, तो दूसरा आज़माएँ या किसी दोस्त से ब्रिज लाइन माँगें।';
 
   @override
   String get bridgesAskTorProject => 'Tor Project से पूछें';
@@ -7461,18 +7434,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get bridgesTooLongForTor => 'Tor के लिए बहुत लंबी';
 
   @override
-  String get bridgesCountry => 'देश';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '$method, $from';
   }
-
-  @override
-  String get bridgesChina => 'चीन';
-
-  @override
-  String get bridgesBelarus => 'बेलारूस';
 
   @override
   String get bridgesKryfoCanTUseThis => 'Kryfo यह लाइन इस्तेमाल नहीं कर सकता';

@@ -238,7 +238,6 @@ final _pages = [
         choice: BridgeChoice.friend,
         friendLines: 'obfs4 1.2.3.4:443 ABCDEF cert=abc iat-mode=0',
         consent: 'yes',
-        country: 'ir',
       );
     },
     after: (t) async {

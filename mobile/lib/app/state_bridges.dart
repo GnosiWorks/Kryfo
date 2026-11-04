@@ -125,7 +125,7 @@ extension AppStateBridges on AppState {
     const taken = {'error: mode already set', 'error: restore used'};
     if (r.startsWith('error') && !taken.contains(r)) {
       dlog('bridges: kept mode refused ($r)');
-      // kept at once, the yes and the country with it, as the engine does
+      // kept at once, the yes with it, as the engine does
       _bridge = _bridge.copyWith(choice: BridgeChoice.auto, skipDirect: true);
       unawaited(_writeBridgeSetup(_bridge));
       return r;
@@ -189,9 +189,12 @@ extension AppStateBridges on AppState {
         torProjectLines: await st.read(key: 'bridge_moat_lines') ?? '',
         consent: await st.read(key: 'bridge_consent') ?? 'no',
         skipDirect: (await st.read(key: 'bridge_skip_direct')) == '1',
-        country: await st.read(key: 'bridge_country') ?? '',
         offerAuto: offer,
       );
+      // a country picked before goes: automatic finds its own way
+      if (await st.read(key: 'bridge_country') != null) {
+        await _bridgeDelete('bridge_country');
+      }
       await _finishBridgeMove(source, b);
       return b;
     }
@@ -252,7 +255,6 @@ extension AppStateBridges on AppState {
     await _bridgeWrite('bridge_moat_lines', b.torProjectLines);
     await _bridgeWrite('bridge_consent', b.consent);
     await _bridgeWrite('bridge_skip_direct', b.skipDirect ? '1' : '0');
-    await _bridgeWrite('bridge_country', b.country);
     await _bridgeWrite('bridge_offer_auto', offer);
     if (lines) await _bridgeWrite('bridge_lines', b.friendLines);
     // the mode last: a setup without it is read as not moved over yet
@@ -365,8 +367,7 @@ extension AppStateBridges on AppState {
       a.friendLines == b.friendLines &&
       a.torProjectLines == b.torProjectLines &&
       a.consent == b.consent &&
-      a.skipDirect == b.skipDirect &&
-      a.country == b.country;
+      a.skipDirect == b.skipDirect;
 
   // the lines tor uses under a setup, or null for none
   static String? _linesInUse(BridgeSetup b) => switch (b.choice) {
@@ -393,14 +394,6 @@ extension AppStateBridges on AppState {
   Future<void> setBridgeConsent(bool yes) async {
     if (inDecoyView) return;
     _bridge = _bridge.copyWith(consent: yes ? 'yes' : 'no');
-    if (_bridge.choice == BridgeChoice.auto) applyBridgeNow();
-    notifyListeners();
-    await _writeBridgeSetup(_bridge);
-  }
-
-  Future<void> setBridgeCountry(String cc) async {
-    if (inDecoyView) return;
-    _bridge = _bridge.copyWith(country: cc);
     if (_bridge.choice == BridgeChoice.auto) applyBridgeNow();
     notifyListeners();
     await _writeBridgeSetup(_bridge);
@@ -471,26 +464,6 @@ extension AppStateBridges on AppState {
     if (_bridgeStatus.exhausted) engine.bridgeRetry();
     notifyListeners();
     await _writeBridgeSetup(_bridge);
-  }
-
-  String? get moatGuess => _moatGuess;
-
-  /// asked only when the person picks the tor project's guess, and only
-  /// over meek with the yes: through tor the guess would be the exit
-  /// relay's country, so with tor up there is no guess, only the list
-  Future<String?> askMoatGuess() async {
-    if (inDecoyView || torUsable || _bridge.consent != 'yes') return null;
-    try {
-      final m = jsonDecode(await engine.moatSettings(''));
-      final cc = m is Map ? m['country'] : null;
-      if (m is Map && m['ok'] == true && cc is String && cc.length == 2) {
-        _moatGuess = cc.toLowerCase();
-        notifyListeners();
-      }
-    } catch (e) {
-      dlog('bridges: no country guess (${e.runtimeType})');
-    }
-    return _moatGuess;
   }
 
   /// the engine's status line facts, read with tor's status each second

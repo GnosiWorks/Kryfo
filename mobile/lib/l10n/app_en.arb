@@ -1528,10 +1528,6 @@
   "@bridgesWhenYouAskFor": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesAsking": "Asking…",
-  "@bridgesAsking": {
-    "description": "screens/bridges_screen.dart"
-  },
   "cameraNoCameraOnThis": "No camera on this phone",
   "@cameraNoCameraOnThis": {
     "description": "screens/camera_screen.dart"
@@ -8958,9 +8954,6 @@
       }
     }
   },
-  "@bridgesBelarus": {
-    "description": "screens/bridges_screen.dart"
-  },
   "@bridgesThatSNotABridge": {
     "description": "screens/bridges_screen.dart"
   },
@@ -8999,9 +8992,6 @@
   },
   "torBootSplashConnect": "Connect",
   "bridgesOffline": "Offline",
-  "@bridgesTheTorProjectKnows": {
-    "description": "screens/bridges_screen.dart"
-  },
   "@bridgesTorNoBridge": {
     "description": "screens/bridges_screen.dart"
   },
@@ -9012,13 +9002,7 @@
   "bridgesBridgeFromAFriend": "Bridge from a friend",
   "bridgesKryfoCanAskThe": "Kryfo can ask the Tor Project for a bridge to get around it.",
   "bridgesNotNeededRightNow": "Not needed right now",
-  "@bridgesTheTorProjectSGuess": {
-    "description": "screens/bridges_screen.dart"
-  },
   "bridgesBuiltInBridges": "Built-in bridges",
-  "@bridgesRussia": {
-    "description": "screens/bridges_screen.dart"
-  },
   "bridgesKryfoCanGetAround": "Kryfo can get around Tor blocks now",
   "bridgesThatSNotABridge": "That's not a bridge line",
   "@bridgesTorIsBlockedOnThis": {
@@ -9054,9 +9038,6 @@
     "description": "screens/bridges_screen.dart"
   },
   "bridgesTryingAnotherWayOf": "Trying another way… ({attempt} of {attempts})",
-  "@bridgesChina": {
-    "description": "screens/bridges_screen.dart"
-  },
   "@bridgesConnectingDots": {
     "description": "screens/bridges_screen.dart"
   },
@@ -9087,10 +9068,6 @@
   },
   "bridgesDetails": "Details",
   "transportBridgeMode": "Bridges",
-  "bridgesEgypt": "Egypt",
-  "@bridgesIran": {
-    "description": "screens/bridges_screen.dart"
-  },
   "@bridgesStraightToTor": {
     "description": "screens/bridges_screen.dart"
   },
@@ -9157,15 +9134,11 @@
   "@bridgesFromTheTorProjectLower": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesIran": "Iran",
   "@bridgesAskTorProject": {
     "description": "screens/bridges_screen.dart"
   },
   "@settingsBridgesForNetworksThat": {
     "description": "screens/settings_screen.dart"
-  },
-  "@bridgesCountry": {
-    "description": "screens/bridges_screen.dart"
   },
   "@transportBridgeMethod": {
     "description": "screens/transport_screen.dart"
@@ -9200,7 +9173,6 @@
   },
   "torBootSplashIfTorIsBlocked": "If Tor is blocked or watched where you are, Kryfo can start through a bridge instead.",
   "bridgesScanACode": "Scan a code",
-  "bridgesMyanmar": "Myanmar",
   "bridgesSwitchToAutomatic": "Switch to automatic",
   "@bridgesNoInternet": {
     "description": "screens/bridges_screen.dart"
@@ -9235,7 +9207,6 @@
     "description": "screens/bridges_screen.dart"
   },
   "bridgesGoesThroughAVolunteer": "Goes through a volunteer's computer. Hard to block, slow to start.",
-  "bridgesLetTheTorProject": "Let the Tor Project guess",
   "@torBootSplashTorIsBlockedHere": {
     "description": "widgets/tor_boot_splash.dart"
   },
@@ -9256,10 +9227,6 @@
   "bridgesKryfoCouldNotRead": "{count, plural, one{Kryfo couldn't read {count} of these lines} other{Kryfo couldn't read {count} of these lines}}",
   "bridgesTorNoBridge": "Tor, no bridge",
   "bridgesKryfoFindsAWay": "Kryfo finds a way that works where you are.",
-  "@bridgesLetTheTorProject": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesTheTorProjectKnows": "The Tor Project has its own advice for these countries.",
   "@bridgesTryingAnotherWay": {
     "description": "screens/bridges_screen.dart"
   },
@@ -9282,7 +9249,6 @@
   "@torBootSplashIfTorIsBlocked": {
     "description": "widgets/tor_boot_splash.dart"
   },
-  "bridgesRussia": "Russia",
   "@transportBridgeMode": {
     "description": "screens/transport_screen.dart"
   },
@@ -9311,7 +9277,6 @@
   },
   "bridgesFromAFriendLower": "from a friend",
   "bridgesAlmostThere": "Almost there",
-  "bridgesTheTorProjectSGuess": "The Tor Project's guess",
   "@bridgesNothingGotThrough": {
     "description": "screens/bridges_screen.dart"
   },
@@ -9338,7 +9303,6 @@
   "@transportBridgePhase": {
     "description": "screens/transport_screen.dart"
   },
-  "bridgesTurkmenistan": "Turkmenistan",
   "@bridgesCheckingForMessages": {
     "description": "screens/bridges_screen.dart"
   },
@@ -9348,14 +9312,8 @@
   "transportBridgeMethod": "Method",
   "bridgesPointAtTheBridge": "Point at the bridge's QR code",
   "bridgesConnectingThroughYourBridge": "Connecting through your bridge…",
-  "@bridgesTurkmenistan": {
-    "description": "screens/bridges_screen.dart"
-  },
   "bridgesThisLineIsTooLong": "This line is too long for Tor to use.",
   "@bridgesMore": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "@bridgesMyanmar": {
     "description": "screens/bridges_screen.dart"
   },
   "bridgesAutomaticFindsAWay": "Automatic finds a way by itself when Tor is blocked. To find a bridge, Kryfo may ask the Tor Project, if you agree.",
@@ -9370,10 +9328,6 @@
   "@bridgesNotNeededRightNow": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesHongKong": "Hong Kong",
-  "@bridgesHongKong": {
-    "description": "screens/bridges_screen.dart"
-  },
   "@bridgesAskingTheTorProject": {
     "description": "screens/bridges_screen.dart"
   },
@@ -9381,15 +9335,13 @@
     "description": "screens/bridges_screen.dart"
   },
   "bridgesWhenTorIsBlockedAutomatic": "When Tor is blocked, Automatic asks the Tor Project what works in your country.",
-  "@bridgesEgypt": {
-    "description": "screens/bridges_screen.dart"
+  "bridgesPlainAdvice": "Kryfo picks bridges automatically. Snowflake and WebTunnel work in most places. If one doesn't connect, try another, or ask a friend for a bridge line.",
+  "@bridgesPlainAdvice": {
+    "description": "bridges screen: plain advice over the choices, the same for everyone, no country"
   },
   "bridgesAskTorProject": "Ask the Tor Project",
   "bridgesTooLongForTor": "Too long for Tor to use",
-  "bridgesCountry": "Country",
   "bridgesMethodFrom": "{method}, {from}",
-  "bridgesChina": "China",
-  "bridgesBelarus": "Belarus",
   "bridgesKryfoCanTUseThis": "Kryfo can't use this line",
   "@bridgesTooLongForTor": {
     "description": "screens/bridges_screen.dart"

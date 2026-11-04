@@ -608,7 +608,6 @@ void main() {
     expect(l.bridges1LineSaved(1), "1 line saved");
     expect(l.bridges1LineSaved(2), "2 lines saved");
     expect(l.bridges1LineSaved(5), "5 lines saved");
-    expect(l.bridgesAsking, "Asking…");
     expect(l.cameraNoCameraOnThis, "No camera on this phone");
     expect(l.cameraCameraNotAvailable, "Camera not available");
     expect(l.cameraCameraPermissionIsOff, "Camera permission is off");
@@ -3317,24 +3316,15 @@ void main() {
     );
     expect(l.bridgesAskTorProject, "Ask the Tor Project");
     expect(
+      l.bridgesPlainAdvice,
+      "Kryfo picks bridges automatically. Snowflake and WebTunnel work in "
+      "most places. If one doesn't connect, try another, or ask a friend for "
+      "a bridge line.",
+    );
+    expect(
       l.bridgesWhenTorIsBlockedAutomatic,
       "When Tor is blocked, Automatic asks the Tor Project what works in your country.",
     );
-    expect(l.bridgesCountry, "Country");
-    expect(l.bridgesLetTheTorProject, "Let the Tor Project guess");
-    expect(
-      l.bridgesTheTorProjectKnows,
-      "The Tor Project has its own advice for these countries.",
-    );
-    expect(l.bridgesTheTorProjectSGuess, "The Tor Project's guess");
-    expect(l.bridgesBelarus, "Belarus");
-    expect(l.bridgesChina, "China");
-    expect(l.bridgesEgypt, "Egypt");
-    expect(l.bridgesHongKong, "Hong Kong");
-    expect(l.bridgesIran, "Iran");
-    expect(l.bridgesMyanmar, "Myanmar");
-    expect(l.bridgesRussia, "Russia");
-    expect(l.bridgesTurkmenistan, "Turkmenistan");
     expect(l.bridgesSavedLines, "Saved lines");
     expect(l.bridgesKryfoCanTUseThis, "Kryfo can't use this line");
     expect(l.bridgesTooLongForTor, "Too long for Tor to use");

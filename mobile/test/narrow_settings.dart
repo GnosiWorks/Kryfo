@@ -232,7 +232,6 @@ void narrowSettings({
       friendLines: 'obfs4 1.2.3.4:443 ABCDEF cert=abc iat-mode=0',
       torProjectLines: 'webtunnel [2001:db8::1]:443 ABCDEF url=https://a.b/c',
       consent: 'yes',
-      country: 'ir',
       offerAuto: true,
     );
     addTearDown(() => appState.bridgeSetupForTest = const BridgeSetup());
