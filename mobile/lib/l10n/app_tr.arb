@@ -2666,6 +2666,7 @@
   "desktopTrayQuit": "Kryfo'dan çık",
   "desktopTrayTip": "Kryfo açık ve mesaj alıyor",
   "desktopTrayLockedTip": "Mesaj almaya başlamak için Kryfo'yu aç",
+  "desktopTrayStillRunning": "Kryfo sistem tepsisinde çalışmaya devam ediyor. Çıkmak için tepsideki simgesini kullan.",
   "desktopRunSection": "Bu bilgisayarda",
   "desktopTrayRow": "Sistem tepsisinde çalışmaya devam et",
   "desktopTrayHint": "Pencereyi kapatınca Kryfo sistem tepsisinde kalır, mesajlar gelmeye devam eder.",

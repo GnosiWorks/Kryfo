@@ -7,6 +7,7 @@
 #include <flutter/method_channel.h>
 
 #include <memory>
+#include <string>
 
 #include "kryfo_tray.h"
 #include "win32_window.h"
@@ -39,15 +40,14 @@ class FlutterWindow : public Win32Window {
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> desktop_;
   kryfo::Tray tray_;
 
-  // ends when the window comes up, see PumpFrames
-  ULONGLONG pump_until_ = 0;
+  // the one-time line for the first close to the tray, from dart
+  std::wstring hint_;
 
   // started with the computer (--hidden)
   bool start_hidden_ = false;
 
   void ShowAndRaise();
-  void PumpFrames();
-  void PumpTick();
+  void HideToTray();
   void Quit();
   void EndNow();
 };

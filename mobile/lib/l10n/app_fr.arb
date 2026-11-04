@@ -2666,6 +2666,7 @@
   "desktopTrayQuit": "Quitter Kryfo",
   "desktopTrayTip": "Kryfo est ouvert et reçoit des messages",
   "desktopTrayLockedTip": "Ouvrez Kryfo pour commencer à recevoir des messages",
+  "desktopTrayStillRunning": "Kryfo reste actif dans la zone de notification. Pour le quitter, passez par son icône dans la zone de notification.",
   "desktopRunSection": "Sur cet ordinateur",
   "desktopTrayRow": "Rester actif dans la zone de notification",
   "desktopTrayHint": "Fermer la fenêtre garde Kryfo dans la zone de notification, et les messages continuent d’arriver.",

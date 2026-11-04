@@ -149,19 +149,18 @@ Future<void> showWindow() async {
   } catch (_) {}
 }
 
-/// frames asked for by the windows runner for a few seconds: a screen that
-/// comes up with an animation moves without waiting for input there
-Future<void> askFrames() async {
-  if (!Platform.isWindows) return;
-  try {
-    await _desktopChannel.invokeMethod<void>('frames');
-  } catch (_) {}
-}
-
-/// [locked]: before the vault opens nothing arrives, and the tip says so
+/// [locked]: before the vault opens nothing arrives, and the tip says so.
+/// once it is open, windows' runner also gets the line for the first close
+/// to the tray, until it says it was shown
 Future<void> sayTrayWords({bool locked = false}) async {
+  final run = desktopRun;
+  final hint =
+      Platform.isWindows && !locked && run is DesktopRun && !run.trayHinted;
   try {
-    await _desktopChannel.invokeMethod<void>('tray', trayWords(locked: locked));
+    await _desktopChannel.invokeMethod<void>(
+      'tray',
+      trayWords(locked: locked, hint: hint),
+    );
   } catch (_) {
     // a runner without a tray: closing the window ends the app
   }
@@ -169,10 +168,11 @@ Future<void> sayTrayWords({bool locked = false}) async {
 
 /// the tray's words, in the app's language
 @visibleForTesting
-Map<String, String> trayWords({bool locked = false}) => {
+Map<String, String> trayWords({bool locked = false, bool hint = false}) => {
   'open': l10n.desktopLockOpen,
   'quit': l10n.desktopTrayQuit,
   'tip': locked ? l10n.desktopTrayLockedTip : l10n.desktopTrayTip,
+  if (hint) 'hint': l10n.desktopTrayStillRunning,
 };
 
 /// started with the computer ([startHiddenFlag]): the runner keeps the
@@ -326,6 +326,9 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   }
   _desktopChannel.setMethodCallHandler((call) async {
     if (call.method == 'quit') ending();
+    // the first close to the tray was said: never again
+    final run = desktopRun;
+    if (call.method == 'hinted' && run is DesktopRun) await run.markHinted();
     return null;
   });
   // a run before's temporary files: its key died with it, they go unread
@@ -382,7 +385,6 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
             trace('seal open');
             await appMain();
             trace('app started');
-            unawaited(askFrames());
           } catch (e, st) {
             // said, not left as a lock screen that never moves
             dlog('desktop start: $step ${e.runtimeType}');

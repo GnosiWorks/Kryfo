@@ -2666,6 +2666,7 @@
   "desktopTrayQuit": "Esci da Kryfo",
   "desktopTrayTip": "Kryfo è attivo e riceve messaggi",
   "desktopTrayLockedTip": "Apri Kryfo per iniziare a ricevere messaggi",
+  "desktopTrayStillRunning": "Kryfo resta attivo nell'area di notifica. Per uscire, usa la sua icona nell'area di notifica.",
   "desktopRunSection": "Su questo computer",
   "desktopTrayRow": "Resta attivo nell'area di notifica",
   "desktopTrayHint": "Chiudendo la finestra Kryfo resta nell'area di notifica, e i messaggi continuano ad arrivare.",

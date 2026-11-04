@@ -2666,6 +2666,7 @@
   "desktopTrayQuit": "Kryfo बंद करें",
   "desktopTrayTip": "Kryfo चल रहा है और संदेश ले रहा है",
   "desktopTrayLockedTip": "संदेश पाना शुरू करने के लिए Kryfo खोलें",
+  "desktopTrayStillRunning": "Kryfo सिस्टम ट्रे में चलता रहता है। बंद करने के लिए ट्रे में उसका आइकन इस्तेमाल करें।",
   "desktopRunSection": "इस कंप्यूटर पर",
   "desktopTrayRow": "सिस्टम ट्रे में चलता रहे",
   "desktopTrayHint": "विंडो बंद करने पर Kryfo सिस्टम ट्रे में रहता है, ताकि संदेश आते रहें।",

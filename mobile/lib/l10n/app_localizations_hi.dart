@@ -10144,6 +10144,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get desktopTrayLockedTip => 'संदेश पाना शुरू करने के लिए Kryfo खोलें';
 
   @override
+  String get desktopTrayStillRunning =>
+      'Kryfo सिस्टम ट्रे में चलता रहता है। बंद करने के लिए ट्रे में उसका आइकन इस्तेमाल करें।';
+
+  @override
   String get desktopRunSection => 'इस कंप्यूटर पर';
 
   @override

@@ -2666,6 +2666,7 @@
   "desktopTrayQuit": "Выйти из Kryfo",
   "desktopTrayTip": "Kryfo работает и принимает сообщения",
   "desktopTrayLockedTip": "Открой Kryfo, чтобы начать получать сообщения",
+  "desktopTrayStillRunning": "Kryfo продолжает работать в области уведомлений. Выйти можно через его значок там.",
   "desktopRunSection": "На этом компьютере",
   "desktopTrayRow": "Работать в области уведомлений",
   "desktopTrayHint": "Если закрыть окно, Kryfo остаётся в области уведомлений, и сообщения продолжают приходить.",

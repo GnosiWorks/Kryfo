@@ -16277,6 +16277,12 @@ abstract class AppLocalizations {
   /// **'Open Kryfo to start receiving messages'**
   String get desktopTrayLockedTip;
 
+  /// windows: shown once from the tray icon, the first time closing the window hides kryfo to the tray
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo is still running in the tray. Quit from the tray icon.'**
+  String get desktopTrayStillRunning;
+
   /// notifications page on a computer: the section that replaces the phone's delivery modes
   ///
   /// In en, this message translates to:

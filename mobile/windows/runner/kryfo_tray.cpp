@@ -63,6 +63,19 @@ void Tray::Hide() {
   shown_ = false;
 }
 
+bool Tray::Balloon(const std::wstring& text) {
+  if (!shown_ || text.empty()) return false;
+  NOTIFYICONDATAW data = {};
+  data.cbSize = sizeof(data);
+  data.hWnd = window_;
+  data.uID = kIconId;
+  data.uFlags = NIF_INFO;
+  ::wcsncpy_s(data.szInfo, text.c_str(), _TRUNCATE);
+  ::wcsncpy_s(data.szInfoTitle, L"Kryfo", _TRUNCATE);
+  data.dwInfoFlags = NIIF_INFO | NIIF_NOSOUND | NIIF_RESPECT_QUIET_TIME;
+  return ::Shell_NotifyIconW(NIM_MODIFY, &data) != FALSE;
+}
+
 TrayEvent Tray::EventOf(bool v4, UINT event) {
   if (v4) {
     // version 4 sends the mouse messages too, then its own. a right click

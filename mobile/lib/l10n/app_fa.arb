@@ -2666,6 +2666,7 @@
   "desktopTrayQuit": "خروج از Kryfo",
   "desktopTrayTip": "Kryfo در حال اجراست و پیام می‌گیرد",
   "desktopTrayLockedTip": "Kryfo را باز کنید تا پیام‌ها برسند",
+  "desktopTrayStillRunning": "Kryfo همچنان در سینی سیستم اجرا می‌شود. برای خروج از نماد آن در سینی سیستم استفاده کنید.",
   "desktopRunSection": "روی این رایانه",
   "desktopTrayRow": "اجرا در سینی سیستم",
   "desktopTrayHint": "با بستن پنجره، Kryfo در سینی سیستم می‌ماند و پیام‌ها همچنان می‌رسند.",

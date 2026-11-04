@@ -10221,6 +10221,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Apri Kryfo per iniziare a ricevere messaggi';
 
   @override
+  String get desktopTrayStillRunning =>
+      'Kryfo resta attivo nell\'area di notifica. Per uscire, usa la sua icona nell\'area di notifica.';
+
+  @override
   String get desktopRunSection => 'Su questo computer';
 
   @override

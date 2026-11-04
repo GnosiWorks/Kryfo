@@ -2666,6 +2666,7 @@
   "desktopTrayQuit": "أغلق Kryfo",
   "desktopTrayTip": "Kryfo يعمل ويستقبل الرسائل",
   "desktopTrayLockedTip": "افتح Kryfo لتبدأ في استقبال الرسائل",
+  "desktopTrayStillRunning": "لا يزال Kryfo يعمل في علبة النظام. للخروج استخدم أيقونته في علبة النظام.",
   "desktopRunSection": "على هذا الحاسوب",
   "desktopTrayRow": "إبقاء التشغيل في علبة النظام",
   "desktopTrayHint": "إغلاق النافذة يُبقي Kryfo في علبة النظام، فتظل الرسائل تصل.",

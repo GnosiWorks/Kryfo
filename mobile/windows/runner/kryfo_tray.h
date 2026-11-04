@@ -27,6 +27,10 @@ class Tray {
   void Hide();
   bool shown() const { return shown_; }
 
+  // a quiet note from the icon (a toast on windows 10 and 11). false when
+  // there is no icon or the shell refused it
+  bool Balloon(const std::wstring& text);
+
   // the window's message handler calls this first; true when it was the
   // tray's. on_open and on_quit run on a menu pick or a click
   bool Handle(UINT message, WPARAM wparam, LPARAM lparam,

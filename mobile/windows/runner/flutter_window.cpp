@@ -9,12 +9,9 @@
 
 namespace {
 constexpr UINT_PTR kQuitTimer = 0x4B51;
-constexpr UINT_PTR kFrameTimer = 0x4B52;
 constexpr UINT_PTR kHiddenTimer = 0x4B53;
 // how long a hidden start waits for its tray icon before the window shows
 constexpr UINT kHiddenWaitMs = 10000;
-// how long the window asks for frames itself after it comes up
-constexpr ULONGLONG kPumpMs = 3000;
 }  // namespace
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
@@ -58,6 +55,9 @@ bool FlutterWindow::OnCreate() {
         return w;
       };
       tray_.Show(GetHandle(), word("open"), word("quit"), word("tip"));
+      // said once, the first time closing hides the window. dart sends it
+      // until it hears "hinted"
+      hint_ = word("hint");
       result->Success();
     } else if (call.method_name() == "noTray") {
       // the tray switch off: no icon, and closing the window quits
@@ -71,9 +71,6 @@ bool FlutterWindow::OnCreate() {
       result->Success(flutter::EncodableValue(tray_.shown()));
     } else if (call.method_name() == "show") {
       ShowAndRaise();
-      result->Success();
-    } else if (call.method_name() == "frames") {
-      PumpFrames();
       result->Success();
     } else {
       result->NotImplemented();
@@ -122,30 +119,16 @@ void FlutterWindow::ShowAndRaise() {
     ::SetFocus(flutter_controller_->view()->GetNativeWindow());
   }
   if (joined) ::AttachThreadInput(mine, theirs, FALSE);
-  PumpFrames();
+  // what was drawn while hidden is stale: one new frame
+  if (flutter_controller_) flutter_controller_->ForceRedraw();
 }
 
-// frames asked for from here for a while: what was drawn while hidden is
-// stale, and an animation that starts with the window would otherwise move
-// only on input
-void FlutterWindow::PumpFrames() {
-  HWND w = GetHandle();
-  if (!w || !flutter_controller_) return;
-  pump_until_ = ::GetTickCount64() + kPumpMs;
-  flutter_controller_->ForceRedraw();
-  ::SetTimer(w, kFrameTimer, 16, nullptr);
-}
-
-void FlutterWindow::PumpTick() {
-  HWND w = GetHandle();
-  if (!w || !flutter_controller_ || ::GetTickCount64() >= pump_until_ ||
-      !::IsWindowVisible(w)) {
-    if (w) ::KillTimer(w, kFrameTimer);
-    return;
-  }
-  HWND view = flutter_controller_->view()->GetNativeWindow();
-  ::InvalidateRect(view, nullptr, FALSE);
-  flutter_controller_->ForceRedraw();
+// closing with the tray up only hides; the first time, the tray says so
+void FlutterWindow::HideToTray() {
+  ::ShowWindow(GetHandle(), SW_HIDE);
+  if (hint_.empty() || !tray_.Balloon(hint_)) return;
+  hint_.clear();
+  if (desktop_) desktop_->InvokeMethod("hinted", nullptr);
 }
 
 // the window goes, then the process, at once: no engine shutdown or dll
@@ -155,7 +138,6 @@ void FlutterWindow::EndNow() {
   HWND w = GetHandle();
   if (w) {
     ::KillTimer(w, kQuitTimer);
-    ::KillTimer(w, kFrameTimer);
     ::ShowWindow(w, SW_HIDE);
   }
   tray_.Hide();
@@ -201,7 +183,7 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
   }
   if (message == WM_CLOSE) {
     if (tray_.shown()) {
-      ::ShowWindow(hwnd, SW_HIDE);
+      HideToTray();
     } else {
       Quit();
     }
@@ -209,10 +191,6 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
   }
   switch (message) {
     case WM_TIMER:
-      if (wparam == kFrameTimer) {
-        PumpTick();
-        return 0;
-      }
       if (wparam == kHiddenTimer) {
         ::KillTimer(hwnd, kHiddenTimer);
         if (!tray_.shown()) ShowAndRaise();
