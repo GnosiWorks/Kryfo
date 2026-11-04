@@ -1,211 +1,135 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// six digits you read out loud. the code points at your invite for ten
-// minutes, works once, then the address is gone. your three words sit under
-// it, and the key number of the invite, for the other phone to match before
-// it adds you. shared by the invite page and the pairing screen.
+// eight digits you read out loud. the first two pick a meeting place on the
+// relays, the last six never leave the phone: the other side proves it
+// typed them without sending them, and each gets the other's one-time
+// invite. a wrong code is a try, and three end it. the code shows for ten
+// minutes; once it matched the person sees who it is and adds them. shared
+// by the invite page and the pairing screen.
 import 'dart:async';
-import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../main.dart'
-    show appState, engine, inviteKeyNumber, sessionQuiet, AppStateSession;
-import '../quiet_wait.dart';
+
+import '../main.dart' show appState, pairHooks, AppStateSession;
+import '../pair_flow.dart';
 import '../theme.dart';
-import 'ease_size.dart';
-import 'halo_buttons.dart';
-import 'swap.dart';
-import 'motion.dart' show BreathDot, kHouseCurve, kHouseTime, motionStill;
-import 'pair_join.dart'
-    show PairWordsTag, pairErrorText, pairNow, pairUnreached;
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
+import 'ease_size.dart';
+import 'halo_buttons.dart';
+import 'motion.dart' show BreathDot, kHouseCurve, kHouseTime, motionStill;
+import 'pair_join.dart' show PairMatched, pairLineText;
+import 'swap.dart';
 
-// as long as the engine stamps an invite at a code to live
-const kPairCodeLife = Duration(minutes: 10);
+export '../pair_flow.dart' show PairCodes, kPairCodeLife;
 
 class PairCodePanel extends StatefulWidget {
   // compact drops the explanatory lines, for use under a qr
   final bool compact;
-  // puts [invite] at a code and gives the engine's answer. tests stand in
-  // for it
-  final Future<String> Function(String code, String invite)? publish;
-  // the invite a code points at: the session's own
-  final Future<String> Function()? invite;
+  // what a new run is made on; the app's own by default, tests stand in
+  final PairHooks Function()? hooks;
+  // the add went through: its line (empty when a chat opening is the
+  // answer)
+  final void Function(String status)? onAdded;
   const PairCodePanel({
     super.key,
     this.compact = false,
-    this.publish,
-    this.invite,
+    this.hooks,
+    this.onAdded,
   });
   @override
   State<PairCodePanel> createState() => _PairCodePanelState();
 }
 
-// a code, when it burns, and the key number of the invite it points at
-class PairCodeLive {
-  PairCodeLive(this.box, this.code, this.burns, [this.number]);
-  final String box;
-  final String code;
-  final DateTime burns;
-  final String? number;
-  // the engine took it: until then the panel says it is working
-  bool shown = false;
-  // its burning was said once, on a panel opened after it went
-  bool told = false;
-}
-
-// the live code of each container, outside any panel: a card or tab left
-// and opened again shows the code its invite is still up for. keyed by
-// container, so no other container ever sees it
-class PairCodes extends ChangeNotifier {
-  final _live = <String, PairCodeLive>{};
-
-  PairCodeLive? of(String box) => _live[box];
-
-  PairCodeLive begin(String box, String code, [String? number]) {
-    final c = PairCodeLive(box, code, pairNow().add(kPairCodeLife), number);
-    _live[box] = c;
-    notifyListeners();
-    return c;
-  }
-
-  void ready(PairCodeLive c) {
-    if (!identical(_live[c.box], c)) return;
-    c.shown = true;
-    notifyListeners();
-  }
-
-  void drop(PairCodeLive c) {
-    if (!identical(_live[c.box], c)) return;
-    _live.remove(c.box);
-    notifyListeners();
-  }
-
-  // whole seconds to go, rounded up so a fresh code reads ten minutes
-  int left(PairCodeLive c) {
-    final ms = c.burns.difference(pairNow()).inMilliseconds;
-    return ms <= 0 ? 0 : (ms + 999) ~/ 1000;
-  }
-
-  @visibleForTesting
-  void clear() => _live.clear();
-}
-
 class _PairCodePanelState extends State<PairCodePanel> {
-  // what this panel shows, out of the shared store
-  PairCodeLive? _on;
-  String _status = '';
-  bool _failed = false;
+  PairRun? _on;
   Timer? _tick;
+  int _wrongSeen = 0;
 
   PairCodes get _codes => appState.pairCodes;
-  bool get _busy => _on != null && !_on!.shown;
-  String? get _code => _on != null && _on!.shown ? _on!.code : null;
-  int get _left => _on == null ? 0 : _codes.left(_on!);
 
   @override
   void initState() {
     super.initState();
-    _codes.addListener(_sync);
     _sync(first: true);
+    _codes.addListener(_sync);
   }
 
   @override
   void dispose() {
     _codes.removeListener(_sync);
+    _on?.removeListener(_changed);
     _tick?.cancel();
     super.dispose();
   }
 
-  // the store's code for this container, counted down. one that burned is
-  // gone and said so: a code that just vanished reads as a fault
+  // the store's run for this container, followed. one whose end was said
+  // on a panel before goes: a line that stays reads as a fault
   void _sync({bool first = false}) {
     if (!mounted) return;
-    var c = _codes.of(appState.pairBox);
-    var burned = false;
-    if (c != null && _codes.left(c) <= 0) {
-      burned = c.shown && !c.told;
-      if (c.shown) c.told = true;
-      c = null;
+    var r = _codes.of(appState.pairBox);
+    if (first && r != null && r.phase == PairPhase.ended && r.told) {
+      _codes.drop(appState.pairBox);
+      r = null;
     }
-    final was = _on;
-    if (c == null && was != null && was.shown && _codes.left(was) <= 0) {
-      was.told = true;
-      burned = true;
+    if (!identical(r, _on)) {
+      _on?.removeListener(_changed);
+      _on = r?..addListener(_changed);
+      _wrongSeen = r?.wrong ?? 0;
     }
-    if (c == null) {
+    _ticking();
+    if (!first) setState(() {});
+  }
+
+  void _ticking() {
+    final live = _on?.phase == PairPhase.live;
+    if (live) {
+      _tick ??= Timer.periodic(const Duration(seconds: 1), (_) {
+        if (mounted) setState(() {});
+      });
+    } else {
       _tick?.cancel();
       _tick = null;
-    } else {
-      _tick ??= Timer.periodic(const Duration(seconds: 1), (_) => _sync());
     }
-    final changed = !identical(c, was) || burned;
-    _on = c;
-    if (burned) {
-      _failed = false;
-      _status = l10n.pairCodePanelBurned;
-    }
-    // a tick only moves the count
-    if (!first && (changed || c != null)) setState(() {});
   }
 
-  // reading the invite, before the store holds the code
-  bool _making = false;
+  void _changed() {
+    final r = _on;
+    if (!mounted || r == null) return;
+    if (r.wrong > _wrongSeen) {
+      _wrongSeen = r.wrong;
+      HapticFeedback.heavyImpact();
+    }
+    if (r.phase == PairPhase.matched) HapticFeedback.lightImpact();
+    if (r.phase == PairPhase.added) {
+      HapticFeedback.lightImpact();
+      final said = r.added ?? '';
+      _codes.drop(appState.pairBox);
+      if (said.isNotEmpty) showHaloToast(context, said);
+      widget.onAdded?.call(said);
+      return;
+    }
+    _ticking();
+    setState(() {});
+  }
 
   Future<void> _make() async {
-    if (_busy || _making) return;
+    final r = _on;
+    if (r != null && (r.busy || r.phase == PairPhase.live)) return;
     HapticFeedback.selectionClick();
-    // Random.secure: a guessable code is one someone else can stand in
-    // front of
-    final r = Random.secure();
-    final code = List.generate(6, (_) => r.nextInt(10)).join();
-    if (appState.sessionOnion.isEmpty) {
-      setState(() {
-        _failed = false;
-        _status = l10n.pairCodePanelYourInviteIsNot;
-      });
-      return;
-    }
-    setState(() {
-      _failed = false;
-      _status = l10n.pairCodePanelPuttingYourInviteIn;
-    });
-    // the number shown is read off the very invite put at the code
-    _making = true;
-    final String invite;
-    try {
-      invite = await (widget.invite ?? appState.sessionInvite)();
-    } finally {
-      _making = false;
-    }
-    // the engine stamps the invite's life as it builds it, and a publish
-    // over a slow route takes a while: the count starts now, not on the
-    // answer, so it never runs past the invite. the code is the store's,
-    // so a panel left before the answer still leaves it live
-    final c = _codes.begin(appState.pairBox, code, inviteKeyNumber(invite));
-    final res = await (widget.publish ?? _publish)(code, invite);
-    if (res.startsWith('error')) {
-      _codes.drop(c);
-      if (!mounted) return;
-      setState(() {
-        _failed = true;
-        _status = pairErrorText(res);
-      });
-      return;
-    }
-    _codes.ready(c);
-    if (mounted) setState(() => _status = '');
+    final run = _codes.begin(appState.pairBox, (widget.hooks ?? pairHooks)());
+    await run.start();
   }
-
-  // a quiet session never reaches the relays: it answers as unreachable
-  // ones would
-  static Future<String> _publish(String code, String invite) => sessionQuiet
-      ? unreachedLater(pairUnreached)
-      : engine.pairCodePublish(code, invite);
 
   @override
   Widget build(BuildContext context) {
     final still = motionStill(context);
+    final r = _on;
+    final view = switch (r?.phase) {
+      PairPhase.live => 'live',
+      PairPhase.matched || PairPhase.adding => 'matched',
+      _ => 'idle',
+    };
     // the code settles in on the house spring as the card eases to its
     // height, so the buttons under it move instead of jumping. with reduced
     // motion it swaps
@@ -228,19 +152,33 @@ class _PairCodePanelState extends State<PairCodePanel> {
         ),
         layoutBuilder: (top, gone) =>
             Stack(alignment: Alignment.topCenter, children: [...gone, ?top]),
-        child: _code == null ? _idle() : _liveView(),
+        child: switch (view) {
+          'live' => _liveView(r!),
+          'matched' => PairMatched(
+            key: const ValueKey('matched'),
+            words: r!.peer!.id,
+            busy: r.phase == PairPhase.adding,
+            onAdd: r.confirm,
+            onNotThem: r.notThem,
+          ),
+          _ => _idle(r),
+        },
       ),
     );
   }
 
-  Widget _idle() {
+  Widget _idle(PairRun? r) {
+    final busy = r != null && r.busy;
+    if (r != null && r.phase == PairPhase.ended) r.told = true;
+    final line = r == null ? '' : pairLineText(r.line, sharer: true);
+    final warn = r?.warn ?? false;
     return Column(
       key: const ValueKey('idle'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (!widget.compact) ...[
           Text(
-            l10n.pairCodePanelReadSixDigitsOut,
+            l10n.pairCodePanelReadEightDigitsOut,
             style: HaloType.sans(size: 13.5, color: HaloColors.text2),
           ),
           const SizedBox(height: 22),
@@ -248,70 +186,77 @@ class _PairCodePanelState extends State<PairCodePanel> {
         // under a qr it is the other way, so it stays the quieter one
         if (widget.compact)
           HaloGhostButton(
-            label: _busy
+            label: busy
                 ? l10n.pairCodePanelWorking
-                : l10n.pairCodePanelOrMakeASix,
-            onTap: _busy ? null : _make,
+                : l10n.pairCodePanelOrMakeACode,
+            onTap: busy ? null : _make,
           )
         else
           HaloPrimaryButton(
-            label: _busy
+            label: busy
                 ? l10n.pairCodePanelWorking
-                : l10n.pairCodePanelOrMakeASix,
-            busy: _busy,
+                : l10n.pairCodePanelOrMakeACode,
+            busy: busy,
             onTap: _make,
           ),
         // a new line rises in over the last, and the card eases to it
         EaseSize(
-          child: _status.isEmpty
+          child: line.isEmpty
               ? const SizedBox(width: double.infinity)
               : Padding(
                   padding: const EdgeInsets.only(top: 10),
                   child: RiseSwap(
                     alignment: Alignment.center,
                     child: Text(
-                      _status,
-                      key: ValueKey(_status),
+                      line,
+                      key: ValueKey(line),
                       textAlign: TextAlign.center,
-                      style: HaloType.mono(
-                        size: 10.5,
-                        color: _failed ? HaloColors.roseText : HaloColors.text2,
-                      ),
+                      style: warn
+                          ? HaloType.sans(
+                              size: 12.5,
+                              weight: FontWeight.w600,
+                              color: HaloColors.roseText,
+                            )
+                          : HaloType.mono(size: 10.5, color: HaloColors.text2),
                     ),
                   ),
                 ),
         ),
+        if (!widget.compact) ...[
+          const SizedBox(height: 14),
+          Text(
+            l10n.pairCodeBothNeed06Shown,
+            textAlign: TextAlign.center,
+            style: HaloType.sans(size: 12, color: HaloColors.text2),
+          ),
+        ],
       ],
     );
   }
 
-  Widget _liveView() {
-    final mm = whole(_left ~/ 60);
-    final ss = twoDigits(_left % 60);
+  Widget _liveView(PairRun r) {
+    final left = _codes.left(r);
+    final mm = whole(left ~/ 60);
+    final ss = twoDigits(left % 60);
+    final code = r.code ?? '';
+    final line = pairLineText(r.line, sharer: true);
     return Column(
       key: const ValueKey('live'),
       children: [
         GestureDetector(
           onTap: () {
             HapticFeedback.selectionClick();
-            copySensitive(_code!);
+            copySensitive(code.replaceAll(' ', ''));
             showHaloToast(context, l10n.pairCodePanelCodeCopied);
           },
-          child: Text(
-            '${_code!.substring(0, 3)} ${_code!.substring(3)}',
-            // digits read out in order, whatever the language
+          child: Semantics(
+            label: code,
             textDirection: TextDirection.ltr,
-            style: HaloType.mono(
-              size: widget.compact ? 34 : 40,
-              weight: FontWeight.w600,
-              color: HaloColors.amberText,
-              letter: 0.16,
-            ),
+            excludeSemantics: true,
+            child: _CodeDigits(code: code, size: widget.compact ? 32 : 38),
           ),
         ),
-        const SizedBox(height: 12),
-        PairWordsTag(words: appState.sessionId, number: _on?.number),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -327,21 +272,121 @@ class _PairCodePanelState extends State<PairCodePanel> {
         Text(
           widget.compact
               ? l10n.pairCodePanelTheyTapAddChoose
-              : l10n.pairCodePanelTheyOpenKryfoTap,
+              : l10n.pairCodePanelTheyOpenKryfoEight,
           textAlign: TextAlign.center,
           style: HaloType.sans(size: 12.5, color: HaloColors.text2),
         ),
-        // what comes to this side is their request: taken in on their word
-        // that the numbers matched
-        if (_on?.number != null) ...[
-          const SizedBox(height: 8),
-          Text(
-            l10n.pairCodePanelAcceptOnce,
-            textAlign: TextAlign.center,
-            style: HaloType.sans(size: 12.5, color: HaloColors.text2),
-          ),
-        ],
+        // a wrong try, said in the warning colour until the next line
+        EaseSize(
+          child: line.isEmpty
+              ? const SizedBox(width: double.infinity)
+              : Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: RiseSwap(
+                    alignment: Alignment.center,
+                    child: Text(
+                      line,
+                      key: ValueKey(line),
+                      textAlign: TextAlign.center,
+                      style: r.warn
+                          ? HaloType.sans(
+                              size: 13,
+                              weight: FontWeight.w600,
+                              color: HaloColors.roseText,
+                            )
+                          : HaloType.sans(size: 12.5, color: HaloColors.text2),
+                    ),
+                  ),
+                ),
+        ),
       ],
+    );
+  }
+}
+
+/// the code in its three groups, each digit rising in a beat after the one
+/// before. still with reduced motion. digits in the same order whatever
+/// the language, so two people read them alike
+class _CodeDigits extends StatelessWidget {
+  final String code;
+  final double size;
+  const _CodeDigits({required this.code, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    final still = motionStill(context);
+    final style = HaloType.mono(
+      size: size,
+      weight: FontWeight.w600,
+      color: HaloColors.amberText,
+      letter: 0.12,
+    );
+    var i = 0;
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final ch in code.split(''))
+            if (ch == ' ')
+              SizedBox(width: size * 0.42)
+            else
+              _Rise(
+                still: still,
+                delay: Duration(milliseconds: 28 * i++),
+                child: Text(ch, style: style),
+              ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Rise extends StatefulWidget {
+  final bool still;
+  final Duration delay;
+  final Widget child;
+  const _Rise({required this.still, required this.delay, required this.child});
+  @override
+  State<_Rise> createState() => _RiseState();
+}
+
+class _RiseState extends State<_Rise> with SingleTickerProviderStateMixin {
+  late final _c = AnimationController(vsync: this, duration: kHouseTime);
+  Timer? _wait;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.still) {
+      _c.value = 1;
+    } else {
+      _wait = Timer(widget.delay, () {
+        if (mounted) _c.forward();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _wait?.cancel();
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final a = _c.drive(CurveTween(curve: kHouseCurve));
+    return AnimatedBuilder(
+      animation: a,
+      builder: (_, child) => Opacity(
+        opacity: _c.value.clamp(0, 1),
+        child: Transform.translate(
+          offset: Offset(0, (1 - a.value) * 10),
+          child: child,
+        ),
+      ),
+      child: widget.child,
     );
   }
 }

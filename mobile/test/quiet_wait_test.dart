@@ -28,8 +28,7 @@ void main() {
   test('every stand-in answers through it', () {
     final sites = {
       'lib/handle_claim.dart': 3,
-      'lib/screens/pair_code_screen.dart': 1,
-      'lib/widgets/pair_code_panel.dart': 1,
+      'lib/app/pair_codes_app.dart': 2,
       'lib/gifs/gif_source.dart': 2,
       'lib/app/links.dart': 1,
       'lib/screens/search_screen.dart': 1,
@@ -59,9 +58,18 @@ void main() {
     final claim = src('lib/handle_claim.dart');
     expect(claim, contains('engine.decoyHandleCheck(h)'));
     expect(claim, contains('final uri = sessionQuiet ? null'));
+    // a quiet pairing makes no invite and reaches no relay, on either side
+    final pair = src('lib/app/pair_codes_app.dart');
     expect(
-      src('lib/widgets/pair_code_panel.dart'),
-      contains('sessionQuiet\n      ? unreachedLater(pairUnreached)'),
+      pair,
+      contains('PairHooks pairHooks() => sessionQuiet\n    ? PairHooks('),
+    );
+    expect(pair, contains('share: (_) => unreachedLater(pairUnreached),'));
+    expect(pair, contains('join: (_, _) => unreachedLater(pairUnreached),'));
+    expect(pair, contains('invite: () async => PairMine(Uint8List(0)),'));
+    expect(
+      pair,
+      contains('if (sessionQuiet || !signalSession.ready) return null;'),
     );
     expect(
       src('lib/app/state_session.dart'),
