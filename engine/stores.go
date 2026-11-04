@@ -386,10 +386,11 @@ func backupClientFor(lane string) (*http.Client, error) {
 // and on its everyday addresses, so they go through tor on every route.
 // so do the first-contact lanes: that address sits in the invite a handle
 // points to, and the registry runs on our relay's box, so from this phone's
-// ip it would put a name on the ip
+// ip it would put a name on the ip. and a hidden chat's: from this phone's
+// ip our relay would see it beside the everyday addresses
 func laneKeepsTor(lane string) bool {
 	switch laneKind(lane) {
-	case "room", "pair", laneFirstContact, laneHello:
+	case "room", "pair", laneFirstContact, laneHello, laneHidden:
 		return true
 	}
 	return false

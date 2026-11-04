@@ -333,6 +333,10 @@ class _Io implements AppIo {
   @override
   void listen(int ident, String xPub, {bool fresh = false}) =>
       listened.add(xPub);
+
+  @override
+  void listenHidden(int ident, String xPub, {bool fresh = false}) =>
+      listen(ident, xPub, fresh: fresh);
   @override
   String edPub() => 'ed-me';
   @override

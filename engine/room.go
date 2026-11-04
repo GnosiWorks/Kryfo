@@ -182,7 +182,9 @@ func HaloRoomSubscribe(cPriv, cPeer *C.char) *C.char {
 	lane := roomLane(hex.EncodeToString(me.pub[:]))
 	noteKnockTarget(key, knockTarget{rcvPk, rcvSk, lane, lane, ""})
 	startSub(key, func(ctx context.Context) {
-		nostrSubscribeRunnerFn(ctx, lane, key, rcvPk, func(gw nostr2.Event) (string, error) {
+		// the room's member addresses share a socket per relay; its drop
+		// box keeps one of its own
+		nostrSubscribeRunnerFn(shareOn(ctx, "room"), lane, key, rcvPk, func(gw nostr2.Event) (string, error) {
 			return nip17UnwrapAs(me, peer, gw)
 		})
 	})

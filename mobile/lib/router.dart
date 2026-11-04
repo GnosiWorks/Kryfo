@@ -1091,6 +1091,12 @@ class VaultRouter {
   // no tick for someone the vault blocked
   bool blocks(String id) => cardOf(id)?.blocked ?? false;
 
+  // a key a hidden chat listens on: its address keeps a relay socket of its
+  // own, never one the everyday chats share
+  bool hidesKey(String xPub) =>
+      xPub.isNotEmpty &&
+      [..._members.values, ..._peers.values].any((c) => c.xpub == xPub);
+
   // the keys to listen on, each to its person. the vault's blocked too,
   // while the block is young: what they send while it holds is dropped as
   // it comes. one whose card does not say when it began is listened on

@@ -186,6 +186,8 @@ func HaloRestoreIdentity(cEdPriv *C.char, cXPriv *C.char) *C.char {
 	copy(myXPriv[:], xPrivBytes)
 	curve25519.ScalarBaseMult(&myXPub, &myXPriv)
 	putIdentity(mainIdent, xid{priv: myXPriv, pub: myXPub})
+	// a restore may have landed another batch book
+	batchBookReset()
 
 	myId = idFromPubkey(myEdPub)
 	log.Printf("halo: identity restored: %s", myId)
