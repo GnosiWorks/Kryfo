@@ -29,9 +29,14 @@ put you in danger, read all of it.
   relays, through tor, never directly.
 - server seizure. there is no central server holding a contact graph or
   message history. our relay deletes sealed messages after 14 days.
-- casual device access. the database is sqlcipher encrypted, the app can
-  require a pin or biometrics, and panic wipe removes everything including
-  media on disk.
+- casual device access. the database is sqlcipher encrypted, photos,
+  voice notes and files are encrypted too, each container's under a key
+  made from its database key, and the app can require a pin or biometrics.
+  a wipe drops the keys first, in the first second or two, so messages and
+  files never open again. then the files are overwritten and deleted, a
+  few seconds in all. flash storage can keep old blocks of a file after
+  that: without the keys they do not open, but a file from before 0.6 that
+  was never encrypted (below) is only as gone as the storage makes it.
 - phone number correlation. there is no number or email to tie you to a real
   identity, and no address book upload.
 - someone making you unlock the app. a decoy pin opens an empty Kryfo, as if
@@ -109,9 +114,16 @@ put you in danger, read all of it.
   scrolling through a phone you were made to unlock. they are not built to
   survive a lab. a copy of the phone can show that Kryfo holds more than it
   shows, and a short pin against such a copy can be guessed. android's
-  storage and battery figures for the app are not hidden either. if a
-  forensic copy is the fear, the wipe pin is the tool, and not having the
-  data on the phone at all is better still.
+  storage and battery figures for the app are not hidden either.
+  up to 0.5.3, photos, voice notes and files were kept unencrypted inside
+  the app's own folder, hidden chats' in folders of their own and under
+  the names people gave them: a copy of the phone shows them, hidden ones
+  too, without any pin. from 0.6 they are encrypted, the hidden chats'
+  under a key that only their pin opens, and their names on disk say
+  nothing. files from before are encrypted when their chats first open
+  after the update: until the hidden chats pin is used once, theirs stay
+  as they were. if a forensic copy is the fear, the wipe pin is the tool,
+  and not having the data on the phone at all is better still.
 - what the everyday side keeps to reach a hidden chat while it is shut. the
   card it keeps for each one, readable with the everyday database key, holds
   the keys and addresses needed to receive, and whether the chat blocks

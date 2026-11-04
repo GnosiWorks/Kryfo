@@ -74,8 +74,10 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
   final release = releaseHandle && !sessionQuiet;
   final handleKey = session.container.key('my_handle');
   haloWiping = true;
-  // the pin key before anything: hidden chats sealed under it open nowhere
-  // again, whatever of their files the flash keeps
+  // the pin key before anything: hidden chats' database and their sealed
+  // photos and files open nowhere again, whatever the flash keeps of them.
+  // files an older version left plain and that were never sealed since are
+  // only as gone as the shred below gets them
   await _dropPinKey();
   wipeForget();
   // a draft waiting to be written would land in a file being erased
