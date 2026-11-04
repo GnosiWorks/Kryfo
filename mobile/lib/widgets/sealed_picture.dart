@@ -356,6 +356,28 @@ class _Held extends RenderProxyBox {
     if (!_held) _last = size;
   }
 
+  // asked for its width or height while held: what it last had
+  Size? get _kept => _held ? _last : null;
+
+  @override
+  Size computeDryLayout(BoxConstraints constraints) => switch (_kept) {
+    final k? => constraints.constrain(k),
+    null => super.computeDryLayout(constraints),
+  };
+
+  @override
+  double computeMinIntrinsicWidth(double height) =>
+      _kept?.width ?? super.computeMinIntrinsicWidth(height);
+  @override
+  double computeMaxIntrinsicWidth(double height) =>
+      _kept?.width ?? super.computeMaxIntrinsicWidth(height);
+  @override
+  double computeMinIntrinsicHeight(double width) =>
+      _kept?.height ?? super.computeMinIntrinsicHeight(width);
+  @override
+  double computeMaxIntrinsicHeight(double width) =>
+      _kept?.height ?? super.computeMaxIntrinsicHeight(width);
+
   @override
   void paint(PaintingContext context, Offset offset) {
     if (!_held) super.paint(context, offset);

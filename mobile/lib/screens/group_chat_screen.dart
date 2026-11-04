@@ -6375,16 +6375,11 @@ class _GroupBubble extends StatelessWidget {
                                                                       context,
                                                                       240,
                                                                     ),
-                                                                image: ResizeImage.resizeIfNeeded(
+                                                                image: mediaImage(
+                                                                  m.mediaPath!,
                                                                   decodePx(
                                                                     context,
                                                                     240,
-                                                                  ),
-                                                                  null,
-                                                                  FileImage(
-                                                                    File(
-                                                                      m.mediaPath!,
-                                                                    ),
                                                                   ),
                                                                 ),
                                                                 semanticLabel:

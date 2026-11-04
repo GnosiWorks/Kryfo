@@ -8735,16 +8735,11 @@ class _Bubble extends StatelessWidget {
                                                                   context,
                                                                   times: 0.78,
                                                                 ),
-                                                            image: ResizeImage.resizeIfNeeded(
+                                                            image: mediaImage(
+                                                              msg.mediaPath!,
                                                               screenPx(
                                                                 context,
                                                                 times: 0.78,
-                                                              ),
-                                                              null,
-                                                              FileImage(
-                                                                File(
-                                                                  msg.mediaPath!,
-                                                                ),
                                                               ),
                                                             ),
                                                             errorBuilder: (_, e, _) {
