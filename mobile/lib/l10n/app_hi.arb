@@ -2994,5 +2994,11 @@
   "devicesChangedNotice": "आपके डिवाइस बदल गए",
   "devicesChangedLine": "क्या बदला, यह देखने के लिए जुड़े हुए डिवाइस खोलें।",
   "devicesUnknownNotice": "कहीं और से जोड़ा गया डिवाइस",
-  "devicesUnknownLine": "Kryfo की किसी दूसरी कॉपी ने आपके खाते से एक डिवाइस जोड़ा। इस फ़ोन ने उसे आपकी सूची से हटा दिया।"
+  "devicesUnknownLine": "Kryfo की किसी दूसरी कॉपी ने आपके खाते से एक डिवाइस जोड़ा। इस फ़ोन ने उसे आपकी सूची से हटा दिया।",
+  "bridgesShareBridgeN": "ब्रिज {n} शेयर करें",
+  "bridgesShareThisBridge": "यह ब्रिज शेयर करें",
+  "bridgesShareItPrivately": "इसे निजी तौर पर, भरोसे के लोगों के साथ शेयर करें। जो ब्रिज सार्वजनिक पन्नों से दूर रहता है, वह ज़्यादा समय तक चलता है।",
+  "bridgesCopyBridge": "ब्रिज कॉपी करें",
+  "bridgesBridgeCopied": "ब्रिज कॉपी हुआ",
+  "bridgesSendBridgeTo": "ब्रिज भेजें"
 }

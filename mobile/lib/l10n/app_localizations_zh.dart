@@ -10758,6 +10758,26 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get devicesUnknownLine => '另一份 Kryfo 把一台设备关联到了你的账号。这部手机已把它从你的列表中移除。';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return '分享网桥 $n';
+  }
+
+  @override
+  String get bridgesShareThisBridge => '分享这个网桥';
+
+  @override
+  String get bridgesShareItPrivately => '请私下分享给你信任的人。不出现在公开页面上的网桥能用得更久。';
+
+  @override
+  String get bridgesCopyBridge => '复制网桥';
+
+  @override
+  String get bridgesBridgeCopied => '网桥已复制';
+
+  @override
+  String get bridgesSendBridgeTo => '把网桥发给';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -21400,4 +21420,24 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get devicesUnknownLine => '另一份 Kryfo 把一台裝置連結到了你的帳號。這支手機已把它從你的清單中移除。';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return '分享橋接 $n';
+  }
+
+  @override
+  String get bridgesShareThisBridge => '分享這個橋接';
+
+  @override
+  String get bridgesShareItPrivately => '請私下分享給你信任的人。不出現在公開頁面上的橋接能用得更久。';
+
+  @override
+  String get bridgesCopyBridge => '複製橋接';
+
+  @override
+  String get bridgesBridgeCopied => '已複製橋接';
+
+  @override
+  String get bridgesSendBridgeTo => '把橋接傳給';
 }

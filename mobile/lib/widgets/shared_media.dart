@@ -2,7 +2,6 @@
 // what a chat shared: its count over the first four, the last of them
 // saying how many more. a tap on any opens them all. until the rows are
 // read it holds four quiet tiles, so nothing wrong is ever on screen
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 
@@ -11,9 +10,9 @@ import '../l10n/numbers.dart';
 import '../theme.dart';
 import 'ease_size.dart';
 import 'halo_rows.dart';
-import 'motion.dart' show motionStill;
 import 'page_head.dart';
 import 'press_scale.dart';
+import 'sealed_picture.dart';
 import 'swap.dart';
 
 class SharedMediaSection extends StatelessWidget {
@@ -124,26 +123,18 @@ class _Tile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final still = motionStill(context);
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: Stack(
         fit: StackFit.expand,
         children: [
-          ColoredBox(color: HaloColors.surface2),
-          Image.file(
-            File(path),
-            fit: BoxFit.cover,
-            cacheWidth: (side * MediaQuery.devicePixelRatioOf(context)).round(),
-            // a photo fades in as it decodes rather than blinking on
-            frameBuilder: (_, child, frame, sync) => sync || still
-                ? child
-                : AnimatedOpacity(
-                    opacity: frame == null ? 0 : 1,
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeOut,
-                    child: child,
-                  ),
+          // its blur, the photo fading up over it as it decodes
+          SealedPicture(
+            path: path,
+            image: mediaImage(
+              path,
+              (side * MediaQuery.devicePixelRatioOf(context)).round(),
+            ),
             // a black square would read as a broken app, not a photo whose
             // file is gone
             errorBuilder: (_, _, _) => MissingTile(size: side),

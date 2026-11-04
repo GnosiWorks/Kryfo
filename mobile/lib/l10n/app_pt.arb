@@ -2994,5 +2994,11 @@
   "devicesChangedNotice": "Seus aparelhos mudaram",
   "devicesChangedLine": "Abra Aparelhos conectados para ver o que mudou.",
   "devicesUnknownNotice": "Aparelho conectado em outro lugar",
-  "devicesUnknownLine": "Outra cópia do Kryfo conectou um aparelho à sua conta. Este celular o tirou da sua lista."
+  "devicesUnknownLine": "Outra cópia do Kryfo conectou um aparelho à sua conta. Este celular o tirou da sua lista.",
+  "bridgesShareBridgeN": "Compartilhar ponte {n}",
+  "bridgesShareThisBridge": "Compartilhar esta ponte",
+  "bridgesShareItPrivately": "Compartilhe em particular, com pessoas de confiança. Uma ponte fora de páginas públicas continua funcionando por mais tempo.",
+  "bridgesCopyBridge": "Copiar ponte",
+  "bridgesBridgeCopied": "Ponte copiada",
+  "bridgesSendBridgeTo": "Enviar a ponte para"
 }

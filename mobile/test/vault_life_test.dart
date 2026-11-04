@@ -1143,6 +1143,8 @@ void main() {
       final h1 = p.join(w.media, 'h1.jpg');
       Uint8List raw(String f) => rawFileAccess(() => File(f).readAsBytesSync());
       expect(isSealedHead(raw(h1)), isTrue);
+      // its blur lies next to it, and goes where it goes
+      File('$h1.blur').writeAsBytesSync([1, 2, 3]);
       await w.app.createVault('246810');
       await w.app.hideChats(people: [_h], groups: [_g2]);
       _whole(w, why: 'sealed');
@@ -1151,10 +1153,17 @@ void main() {
       expect(rawFileAccess(() => File(h1).existsSync()), isFalse);
       expect(isSealedHead(raw(moved)), isTrue);
       expect(File(moved).readAsStringSync(), 'h1.jpg');
+      expect(rawFileAccess(() => File('$h1.blur').existsSync()), isFalse);
+      expect(isSealedHead(raw('$moved.blur')), isTrue);
+      expect(File('$moved.blur').readAsBytesSync(), [1, 2, 3]);
       // the hidden chats shut: the everyday key does not open it
       containerClosed!(HaloContainer.vault.id);
       expect(
         () => File(moved).readAsStringSync(),
+        throwsA(isA<SealedLocked>()),
+      );
+      expect(
+        () => File('$moved.blur').readAsBytesSync(),
         throwsA(isA<SealedLocked>()),
       );
     });

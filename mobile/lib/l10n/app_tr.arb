@@ -2994,5 +2994,11 @@
   "devicesChangedNotice": "Cihazların değişti",
   "devicesChangedLine": "Neyin değiştiğini görmek için Bağlı cihazlar’ı aç.",
   "devicesUnknownNotice": "Başka yerde bağlanan cihaz",
-  "devicesUnknownLine": "Kryfo’nun başka bir kopyası hesabına bir cihaz bağladı. Bu telefon onu listenden çıkardı."
+  "devicesUnknownLine": "Kryfo’nun başka bir kopyası hesabına bir cihaz bağladı. Bu telefon onu listenden çıkardı.",
+  "bridgesShareBridgeN": "{n}. köprüyü paylaş",
+  "bridgesShareThisBridge": "Bu köprüyü paylaş",
+  "bridgesShareItPrivately": "Güvendiğin kişilerle özel olarak paylaş. Herkese açık sayfalarda yer almayan bir köprü daha uzun süre çalışır.",
+  "bridgesCopyBridge": "Köprüyü kopyala",
+  "bridgesBridgeCopied": "Köprü kopyalandı",
+  "bridgesSendBridgeTo": "Köprüyü gönder"
 }

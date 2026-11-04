@@ -11370,4 +11370,25 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get devicesUnknownLine =>
       'Salinan Kryfo lain menautkan perangkat ke akunmu. Ponsel ini mengeluarkannya dari daftarmu.';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return 'Bagikan jembatan $n';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'Bagikan jembatan ini';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'Bagikan secara pribadi, kepada orang yang kamu percaya. Jembatan yang tidak dipasang di halaman publik bekerja lebih lama.';
+
+  @override
+  String get bridgesCopyBridge => 'Salin jembatan';
+
+  @override
+  String get bridgesBridgeCopied => 'Jembatan disalin';
+
+  @override
+  String get bridgesSendBridgeTo => 'Kirim jembatan ke';
 }

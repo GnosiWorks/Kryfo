@@ -2994,5 +2994,11 @@
   "devicesChangedNotice": "دستگاه‌هایتان تغییر کرد",
   "devicesChangedLine": "برای دیدن تغییرها دستگاه‌های پیوندخورده را باز کنید.",
   "devicesUnknownNotice": "دستگاهی که جای دیگری پیوند خورد",
-  "devicesUnknownLine": "نسخهٔ دیگری از Kryfo دستگاهی را به حساب‌تان پیوند داد. این گوشی آن را از فهرست‌تان برداشت."
+  "devicesUnknownLine": "نسخهٔ دیگری از Kryfo دستگاهی را به حساب‌تان پیوند داد. این گوشی آن را از فهرست‌تان برداشت.",
+  "bridgesShareBridgeN": "اشتراک پل ⁨{n}⁩",
+  "bridgesShareThisBridge": "این پل را به اشتراک بگذار",
+  "bridgesShareItPrivately": "آن را خصوصی و با کسانی که به آن‌ها اعتماد داری به اشتراک بگذار. پلی که در صفحه‌های عمومی نیاید، مدت بیشتری کار می‌کند.",
+  "bridgesCopyBridge": "کپی پل",
+  "bridgesBridgeCopied": "پل کپی شد",
+  "bridgesSendBridgeTo": "فرستادن پل به"
 }

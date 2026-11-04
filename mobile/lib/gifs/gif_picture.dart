@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import '../dlog.dart';
 import '../image_strip.dart';
 import '../l10n/l10n.dart';
+import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
 import '../widgets/motion.dart' show motionStill;
 
@@ -200,7 +201,19 @@ class _ChatPictureState extends State<ChatPicture> {
   @override
   void initState() {
     super.initState();
+    picturesShut.addListener(_shut);
     if (_gif == null) _check();
+  }
+
+  @override
+  void dispose() {
+    picturesShut.removeListener(_shut);
+    super.dispose();
+  }
+
+  // the still frame goes with the lock, as the picture does
+  void _shut() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -221,7 +234,7 @@ class _ChatPictureState extends State<ChatPicture> {
 
   @override
   Widget build(BuildContext context) {
-    if (_gif != true) return widget.child;
+    if (_gif != true || picturesShut.value) return widget.child;
     final still = motionStill(context) && !_playing;
     // the bubble's constraints reach the picture as they would without the
     // badge, so a small gif fills its box the way a photo does

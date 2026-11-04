@@ -1011,7 +1011,14 @@ open class MainActivity : FlutterFragmentActivity() {
                     if (bmp !== frame) bmp.recycle()
                     frame.recycle()
                 } else if (ms > 0) {
-                    out = mapOf("jpeg" to null, "ms" to ms, "w" to 16, "h" to 9)
+                    // no frame: the shape still comes from the track header,
+                    // so an upright clip is not drawn wide
+                    val (w, h) = shownSize(
+                        r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull() ?: 0,
+                        r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull() ?: 0,
+                        r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)?.toIntOrNull() ?: 0,
+                    )
+                    out = mapOf("jpeg" to null, "ms" to ms, "w" to w, "h" to h)
                 }
             } catch (e: Exception) {
                 // not a video the phone can read; the bubble says so

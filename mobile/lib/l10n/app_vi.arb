@@ -2994,5 +2994,11 @@
   "devicesChangedNotice": "Thiết bị của bạn đã thay đổi",
   "devicesChangedLine": "Mở Thiết bị đã liên kết để xem những gì đã thay đổi.",
   "devicesUnknownNotice": "Thiết bị được liên kết ở nơi khác",
-  "devicesUnknownLine": "Một bản Kryfo khác đã liên kết một thiết bị với tài khoản của bạn. Điện thoại này đã gỡ nó khỏi danh sách của bạn."
+  "devicesUnknownLine": "Một bản Kryfo khác đã liên kết một thiết bị với tài khoản của bạn. Điện thoại này đã gỡ nó khỏi danh sách của bạn.",
+  "bridgesShareBridgeN": "Chia sẻ cầu nối {n}",
+  "bridgesShareThisBridge": "Chia sẻ cầu nối này",
+  "bridgesShareItPrivately": "Hãy chia sẻ riêng với người bạn tin tưởng. Cầu nối không đăng ở trang công khai sẽ dùng được lâu hơn.",
+  "bridgesCopyBridge": "Sao chép cầu nối",
+  "bridgesBridgeCopied": "Đã sao chép cầu nối",
+  "bridgesSendBridgeTo": "Gửi cầu nối cho"
 }

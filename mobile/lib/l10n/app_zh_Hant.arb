@@ -2994,5 +2994,11 @@
   "devicesChangedNotice": "你的裝置有變化",
   "devicesChangedLine": "開啟「已連結的裝置」查看變化。",
   "devicesUnknownNotice": "在別處連結的裝置",
-  "devicesUnknownLine": "另一份 Kryfo 把一台裝置連結到了你的帳號。這支手機已把它從你的清單中移除。"
+  "devicesUnknownLine": "另一份 Kryfo 把一台裝置連結到了你的帳號。這支手機已把它從你的清單中移除。",
+  "bridgesShareBridgeN": "分享橋接 {n}",
+  "bridgesShareThisBridge": "分享這個橋接",
+  "bridgesShareItPrivately": "請私下分享給你信任的人。不出現在公開頁面上的橋接能用得更久。",
+  "bridgesCopyBridge": "複製橋接",
+  "bridgesBridgeCopied": "已複製橋接",
+  "bridgesSendBridgeTo": "把橋接傳給"
 }

@@ -12,6 +12,7 @@ import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../media_progress.dart';
 import '../open_file.dart';
+import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
 import '../transfers.dart';
 import 'decode_px.dart';
@@ -19,8 +20,8 @@ import 'file_wait.dart' show FileWaitMark;
 import 'halo_hero.dart';
 import 'media_bubbles.dart' show humanFileSize;
 import 'motion.dart' show motionStill;
-import 'photo_viewer.dart' show PhotoTileFade;
 import 'press_scale.dart';
+import 'sealed_picture.dart';
 import 'swap.dart';
 
 /// the tag a tile and its page in the viewer share
@@ -338,13 +339,9 @@ class _PhotoFace extends StatelessWidget {
   const _PhotoFace({required this.path, required this.width});
 
   @override
-  Widget build(BuildContext context) => Image.file(
-    File(path),
-    fit: BoxFit.cover,
-    gaplessPlayback: true,
-    cacheWidth: decodePx(context, width),
-    frameBuilder: (_, child, frame, sync) =>
-        PhotoTileFade(shown: sync || frame != null, child: child),
+  Widget build(BuildContext context) => SealedPicture(
+    path: path,
+    image: mediaImage(path, decodePx(context, width)),
     errorBuilder: (_, _, _) => const _Lost(),
   );
 }
@@ -362,25 +359,32 @@ class _VideoFaceState extends State<_VideoFace> {
   @override
   void initState() {
     super.initState();
-    if (_info == null) {
-      videoInfoFor(widget.path).then((i) {
-        if (mounted && i != null) setState(() => _info = i);
-      });
-    }
+    picturesShut.addListener(_lock);
+    _lock();
+  }
+
+  @override
+  void dispose() {
+    picturesShut.removeListener(_lock);
+    super.dispose();
+  }
+
+  // asked for, and again once the lock lifts if it took the frame
+  void _lock() {
+    if (picturesShut.value || _info?.jpeg != null) return;
+    videoInfoFor(widget.path).then((i) {
+      if (mounted && i != null) setState(() => _info = i);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final jpeg = _info?.jpeg;
-    return FadeSwap(
-      child: jpeg == null
-          ? ColoredBox(key: const ValueKey('none'), color: HaloColors.surface3)
-          : Image.memory(
-              jpeg,
-              key: const ValueKey('frame'),
-              fit: BoxFit.cover,
-              gaplessPlayback: true,
-            ),
+    // its blur, the first frame fading up over it
+    return SealedPicture(
+      path: widget.path,
+      image: jpeg == null ? null : MemoryImage(jpeg),
+      ground: HaloColors.surface3,
     );
   }
 }

@@ -2994,5 +2994,11 @@
   "devicesChangedNotice": "Perangkatmu berubah",
   "devicesChangedLine": "Buka Perangkat tertaut untuk melihat apa yang berubah.",
   "devicesUnknownNotice": "Perangkat ditautkan dari tempat lain",
-  "devicesUnknownLine": "Salinan Kryfo lain menautkan perangkat ke akunmu. Ponsel ini mengeluarkannya dari daftarmu."
+  "devicesUnknownLine": "Salinan Kryfo lain menautkan perangkat ke akunmu. Ponsel ini mengeluarkannya dari daftarmu.",
+  "bridgesShareBridgeN": "Bagikan jembatan {n}",
+  "bridgesShareThisBridge": "Bagikan jembatan ini",
+  "bridgesShareItPrivately": "Bagikan secara pribadi, kepada orang yang kamu percaya. Jembatan yang tidak dipasang di halaman publik bekerja lebih lama.",
+  "bridgesCopyBridge": "Salin jembatan",
+  "bridgesBridgeCopied": "Jembatan disalin",
+  "bridgesSendBridgeTo": "Kirim jembatan ke"
 }

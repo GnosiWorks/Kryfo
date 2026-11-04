@@ -2994,5 +2994,11 @@
   "devicesChangedNotice": "Twoje urządzenia się zmieniły",
   "devicesChangedLine": "Otwórz Połączone urządzenia, żeby zobaczyć, co się zmieniło.",
   "devicesUnknownNotice": "Urządzenie połączone gdzie indziej",
-  "devicesUnknownLine": "Inna kopia Kryfo połączyła urządzenie z twoim kontem. Ten telefon zdjął je z twojej listy."
+  "devicesUnknownLine": "Inna kopia Kryfo połączyła urządzenie z twoim kontem. Ten telefon zdjął je z twojej listy.",
+  "bridgesShareBridgeN": "Udostępnij mostek {n}",
+  "bridgesShareThisBridge": "Udostępnij ten mostek",
+  "bridgesShareItPrivately": "Udostępnij go prywatnie, osobom, którym ufasz. Mostek, którego nie ma na publicznych stronach, działa dłużej.",
+  "bridgesCopyBridge": "Kopiuj mostek",
+  "bridgesBridgeCopied": "Mostek skopiowany",
+  "bridgesSendBridgeTo": "Wyślij mostek do"
 }

@@ -10,13 +10,15 @@ import '../file_kind.dart' show FileShape, fileShapeOf, readFileFacts;
 import '../file_save.dart';
 import '../lock_state.dart';
 import '../open_file.dart';
+import '../photo_blur.dart' show blurNow;
+import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
 import 'file_sheet.dart';
 import 'halo_hero.dart';
 import 'photo_viewer.dart';
 import 'press_scale.dart';
 import 'remembered_height.dart';
-import 'swap.dart';
+import 'sealed_picture.dart';
 import '../l10n/l10n.dart';
 import 'shots_line.dart' show KeptIn, keptOpenLine;
 import '../l10n/numbers.dart';
@@ -107,8 +109,24 @@ class _VideoBubbleState extends State<VideoBubble> {
   @override
   void initState() {
     super.initState();
+    picturesShut.addListener(_lock);
     _info = videoInfoNow(widget.path);
     _load();
+  }
+
+  @override
+  void dispose() {
+    picturesShut.removeListener(_lock);
+    super.dispose();
+  }
+
+  // the first frame the lock took is asked for again once it lifts
+  void _lock() {
+    if (picturesShut.value) {
+      if (mounted) setState(() {});
+      return;
+    }
+    if (_info?.jpeg == null) _load();
   }
 
   @override
@@ -147,7 +165,8 @@ class _VideoBubbleState extends State<VideoBubble> {
     final info = _info;
     // tall clips are held to the height a photo gets; wide ones keep their
     // shape. unknown yet: the common one, so most bubbles do not move.
-    final aspect = (info?.aspect ?? 16 / 9).clamp(0.62, 2.4);
+    final aspect = (info?.aspect ?? blurNow(widget.path)?.aspect ?? 16 / 9)
+        .clamp(0.62, 2.4);
     final h = (widget.width / aspect).clamp(90.0, 280.0);
     final jpeg = info?.jpeg;
     final length = info != null && info.length > Duration.zero
@@ -171,19 +190,11 @@ class _VideoBubbleState extends State<VideoBubble> {
                     videoFlight(c, a, dir, from, to, widget.path),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(14),
-                  // the first frame fades up over the plain box
-                  child: FadeSwap(
-                    child: jpeg != null
-                        ? Image.memory(
-                            jpeg,
-                            key: const ValueKey('frame'),
-                            fit: BoxFit.cover,
-                            gaplessPlayback: true,
-                          )
-                        : ColoredBox(
-                            key: const ValueKey('wait'),
-                            color: HaloColors.surface3,
-                          ),
+                  // its blur, the first frame fading up over it
+                  child: SealedPicture(
+                    path: widget.path,
+                    image: jpeg == null ? null : MemoryImage(jpeg),
+                    ground: HaloColors.surface3,
                   ),
                 ),
               ),

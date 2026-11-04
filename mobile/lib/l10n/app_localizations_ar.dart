@@ -11511,4 +11511,25 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get devicesUnknownLine =>
       'ربطت نسخة أخرى من Kryfo جهازًا بحسابك. أزاله هذا الهاتف من قائمتك.';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return 'مشاركة الجسر ⁨$n⁩';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'شارك هذا الجسر';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'شاركه بشكل خاص مع من تثق بهم. الجسر الذي يبقى بعيدًا عن الصفحات العامة يعمل لمدة أطول.';
+
+  @override
+  String get bridgesCopyBridge => 'نسخ الجسر';
+
+  @override
+  String get bridgesBridgeCopied => 'نُسخ الجسر';
+
+  @override
+  String get bridgesSendBridgeTo => 'أرسل الجسر إلى';
 }

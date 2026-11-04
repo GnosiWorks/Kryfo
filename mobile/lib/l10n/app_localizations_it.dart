@@ -11459,4 +11459,25 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get devicesUnknownLine =>
       'Un’altra copia di Kryfo ha collegato un dispositivo al tuo account. Questo telefono l’ha tolto dalla tua lista.';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return 'Condividi bridge $n';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'Condividi questo bridge';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'Condividilo in privato, con persone di cui ti fidi. Un bridge che resta fuori dalle pagine pubbliche funziona più a lungo.';
+
+  @override
+  String get bridgesCopyBridge => 'Copia bridge';
+
+  @override
+  String get bridgesBridgeCopied => 'Bridge copiato';
+
+  @override
+  String get bridgesSendBridgeTo => 'Invia il bridge a';
 }

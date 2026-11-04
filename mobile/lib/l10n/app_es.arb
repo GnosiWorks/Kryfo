@@ -2994,5 +2994,11 @@
   "devicesChangedNotice": "Tus dispositivos cambiaron",
   "devicesChangedLine": "Abre Dispositivos vinculados para ver qué cambió.",
   "devicesUnknownNotice": "Dispositivo vinculado en otro lugar",
-  "devicesUnknownLine": "Otra copia de Kryfo vinculó un dispositivo a tu cuenta. Este teléfono lo quitó de tu lista."
+  "devicesUnknownLine": "Otra copia de Kryfo vinculó un dispositivo a tu cuenta. Este teléfono lo quitó de tu lista.",
+  "bridgesShareBridgeN": "Compartir puente {n}",
+  "bridgesShareThisBridge": "Compartir este puente",
+  "bridgesShareItPrivately": "Compártelo en privado, con gente de confianza. Un puente que no se publica sigue funcionando más tiempo.",
+  "bridgesCopyBridge": "Copiar puente",
+  "bridgesBridgeCopied": "Puente copiado",
+  "bridgesSendBridgeTo": "Enviar el puente a"
 }

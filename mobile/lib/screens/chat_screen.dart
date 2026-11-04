@@ -13,11 +13,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import '../photo_blur.dart' show makeBlurSoon;
 import '../picked.dart';
 import '../album.dart';
 import '../widgets/say.dart' show sayArrivals;
 import '../widgets/album_grid.dart';
 import '../widgets/album_viewer.dart';
+import '../widgets/sealed_picture.dart';
 import 'media_send_screen.dart';
 import '../sent_name.dart';
 import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
@@ -4348,6 +4350,7 @@ class _ChatScreenState extends State<ChatScreen>
       }
       return null;
     }
+    makeBlurSoon(dest.path);
     return _Ready(msgUid, dest.path, fileName: name);
   }
 
@@ -4366,6 +4369,7 @@ class _ChatScreenState extends State<ChatScreen>
     // a png, gif, webp or heic keeps its own kind, and its name says so
     final mediaFile = File('${mediaDir.path}/$msgUid.${pictureExt(bytes)}');
     await mediaFile.writeAsBytes(bytes);
+    makeBlurSoon(mediaFile.path);
     return _Ready(msgUid, mediaFile.path);
   }
 
@@ -8800,33 +8804,25 @@ class _Bubble extends StatelessWidget {
                                                             0.78,
                                                         child: ChatPicture(
                                                           path: msg.mediaPath!,
-                                                          child: Image.file(
-                                                            File(
-                                                              msg.mediaPath!,
-                                                            ),
-                                                            gaplessPlayback:
-                                                                true,
-                                                            fit: BoxFit.cover,
-                                                            cacheWidth:
+                                                          // its blur at once,
+                                                          // the photo fading up
+                                                          // over it once decoded
+                                                          child: SealedPicture(
+                                                            path:
+                                                                msg.mediaPath!,
+                                                            shaped: true,
+                                                            decodeWidth:
                                                                 screenPx(
                                                                   context,
                                                                   times: 0.78,
                                                                 ),
-                                                            // fades up once decoded,
-                                                            // over a quiet box
-                                                            frameBuilder:
-                                                                (
-                                                                  _,
-                                                                  child,
-                                                                  frame,
-                                                                  sync,
-                                                                ) => PhotoTileFade(
-                                                                  shown:
-                                                                      sync ||
-                                                                      frame !=
-                                                                          null,
-                                                                  child: child,
-                                                                ),
+                                                            image: mediaImage(
+                                                              msg.mediaPath!,
+                                                              screenPx(
+                                                                context,
+                                                                times: 0.78,
+                                                              ),
+                                                            ),
                                                             errorBuilder: (_, e, _) {
                                                               dlog(
                                                                 'image failed: '
@@ -10103,16 +10099,11 @@ class MediaGalleryScreen extends StatelessWidget {
                   ),
                   child: HaloHero(
                     tag: tag,
-                    child: Image.file(
-                      File(path),
-                      fit: BoxFit.cover,
-                      cacheWidth: 360,
+                    // each tile shows its blur, its photo fading up over it
+                    child: SealedPicture(
+                      path: path,
+                      image: mediaImage(path, 360),
                       filterQuality: FilterQuality.low,
-                      // each tile fades up once its photo is decoded
-                      frameBuilder: (_, child, frame, sync) => PhotoTileFade(
-                        shown: sync || frame != null,
-                        child: child,
-                      ),
                       // a photo whose file is gone says so, not a black square
                       errorBuilder: (_, _, _) => Container(
                         color: HaloColors.surface2,

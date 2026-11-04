@@ -45,7 +45,13 @@ mixin _DeleteRows {
     final dir = await container.mediaDir();
     final out = <File>[];
     await for (final e in dir.list(followLinks: false)) {
-      if (e is! File || named.contains(p.basename(e.path))) continue;
+      if (e is! File) continue;
+      // a blur stays while its photo or video is named
+      final leaf = p.basename(e.path);
+      final of = leaf.endsWith(kBlurLeaf)
+          ? leaf.substring(0, leaf.length - kBlurLeaf.length)
+          : leaf;
+      if (named.contains(of)) continue;
       if ((await e.lastModified()).isBefore(before)) out.add(e);
     }
     return out;

@@ -2994,5 +2994,11 @@
   "devicesChangedNotice": "تغيّرت أجهزتك",
   "devicesChangedLine": "افتح الأجهزة المرتبطة لترى ما تغيّر.",
   "devicesUnknownNotice": "جهاز رُبط من مكان آخر",
-  "devicesUnknownLine": "ربطت نسخة أخرى من Kryfo جهازًا بحسابك. أزاله هذا الهاتف من قائمتك."
+  "devicesUnknownLine": "ربطت نسخة أخرى من Kryfo جهازًا بحسابك. أزاله هذا الهاتف من قائمتك.",
+  "bridgesShareBridgeN": "مشاركة الجسر ⁨{n}⁩",
+  "bridgesShareThisBridge": "شارك هذا الجسر",
+  "bridgesShareItPrivately": "شاركه بشكل خاص مع من تثق بهم. الجسر الذي يبقى بعيدًا عن الصفحات العامة يعمل لمدة أطول.",
+  "bridgesCopyBridge": "نسخ الجسر",
+  "bridgesBridgeCopied": "نُسخ الجسر",
+  "bridgesSendBridgeTo": "أرسل الجسر إلى"
 }

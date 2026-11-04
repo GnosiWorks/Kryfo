@@ -11354,4 +11354,25 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get devicesUnknownLine =>
       'Một bản Kryfo khác đã liên kết một thiết bị với tài khoản của bạn. Điện thoại này đã gỡ nó khỏi danh sách của bạn.';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return 'Chia sẻ cầu nối $n';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'Chia sẻ cầu nối này';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'Hãy chia sẻ riêng với người bạn tin tưởng. Cầu nối không đăng ở trang công khai sẽ dùng được lâu hơn.';
+
+  @override
+  String get bridgesCopyBridge => 'Sao chép cầu nối';
+
+  @override
+  String get bridgesBridgeCopied => 'Đã sao chép cầu nối';
+
+  @override
+  String get bridgesSendBridgeTo => 'Gửi cầu nối cho';
 }

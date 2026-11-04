@@ -11369,4 +11369,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get devicesUnknownLine =>
       'Another copy of Kryfo linked a device to your account. This phone took it off your list.';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return 'Share bridge $n';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'Share this bridge';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'Share it privately, with people you trust. A bridge kept off public pages keeps working for longer.';
+
+  @override
+  String get bridgesCopyBridge => 'Copy bridge';
+
+  @override
+  String get bridgesBridgeCopied => 'Bridge copied';
+
+  @override
+  String get bridgesSendBridgeTo => 'Send the bridge to';
 }

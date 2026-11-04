@@ -2994,5 +2994,11 @@
   "devicesChangedNotice": "你的设备有变化",
   "devicesChangedLine": "打开“已关联的设备”查看变化。",
   "devicesUnknownNotice": "在别处关联的设备",
-  "devicesUnknownLine": "另一份 Kryfo 把一台设备关联到了你的账号。这部手机已把它从你的列表中移除。"
+  "devicesUnknownLine": "另一份 Kryfo 把一台设备关联到了你的账号。这部手机已把它从你的列表中移除。",
+  "bridgesShareBridgeN": "分享网桥 {n}",
+  "bridgesShareThisBridge": "分享这个网桥",
+  "bridgesShareItPrivately": "请私下分享给你信任的人。不出现在公开页面上的网桥能用得更久。",
+  "bridgesCopyBridge": "复制网桥",
+  "bridgesBridgeCopied": "网桥已复制",
+  "bridgesSendBridgeTo": "把网桥发给"
 }

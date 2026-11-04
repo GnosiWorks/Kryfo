@@ -11548,4 +11548,25 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get devicesUnknownLine =>
       'Інша копія Kryfo пов’язала пристрій із вашим обліковим записом. Цей телефон прибрав його з вашого списку.';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return 'Поділитися мостом $n';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'Поділитися цим мостом';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'Діліться ним особисто, з тими, кому довіряєте. Міст, якого немає на відкритих сторінках, працює довше.';
+
+  @override
+  String get bridgesCopyBridge => 'Копіювати міст';
+
+  @override
+  String get bridgesBridgeCopied => 'Міст скопійовано';
+
+  @override
+  String get bridgesSendBridgeTo => 'Надіслати міст';
 }

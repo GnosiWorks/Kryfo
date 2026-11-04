@@ -13,10 +13,12 @@ import 'package:flutter/services.dart';
 
 import '../main.dart' show appState, AppStateScreen;
 import '../open_file.dart';
+import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
 import 'halo_hero.dart';
 import 'motion.dart' show kText2, motionStill;
 import 'press_scale.dart';
+import 'sealed_picture.dart';
 import 'text_ground.dart';
 import '../l10n/l10n.dart';
 import 'shots_line.dart' show KeptIn, keptOpenLine;
@@ -147,12 +149,14 @@ class _VideoViewerState extends State<_VideoViewer>
       _length = info.length;
     }
     widget.route.addStatusListener(_routeStatus);
+    picturesShut.addListener(_lockChanged);
     _open();
   }
 
   @override
   void dispose() {
     _unguard?.call();
+    picturesShut.removeListener(_lockChanged);
     WidgetsBinding.instance.removeObserver(this);
     widget.route.removeStatusListener(_routeStatus);
     _poll?.cancel();
@@ -173,7 +177,55 @@ class _VideoViewerState extends State<_VideoViewer>
     if (s == AnimationStatus.completed && _id != null && !_started) _play();
   }
 
-  Future<void> _open() async {
+  // the lock closes the player, so no frame of it is held behind the pin,
+  // and it comes back paused where it was once the lock lifts
+  bool _resting = false;
+  // each rest counts up: an open still on its way from before one is closed
+  int _rests = 0;
+
+  void _lockChanged() {
+    if (picturesShut.value) {
+      _rest();
+    } else {
+      unawaited(_wake());
+    }
+  }
+
+  void _rest() {
+    _stopPoll();
+    _hide?.cancel();
+    _rests++;
+    final id = _id;
+    _id = null;
+    if (id != null) _channel.invokeMethod('close', {'id': id});
+    _resting = true;
+    if (!mounted) return;
+    setState(() {
+      _started = false;
+      _playing = false;
+      _controls = true;
+    });
+  }
+
+  Future<void> _wake() async {
+    if (!_resting || !mounted) return;
+    _resting = false;
+    // the first frame the lock took, back under the blur
+    videoInfoFor(widget.path).then((_) {
+      if (mounted) setState(() {});
+    });
+    await _open(play: false);
+    final id = _id;
+    if (id != null && _pos > Duration.zero && !_done) {
+      await _channel.invokeMethod('seek', {
+        'id': id,
+        'ms': _pos.inMilliseconds,
+      });
+    }
+  }
+
+  Future<void> _open({bool play = true}) async {
+    final rests = _rests;
     Map<String, dynamic>? m;
     try {
       m = await _channel.invokeMapMethod<String, dynamic>(
@@ -183,7 +235,10 @@ class _VideoViewerState extends State<_VideoViewer>
     } catch (e) {
       dlog('video: not opened (${e.runtimeType})');
     }
-    if (!mounted) {
+    // gone, or the lock went up while it opened: a lock and an unlock on
+    // the way leave a newer open, so this one never holds a second player
+    if (!mounted || picturesShut.value || rests != _rests) {
+      if (mounted && picturesShut.value) _resting = true;
       final id = (m?['id'] as num?)?.toInt();
       if (id != null) _channel.invokeMethod('close', {'id': id});
       return;
@@ -200,7 +255,7 @@ class _VideoViewerState extends State<_VideoViewer>
       final ms = (m['ms'] as num?)?.toInt() ?? 0;
       if (ms > 0) _length = Duration(milliseconds: ms);
     });
-    if (widget.route.status == AnimationStatus.completed) _play();
+    if (play && widget.route.status == AnimationStatus.completed) _play();
   }
 
   // the lock pauses a video that is playing
@@ -398,9 +453,12 @@ class _VideoViewerState extends State<_VideoViewer>
       child: VideoFrame(
         aspect: _aspect,
         turns: _turns,
-        under: jpeg != null
-            ? Image.memory(jpeg, fit: BoxFit.cover, gaplessPlayback: true)
-            : const ColoredBox(color: Colors.black),
+        // its blur, the first frame fading up over it
+        under: SealedPicture(
+          path: widget.path,
+          image: jpeg == null ? null : MemoryImage(jpeg),
+          ground: Colors.black,
+        ),
         texture: id != null && _started ? Texture(textureId: id) : null,
       ),
     );

@@ -24,6 +24,7 @@ import '../widgets/motion.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
+import 'bridge_share_sheet.dart';
 import 'bridge_sheets.dart';
 import '../wide/read_width.dart' show DeskPage;
 
@@ -1199,6 +1200,23 @@ class _LineRow extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+          // a line that works can go to a friend; one that does not stays
+          EaseSize(
+            child: bad
+                ? const SizedBox.shrink()
+                : IconButton(
+                    tooltip: l10n.bridgesShareBridgeN(whole(number)),
+                    onPressed: () {
+                      HapticFeedback.selectionClick();
+                      showBridgeShareSheet(context, line);
+                    },
+                    icon: Icon(
+                      Icons.ios_share_rounded,
+                      size: 18,
+                      color: HaloColors.text2,
+                    ),
+                  ),
           ),
           IconButton(
             tooltip: l10n.bridgesRemoveBridgeN(whole(number)),
