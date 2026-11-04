@@ -241,11 +241,16 @@ class Session {
   // what the person did on a chat of the everyday side, for my other
   // devices (own_sync.dart): never a hidden chat's, never the decoy's
   void _ownTell(HaloDb d, String kind, OwnChat chat, Map<String, Object?> a) {
-    if (!identical(d, primary) || primary.container != HaloContainer.everyday) {
-      return;
-    }
+    if (!_ownTells(d)) return;
     ownNoted?.call(kind, chat, a);
   }
+
+  // whether a doing on [d] is told at all: own sync runs, and [d] is the
+  // everyday container's primary. nothing more is read when it is not
+  bool _ownTells(HaloDb d) =>
+      ownNoted != null &&
+      identical(d, primary) &&
+      primary.container == HaloContainer.everyday;
 
   static int _now() => DateTime.now().millisecondsSinceEpoch;
 
@@ -711,7 +716,7 @@ class Session {
   Future<void> deleteMessage(String msgUid) async {
     if (mediaInflight.contains(msgUid)) cancelMediaSend(msgUid);
     final d = await _ofUid(msgUid);
-    final at = await d.chatOf(msgUid);
+    final at = _ownTells(d) ? await d.chatOf(msgUid) : null;
     await d.deleteMessage(msgUid);
     if (at != null) {
       final g = at.$2;
@@ -791,7 +796,7 @@ class Session {
   ) async {
     final d = _ofChat(chatId);
     final lit = await d.lightReadBurns(msgUids);
-    if (lit.isNotEmpty) {
+    if (lit.isNotEmpty && _ownTells(d)) {
       final group = await d.groupExists(chatId);
       _ownTell(d, 'lit', (id: chatId, group: group), {'b': lit});
     }
