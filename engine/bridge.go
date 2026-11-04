@@ -1386,6 +1386,16 @@ func handleConn(conn net.Conn) {
 			return
 		}
 		line = strings.TrimSpace(line)
+		// a linking device's bundles, for the link that waits with its
+		// token: never the inbox. with no link waiting it is junk below
+		if linkDoorTake(line) {
+			conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			if _, err := conn.Write([]byte(doorAck)); err != nil {
+				return
+			}
+			conn.SetReadDeadline(deadline(doorNextLine))
+			continue
+		}
 		// junk never reaches dart's trial decrypts, and a full or repeated
 		// inbox takes nothing more. no ack either way: an honest sender
 		// retries through its backoff, a flood learns nothing.

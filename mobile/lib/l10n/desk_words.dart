@@ -131,6 +131,10 @@ const deskWordKeys = [
   'flowVaultPassLine',
   'flowDecoyShade',
   'bridgesThisNetworkWantsA',
+  'devicesThisPhone',
+  'devicesThisPhoneOnly',
+  'devicesOnlyThisPhone',
+  'devicesHiddenStay',
 ];
 
 extension DeskWords on AppLocalizations {
@@ -390,4 +394,12 @@ extension DeskWords on AppLocalizations {
       onDesktop ? flowDecoyShadeDesk : flowDecoyShade;
   String get bridgesThisNetworkWantsAShown =>
       onDesktop ? bridgesThisNetworkWantsADesk : bridgesThisNetworkWantsA;
+  String get devicesThisPhoneShown =>
+      onDesktop ? devicesThisPhoneDesk : devicesThisPhone;
+  String get devicesThisPhoneOnlyShown =>
+      onDesktop ? devicesThisPhoneOnlyDesk : devicesThisPhoneOnly;
+  String get devicesOnlyThisPhoneShown =>
+      onDesktop ? devicesOnlyThisPhoneDesk : devicesOnlyThisPhone;
+  String get devicesHiddenStayShown =>
+      onDesktop ? devicesHiddenStayDesk : devicesHiddenStay;
 }
