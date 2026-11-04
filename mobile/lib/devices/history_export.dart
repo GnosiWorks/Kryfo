@@ -5,6 +5,7 @@
 // holds it. hidden chats (whole, by id), the decoy, the chat with the
 // developer, burner rooms, timed messages and chats with screenshots
 // blocked stay here
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -31,6 +32,15 @@ const kHistoryVoiceMax = 10 << 20;
 
 /// why a chat came only as its row
 const kHistoryStaysShots = 'shots';
+
+/// a record of the copy that is no chat: what the device needs to go on
+/// where the phone is (lists the phone holds and what its engine learnt of
+/// those contacts, messages it deleted lately),
+/// sent with every copy, "no history" too
+const kHistoryMaterial = 'material';
+
+// a material record stays well inside a chat record
+const _kMaterialMost = 48 << 10;
 
 /// the columns a chat or a message takes along. keys, sessions, wallpapers,
 /// counters and anything naming a third person stay on the phone
@@ -61,6 +71,9 @@ const kHistoryContactCols = [
   'opus_can',
   'caps',
   'caps_at',
+  // v4: my identity for the contact, and theirs
+  'ident',
+  'ikey',
 ];
 const kHistoryGroupCols = [
   'group_id',
@@ -171,13 +184,17 @@ class _Open {
 
 /// the planned stream on the phone
 class HistoryOutgoing {
-  HistoryOutgoing._(this._o, this.id, this.head, this.chats);
+  HistoryOutgoing._(this._o, this.id, this.head, this.chats, this._gone);
   final _Open _o;
+  final _GoneSince _gone;
   HistorySender get _s => _o.s;
 
   /// a chat was hidden while the copy was open: nothing more goes, and the
   /// device discards what it took
   bool get ended => _o.ended;
+
+  /// the engine's handle of the sender, for the door that serves it
+  int get handle => _s.handle;
 
   /// the stream id the device needs with the first record, as hex
   final String id;
@@ -199,10 +216,67 @@ class HistoryOutgoing {
       HistoryChatGap(chats[g.chat], g.want, g.got),
   ];
 
+  /// what this phone deleted since it made the copy, in the chats whose
+  /// row went, as the copy's own gone rows: [uid, key, at]
+  Future<List<List<Object?>>> goneSince() => _gone.rows();
+
   void close() {
     _o.off();
     _o.end();
   }
+}
+
+// the gone rows the copy carried, and the chats they are for: whatever
+// gone_in holds beyond them later went since the export
+class _GoneSince {
+  _GoneSince(this.db, this.peers, this.groups, this.sent);
+  final Database db;
+  final Set<String> peers;
+  final Set<String> groups;
+  final Set<String> sent;
+
+  static String keyOf(Object? uid, Object? peer, Object? at) =>
+      '$uid|$peer|$at';
+
+  Future<List<List<Object?>>> rows() async => [
+    if (await _hasTable(db, 'gone_in'))
+      for (final r in await db.rawQuery(
+        'SELECT msg_uid, peer_id, at FROM main.gone_in ORDER BY at',
+      ))
+        if (_goneFor(r['peer_id'] as String, peers, groups) &&
+            !sent.contains(keyOf(r['msg_uid'], r['peer_id'], r['at'])))
+          [r['msg_uid'], r['peer_id'], r['at']],
+  ];
+}
+
+// whether a gone row's key names a chat of these
+bool _goneFor(String k, Set<String> peers, Set<String> groups) {
+  final g = k.startsWith('group:') ? k.substring(6, k.lastIndexOf(':')) : null;
+  return g == null ? peers.contains(k) : groups.contains(g);
+}
+
+// the material in records that each stay inside one chat record
+List<Map<String, Object?>> _materialRecords(Map<String, List<Object?>> m) {
+  final out = <Map<String, Object?>>[];
+  var cur = <String, List<Object?>>{};
+  var size = 0;
+  void flush() {
+    if (cur.isEmpty) return;
+    out.add({'kind': kHistoryMaterial, 'id': '', ...cur});
+    cur = {};
+    size = 0;
+  }
+
+  for (final e in m.entries) {
+    for (final item in e.value) {
+      final n = jsonEncode(item).length + 1;
+      if (size + n > _kMaterialMost) flush();
+      (cur[e.key] ??= []).add(item);
+      size += n;
+    }
+  }
+  flush();
+  return out;
 }
 
 Future<bool> _hasTable(DatabaseExecutor db, String t) async =>
@@ -290,6 +364,7 @@ Future<HistoryOutgoing> exportHistory({
   required String bindHex,
   required String identityHex,
   bool skipMedia = false,
+  bool rowsOnly = false,
   DateTime? now,
   int chunk = 0,
   HistoryHold? hold,
@@ -304,6 +379,9 @@ Future<HistoryOutgoing> exportHistory({
     }
   }
   final chats = <HistoryChatRef>[];
+  final sentPeers = <String>{};
+  final sentGroups = <String>{};
+  final goneSent = <String>{};
   var hidden = <String>{};
   HistorySender? sender;
   _Open? open;
@@ -440,6 +518,11 @@ Future<HistoryOutgoing> exportHistory({
       if (n == null) continue;
       chats.add(HistoryChatRef(group, id));
       if (shots) continue;
+      // what was deleted of it goes too, "no history" included, so a copy
+      // of it the device got live goes there as it went here
+      (group ? sentGroups : sentPeers).add(id);
+      // "no history": the chat's row alone, and only new messages after
+      if (rowsOnly) continue;
       var after = 0;
       while (true) {
         final page = await db.rawQuery(
@@ -559,6 +642,62 @@ Future<HistoryOutgoing> exportHistory({
         }
       }
     }
+    // last, what is no chat: the contacts' lists this phone holds, and the
+    // messages of the chats that went that it deleted lately, so a copy of
+    // one the device got live goes there too
+    final material = <String, List<Object?>>{
+      'gone': [],
+      'lists': [],
+      'proven': [],
+      'pq': [],
+    };
+    final keys = <String>{
+      for (final (group, _, row) in order)
+        if (!group && row['ikey'] is String) row['ikey'] as String,
+    };
+    if (await _hasTable(db, 'gone_in')) {
+      for (final r in await db.rawQuery(
+        'SELECT msg_uid, peer_id, at FROM main.gone_in ORDER BY at',
+      )) {
+        final k = r['peer_id'] as String;
+        if (!_goneFor(k, sentPeers, sentGroups)) continue;
+        material['gone']!.add([r['msg_uid'], k, r['at']]);
+        goneSent.add(_GoneSince.keyOf(r['msg_uid'], k, r['at']));
+      }
+    }
+    // the keys each contact's messages came under, and whether a session
+    // with them was post-quantum: the device starts where this phone is
+    if (await _hasTable(db, 'dev_proven')) {
+      for (final r in await db.rawQuery(
+        'SELECT peer, key FROM main.dev_proven WHERE ident = 0 '
+        'ORDER BY peer, key',
+      )) {
+        if (!keys.contains(r['peer'])) continue;
+        material['proven']!.add([r['peer'], r['key']]);
+      }
+    }
+    if (await _hasTable(db, 'dev_pq')) {
+      for (final r in await db.rawQuery(
+        'SELECT peer FROM main.dev_pq WHERE ident = 0 ORDER BY peer',
+      )) {
+        if (keys.contains(r['peer'])) material['pq']!.add(r['peer']);
+      }
+    }
+    if (await _hasTable(db, 'dev_lists')) {
+      for (final r in await db.rawQuery(
+        "SELECT owner, wire FROM main.dev_lists WHERE ident = 0 AND owner != 'me' "
+        'ORDER BY owner',
+      )) {
+        final owner = r['owner'] as String;
+        final wire = r['wire'];
+        if (!keys.contains(owner) || wire is! List<int>) continue;
+        material['lists']!.add([owner, base64Encode(wire)]);
+      }
+    }
+    for (final meta in _materialRecords(material)) {
+      if (s.chat(meta) == null) continue;
+      chats.add(const HistoryChatRef(false, ''));
+    }
     // a hide that slipped past the hold: nothing of it may go. checked
     // inside the hold, so a hide waiting on it cannot slip in between
     final after = await hiddenChatIds(db);
@@ -577,7 +716,13 @@ Future<HistoryOutgoing> exportHistory({
       o.planning = false;
     }
     if (o.ended) throw const HistoryHiddenMeanwhile();
-    return HistoryOutgoing._(o, o.s.id, o.s.head(), chats);
+    return HistoryOutgoing._(
+      o,
+      o.s.id,
+      o.s.head(),
+      chats,
+      _GoneSince(db, sentPeers, sentGroups, goneSent),
+    );
   } catch (e) {
     final ended = open?.ended ?? false;
     open?.off();

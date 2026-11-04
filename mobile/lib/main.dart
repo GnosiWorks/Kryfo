@@ -6,6 +6,10 @@ import 'devices/device_receive.dart';
 import 'devices/device_send.dart';
 import 'devices/device_state.dart';
 import 'devices/device_store.dart';
+import 'devices/history_export.dart'
+    show HistoryChatRef, HistoryNotHere, HistoryOutgoing, exportHistory;
+import 'devices/history_ffi.dart' show historyHex;
+import 'devices/history_link.dart';
 import 'devices/history_open.dart' show endHistoryCopies;
 import 'devices/link_calls.dart' show EngineLinkCalls;
 import 'devices/link_flow.dart';
@@ -230,6 +234,7 @@ part 'app/devices_receive_app.dart';
 part 'app/devices_send_app.dart';
 part 'app/devices_vault_app.dart';
 part 'app/link_app.dart';
+part 'app/history_app.dart';
 part 'app/engine.dart';
 part 'app/files.dart';
 part 'app/gates.dart';

@@ -353,10 +353,12 @@ func HaloHistSendTally(h C.longlong, in *C.uchar, n C.int) *C.char {
 // forgets the keys and removes the spool.
 //
 //export HaloHistSendClose
-func HaloHistSendClose(h C.longlong) {
+func HaloHistSendClose(h C.longlong) { histSendClose(int64(h)) }
+
+func histSendClose(h int64) {
 	hist.Lock()
-	s := hist.send[int64(h)]
-	delete(hist.send, int64(h))
+	s := hist.send[h]
+	delete(hist.send, h)
 	hist.Unlock()
 	if s != nil {
 		s.Close()

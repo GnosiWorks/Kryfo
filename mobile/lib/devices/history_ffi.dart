@@ -258,6 +258,9 @@ String _text(Pointer<Utf8> p) {
 class HistorySender {
   HistorySender._(this._h);
   final int _h;
+
+  /// the engine's handle, for the door that serves its records
+  int get handle => _h;
   static DynamicLibrary get _l => _lib();
 
   /// [spool] is a new file for the sealed text, [root] the folder file

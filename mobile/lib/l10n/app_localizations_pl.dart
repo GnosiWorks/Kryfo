@@ -10916,6 +10916,128 @@ class AppLocalizationsPl extends AppLocalizations {
       'Ten czat zostaje na twoim telefonie, bo zrzuty ekranu są w nim zablokowane.';
 
   @override
+  String get historyCopyTitle => 'Historia czatów';
+
+  @override
+  String get historyCopyMaking => 'Przygotowanie twoich czatów';
+
+  @override
+  String get historyCopyMakingLine =>
+      'Telefon zbiera to, co zostanie skopiowane. Za chwilę start.';
+
+  @override
+  String get historyCopyGoing => 'Kopiowanie twoich czatów';
+
+  @override
+  String get historyCopyGoingLine =>
+      'Trzymaj oba urządzenia online, aż się skończy.';
+
+  @override
+  String historyCopySize(Object size) {
+    return 'Razem $size';
+  }
+
+  @override
+  String get historyCopyWaiting => 'Czekanie na drugie urządzenie';
+
+  @override
+  String get historyCopyWaitingLine =>
+      'Kopiowanie wznowi się samo, gdy oba urządzenia będą online.';
+
+  @override
+  String get historyCopyPaused => 'Kopiowanie robi krótką przerwę';
+
+  @override
+  String get historyCopyPausedLine => 'Wznowi się za minutę.';
+
+  @override
+  String get historyCopyWhole => 'Dotarły wszystkie wiadomości i pliki';
+
+  @override
+  String get historyCopyWholeLine => 'Niczego nie brakuje.';
+
+  @override
+  String get historyCopyRows => 'Dotarły twoje kontakty i grupy';
+
+  @override
+  String get historyCopyRowsLine =>
+      'Od teraz nowe wiadomości pojawiają się na urządzeniu.';
+
+  @override
+  String get historyCopyGaps => 'Dotarła większość twoich czatów';
+
+  @override
+  String get historyCopyGapsLine =>
+      'Te czaty mają na nowym urządzeniu mniej niż na telefonie.';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return 'Wiadomości: $got z $want';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return 'Pliki: $got z $want';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString elementu zostało na telefonie',
+      many: '$countString elementów zostało na telefonie',
+      few: '$countString elementy zostały na telefonie',
+      one: '1 element został na telefonie',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy => 'Za duże lub nieczytelne do skopiowania.';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString czatu zostało na telefonie',
+      many: '$countString czatów zostało na telefonie',
+      few: '$countString czaty zostały na telefonie',
+      one: '1 czat został na telefonie',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => 'Kopiowanie się zatrzymało';
+
+  @override
+  String get historyCopyEndedLine =>
+      'Nic więcej nie dotrze. Połącz urządzenie ponownie, aby zrobić nową kopię.';
+
+  @override
+  String get historyCopyFailed => 'Kopiowanie nie mogło się zakończyć';
+
+  @override
+  String get historyCopyFailedLine =>
+      'Połącz urządzenie ponownie, aby zrobić nową kopię.';
+
+  @override
+  String get historyCopyStays => 'Zostało na telefonie';
+
+  @override
+  String get historyCopySee => 'Zobacz kopię';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

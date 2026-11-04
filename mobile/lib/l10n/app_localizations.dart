@@ -17269,6 +17269,168 @@ abstract class AppLocalizations {
   /// **'This chat stays on your phone because screenshots are blocked in it.'**
   String get historyChatStaysShots;
 
+  /// screens/history_copy_screen.dart: the page bar of the history copy
+  ///
+  /// In en, this message translates to:
+  /// **'Chat history'**
+  String get historyCopyTitle;
+
+  /// screens/history_copy_screen.dart: the phone gathers the history before it goes
+  ///
+  /// In en, this message translates to:
+  /// **'Getting your chats ready'**
+  String get historyCopyMaking;
+
+  /// screens/history_copy_screen.dart: under the gathering title
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone gathers what to copy. It starts in a moment.'**
+  String get historyCopyMakingLine;
+
+  /// screens/history_copy_screen.dart: the history copy under way
+  ///
+  /// In en, this message translates to:
+  /// **'Copying your chats'**
+  String get historyCopyGoing;
+
+  /// screens/history_copy_screen.dart: under the copying title
+  ///
+  /// In en, this message translates to:
+  /// **'Keep both devices online until it\'s done.'**
+  String get historyCopyGoingLine;
+
+  /// screens/history_copy_screen.dart: the whole copy's size, shown before and while it goes
+  ///
+  /// In en, this message translates to:
+  /// **'{size} in all'**
+  String historyCopySize(Object size);
+
+  /// screens/history_copy_screen.dart: the other device is not online now
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the other device'**
+  String get historyCopyWaiting;
+
+  /// screens/history_copy_screen.dart: under the waiting title
+  ///
+  /// In en, this message translates to:
+  /// **'The copy goes on by itself when both devices are online.'**
+  String get historyCopyWaitingLine;
+
+  /// screens/history_copy_screen.dart: a record did not come many times, the copy waits
+  ///
+  /// In en, this message translates to:
+  /// **'The copy takes a short break'**
+  String get historyCopyPaused;
+
+  /// screens/history_copy_screen.dart: under the pause title
+  ///
+  /// In en, this message translates to:
+  /// **'It goes on in a minute.'**
+  String get historyCopyPausedLine;
+
+  /// screens/history_copy_screen.dart: the counts match in every chat
+  ///
+  /// In en, this message translates to:
+  /// **'Every message and file came over'**
+  String get historyCopyWhole;
+
+  /// screens/history_copy_screen.dart: under the whole title
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is missing.'**
+  String get historyCopyWholeLine;
+
+  /// screens/history_copy_screen.dart: no history chosen: chats and contacts came, no old messages
+  ///
+  /// In en, this message translates to:
+  /// **'Your contacts and groups came over'**
+  String get historyCopyRows;
+
+  /// screens/history_copy_screen.dart: under the no history title
+  ///
+  /// In en, this message translates to:
+  /// **'New messages show on the device from now on.'**
+  String get historyCopyRowsLine;
+
+  /// screens/history_copy_screen.dart: some chats came with fewer messages or files
+  ///
+  /// In en, this message translates to:
+  /// **'Most of your chats came over'**
+  String get historyCopyGaps;
+
+  /// screens/history_copy_screen.dart: over the list of chats with less
+  ///
+  /// In en, this message translates to:
+  /// **'These chats have less on the new device than on your phone.'**
+  String get historyCopyGapsLine;
+
+  /// screens/history_copy_screen.dart: one chat: messages on the new device of what the phone holds
+  ///
+  /// In en, this message translates to:
+  /// **'Messages: {got} of {want}'**
+  String historyCopyGapMessages(Object got, Object want);
+
+  /// screens/history_copy_screen.dart: one chat: files on the new device of what the phone sent
+  ///
+  /// In en, this message translates to:
+  /// **'Files: {got} of {want}'**
+  String historyCopyGapFiles(Object got, Object want);
+
+  /// screens/history_copy_screen.dart: rows and files the phone could not send in one chat
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 item stayed on your phone} other{{count} items stayed on your phone}}'**
+  String historyCopyLeft(num count);
+
+  /// screens/history_copy_screen.dart: why items stayed on the phone
+  ///
+  /// In en, this message translates to:
+  /// **'Too big or unreadable to copy.'**
+  String get historyCopyLeftWhy;
+
+  /// screens/history_copy_screen.dart: whole chats the phone could not send
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 chat stayed on your phone} other{{count} chats stayed on your phone}}'**
+  String historyCopyLeftChats(num count);
+
+  /// screens/history_copy_screen.dart: the copy was stopped on the phone
+  ///
+  /// In en, this message translates to:
+  /// **'The copy stopped'**
+  String get historyCopyEnded;
+
+  /// screens/history_copy_screen.dart: under the stopped title, neutral on purpose
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing more comes over. Link the device again for a fresh copy.'**
+  String get historyCopyEndedLine;
+
+  /// screens/history_copy_screen.dart: the copy could not go on and was taken back
+  ///
+  /// In en, this message translates to:
+  /// **'The copy couldn\'t finish'**
+  String get historyCopyFailed;
+
+  /// screens/history_copy_screen.dart: under the could not finish title
+  ///
+  /// In en, this message translates to:
+  /// **'Link the device again for a fresh copy.'**
+  String get historyCopyFailedLine;
+
+  /// screens/history_copy_screen.dart: the section of chats that stayed on the phone
+  ///
+  /// In en, this message translates to:
+  /// **'Stayed on your phone'**
+  String get historyCopyStays;
+
+  /// screens/home_screen.dart: the card's button that opens the history copy page
+  ///
+  /// In en, this message translates to:
+  /// **'See the copy'**
+  String get historyCopySee;
+
   /// widgets/pin_pad.dart: the pin dots to a screen reader, the count only
   ///
   /// In en, this message translates to:

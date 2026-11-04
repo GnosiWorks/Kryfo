@@ -10846,6 +10846,126 @@ class AppLocalizationsAr extends AppLocalizations {
       'تبقى هذه المحادثة على هاتفك لأن لقطات الشاشة محظورة فيها.';
 
   @override
+  String get historyCopyTitle => 'سجل المحادثات';
+
+  @override
+  String get historyCopyMaking => 'جارٍ تجهيز محادثاتك';
+
+  @override
+  String get historyCopyMakingLine => 'يجمع هاتفك ما سيُنسخ. يبدأ بعد لحظة.';
+
+  @override
+  String get historyCopyGoing => 'جارٍ نسخ محادثاتك';
+
+  @override
+  String get historyCopyGoingLine => 'أبقِ الجهازين متصلين حتى ينتهي النسخ.';
+
+  @override
+  String historyCopySize(Object size) {
+    return 'المجموع ⁨$size⁩';
+  }
+
+  @override
+  String get historyCopyWaiting => 'بانتظار الجهاز الآخر';
+
+  @override
+  String get historyCopyWaitingLine =>
+      'يتابع النسخ وحده حين يكون الجهازان متصلين.';
+
+  @override
+  String get historyCopyPaused => 'يأخذ النسخ استراحة قصيرة';
+
+  @override
+  String get historyCopyPausedLine => 'يتابع بعد دقيقة.';
+
+  @override
+  String get historyCopyWhole => 'وصلت كل الرسائل والملفات';
+
+  @override
+  String get historyCopyWholeLine => 'لا شيء ناقص.';
+
+  @override
+  String get historyCopyRows => 'وصلت جهات اتصالك ومجموعاتك';
+
+  @override
+  String get historyCopyRowsLine => 'من الآن تظهر الرسائل الجديدة على الجهاز.';
+
+  @override
+  String get historyCopyGaps => 'وصلت معظم محادثاتك';
+
+  @override
+  String get historyCopyGapsLine =>
+      'في هذه المحادثات محتوى أقل على الجهاز الجديد مما على هاتفك.';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return 'الرسائل: ⁨$got⁩ من ⁨$want⁩';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return 'الملفات: ⁨$got⁩ من ⁨$want⁩';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'بقي ⁨$countString⁩ عنصر على هاتفك',
+      many: 'بقي ⁨$countString⁩ عنصرًا على هاتفك',
+      few: 'بقيت ⁨$countString⁩ عناصر على هاتفك',
+      two: 'بقي عنصران على هاتفك',
+      one: 'بقي عنصر واحد على هاتفك',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy => 'كبيرة جدًا أو غير مقروءة للنسخ.';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'بقيت ⁨$countString⁩ محادثة على هاتفك',
+      many: 'بقيت ⁨$countString⁩ محادثة على هاتفك',
+      few: 'بقيت ⁨$countString⁩ محادثات على هاتفك',
+      two: 'بقيت محادثتان على هاتفك',
+      one: 'بقيت محادثة واحدة على هاتفك',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => 'توقف النسخ';
+
+  @override
+  String get historyCopyEndedLine =>
+      'لن يصل شيء آخر. اربط الجهاز من جديد لنسخة جديدة.';
+
+  @override
+  String get historyCopyFailed => 'تعذّر إكمال النسخ';
+
+  @override
+  String get historyCopyFailedLine => 'اربط الجهاز من جديد لنسخة جديدة.';
+
+  @override
+  String get historyCopyStays => 'بقي على هاتفك';
+
+  @override
+  String get historyCopySee => 'عرض النسخ';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

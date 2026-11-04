@@ -13413,6 +13413,147 @@
   "@historyChatStaysShots": {
     "description": "devices/history_import.dart: on a newly linked device, for a chat that stayed on the phone because screenshot blocking is on in it"
   },
+  "historyCopyTitle": "Chat history",
+  "@historyCopyTitle": {
+    "description": "screens/history_copy_screen.dart: the page bar of the history copy"
+  },
+  "historyCopyMaking": "Getting your chats ready",
+  "@historyCopyMaking": {
+    "description": "screens/history_copy_screen.dart: the phone gathers the history before it goes"
+  },
+  "historyCopyMakingLine": "Your phone gathers what to copy. It starts in a moment.",
+  "@historyCopyMakingLine": {
+    "description": "screens/history_copy_screen.dart: under the gathering title"
+  },
+  "historyCopyGoing": "Copying your chats",
+  "@historyCopyGoing": {
+    "description": "screens/history_copy_screen.dart: the history copy under way"
+  },
+  "historyCopyGoingLine": "Keep both devices online until it's done.",
+  "@historyCopyGoingLine": {
+    "description": "screens/history_copy_screen.dart: under the copying title"
+  },
+  "historyCopySize": "{size} in all",
+  "@historyCopySize": {
+    "description": "screens/history_copy_screen.dart: the whole copy's size, shown before and while it goes",
+    "placeholders": {
+      "size": {
+        "type": "Object"
+      }
+    }
+  },
+  "historyCopyWaiting": "Waiting for the other device",
+  "@historyCopyWaiting": {
+    "description": "screens/history_copy_screen.dart: the other device is not online now"
+  },
+  "historyCopyWaitingLine": "The copy goes on by itself when both devices are online.",
+  "@historyCopyWaitingLine": {
+    "description": "screens/history_copy_screen.dart: under the waiting title"
+  },
+  "historyCopyPaused": "The copy takes a short break",
+  "@historyCopyPaused": {
+    "description": "screens/history_copy_screen.dart: a record did not come many times, the copy waits"
+  },
+  "historyCopyPausedLine": "It goes on in a minute.",
+  "@historyCopyPausedLine": {
+    "description": "screens/history_copy_screen.dart: under the pause title"
+  },
+  "historyCopyWhole": "Every message and file came over",
+  "@historyCopyWhole": {
+    "description": "screens/history_copy_screen.dart: the counts match in every chat"
+  },
+  "historyCopyWholeLine": "Nothing is missing.",
+  "@historyCopyWholeLine": {
+    "description": "screens/history_copy_screen.dart: under the whole title"
+  },
+  "historyCopyRows": "Your contacts and groups came over",
+  "@historyCopyRows": {
+    "description": "screens/history_copy_screen.dart: no history chosen: chats and contacts came, no old messages"
+  },
+  "historyCopyRowsLine": "New messages show on the device from now on.",
+  "@historyCopyRowsLine": {
+    "description": "screens/history_copy_screen.dart: under the no history title"
+  },
+  "historyCopyGaps": "Most of your chats came over",
+  "@historyCopyGaps": {
+    "description": "screens/history_copy_screen.dart: some chats came with fewer messages or files"
+  },
+  "historyCopyGapsLine": "These chats have less on the new device than on your phone.",
+  "@historyCopyGapsLine": {
+    "description": "screens/history_copy_screen.dart: over the list of chats with less"
+  },
+  "historyCopyGapMessages": "Messages: {got} of {want}",
+  "@historyCopyGapMessages": {
+    "description": "screens/history_copy_screen.dart: one chat: messages on the new device of what the phone holds",
+    "placeholders": {
+      "got": {
+        "type": "Object"
+      },
+      "want": {
+        "type": "Object"
+      }
+    }
+  },
+  "historyCopyGapFiles": "Files: {got} of {want}",
+  "@historyCopyGapFiles": {
+    "description": "screens/history_copy_screen.dart: one chat: files on the new device of what the phone sent",
+    "placeholders": {
+      "got": {
+        "type": "Object"
+      },
+      "want": {
+        "type": "Object"
+      }
+    }
+  },
+  "historyCopyLeft": "{count, plural, one{1 item stayed on your phone} other{{count} items stayed on your phone}}",
+  "@historyCopyLeft": {
+    "description": "screens/history_copy_screen.dart: rows and files the phone could not send in one chat",
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "historyCopyLeftWhy": "Too big or unreadable to copy.",
+  "@historyCopyLeftWhy": {
+    "description": "screens/history_copy_screen.dart: why items stayed on the phone"
+  },
+  "historyCopyLeftChats": "{count, plural, one{1 chat stayed on your phone} other{{count} chats stayed on your phone}}",
+  "@historyCopyLeftChats": {
+    "description": "screens/history_copy_screen.dart: whole chats the phone could not send",
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "historyCopyEnded": "The copy stopped",
+  "@historyCopyEnded": {
+    "description": "screens/history_copy_screen.dart: the copy was stopped on the phone"
+  },
+  "historyCopyEndedLine": "Nothing more comes over. Link the device again for a fresh copy.",
+  "@historyCopyEndedLine": {
+    "description": "screens/history_copy_screen.dart: under the stopped title, neutral on purpose"
+  },
+  "historyCopyFailed": "The copy couldn't finish",
+  "@historyCopyFailed": {
+    "description": "screens/history_copy_screen.dart: the copy could not go on and was taken back"
+  },
+  "historyCopyFailedLine": "Link the device again for a fresh copy.",
+  "@historyCopyFailedLine": {
+    "description": "screens/history_copy_screen.dart: under the could not finish title"
+  },
+  "historyCopyStays": "Stayed on your phone",
+  "@historyCopyStays": {
+    "description": "screens/history_copy_screen.dart: the section of chats that stayed on the phone"
+  },
+  "historyCopySee": "See the copy",
+  "@historyCopySee": {
+    "description": "screens/home_screen.dart: the card's button that opens the history copy page"
+  },
   "a11yPinDigits": "{count, plural, =0{No digits} =1{1 digit} other{{count} digits}}",
   "@a11yPinDigits": {
     "description": "widgets/pin_pad.dart: the pin dots to a screen reader, the count only",

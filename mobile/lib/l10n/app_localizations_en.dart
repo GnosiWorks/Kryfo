@@ -10709,6 +10709,123 @@ class AppLocalizationsEn extends AppLocalizations {
       'This chat stays on your phone because screenshots are blocked in it.';
 
   @override
+  String get historyCopyTitle => 'Chat history';
+
+  @override
+  String get historyCopyMaking => 'Getting your chats ready';
+
+  @override
+  String get historyCopyMakingLine =>
+      'Your phone gathers what to copy. It starts in a moment.';
+
+  @override
+  String get historyCopyGoing => 'Copying your chats';
+
+  @override
+  String get historyCopyGoingLine =>
+      'Keep both devices online until it\'s done.';
+
+  @override
+  String historyCopySize(Object size) {
+    return '$size in all';
+  }
+
+  @override
+  String get historyCopyWaiting => 'Waiting for the other device';
+
+  @override
+  String get historyCopyWaitingLine =>
+      'The copy goes on by itself when both devices are online.';
+
+  @override
+  String get historyCopyPaused => 'The copy takes a short break';
+
+  @override
+  String get historyCopyPausedLine => 'It goes on in a minute.';
+
+  @override
+  String get historyCopyWhole => 'Every message and file came over';
+
+  @override
+  String get historyCopyWholeLine => 'Nothing is missing.';
+
+  @override
+  String get historyCopyRows => 'Your contacts and groups came over';
+
+  @override
+  String get historyCopyRowsLine =>
+      'New messages show on the device from now on.';
+
+  @override
+  String get historyCopyGaps => 'Most of your chats came over';
+
+  @override
+  String get historyCopyGapsLine =>
+      'These chats have less on the new device than on your phone.';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return 'Messages: $got of $want';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return 'Files: $got of $want';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString items stayed on your phone',
+      one: '1 item stayed on your phone',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy => 'Too big or unreadable to copy.';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString chats stayed on your phone',
+      one: '1 chat stayed on your phone',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => 'The copy stopped';
+
+  @override
+  String get historyCopyEndedLine =>
+      'Nothing more comes over. Link the device again for a fresh copy.';
+
+  @override
+  String get historyCopyFailed => 'The copy couldn\'t finish';
+
+  @override
+  String get historyCopyFailedLine => 'Link the device again for a fresh copy.';
+
+  @override
+  String get historyCopyStays => 'Stayed on your phone';
+
+  @override
+  String get historyCopySee => 'See the copy';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

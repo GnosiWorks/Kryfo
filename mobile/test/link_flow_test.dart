@@ -83,11 +83,11 @@ class _Join implements JoinLinkHooks {
   @override
   Future<void> joined(
     JoinPlace p,
-    Uint8List s,
+    LinkStream s,
     Map<String, dynamic> own,
   ) async {
     steps.add('joined, rows ${(own['rows'] as List).length}');
-    stream = Uint8List.fromList(s);
+    stream = Uint8List.fromList(s.key);
   }
 
   @override
