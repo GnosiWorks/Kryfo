@@ -30,8 +30,9 @@ const (
 	maxMessage = 96 << 10
 	// a media send is a burst of slices, then quiet
 	eventsPerSec, eventBurst = 10, 500
-	// one live subscription per socket, catch-up pages one after another
-	reqsPerSec, reqBurst = 2, 100
+	// a socket carries a batch of up to 8 addresses: their windows and
+	// catch-up pages share this, the app paces at 8/s, burst 180
+	reqsPerSec, reqBurst = 10, 200
 	maxIDs, maxAddrs     = 20, 10
 	// ids asked for with their address: the app asks for wraps it was told
 	// of by id, a hundred at a time
