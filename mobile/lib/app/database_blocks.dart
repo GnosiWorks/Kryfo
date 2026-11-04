@@ -75,6 +75,7 @@ mixin _BlockRows {
         ('frames_out', 'peer_id'),
         ('pins_out', 'peer_id'),
         ('edits_out', 'peer_id'),
+        ('taken_out', 'peer_id'),
         ('held_onion', 'peer_id'),
         ('first_kept', 'peer'),
         ('gone_in', 'peer_id'),
@@ -85,6 +86,9 @@ mixin _BlockRows {
         ('vouches', 'voucher_id'),
         ('block_spans', 'peer_id'),
         ('blocked_drops', 'peer_id'),
+        // where heals rebuilt their session, a hold on it, and their nonces
+        ('heal_lines', 'peer'),
+        ('heal_nonces', 'peer'),
         ('group_members', 'halo_id'),
         ('group_media_owed', 'member'),
         ('group_ctl_out', 'member'),

@@ -41,7 +41,7 @@ import 'desktop_vault.dart';
 import 'keyring_linux.dart';
 import 'sealed_format.dart' show EngineChunkCrypto;
 import 'sealed_io.dart';
-import 'sealed_native.dart' show nativeFilesSealed;
+import 'sealed_native.dart' show nativeFilesSealed, sweepNativeCopies;
 import 'seal_windows.dart';
 import 'sealed_setup.dart';
 import 'system_seal.dart';
@@ -305,6 +305,9 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
       support: (await paths.getApplicationSupportPath())!,
       runtime: runtime,
     ).clearMemory();
+  } else {
+    // windows: the plain copies a crash left for code outside dart
+    sweepNativeCopies(p.join(root, 'tmp', 'native'));
   }
   var started = false;
   runApp(
@@ -361,6 +364,9 @@ Future<void> openSeal({
   )..filesKey = await filesKeyFrom(vault);
   final io = SealedIO(areas, const EngineChunkCrypto());
   IOOverrides.global = io;
+  // where code outside dart gets its copies when there is no memfd: on
+  // windows <root>/tmp, on the disk (B9), each gone when its reader is
+  final spill = runtime == null ? p.join(root, 'tmp', 'native') : null;
   isolateRunner = <R>(FutureOr<R> Function() f) => runSealed(f);
   nativeFiles =
       <T>(
@@ -368,7 +374,7 @@ Future<void> openSeal({
         List<String> outs,
         Future<T> Function(List<String>, List<String>) run,
         bool Function(T)? ok,
-      ) => nativeFilesSealed(areas, ins, outs, run, ok);
+      ) => nativeFilesSealed(areas, ins, outs, run, ok, spill);
   // a backup is encrypted already and may be large: on the disk
   bulkTempDir = () async {
     final d = p.join(root, 'tmp');

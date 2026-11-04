@@ -62,8 +62,10 @@ import '../stickers/sticker_view.dart' show StickerBudget;
 import '../stickers/sticker_wire.dart' show StickerWire;
 import '../main.dart'
     show
+        typeLeaf,
         appState,
         AppStateFiles,
+        kNotSent,
         session,
         sessionQuiet,
         claimChat,
@@ -1184,6 +1186,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 m.autoRetries = c.$1;
                 m.gaveUp = c.$2;
               }
+              _heldForTap(m, r);
               return m;
             }),
           );
@@ -1483,6 +1486,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       m.cameAt = (r['sent_at'] as num?)?.toInt();
       if (dir == 'in') m.fresh = true;
       _placeLoadedSend(m);
+      _heldForTap(m, r);
       fresh.add(m);
     }
     final nowHave = _messages.map((m) => m.msgUid).toSet();
@@ -3057,8 +3061,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (!await _stillHere()) return null;
     final made = uid ?? newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.groupId);
-    final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-    final dest = File('${mediaDir.path}/f_${made}_$safe');
+    // its type only: the name it was given lives in the database
+    final dest = File('${mediaDir.path}/f_$made${typeLeaf(name)}');
     // a gallery video carries where, on what and when, like a photo, and a
     // picture sent as a file is cleaned like one sent as a photo. both are
     // told by their bytes and cleaned on our own copy by the one cleaner;
@@ -3159,6 +3163,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         }
         await _finishGroupMediaSend(m, r);
       });
+
+  // one a restore brought still waiting to go: not sent, and never tried
+  // on its own. a tap sends it
+  void _heldForTap(_GMsg m, Map<String, Object?> r) {
+    if (m.direction != 'out' || r['sent'] != kNotSent) return;
+    m
+      ..sending = false
+      ..failed = true
+      ..gaveUp = true;
+  }
 
   void _placeLoadedSend(_GMsg m) {
     final uid = m.msgUid;
@@ -3728,7 +3742,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               ? null
               : () {
                   dismiss();
-                  Clipboard.setData(ClipboardData(text: target.text));
+                  copySensitive(target.text, kept: true);
                   showHaloToast(context, l10n.commonCopied);
                 },
         ),
@@ -4625,7 +4639,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                           // it, since the first version with rooms
                           NoticeBanner(
                             glyph: NoticeGlyph.shield,
-                            text: l10n.roomShotsBlocked,
+                            text: l10n.roomShotsBlockedShown,
                             color: HaloColors.violet,
                             margin: const EdgeInsets.fromLTRB(12, 4, 12, 2),
                             delay: const Duration(milliseconds: 220),
@@ -5205,7 +5219,8 @@ class _Header extends StatelessWidget {
                                               start: 6,
                                             ),
                                         child: Semantics(
-                                          label: l10n.groupShotsBlockedHere,
+                                          label:
+                                              l10n.groupShotsBlockedHereShown,
                                           child: Icon(
                                             Icons.phonelink_lock_outlined,
                                             size: 11,

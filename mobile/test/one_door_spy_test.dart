@@ -13,6 +13,9 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/devices/device_send.dart';
+import 'package:kryfo/devices/device_state.dart';
+import 'package:kryfo/heal.dart' show healOfWire;
 import 'package:kryfo/identities.dart';
 import 'package:kryfo/main.dart'
     show
@@ -22,6 +25,7 @@ import 'package:kryfo/main.dart'
         OtherIdentity,
         PairRefused,
         appState,
+        deviceSendForTest,
         pairArgOf,
         newMsgUid,
         useDatabasesForTest,
@@ -29,6 +33,7 @@ import 'package:kryfo/main.dart'
         AppStateDevchat,
         AppStateDoor,
         AppStateGroups,
+        AppStateHeal,
         AppStateIdentity,
         AppStateMessages,
         AppStateOutbox,
@@ -36,7 +41,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:kryfo/wire_pad.dart' show unpad;
+import 'package:kryfo/wire_pad.dart' show padSeal, unpad;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -401,6 +406,24 @@ void main() {
     expect(main0.foundIn(heal.payload), isEmpty);
     wire.out.clear();
 
+    // the heal (KHB1) that replaces it: on my identity for them, signed by
+    // it, its block my store's for them
+    await mem.update(
+      'contacts',
+      {'caps': 'pp'},
+      where: 'halo_id = ?',
+      whereArgs: [_ci],
+    );
+    expect(await appState.healForTest(_ci), isTrue);
+    final khb1 = wire.out.single;
+    expect(khb1.call, 'relay');
+    final h = KryfoSignal.shared.parseHeal(healOfWire(khb1.payload)!);
+    expect(h.identity, [5, ...ciX]);
+    expect(h.signer, [5, ...ciX]);
+    expect(h.block.registrationId, ciRegId);
+    expect(main0.foundIn(khb1.payload), isEmpty);
+    wire.out.clear();
+
     // a group with them in it: the roster names me by my identity for them
     final g = await appState.createGroupAndAnnounce('a group', [_ci]);
     await appState.sendToGroup(g, 'to the group');
@@ -522,4 +545,91 @@ void main() {
       );
     }
   });
+
+  test('with the linked switch off, and on for a contact without the devices '
+      'word while I have no device, a send is today\'s: one relay call on '
+      'their pair, the frame filled as today', () async {
+    final x = (await mem.query('contacts')).first['xpub'] as String;
+    final engine = _PhoneOnly();
+    try {
+      for (final on in [false, true]) {
+        linkedDevicesForTest = on;
+        deviceSendForTest(
+          on
+              ? DeviceSend(
+                  state: DeviceState(engine),
+                  db: () async => mem,
+                  sessions: (_) async => throw StateError('no device'),
+                  wire: _NoDeviceWire(),
+                )
+              : null,
+        );
+        wire.out.clear();
+        final text = 'as today ${on ? 'on' : 'off'}';
+        final wrapped = await wrapMessage(text, msgUid: newMsgUid());
+        final went = await appState.sendEnvelopeForTest(_ci, wrapped);
+        expect(went, isTrue, reason: 'switch $on: ${wire.out}');
+        final relays = [
+          for (final o in wire.out)
+            if (o.call == 'relay') o,
+        ];
+        expect(relays, hasLength(1), reason: 'switch $on');
+        expect(relays.single.to, await pairArgOf(1, x));
+        expect(relays.single.ident, 1);
+        final w = base64Decode(relays.single.payload);
+        final padded = utf8.decode(
+          await them.open('me', w[0], Uint8List.sublistView(w, 1)),
+        );
+        // filled by today's rule, to its own size, nothing added
+        expect(padded, padSeal(unpad(padded)));
+        final m = unwrapMessage(unpad(padded));
+        expect(m.message, text);
+        expect(unpad(padded), isNot(contains('"as"')));
+        // the devices word only with the switch on
+        expect(
+          (jsonDecode(unpad(padded).substring(7)) as Map)['cp'],
+          on ? contains('dv') : isNot(contains('dv')),
+        );
+      }
+      // on, the engine was asked, and named the phone alone
+      expect(engine.fanouts, 1);
+    } finally {
+      linkedDevicesForTest = false;
+      deviceSendForTest(null);
+    }
+  });
+}
+
+// a device engine whose contacts have their phones alone
+class _PhoneOnly implements DeviceEngine {
+  int fanouts = 0;
+  @override
+  String call(String op, Map<String, Object?> args) {
+    if (op != 'fanout') return jsonEncode({'rows': [], 'err': 'error'});
+    fanouts++;
+    return jsonEncode({
+      'rows': [],
+      'slots': [
+        {
+          'identity': args['contact'],
+          'device': 1,
+          'key': args['contact'],
+          'reg': 0,
+        },
+      ],
+    });
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('engine: ${i.memberName}');
+}
+
+class _NoDeviceWire implements DeviceWire {
+  @override
+  Future<String> send(int ident, String arg, String cipher) =>
+      throw StateError('no device copy goes');
+  @override
+  Future<String> sendOpener(int ident, String arg, String cipher) =>
+      throw StateError('no device copy goes');
 }

@@ -2,6 +2,7 @@
 package devices
 
 import (
+	"bytes"
 	"errors"
 	"sync"
 )
@@ -93,6 +94,21 @@ func ownSource(identity Key, held *List, from From) bool {
 	}
 	_, ok := held.FindKey(from.remote)
 	return ok
+}
+
+// Undo drops the identity's list when it is still wire, the first one a
+// link brought: a link that failed after it leaves the device as it was,
+// so the next link's first list is taken afresh.
+func (o *Own) Undo(identity Key, wire []byte) bool {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	l := o.lists[identity]
+	if l == nil || !bytes.Equal(l.Wire(), wire) {
+		return false
+	}
+	delete(o.lists, identity)
+	delete(o.me, identity)
+	return true
 }
 
 // Current is the identity's own list held, nil before the first.

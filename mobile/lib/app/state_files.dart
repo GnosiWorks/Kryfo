@@ -91,8 +91,13 @@ extension AppStateFiles on AppState {
       mediaProgressUpdate(uid, 0.97 * p.done / p.total);
     });
     try {
-      final r = await engine.fileSend(
-        dropSendJob(path: path, uid: uid, members: members),
+      // the engine reads the file by path: a sealed one goes in as memory
+      final r = await withNativeFiles(
+        [path],
+        const [],
+        (i, _) => engine.fileSend(
+          dropSendJob(path: i[0], uid: uid, members: members),
+        ),
       );
       final sent = dropSentOf(r);
       if (sent != null && sent.sent) _dropDays[dayKey] = dropDayAdd(day, size);
@@ -121,8 +126,12 @@ extension AppStateFiles on AppState {
   /// but that week
   Future<void> takeDropBack(String path, String uid) async {
     try {
-      final r = await engine.fileTakeBack(
-        dropSendJob(path: path, uid: uid, members: const ['-']),
+      final r = await withNativeFiles(
+        [path],
+        const [],
+        (i, _) => engine.fileTakeBack(
+          dropSendJob(path: i[0], uid: uid, members: const ['-']),
+        ),
       );
       if (r != 'ok') dlog('files: not taken back ($r)');
     } catch (e) {
@@ -147,8 +156,12 @@ extension AppStateFiles on AppState {
       final path = (r['file_path'] ?? r['media_path']) as String?;
       if (path == null || !dropFits(await File(path).length())) return;
       final v = jsonDecode(
-        await engine.fileValues(
-          dropSendJob(path: path, uid: uid, members: const ['-']),
+        await withNativeFiles(
+          [path],
+          const [],
+          (i, _) => engine.fileValues(
+            dropSendJob(path: i[0], uid: uid, members: const ['-']),
+          ),
         ),
       );
       if (v is! Map) return;
@@ -460,10 +473,7 @@ extension AppStateFiles on AppState {
     final halt = stop ?? () => everydayHeld || haloWiping || !linkUp;
     // a vault shut part way keeps what it holds for its next open
     bool shut() => !identical(d, live) && !identical(d, _openVault);
-    for (final f in await dueFetches(
-      db,
-      DateTime.now().millisecondsSinceEpoch,
-    )) {
+    for (var f in await dueFetches(db, DateTime.now().millisecondsSinceEpoch)) {
       if (halt() || shut()) return;
       final env = unwrapMessage(f.wire);
       final frame = env.drop;
@@ -520,6 +530,12 @@ extension AppStateFiles on AppState {
           }
         }
       }
+      // what came is sealed now, before a shut vault leaves it for later
+      if ((await fetchOf(db, f.uid))?.state == kFetchHave) {
+        final sealed = await _sealFetched(db, f);
+        if (sealed == null) continue;
+        f = sealed;
+      }
       incomingMediaDone(chat);
       if (shut()) return;
       if (await fetchOf(db, f.uid) == null) {
@@ -531,6 +547,55 @@ extension AppStateFiles on AppState {
       if (shut()) return;
       await _letFetchGo(db, f, frame, chat);
     }
+  }
+
+  // the engine's plain file in the fetch folder moved through the seal
+  // into got/, its row after. a stop between leaves the row on the fetch
+  // path: the next pass finds the sealed copy and points the row at it.
+  // one whose plain file could not be sealed (its hidden chats shut that
+  // moment) is shredded and fetched again: null, and it waits
+  Future<DropFetch?> _sealFetched(Database db, DropFetch f) async {
+    if (!inFetchFolder(f.path)) return f;
+    if (!await File(f.path).exists()) {
+      final got = gotPathFor(f.path);
+      if (await File(got).exists()) {
+        await db.update(
+          'file_fetches',
+          {'path': got},
+          where: 'msg_uid = ?',
+          whereArgs: [f.uid],
+        );
+        return f.withPath(got);
+      }
+      // shredded unsealed before: in again from the service
+      await fetchState(db, f.uid, kFetchWaiting);
+      return null;
+    }
+    final to = gotPathFor(f.path);
+    try {
+      await Directory(p.dirname(to)).create(recursive: true);
+      await File(f.path).rename(to);
+    } catch (e) {
+      dlog('files: a fetched file not sealed (${e.runtimeType})');
+      await shredFile(f.path);
+      try {
+        await fetchState(db, f.uid, kFetchWaiting);
+      } catch (_) {
+        // its database shut too: the next open finds it gone and asks again
+      }
+      return null;
+    }
+    await db.update(
+      'file_fetches',
+      {'path': to},
+      where: 'msg_uid = ?',
+      whereArgs: [f.uid],
+    );
+    // the engine's parts of it go with it
+    for (final s in const ['.part', '.open']) {
+      await shredFile('${f.path}$s');
+    }
+    return f.withPath(to);
   }
 
   // the kept envelope filed as if it had just come

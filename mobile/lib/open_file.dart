@@ -7,6 +7,7 @@ import 'dlog.dart';
 import 'desktop/desktop_mode.dart' show canShareOut;
 import 'file_kind.dart';
 import 'l10n/numbers.dart';
+import 'phone_seal.dart' show withFileKey;
 
 const _channel = MethodChannel('halo/platform');
 
@@ -24,11 +25,14 @@ Future<OpenAnswer> openWithAnotherApp(String path, {String? name}) async {
   final facts = await readFileFacts(path, name);
   if (facts.installer) return OpenAnswer.refused;
   try {
-    final r = await _channel.invokeMethod<Object?>('openFile', {
-      'path': path,
-      'name': safeFileName(name, facts: facts),
-      'mime': facts.mime,
-    });
+    final r = await _channel.invokeMethod<Object?>(
+      'openFile',
+      withFileKey(path, {
+        'path': path,
+        'name': safeFileName(name, facts: facts),
+        'mime': facts.mime,
+      }),
+    );
     if (r == true) return OpenAnswer.opened;
     if (r == 'refused') return OpenAnswer.refused;
     return OpenAnswer.nothing;
@@ -71,14 +75,17 @@ Future<ShareEnd> shareFileOut(
   }
   try {
     return shareEndOf(
-      await _channel.invokeMethod<Object>('shareFile', {
-        'path': path,
-        'name': shown,
-        'text': text,
-        'subject': subject,
-        'backup': backup,
-        'quiet': !backup && (quiet || shareGoesWithLock()),
-      }),
+      await _channel.invokeMethod<Object>(
+        'shareFile',
+        withFileKey(path, {
+          'path': path,
+          'name': shown,
+          'text': text,
+          'subject': subject,
+          'backup': backup,
+          'quiet': !backup && (quiet || shareGoesWithLock()),
+        }),
+      ),
     );
   } catch (e) {
     dlog('share: ${e.runtimeType}');
@@ -128,10 +135,10 @@ Future<VideoInfo?> videoInfoFor(String path) {
   return _asking[path] ??= () async {
     VideoInfo? out;
     try {
-      final m = await _channel.invokeMapMethod<String, dynamic>('videoInfo', {
-        'path': path,
-        'maxEdge': 640,
-      });
+      final m = await _channel.invokeMapMethod<String, dynamic>(
+        'videoInfo',
+        withFileKey(path, {'path': path, 'maxEdge': 640}),
+      );
       if (m != null) {
         out = VideoInfo(
           m['jpeg'] as Uint8List?,

@@ -161,9 +161,19 @@ Future<void> deviceTables(
       kind TEXT NOT NULL DEFAULT 'computer',
       linked_at INTEGER NOT NULL,
       removed_at INTEGER,
-      heard_online_ms INTEGER NOT NULL DEFAULT 0
+      heard_online_ms INTEGER NOT NULL DEFAULT 0,
+      notice INTEGER NOT NULL DEFAULT 0,
+      stream BLOB
     )
   ''');
+  // 1 until the person opens the devices page after the device came: the
+  // notice on every own device stays till then
+  await addColumn(
+    db,
+    'ALTER TABLE own_devices ADD COLUMN notice INTEGER NOT NULL DEFAULT 0',
+  );
+  // the history stream's key the link made, until the copy is done
+  await addColumn(db, 'ALTER TABLE own_devices ADD COLUMN stream BLOB');
   await db.execute('''
     CREATE TABLE IF NOT EXISTS own_device_keys (
       uid TEXT NOT NULL,
@@ -186,7 +196,75 @@ Future<void> deviceTables(
       PRIMARY KEY (uid, ident, peer, device)
     )
   ''');
+  // the send loop's columns (device_send.dart): where the copy's session
+  // is, the frame until it is sealed, the wire after, the burst's size,
+  // and when it goes again
+  for (final c in _devOutColumns) {
+    await addColumn(db, 'ALTER TABLE dev_out ADD COLUMN $c');
+  }
+  // the device pairs this device made a seed for, by the device key it
+  // was made for (a new key on the id is another pair), and when their
+  // opener went to the opener address (0: not yet): every copy after it
+  // goes on the seeded pair
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS dev_openers (
+      ident INTEGER NOT NULL,
+      peer TEXT NOT NULL,
+      their_device INTEGER NOT NULL,
+      my_device INTEGER NOT NULL,
+      at INTEGER NOT NULL,
+      PRIMARY KEY (ident, peer, their_device, my_device)
+    )
+  ''');
+  await addColumn(
+    db,
+    'ALTER TABLE dev_pushes ADD COLUMN devs TEXT NOT NULL DEFAULT \'\'',
+  );
+  await addColumn(
+    db,
+    'ALTER TABLE dev_pushes ADD COLUMN sent_at INTEGER NOT NULL DEFAULT 0',
+  );
+  await addColumn(
+    db,
+    "ALTER TABLE dev_openers ADD COLUMN key TEXT NOT NULL DEFAULT ''",
+  );
+  // a push's bundles, taken once and kept for its retries; its next try;
+  // whether its device copies went already
+  for (final c in const [
+    "bundles TEXT NOT NULL DEFAULT ''",
+    'next_at INTEGER NOT NULL DEFAULT 0',
+    'tries INTEGER NOT NULL DEFAULT 0',
+    'dev_sent INTEGER NOT NULL DEFAULT 0',
+  ]) {
+    await addColumn(db, 'ALTER TABLE dev_pushes ADD COLUMN $c');
+  }
+  // the phone's last ask of each own device for bundles: a batch's 'da' is
+  // taken only when it is this one, once
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS dev_asks (
+      ident INTEGER NOT NULL,
+      device INTEGER NOT NULL,
+      asked_at INTEGER NOT NULL,
+      PRIMARY KEY (ident, device)
+    )
+  ''');
 }
+
+const _devOutColumns = [
+  'own INTEGER NOT NULL DEFAULT 0',
+  "addr TEXT NOT NULL DEFAULT ''",
+  "pin TEXT NOT NULL DEFAULT ''",
+  'reg INTEGER NOT NULL DEFAULT 0',
+  'plain TEXT',
+  'wire TEXT',
+  'size INTEGER NOT NULL DEFAULT 0',
+  "state TEXT NOT NULL DEFAULT 'wait'",
+  'opener INTEGER NOT NULL DEFAULT 0',
+  'receipt INTEGER NOT NULL DEFAULT 0',
+  'tries INTEGER NOT NULL DEFAULT 0',
+  'next_at INTEGER NOT NULL DEFAULT 0',
+  'sent_at INTEGER NOT NULL DEFAULT 0',
+];
 
 const _allTables = [
   'dev_lists',
@@ -199,6 +277,8 @@ const _allTables = [
   'own_devices',
   'own_device_keys',
   'dev_out',
+  'dev_openers',
+  'dev_asks',
 ];
 
 /// at every open: [deviceTables] only when one is missing, so a file that
@@ -218,10 +298,22 @@ Future<void> deviceTablesAtOpen(
     for (final c in await db.rawQuery("PRAGMA table_info('identities')"))
       c['name'] as String,
   };
+  Future<Set<String>> colsOf(String t) async => {
+    for (final c in await db.rawQuery("PRAGMA table_info('$t')"))
+      c['name'] as String,
+  };
+  final own = have.contains('own_devices')
+      ? await colsOf('own_devices')
+      : const <String>{};
   final whole =
       _allTables.every(have.contains) &&
+      own.contains('notice') &&
+      own.contains('stream') &&
       (!have.contains('identities') ||
-          (cols.contains('dev_id') && cols.contains('ident_pub')));
+          (cols.contains('dev_id') && cols.contains('ident_pub'))) &&
+      (await colsOf('dev_out')).contains('sent_at') &&
+      (await colsOf('dev_pushes')).contains('dev_sent') &&
+      (await colsOf('dev_openers')).contains('key');
   if (!whole) await deviceTables(db, addColumn);
 }
 

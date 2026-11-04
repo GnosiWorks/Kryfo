@@ -2510,6 +2510,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Messages arrive instantly. Nothing leaves Tor. Uses the most battery.';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'Messages arrive instantly on Fast. Uses the most battery.';
+
+  @override
   String get gettingMessagesCheckIns => 'Check-ins';
 
   @override
@@ -4296,9 +4300,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pairCodeEnterOne => 'Enter one';
 
   @override
-  String get pairCodeSixDigits => 'Six digits';
-
-  @override
   String get pairCodeLooking => 'Looking…';
 
   @override
@@ -4314,38 +4315,88 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t reach the relays. Try again in a moment.';
 
   @override
-  String get pairCodeFailed => 'That didn\'t work. Try again.';
+  String get fastRoomsWaitForTor =>
+      'Rooms and pairing codes always go through Tor, also on Fast. They work as soon as Tor connects.';
 
   @override
-  String get pairCodeTypeTheSixDigits => 'Type the six digits they read out.';
+  String get pairCodeFailed => 'That didn\'t work. Try again.';
 
   @override
   String get pairCodeAddThem => 'Add them';
 
   @override
-  String get pairCodeUsedTwice =>
-      'This code was used twice. Ask for a new one.';
-
-  @override
   String get pairCodeKeyNumber => 'Key number';
 
   @override
-  String get pairCodeNumberMatches =>
-      'Check all four groups match on both phones';
-
-  @override
-  String get pairCodeNumberMatchesDesk =>
-      'Check all four groups match on both devices';
-
-  @override
-  String get pairCodeNumberDiffers => 'The number is different';
-
-  @override
-  String get pairCodeNoNumberThere =>
-      'No number on their screen? Add them, then compare the safety number in your chat.';
-
-  @override
   String get pairCodeNotAdded => 'Not added. Ask them for a new code.';
+
+  @override
+  String get pairCodeEightDigits => 'Eight digits';
+
+  @override
+  String get pairCodeTypeTheEightDigits =>
+      'Type the eight digits they read out.';
+
+  @override
+  String get pairCodeOldCode =>
+      'That code is from an older Kryfo. Both phones need Kryfo 0.6 or newer.';
+
+  @override
+  String get pairCodeOldCodeDesk =>
+      'That code is from an older Kryfo. Both devices need Kryfo 0.6 or newer.';
+
+  @override
+  String get pairCodeBothNeed06 => 'Both phones need Kryfo 0.6 or newer.';
+
+  @override
+  String get pairCodeBothNeed06Desk => 'Both devices need Kryfo 0.6 or newer.';
+
+  @override
+  String get pairCodeWaitingForThem => 'Waiting for them…';
+
+  @override
+  String get pairCodeStillWaiting =>
+      'Still waiting. If their screen says a wrong code was typed, check the digits together.';
+
+  @override
+  String get pairCodeUnanswered =>
+      'No answer came. Check the code with them and type it again.';
+
+  @override
+  String get pairCodeTooManyTries =>
+      'This code was tried three times. Ask them for a new one.';
+
+  @override
+  String get pairCodeRanOut => 'That code ran out. Ask them for a new one.';
+
+  @override
+  String get pairCodeMatched => 'The code matched. Add each other?';
+
+  @override
+  String get pairCodeNotThem => 'Not them';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut =>
+      'Read eight digits out loud and you add each other. Nothing else needs to change hands.';
+
+  @override
+  String get pairCodePanelOrMakeACode => 'Or make a code to read out';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      'They open Kryfo, tap add, choose pairing code and type these eight digits. Make a new one for the next person.';
+
+  @override
+  String get pairCodePanelWrongTyped =>
+      'A wrong code was typed. Read it out again, slowly.';
+
+  @override
+  String get pairCodePanelThreeWrong =>
+      'A wrong code was typed three times, so this one stopped. Make a new one.';
+
+  @override
+  String get pairCodePanelNotAdded =>
+      'Not added. Make a new code when they\'re ready.';
 
   @override
   String get panicSetupThoseWereDifferentFrom =>
@@ -4897,6 +4948,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'Notifications need setting up again on this device.';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'Chats you deleted after this backup was made come back with it, and those contacts may see that you set up Kryfo again.';
 
   @override
   String get restoreMoveItHere => 'Move it here';
@@ -6732,14 +6787,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pairCodePanelYourInviteIsNot => 'Your invite is not ready yet';
 
   @override
-  String get pairCodePanelReadSixDigitsOut =>
-      'Read six digits out loud and they can add you. Nothing else needs to change hands.';
-
-  @override
   String get pairCodePanelWorking => 'Working';
-
-  @override
-  String get pairCodePanelOrMakeASix => 'Or make a six digit code to read out';
 
   @override
   String get pairCodePanelBurned =>
@@ -6756,17 +6804,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pairCodePanelTheyTapAddChoose =>
       'They tap add, choose code, and type these.';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      'They open Kryfo, tap add, choose pairing code and type these six digits. Make a new one for the next person.';
-
-  @override
-  String get pairCodePanelYourWords => 'Your three words';
-
-  @override
-  String get pairCodePanelAcceptOnce =>
-      'Their request comes once they add you. Accept it only once they say all four groups matched.';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -8564,6 +8601,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Kryfo\'s server asks the GIF service for you. The service never sees you, and the server keeps no record of what you searched.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Kryfo\'s server asks the GIF service for you, so the service never sees you. On Fast our server sees your IP address while you search, and keeps no record of it or of what you searched.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'The GIF travels encrypted, like a photo. Your friend\'s phone fetches nothing.';
 
@@ -8591,7 +8632,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'GIF search goes through Kryfo\'s server. $brand never sees you. Turn it on?';
+    return 'GIF search goes straight to Kryfo\'s server, which sees your IP address on Fast. $brand never sees you. Turn it on?';
   }
 
   @override
@@ -8724,7 +8765,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatBlockScreenshots => 'Block screenshots';
 
   @override
-  String get chatShotsWhenTheyUpdate => 'Available when they update';
+  String get chatShotsWhenTheyUpdate =>
+      'Available when they use the latest Kryfo on a phone';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => 'Available in Kryfo for Android';
 
   @override
   String get chatShotsBothPhones =>
@@ -8798,7 +8843,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Kryfo blocks screenshots and screen recording of this room on every phone in it, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.';
 
   @override
+  String get roomShotsBlockedDesk =>
+      'Copying, forwarding and saving each other’s messages is off in this room. Kryfo for Android also blocks screenshots and screen recording of it.';
+
+  @override
   String get roomShotsAlwaysOn => 'Always on in a room, on every phone in it';
+
+  @override
+  String get roomShotsAlwaysOnDesk =>
+      'Always on in a room, in Kryfo for Android';
 
   @override
   String get settingsPerChat => 'Per chat';
@@ -9802,22 +9855,33 @@ class AppLocalizationsEn extends AppLocalizations {
       'Blocks screenshots and screen recording on every phone in this group, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.';
 
   @override
+  String get groupShotsBlocksAllDesk =>
+      'Turns off copying, forwarding and saving each other’s messages here. Kryfo for Android also blocks screenshots and screen recording.';
+
+  @override
   String get groupShotsStartsWhenAll =>
-      'Waiting for everyone here to update Kryfo';
+      'Waiting until everyone here can block screenshots on their device';
 
   @override
   String get groupShotsOnForAll => 'On for everyone here';
+
+  @override
+  String get groupShotsOnForAllDesk => 'On in Kryfo for Android';
 
   @override
   String get groupShotsOffAdminOnly => 'Off. Only the admin can change this';
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'Waiting for everyone here to update Kryfo. Only the admin can change this';
+      'Waiting until everyone here can block screenshots on their device. Only the admin can change this';
 
   @override
   String get groupShotsOnAdminOnly =>
       'On for everyone here. Only the admin can change this';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk =>
+      'On in Kryfo for Android. Only the admin can change this';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -9835,26 +9899,26 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'Still to update';
+  String get groupShotsWaitingTitle => 'Not covered yet';
 
   @override
   String get groupShotsWaitingHint =>
-      'Screenshot blocking covers everyone once these people update Kryfo. Tap someone to remove them from the group.';
+      'Screenshot blocking covers everyone once these people’s devices can block screenshots. Tap someone to remove them from the group.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'Needs to update Kryfo, or hasn’t been online since';
+      'Can’t block screenshots on their device yet, or hasn’t been online since';
 
   @override
   String get groupShotsBlockedByYou => 'Blocked by you';
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'You turned on screenshot blocking. It covers everyone once all here have updated Kryfo.';
+      'You turned on screenshot blocking. It covers everyone once all here can block screenshots on their device.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name turned on screenshot blocking. It covers everyone once all here have updated Kryfo.';
+    return '$name turned on screenshot blocking. It covers everyone once all here can block screenshots on their device.';
   }
 
   @override
@@ -9862,8 +9926,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Screenshot blocking is on for everyone here. Copying, forwarding and saving each other’s messages is off too.';
 
   @override
+  String get groupShotsStartedDesk =>
+      'Screenshot blocking is on in Kryfo for Android. Copying, forwarding and saving each other’s messages is off too.';
+
+  @override
   String get groupShotsPaused =>
-      'Someone here can’t block screenshots yet. It covers everyone again once they update Kryfo.';
+      'Someone here can’t block screenshots on their device yet. It covers everyone again once they can.';
 
   @override
   String get groupShotsCantYet => 'Can’t block screenshots yet';
@@ -9873,13 +9941,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'Screenshot blocking won’t cover everyone here until they update Kryfo.';
+      'Screenshot blocking won’t cover everyone here until they can block screenshots on their device.';
 
   @override
   String get groupShotsLeaveStays => 'Screenshot blocking stays as it is.';
 
   @override
   String get groupShotsBlockedHere => 'Kryfo blocks screenshots in this group';
+
+  @override
+  String get groupShotsBlockedHereDesk =>
+      'Copying, forwarding and saving is off in this group';
 
   @override
   String get groupShotsMenuNote =>
@@ -9910,14 +9982,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get devicesThisPhoneOnly => 'This phone only';
 
   @override
+  String get devicesThisPhoneOnlyDesk => 'This computer only';
+
+  @override
   String get devicesNameSeparator => ', ';
 
   @override
   String get devicesThisPhone => 'This phone';
 
   @override
+  String get devicesThisPhoneDesk => 'This computer';
+
+  @override
   String get devicesOnlyThisPhone =>
       'Only this phone can link or remove devices';
+
+  @override
+  String get devicesOnlyThisPhoneDesk =>
+      'Only this computer can link or remove devices';
 
   @override
   String devicesLinkedOn(Object date) {
@@ -10069,7 +10151,151 @@ class AppLocalizationsEn extends AppLocalizations {
       'Hidden chats and the decoy stay on this phone.';
 
   @override
+  String get devicesHiddenStayDesk =>
+      'Hidden chats and the decoy stay on this computer.';
+
+  @override
   String get devicesScanCode => 'Scan the code';
+
+  @override
+  String get devicesLinkReaching => 'Reaching the device';
+
+  @override
+  String get devicesLinkReachingLine =>
+      'Keep Kryfo open on both. Over Tor this can take a minute.';
+
+  @override
+  String get devicesLinkCompare => 'Do the numbers match?';
+
+  @override
+  String get devicesLinkCompareLine =>
+      'The new device shows six numbers too. Link it only if they are the same.';
+
+  @override
+  String get devicesLinkMatch => 'They match';
+
+  @override
+  String get devicesLinkNoMatch => 'They don\'t match';
+
+  @override
+  String get devicesLinkLinking => 'Linking';
+
+  @override
+  String get devicesLinkLinkingLine =>
+      'Setting up the new device. Keep both open.';
+
+  @override
+  String get devicesLinkDone => 'Device linked';
+
+  @override
+  String get devicesLinkDoneLine =>
+      'It shows in Linked devices, where you can rename or remove it.';
+
+  @override
+  String get devicesLinkUnreached => 'Couldn\'t reach the device';
+
+  @override
+  String get devicesLinkUnreachedLine =>
+      'Check that Kryfo is open on the new device and shows its code, then try again.';
+
+  @override
+  String get devicesLinkStopped => 'Nothing was linked';
+
+  @override
+  String get devicesLinkStoppedLine =>
+      'The numbers have to match. Start again with a new code.';
+
+  @override
+  String get devicesLinkInterruptedLine =>
+      'Something interrupted the link. Start again with a new code.';
+
+  @override
+  String get scanLinkTitle => 'Scan the device\'s code';
+
+  @override
+  String get scanLinkPoint => 'Point at the code on the new device';
+
+  @override
+  String get scanLinkNotOne => 'That\'s not a link code';
+
+  @override
+  String get onboardingLinkToMyPhone => 'Link to my phone';
+
+  @override
+  String get joinTitle => 'Link to your phone';
+
+  @override
+  String get joinStep1 => 'Open Kryfo on your phone.';
+
+  @override
+  String get joinStep2 =>
+      'Go to Settings, then Linked devices, then Link a device.';
+
+  @override
+  String get joinStep3 => 'Scan this code with your phone.';
+
+  @override
+  String get joinWaiting => 'Waiting for your phone';
+
+  @override
+  String get joinCodeLife => 'The code works for ten minutes.';
+
+  @override
+  String get joinCompareLine =>
+      'Your phone shows six numbers too. Go on only if they are the same.';
+
+  @override
+  String get joinLinking => 'Linking to your phone';
+
+  @override
+  String get joinLinkingLine =>
+      'Keep Kryfo open on your phone until this is done.';
+
+  @override
+  String get joinDone => 'Linked to your phone';
+
+  @override
+  String get joinDoneLine =>
+      'New messages reach this device too. Your account\'s key number:';
+
+  @override
+  String get joinOpen => 'Open Kryfo';
+
+  @override
+  String get joinUnreached => 'Couldn\'t reach your phone';
+
+  @override
+  String get joinUnreachedLine =>
+      'Check that your phone is online with Kryfo open, then try a new code.';
+
+  @override
+  String get joinNewCode => 'New code';
+
+  @override
+  String get devicesNewNotice => 'New device linked';
+
+  @override
+  String devicesNewNoticeLine(Object name, Object date) {
+    return '$name was linked to your account on $date. Open Linked devices to see it.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'New devices linked';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names were linked to your account. Open Linked devices to see them.';
+  }
+
+  @override
+  String get devicesNewNoticeOpen => 'Open';
+
+  @override
+  String get settingsLinkedToLine =>
+      'Linked to your phone. Backups and invites stay on the phone.';
+
+  @override
+  String get devicesYourPhone => 'Your phone';
 
   @override
   String get desktopLockTitle => 'Kryfo is locked';
@@ -10774,4 +11000,51 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get desktopBackupHint =>
       'Brings everything back if this computer is ever reset.';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name set up Kryfo again';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return '$name\'s phone started a new secure session';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return 'You verified $name before. Nothing is sent until you check the number or keep chatting. Their messages still arrive.';
+  }
+
+  @override
+  String get chatKeepChatting => 'Keep chatting';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '$name needs to update Kryfo to keep chatting.';
+  }
+
+  @override
+  String get restoreOlderTitle => 'Some chats will pause';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '$name uses an older Kryfo. Your chat with them will pause until they update.';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '$first and $second use an older Kryfo. Your chats with them will pause until they update.';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count others',
+      one: '1 other',
+    );
+    return '$first, $second and $_temp0 use an older Kryfo. Your chats with them will pause until they update.';
+  }
 }

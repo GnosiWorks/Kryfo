@@ -803,3 +803,69 @@ func TestOfferCarriesWindow(t *testing.T) {
 		}
 	}
 }
+
+// a code typed again goes on from the tries its earlier joiner used
+func TestJoinerAfterKeepsTries(t *testing.T) {
+	c := mustCode("07123456")
+	if _, err := NewJoinerAfter(&c, tInvB, MaxTries); err != ErrTries {
+		t.Fatalf("a used-up code: %v", err)
+	}
+	j, err := NewJoinerAfter(&c, tInvB, MaxTries-1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := range 2 {
+		s, _ := NewSharer(&c, tInvA)
+		off, _, _ := s.Offer(tNow, nil)
+		_, err := j.Answer(off, tNow, nil)
+		if i == 0 && err != nil {
+			t.Fatalf("the last try: %v", err)
+		}
+		if i == 1 && err != ErrTries {
+			t.Fatalf("past the cap: %v", err)
+		}
+	}
+}
+
+// the marks around digits that ar and fa fields and copy-paste add are
+// skipped like spaces (review I3); anything else still fails closed
+func TestCodesSkipMarks(t *testing.T) {
+	for _, m := range []string{"‎", "‏", "؜", "⁦", "⁧", "⁨", "⁩", " ", "‑", " "} {
+		in := m + "07" + m + "123" + m + "456" + m
+		c, err := ParseCode(in)
+		if err != nil || c.String() != "07 123 456" {
+			t.Fatalf("%U: %q %v", []rune(m)[0], c.String(), err)
+		}
+	}
+	for _, in := range []string{"07​123456", "07‒123456", "07\xff123456"} {
+		if _, err := ParseCode(in); !errors.Is(err, ErrCode) {
+			t.Fatalf("%q taken", in)
+		}
+	}
+}
+
+// six digits are an older Kryfo's code, told apart from a mistyped one
+func TestOldCode(t *testing.T) {
+	for in, want := range map[string]bool{
+		"482913": true, "482 913": true, "۴۸۲۹۱۳": true, "‎482-913": true,
+		"48291": false, "4829134": false, "07123456": false, "48291x": false, "": false,
+	} {
+		if OldCode([]byte(in)) != want {
+			t.Fatalf("%q: want %v", in, want)
+		}
+	}
+}
+
+func TestKindAndExpiry(t *testing.T) {
+	_, off := fixedSharer(t)
+	if Kind(off) != "KPO1" || Kind([]byte("KPA1x")) != "KPA1" || Kind([]byte("KPX1")) != "" || Kind(nil) != "" {
+		t.Fatal("kinds")
+	}
+	e, err := OfferExpires(off)
+	if err != nil || !e.After(tNow.Add(OfferLife)) || e.After(tNow.Add(OfferLife+Skew+time.Minute)) {
+		t.Fatalf("expiry %v %v", e, err)
+	}
+	if _, err := OfferExpires(off[:10]); err == nil {
+		t.Fatal("a cut offer has an expiry")
+	}
+}

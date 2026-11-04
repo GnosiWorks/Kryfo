@@ -42,11 +42,17 @@ extension AppStateHeal on AppState {
           floor ??
           resendFrom(now, since, window: _kResendWindow, most: _kResendMost),
     );
+    // after their restore: what we took back or edited since their backup
+    // goes again, or their file brings it back for good
+    final undone = since == null || since > now
+        ? 0
+        : await on.requeueTakenSince(peer, since: since);
+    if (undone > 0) dlog('resend: $undone unsends and edits go again');
     if (again > 0) {
       dlog('resend: $again undelivered to $peer go again');
       _bumpChatRev(peer);
-      unawaited(drainOutbox());
     }
+    if (again > 0 || undone > 0) unawaited(drainOutbox());
   }
 
   // asked while their vault is shut: the resend is owed, sealed to the
@@ -78,6 +84,16 @@ extension AppStateHeal on AppState {
     if (await d.isBlocked(member) || await blockedAnywhere(member)) return;
     if (await d.keyChanged(member)) return;
     _groupResentAt[gap] = now;
+    // our unsends and edits since their backup, which their file undid
+    final undone = await d.requeueGroupTakenSince(
+      member,
+      since: since,
+      now: now,
+    );
+    if (undone > 0) {
+      dlog('resend: $undone group unsends and edits go again');
+      if (!haloWiping && !everydayHeld) unawaited(_drainGroupCtl());
+    }
     // no further back than gone texts are known, by the day: an older
     // backup is the same restore all day long
     final from = max(since, now - HaloDb.kGoneFor.inMilliseconds);
@@ -125,30 +141,28 @@ extension AppStateHeal on AppState {
     _healPending[peer] = DateTime.now().millisecondsSinceEpoch;
   }
 
-  // the card a seal starts a session afresh from, when the one held came
-  // back with a restore. with none kept they are asked for theirs: their
-  // answer leaves it on the row, and the outbox sends again
+  // a seal on a session a restore brought back: nothing is built here.
+  // they are sent a heal (KHB1) as it falls due, build from it and answer,
+  // and what waits goes once their answer opens (3.8: one side builds, the
+  // other opens, so no second session races the first)
   Future<LsBundle?> _afreshCard(String peer) async {
-    final card = (await _reach(peer))?.bundle;
-    if (card != null && card.isNotEmpty) {
-      try {
-        // a 0.5.x card has no kyber prekey: it starts nothing, and theirs
-        // is asked for as if none were kept
-        final b = cardBundle(card);
-        _waitingCard.remove(peer);
-        return b;
-      } catch (e) {
-        dlog('afresh: their card does not read (${e.runtimeType})');
-      }
-    }
     _waitingCard.add(peer);
-    // asked as the pass asks (SignalSession.askWait): a seal
-    // tried again in between asks nothing
-    final now = DateTime.now().millisecondsSinceEpoch;
-    if (!_asking.containsKey(peer) && await signalSession.askDue(peer, now)) {
-      unawaited(_askOnce(peer, now));
-    }
+    // only marked: the next pass sends it first, inside its budget of
+    // eight, so a busy start does not put out a heal to everyone it
+    // touches at once (8, R6)
+    _healWanted.add(peer);
     return null;
+  }
+
+  /// [peer]'s messages stop reading: a session a restore brought back is
+  /// healed by the next pass, any other at once (a repair)
+  Future<void> _healSoon(String peer) async {
+    final ss = await signalFor(peer);
+    if (ss != null && await ss.sealsOnRestored(peer)) {
+      _healWanted.add(peer);
+      return;
+    }
+    await _askToStartAfresh(peer);
   }
 
   Future<bool> _askOnce(String peer, int now) =>
@@ -169,11 +183,19 @@ extension AppStateHeal on AppState {
     now ?? DateTime.now().millisecondsSinceEpoch,
   ).whenComplete(() => _afreshPass = null);
 
+  // the gap between two passes: 10 to 30 minutes at random, so the heals
+  // of one restore go out over hours and two contacts comparing when
+  // theirs came learn little (8, R6)
+  static int _afreshGap(Random r) =>
+      const Duration(minutes: 10).inMilliseconds +
+      r.nextInt(const Duration(minutes: 20).inMilliseconds);
+
   Future<void> _askAfreshRound(int now) async {
     if (everydayHeld) return;
     if (!signalSession.ready || !signalSession.hasRestored) return;
-    if (now - _afreshLookedAt < 10 * 60 * 1000) return;
-    _afreshLookedAt = now;
+    if (now < _afreshLookedAt) return;
+    final rnd = Random.secure();
+    _afreshLookedAt = now + _afreshGap(rnd);
     // someone blocked or never taken in is never asked, and their session
     // would hold the marks for good
     final unasked = <String>{};
@@ -190,19 +212,34 @@ extension AppStateHeal on AppState {
       return;
     }
     var left = _kAsksPerPass;
-    // the open vault's people too: one shut now is looked at on a later pass
+    // the open vault's people too: one shut now is looked at on a later
+    // pass. in random order, whatever identity each is on
+    final people = <String>[];
     for (final d in [live, ?_openVault]) {
-      final List<Map<String, Object?>> people;
       try {
-        people = await d.contacts();
+        for (final r in await d.contacts()) {
+          people.add(r['halo_id'] as String);
+        }
       } catch (_) {
         continue;
       }
-      for (final r in people) {
-        if (left == 0 || everydayHeld) return;
-        final id = r['halo_id'] as String;
-        if (isDevId(id) || !await signalSession.askDue(id, now)) continue;
-        if (await _askOnce(id, now)) left--;
+    }
+    people.shuffle(rnd);
+    // those a seal waits on first, then everyone else, each once
+    final wanted = [..._healWanted]..shuffle(rnd);
+    final order = {...wanted, ...people};
+    for (final id in order) {
+      if (left == 0 || everydayHeld) return;
+      if (isDevId(id)) continue;
+      final ss = await signalFor(id);
+      if (ss == null || !await ss.sealsOnRestored(id)) {
+        _healWanted.remove(id);
+        continue;
+      }
+      if (!await ss.askDue(id, now)) continue;
+      if (await _askOnce(id, now)) {
+        _healWanted.remove(id);
+        left--;
       }
     }
   }
@@ -210,34 +247,359 @@ extension AppStateHeal on AppState {
   @visibleForTesting
   Future<void> askAfreshForTest({int? now}) => _askAfresh(now: now);
 
-  // [peer] asked to start a session with us afresh from our card. their
-  // answer carries theirs, and ours starts afresh from it too. true once the
-  // relay took the ask
+  // [peer] is sent a heal (KHB1): our phone's bundle with a one-time
+  // kyber made for it, so they build a session to us and answer on it.
+  // after a restore it says so (bit 0) and since when: the day of their
+  // last message here, so what of theirs never reached this file comes
+  // again. true once the relay took it
   Future<bool> _askToStartAfresh(String peer, {int? now}) async {
-    if (!await _io.hasSession(peer)) return false;
-    // someone blocked is asked nothing, and their card would not be taken
-    if (await _reach(peer) == null || await blockedAnywhere(peer)) {
+    if (isDevId(peer) || !await _io.hasSession(peer)) return false;
+    // someone blocked is sent nothing, not even keys
+    final to = await _reach(peer);
+    if (to == null || await blockedAnywhere(peer)) return false;
+    final ss = await signalFor(peer);
+    if (ss == null) return false;
+    final at = now ?? DateTime.now().millisecondsSinceEpoch;
+    final restored = await ss.sealsOnRestored(peer);
+    final on = to.on;
+    // a chat deleted here (parked) gets no restore's heal: it would tell
+    // them, and they reach us as a request, as anyone new does. one a shut
+    // vault holds waits for it to open, where that can be read (a later
+    // pass, or their next text, which opens only then)
+    if (restored && (on == null || !await on.isAccepted(peer))) return false;
+    int? since;
+    if (restored) {
+      final from = ss.restoredFrom ?? at;
+      try {
+        since = on == null
+            ? healDayOf(from)
+            : await healSinceFor(await on.open(), peer, fallbackMs: from);
+      } catch (e) {
+        dlog('heal: since not read (${e.runtimeType})');
+        since = healDayOf(from);
+      }
+    } else if (await _olderKryfo(peer, to.on)) {
+      // a repair a 0.5.x phone cannot take: nothing goes, nothing waits
       return false;
     }
-    _wantHeal(peer);
-    // their session came back with a restore: when the backup was made, to
-    // the day, so they put out again what never reached us since
-    final from = await signalSession.sealsOnRestored(peer)
-        ? signalSession.restoredFrom
-        : null;
-    final ok = await _sendBundleCtl(
-      peer,
-      want: true,
-      since: from == null ? null : utcDayOf(from),
-    );
+    final ok = await _sendHeal(peer, ss, since: since, now: at);
     if (ok) {
-      await signalSession.noteAsked(
-        peer,
-        now ?? DateTime.now().millisecondsSinceEpoch,
-      );
+      _wantHeal(peer);
+      // a repair holds our sends until their answer opens: one sealed on
+      // the old session meanwhile would put it in front again over there
+      if (!restored) _waitingCard.add(peer);
+      await ss.noteAsked(peer, at);
     }
     return ok;
   }
+
+  // their row says they never sent a capability list: a 0.5.x phone
+  Future<bool> _olderKryfo(String peer, HaloDb? on) async {
+    if (on == null) return false;
+    try {
+      return olderKryfo((await on.getContact(peer))?['caps'] as String?);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// [peer] holds an older Kryfo and their session came back with a
+  /// restore: their chat waits until they update (Q20)
+  Future<bool> pausedForUpdate(String peer) async {
+    if (isDevId(peer)) return false;
+    try {
+      final ss = await signalFor(peer);
+      if (ss == null || !await ss.sealsOnRestored(peer)) return false;
+      final to = await _reach(peer);
+      return to != null && await _olderKryfo(peer, to.on);
+    } catch (e) {
+      dlog('heal: pause not read (${e.runtimeType})');
+      return false;
+    }
+  }
+
+  // the KHB1 itself, outside the session on the pair's address. at most
+  // one a minute per person
+  Future<bool> _sendHeal(
+    String peer,
+    SignalSession ss, {
+    int? since,
+    required int now,
+  }) async {
+    if (everydayHeld) return false;
+    final key = '$peer:heal';
+    if (now - (_bundleCtlSentAt[key] ?? 0) < _bundleGap.inMilliseconds) {
+      return false;
+    }
+    _pruneHeal();
+    _bundleCtlSentAt[key] = now;
+    try {
+      final to = await _reach(peer);
+      if (to == null || to.xpub.isEmpty) return false;
+      // never to someone whose identity is not held: a first contact goes
+      // through the invite and the hello
+      final theirs = await _storedIdentity(ss, peer);
+      if (theirs == null) return false;
+      final khb1 = await makeHeal(ss, peer: theirs, since: since, nowMs: now);
+      final (on, framed) = await doorFor(peer, healWire(khb1), outside: true);
+      if (on != ss.ident) return false;
+      final r = await Future(() => _io.relaySend(on, to.xpub, framed));
+      dlog('heal to $peer (restored=${since != null}): $r');
+      return r == 'ok';
+    } catch (e) {
+      dlog('heal to $peer failed (${e.runtimeType})');
+      return false;
+    }
+  }
+
+  // [a] sorts before [b] as bytes: the smaller identity key's heal wins
+  // when two cross
+  static bool _keyBefore(List<int> a, List<int> b) {
+    for (var i = 0; i < a.length && i < b.length; i++) {
+      if (a[i] != b[i]) return a[i] < b[i];
+    }
+    return a.length < b.length;
+  }
+
+  // a heal (KHB1) came off the relay from [peerXPub], the key the wrap's
+  // seal names. taken only when 3.8's checks hold: theirs and mine, signed
+  // by their identity, fresh, never seen, a pq bundle. then their session
+  // is built from it, the empty answer goes at once inside it, and what
+  // never came back delivered goes again
+  Future<void> _takeHeal(String peerXPub, Uint8List khb1, String h) async {
+    try {
+      final x = peerXPub.toLowerCase();
+      final peer = _xPubToHaloId[peerXPub] ?? _xPubToHaloId[x];
+      if (peer == null || isDevId(peer) || devIdClaim(peer)) {
+        dlog('heal: from no one held here, dropped');
+        return;
+      }
+      final to = await _reach(peer);
+      if (to == null || to.xpub.toLowerCase() != x) return;
+      if (await blockedAnywhere(peer)) return;
+      final on = to.on;
+      if (on == null) {
+        // a shut vault holds them: their next try lands once it is open
+        dlog('heal: for a chat a shut vault holds, not taken now');
+        return;
+      }
+      if (!await on.isAccepted(peer)) return;
+      final ss = await signalFor(peer);
+      if (ss == null) return;
+      final LsHeal heal;
+      try {
+        heal = ss.lib.parseHeal(khb1);
+      } on LsError catch (e) {
+        dlog('heal: refused by the parser ($e)');
+        return;
+      }
+      // never a first session: a heal is for an identity held here
+      final held = await _storedIdentity(ss, peer);
+      if (held == null) {
+        dlog('heal: no identity held for them, dropped');
+        return;
+      }
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final why = checkHeal(
+        heal,
+        held: held,
+        mine: ss.identity.public,
+        nowMs: now,
+        restoredAt: await restoredAt(),
+        lastIssued: await lastHealOf(await on.open(), peer),
+      );
+      if (why != null) {
+        dlog('heal: refused (${why.name})');
+        return;
+      }
+      // both sent one at once: the smaller identity key's is the one built
+      _pruneHeal();
+      if (_healPending.containsKey(peer) &&
+          _keyBefore(ss.identity.public, heal.identity)) {
+        dlog('heal: crossed, ours stands');
+        return;
+      }
+      final built = _healBuiltAt[peer];
+      if (built != null && now - built < kHealRebuildGap.inMilliseconds) {
+        dlog('heal: rebuilt lately, taken on their next try');
+        return;
+      }
+      // kept where they are: an open vault's contact in the vault
+      if (!await noteHealNonce(
+        await on.open(),
+        ss.ident,
+        heal.nonce,
+        nowMs: now,
+        peer: peer,
+      )) {
+        dlog('heal: a nonce seen already');
+        return;
+      }
+      try {
+        await ss.processBundle(peer, heal.block.bundle);
+      } on ClassicRefused {
+        return;
+      } on LsError {
+        // only a held record that does not read goes: one that reads keeps
+        // its archived states, so what was sealed before still opens
+        if (!await _heldUnreadable(ss, peer)) rethrow;
+        await ss.rebuild(peer, heal.block.bundle);
+      }
+      _healBuiltAt[peer] = now;
+      _healPending.remove(peer);
+      await keepLastHeal(await on.open(), peer, heal.issued);
+      // a classic chat a heal moved to pq: the restart is done, and its 15
+      // days begin, so the upkeep sends no KDB1 for it
+      final info = await ss.sessionInfo(peer);
+      if (info != null && info.archived.any((s) => s.version < 4)) {
+        await notePqOver(peer, nowMs: now);
+      }
+      dlog('heal: session rebuilt for $peer (restored=${heal.restored})');
+      await _noteHealed(on, peer, restored: heal.restored, at: now);
+      // the answer first: the opener their heal kyber opens
+      await _answerHeal(peer);
+      // what waited on our side goes on the new session
+      _cardCame(peer);
+      final since = healSinceMs(heal);
+      await _resendTo(on, peer, since: since);
+      if (since != null) {
+        await _resendGroupsAfterRestore(peer, since: since, sealed: false);
+      }
+    } catch (e) {
+      dlog('heal: not taken (${e.runtimeType})');
+    } finally {
+      await live.markSeen(h);
+    }
+  }
+
+  Future<bool> _heldUnreadable(SignalSession ss, String peer) async {
+    final r = await ss.sessionStore.load(peer);
+    if (r == null) return false;
+    try {
+      ss.lib.sessionInfo(r);
+      return false;
+    } on LsError {
+      return true;
+    }
+  }
+
+  // the line in their chat, and a hold on a verified contact until the
+  // person looks. the flag only picks the words: a key holder could clear
+  // it, so the hold never depends on it (Q22)
+  Future<void> _noteHealed(
+    HaloDb on,
+    String peer, {
+    required bool restored,
+    required int at,
+  }) async {
+    try {
+      final row = await on.getContact(peer);
+      final verified = (row?['verified_key'] as String?)?.isNotEmpty ?? false;
+      await addHealLine(
+        await on.open(),
+        peer,
+        at: at,
+        kind: restored ? kHealLineRestored : kHealLineRepair,
+        held: kHealHold && verified,
+      );
+      _bumpChatRev(peer);
+      keyChanged();
+    } catch (e) {
+      dlog('heal: line not kept (${e.runtimeType})');
+    }
+  }
+
+  // the empty frame that answers a heal, inside the session it built: not
+  // held for a key check, since it carries nothing
+  Future<void> _answerHeal(String peer) async {
+    try {
+      final to = await _reach(peer);
+      if (to == null || to.xpub.isEmpty) return;
+      final s = await signalSeal(
+        peer,
+        await wrapMessage('', sender: _mySender()),
+        unheld: true,
+      );
+      final r = await Future(() => _io.relaySend(s.ident, to.xpub, s.cipher));
+      dlog('heal: answered $peer: $r');
+    } catch (e) {
+      dlog('heal: not answered (${e.runtimeType})');
+    }
+  }
+
+  /// the person looked at a heal's hold on [peer]: what waited goes
+  Future<void> releaseHealHold(String peer) async {
+    try {
+      await session.releaseHealHold(peer);
+    } catch (e) {
+      dlog('heal: hold not cleared (${e.runtimeType})');
+    }
+    _recardFor(peer);
+    keyChanged();
+    unawaited(drainOutbox());
+  }
+
+  /// before the everyday store opens after a restore: every other
+  /// identity's sessions are marked as the main one's are as it opens, so
+  /// none is sealed on before a heal. true when each was
+  Future<bool> markRestoredIdentities(Database db, {int? from}) async {
+    var ok = true;
+    for (final r in await identityRows(db)) {
+      if (r.retiredAt != null || r.id == kMainIdent || r.kind == kIdentPool) {
+        continue;
+      }
+      try {
+        await (await signalOfIdent(r.id)).markRestored(from: from);
+      } catch (e) {
+        ok = false;
+        dlog('restore: identity ${r.id} not marked (${e.runtimeType})');
+      }
+    }
+    return ok;
+  }
+
+  /// what follows a restore or a move, once, on the first start after it
+  /// (8), with every store open: each identity's unused one-time invites
+  /// go (one may have been answered since the file was made) and its
+  /// session prekeys are made again, and pool identities retire. the main
+  /// invites stay: links and the handle keep working. true when every
+  /// identity was done; otherwise the next start runs it again
+  Future<bool> afterRestore(Database db, {int? nowMs}) async {
+    final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
+    var ok = true;
+    for (final r in await identityRows(db)) {
+      if (r.retiredAt != null) continue;
+      if (r.kind == kIdentPool) {
+        await db.update(
+          'identities',
+          {'retired_at': now},
+          where: 'id = ?',
+          whereArgs: [r.id],
+        );
+        continue;
+      }
+      try {
+        final ss = await signalOfIdent(r.id);
+        for (final i in await invitesOf(db, r.id, kind: kInviteOneTime)) {
+          if (i.usedAt == null) await dropInvite(db, ss, i);
+        }
+        await ss.replaceSessionPreKeys(now: now);
+      } catch (e) {
+        ok = false;
+        dlog('restore: identity ${r.id} not settled (${e.runtimeType})');
+      }
+    }
+    dlog('restore: invites and session prekeys made again (ok=$ok)');
+    return ok;
+  }
+
+  @visibleForTesting
+  Future<bool> healForTest(String peer, {int? now}) =>
+      _askToStartAfresh(peer, now: now);
+
+  @visibleForTesting
+  Future<void> takeHealForTest(String peerXPub, Uint8List khb1) =>
+      _takeHeal(peerXPub, khb1, 'heal-${khb1.hashCode}');
 
   // wipe a corrupt outbound session and rebuild it from the peer's stored
   // prekey bundle. false if we never kept a bundle: the caller then surfaces
@@ -325,6 +687,8 @@ extension AppStateHeal on AppState {
   // identity. a valid frame backfills peer_bundle (pre-v30 pairings) and
   // rebuilds the corrupt session, so both sides converge without re-pairing.
   Future<void> _handleBundleCtl(String peerXPub, String raw, String h) async {
+    final heal = healOfWire(raw);
+    if (heal != null) return _takeHeal(peerXPub, heal, h);
     try {
       final j = jsonDecode(raw);
       if (j is! Map || j['halo_ctl'] != 'bundle') return;
@@ -360,6 +724,13 @@ extension AppStateHeal on AppState {
           : _eqBytes(_xIdentity(peerXPub.toLowerCase()) ?? const [], claimed);
       if (!ok) {
         dlog('bundle ctl: identity mismatch for $from, dropped');
+        return;
+      }
+      // a card builds a first session only (an introduction). with one held
+      // the heal is a KHB1, which shows and holds: a json card would
+      // rebuild quietly whatever the sender chose (11 step 8, 3.8)
+      if (await ss.hasSession(from)) {
+        dlog('bundle ctl: a session is held with $from, refused');
         return;
       }
       // their frame came over the pair address: they read ours too

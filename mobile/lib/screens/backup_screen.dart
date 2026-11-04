@@ -33,6 +33,7 @@ import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../dlog.dart';
 import '../save_names.dart' show backupName, savesPlain;
+import '../phone_seal.dart' show withFileKey;
 
 // a test's backup, in place of the engine's
 @visibleForTesting
@@ -1101,11 +1102,10 @@ Future<SaveAnswer> saveDocumentOut(
   var still = Duration.zero;
   var asking = false;
   final asked = _platform
-      .invokeMethod<Object?>('saveDocument', {
-        'path': path,
-        'name': name,
-        'backup': backup,
-      })
+      .invokeMethod<Object?>(
+        'saveDocument',
+        withFileKey(path, {'path': path, 'name': name, 'backup': backup}),
+      )
       .then(_saveAnswer)
       .catchError((Object e) {
         dlog('backup: no save dialog (${e.runtimeType})');

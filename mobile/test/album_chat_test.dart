@@ -159,7 +159,7 @@ class _Db extends DevTestDb {
   Future<({bool sent, bool delivered})> sendState(String msgUid) async =>
       (sent: _row(msgUid)?['sent'] == 1, delivered: true);
   @override
-  Future<void> deleteMessage(String msgUid) async {
+  Future<void> deleteMessage(String msgUid, {String? from}) async {
     deleted.add(msgUid);
     await mem.delete('messages', where: 'msg_uid = ?', whereArgs: [msgUid]);
   }

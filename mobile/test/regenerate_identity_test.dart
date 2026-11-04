@@ -53,10 +53,20 @@ class _Engine implements HaloEngine {
 
   @override
   String myXPubkey() => _hex(pair.publicKey.serialize().sublist(1));
+  // how often a private key was pulled back out
+  var pulls = 0;
   @override
-  String myXPrivkey() => _hex(pair.privateKey.serialize());
+  String myXPrivkey() {
+    pulls++;
+    return _hex(pair.privateKey.serialize());
+  }
+
   @override
-  String myEdPrivkey() => 'ed';
+  String myEdPrivkey() {
+    pulls++;
+    return 'ed';
+  }
+
   @override
   Future<String> subscribeFirstContact(int ident, int counter) async {
     listened.add(counter);
@@ -120,9 +130,15 @@ void main() {
     final before = _bundle(await makePreKeyBundleB64());
     final oldInvite = await signalSession.preKeyStore.load(invitePreKeyId);
 
+    e.pulls = 0;
     await app.regenerateIdentity();
 
     expect(live.saved, ['second-words-now']);
+    // the keys come out once, as they are made: signal and a backup take
+    // the copy held then, never the engine's again
+    expect(e.pulls, 2);
+    expect(app.mainKeysForBackup.x, _hex(e.pair.privateKey.serialize()));
+    expect(e.pulls, 2);
     // openers kept for the old key open no more
     expect(live.keptGone, 1);
     final now = _bundle(await makePreKeyBundleB64());

@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../backup.dart';
+import '../heal.dart' show kRestoreWarnsOlder;
 import '../main.dart'
     show
         appState,
@@ -147,6 +148,15 @@ Future<void> _cutShortSheet(BuildContext context) => showNoticeSheet(
   line: l10n.restoreKryfoClosesRestoreAgain,
   ok: l10n.restoreReopenKryfo,
 );
+
+/// who in a backup uses an older Kryfo, as the sheet says it: two names
+/// and how many more
+String olderLine(List<String> names) => switch (names.length) {
+  0 => '',
+  1 => l10n.restoreOlderOne(names[0]),
+  2 => l10n.restoreOlderTwo(names[0], names[1]),
+  _ => l10n.restoreOlderMany(names[0], names[1], names.length - 2),
+};
 
 class RestoreScreen extends StatefulWidget {
   // called after a restore instead of the 'reopen kryfo' notice, so
@@ -295,6 +305,19 @@ class _RestoreScreenState extends State<RestoreScreen> with PinShield {
     // receiving the moment this one sends
     final go = await _moveSheet(s);
     if (!go || !mounted) return;
+    // contacts on an older Kryfo: their chats pause until they update, and
+    // the person goes on knowing who (Q20). a decoy never goes online
+    if (kRestoreWarnsOlder && s.older.isNotEmpty && !_here.into.quiet) {
+      final ok = await showConfirmSheet(
+        context,
+        title: l10n.restoreOlderTitle,
+        line: olderLine(s.older),
+        yes: l10n.restoreRestoreAnyway,
+        keep: l10n.restoreNotYet,
+        rose: false,
+      );
+      if (!ok || !mounted) return;
+    }
     if (appState.onboardingComplete) {
       final ok = await showConfirmSheet(
         context,
@@ -520,6 +543,7 @@ class _RestoreScreenState extends State<RestoreScreen> with PinShield {
               if (s.moved != true)
                 _item(l10n.restoreIfThePhoneThisShown, strong: true),
               _item(l10n.restoreNotificationsNeedSettingUp),
+              _item(l10n.restoreDeletedComeBack),
               const SizedBox(height: 22),
               HaloPrimaryButton(
                 label: l10n.restoreMoveItHere,

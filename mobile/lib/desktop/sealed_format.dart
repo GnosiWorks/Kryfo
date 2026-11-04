@@ -7,13 +7,14 @@
 // no two seals share a key, so a chunk written again is safe
 import 'dart:convert';
 import 'dart:ffi';
+import 'dart:io' show Platform;
 import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:ffi/ffi.dart';
 
-import '../engine_strings.dart' show freeSecret;
+import '../chunk_keys.dart';
 
 const sealedMagic = [0x4b, 0x52, 0x59, 0x4d]; // KRYM
 const sealedVersion = 1;
@@ -38,50 +39,39 @@ abstract class ChunkCrypto {
   Uint8List? open(Uint8List key, Uint8List sealed);
 }
 
-typedef _ChunkC =
-    Int32 Function(
-      Pointer<Utf8>,
-      Uint64,
-      Uint8,
-      Pointer<Uint8>,
-      Int32,
-      Pointer<Uint8>,
-    );
-typedef _Chunk =
-    int Function(Pointer<Utf8>, int, int, Pointer<Uint8>, int, Pointer<Uint8>);
-
-String _hex(List<int> b) =>
-    b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
-
 class EngineChunkCrypto implements ChunkCrypto {
   const EngineChunkCrypto();
 
-  static final _sealChunk = DynamicLibrary.process()
-      .lookupFunction<_ChunkC, _Chunk>('HaloSealChunk');
-  static final _openChunk = DynamicLibrary.process()
-      .lookupFunction<_ChunkC, _Chunk>('HaloOpenChunk');
+  static final _keys = ChunkKeys(
+    Platform.isAndroid
+        ? DynamicLibrary.open('libhalo.so')
+        : DynamicLibrary.process(),
+  );
 
-  Uint8List? _run(_Chunk call, Uint8List key, Uint8List data) {
-    final k = _hex(key).toNativeUtf8();
+  // each chunk has a key of its own: it crosses as bytes and is held by
+  // the engine for this chunk alone
+  Uint8List? _run(ChunkCall call, Uint8List key, Uint8List data) {
+    final h = _keys.take(key);
+    if (h <= 0) return null;
     final cap = data.length + _tag;
     final inp = calloc<Uint8>(cap), out = calloc<Uint8>(cap);
     try {
       inp.asTypedList(cap).setAll(0, data);
-      final n = call(k, 0, _type, inp, data.length, out);
+      final n = call(h, 0, _type, inp, data.length, out);
       if (n < 0 || n > cap) return null;
       return Uint8List.fromList(out.asTypedList(n));
     } finally {
+      _keys.drop(h);
       inp.asTypedList(cap).fillRange(0, cap, 0);
       out.asTypedList(cap).fillRange(0, cap, 0);
       calloc.free(inp);
       calloc.free(out);
-      freeSecret(k);
     }
   }
 
   @override
   Uint8List seal(Uint8List key, Uint8List plain) {
-    final s = _run(_sealChunk, key, plain);
+    final s = _run(_keys.seal, key, plain);
     if (s == null || s.length != plain.length + _tag) {
       throw StateError('seal failed');
     }
@@ -91,7 +81,7 @@ class EngineChunkCrypto implements ChunkCrypto {
   @override
   Uint8List? open(Uint8List key, Uint8List sealed) {
     if (sealed.length < _tag) return null;
-    return _run(_openChunk, key, sealed);
+    return _run(_keys.open, key, sealed);
   }
 }
 

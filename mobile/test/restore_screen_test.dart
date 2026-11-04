@@ -325,6 +325,8 @@ void main() {
         await t.pumpAndSettle();
       }
       expect(shown(), isTrue);
+      // what was deleted after the file comes back with it, and says so
+      expect(find.text(l10n.restoreDeletedComeBack), findsOneWidget);
       await t.tap(go);
       await t.pumpAndSettle();
       expect(find.text(l10n.restoreRestoring), findsOneWidget);
@@ -359,6 +361,80 @@ void main() {
     await t.binding.handlePopRoute();
     await t.pumpAndSettle();
     expect(find.byType(RestoreScreen), findsNothing);
+  });
+
+  testWidgets('contacts on an older Kryfo are named before the restore, '
+      'and not yet leaves the phone as it was', (t) async {
+    phone(t);
+    FlutterSecureStorage.setMockInitialValues({});
+    await appState.loadMyHandle();
+    var restored = false;
+    var quits = 0;
+    quitAfterRestore = () => quits++;
+    addTearDown(() => quitAfterRestore = () => exit(0));
+    inspectForTest = (_) async => const BackupSummary(
+      when: null,
+      version: 4,
+      haloId: 'amber-fox-run',
+      contacts: 5,
+      messages: 9,
+      older: ['Ana', 'Ben', 'Cid', 'Dee'],
+    );
+    restoreForTest = (_, _) async => restored = true;
+    await _openAndRestore(t, wrap: _rooted);
+
+    expect(find.text(l10n.restoreOlderTitle), findsOneWidget);
+    expect(find.text(l10n.restoreOlderMany('Ana', 'Ben', 2)), findsOneWidget);
+    await press(t, find.text(l10n.restoreNotYet));
+    await t.pumpAndSettle();
+    expect(restored, isFalse);
+
+    final again = find.descendant(
+      of: find.byType(ListView),
+      matching: find.text(l10n.restoreRestore),
+    );
+    await press(t, again);
+    await t.pumpAndSettle();
+    await press(t, find.text(l10n.restoreMoveItHere));
+    await t.pumpAndSettle();
+    await press(t, find.text(l10n.restoreRestoreAnyway));
+    await t.pumpAndSettle();
+    expect(restored, isTrue);
+  });
+
+  test('the older line names two and counts the rest', () {
+    expect(olderLine(const []), '');
+    expect(olderLine(const ['Ana']), l10n.restoreOlderOne('Ana'));
+    expect(olderLine(const ['Ana', 'Ben']), l10n.restoreOlderTwo('Ana', 'Ben'));
+    expect(
+      olderLine(const ['Ana', 'Ben', 'Cid']),
+      l10n.restoreOlderMany('Ana', 'Ben', 1),
+    );
+    expect(l10n.restoreOlderMany('Ana', 'Ben', 1), contains('1 other '));
+    expect(l10n.restoreOlderMany('Ana', 'Ben', 3), contains('3 others'));
+  });
+
+  testWidgets('a file with no one on an older Kryfo asks nothing more', (
+    t,
+  ) async {
+    phone(t);
+    FlutterSecureStorage.setMockInitialValues({});
+    await appState.loadMyHandle();
+    var restored = false;
+    var quits = 0;
+    quitAfterRestore = () => quits++;
+    addTearDown(() => quitAfterRestore = () => exit(0));
+    inspectForTest = (_) async => const BackupSummary(
+      when: null,
+      version: 4,
+      haloId: 'amber-fox-run',
+      contacts: 2,
+      messages: 9,
+    );
+    restoreForTest = (_, _) async => restored = true;
+    await _openAndRestore(t, wrap: _rooted);
+    expect(find.text(l10n.restoreOlderTitle), findsNothing);
+    expect(restored, isTrue);
   });
 
   testWidgets('the same identity from an older file keeps its handle and '

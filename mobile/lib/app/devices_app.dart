@@ -39,12 +39,14 @@ Future<void> bootDevices() async {
   if (!linkedDevicesOn) return;
   try {
     final db = await live.open();
+    await readLinkedRole(db);
     final lib = signalSession.lib;
     final path = KryfoSignal.loadedFrom;
     if (path == null) throw StateError('the signal library has no path');
     final ds = DeviceState(DeviceEngine());
     await ds.load(db, await devMineOf(db, lib), shimPath: path);
     _deviceState = ds;
+    _bootDeviceSend(ds);
     if (ds.skipped > 0) dlog('devices: ${ds.skipped} rows did not load');
   } catch (e) {
     dlog('devices: not loaded (${e.runtimeType})');

@@ -2574,6 +2574,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'تصل الرسائل فورًا. لا شيء يمر خارج Tor. يستهلك البطارية أكثر من غيره.';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'تصل الرسائل فورًا على الوضع السريع. يستهلك البطارية أكثر من غيره.';
+
+  @override
   String get gettingMessagesCheckIns => 'تفقّد دوري';
 
   @override
@@ -4403,9 +4407,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pairCodeEnterOne => 'إدخال رمز';
 
   @override
-  String get pairCodeSixDigits => 'ستة أرقام';
-
-  @override
   String get pairCodeLooking => 'جارٍ البحث…';
 
   @override
@@ -4421,37 +4422,87 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذّر الوصول إلى المُرحِّلات. حاول مجددًا بعد قليل.';
 
   @override
-  String get pairCodeFailed => 'لم ينجح ذلك. حاول مجددًا.';
+  String get fastRoomsWaitForTor =>
+      'تمر الغرف ورموز الاقتران دائمًا عبر Tor، حتى على الوضع السريع. تعمل فور اتصال Tor.';
 
   @override
-  String get pairCodeTypeTheSixDigits => 'اكتب الأرقام الستة التي قرأها عليك.';
+  String get pairCodeFailed => 'لم ينجح ذلك. حاول مجددًا.';
 
   @override
   String get pairCodeAddThem => 'أضِفه';
 
   @override
-  String get pairCodeUsedTwice => 'استُخدم هذا الرمز مرتين. اطلب رمزًا جديدًا.';
-
-  @override
   String get pairCodeKeyNumber => 'رقم المفتاح';
 
   @override
-  String get pairCodeNumberMatches =>
-      'تحقّق من تطابق المجموعات الأربع على الهاتفين';
-
-  @override
-  String get pairCodeNumberMatchesDesk =>
-      'تحقّق من تطابق المجموعات الأربع على الجهازين';
-
-  @override
-  String get pairCodeNumberDiffers => 'الرقم مختلف';
-
-  @override
-  String get pairCodeNoNumberThere =>
-      'لا يظهر رقم على شاشته؟ أضِفه، ثم قارن رقم الأمان في المحادثة.';
-
-  @override
   String get pairCodeNotAdded => 'لم تتم الإضافة. اطلب رمزًا جديدًا.';
+
+  @override
+  String get pairCodeEightDigits => 'ثمانية أرقام';
+
+  @override
+  String get pairCodeTypeTheEightDigits =>
+      'اكتب الأرقام الثمانية التي قرأها عليك.';
+
+  @override
+  String get pairCodeOldCode =>
+      'هذا الرمز من إصدار أقدم من Kryfo. يحتاج الهاتفان إلى Kryfo 0.6 أو أحدث.';
+
+  @override
+  String get pairCodeOldCodeDesk =>
+      'هذا الرمز من إصدار أقدم من Kryfo. يحتاج الجهازان إلى Kryfo 0.6 أو أحدث.';
+
+  @override
+  String get pairCodeBothNeed06 => 'يحتاج الهاتفان إلى Kryfo 0.6 أو أحدث.';
+
+  @override
+  String get pairCodeBothNeed06Desk => 'يحتاج الجهازان إلى Kryfo 0.6 أو أحدث.';
+
+  @override
+  String get pairCodeWaitingForThem => 'بانتظار الطرف الآخر…';
+
+  @override
+  String get pairCodeStillWaiting =>
+      'ما زلنا ننتظر. إذا ظهر على شاشته أن رمزًا خاطئًا كُتب، فراجعا الأرقام معًا.';
+
+  @override
+  String get pairCodeUnanswered =>
+      'لم يصل أي رد. راجع الرمز معه واكتبه مرة أخرى.';
+
+  @override
+  String get pairCodeTooManyTries =>
+      'جُرّب هذا الرمز ثلاث مرات. اطلب رمزًا جديدًا.';
+
+  @override
+  String get pairCodeRanOut => 'انتهت مدة هذا الرمز. اطلب رمزًا جديدًا.';
+
+  @override
+  String get pairCodeMatched => 'تطابق الرمز. هل تضيفان بعضكما؟';
+
+  @override
+  String get pairCodeNotThem => 'ليس هو';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut =>
+      'اقرأ ثمانية أرقام بصوت عالٍ فيضيف كلٌّ منكما الآخر. لا حاجة إلى تبادل أي شيء آخر.';
+
+  @override
+  String get pairCodePanelOrMakeACode => 'أو أنشئ رمزًا لتقرأه';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      'يفتح Kryfo، ويضغط «إضافة»، ويختار «رمز الاقتران» ثم يكتب هذه الأرقام الثمانية. أنشئ رمزًا جديدًا للشخص التالي.';
+
+  @override
+  String get pairCodePanelWrongTyped => 'كُتب رمز خاطئ. اقرأه مرة أخرى ببطء.';
+
+  @override
+  String get pairCodePanelThreeWrong =>
+      'كُتب رمز خاطئ ثلاث مرات، فتوقف هذا الرمز. أنشئ رمزًا جديدًا.';
+
+  @override
+  String get pairCodePanelNotAdded =>
+      'لم تتم الإضافة. أنشئ رمزًا جديدًا عندما يكون الطرف الآخر جاهزًا.';
 
   @override
   String get panicSetupThoseWereDifferentFrom => 'لم يتطابقا. من البداية.';
@@ -4991,6 +5042,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'يجب إعداد الإشعارات من جديد على هذا الجهاز.';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'المحادثات التي حذفتها بعد إنشاء هذه النسخة الاحتياطية تعود معها، وقد يرى أصحابها أنك أعدت إعداد Kryfo.';
 
   @override
   String get restoreMoveItHere => 'نقله إلى هنا';
@@ -6858,14 +6913,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pairCodePanelYourInviteIsNot => 'دعوتك ليست جاهزة بعد';
 
   @override
-  String get pairCodePanelReadSixDigitsOut =>
-      'اقرأ ستة أرقام بصوت عالٍ فيستطيع إضافتك. لا حاجة إلى تبادل أي شيء آخر.';
-
-  @override
   String get pairCodePanelWorking => 'جارٍ العمل';
-
-  @override
-  String get pairCodePanelOrMakeASix => 'أو أنشئ رمزًا من ستة أرقام لتقرأه';
 
   @override
   String get pairCodePanelBurned =>
@@ -6882,17 +6930,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get pairCodePanelTheyTapAddChoose =>
       'يضغط «إضافة»، ويختار «رمز»، ثم يكتب هذه الأرقام.';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      'يفتح Kryfo، ويضغط «إضافة»، ويختار «رمز الاقتران» ثم يكتب هذه الأرقام الستة. أنشئ رمزًا جديدًا للشخص التالي.';
-
-  @override
-  String get pairCodePanelYourWords => 'كلماتك الثلاث';
-
-  @override
-  String get pairCodePanelAcceptOnce =>
-      'يصلك طلبه بعد أن يضيفك. اقبله فقط بعد أن يقول إن المجموعات الأربع تطابقت.';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -8694,6 +8731,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'خادم Kryfo يسأل خدمة GIF نيابة عنك. الخدمة لا تراك أبدًا، والخادم لا يحتفظ بأي سجل لما بحثت عنه.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'خادم Kryfo يسأل خدمة GIF نيابة عنك، فلا تراك الخدمة أبدًا. على الوضع السريع يرى خادمنا عنوان IP الخاص بك أثناء البحث، ولا يحتفظ بأي سجل له أو لما بحثت عنه.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'تنتقل صورة GIF مشفّرة، مثل الصورة. هاتف صديقك لا يجلب شيئًا.';
 
@@ -8721,7 +8762,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'يمر البحث عن GIF عبر خادم Kryfo. لا يراك ⁨$brand⁩ أبدًا. هل تريد تشغيله؟';
+    return 'يذهب البحث عن GIF مباشرة إلى خادم Kryfo، الذي يرى عنوان IP الخاص بك على الوضع السريع. لا يراك ⁨$brand⁩ أبدًا. هل تريد تشغيله؟';
   }
 
   @override
@@ -8855,7 +8896,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatBlockScreenshots => 'منع لقطات الشاشة';
 
   @override
-  String get chatShotsWhenTheyUpdate => 'متاح عندما يحدّث تطبيقه';
+  String get chatShotsWhenTheyUpdate =>
+      'متاح عندما يستخدم أحدث إصدار من Kryfo على هاتف';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => 'متاح في Kryfo لأندرويد';
 
   @override
   String get chatShotsBothPhones =>
@@ -8933,7 +8978,15 @@ class AppLocalizationsAr extends AppLocalizations {
       'يمنع Kryfo لقطات الشاشة وتسجيل الشاشة لهذه الغرفة على كل هاتف فيها، ونسخ رسائل الآخرين أو إعادة توجيهها أو حفظها. لا يستطيع منع التطبيقات المسموح لها بقراءة الشاشة، ولا هاتفًا أو تطبيقًا عُدِّل للالتفاف عليه.';
 
   @override
+  String get roomShotsBlockedDesk =>
+      'نسخ رسائل بعضكم وإعادة توجيهها وحفظها متوقف في هذه الغرفة. ويمنع Kryfo لأندرويد أيضًا لقطات الشاشة وتسجيلها.';
+
+  @override
   String get roomShotsAlwaysOn => 'مفعّل دائمًا في الغرفة، على كل هاتف فيها';
+
+  @override
+  String get roomShotsAlwaysOnDesk =>
+      'مفعّل دائمًا في الغرفة، في Kryfo لأندرويد';
 
   @override
   String get settingsPerChat => 'حسب المحادثة';
@@ -9940,21 +9993,33 @@ class AppLocalizationsAr extends AppLocalizations {
       'يمنع لقطات الشاشة وتسجيل الشاشة على كل هاتف في هذه المجموعة، ونسخ رسائل بعضكم أو إعادة توجيهها أو حفظها. لا يستطيع منع التطبيقات المسموح لها بقراءة الشاشة، ولا هاتفًا أو تطبيقًا عُدِّل للالتفاف عليه.';
 
   @override
-  String get groupShotsStartsWhenAll => 'بانتظار أن يحدّث الجميع هنا Kryfo';
+  String get groupShotsBlocksAllDesk =>
+      'يوقف هنا نسخ رسائل بعضكم وإعادة توجيهها وحفظها. ويمنع Kryfo لأندرويد أيضًا لقطات الشاشة وتسجيلها.';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'بانتظار أن يستطيع الجميع هنا منع لقطات الشاشة على أجهزتهم';
 
   @override
   String get groupShotsOnForAll => 'مفعّل للجميع هنا';
+
+  @override
+  String get groupShotsOnForAllDesk => 'مفعّل في Kryfo لأندرويد';
 
   @override
   String get groupShotsOffAdminOnly => 'متوقف. المشرف وحده يستطيع تغيير هذا';
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'بانتظار أن يحدّث الجميع هنا Kryfo. المشرف وحده يستطيع تغيير هذا';
+      'بانتظار أن يستطيع الجميع هنا منع لقطات الشاشة على أجهزتهم. المشرف وحده يستطيع تغيير هذا';
 
   @override
   String get groupShotsOnAdminOnly =>
       'مفعّل للجميع هنا. المشرف وحده يستطيع تغيير هذا';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk =>
+      'مفعّل في Kryfo لأندرويد. المشرف وحده يستطيع تغيير هذا';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -9976,26 +10041,26 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'لم يحدّثوا بعد';
+  String get groupShotsWaitingTitle => 'لم يشملهم بعد';
 
   @override
   String get groupShotsWaitingHint =>
-      'يشمل منع لقطات الشاشة الجميع حين يحدّث هؤلاء Kryfo. المس أحدهم لإزالته من المجموعة.';
+      'يشمل منع لقطات الشاشة الجميع عندما تستطيع أجهزة هؤلاء الأشخاص منع لقطات الشاشة. اضغط على شخص لإزالته من المجموعة.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'عليه تحديث Kryfo، أو لم يتصل منذ ذلك الحين';
+      'لا يستطيع منع لقطات الشاشة على جهازه بعد، أو لم يتصل منذ ذلك الحين';
 
   @override
   String get groupShotsBlockedByYou => 'حظرته';
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'فعّلت منع لقطات الشاشة. سيشمل الجميع حين يحدّث كل من هنا Kryfo.';
+      'فعّلت منع لقطات الشاشة. يشمل الجميع عندما يستطيع كل من هنا منع لقطات الشاشة على جهازه.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return 'فعّل ⁨$name⁩ منع لقطات الشاشة. سيشمل الجميع حين يحدّث كل من هنا Kryfo.';
+    return 'فعّل $name منع لقطات الشاشة. يشمل الجميع عندما يستطيع كل من هنا منع لقطات الشاشة على جهازه.';
   }
 
   @override
@@ -10003,8 +10068,12 @@ class AppLocalizationsAr extends AppLocalizations {
       'منع لقطات الشاشة مفعّل للجميع هنا. نسخ رسائل بعضكم وإعادة توجيهها وحفظها متوقف أيضًا.';
 
   @override
+  String get groupShotsStartedDesk =>
+      'منع لقطات الشاشة مفعّل في Kryfo لأندرويد. نسخ رسائل بعضكم وإعادة توجيهها وحفظها متوقف أيضًا.';
+
+  @override
   String get groupShotsPaused =>
-      'أحد الموجودين هنا لا يستطيع منع لقطات الشاشة بعد. سيشمل الجميع مجددًا حين يحدّث Kryfo.';
+      'أحد الموجودين هنا لا يستطيع منع لقطات الشاشة على جهازه بعد. سيشمل الجميع مجددًا عندما يستطيع ذلك.';
 
   @override
   String get groupShotsCantYet => 'لا يستطيع منع لقطات الشاشة بعد';
@@ -10014,13 +10083,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'لن يشمل منع لقطات الشاشة الجميع هنا حتى يحدّث Kryfo.';
+      'لن يشمل منع لقطات الشاشة الجميع هنا حتى يستطيعوا منعها على أجهزتهم.';
 
   @override
   String get groupShotsLeaveStays => 'يبقى منع لقطات الشاشة كما هو.';
 
   @override
   String get groupShotsBlockedHere => 'يمنع Kryfo لقطات الشاشة في هذه المجموعة';
+
+  @override
+  String get groupShotsBlockedHereDesk =>
+      'النسخ وإعادة التوجيه والحفظ متوقف في هذه المجموعة';
 
   @override
   String get groupShotsMenuNote =>
@@ -10051,13 +10124,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get devicesThisPhoneOnly => 'هذا الهاتف فقط';
 
   @override
+  String get devicesThisPhoneOnlyDesk => 'هذا الحاسوب فقط';
+
+  @override
   String get devicesNameSeparator => '، ';
 
   @override
   String get devicesThisPhone => 'هذا الهاتف';
 
   @override
+  String get devicesThisPhoneDesk => 'هذا الحاسوب';
+
+  @override
   String get devicesOnlyThisPhone => 'هذا الهاتف وحده يربط الأجهزة أو يزيلها';
+
+  @override
+  String get devicesOnlyThisPhoneDesk =>
+      'هذا الحاسوب وحده يربط الأجهزة أو يزيلها';
 
   @override
   String devicesLinkedOn(Object date) {
@@ -10208,7 +10291,150 @@ class AppLocalizationsAr extends AppLocalizations {
       'تبقى المحادثات المخفية والتمويه على هذا الهاتف.';
 
   @override
+  String get devicesHiddenStayDesk =>
+      'تبقى المحادثات المخفية والتمويه على هذا الحاسوب.';
+
+  @override
   String get devicesScanCode => 'قراءة الرمز';
+
+  @override
+  String get devicesLinkReaching => 'جارٍ الوصول إلى الجهاز';
+
+  @override
+  String get devicesLinkReachingLine =>
+      'أبقِ Kryfo مفتوحًا على الجهازين. قد يستغرق هذا دقيقة عبر Tor.';
+
+  @override
+  String get devicesLinkCompare => 'هل تتطابق الأرقام؟';
+
+  @override
+  String get devicesLinkCompareLine =>
+      'يعرض الجهاز الجديد ستة أرقام أيضًا. اربطه فقط إن كانت هي نفسها.';
+
+  @override
+  String get devicesLinkMatch => 'تتطابق';
+
+  @override
+  String get devicesLinkNoMatch => 'لا تتطابق';
+
+  @override
+  String get devicesLinkLinking => 'جارٍ الربط';
+
+  @override
+  String get devicesLinkLinkingLine =>
+      'جارٍ تجهيز الجهاز الجديد. أبقِ الجهازين مفتوحين.';
+
+  @override
+  String get devicesLinkDone => 'رُبط الجهاز';
+
+  @override
+  String get devicesLinkDoneLine =>
+      'يظهر في الأجهزة المرتبطة، حيث يمكنك تغيير اسمه أو إزالته.';
+
+  @override
+  String get devicesLinkUnreached => 'تعذّر الوصول إلى الجهاز';
+
+  @override
+  String get devicesLinkUnreachedLine =>
+      'تأكد أن Kryfo مفتوح على الجهاز الجديد ويعرض رمزه، ثم أعد المحاولة.';
+
+  @override
+  String get devicesLinkStopped => 'لم يُربط شيء';
+
+  @override
+  String get devicesLinkStoppedLine =>
+      'يجب أن تتطابق الأرقام. ابدأ من جديد برمز جديد.';
+
+  @override
+  String get devicesLinkInterruptedLine =>
+      'انقطع الربط. ابدأ من جديد برمز جديد.';
+
+  @override
+  String get scanLinkTitle => 'قراءة رمز الجهاز';
+
+  @override
+  String get scanLinkPoint => 'وجّه الكاميرا إلى الرمز على الجهاز الجديد';
+
+  @override
+  String get scanLinkNotOne => 'هذا ليس رمز ربط';
+
+  @override
+  String get onboardingLinkToMyPhone => 'الربط بهاتفي';
+
+  @override
+  String get joinTitle => 'الربط بهاتفك';
+
+  @override
+  String get joinStep1 => 'افتح Kryfo على هاتفك.';
+
+  @override
+  String get joinStep2 =>
+      'اذهب إلى الإعدادات، ثم الأجهزة المرتبطة، ثم ربط جهاز.';
+
+  @override
+  String get joinStep3 => 'اقرأ هذا الرمز بهاتفك.';
+
+  @override
+  String get joinWaiting => 'في انتظار هاتفك';
+
+  @override
+  String get joinCodeLife => 'يعمل الرمز عشر دقائق.';
+
+  @override
+  String get joinCompareLine =>
+      'يعرض هاتفك ستة أرقام أيضًا. تابع فقط إن كانت هي نفسها.';
+
+  @override
+  String get joinLinking => 'جارٍ الربط بهاتفك';
+
+  @override
+  String get joinLinkingLine => 'أبقِ Kryfo مفتوحًا على هاتفك حتى ينتهي هذا.';
+
+  @override
+  String get joinDone => 'رُبط بهاتفك';
+
+  @override
+  String get joinDoneLine =>
+      'تصل الرسائل الجديدة إلى هذا الجهاز أيضًا. رقم مفتاح حسابك:';
+
+  @override
+  String get joinOpen => 'فتح Kryfo';
+
+  @override
+  String get joinUnreached => 'تعذّر الوصول إلى هاتفك';
+
+  @override
+  String get joinUnreachedLine =>
+      'تأكد أن هاتفك متصل وأن Kryfo مفتوح عليه، ثم جرّب رمزًا جديدًا.';
+
+  @override
+  String get joinNewCode => 'رمز جديد';
+
+  @override
+  String get devicesNewNotice => 'رُبط جهاز جديد';
+
+  @override
+  String devicesNewNoticeLine(Object name, Object date) {
+    return 'رُبط ⁨$name⁩ بحسابك في ⁨$date⁩. افتح الأجهزة المرتبطة لتراه.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'أجهزة جديدة مرتبطة';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return 'رُبطت ⁨$names⁩ بحسابك. افتح الأجهزة المرتبطة لتراها.';
+  }
+
+  @override
+  String get devicesNewNoticeOpen => 'فتح';
+
+  @override
+  String get settingsLinkedToLine =>
+      'مرتبط بهاتفك. تبقى النسخ الاحتياطية والدعوات على الهاتف.';
+
+  @override
+  String get devicesYourPhone => 'هاتفك';
 
   @override
   String get desktopLockTitle => 'Kryfo مقفل';
@@ -10918,4 +11144,45 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get desktopBackupHint => 'تعيد كل شيء إن أُعيد ضبط هذا الحاسوب يومًا.';
+
+  @override
+  String chatHealRestored(Object name) {
+    return 'أعاد ⁨$name⁩ إعداد Kryfo';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return 'بدأ هاتف ⁨$name⁩ جلسة آمنة جديدة';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return 'سبق أن تحققت من ⁨$name⁩. لن يُرسل شيء حتى تتحقق من الرقم أو تتابع المحادثة. رسائله ما زالت تصل.';
+  }
+
+  @override
+  String get chatKeepChatting => 'متابعة المحادثة';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return 'يحتاج ⁨$name⁩ إلى تحديث Kryfo لمتابعة المحادثة.';
+  }
+
+  @override
+  String get restoreOlderTitle => 'ستتوقف بعض المحادثات مؤقتًا';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return 'يستخدم ⁨$name⁩ إصدارًا أقدم من Kryfo. ستتوقف محادثتكما مؤقتًا حتى يحدّثه.';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return 'يستخدم ⁨$first⁩ و⁨$second⁩ إصدارًا أقدم من Kryfo. ستتوقف محادثاتك معهما مؤقتًا حتى يحدّثا التطبيق.';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return 'يستخدم ⁨$first⁩ و⁨$second⁩ و$count آخرون إصدارًا أقدم من Kryfo. ستتوقف محادثاتك معهم مؤقتًا حتى يحدّثوا التطبيق.';
+  }
 }

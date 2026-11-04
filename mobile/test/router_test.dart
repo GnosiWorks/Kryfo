@@ -212,6 +212,8 @@ class _Io implements AppIo {
   @override
   Future<List<String>> sessionAddresses() async => sessions;
   @override
+  Future<String?> sessionXPub(String peer) async => 'x-$peer';
+  @override
   Future<({String haloId, String plain, UnwrappedMessage env})?>
   openFirstContact(String cipher) async => firstContact;
   @override
@@ -686,6 +688,19 @@ class _Mem implements HaloDb {
   Future<bool> messageExists(String msgUid) async =>
       _hit('messageExists', msgUid, msg(msgUid) != null);
   @override
+  Future<bool> messageFrom(String msgUid, String sender, String? group) async =>
+      _hit(
+        'messageFrom',
+        msgUid,
+        msgs.any(
+          (m) =>
+              m['msg_uid'] == msgUid &&
+              (m['direction'] == 'out' ||
+                  (m['peer_id'] == sender &&
+                      (m['group_id'] ?? '') == (group ?? ''))),
+        ),
+      );
+  @override
   Future<bool> goneFrom(String peer, String msgUid) async => false;
   @override
   Future<(String, String?)?> chatOf(String msgUid) async {
@@ -708,7 +723,11 @@ class _Mem implements HaloDb {
   }
 
   @override
-  Future<void> editMessage(String msgUid, String newText) async {
+  Future<void> editMessage(
+    String msgUid,
+    String newText, {
+    String? from,
+  }) async {
     _hit('editMessage', msgUid, null);
     final m = msg(msgUid);
     if (m == null) return;
@@ -717,7 +736,7 @@ class _Mem implements HaloDb {
   }
 
   @override
-  Future<void> deleteMessage(String msgUid) async {
+  Future<void> deleteMessage(String msgUid, {String? from}) async {
     _hit('deleteMessage', msgUid, null);
     msgs.removeWhere((m) => m['msg_uid'] == msgUid);
     reactions.remove(msgUid);
@@ -1852,7 +1871,7 @@ void main() {
       expect(w.vault.msg('b'), isNull);
       final p = w.vault.msg('p')!;
       final path = p['media_path'] as String;
-      expect(path, contains('media_v'));
+      expect(path, contains('media_k3'));
       expect(
         File(path).readAsBytesSync(),
         List<int>.generate(20, (i) => 200 - i),

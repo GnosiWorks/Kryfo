@@ -174,12 +174,12 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 		t.Fatal(err)
 	}
 	roomSent := gw.Tags.Find("p")[1]
-	_, pairPk, err := pairCodeKeys("482913")
+	_, pairPk, err := pairBoxKeys("48", 2950000)
 	if err != nil {
 		t.Fatal(err)
 	}
 	qctx, qcancel := context.WithTimeout(ctx, 2*time.Second)
-	pairCodeQuery(qctx, pairPk)
+	pairCodeQuery(qctx, pairLane(pairPk), []string{pairPk})
 	qcancel()
 	waitFor(t, "both sends on both relays", 15*time.Second, func() bool {
 		for _, r := range []*relayStandIn{a, b} {
@@ -553,8 +553,8 @@ func TestShortPongWaitClosesTheSocket(t *testing.T) {
 	}
 }
 
-// balanced and fast have no tor: one client for every lane, as before, and
-// nothing goes near the socks port even when one is there.
+// balanced and fast skip tor: one client for every lane, as before, and
+// nothing but a burner room's addresses goes near the socks port
 func TestDirectModesUnchanged(t *testing.T) {
 	for _, m := range []string{modeBalanced, modeFast} {
 		t.Run(m, func(t *testing.T) {
@@ -588,8 +588,13 @@ func TestDirectModesUnchanged(t *testing.T) {
 				}
 				return n == l.subs()
 			})
-			if n := socks.count(); n != 0 {
-				t.Fatalf("%d streams went through socks in %s mode", n, m)
+			// only the room's two addresses go through tor (laneKeepsTor)
+			want := 0
+			for _, r := range l.rooms {
+				want += len(r)
+			}
+			if n := socks.count(); n != want {
+				t.Fatalf("%d streams went through socks in %s mode, want the room's %d", n, m, want)
 			}
 		})
 	}

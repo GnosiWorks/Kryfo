@@ -2513,6 +2513,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Mesajlar anında gelir. Hiçbir şey Tor’un dışına çıkmaz. En çok pili bu harcar.';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'Hızlı’da mesajlar anında gelir. En çok pili bu harcar.';
+
+  @override
   String get gettingMessagesCheckIns => 'Kontroller';
 
   @override
@@ -4316,9 +4320,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pairCodeEnterOne => 'Kod gir';
 
   @override
-  String get pairCodeSixDigits => 'Altı rakam';
-
-  @override
   String get pairCodeLooking => 'Aranıyor…';
 
   @override
@@ -4334,37 +4335,89 @@ class AppLocalizationsTr extends AppLocalizations {
       'Aktarıcılara ulaşılamadı. Birazdan yeniden dene.';
 
   @override
-  String get pairCodeFailed => 'Olmadı. Yeniden dene.';
+  String get fastRoomsWaitForTor =>
+      'Odalar ve eşleştirme kodları Hızlı’da da her zaman Tor’dan geçer. Tor bağlanır bağlanmaz çalışırlar.';
 
   @override
-  String get pairCodeTypeTheSixDigits => 'Sana okuduğu altı rakamı yaz.';
+  String get pairCodeFailed => 'Olmadı. Yeniden dene.';
 
   @override
   String get pairCodeAddThem => 'Ekle';
 
   @override
-  String get pairCodeUsedTwice => 'Bu kod iki kez kullanıldı. Yenisini iste.';
-
-  @override
   String get pairCodeKeyNumber => 'Anahtar numarası';
 
   @override
-  String get pairCodeNumberMatches =>
-      'Dört grubun da iki telefonda aynı olduğunu kontrol et';
-
-  @override
-  String get pairCodeNumberMatchesDesk =>
-      'Dört grubun da iki cihazda aynı olduğunu kontrol et';
-
-  @override
-  String get pairCodeNumberDiffers => 'Numara farklı';
-
-  @override
-  String get pairCodeNoNumberThere =>
-      'Ekranında numara yok mu? Ekle, sonra sohbette güvenlik numarasını karşılaştır.';
-
-  @override
   String get pairCodeNotAdded => 'Eklenmedi. Yeni bir kod iste.';
+
+  @override
+  String get pairCodeEightDigits => 'Sekiz rakam';
+
+  @override
+  String get pairCodeTypeTheEightDigits => 'Sana okuduğu sekiz rakamı yaz.';
+
+  @override
+  String get pairCodeOldCode =>
+      'Bu kod daha eski bir Kryfo’dan. İki telefonda da Kryfo 0.6 veya daha yenisi gerekir.';
+
+  @override
+  String get pairCodeOldCodeDesk =>
+      'Bu kod daha eski bir Kryfo’dan. İki cihazda da Kryfo 0.6 veya daha yenisi gerekir.';
+
+  @override
+  String get pairCodeBothNeed06 =>
+      'İki telefonda da Kryfo 0.6 veya daha yenisi gerekir.';
+
+  @override
+  String get pairCodeBothNeed06Desk =>
+      'İki cihazda da Kryfo 0.6 veya daha yenisi gerekir.';
+
+  @override
+  String get pairCodeWaitingForThem => 'Karşı taraf bekleniyor…';
+
+  @override
+  String get pairCodeStillWaiting =>
+      'Hâlâ bekleniyor. Karşı tarafın ekranı yanlış kod yazıldığını söylüyorsa rakamları birlikte kontrol edin.';
+
+  @override
+  String get pairCodeUnanswered =>
+      'Yanıt gelmedi. Kodu karşı tarafla kontrol et ve yeniden yaz.';
+
+  @override
+  String get pairCodeTooManyTries =>
+      'Bu kod üç kez denendi. Yeni bir kod iste.';
+
+  @override
+  String get pairCodeRanOut => 'O kodun süresi doldu. Yeni bir kod iste.';
+
+  @override
+  String get pairCodeMatched => 'Kod eşleşti. Birbirinizi ekleyin mi?';
+
+  @override
+  String get pairCodeNotThem => 'Bu o değil';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut =>
+      'Sekiz rakamı yüksek sesle oku, birbirinizi ekleyin. Başka hiçbir şeyin el değiştirmesi gerekmez.';
+
+  @override
+  String get pairCodePanelOrMakeACode => 'Ya da okumak için bir kod oluştur';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      'Karşındaki Kryfo’yu açar, ekleme ekranında eşleştirme kodunu seçer ve bu sekiz rakamı yazar. Sonraki kişi için yenisini oluştur.';
+
+  @override
+  String get pairCodePanelWrongTyped =>
+      'Yanlış bir kod yazıldı. Yavaşça yeniden oku.';
+
+  @override
+  String get pairCodePanelThreeWrong =>
+      'Üç kez yanlış kod yazıldı, bu yüzden bu kod durdu. Yenisini oluştur.';
+
+  @override
+  String get pairCodePanelNotAdded =>
+      'Eklenmedi. Karşı taraf hazır olduğunda yeni bir kod oluştur.';
 
   @override
   String get panicSetupThoseWereDifferentFrom =>
@@ -4915,6 +4968,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'Bildirimlerin bu cihazda yeniden ayarlanması gerekir.';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'Bu yedek oluşturulduktan sonra sildiğin sohbetler onunla geri gelir ve o kişiler Kryfo’yu yeniden kurduğunu görebilir.';
 
   @override
   String get restoreMoveItHere => 'Buraya taşı';
@@ -6756,15 +6813,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pairCodePanelYourInviteIsNot => 'Davetin henüz hazır değil';
 
   @override
-  String get pairCodePanelReadSixDigitsOut =>
-      'Altı rakamı yüksek sesle oku, seni ekleyebilsin. Başka hiçbir şeyin el değiştirmesi gerekmez.';
-
-  @override
   String get pairCodePanelWorking => 'Hazırlanıyor';
-
-  @override
-  String get pairCodePanelOrMakeASix =>
-      'Ya da okumak için altı haneli bir kod oluştur';
 
   @override
   String get pairCodePanelBurned =>
@@ -6781,17 +6830,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get pairCodePanelTheyTapAddChoose =>
       'Karşındaki ekleme ekranını açar, kodu seçer ve bunları yazar.';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      'Karşındaki Kryfo’yu açar, ekleme ekranında eşleştirme kodunu seçer ve bu altı rakamı yazar. Sonraki kişi için yenisini oluştur.';
-
-  @override
-  String get pairCodePanelYourWords => 'Üç kelimen';
-
-  @override
-  String get pairCodePanelAcceptOnce =>
-      'Seni eklediğinde isteği gelir. Yalnızca dört grubun da aynı olduğunu söylediğinde kabul et.';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -8592,6 +8630,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kryfo’nun sunucusu GIF servisine senin yerine sorar. Servis seni asla görmez, sunucu da ne aradığının kaydını tutmaz.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Kryfo’nun sunucusu GIF servisine senin yerine sorar, böylece servis seni asla görmez. Hızlı’da sunucumuz arama sırasında IP adresini görür, ne onun ne de aradıklarının kaydını tutar.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'GIF, bir fotoğraf gibi şifreli gider. Arkadaşının telefonu hiçbir şey indirmez.';
 
@@ -8619,7 +8661,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'GIF arama, Kryfo’nun sunucusundan geçer. $brand seni asla görmez. Açılsın mı?';
+    return 'GIF arama doğrudan Kryfo’nun sunucusuna gider, sunucu Hızlı’da IP adresini görür. $brand seni asla görmez. Açılsın mı?';
   }
 
   @override
@@ -8754,7 +8796,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatShotsWhenTheyUpdate =>
-      'Karşı taraf güncelleyince kullanılabilir';
+      'Karşı taraf telefonda Kryfo\'nun son sürümünü kullanınca kullanılabilir';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk =>
+      'Android için Kryfo\'da kullanılabilir';
 
   @override
   String get chatShotsBothPhones =>
@@ -8829,8 +8875,16 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kryfo bu odanın ekran görüntüsünü ve ekran kaydını içindeki her telefonda engeller; başkalarının mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi de. Ekranı okumasına izin verilen uygulamaları ya da bunu aşmak için değiştirilmiş bir telefonu veya uygulamayı durduramaz.';
 
   @override
+  String get roomShotsBlockedDesk =>
+      'Bu odada birbirinizin mesajlarını kopyalamak, iletmek ve kaydetmek kapalı. Android için Kryfo ekran görüntüsünü ve ekran kaydını da engeller.';
+
+  @override
   String get roomShotsAlwaysOn =>
       'Odada her zaman açık, içindeki her telefonda';
+
+  @override
+  String get roomShotsAlwaysOnDesk =>
+      'Odada her zaman açık, Android için Kryfo\'da';
 
   @override
   String get settingsPerChat => 'Sohbete göre';
@@ -9833,11 +9887,18 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu gruptaki her telefonda ekran görüntüsünü ve ekran kaydını engeller; birbirinizin mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi de. Ekranı okumasına izin verilen uygulamaları ya da bunu aşmak için değiştirilmiş bir telefonu veya uygulamayı durduramaz.';
 
   @override
+  String get groupShotsBlocksAllDesk =>
+      'Burada birbirinizin mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi kapatır. Android için Kryfo ekran görüntüsünü ve ekran kaydını da engeller.';
+
+  @override
   String get groupShotsStartsWhenAll =>
-      'Buradaki herkesin Kryfo\'yu güncellemesi bekleniyor';
+      'Buradaki herkesin cihazında ekran görüntüsünü engelleyebilmesi bekleniyor';
 
   @override
   String get groupShotsOnForAll => 'Buradaki herkes için açık';
+
+  @override
+  String get groupShotsOnForAllDesk => 'Android için Kryfo\'da açık';
 
   @override
   String get groupShotsOffAdminOnly =>
@@ -9845,11 +9906,15 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'Buradaki herkesin Kryfo\'yu güncellemesi bekleniyor. Bunu yalnızca yönetici değiştirebilir';
+      'Buradaki herkesin cihazında ekran görüntüsünü engelleyebilmesi bekleniyor. Bunu yalnızca yönetici değiştirebilir';
 
   @override
   String get groupShotsOnAdminOnly =>
       'Buradaki herkes için açık. Bunu yalnızca yönetici değiştirebilir';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk =>
+      'Android için Kryfo\'da açık. Bunu yalnızca yönetici değiştirebilir';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -9867,26 +9932,26 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'Henüz güncellemeyenler';
+  String get groupShotsWaitingTitle => 'Henüz kapsanmıyor';
 
   @override
   String get groupShotsWaitingHint =>
-      'Bu kişiler Kryfo\'yu güncellediğinde ekran görüntüsü engeli herkesi kapsar. Gruptan çıkarmak için birine dokun.';
+      'Bu kişilerin cihazları ekran görüntüsünü engelleyebildiğinde ekran görüntüsü engeli herkesi kapsar. Gruptan çıkarmak için birine dokun.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'Kryfo\'yu güncellemesi gerekiyor ya da o zamandan beri çevrim dışı';
+      'Cihazında henüz ekran görüntüsünü engelleyemiyor veya o zamandan beri çevrim içi olmadı';
 
   @override
   String get groupShotsBlockedByYou => 'Senin engellediğin';
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'Ekran görüntüsü engelini açtın. Buradaki herkes Kryfo\'yu güncellediğinde herkesi kapsar.';
+      'Ekran görüntüsü engelini açtın. Buradaki herkes cihazında ekran görüntüsünü engelleyebildiğinde herkesi kapsar.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name ekran görüntüsü engelini açtı. Buradaki herkes Kryfo\'yu güncellediğinde herkesi kapsar.';
+    return '$name ekran görüntüsü engelini açtı. Buradaki herkes cihazında ekran görüntüsünü engelleyebildiğinde herkesi kapsar.';
   }
 
   @override
@@ -9894,8 +9959,12 @@ class AppLocalizationsTr extends AppLocalizations {
       'Ekran görüntüsü engeli buradaki herkes için açık. Birbirinizin mesajlarını kopyalamak, iletmek ve kaydetmek de kapalı.';
 
   @override
+  String get groupShotsStartedDesk =>
+      'Ekran görüntüsü engeli Android için Kryfo\'da açık. Birbirinizin mesajlarını kopyalamak, iletmek ve kaydetmek de kapalı.';
+
+  @override
   String get groupShotsPaused =>
-      'Buradaki biri henüz ekran görüntüsünü engelleyemiyor. Kryfo\'yu güncellediğinde yeniden herkesi kapsar.';
+      'Buradaki biri cihazında henüz ekran görüntüsünü engelleyemiyor. Engelleyebildiğinde yine herkesi kapsar.';
 
   @override
   String get groupShotsCantYet => 'Henüz ekran görüntüsünü engelleyemiyor';
@@ -9905,7 +9974,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'Bu kişi Kryfo\'yu güncelleyene kadar ekran görüntüsü engeli buradaki herkesi kapsamaz.';
+      'Ekran görüntüsü engeli, bu kişiler cihazlarında engelleyebilene kadar buradaki herkesi kapsamaz.';
 
   @override
   String get groupShotsLeaveStays =>
@@ -9914,6 +9983,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get groupShotsBlockedHere =>
       'Kryfo bu grupta ekran görüntüsünü engeller';
+
+  @override
+  String get groupShotsBlockedHereDesk =>
+      'Bu grupta kopyalamak, iletmek ve kaydetmek kapalı';
 
   @override
   String get groupShotsMenuNote =>
@@ -9945,14 +10018,24 @@ class AppLocalizationsTr extends AppLocalizations {
   String get devicesThisPhoneOnly => 'Yalnızca bu telefon';
 
   @override
+  String get devicesThisPhoneOnlyDesk => 'Yalnızca bu bilgisayar';
+
+  @override
   String get devicesNameSeparator => ', ';
 
   @override
   String get devicesThisPhone => 'Bu telefon';
 
   @override
+  String get devicesThisPhoneDesk => 'Bu bilgisayar';
+
+  @override
   String get devicesOnlyThisPhone =>
       'Cihaz bağlayıp kaldırabilen tek yer bu telefon';
+
+  @override
+  String get devicesOnlyThisPhoneDesk =>
+      'Cihaz bağlayıp kaldırabilen tek yer bu bilgisayar';
 
   @override
   String devicesLinkedOn(Object date) {
@@ -10103,7 +10186,151 @@ class AppLocalizationsTr extends AppLocalizations {
   String get devicesHiddenStay => 'Gizli sohbetler ve yem bu telefonda kalır.';
 
   @override
+  String get devicesHiddenStayDesk =>
+      'Gizli sohbetler ve yem bu bilgisayarda kalır.';
+
+  @override
   String get devicesScanCode => 'Kodu tara';
+
+  @override
+  String get devicesLinkReaching => 'Cihaza ulaşılıyor';
+
+  @override
+  String get devicesLinkReachingLine =>
+      'Kryfo’yu ikisinde de açık tut. Tor üzerinden bu bir dakika sürebilir.';
+
+  @override
+  String get devicesLinkCompare => 'Rakamlar aynı mı?';
+
+  @override
+  String get devicesLinkCompareLine =>
+      'Yeni cihaz da altı rakam gösteriyor. Yalnızca aynıysa bağla.';
+
+  @override
+  String get devicesLinkMatch => 'Aynı';
+
+  @override
+  String get devicesLinkNoMatch => 'Aynı değil';
+
+  @override
+  String get devicesLinkLinking => 'Bağlanıyor';
+
+  @override
+  String get devicesLinkLinkingLine =>
+      'Yeni cihaz hazırlanıyor. İkisini de açık tut.';
+
+  @override
+  String get devicesLinkDone => 'Cihaz bağlandı';
+
+  @override
+  String get devicesLinkDoneLine =>
+      'Bağlı cihazlar’da görünüyor. Oradan adını değiştirebilir ya da kaldırabilirsin.';
+
+  @override
+  String get devicesLinkUnreached => 'Cihaza ulaşılamadı';
+
+  @override
+  String get devicesLinkUnreachedLine =>
+      'Kryfo’nun yeni cihazda açık olduğunu ve kodunu gösterdiğini kontrol et, sonra tekrar dene.';
+
+  @override
+  String get devicesLinkStopped => 'Hiçbir şey bağlanmadı';
+
+  @override
+  String get devicesLinkStoppedLine =>
+      'Rakamlar aynı olmalı. Yeni bir kodla baştan başla.';
+
+  @override
+  String get devicesLinkInterruptedLine =>
+      'Bağlama yarıda kesildi. Yeni bir kodla baştan başla.';
+
+  @override
+  String get scanLinkTitle => 'Cihazın kodunu tara';
+
+  @override
+  String get scanLinkPoint => 'Yeni cihazdaki koda doğrult';
+
+  @override
+  String get scanLinkNotOne => 'Bu bir bağlama kodu değil';
+
+  @override
+  String get onboardingLinkToMyPhone => 'Telefonuma bağla';
+
+  @override
+  String get joinTitle => 'Telefonuna bağla';
+
+  @override
+  String get joinStep1 => 'Telefonunda Kryfo’yu aç.';
+
+  @override
+  String get joinStep2 =>
+      'Ayarlar’a, sonra Bağlı cihazlar’a, sonra Cihaz bağla’ya git.';
+
+  @override
+  String get joinStep3 => 'Bu kodu telefonunla tara.';
+
+  @override
+  String get joinWaiting => 'Telefonun bekleniyor';
+
+  @override
+  String get joinCodeLife => 'Kod on dakika geçerli.';
+
+  @override
+  String get joinCompareLine =>
+      'Telefonun da altı rakam gösteriyor. Yalnızca aynıysa devam et.';
+
+  @override
+  String get joinLinking => 'Telefonuna bağlanıyor';
+
+  @override
+  String get joinLinkingLine =>
+      'Bu bitene kadar telefonunda Kryfo’yu açık tut.';
+
+  @override
+  String get joinDone => 'Telefonuna bağlandı';
+
+  @override
+  String get joinDoneLine =>
+      'Yeni mesajlar artık bu cihaza da geliyor. Hesabının anahtar numarası:';
+
+  @override
+  String get joinOpen => 'Kryfo’yu aç';
+
+  @override
+  String get joinUnreached => 'Telefonuna ulaşılamadı';
+
+  @override
+  String get joinUnreachedLine =>
+      'Telefonunun çevrimiçi olduğunu ve Kryfo’nun açık olduğunu kontrol et, sonra yeni bir kod dene.';
+
+  @override
+  String get joinNewCode => 'Yeni kod';
+
+  @override
+  String get devicesNewNotice => 'Yeni cihaz bağlandı';
+
+  @override
+  String devicesNewNoticeLine(Object name, Object date) {
+    return '$name $date tarihinde hesabına bağlandı. Görmek için Bağlı cihazlar’ı aç.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'Yeni cihazlar bağlandı';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names hesabına bağlandı. Görmek için Bağlı cihazlar’ı aç.';
+  }
+
+  @override
+  String get devicesNewNoticeOpen => 'Aç';
+
+  @override
+  String get settingsLinkedToLine =>
+      'Telefonuna bağlı. Yedekler ve davetler telefonda kalır.';
+
+  @override
+  String get devicesYourPhone => 'Telefonun';
 
   @override
   String get desktopLockTitle => 'Kryfo kilitli';
@@ -10805,4 +11032,45 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get desktopBackupHint =>
       'Bu bilgisayar bir gün sıfırlanırsa her şeyi geri getirir.';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name Kryfo’yu yeniden kurdu';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return '$name kişisinin telefonu yeni bir güvenli oturum başlattı';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return '$name kişisini daha önce doğruladın. Numarayı kontrol edene ya da sohbete devam edene kadar hiçbir şey gönderilmez. Onun mesajları gelmeye devam eder.';
+  }
+
+  @override
+  String get chatKeepChatting => 'Sohbete devam et';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return 'Sohbete devam etmek için $name kişisinin Kryfo’yu güncellemesi gerekiyor.';
+  }
+
+  @override
+  String get restoreOlderTitle => 'Bazı sohbetler duraklayacak';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '$name Kryfo’nun eski bir sürümünü kullanıyor. Güncelleyene kadar sohbetiniz duraklar.';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '$first ve $second Kryfo’nun eski bir sürümünü kullanıyor. Güncelleyene kadar onlarla sohbetlerin duraklar.';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return '$first, $second ve $count kişi daha Kryfo’nun eski bir sürümünü kullanıyor. Güncelleyene kadar onlarla sohbetlerin duraklar.';
+  }
 }

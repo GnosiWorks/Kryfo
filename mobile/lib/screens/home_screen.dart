@@ -72,6 +72,9 @@ import 'search_screen.dart';
 import 'group_info_screen.dart' show endedLine, leaveLine;
 import 'support_screen.dart' show SupportPin, supportRoute;
 import '../widgets/update_card.dart' show UpdateHint;
+import '../devices/linked_switch.dart' show kLinkedDevicesOn;
+import '../devices/own_device_store.dart' show linkNotices;
+import 'linked_devices_screen.dart' show LinkedDevicesScreen, linkNoticeWords;
 
 bool _miuiPromptChecked = false;
 
@@ -501,6 +504,7 @@ class _ChatsTab extends StatelessWidget {
           const UpdateHint(),
           const _ShotsCard(),
           const _ComputerBackupCard(),
+          if (kLinkedDevicesOn) const _LinkNoticeCard(),
           StaggerIn(
             index: 1,
             child: _QuickTiles(
@@ -915,6 +919,52 @@ class _HomeCard extends StatelessWidget {
   }
 }
 
+// a device was linked to the account: said on every own device, and it
+// stays until the person opens the devices page. never in the decoy
+class _LinkNoticeCard extends StatelessWidget {
+  const _LinkNoticeCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: Listenable.merge([linkNotices, lockState]),
+      builder: (context, _) {
+        final all = linkNotices.value;
+        final show = all.isNotEmpty && !lockState.inDecoy && !sessionQuiet;
+        final words = all.isEmpty
+            ? (title: l10n.devicesNewNotice, line: '')
+            : linkNoticeWords([
+                for (final n in all) (name: n.name, at: n.at),
+              ], homeClock());
+        return _HomeCard(
+          show: show,
+          id: 'link-notice',
+          tint: HaloColors.amber,
+          wash: true,
+          title: words.title,
+          line: words.line,
+          lineColor: HaloColors.text,
+          actions: [
+            CardAction(
+              label: l10n.devicesNewNoticeOpen,
+              onTap: () async {
+                HapticFeedback.selectionClick();
+                final src = await ownDevicesSource();
+                if (!context.mounted) return;
+                await Navigator.of(
+                  context,
+                ).push(haloRoute(LinkedDevicesScreen(source: src)));
+              },
+              fill: HaloColors.amber,
+              ink: HaloColors.onAmber,
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 // android is not letting kryfo put a notification up, so nothing arrives
 // while the app is closed. the android 13 permission dialog does not come
 // back once the answer is final, so the only way out is the page this opens.
@@ -1288,7 +1338,7 @@ class _ShotsCardState extends State<_ShotsCard> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
-                l10n.chatShotsWhenTheyUpdate,
+                l10n.chatShotsWhenTheyUpdateShown,
                 style: HaloType.sans(size: 12.5, color: HaloColors.text2),
               ),
             ),
