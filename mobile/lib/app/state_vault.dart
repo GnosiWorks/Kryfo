@@ -409,6 +409,12 @@ extension AppStateVault on AppState {
       final chats = _refs(people, groups);
       if (chats.isEmpty) return 0;
       final n = await _move(v, chats, (m) => _unhide(m, v, chats), out: true);
+      // linked devices: back on the everyday side, lists go both ways again
+      if (linkedDevicesOn && AppState._everyday(v)) {
+        for (final c in chats) {
+          if (!c.group) unawaited(_devicesShown(c.id));
+        }
+      }
       await refreshContacts();
       await refreshGroups();
       return n;
@@ -624,6 +630,9 @@ extension AppStateVault on AppState {
       if (isDevChat(c.id) || !await m.hideable(c)) continue;
       // its unsent words go, before its rows are copied over
       await dropDraft(primary, c.id, group: c.group);
+      // linked devices: nothing of theirs stays on the everyday side, their
+      // lists, device sessions and pairs neither (read before the row goes)
+      if (everyday && !c.group) await _devForget(c.id, sessions: true);
       marks = marks.hiding(c);
       await m.copyIn(c, marks);
       if (everyday) {

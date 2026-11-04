@@ -386,12 +386,17 @@ Future<void> _devOpened(
     if (ikey == null) return;
     final info = ss.lib.sessionInfo(record);
     final ident = row.first['ident'] as int? ?? kMainIdent;
+    final sr = SessionRemote.opened(remote);
+    _phoneRemotes.remove(peer);
     await ds.session(db, 'opened', {
       'ident': ident,
       'identity': ikey,
       'device': 1,
       'pq': info.version >= 4 && info.pq,
-    }, SessionRemote.opened(remote));
+    }, sr);
+    // the frame's device words are taken under this remote once it is
+    // filed (devices_receive_app.dart), and only after it was admitted
+    _phoneRemotes[peer] = (identity: ikey, remote: sr);
     // they answered: a list that went to them before is taken
     await _deviceSend?.heard(
       ident,
@@ -403,6 +408,63 @@ Future<void> _devOpened(
   } catch (e) {
     dlog('devices: an open not noted (${e.runtimeType})');
   }
+}
+
+// the remote the last admitted frame from each contact's phone opened under,
+// for its device words (_devPhoneFrames). a frame not admitted takes it out
+final _phoneRemotes = <String, ({String identity, SessionRemote remote})>{};
+
+/// the remote [peer]'s phone's last frame opened under, when it was
+/// admitted and is still [identity]'s
+SessionRemote? _phoneRemoteOf(String peer, String identity) {
+  final r = _phoneRemotes[peer];
+  return r != null && r.identity == identity ? r.remote : null;
+}
+
+/// a copy from [identity]'s [device] (a contact's, or one of mine) opened
+/// on its device session at [addr] and admitted by the engine before it is
+/// kept: Admit, or AdmitOpener on the opener's registration id, under the
+/// remote libsignal answered. a refused copy throws DevRefused, its
+/// plaintext wiped and nothing of it stored
+Future<({Uint8List plain, SessionRemote remote})> deviceOpenAt(
+  DatabaseExecutor db,
+  DeviceSessions ds, {
+  required int ident,
+  required String identity,
+  required String addr,
+  required int device,
+  required int type,
+  required Uint8List body,
+  required Uint8List pin,
+  required int reg,
+}) async {
+  final state = _deviceState;
+  if (state == null || !linkedDevicesOn) {
+    throw const DevRefused('off', {});
+  }
+  SessionRemote? remote;
+  final plain = await ds.open(
+    addr,
+    device,
+    type,
+    body,
+    pin,
+    reg: reg,
+    admit: (r, record, {required opener, required reg}) async {
+      final sr = SessionRemote.opened(r);
+      final info = ds.s.lib.sessionInfo(record);
+      await state.session(db, 'opened', {
+        'ident': ident,
+        'identity': identity,
+        'device': device,
+        'opener': opener,
+        'reg': reg,
+        'pq': info.version >= 4 && info.pq,
+      }, sr);
+      remote = sr;
+    },
+  );
+  return (plain: plain, remote: remote!);
 }
 
 // wires a decrypt found opened before: a copy is no sign the sessions went

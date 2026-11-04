@@ -238,6 +238,19 @@ Future<void> deviceTables(
       PRIMARY KEY (ident, device)
     )
   ''');
+  // what the receiving side did once per contact (device_receive.dart): a
+  // bundle ask answered (a day per device), a held list handed back (once
+  // per version), a list asked for, and the alarms step 8 shows
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS dev_marks (
+      ident INTEGER NOT NULL,
+      peer TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      key TEXT NOT NULL,
+      at INTEGER NOT NULL,
+      PRIMARY KEY (ident, peer, kind, key)
+    )
+  ''');
 }
 
 const _devOutColumns = [
@@ -269,6 +282,7 @@ const _allTables = [
   'dev_out',
   'dev_openers',
   'dev_asks',
+  'dev_marks',
 ];
 
 /// at every open: [deviceTables] only when one is missing, so a file that

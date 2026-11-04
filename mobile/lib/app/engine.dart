@@ -718,6 +718,17 @@ class HaloEngine {
       .lookupFunction<IdentFn, IdentFnDart>('HaloDevicePairsOn');
   String devicePairsOn(bool on) => engineTake(_devicePairsOn(on ? 1 : 0));
 
+  // listening on a device pair (device_receive.dart): [arg] "x/their/my"
+  // for its opener address, "x/their/my.seed" for the seeded pair
+  void deviceListenBg(int ident, String arg) =>
+      _background(_subscribeOnIsolate(ident, arg), 'device listen');
+
+  // no more listening on a device pair, by its tag; its files go
+  void deviceUnlistenBg(int ident, String arg) => _background(
+    _identFfiOnIsolate('HaloNostrUnsubscribe', ident, [arg]),
+    'device unlisten',
+  );
+
   // a copy to a device pair, [arg] "x/their/my.seed" (device_send.dart):
   // on the seeded pair, or with [opener] to the receiver's opener address.
   // a device pair is never the dev chat's, so a pinned key is refused

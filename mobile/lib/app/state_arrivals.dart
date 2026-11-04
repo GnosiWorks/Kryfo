@@ -411,6 +411,17 @@ extension AppStateArrivals on AppState {
       }
       return to;
     }
+    // linked devices: a contact's phone's lists, bundles and asks, on the
+    // everyday side only. a frame of nothing else is never shown
+    if (linkedDevicesOn &&
+        to == RouteTo.everyday &&
+        into == null &&
+        identical(db, live) &&
+        env.groupId == null &&
+        !fromBackPair &&
+        await _devPhoneFrames(senderHaloId, wire)) {
+      return RouteTo.dropped;
+    }
     await _takeShots(senderHaloId, env, db);
     final capsMoved = await _takeCaps(senderHaloId, env, db);
     await _memberCaps(senderHaloId, env, db, oneToOneMoved: capsMoved);
