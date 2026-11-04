@@ -1695,8 +1695,12 @@ void main() {
       await w.open();
       await copySensitive('meet at the bridge', kept: true);
       await w.lockUp();
-      expect(clears.single.method, 'clearClip');
-      expect(clears.single.arguments, containsPair('any', true));
+      // the lock, and the hidden chats shutting with it
+      expect(clears, isNotEmpty);
+      for (final c in clears) {
+        expect(c.method, 'clearClip');
+        expect(c.arguments, containsPair('any', true));
+      }
       expect(ourClipForTest.value, isNull);
     });
 
