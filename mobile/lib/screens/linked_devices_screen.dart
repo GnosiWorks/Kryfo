@@ -2,6 +2,8 @@
 // your linked devices: this phone, the computers linked to it, linking one
 // more and removing them. only you see this page; your contacts' apps show
 // nothing about your devices
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -22,6 +24,8 @@ import '../widgets/sheet_handle.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
 import '../widgets/unfold.dart';
+import 'link_screens.dart';
+import 'scan_screen.dart';
 
 /// the settings row's value: the other devices by name, never a count
 String devicesRowValue(List<OwnDevice> all) {
@@ -30,8 +34,32 @@ String devicesRowValue(List<OwnDevice> all) {
       if (!d.thisDevice) d.name,
   ];
   return others.isEmpty
-      ? l10n.devicesThisPhoneOnly
+      ? l10n.devicesThisPhoneOnlyShown
       : others.join(l10n.devicesNameSeparator);
+}
+
+/// the home card's title and line for the notices not opened yet: one
+/// device by its name and day, more by their names, oldest first
+({String title, String line}) linkNoticeWords(
+  List<({String name, DateTime at})> all,
+  DateTime now,
+) {
+  if (all.length == 1) {
+    final n = all.single;
+    return (
+      title: l10n.devicesNewNotice,
+      line: l10n.devicesNewNoticeLine(
+        n.name,
+        dayMonthMaybeYear(n.at, now: now),
+      ),
+    );
+  }
+  return (
+    title: l10n.devicesNewNoticeMany,
+    line: l10n.devicesNewNoticeManyLine(
+      [for (final n in all) n.name].join(l10n.devicesNameSeparator),
+    ),
+  );
 }
 
 String deviceUseLine(DeviceUse u) => switch (u) {
@@ -41,9 +69,12 @@ String deviceUseLine(DeviceUse u) => switch (u) {
   DeviceUse.notYet => l10n.devicesNotUsedYet,
 };
 
-/// the line under a device's name
-String deviceLine(OwnDevice d, DateTime now) {
-  if (d.thisDevice) return l10n.devicesOnlyThisPhone;
+/// the line under a device's name. on a linked device its own row says
+/// whose it is: its phone links and removes
+String deviceLine(OwnDevice d, DateTime now, {bool linked = false}) {
+  if (d.thisDevice) {
+    return linked ? l10n.joinDone : l10n.devicesOnlyThisPhoneShown;
+  }
   final use = deviceUseLine(deviceUseOf(d.lastUsed, now));
   final at = d.linkedAt;
   return at == null
@@ -64,7 +95,7 @@ class LinkedDevicesScreen extends StatefulWidget {
 
 class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
   late final OwnDevices _source =
-      widget.source ?? ThisPhoneOnly(phoneName: l10n.devicesThisPhone);
+      widget.source ?? ThisPhoneOnly(phoneName: l10n.devicesThisPhoneShown);
   final _scroll = ScrollController();
   List<OwnDevice>? _devices;
   final Set<String> _leaving = {};
@@ -75,6 +106,8 @@ class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
   void initState() {
     super.initState();
     _load();
+    // the page is open: a new device's notice has been seen
+    unawaited(_source.opened());
   }
 
   @override
@@ -171,7 +204,39 @@ class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
 
   void _link() {
     HapticFeedback.selectionClick();
-    Navigator.of(context).push(haloRoute(const LinkDeviceScreen()));
+    Navigator.of(
+      context,
+    ).push(haloRoute(LinkDeviceScreen(onScan: _source.canLink ? _scan : null)));
+  }
+
+  // the scanner, then the link from the code it read. "try again" opens
+  // the scanner afresh; a link that took closes the link page too
+  Future<void> _scan(LinkHistory history) async {
+    final nav = Navigator.of(context);
+    final code = await nav.push<String>(
+      haloRoute(const ScanScreen(link: true)),
+    );
+    if (code == null || !mounted) return;
+    var again = false;
+    final linked = await nav.push<bool>(
+      haloRoute(
+        LinkRunScreen(
+          flow: _source.linkFlow(code, history),
+          onAgain: () {
+            again = true;
+            nav.pop(false);
+          },
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (linked == true) {
+      nav.pop();
+      await _load();
+      unawaited(_source.opened());
+    } else if (again) {
+      await _scan(history);
+    }
   }
 
   @override
@@ -206,7 +271,9 @@ class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
                                     child: _DeviceRow(
                                       device: d,
                                       now: now,
-                                      onTap: d.thisDevice
+                                      linked: _source.linkedDevice,
+                                      onTap:
+                                          d.thisDevice || _source.linkedDevice
                                           ? null
                                           : () => _open(d),
                                     ),
@@ -216,7 +283,7 @@ class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
                           ],
                         ),
                         FadeSwap(
-                          child: others.isEmpty
+                          child: others.isEmpty && _source.linksHere
                               ? const _Empty(key: ValueKey('empty'))
                               : const SizedBox(
                                   key: ValueKey('some'),
@@ -234,7 +301,7 @@ class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
                           text: l10n.devicesUnusedRule,
                         ),
                         Unfold(
-                          open: others.isNotEmpty,
+                          open: others.isNotEmpty && !_source.linkedDevice,
                           child: Padding(
                             padding: const EdgeInsets.only(top: 24),
                             child: HaloGroup(
@@ -253,39 +320,42 @@ class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
                       ],
                     ),
             ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                20,
-                8,
-                20,
-                16 + MediaQuery.paddingOf(context).bottom,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Unfold(
-                    open: _full,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: Text(
-                        l10n.devicesFull,
-                        textAlign: TextAlign.center,
-                        style: HaloType.sans(
-                          size: 12.5,
-                          color: HaloColors.text2,
-                          height: 1.4,
+            // linking is the phone's: a linked device and a computer that
+            // holds the account offer none
+            if (_source.linksHere)
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  8,
+                  20,
+                  16 + MediaQuery.paddingOf(context).bottom,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Unfold(
+                      open: _full,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Text(
+                          l10n.devicesFull,
+                          textAlign: TextAlign.center,
+                          style: HaloType.sans(
+                            size: 12.5,
+                            color: HaloColors.text2,
+                            height: 1.4,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  HaloPrimaryButton(
-                    label: l10n.devicesLinkADevice,
-                    onTap: devices == null || _full ? null : _link,
-                  ),
-                ],
+                    HaloPrimaryButton(
+                      label: l10n.devicesLinkADevice,
+                      onTap: devices == null || _full ? null : _link,
+                    ),
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -298,8 +368,14 @@ enum _Act { rename, remove }
 class _DeviceRow extends StatelessWidget {
   final OwnDevice device;
   final DateTime now;
+  final bool linked;
   final VoidCallback? onTap;
-  const _DeviceRow({required this.device, required this.now, this.onTap});
+  const _DeviceRow({
+    required this.device,
+    required this.now,
+    this.linked = false,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -345,7 +421,7 @@ class _DeviceRow extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      deviceLine(d, now),
+                      deviceLine(d, now, linked: linked),
                       style: HaloType.sans(
                         size: 12.5,
                         color: HaloColors.text2,
@@ -647,7 +723,7 @@ class _LinkDeviceScreenState extends State<LinkDeviceScreen> {
                   const SizedBox(height: 16),
                   _Note(
                     icon: Icons.lock_outline_rounded,
-                    text: l10n.devicesHiddenStay,
+                    text: l10n.devicesHiddenStayShown,
                   ),
                   const Spacer(),
                   const SizedBox(height: 20),

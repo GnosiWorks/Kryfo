@@ -14,6 +14,7 @@ import '../widgets/ease_size.dart';
 import '../widgets/press_scale.dart';
 import '../l10n/l10n.dart';
 import '../widgets/shift_tap_guard.dart';
+import '../widgets/tor_wait_line.dart';
 
 // returns the new room's group id, or null if the sheet was dismissed
 Future<String?> showRoomCreateSheet(BuildContext context) {
@@ -58,7 +59,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _creating = false);
-      showHaloToast(context, l10n.roomCreateCouldNotCreateThe);
+      showHaloToast(context, torWaitLine() ?? l10n.roomCreateCouldNotCreateThe);
     }
   }
 
@@ -90,6 +91,18 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
                 height: 1.5,
               ),
             ),
+            // on fast a room still goes through tor, and waits for it
+            if (torWaitLine() case final wait?) ...[
+              const SizedBox(height: 8),
+              Text(
+                wait,
+                style: HaloType.sans(
+                  size: 12,
+                  color: HaloColors.amberText,
+                  height: 1.5,
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             ShiftTapGuard(
               controller: _nameCtrl,

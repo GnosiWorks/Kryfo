@@ -4007,6 +4007,12 @@ abstract class AppLocalizations {
   /// **'Messages arrive instantly. Nothing leaves Tor. Uses the most battery.'**
   String get gettingMessagesMessagesArriveInstantlyNothing;
 
+  /// screens/notifications_screen.dart, screens/onboarding_screen.dart: the always-on card on the Fast route (settingsFast), where messages do not go through Tor
+  ///
+  /// In en, this message translates to:
+  /// **'Messages arrive instantly on Fast. Uses the most battery.'**
+  String get gettingMessagesArriveInstantlyFast;
+
   /// screens/notifications_screen.dart
   ///
   /// In en, this message translates to:
@@ -6827,6 +6833,12 @@ abstract class AppLocalizations {
   /// **'Couldn\'t reach the relays. Try again in a moment.'**
   String get pairCodeUnreached;
 
+  /// widgets/pair_join.dart, screens/room_create_sheet.dart, screens/room_preview_sheet.dart: on the Fast route (settingsFast) while Tor is not connected: burner rooms and pair codes always go through Tor, so they wait for it
+  ///
+  /// In en, this message translates to:
+  /// **'Rooms and pairing codes always go through Tor, also on Fast. They work as soon as Tor connects.'**
+  String get fastRoomsWaitForTor;
+
   /// widgets/pair_join.dart, widgets/pair_code_panel.dart: sharing or looking up a pairing code failed for another reason
   ///
   /// In en, this message translates to:
@@ -7894,6 +7906,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notifications need setting up again on this device.'**
   String get restoreNotificationsNeedSettingUp;
+
+  /// screens/restore_screen.dart: a point under "What doesn't": chats deleted after the backup was made come back, and those contacts may see the "set up Kryfo again" line (chatHealRestored)
+  ///
+  /// In en, this message translates to:
+  /// **'Chats you deleted after this backup was made come back with it, and those contacts may see that you set up Kryfo again.'**
+  String get restoreDeletedComeBack;
 
   /// screens/restore_screen.dart
   ///
@@ -13799,6 +13817,12 @@ abstract class AppLocalizations {
   /// **'Kryfo\'s server asks the GIF service for you. The service never sees you, and the server keeps no record of what you searched.'**
   String get gifOptInAsksForYou;
 
+  /// gifs/gif_opt_in.dart: under the first point on the Fast route (settingsFast), where the search goes from the device to our server without Tor
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo\'s server asks the GIF service for you, so the service never sees you. On Fast our server sees your IP address while you search, and keeps no record of it or of what you searched.'**
+  String get gifOptInAsksForYouFast;
+
   /// gifs/gif_opt_in.dart: under the second point
   ///
   /// In en, this message translates to:
@@ -13841,10 +13865,10 @@ abstract class AppLocalizations {
   /// **'GIF search goes through Kryfo\'s server over Tor. {brand} never sees you. Turn it on?'**
   String gifAskOverTor(String brand);
 
-  /// gifs/gif_opt_in.dart: the same question on the relay and fast routes (no tor there). brand is GIPHY or Klipy
+  /// gifs/gif_opt_in.dart: the one question of the gifs tab on the Fast route (settingsFast), where the search goes from the device to our server without Tor. brand is GIPHY or Klipy
   ///
   /// In en, this message translates to:
-  /// **'GIF search goes through Kryfo\'s server. {brand} never sees you. Turn it on?'**
+  /// **'GIF search goes straight to Kryfo\'s server, which sees your IP address on Fast. {brand} never sees you. Turn it on?'**
   String gifAskThroughKryfo(String brand);
 
   /// gifs/gif_opt_in.dart: the button under that question, and the quiet button next to "GIF search is off": turns gif search on
@@ -16013,6 +16037,12 @@ abstract class AppLocalizations {
   /// **'This phone only'**
   String get devicesThisPhoneOnly;
 
+  /// screens/settings_screen.dart: on a computer, the devices row when nothing else is linked
+  ///
+  /// In en, this message translates to:
+  /// **'This computer only'**
+  String get devicesThisPhoneOnlyDesk;
+
   /// screens/linked_devices_screen.dart: goes between device names on the settings row
   ///
   /// In en, this message translates to:
@@ -16025,11 +16055,23 @@ abstract class AppLocalizations {
   /// **'This phone'**
   String get devicesThisPhone;
 
+  /// screens/linked_devices_screen.dart: on a computer, the computer itself, first in the devices list
+  ///
+  /// In en, this message translates to:
+  /// **'This computer'**
+  String get devicesThisPhoneDesk;
+
   /// screens/linked_devices_screen.dart: the line under this phone on the list
   ///
   /// In en, this message translates to:
   /// **'Only this phone can link or remove devices'**
   String get devicesOnlyThisPhone;
+
+  /// screens/linked_devices_screen.dart: on a computer, the line under the computer itself
+  ///
+  /// In en, this message translates to:
+  /// **'Only this computer can link or remove devices'**
+  String get devicesOnlyThisPhoneDesk;
 
   /// screens/linked_devices_screen.dart: when a device was linked, a day
   ///
@@ -16259,11 +16301,263 @@ abstract class AppLocalizations {
   /// **'Hidden chats and the decoy stay on this phone.'**
   String get devicesHiddenStay;
 
+  /// screens/linked_devices_screen.dart: on a computer, a note on the link page
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden chats and the decoy stay on this computer.'**
+  String get devicesHiddenStayDesk;
+
   /// screens/linked_devices_screen.dart: the button at the foot of the link page
   ///
   /// In en, this message translates to:
   /// **'Scan the code'**
   String get devicesScanCode;
+
+  /// screens/link_screens.dart: the phone waits for the new device to answer its scan
+  ///
+  /// In en, this message translates to:
+  /// **'Reaching the device'**
+  String get devicesLinkReaching;
+
+  /// screens/link_screens.dart: under devicesLinkReaching
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Kryfo open on both. Over Tor this can take a minute.'**
+  String get devicesLinkReachingLine;
+
+  /// screens/link_screens.dart: title over the six numbers, on the phone and the new device
+  ///
+  /// In en, this message translates to:
+  /// **'Do the numbers match?'**
+  String get devicesLinkCompare;
+
+  /// screens/link_screens.dart: on the phone, under the title over the six numbers
+  ///
+  /// In en, this message translates to:
+  /// **'The new device shows six numbers too. Link it only if they are the same.'**
+  String get devicesLinkCompareLine;
+
+  /// screens/link_screens.dart: button: the six numbers are the same on both screens
+  ///
+  /// In en, this message translates to:
+  /// **'They match'**
+  String get devicesLinkMatch;
+
+  /// screens/link_screens.dart: button: the six numbers differ, nothing is linked
+  ///
+  /// In en, this message translates to:
+  /// **'They don\'t match'**
+  String get devicesLinkNoMatch;
+
+  /// screens/link_screens.dart: the phone, after the numbers matched
+  ///
+  /// In en, this message translates to:
+  /// **'Linking'**
+  String get devicesLinkLinking;
+
+  /// screens/link_screens.dart: under devicesLinkLinking
+  ///
+  /// In en, this message translates to:
+  /// **'Setting up the new device. Keep both open.'**
+  String get devicesLinkLinkingLine;
+
+  /// screens/link_screens.dart: the phone: the link worked
+  ///
+  /// In en, this message translates to:
+  /// **'Device linked'**
+  String get devicesLinkDone;
+
+  /// screens/link_screens.dart: under devicesLinkDone
+  ///
+  /// In en, this message translates to:
+  /// **'It shows in Linked devices, where you can rename or remove it.'**
+  String get devicesLinkDoneLine;
+
+  /// screens/link_screens.dart: the phone got no answer from the new device. the decoy ends here too
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach the device'**
+  String get devicesLinkUnreached;
+
+  /// screens/link_screens.dart: under devicesLinkUnreached
+  ///
+  /// In en, this message translates to:
+  /// **'Check that Kryfo is open on the new device and shows its code, then try again.'**
+  String get devicesLinkUnreachedLine;
+
+  /// screens/link_screens.dart: the link ended without a device: numbers did not match, or the phone has no room
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing was linked'**
+  String get devicesLinkStopped;
+
+  /// screens/link_screens.dart: under devicesLinkStopped
+  ///
+  /// In en, this message translates to:
+  /// **'The numbers have to match. Start again with a new code.'**
+  String get devicesLinkStoppedLine;
+
+  /// screens/link_screens.dart: under devicesLinkStopped when the link ended for another reason than a no: the other side stopped, a step failed
+  ///
+  /// In en, this message translates to:
+  /// **'Something interrupted the link. Start again with a new code.'**
+  String get devicesLinkInterruptedLine;
+
+  /// screens/scan_screen.dart: the scanner title when the phone links a device
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the device\'s code'**
+  String get scanLinkTitle;
+
+  /// screens/scan_screen.dart: the scanner hint when the phone links a device
+  ///
+  /// In en, this message translates to:
+  /// **'Point at the code on the new device'**
+  String get scanLinkPoint;
+
+  /// screens/scan_screen.dart: a code in frame that is not a new device's link code
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s not a link code'**
+  String get scanLinkNotOne;
+
+  /// screens/onboarding_screen.dart: text link on the first page: this device joins the account on a phone
+  ///
+  /// In en, this message translates to:
+  /// **'Link to my phone'**
+  String get onboardingLinkToMyPhone;
+
+  /// screens/link_screens.dart: page title on the new device
+  ///
+  /// In en, this message translates to:
+  /// **'Link to your phone'**
+  String get joinTitle;
+
+  /// screens/link_screens.dart: first step under the code on the new device
+  ///
+  /// In en, this message translates to:
+  /// **'Open Kryfo on your phone.'**
+  String get joinStep1;
+
+  /// screens/link_screens.dart: second step under the code on the new device. names the settings rows as they read
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Settings, then Linked devices, then Link a device.'**
+  String get joinStep2;
+
+  /// screens/link_screens.dart: third step under the code on the new device
+  ///
+  /// In en, this message translates to:
+  /// **'Scan this code with your phone.'**
+  String get joinStep3;
+
+  /// screens/link_screens.dart: the new device waits for the phone to scan
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for your phone'**
+  String get joinWaiting;
+
+  /// screens/link_screens.dart: under joinWaiting
+  ///
+  /// In en, this message translates to:
+  /// **'The code works for ten minutes.'**
+  String get joinCodeLife;
+
+  /// screens/link_screens.dart: on the new device, under the title over the six numbers
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone shows six numbers too. Go on only if they are the same.'**
+  String get joinCompareLine;
+
+  /// screens/link_screens.dart: the new device, after the numbers matched
+  ///
+  /// In en, this message translates to:
+  /// **'Linking to your phone'**
+  String get joinLinking;
+
+  /// screens/link_screens.dart: under joinLinking
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Kryfo open on your phone until this is done.'**
+  String get joinLinkingLine;
+
+  /// screens/link_screens.dart: the new device is linked
+  ///
+  /// In en, this message translates to:
+  /// **'Linked to your phone'**
+  String get joinDone;
+
+  /// screens/link_screens.dart: under joinDone, right above the account's key number (20 digits)
+  ///
+  /// In en, this message translates to:
+  /// **'New messages reach this device too. Your account\'s key number:'**
+  String get joinDoneLine;
+
+  /// screens/link_screens.dart: button on the new device once linked
+  ///
+  /// In en, this message translates to:
+  /// **'Open Kryfo'**
+  String get joinOpen;
+
+  /// screens/link_screens.dart: the new device got no answer from the phone, or the code ran out
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach your phone'**
+  String get joinUnreached;
+
+  /// screens/link_screens.dart: under joinUnreached
+  ///
+  /// In en, this message translates to:
+  /// **'Check that your phone is online with Kryfo open, then try a new code.'**
+  String get joinUnreachedLine;
+
+  /// screens/link_screens.dart: button: show a fresh code
+  ///
+  /// In en, this message translates to:
+  /// **'New code'**
+  String get joinNewCode;
+
+  /// screens/home_screen.dart: card title on every own device after a device was linked. stays until opened
+  ///
+  /// In en, this message translates to:
+  /// **'New device linked'**
+  String get devicesNewNotice;
+
+  /// screens/home_screen.dart: the card's line: the device's name and the day it was linked
+  ///
+  /// In en, this message translates to:
+  /// **'{name} was linked to your account on {date}. Open Linked devices to see it.'**
+  String devicesNewNoticeLine(Object name, Object date);
+
+  /// screens/home_screen.dart: the card's title when more than one device was linked since the page was last opened
+  ///
+  /// In en, this message translates to:
+  /// **'New devices linked'**
+  String get devicesNewNoticeMany;
+
+  /// screens/home_screen.dart: the card's line when more than one device was linked: their names, joined by devicesNameSeparator
+  ///
+  /// In en, this message translates to:
+  /// **'{names} were linked to your account. Open Linked devices to see them.'**
+  String devicesNewNoticeManyLine(Object names);
+
+  /// screens/home_screen.dart: the card's button: opens Linked devices
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get devicesNewNoticeOpen;
+
+  /// screens/settings_screen.dart: under Linked devices on a linked device
+  ///
+  /// In en, this message translates to:
+  /// **'Linked to your phone. Backups and invites stay on the phone.'**
+  String get settingsLinkedToLine;
+
+  /// screens/linked_devices_screen.dart: on a linked device, its phone in the devices list
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone'**
+  String get devicesYourPhone;
 
   /// desktop/desktop_lock_screen.dart: the title of the passphrase screen the desktop app opens on
   ///

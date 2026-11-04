@@ -52,6 +52,8 @@ const (
 	labelBind       = "kryfo-link-v2 bind"
 	labelN2P        = "kryfo-link-v2 joiner to phone"
 	labelP2N        = "kryfo-link-v2 phone to joiner"
+	labelPlace      = "kryfo-link-v2 place"
+	labelBundles    = "kryfo-link-v2 bundles"
 )
 
 var (
@@ -122,6 +124,42 @@ func welcomeKey(dh, kem []byte, bind [32]byte) ([]byte, error) {
 	ikm := append(append([]byte(nil), dh...), kem...)
 	defer wipe(ikm)
 	return hkdf.Key(sha256.New, ikm, bind[:], labelP2N, 32)
+}
+
+// the keys for what goes after the welcome: KLP1 to the joiner and KLB1
+// back. from the same two secrets as the welcome, never from bind alone:
+// bind is a hash of what went over the rendezvous, so anyone who saw it
+// can make it
+func afterKeys(dh, kem []byte, bind [32]byte) (AfterKeys, error) {
+	var a AfterKeys
+	ikm := append(append([]byte(nil), dh...), kem...)
+	defer wipe(ikm)
+	p, err := hkdf.Key(sha256.New, ikm, bind[:], labelPlace, 32)
+	if err != nil {
+		return a, err
+	}
+	b, err := hkdf.Key(sha256.New, ikm, bind[:], labelBundles, 32)
+	if err != nil {
+		wipe(p)
+		return a, err
+	}
+	copy(a.Place[:], p)
+	copy(a.Bundles[:], b)
+	wipe(p)
+	wipe(b)
+	return a, nil
+}
+
+// AfterKeys seal the two link messages after the welcome, one each.
+type AfterKeys struct {
+	Place   [32]byte
+	Bundles [32]byte
+}
+
+// Forget wipes both keys.
+func (a *AfterKeys) Forget() {
+	wipe(a.Place[:])
+	wipe(a.Bundles[:])
 }
 
 // each key seals exactly one message, so a zero nonce is safe
@@ -299,14 +337,19 @@ type Linked struct {
 	StreamKey [StreamKeySize]byte
 	// Bind is the link's transcript, which the history stream is bound to
 	Bind [32]byte
+	// After opens KLP1 and seals KLB1
+	After AfterKeys
 }
 
 // KeyNumber is the number the new device shows after linking, to check
 // against the one the phone shows for itself.
 func (l *Linked) KeyNumber() string { return KeyNumber(l.Identity) }
 
-// Forget wipes the stream key.
-func (l *Linked) Forget() { wipe(l.StreamKey[:]) }
+// Forget wipes the stream key and the after keys.
+func (l *Linked) Forget() {
+	wipe(l.StreamKey[:])
+	l.After.Forget()
+}
 
 // HandleWelcome takes the phone's welcome, once the person has confirmed.
 func (j *Joiner) HandleWelcome(msg []byte, now time.Time) (*Linked, error) {
@@ -333,10 +376,15 @@ func (j *Joiner) HandleWelcome(msg []byte, now time.Time) (*Linked, error) {
 	if err != nil || identity == j.key {
 		return nil, j.fail(ErrMalformed)
 	}
+	after, err := afterKeys(j.dh, j.kem, j.bind)
+	if err != nil {
+		return nil, j.fail(err)
+	}
 	out := &Linked{
 		Identity: identity,
 		Keys:     DeviceKeys{Identity: identity, Key: j.key, Reg: j.reg},
 		Bind:     j.bind,
+		After:    after,
 	}
 	copy(out.StreamKey[:], pt[:StreamKeySize])
 	j.st = stDone
@@ -372,6 +420,7 @@ type Linker struct {
 	bind     [32]byte
 	device   DeviceKeys
 	sas      string
+	after    AfterKeys
 }
 
 // AcceptOffer starts the phone's side from an offer it scanned, for the
@@ -530,6 +579,16 @@ func (p *Linker) Abort() {
 		p.st = stFailed
 	}
 	p.forget()
+	p.after.Forget()
+}
+
+// After is the keys for KLP1 and KLB1, once the welcome is made. the
+// caller wipes them when the link is over.
+func (p *Linker) After() (AfterKeys, error) {
+	if p.st != stDone {
+		return AfterKeys{}, ErrState
+	}
+	return p.after, nil
 }
 
 // Welcome seals the history stream's key and the identity for the new
@@ -547,6 +606,9 @@ func (p *Linker) Welcome(stream *[StreamKeySize]byte, now time.Time) ([]byte, er
 		return nil, p.fail(err)
 	}
 	defer wipe(k)
+	if p.after, err = afterKeys(p.dh, p.kem, p.bind); err != nil {
+		return nil, p.fail(err)
+	}
 	pt := append(append([]byte(nil), stream[:]...), p.identity[:]...)
 	ct, err := sealOnce(k, pt, adOf(welcomeMagic, p.bind))
 	wipe(pt)

@@ -2574,6 +2574,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'تصل الرسائل فورًا. لا شيء يمر خارج Tor. يستهلك البطارية أكثر من غيره.';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'تصل الرسائل فورًا على الوضع السريع. يستهلك البطارية أكثر من غيره.';
+
+  @override
   String get gettingMessagesCheckIns => 'تفقّد دوري';
 
   @override
@@ -4418,6 +4422,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذّر الوصول إلى المُرحِّلات. حاول مجددًا بعد قليل.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'تمر الغرف ورموز الاقتران دائمًا عبر Tor، حتى على الوضع السريع. تعمل فور اتصال Tor.';
+
+  @override
   String get pairCodeFailed => 'لم ينجح ذلك. حاول مجددًا.';
 
   @override
@@ -5034,6 +5042,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'يجب إعداد الإشعارات من جديد على هذا الجهاز.';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'المحادثات التي حذفتها بعد إنشاء هذه النسخة الاحتياطية تعود معها، وقد يرى أصحابها أنك أعدت إعداد Kryfo.';
 
   @override
   String get restoreMoveItHere => 'نقله إلى هنا';
@@ -8716,6 +8728,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'خادم Kryfo يسأل خدمة GIF نيابة عنك. الخدمة لا تراك أبدًا، والخادم لا يحتفظ بأي سجل لما بحثت عنه.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'خادم Kryfo يسأل خدمة GIF نيابة عنك، فلا تراك الخدمة أبدًا. على الوضع السريع يرى خادمنا عنوان IP الخاص بك أثناء البحث، ولا يحتفظ بأي سجل له أو لما بحثت عنه.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'تنتقل صورة GIF مشفّرة، مثل الصورة. هاتف صديقك لا يجلب شيئًا.';
 
@@ -8743,7 +8759,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'يمر البحث عن GIF عبر خادم Kryfo. لا يراك ⁨$brand⁩ أبدًا. هل تريد تشغيله؟';
+    return 'يذهب البحث عن GIF مباشرة إلى خادم Kryfo، الذي يرى عنوان IP الخاص بك على الوضع السريع. لا يراك ⁨$brand⁩ أبدًا. هل تريد تشغيله؟';
   }
 
   @override
@@ -10105,13 +10121,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get devicesThisPhoneOnly => 'هذا الهاتف فقط';
 
   @override
+  String get devicesThisPhoneOnlyDesk => 'هذا الحاسوب فقط';
+
+  @override
   String get devicesNameSeparator => '، ';
 
   @override
   String get devicesThisPhone => 'هذا الهاتف';
 
   @override
+  String get devicesThisPhoneDesk => 'هذا الحاسوب';
+
+  @override
   String get devicesOnlyThisPhone => 'هذا الهاتف وحده يربط الأجهزة أو يزيلها';
+
+  @override
+  String get devicesOnlyThisPhoneDesk =>
+      'هذا الحاسوب وحده يربط الأجهزة أو يزيلها';
 
   @override
   String devicesLinkedOn(Object date) {
@@ -10262,7 +10288,150 @@ class AppLocalizationsAr extends AppLocalizations {
       'تبقى المحادثات المخفية والتمويه على هذا الهاتف.';
 
   @override
+  String get devicesHiddenStayDesk =>
+      'تبقى المحادثات المخفية والتمويه على هذا الحاسوب.';
+
+  @override
   String get devicesScanCode => 'قراءة الرمز';
+
+  @override
+  String get devicesLinkReaching => 'جارٍ الوصول إلى الجهاز';
+
+  @override
+  String get devicesLinkReachingLine =>
+      'أبقِ Kryfo مفتوحًا على الجهازين. قد يستغرق هذا دقيقة عبر Tor.';
+
+  @override
+  String get devicesLinkCompare => 'هل تتطابق الأرقام؟';
+
+  @override
+  String get devicesLinkCompareLine =>
+      'يعرض الجهاز الجديد ستة أرقام أيضًا. اربطه فقط إن كانت هي نفسها.';
+
+  @override
+  String get devicesLinkMatch => 'تتطابق';
+
+  @override
+  String get devicesLinkNoMatch => 'لا تتطابق';
+
+  @override
+  String get devicesLinkLinking => 'جارٍ الربط';
+
+  @override
+  String get devicesLinkLinkingLine =>
+      'جارٍ تجهيز الجهاز الجديد. أبقِ الجهازين مفتوحين.';
+
+  @override
+  String get devicesLinkDone => 'رُبط الجهاز';
+
+  @override
+  String get devicesLinkDoneLine =>
+      'يظهر في الأجهزة المرتبطة، حيث يمكنك تغيير اسمه أو إزالته.';
+
+  @override
+  String get devicesLinkUnreached => 'تعذّر الوصول إلى الجهاز';
+
+  @override
+  String get devicesLinkUnreachedLine =>
+      'تأكد أن Kryfo مفتوح على الجهاز الجديد ويعرض رمزه، ثم أعد المحاولة.';
+
+  @override
+  String get devicesLinkStopped => 'لم يُربط شيء';
+
+  @override
+  String get devicesLinkStoppedLine =>
+      'يجب أن تتطابق الأرقام. ابدأ من جديد برمز جديد.';
+
+  @override
+  String get devicesLinkInterruptedLine =>
+      'انقطع الربط. ابدأ من جديد برمز جديد.';
+
+  @override
+  String get scanLinkTitle => 'قراءة رمز الجهاز';
+
+  @override
+  String get scanLinkPoint => 'وجّه الكاميرا إلى الرمز على الجهاز الجديد';
+
+  @override
+  String get scanLinkNotOne => 'هذا ليس رمز ربط';
+
+  @override
+  String get onboardingLinkToMyPhone => 'الربط بهاتفي';
+
+  @override
+  String get joinTitle => 'الربط بهاتفك';
+
+  @override
+  String get joinStep1 => 'افتح Kryfo على هاتفك.';
+
+  @override
+  String get joinStep2 =>
+      'اذهب إلى الإعدادات، ثم الأجهزة المرتبطة، ثم ربط جهاز.';
+
+  @override
+  String get joinStep3 => 'اقرأ هذا الرمز بهاتفك.';
+
+  @override
+  String get joinWaiting => 'في انتظار هاتفك';
+
+  @override
+  String get joinCodeLife => 'يعمل الرمز عشر دقائق.';
+
+  @override
+  String get joinCompareLine =>
+      'يعرض هاتفك ستة أرقام أيضًا. تابع فقط إن كانت هي نفسها.';
+
+  @override
+  String get joinLinking => 'جارٍ الربط بهاتفك';
+
+  @override
+  String get joinLinkingLine => 'أبقِ Kryfo مفتوحًا على هاتفك حتى ينتهي هذا.';
+
+  @override
+  String get joinDone => 'رُبط بهاتفك';
+
+  @override
+  String get joinDoneLine =>
+      'تصل الرسائل الجديدة إلى هذا الجهاز أيضًا. رقم مفتاح حسابك:';
+
+  @override
+  String get joinOpen => 'فتح Kryfo';
+
+  @override
+  String get joinUnreached => 'تعذّر الوصول إلى هاتفك';
+
+  @override
+  String get joinUnreachedLine =>
+      'تأكد أن هاتفك متصل وأن Kryfo مفتوح عليه، ثم جرّب رمزًا جديدًا.';
+
+  @override
+  String get joinNewCode => 'رمز جديد';
+
+  @override
+  String get devicesNewNotice => 'رُبط جهاز جديد';
+
+  @override
+  String devicesNewNoticeLine(Object name, Object date) {
+    return 'رُبط ⁨$name⁩ بحسابك في ⁨$date⁩. افتح الأجهزة المرتبطة لتراه.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'أجهزة جديدة مرتبطة';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return 'رُبطت ⁨$names⁩ بحسابك. افتح الأجهزة المرتبطة لتراها.';
+  }
+
+  @override
+  String get devicesNewNoticeOpen => 'فتح';
+
+  @override
+  String get settingsLinkedToLine =>
+      'مرتبط بهاتفك. تبقى النسخ الاحتياطية والدعوات على الهاتف.';
+
+  @override
+  String get devicesYourPhone => 'هاتفك';
 
   @override
   String get desktopLockTitle => 'Kryfo مقفل';

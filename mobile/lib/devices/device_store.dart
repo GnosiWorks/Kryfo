@@ -161,9 +161,19 @@ Future<void> deviceTables(
       kind TEXT NOT NULL DEFAULT 'computer',
       linked_at INTEGER NOT NULL,
       removed_at INTEGER,
-      heard_online_ms INTEGER NOT NULL DEFAULT 0
+      heard_online_ms INTEGER NOT NULL DEFAULT 0,
+      notice INTEGER NOT NULL DEFAULT 0,
+      stream BLOB
     )
   ''');
+  // 1 until the person opens the devices page after the device came: the
+  // notice on every own device stays till then
+  await addColumn(
+    db,
+    'ALTER TABLE own_devices ADD COLUMN notice INTEGER NOT NULL DEFAULT 0',
+  );
+  // the history stream's key the link made, until the copy is done
+  await addColumn(db, 'ALTER TABLE own_devices ADD COLUMN stream BLOB');
   await db.execute('''
     CREATE TABLE IF NOT EXISTS own_device_keys (
       uid TEXT NOT NULL,
@@ -292,8 +302,13 @@ Future<void> deviceTablesAtOpen(
     for (final c in await db.rawQuery("PRAGMA table_info('$t')"))
       c['name'] as String,
   };
+  final own = have.contains('own_devices')
+      ? await colsOf('own_devices')
+      : const <String>{};
   final whole =
       _allTables.every(have.contains) &&
+      own.contains('notice') &&
+      own.contains('stream') &&
       (!have.contains('identities') ||
           (cols.contains('dev_id') && cols.contains('ident_pub'))) &&
       (await colsOf('dev_out')).contains('sent_at') &&

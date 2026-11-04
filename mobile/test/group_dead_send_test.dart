@@ -13,7 +13,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloDb, appState, useDatabasesForTest, AppStateMessages, AppStateRoute;
+    show
+        HaloDb,
+        appState,
+        kNotSent,
+        useDatabasesForTest,
+        AppStateMessages,
+        AppStateRoute;
 import 'package:kryfo/media_send.dart' show mediaInflight;
 import 'package:kryfo/screens/group_chat_screen.dart';
 import 'package:kryfo/polls.dart' show PollSpec, PollVote;
@@ -131,11 +137,16 @@ Map<String, Object?> _out(int rowid, String uid, {String? file}) => {
   'file_name': ?file,
 };
 
-Future<_GroupDb> _open(WidgetTester t) async {
+Future<_GroupDb> _open(
+  WidgetTester t, {
+  List<Map<String, Object?>>? rows,
+}) async {
   phone(t);
   // the file row has no path on disk, so a retry of it would start at its
   // poll row as a text one does, and be seen
-  final db = _GroupDb([_out(1, _stale), _out(2, _file, file: 'notes.pdf')]);
+  final db = _GroupDb(
+    rows ?? [_out(1, _stale), _out(2, _file, file: 'notes.pdf')],
+  );
   useDatabasesForTest(db, Session(db));
   mediaInflight.add(_file);
   addTearDown(() => mediaInflight.remove(_file));
@@ -181,6 +192,21 @@ void main() {
     await t.pump(const Duration(seconds: 31));
     expect(db.asked, contains(_stale));
     expect(db.asked, isNot(contains(_file)));
+    await _close(t);
+  });
+
+  testWidgets('one a restore brought still waiting is never tried on its '
+      'own, the route up or not', (t) async {
+    final db = await _open(t, rows: [_out(1, 'restored')..['sent'] = kNotSent]);
+    appState.setTorStatusForTest(TorStatus.publishing);
+    for (var i = 0; i < 4; i++) {
+      await t.pump(const Duration(seconds: 31));
+    }
+    expect(db.asked, isEmpty);
+    // a tap on it sends it
+    await t.tap(find.text('hello 1'));
+    await t.pump(const Duration(seconds: 1));
+    expect(db.asked, ['restored']);
     await _close(t);
   });
 

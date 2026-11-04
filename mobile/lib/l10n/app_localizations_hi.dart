@@ -2517,6 +2517,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'मैसेज तुरंत आते हैं। कुछ भी Tor से बाहर नहीं जाता। बैटरी सबसे ज़्यादा लगती है।';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'तेज़ पर मैसेज तुरंत आते हैं। बैटरी सबसे ज़्यादा लगती है।';
+
+  @override
   String get gettingMessagesCheckIns => 'समय-समय पर जाँच';
 
   @override
@@ -4323,6 +4327,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'रिले तक नहीं पहुँच पाए। थोड़ी देर में फिर कोशिश करें।';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'रूम और जोड़ने के कोड हमेशा Tor से होकर जाते हैं, तेज़ पर भी। Tor जुड़ते ही ये काम करते हैं।';
+
+  @override
   String get pairCodeFailed => 'यह नहीं हुआ। दोबारा कोशिश करें।';
 
   @override
@@ -4949,6 +4957,10 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'इस डिवाइस पर सूचनाएँ फिर से सेट करनी होंगी।';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'इस बैकअप के बनने के बाद आपने जो चैट मिटाईं, वे इसके साथ लौट आती हैं, और उन संपर्कों को दिख सकता है कि आपने Kryfo फिर से सेट किया।';
 
   @override
   String get restoreMoveItHere => 'इसे यहाँ लाएँ';
@@ -8600,6 +8612,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'Kryfo का सर्वर आपकी तरफ़ से GIF सेवा से पूछता है। सेवा आपको कभी नहीं देखती, और सर्वर कोई रिकॉर्ड नहीं रखता कि आपने क्या खोजा।';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Kryfo का सर्वर आपकी तरफ़ से GIF सेवा से पूछता है, इसलिए सेवा आपको कभी नहीं देखती। तेज़ पर खोजते समय हमारा सर्वर आपका IP पता देखता है, और न उसका, न आपकी खोज का कोई रिकॉर्ड रखता है।';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'GIF फ़ोटो की तरह एन्क्रिप्टेड होकर जाता है। आपके दोस्त का फ़ोन कुछ भी नहीं लाता।';
 
@@ -8627,7 +8643,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'GIF खोज Kryfo के सर्वर से होकर जाती है। $brand आपको कभी नहीं देखता। चालू करें?';
+    return 'GIF खोज सीधे Kryfo के सर्वर तक जाती है, जो तेज़ पर आपका IP पता देखता है। $brand आपको कभी नहीं देखता। चालू करें?';
   }
 
   @override
@@ -9979,14 +9995,24 @@ class AppLocalizationsHi extends AppLocalizations {
   String get devicesThisPhoneOnly => 'सिर्फ़ यह फ़ोन';
 
   @override
+  String get devicesThisPhoneOnlyDesk => 'सिर्फ़ यह कंप्यूटर';
+
+  @override
   String get devicesNameSeparator => ', ';
 
   @override
   String get devicesThisPhone => 'यह फ़ोन';
 
   @override
+  String get devicesThisPhoneDesk => 'यह कंप्यूटर';
+
+  @override
   String get devicesOnlyThisPhone =>
       'सिर्फ़ यही फ़ोन डिवाइस जोड़ या हटा सकता है';
+
+  @override
+  String get devicesOnlyThisPhoneDesk =>
+      'सिर्फ़ यही कंप्यूटर डिवाइस जोड़ या हटा सकता है';
 
   @override
   String devicesLinkedOn(Object date) {
@@ -10138,7 +10164,150 @@ class AppLocalizationsHi extends AppLocalizations {
       'छिपी चैट और नकली Kryfo इसी फ़ोन पर रहते हैं।';
 
   @override
+  String get devicesHiddenStayDesk =>
+      'छिपी चैट और नकली Kryfo इसी कंप्यूटर पर रहते हैं।';
+
+  @override
   String get devicesScanCode => 'कोड स्कैन करें';
+
+  @override
+  String get devicesLinkReaching => 'डिवाइस से जुड़ रहे हैं';
+
+  @override
+  String get devicesLinkReachingLine =>
+      'दोनों पर Kryfo खुला रखें। Tor से इसमें एक मिनट लग सकता है।';
+
+  @override
+  String get devicesLinkCompare => 'क्या अंक मिलते हैं?';
+
+  @override
+  String get devicesLinkCompareLine =>
+      'नया डिवाइस भी छह अंक दिखाता है। वही अंक हों तभी जोड़ें।';
+
+  @override
+  String get devicesLinkMatch => 'मिलते हैं';
+
+  @override
+  String get devicesLinkNoMatch => 'नहीं मिलते';
+
+  @override
+  String get devicesLinkLinking => 'जोड़ रहे हैं';
+
+  @override
+  String get devicesLinkLinkingLine =>
+      'नया डिवाइस तैयार हो रहा है। दोनों खुले रखें।';
+
+  @override
+  String get devicesLinkDone => 'डिवाइस जुड़ गया';
+
+  @override
+  String get devicesLinkDoneLine =>
+      'यह जुड़े हुए डिवाइस में दिखता है, जहाँ आप इसका नाम बदल सकते हैं या इसे हटा सकते हैं।';
+
+  @override
+  String get devicesLinkUnreached => 'डिवाइस तक नहीं पहुँच पाए';
+
+  @override
+  String get devicesLinkUnreachedLine =>
+      'देखें कि नए डिवाइस पर Kryfo खुला है और उसका कोड दिख रहा है, फिर दोबारा कोशिश करें।';
+
+  @override
+  String get devicesLinkStopped => 'कुछ नहीं जुड़ा';
+
+  @override
+  String get devicesLinkStoppedLine =>
+      'अंक मिलने चाहिए। नए कोड के साथ फिर से शुरू करें।';
+
+  @override
+  String get devicesLinkInterruptedLine =>
+      'जोड़ना बीच में रुक गया। नए कोड के साथ फिर से शुरू करें।';
+
+  @override
+  String get scanLinkTitle => 'डिवाइस का कोड स्कैन करें';
+
+  @override
+  String get scanLinkPoint => 'नए डिवाइस पर दिख रहे कोड की ओर कैमरा रखें';
+
+  @override
+  String get scanLinkNotOne => 'यह जोड़ने वाला कोड नहीं है';
+
+  @override
+  String get onboardingLinkToMyPhone => 'मेरे फ़ोन से जोड़ें';
+
+  @override
+  String get joinTitle => 'अपने फ़ोन से जोड़ें';
+
+  @override
+  String get joinStep1 => 'अपने फ़ोन पर Kryfo खोलें।';
+
+  @override
+  String get joinStep2 =>
+      'सेटिंग्स में जाएँ, फिर जुड़े हुए डिवाइस, फिर डिवाइस जोड़ें।';
+
+  @override
+  String get joinStep3 => 'यह कोड अपने फ़ोन से स्कैन करें।';
+
+  @override
+  String get joinWaiting => 'आपके फ़ोन का इंतज़ार है';
+
+  @override
+  String get joinCodeLife => 'यह कोड दस मिनट तक चलता है।';
+
+  @override
+  String get joinCompareLine =>
+      'आपका फ़ोन भी छह अंक दिखाता है। वही अंक हों तभी आगे बढ़ें।';
+
+  @override
+  String get joinLinking => 'आपके फ़ोन से जोड़ रहे हैं';
+
+  @override
+  String get joinLinkingLine => 'यह पूरा होने तक अपने फ़ोन पर Kryfo खुला रखें।';
+
+  @override
+  String get joinDone => 'आपके फ़ोन से जुड़ गया';
+
+  @override
+  String get joinDoneLine =>
+      'नए मैसेज अब इस डिवाइस पर भी आते हैं। आपके खाते का कुंजी नंबर:';
+
+  @override
+  String get joinOpen => 'Kryfo खोलें';
+
+  @override
+  String get joinUnreached => 'आपके फ़ोन तक नहीं पहुँच पाए';
+
+  @override
+  String get joinUnreachedLine =>
+      'देखें कि आपका फ़ोन ऑनलाइन है और Kryfo खुला है, फिर नया कोड आज़माएँ।';
+
+  @override
+  String get joinNewCode => 'नया कोड';
+
+  @override
+  String get devicesNewNotice => 'नया डिवाइस जुड़ा';
+
+  @override
+  String devicesNewNoticeLine(Object name, Object date) {
+    return '$name $date को आपके खाते से जुड़ा। देखने के लिए जुड़े हुए डिवाइस खोलें।';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'नए डिवाइस जुड़े';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names आपके खाते से जुड़े। देखने के लिए जुड़े हुए डिवाइस खोलें।';
+  }
+
+  @override
+  String get devicesNewNoticeOpen => 'खोलें';
+
+  @override
+  String get settingsLinkedToLine =>
+      'आपके फ़ोन से जुड़ा है। बैकअप और न्योते फ़ोन पर ही रहते हैं।';
+
+  @override
+  String get devicesYourPhone => 'आपका फ़ोन';
 
   @override
   String get desktopLockTitle => 'Kryfo लॉक है';

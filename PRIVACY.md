@@ -16,7 +16,7 @@ to deliver a message, Kryfo routes it through tor and, when the other person is 
 
 photos, videos, voice notes and files bigger than one message go through our files service, when everyone in the chat has a version that fetches from it. your phone seals the file with a key of its own before it leaves, and the key travels only inside the end-to-end encrypted message. the service holds sealed bytes it cannot open, reached over tor on every route, so it never sees your ip. it knows a file's id, its size rounded up, how many recipients it has and when it went up and came down. nothing in an upload is yours: no key, no account, no day, so two files from you share nothing it can see. each new upload costs your phone a little work instead, more while the service is busy, and never more than a minute of it. each recipient tells the service when it has the file, and once all have, the file goes. only its random id, a hash of a random token only your phone holds, and the day stay until the week is up, so the same message sent again from your phone does not upload it again. nothing stays longer than a week. how many big files you send in a day is counted on your phone, not on our server.
 
-your ip is hidden behind tor on the default private mode. fast mode skips tor to go quicker. it connects straight to our two relays, run at two different hosting companies, which then see your ip for that connection and write nothing down. each message goes to both, so one can stop without messages stopping. while the first of them is down, fast mode also reads and sends through public relays, and then only through tor, so they never see your ip. each of our servers sees which mailboxes one ip address reads and writes, and when both people in a chat use fast mode, it can see that two ip addresses share a mailbox. fast mode is off by default and labeled where you turn it on. relay mode was merged into it.
+your ip is hidden behind tor on the default private mode. fast mode skips tor to go quicker. it connects straight to our two relays, run at two different hosting companies, which then see your ip for that connection and write nothing down. each message goes to both, so one can stop without messages stopping. while the first of them is down, fast mode also reads and sends through public relays, and then only through tor, so they never see your ip. each of our servers sees which mailboxes one ip address reads and writes, and when both people in a chat use fast mode, it can see that two ip addresses share a mailbox. fast mode is off by default and labeled where you turn it on. relay mode was merged into it. burner rooms and pair codes go through tor on every route, also in fast mode, so our relays never see your ip on a room's addresses or a pair code's.
 
 ## typing
 
@@ -43,6 +43,12 @@ a handle (@name) is optional. without one, nothing about you sits anywhere centr
 people search is a second choice on top of that, off by default. only handles whose owner turned on "Show me in search" come up, next to a name they picked. turning it off takes you out of search at once. releasing the handle deletes its entry at once. the server keeps one backup copy a day and deletes each copy once it is a week old, so no copy of a released handle is left after 8 days.
 
 the app reaches the registry, people search and the badge service over tor on every route, also in fast mode. the registry keeps no record of who looked anyone up or what was searched for.
+
+## gif search
+
+gif search is off until you turn it on. when it is on, the gifs tab sends what you type, the app's language, how far into the results and how many to show, and for more of the same results which service gave them (giphy or klipy) to our gif relay on relay.kryfo.app, and fetches the pictures of the results from it. on the private route that goes on a tor circuit of its own, apart from your messages, handles and badges. our server asks giphy or klipy for you under one fixed name and passes their pictures through, so neither of them ever sees your phone, your ip or anything that tells one person from another. it writes no access log and keeps no record of who searched or for what. a trending page is kept for five minutes and holds nothing of anyone's.
+
+on the private route all of it goes through tor, so our server sees a tor exit, never you. in fast mode it goes straight from your phone to our server, as your messages do: our server then sees your ip address and the words you searched, and writes neither down. the gifs tab and the sheet where you turn search on say which route it takes. a gif you send travels inside your encrypted message, like a photo, and your contact's phone fetches nothing.
 
 ## the developer chat
 
@@ -82,7 +88,7 @@ google sees that this install uses Kryfo, when it is woken, and your phone's IP 
 
 ## third parties
 
-Kryfo talks to tor relays and nostr relays, to our files service for big files, to your helper app's server if you choose the helper app mode, to google and our push gateway if you choose google push, to the tor project when you ask it for bridges, and, while a bridge is in use, to that bridge and what it needs: snowflake volunteers, public stun servers and the cdn in front of the tor project. we share nothing with them, and we have no data to sell, rent or trade.
+Kryfo talks to tor relays and nostr relays, to our files service for big files, to our gif relay if you turn gif search on, to your helper app's server if you choose the helper app mode, to google and our push gateway if you choose google push, to the tor project when you ask it for bridges, and, while a bridge is in use, to that bridge and what it needs: snowflake volunteers, public stun servers and the cdn in front of the tor project. we share nothing with them, and we have no data to sell, rent or trade.
 
 ## law enforcement and data requests
 

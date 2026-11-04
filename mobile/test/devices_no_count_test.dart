@@ -12,6 +12,13 @@ const _owner = {
   'lib/screens/linked_devices_screen.dart',
   'lib/screens/settings_screen.dart',
   'lib/devices/own_devices.dart',
+  // linking one, and the notice of a new one: the owner's alone
+  'lib/screens/link_screens.dart',
+  'lib/devices/own_device_store.dart',
+  'lib/app/link_app.dart',
+  'lib/main.dart',
+  // the notice card, shown only to the owner, never on a contact's page
+  'lib/screens/home_screen.dart',
 };
 
 // the one devices message with a number: days left, about your own device

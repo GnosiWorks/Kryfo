@@ -493,8 +493,18 @@ extension AppStateBoot on AppState {
     try {
       final database = await live.open();
       final prefs = await SharedPreferences.getInstance();
+      restoreLandedAt = restoreLandedOf(prefs);
       final after = prefs.getInt(kRestoreAfterPref);
       final from = after != null && after > 0 ? after : null;
+      // before any store or drain can send: what of ours the file still
+      // had waiting waits for a tap
+      if (after != null) {
+        await holdOutboxAfterRestore(
+          database,
+          landed: restoreLandedAt,
+          made: from,
+        );
+      }
       // linked devices go before anything can seal to them, and every other
       // identity's sessions are marked before the store is ready
       var marked = true;

@@ -26,7 +26,10 @@ import '../main.dart'
         AppStateSession,
         AppStateRefresh,
         AppStateIdentity,
-        AppStateDelivery;
+        AppStateDelivery,
+        newJoinFlow;
+import '../devices/linked_switch.dart' show kLinkedDevicesOn;
+import 'link_screens.dart' show JoinScreen;
 import '../widgets/kryfo_link_text.dart' show addScanned, takeOwnLink;
 import 'scan_screen.dart';
 import 'handle_screen.dart'
@@ -118,6 +121,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   int get _at => (_ctrl.page ?? _page.toDouble()).round();
 
+  // this device joins an account on a phone in place of making its own
+  void _link() {
+    HapticFeedback.selectionClick();
+    final nav = Navigator.of(context);
+    nav.push(
+      haloRoute(
+        JoinScreen(
+          newFlow: newJoinFlow,
+          // onboarding is done already, when the link was: this only
+          // leaves the page
+          onLinked: () => nav.pop(),
+        ),
+      ),
+    );
+  }
+
   void _next() => _go(_at + 1);
 
   // system back walks one step back; only the first step leaves the app
@@ -145,7 +164,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _step(OnboardStep s) {
     final enter = !_seen.contains(s);
     return switch (s) {
-      OnboardStep.welcome => _WelcomeScreen(onContinue: _next, enter: enter),
+      OnboardStep.welcome => _WelcomeScreen(
+        onContinue: _next,
+        enter: enter,
+        // a computer joins a phone in 0.6; a phone makes its own account
+        onLink: kLinkedDevicesOn && onDesktop ? _link : null,
+      ),
       OnboardStep.identity => _IdentityScreen(
         appState: widget.appState,
         onContinue: _next,
@@ -382,7 +406,13 @@ class _StepBar extends StatelessWidget {
 class _WelcomeScreen extends StatefulWidget {
   final VoidCallback onContinue;
   final bool enter;
-  const _WelcomeScreen({required this.onContinue, required this.enter});
+  // joins an account on a phone; null where linking is off
+  final VoidCallback? onLink;
+  const _WelcomeScreen({
+    required this.onContinue,
+    required this.enter,
+    this.onLink,
+  });
   @override
   State<_WelcomeScreen> createState() => _WelcomeScreenState();
 }
@@ -479,6 +509,13 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
                   ).push(haloRoute(const RestoreScreen())),
                 ),
               ),
+              if (widget.onLink != null)
+                Center(
+                  child: _TextLink(
+                    label: l10n.onboardingLinkToMyPhone,
+                    onTap: widget.onLink!,
+                  ),
+                ),
             ],
           ),
           by: 10,
@@ -1495,7 +1532,9 @@ class _DeliveryScreenState extends State<_DeliveryScreen> {
             ),
             DeliveryMode.always => (
               l10n.gettingMessagesAlwaysOn,
-              l10n.gettingMessagesMessagesArriveInstantlyNothing,
+              onion
+                  ? l10n.gettingMessagesMessagesArriveInstantlyNothing
+                  : l10n.gettingMessagesArriveInstantlyFast,
               null,
             ),
             DeliveryMode.checkins => (

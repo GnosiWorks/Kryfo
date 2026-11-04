@@ -1,11 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import 'dart:async';
-import 'device_sessions.dart' show DeviceSessions;
+import 'device_sessions.dart' show DeviceSessions, kOwnDevices;
 import 'devices/device_send.dart';
 import 'devices/device_state.dart';
 import 'devices/device_store.dart';
 import 'devices/history_open.dart' show endHistoryCopies;
+import 'devices/link_calls.dart' show EngineLinkCalls;
+import 'devices/link_flow.dart';
+import 'devices/own_device_store.dart';
+import 'devices/own_devices.dart'
+    show DecoyDevices, DeviceKind, LinkHistory, OwnDevices;
 import 'secure_store.dart';
 import 'desktop/desktop_mode.dart'
     show
@@ -170,7 +175,9 @@ import 'signal_session.dart';
 import 'signal_stores.dart' show kDevSignalPrefix, onPeerKeyChanged;
 import 'dart:isolate';
 import 'dlog.dart';
-import 'read_burn.dart' show burnStartBy, burnWaitsRow, burnWaitsSql, kBurnSkew;
+import 'read_burn.dart'
+    show burnCameAt, burnStartBy, burnWaitsRow, burnWaitsSql, kBurnSkew;
+import 'restore_undo.dart';
 import 'stranger_gate.dart';
 import 'first_contact.dart';
 import 'text_send.dart' show kSendBlocked;
@@ -219,6 +226,7 @@ part 'app/database_search.dart';
 part 'app/dev_screen.dart';
 part 'app/devices_app.dart';
 part 'app/devices_send_app.dart';
+part 'app/link_app.dart';
 part 'app/engine.dart';
 part 'app/files.dart';
 part 'app/gates.dart';

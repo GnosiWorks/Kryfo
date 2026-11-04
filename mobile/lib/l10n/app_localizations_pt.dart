@@ -2532,6 +2532,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'As mensagens chegam na hora. Tudo fica dentro do Tor. Gasta mais bateria.';
 
   @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'No Rápido, as mensagens chegam na hora. Gasta mais bateria.';
+
+  @override
   String get gettingMessagesCheckIns => 'Consultas';
 
   @override
@@ -4348,6 +4352,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Não foi possível falar com os retransmissores. Tente de novo em instantes.';
 
   @override
+  String get fastRoomsWaitForTor =>
+      'Salas e códigos de pareamento sempre passam pelo Tor, também no Rápido. Funcionam assim que o Tor conecta.';
+
+  @override
   String get pairCodeFailed => 'Não deu certo. Tente de novo.';
 
   @override
@@ -4980,6 +4988,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get restoreNotificationsNeedSettingUp =>
       'As notificações precisam ser configuradas de novo neste aparelho.';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'As conversas que você apagou depois deste backup voltam com ele, e esses contatos podem ver que você configurou o Kryfo de novo.';
 
   @override
   String get restoreMoveItHere => 'Trazer para cá';
@@ -8654,6 +8666,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'O servidor do Kryfo pede ao serviço de GIFs por você. O serviço nunca vê você, e o servidor não guarda registro do que você buscou.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'O servidor do Kryfo pede ao serviço de GIFs por você, então o serviço nunca vê você. No Rápido, nosso servidor vê seu endereço IP enquanto você busca, e não guarda registro dele nem do que você buscou.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'O GIF viaja criptografado, como uma foto. O celular do seu amigo não baixa nada.';
 
@@ -8681,7 +8697,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'A busca de GIFs passa pelo servidor do Kryfo. $brand nunca vê você. Quer ligar?';
+    return 'A busca de GIFs vai direto ao servidor do Kryfo, que no Rápido vê seu endereço IP. $brand nunca vê você. Quer ligar?';
   }
 
   @override
@@ -10047,14 +10063,24 @@ class AppLocalizationsPt extends AppLocalizations {
   String get devicesThisPhoneOnly => 'Só este celular';
 
   @override
+  String get devicesThisPhoneOnlyDesk => 'Só este computador';
+
+  @override
   String get devicesNameSeparator => ', ';
 
   @override
   String get devicesThisPhone => 'Este celular';
 
   @override
+  String get devicesThisPhoneDesk => 'Este computador';
+
+  @override
   String get devicesOnlyThisPhone =>
       'Só este celular pode conectar ou remover aparelhos';
+
+  @override
+  String get devicesOnlyThisPhoneDesk =>
+      'Só este computador pode conectar ou remover aparelhos';
 
   @override
   String devicesLinkedOn(Object date) {
@@ -10207,7 +10233,150 @@ class AppLocalizationsPt extends AppLocalizations {
       'As conversas ocultas e o disfarce ficam neste celular.';
 
   @override
+  String get devicesHiddenStayDesk =>
+      'As conversas ocultas e o disfarce ficam neste computador.';
+
+  @override
   String get devicesScanCode => 'Escanear o código';
+
+  @override
+  String get devicesLinkReaching => 'Procurando o aparelho';
+
+  @override
+  String get devicesLinkReachingLine =>
+      'Deixe o Kryfo aberto nos dois. Pelo Tor isso pode levar um minuto.';
+
+  @override
+  String get devicesLinkCompare => 'Os números são iguais?';
+
+  @override
+  String get devicesLinkCompareLine =>
+      'O novo aparelho também mostra seis números. Conecte só se forem iguais.';
+
+  @override
+  String get devicesLinkMatch => 'São iguais';
+
+  @override
+  String get devicesLinkNoMatch => 'Não são iguais';
+
+  @override
+  String get devicesLinkLinking => 'Conectando';
+
+  @override
+  String get devicesLinkLinkingLine =>
+      'Preparando o novo aparelho. Deixe os dois abertos.';
+
+  @override
+  String get devicesLinkDone => 'Aparelho conectado';
+
+  @override
+  String get devicesLinkDoneLine =>
+      'Ele aparece em Aparelhos conectados, onde você pode renomear ou remover.';
+
+  @override
+  String get devicesLinkUnreached => 'Não foi possível alcançar o aparelho';
+
+  @override
+  String get devicesLinkUnreachedLine =>
+      'Confira se o Kryfo está aberto no novo aparelho mostrando o código e tente de novo.';
+
+  @override
+  String get devicesLinkStopped => 'Nada foi conectado';
+
+  @override
+  String get devicesLinkStoppedLine =>
+      'Os números precisam ser iguais. Comece de novo com um código novo.';
+
+  @override
+  String get devicesLinkInterruptedLine =>
+      'Algo interrompeu a conexão. Comece de novo com um código novo.';
+
+  @override
+  String get scanLinkTitle => 'Escanear o código do aparelho';
+
+  @override
+  String get scanLinkPoint => 'Aponte para o código no novo aparelho';
+
+  @override
+  String get scanLinkNotOne => 'Esse não é um código de conexão';
+
+  @override
+  String get onboardingLinkToMyPhone => 'Conectar ao meu celular';
+
+  @override
+  String get joinTitle => 'Conectar ao seu celular';
+
+  @override
+  String get joinStep1 => 'Abra o Kryfo no seu celular.';
+
+  @override
+  String get joinStep2 =>
+      'Vá em Configurações, depois Aparelhos conectados, depois Conectar um aparelho.';
+
+  @override
+  String get joinStep3 => 'Escaneie este código com o seu celular.';
+
+  @override
+  String get joinWaiting => 'Esperando o seu celular';
+
+  @override
+  String get joinCodeLife => 'O código vale por dez minutos.';
+
+  @override
+  String get joinCompareLine =>
+      'Seu celular também mostra seis números. Continue só se forem iguais.';
+
+  @override
+  String get joinLinking => 'Conectando ao seu celular';
+
+  @override
+  String get joinLinkingLine => 'Deixe o Kryfo aberto no celular até terminar.';
+
+  @override
+  String get joinDone => 'Conectado ao seu celular';
+
+  @override
+  String get joinDoneLine =>
+      'As novas mensagens chegam também a este aparelho. O número da chave da sua conta:';
+
+  @override
+  String get joinOpen => 'Abrir o Kryfo';
+
+  @override
+  String get joinUnreached => 'Não foi possível alcançar o seu celular';
+
+  @override
+  String get joinUnreachedLine =>
+      'Confira se o celular está online com o Kryfo aberto e tente um código novo.';
+
+  @override
+  String get joinNewCode => 'Código novo';
+
+  @override
+  String get devicesNewNotice => 'Novo aparelho conectado';
+
+  @override
+  String devicesNewNoticeLine(Object name, Object date) {
+    return '$name foi conectado à sua conta em $date. Abra Aparelhos conectados para ver.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'Novos aparelhos conectados';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names foram conectados à sua conta. Abra Aparelhos conectados para ver.';
+  }
+
+  @override
+  String get devicesNewNoticeOpen => 'Abrir';
+
+  @override
+  String get settingsLinkedToLine =>
+      'Conectado ao seu celular. Backups e convites ficam no celular.';
+
+  @override
+  String get devicesYourPhone => 'Seu celular';
 
   @override
   String get desktopLockTitle => 'O Kryfo está bloqueado';
