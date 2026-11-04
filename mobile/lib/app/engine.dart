@@ -712,6 +712,34 @@ class HaloEngine {
   Future<String> pairSeed(int ident, String peerXPubHex, String seedHex) =>
       _identFfiOnIsolate('HaloPairSeed', ident, [peerXPubHex, seedHex]);
 
+  // linked devices: device-pair args ("x/their/my") on or off in the
+  // engine. off refuses every one, as today
+  late final IdentFnDart _devicePairsOn = _lib
+      .lookupFunction<IdentFn, IdentFnDart>('HaloDevicePairsOn');
+  String devicePairsOn(bool on) => engineTake(_devicePairsOn(on ? 1 : 0));
+
+  // a copy to a device pair, [arg] "x/their/my.seed" (device_send.dart):
+  // on the seeded pair, or with [opener] to the receiver's opener address.
+  // a device pair is never the dev chat's, so a pinned key is refused
+  Future<String> nostrSendDevice(
+    int ident,
+    String arg,
+    String b64Cipher, {
+    bool opener = false,
+  }) {
+    if (devGate.names(xPub: arg.split('/').first)) {
+      return Future.value(kDevRefused);
+    }
+    return _identFfiOnIsolate(
+      opener ? 'HaloNostrSendDeviceOpener' : 'HaloNostrSend',
+      ident,
+      [arg, padRumor(b64Cipher)],
+    ).timeout(
+      const Duration(seconds: 60),
+      onTimeout: () => 'error: relay timeout',
+    );
+  }
+
   // an eight digit pair code (pair_flow.dart): a run in the engine named by
   // its handle. share puts the offer up and gives the code to show; join
   // takes the typed code as bytes, zeroed once the engine read them; step

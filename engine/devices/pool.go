@@ -4,6 +4,7 @@ package devices
 import (
 	"bytes"
 	"errors"
+	"sort"
 	"sync"
 	"time"
 )
@@ -94,12 +95,25 @@ func (r *pooled) prune(now time.Time) {
 // other session keys go. a one-time bundle must be on the last resort's
 // session keys. on any error nothing is kept.
 func (p *Pool) Put(identity Key, e Entry, once [][]byte, last []byte, made, now time.Time) error {
+	return p.PutAsked(identity, e, once, last, made, time.Time{}, now)
+}
+
+// PutAsked is Put for a batch that answers the phone's ask of asked: a
+// bundle made for the ask is no older than it, so a device clock far
+// behind does not age the batch out on arrival. a zero asked is Put.
+func (p *Pool) PutAsked(identity Key, e Entry, once [][]byte, last []byte, made, asked, now time.Time) error {
 	if e.Phone {
 		return ErrPhone
 	}
 	at := now
 	if made.Before(now) {
 		at = made
+	}
+	if !asked.IsZero() && asked.After(at) {
+		at = asked
+		if at.After(now) {
+			at = now
+		}
 	}
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -151,12 +165,14 @@ func (p *Pool) Put(identity Key, e Entry, once [][]byte, last []byte, made, now 
 		next.kyber[bl.KyberID] = true
 		next.once = append(next.once, poolBundle{b: bytes.Clone(b), at: at, spk: bl.SpkID})
 	}
+	// oldest first, so a batch made before the ones held goes out first
+	sort.SliceStable(next.once, func(i, j int) bool { return next.once[i].at.Before(next.once[j].at) })
 	p.rows[k] = next
 	return nil
 }
 
 // Take gives one KDB1 of identity's device e, as its list names it now, at
-// now: the oldest one-time one while any is young enough, and low when the
+// now: the oldest one-time one (by its age) while any is young enough, and low when the
 // device should be asked for more. bundles of another key under e's id go.
 func (p *Pool) Take(identity Key, e Entry, now time.Time) (kdb1 []byte, low bool, err error) {
 	p.mu.Lock()

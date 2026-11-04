@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'container.dart';
+import 'devices/device_state.dart' show linkedDevicesOn;
 import 'router.dart' show RouteTo;
 
 /// the envelope's word for a typing frame, and for what a phone understands
@@ -27,6 +28,10 @@ const kCapGroupShots = 'gs';
 const kCapDrops = 'fb';
 const kCapPhotos = 'pp';
 const kCapPqRestart = 'pq';
+
+/// the word of a phone that reads device lists and per-device copies
+/// (linked devices). never in [kMyCaps]: [myCaps] adds it with the switch on
+const kCapDevices = 'dv';
 const kKnownCaps = {
   kCapTyping,
   kCapGroupShots,
@@ -68,6 +73,15 @@ const kTypingBackoff = [
 String wrapTyping({required int writtenAt}) =>
     'halo/1:{"$kTypingWire":1,"w":$writtenAt}';
 
+// the linked devices word: read and sent only with the switch on
+bool _known(Object? c) =>
+    kKnownCaps.contains(c) || (c == kCapDevices && linkedDevicesOn);
+
+/// this phone's list as a 1:1 frame carries it: [kMyCaps], and with the
+/// linked devices switch on [kCapDevices]
+List<String> get myCaps =>
+    linkedDevicesOn ? const [...kMyCaps, kCapDevices] : kMyCaps;
+
 /// the capability list as the wire has it: the names this build knows,
 /// null when there is none or it is no list of names
 List<String>? capsFromWire(Object? raw) {
@@ -75,19 +89,19 @@ List<String>? capsFromWire(Object? raw) {
   if (raw.any((e) => e is! String)) return null;
   return [
     for (final e in raw)
-      if (kKnownCaps.contains(e)) e as String,
+      if (_known(e)) e as String,
   ];
 }
 
 /// [body], a 1:1 frame's json, with this phone's list on it
-void capsPut(Map<String, dynamic> body) => body[kCapsWire] = kMyCaps;
+void capsPut(Map<String, dynamic> body) => body[kCapsWire] = myCaps;
 
 /// caps as a contact row keeps them
 String capsText(List<String> caps) => (caps.toSet().toList()..sort()).join(',');
 
 Set<String> capsOfText(String? s) => {
   for (final c in (s ?? '').split(','))
-    if (kKnownCaps.contains(c)) c,
+    if (_known(c)) c,
 };
 
 /// what a contact row's caps become after a 1:1 frame written at

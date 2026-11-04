@@ -205,6 +205,13 @@ extension AppStateTyping on AppState {
       );
       // their phone may take a photo now, or no longer
       if (moved) unawaited(photoSweep());
+      // and may read my device list now
+      if (moved &&
+          linkedDevicesOn &&
+          identical(db, live) &&
+          (env.caps?.contains(kCapDevices) ?? false)) {
+        unawaited(_devicesShown(peer));
+      }
       return moved;
     } catch (e) {
       dlog('typing: caps not taken (${e.runtimeType})');
