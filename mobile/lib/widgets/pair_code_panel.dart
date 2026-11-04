@@ -170,7 +170,13 @@ class _PairCodePanelState extends State<PairCodePanel> {
   Widget _idle(PairRun? r) {
     final busy = r != null && r.busy;
     if (r != null && r.phase == PairPhase.ended) r.told = true;
-    final line = r == null ? '' : pairLineText(r.line, sharer: true);
+    // an add that did not take says why in its own words
+    final said = r?.phase == PairPhase.ended ? r?.added ?? '' : '';
+    final line = said.isNotEmpty
+        ? said
+        : r == null
+        ? ''
+        : pairLineText(r.line, sharer: true);
     final warn = r?.warn ?? false;
     return Column(
       key: const ValueKey('idle'),

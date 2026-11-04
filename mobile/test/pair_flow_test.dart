@@ -376,4 +376,30 @@ void main() {
       }
     },
   );
+
+  testWidgets('a joiner waiting on its answer rides out rounds no relay '
+      'answered; one that never heard a relay gives up after a minute', (
+    t,
+  ) async {
+    final f = _Fake()
+      ..steps.addAll(['wait 0', for (var i = 0; i < 30; i++) 'unreached']);
+    final r = PairRun.join(f.hooks());
+    r.begin('07123456');
+    await t.pump();
+    now = now.add(kPairLookFor * 2);
+    await t.pump(const Duration(seconds: 6));
+    expect(r.phase, PairPhase.live);
+    expect(r.line, PairLine.unreached);
+    r.dispose();
+    await t.pump(const Duration(seconds: 5));
+    final g = _Fake()..steps.addAll([for (var i = 0; i < 30; i++) 'unreached']);
+    final q = PairRun.join(g.hooks());
+    q.begin('07123456');
+    await t.pump();
+    now = now.add(kPairLookFor);
+    await t.pump(const Duration(seconds: 3));
+    expect(q.phase, PairPhase.ended);
+    expect(q.line, PairLine.unreached);
+    expect(q.warn, isTrue);
+  });
 }

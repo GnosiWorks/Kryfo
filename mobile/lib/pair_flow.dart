@@ -367,7 +367,11 @@ class PairRun extends ChangeNotifier {
       );
     }
     if (res == 'unreached') {
-      if (!sharer && now.difference(_since ?? now) >= kPairLookFor) {
+      // a joiner that never heard a relay gives up; one waiting on its
+      // answer keeps waiting
+      if (!sharer &&
+          _waitSince == null &&
+          now.difference(_since ?? now) >= kPairLookFor) {
         return _end(PairLine.unreached, warn: true);
       }
       // a sharer's code stays up: one round no relay answered is not the end

@@ -88,8 +88,9 @@ class _PairJoinState extends State<PairJoin>
     duration: const Duration(milliseconds: 420),
   );
   PairRun? _run;
-  // a line said before any run, or after one ended
+  // a line said before any run, or after one ended, and an add's own
   PairLine _line = PairLine.none;
+  String _said = '';
   bool _warn = false;
 
   @override
@@ -112,7 +113,8 @@ class _PairJoinState extends State<PairJoin>
     if (r.phase == PairPhase.matched) HapticFeedback.lightImpact();
     if (r.phase == PairPhase.ended) {
       if (r.warn) _nudge();
-      _line = r.added != null && r.added!.isNotEmpty ? PairLine.none : r.line;
+      _said = r.added ?? '';
+      _line = r.line;
       _warn = r.warn;
     }
     setState(() {});
@@ -138,6 +140,7 @@ class _PairJoinState extends State<PairJoin>
         _line = pairOldCode(_ctrl.text)
             ? PairLine.oldCode
             : PairLine.eightDigits;
+        _said = '';
         _warn = true;
       });
       _nudge();
@@ -149,6 +152,7 @@ class _PairJoinState extends State<PairJoin>
     _run = r..addListener(_changed);
     setState(() {
       _line = PairLine.none;
+      _said = '';
       _warn = false;
     });
     await r.begin(_ctrl.text);
@@ -210,7 +214,9 @@ class _PairJoinState extends State<PairJoin>
         r != null && (r.phase == PairPhase.making || r.phase == PairPhase.live);
     final line = running ? r.line : _line;
     final warn = running ? r.warn : _warn;
-    final text = pairLineText(line, sharer: false);
+    final text = !running && _said.isNotEmpty
+        ? _said
+        : pairLineText(line, sharer: false);
     final waits = running && r.phase == PairPhase.live;
     final status = text.isEmpty
         ? const SizedBox(width: double.infinity)
@@ -272,9 +278,10 @@ class _PairJoinState extends State<PairJoin>
             inputFormatters: const [PairCodeFormatter()],
             textAlign: TextAlign.center,
             onChanged: (_) {
-              if (_line != PairLine.none) {
+              if (_line != PairLine.none || _said.isNotEmpty) {
                 setState(() {
                   _line = PairLine.none;
+                  _said = '';
                   _warn = false;
                 });
               }

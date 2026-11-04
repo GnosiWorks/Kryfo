@@ -22,7 +22,8 @@ import 'pin_flow_fakes.dart' show app, phone;
 const _words = 'thumb-behave-boring';
 
 class _Pair {
-  _Pair(this.steps, {this.joinSays = 'ok 4'});
+  _Pair(this.steps, {this.joinSays = 'ok 4', this.adds = ('', true)});
+  final (String, bool) adds;
   // one per round, the last one repeating
   final List<String> steps;
   final String joinSays;
@@ -44,7 +45,7 @@ class _Pair {
       hold: (_, _) async => calls.add('hold'),
       add: (p, m, {required sharer}) async {
         calls.add('add');
-        return ('', true);
+        return adds;
       },
       drop: (_) async => calls.add('drop'),
     ),
@@ -273,5 +274,25 @@ void main() {
       Directionality.of(t.element(find.text(l10n.pairCodeMatched))),
       TextDirection.rtl,
     );
+  });
+
+  testWidgets('an add the app turned away says why in its own words, and '
+      'lets the invite go', (t) async {
+    phone(t);
+    final p = _Pair([_done()], adds: ('They are blocked here.', false));
+    await t.pumpWidget(app(p.widget()));
+    await _type(t, '07123456');
+    await _rounds(t, 2);
+    await t.pumpAndSettle();
+    await t.tap(find.text(l10n.commonAdd));
+    await t.pumpAndSettle();
+    expect(find.text('They are blocked here.'), findsOneWidget);
+    expect(p.done, isEmpty);
+    expect(p.calls, containsAllInOrder(['add', 'drop']));
+    // a new code typed clears it
+    await _type(t, '482913');
+    await t.pumpAndSettle();
+    expect(find.text('They are blocked here.'), findsNothing);
+    expect(find.text(l10n.pairCodeOldCodeShown), findsOneWidget);
   });
 }

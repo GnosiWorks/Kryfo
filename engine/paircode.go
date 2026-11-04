@@ -601,10 +601,9 @@ func (r *pairRun) shareStep(now time.Time) string {
 	if now.After(r.until.Add(pake.Skew)) {
 		return "error: expired"
 	}
-	// a new window, a new offer; the one before stays answerable
-	if now.Before(r.until) && !r.offer(now) {
-		return "unreached"
-	}
+	// a new window, a new offer; the one before stays answerable. one no
+	// relay took goes up again next round, and the answers are read still
+	offered := !now.Before(r.until) || r.offer(now)
 	w := pake.Window(now)
 	addrs, err := pairAddrs(r.box, []uint64{w - 1, w})
 	if err != nil {
@@ -639,7 +638,7 @@ func (r *pairRun) shareStep(now time.Time) string {
 			log.Printf("paircode: a wrong code (%d)", r.sharer.Fails())
 		}
 	}
-	if !heard {
+	if !heard || !offered {
 		return "unreached"
 	}
 	return fmt.Sprintf("wait %d", r.sharer.Fails())
