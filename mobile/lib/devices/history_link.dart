@@ -860,13 +860,20 @@ class DeviceHistoryCopy {
   }
 
   Future<void> run() async {
-    await _loadHeard();
+    var heard = false;
     while (!_stopped) {
       final was = await kept(db);
       final owed = await _owed();
-      if (was != null && historyCopyOver(was.step)) {
-        stage.value = was;
+      final over = was != null && historyCopyOver(was.step) ? was : null;
+      if (over != null) {
+        stage.value = over;
         if (owed == null) return;
+      }
+      if (!heard) {
+        heard = true;
+        await _loadHeard();
+      }
+      if (over != null && owed != null) {
         // every record is in: the tally goes before the bookkeeping does,
         // so a copy the phone ended still goes from here
         if (!await _deliver(owed)) return;
