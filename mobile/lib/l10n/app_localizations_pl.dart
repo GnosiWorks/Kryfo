@@ -11298,70 +11298,70 @@ class AppLocalizationsPl extends AppLocalizations {
       'Pomija Tor, więc wiadomości docierają szybciej i zużywają mniej baterii. Nasze serwery widzą twój adres IP tylko podczas połączenia i nigdy go nie zapisują ani nie przechowują. Twoje kontakty nigdy go nie widzą. Twoja sieć widzi, że łączysz się z Kryfo.';
 
   @override
-  String get voiceSeeTranscription => 'See transcription';
+  String get voiceSeeTranscription => 'Pokaż transkrypcję';
 
   @override
-  String get voiceTranscribing => 'Transcribing…';
+  String get voiceTranscribing => 'Transkrybuję…';
 
   @override
-  String get voiceHideTranscription => 'Hide';
+  String get voiceHideTranscription => 'Ukryj';
 
   @override
-  String get voiceShowOriginalOnly => 'Show original only';
+  String get voiceShowOriginalOnly => 'Pokaż tylko oryginał';
 
   @override
-  String get voiceCouldNotTranscribe => 'Couldn\'t make out the words';
+  String get voiceCouldNotTranscribe => 'Nie udało się rozpoznać słów';
 
   @override
-  String get voiceTranscriptLabel => 'Transcription';
+  String get voiceTranscriptLabel => 'Transkrypcja';
 
   @override
-  String get voiceSettingsTitle => 'Voice transcription';
+  String get voiceSettingsTitle => 'Transkrypcja głosu';
 
   @override
-  String get voiceOnRow => 'Transcribe voice messages';
+  String get voiceOnRow => 'Transkrybuj wiadomości głosowe';
 
   @override
-  String get voiceOnHint => 'Offered under every voice message';
+  String get voiceOnHint => 'Dostępna pod każdą wiadomością głosową';
 
   @override
-  String get voiceOffDeletes => 'Turning this off deletes saved transcripts.';
+  String get voiceOffDeletes => 'Wyłączenie usuwa zapisane transkrypcje.';
 
   @override
-  String get voiceModelTitle => 'Speech model';
+  String get voiceModelTitle => 'Model mowy';
 
   @override
   String voiceModelLine(Object size) {
-    return 'One download of about $size, for every language.';
+    return 'Jedno pobranie, około $size, dla wszystkich języków.';
   }
 
   @override
   String get voiceModelPrivacy =>
-      'Downloaded over Tor and kept on this phone. Your voice messages never leave it.';
+      'Pobierany przez Tor i przechowywany na tym telefonie. Twoje wiadomości głosowe nigdy go nie opuszczają.';
 
   @override
   String get voiceModelPrivacyDesk =>
-      'Downloaded over Tor and kept on this computer. Your voice messages never leave it.';
+      'Pobierany przez Tor i przechowywany na tym komputerze. Twoje wiadomości głosowe nigdy go nie opuszczają.';
 
   @override
   String get voiceModelFailNoTor =>
-      'Tor isn\'t connected yet. The model downloads over Tor only, so try again once it is.';
+      'Tor nie jest jeszcze połączony. Model pobiera się tylko przez Tor, więc spróbuj ponownie, gdy się połączy.';
 
   @override
-  String get voiceModelRemoveTitle => 'Remove the speech model?';
+  String get voiceModelRemoveTitle => 'Usunąć model mowy?';
 
   @override
   String get voiceModelRemoveLine =>
-      'Transcripts already made stay. New ones need the model again.';
+      'Gotowe transkrypcje zostają. Nowe znów będą potrzebować modelu.';
 
   @override
   String get voiceKeptNote =>
-      'Transcripts are kept with their chat, encrypted on this phone, and deleted with it.';
+      'Transkrypcje są przechowywane przy swoim czacie, zaszyfrowane na tym telefonie, i usuwane razem z nim.';
 
   @override
   String get voiceKeptNoteDesk =>
-      'Transcripts are kept with their chat, encrypted on this computer, and deleted with it.';
+      'Transkrypcje są przechowywane przy swoim czacie, zaszyfrowane na tym komputerze, i usuwane razem z nim.';
 
   @override
-  String get voiceNotNow => 'Not now';
+  String get voiceNotNow => 'Nie teraz';
 }
