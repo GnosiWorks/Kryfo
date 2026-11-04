@@ -1566,16 +1566,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'Could not clean that gif';
 
   @override
-  String get chatTorIsNotUp => 'Tor is not up yet · sending without';
+  String get chatTorIsNotUp => 'Tor isn\'t connected yet · no link preview';
 
   @override
-  String get chatCouldnTReachIt => 'Couldn\'t reach it · sending without';
+  String get chatCouldnTReachIt => 'Couldn\'t reach the page · no link preview';
 
   @override
-  String get chatNoTitleCameBack => 'No title came back · sending without';
+  String get chatNoTitleCameBack => 'That page has no title · no link preview';
 
   @override
-  String get chatCouldnTFetchIt => 'Couldn\'t fetch it · sending without';
+  String get chatCouldnTFetchIt => 'Couldn\'t load a preview';
 
   @override
   String get chatNoSignalSessionRe => 'No signal session: pair again';
@@ -2551,16 +2551,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupChatMessageUnavailable => 'Message unavailable';
 
   @override
-  String get groupChatTorIsNotUp => 'Tor is not up yet · sending without';
+  String get groupChatTorIsNotUp =>
+      'Tor isn\'t connected yet · no link preview';
 
   @override
-  String get groupChatCouldnTReachIt => 'Couldn\'t reach it · sending without';
+  String get groupChatCouldnTReachIt =>
+      'Couldn\'t reach the page · no link preview';
 
   @override
-  String get groupChatNoTitleCameBack => 'No title came back · sending without';
+  String get groupChatNoTitleCameBack =>
+      'That page has no title · no link preview';
 
   @override
-  String get groupChatCouldnTFetchIt => 'Couldn\'t fetch it · sending without';
+  String get groupChatCouldnTFetchIt => 'Couldn\'t load a preview';
 
   @override
   String get groupChatCamera => 'Camera';

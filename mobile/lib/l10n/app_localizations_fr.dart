@@ -1577,18 +1577,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'Impossible de nettoyer ce gif';
 
   @override
-  String get chatTorIsNotUp => 'Tor n’est pas encore prêt · envoi sans aperçu';
+  String get chatTorIsNotUp =>
+      'Tor n’est pas encore connecté · pas d’aperçu du lien';
 
   @override
   String get chatCouldnTReachIt =>
-      'Impossible de l’atteindre · envoi sans aperçu';
+      'Impossible d’atteindre la page · pas d’aperçu du lien';
 
   @override
-  String get chatNoTitleCameBack => 'Aucun titre reçu · envoi sans aperçu';
+  String get chatNoTitleCameBack =>
+      'Cette page n’a pas de titre · pas d’aperçu du lien';
 
   @override
-  String get chatCouldnTFetchIt =>
-      'Impossible de le récupérer · envoi sans aperçu';
+  String get chatCouldnTFetchIt => 'Impossible de charger l’aperçu';
 
   @override
   String get chatNoSignalSessionRe =>
@@ -2577,18 +2578,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get groupChatTorIsNotUp =>
-      'Tor n’est pas encore prêt · envoi sans aperçu';
+      'Tor n’est pas encore connecté · pas d’aperçu du lien';
 
   @override
   String get groupChatCouldnTReachIt =>
-      'Impossible de l’atteindre · envoi sans aperçu';
+      'Impossible d’atteindre la page · pas d’aperçu du lien';
 
   @override
-  String get groupChatNoTitleCameBack => 'Aucun titre reçu · envoi sans aperçu';
+  String get groupChatNoTitleCameBack =>
+      'Cette page n’a pas de titre · pas d’aperçu du lien';
 
   @override
-  String get groupChatCouldnTFetchIt =>
-      'Impossible de le récupérer · envoi sans aperçu';
+  String get groupChatCouldnTFetchIt => 'Impossible de charger l’aperçu';
 
   @override
   String get groupChatCamera => 'Caméra';

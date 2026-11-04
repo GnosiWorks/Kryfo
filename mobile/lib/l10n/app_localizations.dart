@@ -2473,28 +2473,28 @@ abstract class AppLocalizations {
   /// **'Could not clean that gif'**
   String get chatCouldNotCleanThatGif;
 
-  /// screens/chat_screen.dart
+  /// Toast when the user taps add preview in the composer and Tor is not running. The page title is fetched over Tor only; on failure no link preview is added. Nothing is sent at this moment, and the message later goes on its normal route. Say only that no link preview is added, never that the message goes without Tor.
   ///
   /// In en, this message translates to:
-  /// **'Tor is not up yet · sending without'**
+  /// **'Tor isn\'t connected yet · no link preview'**
   String get chatTorIsNotUp;
 
-  /// screens/chat_screen.dart
+  /// Toast when the user taps add preview in the composer and the page cannot be reached over Tor. On failure no link preview is added. Nothing is sent at this moment, and the message later goes on its normal route. Say only that no link preview is added, never that the message goes without Tor.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t reach it · sending without'**
+  /// **'Couldn\'t reach the page · no link preview'**
   String get chatCouldnTReachIt;
 
-  /// screens/chat_screen.dart
+  /// Toast when the user taps add preview in the composer and the page loads over Tor but has no title. No link preview is added. Nothing is sent at this moment, and the message later goes on its normal route. Say only that no link preview is added.
   ///
   /// In en, this message translates to:
-  /// **'No title came back · sending without'**
+  /// **'That page has no title · no link preview'**
   String get chatNoTitleCameBack;
 
-  /// screens/chat_screen.dart
+  /// Toast when fetching a link preview in the composer fails for any other reason. No link preview is added. Nothing is sent at this moment, and the message later goes on its normal route.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t fetch it · sending without'**
+  /// **'Couldn\'t load a preview'**
   String get chatCouldnTFetchIt;
 
   /// screens/chat_screen.dart
@@ -4081,28 +4081,28 @@ abstract class AppLocalizations {
   /// **'Message unavailable'**
   String get groupChatMessageUnavailable;
 
-  /// screens/group_chat_screen.dart
+  /// Toast when the user taps add preview in the group composer and Tor is not running. The page title is fetched over Tor only; on failure no link preview is added. Nothing is sent at this moment, and the message later goes on its normal route. Say only that no link preview is added, never that the message goes without Tor.
   ///
   /// In en, this message translates to:
-  /// **'Tor is not up yet · sending without'**
+  /// **'Tor isn\'t connected yet · no link preview'**
   String get groupChatTorIsNotUp;
 
-  /// screens/group_chat_screen.dart
+  /// Toast when the user taps add preview in the group composer and the page cannot be reached over Tor. On failure no link preview is added. Nothing is sent at this moment, and the message later goes on its normal route. Say only that no link preview is added, never that the message goes without Tor.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t reach it · sending without'**
+  /// **'Couldn\'t reach the page · no link preview'**
   String get groupChatCouldnTReachIt;
 
-  /// screens/group_chat_screen.dart
+  /// Toast when the user taps add preview in the group composer and the page loads over Tor but has no title. No link preview is added. Nothing is sent at this moment, and the message later goes on its normal route. Say only that no link preview is added.
   ///
   /// In en, this message translates to:
-  /// **'No title came back · sending without'**
+  /// **'That page has no title · no link preview'**
   String get groupChatNoTitleCameBack;
 
-  /// screens/group_chat_screen.dart
+  /// Toast when fetching a link preview in the group composer fails for any other reason. No link preview is added. Nothing is sent at this moment, and the message later goes on its normal route.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t fetch it · sending without'**
+  /// **'Couldn\'t load a preview'**
   String get groupChatCouldnTFetchIt;
 
   /// screens/group_chat_screen.dart

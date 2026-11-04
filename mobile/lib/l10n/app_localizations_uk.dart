@@ -1599,16 +1599,18 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'Не вдалося очистити цей GIF';
 
   @override
-  String get chatTorIsNotUp => 'Tor ще не запущено · піде без прев’ю';
+  String get chatTorIsNotUp => 'Tor ще не під’єднано · без прев’ю посилання';
 
   @override
-  String get chatCouldnTReachIt => 'Сайт не відповідає · піде без прев’ю';
+  String get chatCouldnTReachIt =>
+      'Не вдалося відкрити сторінку · без прев’ю посилання';
 
   @override
-  String get chatNoTitleCameBack => 'Заголовка немає · піде без прев’ю';
+  String get chatNoTitleCameBack =>
+      'Сторінка не має заголовка · без прев’ю посилання';
 
   @override
-  String get chatCouldnTFetchIt => 'Не вдалося завантажити · піде без прев’ю';
+  String get chatCouldnTFetchIt => 'Не вдалося завантажити прев’ю';
 
   @override
   String get chatNoSignalSessionRe => 'Немає сесії Signal. З’єднайся заново';
@@ -2606,17 +2608,19 @@ class AppLocalizationsUk extends AppLocalizations {
   String get groupChatMessageUnavailable => 'Повідомлення недоступне';
 
   @override
-  String get groupChatTorIsNotUp => 'Tor ще не запущено · піде без прев’ю';
+  String get groupChatTorIsNotUp =>
+      'Tor ще не під’єднано · без прев’ю посилання';
 
   @override
-  String get groupChatCouldnTReachIt => 'Сайт не відповідає · піде без прев’ю';
+  String get groupChatCouldnTReachIt =>
+      'Не вдалося відкрити сторінку · без прев’ю посилання';
 
   @override
-  String get groupChatNoTitleCameBack => 'Заголовка немає · піде без прев’ю';
+  String get groupChatNoTitleCameBack =>
+      'Сторінка не має заголовка · без прев’ю посилання';
 
   @override
-  String get groupChatCouldnTFetchIt =>
-      'Не вдалося завантажити · піде без прев’ю';
+  String get groupChatCouldnTFetchIt => 'Не вдалося завантажити прев’ю';
 
   @override
   String get groupChatCamera => 'Камера';

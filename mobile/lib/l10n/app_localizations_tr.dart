@@ -1570,16 +1570,18 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatTorIsNotUp =>
-      'Tor henüz hazır değil · önizlemesiz gönderiliyor';
+      'Tor henüz bağlı değil · bağlantı önizlemesi yok';
 
   @override
-  String get chatCouldnTReachIt => 'Ulaşılamadı · önizlemesiz gönderiliyor';
+  String get chatCouldnTReachIt =>
+      'Sayfaya ulaşılamadı · bağlantı önizlemesi yok';
 
   @override
-  String get chatNoTitleCameBack => 'Başlık gelmedi · önizlemesiz gönderiliyor';
+  String get chatNoTitleCameBack =>
+      'Bu sayfanın başlığı yok · bağlantı önizlemesi yok';
 
   @override
-  String get chatCouldnTFetchIt => 'Alınamadı · önizlemesiz gönderiliyor';
+  String get chatCouldnTFetchIt => 'Önizleme yüklenemedi';
 
   @override
   String get chatNoSignalSessionRe => 'Signal oturumu yok. Yeniden eşleştir';
@@ -2555,18 +2557,18 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupChatTorIsNotUp =>
-      'Tor henüz hazır değil · önizlemesiz gönderiliyor';
+      'Tor henüz bağlı değil · bağlantı önizlemesi yok';
 
   @override
   String get groupChatCouldnTReachIt =>
-      'Ulaşılamadı · önizlemesiz gönderiliyor';
+      'Sayfaya ulaşılamadı · bağlantı önizlemesi yok';
 
   @override
   String get groupChatNoTitleCameBack =>
-      'Başlık gelmedi · önizlemesiz gönderiliyor';
+      'Bu sayfanın başlığı yok · bağlantı önizlemesi yok';
 
   @override
-  String get groupChatCouldnTFetchIt => 'Alınamadı · önizlemesiz gönderiliyor';
+  String get groupChatCouldnTFetchIt => 'Önizleme yüklenemedi';
 
   @override
   String get groupChatCamera => 'Kamera';

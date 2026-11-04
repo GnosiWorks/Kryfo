@@ -1602,19 +1602,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'Не удалось очистить GIF';
 
   @override
-  String get chatTorIsNotUp => 'Tor ещё не запущен · отправляем без превью';
+  String get chatTorIsNotUp => 'Tor ещё не подключён · без превью ссылки';
 
   @override
   String get chatCouldnTReachIt =>
-      'Не удалось достучаться · отправляем без превью';
+      'Не удалось открыть страницу · без превью ссылки';
 
   @override
   String get chatNoTitleCameBack =>
-      'Заголовок не пришёл · отправляем без превью';
+      'У страницы нет заголовка · без превью ссылки';
 
   @override
-  String get chatCouldnTFetchIt =>
-      'Не удалось загрузить · отправляем без превью';
+  String get chatCouldnTFetchIt => 'Не удалось загрузить превью';
 
   @override
   String get chatNoSignalSessionRe => 'Нет сессии Signal — свяжись заново';
@@ -2611,20 +2610,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get groupChatMessageUnavailable => 'Сообщение недоступно';
 
   @override
-  String get groupChatTorIsNotUp =>
-      'Tor ещё не запущен · отправляем без превью';
+  String get groupChatTorIsNotUp => 'Tor ещё не подключён · без превью ссылки';
 
   @override
   String get groupChatCouldnTReachIt =>
-      'Не удалось достучаться · отправляем без превью';
+      'Не удалось открыть страницу · без превью ссылки';
 
   @override
   String get groupChatNoTitleCameBack =>
-      'Заголовок не пришёл · отправляем без превью';
+      'У страницы нет заголовка · без превью ссылки';
 
   @override
-  String get groupChatCouldnTFetchIt =>
-      'Не удалось загрузить · отправляем без превью';
+  String get groupChatCouldnTFetchIt => 'Не удалось загрузить превью';
 
   @override
   String get groupChatCamera => 'Камера';

@@ -1565,20 +1565,17 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'تمیز کردن آن گیف ممکن نشد';
 
   @override
-  String get chatTorIsNotUp =>
-      'Tor هنوز آماده نیست · بدون پیش‌نمایش فرستاده می‌شود';
+  String get chatTorIsNotUp => 'Tor هنوز وصل نیست · بدون پیش‌نمایش پیوند';
 
   @override
-  String get chatCouldnTReachIt =>
-      'به آن دسترسی نشد · بدون پیش‌نمایش فرستاده می‌شود';
+  String get chatCouldnTReachIt => 'به صفحه دسترسی نشد · بدون پیش‌نمایش پیوند';
 
   @override
   String get chatNoTitleCameBack =>
-      'عنوانی برنگشت · بدون پیش‌نمایش فرستاده می‌شود';
+      'این صفحه عنوانی ندارد · بدون پیش‌نمایش پیوند';
 
   @override
-  String get chatCouldnTFetchIt =>
-      'دریافتش ممکن نشد · بدون پیش‌نمایش فرستاده می‌شود';
+  String get chatCouldnTFetchIt => 'پیش‌نمایش بارگیری نشد';
 
   @override
   String get chatNoSignalSessionRe => 'نشست Signal نیست. دوباره جفت کنید';
@@ -2553,20 +2550,18 @@ class AppLocalizationsFa extends AppLocalizations {
   String get groupChatMessageUnavailable => 'پیام در دسترس نیست';
 
   @override
-  String get groupChatTorIsNotUp =>
-      'Tor هنوز آماده نیست · بدون پیش‌نمایش فرستاده می‌شود';
+  String get groupChatTorIsNotUp => 'Tor هنوز وصل نیست · بدون پیش‌نمایش پیوند';
 
   @override
   String get groupChatCouldnTReachIt =>
-      'به آن دسترسی نشد · بدون پیش‌نمایش فرستاده می‌شود';
+      'به صفحه دسترسی نشد · بدون پیش‌نمایش پیوند';
 
   @override
   String get groupChatNoTitleCameBack =>
-      'عنوانی برنگشت · بدون پیش‌نمایش فرستاده می‌شود';
+      'این صفحه عنوانی ندارد · بدون پیش‌نمایش پیوند';
 
   @override
-  String get groupChatCouldnTFetchIt =>
-      'دریافتش ممکن نشد · بدون پیش‌نمایش فرستاده می‌شود';
+  String get groupChatCouldnTFetchIt => 'پیش‌نمایش بارگیری نشد';
 
   @override
   String get groupChatCamera => 'دوربین';

@@ -1569,18 +1569,17 @@ class AppLocalizationsHi extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'उस GIF को साफ़ नहीं कर पाए';
 
   @override
-  String get chatTorIsNotUp => 'Tor अभी चालू नहीं हुआ · इसके बिना भेज रहे हैं';
+  String get chatTorIsNotUp => 'Tor अभी जुड़ा नहीं है · लिंक प्रीव्यू नहीं';
 
   @override
-  String get chatCouldnTReachIt =>
-      'वहाँ तक नहीं पहुँच पाए · इसके बिना भेज रहे हैं';
+  String get chatCouldnTReachIt => 'पेज तक नहीं पहुँच पाए · लिंक प्रीव्यू नहीं';
 
   @override
   String get chatNoTitleCameBack =>
-      'कोई शीर्षक नहीं मिला · इसके बिना भेज रहे हैं';
+      'इस पेज का कोई शीर्षक नहीं है · लिंक प्रीव्यू नहीं';
 
   @override
-  String get chatCouldnTFetchIt => 'इसे ला नहीं पाए · इसके बिना भेज रहे हैं';
+  String get chatCouldnTFetchIt => 'प्रीव्यू लोड नहीं हो पाया';
 
   @override
   String get chatNoSignalSessionRe => 'कोई Signal सत्र नहीं: दोबारा जोड़ें';
@@ -2559,19 +2558,18 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get groupChatTorIsNotUp =>
-      'Tor अभी चालू नहीं हुआ · इसके बिना भेज रहे हैं';
+      'Tor अभी जुड़ा नहीं है · लिंक प्रीव्यू नहीं';
 
   @override
   String get groupChatCouldnTReachIt =>
-      'वहाँ तक नहीं पहुँच पाए · इसके बिना भेज रहे हैं';
+      'पेज तक नहीं पहुँच पाए · लिंक प्रीव्यू नहीं';
 
   @override
   String get groupChatNoTitleCameBack =>
-      'कोई शीर्षक नहीं मिला · इसके बिना भेज रहे हैं';
+      'इस पेज का कोई शीर्षक नहीं है · लिंक प्रीव्यू नहीं';
 
   @override
-  String get groupChatCouldnTFetchIt =>
-      'इसे ला नहीं पाए · इसके बिना भेज रहे हैं';
+  String get groupChatCouldnTFetchIt => 'प्रीव्यू लोड नहीं हो पाया';
 
   @override
   String get groupChatCamera => 'कैमरा';

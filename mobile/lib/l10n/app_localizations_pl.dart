@@ -1602,19 +1602,18 @@ class AppLocalizationsPl extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'Nie udało się wyczyścić tego GIF-a';
 
   @override
-  String get chatTorIsNotUp =>
-      'Sieć Tor nie jest jeszcze aktywna · wysyłanie bezpośrednie';
+  String get chatTorIsNotUp => 'Tor jeszcze nie działa · bez podglądu linku';
 
   @override
   String get chatCouldnTReachIt =>
-      'Nie udało się połączyć · wysyłanie bezpośrednie';
+      'Nie udało się połączyć ze stroną · bez podglądu linku';
 
   @override
   String get chatNoTitleCameBack =>
-      'Nie pobrano tytułu · wysyłanie bez podglądu';
+      'Ta strona nie ma tytułu · bez podglądu linku';
 
   @override
-  String get chatCouldnTFetchIt => 'Nie udało się pobrać · wysyłanie bez tego';
+  String get chatCouldnTFetchIt => 'Nie udało się wczytać podglądu';
 
   @override
   String get chatNoSignalSessionRe => 'Brak sesji Signal: sparuj ponownie';
@@ -2613,17 +2612,19 @@ class AppLocalizationsPl extends AppLocalizations {
   String get groupChatMessageUnavailable => 'Wiadomość niedostępna';
 
   @override
-  String get groupChatTorIsNotUp => 'Tor nie działa · wysyłanie bez niego';
+  String get groupChatTorIsNotUp =>
+      'Tor jeszcze nie działa · bez podglądu linku';
 
   @override
   String get groupChatCouldnTReachIt =>
-      'Brak połączenia · wysyłanie bezpośrednie';
+      'Nie udało się połączyć ze stroną · bez podglądu linku';
 
   @override
-  String get groupChatNoTitleCameBack => 'Brak tytułu · wysyłanie bez niego';
+  String get groupChatNoTitleCameBack =>
+      'Ta strona nie ma tytułu · bez podglądu linku';
 
   @override
-  String get groupChatCouldnTFetchIt => 'Brak pobrania · wysyłanie bez tego';
+  String get groupChatCouldnTFetchIt => 'Nie udało się wczytać podglądu';
 
   @override
   String get groupChatCamera => 'Aparat';

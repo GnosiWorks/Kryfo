@@ -1555,18 +1555,18 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatCouldNotCleanThatGif => 'Gagal membersihkan gif itu';
 
   @override
-  String get chatTorIsNotUp => 'Tor belum aktif · dikirim tanpa pratinjau';
+  String get chatTorIsNotUp => 'Tor belum terhubung · tanpa pratinjau tautan';
 
   @override
   String get chatCouldnTReachIt =>
-      'Situsnya tak terjangkau · dikirim tanpa pratinjau';
+      'Halamannya tak terjangkau · tanpa pratinjau tautan';
 
   @override
-  String get chatNoTitleCameBack => 'Tidak ada judul · dikirim tanpa pratinjau';
+  String get chatNoTitleCameBack =>
+      'Halaman itu tidak punya judul · tanpa pratinjau tautan';
 
   @override
-  String get chatCouldnTFetchIt =>
-      'Gagal mengambilnya · dikirim tanpa pratinjau';
+  String get chatCouldnTFetchIt => 'Gagal memuat pratinjau';
 
   @override
   String get chatNoSignalSessionRe => 'Tidak ada sesi Signal. Tautkan ulang';
@@ -2549,19 +2549,19 @@ class AppLocalizationsId extends AppLocalizations {
   String get groupChatMessageUnavailable => 'Pesan tidak tersedia';
 
   @override
-  String get groupChatTorIsNotUp => 'Tor belum aktif · dikirim tanpa pratinjau';
+  String get groupChatTorIsNotUp =>
+      'Tor belum terhubung · tanpa pratinjau tautan';
 
   @override
   String get groupChatCouldnTReachIt =>
-      'Situsnya tak terjangkau · dikirim tanpa pratinjau';
+      'Halamannya tak terjangkau · tanpa pratinjau tautan';
 
   @override
   String get groupChatNoTitleCameBack =>
-      'Tidak ada judul · dikirim tanpa pratinjau';
+      'Halaman itu tidak punya judul · tanpa pratinjau tautan';
 
   @override
-  String get groupChatCouldnTFetchIt =>
-      'Gagal mengambilnya · dikirim tanpa pratinjau';
+  String get groupChatCouldnTFetchIt => 'Gagal memuat pratinjau';
 
   @override
   String get groupChatCamera => 'Kamera';

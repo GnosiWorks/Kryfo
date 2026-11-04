@@ -1494,16 +1494,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatCouldNotCleanThatGif => '无法清理这个 GIF';
 
   @override
-  String get chatTorIsNotUp => 'Tor 还没启动 · 不带预览发送';
+  String get chatTorIsNotUp => 'Tor 还没连上 · 不添加链接预览';
 
   @override
-  String get chatCouldnTReachIt => '无法访问 · 不带预览发送';
+  String get chatCouldnTReachIt => '无法访问该页面 · 不添加链接预览';
 
   @override
-  String get chatNoTitleCameBack => '没有取到标题 · 不带预览发送';
+  String get chatNoTitleCameBack => '该页面没有标题 · 不添加链接预览';
 
   @override
-  String get chatCouldnTFetchIt => '无法获取 · 不带预览发送';
+  String get chatCouldnTFetchIt => '无法加载预览';
 
   @override
   String get chatNoSignalSessionRe => '没有 Signal 会话——请重新配对';
@@ -2423,16 +2423,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupChatMessageUnavailable => '消息不可用';
 
   @override
-  String get groupChatTorIsNotUp => 'Tor 还没启动 · 不带预览发送';
+  String get groupChatTorIsNotUp => 'Tor 还没连上 · 不添加链接预览';
 
   @override
-  String get groupChatCouldnTReachIt => '无法访问 · 不带预览发送';
+  String get groupChatCouldnTReachIt => '无法访问该页面 · 不添加链接预览';
 
   @override
-  String get groupChatNoTitleCameBack => '没有取到标题 · 不带预览发送';
+  String get groupChatNoTitleCameBack => '该页面没有标题 · 不添加链接预览';
 
   @override
-  String get groupChatCouldnTFetchIt => '无法获取 · 不带预览发送';
+  String get groupChatCouldnTFetchIt => '无法加载预览';
 
   @override
   String get groupChatCamera => '相机';
@@ -11986,16 +11986,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatCouldNotCleanThatGif => '無法清理那個 GIF';
 
   @override
-  String get chatTorIsNotUp => 'Tor 尚未啟動 · 不附預覽直接傳送';
+  String get chatTorIsNotUp => 'Tor 尚未連上 · 不加入連結預覽';
 
   @override
-  String get chatCouldnTReachIt => '連不上 · 不附預覽直接傳送';
+  String get chatCouldnTReachIt => '無法連上該頁面 · 不加入連結預覽';
 
   @override
-  String get chatNoTitleCameBack => '沒有取得標題 · 不附預覽直接傳送';
+  String get chatNoTitleCameBack => '該頁面沒有標題 · 不加入連結預覽';
 
   @override
-  String get chatCouldnTFetchIt => '無法擷取 · 不附預覽直接傳送';
+  String get chatCouldnTFetchIt => '無法載入預覽';
 
   @override
   String get chatNoSignalSessionRe => '沒有 Signal 工作階段，請重新配對';
@@ -12915,16 +12915,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupChatMessageUnavailable => '訊息無法顯示';
 
   @override
-  String get groupChatTorIsNotUp => 'Tor 尚未啟動 · 不附預覽直接傳送';
+  String get groupChatTorIsNotUp => 'Tor 尚未連上 · 不加入連結預覽';
 
   @override
-  String get groupChatCouldnTReachIt => '連不上 · 不附預覽直接傳送';
+  String get groupChatCouldnTReachIt => '無法連上該頁面 · 不加入連結預覽';
 
   @override
-  String get groupChatNoTitleCameBack => '沒有取得標題 · 不附預覽直接傳送';
+  String get groupChatNoTitleCameBack => '該頁面沒有標題 · 不加入連結預覽';
 
   @override
-  String get groupChatCouldnTFetchIt => '無法擷取 · 不附預覽直接傳送';
+  String get groupChatCouldnTFetchIt => '無法載入預覽';
 
   @override
   String get groupChatCamera => '相機';
