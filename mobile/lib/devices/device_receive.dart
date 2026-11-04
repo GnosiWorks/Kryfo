@@ -102,13 +102,24 @@ class DeviceReceive {
     required this.sign,
     this.shown,
     this.blockedChat,
+    this.ownHome,
+    Future<Database> Function()? mine,
     int Function()? clock,
-  }) : _clock = clock ?? (() => DateTime.now().millisecondsSinceEpoch);
+  }) : mine = mine ?? db,
+       _clock = clock ?? (() => DateTime.now().millisecondsSinceEpoch);
 
   final DeviceState state;
 
-  /// the everyday container
+  /// where the contacts' device state is: the everyday container, or the
+  /// open vault for its hidden chats
   final Future<Database> Function() db;
+
+  /// where my own state is (my list, the pool): the everyday container
+  final Future<Database> Function() mine;
+
+  /// the everyday side, for this one when it is the open vault's: my own
+  /// devices and my own list are heard and kept there alone
+  final DeviceReceive? ownHome;
   final Future<DeviceSessions> Function(int ident) sessions;
   final DeviceSend send;
   final DeviceListen listener;
@@ -167,6 +178,7 @@ class DeviceReceive {
     if (m == null || t.my != m.device) return null;
     final identity = '05${t.peerX}';
     final own = identity == devHex(m.identity);
+    if (own && ownHome != null) return null;
     var who = own ? null : await contact(t.ident, identity);
     // a blocked contact's device: opened and admitted, nothing of it taken
     // or answered, and what it wrote goes to the chat's block rules (noted
@@ -578,7 +590,11 @@ class DeviceReceive {
       await _answerAsk(d, m, c, identity, device, dq.whereType<int>());
     }
     final dh = j['dh'];
-    if (dh is String && m.device == 1) await _handedBack(d, m, identity, dh);
+    if (dh is String && m.device == 1) {
+      // my own list, so the everyday side's to sign and keep
+      final h = ownHome ?? this;
+      await h._handedBack(await h.db(), m, identity, dh);
+    }
     if (j['dw'] == 1 && m.device == 1 && c.devices) {
       await _wantsMine(d, m, identity);
     }
@@ -678,6 +694,19 @@ class DeviceReceive {
   /// heard on, and what was marked for them goes. read before their rows go
   Future<void> forget(int ident, String identity) async {
     if (!linkedDevicesOn) return;
+    await unlistenAll(ident, identity);
+    await (await db()).delete(
+      'dev_marks',
+      where: 'ident = ? AND peer = ?',
+      whereArgs: [ident, identity],
+    );
+  }
+
+  /// every device pair of [identity], a contact of my [ident], heard on
+  /// no more, with nothing of theirs deleted: their rows are moving to the
+  /// other side (hidden or shown)
+  Future<void> unlistenAll(int ident, String identity) async {
+    if (!linkedDevicesOn) return;
     final d = await db();
     final m = await me(ident);
     if (m == null) return;
@@ -705,11 +734,6 @@ class DeviceReceive {
       listener.unlisten(ident, p);
       listener.unlisten(ident, '$p.0');
     }
-    await d.delete(
-      'dev_marks',
-      where: 'ident = ? AND peer = ?',
-      whereArgs: [ident, identity],
-    );
   }
 
   /// every device pair of mine heard on: the seeded pair where a seed is
@@ -732,7 +756,10 @@ class DeviceReceive {
         addr: r['halo_id'] as String,
       ));
     }
-    for (final r in await d.query('identities', columns: ['id'])) {
+    for (final r
+        in ownHome != null
+            ? const <Map<String, Object?>>[]
+            : await d.query('identities', columns: ['id'])) {
       final ident = r['id'] as int;
       final m = await me(ident);
       if (m == null) continue;
@@ -885,7 +912,8 @@ class DeviceReceive {
       }
       await _mark(d, m.ident, identity, 'dq', '$id', now);
       try {
-        final j = await state.call(d, 'pool_take', {
+        // the pool is mine, wherever the contact's marks are
+        final j = await state.call(await mine(), 'pool_take', {
           'ident': m.ident,
           'device': id,
           'now': now,

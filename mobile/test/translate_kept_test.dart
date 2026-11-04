@@ -316,6 +316,21 @@ void main() {
       },
     );
 
+    test('made after an off: what a container kept before it goes', () async {
+      // turned off while the vault was shut, then the app started again: the
+      // vault opens before any chat, so no session switch is heard
+      final store = MemoryTranslateStore(
+        const TranslateSettings(wifiOnly: false, offs: 1),
+      )..keptRows['heron'] = {'u1': _k(_zh, _en)};
+      final f = fakeHub(installed: true, words: {_zh: _en}, store: store);
+      final c = ChatTranslation(f.hub, 'heron');
+      addTearDown(c.dispose);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(c.of('u1', _zh).text, isNull);
+      expect(await store.kept('heron'), isEmpty);
+    });
+
     test('translation off: kept ones are not read', () async {
       final store = _Reads(const TranslateSettings(on: false));
       final f = fakeHub(installed: true, words: {_zh: _en}, store: store);

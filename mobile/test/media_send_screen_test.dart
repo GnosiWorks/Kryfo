@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:kryfo/album.dart' show kPickMax;
+import 'package:kryfo/desktop/desktop_mode.dart' show onDesktop;
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/picked.dart';
 import 'package:kryfo/screens/media_send_screen.dart';
@@ -299,5 +300,31 @@ void main() {
     await send(t);
     expect((await got)!.items.map(_tagOf), [9]);
     expect(gone, isEmpty);
+  });
+
+  testWidgets('on a computer enter sends with the caption, shift and enter '
+      'is a new line in it', (t) async {
+    onDesktop = true;
+    addTearDown(() => onDesktop = false);
+    final got = await open(t, [_photo(1)]);
+    await t.enterText(find.byType(TextField), 'look');
+    await t.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+    expect(await t.sendKeyEvent(LogicalKeyboardKey.enter), isFalse);
+    await t.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+    expect(await t.sendKeyEvent(LogicalKeyboardKey.enter), isTrue);
+    await t.pumpAndSettle();
+    final r = await got;
+    expect(r!.items.map(_tagOf), [1]);
+    expect(r.caption, 'look');
+  });
+
+  testWidgets('on a phone enter stays the keyboard\'s own', (t) async {
+    final got = await open(t, [_photo(1)]);
+    await t.enterText(find.byType(TextField), 'look');
+    expect(await t.sendKeyEvent(LogicalKeyboardKey.enter), isFalse);
+    await t.pumpAndSettle();
+    expect(find.byType(MediaSendScreen), findsOneWidget);
+    await send(t);
+    expect((await got)!.caption, 'look');
   });
 }

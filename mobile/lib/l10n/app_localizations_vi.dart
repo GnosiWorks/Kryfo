@@ -10346,6 +10346,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get desktopTrayLockedTip => 'Mở Kryfo để bắt đầu nhận tin nhắn';
 
   @override
+  String get desktopTrayStillRunning =>
+      'Kryfo vẫn đang chạy trong khay hệ thống. Để thoát, hãy dùng biểu tượng của nó trong khay.';
+
+  @override
   String get desktopRunSection => 'Trên máy tính này';
 
   @override
@@ -11179,6 +11183,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatDropHereToSend => 'Thả vào đây để gửi';
+
+  @override
+  String get notesDropKeepsWords =>
+      'Ghi chú riêng lưu chữ. Hãy gửi tệp trong một cuộc trò chuyện.';
 
   @override
   String get voiceSeeTranscription => 'Xem bản chép lời';

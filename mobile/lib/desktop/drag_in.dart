@@ -33,9 +33,20 @@ class DragInZone extends StatefulWidget {
     super.key,
     required this.child,
     required this.enabled,
-    required this.send,
+    required Future<void> Function(String path, String name) this.send,
     required this.couldNotRead,
-  });
+  }) : keepsOut = null;
+
+  /// a place that holds no files, note to self: a drop is met with [line],
+  /// on the wash and after, never with nothing
+  const DragInZone.wordsOnly({
+    super.key,
+    required this.child,
+    required String Function() line,
+  }) : enabled = true,
+       send = null,
+       couldNotRead = line,
+       keepsOut = line;
 
   final Widget child;
 
@@ -43,10 +54,13 @@ class DragInZone extends StatefulWidget {
   final bool enabled;
 
   /// one file sent from its path under the name it had, as a pick is
-  final Future<void> Function(String path, String name) send;
+  final Future<void> Function(String path, String name)? send;
 
   /// the chat's own words for a file it could not read
   final String Function() couldNotRead;
+
+  /// what a place that takes no files says instead
+  final String Function()? keepsOut;
 
   @override
   State<DragInZone> createState() => _DragInZoneState();
@@ -60,6 +74,12 @@ class _DragInZoneState extends State<DragInZone> {
 
   Future<void> _drop(List<String> paths) async {
     if (!_open) return;
+    final out = widget.keepsOut;
+    final send = widget.send;
+    if (out != null || send == null) {
+      showHaloToast(context, (out ?? widget.couldNotRead)());
+      return;
+    }
     final files = draggedFiles(paths);
     if (files.isEmpty) {
       showHaloToast(context, widget.couldNotRead());
@@ -74,7 +94,7 @@ class _DragInZoneState extends State<DragInZone> {
     try {
       for (final f in files) {
         if (!mounted || lockState.locked) break;
-        await widget.send(f, p.basename(f));
+        await send(f, p.basename(f));
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -103,7 +123,7 @@ class _DragInZoneState extends State<DragInZone> {
                 child: AnimatedOpacity(
                   opacity: _over && _open ? 1 : 0,
                   duration: Duration(milliseconds: still ? 0 : 150),
-                  child: const _DropShade(),
+                  child: _DropShade(line: widget.keepsOut),
                 ),
               ),
             ),
@@ -116,7 +136,10 @@ class _DragInZoneState extends State<DragInZone> {
 
 // the chat under a wash, an accent ring and one line: let go to send
 class _DropShade extends StatelessWidget {
-  const _DropShade();
+  const _DropShade({this.line});
+
+  /// a place that takes no files: its own line, under a note's glyph
+  final String Function()? line;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -134,13 +157,13 @@ class _DropShade extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.file_download_outlined,
+              line == null ? Icons.file_download_outlined : Icons.notes_rounded,
               size: 36,
               color: HaloColors.amber,
             ),
             const SizedBox(height: 12),
             Text(
-              l10n.chatDropHereToSend,
+              line?.call() ?? l10n.chatDropHereToSend,
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 16,

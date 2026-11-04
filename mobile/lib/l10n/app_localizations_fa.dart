@@ -10372,6 +10372,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get desktopTrayLockedTip => 'Kryfo را باز کنید تا پیام‌ها برسند';
 
   @override
+  String get desktopTrayStillRunning =>
+      'Kryfo همچنان در سینی سیستم اجرا می‌شود. برای خروج از نماد آن در سینی سیستم استفاده کنید.';
+
+  @override
   String get desktopRunSection => 'روی این رایانه';
 
   @override
@@ -11207,6 +11211,10 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get chatDropHereToSend => 'برای فرستادن اینجا رها کنید';
+
+  @override
+  String get notesDropKeepsWords =>
+      'یادداشت برای خود متن نگه می‌دارد. فایل‌ها را در یک گفتگو بفرستید.';
 
   @override
   String get voiceSeeTranscription => 'دیدن متن';

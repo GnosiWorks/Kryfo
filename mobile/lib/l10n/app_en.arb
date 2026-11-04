@@ -12974,6 +12974,10 @@
   "@desktopTrayLockedTip": {
     "description": "desktop/desktop_start.dart: the tray icon tooltip after a start with the computer, before kryfo is unlocked"
   },
+  "desktopTrayStillRunning": "Kryfo is still running in the tray. Quit from the tray icon.",
+  "@desktopTrayStillRunning": {
+    "description": "windows: shown once from the tray icon, the first time closing the window hides kryfo to the tray"
+  },
   "desktopRunSection": "On this computer",
   "@desktopRunSection": {
     "description": "notifications page on a computer: the section that replaces the phone's delivery modes"
@@ -14060,6 +14064,10 @@
   "chatDropHereToSend": "Drop here to send",
   "@chatDropHereToSend": {
     "description": "a computer: files dragged over a chat, the line on the wash before they are let go"
+  },
+  "notesDropKeepsWords": "Note to self keeps words. Send files in a chat.",
+  "@notesDropKeepsWords": {
+    "description": "a computer: files dropped on note to self, which keeps text only"
   },
   "voiceSeeTranscription": "See transcription",
   "@voiceSeeTranscription": {

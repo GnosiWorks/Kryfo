@@ -10560,6 +10560,10 @@ class AppLocalizationsPl extends AppLocalizations {
       'Otwórz Kryfo, żeby zacząć odbierać wiadomości';
 
   @override
+  String get desktopTrayStillRunning =>
+      'Kryfo nadal działa w zasobniku. Zamknij je ikoną w zasobniku.';
+
+  @override
   String get desktopRunSection => 'Na tym komputerze';
 
   @override
@@ -11417,6 +11421,10 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get chatDropHereToSend => 'Upuść tutaj, by wysłać';
+
+  @override
+  String get notesDropKeepsWords =>
+      'Notatka dla siebie przechowuje słowa. Pliki wyślij w czacie.';
 
   @override
   String get voiceSeeTranscription => 'Pokaż transkrypcję';

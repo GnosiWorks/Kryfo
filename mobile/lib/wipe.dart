@@ -24,7 +24,8 @@ import 'main.dart'
         AppStateProfile,
         AppStatePhotos;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'desktop/desktop_mode.dart' show rawFiles;
+import 'desktop/desktop_mode.dart'
+    show desktopLetGo, desktopWipeKeys, onDesktop, rawFiles;
 import 'dlog.dart';
 import 'drafts.dart' show forgetAllDrafts;
 import 'shred.dart' show shredFile;
@@ -74,11 +75,17 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
   final release = releaseHandle && !sessionQuiet;
   final handleKey = session.container.key('my_handle');
   haloWiping = true;
+  // on desktop the handle is in the vault, which goes next: read first
+  String? h;
+  if (release && onDesktop) h = await _handle(handleKey);
   // the pin key before anything: hidden chats' database and their sealed
   // photos and files open nowhere again, whatever the flash keeps of them.
   // files an older version left plain and that were never sealed since are
   // only as gone as the shred below gets them
   await _dropPinKey();
+  // on desktop the vault, which holds every key, and what the computer's
+  // account kept for it
+  await desktopWipeKeys?.call();
   wipeForget();
   // a draft waiting to be written would land in a file being erased
   forgetAllDrafts();
@@ -92,17 +99,12 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
   }
   // a beat for anything mid-query to finish before the files vanish
   await Future.delayed(const Duration(milliseconds: 120));
+  // windows deletes no database file that is still open
+  await desktopLetGo?.call();
   // the handle goes back while the key that proves it is ours is still in
   // the engine's memory. the request runs beside the erase and gets a few
   // seconds at most: nothing here waits on the network
-  String? h;
-  if (release) {
-    try {
-      h = await secureStore.read(key: handleKey);
-    } catch (e) {
-      dlog('wipe: handle not read (${e.runtimeType})');
-    }
-  }
+  if (release && !onDesktop) h = await _handle(handleKey);
   final released = h == null || h.isEmpty ? null : _release(h);
   final cap = Future<void>.delayed(const Duration(seconds: 4));
   // keys, prefs and folders first. tor's own folder stays while tor runs
@@ -146,6 +148,15 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
   wipeExit(0);
 }
 
+Future<String?> _handle(String key) async {
+  try {
+    return await secureStore.read(key: key);
+  } catch (e) {
+    dlog('wipe: handle not read (${e.runtimeType})');
+    return null;
+  }
+}
+
 Future<void> _dropPinKey() async {
   try {
     await const MethodChannel(
@@ -180,12 +191,21 @@ Future<void> _erase({Set<String> keep = const {}}) async {
   } catch (e) {
     dlog('wipe: finger key left (${e.runtimeType})');
   }
+  // identity markers go first. if anything below fails the next launch
+  // still starts at onboarding instead of an empty home screen. on desktop
+  // both live in the vault, gone already: the files go all the same
   try {
-    // identity markers go first. if anything below fails the next launch
-    // still starts at onboarding instead of an empty home screen.
     await secureStore.deleteAll();
+  } catch (e) {
+    dlog('wipe: secrets left (${e.runtimeType})');
+  }
+  try {
     final prefs0 = await SharedPreferences.getInstance();
     await prefs0.clear();
+  } catch (e) {
+    dlog('wipe: prefs left (${e.runtimeType})');
+  }
+  try {
     final docs = await getApplicationDocumentsDirectory();
     final held = _heldIn(docs);
     final dirs = <Directory>[

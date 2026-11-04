@@ -10365,6 +10365,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get desktopTrayLockedTip => 'संदेश पाना शुरू करने के लिए Kryfo खोलें';
 
   @override
+  String get desktopTrayStillRunning =>
+      'Kryfo सिस्टम ट्रे में चलता रहता है। बंद करने के लिए ट्रे में उसका आइकन इस्तेमाल करें।';
+
+  @override
   String get desktopRunSection => 'इस कंप्यूटर पर';
 
   @override
@@ -11201,6 +11205,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get chatDropHereToSend => 'भेजने के लिए यहाँ छोड़ें';
+
+  @override
+  String get notesDropKeepsWords =>
+      'अपने लिए नोट में शब्द रहते हैं। फ़ाइलें किसी चैट में भेजें।';
 
   @override
   String get voiceSeeTranscription => 'लिखित रूप देखें';
