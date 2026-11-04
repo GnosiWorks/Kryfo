@@ -107,3 +107,66 @@ func mustAgain(t *testing.T, k *[StreamKeySize]byte, bind [32]byte, gen uint32) 
 	}
 	return g
 }
+
+// the ask key the phone keeps once a copy is over is the same ask: its
+// tag and macs, nothing else
+func TestAKeptAskIsTheSameAsk(t *testing.T) {
+	bind := [32]byte{4}
+	a, _ := AskFor(askStream(5), bind)
+	k := a.Key()
+	b, err := AskOf(k[:])
+	if err != nil || b.Tag != a.Tag {
+		t.Fatal("the kept ask has another tag")
+	}
+	mac := a.MAC("hello", "-")
+	if !b.Check("hello", "-", mac[:]) {
+		t.Fatal("the kept ask refuses the device")
+	}
+	if _, err := AskOf(k[:31]); err == nil {
+		t.Fatal("a short ask key taken")
+	}
+}
+
+// what the phone deleted since the export opens only for its own link,
+// generation, sender and page
+func TestTheGoneRowsOpenOnlyForTheirCopy(t *testing.T) {
+	bind := [32]byte{6}
+	g1, _ := AgainKey(askStream(7), bind, 1)
+	g2, _ := AgainKey(askStream(7), bind, 2)
+	k1, err := GoneKey(g1, bind)
+	if err != nil {
+		t.Fatal(err)
+	}
+	k2, _ := GoneKey(g2, bind)
+	if *k1 == *k2 || *k1 == *g1 {
+		t.Fatal("a gone key is another key")
+	}
+	a, _ := AskFor(g1, bind)
+	if a.Key() == *k1 {
+		t.Fatal("the gone key is the ask key")
+	}
+	id := [IDSize]byte{1}
+	ct, err := SealGone(k1, bind, 1, id, 0, 2, []byte(`[["u1","p",3]]`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, err := OpenGone(k1, bind, 1, id, 0, 2, ct)
+	if err != nil || !bytes.Equal(p, []byte(`[["u1","p",3]]`)) {
+		t.Fatalf("the page does not open: %v", err)
+	}
+	for name, open := range map[string]func() ([]byte, error){
+		"another generation's key": func() ([]byte, error) { return OpenGone(k2, bind, 1, id, 0, 2, ct) },
+		"another generation":       func() ([]byte, error) { return OpenGone(k1, bind, 2, id, 0, 2, ct) },
+		"another link":             func() ([]byte, error) { return OpenGone(k1, [32]byte{7}, 1, id, 0, 2, ct) },
+		"another sender":           func() ([]byte, error) { return OpenGone(k1, bind, 1, [IDSize]byte{2}, 0, 2, ct) },
+		"another page":             func() ([]byte, error) { return OpenGone(k1, bind, 1, id, 1, 2, ct) },
+		"fewer pages":              func() ([]byte, error) { return OpenGone(k1, bind, 1, id, 0, 1, ct) },
+	} {
+		if _, err := open(); err == nil {
+			t.Fatalf("opened under %s", name)
+		}
+	}
+	if _, err := SealGone(k1, bind, 1, id, 2, 2, nil); err == nil {
+		t.Fatal("a page past the end sealed")
+	}
+}

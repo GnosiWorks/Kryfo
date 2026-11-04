@@ -351,3 +351,100 @@ func TestTheDeviceAsksOnlyAnOnion(t *testing.T) {
 		t.Fatal("dialed a name that is not an onion")
 	}
 }
+
+// a copy over before the phone's app came back: from the kept ask key
+// alone the door answers its end word to every ask, and nothing else
+func TestAKeptAskAnswersTheEndWord(t *testing.T) {
+	histDoorHere(t)
+	p := newHistPhone(t)
+	out := &histServeOut{}
+	if err := histServeCall("ask", p.args(nil), out); err != nil {
+		t.Fatal(err)
+	}
+	want, _ := devices.AskFor(p.key, p.bind)
+	if out.Tag != hex.EncodeToString(want.Tag[:]) || len(out.Ask) != 64 {
+		t.Fatalf("the ask: %+v", out)
+	}
+	// nothing open for it yet: the device's hello is junk at the door
+	if ans, ok := histDoorTake(histAskLine(want, "hello", "-")); ok {
+		t.Fatalf("an ask answered before the rest: %q", ans)
+	}
+	for _, why := range []string{histWhyEnded, histWhyDone} {
+		rest := &histServeOut{}
+		if err := histServeCall("rest", &histServeArgs{Ask: out.Ask, Why: why}, rest); err != nil {
+			t.Fatal(err)
+		}
+		p.tag = rest.Tag
+		if rest.Tag != out.Tag {
+			t.Fatal("the rest has another tag")
+		}
+		if got := p.fetch(t, "hello", nil); got.Why != why {
+			t.Fatalf("hello at rest: %+v", got)
+		}
+		if got := p.fetch(t, "rec", func(a *histServeArgs) { a.I = 1 }); got.Why != why || got.Rec != nil {
+			t.Fatalf("a record at rest: %+v", got)
+		}
+		if got := p.fetch(t, "tally", func(a *histServeArgs) { a.Tally = []byte{1} }); got.Ok || got.Why != why {
+			t.Fatalf("a tally at rest: %+v", got)
+		}
+		if got := p.fetch(t, "gone", func(a *histServeArgs) { a.ID = strings.Repeat("00", 32) }); got.Why != why {
+			t.Fatalf("gone at rest: %+v", got)
+		}
+	}
+	if err := histServeCall("rest", &histServeArgs{Ask: out.Ask, Why: histWhyMaking}, &histServeOut{}); err == nil {
+		t.Fatal("a rest that makes")
+	}
+	if err := histServeCall("rest", &histServeArgs{Ask: out.Ask[:62], Why: histWhyEnded}, &histServeOut{}); err == nil {
+		t.Fatal("a short ask key")
+	}
+}
+
+// what the phone deleted since the export: "making" until it is sealed,
+// then in pages that open for this generation and sender alone
+func TestTheGoneSinceTheExportOverTheDoor(t *testing.T) {
+	histDoorHere(t)
+	was := histGonePage
+	histGonePage = 8
+	defer func() { histGonePage = was }()
+	p := newHistPhone(t)
+	p.serve(t, 2)
+	sid := p.send.ID()
+	id := func(a *histServeArgs) { a.Gen, a.ID = 2, hex.EncodeToString(sid[:]) }
+	if got := p.fetch(t, "gone", id); got.Why != histWhyMaking || got.Ok {
+		t.Fatalf("gone before it is sealed: %+v", got)
+	}
+	if !p.state(t).GoneAsked {
+		t.Fatal("the phone does not see the ask")
+	}
+	rows := []byte(`[["u1","ana",5],["u2","group:g:ben",6]]`)
+	if err := histServeCall("gone", &histServeArgs{Tag: p.tag, Gone: rows}, &histServeOut{}); err != nil {
+		t.Fatal(err)
+	}
+	// sealed once: a second set is refused, the first stays
+	if err := histServeCall("gone", &histServeArgs{Tag: p.tag, Gone: []byte(`[]`)}, &histServeOut{}); err == nil {
+		t.Fatal("the gone rows sealed twice")
+	}
+	got := p.fetch(t, "gone", id)
+	if !got.Ok || string(got.Gone) != string(rows) {
+		t.Fatalf("the gone rows: %+v", got)
+	}
+	// another generation hears so, another sender's id opens nothing
+	if got := p.fetch(t, "gone", func(a *histServeArgs) { a.Gen, a.ID = 1, hex.EncodeToString(sid[:]) }); got.Why != histWhyOther {
+		t.Fatalf("an older generation: %+v", got)
+	}
+	a := p.args(func(a *histServeArgs) { a.Gen, a.ID = 2, strings.Repeat("11", 32) })
+	a.Onion = histTestOnion
+	if err := histFetchCall("gone", a, &histServeOut{}); err == nil {
+		t.Fatal("opened for another sender")
+	}
+	// a page past the end is none
+	ask, _ := devices.AskFor(p.key, p.bind)
+	if ans, _ := histDoorTake(histAskLine(ask, "gone", "2.99")); ans != histAnswerNo+" "+histWhyNone {
+		t.Fatalf("past the end: %q", ans)
+	}
+	// ended: the ask hears it
+	histServeCall("end", &histServeArgs{Tag: p.tag, Why: histWhyEnded}, &histServeOut{})
+	if got := p.fetch(t, "gone", id); got.Why != histWhyEnded {
+		t.Fatalf("gone after the end: %+v", got)
+	}
+}

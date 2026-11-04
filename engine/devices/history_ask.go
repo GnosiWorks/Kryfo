@@ -2,6 +2,8 @@
 package devices
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/hkdf"
 	"crypto/hmac"
 	"crypto/sha256"
@@ -17,10 +19,12 @@ import (
 // stream key, in one process or across restarts
 
 const (
-	labelAskSalt = "kryfo-history-v1 ask salt"
-	labelAsk     = "kryfo-history-v1 ask"
-	labelAskTag  = "kryfo-history-v1 ask tag"
-	labelAgain   = "kryfo-history-v1 again"
+	labelAskSalt   = "kryfo-history-v1 ask salt"
+	labelAsk       = "kryfo-history-v1 ask"
+	labelAskTag    = "kryfo-history-v1 ask tag"
+	labelAgain     = "kryfo-history-v1 again"
+	labelGoneSince = "kryfo-history-v1 gone since"
+	labelGoneAD    = "KHG1"
 
 	// AskTagSize is the tag the phone finds a copy by
 	AskTagSize = 16
@@ -48,14 +52,26 @@ func AskFor(stream *[StreamKeySize]byte, bind [32]byte) (*Ask, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer wipe(k)
+	return AskOf(k)
+}
+
+// AskOf is the ask of an ask key the phone kept once its copy was over:
+// enough to answer "ended" or "done", nothing to make a copy with.
+func AskOf(key []byte) (*Ask, error) {
+	if len(key) != 32 {
+		return nil, ErrUsable
+	}
 	a := &Ask{}
-	copy(a.key[:], k)
-	wipe(k)
+	copy(a.key[:], key)
 	m := hmac.New(sha256.New, a.key[:])
 	m.Write([]byte(labelAskTag))
 	copy(a.Tag[:], m.Sum(nil))
 	return a, nil
 }
+
+// Key is the ask key, for the phone to keep once the copy is over.
+func (a *Ask) Key() [32]byte { return a.key }
 
 // MAC is the mac over one ask: its op and its argument, each with its
 // length, so no two asks share one.
@@ -103,4 +119,72 @@ func AgainKey(stream *[StreamKeySize]byte, bind [32]byte, gen uint32) (*[StreamK
 	copy(out[:], k)
 	wipe(k)
 	return out, nil
+}
+
+// GoneKey is the key the phone seals what it deleted since the export
+// under, from the key of the copy's generation.
+func GoneKey(gen *[StreamKeySize]byte, bind [32]byte) (*[32]byte, error) {
+	if gen == nil {
+		return nil, ErrUsable
+	}
+	salt := sha256.Sum256(append([]byte(labelAskSalt), bind[:]...))
+	k, err := hkdf.Key(sha256.New, gen[:], salt[:], labelGoneSince, 32)
+	if err != nil {
+		return nil, err
+	}
+	out := &[32]byte{}
+	copy(out[:], k)
+	wipe(k)
+	return out, nil
+}
+
+// the gone rows go in pages, each sealed once under its own index
+func goneAEAD(key *[32]byte) (cipher.AEAD, error) {
+	c, err := aes.NewCipher(key[:])
+	if err != nil {
+		return nil, err
+	}
+	return cipher.NewGCM(c)
+}
+
+func goneAD(bind [32]byte, gen uint32, id [IDSize]byte, i, n int) ([]byte, [12]byte) {
+	ad := append([]byte(labelGoneAD), bind[:]...)
+	ad = append(ad, id[:]...)
+	ad = binary.BigEndian.AppendUint32(ad, gen)
+	ad = binary.BigEndian.AppendUint32(ad, uint32(i))
+	ad = binary.BigEndian.AppendUint32(ad, uint32(n))
+	var nonce [12]byte
+	binary.BigEndian.PutUint32(nonce[8:], uint32(i))
+	return ad, nonce
+}
+
+// SealGone seals page i of n of the gone rows for the copy gen whose
+// sender is id. each page index is sealed once per key.
+func SealGone(key *[32]byte, bind [32]byte, gen uint32, id [IDSize]byte, i, n int, plain []byte) ([]byte, error) {
+	if i < 0 || i >= n {
+		return nil, ErrMalformed
+	}
+	g, err := goneAEAD(key)
+	if err != nil {
+		return nil, err
+	}
+	ad, nonce := goneAD(bind, gen, id, i, n)
+	return g.Seal(nil, nonce[:], plain, ad), nil
+}
+
+// OpenGone opens page i of n, for this link, generation and sender alone.
+func OpenGone(key *[32]byte, bind [32]byte, gen uint32, id [IDSize]byte, i, n int, ct []byte) ([]byte, error) {
+	if i < 0 || i >= n {
+		return nil, ErrMalformed
+	}
+	g, err := goneAEAD(key)
+	if err != nil {
+		return nil, err
+	}
+	ad, nonce := goneAD(bind, gen, id, i, n)
+	p, err := g.Open(nil, nonce[:], ct, ad)
+	if err != nil {
+		return nil, ErrOpen
+	}
+	return p, nil
 }

@@ -44,6 +44,13 @@ const (
 // a tally goes in lines of this many bytes at most
 var histTallyChunk = 48 << 10
 
+// what the phone deleted since the export goes in pages of this size, at
+// most this many
+var (
+	histGonePage = 256 << 10
+	histGoneMost = 64
+)
+
 // one copy the phone serves
 type histServe struct {
 	ask   *devices.Ask
@@ -56,6 +63,24 @@ type histServe struct {
 	parts map[int]string
 	nPart int
 	tally []byte
+	// what the phone deleted since the export: its key until sealed, the
+	// device's ask for it, and the pages once sealed
+	bind      [32]byte
+	goneKey   *[32]byte
+	goneAsked bool
+	gone      [][]byte
+}
+
+func (s *histServe) wipe() {
+	s.ask.Wipe()
+	s.forgetGone()
+}
+
+func (s *histServe) forgetGone() {
+	if s.goneKey != nil {
+		clear(s.goneKey[:])
+		s.goneKey = nil
+	}
 }
 
 var histServes = struct {
@@ -73,6 +98,9 @@ type histServeArgs struct {
 	Onion string `json:"onion"`
 	I     uint64 `json:"i"`
 	Tally []byte `json:"tally"`
+	Ask   string `json:"ask"`
+	ID    string `json:"id"`
+	Gone  []byte `json:"gone"`
 }
 
 type histServeOut struct {
@@ -86,6 +114,10 @@ type histServeOut struct {
 	Tally []byte `json:"tally,omitempty"`
 	Rec   []byte `json:"rec,omitempty"`
 	Ok    bool   `json:"ok,omitempty"`
+	Ask   string `json:"ask,omitempty"`
+	// the device asked for what the phone deleted since the export
+	GoneAsked bool   `json:"gone_asked,omitempty"`
+	Gone      []byte `json:"gone,omitempty"`
 }
 
 func histStreamKey(keyHex, bindHex string) (*[devices.StreamKeySize]byte, [32]byte, error) {
@@ -139,6 +171,47 @@ func histServeJSON(op, raw string) string {
 }
 
 func histServeCall(op string, a *histServeArgs, out *histServeOut) error {
+	switch op {
+	case "ask":
+		// the ask key of a copy, for the phone to keep once it is over
+		key, bind, err := histStreamKey(a.Key, a.Bind)
+		if err != nil {
+			return err
+		}
+		defer clear(key[:])
+		ask, err := devices.AskFor(key, bind)
+		if err != nil {
+			return err
+		}
+		k := ask.Key()
+		out.Tag, out.Ask = hex.EncodeToString(ask.Tag[:]), hex.EncodeToString(k[:])
+		clear(k[:])
+		ask.Wipe()
+		return nil
+	case "rest":
+		// a copy over before this start: from its kept ask key alone, the
+		// door answers its end word, so a device away meanwhile hears it
+		if a.Why != histWhyEnded && a.Why != histWhyDone {
+			return errors.New("bad why")
+		}
+		k, err := hex.DecodeString(a.Ask)
+		if err != nil {
+			return errors.New("bad ask")
+		}
+		ask, err := devices.AskOf(k)
+		clear(k)
+		if err != nil {
+			return err
+		}
+		histServes.Lock()
+		if o := histServes.m[ask.Tag]; o != nil {
+			o.wipe()
+		}
+		histServes.m[ask.Tag] = &histServe{ask: ask, why: a.Why}
+		histServes.Unlock()
+		out.Tag = hex.EncodeToString(ask.Tag[:])
+		return nil
+	}
 	if op == "open" {
 		// a copy of the link stream a.Key at generation a.Gen: its key for
 		// the sender, and its tag. while the sender is made, a device that
@@ -157,13 +230,19 @@ func histServeCall(op string, a *histServeArgs, out *histServeOut) error {
 			ask.Wipe()
 			return err
 		}
+		gk, err := devices.GoneKey(g, bind)
+		if err != nil {
+			clear(g[:])
+			ask.Wipe()
+			return err
+		}
 		out.Key = hex.EncodeToString(g[:])
 		clear(g[:])
 		histServes.Lock()
 		if o := histServes.m[ask.Tag]; o != nil {
-			o.ask.Wipe()
+			o.wipe()
 		}
-		histServes.m[ask.Tag] = &histServe{ask: ask, gen: a.Gen, why: histWhyMaking}
+		histServes.m[ask.Tag] = &histServe{ask: ask, gen: a.Gen, why: histWhyMaking, bind: bind, goneKey: gk}
 		histServes.Unlock()
 		out.Tag, out.Gen = hex.EncodeToString(ask.Tag[:]), a.Gen
 		return nil
@@ -193,13 +272,40 @@ func histServeCall(op string, a *histServeArgs, out *histServeOut) error {
 			return errors.New("bad why")
 		}
 		s.why, s.send = a.Why, 0
+		s.forgetGone()
 		return nil
 	case "state":
 		out.Why, out.Gen, out.ID, out.Asked = s.why, s.gen, s.id, s.asked
-		out.Tally = s.tally
+		out.Tally, out.GoneAsked = s.tally, s.goneAsked
+		return nil
+	case "gone":
+		// what the phone deleted since the export, sealed once in pages
+		// under the generation's gone key, which then goes
+		if s.why != "" || s.send == 0 || s.goneKey == nil || s.gone != nil {
+			return devices.ErrState
+		}
+		id, err := hex.DecodeString(s.id)
+		if err != nil || len(id) != devices.IDSize {
+			return devices.ErrState
+		}
+		n := max(1, (len(a.Gone)+histGonePage-1)/histGonePage)
+		if n > histGoneMost {
+			return errors.New("too much gone")
+		}
+		var sid [devices.IDSize]byte
+		copy(sid[:], id)
+		pages := make([][]byte, n)
+		for i := range pages {
+			part := a.Gone[min(i*histGonePage, len(a.Gone)):min((i+1)*histGonePage, len(a.Gone))]
+			if pages[i], err = devices.SealGone(s.goneKey, s.bind, s.gen, sid, i, n, part); err != nil {
+				return err
+			}
+		}
+		s.gone = pages
+		s.forgetGone()
 		return nil
 	case "drop":
-		s.ask.Wipe()
+		s.wipe()
 		delete(histServes.m, tag)
 		return nil
 	}
@@ -247,17 +353,40 @@ func histDoorTake(line string) (string, bool) {
 		ans := s.takeTally(arg)
 		histServes.Unlock()
 		return ans, true
-	case "rec":
-		// "<generation>.<index>": a device still on a copy the phone made
-		// again since hears so, and says hello again
-		g, n, _ := strings.Cut(arg, ".")
-		ag, err1 := strconv.ParseUint(g, 10, 32)
-		i, err := strconv.ParseUint(n, 10, 64)
-		if err != nil || err1 != nil || arg != strconv.FormatUint(ag, 10)+"."+strconv.FormatUint(i, 10) {
+	case "gone":
+		// "<generation>.<page>": what the phone deleted since the export,
+		// once it sealed it; until then the device hears "making"
+		ag, i, ok := histGenAt(arg)
+		switch {
+		case !ok:
+			histServes.Unlock()
+			return histAnswerNo + " " + histWhyNone, true
+		case why != "":
+			histServes.Unlock()
+			return histAnswerNo + " " + why, true
+		case ag != gen:
+			histServes.Unlock()
+			return histAnswerNo + " " + histWhyOther, true
+		case s.gone == nil:
+			s.goneAsked = true
+			histServes.Unlock()
+			return histAnswerNo + " " + histWhyMaking, true
+		case i >= uint64(len(s.gone)):
 			histServes.Unlock()
 			return histAnswerNo + " " + histWhyNone, true
 		}
-		if why == "" && uint32(ag) != gen {
+		page, n := s.gone[i], len(s.gone)
+		histServes.Unlock()
+		return histAnswerYes + " " + strconv.Itoa(n) + " " + base64.StdEncoding.EncodeToString(page), true
+	case "rec":
+		// "<generation>.<index>": a device still on a copy the phone made
+		// again since hears so, and says hello again
+		ag, i, ok := histGenAt(arg)
+		if !ok {
+			histServes.Unlock()
+			return histAnswerNo + " " + histWhyNone, true
+		}
+		if why == "" && ag != gen {
 			histServes.Unlock()
 			return histAnswerNo + " " + histWhyOther, true
 		}
@@ -280,6 +409,17 @@ func histDoorTake(line string) (string, bool) {
 	}
 	histServes.Unlock()
 	return histAnswerNo + " " + histWhyNone, true
+}
+
+// "<generation>.<index>" in its one spelling
+func histGenAt(arg string) (uint32, uint64, bool) {
+	g, n, _ := strings.Cut(arg, ".")
+	ag, err1 := strconv.ParseUint(g, 10, 32)
+	i, err := strconv.ParseUint(n, 10, 64)
+	if err != nil || err1 != nil || arg != strconv.FormatUint(ag, 10)+"."+strconv.FormatUint(i, 10) {
+		return 0, 0, false
+	}
+	return uint32(ag), i, true
 }
 
 // a line of the device's tally, "<i>/<n>:<base64>": whole once every line
@@ -513,6 +653,58 @@ func histFetchCall(op string, a *histServeArgs, out *histServeOut) error {
 			return errors.New("not an answer")
 		}
 		out.Rec = b
+		return nil
+	case "gone":
+		// what the phone deleted since the export, page by page, opened
+		// under this generation's gone key for this sender alone
+		id, err := hex.DecodeString(a.ID)
+		if err != nil || len(id) != devices.IDSize {
+			return errors.New("bad id")
+		}
+		var sid [devices.IDSize]byte
+		copy(sid[:], id)
+		g, err := devices.AgainKey(key, bind, a.Gen)
+		if err != nil {
+			return err
+		}
+		gk, err := devices.GoneKey(g, bind)
+		clear(g[:])
+		if err != nil {
+			return err
+		}
+		defer clear(gk[:])
+		var all []byte
+		n := 1
+		for i := 0; i < n; i++ {
+			arg := strconv.FormatUint(uint64(a.Gen), 10) + "." + strconv.Itoa(i)
+			ans, err := histAsk(a.Onion, histAskLine(ask, "gone", arg))
+			if err != nil {
+				return err
+			}
+			f := strings.Fields(ans)
+			if len(f) == 2 && f[0] == histAnswerNo {
+				out.Why = f[1]
+				return nil
+			}
+			if len(f) != 3 || f[0] != histAnswerYes {
+				return errors.New("not an answer")
+			}
+			pn, err := strconv.Atoi(f[1])
+			if err != nil || pn < 1 || pn > histGoneMost || (i > 0 && pn != n) {
+				return errors.New("not an answer")
+			}
+			n = pn
+			ct, err := base64.StdEncoding.DecodeString(f[2])
+			if err != nil {
+				return errors.New("not an answer")
+			}
+			p, err := devices.OpenGone(gk, bind, a.Gen, sid, i, n, ct)
+			if err != nil {
+				return err
+			}
+			all = append(all, p...)
+		}
+		out.Gone, out.Ok = all, true
 		return nil
 	case "tally":
 		if len(a.Tally) == 0 || len(a.Tally) > devices.TallyMax {
