@@ -24,6 +24,8 @@ const _apart = {
   'halo.lock.panic_salt',
   'halo.lock.misses',
   'halo.lock.until',
+  // when the last restore landed, by this phone's clock (restore_undo.dart)
+  'restore.landed',
   // legacy keys a sweep deletes, and a backup field
   'push_mode',
   'ntfy_topic',
