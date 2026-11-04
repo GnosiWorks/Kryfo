@@ -512,3 +512,124 @@ func TestDeviceKeysForTheAddressLayer(t *testing.T) {
 		t.Fatal("an unnamed error")
 	}
 }
+
+// a device copy is admitted on its listed key, an opener on its listed
+// registration id too, and the device counts as heard; a copy from one of
+// my own devices goes through my own list, never my own key
+func TestOpenedTakesDeviceOpenersAndMyOwnDevices(t *testing.T) {
+	l := devTestShim(t)
+	me, bob := newDevAcct(t, l), newDevAcct(t, l)
+	desk := newDevSigner(t, l)
+	bobDesk := newDevSigner(t, l)
+	mine := me.link(t, desk.pub, false)
+	theirs := bob.link(t, bobDesk.pub, false)
+	mustOK(t, devCallJSON("load", devJSON(t, map[string]any{
+		"mine": []map[string]any{{"ident": 0, "identity": hexKey(me.id.pub)}},
+	})))
+	mustOK(t, devSessionJSON("own_mine", devJSON(t, map[string]any{"ident": 0, "list": me.wire})))
+	opened := func(identity devices.Key, dev int, remote devices.Key, opener bool, reg uint32) string {
+		return devErr(t, devSessionJSON("opened", devJSON(t, map[string]any{
+			"ident": 0, "identity": hexKey(identity), "device": dev, "remote": hexKey(remote),
+			"opener": opener, "reg": reg,
+		})))
+	}
+	if e := opened(bob.id.pub, 1, bob.id.pub, false, 0); e != "" {
+		t.Fatalf("bob's phone: %s", e)
+	}
+	mustOK(t, devSessionJSON("accept", devJSON(t, map[string]any{
+		"identity": hexKey(bob.id.pub), "list": bob.wire, "remote": hexKey(bob.id.pub),
+	})))
+	// bob's desk was sent to and never answered
+	mustOK(t, devCallJSON("quiet", devJSON(t, map[string]any{
+		"op": "sent", "identity": hexKey(bob.id.pub), "device": int(theirs.ID), "key": hexKey(bobDesk.pub), "now": 1000,
+	})))
+	if e := opened(bob.id.pub, int(theirs.ID), bobDesk.pub, true, theirs.Reg+1); e != "not_its_key" {
+		t.Fatalf("an opener under another reg: %s", e)
+	}
+	if len(devNow().quiet.Slots(bob.id.pub)) != 1 {
+		t.Fatal("a refused opener counted as heard")
+	}
+	if e := opened(bob.id.pub, int(theirs.ID), desk.pub, false, 0); e != "not_its_key" {
+		t.Fatalf("bob's desk on another key: %s", e)
+	}
+	if e := opened(bob.id.pub, int(theirs.ID), bobDesk.pub, true, theirs.Reg); e != "" {
+		t.Fatalf("bob's desk's opener: %s", e)
+	}
+	if len(devNow().quiet.Slots(bob.id.pub)) != 0 {
+		t.Fatal("bob's desk answered and is still quiet")
+	}
+	// my desk, through my own list
+	if e := opened(me.id.pub, int(mine.ID), desk.pub, true, mine.Reg); e != "" {
+		t.Fatalf("my desk's opener: %s", e)
+	}
+	if e := opened(me.id.pub, int(mine.ID), desk.pub, true, mine.Reg+1); e != "not_its_key" {
+		t.Fatalf("my desk under another reg: %s", e)
+	}
+	if e := opened(me.id.pub, int(mine.ID), bobDesk.pub, false, 0); e != "not_its_key" {
+		t.Fatalf("my desk's id on bob's desk's key: %s", e)
+	}
+	if e := opened(me.id.pub, 9, desk.pub, false, 0); e != "not_listed" {
+		t.Fatalf("an id my list does not name: %s", e)
+	}
+	if e := opened(me.id.pub, 1, me.id.pub, false, 0); e != "self" {
+		t.Fatalf("my own key: %s", e)
+	}
+	if e := devErr(t, devSessionJSON("opened", devJSON(t, map[string]any{
+		"ident": 3, "identity": hexKey(me.id.pub), "device": int(mine.ID), "remote": hexKey(desk.pub),
+	}))); e != "taken" {
+		t.Fatalf("my identity under another ident: %s", e)
+	}
+}
+
+// a contact hands back the list of mine it holds, which another copy of
+// this phone signed above mine: the phone gets the body of its own list
+// above that one, and the devices it does not know. a list not above
+// mine, another identity's, or a bad signature give nothing to sign
+func TestAHandedBackListIsSignedAbove(t *testing.T) {
+	l := devTestShim(t)
+	me, other := newDevAcct(t, l), newDevAcct(t, l)
+	mustOK(t, devCallJSON("load", devJSON(t, map[string]any{
+		"mine": []map[string]any{{"ident": 0, "identity": hexKey(me.id.pub)}},
+	})))
+	mustOK(t, devSessionJSON("own_mine", devJSON(t, map[string]any{"ident": 0, "list": me.wire})))
+	mineWire, mineList := me.wire, me.list
+	// the other copy of the phone linked a stranger's laptop
+	laptop := newDevSigner(t, l)
+	me.link(t, laptop.pub, false)
+	held := me.wire
+	above := func(list []byte) devOut {
+		var out devOut
+		if err := json.Unmarshal([]byte(devCallJSON("own_above", devJSON(t, map[string]any{"ident": 0, "list": list}))), &out); err != nil {
+			t.Fatal(err)
+		}
+		return out
+	}
+	out := above(held)
+	if out.Err != "" || out.Outcome != "above" || len(out.Devices) != 1 || out.Devices[0].Key != hexKey(laptop.pub) {
+		t.Fatalf("above: %+v", out)
+	}
+	sig, err := me.id.Sign(devices.ContextList, out.List)
+	if err != nil {
+		t.Fatal(err)
+	}
+	mustOK(t, devSessionJSON("own_mine", devJSON(t, map[string]any{"ident": 0, "list": append(slices.Clone(out.List), sig...)})))
+	cur := devNow().own.Current(me.id.pub)
+	if cur.Version <= me.list.Version || len(cur.Devices) != len(mineList.Devices) {
+		t.Fatalf("the list signed above: v%d (held v%d), %d devices", cur.Version, me.list.Version, len(cur.Devices))
+	}
+	// the same hand back again, and my old list: nothing to sign
+	if out := above(held); out.Err != "" || out.Outcome != "same" || out.List != nil {
+		t.Fatalf("a hand back already passed: %+v", out)
+	}
+	if out := above(mineWire); out.Outcome != "same" {
+		t.Fatalf("my older list: %+v", out)
+	}
+	if out := above(other.wire); out.Err != "identity" {
+		t.Fatalf("another identity's list: %+v", out)
+	}
+	bad := slices.Clone(held)
+	bad[len(bad)-1] ^= 1
+	if out := above(bad); out.Err != "signature" {
+		t.Fatalf("a bad signature: %+v", out)
+	}
+}

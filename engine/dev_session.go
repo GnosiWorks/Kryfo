@@ -71,18 +71,19 @@ func (d *devState) session(op string, a *devArgs, out *devOut) error {
 }
 
 // a message from device a.Device of the contact id opened on a session
-// whose libsignal remote was remote: admitted first, then the key is
-// proven for the contact, and a post-quantum session noted for good. a
-// contact the book does not hold yet is added only from its phone's
-// session on its own identity
+// whose libsignal remote was remote: admitted first (an opener with its
+// registration id too), then the key is proven for the contact, the device
+// counts as heard, and a post-quantum session is noted for good. a contact
+// the book does not hold yet is added only from its phone's session on its
+// own identity. my own identity goes through Own's door: one of my other
+// devices, listed, on its listed key
 func (d *devState) opened(id, remote devices.Key, a *devArgs, out *devOut) error {
 	dev, err := a.device()
 	if err != nil {
 		return err
 	}
-	if _, mine := d.mine[id]; mine {
-		// own devices go through Own's door, in the receive wiring
-		return devices.ErrSelf
+	if m, mine := d.mine[id]; mine {
+		return d.openedOwn(id, m, remote, dev, a, out)
 	}
 	if i, ok := d.peers[id]; ok && i != a.Ident {
 		return devices.ErrTaken
@@ -101,7 +102,12 @@ func (d *devState) opened(id, remote devices.Key, a *devArgs, out *devOut) error
 		s.ident = a.Ident
 		out.Claimants = keysOut(claimants)
 	}
-	if err := d.book.Admit(id, dev, remote); err != nil {
+	if a.Opener {
+		err = d.book.AdmitOpener(id, dev, remote, a.Reg)
+	} else {
+		err = d.book.Admit(id, dev, remote)
+	}
+	if err != nil {
 		return err
 	}
 	claimants, err := d.book.Proven(id, remote)
@@ -109,9 +115,34 @@ func (d *devState) opened(id, remote devices.Key, a *devArgs, out *devOut) error
 		return err
 	}
 	out.Claimants = keysOut(claimants)
+	d.quiet.Heard(id, dev)
 	if a.PQ {
 		return d.book.SawPQ(id)
 	}
+	return nil
+}
+
+// a message from my own device a.Device of my identity id: never my own
+// key, and only a device my own list names on that key
+func (d *devState) openedOwn(id devices.Key, m devMine, remote devices.Key, dev uint8, a *devArgs, out *devOut) error {
+	if m.ident != a.Ident {
+		return devices.ErrTaken
+	}
+	if remote == m.key {
+		return devices.ErrSelf
+	}
+	s := d.snap(id)
+	defer func() { out.Rows = s.rows() }()
+	var err error
+	if a.Opener {
+		err = d.own.AdmitOpener(id, dev, remote, a.Reg)
+	} else {
+		err = d.own.Admit(id, dev, remote)
+	}
+	if err != nil {
+		return err
+	}
+	d.quiet.Heard(id, dev)
 	return nil
 }
 
