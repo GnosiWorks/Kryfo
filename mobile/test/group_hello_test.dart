@@ -1258,10 +1258,7 @@ void main() {
       admin.words,
       await env(
         admin,
-        GroupControl(
-          type: 'roster',
-          participants: [up.part(ri: newer)],
-        ),
+        GroupControl(type: 'roster', participants: [up.part(ri: newer)]),
       ),
       live,
     );

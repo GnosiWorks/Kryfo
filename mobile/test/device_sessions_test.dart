@@ -351,32 +351,29 @@ void main() {
     await expectLater(copyTo(gone), throwsA(anything));
   });
 
-  test(
-    'the last resort bundle goes again when the session keys change',
-    () async {
-      final d = bobs.first;
-      final t0 = DateTime.now().millisecondsSinceEpoch;
-      var told = 0;
-      d.store.onSessionPreKeys = () => told++;
-      LsBundle read(Uint8List kdb1) =>
-          ana.lib.parseDeviceBundle(kdb1, bob.identity.public).bundle;
-      final first = read(await d.ds.lastResortBundle(d.id, now: t0));
-      final before = told;
-      final again = read(await d.ds.lastResortBundle(d.id, now: t0 + day));
-      expect(again.kyberPreKeyId, first.kyberPreKeyId);
-      expect(again.signedPreKeyId, first.signedPreKeyId);
-      expect(told, before);
-      // a use 31 days on replaces them: the device is told, and its next
-      // bundles are on the new keys
-      final once = read(await d.ds.makeBundle(d.id, now: t0 + 31 * day));
-      expect(told, before + 1);
-      final next = read(await d.ds.lastResortBundle(d.id, now: t0 + 31 * day));
-      expect(next.kyberPreKeyId, isNot(first.kyberPreKeyId));
-      expect(next.signedPreKeyId, isNot(first.signedPreKeyId));
-      expect(once.signedPreKeyId, next.signedPreKeyId);
-      expect(once.kyberPreKeyId, isNot(next.kyberPreKeyId));
-    },
-  );
+  test('the last resort bundle goes again when the session keys change', () async {
+    final d = bobs.first;
+    final t0 = DateTime.now().millisecondsSinceEpoch;
+    var told = 0;
+    d.store.onSessionPreKeys = () => told++;
+    LsBundle read(Uint8List kdb1) =>
+        ana.lib.parseDeviceBundle(kdb1, bob.identity.public).bundle;
+    final first = read(await d.ds.lastResortBundle(d.id, now: t0));
+    final before = told;
+    final again = read(await d.ds.lastResortBundle(d.id, now: t0 + day));
+    expect(again.kyberPreKeyId, first.kyberPreKeyId);
+    expect(again.signedPreKeyId, first.signedPreKeyId);
+    expect(told, before);
+    // a use 31 days on replaces them: the device is told, and its next
+    // bundles are on the new keys
+    final once = read(await d.ds.makeBundle(d.id, now: t0 + 31 * day));
+    expect(told, before + 1);
+    final next = read(await d.ds.lastResortBundle(d.id, now: t0 + 31 * day));
+    expect(next.kyberPreKeyId, isNot(first.kyberPreKeyId));
+    expect(next.signedPreKeyId, isNot(first.signedPreKeyId));
+    expect(once.signedPreKeyId, next.signedPreKeyId);
+    expect(once.kyberPreKeyId, isNot(next.kyberPreKeyId));
+  });
 
   test('an opener before the bundle keeps its session', () async {
     // ana links a3 and bob links d2 at once: a3 heard of d2 first and
@@ -393,17 +390,18 @@ void main() {
       return (jsonDecode(got) as Map)['t'] as String;
     }
 
-    Future<bool> buildD2(Dev a3, {bool rebuild = false}) async => d2.ds.build(
-      'ana',
-      a3.id,
-      d2.store.lib.parseDeviceBundle(
-        await a3.ds.makeBundle(a3.id),
-        ana.identity.public,
-      ),
-      a3.key,
-      a3.reg,
-      rebuild: rebuild,
-    );
+    Future<bool> buildD2(Dev a3, {bool rebuild = false}) async =>
+        d2.ds.build(
+          'ana',
+          a3.id,
+          d2.store.lib.parseDeviceBundle(
+            await a3.ds.makeBundle(a3.id),
+            ana.identity.public,
+          ),
+          a3.key,
+          a3.reg,
+          rebuild: rebuild,
+        );
 
     expect(
       await a3.ds.build(
