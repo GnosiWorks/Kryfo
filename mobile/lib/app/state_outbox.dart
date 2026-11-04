@@ -611,6 +611,10 @@ extension AppStateOutbox on AppState {
   @visibleForTesting
   set closingForTest(Completer<void>? c) => _closeDone = c;
 
+  // whether a close would wait for an arrival, for the tests
+  @visibleForTesting
+  bool get arrivingForTest => _arriving.isNotEmpty;
+
   // a mark set or taken off, or a new key accepted. one in the open vault
   // reaches its card now, not only at the close
   Future<bool> setVerified(String peer, bool verified, {String? key}) async {

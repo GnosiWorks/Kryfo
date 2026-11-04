@@ -6,6 +6,7 @@
 // device line while the vault is shut is sealed as it came and opened by
 // the vault's side as it opens. the databases and the engine stand-ins,
 // the switch on
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -24,6 +25,7 @@ import 'package:kryfo/main.dart'
         vaultDeviceReceive,
         vaultDevicesForTest,
         AppStateVaultDevices,
+        AppStateOutbox,
         useDatabasesForTest,
         useEngineForTest,
         AppStateReceive,
@@ -282,6 +284,40 @@ void main() {
       useDatabasesForTest(live, await Session.withVault(live, vault));
       await app.drainSealed(vault, 'priv-A');
       expect(vault.msg('u-desk-c')?['plaintext'], 'as it shut');
+      expect(vault.people[_h]!['caps'], 'dv,op,ty');
+    });
+
+    test('a copy opened as a close starts holds nothing while it waits for '
+        'that close, and is sealed as a device\'s once it ends', () async {
+      vault.people[_h]!['caps'] = 'dv,op,ty';
+      vault.people[_h]!['caps_at'] = 5;
+      useDatabasesForTest(live, await Session.withVault(live, vault));
+      await app.drainSealed(vault, 'priv-A');
+      deviceReceiveForTest(_Recv());
+      final closing = Completer<void>();
+      final hidden = _Recv()
+        ..copies['desk-5'] = (
+          peer: _h,
+          frame: 'halo/1:{"u":"u-desk-d","m":"in the close","w":1780000000000}',
+        );
+      hidden.opening = () {
+        app.closingForTest = closing;
+        useDatabasesForTest(live, Session(live));
+      };
+      vaultDevicesForTest(hidden, null, vault);
+      final going = app.receiveRelay([(peer: '$_x/5/1/opn', cipher: 'desk-5')]);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      // the close waits for arrivals: this one must not hold it up
+      expect(app.arrivingForTest, isFalse);
+      expect(store.inbox, isEmpty);
+      app.closingForTest = null;
+      closing.complete();
+      await going;
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(store.inbox, hasLength(1));
+      useDatabasesForTest(live, await Session.withVault(live, vault));
+      await app.drainSealed(vault, 'priv-A');
+      expect(vault.msg('u-desk-d')?['plaintext'], 'in the close');
       expect(vault.people[_h]!['caps'], 'dv,op,ty');
     });
 

@@ -93,7 +93,9 @@ Future<bool> _devPhoneSend(DevMe me, DevContact c, String frame) async {
   try {
     final p = _devicePushPhone(me.ident, c.peer);
     final cipher = await p.seal(frame, await p.measure(frame) ?? 0);
-    final x = await peerXPubOf(c.peer);
+    // the store it was sealed on: the cache of idents misses a hidden
+    // chat's contact while the vault is shut
+    final x = await (await signalOfIdent(me.ident)).peerXPubHex(c.peer);
     if (x == null) return false;
     return await engine.nostrSend(me.ident, x, cipher) == 'ok';
   } catch (e) {
@@ -188,40 +190,41 @@ extension AppStateDevices on AppState {
     } else {
       r = _deviceReceive;
     }
-    // a close waits for it from the open to the filing; one that shuts
-    // the vault meanwhile seals the copy as a device's (fromDevice)
+    // a close waits for it while it opens on the vault's side. the filing
+    // waits for a close (_afterClose), so it holds nothing then: one that
+    // shut the vault meanwhile seals the copy as a device's (fromDevice)
     final at = hidden;
     if (at != null) _arriving[at] = (_arriving[at] ?? 0) + 1;
+    final DevCopyIn? got;
     try {
       final before = _relayOpened[h];
-      DevCopyIn? got;
       if (before != null) {
         got = (peer: before.id, frame: before.plain);
       } else {
         got = await r!.receive(m.peer, m.cipher);
         if (got != null) _keepOpened(h, got.peer, got.frame, epoch);
       }
-      if (got == null) {
-        await live.markSeen(h);
-        arrived();
-        return;
-      }
-      final went = await _applyDeviceCopy(
-        got,
-        wrappedAt: wrappedAt,
-        reached: reached,
-      );
-      await live.markSeen(h);
-      _relayOpened.take(h);
-      if (AppState._shown(went)) {
-        notifyListeners();
-        arrived();
-      }
     } finally {
       if (at != null) {
         final n = (_arriving[at] ?? 1) - 1;
         n > 0 ? _arriving[at] = n : _arriving.remove(at);
       }
+    }
+    if (got == null) {
+      await live.markSeen(h);
+      arrived();
+      return;
+    }
+    final went = await _applyDeviceCopy(
+      got,
+      wrappedAt: wrappedAt,
+      reached: reached,
+    );
+    await live.markSeen(h);
+    _relayOpened.take(h);
+    if (AppState._shown(went)) {
+      notifyListeners();
+      arrived();
     }
   }
 
