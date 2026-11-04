@@ -106,7 +106,8 @@ mixin _BlockRows {
       // a frame of theirs waiting to go on to my devices (own sync), where
       // the device tables are
       if ((await t.rawQuery(
-        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'own_held'",
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+        ['own_held'],
       )).isNotEmpty) {
         await t.delete('own_held', where: 'sender = ?', whereArgs: [haloId]);
       }
