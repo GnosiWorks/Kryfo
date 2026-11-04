@@ -10121,10 +10121,11 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tất cả tin nhắn, kèm ảnh và video trong 30 ngày qua.';
 
   @override
-  String get devicesHistoryNone => 'Bắt đầu không có lịch sử';
+  String get devicesHistoryNone => 'Chỉ danh bạ và nhóm';
 
   @override
-  String get devicesHistoryNoneHint => 'Chỉ tin nhắn mới đến thiết bị.';
+  String get devicesHistoryNoneHint =>
+      'Chúng được chuyển sang không kèm tin nhắn nào.';
 
   @override
   String get devicesSkipMedia => 'Bỏ qua ảnh và video';
@@ -10700,6 +10701,28 @@ class AppLocalizationsVi extends AppLocalizations {
       'Cuộc trò chuyện này ở lại trên điện thoại của bạn vì đã chặn chụp màn hình trong đó.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name dùng phiên bản Kryfo cũ hơn. Hãy trả lời từ điện thoại của bạn.';
+  }
+
+  @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'Tạm thời hãy trả lời $name từ điện thoại của bạn.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'Mọi tin nhắn ở đây chỉ bị xóa khỏi máy tính này. Điện thoại của bạn vẫn giữ chúng.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'Mọi tin nhắn và liên hệ chỉ bị xóa khỏi máy tính này. Điện thoại của bạn vẫn giữ cuộc trò chuyện.';
+
+  @override
+  String get linkedBlockHereOnly =>
+      'Tin nhắn của họ sẽ không đến máy tính này nữa. Họ không được báo. Hãy chặn họ trên điện thoại để tin nhắn cũng dừng ở đó.';
+
+  @override
   String get historyCopyTitle => 'Lịch sử trò chuyện';
 
   @override
@@ -10744,7 +10767,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get historyCopyRows => 'Danh bạ và nhóm của bạn đã sang';
 
   @override
-  String get historyCopyRowsLine => 'Từ giờ tin nhắn mới hiện trên thiết bị.';
+  String get historyCopyRowsLine =>
+      'Chúng đã sang mà không kèm tin nhắn nào. Tin nhắn mới hiện trên thiết bị từ bây giờ.';
 
   @override
   String get historyCopyGaps => 'Phần lớn cuộc trò chuyện đã sang';

@@ -10239,11 +10239,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Tous vos messages, avec les photos et vidéos des 30 derniers jours.';
 
   @override
-  String get devicesHistoryNone => 'Commencer sans historique';
+  String get devicesHistoryNone => 'Contacts et groupes seulement';
 
   @override
-  String get devicesHistoryNoneHint =>
-      'Seuls les nouveaux messages arrivent sur l’appareil.';
+  String get devicesHistoryNoneHint => 'Ils arrivent sans aucun message.';
 
   @override
   String get devicesSkipMedia => 'Ignorer les photos et vidéos';
@@ -10826,6 +10825,28 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cette discussion reste sur votre téléphone, car les captures d’écran y sont bloquées.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name utilise une version plus ancienne de Kryfo. Répondez depuis votre téléphone.';
+  }
+
+  @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'Pour l\'instant, répondez à $name depuis votre téléphone.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'Chaque message ici est effacé de cet ordinateur seulement. Votre téléphone les garde.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'Tous les messages et le contact partent de cet ordinateur seulement. Votre téléphone garde la discussion.';
+
+  @override
+  String get linkedBlockHereOnly =>
+      'Ses messages n’arrivent plus sur cet ordinateur. Ce contact n’en est pas averti. Bloquez-le sur votre téléphone pour qu’ils s’arrêtent aussi là-bas.';
+
+  @override
   String get historyCopyTitle => 'Historique des discussions';
 
   @override
@@ -10871,7 +10892,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get historyCopyRowsLine =>
-      'Les nouveaux messages s’affichent désormais sur l’appareil.';
+      'Ils sont arrivés sans aucun message. Les nouveaux messages s\'affichent sur l\'appareil à partir de maintenant.';
 
   @override
   String get historyCopyGaps => 'La plupart de tes discussions sont arrivées';

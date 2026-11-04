@@ -10165,10 +10165,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Tüm mesajların, son 30 günün fotoğraf ve videolarıyla.';
 
   @override
-  String get devicesHistoryNone => 'Geçmiş olmadan başla';
+  String get devicesHistoryNone => 'Yalnızca kişiler ve gruplar';
 
   @override
-  String get devicesHistoryNoneHint => 'Cihaza yalnızca yeni mesajlar gelir.';
+  String get devicesHistoryNoneHint => 'Hiçbir mesaj olmadan gelirler.';
 
   @override
   String get devicesSkipMedia => 'Fotoğraf ve videoları atla';
@@ -10742,6 +10742,28 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu sohbet telefonunda kalır, çünkü içinde ekran görüntüsü engelli.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name daha eski bir Kryfo kullanıyor. Telefonundan yanıtla.';
+  }
+
+  @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'Şimdilik $name kişisine telefonundan yanıt ver.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'Buradaki her mesaj yalnızca bu bilgisayardan silinir. Telefonun onları saklar.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'Tüm mesajlar ve kişi yalnızca bu bilgisayardan gider. Telefonun sohbeti saklar.';
+
+  @override
+  String get linkedBlockHereOnly =>
+      'Mesajları artık bu bilgisayara gelmez. Ona haber verilmez. Telefonunda da gelmemesi için onu orada da engelle.';
+
+  @override
   String get historyCopyTitle => 'Sohbet geçmişi';
 
   @override
@@ -10787,7 +10809,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get historyCopyRowsLine =>
-      'Yeni mesajlar bundan sonra cihazda görünür.';
+      'Hiçbir mesaj olmadan geldiler. Yeni mesajlar bundan sonra cihazda görünür.';
 
   @override
   String get historyCopyGaps => 'Sohbetlerinin çoğu geldi';

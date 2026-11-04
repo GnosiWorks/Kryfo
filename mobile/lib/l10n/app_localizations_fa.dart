@@ -10147,10 +10147,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'همه‌ی پیام‌هایتان، با عکس‌ها و ویدیوهای ۳۰ روز گذشته.';
 
   @override
-  String get devicesHistoryNone => 'شروع بدون تاریخچه';
+  String get devicesHistoryNone => 'فقط مخاطبان و گروه‌ها';
 
   @override
-  String get devicesHistoryNoneHint => 'فقط پیام‌های تازه به دستگاه می‌رسد.';
+  String get devicesHistoryNoneHint => 'بدون هیچ پیامی منتقل می‌شوند.';
 
   @override
   String get devicesSkipMedia => 'بدون عکس و ویدیو';
@@ -10728,6 +10728,28 @@ class AppLocalizationsFa extends AppLocalizations {
       'این گفت‌وگو روی گوشی شما می‌ماند، چون اسکرین‌شات در آن مسدود است.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name از نسخهٔ قدیمی‌تر Kryfo استفاده می‌کند. از گوشی خود پاسخ دهید.';
+  }
+
+  @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'فعلاً از گوشی خود به $name پاسخ دهید.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'همه‌ی پیام‌های این‌جا فقط از این رایانه حذف می‌شوند. گوشی شما آن‌ها را نگه می‌دارد.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'همه‌ی پیام‌ها و مخاطب فقط از این رایانه حذف می‌شوند. گوشی شما گفت‌وگو را نگه می‌دارد.';
+
+  @override
+  String get linkedBlockHereOnly =>
+      'دیگر پیامی از او به این رایانه نمی‌رسد. به او گفته نمی‌شود. در گوشی‌تان هم مسدودش کنید تا آنجا هم نرسد.';
+
+  @override
   String get historyCopyTitle => 'تاریخچهٔ گفت‌وگوها';
 
   @override
@@ -10773,7 +10795,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get historyCopyRowsLine =>
-      'از این به بعد پیام‌های تازه روی دستگاه نشان داده می‌شوند.';
+      'بدون هیچ پیامی رسیدند. پیام‌های تازه از این پس روی دستگاه نشان داده می‌شوند.';
 
   @override
   String get historyCopyGaps => 'بیشتر گفت‌وگوهایتان رسید';

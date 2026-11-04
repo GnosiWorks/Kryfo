@@ -402,9 +402,22 @@ extension AppStateVault on AppState {
       if (v == null) throw StateError('no vault at hand');
       final chats = _refs(people, groups);
       if (chats.isEmpty) return 0;
-      final went = await _move(v, chats, (m) => _hide(m, v, chats), out: false);
+      // linked devices: the move drops what own sync kept of them, so the
+      // gone each needs is told here, at once (P1)
+      final told = AppState._everyday(v)
+          ? await _ownBeforeHide(chats)
+          : const <(OwnChat, int)>[];
+      final List<ChatRef> went;
+      try {
+        went = await _move(v, chats, (m) => _hide(m, v, chats), out: false);
+      } catch (_) {
+        await _ownAfterHide(const [], const []);
+        rethrow;
+      }
+      await _ownAfterHide(told, went);
       // a copy open to a new device may already hold their rows: it ends
       if (went.isNotEmpty) endHistoryCopies();
+      if (went.isNotEmpty && AppState._everyday(v)) unawaited(_ownPass());
       // linked devices: their pairs heard on as the vault's cards say
       if (AppState._everyday(v)) await _listenHiddenDevices();
       // what could still name them outside the vault, and what they showed.

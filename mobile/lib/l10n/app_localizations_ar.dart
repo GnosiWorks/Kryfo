@@ -10270,10 +10270,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'كل رسائلك، مع الصور والفيديوهات من آخر 30 يومًا.';
 
   @override
-  String get devicesHistoryNone => 'البدء دون سجل';
+  String get devicesHistoryNone => 'جهات الاتصال والمجموعات فقط';
 
   @override
-  String get devicesHistoryNoneHint => 'تصل الرسائل الجديدة فقط إلى الجهاز.';
+  String get devicesHistoryNoneHint => 'تصل دون أي رسائل.';
 
   @override
   String get devicesSkipMedia => 'تخطي الصور والفيديوهات';
@@ -10846,6 +10846,28 @@ class AppLocalizationsAr extends AppLocalizations {
       'تبقى هذه المحادثة على هاتفك لأن لقطات الشاشة محظورة فيها.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name يستخدم إصدارًا أقدم من Kryfo. ردّ من هاتفك.';
+  }
+
+  @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'ردّ على $name من هاتفك في الوقت الحالي.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'تُمسح كل رسالة هنا من هذا الحاسوب فقط. يحتفظ بها هاتفك.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'تزول كل الرسائل وجهة الاتصال من هذا الحاسوب فقط. يحتفظ هاتفك بالمحادثة.';
+
+  @override
+  String get linkedBlockHereOnly =>
+      'تتوقف رسائله عن الوصول إلى هذا الحاسوب. ولا يُبلَّغ بذلك. احظره من هاتفك ليتوقف هناك أيضًا.';
+
+  @override
   String get historyCopyTitle => 'سجل المحادثات';
 
   @override
@@ -10888,7 +10910,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get historyCopyRows => 'وصلت جهات اتصالك ومجموعاتك';
 
   @override
-  String get historyCopyRowsLine => 'من الآن تظهر الرسائل الجديدة على الجهاز.';
+  String get historyCopyRowsLine =>
+      'وصلت دون أي رسائل. تظهر الرسائل الجديدة على الجهاز من الآن.';
 
   @override
   String get historyCopyGaps => 'وصلت معظم محادثاتك';
