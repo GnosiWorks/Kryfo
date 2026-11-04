@@ -5474,9 +5474,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsVersion => 'Versi';
 
   @override
-  String get settings030Alpha => '0.5.3 · alfa';
-
-  @override
   String get settingsReportAnIssue => 'Laporkan masalah';
 
   @override
@@ -11046,4 +11043,39 @@ class AppLocalizationsId extends AppLocalizations {
   String restoreOlderMany(Object first, Object second, int count) {
     return '$first, $second, dan $count orang lainnya memakai Kryfo versi lama. Obrolanmu dengan mereka dijeda sampai mereka memperbaruinya.';
   }
+
+  @override
+  String settingsVersionAlpha(String version) {
+    return '$version · alfa';
+  }
+
+  @override
+  String get settingsShotsNotHereYet => 'Belum ada di komputer ini';
+
+  @override
+  String get settingsDeskInTray => 'Berjalan di area notifikasi';
+
+  @override
+  String get settingsDeskWhileOpen => 'Selama Kryfo terbuka';
+
+  @override
+  String get onboardingDeskRunTitle => 'Kryfo tetap *berjalan*.';
+
+  @override
+  String get onboardingDeskRunLead =>
+      'Tutup jendela dan Kryfo menunggu di area notifikasi, jadi pesan terus masuk. Keduanya bisa kamu ubah nanti di Pengaturan, bagian Notifikasi.';
+
+  @override
+  String get savedLongPressAnyMessageDesk =>
+      'Klik kanan pesan mana pun lalu pilih simpan untuk menyimpannya di sini.';
+
+  @override
+  String get chatFailedTapToRetryDesk => 'Gagal · klik untuk coba lagi';
+
+  @override
+  String get groupChatTapToRetryDesk => '! Klik untuk ulangi';
+
+  @override
+  String get modesFastLineDesk =>
+      'Melewati Tor, jadi pesan sampai lebih cepat dan lebih hemat baterai. Server kami melihat alamat IP-mu hanya selama kamu terhubung, dan tidak pernah mencatat atau menyimpannya. Kontakmu tidak pernah melihatnya. Jaringanmu bisa melihat kamu terhubung ke Kryfo.';
 }

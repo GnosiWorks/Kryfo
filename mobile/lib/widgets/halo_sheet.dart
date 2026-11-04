@@ -5,9 +5,13 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../theme.dart';
 
 const kSheetRadius = 20.0;
+
+/// the widest a sheet gets on a computer, as wide as the onboarding column
+const kDeskSheetWidth = 560.0;
 
 Future<T?> showHaloSheet<T>(
   BuildContext context, {
@@ -25,6 +29,10 @@ Future<T?> showHaloSheet<T>(
     backgroundColor: HaloColors.surface2,
     barrierColor: HaloColors.ink.withValues(alpha: 0.62),
     isScrollControlled: true,
+    // a computer's window is wide: a sheet keeps a phone's width, centred
+    constraints: onDesktop
+        ? const BoxConstraints(maxWidth: kDeskSheetWidth)
+        : null,
     isDismissible: dismissible,
     enableDrag: dismissible,
     shape: const RoundedRectangleBorder(

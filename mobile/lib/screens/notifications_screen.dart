@@ -40,6 +40,7 @@ import '../widgets/swap.dart';
 import '../widgets/unfold.dart';
 import '../l10n/l10n.dart';
 import '../dlog.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 // the route switch, a stand-in in tests: the real one moves the engine
 @visibleForTesting
@@ -284,300 +285,305 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     final guide = _guide;
     return Scaffold(
       backgroundColor: HaloColors.surface,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 28),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: staggerAll([
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-                child: Row(
-                  children: [
-                    IconButton(
-                      tooltip: l10n.commonBack,
-                      onPressed: () => Navigator.pop(context),
-                      icon: Icon(
-                        Icons.chevron_left,
-                        color: HaloColors.warm,
-                        size: 26,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 6),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Semantics(
-                      header: true,
-                      child: Text(
-                        l10n.settingsNotifications,
-                        style: HaloType.serif(
-                          size: 30,
-                          weight: FontWeight.w400,
+      body: DeskPage(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: staggerAll([
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        tooltip: l10n.commonBack,
+                        onPressed: () => Navigator.pop(context),
+                        icon: Icon(
+                          Icons.chevron_left,
+                          color: HaloColors.warm,
+                          size: 26,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      l10n.notificationsLeadShown,
-                      style: HaloType.sans(
-                        size: 13,
-                        height: 1.45,
-                        color: HaloColors.warm,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              // a computer has no delivery modes: the window's process is
-              // the app. its own section takes their place
-              _section(
-                onDesktop
-                    ? l10n.desktopRunSection
-                    : l10n.notificationsHowTheyReachYou,
-              ),
-              const SizedBox(height: 8),
-              // play builds on a phone with play services: google push
-              // first, the one most people want
-              if (google && !onDesktop)
-                _ModeCard(
-                  key: const ValueKey('googleCard'),
-                  title: l10n.deliveryModeGooglePush,
-                  tag: l10n.notificationsRecommended,
-                  body: l10n.notificationsGoogleBody,
-                  on: mode == DeliveryMode.google,
-                  wait: googleWait,
-                  checking: _starting,
-                  action: mode == DeliveryMode.google || onOnion || _starting
-                      ? null
-                      : l10n.gettingMessagesHelperUseOnion,
-                  onTap: _starting
-                      ? null
-                      : onOnion || mode == DeliveryMode.google
-                      ? () => _pick(DeliveryMode.google)
-                      : _toOnion,
-                ),
-              if (!onDesktop) ...[
-                _ModeCard(
-                  title: l10n.gettingMessagesAlwaysOn,
-                  // on fast it does not go through tor, and is not the most
-                  // private way
-                  tag: onOnion ? l10n.gettingMessagesMostPrivate : null,
-                  body: onOnion
-                      ? l10n.gettingMessagesMessagesArriveInstantlyNothing
-                      : l10n.gettingMessagesArriveInstantlyFast,
-                  on: mode == DeliveryMode.always,
-                  onTap: () => _pick(DeliveryMode.always),
-                ),
-                _ModeCard(
-                  title: l10n.gettingMessagesCheckIns,
-                  tag: l10n.gettingMessagesLightest,
-                  body: l10n.gettingMessagesKryfoLooksForMessages,
-                  on: mode == DeliveryMode.checkins,
-                  onTap: () => _pick(DeliveryMode.checkins),
-                ),
-                // always there, greyed until onion and our relay allow it
-                _ModeCard(
-                  title: l10n.deliveryModeThroughAHelperApp,
-                  body: l10n.gettingMessagesHelperBody,
-                  on: mode == DeliveryMode.helper,
-                  wait: helperWait,
-                  checking: checking,
-                  // a pill says what the tap does: move the route, or set up
-                  action: mode == DeliveryMode.helper
-                      ? null
-                      : helperWait == null
-                      ? l10n.gettingMessagesHelperSetUp
-                      : onOnion
-                      ? null
-                      : l10n.gettingMessagesHelperUseOnion,
-                  onTap: helperWait == null
-                      ? () => _pick(DeliveryMode.helper)
-                      : onOnion
-                      ? null
-                      : _toOnion,
-                ),
-              ],
-              Padding(
-                padding: const EdgeInsets.fromLTRB(22, 4, 22, 0),
-                child: Row(
-                  children: [
-                    // it pulses only while tor is on its way, and holds
-                    // still once live
-                    if (!status.live && connecting)
-                      BreathDot(color: HaloColors.amber, size: 6)
-                    else
-                      AnimatedContainer(
-                        duration: reduceMotion(context)
-                            ? Duration.zero
-                            : const Duration(milliseconds: 300),
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: status.live
-                              ? HaloColors.green
-                              : HaloColors.amber,
-                          shape: BoxShape.circle,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Semantics(
+                        header: true,
+                        child: Text(
+                          l10n.settingsNotifications,
+                          style: HaloType.serif(
+                            size: 30,
+                            weight: FontWeight.w400,
+                          ),
                         ),
                       ),
-                    const SizedBox(width: 9),
-                    Expanded(
-                      // a new state rises in; the minutes counting on
-                      // change in place
-                      child: Semantics(
-                        liveRegion: true,
-                        label: heard,
-                        excludeSemantics: true,
-                        child: RiseSwap(
-                          child: Text(
-                            status.text,
-                            key: ValueKey((status.live, link.kind)),
-                            style: HaloType.mono(
-                              size: 12,
-                              color: status.live
-                                  ? HaloColors.greenText
-                                  : HaloColors.text,
+                      const SizedBox(height: 6),
+                      Text(
+                        l10n.notificationsLeadShown,
+                        style: HaloType.sans(
+                          size: 13,
+                          height: 1.45,
+                          color: HaloColors.warm,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // a computer has no delivery modes: the window's process is
+                // the app. its own section takes their place
+                _section(
+                  onDesktop
+                      ? l10n.desktopRunSection
+                      : l10n.notificationsHowTheyReachYou,
+                ),
+                const SizedBox(height: 8),
+                // play builds on a phone with play services: google push
+                // first, the one most people want
+                if (google && !onDesktop)
+                  _ModeCard(
+                    key: const ValueKey('googleCard'),
+                    title: l10n.deliveryModeGooglePush,
+                    tag: l10n.notificationsRecommended,
+                    body: l10n.notificationsGoogleBody,
+                    on: mode == DeliveryMode.google,
+                    wait: googleWait,
+                    checking: _starting,
+                    action: mode == DeliveryMode.google || onOnion || _starting
+                        ? null
+                        : l10n.gettingMessagesHelperUseOnion,
+                    onTap: _starting
+                        ? null
+                        : onOnion || mode == DeliveryMode.google
+                        ? () => _pick(DeliveryMode.google)
+                        : _toOnion,
+                  ),
+                if (!onDesktop) ...[
+                  _ModeCard(
+                    title: l10n.gettingMessagesAlwaysOn,
+                    // on fast it does not go through tor, and is not the most
+                    // private way
+                    tag: onOnion ? l10n.gettingMessagesMostPrivate : null,
+                    body: onOnion
+                        ? l10n.gettingMessagesMessagesArriveInstantlyNothing
+                        : l10n.gettingMessagesArriveInstantlyFast,
+                    on: mode == DeliveryMode.always,
+                    onTap: () => _pick(DeliveryMode.always),
+                  ),
+                  _ModeCard(
+                    title: l10n.gettingMessagesCheckIns,
+                    tag: l10n.gettingMessagesLightest,
+                    body: l10n.gettingMessagesKryfoLooksForMessages,
+                    on: mode == DeliveryMode.checkins,
+                    onTap: () => _pick(DeliveryMode.checkins),
+                  ),
+                  // always there, greyed until onion and our relay allow it
+                  _ModeCard(
+                    title: l10n.deliveryModeThroughAHelperApp,
+                    body: l10n.gettingMessagesHelperBody,
+                    on: mode == DeliveryMode.helper,
+                    wait: helperWait,
+                    checking: checking,
+                    // a pill says what the tap does: move the route, or set up
+                    action: mode == DeliveryMode.helper
+                        ? null
+                        : helperWait == null
+                        ? l10n.gettingMessagesHelperSetUp
+                        : onOnion
+                        ? null
+                        : l10n.gettingMessagesHelperUseOnion,
+                    onTap: helperWait == null
+                        ? () => _pick(DeliveryMode.helper)
+                        : onOnion
+                        ? null
+                        : _toOnion,
+                  ),
+                ],
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 4, 22, 0),
+                  child: Row(
+                    children: [
+                      // it pulses only while tor is on its way, and holds
+                      // still once live
+                      if (!status.live && connecting)
+                        BreathDot(color: HaloColors.amber, size: 6)
+                      else
+                        AnimatedContainer(
+                          duration: reduceMotion(context)
+                              ? Duration.zero
+                              : const Duration(milliseconds: 300),
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: status.live
+                                ? HaloColors.green
+                                : HaloColors.amber,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      const SizedBox(width: 9),
+                      Expanded(
+                        // a new state rises in; the minutes counting on
+                        // change in place
+                        child: Semantics(
+                          liveRegion: true,
+                          label: heard,
+                          excludeSemantics: true,
+                          child: RiseSwap(
+                            child: Text(
+                              status.text,
+                              key: ValueKey((status.live, link.kind)),
+                              style: HaloType.mono(
+                                size: 12,
+                                color: status.live
+                                    ? HaloColors.greenText
+                                    : HaloColors.text,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              Unfold(
-                open: bridgeNote != null,
-                child: Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(37, 4, 22, 0),
-                  child: RiseSwap(
-                    child: Text(
-                      bridgeNote ?? '',
-                      key: ValueKey(bridgeNote),
-                      style: HaloType.mono(size: 11.5, color: HaloColors.text2),
-                    ),
-                  ),
-                ),
-              ),
-              // each mode's note grows in and folds away, so the page never
-              // jumps under a finger
-              if (onDesktop && desktopRun != null)
-                DeskRunSection(run: desktopRun!),
-              if (!onDesktop) ...[
-                _note(
-                  l10n.gettingMessagesWhenThePhoneSits,
-                  open: mode == DeliveryMode.checkins,
-                ),
-                // some registration the relay keeps refusing: a plain line,
-                // the check-ins carry those chats meanwhile
-                _note(
-                  l10n.gettingMessagesHelperRefused,
-                  open: mode == DeliveryMode.helper && appState.helperRefused,
-                ),
-                _note(
-                  l10n.notificationsGoogleRefused,
-                  open: mode == DeliveryMode.google && appState.helperRefused,
-                ),
-                _note(
-                  l10n.gettingMessagesHelperNote,
-                  open: mode == DeliveryMode.helper,
-                ),
-                _note(
-                  l10n.notificationsGoogleNote,
-                  open: mode == DeliveryMode.google,
-                ),
-              ],
-              const SizedBox(height: 10),
-              // android's channel page: a computer's sound is its own
-              if (!onDesktop) _section(l10n.notificationsSoundAndVibration),
-              if (!onDesktop)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                  child: HaloGroup(
-                    children: [
-                      HaloRow(
-                        key: const ValueKey('soundRow'),
-                        icon: Icons.volume_up_outlined,
-                        label: l10n.notificationsChannelName,
-                        hint: l10n.notificationsSoundHint,
-                        onTap: _openSound,
-                      ),
                     ],
                   ),
                 ),
-              _section(l10n.gettingMessagesWhatShows),
-              // what they say is chosen in one place, with the icon: this
-              // row goes there
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                child: HaloGroup(
-                  children: [
-                    HaloRow(
-                      icon: Icons.notifications_none_rounded,
-                      label: l10n.notificationsEachShows,
-                      value: _show == null ? null : notifShowName(_show!),
-                      onTap: () async {
-                        await Navigator.of(context).push(
-                          haloRoute(const IconScreen(toNotifications: true)),
-                        );
-                        _readShow();
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              // a pin turns previews off. if someone turns them back on,
-              // say what that gives away, in the warning's own colour
-              Unfold(
-                open: lockState.lockOn && _show == NotifShow.all,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 0, 28, 8),
-                  child: Text(
-                    l10n.gettingMessagesShowsMessageTextIn,
-                    style: HaloType.sans(
-                      size: 12,
-                      color: HaloColors.roseText,
-                      height: 1.35,
+                Unfold(
+                  open: bridgeNote != null,
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(37, 4, 22, 0),
+                    child: RiseSwap(
+                      child: Text(
+                        bridgeNote ?? '',
+                        key: ValueKey(bridgeNote),
+                        style: HaloType.mono(
+                          size: 11.5,
+                          color: HaloColors.text2,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              if (!onDesktop) _section(l10n.notificationsBatteryTips),
-              if (!onDesktop)
+                // each mode's note grows in and folds away, so the page never
+                // jumps under a finger
+                if (onDesktop && desktopRun != null)
+                  DeskRunSection(run: desktopRun!),
+                if (!onDesktop) ...[
+                  _note(
+                    l10n.gettingMessagesWhenThePhoneSits,
+                    open: mode == DeliveryMode.checkins,
+                  ),
+                  // some registration the relay keeps refusing: a plain line,
+                  // the check-ins carry those chats meanwhile
+                  _note(
+                    l10n.gettingMessagesHelperRefused,
+                    open: mode == DeliveryMode.helper && appState.helperRefused,
+                  ),
+                  _note(
+                    l10n.notificationsGoogleRefused,
+                    open: mode == DeliveryMode.google && appState.helperRefused,
+                  ),
+                  _note(
+                    l10n.gettingMessagesHelperNote,
+                    open: mode == DeliveryMode.helper,
+                  ),
+                  _note(
+                    l10n.notificationsGoogleNote,
+                    open: mode == DeliveryMode.google,
+                  ),
+                ],
+                const SizedBox(height: 10),
+                // android's channel page: a computer's sound is its own
+                if (!onDesktop) _section(l10n.notificationsSoundAndVibration),
+                if (!onDesktop)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                    child: HaloGroup(
+                      children: [
+                        HaloRow(
+                          key: const ValueKey('soundRow'),
+                          icon: Icons.volume_up_outlined,
+                          label: l10n.notificationsChannelName,
+                          hint: l10n.notificationsSoundHint,
+                          onTap: _openSound,
+                        ),
+                      ],
+                    ),
+                  ),
+                _section(l10n.gettingMessagesWhatShows),
+                // what they say is chosen in one place, with the icon: this
+                // row goes there
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                   child: HaloGroup(
                     children: [
                       HaloRow(
-                        key: const ValueKey('batteryRow'),
-                        icon: Icons.battery_saver,
-                        label: l10n.settingsRunInBackground,
-                        hint: l10n.settingsSoMessagesArrive,
-                        value: _exempt == null
-                            ? null
-                            : _exempt!
-                            ? l10n.notificationsBatteryAllowed
-                            : l10n.notificationsBatteryNotYet,
+                        icon: Icons.notifications_none_rounded,
+                        label: l10n.notificationsEachShows,
+                        value: _show == null ? null : notifShowName(_show!),
                         onTap: () async {
-                          await askBatteryExemption(context);
-                          _readBattery();
+                          await Navigator.of(context).push(
+                            haloRoute(const IconScreen(toNotifications: true)),
+                          );
+                          _readShow();
                         },
                       ),
-                      if (guide != null)
-                        HaloRow(
-                          key: const ValueKey('makerRow'),
-                          icon: Icons.phone_android_outlined,
-                          label: l10n.notificationsMakerSwitch,
-                          hint: guide.title,
-                          onTap: () => showMakerGuide(context),
-                        ),
                     ],
                   ),
                 ),
-            ]),
+                // a pin turns previews off. if someone turns them back on,
+                // say what that gives away, in the warning's own colour
+                Unfold(
+                  open: lockState.lockOn && _show == NotifShow.all,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(28, 0, 28, 8),
+                    child: Text(
+                      l10n.gettingMessagesShowsMessageTextIn,
+                      style: HaloType.sans(
+                        size: 12,
+                        color: HaloColors.roseText,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ),
+                if (!onDesktop) _section(l10n.notificationsBatteryTips),
+                if (!onDesktop)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                    child: HaloGroup(
+                      children: [
+                        HaloRow(
+                          key: const ValueKey('batteryRow'),
+                          icon: Icons.battery_saver,
+                          label: l10n.settingsRunInBackground,
+                          hint: l10n.settingsSoMessagesArrive,
+                          value: _exempt == null
+                              ? null
+                              : _exempt!
+                              ? l10n.notificationsBatteryAllowed
+                              : l10n.notificationsBatteryNotYet,
+                          onTap: () async {
+                            await askBatteryExemption(context);
+                            _readBattery();
+                          },
+                        ),
+                        if (guide != null)
+                          HaloRow(
+                            key: const ValueKey('makerRow'),
+                            icon: Icons.phone_android_outlined,
+                            label: l10n.notificationsMakerSwitch,
+                            hint: guide.title,
+                            onTap: () => showMakerGuide(context),
+                          ),
+                      ],
+                    ),
+                  ),
+              ]),
+            ),
           ),
         ),
       ),

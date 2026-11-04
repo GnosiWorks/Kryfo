@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../desktop/desktop_mode.dart' show onDesktop;
 import 'key_ring.dart';
 
 class PressScale extends StatefulWidget {
@@ -55,6 +56,8 @@ class _PressScaleState extends State<PressScale> {
               HapticFeedback.mediumImpact();
               widget.onLongPress!();
             },
+      // a right click on a computer is the hold
+      onSecondaryTap: onDesktop ? widget.onLongPress : null,
       onTap: widget.onTap == null
           ? null
           : () {

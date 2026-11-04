@@ -1551,7 +1551,6 @@
   "settingsWhatWeCanSee": "Cosa possiamo vedere",
   "settingsTheHonestList": "L'elenco onesto",
   "settingsVersion": "Versione",
-  "settings030Alpha": "0.5.3 · alpha",
   "settingsReportAnIssue": "Segnala un problema",
   "settingsReportInKryfo": "Scrivi in Kryfo",
   "settingsReportInKryfoSub": "La chat con Marios. Puoi scrivere in modo anonimo.",
@@ -2910,5 +2909,15 @@
   "restoreOlderTitle": "Alcune chat andranno in pausa",
   "restoreOlderOne": "{name} usa una versione precedente di Kryfo. La vostra chat resterà in pausa finché non aggiorna.",
   "restoreOlderTwo": "{first} e {second} usano una versione precedente di Kryfo. Le chat con loro resteranno in pausa finché non aggiornano.",
-  "restoreOlderMany": "{first}, {second} e {count, plural, =1{1 altra persona} other{altre {count} persone}} usano una versione precedente di Kryfo. Le chat con loro resteranno in pausa finché non aggiornano."
+  "restoreOlderMany": "{first}, {second} e {count, plural, =1{1 altra persona} other{altre {count} persone}} usano una versione precedente di Kryfo. Le chat con loro resteranno in pausa finché non aggiornano.",
+  "settingsVersionAlpha": "{version} · alpha",
+  "settingsShotsNotHereYet": "Non ancora su questo computer",
+  "settingsDeskInTray": "Attivo nell'area di notifica",
+  "settingsDeskWhileOpen": "Finché Kryfo è aperto",
+  "onboardingDeskRunTitle": "Kryfo resta *attivo*.",
+  "onboardingDeskRunLead": "Chiudi la finestra e Kryfo aspetta nell'area di notifica, così i messaggi continuano ad arrivare. Puoi cambiare entrambe le cose più tardi in Impostazioni, sotto Notifiche.",
+  "savedLongPressAnyMessageDesk": "Fai clic destro su un messaggio e scegli salva per tenerlo qui.",
+  "chatFailedTapToRetryDesk": "Non inviato · fai clic per riprovare",
+  "groupChatTapToRetryDesk": "! Fai clic per riprovare",
+  "modesFastLineDesk": "Salta Tor, così i messaggi arrivano prima e consumano meno batteria. I nostri server vedono il tuo indirizzo IP solo mentre sei connesso, e non lo registrano né lo conservano mai. I tuoi contatti non lo vedono mai. La tua rete può vedere che ti connetti a Kryfo."
 }

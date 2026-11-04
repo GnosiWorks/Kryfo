@@ -1551,7 +1551,6 @@
   "settingsWhatWeCanSee": "O que conseguimos ver",
   "settingsTheHonestList": "A lista honesta",
   "settingsVersion": "Versão",
-  "settings030Alpha": "0.5.3 · alfa",
   "settingsReportAnIssue": "Relatar um problema",
   "settingsReportInKryfo": "Escrever no Kryfo",
   "settingsReportInKryfoSub": "A conversa com Marios. Você pode escrever anonimamente.",
@@ -2910,5 +2909,15 @@
   "restoreOlderTitle": "Algumas conversas vão pausar",
   "restoreOlderOne": "{name} usa uma versão anterior do Kryfo. A conversa de vocês vai pausar até essa pessoa atualizar.",
   "restoreOlderTwo": "{first} e {second} usam uma versão anterior do Kryfo. Suas conversas com eles vão pausar até atualizarem.",
-  "restoreOlderMany": "{first}, {second} e {count, plural, =1{mais 1 pessoa} other{mais {count} pessoas}} usam uma versão anterior do Kryfo. Suas conversas com eles vão pausar até atualizarem."
+  "restoreOlderMany": "{first}, {second} e {count, plural, =1{mais 1 pessoa} other{mais {count} pessoas}} usam uma versão anterior do Kryfo. Suas conversas com eles vão pausar até atualizarem.",
+  "settingsVersionAlpha": "{version} · alfa",
+  "settingsShotsNotHereYet": "Ainda não neste computador",
+  "settingsDeskInTray": "Aberto na bandeja do sistema",
+  "settingsDeskWhileOpen": "Enquanto o Kryfo está aberto",
+  "onboardingDeskRunTitle": "O Kryfo continua *aberto*.",
+  "onboardingDeskRunLead": "Feche a janela e o Kryfo espera na bandeja do sistema, e as mensagens continuam chegando. Você pode mudar as duas coisas depois em Configurações, em Notificações.",
+  "savedLongPressAnyMessageDesk": "Clique com o botão direito em qualquer mensagem e escolha salvar para guardá-la aqui.",
+  "chatFailedTapToRetryDesk": "Falhou · clique para repetir",
+  "groupChatTapToRetryDesk": "! Clique para repetir",
+  "modesFastLineDesk": "Pula o Tor, então as mensagens chegam mais rápido e gastam menos bateria. Nossos servidores veem seu endereço IP só enquanto você está conectado, e nunca registram nem guardam. Seus contatos nunca veem. Sua rede pode ver que você se conecta ao Kryfo."
 }

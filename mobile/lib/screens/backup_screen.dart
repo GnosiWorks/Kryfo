@@ -34,6 +34,7 @@ import '../l10n/numbers.dart';
 import '../dlog.dart';
 import '../save_names.dart' show backupName, savesPlain;
 import '../phone_seal.dart' show withFileKey;
+import '../wide/read_width.dart' show DeskPage;
 
 // a test's backup, in place of the engine's
 @visibleForTesting
@@ -361,177 +362,179 @@ class _BackupScreenState extends State<BackupScreen> {
         leading: BackButton(color: HaloColors.text2),
         title: Text(l10n.backupBackUpKryfo, style: HaloType.pageTitle()),
       ),
-      body: SafeArea(
-        // fits or scrolls: on a short screen a plain column leaves the
-        // button painted outside what can be tapped
-        child: FitColumn(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: staggerAllIn(context, [
-            // a setup's backup holds the chats it just hid: never a move
-            if (!widget.withHiddenChats) ...[
-              ChoiceCard(
-                on: !_move,
-                title: l10n.backupBackUp,
-                line: l10n.backupACopyToKeepShown,
-                onTap: () => _choose(false),
+      body: DeskPage(
+        child: SafeArea(
+          // fits or scrolls: on a short screen a plain column leaves the
+          // button painted outside what can be tapped
+          child: FitColumn(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: staggerAllIn(context, [
+              // a setup's backup holds the chats it just hid: never a move
+              if (!widget.withHiddenChats) ...[
+                ChoiceCard(
+                  on: !_move,
+                  title: l10n.backupBackUp,
+                  line: l10n.backupACopyToKeepShown,
+                  onTap: () => _choose(false),
+                ),
+                const SizedBox(height: 8),
+                ChoiceCard(
+                  on: _move,
+                  title: l10n.backupMoveToAnotherDevice,
+                  line: l10n.backupTheFileTakesThisShown,
+                  onTap: () => _choose(true),
+                ),
+                const SizedBox(height: 16),
+              ],
+              _About(
+                move: _move && !widget.withHiddenChats,
+                canMove: !widget.withHiddenChats,
+                hidden: _hidden,
+              ),
+              const SizedBox(height: 24),
+              SecretField(
+                label: l10n.backupPassphrase,
+                controller: _p1,
+                shown: _shown,
+                onToggle: () => setState(() => _shown = !_shown),
+              ),
+              const SizedBox(height: 12),
+              SecretField(
+                label: l10n.backupConfirmPassphrase,
+                controller: _p2,
+                shown: _shown,
+                onToggle: () => setState(() => _shown = !_shown),
+                action: TextInputAction.done,
+                onSubmit: _busy ? null : _create,
+              ),
+              const SizedBox(height: 12),
+              EaseSize(
+                child: _error == null
+                    ? const SizedBox(width: double.infinity)
+                    : RiseSwap(
+                        child: Text(
+                          _error!,
+                          key: ValueKey(_error),
+                          style: HaloType.sans(
+                            size: 12,
+                            color: HaloColors.roseText,
+                          ),
+                        ),
+                      ),
+              ),
+              const Spacer(),
+              // not saved: a plain line, the file kept to try again
+              EaseSize(
+                child: RiseSwap(
+                  alignment: Alignment.topCenter,
+                  child: !_notSaved
+                      ? const SizedBox(
+                          key: ValueKey(false),
+                          width: double.infinity,
+                        )
+                      : Padding(
+                          key: ValueKey(_noRoom),
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: Text(
+                              _noRoom
+                                  ? l10n.backupNotSavedNoSpace
+                                  : l10n.backupNotSaved,
+                              textAlign: TextAlign.center,
+                              style: HaloType.sans(
+                                size: 13,
+                                color: HaloColors.text,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+              HaloPrimaryButton(
+                label: _saving
+                    ? l10n.backupSaving
+                    : _notSaved
+                    ? l10n.commonTryAgain
+                    : _busy
+                    ? (_progress > 0
+                          ? l10n.backupWriting(percent(_progress))
+                          : l10n.backupCreating)
+                    : (_move
+                          ? l10n.backupMakeTheFileAnd
+                          : l10n.backupCreateBackup),
+                // the percent itself changes in place
+                phase: '${(_busy, _progress > 0, _move, _saving, _notSaved)}',
+                busy: _busy,
+                onTap: _notSaved ? () => _handOver(save: true) : _create,
+              ),
+              EaseSize(
+                child: RiseSwap(
+                  alignment: Alignment.topCenter,
+                  child: !_notSaved || !canShareOut
+                      ? const SizedBox(
+                          key: ValueKey(false),
+                          width: double.infinity,
+                        )
+                      : Padding(
+                          key: const ValueKey(true),
+                          padding: const EdgeInsets.only(top: 10),
+                          child: SizedBox(
+                            key: _ways,
+                            width: double.infinity,
+                            child: HaloGhostButton(
+                              label: l10n.backupShareInstead,
+                              onTap: () => _handOver(save: false),
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+              // the file, as far as it is written
+              EaseSize(
+                child: !_busy || _saving || _progress <= 0
+                    ? const SizedBox(width: double.infinity)
+                    : Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: HaloBar(
+                          value: _progress,
+                          height: 3,
+                          label: l10n.a11yBackupProgress,
+                        ),
+                      ),
+              ),
+              // the folder stays empty until the file is done and saved
+              EaseSize(
+                child: RiseSwap(
+                  alignment: Alignment.topCenter,
+                  child: !_writing || _progress <= 0
+                      ? const SizedBox(
+                          key: ValueKey(false),
+                          width: double.infinity,
+                        )
+                      : Padding(
+                          key: const ValueKey(true),
+                          padding: const EdgeInsets.only(top: 10),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: Text(
+                              l10n.backupSaveComesAfter,
+                              textAlign: TextAlign.center,
+                              style: HaloType.sans(
+                                size: 12.5,
+                                color: HaloColors.text2,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ),
+                ),
               ),
               const SizedBox(height: 8),
-              ChoiceCard(
-                on: _move,
-                title: l10n.backupMoveToAnotherDevice,
-                line: l10n.backupTheFileTakesThisShown,
-                onTap: () => _choose(true),
-              ),
-              const SizedBox(height: 16),
-            ],
-            _About(
-              move: _move && !widget.withHiddenChats,
-              canMove: !widget.withHiddenChats,
-              hidden: _hidden,
-            ),
-            const SizedBox(height: 24),
-            SecretField(
-              label: l10n.backupPassphrase,
-              controller: _p1,
-              shown: _shown,
-              onToggle: () => setState(() => _shown = !_shown),
-            ),
-            const SizedBox(height: 12),
-            SecretField(
-              label: l10n.backupConfirmPassphrase,
-              controller: _p2,
-              shown: _shown,
-              onToggle: () => setState(() => _shown = !_shown),
-              action: TextInputAction.done,
-              onSubmit: _busy ? null : _create,
-            ),
-            const SizedBox(height: 12),
-            EaseSize(
-              child: _error == null
-                  ? const SizedBox(width: double.infinity)
-                  : RiseSwap(
-                      child: Text(
-                        _error!,
-                        key: ValueKey(_error),
-                        style: HaloType.sans(
-                          size: 12,
-                          color: HaloColors.roseText,
-                        ),
-                      ),
-                    ),
-            ),
-            const Spacer(),
-            // not saved: a plain line, the file kept to try again
-            EaseSize(
-              child: RiseSwap(
-                alignment: Alignment.topCenter,
-                child: !_notSaved
-                    ? const SizedBox(
-                        key: ValueKey(false),
-                        width: double.infinity,
-                      )
-                    : Padding(
-                        key: ValueKey(_noRoom),
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: Text(
-                            _noRoom
-                                ? l10n.backupNotSavedNoSpace
-                                : l10n.backupNotSaved,
-                            textAlign: TextAlign.center,
-                            style: HaloType.sans(
-                              size: 13,
-                              color: HaloColors.text,
-                              height: 1.4,
-                            ),
-                          ),
-                        ),
-                      ),
-              ),
-            ),
-            HaloPrimaryButton(
-              label: _saving
-                  ? l10n.backupSaving
-                  : _notSaved
-                  ? l10n.commonTryAgain
-                  : _busy
-                  ? (_progress > 0
-                        ? l10n.backupWriting(percent(_progress))
-                        : l10n.backupCreating)
-                  : (_move
-                        ? l10n.backupMakeTheFileAnd
-                        : l10n.backupCreateBackup),
-              // the percent itself changes in place
-              phase: '${(_busy, _progress > 0, _move, _saving, _notSaved)}',
-              busy: _busy,
-              onTap: _notSaved ? () => _handOver(save: true) : _create,
-            ),
-            EaseSize(
-              child: RiseSwap(
-                alignment: Alignment.topCenter,
-                child: !_notSaved || !canShareOut
-                    ? const SizedBox(
-                        key: ValueKey(false),
-                        width: double.infinity,
-                      )
-                    : Padding(
-                        key: const ValueKey(true),
-                        padding: const EdgeInsets.only(top: 10),
-                        child: SizedBox(
-                          key: _ways,
-                          width: double.infinity,
-                          child: HaloGhostButton(
-                            label: l10n.backupShareInstead,
-                            onTap: () => _handOver(save: false),
-                          ),
-                        ),
-                      ),
-              ),
-            ),
-            // the file, as far as it is written
-            EaseSize(
-              child: !_busy || _saving || _progress <= 0
-                  ? const SizedBox(width: double.infinity)
-                  : Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: HaloBar(
-                        value: _progress,
-                        height: 3,
-                        label: l10n.a11yBackupProgress,
-                      ),
-                    ),
-            ),
-            // the folder stays empty until the file is done and saved
-            EaseSize(
-              child: RiseSwap(
-                alignment: Alignment.topCenter,
-                child: !_writing || _progress <= 0
-                    ? const SizedBox(
-                        key: ValueKey(false),
-                        width: double.infinity,
-                      )
-                    : Padding(
-                        key: const ValueKey(true),
-                        padding: const EdgeInsets.only(top: 10),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: Text(
-                            l10n.backupSaveComesAfter,
-                            textAlign: TextAlign.center,
-                            style: HaloType.sans(
-                              size: 12.5,
-                              color: HaloColors.text2,
-                              height: 1.4,
-                            ),
-                          ),
-                        ),
-                      ),
-              ),
-            ),
-            const SizedBox(height: 8),
-          ]),
+            ]),
+          ),
         ),
       ),
     );

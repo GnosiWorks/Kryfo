@@ -20,7 +20,7 @@ import '../widgets/album_grid.dart';
 import '../widgets/album_viewer.dart';
 import 'media_send_screen.dart';
 import '../sent_name.dart';
-import '../desktop/desktop_mode.dart' show canShareOut;
+import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
 import 'dart:io';
 import 'dart:convert';
 import 'key_verification_screen.dart';
@@ -3833,12 +3833,14 @@ class _ChatScreenState extends State<ChatScreen>
       builder: (sheetCtx) => AttachGrid(
         note: l10n.chatNoExifNeverSaved,
         items: [
-          AttachItem(
-            icon: (c) => Icon(Icons.photo_camera_outlined, color: c),
-            tint: HaloColors.amber,
-            label: l10n.chatCamera,
-            onTap: _openCamera,
-          ),
+          // a computer has no camera to open
+          if (!onDesktop)
+            AttachItem(
+              icon: (c) => Icon(Icons.photo_camera_outlined, color: c),
+              tint: HaloColors.amber,
+              label: l10n.chatCamera,
+              onTap: _openCamera,
+            ),
           AttachItem(
             icon: (c) => Icon(Icons.photo_library_outlined, color: c),
             tint: HaloColors.violet,
@@ -8308,6 +8310,10 @@ class _Bubble extends StatelessWidget {
             ? () => onRetry!(msg)
             : onReveal,
         onLongPress: onLongPress == null ? null : () => onLongPress!(context),
+        // a right click on a computer opens the same menu
+        onSecondaryTap: !onDesktop || onLongPress == null
+            ? null
+            : () => onLongPress!(context),
         child: AnimatedPadding(
           duration: roomTime,
           curve: kHouseCurve,
@@ -8953,7 +8959,7 @@ class _Bubble extends StatelessWidget {
                                           if (failedShown) ...[
                                             const SizedBox(height: 4),
                                             Text(
-                                              l10n.chatFailedTapToRetry,
+                                              l10n.chatFailedTapToRetryShown,
                                               style: TextStyle(
                                                 fontFamily: HaloType.monoFamily,
                                                 fontFamilyFallback:
@@ -9165,6 +9171,10 @@ class _Bubble extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onLongPress: onLongPress == null ? null : () => onLongPress!(context),
+        // a right click on a computer opens the same menu
+        onSecondaryTap: !onDesktop || onLongPress == null
+            ? null
+            : () => onLongPress!(context),
         child: AnimatedPadding(
           duration: roomTime,
           curve: kHouseCurve,
@@ -9220,7 +9230,7 @@ class _Bubble extends StatelessWidget {
                                     burn: burn,
                                     burnWaits: msg.burnWaits,
                                     alert: failedShown
-                                        ? l10n.chatFailedTapToRetry
+                                        ? l10n.chatFailedTapToRetryShown
                                         : null,
                                     alertColor: failedShown
                                         ? HaloColors.rose
@@ -9698,20 +9708,21 @@ class _Composer extends StatelessWidget {
               const SizedBox(width: 1),
               // the camera that keeps its photos inside kryfo. each icon
               // sits in a finger-sized box, so a tap between them lands
-              PressScale(
-                label: l10n.chatOpenTheCamera,
-                onTap: onCamera,
-                scale: 0.86,
-                child: SizedBox(
-                  width: 38,
-                  height: 40,
-                  child: Icon(
-                    Icons.photo_camera_outlined,
-                    size: 22,
-                    color: HaloColors.text2,
+              if (!onDesktop)
+                PressScale(
+                  label: l10n.chatOpenTheCamera,
+                  onTap: onCamera,
+                  scale: 0.86,
+                  child: SizedBox(
+                    width: 38,
+                    height: 40,
+                    child: Icon(
+                      Icons.photo_camera_outlined,
+                      size: 22,
+                      color: HaloColors.text2,
+                    ),
                   ),
                 ),
-              ),
               PressScale(
                 label: l10n.chatAttachAPhoto,
                 onTap: onAttach,

@@ -8798,12 +8798,6 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'0.5.3 · alpha'**
-  String get settings030Alpha;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Report an issue'**
   String get settingsReportAnIssue;
 
@@ -17746,6 +17740,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{first}, {second} and {count, plural, =1{1 other} other{{count} others}} use an older Kryfo. Your chats with them will pause until they update.'**
   String restoreOlderMany(Object first, Object second, int count);
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'{version} · alpha'**
+  String settingsVersionAlpha(String version);
+
+  /// screens/settings_screen.dart: the screenshots line on a computer
+  ///
+  /// In en, this message translates to:
+  /// **'Not on this computer yet'**
+  String get settingsShotsNotHereYet;
+
+  /// screens/settings_screen.dart: how messages arrive on a computer, kept in the tray
+  ///
+  /// In en, this message translates to:
+  /// **'Running in the tray'**
+  String get settingsDeskInTray;
+
+  /// screens/settings_screen.dart: how messages arrive on a computer with the tray off
+  ///
+  /// In en, this message translates to:
+  /// **'While Kryfo is open'**
+  String get settingsDeskWhileOpen;
+
+  /// screens/onboarding_screen.dart: the computer's step in place of the notification one
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo keeps *running*.'**
+  String get onboardingDeskRunTitle;
+
+  /// screens/onboarding_screen.dart: the computer's step in place of the notification one
+  ///
+  /// In en, this message translates to:
+  /// **'Close the window and Kryfo waits in the tray, so messages keep arriving. You can change both later in Settings, under Notifications.'**
+  String get onboardingDeskRunLead;
+
+  /// screens/saved_screen.dart, on a computer
+  ///
+  /// In en, this message translates to:
+  /// **'Right-click any message and choose save to keep it here.'**
+  String get savedLongPressAnyMessageDesk;
+
+  /// screens/chat_screen.dart, on a computer
+  ///
+  /// In en, this message translates to:
+  /// **'Failed · click to retry'**
+  String get chatFailedTapToRetryDesk;
+
+  /// screens/group_chat_screen.dart, on a computer
+  ///
+  /// In en, this message translates to:
+  /// **'! Click to retry'**
+  String get groupChatTapToRetryDesk;
+
+  /// screens/modes_screen.dart, on a computer
+  ///
+  /// In en, this message translates to:
+  /// **'Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you\'re connected, and never log or keep it. Your contacts never see it. Your network can see that you connect to Kryfo.'**
+  String get modesFastLineDesk;
 }
 
 class _AppLocalizationsDelegate

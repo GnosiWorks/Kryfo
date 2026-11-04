@@ -25,6 +25,7 @@ import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
 import 'bridge_sheets.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 class BridgesScreen extends StatefulWidget {
   const BridgesScreen({super.key});
@@ -84,111 +85,113 @@ class _BridgesScreenState extends State<BridgesScreen> {
               ),
             ),
           ),
-          body: ListView(
-            padding: EdgeInsetsDirectional.fromSTEB(
-              20,
-              4,
-              20,
-              40 + MediaQuery.paddingOf(context).bottom,
-            ),
-            children: staggerAll([
-              BridgeStatusView(
-                line: line,
-                onAction: decoy ? null : (a) => _act(a),
-                onRelay: decoy ? null : () => switchToRelay(context),
+          body: DeskPage(
+            child: ListView(
+              padding: EdgeInsetsDirectional.fromSTEB(
+                20,
+                4,
+                20,
+                40 + MediaQuery.paddingOf(context).bottom,
               ),
-              const SizedBox(height: 18),
-              if (!decoy)
-                EaseSize(
-                  child:
-                      b.offerAuto &&
-                          b.choice != BridgeChoice.auto &&
-                          !lockState.inVault
-                      ? Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _OfferCard(
-                            onYes: () => _pick(BridgeChoice.auto),
-                            onNo: appState.dismissAutoOffer,
-                          ),
-                        )
-                      : const SizedBox(width: double.infinity),
+              children: staggerAll([
+                BridgeStatusView(
+                  line: line,
+                  onAction: decoy ? null : (a) => _act(a),
+                  onRelay: decoy ? null : () => switchToRelay(context),
                 ),
-              Semantics(
-                container: true,
-                explicitChildNodes: true,
-                child: Column(
-                  children: [
-                    _ChoiceCard(
-                      title: l10n.bridgesAutomatic,
-                      body: l10n.bridgesKryfoFindsAWay,
-                      selected: chosen == BridgeChoice.auto,
-                      tag: tag(BridgeChoice.auto),
-                      onTap: decoy ? null : () => _pick(BridgeChoice.auto),
-                    ),
-                    if (!decoy) ...[
-                      const SizedBox(height: 10),
+                const SizedBox(height: 18),
+                if (!decoy)
+                  EaseSize(
+                    child:
+                        b.offerAuto &&
+                            b.choice != BridgeChoice.auto &&
+                            !lockState.inVault
+                        ? Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _OfferCard(
+                              onYes: () => _pick(BridgeChoice.auto),
+                              onNo: appState.dismissAutoOffer,
+                            ),
+                          )
+                        : const SizedBox(width: double.infinity),
+                  ),
+                Semantics(
+                  container: true,
+                  explicitChildNodes: true,
+                  child: Column(
+                    children: [
                       _ChoiceCard(
-                        title: l10n.bridgesDirect,
-                        body: l10n.bridgesFastestWhereTorIsnt,
-                        selected: chosen == BridgeChoice.direct,
-                        tag: tag(BridgeChoice.direct),
-                        onTap: () => _pick(BridgeChoice.direct),
+                        title: l10n.bridgesAutomatic,
+                        body: l10n.bridgesKryfoFindsAWay,
+                        selected: chosen == BridgeChoice.auto,
+                        tag: tag(BridgeChoice.auto),
+                        onTap: decoy ? null : () => _pick(BridgeChoice.auto),
                       ),
-                      const SizedBox(height: 10),
-                      _ChoiceCard(
-                        title: l10n.bridgesBridgeFromAFriend,
-                        body: l10n.bridgesPasteOrScanALineShown,
-                        selected: chosen == BridgeChoice.friend,
-                        tag: tag(BridgeChoice.friend),
-                        onTap: () => _pick(BridgeChoice.friend),
-                        extra: friendCount == 0
-                            ? null
-                            : _FriendLinesRow(
-                                count: friendCount,
-                                onEdit: () => showFriendLinesSheet(context),
-                              ),
-                      ),
+                      if (!decoy) ...[
+                        const SizedBox(height: 10),
+                        _ChoiceCard(
+                          title: l10n.bridgesDirect,
+                          body: l10n.bridgesFastestWhereTorIsnt,
+                          selected: chosen == BridgeChoice.direct,
+                          tag: tag(BridgeChoice.direct),
+                          onTap: () => _pick(BridgeChoice.direct),
+                        ),
+                        const SizedBox(height: 10),
+                        _ChoiceCard(
+                          title: l10n.bridgesBridgeFromAFriend,
+                          body: l10n.bridgesPasteOrScanALineShown,
+                          selected: chosen == BridgeChoice.friend,
+                          tag: tag(BridgeChoice.friend),
+                          onTap: () => _pick(BridgeChoice.friend),
+                          extra: friendCount == 0
+                              ? null
+                              : _FriendLinesRow(
+                                  count: friendCount,
+                                  onEdit: () => showFriendLinesSheet(context),
+                                ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-              // a way picked under "more" shows here, so no card stands
-              // unexplained with none selected
-              if (!decoy)
-                EaseSize(
-                  child: _usingLine(chosen) == null
-                      ? const SizedBox(width: double.infinity)
-                      : Padding(
-                          padding: const EdgeInsetsDirectional.only(
-                            start: 4,
-                            top: 12,
-                          ),
-                          child: RiseSwap(
-                            child: Text(
-                              _usingLine(chosen)!,
-                              key: ValueKey(chosen),
-                              style: HaloType.mono(
-                                size: 12,
-                                weight: FontWeight.w600,
-                                color: HaloColors.violetText,
+                // a way picked under "more" shows here, so no card stands
+                // unexplained with none selected
+                if (!decoy)
+                  EaseSize(
+                    child: _usingLine(chosen) == null
+                        ? const SizedBox(width: double.infinity)
+                        : Padding(
+                            padding: const EdgeInsetsDirectional.only(
+                              start: 4,
+                              top: 12,
+                            ),
+                            child: RiseSwap(
+                              child: Text(
+                                _usingLine(chosen)!,
+                                key: ValueKey(chosen),
+                                style: HaloType.mono(
+                                  size: 12,
+                                  weight: FontWeight.w600,
+                                  color: HaloColors.violetText,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                ),
-              if (!decoy) ...[
-                const SizedBox(height: 8),
-                _MoreToggle(
-                  open: _more,
-                  onTap: () => setState(() => _more = !_more),
-                ),
-                EaseSize(
-                  child: _more
-                      ? _MoreSection(status: s, setup: b)
-                      : const SizedBox(width: double.infinity),
-                ),
-              ],
-            ]),
+                  ),
+                if (!decoy) ...[
+                  const SizedBox(height: 8),
+                  _MoreToggle(
+                    open: _more,
+                    onTap: () => setState(() => _more = !_more),
+                  ),
+                  EaseSize(
+                    child: _more
+                        ? _MoreSection(status: s, setup: b)
+                        : const SizedBox(width: double.infinity),
+                  ),
+                ],
+              ]),
+            ),
           ),
         );
       },

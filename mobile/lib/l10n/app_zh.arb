@@ -1551,7 +1551,6 @@
   "settingsWhatWeCanSee": "我们能看到什么",
   "settingsTheHonestList": "诚实的清单",
   "settingsVersion": "版本",
-  "settings030Alpha": "0.5.3 · alpha 版",
   "settingsReportAnIssue": "报告问题",
   "settingsReportInKryfo": "在 Kryfo 里写",
   "settingsReportInKryfoSub": "和 Marios 的聊天。你可以匿名写。",
@@ -2910,5 +2909,15 @@
   "restoreOlderTitle": "部分聊天将暂停",
   "restoreOlderOne": "{name} 使用的是旧版 Kryfo。在对方更新前，你们的聊天会暂停。",
   "restoreOlderTwo": "{first} 和 {second} 使用的是旧版 Kryfo。在他们更新前，你和他们的聊天会暂停。",
-  "restoreOlderMany": "{first}、{second} 和另外 {count} 人使用的是旧版 Kryfo。在他们更新前，你和他们的聊天会暂停。"
+  "restoreOlderMany": "{first}、{second} 和另外 {count} 人使用的是旧版 Kryfo。在他们更新前，你和他们的聊天会暂停。",
+  "settingsVersionAlpha": "{version} · alpha 版",
+  "settingsShotsNotHereYet": "这台电脑上暂不支持",
+  "settingsDeskInTray": "在系统托盘中运行",
+  "settingsDeskWhileOpen": "Kryfo 打开期间",
+  "onboardingDeskRunTitle": "Kryfo 一直*在线*。",
+  "onboardingDeskRunLead": "关闭窗口后，Kryfo 在系统托盘中等候，消息照常到达。之后可以在“设置”的“通知”里更改这两项。",
+  "savedLongPressAnyMessageDesk": "右键点击任意消息，选“保存”，就能把它留在这里。",
+  "chatFailedTapToRetryDesk": "失败 · 单击重试",
+  "groupChatTapToRetryDesk": "! 单击重试",
+  "modesFastLineDesk": "不经过 Tor，消息到得更快，也更省电。我们的服务器只在你连接期间看到你的 IP 地址，从不记录或保存。你的联系人永远看不到它。你的网络能看到你在连接 Kryfo。"
 }

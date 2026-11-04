@@ -12,6 +12,7 @@ import '../theme.dart';
 import '../widgets/halo_rows.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/stagger_in.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 const _kryfoSource = 'https://github.com/GnosiWorks/Kryfo';
 const _signalSource = 'https://github.com/signalapp/libsignal';
@@ -136,88 +137,90 @@ class _LicencesScreenState extends State<LicencesScreen> {
     return Scaffold(
       backgroundColor: HaloColors.surface,
       appBar: _bar(l10n.settingsLicences),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
-          children: staggerAll([
-            Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 4, 16),
-              child: Text(
-                l10n.licencesKryfoLine,
-                style: HaloType.sans(
-                  size: 14,
-                  color: HaloColors.text,
-                  height: 1.5,
+      body: DeskPage(
+        child: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
+            children: staggerAll([
+              Padding(
+                padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 4, 16),
+                child: Text(
+                  l10n.licencesKryfoLine,
+                  style: HaloType.sans(
+                    size: 14,
+                    color: HaloColors.text,
+                    height: 1.5,
+                  ),
                 ),
               ),
-            ),
-            HaloGroup(
-              children: [
-                _textRow(l10n.licencesGplText, 'GNU GPL 3.0', _gpl, _gplLink),
-                HaloRow(
-                  icon: Icons.code,
-                  label: l10n.licencesSourceCode,
-                  value: 'github.com/GnosiWorks/Kryfo',
-                  tapHint: l10n.settingsCopyLinkHint,
-                  onTap: () => _copy(_kryfoSource),
-                ),
-              ],
-            ),
-            HaloSection(l10n.licencesSignalTitle),
-            // the tag is known before anything loads, so the line never
-            // moves the rows below it
-            Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(4, 0, 4, 14),
-              child: Text(
-                l10n.licencesSignalLine(kLibsignalTag),
-                style: HaloType.sans(
-                  size: 13,
-                  color: HaloColors.text2,
-                  height: 1.5,
+              HaloGroup(
+                children: [
+                  _textRow(l10n.licencesGplText, 'GNU GPL 3.0', _gpl, _gplLink),
+                  HaloRow(
+                    icon: Icons.code,
+                    label: l10n.licencesSourceCode,
+                    value: 'github.com/GnosiWorks/Kryfo',
+                    tapHint: l10n.settingsCopyLinkHint,
+                    onTap: () => _copy(_kryfoSource),
+                  ),
+                ],
+              ),
+              HaloSection(l10n.licencesSignalTitle),
+              // the tag is known before anything loads, so the line never
+              // moves the rows below it
+              Padding(
+                padding: const EdgeInsetsDirectional.fromSTEB(4, 0, 4, 14),
+                child: Text(
+                  l10n.licencesSignalLine(kLibsignalTag),
+                  style: HaloType.sans(
+                    size: 13,
+                    color: HaloColors.text2,
+                    height: 1.5,
+                  ),
                 ),
               ),
-            ),
-            HaloGroup(
-              children: [
-                _textRow(
-                  l10n.licencesAgplText,
-                  'GNU AGPL 3.0',
-                  agpl,
-                  _agplLink,
-                ),
-                HaloRow(
-                  icon: Icons.code,
-                  label: l10n.licencesSignalSource,
-                  value: 'github.com/signalapp/libsignal',
-                  tapHint: l10n.settingsCopyLinkHint,
-                  onTap: () => _copy(_signalSource),
-                ),
-              ],
-            ),
-            HaloSection(l10n.licencesParts),
-            HaloGroup(
-              children: [
-                _listRow(
-                  Icons.widgets_outlined,
-                  l10n.licencesInApp,
-                  app,
-                  failed: _dart.failed || _engine.failed,
-                ),
-                _listRow(
-                  Icons.lock_outline,
-                  l10n.licencesInSignal,
-                  rust?.crates,
-                  failed: _rust.failed,
-                ),
-                _listRow(
-                  Icons.hub_outlined,
-                  l10n.licencesInEngine,
-                  engine?.parts,
-                  failed: _engine.failed,
-                ),
-              ],
-            ),
-          ]),
+              HaloGroup(
+                children: [
+                  _textRow(
+                    l10n.licencesAgplText,
+                    'GNU AGPL 3.0',
+                    agpl,
+                    _agplLink,
+                  ),
+                  HaloRow(
+                    icon: Icons.code,
+                    label: l10n.licencesSignalSource,
+                    value: 'github.com/signalapp/libsignal',
+                    tapHint: l10n.settingsCopyLinkHint,
+                    onTap: () => _copy(_signalSource),
+                  ),
+                ],
+              ),
+              HaloSection(l10n.licencesParts),
+              HaloGroup(
+                children: [
+                  _listRow(
+                    Icons.widgets_outlined,
+                    l10n.licencesInApp,
+                    app,
+                    failed: _dart.failed || _engine.failed,
+                  ),
+                  _listRow(
+                    Icons.lock_outline,
+                    l10n.licencesInSignal,
+                    rust?.crates,
+                    failed: _rust.failed,
+                  ),
+                  _listRow(
+                    Icons.hub_outlined,
+                    l10n.licencesInEngine,
+                    engine?.parts,
+                    failed: _engine.failed,
+                  ),
+                ],
+              ),
+            ]),
+          ),
         ),
       ),
     );
@@ -242,72 +245,79 @@ class _PartsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: HaloColors.surface,
       appBar: _bar(title),
-      body: SafeArea(
-        child: ListView.separated(
-          padding: const EdgeInsets.fromLTRB(0, 4, 0, 32),
-          itemCount: parts.length,
-          separatorBuilder: (_, _) => Padding(
-            padding: const EdgeInsetsDirectional.only(start: 20),
-            child: Container(height: 0.5, color: HaloColors.line),
-          ),
-          itemBuilder: (context, i) {
-            final p = parts[i];
-            final sub = [?p.version, ?p.licence].join(' · ');
-            return StaggerIn(
-              index: i,
-              child: InkWell(
-                onTap: () => Navigator.of(context).push(
-                  haloRoute(
-                    _TextScreen(
-                      title: p.version == null
-                          ? p.name
-                          : '${p.name} ${p.version}',
-                      texts: p.texts,
+      body: DeskPage(
+        child: SafeArea(
+          child: ListView.separated(
+            padding: const EdgeInsets.fromLTRB(0, 4, 0, 32),
+            itemCount: parts.length,
+            separatorBuilder: (_, _) => Padding(
+              padding: const EdgeInsetsDirectional.only(start: 20),
+              child: Container(height: 0.5, color: HaloColors.line),
+            ),
+            itemBuilder: (context, i) {
+              final p = parts[i];
+              final sub = [?p.version, ?p.licence].join(' · ');
+              return StaggerIn(
+                index: i,
+                child: InkWell(
+                  onTap: () => Navigator.of(context).push(
+                    haloRoute(
+                      _TextScreen(
+                        title: p.version == null
+                            ? p.name
+                            : '${p.name} ${p.version}',
+                        texts: p.texts,
+                      ),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                      20,
+                      12,
+                      16,
+                      12,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                p.name,
+                                style: HaloType.sans(
+                                  size: 14,
+                                  color: HaloColors.text,
+                                ),
+                              ),
+                              if (sub.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2),
+                                  child: Text(
+                                    sub,
+                                    style: HaloType.sans(
+                                      size: 12.5,
+                                      color: HaloColors.text2,
+                                      height: 1.35,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        // mirrors itself in rtl, as HaloRow's does
+                        Icon(
+                          Icons.chevron_right,
+                          size: 18,
+                          color: HaloColors.text3,
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(20, 12, 16, 12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              p.name,
-                              style: HaloType.sans(
-                                size: 14,
-                                color: HaloColors.text,
-                              ),
-                            ),
-                            if (sub.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 2),
-                                child: Text(
-                                  sub,
-                                  style: HaloType.sans(
-                                    size: 12.5,
-                                    color: HaloColors.text2,
-                                    height: 1.35,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      // mirrors itself in rtl, as HaloRow's does
-                      Icon(
-                        Icons.chevron_right,
-                        size: 18,
-                        color: HaloColors.text3,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );
@@ -332,32 +342,34 @@ class _TextScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: HaloColors.surface,
       appBar: _bar(title),
-      body: SafeArea(
-        child: SelectionArea(
-          child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
-            itemCount: blocks.length,
-            itemBuilder: (_, i) {
-              final b = blocks[i];
-              if (b == null) {
+      body: DeskPage(
+        child: SafeArea(
+          child: SelectionArea(
+            child: ListView.builder(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
+              itemCount: blocks.length,
+              itemBuilder: (_, i) {
+                final b = blocks[i];
+                if (b == null) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    child: Container(height: 0.5, color: HaloColors.line),
+                  );
+                }
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  child: Container(height: 0.5, color: HaloColors.line),
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    b,
+                    textDirection: TextDirection.ltr,
+                    style: HaloType.mono(
+                      size: 12,
+                      weight: FontWeight.w400,
+                      color: HaloColors.text,
+                    ).copyWith(height: 1.5),
+                  ),
                 );
-              }
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Text(
-                  b,
-                  textDirection: TextDirection.ltr,
-                  style: HaloType.mono(
-                    size: 12,
-                    weight: FontWeight.w400,
-                    color: HaloColors.text,
-                  ).copyWith(height: 1.5),
-                ),
-              );
-            },
+              },
+            ),
           ),
         ),
       ),

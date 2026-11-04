@@ -55,6 +55,9 @@ class WideHome extends StatefulWidget {
   // the phone's bar, for a narrow window
   final Widget bar;
   final VoidCallback onSearch;
+  // ctrl+n and ctrl+comma, as signal and telegram have them
+  final VoidCallback? onAdd;
+  final VoidCallback? onSettings;
   const WideHome({
     super.key,
     required this.tab,
@@ -63,6 +66,8 @@ class WideHome extends StatefulWidget {
     required this.tabs,
     required this.bar,
     required this.onSearch,
+    this.onAdd,
+    this.onSettings,
   });
 
   @override
@@ -152,6 +157,9 @@ class _WideHomeState extends State<WideHome> {
       shortcuts: const {
         SingleActivator(LogicalKeyboardKey.escape): _BackIntent(),
         SingleActivator(LogicalKeyboardKey.keyF, control: true): _FindIntent(),
+        SingleActivator(LogicalKeyboardKey.keyN, control: true): _AddIntent(),
+        SingleActivator(LogicalKeyboardKey.comma, control: true):
+            _SettingsIntent(),
       },
       child: Actions(
         actions: {
@@ -160,6 +168,18 @@ class _WideHomeState extends State<WideHome> {
           _FindIntent: CallbackAction<_FindIntent>(
             onInvoke: (_) {
               if (!_pane.find()) widget.onSearch();
+              return null;
+            },
+          ),
+          _AddIntent: CallbackAction<_AddIntent>(
+            onInvoke: (_) {
+              widget.onAdd?.call();
+              return null;
+            },
+          ),
+          _SettingsIntent: CallbackAction<_SettingsIntent>(
+            onInvoke: (_) {
+              widget.onSettings?.call();
               return null;
             },
           ),
@@ -417,6 +437,14 @@ class _BackIntent extends Intent {
 
 class _FindIntent extends Intent {
   const _FindIntent();
+}
+
+class _AddIntent extends Intent {
+  const _AddIntent();
+}
+
+class _SettingsIntent extends Intent {
+  const _SettingsIntent();
 }
 
 // esc closes the pane's page, and only while it shows one: else the key
