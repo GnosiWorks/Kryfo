@@ -279,21 +279,29 @@ class HaloEngine {
       );
 
   // [fresh]: someone just added or accepted, heard without a turn
-  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) =>
-      _subscribeBg(ident, peerXPubHex, fresh: fresh, hidden: false);
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) {
+    _background(
+      devGate.listen(
+        peerXPubHex,
+        out: () => _onPair(
+          ident,
+          peerXPubHex,
+          (pair) => _subscribeOnIsolate(ident, pair, fresh: fresh),
+        ),
+        room: (priv) async {
+          roomSubscribeBg(priv, peerXPubHex);
+          return 'ok';
+        },
+      ),
+      'relay listen',
+    );
+  }
 
   // a hidden chat: its address keeps a relay socket of its own
   void nostrSubscribeHiddenBg(
     int ident,
     String peerXPubHex, {
     bool fresh = false,
-  }) => _subscribeBg(ident, peerXPubHex, fresh: fresh, hidden: true);
-
-  void _subscribeBg(
-    int ident,
-    String peerXPubHex, {
-    required bool fresh,
-    required bool hidden,
   }) {
     _background(
       devGate.listen(
@@ -302,7 +310,7 @@ class HaloEngine {
           ident,
           peerXPubHex,
           (pair) =>
-              _subscribeOnIsolate(ident, pair, fresh: fresh, hidden: hidden),
+              _subscribeOnIsolate(ident, pair, fresh: fresh, hidden: true),
         ),
         room: (priv) async {
           roomSubscribeBg(priv, peerXPubHex);

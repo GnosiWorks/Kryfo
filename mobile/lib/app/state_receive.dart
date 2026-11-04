@@ -286,17 +286,22 @@ extension AppStateReceive on AppState {
   // other way is listened on again, so its address leaves the everyday
   // sockets or joins them
   void _relistenMoved() {
-    for (final e in _router.listenFor.entries) {
-      if (!_toldHidden.contains(e.key)) _listen(identOf(e.value), e.key);
-    }
-    for (final x in _toldHidden.toList()) {
-      if (_router.hidesKey(x)) continue;
-      final who = _xPubToHaloId[x];
-      if (who == null) {
-        _toldHidden.remove(x);
-        continue;
+    try {
+      for (final e in _router.listenFor.entries) {
+        if (!_toldHidden.contains(e.key)) _listen(identOf(e.value), e.key);
       }
-      _listen(identOf(who), x, hidden: false);
+      for (final x in _toldHidden.toList()) {
+        if (_router.hidesKey(x)) continue;
+        final who = _xPubToHaloId[x];
+        if (who == null) {
+          _toldHidden.remove(x);
+          continue;
+        }
+        _listen(identOf(who), x, hidden: false);
+      }
+    } catch (e) {
+      // the runners keep their sockets until the next start listens again
+      dlog('listen: moved chats not listened again (${e.runtimeType})');
     }
   }
 

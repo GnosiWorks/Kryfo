@@ -540,6 +540,11 @@ void main() {
     final doors = {
       'Future<String> nostrSend(': ['devGate.nostrSend(', '_sendOnIsolate('],
       'void nostrSubscribeBg(': ['devGate', '.listen(', '_subscribeOnIsolate('],
+      'void nostrSubscribeHiddenBg(': [
+        'devGate',
+        '.listen(',
+        '_subscribeOnIsolate(',
+      ],
       'Future<String> sendFirstContact(': [
         'devGate.sendFirstContact(',
         '_fcSendOnIsolate(',
@@ -569,7 +574,7 @@ void main() {
     // the doors above, plus each helper's own definition
     expect(count('_sendOnIsolate('), 3);
     expect(count('_fcSendOnIsolate('), 2);
-    expect(count('_subscribeOnIsolate('), 2);
+    expect(count('_subscribeOnIsolate('), 3);
     expect(count('_nostrSubscribe('), 1);
     expect(count("'HaloRoomSend'"), 1);
     expect(count("'HaloRoomSendFirstContact'"), 1);
