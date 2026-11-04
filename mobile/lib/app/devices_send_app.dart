@@ -202,6 +202,8 @@ Future<void> _devForget(String haloId, {bool sessions = false}) async {
     final ikey = r.isEmpty ? null : r.first['ikey'] as String?;
     if (ikey == null) return;
     final ident = r.first['ident'] as int? ?? kMainIdent;
+    // their device pairs are heard on no more (read before the list goes)
+    await _deviceReceive?.forget(ident, ikey);
     try {
       await ds.call(db, 'forget', {'identity': ikey});
     } on DevRefused catch (e) {

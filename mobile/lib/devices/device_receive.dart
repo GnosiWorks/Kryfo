@@ -101,6 +101,7 @@ class DeviceReceive {
     required this.phone,
     required this.sign,
     this.shown,
+    this.blockedChat,
     int Function()? clock,
   }) : _clock = clock ?? (() => DateTime.now().millisecondsSinceEpoch);
 
@@ -131,6 +132,14 @@ class DeviceReceive {
 
   /// a held opener that opened once its list came: its words for the chat
   final Future<void> Function(DevCopyIn copy)? shown;
+
+  /// a contact of my [ident] by their identity key who is blocked, on the
+  /// everyday side; null for anyone else
+  final Future<({DevMe me, DevContact c})?> Function(
+    int ident,
+    String identity,
+  )?
+  blockedChat;
   final int Function() _clock;
 
   final _alarms = StreamController<DevAlarm>.broadcast();
@@ -144,7 +153,13 @@ class DeviceReceive {
   /// taken. a contact's device's words for the chat come back; my own
   /// devices' and a copy that was refused, did not open or said nothing
   /// else give null
-  Future<DevCopyIn?> receive(String tag, String cipher) async {
+  ///
+  /// [heldSince]: a held opener tried again keeps the time it first came
+  Future<DevCopyIn?> receive(
+    String tag,
+    String cipher, {
+    int? heldSince,
+  }) async {
     if (!linkedDevicesOn) return null;
     final t = deviceTagOf(tag);
     if (t == null) return null;
@@ -152,8 +167,16 @@ class DeviceReceive {
     if (m == null || t.my != m.device) return null;
     final identity = '05${t.peerX}';
     final own = identity == devHex(m.identity);
-    final who = own ? null : await contact(t.ident, identity);
-    if (!own && who == null) return null;
+    var who = own ? null : await contact(t.ident, identity);
+    // a blocked contact's device: opened and admitted, nothing of it taken
+    // or answered, and what it wrote goes to the chat's block rules (noted
+    // as dropped there, as their phone's is)
+    var blocked = false;
+    if (!own && who == null) {
+      who = await blockedChat?.call(t.ident, identity);
+      if (who == null) return null;
+      blocked = true;
+    }
     final Uint8List wire;
     try {
       wire = base64Decode(cipher);
@@ -169,7 +192,9 @@ class DeviceReceive {
     final d = await db();
     final entry = await _entry(d, t.ident, own ? null : identity, t.their);
     if (entry == null) {
-      if (type == kLsPreKey) await _hold(d, t, identity, cipher);
+      if (type == kLsPreKey && !blocked) {
+        await _hold(d, t, identity, cipher, since: heldSince);
+      }
       return null;
     }
     final ds = await sessions(t.ident);
@@ -190,8 +215,10 @@ class DeviceReceive {
       );
     } on DevRefused catch (e) {
       // a device the list held does not name yet: its opener waits for it
-      if (type == kLsPreKey && (e.why == 'not_listed' || e.why == 'unknown')) {
-        await _hold(d, t, identity, cipher);
+      if (type == kLsPreKey &&
+          !blocked &&
+          (e.why == 'not_listed' || e.why == 'unknown')) {
+        await _hold(d, t, identity, cipher, since: heldSince);
       }
       return null;
     } on Object {
@@ -207,9 +234,20 @@ class DeviceReceive {
     }
     final j = _bodyOf(text);
     if (j == null) return null;
-    await _heard(d, t, m, identity, entry.key, j);
+    // the session is kept now: whatever throws below never costs the copy
+    // its words for the chat, it would not open a second time
+    if (blocked) return _chatWords(who!.c, j);
+    try {
+      await _heard(d, t, m, identity, entry.key, j);
+    } catch (e) {
+      _note('a device not noted as heard (${e.runtimeType})');
+    }
     if (own) {
-      await _ownWords(d, t, m, identity, j, o.remote);
+      try {
+        await _ownWords(d, t, m, identity, j, o.remote);
+      } catch (e) {
+        _note('own words not taken (${e.runtimeType})');
+      }
       return null;
     }
     return _contactWords(d, m, who!.c, identity, t.their, j, o.remote);
@@ -295,9 +333,9 @@ class DeviceReceive {
       }
     });
     final pair = '${t.peerX}/${t.their}/${m.device}';
-    if (held is List<int>) {
-      listener.unlisten(t.ident, '$pair.${devHex(held)}');
-    }
+    // the listen on the new seed takes the old one's place in the engine
+    // (same tag), its addresses let go there: no unlisten that could land
+    // after it
     final res = await listener.seed(t.ident, pair, theirs);
     if (res != 'ok') return;
     listener.listen(t.ident, '$pair.$theirs');
@@ -441,17 +479,38 @@ class DeviceReceive {
     Map<String, dynamic> j,
     SessionRemote remote,
   ) async {
-    await _takeWords(d, m, c, identity, device, j, remote);
+    try {
+      await _takeWords(d, m, c, identity, device, j, remote);
+    } catch (e) {
+      _note('device words not taken (${e.runtimeType})');
+    }
+    // a receipt from each device: the first counts, the rest go. a list's
+    // own and a starter's are this file's
+    final dr = j['dr'];
+    var first = true;
+    if (dr is String) {
+      try {
+        first = await send.receipt(m.ident, identity, device, dr);
+      } catch (e) {
+        _note('a receipt not noted (${e.runtimeType})');
+      }
+    }
+    return _chatWords(c, j, receipt: first);
+  }
+
+  // what a contact's device wrote, for the chat: the device words and the
+  // device's own keys out, a list's or starter's uid out, and a receipt
+  // only when it is the first for its uid
+  DevCopyIn? _chatWords(
+    DevContact c,
+    Map<String, dynamic> j, {
+    bool receipt = true,
+  }) {
     final out = Map<String, dynamic>.of(j)
       ..removeWhere((k, _) => kDeviceWords.contains(k))
       ..removeWhere((k, _) => _identityWords.contains(k));
-    // a receipt from each device: the first counts, the rest go. a list's
-    // own and a starter's are this file's
     final dr = out['dr'];
-    if (dr is String) {
-      final first = await send.receipt(m.ident, identity, device, dr);
-      if (!first || _devUid(dr)) out.remove('dr');
-    }
+    if (dr is String && (!receipt || _devUid(dr))) out.remove('dr');
     final u = out['u'];
     if (u is String && _devUid(u)) out.remove('u');
     if (!_says(out)) return null;
@@ -469,7 +528,7 @@ class DeviceReceive {
   ) async {
     if (!linkedDevicesOn) return false;
     final j = _bodyOf(text);
-    if (j == null || !j.keys.any(kDeviceWords.contains)) return false;
+    if (j == null || !hasDeviceWords(text)) return false;
     final who = await contact(ident, identity);
     if (who == null) return false;
     final d = await db();
@@ -597,6 +656,45 @@ class DeviceReceive {
     final pair = '${identity.substring(2)}/$id/${m.device}';
     listener.unlisten(m.ident, pair);
     listener.unlisten(m.ident, '$pair.0');
+  }
+
+  /// [identity], a contact of my [ident], is forgotten (deleted, "not
+  /// them", declined, hidden): every device pair of theirs is no longer
+  /// heard on, and what was marked for them goes. read before their rows go
+  Future<void> forget(int ident, String identity) async {
+    if (!linkedDevicesOn) return;
+    final d = await db();
+    final m = await me(ident);
+    if (m == null) return;
+    final x = identity.substring(2);
+    final pairs = <String>{
+      for (final r in await d.query(
+        'pairs',
+        columns: ['their_device', 'my_device'],
+        where:
+            'ident = ? AND peer = ? AND (their_device != 1 OR my_device != 1)',
+        whereArgs: [ident, identity],
+      ))
+        '$x/${r['their_device']}/${r['my_device']}',
+    };
+    try {
+      final cur = await state.call(d, 'current', {'identity': identity});
+      for (final e in _entries(cur['devices'])) {
+        if (e.id == 1 && m.device == 1) continue;
+        pairs.add('$x/${e.id}/${m.device}');
+      }
+    } on DevRefused {
+      // no list held
+    }
+    for (final p in pairs) {
+      listener.unlisten(ident, p);
+      listener.unlisten(ident, '$p.0');
+    }
+    await d.delete(
+      'dev_marks',
+      where: 'ident = ? AND peer = ?',
+      whereArgs: [ident, identity],
+    );
   }
 
   /// every device pair of mine heard on: the seeded pair where a seed is
@@ -920,8 +1018,9 @@ class DeviceReceive {
     Database d,
     DevTag t,
     String identity,
-    String cipher,
-  ) async {
+    String cipher, {
+    int? since,
+  }) async {
     final now = _clock();
     await d.delete(
       'dev_held_openers',
@@ -951,12 +1050,19 @@ class DeviceReceive {
       'peer': identity,
       'device': t.their,
       'cipher': bytes,
-      'came_at': now,
+      // a retry keeps the first time it came: 7 days from then, not from
+      // each list that moves
+      'came_at': since ?? now,
     });
   }
 
   Future<void> _retryHeld(Database d, DevMe m, String identity) async {
     final now = _clock();
+    await d.delete(
+      'dev_held_openers',
+      where: 'came_at < ?',
+      whereArgs: [now - kHeldOpenerKept.inMilliseconds],
+    );
     final rows = await d.query(
       'dev_held_openers',
       where: 'ident = ? AND peer = ? AND came_at >= ?',
@@ -973,7 +1079,11 @@ class DeviceReceive {
         r['device'] as int,
         m.device,
       );
-      final got = await receive(tag, utf8.decode(c));
+      final got = await receive(
+        tag,
+        utf8.decode(c),
+        heldSince: r['came_at'] as int?,
+      );
       final s = shown;
       if (got != null && s != null) await s(got);
     }
@@ -1068,20 +1178,36 @@ List<({int id, String key, int reg})> _entries(Object? l) => [
       ),
 ];
 
-/// whether [text], an envelope, carries device words
+// the device words a phone's frame may carry: 'as' there is a v4 opener's
+// seed, the chat's own
+final _phoneWords = kDeviceWords.difference(const {'as'});
+
+/// whether [text], an envelope from a phone, carries device words
 bool hasDeviceWords(String text) =>
-    _bodyOf(text)?.keys.any(kDeviceWords.contains) ?? false;
+    _bodyOf(text)?.keys.any(_phoneWords.contains) ?? false;
 
 /// whether [text] carries device words and nothing a chat shows: a list,
 /// bundles, an ask or a handback alone
 bool deviceWordsOnly(String text) {
   final j = _bodyOf(text);
-  if (j == null || !j.keys.any(kDeviceWords.contains)) return false;
+  if (j == null || !j.keys.any(_phoneWords.contains)) return false;
+  return !_says(_rest(j));
+}
+
+/// [text] with its device words out, as it is filed; as it is when it has
+/// none
+String withoutDeviceWords(String text) {
+  final j = _bodyOf(text);
+  if (j == null || !j.keys.any(_phoneWords.contains)) return text;
+  return '$kEnvelopePrefix${jsonEncode(_rest(j))}';
+}
+
+Map<String, dynamic> _rest(Map<String, dynamic> j) {
   final rest = Map<String, dynamic>.of(j)
-    ..removeWhere((k, _) => kDeviceWords.contains(k));
+    ..removeWhere((k, _) => _phoneWords.contains(k));
   final u = rest['u'];
   if (u is String && _devUid(u)) rest.remove('u');
-  return !_says(rest);
+  return rest;
 }
 
 // a uid that is this file's or the send loop's: a list's, a starter's

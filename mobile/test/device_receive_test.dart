@@ -27,7 +27,7 @@ import 'package:kryfo/devices/device_state.dart';
 import 'package:kryfo/identities.dart';
 import 'package:kryfo/invites.dart' show bundleBlock;
 import 'package:kryfo/main.dart'
-    show HaloDb, deviceOpenAt, deviceStateForTest, devMineOf;
+    show HaloDb, deviceOpenAt, deviceStateForTest, deviceTagStepDone, devMineOf;
 import 'package:kryfo/signal_ffi/kryfo_signal.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/wire_pad.dart' show unpad;
@@ -121,8 +121,17 @@ class _Wire implements DeviceWire {
 class _Listen implements DeviceListen {
   final heard = <String>{};
   final seeds = <String>[];
+  // a listen on a seeded pair takes the place of any seed held, as the
+  // engine's subscribe on the same tag does
   @override
-  void listen(int ident, String arg) => heard.add(arg);
+  void listen(int ident, String arg) {
+    if (arg.contains('.')) {
+      final base = arg.split('.').first;
+      heard.removeWhere((h) => h.startsWith('$base.'));
+    }
+    heard.add(arg);
+  }
+
   @override
   void unlisten(int ident, String arg) {
     heard.remove(arg);
@@ -226,7 +235,11 @@ void main() {
   // device 9 of his that no list names yet. ana's own list names her desk
   // (4) when [desk]. bob's devices hold sessions to ana's phone, built from
   // its KDB1, as a list push would hand them out
-  Future<_World> world({bool desk = false}) async {
+  Future<_World> world({
+    bool desk = false,
+    String gate = 'open',
+    Future<Uint8List> Function(int ident, Uint8List body)? sign,
+  }) async {
     final lib = shim!;
     final db = await open();
     final anaKp = testKeyPair();
@@ -330,12 +343,20 @@ void main() {
       open: deviceOpenAt,
       me: (_) async => me,
       contact: (ident, identity) async =>
-          identity == toBob.identity ? (me: me, c: toBob) : null,
+          identity == toBob.identity && gate == 'open'
+          ? (me: me, c: toBob)
+          : null,
+      blockedChat: (ident, identity) async =>
+          identity == toBob.identity && gate == 'blocked'
+          ? (me: me, c: toBob)
+          : null,
       phone: (me, c, frame) async {
         w.toPhone.add(frame);
         return true;
       },
-      sign: (_, body) async => lib.sign(anaId, LsSigContext.deviceList, body),
+      sign:
+          sign ??
+          (_, body) async => lib.sign(anaId, LsSigContext.deviceList, body),
       shown: (c) async => w.shown.add(c),
       clock: () => w.clock,
     );
@@ -872,6 +893,156 @@ void main() {
     expect(j['dz'], isA<String>());
     expect(j['dk'], clock);
     expect(j['da'], askedAt);
+  });
+
+  test('a blocked contact\'s device is opened and left to the block: its words '
+      'for the chat come, nothing of it is taken or answered', () async {
+    if (skip()) return;
+    final w = await world(desk: true, gate: 'blocked');
+    final c = await w.b5.ds.seal(
+      'ana',
+      1,
+      'halo/1:${jsonEncode({
+        'u': 'm-blk',
+        'm': 'while blocked',
+        'as': _hex32(0x33),
+        'dq': [4],
+      })}',
+      w.ana.identity.public,
+    );
+    final got = await w.recv.receive(w.tag(w.b5, opener: true), c);
+    expect(got!.peer, _bobChat);
+    final j = _json(got.frame);
+    expect(j['u'], 'm-blk');
+    expect(j.containsKey('dq'), isFalse);
+    expect(j.containsKey('as'), isFalse);
+    expect(w.toPhone, isEmpty);
+    expect(await w.db.query('pairs'), isEmpty);
+    expect(w.listen.seeds, isEmpty);
+    // an opener of theirs no list names is not held for them either
+    final early = await w.b9.ds.seal(
+      'ana',
+      1,
+      'halo/1:{"u":"m-blk9","m":"x"}',
+      w.ana.identity.public,
+    );
+    expect(await w.recv.receive(w.tag(w.b9, opener: true), early), isNull);
+    expect(await w.db.query('dev_held_openers'), isEmpty);
+  });
+
+  test('a hidden contact\'s device line (not on the everyday side) opens '
+      'nothing and keeps nothing', () async {
+    if (skip()) return;
+    final w = await world(gate: 'hidden');
+    for (final d in [w.b5, w.b9]) {
+      final c = await d.ds.seal(
+        'ana',
+        1,
+        'halo/1:{"u":"m-hid","m":"hidden"}',
+        w.ana.identity.public,
+      );
+      expect(await w.recv.receive(w.tag(d, opener: true), c), isNull);
+      expect(await w.anaDs.has(_bobChat, d.id), isFalse);
+    }
+    expect(await w.db.query('dev_held_openers'), isEmpty);
+    expect(await w.db.query('pairs'), isEmpty);
+    expect(await w.db.query('dev_marks'), isEmpty);
+  });
+
+  test('a held opener keeps its first time across retries: a list that '
+      'still does not name it does not start its 7 days again', () async {
+    if (skip()) return;
+    final w = await world();
+    final c = await w.b9.ds.seal(
+      'ana',
+      1,
+      'halo/1:{"u":"m-early","m":"early"}',
+      w.ana.identity.public,
+    );
+    final came = w.clock;
+    expect(await w.recv.receive(w.tag(w.b9, opener: true), c), isNull);
+    w.clock += const Duration(days: 3).inMilliseconds;
+    final v1 = _list(w.bobId, w.bob.registrationId, 7001, [w.b5.entry]);
+    await w.recv.takePhone(
+      kMainIdent,
+      w.toBob.identity,
+      'halo/1:${jsonEncode({'dl': base64Encode(v1)})}',
+      w.bobRemote,
+    );
+    final row = (await w.db.query('dev_held_openers')).single;
+    expect(row['came_at'], came);
+    // past its 7 days from the first time, a retry lets it go
+    w.clock += const Duration(days: 5).inMilliseconds;
+    final v2 = _list(w.bobId, w.bob.registrationId, 7002, [w.b5.entry]);
+    await w.recv.takePhone(
+      kMainIdent,
+      w.toBob.identity,
+      'halo/1:${jsonEncode({'dl': base64Encode(v2)})}',
+      w.bobRemote,
+    );
+    expect(await w.db.query('dev_held_openers'), isEmpty);
+  });
+
+  test('a forgotten contact\'s device pairs are heard on no more and their '
+      'marks go', () async {
+    if (skip()) return;
+    final w = await world();
+    final c = await w.b5.ds.seal(
+      'ana',
+      1,
+      'halo/1:${jsonEncode({'u': 'm-f', 'm': 'x', 'as': _hex32(0x44)})}',
+      w.ana.identity.public,
+    );
+    await w.recv.receive(w.tag(w.b5, opener: true), c);
+    await w.recv.listenAll();
+    expect(w.listen.heard.where((h) => h.startsWith(w.bobX)), isNotEmpty);
+    await w.db.insert('dev_marks', {
+      'ident': kMainIdent,
+      'peer': w.toBob.identity,
+      'kind': 'alarm:claim',
+      'key': '',
+      'at': w.clock,
+    });
+    await w.recv.forget(kMainIdent, w.toBob.identity);
+    expect(w.listen.heard.where((h) => h.startsWith(w.bobX)), isEmpty);
+    expect(await w.db.query('dev_marks'), isEmpty);
+  });
+
+  test('a throw in the device words after the open keeps the copy\'s words '
+      'for the chat', () async {
+    if (skip()) return;
+    final w = await world(
+      desk: true,
+      sign: (_, _) async => throw StateError('the signer is gone'),
+    );
+    final above = _list(w.anaId, w.ana.registrationId, 4100, [w.desk.entry]);
+    final c = await w.b5.ds.seal(
+      'ana',
+      1,
+      'halo/1:${jsonEncode({'u': 'm-keep', 'm': 'kept all the same', 'dh': base64Encode(above)})}',
+      w.ana.identity.public,
+    );
+    final got = await w.recv.receive(w.tag(w.b5, opener: true), c);
+    expect(_json(got!.frame)['m'], 'kept all the same');
+    expect(await w.anaDs.has(_bobChat, 5), isTrue);
+  });
+
+  test('the listens and unlistens of one tag run in the order asked', () async {
+    final order = <String>[];
+    Future<String> step(String name, int ms) async {
+      await Future<void>.delayed(Duration(milliseconds: ms));
+      order.add(name);
+      return 'ok';
+    }
+
+    const x =
+        'aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11';
+    final slow = deviceTagStepDone(0, '$x/5/1.00', () => step('unlisten', 60));
+    final fast = deviceTagStepDone(0, '$x/5/1.ff', () => step('listen', 1));
+    // another tag (the opener address) is not held up by them
+    final other = deviceTagStepDone(0, '$x/5/1', () => step('opener', 1));
+    await Future.wait([slow, fast, other]);
+    expect(order, ['opener', 'unlisten', 'listen']);
   });
 
   test('with the switch off nothing is opened, taken or listened on', () async {

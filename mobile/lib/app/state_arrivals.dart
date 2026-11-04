@@ -178,6 +178,8 @@ extension AppStateArrivals on AppState {
     UnwrappedMessage env, {
     required String wire,
     bool fromBackPair = false,
+    // a contact's device's copy (linked devices): it never moves their caps
+    bool fromDevice = false,
     HaloDb? into,
     int? arrivedAt,
     // when the sender wrapped it by their clock, where the lane says. each
@@ -211,6 +213,7 @@ extension AppStateArrivals on AppState {
         env,
         wire: wire,
         fromBackPair: fromBackPair,
+        fromDevice: fromDevice,
         into: into,
         arrivedAt: arrivedAt,
         wrappedAt: wrappedAt,
@@ -231,6 +234,7 @@ extension AppStateArrivals on AppState {
         env,
         wire: wire,
         fromBackPair: fromBackPair,
+        fromDevice: fromDevice,
         marks: marks,
         wrappedAt: wrappedAt,
         late: late,
@@ -273,6 +277,7 @@ extension AppStateArrivals on AppState {
     UnwrappedMessage env, {
     required String wire,
     bool fromBackPair = false,
+    bool fromDevice = false,
     HaloDb? into,
     int? arrivedAt,
     // the chats to mark once the caller is done, on the live path
@@ -290,6 +295,7 @@ extension AppStateArrivals on AppState {
         env,
         wire: wire,
         fromBackPair: fromBackPair,
+        fromDevice: fromDevice,
         into: into,
         arrivedAt: arrivedAt,
         marks: marks,
@@ -326,6 +332,7 @@ extension AppStateArrivals on AppState {
     UnwrappedMessage env, {
     required String wire,
     required bool fromBackPair,
+    required bool fromDevice,
     required HaloDb? into,
     required int? arrivedAt,
     required Set<String>? marks,
@@ -334,6 +341,21 @@ extension AppStateArrivals on AppState {
     required bool late,
     required Reached? reached,
   }) async {
+    // linked devices: a phone's device words are taken on the everyday side
+    // only (below); on any other route, and sealed for the vault, a frame of
+    // nothing else is dropped and the words come out of what is filed
+    final words = linkedDevicesOn && !fromDevice && hasDeviceWords(wire);
+    final takes =
+        words &&
+        into == null &&
+        env.groupId == null &&
+        !fromBackPair &&
+        _routeOf(senderHaloId, null) == RouteTo.everyday;
+    if (words && !takes) {
+      if (deviceWordsOnly(wire)) return RouteTo.dropped;
+      wire = withoutDeviceWords(wire);
+      env = unwrapMessage(wire);
+    }
     // what is opened goes with the session it began in
     final epoch = _openedEpoch;
     final RouteTo to;
@@ -413,18 +435,21 @@ extension AppStateArrivals on AppState {
     }
     // linked devices: a contact's phone's lists, bundles and asks, on the
     // everyday side only. a frame of nothing else is never shown
-    if (linkedDevicesOn &&
-        to == RouteTo.everyday &&
-        into == null &&
-        identical(db, live) &&
-        env.groupId == null &&
-        !fromBackPair &&
-        await _devPhoneFrames(senderHaloId, wire)) {
-      return RouteTo.dropped;
+    if (takes) {
+      if (to == RouteTo.everyday && identical(db, live)) {
+        if (await _devPhoneFrames(senderHaloId, wire)) return RouteTo.dropped;
+      } else if (deviceWordsOnly(wire)) {
+        return RouteTo.dropped;
+      }
+      wire = withoutDeviceWords(wire);
+      env = unwrapMessage(wire);
     }
     await _takeShots(senderHaloId, env, db);
-    final capsMoved = await _takeCaps(senderHaloId, env, db);
-    await _memberCaps(senderHaloId, env, db, oneToOneMoved: capsMoved);
+    // a device's copy carries no caps of the phone's: they stay as they are
+    final capsMoved = !fromDevice && await _takeCaps(senderHaloId, env, db);
+    if (!fromDevice) {
+      await _memberCaps(senderHaloId, env, db, oneToOneMoved: capsMoved);
+    }
     // their phone takes a pq restart now: their held chat is looked at
     if (capsMoved &&
         (to == RouteTo.everyday || to == RouteTo.vault) &&

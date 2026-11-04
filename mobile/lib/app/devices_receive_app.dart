@@ -67,6 +67,27 @@ Future<({DevMe me, DevContact c})?> _devContactByKey(
   return _devWhoOf(ident, peer, ss);
 }
 
+// a blocked contact of my [ident] by their identity key, on the everyday
+// side: their devices' copies are opened, admitted and left to the block
+Future<({DevMe me, DevContact c})?> _devBlockedByKey(
+  int ident,
+  String identity,
+) async {
+  final db = await live.open();
+  final r = await db.query(
+    'contacts',
+    columns: ['halo_id'],
+    where: 'ident = ? AND ikey = ? AND accepted = 1 AND blocked = 1',
+    whereArgs: [ident, identity],
+    limit: 1,
+  );
+  if (r.isEmpty) return null;
+  final peer = r.first['halo_id'] as String;
+  if (appState._routeOf(peer, null) != RouteTo.everyday) return null;
+  final ss = await signalOfIdent(ident);
+  return _devWhoOf(ident, peer, ss);
+}
+
 // a frame of mine to [c]'s phone alone, on the identity pair
 Future<bool> _devPhoneSend(DevMe me, DevContact c, String frame) async {
   try {
@@ -93,6 +114,7 @@ void _bootDeviceReceive(DeviceState ds, DeviceSend send) {
     open: deviceOpenAt,
     me: _devMeOf,
     contact: _devContactByKey,
+    blockedChat: _devBlockedByKey,
     phone: _devPhoneSend,
     sign: (ident, body) async {
       final ss = await signalOfIdent(ident);
@@ -162,6 +184,7 @@ extension AppStateDevices on AppState {
     c.peer,
     unwrapMessage(c.frame),
     wire: c.frame,
+    fromDevice: true,
     wrappedAt: wrappedAt,
     reached: reached,
   );
