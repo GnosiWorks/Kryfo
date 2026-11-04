@@ -103,6 +103,8 @@ class AppState extends ChangeNotifier {
     // a vault's: only the everyday identity goes online. its seal and its
     // store read the same row
     _madeApp = this;
+    // a hidden chat's sends go on its own lane, as its listen does
+    hiddenSendPeer = (x) => _router.hidesKey(x) || _toldHidden.contains(x);
     devGate.chat = () => live.devChat.load();
     _keyMoved = flagKeyChanged;
     devLane.chat = () => live.devChat.load();

@@ -1050,6 +1050,9 @@ Future<BackupDraft> draftBackup(
   final catchUp = hidden
       ? await catchUpAnchors(engineDir(docs))
       : const <String, int>{};
+  // the batches stay as they are on the new phone: a relay never sees an
+  // address in two. the file names no address and shows no vault
+  final book = await batchBook(engineDir(docs));
   final dbKey = await _secureStorage.read(key: _kDbPassphrase);
   if (dbKey == null) throw BackupError('db passphrase missing');
   final prefs = await SharedPreferences.getInstance();
@@ -1133,6 +1136,7 @@ Future<BackupDraft> draftBackup(
     'settings': settings,
     'onboardingDone': onboardingDone,
     'catchUp': catchUp,
+    'book': ?book,
     'chunk': kBackupChunk,
     'files': [for (final f in files) f.toJson()],
     if (hidden) 'vault': {'key': key},
@@ -1955,7 +1959,11 @@ Future<void> _restoreFile(
     await restorePrefs(manifest['prefs']);
     await _holdRelays();
     await _clearShade();
-    await landCatchUpAnchors(engineDir(docs.path), manifest['catchUp']);
+    await landCatchUpAnchors(
+      engineDir(docs.path),
+      manifest['catchUp'],
+      book: manifest['book'],
+    );
     // in place before the restart reads them
     _restoredSettings = await landCarriedSettings(
       manifest['settings'],
@@ -1997,6 +2005,25 @@ Future<Map<String, int>> catchUpAnchors(String docs) async {
 
 final _kAnchorName = RegExp(r'^nostr_last_[0-9a-f]{1,16}$');
 
+/// the engine's batch book (engine/batches.go)
+const kBatchBookName = 'nostr_book';
+final _kBookLine = RegExp(r'^[A-Za-z0-9+/]+$');
+
+/// the batch book as its file has it, one sealed line: under a key from
+/// the identity, the vault's part under the vault's own. null with none
+@visibleForTesting
+Future<String?> batchBook(String docs) async {
+  try {
+    final f = File(p.join(docs, kBatchBookName));
+    if (!await f.exists()) return null;
+    final line = (await f.readAsString()).trim();
+    return _kBookLine.hasMatch(line) ? line : null;
+  } catch (e) {
+    dlog('backup: batch book not read (${e.runtimeType})');
+    return null;
+  }
+}
+
 // the relays let go before a restore rewrites their anchors: a reader
 // still running would write its own back. the app starts again after
 Future<void> _holdRelays() async {
@@ -2011,21 +2038,38 @@ Future<void> _holdRelays() async {
 /// marks of what was read with it, and each address starts where the phone
 /// the backup came from had read it. one the file does not name, or a file
 /// from before this was carried, reads its relays whole: nothing is missed,
-/// and the uid checks take what comes twice
+/// and the uid checks take what comes twice. the batch book the file
+/// carries takes the place of this folder's, so every address stays in its
+/// batch
 @visibleForTesting
-Future<void> landCatchUpAnchors(String docs, Object? carried) async {
+Future<void> landCatchUpAnchors(
+  String docs,
+  Object? carried, {
+  Object? book,
+}) async {
   try {
     await for (final e in Directory(docs).list()) {
       final name = p.basename(e.path);
       // the queue of wraps for our relays belongs to the phone it was made on
       if (name.startsWith('nostr_last_') ||
           name.startsWith('nostr_seen_') ||
-          name.startsWith('nostr_topup')) {
+          name.startsWith('nostr_topup') ||
+          name.startsWith('nostr_batch_') ||
+          name.startsWith(kBatchBookName)) {
         await e.delete();
       }
     }
   } catch (e) {
     dlog('backup: catch-up not cleared (${e.runtimeType})');
+  }
+  if (book is String && _kBookLine.hasMatch(book)) {
+    try {
+      final f = File(p.join(docs, '$kBatchBookName.new'));
+      await f.writeAsString('$book\n', flush: true);
+      await f.rename(p.join(docs, kBatchBookName));
+    } catch (e) {
+      dlog('backup: batch book not landed (${e.runtimeType})');
+    }
   }
   if (carried is! Map) return;
   for (final MapEntry(:key, :value) in carried.entries) {

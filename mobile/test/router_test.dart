@@ -20,7 +20,8 @@ import 'package:kryfo/main.dart'
         AppStateMessages,
         AppStateVault,
         AppStateReceive,
-        AppStateRoute;
+        AppStateRoute,
+        hiddenSendPeer;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';
@@ -244,6 +245,11 @@ class _Io implements AppIo {
     hiddenHeard.add(xPub);
     _heard(xPub);
   }
+
+  // the vault's key for the engine's batch book, as the app hands it
+  final bookKeys = <String>[];
+  @override
+  Future<void> bookVault(String secret) async => bookKeys.add(secret);
 
   // listens and pin tellings, in the order they came
   final told = <String>[];
@@ -1674,6 +1680,17 @@ void main() {
     await w.app.resubscribe();
     expect(w.io.everyday, isNot(contains('x-$_h')));
     expect(w.io.everyday, contains('x-$_v'));
+  });
+
+  test('a hidden chat sends on its own lane, and still once deleted inside '
+      'the vault', () async {
+    final w = await _World.make();
+    await w.app.subscribeKnown();
+    expect(hiddenSendPeer('x-$_h'), isTrue);
+    expect(hiddenSendPeer('x-$_v'), isFalse);
+    await w.router.unlist([_h]);
+    await w.app.resubscribe();
+    expect(hiddenSendPeer('x-$_h'), isTrue);
   });
 
   test('the pins are told before the first listen', () async {

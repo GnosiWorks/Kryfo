@@ -6,6 +6,11 @@ part of '../main.dart';
 // marks the zone of a vault job, so one never waits on its own chain
 const _kVaultJob = #kryfoVaultJob;
 
+// the vault's own sealing key, read from its rows. tests stand one in
+@visibleForTesting
+Future<String?> Function(HaloDb v) vaultSealKeyOf = (v) =>
+    VaultRouter.sealKeyIn(SqlRouterStore(v.open));
+
 extension AppStateVault on AppState {
   // an arrival for a hidden chat while the vault is shut: sealed to the
   // vault as it came, and nothing else happens. a 1:1 message still gets
@@ -345,6 +350,19 @@ extension AppStateVault on AppState {
     return false;
   });
 
+  // the batch book's vault part (engine/batches.go) opens with the vault's
+  // own sealing key: told as the vault opens and before a move listens
+  // again, taken back as it shuts. never the decoy's: it listens on nothing
+  Future<void> _bookVaultFrom(HaloDb v) async {
+    if (!AppState._everyday(v)) return;
+    try {
+      final k = await vaultSealKeyOf(v);
+      if (k != null) await _io.bookVault(k);
+    } catch (e) {
+      dlog('vault: book key not told (${e.runtimeType})');
+    }
+  }
+
   // a vault no pin opens, with nothing listed: its key and files go
   Future<void> _unmake(HaloContainer c) async {
     try {
@@ -419,6 +437,8 @@ extension AppStateVault on AppState {
       }
       await refreshContacts();
       await refreshGroups();
+      // their batch places go into the vault's part of the book
+      await _bookVaultFrom(v);
       _relistenMoved();
       return went.length;
     }),
@@ -444,6 +464,8 @@ extension AppStateVault on AppState {
       }
       await refreshContacts();
       await refreshGroups();
+      // their batch places come back from the vault's part of the book
+      await _bookVaultFrom(v);
       _relistenMoved(out: before.difference(_router.listenFor.keys.toSet()));
       return n;
     }),
@@ -457,6 +479,7 @@ extension AppStateVault on AppState {
       final v = _session.vault ?? _madeVault;
       if (v == null) throw StateError('no vault at hand');
       final everyday = AppState._everyday(v);
+      final before = _router.listenFor.keys.toSet();
       // every chat it holds, so each comes back alike: as the list names them
       // on the everyday side, as its own rows do on the decoy's
       final List<ChatRef> all;
@@ -480,6 +503,10 @@ extension AppStateVault on AppState {
       if (everyday) {
         // what is still listed the vault no longer holds: deleted inside it
         await _router.unlist([for (final (id, _) in _router.hiddenChats) id]);
+        // their batch places come back from the vault's part of the book
+        // now, while its key is at hand: the vault's part goes with it
+        await _bookVaultFrom(v);
+        _relistenMoved(out: before.difference(_router.listenFor.keys.toSet()));
       }
       // its blocked keys and let-go words stay, on the side its chats went to
       await _primaryOf(v).takeBlocks(await v.blockedKeys(), await v.tombs());
@@ -491,6 +518,7 @@ extension AppStateVault on AppState {
         _forgetVaultSide();
         _vaultShade.clear();
       }
+      if (everyday) unawaited(_io.bookVault(''));
       if (everyday) await _vaultDevicesOut();
       if (identical(_madeVault, v)) _madeVault = null;
       await v.close();

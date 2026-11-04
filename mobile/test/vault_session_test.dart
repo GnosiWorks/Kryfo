@@ -45,7 +45,8 @@ import 'package:kryfo/main.dart'
         AppStatePhotos,
         AppStateReceive,
         AppStateRefresh,
-        AppStateIdentity;
+        AppStateIdentity,
+        vaultSealKeyOf;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/notifications.dart' show kCancelRetryAfter;
 import 'package:kryfo/polls.dart';
@@ -256,6 +257,10 @@ class _Io implements AppIo {
   @override
   void listenHidden(int ident, String xPub, {bool fresh = false}) =>
       listen(ident, xPub, fresh: fresh);
+  // the vault's key for the engine's batch book, as the app hands it
+  final bookKeys = <String>[];
+  @override
+  Future<void> bookVault(String secret) async => bookKeys.add(secret);
   @override
   String edPub() => 'ed-me';
   @override
@@ -423,6 +428,14 @@ class _Rows {
 
 // a database as the app reaches it. a closed handle answers nothing, as a
 // closed wrapped one does: its key went with it
+// the vault's sealing key as its rows hold it, for the batch book
+void _sealKeyFromRows() {
+  vaultSealKeyOf = (v) async => v is _Db ? v.r.meta['priv'] : null;
+  addTearDown(
+    () => vaultSealKeyOf = (v) => VaultRouter.sealKeyIn(SqlRouterStore(v.open)),
+  );
+}
+
 class _Db implements HaloDb {
   _Db(this._container, this.r);
 
@@ -2047,6 +2060,7 @@ void main() {
 
     test('hiding a chat moves it and rebuilds the session', () async {
       final w = await _World.make();
+      _sealKeyFromRows();
       await w.open();
       expect(session.isHidden(_v), isFalse);
       typedDraft(
@@ -2057,7 +2071,12 @@ void main() {
       );
       addTearDown(endProcessForTest);
       expect(heldDraft(HaloContainer.everyday, _v, group: false), isNotNull);
+      // the engine's batch book opens its vault part as the vault opens
+      expect(w.io.bookKeys, ['priv-A']);
       expect(await w.app.hideChats(people: [_v]), 1);
+      // and has the key at hand when the hide listens again, so V's batch
+      // place goes into the vault's part
+      expect(w.io.bookKeys.last, 'priv-A');
       expect(session.isHidden(_v), isTrue);
       // its unsent words stay nowhere outside the vault
       expect(heldDraft(HaloContainer.everyday, _v, group: false), isNull);
@@ -2074,6 +2093,8 @@ void main() {
       expect(w.vaultRows.uids, contains('x1'));
       expect(w.io.rang, [_v]);
       await w.lockUp();
+      // shut, the engine keeps nothing of the vault's key
+      expect(w.io.bookKeys.last, '');
       await w.everyday();
       expect(w.homeIds, {_g1});
       await w.onion(
@@ -2155,8 +2176,13 @@ void main() {
 
     test('Show in chat list brings a chat back', () async {
       final w = await _World.make();
+      _sealKeyFromRows();
       await w.open();
+      w.io.bookKeys.clear();
       expect(await w.app.unhideChats(people: [_h]), 1);
+      // the key is at hand as H listens again: its old batch place comes
+      // back from the vault's part of the book
+      expect(w.io.bookKeys, ['priv-A']);
       expect(session.isHidden(_h), isFalse);
       expect(w.app.contacts.firstWhere((c) => c.haloId == _h).hidden, isFalse);
       expect(w.router.hides(_h), isFalse);

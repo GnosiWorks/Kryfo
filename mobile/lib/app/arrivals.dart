@@ -105,6 +105,15 @@ class AppIo {
   void unlisten(int ident, String xPub) =>
       engine.nostrUnsubscribeBg(ident, xPub);
 
+  // the open vault's key for the engine's batch book, '' as it shuts
+  Future<void> bookVault(String secret) async {
+    try {
+      await engine.bookVault(secret);
+    } catch (e) {
+      dlog('vault: book key not handed (${e.runtimeType})');
+    }
+  }
+
   String edPub() => engine.myEdPubkey();
 
   String xPub() => engine.myXPubkey();
