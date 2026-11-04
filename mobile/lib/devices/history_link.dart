@@ -21,7 +21,7 @@ import 'history_export.dart';
 import 'history_ffi.dart';
 import 'history_import.dart';
 import 'own_device_store.dart'
-    show historyCopiesKept, historyCopyOf, keepHistoryCopy;
+    show historyCopiesKept, historyCopyAnyOf, historyCopyOf, keepHistoryCopy;
 
 // ---- the engine's calls ----
 
@@ -483,19 +483,24 @@ class PhoneHistoryCopy {
     DateTime Function()? clock,
   }) async {
     final now = (clock ?? DateTime.now)().millisecondsSinceEpoch;
-    for (final uid in await historyCopiesKept(db)) {
-      final row = await historyCopyOf(db, uid);
-      if (row != null) await _rest(db, uid, Map.of(row.hist), door, now);
+    for (final k in await historyCopiesKept(db)) {
+      final row = await historyCopyAnyOf(db, k.uid);
+      if (row != null) {
+        await _rest(db, k.uid, Map.of(row.hist), door, now, removed: k.removed);
+      }
     }
   }
 
+  // a device removed hears its copy ended, whatever it came to: it
+  // discards what it took, if it still runs at all
   static Future<void> _rest(
     Database db,
     String uid,
     Map<String, Object?> hist,
     HistoryDoor door,
-    int now,
-  ) async {
+    int now, {
+    bool removed = false,
+  }) async {
     final done = HistoryCopyStage.fromJson(hist['r']);
     final ask = hist['q'];
     if (done == null || !historyCopyOver(done.step) || ask is! String) return;
@@ -504,11 +509,54 @@ class PhoneHistoryCopy {
       hist
         ..remove('q')
         ..remove('e');
-      await keepHistoryCopy(db, uid, hist);
+      await keepHistoryCopy(db, uid, hist, removed: removed);
       return;
     }
     try {
-      door.rest(ask, _endWord(done.step));
+      door.rest(ask, removed ? 'ended' : _endWord(done.step));
+    } on HistoryRefused {
+      // a kept key that does not read: nothing to answer with
+    }
+  }
+
+  /// device [uid] is being removed: its copy ends now, under way or over.
+  /// a run of it ([running]) stops first and writes nothing more; the door
+  /// then answers "ended" from the copy's ask key for [kHistoryRestFor],
+  /// so the device discards what it took, and the stream key goes. called
+  /// before the row is marked removed
+  static Future<void> unlinked(
+    Database db,
+    String uid,
+    HistoryDoor door, {
+    PhoneHistoryCopy? running,
+    DateTime Function()? clock,
+  }) async {
+    running?.stop();
+    final row = await historyCopyAnyOf(db, uid);
+    if (row == null) return;
+    final hist = Map<String, Object?>.of(row.hist);
+    final now = (clock ?? DateTime.now)().millisecondsSinceEpoch;
+    var ask = hist['q'] as String?;
+    final stream = row.stream;
+    if (ask == null && stream != null && stream.length == 32) {
+      try {
+        ask = door.ask(historyHex(stream), hist['b'] as String).askHex;
+      } on Object {
+        ask = null;
+      }
+    }
+    final done = HistoryCopyStage.fromJson(hist['r']);
+    if (done == null || !historyCopyOver(done.step)) {
+      hist['r'] = const HistoryCopyStage(HistoryCopyStep.ended).toJson();
+    }
+    if (ask != null) {
+      hist['q'] = ask;
+      hist['e'] = now;
+    }
+    await keepHistoryCopy(db, uid, hist, forget: true, removed: true);
+    if (ask == null) return;
+    try {
+      door.rest(ask, 'ended');
     } on HistoryRefused {
       // a kept key that does not read: nothing to answer with
     }

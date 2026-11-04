@@ -17,13 +17,21 @@ import 'own_devices.dart';
 /// one key of a device of mine: its id and key on identity [ident]'s list
 typedef OwnDeviceKey = ({int ident, int dev, String key, int reg});
 
-/// a device linked that the person has not looked at yet
+/// a device linked, or one that went, that the person has not looked at
+/// yet. [why] is null for a device linked; else why it went
+/// (own_unlink.dart's kGone words), [at] when
 @immutable
 class LinkNotice {
-  const LinkNotice({required this.uid, required this.name, required this.at});
+  const LinkNotice({
+    required this.uid,
+    required this.name,
+    required this.at,
+    this.why,
+  });
   final String uid;
   final String name;
   final DateTime at;
+  final String? why;
 }
 
 /// the notices not opened yet, for the home card; null until read
@@ -114,27 +122,166 @@ Future<List<String>> historyCopiesOwed(DatabaseExecutor db) async => [
     r['uid'] as String,
 ];
 
-/// every device with a copy kept, under way or over, for the start
-Future<List<String>> historyCopiesKept(DatabaseExecutor db) async => [
+/// every device with a copy kept, under way or over, for the start: a
+/// device removed since too, whose door answers that its copy ended
+Future<List<({String uid, bool removed})>> historyCopiesKept(
+  DatabaseExecutor db,
+) async => [
   for (final r in await db.query(
     'own_devices',
-    columns: ['uid'],
-    where: 'removed_at IS NULL AND hist IS NOT NULL',
+    columns: ['uid', 'removed_at'],
+    where: 'hist IS NOT NULL',
   ))
-    r['uid'] as String,
+    (uid: r['uid'] as String, removed: r['removed_at'] != null),
 ];
 
-/// the copy's place kept; [forget] lets the stream key go, the copy over
+/// the copy's place kept; [forget] lets the stream key go, the copy over.
+/// a device removed meanwhile keeps what its removal wrote, unless
+/// [removed] says this is that write
 Future<void> keepHistoryCopy(
   DatabaseExecutor db,
   String uid,
   Map<String, Object?> hist, {
   bool forget = false,
+  bool removed = false,
 }) => db.update(
   'own_devices',
   {'hist': jsonEncode(hist), if (forget) 'stream': null},
-  where: 'uid = ?',
+  where: removed ? 'uid = ?' : 'uid = ? AND removed_at IS NULL',
   whereArgs: [uid],
+);
+
+/// the history place of device [uid], removed or not, for its end
+Future<({Map<String, Object?> hist, Uint8List? stream})?> historyCopyAnyOf(
+  DatabaseExecutor db,
+  String uid,
+) async {
+  final r = await db.query(
+    'own_devices',
+    columns: ['stream', 'hist'],
+    where: 'uid = ?',
+    whereArgs: [uid],
+  );
+  if (r.isEmpty || r.first['hist'] is! String) return null;
+  try {
+    final h = jsonDecode(r.first['hist'] as String) as Map;
+    final s = r.first['stream'];
+    return (
+      hist: h.cast<String, Object?>(),
+      stream: s is List<int> ? Uint8List.fromList(s) : null,
+    );
+  } on FormatException {
+    return null;
+  }
+}
+
+/// devices [uids] went, for [why] at [at]: off the list here, their keys
+/// with them. [notice] 2 says so on the home card until the devices page
+/// is opened
+Future<void> markOwnDevicesGone(
+  DatabaseExecutor db,
+  Iterable<String> uids, {
+  required String why,
+  required int at,
+  required bool notice,
+}) async {
+  for (final uid in uids) {
+    await db.update(
+      'own_devices',
+      {
+        'removed_at': at,
+        'gone_why': why,
+        'stream': null,
+        'notice': notice ? 2 : 0,
+      },
+      where: 'uid = ? AND removed_at IS NULL',
+      whereArgs: [uid],
+    );
+    await db.delete('own_device_keys', where: 'uid = ?', whereArgs: [uid]);
+  }
+}
+
+/// the devices of mine whose key on [ident] is one of [keys] ([dev] and its
+/// key, as a list names them), not removed yet
+Future<List<String>> ownDevicesWithKeys(
+  DatabaseExecutor db,
+  int ident,
+  Iterable<({int id, String key})> keys,
+) async {
+  final out = <String>[];
+  for (final k in keys) {
+    for (final r in await db.rawQuery(
+      'SELECT k.uid FROM own_device_keys k JOIN own_devices o ON '
+      'o.uid = k.uid WHERE o.removed_at IS NULL AND k.ident = ? AND '
+      'k.dev_id = ? AND k.key = ?',
+      [ident, k.id, k.key],
+    )) {
+      out.add(r['uid'] as String);
+    }
+  }
+  return out;
+}
+
+/// devices [uids] said they unlinked themselves while no removal could go:
+/// the next tick on the everyday side removes them as that
+Future<void> markOwnDevicesLeft(DatabaseExecutor db, List<String> uids) async {
+  for (final uid in uids) {
+    await db.update(
+      'own_devices',
+      {'gone_why': 'itself'},
+      where: 'uid = ? AND removed_at IS NULL',
+      whereArgs: [uid],
+    );
+  }
+}
+
+/// which of [uids] said they unlinked themselves and wait for it
+Future<List<String>> ownDevicesLeft(
+  DatabaseExecutor db,
+  List<String> uids,
+) async => [
+  for (final r in await db.query(
+    'own_devices',
+    columns: ['uid'],
+    where:
+        "removed_at IS NULL AND gone_why = 'itself' AND "
+        'uid IN (${List.filled(uids.length, '?').join(',')})',
+    whereArgs: uids,
+  ))
+    r['uid'] as String,
+];
+
+/// the phone was online [ms] more: each device's time since its last word
+/// grows by that
+Future<void> addOwnOnlineTime(DatabaseExecutor db, int ms) => db.rawUpdate(
+  'UPDATE own_devices SET heard_online_ms = heard_online_ms + ? '
+  "WHERE removed_at IS NULL AND kind != 'phone'",
+  [ms],
+);
+
+/// a device of mine said a person uses it: its time since starts again
+Future<void> ownDeviceHeard(
+  DatabaseExecutor db, {
+  required int ident,
+  required int dev,
+  required String key,
+  required int at,
+}) => db.rawUpdate(
+  'UPDATE own_devices SET heard_online_ms = 0, heard_at = ? WHERE uid IN '
+  '(SELECT uid FROM own_device_keys WHERE ident = ? AND dev_id = ? '
+  'AND key = ?) AND removed_at IS NULL',
+  [at, ident, dev, key],
+);
+
+/// how long a device removed is kept on the page's rows once seen, so its
+/// history copy can still answer that it ended
+const kGoneRowKept = Duration(days: 31);
+
+/// devices gone long ago, their notice seen, go for good
+Future<void> pruneGoneDevices(DatabaseExecutor db, int now) => db.delete(
+  'own_devices',
+  where: 'removed_at IS NOT NULL AND removed_at < ? AND notice = 0',
+  whereArgs: [now - kGoneRowKept.inMilliseconds],
 );
 
 /// where a linked device keeps its history stream's key until the copy
@@ -237,9 +384,41 @@ Future<bool> linkedRoleOf(DatabaseExecutor db) async {
   return r.isNotEmpty && r.first['ident_pub'] is List<int>;
 }
 
-/// the notices not opened yet, oldest first, read into [linkNotices]
+/// the mark device_receive.dart keeps for a device another copy of my
+/// phone linked (a contact handed back a list naming it)
+const kUnknownDeviceMark = 'alarm:unknown_device';
+const _kUnknownDeviceSeen = 'seen:unknown_device';
+
+/// the notices not opened yet, read into [linkNotices]: a device another
+/// copy of my phone linked first, then the devices that went, then the
+/// ones linked, oldest first in each
 Future<List<LinkNotice>> readLinkNotices(DatabaseExecutor db) async {
   final out = [
+    for (final r in await db.query(
+      'dev_marks',
+      columns: ['key', 'at'],
+      where: 'kind = ?',
+      whereArgs: [kUnknownDeviceMark],
+      orderBy: 'at',
+    ))
+      LinkNotice(
+        uid: 'unknown:${r['key']}',
+        name: '',
+        at: DateTime.fromMillisecondsSinceEpoch(r['at'] as int),
+        why: 'unknown',
+      ),
+    for (final r in await db.query(
+      'own_devices',
+      columns: ['uid', 'name', 'removed_at', 'gone_why'],
+      where: 'notice = 2 AND removed_at IS NOT NULL',
+      orderBy: 'removed_at',
+    ))
+      LinkNotice(
+        uid: r['uid'] as String,
+        name: r['name'] as String,
+        at: DateTime.fromMillisecondsSinceEpoch(r['removed_at'] as int),
+        why: r['gone_why'] as String? ?? 'removed',
+      ),
     for (final r in await db.query(
       'own_devices',
       columns: ['uid', 'name', 'linked_at'],
@@ -258,7 +437,14 @@ Future<List<LinkNotice>> readLinkNotices(DatabaseExecutor db) async {
 
 /// the person opened the devices page: every notice has done its job
 Future<void> openLinkNotices(DatabaseExecutor db) async {
-  await db.update('own_devices', {'notice': 0}, where: 'notice = 1');
+  await db.update('own_devices', {'notice': 0}, where: 'notice != 0');
+  await db.update(
+    'dev_marks',
+    {'kind': _kUnknownDeviceSeen},
+    where: 'kind = ?',
+    whereArgs: [kUnknownDeviceMark],
+    conflictAlgorithm: ConflictAlgorithm.replace,
+  );
   linkNotices.value = const [];
 }
 
@@ -277,6 +463,7 @@ class StoredOwnDevices implements OwnDevices {
     this.phoneName,
     this.link,
     this.unlink,
+    this.leave,
   });
 
   final DatabaseExecutor db;
@@ -289,8 +476,12 @@ class StoredOwnDevices implements OwnDevices {
   /// a link from a scanned code; null where this device cannot link
   final LinkFlow Function(String code, LinkHistory history)? link;
 
-  /// taking a device off the list (the removal step); none yet
-  final Future<void> Function(String uid)? unlink;
+  /// taking devices off the list (own_unlink.dart); null where this
+  /// device removes none
+  final Future<void> Function(List<String> uids)? unlink;
+
+  /// a linked device unlinks itself: it tells its phone, then wipes
+  final Future<void> Function()? leave;
 
   @override
   Future<List<OwnDevice>> load() async {
@@ -316,6 +507,15 @@ class StoredOwnDevices implements OwnDevices {
           name: r['name'] as String,
           kind: r['kind'] == 'phone' ? DeviceKind.phone : DeviceKind.computer,
           linkedAt: DateTime.fromMillisecondsSinceEpoch(r['linked_at'] as int),
+          lastUsed: switch (r['heard_at']) {
+            final int t when t > 0 => DateTime.fromMillisecondsSinceEpoch(t),
+            _ => null,
+          },
+          // on the phone, counted in its own time online as the removal
+          // counts it; a linked device does not count
+          unlinksInDays: phoneName == null
+              ? unlinksInDaysOf((r['heard_online_ms'] as num?)?.toInt() ?? 0)
+              : null,
           code: switch (keys[r['uid']]) {
             final String k => keyNumberGroups(_unhex(k)) ?? const [],
             null => const [],
@@ -333,16 +533,24 @@ class StoredOwnDevices implements OwnDevices {
   );
 
   @override
-  Future<void> remove(String id) async => unlink?.call(id);
+  Future<void> remove(String id) async => unlink?.call([id]);
 
   @override
   Future<void> removeOthers() async {
     final u = unlink;
     if (u == null) return;
-    for (final d in await load()) {
-      if (!d.thisDevice && !d.isPhone) await u(d.id);
-    }
+    // one list without all of them
+    await u([
+      for (final d in await load())
+        if (!d.thisDevice && !d.isPhone) d.id,
+    ]);
   }
+
+  @override
+  bool get canLeave => leave != null && phoneName != null;
+
+  @override
+  Future<void> leaveHere() async => leave?.call();
 
   @override
   bool get canLink => link != null && phoneName == null;

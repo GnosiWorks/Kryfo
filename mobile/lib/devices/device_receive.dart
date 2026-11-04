@@ -82,8 +82,13 @@ typedef DevAlarm = ({int ident, String peer, String kind, String key});
 /// the device frames: lists, bundles, asks, handbacks, the own frames
 const kDeviceWords = {
   'as', 'dl', 'db', 'dq', 'dh', 'dw', 'dn', 'dz', 'dk', 'da', 'fl', //
-  'oc', 'os', 'of', 'ob', 'hs',
+  'oc', 'os', 'of', 'ob', 'hs', 'ou',
 };
+
+/// why a linked device says it unlinked itself ('ou'): not opened for 30
+/// days, its clock set back, its lock state unreadable, or the person
+/// unlinked it there
+const kOwnLeftWhy = {'unused', 'clock', 'broken', 'self'};
 
 // what a device's copy may not say for its contact: its engine's own
 // onion and keys, its caps, a phone's first-contact and restart words
@@ -162,6 +167,18 @@ class DeviceReceive {
   /// of: added with their notice (own_device_store.dart's one writer)
   Future<void> Function(int ident, List<({int id, String key, int reg})> added)?
   ownAdded;
+
+  /// a linked device: my phone's list of my identity [ident] no longer
+  /// names this device. it wipes
+  Future<void> Function(int ident)? ownRemoved;
+
+  /// a linked device: my own devices [gone] left my list of [ident]
+  Future<void> Function(int ident, List<({int id, String key, int reg})> gone)?
+  ownGoneHere;
+
+  /// the phone: my own [device] of [ident] on [key] says it unlinked itself
+  /// ([why], one of [kOwnLeftWhy]) and wiped
+  Future<void> Function(int ident, int device, String key, String why)? ownLeft;
 
   final _alarms = StreamController<DevAlarm>.broadcast();
 
@@ -435,6 +452,14 @@ class DeviceReceive {
     if (fl is Map && m.device != 1 && t.their == 1) {
       await _fromMyPhone(m, fl, remote);
     }
+    // a device of mine unlinked itself: the phone takes it off my list
+    final ou = j['ou'];
+    if (ou is Map && m.device == 1 && t.their != 1) {
+      final w = ou['w'];
+      if (w is String && kOwnLeftWhy.contains(w)) {
+        await ownLeft?.call(m.ident, t.their, entry.key, w);
+      }
+    }
   }
 
   // a contact's list my phone took and passed on, inside its session: the
@@ -516,6 +541,8 @@ class DeviceReceive {
     } on DevRefused catch (e) {
       if (e.why == 'removed') {
         await _alarm(d, m.ident, identity, 'removed', '');
+        // signed by my phone, without this device: it wipes
+        await ownRemoved?.call(m.ident);
       }
       if (e.why == 'equivocation') {
         await _alarm(d, m.ident, identity, 'equivocation', '');
@@ -559,6 +586,7 @@ class DeviceReceive {
       }
       await _dropDevice(d, m, identity, kOwnDevices, e.id);
     }
+    if (m.device != 1) await ownGoneHere?.call(m.ident, gone);
   }
 
   Future<void> _batch(

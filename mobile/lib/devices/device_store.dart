@@ -285,6 +285,28 @@ Future<void> deviceTables(
     db,
     'ALTER TABLE own_devices ADD COLUMN heard_at INTEGER NOT NULL DEFAULT 0',
   );
+  // a device of mine removed: why ('removed' here, 'unused' after 30 days
+  // of this phone's time online without a word from it, 'itself' when it
+  // said it unlinked, 'restore', 'unknown' for one another copy of the
+  // phone linked), noticed with notice 2 until the devices page is opened
+  await addColumn(db, 'ALTER TABLE own_devices ADD COLUMN gone_why TEXT');
+  // the last word to a device of mine just removed: my list without it,
+  // sealed on its session before that went, with where it goes, handed to
+  // the relay until it took it (kFarewellKept at most)
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS dev_farewell (
+      ident INTEGER NOT NULL,
+      device INTEGER NOT NULL,
+      key TEXT NOT NULL,
+      arg TEXT NOT NULL,
+      wire TEXT NOT NULL,
+      opener INTEGER NOT NULL DEFAULT 0,
+      at INTEGER NOT NULL,
+      tries INTEGER NOT NULL DEFAULT 0,
+      next_at INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (ident, device)
+    )
+  ''');
   await db.execute('''
     CREATE TABLE IF NOT EXISTS dev_marks (
       ident INTEGER NOT NULL,
@@ -311,6 +333,7 @@ const _devOutColumns = [
   'tries INTEGER NOT NULL DEFAULT 0',
   'next_at INTEGER NOT NULL DEFAULT 0',
   'sent_at INTEGER NOT NULL DEFAULT 0',
+  'keep INTEGER NOT NULL DEFAULT 0',
 ];
 
 const _allTables = [
@@ -330,6 +353,7 @@ const _allTables = [
   'own_told',
   'own_gone',
   'own_held',
+  'dev_farewell',
 ];
 
 /// at every open: [deviceTables] only when one is missing, so a file that
@@ -361,9 +385,10 @@ Future<void> deviceTablesAtOpen(
       own.contains('notice') &&
       own.contains('stream') &&
       own.contains('heard_at') &&
+      own.contains('gone_why') &&
       (!have.contains('identities') ||
           (cols.contains('dev_id') && cols.contains('ident_pub'))) &&
-      (await colsOf('dev_out')).contains('sent_at') &&
+      (await colsOf('dev_out')).contains('keep') &&
       (await colsOf('dev_pushes')).contains('dev_sent') &&
       (await colsOf('dev_openers')).contains('key');
   if (!whole) await deviceTables(db, addColumn);
