@@ -15,6 +15,7 @@ import 'package:kryfo/desktop/sealed_format.dart';
 import 'package:kryfo/desktop/sealed_io.dart';
 import 'package:kryfo/media_names.dart';
 import 'package:kryfo/phone_seal.dart';
+import 'package:kryfo/shred.dart' show shredFile;
 import 'package:kryfo/voice_opus.dart';
 import 'package:path/path.dart' as p;
 
@@ -517,17 +518,25 @@ void main() {
     });
   });
 
-  test('a shred overwrites the sealed bytes as they lie', () async {
+  test('a shred overwrites the sealed bytes as they lie, every one, before '
+      'the name goes', () async {
     openEveryday();
     final at = p.join(docs, 'media', 'in_q.jpg');
     File(at).writeAsBytesSync(List.filled(100000, 5));
     final stored = _raw(at).length;
-    var seen = 0;
-    await rawFiles(() async {
-      final r = await File(at).open(mode: FileMode.append);
-      seen = await r.length();
-      await r.close();
-    });
-    expect(seen, stored);
+    expect(stored, storedLength(100000));
+    // a handle on the same file, kept past the unlink, sees what the shred
+    // left in its blocks
+    final held = rawFileAccess(() => File(at).openSync());
+    final lengths = <int>[];
+    await shredFile(at, probe: lengths.add);
+    expect(rawFileAccess(() => File(at).existsSync()), isFalse);
+    // the sealed length, never the plaintext's: nothing was decrypted
+    expect(lengths.last, stored);
+    held.setPositionSync(0);
+    final left = held.readSync(stored + 10);
+    held.closeSync();
+    expect(left.length, stored);
+    expect(left.every((b) => b == 0), isTrue);
   });
 }
