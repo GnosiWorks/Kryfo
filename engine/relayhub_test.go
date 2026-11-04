@@ -40,7 +40,7 @@ func freshBatches(t *testing.T) {
 	t.Helper()
 	batchMu.Lock()
 	old := batches
-	batches = &batchBook{dir: savedDataDir(), every: map[string]batchPlace{}, top: map[string]batchTop{}, hide: map[string]bool{}}
+	batches = &batchBook{dir: savedDataDir(), every: map[string]batchPlace{}, top: map[string]batchTop{}}
 	batches.key, batches.idKey = bookKeys()
 	batchMu.Unlock()
 	t.Cleanup(func() {

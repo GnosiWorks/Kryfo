@@ -430,7 +430,7 @@ void main() {
       final d = await draftBackup(stage, side: const _Side());
       expect(d.manifest['book'], line);
       // a file that leaves the hidden chats out carries it too: it names no
-      // address, and its vault part reads the same with a vault or none
+      // address, and a hidden chat's place reads as any other's
       expect(
         (await draftBackup(
           stage,

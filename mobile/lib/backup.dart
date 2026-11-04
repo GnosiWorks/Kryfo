@@ -2009,8 +2009,8 @@ final _kAnchorName = RegExp(r'^nostr_last_[0-9a-f]{1,16}$');
 const kBatchBookName = 'nostr_book';
 final _kBookLine = RegExp(r'^[A-Za-z0-9+/]+$');
 
-/// the batch book as its file has it, one sealed line: under a key from
-/// the identity, the vault's part under the vault's own. null with none
+/// the batch book as its file has it, one sealed line under a key from
+/// the identity. null with none
 @visibleForTesting
 Future<String?> batchBook(String docs) async {
   try {

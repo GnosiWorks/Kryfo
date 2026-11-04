@@ -260,10 +260,6 @@ class ArrivalIo implements AppIo {
   @override
   void listenHidden(int ident, String xPub, {bool fresh = false}) =>
       listen(ident, xPub, fresh: fresh);
-  // the vault's key for the engine's batch book, as the app hands it
-  final bookKeys = <String>[];
-  @override
-  Future<void> bookVault(String secret) async => bookKeys.add(secret);
   final unheard = <String>[];
   @override
   void unlisten(int ident, String xPub) => unheard.add(xPub);

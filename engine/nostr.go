@@ -2684,9 +2684,6 @@ func nostrSubscribeAt(c convPair, peerHex, rcvSk, rcvPk string, fresh, hidden bo
 	// a hidden chat's knocks go on its own lane too, never in a batch's
 	// registration
 	lane := c.listenLaneAs(rcvPk, hidden)
-	if hidden {
-		batchHide(rcvPk)
-	}
 	noteKnockTarget(key, knockTarget{rcvPk, rcvSk, lane, lane, strings.ToLower(peerHex)})
 	nostrMu.Lock()
 	if cancel, exists := nostrSubs[key]; exists {

@@ -757,30 +757,6 @@ class HaloEngine {
     );
   }
 
-  // the open vault's key for the batch book (engine/batches.go), '' as it
-  // shuts. a shut waits for every listen asked before it, so a chat moved
-  // out of the vault just before still finds its place. a newer call wins
-  int _bookGen = 0;
-  Future<void> bookVault(String secret) async {
-    final gen = ++_bookGen;
-    if (secret.isEmpty) {
-      await Future.wait([
-        for (final f in [..._listensInFlight]) f.catchError((Object _) => ''),
-      ]).timeout(const Duration(seconds: 20), onTimeout: () => const []);
-      if (gen != _bookGen) return;
-    }
-    final p = secret.toNativeUtf8();
-    try {
-      engineTake(
-        _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrBookVault')(p),
-      );
-    } catch (_) {
-      // an older engine without the call
-    } finally {
-      freeSecret(p);
-    }
-  }
-
   // no more listening on a device pair, by its tag; its files go
   void deviceUnlistenBg(int ident, String arg) => deviceTagStep(
     ident,
@@ -1726,10 +1702,6 @@ Future<String> _sendOnIsolate(
   });
 }
 
-// the listens asked and not yet in, so the vault's key goes only after
-// them (HaloEngine.bookVault)
-final _listensInFlight = <Future<String>>{};
-
 Future<String> _subscribeOnIsolate(
   int ident,
   String xPub, {
@@ -1739,13 +1711,6 @@ Future<String> _subscribeOnIsolate(
   final name = hidden
       ? (fresh ? 'HaloNostrSubscribeHiddenNew' : 'HaloNostrSubscribeHidden')
       : (fresh ? 'HaloNostrSubscribeNew' : 'HaloNostrSubscribe');
-  final f = _listenOnIsolate(ident, xPub, name);
-  _listensInFlight.add(f);
-  f.whenComplete(() => _listensInFlight.remove(f)).ignore();
-  return f;
-}
-
-Future<String> _listenOnIsolate(int ident, String xPub, String name) {
   return Isolate.run(() {
     final lib = Platform.isAndroid
         ? DynamicLibrary.open('libhalo.so')

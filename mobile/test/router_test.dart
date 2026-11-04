@@ -246,10 +246,6 @@ class _Io implements AppIo {
     _heard(xPub);
   }
 
-  // the vault's key for the engine's batch book, as the app hands it
-  final bookKeys = <String>[];
-  @override
-  Future<void> bookVault(String secret) async => bookKeys.add(secret);
 
   // listens and pin tellings, in the order they came
   final told = <String>[];

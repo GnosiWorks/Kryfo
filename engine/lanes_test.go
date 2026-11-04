@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/ed25519"
 	"encoding/hex"
@@ -390,94 +391,62 @@ func TestBatchesNeverMove(t *testing.T) {
 	}
 }
 
-// a chat hidden after it was batched: its place goes into the vault's part
-// of the book, which only the vault's key opens, and comes back with an
-// unhide. the file looks the same with a vault and without
-func TestAHiddenChatsPlaceIsInTheVault(t *testing.T) {
-	bookIdentity(t)
-	dir := t.TempDir()
-	old := savedDataDir()
-	setSavedDataDir(dir)
-	t.Cleanup(func() { setSavedDataDir(old) })
+// a chat hidden after it was batched keeps its entry, so the book counts
+// no hidden chat: every seat given has its entry, before a hide and after,
+// and the file a hide leaves is the file it found
+func TestAHiddenChatKeepsItsPlace(t *testing.T) {
+	socks := newSocksStandIn(t)
+	r := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, socks, r)
 	batchBookReset()
-	t.Cleanup(func() {
-		batchVault(nil)
-		batchBookReset()
-	})
-	addr := func(i int) string { return fmt.Sprintf("%016x%048x", i+1, 0) }
+	t.Cleanup(batchBookReset)
+	t.Cleanup(func() { runnersGone(t) })
 	set := contactSet(mainIdent)
+	var peers []xid
 	for i := 0; i < 12; i++ {
-		batchOf(set, addr(i))
-	}
-	size := func() int {
-		st, err := os.Stat(filepath.Join(dir, bookName))
-		if err != nil {
-			t.Fatal(err)
+		p := newXid(t)
+		peers = append(peers, p)
+		if res := nostrSubscribeAs(mainIdent, hex.EncodeToString(p.pub[:]), false, false); res != "ok" {
+			t.Fatal(res)
 		}
-		return int(st.Size())
 	}
-	without := size()
-	// the vault opens and a chat of batch 1 is hidden
-	vkey := []byte("AGE-SECRET-KEY-1TEST")
-	batchVault(vkey)
-	batchHide(addr(9))
-	with := size()
-	if with != without {
-		t.Fatalf("the book is %d bytes with a hidden place, %d without", with, without)
-	}
-	inEvery := func(a string) bool {
+	whole := func() {
+		t.Helper()
 		batchMu.Lock()
 		defer batchMu.Unlock()
 		b := batchBookNow()
-		_, ok := b.every[b.id(a)]
-		return ok
-	}
-	if inEvery(addr(9)) {
-		t.Fatal("a hidden chat's place stayed in the everyday part")
-	}
-	// the vault shuts, the app starts again: the everyday part knows
-	// nothing of it, and nobody takes its seat
-	batchVault(nil)
-	batchBookReset()
-	if inEvery(addr(9)) {
-		t.Fatal("the everyday part names the hidden chat after a restart")
-	}
-	for i := 12; i < 16; i++ {
-		if got := batchOf(set, addr(i)); got != 1 {
-			t.Fatalf("a new address in batch %d, want 1", got)
+		given := 0
+		for _, x := range b.top {
+			given += x.n*batchMax + x.given
+		}
+		if given != 12 || len(b.every) != 12 {
+			t.Fatalf("%d seats given, %d entries: a difference counts hidden chats", given, len(b.every))
 		}
 	}
-	if got := batchOf(set, addr(16)); got != 2 {
-		t.Fatalf("batch 1 took a ninth address (%d), the hidden chat's seat was given away", got)
+	whole()
+	path := filepath.Join(savedDataDir(), bookName)
+	before, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
 	}
-	// the vault opens again and the chat comes out: its own place
+	// one of batch 1 is hidden: listened on again as a hidden chat's
+	hid := peers[9]
+	was := batchOf(set, mustRcv(t, hid))
+	if res := nostrSubscribeAs(mainIdent, hex.EncodeToString(hid.pub[:]), false, true); res != "ok" {
+		t.Fatal(res)
+	}
+	after, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(before, after) {
+		t.Fatal("a hide wrote the book")
+	}
+	// read again, as after a restart: whole, and an unhide finds its place
 	batchBookReset()
-	batchVault(vkey)
-	if got := batchOf(set, addr(9)); got != 1 {
-		t.Fatalf("an unhidden chat came back to batch %d, want 1", got)
-	}
-	if !inEvery(addr(9)) {
-		t.Fatal("an unhidden chat's place is not back in the everyday part")
-	}
-	// heard hidden while the vault's key is not at hand: it waits in the
-	// everyday part until the key is
-	batchVault(nil)
-	batchHide(addr(2))
-	if !inEvery(addr(2)) {
-		t.Fatal("a place left with no vault key to keep it")
-	}
-	batchVault(vkey)
-	if inEvery(addr(2)) {
-		t.Fatal("the place heard hidden did not go into the vault's part once its key came")
-	}
-	// another vault's key opens nothing of it
-	batchVault(nil)
-	batchVault([]byte("AGE-SECRET-KEY-1OTHER"))
-	batchMu.Lock()
-	n := len(batches.vault)
-	batchMu.Unlock()
-	if n != 0 {
-		t.Fatalf("another vault's key read %d places", n)
+	whole()
+	if got := batchOf(set, mustRcv(t, hid)); got != was {
+		t.Fatalf("an unhidden chat came back to batch %d, want %d", got, was)
 	}
 }
 

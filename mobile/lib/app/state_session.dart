@@ -653,8 +653,6 @@ extension AppStateSession on AppState {
     // its chats draw their waiting files as such
     unawaited(_loadFileWaits());
     try {
-      // its places in the batch book, for a chat moved out
-      await _bookVaultFrom(v);
       // its timers that ran out while it was shut go now, and what waits
       // from someone blocked on the everyday side starts
       await v.purgeExpired(blocked: _realBlocked);
@@ -720,7 +718,6 @@ extension AppStateSession on AppState {
     _session = Session(was.primary);
     lockState.inVault = false;
     _forgetVaultSide();
-    if (everyday) unawaited(_io.bookVault(''));
     // its file on the way stops, and its waits go. the decoy's fetches
     // nothing, and the everyday side is not read from it
     if (everyday) _vaultFetchStops(v);

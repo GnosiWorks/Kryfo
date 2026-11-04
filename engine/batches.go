@@ -13,11 +13,11 @@ package main
 // stay the same (until 0.7).
 //
 // the book is one file, sealed under a key from the main identity and
-// padded, naming each address by a keyed hash. the places of chats hidden
-// after they were batched go in a part of it that only the vault's key
-// opens. with no vault, or the vault shut since this process began, that
-// part is random bytes of the same size, so the file reads the same with a
-// vault and without.
+// padded, naming each address by a keyed hash. a chat hidden after it was
+// batched keeps its entry: it reads like any address let go of, and every
+// seat given has one, so the book says nothing of a vault. a part only the
+// vault's key opened would not: the seats given less the entries left
+// would count the hidden chats, and an entry gone would name one.
 
 import (
 	"bytes"
@@ -35,16 +35,10 @@ import (
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
-import "C"
-
 const batchMax = 8
 
 // the book's file in the engine's folder
 const bookName = "nostr_book"
-
-// the vault's part is padded to whole steps of this, so a few hidden
-// places and none take the same room
-const bookVaultStep = 4 << 10
 
 type batchPlace struct {
 	set string
@@ -61,18 +55,9 @@ type batchBook struct {
 	// the file's key and the ids' key, from the main identity. nil with no
 	// identity: the book then lives in memory only
 	key, idKey []byte
-	// the everyday part, by keyed hash
+	// the places, by keyed hash
 	every map[string]batchPlace
 	top   map[string]batchTop
-	// the vault's part as the file holds it, kept as it is while the vault
-	// is shut
-	vaultSealed []byte
-	// while the vault's key is at hand: its part, opened
-	vaultKey []byte
-	vault    map[string]batchPlace
-	// ids heard hidden while the vault's key was not at hand: their places
-	// go to its part once it is
-	hide map[string]bool
 }
 
 var (
@@ -96,7 +81,7 @@ func batchBookNow() *batchBook {
 	if b := batches; b != nil && b.dir == dir && bytes.Equal(b.key, key) {
 		return b
 	}
-	b := &batchBook{dir: dir, key: key, idKey: idKey, every: map[string]batchPlace{}, top: map[string]batchTop{}, hide: map[string]bool{}}
+	b := &batchBook{dir: dir, key: key, idKey: idKey, every: map[string]batchPlace{}, top: map[string]batchTop{}}
 	if dir != "" {
 		// the files of a version that kept a file per address
 		olds, _ := filepath.Glob(filepath.Join(dir, "nostr_batch_*"))
@@ -135,12 +120,6 @@ type bookFile struct {
 	E map[string][2]any `json:"e"`
 	// set -> [newest batch, seats given in it]
 	T map[string][2]int `json:"t"`
-	// the vault's part, sealed
-	V []byte `json:"v"`
-}
-
-type bookVaultFile struct {
-	E map[string][2]any `json:"e"`
 }
 
 func placesOf(m map[string][2]any) map[string]batchPlace {
@@ -182,32 +161,6 @@ func bookOpen(key, b []byte) ([]byte, bool) {
 	return out, err == nil
 }
 
-// whole steps, so the size says no more than how many steps
-func bookVaultPad(plain []byte) []byte {
-	n := (vaultPadHead + len(plain) + bookVaultStep - 1) / bookVaultStep * bookVaultStep
-	out := make([]byte, n)
-	copy(out, vaultPadMagic)
-	out[4], out[5], out[6], out[7] = byte(len(plain)>>24), byte(len(plain)>>16), byte(len(plain)>>8), byte(len(plain))
-	copy(out[vaultPadHead:], plain)
-	return out
-}
-
-func bookVaultUnpad(b []byte) ([]byte, bool) {
-	if len(b) < vaultPadHead || !bytes.Equal(b[:4], vaultPadMagic) {
-		return nil, false
-	}
-	n := int(b[4])<<24 | int(b[5])<<16 | int(b[6])<<8 | int(b[7])
-	if n < 0 || n > len(b)-vaultPadHead {
-		return nil, false
-	}
-	return b[vaultPadHead : vaultPadHead+n], true
-}
-
-// the size a sealed vault part of one step takes, for the filler
-func bookVaultFiller() []byte {
-	return randBytes(chacha20poly1305.NonceSizeX + bookVaultStep + chacha20poly1305.Overhead)
-}
-
 func (b *batchBook) read(raw []byte) {
 	sealed, err := base64.RawStdEncoding.DecodeString(strings.TrimSpace(string(raw)))
 	if err != nil {
@@ -231,7 +184,6 @@ func (b *batchBook) read(raw []byte) {
 			b.top[set] = batchTop{t[0], t[1]}
 		}
 	}
-	b.vaultSealed = f.V
 }
 
 // the book on disk, whole or not at all. never while the engine is held
@@ -239,20 +191,11 @@ func (b *batchBook) write() {
 	if b.dir == "" || b.key == nil || engineHeld.Load() {
 		return
 	}
-	if b.vaultKey != nil {
-		plain, _ := json.Marshal(bookVaultFile{E: placesJSON(b.vault)})
-		if s := bookSeal(b.vaultKey, bookVaultPad(plain)); s != nil {
-			b.vaultSealed = s
-		}
-	}
-	if b.vaultSealed == nil {
-		b.vaultSealed = bookVaultFiller()
-	}
 	t := make(map[string][2]int, len(b.top))
 	for set, x := range b.top {
 		t[set] = [2]int{x.n, x.given}
 	}
-	plain, err := json.Marshal(bookFile{E: placesJSON(b.every), T: t, V: b.vaultSealed})
+	plain, err := json.Marshal(bookFile{E: placesJSON(b.every), T: t})
 	if err != nil {
 		return
 	}
@@ -283,96 +226,19 @@ func (b *batchBook) seat(set string) int {
 	return t.n
 }
 
-// the batch of rcvPk in set, given it now if it has none. a place in the
-// vault's part comes back to the everyday one: the chat is out of the vault
+// the batch of rcvPk in set, given it now if it has none
 func batchOf(set, rcvPk string) int {
 	batchMu.Lock()
 	defer batchMu.Unlock()
 	b := batchBookNow()
 	id := b.id(rcvPk)
-	delete(b.hide, id)
 	if p, ok := b.every[id]; ok && p.set == set {
-		return p.n
-	}
-	if p, ok := b.vault[id]; ok && p.set == set {
-		delete(b.vault, id)
-		b.every[id] = p
-		b.write()
 		return p.n
 	}
 	p := batchPlace{set, b.seat(set)}
 	b.every[id] = p
 	b.write()
 	return p.n
-}
-
-// rcvPk is listened on as a hidden chat's: a place it has goes into the
-// vault's part, or there once the vault's key is at hand
-func batchHide(rcvPk string) {
-	batchMu.Lock()
-	defer batchMu.Unlock()
-	b := batchBookNow()
-	id := b.id(rcvPk)
-	p, ok := b.every[id]
-	if !ok {
-		return
-	}
-	if b.vaultKey == nil {
-		b.hide[id] = true
-		return
-	}
-	delete(b.every, id)
-	b.vault[id] = p
-	b.write()
-}
-
-// the vault's key, as the open vault hands it, or none as it shuts. its
-// part opens with it, and what was heard hidden meanwhile goes in. a part
-// that does not open (none yet, another vault's) starts empty
-func batchVault(secret []byte) {
-	batchMu.Lock()
-	defer batchMu.Unlock()
-	b := batchBookNow()
-	if len(secret) == 0 {
-		clear(b.vaultKey)
-		b.vaultKey, b.vault = nil, nil
-		return
-	}
-	key := nostrHkdf(secret, nil, []byte("kryfo batch book vault v1"), 32)
-	if b.vaultKey != nil && bytes.Equal(b.vaultKey, key) {
-		return
-	}
-	b.vaultKey, b.vault = key, map[string]batchPlace{}
-	if plain, ok := bookOpen(key, b.vaultSealed); ok {
-		if plain, ok = bookVaultUnpad(plain); ok {
-			var f bookVaultFile
-			if json.Unmarshal(plain, &f) == nil {
-				b.vault = placesOf(f.E)
-			}
-		}
-	}
-	moved := false
-	for id := range b.hide {
-		if p, ok := b.every[id]; ok {
-			delete(b.every, id)
-			b.vault[id] = p
-			moved = true
-		}
-	}
-	clear(b.hide)
-	if moved {
-		b.write()
-	}
-}
-
-// the open vault's key ("" as it shuts). nothing of it is kept on disk
-//
-//export HaloNostrBookVault
-func HaloNostrBookVault(cSecret *C.char) *C.char {
-	s := goSecret(cSecret)
-	defer clear(s)
-	batchVault(s)
-	return C.CString("ok")
 }
 
 // the batches of an identity's contact addresses, and of its device pairs'
