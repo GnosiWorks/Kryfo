@@ -15836,19 +15836,19 @@ abstract class AppLocalizations {
   /// widgets/group_shots_sheet.dart: the title of that list
   ///
   /// In en, this message translates to:
-  /// **'Still to update'**
+  /// **'Not covered yet'**
   String get groupShotsWaitingTitle;
 
   /// widgets/group_shots_sheet.dart: the line under the title
   ///
   /// In en, this message translates to:
-  /// **'Screenshot blocking covers everyone once these people update Kryfo. Tap someone to remove them from the group.'**
+  /// **'Screenshot blocking covers everyone once these people’s devices can block screenshots. Tap someone to remove them from the group.'**
   String get groupShotsWaitingHint;
 
-  /// widgets/group_shots_sheet.dart: under a member's name
+  /// widgets/group_shots_sheet.dart: under a member's name whose Kryfo does not say it blocks screenshots in groups: an older Kryfo, or Kryfo on a computer. names no update and no kind of device, so it stays true for both and tells no one which it is
   ///
   /// In en, this message translates to:
-  /// **'Needs to update Kryfo, or hasn’t been online since'**
+  /// **'Can’t block screenshots on their device yet, or hasn’t been online since'**
   String get groupShotsNeedsUpdate;
 
   /// widgets/group_shots_sheet.dart: under a member you blocked

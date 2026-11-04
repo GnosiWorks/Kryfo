@@ -9963,15 +9963,15 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'Pas encore à jour';
+  String get groupShotsWaitingTitle => 'Pas encore couverts';
 
   @override
   String get groupShotsWaitingHint =>
-      'Le blocage des captures couvre tout le monde dès que ces personnes mettent Kryfo à jour. Touchez quelqu’un pour le retirer du groupe.';
+      'Le blocage des captures couvre tout le monde dès que les appareils de ces personnes peuvent bloquer les captures. Touchez quelqu’un pour le retirer du groupe.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'Doit mettre Kryfo à jour, ou n’a pas été en ligne depuis';
+      'Ne peut pas encore bloquer les captures sur son appareil, ou n’a pas été en ligne depuis';
 
   @override
   String get groupShotsBlockedByYou => 'Bloqué par vous';

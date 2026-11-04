@@ -9362,13 +9362,13 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => '还没更新的人';
+  String get groupShotsWaitingTitle => '尚未覆盖';
 
   @override
-  String get groupShotsWaitingHint => '这些人更新 Kryfo 后，禁止截屏就对所有人生效。点一个人可以把他移出群组。';
+  String get groupShotsWaitingHint => '这些人的设备能禁止截屏后，禁止截屏就覆盖所有人。点按某人可将其移出群组。';
 
   @override
-  String get groupShotsNeedsUpdate => '需要更新 Kryfo，或之后一直没上线';
+  String get groupShotsNeedsUpdate => '其设备暂时无法禁止截屏，或之后一直未上线';
 
   @override
   String get groupShotsBlockedByYou => '已被你屏蔽';
@@ -19528,13 +19528,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get groupShotsWaitingTitle => '還沒更新的人';
+  String get groupShotsWaitingTitle => '尚未涵蓋';
 
   @override
-  String get groupShotsWaitingHint => '這些人更新 Kryfo 後，禁止截圖就對所有人生效。點一個人可以把他移出群組。';
+  String get groupShotsWaitingHint => '這些人的裝置能禁止截圖後，禁止截圖就涵蓋所有人。點按某人可將其移出群組。';
 
   @override
-  String get groupShotsNeedsUpdate => '需要更新 Kryfo，或之後一直沒上線';
+  String get groupShotsNeedsUpdate => '其裝置暫時無法禁止截圖，或之後一直未上線';
 
   @override
   String get groupShotsBlockedByYou => '已被你封鎖';

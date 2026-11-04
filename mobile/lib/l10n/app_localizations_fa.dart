@@ -9876,15 +9876,15 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'هنوز به‌روز نکرده‌اند';
+  String get groupShotsWaitingTitle => 'هنوز شامل نمی‌شوند';
 
   @override
   String get groupShotsWaitingHint =>
-      'وقتی این افراد Kryfo را به‌روز کنند، جلوگیری از اسکرین‌شات همه را در بر می‌گیرد. برای حذف کسی از گروه، روی او بزنید.';
+      'جلوگیری از اسکرین‌شات وقتی همه را می‌گیرد که دستگاه این افراد بتواند جلوی اسکرین‌شات را بگیرد. روی کسی بزنید تا از گروه حذفش کنید.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'باید Kryfo را به‌روز کند، یا از آن موقع آنلاین نشده';
+      'هنوز نمی‌تواند روی دستگاهش جلوی اسکرین‌شات را بگیرد، یا از آن موقع آنلاین نبوده است';
 
   @override
   String get groupShotsBlockedByYou => 'شما مسدودش کرده‌اید';

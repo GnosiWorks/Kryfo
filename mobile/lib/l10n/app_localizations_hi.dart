@@ -9868,15 +9868,15 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'अभी अपडेट बाकी है';
+  String get groupShotsWaitingTitle => 'अभी शामिल नहीं';
 
   @override
   String get groupShotsWaitingHint =>
-      'इन लोगों के Kryfo अपडेट करते ही स्क्रीनशॉट रोकना सब पर लागू होगा। किसी को ग्रुप से हटाने के लिए उस पर टैप करें।';
+      'जब इन लोगों के डिवाइस स्क्रीनशॉट रोक पाएँगे, तब स्क्रीनशॉट रोकना सब पर लागू होगा। किसी को ग्रुप से हटाने के लिए उस पर टैप करें।';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'Kryfo अपडेट करना है, या तब से ऑनलाइन नहीं आए';
+      'अपने डिवाइस पर अभी स्क्रीनशॉट नहीं रोक सकते, या तब से ऑनलाइन नहीं आए';
 
   @override
   String get groupShotsBlockedByYou => 'आपने ब्लॉक किया है';

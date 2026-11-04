@@ -9852,15 +9852,15 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'Chưa cập nhật';
+  String get groupShotsWaitingTitle => 'Chưa được áp dụng';
 
   @override
   String get groupShotsWaitingHint =>
-      'Chặn chụp màn hình sẽ áp dụng cho mọi người khi những người này cập nhật Kryfo. Chạm vào một người để gỡ họ khỏi nhóm.';
+      'Chặn chụp màn hình áp dụng cho mọi người khi thiết bị của những người này chặn được chụp màn hình. Chạm vào một người để xoá họ khỏi nhóm.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'Cần cập nhật Kryfo, hoặc chưa trực tuyến từ lúc đó';
+      'Chưa chặn được chụp màn hình trên thiết bị của họ, hoặc chưa trực tuyến từ lúc đó';
 
   @override
   String get groupShotsBlockedByYou => 'Bạn đã chặn';

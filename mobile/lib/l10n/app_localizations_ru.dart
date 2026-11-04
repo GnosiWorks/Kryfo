@@ -10030,15 +10030,15 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'Ещё не обновили';
+  String get groupShotsWaitingTitle => 'Пока не охвачены';
 
   @override
   String get groupShotsWaitingHint =>
-      'Запрет скриншотов заработает для всех, как только эти люди обновят Kryfo. Нажми на человека, чтобы удалить его из группы.';
+      'Запрет скриншотов распространится на всех, когда устройства этих людей смогут запрещать скриншоты. Нажмите на человека, чтобы удалить его из группы.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'Нужно обновить Kryfo, или не был(а) в сети с тех пор';
+      'Пока не может запрещать скриншоты на своём устройстве или с тех пор не был в сети';
 
   @override
   String get groupShotsBlockedByYou => 'Заблокирован(а) тобой';

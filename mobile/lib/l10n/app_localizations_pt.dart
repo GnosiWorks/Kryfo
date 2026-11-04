@@ -9935,15 +9935,15 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'Ainda sem atualizar';
+  String get groupShotsWaitingTitle => 'Ainda não incluídos';
 
   @override
   String get groupShotsWaitingHint =>
-      'O bloqueio de capturas vale para todos assim que essas pessoas atualizarem o Kryfo. Toque em alguém para remover do grupo.';
+      'O bloqueio de capturas vale para todos assim que os aparelhos dessas pessoas puderem bloquear capturas. Toque em alguém para remover do grupo.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'Precisa atualizar o Kryfo, ou não ficou online desde então';
+      'Ainda não consegue bloquear capturas no aparelho, ou não ficou online desde então';
 
   @override
   String get groupShotsBlockedByYou => 'Bloqueado por você';

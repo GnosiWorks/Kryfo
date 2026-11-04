@@ -9859,15 +9859,15 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'Belum memperbarui';
+  String get groupShotsWaitingTitle => 'Belum tercakup';
 
   @override
   String get groupShotsWaitingHint =>
-      'Blokir tangkapan layar berlaku untuk semua orang setelah mereka memperbarui Kryfo. Ketuk seseorang untuk mengeluarkannya dari grup.';
+      'Blokir tangkapan layar berlaku untuk semua orang setelah perangkat orang-orang ini bisa memblokir tangkapan layar. Ketuk seseorang untuk mengeluarkannya dari grup.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'Perlu memperbarui Kryfo, atau belum online sejak itu';
+      'Belum bisa memblokir tangkapan layar di perangkatnya, atau belum online sejak itu';
 
   @override
   String get groupShotsBlockedByYou => 'Kamu blokir';

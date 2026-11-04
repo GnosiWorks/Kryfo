@@ -12376,17 +12376,17 @@
       }
     }
   },
-  "groupShotsWaitingTitle": "Still to update",
+  "groupShotsWaitingTitle": "Not covered yet",
   "@groupShotsWaitingTitle": {
     "description": "widgets/group_shots_sheet.dart: the title of that list"
   },
-  "groupShotsWaitingHint": "Screenshot blocking covers everyone once these people update Kryfo. Tap someone to remove them from the group.",
+  "groupShotsWaitingHint": "Screenshot blocking covers everyone once these people’s devices can block screenshots. Tap someone to remove them from the group.",
   "@groupShotsWaitingHint": {
     "description": "widgets/group_shots_sheet.dart: the line under the title"
   },
-  "groupShotsNeedsUpdate": "Needs to update Kryfo, or hasn’t been online since",
+  "groupShotsNeedsUpdate": "Can’t block screenshots on their device yet, or hasn’t been online since",
   "@groupShotsNeedsUpdate": {
-    "description": "widgets/group_shots_sheet.dart: under a member's name"
+    "description": "widgets/group_shots_sheet.dart: under a member's name whose Kryfo does not say it blocks screenshots in groups: an older Kryfo, or Kryfo on a computer. names no update and no kind of device, so it stays true for both and tells no one which it is"
   },
   "groupShotsBlockedByYou": "Blocked by you",
   "@groupShotsBlockedByYou": {

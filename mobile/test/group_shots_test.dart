@@ -5,9 +5,11 @@
 // and on for everyone once every member's app can block
 import 'dart:convert';
 
+import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/chat_shots.dart';
 import 'package:kryfo/group_shots.dart';
+import 'package:kryfo/l10n/app_localizations.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/rooms.dart' show roomFrame;
 import 'package:kryfo/typing.dart'
@@ -412,5 +414,36 @@ void main() {
       );
       expect(groupShotsOwesCaps(const GroupShots(at: 9, known: true)), isFalse);
     });
+  });
+
+  // a member without 'gs' runs an older Kryfo or Kryfo on a computer: the
+  // waiting sheet is true of both and says neither
+  test('the waiting sheet names no update and no kind of device', () {
+    for (final loc in AppLocalizations.supportedLocales) {
+      final l = lookupAppLocalizations(loc);
+      for (final s in [
+        l.groupShotsWaitingTitle,
+        l.groupShotsWaitingHint,
+        l.groupShotsNeedsUpdate,
+      ]) {
+        expect(s, isNot(contains('Kryfo')), reason: '$loc: $s');
+      }
+    }
+    final en = lookupAppLocalizations(const Locale('en'));
+    for (final s in [
+      en.groupShotsWaitingTitle,
+      en.groupShotsWaitingHint,
+      en.groupShotsNeedsUpdate,
+    ]) {
+      final lower = s.toLowerCase();
+      for (final w in ['update', 'phone', 'computer', 'android', 'windows']) {
+        expect(lower, isNot(contains(w)), reason: s);
+      }
+    }
+    expect(
+      en.groupShotsNeedsUpdate,
+      'Can’t block screenshots on their device yet, or hasn’t been online '
+      'since',
+    );
   });
 }

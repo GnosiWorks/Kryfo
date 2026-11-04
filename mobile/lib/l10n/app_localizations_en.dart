@@ -9855,15 +9855,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'Still to update';
+  String get groupShotsWaitingTitle => 'Not covered yet';
 
   @override
   String get groupShotsWaitingHint =>
-      'Screenshot blocking covers everyone once these people update Kryfo. Tap someone to remove them from the group.';
+      'Screenshot blocking covers everyone once these people’s devices can block screenshots. Tap someone to remove them from the group.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'Needs to update Kryfo, or hasn’t been online since';
+      'Can’t block screenshots on their device yet, or hasn’t been online since';
 
   @override
   String get groupShotsBlockedByYou => 'Blocked by you';

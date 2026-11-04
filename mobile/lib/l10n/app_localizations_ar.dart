@@ -9996,15 +9996,15 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'لم يحدّثوا بعد';
+  String get groupShotsWaitingTitle => 'لم يشملهم بعد';
 
   @override
   String get groupShotsWaitingHint =>
-      'يشمل منع لقطات الشاشة الجميع حين يحدّث هؤلاء Kryfo. المس أحدهم لإزالته من المجموعة.';
+      'يشمل منع لقطات الشاشة الجميع عندما تستطيع أجهزة هؤلاء الأشخاص منع لقطات الشاشة. اضغط على شخص لإزالته من المجموعة.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'عليه تحديث Kryfo، أو لم يتصل منذ ذلك الحين';
+      'لا يستطيع منع لقطات الشاشة على جهازه بعد، أو لم يتصل منذ ذلك الحين';
 
   @override
   String get groupShotsBlockedByYou => 'حظرته';

@@ -9887,15 +9887,15 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'Henüz güncellemeyenler';
+  String get groupShotsWaitingTitle => 'Henüz kapsanmıyor';
 
   @override
   String get groupShotsWaitingHint =>
-      'Bu kişiler Kryfo\'yu güncellediğinde ekran görüntüsü engeli herkesi kapsar. Gruptan çıkarmak için birine dokun.';
+      'Bu kişilerin cihazları ekran görüntüsünü engelleyebildiğinde ekran görüntüsü engeli herkesi kapsar. Gruptan çıkarmak için birine dokun.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'Kryfo\'yu güncellemesi gerekiyor ya da o zamandan beri çevrim dışı';
+      'Cihazında henüz ekran görüntüsünü engelleyemiyor veya o zamandan beri çevrim içi olmadı';
 
   @override
   String get groupShotsBlockedByYou => 'Senin engellediğin';
