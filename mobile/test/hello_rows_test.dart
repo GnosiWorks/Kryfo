@@ -1068,7 +1068,10 @@ void main() {
       expect(engine.unsubscribed, contains(row.id));
       // their Add came first: the opener is here before mine
       final early = await p.openerTo(row, 'u-early');
-      await app.receiveRelay([(peer: 'f0:${row.id}', cipher: early)]);
+      // not acked: the engine fetches it again once the add listens
+      expect(await app.receiveRelay([(peer: 'f0:${row.id}', cipher: early)]), {
+        0,
+      });
       await _settle();
       expect(firstFails.codes, contains('held'));
       expect(live.people[p.words], isNull);
@@ -1084,4 +1087,32 @@ void main() {
       expect((await inviteOf(db, kMainIdent, row.id))?.usedAt, isNotNull);
     },
   );
+
+  test('a pairing held at a late match keeps its half hour from the match, '
+      'not from the invite\'s making (review L2)', () async {
+    await myMain();
+    final mine = (await app.pairInvite())!;
+    final row = mine.row as InviteRow;
+    // made 25 minutes ago, matched now
+    await db.update(
+      'hellos',
+      {'at': DateTime.now().millisecondsSinceEpoch - 25 * 60 * 1000},
+      where: 'way = ? AND invite_id = ?',
+      whereArgs: ['pair', row.id],
+    );
+    final p = await _Phone.make('pair-code-late', 101);
+    await app.pairHold(mine, pairPeerOf((await p.pairInvite()).link)!);
+    // an upkeep ten minutes on, past the invite's half hour but not the
+    // match's: the invite stays held
+    await app.keepMyInvites(
+      nowMs: DateTime.now().millisecondsSinceEpoch + 10 * 60 * 1000,
+    );
+    expect(await hellosOf('pair', p.keyHex), hasLength(1));
+    expect((await inviteOf(db, kMainIdent, row.id))?.usedAt, isNull);
+    // and goes once the match's half hour is over
+    await app.keepMyInvites(
+      nowMs: DateTime.now().millisecondsSinceEpoch + 31 * 60 * 1000,
+    );
+    expect(await hellosOf('pair', p.keyHex), isEmpty);
+  });
 }

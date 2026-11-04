@@ -111,17 +111,10 @@ extension AppStatePairCodes on AppState {
 
   /// the sharer's invite of a pairing that matched, held for [peer] until
   /// the person adds them: not listened on, so no opener opens there before
-  Future<void> pairHold(PairMine mine, PairPeer peer) async {
+  Future<void> pairHold(PairMine mine, PairPeer peer, {int? nowMs}) async {
     final row = mine.row, inv = peer.invite;
     if (row is! InviteRow || inv is! LsInvite) return;
     final db = await live.open();
-    final was = await db.query(
-      'hellos',
-      columns: ['at'],
-      where: 'ident = ? AND way = ? AND invite_id = ?',
-      whereArgs: [row.ident, kHelloPair, row.id],
-      limit: 1,
-    );
     await db.delete(
       'hellos',
       where: 'ident = ? AND way = ? AND invite_id = ?',
@@ -133,9 +126,9 @@ extension AppStatePairCodes on AppState {
       'peer': _hexOf(inv.identity),
       'invite_id': row.id,
       'fc': _hexOf(inv.firstContact),
-      'at': was.isEmpty
-          ? DateTime.now().millisecondsSinceEpoch
-          : was.first['at'] as int,
+      // the hold counts from the match, not from the invite's making: a
+      // late match keeps its half hour for the add
+      'at': nowMs ?? DateTime.now().millisecondsSinceEpoch,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     // one listened on anyway (an older build's upkeep) is let go
     await engine.unsubscribeFcKey(row.ident, row.id);

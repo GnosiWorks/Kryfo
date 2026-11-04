@@ -286,7 +286,7 @@ extension AppStateInvites on AppState {
     );
     if (held.isNotEmpty) {
       firstFails.note('held');
-      return;
+      throw const _FirstWaits();
     }
     // my one-time invite inside a hello: only the owner it went to opens
     // on it, anyone else is dropped before decrypt and spends nothing
