@@ -720,8 +720,11 @@ class HaloEngine {
 
   // listening on a device pair (device_receive.dart): [arg] "x/their/my"
   // for its opener address, "x/their/my.seed" for the seeded pair
-  void deviceListenBg(int ident, String arg) =>
-      _background(_subscribeOnIsolate(ident, arg), 'device listen');
+  // a device pair is never the dev chat's: a pinned key is not listened on
+  void deviceListenBg(int ident, String arg) {
+    if (devGate.names(xPub: arg.split('/').first)) return;
+    _background(_subscribeOnIsolate(ident, arg), 'device listen');
+  }
 
   // no more listening on a device pair, by its tag; its files go
   void deviceUnlistenBg(int ident, String arg) => _background(
