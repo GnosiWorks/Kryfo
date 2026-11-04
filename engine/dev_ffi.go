@@ -247,6 +247,8 @@ func (d *devState) call(op string, a *devArgs, out *devOut) error {
 			return err
 		}
 		return d.accept(id, a.List, devices.FromInvite(), out)
+	case "copy_list":
+		return d.copyList(a, out)
 	case "fanout":
 		return d.fanout(a, out)
 	case "quiet":
@@ -380,6 +382,24 @@ func (d *devState) accept(id devices.Key, wire []byte, from devices.From, out *d
 	out.Outcome, out.Claimants = outcomeName(o), keysOut(claimants)
 	out.Rows = s.rows()
 	return nil
+}
+
+// a contact's list my phone held, from the history copy it sent this linked
+// device: a first list only (devices.FromCopy), never on the phone itself,
+// and only for a contact of the identity the device serves
+func (d *devState) copyList(a *devArgs, out *devOut) error {
+	mine, ok := d.idents[a.Ident]
+	if !ok || d.mine[mine].key == mine {
+		return devices.ErrSource
+	}
+	id, err := a.identity()
+	if err != nil {
+		return err
+	}
+	if i, ok := d.peers[id]; !ok || i != a.Ident {
+		return devices.ErrUnknown
+	}
+	return d.accept(id, a.List, devices.FromCopy(), out)
 }
 
 func (d *devState) fanout(a *devArgs, out *devOut) error {

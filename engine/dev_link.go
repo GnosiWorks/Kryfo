@@ -853,6 +853,8 @@ type linkOut struct {
 	Once      [][]byte   `json:"once,omitempty"`
 	Made      int64      `json:"made,omitempty"`
 	Stream    []byte     `json:"stream,omitempty"`
+	Bind      []byte     `json:"bind,omitempty"`
+	Onion     string     `json:"onion,omitempty"`
 	Want      int        `json:"want,omitempty"`
 	Rows      []devOp    `json:"rows,omitempty"`
 	Gone      []devEntry `json:"gone,omitempty"`
@@ -1119,6 +1121,10 @@ func (r *linkRun) takeLocked(out *linkOut) error {
 	case r.j != nil && r.st == lsDone:
 		out.Stream = append([]byte(nil), r.linked.StreamKey[:]...)
 		out.Identity = hexKey(r.linked.Identity)
+		// the history comes from the phone's onion, under this link's
+		// transcript
+		out.Bind = append([]byte(nil), r.linked.Bind[:]...)
+		out.Onion = r.place.Onion
 	case r.p != nil && r.st == lsBundles:
 		e := entryOut(r.entry)
 		out.Device = &e
@@ -1126,6 +1132,7 @@ func (r *linkRun) takeLocked(out *linkOut) error {
 		out.First, out.Last, out.Once = r.got.First, r.got.Last, r.got.Once
 		out.Made = r.got.Made.UnixMilli()
 		out.Stream = append([]byte(nil), r.stream[:]...)
+		out.Bind = append([]byte(nil), r.bind[:]...)
 		// the run stays until dart kept the device ("kept") or not ("end")
 		r.st = lsKeeping
 		return errStay

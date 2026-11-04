@@ -30,6 +30,7 @@ func (e *RollbackError) Is(target error) bool { return target == ErrRollback }
 type From struct {
 	invite bool
 	link   bool
+	copy   bool
 	remote Key
 }
 
@@ -40,6 +41,12 @@ func FromInvite() From { return From{invite: true} }
 // on the channel the person confirmed. only an own list takes it (Own.Set);
 // a contact's list or bundle never does. only the link layer builds one.
 func FromLink() From { return From{link: true} }
+
+// FromCopy is a contact's list my own phone held, carried in the history
+// copy it sent this linked device under the link's stream key. it gives a
+// first list only, never moves one held, and never carries a bundle or an
+// own list. only the engine's copy call builds one.
+func FromCopy() From { return From{copy: true} }
 
 // FromSession is what came inside a session whose remote identity is
 // remote, as ks_decrypt_* returned it. only the session layer builds one;
@@ -128,6 +135,20 @@ func (k *known) accept(l *List, from From) (*List, Outcome, error) {
 	if from.link {
 		return nil, 0, ErrSource
 	}
+	if from.copy {
+		// the phone's word stands in for the contact's session only until
+		// one speaks: a first list, or the very one held
+		switch {
+		case answering:
+			return nil, 0, ErrSource
+		case k.cur == nil:
+			k.cur, k.fromInvite = l, false
+			return l, First, nil
+		case l.Version == k.cur.Version:
+			return k.cur, Same, nil
+		}
+		return nil, 0, ErrSource
+	}
 	if from.invite {
 		// an invite list names the device that answers its first
 		// contacts, and counts only until the session sends one
@@ -171,7 +192,7 @@ func (k *known) accept(l *List, from From) (*List, Outcome, error) {
 // for the phone. it comes from the identity's own session or the device's,
 // never one device handing over another's, so an old bundle is not replayed
 func (k *known) takeBundle(p []byte, from From) (*Block, error) {
-	if from.invite || from.link || !k.vouches(from.remote) {
+	if from.invite || from.link || from.copy || !k.vouches(from.remote) {
 		return nil, ErrSource
 	}
 	b, err := ParseBundle(p, k.identity)
