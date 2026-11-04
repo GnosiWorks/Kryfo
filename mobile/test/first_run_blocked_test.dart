@@ -322,9 +322,7 @@ void main() {
 
   // tor alone not getting through: let kryfo find a bridge first, filled,
   // and fast after it, quiet, with what this network sees on it
-  testWidgets('tor seems blocked: the bridge way first, fast last', (
-    t,
-  ) async {
+  testWidgets('tor seems blocked: the bridge way first, fast last', (t) async {
     phone(t);
     appState.bridgeSetupForTest = const BridgeSetup(
       choice: BridgeChoice.direct,
