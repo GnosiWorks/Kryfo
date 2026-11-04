@@ -9829,7 +9829,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get groupShotsStartsWhenAll =>
-      'यहाँ सबके Kryfo अपडेट करने का इंतज़ार है';
+      'इंतज़ार है कि यहाँ सब अपने डिवाइस पर स्क्रीनशॉट रोक सकें';
 
   @override
   String get groupShotsOnForAll => 'यहाँ सबके लिए चालू';
@@ -9842,7 +9842,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'यहाँ सबके Kryfo अपडेट करने का इंतज़ार है। इसे सिर्फ़ एडमिन बदल सकते हैं';
+      'इंतज़ार है कि यहाँ सब अपने डिवाइस पर स्क्रीनशॉट रोक सकें। इसे सिर्फ़ एडमिन बदल सकते हैं';
 
   @override
   String get groupShotsOnAdminOnly =>
@@ -9883,11 +9883,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'आपने स्क्रीनशॉट रोकना चालू किया। यहाँ सबके Kryfo अपडेट करने के बाद यह सब पर लागू होगा।';
+      'आपने स्क्रीनशॉट रोकना चालू किया। जब यहाँ सब अपने डिवाइस पर स्क्रीनशॉट रोक सकेंगे, तब यह सब पर लागू होगा।';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name ने स्क्रीनशॉट रोकना चालू किया। यहाँ सबके Kryfo अपडेट करने के बाद यह सब पर लागू होगा।';
+    return '$name ने स्क्रीनशॉट रोकना चालू किया। जब यहाँ सब अपने डिवाइस पर स्क्रीनशॉट रोक सकेंगे, तब यह सब पर लागू होगा।';
   }
 
   @override
@@ -9900,7 +9900,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get groupShotsPaused =>
-      'यहाँ कोई अभी स्क्रीनशॉट नहीं रोक सकता। उनके Kryfo अपडेट करते ही यह फिर सब पर लागू होगा।';
+      'यहाँ कोई अभी अपने डिवाइस पर स्क्रीनशॉट नहीं रोक सकता। जब वे रोक सकेंगे, यह फिर सब पर लागू होगा।';
 
   @override
   String get groupShotsCantYet => 'अभी स्क्रीनशॉट नहीं रोक सकते';
@@ -9910,7 +9910,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'जब तक वे Kryfo अपडेट नहीं करते, स्क्रीनशॉट रोकना यहाँ सब पर लागू नहीं होगा।';
+      'जब तक ये लोग अपने डिवाइस पर स्क्रीनशॉट नहीं रोक सकते, तब तक स्क्रीनशॉट रोकना यहाँ सब पर लागू नहीं होगा।';
 
   @override
   String get groupShotsLeaveStays => 'स्क्रीनशॉट रोकना जैसा है वैसा ही रहेगा।';

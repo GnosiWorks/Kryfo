@@ -9953,7 +9953,8 @@ class AppLocalizationsAr extends AppLocalizations {
       'يوقف هنا نسخ رسائل بعضكم وإعادة توجيهها وحفظها. ويمنع Kryfo لأندرويد أيضًا لقطات الشاشة وتسجيلها.';
 
   @override
-  String get groupShotsStartsWhenAll => 'بانتظار أن يحدّث الجميع هنا Kryfo';
+  String get groupShotsStartsWhenAll =>
+      'بانتظار أن يستطيع الجميع هنا منع لقطات الشاشة على أجهزتهم';
 
   @override
   String get groupShotsOnForAll => 'مفعّل للجميع هنا';
@@ -9966,7 +9967,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'بانتظار أن يحدّث الجميع هنا Kryfo. المشرف وحده يستطيع تغيير هذا';
+      'بانتظار أن يستطيع الجميع هنا منع لقطات الشاشة على أجهزتهم. المشرف وحده يستطيع تغيير هذا';
 
   @override
   String get groupShotsOnAdminOnly =>
@@ -10011,11 +10012,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'فعّلت منع لقطات الشاشة. سيشمل الجميع حين يحدّث كل من هنا Kryfo.';
+      'فعّلت منع لقطات الشاشة. يشمل الجميع عندما يستطيع كل من هنا منع لقطات الشاشة على جهازه.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return 'فعّل ⁨$name⁩ منع لقطات الشاشة. سيشمل الجميع حين يحدّث كل من هنا Kryfo.';
+    return 'فعّل $name منع لقطات الشاشة. يشمل الجميع عندما يستطيع كل من هنا منع لقطات الشاشة على جهازه.';
   }
 
   @override
@@ -10028,7 +10029,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get groupShotsPaused =>
-      'أحد الموجودين هنا لا يستطيع منع لقطات الشاشة بعد. سيشمل الجميع مجددًا حين يحدّث Kryfo.';
+      'أحد الموجودين هنا لا يستطيع منع لقطات الشاشة على جهازه بعد. سيشمل الجميع مجددًا عندما يستطيع ذلك.';
 
   @override
   String get groupShotsCantYet => 'لا يستطيع منع لقطات الشاشة بعد';
@@ -10038,7 +10039,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'لن يشمل منع لقطات الشاشة الجميع هنا حتى يحدّث Kryfo.';
+      'لن يشمل منع لقطات الشاشة الجميع هنا حتى يستطيعوا منعها على أجهزتهم.';
 
   @override
   String get groupShotsLeaveStays => 'يبقى منع لقطات الشاشة كما هو.';

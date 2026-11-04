@@ -9925,7 +9925,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get groupShotsStartsWhenAll =>
-      'Wartet, bis alle hier Kryfo aktualisiert haben';
+      'Wartet, bis alle hier auf ihrem Gerät Screenshots blockieren können';
 
   @override
   String get groupShotsOnForAll => 'An für alle hier';
@@ -9938,7 +9938,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'Wartet, bis alle hier Kryfo aktualisiert haben. Nur der Admin kann das ändern';
+      'Wartet, bis alle hier auf ihrem Gerät Screenshots blockieren können. Nur der Admin kann das ändern';
 
   @override
   String get groupShotsOnAdminOnly =>
@@ -9979,11 +9979,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'Du hast das Blockieren von Screenshots eingeschaltet. Es gilt für alle, sobald alle hier Kryfo aktualisiert haben.';
+      'Du hast das Blockieren von Screenshots eingeschaltet. Es gilt für alle, sobald alle hier auf ihrem Gerät Screenshots blockieren können.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name hat das Blockieren von Screenshots eingeschaltet. Es gilt für alle, sobald alle hier Kryfo aktualisiert haben.';
+    return '$name hat das Blockieren von Screenshots eingeschaltet. Es gilt für alle, sobald alle hier auf ihrem Gerät Screenshots blockieren können.';
   }
 
   @override
@@ -9996,7 +9996,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get groupShotsPaused =>
-      'Jemand hier kann Screenshots noch nicht blockieren. Es gilt wieder für alle, sobald die Person Kryfo aktualisiert.';
+      'Jemand hier kann auf dem eigenen Gerät noch keine Screenshots blockieren. Es gilt wieder für alle, sobald das geht.';
 
   @override
   String get groupShotsCantYet => 'Kann Screenshots noch nicht blockieren';
@@ -10006,7 +10006,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'Das Blockieren von Screenshots gilt erst wieder für alle hier, wenn die Person Kryfo aktualisiert.';
+      'Das Blockieren von Screenshots gilt nicht für alle hier, bis sie auf ihrem Gerät Screenshots blockieren können.';
 
   @override
   String get groupShotsLeaveStays =>

@@ -12338,7 +12338,7 @@
   "@groupShotsBlocksAllDesk": {
     "description": "groupShotsBlocksAll as a computer shows it (linux and windows): a computer cannot block screenshots, so only the copying, forwarding and saving limits are its own"
   },
-  "groupShotsStartsWhenAll": "Waiting for everyone here to update Kryfo",
+  "groupShotsStartsWhenAll": "Waiting until everyone here can block screenshots on their device",
   "@groupShotsStartsWhenAll": {
     "description": "screens/group_info_screen.dart: the admin's switch, on while someone's app cannot block yet"
   },
@@ -12354,7 +12354,7 @@
   "@groupShotsOffAdminOnly": {
     "description": "screens/group_info_screen.dart: a member's read-only row, off"
   },
-  "groupShotsWaitAdminOnly": "Waiting for everyone here to update Kryfo. Only the admin can change this",
+  "groupShotsWaitAdminOnly": "Waiting until everyone here can block screenshots on their device. Only the admin can change this",
   "@groupShotsWaitAdminOnly": {
     "description": "screens/group_info_screen.dart: a member's read-only row, on but waiting on someone"
   },
@@ -12392,11 +12392,11 @@
   "@groupShotsBlockedByYou": {
     "description": "widgets/group_shots_sheet.dart: under a member you blocked"
   },
-  "groupShotsYouTurnedOnWait": "You turned on screenshot blocking. It covers everyone once all here have updated Kryfo.",
+  "groupShotsYouTurnedOnWait": "You turned on screenshot blocking. It covers everyone once all here can block screenshots on their device.",
   "@groupShotsYouTurnedOnWait": {
     "description": "widgets/shots_line.dart: the line in the group where you turned it on and someone's app cannot block yet"
   },
-  "groupShotsTheyTurnedOnWait": "{name} turned on screenshot blocking. It covers everyone once all here have updated Kryfo.",
+  "groupShotsTheyTurnedOnWait": "{name} turned on screenshot blocking. It covers everyone once all here can block screenshots on their device.",
   "@groupShotsTheyTurnedOnWait": {
     "description": "widgets/shots_line.dart: the same, turned on by the admin",
     "placeholders": {
@@ -12413,7 +12413,7 @@
   "@groupShotsStartedDesk": {
     "description": "groupShotsStarted as a computer shows it (linux and windows): a computer cannot block screenshots, so only the copying, forwarding and saving limits are its own"
   },
-  "groupShotsPaused": "Someone here can’t block screenshots yet. It covers everyone again once they update Kryfo.",
+  "groupShotsPaused": "Someone here can’t block screenshots on their device yet. It covers everyone again once they can.",
   "@groupShotsPaused": {
     "description": "widgets/shots_line.dart: someone whose app cannot block came in or went back to an older app"
   },
@@ -12425,7 +12425,7 @@
   "@groupShotsAddTitle": {
     "description": "screens/group_info_screen.dart: confirm title when adding such a person"
   },
-  "groupShotsAddPauses": "Screenshot blocking won’t cover everyone here until they update Kryfo.",
+  "groupShotsAddPauses": "Screenshot blocking won’t cover everyone here until they can block screenshots on their device.",
   "@groupShotsAddPauses": {
     "description": "screens/group_info_screen.dart: confirm line when adding such a person"
   },

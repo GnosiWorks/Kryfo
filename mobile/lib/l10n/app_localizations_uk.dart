@@ -9978,7 +9978,8 @@ class AppLocalizationsUk extends AppLocalizations {
       'Забороняє тут копіювати, пересилати й зберігати повідомлення одне одного. Kryfo для Android також блокує знімки й запис екрана.';
 
   @override
-  String get groupShotsStartsWhenAll => 'Чекає, поки всі тут оновлять Kryfo';
+  String get groupShotsStartsWhenAll =>
+      'Чекаємо, доки всі тут зможуть блокувати знімки екрана на своєму пристрої';
 
   @override
   String get groupShotsOnForAll => 'Увімкнено для всіх тут';
@@ -9991,7 +9992,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'Чекає, поки всі тут оновлять Kryfo. Змінити це може лише адмін';
+      'Чекаємо, доки всі тут зможуть блокувати знімки екрана на своєму пристрої. Змінити це може лише адмін';
 
   @override
   String get groupShotsOnAdminOnly =>
@@ -10034,11 +10035,11 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'Ти увімкнув(-ла) блокування знімків екрана. Воно запрацює для всіх, коли всі тут оновлять Kryfo.';
+      'Ви ввімкнули блокування знімків екрана. Воно діятиме для всіх, коли всі тут зможуть блокувати знімки на своєму пристрої.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name увімкнув(-ла) блокування знімків екрана. Воно запрацює для всіх, коли всі тут оновлять Kryfo.';
+    return '$name вмикає блокування знімків екрана. Воно діятиме для всіх, коли всі тут зможуть блокувати знімки на своєму пристрої.';
   }
 
   @override
@@ -10051,7 +10052,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get groupShotsPaused =>
-      'Хтось тут поки не може блокувати знімки екрана. Блокування знову буде для всіх, коли ця людина оновить Kryfo.';
+      'Хтось тут поки не може блокувати знімки екрана на своєму пристрої. Блокування знову діятиме для всіх, коли це стане можливо.';
 
   @override
   String get groupShotsCantYet => 'Поки не може блокувати знімки екрана';
@@ -10061,7 +10062,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'Блокування знімків екрана не діятиме для всіх тут, доки ця людина не оновить Kryfo.';
+      'Блокування знімків екрана не діятиме для всіх тут, доки вони не зможуть блокувати знімки на своєму пристрої.';
 
   @override
   String get groupShotsLeaveStays =>

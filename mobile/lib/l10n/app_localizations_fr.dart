@@ -9923,7 +9923,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get groupShotsStartsWhenAll =>
-      'En attente que tout le monde ici mette Kryfo à jour';
+      'En attente que tout le monde ici puisse bloquer les captures sur son appareil';
 
   @override
   String get groupShotsOnForAll => 'Activé pour tout le monde ici';
@@ -9937,7 +9937,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'En attente que tout le monde ici mette Kryfo à jour. Seul l’admin peut changer cela';
+      'En attente que tout le monde ici puisse bloquer les captures sur son appareil. Seul l’admin peut changer cela';
 
   @override
   String get groupShotsOnAdminOnly =>
@@ -9978,11 +9978,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'Vous avez activé le blocage des captures. Il couvrira tout le monde dès que chacun ici aura mis Kryfo à jour.';
+      'Vous avez activé le blocage des captures. Il couvre tout le monde dès que chacun ici peut bloquer les captures sur son appareil.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name a activé le blocage des captures. Il couvrira tout le monde dès que chacun ici aura mis Kryfo à jour.';
+    return '$name a activé le blocage des captures. Il couvre tout le monde dès que chacun ici peut bloquer les captures sur son appareil.';
   }
 
   @override
@@ -9995,7 +9995,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get groupShotsPaused =>
-      'Quelqu’un ici ne peut pas encore bloquer les captures. Le blocage couvrira de nouveau tout le monde dès sa mise à jour de Kryfo.';
+      'Quelqu’un ici ne peut pas encore bloquer les captures sur son appareil. Le blocage couvre de nouveau tout le monde dès que c’est possible.';
 
   @override
   String get groupShotsCantYet => 'Ne peut pas encore bloquer les captures';
@@ -10005,7 +10005,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'Le blocage des captures ne couvrira pas tout le monde ici tant que cette personne n’aura pas mis Kryfo à jour.';
+      'Le blocage des captures ne couvrira pas tout le monde ici tant que ces personnes ne pourront pas bloquer les captures sur leur appareil.';
 
   @override
   String get groupShotsLeaveStays => 'Le blocage des captures reste tel quel.';

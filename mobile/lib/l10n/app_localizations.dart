@@ -15788,7 +15788,7 @@ abstract class AppLocalizations {
   /// screens/group_info_screen.dart: the admin's switch, on while someone's app cannot block yet
   ///
   /// In en, this message translates to:
-  /// **'Waiting for everyone here to update Kryfo'**
+  /// **'Waiting until everyone here can block screenshots on their device'**
   String get groupShotsStartsWhenAll;
 
   /// screens/group_info_screen.dart: the admin's switch, on for every member
@@ -15812,7 +15812,7 @@ abstract class AppLocalizations {
   /// screens/group_info_screen.dart: a member's read-only row, on but waiting on someone
   ///
   /// In en, this message translates to:
-  /// **'Waiting for everyone here to update Kryfo. Only the admin can change this'**
+  /// **'Waiting until everyone here can block screenshots on their device. Only the admin can change this'**
   String get groupShotsWaitAdminOnly;
 
   /// screens/group_info_screen.dart: a member's read-only row, on for every member
@@ -15860,13 +15860,13 @@ abstract class AppLocalizations {
   /// widgets/shots_line.dart: the line in the group where you turned it on and someone's app cannot block yet
   ///
   /// In en, this message translates to:
-  /// **'You turned on screenshot blocking. It covers everyone once all here have updated Kryfo.'**
+  /// **'You turned on screenshot blocking. It covers everyone once all here can block screenshots on their device.'**
   String get groupShotsYouTurnedOnWait;
 
   /// widgets/shots_line.dart: the same, turned on by the admin
   ///
   /// In en, this message translates to:
-  /// **'{name} turned on screenshot blocking. It covers everyone once all here have updated Kryfo.'**
+  /// **'{name} turned on screenshot blocking. It covers everyone once all here can block screenshots on their device.'**
   String groupShotsTheyTurnedOnWait(String name);
 
   /// widgets/shots_line.dart: every member's app can block now
@@ -15884,7 +15884,7 @@ abstract class AppLocalizations {
   /// widgets/shots_line.dart: someone whose app cannot block came in or went back to an older app
   ///
   /// In en, this message translates to:
-  /// **'Someone here can’t block screenshots yet. It covers everyone again once they update Kryfo.'**
+  /// **'Someone here can’t block screenshots on their device yet. It covers everyone again once they can.'**
   String get groupShotsPaused;
 
   /// screens/group_info_screen.dart: in the add sheet, under someone whose app cannot block in groups yet
@@ -15902,7 +15902,7 @@ abstract class AppLocalizations {
   /// screens/group_info_screen.dart: confirm line when adding such a person
   ///
   /// In en, this message translates to:
-  /// **'Screenshot blocking won’t cover everyone here until they update Kryfo.'**
+  /// **'Screenshot blocking won’t cover everyone here until they can block screenshots on their device.'**
   String get groupShotsAddPauses;
 
   /// screens/group_info_screen.dart: extra line in the admin's leave confirm while blocking is on

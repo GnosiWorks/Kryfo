@@ -9820,7 +9820,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get groupShotsStartsWhenAll =>
-      'Menunggu semua orang di sini memperbarui Kryfo';
+      'Menunggu semua orang di sini bisa memblokir tangkapan layar di perangkatnya';
 
   @override
   String get groupShotsOnForAll => 'Menyala untuk semua orang di sini';
@@ -9834,7 +9834,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'Menunggu semua orang di sini memperbarui Kryfo. Hanya admin yang bisa mengubahnya';
+      'Menunggu semua orang di sini bisa memblokir tangkapan layar di perangkatnya. Hanya admin yang bisa mengubahnya';
 
   @override
   String get groupShotsOnAdminOnly =>
@@ -9874,11 +9874,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'Kamu menyalakan blokir tangkapan layar. Ini berlaku untuk semua orang setelah semua di sini memperbarui Kryfo.';
+      'Kamu menyalakan blokir tangkapan layar. Ini berlaku untuk semua orang setelah semua di sini bisa memblokir tangkapan layar di perangkatnya.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name menyalakan blokir tangkapan layar. Ini berlaku untuk semua orang setelah semua di sini memperbarui Kryfo.';
+    return '$name menyalakan blokir tangkapan layar. Ini berlaku untuk semua orang setelah semua di sini bisa memblokir tangkapan layar di perangkatnya.';
   }
 
   @override
@@ -9891,7 +9891,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get groupShotsPaused =>
-      'Seseorang di sini belum bisa memblokir tangkapan layar. Ini berlaku lagi untuk semua orang setelah dia memperbarui Kryfo.';
+      'Seseorang di sini belum bisa memblokir tangkapan layar di perangkatnya. Ini berlaku lagi untuk semua orang setelah dia bisa.';
 
   @override
   String get groupShotsCantYet => 'Belum bisa memblokir tangkapan layar';
@@ -9901,7 +9901,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'Blokir tangkapan layar tidak berlaku untuk semua orang di sini sampai dia memperbarui Kryfo.';
+      'Blokir tangkapan layar belum berlaku untuk semua orang di sini sampai mereka bisa memblokirnya di perangkatnya.';
 
   @override
   String get groupShotsLeaveStays =>

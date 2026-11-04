@@ -9813,7 +9813,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupShotsStartsWhenAll =>
-      'Đang chờ mọi người ở đây cập nhật Kryfo';
+      'Đang chờ mọi người ở đây chặn được chụp màn hình trên thiết bị của họ';
 
   @override
   String get groupShotsOnForAll => 'Đã bật cho mọi người ở đây';
@@ -9827,7 +9827,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'Đang chờ mọi người ở đây cập nhật Kryfo. Chỉ quản trị viên mới đổi được';
+      'Đang chờ mọi người ở đây chặn được chụp màn hình trên thiết bị của họ. Chỉ quản trị viên mới đổi được';
 
   @override
   String get groupShotsOnAdminOnly =>
@@ -9867,11 +9867,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'Bạn đã bật chặn chụp màn hình. Nó sẽ áp dụng cho mọi người khi tất cả ở đây đã cập nhật Kryfo.';
+      'Bạn đã bật chặn chụp màn hình. Nó áp dụng cho mọi người khi tất cả ở đây chặn được chụp màn hình trên thiết bị của họ.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name đã bật chặn chụp màn hình. Nó sẽ áp dụng cho mọi người khi tất cả ở đây đã cập nhật Kryfo.';
+    return '$name đã bật chặn chụp màn hình. Nó áp dụng cho mọi người khi tất cả ở đây chặn được chụp màn hình trên thiết bị của họ.';
   }
 
   @override
@@ -9884,7 +9884,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupShotsPaused =>
-      'Có người ở đây chưa chặn chụp màn hình được. Nó sẽ lại áp dụng cho mọi người khi họ cập nhật Kryfo.';
+      'Có người ở đây chưa chặn được chụp màn hình trên thiết bị của họ. Nó sẽ áp dụng lại cho mọi người khi họ chặn được.';
 
   @override
   String get groupShotsCantYet => 'Chưa chặn chụp màn hình được';
@@ -9894,7 +9894,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'Chặn chụp màn hình sẽ không áp dụng cho mọi người ở đây cho đến khi họ cập nhật Kryfo.';
+      'Chặn chụp màn hình sẽ chưa áp dụng cho mọi người ở đây cho đến khi họ chặn được trên thiết bị của mình.';
 
   @override
   String get groupShotsLeaveStays => 'Chặn chụp màn hình vẫn giữ nguyên.';

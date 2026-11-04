@@ -9836,7 +9836,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get groupShotsStartsWhenAll =>
-      'در انتظار به‌روزرسانی Kryfo توسط همه‌ی اعضا';
+      'در انتظار اینکه همه‌ی اعضا بتوانند روی دستگاهشان جلوی اسکرین‌شات را بگیرند';
 
   @override
   String get groupShotsOnForAll => 'برای همه‌ی اعضا روشن است';
@@ -9850,7 +9850,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'در انتظار به‌روزرسانی Kryfo توسط همه‌ی اعضا. فقط مدیر می‌تواند این را تغییر دهد';
+      'در انتظار اینکه همه‌ی اعضا بتوانند روی دستگاهشان جلوی اسکرین‌شات را بگیرند. فقط مدیر می‌تواند این را تغییر دهد';
 
   @override
   String get groupShotsOnAdminOnly =>
@@ -9891,11 +9891,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'شما جلوگیری از اسکرین‌شات را روشن کردید. وقتی همه‌ی اعضا Kryfo را به‌روز کنند، همه را در بر می‌گیرد.';
+      'جلوگیری از اسکرین‌شات را روشن کردید. وقتی همه‌ی اعضا بتوانند روی دستگاهشان جلوی اسکرین‌شات را بگیرند، همه را در بر می‌گیرد.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '⁨$name⁩ جلوگیری از اسکرین‌شات را روشن کرد. وقتی همه‌ی اعضا Kryfo را به‌روز کنند، همه را در بر می‌گیرد.';
+    return '$name جلوگیری از اسکرین‌شات را روشن کرد. وقتی همه‌ی اعضا بتوانند روی دستگاهشان جلوی اسکرین‌شات را بگیرند، همه را در بر می‌گیرد.';
   }
 
   @override
@@ -9908,7 +9908,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get groupShotsPaused =>
-      'یکی از اعضا هنوز نمی‌تواند جلوی اسکرین‌شات را بگیرد. وقتی Kryfo را به‌روز کند، دوباره همه را در بر می‌گیرد.';
+      'یکی از اعضا هنوز نمی‌تواند روی دستگاهش جلوی اسکرین‌شات را بگیرد. وقتی بتواند، دوباره همه را در بر می‌گیرد.';
 
   @override
   String get groupShotsCantYet => 'هنوز نمی‌تواند جلوی اسکرین‌شات را بگیرد';
@@ -9918,7 +9918,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'تا وقتی Kryfo را به‌روز نکند، جلوگیری از اسکرین‌شات همه‌ی اعضا را در بر نمی‌گیرد.';
+      'جلوگیری از اسکرین‌شات همه‌ی اعضا را در بر نمی‌گیرد تا وقتی که بتوانند روی دستگاهشان جلوی آن را بگیرند.';
 
   @override
   String get groupShotsLeaveStays =>

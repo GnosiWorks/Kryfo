@@ -9816,7 +9816,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupShotsStartsWhenAll =>
-      'Waiting for everyone here to update Kryfo';
+      'Waiting until everyone here can block screenshots on their device';
 
   @override
   String get groupShotsOnForAll => 'On for everyone here';
@@ -9829,7 +9829,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'Waiting for everyone here to update Kryfo. Only the admin can change this';
+      'Waiting until everyone here can block screenshots on their device. Only the admin can change this';
 
   @override
   String get groupShotsOnAdminOnly =>
@@ -9870,11 +9870,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'You turned on screenshot blocking. It covers everyone once all here have updated Kryfo.';
+      'You turned on screenshot blocking. It covers everyone once all here can block screenshots on their device.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name turned on screenshot blocking. It covers everyone once all here have updated Kryfo.';
+    return '$name turned on screenshot blocking. It covers everyone once all here can block screenshots on their device.';
   }
 
   @override
@@ -9887,7 +9887,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupShotsPaused =>
-      'Someone here can’t block screenshots yet. It covers everyone again once they update Kryfo.';
+      'Someone here can’t block screenshots on their device yet. It covers everyone again once they can.';
 
   @override
   String get groupShotsCantYet => 'Can’t block screenshots yet';
@@ -9897,7 +9897,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'Screenshot blocking won’t cover everyone here until they update Kryfo.';
+      'Screenshot blocking won’t cover everyone here until they can block screenshots on their device.';
 
   @override
   String get groupShotsLeaveStays => 'Screenshot blocking stays as it is.';

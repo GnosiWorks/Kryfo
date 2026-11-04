@@ -9902,7 +9902,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get groupShotsStartsWhenAll =>
-      'In attesa che tutti qui aggiornino Kryfo';
+      'In attesa che tutti qui possano bloccare gli screenshot sul proprio dispositivo';
 
   @override
   String get groupShotsOnForAll => 'Attivo per tutti qui';
@@ -9916,7 +9916,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'In attesa che tutti qui aggiornino Kryfo. Solo l\'admin può cambiarlo';
+      'In attesa che tutti qui possano bloccare gli screenshot sul proprio dispositivo. Solo l\'admin può cambiarlo';
 
   @override
   String get groupShotsOnAdminOnly =>
@@ -9957,11 +9957,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'Hai attivato il blocco degli screenshot. Varrà per tutti appena tutti qui avranno aggiornato Kryfo.';
+      'Hai attivato il blocco degli screenshot. Copre tutti quando tutti qui potranno bloccare gli screenshot sul proprio dispositivo.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name ha attivato il blocco degli screenshot. Varrà per tutti appena tutti qui avranno aggiornato Kryfo.';
+    return '$name ha attivato il blocco degli screenshot. Copre tutti quando tutti qui potranno bloccare gli screenshot sul proprio dispositivo.';
   }
 
   @override
@@ -9974,7 +9974,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get groupShotsPaused =>
-      'Qualcuno qui non può ancora bloccare gli screenshot. Varrà di nuovo per tutti appena aggiorna Kryfo.';
+      'Qualcuno qui non può ancora bloccare gli screenshot sul suo dispositivo. Copre di nuovo tutti quando potrà farlo.';
 
   @override
   String get groupShotsCantYet => 'Non può ancora bloccare gli screenshot';
@@ -9984,7 +9984,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'Il blocco degli screenshot non varrà per tutti qui finché non aggiorna Kryfo.';
+      'Il blocco degli screenshot non coprirà tutti qui finché non potranno bloccare gli screenshot sul proprio dispositivo.';
 
   @override
   String get groupShotsLeaveStays => 'Il blocco degli screenshot resta com\'è.';

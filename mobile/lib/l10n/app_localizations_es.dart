@@ -9895,7 +9895,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get groupShotsStartsWhenAll =>
-      'Esperando a que todos aquí actualicen Kryfo';
+      'Esperando a que todos aquí puedan bloquear capturas en su dispositivo';
 
   @override
   String get groupShotsOnForAll => 'Activado para todos aquí';
@@ -9909,7 +9909,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'Esperando a que todos aquí actualicen Kryfo. Solo el admin puede cambiarlo';
+      'Esperando a que todos aquí puedan bloquear capturas en su dispositivo. Solo el admin puede cambiarlo';
 
   @override
   String get groupShotsOnAdminOnly =>
@@ -9950,11 +9950,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'Activaste el bloqueo de capturas. Cubrirá a todos en cuanto todos aquí hayan actualizado Kryfo.';
+      'Activaste el bloqueo de capturas. Cubre a todos cuando todos aquí puedan bloquear capturas en su dispositivo.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name activó el bloqueo de capturas. Cubrirá a todos en cuanto todos aquí hayan actualizado Kryfo.';
+    return '$name activó el bloqueo de capturas. Cubre a todos cuando todos aquí puedan bloquear capturas en su dispositivo.';
   }
 
   @override
@@ -9967,7 +9967,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get groupShotsPaused =>
-      'Alguien aquí todavía no puede bloquear capturas. Volverá a cubrir a todos en cuanto actualice Kryfo.';
+      'Alguien aquí aún no puede bloquear capturas en su dispositivo. Vuelve a cubrir a todos cuando pueda.';
 
   @override
   String get groupShotsCantYet => 'Todavía no puede bloquear capturas';
@@ -9977,7 +9977,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'El bloqueo de capturas no cubrirá a todos aquí hasta que actualice Kryfo.';
+      'El bloqueo de capturas no cubrirá a todos aquí hasta que puedan bloquear capturas en su dispositivo.';
 
   @override
   String get groupShotsLeaveStays =>

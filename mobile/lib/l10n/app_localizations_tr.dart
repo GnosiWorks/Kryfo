@@ -9847,7 +9847,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupShotsStartsWhenAll =>
-      'Buradaki herkesin Kryfo\'yu güncellemesi bekleniyor';
+      'Buradaki herkesin cihazında ekran görüntüsünü engelleyebilmesi bekleniyor';
 
   @override
   String get groupShotsOnForAll => 'Buradaki herkes için açık';
@@ -9861,7 +9861,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'Buradaki herkesin Kryfo\'yu güncellemesi bekleniyor. Bunu yalnızca yönetici değiştirebilir';
+      'Buradaki herkesin cihazında ekran görüntüsünü engelleyebilmesi bekleniyor. Bunu yalnızca yönetici değiştirebilir';
 
   @override
   String get groupShotsOnAdminOnly =>
@@ -9902,11 +9902,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'Ekran görüntüsü engelini açtın. Buradaki herkes Kryfo\'yu güncellediğinde herkesi kapsar.';
+      'Ekran görüntüsü engelini açtın. Buradaki herkes cihazında ekran görüntüsünü engelleyebildiğinde herkesi kapsar.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name ekran görüntüsü engelini açtı. Buradaki herkes Kryfo\'yu güncellediğinde herkesi kapsar.';
+    return '$name ekran görüntüsü engelini açtı. Buradaki herkes cihazında ekran görüntüsünü engelleyebildiğinde herkesi kapsar.';
   }
 
   @override
@@ -9919,7 +9919,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupShotsPaused =>
-      'Buradaki biri henüz ekran görüntüsünü engelleyemiyor. Kryfo\'yu güncellediğinde yeniden herkesi kapsar.';
+      'Buradaki biri cihazında henüz ekran görüntüsünü engelleyemiyor. Engelleyebildiğinde yine herkesi kapsar.';
 
   @override
   String get groupShotsCantYet => 'Henüz ekran görüntüsünü engelleyemiyor';
@@ -9929,7 +9929,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'Bu kişi Kryfo\'yu güncelleyene kadar ekran görüntüsü engeli buradaki herkesi kapsamaz.';
+      'Ekran görüntüsü engeli, bu kişiler cihazlarında engelleyebilene kadar buradaki herkesi kapsamaz.';
 
   @override
   String get groupShotsLeaveStays =>

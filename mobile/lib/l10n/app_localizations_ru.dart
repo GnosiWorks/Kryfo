@@ -9988,7 +9988,8 @@ class AppLocalizationsRu extends AppLocalizations {
       'Запрещает здесь копировать, пересылать и сохранять сообщения друг друга. Kryfo для Android также запрещает скриншоты и запись экрана.';
 
   @override
-  String get groupShotsStartsWhenAll => 'Ждёт, пока все здесь обновят Kryfo';
+  String get groupShotsStartsWhenAll =>
+      'Ждём, когда все здесь смогут запрещать скриншоты на своём устройстве';
 
   @override
   String get groupShotsOnForAll => 'Включено для всех здесь';
@@ -10002,7 +10003,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'Ждёт, пока все здесь обновят Kryfo. Изменить это может только админ';
+      'Ждём, когда все здесь смогут запрещать скриншоты на своём устройстве. Изменить это может только админ';
 
   @override
   String get groupShotsOnAdminOnly =>
@@ -10045,11 +10046,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'Ты включил(а) запрет скриншотов. Он заработает для всех, когда все здесь обновят Kryfo.';
+      'Вы включили запрет скриншотов. Он заработает для всех, когда все здесь смогут запрещать скриншоты на своём устройстве.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name включил(а) запрет скриншотов. Он заработает для всех, когда все здесь обновят Kryfo.';
+    return '$name включил(а) запрет скриншотов. Он заработает для всех, когда все здесь смогут запрещать скриншоты на своём устройстве.';
   }
 
   @override
@@ -10062,7 +10063,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get groupShotsPaused =>
-      'Кто-то здесь пока не может запрещать скриншоты. Запрет снова будет для всех, когда этот человек обновит Kryfo.';
+      'Кто-то здесь пока не может запрещать скриншоты на своём устройстве. Запрет снова будет для всех, когда это станет возможно.';
 
   @override
   String get groupShotsCantYet => 'Пока не может запрещать скриншоты';
@@ -10072,7 +10073,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'Запрет скриншотов не будет действовать для всех здесь, пока этот человек не обновит Kryfo.';
+      'Запрет скриншотов не будет действовать для всех здесь, пока они не смогут запрещать скриншоты на своём устройстве.';
 
   @override
   String get groupShotsLeaveStays => 'Запрет скриншотов останется как есть.';
