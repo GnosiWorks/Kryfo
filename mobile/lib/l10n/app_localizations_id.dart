@@ -8723,7 +8723,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatShotsWhenTheyUpdate =>
-      'Tersedia setelah dia memperbarui aplikasinya';
+      'Tersedia setelah dia memakai Kryfo terbaru di ponsel';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => 'Tersedia di Kryfo untuk Android';
 
   @override
   String get chatShotsBothPhones =>

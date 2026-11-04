@@ -14,7 +14,7 @@ import 'group_shots.dart' show GroupShotsWord, kGroupNudgeWire, kGroupShotsWire;
 import 'media_resend.dart';
 import 'profile_photo.dart' show PhotoFrame, kPhotoWire;
 import 'stickers/sticker_wire.dart' show StickerWire;
-import 'typing.dart' show capsFromWire, kCapsWire, kMyCaps, kTypingWire;
+import 'typing.dart' show capsFromWire, kCapsWire, kTypingWire, myCaps;
 import 'voice_format.dart' show kOpusWire;
 
 const _envelopePrefix = kEnvelopePrefix;
@@ -503,7 +503,7 @@ Future<String> wrapMessage(
     body['g'] = groupId;
     // what this phone understands, inside the group's encryption. a room
     // frame loses it again (roomFrame)
-    body['cp'] = kMyCaps;
+    body['cp'] = myCaps;
   }
   if (groupControl != null) body['gc'] = groupControl.toWire();
   return '$_envelopePrefix${jsonEncode(body)}';

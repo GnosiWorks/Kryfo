@@ -8872,7 +8872,10 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get chatShotsWhenTheyUpdate =>
-      'Стане доступно, коли співрозмовник оновить застосунок';
+      'Стане доступно, коли співрозмовник користуватиметься останньою версією Kryfo на телефоні';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => 'Доступно в Kryfo для Android';
 
   @override
   String get chatShotsBothPhones =>

@@ -8721,7 +8721,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatBlockScreenshots => 'Block screenshots';
 
   @override
-  String get chatShotsWhenTheyUpdate => 'Available when they update';
+  String get chatShotsWhenTheyUpdate =>
+      'Available when they use the latest Kryfo on a phone';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => 'Available in Kryfo for Android';
 
   @override
   String get chatShotsBothPhones =>

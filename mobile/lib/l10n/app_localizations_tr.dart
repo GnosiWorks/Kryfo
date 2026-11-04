@@ -8751,7 +8751,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatShotsWhenTheyUpdate =>
-      'Karşı taraf güncelleyince kullanılabilir';
+      'Karşı taraf telefonda Kryfo\'nun son sürümünü kullanınca kullanılabilir';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk =>
+      'Android için Kryfo\'da kullanılabilir';
 
   @override
   String get chatShotsBothPhones =>

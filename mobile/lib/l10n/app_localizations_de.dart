@@ -8821,7 +8821,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chatShotsWhenTheyUpdate =>
-      'Verfügbar, sobald die andere Person aktualisiert';
+      'Verfügbar, sobald die andere Person das neueste Kryfo auf einem Handy nutzt';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => 'Verfügbar in Kryfo für Android';
 
   @override
   String get chatShotsBothPhones =>

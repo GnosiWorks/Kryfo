@@ -103,6 +103,12 @@ final _pairs = <(String, _Get, _Get, _Get)>[
     (l) => l.chatAlbumItDisappearsWithNoDesk,
   ),
   (
+    'chatShotsWhenTheyUpdate',
+    (l) => l.chatShotsWhenTheyUpdateShown,
+    (l) => l.chatShotsWhenTheyUpdate,
+    (l) => l.chatShotsWhenTheyUpdateDesk,
+  ),
+  (
     'contactStaysOnThisPhone',
     (l) => l.contactStaysOnThisPhoneShown,
     (l) => l.contactStaysOnThisPhone,

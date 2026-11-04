@@ -8852,7 +8852,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatBlockScreenshots => 'منع لقطات الشاشة';
 
   @override
-  String get chatShotsWhenTheyUpdate => 'متاح عندما يحدّث تطبيقه';
+  String get chatShotsWhenTheyUpdate =>
+      'متاح عندما يستخدم أحدث إصدار من Kryfo على هاتف';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => 'متاح في Kryfo لأندرويد';
 
   @override
   String get chatShotsBothPhones =>

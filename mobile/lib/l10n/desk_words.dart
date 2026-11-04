@@ -21,6 +21,7 @@ const deskWordKeys = [
   'chatJustForYouNever',
   'chatEveryMessageHereIs',
   'chatAlbumItDisappearsWithNo',
+  'chatShotsWhenTheyUpdate',
   'contactStaysOnThisPhone',
   'contactMessagesAndContactGone',
   'contactEveryMessageAndThe',
@@ -154,6 +155,8 @@ extension DeskWords on AppLocalizations {
       onDesktop ? chatJustForYouNeverDesk : chatJustForYouNever;
   String get chatEveryMessageHereIsShown =>
       onDesktop ? chatEveryMessageHereIsDesk : chatEveryMessageHereIs;
+  String get chatShotsWhenTheyUpdateShown =>
+      onDesktop ? chatShotsWhenTheyUpdateDesk : chatShotsWhenTheyUpdate;
   String get chatAlbumItDisappearsWithNoShown =>
       onDesktop ? chatAlbumItDisappearsWithNoDesk : chatAlbumItDisappearsWithNo;
   String get contactStaysOnThisPhoneShown =>

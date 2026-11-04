@@ -13,6 +13,7 @@ import 'desktop/desktop_mode.dart'
         keepComputerDecoyNote,
         kComputerDecoyNote,
         onDesktop,
+        shotsHonouredHere,
         startEngineIn;
 import 'store.dart' show playBuild;
 import 'wide/wide_pane.dart' show chatNavigator, chatPush, deskPush;

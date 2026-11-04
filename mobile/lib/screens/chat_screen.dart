@@ -5949,7 +5949,7 @@ class _ChatScreenState extends State<ChatScreen>
                 sub: !_accepted
                     ? l10n.chatAcceptThemFirst
                     : !_shots.peerCan
-                    ? l10n.chatShotsWhenTheyUpdate
+                    ? l10n.chatShotsWhenTheyUpdateShown
                     : l10n.chatShotsBlocksBoth,
                 toggled: _shots.blocking,
                 onTap: _accepted && _shots.peerCan ? onShots : null,

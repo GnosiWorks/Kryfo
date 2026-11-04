@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'container.dart';
+import 'desktop/desktop_mode.dart' show shotsHonouredHere;
 import 'router.dart' show RouteTo;
 
 /// the envelope's word for a typing frame, and for what a phone understands
@@ -79,8 +80,17 @@ List<String>? capsFromWire(Object? raw) {
   ];
 }
 
+/// what this app puts on its frames: a computer, which cannot block
+/// screenshots, leaves out 'gs'
+List<String> get myCaps => shotsHonouredHere
+    ? kMyCaps
+    : [
+        for (final c in kMyCaps)
+          if (c != kCapGroupShots) c,
+      ];
+
 /// [body], a 1:1 frame's json, with this phone's list on it
-void capsPut(Map<String, dynamic> body) => body[kCapsWire] = kMyCaps;
+void capsPut(Map<String, dynamic> body) => body[kCapsWire] = myCaps;
 
 /// caps as a contact row keeps them
 String capsText(List<String> caps) => (caps.toSet().toList()..sort()).join(',');

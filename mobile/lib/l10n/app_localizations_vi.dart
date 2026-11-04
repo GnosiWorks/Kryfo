@@ -8714,7 +8714,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatShotsWhenTheyUpdate =>
-      'Dùng được khi người kia cập nhật ứng dụng';
+      'Dùng được khi người kia dùng Kryfo bản mới nhất trên điện thoại';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => 'Dùng được trong Kryfo cho Android';
 
   @override
   String get chatShotsBothPhones =>

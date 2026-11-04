@@ -10920,9 +10920,13 @@
   "@chatBlockScreenshots": {
     "description": "screens/chat_screen.dart, screens/contact_screen.dart, screens/group_info_screen.dart: the per-chat switch that blocks screenshots on both phones"
   },
-  "chatShotsWhenTheyUpdate": "Available when they update",
+  "chatShotsWhenTheyUpdate": "Available when they use the latest Kryfo on a phone",
   "@chatShotsWhenTheyUpdate": {
-    "description": "screens/chat_screen.dart, screens/contact_screen.dart: under the switch while the other phone does not know the block yet"
+    "description": "screens/chat_screen.dart, screens/contact_screen.dart, screens/home_screen.dart: under the switch while the other side does not block yet: an older Kryfo, or Kryfo on a computer, which cannot block"
+  },
+  "chatShotsWhenTheyUpdateDesk": "Available in Kryfo for Android",
+  "@chatShotsWhenTheyUpdateDesk": {
+    "description": "chatShotsWhenTheyUpdate as a computer shows it (linux and windows): a computer cannot block screenshots, so the switch is not offered there"
   },
   "chatShotsBothPhones": "Kryfo blocks screenshots and screen recording of this chat on both phones, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.",
   "@chatShotsBothPhones": {

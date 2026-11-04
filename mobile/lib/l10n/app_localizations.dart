@@ -14033,11 +14033,17 @@ abstract class AppLocalizations {
   /// **'Block screenshots'**
   String get chatBlockScreenshots;
 
-  /// screens/chat_screen.dart, screens/contact_screen.dart: under the switch while the other phone does not know the block yet
+  /// screens/chat_screen.dart, screens/contact_screen.dart, screens/home_screen.dart: under the switch while the other side does not block yet: an older Kryfo, or Kryfo on a computer, which cannot block
   ///
   /// In en, this message translates to:
-  /// **'Available when they update'**
+  /// **'Available when they use the latest Kryfo on a phone'**
   String get chatShotsWhenTheyUpdate;
+
+  /// chatShotsWhenTheyUpdate as a computer shows it (linux and windows): a computer cannot block screenshots, so the switch is not offered there
+  ///
+  /// In en, this message translates to:
+  /// **'Available in Kryfo for Android'**
+  String get chatShotsWhenTheyUpdateDesk;
 
   /// screens/contact_screen.dart: under the switch while it is on
   ///

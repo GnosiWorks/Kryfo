@@ -11,6 +11,10 @@ import 'package:flutter/widgets.dart';
 /// and test the phone's behaviour there
 bool onDesktop = false;
 
+/// this app keeps its window out of screenshots, and so may say it blocks
+/// them: a chat's 'ss', a group's 'gs'. a computer cannot yet
+bool get shotsHonouredHere => !onDesktop;
+
 /// a share sheet to hand things to other apps. linux has none: share_plus
 /// there turns text into a mailto link for the mail client, which writes it
 /// to its drafts and its logs. desktop offers copy and the qr instead

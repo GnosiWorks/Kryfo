@@ -8885,7 +8885,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatShotsWhenTheyUpdate =>
-      'Станет доступно, когда собеседник обновит приложение';
+      'Станет доступно, когда собеседник будет пользоваться последней версией Kryfo на телефоне';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => 'Доступно в Kryfo для Android';
 
   @override
   String get chatShotsBothPhones =>

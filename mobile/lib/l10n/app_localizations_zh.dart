@@ -8306,7 +8306,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatBlockScreenshots => '禁止截屏';
 
   @override
-  String get chatShotsWhenTheyUpdate => '对方更新后即可使用';
+  String get chatShotsWhenTheyUpdate => '对方在手机上使用最新版 Kryfo 后即可使用';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => '可在 Android 版 Kryfo 中使用';
 
   @override
   String get chatShotsBothPhones =>
@@ -18444,7 +18447,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatBlockScreenshots => '禁止截圖';
 
   @override
-  String get chatShotsWhenTheyUpdate => '對方更新後即可使用';
+  String get chatShotsWhenTheyUpdate => '對方在手機上使用最新版 Kryfo 後即可使用';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => '可在 Android 版 Kryfo 中使用';
 
   @override
   String get chatShotsBothPhones =>

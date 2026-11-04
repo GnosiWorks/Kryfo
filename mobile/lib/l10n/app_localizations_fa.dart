@@ -8738,7 +8738,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get chatShotsWhenTheyUpdate =>
-      'وقتی برنامه‌اش را به‌روز کند در دسترس است';
+      'وقتی آخرین نسخهٔ Kryfo را روی گوشی به کار ببرد در دسترس است';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk =>
+      'در Kryfo برای اندروید در دسترس است';
 
   @override
   String get chatShotsBothPhones =>
