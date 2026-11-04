@@ -170,7 +170,7 @@ void main() {
       ..sendModeForTest = 'private'
       ..deliveryModeForTest = DeliveryMode.helper;
     eng.live = jsonEncode([
-      {'i': 'abcd', 'g': 'everyday:0'},
+      {'i': 'abcd', 'g': 'everyday:0:0'},
     ]);
     chosen = 'io.heckel.ntfy';
     for (var s = 0; s < 16; s++) {
