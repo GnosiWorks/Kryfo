@@ -10562,6 +10562,40 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get voiceNotNow => '暂不';
+
+  @override
+  String get albumPrevious => '上一个';
+
+  @override
+  String get albumNext => '下一个';
+
+  @override
+  String get notesHoldHintDesk => '右键点击一条笔记即可复制或删除。';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      '这里还没有置顶内容。右键点击一条消息，选择“置顶”，它就会在这里等着聊天里的每个人。';
+
+  @override
+  String get chatGalleryDesk => '图片';
+
+  @override
+  String get groupChatGalleryDesk => '图片';
+
+  @override
+  String get photoChooseDesk => '选择图片文件';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => '从图片文件';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => '声音';
+
+  @override
+  String get notificationsPlaySound => '播放提示音';
+
+  @override
+  String get notificationsPlaySoundHint => '这台电脑上的每条通知都会响';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -21008,4 +21042,38 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get voiceNotNow => '以後再說';
+
+  @override
+  String get albumPrevious => '上一個';
+
+  @override
+  String get albumNext => '下一個';
+
+  @override
+  String get notesHoldHintDesk => '在筆記上按右鍵即可複製或刪除。';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      '這裡還沒有置頂的訊息。在一則訊息上按右鍵並選擇「置頂」，它就會在這裡等著聊天中的每個人。';
+
+  @override
+  String get chatGalleryDesk => '圖片';
+
+  @override
+  String get groupChatGalleryDesk => '圖片';
+
+  @override
+  String get photoChooseDesk => '選擇圖片檔案';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => '從圖片檔案';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => '聲音';
+
+  @override
+  String get notificationsPlaySound => '播放提示音';
+
+  @override
+  String get notificationsPlaySoundHint => '這台電腦上的每則通知都會響';
 }

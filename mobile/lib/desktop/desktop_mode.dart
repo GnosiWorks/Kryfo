@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:isolate';
 
 import 'package:flutter/widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../container.dart' show HaloContainer;
 
@@ -146,6 +147,28 @@ const kComputerDecoyNote = 'computer_lock';
 
 /// writes the decoy's note into the open decoy's database, set by the app
 Future<void> Function(String note)? keepComputerDecoyNote;
+
+/// a computer's notifications make their sound. on unless turned off on
+/// the notifications page; each post reads it as it goes
+final deskSound = ValueNotifier<bool>(true);
+
+const _deskSoundKey = 'desk_sound';
+
+/// the sound as it was left, read once the vault is open
+Future<void> readDeskSound() async {
+  try {
+    final p = await SharedPreferences.getInstance();
+    deskSound.value = p.getBool(_deskSoundKey) ?? true;
+  } catch (_) {}
+}
+
+Future<void> setDeskSound(bool on) async {
+  deskSound.value = on;
+  try {
+    final p = await SharedPreferences.getInstance();
+    await p.setBool(_deskSoundKey, on);
+  } catch (_) {}
+}
 
 /// keep running in the tray and start with the computer, for the
 /// notifications page. set by the desktop start; null on the phone

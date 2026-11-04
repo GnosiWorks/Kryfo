@@ -11238,4 +11238,40 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Agora não';
+
+  @override
+  String get albumPrevious => 'Anterior';
+
+  @override
+  String get albumNext => 'Próximo';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Clique com o botão direito em uma nota para copiar ou apagar.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Nada fixado aqui ainda. Clique com o botão direito em uma mensagem e escolha Fixar, e ela fica aqui esperando por todos na conversa.';
+
+  @override
+  String get chatGalleryDesk => 'Imagens';
+
+  @override
+  String get groupChatGalleryDesk => 'Imagens';
+
+  @override
+  String get photoChooseDesk => 'Escolher um arquivo de imagem';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'De um arquivo de imagem';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Som';
+
+  @override
+  String get notificationsPlaySound => 'Tocar um som';
+
+  @override
+  String get notificationsPlaySoundHint =>
+      'A cada notificação neste computador';
 }

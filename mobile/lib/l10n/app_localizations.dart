@@ -17940,6 +17940,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not now'**
   String get voiceNotNow;
+
+  /// a computer: the round button at an album's side that goes back one photo or video
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get albumPrevious;
+
+  /// a computer: the round button at an album's side that goes on one photo or video
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get albumNext;
+
+  /// a computer: notesHoldHint with a right click in place of the hold
+  ///
+  /// In en, this message translates to:
+  /// **'Right-click a note to copy or delete it.'**
+  String get notesHoldHintDesk;
+
+  /// a computer: pinsNothingPinnedHereYet with a right click in place of the hold
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing pinned here yet. Right-click a message and choose Pin, and it waits here for everyone in the chat.'**
+  String get pinsNothingPinnedHereYetDesk;
+
+  /// a computer: the attach menu's photo row, which opens the file picker for pictures
+  ///
+  /// In en, this message translates to:
+  /// **'Pictures'**
+  String get chatGalleryDesk;
+
+  /// a computer: the group attach menu's photo row, which opens the file picker for pictures
+  ///
+  /// In en, this message translates to:
+  /// **'Pictures'**
+  String get groupChatGalleryDesk;
+
+  /// a computer: the photo sheet's row that opens the file picker for a picture
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a picture file'**
+  String get photoChooseDesk;
+
+  /// a computer: the wallpaper row that opens the file picker for a picture
+  ///
+  /// In en, this message translates to:
+  /// **'From a picture file'**
+  String get wallpaperFromYourPhotosDesk;
+
+  /// a computer: the notifications page's section with the sound switch
+  ///
+  /// In en, this message translates to:
+  /// **'Sound'**
+  String get notificationsSoundAndVibrationDesk;
+
+  /// a computer: the switch that lets a notification make its sound
+  ///
+  /// In en, this message translates to:
+  /// **'Play a sound'**
+  String get notificationsPlaySound;
+
+  /// a computer: the line under the sound switch
+  ///
+  /// In en, this message translates to:
+  /// **'With each notification on this computer'**
+  String get notificationsPlaySoundHint;
 }
 
 class _AppLocalizationsDelegate

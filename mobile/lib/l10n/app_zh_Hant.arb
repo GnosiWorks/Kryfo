@@ -2942,5 +2942,16 @@
   "voiceModelRemoveLine": "已產生的文字會保留。新的需要再次下載模型。",
   "voiceKeptNote": "文字內容與所屬聊天一起加密保存在這支手機上，並隨聊天一起刪除。",
   "voiceKeptNoteDesk": "文字內容與所屬聊天一起加密保存在這台電腦上，並隨聊天一起刪除。",
-  "voiceNotNow": "以後再說"
+  "voiceNotNow": "以後再說",
+  "albumPrevious": "上一個",
+  "albumNext": "下一個",
+  "notesHoldHintDesk": "在筆記上按右鍵即可複製或刪除。",
+  "pinsNothingPinnedHereYetDesk": "這裡還沒有置頂的訊息。在一則訊息上按右鍵並選擇「置頂」，它就會在這裡等著聊天中的每個人。",
+  "chatGalleryDesk": "圖片",
+  "groupChatGalleryDesk": "圖片",
+  "photoChooseDesk": "選擇圖片檔案",
+  "wallpaperFromYourPhotosDesk": "從圖片檔案",
+  "notificationsSoundAndVibrationDesk": "聲音",
+  "notificationsPlaySound": "播放提示音",
+  "notificationsPlaySoundHint": "這台電腦上的每則通知都會響"
 }

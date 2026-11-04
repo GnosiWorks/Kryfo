@@ -11140,4 +11140,40 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Để sau';
+
+  @override
+  String get albumPrevious => 'Trước';
+
+  @override
+  String get albumNext => 'Tiếp';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Nhấp chuột phải vào một ghi chú để sao chép hoặc xóa.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Chưa có gì được ghim ở đây. Nhấp chuột phải vào một tin nhắn và chọn Ghim, tin nhắn sẽ nằm ở đây cho mọi người trong cuộc trò chuyện.';
+
+  @override
+  String get chatGalleryDesk => 'Hình ảnh';
+
+  @override
+  String get groupChatGalleryDesk => 'Hình ảnh';
+
+  @override
+  String get photoChooseDesk => 'Chọn một tệp hình ảnh';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'Từ một tệp hình ảnh';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Âm thanh';
+
+  @override
+  String get notificationsPlaySound => 'Phát âm thanh';
+
+  @override
+  String get notificationsPlaySoundHint =>
+      'Với mỗi thông báo trên máy tính này';
 }

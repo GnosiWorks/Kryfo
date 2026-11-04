@@ -2942,5 +2942,16 @@
   "voiceModelRemoveLine": "Готовые тексты останутся. Для новых снова понадобится модель.",
   "voiceKeptNote": "Тексты хранятся зашифрованными вместе с чатом на этом телефоне и удаляются вместе с ним.",
   "voiceKeptNoteDesk": "Тексты хранятся зашифрованными вместе с чатом на этом компьютере и удаляются вместе с ним.",
-  "voiceNotNow": "Не сейчас"
+  "voiceNotNow": "Не сейчас",
+  "albumPrevious": "Предыдущее",
+  "albumNext": "Следующее",
+  "notesHoldHintDesk": "Щёлкни правой кнопкой по заметке, чтобы скопировать или удалить её.",
+  "pinsNothingPinnedHereYetDesk": "Здесь пока ничего не закреплено. Щёлкни правой кнопкой по сообщению и выбери «Закрепить», и оно будет ждать здесь всех в чате.",
+  "chatGalleryDesk": "Изображения",
+  "groupChatGalleryDesk": "Изображения",
+  "photoChooseDesk": "Выбрать файл изображения",
+  "wallpaperFromYourPhotosDesk": "Из файла изображения",
+  "notificationsSoundAndVibrationDesk": "Звук",
+  "notificationsPlaySound": "Воспроизводить звук",
+  "notificationsPlaySoundHint": "При каждом уведомлении на этом компьютере"
 }

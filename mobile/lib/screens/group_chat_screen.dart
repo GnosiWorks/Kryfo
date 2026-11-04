@@ -42,6 +42,7 @@ import '../widgets/media_bubbles.dart';
 import '../voice/chat_transcripts.dart';
 import '../voice/ui/transcript_line.dart';
 import '../voice/voice_transcripts.dart' show voiceTranscriptsIfOn;
+import '../widgets/desk_select.dart';
 import '../widgets/decode_px.dart';
 import '../atmosphere.dart';
 import '../notifications.dart' show clearNotificationsFor;
@@ -537,6 +538,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   final Map<String, StickerLanding> _landings = {};
   final List<VoidCallback> _flights = [];
   _GMsg? _replyTo;
+  final _composerFocus = FocusNode();
   // the quote a kept draft had, until the messages are here to find it in
   String? _draftReply;
   // a kept quote of someone blocked: out of sight, never sent, kept in the
@@ -648,6 +650,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     super.initState();
     _unwatchCaptures = captureWatch.watch(_captured);
     _memo = session.chatKey(widget.groupId);
+    // a computer: the chat opens ready to type
+    if (onDesktop) _composerFocus.requestFocus();
     _loadWall();
     // set from its info page or under appearance: shown at once
     wallpaperRevision.addListener(_loadWall);
@@ -2093,6 +2097,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (_nobodyToRead()) return;
     setState(() => _sending = true);
     _msgCtrl.clear();
+    // a computer: the next words go straight on, the send button's click
+    // took the field's focus
+    if (onDesktop) _composerFocus.requestFocus();
     final uid = newMsgUid();
     final replyToUid = _takeQuote(words: true);
     final burnSeconds = _ghost ? _burnSeconds : null;
@@ -2424,7 +2431,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           AttachItem(
             icon: (c) => Icon(Icons.photo_library_outlined, color: c),
             tint: HaloColors.violet,
-            label: l10n.groupChatGallery,
+            label: l10n.groupChatGalleryShown,
             onTap: _pickGroupMultiple,
           ),
           AttachItem(
@@ -4552,6 +4559,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   @override
   void dispose() {
+    _composerFocus.dispose();
     _transcripts?.dispose();
     _find.detach();
     _unwatchCaptures?.call();
@@ -4594,16 +4602,36 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   @override
   Widget build(BuildContext context) => menuBack(
-    child: DragInZone(
-      enabled: _end == null && !_waiting,
-      send: (path, name) async {
-        if (_nobodyToRead()) return;
-        await _sendGroupFileFrom(path, name);
+    child: PopScope(
+      canPop: !_escHolds,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _escOne();
       },
-      couldNotRead: () => l10n.groupChatCouldNotReadThat,
-      child: _page(context),
+      child: DragInZone(
+        enabled: _end == null && !_waiting,
+        send: (path, name) async {
+          if (_nobodyToRead()) return;
+          await _sendGroupFileFrom(path, name);
+        },
+        couldNotRead: () => l10n.groupChatCouldNotReadThat,
+        child: _page(context),
+      ),
     ),
   );
+
+  // esc on a computer lets go of the quote, then the search, and only then
+  // closes the chat
+  bool get _escHolds => onDesktop && (_replyTo != null || _searching);
+
+  void _escOne() {
+    if (_replyTo != null) {
+      setState(() => _replyTo = null);
+      _keepDraft();
+    } else if (_searching) {
+      _closeSearch();
+    }
+    if (onDesktop) _composerFocus.requestFocus();
+  }
 
   Widget _page(BuildContext context) {
     // the albums as the thread stands now: a row of one is drawn by its lead
@@ -4883,6 +4911,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         key: const ValueKey('composer'),
                         child: _Composer(
                           controller: _msgCtrl,
+                          focusNode: _composerFocus,
                           members: _mentionable,
                           sending: _sending,
                           ghost: _ghost,
@@ -5379,6 +5408,7 @@ class _ReplyQuoteBar extends StatelessWidget {
 
 class _Composer extends StatelessWidget {
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final bool sending;
   final bool ghost;
   final int burnSeconds;
@@ -5396,6 +5426,7 @@ class _Composer extends StatelessWidget {
   const _Composer({
     this.members = const [],
     required this.controller,
+    this.focusNode,
     required this.sending,
     required this.ghost,
     this.burnSeconds = 300,
@@ -5575,6 +5606,7 @@ class _Composer extends StatelessWidget {
                                 textDirection: dir,
                                 inputFormatters: const [UnmarkedInput()],
                                 controller: controller,
+                                focusNode: focusNode,
                                 enableIMEPersonalizedLearning: false,
                                 style: HaloType.sans(
                                   size: 14,
@@ -6414,81 +6446,51 @@ class _GroupBubble extends StatelessWidget {
                                               ),
                                             ),
                                           if (m.text.isNotEmpty)
-                                            writtenStart(
-                                              m.text,
-                                              Padding(
-                                                padding: m.mediaPath != null
-                                                    ? const EdgeInsets.fromLTRB(
-                                                        4,
-                                                        6,
-                                                        4,
-                                                        0,
-                                                      )
-                                                    : EdgeInsets.zero,
-                                                // a search marks its hits; else
-                                                // a kryfo link is drawn as one,
-                                                // otherwise @three-words in amber
-                                                child: query.isNotEmpty
-                                                    ? Text.rich(
-                                                        TextSpan(
-                                                          style: _bodyStyle(
-                                                            isOut,
+                                            DeskSelectable(
+                                              // a click on these words is the bubble's while it retries
+                                              enabled: !m.failed,
+                                              onMenu: onLongPress == null
+                                                  ? null
+                                                  : () => onLongPress!(ctx),
+                                              child: writtenStart(
+                                                m.text,
+                                                Padding(
+                                                  padding: m.mediaPath != null
+                                                      ? const EdgeInsets.fromLTRB(
+                                                          4,
+                                                          6,
+                                                          4,
+                                                          0,
+                                                        )
+                                                      : EdgeInsets.zero,
+                                                  // a search marks its hits; else
+                                                  // a kryfo link is drawn as one,
+                                                  // otherwise @three-words in amber
+                                                  child: query.isNotEmpty
+                                                      ? Text.rich(
+                                                          TextSpan(
+                                                            style: _bodyStyle(
+                                                              isOut,
+                                                            ),
+                                                            children: searchLit(
+                                                              m.text,
+                                                              query,
+                                                              onAmber:
+                                                                  onAmberText,
+                                                            ),
                                                           ),
-                                                          children: searchLit(
-                                                            m.text,
-                                                            query,
-                                                            onAmber:
-                                                                onAmberText,
-                                                          ),
-                                                        ),
-                                                        textDirection:
-                                                            writtenDir(m.text),
-                                                      )
-                                                    : m.text.contains(
-                                                        'kryfo://',
-                                                      )
-                                                    ? KryfoLinkText(
-                                                        text: m.text,
-                                                        style: HaloType.sans(
-                                                          size: 14,
-                                                          color:
-                                                              (isOut &&
-                                                                  m.mediaPath ==
-                                                                      null)
-                                                              ? HaloColors
-                                                                    .onAmber
-                                                              : HaloColors.text,
-                                                          height: 1.35,
-                                                        ),
-                                                        onAmber:
-                                                            isOut &&
-                                                            m.mediaPath == null,
-                                                        linkColor:
-                                                            (isOut &&
-                                                                m.mediaPath ==
-                                                                    null)
-                                                            ? HaloColors.onAmber
-                                                            : HaloColors.amber,
-                                                      )
-                                                    : Text.rich(
-                                                        mentionRich(
-                                                          m.text,
-                                                          HaloType.sans(
+                                                          textDirection:
+                                                              writtenDir(
+                                                                m.text,
+                                                              ),
+                                                        )
+                                                      : m.text.contains(
+                                                          'kryfo://',
+                                                        )
+                                                      ? KryfoLinkText(
+                                                          text: m.text,
+                                                          style: HaloType.sans(
                                                             size: 14,
-                                                            // captions get more
-                                                            // weight to read over
-                                                            // busy images
-                                                            weight:
-                                                                m.mediaPath !=
-                                                                    null
-                                                                ? FontWeight
-                                                                      .w600
-                                                                : FontWeight
-                                                                      .w400,
-                                                            // a photo caption sits
-                                                            // on a transparent
-                                                            // bubble, where onAmber
-                                                            // is invisible
                                                             color:
                                                                 (isOut &&
                                                                     m.mediaPath ==
@@ -6499,17 +6501,62 @@ class _GroupBubble extends StatelessWidget {
                                                                       .text,
                                                             height: 1.35,
                                                           ),
-                                                          accent:
+                                                          onAmber:
+                                                              isOut &&
+                                                              m.mediaPath ==
+                                                                  null,
+                                                          linkColor:
                                                               (isOut &&
                                                                   m.mediaPath ==
                                                                       null)
                                                               ? HaloColors
                                                                     .onAmber
-                                                              : null,
+                                                              : HaloColors
+                                                                    .amber,
+                                                        )
+                                                      : Text.rich(
+                                                          mentionRich(
+                                                            m.text,
+                                                            HaloType.sans(
+                                                              size: 14,
+                                                              // captions get more
+                                                              // weight to read over
+                                                              // busy images
+                                                              weight:
+                                                                  m.mediaPath !=
+                                                                      null
+                                                                  ? FontWeight
+                                                                        .w600
+                                                                  : FontWeight
+                                                                        .w400,
+                                                              // a photo caption sits
+                                                              // on a transparent
+                                                              // bubble, where onAmber
+                                                              // is invisible
+                                                              color:
+                                                                  (isOut &&
+                                                                      m.mediaPath ==
+                                                                          null)
+                                                                  ? HaloColors
+                                                                        .onAmber
+                                                                  : HaloColors
+                                                                        .text,
+                                                              height: 1.35,
+                                                            ),
+                                                            accent:
+                                                                (isOut &&
+                                                                    m.mediaPath ==
+                                                                        null)
+                                                                ? HaloColors
+                                                                      .onAmber
+                                                                : null,
+                                                          ),
+                                                          textDirection:
+                                                              writtenDir(
+                                                                m.text,
+                                                              ),
                                                         ),
-                                                        textDirection:
-                                                            writtenDir(m.text),
-                                                      ),
+                                                ),
                                               ),
                                             ),
                                           if (m.url case final u?) ...[

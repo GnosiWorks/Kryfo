@@ -219,7 +219,7 @@ class _PinsSheetState extends State<_PinsSheet> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(22, 10, 22, 30),
                 child: Text(
-                  l10n.pinsNothingPinnedHereYet,
+                  l10n.pinsNothingPinnedHereYetShown,
                   style: HaloType.sans(
                     size: 13.5,
                     color: HaloColors.text2,

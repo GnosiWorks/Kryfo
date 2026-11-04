@@ -2942,5 +2942,16 @@
   "voiceModelRemoveLine": "Fertige Transkripte bleiben. Für neue braucht es das Modell wieder.",
   "voiceKeptNote": "Transkripte bleiben verschlüsselt bei ihrem Chat auf diesem Handy und werden mit ihm gelöscht.",
   "voiceKeptNoteDesk": "Transkripte bleiben verschlüsselt bei ihrem Chat auf diesem Computer und werden mit ihm gelöscht.",
-  "voiceNotNow": "Nicht jetzt"
+  "voiceNotNow": "Nicht jetzt",
+  "albumPrevious": "Zurück",
+  "albumNext": "Weiter",
+  "notesHoldHintDesk": "Klicke mit der rechten Maustaste auf eine Notiz, um sie zu kopieren oder zu löschen.",
+  "pinsNothingPinnedHereYetDesk": "Noch nichts angeheftet. Klicke mit der rechten Maustaste auf eine Nachricht und wähle Anheften, dann wartet sie hier für alle im Chat.",
+  "chatGalleryDesk": "Bilder",
+  "groupChatGalleryDesk": "Bilder",
+  "photoChooseDesk": "Bilddatei wählen",
+  "wallpaperFromYourPhotosDesk": "Aus einer Bilddatei",
+  "notificationsSoundAndVibrationDesk": "Ton",
+  "notificationsPlaySound": "Ton abspielen",
+  "notificationsPlaySoundHint": "Bei jeder Benachrichtigung auf diesem Computer"
 }

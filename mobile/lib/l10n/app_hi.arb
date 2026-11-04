@@ -2942,5 +2942,16 @@
   "voiceModelRemoveLine": "बन चुके लिखित रूप बने रहते हैं। नए के लिए मॉडल फिर चाहिए।",
   "voiceKeptNote": "लिखित रूप इस फ़ोन पर अपनी चैट के साथ एन्क्रिप्ट होकर रखे जाते हैं और उसी के साथ मिटते हैं।",
   "voiceKeptNoteDesk": "लिखित रूप इस कंप्यूटर पर अपनी चैट के साथ एन्क्रिप्ट होकर रखे जाते हैं और उसी के साथ मिटते हैं।",
-  "voiceNotNow": "अभी नहीं"
+  "voiceNotNow": "अभी नहीं",
+  "albumPrevious": "पिछला",
+  "albumNext": "अगला",
+  "notesHoldHintDesk": "कॉपी या डिलीट करने के लिए नोट पर राइट-क्लिक करें।",
+  "pinsNothingPinnedHereYetDesk": "यहाँ अभी कुछ पिन नहीं है। किसी मैसेज पर राइट-क्लिक करें और पिन करें चुनें, वह यहाँ चैट के सभी लोगों के लिए रहेगा।",
+  "chatGalleryDesk": "तस्वीरें",
+  "groupChatGalleryDesk": "तस्वीरें",
+  "photoChooseDesk": "तस्वीर की फ़ाइल चुनें",
+  "wallpaperFromYourPhotosDesk": "तस्वीर की फ़ाइल से",
+  "notificationsSoundAndVibrationDesk": "आवाज़",
+  "notificationsPlaySound": "आवाज़ चलाएँ",
+  "notificationsPlaySoundHint": "इस कंप्यूटर पर हर सूचना के साथ"
 }

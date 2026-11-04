@@ -3,13 +3,15 @@
 // through the album in its order with a count at the top, zooms a photo by
 // pinch or double tap, and plays a video where it is. a swipe down or the
 // close button takes it back into its tile; with no movement asked for it
-// fades instead.
+// fades instead. on a computer the arrow keys and the round buttons at its
+// sides go back and forth, as a mouse cannot swipe.
 import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../dlog.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
@@ -191,6 +193,77 @@ class AlbumViewerState extends State<AlbumViewer>
     if (z != _zoomed) setState(() => _zoomed = z);
   }
 
+  /// one item on, [by] +1 or -1, in the album's order
+  void step(int by) {
+    final to = _at + by;
+    if (to < 0 || to >= widget.items.length || !_pages.hasClients) return;
+    if (motionStill(context)) {
+      _pages.jumpToPage(to);
+    } else {
+      _pages.animateToPage(
+        to,
+        duration: const Duration(milliseconds: 280),
+        curve: kHouseCurve,
+      );
+    }
+  }
+
+  // the arrows as they read: in a right-to-left language the next item is
+  // to the left
+  Map<ShortcutActivator, VoidCallback> _keys(BuildContext context) {
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    return {
+      const SingleActivator(LogicalKeyboardKey.arrowRight): () =>
+          step(rtl ? -1 : 1),
+      const SingleActivator(LogicalKeyboardKey.arrowLeft): () =>
+          step(rtl ? 1 : -1),
+      const SingleActivator(LogicalKeyboardKey.escape): _close,
+    };
+  }
+
+  // the round buttons at the sides, while the count shows
+  List<Widget> _sides(double fade) {
+    final n = widget.items.length;
+    if (!onDesktop || n < 2) return const [];
+    Widget side(bool next) {
+      final shown = _chrome && !_zoomed && (next ? _at < n - 1 : _at > 0);
+      return PositionedDirectional(
+        start: next ? null : 16,
+        end: next ? 16 : null,
+        top: 0,
+        bottom: 0,
+        child: Center(
+          child: IgnorePointer(
+            ignoring: !shown,
+            child: AnimatedOpacity(
+              opacity: shown ? fade.clamp(0.0, 1.0) : 0,
+              duration: motionStill(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 180),
+              child: ViewerRound(
+                key: ValueKey(next ? 'album next' : 'album previous'),
+                size: 44,
+                label: next ? l10n.albumNext : l10n.albumPrevious,
+                onTap: () => step(next ? 1 : -1),
+                child: Icon(
+                  next
+                      ? Icons.chevron_right_rounded
+                      : Icons.chevron_left_rounded,
+                  size: 28,
+                  color: Colors.white,
+                  // the chevron points the way the album goes
+                  textDirection: Directionality.of(context),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return [side(false), side(true)];
+  }
+
   @override
   Widget build(BuildContext context) {
     final pad = MediaQuery.paddingOf(context);
@@ -238,7 +311,7 @@ class AlbumViewerState extends State<AlbumViewer>
         );
       },
     );
-    return AnimatedBuilder(
+    final viewer = AnimatedBuilder(
       animation: widget.route,
       builder: (context, child) {
         final dark = widget.route.value * (1 - pulled * 0.75);
@@ -261,6 +334,7 @@ class AlbumViewerState extends State<AlbumViewer>
                 ),
                 Positioned.fill(child: child!),
                 ..._top(pad, widget.route.value * (1 - pulled)),
+                ..._sides(widget.route.value * (1 - pulled)),
               ],
             ),
           ),
@@ -270,6 +344,11 @@ class AlbumViewerState extends State<AlbumViewer>
         offset: Offset(0, _drag),
         child: Transform.scale(scale: 1 - pulled * 0.12, child: pages),
       ),
+    );
+    if (!onDesktop) return viewer;
+    return CallbackShortcuts(
+      bindings: _keys(context),
+      child: Focus(autofocus: true, child: viewer),
     );
   }
 

@@ -24,6 +24,7 @@ import '../widgets/swap.dart';
 import '../widgets/written_field.dart';
 import '../l10n/l10n.dart';
 import '../widgets/shift_tap_guard.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 class HandleScreen extends StatefulWidget {
   const HandleScreen({super.key});
@@ -132,30 +133,32 @@ class _HandleScreenState extends State<HandleScreen> {
         elevation: 0,
         title: Text(l10n.handlePublicHandle, style: HaloType.pageTitle()),
       ),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          4,
-          20,
-          40 + MediaQuery.paddingOf(context).bottom,
-        ),
-        children: [
-          FadeSwap(
-            child: KeyedSubtree(
-              key: ValueKey(
-                _claimed == null
-                    ? 'claim'
-                    : appState.handleForeign
-                    ? 'foreign'
-                    : 'claimed',
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: staggerAll(_page()),
+      body: DeskPage(
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            4,
+            20,
+            40 + MediaQuery.paddingOf(context).bottom,
+          ),
+          children: [
+            FadeSwap(
+              child: KeyedSubtree(
+                key: ValueKey(
+                  _claimed == null
+                      ? 'claim'
+                      : appState.handleForeign
+                      ? 'foreign'
+                      : 'claimed',
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: staggerAll(_page()),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

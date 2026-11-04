@@ -2942,5 +2942,16 @@
   "voiceModelRemoveLine": "Hazır metinler kalır. Yenileri için model yeniden gerekir.",
   "voiceKeptNote": "Metinler bu telefonda sohbetleriyle birlikte şifreli tutulur ve sohbetle birlikte silinir.",
   "voiceKeptNoteDesk": "Metinler bu bilgisayarda sohbetleriyle birlikte şifreli tutulur ve sohbetle birlikte silinir.",
-  "voiceNotNow": "Şimdi değil"
+  "voiceNotNow": "Şimdi değil",
+  "albumPrevious": "Önceki",
+  "albumNext": "Sonraki",
+  "notesHoldHintDesk": "Kopyalamak ya da silmek için bir nota sağ tıkla.",
+  "pinsNothingPinnedHereYetDesk": "Henüz sabitlenen bir şey yok. Bir mesaja sağ tıkla ve Sabitle’yi seç; sohbetteki herkes için burada durur.",
+  "chatGalleryDesk": "Resimler",
+  "groupChatGalleryDesk": "Resimler",
+  "photoChooseDesk": "Bir resim dosyası seç",
+  "wallpaperFromYourPhotosDesk": "Bir resim dosyasından",
+  "notificationsSoundAndVibrationDesk": "Ses",
+  "notificationsPlaySound": "Ses çal",
+  "notificationsPlaySoundHint": "Bu bilgisayardaki her bildirimde"
 }

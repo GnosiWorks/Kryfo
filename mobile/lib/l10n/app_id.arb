@@ -2942,5 +2942,16 @@
   "voiceModelRemoveLine": "Transkrip yang sudah dibuat tetap ada. Yang baru perlu modelnya lagi.",
   "voiceKeptNote": "Transkrip disimpan terenkripsi bersama chatnya di ponsel ini dan dihapus bersamanya.",
   "voiceKeptNoteDesk": "Transkrip disimpan terenkripsi bersama chatnya di komputer ini dan dihapus bersamanya.",
-  "voiceNotNow": "Nanti saja"
+  "voiceNotNow": "Nanti saja",
+  "albumPrevious": "Sebelumnya",
+  "albumNext": "Berikutnya",
+  "notesHoldHintDesk": "Klik kanan sebuah catatan untuk menyalin atau menghapusnya.",
+  "pinsNothingPinnedHereYetDesk": "Belum ada yang disematkan di sini. Klik kanan sebuah pesan lalu pilih Sematkan, dan pesan itu menunggu di sini untuk semua orang di obrolan.",
+  "chatGalleryDesk": "Gambar",
+  "groupChatGalleryDesk": "Gambar",
+  "photoChooseDesk": "Pilih file gambar",
+  "wallpaperFromYourPhotosDesk": "Dari file gambar",
+  "notificationsSoundAndVibrationDesk": "Suara",
+  "notificationsPlaySound": "Putar suara",
+  "notificationsPlaySoundHint": "Di setiap notifikasi di komputer ini"
 }

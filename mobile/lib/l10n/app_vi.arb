@@ -2942,5 +2942,16 @@
   "voiceModelRemoveLine": "Các bản chép lời đã có vẫn giữ nguyên. Bản mới cần mô hình lại.",
   "voiceKeptNote": "Bản chép lời được lưu mã hóa cùng cuộc trò chuyện trên điện thoại này và bị xóa cùng nó.",
   "voiceKeptNoteDesk": "Bản chép lời được lưu mã hóa cùng cuộc trò chuyện trên máy tính này và bị xóa cùng nó.",
-  "voiceNotNow": "Để sau"
+  "voiceNotNow": "Để sau",
+  "albumPrevious": "Trước",
+  "albumNext": "Tiếp",
+  "notesHoldHintDesk": "Nhấp chuột phải vào một ghi chú để sao chép hoặc xóa.",
+  "pinsNothingPinnedHereYetDesk": "Chưa có gì được ghim ở đây. Nhấp chuột phải vào một tin nhắn và chọn Ghim, tin nhắn sẽ nằm ở đây cho mọi người trong cuộc trò chuyện.",
+  "chatGalleryDesk": "Hình ảnh",
+  "groupChatGalleryDesk": "Hình ảnh",
+  "photoChooseDesk": "Chọn một tệp hình ảnh",
+  "wallpaperFromYourPhotosDesk": "Từ một tệp hình ảnh",
+  "notificationsSoundAndVibrationDesk": "Âm thanh",
+  "notificationsPlaySound": "Phát âm thanh",
+  "notificationsPlaySoundHint": "Với mỗi thông báo trên máy tính này"
 }

@@ -2942,5 +2942,16 @@
   "voiceModelRemoveLine": "Le trascrizioni già fatte restano. Per le nuove serve di nuovo il modello.",
   "voiceKeptNote": "Le trascrizioni restano cifrate con la loro chat su questo telefono e vengono eliminate con essa.",
   "voiceKeptNoteDesk": "Le trascrizioni restano cifrate con la loro chat su questo computer e vengono eliminate con essa.",
-  "voiceNotNow": "Non ora"
+  "voiceNotNow": "Non ora",
+  "albumPrevious": "Precedente",
+  "albumNext": "Successivo",
+  "notesHoldHintDesk": "Fai clic destro su una nota per copiarla o eliminarla.",
+  "pinsNothingPinnedHereYetDesk": "Ancora niente di fissato qui. Fai clic destro su un messaggio e scegli Fissa: resterà qui per tutti nella chat.",
+  "chatGalleryDesk": "Immagini",
+  "groupChatGalleryDesk": "Immagini",
+  "photoChooseDesk": "Scegli un file immagine",
+  "wallpaperFromYourPhotosDesk": "Da un file immagine",
+  "notificationsSoundAndVibrationDesk": "Suono",
+  "notificationsPlaySound": "Riproduci un suono",
+  "notificationsPlaySoundHint": "A ogni notifica su questo computer"
 }

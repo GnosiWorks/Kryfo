@@ -24,6 +24,7 @@ import '../widgets/swap.dart' show FadeSwap;
 import '../widgets/swipe_actions.dart';
 import 'chat_door.dart';
 import 'home_screen.dart' show ContactPreview;
+import '../wide/read_width.dart' show DeskPage;
 
 // archived chats: hidden from the main list, still receive normally. rows
 // read dimmer on purpose and wake to full colour on press.
@@ -34,18 +35,20 @@ class ArchivedScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: HaloColors.surface,
-      body: SafeArea(
-        child: AnimatedBuilder(
-          animation: appState,
-          builder: (_, _) => ArchivedList(
-            archived: appState.contacts.where((c) => c.archived).toList(),
-            dev: appState.devRow?.archived == true ? appState.devRow : null,
-            onUnarchive: appState.unarchive,
-            onUnarchiveDev: () => setDevArchived(false),
-            onOpen: (id) => openChatAt(context, peer: id),
-            onOpenDev: (id) => openDevChat(context, id),
-            // under the lock nothing is being watched
-            quiet: lockGuard.isLocked(),
+      body: DeskPage(
+        child: SafeArea(
+          child: AnimatedBuilder(
+            animation: appState,
+            builder: (_, _) => ArchivedList(
+              archived: appState.contacts.where((c) => c.archived).toList(),
+              dev: appState.devRow?.archived == true ? appState.devRow : null,
+              onUnarchive: appState.unarchive,
+              onUnarchiveDev: () => setDevArchived(false),
+              onOpen: (id) => openChatAt(context, peer: id),
+              onOpenDev: (id) => openDevChat(context, id),
+              // under the lock nothing is being watched
+              quiet: lockGuard.isLocked(),
+            ),
           ),
         ),
       ),

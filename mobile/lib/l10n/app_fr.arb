@@ -2942,5 +2942,16 @@
   "voiceModelRemoveLine": "Les transcriptions déjà faites restent. Les nouvelles auront de nouveau besoin du modèle.",
   "voiceKeptNote": "Les transcriptions sont gardées chiffrées avec leur discussion sur ce téléphone et supprimées avec elle.",
   "voiceKeptNoteDesk": "Les transcriptions sont gardées chiffrées avec leur discussion sur cet ordinateur et supprimées avec elle.",
-  "voiceNotNow": "Pas maintenant"
+  "voiceNotNow": "Pas maintenant",
+  "albumPrevious": "Précédent",
+  "albumNext": "Suivant",
+  "notesHoldHintDesk": "Faites un clic droit sur une note pour la copier ou la supprimer.",
+  "pinsNothingPinnedHereYetDesk": "Rien d’épinglé ici pour l’instant. Faites un clic droit sur un message et choisissez Épingler : il attendra ici pour tout le monde dans la discussion.",
+  "chatGalleryDesk": "Images",
+  "groupChatGalleryDesk": "Images",
+  "photoChooseDesk": "Choisir un fichier image",
+  "wallpaperFromYourPhotosDesk": "Depuis un fichier image",
+  "notificationsSoundAndVibrationDesk": "Son",
+  "notificationsPlaySound": "Jouer un son",
+  "notificationsPlaySoundHint": "À chaque notification sur cet ordinateur"
 }

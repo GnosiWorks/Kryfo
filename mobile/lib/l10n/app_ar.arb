@@ -2942,5 +2942,16 @@
   "voiceModelRemoveLine": "تبقى النصوص التي أُنشئت. النصوص الجديدة تحتاج إلى النموذج مجددًا.",
   "voiceKeptNote": "تُحفظ النصوص مشفّرة مع محادثتها على هذا الهاتف وتُحذف معها.",
   "voiceKeptNoteDesk": "تُحفظ النصوص مشفّرة مع محادثتها على هذا الحاسوب وتُحذف معها.",
-  "voiceNotNow": "ليس الآن"
+  "voiceNotNow": "ليس الآن",
+  "albumPrevious": "السابق",
+  "albumNext": "التالي",
+  "notesHoldHintDesk": "انقر بزر الفأرة الأيمن على ملاحظة لنسخها أو حذفها.",
+  "pinsNothingPinnedHereYetDesk": "لا شيء مثبّت هنا بعد. انقر بزر الفأرة الأيمن على رسالة واختر «تثبيت»، فتنتظر هنا للجميع في المحادثة.",
+  "chatGalleryDesk": "الصور",
+  "groupChatGalleryDesk": "الصور",
+  "photoChooseDesk": "اختر ملف صورة",
+  "wallpaperFromYourPhotosDesk": "من ملف صورة",
+  "notificationsSoundAndVibrationDesk": "الصوت",
+  "notificationsPlaySound": "تشغيل صوت",
+  "notificationsPlaySoundHint": "مع كل إشعار على هذا الحاسوب"
 }
