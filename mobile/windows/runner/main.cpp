@@ -79,6 +79,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
   flutter::DartProject project(L"data");
+  // dart on a thread of its own. on the merged thread, flutter 3.41's timer
+  // thread sleeps through an earlier deadline, so a frame waits for the next
+  // input (flutter#192513, fixed in 3.47). this also keeps the window
+  // answering while dart is in a long native call
+  project.set_ui_thread_policy(flutter::UIThreadPolicy::RunOnSeparateThread);
 
   std::vector<std::string> command_line_arguments =
       GetCommandLineArguments();
