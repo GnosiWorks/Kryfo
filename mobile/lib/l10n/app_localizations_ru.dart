@@ -4406,9 +4406,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pairCodeEnterOne => 'Ввести код';
 
   @override
-  String get pairCodeSixDigits => 'Шесть цифр';
-
-  @override
   String get pairCodeLooking => 'Ищем…';
 
   @override
@@ -4430,36 +4427,83 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pairCodeFailed => 'Не получилось. Попробуй ещё раз.';
 
   @override
-  String get pairCodeTypeTheSixDigits =>
-      'Введи шесть цифр, которые тебе продиктовали.';
-
-  @override
   String get pairCodeAddThem => 'Добавить';
-
-  @override
-  String get pairCodeUsedTwice =>
-      'Этот код использовали дважды. Попроси новый.';
 
   @override
   String get pairCodeKeyNumber => 'Номер ключа';
 
   @override
-  String get pairCodeNumberMatches =>
-      'Проверь, что все четыре группы совпадают на обоих телефонах';
-
-  @override
-  String get pairCodeNumberMatchesDesk =>
-      'Проверь, что все четыре группы совпадают на обоих устройствах';
-
-  @override
-  String get pairCodeNumberDiffers => 'Номер не совпадает';
-
-  @override
-  String get pairCodeNoNumberThere =>
-      'На экране собеседника нет номера? Добавь его, а потом сверь код безопасности в чате.';
-
-  @override
   String get pairCodeNotAdded => 'Не добавлено. Попроси новый код.';
+
+  @override
+  String get pairCodeEightDigits => 'Восемь цифр';
+
+  @override
+  String get pairCodeTypeTheEightDigits =>
+      'Введи восемь цифр, которые тебе продиктовали.';
+
+  @override
+  String get pairCodeOldCode =>
+      'Этот код из более старого Kryfo. На обоих телефонах нужен Kryfo 0.6 или новее.';
+
+  @override
+  String get pairCodeOldCodeDesk =>
+      'Этот код из более старого Kryfo. На обоих устройствах нужен Kryfo 0.6 или новее.';
+
+  @override
+  String get pairCodeBothNeed06 =>
+      'На обоих телефонах нужен Kryfo 0.6 или новее.';
+
+  @override
+  String get pairCodeBothNeed06Desk =>
+      'На обоих устройствах нужен Kryfo 0.6 или новее.';
+
+  @override
+  String get pairCodeWaitingForThem => 'Ждём собеседника…';
+
+  @override
+  String get pairCodeStillWaiting =>
+      'Всё ещё ждём. Если на его экране написано, что введён неверный код, сверьте цифры вместе.';
+
+  @override
+  String get pairCodeUnanswered =>
+      'Ответа не пришло. Сверь код с собеседником и введи его ещё раз.';
+
+  @override
+  String get pairCodeTooManyTries =>
+      'Этот код пробовали три раза. Попроси новый.';
+
+  @override
+  String get pairCodeRanOut => 'Время этого кода вышло. Попроси новый.';
+
+  @override
+  String get pairCodeMatched => 'Код совпал. Добавить друг друга?';
+
+  @override
+  String get pairCodeNotThem => 'Это не тот человек';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut =>
+      'Продиктуй восемь цифр, и вы добавите друг друга. Больше ничего передавать не нужно.';
+
+  @override
+  String get pairCodePanelOrMakeACode => 'Или создай код, чтобы продиктовать';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      'Собеседник открывает Kryfo, нажимает «Добавить», выбирает «Код связи» и вводит эти восемь цифр. Для следующего человека создай новый.';
+
+  @override
+  String get pairCodePanelWrongTyped =>
+      'Введён неверный код. Продиктуй его ещё раз, медленно.';
+
+  @override
+  String get pairCodePanelThreeWrong =>
+      'Неверный код ввели три раза, поэтому этот код больше не действует. Создай новый.';
+
+  @override
+  String get pairCodePanelNotAdded =>
+      'Не добавлено. Создай новый код, когда человек будет готов.';
 
   @override
   String get panicSetupThoseWereDifferentFrom => 'Не совпало. Давай сначала.';
@@ -6879,15 +6923,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pairCodePanelYourInviteIsNot => 'Твоё приглашение ещё не готово';
 
   @override
-  String get pairCodePanelReadSixDigitsOut =>
-      'Продиктуй шесть цифр — и тебя смогут добавить. Больше ничего передавать не нужно.';
-
-  @override
   String get pairCodePanelWorking => 'Работаем';
-
-  @override
-  String get pairCodePanelOrMakeASix =>
-      'Или создай шестизначный код, чтобы продиктовать';
 
   @override
   String get pairCodePanelBurned =>
@@ -6904,17 +6940,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get pairCodePanelTheyTapAddChoose =>
       'Собеседник нажимает «Добавить», выбирает код и вводит эти цифры.';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      'Собеседник открывает Kryfo, нажимает «Добавить», выбирает «Код связи» и вводит эти шесть цифр. Для следующего человека создай новый.';
-
-  @override
-  String get pairCodePanelYourWords => 'Твои три слова';
-
-  @override
-  String get pairCodePanelAcceptOnce =>
-      'Запрос придёт, когда собеседник тебя добавит. Принимай его, только когда он скажет, что все четыре группы совпали.';
 
   @override
   String pinsPinnedMessages(Object count) {

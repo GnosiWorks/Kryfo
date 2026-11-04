@@ -25,7 +25,7 @@ class VideoPlayers(private val textures: TextureRegistry) {
         val id = (call.argument<Number>("id"))?.toLong()
         val p = id?.let { players[it] }
         when (call.method) {
-            "open" -> open(call.argument<String>("path"), result)
+            "open" -> open(call.argument<String>("path"), call.argument<ByteArray>("key"), result)
             "play" -> {
                 if (p?.prepared == true) {
                     if (p.completed) p.mp.seekTo(0)
@@ -71,7 +71,9 @@ class VideoPlayers(private val textures: TextureRegistry) {
         }
     }
 
-    private fun open(path: String?, result: MethodChannel.Result) {
+    // [key]: the file is sealed at rest and is read through it, a chunk at
+    // a time, never as a plain copy
+    private fun open(path: String?, key: ByteArray?, result: MethodChannel.Result) {
         if (path == null) {
             result.success(null)
             return
@@ -97,11 +99,16 @@ class VideoPlayers(private val textures: TextureRegistry) {
                     .setContentType(AudioAttributes.CONTENT_TYPE_MOVIE)
                     .build()
             )
-            mp.setDataSource(path)
+            if (key == null) {
+                mp.setDataSource(path)
+            } else {
+                mp.setDataSource(SealedReader(path, key).media())
+            }
             // a phone held upright records a wide picture and a turn in the
             // track header. the newer texture path draws frames as decoded,
             // unturned, so the turn and the decoded size go to dart
-            val shape = shapeOf(path)
+            val shape = shapeOf(path, key)
+            key?.fill(0)
             val turns = if (producer.handlesCropAndRotation()) 0 else shape.turns
             mp.setOnPreparedListener {
                 p.prepared = true
@@ -158,10 +165,10 @@ class VideoPlayers(private val textures: TextureRegistry) {
     private class Shape(val w: Int, val h: Int, val turns: Int)
 
     // the decoded size and the quarter turns the track header asks for
-    private fun shapeOf(path: String): Shape {
+    private fun shapeOf(path: String, key: ByteArray?): Shape {
         val r = MediaMetadataRetriever()
         return try {
-            r.setDataSource(path)
+            if (key == null) r.setDataSource(path) else r.setDataSource(SealedReader(path, key).media())
             val w = r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)
                 ?.toIntOrNull() ?: 0
             val h = r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)

@@ -56,7 +56,8 @@ const deskWordKeys = [
   'notesExportHoldsInstaller',
   'onboardingGeneratedFromAKey',
   'onboardingYourIdentityLivesOn',
-  'pairCodeNumberMatches',
+  'pairCodeOldCode',
+  'pairCodeBothNeed06',
   'restoreReplaceTheAccountOn',
   'restoreTheRegistryDidNot',
   'restoreKryfoWillCloseNow',
@@ -231,8 +232,10 @@ extension DeskWords on AppLocalizations {
   String get onboardingYourIdentityLivesOnShown => onDesktop
       ? onboardingYourIdentityLivesOnDesk
       : onboardingYourIdentityLivesOn;
-  String get pairCodeNumberMatchesShown =>
-      onDesktop ? pairCodeNumberMatchesDesk : pairCodeNumberMatches;
+  String get pairCodeOldCodeShown =>
+      onDesktop ? pairCodeOldCodeDesk : pairCodeOldCode;
+  String get pairCodeBothNeed06Shown =>
+      onDesktop ? pairCodeBothNeed06Desk : pairCodeBothNeed06;
   String get restoreReplaceTheAccountOnShown =>
       onDesktop ? restoreReplaceTheAccountOnDesk : restoreReplaceTheAccountOn;
   String restoreTheRegistryDidNotShown(Object mine) => onDesktop

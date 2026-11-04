@@ -321,7 +321,7 @@ class _NotesScreenState extends State<NotesScreen> {
       if (!mounted || a == null) return;
       switch (a) {
         case 'copy':
-          Clipboard.setData(ClipboardData(text: text));
+          copySensitive(text, kept: true);
           showHaloToast(context, l10n.commonCopied);
         case 'delete':
           _delete(n);

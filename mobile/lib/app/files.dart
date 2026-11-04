@@ -67,8 +67,6 @@ Future<void> sweepShareCopies(Directory cache, {DateTime? now}) async {
   }
 }
 
-String _safeLeaf(String s) => s.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-
 final _leafRandom = Random.secure();
 
 // a wallpaper's name: random, never its chat's
@@ -125,24 +123,19 @@ String _freshLeaf() {
   return 'in_${b.map((x) => x.toRadixString(16).padLeft(2, '0')).join()}';
 }
 
-// where a received file lands: media/in_<random>_<name>, in the folder of
-// the container the message goes to. the sender's name stays at the end so
-// the file keeps its type. on desktop only its type stays: a copied folder
-// would list every name people sent, and the name lives in the database
+// where a received file lands: media/in_<random>.<type>, in the folder of
+// the container the message goes to. only its type stays: the folder would
+// list every name people sent, and the name lives in the database
 Future<File> receivedFileFor(
   String name, [
   HaloContainer c = HaloContainer.everyday,
 ]) async {
   final mediaDir = await c.mediaDir();
-  final leaf = onDesktop
-      ? '${_freshLeaf()}${typeLeaf(name)}'
-      : '${_freshLeaf()}_${_safeLeaf(name)}';
-  return File('${mediaDir.path}/$leaf');
+  return File('${mediaDir.path}/${_freshLeaf()}${typeLeaf(name)}');
 }
 
 /// a name's type for a file on disk: a dot and up to eight letters or
 /// digits, or nothing
-@visibleForTesting
 String typeLeaf(String name) {
   final m = RegExp(r'\.([A-Za-z0-9]{1,8})$').firstMatch(name);
   return m == null ? '' : '.${m.group(1)!.toLowerCase()}';

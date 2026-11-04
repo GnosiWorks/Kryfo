@@ -4320,9 +4320,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pairCodeEnterOne => 'Kod gir';
 
   @override
-  String get pairCodeSixDigits => 'Altı rakam';
-
-  @override
   String get pairCodeLooking => 'Aranıyor…';
 
   @override
@@ -4345,34 +4342,82 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pairCodeFailed => 'Olmadı. Yeniden dene.';
 
   @override
-  String get pairCodeTypeTheSixDigits => 'Sana okuduğu altı rakamı yaz.';
-
-  @override
   String get pairCodeAddThem => 'Ekle';
-
-  @override
-  String get pairCodeUsedTwice => 'Bu kod iki kez kullanıldı. Yenisini iste.';
 
   @override
   String get pairCodeKeyNumber => 'Anahtar numarası';
 
   @override
-  String get pairCodeNumberMatches =>
-      'Dört grubun da iki telefonda aynı olduğunu kontrol et';
-
-  @override
-  String get pairCodeNumberMatchesDesk =>
-      'Dört grubun da iki cihazda aynı olduğunu kontrol et';
-
-  @override
-  String get pairCodeNumberDiffers => 'Numara farklı';
-
-  @override
-  String get pairCodeNoNumberThere =>
-      'Ekranında numara yok mu? Ekle, sonra sohbette güvenlik numarasını karşılaştır.';
-
-  @override
   String get pairCodeNotAdded => 'Eklenmedi. Yeni bir kod iste.';
+
+  @override
+  String get pairCodeEightDigits => 'Sekiz rakam';
+
+  @override
+  String get pairCodeTypeTheEightDigits => 'Sana okuduğu sekiz rakamı yaz.';
+
+  @override
+  String get pairCodeOldCode =>
+      'Bu kod daha eski bir Kryfo’dan. İki telefonda da Kryfo 0.6 veya daha yenisi gerekir.';
+
+  @override
+  String get pairCodeOldCodeDesk =>
+      'Bu kod daha eski bir Kryfo’dan. İki cihazda da Kryfo 0.6 veya daha yenisi gerekir.';
+
+  @override
+  String get pairCodeBothNeed06 =>
+      'İki telefonda da Kryfo 0.6 veya daha yenisi gerekir.';
+
+  @override
+  String get pairCodeBothNeed06Desk =>
+      'İki cihazda da Kryfo 0.6 veya daha yenisi gerekir.';
+
+  @override
+  String get pairCodeWaitingForThem => 'Karşı taraf bekleniyor…';
+
+  @override
+  String get pairCodeStillWaiting =>
+      'Hâlâ bekleniyor. Karşı tarafın ekranı yanlış kod yazıldığını söylüyorsa rakamları birlikte kontrol edin.';
+
+  @override
+  String get pairCodeUnanswered =>
+      'Yanıt gelmedi. Kodu karşı tarafla kontrol et ve yeniden yaz.';
+
+  @override
+  String get pairCodeTooManyTries =>
+      'Bu kod üç kez denendi. Yeni bir kod iste.';
+
+  @override
+  String get pairCodeRanOut => 'O kodun süresi doldu. Yeni bir kod iste.';
+
+  @override
+  String get pairCodeMatched => 'Kod eşleşti. Birbirinizi ekleyin mi?';
+
+  @override
+  String get pairCodeNotThem => 'Bu o değil';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut =>
+      'Sekiz rakamı yüksek sesle oku, birbirinizi ekleyin. Başka hiçbir şeyin el değiştirmesi gerekmez.';
+
+  @override
+  String get pairCodePanelOrMakeACode => 'Ya da okumak için bir kod oluştur';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      'Karşındaki Kryfo’yu açar, ekleme ekranında eşleştirme kodunu seçer ve bu sekiz rakamı yazar. Sonraki kişi için yenisini oluştur.';
+
+  @override
+  String get pairCodePanelWrongTyped =>
+      'Yanlış bir kod yazıldı. Yavaşça yeniden oku.';
+
+  @override
+  String get pairCodePanelThreeWrong =>
+      'Üç kez yanlış kod yazıldı, bu yüzden bu kod durdu. Yenisini oluştur.';
+
+  @override
+  String get pairCodePanelNotAdded =>
+      'Eklenmedi. Karşı taraf hazır olduğunda yeni bir kod oluştur.';
 
   @override
   String get panicSetupThoseWereDifferentFrom =>
@@ -6768,15 +6813,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pairCodePanelYourInviteIsNot => 'Davetin henüz hazır değil';
 
   @override
-  String get pairCodePanelReadSixDigitsOut =>
-      'Altı rakamı yüksek sesle oku, seni ekleyebilsin. Başka hiçbir şeyin el değiştirmesi gerekmez.';
-
-  @override
   String get pairCodePanelWorking => 'Hazırlanıyor';
-
-  @override
-  String get pairCodePanelOrMakeASix =>
-      'Ya da okumak için altı haneli bir kod oluştur';
 
   @override
   String get pairCodePanelBurned =>
@@ -6793,17 +6830,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get pairCodePanelTheyTapAddChoose =>
       'Karşındaki ekleme ekranını açar, kodu seçer ve bunları yazar.';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      'Karşındaki Kryfo’yu açar, ekleme ekranında eşleştirme kodunu seçer ve bu altı rakamı yazar. Sonraki kişi için yenisini oluştur.';
-
-  @override
-  String get pairCodePanelYourWords => 'Üç kelimen';
-
-  @override
-  String get pairCodePanelAcceptOnce =>
-      'Seni eklediğinde isteği gelir. Yalnızca dört grubun da aynı olduğunu söylediğinde kabul et.';
 
   @override
   String pinsPinnedMessages(Object count) {

@@ -12,6 +12,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
+import 'package:kryfo/desktop/desktop_mode.dart'
+    show containerClosed, containerOpened;
+import 'package:kryfo/desktop/sealed_format.dart' show isSealedHead;
+import 'package:kryfo/desktop/sealed_io.dart';
 import 'package:kryfo/main.dart'
     show
         AppState,
@@ -28,9 +32,12 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/router.dart';
 import 'package:kryfo/search.dart' show searchBody;
 import 'package:kryfo/session.dart';
+import 'package:kryfo/phone_seal.dart';
 import 'package:kryfo/vault_life.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'desktop/sealed_file_test.dart' show ToyCrypto;
 
 const _h = 'hidden-wreck-tone';
 const _v = 'visible-plain-row';
@@ -834,8 +841,8 @@ class _World {
   late final everydayDb = _Db(HaloContainer.everyday, () => _Tables());
 
   // the folder suffixes of the two sides
-  String get ls => liveDb.container.suffix;
-  String get vs => vaultDb.container.suffix;
+  String get ls => liveDb.container.folderSuffix;
+  String get vs => vaultDb.container.folderSuffix;
 
   // a move held as it copies its first chat in, and that it got there
   Completer<void>? hold;
@@ -1120,6 +1127,38 @@ void main() {
   });
 
   group('hide', () {
+    test('sealed files move under the hidden chats\' key and open with no '
+        'other', () async {
+      final areas = SealedAreas(
+        docs: docs.path,
+        support: p.join(docs.path, 'support'),
+        runtime: p.join(docs.path, 'tmp'),
+        phone: true,
+      );
+      installPhoneSeal(areas, ToyCrypto());
+      addTearDown(uninstallPhoneSealForTest);
+      containerOpened!(HaloContainer.everyday.id, '', 'e' * 64);
+      containerOpened!(HaloContainer.vault.id, '_k3', "x'${'f' * 64}'");
+      final w = await _World.make(docs);
+      final h1 = p.join(w.media, 'h1.jpg');
+      Uint8List raw(String f) => rawFileAccess(() => File(f).readAsBytesSync());
+      expect(isSealedHead(raw(h1)), isTrue);
+      await w.app.createVault('246810');
+      await w.app.hideChats(people: [_h], groups: [_g2]);
+      _whole(w, why: 'sealed');
+      final moved = w.vault.msg('h1')!['media_path'] as String;
+      expect(p.dirname(moved), w.mediaV);
+      expect(rawFileAccess(() => File(h1).existsSync()), isFalse);
+      expect(isSealedHead(raw(moved)), isTrue);
+      expect(File(moved).readAsStringSync(), 'h1.jpg');
+      // the hidden chats shut: the everyday key does not open it
+      containerClosed!(HaloContainer.vault.id);
+      expect(
+        () => File(moved).readAsStringSync(),
+        throwsA(isA<SealedLocked>()),
+      );
+    });
+
     test('every row and file moves and the words follow', () async {
       final w = await _World.make(docs);
       await w.app.rememberPeerFc(_h, 'fc-h');
@@ -1174,7 +1213,7 @@ void main() {
       expect(v.msg('h2')!['file_path'], '$m/f_h2_doc.pdf');
       expect(
         v.contact(_h)!['atmosphere'],
-        'image:${p.join(docs.path, 'wallpapers_v')}/$_h.jpg',
+        'image:${p.join(docs.path, 'wallpapers_k3')}/$_h.jpg',
       );
       expect(Directory(w.media).listSync().map((f) => p.basename(f.path)), [
         'v1.jpg',
@@ -1389,7 +1428,7 @@ void main() {
       );
       expect(Directory(w.mediaV).existsSync(), isFalse);
       expect(
-        Directory(p.join(docs.path, 'wallpapers_v')).existsSync(),
+        Directory(p.join(docs.path, 'wallpapers_k3')).existsSync(),
         isFalse,
       );
       expect(w.vault['messages'], isEmpty);

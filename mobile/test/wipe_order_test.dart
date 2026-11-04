@@ -394,6 +394,8 @@ void main() {
     // the pin key before all of it, then the finger's
     expect(platform.take(2), ['pinKeyDrop', 'bioDisable']);
     expect(platform, contains('wipe'));
+    // the clipboard too, after the keys
+    expect(platform.indexOf('clearClip'), greaterThan(1));
     expect(await const FlutterSecureStorage().readAll(), isEmpty);
     expect(exited, 0);
   });

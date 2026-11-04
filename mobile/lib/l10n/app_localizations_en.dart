@@ -4300,9 +4300,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pairCodeEnterOne => 'Enter one';
 
   @override
-  String get pairCodeSixDigits => 'Six digits';
-
-  @override
   String get pairCodeLooking => 'Looking…';
 
   @override
@@ -4325,35 +4322,81 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pairCodeFailed => 'That didn\'t work. Try again.';
 
   @override
-  String get pairCodeTypeTheSixDigits => 'Type the six digits they read out.';
-
-  @override
   String get pairCodeAddThem => 'Add them';
-
-  @override
-  String get pairCodeUsedTwice =>
-      'This code was used twice. Ask for a new one.';
 
   @override
   String get pairCodeKeyNumber => 'Key number';
 
   @override
-  String get pairCodeNumberMatches =>
-      'Check all four groups match on both phones';
-
-  @override
-  String get pairCodeNumberMatchesDesk =>
-      'Check all four groups match on both devices';
-
-  @override
-  String get pairCodeNumberDiffers => 'The number is different';
-
-  @override
-  String get pairCodeNoNumberThere =>
-      'No number on their screen? Add them, then compare the safety number in your chat.';
-
-  @override
   String get pairCodeNotAdded => 'Not added. Ask them for a new code.';
+
+  @override
+  String get pairCodeEightDigits => 'Eight digits';
+
+  @override
+  String get pairCodeTypeTheEightDigits =>
+      'Type the eight digits they read out.';
+
+  @override
+  String get pairCodeOldCode =>
+      'That code is from an older Kryfo. Both phones need Kryfo 0.6 or newer.';
+
+  @override
+  String get pairCodeOldCodeDesk =>
+      'That code is from an older Kryfo. Both devices need Kryfo 0.6 or newer.';
+
+  @override
+  String get pairCodeBothNeed06 => 'Both phones need Kryfo 0.6 or newer.';
+
+  @override
+  String get pairCodeBothNeed06Desk => 'Both devices need Kryfo 0.6 or newer.';
+
+  @override
+  String get pairCodeWaitingForThem => 'Waiting for them…';
+
+  @override
+  String get pairCodeStillWaiting =>
+      'Still waiting. If their screen says a wrong code was typed, check the digits together.';
+
+  @override
+  String get pairCodeUnanswered =>
+      'No answer came. Check the code with them and type it again.';
+
+  @override
+  String get pairCodeTooManyTries =>
+      'This code was tried three times. Ask them for a new one.';
+
+  @override
+  String get pairCodeRanOut => 'That code ran out. Ask them for a new one.';
+
+  @override
+  String get pairCodeMatched => 'The code matched. Add each other?';
+
+  @override
+  String get pairCodeNotThem => 'Not them';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut =>
+      'Read eight digits out loud and you add each other. Nothing else needs to change hands.';
+
+  @override
+  String get pairCodePanelOrMakeACode => 'Or make a code to read out';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      'They open Kryfo, tap add, choose pairing code and type these eight digits. Make a new one for the next person.';
+
+  @override
+  String get pairCodePanelWrongTyped =>
+      'A wrong code was typed. Read it out again, slowly.';
+
+  @override
+  String get pairCodePanelThreeWrong =>
+      'A wrong code was typed three times, so this one stopped. Make a new one.';
+
+  @override
+  String get pairCodePanelNotAdded =>
+      'Not added. Make a new code when they\'re ready.';
 
   @override
   String get panicSetupThoseWereDifferentFrom =>
@@ -6744,14 +6787,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pairCodePanelYourInviteIsNot => 'Your invite is not ready yet';
 
   @override
-  String get pairCodePanelReadSixDigitsOut =>
-      'Read six digits out loud and they can add you. Nothing else needs to change hands.';
-
-  @override
   String get pairCodePanelWorking => 'Working';
-
-  @override
-  String get pairCodePanelOrMakeASix => 'Or make a six digit code to read out';
 
   @override
   String get pairCodePanelBurned =>
@@ -6768,17 +6804,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pairCodePanelTheyTapAddChoose =>
       'They tap add, choose code, and type these.';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      'They open Kryfo, tap add, choose pairing code and type these six digits. Make a new one for the next person.';
-
-  @override
-  String get pairCodePanelYourWords => 'Your three words';
-
-  @override
-  String get pairCodePanelAcceptOnce =>
-      'Their request comes once they add you. Accept it only once they say all four groups matched.';
 
   @override
   String pinsPinnedMessages(Object count) {

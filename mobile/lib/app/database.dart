@@ -149,7 +149,9 @@ class HaloDb
     final path = await container.dbPath();
     final pw = await _passphrase();
     // on desktop its files open from here on, the upgrade's own too
-    if (!_keyed) containerOpened?.call(container.id, container.suffix, pw);
+    if (!_keyed) {
+      containerOpened?.call(container.id, container.folderSuffix, pw);
+    }
     _keyed = true;
     // photo files an upgrade took in, shredded once it is written
     var adopted = const <String>[];
@@ -978,6 +980,14 @@ class HaloDb
     } catch (e) {
       dlog('devices: tables not made (${e.runtimeType})');
     }
+    // folders by number and files under names that say nothing, before a
+    // row is read; then the phone seals what is still plain
+    try {
+      await mediaNamesAtOpen(_db!, container, p.dirname(path));
+    } catch (e) {
+      dlog('media names: not all renamed (${e.runtimeType})');
+    }
+    containerSettled?.call(container);
     // retired while it was opening
     if (_retired) {
       await close();

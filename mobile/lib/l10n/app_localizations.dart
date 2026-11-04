@@ -6812,12 +6812,6 @@ abstract class AppLocalizations {
   /// screens/pair_code_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Six digits'**
-  String get pairCodeSixDigits;
-
-  /// screens/pair_code_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Looking…'**
   String get pairCodeLooking;
 
@@ -6854,20 +6848,8 @@ abstract class AppLocalizations {
   /// screens/pair_code_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Type the six digits they read out.'**
-  String get pairCodeTypeTheSixDigits;
-
-  /// screens/pair_code_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Add them'**
   String get pairCodeAddThem;
-
-  /// widgets/pair_join.dart: the code's address holds more than one invite, so nothing is added
-  ///
-  /// In en, this message translates to:
-  /// **'This code was used twice. Ask for a new one.'**
-  String get pairCodeUsedTwice;
 
   /// widgets/pair_join.dart: the label over the key number on both pair-code screens: 20 digits made from the key the chat will use
   ///
@@ -6875,35 +6857,125 @@ abstract class AppLocalizations {
   /// **'Key number'**
   String get pairCodeKeyNumber;
 
-  /// widgets/pair_join.dart: under the key number on both pair-code screens: all four groups must be the same on the two phones
-  ///
-  /// In en, this message translates to:
-  /// **'Check all four groups match on both phones'**
-  String get pairCodeNumberMatches;
-
-  /// pairCodeNumberMatches as a computer shows it (linux and windows)
-  ///
-  /// In en, this message translates to:
-  /// **'Check all four groups match on both devices'**
-  String get pairCodeNumberMatchesDesk;
-
-  /// widgets/pair_join.dart: button under Add: the numbers on the two phones are not the same; nothing is added
-  ///
-  /// In en, this message translates to:
-  /// **'The number is different'**
-  String get pairCodeNumberDiffers;
-
-  /// widgets/pair_join.dart: small line at the bottom of the card: an older Kryfo on the other phone shows no key number
-  ///
-  /// In en, this message translates to:
-  /// **'No number on their screen? Add them, then compare the safety number in your chat.'**
-  String get pairCodeNoNumberThere;
-
   /// widgets/pair_join.dart: status line after Not them
   ///
   /// In en, this message translates to:
   /// **'Not added. Ask them for a new code.'**
   String get pairCodeNotAdded;
+
+  /// pair code join field: what was typed is not eight digits
+  ///
+  /// In en, this message translates to:
+  /// **'Eight digits'**
+  String get pairCodeEightDigits;
+
+  /// pair code join screen, above the field
+  ///
+  /// In en, this message translates to:
+  /// **'Type the eight digits they read out.'**
+  String get pairCodeTypeTheEightDigits;
+
+  /// pair code join: six digits were typed, the code of a Kryfo before 0.6, which cannot pair with this one
+  ///
+  /// In en, this message translates to:
+  /// **'That code is from an older Kryfo. Both phones need Kryfo 0.6 or newer.'**
+  String get pairCodeOldCode;
+
+  /// pairCodeOldCode as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'That code is from an older Kryfo. Both devices need Kryfo 0.6 or newer.'**
+  String get pairCodeOldCodeDesk;
+
+  /// pair code screens, a small line under the code or the field: a pair code works only between two phones on Kryfo 0.6 or newer
+  ///
+  /// In en, this message translates to:
+  /// **'Both phones need Kryfo 0.6 or newer.'**
+  String get pairCodeBothNeed06;
+
+  /// pairCodeBothNeed06 as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Both devices need Kryfo 0.6 or newer.'**
+  String get pairCodeBothNeed06Desk;
+
+  /// pair code join: the code was found and answered, waiting for the other side to confirm it
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for them…'**
+  String get pairCodeWaitingForThem;
+
+  /// pair code join: waited a while for the other side; a wrong code shows a warning on their screen
+  ///
+  /// In en, this message translates to:
+  /// **'Still waiting. If their screen says a wrong code was typed, check the digits together.'**
+  String get pairCodeStillWaiting;
+
+  /// pair code join: the other side never confirmed the code (a wrong code, or they left the screen)
+  ///
+  /// In en, this message translates to:
+  /// **'No answer came. Check the code with them and type it again.'**
+  String get pairCodeUnanswered;
+
+  /// pair code join: this code was used for three tries, the limit; the other side has to make a new one
+  ///
+  /// In en, this message translates to:
+  /// **'This code was tried three times. Ask them for a new one.'**
+  String get pairCodeTooManyTries;
+
+  /// pair code join: the code's ten minutes are over
+  ///
+  /// In en, this message translates to:
+  /// **'That code ran out. Ask them for a new one.'**
+  String get pairCodeRanOut;
+
+  /// pair code, both sides: the code matched on both phones and the other person's name shows above; nothing is added until Add is tapped
+  ///
+  /// In en, this message translates to:
+  /// **'The code matched. Add each other?'**
+  String get pairCodeMatched;
+
+  /// pair code, both sides: under Add, the name shown is not who they expected; nothing is added
+  ///
+  /// In en, this message translates to:
+  /// **'Not them'**
+  String get pairCodeNotThem;
+
+  /// pair code share screen, above the button
+  ///
+  /// In en, this message translates to:
+  /// **'Read eight digits out loud and you add each other. Nothing else needs to change hands.'**
+  String get pairCodePanelReadEightDigitsOut;
+
+  /// pair code share button, under the qr on the invite page and on the pairing screen
+  ///
+  /// In en, this message translates to:
+  /// **'Or make a code to read out'**
+  String get pairCodePanelOrMakeACode;
+
+  /// pair code share screen, under the code
+  ///
+  /// In en, this message translates to:
+  /// **'They open Kryfo, tap add, choose pairing code and type these eight digits. Make a new one for the next person.'**
+  String get pairCodePanelTheyOpenKryfoEight;
+
+  /// pair code share screen: the other phone typed a wrong code (one of three tries)
+  ///
+  /// In en, this message translates to:
+  /// **'A wrong code was typed. Read it out again, slowly.'**
+  String get pairCodePanelWrongTyped;
+
+  /// pair code share screen: a wrong code was typed three times, the code no longer works
+  ///
+  /// In en, this message translates to:
+  /// **'A wrong code was typed three times, so this one stopped. Make a new one.'**
+  String get pairCodePanelThreeWrong;
+
+  /// pair code share screen: the person tapped Not them; nothing was added
+  ///
+  /// In en, this message translates to:
+  /// **'Not added. Make a new code when they\'re ready.'**
+  String get pairCodePanelNotAdded;
 
   /// screens/panic_setup_screen.dart
   ///
@@ -10748,20 +10820,8 @@ abstract class AppLocalizations {
   /// widgets/pair_code_panel.dart
   ///
   /// In en, this message translates to:
-  /// **'Read six digits out loud and they can add you. Nothing else needs to change hands.'**
-  String get pairCodePanelReadSixDigitsOut;
-
-  /// widgets/pair_code_panel.dart
-  ///
-  /// In en, this message translates to:
   /// **'Working'**
   String get pairCodePanelWorking;
-
-  /// widgets/pair_code_panel.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Or make a six digit code to read out'**
-  String get pairCodePanelOrMakeASix;
 
   /// widgets/pair_code_panel.dart: where the six digits were, once their ten minutes are over
   ///
@@ -10786,24 +10846,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'They tap add, choose code, and type these.'**
   String get pairCodePanelTheyTapAddChoose;
-
-  /// widgets/pair_code_panel.dart
-  ///
-  /// In en, this message translates to:
-  /// **'They open Kryfo, tap add, choose pairing code and type these six digits. Make a new one for the next person.'**
-  String get pairCodePanelTheyOpenKryfoTap;
-
-  /// widgets/pair_join.dart: label over the sharer's own three words under the six digit code
-  ///
-  /// In en, this message translates to:
-  /// **'Your three words'**
-  String get pairCodePanelYourWords;
-
-  /// widgets/pair_code_panel.dart: under the sharer's key number while a code is live: the joiner's request arrives after they add
-  ///
-  /// In en, this message translates to:
-  /// **'Their request comes once they add you. Accept it only once they say all four groups matched.'**
-  String get pairCodePanelAcceptOnce;
 
   /// widgets/pins.dart
   ///

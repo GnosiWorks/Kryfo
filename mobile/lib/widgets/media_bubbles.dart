@@ -22,6 +22,7 @@ import '../file_save.dart' show savingFiles;
 import '../dlog.dart';
 import '../lock_guard.dart' show lockGuard;
 import '../voice_length.dart';
+import '../phone_seal.dart' show PlainView, plainViewOf;
 
 /// a file's size as the bubbles write it
 String humanFileSize(int bytes) {
@@ -446,10 +447,14 @@ class VoiceBubbleState extends State<VoiceBubble> {
 
   // the file the player has open, held so it is not shredded under it
   String? _open;
+  // what the player reads of a sealed note: memory, gone with the hold
+  PlainView? _view;
 
   void _letFileGo() {
     final o = _open;
     _open = null;
+    _view?.close();
+    _view = null;
     if (o != null) letVoiceFileGo(o);
   }
 
@@ -501,8 +506,10 @@ class VoiceBubbleState extends State<VoiceBubble> {
     Future.delayed(const Duration(milliseconds: 400), () async {
       if (!mounted) return;
       final probe = AudioPlayer();
+      PlainView? v;
       try {
-        final d = await probe.setFilePath(widget.path);
+        v = plainViewOf(widget.path);
+        final d = await probe.setFilePath(v.path);
         if (d != null) {
           _durCache[widget.path] = d;
           if (mounted) setState(() => _dur = d);
@@ -511,6 +518,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
         // no length known: the bubble shows none
       } finally {
         await probe.dispose();
+        v?.close();
       }
     });
   }
@@ -526,8 +534,16 @@ class VoiceBubbleState extends State<VoiceBubble> {
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
         final path = widget.path;
-        final d = await _player.setFilePath(path);
+        final v = plainViewOf(path);
+        final Duration? d;
+        try {
+          d = await _player.setFilePath(v.path);
+        } catch (_) {
+          v.close();
+          rethrow;
+        }
         _letFileGo();
+        _view = v;
         holdVoiceFile(_open = path);
         // the length read from the head stays: the number does not jump
         _dur = _durCache[path] ?? d ?? Duration.zero;

@@ -8,6 +8,7 @@ import (
 	"io"
 	"strconv"
 	"time"
+	"unicode/utf8"
 )
 
 const (
@@ -50,26 +51,20 @@ func NewCode(rnd io.Reader) (Code, error) {
 	return c, nil
 }
 
-// ParseCode takes the eight digits as typed. spaces and dashes are
-// skipped, and arabic-indic, extended arabic-indic, devanagari and
-// fullwidth digits read as ascii ones, so the password matches on both phones
-func ParseCode(s string) (Code, error) {
+// ParseCode takes the eight digits as typed. spaces, dashes and the marks
+// text fields and copy-paste put around digits (bidi marks, no-break
+// spaces, the non-breaking hyphen) are skipped, and arabic-indic, extended
+// arabic-indic, devanagari and fullwidth digits read as ascii ones, so the
+// password matches on both phones
+func ParseCode(s string) (Code, error) { return ParseCodeBytes([]byte(s)) }
+
+// ParseCodeBytes is ParseCode on the typed bytes, so the caller can clear
+// them; nothing here keeps a copy
+func ParseCodeBytes(s []byte) (Code, error) {
 	var c Code
 	var d [BoxDigits + SecretDigits]byte
-	n := 0
-	for _, r := range s {
-		if r == ' ' || r == '-' || r == '\u00a0' {
-			continue
-		}
-		v, ok := digitOf(r)
-		if !ok || n == len(d) {
-			wipe(d[:])
-			return c, ErrCode
-		}
-		d[n] = '0' + v
-		n++
-	}
-	if n != len(d) {
+	n, ok := codeDigits(s, d[:])
+	if !ok || n != len(d) {
 		wipe(d[:])
 		return c, ErrCode
 	}
@@ -77,6 +72,44 @@ func ParseCode(s string) (Code, error) {
 	copy(c.secret[:], d[BoxDigits:])
 	wipe(d[:])
 	return c, nil
+}
+
+// OldCode is six digits and nothing else: the code of a Kryfo before 0.6,
+// which has no box and no pake, so nothing here can take it
+func OldCode(s []byte) bool {
+	var d [SecretDigits]byte
+	n, ok := codeDigits(s, d[:])
+	wipe(d[:])
+	return ok && n == SecretDigits
+}
+
+// codeDigits folds the typed digits into d as ascii. false for any other
+// character or more digits than d holds
+func codeDigits(s []byte, d []byte) (int, bool) {
+	n := 0
+	for len(s) > 0 {
+		r, size := utf8.DecodeRune(s)
+		s = s[size:]
+		if skipped(r) {
+			continue
+		}
+		v, ok := digitOf(r)
+		if !ok || n == len(d) {
+			return n, false
+		}
+		d[n] = '0' + v
+		n++
+	}
+	return n, true
+}
+
+// skipped is what may sit between typed digits
+func skipped(r rune) bool {
+	switch r {
+	case ' ', '-', '\u00a0', '\u202f', '\u2011', '\u200e', '\u200f', '\u061c':
+		return true
+	}
+	return r >= '\u2066' && r <= '\u2069'
 }
 
 func digitOf(r rune) (byte, bool) {
@@ -93,8 +126,19 @@ func (c *Code) Box() string { return string(c.box[:]) }
 
 // String is the code as shown: NN NNN NNN
 func (c *Code) String() string {
-	s := c.secret
-	return string(c.box[:]) + " " + string(s[:3]) + " " + string(s[3:])
+	b := c.Shown()
+	defer wipe(b)
+	return string(b)
+}
+
+// Shown is String as bytes the caller can clear
+func (c *Code) Shown() []byte {
+	b := make([]byte, 0, BoxDigits+SecretDigits+2)
+	b = append(b, c.box[:]...)
+	b = append(b, ' ')
+	b = append(b, c.secret[:3]...)
+	b = append(b, ' ')
+	return append(b, c.secret[3:]...)
 }
 
 // Wipe clears the secret digits
