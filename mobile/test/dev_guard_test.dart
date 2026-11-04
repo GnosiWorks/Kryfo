@@ -667,7 +667,11 @@ class _Mem implements HaloDb {
   }
 
   @override
-  Future<void> editMessage(String msgUid, String newText) async {
+  Future<void> editMessage(
+    String msgUid,
+    String newText, {
+    String? from,
+  }) async {
     _hit('editMessage', msgUid, null);
     final m = msg(msgUid);
     if (m == null) return;
@@ -676,7 +680,7 @@ class _Mem implements HaloDb {
   }
 
   @override
-  Future<void> deleteMessage(String msgUid) async {
+  Future<void> deleteMessage(String msgUid, {String? from}) async {
     _hit('deleteMessage', msgUid, null);
     msgs.removeWhere((m) => m['msg_uid'] == msgUid);
     reactions.remove(msgUid);
