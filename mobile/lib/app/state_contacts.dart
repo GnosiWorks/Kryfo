@@ -153,6 +153,8 @@ extension AppStateContacts on AppState {
     if ((row['accepted'] as num?)?.toInt() == 1) {
       await deleteConversation(id);
     } else {
+      // linked devices: a request's lists go with it (read before the row)
+      await _devForget(id);
       await live.declineRequest(id);
     }
     // the store of the identity they knew

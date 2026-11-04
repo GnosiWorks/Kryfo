@@ -718,6 +718,21 @@ class HaloEngine {
       .lookupFunction<IdentFn, IdentFnDart>('HaloDevicePairsOn');
   String devicePairsOn(bool on) => engineTake(_devicePairsOn(on ? 1 : 0));
 
+  // listening on a device pair (device_receive.dart): [arg] "x/their/my"
+  // for its opener address, "x/their/my.seed" for the seeded pair
+  // a device pair is never the dev chat's: a pinned key is not listened on
+  void deviceListenBg(int ident, String arg) {
+    if (devGate.names(xPub: arg.split('/').first)) return;
+    deviceTagStep(ident, arg, () => _subscribeOnIsolate(ident, arg));
+  }
+
+  // no more listening on a device pair, by its tag; its files go
+  void deviceUnlistenBg(int ident, String arg) => deviceTagStep(
+    ident,
+    arg,
+    () => _identFfiOnIsolate('HaloNostrUnsubscribe', ident, [arg]),
+  );
+
   // a copy to a device pair, [arg] "x/their/my.seed" (device_send.dart):
   // on the seeded pair, or with [opener] to the receiver's opener address.
   // a device pair is never the dev chat's, so a pinned key is refused
@@ -1321,6 +1336,34 @@ class _KnockWaits implements Exception {
 // a stranger's opener that did not file and may later: not acked
 class _FirstWaits implements Exception {
   const _FirstWaits();
+}
+
+// the listens and unlistens of one engine tag (a device pair's opener
+// address, or its seeded pair whatever the seed) run in the order asked, so
+// an unlisten never lands after a listen asked behind it
+final _deviceTagSteps = <String, Future<void>>{};
+
+void deviceTagStep(int ident, String arg, Future<String> Function() run) =>
+    unawaited(deviceTagStepDone(ident, arg, run));
+
+/// as deviceTagStep, done when [run] is
+Future<void> deviceTagStepDone(
+  int ident,
+  String arg,
+  Future<String> Function() run,
+) {
+  final base = arg.split('.').first;
+  final k = '$ident $base ${arg.contains('.') ? 'seeded' : 'opener'}';
+  final next = (_deviceTagSteps[k] ?? Future<void>.value())
+      .then((_) => run())
+      .then<void>((r) {
+        if (r != 'ok') dlog('device pair listen: $r');
+      }, onError: (Object e) => dlog('device pair listen: $e'));
+  _deviceTagSteps[k] = next;
+  next.whenComplete(() {
+    if (identical(_deviceTagSteps[k], next)) _deviceTagSteps.remove(k);
+  });
+  return next;
 }
 
 // a call nobody waits on: what it threw still shows in a debug log

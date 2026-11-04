@@ -42,6 +42,12 @@ class SessionRemote {
 String devHex(List<int> b) =>
     b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
 
+/// the bytes of a hex key as [devHex] writes it
+Uint8List devBytes(String hex) => Uint8List.fromList([
+  for (var i = 0; i + 1 < hex.length; i += 2)
+    int.parse(hex.substring(i, i + 2), radix: 16),
+]);
+
 /// the engine turned a call down. [why] is its name for the reason
 /// (rollback, equivocation, signature, not_listed, ...)
 class DevRefused implements Exception {

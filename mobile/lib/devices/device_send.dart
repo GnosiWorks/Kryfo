@@ -104,6 +104,7 @@ class DeviceSend {
     required this.db,
     required this.sessions,
     required this.wire,
+    this.listen,
     int Function()? clock,
     Random? random,
   }) : _clock = clock ?? (() => DateTime.now().millisecondsSinceEpoch),
@@ -117,6 +118,10 @@ class DeviceSend {
   /// the device sessions of my identity [ident]
   final Future<DeviceSessions> Function(int ident) sessions;
   final DeviceWire wire;
+
+  /// listens on a device pair, [arg] as the engine names it
+  /// ("x/their/my.seed"): a pair given a seed here is heard on from then on
+  final void Function(int ident, String arg)? listen;
   final int Function() _clock;
   final Random _rand;
 
@@ -423,6 +428,11 @@ class DeviceSend {
       });
       await _record(t, at, s.key);
     });
+    // its answers come on the seeded pair
+    listen?.call(
+      me.ident,
+      '${s.identity.substring(2)}/${s.device}/${me.device}.${devHex(seed)}',
+    );
     return seed;
   }
 
@@ -726,6 +736,50 @@ class DeviceSend {
     );
   }
 
+  /// whether a copy to [identity]'s [device] waits for its session: a
+  /// bundle that comes now answers an ask (a Rebuild's), not a push
+  Future<bool> waitsFor(int ident, String identity, int device) async =>
+      (await (await db()).query(
+        'dev_out',
+        columns: ['uid'],
+        where: "ident = ? AND peer = ? AND device = ? AND state = 'wait'",
+        whereArgs: [ident, identity, device],
+        limit: 1,
+      )).isNotEmpty;
+
+  /// [frame] to [identity]'s [device] alone, on its device session: an
+  /// answer (a receipt, a bundle, a held list) on the pair a frame came on.
+  /// it waits in dev_out for the pump as any copy that waits does
+  Future<void> toOne({
+    required int ident,
+    required String identity,
+    required int device,
+    required String addr,
+    required String pin,
+    required int reg,
+    required String frame,
+    bool own = false,
+  }) async {
+    final body = _bodyOf(frame);
+    if (body == null) return;
+    final now = _clock();
+    await (await db()).insert('dev_out', {
+      'uid': _uidOf(body, frame),
+      'ident': ident,
+      'peer': identity,
+      'device': device,
+      'at': now,
+      'own': own ? 1 : 0,
+      'addr': addr,
+      'pin': pin,
+      'reg': reg,
+      'plain': frame,
+      'state': 'wait',
+      'next_at': now,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    unawaited(pump());
+  }
+
   /// [identity]'s [device] left its list: nothing more is owed to it
   Future<void> dropDevice(int ident, String identity, int device) async {
     final d = await db();
@@ -1004,9 +1058,10 @@ class DeviceSend {
       // each device of theirs its own bundles: taken from the pool once and
       // kept on the push in the same transaction, then the same ones on
       // every retry. a crash after hands none twice, a failed push spends
-      // no more
+      // no more. a device of theirs or of mine that came since the take
+      // gets its own then: kept with the set they were taken for
       var per = _bundlesOf(rs);
-      if (add.isNotEmpty && per == null) {
+      if (add.isNotEmpty && await _bundlesOwed(d, per, add, identity)) {
         try {
           final slots = _slots(
             await state.call(d, 'fanout', {
@@ -1017,39 +1072,59 @@ class DeviceSend {
               'now': now,
             }),
           );
-          final took = <int, List<String>>{};
-          await d.transaction((t) async {
-            for (final s in slots) {
-              if (!s.own) took[s.device] = await _take(t, ident, add, now);
-            }
-            await _pushRows(t, rs, {
-              'bundles': jsonEncode({
-                for (final e in took.entries) '${e.key}': e.value,
-              }),
+          final kept = per;
+          final took = <int, List<String>>{
+            if (kept != null)
+              for (final e in kept.s.entries) e.key: [...e.value],
+          };
+          final keptFor = kept?.a ?? const <int>{};
+          final newMine = add.difference(keptFor);
+          final theirs = [
+            for (final s in slots)
+              if (!s.own) s.device,
+          ];
+          final owed = theirs.any(
+            (dev) => !took.containsKey(dev) || newMine.isNotEmpty,
+          );
+          if (owed) {
+            await d.transaction((t) async {
+              for (final dev in theirs) {
+                final want = took.containsKey(dev) ? newMine : add;
+                if (want.isEmpty) continue;
+                (took[dev] ??= []).addAll(await _take(t, ident, want, now));
+              }
+              await _pushRows(t, rs, {
+                'bundles': jsonEncode({
+                  'a': [...keptFor.union(add)],
+                  's': {for (final e in took.entries) '${e.key}': e.value},
+                }),
+              });
             });
-          });
-          per = took;
+          }
+          per = (a: keptFor.union(add), s: took);
         } on Object {
           await _pushFailed(d, rs, now);
           continue;
         }
       }
-      final bundles = per ?? const <int, List<String>>{};
-      // its device copies went on an earlier try: the phone's alone now
-      final devicesWent = rs.any((r) => r['dev_sent'] == 1);
+      final bundles = per?.s ?? const <int, List<String>>{};
+      // a device whose copy of this list is still owed (in dev_out until its
+      // receipt) gets no second one: burst skips a slot owed under the uid,
+      // so a retry after a failed phone copy is the phone's alone, and a
+      // removal due with such an add still reaches every device not owed
       final DevBurst? r;
       try {
         r = await burst(
           who.me,
           who.c,
-          '$kEnvelopePrefix${jsonEncode({'dl': list})}',
+          // a uid, so each device's copy goes again until that device's
+          // receipt; the version names it, one list a uid
+          '$kEnvelopePrefix${jsonEncode({'u': 'dl:${_listVersion(list)}', 'dl': list})}',
           phone: phone(who.me, who.c),
           force: true,
           frameFor: (slot, f) {
             // my own devices get my list from the phone, not as a push
             if (slot.own) return null;
-            final phoneSlot = slot.device == 1 && who.me.device == 1;
-            if (devicesWent && !phoneSlot) return null;
             final b = bundles[slot.device] ?? const [];
             return b.isEmpty ? f : _with(f, (j) => j['db'] = b);
           },
@@ -1062,7 +1137,6 @@ class DeviceSend {
         await _pushFailed(d, rs, now);
         continue;
       }
-      await _pushRows(d, rs, {'dev_sent': 1});
       final pc = r.phone;
       if (pc != null && !await send(who.me, who.c, pc)) {
         await _pushFailed(d, rs, now);
@@ -1073,20 +1147,48 @@ class DeviceSend {
         'bundles': '',
         'tries': 0,
         'next_at': 0,
-        'dev_sent': 0,
       });
     }
   }
 
-  Map<int, List<String>>? _bundlesOf(List<Map<String, Object?>> rs) {
+  // whether a push still owes bundles: none taken yet, a device of mine
+  // added since, or a device of theirs the list held names that has none.
+  // read from the list, so a retry never runs the fanout (and its quiet
+  // probes) for nothing
+  Future<bool> _bundlesOwed(
+    Database d,
+    ({Set<int> a, Map<int, List<String>> s})? per,
+    Set<int> add,
+    String identity,
+  ) async {
+    if (per == null || add.difference(per.a).isNotEmpty) return true;
+    try {
+      final cur = await state.call(d, 'current', {'identity': identity});
+      return [
+        for (final e in (cur['devices'] as List? ?? const []))
+          (e as Map)['id'] as int,
+      ].any((id) => !per.s.containsKey(id));
+    } on DevRefused {
+      return !per.s.containsKey(1);
+    }
+  }
+
+  // the bundles a push took, and the devices of mine they were taken for
+  ({Set<int> a, Map<int, List<String>> s})? _bundlesOf(
+    List<Map<String, Object?>> rs,
+  ) {
     for (final r in rs) {
       final b = r['bundles'] as String? ?? '';
       if (b.isEmpty) continue;
       try {
-        return {
-          for (final e in (jsonDecode(b) as Map).entries)
-            int.parse(e.key as String): (e.value as List).cast<String>(),
-        };
+        final j = jsonDecode(b) as Map;
+        return (
+          a: {for (final x in (j['a'] as List)) x as int},
+          s: {
+            for (final e in (j['s'] as Map).entries)
+              int.parse(e.key as String): (e.value as List).cast<String>(),
+          },
+        );
       } catch (_) {
         return null;
       }
@@ -1242,6 +1344,18 @@ class DeviceSend {
       'state': 'wait',
       'next_at': now,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+}
+
+// the version a KDL2 wire names, after its magic and identity; 0 when it
+// does not read
+int _listVersion(Object? b64) {
+  try {
+    final w = base64Decode(b64 as String);
+    if (w.length < 4 + 33 + 8) return 0;
+    return ByteData.sublistView(w, 37, 45).getUint64(0);
+  } catch (_) {
+    return 0;
   }
 }
 
