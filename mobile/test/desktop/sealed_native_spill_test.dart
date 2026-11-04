@@ -93,4 +93,34 @@ void main() {
       throwsA(isA<FileSystemException>()),
     );
   });
+
+  test('at start, what a crash left in the spill folder is zeroed and '
+      'deleted', () {
+    Directory(p.join(spill, 'odd')).createSync(recursive: true);
+    final left = File(p.join(spill, 'ab' * 16))
+      ..writeAsStringSync('the whole report');
+    // a handle held across the sweep sees the zeros it left
+    final held = left.openSync();
+    sweepNativeCopies(spill);
+    expect(Directory(spill).listSync(), isEmpty);
+    held.setPositionSync(0);
+    expect(held.readSync(64), List.filled(16, 0));
+    held.closeSync();
+    // nothing there, or no folder at all: nothing to do
+    sweepNativeCopies(spill);
+    sweepNativeCopies(p.join(root.path, 'none'));
+  });
+
+  test('a copy whose zeroing fails is still deleted', () {
+    final c = DiskCopy.create(spill);
+    File(c.path).writeAsStringSync('plain');
+    // read-only: opening it to zero throws
+    Process.runSync('chmod', ['444', c.path]);
+    expect(
+      () => File(c.path).openSync(mode: FileMode.writeOnlyAppend),
+      throwsA(isA<FileSystemException>()),
+    );
+    c.close();
+    expect(File(c.path).existsSync(), isFalse);
+  });
 }
