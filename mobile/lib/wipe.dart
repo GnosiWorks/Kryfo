@@ -53,6 +53,9 @@ const kWipeHeld = 'wipe_held';
 // unzeroed, and a panic wipe stays quick
 const kWipeShredWait = Duration(seconds: 2);
 
+// how long a wipe gives a linked device's last word to reach the relay
+const kWipeTellWait = Duration(seconds: 8);
+
 // the shred of one held entry, a stand-in in tests
 @visibleForTesting
 Future<void> Function(String path) wipeShred = shredHeld;
@@ -68,8 +71,16 @@ Future<void> get wipeShredding => _shredding;
 
 // [releaseHandle] gives the handle back on the way, for a wipe chosen in
 // settings. a wipe from the lock screen or from a quiet session makes no
-// network call at all
-Future<void> wipeHalo({bool releaseHandle = false}) async {
+// network call at all. [afterErase] runs once the keys, prefs and files are
+// gone and before the engine is taken off the network (a linked device's
+// last word to its phone, sealed before the wipe began), a few seconds at
+// most. [stay]: the process lives on for a page that says what happened,
+// and android's erase and the exit wait for [wipeFinish]
+Future<void> wipeHalo({
+  bool releaseHandle = false,
+  Future<void> Function()? afterErase,
+  bool stay = false,
+}) async {
   // read before anything goes: a quiet session has no handle and reaches
   // nobody on the everyday identity's behalf
   final release = releaseHandle && !sessionQuiet;
@@ -111,6 +122,15 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
   await _erase(keep: const {'tor'});
   // what was copied leaves the clipboard, whatever session copied it
   unawaited(dropOurClip(wipe: true));
+  // never before the erase: whatever happens to it, nothing is left to read
+  final after = afterErase;
+  if (after != null) {
+    try {
+      await Future.any([after(), Future<void>.delayed(kWipeTellWait)]);
+    } catch (e) {
+      dlog('wipe: the last word not sent (${e.runtimeType})');
+    }
+  }
   final shredFrom = Stopwatch()..start();
   if (released != null) await Future.any([released, cap]);
   // the engine stops its relay listeners and takes tor off the network, and
@@ -128,6 +148,13 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
   if (wait > Duration.zero) {
     await Future.any([_shredding, Future<void>.delayed(wait)]);
   }
+  if (stay) return;
+  await wipeFinish();
+}
+
+/// the end of a wipe: android's erase, else the exit. a page shown after a
+/// wipe that stayed calls it when the person closes it
+Future<void> wipeFinish() async {
   // the call that finishes the job kills this process before it can
   // answer, so a reply at all means it did not happen.
   var native = false;
