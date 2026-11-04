@@ -726,7 +726,8 @@ open class MainActivity : FlutterFragmentActivity() {
                         val path = call.argument<String>("path")
                         val name = call.argument<String>("name")
                         val mime = call.argument<String>("mime")
-                        if (path == null) result.success(false) else openFile(path, name, mime, result)
+                        val key = call.argument<ByteArray>("key")
+                        if (path == null) result.success(false) else openFile(path, name, mime, key, result)
                     }
                     "shareFile" -> {
                         val path = call.argument<String>("path")
@@ -740,6 +741,7 @@ open class MainActivity : FlutterFragmentActivity() {
                                 call.argument<String>("subject"),
                                 call.argument<Boolean>("backup") == true,
                                 call.argument<Boolean>("quiet") == true,
+                                call.argument<ByteArray>("key"),
                                 result
                             )
                         }
@@ -747,7 +749,8 @@ open class MainActivity : FlutterFragmentActivity() {
                     "videoInfo" -> {
                         val path = call.argument<String>("path")
                         val maxEdge = call.argument<Int>("maxEdge") ?: 640
-                        if (path == null) result.success(null) else videoInfo(path, maxEdge, result)
+                        val key = call.argument<ByteArray>("key")
+                        if (path == null) result.success(null) else videoInfo(path, maxEdge, key, result)
                     }
                     "saveDocument" -> {
                         val path = call.argument<String>("path")
@@ -759,6 +762,7 @@ open class MainActivity : FlutterFragmentActivity() {
                                 path,
                                 name,
                                 call.argument<Boolean>("backup") == true,
+                                call.argument<ByteArray>("key"),
                                 result,
                             )
                         }
@@ -805,7 +809,8 @@ open class MainActivity : FlutterFragmentActivity() {
     // never written over. a copy cut short is shredded, and null comes back.
     // a backup is ciphertext with a rule of its own (Shred.BACKUP_OUT): the
     // last one goes when the next goes out
-    private fun handOut(src: File, name: String?, into: String): File? {
+    // [key]: [src] is sealed at rest, and the copy is its plaintext
+    private fun handOut(src: File, name: String?, into: String, key: ByteArray? = null): File? {
         val top = File(cacheDir, into)
         val backup = into == Shred.BACKUP_OUT
         if (backup) {
@@ -819,7 +824,7 @@ open class MainActivity : FlutterFragmentActivity() {
         val dst = File(dir, Shred.leaf(name ?: src.name))
         return try {
             dir.mkdirs()
-            src.inputStream().use { i -> dst.outputStream().use { o -> i.copyTo(o) } }
+            Sealed.open(src.path, key).use { i -> dst.outputStream().use { o -> i.copyTo(o) } }
             if (!backup) JobSetup.scheduleCopySweep(this)
             dst
         } catch (e: Exception) {
@@ -829,16 +834,29 @@ open class MainActivity : FlutterFragmentActivity() {
     }
 
     // "refused" for an app installer: dart offers a save instead
-    private fun openFile(path: String, name: String?, mime: String?, result: MethodChannel.Result) {
+    private fun openFile(
+        path: String,
+        name: String?,
+        mime: String?,
+        key: ByteArray?,
+        result: MethodChannel.Result
+    ) {
         Thread {
             val type = mime ?: mimeOf(File(name ?: path))
-            if (Installer.refused(File(path), name, type)) {
+            if (key == null && Installer.refused(File(path), name, type)) {
                 runOnUiThread { result.success("refused") }
                 return@Thread
             }
-            val dst = handOut(File(path), name, "open")
+            val dst = handOut(File(path), name, "open", key)
+            key?.fill(0)
             if (dst == null) {
                 runOnUiThread { result.success(false) }
+                return@Thread
+            }
+            // a sealed one is looked into as its copy
+            if (key != null && Installer.refused(dst, name, type)) {
+                Shred.tree(dst.parentFile!!)
+                runOnUiThread { result.success("refused") }
                 return@Thread
             }
             var started = false
@@ -885,15 +903,23 @@ open class MainActivity : FlutterFragmentActivity() {
         subject: String?,
         backup: Boolean,
         quiet: Boolean,
+        key: ByteArray?,
         result: MethodChannel.Result
     ) {
         Thread {
-            if (!backup && Installer.refused(File(path), name, mimeOf(File(name ?: path)))) {
+            val type = mimeOf(File(name ?: path))
+            if (!backup && key == null && Installer.refused(File(path), name, type)) {
                 runOnUiThread { result.success(SharePick.FAILED) }
                 return@Thread
             }
-            val dst = handOut(File(path), name, Shred.shareInto(backup, quiet))
+            val dst = handOut(File(path), name, Shred.shareInto(backup, quiet), key)
+            key?.fill(0)
             if (dst == null) {
+                runOnUiThread { result.success(SharePick.FAILED) }
+                return@Thread
+            }
+            if (!backup && key != null && Installer.refused(dst, name, type)) {
+                Shred.tree(dst.parentFile!!)
                 runOnUiThread { result.success(SharePick.FAILED) }
                 return@Thread
             }
@@ -932,12 +958,13 @@ open class MainActivity : FlutterFragmentActivity() {
     // one frame and the length of a video, for its bubble. the frame goes
     // back as bytes and is never written anywhere: a thumbnail on disk
     // would outlive a message that burned.
-    private fun videoInfo(path: String, maxEdge: Int, result: MethodChannel.Result) {
+    private fun videoInfo(path: String, maxEdge: Int, key: ByteArray?, result: MethodChannel.Result) {
         Thread {
             var out: Map<String, Any?>? = null
             val r = MediaMetadataRetriever()
             try {
-                r.setDataSource(path)
+                if (key == null) r.setDataSource(path) else r.setDataSource(SealedReader(path, key).media())
+                key?.fill(0)
                 val ms = r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
                     ?.toLongOrNull() ?: 0L
                 val frame = r.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
@@ -981,6 +1008,7 @@ open class MainActivity : FlutterFragmentActivity() {
         path: String,
         name: String,
         backup: Boolean,
+        key: ByteArray?,
         result: MethodChannel.Result,
     ) {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
@@ -996,7 +1024,7 @@ open class MainActivity : FlutterFragmentActivity() {
                 }
             }
         }
-        val p = SaveDoc.begin(path) { result.success(it) }
+        val p = SaveDoc.begin(path, key) { result.success(it) }
         if (p == null) {
             result.success(mapOf("state" to SaveDoc.FAILED))
             return
@@ -1035,11 +1063,13 @@ open class MainActivity : FlutterFragmentActivity() {
             val state = SaveDoc.copyInto(
                 File(p.path),
                 before,
+                key = p.key,
                 open = { contentResolver.openOutputStream(uri, it) },
                 sizeThere = { sizeOf(uri) },
                 readBack = { contentResolver.openInputStream(uri) },
                 drop = { dropDocument(uri) },
             )
+            p.key?.fill(0)
             val kept = state == SaveDoc.SAVED || state == SaveDoc.UNCHECKED
             val where = if (kept) placeOf(uri) else null
             runOnUiThread { p.reply(state, where) }

@@ -1852,7 +1852,7 @@ void main() {
       expect(w.vault.msg('b'), isNull);
       final p = w.vault.msg('p')!;
       final path = p['media_path'] as String;
-      expect(path, contains('media_v'));
+      expect(path, contains('media_k3'));
       expect(
         File(path).readAsBytesSync(),
         List<int>.generate(20, (i) => 200 - i),

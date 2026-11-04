@@ -14,9 +14,12 @@ import 'package:path_provider_platform_interface/path_provider_platform_interfac
 void main() {
   tearDown(() => onDesktop = false);
 
-  test('the phone keeps its names', () {
+  test('the phone keeps its database names, its folders go by number', () {
     expect(HaloContainer.decoy.dbFile, 'halo_d.db');
     expect(HaloContainer.vault.suffix, '_v');
+    expect(HaloContainer.vault.folderSuffix, '_k3');
+    expect(HaloContainer.decoy.folderSuffix, '_k2');
+    expect(HaloContainer.decoyVault.folderSuffix, '_k4');
   });
 
   test('on desktop no name says decoy or vault', () {
@@ -47,7 +50,8 @@ void main() {
     expect(typeLeaf('../../etc/passwd'), '');
   });
 
-  test('a received file on desktop is named by chance alone', () async {
+  test('a received file is named by chance alone, on desktop and on the '
+      'phone', () async {
     final tmp = Directory.systemTemp.createTempSync('names');
     addTearDown(() => tmp.deleteSync(recursive: true));
     PathProviderPlatform.instance = DesktopPaths(tmp.path);
@@ -56,6 +60,6 @@ void main() {
     expect(p.basename(f.path), matches(RegExp(r'^in_[0-9a-f]{32}\.pdf$')));
     onDesktop = false;
     final g = await receivedFileFor('Wren passport scan.pdf');
-    expect(p.basename(g.path), endsWith('_Wren_passport_scan.pdf'));
+    expect(p.basename(g.path), matches(RegExp(r'^in_[0-9a-f]{32}\.pdf$')));
   });
 }

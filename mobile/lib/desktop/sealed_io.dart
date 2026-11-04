@@ -49,10 +49,19 @@ R plainOutAllowed<R>(R Function() f) =>
 /// where things are sealed and under which key. sendable, so an isolate
 /// gets the same
 class SealedAreas {
-  SealedAreas({required this.docs, required this.support, this.runtime});
+  SealedAreas({
+    required this.docs,
+    required this.support,
+    this.runtime,
+    this.phone = false,
+  });
 
   final String docs;
   final String support;
+
+  /// the phone's: only the containers' media and wallpapers are sealed;
+  /// support and the cache keep what they keep for a moment, as before
+  final bool phone;
 
   /// the folder in memory: a sealed file may be carried there in the clear
   final String? runtime;
@@ -71,6 +80,11 @@ class SealedAreas {
   static const _plainSupport = {'translate', 'voice'};
 
   static final _media = RegExp(r'^(media|wallpapers)(_k[234])?$');
+
+  // the engine writes and reads these by path: its own sealed parts of a
+  // file on its way in, and the plain file it opens them into, which the
+  // app then moves into place through here
+  static const _engineOwn = {'fetch', 'held'};
   static final _waitingOnion = RegExp(r'^onion(_k[234])?\.key(\.new)?$');
 
   // a restore's staging folders in docs: the files key, as support's
@@ -92,14 +106,17 @@ class SealedAreas {
     if (p.isWithin(docs, full)) {
       final parts = p.split(p.relative(full, from: docs));
       // a decoy's onion key waiting for its next start, written by dart
-      if (parts.length == 1 && _waitingOnion.hasMatch(parts.first)) {
+      if (!phone && parts.length == 1 && _waitingOnion.hasMatch(parts.first)) {
         return '*';
       }
       if (parts.length < 2) return null;
-      if (_staging.contains(parts.first)) return '*';
+      if (!phone && _staging.contains(parts.first)) return '*';
       final m = _media.firstMatch(parts.first);
-      return m == null ? null : (m.group(2) ?? '');
+      if (m == null) return null;
+      if (parts.length > 2 && _engineOwn.contains(parts[1])) return null;
+      return m.group(2) ?? '';
     }
+    if (phone) return null;
     if (p.isWithin(support, full)) {
       final top = p.split(p.relative(full, from: support)).first;
       if (_plainSupport.contains(top) || top.startsWith('shared_preferences')) {
@@ -133,6 +150,8 @@ class SealedAreas {
     if (Zone.current[plainOutZoneKey] == true) return true;
     final full = p.normalize(p.absolute(path));
     if (full.startsWith('/proc/self/fd/')) return true;
+    // the phone's copies for a share, a save or a backup, shredded after
+    if (phone && p.isWithin(support, full)) return true;
     final r = runtime;
     return r != null && p.isWithin(r, full);
   }
@@ -142,6 +161,7 @@ class SealedAreas {
     'docs': docs,
     'support': support,
     'runtime': runtime,
+    'phone': phone,
     'files': filesKey,
     'keys': Map.of(containerKeys),
     'swept': swept.toList(),
@@ -152,6 +172,7 @@ class SealedAreas {
       docs: m['docs'] as String,
       support: m['support'] as String,
       runtime: m['runtime'] as String?,
+      phone: m['phone'] == true,
     );
     a.swept.addAll((m['swept'] as List).cast<String>());
     a.filesKey = m['files'] as Uint8List?;

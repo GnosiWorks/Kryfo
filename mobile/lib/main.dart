@@ -12,10 +12,12 @@ import 'desktop/desktop_mode.dart'
         computerLock,
         containerClosed,
         containerOpened,
+        containerSettled,
         keepComputerDecoyNote,
         kComputerDecoyNote,
         onDesktop,
-        startEngineIn;
+        startEngineIn,
+        withNativeFiles;
 import 'store.dart' show playBuild;
 import 'wide/wide_pane.dart' show chatNavigator, chatPush, deskPush;
 import 'widgets/boot_failed.dart';
@@ -52,11 +54,13 @@ import 'picked.dart'
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
+import 'phone_seal.dart' show openPhoneSeal;
 import 'theme.dart';
 import 'wipe.dart';
 import 'group_end.dart';
 import 'group_shots.dart';
 import 'group_media_send.dart';
+import 'media_names.dart' show mediaNamesAtOpen;
 import 'media_progress.dart';
 import 'transfers.dart';
 import 'transfer_note.dart';
@@ -263,6 +267,8 @@ part 'app/state_files.dart';
 void main() async {
   dlog('launch main');
   WidgetsFlutterBinding.ensureInitialized();
+  // the media folders sealed before anything reads or writes them
+  await openPhoneSeal();
   // a key saved for someone that is not the one held before: open pages that
   // show it read again
   onPeerKeyChanged = appState.keyChanged;

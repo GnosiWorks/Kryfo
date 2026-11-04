@@ -193,9 +193,9 @@ void main() {
     await landQuietRestore(from, docs, manifest);
     expect(under(docs), [
       'halo_d.db',
-      'media_d/a.jpg',
+      'media_k2/a.jpg',
       'onion_d.key',
-      'wallpapers_d/w/b.jpg',
+      'wallpapers_k2/w/b.jpg',
     ]);
   });
 

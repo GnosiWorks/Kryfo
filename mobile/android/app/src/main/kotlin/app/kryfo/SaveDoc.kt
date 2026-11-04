@@ -34,6 +34,8 @@ object SaveDoc {
         val path: String,
         val code: Int,
         private val send: (Map<String, Any?>) -> Unit,
+        // the file's key when it is sealed at rest
+        val key: ByteArray? = null,
     ) {
         private val sent = AtomicBoolean(false)
 
@@ -68,11 +70,15 @@ object SaveDoc {
 
     // null while a copy still runs. one still waiting for its dialog never
     // got an answer, and is ended for the new one
-    fun begin(path: String, send: (Map<String, Any?>) -> Unit): Pending? {
+    fun begin(
+        path: String,
+        key: ByteArray? = null,
+        send: (Map<String, Any?>) -> Unit,
+    ): Pending? {
         if (busy()) return null
         current?.reply(FAILED)
         seq = (seq + 1) % CODES
-        val p = Pending(path, FIRST_CODE + seq, send)
+        val p = Pending(path, FIRST_CODE + seq, send, key)
         current = p
         stage = PICKING
         moved = 0L
@@ -152,15 +158,16 @@ object SaveDoc {
         stop: () -> Boolean = { aborted },
         onChecking: () -> Unit = SaveDoc::checking,
         gone: () -> Boolean = { taken },
+        key: ByteArray? = null,
     ): String {
         val state = try {
-            val want = src.length()
+            val want = Sealed.length(src.path, key)
             if (want <= 0L) return FAILED
             val out = open() ?: return FAILED
             val wrote = MessageDigest.getInstance("SHA-256")
             var n = 0L
             out.use { o ->
-                src.inputStream().use { i ->
+                Sealed.open(src.path, key).use { i ->
                     val buf = ByteArray(256 * 1024)
                     while (true) {
                         if (stop()) throw IOException("stopped")
@@ -206,11 +213,13 @@ object SaveDoc {
         sizeThere: () -> Long?,
         readBack: () -> InputStream?,
         drop: () -> Unit,
+        key: ByteArray? = null,
     ): String {
         var opened = false
         val state = copy(
             src,
             open = { openWith(before, open).also { opened = it != null } },
+            key = key,
             sizeThere = sizeThere,
             readBack = readBack,
         )

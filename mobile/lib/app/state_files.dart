@@ -91,8 +91,13 @@ extension AppStateFiles on AppState {
       mediaProgressUpdate(uid, 0.97 * p.done / p.total);
     });
     try {
-      final r = await engine.fileSend(
-        dropSendJob(path: path, uid: uid, members: members),
+      // the engine reads the file by path: a sealed one goes in as memory
+      final r = await withNativeFiles(
+        [path],
+        const [],
+        (i, _) => engine.fileSend(
+          dropSendJob(path: i[0], uid: uid, members: members),
+        ),
       );
       final sent = dropSentOf(r);
       if (sent != null && sent.sent) _dropDays[dayKey] = dropDayAdd(day, size);
@@ -121,8 +126,12 @@ extension AppStateFiles on AppState {
   /// but that week
   Future<void> takeDropBack(String path, String uid) async {
     try {
-      final r = await engine.fileTakeBack(
-        dropSendJob(path: path, uid: uid, members: const ['-']),
+      final r = await withNativeFiles(
+        [path],
+        const [],
+        (i, _) => engine.fileTakeBack(
+          dropSendJob(path: i[0], uid: uid, members: const ['-']),
+        ),
       );
       if (r != 'ok') dlog('files: not taken back ($r)');
     } catch (e) {
@@ -147,8 +156,12 @@ extension AppStateFiles on AppState {
       final path = (r['file_path'] ?? r['media_path']) as String?;
       if (path == null || !dropFits(await File(path).length())) return;
       final v = jsonDecode(
-        await engine.fileValues(
-          dropSendJob(path: path, uid: uid, members: const ['-']),
+        await withNativeFiles(
+          [path],
+          const [],
+          (i, _) => engine.fileValues(
+            dropSendJob(path: i[0], uid: uid, members: const ['-']),
+          ),
         ),
       );
       if (v is! Map) return;

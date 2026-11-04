@@ -7,6 +7,7 @@
 // no two seals share a key, so a chunk written again is safe
 import 'dart:convert';
 import 'dart:ffi';
+import 'dart:io' show Platform;
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -56,10 +57,15 @@ String _hex(List<int> b) =>
 class EngineChunkCrypto implements ChunkCrypto {
   const EngineChunkCrypto();
 
-  static final _sealChunk = DynamicLibrary.process()
-      .lookupFunction<_ChunkC, _Chunk>('HaloSealChunk');
-  static final _openChunk = DynamicLibrary.process()
-      .lookupFunction<_ChunkC, _Chunk>('HaloOpenChunk');
+  static final _lib = Platform.isAndroid
+      ? DynamicLibrary.open('libhalo.so')
+      : DynamicLibrary.process();
+  static final _sealChunk = _lib.lookupFunction<_ChunkC, _Chunk>(
+    'HaloSealChunk',
+  );
+  static final _openChunk = _lib.lookupFunction<_ChunkC, _Chunk>(
+    'HaloOpenChunk',
+  );
 
   Uint8List? _run(_Chunk call, Uint8List key, Uint8List data) {
     final k = _hex(key).toNativeUtf8();

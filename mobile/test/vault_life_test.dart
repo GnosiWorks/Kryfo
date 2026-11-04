@@ -834,8 +834,8 @@ class _World {
   late final everydayDb = _Db(HaloContainer.everyday, () => _Tables());
 
   // the folder suffixes of the two sides
-  String get ls => liveDb.container.suffix;
-  String get vs => vaultDb.container.suffix;
+  String get ls => liveDb.container.folderSuffix;
+  String get vs => vaultDb.container.folderSuffix;
 
   // a move held as it copies its first chat in, and that it got there
   Completer<void>? hold;
@@ -1174,7 +1174,7 @@ void main() {
       expect(v.msg('h2')!['file_path'], '$m/f_h2_doc.pdf');
       expect(
         v.contact(_h)!['atmosphere'],
-        'image:${p.join(docs.path, 'wallpapers_v')}/$_h.jpg',
+        'image:${p.join(docs.path, 'wallpapers_k3')}/$_h.jpg',
       );
       expect(Directory(w.media).listSync().map((f) => p.basename(f.path)), [
         'v1.jpg',
@@ -1389,7 +1389,7 @@ void main() {
       );
       expect(Directory(w.mediaV).existsSync(), isFalse);
       expect(
-        Directory(p.join(docs.path, 'wallpapers_v')).existsSync(),
+        Directory(p.join(docs.path, 'wallpapers_k3')).existsSync(),
         isFalse,
       );
       expect(w.vault['messages'], isEmpty);

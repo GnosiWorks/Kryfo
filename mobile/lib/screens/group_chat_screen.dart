@@ -62,6 +62,7 @@ import '../stickers/sticker_view.dart' show StickerBudget;
 import '../stickers/sticker_wire.dart' show StickerWire;
 import '../main.dart'
     show
+        typeLeaf,
         appState,
         AppStateFiles,
         session,
@@ -3057,8 +3058,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (!await _stillHere()) return null;
     final made = uid ?? newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.groupId);
-    final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-    final dest = File('${mediaDir.path}/f_${made}_$safe');
+    // its type only: the name it was given lives in the database
+    final dest = File('${mediaDir.path}/f_$made${typeLeaf(name)}');
     // a gallery video carries where, on what and when, like a photo, and a
     // picture sent as a file is cleaned like one sent as a photo. both are
     // told by their bytes and cleaned on our own copy by the one cleaner;
