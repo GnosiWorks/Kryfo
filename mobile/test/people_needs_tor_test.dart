@@ -50,7 +50,7 @@ class _Engine implements HaloEngine {
   final asks = <String>[];
   Completer<String>? held;
   @override
-  Future<String> torPost(String url, String body) {
+  Future<String> searchPost(String url, String body) {
     asks.add(url);
     final h = held;
     if (h != null) return h.future;
@@ -265,14 +265,14 @@ void main() {
       expect(src, isNot(contains('HttpClient(')), reason: f.path);
       expect(src, isNot(contains("import 'package:http/")), reason: f.path);
     }
-    // people search asks through the engine's tor post only, the decoy on
-    // its own lane
+    // people search asks through the engine's search post only, a circuit
+    // per search, the decoy on its own lane
     final search = File('lib/screens/search_screen.dart').readAsStringSync();
     final post = search.substring(
       search.indexOf('Future<String> _peoplePost('),
       search.indexOf('void _openPerson('),
     );
-    expect(post, contains(': engine.torPost(url, body);'));
+    expect(post, contains(': engine.searchPost(url, body);'));
     expect(post, contains('? engine.decoyTorPost(url, body)'));
     expect(RegExp(r'engine\.\w+\(').allMatches(post).length, 2);
     // a handle's lookup goes the same way
@@ -303,7 +303,7 @@ void main() {
     }
     final handle = File('../engine/handle.go').readAsStringSync();
     final reg = fn(handle, 'var handleHTTP = func()');
-    expect(reg, contains('servicesClient(ctx)'));
+    expect(reg, contains('ownHandleClient(ctx)'));
     expect(reg, isNot(contains('torNostrClientFor')));
     final services = File('../engine/services.go').readAsStringSync();
     expect(
@@ -320,6 +320,18 @@ void main() {
       fn(quiet, 'func decoyClient('),
       contains('servicesTorClientAs(decoyLane())'),
     );
+    // the own handle on its lane, each search on a socks name of its own
+    expect(
+      fn(services, 'func ownHandleClient('),
+      contains('servicesTorClientAs(laneOwnHandle, laneName(laneOwnHandle))'),
+    );
+    final perSearch = fn(services, 'func searchClient(');
+    expect(perSearch, contains('freshSocksName()'));
+    expect(perSearch, contains('torDialerAs('));
+    expect(perSearch, contains('DisableKeepAlives = true'));
+    expect(perSearch, isNot(contains('torNostrClientFor')));
+    expect(perSearch, isNot(contains('directNostrClient')));
+    expect(services, contains('return torPostOn(url, body, searchClient) }'));
     final client = fn(services, 'func servicesTorClientAs(');
     expect(client, contains('torDialerAs('));
     expect(client, contains('torLaneClient('));
