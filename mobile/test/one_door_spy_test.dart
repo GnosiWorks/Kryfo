@@ -15,6 +15,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/devices/device_send.dart';
 import 'package:kryfo/devices/device_state.dart';
+import 'package:kryfo/heal.dart' show healOfWire;
 import 'package:kryfo/identities.dart';
 import 'package:kryfo/main.dart'
     show
@@ -32,6 +33,7 @@ import 'package:kryfo/main.dart'
         AppStateDevchat,
         AppStateDoor,
         AppStateGroups,
+        AppStateHeal,
         AppStateIdentity,
         AppStateMessages,
         AppStateOutbox,
@@ -402,6 +404,24 @@ void main() {
     expect(base64Decode(card['identityKey'] as String), [5, ...ciX]);
     expect(card['registrationId'], ciRegId);
     expect(main0.foundIn(heal.payload), isEmpty);
+    wire.out.clear();
+
+    // the heal (KHB1) that replaces it: on my identity for them, signed by
+    // it, its block my store's for them
+    await mem.update(
+      'contacts',
+      {'caps': 'pp'},
+      where: 'halo_id = ?',
+      whereArgs: [_ci],
+    );
+    expect(await appState.healForTest(_ci), isTrue);
+    final khb1 = wire.out.single;
+    expect(khb1.call, 'relay');
+    final h = KryfoSignal.shared.parseHeal(healOfWire(khb1.payload)!);
+    expect(h.identity, [5, ...ciX]);
+    expect(h.signer, [5, ...ciX]);
+    expect(h.block.registrationId, ciRegId);
+    expect(main0.foundIn(khb1.payload), isEmpty);
     wire.out.clear();
 
     // a group with them in it: the roster names me by my identity for them

@@ -10890,4 +10890,51 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get desktopBackupHint =>
       'Ramène tout si cet ordinateur est un jour réinitialisé.';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name a de nouveau configuré Kryfo';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return 'Le téléphone de $name a ouvert une nouvelle session sécurisée';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return 'Vous aviez vérifié $name. Rien n’est envoyé tant que vous ne vérifiez pas le numéro ou ne continuez pas la discussion. Ses messages arrivent toujours.';
+  }
+
+  @override
+  String get chatKeepChatting => 'Continuer la discussion';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '$name doit mettre à jour Kryfo pour continuer à discuter.';
+  }
+
+  @override
+  String get restoreOlderTitle => 'Certaines discussions vont faire une pause';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '$name utilise une ancienne version de Kryfo. Votre discussion fera une pause jusqu’à sa mise à jour.';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '$first et $second utilisent une ancienne version de Kryfo. Vos discussions avec eux feront une pause jusqu’à leur mise à jour.';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count autres personnes',
+      one: '1 autre personne',
+    );
+    return '$first, $second et $_temp0 utilisent une ancienne version de Kryfo. Vos discussions avec eux feront une pause jusqu’à leur mise à jour.';
+  }
 }

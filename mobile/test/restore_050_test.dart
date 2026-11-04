@@ -15,6 +15,7 @@ import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart';
 import 'package:kryfo/secure_store.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/heal.dart' show kRestoreAfterPref;
 import 'package:kryfo/signal_session.dart';
 import 'signal_kit.dart';
 import 'package:path/path.dart' as p;
@@ -304,6 +305,8 @@ void main() {
       expect(prefs.getString('supporter_tier'), 'gold');
       expect(prefs.getBool('onboarding.complete'), isTrue);
       expect(prefs.getBool(kSessionsRestoredPref), isTrue);
+      // and what follows a restore runs on the next start
+      expect(prefs.getInt(kRestoreAfterPref), isNotNull);
 
       // what 0.5.0 never carried keeps the phone's own, or its default
       expect(restoredSettings, isFalse);

@@ -10779,4 +10779,45 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get desktopBackupHint =>
       'Mengembalikan semuanya kalau suatu saat komputer ini direset.';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name memasang Kryfo lagi';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return 'Ponsel $name memulai sesi aman yang baru';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return 'Kamu sudah memverifikasi $name sebelumnya. Tidak ada yang terkirim sampai kamu memeriksa nomornya atau lanjut mengobrol. Pesan darinya tetap masuk.';
+  }
+
+  @override
+  String get chatKeepChatting => 'Lanjut mengobrol';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '$name perlu memperbarui Kryfo agar bisa lanjut mengobrol.';
+  }
+
+  @override
+  String get restoreOlderTitle => 'Beberapa obrolan akan dijeda';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '$name memakai Kryfo versi lama. Obrolan kalian dijeda sampai dia memperbaruinya.';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '$first dan $second memakai Kryfo versi lama. Obrolanmu dengan mereka dijeda sampai mereka memperbaruinya.';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return '$first, $second, dan $count orang lainnya memakai Kryfo versi lama. Obrolanmu dengan mereka dijeda sampai mereka memperbaruinya.';
+  }
 }

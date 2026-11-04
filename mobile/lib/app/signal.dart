@@ -91,6 +91,9 @@ Future<({int ident, String cipher})> signalSeal(
   String peerId,
   String plaintext, {
   bool onlySettled = false,
+  // the empty answer to a heal: it carries nothing, and the session it
+  // opens is what a held contact's sends wait on
+  bool unheld = false,
 }) async {
   if (isDevId(peerId)) {
     if (onlySettled) throw NotSettled(peerId);
@@ -111,7 +114,7 @@ Future<({int ident, String cipher})> signalSeal(
     onlySettled: onlySettled,
     afresh: from == null ? null : () => from(peerId),
     // a read that fails seals nothing
-    held: () => appState.keyHeld(peerId, strict: true),
+    held: unheld ? null : () => appState.keyHeld(peerId, strict: true),
     // a card naming another key: flagged as on an open, once out of the lane
     keyMoved: () => unawaited(_keyMoved?.call(peerId)),
     size: size,

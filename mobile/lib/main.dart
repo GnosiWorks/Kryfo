@@ -31,6 +31,7 @@ import 'dart:ffi';
 import 'dart:io';
 import 'clean_media.dart' show kSaveCopies;
 import 'shred.dart';
+import 'heal.dart';
 import 'identities.dart';
 import 'invites.dart';
 import 'album.dart' show AlbumTag, albumGoneUid, albumInWindow, albumItemBurnAt;

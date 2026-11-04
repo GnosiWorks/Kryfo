@@ -10915,4 +10915,45 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get desktopBackupHint => 'تعيد كل شيء إن أُعيد ضبط هذا الحاسوب يومًا.';
+
+  @override
+  String chatHealRestored(Object name) {
+    return 'أعاد ⁨$name⁩ إعداد Kryfo';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return 'بدأ هاتف ⁨$name⁩ جلسة آمنة جديدة';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return 'سبق أن تحققت من ⁨$name⁩. لن يُرسل شيء حتى تتحقق من الرقم أو تتابع المحادثة. رسائله ما زالت تصل.';
+  }
+
+  @override
+  String get chatKeepChatting => 'متابعة المحادثة';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return 'يحتاج ⁨$name⁩ إلى تحديث Kryfo لمتابعة المحادثة.';
+  }
+
+  @override
+  String get restoreOlderTitle => 'ستتوقف بعض المحادثات مؤقتًا';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return 'يستخدم ⁨$name⁩ إصدارًا أقدم من Kryfo. ستتوقف محادثتكما مؤقتًا حتى يحدّثه.';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return 'يستخدم ⁨$first⁩ و⁨$second⁩ إصدارًا أقدم من Kryfo. ستتوقف محادثاتك معهما مؤقتًا حتى يحدّثا التطبيق.';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return 'يستخدم ⁨$first⁩ و⁨$second⁩ و$count آخرون إصدارًا أقدم من Kryfo. ستتوقف محادثاتك معهم مؤقتًا حتى يحدّثوا التطبيق.';
+  }
 }

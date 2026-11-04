@@ -10856,4 +10856,51 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get desktopBackupHint =>
       'Traz tudo de volta se este computador for redefinido.';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name configurou o Kryfo de novo';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return 'O telefone de $name iniciou uma nova sessão segura';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return 'Você já tinha verificado $name. Nada é enviado até você conferir o número ou continuar a conversa. As mensagens dessa pessoa continuam chegando.';
+  }
+
+  @override
+  String get chatKeepChatting => 'Continuar a conversa';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '$name precisa atualizar o Kryfo para continuar a conversa.';
+  }
+
+  @override
+  String get restoreOlderTitle => 'Algumas conversas vão pausar';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '$name usa uma versão anterior do Kryfo. A conversa de vocês vai pausar até essa pessoa atualizar.';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '$first e $second usam uma versão anterior do Kryfo. Suas conversas com eles vão pausar até atualizarem.';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'mais $count pessoas',
+      one: 'mais 1 pessoa',
+    );
+    return '$first, $second e $_temp0 usam uma versão anterior do Kryfo. Suas conversas com eles vão pausar até atualizarem.';
+  }
 }

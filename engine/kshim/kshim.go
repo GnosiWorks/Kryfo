@@ -12,7 +12,30 @@ package kshim
 #include <stdlib.h>
 #ifdef _WIN32
 #include <windows.h>
-static void *ks_open(const char *path) { return (void *)LoadLibraryA(path); }
+// path is utf-8. a full path loads from its own folder and system32 only,
+// a bare name from the exe's folder and system32: never cwd or PATH
+static void *ks_open(const char *path) {
+	int n = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path, -1, NULL, 0);
+	if (n <= 0) return NULL;
+	wchar_t *w = (wchar_t *)malloc((size_t)n * sizeof(wchar_t));
+	if (w == NULL) return NULL;
+	if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path, -1, w, n) != n) {
+		free(w);
+		return NULL;
+	}
+	int full = (n > 3 && w[1] == L':' && (w[2] == L'\\' || w[2] == L'/')) ||
+		(w[0] == L'\\' && w[1] == L'\\');
+	int sep = wcschr(w, L'\\') != NULL || wcschr(w, L'/') != NULL;
+	HMODULE h = NULL;
+	if (full) {
+		h = LoadLibraryExW(w, NULL, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32);
+	} else if (!sep) {
+		h = LoadLibraryExW(w, NULL, LOAD_LIBRARY_SEARCH_APPLICATION_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32);
+	}
+	// a relative path with a folder in it: refused, it would follow cwd
+	free(w);
+	return (void *)h;
+}
 static void *ks_sym(void *h, const char *name) {
 	return (void *)GetProcAddress((HMODULE)h, name);
 }

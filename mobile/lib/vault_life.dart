@@ -295,6 +295,8 @@ const _peerRows = {
   'contact_photos': 'halo_id = ?1',
   'photo_parts': 'halo_id = ?1',
   'photo_peers': 'halo_id = ?1',
+  // where heals rebuilt their session, and a hold on it
+  'heal_lines': 'peer = ?1',
 };
 // a person's block rows, by peer_id, which go with a group's people
 const _blockRows = ['block_spans', 'blocked_drops'];
@@ -307,6 +309,7 @@ const _mayLack = {
   'photo_parts',
   'photo_peers',
   'roster_invites',
+  'heal_lines',
 };
 const _groupRows = {
   'group_members': 'group_id = ?1',
