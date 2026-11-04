@@ -15,13 +15,15 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'container.dart';
+import 'devices/device_state.dart' show linkedDevicesOn;
 import 'lock_state.dart' show LockState, lockState;
-import 'main.dart' show HaloDb, engine, shredFile;
+import 'main.dart' show HaloDb, deviceState, engine, shredFile;
 import 'notifications.dart'
     show cancelWithRetry, clearNotificationsFor, notifPlugin;
 import 'chat_shots.dart' show ShotsWord;
 import 'router.dart';
 import 'search.dart' show searchBody;
+import 'typing.dart' show capsOfText, kCapDevices;
 
 // a chat as a move sees it: a person's, or a group's
 class ChatRef {
@@ -302,6 +304,34 @@ const _peerRows = {
   'heal_lines': 'peer = ?1',
   'heal_nonces': 'peer = ?1',
 };
+// linked devices: a person's device state, by their identity key ({ik}),
+// which goes with their own chat. their device sessions and pairs too; the
+// phone pair's (1 to 1) is the chat's and stays with its store. with the
+// switch off nothing of it moves
+const _deviceRows = {
+  'dev_lists': 'owner = {ik}',
+  'dev_proven': 'peer = {ik}',
+  'dev_pq': 'peer = {ik}',
+  'dev_quiet': 'peer = {ik}',
+  'dev_held_openers': 'peer = {ik}',
+  'dev_pushes': 'peer = {ik}',
+  'dev_out': 'peer = {ik}',
+  'dev_openers': 'peer = {ik}',
+  'dev_marks': 'peer = {ik}',
+  'pairs': 'peer = {ik} AND (their_device != 1 OR my_device != 1)',
+  'sessions': 'address = ?1 AND device_id >= 2',
+};
+
+Map<String, String> get _devicesOf => linkedDevicesOn
+    ? {
+        for (final e in _deviceRows.entries)
+          e.key: e.value.replaceAll(
+            '{ik}',
+            '(SELECT ikey FROM {s}.contacts WHERE halo_id = ?1)',
+          ),
+      }
+    : const {};
+
 // a person's block rows, by peer_id, which go with a group's people
 const _blockRows = ['block_spans', 'blocked_drops'];
 // made after the chat tables, the drafts' in a try of its own: one side
@@ -316,6 +346,15 @@ const _mayLack = {
   'roster_invites',
   'heal_lines',
   'heal_nonces',
+  'dev_lists',
+  'dev_proven',
+  'dev_pq',
+  'dev_quiet',
+  'dev_held_openers',
+  'dev_pushes',
+  'dev_out',
+  'dev_openers',
+  'dev_marks',
 };
 const _groupRows = {
   'group_members': 'group_id = ?1',
@@ -490,7 +529,10 @@ class SqlChatMover implements ChatMover {
       src,
       dst,
       table,
-      skip: table == 'held_onion' || table == 'group_ctl_out'
+      skip:
+          table == 'held_onion' ||
+              table == 'group_ctl_out' ||
+              table == 'dev_held_openers'
           ? const {'id'}
           : const {},
     );
@@ -580,6 +622,11 @@ class SqlChatMover implements ChatMover {
     for (final e in (c.group ? _groupRows : _peerRows).entries) {
       await _put(t, e.key, e.value, c, src, dst, from, to);
     }
+    if (!c.group) {
+      for (final e in _devicesOf.entries) {
+        await _put(t, e.key, e.value, c, src, dst, from, to);
+      }
+    }
     await _index(t, dst, top);
   }
 
@@ -625,7 +672,10 @@ class SqlChatMover implements ChatMover {
       ))
         r['msg_uid'] as String,
     ];
-    for (final e in (c.group ? _groupRows : _peerRows).entries) {
+    for (final e in {
+      ...(c.group ? _groupRows : _peerRows),
+      if (!c.group) ..._devicesOf,
+    }.entries) {
       if (_mayLack.contains(e.key) && (await _cols(t, s, e.key)).isEmpty) {
         continue;
       }
@@ -931,7 +981,24 @@ Future<String?> hiddenCard(DatabaseExecutor t, ChatRef c) async {
       '${shots}c.verified_key, $from FROM v.contacts c WHERE c.halo_id = ?1',
       [c.id],
     );
-    return r.isEmpty ? null : peerCard(card(r.first));
+    if (r.isEmpty) return null;
+    final base = card(r.first);
+    final devices = base.blocked ? null : await _hiddenDevices(t, c.id);
+    return peerCard(
+      devices == null
+          ? base
+          : RouterCard(
+              base.id,
+              base.onion,
+              base.xpub,
+              backPaired: base.backPaired,
+              blocked: base.blocked,
+              blockedFrom: base.blockedFrom,
+              verifiedKey: base.verifiedKey,
+              shots: base.shots,
+              devices: devices,
+            ),
+    );
   }
   final r = await t.rawQuery(
     'SELECT c.halo_id, c.onion, c.xpub, c.back_paired, c.blocked, '
@@ -946,4 +1013,117 @@ Future<String?> hiddenCard(DatabaseExecutor t, ChatRef c) async {
     [c.id],
   );
   return groupCard([for (final x in r) card(x)]);
+}
+
+// linked devices: the device pairs of a hidden person to listen on while
+// the vault is shut, from the vault's rows attached as v. this phone is
+// device 1 of its identity: the vault is on phones alone. each device on
+// the list held that has no session yet on its opener address, each pair
+// with a seed on its seeded one. a device the engine holds their list
+// without (disputed) is left out; one the engine does not hold yet (a hide
+// from the setup) keeps the list as stored, until the next card. null with
+// none, and with the switch off
+Future<HiddenDevices?> _hiddenDevices(DatabaseExecutor t, String id) async {
+  if (!linkedDevicesOn) return null;
+  try {
+    final who = await t.rawQuery(
+      'SELECT ikey, ident, caps FROM v.contacts WHERE halo_id = ?1 '
+      'AND accepted = 1',
+      [id],
+    );
+    final ikey = who.isEmpty ? null : who.first['ikey'] as String?;
+    if (ikey == null) return null;
+    final ident = who.first['ident'] as int? ?? 0;
+    final lists = capsOfText(
+      who.first['caps'] as String?,
+    ).contains(kCapDevices);
+    final l = await t.rawQuery(
+      'SELECT wire FROM v.dev_lists WHERE ident = ?1 AND owner = ?2',
+      [ident, ikey],
+    );
+    final wire = l.isEmpty ? null : l.first['wire'];
+    if (wire is! List<int>) {
+      return lists ? HiddenDevices(ikey, ident, const [], lists: true) : null;
+    }
+    final seeds = {
+      for (final r in await t.rawQuery(
+        'SELECT their_device, seed FROM v.pairs WHERE ident = ?1 AND '
+        'peer = ?2 AND my_device = 1 AND their_device != 1 AND conv = 4',
+        [ident, ikey],
+      ))
+        if (r['seed'] case final List<int> b when b.length == 32)
+          r['their_device'] as int: b,
+    };
+    final held = {
+      for (final r in await t.rawQuery(
+        'SELECT device_id FROM v.sessions WHERE ident = ?1 AND address = ?2 '
+        'AND device_id >= 2',
+        [ident, id],
+      ))
+        r['device_id'] as int,
+    };
+    String hex(List<int> b) =>
+        b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
+    final pinned = _pinnedBy(ikey);
+    final pairs = <HiddenPair>[
+      for (final (dev, key) in listEntries(wire))
+        if (dev != 1 &&
+            pinned(dev, hex(key)) &&
+            (seeds.containsKey(dev) || !held.contains(dev)))
+          (
+            their: dev,
+            my: 1,
+            key: hex(key),
+            seed: seeds[dev] == null ? null : hex(seeds[dev]!),
+            opener: !held.contains(dev),
+          ),
+    ];
+    return pairs.isEmpty && !lists
+        ? null
+        : HiddenDevices(ikey, ident, pairs, lists: lists);
+  } catch (_) {
+    // a vault from before the tables: nothing to listen on yet
+    return null;
+  }
+}
+
+// whether the engine routes to [identity]'s device on that key: always,
+// when it holds no list of theirs
+bool Function(int dev, String key) _pinnedBy(String identity) {
+  final ds = deviceState;
+  Map<String, dynamic>? ask(String op, Map<String, Object?> args) {
+    try {
+      return jsonDecode(ds!.engine.call(op, args)) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  final cur = ds == null ? null : ask('current', {'identity': identity});
+  if (cur == null || cur['err'] != null) return (_, _) => true;
+  return (dev, key) {
+    final p = ask('pin', {'identity': identity, 'device': dev});
+    return p != null && p['err'] == null && p['key'] == key;
+  };
+}
+
+/// the devices a KDL2 list names, by id and key, as it was stored once
+/// taken (its signature was checked then): empty for one that does not read
+@visibleForTesting
+List<(int, List<int>)> listEntries(List<int> w) {
+  const head = 4 + 33 + 8 + 1;
+  const entry = 1 + 33 + 4 + 1;
+  if (w.length < head ||
+      ascii.decode(w.sublist(0, 4), allowInvalid: true) != 'KDL2') {
+    return const [];
+  }
+  final n = w[head - 1];
+  if (n < 1 || w.length != head + n * entry + 64) return const [];
+  return [
+    for (var i = 0; i < n; i++)
+      (
+        w[head + i * entry],
+        w.sublist(head + i * entry + 1, head + i * entry + 34),
+      ),
+  ];
 }

@@ -60,10 +60,15 @@ class DeviceRefused implements Exception {
 class DeviceSessions {
   /// sessions in [s]'s store. on a phone ([linked] false) device 1 is
   /// SignalSession's own and refused here
-  DeviceSessions(this.s, {this.linked = false});
+  DeviceSessions(this.s, {this.linked = false, this.store});
 
-  /// the identity's store the sessions live in
+  /// the identity's store: its keys, and the sessions unless [store]
   final SignalSession s;
+
+  /// where the sessions are kept when not beside the identity's own: a
+  /// hidden chat's contact's in the open vault. the identity's keys stay
+  /// in [s]'s store
+  final Database? store;
 
   /// the store is a linked device's: a contact's phone is a device here too
   final bool linked;
@@ -75,8 +80,11 @@ class DeviceSessions {
 
   int _now() => DateTime.now().millisecondsSinceEpoch;
 
-  LsSessionStore _sessions([DatabaseExecutor? t]) =>
-      LsSessionStore(t ?? s.database, prefix: s.tablePrefix, ident: s.ident);
+  LsSessionStore _sessions([DatabaseExecutor? t]) => LsSessionStore(
+    t ?? store ?? s.database,
+    prefix: store == null ? s.tablePrefix : '',
+    ident: s.ident,
+  );
 
   // one queue per device, so copies to six devices do not wait on each other
   Future<T> _serial<T>(String peer, int device, Future<T> Function() job) {
@@ -401,8 +409,12 @@ class DeviceSessions {
       opener: true,
       reg: info.registrationId,
     );
+    // kept elsewhere: the session first, so a crash between leaves a key
+    // unspent and the same opener opens on the session held
+    final apart = store;
+    if (apart != null) await _sessions(apart).store(peer, o.record, device);
     await s.database.transaction((t) async {
-      await _sessions(t).store(peer, o.record, device);
+      if (apart == null) await _sessions(t).store(peer, o.record, device);
       final k = LsKyberPreKeyStore(t, prefix: s.tablePrefix, ident: s.ident);
       final usedPk = o.usedPreKey;
       if (usedPk != null) {

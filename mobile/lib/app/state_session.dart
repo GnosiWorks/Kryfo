@@ -660,6 +660,8 @@ extension AppStateSession on AppState {
       await refreshGroups();
       // the list names every chat it holds, whatever the last close left
       await refreshHiddenCards();
+      // linked devices: its contacts' device state, before what was sealed
+      await _vaultDevicesIn(v);
       // what came sealed while it was shut
       await _unseal();
       // its groups' screenshot blocks, as what came says
@@ -785,8 +787,11 @@ extension AppStateSession on AppState {
         } catch (e) {
           dlog('vault: cards left as they were (${e.runtimeType})');
         }
+        // linked devices: its side stops, its pairs heard on by the cards
+        await _vaultDevicesOut();
         await v.close();
       });
+      await _listenHiddenDevices();
     } catch (e) {
       dlog('vault: close (${e.runtimeType})');
     } finally {

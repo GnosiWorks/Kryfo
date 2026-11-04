@@ -208,7 +208,7 @@ extension AppStateTyping on AppState {
       // and may read my device list now
       if (moved &&
           linkedDevicesOn &&
-          identical(db, live) &&
+          (identical(db, live) || identical(db, _vaultDevOf)) &&
           (env.caps?.contains(kCapDevices) ?? false)) {
         unawaited(_devicesShown(peer));
       }
