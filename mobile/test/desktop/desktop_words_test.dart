@@ -109,6 +109,48 @@ final _pairs = <(String, _Get, _Get, _Get)>[
     (l) => l.chatShotsWhenTheyUpdateDesk,
   ),
   (
+    'roomShotsBlocked',
+    (l) => l.roomShotsBlockedShown,
+    (l) => l.roomShotsBlocked,
+    (l) => l.roomShotsBlockedDesk,
+  ),
+  (
+    'roomShotsAlwaysOn',
+    (l) => l.roomShotsAlwaysOnShown,
+    (l) => l.roomShotsAlwaysOn,
+    (l) => l.roomShotsAlwaysOnDesk,
+  ),
+  (
+    'groupShotsBlocksAll',
+    (l) => l.groupShotsBlocksAllShown,
+    (l) => l.groupShotsBlocksAll,
+    (l) => l.groupShotsBlocksAllDesk,
+  ),
+  (
+    'groupShotsOnForAll',
+    (l) => l.groupShotsOnForAllShown,
+    (l) => l.groupShotsOnForAll,
+    (l) => l.groupShotsOnForAllDesk,
+  ),
+  (
+    'groupShotsOnAdminOnly',
+    (l) => l.groupShotsOnAdminOnlyShown,
+    (l) => l.groupShotsOnAdminOnly,
+    (l) => l.groupShotsOnAdminOnlyDesk,
+  ),
+  (
+    'groupShotsBlockedHere',
+    (l) => l.groupShotsBlockedHereShown,
+    (l) => l.groupShotsBlockedHere,
+    (l) => l.groupShotsBlockedHereDesk,
+  ),
+  (
+    'groupShotsStarted',
+    (l) => l.groupShotsStartedShown,
+    (l) => l.groupShotsStarted,
+    (l) => l.groupShotsStartedDesk,
+  ),
+  (
     'contactStaysOnThisPhone',
     (l) => l.contactStaysOnThisPhoneShown,
     (l) => l.contactStaysOnThisPhone,
@@ -759,6 +801,47 @@ void main() {
         expect(s, isNot(contains(w)), reason: key);
       }
     }
+  });
+
+  test('a computer\'s group and room screens never say it blocks '
+      'screenshots; the copy limits are still named', () {
+    final l = lookupAppLocalizations(const Locale('en'));
+    addTearDown(() => onDesktop = false);
+    onDesktop = true;
+    final said = [
+      l.roomShotsBlockedShown,
+      l.roomShotsAlwaysOnShown,
+      l.groupShotsBlocksAllShown,
+      l.groupShotsOnForAllShown,
+      l.groupShotsOnAdminOnlyShown,
+      l.groupShotsBlockedHereShown,
+      l.groupShotsStartedShown,
+    ];
+    for (final s in said) {
+      final lower = s.toLowerCase();
+      expect(lower, isNot(startsWith('kryfo blocks')), reason: s);
+      expect(lower, isNot(startsWith('blocks screenshots')), reason: s);
+      expect(lower, isNot(contains('on every')), reason: s);
+      expect(lower, isNot(contains('for everyone')), reason: s);
+      // what a phone does is said of Kryfo for Android, never of here
+      if (lower.contains('screenshot')) {
+        expect(s, contains('Kryfo for Android'), reason: s);
+      }
+    }
+    for (final s in [
+      l.roomShotsBlockedShown,
+      l.groupShotsBlocksAllShown,
+      l.groupShotsBlockedHereShown,
+      l.groupShotsStartedShown,
+    ]) {
+      expect(s.toLowerCase(), contains('copying, forwarding and saving'));
+    }
+    onDesktop = false;
+    expect(
+      l.groupShotsBlockedHereShown,
+      'Kryfo blocks screenshots in this group',
+    );
+    expect(l.groupShotsOnForAllShown, 'On for everyone here');
   });
 
   test('the asked-for wording', () {

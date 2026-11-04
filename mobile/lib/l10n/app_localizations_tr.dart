@@ -8830,8 +8830,16 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kryfo bu odanın ekran görüntüsünü ve ekran kaydını içindeki her telefonda engeller; başkalarının mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi de. Ekranı okumasına izin verilen uygulamaları ya da bunu aşmak için değiştirilmiş bir telefonu veya uygulamayı durduramaz.';
 
   @override
+  String get roomShotsBlockedDesk =>
+      'Bu odada birbirinizin mesajlarını kopyalamak, iletmek ve kaydetmek kapalı. Android için Kryfo ekran görüntüsünü ve ekran kaydını da engeller.';
+
+  @override
   String get roomShotsAlwaysOn =>
       'Odada her zaman açık, içindeki her telefonda';
+
+  @override
+  String get roomShotsAlwaysOnDesk =>
+      'Odada her zaman açık, Android için Kryfo\'da';
 
   @override
   String get settingsPerChat => 'Sohbete göre';
@@ -9834,11 +9842,18 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu gruptaki her telefonda ekran görüntüsünü ve ekran kaydını engeller; birbirinizin mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi de. Ekranı okumasına izin verilen uygulamaları ya da bunu aşmak için değiştirilmiş bir telefonu veya uygulamayı durduramaz.';
 
   @override
+  String get groupShotsBlocksAllDesk =>
+      'Burada birbirinizin mesajlarını kopyalamayı, iletmeyi ve kaydetmeyi kapatır. Android için Kryfo ekran görüntüsünü ve ekran kaydını da engeller.';
+
+  @override
   String get groupShotsStartsWhenAll =>
       'Buradaki herkesin Kryfo\'yu güncellemesi bekleniyor';
 
   @override
   String get groupShotsOnForAll => 'Buradaki herkes için açık';
+
+  @override
+  String get groupShotsOnForAllDesk => 'Android için Kryfo\'da açık';
 
   @override
   String get groupShotsOffAdminOnly =>
@@ -9851,6 +9866,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get groupShotsOnAdminOnly =>
       'Buradaki herkes için açık. Bunu yalnızca yönetici değiştirebilir';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk =>
+      'Android için Kryfo\'da açık. Bunu yalnızca yönetici değiştirebilir';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -9895,6 +9914,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Ekran görüntüsü engeli buradaki herkes için açık. Birbirinizin mesajlarını kopyalamak, iletmek ve kaydetmek de kapalı.';
 
   @override
+  String get groupShotsStartedDesk =>
+      'Ekran görüntüsü engeli Android için Kryfo\'da açık. Birbirinizin mesajlarını kopyalamak, iletmek ve kaydetmek de kapalı.';
+
+  @override
   String get groupShotsPaused =>
       'Buradaki biri henüz ekran görüntüsünü engelleyemiyor. Kryfo\'yu güncellediğinde yeniden herkesi kapsar.';
 
@@ -9915,6 +9938,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get groupShotsBlockedHere =>
       'Kryfo bu grupta ekran görüntüsünü engeller';
+
+  @override
+  String get groupShotsBlockedHereDesk =>
+      'Bu grupta kopyalamak, iletmek ve kaydetmek kapalı';
 
   @override
   String get groupShotsMenuNote =>

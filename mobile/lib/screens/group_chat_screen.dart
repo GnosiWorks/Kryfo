@@ -4625,7 +4625,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                           // it, since the first version with rooms
                           NoticeBanner(
                             glyph: NoticeGlyph.shield,
-                            text: l10n.roomShotsBlocked,
+                            text: l10n.roomShotsBlockedShown,
                             color: HaloColors.violet,
                             margin: const EdgeInsets.fromLTRB(12, 4, 12, 2),
                             delay: const Duration(milliseconds: 220),
@@ -5205,7 +5205,8 @@ class _Header extends StatelessWidget {
                                               start: 6,
                                             ),
                                         child: Semantics(
-                                          label: l10n.groupShotsBlockedHere,
+                                          label:
+                                              l10n.groupShotsBlockedHereShown,
                                           child: Icon(
                                             Icons.phonelink_lock_outlined,
                                             size: 11,

@@ -8375,7 +8375,14 @@ class AppLocalizationsZh extends AppLocalizations {
       'Kryfo 在这个聊天室的每部手机上禁止截屏和录屏，也禁止复制、转发或保存别人的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
 
   @override
+  String get roomShotsBlockedDesk =>
+      '此聊天室中不能复制、转发或保存彼此的消息。Android 版 Kryfo 还会禁止截屏和录屏。';
+
+  @override
   String get roomShotsAlwaysOn => '聊天室里始终开启，每部手机都一样';
+
+  @override
+  String get roomShotsAlwaysOnDesk => '聊天室里始终开启，在 Android 版 Kryfo 中';
 
   @override
   String get settingsPerChat => '按聊天设置';
@@ -9316,10 +9323,17 @@ class AppLocalizationsZh extends AppLocalizations {
       '在这个群组的每部手机上禁止截屏和录屏，也禁止复制、转发或保存彼此的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
 
   @override
+  String get groupShotsBlocksAllDesk =>
+      '在这里关闭复制、转发和保存彼此的消息。Android 版 Kryfo 还会禁止截屏和录屏。';
+
+  @override
   String get groupShotsStartsWhenAll => '等这里的所有人更新 Kryfo';
 
   @override
   String get groupShotsOnForAll => '对这里的所有人开启';
+
+  @override
+  String get groupShotsOnForAllDesk => '在 Android 版 Kryfo 中开启';
 
   @override
   String get groupShotsOffAdminOnly => '已关闭。只有管理员能更改';
@@ -9329,6 +9343,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get groupShotsOnAdminOnly => '对这里的所有人开启。只有管理员能更改';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk => '在 Android 版 Kryfo 中开启。只有管理员能更改';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -9369,6 +9386,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupShotsStarted => '禁止截屏已对这里的所有人开启。复制、转发和保存彼此的消息也已关闭。';
 
   @override
+  String get groupShotsStartedDesk =>
+      '禁止截屏已在 Android 版 Kryfo 中开启。复制、转发和保存彼此的消息也已关闭。';
+
+  @override
   String get groupShotsPaused => '这里有人还不能禁止截屏。他更新 Kryfo 后，会再次对所有人生效。';
 
   @override
@@ -9385,6 +9406,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get groupShotsBlockedHere => 'Kryfo 已在此群组中禁止截屏';
+
+  @override
+  String get groupShotsBlockedHereDesk => '此群组中不能复制、转发或保存';
 
   @override
   String get groupShotsMenuNote => '此群组中不能复制、转发或保存别人的消息';
@@ -18516,7 +18540,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       'Kryfo 在這個聊天室的每支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存別人的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
 
   @override
+  String get roomShotsBlockedDesk =>
+      '此聊天室中不能複製、轉傳或儲存彼此的訊息。Android 版 Kryfo 還會禁止截圖和螢幕錄影。';
+
+  @override
   String get roomShotsAlwaysOn => '聊天室裡一律開啟，每支手機都一樣';
+
+  @override
+  String get roomShotsAlwaysOnDesk => '聊天室裡一律開啟，在 Android 版 Kryfo 中';
 
   @override
   String get settingsPerChat => '依聊天設定';
@@ -19458,10 +19489,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '在這個群組的每支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存彼此的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
 
   @override
+  String get groupShotsBlocksAllDesk =>
+      '在這裡關閉複製、轉傳和儲存彼此的訊息。Android 版 Kryfo 還會禁止截圖和螢幕錄影。';
+
+  @override
   String get groupShotsStartsWhenAll => '等這裡的所有人更新 Kryfo';
 
   @override
   String get groupShotsOnForAll => '對這裡的所有人開啟';
+
+  @override
+  String get groupShotsOnForAllDesk => '在 Android 版 Kryfo 中開啟';
 
   @override
   String get groupShotsOffAdminOnly => '已關閉。只有管理員能變更';
@@ -19471,6 +19509,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupShotsOnAdminOnly => '對這裡的所有人開啟。只有管理員能變更';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk => '在 Android 版 Kryfo 中開啟。只有管理員能變更';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -19511,6 +19552,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupShotsStarted => '禁止截圖已對這裡的所有人開啟。複製、轉傳和儲存彼此的訊息也已關閉。';
 
   @override
+  String get groupShotsStartedDesk =>
+      '禁止截圖已在 Android 版 Kryfo 中開啟。複製、轉傳和儲存彼此的訊息也已關閉。';
+
+  @override
   String get groupShotsPaused => '這裡有人還不能禁止截圖。他更新 Kryfo 後，會再次對所有人生效。';
 
   @override
@@ -19527,6 +19572,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupShotsBlockedHere => 'Kryfo 已在此群組中禁止截圖';
+
+  @override
+  String get groupShotsBlockedHereDesk => '此群組中不能複製、轉傳或儲存';
 
   @override
   String get groupShotsMenuNote => '此群組中不能複製、轉傳或儲存別人的訊息';

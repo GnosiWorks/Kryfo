@@ -8791,8 +8791,16 @@ class AppLocalizationsVi extends AppLocalizations {
       'Kryfo chặn chụp màn hình và quay màn hình phòng này trên mọi điện thoại trong đó, cũng như sao chép, chuyển tiếp hoặc lưu tin nhắn của người khác. Nó không chặn được các ứng dụng được phép đọc màn hình, hay điện thoại hoặc ứng dụng đã bị sửa để lách qua.';
 
   @override
+  String get roomShotsBlockedDesk =>
+      'Không thể sao chép, chuyển tiếp hoặc lưu tin nhắn của nhau trong phòng này. Kryfo cho Android còn chặn chụp màn hình và quay màn hình.';
+
+  @override
   String get roomShotsAlwaysOn =>
       'Luôn bật trong phòng, trên mọi điện thoại trong đó';
+
+  @override
+  String get roomShotsAlwaysOnDesk =>
+      'Luôn bật trong phòng, trong Kryfo cho Android';
 
   @override
   String get settingsPerChat => 'Theo từng cuộc trò chuyện';
@@ -9800,11 +9808,18 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chặn chụp màn hình và quay màn hình trên mọi điện thoại trong nhóm này, cũng như sao chép, chuyển tiếp hoặc lưu tin nhắn của nhau. Nó không chặn được các ứng dụng được phép đọc màn hình, hay điện thoại hoặc ứng dụng đã bị sửa để lách qua.';
 
   @override
+  String get groupShotsBlocksAllDesk =>
+      'Tắt việc sao chép, chuyển tiếp và lưu tin nhắn của nhau ở đây. Kryfo cho Android còn chặn chụp màn hình và quay màn hình.';
+
+  @override
   String get groupShotsStartsWhenAll =>
       'Đang chờ mọi người ở đây cập nhật Kryfo';
 
   @override
   String get groupShotsOnForAll => 'Đã bật cho mọi người ở đây';
+
+  @override
+  String get groupShotsOnForAllDesk => 'Đã bật trong Kryfo cho Android';
 
   @override
   String get groupShotsOffAdminOnly =>
@@ -9817,6 +9832,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get groupShotsOnAdminOnly =>
       'Đã bật cho mọi người ở đây. Chỉ quản trị viên mới đổi được';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk =>
+      'Đã bật trong Kryfo cho Android. Chỉ quản trị viên mới đổi được';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -9860,6 +9879,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chặn chụp màn hình đã bật cho mọi người ở đây. Việc sao chép, chuyển tiếp và lưu tin nhắn của nhau cũng bị tắt.';
 
   @override
+  String get groupShotsStartedDesk =>
+      'Chặn chụp màn hình đã bật trong Kryfo cho Android. Việc sao chép, chuyển tiếp và lưu tin nhắn của nhau cũng bị tắt.';
+
+  @override
   String get groupShotsPaused =>
       'Có người ở đây chưa chặn chụp màn hình được. Nó sẽ lại áp dụng cho mọi người khi họ cập nhật Kryfo.';
 
@@ -9878,6 +9901,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupShotsBlockedHere => 'Kryfo chặn chụp màn hình trong nhóm này';
+
+  @override
+  String get groupShotsBlockedHereDesk =>
+      'Không thể sao chép, chuyển tiếp hoặc lưu trong nhóm này';
 
   @override
   String get groupShotsMenuNote =>

@@ -8800,8 +8800,16 @@ class AppLocalizationsId extends AppLocalizations {
       'Kryfo memblokir tangkapan layar dan rekaman layar ruang ini di setiap ponsel di dalamnya, juga menyalin, meneruskan, atau menyimpan pesan orang lain. Ini tidak bisa mencegah aplikasi yang diizinkan membaca layar, atau ponsel maupun aplikasi yang diubah untuk mengakalinya.';
 
   @override
+  String get roomShotsBlockedDesk =>
+      'Menyalin, meneruskan, dan menyimpan pesan satu sama lain mati di ruang ini. Kryfo untuk Android juga memblokir tangkapan layar dan rekaman layar.';
+
+  @override
   String get roomShotsAlwaysOn =>
       'Selalu menyala di ruang, di setiap ponsel di dalamnya';
+
+  @override
+  String get roomShotsAlwaysOnDesk =>
+      'Selalu menyala di ruang, di Kryfo untuk Android';
 
   @override
   String get settingsPerChat => 'Per obrolan';
@@ -9807,11 +9815,18 @@ class AppLocalizationsId extends AppLocalizations {
       'Memblokir tangkapan layar dan rekaman layar di setiap ponsel dalam grup ini, juga menyalin, meneruskan, atau menyimpan pesan satu sama lain. Ini tidak bisa mencegah aplikasi yang diizinkan membaca layar, atau ponsel maupun aplikasi yang diubah untuk mengakalinya.';
 
   @override
+  String get groupShotsBlocksAllDesk =>
+      'Mematikan menyalin, meneruskan, dan menyimpan pesan satu sama lain di sini. Kryfo untuk Android juga memblokir tangkapan layar dan rekaman layar.';
+
+  @override
   String get groupShotsStartsWhenAll =>
       'Menunggu semua orang di sini memperbarui Kryfo';
 
   @override
   String get groupShotsOnForAll => 'Menyala untuk semua orang di sini';
+
+  @override
+  String get groupShotsOnForAllDesk => 'Menyala di Kryfo untuk Android';
 
   @override
   String get groupShotsOffAdminOnly =>
@@ -9824,6 +9839,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get groupShotsOnAdminOnly =>
       'Menyala untuk semua orang di sini. Hanya admin yang bisa mengubahnya';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk =>
+      'Menyala di Kryfo untuk Android. Hanya admin yang bisa mengubahnya';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -9867,6 +9886,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Blokir tangkapan layar menyala untuk semua orang di sini. Menyalin, meneruskan, dan menyimpan pesan satu sama lain juga mati.';
 
   @override
+  String get groupShotsStartedDesk =>
+      'Blokir tangkapan layar menyala di Kryfo untuk Android. Menyalin, meneruskan, dan menyimpan pesan satu sama lain juga mati.';
+
+  @override
   String get groupShotsPaused =>
       'Seseorang di sini belum bisa memblokir tangkapan layar. Ini berlaku lagi untuk semua orang setelah dia memperbarui Kryfo.';
 
@@ -9887,6 +9910,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get groupShotsBlockedHere =>
       'Kryfo memblokir tangkapan layar di grup ini';
+
+  @override
+  String get groupShotsBlockedHereDesk =>
+      'Menyalin, meneruskan, dan menyimpan mati di grup ini';
 
   @override
   String get groupShotsMenuNote =>

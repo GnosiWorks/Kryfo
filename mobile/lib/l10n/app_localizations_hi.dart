@@ -8811,7 +8811,15 @@ class AppLocalizationsHi extends AppLocalizations {
       'Kryfo इस रूम के हर फ़ोन पर इसके स्क्रीनशॉट और स्क्रीन रिकॉर्डिंग रोकता है, और एक-दूसरे के मैसेज कॉपी, फ़ॉरवर्ड या सेव करना भी। यह उन ऐप को नहीं रोक सकता जिन्हें स्क्रीन पढ़ने की अनुमति है, न ही ऐसे फ़ोन या ऐप को जिसे इससे बचने के लिए बदला गया हो।';
 
   @override
+  String get roomShotsBlockedDesk =>
+      'इस रूम में एक-दूसरे के मैसेज कॉपी, फ़ॉरवर्ड और सेव करना बंद है। Android के लिए Kryfo स्क्रीनशॉट और स्क्रीन रिकॉर्डिंग भी रोकता है।';
+
+  @override
   String get roomShotsAlwaysOn => 'रूम में हमेशा चालू, उसके हर फ़ोन पर';
+
+  @override
+  String get roomShotsAlwaysOnDesk =>
+      'रूम में हमेशा चालू, Android के लिए Kryfo में';
 
   @override
   String get settingsPerChat => 'हर चैट के लिए अलग';
@@ -9816,11 +9824,18 @@ class AppLocalizationsHi extends AppLocalizations {
       'इस ग्रुप के हर फ़ोन पर स्क्रीनशॉट और स्क्रीन रिकॉर्डिंग रोकता है, और एक-दूसरे के मैसेज कॉपी, फ़ॉरवर्ड या सेव करना भी। यह उन ऐप को नहीं रोक सकता जिन्हें स्क्रीन पढ़ने की अनुमति है, न ही ऐसे फ़ोन या ऐप को जिसे इससे बचने के लिए बदला गया हो।';
 
   @override
+  String get groupShotsBlocksAllDesk =>
+      'यहाँ एक-दूसरे के मैसेज कॉपी, फ़ॉरवर्ड और सेव करना बंद करता है। Android के लिए Kryfo स्क्रीनशॉट और स्क्रीन रिकॉर्डिंग भी रोकता है।';
+
+  @override
   String get groupShotsStartsWhenAll =>
       'यहाँ सबके Kryfo अपडेट करने का इंतज़ार है';
 
   @override
   String get groupShotsOnForAll => 'यहाँ सबके लिए चालू';
+
+  @override
+  String get groupShotsOnForAllDesk => 'Android के लिए Kryfo में चालू';
 
   @override
   String get groupShotsOffAdminOnly => 'बंद। इसे सिर्फ़ एडमिन बदल सकते हैं';
@@ -9832,6 +9847,10 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get groupShotsOnAdminOnly =>
       'यहाँ सबके लिए चालू। इसे सिर्फ़ एडमिन बदल सकते हैं';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk =>
+      'Android के लिए Kryfo में चालू। इसे सिर्फ़ एडमिन बदल सकते हैं';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -9876,6 +9895,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'यहाँ सबके लिए स्क्रीनशॉट रोकना चालू है। एक-दूसरे के मैसेज कॉपी, फ़ॉरवर्ड और सेव करना भी बंद है।';
 
   @override
+  String get groupShotsStartedDesk =>
+      'Android के लिए Kryfo में स्क्रीनशॉट रोकना चालू है। एक-दूसरे के मैसेज कॉपी, फ़ॉरवर्ड और सेव करना भी बंद है।';
+
+  @override
   String get groupShotsPaused =>
       'यहाँ कोई अभी स्क्रीनशॉट नहीं रोक सकता। उनके Kryfo अपडेट करते ही यह फिर सब पर लागू होगा।';
 
@@ -9894,6 +9917,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get groupShotsBlockedHere => 'Kryfo इस ग्रुप में स्क्रीनशॉट रोकता है';
+
+  @override
+  String get groupShotsBlockedHereDesk =>
+      'इस ग्रुप में कॉपी, फ़ॉरवर्ड और सेव करना बंद है';
 
   @override
   String get groupShotsMenuNote =>

@@ -8873,8 +8873,16 @@ class AppLocalizationsEs extends AppLocalizations {
       'Kryfo bloquea las capturas y la grabación de pantalla de esta sala en todos sus teléfonos, y copiar, reenviar o guardar los mensajes de los demás. No puede impedir las apps con permiso para leer la pantalla ni un teléfono o una app modificados para saltárselo.';
 
   @override
+  String get roomShotsBlockedDesk =>
+      'Copiar, reenviar y guardar los mensajes de los demás está desactivado en esta sala. Kryfo para Android también bloquea las capturas y la grabación de pantalla.';
+
+  @override
   String get roomShotsAlwaysOn =>
       'Siempre activado en una sala, en todos sus teléfonos';
+
+  @override
+  String get roomShotsAlwaysOnDesk =>
+      'Siempre activado en una sala, en Kryfo para Android';
 
   @override
   String get settingsPerChat => 'Por chat';
@@ -9882,11 +9890,18 @@ class AppLocalizationsEs extends AppLocalizations {
       'Bloquea las capturas y la grabación de pantalla en todos los teléfonos de este grupo, y copiar, reenviar o guardar los mensajes de los demás. No puede impedir las apps con permiso para leer la pantalla ni un teléfono o una app modificados para saltárselo.';
 
   @override
+  String get groupShotsBlocksAllDesk =>
+      'Desactiva aquí copiar, reenviar y guardar los mensajes de los demás. Kryfo para Android también bloquea las capturas y la grabación de pantalla.';
+
+  @override
   String get groupShotsStartsWhenAll =>
       'Esperando a que todos aquí actualicen Kryfo';
 
   @override
   String get groupShotsOnForAll => 'Activado para todos aquí';
+
+  @override
+  String get groupShotsOnForAllDesk => 'Activado en Kryfo para Android';
 
   @override
   String get groupShotsOffAdminOnly =>
@@ -9899,6 +9914,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get groupShotsOnAdminOnly =>
       'Activado para todos aquí. Solo el admin puede cambiarlo';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk =>
+      'Activado en Kryfo para Android. Solo el admin puede cambiarlo';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -9943,6 +9962,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'El bloqueo de capturas está activado para todos aquí. Copiar, reenviar y guardar los mensajes de los demás también queda desactivado.';
 
   @override
+  String get groupShotsStartedDesk =>
+      'El bloqueo de capturas está activado en Kryfo para Android. Copiar, reenviar y guardar los mensajes de los demás también queda desactivado.';
+
+  @override
   String get groupShotsPaused =>
       'Alguien aquí todavía no puede bloquear capturas. Volverá a cubrir a todos en cuanto actualice Kryfo.';
 
@@ -9963,6 +9986,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get groupShotsBlockedHere =>
       'Kryfo bloquea las capturas en este grupo';
+
+  @override
+  String get groupShotsBlockedHereDesk =>
+      'Copiar, reenviar y guardar está desactivado en este grupo';
 
   @override
   String get groupShotsMenuNote =>

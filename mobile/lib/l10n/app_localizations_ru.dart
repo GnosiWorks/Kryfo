@@ -8964,8 +8964,16 @@ class AppLocalizationsRu extends AppLocalizations {
       'Kryfo запрещает скриншоты и запись экрана этой комнаты на каждом телефоне в ней, а также копировать, пересылать и сохранять чужие сообщения. Это не остановит приложения с доступом к экрану или телефон и приложение, изменённые, чтобы это обойти.';
 
   @override
+  String get roomShotsBlockedDesk =>
+      'В этой комнате нельзя копировать, пересылать и сохранять сообщения друг друга. Kryfo для Android также запрещает скриншоты и запись экрана.';
+
+  @override
   String get roomShotsAlwaysOn =>
       'В комнате включено всегда, на каждом телефоне';
+
+  @override
+  String get roomShotsAlwaysOnDesk =>
+      'В комнате включено всегда, в Kryfo для Android';
 
   @override
   String get settingsPerChat => 'Для каждого чата';
@@ -9976,10 +9984,17 @@ class AppLocalizationsRu extends AppLocalizations {
       'Запрещает скриншоты и запись экрана на каждом телефоне в этой группе, а также копировать, пересылать и сохранять сообщения друг друга. Это не остановит приложения с доступом к экрану или телефон и приложение, изменённые, чтобы это обойти.';
 
   @override
+  String get groupShotsBlocksAllDesk =>
+      'Запрещает здесь копировать, пересылать и сохранять сообщения друг друга. Kryfo для Android также запрещает скриншоты и запись экрана.';
+
+  @override
   String get groupShotsStartsWhenAll => 'Ждёт, пока все здесь обновят Kryfo';
 
   @override
   String get groupShotsOnForAll => 'Включено для всех здесь';
+
+  @override
+  String get groupShotsOnForAllDesk => 'Включено в Kryfo для Android';
 
   @override
   String get groupShotsOffAdminOnly =>
@@ -9992,6 +10007,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get groupShotsOnAdminOnly =>
       'Включено для всех здесь. Изменить это может только админ';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk =>
+      'Включено в Kryfo для Android. Изменить это может только админ';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -10038,6 +10057,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Запрет скриншотов включён для всех здесь. Копировать, пересылать и сохранять сообщения друг друга тоже нельзя.';
 
   @override
+  String get groupShotsStartedDesk =>
+      'Запрет скриншотов включён в Kryfo для Android. Копировать, пересылать и сохранять сообщения друг друга тоже нельзя.';
+
+  @override
   String get groupShotsPaused =>
       'Кто-то здесь пока не может запрещать скриншоты. Запрет снова будет для всех, когда этот человек обновит Kryfo.';
 
@@ -10056,6 +10079,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get groupShotsBlockedHere => 'Kryfo запрещает скриншоты в этой группе';
+
+  @override
+  String get groupShotsBlockedHereDesk =>
+      'В этой группе нельзя копировать, пересылать и сохранять';
 
   @override
   String get groupShotsMenuNote =>

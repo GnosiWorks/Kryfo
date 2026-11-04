@@ -8818,8 +8818,16 @@ class AppLocalizationsFa extends AppLocalizations {
       'Kryfo اسکرین‌شات و ضبط صفحه‌ی این اتاق را در همه‌ی گوشی‌های آن مسدود می‌کند، و کپی، بازارسال یا ذخیره‌ی پیام‌های دیگران را هم. جلوی برنامه‌هایی که اجازه‌ی خواندن صفحه را دارند، یا گوشی و برنامه‌ای را که برای دور زدنش تغییر داده شده نمی‌گیرد.';
 
   @override
+  String get roomShotsBlockedDesk =>
+      'کپی، بازارسال و ذخیره‌ی پیام‌های یکدیگر در این اتاق خاموش است. Kryfo برای اندروید جلوی اسکرین‌شات و ضبط صفحه را هم می‌گیرد.';
+
+  @override
   String get roomShotsAlwaysOn =>
       'در اتاق همیشه روشن است، روی همه‌ی گوشی‌های آن';
+
+  @override
+  String get roomShotsAlwaysOnDesk =>
+      'در اتاق همیشه روشن است، در Kryfo برای اندروید';
 
   @override
   String get settingsPerChat => 'برای هر گفت‌وگو';
@@ -9823,11 +9831,18 @@ class AppLocalizationsFa extends AppLocalizations {
       'جلوی اسکرین‌شات و ضبط صفحه را در همه‌ی گوشی‌های این گروه می‌گیرد، و کپی، بازارسال یا ذخیره‌ی پیام‌های یکدیگر را هم. جلوی برنامه‌هایی که اجازه‌ی خواندن صفحه را دارند، یا گوشی و برنامه‌ای را که برای دور زدنش تغییر داده شده نمی‌گیرد.';
 
   @override
+  String get groupShotsBlocksAllDesk =>
+      'کپی، بازارسال و ذخیره‌ی پیام‌های یکدیگر را اینجا خاموش می‌کند. Kryfo برای اندروید جلوی اسکرین‌شات و ضبط صفحه را هم می‌گیرد.';
+
+  @override
   String get groupShotsStartsWhenAll =>
       'در انتظار به‌روزرسانی Kryfo توسط همه‌ی اعضا';
 
   @override
   String get groupShotsOnForAll => 'برای همه‌ی اعضا روشن است';
+
+  @override
+  String get groupShotsOnForAllDesk => 'در Kryfo برای اندروید روشن است';
 
   @override
   String get groupShotsOffAdminOnly =>
@@ -9840,6 +9855,10 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get groupShotsOnAdminOnly =>
       'برای همه‌ی اعضا روشن است. فقط مدیر می‌تواند این را تغییر دهد';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk =>
+      'در Kryfo برای اندروید روشن است. فقط مدیر می‌تواند این را تغییر دهد';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -9884,6 +9903,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'جلوگیری از اسکرین‌شات برای همه‌ی اعضا روشن است. کپی، بازارسال و ذخیره‌ی پیام‌های یکدیگر هم خاموش است.';
 
   @override
+  String get groupShotsStartedDesk =>
+      'جلوگیری از اسکرین‌شات در Kryfo برای اندروید روشن است. کپی، بازارسال و ذخیره‌ی پیام‌های یکدیگر هم خاموش است.';
+
+  @override
   String get groupShotsPaused =>
       'یکی از اعضا هنوز نمی‌تواند جلوی اسکرین‌شات را بگیرد. وقتی Kryfo را به‌روز کند، دوباره همه را در بر می‌گیرد.';
 
@@ -9904,6 +9927,10 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get groupShotsBlockedHere =>
       'Kryfo در این گروه جلوی اسکرین‌شات را می‌گیرد';
+
+  @override
+  String get groupShotsBlockedHereDesk =>
+      'کپی، بازارسال و ذخیره در این گروه خاموش است';
 
   @override
   String get groupShotsMenuNote =>
