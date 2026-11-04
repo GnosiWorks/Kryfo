@@ -975,6 +975,35 @@ void main() {
     );
   }, skip: skip);
 
+  test('a contact known here by key alone is put back as it was when the '
+      'copy is taken back', () async {
+    final ph = await _phone();
+    final d = await _device(ph);
+    await d.db.insert('contacts', {
+      'halo_id': _ana,
+      'onion': '',
+      'xpub': '',
+      'first_seen': 0,
+      'last_seen': 0,
+      'accepted': 0,
+    });
+    final before = (await d.db.query(
+      'contacts',
+      where: 'halo_id = ?',
+      whereArgs: [_ana],
+    )).single;
+    final w = _World(ph, d)..startPhone();
+    w.wireOver = _CutTally(w.wire, endHistoryCopies);
+    w.startDevice();
+    await w.settle();
+    expect(d.landed, 1);
+    expect(w.device!.stage.value.step, HistoryCopyStep.ended);
+    expect(w.takenBack, contains(_ana));
+    // the key-only row stays, with nothing the copy brought in it
+    final after = await d.db.query('contacts');
+    expect(after, [before]);
+  }, skip: skip);
+
   test('what the phone deleted while the copy ran goes on the device too, '
       'and the copy stays whole', () async {
     final ph = await _phone();
