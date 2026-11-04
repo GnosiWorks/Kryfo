@@ -80,9 +80,13 @@ class VoiceModels {
 
   /// starts fetching [id] from the mirror the engine pins; nothing here
   /// names a host. false when it could not start
-  Future<bool> fetch(String id) async {
-    if (quiet()) return false;
-    return await call('HaloVoiceFetch', [id, await dir()]) == 'ok';
+  Future<bool> fetch(String id) async => await start(id) == 'ok';
+
+  /// the same, with the engine's answer: "ok", or "error: ..." ("error:
+  /// tor: ..." when tor is not up)
+  Future<String> start(String id) async {
+    if (quiet()) return 'error: decoy';
+    return call('HaloVoiceFetch', [id, await dir()]);
   }
 
   Future<VoiceModelStatus> progress(String id) async {
@@ -102,6 +106,15 @@ class VoiceModels {
   /// the model's path for the transcriber, null unless it is installed
   Future<String?> pathOf(String id) async {
     if (!await installed(id)) return null;
+    for (final m in await models()) {
+      if (m.id == id) return '${await dir()}/${m.file}';
+    }
+    return null;
+  }
+
+  /// where [id] is kept once on the phone, there or not; null for a model
+  /// the engine does not pin
+  Future<String?> fileOf(String id) async {
     for (final m in await models()) {
       if (m.id == id) return '${await dir()}/${m.file}';
     }
