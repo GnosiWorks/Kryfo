@@ -2881,7 +2881,9 @@ Future<void> _confirmDelete(BuildContext context, ContactPreview c) async {
   final ok = await showConfirmSheet(
     context,
     title: l10n.homeDeleteThisChat,
-    line: l10n.homeEveryMessageWithGoesShown(c.nickname ?? c.haloId),
+    line: ownChatEndsHere
+        ? l10n.linkedDeleteHereOnly
+        : l10n.homeEveryMessageWithGoesShown(c.nickname ?? c.haloId),
     yes: l10n.commonDelete,
   );
   if (!ok) return;

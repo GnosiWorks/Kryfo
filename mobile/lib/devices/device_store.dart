@@ -270,6 +270,16 @@ Future<void> deviceTables(
       at INTEGER NOT NULL
     )
   ''');
+  // a contact's frame my phone took while the decoy was open, to pass on
+  // to my devices once the everyday side sends again
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS own_held (
+      uid TEXT PRIMARY KEY,
+      chat TEXT NOT NULL,
+      sender TEXT NOT NULL,
+      frame TEXT NOT NULL
+    )
+  ''');
   // when a linked device last said a person uses it (its 'ob')
   await addColumn(
     db,
@@ -319,6 +329,7 @@ const _allTables = [
   'dev_marks',
   'own_told',
   'own_gone',
+  'own_held',
 ];
 
 /// at every open: [deviceTables] only when one is missing, so a file that

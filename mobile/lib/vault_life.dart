@@ -332,6 +332,21 @@ Map<String, String> get _devicesOf => linkedDevicesOn
       }
     : const {};
 
+// own sync's rows keyed by the chat (own_sync.dart): the order of my
+// devices' ops on it, what was told of it, a frame waiting to go on. they
+// go from the side the chat leaves and are never copied: the vault takes
+// no ops, and the hide tells my devices itself
+const _ownRows = {
+  'frame_order': "msg_uid = 'os:' || {c}",
+  'own_told': 'chat = {c}',
+  'own_held': 'chat = {c}',
+};
+
+Map<String, String> _ownOf(ChatRef c) => {
+  for (final e in _ownRows.entries)
+    e.key: e.value.replaceAll('{c}', c.group ? "'g:' || ?1" : "'p:' || ?1"),
+};
+
 // a person's block rows, by peer_id, which go with a group's people
 const _blockRows = ['block_spans', 'blocked_drops'];
 // made after the chat tables, the drafts' in a try of its own: one side
@@ -682,6 +697,10 @@ class SqlChatMover implements ChatMover {
       await t.execute('DELETE FROM $s.${e.key} WHERE ${_fill(e.value, c, s)}', [
         c.id,
       ]);
+    }
+    for (final e in _ownOf(c).entries) {
+      if ((await _cols(t, s, e.key)).isEmpty) continue;
+      await t.execute('DELETE FROM $s.${e.key} WHERE ${e.value}', [c.id]);
     }
     await t.execute('DELETE FROM $s.messages WHERE ${_chatMsgs(c)}', [c.id]);
     // its notification tag stays behind with nothing: the other side makes

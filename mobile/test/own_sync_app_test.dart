@@ -33,6 +33,13 @@ import 'package:kryfo/main.dart'
         linkedRoleForTest,
         ownApplyForTest,
         ownPassForTest,
+        ownHeldGoForTest,
+        ownNoteForTest,
+        ownAroundHideForTest,
+        deviceSealOutcome,
+        DeviceSent,
+        DeviceCannotReach,
+        kNotFromDevice,
         phonePqForTest,
         ownSyncForTest,
         searchTables,
@@ -40,7 +47,8 @@ import 'package:kryfo/main.dart'
         useEngineForTest,
         AppStateRoute,
         AppStateOutbox,
-        AppStateReceive;
+        AppStateReceive,
+        AppStateContacts;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:path/path.dart' as p;
@@ -86,6 +94,7 @@ class _Told extends OwnSync {
       );
   final ops = <(String, String?, Map<String, Object?>)>[];
   final forwards = <(String, String)>[];
+  final came = <int>[];
 
   @override
   Future<List<OwnPeer>> others(int ident) async => [(id: 4, key: 'k', reg: 1)];
@@ -104,6 +113,7 @@ class _Told extends OwnSync {
   @override
   Future<bool> forward(int ident, String sender, String frame, int came) async {
     forwards.add((sender, frame));
+    this.came.add(came);
     return true;
   }
 
@@ -648,5 +658,209 @@ void main() {
     expect(rows.single['notice'], 1);
     final keys = await s.query('own_device_keys');
     expect((keys.single['dev_id'], keys.single['key']), (6, k));
+  }, skip: skip);
+
+  test('M1 a group frame my desk names members for goes on only as a '
+      'message: never a profile photo, a pq restart or an introduction, '
+      'and nothing but what a message says', () async {
+    Future<List<String>> sent(Map<String, Object?> j) async {
+      io.sent.clear();
+      await copy('g:g1', _f(j), n: ['old-friend']);
+      return [
+        for (final (_, c) in io.sent)
+          if (c.contains('from the desk')) c,
+      ];
+    }
+
+    for (final bad in <Map<String, Object?>>[
+      {'pp': 'slice', 'u': 'u-pp'},
+      {'rq': 'kdb1', 'u': 'u-rq'},
+      {
+        'in': {'h': 'x', 'o': 'o', 'x': 'x'},
+        'u': 'u-in',
+      },
+      {'nd': {}, 'u': 'u-nd'},
+      {'dl': 'x', 'u': 'u-dl'},
+      {
+        'u': 'u-ss',
+        'ss': {'o': 1},
+      },
+    ]) {
+      expect(
+        await sent({'m': 'from the desk', 'g': 'g1', ...bad}),
+        isEmpty,
+        reason: '$bad',
+      );
+    }
+    final ok = await sent({
+      'u': 'u-ok',
+      'm': 'from the desk',
+      'g': 'g1',
+      'bg': 'badge',
+      'rs': ['bob'],
+      'gs': {'o': 1},
+      'fs': 'ab',
+    });
+    expect(ok, hasLength(1));
+    for (final k in ['"bg"', '"rs"', '"gs"', '"fs"']) {
+      expect(ok.single, isNot(contains(k)), reason: k);
+    }
+  }, skip: skip);
+
+  test('M2 a hide tells my devices gone at once, and no pass runs while '
+      'the chats move', () async {
+    await ownPassForTest();
+    expect(told.ops, isEmpty);
+    await ownAroundHideForTest(['bob'], () async {
+      // what the move drops of him (vault_life _ownRows)
+      await s.delete('own_told', where: "chat = 'p:bob'");
+      await s.update('contacts', {'accepted': 0}, where: "halo_id = 'bob'");
+      await s.update('contacts', {
+        'nickname': 'B',
+      }, where: "halo_id = 'old-friend'");
+      await ownPassForTest();
+      expect(told.ops, isEmpty);
+      expect(await s.query('own_told', where: "chat = 'p:bob'"), isEmpty);
+    });
+    expect(told.ops.map((o) => (o.$1, o.$2)), [('gone', 'p:bob')]);
+    // and the passes run again after it
+    await ownPassForTest();
+    expect(
+      told.ops.map((o) => (o.$1, o.$2)),
+      contains(('contact', 'p:old-friend')),
+    );
+    expect(told.ops.where((o) => o.$2 == 'p:bob'), hasLength(1));
+  }, skip: skip);
+
+  test('M3 what a 0.5.x contact sends while the decoy is open waits on the '
+      'everyday side, and goes on to my devices once it closes, stamped '
+      'then', () async {
+    phonePqForTest = (_) async => true;
+    final decoy = _Rows(s, HaloContainer.decoy);
+    useDatabasesForTest(db, Session(decoy));
+    await comes('old-friend', _f({'u': 'u-od', 'm': 'during the decoy'}));
+    expect(told.forwards, isEmpty);
+    expect(await s.query('own_held'), hasLength(1));
+    // nothing of it leaves while the decoy is open
+    await ownHeldGoForTest();
+    expect(told.forwards, isEmpty);
+    useDatabasesForTest(db, Session(db));
+    final before = DateTime.now().millisecondsSinceEpoch;
+    await ownHeldGoForTest();
+    expect(told.forwards.map((x) => x.$1), ['old-friend']);
+    expect(
+      jsonDecode(told.forwards.single.$2.substring(7))['m'],
+      'during the decoy',
+    );
+    expect(told.came.single, greaterThanOrEqualTo(before));
+    expect(await s.query('own_held'), isEmpty);
+    // one of a chat gone since takes nothing
+    useDatabasesForTest(db, Session(decoy));
+    await comes('old-friend', _f({'u': 'u-od2', 'm': 'again'}));
+    expect(await s.query('own_held'), hasLength(1));
+    await s.update('contacts', {
+      'accepted': 0,
+    }, where: "halo_id = 'old-friend'");
+    useDatabasesForTest(db, Session(db));
+    await ownHeldGoForTest();
+    expect(told.forwards, hasLength(1));
+    expect(await s.query('own_held'), isEmpty);
+  }, skip: skip);
+
+  test('M4 L3 a chat gone on my phone leaves the shade of a linked device, '
+      'and the device keeps no more of the person than the phone does after '
+      'a hide', () async {
+    linkedRoleForTest = true;
+    await s.insert('notif_tags', {'chat': 'bob', 'tag': 't-bob'});
+    await s.insert('gone_in', {'msg_uid': 'x', 'peer_id': 'bob', 'at': 1});
+    await s.insert('frame_order', {
+      'msg_uid': 'os:p:bob',
+      'sender': 'own:0/1/k',
+      'kind': 'st',
+      'w': 1,
+    });
+    expect(await op('gone', 'p:bob', {}), isTrue);
+    expect(io.unrang, contains('bob'));
+    expect(io.unrangTags, contains('t-bob'));
+    // a group still names him: a key-only row
+    final b = (await s.query('contacts', where: "halo_id = 'bob'")).single;
+    expect((b['accepted'], b['nickname'], b['note']), (0, null, null));
+    expect(b['ikey'], isNotNull);
+    expect(await s.query('gone_in', where: "peer_id = 'bob'"), isEmpty);
+    expect(await s.query('frame_order', where: "msg_uid = 'os:p:bob'"), isEmpty);
+    // one nothing names goes
+    await s.update('contacts', {'shots_on': 0}, where: "halo_id = 'carol'");
+    expect(await op('gone', 'p:carol', {}), isTrue);
+    expect(await s.query('contacts', where: "halo_id = 'carol'"), isEmpty);
+    // a group gone leaves the shade too
+    await op('group', 'g:g2', {
+      'r': {'name': 'Climbing', 'created_at': 7},
+      'm': ['me', 'bob'],
+    });
+    expect(await op('ungroup', 'g:g2', {}), isTrue);
+    expect(io.unrang, contains('group:g2'));
+  }, skip: skip);
+
+  test('M5 a linked device\'s seal that went counts as sent; one that cannot '
+      'reach them says so', () {
+    expect(deviceSealOutcome(const DeviceSent()), 'ok');
+    expect(deviceSealOutcome(const DeviceCannotReach('bob')), kNotFromDevice);
+    expect(deviceSealOutcome(StateError('x')), isNull);
+  });
+
+  test('M6 a linked device keeps a whole chat\'s delete, its clear and its '
+      'block to itself; my phone takes no block from it', () async {
+    linkedRoleForTest = true;
+    await ownPassForTest();
+    await s.update('contacts', {'blocked': 1}, where: "halo_id = 'bob'");
+    await ownPassForTest();
+    expect(told.ops, isEmpty);
+    await s.update('contacts', {'nickname': 'Bobby'}, where: "halo_id = 'bob'");
+    await ownPassForTest();
+    expect(told.ops.single.$1, 'contact');
+    expect((told.ops.single.$3['r'] as Map).containsKey('blocked'), isFalse);
+    await s.update('contacts', {'accepted': 0}, where: "halo_id = 'bob'");
+    await ownPassForTest();
+    expect(told.ops.where((o) => o.$1 == 'gone'), isEmpty);
+    ownNoted = ownNoteForTest;
+    await Session(db).clearConversation('old-friend');
+    await Session(db).clearUnread('old-friend');
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    expect(told.ops.where((o) => o.$1 == 'clear'), isEmpty);
+    expect(told.ops.where((o) => o.$1 == 'read'), hasLength(1));
+    // the phone
+    linkedRoleForTest = false;
+    expect(
+      await op('contact', 'p:old-friend', {
+        'r': {'blocked': 1, 'nickname': 'Old'},
+      }),
+      isTrue,
+    );
+    final o = (await s.query(
+      'contacts',
+      where: "halo_id = 'old-friend'",
+    )).single;
+    expect((o['blocked'], o['nickname']), (0, 'Old'));
+  }, skip: skip);
+
+  test('L4 a chat deleted on my phone is told gone at once, as a hide is',
+      () async {
+    await ownPassForTest();
+    await app.deleteConversation('old-friend');
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    expect(told.ops.map((o) => (o.$1, o.$2)), [('gone', 'p:old-friend')]);
+  }, skip: skip);
+
+  test('L5 a delete here lets go of own_gone rows past their time', () async {
+    await s.insert('own_gone', {'uid': 'u-very-old', 'at': 1});
+    await copy('p:bob', _f({'u': 'u-dd', 'm': 'x', 'w': 2}));
+    expect(
+      await op('del', 'p:bob', {
+        'u': ['u-dd'],
+      }),
+      isTrue,
+    );
+    final kept = {for (final r in await s.query('own_gone')) r['uid']};
+    expect(kept, {'u-dd'});
   }, skip: skip);
 }

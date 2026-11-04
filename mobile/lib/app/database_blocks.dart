@@ -103,6 +103,13 @@ mixin _BlockRows {
       ]) {
         await t.delete(table, where: '$col = ?', whereArgs: [haloId]);
       }
+      // a frame of theirs waiting to go on to my devices (own sync), where
+      // the device tables are
+      if ((await t.rawQuery(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'own_held'",
+      )).isNotEmpty) {
+        await t.delete('own_held', where: 'sender = ?', whereArgs: [haloId]);
+      }
       // what of theirs went in groups, by group and sender (goneKey). the
       // delete marked their polls as just gone: nothing of them stays
       final inGroups = [

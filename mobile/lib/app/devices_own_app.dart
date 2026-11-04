@@ -76,6 +76,8 @@ Future<void> _ownBeat() async {
 void _ownNote(String kind, OwnChat chat, Map<String, Object?> a) {
   final own = _ownSync;
   if (own == null || !_ownSends) return;
+  // a linked device's clear of a whole chat stays on it (kOwnChatEndsBothWays)
+  if (linkedRole && !kOwnOpsFromDevice.contains(kind)) return;
   unawaited(() async {
     try {
       if (!await _ownChatShared(chat)) return;
@@ -166,15 +168,33 @@ Future<void> _ownAddedHere(
 }
 
 /// the rows a contact's state op carries: what a person sets on a chat. a
-/// linked device sends only these, its phone the whole row
+/// linked device sends only these, its phone the whole row. a block goes
+/// from the phone alone unless kOwnChatEndsBothWays
 const kOwnContactSet = [
   'nickname',
   'note',
   'muted',
   'archived',
   'pinned',
-  'blocked',
+  if (kOwnChatEndsBothWays) 'blocked',
 ];
+
+/// on a linked device, a whole chat deleted or cleared goes from this
+/// device alone (kOwnChatEndsBothWays off): what its confirm says
+bool get ownChatEndsHere => linkedRole && !kOwnChatEndsBothWays;
+
+/// a clear's confirm line in a chat or a group: this device's own words on
+/// a linked device, as the desk words are a computer's (desk_words.dart)
+String ownClearLine({required bool group}) => ownChatEndsHere
+    ? l10n.linkedClearHereOnly
+    : group
+    ? l10n.groupInfoEveryMessageHereIsShown
+    : l10n.chatEveryMessageHereIsShown;
+
+/// a delete's confirm line on a contact's page, the same way
+String get ownDeleteLine => ownChatEndsHere
+    ? l10n.linkedDeleteHereOnly
+    : l10n.contactEveryMessageAndTheShown;
 
 /// what the app does with own frames, for the tests
 @visibleForTesting
@@ -187,6 +207,32 @@ Future<bool> Function(String peer)? phonePqForTest;
 /// the pass that tells my devices what moved, run now, for the tests
 @visibleForTesting
 Future<void> ownPassForTest() async => _madeApp?._ownPass();
+
+/// what the session tells of the person's doing, as the app takes it, for
+/// the tests
+@visibleForTesting
+void Function(String kind, OwnChat chat, Map<String, Object?> a)
+get ownNoteForTest => _ownNote;
+
+/// what waited while the decoy was open, sent now, for the tests
+@visibleForTesting
+Future<void> ownHeldGoForTest() async => _madeApp?._ownHeldGo();
+
+/// a hide's own part around [move], for the tests
+@visibleForTesting
+Future<void> ownAroundHideForTest(
+  List<String> people,
+  Future<void> Function() move,
+) async {
+  final app = _madeApp!;
+  final chats = [for (final p in people) ChatRef(p)];
+  final told = await app._ownBeforeHide(chats);
+  try {
+    await move();
+  } finally {
+    await app._ownAfterHide(told, chats);
+  }
+}
 
 class _AppOwn implements OwnApply {
   const _AppOwn();
@@ -247,6 +293,18 @@ class DeviceCannotReach implements Exception {
 }
 
 enum _DeviceSend { sent, cannot, failed }
+
+/// a send this linked device could not make: its phone answers that chat
+const kNotFromDevice = 'error: not from this device';
+
+/// what a send makes of a seal that threw on a linked device: 'ok' when its
+/// copies went from here (DeviceSent), [kNotFromDevice] when no device of
+/// theirs holds a session with this one, null for any other failure
+String? deviceSealOutcome(Object e) => e is DeviceSent
+    ? 'ok'
+    : e is DeviceCannotReach
+    ? kNotFromDevice
+    : null;
 
 /// how long a linked device gathers a group frame's members before its own
 /// copy goes, naming the ones it could not reach
@@ -623,16 +681,19 @@ extension AppStateOwn on AppState {
     }
   }
 
-  // a frame of my device's as this phone sends it: the device's own
-  // onion, keys and caps out, this phone's in
+  // a frame of my device's as this phone sends it: only what a message
+  // says (kOwnPassOnKeys), never a photo, a pq restart, an introduction or
+  // anything else a device may not do as me; this phone's id and onion in
   String? _ownRewrapped(String frame) {
     try {
-      final j =
+      final body =
           jsonDecode(frame.substring(kEnvelopePrefix.length))
               as Map<String, dynamic>;
-      for (final k in const ['h', 'o', 'x', 'e', 'av', 'cp', 'pg', 'as']) {
-        j.remove(k);
-      }
+      if (!ownCopyFits(body)) return null;
+      final j = {
+        for (final e in body.entries)
+          if (kOwnPassOnKeys.contains(e.key)) e.key: e.value,
+      };
       final s = _mySender();
       j['h'] = s.haloId;
       if (s.onion.isNotEmpty) j['o'] = s.onion;
@@ -680,8 +741,11 @@ extension AppStateOwn on AppState {
     RouteTo to,
   ) async {
     final own = _ownSync;
-    if (own == null || !_ownSends || linkedRole) return;
+    if (own == null || !linkedDevicesOn || linkedRole) return;
     if (to != RouteTo.everyday) return;
+    // in the decoy or a quiet session it waits on the everyday side (M3)
+    final hold = !_ownSends;
+    if (hold && live.container != HaloContainer.everyday) return;
     if (env.typing || env.pqRestart != null || env.photo != null) return;
     if (env.need != null || env.intro != null) return;
     if (deviceWordsOnly(wire)) return;
@@ -696,9 +760,71 @@ extension AppStateOwn on AppState {
       if ((await own.others(identOfPeer(sender))).isEmpty) return;
       if (!await _ownChatShared(chat)) return;
       if (await _reachesMyDevices(sender)) return;
+      if (hold) {
+        await _ownHold(chat, sender, plain);
+        return;
+      }
       await own.forward(identOfPeer(sender), sender, plain, _clockMs());
     } catch (e) {
       dlog('own: a frame not passed on (${e.runtimeType})');
+    }
+  }
+
+  // a frame to pass on, kept in the everyday database while the decoy is
+  // open: no time of its own, so my devices learn nothing of when the
+  // phone took it
+  Future<void> _ownHold(OwnChat chat, String sender, String frame) async {
+    if (frame.length > kOwnFrameMost) return;
+    final d = await live.open();
+    final n =
+        Sqflite.firstIntValue(
+          await d.rawQuery('SELECT COUNT(*) FROM own_held'),
+        ) ??
+        0;
+    if (n >= kOwnHeldMost) return;
+    await d.insert('own_held', {
+      'uid': ownHash('$sender\n$frame'),
+      'chat': ownChatName(chat),
+      'sender': sender,
+      'frame': frame,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  // what waited while the decoy was open goes on, stamped now, once the
+  // everyday side sends again; a chat hidden or gone since takes nothing
+  Future<void> _ownHeldGo() async {
+    final own = _ownSync;
+    if (own == null || !_ownSends || linkedRole || _ownHeldGoing) return;
+    _ownHeldGoing = true;
+    try {
+      final d = await live.open();
+      final rows = await d.query('own_held', limit: 64);
+      for (final r in rows) {
+        final uid = r['uid'] as String;
+        final sender = r['sender'] as String;
+        final chat = ownChatOf(r['chat']);
+        try {
+          if (chat != null &&
+              !await live.isBlocked(sender) &&
+              (chat.group || await live.isAccepted(sender)) &&
+              await _ownChatShared(chat)) {
+            await own.forward(
+              identOfPeer(sender),
+              sender,
+              r['frame'] as String,
+              _clockMs(),
+            );
+          }
+        } catch (e) {
+          dlog('own: a held frame not passed on (${e.runtimeType})');
+        }
+        await d.delete('own_held', where: 'uid = ?', whereArgs: [uid]);
+        if (!_ownSends) return;
+      }
+    } catch (e) {
+      dlog('own: held frames not read (${e.runtimeType})');
+    } finally {
+      _ownHeldGoing = false;
     }
   }
 
@@ -811,6 +937,7 @@ extension AppStateOwn on AppState {
       case 'ungroup':
         if (!chat.group || !linkedRole) return false;
         if (await live.getGroup(chat.id) == null) return false;
+        // its notifications leave the shade with it (_dropGroup)
         await _dropGroup(chat.id, live);
         await _ownMarkPass(chat);
         await refreshGroups();
@@ -882,7 +1009,7 @@ extension AppStateOwn on AppState {
         await d.update('contacts', set, where: 'halo_id = ?', whereArgs: [id]);
       }
       // a block goes the way a block here goes
-      final b = row['blocked'];
+      final b = kOwnChatEndsBothWays ? row['blocked'] : null;
       if ((b == 0 || b == 1) && (b == 1) != await live.isBlocked(id)) {
         await live.setBlocked(id, b == 1);
       }
@@ -934,8 +1061,14 @@ extension AppStateOwn on AppState {
     if (row == null || (row['accepted'] as num?)?.toInt() != 1) return false;
     // a hidden chat on this phone is never touched from a device
     if (!linkedRole && _routeOf(id, null) != RouteTo.everyday) return false;
+    // the shade lets go of them too (a hide on the phone clears its own)
+    final tags = {?await live.notifTagOf(id)};
     await _devForget(id, sessions: true);
     await live.deleteConversation(id);
+    // a linked device keeps no more of them than the phone's everyday side
+    // keeps after a hide: a key-only row while a group names them
+    if (linkedRole) await _ownDropPerson(id);
+    await _io.unnotifyGone(id, tags);
     await _ownMarkPass((id: id, group: false));
     _bumpChatRev(id);
     await refreshContacts();
@@ -1007,7 +1140,7 @@ extension AppStateOwn on AppState {
   /// keeps what is there and tells nothing (the history copy carried it)
   Future<void> _ownPass() async {
     final own = _ownSync;
-    if (own == null || !_ownSends) return;
+    if (own == null || !_ownSends || _ownPaused) return;
     final run = _ownPassing;
     if (run != null) {
       _ownPassAgain = true;
@@ -1060,9 +1193,9 @@ extension AppStateOwn on AppState {
         if (now.containsKey(k) || k == 'me') continue;
         final chat = ownChatOf(k);
         if (chat != null) {
-          // only the phone ends a group here; a linked device tells of a
-          // contact's chat it deleted
-          if (!chat.group || !linkedRole) {
+          // only the phone ends a chat on my other devices; a linked
+          // device's delete stays on it unless kOwnChatEndsBothWays
+          if (!linkedRole || (!chat.group && kOwnChatEndsBothWays)) {
             await own.op(
               _ownIdentOf(chat),
               chat.group ? 'ungroup' : 'gone',
@@ -1075,6 +1208,56 @@ extension AppStateOwn on AppState {
       }
     } catch (e) {
       dlog('own: a pass not run (${e.runtimeType})');
+    }
+  }
+
+  // a hide is about to move [chats]: no pass runs until it is done, and
+  // the ones my devices were told of are noted, with their identity, for
+  // the gone that follows. the move drops what own sync kept of them
+  Future<List<(OwnChat, int)>> _ownBeforeHide(List<ChatRef> chats) async {
+    if (_ownSync == null || !_ownSends) return const [];
+    _ownPaused = true;
+    try {
+      await _ownPassing;
+      final d = await live.open();
+      final told = {
+        for (final r in await d.query('own_told', columns: ['chat']))
+          r['chat'] as String,
+      };
+      return [
+        for (final c in chats)
+          if (told.contains(ownChatName((id: c.id, group: c.group))))
+            (
+              (id: c.id, group: c.group),
+              c.group ? kMainIdent : identOfPeer(c.id),
+            ),
+      ];
+    } catch (e) {
+      _ownPaused = false;
+      dlog('own: a hide not noted (${e.runtimeType})');
+      return const [];
+    }
+  }
+
+  // the hide is done: each chat of [told] that went leaves my devices now
+  // (P1), and the passes run again
+  Future<void> _ownAfterHide(
+    List<(OwnChat, int)> told,
+    Iterable<ChatRef> went,
+  ) async {
+    _ownPaused = false;
+    final own = _ownSync;
+    if (own == null || told.isEmpty) return;
+    final gone = {
+      for (final c in went) ownChatName((id: c.id, group: c.group)),
+    };
+    for (final (chat, ident) in told) {
+      if (!gone.contains(ownChatName(chat))) continue;
+      try {
+        await own.op(ident, chat.group ? 'ungroup' : 'gone', chat, const {});
+      } catch (e) {
+        dlog('own: a gone not sent (${e.runtimeType})');
+      }
     }
   }
 
@@ -1202,10 +1385,68 @@ extension AppStateOwn on AppState {
 
   Future<void> _ownGoneUid(String uid) async {
     final d = await live.open();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    // a copy later than this would be too late for any gone row as well
+    await d.delete(
+      'own_gone',
+      where: 'at < ?',
+      whereArgs: [now - HaloDb.kGoneFor.inMilliseconds],
+    );
     await d.insert('own_gone', {
       'uid': uid,
-      'at': DateTime.now().millisecondsSinceEpoch,
+      'at': now,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  // a person a gone chat names no more here: their row and what went of
+  // theirs, a key-only row kept while a group names them (vault_life _drop)
+  Future<void> _ownDropPerson(String id) async {
+    final d = await live.open();
+    await d.transaction((t) async {
+      final row = await t.query(
+        'contacts',
+        columns: [
+          'onion',
+          'xpub',
+          'first_seen',
+          'back_paired',
+          'blocked',
+          'ident',
+          'ikey',
+        ],
+        where: 'halo_id = ?',
+        whereArgs: [id],
+        limit: 1,
+      );
+      await t.delete('gone_in', where: 'peer_id = ?', whereArgs: [id]);
+      // the order of my phone's ops on the chat goes with it
+      await t.delete(
+        'frame_order',
+        where: 'msg_uid = ?',
+        whereArgs: ['os:${ownChatName((id: id, group: false))}'],
+      );
+      await t.delete('contacts', where: 'halo_id = ?', whereArgs: [id]);
+      final named = await t.rawQuery(
+        'SELECT 1 FROM group_members WHERE halo_id = ?1 UNION ALL '
+        'SELECT 1 FROM messages WHERE peer_id = ?1 AND group_id IS NOT NULL '
+        "AND group_id != '' LIMIT 1",
+        [id],
+      );
+      if (row.isEmpty || named.isEmpty) return;
+      final r = row.first;
+      await t.insert('contacts', {
+        'halo_id': id,
+        'onion': r['onion'] ?? '',
+        'xpub': r['xpub'] ?? '',
+        'first_seen': r['first_seen'] ?? 0,
+        'last_seen': r['first_seen'] ?? 0,
+        'back_paired': r['back_paired'] ?? 0,
+        'blocked': r['blocked'] ?? 0,
+        'accepted': 0,
+        'ident': r['ident'] ?? kMainIdent,
+        'ikey': r['ikey'],
+      });
+    });
   }
 
   Future<bool> _ownGoneHas(String uid) async {
@@ -1231,6 +1472,12 @@ const _kOwnChunks = 'own:';
 
 Future<void>? _ownPassing;
 bool _ownPassAgain = false;
+bool _ownHeldGoing = false;
+// no pass while a hide moves chats: it would tell what the hide drops
+bool _ownPaused = false;
+
+/// the most frames kept to pass on while the decoy is open
+const kOwnHeldMost = 2048;
 Timer? _ownPassTimer;
 
 /// how long after the lists moved the chats' state is told

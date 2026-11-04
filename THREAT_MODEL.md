@@ -141,6 +141,10 @@ put you in danger, read all of it.
   the keys and addresses needed to receive, and those of their linked
   devices, which shows how many they use, and whether the chat blocks
   screenshots and when that last changed.
+- a linked computer and a hidden chat. a chat hidden on the phone leaves
+  the computer as a deleted one does. one shown again comes back there with
+  its name, note and settings as they were, where a deleted chat added again
+  starts empty: the computer can tell it was hidden.
 - someone who already knows you. a person who knows your three words or
   handle sees different ones in the decoy, and nothing that arrives for you
   shows while it is open.

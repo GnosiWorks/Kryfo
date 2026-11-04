@@ -14,6 +14,7 @@ import '../lock_state.dart' show lockState;
 import '../supporter.dart' show SupporterTier, tierGlyph, tierLabel, tierOf;
 import '../main.dart'
     show
+        ownDeleteLine,
         appState,
         session,
         sessionQuiet,
@@ -796,7 +797,7 @@ class _ContactScreenState extends State<ContactScreen> {
                   final ok = await showConfirmSheet(
                     context,
                     title: l10n.contactDeleteThisChat,
-                    line: l10n.contactEveryMessageAndTheShown,
+                    line: ownDeleteLine,
                     yes: l10n.commonDelete,
                   );
                   if (!ok) return;

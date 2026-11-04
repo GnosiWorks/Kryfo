@@ -16270,13 +16270,13 @@ abstract class AppLocalizations {
   /// screens/linked_devices_screen.dart: the second history choice
   ///
   /// In en, this message translates to:
-  /// **'Start with no history'**
+  /// **'Contacts and groups only'**
   String get devicesHistoryNone;
 
   /// screens/linked_devices_screen.dart: under the second history choice
   ///
   /// In en, this message translates to:
-  /// **'Only new messages reach the device.'**
+  /// **'They come over without any messages.'**
   String get devicesHistoryNoneHint;
 
   /// screens/linked_devices_screen.dart: the switch under the first history choice
@@ -17275,6 +17275,24 @@ abstract class AppLocalizations {
   /// **'{name} uses an older Kryfo. Reply from your phone.'**
   String chatDeviceReplyFromPhone(String name);
 
+  /// screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact none of whose devices has written to this one yet, whose messages go from the phone for now
+  ///
+  /// In en, this message translates to:
+  /// **'Reply to {name} from your phone for now.'**
+  String chatDeviceReplyFromPhoneForNow(String name);
+
+  /// screens/chat_screen.dart, screens/group_info_screen.dart: on a linked device, the clear confirm: a clear there stays on that device
+  ///
+  /// In en, this message translates to:
+  /// **'Every message here is erased from this computer only. Your phone keeps them.'**
+  String get linkedClearHereOnly;
+
+  /// screens/contact_screen.dart, screens/home_screen.dart: on a linked device, the delete confirm: a deleted chat goes from that device alone
+  ///
+  /// In en, this message translates to:
+  /// **'Every message and the contact go from this computer only. Your phone keeps the chat.'**
+  String get linkedDeleteHereOnly;
+
   /// screens/history_copy_screen.dart: the page bar of the history copy
   ///
   /// In en, this message translates to:
@@ -17356,7 +17374,7 @@ abstract class AppLocalizations {
   /// screens/history_copy_screen.dart: under the no history title
   ///
   /// In en, this message translates to:
-  /// **'New messages show on the device from now on.'**
+  /// **'They came without any messages. New messages show on the device from now on.'**
   String get historyCopyRowsLine;
 
   /// screens/history_copy_screen.dart: some chats came with fewer messages or files

@@ -28,6 +28,10 @@ import 'own_sync.dart' show kOwnFrameMost, ownChatName, ownHash;
 /// how long a copy waits for its device before it is let go
 const kDeviceCopyKept = Duration(days: 7);
 
+/// how long a state op waits for an own device that never answers: job 9
+/// ends them with the device, this is the most until then
+const kOwnOpKept = Duration(days: 30);
+
 /// the most contacts one pass of a spread push reaches
 const kPushPerPass = 8;
 
@@ -173,6 +177,10 @@ class DeviceSend {
     // false: no own copy in this burst (a chat with screenshots blocked;
     // a group's goes once after its members', OwnSync.copy)
     bool ownCopy = true,
+    // a linked device's send: nothing is kept unless a device of theirs
+    // holds a session with this one now, so a copy that would only wait
+    // is never counted as gone
+    bool mustReach = false,
   }) async {
     if (!linkedDevicesOn || !frame.startsWith(kEnvelopePrefix)) return null;
     final body = _bodyOf(frame);
@@ -199,6 +207,9 @@ class DeviceSend {
     bool isPhone(DevSlot s) => !s.own && s.device == 1 && me.device == 1;
     if (!force && slots.every(isPhone)) return null;
     final uid = _uidOf(body, frame);
+    // an own copy is answered by its own uid (OwnSync.take)
+    final ownUid = 'oc:${ownHash(frame)}';
+    String uidOf(DevSlot s) => s.own ? ownUid : uid;
     final receipt = body['u'] is String;
     final ds = await sessions(me.ident);
 
@@ -222,7 +233,7 @@ class DeviceSend {
       // a slot that fails here (a session held on another key, a row that
       // does not read) misses this message; the phone and the others go
       try {
-        if (await _owed(d, uid, me.ident, s)) continue;
+        if (await _owed(d, uidOf(s), me.ident, s)) continue;
         final pin = _bytes(s.key);
         final has = await ds.has(addr, s.device);
         final answered = has && await ds.answered(addr, s.device, pin);
@@ -247,6 +258,9 @@ class DeviceSend {
     if (phoneFrame != null && ask.isNotEmpty) {
       phoneFrame = _withAsk(phoneFrame, ask);
     }
+    if (mustReach && !ready.any((r) => !r.$1.own)) {
+      return (phone: null, size: 0, copies: 0);
+    }
 
     // one size for the burst: the largest copy, the phone's measured too
     final copies = [for (final r in ready) r.$2];
@@ -267,7 +281,7 @@ class DeviceSend {
     // every copy owed written before any goes
     final rows = <Map<String, Object?>>[];
     Map<String, Object?> row(DevSlot s, String addr) => {
-      'uid': uid,
+      'uid': uidOf(s),
       'ident': me.ident,
       'peer': s.identity,
       'device': s.device,
@@ -325,6 +339,39 @@ class DeviceSend {
       if (r['state'] == 'go') unawaited(_go(d, r));
     }
     return (phone: phoneCipher, size: size, copies: rows.length);
+  }
+
+  /// whether a device of [c]'s holds a session with this one now: what a
+  /// burst with mustReach counts as reached
+  Future<bool> reaches(DevMe me, DevContact c) async {
+    if (!linkedDevicesOn) return false;
+    final d = await db();
+    final List<DevSlot> slots;
+    try {
+      slots = _slots(
+        await state.call(d, 'fanout', {
+          'ident': me.ident,
+          'contact': c.identity,
+          'devices': c.devices,
+          'phone_classic': c.phoneClassic,
+          'now': _clock(),
+          'no_own': true,
+        }),
+      );
+    } on DevRefused {
+      return false;
+    }
+    final ds = await sessions(me.ident);
+    for (final s in slots) {
+      if (s.own || s.rebuild) continue;
+      if (s.device == 1 && me.device == 1) continue;
+      try {
+        if (await ds.has(c.peer, s.device)) return true;
+      } on Object {
+        continue;
+      }
+    }
+    return false;
   }
 
   List<DevSlot> _slots(Map<String, dynamic> j) => [
@@ -656,11 +703,17 @@ class DeviceSend {
     final d = await db();
     final now = _clock();
     // a state op to my own device is kept until it answers: a hide that
-    // never reached a laptop would leave the chat there
+    // never reached a laptop would leave the chat there. one that never
+    // answers for [kOwnOpKept] is let go
     await d.delete(
       'dev_out',
-      where: "at < ? AND NOT (own = 1 AND uid LIKE 'os:%')",
-      whereArgs: [now - kDeviceCopyKept.inMilliseconds],
+      where:
+          "(at < ? AND NOT (own = 1 AND uid LIKE 'os:%')) OR "
+          "(own = 1 AND uid LIKE 'os:%' AND at < ?)",
+      whereArgs: [
+        now - kDeviceCopyKept.inMilliseconds,
+        now - kOwnOpKept.inMilliseconds,
+      ],
     );
     final due = await d.query(
       'dev_out',
@@ -1501,14 +1554,7 @@ String _withAsk(String frame, List<int> devices) =>
 String? ownCopyOf(int ident, String peer, String frame) {
   if (frame.length > kOwnFrameMost) return null;
   final b = _bodyOf(frame);
-  if (b == null || b.containsKey('g')) return null;
-  for (final k in _notCopied) {
-    if (b.containsKey(k)) return null;
-  }
-  final ss = b['ss'];
-  if (ss is Map && ss['o'] == 1) return null;
-  final says = b['u'] is String || _copiedControls.any(b.containsKey);
-  if (!says) return null;
+  if (b == null || b.containsKey('g') || !ownCopyFits(b)) return null;
   final chat = ownChatName((id: peer, group: false));
   return '$kEnvelopePrefix${jsonEncode({
     'u': 'oc:${ownHash(frame)}',
@@ -1525,6 +1571,25 @@ const _notCopied = {
 
 // my words on a message that carry its uid inside
 const _copiedControls = {'ed', 'r', 'pn', 'un', 'vt', 'pc'};
+
+/// whether a frame's [body] is one an own copy may carry: a message or my
+/// word on one, nothing of _notCopied, no screenshot block
+bool ownCopyFits(Map<String, dynamic> body) {
+  for (final k in _notCopied) {
+    if (body.containsKey(k)) return false;
+  }
+  final ss = body['ss'];
+  if (ss is Map && ss['o'] == 1) return false;
+  return body['u'] is String || _copiedControls.any(body.containsKey);
+}
+
+/// the keys of a group frame of my device's that my phone sends on as its
+/// own: what a message says, never who sent it or anything else of theirs
+const kOwnPassOnKeys = {
+  'm', 'w', 'op', 'bl', 'st', 'pl', 'vt', 'pc', 'u', 'r', 'pn', 'ed', 'q', //
+  'i', 'un', 'cr', 'f', 'fn', 'vo', 'vd', 'pv', 'mid', 'ci', 'ct', 'b', 'g',
+  'sc', 'al',
+};
 
 Uint8List _bytes(String hex) => Uint8List.fromList([
   for (var i = 0; i + 1 < hex.length; i += 2)

@@ -115,6 +115,9 @@ extension AppStateContacts on AppState {
     // still reach us, in requests instead of a live chat.
     await refreshContacts();
     notifyListeners();
+    // linked devices: told at once, as a hide is (a linked device keeps its
+    // delete to itself, kOwnChatEndsBothWays)
+    unawaited(_ownPass());
   }
 
   // what a link may do about [id] held here on another key. only the

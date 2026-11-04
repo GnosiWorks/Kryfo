@@ -10300,11 +10300,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Усі ваші повідомлення, а також фото й відео за останні 30 днів.';
 
   @override
-  String get devicesHistoryNone => 'Почати без історії';
+  String get devicesHistoryNone => 'Лише контакти й групи';
 
   @override
-  String get devicesHistoryNoneHint =>
-      'На пристрій надходитимуть лише нові повідомлення.';
+  String get devicesHistoryNoneHint => 'Вони переносяться без повідомлень.';
 
   @override
   String get devicesSkipMedia => 'Без фото й відео';
@@ -10888,6 +10887,19 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'Поки що відповідай $name з телефона.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'Кожне повідомлення тут буде стерто лише з цього комп’ютера. Телефон їх збереже.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'Усі повідомлення й контакт зникнуть лише з цього комп’ютера. Телефон збереже чат.';
+
+  @override
   String get historyCopyTitle => 'Історія чатів';
 
   @override
@@ -10933,7 +10945,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get historyCopyRowsLine =>
-      'Відтепер нові повідомлення з’являтимуться на пристрої.';
+      'Їх перенесено без повідомлень. Нові повідомлення з’являються на пристрої відтепер.';
 
   @override
   String get historyCopyGaps => 'Майже всі чати перенесено';

@@ -10136,11 +10136,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Semua pesanmu, dengan foto dan video dari 30 hari terakhir.';
 
   @override
-  String get devicesHistoryNone => 'Mulai tanpa riwayat';
+  String get devicesHistoryNone => 'Hanya kontak dan grup';
 
   @override
-  String get devicesHistoryNoneHint =>
-      'Hanya pesan baru yang sampai ke perangkat.';
+  String get devicesHistoryNoneHint => 'Semuanya pindah tanpa pesan apa pun.';
 
   @override
   String get devicesSkipMedia => 'Lewati foto dan video';
@@ -10722,6 +10721,19 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'Untuk sekarang, balas $name dari ponselmu.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'Semua pesan di sini dihapus hanya dari komputer ini. Ponselmu tetap menyimpannya.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'Semua pesan dan kontak ini hilang hanya dari komputer ini. Ponselmu tetap menyimpan chatnya.';
+
+  @override
   String get historyCopyTitle => 'Riwayat chat';
 
   @override
@@ -10767,7 +10779,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get historyCopyRowsLine =>
-      'Mulai sekarang pesan baru muncul di perangkat.';
+      'Semuanya sampai tanpa pesan apa pun. Pesan baru muncul di perangkat mulai sekarang.';
 
   @override
   String get historyCopyGaps => 'Sebagian besar chatmu sudah sampai';

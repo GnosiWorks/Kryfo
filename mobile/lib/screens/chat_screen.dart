@@ -101,6 +101,9 @@ import '../main.dart'
     show
         typeLeaf,
         linkedRole,
+        deviceReaches,
+        deviceSealOutcome,
+        ownClearLine,
         engine,
         sendFirstContactNoted,
         AppStatePqRestart,
@@ -1047,9 +1050,15 @@ class _ChatScreenState extends State<ChatScreen>
         line = l10n.chatDeviceReplyFromPhone(
           _nickname ?? (row['nickname'] as String?) ?? widget.peerHaloId,
         );
+      } else if (!await deviceReaches(widget.peerHaloId)) {
+        // none of their devices wrote to this one yet: the phone answers
+        line = l10n.chatDeviceReplyFromPhoneForNow(
+          _nickname ?? (row['nickname'] as String?) ?? widget.peerHaloId,
+        );
       } else {
         line = null;
       }
+      if (!mounted) return;
       if (line != _phoneOnly) setState(() => _phoneOnly = line);
     } catch (e) {
       dlog('chat: phone-only not read (${e.runtimeType})');
@@ -3633,9 +3642,16 @@ class _ChatScreenState extends State<ChatScreen>
         cipher = sealed.cipher;
         sealedOn = sealed.ident;
       } catch (e) {
+        // a linked device: its copies went from here, or its phone answers
+        final out = deviceSealOutcome(e);
+        if (out == 'ok') {
+          await _finishTextSend(msg, 'ok');
+          return;
+        }
         if (!mounted) return;
         // waiting on their card: still going, as the first send has it
         if (e is StartingAfresh || e is KeyHeld) return;
+        if (out != null) unawaited(_readPhoneOnly());
         setState(() {
           msg.sending = false;
           msg.failed = true;
@@ -5056,7 +5072,15 @@ class _ChatScreenState extends State<ChatScreen>
           gate.complete();
         }
       } catch (e) {
+        // a linked device: its copies went from here, or its phone answers
+        final out = deviceSealOutcome(e);
+        if (out == 'ok') {
+          mounted ? setState(() => sealing(false)) : sealing(false);
+          await _finishTextSend(msg, 'ok');
+          return;
+        }
         if (!mounted) return;
+        if (out != null) unawaited(_readPhoneOnly());
         setState(() {
           sealing(false);
           // one waiting on their card after a restore is no broken session
@@ -5068,7 +5092,7 @@ class _ChatScreenState extends State<ChatScreen>
           if (slot) _sentCount--;
           if (devKeyFailed(e)) {
             _devKeyFailed = true;
-          } else {
+          } else if (out == null) {
             _status = l10n.chatNoSignalSessionRe;
           }
         });
@@ -6194,7 +6218,7 @@ class _ChatScreenState extends State<ChatScreen>
     final confirm = await showConfirmSheet(
       context,
       title: l10n.chatClearThisConversation,
-      line: l10n.chatEveryMessageHereIsShown,
+      line: ownClearLine(group: false),
       yes: l10n.chatClear,
       keep: l10n.commonCancel,
     );

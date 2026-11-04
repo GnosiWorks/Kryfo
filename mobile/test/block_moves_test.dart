@@ -665,6 +665,53 @@ void main() {
     }, skip: skip);
   }
 
+  test('M2 a chat into the vault leaves no own sync row of it behind, and '
+      'none goes with it; another chat\'s stay', () async {
+    {
+      final db = await _world();
+      for (final s in ['main', 'v']) {
+        await db.execute(
+          'CREATE TABLE $s.own_told (chat TEXT PRIMARY KEY, digest TEXT)',
+        );
+        await db.execute(
+          'CREATE TABLE $s.own_held (uid TEXT PRIMARY KEY, chat TEXT, '
+          'sender TEXT, frame TEXT)',
+        );
+      }
+      for (final (c, other) in [('p:$_f', 'p:someone'), ('g:$_g', 'g:other')]) {
+        for (final x in [c, other]) {
+          await db.execute(
+            "INSERT INTO main.frame_order VALUES ('os:$x', 'own:0/4/k', 'read', 3)",
+          );
+          await db.execute("INSERT INTO main.own_told VALUES ('$x', 'd')");
+          await db.execute(
+            "INSERT INTO main.own_held VALUES ('h-$x', '$x', 'who', 'f')",
+          );
+        }
+      }
+      final mover = SqlChatMover(_NoDb(), _NoDb());
+      await mover.moveRowsOn(db, const ChatRef(_f), intoVault: true);
+      await mover.moveRowsOn(db, group, intoVault: true);
+      Future<List<String>> left(String s) async => [
+        for (final r in await db.rawQuery(
+          "SELECT msg_uid AS k FROM $s.frame_order WHERE msg_uid LIKE 'os:%' "
+          'UNION ALL SELECT chat FROM $s.own_told '
+          'UNION ALL SELECT chat FROM $s.own_held ORDER BY 1',
+        ))
+          r['k'] as String,
+      ];
+      expect(await left('main'), [
+        'g:other',
+        'g:other',
+        'os:g:other',
+        'os:p:someone',
+        'p:someone',
+        'p:someone',
+      ]);
+      expect(await left('v'), isEmpty);
+    }
+  }, skip: skip);
+
   for (final side in ['main', 'v']) {
     test(
       'a move goes on when $side has no drafts or wallpapers table',

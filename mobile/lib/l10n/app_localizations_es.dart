@@ -10208,11 +10208,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Todos tus mensajes, con las fotos y los videos de los últimos 30 días.';
 
   @override
-  String get devicesHistoryNone => 'Empezar sin historial';
+  String get devicesHistoryNone => 'Solo contactos y grupos';
 
   @override
-  String get devicesHistoryNoneHint =>
-      'Solo llegan los mensajes nuevos al dispositivo.';
+  String get devicesHistoryNoneHint => 'Pasan sin ningún mensaje.';
 
   @override
   String get devicesSkipMedia => 'Omitir fotos y videos';
@@ -10794,6 +10793,19 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'Por ahora, responde a $name desde tu teléfono.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'Todos los mensajes de aquí se borran solo de este ordenador. Tu teléfono los conserva.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'Todos los mensajes y el contacto se van solo de este ordenador. Tu teléfono conserva el chat.';
+
+  @override
   String get historyCopyTitle => 'Historial de chats';
 
   @override
@@ -10839,7 +10851,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get historyCopyRowsLine =>
-      'Desde ahora, los mensajes nuevos se muestran en el dispositivo.';
+      'Llegaron sin ningún mensaje. Los mensajes nuevos se ven en el dispositivo desde ahora.';
 
   @override
   String get historyCopyGaps => 'Llegaron casi todos tus chats';

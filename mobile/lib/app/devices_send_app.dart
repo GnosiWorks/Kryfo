@@ -169,10 +169,29 @@ Future<bool> _deviceSealHere(
       framed,
       force: true,
       ownCopy: _ownSends && await _ownChatShared((id: peer, group: false)),
+      // a contact whose devices never wrote to this one is not reached
+      mustReach: true,
     );
     return b != null && b.copies > 0;
   } catch (e) {
     dlog('devices: no copies from this device (${e.runtimeType})');
+    return false;
+  }
+}
+
+/// on a linked device, whether this device reaches [peer] itself: a device
+/// of theirs holds a session with it. false sends from the phone
+Future<bool> deviceReaches(String peer) async {
+  if (!linkedDevicesOn || !linkedRole || isDevId(peer)) return false;
+  final send = _deviceSend;
+  if (send == null || !identical(_devHomeDb(peer), live)) return false;
+  try {
+    final ident = identOfPeer(peer);
+    final who = await _devWhoOf(ident, peer, await signalOfIdent(ident));
+    if (who == null || !who.c.devices) return false;
+    return await send.reaches(who.me, who.c);
+  } catch (e) {
+    dlog('devices: reach not read (${e.runtimeType})');
     return false;
   }
 }

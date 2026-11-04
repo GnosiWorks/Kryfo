@@ -10141,10 +10141,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'आपके सारे मैसेज, पिछले 30 दिन की फ़ोटो और वीडियो के साथ।';
 
   @override
-  String get devicesHistoryNone => 'बिना पुरानी चैट के शुरू करें';
+  String get devicesHistoryNone => 'सिर्फ़ संपर्क और ग्रुप';
 
   @override
-  String get devicesHistoryNoneHint => 'डिवाइस पर सिर्फ़ नए मैसेज आएँगे।';
+  String get devicesHistoryNoneHint => 'वे बिना किसी मैसेज के आते हैं।';
 
   @override
   String get devicesSkipMedia => 'फ़ोटो और वीडियो छोड़ दें';
@@ -10725,6 +10725,19 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'अभी के लिए $name को अपने फ़ोन से जवाब दें।';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'यहाँ का हर मैसेज सिर्फ़ इस कंप्यूटर से मिटेगा। आपका फ़ोन उन्हें रखता है।';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'हर मैसेज और संपर्क सिर्फ़ इस कंप्यूटर से हटेंगे। आपका फ़ोन चैट रखता है।';
+
+  @override
   String get historyCopyTitle => 'चैट हिस्ट्री';
 
   @override
@@ -10768,7 +10781,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get historyCopyRows => 'आपके संपर्क और ग्रुप आ गए';
 
   @override
-  String get historyCopyRowsLine => 'अब से नए मैसेज डिवाइस पर दिखेंगे।';
+  String get historyCopyRowsLine =>
+      'वे बिना किसी मैसेज के आए। नए मैसेज अब से डिवाइस पर दिखते हैं।';
 
   @override
   String get historyCopyGaps => 'आपकी ज़्यादातर चैट आ गईं';

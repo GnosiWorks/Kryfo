@@ -442,6 +442,8 @@ extension AppStateOutbox on AppState {
     // a decoy open: all of it waits for the session that wrote it
     if (everydayHeld) return;
     unawaited(_replayHeld());
+    // linked devices: what reached the phone while the decoy was open
+    unawaited(_ownHeldGo());
     unawaited(_drainEdits());
     unawaited(_drainPins());
     unawaited(_drainFrames());

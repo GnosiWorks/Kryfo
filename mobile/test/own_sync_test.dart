@@ -549,7 +549,14 @@ void main() {
     await take(_op(4, 2, 'group', 'g:g1', {'r': {}, 'm': []}));
     await take(_op(4, 3, 'profile', 'p:x'));
     await take(_op(4, 4, 'gone', 'p:bob-quiet-river'));
-    expect(w.apply.ops.map((o) => o.$2), ['read', 'gone']);
+    // M6: a whole chat's end or clear from a device stays on it
+    await take(_op(4, 5, 'clear', 'p:bob-quiet-river', {'t': 1}));
+    await take(
+      _op(4, 6, 'del', 'p:bob-quiet-river', {
+        'u': ['u-1'],
+      }),
+    );
+    expect(w.apply.ops.map((o) => o.$2), ['read', 'del']);
     const f = 'halo/1:{"u":"u-x","m":"made up"}';
     await take(
       _frame({
@@ -652,6 +659,32 @@ void main() {
       w.deskTag(opener: true),
       await w.seal(_frame({'dr': 'os:1:1'})),
     );
+    expect(await owed(), isEmpty);
+  });
+
+  test('L5 a state op to a device that never answers is let go after '
+      'kOwnOpKept', () async {
+    if (skip()) return;
+    final w = await phone();
+    await w.recv.receive(
+      w.deskTag(opener: true),
+      await w.seal(_op(4, 1, 'read', 'p:bob-quiet-river')),
+    );
+    await w.settle(1);
+    expect(
+      await w.own.op(kMainIdent, 'read', (id: 'bob', group: false), const {}),
+      isTrue,
+    );
+    await w.settle(2);
+    Future<List<String>> owed() async => [
+      for (final r in await w.db.query('dev_out', where: 'device = 4'))
+        r['uid'] as String,
+    ];
+    w.clock += const Duration(days: 29).inMilliseconds;
+    await w.send.pump();
+    expect(await owed(), ['os:1:1']);
+    w.clock += const Duration(days: 2).inMilliseconds;
+    await w.send.pump();
     expect(await owed(), isEmpty);
   });
 

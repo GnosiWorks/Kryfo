@@ -51,9 +51,21 @@ const kOwnOps = {
   'profile': 'st',
 };
 
+/// whether a linked device's delete or clear of a whole chat, and its
+/// block, reach the phone too. off: they stay on that device, and only the
+/// phone's go to the others (a stolen computer cannot end chats on the
+/// phone); single deletes and burn clocks go both ways either way
+const kOwnChatEndsBothWays = false;
+
 /// the ops a linked device may send its phone: never a contact or a group
 /// it made up, never my profile
-const kOwnOpsFromDevice = {'read', 'lit', 'del', 'clear', 'contact', 'gone'};
+const kOwnOpsFromDevice = {
+  'read',
+  'lit',
+  'del',
+  'contact',
+  if (kOwnChatEndsBothWays) ...['clear', 'gone'],
+};
 
 /// a chat as own frames name it: 'p:' and a contact's kryfo id, or 'g:'
 /// and a group's id

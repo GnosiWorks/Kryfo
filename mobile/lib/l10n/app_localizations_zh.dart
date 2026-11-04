@@ -9609,10 +9609,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devicesHistoryCopyHint => '所有消息，以及最近 30 天的照片和视频。';
 
   @override
-  String get devicesHistoryNone => '不带历史记录开始';
+  String get devicesHistoryNone => '仅联系人和群组';
 
   @override
-  String get devicesHistoryNoneHint => '设备只会收到新消息。';
+  String get devicesHistoryNoneHint => '它们会复制过来，不含任何消息。';
 
   @override
   String get devicesSkipMedia => '跳过照片和视频';
@@ -10146,6 +10146,17 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return '暂时请在手机上回复 $name。';
+  }
+
+  @override
+  String get linkedClearHereOnly => '这里的每条消息只会从这台电脑上清除。你的手机会保留它们。';
+
+  @override
+  String get linkedDeleteHereOnly => '所有消息和这位联系人只会从这台电脑上移除。你的手机会保留这段聊天。';
+
+  @override
   String get historyCopyTitle => '聊天记录';
 
   @override
@@ -10187,7 +10198,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get historyCopyRows => '你的联系人和群组已复制';
 
   @override
-  String get historyCopyRowsLine => '从现在起，新消息会显示在设备上。';
+  String get historyCopyRowsLine => '它们已复制过来，不含任何消息。从现在起，新消息会显示在这台设备上。';
 
   @override
   String get historyCopyGaps => '大部分聊天已复制';
@@ -20167,10 +20178,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devicesHistoryCopyHint => '所有訊息，以及最近 30 天的照片和影片。';
 
   @override
-  String get devicesHistoryNone => '不帶歷史記錄開始';
+  String get devicesHistoryNone => '僅聯絡人和群組';
 
   @override
-  String get devicesHistoryNoneHint => '裝置只會收到新訊息。';
+  String get devicesHistoryNoneHint => '它們會複製過來，不含任何訊息。';
 
   @override
   String get devicesSkipMedia => '略過照片和影片';
@@ -20705,6 +20716,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return '暫時請在手機上回覆 $name。';
+  }
+
+  @override
+  String get linkedClearHereOnly => '這裡的每則訊息只會從這台電腦上抹除。你的手機會保留它們。';
+
+  @override
+  String get linkedDeleteHereOnly => '所有訊息和這位聯絡人只會從這台電腦上移除。你的手機會保留這段聊天。';
+
+  @override
   String get historyCopyTitle => '聊天記錄';
 
   @override
@@ -20746,7 +20768,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get historyCopyRows => '你的聯絡人和群組已複製';
 
   @override
-  String get historyCopyRowsLine => '從現在起，新訊息會顯示在裝置上。';
+  String get historyCopyRowsLine => '它們已複製過來，不含任何訊息。從現在起，新訊息會顯示在這台裝置上。';
 
   @override
   String get historyCopyGaps => '大部分聊天已複製';
