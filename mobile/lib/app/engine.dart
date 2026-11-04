@@ -279,14 +279,30 @@ class HaloEngine {
       );
 
   // [fresh]: someone just added or accepted, heard without a turn
-  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) {
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) =>
+      _subscribeBg(ident, peerXPubHex, fresh: fresh, hidden: false);
+
+  // a hidden chat: its address keeps a relay socket of its own
+  void nostrSubscribeHiddenBg(
+    int ident,
+    String peerXPubHex, {
+    bool fresh = false,
+  }) => _subscribeBg(ident, peerXPubHex, fresh: fresh, hidden: true);
+
+  void _subscribeBg(
+    int ident,
+    String peerXPubHex, {
+    required bool fresh,
+    required bool hidden,
+  }) {
     _background(
       devGate.listen(
         peerXPubHex,
         out: () => _onPair(
           ident,
           peerXPubHex,
-          (pair) => _subscribeOnIsolate(ident, pair, fresh: fresh),
+          (pair) =>
+              _subscribeOnIsolate(ident, pair, fresh: fresh, hidden: hidden),
         ),
         room: (priv) async {
           roomSubscribeBg(priv, peerXPubHex);
@@ -1633,14 +1649,16 @@ Future<String> _subscribeOnIsolate(
   int ident,
   String xPub, {
   bool fresh = false,
+  bool hidden = false,
 }) {
+  final name = hidden
+      ? (fresh ? 'HaloNostrSubscribeHiddenNew' : 'HaloNostrSubscribeHidden')
+      : (fresh ? 'HaloNostrSubscribeNew' : 'HaloNostrSubscribe');
   return Isolate.run(() {
     final lib = Platform.isAndroid
         ? DynamicLibrary.open('libhalo.so')
         : DynamicLibrary.process();
-    final fn = lib.lookupFunction<IdentOneFn, IdentOneFnDart>(
-      fresh ? 'HaloNostrSubscribeNew' : 'HaloNostrSubscribe',
-    );
+    final fn = lib.lookupFunction<IdentOneFn, IdentOneFnDart>(name);
     final p = xPub.toNativeUtf8();
     try {
       return engineTake(fn(ident, p));

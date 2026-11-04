@@ -230,6 +230,10 @@ class _Io implements AppIo {
     told.add('listen');
   }
 
+  @override
+  void listenHidden(int ident, String xPub, {bool fresh = false}) =>
+      listen(ident, xPub, fresh: fresh);
+
   // listens and pin tellings, in the order they came
   final told = <String>[];
   @override

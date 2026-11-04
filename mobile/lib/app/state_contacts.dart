@@ -80,7 +80,7 @@ extension AppStateContacts on AppState {
       await subscribePeer(who);
     } else if (card.xPub.isNotEmpty) {
       _xPubToHaloId[card.xPub] = who;
-      _io.listen(identOf(who), card.xPub);
+      _listen(identOf(who), card.xPub, hidden: true);
     }
     _wantHeal(who);
     unawaited(_sendBundleCtl(who, want: true));

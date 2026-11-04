@@ -270,6 +270,36 @@ extension AppStateReceive on AppState {
     await _listenKnown(cache: true);
   }
 
+  // listens on [xPub]. a hidden chat's address keeps a relay socket of its
+  // own; [hidden] null asks the vault's cards
+  void _listen(int ident, String xPub, {bool fresh = false, bool? hidden}) {
+    if (hidden ?? _router.hidesKey(xPub)) {
+      _toldHidden.add(xPub);
+      _io.listenHidden(ident, xPub, fresh: fresh);
+    } else {
+      _toldHidden.remove(xPub);
+      _io.listen(ident, xPub, fresh: fresh);
+    }
+  }
+
+  // after chats went into the vault or came out: each key listened on the
+  // other way is listened on again, so its address leaves the everyday
+  // sockets or joins them
+  void _relistenMoved() {
+    for (final e in _router.listenFor.entries) {
+      if (!_toldHidden.contains(e.key)) _listen(identOf(e.value), e.key);
+    }
+    for (final x in _toldHidden.toList()) {
+      if (_router.hidesKey(x)) continue;
+      final who = _xPubToHaloId[x];
+      if (who == null) {
+        _toldHidden.remove(x);
+        continue;
+      }
+      _listen(identOf(who), x, hidden: false);
+    }
+  }
+
   // the keys it listened on, and whether anyone was missed. [skip]: keys
   // already listened on, their runners left as they are
   Future<({Set<String> keys, bool short})> _listenKnown({
@@ -341,7 +371,7 @@ extension AppStateReceive on AppState {
         if (holder != null && holder != haloId) continue;
         if (r['accepted'] == 1) ours[xPub] = haloId;
         _xPubToHaloId[xPub] = haloId;
-        if (!skip.contains(xPub)) _io.listen(identOf(haloId), xPub);
+        if (!skip.contains(xPub)) _listen(identOf(haloId), xPub);
         fresh[xPub] = haloId;
       } catch (e) {
         short = true;
@@ -357,7 +387,9 @@ extension AppStateReceive on AppState {
     for (final h in hidden.entries) {
       try {
         _xPubToHaloId[h.key] = h.value;
-        if (!skip.contains(h.key)) _io.listen(identOf(h.value), h.key);
+        if (!skip.contains(h.key)) {
+          _listen(identOf(h.value), h.key, hidden: true);
+        }
         heard.add(h.key);
       } catch (e) {
         short = true;

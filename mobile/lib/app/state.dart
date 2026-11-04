@@ -325,6 +325,8 @@ class AppState extends ChangeNotifier {
   bool _resubscribeDue = false;
   // the pinned chats' keys the engine was last told, sorted and joined
   String _pinsTold = '';
+  // the keys last listened on as hidden chats (AppStateReceive._listen)
+  final Set<String> _toldHidden = {};
 
   static const _platformChannel = MethodChannel('halo/platform');
   // the process engine's own, answered before a screen is there too

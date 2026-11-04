@@ -252,6 +252,10 @@ class _Io implements AppIo {
   Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
   @override
   void listen(int ident, String xPub, {bool fresh = false}) {}
+
+  @override
+  void listenHidden(int ident, String xPub, {bool fresh = false}) =>
+      listen(ident, xPub, fresh: fresh);
   @override
   String edPub() => 'ed-me';
   @override

@@ -393,6 +393,7 @@ extension AppStateVault on AppState {
       }
       await refreshContacts();
       await refreshGroups();
+      _relistenMoved();
       return went.length;
     }),
   );
@@ -411,6 +412,7 @@ extension AppStateVault on AppState {
       final n = await _move(v, chats, (m) => _unhide(m, v, chats), out: true);
       await refreshContacts();
       await refreshGroups();
+      _relistenMoved();
       return n;
     }),
   );
