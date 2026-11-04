@@ -22,6 +22,7 @@ import 'package:kryfo/screens/settings_screen.dart';
 import 'package:kryfo/store.dart' show playBuildForTest;
 import 'package:kryfo/widgets/onion_loader.dart' show OnionMark;
 import 'package:kryfo/widgets/press_scale.dart';
+import 'package:kryfo/widgets/voice_mic.dart' show HoldToTalkMic;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../dev_chat_fakes.dart' show devApp, devWorld;
@@ -265,5 +266,41 @@ void main() {
       final s = File(f).readAsStringSync();
       expect('onSecondaryTap:'.allMatches(s).length, n, reason: f);
     }
+  });
+
+  testWidgets('a double click on send never starts a voice note', (t) async {
+    onDesktop = true;
+    addTearDown(() => onDesktop = false);
+    const rec = MethodChannel('com.llfbandit.record/messages');
+    final m = t.binding.defaultBinaryMessenger;
+    m.setMockMethodCallHandler(rec, (_) async => null);
+    addTearDown(() => m.setMockMethodCallHandler(rec, null));
+    var asked = 0;
+    await t.pumpWidget(
+      MaterialApp(
+        home: Material(
+          child: Center(
+            child: HoldToTalkMic(
+              disguise: false,
+              onSend: (_) {},
+              mayRecord: () {
+                asked++;
+                return false;
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    // the click right after the mic took send's place
+    await t.tap(find.byType(HoldToTalkMic));
+    await t.pump();
+    expect(asked, 0);
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 800)),
+    );
+    await t.tap(find.byType(HoldToTalkMic));
+    await t.pump();
+    expect(asked, 1);
   });
 }

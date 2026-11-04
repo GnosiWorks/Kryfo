@@ -155,6 +155,9 @@ class HoldToTalkMic extends StatefulWidget {
 
 class HoldToTalkMicState extends State<HoldToTalkMic> {
   final _rec = AudioRecorder();
+  // the mic takes send's place once a message goes: a double click on send
+  // must not start a note
+  final _shownAt = DateTime.now();
   RecordBarEntry? _overlay;
   Timer? _ticker;
   int _ms = 0;
@@ -916,7 +919,14 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
           // a short tap says how it works instead of doing nothing, or with
           // a screen reader on records at once
           onTap: reader
-              ? _tapRecord
+              ? () {
+                  if (onDesktop &&
+                      DateTime.now().difference(_shownAt) <
+                          const Duration(milliseconds: 700)) {
+                    return;
+                  }
+                  _tapRecord();
+                }
               : () {
                   HapticFeedback.selectionClick();
                   showHaloToast(context, l10n.chatHoldToRecord);
